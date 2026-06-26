@@ -1,0 +1,36 @@
+{
+  "id": "ev_mvp_dev_001_integration_broken",
+  "category": "reactive",
+  "title": "Bir şey çalışmıyor",
+  "subtitle": "Mutfak masası · 02:17",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Saat ikiyi geçiyor. Üçüncü kahve soğumuş. **API tarafından dönen JSON** ile UI'da beklediğin shape arasında bir uçurum açıldı — büyük değil ama kapanmıyor.\n\nMantıklı yol: yarın taze gözle bak. Pratik yol: bir hack ile geç, sonra döner düzeltirsin.\n\n*Sonra dönüp düzeltmek.* O sözü daha önce de duymuştun.",
+  "trigger_conditions": [
+    {"type": "build_phase", "value": "development"},
+    {"type": "random", "chance": 0.30}
+  ],
+  "cooldown_days": 14,
+  "one_shot": false,
+  "priority": 0,
+  "choices": [
+    {
+      "label": "Gece boyu uğraş, doğru yap",
+      "modifiers": [
+        {"type": "quality_bonus", "amount": 3},
+        {"type": "set_flag", "key": "founder_fatigue", "value": true}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Geçici çözüm — TODO listesine ekle",
+      "modifiers": [
+        {"type": "set_flag", "key": "tech_debt_birikti", "value": true},
+        {"type": "speed_bonus", "days": -1}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

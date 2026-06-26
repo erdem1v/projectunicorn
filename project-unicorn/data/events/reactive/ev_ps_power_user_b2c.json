@@ -1,0 +1,35 @@
+{
+  "id": "ev_ps_power_user_b2c",
+  "category": "opportunity",
+  "title": "Erken hayran",
+  "subtitle": "X / Twitter · 19:30",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Bir kullanıcı ürünü göklere çıkarmış: *\"Bu araç iş akışımı değiştirdi, herkes denemeli.\"* Altında yorumlar birikiyor.\n\nMomentum küçük ama gerçek. Üstüne gidersen büyür.",
+  "trigger_conditions": [
+    {"type": "market_type", "value": "b2c"},
+    {"type": "customer_count_min", "value": 1},
+    {"type": "audience_above", "value": 40},
+    {"type": "random", "chance": 0.3}
+  ],
+  "cooldown_days": 12,
+  "one_shot": false,
+  "priority": 0,
+  "choices": [
+    {
+      "label": "Tanıtım yaz — momentumu kullan",
+      "modifiers": [
+        {"type": "brand", "delta": 4},
+        {"type": "audience_delta", "delta": 25}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Sessiz kal",
+      "modifiers": [],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

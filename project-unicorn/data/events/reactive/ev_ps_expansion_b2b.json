@@ -1,0 +1,43 @@
+{
+  "id": "ev_ps_expansion_b2b",
+  "category": "opportunity",
+  "title": "Seat artırımı",
+  "subtitle": "Toplantı · 11:15",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Müşterilerinden biri memnun: *\"Ekibimde daha çok kişi kullanmak istiyor. Koltuk ekleyebilir miyiz?\"*\n\nBüyüyen bir hesap, yeni bir müşteriden kıymetli. Ama nasıl fiyatladığın ilişkiyi belirler.",
+  "trigger_conditions": [
+    {"type": "market_type", "value": "b2b"},
+    {"type": "customer_count_min", "value": 1},
+    {"type": "random", "chance": 0.25}
+  ],
+  "cooldown_days": 14,
+  "one_shot": false,
+  "priority": 1,
+  "choices": [
+    {
+      "label": "Önerilen fiyattan ekle",
+      "modifiers": [
+        {"type": "customer_mrr_delta", "delta": 600}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Pazarlık et — daha fazla iste",
+      "modifiers": [
+        {"type": "customer_mrr_delta", "delta": 1000}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Bedavaya ver — ilişki kıymetli",
+      "modifiers": [
+        {"type": "satisfaction_delta", "delta": 10}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

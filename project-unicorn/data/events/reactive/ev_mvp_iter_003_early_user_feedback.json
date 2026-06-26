@@ -1,0 +1,35 @@
+{
+  "id": "ev_mvp_iter_003_early_user_feedback",
+  "category": "reactive",
+  "title": "Tanıdıktan istenmemiş geri bildirim",
+  "subtitle": "WhatsApp · 16:48",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Eski iş arkadaşına geçen hafta demoyu açmıştın. Bugün uzun bir mesaj attı. **'Aslında şu olsa daha iyi olurdu...'** ile başlıyor. Üç paragraf devam ediyor.\n\nHalbuki o senin hedef kullanıcın bile değil. Ama söyledikleri mantıklı. Mantıklı geliyor.\n\n*'Bir geri bildirim — herkes bir şey söyler.'* Bu cümleyi kaç kere duymuştun ki?",
+  "trigger_conditions": [
+    {"type": "build_phase", "value": "iteration"},
+    {"type": "random", "chance": 0.25}
+  ],
+  "cooldown_days": 18,
+  "one_shot": false,
+  "priority": 0,
+  "choices": [
+    {
+      "label": "Önerilerini ciddiye al, tasarımı tekrar düşün",
+      "modifiers": [
+        {"type": "set_flag", "key": "early_feedback_dinlendi", "value": true},
+        {"type": "speed_bonus", "days": 1}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Vizyonuna sadık kal, yola devam",
+      "modifiers": [
+        {"type": "brand", "delta": 1}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+[gd_scene load_steps=4 format=3 uid="uid://buildhudpaneltscn001"]
+
+[ext_resource type="Script" path="res://scripts/ui/components/build_hud_panel.gd" id="1_build_hud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.118, 0.106, 0.082, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.30, 0.27, 0.22, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
+bg_color = Color(0.165, 0.137, 0.106, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="BuildHUDPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_build_hud")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -300.0
+offset_top = 60.0
+offset_right = -20.0
+offset_bottom = 220.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Root/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderRow" type="VBoxContainer" parent="Root/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ProductNameLabel" type="Label" parent="Root/Panel/VBox/HeaderRow"]
+layout_mode = 2
+text = "Build"
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="PhaseLabel" type="Label" parent="Root/Panel/VBox/HeaderRow"]
+layout_mode = 2
+text = "—"
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="StatsRow" type="HBoxContainer" parent="Root/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="QualityLabel" type="Label" parent="Root/Panel/VBox/StatsRow"]
+layout_mode = 2
+text = "Kalite —"
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="BugsLabel" type="Label" parent="Root/Panel/VBox/StatsRow"]
+layout_mode = 2
+text = "Bug —"
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="ProgressBar" type="ProgressBar" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+value = 0.0
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
+
+[node name="ButtonRow" type="HBoxContainer" parent="Root/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="IterationButton" type="Button" parent="Root/Panel/VBox/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Bir iterasyon daha"
+disabled = true
+
+[node name="DevelopmentButton" type="Button" parent="Root/Panel/VBox/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Development'a geç"
+disabled = true
+
+[node name="LaunchButton" type="Button" parent="Root/Panel/VBox/ButtonRow"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "LAUNCH"

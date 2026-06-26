@@ -1,0 +1,26 @@
+{
+  "id": "ev_ps_first_revenue",
+  "category": "reactive",
+  "title": "Biri ödedi",
+  "subtitle": "Stripe bildirimi · 08:03",
+  "illustration_path": "",
+  "character_id": "char_mentor_frank",
+  "body_text": "Telefon titriyor. Stripe.\n\n*Bir ödeme geldi.* Küçük bir rakam — ama gerçek. Birisi, senin yaptığın şeye para verdi.\n\nFrank başını sallıyor: \"İşte. Artık bir şirketsin. Küçük, ama şirket.\"",
+  "trigger_conditions": [
+    {"type": "mrr_above", "value": 0}
+  ],
+  "cooldown_days": 0,
+  "one_shot": true,
+  "priority": 8,
+  "choices": [
+    {
+      "label": "Bir nefes al",
+      "modifiers": [
+        {"type": "set_flag", "key": "first_revenue_seen", "value": true},
+        {"type": "mentor_advisory", "text": "İlk dolar geldi. Şimdi ikinciyi, üçüncüyü bul."}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

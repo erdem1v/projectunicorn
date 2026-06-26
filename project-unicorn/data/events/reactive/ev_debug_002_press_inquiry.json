@@ -1,0 +1,43 @@
+{
+  "id": "ev_debug_002_press_inquiry",
+  "category": "reactive",
+  "title": "Basın arıyor",
+  "subtitle": "TechCrunch e-mail · 11:14 [DEBUG]",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "TechCrunch muhabiri bir alıntı istiyor: *son altı ayda 'AI startup'ları nasıl ayakta kalır?'* Cevabın yarın yayınlanacak. [DEBUG content]",
+  "trigger_conditions": [
+    {"type": "day_min", "value": 5},
+    {"type": "random", "chance": 0.20}
+  ],
+  "cooldown_days": 21,
+  "one_shot": false,
+  "priority": 0,
+  "choices": [
+    {
+      "label": "Hazırlanmış, ölçülü bir açıklama gönder",
+      "modifiers": [
+        {"type": "brand", "delta": 3},
+        {"type": "reputation", "delta": 1}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Yorum yapmayı reddet",
+      "modifiers": [
+        {"type": "brand", "delta": -2}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Sıcağı sıcağına konuş",
+      "modifiers": [
+        {"type": "brand", "delta": 6}
+      ],
+      "unlock_condition": {"type": "reputation_above", "value": 10},
+      "unlock_reason_text": "Reputation 10+ gerekli"
+    }
+  ]
+}

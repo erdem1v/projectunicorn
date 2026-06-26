@@ -1,0 +1,260 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/onboarding/steps/origin_step.gd" id="1_origin"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.165, 0.137, 0.106, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.27, 0.22, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_selected"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.78, 0.4, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
+bg_color = Color(0.55, 0.42, 0.18, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+content_margin_left = 8.0
+content_margin_top = 3.0
+content_margin_right = 8.0
+content_margin_bottom = 3.0
+
+[node name="OriginStep" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_origin")
+
+[node name="Intro" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 28.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 14
+text = "Founder olarak nereden geliyorsun? Origin tüm açılış durumunu belirler — cash, ağ, basın algısı."
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 56.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 24
+
+[node name="SelfMadeCard" type="Panel" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Row/SelfMadeCard"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Row/SelfMadeCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="Row/SelfMadeCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 20
+text = "🚀 Self-Made Founder"
+
+[node name="Tagline" type="Label" parent="Row/SelfMadeCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "\"Apartmanında 18 ay kod yazdın. Şimdi MVP'n hazır.\""
+autowrap_mode = 2
+
+[node name="Pro" type="Label" parent="Row/SelfMadeCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 0.62, 1)
+theme_override_font_sizes/font_size = 13
+text = "+  Founder cred (VC pitch +%30), basın seninle iyi"
+autowrap_mode = 2
+
+[node name="Con" type="Label" parent="Row/SelfMadeCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.6, 0.55, 1)
+theme_override_font_sizes/font_size = 13
+text = "−  Sıfır finans erişimi, sıfır politik ağ"
+autowrap_mode = 2
+
+[node name="Spacer" type="Control" parent="Row/SelfMadeCard/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Skill" type="Label" parent="Row/SelfMadeCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "Skill puanı: 6"
+
+[node name="HeirCard" type="Panel" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Body" type="VBoxContainer" parent="Row/HeirCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="Row/HeirCard/Body"]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="Row/HeirCard/Body/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 20
+text = "💰 Heir"
+
+[node name="Badge" type="Label" parent="Row/HeirCard/Body/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.92, 0.78, 1)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge")
+text = "ÇOK YAKINDA"
+
+[node name="Tagline" type="Label" parent="Row/HeirCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "\"Babanın trust fonu hesabında. Aile 'gerçek bir iş' istiyor.\""
+autowrap_mode = 2
+
+[node name="Pro" type="Label" parent="Row/HeirCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 0.62, 1)
+theme_override_font_sizes/font_size = 13
+text = "+  $20M sermaye, üst-tabaka network anında erişim"
+autowrap_mode = 2
+
+[node name="Con" type="Label" parent="Row/HeirCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.6, 0.55, 1)
+theme_override_font_sizes/font_size = 13
+text = "−  Nepo baby reputasyonu (Public −3), çalışan loyalty −1"
+autowrap_mode = 2
+
+[node name="Spacer" type="Control" parent="Row/HeirCard/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Skill" type="Label" parent="Row/HeirCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "Skill puanı: 4"
+
+[node name="CorpCard" type="Panel" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Body" type="VBoxContainer" parent="Row/CorpCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="Row/CorpCard/Body"]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="Row/CorpCard/Body/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 20
+text = "🏢 Corporate Refugee"
+
+[node name="Badge" type="Label" parent="Row/CorpCard/Body/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.92, 0.78, 1)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge")
+text = "ÇOK YAKINDA"
+
+[node name="Tagline" type="Label" parent="Row/CorpCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "[DESIGNER REVIEW] Tagline TBD — PROJECT_SPEC §9 item #1."
+autowrap_mode = 2
+
+[node name="Spacer" type="Control" parent="Row/CorpCard/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Skill" type="Label" parent="Row/CorpCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "Skill puanı: 6"

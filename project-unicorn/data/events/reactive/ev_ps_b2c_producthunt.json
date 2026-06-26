@@ -1,0 +1,36 @@
+{
+  "id": "ev_ps_b2c_producthunt",
+  "category": "opportunity",
+  "title": "Product Hunt penceresi",
+  "subtitle": "Slack DM · 23:11",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Bir tanıdık yazdı: *\"Yarın Product Hunt'ta launch etsene, sana destek olurum.\"*\n\nGörünürlük demek — bir günlüğüne herkes bakar. Kötü giderse, o da herkesin önünde olur.",
+  "trigger_conditions": [
+    {"type": "market_type", "value": "b2c"},
+    {"type": "flag_set", "key": "b2c_paid_tier_open"},
+    {"type": "audience_above", "value": 30},
+    {"type": "random", "chance": 0.4}
+  ],
+  "cooldown_days": 10,
+  "one_shot": false,
+  "priority": 1,
+  "choices": [
+    {
+      "label": "Launch et — görünürlüğü al",
+      "modifiers": [
+        {"type": "convert_audience", "pct": 0.25, "source": "producthunt"},
+        {"type": "brand", "delta": 3},
+        {"type": "audience_delta", "delta": 20}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Pas geç — organik kal",
+      "modifiers": [],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

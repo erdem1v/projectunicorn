@@ -1,0 +1,1990 @@
+[gd_scene load_steps=9 format=3 uid="uid://b8q2ptab1producta"]
+
+[ext_resource type="Script" path="res://scripts/tabs/product_tab.gd" id="1_producttab"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_intro_panel"]
+bg_color = Color(0.165, 0.137, 0.106, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.145, 0.122, 0.094, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.35, 0.27, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_selected_border"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.91, 0.733, 0.471, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bug_normal"]
+bg_color = Color(0.165, 0.137, 0.106, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fg"]
+bg_color = Color(0.91, 0.733, 0.471, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_column_panel"]
+bg_color = Color(0.165, 0.137, 0.106, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row_inner"]
+bg_color = Color(0.145, 0.122, 0.094, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.35, 0.27, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+
+[node name="ProductTab" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_producttab")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleBar" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Margin/Layout/TitleBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 22
+text = "Product"
+
+[node name="SubtitleLabel" type="Label" parent="Margin/Layout/TitleBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Design document"
+vertical_alignment = 2
+
+[node name="Separator" type="HSeparator" parent="Margin/Layout"]
+layout_mode = 2
+
+[node name="BuildStateRoot" type="Control" parent="Margin/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 400)
+
+; =========================================================================
+;  DesignDocumentView — §A
+; =========================================================================
+[node name="DesignDocumentView" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="ColumnsRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+; ---- LEFT COLUMN ----
+[node name="LeftColumn" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.6
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="LeftVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+; ProductSection
+[node name="ProductSection" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeaderLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "ÜRÜN"
+
+[node name="MentorFramingLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+text = "Hangi problemi çözüyoruz? Önce onu seç."
+autowrap_mode = 2
+
+[node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "5 seçenek — birini seç."
+
+[node name="SubTypeList" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+; ----- SubTypeRow_0..4 (5 rows) -----
+[node name="SubTypeRow_0" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_inner")
+
+[node name="RowLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_0"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_0/RowLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Sub-type 0"
+
+[node name="PitchLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_0/RowLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Pitch placeholder"
+autowrap_mode = 2
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_0"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+[node name="SubTypeRow_1" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_inner")
+
+[node name="RowLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_1/RowLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Sub-type 1"
+
+[node name="PitchLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_1/RowLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Pitch placeholder"
+autowrap_mode = 2
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_1"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+[node name="SubTypeRow_2" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_inner")
+
+[node name="RowLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_2/RowLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Sub-type 2"
+
+[node name="PitchLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_2/RowLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Pitch placeholder"
+autowrap_mode = 2
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_2"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+[node name="SubTypeRow_3" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_inner")
+
+[node name="RowLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_3/RowLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Sub-type 3"
+
+[node name="PitchLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_3/RowLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Pitch placeholder"
+autowrap_mode = 2
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_3"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+[node name="SubTypeRow_4" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_row_inner")
+
+[node name="RowLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_4/RowLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Sub-type 4"
+
+[node name="PitchLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_4/RowLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Pitch placeholder"
+autowrap_mode = 2
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_4"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+; =========================================================================
+;  CENTER COLUMN — feature grid
+; =========================================================================
+[node name="CenterColumn" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 4.6
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="CenterVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "ÖZELLİKLER"
+
+[node name="SelectionCounterLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "0 / 4 seçili — min 2"
+
+[node name="ContextLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+text = ""
+
+[node name="EmptyInstructionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 13
+text = "Önce soldan bir ürün tipi seç."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="FeatureGrid" type="GridContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
+
+; ----- FeatureCard_0..6 (7 cards, hide beyond pool size) -----
+[node name="FeatureCard_0" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="CardLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Feature"
+
+[node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Voice"
+autowrap_mode = 2
+
+[node name="ComplexityRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Karmaşıklık"
+
+[node name="Complexity" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+[node name="FeatureCard_1" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="CardLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Feature"
+
+[node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Voice"
+autowrap_mode = 2
+
+[node name="ComplexityRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Karmaşıklık"
+
+[node name="Complexity" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+[node name="FeatureCard_2" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="CardLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Feature"
+
+[node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Voice"
+autowrap_mode = 2
+
+[node name="ComplexityRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Karmaşıklık"
+
+[node name="Complexity" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+[node name="FeatureCard_3" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="CardLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Feature"
+
+[node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Voice"
+autowrap_mode = 2
+
+[node name="ComplexityRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Karmaşıklık"
+
+[node name="Complexity" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+[node name="FeatureCard_4" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="CardLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Feature"
+
+[node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Voice"
+autowrap_mode = 2
+
+[node name="ComplexityRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Karmaşıklık"
+
+[node name="Complexity" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+[node name="FeatureCard_5" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="CardLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Feature"
+
+[node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Voice"
+autowrap_mode = 2
+
+[node name="ComplexityRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Karmaşıklık"
+
+[node name="Complexity" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+[node name="FeatureCard_6" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="CardLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "Feature"
+
+[node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Voice"
+autowrap_mode = 2
+
+[node name="ComplexityRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Karmaşıklık"
+
+[node name="Complexity" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow/Complexity"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_font_sizes/font_size = 12
+text = "●"
+
+[node name="SelectedBorder" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
+
+; =========================================================================
+;  RIGHT COLUMN — projection panel
+; =========================================================================
+[node name="RightColumn" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.8
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="RightVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "TAHMİN"
+
+[node name="ProjectionList" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+; ProjectionRow_* (8 rows)
+[node name="Row_SubType" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_SubType"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "ÜRÜN TİPİ"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_SubType"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_SubType"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+horizontal_alignment = 2
+
+[node name="Row_FeatureCount" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_FeatureCount"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "ÖZELLİK SAYISI"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_FeatureCount"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_FeatureCount"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+horizontal_alignment = 2
+
+[node name="Row_Duration" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_Duration"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "TAHMİNİ SÜRE"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_Duration"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_Duration"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+horizontal_alignment = 2
+
+[node name="Row_ShipDate" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_ShipDate"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "TAHMİNİ BİTİŞ"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_ShipDate"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_ShipDate"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+horizontal_alignment = 2
+
+[node name="Row_QualityCeiling" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_QualityCeiling"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "KALİTE TAVANI"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_QualityCeiling"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_QualityCeiling"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+horizontal_alignment = 2
+
+[node name="Row_BugRisk" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_BugRisk"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "BUG RİSKİ"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_BugRisk"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_BugRisk"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+horizontal_alignment = 2
+
+[node name="Row_RunwayCost" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayCost"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "RUNWAY MALİYETİ"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayCost"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayCost"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+horizontal_alignment = 2
+
+[node name="Row_RunwayAfter" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayAfter"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "BUILD SONRASI RUNWAY"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayAfter"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayAfter"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+horizontal_alignment = 2
+
+[node name="RightSeparator" type="HSeparator" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox"]
+layout_mode = 2
+
+[node name="MentorAdvisoryLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+text = "Soldan başla. Ne yaptığımıza karar verelim."
+autowrap_mode = 2
+vertical_alignment = 0
+
+; =========================================================================
+;  CommitBar + ReasonLabel
+; =========================================================================
+[node name="CommitBar" type="Button" parent="Margin/Layout/BuildStateRoot/DesignDocumentView"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+disabled = true
+text = "BUILD'İ BAŞLAT"
+
+[node name="ReasonLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "Ürün tipi ve en az 2 özellik seç."
+horizontal_alignment = 1
+
+; =========================================================================
+;  BuildProgressView — §B
+; =========================================================================
+[node name="BuildProgressView" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="BuildHeaderPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="HeaderLayout" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SubTypeLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "—"
+
+[node name="DotSep0" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 14
+text = "·"
+
+[node name="FeaturesLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+text = "—"
+autowrap_mode = 2
+
+[node name="DotSep1" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 14
+text = "·"
+
+[node name="EngineerLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+text = "Mühendis: —"
+
+[node name="BottomRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+; ---- ProgressPanel (LEFT) ----
+[node name="ProgressPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 6.2
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="ProgressLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PhaseSegmentedBar" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 18)
+theme_override_constants/separation = 4
+
+[node name="IterationBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 9.0
+max_value = 9.0
+value = 0.0
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fg")
+
+[node name="PolishBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+max_value = 3.0
+value = 0.0
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fg")
+
+[node name="ProgressCaption" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+
+[node name="FeedSeparator" type="HSeparator" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
+layout_mode = 2
+
+[node name="FeedHeader" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "GÜNLÜK GELİŞİM"
+
+[node name="FeedScroll" type="ScrollContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="FeedList" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/FeedScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+; ---- StatusPanel (RIGHT) ----
+[node name="StatusPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 3.6
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="StatusLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StatusHeader" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "DURUM"
+
+[node name="StatRow_Quality" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Kalite"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+
+[node name="StatRow_Bugs" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bug_normal")
+
+[node name="BugLayout" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Bug riski"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+
+[node name="StatRow_Phase" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Faz"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "İterasyon"
+
+[node name="StatRow_Remaining" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Kalan"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+
+[node name="StatusSeparator" type="HSeparator" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+
+[node name="MentorMiniHeader" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "MENTOR"
+
+[node name="MentorLineLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+text = "İzliyorum."
+autowrap_mode = 2
+
+; =========================================================================
+;  PolishProgressView — §C
+; =========================================================================
+[node name="PolishProgressView" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="BuildHeaderPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="HeaderLayout" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SubTypeLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "—"
+
+[node name="DotSep0" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 14
+text = "·"
+
+[node name="FeaturesLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+text = "—"
+autowrap_mode = 2
+
+[node name="DotSep1" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 14
+text = "·"
+
+[node name="EngineerLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+text = "Mühendis: —"
+
+[node name="BottomRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="ProgressPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 6.2
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="ProgressLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PhaseSegmentedBar" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 18)
+theme_override_constants/separation = 4
+
+[node name="IterationBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 9.0
+max_value = 9.0
+value = 9.0
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fg")
+
+[node name="PolishBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+max_value = 3.0
+value = 0.0
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fg")
+
+[node name="ProgressCaption" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+
+[node name="FeedSeparator" type="HSeparator" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
+layout_mode = 2
+
+[node name="FeedHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "GÜNLÜK GELİŞİM"
+
+[node name="FeedScroll" type="ScrollContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="FeedList" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/FeedScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="StatusPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 3.6
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="StatusLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StatusHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "DURUM"
+
+[node name="StatRow_Quality" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Kalite"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+
+[node name="StatRow_Bugs" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bug_normal")
+
+[node name="BugLayout" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Bug"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+
+[node name="StatRow_Phase" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Faz"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "Polish"
+
+[node name="StatRow_Remaining" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "Kalan"
+
+[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+
+[node name="StatusSeparator" type="HSeparator" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+
+[node name="MentorMiniHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_constants/letter_spacing = 1
+theme_override_font_sizes/font_size = 10
+text = "MENTOR"
+
+[node name="MentorLineLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+text = "Bugları çöz."
+autowrap_mode = 2
+
+[node name="ShipNowButton" type="Button" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "ŞİMDİ SHIP'LE"
+
+; =========================================================================
+;  PostShipView — PostShip sales phase, B2C/B2B aware (Spec PostShip §F)
+; =========================================================================
+[node name="PostShipView" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="PostShipTitle" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.733, 0.471, 1)
+theme_override_font_sizes/font_size = 22
+text = "Ürün canlı"
+
+[node name="StatusPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PostShipView"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="StatusVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipView/StatusPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="StatusHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/StatusPanel/StatusVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "GÜNCEL DURUM"
+
+[node name="StatusBody" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/StatusPanel/StatusVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "—"
+autowrap_mode = 2
+
+[node name="FrankPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PostShipView"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="FrankVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipView/FrankPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="FrankHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/FrankPanel/FrankVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "FRANK"
+
+[node name="FrankLine" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/FrankPanel/FrankVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+text = "—"
+autowrap_mode = 2
+
+[node name="TractionPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PostShipView"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+
+[node name="TractionVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipView/TractionPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TractionHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/TractionPanel/TractionVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+text = "TRACTION'A DOĞRU"
+
+[node name="TractionBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/PostShipView/TractionPanel/TractionVBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+max_value = 1.0
+value = 0.0
+show_percentage = false
+
+[node name="TractionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/TractionPanel/TractionVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 11
+text = "—"
+
+[node name="SalesHintButton" type="Button" parent="Margin/Layout/BuildStateRoot/PostShipView"]
+layout_mode = 2
+text = "Sales sekmesine git →"

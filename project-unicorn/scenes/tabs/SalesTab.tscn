@@ -1,0 +1,136 @@
+[gd_scene format=3 uid="uid://salestab0001"]
+
+[ext_resource type="Script" path="res://scripts/tabs/sales_tab.gd" id="1_sales"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.165, 0.137, 0.106, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+
+[node name="SalesTab" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sales")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleBar" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Margin/Layout/TitleBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Sales"
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 22
+
+[node name="MetricsLabel" type="Label" parent="Margin/Layout/TitleBar"]
+layout_mode = 2
+text = "—"
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="Separator" type="HSeparator" parent="Margin/Layout"]
+layout_mode = 2
+
+[node name="Columns" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="ProspectsPanel" type="PanelContainer" parent="Margin/Layout/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="PVBox" type="VBoxContainer" parent="Margin/Layout/Columns/ProspectsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PHeader" type="HBoxContainer" parent="Margin/Layout/Columns/ProspectsPanel/PVBox"]
+layout_mode = 2
+
+[node name="PHeaderLabel" type="Label" parent="Margin/Layout/Columns/ProspectsPanel/PVBox/PHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "PROSPECTS"
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+
+[node name="FindButton" type="Button" parent="Margin/Layout/Columns/ProspectsPanel/PVBox/PHeader"]
+layout_mode = 2
+text = "+ Prospect bul"
+
+[node name="ProspectsEmpty" type="Label" parent="Margin/Layout/Columns/ProspectsPanel/PVBox"]
+layout_mode = 2
+text = "Henüz prospect yok. Frank biriyle tanıştırabilir."
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 2
+
+[node name="ProspectsScroll" type="ScrollContainer" parent="Margin/Layout/Columns/ProspectsPanel/PVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ProspectsList" type="VBoxContainer" parent="Margin/Layout/Columns/ProspectsPanel/PVBox/ProspectsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="CustomersPanel" type="PanelContainer" parent="Margin/Layout/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="CVBox" type="VBoxContainer" parent="Margin/Layout/Columns/CustomersPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CHeaderLabel" type="Label" parent="Margin/Layout/Columns/CustomersPanel/CVBox"]
+layout_mode = 2
+text = "MÜŞTERİLER"
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 10
+
+[node name="CustomersEmpty" type="Label" parent="Margin/Layout/Columns/CustomersPanel/CVBox"]
+layout_mode = 2
+text = "Henüz müşteri yok."
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 2
+
+[node name="CustomersScroll" type="ScrollContainer" parent="Margin/Layout/Columns/CustomersPanel/CVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CustomersList" type="VBoxContainer" parent="Margin/Layout/Columns/CustomersPanel/CVBox/CustomersScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6

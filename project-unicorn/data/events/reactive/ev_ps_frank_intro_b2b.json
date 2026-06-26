@@ -1,0 +1,27 @@
+{
+  "id": "ev_ps_frank_intro_b2b",
+  "category": "reactive",
+  "title": "Frank bir kapı aralıyor",
+  "subtitle": "Telefon · 10:20",
+  "illustration_path": "",
+  "character_id": "char_mentor_frank",
+  "body_text": "Frank kahvesini bitiriyor.\n\n\"Tanıdığım biri var. Operasyon müdürü. Şu yeni şeyini görmek istiyor — toplantı ayarladım.\"\n\n\"Hazırlıklı git. Yumuşatma. Sales sekmesinde seni bekliyor olacak.\"",
+  "trigger_conditions": [
+    {"type": "mvp_shipped", "value": true},
+    {"type": "market_type", "value": "b2b"}
+  ],
+  "cooldown_days": 0,
+  "one_shot": true,
+  "priority": 5,
+  "choices": [
+    {
+      "label": "Tamam — hazırlanayım",
+      "modifiers": [
+        {"type": "add_prospect", "archetype": "mid", "source": "frank_intro"},
+        {"type": "mentor_advisory", "text": "İlk pitch'in Sales sekmesinde. Yumuşatma, ürünü göster."}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

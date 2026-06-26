@@ -1,0 +1,42 @@
+{
+  "id": "ev_ps_referral_b2b",
+  "category": "opportunity",
+  "title": "Patronun arkadaşı",
+  "subtitle": "E-posta · 13:05",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Mevcut müşterilerinden biri yazmış: *\"Bir arkadaşıma senden bahsettim, o da ilgileniyor.\"*\n\nAltında bir şart var: \"Tek bir şey — şu özelliği ekleyebilir misin? İkimiz de kullanırız.\"\n\nYeni bir kapı — ama roadmap'ine bir borç yazıyor.",
+  "trigger_conditions": [
+    {"type": "market_type", "value": "b2b"},
+    {"type": "customer_count_min", "value": 1},
+    {"type": "random", "chance": 0.3}
+  ],
+  "cooldown_days": 12,
+  "one_shot": false,
+  "priority": 1,
+  "choices": [
+    {
+      "label": "Kabul et — feature sözü ver",
+      "modifiers": [
+        {"type": "add_prospect", "archetype": "mid", "source": "referral"},
+        {"type": "set_flag", "key": "feature_debt", "value": true}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Pazarlık et — söz verme",
+      "modifiers": [
+        {"type": "add_prospect", "archetype": "small", "source": "referral"}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Reddet — roadmap temiz kalsın",
+      "modifiers": [],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

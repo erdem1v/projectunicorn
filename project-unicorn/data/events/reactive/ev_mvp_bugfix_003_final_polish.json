@@ -1,0 +1,33 @@
+{
+  "id": "ev_mvp_bugfix_003_final_polish",
+  "category": "reactive",
+  "title": "Küçük bir cila fırsatı",
+  "subtitle": "Demo videosu · 23:51",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Ekran kaydı çekiyorsun, izliyorsun. Bir geçiş kaba. Bir font hizalaması yamuk. Bir hata mesajı pek anlamsız.\n\nHepsi tek tek küçük. Hepsi birlikte... fark eder mi? Belki. Belki etmez.\n\n*'Detaylar mühim'* diyenlerle *'çık önce'* diyenler aynı anda kafanın içinde konuşuyor. İkisi de tanıdık ses.",
+  "trigger_conditions": [
+    {"type": "build_phase", "value": "bugfix"},
+    {"type": "random", "chance": 0.25}
+  ],
+  "cooldown_days": 12,
+  "one_shot": false,
+  "priority": 0,
+  "choices": [
+    {
+      "label": "Vakit harca, cila çek",
+      "modifiers": [
+        {"type": "quality_bonus", "amount": 3},
+        {"type": "speed_bonus", "days": 1}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Yeterince iyi — devam",
+      "modifiers": [],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

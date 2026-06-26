@@ -1,0 +1,38 @@
+{
+  "id": "ev_debug_003_cash_warning",
+  "category": "reactive",
+  "title": "Frank arıyor — runway",
+  "subtitle": "Telefon · 09:45 [DEBUG]",
+  "illustration_path": "",
+  "character_id": "char_mentor_frank",
+  "body_text": "Frank sabah ilk işi aradı. *'Şu kasaya bir bak,'* diyor. **Üç haftalık runway**. Bir şey kesmek gerekiyor — ama hangisi? [DEBUG content]",
+  "trigger_conditions": [
+    {"type": "cash_below", "value": 30000}
+  ],
+  "cooldown_days": 0,
+  "one_shot": true,
+  "priority": 10,
+  "choices": [
+    {
+      "label": "Tool harcamasını kıs (acılı)",
+      "modifiers": [
+        {"type": "cash", "delta": 5000},
+        {"type": "morale_all_employees", "delta": -3}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Küçük bir köprü turu denesem? [NOT IMPLEMENTED]",
+      "modifiers": [],
+      "unlock_condition": {"type": "phase", "value": 99},
+      "unlock_reason_text": "VC sistemi henüz yok"
+    },
+    {
+      "label": "Mevcut yolda devam et, sayıları izle",
+      "modifiers": [],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

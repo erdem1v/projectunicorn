@@ -1,0 +1,440 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/onboarding/steps/trait_step.gd" id="1_trait"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.165, 0.137, 0.106, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.27, 0.22, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_selected"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.78, 0.4, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="TraitStep" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_trait")
+
+[node name="Intro" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 28.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 14
+text = "Bir pozitif + bir negatif trait seç. Her ikisi de zorunlu — yetenek bedelle birlikte gelir."
+
+[node name="Cols" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 56.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 24
+
+[node name="Positive" type="VBoxContainer" parent="Cols"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Header" type="Label" parent="Cols/Positive"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 0.62, 1)
+theme_override_font_sizes/font_size = 16
+text = "POZİTİF"
+
+[node name="Cards" type="VBoxContainer" parent="Cols/Positive"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="Charismatic" type="Panel" parent="Cols/Positive/Cards"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 60)
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Cols/Positive/Cards/Charismatic"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Cols/Positive/Cards/Charismatic"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="Cols/Positive/Cards/Charismatic/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Charismatic"
+
+[node name="Desc" type="Label" parent="Cols/Positive/Cards/Charismatic/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 12
+text = "İnsanları okumakta usta. Pitch ve scandal recovery'de güçlü. [DEBUG]"
+autowrap_mode = 2
+
+[node name="Pragmatic" type="Panel" parent="Cols/Positive/Cards"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 60)
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Cols/Positive/Cards/Pragmatic"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Cols/Positive/Cards/Pragmatic"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="Cols/Positive/Cards/Pragmatic/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Pragmatic"
+
+[node name="Desc" type="Label" parent="Cols/Positive/Cards/Pragmatic/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 12
+text = "Mükemmel yerine 'yeterince iyi'yi seçer. Ship hızı bonus. [DEBUG]"
+autowrap_mode = 2
+
+[node name="TechVisionary" type="Panel" parent="Cols/Positive/Cards"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 60)
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Cols/Positive/Cards/TechVisionary"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Cols/Positive/Cards/TechVisionary"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="Cols/Positive/Cards/TechVisionary/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Technical Visionary"
+
+[node name="Desc" type="Label" parent="Cols/Positive/Cards/TechVisionary/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 12
+text = "Stack seçimleri ileri görüşlü. R&D çıktısı bonus. [DEBUG]"
+autowrap_mode = 2
+
+[node name="Resilient" type="Panel" parent="Cols/Positive/Cards"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 60)
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Cols/Positive/Cards/Resilient"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Cols/Positive/Cards/Resilient"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="Cols/Positive/Cards/Resilient/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Resilient"
+
+[node name="Desc" type="Label" parent="Cols/Positive/Cards/Resilient/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 12
+text = "Sert event'lerden hızlı toparlanır. Morale recovery. [DEBUG]"
+autowrap_mode = 2
+
+[node name="Negative" type="VBoxContainer" parent="Cols"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Header" type="Label" parent="Cols/Negative"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.6, 0.55, 1)
+theme_override_font_sizes/font_size = 16
+text = "NEGATİF"
+
+[node name="Cards" type="VBoxContainer" parent="Cols/Negative"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="ImposterSyndrome" type="Panel" parent="Cols/Negative/Cards"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 60)
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Cols/Negative/Cards/ImposterSyndrome"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Cols/Negative/Cards/ImposterSyndrome"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="Cols/Negative/Cards/ImposterSyndrome/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Imposter Syndrome"
+
+[node name="Desc" type="Label" parent="Cols/Negative/Cards/ImposterSyndrome/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 12
+text = "Yüksek-stake'li pitch'lerde performans cezası. [DEBUG]"
+autowrap_mode = 2
+
+[node name="ConflictAvoidant" type="Panel" parent="Cols/Negative/Cards"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 60)
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Cols/Negative/Cards/ConflictAvoidant"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Cols/Negative/Cards/ConflictAvoidant"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="Cols/Negative/Cards/ConflictAvoidant/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Conflict Avoidant"
+
+[node name="Desc" type="Label" parent="Cols/Negative/Cards/ConflictAvoidant/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 12
+text = "Zor employee konuşmalarından kaçınır. Morale erozyon riski. [DEBUG]"
+autowrap_mode = 2
+
+[node name="BurntOut" type="Panel" parent="Cols/Negative/Cards"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 60)
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Cols/Negative/Cards/BurntOut"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Cols/Negative/Cards/BurntOut"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="Cols/Negative/Cards/BurntOut/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Burnt-Out"
+
+[node name="Desc" type="Label" parent="Cols/Negative/Cards/BurntOut/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 12
+text = "Founder training pencereleri arası daha kısa. [DEBUG]"
+autowrap_mode = 2
+
+[node name="Stubborn" type="Panel" parent="Cols/Negative/Cards"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 60)
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Cols/Negative/Cards/Stubborn"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Cols/Negative/Cards/Stubborn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="Cols/Negative/Cards/Stubborn/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Stubborn"
+
+[node name="Desc" type="Label" parent="Cols/Negative/Cards/Stubborn/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 12
+text = "Pivot maliyeti yüksek. Strategic flexibility cezası. [DEBUG]"
+autowrap_mode = 2

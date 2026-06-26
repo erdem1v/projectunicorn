@@ -1,0 +1,45 @@
+{
+  "id": "ev_debug_001_engineer_workload",
+  "category": "reactive",
+  "title": "Mühendisin mola istiyor",
+  "subtitle": "Ofis · 18:30 [DEBUG]",
+  "illustration_path": "",
+  "character_id": "char_debug_eng_a",
+  "body_text": "**Debug Engineer A** son sprint'i bitirip masada uyukladı. Sabah erken geldi, akşam geç çıkıyor. Bir kahve daha içip 'tamam' diyor — ama gözleri *biraz çukurlanmış*. [DEBUG content]",
+  "trigger_conditions": [
+    {"type": "day_min", "value": 3},
+    {"type": "random", "chance": 0.30}
+  ],
+  "cooldown_days": 14,
+  "one_shot": false,
+  "priority": 0,
+  "choices": [
+    {
+      "label": "Bu hafta izin ver",
+      "modifiers": [
+        {"type": "morale", "character_id": "char_debug_eng_a", "delta": 5},
+        {"type": "cash", "delta": -2000}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Deadline'a kadar bastır",
+      "modifiers": [
+        {"type": "morale", "character_id": "char_debug_eng_a", "delta": -3},
+        {"type": "brand", "delta": 1}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Yardımcı bir mühendis daha al",
+      "modifiers": [
+        {"type": "cash", "delta": -8000},
+        {"type": "morale", "character_id": "char_debug_eng_a", "delta": 3}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

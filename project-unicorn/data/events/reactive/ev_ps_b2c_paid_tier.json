@@ -1,0 +1,34 @@
+{
+  "id": "ev_ps_b2c_paid_tier",
+  "category": "reactive",
+  "title": "Fiyatlandırma kararı",
+  "subtitle": "Mutfak masası · 21:40",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Ürün canlı. Birkaç yüz kişi deniyor, kimse para vermiyor — çünkü daha istemedin.\n\nParayı masaya koyma vakti. **Düşük tut**: daha çok kişi öder, her biri az. **Yüksek tut**: az kişi öder, her biri değerli.\n\nİlk fiyat, ürünün ne kadar değerli göründüğünü söyler.",
+  "trigger_conditions": [
+    {"type": "market_type", "value": "b2c"},
+    {"type": "audience_above", "value": 15}
+  ],
+  "cooldown_days": 0,
+  "one_shot": true,
+  "priority": 6,
+  "choices": [
+    {
+      "label": "Düşük fiyat — kitleyi paraya çevir",
+      "modifiers": [
+        {"type": "open_paid_tier", "price": 12, "initial_pct": 0.10}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Yüksek fiyat — değerine güven",
+      "modifiers": [
+        {"type": "open_paid_tier", "price": 25, "initial_pct": 0.04}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

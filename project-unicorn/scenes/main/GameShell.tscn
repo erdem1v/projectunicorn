@@ -1,0 +1,96 @@
+[gd_scene format=3 uid="uid://60d0rg15pih3"]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/components/TopBar.tscn" id="1_topbar"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/LeftTabs.tscn" id="2_lefttabs"]
+[ext_resource type="Script" uid="uid://uw5ybisq8fg0" path="res://scripts/ui/components/center_viewport.gd" id="3_center"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/RightPanel.tscn" id="4_rightpanel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/NewsTicker.tscn" id="5_newsticker"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/BuildHUDPanel.tscn" id="6_buildhud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_center"]
+bg_color = Color(0.165, 0.137, 0.106, 1)
+
+[node name="GameShell" type="Control" unique_id=1712078200]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopBar" parent="." unique_id=367670588 instance=ExtResource("1_topbar")]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 44.0
+grow_horizontal = 2
+
+[node name="MidRow" type="HBoxContainer" parent="." unique_id=1513243657]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 44.0
+offset_bottom = -32.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="LeftTabs" parent="MidRow" unique_id=819207523 instance=ExtResource("2_lefttabs")]
+layout_mode = 2
+
+[node name="CenterViewport" type="Panel" parent="MidRow" unique_id=394671301]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_center")
+script = ExtResource("3_center")
+
+[node name="Content" type="VBoxContainer" parent="MidRow/CenterViewport" unique_id=1402910700]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -32.0
+offset_right = 160.0
+offset_bottom = 32.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="MidRow/CenterViewport/Content" unique_id=2635425]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_font_sizes/font_size = 22
+text = "PRODUCT"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="MidRow/CenterViewport/Content" unique_id=1623746070]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 11
+text = "Content coming"
+horizontal_alignment = 1
+
+[node name="RightPanel" parent="MidRow" unique_id=1658491149 instance=ExtResource("4_rightpanel")]
+layout_mode = 2
+
+[node name="NewsTicker" parent="." unique_id=795198888 instance=ExtResource("5_newsticker")]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -32.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ModalLayer" type="CanvasLayer" parent="." unique_id=1292228396]
+layer = 10
+
+[node name="BuildHUD" parent="MidRow/CenterViewport" instance=ExtResource("6_buildhud")]

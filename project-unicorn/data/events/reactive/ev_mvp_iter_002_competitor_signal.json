@@ -1,0 +1,35 @@
+{
+  "id": "ev_mvp_iter_002_competitor_signal",
+  "category": "reactive",
+  "title": "Rakip benzer şey duyurdu",
+  "subtitle": "Twitter · 11:02",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Sabah feed'i karıştırırken bir thread denk geldi. **Y Combinator W26 batch'inden bir ekip** — neredeyse aynı problemi vuruyorlar. Onların post'u temiz, demo video pürüzsüz, comment'ler iyi.\n\nİlk içgüdü: panik. İkinci içgüdü: *'Bizimkini onların yapamadığı bir şeye eğip ayrışalım.'*\n\nÜçüncü içgüdü, bir saat sonra geliyor: belki ikisi de yanlış cevap.",
+  "trigger_conditions": [
+    {"type": "build_phase", "value": "iteration"},
+    {"type": "random", "chance": 0.25}
+  ],
+  "cooldown_days": 21,
+  "one_shot": false,
+  "priority": 0,
+  "choices": [
+    {
+      "label": "Tasarımı onların eksik yerine eğ",
+      "modifiers": [
+        {"type": "set_flag", "key": "pivot_versus_rakip", "value": true},
+        {"type": "speed_bonus", "days": 1}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Kendi yolundan sapma",
+      "modifiers": [
+        {"type": "brand", "delta": 1}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

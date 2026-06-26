@@ -1,0 +1,185 @@
+extends Control
+
+# Right-top compact build panel — Software Inc. fidelity. Lives inside
+# CenterViewport (the desk area) as a child Control, not RightPanel. The root
+# is a full-rect, mouse-ignore Control so desk clicks pass through; only the
+# inner Panel/buttons capture input. (Was a root CanvasLayer that floated over
+# the whole screen / RightPanel — now confined to the desk, clipped by
+# CenterViewport.clip_contents.) Visible only while a build is active. Faz-aware:
+#   iteration → kalite + bug-risk + [Bir iterasyon daha] [Development'a geç]
+#   development → kalite + bug + progress bar (no buttons, auto-tick)
+#   bugfix → kalite + canlı bug count + [LAUNCH]
+#
+# Signal-driven refresh (no _process poll): EventBus.build_phase_changed +
+# build_iteration_decision_pending + day_advanced are enough. Refresh is also
+# called on _ready in case we mount mid-build (e.g. save load).
+#
+# process_mode = ALWAYS so the panel stays interactive while the tree is
+# paused (event modals up, etc) — same gotcha as ModalLayer / MCPRuntime.
+
+@onready var root_panel: PanelContainer = $Root/Panel
+@onready var product_name_label: Label = $Root/Panel/VBox/HeaderRow/ProductNameLabel
+@onready var phase_label: Label = $Root/Panel/VBox/HeaderRow/PhaseLabel
+@onready var quality_label: Label = $Root/Panel/VBox/StatsRow/QualityLabel
+@onready var bugs_label: Label = $Root/Panel/VBox/StatsRow/BugsLabel
+@onready var progress_bar: ProgressBar = $Root/Panel/VBox/ProgressBar
+@onready var iteration_button: Button = $Root/Panel/VBox/ButtonRow/IterationButton
+@onready var development_button: Button = $Root/Panel/VBox/ButtonRow/DevelopmentButton
+@onready var launch_button: Button = $Root/Panel/VBox/ButtonRow/LaunchButton
+
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	iteration_button.pressed.connect(_on_iteration_pressed)
+	development_button.pressed.connect(_on_development_pressed)
+	launch_button.pressed.connect(_on_launch_pressed)
+	EventBus.build_phase_changed.connect(_on_build_phase_changed)
+	EventBus.build_iteration_decision_pending.connect(_on_decision_pending_changed)
+	EventBus.day_advanced.connect(_on_day_advanced)
+	_refresh()
+
+
+func _exit_tree() -> void:
+	if EventBus.build_phase_changed.is_connected(_on_build_phase_changed):
+		EventBus.build_phase_changed.disconnect(_on_build_phase_changed)
+	if EventBus.build_iteration_decision_pending.is_connected(_on_decision_pending_changed):
+		EventBus.build_iteration_decision_pending.disconnect(_on_decision_pending_changed)
+	if EventBus.day_advanced.is_connected(_on_day_advanced):
+		EventBus.day_advanced.disconnect(_on_day_advanced)
+
+
+func _on_build_phase_changed(_new_phase: String) -> void:
+	_refresh()
+
+
+func _on_decision_pending_changed(_pending: bool) -> void:
+	_refresh()
+
+
+func _on_day_advanced(_new_day: int) -> void:
+	_refresh()
+
+
+func _refresh() -> void:
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if b == null:
+		visible = false
+		return
+	visible = true
+
+	# Header — sub-type name + phase label
+	product_name_label.text = _sub_type_display(b.sub_product_type_id)
+	phase_label.text = _phase_display(b)
+
+	# Stats row — quality always; bug rendering varies a touch by phase
+	quality_label.text = "Kalite %d" % b.quality
+	bugs_label.text = _bugs_display(b)
+
+	# Progress bar — drives off phase counter
+	_paint_progress(b)
+
+	# Buttons — set visible + disabled per phase
+	_paint_buttons(b)
+
+
+func _sub_type_display(sub_type_id: String) -> String:
+	if sub_type_id == "":
+		return "Build"
+	var data: Dictionary = ProductCatalog.get_sub_product_type_by_id(sub_type_id)
+	if data.is_empty():
+		return sub_type_id
+	return String(data.get("name", sub_type_id))
+
+
+func _phase_display(b: FeatureBuild) -> String:
+	match b.current_phase:
+		"iteration":
+			return "Designing — Iteration %d" % b.iteration_count
+		"development":
+			return "Development"
+		"bugfix", "polish":
+			return "Bug Fixing"
+		_:
+			return b.current_phase.capitalize()
+
+
+func _bugs_display(b: FeatureBuild) -> String:
+	match b.current_phase:
+		"iteration":
+			# Bug riski seviyesi olarak hafif bir kategorize ver; ham sayı da
+			# parantezde.
+			var band: String = _bug_risk_band(b.bug_count)
+			return "Bug riski: %s (%d)" % [band, b.bug_count]
+		"development":
+			return "Bug: %d" % b.bug_count
+		"bugfix", "polish":
+			return "Bug: %d (azalıyor)" % b.bug_count
+		_:
+			return "Bug: %d" % b.bug_count
+
+
+func _bug_risk_band(count: int) -> String:
+	if count <= 2:
+		return "Düşük"
+	elif count <= 6:
+		return "Orta"
+	return "Yüksek"
+
+
+func _paint_progress(b: FeatureBuild) -> void:
+	match b.current_phase:
+		"iteration":
+			progress_bar.visible = true
+			progress_bar.max_value = float(max(1, ProductSystem.ITERATION_LENGTH_DAYS))
+			progress_bar.value = float(ProductSystem.ITERATION_LENGTH_DAYS - b.iteration_days_in_current)
+		"development":
+			progress_bar.visible = true
+			progress_bar.max_value = float(max(1, b.development_days_total))
+			progress_bar.value = float(b.development_days_elapsed)
+		"bugfix", "polish":
+			# Open-ended; hide the bar so it doesn't lie about an end-date.
+			progress_bar.visible = false
+		_:
+			progress_bar.visible = false
+
+
+func _paint_buttons(b: FeatureBuild) -> void:
+	match b.current_phase:
+		"iteration":
+			iteration_button.visible = true
+			development_button.visible = true
+			launch_button.visible = false
+			# Active only when the current iteration finished and we're waiting
+			# on the player. Visible-but-disabled otherwise so layout doesn't
+			# jump when the decision opens up.
+			var pending: bool = b.iteration_decision_pending
+			iteration_button.disabled = not pending
+			development_button.disabled = not pending
+		"development":
+			iteration_button.visible = false
+			development_button.visible = false
+			launch_button.visible = false
+		"bugfix", "polish":
+			iteration_button.visible = false
+			development_button.visible = false
+			launch_button.visible = true
+			launch_button.disabled = false
+		_:
+			iteration_button.visible = false
+			development_button.visible = false
+			launch_button.visible = false
+
+
+func _on_iteration_pressed() -> void:
+	ProductSystem.advance_iteration()
+	_refresh()
+
+
+func _on_development_pressed() -> void:
+	ProductSystem.enter_development()
+	_refresh()
+
+
+func _on_launch_pressed() -> void:
+	ProductSystem.launch()
+	_refresh()

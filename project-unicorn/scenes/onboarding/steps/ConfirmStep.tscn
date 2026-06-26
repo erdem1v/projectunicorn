@@ -1,0 +1,98 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/onboarding/steps/confirm_step.gd" id="1_confirm"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_summary"]
+bg_color = Color(0.165, 0.137, 0.106, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.27, 0.22, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 24.0
+content_margin_top = 24.0
+content_margin_right = 24.0
+content_margin_bottom = 24.0
+
+[node name="ConfirmStep" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_confirm")
+
+[node name="Intro" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 28.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 14
+text = "Seçimlerini onaylıyor musun? Founder hazır, sırada ürün var. Onayladıktan sonra geri dönemezsin."
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 56.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_summary")
+
+[node name="List" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="OriginLabel" type="Label" parent="Panel/List"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Origin · …"
+
+[node name="SkillsLabel" type="Label" parent="Panel/List"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Beceriler · …"
+
+[node name="TraitsLabel" type="Label" parent="Panel/List"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Trait'ler · …"
+
+[node name="SubgenreLabel" type="Label" parent="Panel/List"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Subgenre · …"
+
+[node name="CompanyLabel" type="Label" parent="Panel/List"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Şirket · …"
+autowrap_mode = 2
+
+[node name="FounderLabel" type="Label" parent="Panel/List"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 15
+text = "Founder · …"

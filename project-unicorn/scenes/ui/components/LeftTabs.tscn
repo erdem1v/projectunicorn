@@ -1,0 +1,566 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/components/left_tabs.gd" id="1_lefttabs"]
+
+[sub_resource type="StyleBoxFlat" id="panel_lefttabs"]
+bg_color = Color(0.102, 0.082, 0.063, 1)
+border_width_right = 1
+border_color = Color(1, 1, 1, 0.06)
+
+[sub_resource type="StyleBoxFlat" id="tab_btn_active"]
+bg_color = Color(0.196, 0.149, 0.106, 1)
+border_width_left = 2
+border_color = Color(0.91, 0.733, 0.471, 1)
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+
+[sub_resource type="StyleBoxFlat" id="tab_btn_idle"]
+bg_color = Color(0, 0, 0, 0)
+border_width_top = 1
+border_color = Color(1, 1, 1, 0.04)
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+
+[sub_resource type="StyleBoxFlat" id="badge_style"]
+bg_color = Color(0.78, 0.31, 0.31, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="LeftTabs" type="Panel"]
+custom_minimum_size = Vector2(84, 0)
+theme_override_styles/panel = SubResource("panel_lefttabs")
+script = ExtResource("1_lefttabs")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 8
+
+[node name="Col" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ProductBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_styles/normal = SubResource("tab_btn_active")
+theme_override_styles/hover = SubResource("tab_btn_active")
+theme_override_styles/pressed = SubResource("tab_btn_active")
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/ProductBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="IconLabel" type="Label" parent="Margin/Col/ProductBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 16
+text = "▣"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Margin/Col/ProductBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 11
+text = "Product"
+horizontal_alignment = 1
+
+[node name="Badge" type="Panel" parent="Margin/Col/ProductBtn"]
+visible = false
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 22.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("badge_style")
+
+[node name="BadgeLabel" type="Label" parent="Margin/Col/ProductBtn/Badge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HRBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_styles/normal = SubResource("tab_btn_idle")
+theme_override_styles/hover = SubResource("tab_btn_idle")
+theme_override_styles/pressed = SubResource("tab_btn_idle")
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/HRBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="IconLabel" type="Label" parent="Margin/Col/HRBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 16
+text = "◉"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Margin/Col/HRBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 11
+text = "HR"
+horizontal_alignment = 1
+
+[node name="Badge" type="Panel" parent="Margin/Col/HRBtn"]
+visible = false
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 22.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("badge_style")
+
+[node name="BadgeLabel" type="Label" parent="Margin/Col/HRBtn/Badge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FinanceBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_styles/normal = SubResource("tab_btn_idle")
+theme_override_styles/hover = SubResource("tab_btn_idle")
+theme_override_styles/pressed = SubResource("tab_btn_idle")
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/FinanceBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="IconLabel" type="Label" parent="Margin/Col/FinanceBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 16
+text = "$"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Margin/Col/FinanceBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 11
+text = "Finance"
+horizontal_alignment = 1
+
+[node name="Badge" type="Panel" parent="Margin/Col/FinanceBtn"]
+visible = false
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 22.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("badge_style")
+
+[node name="BadgeLabel" type="Label" parent="Margin/Col/FinanceBtn/Badge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SalesBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_styles/normal = SubResource("tab_btn_idle")
+theme_override_styles/hover = SubResource("tab_btn_idle")
+theme_override_styles/pressed = SubResource("tab_btn_idle")
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/SalesBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="IconLabel" type="Label" parent="Margin/Col/SalesBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 16
+text = "↗"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Margin/Col/SalesBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 11
+text = "Sales"
+horizontal_alignment = 1
+
+[node name="Badge" type="Panel" parent="Margin/Col/SalesBtn"]
+visible = false
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 22.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("badge_style")
+
+[node name="BadgeLabel" type="Label" parent="Margin/Col/SalesBtn/Badge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OpsBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_styles/normal = SubResource("tab_btn_idle")
+theme_override_styles/hover = SubResource("tab_btn_idle")
+theme_override_styles/pressed = SubResource("tab_btn_idle")
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/OpsBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="IconLabel" type="Label" parent="Margin/Col/OpsBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 16
+text = "◇"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Margin/Col/OpsBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 11
+text = "Ops"
+horizontal_alignment = 1
+
+[node name="Badge" type="Panel" parent="Margin/Col/OpsBtn"]
+visible = false
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 22.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("badge_style")
+
+[node name="BadgeLabel" type="Label" parent="Margin/Col/OpsBtn/Badge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RnDBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_styles/normal = SubResource("tab_btn_idle")
+theme_override_styles/hover = SubResource("tab_btn_idle")
+theme_override_styles/pressed = SubResource("tab_btn_idle")
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/RnDBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="IconLabel" type="Label" parent="Margin/Col/RnDBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 16
+text = "⚡"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Margin/Col/RnDBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 11
+text = "R&D"
+horizontal_alignment = 1
+
+[node name="Badge" type="Panel" parent="Margin/Col/RnDBtn"]
+visible = false
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 22.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("badge_style")
+
+[node name="BadgeLabel" type="Label" parent="Margin/Col/RnDBtn/Badge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PersonalBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_styles/normal = SubResource("tab_btn_idle")
+theme_override_styles/hover = SubResource("tab_btn_idle")
+theme_override_styles/pressed = SubResource("tab_btn_idle")
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/PersonalBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="IconLabel" type="Label" parent="Margin/Col/PersonalBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 16
+text = "★"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Margin/Col/PersonalBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 11
+text = "Personal"
+horizontal_alignment = 1
+
+[node name="Badge" type="Panel" parent="Margin/Col/PersonalBtn"]
+visible = false
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 22.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("badge_style")
+
+[node name="BadgeLabel" type="Label" parent="Margin/Col/PersonalBtn/Badge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EventsBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_styles/normal = SubResource("tab_btn_idle")
+theme_override_styles/hover = SubResource("tab_btn_idle")
+theme_override_styles/pressed = SubResource("tab_btn_idle")
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/EventsBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="IconLabel" type="Label" parent="Margin/Col/EventsBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 16
+text = "●"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Margin/Col/EventsBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_font_sizes/font_size = 11
+text = "Events"
+horizontal_alignment = 1
+
+[node name="Badge" type="Panel" parent="Margin/Col/EventsBtn"]
+visible = false
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -22.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 22.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("badge_style")
+
+[node name="BadgeLabel" type="Label" parent="Margin/Col/EventsBtn/Badge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1

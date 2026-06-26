@@ -1,0 +1,196 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/modals/event_modal.gd" id="1_event_modal"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.145, 0.122, 0.094, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.35, 0.27, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+bg_color = Color(0.55, 0.42, 0.18, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_art"]
+bg_color = Color(0.235, 0.196, 0.149, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pill"]
+bg_color = Color(0.65, 0.6, 0.5, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 6.0
+content_margin_bottom = 2.0
+
+[node name="EventModal" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_event_modal")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="CenterPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -270.0
+offset_right = 240.0
+offset_bottom = 270.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Body" type="VBoxContainer" parent="CenterPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="HeaderBand" type="HBoxContainer" parent="CenterPanel/Body"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_header")
+
+[node name="TitleLabel" type="Label" parent="CenterPanel/Body/HeaderBand"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.96, 0.92, 0.78, 1)
+theme_override_font_sizes/font_size = 16
+text = "Event title"
+
+[node name="IdCodeLabel" type="Label" parent="CenterPanel/Body/HeaderBand"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.92, 0.78, 1)
+theme_override_font_sizes/font_size = 11
+text = "EV · ###"
+vertical_alignment = 2
+
+[node name="ArtRegion" type="Panel" parent="CenterPanel/Body"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 120)
+theme_override_styles/panel = SubResource("StyleBoxFlat_art")
+
+[node name="ArtPlaceholderLabel" type="Label" parent="CenterPanel/Body/ArtRegion"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = -10.0
+offset_right = 60.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.55, 0.50, 0.42, 1)
+theme_override_font_sizes/font_size = 11
+text = "[illustration]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CaptionStrip" type="Label" parent="CenterPanel/Body/ArtRegion"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -22.0
+offset_left = 10.0
+offset_right = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 11
+text = "caption"
+
+[node name="CharacterContext" type="HBoxContainer" parent="CenterPanel/Body"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PortraitPanel" type="Panel" parent="CenterPanel/Body/CharacterContext"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_art")
+
+[node name="TextCol" type="VBoxContainer" parent="CenterPanel/Body/CharacterContext"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="NameRoleLabel" type="Label" parent="CenterPanel/Body/CharacterContext/TextCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 13
+text = "Name · Role"
+
+[node name="RelationshipPill" type="Label" parent="CenterPanel/Body/CharacterContext/TextCol"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_colors/font_color = Color(0.12, 0.1, 0.08, 1)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_pill")
+text = "NEUTRAL"
+
+[node name="TraitsLabel" type="Label" parent="CenterPanel/Body/CharacterContext/TextCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 11
+text = ""
+
+[node name="BodyRichText" type="RichTextLabel" parent="CenterPanel/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = false
+scroll_active = true
+autowrap_mode = 3
+theme_override_colors/default_color = Color(0.85, 0.79, 0.68, 1)
+theme_override_font_sizes/normal_font_size = 14
+text = ""
+
+[node name="ChoicesContainer" type="VBoxContainer" parent="CenterPanel/Body"]
+layout_mode = 2
+theme_override_constants/separation = 6

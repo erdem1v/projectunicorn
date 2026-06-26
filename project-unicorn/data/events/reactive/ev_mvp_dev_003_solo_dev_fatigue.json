@@ -1,0 +1,36 @@
+{
+  "id": "ev_mvp_dev_003_solo_dev_fatigue",
+  "category": "reactive",
+  "title": "Tek başına ağır",
+  "subtitle": "Yatak odası · 07:48",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Alarm çaldı, kalkmadın. On dakika sonra bir kez daha çaldı, hâlâ kalkmadın.\n\nDün gece üçte yattın, gözlerin yanıyor. Bir kullanıcı feedback'i yok, deadline yok — sadece sen ve laptop. **Yapmazsan kimse yapmayacak.** Yapsan da kimse görmeyecek.\n\nBir gün dinlensen — runway eriyor ama belki yarın daha iyi düşünürsün. Ya da bugün kendini zorlasan — bir şey daha biter ama hata yapma ihtimalin artar.",
+  "trigger_conditions": [
+    {"type": "build_phase", "value": "development"},
+    {"type": "random", "chance": 0.20}
+  ],
+  "cooldown_days": 20,
+  "one_shot": false,
+  "priority": 0,
+  "choices": [
+    {
+      "label": "Bugün kendine ver, yarın taze başla",
+      "modifiers": [
+        {"type": "speed_bonus", "days": 1},
+        {"type": "set_flag", "key": "founder_recovery", "value": true}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Zorla, kahve yap, masaya otur",
+      "modifiers": [
+        {"type": "quality_bonus", "amount": -2},
+        {"type": "set_flag", "key": "founder_fatigue", "value": true}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

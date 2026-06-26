@@ -1,0 +1,235 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/onboarding/steps/subgenre_step.gd" id="1_sub"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.165, 0.137, 0.106, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.27, 0.22, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_selected"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.78, 0.4, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
+bg_color = Color(0.55, 0.42, 0.18, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+content_margin_left = 8.0
+content_margin_top = 3.0
+content_margin_right = 8.0
+content_margin_bottom = 3.0
+
+[node name="SubgenreStep" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sub")
+
+[node name="Intro" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 28.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 14
+text = "Hangi pazarda doğacaksın? Subgenre component palette'ini ve büyüme profili tonunu belirler."
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 56.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 24
+
+[node name="AICard" type="Panel" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Row/AICard"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Row/AICard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="Row/AICard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 22
+text = "AI"
+
+[node name="Tagline" type="Label" parent="Row/AICard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "[DESIGNER REVIEW] Yüksek risk, yüksek tavan. Sıcak pazar, sert rekabet."
+autowrap_mode = 2
+
+[node name="Spacer" type="Control" parent="Row/AICard/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Palette" type="Label" parent="Row/AICard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 11
+text = "inference engine · vector DB · eval pipeline · multi-modal"
+autowrap_mode = 2
+
+[node name="SaaSCard" type="Panel" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="SelectedBorder" type="Panel" parent="Row/SaaSCard"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_selected")
+
+[node name="Body" type="VBoxContainer" parent="Row/SaaSCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="Row/SaaSCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 22
+text = "SaaS"
+
+[node name="Tagline" type="Label" parent="Row/SaaSCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "[DESIGNER REVIEW] Sürekli MRR, yavaş büyüme, savunulabilir marj."
+autowrap_mode = 2
+
+[node name="Spacer" type="Control" parent="Row/SaaSCard/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Palette" type="Label" parent="Row/SaaSCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 11
+text = "auth · integrations · analytics · admin"
+autowrap_mode = 2
+
+[node name="SocialCard" type="Panel" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Body" type="VBoxContainer" parent="Row/SocialCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="Row/SocialCard/Body"]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="Row/SocialCard/Body/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_font_sizes/font_size = 22
+text = "Social"
+
+[node name="Badge" type="Label" parent="Row/SocialCard/Body/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.92, 0.78, 1)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge")
+text = "ÇOK YAKINDA"
+
+[node name="Tagline" type="Label" parent="Row/SocialCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_font_sizes/font_size = 13
+text = "[DESIGNER REVIEW] Virality-driven, brand-volatile."
+autowrap_mode = 2
+
+[node name="Spacer" type="Control" parent="Row/SocialCard/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Palette" type="Label" parent="Row/SocialCard/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_font_sizes/font_size = 11
+text = "feed algorithm · moderation · ad system"
+autowrap_mode = 2

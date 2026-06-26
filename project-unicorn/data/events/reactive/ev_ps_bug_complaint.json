@@ -1,0 +1,46 @@
+{
+  "id": "ev_ps_bug_complaint",
+  "category": "scandal",
+  "title": "Bu çalışmıyor",
+  "subtitle": "Destek kutusu · 16:48",
+  "illustration_path": "",
+  "character_id": "",
+  "body_text": "Bir müşteri yüksek sesle şikayetçi: *\"Söz verdiğiniz şey çalışmıyor. Paramı boşa mı verdim?\"*\n\nDiğer müşteriler de okuyor. Sessizlik de bir cevap — ama yanlış olanı.",
+  "trigger_conditions": [
+    {"type": "customer_count_min", "value": 1},
+    {"type": "customer_satisfaction_below", "value": 60},
+    {"type": "random", "chance": 0.5}
+  ],
+  "cooldown_days": 8,
+  "one_shot": false,
+  "priority": 2,
+  "choices": [
+    {
+      "label": "Refund + özür dile",
+      "modifiers": [
+        {"type": "cash", "delta": -1500},
+        {"type": "satisfaction_delta", "delta": 20}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Hot-fix sözü ver",
+      "modifiers": [
+        {"type": "satisfaction_delta", "delta": 8},
+        {"type": "set_flag", "key": "hotfix_promised", "value": true}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    },
+    {
+      "label": "Görmezden gel",
+      "modifiers": [
+        {"type": "churn_customer"},
+        {"type": "brand", "delta": -2}
+      ],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}
