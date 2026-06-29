@@ -117,6 +117,7 @@ func _ready() -> void:
 	_wire_polish_view()
 	post_ship_sales_button.pressed.connect(_on_post_ship_sales_pressed)
 	EventBus.day_advanced.connect(_on_day_advanced)
+	EventBus.build_progress_changed.connect(_on_build_progress_changed)
 	EventBus.modal_requested.connect(_on_modal_requested_for_feed)
 	# PostShip repaint on sales-state changes (immediate feedback for revenue/leads).
 	EventBus.mrr_changed.connect(_on_sales_state_changed)
@@ -130,6 +131,8 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if EventBus.day_advanced.is_connected(_on_day_advanced):
 		EventBus.day_advanced.disconnect(_on_day_advanced)
+	if EventBus.build_progress_changed.is_connected(_on_build_progress_changed):
+		EventBus.build_progress_changed.disconnect(_on_build_progress_changed)
 	if EventBus.modal_requested.is_connected(_on_modal_requested_for_feed):
 		EventBus.modal_requested.disconnect(_on_modal_requested_for_feed)
 	for sig in [EventBus.mrr_changed, EventBus.customer_added, EventBus.customer_removed,
@@ -614,7 +617,11 @@ func _paint_post_ship() -> void:
 	if GameState.get_flag("ready_for_traction", false):
 		post_ship_traction_label.text = "Traction'a hazır — Frank'le konuş."
 	else:
-		post_ship_traction_label.text = "MRR $%d / $%d · %d müşteri" % [GameState.mrr, SalesSystem.TRACTION_MRR_TARGET, CustomerRegistry.get_active().size()]
+		# MRR is the canonical traction north-star (Faz 1 bug 1.5). The old label
+		# also showed a customer-record count, which for B2C is one aggregate
+		# record (never climbs) and contradicted the "ödeyen kullanıcı" seats line
+		# above it. Show MRR progress only.
+		post_ship_traction_label.text = "MRR $%d / $%d" % [GameState.mrr, SalesSystem.TRACTION_MRR_TARGET]
 
 
 func _on_post_ship_sales_pressed() -> void:
@@ -709,4 +716,13 @@ func _on_day_advanced(_new_day: int) -> void:
 				if not EventManager.has_pending():
 					_prepend_feed_entry(feed, GameState.day, "Sessiz bir gün.")
 	# Re-route + paint (build might have transitioned phase this tick).
+	_refresh_view()
+
+
+func _on_build_progress_changed() -> void:
+	# Fired at the end of ProductSystem.daily_tick, after the phase counter
+	# advanced. day_advanced already repainted with yesterday's value (it fires
+	# before the tick); repaint again with the post-tick value so the bar tracks
+	# the day correctly (Faz 1 bug 1.1). Feed bookkeeping stays in _on_day_advanced
+	# so entries are not duplicated.
 	_refresh_view()

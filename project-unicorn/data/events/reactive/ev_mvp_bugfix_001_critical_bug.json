@@ -11,7 +11,7 @@
     {"type": "random", "chance": 0.40}
   ],
   "cooldown_days": 14,
-  "one_shot": false,
+  "one_shot": true,
   "priority": 1,
   "choices": [
     {

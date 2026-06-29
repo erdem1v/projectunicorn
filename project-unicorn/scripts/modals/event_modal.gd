@@ -205,7 +205,16 @@ static func _markdown_to_bbcode(text: String) -> String:
 static func _drop_cap(text: String) -> String:
 	if text.length() == 0:
 		return text
-	return "[font_size=28]%s[/font_size]%s" % [text.substr(0, 1), text.substr(1)]
+	# Only drop-cap a real leading letter. If the body starts with a markdown
+	# marker ("*"/"**") or a BBCode tag ("["), wrapping just the first char in
+	# [font_size]…[/font_size] splits that marker, and the later markdown regex
+	# interleaves tags so RichTextLabel leaks a raw "[/font_size]" into the body
+	# (Faz 1 bug 1.4). A char is a (case-bearing) letter iff upper != lower —
+	# this also keeps Turkish İ/ı/Ç/Ş/Ö/Ü/Ğ, which an ASCII check would drop.
+	var first: String = text.substr(0, 1)
+	if first.to_upper() == first.to_lower():
+		return text
+	return "[font_size=28]%s[/font_size]%s" % [first, text.substr(1)]
 
 
 static func _format_modifier(m: Dictionary) -> String:

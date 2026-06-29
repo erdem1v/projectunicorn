@@ -8,10 +8,11 @@
   "body_text": "İlk hafta açtığın o kestirme — *'şimdilik böyle, sonra düzeltiriz'* — şimdi üç ayrı yerden bağırıyor. Her yeni şey eklemek zorlaşıyor.\n\nDurup düzeltmek = iki gün kayıp ama ileride pürüzsüz.\nÜstüne build etmek = bugünün hızı, yarının daha büyük faturası.\n\n*'Yarının ekibi yarının problemidir,'* diyen yazıyı bir yerlerde okumuştun. Şu an yarının ekibi de sensin.",
   "trigger_conditions": [
     {"type": "build_phase", "value": "development"},
+    {"type": "flag_set", "key": "tech_debt_birikti"},
     {"type": "random", "chance": 0.25}
   ],
   "cooldown_days": 16,
-  "one_shot": false,
+  "one_shot": true,
   "priority": 0,
   "choices": [
     {

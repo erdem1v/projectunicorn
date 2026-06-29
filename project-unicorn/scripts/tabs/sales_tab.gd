@@ -52,9 +52,15 @@ func _refresh() -> void:
 
 
 func _refresh_metrics() -> void:
-	var n: int = CustomerRegistry.get_active().size()
 	var sat: int = CustomerRegistry.get_min_satisfaction()
-	metrics_label.text = "%d müşteri · MRR $%d · en düşük memnuniyet %d" % [n, GameState.mrr, sat]
+	# MRR-led, market-aware count (Faz 1 bug 1.5): B2C's base is one aggregate
+	# record whose seats are the paying users, so showing the record count (1)
+	# contradicted the "ödeyen kullanıcı" seats figure elsewhere. Show seats for
+	# B2C, real account count for B2B.
+	if String(GameState.get_flag("mvp_market_type", "")) == "b2c":
+		metrics_label.text = "MRR $%d · %d ödeyen kullanıcı · en düşük memnuniyet %d" % [GameState.mrr, CustomerRegistry.get_total_users(), sat]
+	else:
+		metrics_label.text = "MRR $%d · %d müşteri · en düşük memnuniyet %d" % [GameState.mrr, CustomerRegistry.get_active().size(), sat]
 
 
 func _refresh_prospects() -> void:

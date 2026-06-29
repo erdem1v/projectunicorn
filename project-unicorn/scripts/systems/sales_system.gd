@@ -6,9 +6,11 @@ extends RefCounted
 #
 # PostShip spec §C/§D. After mvp_shipped:
 #   - B2C: grow an *audience* (interest, NOT revenue) from quality+brand-bugs.
-#          Convert audience→paying ONLY after the player opened a paid tier (a
-#          played decision); even then a tiny quality-earned organic trickle —
-#          big jumps come from growth-move events. (§10: no magical revenue.)
+#          Audience→paying conversion happens ONLY through played decisions:
+#          the paid-tier pricing choice and growth-move events. There is NO
+#          per-tick conversion — MRR plateaus between decisions, so growth
+#          always traces to something the player did. (§10: no magical revenue,
+#          CLAUDE.md Principle #2 — Faz 1 bug 1.8.)
 #   - B2B: passive here — customers come from the pitch dialogue; expansion later.
 #   - Both: daily customer-satisfaction drift → health band.
 # The canonical MRR bridge (aggregate active customers → GameState.mrr) is kept.
@@ -22,8 +24,6 @@ const AUDIENCE_QUALITY_COEF := 0.15
 const AUDIENCE_BRAND_COEF := 0.10
 const AUDIENCE_BUG_COEF := 0.30
 const B2C_PRICE_DEFAULT := 15            # $/user/month; paid-tier decision may override
-const B2C_ORGANIC_DAILY := 1             # tiny quality-earned trickle (post paid-tier)
-const B2C_ORGANIC_QUALITY_GATE := 60
 const B2C_USERBASE_ID := "co_b2c_userbase"
 
 const SATISFACTION_QUALITY_GATE := 70    # quality ≥ → satisfaction drifts up
@@ -65,10 +65,12 @@ static func _tick_b2c() -> void:
 	growth = maxf(0.0, growth)
 	var audience: int = int(GameState.get_flag("b2c_audience", 0)) + int(round(growth))
 	GameState.set_flag("b2c_audience", audience)
-
-	# Revenue only AFTER the paid-tier decision, and only a tiny earned trickle.
-	if GameState.get_flag("b2c_paid_tier_open", false) and quality >= B2C_ORGANIC_QUALITY_GATE:
-		convert_b2c_audience(B2C_ORGANIC_DAILY, "organic")
+	# No per-tick revenue. Audience is interest (a "pent-up demand" pool), NOT
+	# revenue — it accrues passively, but it only becomes paying users through a
+	# PLAYED decision: open_b2c_paid_tier() (the pricing event) and growth-move
+	# events (Product Hunt, power-user) that call convert_b2c_audience(). This is
+	# the §10 / CLAUDE.md Principle #2 fix (Faz 1 bug 1.8): MRR plateaus between
+	# decisions instead of climbing every day on its own with nothing to click.
 
 
 # Player opened the paid tier (a played pricing decision) — licenses B2C revenue

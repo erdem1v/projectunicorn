@@ -51,3 +51,15 @@ extends Resource
 
 func has_tag(tag: String) -> bool:
 	return tag in tags
+
+
+func has_random_trigger() -> bool:
+	# True when eligibility includes a random dice roll. Used by EventManager's
+	# per-day rate-limit (Faz 1 bug 1.6): only the ambient random pool is throttled
+	# to ≤1/tick; deterministic state-gated "beat" events (no random roll — e.g.
+	# paid-tier, first-revenue, Frank intro, traction-ready) fire the moment their
+	# condition holds, never delayed in the one-per-day queue.
+	for cond in trigger_conditions:
+		if typeof(cond) == TYPE_DICTIONARY and String(cond.get("type", "")) == "random":
+			return true
+	return false

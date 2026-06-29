@@ -36,6 +36,7 @@ func _ready() -> void:
 	EventBus.build_phase_changed.connect(_on_build_phase_changed)
 	EventBus.build_iteration_decision_pending.connect(_on_decision_pending_changed)
 	EventBus.day_advanced.connect(_on_day_advanced)
+	EventBus.build_progress_changed.connect(_on_build_progress_changed)
 	_refresh()
 
 
@@ -46,6 +47,8 @@ func _exit_tree() -> void:
 		EventBus.build_iteration_decision_pending.disconnect(_on_decision_pending_changed)
 	if EventBus.day_advanced.is_connected(_on_day_advanced):
 		EventBus.day_advanced.disconnect(_on_day_advanced)
+	if EventBus.build_progress_changed.is_connected(_on_build_progress_changed):
+		EventBus.build_progress_changed.disconnect(_on_build_progress_changed)
 
 
 func _on_build_phase_changed(_new_phase: String) -> void:
@@ -60,6 +63,12 @@ func _on_day_advanced(_new_day: int) -> void:
 	_refresh()
 
 
+func _on_build_progress_changed() -> void:
+	# Fired at the end of ProductSystem.daily_tick, after the phase counter
+	# advanced — paints the bar with this tick's value instead of yesterday's.
+	_refresh()
+
+
 func _refresh() -> void:
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if b == null:
@@ -70,6 +79,12 @@ func _refresh() -> void:
 	# Header — sub-type name + phase label
 	product_name_label.text = _sub_type_display(b.sub_product_type_id)
 	phase_label.text = _phase_display(b)
+	# Accent the phase label while an iteration decision is pending so the
+	# "now decide" state reads at a glance (Faz 1 bug 1.7).
+	if b.current_phase == "iteration" and b.iteration_decision_pending:
+		phase_label.add_theme_color_override("font_color", UiTokens.ACCENT)
+	else:
+		phase_label.remove_theme_color_override("font_color")
 
 	# Stats row — quality always; bug rendering varies a touch by phase
 	quality_label.text = "Kalite %d" % b.quality
@@ -94,6 +109,8 @@ func _sub_type_display(sub_type_id: String) -> String:
 func _phase_display(b: FeatureBuild) -> String:
 	match b.current_phase:
 		"iteration":
+			if b.iteration_decision_pending:
+				return "İterasyon %d bitti — karar ver" % b.iteration_count
 			return "Designing — Iteration %d" % b.iteration_count
 		"development":
 			return "Development"
@@ -155,6 +172,12 @@ func _paint_buttons(b: FeatureBuild) -> void:
 			var pending: bool = b.iteration_decision_pending
 			iteration_button.disabled = not pending
 			development_button.disabled = not pending
+			# Decision-pending visibility (Faz 1 bug 1.7): the clock keeps running
+			# (no pause by design), so accent the now-live buttons to read as
+			# "act now"; plain tint while the iteration is still running.
+			var btn_tint: Color = UiTokens.ACCENT if pending else Color(1, 1, 1, 1)
+			iteration_button.modulate = btn_tint
+			development_button.modulate = btn_tint
 		"development":
 			iteration_button.visible = false
 			development_button.visible = false

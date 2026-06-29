@@ -58,6 +58,10 @@ static func daily_tick() -> void:
 		"bugfix":
 			_tick_bugfix_phase()
 		# planning / shipped / cancelled — no daily work
+	# Repaint progress bars AFTER the phase counters advanced this tick. The HUD
+	# also refreshes on day_advanced, but that fires before this tick decrements
+	# the counter, so without this the bar lags a day (Faz 1 bug 1.1).
+	EventBus.build_progress_changed.emit()
 
 
 # --- Phase ticks ---

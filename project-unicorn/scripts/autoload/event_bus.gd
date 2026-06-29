@@ -42,6 +42,11 @@ signal build_phase_changed(new_phase: String)
 # pick "advance" or "enter_development". BuildHUDPanel flips its buttons
 # active on this; iteration ticks keep flowing (no auto-pause).
 signal build_iteration_decision_pending(pending: bool)
+# Emitted at the END of ProductSystem.daily_tick (after the phase tick advances
+# its counters), so build progress bars repaint with the post-tick value.
+# day_advanced fires BEFORE the tick decrements the counter, which made the bar
+# lag a day and read empty on day 1 then jump (Faz 1 bug 1.1).
+signal build_progress_changed()
 
 # --- PostShip / sales signals ---
 # Prospect pool changes (Sales tab repaints). Mirrors customer_added/removed.

@@ -40,17 +40,44 @@ func _ready() -> void:
 # --- TimeManager slot 6 entry point ---
 
 func daily_tick() -> void:
-	var newly_eligible: Array[GameEvent] = []
+	var eligible: Array[GameEvent] = []
 	for ev in _all_events.values():
 		if _is_eligible(ev):
-			newly_eligible.append(ev)
-	if newly_eligible.is_empty():
+			eligible.append(ev)
+	if eligible.is_empty():
 		_pump_queue()  # in case prior tick left something queued
 		return
-	# Group by priority (descending), shuffle each group, concatenate.
-	# Uses the global seeded RNG per TECH_SPEC §10.4 (bare randf / shuffle).
+	# Faz 1 bug 1.6 — split eligible events into deterministic "beat" events
+	# (state-gated, no random roll) and the ambient random pool. Beats are
+	# critical flow moments (paid-tier, first-revenue, Frank intro, traction-
+	# ready) and must NOT be delayed behind a one-per-day cap, so every eligible
+	# beat is enqueued. The ambient random pool is throttled to at most ONE new
+	# event per tick, so events fire in sync with the daily tick instead of
+	# bursting all at once (the burst is what made the day appear frozen while
+	# modals stacked, and — before build events became one_shot — fed the
+	# "same event twice" feel).
+	var beats: Array[GameEvent] = []
+	var ambient: Array[GameEvent] = []
+	for ev in eligible:
+		if ev.has_random_trigger():
+			ambient.append(ev)
+		else:
+			beats.append(ev)
+	# Every eligible beat, highest priority first.
+	for ev in _ordered_by_priority(beats):
+		_enqueue_eligible(ev)
+	# At most one ambient event this tick.
+	for ev in _ordered_by_priority(ambient):
+		if _enqueue_eligible(ev):
+			break
+	_pump_queue()
+
+
+# Group by priority (descending), shuffle each group, concatenate. Uses the
+# global seeded RNG per TECH_SPEC §10.4 (bare shuffle) for deterministic replay.
+func _ordered_by_priority(events: Array[GameEvent]) -> Array[GameEvent]:
 	var by_priority: Dictionary = {}
-	for ev in newly_eligible:
+	for ev in events:
 		if not by_priority.has(ev.priority):
 			by_priority[ev.priority] = []
 		by_priority[ev.priority].append(ev)
@@ -63,15 +90,19 @@ func daily_tick() -> void:
 		group.shuffle()
 		for ev in group:
 			ordered.append(ev)
-	newly_eligible = ordered
-	for ev in newly_eligible:
-		if _queue.has(ev) or ev.id == _active_event_id:
-			continue
-		_queue.append(ev)
-		EventBus.event_triggered.emit(ev.id)
-		if OS.is_debug_build():
-			print("[EventManager] Eligible: %s" % ev.id)
-	_pump_queue()
+	return ordered
+
+
+# Queue an eligible event unless it is already queued / currently showing.
+# Returns true only when it was newly added (so the ambient cap can count it).
+func _enqueue_eligible(ev: GameEvent) -> bool:
+	if _queue.has(ev) or ev.id == _active_event_id:
+		return false
+	_queue.append(ev)
+	EventBus.event_triggered.emit(ev.id)
+	if OS.is_debug_build():
+		print("[EventManager] Eligible: %s" % ev.id)
+	return true
 
 
 # --- Modal closure entry point (called by EventModal when a choice is picked) ---
@@ -374,7 +405,13 @@ func _load_all_events_from_disk() -> void:
 	var filename: String = dir.get_next()
 	while filename != "":
 		if not dir.current_is_dir() and filename.ends_with(".json"):
-			if _load_one(EVENTS_DIR + filename):
+			# ev_debug_* are placeholder/test events ([DEBUG] markers, nonexistent
+			# characters). Keep the files as fixtures but never load them into the
+			# live pool — they leaked into normal play (e.g. a "çalışan event"i with
+			# zero employees, before any build / after ship). Faz 1 bug 1.4.
+			if filename.begins_with("ev_debug_"):
+				pass
+			elif _load_one(EVENTS_DIR + filename):
 				loaded += 1
 		filename = dir.get_next()
 	dir.list_dir_end()
