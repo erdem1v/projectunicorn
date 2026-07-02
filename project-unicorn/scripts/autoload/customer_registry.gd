@@ -17,9 +17,10 @@ extends Node
 # and shadowing it produces subtle bugs (mirrors CharacterRegistry policy).
 
 # Manual toggle for deliberate registry integration testing. Off in normal runs
-# so a fresh game starts with zero customers and zero MRR (Economic Outcome
-# Principle, PROJECT_SPEC §10). Flip to true to restore the Nordica/Palmiye/
-# Beykoz seed for verifying Sales/Finance pipeline behavior with real data.
+# so a fresh game starts with zero customers and zero MRR. (B2C MRR then derives
+# from the live audience + price each hour — Economy Model v2, PROJECT_SPEC §10
+# revision.) Flip to true to restore the Nordica/Palmiye/Beykoz seed for verifying
+# Sales/Finance pipeline behavior with real data.
 const DEBUG_SEED := false
 
 var _customers: Dictionary = {}  # id (String) -> Customer
@@ -153,6 +154,19 @@ func set_mrr(customer_id: String, value: int) -> void:
 		return  # No-op: don't emit a redundant signal
 	c.mrr = clamped
 	EventBus.customer_mrr_changed.emit(customer_id, clamped)
+
+
+func set_seats(customer_id: String, value: int) -> void:
+	# Seat-level write — used by B2C dynamic pricing for seat-granular churn
+	# (raising the price sheds some seats). NOT the same as removing the whole
+	# record: the B2C base is one aggregate record, so churn shrinks its seats.
+	# `seats` has no dedicated signal; callers re-derive MRR via set_mrr() (which
+	# emits) so the UI/TopBar update.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] set_seats on unknown id: %s" % customer_id)
+		return
+	c.seats = maxi(value, 0)
 
 
 # --- Debug seed (writes directly to _customers; does NOT call add() so no

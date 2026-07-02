@@ -8,7 +8,7 @@ extends Resource
 #
 # NO `mrr_potential` field — shipping a build does not produce MRR per the
 # narrative-strategy design principle (Decision Log 2026-05-16). Ship sets
-# flags["mvp_shipped"] and flags["product_quality"]; no economic delta.
+# flags["mvp_shipped"] + mvp_innovation/stability/usability; no economic delta.
 #
 # Forward-compat fields (equity_impact, revenue_share, tags, quality_modifiers)
 # follow the Character forward-compat pattern — declared so future systems
@@ -38,12 +38,40 @@ extends Resource
 # --- Spec #2 additions ---
 @export var sub_product_type_id: String = ""
 @export var feature_ids: Array[String] = []
+# Product Lifecycle Part 1: player-chosen product name (empty → falls back to the
+# sub-type name at display time). lead_engineer_id is a reserve seed (= founder for
+# now; HR wires the real effect later).
+@export var product_name: String = ""
+@export var lead_engineer_id: String = ""
 # planning / iteration / development / bugfix / shipped / cancelled.
 # Note: "polish" is the legacy name for "bugfix" — _sync_status_from_phase()
 # accepts both so older saves don't crash; new code only writes "bugfix".
 @export var current_phase: String = "planning"
 @export var bug_count: int = 0
 @export var min_estimation_days: int = 0
+
+# --- Multi-dimensional quality (Product Lifecycle Part 1) ---
+# Three open-ended canonical axes, BORN AT 0 (Erdem: a v1 is genuinely raw and
+# climbs hour by hour). ProductSystem grows these via QualityModel.grow(); the
+# legacy `quality` int above is now a DERIVED mirror kept in sync each tick
+# (_sync_legacy_quality) so anything still reading b.quality keeps working.
+@export var innovation: float = 0.0
+@export var stability: float = 0.0
+@export var usability: float = 0.0
+# Fractional bug accumulator (Blok C hourly accrual): ticks bug_count up as it crosses 1.0.
+@export var bug_progress: float = 0.0
+# Product Lifecycle Part 2A: a bug-sprint reuses this build object but is a
+# post-ship repair, not a real build → routed to PostShipView, not BuildProgressView.
+@export var is_bug_sprint: bool = false
+# Product Lifecycle Part 2B: a version build (v2+) reuses the full build flow but SEEDS
+# axes from the live product (not 0) and increments mvp_version at launch. Routed to
+# BuildProgressView like any real build (is_version_build is invisible to BuildHUDPanel).
+@export var is_version_build: bool = false
+# Pool-deepening (feature-exhaustion unlock): ids (⊆ feature_ids) the player chose to
+# STRENGTHEN this build. Their dimension_contribution is amplified (get_dimension_weights)
+# and their dominant axis gets a flat hourly bonus (ProductSystem). Empty for every normal
+# build and every version-ADD build → zero behavior change.
+@export var strengthened_feature_ids: Array[String] = []
 
 # --- Software Inc.-style phase machinery (Spec #4) ---
 # How many iterations the player has committed to so far. Each iteration nudges
@@ -89,6 +117,40 @@ func get_total_complexity() -> int:
 		var f: Dictionary = ProductCatalog.get_feature_by_id(fid)
 		total += int(f.get("complexity", 0))
 	return total
+
+
+# A strengthened feature contributes as if its dimension_contribution were multiplied by
+# this factor (pool-deepening) — redistribution only, so the COST is that the other axes'
+# normalized share drops. BALANCE-TUNABLE.
+const STRENGTHEN_CONTRIB_FACTOR := 3.0
+
+
+# Normalized per-axis share (sums to 1) of the selected features' quality focus.
+# Steers WHICH axis climbs fastest during the build (ProductSystem scales phase
+# raws by this). Reads each feature's `dimension_contribution` {innovation,
+# stability, usability}; falls back to an equal split when features carry no
+# contribution data yet (safe pre-Blok-B).
+func get_dimension_weights() -> Dictionary:
+	var acc := {"innovation": 0.0, "stability": 0.0, "usability": 0.0}
+	var any := false
+	for fid in feature_ids:
+		var f: Dictionary = ProductCatalog.get_feature_by_id(fid)
+		var dc: Dictionary = f.get("dimension_contribution", {})
+		# Strengthened features weigh more → their axes climb faster, the others slower.
+		var boost: float = STRENGTHEN_CONTRIB_FACTOR if strengthened_feature_ids.has(fid) else 1.0
+		for axis in acc.keys():
+			var v: float = float(dc.get(axis, 0.0)) * boost
+			if v > 0.0:
+				any = true
+			acc[axis] += v
+	var total: float = acc["innovation"] + acc["stability"] + acc["usability"]
+	if not any or total <= 0.0:
+		return {"innovation": 1.0 / 3.0, "stability": 1.0 / 3.0, "usability": 1.0 / 3.0}
+	return {
+		"innovation": acc["innovation"] / total,
+		"stability": acc["stability"] / total,
+		"usability": acc["usability"] / total,
+	}
 
 
 func is_in_phase(phase: String) -> bool:

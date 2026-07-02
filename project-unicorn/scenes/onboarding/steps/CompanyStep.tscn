@@ -3,12 +3,12 @@
 [ext_resource type="Script" path="res://scripts/onboarding/steps/company_step.gd" id="1_company"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
-bg_color = Color(0.165, 0.137, 0.106, 1)
+bg_color = Color(0.965, 0.949, 0.91, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.3, 0.27, 0.22, 1)
+border_color = Color(0.847, 0.816, 0.737, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -20,7 +20,7 @@ border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.95, 0.78, 0.4, 1)
+border_color = Color(0.886, 0.639, 0.235, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -50,7 +50,7 @@ theme_override_constants/separation = 4
 
 [node name="Label" type="Label" parent="List/CompanyNameRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 14
 text = "Şirket adı"
 
@@ -65,7 +65,7 @@ theme_override_constants/separation = 4
 
 [node name="Label" type="Label" parent="List/FounderNameRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 14
 text = "Adın (opsiyonel)"
 
@@ -80,7 +80,7 @@ theme_override_constants/separation = 4
 
 [node name="Label" type="Label" parent="List/LogoRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 14
 text = "Logo stili"
 
@@ -113,7 +113,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 14
 text = "Minimalist"
 horizontal_alignment = 1
@@ -144,7 +144,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 14
 text = "Tech"
 horizontal_alignment = 1
@@ -175,7 +175,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 14
 text = "Playful"
 horizontal_alignment = 1
@@ -206,7 +206,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 14
 text = "Serious"
 horizontal_alignment = 1
@@ -218,7 +218,7 @@ theme_override_constants/separation = 4
 
 [node name="Label" type="Label" parent="List/SloganRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 14
 text = "Slogan (opsiyonel)"
 
@@ -234,7 +234,7 @@ theme_override_constants/separation = 12
 [node name="PreviewHeader" type="Label" parent="List/PreviewRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(80, 0)
-theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 12
 text = "ÖNİZLEME"
 vertical_alignment = 1
@@ -242,7 +242,7 @@ vertical_alignment = 1
 [node name="LogoChip" type="Label" parent="List/PreviewRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(36, 36)
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_card")
 text = "?"
@@ -252,7 +252,7 @@ vertical_alignment = 1
 [node name="PreviewLabel" type="Label" parent="List/PreviewRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 18
 text = "[Şirket adı]"
 vertical_alignment = 1

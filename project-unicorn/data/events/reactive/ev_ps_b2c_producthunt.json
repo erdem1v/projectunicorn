@@ -21,7 +21,8 @@
       "modifiers": [
         {"type": "convert_audience", "pct": 0.25, "source": "producthunt"},
         {"type": "brand", "delta": 3},
-        {"type": "audience_delta", "delta": 20}
+        {"type": "audience_delta", "delta": 20},
+        {"type": "cash", "delta": -800}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

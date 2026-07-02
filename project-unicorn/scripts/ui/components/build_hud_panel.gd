@@ -71,23 +71,32 @@ func _on_build_progress_changed() -> void:
 
 func _refresh() -> void:
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b == null:
+	# Hidden with no build, and during a bug sprint (Part 2A) — the sprint UI lives in
+	# PostShipView, not this desk overlay.
+	if b == null or b.is_bug_sprint:
 		visible = false
 		return
 	visible = true
 
-	# Header — sub-type name + phase label
-	product_name_label.text = _sub_type_display(b.sub_product_type_id)
+	# Header — product name (falls back to the sub-type name) + phase label
+	product_name_label.text = b.product_name if b.product_name != "" else _sub_type_display(b.sub_product_type_id)
 	phase_label.text = _phase_display(b)
 	# Accent the phase label while an iteration decision is pending so the
 	# "now decide" state reads at a glance (Faz 1 bug 1.7).
 	if b.current_phase == "iteration" and b.iteration_decision_pending:
-		phase_label.add_theme_color_override("font_color", UiTokens.ACCENT)
+		phase_label.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
 	else:
 		phase_label.remove_theme_color_override("font_color")
 
-	# Stats row — quality always; bug rendering varies a touch by phase
-	quality_label.text = "Kalite %d" % b.quality
+	# Stats row — three quality dimensions (Stability shown EFFECTIVE, so bugs drag
+	# it down live) + raw bug count in bugs_label. İno / Krl / Kul = per-axis 0-100.
+	var draw: Dictionary = QualityModel.dims_from_build(b)
+	var deco: Dictionary = QualityModel.economy_dims_from_build(b)
+	quality_label.text = "İno %d · Krl %d · Kul %d" % [
+		int(round(QualityModel.axis_score(draw, "innovation"))),
+		int(round(QualityModel.axis_score(deco, "stability"))),
+		int(round(QualityModel.axis_score(draw, "usability"))),
+	]
 	bugs_label.text = _bugs_display(b)
 
 	# Progress bar — drives off phase counter

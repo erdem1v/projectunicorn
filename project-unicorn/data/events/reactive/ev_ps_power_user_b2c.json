@@ -20,7 +20,8 @@
       "label": "Tanıtım yaz — momentumu kullan",
       "modifiers": [
         {"type": "brand", "delta": 4},
-        {"type": "audience_delta", "delta": 25}
+        {"type": "audience_delta", "delta": 25},
+        {"type": "cash", "delta": -600}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

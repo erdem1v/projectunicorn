@@ -115,6 +115,7 @@ func _dispatch_daily_tick() -> void:
 	_tick_rnd()
 	_tick_hr()
 	_tick_sales()
+	_tick_rivals()
 	_tick_finance()
 	_tick_events()
 	_tick_industry_events()
@@ -133,6 +134,8 @@ func _dispatch_daily_tick() -> void:
 func _dispatch_hourly_tick(hour: int) -> void:
 	# Saatlik granularity event-driven olduğu için daily'ye göre az slot.
 	# Sistemler geldikçe slot doldurulur, dispatch yapısı dokunulmaz kalır.
+	_tick_product_hourly(hour)
+	_tick_sales_hourly(hour)
 	_tick_hourly_events(hour)
 	_tick_hourly_schedule(hour)
 
@@ -161,6 +164,12 @@ func _tick_sales() -> void:
 	# See scripts/systems/sales_system.gd.
 	SalesSystem.daily_tick()
 
+func _tick_rivals() -> void:
+	# Product Lifecycle Part 1: rival products evolve slowly (startups fast,
+	# established slow, giants static) so a stalled player gets passed. Daily, not
+	# hourly, to avoid UI churn. See scripts/autoload/rival_registry.gd.
+	RivalRegistry.advance_all()
+
 func _tick_finance() -> void:
 	# Pure-logic system filling slot 5. Computes daily revenue + burn,
 	# applies net flow to GameState.cash, recalculates runway.
@@ -185,7 +194,18 @@ func _tick_endings_check() -> void:
 	# PROJECT_SPEC §3.5 (Bankruptcy, Brand Collapse, VC Rejection Cascade, Time-Out).
 
 
-# --- Hourly tick slots (2, lighter) ---
+# --- Hourly tick slots (3, lighter) ---
+
+func _tick_product_hourly(hour: int) -> void:
+	# Product Lifecycle Part 1: the active build's quality accrues hourly (from 0,
+	# smooth) + development bugs accumulate hourly. Phase counters stay daily.
+	# See scripts/systems/product_system.gd.
+	ProductSystem.hourly_tick(hour)
+
+func _tick_sales_hourly(hour: int) -> void:
+	# Economy Model v2: B2C audience flows (bidirectional) and MRR derives every
+	# in-game hour, so the economy reads as live. See scripts/systems/sales_system.gd.
+	SalesSystem.hourly_tick(hour)
 
 func _tick_hourly_events(hour: int) -> void:
 	pass  # TODO when EventManager exposes hourly_tick:

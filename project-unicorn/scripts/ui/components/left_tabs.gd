@@ -22,18 +22,21 @@ extends Panel
 	$Margin/Col/EventsBtn,
 ]
 
+@onready var settings_btn: Button = $Margin/Col/SettingsBtn
+
 var current_tab_idx: int = 0  # Default: Product
 
-var _btn_active: StyleBoxFlat
-var _btn_idle: StyleBoxFlat
+# Active/idle look is driven by theme type variations (TabButtonActive/TabButton);
+# icon + label colors are tinted at runtime in _apply_visual.
 
 
 func _ready() -> void:
-	_btn_active = tab_buttons[0].get_theme_stylebox("normal")
-	_btn_idle = tab_buttons[1].get_theme_stylebox("normal")
-
 	for i in tab_buttons.size():
 		tab_buttons[i].pressed.connect(_on_tab_button.bind(i))
+
+	# Gear button — bottom-pinned, NOT a tab (kept out of tab_buttons so it never
+	# gets active styling or emits tab_changed). Opens the settings panel instead.
+	settings_btn.pressed.connect(_on_settings_button)
 
 	_apply_visual(current_tab_idx)
 	EventBus.tab_changed.emit(UiTokens.TABS[current_tab_idx].id)
@@ -69,18 +72,20 @@ func _on_tab_button(idx: int) -> void:
 	EventBus.tab_changed.emit(UiTokens.TABS[idx].id)
 
 
+func _on_settings_button() -> void:
+	EventBus.settings_requested.emit()
+
+
 func _apply_visual(active_idx: int) -> void:
-	# Active tab: amber-left-border stylebox + cream icon/label colors.
-	# Idle tabs: transparent stylebox + dim icon/label colors.
+	# Active tab: amber-left-border tile (TabButtonActive) + ink icon/label.
+	# Idle tabs: transparent (TabButton) + dim icon/label.
 	for i in tab_buttons.size():
 		var is_active: bool = i == active_idx
-		tab_buttons[i].add_theme_stylebox_override("normal", _btn_active if is_active else _btn_idle)
-		tab_buttons[i].add_theme_stylebox_override("hover", _btn_active if is_active else _btn_idle)
-		tab_buttons[i].add_theme_stylebox_override("pressed", _btn_active if is_active else _btn_idle)
-		var icon_label: Label = tab_buttons[i].get_node("Stack/IconLabel")
+		tab_buttons[i].theme_type_variation = &"TabButtonActive" if is_active else &"TabButton"
+		var icon: TextureRect = tab_buttons[i].get_node("Stack/Icon")
 		var name_label: Label = tab_buttons[i].get_node("Stack/NameLabel")
-		var color: Color = UiTokens.TEXT_PRIMARY if is_active else UiTokens.TEXT_DIM
-		icon_label.add_theme_color_override("font_color", color)
+		var color: Color = UiTokens.INK if is_active else UiTokens.INK_DIM
+		icon.modulate = color
 		name_label.add_theme_color_override("font_color", color)
 
 

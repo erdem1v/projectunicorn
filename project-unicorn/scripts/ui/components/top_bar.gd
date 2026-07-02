@@ -16,12 +16,11 @@ const PHASE_NAMES := ["Bootstrap", "Traction", "Series A"]
 
 @onready var company_name_label: Label = $Margin/Row/IdentityGroup/CompanyNameLabel
 @onready var cash_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Cash/ValueLabel
-@onready var cash_delta_label: Label = $Margin/Row/FinanceGroup/StatCol_Cash/DeltaLabel
 @onready var mrr_value_label: Label = $Margin/Row/FinanceGroup/StatCol_MRR/ValueLabel
-@onready var mrr_delta_label: Label = $Margin/Row/FinanceGroup/StatCol_MRR/DeltaLabel
-@onready var burn_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Burn/ValueLabel
-@onready var net_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Net/ValueLabel
-@onready var runway_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Runway/ValueLabel
+@onready var burn_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Burn/ValueRow/ValueLabel
+@onready var net_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Net/ValueRow/ValueLabel
+@onready var runway_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Runway/ValueRow/ValueLabel
+@onready var runway_unit_label: Label = $Margin/Row/FinanceGroup/StatCol_Runway/ValueRow/UnitLabel
 @onready var brand_value_label: Label = $Margin/Row/ReputationGroup/StatCol_Brand/ValueLabel
 @onready var rep_value_label: Label = $Margin/Row/ReputationGroup/StatCol_Rep/ValueLabel
 @onready var day_label: Label = $Margin/Row/TimeGroup/DayLabel
@@ -45,21 +44,11 @@ const PHASE_NAMES := ["Bootstrap", "Traction", "Series A"]
 # the indicator honest after event-pause restore, build commits, etc.
 var current_speed: int = 1  # 0=pause, 1=1x, 2=2x, 3=4x
 
-# Stylebox refs captured at design time, swapped at runtime
-var _dot_active: StyleBoxFlat
-var _dot_dim: StyleBoxFlat
-var _btn_active: StyleBoxFlat
-var _btn_idle: StyleBoxFlat
+# Active/idle look is driven by theme type variations (master_theme.tres):
+# PhaseDotActive/PhaseDotDim and SpeedButtonActive/SpeedButton.
 
 
 func _ready() -> void:
-	# Capture the styleboxes the scene already has: dot1 / btn1 = active,
-	# dot2 / btn0 = idle. Use these references when swapping state.
-	_dot_active = phase_dots[0].get_theme_stylebox("panel")
-	_dot_dim = phase_dots[1].get_theme_stylebox("panel")
-	_btn_active = speed_btns[1].get_theme_stylebox("normal")
-	_btn_idle = speed_btns[0].get_theme_stylebox("normal")
-
 	# Initial paint from current GameState
 	_refresh_all()
 
@@ -114,54 +103,32 @@ func _refresh_all() -> void:
 # --- Signal handlers ---
 
 func _on_cash_changed(value: int) -> void:
-	cash_value_label.text = _fmt_money(value)
-	_refresh_cash_delta()
-
-func _refresh_cash_delta() -> void:
-	# Cash daily delta = projected net flow tomorrow. Color tints by sign.
-	var net: int = GameState.get_net_daily_flow()
-	var sign_str: String
-	var color: Color
-	if net > 0:
-		sign_str = "+"
-		color = UiTokens.POSITIVE
-	elif net < 0:
-		sign_str = "-"
-		color = UiTokens.NEGATIVE
-	else:
-		sign_str = ""
-		color = UiTokens.TEXT_MUTED
-	cash_delta_label.text = "%s%s/d" % [sign_str, _fmt_money(absi(net))]
-	cash_delta_label.add_theme_color_override("font_color", color)
+	cash_value_label.text = _fmt_cash_full(value)   # full number w/ separators (not abbreviated)
 
 func _on_mrr_changed(value: int) -> void:
 	mrr_value_label.text = _fmt_money(value)
-	# No per-day MRR delta tracking yet; structural placeholder per UI mini-spec.
-	mrr_delta_label.text = "+$0/d"
-	# Net flow depends on MRR too — refresh both Net column and Cash delta.
-	_refresh_net()
-	_refresh_cash_delta()
+	_refresh_net()  # net = mrr − burn
 
 func _on_burn_changed(value: int) -> void:
-	burn_value_label.text = "-%s/d" % _fmt_money(value)
+	# Burn is a daily cost; caption + dim "/d" unit convey the rate (value stays cream).
+	burn_value_label.text = _fmt_money(value)
 	_refresh_net()
-	_refresh_cash_delta()
 
 func _refresh_net() -> void:
-	# Derived from GameState.mrr and GameState.daily_burn. _fmt_money is unsigned;
-	# sign branching lives here.
+	# Net daily flow (mrr − burn), sign-colored on the dark chrome. The "/d" unit
+	# is a static dim suffix in the scene.
 	var net: int = GameState.get_net_daily_flow()
-	var sign_str: String
-	if net > 0:
-		sign_str = "+"
-	elif net < 0:
-		sign_str = "-"
-	else:
-		sign_str = ""
-	net_value_label.text = "%s%s/d" % [sign_str, _fmt_money(absi(net))]
+	var sign_str: String = "+" if net > 0 else ("-" if net < 0 else "")
+	net_value_label.text = "%s%s" % [sign_str, _fmt_money(absi(net))]
+	net_value_label.add_theme_color_override("font_color", UiTokens.delta_color_bright(net))
 
 func _on_runway_changed(months: float) -> void:
-	runway_value_label.text = "∞" if months == INF else "%.1fmo" % months
+	if months == INF:
+		runway_value_label.text = "∞"
+		runway_unit_label.visible = false
+	else:
+		runway_value_label.text = "%.1f" % months
+		runway_unit_label.visible = true
 
 func _on_brand_changed(value: int) -> void:
 	brand_value_label.text = "%d" % value
@@ -179,16 +146,13 @@ func _on_hour_changed(_hour: int) -> void:
 
 func _update_day_label() -> void:
 	# In-fiction date per UI overhaul mini-spec (e.g. "Wed, Jan 1 · 09:00").
-	day_label.text = "%s · %02d:00" % [GameState.get_display_date(), GameState.current_hour]
+	day_label.text = "%s · %02d:00" % [GameState.get_display_date(true), GameState.current_hour]
 
 func _on_phase_changed(new_phase: int) -> void:
 	var idx: int = clampi(new_phase - 1, 0, PHASE_NAMES.size() - 1)
-	phase_name_label.text = PHASE_NAMES[idx]
+	phase_name_label.text = PHASE_NAMES[idx].to_upper()
 	for i in phase_dots.size():
-		phase_dots[i].add_theme_stylebox_override(
-			"panel",
-			_dot_active if i <= idx else _dot_dim
-		)
+		phase_dots[i].theme_type_variation = &"PhaseDotActive" if i <= idx else &"PhaseDotDim"
 
 
 func _on_speed_button(idx: int) -> void:
@@ -205,17 +169,35 @@ func _on_time_manager_speed_changed(new_speed: int) -> void:
 
 func _apply_speed_visual(active_idx: int) -> void:
 	for i in speed_btns.size():
-		speed_btns[i].add_theme_stylebox_override(
-			"normal",
-			_btn_active if i == active_idx else _btn_idle
-		)
+		speed_btns[i].theme_type_variation = &"SpeedButtonActive" if i == active_idx else &"SpeedButton"
 
 
 # --- Formatting ---
 
+# MRR/BURN/NET stay abbreviated (K/M) so they can't widen FinanceGroup and shove the speed
+# controls. One decimal below $10K keeps MRR precise ("$3.5K"), no decimal above ("$50K",
+# "$350K"), M above a million ("$1.2M").
 func _fmt_money(value: int) -> String:
-	if absi(value) >= 1000000:
+	var a: int = absi(value)
+	if a >= 1000000:
 		return "$%.1fM" % (value / 1000000.0)
-	if absi(value) >= 1000:
+	if a >= 10000:
 		return "$%.0fK" % (value / 1000.0)
+	if a >= 1000:
+		return "$%.1fK" % (value / 1000.0)
 	return "$%d" % value
+
+
+# CASH is shown in FULL with thousands separators (Erdem: money management is precise, wants
+# the exact figure) — "$12,340", "$1,234,567". Godot has no locale grouping, so group manually.
+# The StatCol_Cash width bound (+ clip_text) keeps even 7-digit values from shoving the chrome.
+func _fmt_cash_full(value: int) -> String:
+	var digits: String = str(absi(value))
+	var out: String = ""
+	var c: int = 0
+	for i in range(digits.length() - 1, -1, -1):
+		out = digits[i] + out
+		c += 1
+		if c % 3 == 0 and i > 0:
+			out = "," + out
+	return ("-$" if value < 0 else "$") + out

@@ -51,12 +51,16 @@ func _build_choices(choices: Array) -> void:
 	for c in choices_box.get_children():
 		c.queue_free()
 	for i in choices.size():
-		var btn := Button.new()
-		btn.text = String((choices[i] as Dictionary).get("label", "—"))
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		btn.pressed.connect(_on_choice_pressed.bind(i))
-		choices_box.add_child(btn)
+		var label: String = String((choices[i] as Dictionary).get("label", "—"))
+		var card: Dictionary = UiFactory.make_choice_card(label)
+		var root: PanelContainer = card.root
+		root.gui_input.connect(_on_choice_input.bind(i))
+		choices_box.add_child(root)
+
+
+func _on_choice_input(event: InputEvent, idx: int) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_on_choice_pressed(idx)
 
 
 func _on_choice_pressed(idx: int) -> void:

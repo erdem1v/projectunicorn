@@ -1,40 +1,19 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/components/left_tabs.gd" id="1_lefttabs"]
-
-[sub_resource type="StyleBoxFlat" id="panel_lefttabs"]
-bg_color = Color(0.102, 0.082, 0.063, 1)
-border_width_right = 1
-border_color = Color(1, 1, 1, 0.06)
-
-[sub_resource type="StyleBoxFlat" id="tab_btn_active"]
-bg_color = Color(0.196, 0.149, 0.106, 1)
-border_width_left = 2
-border_color = Color(0.91, 0.733, 0.471, 1)
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-
-[sub_resource type="StyleBoxFlat" id="tab_btn_idle"]
-bg_color = Color(0, 0, 0, 0)
-border_width_top = 1
-border_color = Color(1, 1, 1, 0.04)
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-
-[sub_resource type="StyleBoxFlat" id="badge_style"]
-bg_color = Color(0.78, 0.31, 0.31, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+[ext_resource type="Texture2D" path="res://assets/icons/tabs/product.svg" id="2_product"]
+[ext_resource type="Texture2D" path="res://assets/icons/tabs/hr.svg" id="3_hr"]
+[ext_resource type="Texture2D" path="res://assets/icons/tabs/finance.svg" id="4_finance"]
+[ext_resource type="Texture2D" path="res://assets/icons/tabs/sales.svg" id="5_sales"]
+[ext_resource type="Texture2D" path="res://assets/icons/tabs/ops.svg" id="6_ops"]
+[ext_resource type="Texture2D" path="res://assets/icons/tabs/rnd.svg" id="7_rnd"]
+[ext_resource type="Texture2D" path="res://assets/icons/tabs/personal.svg" id="8_personal"]
+[ext_resource type="Texture2D" path="res://assets/icons/tabs/events.svg" id="9_events"]
+[ext_resource type="Texture2D" path="res://assets/icons/tabs/settings.svg" id="10_settings"]
 
 [node name="LeftTabs" type="Panel"]
 custom_minimum_size = Vector2(84, 0)
-theme_override_styles/panel = SubResource("panel_lefttabs")
+theme_type_variation = &"SidePanel"
 script = ExtResource("1_lefttabs")
 
 [node name="Margin" type="MarginContainer" parent="."]
@@ -56,9 +35,7 @@ theme_override_constants/separation = 0
 [node name="ProductBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_styles/normal = SubResource("tab_btn_active")
-theme_override_styles/hover = SubResource("tab_btn_active")
-theme_override_styles/pressed = SubResource("tab_btn_active")
+theme_type_variation = &"TabButtonActive"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/ProductBtn"]
@@ -69,22 +46,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 alignment = 1
 
-[node name="IconLabel" type="Label" parent="Margin/Col/ProductBtn/Stack"]
+[node name="Icon" type="TextureRect" parent="Margin/Col/ProductBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 16
-text = "▣"
-horizontal_alignment = 1
+texture = ExtResource("2_product")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.169, 0.149, 0.125, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/ProductBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"TabLabel"
 text = "Product"
 horizontal_alignment = 1
 
@@ -95,13 +72,13 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -22.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = 22.0
+offset_left = -24.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 24.0
 grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("badge_style")
+theme_type_variation = &"TabBadge"
 
 [node name="BadgeLabel" type="Label" parent="Margin/Col/ProductBtn/Badge"]
 layout_mode = 1
@@ -111,8 +88,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"BadgeLabel"
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -120,9 +96,7 @@ vertical_alignment = 1
 [node name="HRBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_styles/normal = SubResource("tab_btn_idle")
-theme_override_styles/hover = SubResource("tab_btn_idle")
-theme_override_styles/pressed = SubResource("tab_btn_idle")
+theme_type_variation = &"TabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/HRBtn"]
@@ -133,22 +107,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 alignment = 1
 
-[node name="IconLabel" type="Label" parent="Margin/Col/HRBtn/Stack"]
+[node name="Icon" type="TextureRect" parent="Margin/Col/HRBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 16
-text = "◉"
-horizontal_alignment = 1
+texture = ExtResource("3_hr")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.576, 0.545, 0.471, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/HRBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"TabLabel"
 text = "HR"
 horizontal_alignment = 1
 
@@ -159,13 +133,13 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -22.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = 22.0
+offset_left = -24.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 24.0
 grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("badge_style")
+theme_type_variation = &"TabBadge"
 
 [node name="BadgeLabel" type="Label" parent="Margin/Col/HRBtn/Badge"]
 layout_mode = 1
@@ -175,8 +149,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"BadgeLabel"
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -184,9 +157,7 @@ vertical_alignment = 1
 [node name="FinanceBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_styles/normal = SubResource("tab_btn_idle")
-theme_override_styles/hover = SubResource("tab_btn_idle")
-theme_override_styles/pressed = SubResource("tab_btn_idle")
+theme_type_variation = &"TabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/FinanceBtn"]
@@ -197,22 +168,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 alignment = 1
 
-[node name="IconLabel" type="Label" parent="Margin/Col/FinanceBtn/Stack"]
+[node name="Icon" type="TextureRect" parent="Margin/Col/FinanceBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 16
-text = "$"
-horizontal_alignment = 1
+texture = ExtResource("4_finance")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.576, 0.545, 0.471, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/FinanceBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"TabLabel"
 text = "Finance"
 horizontal_alignment = 1
 
@@ -223,13 +194,13 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -22.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = 22.0
+offset_left = -24.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 24.0
 grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("badge_style")
+theme_type_variation = &"TabBadge"
 
 [node name="BadgeLabel" type="Label" parent="Margin/Col/FinanceBtn/Badge"]
 layout_mode = 1
@@ -239,8 +210,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"BadgeLabel"
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -248,9 +218,7 @@ vertical_alignment = 1
 [node name="SalesBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_styles/normal = SubResource("tab_btn_idle")
-theme_override_styles/hover = SubResource("tab_btn_idle")
-theme_override_styles/pressed = SubResource("tab_btn_idle")
+theme_type_variation = &"TabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/SalesBtn"]
@@ -261,22 +229,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 alignment = 1
 
-[node name="IconLabel" type="Label" parent="Margin/Col/SalesBtn/Stack"]
+[node name="Icon" type="TextureRect" parent="Margin/Col/SalesBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 16
-text = "↗"
-horizontal_alignment = 1
+texture = ExtResource("5_sales")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.576, 0.545, 0.471, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/SalesBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"TabLabel"
 text = "Sales"
 horizontal_alignment = 1
 
@@ -287,13 +255,13 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -22.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = 22.0
+offset_left = -24.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 24.0
 grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("badge_style")
+theme_type_variation = &"TabBadge"
 
 [node name="BadgeLabel" type="Label" parent="Margin/Col/SalesBtn/Badge"]
 layout_mode = 1
@@ -303,8 +271,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"BadgeLabel"
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -312,9 +279,7 @@ vertical_alignment = 1
 [node name="OpsBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_styles/normal = SubResource("tab_btn_idle")
-theme_override_styles/hover = SubResource("tab_btn_idle")
-theme_override_styles/pressed = SubResource("tab_btn_idle")
+theme_type_variation = &"TabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/OpsBtn"]
@@ -325,22 +290,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 alignment = 1
 
-[node name="IconLabel" type="Label" parent="Margin/Col/OpsBtn/Stack"]
+[node name="Icon" type="TextureRect" parent="Margin/Col/OpsBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 16
-text = "◇"
-horizontal_alignment = 1
+texture = ExtResource("6_ops")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.576, 0.545, 0.471, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/OpsBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"TabLabel"
 text = "Ops"
 horizontal_alignment = 1
 
@@ -351,13 +316,13 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -22.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = 22.0
+offset_left = -24.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 24.0
 grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("badge_style")
+theme_type_variation = &"TabBadge"
 
 [node name="BadgeLabel" type="Label" parent="Margin/Col/OpsBtn/Badge"]
 layout_mode = 1
@@ -367,8 +332,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"BadgeLabel"
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -376,9 +340,7 @@ vertical_alignment = 1
 [node name="RnDBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_styles/normal = SubResource("tab_btn_idle")
-theme_override_styles/hover = SubResource("tab_btn_idle")
-theme_override_styles/pressed = SubResource("tab_btn_idle")
+theme_type_variation = &"TabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/RnDBtn"]
@@ -389,22 +351,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 alignment = 1
 
-[node name="IconLabel" type="Label" parent="Margin/Col/RnDBtn/Stack"]
+[node name="Icon" type="TextureRect" parent="Margin/Col/RnDBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 16
-text = "⚡"
-horizontal_alignment = 1
+texture = ExtResource("7_rnd")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.576, 0.545, 0.471, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/RnDBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"TabLabel"
 text = "R&D"
 horizontal_alignment = 1
 
@@ -415,13 +377,13 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -22.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = 22.0
+offset_left = -24.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 24.0
 grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("badge_style")
+theme_type_variation = &"TabBadge"
 
 [node name="BadgeLabel" type="Label" parent="Margin/Col/RnDBtn/Badge"]
 layout_mode = 1
@@ -431,8 +393,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"BadgeLabel"
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -440,9 +401,7 @@ vertical_alignment = 1
 [node name="PersonalBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_styles/normal = SubResource("tab_btn_idle")
-theme_override_styles/hover = SubResource("tab_btn_idle")
-theme_override_styles/pressed = SubResource("tab_btn_idle")
+theme_type_variation = &"TabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/PersonalBtn"]
@@ -453,22 +412,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 alignment = 1
 
-[node name="IconLabel" type="Label" parent="Margin/Col/PersonalBtn/Stack"]
+[node name="Icon" type="TextureRect" parent="Margin/Col/PersonalBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 16
-text = "★"
-horizontal_alignment = 1
+texture = ExtResource("8_personal")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.576, 0.545, 0.471, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/PersonalBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"TabLabel"
 text = "Personal"
 horizontal_alignment = 1
 
@@ -479,13 +438,13 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -22.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = 22.0
+offset_left = -24.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 24.0
 grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("badge_style")
+theme_type_variation = &"TabBadge"
 
 [node name="BadgeLabel" type="Label" parent="Margin/Col/PersonalBtn/Badge"]
 layout_mode = 1
@@ -495,8 +454,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"BadgeLabel"
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -504,9 +462,7 @@ vertical_alignment = 1
 [node name="EventsBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_styles/normal = SubResource("tab_btn_idle")
-theme_override_styles/hover = SubResource("tab_btn_idle")
-theme_override_styles/pressed = SubResource("tab_btn_idle")
+theme_type_variation = &"TabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/EventsBtn"]
@@ -517,22 +473,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 alignment = 1
 
-[node name="IconLabel" type="Label" parent="Margin/Col/EventsBtn/Stack"]
+[node name="Icon" type="TextureRect" parent="Margin/Col/EventsBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 16
-text = "●"
-horizontal_alignment = 1
+texture = ExtResource("9_events")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.576, 0.545, 0.471, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/EventsBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"TabLabel"
 text = "Events"
 horizontal_alignment = 1
 
@@ -543,13 +499,13 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -22.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = 22.0
+offset_left = -24.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 24.0
 grow_horizontal = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("badge_style")
+theme_type_variation = &"TabBadge"
 
 [node name="BadgeLabel" type="Label" parent="Margin/Col/EventsBtn/Badge"]
 layout_mode = 1
@@ -559,8 +515,49 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"BadgeLabel"
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="Margin/Col"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Divider" type="ColorRect" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+color = Color(0, 0, 0, 0.1)
+
+[node name="SettingsBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_type_variation = &"TabButton"
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/SettingsBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Margin/Col/SettingsBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("10_settings")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.576, 0.545, 0.471, 1)
+
+[node name="NameLabel" type="Label" parent="Margin/Col/SettingsBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"TabLabel"
+text = "Ayarlar"
+horizontal_alignment = 1

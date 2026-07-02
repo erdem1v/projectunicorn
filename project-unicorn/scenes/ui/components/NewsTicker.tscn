@@ -1,17 +1,12 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/components/news_ticker.gd" id="1_newsticker"]
-
-[sub_resource type="StyleBoxFlat" id="panel_newsticker"]
-bg_color = Color(0.082, 0.063, 0.047, 1)
-border_width_top = 1
-border_color = Color(1, 1, 1, 0.06)
 
 [node name="NewsTicker" type="Panel"]
 clip_contents = true
 custom_minimum_size = Vector2(0, 32)
 process_mode = 3
-theme_override_styles/panel = SubResource("panel_newsticker")
+theme_type_variation = &"NewsPanel"
 script = ExtResource("1_newsticker")
 
 [node name="Stream" type="RichTextLabel" parent="."]
@@ -23,5 +18,4 @@ bbcode_enabled = true
 fit_content = true
 scroll_active = false
 autowrap_mode = 0
-theme_override_colors/default_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/normal_font_size = 12
+theme_type_variation = &"NewsRich"

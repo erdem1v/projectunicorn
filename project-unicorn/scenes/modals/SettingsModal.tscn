@@ -1,0 +1,148 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/modals/settings_modal.gd" id="1_modal"]
+
+[node name="SettingsModal" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_modal")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="CenterPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -230.0
+offset_top = -175.0
+offset_right = 230.0
+offset_bottom = 175.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ModalPanel"
+
+[node name="Body" type="VBoxContainer" parent="CenterPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 28.0
+offset_right = -32.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+
+[node name="TitleLabel" type="Label" parent="CenterPanel/Body"]
+layout_mode = 2
+theme_type_variation = &"TitleSerif"
+text = "Ayarlar"
+
+[node name="MusicSection" type="VBoxContainer" parent="CenterPanel/Body"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SectionHeader" type="Label" parent="CenterPanel/Body/MusicSection"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+text = "MÜZİK"
+
+[node name="Card" type="PanelContainer" parent="CenterPanel/Body/MusicSection"]
+layout_mode = 2
+theme_type_variation = &"CardPanel"
+
+[node name="CardBody" type="VBoxContainer" parent="CenterPanel/Body/MusicSection/Card"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="ToggleRow" type="HBoxContainer" parent="CenterPanel/Body/MusicSection/Card/CardBody"]
+layout_mode = 2
+
+[node name="ToggleLabel" type="Label" parent="CenterPanel/Body/MusicSection/Card/CardBody/ToggleRow"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"BodySerif"
+text = "Arka plan müziği"
+
+[node name="ToggleSpacer" type="Control" parent="CenterPanel/Body/MusicSection/Card/CardBody/ToggleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MusicToggle" type="CheckButton" parent="CenterPanel/Body/MusicSection/Card/CardBody/ToggleRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"SettingsSwitch"
+button_pressed = true
+
+[node name="VolumeRow" type="HBoxContainer" parent="CenterPanel/Body/MusicSection/Card/CardBody"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VolumeLabel" type="Label" parent="CenterPanel/Body/MusicSection/Card/CardBody/VolumeRow"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"BodySerif"
+text = "Seviye"
+
+[node name="VolumeSlider" type="HSlider" parent="CenterPanel/Body/MusicSection/Card/CardBody/VolumeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"VolumeSlider"
+min_value = 0.0
+max_value = 100.0
+step = 1.0
+value = 35.0
+
+[node name="PctLabel" type="Label" parent="CenterPanel/Body/MusicSection/Card/CardBody/VolumeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"RowMeta"
+text = "35%"
+horizontal_alignment = 2
+
+[node name="SfxPlaceholder" type="VBoxContainer" parent="CenterPanel/Body"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Spacer" type="Control" parent="CenterPanel/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Footer" type="HBoxContainer" parent="CenterPanel/Body"]
+layout_mode = 2
+
+[node name="FooterSpacer" type="Control" parent="CenterPanel/Body/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CloseBtn" type="Button" parent="CenterPanel/Body/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 38)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_type_variation = &"CommitButton"
+text = "Kapat"

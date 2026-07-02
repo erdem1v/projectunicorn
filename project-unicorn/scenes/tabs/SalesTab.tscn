@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/tabs/sales_tab.gd" id="1_sales"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.165, 0.137, 0.106, 1)
+bg_color = Color(0.965, 0.949, 0.91, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -45,15 +45,13 @@ theme_override_constants/separation = 8
 [node name="TitleLabel" type="Label" parent="Margin/Layout/TitleBar"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"TitleSerif"
 text = "Sales"
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 22
 
 [node name="MetricsLabel" type="Label" parent="Margin/Layout/TitleBar"]
 layout_mode = 2
+theme_type_variation = &"RowMeta"
 text = "—"
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 12
 
 [node name="Separator" type="HSeparator" parent="Margin/Layout"]
 layout_mode = 2
@@ -79,9 +77,8 @@ layout_mode = 2
 [node name="PHeaderLabel" type="Label" parent="Margin/Layout/Columns/ProspectsPanel/PVBox/PHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"SectionLabel"
 text = "PROSPECTS"
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 10
 
 [node name="FindButton" type="Button" parent="Margin/Layout/Columns/ProspectsPanel/PVBox/PHeader"]
 layout_mode = 2
@@ -89,9 +86,8 @@ text = "+ Prospect bul"
 
 [node name="ProspectsEmpty" type="Label" parent="Margin/Layout/Columns/ProspectsPanel/PVBox"]
 layout_mode = 2
+theme_type_variation = &"CaptionMuted"
 text = "Henüz prospect yok. Frank biriyle tanıştırabilir."
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 12
 autowrap_mode = 2
 
 [node name="ProspectsScroll" type="ScrollContainer" parent="Margin/Layout/Columns/ProspectsPanel/PVBox"]
@@ -115,15 +111,13 @@ theme_override_constants/separation = 8
 
 [node name="CHeaderLabel" type="Label" parent="Margin/Layout/Columns/CustomersPanel/CVBox"]
 layout_mode = 2
+theme_type_variation = &"SectionLabel"
 text = "MÜŞTERİLER"
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 10
 
 [node name="CustomersEmpty" type="Label" parent="Margin/Layout/Columns/CustomersPanel/CVBox"]
 layout_mode = 2
+theme_type_variation = &"CaptionMuted"
 text = "Henüz müşteri yok."
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 12
 autowrap_mode = 2
 
 [node name="CustomersScroll" type="ScrollContainer" parent="Margin/Layout/Columns/CustomersPanel/CVBox"]

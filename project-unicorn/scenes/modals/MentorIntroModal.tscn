@@ -1,25 +1,6 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/modals/mentor_intro_modal.gd" id="1_modal"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.145, 0.122, 0.094, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.4, 0.35, 0.27, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_portrait"]
-bg_color = Color(0.235, 0.196, 0.149, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
 
 [node name="MentorIntroModal" type="Control"]
 process_mode = 3
@@ -54,7 +35,7 @@ offset_right = 340.0
 offset_bottom = 220.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+theme_type_variation = &"ModalPanel"
 
 [node name="Body" type="VBoxContainer" parent="CenterPanel"]
 layout_mode = 1
@@ -74,9 +55,10 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="Portrait" type="Panel" parent="CenterPanel/Body/Header"]
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
-custom_minimum_size = Vector2(96, 96)
-theme_override_styles/panel = SubResource("StyleBoxFlat_portrait")
+size_flags_vertical = 4
+theme_type_variation = &"Avatar"
 
 [node name="PortraitLabel" type="Label" parent="CenterPanel/Body/Header/Portrait"]
 layout_mode = 1
@@ -85,40 +67,46 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
-theme_override_font_sizes/font_size = 14
-text = "FRANK"
+mouse_filter = 2
+theme_type_variation = &"AvatarInitial"
+text = "FK"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="HeaderText" type="VBoxContainer" parent="CenterPanel/Body/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 5
-theme_override_constants/separation = 4
+size_flags_vertical = 4
+theme_override_constants/separation = 3
 
 [node name="NameLabel" type="Label" parent="CenterPanel/Body/Header/HeaderText"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
-theme_override_font_sizes/font_size = 20
+theme_type_variation = &"TitleSerif"
 text = "Frank Köseoğlu"
 
 [node name="RoleLabel" type="Label" parent="CenterPanel/Body/Header/HeaderText"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
-theme_override_font_sizes/font_size = 13
-text = "Operating Partner"
+theme_type_variation = &"SectionLabel"
+text = "OPERATING PARTNER"
 
-[node name="BodyLabel" type="Label" parent="CenterPanel/Body"]
+[node name="BodyRichText" type="RichTextLabel" parent="CenterPanel/Body"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.85, 0.79, 0.68, 1)
-theme_override_font_sizes/font_size = 14
-text = "Frank kahvesinden bir yudum alıyor.\n\n\"Product Hunt'taki sunumun fena değildi. O yüzden buradayım.\"\n\n\"Şirketini kurdun. Kolay kısmı buydu. Şimdi bir ürün lazım — birinin para vereceği bir şey. İlk versiyonu kendin yapacaksın.\"\n\n\"Product sekmesine geç, neye oynayacağını seç. Çoğu kurucu açlıktan değil, hazımsızlıktan ölür.\""
-autowrap_mode = 2
+bbcode_enabled = true
+fit_content = false
+scroll_active = false
+theme_type_variation = &"BodyRich"
+text = "Frank kahvesinden bir yudum alıyor.
+
+\"Product Hunt'taki sunumun fena değildi. O yüzden buradayım.\"
+
+\"Şirketini kurdun. Kolay kısmı buydu. Şimdi bir ürün lazım — birinin para vereceği bir şey. İlk versiyonu kendin yapacaksın.\"
+
+\"Product sekmesine geç, neye oynayacağını seç. Çoğu kurucu açlıktan değil, hazımsızlıktan ölür.\""
 
 [node name="ContinueBtn" type="Button" parent="CenterPanel/Body"]
+custom_minimum_size = Vector2(180, 38)
 layout_mode = 2
 size_flags_horizontal = 8
-custom_minimum_size = Vector2(180, 36)
+theme_type_variation = &"CommitButton"
 text = "Hadi başlayalım"

@@ -7,9 +7,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/components/NewsTicker.tscn" id="5_newsticker"]
 [ext_resource type="PackedScene" path="res://scenes/ui/components/BuildHUDPanel.tscn" id="6_buildhud"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_center"]
-bg_color = Color(0.165, 0.137, 0.106, 1)
-
 [node name="GameShell" type="Control" unique_id=1712078200]
 process_mode = 3
 layout_mode = 3
@@ -23,7 +20,7 @@ grow_vertical = 2
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 44.0
+offset_bottom = 56.0
 grow_horizontal = 2
 
 [node name="MidRow" type="HBoxContainer" parent="." unique_id=1513243657]
@@ -31,7 +28,7 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 44.0
+offset_top = 56.0
 offset_bottom = -32.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -44,7 +41,7 @@ layout_mode = 2
 clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_center")
+theme_type_variation = &"ViewportPanel"
 script = ExtResource("3_center")
 
 [node name="Content" type="VBoxContainer" parent="MidRow/CenterViewport" unique_id=1402910700]
@@ -65,15 +62,13 @@ alignment = 1
 
 [node name="TitleLabel" type="Label" parent="MidRow/CenterViewport/Content" unique_id=2635425]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 22
+theme_type_variation = &"TitleSerif"
 text = "PRODUCT"
 horizontal_alignment = 1
 
 [node name="SubtitleLabel" type="Label" parent="MidRow/CenterViewport/Content" unique_id=1623746070]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"CaptionMuted"
 text = "Content coming"
 horizontal_alignment = 1
 

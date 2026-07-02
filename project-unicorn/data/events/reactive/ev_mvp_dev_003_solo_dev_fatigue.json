@@ -17,7 +17,8 @@
     {
       "label": "Bugün kendine ver, yarın taze başla",
       "modifiers": [
-        {"type": "speed_bonus", "days": 1},
+        {"type": "delay_days", "days": 1},
+        {"type": "dimension_delta", "axis": "stability", "amount": 2},
         {"type": "set_flag", "key": "founder_recovery", "value": true}
       ],
       "unlock_condition": {},
@@ -26,7 +27,8 @@
     {
       "label": "Zorla, kahve yap, masaya otur",
       "modifiers": [
-        {"type": "quality_bonus", "amount": -2},
+        {"type": "delay_days", "days": -1},
+        {"type": "bug_delta", "amount": 2},
         {"type": "set_flag", "key": "founder_fatigue", "value": true}
       ],
       "unlock_condition": {},

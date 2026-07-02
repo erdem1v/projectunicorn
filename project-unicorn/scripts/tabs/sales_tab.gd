@@ -9,9 +9,10 @@ extends Control
 const FIND_PROSPECTS_COOLDOWN_DAYS := 5
 const FIND_PROSPECTS_COUNT := 2
 
-const C_CREAM := Color(0.96, 0.91, 0.82, 1)
-const C_DIM := Color(0.78, 0.722, 0.612, 1)
-const C_SUBDUED := Color(0.56, 0.494, 0.396, 1)
+# Light-surface row text (Sales tab renders on the light body).
+const C_CREAM := UiTokens.INK
+const C_DIM := UiTokens.INK_MUTED
+const C_SUBDUED := UiTokens.INK_DIM
 
 @onready var metrics_label: Label = $Margin/Layout/TitleBar/MetricsLabel
 @onready var find_button: Button = $Margin/Layout/Columns/ProspectsPanel/PVBox/PHeader/FindButton

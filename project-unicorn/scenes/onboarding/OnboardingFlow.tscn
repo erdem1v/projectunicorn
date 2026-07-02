@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/onboarding/onboarding_flow.gd" id="1_flow"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
-bg_color = Color(0.122, 0.106, 0.086, 1)
+bg_color = Color(0.925, 0.902, 0.839, 1)
 
 [node name="OnboardingFlow" type="Control"]
 process_mode = 3
@@ -43,14 +43,12 @@ layout_mode = 2
 [node name="TitleLabel" type="Label" parent="Layout/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
-theme_override_font_sizes/font_size = 22
+theme_type_variation = &"TitleSerif"
 text = "Origin"
 
 [node name="StepIndicator" type="Label" parent="Layout/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.553, 0.471, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"SectionLabel"
 text = "1 / 6"
 vertical_alignment = 2
 
@@ -74,6 +72,7 @@ text = "Geri"
 [node name="NextBtn" type="Button" parent="Layout/Footer"]
 layout_mode = 2
 custom_minimum_size = Vector2(120, 36)
+theme_type_variation = &"CommitButton"
 text = "İleri"
 
 [node name="LoadingOverlay" type="Control" parent="."]
@@ -109,6 +108,7 @@ offset_right = 160.0
 offset_bottom = 48.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ModalPanel"
 
 [node name="LoadingLabel" type="Label" parent="LoadingOverlay/CenterPanel"]
 layout_mode = 1
@@ -117,7 +117,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 18
 text = "Hazırlanıyor…"
 horizontal_alignment = 1

@@ -19,6 +19,15 @@ signal runway_recalculated(months: float)
 signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=4x
 signal tab_changed(tab_id: String)  # "product", "hr", "finance", "sales", "ops", "rnd", "personal", "events"
 
+# --- Settings / audio signals ---
+# Gear button (below the left tab column) → main.gd mounts SettingsModal
+# (same lifecycle as modal_requested: pause on open, restore on close).
+signal settings_requested
+# AudioManager emits these when the prefs change so any UI can reflect state
+# without polling. music_volume is linear 0..1.
+signal music_enabled_changed(enabled: bool)
+signal music_volume_changed(volume: float)
+
 # --- Character signals (§13.2) ---
 signal character_added(character_id: String)
 signal character_removed(character_id: String)
@@ -47,6 +56,14 @@ signal build_iteration_decision_pending(pending: bool)
 # day_advanced fires BEFORE the tick decrements the counter, which made the bar
 # lag a day and read empty on day 1 then jump (Faz 1 bug 1.1).
 signal build_progress_changed()
+
+# --- Rival signals (Product Lifecycle Part 1) ---
+# Emitted by RivalRegistry. rival_added on seed; rival_status_changed when a
+# rival's display band flips; rival_advanced once per day after advance_all so
+# RightPanel repaints its ACTIVE RIVALS section.
+signal rival_added(rival_id: String)
+signal rival_status_changed(rival_id: String, status: String)
+signal rival_advanced()
 
 # --- PostShip / sales signals ---
 # Prospect pool changes (Sales tab repaints). Mirrors customer_added/removed.

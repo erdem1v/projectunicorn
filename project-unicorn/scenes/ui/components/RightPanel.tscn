@@ -1,61 +1,11 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/components/right_panel.gd" id="1_rightpanel"]
 
-[sub_resource type="StyleBoxFlat" id="panel_rightpanel"]
-bg_color = Color(0.102, 0.082, 0.063, 1)
-border_width_left = 1
-border_color = Color(1, 1, 1, 0.06)
-
-[sub_resource type="StyleBoxFlat" id="portrait_box"]
-bg_color = Color(0.494, 0.353, 0.22, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="health_green"]
-bg_color = Color(0.49, 0.69, 0.45, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="health_yellow"]
-bg_color = Color(0.87, 0.69, 0.31, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="rival_active"]
-bg_color = Color(0.91, 0.733, 0.471, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="rival_dim"]
-bg_color = Color(0.4, 0.353, 0.282, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="rival_warn"]
-bg_color = Color(0.87, 0.69, 0.31, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="captable_founder_segment"]
-bg_color = Color(0.494, 0.353, 0.22, 1)
-
 [node name="RightPanel" type="Panel"]
-custom_minimum_size = Vector2(180, 0)
+custom_minimum_size = Vector2(240, 0)
 clip_contents = true
-theme_override_styles/panel = SubResource("panel_rightpanel")
+theme_type_variation = &"SidePanel"
 script = ExtResource("1_rightpanel")
 
 [node name="Scroll" type="ScrollContainer" parent="."]
@@ -70,17 +20,15 @@ horizontal_scroll_mode = 0
 [node name="Margin" type="MarginContainer" parent="Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
 
 [node name="Sections" type="VBoxContainer" parent="Scroll/Margin"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 16
-
-; ============= MENTOR SECTION =============
+theme_override_constants/separation = 24
 
 [node name="MentorSection" type="VBoxContainer" parent="Scroll/Margin/Sections"]
 layout_mode = 2
@@ -88,16 +36,14 @@ theme_override_constants/separation = 8
 
 [node name="HeaderLabel" type="Label" parent="Scroll/Margin/Sections/MentorSection"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "MENTOR"
 
 [node name="AccentLine" type="ColorRect" parent="Scroll/Margin/Sections/MentorSection"]
 custom_minimum_size = Vector2(20, 1)
 layout_mode = 2
 size_flags_horizontal = 0
-color = Color(0.91, 0.733, 0.471, 1)
+color = Color(0.886, 0.639, 0.235, 1)
 
 [node name="MentorBody" type="HBoxContainer" parent="Scroll/Margin/Sections/MentorSection"]
 layout_mode = 2
@@ -107,42 +53,51 @@ theme_override_constants/separation = 10
 custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_styles/panel = SubResource("portrait_box")
+theme_type_variation = &"Avatar"
+
+[node name="Initial" type="Label" parent="Scroll/Margin/Sections/MentorSection/MentorBody/PortraitBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"AvatarInitial"
+text = "FK"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="MentorTextCol" type="VBoxContainer" parent="Scroll/Margin/Sections/MentorSection/MentorBody"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 theme_override_constants/separation = 1
 
 [node name="NameLabel" type="Label" parent="Scroll/Margin/Sections/MentorSection/MentorBody/MentorTextCol"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 13
+theme_type_variation = &"NameSerif"
 text = "Frank Köseoğlu"
 
 [node name="RoleLabel" type="Label" parent="Scroll/Margin/Sections/MentorSection/MentorBody/MentorTextCol"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
-text = "Operating Partner"
+theme_type_variation = &"SectionLabel"
+text = "OPERATING PARTNER"
 
 [node name="QuoteLabel" type="Label" parent="Scroll/Margin/Sections/MentorSection"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"QuoteSerif"
 text = "\"Most founders die from indigestion, not starvation. Pick your bets.\""
 autowrap_mode = 2
 
 [node name="Sep1" type="ColorRect" parent="Scroll/Margin/Sections"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
-color = Color(1, 1, 1, 0.06)
-
-; ============= CUSTOMERS SECTION =============
+color = Color(0, 0, 0, 0.08)
 
 [node name="CustomersSection" type="VBoxContainer" parent="Scroll/Margin/Sections"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
 [node name="HeaderRow" type="HBoxContainer" parent="Scroll/Margin/Sections/CustomersSection"]
 layout_mode = 2
@@ -150,121 +105,166 @@ layout_mode = 2
 [node name="HeaderLabel" type="Label" parent="Scroll/Margin/Sections/CustomersSection/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "TOP CUSTOMERS"
 
 [node name="CountLabel" type="Label" parent="Scroll/Margin/Sections/CustomersSection/HeaderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.353, 0.282, 1)
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "0 of 0"
 
 [node name="AccentLine" type="ColorRect" parent="Scroll/Margin/Sections/CustomersSection"]
 custom_minimum_size = Vector2(20, 1)
 layout_mode = 2
 size_flags_horizontal = 0
-color = Color(0.91, 0.733, 0.471, 1)
+color = Color(0.886, 0.639, 0.235, 1)
 
 [node name="Customer1" type="HBoxContainer" parent="Scroll/Margin/Sections/CustomersSection"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
+
+[node name="Avatar" type="Panel" parent="Scroll/Margin/Sections/CustomersSection/Customer1"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"Avatar"
+
+[node name="Initial" type="Label" parent="Scroll/Margin/Sections/CustomersSection/Customer1/Avatar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"AvatarInitial"
+text = "N"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Col" type="VBoxContainer" parent="Scroll/Margin/Sections/CustomersSection/Customer1"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 theme_override_constants/separation = 1
 
 [node name="NameLabel" type="Label" parent="Scroll/Margin/Sections/CustomersSection/Customer1/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
+theme_type_variation = &"RowName"
 text = "Nordica Logistics"
 
 [node name="MetaLabel" type="Label" parent="Scroll/Margin/Sections/CustomersSection/Customer1/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"RowMeta"
 text = "$3.2K · 12 seats"
 
 [node name="HealthDot" type="Panel" parent="Scroll/Margin/Sections/CustomersSection/Customer1"]
-custom_minimum_size = Vector2(6, 6)
+custom_minimum_size = Vector2(7, 7)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_styles/panel = SubResource("health_green")
 
 [node name="Customer2" type="HBoxContainer" parent="Scroll/Margin/Sections/CustomersSection"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
+
+[node name="Avatar" type="Panel" parent="Scroll/Margin/Sections/CustomersSection/Customer2"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"Avatar"
+
+[node name="Initial" type="Label" parent="Scroll/Margin/Sections/CustomersSection/Customer2/Avatar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"AvatarInitial"
+text = "P"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Col" type="VBoxContainer" parent="Scroll/Margin/Sections/CustomersSection/Customer2"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 theme_override_constants/separation = 1
 
 [node name="NameLabel" type="Label" parent="Scroll/Margin/Sections/CustomersSection/Customer2/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
+theme_type_variation = &"RowName"
 text = "Palmiye Holding"
 
 [node name="MetaLabel" type="Label" parent="Scroll/Margin/Sections/CustomersSection/Customer2/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"RowMeta"
 text = "$1.8K · 8 seats"
 
 [node name="HealthDot" type="Panel" parent="Scroll/Margin/Sections/CustomersSection/Customer2"]
-custom_minimum_size = Vector2(6, 6)
+custom_minimum_size = Vector2(7, 7)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_styles/panel = SubResource("health_green")
 
 [node name="Customer3" type="HBoxContainer" parent="Scroll/Margin/Sections/CustomersSection"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
+
+[node name="Avatar" type="Panel" parent="Scroll/Margin/Sections/CustomersSection/Customer3"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"Avatar"
+
+[node name="Initial" type="Label" parent="Scroll/Margin/Sections/CustomersSection/Customer3/Avatar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"AvatarInitial"
+text = "B"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Col" type="VBoxContainer" parent="Scroll/Margin/Sections/CustomersSection/Customer3"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 theme_override_constants/separation = 1
 
 [node name="NameLabel" type="Label" parent="Scroll/Margin/Sections/CustomersSection/Customer3/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
+theme_type_variation = &"RowName"
 text = "Beykoz Tekstil"
 
 [node name="MetaLabel" type="Label" parent="Scroll/Margin/Sections/CustomersSection/Customer3/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"RowMeta"
 text = "$0.9K · 4 seats"
 
 [node name="HealthDot" type="Panel" parent="Scroll/Margin/Sections/CustomersSection/Customer3"]
-custom_minimum_size = Vector2(6, 6)
+custom_minimum_size = Vector2(7, 7)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_styles/panel = SubResource("health_yellow")
 
 [node name="EmptyStateLabel" type="Label" parent="Scroll/Margin/Sections/CustomersSection"]
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"CaptionMuted"
 text = "Henüz müşteri yok"
 
 [node name="Sep2" type="ColorRect" parent="Scroll/Margin/Sections"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
-color = Color(1, 1, 1, 0.06)
-
-; ============= RIVALS SECTION =============
+color = Color(0, 0, 0, 0.08)
 
 [node name="RivalsSection" type="VBoxContainer" parent="Scroll/Margin/Sections"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
 [node name="HeaderRow" type="HBoxContainer" parent="Scroll/Margin/Sections/RivalsSection"]
 layout_mode = 2
@@ -272,32 +272,24 @@ layout_mode = 2
 [node name="HeaderLabel" type="Label" parent="Scroll/Margin/Sections/RivalsSection/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "ACTIVE RIVALS"
 
 [node name="CountLabel" type="Label" parent="Scroll/Margin/Sections/RivalsSection/HeaderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.353, 0.282, 1)
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "0"
 
 [node name="AccentLine" type="ColorRect" parent="Scroll/Margin/Sections/RivalsSection"]
 custom_minimum_size = Vector2(20, 1)
 layout_mode = 2
 size_flags_horizontal = 0
-color = Color(0.91, 0.733, 0.471, 1)
+color = Color(0.886, 0.639, 0.235, 1)
 
 [node name="Rival1" type="HBoxContainer" parent="Scroll/Margin/Sections/RivalsSection"]
+visible = false
 layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="StatusDot" type="Panel" parent="Scroll/Margin/Sections/RivalsSection/Rival1"]
-custom_minimum_size = Vector2(6, 6)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_styles/panel = SubResource("rival_active")
+theme_override_constants/separation = 8
 
 [node name="Col" type="VBoxContainer" parent="Scroll/Margin/Sections/RivalsSection/Rival1"]
 layout_mode = 2
@@ -306,26 +298,18 @@ theme_override_constants/separation = 1
 
 [node name="NameLabel" type="Label" parent="Scroll/Margin/Sections/RivalsSection/Rival1/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
+theme_type_variation = &"RowName"
 text = "Kerem @ Volthane"
 
 [node name="StatusLabel" type="Label" parent="Scroll/Margin/Sections/RivalsSection/Rival1/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.91, 0.733, 0.471, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"SectionLabel"
 text = "HIRING"
 
 [node name="Rival2" type="HBoxContainer" parent="Scroll/Margin/Sections/RivalsSection"]
+visible = false
 layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="StatusDot" type="Panel" parent="Scroll/Margin/Sections/RivalsSection/Rival2"]
-custom_minimum_size = Vector2(6, 6)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_styles/panel = SubResource("rival_dim")
+theme_override_constants/separation = 8
 
 [node name="Col" type="VBoxContainer" parent="Scroll/Margin/Sections/RivalsSection/Rival2"]
 layout_mode = 2
@@ -334,26 +318,18 @@ theme_override_constants/separation = 1
 
 [node name="NameLabel" type="Label" parent="Scroll/Margin/Sections/RivalsSection/Rival2/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
+theme_type_variation = &"RowName"
 text = "Despina @ Mavi-Loop"
 
 [node name="StatusLabel" type="Label" parent="Scroll/Margin/Sections/RivalsSection/Rival2/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"SectionLabel"
 text = "QUIET"
 
 [node name="Rival3" type="HBoxContainer" parent="Scroll/Margin/Sections/RivalsSection"]
+visible = false
 layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="StatusDot" type="Panel" parent="Scroll/Margin/Sections/RivalsSection/Rival3"]
-custom_minimum_size = Vector2(6, 6)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_styles/panel = SubResource("rival_warn")
+theme_override_constants/separation = 8
 
 [node name="Col" type="VBoxContainer" parent="Scroll/Margin/Sections/RivalsSection/Rival3"]
 layout_mode = 2
@@ -362,34 +338,28 @@ theme_override_constants/separation = 1
 
 [node name="NameLabel" type="Label" parent="Scroll/Margin/Sections/RivalsSection/Rival3/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
+theme_type_variation = &"RowName"
 text = "Ortega @ Bytecraft"
 
 [node name="StatusLabel" type="Label" parent="Scroll/Margin/Sections/RivalsSection/Rival3/Col"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.87, 0.69, 0.31, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"SectionLabel"
 text = "PIVOTING"
 
 [node name="EmptyStateLabel" type="Label" parent="Scroll/Margin/Sections/RivalsSection"]
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"CaptionMuted"
 text = "Rakip izlenmiyor"
 
 [node name="Sep3" type="ColorRect" parent="Scroll/Margin/Sections"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
-color = Color(1, 1, 1, 0.06)
-
-; ============= EVENTS SECTION =============
+color = Color(0, 0, 0, 0.08)
 
 [node name="EventsSection" type="VBoxContainer" parent="Scroll/Margin/Sections"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
 [node name="HeaderRow" type="HBoxContainer" parent="Scroll/Margin/Sections/EventsSection"]
 layout_mode = 2
@@ -397,84 +367,76 @@ layout_mode = 2
 [node name="HeaderLabel" type="Label" parent="Scroll/Margin/Sections/EventsSection/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "UPCOMING — DAY 1 TO 15"
 
 [node name="AccentLine" type="ColorRect" parent="Scroll/Margin/Sections/EventsSection"]
 custom_minimum_size = Vector2(20, 1)
 layout_mode = 2
 size_flags_horizontal = 0
-color = Color(0.91, 0.733, 0.471, 1)
+color = Color(0.886, 0.639, 0.235, 1)
 
 [node name="Event1" type="HBoxContainer" parent="Scroll/Margin/Sections/EventsSection"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="DateLabel" type="Label" parent="Scroll/Margin/Sections/EventsSection/Event1"]
-custom_minimum_size = Vector2(36, 0)
+custom_minimum_size = Vector2(38, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"FeedDay"
 text = "Day 7"
 
 [node name="NameLabel" type="Label" parent="Scroll/Margin/Sections/EventsSection/Event1"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"RowName"
 text = "TC Disrupt registration"
 
 [node name="Event2" type="HBoxContainer" parent="Scroll/Margin/Sections/EventsSection"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="DateLabel" type="Label" parent="Scroll/Margin/Sections/EventsSection/Event2"]
-custom_minimum_size = Vector2(36, 0)
+custom_minimum_size = Vector2(38, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"FeedDay"
 text = "Day 12"
 
 [node name="NameLabel" type="Label" parent="Scroll/Margin/Sections/EventsSection/Event2"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"RowName"
 text = "Nordica renewal"
 
 [node name="Event3" type="HBoxContainer" parent="Scroll/Margin/Sections/EventsSection"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="DateLabel" type="Label" parent="Scroll/Margin/Sections/EventsSection/Event3"]
-custom_minimum_size = Vector2(36, 0)
+custom_minimum_size = Vector2(38, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"FeedDay"
 text = "Day 14"
 
 [node name="NameLabel" type="Label" parent="Scroll/Margin/Sections/EventsSection/Event3"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"RowName"
 text = "Payroll"
 
 [node name="EmptyStateLabel" type="Label" parent="Scroll/Margin/Sections/EventsSection"]
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"CaptionMuted"
 text = "Yaklaşan bir şey yok"
 
 [node name="Sep4" type="ColorRect" parent="Scroll/Margin/Sections"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
-color = Color(1, 1, 1, 0.06)
-
-; ============= CAP TABLE SECTION =============
+color = Color(0, 0, 0, 0.08)
 
 [node name="CapTableSection" type="VBoxContainer" parent="Scroll/Margin/Sections"]
 layout_mode = 2
@@ -486,22 +448,19 @@ layout_mode = 2
 [node name="HeaderLabel" type="Label" parent="Scroll/Margin/Sections/CapTableSection/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "CAP TABLE"
+
+[node name="CountLabel" type="Label" parent="Scroll/Margin/Sections/CapTableSection/HeaderRow"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+text = "$0 raised"
 
 [node name="AccentLine" type="ColorRect" parent="Scroll/Margin/Sections/CapTableSection"]
 custom_minimum_size = Vector2(20, 1)
 layout_mode = 2
 size_flags_horizontal = 0
-color = Color(0.91, 0.733, 0.471, 1)
-
-[node name="CountLabel" type="Label" parent="Scroll/Margin/Sections/CapTableSection/HeaderRow"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.353, 0.282, 1)
-theme_override_font_sizes/font_size = 10
-text = "$0 raised"
+color = Color(0.886, 0.639, 0.235, 1)
 
 [node name="Bar" type="HBoxContainer" parent="Scroll/Margin/Sections/CapTableSection"]
 custom_minimum_size = Vector2(0, 8)
@@ -512,7 +471,7 @@ theme_override_constants/separation = 0
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("captable_founder_segment")
+theme_type_variation = &"CapBar"
 
 [node name="Legend" type="VBoxContainer" parent="Scroll/Margin/Sections/CapTableSection"]
 layout_mode = 2
@@ -526,12 +485,11 @@ theme_override_constants/separation = 6
 custom_minimum_size = Vector2(8, 8)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(0.494, 0.353, 0.22, 1)
+color = Color(0.45, 0.38, 0.32, 1)
 
 [node name="FounderLabel" type="Label" parent="Scroll/Margin/Sections/CapTableSection/Legend/FounderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"RowMeta"
 text = "Founder · 100%"
 
 [node name="InvestorsRow" type="HBoxContainer" parent="Scroll/Margin/Sections/CapTableSection/Legend"]
@@ -542,12 +500,11 @@ theme_override_constants/separation = 6
 custom_minimum_size = Vector2(8, 8)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(0.4, 0.353, 0.282, 1)
+color = Color(0.7, 0.66, 0.58, 1)
 
 [node name="InvestorsLabel" type="Label" parent="Scroll/Margin/Sections/CapTableSection/Legend/InvestorsRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"RowMeta"
 text = "Investors · 0%"
 
 [node name="OptionPoolRow" type="HBoxContainer" parent="Scroll/Margin/Sections/CapTableSection/Legend"]
@@ -558,12 +515,11 @@ theme_override_constants/separation = 6
 custom_minimum_size = Vector2(8, 8)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(0.4, 0.353, 0.282, 1)
+color = Color(0.7, 0.66, 0.58, 1)
 
 [node name="OptionPoolLabel" type="Label" parent="Scroll/Margin/Sections/CapTableSection/Legend/OptionPoolRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"RowMeta"
 text = "Option pool · 0%"
 
 [node name="EmployeesWithEquityRow" type="HBoxContainer" parent="Scroll/Margin/Sections/CapTableSection/Legend"]
@@ -575,10 +531,9 @@ theme_override_constants/separation = 6
 custom_minimum_size = Vector2(8, 8)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(0.91, 0.733, 0.471, 1)
+color = Color(0.886, 0.639, 0.235, 1)
 
 [node name="EmployeesEquityLabel" type="Label" parent="Scroll/Margin/Sections/CapTableSection/Legend/EmployeesWithEquityRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"RowMeta"
 text = ""

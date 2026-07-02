@@ -16,12 +16,18 @@ const GAME_SHELL := preload("res://scenes/main/GameShell.tscn")
 const MENTOR_MODAL := preload("res://scenes/modals/MentorIntroModal.tscn")
 const EVENT_MODAL := preload("res://scenes/modals/EventModal.tscn")
 const PITCH_MODAL := preload("res://scenes/modals/PitchDialogueModal.tscn")
+const SETTINGS_MODAL := preload("res://scenes/modals/SettingsModal.tscn")
 
 var _flow: Node = null
 var _shell: Node = null
 var _modal: Node = null              # Mentor intro modal
 var _event_modal: Node = null        # Currently-open event modal, or null
 var _pitch_modal: Node = null        # Currently-open pitch dialogue modal, or null
+var _settings_modal: Node = null     # Currently-open settings modal, or null
+# Speed to restore when the settings panel closes. Tracked separately from
+# _pre_event_speed because the player can open settings at any speed (incl.
+# already-paused) and we must return to exactly that.
+var _pre_settings_speed: int = -1
 var _shell_mounted: bool = false
 var _event_signals_wired: bool = false
 # Speed at the moment the first event in a chain pauses the game. When the
@@ -94,6 +100,7 @@ func _swap_to_shell_and_modal() -> void:
 		EventBus.event_resolved.connect(_on_event_resolved)
 		EventBus.pitch_requested.connect(_on_pitch_requested)
 		EventBus.pitch_finished.connect(_on_pitch_finished)
+		EventBus.settings_requested.connect(_on_settings_requested)
 		_event_signals_wired = true
 
 	_modal = MENTOR_MODAL.instantiate()
@@ -169,6 +176,34 @@ func _on_pitch_finished() -> void:
 		var restore: int = _pre_event_speed if _pre_event_speed >= 0 else 1
 		_pre_event_speed = -1
 		EventBus.speed_change_requested.emit(restore)
+
+
+# --- Settings modal lifecycle (gear button below the left tabs) ---
+
+func _on_settings_requested() -> void:
+	if _settings_modal != null:
+		return  # already open
+	var modal_layer: CanvasLayer = _shell.get_node_or_null("ModalLayer") if _shell != null else null
+	if modal_layer == null:
+		push_error("[Main] GameShell/ModalLayer missing — settings modal can't mount")
+		return
+	# Pause while the panel is up (consistent with the other modals) and remember
+	# the exact speed to restore on close.
+	_pre_settings_speed = TimeManager.current_speed
+	EventBus.speed_change_requested.emit(0)
+	_settings_modal = SETTINGS_MODAL.instantiate()
+	_settings_modal.dismissed.connect(_on_settings_dismissed)
+	modal_layer.add_child(_settings_modal)
+
+
+func _on_settings_dismissed() -> void:
+	_settings_modal = null
+	# Don't stomp an event/pitch that queued while settings were open — if one is
+	# pending it manages its own pause/restore; otherwise return to prior speed.
+	if not EventManager.has_pending():
+		var restore: int = _pre_settings_speed if _pre_settings_speed >= 0 else 1
+		EventBus.speed_change_requested.emit(restore)
+	_pre_settings_speed = -1
 
 
 # --- Debug skip (F12, debug builds only) ---

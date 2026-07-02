@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://co6s0h02wvg8x"
+path="res://.godot/imported/Döngü Modu.mp3-0e803737712796b7c2060f3f8618dbf4.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/Döngü Modu.mp3"
+dest_files=["res://.godot/imported/Döngü Modu.mp3-0e803737712796b7c2060f3f8618dbf4.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

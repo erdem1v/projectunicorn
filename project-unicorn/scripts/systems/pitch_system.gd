@@ -80,6 +80,37 @@ static func _budget_for(archetype: String) -> String:
 		_: return "low"
 
 
+# --- Value-driven pricing range (E) ---
+
+static func _value_premium_position() -> float:
+	# Map product worth ($/user from the value algorithm) to a 0..1 "how premium"
+	# position used to place the recommended price within the archetype's MRR band.
+	var optimal: float = float(SalesSystem.product_value()["optimal"])
+	return clampf((optimal - 4.0) / 24.0, 0.0, 1.0)   # ~$4 → band-low, ~$28 → band-high (working)
+
+
+static func _price_mult_window() -> Dictionary:
+	# Recommended price_mult window (±0.18 around the value position).
+	var v: float = _value_premium_position()
+	return {"lo": clampf(v - 0.18, 0.0, 1.0), "hi": clampf(v + 0.18, 0.0, 1.0), "mid": v}
+
+
+static func _pitch_value_hint() -> String:
+	# Markets-gated value range for the pricing stage (E.1/E.2). Below threshold the
+	# precise range is hidden — the player offers blind (mirrors the budget_band gate).
+	if not SkillCheck.can_read_prospect():
+		return "Bütçesini kestiremiyorsun — körlemesine teklif vereceksin."
+	var win: Dictionary = _price_mult_window()
+	var band: Dictionary = MRR_BANDS.get(_prospect.archetype, MRR_BANDS["small"])
+	var lo_mo: int = int(round(lerpf(float(band["low"]), float(band["high"]), win["lo"])))
+	var hi_mo: int = int(round(lerpf(float(band["low"]), float(band["high"]), win["hi"])))
+	var seats: int = SalesSystem._seats_for_archetype(_prospect.archetype)
+	var per_lo: int = int(round(float(lo_mo) / maxf(1.0, float(seats))))
+	var per_hi: int = int(round(float(hi_mo) / maxf(1.0, float(seats))))
+	return "Markets okuması — %d seat. Ürün değerin bu segmentte seat başına ~$%d-%d → ~$%d-%d/ay. Bu aralıkta oyna." \
+		% [seats, per_lo, per_hi, lo_mo, hi_mo]
+
+
 # --- Pitch lifecycle ---
 
 static func is_active() -> bool:
@@ -140,8 +171,7 @@ static func get_stage() -> Dictionary:
 				],
 			}
 		2:
-			var hint := "Bütçesini bilmiyorum. Karanlıkta atış." if not SkillCheck.can_read_prospect() \
-				else "Bütçesini biliyorum (%s) — buna göre oyna." % _prospect.budget_band
+			var hint := _pitch_value_hint()
 			return {
 				"id": "pricing",
 				"speaker": "%s · %s" % [_prospect.company_name, _prospect.industry],
@@ -194,6 +224,14 @@ static func choose(idx: int) -> Dictionary:
 		"pricing":
 			_price_mult = float(c.get("price_mult", 0.55))
 			_close_diff_delta = int(c.get("close_diff", 0))
+			# Value-range modifier (E.3): above the value window the prospect balks
+			# (harder close); below is an easy close but low MRR (low MRR already
+			# falls out of the band lerp in _resolve_outcome).
+			var win: Dictionary = _price_mult_window()
+			if _price_mult > win["hi"]:
+				_close_diff_delta += 1
+			elif _price_mult < win["lo"]:
+				_close_diff_delta -= 1
 		"close":
 			var chk2: Dictionary = SkillCheck.resolve("charisma",
 				CLOSE_BASE_DIFFICULTY + _close_diff_delta + _prospect.difficulty_stars - 1, _accum_bonus)
@@ -207,7 +245,11 @@ static func choose(idx: int) -> Dictionary:
 
 static func _resolve_outcome(chk: Dictionary, mrr_mult: float) -> Dictionary:
 	var band: String = String(chk.get("band", "fail"))
-	var quality: int = int(GameState.get_flag("mvp_quality", 50))
+	# Signed B2B account's initial satisfaction seeds from Stability + Usability
+	# (reliability + ease — what a business buyer feels day one), effective stability.
+	var _seed_dims: Dictionary = QualityModel.economy_dims_from_flags()
+	var quality_seed: int = int(round(
+		(QualityModel.axis_score(_seed_dims, "stability") + QualityModel.axis_score(_seed_dims, "usability")) * 0.5))
 	# Cooldown applies regardless of outcome.
 	GameState.set_flag("next_pitch_day", GameState.day + PITCH_COOLDOWN_DAYS)
 
@@ -228,7 +270,7 @@ static func _resolve_outcome(chk: Dictionary, mrr_mult: float) -> Dictionary:
 		var bandvals: Dictionary = MRR_BANDS.get(_prospect.archetype, MRR_BANDS["small"])
 		var target: float = lerpf(float(bandvals["low"]), float(bandvals["high"]), clampf(_price_mult, 0.0, 1.0))
 		var mrr: int = int(round(target * mrr_mult))
-		var satisfaction: int = clampi(quality + (5 if band == "crit_success" else 0), 0, 100)
+		var satisfaction: int = clampi(quality_seed + (5 if band == "crit_success" else 0), 0, 100)
 		var cust: Customer = SalesSystem.add_b2b_customer(_prospect, mrr, satisfaction)
 		ProspectRegistry.remove(_prospect.id)
 		result["mrr"] = mrr

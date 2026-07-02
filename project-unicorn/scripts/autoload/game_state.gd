@@ -6,10 +6,10 @@ extends Node
 
 const DAYS_PER_MONTH := 30  # Matches FinanceSystem.DAYS_PER_MONTH; both convert monthly → daily
 
-# Calendar anchor — Day 1 = Wed Jan 1, 2025 (TECH_SPEC §20 2026-05-16 entry).
-# Jan 1 2025 is a real-world Wednesday so day-of-week renders correctly with
-# no offset hack. get_display_date() does the conversion.
-const START_DATE := {"year": 2025, "month": 1, "day": 1}
+# Calendar anchor — Day 1 = Thu Jan 1, 2026 (game starts in 2026; year advances
+# with playtime). Godot Time computes the real weekday from the date, so no
+# offset hack. get_display_date() does the conversion.
+const START_DATE := {"year": 2026, "month": 1, "day": 1}
 const MONTH_ABBR := ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const DOW_ABBR := ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
@@ -123,12 +123,14 @@ func get_founder_skill(skill_name: String) -> int:
 	return int(founder.role_stats.get(skill_name, 0))
 
 
-func get_display_date() -> String:
-	# Day N → "Wed, Jan 1" using the START_DATE anchor. Godot Time built-ins;
-	# no external calendar lib.
+func get_display_date(with_year: bool = false) -> String:
+	# Day N → "Thu, Jan 1" (or "Thu, Jan 1, 2026" with_year) using the START_DATE
+	# anchor. Godot Time built-ins; no external calendar lib.
 	var anchor_unix: int = int(Time.get_unix_time_from_datetime_dict(START_DATE))
 	var current_unix: int = anchor_unix + (day - 1) * 86400
 	var d: Dictionary = Time.get_datetime_dict_from_unix_time(current_unix)
+	if with_year:
+		return "%s, %s %d, %d" % [DOW_ABBR[d.weekday], MONTH_ABBR[d.month - 1], d.day, d.year]
 	return "%s, %s %d" % [DOW_ABBR[d.weekday], MONTH_ABBR[d.month - 1], d.day]
 
 func _emit_runway() -> void:

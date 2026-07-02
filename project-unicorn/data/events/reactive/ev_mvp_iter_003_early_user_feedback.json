@@ -17,8 +17,10 @@
     {
       "label": "Önerilerini ciddiye al, tasarımı tekrar düşün",
       "modifiers": [
-        {"type": "set_flag", "key": "early_feedback_dinlendi", "value": true},
-        {"type": "speed_bonus", "days": 1}
+        {"type": "dimension_delta", "axis": "usability", "amount": 6},
+        {"type": "delay_days", "days": 2},
+        {"type": "cash", "delta": -100},
+        {"type": "set_flag", "key": "early_feedback_dinlendi", "value": true}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""
@@ -26,7 +28,9 @@
     {
       "label": "Vizyonuna sadık kal, yola devam",
       "modifiers": [
-        {"type": "brand", "delta": 1}
+        {"type": "delay_days", "days": -1},
+        {"type": "brand", "delta": 1},
+        {"type": "dimension_delta", "axis": "usability", "amount": -2}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

@@ -18,7 +18,8 @@
     {
       "label": "Önerilen fiyattan ekle",
       "modifiers": [
-        {"type": "customer_mrr_delta", "delta": 600}
+        {"type": "customer_mrr_delta", "delta": 600},
+        {"type": "satisfaction_delta", "delta": -5}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""
@@ -26,7 +27,8 @@
     {
       "label": "Pazarlık et — daha fazla iste",
       "modifiers": [
-        {"type": "customer_mrr_delta", "delta": 1000}
+        {"type": "customer_mrr_delta", "delta": 1000},
+        {"type": "satisfaction_delta", "delta": -12}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

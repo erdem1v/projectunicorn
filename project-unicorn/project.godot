@@ -23,10 +23,12 @@ GameState="*res://scripts/autoload/game_state.gd"
 CharacterRegistry="*res://scripts/autoload/character_registry.gd"
 CustomerRegistry="*res://scripts/autoload/customer_registry.gd"
 ProspectRegistry="*res://scripts/autoload/prospect_registry.gd"
+RivalRegistry="*res://scripts/autoload/rival_registry.gd"
 EventManager="*res://scripts/autoload/event_manager.gd"
 TimeManager="*res://scripts/autoload/time_manager.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
 Settings="*res://scripts/autoload/settings.gd"
+AudioManager="*res://scripts/autoload/audio_manager.gd"
 MCPRuntime="*uid://bvdfxyfwqs84q"
 
 [display]
@@ -41,6 +43,10 @@ window/stretch/aspect="expand"
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/auto_reload/plugin.cfg", "res://addons/godot_mcp_editor/plugin.cfg", "res://addons/godot_mcp_runtime/plugin.cfg")
+
+[gui]
+
+theme/custom="res://themes/master_theme.tres"
 
 [physics]
 

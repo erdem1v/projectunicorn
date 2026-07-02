@@ -17,8 +17,8 @@
     {
       "label": "Vakit harca, cila çek",
       "modifiers": [
-        {"type": "quality_bonus", "amount": 3},
-        {"type": "speed_bonus", "days": 1}
+        {"type": "dimension_delta", "axis": "usability", "amount": 5},
+        {"type": "cash", "delta": -80}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

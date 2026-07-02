@@ -17,8 +17,9 @@
     {
       "label": "Tasarımı onların eksik yerine eğ",
       "modifiers": [
-        {"type": "set_flag", "key": "pivot_versus_rakip", "value": true},
-        {"type": "speed_bonus", "days": 1}
+        {"type": "dimension_delta", "axis": "innovation", "amount": 5},
+        {"type": "delay_days", "days": 2},
+        {"type": "set_flag", "key": "pivot_versus_rakip", "value": true}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""
@@ -26,7 +27,8 @@
     {
       "label": "Kendi yolundan sapma",
       "modifiers": [
-        {"type": "brand", "delta": 1}
+        {"type": "brand", "delta": 2},
+        {"type": "dimension_delta", "axis": "innovation", "amount": -2}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

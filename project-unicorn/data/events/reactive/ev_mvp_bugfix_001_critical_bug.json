@@ -17,8 +17,9 @@
     {
       "label": "Launch'u ertele, çöz",
       "modifiers": [
-        {"type": "speed_bonus", "days": 3},
-        {"type": "quality_bonus", "amount": 4}
+        {"type": "bug_delta", "amount": -6},
+        {"type": "dimension_delta", "axis": "stability", "amount": 4},
+        {"type": "cash", "delta": -150}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

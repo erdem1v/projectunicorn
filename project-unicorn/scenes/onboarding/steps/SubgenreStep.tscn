@@ -3,12 +3,12 @@
 [ext_resource type="Script" path="res://scripts/onboarding/steps/subgenre_step.gd" id="1_sub"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
-bg_color = Color(0.165, 0.137, 0.106, 1)
+bg_color = Color(0.965, 0.949, 0.91, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.3, 0.27, 0.22, 1)
+border_color = Color(0.847, 0.816, 0.737, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -20,14 +20,14 @@ border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.95, 0.78, 0.4, 1)
+border_color = Color(0.886, 0.639, 0.235, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
-bg_color = Color(0.55, 0.42, 0.18, 1)
+bg_color = Color(0.961, 0.89, 0.753, 1)
 corner_radius_top_left = 2
 corner_radius_top_right = 2
 corner_radius_bottom_right = 2
@@ -52,7 +52,7 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 28.0
 grow_horizontal = 2
-theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 14
 text = "Hangi pazarda doğacaksın? Subgenre component palette'ini ve büyüme profili tonunu belirler."
 
@@ -99,13 +99,13 @@ theme_override_constants/separation = 12
 
 [node name="Name" type="Label" parent="Row/AICard/Body"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 22
 text = "AI"
 
 [node name="Tagline" type="Label" parent="Row/AICard/Body"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 13
 text = "[DESIGNER REVIEW] Yüksek risk, yüksek tavan. Sıcak pazar, sert rekabet."
 autowrap_mode = 2
@@ -117,7 +117,7 @@ mouse_filter = 2
 
 [node name="Palette" type="Label" parent="Row/AICard/Body"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 11
 text = "inference engine · vector DB · eval pipeline · multi-modal"
 autowrap_mode = 2
@@ -155,13 +155,13 @@ theme_override_constants/separation = 12
 
 [node name="Name" type="Label" parent="Row/SaaSCard/Body"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 22
 text = "SaaS"
 
 [node name="Tagline" type="Label" parent="Row/SaaSCard/Body"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 13
 text = "[DESIGNER REVIEW] Sürekli MRR, yavaş büyüme, savunulabilir marj."
 autowrap_mode = 2
@@ -173,7 +173,7 @@ mouse_filter = 2
 
 [node name="Palette" type="Label" parent="Row/SaaSCard/Body"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 11
 text = "auth · integrations · analytics · admin"
 autowrap_mode = 2
@@ -204,20 +204,20 @@ layout_mode = 2
 [node name="Name" type="Label" parent="Row/SocialCard/Body/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.949, 0.898, 0.788, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 22
 text = "Social"
 
 [node name="Badge" type="Label" parent="Row/SocialCard/Body/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.92, 0.78, 1)
+theme_override_colors/font_color = Color(0.541, 0.353, 0.071, 1)
 theme_override_font_sizes/font_size = 10
 theme_override_styles/normal = SubResource("StyleBoxFlat_badge")
 text = "ÇOK YAKINDA"
 
 [node name="Tagline" type="Label" parent="Row/SocialCard/Body"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.72, 0.61, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 13
 text = "[DESIGNER REVIEW] Virality-driven, brand-volatile."
 autowrap_mode = 2
@@ -229,7 +229,7 @@ mouse_filter = 2
 
 [node name="Palette" type="Label" parent="Row/SocialCard/Body"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.55, 0.47, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 11
 text = "feed algorithm · moderation · ad system"
 autowrap_mode = 2

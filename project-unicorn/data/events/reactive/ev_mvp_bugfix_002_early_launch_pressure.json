@@ -17,7 +17,9 @@
     {
       "label": "Bir tur daha temizlik — gönder olmadı",
       "modifiers": [
-        {"type": "quality_bonus", "amount": 2},
+        {"type": "bug_delta", "amount": -4},
+        {"type": "dimension_delta", "axis": "stability", "amount": 2},
+        {"type": "cash", "delta": -100},
         {"type": "set_flag", "key": "polish_one_more_pass", "value": true}
       ],
       "unlock_condition": {},
@@ -26,6 +28,7 @@
     {
       "label": "Hazır olmasa da çık — kullanıcı gösterir",
       "modifiers": [
+        {"type": "brand", "delta": -1},
         {"type": "set_flag", "key": "launch_pressure_kabul", "value": true}
       ],
       "unlock_condition": {},

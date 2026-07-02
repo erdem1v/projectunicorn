@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/tabs/product_tab.gd" id="1_producttab"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_intro_panel"]
-bg_color = Color(0.165, 0.137, 0.106, 1)
+bg_color = Color(0.914, 0.886, 0.82, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -14,12 +14,12 @@ content_margin_right = 12.0
 content_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
-bg_color = Color(0.145, 0.122, 0.094, 1)
+bg_color = Color(0.965, 0.949, 0.91, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.4, 0.35, 0.27, 1)
+border_color = Color(0.847, 0.816, 0.737, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -35,14 +35,14 @@ border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.91, 0.733, 0.471, 1)
+border_color = Color(0.886, 0.639, 0.235, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bug_normal"]
-bg_color = Color(0.165, 0.137, 0.106, 1)
+bg_color = Color(0.914, 0.886, 0.82, 1)
 corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
@@ -53,14 +53,14 @@ content_margin_right = 8.0
 content_margin_bottom = 4.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fg"]
-bg_color = Color(0.91, 0.733, 0.471, 1)
+bg_color = Color(0.886, 0.639, 0.235, 1)
 corner_radius_top_left = 2
 corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_column_panel"]
-bg_color = Color(0.165, 0.137, 0.106, 1)
+bg_color = Color(0.914, 0.886, 0.82, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -71,12 +71,12 @@ content_margin_right = 12.0
 content_margin_bottom = 12.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row_inner"]
-bg_color = Color(0.145, 0.122, 0.094, 1)
+bg_color = Color(0.965, 0.949, 0.91, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.4, 0.35, 0.27, 1)
+border_color = Color(0.847, 0.816, 0.737, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -118,14 +118,12 @@ theme_override_constants/separation = 12
 [node name="TitleLabel" type="Label" parent="Margin/Layout/TitleBar"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 22
+theme_type_variation = &"TitleSerif"
 text = "Product"
 
 [node name="SubtitleLabel" type="Label" parent="Margin/Layout/TitleBar"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"CaptionMuted"
 text = "Design document"
 vertical_alignment = 2
 
@@ -173,21 +171,19 @@ theme_override_constants/separation = 6
 
 [node name="HeaderLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "ÜRÜN"
 
 [node name="MentorFramingLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 12
 text = "Hangi problemi çözüyoruz? Önce onu seç."
 autowrap_mode = 2
 
 [node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "5 seçenek — birini seç."
 
@@ -219,14 +215,13 @@ theme_override_constants/separation = 2
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_0/RowLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Sub-type 0"
 
 [node name="PitchLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_0/RowLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Pitch placeholder"
 autowrap_mode = 2
@@ -265,14 +260,13 @@ theme_override_constants/separation = 2
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_1/RowLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Sub-type 1"
 
 [node name="PitchLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_1/RowLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Pitch placeholder"
 autowrap_mode = 2
@@ -311,14 +305,13 @@ theme_override_constants/separation = 2
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_2/RowLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Sub-type 2"
 
 [node name="PitchLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_2/RowLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Pitch placeholder"
 autowrap_mode = 2
@@ -357,14 +350,13 @@ theme_override_constants/separation = 2
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_3/RowLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Sub-type 3"
 
 [node name="PitchLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_3/RowLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Pitch placeholder"
 autowrap_mode = 2
@@ -403,14 +395,13 @@ theme_override_constants/separation = 2
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_4/RowLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Sub-type 4"
 
 [node name="PitchLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList/SubTypeRow_4/RowLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Pitch placeholder"
 autowrap_mode = 2
@@ -447,28 +438,26 @@ theme_override_constants/separation = 8
 [node name="HeaderLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "ÖZELLİKLER"
 
 [node name="SelectionCounterLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/HeaderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "0 / 4 seçili — min 2"
 
 [node name="ContextLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox"]
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 12
 text = ""
 
 [node name="EmptyInstructionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 13
 text = "Önce soldan bir ürün tipi seç."
 horizontal_alignment = 1
@@ -508,15 +497,14 @@ theme_override_constants/separation = 4
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Feature"
 
 [node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Voice"
 autowrap_mode = 2
@@ -529,7 +517,7 @@ theme_override_constants/separation = 6
 [node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Karmaşıklık"
 
@@ -541,35 +529,35 @@ theme_override_constants/separation = 2
 [node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_0/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
@@ -608,15 +596,14 @@ theme_override_constants/separation = 4
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Feature"
 
 [node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Voice"
 autowrap_mode = 2
@@ -629,7 +616,7 @@ theme_override_constants/separation = 6
 [node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Karmaşıklık"
 
@@ -641,35 +628,35 @@ theme_override_constants/separation = 2
 [node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_1/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
@@ -708,15 +695,14 @@ theme_override_constants/separation = 4
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Feature"
 
 [node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Voice"
 autowrap_mode = 2
@@ -729,7 +715,7 @@ theme_override_constants/separation = 6
 [node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Karmaşıklık"
 
@@ -741,35 +727,35 @@ theme_override_constants/separation = 2
 [node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_2/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
@@ -808,15 +794,14 @@ theme_override_constants/separation = 4
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Feature"
 
 [node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Voice"
 autowrap_mode = 2
@@ -829,7 +814,7 @@ theme_override_constants/separation = 6
 [node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Karmaşıklık"
 
@@ -841,35 +826,35 @@ theme_override_constants/separation = 2
 [node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_3/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
@@ -908,15 +893,14 @@ theme_override_constants/separation = 4
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Feature"
 
 [node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Voice"
 autowrap_mode = 2
@@ -929,7 +913,7 @@ theme_override_constants/separation = 6
 [node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Karmaşıklık"
 
@@ -941,35 +925,35 @@ theme_override_constants/separation = 2
 [node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_4/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
@@ -1008,15 +992,14 @@ theme_override_constants/separation = 4
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Feature"
 
 [node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Voice"
 autowrap_mode = 2
@@ -1029,7 +1012,7 @@ theme_override_constants/separation = 6
 [node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Karmaşıklık"
 
@@ -1041,35 +1024,35 @@ theme_override_constants/separation = 2
 [node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_5/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
@@ -1108,15 +1091,14 @@ theme_override_constants/separation = 4
 [node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "Feature"
 
 [node name="VoiceLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Voice"
 autowrap_mode = 2
@@ -1129,7 +1111,7 @@ theme_override_constants/separation = 6
 [node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Karmaşıklık"
 
@@ -1141,35 +1123,35 @@ theme_override_constants/separation = 2
 [node name="Dot0" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot1" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot2" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot3" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
 [node name="Dot4" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid/FeatureCard_6/CardLayout/ComplexityRow/Complexity"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.30, 0.27, 0.22, 1)
+theme_override_colors/font_color = Color(0.80, 0.77, 0.70, 1)
 theme_override_font_sizes/font_size = 12
 text = "●"
 
@@ -1200,9 +1182,7 @@ theme_override_constants/separation = 12
 
 [node name="HeaderLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "TAHMİN"
 
 [node name="ProjectionList" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox"]
@@ -1216,9 +1196,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_SubType"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "ÜRÜN TİPİ"
 
 [node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_SubType"]
@@ -1227,7 +1205,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_SubType"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 horizontal_alignment = 2
@@ -1238,9 +1216,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_FeatureCount"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "ÖZELLİK SAYISI"
 
 [node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_FeatureCount"]
@@ -1249,7 +1225,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_FeatureCount"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 horizontal_alignment = 2
@@ -1260,9 +1236,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_Duration"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "TAHMİNİ SÜRE"
 
 [node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_Duration"]
@@ -1271,7 +1245,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_Duration"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 horizontal_alignment = 2
@@ -1282,9 +1256,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_ShipDate"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "TAHMİNİ BİTİŞ"
 
 [node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_ShipDate"]
@@ -1293,7 +1265,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_ShipDate"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 horizontal_alignment = 2
@@ -1304,9 +1276,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_QualityCeiling"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "KALİTE TAVANI"
 
 [node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_QualityCeiling"]
@@ -1315,7 +1285,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_QualityCeiling"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 horizontal_alignment = 2
@@ -1326,9 +1296,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_BugRisk"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "BUG RİSKİ"
 
 [node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_BugRisk"]
@@ -1337,7 +1305,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_BugRisk"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 horizontal_alignment = 2
@@ -1348,9 +1316,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayCost"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "RUNWAY MALİYETİ"
 
 [node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayCost"]
@@ -1359,7 +1325,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayCost"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 horizontal_alignment = 2
@@ -1370,9 +1336,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayAfter"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "BUILD SONRASI RUNWAY"
 
 [node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayAfter"]
@@ -1381,7 +1345,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/ProjectionList/Row_RunwayAfter"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 horizontal_alignment = 2
@@ -1392,11 +1356,35 @@ layout_mode = 2
 [node name="MentorAdvisoryLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 12
 text = "Soldan başla. Ne yaptığımıza karar verelim."
 autowrap_mode = 2
 vertical_alignment = 0
+
+; =========================================================================
+;  NameRow (product name input + suggest) — Product Lifecycle Part 1
+; =========================================================================
+[node name="NameRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/NameRow"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_type_variation = &"SectionLabel"
+text = "ÜRÜN ADI"
+
+[node name="NameInput" type="LineEdit" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_length = 40
+placeholder_text = "Ürününe ne diyeceksin?"
+
+[node name="SuggestButton" type="Button" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/NameRow"]
+layout_mode = 2
+text = "🎲 Öner"
 
 ; =========================================================================
 ;  CommitBar + ReasonLabel
@@ -1409,7 +1397,7 @@ text = "BUILD'İ BAŞLAT"
 
 [node name="ReasonLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Ürün tipi ve en az 2 özellik seç."
 horizontal_alignment = 1
@@ -1438,33 +1426,32 @@ theme_override_constants/separation = 12
 
 [node name="SubTypeLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "—"
 
 [node name="DotSep0" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 14
 text = "·"
 
 [node name="FeaturesLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 12
 text = "—"
 autowrap_mode = 2
 
 [node name="DotSep1" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 14
 text = "·"
 
 [node name="EngineerLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 12
 text = "Mühendis: —"
 
@@ -1510,7 +1497,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fg")
 
 [node name="ProgressCaption" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 
@@ -1519,9 +1506,7 @@ layout_mode = 2
 
 [node name="FeedHeader" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "GÜNLÜK GELİŞİM"
 
 [node name="FeedScroll" type="ScrollContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
@@ -1548,9 +1533,7 @@ theme_override_constants/separation = 8
 
 [node name="StatusHeader" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "DURUM"
 
 [node name="StatRow_Quality" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
@@ -1559,7 +1542,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Kalite"
 
@@ -1569,7 +1552,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 
@@ -1583,7 +1566,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Bug riski"
 
@@ -1593,7 +1576,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 
@@ -1603,7 +1586,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Faz"
 
@@ -1613,7 +1596,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "İterasyon"
 
@@ -1623,7 +1606,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Kalan"
 
@@ -1633,7 +1616,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 
@@ -1642,14 +1625,12 @@ layout_mode = 2
 
 [node name="MentorMiniHeader" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "MENTOR"
 
 [node name="MentorLineLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 12
 text = "İzliyorum."
 autowrap_mode = 2
@@ -1678,33 +1659,32 @@ theme_override_constants/separation = 12
 
 [node name="SubTypeLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"NameSerif"
 text = "—"
 
 [node name="DotSep0" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 14
 text = "·"
 
 [node name="FeaturesLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 12
 text = "—"
 autowrap_mode = 2
 
 [node name="DotSep1" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 14
 text = "·"
 
 [node name="EngineerLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 12
 text = "Mühendis: —"
 
@@ -1749,7 +1729,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fg")
 
 [node name="ProgressCaption" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 
@@ -1758,9 +1738,7 @@ layout_mode = 2
 
 [node name="FeedHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "GÜNLÜK GELİŞİM"
 
 [node name="FeedScroll" type="ScrollContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
@@ -1786,9 +1764,7 @@ theme_override_constants/separation = 8
 
 [node name="StatusHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "DURUM"
 
 [node name="StatRow_Quality" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
@@ -1797,7 +1773,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Kalite"
 
@@ -1807,7 +1783,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 
@@ -1821,7 +1797,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Bug"
 
@@ -1831,7 +1807,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 
@@ -1841,7 +1817,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Faz"
 
@@ -1851,7 +1827,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "Polish"
 
@@ -1861,7 +1837,7 @@ theme_override_constants/separation = 8
 
 [node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
 text = "Kalan"
 
@@ -1871,7 +1847,7 @@ size_flags_horizontal = 3
 
 [node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
 theme_override_font_sizes/font_size = 13
 text = "—"
 
@@ -1880,14 +1856,12 @@ layout_mode = 2
 
 [node name="MentorMiniHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
 text = "MENTOR"
 
 [node name="MentorLineLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 12
 text = "Bugları çöz."
 autowrap_mode = 2
@@ -1900,7 +1874,7 @@ text = "ŞİMDİ SHIP'LE"
 ; =========================================================================
 ;  PostShipView — PostShip sales phase, B2C/B2B aware (Spec PostShip §F)
 ; =========================================================================
-[node name="PostShipView" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot"]
+[node name="PostShipScroll" type="ScrollContainer" parent="Margin/Layout/BuildStateRoot"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -1908,83 +1882,108 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="PostShipView" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="PostShipTitle" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView"]
+[node name="PostShipTitle" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.91, 0.733, 0.471, 1)
-theme_override_font_sizes/font_size = 22
+theme_type_variation = &"NameSerif"
 text = "Ürün canlı"
 
-[node name="StatusPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PostShipView"]
+[node name="StatusPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
+theme_type_variation = &"CardPanel"
 
-[node name="StatusVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipView/StatusPanel"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="StatusHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/StatusPanel/StatusVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 10
-text = "GÜNCEL DURUM"
-
-[node name="StatusBody" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/StatusPanel/StatusVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 13
-text = "—"
-autowrap_mode = 2
-
-[node name="FrankPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PostShipView"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
-
-[node name="FrankVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipView/FrankPanel"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="FrankHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/FrankPanel/FrankVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 10
-text = "FRANK"
-
-[node name="FrankLine" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/FrankPanel/FrankVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 12
-text = "—"
-autowrap_mode = 2
-
-[node name="TractionPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PostShipView"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
-
-[node name="TractionVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipView/TractionPanel"]
+[node name="StatusVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/StatusPanel"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="TractionHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/TractionPanel/TractionVBox"]
+[node name="StatusHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/StatusPanel/StatusVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_font_sizes/font_size = 10
+theme_type_variation = &"SectionLabel"
+text = "DURUM"
+
+[node name="StatusBody" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/StatusPanel/StatusVBox"]
+layout_mode = 2
+theme_type_variation = &"BodySerif"
+text = "—"
+autowrap_mode = 2
+
+[node name="FrankPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView"]
+layout_mode = 2
+theme_type_variation = &"CardPanel"
+
+[node name="FrankBody" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/FrankPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Avatar" type="Panel" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/FrankPanel/FrankBody"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"Avatar"
+
+[node name="Initial" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/FrankPanel/FrankBody/Avatar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"AvatarInitial"
+text = "FK"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FrankVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/FrankPanel/FrankBody"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 3
+
+[node name="FrankHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/FrankPanel/FrankBody/FrankVBox"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+text = "FRANK"
+
+[node name="FrankLine" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/FrankPanel/FrankBody/FrankVBox"]
+layout_mode = 2
+theme_type_variation = &"QuoteSerif"
+text = "—"
+autowrap_mode = 2
+
+[node name="TractionPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView"]
+layout_mode = 2
+theme_type_variation = &"CardPanel"
+
+[node name="TractionVBox" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/TractionPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TractionHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/TractionPanel/TractionVBox"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
 text = "TRACTION'A DOĞRU"
 
-[node name="TractionBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/PostShipView/TractionPanel/TractionVBox"]
+[node name="TractionBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/TractionPanel/TractionVBox"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
+theme_type_variation = &"BuildProgress"
 max_value = 1.0
 value = 0.0
 show_percentage = false
 
-[node name="TractionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipView/TractionPanel/TractionVBox"]
+[node name="TractionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/TractionPanel/TractionVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"RowMeta"
 text = "—"
 
-[node name="SalesHintButton" type="Button" parent="Margin/Layout/BuildStateRoot/PostShipView"]
+[node name="SalesHintButton" type="Button" parent="Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView"]
 layout_mode = 2
+theme_type_variation = &"CommitButton"
 text = "Sales sekmesine git →"

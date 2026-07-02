@@ -17,8 +17,8 @@
     {
       "label": "Düzgün yap — birkaç gün daha gerek",
       "modifiers": [
-        {"type": "quality_bonus", "amount": 4},
-        {"type": "speed_bonus", "days": 2}
+        {"type": "dimension_delta", "axis": "usability", "amount": 6},
+        {"type": "delay_days", "days": 2}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""
@@ -26,7 +26,8 @@
     {
       "label": "Kırp, yüzeyi koru, devam et",
       "modifiers": [
-        {"type": "quality_bonus", "amount": -2},
+        {"type": "delay_days", "days": -1},
+        {"type": "bug_delta", "amount": 3},
         {"type": "set_flag", "key": "scope_creep_kirpildi", "value": true}
       ],
       "unlock_condition": {},

@@ -338,21 +338,38 @@ func _apply_modifiers(modifiers: Array) -> void:
 				new_c.role_stats = cdata.get("role_stats", {})
 				new_c.attention_flag = String(cdata.get("attention_flag", ""))
 				CharacterRegistry.add(new_c)
+			# --- Build modifiers (Product Lifecycle Part 1: clear two-rule vocabulary) ---
+			"dimension_delta":
+				# {axis, amount} — grow (+) or penalize (−) a quality axis, bounded via grow().
+				ProductSystem.apply_dimension_delta(String(m.get("axis", "innovation")), int(m.get("amount", 0)))
+			"bug_delta":
+				# {amount} — add (+) or clear (−) bugs directly.
+				ProductSystem.apply_bug_delta(int(m.get("amount", 0)))
+			"delay_days":
+				# {days} — POSITIVE = slower (adds days to the phase), NEGATIVE = faster.
+				ProductSystem.apply_speed_bonus(int(m.get("days", 0)))
+			# Deprecated aliases (kept so any un-migrated content still applies):
 			"speed_bonus":
 				ProductSystem.apply_speed_bonus(int(m.get("days", 0)))
 			"quality_bonus":
-				ProductSystem.apply_quality_bonus(int(m.get("amount", 0)))
+				ProductSystem.apply_dimension_delta("innovation", int(m.get("amount", 0)))
 			"ship_active_build":
 				ProductSystem.ship_active_build()
 			# --- PostShip / sales modifiers (§10: revenue only via played choices) ---
 			"add_prospect":
 				PitchSystem.spawn_prospect(String(m.get("archetype", "small")), String(m.get("source", "event")))
 			"churn_customer":
-				# Lose the most-at-risk customer; resync MRR immediately so the drop is felt now.
+				# Most-at-risk customer leaves. B2C is one aggregate record, so for B2C
+				# erode the AUDIENCE (derived MRR follows) instead of deleting the whole
+				# userbase; B2B removes the account record. (Economy Model v2.)
 				var victim: Customer = CustomerRegistry.get_lowest_satisfaction_customer()
 				if victim != null:
-					CustomerRegistry.remove(victim.id)
-					GameState.set_mrr(CustomerRegistry.get_total_mrr())
+					if victim.market_type == "b2c":
+						var aud: int = int(GameState.get_flag("b2c_audience", 0))
+						SalesSystem.add_b2c_audience(-int(round(aud * 0.15)))
+					else:
+						CustomerRegistry.remove(victim.id)
+						GameState.set_mrr(CustomerRegistry.get_total_mrr())
 			"customer_mrr_delta":
 				# Expansion: grow an existing B2B account's MRR.
 				var b2bs: Array[Customer] = CustomerRegistry.get_by_market("b2b")
@@ -366,14 +383,16 @@ func _apply_modifiers(modifiers: Array) -> void:
 					sc.satisfaction = clampi(sc.satisfaction + delta, 0, 100)
 					sc.update_health_from_satisfaction()
 			"audience_delta":
-				GameState.set_flag("b2c_audience", maxi(0, int(GameState.get_flag("b2c_audience", 0)) + delta))
+				SalesSystem.add_b2c_audience(delta)  # +/- audience; derived MRR follows
 			"open_paid_tier":
 				SalesSystem.open_b2c_paid_tier(int(m.get("price", 15)), float(m.get("initial_pct", 0.1)))
 			"convert_audience":
+				# Economy Model v2: growth-move events (Product Hunt, power-user) are now
+				# an AUDIENCE SPIKE — MRR follows via the hourly derivation, not a chunk.
 				var n: int = int(m.get("count", 0))
 				if m.has("pct"):
 					n = int(round(int(GameState.get_flag("b2c_audience", 0)) * float(m.get("pct", 0.0))))
-				SalesSystem.convert_b2c_audience(n, String(m.get("source", "decision")))
+				SalesSystem.add_b2c_audience(n)
 			"mentor_advisory":
 				EventBus.mentor_advisory_changed.emit(String(m.get("text", "")))
 			_:

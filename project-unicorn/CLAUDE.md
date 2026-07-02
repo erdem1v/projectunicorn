@@ -14,6 +14,8 @@ Before reading the rest of this document or any spec, internalize these principl
 
 2. **Every economic outcome comes from a played decision moment.** No auto-revenue, no auto-progress, no system-event-as-economic-delta. If a change would touch cash, MRR, brand, reputation, customer count, or any other economic field, ask: "what specific player decision earned this?" If no decision moment exists upstream of the delta, no delta. Flag the question rather than introducing auto-progress silently.
 
+   *Revision note (Economy Model v2): B2C revenue is now **derived auto-flow** — MRR updates continuously (hourly) from the player-managed **audience + price** levers, not tycoon spontaneous income, and the audience is **bidirectional** so bad management still erodes it (MRR can fall; runway stays a threat). The principle's intent holds — every delta traces to a played lever — but the literal "no auto-revenue" is relaxed to "no auto-revenue **untethered from player levers**." B2B stays pitch-driven. See [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md) §10 Revision.*
+
 3. **Micro-to-macro player evolution is the killer differentiator.** Same player, evolving interaction grammar as the company scales across the three release tiers. Tier 1 = micromanage. Tier 2 = delegate, set policy, intervene on exceptions. Tier 3 = macro decisions only. Plan all Tier 1 systems with Tier 2/3 in mind even when shipping Tier 1 alone — data shapes, save schemas, and event vocabularies should anticipate the trillion-dollar version.
 
 4. **Narrative-strategy means decision over optimization.** When in doubt between a path that creates a story moment and a path that adds a stat, favor the story moment. Numbers serve narrative weight, not the other way around.

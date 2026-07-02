@@ -16,9 +16,9 @@ extends Panel
 # TODO when customer health system comes online:
 #   - Connect EventBus.customer_health_changed and repaint health dots
 #     (currently hardcoded green/yellow in RightPanel.tscn)
-# TODO when RivalAI comes online:
-#   - Build rows dynamically from RivalAI.get_active_rivals()
-#   - Connect EventBus.rival_status_changed
+# Rivals are now registry-backed (Product Lifecycle Part 1): rows come from
+# RivalRegistry.get_by_type(active_sub_type); wired to rival_added/advanced/
+# status_changed. (Rival AI decisions are still Tier 2 — momentum only for now.)
 # TODO when EventManager exposes upcoming queue:
 #   - Build rows from EventManager.get_upcoming(14)
 # TODO when funding system comes online:
@@ -74,6 +74,12 @@ func _ready() -> void:
 	EventBus.customer_removed.connect(_on_customer_changed)
 	# Frank's advisory line — updated by PostShip intro/customer/traction events.
 	EventBus.mentor_advisory_changed.connect(_on_mentor_advisory_changed)
+	# Rivals (Product Lifecycle Part 1) — registry-backed now.
+	EventBus.rival_added.connect(_on_rival_changed)
+	EventBus.rival_advanced.connect(_refresh_rivals)
+	EventBus.rival_status_changed.connect(_on_rival_status_changed)
+	# Repaint the rival league when the build/ship state moves the active sub-type.
+	EventBus.build_phase_changed.connect(_on_build_phase_changed)
 
 
 func _exit_tree() -> void:
@@ -83,6 +89,10 @@ func _exit_tree() -> void:
 	EventBus.customer_added.disconnect(_on_customer_changed)
 	EventBus.customer_removed.disconnect(_on_customer_changed)
 	EventBus.mentor_advisory_changed.disconnect(_on_mentor_advisory_changed)
+	EventBus.rival_added.disconnect(_on_rival_changed)
+	EventBus.rival_advanced.disconnect(_refresh_rivals)
+	EventBus.rival_status_changed.disconnect(_on_rival_status_changed)
+	EventBus.build_phase_changed.disconnect(_on_build_phase_changed)
 
 
 func _on_mentor_advisory_changed(text: String) -> void:
@@ -127,17 +137,77 @@ func _refresh_customers() -> void:
 			var c: Customer = top[i]
 			row_names[i].text = c.company_name
 			row_metas[i].text = "$%.1fK · %d seats" % [c.mrr / 1000.0, c.seats]
+			var initial: Label = customer_rows[i].get_node("Avatar/Initial")
+			initial.text = c.company_name.substr(0, 1).to_upper() if c.company_name != "" else "?"
+			# Health dots: green placeholder until the customer-health system lands.
+			_paint_dot(customer_rows[i].get_node("HealthDot"), UiTokens.HEALTH_GREEN)
+
+
+func _paint_dot(panel: Panel, color: Color) -> void:
+	# Token-driven status dot (replaces inline circular styleboxes).
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = color
+	sb.set_corner_radius_all(4)
+	panel.add_theme_stylebox_override("panel", sb)
+
+
+func _on_rival_changed(_rival_id: String = "") -> void:
+	_refresh_rivals()
+
+
+func _on_rival_status_changed(_rival_id: String, _status: String) -> void:
+	_refresh_rivals()
+
+
+func _on_build_phase_changed(_new_phase: String) -> void:
+	_refresh_rivals()
 
 
 func _refresh_rivals() -> void:
-	# Rivals are not registry-backed yet. Until RivalAI lands (see TODO at top),
-	# hide all hardcoded sample rows and show the empty state. When RivalAI
-	# exposes get_active_rivals(), replace this with the same pattern as
-	# _refresh_customers.
-	for row in rival_rows:
-		row.visible = false
-	rivals_count_label.text = "0"
-	rivals_empty_label.visible = true
+	# Registry-backed (Product Lifecycle Part 1). Show the strongest rivals in the
+	# active/shipped sub-type (giant on top = who dominates); the header count slot
+	# carries the player's startup-league rank "N/M".
+	var sub: String = _active_sub_type_id()
+	var list: Array[Rival] = RivalRegistry.get_by_type(sub) if sub != "" else ([] as Array[Rival])
+	if list.is_empty():
+		for row in rival_rows:
+			row.visible = false
+		rivals_count_label.text = "0"
+		rivals_empty_label.visible = true
+		return
+	var axes: Array = ProductCatalog.get_quality_axes(sub)
+	list.sort_custom(func(a, b): return a.composite(axes) > b.composite(axes))
+	rivals_empty_label.visible = false
+	var rank: Dictionary = RivalRegistry.get_player_rank_in_startup_league(sub, _player_composite(sub))
+	rivals_count_label.text = "%d/%d" % [int(rank["rank"]), int(rank["total"])]
+	for i in range(rival_rows.size()):
+		rival_rows[i].visible = i < list.size()
+		if i < list.size():
+			var r: Rival = list[i]
+			(rival_rows[i].get_node("Col/NameLabel") as Label).text = r.product_name
+			(rival_rows[i].get_node("Col/StatusLabel") as Label).text = r.status
+
+
+func _active_sub_type_id() -> String:
+	# Active build → shipped snapshot → first type of the founder's subgenre.
+	var b = ProductSystem.get_active_build()
+	if b != null and b.sub_product_type_id != "":
+		return b.sub_product_type_id
+	var shipped: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
+	if shipped != "":
+		return shipped
+	var types: Array = ProductCatalog.get_sub_product_types(GameState.subgenre)
+	return String(types[0].get("id", "")) if not types.is_empty() else ""
+
+
+func _player_composite(sub: String) -> float:
+	var axes: Array = ProductCatalog.get_quality_axes(sub)
+	var b = ProductSystem.get_active_build()
+	if b != null:
+		return QualityModel.composite_quality(QualityModel.economy_dims_from_build(b), axes)
+	if GameState.get_flag("mvp_shipped", false):
+		return QualityModel.shipped_composite()
+	return 0.0
 
 
 func _refresh_events_header(current_day: int) -> void:
@@ -169,7 +239,7 @@ func _on_customer_changed(_id: String) -> void:
 
 func _refresh_captable() -> void:
 	var founder_pct: int = int(round(GameState.get_founder_equity() * 100.0))
-	captable_founder_label.text = "Founder · %s · %d%%" % [GameState.company_name, founder_pct]
+	captable_founder_label.text = "Founder · %d%%" % founder_pct
 
 	var count: int = 0
 	for emp in CharacterRegistry.get_employees():

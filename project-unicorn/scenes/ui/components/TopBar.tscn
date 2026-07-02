@@ -1,62 +1,10 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/components/top_bar.gd" id="1_topbar"]
 
-[sub_resource type="StyleBoxFlat" id="panel_topbar"]
-bg_color = Color(0.122, 0.102, 0.078, 1)
-border_width_bottom = 1
-border_color = Color(1, 1, 1, 0.06)
-
-[sub_resource type="StyleBoxFlat" id="phase_dot_active"]
-bg_color = Color(0.91, 0.733, 0.471, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="phase_dot_dim"]
-bg_color = Color(0.4, 0.353, 0.282, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="speed_btn_active"]
-bg_color = Color(0.494, 0.353, 0.22, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-content_margin_left = 8.0
-content_margin_top = 3.0
-content_margin_right = 8.0
-content_margin_bottom = 3.0
-
-[sub_resource type="StyleBoxFlat" id="speed_btn_idle"]
-bg_color = Color(0, 0, 0, 0)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-content_margin_left = 8.0
-content_margin_top = 3.0
-content_margin_right = 8.0
-content_margin_bottom = 3.0
-
-[sub_resource type="StyleBoxFlat" id="speed_btn_hover"]
-bg_color = Color(1, 1, 1, 0.04)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-content_margin_left = 8.0
-content_margin_top = 3.0
-content_margin_right = 8.0
-content_margin_bottom = 3.0
-
 [node name="TopBar" type="Panel"]
-custom_minimum_size = Vector2(0, 44)
-theme_override_styles/panel = SubResource("panel_topbar")
+custom_minimum_size = Vector2(0, 56)
+theme_type_variation = &"TopBarPanel"
 script = ExtResource("1_topbar")
 
 [node name="Margin" type="MarginContainer" parent="."]
@@ -73,7 +21,7 @@ theme_override_constants/margin_bottom = 0
 
 [node name="Row" type="HBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 28
+theme_override_constants/separation = 26
 alignment = 1
 
 [node name="IdentityGroup" type="HBoxContainer" parent="Margin/Row"]
@@ -85,173 +33,175 @@ theme_override_constants/separation = 10
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(0.91, 0.733, 0.471, 1)
+color = Color(0.886, 0.639, 0.235, 1)
 
 [node name="CompanyNameLabel" type="Label" parent="Margin/Row/IdentityGroup"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 15
+theme_type_variation = &"ChromeValue"
 text = "Unicorn Inc."
 
 [node name="Sep1" type="ColorRect" parent="Margin/Row"]
-custom_minimum_size = Vector2(1, 18)
+custom_minimum_size = Vector2(1, 22)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(1, 1, 1, 0.06)
+color = Color(1, 1, 1, 0.08)
 
 [node name="FinanceGroup" type="HBoxContainer" parent="Margin/Row"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 22
+theme_override_constants/separation = 24
 
 [node name="StatCol_Cash" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
+custom_minimum_size = Vector2(104, 0)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 1
+theme_override_constants/separation = 2
 
 [node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Cash"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"MetricCaption"
 text = "CASH"
 
 [node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Cash"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 15
-text = "$50K"
-
-[node name="DeltaLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Cash"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 10
-text = "+$0/d"
+theme_type_variation = &"MetricValue"
+text = "$50,000"
+clip_text = true
 
 [node name="StatCol_MRR" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 1
+theme_override_constants/separation = 2
 
 [node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_MRR"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"MetricCaption"
 text = "MRR"
 
 [node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_MRR"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 15
+theme_type_variation = &"MetricValue"
 text = "$0"
-
-[node name="DeltaLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_MRR"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 10
-text = "+$0/d"
+clip_text = true
 
 [node name="StatCol_Burn" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 1
+theme_override_constants/separation = 2
 
 [node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"MetricCaption"
 text = "BURN"
 
-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn"]
+[node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Burn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 15
-text = "-$500/d"
+theme_override_constants/separation = 2
+
+[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn/ValueRow"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"MetricValue"
+text = "$500"
+
+[node name="UnitLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn/ValueRow"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"MetricUnit"
+text = "/d"
 
 [node name="StatCol_Net" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 1
+theme_override_constants/separation = 2
 
 [node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"MetricCaption"
 text = "NET"
 
-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net"]
+[node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Net"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 15
-text = "-$500/d"
+theme_override_constants/separation = 2
+
+[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net/ValueRow"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"MetricValue"
+text = "+$500"
+
+[node name="UnitLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net/ValueRow"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"MetricUnit"
+text = "/d"
 
 [node name="StatCol_Runway" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 1
+theme_override_constants/separation = 2
 
 [node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"MetricCaption"
 text = "RUNWAY"
 
-[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway"]
+[node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Runway"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 15
-text = "3.3mo"
+theme_override_constants/separation = 2
+
+[node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway/ValueRow"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"MetricValue"
+text = "3.3"
+
+[node name="UnitLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway/ValueRow"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"MetricUnit"
+text = "mo"
 
 [node name="Sep2" type="ColorRect" parent="Margin/Row"]
-custom_minimum_size = Vector2(1, 18)
+custom_minimum_size = Vector2(1, 22)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(1, 1, 1, 0.06)
+color = Color(1, 1, 1, 0.08)
 
 [node name="ReputationGroup" type="HBoxContainer" parent="Margin/Row"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 22
+theme_override_constants/separation = 24
 
 [node name="StatCol_Brand" type="VBoxContainer" parent="Margin/Row/ReputationGroup"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 1
+theme_override_constants/separation = 2
 
 [node name="HeaderLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Brand"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"MetricCaption"
 text = "BRAND"
 
 [node name="ValueLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Brand"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 15
+theme_type_variation = &"MetricValue"
 text = "50"
 
 [node name="StatCol_Rep" type="VBoxContainer" parent="Margin/Row/ReputationGroup"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 1
+theme_override_constants/separation = 2
 
 [node name="HeaderLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Rep"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.56, 0.494, 0.396, 1)
-theme_override_constants/letter_spacing = 1
-theme_override_font_sizes/font_size = 9
+theme_type_variation = &"MetricCaption"
 text = "REPUTATION"
 
 [node name="ValueLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Rep"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 15
+theme_type_variation = &"MetricValue"
 text = "0"
 
 [node name="Spacer" type="Control" parent="Margin/Row"]
@@ -260,24 +210,23 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="TimeGroup" type="HBoxContainer" parent="Margin/Row"]
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(360, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 16
 
 [node name="DayLabel" type="Label" parent="Margin/Row/TimeGroup"]
-custom_minimum_size = Vector2(160, 0)
+custom_minimum_size = Vector2(210, 0)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 13
-text = "Wed, Jan 1 · 09:00"
+theme_type_variation = &"ChromeSerif"
+text = "Thu, Jan 1, 2026 · 09:00"
 
 [node name="Sep3" type="ColorRect" parent="Margin/Row/TimeGroup"]
-custom_minimum_size = Vector2(1, 18)
+custom_minimum_size = Vector2(1, 22)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(1, 1, 1, 0.06)
+color = Color(1, 1, 1, 0.08)
 
 [node name="PhaseGroup" type="VBoxContainer" parent="Margin/Row/TimeGroup"]
 custom_minimum_size = Vector2(108, 0)
@@ -287,9 +236,8 @@ theme_override_constants/separation = 4
 
 [node name="PhaseNameLabel" type="Label" parent="Margin/Row/TimeGroup/PhaseGroup"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
-text = "Bootstrap"
+theme_type_variation = &"ChromeLabel"
+text = "BOOTSTRAP"
 horizontal_alignment = 1
 
 [node name="PhaseDots" type="HBoxContainer" parent="Margin/Row/TimeGroup/PhaseGroup"]
@@ -300,23 +248,23 @@ theme_override_constants/separation = 6
 [node name="PhaseDot1" type="Panel" parent="Margin/Row/TimeGroup/PhaseGroup/PhaseDots"]
 custom_minimum_size = Vector2(24, 4)
 layout_mode = 2
-theme_override_styles/panel = SubResource("phase_dot_active")
+theme_type_variation = &"PhaseDotActive"
 
 [node name="PhaseDot2" type="Panel" parent="Margin/Row/TimeGroup/PhaseGroup/PhaseDots"]
 custom_minimum_size = Vector2(24, 4)
 layout_mode = 2
-theme_override_styles/panel = SubResource("phase_dot_dim")
+theme_type_variation = &"PhaseDotDim"
 
 [node name="PhaseDot3" type="Panel" parent="Margin/Row/TimeGroup/PhaseGroup/PhaseDots"]
 custom_minimum_size = Vector2(24, 4)
 layout_mode = 2
-theme_override_styles/panel = SubResource("phase_dot_dim")
+theme_type_variation = &"PhaseDotDim"
 
 [node name="Sep4" type="ColorRect" parent="Margin/Row/TimeGroup"]
-custom_minimum_size = Vector2(1, 18)
+custom_minimum_size = Vector2(1, 22)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(1, 1, 1, 0.06)
+color = Color(1, 1, 1, 0.08)
 
 [node name="SpeedControls" type="HBoxContainer" parent="Margin/Row/TimeGroup"]
 layout_mode = 2
@@ -326,47 +274,23 @@ theme_override_constants/separation = 4
 [node name="PauseBtn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(28, 22)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_colors/font_hover_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_colors/font_pressed_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("speed_btn_idle")
-theme_override_styles/hover = SubResource("speed_btn_hover")
-theme_override_styles/pressed = SubResource("speed_btn_active")
+theme_type_variation = &"SpeedButton"
 text = "II"
 
 [node name="Speed1Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(28, 22)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_colors/font_hover_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_colors/font_pressed_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("speed_btn_active")
-theme_override_styles/hover = SubResource("speed_btn_active")
-theme_override_styles/pressed = SubResource("speed_btn_active")
+theme_type_variation = &"SpeedButtonActive"
 text = "1x"
 
 [node name="Speed2Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(28, 22)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_colors/font_hover_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_colors/font_pressed_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("speed_btn_idle")
-theme_override_styles/hover = SubResource("speed_btn_hover")
-theme_override_styles/pressed = SubResource("speed_btn_active")
+theme_type_variation = &"SpeedButton"
 text = "2x"
 
 [node name="Speed4Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(28, 22)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_colors/font_hover_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_colors/font_pressed_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("speed_btn_idle")
-theme_override_styles/hover = SubResource("speed_btn_hover")
-theme_override_styles/pressed = SubResource("speed_btn_active")
+theme_type_variation = &"SpeedButton"
 text = "4x"

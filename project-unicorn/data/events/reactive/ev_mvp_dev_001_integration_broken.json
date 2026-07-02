@@ -17,7 +17,8 @@
     {
       "label": "Gece boyu uğraş, doğru yap",
       "modifiers": [
-        {"type": "quality_bonus", "amount": 3},
+        {"type": "dimension_delta", "axis": "stability", "amount": 6},
+        {"type": "delay_days", "days": 1},
         {"type": "set_flag", "key": "founder_fatigue", "value": true}
       ],
       "unlock_condition": {},
@@ -26,8 +27,9 @@
     {
       "label": "Geçici çözüm — TODO listesine ekle",
       "modifiers": [
-        {"type": "set_flag", "key": "tech_debt_birikti", "value": true},
-        {"type": "speed_bonus", "days": -1}
+        {"type": "delay_days", "days": -2},
+        {"type": "bug_delta", "amount": 2},
+        {"type": "set_flag", "key": "tech_debt_birikti", "value": true}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

@@ -21,7 +21,7 @@ extends Panel
 
 const SCROLL_SPEED := 50.0  # pixels per second
 const SEPARATOR := "   ·   "
-const SOURCE_COLOR := "#e8bb78"  # amber — matches UiTokens.ACCENT_HEX
+const SOURCE_COLOR := UiTokens.ACCENT_HEX  # amber source name (single token source)
 
 const HEADLINES := [
 	{"src": "Webrazzi",      "txt": "Vertical SaaS valuations cool 12% in Q1"},

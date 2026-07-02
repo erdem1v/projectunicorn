@@ -856,6 +856,15 @@ This is the line between Project Unicorn and tycoon games. Tycoon games auto-gen
 
 This principle governs all system design. When designing any new system, ask: "is the player making a decision that earns this delta?" If the answer is no decision moment, no delta. Surface the question to the chat-side directors rather than introducing an auto-progress path silently.
 
+### §10 Revision — Economy Model v2 (B2C derived auto-flow)
+
+The B2C revenue model is revised. B2C MRR is no longer produced only at discrete decision moments; it is **derived automatically and continuously** (every in-game hour) from a live **audience** base and the player's **price**:
+
+- `paying_users = round(audience × conversion_rate(price))`; `MRR = paying_users × price`.
+- The audience is **bidirectional**: quality, brand, and positive reputation/events grow it; bugs, low/falling reputation, negative events, and over-aggressive price hikes erode it. So MRR can fall as well as rise, and **runway stays a real threat** — a badly-run company (low quality, falling reputation, unfixed bugs) loses audience and revenue.
+
+This is **not** tycoon spontaneous generation. Revenue still emerges *only* from player-managed levers — price positioning, product quality, reputation-preserving event choices, and growth-move events that move the audience — but it now **flows between decisions** instead of plateauing. The earlier "no auto-revenue / time passing does not generate cash" wording targets tycoon-style income from system events (build factory → income); **derived-from-managed-levers flow** is the intended model going forward. B2B remains **pitch-driven** (fixed MRR per signed deal; no auto-flow). This note is the governing patch; a full doc rewrite is deferred.
+
 ---
 
 *End of Project Spec. For technical architecture, see `TECH_SPEC.md`. For session entry and agentic workflow, see `CLAUDE.md`.*

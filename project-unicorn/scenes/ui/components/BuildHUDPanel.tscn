@@ -1,14 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://buildhudpaneltscn001"]
+[gd_scene load_steps=3 format=3 uid="uid://buildhudpaneltscn001"]
 
 [ext_resource type="Script" path="res://scripts/ui/components/build_hud_panel.gd" id="1_build_hud"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.118, 0.106, 0.082, 0.94)
+bg_color = Color(0.965, 0.949, 0.91, 0.98)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.30, 0.27, 0.22, 1)
+border_color = Color(0.847, 0.816, 0.737, 1)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -17,13 +17,6 @@ content_margin_left = 12.0
 content_margin_top = 10.0
 content_margin_right = 12.0
 content_margin_bottom = 10.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
-bg_color = Color(0.165, 0.137, 0.106, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
 
 [node name="BuildHUDPanel" type="Control"]
 layout_mode = 3
@@ -66,15 +59,13 @@ theme_override_constants/separation = 2
 
 [node name="ProductNameLabel" type="Label" parent="Root/Panel/VBox/HeaderRow"]
 layout_mode = 2
+theme_type_variation = &"NameSerif"
 text = "Build"
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 14
 
 [node name="PhaseLabel" type="Label" parent="Root/Panel/VBox/HeaderRow"]
 layout_mode = 2
+theme_type_variation = &"RowMeta"
 text = "—"
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
 
 [node name="StatsRow" type="HBoxContainer" parent="Root/Panel/VBox"]
 layout_mode = 2
@@ -82,15 +73,13 @@ theme_override_constants/separation = 12
 
 [node name="QualityLabel" type="Label" parent="Root/Panel/VBox/StatsRow"]
 layout_mode = 2
+theme_type_variation = &"RowMeta"
 text = "Kalite —"
-theme_override_colors/font_color = Color(0.96, 0.91, 0.82, 1)
-theme_override_font_sizes/font_size = 11
 
 [node name="BugsLabel" type="Label" parent="Root/Panel/VBox/StatsRow"]
 layout_mode = 2
+theme_type_variation = &"RowMeta"
 text = "Bug —"
-theme_override_colors/font_color = Color(0.78, 0.722, 0.612, 1)
-theme_override_font_sizes/font_size = 11
 
 [node name="ProgressBar" type="ProgressBar" parent="Root/Panel/VBox"]
 custom_minimum_size = Vector2(0, 6)
@@ -99,7 +88,7 @@ size_flags_horizontal = 3
 max_value = 1.0
 value = 0.0
 show_percentage = false
-theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
+theme_type_variation = &"BuildProgress"
 
 [node name="ButtonRow" type="HBoxContainer" parent="Root/Panel/VBox"]
 layout_mode = 2
@@ -121,4 +110,5 @@ disabled = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"CommitButton"
 text = "LAUNCH"
