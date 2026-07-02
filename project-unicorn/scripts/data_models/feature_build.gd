@@ -80,7 +80,9 @@ extends Resource
 # Days remaining inside the current iteration. When this hits 0 we don't pause
 # the game — we flip a "decision pending" flag so BuildHUDPanel lights up its
 # advance/development buttons and the player picks on their own time.
-@export var iteration_days_in_current: int = 0
+# B2: FLOAT so it decrements hourly (1/24 per hour) and the progress reads
+# smooth instead of jumping a whole day at a time. Displays int-cast for "N gün".
+@export var iteration_days_in_current: float = 0.0
 # Whether the player owes a decision for the just-completed iteration.
 # Persisted on the build (not the system) so saving mid-decision restores
 # cleanly.
@@ -88,7 +90,9 @@ extends Resource
 # Development phase span — derived from feature complexity at start_build()
 # time and ticked down during _tick_development_phase().
 @export var development_days_total: int = 0
-@export var development_days_elapsed: int = 0
+# B2: FLOAT so development/sprint progress advances hourly (1/24 per hour) and
+# reads smooth. development_days_total stays an int (whole-day duration).
+@export var development_days_elapsed: float = 0.0
 
 # --- DEPRECATED Spec #2 fields (kept for save compat — do not read in new code) ---
 # Player no longer picks a duration up front (Spec #4 removed Rushed/Standard/

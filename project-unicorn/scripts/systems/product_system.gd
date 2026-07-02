@@ -92,44 +92,37 @@ static var active_build: FeatureBuild = null
 # --- Entry point (called by TimeManager._tick_product at slot 1) ---
 
 static func daily_tick() -> void:
-	# Daily = phase COUNTERS + transitions + bugfix bug-clearing only. Quality growth
-	# and bug ACCRUAL are hourly now (hourly_tick) so they read smooth, not day-jumps.
-	if active_build == null:
-		return
-	match active_build.current_phase:
-		"iteration":
-			_tick_iteration_day()
-		"development":
-			_tick_development_day()
-		"bugfix":
-			_tick_bugfix_day()
-		"bug_sprint":
-			_tick_bug_sprint_day()
-		# planning / shipped / cancelled — no daily work
-	EventBus.build_progress_changed.emit()
+	# B2: build phase progress is HOURLY now (hourly_tick) so it reads smooth,
+	# not day-jumps. Nothing product-side is genuinely daily anymore — this slot-1
+	# entry is kept as a stub for any future daily product logic.
+	pass
 
 
-# --- Daily phase-counter ticks (transitions only; growth is hourly) ---
+# --- Hourly phase-progress helpers (B2: formerly the daily _tick_*_day funcs) ---
+# One in-game hour = 1/HOURS_PER_BUILD_DAY of a day, so a 4-day iteration drains
+# over 96 hourly steps — SAME total duration, smooth motion. Transitions fire on
+# the hour the fractional counter crosses its threshold.
 
-static func _tick_iteration_day() -> void:
+static func _advance_iteration_hour() -> void:
 	# Idle while the player owes an iteration decision — no counter movement.
 	if active_build.iteration_decision_pending:
 		return
-	active_build.iteration_days_in_current = max(0, active_build.iteration_days_in_current - 1)
-	if active_build.iteration_days_in_current == 0:
+	active_build.iteration_days_in_current = maxf(0.0, active_build.iteration_days_in_current - 1.0 / float(HOURS_PER_BUILD_DAY))
+	if active_build.iteration_days_in_current <= 0.0:
 		active_build.iteration_decision_pending = true
 		EventBus.build_iteration_decision_pending.emit(true)
 
 
-static func _tick_development_day() -> void:
-	active_build.development_days_elapsed += 1
-	if active_build.development_days_elapsed >= active_build.development_days_total:
+static func _advance_development_hour() -> void:
+	active_build.development_days_elapsed += 1.0 / float(HOURS_PER_BUILD_DAY)
+	if active_build.development_days_elapsed >= float(active_build.development_days_total):
 		# Tech-debt taken during dev events now comes due as real bugs (C2).
 		if GameState.get_flag("tech_debt_birikti", false):
 			active_build.bug_count += TECH_DEBT_BUG_PENALTY
 			GameState.set_flag("tech_debt_birikti", false)
 		active_build.current_phase = "bugfix"
 		active_build._sync_status_from_phase()
+		active_build.bug_progress = 0.0   # shared accumulator now used to CLEAR (negative) in bugfix
 		# Snapshot bug count at bugfix entry so PostShipView / HUD can read
 		# "started with M, shipped with N". Keyed by build id.
 		GameState.set_flag("bug_count_at_bugfix_start_%s" % active_build.id, active_build.bug_count)
@@ -139,10 +132,16 @@ static func _tick_development_day() -> void:
 			print("[ProductSystem] Development complete → bugfix. quality=%d bugs=%d" % [active_build.quality, active_build.bug_count])
 
 
-static func _tick_bugfix_day() -> void:
-	# Open-ended — no auto shipping. Bugs fall in daily chunks; quality hardens hourly.
-	active_build.bug_count = max(0, active_build.bug_count - POLISH_BUG_FIX_PER_DAY)
-	_sync_legacy_quality(active_build)
+static func _clear_bugs_hourly(rate_per_day: float) -> void:
+	# Bugfix: bugs fall smoothly (rate_per_day ÷ 24) via the fractional bug_progress
+	# accumulator (negative side), instead of a daily chunk.
+	var b := active_build
+	b.bug_progress -= rate_per_day / float(HOURS_PER_BUILD_DAY)
+	while b.bug_progress <= -1.0 and b.bug_count > 0:
+		b.bug_count -= 1
+		b.bug_progress += 1.0
+	b.bug_count = max(0, b.bug_count)
+	_sync_legacy_quality(b)
 
 
 # --- Hourly tick (Product Lifecycle Part 1): smooth quality + bug accrual ---
@@ -158,26 +157,32 @@ static func hourly_tick(_hour: int) -> void:
 	match active_build.current_phase:
 		"iteration":
 			if active_build.iteration_decision_pending:
-				return  # idling on the player's decision — no accrual
-			_grow_hourly(active_build, "innovation", ITER_INNO)
-			_grow_hourly(active_build, "usability", ITER_USAB)
-			_accrue_bugs_hourly()
+				return  # idling on the player's decision — no accrual, no counter
+			_advance_iteration_hour()   # may flip decision_pending this hour
+			# Skip growth on the hour the iteration just completed.
+			if not active_build.iteration_decision_pending:
+				_grow_hourly(active_build, "innovation", ITER_INNO)
+				_grow_hourly(active_build, "usability", ITER_USAB)
+				_accrue_bugs_hourly()
 		"development":
 			var tech: int = GameState.get_founder_skill("tech")
 			_grow_hourly(active_build, "stability", DEV_STAB_BASE + float(tech) * TECH_STAB_COEF)
 			_grow_hourly(active_build, "usability", DEV_USAB)
 			_accrue_bugs_hourly()
+			_advance_development_hour()   # may transition to bugfix
 		"bugfix":
 			_grow_hourly(active_build, "stability", BUGFIX_STAB)
 			_grow_hourly(active_build, "usability", BUGFIX_USAB)
+			_clear_bugs_hourly(float(POLISH_BUG_FIX_PER_DAY))
 		"bug_sprint":
 			_tick_bug_sprint_hourly()
+			_advance_bug_sprint_hour()    # may END the sprint (active_build → null)
 		_:
 			return
 	# Pool-deepening: strengthened features push their dominant axis a little every growth
-	# hour in ALL growth phases (no-op unless this is a strengthen build). Runs only after a
-	# non-returning growth phase above; bug_sprint carries an empty strengthen list.
-	if active_build.current_phase in ["iteration", "development", "bugfix"]:
+	# hour in ALL growth phases (no-op unless this is a strengthen build). Guard: a
+	# just-ended bug sprint nulled active_build above.
+	if active_build != null and active_build.current_phase in ["iteration", "development", "bugfix"]:
 		_apply_strengthen_growth_hourly(active_build)
 	EventBus.build_progress_changed.emit()
 
@@ -277,9 +282,9 @@ static func _tick_bug_sprint_hourly() -> void:
 	GameState.set_flag("mvp_live_bug_progress", 0.0)
 
 
-static func _tick_bug_sprint_day() -> void:
-	active_build.development_days_elapsed += 1
-	if active_build.development_days_elapsed >= active_build.development_days_total:
+static func _advance_bug_sprint_hour() -> void:
+	active_build.development_days_elapsed += 1.0 / float(HOURS_PER_BUILD_DAY)
+	if active_build.development_days_elapsed >= float(active_build.development_days_total):
 		# Done: persist the cleared live bug count, drop the sprint, resume normal PostShip.
 		GameState.set_flag("mvp_live_bug_count", active_build.bug_count)
 		GameState.set_flag("mvp_live_bug_progress", 0.0)
@@ -628,9 +633,9 @@ static func apply_speed_bonus(days: int) -> void:
 		return
 	match active_build.current_phase:
 		"iteration":
-			active_build.iteration_days_in_current = max(0, active_build.iteration_days_in_current + days)
+			active_build.iteration_days_in_current = maxf(0.0, active_build.iteration_days_in_current + float(days))
 		"development":
-			active_build.development_days_total = max(active_build.development_days_elapsed, active_build.development_days_total + days)
+			active_build.development_days_total = int(maxf(active_build.development_days_elapsed, float(active_build.development_days_total + days)))
 
 
 static func apply_quality_bonus(amount: int) -> void:

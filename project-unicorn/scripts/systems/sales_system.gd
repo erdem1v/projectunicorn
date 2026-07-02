@@ -337,7 +337,13 @@ static func _value_lines(sub: String, feature_count: int, tendency: String) -> A
 	for a in axes:
 		var axis: String = String(a.get("axis", ""))
 		var label: String = String(a.get("display_label", axis))
-		var s: int = int(round(QualityModel.axis_score(dims, axis)))
+		# A1 single-source-of-truth: show the RAW axis value (stability = effective,
+		# since dims come from economy_dims_from_flags) so this badge matches the
+		# left "Ürün Durumu" card byte-for-byte. The price formula is unaffected — it
+		# reads QualityModel.shipped_normalized() (composite), never these badges.
+		var s: int = int(round(float(dims.get(axis, 0.0))))
+		# Bands re-tuned for the raw scale (axes born 0, asymptote ~110): a shipped
+		# axis ≥70 reads strong, ≥45 mid. Cosmetic only (chip color/label).
 		var axis_sign: int = 1 if s >= 70 else (0 if s >= 45 else -1)
 		var tail: String = "güçlü" if axis_sign > 0 else ("orta" if axis_sign == 0 else "zayıf")
 		lines.append({"text": "%s %d → %s" % [label, s, tail], "sign": axis_sign})

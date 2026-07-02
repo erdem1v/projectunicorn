@@ -27,6 +27,15 @@ extends Control
 @onready var development_button: Button = $Root/Panel/VBox/ButtonRow/DevelopmentButton
 @onready var launch_button: Button = $Root/Panel/VBox/ButtonRow/LaunchButton
 
+# C2: product_tab suppresses this desk overlay while its BuildProgressView is up
+# (the phase decision now lives there as a proper card). Still shows on other tabs.
+var _suppressed: bool = false
+
+
+func set_suppressed(v: bool) -> void:
+	_suppressed = v
+	_refresh()
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -71,9 +80,9 @@ func _on_build_progress_changed() -> void:
 
 func _refresh() -> void:
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	# Hidden with no build, and during a bug sprint (Part 2A) — the sprint UI lives in
-	# PostShipView, not this desk overlay.
-	if b == null or b.is_bug_sprint:
+	# Hidden with no build, during a bug sprint (Part 2A — sprint UI lives in
+	# PostShipView), or while suppressed (C2 — BuildProgressView owns the decision).
+	if _suppressed or b == null or b.is_bug_sprint:
 		visible = false
 		return
 	visible = true
@@ -90,12 +99,14 @@ func _refresh() -> void:
 
 	# Stats row — three quality dimensions (Stability shown EFFECTIVE, so bugs drag
 	# it down live) + raw bug count in bugs_label. İno / Krl / Kul = per-axis 0-100.
+	# C3 single-source: RAW dims (stability = effective) to match the PostShip
+	# left card + pricing badges. Was axis_score (normalized) → inconsistent.
 	var draw: Dictionary = QualityModel.dims_from_build(b)
 	var deco: Dictionary = QualityModel.economy_dims_from_build(b)
 	quality_label.text = "İno %d · Krl %d · Kul %d" % [
-		int(round(QualityModel.axis_score(draw, "innovation"))),
-		int(round(QualityModel.axis_score(deco, "stability"))),
-		int(round(QualityModel.axis_score(draw, "usability"))),
+		int(round(float(draw.get("innovation", 0.0)))),
+		int(round(float(deco.get("stability", 0.0)))),
+		int(round(float(draw.get("usability", 0.0)))),
 	]
 	bugs_label.text = _bugs_display(b)
 

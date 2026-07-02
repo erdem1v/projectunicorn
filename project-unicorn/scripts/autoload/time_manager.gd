@@ -32,6 +32,7 @@ const HOURS_PER_DAY := 24
 const INITIAL_HOUR := 9                          # Game starts at 09:00 on Day 1
 
 var current_speed: int = 1                       # Default 1x — TopBar visually active at 1x
+var last_running_speed: int = 1                  # Last non-zero speed; Space-toggle (GameShell) resumes to this
 
 # Emitted after current_speed actually changes. UI (TopBar) subscribes here
 # rather than mirroring EventBus.speed_change_requested directly, so visuals
@@ -100,6 +101,8 @@ func _on_speed_change_requested(speed: int) -> void:
 		push_warning("[TimeManager] Invalid speed requested: %d" % speed)
 		return
 	current_speed = speed
+	if speed > 0:
+		last_running_speed = speed   # remember for Space-toggle resume
 	get_tree().paused = (speed == 0)
 	speed_changed.emit(speed)
 
