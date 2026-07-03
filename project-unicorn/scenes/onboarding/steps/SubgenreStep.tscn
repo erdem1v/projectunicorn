@@ -54,7 +54,7 @@ offset_bottom = 28.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 14
-text = "Hangi pazarda doğacaksın? Subgenre component palette'ini ve büyüme profili tonunu belirler."
+text = "Hangi pazarda doğacaksın? Bu seçim neler inşa edebileceğini ve şirketin nasıl büyüyeceğini belirler."
 
 [node name="Row" type="HBoxContainer" parent="."]
 layout_mode = 1
@@ -107,7 +107,7 @@ text = "AI"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 13
-text = "[DESIGNER REVIEW] Yüksek risk, yüksek tavan. Sıcak pazar, sert rekabet."
+text = "Yüksek risk, yüksek tavan. Pazar sıcak, rekabet acımasız."
 autowrap_mode = 2
 
 [node name="Spacer" type="Control" parent="Row/AICard/Body"]
@@ -119,7 +119,7 @@ mouse_filter = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 11
-text = "inference engine · vector DB · eval pipeline · multi-modal"
+text = "modeller · vektör aramalar · GPU faturaları · herkes buraya koşuyor"
 autowrap_mode = 2
 
 [node name="SaaSCard" type="Panel" parent="Row"]
@@ -163,7 +163,7 @@ text = "SaaS"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 13
-text = "[DESIGNER REVIEW] Sürekli MRR, yavaş büyüme, savunulabilir marj."
+text = "Aydan aya biriken abonelik geliri. Yavaş büyür, sağlam durur."
 autowrap_mode = 2
 
 [node name="Spacer" type="Control" parent="Row/SaaSCard/Body"]
@@ -175,7 +175,7 @@ mouse_filter = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 11
-text = "auth · integrations · analytics · admin"
+text = "panolar · entegrasyonlar · faturalar · sabır"
 autowrap_mode = 2
 
 [node name="SocialCard" type="Panel" parent="Row"]
@@ -219,7 +219,7 @@ text = "ÇOK YAKINDA"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 13
-text = "[DESIGNER REVIEW] Virality-driven, brand-volatile."
+text = "Viral büyür, viral çöker. Marka bir gecede kurulur, bir gecede biter."
 autowrap_mode = 2
 
 [node name="Spacer" type="Control" parent="Row/SocialCard/Body"]
@@ -231,5 +231,5 @@ mouse_filter = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 11
-text = "feed algorithm · moderation · ad system"
+text = "akış algoritması · moderasyon · reklam parası"
 autowrap_mode = 2
