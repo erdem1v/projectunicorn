@@ -10,6 +10,7 @@
     {"type": "build_phase", "value": "iteration"},
     {"type": "random", "chance": 0.35}
   ],
+  "allowed_hours": [22, 2],
   "cooldown_days": 12,
   "one_shot": true,
   "priority": 0,

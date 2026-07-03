@@ -10,6 +10,7 @@
     {"type": "build_phase", "value": "bugfix"},
     {"type": "random", "chance": 0.25}
   ],
+  "allowed_hours": [21, 1],
   "cooldown_days": 12,
   "one_shot": true,
   "priority": 0,
@@ -25,7 +26,10 @@
     },
     {
       "label": "Yeterince iyi — devam",
-      "modifiers": [],
+      "modifiers": [
+        {"type": "dimension_delta", "axis": "usability", "amount": -2},
+        {"type": "bug_delta", "amount": 1}
+      ],
       "unlock_condition": {},
       "unlock_reason_text": ""
     }

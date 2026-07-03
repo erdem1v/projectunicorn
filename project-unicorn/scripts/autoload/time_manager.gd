@@ -211,9 +211,12 @@ func _tick_sales_hourly(hour: int) -> void:
 	SalesSystem.hourly_tick(hour)
 
 func _tick_hourly_events(hour: int) -> void:
-	pass  # TODO when EventManager exposes hourly_tick:
-	# EventManager.hourly_tick(hour) — for time-of-day triggers
-	# (e.g. "Mira lunch 13:00", "all-hands 09:00", "VC dinner 19:00")
+	# Ambient (random-trigger) reactive events evaluate hourly so time-of-day
+	# windows (allowed_hours in the event JSON) are mechanically honest — a
+	# 02:17 bug event fires at night, not at the midnight daily tick.
+	# Deterministic beat events stay on the daily path (slot 6, daily_tick).
+	# See scripts/autoload/event_manager.gd (D-A).
+	EventManager.hourly_tick(hour)
 
 func _tick_hourly_schedule(hour: int) -> void:
 	pass  # TODO when CharacterRegistry exposes schedule queries

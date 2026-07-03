@@ -11,6 +11,7 @@
     {"type": "customer_satisfaction_below", "value": 60},
     {"type": "random", "chance": 0.5}
   ],
+  "allowed_hours": [9, 18],
   "cooldown_days": 8,
   "one_shot": false,
   "priority": 2,
@@ -28,6 +29,7 @@
       "label": "Hot-fix sözü ver",
       "modifiers": [
         {"type": "satisfaction_delta", "delta": 8},
+        {"type": "cash", "delta": -300},
         {"type": "set_flag", "key": "hotfix_promised", "value": true}
       ],
       "unlock_condition": {},

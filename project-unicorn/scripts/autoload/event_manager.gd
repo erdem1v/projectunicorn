@@ -3,11 +3,14 @@ extends Node
 # Event pipeline per TECH_SPEC §6.1 + §8.2 slot 6.
 #
 # Loads GameEvent resources from data/events/reactive/*.json at _ready.
-# Each daily tick (slot 6, after Finance) walks all loaded events, filters by
-# eligibility (trigger conditions + cooldown + one-shot history), queues
-# eligible events sorted by priority desc, and emits modal_requested for the
-# top of the queue if no modal is currently active. The modal is mounted by
-# main.gd (deferred consumer pattern — EventManager has no scene dependency).
+# Each daily tick (slot 6, after Finance) walks the deterministic "beat"
+# events (no random trigger), filters by eligibility (trigger conditions +
+# cooldown + one-shot history), queues eligible events sorted by priority
+# desc, and emits modal_requested for the top of the queue if no modal is
+# currently active. Ambient events (random trigger) evaluate on hourly_tick
+# instead, gated by optional allowed_hours time-of-day windows (D-A). The
+# modal is mounted by main.gd (deferred consumer pattern — EventManager has
+# no scene dependency).
 #
 # When a choice is picked, EventModal calls resolve_choice(event_id, idx):
 # the modifier dispatcher applies effects through existing GameState +
@@ -32,6 +35,17 @@ var _history: Array = []                  # Array of {id, day, choice}
 var _active_event_id: String = ""         # "" = no modal up
 var _active_event: GameEvent = null       # live event object — covers synthetic events (e.g. ship moment) not in _all_events
 
+# Time-of-day windows (D-A). Optional JSON field "allowed_hours": [start, end]
+# — inclusive 24h ints; start > end wraps midnight (e.g. [22, 2] = 22:00-02:59).
+# Kept manager-side (id -> Array) so GameEvent's schema stays untouched —
+# the loader ignores unknown JSON keys, this dict is the extension seam.
+var _hour_windows: Dictionary = {}
+
+# Day (GameState.day) on which an ambient event last ENTERED the queue.
+# Preserves the Faz 1 bug 1.6 "≤1 ambient per day" throttle now that ambient
+# evaluation runs hourly (was: `break` after first ambient enqueue in daily_tick).
+var _ambient_fired_day: int = -1
+
 
 func _ready() -> void:
 	_load_all_events_from_disk()
@@ -40,37 +54,56 @@ func _ready() -> void:
 # --- TimeManager slot 6 entry point ---
 
 func daily_tick() -> void:
-	var eligible: Array[GameEvent] = []
-	for ev in _all_events.values():
-		if _is_eligible(ev):
-			eligible.append(ev)
-	if eligible.is_empty():
-		_pump_queue()  # in case prior tick left something queued
-		return
-	# Faz 1 bug 1.6 — split eligible events into deterministic "beat" events
-	# (state-gated, no random roll) and the ambient random pool. Beats are
-	# critical flow moments (paid-tier, first-revenue, Frank intro, traction-
-	# ready) and must NOT be delayed behind a one-per-day cap, so every eligible
-	# beat is enqueued. The ambient random pool is throttled to at most ONE new
-	# event per tick, so events fire in sync with the daily tick instead of
-	# bursting all at once (the burst is what made the day appear frozen while
-	# modals stacked, and — before build events became one_shot — fed the
-	# "same event twice" feel).
+	# Deterministic "beat" events only (Faz 1 bug 1.6 split, D-A refinement):
+	# state-gated events with no random roll — critical flow moments (paid-tier,
+	# first-revenue, Frank intro, traction-ready) — fire the moment their
+	# condition holds, never delayed behind any cap. The ambient random pool
+	# moved to hourly_tick() so time-of-day windows (allowed_hours) are
+	# mechanically honest; its ≤1-per-day throttle lives there now
+	# (_ambient_fired_day).
 	var beats: Array[GameEvent] = []
-	var ambient: Array[GameEvent] = []
-	for ev in eligible:
+	for ev in _all_events.values():
 		if ev.has_random_trigger():
-			ambient.append(ev)
-		else:
+			continue  # ambient — evaluated on the hourly path
+		if _is_eligible(ev):
 			beats.append(ev)
 	# Every eligible beat, highest priority first.
 	for ev in _ordered_by_priority(beats):
 		_enqueue_eligible(ev)
-	# At most one ambient event this tick.
-	for ev in _ordered_by_priority(ambient):
+	_pump_queue()  # also drains anything a prior tick left queued
+
+
+# --- TimeManager hourly slot entry point (D-A: time-of-day windows) ---
+
+func hourly_tick(hour: int) -> void:
+	# Ambient events (those with a "random" trigger) evaluate here so their
+	# allowed_hours windows line up with the fiction — a 02:17 API-bug event
+	# fires at night, not at the midnight daily tick. Semantics:
+	#   - The window gate controls queue-ENTRY only (_is_eligible step 4b);
+	#     display (_pump_queue) is untouched — an enqueued event still shows
+	#     later if a modal is up.
+	#   - ≤1 ambient per day survives via _ambient_fired_day (counts ENTRY).
+	#   - Chance normalization: the JSON "chance" keeps meaning per-DAY
+	#     probability. The roll now repeats every in-window hour, so each
+	#     hourly roll uses chance / window_length_hours (24 h when the event
+	#     has no window). Daily fire probability ≈ 1-(1-p/n)^n — same ballpark
+	#     as p (slightly below), instead of silently multiplying frequency.
+	if _ambient_fired_day == GameState.day:
+		return  # today's ambient slot already used
+	var eligible: Array[GameEvent] = []
+	for ev in _all_events.values():
+		if not ev.has_random_trigger():
+			continue  # beats stay on the daily path
+		if not _is_hour_in_window(hour, _hour_windows.get(ev.id, []) as Array):
+			continue  # cheap pre-filter; _is_eligible re-gates via GameState.current_hour
+		if _is_eligible(ev, 1.0 / float(_window_length_hours(ev))):
+			eligible.append(ev)
+	# At most one ambient event enters the queue per day.
+	for ev in _ordered_by_priority(eligible):
 		if _enqueue_eligible(ev):
+			_ambient_fired_day = GameState.day
+			_pump_queue()
 			break
-	_pump_queue()
 
 
 # Group by priority (descending), shuffle each group, concatenate. Uses the
@@ -230,7 +263,7 @@ func is_condition_met(condition: Dictionary) -> bool:
 
 # --- Private helpers ---
 
-func _is_eligible(ev: GameEvent) -> bool:
+func _is_eligible(ev: GameEvent, random_chance_scale: float = 1.0) -> bool:
 	# 1. Active or already queued — skip.
 	if ev.id == _active_event_id:
 		return false
@@ -265,14 +298,53 @@ func _is_eligible(ev: GameEvent) -> bool:
 			var since: int = current_day - int(entry.get("day", 0))
 			if since < ev.cooldown_days:
 				return false
-	# 5. Trigger conditions (AND logic).
+	# 4b. Time-of-day window (optional JSON "allowed_hours": [start, end],
+	# inclusive; start > end wraps midnight). Gates queue-ENTRY only — an
+	# already-queued event still displays whenever _pump_queue reaches it.
+	# Windowless events always pass.
+	if not _is_hour_in_window(GameState.current_hour, _hour_windows.get(ev.id, []) as Array):
+		return false
+	# 5. Trigger conditions (AND logic). "random" rolls are scaled by
+	# random_chance_scale — the hourly ambient path passes 1/window_hours so
+	# the JSON chance keeps meaning per-DAY probability; daily path uses 1.0.
 	for c in ev.trigger_conditions:
 		if typeof(c) != TYPE_DICTIONARY:
 			push_warning("[EventManager] trigger_conditions entry not Dictionary in %s" % ev.id)
 			return false
+		if String(c.get("type", "")) == "random":
+			if not (randf() < float(c.get("chance", 0.0)) * random_chance_scale):
+				return false
+			continue
 		if not is_condition_met(c):
 			return false
 	return true
+
+
+# --- Time-of-day window helpers (D-A) ---
+
+func _is_hour_in_window(hour: int, window: Array) -> bool:
+	# Empty / malformed window = no gate. Inclusive on both ends.
+	# Wrap-around supported: [22, 2] allows 22, 23, 0, 1, 2.
+	if window.size() != 2:
+		return true
+	var start_h: int = int(window[0])
+	var end_h: int = int(window[1])
+	if start_h <= end_h:
+		return hour >= start_h and hour <= end_h
+	return hour >= start_h or hour <= end_h
+
+
+func _window_length_hours(ev: GameEvent) -> int:
+	# Nominal hour count of the event's window (inclusive), 24 when windowless.
+	# Used to normalize per-hour random rolls back to per-day probability.
+	var window: Array = _hour_windows.get(ev.id, []) as Array
+	if window.size() != 2:
+		return 24
+	var start_h: int = int(window[0])
+	var end_h: int = int(window[1])
+	if start_h <= end_h:
+		return end_h - start_h + 1
+	return (24 - start_h) + end_h + 1
 
 
 func _apply_modifiers(modifiers: Array) -> void:
@@ -455,6 +527,13 @@ func _load_one(path: String) -> bool:
 	if _all_events.has(ev.id):
 		push_warning("[EventManager] Duplicate event id, last wins: %s" % ev.id)
 	_all_events[ev.id] = ev
+	# Optional "allowed_hours": [start, end] (inclusive; start > end wraps
+	# midnight). Parsed into the manager-side dict — see _hour_windows above.
+	var window_raw: Variant = parsed.get("allowed_hours", null)
+	if window_raw is Array and (window_raw as Array).size() == 2:
+		_hour_windows[ev.id] = [int(window_raw[0]), int(window_raw[1])]
+	elif window_raw != null:
+		push_warning("[EventManager] allowed_hours malformed (want [start, end]) in %s" % path)
 	return true
 
 

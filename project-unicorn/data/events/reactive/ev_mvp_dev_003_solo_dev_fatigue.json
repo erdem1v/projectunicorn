@@ -10,6 +10,7 @@
     {"type": "build_phase", "value": "development"},
     {"type": "random", "chance": 0.20}
   ],
+  "allowed_hours": [6, 9],
   "cooldown_days": 20,
   "one_shot": true,
   "priority": 0,

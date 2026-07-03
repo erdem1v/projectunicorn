@@ -5,12 +5,13 @@
   "subtitle": "E-posta · 13:05",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Mevcut müşterilerinden biri yazmış: *\"Bir arkadaşıma senden bahsettim, o da ilgileniyor.\"*\n\nAltında bir şart var: \"Tek bir şey — şu özelliği ekleyebilir misin? İkimiz de kullanırız.\"\n\nYeni bir kapı — ama roadmap'ine bir borç yazıyor.",
+  "body_text": "Müşterilerinden birinin genel müdürü yazmış — sözleşmeye imzayı atan adamın kendisi: *\"Geçen hafta bir tedarikçi yemeğinde başka bir şirketin sahibiyle konuştum, sizin üründen bahsettim. Ciddi ilgilendi — isterseniz tanıştırayım.\"*\n\nE-postanın sonunda bir şart: *\"Tek ricam, şu özelliği roadmap'inize almanız. İki şirket de kullanır.\"*\n\nPatron seviyesinden açılan bir kapı — ama roadmap'ine bir borç yazıyor.",
   "trigger_conditions": [
     {"type": "market_type", "value": "b2b"},
     {"type": "customer_count_min", "value": 1},
     {"type": "random", "chance": 0.3}
   ],
+  "allowed_hours": [9, 17],
   "cooldown_days": 12,
   "one_shot": false,
   "priority": 1,
@@ -19,6 +20,7 @@
       "label": "Kabul et — feature sözü ver",
       "modifiers": [
         {"type": "add_prospect", "archetype": "mid", "source": "referral"},
+        {"type": "cash", "delta": -400},
         {"type": "set_flag", "key": "feature_debt", "value": true}
       ],
       "unlock_condition": {},
@@ -34,7 +36,9 @@
     },
     {
       "label": "Reddet — roadmap temiz kalsın",
-      "modifiers": [],
+      "modifiers": [
+        {"type": "reputation", "delta": 2}
+      ],
       "unlock_condition": {},
       "unlock_reason_text": ""
     }

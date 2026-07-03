@@ -12,6 +12,7 @@
     {"type": "audience_above", "value": 40},
     {"type": "random", "chance": 0.3}
   ],
+  "allowed_hours": [18, 22],
   "cooldown_days": 12,
   "one_shot": false,
   "priority": 0,
@@ -28,7 +29,9 @@
     },
     {
       "label": "Sessiz kal",
-      "modifiers": [],
+      "modifiers": [
+        {"type": "audience_delta", "delta": 5}
+      ],
       "unlock_condition": {},
       "unlock_reason_text": ""
     }

@@ -11,6 +11,7 @@
     {"type": "flag_set", "key": "tech_debt_birikti"},
     {"type": "random", "chance": 0.25}
   ],
+  "allowed_hours": [13, 17],
   "cooldown_days": 16,
   "one_shot": true,
   "priority": 0,

@@ -10,6 +10,7 @@
     {"type": "build_phase", "value": "bugfix"},
     {"type": "random", "chance": 0.40}
   ],
+  "allowed_hours": [18, 23],
   "cooldown_days": 14,
   "one_shot": true,
   "priority": 1,

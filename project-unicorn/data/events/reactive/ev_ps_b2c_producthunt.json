@@ -12,6 +12,7 @@
     {"type": "audience_above", "value": 30},
     {"type": "random", "chance": 0.4}
   ],
+  "allowed_hours": [20, 23],
   "cooldown_days": 10,
   "one_shot": false,
   "priority": 1,
@@ -29,7 +30,9 @@
     },
     {
       "label": "Pas geç — organik kal",
-      "modifiers": [],
+      "modifiers": [
+        {"type": "audience_delta", "delta": 6}
+      ],
       "unlock_condition": {},
       "unlock_reason_text": ""
     }

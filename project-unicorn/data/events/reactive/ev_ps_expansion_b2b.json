@@ -11,6 +11,7 @@
     {"type": "customer_count_min", "value": 1},
     {"type": "random", "chance": 0.25}
   ],
+  "allowed_hours": [10, 16],
   "cooldown_days": 14,
   "one_shot": false,
   "priority": 1,
