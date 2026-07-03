@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://uw5ybisq8fg0" path="res://scripts/ui/components/center_viewport.gd" id="3_center"]
 [ext_resource type="PackedScene" path="res://scenes/ui/components/RightPanel.tscn" id="4_rightpanel"]
 [ext_resource type="PackedScene" path="res://scenes/ui/components/NewsTicker.tscn" id="5_newsticker"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/BuildHUDPanel.tscn" id="6_buildhud"]
 [ext_resource type="Script" path="res://scripts/main/game_shell.gd" id="7_shell"]
 
 [node name="GameShell" type="Control" unique_id=1712078200]
@@ -88,3 +89,5 @@ grow_vertical = 0
 
 [node name="ModalLayer" type="CanvasLayer" parent="." unique_id=1292228396]
 layer = 10
+
+[node name="BuildHUD" parent="MidRow/CenterViewport" instance=ExtResource("6_buildhud")]
