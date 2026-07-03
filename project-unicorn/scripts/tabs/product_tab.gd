@@ -185,20 +185,6 @@ var _active_action: String = "price"   # "price" | "sprint" | "v2"
 var _action_rows: Dictionary = {}       # id -> {root, title, desc, status}
 var _design_two_col_built: bool = false
 
-# --- BuildProgressView Yön A scaffold (C2) — built once; authored bp_* leaves reparented in ---
-var _bp_scaffold_built: bool = false
-var _bp_title_group: VBoxContainer = null
-var _bp_phase_row: HBoxContainer = null
-var _bp_status_chip_slot: HBoxContainer = null
-var _bp_dim_list: VBoxContainer = null
-var _bp_status_slot: VBoxContainer = null
-var _bp_decision_card: PanelContainer = null
-var _bp_decision_title: Label = null
-var _bp_decision_desc: Label = null
-var _bp_iter_btn: Button = null
-var _bp_dev_btn: Button = null
-var _bp_launch_btn: Button = null
-
 
 func _ready() -> void:
 	_wire_design_document_view()
@@ -230,8 +216,6 @@ func _exit_tree() -> void:
 			EventBus.prospect_added, EventBus.prospect_removed, EventBus.hour_changed]:
 		if sig.is_connected(_on_sales_state_changed):
 			sig.disconnect(_on_sales_state_changed)
-	# C2: leaving the product tab (CenterViewport frees it) → let BuildHUD show again.
-	_set_hud_suppressed(false)
 
 
 # --- View routing ---
@@ -273,17 +257,6 @@ func _show_state(view: Control) -> void:
 	# The generic "Product / Design document" tab title is redundant in post-ship
 	# (PostShipTitle shows "<name> · vN · canlı") — hide it there to kill the double title.
 	title_bar.visible = (view != post_ship_scroll)
-	# C2: the phase-decision now lives inside BuildProgressView, so suppress the
-	# redundant BuildHUD desk overlay while that view is up (it still shows on
-	# other tabs / during sprints).
-	_set_hud_suppressed(view == build_progress_view)
-
-
-func _set_hud_suppressed(v: bool) -> void:
-	var parent: Node = get_parent()
-	var hud: Node = parent.get_node_or_null("BuildHUD") if parent != null else null
-	if hud != null and hud.has_method("set_suppressed"):
-		hud.set_suppressed(v)
 
 
 # =========================================================================
@@ -908,10 +881,8 @@ func _on_commit_pressed() -> void:
 		_selected_features = []
 		_selected_product_name = ""
 		name_input.text = ""
-		# A3: auto-unpause ONLY if the game was paused, so a player at 2x/4x keeps
-		# their chosen speed instead of being slammed back to 1x on every commit.
-		if TimeManager.current_speed == 0:
-			EventBus.speed_change_requested.emit(1)
+		# Auto-unpause so the build starts ticking immediately.
+		EventBus.speed_change_requested.emit(1)
 		_refresh_view()
 
 
@@ -965,82 +936,84 @@ func _wire_polish_view() -> void:
 
 
 func _paint_build_progress(b: FeatureBuild) -> void:
-	# C2: BuildProgressView in the Yön A language — two-column control panel that
-	# mirrors PostShipView. Left = progress + live dimension climb + günlük gelişim
-	# feed; right = status + the phase-transition DECISION card (weighty, not a
-	# corner popup) + Frank. The decision buttons call the same ProductSystem API
-	# the old BuildHUD overlay did; that overlay is suppressed while this view is up.
-	_ensure_build_progress_scaffold()
-
-	# Header: name + feature summary chip
+	# Spec #4: BuildProgressView covers iteration / development / bugfix —
+	# decision buttons live in BuildHUDPanel; here we just show header + a
+	# faz-aware status block + the development feed. The phase-segmented bar
+	# from the old Spec #2 model degrades to a single progress bar driven by
+	# whichever counter belongs to the current phase.
 	bp_sub_type_label.text = b.product_name if b.product_name != "" else _sub_product_type_name(b.sub_product_type_id)
-	_clear(_bp_phase_row)
-	_bp_phase_row.add_child(UiFactory.make_label(_build_feature_summary(b), &"RowMeta"))
+	bp_features_label.text = _build_feature_summary(b)
+	bp_engineer_label.text = "Mühendis: %s" % _engineer_name(b)
 
-	# Top-right phase chip
-	_clear(_bp_status_chip_slot)
-	var chip_text: String = ""
-	var chip_kind: StringName = &"neutral"
-	match b.current_phase:
-		"iteration":
-			chip_text = "Karar bekleniyor" if b.iteration_decision_pending else "İterasyon %d" % b.iteration_count
-			chip_kind = &"attention" if b.iteration_decision_pending else &"accent"
-		"development":
-			chip_text = "Geliştirme"
-			chip_kind = &"accent"
-		"bugfix", "polish":
-			chip_text = "Bug Fixing"
-			chip_kind = &"attention"
-	_bp_status_chip_slot.add_child(UiFactory.make_badge(chip_text, chip_kind))
-
-	# Progress bar + caption (bar float → smooth hourly fill, B2)
+	# Bar values per phase. The old iteration / polish split is no longer
+	# meaningful — collapse to "iteration bar = current phase progress".
 	var bar_total: int = 1
-	var bar_value: float = 0.0
+	var bar_value: int = 0
 	match b.current_phase:
 		"iteration":
 			bar_total = max(1, ProductSystem.ITERATION_LENGTH_DAYS)
-			bar_value = float(bar_total) - b.iteration_days_in_current
-			bp_progress_caption.text = "İterasyon %d · %d gün kaldı" % [b.iteration_count, int(ceil(b.iteration_days_in_current))]
+			bar_value = bar_total - b.iteration_days_in_current
 		"development":
 			bar_total = max(1, b.development_days_total)
 			bar_value = b.development_days_elapsed
-			bp_progress_caption.text = "Geliştirme · %d / %d gün" % [int(b.development_days_elapsed), b.development_days_total]
 		"bugfix", "polish":
+			# Open-ended phase — show full bar so the segmented widget doesn't
+			# look broken; LAUNCH lives on BuildHUDPanel.
 			bar_total = 1
 			bar_value = 1
-			bp_progress_caption.text = "Bug Fixing · yayın sende"
 	bp_iteration_bar.max_value = float(bar_total)
-	bp_iteration_bar.value = bar_value
+	bp_iteration_bar.value = float(bar_value)
+	bp_polish_bar.max_value = 1.0
+	bp_polish_bar.value = 0.0
+	bp_phase_bar.get_child(0).size_flags_stretch_ratio = 1.0
+	bp_phase_bar.get_child(1).size_flags_stretch_ratio = 0.0
 
-	# Live dimension climb — raw axes (stability effective), same grammar as PostShip
-	_clear(_bp_dim_list)
-	var dims: Dictionary = QualityModel.economy_dims_from_build(b)
-	var axes: Array = ProductCatalog.get_quality_axes(b.sub_product_type_id)
-	var labels := {"innovation": "İnovasyon", "stability": "Kararlılık", "usability": "Kullanılabilirlik"}
-	for a in axes:
-		labels[String(a.get("axis", ""))] = String(a.get("display_label", a.get("axis", "")))
-	for axis in ["innovation", "stability", "usability"]:
-		_bp_dim_list.add_child(_bp_dim_row(String(labels.get(axis, axis)), int(round(float(dims.get(axis, 0.0))))))
-
-	# Right column: status rows
-	_clear(_bp_status_slot)
-	var comp: int = int(round(QualityModel.composite_quality(dims, axes)))
-	_bp_status_slot.add_child(_bp_status_row("Kalite", "%d" % comp, null))
-	var bug_pal: Dictionary = UiTokens.bug_severity(b.bug_count)
-	_bp_status_slot.add_child(_bp_status_row("Bug", "%d" % b.bug_count, bug_pal.fg))
-	var phase_names := {"iteration": "İterasyon", "development": "Geliştirme", "bugfix": "Bug Fixing", "polish": "Bug Fixing"}
-	_bp_status_slot.add_child(_bp_status_row("Faz", String(phase_names.get(b.current_phase, b.current_phase)), null))
-	var remaining_txt: String = "—"
+	# Caption
 	match b.current_phase:
 		"iteration":
-			remaining_txt = "Karar bekleniyor" if b.iteration_decision_pending else ("%d gün" % int(ceil(b.iteration_days_in_current)))
+			bp_progress_caption.text = "Iteration %d · %d gün kaldı" % [b.iteration_count, b.iteration_days_in_current]
 		"development":
-			remaining_txt = "%d gün kaldı" % int(ceil(max(0.0, float(b.development_days_total) - b.development_days_elapsed)))
-	_bp_status_slot.add_child(_bp_status_row("Kalan", remaining_txt, null))
+			bp_progress_caption.text = "Development %d / %d gün" % [b.development_days_elapsed, b.development_days_total]
+		"bugfix", "polish":
+			bp_progress_caption.text = "Bug Fixing · launch sende"
 
-	# Decision card + Frank
-	_paint_bp_decision(b)
-	bp_mentor_line.text = _bp_mentor_text(b)
+	# Status rows — open-ended composite (no /100; quality has no ceiling now).
+	var comp: int = int(round(QualityModel.composite_quality(
+		QualityModel.economy_dims_from_build(b), ProductCatalog.get_quality_axes(b.sub_product_type_id))))
+	bp_quality_value.text = "%d" % comp
+	bp_bugs_value.text = "%d" % b.bug_count
+	_paint_bug_indicator_color(bp_bugs_row, bp_bugs_value, b.bug_count)
+	match b.current_phase:
+		"iteration":
+			bp_phase_value.text = "İterasyon"
+			if b.iteration_decision_pending:
+				bp_remaining_value.text = "Karar bekleniyor"
+			else:
+				bp_remaining_value.text = "%d gün" % b.iteration_days_in_current
+		"development":
+			bp_phase_value.text = "Development"
+			bp_remaining_value.text = "%d gün kaldı" % max(0, b.development_days_total - b.development_days_elapsed)
+		"bugfix", "polish":
+			bp_phase_value.text = "Bug Fixing"
+			bp_remaining_value.text = "—"
+
+	# Mentor line varies by phase (Blok C: context-aware, decision + bug pressure)
+	match b.current_phase:
+		"iteration":
+			if b.iteration_decision_pending:
+				bp_mentor_line.text = "Yeterince iyi mi? Development'a geç — para yanıyor. Değilse bir tur daha."
+			else:
+				bp_mentor_line.text = _iteration_mentor_line_for(b)
+		"development":
+			if b.bug_count >= 8:
+				bp_mentor_line.text = "Çalışıyor. Bug birikiyor — normal, bugfix'te toplarsın."
+			else:
+				bp_mentor_line.text = "Çalışıyor. Sen izle."
+		"bugfix", "polish":
+			if b.bug_count > 6:
+				bp_mentor_line.text = "Bu kadar bug'la çıkma. Ama çok da bekleme — runway eriyor."
+			else:
+				bp_mentor_line.text = "Temiz görünüyor. Hazır olduğunda yayınla."
 
 	# Feed bootstrap (first paint for this build)
 	if _seen_build_id != b.id:
@@ -1048,218 +1021,6 @@ func _paint_build_progress(b: FeatureBuild) -> void:
 		_clear_feed(bp_feed_list)
 		_prepend_feed_entry(bp_feed_list, b.start_day, "Build başladı.")
 		_last_polish_bug_count = -1
-
-
-# ---- C2 BuildProgressView Yön A scaffold + helpers ----
-
-func _reparent(node: Node, new_parent: Node) -> void:
-	var p: Node = node.get_parent()
-	if p != null:
-		p.remove_child(node)
-	new_parent.add_child(node)
-
-
-func _ensure_build_progress_scaffold() -> void:
-	# Build the two-column Yön A layout ONCE, reparenting the authored bp_* leaves
-	# we keep into it (their @onready refs stay valid). Never call per-paint.
-	if _bp_scaffold_built:
-		return
-	_bp_scaffold_built = true
-	build_progress_view.add_theme_constant_override("separation", 12)
-	var header_panel: Node = build_progress_view.get_node_or_null("BuildHeaderPanel")
-	var bottom_row: Node = build_progress_view.get_node_or_null("BottomRow")
-
-	# TOP STRIP — title + phase | status chip
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 12)
-	_bp_title_group = VBoxContainer.new()
-	_bp_title_group.add_theme_constant_override("separation", 2)
-	_bp_title_group.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_reparent(bp_sub_type_label, _bp_title_group)
-	bp_sub_type_label.theme_type_variation = &"TitleSerif"
-	_bp_phase_row = HBoxContainer.new()
-	_bp_phase_row.add_theme_constant_override("separation", 5)
-	_bp_title_group.add_child(_bp_phase_row)
-	top.add_child(_bp_title_group)
-	_bp_status_chip_slot = HBoxContainer.new()
-	_bp_status_chip_slot.add_theme_constant_override("separation", 6)
-	_bp_status_chip_slot.size_flags_horizontal = Control.SIZE_SHRINK_END
-	_bp_status_chip_slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	top.add_child(_bp_status_chip_slot)
-	build_progress_view.add_child(top)
-	build_progress_view.add_child(HSeparator.new())
-
-	# MAIN ROW — two columns
-	var main_row := HBoxContainer.new()
-	main_row.add_theme_constant_override("separation", 16)
-	main_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 10)
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 10)
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_row.add_child(left)
-	main_row.add_child(right)
-	build_progress_view.add_child(main_row)
-
-	# LEFT: progress card (caption + bar) + BOYUTLAR + GÜNLÜK GELİŞİM feed
-	left.add_child(_two_ended_header("İlerleme", "Nasıl Gidiyor"))
-	var prog_body := VBoxContainer.new()
-	prog_body.add_theme_constant_override("separation", 8)
-	_reparent(bp_progress_caption, prog_body)
-	bp_progress_caption.theme_type_variation = &"NameSerif"
-	_reparent(bp_iteration_bar, prog_body)
-	bp_iteration_bar.custom_minimum_size = Vector2(0, 10)
-	left.add_child(UiFactory.make_card(prog_body))
-	left.add_child(UiFactory.make_section_header("Boyutlar"))
-	_bp_dim_list = VBoxContainer.new()
-	_bp_dim_list.add_theme_constant_override("separation", 6)
-	left.add_child(_bp_dim_list)
-	left.add_child(UiFactory.make_section_header("Günlük Gelişim"))
-	var feed_scroll: Node = bp_feed_list.get_parent()   # authored FeedScroll
-	if feed_scroll != null:
-		_reparent(feed_scroll, left)
-		if feed_scroll is Control:
-			(feed_scroll as Control).custom_minimum_size = Vector2(0, 120)
-
-	# RIGHT: status card + decision card (attention) + Frank card
-	right.add_child(_two_ended_header("Durum", "Ne Oluyor"))
-	_bp_status_slot = VBoxContainer.new()
-	_bp_status_slot.add_theme_constant_override("separation", 6)
-	right.add_child(UiFactory.make_card(_bp_status_slot))
-	var dec_body := VBoxContainer.new()
-	dec_body.add_theme_constant_override("separation", 8)
-	_bp_decision_title = UiFactory.make_label("", &"NameSerif")
-	_bp_decision_desc = UiFactory.make_label("", &"RowMeta")
-	_bp_decision_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	dec_body.add_child(_bp_decision_title)
-	dec_body.add_child(_bp_decision_desc)
-	var btn_row := HBoxContainer.new()
-	btn_row.add_theme_constant_override("separation", 8)
-	_bp_iter_btn = Button.new()
-	_bp_iter_btn.text = "Bir iterasyon daha"
-	_bp_iter_btn.pressed.connect(_on_bp_iteration_pressed)
-	_bp_dev_btn = Button.new()
-	_bp_dev_btn.theme_type_variation = &"CommitButton"
-	_bp_dev_btn.text = "Development'a geç"
-	_bp_dev_btn.pressed.connect(_on_bp_development_pressed)
-	_bp_launch_btn = Button.new()
-	_bp_launch_btn.theme_type_variation = &"CommitButton"
-	_bp_launch_btn.text = "Yayınla"
-	_bp_launch_btn.pressed.connect(_on_bp_launch_pressed)
-	btn_row.add_child(_bp_iter_btn)
-	btn_row.add_child(_bp_dev_btn)
-	btn_row.add_child(_bp_launch_btn)
-	dec_body.add_child(btn_row)
-	_bp_decision_card = UiFactory.make_card(dec_body, false, true)   # attention card = weight
-	right.add_child(_bp_decision_card)
-	var frank_body := VBoxContainer.new()
-	frank_body.add_theme_constant_override("separation", 4)
-	frank_body.add_child(UiFactory.make_section_header("Frank"))
-	_reparent(bp_mentor_line, frank_body)
-	bp_mentor_line.theme_type_variation = &"QuoteSerif"
-	bp_mentor_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	right.add_child(UiFactory.make_card(frank_body))
-
-	# Retire the authored old-style panels (their kept leaves were reparented out).
-	if header_panel is CanvasItem:
-		(header_panel as CanvasItem).visible = false
-	if bottom_row is CanvasItem:
-		(bottom_row as CanvasItem).visible = false
-
-
-func _bp_dim_row(label: String, score: int) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	var cap: Label = UiFactory.make_label(label, &"NameSerif")
-	cap.custom_minimum_size = Vector2(120, 0)
-	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(cap)
-	var bar := ProgressBar.new()
-	bar.theme_type_variation = &"BuildProgress"
-	bar.custom_minimum_size = Vector2(0, 8)
-	bar.show_percentage = false
-	bar.max_value = 100.0
-	bar.value = float(clampi(score, 0, 100))
-	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_override_bar_fill(bar, _score_color(score))
-	row.add_child(bar)
-	var val: Label = UiFactory.make_label("%d" % score, &"MetricValueInk")
-	val.add_theme_font_size_override("font_size", 22)
-	val.custom_minimum_size = Vector2(40, 0)
-	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	val.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(val)
-	return row
-
-
-func _bp_status_row(label: String, value: String, value_color) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	var l: Label = UiFactory.make_label(label, &"RowMeta", UiTokens.INK_DIM)
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(l)
-	var v: Label = UiFactory.make_label(value, &"RowName", value_color)
-	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	row.add_child(v)
-	return row
-
-
-func _paint_bp_decision(b: FeatureBuild) -> void:
-	_bp_decision_card.visible = true
-	match b.current_phase:
-		"iteration":
-			if b.iteration_decision_pending:
-				_bp_decision_title.text = "İterasyon %d bitti — karar ver" % b.iteration_count
-				_bp_decision_desc.text = "Devam et: kalite tavanı yükselir ama runway yanar. İlerle: daha hızlı, daha düşük tavan. Klasik kurucu kararı."
-				_bp_iter_btn.visible = true
-				_bp_dev_btn.visible = true
-				_bp_launch_btn.visible = false
-			else:
-				_bp_decision_title.text = "Tasarım sürüyor"
-				_bp_decision_desc.text = "İterasyon ilerliyor — İnovasyon ve Kullanılabilirlik saat saat tırmanıyor. Süre dolunca karar verirsin."
-				_bp_iter_btn.visible = false
-				_bp_dev_btn.visible = false
-				_bp_launch_btn.visible = false
-		"development":
-			_bp_decision_title.text = "Geliştirme sürüyor"
-			_bp_decision_desc.text = "Otomatik ilerliyor — Kararlılık tırmanıyor, bug birikiyor. Bugfix'e kadar bekle."
-			_bp_iter_btn.visible = false
-			_bp_dev_btn.visible = false
-			_bp_launch_btn.visible = false
-		"bugfix", "polish":
-			_bp_decision_title.text = "Yayına hazır"
-			_bp_decision_desc.text = "Bug'lar temizleniyor. Hazır olduğunda yayınla — mükemmeli bekleme, runway eriyor."
-			_bp_iter_btn.visible = false
-			_bp_dev_btn.visible = false
-			_bp_launch_btn.visible = true
-
-
-func _bp_mentor_text(b: FeatureBuild) -> String:
-	match b.current_phase:
-		"iteration":
-			return "Yeterince iyi mi? Development'a geç — para yanıyor. Değilse bir tur daha." if b.iteration_decision_pending else _iteration_mentor_line_for(b)
-		"development":
-			return "Çalışıyor. Bug birikiyor — normal, bugfix'te toplarsın." if b.bug_count >= 8 else "Çalışıyor. Sen izle."
-		"bugfix", "polish":
-			return "Bu kadar bug'la çıkma. Ama çok da bekleme — runway eriyor." if b.bug_count > 6 else "Temiz görünüyor. Hazır olduğunda yayınla."
-	return ""
-
-
-func _on_bp_iteration_pressed() -> void:
-	ProductSystem.advance_iteration()
-	_refresh_view()
-
-
-func _on_bp_development_pressed() -> void:
-	ProductSystem.enter_development()
-	_refresh_view()
-
-
-func _on_bp_launch_pressed() -> void:
-	ProductSystem.launch()
-	_refresh_view()
 
 
 # ---- Bug indicator color (ported from Spec #2 _paint_bug_indicator_color) ----
@@ -1287,8 +1048,8 @@ func _iteration_mentor_line_for(b: FeatureBuild) -> String:
 	# Mentor cadence within the current iteration. iteration_days_in_current
 	# decrements from ITERATION_LENGTH_DAYS → 0.
 	var total: int = max(1, ProductSystem.ITERATION_LENGTH_DAYS)
-	var elapsed: float = float(total) - b.iteration_days_in_current
-	var ratio: float = elapsed / float(total)
+	var elapsed: int = total - b.iteration_days_in_current
+	var ratio: float = float(elapsed) / float(total)
 	if ratio < 0.25:
 		return MENTOR_ITERATION_LINES["q4"]
 	elif ratio < 0.5:
@@ -1860,7 +1621,7 @@ func _paint_action_card() -> void:
 	# Sprint mode banner (pricing stays live below it).
 	if _sprinting():
 		var b = ProductSystem.get_active_build()
-		var remaining: int = int(ceil(max(0.0, float(b.development_days_total) - b.development_days_elapsed)))
+		var remaining: int = max(0, b.development_days_total - b.development_days_elapsed)
 		_sprint_banner.visible = true
 		_clear(_sprint_banner)
 		var bl := Label.new()
@@ -1929,9 +1690,7 @@ func _on_action_row_input(ev: InputEvent, id: String) -> void:
 
 func _on_bug_sprint_pressed() -> void:
 	if ProductSystem.start_bug_sprint():
-		# A3: unpause only if paused — don't reset a 2x/4x player's speed.
-		if TimeManager.current_speed == 0:
-			EventBus.speed_change_requested.emit(1)
+		EventBus.speed_change_requested.emit(1)   # unpause so the sprint ticks
 		_refresh_view()
 
 
