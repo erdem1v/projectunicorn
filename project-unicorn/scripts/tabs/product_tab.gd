@@ -182,6 +182,9 @@ var _bottom_strip: VBoxContainer = null
 var _rival_line: Label = null
 var _action_built: bool = false
 var _active_action: String = "price"   # "price" | "sprint" | "v2"
+# Amber vurgu yalnız oyuncu bir satıra gerçekten tıkladıysa çizilir; fiyat panelinin
+# default-açık davranışı _active_action'a bağlı kalır (vurgu ile genişleme ayrık).
+var _action_user_selected: bool = false
 var _action_rows: Dictionary = {}       # id -> {root, title, desc, status}
 var _design_two_col_built: bool = false
 
@@ -1666,8 +1669,8 @@ func _paint_action_card() -> void:
 	# Dim locked rows: sprint locked while sprinting or clean; v2 locked while sprinting.
 	sr["root"].modulate = Color(1, 1, 1, 0.55 if (_sprinting() or bugs <= 0) else 1.0)
 	vr["root"].modulate = Color(1, 1, 1, 0.55 if _sprinting() else 1.0)
-	# Selection highlight (price is the expandable default; stays selected through sprint mode).
-	_apply_action_selection(_active_action if is_b2c else "")
+	# Selection highlight: only after a real user click — default paint stays neutral.
+	_apply_action_selection(_active_action if (is_b2c and _action_user_selected) else "")
 
 
 func _on_action_row_input(ev: InputEvent, id: String) -> void:
@@ -1676,6 +1679,7 @@ func _on_action_row_input(ev: InputEvent, id: String) -> void:
 	match id:
 		"price":
 			_active_action = "price"
+			_action_user_selected = true
 			_on_price_action_pressed()
 			_paint_action_card()
 		"sprint":
