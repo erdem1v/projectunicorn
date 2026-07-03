@@ -182,8 +182,14 @@ var _bottom_strip: VBoxContainer = null
 var _rival_line: Label = null
 var _action_built: bool = false
 var _active_action: String = "price"   # "price" | "sprint" | "v2"
+# B3: the amber row highlight is USER-driven. _active_action's "price" default only
+# feeds the pricing detail's default-expand — no row is painted selected until the
+# player actually clicks one (this flag flips in _on_action_row_input).
+var _action_user_selected: bool = false
 var _action_rows: Dictionary = {}       # id -> {root, title, desc, status}
 var _design_two_col_built: bool = false
+# Blok A design-view polish — built once inside _ensure_design_two_col.
+var _feature_rationale: Label = null   # one-line 2-4 constraint rationale under the ÖZELLİKLER header
 
 # --- BuildProgressView Yön A scaffold (C2) — built once; authored bp_* leaves reparented in ---
 var _bp_scaffold_built: bool = false
@@ -249,6 +255,14 @@ func _refresh_view() -> void:
 	if active != null and active.is_bug_sprint:
 		# Bug sprint (Part 2A) stays in the product management center → pricing reachable,
 		# sprint progress shown in the action card (BuildProgressView is for real builds).
+		_show_state(post_ship_scroll)
+		_paint_post_ship()
+	elif active != null and active.is_version_build \
+			and active.current_phase in ["iteration", "development", "bugfix", "polish"]:
+		# C-routing: a v2+ version build runs in the BACKGROUND — committing it returns
+		# the player to the live-product control panel (PostShipView). Phase decisions
+		# stay on the BuildHUD desk overlay (not suppressed on this view). First builds
+		# (is_version_build == false) keep the full BuildProgressView route below.
 		_show_state(post_ship_scroll)
 		_paint_post_ship()
 	elif active == null and shipped:
@@ -326,13 +340,39 @@ func _ensure_design_two_col() -> void:
 	var right_vbox: Node = projection_list.get_parent()        # RightColumn/RightVBox
 	var right_col: Control = right_vbox.get_parent() as Control
 	right_vbox.get_parent().remove_child(right_vbox)
-	center_vbox.add_child(right_vbox)                          # projection now under the feature grid
+	# Blok A tier 3: the projection block (TAHMİN rows + "neyi güçlendiriyor" profile
+	# + Frank's advisory) reads as ONE calm bordered card under the feature grid, not
+	# loose rows floating on the column panel.
+	center_vbox.add_child(UiFactory.make_card(right_vbox))
+	if right_vbox is VBoxContainer:
+		(right_vbox as VBoxContainer).add_theme_constant_override("separation", 6)
 	right_col.visible = false
 	# Two-column read: left (identity) narrower, center (features + projection) wider.
 	var left_col: Control = sub_type_list.get_parent().get_parent().get_parent() as Control  # SubTypeList→ProductSection→LeftVBox→LeftColumn
 	if left_col != null:
 		left_col.size_flags_stretch_ratio = 2.6
 	center_col.size_flags_stretch_ratio = 5.4
+	# --- Blok A visual hierarchy (3 tiers), build-once restyles -----------------
+	# Tier 1 — product identity headline: ContextLabel is promoted from a small
+	# "X için özellikler" caption to the screen's serif title, moved to the top of
+	# the column (authored overrides removed so the TitleSerif variation applies).
+	center_vbox.move_child(context_label, 0)
+	context_label.remove_theme_color_override("font_color")
+	context_label.remove_theme_font_size_override("font_size")
+	context_label.theme_type_variation = &"TitleSerif"
+	# Tier 2 — feature selection: one-line rationale for the 2-4 constraint under
+	# the ÖZELLİKLER header (WORKING COPY — designer judges the wording in-game).
+	_feature_rationale = UiFactory.make_label(
+		"Tek özellik ürün olmaz; dörtten fazlası MVP'yi boğar.", &"CaptionMuted")
+	_feature_rationale.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_feature_rationale.visible = false
+	center_vbox.add_child(_feature_rationale)
+	center_vbox.move_child(_feature_rationale, selection_counter_label.get_parent().get_index() + 1)
+	# Tier 3 — Frank's advisory reads in his quote voice inside the projection card.
+	mentor_advisory_label.remove_theme_color_override("font_color")
+	mentor_advisory_label.remove_theme_font_size_override("font_size")
+	mentor_advisory_label.theme_type_variation = &"QuoteSerif"
+	mentor_advisory_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 
 func _build_commit_card() -> void:
@@ -394,14 +434,35 @@ func _paint_sub_type_list() -> void:
 		if i < sub_types.size():
 			var data: Dictionary = sub_types[i]
 			var sub_id: String = String(data.get("id", ""))
-			row.get_node("RowLayout/NameLabel").text = String(data.get("name", ""))
-			row.get_node("RowLayout/PitchLabel").text = String(data.get("pitch", ""))
+			# Blok A field contract: clean Turkish name is the title, the English
+			# tech name is small meta, the founder-voice market bet is the body.
+			row.get_node("RowLayout/NameLabel").text = String(data.get("name_human", data.get("name", "")))
+			_ensure_sub_type_meta(row).text = String(data.get("name", "")).to_upper()
+			row.get_node("RowLayout/PitchLabel").text = String(data.get("bet", data.get("pitch", "")))
 			row.set_meta("sub_type_id", sub_id)
 			row.visible = true
 			var sel_border: Panel = row.get_node("SelectedBorder")
 			sel_border.visible = (_selected_sub_product_type == sub_id)
 		else:
 			row.visible = false
+
+
+func _ensure_sub_type_meta(row: Panel) -> Label:
+	# Build-once per row: small mono tech-name line between the title and the bet.
+	var layout: VBoxContainer = row.get_node("RowLayout")
+	var existing := layout.get_node_or_null("TechLabel")
+	if existing != null:
+		return existing
+	var meta := Label.new()
+	meta.name = "TechLabel"
+	meta.theme_type_variation = &"RowMeta"
+	meta.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layout.add_child(meta)
+	layout.move_child(meta, 1)   # under NameLabel, above the bet body
+	# Three lines need more room than the authored 52px two-line row.
+	# (WORKING CALL — height eyeballed blind; designer verifies in-game.)
+	row.custom_minimum_size = Vector2(0, 92)
+	return meta
 
 
 func _on_sub_type_row_input(event: InputEvent, row: Panel) -> void:
@@ -427,6 +488,8 @@ func _on_sub_type_row_input(event: InputEvent, row: Panel) -> void:
 
 func _on_name_input_changed(new_text: String) -> void:
 	_selected_product_name = new_text.strip_edges()
+	if _selected_sub_product_type != "":
+		context_label.text = _identity_headline()   # keep the Tier-1 headline live while typing
 	_refresh_commit_bar()   # cheap toggle; avoids a full repaint that would reset the caret
 
 
@@ -445,13 +508,19 @@ func _paint_feature_grid() -> void:
 		feature_grid.visible = false
 		context_label.visible = false
 		empty_instruction_label.visible = true
-		selection_counter_label.text = "0 / 4 seçili — min 2"
+		selection_counter_label.text = "0 / 4 özellik"
+		selection_counter_label.add_theme_color_override("font_color", UiTokens.INK_DIM)
+		if _feature_rationale != null:
+			_feature_rationale.visible = false
 		return
+	# ContextLabel = Tier-1 identity headline (EmptyInstructionLabel is the empty
+	# state only — the two never show together, killing the old duplication).
 	empty_instruction_label.visible = false
 	context_label.visible = true
-	var sub_type_name: String = _sub_product_type_name(_selected_sub_product_type)
-	context_label.text = "%s için özellikler" % sub_type_name
+	context_label.text = _identity_headline()
 	feature_grid.visible = true
+	if _feature_rationale != null:
+		_feature_rationale.visible = not _v2_mode   # v2 uses a different cap — rationale is v1 copy
 
 	var pool: Array = ProductCatalog.get_feature_pool(_selected_sub_product_type)
 	var feature_cap: int
@@ -472,7 +541,7 @@ func _paint_feature_grid() -> void:
 			card.get_node("CardLayout/NameLabel").text = String(data.get("name", ""))
 			card.get_node("CardLayout/VoiceLabel").text = String(data.get("voice", ""))
 			card.set_meta("feature_id", fid)
-			_paint_axes(card, data)
+			_paint_feature_meta(card, data)
 			card.visible = true
 			var sel_border: Panel = card.get_node("SelectedBorder")
 			var selected: bool = _selected_features.has(fid)
@@ -487,89 +556,104 @@ func _paint_feature_grid() -> void:
 	if _v2_strengthen_mode:
 		selection_counter_label.text = "%d / %d güçlendirme seçili" % [
 			_selected_features.size(), ProductSystem.STRENGTHEN_MAX_PER_VERSION]
+		selection_counter_label.add_theme_color_override("font_color", UiTokens.INK_MUTED)
 	elif _v2_mode:
 		var base_n: int = GameState.get_flag("mvp_components", []).size()
 		selection_counter_label.text = "%d / %d özellik · v1: %d, +%d yeni" % [
 			_selected_features.size(), ProductSystem.MAX_VERSION_FEATURES, base_n,
 			max(0, _selected_features.size() - base_n)]
+		selection_counter_label.add_theme_color_override("font_color", UiTokens.INK_MUTED)
 	else:
-		selection_counter_label.text = "%d / 4 seçili — min 2" % _selected_features.size()
-
-
-func _paint_complexity_dots(card: Panel, complexity: int) -> void:
-	var complexity_box: HBoxContainer = card.get_node("CardLayout/ComplexityRow/Complexity")
-	for i in range(complexity_box.get_child_count()):
-		var dot: Label = complexity_box.get_child(i) as Label
-		if dot == null:
-			continue
-		if i < complexity:
-			dot.add_theme_color_override("font_color", UiTokens.ACCENT)
+		# Clearer state read: muted while short, positive once buildable, amber at cap.
+		var n: int = _selected_features.size()
+		if n < 2:
+			selection_counter_label.text = "%d / 4 özellik · en az 2 seç" % n
+			selection_counter_label.add_theme_color_override("font_color", UiTokens.INK_MUTED)
+		elif n < feature_cap:
+			selection_counter_label.text = "%d / 4 özellik · hazır" % n
+			selection_counter_label.add_theme_color_override("font_color", UiTokens.POSITIVE)
 		else:
-			dot.add_theme_color_override("font_color", Color(0.80, 0.77, 0.70, 1))
+			selection_counter_label.text = "4 / 4 özellik · dolu"
+			selection_counter_label.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
 
 
-# Feature-card three-axis display (Product Lifecycle Part 1). Built in code so the
-# .tscn cards need no per-card surgery: the static ComplexityRow is hidden and a
-# 3-row AxesBox (Çekim / Karmaşıklık / Risk) is added once, repainted each refresh.
-const _AXIS_ROWS := [["pull", "Çekim"], ["complexity", "Karmaşıklık"], ["stakes", "Risk"]]
+# Feature-card meta (Blok A). The 15-dot noise (3 axes × 5 dots) is gone. Each card
+# now shows: a concrete "+N gün" cost badge (total dev days = DEVELOPMENT_DAYS_BASE +
+# Σ complexity, so one feature adds EXACTLY its complexity in days), compact Çekim /
+# Risk one-liners, and a dimension mini-profile naming which quality axes the feature
+# strengthens (tip-özel display_label'lar). Scaffold built once per card (MetaBox
+# guard via get_node_or_null); contents repainted each refresh. The authored
+# ComplexityRow (Dot0..4) stays hidden — dead scene weight, no per-card surgery.
 
-
-func _ensure_axes_box(card: Panel) -> VBoxContainer:
+func _ensure_feature_meta(card: Panel) -> VBoxContainer:
 	var layout: VBoxContainer = card.get_node("CardLayout")
-	var existing := layout.get_node_or_null("AxesBox")
+	var existing := layout.get_node_or_null("MetaBox")
 	if existing != null:
 		return existing
 	var static_row := layout.get_node_or_null("ComplexityRow")
 	if static_row != null:
-		static_row.visible = false
+		static_row.visible = false   # authored dot row is dead — MetaBox replaces it
 	var box := VBoxContainer.new()
-	box.name = "AxesBox"
-	box.add_theme_constant_override("separation", 2)
+	box.name = "MetaBox"
+	box.add_theme_constant_override("separation", 3)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for pair in _AXIS_ROWS:
-		var row := HBoxContainer.new()
-		row.name = String(pair[0])
-		row.add_theme_constant_override("separation", 6)
-		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var cap := Label.new()
-		cap.text = String(pair[1])
-		cap.custom_minimum_size = Vector2(70, 0)
-		cap.add_theme_color_override("font_color", UiTokens.INK_DIM)
-		cap.add_theme_font_size_override("font_size", 10)
-		cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(cap)
-		var dots := HBoxContainer.new()
-		dots.name = "Dots"
-		dots.add_theme_constant_override("separation", 2)
-		dots.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		for i in 5:
-			var d := Label.new()
-			d.text = "●"
-			d.add_theme_font_size_override("font_size", 11)
-			d.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			dots.add_child(d)
-		row.add_child(dots)
-		box.add_child(row)
+	var badges := HBoxContainer.new()
+	badges.name = "BadgeRow"
+	badges.add_theme_constant_override("separation", 8)
+	badges.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(badges)
+	var dim := Label.new()
+	dim.name = "DimLine"
+	dim.theme_type_variation = &"RowMeta"
+	dim.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
+	dim.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(dim)
 	layout.add_child(box)
 	return box
 
 
-func _paint_axes(card: Panel, data: Dictionary) -> void:
-	var box := _ensure_axes_box(card)
-	for pair in _AXIS_ROWS:
-		var key := String(pair[0])
-		var v: int = int(data.get(key, 1))
-		var dots: HBoxContainer = box.get_node(key + "/Dots")
-		var fill: Color = UiTokens.ACCENT
-		if key == "pull":
-			fill = UiTokens.POSITIVE
-		elif key == "stakes":
-			fill = UiTokens.NEGATIVE
-		for i in range(dots.get_child_count()):
-			var dot: Label = dots.get_child(i) as Label
-			if dot == null:
-				continue
-			dot.add_theme_color_override("font_color", fill if i < v else Color(0.80, 0.77, 0.70, 1))
+func _paint_feature_meta(card: Panel, data: Dictionary) -> void:
+	var box := _ensure_feature_meta(card)
+	var badges: HBoxContainer = box.get_node("BadgeRow")
+	_clear(badges)
+	# Concrete cost, not an abstract meter: +complexity days on the build.
+	badges.add_child(UiFactory.make_badge("+%d gün" % int(data.get("complexity", 0)), &"accent"))
+	badges.add_child(_mini_axis_label("Çekim", int(data.get("pull", 0)), UiTokens.POSITIVE))
+	badges.add_child(_mini_axis_label("Risk", int(data.get("stakes", 0)), UiTokens.NEGATIVE))
+	(box.get_node("DimLine") as Label).text = _dimension_profile_text(data)
+
+
+func _mini_axis_label(caption: String, v: int, color: Color) -> Label:
+	# One compact "Çekim 4/5" line instead of a 5-dot meter.
+	var l: Label = UiFactory.make_label("%s %d/5" % [caption, v], &"RowMeta", color)
+	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+
+func _dimension_profile_text(data: Dictionary) -> String:
+	# "→ Kullanılabilirlik ▮▮▮ · Kararlılık ▮▮" — the card names what it strengthens.
+	# Dominant contribution always shows; a second axis only if it genuinely pulls
+	# weight (≥ 1.5), max two entries — compact by design, not a full breakdown.
+	# (WORKING CALL — threshold/format are visual judgment; designer verifies.)
+	var dc: Dictionary = data.get("dimension_contribution", {})
+	var labels: Dictionary = _axis_display_labels()
+	var entries: Array = []
+	for axis in ["innovation", "stability", "usability"]:
+		var v: float = float(dc.get(axis, 0.0))
+		if v > 0.0:
+			entries.append([axis, v])
+	entries.sort_custom(func(a, b): return float(a[1]) > float(b[1]))
+	var parts: PackedStringArray = []
+	for e in entries:
+		if not parts.is_empty() and (float(e[1]) < 1.5 or parts.size() >= 2):
+			break
+		parts.append("%s %s" % [String(labels.get(e[0], e[0])),
+			"▮".repeat(clampi(int(round(float(e[1]))), 1, 4))])
+	if parts.is_empty():
+		return ""
+	return "→ " + " · ".join(parts)
 
 
 func _on_feature_card_input(event: InputEvent, card: Panel) -> void:
@@ -609,7 +693,9 @@ func _refresh_projection() -> void:
 	# forecast. Keep them hidden; show sub-type + feature count + a one-line
 	# hint about iteration cadence so the player knows what they're committing
 	# to before pressing build.
-	_set_projection_row("Row_SubType", _sub_product_type_name(_selected_sub_product_type) if _selected_sub_product_type != "" else "—")
+	# Blok A declutter: the sub-type row is redundant — identity lives in the Tier-1
+	# headline (ContextLabel) now, so the projection card keeps only count + duration.
+	_hide_projection_row("Row_SubType")
 	var _feat_cap: int
 	if _v2_strengthen_mode:
 		_feat_cap = ProductSystem.STRENGTHEN_MAX_PER_VERSION
@@ -1896,34 +1982,54 @@ func _paint_action_card() -> void:
 		sr["title"].text = "Bug Sprinti başlat"
 		sr["desc"].text = "Bug'ları temizle — kararlılık geri gelir (büyüme durur)."
 		sr["status"].text = "%d BUG · ~%d GÜN" % [bugs, ProductSystem.sprint_duration_for(bugs)]
-	# v2/v4 growth row.
+	# v2/v4 growth row. While a version build runs (C-routing keeps the player on
+	# this view), the row turns into a read-only progress line and locks.
 	var vr: Dictionary = _action_rows["v2"]
 	var nextv: int = int(GameState.get_flag("mvp_version", 1)) + 1
-	vr["title"].text = "v%d Geliştir" % nextv
-	vr["desc"].text = "Yeni feature / güçlendirme — daha yüksek rekabet. (Yeni feature = yeni bug.)"
-	vr["status"].text = "~%d GÜN" % (ProductSystem.DEVELOPMENT_DAYS_BASE + _product_total_complexity())
-	# Dim locked rows: sprint locked while sprinting or clean; v2 locked while sprinting.
-	sr["root"].modulate = Color(1, 1, 1, 0.55 if (_sprinting() or bugs <= 0) else 1.0)
-	vr["root"].modulate = Color(1, 1, 1, 0.55 if _sprinting() else 1.0)
-	# Selection highlight (price is the expandable default; stays selected through sprint mode).
-	_apply_action_selection(_active_action if is_b2c else "")
+	var active_b: FeatureBuild = ProductSystem.get_active_build()
+	var ver_build: FeatureBuild = active_b if (active_b != null and active_b.is_version_build) else null
+	if ver_build != null:
+		vr["title"].text = "v%d inşa ediliyor…" % nextv
+		vr["desc"].text = "Sürüm arka planda gelişiyor — faz kararları üstteki masa panelinde."
+		vr["status"].text = _version_build_status_text(ver_build)
+	else:
+		vr["title"].text = "v%d Geliştir" % nextv
+		vr["desc"].text = "Yeni feature / güçlendirme — daha yüksek rekabet. (Yeni feature = yeni bug.)"
+		vr["status"].text = "~%d GÜN" % (ProductSystem.DEVELOPMENT_DAYS_BASE + _product_total_complexity())
+	# Dim locked rows: ANY active build (bug sprint OR version build) locks both
+	# arms; sprint additionally locks when there's nothing to fix.
+	var busy: bool = active_b != null
+	sr["root"].modulate = Color(1, 1, 1, 0.55 if (busy or bugs <= 0) else 1.0)
+	vr["root"].modulate = Color(1, 1, 1, 0.55 if busy else 1.0)
+	# B3: highlight is SELECTION-driven — no amber row until the player has actually
+	# clicked one. The pricing detail's default-expand above still keys off
+	# _active_action's "price" default; expand and highlight are decoupled.
+	_apply_action_selection(_active_action if _action_user_selected else "")
 
 
 func _on_action_row_input(ev: InputEvent, id: String) -> void:
 	if not (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT):
 		return
+	# B3: all three arms are genuinely selectable — a real click (past the lock
+	# guards) records the selection, and only then does the highlight follow it.
 	match id:
 		"price":
 			_active_action = "price"
+			_action_user_selected = true
 			_on_price_action_pressed()
 			_paint_action_card()
 		"sprint":
-			if _sprinting() or _live_bugs() <= 0:
-				return   # locked
+			if ProductSystem.get_active_build() != null or _live_bugs() <= 0:
+				return   # locked: a sprint/version build is running, or nothing to fix
+			_active_action = "sprint"
+			_action_user_selected = true
 			_on_bug_sprint_pressed()
+			_paint_action_card()
 		"v2":
-			if _sprinting():
-				return   # can't build a version mid-sprint
+			if ProductSystem.get_active_build() != null:
+				return   # locked: can't plan a version mid-sprint / mid-version-build
+			_active_action = "v2"
+			_action_user_selected = true
 			_on_v2_pressed()
 
 
@@ -1939,6 +2045,19 @@ func _on_price_action_pressed() -> void:
 	# Pricing panel is always shown in B2C PostShip; soft anchor / ensure visible.
 	if _pricing_panel != null and is_instance_valid(_pricing_panel):
 		_pricing_panel.visible = true
+
+
+func _version_build_status_text(b: FeatureBuild) -> String:
+	# Read-only phase line for the locked v-Geliştir row while a version build runs
+	# in the background (C-routing). Display only — no mechanics read this.
+	match b.current_phase:
+		"iteration":
+			return "KARAR BEKLİYOR" if b.iteration_decision_pending else ("İTERASYON %d" % b.iteration_count)
+		"development":
+			return "%d GÜN KALDI" % int(ceil(max(0.0, float(b.development_days_total) - b.development_days_elapsed)))
+		"bugfix", "polish":
+			return "YAYINA HAZIR"
+	return ""
 
 
 func _post_ship_frank_text(_quality: int) -> String:
@@ -2298,6 +2417,24 @@ func _sub_product_type_name(sub_type_id: String) -> String:
 	if data.is_empty():
 		return sub_type_id
 	return String(data.get("name", sub_type_id))
+
+
+func _sub_type_human_name(sub_type_id: String) -> String:
+	# Clean Turkish display name (Blok A) — falls back to the English tech name.
+	if sub_type_id == "":
+		return "—"
+	var data: Dictionary = ProductCatalog.get_sub_product_type_by_id(sub_type_id)
+	if data.is_empty():
+		return sub_type_id
+	return String(data.get("name_human", data.get("name", sub_type_id)))
+
+
+func _identity_headline() -> String:
+	# Tier-1 identity: the product being planned — its name first once it has one.
+	var type_name: String = _sub_type_human_name(_selected_sub_product_type)
+	if _selected_product_name != "":
+		return "%s — %s" % [_selected_product_name, type_name]
+	return type_name
 
 
 func _build_feature_summary(b: FeatureBuild) -> String:
