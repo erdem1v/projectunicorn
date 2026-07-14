@@ -11,36 +11,48 @@ extends RefCounted
 # Product Lifecycle Part 1: `name_human` = jargon-free display name, `bet` =
 # founder-voice market bet (shown as the type card's two lines). `name` kept as a
 # short internal label + fallback. Multi-Modal App removed (Erdem: "kimse tıklamaz").
+# Design-doc redesign (Part 1): `category_tr` (mono kategori alt-etiketi) + `desc_tr`
+# (tek satır kart açıklaması) DISPLAY-ONLY — yalnız product_tab kart görseli okur,
+# hiçbir hesaba girmez.
 # İçerik working-metin — Erdem voice-pass bekliyor (final copy kilitlemeyin).
 const SUB_PRODUCT_TYPES := {
 	"ai": [
 		{"id": "ai_assistant", "name": "AI Assistant", "name_human": "Yapay Zeka Asistanı",
+			"category_tr": "ASİSTAN", "desc_tr": "Genel amaçlı sohbet asistanı.",
 			"bet": "İnsanların her gün sorduğu şeye hızlı, temiz cevap. ChatGPT'nin üşendiği nişi kap.",
 			"pitch": "ChatGPT'nin yetmediği yerlerde devreye giren asistan.", "market_type": "b2c"},
 		{"id": "ai_photo_editor", "name": "Photo Editor", "name_human": "Görsel Düzenleyici",
+			"category_tr": "GÖRSEL · ÜRETKEN", "desc_tr": "Görsel düzenleme ve üretim aracı.",
 			"bet": "Photoshop açmaya üşenen milyonlar var. Tek tıkla iyi görünsünler, para versinler.",
 			"pitch": "Photoshop'un karmaşıklığını unutturan bir araç.", "market_type": "b2c", "price_tendency": "volume"},
 		{"id": "ai_code_copilot", "name": "Code Copilot", "name_human": "Kod Yazan Asistan",
+			"category_tr": "GELİŞTİRİCİ", "desc_tr": "Kod yazımını hızlandıran yardımcı.",
 			"bet": "Junior geliştiricinin yanında 7/24 duran bir kıdemli. Önce güvenini kazan, ekipler peşinden gelsin.",
 			"pitch": "Kod yazarken öneren, tamamlayan, açıklayan asistan. Geliştiricinin yeni masa arkadaşı.", "market_type": "b2c"},
 		{"id": "ai_vector_search", "name": "Vector Search", "name_human": "Kurumsal Arama",
+			"category_tr": "ARAMA", "desc_tr": "Anlamsal kurumsal arama motoru.",
 			"bet": "Şirketler kendi verisinde kayboluyor. Anlamlı aramayı sat, IT bütçesi açılır.",
 			"pitch": "Şirket verisinde kelimeyle değil anlamla arama yapan motor. Aradığını tarif edemesen de bulur.", "market_type": "b2b", "price_tendency": "premium"},
 	],
 	"saas": [
 		{"id": "saas_project_mgmt", "name": "Project Management", "name_human": "Proje Yönetimi",
+			"category_tr": "İŞ AKIŞI", "desc_tr": "Ekiplerin işi tek panodan yürüttüğü araç.",
 			"bet": "Asana'dan bıkan çok. Daha hafif, daha hızlı bir alternatif ol.",
 			"pitch": "Kim neyi ne zaman yapacak — ekiplerin işi tek panodan takip ettiği araç.", "market_type": "b2b"},
 		{"id": "saas_crm", "name": "CRM", "name_human": "Müşteri Takip (CRM)",
+			"category_tr": "SATIŞ", "desc_tr": "Müşteri ve görüşmeleri tek ekranda toplar.",
 			"bet": "Satış ekipleri deal kaybediyor. Hepsini tek ekranda topla, vazgeçemesinler.",
 			"pitch": "Satış ekibinin müşterileri ve görüşmeleri tek ekranda takip ettiği sistem. Unutulan müşteri, kaçan satış kalmaz.", "market_type": "b2b"},
 		{"id": "saas_analytics", "name": "Analytics Dashboard", "name_human": "Veri Panosu",
+			"category_tr": "ANALİTİK", "desc_tr": "Metrik ve gösterge paneli seti.",
 			"bet": "Yönetici grafiğe para verir. Karmaşık veriyi tek bakışta anlaşılır yap.",
 			"pitch": "Dağınık şirket verisini yöneticinin tek bakışta anlayacağı grafiklere çevirir.", "market_type": "b2b"},
 		{"id": "saas_billing", "name": "Billing Platform", "name_human": "Faturalama Altyapısı",
+			"category_tr": "FİNANS · ALTYAPI", "desc_tr": "Abonelik ve tahsilat altyapısı.",
 			"bet": "Herkes tahsilat ister, kimse kurmak istemez. Sıkıcı ama vazgeçilmez ol.",
 			"pitch": "Abonelik, fatura ve tahsilatı şirketler adına yürüten altyapı. Sıkıcı, ama herkes muhtaç.", "market_type": "b2b"},
 		{"id": "saas_dev_tools", "name": "Dev Tools", "name_human": "Geliştirici Araçları",
+			"category_tr": "GELİŞTİRİCİ", "desc_tr": "Geliştiricinin günlük angaryasını üstlenir.",
 			"bet": "Mühendislerin günlük acısını çöz. Severlerse şirketlerine sokarlar.",
 			"pitch": "Geliştiricilerin her gün uğraştığı angaryayı üstlenen araç seti. Mühendisten mühendise.", "market_type": "b2b", "price_tendency": "premium"},
 	],

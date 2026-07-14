@@ -520,6 +520,67 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="YatirimBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_type_variation = &"TabButton"
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/YatirimBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Margin/Col/YatirimBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_finance")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.576, 0.545, 0.471, 1)
+
+[node name="NameLabel" type="Label" parent="Margin/Col/YatirimBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"TabLabel"
+text = "Yatırım"
+horizontal_alignment = 1
+
+[node name="Badge" type="Panel" parent="Margin/Col/YatirimBtn"]
+visible = false
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -24.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 24.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"TabBadge"
+
+[node name="BadgeLabel" type="Label" parent="Margin/Col/YatirimBtn/Badge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"BadgeLabel"
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Spacer" type="Control" parent="Margin/Col"]
 layout_mode = 2
 size_flags_vertical = 3

@@ -24,6 +24,8 @@ const PHASE_NAMES := ["Bootstrap", "Traction", "Series A"]
 @onready var brand_value_label: Label = $Margin/Row/ReputationGroup/StatCol_Brand/ValueLabel
 @onready var rep_value_label: Label = $Margin/Row/ReputationGroup/StatCol_Rep/ValueLabel
 @onready var day_label: Label = $Margin/Row/TimeGroup/DayLabel
+@onready var shutter_label: Label = $Margin/Row/TimeGroup/ShutterLabel
+@onready var offer_label: Label = $Margin/Row/TimeGroup/OfferLabel
 @onready var phase_name_label: Label = $Margin/Row/TimeGroup/PhaseGroup/PhaseNameLabel
 @onready var phase_dots: Array[Panel] = [
 	$Margin/Row/TimeGroup/PhaseGroup/PhaseDots/PhaseDot1,
@@ -62,7 +64,11 @@ func _ready() -> void:
 	EventBus.day_advanced.connect(_on_day_advanced)
 	EventBus.hour_changed.connect(_on_hour_changed)
 	EventBus.phase_changed.connect(_on_phase_changed)
+	EventBus.shutter_changed.connect(_on_shutter_changed)
+	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
 	TimeManager.speed_changed.connect(_on_time_manager_speed_changed)
+	# Kepenk counter is danger-red on the dark chrome (bright variant for contrast).
+	shutter_label.add_theme_color_override("font_color", UiTokens.NEGATIVE_BRIGHT)
 	# Initial sync — TimeManager's _ready ran first (autoload order) and the
 	# field is whatever it landed on (default 1, or main.gd may have already
 	# emitted 0 to pause for onboarding before we got here).
@@ -82,6 +88,8 @@ func _exit_tree() -> void:
 	EventBus.day_advanced.disconnect(_on_day_advanced)
 	EventBus.hour_changed.disconnect(_on_hour_changed)
 	EventBus.phase_changed.disconnect(_on_phase_changed)
+	EventBus.shutter_changed.disconnect(_on_shutter_changed)
+	EventBus.offer_countdown_changed.disconnect(_on_offer_countdown_changed)
 	TimeManager.speed_changed.disconnect(_on_time_manager_speed_changed)
 
 
@@ -97,6 +105,7 @@ func _refresh_all() -> void:
 	_on_reputation_changed(GameState.reputation)
 	_update_day_label()
 	_on_phase_changed(GameState.phase)
+	_on_shutter_changed(GameState.shutter_days_left)
 	_apply_speed_visual(current_speed)
 
 
@@ -147,6 +156,21 @@ func _on_hour_changed(_hour: int) -> void:
 func _update_day_label() -> void:
 	# In-fiction date per UI overhaul mini-spec (e.g. "Wed, Jan 1 · 09:00").
 	day_label.text = "%s · %02d:00" % [GameState.get_display_date(true), GameState.current_hour]
+
+func _on_shutter_changed(days_left: int) -> void:
+	# Kepenk counter (ENDGAME_DESIGN.md §4.3): visible red countdown while cash
+	# is under zero. -1 = inactive/cleared → hidden.
+	shutter_label.visible = days_left >= 0
+	if days_left >= 0:
+		shutter_label.text = "KEPENK: %d GÜN" % days_left
+
+func _on_offer_countdown_changed(days_left: int) -> void:
+	# Term-sheet validity chip (Spec 4 / ledger 14): shown only when the soonest sheet
+	# is ≤ WARNING_DAYS. Amber above 1 day, red on the last day. -1 = hide.
+	offer_label.visible = days_left >= 0
+	if days_left >= 0:
+		offer_label.text = "TEKLİF: %d GÜN" % days_left
+		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT if days_left > 1 else UiTokens.NEGATIVE_BRIGHT)
 
 func _on_phase_changed(new_phase: int) -> void:
 	var idx: int = clampi(new_phase - 1, 0, PHASE_NAMES.size() - 1)

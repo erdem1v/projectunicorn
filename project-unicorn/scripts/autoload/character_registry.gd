@@ -54,6 +54,17 @@ func get_employees() -> Array[Character]:
 	return out
 
 
+func count_engineers() -> int:
+	# Kapasite havuzu (ProductSystem.capacity_total): kurucu + mühendis sayısı.
+	# Role string konvansiyonu "Engineer" (debug seed / smoke ile aynı, büyük-küçük
+	# harf duyarlı) — hire flow gelince tek sabite bağlanmalı.
+	var n: int = 0
+	for c in get_employees():
+		if c.role == "Engineer":
+			n += 1
+	return n
+
+
 func get_mentor() -> Character:
 	for c in _characters.values():
 		if c.category == "mentor":
@@ -113,6 +124,11 @@ func add(character: Character) -> void:
 		push_warning("[CharacterRegistry] add() id collision: %s" % character.id)
 		return
 	_characters[character.id] = character
+	if character.category == "employee":
+		# Run counter seam (Spec 3 §3): counted HERE, not at the add_character
+		# event modifier, so the future hire flow counts automatically. Founder
+		# (category "founder") is excluded; mentor never passes through add().
+		GameState.run_hires += 1
 	EventBus.character_added.emit(character.id)
 
 
@@ -121,6 +137,15 @@ func remove(id: String) -> void:
 		return
 	_characters.erase(id)
 	EventBus.character_removed.emit(id)
+
+
+# --- Debug reset (onboarding re-trigger) ---
+# Clears the roster so a re-triggered initialize_run re-provisions mentor + a fresh
+# founder without the char_founder id-collision that add() would otherwise drop.
+# Direct clear (no character_removed emits) — the shell is torn down alongside, so
+# no listeners remain; mirrors ensure_mentor/_seed inserting directly without signals.
+func reset() -> void:
+	_characters.clear()
 
 
 func set_morale(id: String, value: int) -> void:

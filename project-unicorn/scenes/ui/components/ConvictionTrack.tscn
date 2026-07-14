@@ -1,0 +1,48 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/components/conviction_track.gd" id="1_ct"]
+
+[node name="ConvictionTrack" type="VBoxContainer"]
+theme_override_constants/separation = 5
+script = ExtResource("1_ct")
+
+[node name="TopRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ZoneLabel"
+text = "İKNA"
+
+[node name="ValueLabel" type="Label" parent="TopRow"]
+layout_mode = 2
+theme_type_variation = &"ConvictionValue"
+text = "0"
+
+[node name="Track" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="ZoneRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="ZoneCold" type="Label" parent="ZoneRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ZoneLabel"
+text = "SOĞUK"
+
+[node name="ZoneWarm" type="Label" parent="ZoneRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ZoneLabel"
+text = "ILIK"
+horizontal_alignment = 1
+
+[node name="ZoneWon" type="Label" parent="ZoneRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ZoneLabel"
+text = "KAZANILDI"
+horizontal_alignment = 2

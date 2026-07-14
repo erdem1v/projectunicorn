@@ -1,0 +1,70 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/components/dialogue_choice_card.gd" id="1_cc"]
+
+[node name="DialogueChoiceCard" type="PanelContainer"]
+theme_type_variation = &"DialogueChoice"
+script = ExtResource("1_cc")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="NumberChip" type="Panel" parent="Row"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"NumberChip"
+
+[node name="Number" type="Label" parent="Row/NumberChip"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"DialogueNumber"
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TextCol" type="VBoxContainer" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="ChoiceText" type="Label" parent="Row/TextCol"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"DialogueChoiceLabel"
+text = "—"
+autowrap_mode = 3
+
+[node name="Odds" type="Label" parent="Row/TextCol"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"DialogueOdds"
+text = ""
+
+[node name="Caption" type="Label" parent="Row/TextCol"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"DialogueOdds"
+text = ""
+autowrap_mode = 3
+
+[node name="Marked" type="Label" parent="Row"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"DialogueTag"
+text = "PROVA EDİLDİ"

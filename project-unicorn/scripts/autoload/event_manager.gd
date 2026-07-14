@@ -172,6 +172,8 @@ func enqueue(event: GameEvent) -> void:
 	# Injection point for system-built synthetic events (e.g. ProductSystem
 	# ship moment). Bypasses eligibility check + history append by design —
 	# callers are responsible for one-shot enforcement themselves.
+	if not GameState.run_active:
+		return  # nothing new mounts after a terminal (ENDGAME_DESIGN.md §7.3)
 	if event == null:
 		push_warning("[EventManager] enqueue called with null event")
 		return
@@ -180,6 +182,40 @@ func enqueue(event: GameEvent) -> void:
 	_queue.append(event)
 	EventBus.event_triggered.emit(event.id)
 	_pump_queue()
+
+
+func enqueue_front(event: GameEvent) -> void:
+	# High-priority deterministic injection (ENDGAME_DESIGN.md §2.4): the Frank
+	# gate scene must jump ahead of already-queued ambient/beat events. Same
+	# dedupe as enqueue() — re-enqueueing the SAME cached GameEvent instance is
+	# a no-op, which is what makes gate reminders stack-proof (§7.10).
+	if not GameState.run_active:
+		return
+	if event == null:
+		push_warning("[EventManager] enqueue_front called with null event")
+		return
+	if _queue.has(event) or event.id == _active_event_id:
+		return
+	_queue.push_front(event)
+	EventBus.event_triggered.emit(event.id)
+	_pump_queue()
+
+
+func flush_queue() -> void:
+	# Terminal path (§7.2): queued scenes die with the run — including a pending
+	# Frank gate scene. Deliberately does NOT touch _active_event_id: an open
+	# modal resolves normally; its post-resolve speed restore is swallowed by
+	# TimeManager's dead-run guard.
+	_queue.clear()
+
+
+func remove_queued(event_id: String) -> void:
+	# Targeted hold (§7.4): shutter start pulls a queued gate scene without
+	# killing the whole queue. The gate latch survives; PhaseGateSystem
+	# re-prompts after the shutter clears.
+	for i in range(_queue.size() - 1, -1, -1):
+		if _queue[i].id == event_id:
+			_queue.remove_at(i)
 
 
 # --- Public queries ---
@@ -441,6 +477,7 @@ func _apply_modifiers(modifiers: Array) -> void:
 						SalesSystem.add_b2c_audience(-int(round(aud * 0.15)))
 					else:
 						CustomerRegistry.remove(victim.id)
+						GameState.run_customers_lost += 1  # run counter seam (Spec 3 §3) — sole customer-removal path
 						GameState.set_mrr(CustomerRegistry.get_total_mrr())
 			"customer_mrr_delta":
 				# Expansion: grow an existing B2B account's MRR.
@@ -467,11 +504,37 @@ func _apply_modifiers(modifiers: Array) -> void:
 				SalesSystem.add_b2c_audience(n)
 			"mentor_advisory":
 				EventBus.mentor_advisory_changed.emit(String(m.get("text", "")))
+			# --- Endgame modifiers (ENDGAME_DESIGN.md §2/§4) — precedent: ship_active_build ---
+			"advance_phase":
+				# Frank gate scene confirm. The single played path to a phase change;
+				# zero economic modifiers ride along (§2.1).
+				GameState.advance_phase()
+			"phase_gate_decline":
+				# "Henüz değil" — no penalty; re-arms the 5-day reminder clock.
+				PhaseGateSystem.on_gate_declined()
+			"accept_acquisition":
+				# Class A instant soft win — fired by the played moment, not the daily scan.
+				EndingsSystem.trigger_ending("acquisition")
+			"accept_pivot":
+				# §4.5 escape hatch taken: VC path closes permanently; run continues to Day 180.
+				EndingsSystem.on_pivot_accepted()
+			"decline_pivot":
+				# Hatch refused at the third closed table — cascade resolves now.
+				EndingsSystem.trigger_ending("vc_rejection_cascade")
+			"start_vc_meeting":
+				# Spec 4: scheduled meeting-prompt accept → mount MeetingScene via a
+				# view-state build. VCPitchSystem emits meeting_scene_requested.
+				VCPitchSystem.begin_meeting(String(m.get("vc_id", "")))
+			"decline_vc_meeting":
+				# "Bugün değil" — the request is consumed, VC stays open, no penalty.
+				GameState.pending_meeting.clear()
 			_:
 				push_warning("[EventManager] Unknown modifier type: %s" % t)
 
 
 func _pump_queue() -> void:
+	if not GameState.run_active:
+		return  # ending modal owns the screen — no event modals behind/over it
 	if _active_event_id != "":
 		return
 	if _queue.is_empty():

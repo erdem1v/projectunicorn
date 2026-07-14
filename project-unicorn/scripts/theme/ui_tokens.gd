@@ -78,6 +78,22 @@ const HEALTH_AMBER := Color(0.788, 0.588, 0.180, 1)
 const DIVIDER_LIGHT := Color(0, 0, 0, 0.08)        # on light body
 const SEPARATOR := Color(1, 1, 1, 0.08)            # on dark chrome
 
+# --- Cinematic dialogue register (Spec 5: MeetingScene / FrankPopup) ---
+# A DARK charcoal register distinct from the light editorial modals — the game's
+# cinematic layer. Text on these surfaces uses the CREAM* / *_BRIGHT tones per the
+# context rule above. Amber fill/edge reuse ACCENT; danger captions reuse
+# NEGATIVE_BRIGHT; monologue (interior voice) text uses CREAM_DIM. Working values
+# sampled toward the approved mockups — final hues sealed by Erdem's F5 eye.
+const SCRIM_MODAL := Color(0, 0, 0, 0.55)            # standard modal dimmer (matches existing modals)
+const SCRIM_ROOM := Color(0, 0, 0, 0.18)              # readability scrim over full-bleed room art
+const STAT_STRIP_BG := Color(0, 0, 0, 0.45)          # bottom-left translucent stat band over art
+const DIALOGUE_BG := Color(0.098, 0.086, 0.075, 1)   # deep warm charcoal (solid — Frank card)
+const DIALOGUE_COLUMN_BG := Color(0.098, 0.086, 0.075, 0.92)  # floating column (art shows through)
+const DIALOGUE_CARD_BG := Color(0.145, 0.129, 0.114, 1)       # choice / quote card (a step lighter)
+const DIALOGUE_CARD_BORDER := Color(1, 1, 1, 0.10)   # subtle hairline on dark
+const CONVICTION_TRACK_BG := Color(1, 1, 1, 0.07)    # İKNA gauge groove
+const PORTRAIT_FRAME := Color(0.941, 0.918, 0.851, 1)  # thin cream portrait-card border
+
 # --- Font sizes ---
 const SIZE_STAT_LABEL := 9      # "CASH" uppercase caption
 const SIZE_STAT_VALUE := 15     # "$248,400" weighted value
@@ -113,6 +129,9 @@ const TABS := [
 	{"id": "rnd",      "label": "R&D",      "glyph": TAB_GLYPH_RND,      "icon": "res://assets/icons/tabs/rnd.svg"},
 	{"id": "personal", "label": "Personal", "glyph": TAB_GLYPH_PERSONAL, "icon": "res://assets/icons/tabs/personal.svg"},
 	{"id": "events",   "label": "Events",   "glyph": TAB_GLYPH_EVENTS,   "icon": "res://assets/icons/tabs/events.svg"},
+	# Spec 4 — 9th tab, appended (keeps LeftTabs badge indices 1/2/7 valid). Icon reuses
+	# finance.svg as a placeholder; Erdem swaps for a dedicated Yatırım glyph at F5.
+	{"id": "yatirim",  "label": "Yatırım",  "glyph": "◆",                "icon": "res://assets/icons/tabs/finance.svg"},
 ]
 
 # ============================================================================
@@ -168,3 +187,24 @@ static func bug_severity(bug_count: int) -> Dictionary:
 	if bug_count <= 0: return badge_palette(&"positive")
 	if bug_count <= 2: return badge_palette(&"accent")
 	return badge_palette(&"negative")
+
+
+## Game-wide money format (Spec 3 §6 — the single convention going forward).
+## < $1K → "$800" · ≥ $1K → one-decimal K ("$2.1K", "$10.0K") · ≥ $1M →
+## one-decimal M ("$4.0M") · ≥ $10M drops a .0 decimal ("$22M"). Negative →
+## leading "-". Existing surfaces keep their local _fmt_money until touched
+## (migrate-when-touched rule); NEW code must use this.
+static func format_money(amount: int) -> String:
+	var a: int = absi(amount)
+	var s: String
+	if a >= 1_000_000:
+		var millions: float = a / 1_000_000.0
+		if a >= 10_000_000 and a % 1_000_000 == 0:
+			s = "$%dM" % int(millions)
+		else:
+			s = "$%.1fM" % millions
+	elif a >= 1_000:
+		s = "$%.1fK" % (a / 1_000.0)
+	else:
+		s = "$%d" % a
+	return ("-" + s) if amount < 0 else s

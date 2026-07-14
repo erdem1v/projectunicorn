@@ -1,41 +1,17 @@
 extends Control
 
-# Product tab — Spec #4 (post-iteration-duration removal).
+# Product tab — Tracker Card dönemi (Blok C kapanışı).
 # View routing keyed off (active_build, GameState.flags["mvp_shipped"]):
-#   DesignDocumentView  | active_build == null AND not mvp_shipped
-#   BuildProgressView   | active_build != null AND phase in {iteration, development, bugfix}
-#   PostShipView        | active_build == null AND mvp_shipped
+#   DesignDocumentView | build yok + ship yok (veya _v2_mode planlama)
+#   CalmBuildView      | v1 build aktif — build köşedeki Tracker Card'tan akar,
+#                        orta alan sakin (ürün adı + "inşa ediliyor", ipucu yok)
+#   PostShipView       | ship sonrası + v2/v3 build SÜRERKEN de (canlı ürün
+#                        yönetilmeye devam eder; build yine kartta akar)
 #
-# DesignDocumentView now only takes sub-type + 2-4 features — no duration. The
-# old Rushed/Standard/Polished selector + projection's quality-ceiling/bug-risk/
-# runway rows are gone; planning trusts the player to commit and learn the
-# system through play, not through forecast math. The Rushed/Standard/Polished
-# selector nodes and all duration refs were removed outright from both this
-# script and ProductTab.tscn.
-#
-# Phase-by-phase build flow is managed by BuildHUDPanel (the right-top desk
-# panel in CenterViewport) — the buttons that used to live in BuildProgress /
-# PolishProgress views now live there. The Product tab keeps the feed-style
-# detail visible while a build is active but doesn't expose decision buttons.
-# PolishProgressView is now a deprecated alias for the bugfix phase and is
-# hidden — _refresh_view routes "bugfix" to BuildProgressView.
-
-# --- Mentor lines ---
-
-const MENTOR_ITERATION_LINES := {
-	"q4": "İzliyorum.",
-	"q3": "Hız iyi gidiyor.",
-	"q2": "Yaklaşıyor.",
-	"q1": "Son sprint.",
-}
-const MENTOR_POLISH_LINES := {
-	"start": "Bugları çöz.",
-	"mid": "Yarısı geçti.",
-	"end": "Bitiş çizgisinde.",
-}
-
-# Feed cap — older entries dropped silently (scroll container also handles overflow).
-const FEED_MAX_ENTRIES := 30
+# Eski BuildProgressView + PolishProgressView (ortadaki büyük dev-bar/feed bloğu)
+# KALDIRILDI — faz akışı + karar butonları BuildHUDPanel'deki dört-faz Tracker
+# Card'ında (TASARIM/GELİŞTİRME/BETA/YAYINLANDI). GÜNLÜK GELİŞİM feed'i silindi
+# (Erdem kararı).
 
 # --- Transient planning state (held until start_build is called) ---
 
@@ -59,16 +35,13 @@ var _commit_frank_label: Label = null
 # Part 2B: "Vazgeç" escape hatch shown only in v2 mode (back to PostShip without committing).
 var _v2_cancel_button: Button = null
 
-# --- Feed tracking ---
-var _seen_build_id: String = ""             # tracks build id to detect first paint on a new build
-var _last_polish_bug_count: int = -1        # sentinel for detecting bug-fix days in polish
-
-# --- View nodes (4) ---
+# --- View nodes ---
 # The static tab title (hidden in post-ship — PostShipTitle carries the identity there).
 @onready var title_bar: HBoxContainer = $Margin/Layout/TitleBar
 @onready var design_document_view: VBoxContainer = $Margin/Layout/BuildStateRoot/DesignDocumentView
-@onready var build_progress_view: VBoxContainer = $Margin/Layout/BuildStateRoot/BuildProgressView
-@onready var polish_progress_view: VBoxContainer = $Margin/Layout/BuildStateRoot/PolishProgressView
+# v1 build sürerken kurma ekranı GÖRÜNÜR ama KİLİTLİ (locked=visible pillar'ı) —
+# boş "inşa ediliyor" görünümünün yerini aldı (Erdem playtest kararı).
+var _design_locked: bool = false
 # Part 2B: PostShipView is now inside a ScrollContainer (content overflowed). post_ship_view
 # points at the INNER VBox so all add_child/move_child/get_parent logic is unchanged; the
 # scroll wrapper is the node we toggle visible.
@@ -78,6 +51,9 @@ var _last_polish_bug_count: int = -1        # sentinel for detecting bug-fix day
 # --- DesignDocumentView wiring ---
 # Sub-type rows (5)
 @onready var sub_type_list: VBoxContainer = $Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList
+@onready var type_caption_label: Label = $Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/CaptionLabel
+@onready var center_header_label: Label = $Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/HeaderRow/HeaderLabel
+@onready var right_header_label: Label = $Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/RightColumn/RightVBox/HeaderLabel
 
 # Feature grid (7 cards)
 @onready var selection_counter_label: Label = $Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/HeaderRow/SelectionCounterLabel
@@ -97,39 +73,6 @@ var _last_polish_bug_count: int = -1        # sentinel for detecting bug-fix day
 @onready var name_row: HBoxContainer = $Margin/Layout/BuildStateRoot/DesignDocumentView/NameRow
 @onready var name_input: LineEdit = $Margin/Layout/BuildStateRoot/DesignDocumentView/NameRow/NameInput
 @onready var suggest_button: Button = $Margin/Layout/BuildStateRoot/DesignDocumentView/NameRow/SuggestButton
-
-# --- BuildProgressView wiring ---
-@onready var bp_sub_type_label: Label = $Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout/SubTypeLabel
-@onready var bp_features_label: Label = $Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout/FeaturesLabel
-@onready var bp_engineer_label: Label = $Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout/EngineerLabel
-@onready var bp_iteration_bar: ProgressBar = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar/IterationBar
-@onready var bp_polish_bar: ProgressBar = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar/PolishBar
-@onready var bp_phase_bar: HBoxContainer = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar
-@onready var bp_progress_caption: Label = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/ProgressCaption
-@onready var bp_feed_list: VBoxContainer = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/FeedScroll/FeedList
-@onready var bp_quality_value: Label = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality/ValueRight
-@onready var bp_bugs_row: PanelContainer = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs
-@onready var bp_bugs_value: Label = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout/ValueRight
-@onready var bp_phase_value: Label = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase/ValueRight
-@onready var bp_remaining_value: Label = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining/ValueRight
-@onready var bp_mentor_line: Label = $Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/MentorLineLabel
-
-# --- PolishProgressView wiring ---
-@onready var pp_sub_type_label: Label = $Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout/SubTypeLabel
-@onready var pp_features_label: Label = $Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout/FeaturesLabel
-@onready var pp_engineer_label: Label = $Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout/EngineerLabel
-@onready var pp_iteration_bar: ProgressBar = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar/IterationBar
-@onready var pp_polish_bar: ProgressBar = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar/PolishBar
-@onready var pp_phase_bar: HBoxContainer = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar
-@onready var pp_progress_caption: Label = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/ProgressCaption
-@onready var pp_feed_list: VBoxContainer = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/FeedScroll/FeedList
-@onready var pp_quality_value: Label = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality/ValueRight
-@onready var pp_bugs_row: PanelContainer = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs
-@onready var pp_bugs_value: Label = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout/ValueRight
-@onready var pp_phase_value: Label = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase/ValueRight
-@onready var pp_remaining_value: Label = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining/ValueRight
-@onready var pp_mentor_line: Label = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/MentorLineLabel
-@onready var pp_ship_now_button: Button = $Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/ShipNowButton
 
 # --- PostShipView (PostShip sales phase, B2C/B2B aware) ---
 @onready var post_ship_title: Label = $Margin/Layout/BuildStateRoot/PostShipScroll/PostShipView/PostShipTitle
@@ -181,21 +124,28 @@ var _b2b_info: VBoxContainer = null
 var _bottom_strip: VBoxContainer = null
 var _rival_line: Label = null
 var _action_built: bool = false
-var _active_action: String = "price"   # "price" | "sprint" | "v2"
-# Amber vurgu yalnız oyuncu bir satıra gerçekten tıkladıysa çizilir; fiyat panelinin
-# default-açık davranışı _active_action'a bağlı kalır (vurgu ile genişleme ayrık).
-var _action_user_selected: bool = false
+# Fiyatlandır seçici satırı kaldırıldı — fiyat paneli B2C'de hep açık;
+# _action_rows yalnız sprint + v2 tetikleyicilerini tutar.
 var _action_rows: Dictionary = {}       # id -> {root, title, desc, status}
-var _design_two_col_built: bool = false
+# --- Design-doc redesign (onaylı mockup, Part 1) — yerleşim scaffold'u + chrome ---
+var _design_layout_built: bool = false
+var _decision_slot: VBoxContainer = null           # alt-sağ KARAR slot'u (CommitCard buraya)
+var _counter_chip: PanelContainer = null           # "N/4 seçili" amber rozeti
+var _stat_values: Dictionary = {}                  # Row_* -> alt-sol stat kutusunun value Label'ı
+var _summary_line: Label = null                    # KARAR kartındaki tek satır özet
+# Tip satırı / feature kartı dolguları — bir kez kurulur, paint'te swap edilir
+var _card_style_normal: StyleBoxFlat = null
+var _card_style_selected: StyleBoxFlat = null
 
 
 func _ready() -> void:
 	_wire_design_document_view()
-	_wire_polish_view()
 	post_ship_sales_button.pressed.connect(_on_post_ship_sales_pressed)
 	EventBus.day_advanced.connect(_on_day_advanced)
 	EventBus.build_progress_changed.connect(_on_build_progress_changed)
-	EventBus.modal_requested.connect(_on_modal_requested_for_feed)
+	# Ship/cancel/faz geçişinde anında re-route (saatlik sinyali beklemeden) —
+	# Tracker Card "PostShip'e geç" tab'ı yeniden kurduğunda da doğru ekran açılır.
+	EventBus.build_phase_changed.connect(_on_build_phase_changed_route)
 	# PostShip repaint on sales-state changes (immediate feedback for revenue/leads).
 	EventBus.mrr_changed.connect(_on_sales_state_changed)
 	EventBus.customer_added.connect(_on_sales_state_changed)
@@ -213,8 +163,8 @@ func _exit_tree() -> void:
 		EventBus.day_advanced.disconnect(_on_day_advanced)
 	if EventBus.build_progress_changed.is_connected(_on_build_progress_changed):
 		EventBus.build_progress_changed.disconnect(_on_build_progress_changed)
-	if EventBus.modal_requested.is_connected(_on_modal_requested_for_feed):
-		EventBus.modal_requested.disconnect(_on_modal_requested_for_feed)
+	if EventBus.build_phase_changed.is_connected(_on_build_phase_changed_route):
+		EventBus.build_phase_changed.disconnect(_on_build_phase_changed_route)
 	for sig in [EventBus.mrr_changed, EventBus.customer_added, EventBus.customer_removed,
 			EventBus.prospect_added, EventBus.prospect_removed, EventBus.hour_changed]:
 		if sig.is_connected(_on_sales_state_changed):
@@ -233,33 +183,88 @@ func _refresh_view() -> void:
 		_show_state(design_document_view)
 		_refresh_design_document()
 		return
-	if active != null and active.is_bug_sprint:
-		# Bug sprint (Part 2A) stays in the product management center → pricing reachable,
-		# sprint progress shown in the action card (BuildProgressView is for real builds).
-		_show_state(post_ship_scroll)
-		_paint_post_ship()
-	elif active == null and shipped:
+	# (Sprint artık build slotu kullanmıyor — carrier dalı kalktı; sprint durumu
+	# PostShip route'larında flag'den okunur, routing null+shipped / build+shipped
+	# dallarına doğal düşer.)
+	if active == null and shipped:
 		_show_state(post_ship_scroll)
 		_paint_post_ship()
 	elif active != null and active.current_phase in ["iteration", "development", "bugfix", "polish"]:
-		# All active build phases share BuildProgressView (PolishProgressView is
-		# deprecated, hidden permanently). Decision buttons live in BuildHUDPanel.
-		_show_state(build_progress_view)
-		_paint_build_progress(active)
+		# Tracker Card (Blok C): build köşe kartından akar. v2/v3 build'de oyuncu
+		# canlı ürünü yönetmeye devam eder (PostShip); ilk build'de kurma ekranı
+		# GÖRÜNÜR ama KİLİTLİ kalır (ne inşa ettiğini görür, değiştiremez).
+		if active.is_version_build or shipped:
+			_show_state(post_ship_scroll)
+			_paint_post_ship()
+		else:
+			_show_state(design_document_view)
+			_paint_design_locked(active)
 	else:
 		_show_state(design_document_view)
-		_refresh_design_document()
+		_paint_design_normal()
 
 
 func _show_state(view: Control) -> void:
 	design_document_view.visible = (view == design_document_view)
-	build_progress_view.visible = (view == build_progress_view)
-	polish_progress_view.visible = (view == polish_progress_view)
 	# Post-ship toggles the scroll WRAPPER (post_ship_view is now the inner VBox).
 	post_ship_scroll.visible = (view == post_ship_scroll)
 	# The generic "Product / Design document" tab title is redundant in post-ship
 	# (PostShipTitle shows "<name> · vN · canlı") — hide it there to kill the double title.
 	title_bar.visible = (view != post_ship_scroll)
+
+
+func _paint_design_locked(b: FeatureBuild) -> void:
+	# Locked=visible pillar: oyuncu NE kurduğunu görür (tip + feature'lar +
+	# projeksiyon), build bitene dek DEĞİŞTİREMEZ. Seçim build'den re-seed edilir
+	# (commit transient state'i sıfırlamıştı).
+	_design_locked = true
+	_selected_sub_product_type = b.sub_product_type_id
+	_selected_features.clear()
+	for fid in b.feature_ids:
+		_selected_features.append(String(fid))
+	_selected_product_name = b.product_name
+	name_input.text = b.product_name
+	_refresh_design_document()
+	# Kilit görünümü paint'ten SONRA uygulanır (commit bar metnini/durumunu ezer).
+	name_input.editable = false
+	suggest_button.visible = false
+	commit_bar.disabled = true
+	commit_bar.text = "İNŞA EDİLİYOR — TASARIM KİLİTLİ"   # working-metin
+	reason_label.visible = false
+	_set_design_dim(0.6)   # working değer — Erdem F5
+
+
+func _paint_design_normal() -> void:
+	# Kilitten normale dönüş: dim geri alınır; editable/suggest'i
+	# _refresh_design_document zaten normal akışa göre yazar.
+	if _design_locked:
+		_design_locked = false
+		_set_design_dim(1.0)
+	# İptal edilen build'in seçimi kurma ekranına geri gelir (yanlış-tık affı) —
+	# oyuncu düzenleyip yeniden başlatır. Tek-seferlik flag, burada tüketilir.
+	if GameState.has_flag("cancelled_build_prefill"):
+		var pf: Dictionary = GameState.get_flag("cancelled_build_prefill", {})
+		GameState.flags.erase("cancelled_build_prefill")
+		_selected_sub_product_type = String(pf.get("type", ""))
+		_selected_features.clear()
+		for fid in pf.get("features", []):
+			_selected_features.append(String(fid))
+		_selected_product_name = String(pf.get("name", ""))
+		name_input.text = _selected_product_name
+	_refresh_design_document()
+
+
+func _set_design_dim(alpha: float) -> void:
+	var cols: Control = design_document_view.get_node_or_null("ColumnsRow")
+	if cols != null:
+		cols.modulate = Color(1, 1, 1, alpha)
+	var bottom: Control = design_document_view.get_node_or_null("BottomRow")
+	if bottom != null:
+		bottom.modulate = Color(1, 1, 1, alpha)
+
+
+func _on_build_phase_changed_route(_new_phase: String) -> void:
+	_refresh_view()
 
 
 # =========================================================================
@@ -285,50 +290,116 @@ func _wire_design_document_view() -> void:
 	_name_suggest_index = GameState.day   # vary the first suggestion per run
 	# Commit ceremony (Blok C): amber CTA + a framed decision card (no more gray slab).
 	commit_bar.theme_type_variation = &"CommitButton"
-	_build_commit_card()
-	_ensure_design_two_col()   # Yön A: consolidate the 3 columns into 2 (identity | features+projection)
+	_ensure_design_layout()   # onaylı mockup yerleşimi (üst: tip+feature, alt: projeksiyon+karar)
+	_build_commit_card()      # KARAR kartını _decision_slot'a kurar — layout'tan SONRA çağrılmalı
 
 
-func _ensure_design_two_col() -> void:
-	# Yön A dialect for the ship-PRE screen: merge the projection (RightColumn) into the bottom
-	# of the feature column, so it reads as two columns — left = product identity (type + name in
-	# the commit card), right = features + projection stacked. Reparent-only; @onready refs
-	# (feature_grid/projection_list/mentor_advisory_label) stay valid, painting logic untouched.
-	if _design_two_col_built:
+func _ensure_design_layout() -> void:
+	# Onaylı mockup (Yön A) yerleşimi: üst sıra = ÜRÜN TİPİ kolonu + ÖZELLİKLER kolonu,
+	# alt sıra = "BU ÜRÜN NEYİ GÜÇLENDİRİYOR" projeksiyon kartı + KARAR slot'u.
+	# Reparent-only + guard'lı (bir kez); @onready ref'leri geçerli kalır, boyama
+	# mantığı ve hesaplar değişmez. Eski _ensure_design_two_col'un yerini alır.
+	if _design_layout_built:
 		return
-	_design_two_col_built = true
-	var center_vbox: Node = feature_grid.get_parent()          # CenterColumn/CenterVBox
-	var center_col: Control = center_vbox.get_parent() as Control
-	var right_vbox: Node = projection_list.get_parent()        # RightColumn/RightVBox
-	var right_col: Control = right_vbox.get_parent() as Control
-	right_vbox.get_parent().remove_child(right_vbox)
-	center_vbox.add_child(right_vbox)                          # projection now under the feature grid
-	right_col.visible = false
-	# Two-column read: left (identity) narrower, center (features + projection) wider.
+	_design_layout_built = true
+	# Üst sıra oranları: sol tip kolonu dar, feature kolonu geniş.
 	var left_col: Control = sub_type_list.get_parent().get_parent().get_parent() as Control  # SubTypeList→ProductSection→LeftVBox→LeftColumn
 	if left_col != null:
 		left_col.size_flags_stretch_ratio = 2.6
+	var center_col: Control = feature_grid.get_parent().get_parent() as Control
 	center_col.size_flags_stretch_ratio = 5.4
+	# Alt sıra: ProjectionCard (authored RightVBox buraya reparent) + DecisionSlot.
+	var right_vbox: Node = projection_list.get_parent()        # RightColumn/RightVBox
+	var right_col: Control = right_vbox.get_parent() as Control
+	var bottom := HBoxContainer.new()
+	bottom.name = "BottomRow"
+	bottom.add_theme_constant_override("separation", 12)
+	design_document_view.add_child(bottom)
+	design_document_view.move_child(bottom, 1)                 # ColumnsRow'un hemen altı
+	var proj_card := PanelContainer.new()
+	proj_card.name = "ProjectionCard"
+	proj_card.theme_type_variation = &"CardPanel"
+	proj_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	proj_card.size_flags_stretch_ratio = 5.0
+	bottom.add_child(proj_card)
+	right_vbox.get_parent().remove_child(right_vbox)
+	proj_card.add_child(right_vbox)
+	right_col.visible = false
+	_decision_slot = VBoxContainer.new()
+	_decision_slot.name = "DecisionSlot"
+	_decision_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_decision_slot.size_flags_stretch_ratio = 4.0
+	bottom.add_child(_decision_slot)
+	# Projeksiyon kartı içeriği: başlık + üç stat kutusu; eski Row_* listesi gizli kalır
+	# (_set_projection_row hâlâ ValueRight'a yazar — tek kaynak + harness dump'ı korunur).
+	right_header_label.text = "BU ÜRÜN NEYİ GÜÇLENDİRİYOR"
+	var stat_row := HBoxContainer.new()
+	stat_row.name = "StatRow"
+	stat_row.add_theme_constant_override("separation", 10)
+	right_vbox.add_child(stat_row)
+	right_vbox.move_child(stat_row, right_header_label.get_index() + 1)
+	for entry in [["Row_SubType", "ÜRÜN TİPİ"], ["Row_FeatureCount", "ÖZELLİK SAYISI"], ["Row_Duration", "TAHMİNİ SÜRE"]]:
+		var stat := UiFactory.make_stat(String(entry[1]), "—")
+		var cell := UiFactory.make_card(stat, true)
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		stat_row.add_child(cell)
+		_stat_values[String(entry[0])] = stat.get_child(1).get_child(0)  # make_stat: [Caption, Row[Value,..]]
+	projection_list.visible = false
+	var right_sep: Node = right_vbox.get_node_or_null("RightSeparator")
+	if right_sep is Control:
+		(right_sep as Control).visible = false
+	# Sayaç rozeti: authored SelectionCounterLabel amber chip'e alınır (ref geçerli kalır;
+	# HeaderRow HBox olduğundan başlıkla çakışma yapısal olarak imkânsız).
+	var header_row: Node = selection_counter_label.get_parent()
+	var counter_idx: int = selection_counter_label.get_index()
+	_counter_chip = PanelContainer.new()
+	_counter_chip.name = "CounterChip"
+	var chip_sb := StyleBoxFlat.new()
+	chip_sb.bg_color = UiTokens.AMBER_BG
+	chip_sb.set_corner_radius_all(3)
+	chip_sb.content_margin_left = 8
+	chip_sb.content_margin_right = 8
+	chip_sb.content_margin_top = 2
+	chip_sb.content_margin_bottom = 2
+	_counter_chip.add_theme_stylebox_override("panel", chip_sb)
+	_counter_chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header_row.remove_child(selection_counter_label)
+	header_row.add_child(_counter_chip)
+	header_row.move_child(_counter_chip, counter_idx)
+	_counter_chip.add_child(selection_counter_label)
+	selection_counter_label.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
+	# ContextLabel emekli — tip adı artık "ÖZELLİKLER · [tip]" başlığında.
+	context_label.visible = false
 
 
 func _build_commit_card() -> void:
-	# Wrap the name row + amber commit button + reason into a bordered CardPanel so
-	# the commit zone reads as a decision moment, not a button floating on gray.
-	# Reparents existing nodes AFTER @onready resolved, so the refs stay valid.
-	var dv: Node = name_row.get_parent()   # DesignDocumentView VBox
-	var insert_idx: int = name_row.get_index()
+	# KARAR kartı — alt-sağ DecisionSlot'a kurulur (mockup). Authored NameRow/CommitBar/
+	# ReasonLabel @onready çözüldükten SONRA içine reparent edilir; ref'ler geçerli kalır.
 	var card := PanelContainer.new()
 	card.name = "CommitCard"
 	card.theme_type_variation = &"CardPanel"
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	card.add_child(vb)
 	vb.add_child(UiFactory.make_section_header("Karar"))
-	dv.add_child(card)
-	dv.move_child(card, insert_idx)
+	_decision_slot.add_child(card)
 	for n in [name_row, commit_bar, reason_label]:
 		n.get_parent().remove_child(n)
 		vb.add_child(n)
+	# Tek satır özet (mockup: "Nova — AI Assistant, 2 özellik. ...") — buton üstünde.
+	_summary_line = Label.new()
+	_summary_line.theme_type_variation = &"CaptionMuted"
+	_summary_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_summary_line.visible = false
+	vb.add_child(_summary_line)
+	vb.move_child(_summary_line, commit_bar.get_index())
+	# Esnek boşluk: buton kartın altına otursun (mockup'taki ferah karar bölgesi).
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(spacer)
+	vb.move_child(spacer, commit_bar.get_index())
 	# Frank's last word, between the button and the reason hint.
 	_commit_frank_label = Label.new()
 	_commit_frank_label.theme_type_variation = &"QuoteSerif"
@@ -336,7 +407,7 @@ func _build_commit_card() -> void:
 	_commit_frank_label.visible = false
 	vb.add_child(_commit_frank_label)
 	vb.move_child(_commit_frank_label, reason_label.get_index())  # above the reason hint
-	# Part 2B: v2 escape hatch — back to the live product without building a version.
+	# Part 2B: v2 escape hatch — back to the live product without committing a version.
 	_v2_cancel_button = Button.new()
 	_v2_cancel_button.text = "Vazgeç"
 	_v2_cancel_button.visible = false
@@ -363,6 +434,9 @@ func _refresh_design_document() -> void:
 
 func _paint_sub_type_list() -> void:
 	var sub_types: Array = ProductCatalog.get_sub_product_types(GameState.subgenre)
+	# Dinamik sayaç: mockup'taki "7 SEÇENEK" kurgu — gerçek havuz subgenre'a göre 4-5.
+	type_caption_label.text = "%d SEÇENEK — BİRİNİ SEÇ" % sub_types.size()
+	_ensure_card_styles()
 	for i in range(sub_type_list.get_child_count()):
 		var row: Panel = sub_type_list.get_child(i) as Panel
 		if row == null:
@@ -370,17 +444,111 @@ func _paint_sub_type_list() -> void:
 		if i < sub_types.size():
 			var data: Dictionary = sub_types[i]
 			var sub_id: String = String(data.get("id", ""))
-			row.get_node("RowLayout/NameLabel").text = String(data.get("name", ""))
-			row.get_node("RowLayout/PitchLabel").text = String(data.get("pitch", ""))
+			var refs: Dictionary = _ensure_type_row_chrome(row)
+			(refs["title"] as Label).text = String(data.get("name_human", data.get("name", "")))
+			(refs["category"] as Label).text = String(data.get("category_tr", ""))
+			(refs["desc"] as Label).text = String(data.get("desc_tr", data.get("pitch", "")))
+			var icon_node := refs["icon"] as TextureRect
+			var icon_path: String = "res://assets/icons/products/%s.svg" % sub_id
+			if ResourceLoader.exists(icon_path):
+				icon_node.texture = load(icon_path)
+				icon_node.visible = true
+			else:
+				icon_node.texture = null
+				icon_node.visible = false
 			row.set_meta("sub_type_id", sub_id)
 			row.visible = true
+			var selected: bool = (_selected_sub_product_type == sub_id)
 			var sel_border: Panel = row.get_node("SelectedBorder")
-			sel_border.visible = (_selected_sub_product_type == sub_id)
+			sel_border.visible = selected
+			# Pale-amber dolgu taban Panel'in stylebox'ında (SelectedBorder üstte çizilir —
+			# dolgu ona konursa metni yıkar); amber çerçeve SelectedBorder'ın işi.
+			row.add_theme_stylebox_override("panel", _card_style_selected if selected else _card_style_normal)
 		else:
 			row.visible = false
 
 
+func _ensure_card_styles() -> void:
+	# Seçili/normal kart dolguları — authored StyleBoxFlat_row_inner ile aynı anatomi
+	# (1px sıcak-tan çerçeve, radius 4), seçilide zemin pale-amber'a kayar. Bir kez
+	# kurulur, paint'te swap edilir (per-paint StyleBox üretimi yok).
+	if _card_style_normal != null:
+		return
+	_card_style_normal = StyleBoxFlat.new()
+	_card_style_normal.bg_color = UiTokens.CARD_BG
+	_card_style_normal.border_color = UiTokens.CARD_BORDER
+	_card_style_normal.set_border_width_all(1)
+	_card_style_normal.set_corner_radius_all(4)
+	_card_style_selected = StyleBoxFlat.new()
+	_card_style_selected.bg_color = UiTokens.CARD_BG.lerp(UiTokens.AMBER_BG, 0.55)
+	_card_style_selected.border_color = UiTokens.CARD_BORDER
+	_card_style_selected.set_border_width_all(1)
+	_card_style_selected.set_corner_radius_all(4)
+
+
+func _ensure_type_row_chrome(row: Panel) -> Dictionary:
+	# Tip kartı chrome'u (mockup): ikon + TR başlık (name_human) + kategori alt-etiketi
+	# (category_tr, mono) + tek satır açıklama (desc_tr). Authored RowLayout gizlenir
+	# (taşınmaz — adları/yolları korunur); bir kez kurulur, ref'ler meta'da cache'li.
+	# Chrome'un tamamı mouse IGNORE — satırın gui_input tıklaması yaşamaya devam eder.
+	if row.has_meta("chrome"):
+		return row.get_meta("chrome")
+	var row_layout: Control = row.get_node_or_null("RowLayout")
+	if row_layout != null:
+		row_layout.visible = false
+	var chrome := HBoxContainer.new()
+	chrome.name = "TypeChrome"
+	chrome.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(chrome)
+	chrome.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	chrome.offset_left = 12.0
+	chrome.offset_top = 8.0
+	chrome.offset_right = -12.0
+	chrome.offset_bottom = -8.0
+	chrome.add_theme_constant_override("separation", 10)
+	var icon := TextureRect.new()
+	icon.name = "Icon"
+	icon.custom_minimum_size = Vector2(24, 24)
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon.modulate = UiTokens.ACCENT_DEEP
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chrome.add_child(icon)
+	var text_box := VBoxContainer.new()
+	text_box.name = "TextBox"
+	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	text_box.add_theme_constant_override("separation", 1)
+	text_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chrome.add_child(text_box)
+	var title := UiFactory.make_label("", &"NameSerif")
+	title.name = "Title"
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text_box.add_child(title)
+	var cat := Label.new()
+	cat.name = "Category"
+	cat.theme_type_variation = &"SectionLabel"
+	cat.add_theme_font_size_override("font_size", 9)
+	cat.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text_box.add_child(cat)
+	var desc := Label.new()
+	desc.name = "Desc"
+	desc.add_theme_color_override("font_color", UiTokens.INK_MUTED)
+	desc.add_theme_font_size_override("font_size", 11)
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.max_lines_visible = 2
+	desc.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text_box.add_child(desc)
+	var refs := {"icon": icon, "title": title, "category": cat, "desc": desc}
+	row.set_meta("chrome", refs)
+	return refs
+
+
 func _on_sub_type_row_input(event: InputEvent, row: Panel) -> void:
+	# Build sürerken kurma ekranı kilitli — görüntü var, değişiklik yok.
+	if _design_locked:
+		return
 	# Part 2B: in v2 mode the product type is fixed to the live product — no re-picking.
 	if _v2_mode:
 		return
@@ -419,15 +587,15 @@ func _on_suggest_pressed() -> void:
 func _paint_feature_grid() -> void:
 	if _selected_sub_product_type == "":
 		feature_grid.visible = false
-		context_label.visible = false
+		center_header_label.text = "ÖZELLİKLER"
 		empty_instruction_label.visible = true
 		selection_counter_label.text = "0 / 4 seçili — min 2"
 		return
 	empty_instruction_label.visible = false
-	context_label.visible = true
-	var sub_type_name: String = _sub_product_type_name(_selected_sub_product_type)
-	context_label.text = "%s için özellikler" % sub_type_name
+	# Tip adı başlıkta taşınır (mockup: "ÖZELLİKLER · AI ASSISTANT"); ContextLabel emekli.
+	center_header_label.text = "ÖZELLİKLER · %s" % _tr_upper(_sub_product_type_name_tr(_selected_sub_product_type))
 	feature_grid.visible = true
+	_ensure_card_styles()
 
 	var pool: Array = ProductCatalog.get_feature_pool(_selected_sub_product_type)
 	var feature_cap: int
@@ -445,14 +613,19 @@ func _paint_feature_grid() -> void:
 		if i < pool.size():
 			var data: Dictionary = pool[i]
 			var fid: String = String(data.get("id", ""))
-			card.get_node("CardLayout/NameLabel").text = String(data.get("name", ""))
-			card.get_node("CardLayout/VoiceLabel").text = String(data.get("voice", ""))
+			var refs: Dictionary = _ensure_feature_card_chrome(card)
+			(refs["name"] as Label).text = String(data.get("name", ""))
+			(refs["desc"] as Label).text = String(data.get("desc_short", data.get("voice", "")))
+			(refs["badge"] as Label).text = "+%dg" % int(data.get("complexity", 0))
+			(refs["contrib"] as Label).text = _feature_contrib_text(data)
 			card.set_meta("feature_id", fid)
 			_paint_axes(card, data)
 			card.visible = true
 			var sel_border: Panel = card.get_node("SelectedBorder")
 			var selected: bool = _selected_features.has(fid)
 			sel_border.visible = selected
+			(refs["check"] as Label).visible = selected
+			card.add_theme_stylebox_override("panel", _card_style_selected if selected else _card_style_normal)
 			# Dim unselected cards when at the 4-feature cap (matches Spec #2 recipe).
 			if at_max and not selected:
 				card.modulate = Color(1, 1, 1, 0.55)
@@ -472,22 +645,12 @@ func _paint_feature_grid() -> void:
 		selection_counter_label.text = "%d / 4 seçili — min 2" % _selected_features.size()
 
 
-func _paint_complexity_dots(card: Panel, complexity: int) -> void:
-	var complexity_box: HBoxContainer = card.get_node("CardLayout/ComplexityRow/Complexity")
-	for i in range(complexity_box.get_child_count()):
-		var dot: Label = complexity_box.get_child(i) as Label
-		if dot == null:
-			continue
-		if i < complexity:
-			dot.add_theme_color_override("font_color", UiTokens.ACCENT)
-		else:
-			dot.add_theme_color_override("font_color", Color(0.80, 0.77, 0.70, 1))
-
-
-# Feature-card three-axis display (Product Lifecycle Part 1). Built in code so the
-# .tscn cards need no per-card surgery: the static ComplexityRow is hidden and a
-# 3-row AxesBox (Çekim / Karmaşıklık / Risk) is added once, repainted each refresh.
-const _AXIS_ROWS := [["pull", "Çekim"], ["complexity", "Karmaşıklık"], ["stakes", "Risk"]]
+# Feature-card three-axis display (Product Lifecycle Part 1 → redesign Part 1).
+# Built in code so the .tscn cards need no per-card surgery: the static ComplexityRow
+# is hidden and a 3-row AxesBox is added once — artık 15 nokta değil, 5-segment yatay
+# bar (mockup). Caption'lar hazır-uppercase (Godot to_upper() TR i/ı bilmez).
+const _AXIS_ROWS := [["pull", "ÇEKİM"], ["complexity", "KARMAŞIKLIK"], ["stakes", "RİSK"]]
+const _AXIS_SEG_EMPTY := Color(0.85, 0.82, 0.75, 1)   # boş segment (eski boş nokta tonu)
 
 
 func _ensure_axes_box(card: Panel) -> VBoxContainer:
@@ -500,31 +663,33 @@ func _ensure_axes_box(card: Panel) -> VBoxContainer:
 		static_row.visible = false
 	var box := VBoxContainer.new()
 	box.name = "AxesBox"
-	box.add_theme_constant_override("separation", 2)
+	box.add_theme_constant_override("separation", 4)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for pair in _AXIS_ROWS:
 		var row := HBoxContainer.new()
 		row.name = String(pair[0])
-		row.add_theme_constant_override("separation", 6)
+		row.add_theme_constant_override("separation", 8)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var cap := Label.new()
 		cap.text = String(pair[1])
-		cap.custom_minimum_size = Vector2(70, 0)
-		cap.add_theme_color_override("font_color", UiTokens.INK_DIM)
-		cap.add_theme_font_size_override("font_size", 10)
+		cap.custom_minimum_size = Vector2(82, 0)
+		cap.theme_type_variation = &"SectionLabel"
+		cap.add_theme_font_size_override("font_size", 9)
 		cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(cap)
-		var dots := HBoxContainer.new()
-		dots.name = "Dots"
-		dots.add_theme_constant_override("separation", 2)
-		dots.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var segs := HBoxContainer.new()
+		segs.name = "Seg"
+		segs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		segs.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		segs.add_theme_constant_override("separation", 3)
+		segs.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		for i in 5:
-			var d := Label.new()
-			d.text = "●"
-			d.add_theme_font_size_override("font_size", 11)
-			d.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			dots.add_child(d)
-		row.add_child(dots)
+			var seg := ColorRect.new()
+			seg.custom_minimum_size = Vector2(0, 5)
+			seg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			seg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			segs.add_child(seg)
+		row.add_child(segs)
 		box.add_child(row)
 	layout.add_child(box)
 	return box
@@ -535,20 +700,93 @@ func _paint_axes(card: Panel, data: Dictionary) -> void:
 	for pair in _AXIS_ROWS:
 		var key := String(pair[0])
 		var v: int = int(data.get(key, 1))
-		var dots: HBoxContainer = box.get_node(key + "/Dots")
+		var segs: HBoxContainer = box.get_node(key + "/Seg")
 		var fill: Color = UiTokens.ACCENT
 		if key == "pull":
 			fill = UiTokens.POSITIVE
 		elif key == "stakes":
 			fill = UiTokens.NEGATIVE
-		for i in range(dots.get_child_count()):
-			var dot: Label = dots.get_child(i) as Label
-			if dot == null:
+		for i in range(segs.get_child_count()):
+			var seg: ColorRect = segs.get_child(i) as ColorRect
+			if seg == null:
 				continue
-			dot.add_theme_color_override("font_color", fill if i < v else Color(0.80, 0.77, 0.70, 1))
+			seg.color = fill if i < v else _AXIS_SEG_EMPTY
+
+
+func _ensure_feature_card_chrome(card: Panel) -> Dictionary:
+	# Feature kartı chrome'u (mockup): başlık satırı (isim + ✓ + "+Ng" süre rozeti),
+	# açıklama (authored VoiceLabel yerinde), segmentli AxesBox ve boyut-katkı satırı.
+	# Bir kez kurulur; NameLabel HeaderRow'a reparent edilir — eski CardLayout/NameLabel
+	# yolu yerine meta ref'leri kullanılır. Chrome mouse IGNORE (kart tıklaması yaşar).
+	if card.has_meta("chrome"):
+		return card.get_meta("chrome")
+	var layout: VBoxContainer = card.get_node("CardLayout")
+	var name_label: Label = layout.get_node("NameLabel")
+	var header := HBoxContainer.new()
+	header.name = "HeaderRow"
+	header.add_theme_constant_override("separation", 8)
+	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layout.add_child(header)
+	layout.move_child(header, 0)
+	name_label.get_parent().remove_child(name_label)
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(name_label)
+	var check := Label.new()
+	check.name = "Check"
+	check.text = "✓"
+	check.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
+	check.visible = false
+	check.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(check)
+	var badge := UiFactory.make_pill("", UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP, false)
+	badge.name = "DurBadge"
+	header.add_child(badge)
+	# AxesBox'ı ContribLine'dan ÖNCE kur ki sıra mockup'taki gibi kalsın:
+	# HeaderRow → açıklama → barlar → katkı satırı.
+	_ensure_axes_box(card)
+	var contrib := Label.new()
+	contrib.name = "ContribLine"
+	contrib.theme_type_variation = &"SectionLabel"
+	contrib.add_theme_font_size_override("font_size", 9)
+	contrib.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
+	contrib.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layout.add_child(contrib)
+	var refs := {
+		"name": name_label, "check": check,
+		"badge": badge.get_child(0), "desc": layout.get_node("VoiceLabel"),
+		"contrib": contrib,
+	}
+	card.set_meta("chrome", refs)
+	return refs
+
+
+func _feature_contrib_text(data: Dictionary) -> String:
+	# Boyut-katkı satırı ("İNOVASYON +6 · EDİTÖR AKIŞI +2"): dimension_contribution ham
+	# ağırlıklarından (0.5-4.0) display-only ×2 ölçek — WORKING CALL (mockup'ın +8/+5 dili;
+	# Erdem çarpanı/top-2'yi değiştirebilir). Ağırlıklardan yalnız OKUR, hesaba girmez.
+	var dc: Dictionary = data.get("dimension_contribution", {})
+	var labels := _axis_display_labels()
+	var entries: Array = []
+	for axis in ["innovation", "stability", "usability"]:
+		var v: int = int(round(float(dc.get(axis, 0.0)) * 2.0))
+		if v > 0:
+			entries.append([v, String(labels.get(axis, axis))])
+	entries.sort_custom(func(a, b): return a[0] > b[0])
+	var parts: PackedStringArray = []
+	for e in entries.slice(0, 2):
+		parts.append("%s +%d" % [_tr_upper(String(e[1])), int(e[0])])
+	return " · ".join(parts)
+
+
+func _tr_upper(s: String) -> String:
+	# Godot to_upper() Türkçe i/ı ayrımını bilmez ("i"→"I"); başlık/etiketler için düzelt.
+	return s.replace("i", "İ").replace("ı", "I").to_upper()
 
 
 func _on_feature_card_input(event: InputEvent, card: Panel) -> void:
+	# Build sürerken kurma ekranı kilitli — görüntü var, değişiklik yok.
+	if _design_locked:
+		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var feature_id: String = card.get_meta("feature_id", "")
 		if feature_id == "":
@@ -585,7 +823,9 @@ func _refresh_projection() -> void:
 	# forecast. Keep them hidden; show sub-type + feature count + a one-line
 	# hint about iteration cadence so the player knows what they're committing
 	# to before pressing build.
-	_set_projection_row("Row_SubType", _sub_product_type_name(_selected_sub_product_type) if _selected_sub_product_type != "" else "—")
+	# Dil tutarlılığı (redesign): stat kutusu TR başlık gösterir (display-only —
+	# _sub_product_type_name EN etiketi BuildProgress tarafında yaşamaya devam eder).
+	_set_projection_row("Row_SubType", _sub_product_type_name_tr(_selected_sub_product_type) if _selected_sub_product_type != "" else "—")
 	var _feat_cap: int
 	if _v2_strengthen_mode:
 		_feat_cap = ProductSystem.STRENGTHEN_MAX_PER_VERSION
@@ -594,10 +834,20 @@ func _refresh_projection() -> void:
 	else:
 		_feat_cap = 4
 	_set_projection_row("Row_FeatureCount", "%d / %d" % [_selected_features.size(), _feat_cap] if not _selected_features.is_empty() else "—")
-	# Duration row: base + feature complexity. Strengthen builds carry the WHOLE product, so
-	# their duration reads the full set, not the (1-2) strengthen picks.
+	# Duration row. v2/strengthen süresi YENİ işe dayanır (ProductSystem.version_dev_days
+	# — start_version_build ile TEK kaynak): eski tam-union süresi "rozet +4g ama süre
+	# ~14 gün" görsel bug'ıydı. v1 eski formülünde kalır.
 	if _v2_strengthen_mode:
-		_set_projection_row("Row_Duration", "~%d gün" % (ProductSystem.DEVELOPMENT_DAYS_BASE + _product_total_complexity()))
+		if _selected_features.is_empty():
+			_hide_projection_row("Row_Duration")
+		else:
+			_set_projection_row("Row_Duration", "~%d gün" % ProductSystem.version_dev_days(_selected_features))
+	elif _v2_mode:
+		var added_ids: Array = _v2_added_ids()
+		if added_ids.is_empty():
+			_hide_projection_row("Row_Duration")
+		else:
+			_set_projection_row("Row_Duration", "~%d gün" % ProductSystem.version_dev_days(added_ids))
 	elif not _selected_features.is_empty():
 		_set_projection_row("Row_Duration", "~%d gün" % (ProductSystem.DEVELOPMENT_DAYS_BASE + _selected_total_complexity()))
 	else:
@@ -647,50 +897,74 @@ func _axis_display_labels() -> Dictionary:
 
 
 func _ensure_projection_profile() -> VBoxContainer:
+	# Boyut profili — mockup'taki yüzde barları (track + amber fill + % etiketi).
+	# Bir kez kurulur (eskisi per-paint queue_free/rebuild yapıyordu — repaint hijyeni);
+	# kendi başlığı yok: kartın authored HeaderLabel'ı "BU ÜRÜN NEYİ GÜÇLENDİRİYOR" taşır.
 	if _projection_profile != null and is_instance_valid(_projection_profile):
 		return _projection_profile
 	var vb := VBoxContainer.new()
 	vb.name = "ProfileBox"
-	vb.add_theme_constant_override("separation", 3)
+	vb.add_theme_constant_override("separation", 6)
 	var right_vbox: Node = mentor_advisory_label.get_parent()
 	right_vbox.add_child(vb)
 	right_vbox.move_child(vb, mentor_advisory_label.get_index())  # sit just above the mentor line
+	for axis in ["innovation", "stability", "usability"]:
+		var row := HBoxContainer.new()
+		row.name = axis
+		row.add_theme_constant_override("separation", 10)
+		var cap := Label.new()
+		cap.name = "Cap"
+		cap.custom_minimum_size = Vector2(150, 0)
+		cap.add_theme_color_override("font_color", UiTokens.INK)
+		cap.add_theme_font_size_override("font_size", 12)
+		row.add_child(cap)
+		var track := Panel.new()
+		track.name = "Track"
+		track.custom_minimum_size = Vector2(0, 8)
+		track.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		track.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var track_sb := StyleBoxFlat.new()
+		track_sb.bg_color = UiTokens.CARD_BORDER
+		track_sb.set_corner_radius_all(3)
+		track.add_theme_stylebox_override("panel", track_sb)
+		row.add_child(track)
+		# Fill: track'e tam-anchor'lu; paint yalnız anchor_right = pay yazar (boyut
+		# matematiği anchor sistemine kalır — her pay farkı görünür).
+		var fill := Panel.new()
+		fill.name = "Fill"
+		var fill_sb := StyleBoxFlat.new()
+		fill_sb.bg_color = UiTokens.ACCENT
+		fill_sb.set_corner_radius_all(3)
+		fill.add_theme_stylebox_override("panel", fill_sb)
+		track.add_child(fill)
+		fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var pct := Label.new()
+		pct.name = "Pct"
+		pct.theme_type_variation = &"SectionLabel"
+		pct.add_theme_font_size_override("font_size", 11)
+		pct.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
+		pct.custom_minimum_size = Vector2(42, 0)
+		pct.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		row.add_child(pct)
+		vb.add_child(row)
 	_projection_profile = vb
 	return vb
 
 
 func _paint_projection_profile() -> void:
 	var box := _ensure_projection_profile()
-	for c in box.get_children():
-		c.queue_free()
 	if _selected_features.is_empty():
 		box.visible = false
 		return
 	box.visible = true
-	var header := Label.new()
-	header.text = "BU ÜRÜN NEYİ GÜÇLENDİRİYOR"
-	header.add_theme_color_override("font_color", UiTokens.INK_MUTED)
-	header.add_theme_font_size_override("font_size", 10)
-	box.add_child(header)
 	var shares := _selected_dimension_shares()
 	var labels := _axis_display_labels()
 	for axis in ["innovation", "stability", "usability"]:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
-		var cap := Label.new()
-		cap.text = String(labels.get(axis, axis))
-		cap.custom_minimum_size = Vector2(140, 0)
-		cap.add_theme_color_override("font_color", UiTokens.INK)
-		cap.add_theme_font_size_override("font_size", 11)
-		row.add_child(cap)
-		var pct: int = int(round(float(shares[axis]) * 100.0))
-		var filled: int = clampi(int(round(float(shares[axis]) * 10.0)), 0, 10)
-		var bar := Label.new()
-		bar.text = "▓".repeat(filled) + "░".repeat(10 - filled) + "  %d%%" % pct
-		bar.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
-		bar.add_theme_font_size_override("font_size", 11)
-		row.add_child(bar)
-		box.add_child(row)
+		var row: HBoxContainer = box.get_node(axis)
+		(row.get_node("Cap") as Label).text = String(labels.get(axis, axis))
+		(row.get_node("Pct") as Label).text = "%d%%" % int(round(float(shares[axis]) * 100.0))
+		var fill: Panel = row.get_node("Track/Fill")
+		fill.anchor_right = clampf(float(shares[axis]), 0.0, 1.0)
 
 
 func _set_projection_row(row_name: String, value: String) -> void:
@@ -701,12 +975,18 @@ func _set_projection_row(row_name: String, value: String) -> void:
 	var value_label := row.get_node_or_null("ValueRight")
 	if value_label is Label:
 		value_label.text = value
+	# Alt-sol kartın stat kutusu aynı değeri aynalar (liste gizli ama ValueRight
+	# tek kaynak kalır; eşleşmeyen Row_* adları burada no-op).
+	if _stat_values.has(row_name):
+		(_stat_values[row_name] as Label).text = value
 
 
 func _hide_projection_row(row_name: String) -> void:
 	var row := projection_list.get_node_or_null(row_name)
 	if row != null:
 		row.visible = false
+	if _stat_values.has(row_name):
+		(_stat_values[row_name] as Label).text = "—"
 
 
 func _mentor_advisory_text() -> String:
@@ -772,6 +1052,13 @@ func _refresh_commit_bar() -> void:
 		else:
 			reason_label.text = "Ürününe bir isim ver."
 	reason_label.visible = not valid
+	# Tek satır özet (mockup; working-metin) — geçerliyken ürün kimliğini konuşur,
+	# değilken ReasonLabel zaten ne eksik söylüyor.
+	if _summary_line != null:
+		_summary_line.visible = valid
+		if valid:
+			_summary_line.text = "%s — %s, %d özellik. Ne yaptığımıza karar verdik." % [
+				_selected_product_name, _sub_product_type_name_tr(_selected_sub_product_type), _selected_features.size()]
 
 
 func _refresh_commit_bar_v2() -> void:
@@ -782,9 +1069,17 @@ func _refresh_commit_bar_v2() -> void:
 	var valid: bool = added >= 1 and _selected_features.size() <= ProductSystem.MAX_VERSION_FEATURES
 	commit_bar.disabled = not valid
 	if valid:
-		commit_bar.text = "v%d'i inşa et · +%d özellik · ~%d gün" % [
-			int(GameState.get_flag("mvp_version", 1)) + 1, added,
-			ProductSystem.DEVELOPMENT_DAYS_BASE + _selected_total_complexity()]
+		# Süre = YENİ işin süresi (version_dev_days — start_version_build ile tek kaynak).
+		# Kapasite bölünecekse (sprint aktif + tek kişi) uzayan duvar-süresi ÖNCEDEN
+		# gösterilir — görünür maliyet, açık seçim.
+		var days: int = ProductSystem.version_dev_days(_v2_added_ids())
+		var pf: float = ProductSystem.projected_speed_factor_with_extra_job()
+		var nv: int = int(GameState.get_flag("mvp_version", 1)) + 1
+		if pf < 1.0:
+			commit_bar.text = "v%d'i inşa et · +%d özellik · ~%d gün → ~%d gün" % [
+				nv, added, days, ProductSystem.days_at_factor(days, pf)]
+		else:
+			commit_bar.text = "v%d'i inşa et · +%d özellik · ~%d gün" % [nv, added, days]
 	else:
 		commit_bar.text = "v%d GELİŞTİR" % (int(GameState.get_flag("mvp_version", 1)) + 1)
 	if not valid:
@@ -793,6 +1088,12 @@ func _refresh_commit_bar_v2() -> void:
 		else:
 			reason_label.text = "En fazla %d özellik taşıyabiliriz." % ProductSystem.MAX_VERSION_FEATURES
 	reason_label.visible = not valid
+	if _summary_line != null:
+		_summary_line.visible = valid
+		if valid:
+			_summary_line.text = "%s v%d — +%d yeni özellik. Büyüme hamlesi." % [
+				String(GameState.get_flag("mvp_product_name", "")),
+				int(GameState.get_flag("mvp_version", 1)) + 1, added]
 	# Frank's last word in the commit card (v2 risk framing).
 	if _commit_frank_label != null:
 		_commit_frank_label.visible = valid
@@ -802,30 +1103,44 @@ func _refresh_commit_bar_v2() -> void:
 
 func _refresh_commit_bar_v2_strengthen() -> void:
 	# Pool-deepening: the pool is exhausted, so the player picks 1..N existing features to
-	# STRENGTHEN. Duration uses the WHOLE product's complexity (feature set is unchanged).
+	# STRENGTHEN. Süre = güçlendirme pick'lerinin işi (version_dev_days — tek kaynak).
 	var n: int = _selected_features.size()
 	var valid: bool = n >= 1 and n <= ProductSystem.STRENGTHEN_MAX_PER_VERSION
 	var next_v: int = int(GameState.get_flag("mvp_version", 1)) + 1
 	commit_bar.disabled = not valid
 	if valid:
-		commit_bar.text = "v%d'i inşa et · %d güçlendirme · ~%d gün" % [
-			next_v, n, ProductSystem.DEVELOPMENT_DAYS_BASE + _product_total_complexity()]
+		var days: int = ProductSystem.version_dev_days(_selected_features)
+		var pf: float = ProductSystem.projected_speed_factor_with_extra_job()
+		if pf < 1.0:
+			commit_bar.text = "v%d'i inşa et · %d güçlendirme · ~%d gün → ~%d gün" % [
+				next_v, n, days, ProductSystem.days_at_factor(days, pf)]
+		else:
+			commit_bar.text = "v%d'i inşa et · %d güçlendirme · ~%d gün" % [next_v, n, days]
 	else:
 		commit_bar.text = "v%d GÜÇLENDİR" % next_v
 	reason_label.text = "Güçlendirmek için en az bir mevcut özelliği seç." if not valid else ""
 	reason_label.visible = not valid
+	if _summary_line != null:
+		_summary_line.visible = valid
+		if valid:
+			_summary_line.text = "%s v%d — %d güçlendirme. Derinleşme hamlesi." % [
+				String(GameState.get_flag("mvp_product_name", "")), next_v, n]
 	if _commit_frank_label != null:
 		_commit_frank_label.visible = valid
 		if valid:
 			_commit_frank_label.text = "Frank: \"Yeni yüzey yok, yeni bug az. Ama derinleşmek de büyümektir.\""
 
 
-func _product_total_complexity() -> int:
-	# Whole live product's feature complexity — the strengthen build carries the full set.
-	var t: int = 0
-	for fid in GameState.get_flag("mvp_components", []):
-		t += int(ProductCatalog.get_feature_by_id(String(fid)).get("complexity", 0))
-	return t
+func _v2_added_ids() -> Array:
+	# v2 add-modunda seçimin YENİ kısmı (union - shipped set) — süre gösterimleri
+	# version_dev_days'e bunu verir (commit'teki start_version_build'e giden added
+	# listesiyle aynı küme).
+	var base: Array = GameState.get_flag("mvp_components", [])
+	var out: Array = []
+	for fid in _selected_features:
+		if not base.has(fid):
+			out.append(fid)
+	return out
 
 
 func _strengthen_target_axis_label() -> String:
@@ -877,15 +1192,16 @@ func _on_commit_pressed() -> void:
 	else:
 		ok = ProductSystem.start_build(_selected_sub_product_type, _selected_features, founder_id, _selected_product_name)
 	if ok:
-		# Reset transient state — router will take over to BuildProgressView
+		# Reset transient state — router sakin build görünümüne geçer; build akışı
+		# sağ üstteki Tracker Card'ta
 		_v2_mode = false
 		_v2_strengthen_mode = false
 		_selected_sub_product_type = ""
 		_selected_features = []
 		_selected_product_name = ""
 		name_input.text = ""
-		# Auto-unpause so the build starts ticking immediately.
-		EventBus.speed_change_requested.emit(1)
+		# Pause'daysa unpause (build tick'lesin); koşan hızı ASLA ezme.
+		TimeManager.resume_if_paused()
 		_refresh_view()
 
 
@@ -923,231 +1239,6 @@ func _on_v2_cancel_pressed() -> void:
 	_selected_features = []
 	_selected_product_name = ""
 	_refresh_view()
-
-
-# =========================================================================
-#  BuildProgressView / PolishProgressView
-# =========================================================================
-
-func _wire_polish_view() -> void:
-	# Spec #4: PolishProgressView is deprecated — the ŞİMDİ SHIP'LE button
-	# moved to BuildHUDPanel as the LAUNCH button. Wire a no-op so the
-	# .tscn signal connection (if any) doesn't crash on click. Whole view
-	# stays hidden via _show_state().
-	if pp_ship_now_button != null and not pp_ship_now_button.pressed.is_connected(_on_polish_ship_now_pressed):
-		pp_ship_now_button.pressed.connect(_on_polish_ship_now_pressed)
-
-
-func _paint_build_progress(b: FeatureBuild) -> void:
-	# Spec #4: BuildProgressView covers iteration / development / bugfix —
-	# decision buttons live in BuildHUDPanel; here we just show header + a
-	# faz-aware status block + the development feed. The phase-segmented bar
-	# from the old Spec #2 model degrades to a single progress bar driven by
-	# whichever counter belongs to the current phase.
-	bp_sub_type_label.text = b.product_name if b.product_name != "" else _sub_product_type_name(b.sub_product_type_id)
-	bp_features_label.text = _build_feature_summary(b)
-	bp_engineer_label.text = "Mühendis: %s" % _engineer_name(b)
-
-	# Bar values per phase. The old iteration / polish split is no longer
-	# meaningful — collapse to "iteration bar = current phase progress".
-	var bar_total: int = 1
-	var bar_value: int = 0
-	match b.current_phase:
-		"iteration":
-			bar_total = max(1, ProductSystem.ITERATION_LENGTH_DAYS)
-			bar_value = bar_total - b.iteration_days_in_current
-		"development":
-			bar_total = max(1, b.development_days_total)
-			bar_value = b.development_days_elapsed
-		"bugfix", "polish":
-			# Open-ended phase — show full bar so the segmented widget doesn't
-			# look broken; LAUNCH lives on BuildHUDPanel.
-			bar_total = 1
-			bar_value = 1
-	bp_iteration_bar.max_value = float(bar_total)
-	bp_iteration_bar.value = float(bar_value)
-	bp_polish_bar.max_value = 1.0
-	bp_polish_bar.value = 0.0
-	bp_phase_bar.get_child(0).size_flags_stretch_ratio = 1.0
-	bp_phase_bar.get_child(1).size_flags_stretch_ratio = 0.0
-
-	# Caption
-	match b.current_phase:
-		"iteration":
-			bp_progress_caption.text = "Iteration %d · %d gün kaldı" % [b.iteration_count, b.iteration_days_in_current]
-		"development":
-			bp_progress_caption.text = "Development %d / %d gün" % [b.development_days_elapsed, b.development_days_total]
-		"bugfix", "polish":
-			bp_progress_caption.text = "Bug Fixing · launch sende"
-
-	# Status rows — open-ended composite (no /100; quality has no ceiling now).
-	var comp: int = int(round(QualityModel.composite_quality(
-		QualityModel.economy_dims_from_build(b), ProductCatalog.get_quality_axes(b.sub_product_type_id))))
-	bp_quality_value.text = "%d" % comp
-	bp_bugs_value.text = "%d" % b.bug_count
-	_paint_bug_indicator_color(bp_bugs_row, bp_bugs_value, b.bug_count)
-	match b.current_phase:
-		"iteration":
-			bp_phase_value.text = "İterasyon"
-			if b.iteration_decision_pending:
-				bp_remaining_value.text = "Karar bekleniyor"
-			else:
-				bp_remaining_value.text = "%d gün" % b.iteration_days_in_current
-		"development":
-			bp_phase_value.text = "Development"
-			bp_remaining_value.text = "%d gün kaldı" % max(0, b.development_days_total - b.development_days_elapsed)
-		"bugfix", "polish":
-			bp_phase_value.text = "Bug Fixing"
-			bp_remaining_value.text = "—"
-
-	# Mentor line varies by phase (Blok C: context-aware, decision + bug pressure)
-	match b.current_phase:
-		"iteration":
-			if b.iteration_decision_pending:
-				bp_mentor_line.text = "Yeterince iyi mi? Development'a geç — para yanıyor. Değilse bir tur daha."
-			else:
-				bp_mentor_line.text = _iteration_mentor_line_for(b)
-		"development":
-			if b.bug_count >= 8:
-				bp_mentor_line.text = "Çalışıyor. Bug birikiyor — normal, bugfix'te toplarsın."
-			else:
-				bp_mentor_line.text = "Çalışıyor. Sen izle."
-		"bugfix", "polish":
-			if b.bug_count > 6:
-				bp_mentor_line.text = "Bu kadar bug'la çıkma. Ama çok da bekleme — runway eriyor."
-			else:
-				bp_mentor_line.text = "Temiz görünüyor. Hazır olduğunda yayınla."
-
-	# Feed bootstrap (first paint for this build)
-	if _seen_build_id != b.id:
-		_seen_build_id = b.id
-		_clear_feed(bp_feed_list)
-		_prepend_feed_entry(bp_feed_list, b.start_day, "Build başladı.")
-		_last_polish_bug_count = -1
-
-
-# ---- Bug indicator color (ported from Spec #2 _paint_bug_indicator_color) ----
-
-func _paint_bug_indicator_color(panel: PanelContainer, value_label: Label, bug_count: int) -> void:
-	var sb := StyleBoxFlat.new()
-	sb.corner_radius_top_left = 3
-	sb.corner_radius_top_right = 3
-	sb.corner_radius_bottom_right = 3
-	sb.corner_radius_bottom_left = 3
-	sb.content_margin_left = 8
-	sb.content_margin_right = 8
-	sb.content_margin_top = 4
-	sb.content_margin_bottom = 4
-	# Token-driven severity chip: green (0) → amber (1-2) → red (3+).
-	var pal: Dictionary = UiTokens.bug_severity(bug_count)
-	sb.bg_color = pal.bg
-	value_label.add_theme_color_override("font_color", pal.fg)
-	panel.add_theme_stylebox_override("panel", sb)
-
-
-# ---- Mentor line helpers ----
-
-func _iteration_mentor_line_for(b: FeatureBuild) -> String:
-	# Mentor cadence within the current iteration. iteration_days_in_current
-	# decrements from ITERATION_LENGTH_DAYS → 0.
-	var total: int = max(1, ProductSystem.ITERATION_LENGTH_DAYS)
-	var elapsed: int = total - b.iteration_days_in_current
-	var ratio: float = float(elapsed) / float(total)
-	if ratio < 0.25:
-		return MENTOR_ITERATION_LINES["q4"]
-	elif ratio < 0.5:
-		return MENTOR_ITERATION_LINES["q3"]
-	elif ratio < 0.75:
-		return MENTOR_ITERATION_LINES["q2"]
-	return MENTOR_ITERATION_LINES["q1"]
-
-
-# Deprecated — Spec #4 dropped the mid-polish ship-now button. The handler
-# is kept as a no-op so the .tscn signal binding (if it survives in scene
-# state) doesn't crash when clicked.
-func _on_polish_ship_now_pressed() -> void:
-	push_warning("[ProductTab] Polish ship-now is deprecated; use BuildHUDPanel LAUNCH instead.")
-
-
-# =========================================================================
-#  Development feed
-# =========================================================================
-
-func _active_feed_list() -> VBoxContainer:
-	var active = ProductSystem.get_active_build()
-	if active == null:
-		return null
-	# Spec #4: all phases route to BuildProgressView's feed; PolishProgressView
-	# is hidden and its feed_list is never painted.
-	return bp_feed_list
-
-
-func _clear_feed(feed: VBoxContainer) -> void:
-	for c in feed.get_children():
-		c.queue_free()
-
-
-func _prepend_feed_entry(feed: VBoxContainer, day: int, message: String) -> void:
-	# Entry: HBox with DayLabel (min_width=46) + MessageLabel (autowrap).
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	var day_label := Label.new()
-	day_label.text = "Gün %d" % day
-	day_label.add_theme_color_override("font_color", UiTokens.INK_MUTED)
-	day_label.add_theme_font_size_override("font_size", 11)
-	day_label.custom_minimum_size = Vector2(46, 0)
-	var msg_label := Label.new()
-	msg_label.text = message
-	msg_label.add_theme_color_override("font_color", UiTokens.INK)
-	msg_label.add_theme_font_size_override("font_size", 11)
-	msg_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	msg_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	row.add_child(day_label)
-	row.add_child(msg_label)
-	feed.add_child(row)
-	feed.move_child(row, 0)
-	# Cap at FEED_MAX_ENTRIES
-	while feed.get_child_count() > FEED_MAX_ENTRIES:
-		var oldest = feed.get_child(feed.get_child_count() - 1)
-		feed.remove_child(oldest)  # immediate detach → get_child_count() drops now → loop terminates
-		oldest.queue_free()        # deferred free is safe once the row is detached (queue_free alone left it parented → infinite loop)
-
-
-func _mirror_feed(src: VBoxContainer, dst: VBoxContainer) -> void:
-	# Copy entries (newest first in src) into dst preserving order.
-	# Walks src from oldest to newest and prepends each into dst so the
-	# resulting order in dst matches src.
-	var n: int = src.get_child_count()
-	for i in range(n - 1, -1, -1):
-		var entry = src.get_child(i)
-		if not (entry is HBoxContainer):
-			continue
-		var day_text: String = ""
-		var msg_text: String = ""
-		if entry.get_child_count() >= 2:
-			day_text = String((entry.get_child(0) as Label).text)
-			msg_text = String((entry.get_child(1) as Label).text)
-		# day_text already has "Gün N" prefix from the original entry — re-parse
-		# the number, falling back to GameState.day on parse failure.
-		var day_num: int = GameState.day
-		var parts: PackedStringArray = day_text.split(" ", false)
-		if parts.size() >= 2:
-			day_num = int(parts[1])
-		_prepend_feed_entry(dst, day_num, msg_text)
-
-
-func _on_modal_requested_for_feed(event) -> void:
-	# Only log when a build is active (filters onboarding/system modals).
-	var active = ProductSystem.get_active_build()
-	if active == null or event == null:
-		return
-	var feed = _active_feed_list()
-	if feed == null:
-		return
-	var title: String = String(event.title) if event != null else ""
-	if title == "":
-		title = "Olay"
-	_prepend_feed_entry(feed, GameState.day, title)
 
 
 # =========================================================================
@@ -1197,7 +1288,12 @@ func _paint_post_ship() -> void:
 	# TRACTION north-star — reparented into LeftCol (uncut); refs unchanged.
 	post_ship_traction_bar.value = SalesSystem.traction_progress()
 	post_ship_traction_label.text = "MRR $%d / $%d" % [GameState.mrr, SalesSystem.TRACTION_MRR_TARGET]
-	_paint_traction_chip(GameState.get_flag("ready_for_traction", false))
+	# Chip = gate-1 readiness. Gate state comes from PhaseGateSystem's latch
+	# (subgenre-agnostic), not the old ready_for_traction flag (B2C-only bug).
+	# Already in phase ≥ 2 → gate passed → chip stays "ready" (ratchet, §2.3).
+	var traction_ready: bool = GameState.phase >= 2 \
+		or (GameState.phase_gate_ready and GameState.pending_next_phase == 2)
+	_paint_traction_chip(traction_ready)
 
 
 func _ensure_post_ship_scaffold() -> void:
@@ -1253,8 +1349,9 @@ func _ensure_post_ship_scaffold() -> void:
 	_left_col.add_child(UiFactory.make_card(_left_funnel_body))
 	post_ship_traction_panel.get_parent().remove_child(post_ship_traction_panel)
 	_left_col.add_child(post_ship_traction_panel)   # uncut now — grows with the column
-	# RIGHT scaffolding: header, B2B info (reparented), action list ----------------------
-	_right_col.add_child(_two_ended_header("Ne Yapacaksın?", "Bir Kol Seç"))
+	# RIGHT scaffolding: B2B info (reparented) + action list. "NE YAPACAKSIN? ·
+	# BİR KOL SEÇ" başlığı kaldırıldı (Erdem: alan tamamen gitsin, altındakiler
+	# yukarı) — fiyat paneli artık seçicisiz, doğrudan burada başlar.
 	_b2b_info = VBoxContainer.new()
 	_b2b_info.add_theme_constant_override("separation", 8)
 	_b2b_info.visible = false
@@ -1353,8 +1450,8 @@ const HEALTH_BUG_WARN := 8         # or this many live bugs → yıpranıyor
 
 
 func _sprinting() -> bool:
-	var a = ProductSystem.get_active_build()
-	return a != null and a.is_bug_sprint
+	# Sprint artık flag-bazlı (build slotu kullanmıyor) — v3 gelişirken de sürebilir.
+	return GameState.get_flag("mvp_bug_sprint_active", false)
 
 
 func _live_bugs() -> int:
@@ -1548,7 +1645,9 @@ func _paint_bottom_strip(quality: int) -> void:
 
 
 func _ensure_action_card() -> void:
-	# Yön A: three stacked selectable action ROWS; price expands the pricing panel inline.
+	# "Fiyatlandır" seçici satırı KALDIRILDI (Erdem: gereksiz — fiyat paneli
+	# zaten burada). Fiyat paneli B2C'de HEP açık, doğrudan kolonun başında;
+	# altında sprint + v2 aksiyon satırları.
 	if _action_built:
 		return
 	_action_built = true
@@ -1556,9 +1655,8 @@ func _ensure_action_card() -> void:
 	_sprint_banner.add_theme_constant_override("separation", 4)
 	_sprint_banner.visible = false
 	_action_list.add_child(_sprint_banner)
-	_action_rows["price"] = _make_action_row("price", "◆", "Fiyatlandır")
 	_price_detail_slot = VBoxContainer.new()
-	_action_list.add_child(_price_detail_slot)   # the pricing panel mounts here (expanded detail)
+	_action_list.add_child(_price_detail_slot)   # the pricing panel mounts here
 	_action_rows["sprint"] = _make_action_row("sprint", "🐛", "Bug Sprinti")
 	_action_rows["v2"] = _make_action_row("v2", "▲", "Geliştir")
 
@@ -1611,24 +1709,36 @@ func _apply_action_selection(sel_id: String) -> void:
 		root.add_theme_stylebox_override("panel", sel)
 
 
+func _building_active() -> bool:
+	# Gerçek bir build sürüyor mu (sprint artık slot kullanmıyor — yalnız v2 satırını
+	# kilitler; sprint kanon gereği build sürerken de BAŞLATILABİLİR).
+	return ProductSystem.get_active_build() != null
+
+
 func _paint_action_card() -> void:
 	_ensure_action_card()
 	var is_b2c: bool = (String(GameState.get_flag("mvp_market_type", "b2c")) == "b2c")
-	# Price row + its pricing detail exist only in B2C (B2B uses _b2b_info instead).
-	_action_rows["price"]["root"].visible = is_b2c
-	_price_detail_slot.visible = is_b2c and _active_action == "price"
-	if is_b2c and _active_action == "price":
+	# Fiyat paneli B2C'de HEP açık (seçici satır kaldırıldı); B2B _b2b_info kullanır.
+	_price_detail_slot.visible = is_b2c
+	if is_b2c:
 		_paint_pricing()
 		if _pricing_panel != null:
 			_pricing_panel.visible = true
-	# Sprint mode banner (pricing stays live below it).
+	# Sprint mode banner (pricing stays live below it) — sprint durumu artık
+	# mvp_sprint_* flag'lerinde (carrier yok; v3 gelişirken de akabilir).
 	if _sprinting():
-		var b = ProductSystem.get_active_build()
-		var remaining: int = max(0, b.development_days_total - b.development_days_elapsed)
+		var total: float = maxf(1.0, float(GameState.get_flag("mvp_sprint_days_total", 1)))
+		var elapsed: float = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0))
+		# Kalan süre duvar-günü cinsinden: kapasite bölünmüşse (build'le paralel,
+		# tek kişi) sprint yarı hızda akar → kalan iş-günü 2× takvim günü sürer.
+		var cf: float = ProductSystem.capacity_speed_factor()
+		var remaining: int = ProductSystem.days_at_factor(int(ceil(maxf(0.0, total - elapsed))), cf)
 		_sprint_banner.visible = true
 		_clear(_sprint_banner)
 		var bl := Label.new()
 		bl.text = "Bug Sprinti · %d gün kaldı · 🐛 %d" % [remaining, _live_bugs()]
+		if cf < 1.0:
+			bl.text += " · yarı hız"
 		bl.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
 		bl.add_theme_font_size_override("font_size", 12)
 		_sprint_banner.add_child(bl)
@@ -1636,21 +1746,20 @@ func _paint_action_card() -> void:
 		bar.theme_type_variation = &"BuildProgress"
 		bar.custom_minimum_size = Vector2(0, 6)
 		bar.show_percentage = false
-		bar.max_value = float(max(1, b.development_days_total))
-		bar.value = float(b.development_days_elapsed)
+		bar.max_value = total
+		bar.value = elapsed
 		_sprint_banner.add_child(bar)
 	else:
 		_sprint_banner.visible = false
-	# Price row copy.
-	_action_rows["price"]["desc"].text = "Fiyatı ayarla, dönüşüm ve MRR'yi optimize et"
-	_action_rows["price"]["status"].text = ("Canlı · $%d" % int(GameState.get_flag("b2c_price", 0))) \
-		if GameState.get_flag("b2c_paid_tier_open", false) else "Taslak"
 	# Sprint row copy + lock state.
 	var bugs: int = _live_bugs()
 	var sr: Dictionary = _action_rows["sprint"]
+	# Kapasite ön-gösterimi: diğer iş aktif VE kapasite < talep+1 olacaksa pf < 1.0 —
+	# uzayan duvar-süresi tıklamadan ÖNCE görünür (görünür maliyet, açık seçim).
+	var pf: float = ProductSystem.projected_speed_factor_with_extra_job()
 	if _sprinting():
 		sr["title"].text = "Sprint sürüyor…"
-		sr["desc"].text = "Bug'lar temizleniyor. Büyüme sprint bitince döner."
+		sr["desc"].text = "Bug'lar temizleniyor. Büyüme akmaya devam eder."
 		sr["status"].text = "🐛 %d" % bugs
 	elif bugs <= 0:
 		sr["title"].text = "Temiz — sprint gerekmez"
@@ -1658,50 +1767,55 @@ func _paint_action_card() -> void:
 		sr["status"].text = "0 BUG"
 	else:
 		sr["title"].text = "Bug Sprinti başlat"
-		sr["desc"].text = "Bug'ları temizle — kararlılık geri gelir (büyüme durur)."
-		sr["status"].text = "%d BUG · ~%d GÜN" % [bugs, ProductSystem.sprint_duration_for(bugs)]
+		sr["desc"].text = "Bug'ları temizle — kararlılık geri gelir (build'le paralelse ikisi yavaşlar)."
+		var sdays: int = ProductSystem.sprint_duration_for(bugs)
+		if pf < 1.0:
+			sr["status"].text = "%d BUG · ~%d GÜN → ~%d GÜN" % [bugs, sdays, ProductSystem.days_at_factor(sdays, pf)]
+		else:
+			sr["status"].text = "%d BUG · ~%d GÜN" % [bugs, sdays]
 	# v2/v4 growth row.
 	var vr: Dictionary = _action_rows["v2"]
 	var nextv: int = int(GameState.get_flag("mvp_version", 1)) + 1
 	vr["title"].text = "v%d Geliştir" % nextv
 	vr["desc"].text = "Yeni feature / güçlendirme — daha yüksek rekabet. (Yeni feature = yeni bug.)"
-	vr["status"].text = "~%d GÜN" % (ProductSystem.DEVELOPMENT_DAYS_BASE + _product_total_complexity())
-	# Dim locked rows: sprint locked while sprinting or clean; v2 locked while sprinting.
+	# Henüz seçim yok — v2 süre modelinin tabanı gösterilir; gerçek süre kurma
+	# ekranında seçime göre netleşir (version_dev_days, tek kaynak).
+	var vdays: int = ProductSystem.version_dev_days([])
+	if pf < 1.0:
+		vr["status"].text = "~%d+ GÜN → ~%d+ GÜN" % [vdays, ProductSystem.days_at_factor(vdays, pf)]
+	else:
+		vr["status"].text = "~%d+ GÜN" % vdays
+	# Kilitler (kanon: canlı yaşam döngüsü build'den bağımsız; kilit yok — kapasite var):
+	# - sprint satırı: sprinting/temiz'ken kilitli — build SÜRERKEN AÇIK.
+	# - v2 satırı: yalnız build sürerken kilitli (ikinci build yok). Sprint sürerken
+	#   AÇIK — bedel kilit değil, kapasite bölünmesi (capacity_speed_factor).
+	var building: bool = _building_active()
+	if building:
+		vr["status"].text = "BUILD SÜRÜYOR"
 	sr["root"].modulate = Color(1, 1, 1, 0.55 if (_sprinting() or bugs <= 0) else 1.0)
-	vr["root"].modulate = Color(1, 1, 1, 0.55 if _sprinting() else 1.0)
-	# Selection highlight: only after a real user click — default paint stays neutral.
-	_apply_action_selection(_active_action if (is_b2c and _action_user_selected) else "")
+	vr["root"].modulate = Color(1, 1, 1, 0.55 if building else 1.0)
+	# Sprint/v2 tetikleyici satırlar — kalıcı seçim yok, vurgu nötr kalır.
+	_apply_action_selection("")
 
 
 func _on_action_row_input(ev: InputEvent, id: String) -> void:
 	if not (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT):
 		return
 	match id:
-		"price":
-			_active_action = "price"
-			_action_user_selected = true
-			_on_price_action_pressed()
-			_paint_action_card()
 		"sprint":
 			if _sprinting() or _live_bugs() <= 0:
-				return   # locked
+				return   # locked (build sürerken AÇIK — kanon)
 			_on_bug_sprint_pressed()
 		"v2":
-			if _sprinting():
-				return   # can't build a version mid-sprint
+			if _building_active():
+				return   # ikinci build yok; sprint sürerken AÇIK (bedel = kapasite bölünmesi)
 			_on_v2_pressed()
 
 
 func _on_bug_sprint_pressed() -> void:
 	if ProductSystem.start_bug_sprint():
-		EventBus.speed_change_requested.emit(1)   # unpause so the sprint ticks
+		TimeManager.resume_if_paused()   # pause'daysa unpause; koşan hızı ezme
 		_refresh_view()
-
-
-func _on_price_action_pressed() -> void:
-	# Pricing panel is always shown in B2C PostShip; soft anchor / ensure visible.
-	if _pricing_panel != null and is_instance_valid(_pricing_panel):
-		_pricing_panel.visible = true
 
 
 func _post_ship_frank_text(_quality: int) -> String:
@@ -2063,31 +2177,15 @@ func _sub_product_type_name(sub_type_id: String) -> String:
 	return String(data.get("name", sub_type_id))
 
 
-func _build_feature_summary(b: FeatureBuild) -> String:
-	var pool: Array = ProductCatalog.get_feature_pool(b.sub_product_type_id)
-	var names: Array[String] = []
-	for fid in b.feature_ids:
-		var found: bool = false
-		for f in pool:
-			if String(f.get("id", "")) == String(fid):
-				names.append(String(f.get("name", "")))
-				found = true
-				break
-		if not found:
-			names.append(String(fid))
-	if names.is_empty():
+func _sub_product_type_name_tr(sub_type_id: String) -> String:
+	# Display-only TR başlık (name_human). _sub_product_type_name (EN kısa etiket)
+	# BuildProgress başlığını + projeksiyon dump'ını da beslediği için dokunulmaz.
+	if sub_type_id == "":
 		return "—"
-	return ", ".join(names)
-
-
-func _engineer_name(b: FeatureBuild) -> String:
-	var founder = CharacterRegistry.get_founder()
-	if founder != null and b.assigned_engineer_id == founder.id:
-		return founder.character_name
-	# Fallback — registry lookup by id, then a generic label
-	if founder != null:
-		return founder.character_name
-	return "Founder"
+	var data: Dictionary = ProductCatalog.get_sub_product_type_by_id(sub_type_id)
+	if data.is_empty():
+		return sub_type_id
+	return String(data.get("name_human", data.get("name", sub_type_id)))
 
 
 func _display_date_for(day_number: int) -> String:
@@ -2106,31 +2204,12 @@ func _display_date_for(day_number: int) -> String:
 # =========================================================================
 
 func _on_day_advanced(_new_day: int) -> void:
-	# Per-day feed bookkeeping BEFORE re-painting (so paint reads the latest counts).
-	var active = ProductSystem.get_active_build()
-	if active != null:
-		var feed = _active_feed_list()
-		if feed != null:
-			if active.current_phase == "polish":
-				# Polish day: detect bug-fix delta vs the previous tick.
-				if _last_polish_bug_count >= 0 and active.bug_count < _last_polish_bug_count:
-					var fixed: int = _last_polish_bug_count - active.bug_count
-					_prepend_feed_entry(feed, GameState.day, "Bug temizliği · %d düşürüldü (kalan %d)." % [fixed, active.bug_count])
-				elif not EventManager.has_pending():
-					_prepend_feed_entry(feed, GameState.day, "Sessiz bir gün.")
-				_last_polish_bug_count = active.bug_count
-			else:
-				# Iteration day: filler only when no pending event will surface.
-				if not EventManager.has_pending():
-					_prepend_feed_entry(feed, GameState.day, "Sessiz bir gün.")
 	# Re-route + paint (build might have transitioned phase this tick).
+	# (Feed defteri silindi — GÜNLÜK GELİŞİM feed'i Tracker Card geçişiyle kalktı.)
 	_refresh_view()
 
 
 func _on_build_progress_changed() -> void:
-	# Fired at the end of ProductSystem.daily_tick, after the phase counter
-	# advanced. day_advanced already repainted with yesterday's value (it fires
-	# before the tick); repaint again with the post-tick value so the bar tracks
-	# the day correctly (Faz 1 bug 1.1). Feed bookkeeping stays in _on_day_advanced
-	# so entries are not duplicated.
+	# Fired hourly at the end of ProductSystem.hourly_tick — keeps the calm/post-ship
+	# views tracking the build state without waiting for day boundaries.
 	_refresh_view()

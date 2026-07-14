@@ -20,11 +20,17 @@ extends Panel
 	$Margin/Col/RnDBtn,
 	$Margin/Col/PersonalBtn,
 	$Margin/Col/EventsBtn,
+	$Margin/Col/YatirimBtn,
 ]
 
 @onready var settings_btn: Button = $Margin/Col/SettingsBtn
 
 var current_tab_idx: int = 0  # Default: Product
+
+# Yatırım (Series A Hunt) tab — index 8. Visible-but-LOCKED before phase 3, unlocks on
+# phase_changed(>=3). Spec 4 §4 / ledger 24 (blocks with the reason shown, no fake choice).
+const YATIRIM_IDX := 8
+var _yatirim_locked: bool = false
 
 # Active/idle look is driven by theme type variations (TabButtonActive/TabButton);
 # icon + label colors are tinted at runtime in _apply_visual.
@@ -38,8 +44,18 @@ func _ready() -> void:
 	# gets active styling or emits tab_changed). Opens the settings panel instead.
 	settings_btn.pressed.connect(_on_settings_button)
 
+	# Phase-gate the Yatırım tab (locked until Series A Hunt / phase 3).
+	EventBus.phase_changed.connect(_on_phase_changed)
+	_set_yatirim_locked(GameState.phase < 3)
+
 	_apply_visual(current_tab_idx)
 	EventBus.tab_changed.emit(UiTokens.TABS[current_tab_idx].id)
+
+	# Programatik tab geçişlerinde highlight'ı senkron tut (Tracker Card
+	# "PostShip'e geç →" + product_tab'ın sales yönlendirmesi tab_changed emit
+	# ediyor; buraya kadar rail dinlemiyordu → bayat highlight). LISTEN-ONLY:
+	# kendi butonumuzun emit'i de buraya düşer ama idempotent, re-emit yok.
+	EventBus.tab_changed.connect(_on_tab_changed_external)
 
 	# Subscribe to signals that move badge counts (TECH_SPEC §13.3)
 	EventBus.morale_changed.connect(_on_morale_changed)
@@ -56,6 +72,10 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	if EventBus.phase_changed.is_connected(_on_phase_changed):
+		EventBus.phase_changed.disconnect(_on_phase_changed)
+	if EventBus.tab_changed.is_connected(_on_tab_changed_external):
+		EventBus.tab_changed.disconnect(_on_tab_changed_external)
 	EventBus.morale_changed.disconnect(_on_morale_changed)
 	EventBus.character_added.disconnect(_on_roster_changed)
 	EventBus.character_removed.disconnect(_on_roster_changed)
@@ -65,6 +85,8 @@ func _exit_tree() -> void:
 
 
 func _on_tab_button(idx: int) -> void:
+	if idx == YATIRIM_IDX and _yatirim_locked:
+		return  # ledger 24 — blocked; the muted tab + tooltip tell the player why
 	if idx == current_tab_idx:
 		return
 	current_tab_idx = idx
@@ -74,6 +96,29 @@ func _on_tab_button(idx: int) -> void:
 
 func _on_settings_button() -> void:
 	EventBus.settings_requested.emit()
+
+
+func _on_phase_changed(new_phase: int) -> void:
+	_set_yatirim_locked(new_phase < 3)
+
+
+func _set_yatirim_locked(locked: bool) -> void:
+	_yatirim_locked = locked
+	var btn: Button = tab_buttons[YATIRIM_IDX]
+	btn.disabled = locked
+	btn.modulate = Color(1, 1, 1, 0.4) if locked else Color(1, 1, 1, 1)
+	btn.tooltip_text = "Series A Hunt'ta açılır" if locked else ""
+
+
+func _on_tab_changed_external(tab_id: String) -> void:
+	# id → index; bilinmeyen id no-op. Kendi butonumuzdan gelen emit'te idx zaten
+	# doğru — idempotent boya, RE-EMIT YOK (sonsuz döngü engeli).
+	for i in UiTokens.TABS.size():
+		if String(UiTokens.TABS[i].id) == tab_id:
+			if current_tab_idx != i:
+				current_tab_idx = i
+				_apply_visual(i)
+			return
 
 
 func _apply_visual(active_idx: int) -> void:

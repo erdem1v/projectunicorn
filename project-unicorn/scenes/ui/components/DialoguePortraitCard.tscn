@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/components/dialogue_portrait_card.gd" id="1_pc"]
+
+[node name="DialoguePortraitCard" type="PanelContainer"]
+clip_contents = true
+theme_type_variation = &"PortraitFrame"
+script = ExtResource("1_pc")
+
+[node name="FallbackBg" type="ColorRect" parent="."]
+layout_mode = 2
+
+[node name="Fallback" type="Label" parent="."]
+visible = false
+layout_mode = 2
+theme_type_variation = &"DialogueName"
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Portrait" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(260, 325)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 6

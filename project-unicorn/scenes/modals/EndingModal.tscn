@@ -1,0 +1,102 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/modals/ending_modal.gd" id="1_ending"]
+
+[node name="EndingModal" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_ending")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="CenterPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -230.0
+offset_right = 260.0
+offset_bottom = 230.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ModalPanel"
+
+[node name="Body" type="VBoxContainer" parent="CenterPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 28.0
+offset_right = -32.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"TitleSerif"
+text = "Kepenk İndi"
+
+[node name="FrankLabel" type="Label" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BodySerif"
+text = ""
+autowrap_mode = 3
+
+[node name="Rule" type="ColorRect" parent="CenterPanel/Body"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+color = Color(0, 0, 0, 0.08)
+
+[node name="StatsGrid" type="GridContainer" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="Footer" type="HBoxContainer" parent="CenterPanel/Body"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="QuitBtn" type="Button" parent="CenterPanel/Body/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 38)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
+theme_override_colors/font_hover_color = Color(0.169, 0.149, 0.125, 1)
+theme_override_colors/font_focus_color = Color(0.169, 0.149, 0.125, 1)
+theme_override_colors/font_pressed_color = Color(0.169, 0.149, 0.125, 1)
+text = "Masaüstüne Dön"
+
+[node name="FooterSpacer" type="Control" parent="CenterPanel/Body/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RestartBtn" type="Button" parent="CenterPanel/Body/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 38)
+layout_mode = 2
+theme_type_variation = &"CommitButton"
+text = "Yeniden Başla"

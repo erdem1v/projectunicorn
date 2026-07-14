@@ -13,10 +13,12 @@ corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
-content_margin_left = 12.0
-content_margin_top = 10.0
-content_margin_right = 12.0
-content_margin_bottom = 10.0
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+shadow_color = Color(0, 0, 0, 0.10)
+shadow_size = 6
 
 [node name="BuildHUDPanel" type="Control"]
 layout_mode = 3
@@ -33,10 +35,10 @@ layout_mode = 3
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -300.0
+offset_left = -340.0
 offset_top = 60.0
 offset_right = -20.0
-offset_bottom = 220.0
+offset_bottom = 232.0
 grow_horizontal = 0
 mouse_filter = 2
 
@@ -51,64 +53,220 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="VBox" type="VBoxContainer" parent="Root/Panel"]
 layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="HeaderRow" type="HBoxContainer" parent="Root/Panel/VBox"]
+layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="HeaderRow" type="VBoxContainer" parent="Root/Panel/VBox"]
+[node name="Icon" type="TextureRect" parent="Root/Panel/VBox/HeaderRow"]
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
-theme_override_constants/separation = 2
+size_flags_vertical = 4
+stretch_mode = 5
 
-[node name="ProductNameLabel" type="Label" parent="Root/Panel/VBox/HeaderRow"]
+[node name="TitleBox" type="VBoxContainer" parent="Root/Panel/VBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="NameLabel" type="Label" parent="Root/Panel/VBox/HeaderRow/TitleBox"]
 layout_mode = 2
 theme_type_variation = &"NameSerif"
 text = "Build"
+text_overrun_behavior = 3
 
-[node name="PhaseLabel" type="Label" parent="Root/Panel/VBox/HeaderRow"]
+[node name="MetaLabel" type="Label" parent="Root/Panel/VBox/HeaderRow/TitleBox"]
 layout_mode = 2
-theme_type_variation = &"RowMeta"
-text = "—"
+theme_type_variation = &"SectionLabel"
+theme_override_font_sizes/font_size = 9
+text = "V1"
 
-[node name="StatsRow" type="HBoxContainer" parent="Root/Panel/VBox"]
+[node name="Pager" type="VBoxContainer" parent="Root/Panel/VBox/HeaderRow"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 0
 
-[node name="QualityLabel" type="Label" parent="Root/Panel/VBox/StatsRow"]
+[node name="PrevBtn" type="Button" parent="Root/Panel/VBox/HeaderRow/Pager"]
+custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
-theme_type_variation = &"RowMeta"
-text = "Kalite —"
+theme_override_font_sizes/font_size = 7
+flat = true
+text = "▲"
 
-[node name="BugsLabel" type="Label" parent="Root/Panel/VBox/StatsRow"]
+[node name="PageLabel" type="Label" parent="Root/Panel/VBox/HeaderRow/Pager"]
 layout_mode = 2
-theme_type_variation = &"RowMeta"
-text = "Bug —"
+theme_type_variation = &"SectionLabel"
+theme_override_font_sizes/font_size = 9
+text = "1/1"
+horizontal_alignment = 1
 
-[node name="ProgressBar" type="ProgressBar" parent="Root/Panel/VBox"]
-custom_minimum_size = Vector2(0, 6)
+[node name="NextBtn" type="Button" parent="Root/Panel/VBox/HeaderRow/Pager"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+theme_override_font_sizes/font_size = 7
+flat = true
+text = "▼"
+
+[node name="CancelBtn" type="Button" parent="Root/Panel/VBox/HeaderRow"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
+theme_override_font_sizes/font_size = 11
+flat = true
+text = "✕"
+tooltip_text = "Build'i iptal et"
+
+[node name="BodyRow" type="HBoxContainer" parent="Root/Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="PhaseCell" type="Control" parent="Root/Panel/VBox/BodyRow"]
+custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 1.0
-value = 0.0
-show_percentage = false
-theme_type_variation = &"BuildProgress"
+mouse_filter = 2
 
-[node name="ButtonRow" type="HBoxContainer" parent="Root/Panel/VBox"]
+[node name="Track" type="Panel" parent="Root/Panel/VBox/BodyRow/PhaseCell"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Fill" type="Panel" parent="Root/Panel/VBox/BodyRow/PhaseCell/Track"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PhaseMargin" type="MarginContainer" parent="Root/Panel/VBox/BodyRow/PhaseCell"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+
+[node name="PhaseVBox" type="VBoxContainer" parent="Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin"]
 layout_mode = 2
-theme_override_constants/separation = 6
+size_flags_vertical = 4
+theme_override_constants/separation = 0
 
-[node name="IterationButton" type="Button" parent="Root/Panel/VBox/ButtonRow"]
+[node name="PhaseName" type="Label" parent="Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin/PhaseVBox"]
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Bir iterasyon daha"
-disabled = true
+theme_type_variation = &"SectionLabel"
+theme_override_font_sizes/font_size = 10
+text = "TASARIM"
 
-[node name="DevelopmentButton" type="Button" parent="Root/Panel/VBox/ButtonRow"]
+[node name="PhaseStatus" type="Label" parent="Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin/PhaseVBox"]
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Development'a geç"
-disabled = true
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
+theme_override_font_sizes/font_size = 10
+text = "İterasyon 1"
 
-[node name="LaunchButton" type="Button" parent="Root/Panel/VBox/ButtonRow"]
+[node name="AxisCol" type="VBoxContainer" parent="Root/Panel/VBox/BodyRow"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 1
+
+[node name="AxisInno" type="Label" parent="Root/Panel/VBox/BodyRow/AxisCol"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+theme_override_font_sizes/font_size = 9
+text = "İNOV: 0%"
+horizontal_alignment = 2
+
+[node name="AxisStab" type="Label" parent="Root/Panel/VBox/BodyRow/AxisCol"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+theme_override_font_sizes/font_size = 9
+text = "KARAR: 0%"
+horizontal_alignment = 2
+
+[node name="AxisUsab" type="Label" parent="Root/Panel/VBox/BodyRow/AxisCol"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+theme_override_font_sizes/font_size = 9
+text = "AKIŞ: 0%"
+horizontal_alignment = 2
+
+[node name="PhaseLine" type="Label" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
+text = ""
+vertical_alignment = 1
+
+[node name="BetaRow" type="HBoxContainer" parent="Root/Panel/VBox"]
 visible = false
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="FoundBox" type="VBoxContainer" parent="Root/Panel/VBox/BetaRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="Cap" type="Label" parent="Root/Panel/VBox/BetaRow/FoundBox"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+theme_override_font_sizes/font_size = 8
+text = "BULUNAN"
+
+[node name="Val" type="Label" parent="Root/Panel/VBox/BetaRow/FoundBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
+theme_override_font_sizes/font_size = 13
+text = "0"
+
+[node name="FixedBox" type="VBoxContainer" parent="Root/Panel/VBox/BetaRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="Cap" type="Label" parent="Root/Panel/VBox/BetaRow/FixedBox"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+theme_override_font_sizes/font_size = 8
+text = "ÇÖZÜLEN"
+
+[node name="Val" type="Label" parent="Root/Panel/VBox/BetaRow/FixedBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.243, 0.42, 0.2, 1)
+theme_override_font_sizes/font_size = 13
+text = "0"
+
+[node name="RemainBox" type="VBoxContainer" parent="Root/Panel/VBox/BetaRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="Cap" type="Label" parent="Root/Panel/VBox/BetaRow/RemainBox"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+theme_override_font_sizes/font_size = 8
+text = "KALAN"
+
+[node name="Val" type="Label" parent="Root/Panel/VBox/BetaRow/RemainBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.639, 0.2, 0.153, 1)
+theme_override_font_sizes/font_size = 13
+text = "0"
+
+[node name="ActionButton" type="Button" parent="Root/Panel/VBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
 theme_type_variation = &"CommitButton"
-text = "LAUNCH"
+text = "Geliştir →"

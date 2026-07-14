@@ -104,7 +104,6 @@ static func hourly_tick(_hour: int) -> void:
 		if market == "b2c":
 			_tick_b2c_audience()   # bidirectional interest flow
 			_derive_b2c_mrr()      # MRR = paying(audience,price) × price
-			_check_traction()
 	_mrr_bridge()
 
 
@@ -119,12 +118,9 @@ static func _mrr_bridge() -> void:
 # Up: quality/brand/(positive)reputation. Down: bugs, low/negative reputation. The
 # price multiplier accelerates a cheap price and slows a premium one.
 static func _tick_b2c_audience() -> void:
-	# Product Lifecycle Part 2A/2B: during a bug sprint OR a v2 build the founder is
-	# repairing/building, not growing — audience FREEZES (growth AND erosion pause). §10 cost.
-	# MRR still derives from the frozen audience below, so revenue coasts at its current level.
-	if GameState.get_flag("mvp_bug_sprint_active", false) \
-			or GameState.get_flag("mvp_version_build_active", false):
-		return
+	# TASARIM KANONU: canlı ürünün ekonomisi ASLA donmaz — ne v-build ne sprint
+	# sırasında. Sprint'in bedeli artık kapasite havuzu (ProductSystem
+	# capacity_speed_factor: build'le paralelse ikisi de yavaşlar), freeze değil.
 	var delta: float = _audience_delta_per_hour()
 	# Accumulate as float so small per-hour deltas (especially slow erosion) survive
 	# instead of rounding to zero each hour; all readers int()-truncate for display.
@@ -248,6 +244,7 @@ static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int) ->
 	c.acquired_on_day = GameState.day
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
+	GameState.run_customers_signed += 1  # run counter seam (Spec 3 §3) — sole B2B signing path
 	GameState.set_mrr(CustomerRegistry.get_total_mrr())  # reflect the signed deal immediately
 	return c
 
@@ -278,20 +275,15 @@ static func _tick_satisfaction() -> void:
 
 
 # --- Traction north-star ---
+# Display-only progress for the PostShip bar. The GATE itself lives in
+# PhaseGateSystem (slot 8) — subgenre-agnostic, reads GameState/registry state
+# daily. The old _check_traction/ready_for_traction mechanism (B2C-branch-only,
+# never fired for B2B) was removed with the endgame engine (ENDGAME_DESIGN.md §2.2).
 
 static func traction_progress() -> float:
 	var mrr_ratio: float = float(GameState.mrr) / float(TRACTION_MRR_TARGET)
 	var cust_ratio: float = float(CustomerRegistry.get_active().size()) / float(TRACTION_CUSTOMER_TARGET)
 	return clampf(maxf(mrr_ratio, cust_ratio), 0.0, 1.0)
-
-
-static func _check_traction() -> void:
-	if GameState.get_flag("ready_for_traction", false):
-		return
-	if traction_progress() >= 1.0:
-		GameState.set_flag("ready_for_traction", true)
-		# The one-shot "Traction'a hazır" beat fires via its eligibility event
-		# (flag_set ready_for_traction + !traction_beat_seen) in EventManager.
 
 
 # --- Value algorithm (product worth → optimal price + lower bound + rationale) ---

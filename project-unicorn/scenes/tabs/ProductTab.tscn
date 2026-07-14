@@ -123,8 +123,8 @@ text = "Product"
 
 [node name="SubtitleLabel" type="Label" parent="Margin/Layout/TitleBar"]
 layout_mode = 2
-theme_type_variation = &"CaptionMuted"
-text = "Design document"
+theme_type_variation = &"SectionLabel"
+text = "DESIGN DOCUMENT · SPEC SHEET"
 vertical_alignment = 2
 
 [node name="Separator" type="HSeparator" parent="Margin/Layout"]
@@ -172,28 +172,21 @@ theme_override_constants/separation = 6
 [node name="HeaderLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "ÜRÜN"
-
-[node name="MentorFramingLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
-theme_override_font_sizes/font_size = 12
-text = "Hangi problemi çözüyoruz? Önce onu seç."
-autowrap_mode = 2
+text = "ÜRÜN TİPİ"
 
 [node name="CaptionLabel" type="Label" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 10
-text = "5 seçenek — birini seç."
+text = "— SEÇENEK"
 
 [node name="SubTypeList" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
 ; ----- SubTypeRow_0..4 (5 rows) -----
 [node name="SubTypeRow_0" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 mouse_filter = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_inner")
@@ -238,7 +231,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
 
 [node name="SubTypeRow_1" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 mouse_filter = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_inner")
@@ -283,7 +276,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
 
 [node name="SubTypeRow_2" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 mouse_filter = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_inner")
@@ -328,7 +321,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
 
 [node name="SubTypeRow_3" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 mouse_filter = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_inner")
@@ -373,7 +366,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
 
 [node name="SubTypeRow_4" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/LeftColumn/LeftVBox/ProductSection/SubTypeList"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 mouse_filter = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_row_inner")
@@ -474,7 +467,7 @@ columns = 2
 
 ; ----- FeatureCard_0..6 (7 cards, hide beyond pool size) -----
 [node name="FeatureCard_0" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 0
@@ -573,7 +566,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
 
 [node name="FeatureCard_1" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 0
@@ -672,7 +665,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
 
 [node name="FeatureCard_2" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 0
@@ -771,7 +764,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
 
 [node name="FeatureCard_3" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 0
@@ -870,7 +863,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
 
 [node name="FeatureCard_4" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 0
@@ -969,7 +962,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
 
 [node name="FeatureCard_5" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 0
@@ -1068,7 +1061,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_selected_border")
 
 [node name="FeatureCard_6" type="Panel" parent="Margin/Layout/BuildStateRoot/DesignDocumentView/ColumnsRow/CenterColumn/CenterVBox/FeatureGrid"]
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 0
@@ -1401,475 +1394,6 @@ theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
 theme_override_font_sizes/font_size = 11
 text = "Ürün tipi ve en az 2 özellik seç."
 horizontal_alignment = 1
-
-; =========================================================================
-;  BuildProgressView — §B
-; =========================================================================
-[node name="BuildProgressView" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 12
-
-[node name="BuildHeaderPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
-
-[node name="HeaderLayout" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="SubTypeLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
-layout_mode = 2
-theme_type_variation = &"NameSerif"
-text = "—"
-
-[node name="DotSep0" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 14
-text = "·"
-
-[node name="FeaturesLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
-theme_override_font_sizes/font_size = 12
-text = "—"
-autowrap_mode = 2
-
-[node name="DotSep1" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 14
-text = "·"
-
-[node name="EngineerLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BuildHeaderPanel/HeaderLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
-theme_override_font_sizes/font_size = 12
-text = "Mühendis: —"
-
-[node name="BottomRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 12
-
-; ---- ProgressPanel (LEFT) ----
-[node name="ProgressPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-size_flags_stretch_ratio = 6.2
-theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
-
-[node name="ProgressLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="PhaseSegmentedBar" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 18)
-theme_override_constants/separation = 4
-
-[node name="IterationBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 9.0
-max_value = 9.0
-value = 0.0
-show_percentage = false
-theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fg")
-
-[node name="PolishBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 3.0
-max_value = 3.0
-value = 0.0
-show_percentage = false
-theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fg")
-
-[node name="ProgressCaption" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_font_sizes/font_size = 13
-text = "—"
-
-[node name="FeedSeparator" type="HSeparator" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
-layout_mode = 2
-
-[node name="FeedHeader" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
-layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "GÜNLÜK GELİŞİM"
-
-[node name="FeedScroll" type="ScrollContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="FeedList" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/ProgressPanel/ProgressLayout/FeedScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 4
-
-; ---- StatusPanel (RIGHT) ----
-[node name="StatusPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-size_flags_stretch_ratio = 3.6
-theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
-
-[node name="StatusLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="StatusHeader" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "DURUM"
-
-[node name="StatRow_Quality" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 10
-text = "Kalite"
-
-[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_font_sizes/font_size = 13
-text = "—"
-
-[node name="StatRow_Bugs" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_bug_normal")
-
-[node name="BugLayout" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 10
-text = "Bug riski"
-
-[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
-theme_override_font_sizes/font_size = 13
-text = "—"
-
-[node name="StatRow_Phase" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 10
-text = "Faz"
-
-[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_font_sizes/font_size = 13
-text = "İterasyon"
-
-[node name="StatRow_Remaining" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 10
-text = "Kalan"
-
-[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_font_sizes/font_size = 13
-text = "—"
-
-[node name="StatusSeparator" type="HSeparator" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-
-[node name="MentorMiniHeader" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "MENTOR"
-
-[node name="MentorLineLabel" type="Label" parent="Margin/Layout/BuildStateRoot/BuildProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
-theme_override_font_sizes/font_size = 12
-text = "İzliyorum."
-autowrap_mode = 2
-
-; =========================================================================
-;  PolishProgressView — §C
-; =========================================================================
-[node name="PolishProgressView" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 12
-
-[node name="BuildHeaderPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
-
-[node name="HeaderLayout" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="SubTypeLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
-layout_mode = 2
-theme_type_variation = &"NameSerif"
-text = "—"
-
-[node name="DotSep0" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 14
-text = "·"
-
-[node name="FeaturesLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
-theme_override_font_sizes/font_size = 12
-text = "—"
-autowrap_mode = 2
-
-[node name="DotSep1" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 14
-text = "·"
-
-[node name="EngineerLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BuildHeaderPanel/HeaderLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
-theme_override_font_sizes/font_size = 12
-text = "Mühendis: —"
-
-[node name="BottomRow" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 12
-
-[node name="ProgressPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-size_flags_stretch_ratio = 6.2
-theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
-
-[node name="ProgressLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="PhaseSegmentedBar" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 18)
-theme_override_constants/separation = 4
-
-[node name="IterationBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 9.0
-max_value = 9.0
-value = 9.0
-show_percentage = false
-theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fg")
-
-[node name="PolishBar" type="ProgressBar" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/PhaseSegmentedBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 3.0
-max_value = 3.0
-value = 0.0
-show_percentage = false
-theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fg")
-
-[node name="ProgressCaption" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_font_sizes/font_size = 13
-text = "—"
-
-[node name="FeedSeparator" type="HSeparator" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
-layout_mode = 2
-
-[node name="FeedHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
-layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "GÜNLÜK GELİŞİM"
-
-[node name="FeedScroll" type="ScrollContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="FeedList" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/ProgressPanel/ProgressLayout/FeedScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 4
-
-[node name="StatusPanel" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-size_flags_stretch_ratio = 3.6
-theme_override_styles/panel = SubResource("StyleBoxFlat_column_panel")
-
-[node name="StatusLayout" type="VBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="StatusHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "DURUM"
-
-[node name="StatRow_Quality" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 10
-text = "Kalite"
-
-[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Quality"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_font_sizes/font_size = 13
-text = "—"
-
-[node name="StatRow_Bugs" type="PanelContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_bug_normal")
-
-[node name="BugLayout" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 10
-text = "Bug"
-
-[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Bugs/BugLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
-theme_override_font_sizes/font_size = 13
-text = "—"
-
-[node name="StatRow_Phase" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 10
-text = "Faz"
-
-[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Phase"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_font_sizes/font_size = 13
-text = "Polish"
-
-[node name="StatRow_Remaining" type="HBoxContainer" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="LabelLeft" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
-theme_override_font_sizes/font_size = 10
-text = "Kalan"
-
-[node name="Spacer" type="Control" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ValueRight" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout/StatRow_Remaining"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_font_sizes/font_size = 13
-text = "—"
-
-[node name="StatusSeparator" type="HSeparator" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-
-[node name="MentorMiniHeader" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_type_variation = &"SectionLabel"
-text = "MENTOR"
-
-[node name="MentorLineLabel" type="Label" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.431, 0.4, 0.337, 1)
-theme_override_font_sizes/font_size = 12
-text = "Bugları çöz."
-autowrap_mode = 2
-
-[node name="ShipNowButton" type="Button" parent="Margin/Layout/BuildStateRoot/PolishProgressView/BottomRow/StatusPanel/StatusLayout"]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-text = "ŞİMDİ SHIP'LE"
 
 ; =========================================================================
 ;  PostShipView — PostShip sales phase, B2C/B2B aware (Spec PostShip §F)

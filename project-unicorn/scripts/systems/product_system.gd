@@ -3,22 +3,22 @@ extends RefCounted
 
 # Slot 1 daily tick per TECH_SPEC §8.2. Pure logic (TECH_SPEC §8.3).
 #
-# Spec #4 phase model (Software Inc.-style, replaces Spec #2's iteration-duration
-# selection): planning → iteration ⇄ iteration → development → bugfix → shipped.
-# The player commits no up-front duration; they advance phases by choosing on
-# the right-top BuildHUDPanel. Iteration cycles freely (advance vs. enter
-# development), development auto-ticks to completion, bugfix is open-ended
-# until the player presses LAUNCH.
+# Dört-faz build akışı (Build Tracker Card spec, Software Inc. modeli):
+#   planning → iteration (TASARIM) → development (GELİŞTİRME) → bugfix (BETA) → shipped.
+# Görünen adlar TR (TASARIM/GELİŞTİRME/BETA/YAYINLANDI); iç faz string'leri
+# değişmedi — event trigger'ları (ev_mvp_bugfix_*) current_phase ile eşleşiyor.
 #
-# Ship moment remains narrative-only — flags shift, no economic delta. The
-# `launch()` body consolidates what used to be commit_to_ship_early /
-# commit_to_ship_from_polish / ship_active_build into a single entry point.
-#
-# Iteration end does NOT pause the game. We set `iteration_decision_pending`
-# on the build and emit EventBus.build_iteration_decision_pending(true);
-# BuildHUDPanel lights up its buttons and the player picks on their own time
-# while the clock keeps ticking. This is intentional — Software Inc. fidelity,
-# and it avoids tangling iteration decisions with the §A event-pause restore.
+# - TASARIM: iterasyonlar OTOMATİK döner (1→2→3...), oyuncuya sorulmaz; her tur
+#   inovasyon/kullanılabilirlik büyütür + runway yakar. Bug ÜRETİLMEZ. Oyuncu
+#   tracker kartındaki "Geliştir →" ile fazdan çıkar (enter_development).
+# - GELİŞTİRME: kod tabanı %0→100 (development_days_elapsed/total) otomatik dolar;
+#   bug YALNIZ bu fazda üretilir. %100'de OTOMATİK beta'ya geçer (auto-ship yok).
+#   Oyuncu erken "Yayınla" diyebilir (launch — bitmemiş kod bedeli + açık bug'lar canlıya).
+# - BETA: eksenler KİLİTLİ (growth yok); test gizli bug'ları BULUR ve ÇÖZER
+#   (bugs_found/bugs_fixed). Oyuncu ne kadar beklerse o kadar temiz ship.
+# - Ship moment narrative-only kalır — launch() durumu damgalar, modal seçimi
+#   ship_active_build'i çağırır. Kalan açık bug'lar mvp_live_bug_count'a taşınır
+#   → post-ship şikayet boru hattı (effective_stability → satisfaction → event).
 
 # --- Phase machinery ---
 const ITERATION_LENGTH_DAYS := 4
@@ -55,8 +55,10 @@ const ITER_USAB := 1.5            #            + usability
 const DEV_STAB_BASE := 1.5        # development = build-out → stability (+ tech)
 const DEV_USAB := 1.0             #            + usability
 const TECH_STAB_COEF := 0.75      # founder tech skill → stability/tick
-const BUGFIX_STAB := 2.0          # bugfix = hardening → stability
-const BUGFIX_USAB := 0.5
+# BUGFIX_STAB/BUGFIX_USAB kaldırıldı (Tracker Card): BETA'da eksenler KİLİTLİ —
+# "kilitli" chip'i yalan söylemesin; Karar%'ın beta'da toparlaması yine görünür
+# çünkü effective stability bug düştükçe iyileşir. GERÇEK denge değişimi
+# (eski bugfix 2.0/gün stability büyütüyordu) — Erdem balance-pass'te yargılar.
 # Feature-mix shaping: effective raw = raw * (DIM_BASE_SHARE + DIM_FEATURE_SHARE *
 # axis_share*3). Equal mix (share 1/3 → *3 = 1) → neutral 1.0; a favored axis grows
 # faster, a starved one slower but never zero.
@@ -66,6 +68,27 @@ const DIM_FEATURE_SHARE := 0.5
 # Bonus bug count applied at launch when the player left a critical bug
 # in (ev_mvp_bugfix_001_critical_bug "Bırak, gönder" choice → flag).
 const CRITICAL_BUG_LAUNCH_PENALTY := 5
+
+# --- Beta + erken-ship (Build Tracker Card, dört-faz akış) ---
+# BETA: test gizli bug'ları bulur (find) ve bulunanları çözer (fix: mevcut
+# POLISH_BUG_FIX_PER_DAY hızı). working value — Erdem balance-pass.
+const BETA_BUG_FIND_PER_DAY := 6.0
+# Erken ship (development'tan Yayınla): bitmemiş kod oranı kadar tüm eksenlerden
+# kesinti — kod %0'da %50 kesinti, %100'de 0. working value — Erdem balance-pass.
+const EARLY_SHIP_AXIS_HAIRCUT := 0.5
+# Build iptali: ilk gün "bedelsiz" sayılır (onay metni basit — yanlış-tık affı);
+# sonrasında onay yanan gün/parayı söyler. Mekanik refund yok (yanan yanmıştır).
+# working value — Erdem balance-pass.
+const CANCEL_FREE_DAYS := 1
+
+# --- v2+ süre modeli ---
+# v2 build TÜM ürünü yeniden yazmaz — süre YENİ işe dayanır: taban (entegrasyon +
+# regresyon maliyeti) + yeni/güçlendirilen feature karmaşıklığı × faktör (yaşayan
+# koda dokunmak yeşil alandan pahalı → "2 günde feature" çıkmaz). Eski model
+# (taban + TÜM union) tam v1-rebuild gibi okunuyordu: +4g'lik tek feature için
+# "~14 gün" — oyuncuya saçma. working values — Erdem balance-pass.
+const V2_DEV_DAYS_BASE := 3
+const V2_COMPLEXITY_FACTOR := 1.5
 
 # --- Post-ship wear (Product Lifecycle Part 2A) ---
 # Live product accrues bugs hourly: more users = more edge cases; complex product
@@ -85,6 +108,11 @@ const MAX_SPRINT_DAYS := 7
 # HR-bridge seed (light): too-frequent sprints → needs_engineer signal (no real hire).
 const ENGINEER_SPRINT_THRESHOLD := 3   # sprints within the window → "need an engineer"
 const ENGINEER_WINDOW_DAYS := 20
+# --- Kapasite havuzu (sprint + version-build eşzamanlılığı) ---
+# Kapasite = kurucu (her zaman 1) + mühendis sayısı. Sprint ve build'in her biri
+# 1 kapasite talep eder; talep > kapasite → işler orantılı yavaşlar (2 iş / 1
+# kişi → ikisi de yarı hız). Formül merkezi: capacity_speed_factor. working value.
+const CAPACITY_BASE := 1
 
 static var active_build: FeatureBuild = null
 
@@ -98,48 +126,114 @@ static func daily_tick() -> void:
 	pass
 
 
+# --- Kapasite havuzu — tick'ler VE UI süre tahminleri aynı kaynaktan okur
+#     (kalibrasyon tek yer). Faktör persist edilmez (türetilmiş değer).
+
+static func capacity_total() -> int:
+	# Kurucu hep var → min 1; kapasite 0 yapısal olarak imkansız.
+	return CAPACITY_BASE + CharacterRegistry.count_engineers()
+
+
+static func capacity_demand() -> int:
+	var d: int = 0
+	if GameState.get_flag("mvp_bug_sprint_active", false):
+		d += 1
+	if GameState.get_flag("pitch_prep_active", false):
+		d += 1  # VC meeting prep occupies the founder (Spec 4 §3 — product slows, visible)
+	if active_build != null and active_build.current_phase in ["iteration", "development", "bugfix"]:
+		d += 1
+	return d
+
+
+static func capacity_speed_factor() -> float:
+	# ŞU ANKİ hız çarpanı — her saat taze hesaplanır (mid-job hire anında etki eder).
+	# demand <= capacity → 1.0; demand=2, capacity=1 → 0.5.
+	var d: int = capacity_demand()
+	if d <= 0:
+		return 1.0
+	return minf(1.0, float(capacity_total()) / float(d))
+
+
+static func projected_speed_factor_with_extra_job() -> float:
+	# UI ön-gösterimi: "bu iş de BAŞLARSA hangi hızda koşar?" — confirm öncesi
+	# uzayan süre projeksiyonunun tek kaynağı ("~3 gün → ~6 gün" deseni).
+	return minf(1.0, float(capacity_total()) / float(capacity_demand() + 1))
+
+
+static func days_at_factor(days: int, f: float) -> int:
+	# Nominal iş-günü → duvar-süresi (takvim günü) projeksiyonu.
+	return int(ceil(float(days) / maxf(0.01, f)))
+
+
 # --- Hourly phase-progress helpers (B2: formerly the daily _tick_*_day funcs) ---
 # One in-game hour = 1/HOURS_PER_BUILD_DAY of a day, so a 4-day iteration drains
 # over 96 hourly steps — SAME total duration, smooth motion. Transitions fire on
 # the hour the fractional counter crosses its threshold.
 
-static func _advance_iteration_hour() -> void:
-	# Idle while the player owes an iteration decision — no counter movement.
-	if active_build.iteration_decision_pending:
-		return
-	active_build.iteration_days_in_current = maxf(0.0, active_build.iteration_days_in_current - 1.0 / float(HOURS_PER_BUILD_DAY))
+static func _advance_iteration_hour(f: float = 1.0) -> void:
+	# Auto-iterasyon (Tracker Card spec): tur dolunca OYUNCUYA SORMADAN yeni tura
+	# geçer (sayaç kesiri korunur — += ile). Fazdan çıkış (enter_development)
+	# oyuncunun kartta "Geliştir →" kararı; tur-içi ilerleme otomatik.
+	active_build.iteration_days_in_current -= f / float(HOURS_PER_BUILD_DAY)
 	if active_build.iteration_days_in_current <= 0.0:
-		active_build.iteration_decision_pending = true
-		EventBus.build_iteration_decision_pending.emit(true)
+		active_build.iteration_count += 1
+		# Yeni tur standart uzunlukta başlar — event uzatması SONRAKI tura taşınmaz.
+		active_build.iteration_round_days = float(ITERATION_LENGTH_DAYS)
+		active_build.iteration_days_in_current += float(ITERATION_LENGTH_DAYS)
+		if OS.is_debug_build():
+			print("[ProductSystem] iteration auto-advance → iter %d" % active_build.iteration_count)
 
 
-static func _advance_development_hour() -> void:
-	active_build.development_days_elapsed += 1.0 / float(HOURS_PER_BUILD_DAY)
+static func _apply_tech_debt_due(b: FeatureBuild) -> void:
+	# Dev event'lerinde alınan tech-debt gerçek bug'a döner — hem normal dev→beta
+	# geçişinde hem erken ship'te uygulanır (borçtan ship'le kaçılamaz).
+	if GameState.get_flag("tech_debt_birikti", false):
+		b.bug_count += TECH_DEBT_BUG_PENALTY
+		GameState.set_flag("tech_debt_birikti", false)
+
+
+static func _advance_development_hour(f: float = 1.0) -> void:
+	active_build.development_days_elapsed += f / float(HOURS_PER_BUILD_DAY)
 	if active_build.development_days_elapsed >= float(active_build.development_days_total):
-		# Tech-debt taken during dev events now comes due as real bugs (C2).
-		if GameState.get_flag("tech_debt_birikti", false):
-			active_build.bug_count += TECH_DEBT_BUG_PENALTY
-			GameState.set_flag("tech_debt_birikti", false)
+		_apply_tech_debt_due(active_build)
 		active_build.current_phase = "bugfix"
 		active_build._sync_status_from_phase()
-		active_build.bug_progress = 0.0   # shared accumulator now used to CLEAR (negative) in bugfix
+		active_build.bug_progress = 0.0
+		# Beta sayaçları sıfırdan başlar; dev'in ürettiği bug'lar "gizli" havuz olarak
+		# bug_count içinde durur, test onları BULUR (working call — Erdem gözden geçirir:
+		# alternatif, bir kısmını önceden-bulunmuş saymaktı).
+		active_build.bugs_found = 0
+		active_build.bugs_fixed = 0
+		active_build.bug_find_progress = 0.0
+		active_build.bug_fix_progress = 0.0
 		# Snapshot bug count at bugfix entry so PostShipView / HUD can read
 		# "started with M, shipped with N". Keyed by build id.
 		GameState.set_flag("bug_count_at_bugfix_start_%s" % active_build.id, active_build.bug_count)
 		_sync_legacy_quality(active_build)
 		EventBus.build_phase_changed.emit("bugfix")
 		if OS.is_debug_build():
-			print("[ProductSystem] Development complete → bugfix. quality=%d bugs=%d" % [active_build.quality, active_build.bug_count])
+			print("[ProductSystem] Development complete → BETA. quality=%d hidden_bugs=%d" % [active_build.quality, active_build.bug_count])
 
 
-static func _clear_bugs_hourly(rate_per_day: float) -> void:
-	# Bugfix: bugs fall smoothly (rate_per_day ÷ 24) via the fractional bug_progress
-	# accumulator (negative side), instead of a daily chunk.
+static func _tick_beta_hourly(f: float = 1.0) -> void:
+	# BETA (iç faz "bugfix"): test gizli bug'ları BULUR, bulunanları ÇÖZER — ikisi de
+	# otomatik; oyuncunun kararı ne kadar bekleyeceği. İnvaryant: gizli = bug_count -
+	# (found - fixed); fix bug_count'u düşürür → effective_stability ve tüm mevcut
+	# tüketiciler değişmeden çalışır. Hızlar working — Erdem balance-pass.
 	var b := active_build
-	b.bug_progress -= rate_per_day / float(HOURS_PER_BUILD_DAY)
-	while b.bug_progress <= -1.0 and b.bug_count > 0:
-		b.bug_count -= 1
-		b.bug_progress += 1.0
+	var hidden: int = b.bug_count - (b.bugs_found - b.bugs_fixed)
+	if hidden > 0:
+		b.bug_find_progress += BETA_BUG_FIND_PER_DAY * f / float(HOURS_PER_BUILD_DAY)
+		while b.bug_find_progress >= 1.0 and hidden > 0:
+			b.bugs_found += 1
+			hidden -= 1
+			b.bug_find_progress -= 1.0
+	if b.bugs_found - b.bugs_fixed > 0:
+		b.bug_fix_progress += float(POLISH_BUG_FIX_PER_DAY) * f / float(HOURS_PER_BUILD_DAY)
+		while b.bug_fix_progress >= 1.0 and b.bugs_found - b.bugs_fixed > 0:
+			b.bugs_fixed += 1
+			b.bug_count -= 1
+			b.bug_fix_progress -= 1.0
 	b.bug_count = max(0, b.bug_count)
 	_sync_legacy_quality(b)
 
@@ -149,55 +243,62 @@ static func _clear_bugs_hourly(rate_per_day: float) -> void:
 # 0), instead of jumping on day boundaries.
 
 static func hourly_tick(_hour: int) -> void:
+	# Kapasite çarpanı HER SAAT taze hesaplanır (mid-job hire/fire anında etki eder).
+	# Zaman dilatasyonu: çarpan işin TÜM saatlik çıktısına uygulanır (süre + kalite +
+	# bug üretimi + strengthen + beta find/fix) — tek başına koşan işin toplam çıktısı
+	# bit-bit aynı kalır, paralel işler aynı çıktıyı daha uzun duvar-saatine yayar.
+	var f: float = capacity_speed_factor()
+	# 1) CANLI SÜRÜM yaşam döngüsü — build pipeline'ından BAĞIMSIZ (tasarım kanonu:
+	#    ship edilmiş sürüm, sonraki sürüm gelişirken de yaşar; wear/erozyon durmaz).
+	#    Sprint aktifken canlı bug'ların sahibi sprint'tir — wear'la aynı saatte
+	#    aynı flag'e iki yazar olmasın diye karşılıklı-dışlama korunur.
+	if GameState.get_flag("mvp_shipped", false):
+		if GameState.get_flag("mvp_bug_sprint_active", false):
+			_tick_live_sprint_hourly(f)
+		else:
+			_post_ship_wear_hourly()   # wear DÜNYA olayıdır, iş değil — çarpan uygulanmaz
+	# 2) BUILD PIPELINE (varsa) — tek slot yalnız GERÇEK build'ler için
+	#    (sprint artık slot kullanmaz; saf canlı-durum aksiyonu).
 	if active_build == null:
-		# Product Lifecycle Part 2A: no build → if a product is live, it WEARS.
-		if GameState.get_flag("mvp_shipped", false):
-			_post_ship_wear_hourly()
 		return
 	match active_build.current_phase:
 		"iteration":
-			if active_build.iteration_decision_pending:
-				return  # idling on the player's decision — no accrual, no counter
-			_advance_iteration_hour()   # may flip decision_pending this hour
-			# Skip growth on the hour the iteration just completed.
-			if not active_build.iteration_decision_pending:
-				_grow_hourly(active_build, "innovation", ITER_INNO)
-				_grow_hourly(active_build, "usability", ITER_USAB)
-				_accrue_bugs_hourly()
+			# TASARIM: auto-döngü + tasarım eksenleri büyür. Bug ÜRETİLMEZ
+			# (Tracker Card spec: bug yalnız GELİŞTİRME fazında doğar).
+			_advance_iteration_hour(f)
+			_grow_hourly(active_build, "innovation", ITER_INNO, f)
+			_grow_hourly(active_build, "usability", ITER_USAB, f)
 		"development":
 			var tech: int = GameState.get_founder_skill("tech")
-			_grow_hourly(active_build, "stability", DEV_STAB_BASE + float(tech) * TECH_STAB_COEF)
-			_grow_hourly(active_build, "usability", DEV_USAB)
-			_accrue_bugs_hourly()
-			_advance_development_hour()   # may transition to bugfix
+			_grow_hourly(active_build, "stability", DEV_STAB_BASE + float(tech) * TECH_STAB_COEF, f)
+			_grow_hourly(active_build, "usability", DEV_USAB, f)
+			_accrue_bugs_hourly(f)
+			_advance_development_hour(f)   # may transition to bugfix (BETA)
 		"bugfix":
-			_grow_hourly(active_build, "stability", BUGFIX_STAB)
-			_grow_hourly(active_build, "usability", BUGFIX_USAB)
-			_clear_bugs_hourly(float(POLISH_BUG_FIX_PER_DAY))
-		"bug_sprint":
-			_tick_bug_sprint_hourly()
-			_advance_bug_sprint_hour()    # may END the sprint (active_build → null)
+			# BETA: eksenler KİLİTLİ (growth yok — kart "kilitli" chip'i doğruyu
+			# söyler); test bug bulur + çözer.
+			_tick_beta_hourly(f)
 		_:
 			return
 	# Pool-deepening: strengthened features push their dominant axis a little every growth
-	# hour in ALL growth phases (no-op unless this is a strengthen build). Guard: a
-	# just-ended bug sprint nulled active_build above.
-	if active_build != null and active_build.current_phase in ["iteration", "development", "bugfix"]:
-		_apply_strengthen_growth_hourly(active_build)
+	# hour (no-op unless this is a strengthen build). "bugfix" listede YOK — beta'da
+	# eksenler kilitli (Tracker Card).
+	if active_build.current_phase in ["iteration", "development"]:
+		_apply_strengthen_growth_hourly(active_build, f)
 	EventBus.build_progress_changed.emit()
 
 
-static func _grow_hourly(b: FeatureBuild, axis: String, daily_raw: float) -> void:
-	_grow_build(b, axis, _shaped_raw(b, axis, daily_raw) / float(HOURS_PER_BUILD_DAY))
+static func _grow_hourly(b: FeatureBuild, axis: String, daily_raw: float, f: float = 1.0) -> void:
+	_grow_build(b, axis, _shaped_raw(b, axis, daily_raw) * f / float(HOURS_PER_BUILD_DAY))
 
 
-static func _accrue_bugs_hourly() -> void:
+static func _accrue_bugs_hourly(f: float = 1.0) -> void:
 	# Complexity-driven, tech reduces but never zeros (BUG_FLOOR). Fractional bugs
 	# accumulate on bug_progress and tick bug_count up as they cross 1.0.
 	var b := active_build
 	var tech: int = GameState.get_founder_skill("tech")
 	var rate: float = maxf(BUG_FLOOR, float(b.get_total_complexity()) * BUG_COMPLEXITY_COEF - float(tech) * BUG_TECH_REDUCER)
-	b.bug_progress += rate
+	b.bug_progress += rate * f
 	while b.bug_progress >= 1.0:
 		b.bug_count += 1
 		b.bug_progress -= 1.0
@@ -239,61 +340,49 @@ static func sprint_duration_for(bug_count: int) -> int:
 
 
 static func start_bug_sprint() -> bool:
-	# A founder decision: reuse active_build as a light "bug_sprint" carrier, routed
-	# to PostShipView (pricing stays live) — see product_tab._refresh_view.
-	if active_build != null:
-		push_warning("[ProductSystem] start_bug_sprint while a build/sprint is active")
+	# Kurucu kararı — SAF CANLI-DURUM aksiyonu (yaşam-döngüsü fix'i): sprint artık
+	# FeatureBuild taşıyıcısı/build slotu KULLANMAZ, durumu mvp_sprint_* flag'lerinde
+	# yaşar. Böylece v3 geliştirilirken de sprint başlatılabilir (kanon: canlı sürümün
+	# tam yaşam döngüsü — sprint erişilebilirliği dahil — build'den bağımsız).
+	if GameState.get_flag("mvp_bug_sprint_active", false):
+		push_warning("[ProductSystem] start_bug_sprint while a sprint is already running")
 		return false
 	if not GameState.get_flag("mvp_shipped", false):
 		return false
 	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", 0))
 	if bugs <= 0:
 		return false
-	var b := FeatureBuild.new()
-	b.id = "bug_sprint"
-	b.is_bug_sprint = true
-	b.current_phase = "bug_sprint"
-	b.sub_product_type_id = String(GameState.get_flag("mvp_sub_product_type_id", ""))
-	b.product_name = String(GameState.get_flag("mvp_product_name", ""))
-	b.bug_count = bugs
-	b.bug_progress = 0.0
-	b.development_days_total = sprint_duration_for(bugs)
-	b.development_days_elapsed = 0
-	active_build = b
-	GameState.set_flag("mvp_bug_sprint_active", true)   # SalesSystem freezes audience while set
+	GameState.set_flag("mvp_bug_sprint_active", true)   # bedel: kapasite havuzu — build'le paralelse ikisi de yavaşlar (capacity_speed_factor)
+	GameState.set_flag("mvp_sprint_days_total", sprint_duration_for(bugs))
+	GameState.set_flag("mvp_sprint_days_elapsed", 0.0)
+	GameState.set_flag("mvp_sprint_fix_progress", 0.0)
 	_record_sprint_and_check_engineer()
-	EventBus.build_phase_changed.emit("bug_sprint")
 	if OS.is_debug_build():
-		print("[ProductSystem] Bug sprint started: %d bugs, %d days" % [bugs, b.development_days_total])
+		print("[ProductSystem] Bug sprint started: %d bugs, %d days" % [bugs, int(GameState.get_flag("mvp_sprint_days_total", 0))])
 	return true
 
 
-static func _tick_bug_sprint_hourly() -> void:
-	# Smooth bug clearing (bugfix rate ÷ 24), synced live to mvp_live_bug_count so the
-	# PostShip status block shows bugs dropping + effective stability recovering. No new
-	# bugs (wear doesn't run while a build/sprint is active).
-	var b := active_build
-	b.bug_progress -= float(SPRINT_BUG_FIX_PER_DAY) / float(HOURS_PER_BUILD_DAY)
-	while b.bug_progress <= -1.0 and b.bug_count > 0:
-		b.bug_count -= 1
-		b.bug_progress += 1.0
-	b.bug_count = max(0, b.bug_count)
-	GameState.set_flag("mvp_live_bug_count", b.bug_count)
+static func _tick_live_sprint_hourly(f: float = 1.0) -> void:
+	# Flag-bazlı sprint tiki (eski carrier'lı _tick_bug_sprint_hourly +
+	# _advance_bug_sprint_hour birleşimi): canlı bug'ları düzgünce temizler,
+	# süre dolunca sprint'i kapatır. Build pipeline'ına hiç dokunmaz.
+	var prog: float = float(GameState.get_flag("mvp_sprint_fix_progress", 0.0))
+	var count: int = int(GameState.get_flag("mvp_live_bug_count", 0))
+	prog -= f * float(SPRINT_BUG_FIX_PER_DAY) / float(HOURS_PER_BUILD_DAY)
+	while prog <= -1.0 and count > 0:
+		count -= 1
+		prog += 1.0
+	GameState.set_flag("mvp_sprint_fix_progress", prog)
+	GameState.set_flag("mvp_live_bug_count", max(0, count))
 	GameState.set_flag("mvp_live_bug_progress", 0.0)
-
-
-static func _advance_bug_sprint_hour() -> void:
-	active_build.development_days_elapsed += 1.0 / float(HOURS_PER_BUILD_DAY)
-	if active_build.development_days_elapsed >= float(active_build.development_days_total):
-		# Done: persist the cleared live bug count, drop the sprint, resume normal PostShip.
-		GameState.set_flag("mvp_live_bug_count", active_build.bug_count)
-		GameState.set_flag("mvp_live_bug_progress", 0.0)
+	var elapsed: float = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0)) + f / float(HOURS_PER_BUILD_DAY)
+	GameState.set_flag("mvp_sprint_days_elapsed", elapsed)
+	if elapsed >= float(GameState.get_flag("mvp_sprint_days_total", 1)):
 		GameState.set_flag("mvp_bug_sprint_active", false)
 		GameState.set_flag("bug_sprint_just_done", true)   # one-shot, consumed by Frank
-		active_build = null
-		EventBus.build_phase_changed.emit("shipped")   # router → normal PostShipView
 		if OS.is_debug_build():
 			print("[ProductSystem] Bug sprint complete. live_bug now %d" % int(GameState.get_flag("mvp_live_bug_count", 0)))
+	EventBus.build_progress_changed.emit()   # PostShip sprint banner'ı saatlik akar
 
 
 static func _record_sprint_and_check_engineer() -> void:
@@ -344,14 +433,14 @@ static func _dominant_axis_of(fid: String) -> String:
 	return best
 
 
-static func _apply_strengthen_growth_hourly(b: FeatureBuild) -> void:
+static func _apply_strengthen_growth_hourly(b: FeatureBuild, f: float = 1.0) -> void:
 	# Flat additive deepening: each strengthened feature pushes its dominant axis a little
 	# every growth hour, in EVERY growth phase → the targeted axis climbs where a plain
 	# rebuild grows it by 0 (e.g. innovation in development). Bounded by grow()'s asymptote.
 	if b.strengthened_feature_ids.is_empty():
 		return
 	for fid in b.strengthened_feature_ids:
-		_grow_build(b, _dominant_axis_of(fid), STRENGTHEN_FLAT_PER_DAY / float(HOURS_PER_BUILD_DAY))
+		_grow_build(b, _dominant_axis_of(fid), STRENGTHEN_FLAT_PER_DAY * f / float(HOURS_PER_BUILD_DAY))
 
 
 static func _sync_legacy_quality(b: FeatureBuild) -> void:
@@ -361,22 +450,9 @@ static func _sync_legacy_quality(b: FeatureBuild) -> void:
 	b.quality = int(round(QualityModel.normalized_from_dims(QualityModel.economy_dims_from_build(b), axes)))
 
 
-# --- Public phase-advance API (called by BuildHUDPanel buttons) ---
-
-static func advance_iteration() -> void:
-	if active_build == null or active_build.current_phase != "iteration":
-		push_warning("[ProductSystem] advance_iteration called outside iteration phase")
-		return
-	active_build.iteration_count += 1
-	active_build.iteration_days_in_current = ITERATION_LENGTH_DAYS
-	active_build.iteration_decision_pending = false
-	# No instant jump (Product Lifecycle Part 1): another iteration buys more
-	# design-exploration TIME — innovation/usability keep climbing (asymptotically)
-	# across the added days. The cost is days + runway, not a free +5.
-	EventBus.build_iteration_decision_pending.emit(false)
-	if OS.is_debug_build():
-		print("[ProductSystem] advance_iteration → iter %d, quality=%d" % [active_build.iteration_count, active_build.quality])
-
+# --- Public phase-advance API (called by the Build Tracker Card buttons) ---
+# advance_iteration() silindi (Tracker Card): iterasyonlar otomatik döner,
+# oyuncunun tek tasarım-fazı kararı "Geliştir →" (enter_development).
 
 static func enter_development() -> void:
 	if active_build == null or active_build.current_phase != "iteration":
@@ -384,24 +460,40 @@ static func enter_development() -> void:
 		return
 	active_build.current_phase = "development"
 	active_build.development_days_elapsed = 0
-	active_build.iteration_decision_pending = false
 	active_build._sync_status_from_phase()
-	EventBus.build_iteration_decision_pending.emit(false)
 	EventBus.build_phase_changed.emit("development")
 	if OS.is_debug_build():
 		print("[ProductSystem] enter_development. dev_days_total=%d iter_count=%d" % [active_build.development_days_total, active_build.iteration_count])
 
 
 static func launch() -> void:
-	# Player pressed LAUNCH on BuildHUDPanel. Stamp launch state, fire ship
+	# Player pressed Yayınla on the tracker card. Stamp launch state, fire ship
 	# moment cinematic, then ship_active_build clears active_build when the
 	# player dismisses the modal (via the choice's ship_active_build modifier).
+	# Tracker Card: development'tan da çağrılabilir (ERKEN ship — bedeli var);
+	# beta'dan (bugfix) her an çağrılabilir.
 	if active_build == null:
 		push_warning("[ProductSystem] launch called with no active build")
 		return
-	if active_build.current_phase != "bugfix":
-		push_warning("[ProductSystem] launch called outside bugfix phase (was %s)" % active_build.current_phase)
+	if active_build.current_phase not in ["development", "bugfix"]:
+		push_warning("[ProductSystem] launch called outside development/bugfix phase (was %s)" % active_build.current_phase)
 		return
+	if active_build.current_phase == "development":
+		# Erken ship: tech-debt borcu yine düşer (kaçış yok) + bitmemiş kod bedeli.
+		_apply_tech_debt_due(active_build)
+		# working formula — Erdem balance-pass: bitmemiş kod oranı kadar tüm
+		# eksenlerden kesinti (kod %0'da %50, %100'de 0). Doğrudan çarpan — bu bir
+		# ceza, büyüme değil; grow()/asimptotu bilinçli olarak bypass eder.
+		var unfinished: float = clampf(
+			1.0 - active_build.development_days_elapsed / maxf(1.0, float(active_build.development_days_total)),
+			0.0, 1.0)
+		var keep: float = 1.0 - EARLY_SHIP_AXIS_HAIRCUT * unfinished
+		active_build.innovation *= keep
+		active_build.stability *= keep
+		active_build.usability *= keep
+		_sync_legacy_quality(active_build)
+		if OS.is_debug_build():
+			print("[ProductSystem] EARLY ship from development: unfinished=%.2f keep=%.2f open_bugs=%d" % [unfinished, keep, active_build.bug_count])
 	# Apply critical-bug penalty if the player chose to ship with an unfixed
 	# bug (set by ev_mvp_bugfix_001_critical_bug "Bırak, gönder"). Per-run flag
 	# is consumed here.
@@ -502,6 +594,7 @@ static func start_build(
 	b.current_phase = "iteration"
 	b.iteration_count = 1
 	b.iteration_days_in_current = ITERATION_LENGTH_DAYS
+	b.iteration_round_days = float(ITERATION_LENGTH_DAYS)
 	b.iteration_decision_pending = false
 	b.development_days_total = DEVELOPMENT_DAYS_BASE + b.get_total_complexity()
 	b.development_days_elapsed = 0
@@ -523,8 +616,9 @@ static func start_build(
 
 static func start_version_build(new_feature_ids: Array, assigned_engineer_id: String = "", strengthen_feature_ids: Array = []) -> bool:
 	# v2+ reuses the whole build flow, but SEEDS axes from the live product (not 0) and
-	# unions new features onto the shipped set. Routed to BuildProgressView (a real build).
-	# §10 cost: time + growth freezes (SalesSystem reads mvp_version_build_active) + new bugs.
+	# unions new features onto the shipped set. Tracker Card'ta normal build gibi akar.
+	# KANON: v-build canlı ürünün ekonomisini DONDURMAZ (eski growth-freeze kaldırıldı);
+	# §10 bedeli = süre + yeni bug'lar.
 	# Pool-deepening: when the pool is exhausted, pass strengthen_feature_ids (⊆ mvp_components)
 	# instead of new features → the build deepens those axes and never locks.
 	if active_build != null:
@@ -554,6 +648,7 @@ static func start_version_build(new_feature_ids: Array, assigned_engineer_id: St
 			return false
 		if not typed_strengthen.has(ss) and typed_strengthen.size() < STRENGTHEN_MAX_PER_VERSION:
 			typed_strengthen.append(ss)
+	var typed_new: Array[String] = []
 	for fid in new_feature_ids:
 		var s: String = String(fid)
 		if not pool_ids.has(s):
@@ -561,6 +656,7 @@ static func start_version_build(new_feature_ids: Array, assigned_engineer_id: St
 			return false
 		if not union_ids.has(s):
 			union_ids.append(s)
+			typed_new.append(s)
 	# THE LOCK, now CONDITIONAL: a new feature is required ONLY when not strengthening. When
 	# the pool is exhausted the player strengthens instead → the version build never locks.
 	if union_ids.size() <= existing_count and typed_strengthen.is_empty():
@@ -594,8 +690,14 @@ static func start_version_build(new_feature_ids: Array, assigned_engineer_id: St
 	b.current_phase = "iteration"
 	b.iteration_count = 1
 	b.iteration_days_in_current = ITERATION_LENGTH_DAYS
+	b.iteration_round_days = float(ITERATION_LENGTH_DAYS)
 	b.iteration_decision_pending = false
-	b.development_days_total = DEVELOPMENT_DAYS_BASE + b.get_total_complexity()   # bigger union → longer
+	# v2 süresi YENİ işe dayanır (union'ın tamamına DEĞİL) — display ile aynı
+	# kaynak (version_dev_days) → rozet/süre uyumsuzluğu yapısal olarak imkansız.
+	var effort_ids: Array = []
+	effort_ids.append_array(typed_new)
+	effort_ids.append_array(typed_strengthen)
+	b.development_days_total = version_dev_days(effort_ids)
 	b.development_days_elapsed = 0
 	b.min_estimation_days = max(5, b.get_total_complexity() + 2)
 	b.total_days = b.development_days_total
@@ -603,7 +705,6 @@ static func start_version_build(new_feature_ids: Array, assigned_engineer_id: St
 	b._sync_status_from_phase()
 	_sync_legacy_quality(b)
 	active_build = b
-	GameState.set_flag("mvp_version_build_active", true)   # SalesSystem freezes audience growth+erosion
 	EventBus.build_phase_changed.emit("iteration")
 	if OS.is_debug_build():
 		print("[ProductSystem] v%d build started: %d features (union), dev_days_total=%d, seeded I%d/S%d/U%d bugs=%d" % [
@@ -612,13 +713,21 @@ static func start_version_build(new_feature_ids: Array, assigned_engineer_id: St
 	return true
 
 
+static func version_dev_days(effort_feature_ids: Array) -> int:
+	# v2+ geliştirme süresi: taban + yeni/güçlendirilen feature karmaşıklığı × faktör.
+	# Hem start_version_build hem ProductTab'ın projeksiyon/commit gösterimleri
+	# BU fonksiyonu kullanır — tek kaynak, gösterim/gerçek süre ayrışamaz.
+	var comp: int = 0
+	for fid in effort_feature_ids:
+		comp += int(ProductCatalog.get_feature_by_id(String(fid)).get("complexity", 0))
+	return V2_DEV_DAYS_BASE + int(ceil(float(comp) * V2_COMPLEXITY_FACTOR))
+
+
 static func cancel_build() -> void:
 	if active_build == null:
 		return
 	active_build.current_phase = "cancelled"
 	active_build._sync_status_from_phase()
-	# A bailed v2 must un-freeze the live economy (else audience stays frozen forever).
-	GameState.set_flag("mvp_version_build_active", false)
 	EventBus.build_phase_changed.emit("cancelled")
 	active_build = null
 
@@ -633,7 +742,15 @@ static func apply_speed_bonus(days: int) -> void:
 		return
 	match active_build.current_phase:
 		"iteration":
-			active_build.iteration_days_in_current = maxf(0.0, active_build.iteration_days_in_current + float(days))
+			# +gün TUR TOPLAMINI uzatır (payda); geçen gün (pay) sabit kalır.
+			# elapsed = round - remaining ⇒ ikisine birden ekle. Negatif = hızlanma.
+			# (Eski kod yalnız KALAN sayaca ekliyordu → "Gün 2/4"+2 → "Gün 0/4"
+			# geri-gitme bug'ı; şimdi "Gün 2/6".)
+			var r := active_build
+			if r.iteration_round_days <= 0.0:
+				r.iteration_round_days = float(ITERATION_LENGTH_DAYS)   # eski-save fallback
+			r.iteration_round_days = maxf(1.0, r.iteration_round_days + float(days))
+			r.iteration_days_in_current = clampf(r.iteration_days_in_current + float(days), 0.0, r.iteration_round_days)
 		"development":
 			active_build.development_days_total = int(maxf(active_build.development_days_elapsed, float(active_build.development_days_total + days)))
 
@@ -670,6 +787,10 @@ static func ship_active_build() -> void:
 		push_warning("[ProductSystem] ship_active_build called with no active build")
 		return
 	GameState.set_flag("mvp_shipped", true)
+	# AYIN OLAYI (Spec 3 §4, working copy) — version-aware ship line.
+	var ship_ver: int = int(GameState.get_flag("mvp_version", 1))
+	GameState.submit_month_highlight(
+		"İlk versiyon yayında" if ship_ver <= 1 else "v%d yayında" % ship_ver, 50)
 	# Redesign (display-only): stamp the FIRST ship day once, so the PostShip status chip can
 	# read the product's live age ("N gün canlı"). Not overwritten on later versions (product
 	# age is from first ship). No calculation reads it; pure display.
@@ -678,8 +799,7 @@ static func ship_active_build() -> void:
 	# (dead `product_quality` write removed — nobody read it; mvp_* is canonical.)
 	GameState.set_flag("mvp_components", active_build.component_ids)
 	# Part 2B: a version build carried the union feature set → mvp_components now reflects the
-	# larger product (wear reads the new complexity). Lift the growth freeze (v2 done shipping).
-	GameState.set_flag("mvp_version_build_active", false)
+	# larger product (wear reads the new complexity).
 	active_build.status = "shipped"
 	active_build.current_phase = "shipped"
 	EventBus.build_phase_changed.emit("shipped")

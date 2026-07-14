@@ -1,0 +1,173 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/modals/month_summary_modal.gd" id="1_monthsum"]
+
+[node name="MonthSummaryModal" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_monthsum")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="CenterPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -330.0
+offset_top = -290.0
+offset_right = 330.0
+offset_bottom = 290.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ModalPanel"
+
+[node name="Body" type="VBoxContainer" parent="CenterPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="HeaderBand" type="PanelContainer" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HeaderRow" type="HBoxContainer" parent="CenterPanel/Body/HeaderBand"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="CenterPanel/Body/HeaderBand/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"TitleSerif"
+text = "OCAK 2026"
+
+[node name="MetaLabel" type="Label" parent="CenterPanel/Body/HeaderBand/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"ChromeLabel"
+text = "Gün 1–31 · Bootstrap"
+
+[node name="BodyMargin" type="MarginContainer" parent="CenterPanel/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 14
+
+[node name="BodyCol" type="VBoxContainer" parent="CenterPanel/Body/BodyMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="RowsBox" type="VBoxContainer" parent="CenterPanel/Body/BodyMargin/BodyCol"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="HighlightStrip" type="PanelContainer" parent="CenterPanel/Body/BodyMargin/BodyCol"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HighlightRow" type="HBoxContainer" parent="CenterPanel/Body/BodyMargin/BodyCol/HighlightStrip"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HighlightCaption" type="Label" parent="CenterPanel/Body/BodyMargin/BodyCol/HighlightStrip/HighlightRow"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"SectionLabel"
+text = "✦ AYIN OLAYI"
+
+[node name="HighlightText" type="Label" parent="CenterPanel/Body/BodyMargin/BodyCol/HighlightStrip/HighlightRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"BodySerif"
+text = ""
+clip_text = true
+
+[node name="FrankRow" type="HBoxContainer" parent="CenterPanel/Body/BodyMargin/BodyCol"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AvatarPanel" type="Panel" parent="CenterPanel/Body/BodyMargin/BodyCol/FrankRow"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"Avatar"
+
+[node name="AvatarLabel" type="Label" parent="CenterPanel/Body/BodyMargin/BodyCol/FrankRow/AvatarPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"AvatarInitial"
+text = "FK"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FrankCol" type="VBoxContainer" parent="CenterPanel/Body/BodyMargin/BodyCol/FrankRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="FrankLine" type="Label" parent="CenterPanel/Body/BodyMargin/BodyCol/FrankRow/FrankCol"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"QuoteSerif"
+text = ""
+autowrap_mode = 3
+
+[node name="FrankCaption" type="Label" parent="CenterPanel/Body/BodyMargin/BodyCol/FrankRow/FrankCol"]
+layout_mode = 2
+theme_type_variation = &"SectionLabel"
+text = "FRANK KÖSEOĞLU — MENTOR"
+
+[node name="FooterBand" type="PanelContainer" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="FooterRow" type="HBoxContainer" parent="CenterPanel/Body/FooterBand"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="FooterCaption" type="Label" parent="CenterPanel/Body/FooterBand/FooterRow"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"ChromeLabel"
+text = "Otomatik özet · her ay sonu"
+
+[node name="FooterSpacer" type="Control" parent="CenterPanel/Body/FooterBand/FooterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ContinueBtn" type="Button" parent="CenterPanel/Body/FooterBand/FooterRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 38)
+layout_mode = 2
+theme_type_variation = &"CommitButton"
+text = "DEVAM ET"

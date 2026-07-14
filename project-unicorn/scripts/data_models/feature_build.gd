@@ -60,12 +60,22 @@ extends Resource
 @export var usability: float = 0.0
 # Fractional bug accumulator (Blok C hourly accrual): ticks bug_count up as it crosses 1.0.
 @export var bug_progress: float = 0.0
-# Product Lifecycle Part 2A: a bug-sprint reuses this build object but is a
-# post-ship repair, not a real build → routed to PostShipView, not BuildProgressView.
+# --- Beta bulunan/çözülen modeli (Build Tracker Card, dört-faz akış) ---
+# bug_count TÜM AÇIK bug'ların sayısı olarak kalır (gizli + bulunan-çözülmemiş) →
+# effective_stability ve diğer tüm mevcut tüketiciler değişmeden çalışır.
+# İnvaryantlar: gizli = bug_count - (bugs_found - bugs_fixed); KALAN = found - fixed;
+# bir fix bugs_fixed'i artırır VE bug_count'u düşürür.
+@export var bugs_found: int = 0
+@export var bugs_fixed: int = 0
+@export var bug_find_progress: float = 0.0
+@export var bug_fix_progress: float = 0.0
+# DEPRECATED (canlı-yaşam-döngüsü fix'i): sprint artık FeatureBuild taşıyıcısı
+# kullanmıyor — durumu mvp_sprint_* flag'lerinde (ProductSystem). Alan save-compat
+# için duruyor; yeni kod hep false yazar/okur.
 @export var is_bug_sprint: bool = false
 # Product Lifecycle Part 2B: a version build (v2+) reuses the full build flow but SEEDS
-# axes from the live product (not 0) and increments mvp_version at launch. Routed to
-# BuildProgressView like any real build (is_version_build is invisible to BuildHUDPanel).
+# axes from the live product (not 0) and increments mvp_version at launch. Tracker
+# Card'ta normal build gibi akar; orta alan PostShipView'da kalır (canlı ürün yönetimi).
 @export var is_version_build: bool = false
 # Pool-deepening (feature-exhaustion unlock): ids (⊆ feature_ids) the player chose to
 # STRENGTHEN this build. Their dimension_contribution is amplified (get_dimension_weights)
@@ -83,9 +93,13 @@ extends Resource
 # B2: FLOAT so it decrements hourly (1/24 per hour) and the progress reads
 # smooth instead of jumping a whole day at a time. Displays int-cast for "N gün".
 @export var iteration_days_in_current: float = 0.0
-# Whether the player owes a decision for the just-completed iteration.
-# Persisted on the build (not the system) so saving mid-decision restores
-# cleanly.
+# Bu turun TOPLAM uzunluğu (payda). Normalde ITERATION_LENGTH_DAYS; delay_days
+# event'leri BUNU uzatır (kalan sayacı değil — "Gün 2/4"+2 → "Gün 2/6", geri
+# gitme bug fix'i). Tur bitince const'a döner (uzatma sonraki tura taşınmaz).
+# 0 = eski save → okuma tarafı const'a düşer (forward-compat).
+@export var iteration_round_days: float = 0.0
+# DEPRECATED (Tracker Card dört-faz akışı): iterasyonlar artık otomatik döner,
+# karar-bekleme modeli kalktı. Alan save-compat için duruyor, hep false.
 @export var iteration_decision_pending: bool = false
 # Development phase span — derived from feature complexity at start_build()
 # time and ticked down during _tick_development_phase().

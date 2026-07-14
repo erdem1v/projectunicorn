@@ -1,5 +1,6 @@
 {
   "id": "ev_ps_first_revenue",
+  "tags": ["build_safe"],
   "category": "reactive",
   "title": "Biri ödedi",
   "subtitle": "Stripe bildirimi · 08:03",

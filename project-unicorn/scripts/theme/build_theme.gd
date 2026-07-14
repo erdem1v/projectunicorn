@@ -73,6 +73,21 @@ func _initialize() -> void:
 	_lbl(th, &"MetricValueInk", sans_sb, 18, T.INK)
 	_lbl(th, &"MetricCaptionInk", mono_label, 9, T.INK_DIM)
 
+	# ---- Cinematic dialogue register (Spec 5): text on the DARK charcoal column.
+	# Cream tones per the context rule; the light INK-based QuoteSerif/ChoiceLabel
+	# are unreadable here, so these are their dark-surface counterparts. ----
+	_lbl(th, &"DialogueName", sans_sb, 15, T.CREAM)           # counterpart name (uppercased in code)
+	_lbl(th, &"DialogueRole", mono_label, 10, T.CREAM_DIM)    # role line under the name
+	_lbl(th, &"DialogueTag", mono_label, 9, T.CREAM_DIM)      # speaker-tag chip "ANCHOR — CANLI"
+	_lbl(th, &"QuoteSerifCream", serif_it, 15, T.CREAM)       # spoken line (light QuoteSerif is INK)
+	_lbl(th, &"DialogueMonologue", serif_it, 14, T.CREAM_DIM) # interior voice — dimmer, italic
+	_lbl(th, &"DialogueChoiceLabel", sans_reg, 14, T.CREAM)   # choice text (light ChoiceLabel is INK)
+	_lbl(th, &"DialogueOdds", mono_reg, 11, T.CREAM_DIM)      # odds / caption line
+	_lbl(th, &"DialogueNumber", mono_reg, 11, T.CREAM_DIM)    # choice number inside its ring chip
+	_lbl(th, &"ZoneLabel", mono_label, 9, T.CREAM_DIM)        # İKNA zone labels SOĞUK/ILIK/KAZANILDI
+	_lbl(th, &"ConvictionValue", mono_reg, 12, T.CREAM)       # İKNA numeric readout
+	_lbl(th, &"StatStripLabel", mono_reg, 11, T.CREAM)        # bottom-left stat band
+
 	# ---- Panel variations ----
 	_panel(th, &"TopBarPanel", "Panel", _box(T.BG_TOPBAR, 0, Color.TRANSPARENT, 0, [0,0,0,1], T.SEPARATOR))
 	_panel(th, &"SidePanel", "Panel", _box(T.BG_PANEL, 0, Color.TRANSPARENT, 0, [1,1,0,0], T.DIVIDER_LIGHT))
@@ -94,12 +109,37 @@ func _initialize() -> void:
 	_panel(th, &"ChoiceCard", "PanelContainer", _box(T.CARD_BG, 1, T.CARD_BORDER, 4, [1,1,1,1], T.CARD_BORDER, 12, 8))
 	_panel(th, &"HeaderBand", "PanelContainer", _box(T.ACCENT, 0, Color.TRANSPARENT, 4, [1,1,1,1], Color.TRANSPARENT, 14, 8))
 
+	# ---- Cinematic dialogue register (Spec 5): DARK panels ----
+	# Column = floating semi-opaque charcoal (art shows through); Card = solid
+	# charcoal for the Frank popup; QuoteBox carries the amber left-edge bar;
+	# DialogueChoice(+Hover) swap on mouse-over; NumberChip is the choice ring.
+	_panel(th, &"DialogueColumn", "Panel", _box(T.DIALOGUE_COLUMN_BG, 0, Color.TRANSPARENT, 12))
+	_panel(th, &"DialogueCard", "Panel", _box(T.DIALOGUE_BG, 1, T.DIALOGUE_CARD_BORDER, 16))
+	_panel(th, &"PortraitFrame", "PanelContainer", _box(T.PORTRAIT_FRAME, 0, Color.TRANSPARENT, 10, [], Color.TRANSPARENT, 4, 4))
+	_panel(th, &"QuoteBox", "PanelContainer", _box(T.DIALOGUE_CARD_BG, 0, Color.TRANSPARENT, 4, [3,0,0,0], T.ACCENT, 14, 10))
+	_panel(th, &"DialogueChoice", "PanelContainer", _box(T.DIALOGUE_CARD_BG, 1, T.DIALOGUE_CARD_BORDER, 8, [], Color.TRANSPARENT, 14, 10))
+	_panel(th, &"DialogueChoiceHover", "PanelContainer", _box(T.DIALOGUE_CARD_BG, 1, T.ACCENT, 8, [], Color.TRANSPARENT, 14, 10))
+	_panel(th, &"NumberChip", "Panel", _box(Color.TRANSPARENT, 1, T.CREAM_DIM, 11))
+	_panel(th, &"StatStrip", "PanelContainer", _box(T.STAT_STRIP_BG, 0, Color.TRANSPARENT, 4, [], Color.TRANSPARENT, 12, 6))
+
 	# ---- Button variations ----
 	_tab_button(th, &"TabButton", false)
 	_tab_button(th, &"TabButtonActive", true)
 	_speed_button(th, &"SpeedButton", false)
 	_speed_button(th, &"SpeedButtonActive", true)
 	_commit_button(th)
+
+	# ---- DialogueGhost: quiet cream text button on the dark register ("Toplantıdan
+	# çekil" withdraw affordance). Transparent until hovered. ----
+	th.set_type_variation(&"DialogueGhost", &"Button")
+	th.set_stylebox("normal", &"DialogueGhost", _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, 4, [], Color.TRANSPARENT, 10, 5))
+	th.set_stylebox("hover", &"DialogueGhost", _box(Color(1, 1, 1, 0.06), 0, Color.TRANSPARENT, 4, [], Color.TRANSPARENT, 10, 5))
+	th.set_stylebox("pressed", &"DialogueGhost", _box(Color(1, 1, 1, 0.03), 0, Color.TRANSPARENT, 4, [], Color.TRANSPARENT, 10, 5))
+	th.set_stylebox("focus", &"DialogueGhost", _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, 0))
+	th.set_font_size("font_size", &"DialogueGhost", 11)
+	th.set_color("font_color", &"DialogueGhost", T.CREAM_DIM)
+	th.set_color("font_hover_color", &"DialogueGhost", T.CREAM)
+	th.set_color("font_pressed_color", &"DialogueGhost", T.CREAM_DIM)
 
 	# ---- RichTextLabel variations ----
 	th.set_type_variation(&"BodyRich", &"RichTextLabel")

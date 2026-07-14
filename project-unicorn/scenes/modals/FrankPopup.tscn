@@ -1,0 +1,148 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/modals/frank_popup.gd" id="1_fp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/DialoguePortraitCard.tscn" id="2_pc"]
+
+[node name="FrankPopup" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_fp")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -320.0
+offset_right = 260.0
+offset_bottom = 320.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"DialogueCard"
+
+[node name="Portrait" parent="Card" instance=ExtResource("2_pc")]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -110.0
+offset_top = -14.0
+offset_right = 110.0
+offset_bottom = 261.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Body" type="MarginContainer" parent="Card"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 278.0
+offset_right = -28.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Content" type="VBoxContainer" parent="Card/Body"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="NameBlock" type="VBoxContainer" parent="Card/Body/Content"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="Label" parent="Card/Body/Content/NameBlock"]
+layout_mode = 2
+theme_type_variation = &"DialogueName"
+text = "—"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="RoleLabel" type="Label" parent="Card/Body/Content/NameBlock"]
+layout_mode = 2
+theme_type_variation = &"DialogueRole"
+text = "—"
+horizontal_alignment = 1
+
+[node name="MonologueWrap" type="MarginContainer" parent="Card/Body/Content"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+
+[node name="MonologueLabel" type="Label" parent="Card/Body/Content/MonologueWrap"]
+layout_mode = 2
+theme_type_variation = &"DialogueMonologue"
+text = ""
+autowrap_mode = 3
+
+[node name="QuoteBox" type="PanelContainer" parent="Card/Body/Content"]
+layout_mode = 2
+theme_type_variation = &"QuoteBox"
+
+[node name="QuoteVBox" type="VBoxContainer" parent="Card/Body/Content/QuoteBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="QuoteLabel" type="Label" parent="Card/Body/Content/QuoteBox/QuoteVBox"]
+layout_mode = 2
+theme_type_variation = &"QuoteSerifCream"
+text = ""
+autowrap_mode = 3
+
+[node name="TagLabel" type="Label" parent="Card/Body/Content/QuoteBox/QuoteVBox"]
+layout_mode = 2
+theme_type_variation = &"DialogueTag"
+text = ""
+
+[node name="ChoicesHeader" type="HBoxContainer" parent="Card/Body/Content"]
+layout_mode = 2
+
+[node name="YanitLabel" type="Label" parent="Card/Body/Content/ChoicesHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ZoneLabel"
+text = "YANITIN:"
+
+[node name="HintLabel" type="Label" parent="Card/Body/Content/ChoicesHeader"]
+layout_mode = 2
+theme_type_variation = &"DialogueOdds"
+text = "Bir seçenek seç"
+
+[node name="Choices" type="VBoxContainer" parent="Card/Body/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Footer" type="HBoxContainer" parent="Card/Body/Content"]
+layout_mode = 2
+
+[node name="BeatLabel" type="Label" parent="Card/Body/Content/Footer"]
+layout_mode = 2
+theme_type_variation = &"DialogueTag"
+text = ""
+
+[node name="FootSpacer" type="Control" parent="Card/Body/Content/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="WithdrawBtn" type="Button" parent="Card/Body/Content/Footer"]
+visible = false
+layout_mode = 2
+theme_type_variation = &"DialogueGhost"
+text = "Kapat"

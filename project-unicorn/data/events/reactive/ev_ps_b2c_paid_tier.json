@@ -1,5 +1,6 @@
 {
   "id": "ev_ps_b2c_paid_tier",
+  "tags": ["build_safe"],
   "category": "reactive",
   "title": "Fiyatlandırma vakti",
   "subtitle": "Mutfak masası · 21:40",
