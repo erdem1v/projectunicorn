@@ -129,9 +129,8 @@ const TABS := [
 	{"id": "rnd",      "label": "R&D",      "glyph": TAB_GLYPH_RND,      "icon": "res://assets/icons/tabs/rnd.svg"},
 	{"id": "personal", "label": "Personal", "glyph": TAB_GLYPH_PERSONAL, "icon": "res://assets/icons/tabs/personal.svg"},
 	{"id": "events",   "label": "Events",   "glyph": TAB_GLYPH_EVENTS,   "icon": "res://assets/icons/tabs/events.svg"},
-	# Spec 4 — 9th tab, appended (keeps LeftTabs badge indices 1/2/7 valid). Icon reuses
-	# finance.svg as a placeholder; Erdem swaps for a dedicated Yatırım glyph at F5.
-	{"id": "yatirim",  "label": "Yatırım",  "glyph": "◆",                "icon": "res://assets/icons/tabs/finance.svg"},
+	# Spec 6 — the standalone "Yatırım" rail tab was relocated INTO the Finance tab as a
+	# sub-page (Finance>Yatırım); the 9th rail entry is gone (badge indices 1/2/7 stay valid).
 ]
 
 # ============================================================================
@@ -208,3 +207,18 @@ static func format_money(amount: int) -> String:
 	else:
 		s = "$%d" % a
 	return ("-" + s) if amount < 0 else s
+
+
+## Net-runway display (Package 5): revenue-aware runway. INF (net_burn ≤ 0) → the
+## "default alive" status word; finite → whole months. Uses TranslationServer because
+## statics can't call tr(). The single home for the months-vs-status + localization
+## decision, feeding every net-runway surface (TopBar, Month-End summary).
+static func net_runway_parts(months: float) -> Dictionary:
+	if months == INF:
+		return {"value": TranslationServer.translate("RUNWAY_PROFITABLE"), "unit": ""}
+	return {"value": str(int(round(months))), "unit": TranslationServer.translate("RUNWAY_UNIT_MONTHS")}
+
+
+static func net_runway_text(months: float) -> String:
+	var p: Dictionary = net_runway_parts(months)
+	return String(p.value) if String(p.unit) == "" else "%s %s" % [p.value, p.unit]

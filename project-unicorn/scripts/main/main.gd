@@ -22,6 +22,7 @@ const ENDING_MODAL := preload("res://scenes/modals/EndingModal.tscn")
 const MONTH_SUMMARY_MODAL := preload("res://scenes/modals/MonthSummaryModal.tscn")
 const MEETING_SCENE := preload("res://scenes/modals/MeetingScene.tscn")
 const FRANK_POPUP := preload("res://scenes/modals/FrankPopup.tscn")
+const TERM_TABLE_SCENE := preload("res://scenes/modals/TermSheetTableScene.tscn")
 
 var _flow: Node = null
 var _shell: Node = null
@@ -34,6 +35,9 @@ var _ending_modal: Node = null       # Ending summary modal — mounts once, nev
 var _month_modal: Node = null        # Currently-open month summary modal, or null
 var _meeting_scene: Node = null      # Currently-open MeetingScene (Spec 5), or null
 var _frank_popup: Node = null        # Currently-open FrankPopup (Spec 5), or null
+var _term_table: Node = null         # Currently-open TermSheetTableScene (Spec 6), or null
+var _deal_prompt_vc: String = ""     # VC whose deal-closed FrankPopup is showing (Spec 6), or ""
+var _pending_deal_prompt_vc: String = ""  # sheet_granted queued a prompt; shown when no modal is up
 var _pre_dialogue_speed: int = -1    # Speed to restore when a cinematic dialogue closes
 var _pre_month_speed: int = -1       # Speed to restore when the month summary closes
 var _pre_confirm_speed: int = -1     # Speed to restore when the confirm closes
@@ -77,6 +81,11 @@ func _ready() -> void:
 		var smoke_case: String = _smoke_case_requested()
 		if smoke_case != "":
 			EndgameSmoke.run_case(smoke_case, _debug_payload())
+			# CLI headless runs (arg on the command line) quit so stdout flushes and the
+			# process exits; the MCP editor-run path (arg via ProjectSettings main_args,
+			# NOT cmdline) is left ALIVE so it can read the live log — see endgame_smoke.gd.
+			if _smoke_case_on_cmdline():
+				get_tree().quit()
 			return
 
 	if OS.is_debug_build() and _skip_onboarding_requested():
@@ -105,6 +114,15 @@ func _smoke_case_requested() -> String:
 			if token.begins_with("--endgame-smoke="):
 				return token.trim_prefix("--endgame-smoke=")
 	return ""
+
+
+# True when the smoke arg came from the actual command line (a CLI run) vs ProjectSettings
+# main_args (the MCP editor-run path). Only CLI runs quit after the case.
+func _smoke_case_on_cmdline() -> bool:
+	for arg in OS.get_cmdline_args():
+		if String(arg).begins_with("--endgame-smoke="):
+			return true
+	return false
 
 
 func _mount_flow() -> void:
@@ -147,6 +165,8 @@ func _swap_to_shell_and_modal() -> void:
 		EventBus.month_ended.connect(_on_month_ended)
 		EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
 		EventBus.frank_popup_requested.connect(_on_frank_popup_requested)
+		EventBus.term_table_requested.connect(_on_term_table_requested)
+		EventBus.sheet_granted.connect(_on_sheet_granted_prompt)
 		_event_signals_wired = true
 
 	_modal = MENTOR_MODAL.instantiate()
@@ -377,6 +397,9 @@ func _on_frank_popup_requested(view_state: Dictionary) -> void:
 # advance() writes the outcome and returns the next view_state (re-populate) or done.
 # The FrankPopup debug fixtures (Spec 5) keep the print-and-close path.
 func _on_dialogue_choice_selected(id: String) -> void:
+	if _deal_prompt_vc != "":
+		_on_deal_prompt_choice(id)
+		return
 	if VCPitchSystem.is_meeting_active():
 		var r: Dictionary = VCPitchSystem.advance(id)
 		if r.get("done", false):
@@ -405,6 +428,104 @@ func _close_dialogue_scenes() -> void:
 		_frank_popup.queue_free()
 		_frank_popup = null
 	# Yield to a pending event chain / a dead run (strict gate from MonthSummary/Ending).
+	if GameState.run_active and not EventManager.has_pending():
+		var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else 1
+		EventBus.speed_change_requested.emit(restore)
+	_pre_dialogue_speed = -1
+	# A won meeting grants a sheet mid-scene; its deal-closed prompt waits until now (§2).
+	_maybe_show_deal_prompt()
+
+
+# --- Term Sheet Table (Spec 6) — deal-closed Frank prompt + table mount ---
+
+func _on_sheet_granted_prompt(vc_id: String) -> void:
+	# A sheet was just granted (won meeting or delayed delivery). Queue the deal-closed prompt;
+	# it shows once nothing else is on screen (a won meeting is still closing when this fires).
+	_pending_deal_prompt_vc = vc_id
+	_maybe_show_deal_prompt()
+
+
+func _maybe_show_deal_prompt() -> void:
+	if _pending_deal_prompt_vc == "":
+		return
+	if not GameState.run_active or GameState.phase < 3:
+		_pending_deal_prompt_vc = ""
+		return
+	if VCPitchSystem.sheet_for(_pending_deal_prompt_vc) == null:
+		_pending_deal_prompt_vc = ""   # sheet gone (expired/walked) before we could offer it
+		return
+	# Don't stack over any modal / dialogue / table / confirm — retried from the close paths.
+	if _frank_popup != null or _meeting_scene != null or _term_table != null \
+			or _event_modal != null or _confirm_modal != null or _pitch_modal != null:
+		return
+	var vc: String = _pending_deal_prompt_vc
+	_pending_deal_prompt_vc = ""
+	_deal_prompt_vc = vc
+	EventBus.frank_popup_requested.emit(_deal_prompt_view_state(vc))
+
+
+func _deal_prompt_view_state(vc_id: String) -> Dictionary:
+	var inv: Dictionary = InvestorRegistry.get_investor(vc_id)
+	var sheet: TermSheet = VCPitchSystem.sheet_for(vc_id)
+	var days: int = sheet.days_left(GameState.day) if sheet != null else PitchConstants.SHEET_VALIDITY_DAYS
+	return {
+		"portrait_path": "res://assets/art/investors/portrait_frank.webp",
+		"speaker_name": "Frank Köseoğlu",
+		"speaker_role": "Mentor / Operating Partner",
+		"active_line": {
+			"text": "\"%s teklif verdi. %d gün geçerli. İstersen masaya şimdi otur, şartları zorla. İstersen teklifi cebine koy, başka VC'lerle de görüş — cebinde ikinci teklif olduğunda pazarlık gücün artar.\"" % [String(inv.get("display_name", "")), days],
+			"speaker_tag": "Frank",
+			"is_monologue": false,
+		},
+		"choices": [
+			{"id": "open_table", "text": "Masaya şimdi otur.", "marked": true, "marked_text": "Geçerlilik: %d gün" % days},
+			{"id": "defer", "text": "Sonra — teklifi al, başka VC'lerle görüş."},
+		],
+		"beat_label": "%s — Term Sheet" % String(inv.get("display_name", "")),
+		"can_withdraw": false,
+	}
+
+
+func _on_deal_prompt_choice(id: String) -> void:
+	var vc: String = _deal_prompt_vc
+	_deal_prompt_vc = ""
+	if _frank_popup != null:
+		_frank_popup.queue_free()
+		_frank_popup = null
+	if id == "open_table":
+		EventBus.term_table_requested.emit(vc)   # table inherits _pre_dialogue_speed (kept below)
+	else:
+		# Defer — the sheet waits in Finance>Yatırım with its clock running. Restore speed.
+		if GameState.run_active and not EventManager.has_pending():
+			var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else 1
+			EventBus.speed_change_requested.emit(restore)
+		_pre_dialogue_speed = -1
+
+
+func _on_term_table_requested(vc_id: String) -> void:
+	if _term_table != null:
+		return
+	var modal_layer: CanvasLayer = _shell.get_node_or_null("ModalLayer") if _shell != null else null
+	if modal_layer == null:
+		push_error("[Main] GameShell/ModalLayer missing — term table can't mount")
+		return
+	if TermSheetTableSystem.open(vc_id).is_empty():
+		push_warning("[Main] term_table_requested for %s with no live sheet" % vc_id)
+		return
+	if _pre_dialogue_speed < 0:
+		_pre_dialogue_speed = TimeManager.current_speed
+	EventBus.speed_change_requested.emit(0)
+	_term_table = TERM_TABLE_SCENE.instantiate()
+	_term_table.closed.connect(_close_term_table)
+	modal_layer.add_child(_term_table)
+
+
+func _close_term_table() -> void:
+	if _term_table != null:
+		_term_table.queue_free()
+		_term_table = null
+	# Sign ended the run (run_active false → no restore, the ending owns the freeze); a walk
+	# leaves the run alive → restore to the pre-table speed.
 	if GameState.run_active and not EventManager.has_pending():
 		var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else 1
 		EventBus.speed_change_requested.emit(restore)

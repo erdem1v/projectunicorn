@@ -61,7 +61,7 @@ static func _build_summary_data() -> Dictionary:
 		"cash": {"from": int(ledger.get("cash", 0)), "to": GameState.cash},
 		"team": {"from": int(ledger.get("employees", 1)), "to": _team_size()},
 		"brand": {"from": int(ledger.get("brand", 50)), "to": GameState.brand},
-		"runway_days": _runway_days(),
+		"runway_text": UiTokens.net_runway_text(GameState.get_runway_months()),
 		"highlight": GameState.month_highlight_text if GameState.month_highlight_text != "" else HIGHLIGHT_FALLBACK,
 		"shutter_active": GameState.shutter_days_left >= 0,
 	}
@@ -72,15 +72,6 @@ static func _build_summary_data() -> Dictionary:
 static func _team_size() -> int:
 	# "Ekip" = founder + payroll employees; the mentor is an advisor, not team.
 	return 1 + CharacterRegistry.get_employees().size()
-
-
-static func _runway_days() -> int:
-	# Display-only current value (no delta arithmetic — runway is derived).
-	# -1 encodes INF; the modal renders "∞".
-	var months: float = GameState.get_runway_months()
-	if months == INF:
-		return -1
-	return int(floor(months * float(GameState.DAYS_PER_MONTH)))
 
 
 # --- Debug (F11 / Shift+F11 in game_shell) ---
@@ -98,7 +89,7 @@ static func debug_force_summary(extreme: bool = false) -> void:
 			"cash": {"from": 999_900, "to": 1_200_000},
 			"team": {"from": 98, "to": 120},
 			"brand": {"from": 12, "to": 100},
-			"runway_days": 999,
+			"runway_text": "8 ay",
 			"highlight": "Uzun bir başlık taşma testi — satın alma teklifi masada, Nordica $1.2K/ay imzalandı",
 			"frank_line": "İyi bir ay. Not al — nadir gelirler.",
 			"shutter_active": false,

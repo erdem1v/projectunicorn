@@ -72,6 +72,8 @@ func _ready() -> void:
 	EventBus.character_removed.connect(_on_character_changed)
 	EventBus.customer_added.connect(_on_customer_changed)
 	EventBus.customer_removed.connect(_on_customer_changed)
+	EventBus.customer_mrr_changed.connect(_on_customer_field_changed)
+	EventBus.customer_seats_changed.connect(_on_customer_field_changed)
 	# Frank's advisory line — updated by PostShip intro/customer/traction events.
 	EventBus.mentor_advisory_changed.connect(_on_mentor_advisory_changed)
 	# Rivals (Product Lifecycle Part 1) — registry-backed now.
@@ -88,6 +90,8 @@ func _exit_tree() -> void:
 	EventBus.character_removed.disconnect(_on_character_changed)
 	EventBus.customer_added.disconnect(_on_customer_changed)
 	EventBus.customer_removed.disconnect(_on_customer_changed)
+	EventBus.customer_mrr_changed.disconnect(_on_customer_field_changed)
+	EventBus.customer_seats_changed.disconnect(_on_customer_field_changed)
 	EventBus.mentor_advisory_changed.disconnect(_on_mentor_advisory_changed)
 	EventBus.rival_added.disconnect(_on_rival_changed)
 	EventBus.rival_advanced.disconnect(_refresh_rivals)
@@ -97,6 +101,11 @@ func _exit_tree() -> void:
 
 func _on_mentor_advisory_changed(text: String) -> void:
 	mentor_quote_label.text = "\"%s\"" % text
+
+
+func _on_customer_field_changed(_customer_id: String, _new_value: int) -> void:
+	# Live seat/MRR mutation on an existing account → repaint the Top Customers list.
+	_refresh_customers()
 
 
 # --- Refresh helpers ---

@@ -278,7 +278,7 @@ static func _build_shutter_warning_event() -> GameEvent:
 	ev.character_id = "char_mentor_frank"
 	# §4.3 Frank line. Loan clause ("ya da birinden borç iste") lands when the
 	# deferred loan mechanic ships.
-	ev.body_text = "Frank ekrana bakmıyor; sana bakıyor.\n\n\"Kırmızıdasın. %d günün var. Ya bir şey sat, ya bir şey kes.\"\n\nTopBar'daki sayaç bugünden itibaren geri sayıyor. Kasa artıya dönerse sayaç durur." % SHUTTER_DAYS
+	ev.body_text = "Frank ekrana bakmıyor; sana bakıyor.\n\n\"Kırmızıdasın. %d günün var. Ya bir şey sat, ya bir şey kes.\"\n\nBugünden itibaren bir geri sayım başladı. Kasa artıya dönerse durur." % SHUTTER_DAYS
 	ev.cooldown_days = 0
 	ev.one_shot = false  # a NEW shutter start after a recovery warns again
 	ev.priority = 10
@@ -303,7 +303,7 @@ static func _build_pivot_offer_event() -> GameEvent:
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = "Üçüncü ret maili kısa. Hepsi kısadır.\n\nFrank uzun bir süre bir şey demiyor. Sonra:\n\n\"Belki bu yıl değil. Belki bu şirket değil. Ama sen bitmedin.\"\n\nVC yolu kapanıyor. Kendi paranla, kendi müşterinle, Day %d'e kadar — hâlâ gerçek bir şirket kurabilirsin." % RUN_END_DAY
+	ev.body_text = "Üçüncü ret maili kısa. Hepsi kısadır.\n\nFrank uzun bir süre bir şey demiyor. Sonra:\n\n\"Belki bu yıl değil. Belki bu şirket değil. Ama sen bitmedin.\"\n\nVC yolu kapanıyor. Kendi paranla, kendi müşterinle, %d. güne kadar — hâlâ gerçek bir şirket kurabilirsin." % RUN_END_DAY
 	ev.cooldown_days = 0
 	ev.one_shot = false  # one-shot enforced by the pivot_offer_made flag
 	ev.priority = 10

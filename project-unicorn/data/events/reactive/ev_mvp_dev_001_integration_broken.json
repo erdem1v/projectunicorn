@@ -5,7 +5,7 @@
   "subtitle": "Mutfak masası · 02:17",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Saat ikiyi geçiyor. Üçüncü kahve soğumuş. **API tarafından dönen JSON** ile UI'da beklediğin shape arasında bir uçurum açıldı — büyük değil ama kapanmıyor.\n\nMantıklı yol: yarın taze gözle bak. Pratik yol: bir hack ile geç, sonra döner düzeltirsin.\n\n*Sonra dönüp düzeltmek.* O sözü daha önce de duymuştun.",
+  "body_text": "Saat ikiyi geçiyor. Üçüncü kahve soğumuş. Sunucudan dönen veri ile arayüzün beklediği biçim tutmuyor — büyük bir fark değil, ama bir türlü kapanmıyor.\n\nİki yol var: yarın taze gözle bakmak, ya da geçici bir çözümle şimdi geçip sonra dönmek.\n\n*Sonra dönüp düzeltmek.* O sözü daha önce de duymuştun.",
   "trigger_conditions": [
     {"type": "build_phase", "value": "development"},
     {"type": "random", "chance": 0.30}
@@ -19,14 +19,13 @@
       "label": "Gece boyu uğraş, doğru yap",
       "modifiers": [
         {"type": "dimension_delta", "axis": "stability", "amount": 6},
-        {"type": "delay_days", "days": 1},
-        {"type": "set_flag", "key": "founder_fatigue", "value": true}
+        {"type": "delay_days", "days": 1}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""
     },
     {
-      "label": "Geçici çözüm — TODO listesine ekle",
+      "label": "Geçici çözüm — sonraya not et",
       "modifiers": [
         {"type": "delay_days", "days": -2},
         {"type": "bug_delta", "amount": 2},

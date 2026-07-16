@@ -5,7 +5,7 @@
   "subtitle": "Twitter · 11:02",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Sabah feed'i karıştırırken bir thread denk geldi. **Y Combinator W26 batch'inden bir ekip** — neredeyse aynı problemi vuruyorlar. Onların post'u temiz, demo video pürüzsüz, comment'ler iyi.\n\nİlk içgüdü: panik. İkinci içgüdü: *'Bizimkini onların yapamadığı bir şeye eğip ayrışalım.'*\n\nÜçüncü içgüdü, bir saat sonra geliyor: belki ikisi de yanlış cevap.",
+  "body_text": "Sabah akışı karıştırırken bir paylaşım dizisi denk geldi. **Y Combinator W26 grubundan bir ekip** — neredeyse aynı problemi vuruyorlar. Onların paylaşımı temiz, demo videosu pürüzsüz, yorumları iyi.\n\nİlk içgüdü: panik. İkinci içgüdü: *'Bizimkini onların yapamadığı bir şeye eğip ayrışalım.'*\n\nÜçüncü içgüdü, bir saat sonra geliyor: belki ikisi de yanlış cevap.",
   "trigger_conditions": [
     {"type": "build_phase", "value": "iteration"},
     {"type": "random", "chance": 0.25}
@@ -19,8 +19,7 @@
       "label": "Tasarımı onların eksik yerine eğ",
       "modifiers": [
         {"type": "dimension_delta", "axis": "innovation", "amount": 5},
-        {"type": "delay_days", "days": 2},
-        {"type": "set_flag", "key": "pivot_versus_rakip", "value": true}
+        {"type": "delay_days", "days": 2}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

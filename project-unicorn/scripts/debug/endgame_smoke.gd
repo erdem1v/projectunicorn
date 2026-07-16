@@ -59,14 +59,35 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"pitch_ret_counter":    fail = _case_pitch_ret_counter()
 		"gecistir_cap":         fail = _case_gecistir_cap()
 		"callback_contract":    fail = _case_callback_contract()
+		"pitch_bug_interrogation": fail = _case_pitch_bug_interrogation()
+		"pitch_refused_acq":    fail = _case_pitch_refused_acq()
 		"sheet_expiry_no_rejection": fail = _case_sheet_expiry_no_rejection()
 		"third_sheet_delayed":  fail = _case_third_sheet_delayed()
 		"cascade_defer_with_sheet": fail = _case_cascade_defer_with_sheet()
 		"walk_counts_rejection": fail = _case_walk_counts_rejection()
+		"table_sign_closes_series_a": fail = _case_table_sign_closes_series_a()
+		"table_walk_counts_rejection": fail = _case_table_walk_counts_rejection()
+		"patience_zero_locks_pushes": fail = _case_patience_zero_locks_pushes()
+		"push_decay_lowers_odds": fail = _case_push_decay_lowers_odds()
+		"leverage_bonus_applies_and_shows": fail = _case_leverage_bonus_applies_and_shows()
+		"no_leverage_no_box": fail = _case_no_leverage_no_box()
+		"investment_figure_tracks_terms": fail = _case_investment_figure_tracks_terms()
+		"table_board_push_sequence": fail = _case_table_board_push_sequence()
+		"deal_prompt_defer_keeps_clock": fail = _case_deal_prompt_defer_keeps_clock()
 		"prep_bonus_and_capacity": fail = _case_prep_bonus_and_capacity()
 		"meeting_daylock":      fail = _case_meeting_daylock()
 		"pivot_closes_hunt":    fail = _case_pivot_closes_hunt()
 		"meeting_during_kepenk": fail = _case_meeting_during_kepenk()
+		"seat_upsell_moves_seats": fail = _case_seat_upsell_moves_seats()
+		"satisfaction_seam_emits": fail = _case_satisfaction_seam_emits()
+		"targeted_modifier_hits_named_customer": fail = _case_targeted_modifier_hits_named_customer()
+		"burn_refresh_same_tick": fail = _case_burn_refresh_same_tick()
+		"feature_bug_seed_by_complexity": fail = _case_feature_bug_seed_by_complexity()
+		"hardening_seeds_no_bugs": fail = _case_hardening_seeds_no_bugs()
+		"runway_net_status":    fail = _case_runway_net_status()
+		"gross_runway_months":  fail = _case_gross_runway_months()
+		"locale_switch":        fail = _case_locale_switch()
+		"settings_language_toggle": fail = _case_settings_language_toggle()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -672,7 +693,7 @@ static func _case_callback_contract() -> String:
 	GameState.set_phase(3)
 	_force("pass")
 	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_bug_count", 5)   # product interrogation + callback not-yet-met
+	GameState.set_flag("mvp_live_bug_count", 5)   # product interrogation + callback not-yet-met
 	_seed_b2b(3000)
 	_sim_day()
 	VCPitchSystem.begin_meeting("meridian")
@@ -688,7 +709,7 @@ static func _case_callback_contract() -> String:
 		return "callback type=%s" % st.get("callback", {}).get("type", "")
 	if st.get("callback", {}).get("met", true):
 		return "callback already met"
-	GameState.set_flag("mvp_bug_count", 1)   # satisfy: bugs under target
+	GameState.set_flag("mvp_live_bug_count", 1)   # satisfy: bugs under target
 	_sim_day()
 	if not st.get("callback", {}).get("met", false):
 		return "callback not met after condition satisfied"
@@ -699,6 +720,47 @@ static func _case_callback_contract() -> String:
 	var seed_without: int = int(VCPitchSystem.seed_conviction("meridian").value)
 	if seed_with - seed_without != PitchConstants.SEED_CALLBACK_BONUS:
 		return "re-entry bonus wrong (%d vs %d)" % [seed_with, seed_without]
+	return ""
+
+
+static func _case_pitch_bug_interrogation() -> String:
+	# A.4: live bugs > 0 must FIRE the product interrogation (sorgu key "bugs") and
+	# leave the bugs_under callback UNMET — both were silently dead while VCPitch read
+	# the never-written mvp_bug_count key (now mvp_live_bug_count with launch fallback).
+	GameState.set_phase(3)
+	_force("pass")
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_live_bug_count", 5)    # >= CALLBACK_BUGS_UNDER (3)
+	_seed_b2b(3000)
+	_sim_day()
+	VCPitchSystem.begin_meeting("meridian")        # product-domain VC
+	VCPitchSystem.advance("b1_read")
+	VCPitchSystem.advance("b2_metrik")             # _sorgu assigned here (_resolve_beat2)
+	if VCPitchSystem._sorgu.get("key", "") != "bugs":
+		return "product interrogation did not fire (sorgu=%s)" % str(VCPitchSystem._sorgu.get("key", ""))
+	if VCPitchSystem._callback_met({"type": "bugs_under", "target": PitchConstants.CALLBACK_BUGS_UNDER}):
+		return "bugs_under met at 5 bugs (should fail, target %d)" % PitchConstants.CALLBACK_BUGS_UNDER
+	return ""
+
+
+static func _case_pitch_refused_acq() -> String:
+	# A.4: a prior acquisition-decline must FIRE the refused-acquisition interrogation
+	# (narrative domain). Dead before A.2 unified the key (reader looked for the
+	# never-written acquisition_declined; the writer sets acquisition_offer_rejected).
+	GameState.set_phase(3)
+	_force("pass")
+	_seed_b2b(3000)
+	GameState.set_flag("acquisition_offer_rejected", true)
+	_sim_day()
+	# Neutralize the DOMINANT-giant proxy so _rival_ahead() doesn't preempt the
+	# refused-acq branch; the key unification is what lets it fire once rival is clear.
+	for r in RivalRegistry.get_all():
+		r.status = "STEADY"
+	VCPitchSystem.begin_meeting("bosphorus")       # narrative-domain VC
+	VCPitchSystem.advance("b1_read")
+	VCPitchSystem.advance("b2_vizyon")             # _sorgu assigned here
+	if VCPitchSystem._sorgu.get("key", "") != "refused_acq":
+		return "refused-acq interrogation did not fire (sorgu=%s)" % str(VCPitchSystem._sorgu.get("key", ""))
 	return ""
 
 
@@ -781,6 +843,205 @@ static func _case_walk_counts_rejection() -> String:
 	return ""
 
 
+# ============================================================================
+# Term Sheet Table cases (Spec 6) — drive TermSheetTableSystem engine-directly (no scene).
+# ============================================================================
+
+static func _grant(vc: String) -> void:
+	GameState.active_sheets.append(VCPitchSystem._make_sheet(vc, GameState.day))
+
+
+static func _case_table_sign_closes_series_a() -> String:
+	GameState.set_phase(3)
+	_force("pass")
+	_grant("anchor")
+	var captured: Array = []  # ending_data dicts (Array mutation survives lambda capture)
+	EventBus.run_ended.connect(func(_id: String, d: Dictionary) -> void: captured.append(d))
+	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.select_lever("valuation")
+	TermSheetTableSystem.push()  # valuation 18 → 22
+	TermSheetTableSystem.sign()
+	if _endings != ["series_a_close"]:
+		return "endings: %s" % str(_endings)
+	if captured.is_empty():
+		return "no ending data captured"
+	var d: Dictionary = captured[0]
+	if int(d.get("valuation_m", 0)) != 22:
+		return "valuation_m=%s (want 22)" % str(d.get("valuation_m"))
+	if int(d.get("dilution_pct", 0)) != 22:
+		return "dilution_pct=%s (want 22)" % str(d.get("dilution_pct"))
+	if int(d.get("board_seats", -1)) != 1 or not bool(d.get("board_veto", false)):
+		return "board terms: seats=%s veto=%s" % [str(d.get("board_seats")), str(d.get("board_veto"))]
+	if int(d.get("money_raised", 0)) != int(round(22 * 1_000_000.0 * 22 / 100.0)):
+		return "money_raised=%s" % str(d.get("money_raised"))
+	return ""
+
+
+static func _case_table_walk_counts_rejection() -> String:
+	GameState.set_phase(3)
+	_grant("anchor")
+	_grant("nexus")
+	var walked: Array = []
+	EventBus.sheet_walked.connect(func(vc: String) -> void: walked.append(vc))
+	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.walk()
+	if GameState.vc_rejections != 1:
+		return "vc_rejections=%d (want 1)" % GameState.vc_rejections
+	if GameState.vc_states.get("anchor", {}).get("status", "") != "walked":
+		return "status not walked"
+	if VCPitchSystem.sheet_for("anchor") != null:
+		return "walked sheet survived"
+	if VCPitchSystem.sheet_for("nexus") == null:
+		return "other sheet destroyed"
+	if walked != ["anchor"]:
+		return "sheet_walked payload: %s" % str(walked)
+	return ""
+
+
+static func _case_patience_zero_locks_pushes() -> String:
+	GameState.set_phase(3)
+	_force("fail")
+	_grant("bosphorus")  # patience 2
+	TermSheetTableSystem.open("bosphorus")
+	TermSheetTableSystem.select_lever("valuation")
+	TermSheetTableSystem.push()  # fail → patience 1
+	TermSheetTableSystem.push()  # fail → patience 0 → PATIENCE_ZERO
+	var vs: Dictionary = TermSheetTableSystem.view_state()
+	if int(vs.state) != TermSheetTableSystem.PATIENCE_ZERO:
+		return "state=%d (want PATIENCE_ZERO=%d)" % [int(vs.state), TermSheetTableSystem.PATIENCE_ZERO]
+	for lever in TermSheetTableSystem.LEVERS:
+		if TermSheetTableSystem.can_push(lever):
+			return "can still push %s at patience zero" % lever
+	if not bool(vs.sign_enabled) or not bool(vs.walk_enabled):
+		return "sign/walk disabled at patience zero"
+	if int(vs.patience.current) != 0:
+		return "patience.current=%d" % int(vs.patience.current)
+	return ""
+
+
+static func _case_push_decay_lowers_odds() -> String:
+	# Invariant: breakdown().total == chance_for() for a few inputs.
+	for combo in [["markets", 0, 0], ["charisma", 1, 1], ["politics", 2, 0]]:
+		var bd0: Dictionary = SkillCheck.breakdown(combo[0], combo[1], combo[2])
+		if abs(float(bd0.total) - SkillCheck.chance_for(combo[0], combo[1], combo[2])) > 0.0000001:
+			return "breakdown.total != chance_for for %s" % str(combo)
+	GameState.set_phase(3)
+	_force("pass")
+	_grant("anchor")
+	TermSheetTableSystem.open("anchor")
+	var odds1: float = TermSheetTableSystem.odds_for("valuation").chance
+	var money0: int = TermSheetTableSystem.money_raised()
+	var pat0: int = int(TermSheetTableSystem.view_state().patience.current)
+	TermSheetTableSystem.select_lever("valuation")
+	TermSheetTableSystem.push()
+	if TermSheetTableSystem.money_raised() <= money0:
+		return "valuation push did not move the lever"
+	if int(TermSheetTableSystem.view_state().patience.current) != pat0:
+		return "patience changed on a successful push"
+	var odds2: float = TermSheetTableSystem.odds_for("valuation").chance
+	var expected: float = clampf(odds1 - PitchConstants.PUSH_DECAY, PitchConstants.PUSH_ODDS_FLOOR, SkillCheck.MAX_CHANCE)
+	if abs(odds2 - expected) > 0.0000001:
+		return "decay wrong: odds1=%f odds2=%f expected=%f" % [odds1, odds2, expected]
+	return ""
+
+
+static func _case_leverage_bonus_applies_and_shows() -> String:
+	GameState.set_phase(3)
+	_grant("anchor")
+	_grant("nexus")
+	TermSheetTableSystem.open("anchor")
+	var vs: Dictionary = TermSheetTableSystem.view_state()
+	if not bool(vs.leverage.active):
+		return "leverage not active with 2 sheets"
+	var base_val: int = int(InvestorRegistry.get_investor("anchor").get("opening_terms", {}).get("valuation_m", 0))
+	var cur: String = String(vs.levers[0].current_text)
+	var lev_val: int = int(cur.trim_prefix("$").trim_suffix("M"))
+	if lev_val != base_val + PitchConstants.LEVERAGE_OPEN_NOTCH:
+		return "opening notch not applied (%d, want %d)" % [lev_val, base_val + PitchConstants.LEVERAGE_OPEN_NOTCH]
+	var baseline: float = SkillCheck.chance_for("markets", int(PitchConstants.LEVER_DIFF["valuation"]), 0)
+	if TermSheetTableSystem.odds_for("valuation").chance <= baseline:
+		return "leverage did not raise odds above baseline"
+	if String(vs.leverage.other_vc_name) != "Nexus Ventures":
+		return "other_vc_name=%s" % String(vs.leverage.other_vc_name)
+	return ""
+
+
+static func _case_no_leverage_no_box() -> String:
+	GameState.set_phase(3)
+	_grant("anchor")
+	TermSheetTableSystem.open("anchor")
+	var vs: Dictionary = TermSheetTableSystem.view_state()
+	if bool(vs.leverage.active):
+		return "leverage active with a single sheet"
+	if String(vs.leverage.box_text) != "":
+		return "leverage box text present with a single sheet"
+	var cur: String = String(vs.levers[0].current_text)
+	if int(cur.trim_prefix("$").trim_suffix("M")) != 18:
+		return "single-sheet opening notched (%s)" % cur
+	return ""
+
+
+static func _case_investment_figure_tracks_terms() -> String:
+	GameState.set_phase(3)
+	_force("pass")
+	_grant("anchor")
+	TermSheetTableSystem.open("anchor")
+	var m0: int = TermSheetTableSystem.money_raised()
+	if m0 != int(round(18 * 1_000_000.0 * 22 / 100.0)):
+		return "m0=%d" % m0
+	TermSheetTableSystem.select_lever("valuation")
+	TermSheetTableSystem.push()  # val 22
+	var m1: int = TermSheetTableSystem.money_raised()
+	if m1 <= m0 or m1 != int(round(22 * 1_000_000.0 * 22 / 100.0)):
+		return "m1=%d (want > m0 and 22×22%%)" % m1
+	TermSheetTableSystem.select_lever("dilution")
+	TermSheetTableSystem.push()  # dil 18
+	var m2: int = TermSheetTableSystem.money_raised()
+	if m2 >= m1 or m2 != int(round(22 * 1_000_000.0 * 18 / 100.0)):
+		return "m2=%d (want < m1 and 22×18%%)" % m2
+	return ""
+
+
+static func _case_table_board_push_sequence() -> String:
+	GameState.set_phase(3)
+	_force("pass")
+	_grant("anchor")  # board 1 seat + veto
+	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.select_lever("board")
+	TermSheetTableSystem.push()  # drop veto
+	if String(TermSheetTableSystem.view_state().levers[2].current_text) != "1 koltuk":
+		return "after veto push: %s (want '1 koltuk')" % String(TermSheetTableSystem.view_state().levers[2].current_text)
+	TermSheetTableSystem.push()  # drop seat
+	if String(TermSheetTableSystem.view_state().levers[2].current_text) != "temiz":
+		return "after seat push: %s (want 'temiz')" % String(TermSheetTableSystem.view_state().levers[2].current_text)
+	if TermSheetTableSystem.can_push("board"):
+		return "board still pushable at temiz"
+	return ""
+
+
+static func _case_deal_prompt_defer_keeps_clock() -> String:
+	# "Sonra" path: the sheet sits in active_sheets with its validity running; the table is
+	# re-enterable until expiry. (The Frank prompt is UI-layer; this asserts the sheet economy
+	# the defer relies on.)
+	GameState.set_phase(3)
+	_grant("anchor")
+	var sheet: TermSheet = VCPitchSystem.sheet_for("anchor")
+	if sheet == null:
+		return "sheet not granted"
+	if sheet.days_left(GameState.day) != PitchConstants.SHEET_VALIDITY_DAYS:
+		return "validity clock not at full (%d)" % sheet.days_left(GameState.day)
+	for i in 3:
+		_sim_day()
+	if VCPitchSystem.sheet_for("anchor") == null:
+		return "sheet expired too early during defer"
+	var vs: Dictionary = TermSheetTableSystem.open("anchor")
+	if vs.is_empty() or not TermSheetTableSystem.is_active():
+		return "table not re-enterable after defer"
+	if sheet.days_left(GameState.day) != PitchConstants.SHEET_VALIDITY_DAYS - 3:
+		return "clock did not tick during defer (%d)" % sheet.days_left(GameState.day)
+	return ""
+
+
 static func _case_prep_bonus_and_capacity() -> String:
 	GameState.set_phase(3)
 	if not VCPitchSystem.request_meeting("anchor"):
@@ -841,4 +1102,207 @@ static func _case_meeting_during_kepenk() -> String:
 	if seed_clear - seed_shutter != -PitchConstants.SEED_SHUTTER_PENALTY:
 		return "shutter seed penalty wrong (clear=%d shutter=%d)" % [seed_clear, seed_shutter]
 	VCPitchSystem.withdraw()
+	return ""
+
+
+# --- Stage C: state-seam cases (WRITE-THROUGH LAW) ---
+
+static func _one_choice_event(id: String, modifiers: Array) -> GameEvent:
+	# Minimal synthetic event carrier for modifier-routing cases (ship-moment pattern).
+	var ev := GameEvent.new()
+	ev.id = id
+	ev.title = id
+	var ch := EventChoice.new()
+	ch.label = "ok"
+	ch.modifiers = modifiers
+	var choices: Array[EventChoice] = [ch]
+	ev.choices = choices
+	return ev
+
+
+static func _case_seat_upsell_moves_seats() -> String:
+	# §F-1: the seat-upsell now moves SEATS (and prices MRR off seats) on the named account,
+	# emits customer_seats_changed, and reflects the aggregate into GameState.mrr.
+	_seed_b2b(2000)
+	var cust: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	var seats0: int = cust.seats
+	var mrr0: int = cust.mrr
+	var seat_signals: Array = []
+	var cb := func(_id: String, n: int) -> void: seat_signals.append(n)
+	EventBus.customer_seats_changed.connect(cb)
+	EventManager.enqueue(EventManager._all_events["ev_ps_expansion_b2b"])
+	if EventManager._active_event_id != "ev_ps_expansion_b2b":
+		EventBus.customer_seats_changed.disconnect(cb)
+		return "expansion event not active (%s)" % EventManager._active_event_id
+	EventManager.resolve_choice("ev_ps_expansion_b2b", 0)   # "Önerilen fiyattan ekle" → +4 koltuk @150
+	EventBus.customer_seats_changed.disconnect(cb)
+	if cust.seats != seats0 + 4:
+		return "seats did not move: %d -> %d (want +4)" % [seats0, cust.seats]
+	if cust.mrr != mrr0 + 600:
+		return "mrr not priced off seats: %d -> %d (want +600)" % [mrr0, cust.mrr]
+	if seat_signals.is_empty():
+		return "customer_seats_changed never fired"
+	if GameState.mrr != CustomerRegistry.get_total_mrr():
+		return "GameState.mrr not bridged (%d vs %d)" % [GameState.mrr, CustomerRegistry.get_total_mrr()]
+	return ""
+
+
+static func _case_satisfaction_seam_emits() -> String:
+	# §F-8: satisfaction changes route through CustomerRegistry.set_satisfaction and emit.
+	_seed_b2b(1000)
+	var cust: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	var sat0: int = cust.satisfaction
+	var sat_signals: Array = []
+	var cb := func(_id: String, v: int) -> void: sat_signals.append(v)
+	EventBus.customer_satisfaction_changed.connect(cb)
+	CustomerRegistry.set_satisfaction(cust.id, sat0 - 10)
+	EventBus.customer_satisfaction_changed.disconnect(cb)
+	if cust.satisfaction != sat0 - 10:
+		return "satisfaction not set (%d -> %d)" % [sat0, cust.satisfaction]
+	if sat_signals != [sat0 - 10]:
+		return "signal payload %s (want [%d])" % [str(sat_signals), sat0 - 10]
+	return ""
+
+
+static func _case_targeted_modifier_hits_named_customer() -> String:
+	# §F-9: a customer_id-targeted modifier hits ONLY the named account, not a bystander.
+	_seed_b2b(1000)   # co_lead_smoke, seats 4
+	var p := Prospect.new()
+	p.id = "lead_two"
+	p.company_name = "Second Corp"
+	p.industry = "Testing"
+	p.archetype = "mid"
+	SalesSystem.add_b2b_customer(p, 2000, 70)   # co_lead_two, seats 12
+	var c1: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	var c2: Customer = CustomerRegistry.get_customer("co_lead_two")
+	var s1: int = c1.seats
+	var s2: int = c2.seats
+	EventManager.enqueue(_one_choice_event("smoke_seat_target", [{"type": "seats", "amount": 5, "per_seat_mrr": 100, "customer_id": "co_lead_two"}]))
+	EventManager.resolve_choice("smoke_seat_target", 0)
+	if c1.seats != s1:
+		return "untargeted account changed: %d -> %d" % [s1, c1.seats]
+	if c2.seats != s2 + 5:
+		return "targeted account seats wrong: %d -> %d (want +5)" % [s2, c2.seats]
+	return ""
+
+
+static func _case_burn_refresh_same_tick() -> String:
+	# §F-10/§E-D.2: set_burn_category refreshes GameState.daily_burn immediately (no daily tick).
+	var burn0: int = GameState.daily_burn
+	FinanceSystem.set_burn_category("marketing", 100)
+	var expected: int = FinanceSystem.compute_total_burn()
+	if GameState.daily_burn != expected:
+		return "daily_burn stale: %d (want %d)" % [GameState.daily_burn, expected]
+	if GameState.daily_burn <= burn0:
+		return "burn did not rise after marketing spend (%d -> %d)" % [burn0, GameState.daily_burn]
+	return ""
+
+
+# --- Package 5: feature bug-seeding cases ---
+
+static func _case_feature_bug_seed_by_complexity() -> String:
+	# A v1 build seeds bugs = Σ feature complexity at commit (COEF 1.0); high > low.
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_streaming"], ""):
+		return "start_build(low) failed"
+	var low: int = ProductSystem.get_active_build().bug_count   # chat 2 + streaming 2 = 4
+	ProductSystem.cancel_build()
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
+		return "start_build(high) failed"
+	var high: int = ProductSystem.get_active_build().bug_count   # tools 4 + image 4 = 8
+	if low != 4:
+		return "low seed wrong: %d (want 4)" % low
+	if high != 8:
+		return "high seed wrong: %d (want 8)" % high
+	if high <= low:
+		return "high seed (%d) not > low (%d)" % [high, low]
+	# Seeded bugs flow through the existing effective-stability channel.
+	if QualityModel.effective_stability(50.0, high) >= 50.0:
+		return "seeded bugs do not erode effective stability"
+	return ""
+
+
+static func _case_hardening_seeds_no_bugs() -> String:
+	# A pure hardening (strengthen-only) v2 build seeds ZERO feature bugs.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
+	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
+	GameState.set_flag("mvp_innovation", 20.0)
+	GameState.set_flag("mvp_stability", 25.0)
+	GameState.set_flag("mvp_usability", 22.0)
+	GameState.set_flag("mvp_live_bug_count", 3)
+	GameState.set_flag("mvp_version", 1)
+	if not ProductSystem.start_version_build([], "", ["ai_assistant_chat"]):
+		return "start_version_build(harden) failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if b.bug_count != 3:
+		return "hardening seeded bugs: bug_count=%d (want 3 inherited, 0 seed)" % b.bug_count
+	if b.strengthened_feature_ids.size() != 1 or b.strengthened_feature_ids[0] != "ai_assistant_chat":
+		return "strengthen list wrong: %s" % str(b.strengthened_feature_ids)
+	return ""
+
+
+# --- Package 5: two-runway model + localization cases ---
+
+static func _case_runway_net_status() -> String:
+	# Net runway: profitable → localized status word (no unit); finite → months + "ay".
+	TranslationServer.set_locale("tr")
+	var alive: Dictionary = UiTokens.net_runway_parts(INF)
+	if String(alive.value) != "Kârlı" or String(alive.unit) != "":
+		return "profitable(tr) wrong: '%s' / '%s'" % [alive.value, alive.unit]
+	TranslationServer.set_locale("en")
+	if String(UiTokens.net_runway_parts(INF).value) != "Default Alive":
+		return "profitable(en) wrong: '%s'" % UiTokens.net_runway_parts(INF).value
+	TranslationServer.set_locale("tr")
+	var finite: Dictionary = UiTokens.net_runway_parts(6.4)
+	if String(finite.value) != "6" or String(finite.unit) != "ay":
+		return "finite wrong: '%s' / '%s'" % [finite.value, finite.unit]
+	# Break-even (net_burn == 0) counts as default alive → INF.
+	GameState.set_daily_burn(50)
+	GameState.set_mrr(1500)   # daily_revenue round(1500/30)=50 == burn → net 0 → INF
+	if GameState.get_runway_months() != INF:
+		return "break-even not treated as alive"
+	return ""
+
+
+static func _case_gross_runway_months() -> String:
+	# Gross burn runway = cash / daily_burn / 30, always finite, 0 at cash ≤ 0.
+	GameState.set_cash(30000)
+	GameState.set_daily_burn(50)   # 30000/50/30 = 20 months
+	var m: float = VCPitchSystem._gross_runway_months()
+	if int(round(m)) != 20:
+		return "gross months wrong: %.2f (want ~20)" % m
+	GameState.set_cash(0)
+	if VCPitchSystem._gross_runway_months() != 0.0:
+		return "gross at cash 0 should be 0"
+	return ""
+
+
+static func _case_locale_switch() -> String:
+	# CSV → TranslationServer resolves per locale (proves the localization layer end-to-end).
+	TranslationServer.set_locale("en")
+	if TranslationServer.translate("RUNWAY_PROFITABLE") != "Default Alive":
+		return "en RUNWAY_PROFITABLE: '%s'" % TranslationServer.translate("RUNWAY_PROFITABLE")
+	if TranslationServer.translate("RUNWAY_GROSS_LABEL") != "Gross Burn Runway":
+		return "en RUNWAY_GROSS_LABEL: '%s'" % TranslationServer.translate("RUNWAY_GROSS_LABEL")
+	TranslationServer.set_locale("tr")
+	if TranslationServer.translate("RUNWAY_PROFITABLE") != "Kârlı":
+		return "tr RUNWAY_PROFITABLE: '%s'" % TranslationServer.translate("RUNWAY_PROFITABLE")
+	if TranslationServer.translate("RUNWAY_GROSS_LABEL") != "Brüt Runway":
+		return "tr RUNWAY_GROSS_LABEL: '%s'" % TranslationServer.translate("RUNWAY_GROSS_LABEL")
+	return ""
+
+
+static func _case_settings_language_toggle() -> String:
+	# Structural check: the SettingsModal scene loads + instantiates and carries the
+	# language toggle's unique nodes. (main is mid-setup here, so _ready population +
+	# the visual layout are Erdem's F5 eye-check.)
+	var scene: PackedScene = load("res://scenes/modals/SettingsModal.tscn")
+	if scene == null:
+		return "SettingsModal.tscn failed to load"
+	var inst: Control = scene.instantiate()
+	var has_nodes: bool = inst.get_node_or_null("%LanguageOption") != null \
+		and inst.get_node_or_null("%LanguageHeader") != null
+	inst.free()
+	if not has_nodes:
+		return "SettingsModal missing %LanguageOption / %LanguageHeader unique nodes"
 	return ""

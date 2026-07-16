@@ -13,6 +13,20 @@ var _meeting_fixture_toggle: bool = false
 # Spec 4 debug: cycles the roster across Shift+F5 presses.
 var _vc_debug_idx: int = 0
 
+# Grants Anchor + Nexus sheets (the mockup's leverage state) if absent and opens the table on
+# Anchor via the normal entry signal. Shared by Shift+F6 and --debug-open-table.
+func _debug_open_term_table() -> void:
+	if not OS.is_debug_build():
+		return
+	if GameState.phase < 3:
+		GameState.set_phase(3)
+	for tt_vc in ["anchor", "nexus"]:
+		if VCPitchSystem.sheet_for(tt_vc) == null and GameState.active_sheets.size() < PitchConstants.MAX_SHEETS:
+			GameState.active_sheets.append(VCPitchSystem._make_sheet(tt_vc, GameState.day))
+	print("[Debug] open Term Sheet Table (anchor, +nexus leverage)")
+	EventBus.term_table_requested.emit("anchor")
+
+
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey):
 		return
@@ -63,6 +77,14 @@ func _input(event: InputEvent) -> void:
 			_vc_debug_idx += 1
 			print("[Debug] Shift+F5 → begin VC meeting (%s)" % inv.get("id", ""))
 			VCPitchSystem.begin_meeting(String(inv.get("id", "")))
+			return
+		if key.shift_pressed and key.keycode == KEY_F6:
+			# Shift+F6 = open the Term Sheet Table (Spec 6) directly on Anchor (grants Anchor +
+			# Nexus, the mockup's leverage state). No-stack guard; plain F6 → endgame keys.
+			var ml_tt: Node = get_node_or_null("ModalLayer")
+			if ml_tt != null and ml_tt.get_child_count() > 0:
+				return
+			_debug_open_term_table()
 			return
 		if key.keycode == KEY_F11:
 			# F11 = force month summary with LIVE data; Shift+F11 = extreme-value

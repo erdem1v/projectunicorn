@@ -63,8 +63,7 @@ func populate(data: Dictionary) -> void:
 	_add_row("Marka", "%d → %d" % [int(brand.from), int(brand.to)],
 		_int_chip(int(brand.to) - int(brand.from)))
 	_add_separator()
-	var runway_days: int = int(data.get("runway_days", -1))
-	_add_row("Runway", "∞" if runway_days < 0 else "%d gün" % runway_days, {})  # no chip (spec override 1)
+	_add_row("Runway", String(data.get("runway_text", "")), {})  # net runway (Package 5); no chip
 
 
 # --- Row construction (code-built: values are dynamic, layout is uniform) ---

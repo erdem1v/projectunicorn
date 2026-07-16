@@ -1,11 +1,11 @@
 {
   "id": "ev_mvp_bugfix_001_critical_bug",
   "category": "reactive",
-  "title": "Bir bug buldun ki...",
+  "title": "Bir hata buldun ki...",
   "subtitle": "Mutfak masası · 19:22",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Test ederken bir yerde tıkadın. Adımları tekrar ettin — tutarlı şekilde çöküyor. **Edge case**: belki kullanıcıların yüzde biri görür, belki yarısı. Tahmin etmenin yolu yok.\n\nÇözmek belki üç-dört gün. Bırakmak: launch günü forumda gözükür mü, kim bilir.\n\n*'Yüzde bir, yüzde elli — istatistik değil bu, kumar.'*",
+  "body_text": "Test ederken bir yerde tıkadın. Adımları tekrar ettin — tutarlı şekilde çöküyor. **Uç durum**: belki kullanıcıların yüzde biri görür, belki yarısı. Tahmin etmenin yolu yok.\n\nÇözmek belki üç-dört gün. Bırakmak: çıkış günü forumda gözükür mü, kim bilir.\n\n*'Yüzde bir, yüzde elli — istatistik değil bu, kumar.'*",
   "trigger_conditions": [
     {"type": "build_phase", "value": "bugfix"},
     {"type": "random", "chance": 0.40}
@@ -16,7 +16,7 @@
   "priority": 1,
   "choices": [
     {
-      "label": "Launch'u ertele, çöz",
+      "label": "Çıkışı ertele, çöz",
       "modifiers": [
         {"type": "bug_delta", "amount": -6},
         {"type": "dimension_delta", "axis": "stability", "amount": 4},

@@ -72,6 +72,33 @@ const CALLBACK_BUGS_UNDER := 3          # "active bugs under N"
 # --- Run wall ---
 const DAY180_WARN_DAY := 179            # Frank "yarın son gün, cebinde teklif var" (ledger 16)
 
+# --- Term Sheet Table (Spec 6 / ENDGAME_DESIGN.md §5) — the push-your-luck negotiation ---
+# Every number is a working placeholder (calibration pass tunes it). Each lever's push reads
+# ONE founder skill (the payoff of the onboarding skill choice) — kept as an editable data
+# table so the mapping never hides inside table logic:
+const LEVER_SKILL := {"valuation": "markets", "dilution": "charisma", "board": "politics"}
+# Per-lever base difficulty (SkillCheck diff units). Kept 0-2 so "temel" reads legibly —
+# diff 3 would zero the base (BASE_CHANCE − 3·DIFFICULTY_STEP = 0). Board is hardest (control),
+# valuation easiest (a market argument).
+const LEVER_DIFF := {"valuation": 0, "dilution": 1, "board": 2}
+# Push step sizes — one successful push moves the lever this far the founder's way.
+const VAL_STEP := 4                     # valuation +$4M per push (higher = founder-good)
+const DIL_STEP := 4                     # dilution −4pp per push (lower = founder-good)
+const DIL_FLOOR := 10                   # dilution can't be pushed below this (%)
+# Board has no numeric step — a fixed sequence: drop veto first, then drop the seat (§8).
+# Odds self-damping: each push to a lever lowers its own subsequent odds (decision 9).
+const PUSH_DECAY := 0.12                # −12pp per prior push to that lever
+const PUSH_ODDS_FLOOR := 0.05           # a lever never becomes literally impossible (ledger 6)
+# Leverage — a second live sheet (§8): bonus to ALL push odds + a one-notch-better opening.
+const LEVERAGE_BONUS_UNITS := 1         # SkillCheck bonus units (each = +BONUS_STEP = +10pp)
+const LEVERAGE_OPEN_NOTCH := 4          # opening valuation starts +$4M better when leverage is live
+# Dial spin duration (seconds) — the push roll presentation.
+const DIAL_SPIN_SECS := 0.8
+
+# Founder-skill Turkish labels for the skill-split odds display (§5). The single label home,
+# reusable by the meeting too.
+const SKILL_LABEL_TR := {"charisma": "karizma", "markets": "piyasa", "politics": "politika", "tech": "teknik"}
+
 
 ## Difficulty label (Turkish, shown in odds text) for a diff int.
 static func diff_label(diff: int) -> String:
@@ -79,3 +106,8 @@ static func diff_label(diff: int) -> String:
 		DIFF_KOLAY: return "Kolay"
 		DIFF_ORTA: return "Orta"
 		_: return "Zorlu"
+
+
+## Founder-skill Turkish label for the odds split (§5). Falls back to the raw key.
+static func skill_label(skill_name: String) -> String:
+	return SKILL_LABEL_TR.get(skill_name, skill_name)

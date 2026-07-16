@@ -2,10 +2,10 @@
   "id": "ev_mvp_bugfix_002_early_launch_pressure",
   "category": "reactive",
   "title": "İçeride bir ses 'şimdi çık' diyor",
-  "subtitle": "Bilanço tab'ı · 10:15",
+  "subtitle": "Bilanço sekmesi · 10:15",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Banka uygulamasını açıyorsun, kapatıyorsun. Açıyorsun, kapatıyorsun. Sayı düşmüş.\n\nBugları temizliyorsun ama her gün **runway eriyor**. Bir tarafın *'biraz daha temizle, doğru çıksın'* diyor. Diğer tarafın *'sonsuza kadar bekleyemezsin, kullanıcıya bırak'* diyor.\n\nİkisi de doğru. Bu yüzden zor.",
+  "body_text": "Banka uygulamasını açıyorsun, kapatıyorsun. Açıyorsun, kapatıyorsun. Sayı düşmüş.\n\nHataları temizliyorsun ama her gün **runway eriyor**. Bir tarafın *'biraz daha temizle, doğru çıksın'* diyor. Diğer tarafın *'sonsuza kadar bekleyemezsin, kullanıcıya bırak'* diyor.\n\nİkisi de doğru. Bu yüzden zor.",
   "trigger_conditions": [
     {"type": "build_phase", "value": "bugfix"},
     {"type": "random", "chance": 0.30}
@@ -20,8 +20,7 @@
       "modifiers": [
         {"type": "bug_delta", "amount": -4},
         {"type": "dimension_delta", "axis": "stability", "amount": 2},
-        {"type": "cash", "delta": -100},
-        {"type": "set_flag", "key": "polish_one_more_pass", "value": true}
+        {"type": "cash", "delta": -100}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""
@@ -29,8 +28,7 @@
     {
       "label": "Hazır olmasa da çık — kullanıcı gösterir",
       "modifiers": [
-        {"type": "brand", "delta": -1},
-        {"type": "set_flag", "key": "launch_pressure_kabul", "value": true}
+        {"type": "brand", "delta": -1}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

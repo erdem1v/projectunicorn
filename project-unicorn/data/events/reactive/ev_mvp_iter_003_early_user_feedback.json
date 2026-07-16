@@ -5,7 +5,7 @@
   "subtitle": "WhatsApp · 16:48",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Eski iş arkadaşına geçen hafta demoyu açmıştın. Bugün uzun bir mesaj attı. **'Aslında şu olsa daha iyi olurdu...'** ile başlıyor. Üç paragraf devam ediyor.\n\nHalbuki o senin hedef kullanıcın bile değil. Ama söyledikleri mantıklı. Mantıklı geliyor.\n\n*'Bir geri bildirim — herkes bir şey söyler.'* Bu cümleyi kaç kere duymuştun ki?",
+  "body_text": "Eski iş arkadaşına geçen hafta demoyu açmıştın. Bugün uzun bir mesaj attı. **'Aslında şu olsa daha iyi olurdu...'** ile başlıyor. Üç paragraf devam ediyor.\n\nHalbuki o senin hedef kullanıcın bile değil. Ama söyledikleri aklına takıldı.\n\n*'Bir geri bildirim — herkes bir şey söyler.'* Bu cümleyi kaç kere duymuştun ki?",
   "trigger_conditions": [
     {"type": "build_phase", "value": "iteration"},
     {"type": "random", "chance": 0.25}
@@ -20,8 +20,7 @@
       "modifiers": [
         {"type": "dimension_delta", "axis": "usability", "amount": 6},
         {"type": "delay_days", "days": 2},
-        {"type": "cash", "delta": -100},
-        {"type": "set_flag", "key": "early_feedback_dinlendi", "value": true}
+        {"type": "cash", "delta": -100}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

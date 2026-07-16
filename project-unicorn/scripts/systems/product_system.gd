@@ -44,6 +44,10 @@ const BUG_TECH_REDUCER := 0.005
 const BUG_FLOOR := 0.010
 # Tech-debt taken via dev events converts to real bugs at development→bugfix.
 const TECH_DEBT_BUG_PENALTY := 5
+# At-commit bug seed ("Yeni feature = yeni bug", Package 5): each NEW feature entering a
+# build adds bugs ∝ its complexity. Separate channel from the hourly dev-phase accrual
+# above; a hardening build (no new features) seeds nothing. BALANCE-TUNABLE.
+const FEATURE_BUG_SEED_COEF := 1.0
 
 # --- Multi-dimensional per-phase quality growth (Product Lifecycle Part 1) ---
 # Per-tick raw growth per axis, routed through QualityModel.grow(_, _, ASYMPTOTE)
@@ -303,6 +307,19 @@ static func _accrue_bugs_hourly(f: float = 1.0) -> void:
 		b.bug_count += 1
 		b.bug_progress -= 1.0
 	_sync_legacy_quality(b)
+
+
+# --- At-commit feature bug seed (Package 5) ---
+
+static func _seed_feature_bugs(feature_ids: Array) -> int:
+	# "Yeni feature = yeni bug": each feature's complexity seeds bugs at build commit.
+	# Flows into b.bug_count → effective_stability → mvp_live_bug_count (same channel as
+	# every other bug). Duration is unaffected (that reads get_total_complexity, not bugs).
+	var seeded: int = 0
+	for fid in feature_ids:
+		var cx: int = int(ProductCatalog.get_feature_by_id(String(fid)).get("complexity", 0))
+		seeded += int(round(float(cx) * FEATURE_BUG_SEED_COEF))
+	return seeded
 
 
 # --- Post-ship wear (Product Lifecycle Part 2A) ---
@@ -590,6 +607,7 @@ static func start_build(
 	b.usability = 0.0
 	b.bug_count = 0
 	b.bug_progress = 0.0
+	b.bug_count += _seed_feature_bugs(typed_features)   # v1: every selected feature is new
 	b.is_mvp = true
 	b.current_phase = "iteration"
 	b.iteration_count = 1
@@ -685,6 +703,7 @@ static func start_version_build(new_feature_ids: Array, assigned_engineer_id: St
 	b.usability = float(GameState.get_flag("mvp_usability", 0.0))
 	b.bug_count = int(GameState.get_flag("mvp_live_bug_count", 0))   # inherit live bugs (sprint first for a clean v2)
 	b.bug_progress = 0.0
+	b.bug_count += _seed_feature_bugs(typed_new)   # v2: ONLY newly-added features seed; hardening (typed_new empty) seeds 0
 	b.is_mvp = true
 	b.is_version_build = true
 	b.current_phase = "iteration"
@@ -825,7 +844,7 @@ static func _build_version_ship_moment_event() -> GameEvent:
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = "Yeni sürümü push'luyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.\n\n\"Büyüdü. Yeni feature'lar tuttu — ama yeni yüzey, yeni bug demek. Gözünü ayırma.\"\n\nKullanıcılar farkı görecek. Rakipler de."
+	ev.body_text = "Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.\n\n\"Büyüdü. Yeni özellikler tuttu — ama yeni yüzey, yeni hata demek. Gözünü ayırma.\"\n\nKullanıcılar farkı görecek. Rakipler de."
 	ev.cooldown_days = 0
 	ev.one_shot = false
 	ev.priority = 10
@@ -850,7 +869,7 @@ static func _build_ship_moment_event() -> GameEvent:
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = "Demo'ya bir kez daha bakıyorsun. Frank arkanda duruyor, telefonuna bakmıyor.\n\n\"Tamam,\" diyor. \"Bu kadar kötü değil.\"\n\nYayına alıyorsun. Birkaç dakika sonra GitHub'da repo public, küçük bir landing page canlı, Frank elini cebine atıyor.\n\n\"Şimdi zor kısmı başlıyor. Bunun parasını verecek birini bulmamız lazım.\""
+	ev.body_text = "Demo'ya bir kez daha bakıyorsun. Frank arkanda duruyor, telefonuna bakmıyor.\n\n\"Tamam,\" diyor. \"Bu kadar kötü değil.\"\n\nYayına alıyorsun. Birkaç dakika sonra GitHub'da depo herkese açık, küçük bir açılış sayfası canlı, Frank elini cebine atıyor.\n\n\"Şimdi zor kısmı başlıyor. Bunun parasını verecek birini bulmamız lazım.\""
 	ev.cooldown_days = 0
 	ev.one_shot = true
 	ev.priority = 10
@@ -859,7 +878,7 @@ static func _build_ship_moment_event() -> GameEvent:
 	ev.tags = ["build_safe", "ship_moment"]
 	ev.trigger_conditions = []
 	var choice: EventChoice = EventChoice.new()
-	choice.label = "Ship'le"
+	choice.label = "Yayınla"
 	choice.modifiers = [{"type": "ship_active_build"}]
 	choice.unlock_condition = {}
 	choice.unlock_reason_text = ""

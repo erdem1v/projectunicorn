@@ -114,7 +114,7 @@ static func seed_conviction(vc_id: String) -> Dictionary:
 	if GameState.shutter_days_left >= 0:
 		v += PitchConstants.SEED_SHUTTER_PENALTY
 		why.append({"d": PitchConstants.SEED_SHUTTER_PENALTY, "l": "Kepenk sayacı"})
-	elif _runway_days() < 30:
+	elif _gross_runway_months() < 1.0:
 		v += PitchConstants.SEED_THIN_RUNWAY_PENALTY
 		why.append({"d": PitchConstants.SEED_THIN_RUNWAY_PENALTY, "l": "Runway dar"})
 
@@ -256,6 +256,7 @@ static func _make_sheet(vc_id: String, granted_day: int) -> TermSheet:
 	sheet.expires_day = granted_day + PitchConstants.SHEET_VALIDITY_DAYS
 	sheet.term_bands = inv.get("term_bands", {}).duplicate()
 	sheet.patience_pool = int(inv.get("patience_pool", 0))
+	sheet.opening_terms = inv.get("opening_terms", {}).duplicate()  # Spec 6 — numeric offer snapshot
 	return sheet
 
 
@@ -283,11 +284,29 @@ static func _reject() -> void:
 # --- Term Sheet Table outcomes (placeholder modal calls these; Spec 6 pushes the real
 # table on top). Logic lives here, not in the UI, so it is testable and single-sourced. ---
 
-static func sign_table(vc_id: String) -> void:
-	# Class A instant Hard Win — the engine backstop fires it (series_a_closed).
-	# Variant derives from the signed terms later (§6); no other economic writes here.
+static func sign_table(vc_id: String, terms: Dictionary = {}) -> void:
+	# Class A instant Hard Win — the played moment fires the ending directly. The engine
+	# backstop (EndingsSystem.daily_tick reads series_a_closed) still catches it if this
+	# path is bypassed; trigger_ending is idempotent so there is never a double-ending.
+	# The signed terms ride into the ending extra so the later ending-screen spec can read
+	# the Founder-Friendly / Aggressive variant from them (Spec 6 decision: variant deferred).
 	GameState.series_a_closed = true
 	_vc(vc_id).status = "signed"
+	EndingsSystem.trigger_ending("series_a_close", _sign_extra(vc_id, terms))
+
+
+# Signed-terms payload for the ending (empty-safe: bare sign_table(vc_id) → just the VC id).
+static func _sign_extra(vc_id: String, terms: Dictionary) -> Dictionary:
+	var extra := {"signed_vc": vc_id}
+	if not terms.is_empty():
+		var val: int = int(terms.get("valuation_m", 0))
+		var dil: int = int(terms.get("dilution_pct", 0))
+		extra["valuation_m"] = val
+		extra["dilution_pct"] = dil
+		extra["board_seats"] = int(terms.get("board_seats", 0))
+		extra["board_veto"] = bool(terms.get("board_veto", false))
+		extra["money_raised"] = int(round(val * 1_000_000.0 * dil / 100.0))
+	return extra
 
 
 static func walk_table(vc_id: String) -> void:
@@ -297,6 +316,7 @@ static func walk_table(vc_id: String) -> void:
 			GameState.active_sheets.erase(sheet)
 	GameState.vc_rejections += 1
 	_vc(vc_id).status = "walked"
+	EventBus.sheet_walked.emit(vc_id)  # Spec 6 — HuntTab repaints after a table walk
 
 
 # Read helper for the Hunt tab / table modal: the live sheet for a VC (or null).
@@ -467,7 +487,7 @@ static func _base_view_state() -> Dictionary:
 		"speaker_name": inv.get("display_name", ""),
 		"speaker_role": inv.get("role_line", ""),
 		"conviction": {"value": mini(_conviction, _cap), "zone_bounds": PitchConstants.ZONE_BOUNDS},
-		"stat_strip": {"left_text": "Kasa: %s · Runway: %d gün · Gün %d" % [UiTokens.format_money(GameState.cash), _runway_days(), GameState.day]},
+		"stat_strip": {"left_text": "Kasa: %s · %s: %d ay · Gün %d" % [UiTokens.format_money(GameState.cash), TranslationServer.translate("RUNWAY_GROSS_LABEL"), int(floor(_gross_runway_months())), GameState.day]},
 		"can_withdraw": false,
 	}
 
@@ -596,7 +616,7 @@ static func _sorgu_narrative() -> Dictionary:
 	# WORKING PROXY: rival lead + refused-acquisition inferred from registry/flags.
 	if _rival_ahead():
 		return {"key": "rival", "vc_line": "\"Bir rakip senden önde. Ligde ikinci olan neden kazansın?\"", "mono": "Rakibi masaya koyacak."}
-	if GameState.get_flag("acquisition_declined", false):
+	if GameState.get_flag("acquisition_offer_rejected", false):
 		return {"key": "refused_acq", "vc_line": "\"Bir satın almayı geri çevirmişsin. Kibir mi, vizyon mu?\"", "mono": "Reddettiğin teklifi soracak."}
 	if GameState.reputation < 0:
 		return {"key": "reputation", "vc_line": "\"İtibarın zedeli. Bu hikâyeye kim inanır?\"", "mono": "İtibarını yoklayacak."}
@@ -604,8 +624,8 @@ static func _sorgu_narrative() -> Dictionary:
 
 
 static func _sorgu_product() -> Dictionary:
-	if int(GameState.get_flag("mvp_bug_count", 0)) > 0:
-		return {"key": "bugs", "vc_line": "\"Ürünün bug kaynıyor. Kalite senin için ne ifade ediyor?\"", "mono": "Bug sayını soracak."}
+	if int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0))) > 0:
+		return {"key": "bugs", "vc_line": "\"Ürünün hata kaynıyor. Kalite senin için ne ifade ediyor?\"", "mono": "Hata sayını soracak."}
 	var weak: String = _weakest_dimension()
 	if weak != "":
 		return {"key": "weak_dim", "vc_line": "\"%s tarafın zayıf. Sektörü bilen biri bunu ilk bakışta görür.\"" % weak, "mono": "En zayıf ekseni bulacak."}
@@ -626,9 +646,11 @@ static func _vc(vc_id: String) -> Dictionary:
 	return GameState.vc_states[vc_id]
 
 
-static func _runway_days() -> int:
+static func _gross_runway_months() -> float:
+	# GROSS burn runway (revenue ignored — "if revenue went to zero, how long?"). The VC's
+	# question; deliberately distinct from the shell's revenue-aware NET runway. Always finite.
 	var burn: int = maxi(GameState.daily_burn, 1)
-	return int(float(GameState.cash) / float(burn)) if GameState.cash > 0 else 0
+	return (float(GameState.cash) / float(burn) / float(GameState.DAYS_PER_MONTH)) if GameState.cash > 0 else 0.0
 
 
 static func _angle_skill(angle: String) -> String:
@@ -667,7 +689,7 @@ static func _react_line(chk: Dictionary) -> String:
 static func _callback_met(cb: Dictionary) -> bool:
 	match String(cb.get("type", "")):
 		"mrr_growth": return GameState.mrr >= int(cb.get("target", 0))
-		"bugs_under": return int(GameState.get_flag("mvp_bug_count", 0)) < int(cb.get("target", 0))
+		"bugs_under": return int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0))) < int(cb.get("target", 0))
 		"first_engineer": return CharacterRegistry.count_engineers() >= 1
 		"scandal_resolved": return not GameState.unmanaged_major_scandal
 		_: return false

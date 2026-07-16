@@ -144,22 +144,25 @@ func _describe_modifier(m) -> Dictionary:
 	var t: String = m.get("type", "")
 	var d: int = int(m.get("delta", 0))
 	match t:
-		"cash": return {"text": "Cash %s" % _fmt_money_delta(d), "kind": _kind(d)}
-		"mrr": return {"text": "MRR %s" % _fmt_money_delta(d), "kind": _kind(d)}
-		"brand": return {"text": "Brand %s" % _fmt_signed(d), "kind": _kind(d)}
-		"reputation": return {"text": "Rep %s" % _fmt_signed(d), "kind": _kind(d)}
+		"cash": return {"text": "Nakit %s" % _fmt_money_delta(d), "kind": _kind(d)}
+		"mrr": return {"text": "MRR %s" % _fmt_money_delta(d), "kind": _kind(d)}  # MRR: ruled accepted TR-tech term
+		"brand": return {"text": "Marka %s" % _fmt_signed(d), "kind": _kind(d)}
+		"reputation": return {"text": "İtibar %s" % _fmt_signed(d), "kind": _kind(d)}
 		"morale": return {"text": "%s %s" % [_char_first(m.get("character_id", "")), _fmt_signed(d)], "kind": _kind(d)}
 		"morale_all_employees": return {"text": "Ekip %s" % _fmt_signed(d), "kind": _kind(d)}
 		"customer_mrr_delta": return {"text": "Müşteri MRR %s" % _fmt_money_delta(d), "kind": _kind(d)}
 		"satisfaction_delta": return {"text": "Memnuniyet %s" % _fmt_signed(d), "kind": _kind(d)}
+		"seats":
+			var sa: int = int(m.get("amount", 0))
+			return {"text": "Koltuk %s" % _fmt_signed(sa), "kind": _kind(sa)}
 		"audience_delta": return {"text": "Kitle %s" % _fmt_signed(d), "kind": _kind(d)}
 		"dimension_delta":
 			var amt: int = int(m.get("amount", 0))
-			var short: String = {"innovation": "İno", "stability": "Krl", "usability": "Kul"}.get(String(m.get("axis", "innovation")), "Kalite")
-			return {"text": "%s %s" % [short, _fmt_signed(amt)], "kind": _kind(amt)}
+			var label: String = {"innovation": "İnovasyon", "stability": "Kararlılık", "usability": "Kullanılabilirlik"}.get(String(m.get("axis", "innovation")), "Kalite")
+			return {"text": "%s %s" % [label, _fmt_signed(amt)], "kind": _kind(amt)}
 		"bug_delta":
 			var bd: int = int(m.get("amount", 0))
-			return {"text": "Bug %s" % _fmt_signed(bd), "kind": (&"negative" if bd > 0 else (&"positive" if bd < 0 else &"neutral"))}
+			return {"text": "Hata %s" % _fmt_signed(bd), "kind": (&"negative" if bd > 0 else (&"positive" if bd < 0 else &"neutral"))}
 		"delay_days":
 			var dd: int = int(m.get("days", 0))
 			return {"text": "%s gün" % _fmt_signed(dd), "kind": (&"negative" if dd > 0 else (&"positive" if dd < 0 else &"neutral"))}
@@ -167,7 +170,13 @@ func _describe_modifier(m) -> Dictionary:
 		"speed_bonus":
 			var sb: int = int(m.get("days", 0))
 			return {"text": "%s gün" % _fmt_signed(sb), "kind": (&"negative" if sb > 0 else &"positive")}
-	return {}  # set_flag / mentor_advisory / add_character / etc. — no badge
+		# Player-facing effects that previously rendered no badge (choices were blind).
+		"churn_customer": return {"text": "Müşteri kaybı", "kind": &"negative"}
+		"add_prospect": return {"text": "Yeni aday", "kind": &"positive"}
+		"convert_audience": return {"text": "Kitleden dönüşüm %%%d" % int(round(float(m.get("pct", 0.0)) * 100.0)), "kind": &"positive"}
+		"open_paid_tier": return {"text": "Ücretli katman açılır", "kind": &"accent"}
+		"add_character": return {"text": "Yeni ekip üyesi", "kind": &"positive"}
+	return {}  # set_flag / mentor_advisory / ship_active_build / endgame types — bookkeeping or self-describing, no badge
 
 
 static func _kind(delta: int) -> StringName:

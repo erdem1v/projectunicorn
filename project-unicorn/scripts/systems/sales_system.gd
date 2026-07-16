@@ -114,6 +114,13 @@ static func _mrr_bridge() -> void:
 		GameState.set_mrr(total_mrr)  # emits mrr_changed → TopBar live; runway recalc
 
 
+# Public bridge seam (WRITE-THROUGH LAW): cross-domain callers (event modifiers that
+# change a customer's MRR) reflect the aggregate through HERE, never a hand-rolled
+# GameState.set_mrr(get_total_mrr()). One reconciliation rule, one place.
+static func reflect_mrr() -> void:
+	_mrr_bridge()
+
+
 # Bidirectional audience flow. Delta MAY be negative (erosion); audience clamps ≥ 0.
 # Up: quality/brand/(positive)reputation. Down: bugs, low/negative reputation. The
 # price multiplier accelerates a cheap price and slows a premium one.
@@ -245,7 +252,7 @@ static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int) ->
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
 	GameState.run_customers_signed += 1  # run counter seam (Spec 3 §3) — sole B2B signing path
-	GameState.set_mrr(CustomerRegistry.get_total_mrr())  # reflect the signed deal immediately
+	_mrr_bridge()  # reflect the signed deal immediately (canonical bridge)
 	return c
 
 
@@ -270,8 +277,7 @@ static func _tick_satisfaction() -> void:
 		if bugs > SATISFACTION_BUG_GATE:
 			delta -= 1
 		if delta != 0:
-			c.satisfaction = clampi(c.satisfaction + delta, 0, 100)
-			c.update_health_from_satisfaction()
+			CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 
 
 # --- Traction north-star ---

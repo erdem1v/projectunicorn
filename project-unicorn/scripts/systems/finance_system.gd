@@ -70,6 +70,9 @@ static func set_burn_category(category: String, value: int) -> void:
 		push_warning("[FinanceSystem] Unknown burn category: %s" % category)
 		return
 	burn_breakdown[category] = max(value, 0)
+	# Stale-mirror fix (§E-D.2): refresh the cached GameState.daily_burn NOW so runway /
+	# TopBar / VCPitch reflect a marketing-spend change this tick, not only next daily tick.
+	GameState.set_daily_burn(compute_total_burn())
 
 
 static func get_burn_breakdown() -> Dictionary:

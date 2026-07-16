@@ -3,10 +3,10 @@
   "tags": ["build_safe"],
   "category": "reactive",
   "title": "Fiyatlandırma vakti",
-  "subtitle": "Mutfak masası · 21:40",
+  "subtitle": "Mutfak masası",
   "illustration_path": "",
   "character_id": "char_mentor_frank",
-  "body_text": "Ürün canlı. Birkaç yüz kişi deniyor, kimse para vermiyor — çünkü daha istemedin.\n\nParayı masaya koyma vakti. Ama artık tek bir rakama mahkûm değilsin: Product sekmesindeki **fiyat cetveli** ürünün ederini sana gösteriyor — istediğin yere koy, istediğin an değiştir.\n\nUcuz başlayıp tabanı büyütebilir, sonra zam yapabilirsin. Ama zam, ucuza alışmış kullanıcıyı küstürür. Senin kararın.",
+  "body_text": "Ürün canlı. Birkaç yüz kişi deniyor, kimse para vermiyor — çünkü daha istemedin.\n\nParayı masaya koyma vakti. Ama artık tek bir rakama mahkûm değilsin: ürün tarafındaki **fiyat cetveli** ürünün ederini sana gösteriyor — istediğin yere koy, istediğin an değiştir.\n\nUcuz başlayıp tabanı büyütebilir, sonra zam yapabilirsin. Ama zam, ucuza alışmış kullanıcıyı küstürür. Senin kararın.",
   "trigger_conditions": [
     {"type": "market_type", "value": "b2c"},
     {"type": "audience_above", "value": 15}
@@ -18,8 +18,7 @@
     {
       "label": "Cetveli aç — fiyatımı koyacağım",
       "modifiers": [
-        {"type": "set_flag", "key": "pricing_prompt_seen", "value": true},
-        {"type": "mentor_advisory", "text": "Fiyat cetveli Product sekmesinde. Ederini gör, konumunu seç — istediğin an değiştir."}
+        {"type": "mentor_advisory", "text": "Fiyat cetveli ürün tarafında. Ederini gör, konumunu seç — istediğin an değiştir."}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

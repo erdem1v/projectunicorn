@@ -393,8 +393,6 @@ func _apply_modifiers(modifiers: Array) -> void:
 		match t:
 			"cash":
 				GameState.set_cash(GameState.cash + delta)
-			"mrr":
-				GameState.set_mrr(GameState.mrr + delta)
 			"brand":
 				GameState.set_brand(GameState.brand + delta)
 			"reputation":
@@ -478,19 +476,32 @@ func _apply_modifiers(modifiers: Array) -> void:
 					else:
 						CustomerRegistry.remove(victim.id)
 						GameState.run_customers_lost += 1  # run counter seam (Spec 3 §3) — sole customer-removal path
-						GameState.set_mrr(CustomerRegistry.get_total_mrr())
+						SalesSystem.reflect_mrr()
+			"seats":
+				# WRITE-THROUGH: grant B2B seats via the registry seam (emits), and price the
+				# recurring value off seats × per-seat rate on the SAME account. The narrative
+				# claim ("N koltuk ekle") now matches the state (seats + MRR move together).
+				var b2bs_s: Array[Customer] = CustomerRegistry.get_by_market("b2b")
+				var seat_tgt: Customer = _resolve_customer_target(m.get("customer_id", ""), b2bs_s[0] if not b2bs_s.is_empty() else null)
+				if seat_tgt != null:
+					var add_seats: int = int(m.get("amount", 0))
+					var per_seat: int = int(m.get("per_seat_mrr", 0))
+					CustomerRegistry.set_seats(seat_tgt.id, seat_tgt.seats + add_seats)
+					if per_seat != 0:
+						CustomerRegistry.set_mrr(seat_tgt.id, seat_tgt.mrr + add_seats * per_seat)
+						SalesSystem.reflect_mrr()
 			"customer_mrr_delta":
-				# Expansion: grow an existing B2B account's MRR.
-				var b2bs: Array[Customer] = CustomerRegistry.get_by_market("b2b")
-				if not b2bs.is_empty():
-					var tgt: Customer = b2bs[0]
+				# Expansion: grow a B2B account's MRR (target-threaded; default = first B2B).
+				var b2bs_m: Array[Customer] = CustomerRegistry.get_by_market("b2b")
+				var tgt: Customer = _resolve_customer_target(m.get("customer_id", ""), b2bs_m[0] if not b2bs_m.is_empty() else null)
+				if tgt != null:
 					CustomerRegistry.set_mrr(tgt.id, tgt.mrr + delta)
-					GameState.set_mrr(CustomerRegistry.get_total_mrr())
+					SalesSystem.reflect_mrr()
 			"satisfaction_delta":
-				var sc: Customer = CustomerRegistry.get_lowest_satisfaction_customer()
+				# Target-threaded; default = the most-at-risk customer (legacy behavior).
+				var sc: Customer = _resolve_customer_target(m.get("customer_id", ""), CustomerRegistry.get_lowest_satisfaction_customer())
 				if sc != null:
-					sc.satisfaction = clampi(sc.satisfaction + delta, 0, 100)
-					sc.update_health_from_satisfaction()
+					CustomerRegistry.set_satisfaction(sc.id, sc.satisfaction + delta)
 			"audience_delta":
 				SalesSystem.add_b2c_audience(delta)  # +/- audience; derived MRR follows
 			"open_paid_tier":
@@ -530,6 +541,23 @@ func _apply_modifiers(modifiers: Array) -> void:
 				GameState.pending_meeting.clear()
 			_:
 				push_warning("[EventManager] Unknown modifier type: %s" % t)
+
+
+func _resolve_customer_target(customer_id_raw: Variant, fallback: Customer) -> Customer:
+	# Target selector for customer-scoped modifiers (WRITE-THROUGH §A.3): a concrete
+	# customer id, the "primary_b2b" selector (first active B2B account), or "" → the
+	# caller's documented fallback. Lets one event hit ONE consistent account across
+	# its seats / MRR / satisfaction modifiers.
+	var sel: String = String(customer_id_raw)
+	if sel == "":
+		return fallback
+	if sel == "primary_b2b":
+		var b2bs: Array[Customer] = CustomerRegistry.get_by_market("b2b")
+		return b2bs[0] if not b2bs.is_empty() else null
+	var by_id: Customer = CustomerRegistry.get_customer(sel)
+	if by_id == null:
+		push_warning("[EventManager] modifier customer_id not found: %s" % sel)
+	return by_id
 
 
 func _pump_queue() -> void:

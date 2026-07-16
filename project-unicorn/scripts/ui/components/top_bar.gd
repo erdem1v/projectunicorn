@@ -67,6 +67,7 @@ func _ready() -> void:
 	EventBus.shutter_changed.connect(_on_shutter_changed)
 	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
 	TimeManager.speed_changed.connect(_on_time_manager_speed_changed)
+	EventBus.language_changed.connect(_on_language_changed)
 	# Kepenk counter is danger-red on the dark chrome (bright variant for contrast).
 	shutter_label.add_theme_color_override("font_color", UiTokens.NEGATIVE_BRIGHT)
 	# Initial sync — TimeManager's _ready ran first (autoload order) and the
@@ -91,6 +92,7 @@ func _exit_tree() -> void:
 	EventBus.shutter_changed.disconnect(_on_shutter_changed)
 	EventBus.offer_countdown_changed.disconnect(_on_offer_countdown_changed)
 	TimeManager.speed_changed.disconnect(_on_time_manager_speed_changed)
+	EventBus.language_changed.disconnect(_on_language_changed)
 
 
 # --- Refresh helpers ---
@@ -132,12 +134,17 @@ func _refresh_net() -> void:
 	net_value_label.add_theme_color_override("font_color", UiTokens.delta_color_bright(net))
 
 func _on_runway_changed(months: float) -> void:
-	if months == INF:
-		runway_value_label.text = "∞"
-		runway_unit_label.visible = false
-	else:
-		runway_value_label.text = "%.1f" % months
-		runway_unit_label.visible = true
+	# Net runway (Package 5): profitable (net_burn ≤ 0) → status word ("Kârlı"), unit hidden;
+	# else whole months. All formatting/localization lives in UiTokens.net_runway_parts.
+	var p: Dictionary = UiTokens.net_runway_parts(months)
+	runway_value_label.text = String(p.value)
+	runway_unit_label.text = String(p.unit)
+	runway_unit_label.visible = String(p.unit) != ""
+
+
+func _on_language_changed(_locale: String) -> void:
+	# Re-translate live surfaces (the runway status word) on a language switch.
+	_refresh_all()
 
 func _on_brand_changed(value: int) -> void:
 	brand_value_label.text = "%d" % value

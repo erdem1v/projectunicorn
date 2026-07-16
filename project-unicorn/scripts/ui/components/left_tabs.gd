@@ -20,17 +20,14 @@ extends Panel
 	$Margin/Col/RnDBtn,
 	$Margin/Col/PersonalBtn,
 	$Margin/Col/EventsBtn,
-	$Margin/Col/YatirimBtn,
 ]
 
 @onready var settings_btn: Button = $Margin/Col/SettingsBtn
 
 var current_tab_idx: int = 0  # Default: Product
 
-# Yatırım (Series A Hunt) tab — index 8. Visible-but-LOCKED before phase 3, unlocks on
-# phase_changed(>=3). Spec 4 §4 / ledger 24 (blocks with the reason shown, no fake choice).
-const YATIRIM_IDX := 8
-var _yatirim_locked: bool = false
+# (Spec 6: the Yatırım tab was relocated into Finance>Yatırım; its phase-3 lock now lives on
+# the Finance sub-page selector, not on the rail.)
 
 # Active/idle look is driven by theme type variations (TabButtonActive/TabButton);
 # icon + label colors are tinted at runtime in _apply_visual.
@@ -43,10 +40,6 @@ func _ready() -> void:
 	# Gear button — bottom-pinned, NOT a tab (kept out of tab_buttons so it never
 	# gets active styling or emits tab_changed). Opens the settings panel instead.
 	settings_btn.pressed.connect(_on_settings_button)
-
-	# Phase-gate the Yatırım tab (locked until Series A Hunt / phase 3).
-	EventBus.phase_changed.connect(_on_phase_changed)
-	_set_yatirim_locked(GameState.phase < 3)
 
 	_apply_visual(current_tab_idx)
 	EventBus.tab_changed.emit(UiTokens.TABS[current_tab_idx].id)
@@ -72,8 +65,6 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	if EventBus.phase_changed.is_connected(_on_phase_changed):
-		EventBus.phase_changed.disconnect(_on_phase_changed)
 	if EventBus.tab_changed.is_connected(_on_tab_changed_external):
 		EventBus.tab_changed.disconnect(_on_tab_changed_external)
 	EventBus.morale_changed.disconnect(_on_morale_changed)
@@ -85,8 +76,6 @@ func _exit_tree() -> void:
 
 
 func _on_tab_button(idx: int) -> void:
-	if idx == YATIRIM_IDX and _yatirim_locked:
-		return  # ledger 24 — blocked; the muted tab + tooltip tell the player why
 	if idx == current_tab_idx:
 		return
 	current_tab_idx = idx
@@ -96,18 +85,6 @@ func _on_tab_button(idx: int) -> void:
 
 func _on_settings_button() -> void:
 	EventBus.settings_requested.emit()
-
-
-func _on_phase_changed(new_phase: int) -> void:
-	_set_yatirim_locked(new_phase < 3)
-
-
-func _set_yatirim_locked(locked: bool) -> void:
-	_yatirim_locked = locked
-	var btn: Button = tab_buttons[YATIRIM_IDX]
-	btn.disabled = locked
-	btn.modulate = Color(1, 1, 1, 0.4) if locked else Color(1, 1, 1, 1)
-	btn.tooltip_text = "Series A Hunt'ta açılır" if locked else ""
 
 
 func _on_tab_changed_external(tab_id: String) -> void:
@@ -144,6 +121,8 @@ func _refresh_hr_badge() -> void:
 	_set_badge_count(1, n)  # tab index 1 = HR
 
 func _refresh_finance_badge() -> void:
+	# Net runway (Package 5): warn only on LOW FINITE months. INF (profitable/"Kârlı")
+	# fails `< 3.0` → no badge, which is correct — profitability is never a warning.
 	var months: float = GameState.get_runway_months()
 	var n: int = 1 if months < 3.0 else 0
 	_set_badge_count(2, n)  # tab index 2 = Finance

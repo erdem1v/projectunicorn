@@ -3,10 +3,10 @@
   "tags": ["build_safe"],
   "category": "opportunity",
   "title": "Product Hunt penceresi",
-  "subtitle": "Slack DM · 23:11",
+  "subtitle": "Slack mesajı · 23:11",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Bir tanıdık yazdı: *\"Yarın Product Hunt'ta launch etsene, sana destek olurum.\"*\n\nGörünürlük demek — bir günlüğüne herkes bakar. Kötü giderse, o da herkesin önünde olur.",
+  "body_text": "Bir tanıdık yazdı: *\"Yarın Product Hunt'ta çıksana, sana destek olurum.\"*\n\nGörünürlük demek — bir günlüğüne herkes bakar. Kötü giderse, o da herkesin önünde olur.",
   "trigger_conditions": [
     {"type": "market_type", "value": "b2c"},
     {"type": "flag_set", "key": "b2c_paid_tier_open"},
@@ -19,7 +19,7 @@
   "priority": 1,
   "choices": [
     {
-      "label": "Launch et — görünürlüğü al",
+      "label": "Çık — görünürlüğü al",
       "modifiers": [
         {"type": "convert_audience", "pct": 0.25, "source": "producthunt"},
         {"type": "brand", "delta": 3},

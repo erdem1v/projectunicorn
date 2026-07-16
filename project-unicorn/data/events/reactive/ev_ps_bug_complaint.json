@@ -18,7 +18,7 @@
   "priority": 2,
   "choices": [
     {
-      "label": "Refund + özür dile",
+      "label": "İade + özür dile",
       "modifiers": [
         {"type": "cash", "delta": -1500},
         {"type": "satisfaction_delta", "delta": 20}
@@ -27,11 +27,10 @@
       "unlock_reason_text": ""
     },
     {
-      "label": "Hot-fix sözü ver",
+      "label": "Hızlı düzeltme sözü ver",
       "modifiers": [
         {"type": "satisfaction_delta", "delta": 8},
-        {"type": "cash", "delta": -300},
-        {"type": "set_flag", "key": "hotfix_promised", "value": true}
+        {"type": "cash", "delta": -300}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

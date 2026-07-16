@@ -26,6 +26,36 @@ static func chance_for(skill_name: String, difficulty: int, bonus: int = 0) -> f
 		MIN_CHANCE, MAX_CHANCE)
 
 
+## Additive breakdown of chance_for, for the Term Sheet Table's skill-split display (Spec 6 §5).
+## Exposes the same terms chance_for sums, so the UI can render "temel %X · +%Y <skill>".
+## Invariant: breakdown(...).total == chance_for(...) for all inputs.
+static func breakdown(skill_name: String, difficulty: int, bonus: int = 0) -> Dictionary:
+	var skill_val: int = GameState.get_founder_skill(skill_name)
+	var base: float = BASE_CHANCE - difficulty * DIFFICULTY_STEP   # difficulty folded into "temel"
+	var skill: float = skill_val * SKILL_STEP
+	var bon: float = bonus * BONUS_STEP                            # at the table, bonus == leverage only
+	return {
+		"base": base,
+		"skill": skill,
+		"bonus": bon,
+		"skill_name": skill_name,
+		"skill_value": skill_val,
+		"total": clampf(base + skill + bon, MIN_CHANCE, MAX_CHANCE),
+	}
+
+
+## Roll against an explicitly-composed probability. The Term Sheet Table composes its own odds
+## (base + skill + leverage − decay) OUTSIDE chance_for, so it rolls through here. Honors the
+## debug force flag so the smoke suite stays deterministic — same override as resolve().
+static func roll_against(chance: float) -> bool:
+	var forced: String = String(GameState.get_flag("debug_skill_force", ""))
+	if OS.is_debug_build() and forced == "pass":
+		return true
+	if OS.is_debug_build() and forced == "fail":
+		return false
+	return randf() < chance
+
+
 static func resolve(skill_name: String, difficulty: int, bonus: int = 0) -> Dictionary:
 	var chance: float = chance_for(skill_name, difficulty, bonus)
 	# Deterministic override for runtime verification (debug builds only):

@@ -258,3 +258,16 @@ Mockups do NOT block Specs 1–2. Engines land first with placeholder modals; th
 - Win budget percentages (§4.7)
 - Day 180 wall (only if 60–90 min target misses)
 - Gate 2 brand floor value
+
+---
+
+## Package 5 Canon (2026-07-14) — Runway model + feature bug-seeding + localization
+
+**Runway is TWO distinct, both-real metrics — never one bare number:**
+- **Net Runway** (shell TopBar / Month-End summary): revenue-aware, `cash ÷ (daily_burn − daily_revenue)` in months. When `net_burn ≤ 0` (break-even or better) it is **default alive** — shown as **"Kârlı"** (TR) / **"Default Alive"** (EN), never "∞". Finance-badge warning only on low FINITE months, never on profitability. Single presentation helper: `UiTokens.net_runway_parts` / `net_runway_text`.
+- **Gross Burn Runway** (VC pitch): cash-only, `cash ÷ daily_burn` in months, always finite — the "if revenue went to zero, how long do you last?" question a VC actually asks. Labeled **"Brüt Runway"** (TR) / **"Gross Burn Runway"** (EN). `VCPitchSystem._gross_runway_months`.
+- The distinct **labels** are what keep "Kârlı" (shell) and "Brüt Runway: 8 ay" (pitch) from reading as a contradiction. Never show an unlabeled runway number in the pitch.
+
+**"Yeni feature = yeni bug" is enforced by complexity-based bug-seeding at build commit:** each NEW feature entering a build seeds `round(complexity × FEATURE_BUG_SEED_COEF)` bugs (`product_system.gd`), flowing through the normal `bug_count → effective_stability → mvp_live_bug_count` channel — separate from the hourly dev-phase accrual. The **hardening / "sağlamlaştırma" path seeds ZERO feature bugs** (only `typed_new` seeds; a strengthen-only version build has none) — the deliberate "features = risk, hardening = safety" strategic axis. Working value: `FEATURE_BUG_SEED_COEF := 1.0`.
+
+**Localization:** Turkish is canonical; English is the literary translation via Godot `TranslationServer` + `localization/strings.csv` (loaded at runtime by the `Localization` autoload), with a language toggle in Settings. See CLAUDE.md LANGUAGE INTEGRITY LAW (reframed 2026-07-14).

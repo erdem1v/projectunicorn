@@ -3,7 +3,7 @@
   "tags": ["build_safe"],
   "category": "reactive",
   "title": "Biri ödedi",
-  "subtitle": "Stripe bildirimi · 08:03",
+  "subtitle": "Stripe bildirimi",
   "illustration_path": "",
   "character_id": "char_mentor_frank",
   "body_text": "Telefon titriyor. Stripe.\n\n*Bir ödeme geldi.* Küçük bir rakam — ama gerçek. Birisi, senin yaptığın şeye para verdi.\n\nFrank başını sallıyor: \"İşte. Artık bir şirketsin. Küçük, ama şirket.\"",
@@ -17,7 +17,6 @@
     {
       "label": "Bir nefes al",
       "modifiers": [
-        {"type": "set_flag", "key": "first_revenue_seen", "value": true},
         {"type": "mentor_advisory", "text": "İlk dolar geldi. Şimdi ikinciyi, üçüncüyü bul."}
       ],
       "unlock_condition": {},

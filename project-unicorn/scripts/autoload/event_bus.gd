@@ -31,6 +31,9 @@ signal confirm_requested(config: Dictionary)
 # without polling. music_volume is linear 0..1.
 signal music_enabled_changed(enabled: bool)
 signal music_volume_changed(volume: float)
+# Localization (Package 5): emitted by the Localization autoload when the language
+# changes so live surfaces re-translate (e.g. TopBar runway). Payload = locale "tr"/"en".
+signal language_changed(locale: String)
 
 # --- Character signals (§13.2) ---
 signal character_added(character_id: String)
@@ -41,6 +44,8 @@ signal morale_changed(character_id: String, new_morale: int)
 signal customer_added(customer_id: String)
 signal customer_removed(customer_id: String)
 signal customer_mrr_changed(customer_id: String, new_mrr: int)
+signal customer_seats_changed(customer_id: String, new_seats: int)
+signal customer_satisfaction_changed(customer_id: String, new_satisfaction: int)
 
 # --- Event signals (§13.2) ---
 signal event_triggered(event_id: String)
@@ -112,6 +117,8 @@ signal callback_ready(vc_id: String)            # callback condition met; door r
 signal meeting_day(vc_id: String)               # pending meeting's day arrived (prompt enqueued)
 signal meeting_requested(vc_id: String)         # Hunt "TOPLANTI İSTE" → VCPitchSystem schedules
 signal offer_countdown_changed(days_left: int)  # min sheet validity ≤ threshold; -1 = hide chip
+signal term_table_requested(vc_id: String)      # Finance>Yatırım "Masaya otur" / deal-prompt → main mounts the table (Spec 6)
+signal sheet_walked(vc_id: String)              # a table walk destroyed a sheet — HuntTab repaints (Spec 6)
 
 # --- Debug signals (OS.is_debug_build only; emitter game_shell.gd) ---
 # Shift+F4 re-triggers onboarding on a running game (screenshot/mockup capture).

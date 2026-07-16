@@ -157,16 +157,34 @@ func set_mrr(customer_id: String, value: int) -> void:
 
 
 func set_seats(customer_id: String, value: int) -> void:
-	# Seat-level write — used by B2C dynamic pricing for seat-granular churn
-	# (raising the price sheds some seats). NOT the same as removing the whole
-	# record: the B2C base is one aggregate record, so churn shrinks its seats.
-	# `seats` has no dedicated signal; callers re-derive MRR via set_mrr() (which
-	# emits) so the UI/TopBar update.
+	# Seat-level write — B2C dynamic pricing (seat-granular churn) and B2B seat upsell.
+	# WRITE-THROUGH LAW: the ONLY seam for `seats`. Emits customer_seats_changed so the
+	# RightPanel seat display repaints live (no raw Customer.seats pokes elsewhere).
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:
 		push_warning("[CustomerRegistry] set_seats on unknown id: %s" % customer_id)
 		return
-	c.seats = maxi(value, 0)
+	var clamped: int = maxi(value, 0)
+	if c.seats == clamped:
+		return  # No-op: don't emit a redundant signal
+	c.seats = clamped
+	EventBus.customer_seats_changed.emit(customer_id, clamped)
+
+
+func set_satisfaction(customer_id: String, value: int) -> void:
+	# Satisfaction seam (WRITE-THROUGH LAW): the ONLY place events/systems change a
+	# customer's satisfaction. Clamps 0-100, keeps the derived health band in sync,
+	# and emits so future health-dot UI can bind (RightPanel TODO).
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] set_satisfaction on unknown id: %s" % customer_id)
+		return
+	var clamped: int = clampi(value, 0, 100)
+	if c.satisfaction == clamped:
+		return  # No-op: don't emit a redundant signal
+	c.satisfaction = clamped
+	c.update_health_from_satisfaction()
+	EventBus.customer_satisfaction_changed.emit(customer_id, clamped)
 
 
 # --- Debug seed (writes directly to _customers; does NOT call add() so no

@@ -2,7 +2,7 @@
   "id": "ev_ps_expansion_b2b",
   "tags": ["build_safe"],
   "category": "opportunity",
-  "title": "Seat artırımı",
+  "title": "Koltuk artırımı",
   "subtitle": "Toplantı · 11:15",
   "illustration_path": "",
   "character_id": "",
@@ -20,8 +20,8 @@
     {
       "label": "Önerilen fiyattan ekle",
       "modifiers": [
-        {"type": "customer_mrr_delta", "delta": 600},
-        {"type": "satisfaction_delta", "delta": -5}
+        {"type": "seats", "amount": 4, "per_seat_mrr": 150, "customer_id": "primary_b2b"},
+        {"type": "satisfaction_delta", "delta": -5, "customer_id": "primary_b2b"}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""
@@ -29,8 +29,8 @@
     {
       "label": "Pazarlık et — daha fazla iste",
       "modifiers": [
-        {"type": "customer_mrr_delta", "delta": 1000},
-        {"type": "satisfaction_delta", "delta": -12}
+        {"type": "seats", "amount": 6, "per_seat_mrr": 150, "customer_id": "primary_b2b"},
+        {"type": "satisfaction_delta", "delta": -12, "customer_id": "primary_b2b"}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""
@@ -38,7 +38,8 @@
     {
       "label": "Bedavaya ver — ilişki kıymetli",
       "modifiers": [
-        {"type": "satisfaction_delta", "delta": 10}
+        {"type": "seats", "amount": 4, "per_seat_mrr": 0, "customer_id": "primary_b2b"},
+        {"type": "satisfaction_delta", "delta": 10, "customer_id": "primary_b2b"}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

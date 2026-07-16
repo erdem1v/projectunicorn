@@ -1,7 +1,7 @@
 extends Control
 
-# Yatırım (Series A Hunt) tab — Spec 4 §4. Mounted by center_viewport.gd on the "yatirim"
-# tab. Left: investor roster (5 cards incl. locked Tier-2) with per-vc_state badges + the
+# Yatırım (Series A Hunt) panel — Spec 4 §4. Nested by FinanceTab as its "Yatırım" sub-page
+# (Spec 6 §7 relocation). Left: investor roster (5 cards incl. locked Tier-2) with per-vc_state badges + the
 # schedule/prep actions. Right: Teklifler (active sheets + validity countdowns + the
 # placeholder table modal), Bekleyen (pending meeting/prep), Frank strip, rejection counter.
 # Humble UI: reads VCPitchSystem / InvestorRegistry / GameState, calls the system for
@@ -25,7 +25,7 @@ func _ready() -> void:
 	_signals = [
 		EventBus.sheet_granted, EventBus.sheet_expired, EventBus.callback_ready,
 		EventBus.meeting_day, EventBus.day_advanced, EventBus.mrr_changed,
-		EventBus.pitch_finished,
+		EventBus.pitch_finished, EventBus.sheet_walked,
 	]
 	for sig in _signals:
 		sig.connect(_on_changed)
@@ -201,18 +201,9 @@ func _build_offer_card(sheet) -> Control:
 
 
 func _open_table(vc_id: String) -> void:
-	# PLACEHOLDER table (Spec 6 replaces with the push-your-luck table). İMZALA signs;
-	# a live second sheet shows the Frank leverage line (flavor only for now).
-	var inv: Dictionary = InvestorRegistry.get_investor(vc_id)
-	var t: Dictionary = InvestorRegistry.get_investor(vc_id).get("term_bands", {})
-	var lev: String = "\n\nCebinde başka teklif var — Frank: \"Bunu bil, masada işine yarar.\"" if GameState.active_sheets.size() > 1 else ""
-	EventBus.confirm_requested.emit({
-		"title": "%s — Term Sheet" % inv.get("display_name", ""),
-		"body": "Değerleme: %s\nSeyrelme: %s\nBoard: %s%s" % [t.get("valuation", "—"), t.get("dilution", "—"), t.get("board", "—"), lev],
-		"confirm_text": "İMZALA",
-		"cancel_text": "Vazgeç",
-		"on_confirm": Callable(self, "_sign").bind(vc_id),
-	})
+	# Spec 6 — open the real push-your-luck Term Sheet Table. main.gd mounts the scene (which
+	# opens TermSheetTableSystem for this VC); İMZALA / MASADAN KALK resolve there.
+	EventBus.term_table_requested.emit(vc_id)
 
 
 func _confirm_walk(vc_id: String) -> void:
@@ -224,9 +215,6 @@ func _confirm_walk(vc_id: String) -> void:
 		"on_confirm": Callable(self, "_walk").bind(vc_id),
 	})
 
-
-func _sign(vc_id: String) -> void:
-	VCPitchSystem.sign_table(vc_id)   # series_a_closed = true → EndingsSystem fires Class A
 
 func _walk(vc_id: String) -> void:
 	VCPitchSystem.walk_table(vc_id)

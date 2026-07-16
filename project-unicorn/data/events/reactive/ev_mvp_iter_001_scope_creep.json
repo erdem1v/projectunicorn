@@ -1,11 +1,11 @@
 {
   "id": "ev_mvp_iter_001_scope_creep",
   "category": "reactive",
-  "title": "Bu feature beklediğimden derinmiş",
+  "title": "Bu özellik beklediğimden derinmiş",
   "subtitle": "Mutfak masası · 23:14",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Bir saat önce *'bir tarama daha,'* dedin. Şimdi üç tab açık, hiçbirinde planladığın şey yok.\n\nFeature'ı düşünürken küçüktü. Yazmaya başlayınca bir köşesinden başka bir şey çıktı. Şimdi seçim şu: ya bunu **doğru** yap — birkaç gün daha. Ya da **kırp**, görsel olarak duruyor, altı boş.\n\nKimsenin bilmediği bir şey hakkında karar veriyorsun. Bu da onun bir parçası.",
+  "body_text": "Bir saat önce *'bir tarama daha,'* dedin. Şimdi üç sekme açık, hiçbirinde planladığın şey yok.\n\nÖzelliği düşünürken küçüktü. Yazmaya başlayınca bir köşesinden başka bir şey çıktı. Şimdi seçim şu: ya bunu **doğru** yap — birkaç gün daha. Ya da **kırp**, görünürde çalışıyor, derinleşmesi sonraya kalır.\n\nKimsenin bilmediği bir şey hakkında karar veriyorsun. Bu da onun bir parçası.",
   "trigger_conditions": [
     {"type": "build_phase", "value": "iteration"},
     {"type": "random", "chance": 0.35}
@@ -28,8 +28,7 @@
       "label": "Kırp, yüzeyi koru, devam et",
       "modifiers": [
         {"type": "delay_days", "days": -1},
-        {"type": "bug_delta", "amount": 3},
-        {"type": "set_flag", "key": "scope_creep_kirpildi", "value": true}
+        {"type": "bug_delta", "amount": 3}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

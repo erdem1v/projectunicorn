@@ -20,6 +20,10 @@ extends Resource
 
 # --- Reserved / forward-compat (Spec 6 Term Sheet Table) ---
 @export var patience_pool: int = 0        # copied from the VC at grant; the table consumes it
+@export var opening_terms: Dictionary = {} # {valuation_m, dilution_pct, board_seats, board_veto} — the
+                                           # table's NUMERIC opening offer (Spec 6). Snapshot from the
+                                           # investor at grant. Pre-close it is shown NOWHERE but the
+                                           # table (ledger 8 — valuation is a table-only secret).
 
 
 func days_left(current_day: int) -> int:

@@ -26,6 +26,44 @@ These principles are non-negotiable for design decisions. Implementation can fle
 
 ---
 
+## Content & Language Laws (LOCKED — Editorial Package 4, 2026-07-14)
+
+These govern all player-facing text and event authoring. They are enforcement rules, not suggestions.
+
+**LANGUAGE INTEGRITY LAW.** Turkish is canonical; English is a literary translation delivered via the localization layer (Godot `TranslationServer` + `localization/strings.csv`, language toggle in Settings — Package 5). **No MIXED TR/EN inside a single player-facing string** (that original intent stands) — full-language EN via the locale switch is correct. Within the Turkish canonical text, English tech terms appear only where they are genuine Turkish-tech loanwords founders actually say — the ruled accepted set is: `pitch, startup, demo, momentum, MRR, runway, churn` (plus proper nouns and the established loanwords `laptop, mail, VC`). Everything else translates to its clean Turkish form (e.g. bug→hata, feature→özellik, feedback→geri bildirim, roadmap→yol haritası, deadline→son tarih, build→geliştirme, push→gönder/yayınla, launch→çıkış/lansman). English lives only in code and specs, never on screen.
+
+**EVENT AUTHORING LAW.** No fake choices. No choice pre-labels its own wisdom (don't tell the player which path is "mantıklı"/"pratik"/right). Effects are shown in readable Turkish, never as internal codes. No event implies an unbuilt system. Time-of-day fiction must match a real firing window — or omit the clock entirely (deterministic beats fire at the day boundary, so they must not assert a specific `· HH:MM`). NPC register stays short and dry; monologue stays coherent. Never name an internal UI node or tab in fiction — a mentor guides as a person ("satış tarafına bak"), not as a UI manual ("Sales sekmesine tıkla").
+
+**EFFECT-VISIBILITY RULE.** Modifiers are shown to the player in readable Turkish labels via `event_modal._describe_modifier` (`scripts/modals/event_modal.gd`), never as internal codes. It is the single place effect badges are built. For choices carrying 2+ effects, prefer a future hover/tooltip reveal over cramming inline (EU4/CK3 grammar) — the tooltip pattern is a pending follow-up (badge chips currently use `mouse_filter = MOUSE_FILTER_IGNORE`).
+
+---
+
+## State Coherence — WRITE-THROUGH LAW (LOCKED — 2026-07-14)
+
+No event, modal, or UI may mutate another domain's state directly. Every domain change goes
+through the owning system's **seam** — a method on the system that owns that state — and the
+seam **emits a signal** wherever the UI reacts to it. If a needed seam doesn't exist, **build
+it**; never write the field directly "just this once." And **every event choice's narrative
+claim must match its modifiers** — if the copy says "koltuk ekle," the modifiers add seats.
+
+Owning seams (write through these, never the raw field):
+- Customers → `CustomerRegistry.set_mrr / set_seats / set_satisfaction / add / remove` (each emits).
+- Aggregate MRR → `SalesSystem.reflect_mrr()` (the single customer-MRR→GameState bridge).
+- Cash / brand / reputation / burn / phase → `GameState.set_*` setters.
+- Characters → `CharacterRegistry.*`. Product / build → `ProductSystem.*`.
+
+**Worked cautionary example (the disease this law cures).** An event titled *"Koltuk artırımı"*
+promised the customer more seats, but its modifier only bumped MRR by a flat number — the seat
+count never moved, because **no seat seam existed** and the code poked the field (or a cached
+mirror) directly. The fix was not to poke harder; it was to build `CustomerRegistry.set_seats`
+(emitting `customer_seats_changed`) and route a `seats` modifier through it, so the seat display
+finally moves and the fiction matches the state. Raw cross-domain writes also create **stale
+mirrors** — e.g. a raw `mrr` write is silently reverted by the next MRR-bridge tick — another
+reason the seam, not the field, is the only sanctioned write. Future specs must name their
+seams; future events must match claims to modifiers.
+
+---
+
 ## Document References
 
 - **Game design master:** [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md) — vision, pillars, mechanics, content, systems, win/lose conditions, endings

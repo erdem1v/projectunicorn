@@ -3,10 +3,10 @@
   "tags": ["build_safe"],
   "category": "reactive",
   "title": "Frank bir kapı aralıyor",
-  "subtitle": "Telefon · 10:20",
+  "subtitle": "Telefon",
   "illustration_path": "",
   "character_id": "char_mentor_frank",
-  "body_text": "Frank kahvesini bitiriyor.\n\n\"Tanıdığım biri var. Operasyon müdürü. Şu yeni şeyini görmek istiyor — toplantı ayarladım.\"\n\n\"Hazırlıklı git. Yumuşatma. Sales sekmesinde seni bekliyor olacak.\"",
+  "body_text": "Frank kahvesini bitiriyor.\n\n\"Tanıdığım biri var. Operasyon müdürü. Şu yeni şeyini görmek istiyor — toplantı ayarladım.\"\n\n\"Hazırlıklı git. Yumuşatma. Satış tarafında seni bekliyor olacak.\"",
   "trigger_conditions": [
     {"type": "mvp_shipped", "value": true},
     {"type": "market_type", "value": "b2b"}
@@ -19,7 +19,7 @@
       "label": "Tamam — hazırlanayım",
       "modifiers": [
         {"type": "add_prospect", "archetype": "mid", "source": "frank_intro"},
-        {"type": "mentor_advisory", "text": "İlk pitch'in Sales sekmesinde. Yumuşatma, ürünü göster."}
+        {"type": "mentor_advisory", "text": "İlk pitch'in satış tarafında. Yumuşatma, ürünü göster."}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

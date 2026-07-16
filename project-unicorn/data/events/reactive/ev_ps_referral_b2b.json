@@ -6,7 +6,7 @@
   "subtitle": "E-posta · 13:05",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Müşterilerinden birinin genel müdürü yazmış — sözleşmeye imzayı atan adamın kendisi: *\"Geçen hafta bir tedarikçi yemeğinde başka bir şirketin sahibiyle konuştum, sizin üründen bahsettim. Ciddi ilgilendi — isterseniz tanıştırayım.\"*\n\nE-postanın sonunda bir şart: *\"Tek ricam, şu özelliği roadmap'inize almanız. İki şirket de kullanır.\"*\n\nPatron seviyesinden açılan bir kapı — ama roadmap'ine bir borç yazıyor.",
+  "body_text": "Müşterilerinden birinin genel müdürü yazmış — sözleşmeye imzayı atan adamın kendisi: *\"Geçen hafta bir tedarikçi yemeğinde başka bir şirketin sahibiyle konuştum, sizin üründen bahsettim. Ciddi ilgilendi — isterseniz tanıştırayım.\"*\n\nE-postanın sonunda bir şart: *\"Tek ricam, şu özelliği yol haritanıza almanız. İki şirket de kullanır.\"*\n\nPatron seviyesinden açılan bir kapı — ama yol haritana bir borç yazıyor.",
   "trigger_conditions": [
     {"type": "market_type", "value": "b2b"},
     {"type": "customer_count_min", "value": 1},
@@ -18,11 +18,10 @@
   "priority": 1,
   "choices": [
     {
-      "label": "Kabul et — feature sözü ver",
+      "label": "Kabul et — özellik sözü ver",
       "modifiers": [
         {"type": "add_prospect", "archetype": "mid", "source": "referral"},
-        {"type": "cash", "delta": -400},
-        {"type": "set_flag", "key": "feature_debt", "value": true}
+        {"type": "cash", "delta": -400}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""
@@ -36,7 +35,7 @@
       "unlock_reason_text": ""
     },
     {
-      "label": "Reddet — roadmap temiz kalsın",
+      "label": "Reddet — yol haritan temiz kalsın",
       "modifiers": [
         {"type": "reputation", "delta": 2}
       ],

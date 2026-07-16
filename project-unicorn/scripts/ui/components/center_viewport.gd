@@ -8,7 +8,7 @@ extends Panel
 const TAB_SCENES := {
 	"product": preload("res://scenes/tabs/ProductTab.tscn"),
 	"sales": preload("res://scenes/tabs/SalesTab.tscn"),
-	"yatirim": preload("res://scenes/tabs/HuntTab.tscn"),
+	"finance": preload("res://scenes/tabs/FinanceTab.tscn"),  # Spec 6 — hosts the Yatırım sub-page
 }
 
 @onready var content_box: VBoxContainer = $Content
