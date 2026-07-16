@@ -26,6 +26,43 @@ These principles are non-negotiable for design decisions. Implementation can fle
 
 ---
 
+## RELEASE SCOPE (LOCKED — July 2026, supersedes any older tier/scope notes)
+
+The game ships in three stages. Each stage has a different NATURE, not just more content. Never build a feature that contradicts the stage it ships in. (Where this reframes Governing Design Principle 3's "Tier 1/2/3 release tiers" — DEMO = Tier 1, EARLY ACCESS = Tier 2, FULL = Tier 3 — this table is authoritative on what each stage IS and what ships when.)
+
+| | DEMO | EARLY ACCESS | FULL |
+|---|---|---|---|
+| Nature | Campaign (an authored arc) | Living-company sandbox | Sandbox + new grammar |
+| Arc | Bootstrap → Traction → Series A close = clean VICTORY ending | Series A close OPENS endless flow; Series B = milestone-NOT-ending | → IPO → macro phase |
+| Ends? | Yes — Series A close is a real victory screen | NO — play continues until bankruptcy or the player stops; new runs give varied experiences | No — adds the IPO gate and macro grammar |
+| Tabs | Core set | ALL core tabs open (Product, HR incl. founder training, Finance/Yatırım, Sales, Marketing system, R&D first layer, Ops) | + macro systems (regulation, politics, mega-corp) |
+| Duration | 60-90 min, kolay-orta difficulty (challenge felt, always fair) | 6-8+ hours, open-ended | 10-12+ hours |
+| In-game time | ~part of year 1 | ~1-2 years (curve redesign pending) | ~2+ years |
+
+Hard rules that follow from this table:
+- **Series B is a MILESTONE, never an ending.** It grants money + prestige + RAISED expectations (bigger burn, investor pressure) and play continues. Never wire Series B to trigger_ending.
+- **IPO is OUT of Early Access** — it ships in FULL because it changes the play grammar (macro). In EA, IPO appears as a VISIBLE-LOCKED gate that opens when valuation crosses a threshold: "IPO yolu açıldı — tam sürümde." This is the strongest Coming-Soon telegraph in the game: the player's own company reaches a door it cannot enter yet.
+- **The endless flow must stay alive** (see Calibration Law 1): post-Series-A play is kept under pressure by rival evolution, product aging/bug accrual, the raised post-Series-B bar, and the valuation league. If you build any of these systems, they are load-bearing for EA — not decoration.
+- **SaveManager is MANDATORY** (EA cannot ship without it; the demo needs it too). A resolution/optimization polish pass (1080p / 1440p / 4K) is required scope, not nice-to-have.
+- **EA v0.1 may ship with the endless CORE** (post-Series-A flow, HR hiring wave, valuation + league, Series B milestone, Save) and land Marketing / R&D / multi-product via early updates. When cutting for v0.1, cut depth, never the endless flow itself.
+- Extra origins (Varis, Kurumsal Mülteci) remain FULL-only; they stay visible-locked in demo/EA.
+
+---
+
+## CALIBRATION LAWS (LOCKED — genre research July 2026, the 90%+ vs 75-80% divide)
+
+Genre research across Game Dev Tycoon (94%), Software Inc (94%), Suzerain (93%) vs Startup Company (80%), The Meter is Running (76%), This Is the President (68%) established five laws. They bind DESIGN decisions now, and the numeric calibration pass later.
+
+1. **Money must NEVER stop mattering.** The genre's #1 score-killer is the economy collapsing into number-growing once the player is rich. Every phase must RE-TIGHTEN the runway: bigger team = bigger payroll, rising investor expectations, rival pressure. Build anti-snowball mechanics and make them LEGIBLE — the player must SEE the rising bar (never an opaque hidden score). If a feature would let the player permanently "solve" money, redesign it.
+2. **Match run length to content depth; kill dead time.** Never pad in-game days with repeated content. No stretch of play should run >60-90 seconds without a meaningful decision (outside deliberate breathers). Fast 4x that compresses dead days + auto-slow when a decision arrives is the target grammar.
+3. **Choices must visibly change game state.** Every major outcome (pitch result, Series A close, retention outcome) must be traceable by the player to visible state — runway, traction, satisfaction, sentiment — never delivered by a hidden aggregate that can contradict the player's narrative. (§10 already forbids un-played economic outcomes; this law adds: the CAUSE must be readable.)
+4. **Systems must be load-bearing.** If a player can win while ignoring an entire subsystem, that subsystem must be integrated (its neglect must cascade) or cut. Interconnection is the measured difference between the 94% and 80% games in our genre.
+5. **Replayability is structural, not padding.** Runs diverge through varied event-deck order, hire pools, rival/investor mixes, and product-type starts — and off-meta strategies must be viable. Never manufacture replay value by repeating the same content.
+
+Playtest tripwires (when the calibration pass runs): a naive policy winning >60-70% of runs, or players reporting the last third as "autopilot," means the economy has collapsed — retune before adding content. In-game duration is being extended from 180 days to ~1-2 years (tier-dependent) with the MRR/traction curve reshaped against realistic startup timelines; until that curve redesign lands, treat all pacing/threshold numbers as provisional and keep them in single tuning surfaces.
+
+---
+
 ## Content & Language Laws (LOCKED — Editorial Package 4, 2026-07-14)
 
 These govern all player-facing text and event authoring. They are enforcement rules, not suggestions.

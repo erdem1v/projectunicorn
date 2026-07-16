@@ -54,6 +54,23 @@ func get_employees() -> Array[Character]:
 	return out
 
 
+const ROLE_CUSTOMER_SUCCESS := "Müşteri Başarı"  # CS role string (TR — also the on-screen label)
+
+
+func get_customer_success() -> Array[Character]:
+	# Customer Success reps — a hired employee type (category "employee") so they count
+	# toward payroll + run_hires + morale drift, distinguished by role (not category).
+	var out: Array[Character] = []
+	for c in _characters.values():
+		if c.category == "employee" and c.role == ROLE_CUSTOMER_SUCCESS:
+			out.append(c)
+	return out
+
+
+func count_customer_success() -> int:
+	return get_customer_success().size()
+
+
 func count_engineers() -> int:
 	# Kapasite havuzu (ProductSystem.capacity_total): kurucu + mühendis sayısı.
 	# Role string konvansiyonu "Engineer" (debug seed / smoke ile aynı, büyük-küçük

@@ -55,6 +55,10 @@ const SUB_PRODUCT_TYPES := {
 			"category_tr": "GELİŞTİRİCİ", "desc_tr": "Geliştiricinin günlük angaryasını üstlenir.",
 			"bet": "Mühendislerin günlük acısını çöz. Severlerse şirketlerine sokarlar.",
 			"pitch": "Geliştiricilerin her gün uğraştığı angaryayı üstlenen araç seti. Mühendisten mühendise.", "market_type": "b2b", "price_tendency": "premium"},
+		{"id": "saas_ops", "name": "Ops Platform", "name_human": "Süreç Otomasyon Platformu",
+			"category_tr": "OPERASYON", "desc_tr": "Sahadan yönetime süreçleri tek yerde toplar.",
+			"bet": "Sahada iş yürüten şirketler kâğıtla boğuluyor. Süreci dijitalleştir, vazgeçemesinler.",
+			"pitch": "İnşaattan lojistiğe, süreçleri uçtan uca otomatikleştiren operasyon platformu.", "market_type": "b2b", "price_tendency": "neutral"},
 	],
 	"social": [],
 }
@@ -143,6 +147,14 @@ const FEATURE_POOLS := {
 		{"id": "saas_dev_logs", "name": "Live Log Stream", "voice": "Hata ararken canlı log akışı. Yoksa herkes yine SSH'a döner.", "complexity": 3, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 1.5, "stability": 2.5, "usability": 1.5}, "requires_research": false, "tags": []},
 		{"id": "saas_dev_sandbox", "name": "Test Sandbox", "voice": "Geliştirici prod'a dokunmadan güvenle denesin. Olmazsa korkar, hiç kullanmaz.", "complexity": 3, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 1.5, "stability": 2.5, "usability": 2.0}, "requires_research": false, "tags": []},
 	],
+	"saas_ops": [
+		{"id": "saas_ops_workflow", "name": "Workflow Automation", "voice": "\"Şu olunca şunu yap\" kurallarıyla süreci otomatikleştir. Manuel takip biter.", "complexity": 4, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 2.5, "stability": 1.5, "usability": 2.0}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_reporting", "name": "Reporting Dashboards", "voice": "Yönetimin tek bakışta gördüğü panolar. Rapor kâbusu biter.", "complexity": 3, "pull": 3, "stakes": 2, "dimension_contribution": {"innovation": 1.0, "stability": 1.5, "usability": 3.0}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_integration", "name": "System Integration", "voice": "Mevcut sistemlerle konuşur; veri iki kez girilmez. Kurumsalın ilk sorduğu şey.", "complexity": 5, "pull": 4, "stakes": 5, "dimension_contribution": {"innovation": 1.0, "stability": 3.5, "usability": 1.0}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_scheduling", "name": "Scheduling & Appointments", "voice": "Randevu ve planlamayı tek takvimde topla. Çakışma, unutma kalmaz.", "complexity": 3, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 1.0, "stability": 2.0, "usability": 2.5}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_field", "name": "Field Connectivity", "voice": "Sahadaki ekip zayıf bağlantıda bile çalışır, sonra senkronlar. Sahanın bel kemiği.", "complexity": 5, "pull": 4, "stakes": 5, "dimension_contribution": {"innovation": 2.0, "stability": 3.0, "usability": 1.5}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_mobile", "name": "Mobile App", "voice": "Saha ekibi telefondan girer. Sadece masaüstünde kalan ürün sahada ölür.", "complexity": 4, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 1.5, "stability": 1.5, "usability": 3.0}, "requires_research": false, "tags": []},
+	],
 }
 
 
@@ -201,11 +213,36 @@ const QUALITY_AXES := {
 		{"axis": "stability", "weight": 1.4, "display_label": "Kararlılık"},
 		{"axis": "usability", "weight": 0.9, "display_label": "Entegrasyon Kolaylığı"},
 	],
+	"saas_ops": [
+		{"axis": "innovation", "weight": 0.9, "display_label": "İnovasyon"},
+		{"axis": "stability", "weight": 1.5, "display_label": "Saha Güvenilirliği"},
+		{"axis": "usability", "weight": 1.1, "display_label": "Kullanılabilirlik"},
+	],
 }
 
 
 static func get_sub_product_types(subgenre: String) -> Array:
 	return SUB_PRODUCT_TYPES.get(subgenre, [])
+
+
+## Merged product pool (onboarding rework 2026-07-16: the Subgenre onboarding
+## step is gone — product type is decided in-game, so the picker offers EVERY
+## pool). Picking a type write-through-sets GameState.subgenre from its pool
+## (see ProductSystem.start_build) so subgenre events/VC seeding keep working.
+static func get_all_sub_product_types() -> Array:
+	var all: Array = []
+	for subgenre_key in SUB_PRODUCT_TYPES:
+		all.append_array(SUB_PRODUCT_TYPES[subgenre_key])
+	return all
+
+
+## Pool (subgenre key) a sub-product type belongs to; "" if unknown.
+static func get_pool_of(sub_product_type_id: String) -> String:
+	for subgenre_key in SUB_PRODUCT_TYPES:
+		for sub_type in SUB_PRODUCT_TYPES[subgenre_key]:
+			if String(sub_type.get("id", "")) == sub_product_type_id:
+				return subgenre_key
+	return ""
 
 
 static func get_feature_pool(sub_product_type_id: String) -> Array:

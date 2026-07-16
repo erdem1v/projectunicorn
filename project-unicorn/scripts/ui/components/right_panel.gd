@@ -198,14 +198,15 @@ func _refresh_rivals() -> void:
 
 
 func _active_sub_type_id() -> String:
-	# Active build → shipped snapshot → first type of the founder's subgenre.
+	# Active build → shipped snapshot → first type of the merged pool (subgenre
+	# is decided by the committed product since the onboarding rework).
 	var b = ProductSystem.get_active_build()
 	if b != null and b.sub_product_type_id != "":
 		return b.sub_product_type_id
 	var shipped: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
 	if shipped != "":
 		return shipped
-	var types: Array = ProductCatalog.get_sub_product_types(GameState.subgenre)
+	var types: Array = ProductCatalog.get_all_sub_product_types()
 	return String(types[0].get("id", "")) if not types.is_empty() else ""
 
 

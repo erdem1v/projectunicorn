@@ -187,6 +187,64 @@ func set_satisfaction(customer_id: String, value: int) -> void:
 	EventBus.customer_satisfaction_changed.emit(customer_id, clamped)
 
 
+# --- B2B lifecycle seams (B2B Sales System). Each mutation routes through here so
+#     the portfolio health / churn-countdown UI binds to a signal, never a raw poke. ---
+
+func set_lifecycle_phase(customer_id: String, phase: String) -> void:
+	# onboarding|active|risk|churning|expansion. Emits customer_health_changed.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] set_lifecycle_phase on unknown id: %s" % customer_id)
+		return
+	if c.lifecycle_phase == phase:
+		return  # No-op: don't emit a redundant signal
+	c.lifecycle_phase = phase
+	EventBus.customer_health_changed.emit(customer_id, phase)
+
+
+func set_churn_countdown(customer_id: String, value: int) -> void:
+	# -1 = inactive; N..0 drives the visible "Churn'e ~N gün" readout. Emits
+	# customer_health_changed (same channel as the phase) so the counter repaints.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] set_churn_countdown on unknown id: %s" % customer_id)
+		return
+	var clamped: int = maxi(value, -1)
+	if c.churn_countdown == clamped:
+		return  # No-op: don't emit a redundant signal
+	c.churn_countdown = clamped
+	EventBus.customer_health_changed.emit(customer_id, c.lifecycle_phase)
+
+
+func set_tolerance(customer_id: String, value: int) -> void:
+	# HIDDEN per-customer field — no signal (the UI never shows raw tolerance).
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] set_tolerance on unknown id: %s" % customer_id)
+		return
+	c.tolerance = clampi(value, 0, 100)
+
+
+func set_risk_streak(customer_id: String, value: int) -> void:
+	# HIDDEN bookkeeping counter (consecutive days under tolerance) — no signal.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.risk_streak = maxi(value, 0)
+
+
+func assign_customer(customer_id: String, employee_id: String) -> void:
+	# Delegation seam (Stage D): "" = founder-managed, else a Customer Success employee id.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] assign_customer on unknown id: %s" % customer_id)
+		return
+	if c.assigned_to == employee_id:
+		return  # No-op: don't emit a redundant signal
+	c.assigned_to = employee_id
+	EventBus.customer_assigned.emit(customer_id, employee_id)
+
+
 # --- Debug seed (writes directly to _customers; does NOT call add() so no
 #     phantom customer_added signals fire on startup) ---
 

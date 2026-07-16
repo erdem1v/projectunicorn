@@ -35,6 +35,17 @@ extends Resource
 @export var character_id: String = ""              # Empty when no character context strip
 @export var body_text: String = ""                 # **bold** *italic* via markdown→BBCode in modal
 
+# --- Synthetic speaker context (B2B Sales System). When character_id is EMPTY but
+#     speaker_name is set, the modal renders a non-Character speaker strip (a customer
+#     speaking in their own voice) from these fields directly, no CharacterRegistry
+#     lookup. Lets the retention modal show the account avatar + name + status. ---
+@export var speaker_name: String = ""              # display name (e.g. a customer company)
+@export var speaker_role: String = ""              # sub-line after the name (contact role)
+@export var speaker_status: String = ""            # status pill text (e.g. "RİSK ALTINDA")
+@export var speaker_status_kind: String = "neutral" # UiFactory badge kind for the pill
+@export var speaker_chips: Array = []              # extra chips: Array of {text, kind}
+@export var speaker_initial: String = ""           # avatar initials; "" → derived from speaker_name
+
 # --- Behavior (used now) ---
 @export var choices: Array[EventChoice] = []
 @export var trigger_conditions: Array = []         # Array of Dictionaries

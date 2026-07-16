@@ -47,6 +47,20 @@ signal customer_mrr_changed(customer_id: String, new_mrr: int)
 signal customer_seats_changed(customer_id: String, new_seats: int)
 signal customer_satisfaction_changed(customer_id: String, new_satisfaction: int)
 
+# --- B2B lifecycle / relationship signals (B2B Sales System) ---
+# health/phase changes drive the portfolio health display + the churn countdown
+# ("Churn'e ~N gün"); churned/expanded are discrete account moments; assigned
+# tracks Customer-Success delegation.
+signal customer_health_changed(customer_id: String, phase: String)
+signal customer_churned(customer_id: String)
+signal customer_expanded(customer_id: String, new_seats: int)
+signal customer_assigned(customer_id: String, employee_id: String)
+# Promise tracking (B2B Sales System §C). "Söz ver" / a CS escalation create a
+# promise; a Product feature ship keeps it, a passed deadline breaks it.
+signal promise_created(promise_id: String)
+signal promise_kept(promise_id: String)
+signal promise_broken(promise_id: String)
+
 # --- Event signals (§13.2) ---
 signal event_triggered(event_id: String)
 signal event_resolved(event_id: String, choice_index: int)

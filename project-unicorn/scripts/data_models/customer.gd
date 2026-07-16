@@ -36,8 +36,22 @@ extends Resource
 
 # --- Acquisition (used now — set when a customer is created via pitch/event/organic) ---
 @export var acquisition_source: String = ""   # "founder_pitch" | "organic" | "event" | "referral"
-@export var acquired_on_day: int = 0          # GameState.day at signing
+@export var acquired_on_day: int = 0          # GameState.day at signing (serves as signed_day)
 @export var difficulty_stars: int = 0         # 1-5 carried from the prospect
+
+# --- B2B lifecycle (B2B Sales System — two-layer satisfaction + watched churn) ---
+# `industry` above serves as the sector channel (portfolio sector tag reads from it).
+@export var lifecycle_phase: String = "onboarding"  # onboarding|active|risk|churning|expansion
+@export var scale: int = 1                    # 1..5 stars (customer size); demo binds 1-3
+@export var tolerance: int = 50               # HIDDEN — satisfaction floor this account endures before Risk
+@export var churn_countdown: int = -1         # -1 inactive; N..0 = the visible "Churn'e ~N gün" counter
+@export var risk_streak: int = 0              # consecutive days satisfaction < tolerance
+@export var assigned_to: String = ""          # "" = founder-managed; else a Customer Success employee id
+@export var support_load: int = 1             # CS-capacity cost (scale/seat weighted)
+@export var onboarding_until: int = 0         # day the onboarding window closes (signed_day + ONBOARDING_DAYS)
+@export var pain_feature_id: String = ""      # the ProductCatalog feature this account wants (drives promises)
+@export var retain_stalls: int = 0            # how many times "Oyala" has been used (works 1-2x, then caught on)
+@export var cs_escalated: bool = false        # a CS-managed account has raised its one escalation (until it recovers)
 
 # --- Reserved for future systems (declared, not used this turn) ---
 @export var renewal_day: int = 0              # When the next renewal event fires (churn/renewal — next spec)

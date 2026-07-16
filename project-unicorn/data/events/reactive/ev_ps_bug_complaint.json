@@ -8,6 +8,7 @@
   "character_id": "",
   "body_text": "Bir müşteri yüksek sesle şikayetçi: *\"Söz verdiğiniz şey çalışmıyor. Paramı boşa mı verdim?\"*\n\nDiğer müşteriler de okuyor. Sessizlik de bir cevap — ama yanlış olanı.",
   "trigger_conditions": [
+    {"type": "market_type", "value": "b2c"},
     {"type": "customer_count_min", "value": 1},
     {"type": "customer_satisfaction_below", "value": 60},
     {"type": "random", "chance": 0.5}

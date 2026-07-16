@@ -18,6 +18,7 @@ var _resolved: bool = false  # one-shot guard against double-click
 
 @onready var title_label: Label = $CenterPanel/Body/HeaderBand/Row/TitleLabel
 @onready var id_code_label: Label = $CenterPanel/Body/HeaderBand/Row/IdCodeLabel
+@onready var art_region: Panel = $CenterPanel/Body/ArtRegion
 @onready var caption_label: Label = $CenterPanel/Body/ArtRegion/CaptionStrip
 @onready var character_context: Control = $CenterPanel/Body/CharacterContext
 @onready var portrait_initial: Label = $CenterPanel/Body/CharacterContext/PortraitPanel/Initial
@@ -35,6 +36,9 @@ func populate(event: GameEvent) -> void:
 	title_label.text = "§  %s" % event.title
 	id_code_label.text = "EV · %s" % _short_code(event.id)
 	caption_label.text = event.subtitle
+	# B2B Sales modals go header → speaker → in-voice body → options (no illustration
+	# frame), which also frees the vertical room the taller cost-line rows need.
+	art_region.visible = not _is_b2b_event()
 	body_rich.text = _markdown_to_bbcode(_drop_cap(event.body_text))
 	_render_character_context()
 	_render_choices()
@@ -43,24 +47,67 @@ func populate(event: GameEvent) -> void:
 # --- Character context ---
 
 func _render_character_context() -> void:
-	if _event.character_id == "":
+	# Clear any prior extra chips (leave the relationship/status pill node in place).
+	for child in chips_row.get_children():
+		if child != relationship_pill:
+			child.queue_free()
+	if _event.character_id != "":
+		_render_registry_character()
+	elif _event.speaker_name != "":
+		_render_synthetic_speaker()
+	else:
 		character_context.visible = false
-		return
+
+
+func _render_registry_character() -> void:
 	var c: Character = CharacterRegistry.get_character(_event.character_id)
 	if c == null:
 		character_context.visible = false
 		push_warning("[EventModal] event.character_id refers to unknown character: %s" % _event.character_id)
 		return
 	character_context.visible = true
+	relationship_pill.visible = true
 	name_role_label.text = "%s · %s" % [c.character_name, c.role]
 	portrait_initial.text = _initials(c.character_name)
 	_apply_relationship_pill(c.relationship)
 	# Trait chips (first 2) appended after the relationship pill.
-	for child in chips_row.get_children():
-		if child != relationship_pill:
-			child.queue_free()
 	for t in c.traits.slice(0, 2):
 		chips_row.add_child(UiFactory.make_badge(String(t), &"neutral"))
+
+
+func _render_synthetic_speaker() -> void:
+	# A non-Character speaker (e.g. a B2B customer talking in their own voice), rendered
+	# straight from the event's speaker_* fields — no CharacterRegistry lookup.
+	character_context.visible = true
+	if _event.speaker_role != "":
+		name_role_label.text = "%s · %s" % [_event.speaker_name, _event.speaker_role]
+	else:
+		name_role_label.text = _event.speaker_name
+	portrait_initial.text = _event.speaker_initial if _event.speaker_initial != "" else _initials(_event.speaker_name)
+	if _event.speaker_status != "":
+		relationship_pill.visible = true
+		_apply_status_pill(_event.speaker_status, StringName(String(_event.speaker_status_kind)))
+	else:
+		relationship_pill.visible = false
+	for chip in _event.speaker_chips:
+		if typeof(chip) == TYPE_DICTIONARY:
+			chips_row.add_child(UiFactory.make_badge(
+				String(chip.get("text", "")), StringName(String(chip.get("kind", "neutral")))))
+
+
+func _apply_status_pill(text: String, kind: StringName) -> void:
+	# Status chip in the relationship-pill slot, tinted from a badge palette (kind).
+	relationship_pill.text = text.to_upper()
+	var pal: Dictionary = UiTokens.badge_palette(kind)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = pal.bg
+	sb.set_corner_radius_all(3)
+	sb.content_margin_left = 6
+	sb.content_margin_right = 6
+	sb.content_margin_top = 2
+	sb.content_margin_bottom = 2
+	relationship_pill.add_theme_stylebox_override("normal", sb)
+	relationship_pill.add_theme_color_override("font_color", pal.fg)
 
 
 func _apply_relationship_pill(rel: String) -> void:
@@ -88,11 +135,17 @@ func _render_choices() -> void:
 
 func _build_choice_card(choice: EventChoice, idx: int) -> Control:
 	var unlocked: bool = EventManager.is_condition_met(choice.unlock_condition)
-	var card: Dictionary = UiFactory.make_choice_card(choice.label, not unlocked)
+	# Retention-family choices use the two-row cost-line layout (bold label + a dim cost
+	# line beneath) instead of inline effect badges. The cost line is derived from the
+	# SAME _describe_modifier used for badges, so label and cost can never desync.
+	var use_cost_line: bool = _is_b2b_event()
+	var cost_line: String = _cost_summary(choice.modifiers) if (unlocked and use_cost_line) else ""
+	var card: Dictionary = UiFactory.make_choice_card(choice.label, not unlocked, cost_line)
 	var root: PanelContainer = card.root
 	var row: HBoxContainer = card.row
 	if unlocked:
-		_add_modifier_badges(row, choice.modifiers)
+		if not use_cost_line:
+			_add_modifier_badges(row, choice.modifiers)
 		root.gui_input.connect(_on_choice_input.bind(idx))
 	else:
 		root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -108,6 +161,25 @@ func _add_modifier_badges(row: HBoxContainer, modifiers: Array) -> void:
 		if desc.is_empty():
 			continue
 		row.add_child(UiFactory.make_badge(desc.text, desc.kind))
+
+
+func _cost_summary(modifiers: Array) -> String:
+	# One readable-TR cost line built from the choice's modifiers via _describe_modifier
+	# (single source of effect truth — costs are never hand-authored into the label).
+	var parts: PackedStringArray = []
+	for m in modifiers:
+		var desc: Dictionary = _describe_modifier(m)
+		if not desc.is_empty():
+			parts.append(String(desc.text))
+	return " · ".join(parts)
+
+
+func _is_b2b_event() -> bool:
+	# True for B2B Sales System modals (retention, escalation) — tagged "b2b_*".
+	for t in _event.tags:
+		if String(t).begins_with("b2b_"):
+			return true
+	return false
 
 
 func _on_choice_input(event: InputEvent, idx: int) -> void:
@@ -176,6 +248,18 @@ func _describe_modifier(m) -> Dictionary:
 		"convert_audience": return {"text": "Kitleden dönüşüm %%%d" % int(round(float(m.get("pct", 0.0)) * 100.0)), "kind": &"positive"}
 		"open_paid_tier": return {"text": "Ücretli katman açılır", "kind": &"accent"}
 		"add_character": return {"text": "Yeni ekip üyesi", "kind": &"positive"}
+		# --- B2B Sales System retention outcomes (badge + cost-line source of truth) ---
+		"b2b_promise_create": return {"text": "Müşteri kalır · söz borcu", "kind": &"accent"}
+		"b2b_retain_delay": return {"text": "Kısa vadeli hamle", "kind": &"neutral"}
+		"b2b_retain_discount": return {"text": "Müşteri kalır · MRR %s" % _fmt_money_delta(int(m.get("mrr_delta", 0))), "kind": &"negative"}
+		"b2b_retain_release": return {"text": "Müşteriyi kaybet", "kind": &"negative"}
+		"b2b_cs_promise_honor": return {"text": "Müşteri kalır · söz borcu doğar · yol haritasına eklenir", "kind": &"accent"}
+		"b2b_cs_promise_refuse": return {"text": "Müşteriyi kaybet", "kind": &"negative"}
+		"b2b_expand":
+			var es: int = int(m.get("add_seats", 0))
+			var em: int = es * int(m.get("per_seat_mrr", 0))
+			return {"text": "Koltuk +%d · MRR %s" % [es, _fmt_money_delta(em)], "kind": &"positive"}
+		"b2b_expand_decline": return {"text": "Değişiklik yok", "kind": &"neutral"}
 	return {}  # set_flag / mentor_advisory / ship_active_build / endgame types — bookkeeping or self-describing, no badge
 
 

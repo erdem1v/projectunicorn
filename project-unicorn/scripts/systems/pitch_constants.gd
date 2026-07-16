@@ -53,6 +53,14 @@ const GECISTIR_CAP := 65               # deflection can never win the room (§4 
 const BEAT1_DIFF := DIFF_ORTA
 const MASAYI_ZORLA_DIFF := DIFF_ZORLU  # Ilık fork gamble; failure = RET (hard, Erdem call C)
 
+# --- Beat skill routing (SKILL-RENAME 2026-07-16) ---
+# Erdem: VC persuasion beats read Nüfuz (investor relations); the traction angle reads
+# Satış. One const per beat so a per-site remap is a one-token change.
+const BEAT1_SKILL := "influence"        # Odayı oku
+const BEAT3_SKILL := "influence"        # Sorgu postures (dürüst / spin / geçiştir)
+const BEAT4_PUSH_SKILL := "influence"   # Masayı zorla
+const ANGLE_SKILL := {"vizyon": "influence"}   # Beat 2 anlatı; fallback: "sales" (traction)
+
 # --- Prep (§1) ---
 const MEETING_LEAD_DAYS := 3           # request → meeting day
 const PREP_DAYS := 2
@@ -76,7 +84,7 @@ const DAY180_WARN_DAY := 179            # Frank "yarın son gün, cebinde teklif
 # Every number is a working placeholder (calibration pass tunes it). Each lever's push reads
 # ONE founder skill (the payoff of the onboarding skill choice) — kept as an editable data
 # table so the mapping never hides inside table logic:
-const LEVER_SKILL := {"valuation": "markets", "dilution": "charisma", "board": "politics"}
+const LEVER_SKILL := {"valuation": "sales", "dilution": "negotiation", "board": "influence"}
 # Per-lever base difficulty (SkillCheck diff units). Kept 0-2 so "temel" reads legibly —
 # diff 3 would zero the base (BASE_CHANCE − 3·DIFFICULTY_STEP = 0). Board is hardest (control),
 # valuation easiest (a market argument).
@@ -95,11 +103,6 @@ const LEVERAGE_OPEN_NOTCH := 4          # opening valuation starts +$4M better w
 # Dial spin duration (seconds) — the push roll presentation.
 const DIAL_SPIN_SECS := 0.8
 
-# Founder-skill Turkish labels for the skill-split odds display (§5). The single label home,
-# reusable by the meeting too.
-const SKILL_LABEL_TR := {"charisma": "karizma", "markets": "piyasa", "politics": "politika", "tech": "teknik"}
-
-
 ## Difficulty label (Turkish, shown in odds text) for a diff int.
 static func diff_label(diff: int) -> String:
 	match diff:
@@ -108,6 +111,8 @@ static func diff_label(diff: int) -> String:
 		_: return "Zorlu"
 
 
-## Founder-skill Turkish label for the odds split (§5). Falls back to the raw key.
+## Founder-skill display label for the odds split (§5). Single label home is
+## FounderConstants (CSV-backed since SKILL-RENAME); kept here as a delegate so
+## existing callers (term sheet table, meeting) stay unchanged.
 static func skill_label(skill_name: String) -> String:
-	return SKILL_LABEL_TR.get(skill_name, skill_name)
+	return FounderConstants.skill_label(skill_name)

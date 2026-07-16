@@ -90,7 +90,8 @@ static func daily_tick() -> void:
 	# Daily: satisfaction drift + a backstop MRR bridge. B2C audience/MRR now flow on
 	# the HOURLY tick (hourly_tick); this is the slot-4 sink + B2B reflection.
 	if GameState.get_flag("mvp_shipped", false):
-		_tick_satisfaction()
+		_tick_satisfaction()          # B2C aggregate only (B2B is routed away — see guard)
+		B2BSalesSystem.daily_tick()   # B2B per-customer lifecycle (two-layer satisfaction / churn)
 	_mrr_bridge()
 	if OS.is_debug_build():
 		print("[SalesSystem] Daily tick — MRR $%d" % GameState.mrr)
@@ -249,6 +250,20 @@ static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int) ->
 	c.warning_flags = prospect.warning_flags.duplicate()
 	c.acquisition_source = "founder_pitch"
 	c.acquired_on_day = GameState.day
+	# B2B lifecycle seed (Stage A): scale + hidden tolerance (scale + sector), fresh
+	# onboarding window. Larger/older/loyal accounts endure low satisfaction longer.
+	c.scale = prospect.scale
+	c.tolerance = B2BConstants.seed_tolerance(prospect.scale, prospect.industry)
+	c.lifecycle_phase = "onboarding"
+	c.churn_countdown = -1
+	c.risk_streak = 0
+	c.support_load = B2BConstants.support_load_for(prospect.scale)
+	c.onboarding_until = GameState.day + B2BConstants.ONBOARDING_DAYS
+	# The feature this account wants (drives special requests + the retention promise).
+	c.pain_feature_id = prospect.pain_feature_id
+	if c.pain_feature_id == "":
+		c.pain_feature_id = B2BSalesSystem.pick_pain_feature(
+			String(GameState.get_flag("mvp_sub_product_type_id", "")), c.scale)
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
 	GameState.run_customers_signed += 1  # run counter seam (Spec 3 §3) — sole B2B signing path
@@ -271,6 +286,8 @@ static func _tick_satisfaction() -> void:
 	var stab: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
 	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0)))
 	for c in CustomerRegistry.get_active():
+		if c.market_type != "b2c":
+			continue  # B2B satisfaction is owned by B2BSalesSystem (two-layer model); leave B2C byte-identical
 		var delta: int = 0
 		if stab >= SATISFACTION_QUALITY_GATE:
 			delta += 1

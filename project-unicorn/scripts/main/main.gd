@@ -88,6 +88,15 @@ func _ready() -> void:
 				get_tree().quit()
 			return
 
+	# Debug: --b2b-shot=<kind> (windowed) renders one B2B Sales modal at 1920×1080,
+	# saves a screenshot to user://, and quits. Visual verification of the widened
+	# EventModal populated with the retention / escalation content. Debug builds only.
+	if OS.is_debug_build():
+		var shot_kind: String = _b2b_shot_requested()
+		if shot_kind != "":
+			_run_b2b_shot(shot_kind)
+			return
+
 	if OS.is_debug_build() and _skip_onboarding_requested():
 		_skip_to_shell()
 		return
@@ -123,6 +132,64 @@ func _smoke_case_on_cmdline() -> bool:
 		if String(arg).begins_with("--endgame-smoke="):
 			return true
 	return false
+
+
+func _b2b_shot_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--b2b-shot="):
+			return s.trim_prefix("--b2b-shot=")
+	return ""
+
+
+func _run_b2b_shot(kind: String) -> void:
+	# Mount one B2B Sales modal into a CanvasLayer, render a couple frames, screenshot.
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	GameState.initialize_run({})
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	var p := Prospect.new()
+	p.id = "shot"
+	p.company_name = "Ege Sigorta"
+	p.industry = "Sigorta"
+	p.archetype = "small"
+	p.pain_feature_id = "ai_vec_filter"
+	var c: Customer = SalesSystem.add_b2b_customer(p, 1000, 70)
+	var ev: GameEvent
+	if kind == "escalation":
+		var cs := Character.new()
+		cs.id = "char_cs_shot"
+		cs.character_name = "Burcu Çetin"
+		cs.role = CharacterRegistry.ROLE_CUSTOMER_SUCCESS
+		cs.category = "employee"
+		cs.monthly_salary = 5000
+		cs.role_stats = {"cs_skill": 55}
+		CharacterRegistry.add(cs)
+		CustomerRegistry.assign_customer(c.id, cs.id)
+		CustomerRegistry.set_satisfaction(c.id, 22)
+		ev = B2BEventFactory.build_cs_escalation(c, cs)
+	elif kind == "expansion":
+		CustomerRegistry.set_lifecycle_phase(c.id, "expansion")
+		ev = B2BEventFactory.build_expansion(c)
+	else:
+		CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+		CustomerRegistry.set_churn_countdown(c.id, 8)
+		ev = B2BEventFactory.build_retention(c)
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var modal: Control = EVENT_MODAL.instantiate()
+	layer.add_child(modal)
+	modal.populate(ev)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().create_timer(0.35).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://b2b_shot_%s.png" % kind
+	img.save_png(path)
+	print("[B2BShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
 
 
 func _mount_flow() -> void:
@@ -555,12 +622,15 @@ func _skip_to_shell() -> void:
 
 
 func _debug_payload() -> Dictionary:
+	# Mirrors the 3-page onboarding draft shape (Stage D). Alloc sums to
+	# FounderConstants.POINT_POOL (6) and keeps odds parity at every read site:
+	# sales=2 (valuation lever + prospect read), negotiation=1 (dilution),
+	# influence=1 (board + VC beats), tech=2 (product); leadership has no reads yet.
 	return {
 		"origin_id": "self_made",
-		"skill_alloc": {"tech": 2, "markets": 2, "charisma": 1, "politics": 1},
-		"trait_positive_id": "charismatic",
-		"trait_negative_id": "imposter_syndrome",
-		"subgenre_id": "ai",
+		"portrait_id": "founder_01",
+		"skill_alloc": {"tech": 2, "sales": 2, "negotiation": 1, "leadership": 0, "influence": 1},
+		"trait_ids": ["visionary", "stubborn"],
 		"company_name": "Unicorn Inc.",
 		"founder_name": "",
 		"logo_style": "minimalist",

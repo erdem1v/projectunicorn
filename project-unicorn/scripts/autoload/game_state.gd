@@ -22,6 +22,7 @@ var subgenre: String = "ai"           # "ai" | "saas" | "social" (demo: ai|saas 
 var logo_style: String = "minimalist" # "minimalist" | "tech" | "playful" | "serious" (PROJECT_SPEC §3.1)
 var slogan: String = ""               # Optional free text — may be empty
 var founder_name: String = ""         # Player's name; "" means the founder Character defaults to "Founder"
+var founder_portrait: String = ""     # Portrait id (e.g. "founder_03"); art via FounderConstants.portrait_path()
 var run_seed: int = 0  # 0 = unseeded; TECH_SPEC §10.4 seeds this when run starts
 
 # --- Phase 1 — Bootstrap defaults ---
@@ -74,6 +75,7 @@ var month_highlight_priority: int = -1
 # B2C semantics. ---
 var run_customers_signed: int = 0      # SalesSystem.add_b2b_customer
 var run_customers_lost: int = 0        # churn_customer modifier, B2B branch
+var run_customers_expanded: int = 0    # B2BSalesSystem.expand (genuine seat/MRR upsell)
 var run_hires: int = 0                 # CharacterRegistry.add, category "employee"
 var run_departures: int = 0            # RESERVED — no fire/quit seam exists yet
 var run_scandals_total: int = 0        # RESERVED — no scandal system yet; debug-settable
@@ -129,6 +131,13 @@ func advance_day() -> void:
 func set_current_hour(value: int) -> void:
 	current_hour = clampi(value, 0, 23)
 	EventBus.hour_changed.emit(current_hour)
+
+func set_subgenre(value: String) -> void:
+	# Write-through seam: called by ProductSystem.start_build when a product is
+	# committed (onboarding no longer asks — the played product decision owns
+	# this field). No signal: every reader (event conditions, VC seeding,
+	# product pool fallbacks) reads lazily at evaluation time.
+	subgenre = value
 
 func set_phase(value: int) -> void:
 	# Save-restore / debug backdoor ONLY. Gameplay phase changes go through
@@ -210,8 +219,12 @@ func get_founder_equity() -> float:
 
 
 func get_founder_skill(skill_name: String) -> int:
-	# Reads from founder.role_stats. Populated by _build_founder from
-	# onboarding SkillStep payload. Returns 0 if founder or skill missing.
+	# Reads from founder.role_stats. Populated by _build_founder from the
+	# onboarding skill allocation. Returns 0 if founder or skill missing.
+	# SKILL-RENAME tripwire: a read of a pre-rename key is a stale caller —
+	# scream in every log instead of silently returning 0.
+	if skill_name in FounderConstants.OLD_SKILLS:
+		push_error("[GameState] read of renamed founder skill '%s' — see FounderConstants SKILL-RENAME ledger" % skill_name)
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder == null:
 		return 0
@@ -250,14 +263,18 @@ func initialize_run(payload: Dictionary) -> void:
 
 	# Identity
 	origin = payload.get("origin_id", "self_made")
+	# Onboarding no longer asks the subgenre — it defaults here and the committed
+	# product write-throughs it later (set_subgenre via ProductSystem.start_build).
 	subgenre = payload.get("subgenre_id", "ai")
 	company_name = payload.get("company_name", "Unicorn Inc.")
 	logo_style = payload.get("logo_style", "minimalist")
 	slogan = payload.get("slogan", "")
 	founder_name = payload.get("founder_name", "")
+	founder_portrait = payload.get("portrait_id", "")
 
-	# Start state per PROJECT_SPEC §4.5 (Self-Made values — only playable demo origin)
-	cash = 10000
+	# Start state: origin decides the opening cash (FounderConstants working
+	# placeholder — Self-Made low capital; locked origins carry their own later).
+	cash = int(FounderConstants.origin_by_id(origin).get("starting_cash", 10000))
 	mrr = 0
 	daily_burn = 50
 	brand = 50
@@ -287,6 +304,7 @@ func initialize_run(payload: Dictionary) -> void:
 	month_highlight_priority = -1
 	run_customers_signed = 0
 	run_customers_lost = 0
+	run_customers_expanded = 0
 	run_hires = 0
 	run_departures = 0
 	run_scandals_total = 0
@@ -306,6 +324,12 @@ func initialize_run(payload: Dictionary) -> void:
 	# Flags survive nothing: fresh run = fresh world-state (hardening for any
 	# future in-place restart; harmless in a fresh process).
 	flags.clear()
+
+	# Origin flags — set AFTER the clear or they would be wiped. RESERVED:
+	# nothing consumes origin_press_sympathy / origin_low_capital yet; future
+	# press/network systems read them (FounderConstants.ORIGINS reserved_flags).
+	for origin_flag in FounderConstants.origin_by_id(origin).get("reserved_flags", []):
+		set_flag(String(origin_flag), true)
 
 	# Saat senkronu: current_hour'u doğrudan yazdık — TimeManager'ın accumulator'ı
 	# da aynı saate kilitlenmeli, yoksa ilk gün saatlik tik atmaz ("ilk gün ölü").
@@ -328,13 +352,13 @@ func initialize_run(payload: Dictionary) -> void:
 
 func _build_founder(payload: Dictionary) -> Character:
 	var skill_alloc: Dictionary = payload.get("skill_alloc", {})
+	# Trait ids as one array (polarity derives from the FounderConstants catalog).
+	# RESERVED: no system consumes trait effects yet — stored for the wiring task.
 	var traits_arr: Array[String] = []
-	var positive_id: String = payload.get("trait_positive_id", "")
-	var negative_id: String = payload.get("trait_negative_id", "")
-	if positive_id != "":
-		traits_arr.append(positive_id)
-	if negative_id != "":
-		traits_arr.append(negative_id)
+	for trait_id in payload.get("trait_ids", []):
+		traits_arr.append(String(trait_id))
+	if not FounderConstants.validate_traits(traits_arr):
+		push_error("[GameState] trait_ids failed the trait formula: %s" % str(traits_arr))
 
 	var raw_name: String = payload.get("founder_name", "")
 	var display_name: String = raw_name.strip_edges() if raw_name != "" else ""
@@ -349,12 +373,18 @@ func _build_founder(payload: Dictionary) -> Character:
 	f.monthly_salary = 0
 	f.equity_pct = 100.0
 	f.morale = 50
-	f.role_stats = {
-		"tech": int(skill_alloc.get("tech", 0)),
-		"markets": int(skill_alloc.get("markets", 0)),
-		"charisma": int(skill_alloc.get("charisma", 0)),
-		"politics": int(skill_alloc.get("politics", 0)),
-	}
+	# SKILL-RENAME: canonical key list lives in FounderConstants.SKILLS — the single
+	# mapping. Stale payload keys (pre-rename UI) are flagged loudly, never copied.
+	var stats: Dictionary = {}
+	for skill_key in FounderConstants.SKILLS:
+		stats[skill_key] = int(skill_alloc.get(skill_key, 0))
+	for k in skill_alloc.keys():
+		if not FounderConstants.SKILLS.has(k):
+			push_error("[GameState] stale skill key in onboarding payload: '%s' (SKILL-RENAME)" % k)
+	if not FounderConstants.validate_alloc(skill_alloc):
+		push_error("[GameState] skill_alloc failed validation (pool %d, cap %d): %s"
+			% [FounderConstants.POINT_POOL, FounderConstants.ONBOARDING_CAP, str(skill_alloc)])
+	f.role_stats = stats
 	f.traits = traits_arr
 	# loyalty / relationship / trust_score / attention_flag stay at Resource
 	# defaults — forward-compatible per scripts/data_models/character.gd.

@@ -149,7 +149,7 @@ static func seed_conviction(vc_id: String) -> Dictionary:
 static func _resolve_beat1(_choice_id: String) -> Dictionary:
 	# Odayı Oku — perception. Success reveals the tell (favored angle + Sorgu target).
 	_first_check_done = true
-	var chk: Dictionary = SkillCheck.resolve("charisma", PitchConstants.BEAT1_DIFF, 0)
+	var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0)
 	if chk.passed:
 		_intel = true
 	_beat = 2
@@ -181,7 +181,7 @@ static func _resolve_beat3(choice_id: String) -> Dictionary:
 	if clean:
 		diff = PitchConstants.DIFF_KOLAY
 	var bonus: int = PitchConstants.PREP_BONUS if (_prep_focus == "prova" and posture == "durust") else 0
-	var chk: Dictionary = SkillCheck.resolve("charisma", diff, bonus)
+	var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT3_SKILL, diff, bonus)
 	var s: int = 0
 	var f: int = 0
 	match posture:
@@ -210,7 +210,7 @@ static func _resolve_beat4(choice_id: String) -> Dictionary:
 			_beat = 5
 			return {"done": false, "view_state": _result_view_state("callback")}
 		"b4_zorla":
-			var chk: Dictionary = SkillCheck.resolve("charisma", PitchConstants.MASAYI_ZORLA_DIFF, 0)
+			var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0)
 			if chk.passed:
 				_grant_sheet()
 				_beat = 5
@@ -499,7 +499,7 @@ static func _beat1_view_state(why: Array) -> Dictionary:
 	vs["monologue_text"] = ("Odayı oku: " + " · ".join(PackedStringArray(why))) if not why.is_empty() else "Odayı oku."
 	vs["beat_label"] = "Odayı Oku · 1/4"
 	vs["can_withdraw"] = true                       # only before the first check (ledger)
-	vs["choices"] = [{"id": "b1_read", "text": "Odayı oku — karşındakini tart.", "odds_text": _odds("Algı", "charisma", PitchConstants.BEAT1_DIFF, 0)}]
+	vs["choices"] = [{"id": "b1_read", "text": "Odayı oku — karşındakini tart.", "odds_text": _odds("Algı", PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0)}]
 	return vs
 
 
@@ -526,9 +526,9 @@ static func _beat3_view_state(prev: Dictionary) -> Dictionary:
 	vs["beat_label"] = "Sorgu · 3/4"
 	var prova: bool = _prep_focus == "prova"
 	vs["choices"] = [
-		{"id": "b3_durust", "text": "Dürüst: kabul et, planı göster.", "odds_text": _odds("Dürüst", "charisma", PitchConstants.DURUST_DIFF, PitchConstants.PREP_BONUS if prova else 0), "caption": "Düşük risk, dürüst duruş.", "marked": prova, "marked_text": "PROVA EDİLDİ"},
-		{"id": "b3_spin", "text": "Spin: zayıflığı güce çevir.", "odds_text": _odds("Spin", "charisma", PitchConstants.SPIN_DIFF, 0), "caption": "Yüksek risk, yüksek getiri."},
-		{"id": "b3_gecistir", "text": "Geçiştir: konuyu kaydır.", "odds_text": _odds("Geçiştir", "charisma", PitchConstants.GECISTIR_DIFF, 0), "caption": "Güvenli, ama masa buradan çıkmaz (%d tavan)." % PitchConstants.GECISTIR_CAP, "caption_danger": true},
+		{"id": "b3_durust", "text": "Dürüst: kabul et, planı göster.", "odds_text": _odds("Dürüst", PitchConstants.BEAT3_SKILL, PitchConstants.DURUST_DIFF, PitchConstants.PREP_BONUS if prova else 0), "caption": "Düşük risk, dürüst duruş.", "marked": prova, "marked_text": "PROVA EDİLDİ"},
+		{"id": "b3_spin", "text": "Spin: zayıflığı güce çevir.", "odds_text": _odds("Spin", PitchConstants.BEAT3_SKILL, PitchConstants.SPIN_DIFF, 0), "caption": "Yüksek risk, yüksek getiri."},
+		{"id": "b3_gecistir", "text": "Geçiştir: konuyu kaydır.", "odds_text": _odds("Geçiştir", PitchConstants.BEAT3_SKILL, PitchConstants.GECISTIR_DIFF, 0), "caption": "Güvenli, ama masa buradan çıkmaz (%d tavan)." % PitchConstants.GECISTIR_CAP, "caption_danger": true},
 	]
 	return vs
 
@@ -551,13 +551,13 @@ static func _beat4_view_state() -> Dictionary:
 		vs["monologue_text"] = "Ilık. Güvenli kapı mı, açgözlü kumar mı?"
 		if _reentry:
 			vs["choices"] = [
-				{"id": "b4_zorla", "text": "Masayı zorla — şimdi karar ver.", "odds_text": _odds("Zorla", "charisma", PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": "Başarısızsan masa kapanır.", "caption_danger": true},
+				{"id": "b4_zorla", "text": "Masayı zorla — şimdi karar ver.", "odds_text": _odds("Zorla", PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": "Başarısızsan masa kapanır.", "caption_danger": true},
 				{"id": "b4_ret", "text": "İkinci kez ılık. Bırak gitsin.", "caption": "Reddedilme sayılır."},
 			]
 		else:
 			vs["choices"] = [
 				{"id": "b4_callback", "text": "Callback'i kabul et — koşulu tuttur.", "caption": "Güvenli. Kapı açık kalır."},
-				{"id": "b4_zorla", "text": "Masayı zorla — şimdi karar ver.", "odds_text": _odds("Zorla", "charisma", PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": "Başarısızsan masa kapanır.", "caption_danger": true},
+				{"id": "b4_zorla", "text": "Masayı zorla — şimdi karar ver.", "odds_text": _odds("Zorla", PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": "Başarısızsan masa kapanır.", "caption_danger": true},
 			]
 	return vs
 
@@ -654,7 +654,9 @@ static func _gross_runway_months() -> float:
 
 
 static func _angle_skill(angle: String) -> String:
-	return "charisma" if angle == "vizyon" else "markets"
+	# SKILL-RENAME: routing lives in PitchConstants.ANGLE_SKILL (vizyon reads Nüfuz,
+	# everything else — metrik/traction — reads Satış).
+	return String(PitchConstants.ANGLE_SKILL.get(angle, "sales"))
 
 
 static func _beat2_bonus(angle: String) -> int:

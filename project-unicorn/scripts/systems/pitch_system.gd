@@ -51,15 +51,31 @@ static var _last_band: String = ""
 
 static func spawn_prospect(archetype: String, source: String) -> Prospect:
 	var p := Prospect.new()
-	var n: int = (GameState.day * 7 + ProspectRegistry.count() * 13) % _COMPANY_NAMES.size()
+	var n: int = (GameState.day * 7 + ProspectRegistry.count() * 13)
 	p.id = "lead_%d_%d" % [GameState.day, ProspectRegistry.count()]
-	p.company_name = _COMPANY_NAMES[n]
-	p.industry = _INDUSTRIES[n]
 	p.archetype = archetype
-	p.need_summary = _NEEDS[n % _NEEDS.size()]
+	# E.2: draw the industry from the ACTIVE product's sector affinity (a vector-search
+	# product yields only tech/finance prospects; ops yields only construction/etc.), and
+	# the company name from that sector so the fiction matches.
+	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
+	var sectors: Array = B2BConstants.sector_pool(sub_id)
+	p.industry = String(sectors[n % sectors.size()])
+	var names: Array = B2BConstants.sector_companies(p.industry)
+	p.company_name = String(names[n % names.size()])
+	# B.4: tie the surface need to a feature that EXISTS in the active product's pool,
+	# so a later special request maps to something the player can actually build.
+	var pain_fid: String = B2BSalesSystem.pick_pain_feature(sub_id, n)
+	p.pain_feature_id = pain_fid
+	p.need_summary = B2BConstants.pain_phrase(pain_fid) if pain_fid != "" else _NEEDS[n % _NEEDS.size()]
 	p.real_need = _REAL_NEEDS[n % _REAL_NEEDS.size()]
 	p.difficulty_stars = _difficulty_for(archetype)
+	p.scale = B2BConstants.roll_scale(archetype)   # 1..5 stars; demo-capped to 1-3 (A.4)
 	p.budget_band = _budget_for(archetype)
+	# E.3: value shown as a RANGE band (floor if it goes poorly, ceiling if well).
+	var band: Dictionary = MRR_BANDS.get(archetype, MRR_BANDS["small"])
+	var mid: float = (float(band["low"]) + float(band["high"])) * 0.5
+	p.value_band_min = int(round(mid * B2BConstants.VALUE_BAND_LOW_FRAC))
+	p.value_band_max = int(round(mid * B2BConstants.VALUE_BAND_HIGH_FRAC))
 	p.source = source
 	p.spawned_on_day = GameState.day
 	ProspectRegistry.add(p)
@@ -107,7 +123,7 @@ static func _pitch_value_hint() -> String:
 	var seats: int = SalesSystem._seats_for_archetype(_prospect.archetype)
 	var per_lo: int = int(round(float(lo_mo) / maxf(1.0, float(seats))))
 	var per_hi: int = int(round(float(hi_mo) / maxf(1.0, float(seats))))
-	return "Markets okuması — %d seat. Ürün değerin bu segmentte seat başına ~$%d-%d → ~$%d-%d/ay. Bu aralıkta oyna." \
+	return "Satış okuması — %d seat. Ürün değerin bu segmentte seat başına ~$%d-%d → ~$%d-%d/ay. Bu aralıkta oyna." \
 		% [seats, per_lo, per_hi, lo_mo, hi_mo]
 
 
@@ -144,7 +160,7 @@ static func get_stage() -> Dictionary:
 		0:
 			var reveal := ""
 			if SkillCheck.can_read_prospect():
-				reveal = "Markets okuması — bütçe: %s. %s" % [_prospect.budget_band, _prospect.real_need]
+				reveal = "Satış okuması — bütçe: %s. %s" % [_prospect.budget_band, _prospect.real_need]
 			return {
 				"id": "intro",
 				"speaker": "%s · %s" % [_prospect.company_name, _prospect.industry],
@@ -165,9 +181,9 @@ static func get_stage() -> Dictionary:
 				"inner": "Klasik itiraz: 'zaten bir şeyimiz var.' Çerçeveyi cevabım belirler.",
 				"reveal": "",
 				"choices": [
-					{"label": "Dürüst ol — taze ama derdine birebir", "skill": "markets", "diff": VALUE_BASE_DIFFICULTY},
-					{"label": "Vizyon sat — nereye gittiğimizi anlat", "skill": "charisma", "diff": VALUE_BASE_DIFFICULTY + 1},
-					{"label": "Onun derdine odaklan, dilinden konuş", "skill": "markets", "diff": VALUE_BASE_DIFFICULTY - 1},
+					{"label": "Dürüst ol — taze ama derdine birebir", "skill": "sales", "diff": VALUE_BASE_DIFFICULTY},
+					{"label": "Vizyon sat — nereye gittiğimizi anlat", "skill": "influence", "diff": VALUE_BASE_DIFFICULTY + 1},
+					{"label": "Onun derdine odaklan, dilinden konuş", "skill": "sales", "diff": VALUE_BASE_DIFFICULTY - 1},
 				],
 			}
 		2:
@@ -193,9 +209,9 @@ static func get_stage() -> Dictionary:
 				"inner": "Son viraj. Geri çekilirsem kaçar; itersem ya imza ya kapı. %s" % band_line,
 				"reveal": "",
 				"choices": [
-					{"label": "Nazikçe ama kararlı kapat", "skill": "charisma", "diff": CLOSE_BASE_DIFFICULTY, "mrr_mult": 1.0},
-					{"label": "Bir taviz ver, güven inşa et", "skill": "charisma", "diff": CLOSE_BASE_DIFFICULTY - 1, "mrr_mult": 0.9},
-					{"label": "Sert kapat — 'bugün karar ver'", "skill": "charisma", "diff": CLOSE_BASE_DIFFICULTY + 1, "mrr_mult": 1.1},
+					{"label": "Nazikçe ama kararlı kapat", "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY, "mrr_mult": 1.0},
+					{"label": "Bir taviz ver, güven inşa et", "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY - 1, "mrr_mult": 0.9},
+					{"label": "Sert kapat — 'bugün karar ver'", "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY + 1, "mrr_mult": 1.1},
 				],
 			}
 
@@ -217,7 +233,7 @@ static func choose(idx: int) -> Dictionary:
 		"intro":
 			_accum_bonus += int(c.get("bonus", 0))
 		"value":
-			var chk: Dictionary = SkillCheck.resolve(String(c.get("skill", "markets")), int(c.get("diff", 1)), _accum_bonus)
+			var chk: Dictionary = SkillCheck.resolve(String(c.get("skill", "sales")), int(c.get("diff", 1)), _accum_bonus)
 			_last_band = String(chk.get("band", ""))
 			_accum_bonus += 2 if chk.get("passed", false) else -1
 			out["check"] = chk
@@ -233,7 +249,7 @@ static func choose(idx: int) -> Dictionary:
 			elif _price_mult < win["lo"]:
 				_close_diff_delta -= 1
 		"close":
-			var chk2: Dictionary = SkillCheck.resolve("charisma",
+			var chk2: Dictionary = SkillCheck.resolve("sales",
 				CLOSE_BASE_DIFFICULTY + _close_diff_delta + _prospect.difficulty_stars - 1, _accum_bonus)
 			var mrr_mult: float = float(c.get("mrr_mult", 1.0))
 			out = {"done": true, "result": _resolve_outcome(chk2, mrr_mult)}

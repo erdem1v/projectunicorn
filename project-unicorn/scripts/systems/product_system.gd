@@ -589,6 +589,12 @@ static func start_build(
 		if not pool_ids.has(String(fid)):
 			push_warning("[ProductSystem] start_build feature %s not in pool for %s" % [fid, sub_product_type_id])
 			return false
+	# Onboarding rework 2026-07-16: subgenre is no longer chosen at onboarding —
+	# the committed product decides it (write-through via the GameState seam so
+	# subgenre event conditions + Meridian dimension seeding keep working).
+	var pool_key: String = ProductCatalog.get_pool_of(sub_product_type_id)
+	if pool_key != "":
+		GameState.set_subgenre(pool_key)
 	var b: FeatureBuild = FeatureBuild.new()
 	b.id = "mvp_build_001"
 	b.sub_product_type_id = sub_product_type_id

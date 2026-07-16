@@ -88,6 +88,10 @@ func _initialize() -> void:
 	_lbl(th, &"ConvictionValue", mono_reg, 12, T.CREAM)       # İKNA numeric readout
 	_lbl(th, &"StatStripLabel", mono_reg, 11, T.CREAM)        # bottom-left stat band
 
+	# ---- Dark-register onboarding (3-page threshold ceremony) ----
+	_lbl(th, &"TitleSerifCream", serif_sb, 26, T.CREAM)       # page title on dark ("Karakter")
+	_lbl(th, &"SubtitleSerifCream", serif_it, 13, T.CREAM_DIM)  # italic page/section subtitle on dark
+
 	# ---- Panel variations ----
 	_panel(th, &"TopBarPanel", "Panel", _box(T.BG_TOPBAR, 0, Color.TRANSPARENT, 0, [0,0,0,1], T.SEPARATOR))
 	_panel(th, &"SidePanel", "Panel", _box(T.BG_PANEL, 0, Color.TRANSPARENT, 0, [1,1,0,0], T.DIVIDER_LIGHT))
@@ -121,6 +125,11 @@ func _initialize() -> void:
 	_panel(th, &"DialogueChoiceHover", "PanelContainer", _box(T.DIALOGUE_CARD_BG, 1, T.ACCENT, 8, [], Color.TRANSPARENT, 14, 10))
 	_panel(th, &"NumberChip", "Panel", _box(Color.TRANSPARENT, 1, T.CREAM_DIM, 11))
 	_panel(th, &"StatStrip", "PanelContainer", _box(T.STAT_STRIP_BG, 0, Color.TRANSPARENT, 4, [], Color.TRANSPARENT, 12, 6))
+
+	# ---- Dark-register onboarding panels: portrait grid cells (hairline vs 2px
+	# amber ring when selected) ----
+	_panel(th, &"PortraitCell", "PanelContainer", _box(T.DIALOGUE_CARD_BG, 1, T.DIALOGUE_CARD_BORDER, 6, [], Color.TRANSPARENT, 3, 3))
+	_panel(th, &"PortraitCellSelected", "PanelContainer", _box(T.DIALOGUE_CARD_BG, 2, T.ACCENT, 6, [], Color.TRANSPARENT, 3, 3))
 
 	# ---- Button variations ----
 	_tab_button(th, &"TabButton", false)
@@ -214,6 +223,31 @@ func _initialize() -> void:
 	th.set_color("font_hover_color", &"Button", T.INK)
 	th.set_color("font_pressed_color", &"Button", T.INK)
 	th.set_color("font_disabled_color", &"Button", T.INK_DIM)
+
+	# ---- DialogueInput: LineEdit for the dark onboarding register (base LineEdit
+	# below is light and unreadable on charcoal) ----
+	th.set_type_variation(&"DialogueInput", &"LineEdit")
+	th.set_stylebox("normal", &"DialogueInput", _box(T.DIALOGUE_CARD_BG, 1, T.DIALOGUE_CARD_BORDER, 4, [], Color.TRANSPARENT, 12, 9))
+	th.set_stylebox("focus", &"DialogueInput", _box(T.DIALOGUE_CARD_BG, 1, T.ACCENT, 4, [], Color.TRANSPARENT, 12, 9))
+	th.set_stylebox("read_only", &"DialogueInput", _box(T.DIALOGUE_CARD_BG, 1, T.DIALOGUE_CARD_BORDER, 4, [], Color.TRANSPARENT, 12, 9))
+	th.set_color("font_color", &"DialogueInput", T.CREAM)
+	th.set_color("font_placeholder_color", &"DialogueInput", T.CREAM_DIM)
+	th.set_color("caret_color", &"DialogueInput", T.CREAM)
+
+	# ---- DialogueStepper: square −/+ button on the dark register (skill
+	# allocation). Base Button is light-styled; DialogueGhost is too quiet for a
+	# repeat-press control. ----
+	th.set_type_variation(&"DialogueStepper", &"Button")
+	th.set_stylebox("normal", &"DialogueStepper", _box(T.DIALOGUE_CARD_BG, 1, T.DIALOGUE_CARD_BORDER, 4, [], Color.TRANSPARENT, 10, 4))
+	th.set_stylebox("hover", &"DialogueStepper", _box(T.DIALOGUE_CARD_BG, 1, T.CREAM_DIM, 4, [], Color.TRANSPARENT, 10, 4))
+	th.set_stylebox("pressed", &"DialogueStepper", _box(Color(1, 1, 1, 0.05), 1, T.CREAM_DIM, 4, [], Color.TRANSPARENT, 10, 4))
+	th.set_stylebox("disabled", &"DialogueStepper", _box(Color(1, 1, 1, 0.02), 1, Color(1, 1, 1, 0.05), 4, [], Color.TRANSPARENT, 10, 4))
+	th.set_stylebox("focus", &"DialogueStepper", _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, 0))
+	th.set_font_size("font_size", &"DialogueStepper", 14)
+	th.set_color("font_color", &"DialogueStepper", T.CREAM)
+	th.set_color("font_hover_color", &"DialogueStepper", T.CREAM)
+	th.set_color("font_pressed_color", &"DialogueStepper", T.CREAM)
+	th.set_color("font_disabled_color", &"DialogueStepper", Color(0.663, 0.620, 0.525, 0.4))
 
 	# ---- Base LineEdit: light input (onboarding text fields) ----
 	th.set_stylebox("normal", &"LineEdit", _box(Color(0.98, 0.969, 0.941, 1), 1, T.CARD_BORDER, 4, [], Color.TRANSPARENT, 10, 6))

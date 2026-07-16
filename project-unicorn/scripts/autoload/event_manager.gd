@@ -539,6 +539,28 @@ func _apply_modifiers(modifiers: Array) -> void:
 			"decline_vc_meeting":
 				# "Bugün değil" — the request is consumed, VC stays open, no penalty.
 				GameState.pending_meeting.clear()
+			# --- B2B Sales System modifiers (retention outcomes; each routes through a
+			#     B2BSalesSystem seam. Brand/reputation ride as their own modifiers on the
+			#     same choice - see B2BEventFactory - so the fiction matches the state). ---
+			"b2b_promise_create":
+				B2BSalesSystem.accept_promise(String(m.get("customer_id", "")),
+					String(m.get("feature_id", "")), int(m.get("deadline_days", 14)))
+			"b2b_retain_delay":
+				B2BSalesSystem.hold(String(m.get("customer_id", "")))
+			"b2b_retain_discount":
+				B2BSalesSystem.apply_discount(String(m.get("customer_id", "")), int(m.get("mrr_delta", 0)))
+			"b2b_retain_release":
+				B2BSalesSystem.release(String(m.get("customer_id", "")))
+			"b2b_cs_promise_honor":
+				B2BSalesSystem.honor_cs_promise(String(m.get("customer_id", "")),
+					String(m.get("feature_id", "")), int(m.get("deadline_days", 14)))
+			"b2b_cs_promise_refuse":
+				B2BSalesSystem.refuse_cs_promise(String(m.get("customer_id", "")))
+			"b2b_expand":
+				B2BSalesSystem.expand(String(m.get("customer_id", "")),
+					int(m.get("add_seats", 0)), int(m.get("per_seat_mrr", 0)))
+			"b2b_expand_decline":
+				B2BSalesSystem.decline_expansion(String(m.get("customer_id", "")))
 			_:
 				push_warning("[EventManager] Unknown modifier type: %s" % t)
 

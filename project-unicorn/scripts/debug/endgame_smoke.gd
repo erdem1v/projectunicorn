@@ -88,6 +88,23 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"gross_runway_months":  fail = _case_gross_runway_months()
 		"locale_switch":        fail = _case_locale_switch()
 		"settings_language_toggle": fail = _case_settings_language_toggle()
+		"b2b_lifecycle_and_countdown": fail = _case_b2b_lifecycle_and_countdown()
+		"b2b_satisfaction_leaves_b2c_identical": fail = _case_b2b_satisfaction_leaves_b2c_identical()
+		"b2b_retention_routes_seams": fail = _case_b2b_retention_routes_seams()
+		"b2b_prospect_pain_references_real_feature": fail = _case_b2b_prospect_pain_references_real_feature()
+		"b2b_promise_kept_on_ship": fail = _case_b2b_promise_kept_on_ship()
+		"b2b_promise_broken_on_deadline": fail = _case_b2b_promise_broken_on_deadline()
+		"founder_5skill_init":  fail = _case_founder_5skill_init()
+		"alloc_guard":          fail = _case_alloc_guard()
+		"trait_formula":        fail = _case_trait_formula()
+		"lever_skill_new_keys": fail = _case_lever_skill_new_keys()
+		"b2b_cs_absorbs_routine": fail = _case_b2b_cs_absorbs_routine()
+		"b2b_cs_escalation_refuse": fail = _case_b2b_cs_escalation_refuse()
+		"b2b_cs_counts_in_payroll_hires": fail = _case_b2b_cs_counts_in_payroll_hires()
+		"b2b_expansion_moves_seats_mrr_counter": fail = _case_b2b_expansion_moves_seats_mrr_counter()
+		"b2b_scale_and_sector_gating": fail = _case_b2b_scale_and_sector_gating()
+		"b2b_onboarding_to_prospect_visible": fail = _case_b2b_onboarding_to_prospect_visible()
+		"onboarding_pages_contract": fail = _case_onboarding_pages_contract()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -106,6 +123,12 @@ static func _sim_day() -> void:
 static func _seed_b2b(mrr: int) -> void:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
+	# A shipped product always has quality axes — seed a realistic HEALTHY product so a
+	# signed account holds steady under the B2B two-layer model (only a DEGRADING product
+	# should erode it). Bug count is left untouched so cases that pre-set it keep control.
+	GameState.set_flag("mvp_innovation", 45.0)
+	GameState.set_flag("mvp_stability", 70.0)
+	GameState.set_flag("mvp_usability", 45.0)
 	var p := Prospect.new()
 	p.id = "lead_smoke"
 	p.company_name = "Smoke Corp"
@@ -921,7 +944,7 @@ static func _case_patience_zero_locks_pushes() -> String:
 
 static func _case_push_decay_lowers_odds() -> String:
 	# Invariant: breakdown().total == chance_for() for a few inputs.
-	for combo in [["markets", 0, 0], ["charisma", 1, 1], ["politics", 2, 0]]:
+	for combo in [["sales", 0, 0], ["negotiation", 1, 1], ["influence", 2, 0]]:
 		var bd0: Dictionary = SkillCheck.breakdown(combo[0], combo[1], combo[2])
 		if abs(float(bd0.total) - SkillCheck.chance_for(combo[0], combo[1], combo[2])) > 0.0000001:
 			return "breakdown.total != chance_for for %s" % str(combo)
@@ -958,7 +981,7 @@ static func _case_leverage_bonus_applies_and_shows() -> String:
 	var lev_val: int = int(cur.trim_prefix("$").trim_suffix("M"))
 	if lev_val != base_val + PitchConstants.LEVERAGE_OPEN_NOTCH:
 		return "opening notch not applied (%d, want %d)" % [lev_val, base_val + PitchConstants.LEVERAGE_OPEN_NOTCH]
-	var baseline: float = SkillCheck.chance_for("markets", int(PitchConstants.LEVER_DIFF["valuation"]), 0)
+	var baseline: float = SkillCheck.chance_for("sales", int(PitchConstants.LEVER_DIFF["valuation"]), 0)
 	if TermSheetTableSystem.odds_for("valuation").chance <= baseline:
 		return "leverage did not raise odds above baseline"
 	if String(vs.leverage.other_vc_name) != "Nexus Ventures":
@@ -1130,11 +1153,14 @@ static func _case_seat_upsell_moves_seats() -> String:
 	var seat_signals: Array = []
 	var cb := func(_id: String, n: int) -> void: seat_signals.append(n)
 	EventBus.customer_seats_changed.connect(cb)
-	EventManager.enqueue(EventManager._all_events["ev_ps_expansion_b2b"])
-	if EventManager._active_event_id != "ev_ps_expansion_b2b":
+	# Synthetic seats-modifier event (the state-bound expansion family replaced the old
+	# random ev_ps_expansion_b2b JSON; the generic `seats` modifier stays for this path).
+	EventManager.enqueue(_one_choice_event("smoke_seat_upsell",
+		[{"type": "seats", "amount": 4, "per_seat_mrr": 150, "customer_id": cust.id}]))
+	if EventManager._active_event_id != "smoke_seat_upsell":
 		EventBus.customer_seats_changed.disconnect(cb)
-		return "expansion event not active (%s)" % EventManager._active_event_id
-	EventManager.resolve_choice("ev_ps_expansion_b2b", 0)   # "Önerilen fiyattan ekle" → +4 koltuk @150
+		return "seat upsell event not active (%s)" % EventManager._active_event_id
+	EventManager.resolve_choice("smoke_seat_upsell", 0)   # +4 koltuk @150
 	EventBus.customer_seats_changed.disconnect(cb)
 	if cust.seats != seats0 + 4:
 		return "seats did not move: %d -> %d (want +4)" % [seats0, cust.seats]
@@ -1305,4 +1331,681 @@ static func _case_settings_language_toggle() -> String:
 	inst.free()
 	if not has_nodes:
 		return "SettingsModal missing %LanguageOption / %LanguageHeader unique nodes"
+	return ""
+
+
+# --- B2B Sales System: Stage A (lifecycle + two-layer satisfaction + churn) ---
+
+static func _case_b2b_lifecycle_and_countdown() -> String:
+	# A degrading product erodes satisfaction below the account's hidden tolerance; the
+	# customer walks active→risk with a VISIBLE churn countdown; recovery resets it; and
+	# churn fires ONLY when the counter reaches zero (never instant).
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	CustomerRegistry.set_tolerance(c.id, 50)
+	CustomerRegistry.set_satisfaction(c.id, 70)
+	# Degrade: low effective stability (high bugs) → low satisfaction target.
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_live_bug_count", 40)
+	var entered_risk := false
+	for i in 40:
+		_sim_day()
+		if CustomerRegistry.get_customer(c.id) == null:
+			return "churned before the recovery check (countdown too short?)"
+		if c.lifecycle_phase == "risk" and c.churn_countdown >= 1:
+			entered_risk = true
+			break
+	if not entered_risk:
+		return "never reached Risk phase with a visible countdown"
+	# Recover: fix the product + lift satisfaction over tolerance → counter resets.
+	GameState.set_flag("mvp_stability", 90.0)
+	GameState.set_flag("mvp_live_bug_count", 0)
+	CustomerRegistry.set_satisfaction(c.id, 85)
+	_sim_day()
+	if c.churn_countdown != -1:
+		return "churn countdown did not reset on recovery (%d)" % c.churn_countdown
+	if c.lifecycle_phase == "risk":
+		return "still in Risk after recovery"
+	# Degrade again and ride the counter to zero → churn from the watched counter.
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_live_bug_count", 40)
+	CustomerRegistry.set_satisfaction(c.id, 70)
+	var churned: Array = []
+	var cb := func(id: String) -> void: churned.append(id)
+	EventBus.customer_churned.connect(cb)
+	var lost0: int = GameState.run_customers_lost
+	for i in 60:
+		_sim_day()
+		if CustomerRegistry.get_customer(c.id) == null:
+			break
+	EventBus.customer_churned.disconnect(cb)
+	if CustomerRegistry.get_customer(c.id) != null:
+		return "did not churn after sustained low satisfaction"
+	if churned != [c.id]:
+		return "customer_churned payload wrong: %s (want [%s])" % [str(churned), c.id]
+	if GameState.run_customers_lost != lost0 + 1:
+		return "run_customers_lost not incremented (%d -> %d)" % [lost0, GameState.run_customers_lost]
+	return ""
+
+
+static func _case_b2b_satisfaction_leaves_b2c_identical() -> String:
+	# Regression guard: the _tick_satisfaction refactor (B2C-only) must leave the B2C
+	# aggregate's daily drift byte-identical, and a coexisting B2B account must NOT be
+	# dragged through the old ±1 gate path (it is owned by the two-layer B2B model).
+	_seed_b2c()  # co_b2c_userbase
+	var p := Prospect.new()
+	p.id = "lead_iso"
+	p.company_name = "Iso Corp"
+	p.industry = "Testing"
+	p.archetype = "small"
+	SalesSystem.add_b2b_customer(p, 1000, 70)   # coexisting B2B account
+	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	if ub == null:
+		return "no B2C aggregate record after seed"
+	# Product where the OLD gate math yields a definite non-zero B2C delta (stab ≥ gate).
+	GameState.set_flag("mvp_stability", 200.0)
+	GameState.set_flag("mvp_innovation", 200.0)
+	GameState.set_flag("mvp_usability", 200.0)
+	GameState.set_flag("mvp_live_bug_count", 0)
+	# Expected delta computed with the SAME code path the tick uses.
+	var stab: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
+	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", 0))
+	var gate_delta: int = 0
+	if stab >= SalesSystem.SATISFACTION_QUALITY_GATE:
+		gate_delta += 1
+	if bugs > SalesSystem.SATISFACTION_BUG_GATE:
+		gate_delta -= 1
+	if gate_delta == 0:
+		return "test misconfigured: expected a non-zero B2C gate delta (stab=%.1f)" % stab
+	var s0: int = ub.satisfaction
+	var want: int = clampi(s0 + gate_delta, 0, 100) - s0
+	_sim_day()
+	var got: int = ub.satisfaction - s0
+	if got != want:
+		return "B2C aggregate satisfaction delta changed by refactor: got %d want %d" % [got, want]
+	return ""
+
+
+# --- B2B Sales System: Stage B (state-bound families + retention + feature pool) ---
+
+static func _add_risk_b2b(pid: String, mrr: int) -> Customer:
+	# Create a founder-managed B2B account already in Risk (for retention-routing tests).
+	var p := Prospect.new()
+	p.id = pid
+	p.company_name = "R_" + pid
+	p.industry = "Sigorta"
+	p.archetype = "small"
+	p.pain_feature_id = "ai_vec_filter"
+	var c: Customer = SalesSystem.add_b2b_customer(p, mrr, 70)
+	CustomerRegistry.set_tolerance(c.id, 50)
+	CustomerRegistry.set_satisfaction(c.id, 20)
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	CustomerRegistry.set_churn_countdown(c.id, 5)
+	return c
+
+
+static func _case_b2b_retention_routes_seams() -> String:
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(2000)  # healthy product + one healthy account (co_lead_smoke)
+
+	# State-match guard: a HEALTHY founder-managed customer produces NO retention event.
+	# Drive the B2B engine directly (advance_day + its daily tick) so the phase-gate /
+	# ambient event machinery does not fire and leave a stale active modal.
+	var healthy: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	for i in 6:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	if CustomerRegistry.get_customer("co_lead_smoke") == null:
+		return "healthy account unexpectedly churned"
+	if healthy.lifecycle_phase == "risk":
+		return "healthy account fell into Risk (state-match broken)"
+	if _instances_of("ev_b2b_retain_co_lead_smoke") != 0:
+		return "retention event fired for a healthy account (never should)"
+
+	# Söz ver → creates a promise, customer recovers, reputation up.
+	var c1: Customer = _add_risk_b2b("ra", 1000)
+	var rep0: int = GameState.reputation
+	EventManager.enqueue(B2BEventFactory.build_retention(c1))
+	if EventManager._active_event_id != "ev_b2b_retain_co_ra":
+		return "retention event not active (%s)" % EventManager._active_event_id
+	EventManager.resolve_choice("ev_b2b_retain_co_ra", 0)
+	if PromiseRegistry.get_open_for("co_ra").size() != 1:
+		return "Söz ver did not create a promise"
+	if c1.lifecycle_phase == "risk":
+		return "Söz ver did not recover the account"
+	if GameState.reputation != rep0 + B2BConstants.RETAIN_PROMISE_REP:
+		return "Söz ver reputation delta wrong"
+
+	# Oyala → extends the countdown once, counts a stall, brand down.
+	var c2: Customer = _add_risk_b2b("rb", 1000)
+	var cd0: int = c2.churn_countdown
+	var brand0: int = GameState.brand
+	EventManager.enqueue(B2BEventFactory.build_retention(c2))
+	EventManager.resolve_choice("ev_b2b_retain_co_rb", 1)
+	if c2.churn_countdown != cd0 + B2BConstants.RETAIN_DELAY_DAYS:
+		return "Oyala did not extend the countdown (%d -> %d)" % [cd0, c2.churn_countdown]
+	if c2.retain_stalls != 1:
+		return "Oyala did not count a stall"
+	if GameState.brand != brand0 + B2BConstants.RETAIN_DELAY_BRAND:
+		return "Oyala brand delta wrong"
+
+	# İndirim ver → MRR drops (bridged), customer recovers, reputation down.
+	var c3: Customer = _add_risk_b2b("rc", 1000)
+	var mrr0: int = c3.mrr
+	var rep0b: int = GameState.reputation
+	EventManager.enqueue(B2BEventFactory.build_retention(c3))
+	EventManager.resolve_choice("ev_b2b_retain_co_rc", 2)
+	var cut: int = int(round(1000.0 * B2BConstants.RETAIN_DISCOUNT_PCT))
+	if c3.mrr != mrr0 - cut:
+		return "İndirim MRR wrong: %d -> %d (want -%d)" % [mrr0, c3.mrr, cut]
+	if GameState.mrr != CustomerRegistry.get_total_mrr():
+		return "İndirim did not bridge MRR (%d vs %d)" % [GameState.mrr, CustomerRegistry.get_total_mrr()]
+	if c3.lifecycle_phase == "risk":
+		return "İndirim did not recover the account"
+	if GameState.reputation != rep0b + B2BConstants.RETAIN_DISCOUNT_REP:
+		return "İndirim reputation delta wrong"
+
+	# Bırak → account removed, run counter up, brand down.
+	var c4: Customer = _add_risk_b2b("rd", 1000)
+	var lost0: int = GameState.run_customers_lost
+	var brand0b: int = GameState.brand
+	EventManager.enqueue(B2BEventFactory.build_retention(c4))
+	EventManager.resolve_choice("ev_b2b_retain_co_rd", 3)
+	if CustomerRegistry.get_customer("co_rd") != null:
+		return "Bırak did not remove the account"
+	if GameState.run_customers_lost != lost0 + 1:
+		return "Bırak did not increment run_customers_lost"
+	if GameState.brand != brand0b + B2BConstants.RETAIN_RELEASE_BRAND:
+		return "Bırak brand delta wrong"
+	return ""
+
+
+static func _case_b2b_prospect_pain_references_real_feature() -> String:
+	# B.4: a prospect's surface need maps to a feature that EXISTS in the active
+	# product's pool (so a special request later is buildable, not a phantom ask).
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	var pool_ids: Array = []
+	for f in ProductCatalog.get_feature_pool("ai_vector_search"):
+		pool_ids.append(String(f.get("id", "")))
+	for i in 6:
+		var p: Prospect = PitchSystem.spawn_prospect("small", "find")
+		if p.pain_feature_id == "":
+			return "prospect %d has empty pain_feature_id" % i
+		if not pool_ids.has(p.pain_feature_id):
+			return "pain_feature_id %s not in the product pool" % p.pain_feature_id
+		if p.need_summary == "":
+			return "prospect %d need_summary empty" % i
+	return ""
+
+
+# --- B2B Sales System: Stage C (promise tracking + Product roadmap coupling) ---
+
+static func _case_b2b_promise_kept_on_ship() -> String:
+	# A promised feature reaching live (mvp_components) before the deadline KEEPS the
+	# promise → satisfaction + tolerance jump + promise_kept signal.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	var sat0: int = c.satisfaction
+	var tol0: int = c.tolerance
+	var kept: Array = []
+	var cb := func(id: String) -> void: kept.append(id)
+	EventBus.promise_kept.connect(cb)
+	var pr: Promise = PromiseRegistry.create(c.id, "ai_vec_filter", 14)
+	GameState.set_flag("mvp_components", ["ai_vec_filter"])  # the promised feature ships
+	EventBus.build_phase_changed.emit("shipped")
+	EventBus.promise_kept.disconnect(cb)
+	if pr.status != "kept":
+		return "promise not kept on ship (status=%s)" % pr.status
+	if kept != [pr.id]:
+		return "promise_kept not emitted once (%s)" % str(kept)
+	if c.satisfaction != clampi(sat0 + B2BConstants.PROMISE_KEPT_SAT, 0, 100):
+		return "kept satisfaction jump wrong (%d -> %d)" % [sat0, c.satisfaction]
+	if c.tolerance != clampi(tol0 + B2BConstants.PROMISE_KEPT_TOLERANCE, 0, 100):
+		return "kept tolerance jump wrong (%d -> %d)" % [tol0, c.tolerance]
+	return ""
+
+
+static func _case_b2b_promise_broken_on_deadline() -> String:
+	# A deadline passing with the feature unshipped BREAKS the promise → tolerance
+	# double-drop + brand hit + credibility flag + promise_broken signal. A re-approach
+	# afterwards lands with reduced goodwill.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	var tol0: int = c.tolerance
+	var brand0: int = GameState.brand
+	var broken: Array = []
+	var cb := func(id: String) -> void: broken.append(id)
+	EventBus.promise_broken.connect(cb)
+	var pr: Promise = PromiseRegistry.create(c.id, "ai_vec_filter", 3)
+	for i in 5:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()   # runs the deadline sweep; feature never shipped
+	EventBus.promise_broken.disconnect(cb)
+	if pr.status != "broken":
+		return "promise not broken past deadline (status=%s)" % pr.status
+	if broken != [pr.id]:
+		return "promise_broken not emitted once (%s)" % str(broken)
+	if GameState.brand != brand0 + B2BConstants.PROMISE_BROKEN_BRAND:
+		return "broken brand hit wrong (%d -> %d)" % [brand0, GameState.brand]
+	if c.tolerance != clampi(tol0 + B2BConstants.PROMISE_BROKEN_TOLERANCE, 0, 100):
+		return "broken tolerance drop wrong (%d -> %d)" % [tol0, c.tolerance]
+	if not GameState.get_flag("b2b_broke_%s" % c.id, false):
+		return "credibility flag not set after a broken promise"
+	# A re-approach now lands with HALF the goodwill bump (credibility down).
+	var sat_before: int = c.satisfaction
+	B2BSalesSystem.accept_promise(c.id, "ai_vec_filter", 14)
+	if c.satisfaction != clampi(sat_before + int(B2BConstants.RETAIN_SAT_BUMP / 2), 0, 100):
+		return "re-approach goodwill not reduced after a broken promise"
+	return ""
+
+
+# --- B2B Sales System: Stage D (Customer-Success delegation + escalation) ---
+
+static func _make_cs(id: String, skill: int, morale: int = 60) -> Character:
+	var cs := Character.new()
+	cs.id = id
+	cs.character_name = "Burcu Çetin"
+	cs.role = CharacterRegistry.ROLE_CUSTOMER_SUCCESS
+	cs.category = "employee"
+	cs.monthly_salary = 5000
+	cs.morale = morale
+	cs.role_stats = {"cs_skill": skill}
+	CharacterRegistry.add(cs)
+	return cs
+
+
+static func _case_b2b_cs_absorbs_routine() -> String:
+	# A CS-managed account erodes SLOWER than a founder-managed twin and produces NO
+	# routine events (no retention/escalation while above the critical threshold).
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)  # founder-managed twin (co_lead_smoke)
+	var founder_mgd: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	var cs: Character = _make_cs("char_cs_1", 60)
+	var p := Prospect.new()
+	p.id = "csm"
+	p.company_name = "CS Managed"
+	p.industry = "Sigorta"
+	p.archetype = "small"
+	p.pain_feature_id = "ai_vec_filter"
+	var cs_mgd: Customer = SalesSystem.add_b2b_customer(p, 1000, 70)
+	CustomerRegistry.assign_customer(cs_mgd.id, cs.id)
+	if cs_mgd.assigned_to != cs.id:
+		return "assign_customer did not set assigned_to"
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_live_bug_count", 40)
+	CustomerRegistry.set_satisfaction(founder_mgd.id, 60)
+	CustomerRegistry.set_satisfaction(cs_mgd.id, 60)
+	for i in 6:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	if cs_mgd.satisfaction <= founder_mgd.satisfaction:
+		return "CS-managed did not erode slower (cs=%d founder=%d)" % [cs_mgd.satisfaction, founder_mgd.satisfaction]
+	if _instances_of("ev_b2b_retain_%s" % cs_mgd.id) != 0:
+		return "CS-managed produced a routine retention event"
+	if _instances_of("ev_b2b_escalation_%s" % cs_mgd.id) != 0:
+		return "CS-managed escalated while still above the critical threshold"
+	return ""
+
+
+static func _case_b2b_cs_escalation_refuse() -> String:
+	# A CS-managed account crossing the critical threshold raises ONE escalation. "Hayır"
+	# churns the account + drops brand + drops THAT CS employee's morale (through the seam).
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	var cs: Character = _make_cs("char_cs_1", 40, 60)
+	var p := Prospect.new()
+	p.id = "esc"
+	p.company_name = "Ege Sigorta"
+	p.industry = "Sigorta"
+	p.archetype = "small"
+	p.pain_feature_id = "ai_vec_filter"
+	var c: Customer = SalesSystem.add_b2b_customer(p, 2000, 70)
+	CustomerRegistry.assign_customer(c.id, cs.id)
+	CustomerRegistry.set_satisfaction(c.id, 20)  # below the critical threshold
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()  # escalation fires
+	var esc_id: String = "ev_b2b_escalation_%s" % c.id
+	if EventManager._active_event_id != esc_id:
+		return "escalation not active (%s)" % EventManager._active_event_id
+	var brand0: int = GameState.brand
+	var lost0: int = GameState.run_customers_lost
+	var morale0: int = cs.morale
+	EventManager.resolve_choice(esc_id, 1)  # "Hayır, yapmıyoruz"
+	if CustomerRegistry.get_customer(c.id) != null:
+		return "refuse did not churn the account"
+	if GameState.run_customers_lost != lost0 + 1:
+		return "refuse did not increment run_customers_lost"
+	if GameState.brand != brand0 - B2BConstants.CS_REFUSE_BRAND:
+		return "refuse brand hit wrong (%d -> %d)" % [brand0, GameState.brand]
+	if cs.morale != clampi(morale0 - B2BConstants.CS_REFUSE_MORALE, 0, 100):
+		return "CS morale not dropped (%d -> %d)" % [morale0, cs.morale]
+	return ""
+
+
+static func _case_b2b_cs_counts_in_payroll_hires() -> String:
+	# The CS employee type counts toward payroll + run_hires (a real hire), and the
+	# CS accessors find it — so growing the portfolio creates organic HR demand.
+	var pay0: int = CharacterRegistry.get_total_monthly_salaries()
+	var hires0: int = GameState.run_hires
+	_make_cs("char_cs_x", 50)
+	if CharacterRegistry.get_total_monthly_salaries() != pay0 + 5000:
+		return "CS salary not counted in payroll"
+	if GameState.run_hires != hires0 + 1:
+		return "CS hire not counted in run_hires"
+	if CharacterRegistry.count_customer_success() != 1:
+		return "count_customer_success wrong (%d)" % CharacterRegistry.count_customer_success()
+	if CharacterRegistry.get_customer_success().size() != 1:
+		return "get_customer_success wrong"
+	return ""
+
+
+# --- B2B Sales System: Stage E (2nd product / sector affinity / value band / expansion) ---
+
+static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
+	# The expansion seam grows seats + MRR through the registry, bridges the aggregate,
+	# and increments the run_customers_expanded counter (genuine upsell only).
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	var seats0: int = c.seats
+	var mrr0: int = c.mrr
+	var exp0: int = GameState.run_customers_expanded
+	var expanded: Array = []
+	var cb := func(_id: String, n: int) -> void: expanded.append(n)
+	EventBus.customer_expanded.connect(cb)
+	B2BSalesSystem.expand(c.id, 5, 120)
+	EventBus.customer_expanded.disconnect(cb)
+	if c.seats != seats0 + 5:
+		return "seats did not grow (%d -> %d)" % [seats0, c.seats]
+	if c.mrr != mrr0 + 5 * 120:
+		return "mrr not priced off added seats (%d -> %d)" % [mrr0, c.mrr]
+	if GameState.mrr != CustomerRegistry.get_total_mrr():
+		return "expansion did not bridge MRR (%d vs %d)" % [GameState.mrr, CustomerRegistry.get_total_mrr()]
+	if GameState.run_customers_expanded != exp0 + 1:
+		return "run_customers_expanded not incremented"
+	if expanded.is_empty():
+		return "customer_expanded never fired"
+	# Event-driven path: a healthy, mature account auto-enqueues the expansion family on
+	# the daily tick (state-bound, not calendar-polled) and resolving "Büyüt" upsells it.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var m: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	m.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)  # mature
+	CustomerRegistry.set_lifecycle_phase(m.id, "active")
+	CustomerRegistry.set_satisfaction(m.id, 80)  # healthy (>= tolerance)
+	var seats_before: int = m.seats
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	var eid: String = "ev_b2b_expand_%s" % m.id
+	if EventManager._active_event_id != eid:
+		return "expansion event not auto-enqueued for mature account (%s)" % EventManager._active_event_id
+	EventManager.resolve_choice(eid, 0)  # "Büyüt"
+	if m.seats <= seats_before:
+		return "event-driven expansion did not grow seats"
+	return ""
+
+
+static func _case_b2b_scale_and_sector_gating() -> String:
+	# Demo scale gating (1..3 only, 4-5 Tier 2 gated) AND sector affinity: the chosen
+	# product yields only sector-appropriate prospects, each with a value RANGE band.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	var ops_sectors: Array = B2BConstants.sector_pool("saas_ops")
+	for i in 8:
+		var p: Prospect = PitchSystem.spawn_prospect("small", "find")
+		if p.scale < 1 or p.scale > B2BConstants.SCALE_DEMO_MAX:
+			return "prospect scale out of demo range: %d" % p.scale
+		if not ops_sectors.has(p.industry):
+			return "ops prospect industry %s not in sector affinity" % p.industry
+		if p.value_band_min <= 0 or p.value_band_max <= p.value_band_min:
+			return "prospect value band invalid (%d-%d)" % [p.value_band_min, p.value_band_max]
+	# Switching the product switches the sector pool (vector-search → no construction).
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	var vec_sectors: Array = B2BConstants.sector_pool("ai_vector_search")
+	for i in 5:
+		var p2: Prospect = PitchSystem.spawn_prospect("small", "find")
+		if not vec_sectors.has(p2.industry):
+			return "vector-search prospect industry %s off-affinity" % p2.industry
+		if ops_sectors.has(p2.industry) and not vec_sectors.has(p2.industry):
+			return "vector-search yielded an ops-only sector: %s" % p2.industry
+	return ""
+
+
+static func _case_b2b_onboarding_to_prospect_visible() -> String:
+	# REAL integrated path (NOT the _seed_b2b skip fixture that sets mvp_* flags directly):
+	# onboarding payload → start_build (sets subgenre via the seam) → launch/ship (sets
+	# mvp_market_type/sub_id) → Frank's intro beat → add_prospect → spawn_prospect →
+	# ProspectRegistry (the source the Sales list renders). Guards the whole spawn chain
+	# on the path a fresh game actually takes — the skip-path suite never exercised it.
+	GameState.initialize_run({"company_name": "Test Inc.", "founder_name": "Dev"})
+	if not ProductSystem.start_build("saas_ops", ["saas_ops_workflow", "saas_ops_reporting"], ""):
+		return "start_build failed"
+	if GameState.subgenre != "saas":
+		return "start_build did not set subgenre via seam (got %s)" % GameState.subgenre
+	ProductSystem.enter_development()
+	ProductSystem.launch()
+	# Dismiss the ship-moment (its ship_active_build modifier sets mvp_shipped); if no
+	# modal is active, ship directly. Either way the ship-moment must not block the queue.
+	if EventManager._active_event_id != "":
+		EventManager.resolve_choice(EventManager._active_event_id, 0)
+	if not GameState.get_flag("mvp_shipped", false):
+		ProductSystem.ship_active_build()
+	if String(GameState.get_flag("mvp_market_type", "")) != "b2b":
+		return "mvp_market_type not b2b after launch (%s)" % String(GameState.get_flag("mvp_market_type", ""))
+	if String(GameState.get_flag("mvp_sub_product_type_id", "")) != "saas_ops":
+		return "mvp_sub_product_type_id not set after launch"
+	if not GameState.get_flag("mvp_shipped", false):
+		return "mvp_shipped not set after ship"
+	# Frank's intro is a post-ship beat — drive daily ticks and drain to it.
+	var reached: bool = false
+	for i in 4:
+		_sim_day()
+		if _drain_to("ev_ps_frank_intro_b2b"):
+			reached = true
+			break
+	if not reached:
+		return "Frank intro never became active post-ship"
+	var n0: int = ProspectRegistry.get_all().size()
+	EventManager.resolve_choice("ev_ps_frank_intro_b2b", 0)   # add_prospect (source frank_intro)
+	var prospects: Array[Prospect] = ProspectRegistry.get_all()
+	if prospects.size() != n0 + 1:
+		return "Frank intro produced no prospect (spawn aborted?) %d -> %d" % [n0, prospects.size()]
+	var p: Prospect = prospects[prospects.size() - 1]
+	if p.value_band_min <= 0 or p.value_band_max <= p.value_band_min:
+		return "prospect value band not populated (%d-%d)" % [p.value_band_min, p.value_band_max]
+	if not B2BConstants.sector_pool("saas_ops").has(p.industry):
+		return "prospect industry %s off saas_ops affinity" % p.industry
+	return ""
+
+
+# --- Founder 5-skill system (SKILL-RENAME + onboarding rework, Stage B) ---
+
+static func _case_founder_5skill_init() -> String:
+	# run_case's initialize_run built the founder from the debug payload: role_stats
+	# must hold EXACTLY the 5 canonical skills, the full pool spent, no legacy keys.
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder after initialize_run"
+	var keys: Array = founder.role_stats.keys()
+	for skill_key in FounderConstants.SKILLS:
+		if not keys.has(skill_key):
+			return "missing skill key %s" % skill_key
+	if keys.size() != FounderConstants.SKILLS.size():
+		return "unexpected extra role_stats keys: %s" % str(keys)
+	var total: int = 0
+	for skill_key in FounderConstants.SKILLS:
+		total += int(founder.role_stats[skill_key])
+	if total != FounderConstants.POINT_POOL:
+		return "skills sum %d (want %d)" % [total, FounderConstants.POINT_POOL]
+	if GameState.get_founder_skill("sales") != 2:
+		return "sales=%d (debug payload wants 2)" % GameState.get_founder_skill("sales")
+	# Legacy read must return 0 (and push_error loudly — the SKILL-RENAME tripwire).
+	if GameState.get_founder_skill("markets") != 0:
+		return "legacy 'markets' read returned nonzero"
+	# Stage D: the full founder identity flows through the single init seam.
+	if GameState.founder_portrait != "founder_01":
+		return "founder_portrait=%s (want founder_01)" % GameState.founder_portrait
+	var origin_cash: int = int(FounderConstants.origin_by_id(GameState.origin).get("starting_cash", -1))
+	if GameState.cash != origin_cash:
+		return "cash=%d (want origin starting_cash %d)" % [GameState.cash, origin_cash]
+	if not GameState.get_flag("origin_press_sympathy", false):
+		return "reserved origin flag origin_press_sympathy not set"
+	if not GameState.get_flag("origin_low_capital", false):
+		return "reserved origin flag origin_low_capital not set"
+	if founder.traits.size() != 2 or founder.traits[0] != "visionary" or founder.traits[1] != "stubborn":
+		return "founder.traits=%s (want [visionary, stubborn])" % str(founder.traits)
+	return ""
+
+
+static func _case_alloc_guard() -> String:
+	# FounderConstants.validate_alloc truth table (pool 6, cap 3, canonical keys only).
+	var ok := {"tech": 2, "sales": 2, "negotiation": 1, "leadership": 0, "influence": 1}
+	if not FounderConstants.validate_alloc(ok):
+		return "valid full-pool allocation rejected"
+	if FounderConstants.alloc_remaining(ok) != 0:
+		return "alloc_remaining != 0 for a full spend"
+	if FounderConstants.validate_alloc({"tech": 2, "sales": 2, "negotiation": 1, "leadership": 0, "influence": 0}):
+		return "one-under-pool sum accepted"
+	if FounderConstants.validate_alloc({"tech": 2, "sales": 2, "negotiation": 1, "leadership": 1, "influence": 1}):
+		return "one-over-pool sum accepted"
+	if FounderConstants.validate_alloc({"tech": 4, "sales": 1, "negotiation": 1, "leadership": 0, "influence": 0}):
+		return "per-skill cap 3 not enforced"
+	if FounderConstants.validate_alloc({"tech": 2, "markets": 2, "negotiation": 1, "leadership": 0, "influence": 1}):
+		return "legacy key 'markets' accepted"
+	return ""
+
+
+static func _case_trait_formula() -> String:
+	# validate_traits: >=1 positive; 1 pos -> negative optional; 2 pos -> exactly 1 negative.
+	if not FounderConstants.validate_traits(["visionary"]):
+		return "1 positive rejected"
+	if not FounderConstants.validate_traits(["visionary", "stubborn"]):
+		return "1 positive + 1 negative rejected"
+	if not FounderConstants.validate_traits(["visionary", "networker", "stubborn"]):
+		return "2 positives + 1 negative rejected"
+	if FounderConstants.validate_traits([]):
+		return "empty selection accepted"
+	if FounderConstants.validate_traits(["visionary", "networker"]):
+		return "2 positives without the required negative accepted"
+	if FounderConstants.validate_traits(["visionary", "networker", "disciplined", "stubborn"]):
+		return "3 positives accepted"
+	if FounderConstants.validate_traits(["visionary", "stubborn", "lone_wolf"]):
+		return "2 negatives accepted"
+	if FounderConstants.validate_traits(["charismatic"]):
+		return "unknown trait id accepted"
+	if FounderConstants.validate_traits(["visionary", "visionary"]):
+		return "duplicate trait id accepted"
+	if FounderConstants.validate_traits(["stubborn"]):
+		return "negative-only selection accepted"
+	return ""
+
+
+static func _case_lever_skill_new_keys() -> String:
+	# Term Sheet levers read the NEW skill keys; can_read_prospect flips on Satış;
+	# the odds-split label resolves through the CSV -> TranslationServer plumbing.
+	var want := {"valuation": "sales", "dilution": "negotiation", "board": "influence"}
+	for lever in want:
+		var skill_key: String = String(PitchConstants.LEVER_SKILL.get(lever, ""))
+		if skill_key != want[lever]:
+			return "LEVER_SKILL[%s]=%s (want %s)" % [lever, skill_key, want[lever]]
+		if not FounderConstants.SKILLS.has(skill_key):
+			return "LEVER_SKILL[%s] not a canonical skill" % lever
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder"
+	founder.role_stats["sales"] = SkillCheck.SALES_READ_THRESHOLD - 1
+	if SkillCheck.can_read_prospect():
+		return "can_read_prospect true below the Satış threshold"
+	founder.role_stats["sales"] = SkillCheck.SALES_READ_THRESHOLD
+	if not SkillCheck.can_read_prospect():
+		return "can_read_prospect false at the Satış threshold"
+	var prev_locale: String = Localization.get_language()
+	Localization.set_language("tr")
+	var label: String = PitchConstants.skill_label("sales")
+	Localization.set_language(prev_locale)
+	if label != "satış":
+		return "skill_label(sales)=%s (want satış via CSV)" % label
+	return ""
+
+
+static func _case_onboarding_pages_contract() -> String:
+	# The 3 dark-register onboarding pages honor the OnboardingStep contract:
+	# valid with a complete draft, İleri-blocked when the blocking field is
+	# missing (points unspent / trait formula broken / empty company name),
+	# payload key sets match the draft schema slices.
+	# Host = an autoload node, NOT the tree root: run_case executes during
+	# main._ready, while root is still "busy setting up children" and rejects
+	# add_child. An autoload finished entering the tree long ago.
+	var root: Node = EventBus
+	var scenes := {
+		"character": load("res://scenes/onboarding/steps/CharacterStep.tscn"),
+		"origin_traits": load("res://scenes/onboarding/steps/OriginTraitsStep.tscn"),
+		"company": load("res://scenes/onboarding/steps/CompanyStep.tscn"),
+	}
+	var full_draft := {
+		"founder_name": "Deneme", "portrait_id": "founder_03", "origin_id": "self_made",
+		"trait_ids": ["visionary", "stubborn"],
+		"skill_alloc": {"tech": 2, "sales": 2, "negotiation": 1, "leadership": 0, "influence": 1},
+		"company_name": "Synaptik", "logo_style": "tech", "slogan": "",
+	}
+	var expected_keys := {
+		"character": ["founder_name", "portrait_id"],
+		"origin_traits": ["origin_id", "trait_ids", "skill_alloc"],
+		"company": ["company_name", "slogan", "logo_style"],
+	}
+	for key in scenes:
+		var ps: PackedScene = scenes[key]
+		if ps == null:
+			return "scene %s failed to load" % key
+		var node: Node = ps.instantiate()
+		if not (node is OnboardingStep):
+			node.free()
+			return "%s is not an OnboardingStep" % key
+		var step: OnboardingStep = node
+		root.add_child(step)
+		step.prefill(full_draft)
+		if not step.is_valid():
+			step.queue_free()
+			return "%s invalid with a complete draft" % key
+		var payload: Dictionary = step.collect_payload()
+		for k in expected_keys[key]:
+			if not payload.has(k):
+				step.queue_free()
+				return "%s payload missing key %s" % [key, k]
+		step.queue_free()
+
+	var unspent: Dictionary = full_draft.duplicate(true)
+	unspent["skill_alloc"]["influence"] = 0
+	var p2: OnboardingStep = scenes["origin_traits"].instantiate()
+	root.add_child(p2)
+	p2.prefill(unspent)
+	var valid_unspent: bool = p2.is_valid()
+	p2.queue_free()
+	if valid_unspent:
+		return "page 2 valid with a skill point unspent"
+
+	var two_pos: Dictionary = full_draft.duplicate(true)
+	two_pos["trait_ids"] = ["visionary", "networker"]
+	var p2b: OnboardingStep = scenes["origin_traits"].instantiate()
+	root.add_child(p2b)
+	p2b.prefill(two_pos)
+	var valid_two_pos: bool = p2b.is_valid()
+	p2b.queue_free()
+	if valid_two_pos:
+		return "page 2 valid with 2 positives and no negative"
+
+	var nameless: Dictionary = full_draft.duplicate(true)
+	nameless["company_name"] = ""
+	var p3: OnboardingStep = scenes["company"].instantiate()
+	root.add_child(p3)
+	p3.prefill(nameless)
+	var valid_nameless: bool = p3.is_valid()
+	p3.queue_free()
+	if valid_nameless:
+		return "page 3 valid with an empty company name"
 	return ""

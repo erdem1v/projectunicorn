@@ -5,3 +5,87 @@ RUNWAY_GROSS_LABEL,Brüt Runway,Gross Burn Runway
 SETTINGS_LANGUAGE,Dil,Language
 LANG_TR,Türkçe,Turkish
 LANG_EN,İngilizce,English
+SKILL_LABEL_TECH,teknik,tech
+SKILL_LABEL_SALES,satış,sales
+SKILL_LABEL_NEGOTIATION,pazarlık,negotiation
+SKILL_LABEL_LEADERSHIP,liderlik,leadership
+SKILL_LABEL_INFLUENCE,nüfuz,influence
+ONB_STEP_CHARACTER,KARAKTER,CHARACTER
+ONB_STEP_ORIGIN,KÖKEN,ORIGIN
+ONB_STEP_COMPANY,ŞİRKET,COMPANY
+ONB_STEP_COUNTER,ADIM %d / %d,STEP %d / %d
+ONB_BACK,Geri,Back
+ONB_NEXT,İleri,Next
+ONB_START,Kur ve Başla,Found and Begin
+ONB_PREPARING,Hazırlanıyor…,Preparing…
+ONB_P1_TITLE,Karakter,Character
+ONB_P1_SUB,"Bu, aynada göreceğin yüz. Bir istatistik değil, bir kimlik.","The face you will see in the mirror. Not a statistic, an identity."
+ONB_NAME_LABEL,ADIN,YOUR NAME
+ONB_NAME_PLACEHOLDER,Boş bırakırsan 'Founder' kullanılır,Leave empty to use 'Founder'
+ONB_FOUNDER_TAG,KURUCU,FOUNDER
+ONB_PORTRAIT_HEADER,PORTRE SEÇ · %d SEÇENEK,CHOOSE A PORTRAIT · %d OPTIONS
+ONB_SELECTED_CHIP,SEÇİLİ · PORTRE %s,SELECTED · PORTRAIT %s
+ONB_P2_TITLE,Köken ve Karakter,Origin and Character
+ONB_P2_SUB,"Nereden geldiğin, neyi kolay, neyi zor yaşayacağını belirler.","Where you come from decides what will come easy, and what will not."
+ONB_ORIGIN_HEADER,KÖKEN,ORIGIN
+ONB_ORIGIN_SUB,"Nereden geldiğin, nereden başladığını belirler.",Where you come from decides where you start.
+ONB_ORIGIN_SELF_MADE_NAME,Self-Made,Self-Made
+ONB_ORIGIN_SELF_MADE_QUOTE,Hiçbir şey yoktu. Her satırı ben yazdım.,There was nothing. I wrote every line myself.
+ONB_ORIGIN_HEIR_NAME,Varis,The Heir
+ONB_ORIGIN_HEIR_QUOTE,Aile sermayesi arkanda. Ama gözler de üzerinde.,"Family money at your back. And every eye on you."
+ONB_ORIGIN_CORP_NAME,Kurumsal Mülteci,Corporate Refugee
+ONB_ORIGIN_CORP_QUOTE,On yıl büyük şirkette. Şimdi kendi adına.,Ten years in a big company. Now in your own name.
+ONB_LOCKED_FULL,TAM SÜRÜMDE,IN FULL RELEASE
+ONB_LOCKED_SOON,ÇOK YAKINDA,COMING SOON
+ONB_LOCKED_CHIP,KİLİTLİ,LOCKED
+ONB_ORIGIN_SM_CHIP_RESILIENT,DAYANIKLI,RESILIENT
+ONB_ORIGIN_SM_CHIP_LOW_CAPITAL,DÜŞÜK SERMAYE,LOW CAPITAL
+ONB_ORIGIN_SM_CHIP_PRESS,BASIN SEMPATİSİ,PRESS SYMPATHY
+ONB_TRAITS_HEADER,KARAKTER,CHARACTER
+ONB_TRAITS_SUB,Bir pozitif seçebilirsin. İki pozitif seçersen bir negatif seçmelisin.,Pick one strength freely. Pick two and you owe a flaw.
+ONB_TRAITS_POSITIVE,POZİTİF,POSITIVE
+ONB_TRAITS_NEGATIVE,NEGATİF,NEGATIVE
+TRAIT_VISIONARY_NAME,Vizyoner,Visionary
+TRAIT_VISIONARY_EFFECT,Ar-Ge sıçramaları daha sık,R&D breakthroughs come more often
+TRAIT_DISCIPLINED_NAME,Disiplinli,Disciplined
+TRAIT_DISCIPLINED_EFFECT,Geliştirme süreleri kısalır,Development cycles run shorter
+TRAIT_NETWORKER_NAME,Ağ Kurucu,Networker
+TRAIT_NETWORKER_EFFECT,Müşteri adayı kalitesi artar,Prospect quality improves
+TRAIT_RESILIENT_NAME,Dayanıklı,Resilient
+TRAIT_RESILIENT_EFFECT,Kriz sonrası hızlı toparlar,Recovers quickly after a crisis
+TRAIT_STUBBORN_NAME,İnatçı,Stubborn
+TRAIT_STUBBORN_EFFECT,Pivot maliyeti yüksek,Pivots cost more
+TRAIT_MICROMANAGER_NAME,Mikro Yönetici,Micromanager
+TRAIT_MICROMANAGER_EFFECT,Ekip morali daha hızlı erir,Team morale erodes faster
+TRAIT_RISK_BLIND_NAME,Risk Körü,Risk-Blind
+TRAIT_RISK_BLIND_EFFECT,Erken çıkış cazibesi artar,Early launches tempt harder
+TRAIT_LONE_WOLF_NAME,Yalnız Kurt,Lone Wolf
+TRAIT_LONE_WOLF_EFFECT,Mentor etkisi azalır,Mentor guidance lands weaker
+ONB_SKILLS_HEADER,YETENEKLER,SKILLS
+ONB_SKILLS_SUB,Masaya ne getiriyorsun.,What you bring to the table.
+ONB_SKILL_TECH,Teknoloji,Technology
+ONB_SKILL_TECH_DESC,Ürün kalitesi ve Ar-Ge hızı.,Product quality and R&D speed.
+ONB_SKILL_SALES,Satış,Sales
+ONB_SKILL_SALES_DESC,Müşteri adayı kalitesi ve anlaşma kapama.,Prospect quality and closing deals.
+ONB_SKILL_NEGOTIATION,Pazarlık,Negotiation
+ONB_SKILL_NEGOTIATION_DESC,Yatırım şartları ve sözleşme pazarlığı.,Investment terms and contract bargaining.
+ONB_SKILL_LEADERSHIP,Liderlik,Leadership
+ONB_SKILL_LEADERSHIP_DESC,Ekip morali ve kriz yönetimi.,Team morale and crisis management.
+ONB_SKILL_INFLUENCE,Nüfuz,Influence
+ONB_SKILL_INFLUENCE_DESC,"Ağ, medya ve yatırımcı ilişkileri.","Network, media and investor relations."
+ONB_POINTS_LEFT,KALAN PUAN,POINTS LEFT
+ONB_POINTS_HINT,tümünü dağıt,spend them all
+ONB_P3_TITLE,Şirket,Company
+ONB_P3_SUB,Kapıya asılacak isim. Bundan sonra herkes bu adı anacak.,The name on the door. From now on this is what they will call you.
+ONB_COMPANY_LABEL,ŞİRKET ADI,COMPANY NAME
+ONB_COMPANY_PLACEHOLDER,Örn. Synaptik,e.g. Synaptik
+ONB_COMPANY_EMPTY,[Şirket adı],[Company name]
+ONB_LOGO_LABEL,LOGO STİLİ,LOGO STYLE
+LOGO_STYLE_MINIMALIST,MİNİMALİST,MINIMALIST
+LOGO_STYLE_TECH,TEKNO,TECH
+LOGO_STYLE_PLAYFUL,OYUNCUL,PLAYFUL
+LOGO_STYLE_SERIOUS,CİDDİ,SERIOUS
+ONB_SLOGAN_LABEL,SLOGAN (OPSİYONEL),SLOGAN (OPTIONAL)
+ONB_SLOGAN_PLACEHOLDER,Bir cümlede ne yapıyorsun,What you do in one sentence
+ONB_PREVIEW_LABEL,ÖNİZLEME,PREVIEW
+ONB_PREVIEW_FOUNDER_TAG,KURUCU · %d,FOUNDER · %d

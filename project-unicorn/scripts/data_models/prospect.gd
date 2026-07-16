@@ -14,11 +14,15 @@ extends Resource
 @export var company_name: String = ""
 @export var industry: String = ""             # e.g. "Logistics", "Real Estate"
 @export var archetype: String = "small"       # "small" | "mid" | "enterprise" — sets MRR band + difficulty
+@export var scale: int = 1                     # 1..5 stars (customer size); demo binds 1-3, 4-5 gated (Tier 2)
 
 # --- Pitch context (shown on the prospect card / drives the dialogue) ---
 @export var need_summary: String = ""         # one-line surface need, always visible
 @export var difficulty_stars: int = 1         # 1-5; raises pitch difficulty
 @export var warning_flags: Array[String] = [] # "slow_payer" | "picky" | …
+@export var pain_feature_id: String = ""      # the ProductCatalog feature the surface need maps to (B.4)
+@export var value_band_min: int = 0           # E.3: prospect value RANGE floor (shown as $min-$max/ay)
+@export var value_band_max: int = 0           # E.3: prospect value RANGE ceiling
 
 # --- Hidden until the founder's Markets skill is high enough to "read" them.
 #     SkillCheck.can_read_prospect() gates UI reveal; PitchSystem uses these to

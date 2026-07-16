@@ -292,6 +292,8 @@ func _wire_design_document_view() -> void:
 	commit_bar.theme_type_variation = &"CommitButton"
 	_ensure_design_layout()   # onaylı mockup yerleşimi (üst: tip+feature, alt: projeksiyon+karar)
 	_build_commit_card()      # KARAR kartını _decision_slot'a kurar — layout'tan SONRA çağrılmalı
+	_ensure_sub_type_scroll() # HOTFIX: 10 tipli birleşik havuz taşmasın — _ensure_design_layout'tan
+	                          # SONRA (left_col zinciri SubTypeList parent'ından yürür)
 
 
 func _ensure_design_layout() -> void:
@@ -433,10 +435,12 @@ func _refresh_design_document() -> void:
 # ---- Sub-type list ----
 
 func _paint_sub_type_list() -> void:
-	var sub_types: Array = ProductCatalog.get_sub_product_types(GameState.subgenre)
-	# Dinamik sayaç: mockup'taki "7 SEÇENEK" kurgu — gerçek havuz subgenre'a göre 4-5.
+	# Onboarding rework 2026-07-16: subgenre adımı kalktı — havuz artık TÜM
+	# ürün tipleri (ai + saas birleşik); commit edilen ürün subgenre'ı yazar.
+	var sub_types: Array = ProductCatalog.get_all_sub_product_types()
 	type_caption_label.text = "%d SEÇENEK — BİRİNİ SEÇ" % sub_types.size()
 	_ensure_card_styles()
+	_ensure_row_capacity(sub_types.size())
 	for i in range(sub_type_list.get_child_count()):
 		var row: Panel = sub_type_list.get_child(i) as Panel
 		if row == null:
@@ -466,6 +470,52 @@ func _paint_sub_type_list() -> void:
 			row.add_theme_stylebox_override("panel", _card_style_selected if selected else _card_style_normal)
 		else:
 			row.visible = false
+
+
+func _ensure_sub_type_scroll() -> void:
+	# HOTFIX (Erdem 2026-07-16): the merged 10-type pool overflowed the authored
+	# 5-row column and pushed the decision area (commit button) off-screen.
+	# Stopgap: wrap SubTypeList in a ScrollContainer capped near the old 5-row
+	# height so the rest of the screen keeps its layout. The real picker
+	# redesign is a separate queued task — do not grow this into one.
+	if sub_type_list.get_parent() is ScrollContainer:
+		return
+	var section: Node = sub_type_list.get_parent()
+	var list_index: int = sub_type_list.get_index()
+	var scroll := ScrollContainer.new()
+	scroll.name = "SubTypeScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(0, 340)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	section.add_child(scroll)
+	section.move_child(scroll, list_index)
+	sub_type_list.reparent(scroll)
+	sub_type_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+
+func _ensure_row_capacity(needed: int) -> void:
+	# Merged pool (10 tip) > authored 5 satır — eksikleri ilk satırı klonlayarak
+	# büyüt (sessiz kırpma yok). Klonun kopyalanan chrome'u ve meta ref'leri
+	# ORİJİNAL node'ları gösterir — temizle ki _ensure_type_row_chrome kendi
+	# chrome'unu sıfırdan kursun; gui_input'u da burada bağla (wire yalnızca
+	# authored satırları bağladı).
+	if sub_type_list.get_child_count() >= needed:
+		return
+	var template: Panel = sub_type_list.get_child(0) as Panel
+	if template == null:
+		return
+	while sub_type_list.get_child_count() < needed:
+		var clone: Panel = template.duplicate() as Panel
+		clone.name = "SubTypeRow_%d" % sub_type_list.get_child_count()
+		if clone.has_meta("chrome"):
+			clone.remove_meta("chrome")
+		if clone.has_meta("sub_type_id"):
+			clone.remove_meta("sub_type_id")
+		var stale_chrome: Node = clone.get_node_or_null("TypeChrome")
+		if stale_chrome != null:
+			stale_chrome.free()
+		sub_type_list.add_child(clone)
+		clone.gui_input.connect(_on_sub_type_row_input.bind(clone))
 
 
 func _ensure_card_styles() -> void:
@@ -1876,7 +1926,7 @@ func _paint_pricing() -> void:
 	var v: Dictionary = SalesSystem.product_value()
 	var optimal: int = int(v["optimal"])
 	var floor_p: int = int(v["floor"])
-	var can_read: bool = GameState.get_founder_skill("markets") >= SkillCheck.MARKETS_READ_THRESHOLD
+	var can_read: bool = GameState.get_founder_skill("sales") >= SkillCheck.SALES_READ_THRESHOLD
 	var is_open: bool = GameState.get_flag("b2c_paid_tier_open", false)
 
 	# Ruler range: lower bound near floor, top open (optimal × 3).
@@ -2074,7 +2124,7 @@ func _update_projection(price: int) -> void:
 	var v: Dictionary = SalesSystem.product_value()
 	var optimal: int = int(v["optimal"])
 	var floor_p: int = int(v["floor"])
-	var can_read: bool = GameState.get_founder_skill("markets") >= SkillCheck.MARKETS_READ_THRESHOLD
+	var can_read: bool = GameState.get_founder_skill("sales") >= SkillCheck.SALES_READ_THRESHOLD
 	var est: Dictionary = SalesSystem.estimate_price_change(price)
 	var cur_paying: int = CustomerRegistry.get_total_users()
 	var new_paying: int = int(est["new_paying"])
