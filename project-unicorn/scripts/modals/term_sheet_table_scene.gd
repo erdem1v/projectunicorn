@@ -283,7 +283,7 @@ func _build_footer() -> Control:
 func _render(vs: Dictionary) -> void:
 	if vs.is_empty():
 		return
-	_name_label.text = String(vs.get("display_name", "")).to_upper()
+	_name_label.text = UiTokens.tr_upper(String(vs.get("display_name", "")))
 	_archetype_label.text = String(vs.get("archetype_line", ""))
 	var pp: String = String(vs.get("portrait_path", ""))
 	_portrait_tex.texture = load(pp) if (pp != "" and ResourceLoader.exists(pp)) else null
@@ -298,7 +298,7 @@ func _render(vs: Dictionary) -> void:
 		var row: Dictionary = _lever_rows[i]
 		var cur: String = String(L.get("current_text", ""))
 		var ghost: String = String(L.get("ghost_text", ""))
-		row.name_label.text = String(L.get("name_tr", "")).to_upper()
+		row.name_label.text = UiTokens.tr_upper(String(L.get("name_tr", "")))
 		row.value_label.text = ("%s → %s" % [cur, ghost]) if ghost != "" else cur
 		row.odds_label.text = String(L.get("odds", {}).get("split_text", ""))
 		row.push_btn.disabled = (not bool(L.get("push_enabled", false))) or _spinning
@@ -437,7 +437,7 @@ func _initials(full_name: String) -> String:
 			out += p[0]
 		if out.length() >= 2:
 			break
-	return out.to_upper()
+	return UiTokens.tr_upper(out)
 
 
 func _input(event: InputEvent) -> void:

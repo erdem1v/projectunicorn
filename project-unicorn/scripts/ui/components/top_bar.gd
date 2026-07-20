@@ -114,15 +114,15 @@ func _refresh_all() -> void:
 # --- Signal handlers ---
 
 func _on_cash_changed(value: int) -> void:
-	cash_value_label.text = _fmt_cash_full(value)   # full number w/ separators (not abbreviated)
+	cash_value_label.text = UiTokens.format_money_exact(value)   # full number w/ separators (not abbreviated)
 
 func _on_mrr_changed(value: int) -> void:
-	mrr_value_label.text = _fmt_money(value)
+	mrr_value_label.text = UiTokens.format_money_chip(value)
 	_refresh_net()  # net = mrr − burn
 
 func _on_burn_changed(value: int) -> void:
 	# Burn is a daily cost; caption + dim "/d" unit convey the rate (value stays cream).
-	burn_value_label.text = _fmt_money(value)
+	burn_value_label.text = UiTokens.format_money_chip(value)
 	_refresh_net()
 
 func _refresh_net() -> void:
@@ -130,7 +130,7 @@ func _refresh_net() -> void:
 	# is a static dim suffix in the scene.
 	var net: int = GameState.get_net_daily_flow()
 	var sign_str: String = "+" if net > 0 else ("-" if net < 0 else "")
-	net_value_label.text = "%s%s" % [sign_str, _fmt_money(absi(net))]
+	net_value_label.text = "%s%s" % [sign_str, UiTokens.format_money_chip(absi(net))]
 	net_value_label.add_theme_color_override("font_color", UiTokens.delta_color_bright(net))
 
 func _on_runway_changed(months: float) -> void:
@@ -181,7 +181,7 @@ func _on_offer_countdown_changed(days_left: int) -> void:
 
 func _on_phase_changed(new_phase: int) -> void:
 	var idx: int = clampi(new_phase - 1, 0, PHASE_NAMES.size() - 1)
-	phase_name_label.text = PHASE_NAMES[idx].to_upper()
+	phase_name_label.text = PHASE_NAMES[idx].to_upper()  # English canon terms — raw to_upper deliberate (tr_upper would corrupt "Traction"/"Series A")
 	for i in phase_dots.size():
 		phase_dots[i].theme_type_variation = &"PhaseDotActive" if i <= idx else &"PhaseDotDim"
 
@@ -201,34 +201,3 @@ func _on_time_manager_speed_changed(new_speed: int) -> void:
 func _apply_speed_visual(active_idx: int) -> void:
 	for i in speed_btns.size():
 		speed_btns[i].theme_type_variation = &"SpeedButtonActive" if i == active_idx else &"SpeedButton"
-
-
-# --- Formatting ---
-
-# MRR/BURN/NET stay abbreviated (K/M) so they can't widen FinanceGroup and shove the speed
-# controls. One decimal below $10K keeps MRR precise ("$3.5K"), no decimal above ("$50K",
-# "$350K"), M above a million ("$1.2M").
-func _fmt_money(value: int) -> String:
-	var a: int = absi(value)
-	if a >= 1000000:
-		return "$%.1fM" % (value / 1000000.0)
-	if a >= 10000:
-		return "$%.0fK" % (value / 1000.0)
-	if a >= 1000:
-		return "$%.1fK" % (value / 1000.0)
-	return "$%d" % value
-
-
-# CASH is shown in FULL with thousands separators (Erdem: money management is precise, wants
-# the exact figure) — "$12,340", "$1,234,567". Godot has no locale grouping, so group manually.
-# The StatCol_Cash width bound (+ clip_text) keeps even 7-digit values from shoving the chrome.
-func _fmt_cash_full(value: int) -> String:
-	var digits: String = str(absi(value))
-	var out: String = ""
-	var c: int = 0
-	for i in range(digits.length() - 1, -1, -1):
-		out = digits[i] + out
-		c += 1
-		if c % 3 == 0 and i > 0:
-			out = "," + out
-	return ("-$" if value < 0 else "$") + out

@@ -18,7 +18,7 @@
     {
       "label": "Önerilerini ciddiye al, tasarımı tekrar düşün",
       "modifiers": [
-        {"type": "dimension_delta", "axis": "usability", "amount": 6},
+        {"type": "dimension_delta", "axis": "experience", "amount": 6},
         {"type": "delay_days", "days": 2},
         {"type": "cash", "delta": -100}
       ],
@@ -30,7 +30,7 @@
       "modifiers": [
         {"type": "delay_days", "days": -1},
         {"type": "brand", "delta": 1},
-        {"type": "dimension_delta", "axis": "usability", "amount": -2}
+        {"type": "dimension_delta", "axis": "experience", "amount": -2}
       ],
       "unlock_condition": {},
       "unlock_reason_text": ""

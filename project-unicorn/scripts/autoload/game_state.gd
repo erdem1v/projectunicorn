@@ -4,7 +4,7 @@ extends Node
 # Defaults reflect PROJECT_SPEC §3.3 Phase 1 — Bootstrap start.
 # All mutations go through setter methods so signal flow stays one-directional (§6.2).
 
-const DAYS_PER_MONTH := 30  # Matches FinanceSystem.DAYS_PER_MONTH; both convert monthly → daily
+const DAYS_PER_MONTH := 30  # Single home for the monthly → daily conversion; FinanceSystem reads it too
 
 # Calendar anchor — Day 1 = Thu Jan 1, 2026 (game starts in 2026; year advances
 # with playtime). Godot Time computes the real weekday from the date, so no
@@ -26,9 +26,9 @@ var founder_portrait: String = ""     # Portrait id (e.g. "founder_03"); art via
 var run_seed: int = 0  # 0 = unseeded; TECH_SPEC §10.4 seeds this when run starts
 
 # --- Phase 1 — Bootstrap defaults ---
-var cash: int = 10000
+var cash: int = FounderConstants.STARTING_CASH
 var mrr: int = 0
-var daily_burn: int = 50        # ~$1,500/month — pressure-from-day-one baseline (~6.6mo runway at start); FinanceSystem owns categorized breakdown
+var daily_burn: int = FinanceSystem.starting_daily_burn()        # ~$1,500/month — pressure-from-day-one baseline (~6.6mo runway at start); FinanceSystem owns categorized breakdown
 var brand: int = 50              # Neutral baseline
 var reputation: int = 0          # Self-Made Founder baseline (§4.5)
 var day: int = 1
@@ -77,11 +77,25 @@ var run_customers_signed: int = 0      # SalesSystem.add_b2b_customer
 var run_customers_lost: int = 0        # churn_customer modifier, B2B branch
 var run_customers_expanded: int = 0    # B2BSalesSystem.expand (genuine seat/MRR upsell)
 var run_hires: int = 0                 # CharacterRegistry.add, category "employee"
+# B2B pitch customer-rep portrait rotation (sequential over the non-selected founder
+# portraits; read+written each meeting, so it's real run state, not a write-only counter).
+var b2b_rep_portrait_rotation_index: int = 0   # sequential cursor into the rep-portrait pool
+var b2b_last_rep_portrait: String = ""         # last face shown — new assignments skip it (no consecutive repeat)
 var run_departures: int = 0            # RESERVED — no fire/quit seam exists yet
 var run_scandals_total: int = 0        # RESERVED — no scandal system yet; debug-settable
 var run_scandals_managed: int = 0      # RESERVED
-var run_pushes_attempted: int = 0      # RESERVED — Term Sheet table writes later
-var run_pushes_won: int = 0            # RESERVED
+var run_pushes_attempted: int = 0      # Term Sheet table push() writes (term_sheet_table_system.gd)
+var run_pushes_won: int = 0            # Term Sheet table push() writes (successful pushes)
+# Peak MRR reached this run — latched in set_mrr (newspaper "en yüksek gelir" line).
+var run_peak_mrr: int = 0
+# Signed Series A term sheet snapshot — persisted at VCPitchSystem.sign_table (the single
+# sign seam). 0 unless a term sheet was actually signed (series_a_close). The ending screen
+# reads these off get_run_ledger() rather than the transient run_ended payload extra.
+var run_investment_amount: int = 0     # money raised, dollars
+var run_valuation_m: int = 0           # pre-money valuation, millions
+var run_equity_pct: int = 0            # equity given == signed dilution_pct
+var run_board_seats: int = 0           # board seats granted to the investor
+var run_board_veto: bool = false       # investor veto right granted
 
 # --- VC Pitch / Series A Hunt state (Spec 4 / VC_PITCH_DESIGN.md §7 — serialized
 # set, same "fields not systems" rule as the endgame block). VCPitchSystem writes;
@@ -106,6 +120,8 @@ func set_cash(value: int) -> void:
 
 func set_mrr(value: int) -> void:
 	mrr = value
+	if value > run_peak_mrr:
+		run_peak_mrr = value  # latch peak here (like set_cash's cash_went_negative) — write-only, no separate signal
 	EventBus.mrr_changed.emit(mrr)
 	_emit_runway()
 
@@ -203,6 +219,8 @@ func get_net_daily_flow() -> int:
 	return get_daily_revenue() - daily_burn
 
 func get_runway_months() -> float:
+	# NET runway (revenue-aware) — the player's canonical lens; VC surfaces deliberately
+	# use GROSS (VCPitchSystem._gross_runway_months / term-sheet table days).
 	# Returns INF when positive net flow; otherwise months remaining.
 	var daily_net: float = float(get_net_daily_flow())
 	if daily_net >= 0.0:
@@ -249,6 +267,56 @@ func get_display_date(with_year: bool = false) -> String:
 		return "%s, %s %d, %d" % [DOW_ABBR[d.weekday], MONTH_ABBR[d.month - 1], d.day, d.year]
 	return "%s, %s %d" % [DOW_ABBR[d.weekday], MONTH_ABBR[d.month - 1], d.day]
 
+func get_run_ledger() -> Dictionary:
+	# The newspaper ending screen's single read seam. Recompute-on-demand (like
+	# get_runway_months / get_founder_equity) — gathers the flat run_* counters +
+	# derived live values into one dict EndingsCopy assembles into prose. READ-ONLY:
+	# nothing here writes state. Signed-terms fields read 0 unless a term sheet was
+	# signed; run_departures reads 0 until a fire/quit flow exists.
+	var start: Dictionary = get_date_dict(1)   # founding calendar (day 1 = Jan 2026)
+	return {
+		# timeline
+		"day": day,
+		"phase": phase,
+		"origin": origin,
+		"start_month": int(start.month),
+		"start_year": int(start.year),
+		# economy
+		"cash": cash,
+		"mrr": mrr,
+		"peak_mrr": run_peak_mrr,
+		"brand": brand,
+		"reputation": reputation,
+		# customers (B2B discrete sign/churn; B2C is aggregate)
+		"customers_active": CustomerRegistry.get_active().size(),
+		"customers_signed": run_customers_signed,
+		"customers_lost": run_customers_lost,
+		"customers_expanded": run_customers_expanded,
+		# team (founder + mentor excluded from get_employees)
+		"employees": CharacterRegistry.get_employees().size(),
+		"hires": run_hires,
+		"departures": run_departures,
+		# product (derived — no dedicated counter)
+		"product_version": int(get_flag("mvp_version", 0)),
+		"product_ships": (get_flag("mvp_version_history", []) as Array).size(),
+		# fundraising
+		"pitches": run_pitches,
+		"sheets_won": run_sheets_won,
+		"vc_rejections": vc_rejections,
+		"pushes_attempted": run_pushes_attempted,
+		"pushes_won": run_pushes_won,
+		# signed term sheet (0 unless series_a_close)
+		"investment_amount": run_investment_amount,
+		"valuation_m": run_valuation_m,
+		"equity_pct": run_equity_pct,
+		"board_seats": run_board_seats,
+		"board_veto": run_board_veto,
+		# scandals (reserved — read 0 today)
+		"scandals_total": run_scandals_total,
+		"scandals_managed": run_scandals_managed,
+	}
+
+
 func _emit_runway() -> void:
 	EventBus.runway_recalculated.emit(get_runway_months())
 
@@ -274,9 +342,9 @@ func initialize_run(payload: Dictionary) -> void:
 
 	# Start state: origin decides the opening cash (FounderConstants working
 	# placeholder — Self-Made low capital; locked origins carry their own later).
-	cash = int(FounderConstants.origin_by_id(origin).get("starting_cash", 10000))
+	cash = int(FounderConstants.origin_by_id(origin).get("starting_cash", FounderConstants.STARTING_CASH))
 	mrr = 0
-	daily_burn = 50
+	daily_burn = FinanceSystem.starting_daily_burn()
 	brand = 50
 	reputation = 0
 	day = 1
@@ -305,12 +373,20 @@ func initialize_run(payload: Dictionary) -> void:
 	run_customers_signed = 0
 	run_customers_lost = 0
 	run_customers_expanded = 0
+	b2b_rep_portrait_rotation_index = 0
+	b2b_last_rep_portrait = ""
 	run_hires = 0
 	run_departures = 0
 	run_scandals_total = 0
 	run_scandals_managed = 0
 	run_pushes_attempted = 0
 	run_pushes_won = 0
+	run_peak_mrr = 0
+	run_investment_amount = 0
+	run_valuation_m = 0
+	run_equity_pct = 0
+	run_board_seats = 0
+	run_board_veto = false
 
 	# VC Pitch / Series A Hunt reset (Spec 4). Dicts via .clear() in case a system
 	# cached the reference; arrays reassigned.

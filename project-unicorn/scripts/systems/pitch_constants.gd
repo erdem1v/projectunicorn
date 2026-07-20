@@ -14,7 +14,7 @@ const WON_MIN := 70
 
 # --- Seeding (§3 macro moment) — base + run-state weights ---
 const SEED_BASE := 20
-const SEED_MRR_REFERENCE := 5000       # traction threshold reference (≈ SalesSystem target)
+const SEED_MRR_REFERENCE := SalesSystem.TRACTION_MRR_TARGET  # traction threshold reference — single home sales_system.gd
 const SEED_MRR_MAX_BONUS := 20         # full bonus when MRR ≫ reference (scaled)
 const SEED_BRAND_FLOOR := 50           # brand at floor = 0 contribution
 const SEED_BRAND_MAX := 12             # ± cap from brand distance to floor
@@ -73,7 +73,7 @@ const MAX_SHEETS := 2
 const WARNING_DAYS := 3                 # expiry warning event + TopBar chip threshold (ledger 14)
 
 # --- Cascade / callbacks ---
-const CASCADE_TABLES := 3               # UI "Kapanan masa: N/3"; EndingsSystem owns the real gate
+# (Cascade table count lives at its single home, EndingsSystem.CASCADE_TABLES — UI reads it there.)
 const CALLBACK_MRR_GROWTH_PCT := 20     # "MRR +20% over meeting-day value"
 const CALLBACK_BUGS_UNDER := 3          # "active bugs under N"
 

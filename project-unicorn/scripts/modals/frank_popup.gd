@@ -43,11 +43,11 @@ func populate(view_state: Dictionary) -> void:
 	_portrait.set_portrait(
 		String(view_state.get("portrait_path", "")),
 		_initials(String(view_state.get("speaker_name", ""))))
-	_name.text = String(view_state.get("speaker_name", "")).to_upper()
-	_role.text = String(view_state.get("speaker_role", "")).to_upper()
+	_name.text = UiTokens.tr_upper(String(view_state.get("speaker_name", "")))
+	_role.text = UiTokens.tr_upper(String(view_state.get("speaker_role", "")))
 	_apply_active_line(view_state.get("active_line", {}), String(view_state.get("monologue_text", "")))
 	_build_choices(view_state.get("choices", []))
-	_beat.text = String(view_state.get("beat_label", "")).to_upper()
+	_beat.text = UiTokens.tr_upper(String(view_state.get("beat_label", "")))
 	_withdraw.visible = bool(view_state.get("can_withdraw", false))
 
 
@@ -59,7 +59,7 @@ func _apply_active_line(line: Dictionary, monologue_text: String) -> void:
 	else:
 		_quote_box.visible = true
 		_quote.text = String(line.get("text", ""))
-		_tag.text = String(line.get("speaker_tag", "")).to_upper()
+		_tag.text = UiTokens.tr_upper(String(line.get("speaker_tag", "")))
 		_monologue_wrap.visible = monologue_text != ""
 		_monologue.text = monologue_text
 
@@ -84,7 +84,7 @@ func _initials(full_name: String) -> String:
 			out += p[0]
 		if out.length() >= 2:
 			break
-	return out.to_upper()
+	return UiTokens.tr_upper(out)
 
 
 func _on_choice_selected(id: String) -> void:

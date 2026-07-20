@@ -156,7 +156,11 @@ static func _tick_healthy(c: Customer) -> void:
 
 
 static func _churn(c: Customer) -> void:
-	# Loss from the watched counter (the passive path).
+	# Loss from the watched counter (the passive path — countdown reached zero). The
+	# brand hit lands HERE, at the actual churn moment (moved off the retention "Kendi
+	# haline bırak" option). CS-refuse churn keeps its own brand modifier and does NOT
+	# route through _churn, so there is no double-apply.
+	GameState.set_brand(GameState.brand + B2BConstants.CHURN_BRAND)
 	_remove_lost(c)
 
 
@@ -211,12 +215,11 @@ static func apply_discount(customer_id: String, mrr_delta: int) -> void:
 	_recover(c, B2BConstants.RETAIN_SAT_BUMP)
 
 
-static func release(customer_id: String) -> void:
-	# "Bırak": deliberately lose the account (brand hit rides as a separate modifier).
-	var c: Customer = CustomerRegistry.get_customer(customer_id)
-	if c == null:
-		return
-	_remove_lost(c)
+static func ignore_risk(_customer_id: String) -> void:
+	# "Kendi haline bırak": choose not to intervene. Deliberate NO-OP — the customer
+	# stays in Risk and keeps paying; the churn countdown (already running) continues on
+	# the daily tick and fires _churn on its own at zero. No instant state change here.
+	pass
 
 
 # --- Stage D: CS escalation outcomes (called by event modifiers) ---

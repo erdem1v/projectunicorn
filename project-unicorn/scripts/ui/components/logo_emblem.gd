@@ -24,16 +24,13 @@ func configure(new_style_id: String, company_name: String) -> void:
 	queue_redraw()
 
 
-## Company initial with Turkish dotted-İ handled by hand — String.to_upper() is
-## not locale-aware ("i" would become "I").
+## Company initial, Turkish dotted-İ correct via the single home UiTokens.tr_upper
+## (raw String.to_upper() is not locale-aware — "i" would become "I").
 static func initial_of(company_name: String) -> String:
 	var stripped: String = company_name.strip_edges()
 	if stripped == "":
 		return "?"
-	var first: String = stripped.substr(0, 1)
-	if first == "i":
-		return "İ"
-	return first.to_upper()
+	return UiTokens.tr_upper(stripped.substr(0, 1))
 
 
 func _emblem_kind() -> String:

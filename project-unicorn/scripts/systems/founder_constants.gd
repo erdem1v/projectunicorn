@@ -47,6 +47,10 @@ const TRAITS := [
 	{"id": "lone_wolf", "polarity": "negative", "name_key": "TRAIT_LONE_WOLF_NAME", "effect_key": "TRAIT_LONE_WOLF_EFFECT"},
 ]
 
+# Self-Made opening cash — single home; the origin catalog below and GameState's
+# defaults + initialize_run fallback all read it.
+const STARTING_CASH := 10000
+
 # Origin catalog. starting_cash is a working placeholder. reserved_flags are SET by
 # initialize_run but consumed nowhere yet — future press/network systems read them.
 const ORIGINS := [
@@ -57,7 +61,7 @@ const ORIGINS := [
 			{"key": "ONB_ORIGIN_SM_CHIP_LOW_CAPITAL", "kind": "minus"},
 			{"key": "ONB_ORIGIN_SM_CHIP_PRESS", "kind": "plus"},
 		],
-		"starting_cash": 10000,
+		"starting_cash": STARTING_CASH,
 		"reserved_flags": ["origin_press_sympathy", "origin_low_capital"]},
 	{"id": "heir", "locked": true,
 		"name_key": "ONB_ORIGIN_HEIR_NAME", "quote_key": "ONB_ORIGIN_HEIR_QUOTE",
@@ -91,8 +95,8 @@ const SKILL_LABEL_KEYS := {
 	"negotiation": "SKILL_LABEL_NEGOTIATION", "leadership": "SKILL_LABEL_LEADERSHIP",
 	"influence": "SKILL_LABEL_INFLUENCE",
 }
-# Onboarding column headers. CSV values carry FINAL display casing — never .to_upper()
-# a Turkish string in code (dotted-İ bug: "liderlik".to_upper() == "LIDERLIK").
+# Onboarding column headers. CSV values carry FINAL display casing — never raw .to_upper()
+# a Turkish string in code (dotted-İ bug: "liderlik".to_upper() == "LIDERLIK"; use UiTokens.tr_upper).
 const SKILL_NAME_KEYS := {
 	"tech": "ONB_SKILL_TECH", "sales": "ONB_SKILL_SALES",
 	"negotiation": "ONB_SKILL_NEGOTIATION", "leadership": "ONB_SKILL_LEADERSHIP",

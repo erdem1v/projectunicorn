@@ -92,6 +92,16 @@ func _initialize() -> void:
 	_lbl(th, &"TitleSerifCream", serif_sb, 26, T.CREAM)       # page title on dark ("Karakter")
 	_lbl(th, &"SubtitleSerifCream", serif_it, 13, T.CREAM_DIM)  # italic page/section subtitle on dark
 
+	# ---- Newspaper ending register ("Ekonomi Postası"): INK text on the cream PAPER
+	# (a LIGHT surface — INK/INK_MUTED/INK_DIM, not the CREAM chrome tones). Masthead is
+	# a large muted grey; the headline is the darkest element (mockup contrast). ----
+	_lbl(th, &"MastheadSerif", serif_sb, 54, T.INK_MUTED)     # "EKONOMİ POSTASI" giant masthead
+	_lbl(th, &"NewsHeadlineSerif", serif_sb, 30, T.INK)       # story headline (darkest)
+	_lbl(th, &"NewsDeckSerif", serif_it, 15, T.INK_MUTED)     # italic subhead / quoted deck
+	_lbl(th, &"NewsCaptionSerif", serif_it, 11, T.INK_DIM)    # engraving caption (italic, dim)
+	_lbl(th, &"NewsMeta", mono_label, 9, T.INK_DIM)           # date / edition caps (mono uppercase)
+	_lbl(th, &"NewsBodySerif", serif_reg, 13, T.INK)          # ledger-line / notice body prose
+
 	# ---- Panel variations ----
 	_panel(th, &"TopBarPanel", "Panel", _box(T.BG_TOPBAR, 0, Color.TRANSPARENT, 0, [0,0,0,1], T.SEPARATOR))
 	_panel(th, &"SidePanel", "Panel", _box(T.BG_PANEL, 0, Color.TRANSPARENT, 0, [1,1,0,0], T.DIVIDER_LIGHT))
@@ -108,6 +118,10 @@ func _initialize() -> void:
 
 	# ---- PanelContainer variations (auto content margins) ----
 	_panel(th, &"CardPanel", "PanelContainer", _box(T.CARD_BG, 1, T.CARD_BORDER, 4, [1,1,1,1], T.CARD_BORDER, 12, 10))
+	# CardCta: "+ Yeni Ürün" davet kartı (Rev3 Portföy). Şeffaf zemin + 1px amber
+	# çerçeve — mockup'taki kesikli CTA kenarını StyleBoxFlat çizemez, düz amber
+	# en yakın karşılık (plan Step 9 kararı).
+	_panel(th, &"CardCta", "PanelContainer", _box(Color.TRANSPARENT, 1, T.ACCENT, 4, [], Color.TRANSPARENT, 12, 10))
 	_panel(th, &"CardPanelTight", "PanelContainer", _box(T.CARD_BG, 1, T.CARD_BORDER, 4, [1,1,1,1], T.CARD_BORDER, 10, 8))
 	_panel(th, &"CardAttention", "PanelContainer", _box(T.CARD_ATTENTION_BG, 1, Color(0.80, 0.62, 0.58, 1), 4, [1,1,1,1], Color(0.80, 0.62, 0.58, 1), 12, 10))
 	_panel(th, &"ChoiceCard", "PanelContainer", _box(T.CARD_BG, 1, T.CARD_BORDER, 4, [1,1,1,1], T.CARD_BORDER, 12, 8))
@@ -130,6 +144,23 @@ func _initialize() -> void:
 	# amber ring when selected) ----
 	_panel(th, &"PortraitCell", "PanelContainer", _box(T.DIALOGUE_CARD_BG, 1, T.DIALOGUE_CARD_BORDER, 6, [], Color.TRANSPARENT, 3, 3))
 	_panel(th, &"PortraitCellSelected", "PanelContainer", _box(T.DIALOGUE_CARD_BG, 2, T.ACCENT, 6, [], Color.TRANSPARENT, 3, 3))
+
+	# ---- Newspaper ending panels ----
+	# PaperPanel: the cream page — a floating single sheet on the dark screen. Right/bottom
+	# PAPER_EDGE border reads as the second-page edge from the mockup; a soft drop shadow
+	# lifts it off DIALOGUE_BG. Generous inner margins (masthead breathing room).
+	var paper_sb := _box(T.PAPER_BG, 0, Color.TRANSPARENT, 2, [0, 2, 0, 2], T.PAPER_EDGE, 44, 36)
+	paper_sb.shadow_color = T.PAPER_SHADOW
+	paper_sb.shadow_size = 12
+	paper_sb.shadow_offset = Vector2(0, 5)
+	_panel(th, &"PaperPanel", "PanelContainer", paper_sb)
+	# RailPanel: the dark meta rail — same charcoal as the screen, a left hairline divides it.
+	_panel(th, &"RailPanel", "PanelContainer", _box(T.DIALOGUE_BG, 0, Color.TRANSPARENT, 0, [1, 0, 0, 0], T.SEPARATOR, 20, 20))
+	# RailCard: Coming-Soon Tier2/Tier3 cards on the rail (a step lighter, hairline border).
+	_panel(th, &"RailCard", "PanelContainer", _box(T.DIALOGUE_CARD_BG, 1, T.DIALOGUE_CARD_BORDER, 4, [1,1,1,1], T.DIALOGUE_CARD_BORDER, 14, 12))
+	# EngravingFrame: the illustration frame on the PAPER (light-surface counterpart to
+	# PortraitFrame). Muted tan fill + thin tan border = neutral empty frame until the PNG lands.
+	_panel(th, &"EngravingFrame", "PanelContainer", _box(Color(0.898, 0.878, 0.816, 1), 1, T.CARD_BORDER, 2, [1,1,1,1], T.CARD_BORDER, 0, 0))
 
 	# ---- Button variations ----
 	_tab_button(th, &"TabButton", false)

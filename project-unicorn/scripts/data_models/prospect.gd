@@ -23,11 +23,12 @@ extends Resource
 @export var pain_feature_id: String = ""      # the ProductCatalog feature the surface need maps to (B.4)
 @export var value_band_min: int = 0           # E.3: prospect value RANGE floor (shown as $min-$max/ay)
 @export var value_band_max: int = 0           # E.3: prospect value RANGE ceiling
+@export var rep_portrait_id: String = ""      # customer-rep face for the pitch MeetingScene; assigned once, kept across a re-meeting (CALLBACK)
 
-# --- Hidden until the founder's Markets skill is high enough to "read" them.
+# --- Hidden until the founder's Satış (sales) skill is high enough to "read" them.
 #     SkillCheck.can_read_prospect() gates UI reveal; PitchSystem uses these to
 #     compute a fair price and de-risk the close. ---
-@export var budget_band: String = ""          # "low" | "mid" | "high" — hidden if Markets too low
+@export var budget_band: String = ""          # "low" | "mid" | "high" — hidden if Satış too low
 @export var real_need: String = ""            # the deeper need behind need_summary — hidden
 
 # --- Provenance ---

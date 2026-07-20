@@ -20,14 +20,14 @@ extends RefCounted
 # so the player can brush the established floor but never enters the giant band.
 # All numbers BALANCE-TUNABLE.
 const TEMPLATE := [
-	{"tier": "giant",       "innovation": 290.0, "stability": 280.0, "usability": 285.0, "momentum": 0.0},
-	{"tier": "established", "innovation": 165.0, "stability": 150.0, "usability": 168.0, "momentum": 0.10},
-	{"tier": "established", "innovation": 138.0, "stability": 132.0, "usability": 150.0, "momentum": 0.08},
-	{"tier": "startup",     "innovation": 82.0,  "stability": 58.0,  "usability": 74.0,  "momentum": 0.70},
-	{"tier": "startup",     "innovation": 64.0,  "stability": 50.0,  "usability": 66.0,  "momentum": 0.60},
-	{"tier": "startup",     "innovation": 50.0,  "stability": 42.0,  "usability": 56.0,  "momentum": 0.55},
-	{"tier": "startup",     "innovation": 40.0,  "stability": 35.0,  "usability": 46.0,  "momentum": 0.50},
-	{"tier": "startup",     "innovation": 31.0,  "stability": 30.0,  "usability": 37.0,  "momentum": 0.45},
+	{"tier": "giant",       "innovation": 290.0, "stability": 280.0, "experience": 285.0, "momentum": 0.0},
+	{"tier": "established", "innovation": 165.0, "stability": 150.0, "experience": 168.0, "momentum": 0.10},
+	{"tier": "established", "innovation": 138.0, "stability": 132.0, "experience": 150.0, "momentum": 0.08},
+	{"tier": "startup",     "innovation": 82.0,  "stability": 58.0,  "experience": 74.0,  "momentum": 0.70},
+	{"tier": "startup",     "innovation": 64.0,  "stability": 50.0,  "experience": 66.0,  "momentum": 0.60},
+	{"tier": "startup",     "innovation": 50.0,  "stability": 42.0,  "experience": 56.0,  "momentum": 0.55},
+	{"tier": "startup",     "innovation": 40.0,  "stability": 35.0,  "experience": 46.0,  "momentum": 0.50},
+	{"tier": "startup",     "innovation": 31.0,  "stability": 30.0,  "experience": 37.0,  "momentum": 0.45},
 ]
 
 # Per-type product names (index 0 = giant, 1-2 = established, 3-7 = startup).
@@ -63,7 +63,7 @@ static func build_all() -> Array:
 				r.tier = String(t["tier"])
 				r.innovation = float(t["innovation"])
 				r.stability = float(t["stability"])
-				r.usability = float(t["usability"])
+				r.experience = float(t["experience"])
 				r.momentum = float(t["momentum"])
 				out.append(r)
 	return out

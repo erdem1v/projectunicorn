@@ -181,7 +181,7 @@ func _build_offer_card(sheet) -> Control:
 	card.add_child(_label(String(inv.get("display_name", "")), C_INK, 13))
 	# Terms preview (mono-ish via RowMeta) + validity countdown, amber → red ≤3.
 	var t: Dictionary = sheet.term_bands
-	card.add_child(_label("Değerleme: %s · Seyrelme: %s · Board: %s" % [t.get("valuation", "—"), t.get("dilution", "—"), t.get("board", "—")], C_DIM, 11, true))
+	card.add_child(_label("Değerleme: %s · Hisse: %s · Board: %s" % [t.get("valuation", "—"), t.get("dilution", "—"), t.get("board", "—")], C_DIM, 11, true))
 	var days: int = sheet.days_left(GameState.day)
 	var dl := _label("Geçerlilik: %d gün" % days, UiTokens.ACCENT_DEEP if days > PitchConstants.WARNING_DAYS else UiTokens.NEGATIVE, 11)
 	card.add_child(dl)
@@ -250,7 +250,7 @@ func _refresh_counter() -> void:
 		_counter.text = "Pivot — bootstrap yolu"
 	elif GameState.vc_rejections > 0:
 		_counter.visible = true
-		_counter.text = "Kapanan masa: %d/%d" % [GameState.vc_rejections, PitchConstants.CASCADE_TABLES]
+		_counter.text = "Kapanan masa: %d/%d" % [GameState.vc_rejections, EndingsSystem.CASCADE_TABLES]
 	else:
 		_counter.visible = false
 

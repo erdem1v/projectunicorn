@@ -40,7 +40,6 @@ const HOURLY_AUD_BASE := 0.08
 const HOURLY_AUD_QUALITY_COEF := 0.006
 const HOURLY_AUD_BRAND_COEF := 0.004
 const HOURLY_AUD_REPUTATION_COEF := 0.01   # raw reputation (-10..100): 0 neutral, + grows, − erodes
-const HOURLY_AUD_BUG_COEF := 0.03          # (unused: bugs now erode via effective stability inside quality)
 
 # Rival-relative economy (Product Lifecycle Part 2A: turned ON). Audience quality
 # term keys off the player's quality RELATIVE to the same-type STARTUP-league rivals
@@ -67,7 +66,6 @@ const VALUE_BASE := 4.0
 const VALUE_QUALITY_COEF := 0.12         # per quality point (0-100)
 const VALUE_FEATURE_COEF := 1.2          # per shipped feature
 const VALUE_COMPLEXITY_COEF := 0.6       # per total feature-complexity point
-const VALUE_BUG_COEF := 0.5              # per launch bug (lowers worth)
 const VALUE_FLOOR_RATIO := 0.5           # lower-bound mark = optimal × this
 const TENDENCY_MULT := {"premium": 1.35, "neutral": 1.0, "volume": 0.8}
 
@@ -197,8 +195,8 @@ static func _derive_b2c_mrr() -> void:
 static func _ensure_b2c_record() -> void:
 	if CustomerRegistry.get_customer(B2C_USERBASE_ID) != null:
 		return
-	# Seed satisfaction from the USABILITY axis (ease-of-use → happy new users).
-	var seed_sat: int = int(round(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "usability")))
+	# Seed satisfaction from the EXPERIENCE axis (ease-of-use → happy new users).
+	var seed_sat: int = int(round(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")))
 	var base := Customer.new()
 	base.id = B2C_USERBASE_ID
 	base.company_name = _product_name() + " kullanıcıları"
@@ -272,10 +270,7 @@ static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int) ->
 
 
 static func _seats_for_archetype(archetype: String) -> int:
-	match archetype:
-		"enterprise": return 40
-		"mid": return 12
-		_: return 4
+	return CustomerArchetypes.seats(archetype)
 
 
 # --- Shared satisfaction tick ---

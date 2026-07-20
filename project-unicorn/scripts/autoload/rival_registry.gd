@@ -9,9 +9,9 @@ extends Node
 # static — so a player who stops feeding their product gets passed.
 #
 # STRUCTURAL CEILING: rival advancement uses QualityModel.grow with per-tier
-# asymptotes; combined with the player's own PHASE1_AXIS_ASYMPTOTE (110), a
-# Phase-1 player (composite < 110 by construction) can never enter the giant band
-# (composite ≈ 285). This is enforced by the number bands, not a clamp.
+# asymptotes. The player's Rev3 axes are bounded by the catalog pool sums (+
+# strengthen accretion paid in efor/time), which sit far below the giant band
+# (composite ≈ 285). Enforced by the number bands, not a clamp.
 
 const TIER_ASYMPTOTE := {"startup": 100.0, "established": 200.0, "giant": 330.0}
 
@@ -82,7 +82,7 @@ func advance_all(days: int = 1) -> void:
 		for _i in days:
 			r.innovation = QualityModel.grow(r.innovation, r.momentum, a)
 			r.stability = QualityModel.grow(r.stability, r.momentum, a)
-			r.usability = QualityModel.grow(r.usability, r.momentum, a)
+			r.experience = QualityModel.grow(r.experience, r.momentum, a)
 		var new_status: String = _status_for(r)
 		if new_status != r.status:
 			r.status = new_status

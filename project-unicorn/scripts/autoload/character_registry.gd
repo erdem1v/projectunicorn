@@ -152,6 +152,12 @@ func add(character: Character) -> void:
 func remove(id: String) -> void:
 	if not _characters.has(id):
 		return
+	# Run counter seam (mirrors add()'s employee guard): read category BEFORE erase.
+	# Reads 0 today — no fire/quit flow calls remove() with an employee yet; the seam
+	# is here so a future departure flow counts automatically.
+	var c: Character = _characters[id]
+	if c != null and c.category == "employee":
+		GameState.run_departures += 1
 	_characters.erase(id)
 	EventBus.character_removed.emit(id)
 

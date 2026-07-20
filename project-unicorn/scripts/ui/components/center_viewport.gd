@@ -50,5 +50,5 @@ func _on_tab_changed(tab_id: String) -> void:
 		content_box.visible = true
 		for tab in UiTokens.TABS:
 			if tab.id == tab_id:
-				title_label.text = (tab.label as String).to_upper()
+				title_label.text = UiTokens.tr_upper(tab.label as String)
 				return

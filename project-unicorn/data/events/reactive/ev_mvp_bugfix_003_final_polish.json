@@ -18,7 +18,7 @@
     {
       "label": "Vakit harca, cila çek",
       "modifiers": [
-        {"type": "dimension_delta", "axis": "usability", "amount": 5},
+        {"type": "dimension_delta", "axis": "experience", "amount": 5},
         {"type": "cash", "delta": -80}
       ],
       "unlock_condition": {},
@@ -27,7 +27,7 @@
     {
       "label": "Yeterince iyi — devam",
       "modifiers": [
-        {"type": "dimension_delta", "axis": "usability", "amount": -2},
+        {"type": "dimension_delta", "axis": "experience", "amount": -2},
         {"type": "bug_delta", "amount": 1}
       ],
       "unlock_condition": {},

@@ -31,7 +31,7 @@ static func _make_chip(text: String, bg: Color, fg: Color, uppercase: bool = tru
 	chip.add_theme_stylebox_override("panel", sb)
 	var lbl := Label.new()
 	lbl.theme_type_variation = &"BadgeLabel"
-	lbl.text = text.to_upper() if uppercase else text
+	lbl.text = UiTokens.tr_upper(text) if uppercase else text
 	lbl.add_theme_color_override("font_color", fg)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -72,14 +72,14 @@ static func make_label(text: String, variation: StringName = &"BodySerif", color
 
 ## UPPERCASE mono section header.
 static func make_section_header(text: String) -> Label:
-	return make_label(text.to_upper(), &"SectionLabel")
+	return make_label(UiTokens.tr_upper(text), &"SectionLabel")
 
 ## Metric strip cell: VBox > [Caption, Value, (Delta)]. Children are named
 ## "Caption"/"Value"/"Delta" for in-place updates. `bright` = dark-chrome delta.
 static func make_metric_cell(caption: String, value_text: String, delta_text: String = "", delta_value: int = 0, bright: bool = true) -> VBoxContainer:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 1)
-	var cap := make_label(caption.to_upper(), &"MetricCaption")
+	var cap := make_label(UiTokens.tr_upper(caption), &"MetricCaption")
 	cap.name = "Caption"
 	col.add_child(cap)
 	var val := make_label(value_text, &"MetricValue")
@@ -96,7 +96,7 @@ static func make_metric_cell(caption: String, value_text: String, delta_text: St
 static func make_stat(caption: String, value_text: String, delta_value: int = 0, delta_text: String = "", value_color: Variant = null) -> VBoxContainer:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 2)
-	col.add_child(make_label(caption.to_upper(), &"MetricCaptionInk"))
+	col.add_child(make_label(UiTokens.tr_upper(caption), &"MetricCaptionInk"))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 5)
 	var val := make_label(value_text, &"MetricValueInk", value_color)

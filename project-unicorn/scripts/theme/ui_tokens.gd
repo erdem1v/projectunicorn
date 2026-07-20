@@ -94,6 +94,16 @@ const DIALOGUE_CARD_BORDER := Color(1, 1, 1, 0.10)   # subtle hairline on dark
 const CONVICTION_TRACK_BG := Color(1, 1, 1, 0.07)    # İKNA gauge groove
 const PORTRAIT_FRAME := Color(0.941, 0.918, 0.851, 1)  # thin cream portrait-card border
 
+# --- Newspaper ending register ("Ekonomi Postası") ---
+# The cream PAPER is a LIGHT surface (INK text) sitting inside the DARK screen
+# (DIALOGUE_BG). It is a touch warmer/brighter than CARD_BG so the page reads as
+# newsprint, not a UI card. The second-page edge + shadow give the single-sheet
+# depth from the mockup. Working values — Erdem's F5 seals the final hues.
+const PAPER_BG := Color(0.953, 0.933, 0.878, 1)     # newsprint cream (warmer than CARD_BG)
+const PAPER_EDGE := Color(0.878, 0.851, 0.780, 1)   # right/bottom second-page edge tint
+const PAPER_RULE := Color(0.169, 0.149, 0.125, 1)   # masthead rules (near-INK, solid)
+const PAPER_SHADOW := Color(0, 0, 0, 0.38)          # page drop shadow on the dark screen
+
 # --- Font sizes ---
 const SIZE_STAT_LABEL := 9      # "CASH" uppercase caption
 const SIZE_STAT_VALUE := 15     # "$248,400" weighted value
@@ -191,8 +201,9 @@ static func bug_severity(bug_count: int) -> Dictionary:
 ## Game-wide money format (Spec 3 §6 — the single convention going forward).
 ## < $1K → "$800" · ≥ $1K → one-decimal K ("$2.1K", "$10.0K") · ≥ $1M →
 ## one-decimal M ("$4.0M") · ≥ $10M drops a .0 decimal ("$22M"). Negative →
-## leading "-". Existing surfaces keep their local _fmt_money until touched
-## (migrate-when-touched rule); NEW code must use this.
+## leading "-". TopBar's variants moved here (format_money_chip/exact, 2026-07-21
+## sweep); remaining local formatters are deliberate: ProductUiShared.money_tr
+## (Rev3 exact dot-grouping), EventModal._fmt_money_delta. NEW code must use this.
 static func format_money(amount: int) -> String:
 	var a: int = absi(amount)
 	var s: String
@@ -207,6 +218,46 @@ static func format_money(amount: int) -> String:
 	else:
 		s = "$%d" % a
 	return ("-" + s) if amount < 0 else s
+
+
+## TopBar finance-chip format (moved verbatim from top_bar.gd — 2026-07-21 sweep).
+## MRR/BURN/NET stay abbreviated (K/M) so they can't widen FinanceGroup and shove the speed
+## controls. One decimal below $10K keeps MRR precise ("$3.5K"), no decimal above ("$50K",
+## "$350K"), M above a million ("$1.2M"). NOTE: thresholds deliberately diverge from
+## format_money (the ≥$10K no-decimal branch) — merge decision belongs to the curve session.
+static func format_money_chip(value: int) -> String:
+	var a: int = absi(value)
+	if a >= 1000000:
+		return "$%.1fM" % (value / 1000000.0)
+	if a >= 10000:
+		return "$%.0fK" % (value / 1000.0)
+	if a >= 1000:
+		return "$%.1fK" % (value / 1000.0)
+	return "$%d" % value
+
+
+## Exact money, comma-grouped (moved verbatim from top_bar.gd — 2026-07-21 sweep).
+## CASH is shown in FULL with thousands separators (Erdem: money management is precise, wants
+## the exact figure) — "$12,340", "$1,234,567". Godot has no locale grouping, so group manually.
+## The StatCol_Cash width bound (+ clip_text) keeps even 7-digit values from shoving the chrome.
+static func format_money_exact(value: int) -> String:
+	var digits: String = str(absi(value))
+	var out: String = ""
+	var c: int = 0
+	for i in range(digits.length() - 1, -1, -1):
+		out = digits[i] + out
+		c += 1
+		if c % 3 == 0 and i > 0:
+			out = "," + out
+	return ("-$" if value < 0 else "$") + out
+
+
+## Turkish-aware uppercase — the single home. Godot's String.to_upper() is not
+## locale-aware: "i" → "I" (dotless — wrong in Turkish, must be "İ"). Pre-substitute
+## i→İ, then to_upper; "ı" → "I" already maps correctly via the default Unicode rules.
+## Player-facing uppercasing goes through this, never raw to_upper().
+static func tr_upper(s: String) -> String:
+	return s.replace("i", "İ").to_upper()
 
 
 ## Net-runway display (Package 5): revenue-aware runway. INF (net_burn ≤ 0) → the

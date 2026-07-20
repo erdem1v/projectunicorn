@@ -20,7 +20,7 @@ extends Resource
 @export var tier: String = "startup"           # "giant" | "established" | "startup"
 @export var innovation: float = 0.0
 @export var stability: float = 0.0
-@export var usability: float = 0.0
+@export var experience: float = 0.0
 @export var momentum: float = 0.0              # per-day dim growth rate (0 for giants)
 @export var status: String = "QUIET"           # display band (DOMINANT/STEADY/SCALING/QUIET)
 
@@ -33,4 +33,4 @@ extends Resource
 # Type-weighted composite (same math the player uses) — for ranking + display.
 func composite(quality_axes: Array = []) -> float:
 	return QualityModel.composite_quality(
-		{"innovation": innovation, "stability": stability, "usability": usability}, quality_axes)
+		{"innovation": innovation, "stability": stability, "experience": experience}, quality_axes)

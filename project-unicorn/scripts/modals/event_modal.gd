@@ -97,7 +97,7 @@ func _render_synthetic_speaker() -> void:
 
 func _apply_status_pill(text: String, kind: StringName) -> void:
 	# Status chip in the relationship-pill slot, tinted from a badge palette (kind).
-	relationship_pill.text = text.to_upper()
+	relationship_pill.text = UiTokens.tr_upper(text)
 	var pal: Dictionary = UiTokens.badge_palette(kind)
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = pal.bg
@@ -111,7 +111,7 @@ func _apply_status_pill(text: String, kind: StringName) -> void:
 
 
 func _apply_relationship_pill(rel: String) -> void:
-	relationship_pill.text = rel.to_upper()
+	relationship_pill.text = UiTokens.tr_upper(rel)
 	var pal: Dictionary = UiTokens.relationship_palette(rel)
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = pal.bg
@@ -203,7 +203,7 @@ static func _initials(full_name: String) -> String:
 	var out: String = ""
 	for word in full_name.split(" ", false):
 		if word.length() > 0:
-			out += word.substr(0, 1).to_upper()
+			out += UiTokens.tr_upper(word.substr(0, 1))
 		if out.length() >= 2:
 			break
 	return out
@@ -230,7 +230,7 @@ func _describe_modifier(m) -> Dictionary:
 		"audience_delta": return {"text": "Kitle %s" % _fmt_signed(d), "kind": _kind(d)}
 		"dimension_delta":
 			var amt: int = int(m.get("amount", 0))
-			var label: String = {"innovation": "İnovasyon", "stability": "Kararlılık", "usability": "Kullanılabilirlik"}.get(String(m.get("axis", "innovation")), "Kalite")
+			var label: String = {"innovation": "İnovasyon", "stability": "Kararlılık", "experience": "Deneyim"}.get(String(m.get("axis", "innovation")), "Kalite")
 			return {"text": "%s %s" % [label, _fmt_signed(amt)], "kind": _kind(amt)}
 		"bug_delta":
 			var bd: int = int(m.get("amount", 0))
@@ -252,7 +252,7 @@ func _describe_modifier(m) -> Dictionary:
 		"b2b_promise_create": return {"text": "Müşteri kalır · söz borcu", "kind": &"accent"}
 		"b2b_retain_delay": return {"text": "Kısa vadeli hamle", "kind": &"neutral"}
 		"b2b_retain_discount": return {"text": "Müşteri kalır · MRR %s" % _fmt_money_delta(int(m.get("mrr_delta", 0))), "kind": &"negative"}
-		"b2b_retain_release": return {"text": "Müşteriyi kaybet", "kind": &"negative"}
+		"b2b_retain_ignore": return {"text": "müdahale yok · sayaç işlemeye devam eder", "kind": &"neutral"}
 		"b2b_cs_promise_honor": return {"text": "Müşteri kalır · söz borcu doğar · yol haritasına eklenir", "kind": &"accent"}
 		"b2b_cs_promise_refuse": return {"text": "Müşteriyi kaybet", "kind": &"negative"}
 		"b2b_expand":

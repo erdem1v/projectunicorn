@@ -17,13 +17,14 @@ extends RefCounted
 # Burn breakdown defaults: $50/day baseline for the pressure-from-day-one start
 # ($10K cash, ~6.6 months runway). Solo founder, no hires, no marketing spend.
 
-const DAYS_PER_MONTH := 30
-
 # Bootstrap solo founder baseline burn (sums to $50/day = ~$1,500/month).
 # Salaries are PULLED from CharacterRegistry at the top of daily_tick — one-way
 # pull, HR ticks at slot 3 so the registry is quiescent by slot 5.
 # Player marketing spend mechanic will mutate "marketing" via set_burn_category().
-static var burn_breakdown := {
+# Single home for the day-1 breakdown; burn_breakdown starts as a mutable copy,
+# and GameState's starting daily_burn derives from it (starting_daily_burn()).
+# NOT: static var reset'i süreç relaunch'una dayanır (TEKRAR DENE = OS restart); in-place reset seam'i ana menü / SaveManager task'ının işi.
+const STARTING_BURN_BREAKDOWN := {
 	"salaries": 0,        # Overwritten daily by pull from CharacterRegistry
 	"tools": 7,           # SaaS subscriptions, hosting, dev tooling (~$210/mo)
 	"office": 25,         # Coworking desk (~$750/mo)
@@ -31,6 +32,15 @@ static var burn_breakdown := {
 	"legal": 11,          # Light retainer / freelance accountant (~$330/mo)
 	"misc": 7,            # Software, supplies, fees (~$210/mo)
 }
+static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
+
+
+static func starting_daily_burn() -> int:
+	# Day-1 baseline total ($50/day) — GameState defaults + initialize_run read it.
+	var total: int = 0
+	for category in STARTING_BURN_BREAKDOWN:
+		total += STARTING_BURN_BREAKDOWN[category]
+	return total
 
 
 # --- Entry point (called by TimeManager._tick_finance) ---
@@ -38,9 +48,9 @@ static var burn_breakdown := {
 static func daily_tick() -> void:
 	# 0. Pull salaries from CharacterRegistry (HR ticked at slot 3; registry
 	#    state is settled). Convert monthly payroll to a daily figure using
-	#    DAYS_PER_MONTH — same conversion as MRR → daily revenue (line below).
+	#    GameState.DAYS_PER_MONTH — same conversion as MRR → daily revenue (line below).
 	var monthly_salaries: int = CharacterRegistry.get_total_monthly_salaries()
-	burn_breakdown["salaries"] = int(round(monthly_salaries / float(DAYS_PER_MONTH)))
+	burn_breakdown["salaries"] = int(round(monthly_salaries / float(GameState.DAYS_PER_MONTH)))
 
 	# 1. Recompute total burn from breakdown (may have shifted via salary pull / marketing)
 	var total_burn: int = compute_total_burn()
@@ -48,12 +58,29 @@ static func daily_tick() -> void:
 		GameState.set_daily_burn(total_burn)  # emits burn_changed → TopBar
 
 	# 2. Daily revenue from monthly recurring revenue
-	var daily_revenue: int = int(round(GameState.mrr / float(DAYS_PER_MONTH)))
+	var daily_revenue: int = int(round(GameState.mrr / float(GameState.DAYS_PER_MONTH)))
 
 	# 3. Net flow applied once — single set_cash call → single signal pass
 	var net: int = daily_revenue - total_burn
 	GameState.set_cash(GameState.cash + net)
 	# set_cash emits cash_changed + runway_recalculated → TopBar updates
+
+
+# --- One-time spend seam (Rev3 build commit: API/lisans maliyeti) ---
+# Write-Through: Finance owns cash. Charged EXACTLY once by the commit seam
+# (ProductSystem.start_build / start_version_build) after validation. Aylık
+# yinelenen API-maliyeti modeli (burn_breakdown["tools"] kalemi) BİLİNÇLİ
+# ERTELENDİ — economy-curve redesign'da ele alınacak. Affordability gate yok
+# (nakit eksiye düşebilir — mevcut iflas baskısıyla aynı kanal); iptal + yeniden
+# commit YENİDEN tahsil eder (yanan yanmıştır — working call). `label` gelecekteki
+# ledger/aylık-özet satırı için kanca; bugün yalnız debug log'a düşer.
+
+static func apply_one_time_cost(amount: int, label: String) -> void:
+	if amount <= 0:
+		return
+	GameState.set_cash(GameState.cash - amount)   # emits cash_changed + runway_recalculated
+	if OS.is_debug_build():
+		print("[FinanceSystem] one-time cost $%d (%s)" % [amount, label])
 
 
 # --- Burn breakdown API (consumed by future systems) ---

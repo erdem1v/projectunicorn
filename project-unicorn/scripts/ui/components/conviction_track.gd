@@ -13,7 +13,7 @@ extends VBoxContainer
 @onready var _track: Control = $Track
 
 var _value: int = 0
-var _bounds: Array = [40, 70]
+var _bounds: Array = PitchConstants.ZONE_BOUNDS
 
 
 func _ready() -> void:
@@ -21,9 +21,9 @@ func _ready() -> void:
 	_track.resized.connect(_track.queue_redraw)
 
 
-func set_value(value: int, zone_bounds: Array = [40, 70]) -> void:
+func set_value(value: int, zone_bounds: Array = PitchConstants.ZONE_BOUNDS) -> void:
 	_value = clampi(value, 0, 100)
-	_bounds = zone_bounds if zone_bounds.size() == 2 else [40, 70]
+	_bounds = zone_bounds if zone_bounds.size() == 2 else PitchConstants.ZONE_BOUNDS
 	_value_label.text = str(_value)
 	_track.queue_redraw()
 

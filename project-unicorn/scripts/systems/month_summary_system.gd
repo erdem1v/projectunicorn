@@ -42,6 +42,11 @@ static func snapshot() -> void:
 		"cash": GameState.cash,
 		"employees": _team_size(),
 		"brand": GameState.brand,
+		# Month-start baselines of the run-cumulative customer counters, so the Sales
+		# pulse strip can read a THIS-MONTH delta (gained/lost/net) read-only. The month
+		# modal ignores these (it shows mrr/cash/team/brand deltas — two data shapes).
+		"customers_signed": GameState.run_customers_signed,
+		"customers_lost": GameState.run_customers_lost,
 	}
 	GameState.month_highlight_text = ""
 	GameState.month_highlight_priority = -1

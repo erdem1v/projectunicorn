@@ -38,11 +38,7 @@ static func support_load_for(scale: int) -> int:
 static func roll_scale(archetype: String) -> int:
 	# 1..5 star size (A.4). Demo caps at SCALE_DEMO_MAX; 4-5 gated behind an unlock
 	# flag (Tier 2 enterprise), so the engine simply does not generate them in demo.
-	var base := 2
-	match archetype:
-		"enterprise": base = 5
-		"mid": base = 3
-		_: base = 2
+	var base: int = CustomerArchetypes.scale_base(archetype)
 	if not GameState.get_flag("b2b_high_scale_unlocked", false):
 		base = mini(base, SCALE_DEMO_MAX)
 	return base
@@ -59,7 +55,7 @@ const RETAIN_SAT_BUMP := 8              # satisfaction relief from a discount
 const RETAIN_PROMISE_REP := 1
 const RETAIN_DELAY_BRAND := -1
 const RETAIN_DISCOUNT_REP := -1
-const RETAIN_RELEASE_BRAND := -2
+const CHURN_BRAND := -2                 # brand hit at the ACTUAL churn moment (countdown expiry)
 
 
 # --- Content tables (working TR drafts; Erdem voice-passes) ---------------------
@@ -212,7 +208,8 @@ const VALUE_BAND_LOW_FRAC := 0.65
 const VALUE_BAND_HIGH_FRAC := 1.15
 
 # Expansion (E.4): a healthy mature account grows seats → MRR. Working amounts.
-const EXPANSION_SEATS := {"small": 3, "mid": 6, "enterprise": 12}
+# Per-archetype seat steps live in CustomerArchetypes (single data home); the flat
+# per-seat rate stays here (not archetype-keyed).
 const EXPANSION_PER_SEAT_MRR := 120
 
 
@@ -220,5 +217,21 @@ static func sector_pool(sub_id: String) -> Array:
 	return SECTOR_AFFINITY.get(sub_id, SECTOR_AFFINITY_FALLBACK)
 
 
+# --- B2B pitch meeting room art (the remap SEAM). Placeholder: every sector maps to
+#     the existing neutral meeting room until the sector-specific art lands (fabrika /
+#     hukuk bürosu / klinik / startup ofisi — planned). When it arrives, each entry is a
+#     one-line remap to res://assets/art/rooms/room_<sector>.webp. ---
+const SECTOR_ROOM_DEFAULT := "res://assets/art/rooms/room_anchor.webp"
+const SECTOR_ROOM := {
+	"İnşaat": SECTOR_ROOM_DEFAULT, "Lojistik": SECTOR_ROOM_DEFAULT, "Sağlık": SECTOR_ROOM_DEFAULT,
+	"Sigorta": SECTOR_ROOM_DEFAULT, "Üretim": SECTOR_ROOM_DEFAULT, "Teknoloji": SECTOR_ROOM_DEFAULT,
+	"E-ticaret": SECTOR_ROOM_DEFAULT, "Medya": SECTOR_ROOM_DEFAULT, "Finans": SECTOR_ROOM_DEFAULT,
+}
+
+
+static func sector_room(industry: String) -> String:
+	return String(SECTOR_ROOM.get(industry, SECTOR_ROOM_DEFAULT))
+
+
 static func expansion_seats(archetype: String) -> int:
-	return int(EXPANSION_SEATS.get(archetype, 3))
+	return CustomerArchetypes.expansion_seats(archetype)

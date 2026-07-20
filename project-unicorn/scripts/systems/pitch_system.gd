@@ -6,10 +6,10 @@ extends RefCounted
 #
 # 4-scene medium-depth (Disco-flavored) flow:
 #   intro   → approach sets a small bonus
-#   value   → framing SkillCheck (markets/charisma) → bonus ±
+#   value   → framing SkillCheck (sales/influence) → bonus ±
 #   pricing → anchor-high / fair / safe sets target MRR + close difficulty
-#   close   → final Charisma SkillCheck → SIGNED / CALLBACK / LOST
-# Markets ≥ reveal threshold (SkillCheck.can_read_prospect) exposes the
+#   close   → final Satış (sales) SkillCheck → SIGNED / CALLBACK / LOST
+# Satış ≥ reveal threshold (SkillCheck.can_read_prospect) exposes the
 # prospect's hidden budget_band/real_need, informing the pricing choice.
 #
 # §10: a customer (MRR) is created ONLY on SIGNED, from this played dialogue.
@@ -18,12 +18,7 @@ const PITCH_COOLDOWN_DAYS := 2
 const VALUE_BASE_DIFFICULTY := 1
 const CLOSE_BASE_DIFFICULTY := 1
 
-# Target MRR bands per archetype (PostShip tunables; Bootstrap scale).
-const MRR_BANDS := {
-	"small": {"low": 200, "high": 500},
-	"mid": {"low": 800, "high": 2000},
-	"enterprise": {"low": 3000, "high": 8000},
-}
+# Target MRR bands per archetype live in CustomerArchetypes (single data home).
 
 # Prospect generation pools (working drafts; Erdem revises).
 const _COMPANY_NAMES := ["Nordica Lojistik", "Palmiye Holding", "Beykoz Tekstil", "Ege Sigorta",
@@ -72,7 +67,7 @@ static func spawn_prospect(archetype: String, source: String) -> Prospect:
 	p.scale = B2BConstants.roll_scale(archetype)   # 1..5 stars; demo-capped to 1-3 (A.4)
 	p.budget_band = _budget_for(archetype)
 	# E.3: value shown as a RANGE band (floor if it goes poorly, ceiling if well).
-	var band: Dictionary = MRR_BANDS.get(archetype, MRR_BANDS["small"])
+	var band: Dictionary = CustomerArchetypes.mrr_band(archetype)
 	var mid: float = (float(band["low"]) + float(band["high"])) * 0.5
 	p.value_band_min = int(round(mid * B2BConstants.VALUE_BAND_LOW_FRAC))
 	p.value_band_max = int(round(mid * B2BConstants.VALUE_BAND_HIGH_FRAC))
@@ -83,17 +78,11 @@ static func spawn_prospect(archetype: String, source: String) -> Prospect:
 
 
 static func _difficulty_for(archetype: String) -> int:
-	match archetype:
-		"enterprise": return 4
-		"mid": return 2
-		_: return 1
+	return CustomerArchetypes.difficulty_stars(archetype)
 
 
 static func _budget_for(archetype: String) -> String:
-	match archetype:
-		"enterprise": return "high"
-		"mid": return "mid"
-		_: return "low"
+	return CustomerArchetypes.budget_band(archetype)
 
 
 # --- Value-driven pricing range (E) ---
@@ -112,12 +101,12 @@ static func _price_mult_window() -> Dictionary:
 
 
 static func _pitch_value_hint() -> String:
-	# Markets-gated value range for the pricing stage (E.1/E.2). Below threshold the
+	# Satış-gated value range for the pricing stage (E.1/E.2). Below threshold the
 	# precise range is hidden — the player offers blind (mirrors the budget_band gate).
 	if not SkillCheck.can_read_prospect():
 		return "Bütçesini kestiremiyorsun — körlemesine teklif vereceksin."
 	var win: Dictionary = _price_mult_window()
-	var band: Dictionary = MRR_BANDS.get(_prospect.archetype, MRR_BANDS["small"])
+	var band: Dictionary = CustomerArchetypes.mrr_band(_prospect.archetype)
 	var lo_mo: int = int(round(lerpf(float(band["low"]), float(band["high"]), win["lo"])))
 	var hi_mo: int = int(round(lerpf(float(band["low"]), float(band["high"]), win["hi"])))
 	var seats: int = SalesSystem._seats_for_archetype(_prospect.archetype)
@@ -261,11 +250,11 @@ static func choose(idx: int) -> Dictionary:
 
 static func _resolve_outcome(chk: Dictionary, mrr_mult: float) -> Dictionary:
 	var band: String = String(chk.get("band", "fail"))
-	# Signed B2B account's initial satisfaction seeds from Stability + Usability
+	# Signed B2B account's initial satisfaction seeds from Stability + Experience
 	# (reliability + ease — what a business buyer feels day one), effective stability.
 	var _seed_dims: Dictionary = QualityModel.economy_dims_from_flags()
 	var quality_seed: int = int(round(
-		(QualityModel.axis_score(_seed_dims, "stability") + QualityModel.axis_score(_seed_dims, "usability")) * 0.5))
+		(QualityModel.axis_score(_seed_dims, "stability") + QualityModel.axis_score(_seed_dims, "experience")) * 0.5))
 	# Cooldown applies regardless of outcome.
 	GameState.set_flag("next_pitch_day", GameState.day + PITCH_COOLDOWN_DAYS)
 
@@ -283,7 +272,7 @@ static func _resolve_outcome(chk: Dictionary, mrr_mult: float) -> Dictionary:
 	var result := {"outcome": outcome, "band": band, "company": _prospect.company_name, "check": chk}
 
 	if outcome == "SIGNED":
-		var bandvals: Dictionary = MRR_BANDS.get(_prospect.archetype, MRR_BANDS["small"])
+		var bandvals: Dictionary = CustomerArchetypes.mrr_band(_prospect.archetype)
 		var target: float = lerpf(float(bandvals["low"]), float(bandvals["high"]), clampf(_price_mult, 0.0, 1.0))
 		var mrr: int = int(round(target * mrr_mult))
 		var satisfaction: int = clampi(quality_seed + (5 if band == "crit_success" else 0), 0, 100)

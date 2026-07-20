@@ -22,7 +22,7 @@ const BRAND_COLLAPSE_FLOOR := 15   # §4.4
 const BRAND_COLLAPSE_WINDOW := 30  # §4.4 "no recovery for 30 days"
 const CASCADE_TABLES := 3          # §4.5 closed pitch tables
 const PIVOT_MRR_MIN := 2000        # §4.5 "metrics are alive" floor
-const BOOTSTRAP_WIN_MRR := 5000    # §4.6 fork MRR threshold
+const BOOTSTRAP_WIN_MRR := SalesSystem.TRACTION_MRR_TARGET  # §4.6 fork MRR threshold — single home sales_system.gd
 const NET_WINDOW := 90             # §4.6 cumulative net window (Erdem 2026-07-13)
 
 # Ending metadata — 7 endings (§4). Titles/frank_lines are working copy;

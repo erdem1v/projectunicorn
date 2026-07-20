@@ -92,11 +92,11 @@ signal rival_advanced()
 # Prospect pool changes (Sales tab repaints). Mirrors customer_added/removed.
 signal prospect_added(prospect_id: String)
 signal prospect_removed(prospect_id: String)
-# Sales tab "Pitch" button → main.gd mounts PitchDialogueModal (same lifecycle
-# as modal_requested: pause on open, restore on close).
+# Sales tab "Görüşmeye git" → main.gd routes to B2BPitchMeeting, which renders the
+# pitch in the shared MeetingScene (pause on open, restore on close).
 signal pitch_requested(prospect_id: String)
-# Emitted by PitchDialogueModal when the pitch flow ends (any outcome) so main.gd
-# frees the modal and restores speed.
+# Emitted by B2BPitchMeeting when the pitch flow ends (any outcome) so the Sales/Hunt
+# tabs repaint. Speed restore + scene teardown happen in main.gd's dialogue close path.
 signal pitch_finished()
 # Frank's RightPanel advisory line — updated by intro/customer events/traction.
 signal mentor_advisory_changed(text: String)

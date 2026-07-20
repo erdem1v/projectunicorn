@@ -15,10 +15,9 @@ const ONBOARDING_FLOW := preload("res://scenes/onboarding/OnboardingFlow.tscn")
 const GAME_SHELL := preload("res://scenes/main/GameShell.tscn")
 const MENTOR_MODAL := preload("res://scenes/modals/MentorIntroModal.tscn")
 const EVENT_MODAL := preload("res://scenes/modals/EventModal.tscn")
-const PITCH_MODAL := preload("res://scenes/modals/PitchDialogueModal.tscn")
 const SETTINGS_MODAL := preload("res://scenes/modals/SettingsModal.tscn")
 const CONFIRM_MODAL := preload("res://scenes/modals/ConfirmModal.tscn")
-const ENDING_MODAL := preload("res://scenes/modals/EndingModal.tscn")
+const ENDING_MODAL := preload("res://scenes/modals/EndingScene.tscn")  # newspaper ceremony ("Ekonomi Postası") — same populate(ending_data) mount contract
 const MONTH_SUMMARY_MODAL := preload("res://scenes/modals/MonthSummaryModal.tscn")
 const MEETING_SCENE := preload("res://scenes/modals/MeetingScene.tscn")
 const FRANK_POPUP := preload("res://scenes/modals/FrankPopup.tscn")
@@ -28,7 +27,6 @@ var _flow: Node = null
 var _shell: Node = null
 var _modal: Node = null              # Mentor intro modal
 var _event_modal: Node = null        # Currently-open event modal, or null
-var _pitch_modal: Node = null        # Currently-open pitch dialogue modal, or null
 var _settings_modal: Node = null     # Currently-open settings modal, or null
 var _confirm_modal: Node = null      # Currently-open confirm modal, or null
 var _ending_modal: Node = null       # Ending summary modal — mounts once, never dismissed back to gameplay
@@ -95,6 +93,26 @@ func _ready() -> void:
 		var shot_kind: String = _b2b_shot_requested()
 		if shot_kind != "":
 			_run_b2b_shot(shot_kind)
+			return
+
+	# Debug: --sales-shot (windowed) mounts GameShell on the Sales tab with a seeded
+	# B2B portfolio (healthy / YENİ / risk / expansion / CS-assigned) at 1920×1080,
+	# screenshots, and quits. Visual verification of the redesigned Sales tab.
+	if OS.is_debug_build():
+		for arg in OS.get_cmdline_args():
+			if String(arg) == "--sales-shot":
+				_run_sales_shot()
+				return
+			if String(arg) == "--pitch-shot":
+				_run_pitch_shot()
+				return
+		var product_shot: String = _product_shot_requested()
+		if product_shot != "":
+			_run_product_shot(product_shot)
+			return
+		var ending_shot: String = _ending_shot_requested()
+		if ending_shot != "":
+			_run_ending_shot(ending_shot)
 			return
 
 	if OS.is_debug_build() and _skip_onboarding_requested():
@@ -192,6 +210,272 @@ func _run_b2b_shot(kind: String) -> void:
 	get_tree().quit()
 
 
+func _run_sales_shot() -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	GameState.initialize_run({})
+	GameState.day = 95
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	GameState.set_flag("mvp_innovation", 45.0)
+	GameState.set_flag("mvp_stability", 70.0)
+	GameState.set_flag("mvp_experience", 45.0)
+	GameState.set_flag("mvp_live_bug_count", 12)  # risk reason → "sık kesinti şikayeti"
+	PitchSystem.spawn_prospect("small", "find")
+	PitchSystem.spawn_prospect("mid", "find")
+	PitchSystem.spawn_prospect("small", "find")
+	_shot_customer("co_kuzey", "Kuzey İnşaat", "İnşaat", "active", 1000, 12, 90, false)
+	_shot_customer("co_palmiye", "Palmiye Holding", "Sigorta", "active", 1500, 16, 150, true)
+	_shot_customer("co_aras", "Aras Klinik", "Sağlık", "onboarding", 700, 6, 10, false)
+	_shot_customer("co_ege", "Ege Sigorta", "Sigorta", "risk", 1000, 12, 60, false)
+	CustomerRegistry.set_churn_countdown("co_ege", 8)
+	_shot_customer("co_nordica", "Nordica", "Lojistik", "expansion", 2000, 20, 180, false)
+	# Monthly strip figures: gained 1 / lost 2 / net -1 (mockup).
+	GameState.run_customers_signed = 5
+	GameState.run_customers_lost = 2
+	GameState.month_ledger = {"customers_signed": 4, "customers_lost": 0}
+	SalesSystem.reflect_mrr()
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	EventBus.tab_changed.emit("sales")
+	await get_tree().process_frame
+	await get_tree().create_timer(0.4).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	img.save_png("user://sales_shot.png")
+	print("[SalesShot] saved %s" % ProjectSettings.globalize_path("user://sales_shot.png"))
+	get_tree().quit()
+
+
+func _product_shot_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--product-shot="):
+			return s.trim_prefix("--product-shot=")
+	return ""
+
+
+func _ending_shot_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--ending-shot="):
+			return s.trim_prefix("--ending-shot=")
+	return ""
+
+
+# Debug: --ending-shot=<key> (windowed). Seeds a representative Run Ledger, mounts the
+# newspaper EndingScene at 1920×1080, screenshots to user://, and quits. <key> is an
+# ending_id, plus the aliases bankruptcy1/2/3 (phase-layered) and series_a_agg (Aggressive
+# variant). Mirrors the --b2b-shot / --product-shot harness.
+func _run_ending_shot(key: String) -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	GameState.initialize_run({})
+	GameState.company_name = "PromptPilot"
+	GameState.founder_name = "Deniz"
+	GameState.day = 156
+
+	# Common representative ledger (every ledger-driven line populated).
+	GameState.set_flag("mvp_version", 3)
+	GameState.set_flag("mvp_version_history", [{"version": 1, "day": 40}, {"version": 2, "day": 90}, {"version": 3, "day": 140}])
+	GameState.run_customers_signed = 9
+	GameState.run_customers_lost = 3
+	GameState.run_hires = 4
+	GameState.run_pitches = 2
+	GameState.run_sheets_won = 1
+	GameState.vc_rejections = 1
+	GameState.run_peak_mrr = 8200
+	GameState.mrr = 6400
+	GameState.cash = 24000
+
+	# Resolve the shot key → real ending_id + phase + signed terms.
+	var ending_id := key
+	match key:
+		"bankruptcy1":
+			ending_id = "bankruptcy"; GameState.phase = 1
+		"bankruptcy2":
+			ending_id = "bankruptcy"; GameState.phase = 2
+		"bankruptcy3", "bankruptcy":
+			ending_id = "bankruptcy"; GameState.phase = 3
+		"series_a_close", "series_a_agg":
+			ending_id = "series_a_close"
+			GameState.phase = 3
+			var aggressive := key == "series_a_agg"
+			GameState.run_valuation_m = 22
+			GameState.run_equity_pct = 32 if aggressive else 18
+			GameState.run_board_seats = 2 if aggressive else 1
+			GameState.run_board_veto = aggressive
+			GameState.run_investment_amount = int(round(22_000_000.0 * (32 if aggressive else 18) / 100.0))
+		"running_on_fumes", "acquisition", "vc_rejection_cascade", "brand_collapse", "profitable_bootstrap":
+			GameState.phase = 3
+		_:
+			GameState.phase = 3
+
+	var data: Dictionary = EndingsSystem._build_ending_data(ending_id, {})
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var scene: Control = ENDING_MODAL.instantiate()
+	layer.add_child(scene)
+	scene.populate(data)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().create_timer(0.4).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://ending_shot_%s.png" % key
+	img.save_png(path)
+	print("[EndingShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
+
+
+# Debug: --product-shot=<portfoy|ozellikler|tracker|detail_b2b|detail_b2c> (windowed).
+# Mounts GameShell with seeded state, drives the Product tab router to the requested
+# Rev3 view at 1920×1080, screenshots to user://, and quits.
+func _run_product_shot(kind: String) -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	GameState.initialize_run({})
+	var founder_id: String = CharacterRegistry.get_founder().id
+	match kind:
+		"detail_b2b", "portfoy":
+			GameState.day = 95
+			GameState.set_flag("mvp_shipped", true)
+			GameState.set_flag("mvp_market_type", "b2b")
+			GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+			GameState.set_flag("mvp_product_name", "Nova")
+			GameState.set_flag("mvp_version", 2)
+			GameState.set_flag("mvp_innovation", 9.0)
+			GameState.set_flag("mvp_stability", 14.0)
+			GameState.set_flag("mvp_experience", 6.0)
+			GameState.set_flag("mvp_components",
+				["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"])
+			GameState.set_flag("mvp_launch_day", 73)
+			GameState.set_flag("mvp_live_bug_count", 6)
+			GameState.set_flag("mvp_bug_history", [2, 2, 3, 4, 4, 5, 6])
+			GameState.set_flag("mvp_version_history",
+				[{"version": 1, "day": 10}, {"version": 2, "day": 73}])
+			var p := Prospect.new()
+			p.id = "shot_ege"
+			p.company_name = "Ege Sigorta"
+			p.industry = "Sigorta"
+			p.archetype = "small"
+			p.pain_feature_id = "saas_ops_integration"
+			var c: Customer = SalesSystem.add_b2b_customer(p, 402, 70)
+			PromiseRegistry.create(c.id, "saas_ops_integration", 12)
+			if kind == "portfoy":
+				ProductSystem.start_version_build(["saas_ops_scheduling"], founder_id, [])
+				var b: FeatureBuild = ProductSystem.get_active_build()
+				if b != null:
+					b.efor_spent = b.total_efor * 0.64
+					ProductSystem.hourly_tick(9)  # faz bandını ilerlemeye oturtur
+		"detail_b2c":
+			GameState.set_flag("mvp_shipped", true)
+			GameState.set_flag("mvp_market_type", "b2c")
+			GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
+			GameState.set_flag("mvp_product_name", "Fokus")
+			GameState.set_flag("mvp_version", 1)
+			GameState.set_flag("mvp_innovation", 1.0)
+			GameState.set_flag("mvp_stability", 0.0)
+			GameState.set_flag("mvp_experience", 5.0)
+			GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
+			GameState.set_flag("mvp_launch_day", GameState.day)
+			GameState.set_flag("mvp_live_bug_count", 5)
+			GameState.set_flag("mvp_bug_history", [1, 2, 2, 3, 4, 4, 5])
+			GameState.set_flag("mvp_version_history", [{"version": 1, "day": GameState.day}])
+			GameState.set_flag("b2c_audience", 1.0)
+			# Satış okuma kapısını aç: optimal rakam "belirsiz" yerine gerçek değerle çizilsin.
+			CharacterRegistry.get_founder().role_stats["sales"] = SkillCheck.SALES_READ_THRESHOLD
+		"tracker", "beta":
+			ProductSystem.start_build("saas_ops",
+				["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"],
+				founder_id, "Nova İki")
+			var b: FeatureBuild = ProductSystem.get_active_build()
+			if b != null:
+				b.efor_spent = b.total_efor * (0.9 if kind == "beta" else 0.5)
+				ProductSystem.hourly_tick(9)
+		_:
+			pass  # "ozellikler": temiz açılış, navigasyon aşağıda
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	EventBus.tab_changed.emit("product")
+	await get_tree().process_frame
+	var cv: Node = _shell.find_child("CenterViewport", true, false)
+	var tab: Node = cv._current_tab_node
+	match kind:
+		"ozellikler":
+			tab._navigate("creation", {"step": 3, "prefill": {"type": "saas_ops",
+				"features": ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"]}})
+		"tracker", "beta":
+			tab._navigate("tracker", {})
+		"detail_b2b", "detail_b2c":
+			tab._navigate("detail", {})
+		_:
+			pass  # portfoy: varsayılan iniş görünümü
+	await get_tree().process_frame
+	await get_tree().create_timer(0.4).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://product_shot_%s.png" % kind
+	img.save_png(path)
+	print("[ProductShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
+
+
+func _run_pitch_shot() -> void:
+	# Mount GameShell, enter a B2B pitch (MeetingScene via B2BPitchMeeting), screenshot the
+	# opening beat: room art + rep portrait + dialogue + choices, NO conviction/stat strip.
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	GameState.initialize_run({})
+	GameState.founder_portrait = "founder_01"
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	var p := PitchSystem.spawn_prospect("mid", "find")
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	# The normal flow wires this in _swap_to_shell_and_modal; the shot mounts the shell
+	# manually, so connect the dialogue-mount handler here before entering the pitch.
+	if not EventBus.meeting_scene_requested.is_connected(_on_meeting_scene_requested):
+		EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
+	B2BPitchMeeting.begin_meeting(p.id)
+	await get_tree().process_frame
+	await get_tree().create_timer(0.5).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	img.save_png("user://pitch_shot.png")
+	print("[PitchShot] saved %s" % ProjectSettings.globalize_path("user://pitch_shot.png"))
+	get_tree().quit()
+
+
+func _shot_customer(id: String, cname: String, industry: String, phase: String, mrr: int, seats: int, days_ago: int, cs: bool) -> void:
+	var c := Customer.new()
+	c.id = id
+	c.company_name = cname
+	c.industry = industry
+	c.market_type = "b2b"
+	c.mrr = mrr
+	c.seats = seats
+	c.satisfaction = 25 if phase == "risk" else 72
+	c.lifecycle_phase = phase
+	c.acquired_on_day = GameState.day - days_ago
+	c.scale = 3
+	c.pain_feature_id = "saas_ops_integration"
+	if cs:
+		var rep := Character.new()
+		rep.id = "char_cs_" + id
+		rep.character_name = "Burcu Çetin"
+		rep.role = CharacterRegistry.ROLE_CUSTOMER_SUCCESS
+		rep.category = "employee"
+		CharacterRegistry.add(rep)
+		c.assigned_to = rep.id
+	c.update_health_from_satisfaction()
+	CustomerRegistry.add(c)
+
+
 func _mount_flow() -> void:
 	_flow = ONBOARDING_FLOW.instantiate()
 	_flow.completed.connect(_on_flow_completed)
@@ -225,7 +509,6 @@ func _swap_to_shell_and_modal() -> void:
 		EventBus.modal_requested.connect(_on_event_modal_requested)
 		EventBus.event_resolved.connect(_on_event_resolved)
 		EventBus.pitch_requested.connect(_on_pitch_requested)
-		EventBus.pitch_finished.connect(_on_pitch_finished)
 		EventBus.settings_requested.connect(_on_settings_requested)
 		EventBus.confirm_requested.connect(_on_confirm_requested)
 		EventBus.run_ended.connect(_on_run_ended)
@@ -285,31 +568,13 @@ func _on_event_resolved(_event_id: String, _choice_idx: int) -> void:
 		EventBus.speed_change_requested.emit(restore)
 
 
-# --- Pitch dialogue modal lifecycle (Sales tab → PostShip §D) ---
+# --- B2B pitch (Sales tab → PostShip §D). The pitch now renders in the shared
+#     MeetingScene via the B2BPitchMeeting view-adapter, which emits
+#     meeting_scene_requested → the generic dialogue mount below handles pause/mount/
+#     teardown. Choice/withdraw routing lives in _on_dialogue_* (B2B branch). ---
 
 func _on_pitch_requested(prospect_id: String) -> void:
-	if _pitch_modal != null:
-		return  # one pitch at a time
-	if _pre_event_speed < 0:
-		_pre_event_speed = TimeManager.current_speed
-	EventBus.speed_change_requested.emit(0)
-	var modal_layer: CanvasLayer = _shell.get_node_or_null("ModalLayer") if _shell != null else null
-	if modal_layer == null:
-		push_error("[Main] GameShell/ModalLayer missing — pitch modal can't mount")
-		return
-	_pitch_modal = PITCH_MODAL.instantiate()
-	modal_layer.add_child(_pitch_modal)
-	_pitch_modal.populate(prospect_id)
-
-
-func _on_pitch_finished() -> void:
-	if _pitch_modal != null:
-		_pitch_modal.queue_free()
-		_pitch_modal = null
-	if not EventManager.has_pending():
-		var restore: int = _pre_event_speed if _pre_event_speed >= 0 else 1
-		_pre_event_speed = -1
-		EventBus.speed_change_requested.emit(restore)
+	B2BPitchMeeting.begin_meeting(prospect_id)
 
 
 # --- Settings modal lifecycle (gear button below the left tabs) ---
@@ -474,6 +739,13 @@ func _on_dialogue_choice_selected(id: String) -> void:
 		elif _meeting_scene != null:
 			_meeting_scene.populate(r.get("view_state", {}))
 		return
+	if B2BPitchMeeting.is_active():
+		var rb: Dictionary = B2BPitchMeeting.advance(id)
+		if rb.get("done", false):
+			_close_dialogue_scenes()
+		elif _meeting_scene != null:
+			_meeting_scene.populate(rb.get("view_state", {}))
+		return
 	print("[Debug] choice_selected: %s" % id)
 	_close_dialogue_scenes()
 
@@ -481,6 +753,10 @@ func _on_dialogue_choice_selected(id: String) -> void:
 func _on_dialogue_withdrawn() -> void:
 	if VCPitchSystem.is_meeting_active():
 		VCPitchSystem.withdraw()
+		_close_dialogue_scenes()
+		return
+	if B2BPitchMeeting.is_active():
+		B2BPitchMeeting.withdraw()
 		_close_dialogue_scenes()
 		return
 	print("[Debug] withdraw_requested")
@@ -523,7 +799,7 @@ func _maybe_show_deal_prompt() -> void:
 		return
 	# Don't stack over any modal / dialogue / table / confirm — retried from the close paths.
 	if _frank_popup != null or _meeting_scene != null or _term_table != null \
-			or _event_modal != null or _confirm_modal != null or _pitch_modal != null:
+			or _event_modal != null or _confirm_modal != null:
 		return
 	var vc: String = _pending_deal_prompt_vc
 	_pending_deal_prompt_vc = ""
@@ -660,7 +936,6 @@ func _on_debug_onboarding_retrigger() -> void:
 	_shell_mounted = false
 	_modal = null
 	_event_modal = null
-	_pitch_modal = null
 	_settings_modal = null
 	_confirm_modal = null
 	_ending_modal = null

@@ -196,7 +196,7 @@ static func view_state() -> Dictionary:
 		"money_raised": money_raised(),
 		"footer": {
 			"kasa_runway_text": _kasa_runway_text(),
-			"counter_text": "Kapanan masa: %d/%d" % [GameState.vc_rejections, PitchConstants.CASCADE_TABLES],
+			"counter_text": "Kapanan masa: %d/%d" % [GameState.vc_rejections, EndingsSystem.CASCADE_TABLES],
 		},
 		"sign_enabled": _active,
 		"walk_enabled": _active,
@@ -251,11 +251,11 @@ static func _result_caption() -> String:
 static func _frank_line(lev_active: bool, other_name: String) -> String:
 	match _state:
 		PUSH_SUCCESS:
-			return "%s'ı aldın. İyi. Şimdi dur, ya da başka bir kaldıraca bas. Sabırları sonsuz değil." % _lever_name(_last_lever_acted)
+			return "%s aldın. İyi. Şimdi dur, ya da başka bir kaldıraca bas. Sabırları sonsuz değil." % _lever_name_acc(_last_lever_acted)
 		PUSH_FAILURE:
 			if _patience <= 1:
 				return "Gerginleşiyorlar. Bir hamlen kaldı. Dikkatli seç."
-			return "Olmadı. %s'da direniyorlar. Israr etme, başka yere geç." % _lever_name(_last_lever_acted)
+			return "Olmadı. %s direniyorlar. Israr etme, başka yere geç." % _lever_name_loc(_last_lever_acted)
 		PATIENCE_ZERO:
 			if lev_active:
 				return "Masada bir teklifin daha var — %s. Kalk, değerlendir, sonra dön." % other_name
@@ -339,11 +339,30 @@ static func _board_text(seats: int, veto: bool) -> String:
 static func _lever_name(lever: String) -> String:
 	match lever:
 		"valuation": return "Değerleme"
-		"dilution": return "Seyrelme"
+		"dilution": return "Hisse"
 		_: return "Board"
 
 
+static func _lever_name_acc(lever: String) -> String:
+	# Accusative form for Frank's "%s aldın" line — the Turkish suffix follows vowel
+	# harmony per lever name, so one shared "'ı" template can't fit all three.
+	match lever:
+		"valuation": return "Değerleme'yi"
+		"dilution": return "Hisse'yi"
+		_: return "Board'u"
+
+
+static func _lever_name_loc(lever: String) -> String:
+	# Locative form for Frank's "%s direniyorlar" line (see _lever_name_acc note).
+	match lever:
+		"valuation": return "Değerleme'de"
+		"dilution": return "Hisse'de"
+		_: return "Board'da"
+
+
 static func _kasa_runway_text() -> String:
+	# GROSS runway in DAYS — deliberate table lens (VC side ignores revenue; the player
+	# shell shows NET months). Days-vs-months unit deferred to the curve session.
 	var burn: int = maxi(GameState.daily_burn, 1)
 	var days: int = int(floor(float(GameState.cash) / float(burn)))
 	return "Kasa: %s · Runway: %d gün" % [UiTokens.format_money(GameState.cash), days]

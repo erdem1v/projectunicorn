@@ -8,17 +8,17 @@ extends RefCounted
 # happen via ProductCatalog quality_axes[].display_label):
 #   innovation — distinctiveness / tech wow / premium pricing power
 #   stability  — bug-freeness / crash resistance / low churn
-#   usability  — ease of use / onboarding / satisfaction
+#   experience — ease of use / onboarding / satisfaction (Rev3 renamed third axis)
 #
-# Each axis is OPEN-ENDED (floor 0, NO upper clamp). The ceiling is STRUCTURAL,
-# enforced by grow()'s diminishing-returns law + PHASE1_AXIS_ASYMPTOTE — not a
-# clamp. See scripts/autoload/rival_registry.gd for the tier bands that keep a
-# Phase-1 player structurally below the giant league.
+# Each axis is OPEN-ENDED (floor 0, NO upper clamp). Player axes are DETERMINISTIC
+# sums of feature contributions since Rev3 (ProductSystem.projected_axes); grow()'s
+# diminishing-returns law still ceilings RIVAL advancement (rival_registry.gd tier
+# asymptotes keep the giant band structurally out of reach).
 #
 # Pure statics (RefCounted, no state) — matches ProductSystem / SalesSystem /
 # ProductCatalog convention. Runs on BOTH quality surfaces:
 #   - live build:  dims_from_build(FeatureBuild)
-#   - post-ship:   dims_from_flags()  (mvp_innovation/stability/usability)
+#   - post-ship:   dims_from_flags()  (mvp_innovation/stability/experience)
 # Every consumer calls QualityModel.x(); nobody re-derives quality inline, so the
 # 12-consumer rewrite is safe and R1/R6 cannot drift.
 #
@@ -26,23 +26,26 @@ extends RefCounted
 # climbs into the startup league hour by hour. The old baseline-50 feel is gone.
 
 # --- Canonical axes (engine ids) ---
-const AXES := ["innovation", "stability", "usability"]
+const AXES := ["innovation", "stability", "experience"]
 
 # Fallback weights + labels when a sub-type omits quality_axes (equal blend).
 const DEFAULT_AXES := [
 	{"axis": "innovation", "weight": 1.0, "display_label": "İnovasyon"},
 	{"axis": "stability",  "weight": 1.0, "display_label": "Kararlılık"},
-	{"axis": "usability",  "weight": 1.0, "display_label": "Kullanılabilirlik"},
+	{"axis": "experience", "weight": 1.0, "display_label": "Deneyim"},
 ]
 
 # --- BALANCE-TUNABLE constants (Erdem tunes at the last pass) ---
 # Saturation half-point: the composite value that maps to normalized 50. This is
 # the knob that decides where a shipped v1 lands on the 0-100 market-quality band.
+# BALANCE FLAG (Rev3 deterministic axes, do NOT retune here): contribution-sum v1
+# composites (~7-12) normalize to ~12-20 vs the old grown ~25-35 — every quality
+# reader (audience, product_value, satisfaction seed, value lines) reads lower.
+# Single-knob candidates for Erdem: this HALF_SAT (50 → ~25) or a global catalog
+# contribution scale (see ProductCatalog.FEATURE_POOLS header).
 const NORMALIZE_HALF_SAT := 50.0
-# Per-axis soft asymptote for a single Phase-1 build. grow() approaches but NEVER
-# reaches it, so player_composite < this by construction (structural ceiling proof
-# in the plan / rival_registry.gd). Later versions (Part 2) raise this per-version.
-const PHASE1_AXIS_ASYMPTOTE := 110.0
+# (PHASE1_AXIS_ASYMPTOTE deleted — Rev3 deterministic sums bypass grow() for the
+# player; the ceiling is now the catalog pool sums + strengthen accretion.)
 # How much each open (launch) bug erodes the Stability axis the economy reads.
 # Bugs are the live face of Stability (Erdem decision): features feed it, bugs eat it.
 # Part 2B: softened 1.5→0.8 so a few bugs are tolerable, heavy neglect still bites (global —
@@ -88,7 +91,7 @@ static func normalized_from_dims(dims: Dictionary, quality_axes: Array = []) -> 
 	return normalized_quality(composite_quality(dims, quality_axes))
 
 
-# Single-axis 0-100 score (R2 usability seed, R3 stability gate, R5 per-axis lines,
+# Single-axis 0-100 score (R2 experience seed, R3 stability gate, R5 per-axis lines,
 # BuildHUD gauges). Pass economy dims when you want bug-eroded stability.
 static func axis_score(dims: Dictionary, axis: String) -> float:
 	return normalized_quality(float(dims.get(axis, 0.0)))
@@ -105,7 +108,7 @@ static func effective_stability(stability: float, bug_count: int) -> float:
 
 # Raw design-time dims (no bug erosion). Use for pure per-axis design display.
 static func dims_from_build(b: FeatureBuild) -> Dictionary:
-	return {"innovation": b.innovation, "stability": b.stability, "usability": b.usability}
+	return {"innovation": b.innovation, "stability": b.stability, "experience": b.experience}
 
 
 # Economy dims — Stability replaced by effective_stability(bug_count). Everything
@@ -114,7 +117,7 @@ static func economy_dims_from_build(b: FeatureBuild) -> Dictionary:
 	return {
 		"innovation": b.innovation,
 		"stability": effective_stability(b.stability, b.bug_count),
-		"usability": b.usability,
+		"experience": b.experience,
 	}
 
 
@@ -122,7 +125,7 @@ static func dims_from_flags() -> Dictionary:
 	return {
 		"innovation": float(GameState.get_flag("mvp_innovation", 0.0)),
 		"stability":  float(GameState.get_flag("mvp_stability", 0.0)),
-		"usability":  float(GameState.get_flag("mvp_usability", 0.0)),
+		"experience": float(GameState.get_flag("mvp_experience", 0.0)),
 	}
 
 
@@ -134,7 +137,7 @@ static func economy_dims_from_flags() -> Dictionary:
 	return {
 		"innovation": float(GameState.get_flag("mvp_innovation", 0.0)),
 		"stability":  effective_stability(float(GameState.get_flag("mvp_stability", 0.0)), bugs),
-		"usability":  float(GameState.get_flag("mvp_usability", 0.0)),
+		"experience": float(GameState.get_flag("mvp_experience", 0.0)),
 	}
 
 

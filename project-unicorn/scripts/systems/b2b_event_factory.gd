@@ -45,9 +45,12 @@ static func build_retention(c: Customer) -> GameEvent:
 		{"type": "b2b_retain_discount", "customer_id": c.id, "mrr_delta": -discount_cut},
 		{"type": "reputation", "delta": B2BConstants.RETAIN_DISCOUNT_REP},
 	]))
-	choices.append(_choice("Bırak", [
-		{"type": "b2b_retain_release", "customer_id": c.id},
-		{"type": "brand", "delta": B2BConstants.RETAIN_RELEASE_BRAND},
+	# "Kendi haline bırak" = choose NOT to intervene. No instant churn / MRR / brand hit;
+	# the customer stays in Risk, keeps paying, the churn countdown keeps running. If it
+	# expires the account leaves on its own (brand hit lands at that churn moment). The
+	# player can reopen İlgilen before expiry and still rescue (recoverable pressure).
+	choices.append(_choice("Kendi haline bırak", [
+		{"type": "b2b_retain_ignore", "customer_id": c.id},
 	]))
 	ev.choices = choices
 	return ev

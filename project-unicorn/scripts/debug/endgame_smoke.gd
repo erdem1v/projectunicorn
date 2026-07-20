@@ -84,6 +84,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"burn_refresh_same_tick": fail = _case_burn_refresh_same_tick()
 		"feature_bug_seed_by_complexity": fail = _case_feature_bug_seed_by_complexity()
 		"hardening_seeds_no_bugs": fail = _case_hardening_seeds_no_bugs()
+		"single_feature_build_legal": fail = _case_single_feature_build_legal()
+		"commit_cost_charged_once": fail = _case_commit_cost_charged_once()
+		"phase_bands_20_60_20": fail = _case_phase_bands_20_60_20()
+		"speed_tracks_team_change": fail = _case_speed_tracks_team_change()
+		"deterministic_axes_at_ship": fail = _case_deterministic_axes_at_ship()
 		"runway_net_status":    fail = _case_runway_net_status()
 		"gross_runway_months":  fail = _case_gross_runway_months()
 		"locale_switch":        fail = _case_locale_switch()
@@ -91,6 +96,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_lifecycle_and_countdown": fail = _case_b2b_lifecycle_and_countdown()
 		"b2b_satisfaction_leaves_b2c_identical": fail = _case_b2b_satisfaction_leaves_b2c_identical()
 		"b2b_retention_routes_seams": fail = _case_b2b_retention_routes_seams()
+		"b2b_ignore_then_churn": fail = _case_b2b_ignore_then_churn()
+		"b2b_pitch_meeting_signs": fail = _case_b2b_pitch_meeting_signs()
+		"b2b_rep_portrait_rotation": fail = _case_b2b_rep_portrait_rotation()
 		"b2b_prospect_pain_references_real_feature": fail = _case_b2b_prospect_pain_references_real_feature()
 		"b2b_promise_kept_on_ship": fail = _case_b2b_promise_kept_on_ship()
 		"b2b_promise_broken_on_deadline": fail = _case_b2b_promise_broken_on_deadline()
@@ -104,7 +112,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_expansion_moves_seats_mrr_counter": fail = _case_b2b_expansion_moves_seats_mrr_counter()
 		"b2b_scale_and_sector_gating": fail = _case_b2b_scale_and_sector_gating()
 		"b2b_onboarding_to_prospect_visible": fail = _case_b2b_onboarding_to_prospect_visible()
+		"sales_month_counters": fail = _case_sales_month_counters()
 		"onboarding_pages_contract": fail = _case_onboarding_pages_contract()
+		"run_ledger":           fail = _case_run_ledger()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -128,7 +138,7 @@ static func _seed_b2b(mrr: int) -> void:
 	# should erode it). Bug count is left untouched so cases that pre-set it keep control.
 	GameState.set_flag("mvp_innovation", 45.0)
 	GameState.set_flag("mvp_stability", 70.0)
-	GameState.set_flag("mvp_usability", 45.0)
+	GameState.set_flag("mvp_experience", 45.0)
 	var p := Prospect.new()
 	p.id = "lead_smoke"
 	p.company_name = "Smoke Corp"
@@ -154,7 +164,7 @@ static func _seed_live_product() -> void:
 	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
 	GameState.set_flag("mvp_innovation", 20.0)
 	GameState.set_flag("mvp_stability", 25.0)
-	GameState.set_flag("mvp_usability", 22.0)
+	GameState.set_flag("mvp_experience", 22.0)
 	GameState.set_flag("mvp_version", 2)
 	GameState.set_flag("mvp_product_name", "Nova")
 
@@ -179,6 +189,98 @@ static func _instances_of(event_id: String) -> int:
 	if EventManager._active_event_id == event_id:
 		n += 1
 	return n
+
+
+# Rev3: aktif build'i hedef faza gelene dek ProductSystem.hourly_tick ile sürer
+# (sınırlı döngü; gün ilerletmez — saf build-motoru sürüşü).
+static func _run_build_to_phase(phase: String, max_hours: int = 24 * 120) -> bool:
+	for i in max_hours:
+		var b: FeatureBuild = ProductSystem.get_active_build()
+		if b == null:
+			return false
+		if b.current_phase == phase:
+			return true
+		ProductSystem.hourly_tick(i % 24)
+	var b_end: FeatureBuild = ProductSystem.get_active_build()
+	return b_end != null and b_end.current_phase == phase
+
+
+# --- Run Ledger + newspaper copy (Ending Screen) ---
+
+static func _case_run_ledger() -> String:
+	# Fresh run: the six new ledger fields reset to 0.
+	var l0: Dictionary = GameState.get_run_ledger()
+	if int(l0.get("peak_mrr", -1)) != 0:
+		return "peak_mrr not reset"
+	if int(l0.get("valuation_m", -1)) != 0 or int(l0.get("investment_amount", -1)) != 0:
+		return "signed terms not reset"
+
+	# Peak MRR latches the MAX seen, not the current value.
+	GameState.set_mrr(5000)
+	GameState.set_mrr(3000)
+	if GameState.run_peak_mrr != 5000:
+		return "peak_mrr latch wrong: %d" % GameState.run_peak_mrr
+
+	# B2B sign (sole seam) + a real employee hire (category guard).
+	_seed_b2b(800)
+	var e := Character.new()
+	e.id = "emp_smoke"
+	e.character_name = "Smoke Dev"
+	e.role = "Engineer"
+	e.category = "employee"
+	CharacterRegistry.add(e)
+	# Ship history → derived product_ships / max_version.
+	GameState.set_flag("mvp_version", 2)
+	GameState.set_flag("mvp_version_history", [{"version": 1, "day": 10}, {"version": 2, "day": 40}])
+
+	var l1: Dictionary = GameState.get_run_ledger()
+	if int(l1.get("customers_signed", 0)) < 1:
+		return "customers_signed not counted: %d" % int(l1.get("customers_signed", 0))
+	if int(l1.get("hires", 0)) != 1:
+		return "hires not counted: %d" % int(l1.get("hires", 0))
+	if int(l1.get("peak_mrr", 0)) != 5000:
+		return "ledger peak_mrr wrong: %d" % int(l1.get("peak_mrr", 0))
+	if int(l1.get("product_ships", 0)) != 2:
+		return "product_ships wrong: %d" % int(l1.get("product_ships", 0))
+	if int(l1.get("product_version", 0)) != 2:
+		return "product_version wrong: %d" % int(l1.get("product_version", 0))
+
+	# Departure seam: removing an employee increments run_departures.
+	CharacterRegistry.remove("emp_smoke")
+	if GameState.run_departures != 1:
+		return "run_departures not counted on employee remove: %d" % GameState.run_departures
+
+	# Signed-terms persistence via the VCPitch seam (without firing the ending).
+	VCPitchSystem._persist_signed_terms({"valuation_m": 22, "dilution_pct": 18, "board_seats": 1, "board_veto": false})
+	var l2: Dictionary = GameState.get_run_ledger()
+	if int(l2.get("valuation_m", 0)) != 22 or int(l2.get("equity_pct", 0)) != 18:
+		return "signed terms not persisted"
+	if int(l2.get("investment_amount", 0)) != int(round(22_000_000.0 * 18.0 / 100.0)):
+		return "investment_amount wrong: %d" % int(l2.get("investment_amount", 0))
+
+	# EndingsCopy composes a populated view_state (Founder-Friendly at equity 18, no veto).
+	var data := {"company_name": "PromptPilot", "tone": "win", "phase": 3}
+	var vs: Dictionary = EndingsCopy.build("series_a_close", l2, data)
+	if String(vs.get("headline", "")) == "":
+		return "EndingsCopy produced empty headline"
+	if (vs.get("ledger_lines", []) as Array).size() < EndingsCopy.MIN_LEDGER_LINES:
+		return "ledger_lines below MIN: %d" % (vs.get("ledger_lines", []) as Array).size()
+	if String(vs.get("variant", "")) != "founder_friendly":
+		return "series_a variant wrong: %s" % String(vs.get("variant", ""))
+
+	# Faz-1 bankruptcy is the quiet closure (generic masthead, no engraving, no ledger box).
+	var qdata := {"company_name": "PromptPilot", "tone": "loss"}
+	var qledger: Dictionary = l2.duplicate()
+	qledger.phase = 1
+	var qvs: Dictionary = EndingsCopy.build("bankruptcy", qledger, qdata)
+	if not bool(qvs.get("is_quiet_closure", false)):
+		return "faz-1 bankruptcy not quiet closure"
+	if String(qvs.get("engraving_path", "x")) != "":
+		return "faz-1 quiet closure should have no engraving"
+	if String(qvs.get("quiet_notice", "")) == "":
+		return "faz-1 quiet closure missing notice"
+
+	return ""
 
 
 # --- Gate cases (Spec 1) ---
@@ -386,9 +488,9 @@ static func _case_live_during_vbuild() -> String:
 	if GameState.get_flag("mvp_bug_sprint_active", false):
 		return "sprint never completed"
 	# v3 ship canlı sürümü DEĞİŞTİRİR (tek yaşam döngüsü, slot temiz).
-	ProductSystem.enter_development()
-	for i in 24 * 40:
-		ProductSystem.hourly_tick(i % 24)   # dev tamamlanır + beta kurur
+	# Rev3: fazlar otomatik akar — build'i Beta'ya dek sür, sonra Yayınla.
+	if not _run_build_to_phase("bugfix"):
+		return "v3 build never reached beta"
 	ProductSystem.launch()
 	ProductSystem.ship_active_build()
 	if int(GameState.get_flag("mvp_version", 0)) != 3:
@@ -442,34 +544,45 @@ static func _case_capacity_split() -> String:
 	if absf(float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0)) - s0 - 1.0) > 0.02:
 		return "solo sprint not full speed"
 	# 2) Sprint AKTİFKEN v-build başlamalı (silinen guard'ın kanıtı) → ikisi yarı hız.
+	# Rev3 ölçümü: build ilerlemesi EFOR cinsinden — beklenen günlük harcama =
+	# team_speed(b) × capacity_speed_factor (taze çarpım; sabit 0.5/1.0 değil).
 	if not ProductSystem.start_version_build(["ai_assistant_voice"], "founder"):
 		return "v-build blocked during sprint (guard not removed)"
-	ProductSystem.enter_development()
-	var e0: float = ProductSystem.get_active_build().development_days_elapsed
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if absf(ProductSystem.capacity_speed_factor() - 0.5) > 0.001:
+		return "parallel factor not 0.5 (%.2f)" % ProductSystem.capacity_speed_factor()
+	var want_day: float = ProductSystem.team_speed(b) * ProductSystem.capacity_speed_factor()
+	var e0: float = b.efor_spent
 	s0 = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0))
 	for h in 24:
 		ProductSystem.hourly_tick(h)
-	var db: float = ProductSystem.get_active_build().development_days_elapsed - e0
+	var db: float = b.efor_spent - e0
 	var ds: float = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0)) - s0
-	if absf(db - 0.5) > 0.02:
-		return "build not half speed (%.3f day/day)" % db
+	if absf(db - want_day) > 0.02:
+		return "build not at split speed (%.3f efor/day, want %.3f)" % [db, want_day]
 	if absf(ds - 0.5) > 0.02:
 		return "sprint not half speed (%.3f day/day)" % ds
-	# 3) Mid-job hire → kapasite 2 → her iki iş anında tam hıza döner.
+	# 3) Mid-job hire → kapasite 2 → faktör 1.0'a DÖNER ve team_speed asistanla
+	#    BÜYÜR (+ASSIST×ENGINEER_DEFAULT_TECH) — beklenti taze çarpımdan.
 	var eng := Character.new()
 	eng.id = "char_smoke_capacity_eng"
 	eng.character_name = "Smoke Eng"
 	eng.role = "Engineer"
 	eng.category = "employee"
 	CharacterRegistry.add(eng)
-	e0 = ProductSystem.get_active_build().development_days_elapsed
+	if absf(ProductSystem.capacity_speed_factor() - 1.0) > 0.001:
+		return "factor did not recover to 1.0 (%.2f)" % ProductSystem.capacity_speed_factor()
+	var want_day2: float = ProductSystem.team_speed(b) * ProductSystem.capacity_speed_factor()
+	if want_day2 <= want_day:
+		return "hire did not raise the expected day rate (%.3f -> %.3f)" % [want_day, want_day2]
+	e0 = b.efor_spent
 	s0 = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0))
 	for h in 24:
 		ProductSystem.hourly_tick(h)
-	db = ProductSystem.get_active_build().development_days_elapsed - e0
+	db = b.efor_spent - e0
 	ds = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0)) - s0
-	if absf(db - 1.0) > 0.02:
-		return "build did not recover to full speed (%.3f day/day)" % db
+	if absf(db - want_day2) > 0.02:
+		return "build did not recover to full speed (%.3f efor/day, want %.3f)" % [db, want_day2]
 	if absf(ds - 1.0) > 0.02:
 		return "sprint did not recover to full speed (%.3f day/day)" % ds
 	return ""
@@ -1254,7 +1367,7 @@ static func _case_hardening_seeds_no_bugs() -> String:
 	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
 	GameState.set_flag("mvp_innovation", 20.0)
 	GameState.set_flag("mvp_stability", 25.0)
-	GameState.set_flag("mvp_usability", 22.0)
+	GameState.set_flag("mvp_experience", 22.0)
 	GameState.set_flag("mvp_live_bug_count", 3)
 	GameState.set_flag("mvp_version", 1)
 	if not ProductSystem.start_version_build([], "", ["ai_assistant_chat"]):
@@ -1264,6 +1377,185 @@ static func _case_hardening_seeds_no_bugs() -> String:
 		return "hardening seeded bugs: bug_count=%d (want 3 inherited, 0 seed)" % b.bug_count
 	if b.strengthened_feature_ids.size() != 1 or b.strengthened_feature_ids[0] != "ai_assistant_chat":
 		return "strengthen list wrong: %s" % str(b.strengthened_feature_ids)
+	return ""
+
+
+# --- Rev3: efor/hız motoru + deterministik eksen case'leri ---
+
+static func _case_single_feature_build_legal() -> String:
+	# Rev3: 2-4 seçim limiti kalktı — tek feature meşru build; boş liste reddedilir.
+	if ProductSystem.start_build("ai_assistant", [], ""):
+		return "empty feature list accepted"
+	if ProductSystem.get_active_build() != null:
+		return "rejected commit left an active build"
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
+		return "single-feature build rejected"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var want_efor: int = ProductCatalog.get_feature_efor("ai_assistant_chat")
+	if want_efor != 6:
+		return "chat efor changed: %d (want 6 = 4 + cx2)" % want_efor
+	if absf(b.total_efor - float(want_efor)) > 0.001:
+		return "total_efor %.1f != feature efor %d" % [b.total_efor, want_efor]
+	return ""
+
+
+static func _case_commit_cost_charged_once() -> String:
+	# Üçüncü-parti maliyet commit'te TAM BİR KEZ düşer (Finance seam); sonraki
+	# günler yalnız günlük net akış; strengthen-only v2 hiç tahsil etmez.
+	var cash0: int = GameState.cash
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_voice"], ""):
+		return "start_build failed"
+	if GameState.cash != cash0 - 800:
+		return "commit cost wrong: %d -> %d (want -800)" % [cash0, GameState.cash]
+	for i in 3:
+		var before: int = GameState.cash
+		_sim_day()
+		var day_delta: int = before - GameState.cash
+		if day_delta != GameState.daily_burn:   # MRR 0 → net akış = -burn; başka kesinti YOK
+			return "extra one-time delta on day %d: -%d (daily burn %d)" % [GameState.day, day_delta, GameState.daily_burn]
+	# Strengthen-only v2: inherited/strengthen asla yeniden tahsil edilmez.
+	ProductSystem.cancel_build()
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
+	GameState.set_flag("mvp_components", ["ai_assistant_voice"])
+	GameState.set_flag("mvp_version", 1)
+	var cash1: int = GameState.cash
+	if not ProductSystem.start_version_build([], "", ["ai_assistant_voice"]):
+		return "strengthen-only v2 failed"
+	if GameState.cash != cash1:
+		return "strengthen-only v2 charged cash (%d -> %d)" % [cash1, GameState.cash]
+	return ""
+
+
+static func _case_phase_bands_20_60_20() -> String:
+	# Fazlar OTOMATİK: frac<.20 iteration, [.20,.80) development, >=.80 bugfix;
+	# %100'de Beta'da PARK (auto-ship yok); launch yalnız Beta'da iş yapar.
+	GameState.set_cash(50000)
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	# Beta öncesi launch → uyarı + no-op (build durur, ship flag'i yazılmaz).
+	ProductSystem.launch()
+	if GameState.get_flag("mvp_shipped", false) or ProductSystem.get_active_build() == null:
+		return "launch outside beta was not a no-op"
+	var hours: int = 0
+	while b.efor_spent < b.total_efor:
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 120:
+			return "efor never completed (%.1f / %.1f)" % [b.efor_spent, b.total_efor]
+		var frac: float = b.efor_spent / maxf(0.001, b.total_efor)
+		var want: String = "iteration"
+		if frac >= ProductSystem.PHASE_DEV_END:
+			want = "bugfix"
+		elif frac >= ProductSystem.PHASE_DESIGN_END:
+			want = "development"
+		if b.current_phase != want:
+			return "phase %s at frac %.3f (want %s)" % [b.current_phase, frac, want]
+	# %100 → Beta'da SÜRESİZ park: 3 gün daha tik, ship YOK, build slotu dolu.
+	for i in 24 * 3:
+		ProductSystem.hourly_tick(i % 24)
+	if GameState.get_flag("mvp_shipped", false):
+		return "auto-shipped from beta park"
+	if ProductSystem.get_active_build() == null:
+		return "build slot cleared without launch"
+	if ProductSystem.get_active_build().current_phase != "bugfix":
+		return "park phase wrong: %s" % ProductSystem.get_active_build().current_phase
+	# Beta'da launch → ship moment kuyruğa düşer, ship_active_build dünyayı damgalar.
+	ProductSystem.launch()
+	if _instances_of("ev_mvp_ship_moment") < 1:
+		return "ship moment not enqueued from beta launch"
+	ProductSystem.ship_active_build()
+	if not GameState.get_flag("mvp_shipped", false):
+		return "ship did not set mvp_shipped"
+	if ProductSystem.get_active_build() != null:
+		return "build slot not cleared after ship"
+	return ""
+
+
+static func _case_speed_tracks_team_change() -> String:
+	# Hız her saat taze: solo günlük harcama ~max(SPEED_MIN, tech); mühendis
+	# alınınca ertesi 24 saat ~tech + ASSIST×DEFAULT_TECH (ve ~gün kısalır).
+	GameState.set_cash(50000)
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder in registry"
+	founder.role_stats["tech"] = 3
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
+		return "start_build failed"   # efor 8+8=16 — ölçüm pencereleri içinde bitmez
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var want_solo: float = maxf(ProductSystem.SPEED_MIN, 3.0)
+	var s0: float = b.efor_spent
+	for h in 24:
+		ProductSystem.hourly_tick(h)
+	if absf((b.efor_spent - s0) - want_solo) > 0.02:
+		return "solo day spend %.3f (want %.3f)" % [b.efor_spent - s0, want_solo]
+	var days_before: int = ProductSystem.estimated_days_remaining(b)
+	var eng := Character.new()
+	eng.id = "char_smoke_speed_eng"
+	eng.character_name = "Speed Eng"
+	eng.role = "Engineer"
+	eng.category = "employee"
+	CharacterRegistry.add(eng)
+	var days_after: int = ProductSystem.estimated_days_remaining(b)
+	if days_after >= days_before:
+		return "~gün did not shrink after hire (%d -> %d)" % [days_before, days_after]
+	var want_team: float = maxf(ProductSystem.SPEED_MIN,
+		3.0 + ProductSystem.SPEED_ASSIST_WEIGHT * float(ProductSystem.ENGINEER_DEFAULT_TECH))
+	s0 = b.efor_spent
+	for h in 24:
+		ProductSystem.hourly_tick(h)
+	if absf((b.efor_spent - s0) - want_team) > 0.02:
+		return "team day spend %.3f (want %.3f)" % [b.efor_spent - s0, want_team]
+	return ""
+
+
+static func _case_deterministic_axes_at_ship() -> String:
+	# Eksenler deterministik: commit damgası == projected_axes == ship'teki mvp_*
+	# flag'leri (v1); v2 = önceki canlı + yeni katkılar + strengthen dominant bonusu.
+	GameState.set_cash(200000)
+	var picks := ["ai_assistant_chat", "ai_assistant_memory"]
+	var want: Dictionary = ProductSystem.projected_axes(picks, [], {})
+	if not ProductSystem.start_build("ai_assistant", picks, ""):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if absf(b.innovation - float(want["innovation"])) > 0.001 \
+			or absf(b.stability - float(want["stability"])) > 0.001 \
+			or absf(b.experience - float(want["experience"])) > 0.001:
+		return "commit axes != projected (I%.1f/S%.1f/E%.1f vs %s)" % [b.innovation, b.stability, b.experience, str(want)]
+	if not _run_build_to_phase("bugfix"):
+		return "v1 build never reached beta"
+	if absf(b.innovation - float(want["innovation"])) > 0.001 \
+			or absf(b.stability - float(want["stability"])) > 0.001 \
+			or absf(b.experience - float(want["experience"])) > 0.001:
+		return "axes drifted during build (no events fired)"
+	ProductSystem.launch()
+	ProductSystem.ship_active_build()
+	if absf(float(GameState.get_flag("mvp_innovation", -1.0)) - float(want["innovation"])) > 0.001 \
+			or absf(float(GameState.get_flag("mvp_stability", -1.0)) - float(want["stability"])) > 0.001 \
+			or absf(float(GameState.get_flag("mvp_experience", -1.0)) - float(want["experience"])) > 0.001:
+		return "v1 shipped flags != projected (%s)" % str(want)
+	# v2: bir yeni feature + bir strengthen (chat'in dominant ekseni: experience).
+	var base_dims := {
+		"innovation": float(GameState.get_flag("mvp_innovation", 0.0)),
+		"stability": float(GameState.get_flag("mvp_stability", 0.0)),
+		"experience": float(GameState.get_flag("mvp_experience", 0.0)),
+	}
+	var want2: Dictionary = ProductSystem.projected_axes(["ai_assistant_voice"], ["ai_assistant_chat"], base_dims)
+	if absf(float(want2["experience"]) - (float(want["experience"]) + 3.0 + ProductSystem.STRENGTHEN_AXIS_BONUS)) > 0.001:
+		return "want2 experience math off (%s)" % str(want2)
+	if not ProductSystem.start_version_build(["ai_assistant_voice"], "", ["ai_assistant_chat"]):
+		return "v2 build failed"
+	if not _run_build_to_phase("bugfix"):
+		return "v2 build never reached beta"
+	ProductSystem.launch()
+	ProductSystem.ship_active_build()
+	if int(GameState.get_flag("mvp_version", 0)) != 2:
+		return "v2 ship did not bump version"
+	if absf(float(GameState.get_flag("mvp_innovation", -1.0)) - float(want2["innovation"])) > 0.001 \
+			or absf(float(GameState.get_flag("mvp_stability", -1.0)) - float(want2["stability"])) > 0.001 \
+			or absf(float(GameState.get_flag("mvp_experience", -1.0)) - float(want2["experience"])) > 0.001:
+		return "v2 shipped flags != previous live + contributions + strengthen bonus (%s)" % str(want2)
 	return ""
 
 
@@ -1405,7 +1697,7 @@ static func _case_b2b_satisfaction_leaves_b2c_identical() -> String:
 	# Product where the OLD gate math yields a definite non-zero B2C delta (stab ≥ gate).
 	GameState.set_flag("mvp_stability", 200.0)
 	GameState.set_flag("mvp_innovation", 200.0)
-	GameState.set_flag("mvp_usability", 200.0)
+	GameState.set_flag("mvp_experience", 200.0)
 	GameState.set_flag("mvp_live_bug_count", 0)
 	# Expected delta computed with the SAME code path the tick uses.
 	var stab: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
@@ -1505,18 +1797,138 @@ static func _case_b2b_retention_routes_seams() -> String:
 	if GameState.reputation != rep0b + B2BConstants.RETAIN_DISCOUNT_REP:
 		return "İndirim reputation delta wrong"
 
-	# Bırak → account removed, run counter up, brand down.
+	# "Kendi haline bırak" → NO instant churn / MRR / brand hit; the account stays in
+	# Risk and keeps paying (the countdown just keeps running — proven in _case_b2b_ignore_then_churn).
 	var c4: Customer = _add_risk_b2b("rd", 1000)
 	var lost0: int = GameState.run_customers_lost
 	var brand0b: int = GameState.brand
+	var mrr0d: int = c4.mrr
 	EventManager.enqueue(B2BEventFactory.build_retention(c4))
 	EventManager.resolve_choice("ev_b2b_retain_co_rd", 3)
-	if CustomerRegistry.get_customer("co_rd") != null:
-		return "Bırak did not remove the account"
-	if GameState.run_customers_lost != lost0 + 1:
-		return "Bırak did not increment run_customers_lost"
-	if GameState.brand != brand0b + B2BConstants.RETAIN_RELEASE_BRAND:
-		return "Bırak brand delta wrong"
+	if CustomerRegistry.get_customer("co_rd") == null:
+		return "Kendi haline bırak instantly churned the account (should not)"
+	if GameState.run_customers_lost != lost0:
+		return "Kendi haline bırak wrongly incremented run_customers_lost"
+	if GameState.brand != brand0b:
+		return "Kendi haline bırak wrongly moved brand (should land at churn, not here)"
+	if c4.mrr != mrr0d:
+		return "Kendi haline bırak wrongly changed MRR"
+	if c4.lifecycle_phase != "risk":
+		return "Kendi haline bırak left Risk (should stay, countdown running)"
+	return ""
+
+
+static func _case_b2b_ignore_then_churn() -> String:
+	# "Kendi haline bırak" = no intervention: the customer stays in Risk and pays; the
+	# churn countdown keeps running and fires _churn on its own at zero, with a SINGLE
+	# brand delta (the moved-to-churn hit). And İlgilen before expiry can still rescue.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(2000)
+	GameState.set_flag("mvp_stability", 20.0)      # degrading product → stays under tolerance
+	GameState.set_flag("mvp_live_bug_count", 40)
+
+	# Ignore path → countdown runs down → natural churn with one brand hit.
+	var c: Customer = _add_risk_b2b("ic", 1000)
+	EventManager.enqueue(B2BEventFactory.build_retention(c))
+	EventManager.resolve_choice("ev_b2b_retain_co_ic", 3)  # "Kendi haline bırak"
+	if CustomerRegistry.get_customer("co_ic") == null:
+		return "ignore churned instantly"
+	var cd0: int = c.churn_countdown
+	if cd0 < 1:
+		return "no active countdown after ignore"
+	var brand_before: int = GameState.brand
+	var lost_before: int = GameState.run_customers_lost
+	var churned: Array = []
+	var cb := func(id: String) -> void: churned.append(id)
+	EventBus.customer_churned.connect(cb)
+	for i in (cd0 + 3):
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+		if CustomerRegistry.get_customer("co_ic") == null:
+			break
+	EventBus.customer_churned.disconnect(cb)
+	if CustomerRegistry.get_customer("co_ic") != null:
+		return "customer never churned after ignoring (countdown didn't run)"
+	if churned != ["co_ic"]:
+		return "customer_churned not emitted once (%s)" % str(churned)
+	if GameState.run_customers_lost != lost_before + 1:
+		return "run_customers_lost not incremented at natural churn"
+	if GameState.brand != brand_before + B2BConstants.CHURN_BRAND:
+		return "churn brand delta wrong/missing (want single %d)" % B2BConstants.CHURN_BRAND
+
+	# Rescue path: a fresh Risk account, ignored once, is still saved by İlgilen → Söz ver.
+	GameState.set_flag("mvp_stability", 90.0)
+	GameState.set_flag("mvp_live_bug_count", 0)
+	var r: Customer = _add_risk_b2b("ir", 1000)
+	EventManager.enqueue(B2BEventFactory.build_retention(r))
+	EventManager.resolve_choice("ev_b2b_retain_co_ir", 3)  # ignore
+	if CustomerRegistry.get_customer("co_ir") == null:
+		return "rescue target churned on ignore"
+	EventManager.enqueue(B2BEventFactory.build_retention(r))  # reopen İlgilen
+	EventManager.resolve_choice("ev_b2b_retain_co_ir", 0)     # Söz ver → recover
+	if r.lifecycle_phase == "risk":
+		return "İlgilen → Söz ver did not rescue after an earlier ignore"
+	return ""
+
+
+# --- B2B pitch → MeetingScene migration (view-only, outcome-invariant) ---
+
+static func _case_b2b_pitch_meeting_signs() -> String:
+	# The B2BPitchMeeting view-adapter drives the UNCHANGED PitchSystem to the same SIGNED
+	# outcome the retired modal produced — round-trip parity through advance().
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_force("pass")  # deterministic skill checks → SIGNED
+	var p: Prospect = PitchSystem.spawn_prospect("small", "find")
+	var before: int = CustomerRegistry.get_by_market("b2b").size()
+	B2BPitchMeeting.begin_meeting(p.id)
+	if not B2BPitchMeeting.is_active():
+		return "adapter not active after begin_meeting"
+	B2BPitchMeeting.advance("c0")  # intro
+	B2BPitchMeeting.advance("c0")  # value (skill check)
+	B2BPitchMeeting.advance("c1")  # pricing (fair)
+	var rc: Dictionary = B2BPitchMeeting.advance("c0")  # close → result screen
+	if rc.get("done", true):
+		return "close should show a result screen, not close immediately"
+	if String(rc.get("view_state", {}).get("beat_label", "")) != "İMZA":
+		return "expected SIGNED (İMZA), got %s" % String(rc.get("view_state", {}).get("beat_label", ""))
+	var rd: Dictionary = B2BPitchMeeting.advance("done")  # Devam → close
+	if not rd.get("done", false):
+		return "Devam did not close the meeting"
+	if B2BPitchMeeting.is_active():
+		return "adapter still active after close"
+	if CustomerRegistry.get_by_market("b2b").size() != before + 1:
+		return "SIGNED did not create a customer"
+	if ProspectRegistry.get_prospect(p.id) != null:
+		return "SIGNED did not remove the prospect"
+	return ""
+
+
+static func _case_b2b_rep_portrait_rotation() -> String:
+	# Rep portrait: sequential over the NON-selected founder pool, no consecutive repeat,
+	# player's own excluded, persisted per-prospect (survives a re-meeting).
+	GameState.initialize_run({})
+	GameState.founder_portrait = "founder_03"  # the player's — must be excluded
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	var assigned: Array = []
+	var prospects: Array = []
+	for i in 6:
+		var p: Prospect = PitchSystem.spawn_prospect("small", "find")
+		prospects.append(p)
+		var rep: String = B2BPitchMeeting._assign_rep(p)
+		if rep == "founder_03":
+			return "assigned the player's own portrait"
+		if not assigned.is_empty() and String(assigned[assigned.size() - 1]) == rep:
+			return "consecutive repeat: %s" % rep
+		if p.rep_portrait_id != rep:
+			return "rep not persisted on the prospect"
+		assigned.append(rep)
+	# Re-meeting the SAME prospect returns the SAME face.
+	var again: String = B2BPitchMeeting._assign_rep(prospects[0])
+	if again != String(assigned[0]):
+		return "re-meeting did not reuse the persisted portrait (%s vs %s)" % [again, str(assigned[0])]
 	return ""
 
 
@@ -1787,7 +2199,9 @@ static func _case_b2b_onboarding_to_prospect_visible() -> String:
 		return "start_build failed"
 	if GameState.subgenre != "saas":
 		return "start_build did not set subgenre via seam (got %s)" % GameState.subgenre
-	ProductSystem.enter_development()
+	# Rev3: fazlar otomatik — Beta'ya dek sür, sonra Yayınla (launch yalnız Beta'da).
+	if not _run_build_to_phase("bugfix"):
+		return "build never reached beta"
 	ProductSystem.launch()
 	# Dismiss the ship-moment (its ship_active_build modifier sets mvp_shipped); if no
 	# modal is active, ship directly. Either way the ship-moment must not block the queue.
@@ -1820,6 +2234,28 @@ static func _case_b2b_onboarding_to_prospect_visible() -> String:
 		return "prospect value band not populated (%d-%d)" % [p.value_band_min, p.value_band_max]
 	if not B2BConstants.sector_pool("saas_ops").has(p.industry):
 		return "prospect industry %s off saas_ops affinity" % p.industry
+	return ""
+
+
+static func _case_sales_month_counters() -> String:
+	# The month_ledger customer-count snapshot (for the Sales pulse strip's Bu ay cells):
+	# initialize_run's snapshot() baselines the counters, so a sign + a churn within the
+	# month read as gained/lost/net = current run counter − the month-start baseline.
+	GameState.initialize_run({})  # ends with snapshot() → baselines the current (0) counters
+	var ledger: Dictionary = GameState.month_ledger
+	if int(ledger.get("customers_signed", -1)) != 0 or int(ledger.get("customers_lost", -1)) != 0:
+		return "month_ledger did not snapshot customer counts (signed=%s lost=%s)" % [str(ledger.get("customers_signed", "MISSING")), str(ledger.get("customers_lost", "MISSING"))]
+	# A sign + a churn happen this month (run-cumulative counters advance).
+	GameState.run_customers_signed = 3
+	GameState.run_customers_lost = 1
+	var gained: int = GameState.run_customers_signed - int(GameState.month_ledger.get("customers_signed", 0))
+	var lost: int = GameState.run_customers_lost - int(GameState.month_ledger.get("customers_lost", 0))
+	if gained != 3 or lost != 1 or (gained - lost) != 2:
+		return "monthly delta wrong: gained=%d lost=%d net=%d" % [gained, lost, gained - lost]
+	# The next month rolls over → re-snapshot moves the baseline to the current totals.
+	MonthSummarySystem.snapshot()
+	if int(GameState.month_ledger.get("customers_signed", -1)) != 3 or int(GameState.month_ledger.get("customers_lost", -1)) != 1:
+		return "re-snapshot did not capture the new month baseline"
 	return ""
 
 

@@ -549,8 +549,8 @@ func _apply_modifiers(modifiers: Array) -> void:
 				B2BSalesSystem.hold(String(m.get("customer_id", "")))
 			"b2b_retain_discount":
 				B2BSalesSystem.apply_discount(String(m.get("customer_id", "")), int(m.get("mrr_delta", 0)))
-			"b2b_retain_release":
-				B2BSalesSystem.release(String(m.get("customer_id", "")))
+			"b2b_retain_ignore":
+				B2BSalesSystem.ignore_risk(String(m.get("customer_id", "")))
 			"b2b_cs_promise_honor":
 				B2BSalesSystem.honor_cs_promise(String(m.get("customer_id", "")),
 					String(m.get("feature_id", "")), int(m.get("deadline_days", 14)))

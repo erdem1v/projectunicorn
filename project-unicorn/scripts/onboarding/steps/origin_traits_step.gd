@@ -6,7 +6,7 @@ extends OnboardingStep
 #                (FULL-only per RELEASE SCOPE; disabled-card recipe).
 #   KARAKTER   — Software-Inc trait formula: 1 positive free; 2 positives force
 #                exactly 1 negative (FounderConstants.validate_traits).
-#   YETENEKLER — 8 points across 5 skills, per-skill cap 3, SegmentBar shows the
+#   YETENEKLER — POINT_POOL (6) points across 5 skills, per-skill cap 3, SegmentBar shows the
 #                ceiling-5 slots; İleri stays blocked until every point is spent.
 #
 # Trait EFFECTS are reserved (no system consumes them yet) — this page only

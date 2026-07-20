@@ -198,7 +198,7 @@ VC archetypes set the slope, never lock a door. A high-skill founder can win bot
 - **Newspaper headline** — variant-specific (victory front page for wins; single column under a shuttered-storefront photo for bankruptcy).
 - **Run summary** — 4–5 lines compiled from Month-End Summary data ("12 müşteri, 2 kayıp / 5 hire, 1 churn / 3 skandal, 2'si yönetildi / $4M @ $22M valuation, %18 dilution").
 - **Frank reflection** — 1–2 sentences, NPC register (short, dry). Tone benchmark: "Kompromat'ı leak etmek yerine VC favor'una çevirsen daha iyi olabilirdi. Ya da olmazdı. Bilmiyoruz."
-- **Retry block** — "Tekrar dene" / "Farklı subgenre" / (post-win) "Hard mode unlocked."
+- **Retry block** — "Tekrar dene" / "Farklı subgenre" / "Hard mode unlocked" (her ending'de görünür — kayıplar dahil; demo'da visible-locked).
 - **Tier 2/3 teaser + Wishlist CTA** — on every ending, losses included.
 
 Demo ships the framework with simple layouts; 30–45s variant cinematics are content/polish phase.

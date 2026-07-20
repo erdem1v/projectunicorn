@@ -44,7 +44,9 @@ const GATES := [
 		"from": 2, "to": 3,
 		"event_id": "ev_phase_gate_series_a",
 		"conditions": [
-			{"type": "mrr_above", "value": 4999},          # MRR ≥ 5000 (= SalesSystem.TRACTION_MRR_TARGET; calibration item)
+			# mrr_above is strict ">" so target-1 ≡ "MRR ≥ TRACTION_MRR_TARGET" —
+			# single source SalesSystem.TRACTION_MRR_TARGET (UI traction bar reads the same).
+			{"type": "mrr_above", "value": SalesSystem.TRACTION_MRR_TARGET - 1},
 			{"type": "brand_above", "value": 24},          # brand ≥ 25 (working floor; calibration item)
 		],  # runway deliberately NOT a condition (§2.2 — deadlock; low runway feeds pitch odds instead)
 		"title": "Series A masası",

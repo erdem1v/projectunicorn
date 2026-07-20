@@ -53,21 +53,21 @@ func populate(view_state: Dictionary) -> void:
 	_portrait.set_portrait(
 		String(view_state.get("portrait_path", "")),
 		_initials(String(view_state.get("speaker_name", ""))))
-	_name.text = String(view_state.get("speaker_name", "")).to_upper()
-	_role.text = String(view_state.get("speaker_role", "")).to_upper()
+	_name.text = UiTokens.tr_upper(String(view_state.get("speaker_name", "")))
+	_role.text = UiTokens.tr_upper(String(view_state.get("speaker_role", "")))
 
 	# İKNA — optional (FrankPopup and non-scored dialogues omit it → track hidden).
 	if view_state.has("conviction"):
 		var c: Dictionary = view_state.conviction
 		_conviction.visible = true
-		_conviction.set_value(int(c.get("value", 0)), c.get("zone_bounds", [40, 70]))
+		_conviction.set_value(int(c.get("value", 0)), c.get("zone_bounds", PitchConstants.ZONE_BOUNDS))
 	else:
 		_conviction.visible = false
 
 	_apply_active_line(view_state.get("active_line", {}), String(view_state.get("monologue_text", "")))
 	_build_choices(view_state.get("choices", []))
 
-	_beat.text = String(view_state.get("beat_label", "")).to_upper()
+	_beat.text = UiTokens.tr_upper(String(view_state.get("beat_label", "")))
 	_withdraw.visible = bool(view_state.get("can_withdraw", false))
 
 	# Stat strip — optional, over the art (bottom-left).
@@ -102,7 +102,7 @@ func _apply_active_line(line: Dictionary, monologue_text: String) -> void:
 	else:
 		_quote_box.visible = true
 		_quote.text = String(line.get("text", ""))
-		_tag.text = String(line.get("speaker_tag", "")).to_upper()
+		_tag.text = UiTokens.tr_upper(String(line.get("speaker_tag", "")))
 		_monologue_wrap.visible = monologue_text != ""
 		_monologue.text = monologue_text
 
@@ -127,7 +127,7 @@ func _initials(full_name: String) -> String:
 			out += p[0]
 		if out.length() >= 2:
 			break
-	return out.to_upper()
+	return UiTokens.tr_upper(out)
 
 
 # --- input / signals --------------------------------------------------------
@@ -180,7 +180,7 @@ static func debug_fixture_full() -> Dictionary:
 			"is_monologue": false,
 		},
 		"monologue_text": "Gözleri rakamlarda, sende değil — bir kurucu değil, bir tablo görmek istiyor.",
-		"conviction": {"value": 52, "zone_bounds": [40, 70]},
+		"conviction": {"value": 52, "zone_bounds": PitchConstants.ZONE_BOUNDS},
 		"choices": [
 			{"id": "retention", "text": "Retention stabil çünkü enterprise tarafa pivot ettik; burn artışı o geçişin yatırımı.", "odds_text": "Zorlu — %58", "marked": true, "marked_text": "PROVA EDİLDİ"},
 			{"id": "plan", "text": "Haklısınız. Önümüzdeki 90 günde burn'ü %22 düşürecek planı devreye aldık.", "odds_text": "Güvenli — %81", "caption": "Düşük risk, düşük getiri."},
@@ -206,7 +206,7 @@ static func debug_fixture_long() -> Dictionary:
 			"is_monologue": false,
 		},
 		"monologue_text": "Bu çok uzun bir iç ses satırı: taşma testi için bilinçli olarak uzatılmış, kutunun dışında, daha soluk ve girintili render edilmeli ve hiçbir koşulda kolonun kenarından taşmamalı.",
-		"conviction": {"value": 88, "zone_bounds": [40, 70]},
+		"conviction": {"value": 88, "zone_bounds": PitchConstants.ZONE_BOUNDS},
 		"choices": [
 			{"id": "pipeline", "text": "Qualified pipeline. Outbound'ı otomatikleştirdik, toplantı kapasitesini üçe katladık ve dönüşüm oranını çeyrek boyunca istikrarlı biçimde yukarı taşıdık.", "odds_text": "Zorlu — %61", "caption": "Uzun caption taşma testi: bu satır da bilinçli olarak uzun tutuldu ki kart içinde sarılsın, taşmasın.", "marked": true},
 			{"id": "activation", "text": "Aktivasyon. İlk on dakikayı yeniden yazdık — 'aha' anı artık %40 daha erken geliyor.", "odds_text": "Güvenli — %79"},

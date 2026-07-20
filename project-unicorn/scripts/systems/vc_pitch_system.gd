@@ -292,7 +292,23 @@ static func sign_table(vc_id: String, terms: Dictionary = {}) -> void:
 	# the Founder-Friendly / Aggressive variant from them (Spec 6 decision: variant deferred).
 	GameState.series_a_closed = true
 	_vc(vc_id).status = "signed"
+	_persist_signed_terms(terms)   # Run Ledger seam — newspaper reads these off get_run_ledger()
 	EndingsSystem.trigger_ending("series_a_close", _sign_extra(vc_id, terms))
+
+
+# Persist the signed deal onto the Run Ledger (write-only run_* convention). The same
+# numbers also ride into the ending extra via _sign_extra (transport); GameState is the
+# durable single source the ending screen and get_run_ledger() read.
+static func _persist_signed_terms(terms: Dictionary) -> void:
+	if terms.is_empty():
+		return
+	var val: int = int(terms.get("valuation_m", 0))
+	var dil: int = int(terms.get("dilution_pct", 0))
+	GameState.run_valuation_m = val
+	GameState.run_equity_pct = dil
+	GameState.run_board_seats = int(terms.get("board_seats", 0))
+	GameState.run_board_veto = bool(terms.get("board_veto", false))
+	GameState.run_investment_amount = int(round(val * 1_000_000.0 * dil / 100.0))
 
 
 # Signed-terms payload for the ending (empty-safe: bare sign_table(vc_id) → just the VC id).
@@ -698,7 +714,7 @@ static func _callback_met(cb: Dictionary) -> bool:
 
 
 static func _weakest_dimension() -> String:
-	var dims := {"İnovasyon": float(GameState.get_flag("mvp_innovation", 0.0)), "Kararlılık": float(GameState.get_flag("mvp_stability", 0.0)), "Kullanılabilirlik": float(GameState.get_flag("mvp_usability", 0.0))}
+	var dims := {"İnovasyon": float(GameState.get_flag("mvp_innovation", 0.0)), "Kararlılık": float(GameState.get_flag("mvp_stability", 0.0)), "Deneyim": float(GameState.get_flag("mvp_experience", 0.0))}
 	var worst := ""
 	var worst_v := 999.0
 	for k in dims:
