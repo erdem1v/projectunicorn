@@ -2,7 +2,7 @@ class_name DialogueChoiceCard
 extends PanelContainer
 
 # Shared cinematic-register choice card (Spec 5) — the dark-register counterpart to the
-# light UiFactory.make_choice_card. Renders a number chip + choice text + optional odds
+# light event_modal._build_choice_card. Renders a number chip + choice text + optional odds
 # line + optional caption (danger-tinted) + optional "marked" marker; hovers with an amber
 # edge; supports a muted, non-interactive disabled state.
 #

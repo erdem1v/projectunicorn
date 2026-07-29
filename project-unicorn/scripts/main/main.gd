@@ -50,6 +50,9 @@ var _event_signals_wired: bool = false
 # game stays paused. -1 means "no event currently in progress."
 var _pre_event_speed: int = -1
 
+# Debug --tempo-probe only: real-clock stamp of the previous day boundary.
+var _tempo_last_msec: int = 0
+
 
 func _ready() -> void:
 	get_window().min_size = Vector2i(1280, 720)
@@ -86,6 +89,16 @@ func _ready() -> void:
 				get_tree().quit()
 			return
 
+	# Debug: --tempo-probe=<speed idx> runs the REAL clock headless (no shell, no
+	# modals) and prints one line per day boundary, so seconds-per-day can be
+	# stopwatched end to end. The smoke harness drives ticks directly and therefore
+	# cannot measure wall-clock tempo — this is the only thing that can.
+	if OS.is_debug_build():
+		var tempo_idx: int = _tempo_probe_requested()
+		if tempo_idx >= 0:
+			_run_tempo_probe(tempo_idx)
+			return
+
 	# Debug: --b2b-shot=<kind> (windowed) renders one B2B Sales modal at 1920×1080,
 	# saves a screenshot to user://, and quits. Visual verification of the widened
 	# EventModal populated with the retention / escalation content. Debug builds only.
@@ -93,6 +106,16 @@ func _ready() -> void:
 		var shot_kind: String = _b2b_shot_requested()
 		if shot_kind != "":
 			_run_b2b_shot(shot_kind)
+			return
+
+	# Debug: --event-shot=<id> (windowed) renders one reactive-event JSON (incl. the
+	# ev_debug_* fixtures the live pool skips) in the EventModal at 1920×1080, saves
+	# a screenshot to user://, and quits. Visual verification of the paper-card
+	# event modal against real event data. Debug builds only.
+	if OS.is_debug_build():
+		var event_shot: String = _event_shot_requested()
+		if event_shot != "":
+			_run_event_shot(event_shot)
 			return
 
 	# Debug: --sales-shot (windowed) mounts GameShell on the Sales tab with a seeded
@@ -152,6 +175,58 @@ func _smoke_case_on_cmdline() -> bool:
 	return false
 
 
+func _tempo_probe_requested() -> int:
+	# -1 = not requested. Cmdline only (this is a stopwatch harness, not an editor path).
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--tempo-probe="):
+			return int(s.trim_prefix("--tempo-probe="))
+	return -1
+
+
+func _run_tempo_probe(idx: int) -> void:
+	# Prints "TEMPO speed=<i> day=<d> delta_ms=<n>" per day boundary, then quits.
+	# Day 1 is only 15 in-game hours (INITIAL_HOUR 09:00), so the first boundary is
+	# short and is used purely to start the stopwatch — the printed deltas are all
+	# full 24-hour days.
+	if idx <= 0 or idx >= TimeManager.SECONDS_PER_DAY.size():
+		print("TEMPO ERROR bad speed index %d" % idx)
+		get_tree().quit()
+		return
+	var stop_day: int = 6
+	GameState.initialize_run(_debug_payload())
+	# Force the seed so two runs at DIFFERENT speeds are comparable. initialize_run
+	# seeds from Time.get_ticks_msec(), which would differ per launch and mask the
+	# very thing this probe proves (tick purity: real tempo must not touch outcomes).
+	GameState.run_seed = 424242
+	seed(GameState.run_seed)
+	# Give the HOURLY path real work to do — build effort, B2C audience flow and bug
+	# accrual all tick hourly, and that is where a speed-coupled bug would surface.
+	# A daily-burn-only run would pass this probe trivially.
+	GameState.set_cash(50000)
+	GameState.set_flag("b2c_audience", 4000)
+	SalesSystem.open_b2c_paid_tier(15)   # real seam — makes MRR derive hourly too
+	ProductSystem.start_build("ai_assistant",
+		["ai_assistant_chat", "ai_assistant_memory"], "", "Nova")
+	print("TEMPO START speed=%d want_ms=%d" % [idx, int(TimeManager.SECONDS_PER_DAY[idx] * 1000.0)])
+	EventBus.day_advanced.connect(func(day: int) -> void:
+		var now: int = Time.get_ticks_msec()
+		if _tempo_last_msec > 0:
+			print("TEMPO speed=%d day=%d delta_ms=%d" % [idx, day, now - _tempo_last_msec])
+		_tempo_last_msec = now
+		# State fingerprint — must be IDENTICAL across speeds for the same seed.
+		var build: FeatureBuild = ProductSystem.get_active_build()
+		var efor: float = build.efor_spent if build != null else 0.0
+		print("TEMPO STATE day=%d cash=%d mrr=%d brand=%d rep=%d aud=%.4f efor=%.4f" % [
+			day, GameState.cash, GameState.mrr, GameState.brand, GameState.reputation,
+			float(GameState.get_flag("b2c_audience", 0.0)), efor])
+		if day >= stop_day:
+			print("TEMPO DONE speed=%d" % idx)
+			get_tree().quit()
+	)
+	EventBus.speed_change_requested.emit(idx)
+
+
 func _b2b_shot_requested() -> String:
 	for arg in OS.get_cmdline_args():
 		var s: String = String(arg)
@@ -164,7 +239,7 @@ func _run_b2b_shot(kind: String) -> void:
 	# Mount one B2B Sales modal into a CanvasLayer, render a couple frames, screenshot.
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run({})
+	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
@@ -180,10 +255,13 @@ func _run_b2b_shot(kind: String) -> void:
 		var cs := Character.new()
 		cs.id = "char_cs_shot"
 		cs.character_name = "Burcu Çetin"
-		cs.role = CharacterRegistry.ROLE_CUSTOMER_SUCCESS
+		cs.role = HRConstants.ROLE_CUSTOMER_REP
 		cs.category = "employee"
 		cs.monthly_salary = 5000
-		cs.role_stats = {"cs_skill": 55}
+		# expertise 5 converts to legacy cs_skill 55 EXACTLY (HRConstants shim table),
+		# so this rep's churn dampen is unchanged by the axis migration.
+		cs.role_stats = {"expertise": 5, "pace": 5, "rapport": 5}
+		cs.traits = ["warms_up_fast"]
 		CharacterRegistry.add(cs)
 		CustomerRegistry.assign_customer(c.id, cs.id)
 		CustomerRegistry.set_satisfaction(c.id, 22)
@@ -210,10 +288,46 @@ func _run_b2b_shot(kind: String) -> void:
 	get_tree().quit()
 
 
+func _event_shot_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--event-shot="):
+			return s.trim_prefix("--event-shot=")
+	return ""
+
+
+func _run_event_shot(event_id: String) -> void:
+	# Mount one reactive-event JSON into the EventModal, render, screenshot.
+	# Mirrors _run_b2b_shot; loads via EventManager.debug_build_event_from_file
+	# so the ev_debug_* fixtures (skipped from the live pool) stay reachable.
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	var ev: GameEvent = EventManager.debug_build_event_from_file(
+		"res://data/events/reactive/%s.json" % event_id)
+	if ev == null:
+		push_error("[EventShot] could not load event: %s" % event_id)
+		get_tree().quit()
+		return
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var modal: Control = EVENT_MODAL.instantiate()
+	layer.add_child(modal)
+	modal.populate(ev)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().create_timer(0.35).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://event_shot_%s.png" % event_id
+	img.save_png(path)
+	print("[EventShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
+
+
 func _run_sales_shot() -> void:
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run({})
+	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
 	GameState.day = 95
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
@@ -272,7 +386,7 @@ func _ending_shot_requested() -> String:
 func _run_ending_shot(key: String) -> void:
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run({})
+	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
 	GameState.company_name = "PromptPilot"
 	GameState.founder_name = "Deniz"
 	GameState.day = 156
@@ -289,6 +403,36 @@ func _run_ending_shot(key: String) -> void:
 	GameState.run_peak_mrr = 8200
 	GameState.mrr = 6400
 	GameState.cash = 24000
+
+	# 2 live B2B customers so the MÜŞTERİ (customers_active) stat cell renders non-zero —
+	# it reads CustomerRegistry live records, not the run counter. Seeded through the
+	# sanctioned seam; the explicit run_customers_signed = 9 above stays authoritative
+	# for the counter (the seam bumped it, we overwrite after).
+	for ci in range(2):
+		var pr := Prospect.new()
+		pr.id = "shot_cust_%d" % ci
+		pr.company_name = ["Ege Sigorta", "Kule Lojistik"][ci]
+		pr.industry = "Sigorta"
+		pr.archetype = "small"
+		pr.pain_feature_id = "ai_vec_filter"
+		SalesSystem.add_b2b_customer(pr, 1000, 70)
+	GameState.run_customers_signed = 9
+	GameState.mrr = 6400   # re-assert after the seam's MRR bridge reflected the 2 records
+
+	# 3 minimal employees so the ÇALIŞAN stat cell renders non-zero — ledger.employees
+	# reads CharacterRegistry live headcount, not run_hires (mirrors the _run_b2b_shot
+	# seeding pattern).
+	var emp_names := ["Burcu Çetin", "Mert Aydın", "Selin Koç"]
+	for i in range(emp_names.size()):
+		var emp := Character.new()
+		emp.id = "char_shot_emp_%d" % i
+		emp.character_name = emp_names[i]
+		emp.role = HRConstants.ROLE_DEVELOPER
+		emp.category = "employee"
+		emp.monthly_salary = 6000
+		emp.role_stats = {"expertise": 5, "pace": 5, "rapport": 5}
+		emp.traits = ["pressure_proof"]   # 1 positive satisfies the employee trait formula
+		CharacterRegistry.add(emp)
 
 	# Resolve the shot key → real ending_id + phase + signed terms.
 	var ending_id := key
@@ -326,6 +470,8 @@ func _run_ending_shot(key: String) -> void:
 	var path: String = "user://ending_shot_%s.png" % key
 	img.save_png(path)
 	print("[EndingShot] saved %s" % ProjectSettings.globalize_path(path))
+	# Also run the real share export so every shot verifies the paper crop bounds.
+	await scene._export_paper_png()
 	get_tree().quit()
 
 
@@ -335,7 +481,7 @@ func _run_ending_shot(key: String) -> void:
 func _run_product_shot(kind: String) -> void:
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run({})
+	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
 	var founder_id: String = CharacterRegistry.get_founder().id
 	match kind:
 		"detail_b2b", "portfoy":
@@ -428,7 +574,7 @@ func _run_pitch_shot() -> void:
 	# opening beat: room art + rep portrait + dialogue + choices, NO conviction/stat strip.
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run({})
+	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
 	GameState.founder_portrait = "founder_01"
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
@@ -468,8 +614,10 @@ func _shot_customer(id: String, cname: String, industry: String, phase: String, 
 		var rep := Character.new()
 		rep.id = "char_cs_" + id
 		rep.character_name = "Burcu Çetin"
-		rep.role = CharacterRegistry.ROLE_CUSTOMER_SUCCESS
+		rep.role = HRConstants.ROLE_CUSTOMER_REP
 		rep.category = "employee"
+		rep.role_stats = HRConstants.default_axes()
+		rep.traits = ["warms_up_fast"]
 		CharacterRegistry.add(rep)
 		c.assigned_to = rep.id
 	c.update_health_from_satisfaction()
@@ -563,7 +711,7 @@ func _on_event_resolved(_event_id: String, _choice_idx: int) -> void:
 		_event_modal.queue_free()
 		_event_modal = null
 	if not EventManager.has_pending():
-		var restore: int = _pre_event_speed if _pre_event_speed >= 0 else 1
+		var restore: int = _pre_event_speed if _pre_event_speed >= 0 else TimeManager.last_running_speed
 		_pre_event_speed = -1
 		EventBus.speed_change_requested.emit(restore)
 
@@ -600,7 +748,7 @@ func _on_settings_dismissed() -> void:
 	# Don't stomp an event/pitch that queued while settings were open — if one is
 	# pending it manages its own pause/restore; otherwise return to prior speed.
 	if not EventManager.has_pending():
-		var restore: int = _pre_settings_speed if _pre_settings_speed >= 0 else 1
+		var restore: int = _pre_settings_speed if _pre_settings_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_settings_speed = -1
 
@@ -630,7 +778,7 @@ func _on_confirm_dismissed() -> void:
 	_confirm_modal = null
 	# Onay sırasında kuyruğa event girdiyse kendi pause/restore'unu yönetir.
 	if not EventManager.has_pending():
-		var restore: int = _pre_confirm_speed if _pre_confirm_speed >= 0 else 1
+		var restore: int = _pre_confirm_speed if _pre_confirm_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_confirm_speed = -1
 
@@ -662,7 +810,7 @@ func _on_month_dismissed() -> void:
 	# Restore only if the run is still alive AND no event modal owns the pause
 	# (spec §1: DEVAM ET restore convention).
 	if GameState.run_active and not EventManager.has_pending():
-		var restore: int = _pre_month_speed if _pre_month_speed >= 0 else 1
+		var restore: int = _pre_month_speed if _pre_month_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_month_speed = -1
 
@@ -772,7 +920,7 @@ func _close_dialogue_scenes() -> void:
 		_frank_popup = null
 	# Yield to a pending event chain / a dead run (strict gate from MonthSummary/Ending).
 	if GameState.run_active and not EventManager.has_pending():
-		var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else 1
+		var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_dialogue_speed = -1
 	# A won meeting grants a sheet mid-scene; its deal-closed prompt waits until now (§2).
@@ -840,7 +988,7 @@ func _on_deal_prompt_choice(id: String) -> void:
 	else:
 		# Defer — the sheet waits in Finance>Yatırım with its clock running. Restore speed.
 		if GameState.run_active and not EventManager.has_pending():
-			var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else 1
+			var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else TimeManager.last_running_speed
 			EventBus.speed_change_requested.emit(restore)
 		_pre_dialogue_speed = -1
 
@@ -870,7 +1018,7 @@ func _close_term_table() -> void:
 	# Sign ended the run (run_active false → no restore, the ending owns the freeze); a walk
 	# leaves the run alive → restore to the pre-table speed.
 	if GameState.run_active and not EventManager.has_pending():
-		var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else 1
+		var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_dialogue_speed = -1
 

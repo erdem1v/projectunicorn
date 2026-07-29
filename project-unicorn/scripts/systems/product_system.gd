@@ -24,12 +24,27 @@ extends RefCounted
 #   → post-ship şikayet boru hattı (effective_stability → satisfaction → event).
 
 # ==========  Rev3 EFOR/HIZ ENGINE (working values — Erdem balance-pass)  ==========
-const SPEED_LEAD_WEIGHT := 1.0      # sorumlu (lead) tech skill ağırlığı
-const SPEED_ASSIST_WEIGHT := 0.5    # diğer her ekip üyesinin tech ağırlığı
-const SPEED_MIN := 1.0              # tech-0 ekip bile günde 1 efor ilerler (sonsuz build imkansız)
-const ENGINEER_DEFAULT_TECH := 2    # role_stats.tech taşımayan çalışan (0-5 skala; kurucu cap 3)
+# Hız yasası (HR Coupling): speed = (FOUNDER_SPEED_COEF × kurucu Teknoloji
+#                                    + EMPLOYEE_SPEED_COEF × Σ o fazın ekibinin HIZ'ı)
+#                                   × koordinasyon çarpanı(sorumlu)
+# ÇALIŞANLAR ARASINDA AĞIRLIK YOK (design doc §4): eski lead/assist ayrımı kalktı, sorumlunun
+# kalitesi artık koordinasyon çarpanında görünüyor. İki katsayının VAR OLMA SEBEBİ iltimas
+# değil, ÖLÇEK: kurucu aynı 0-9 cetvelinin 0-3 bandında (onboarding 6 puan / skill başına 3),
+# çalışan dosyaları 5-8 bandında. Tek katsayı iki bandı birlikte servis edemez — biri diğerini
+# ezer. Bu iki değer eşdeğerlik çıpalarından TÜRETİLDİ, seçilmedi:
+#   kurucu tech-3 solo    → 1.00 × 3 = 3.0 efor/gün   (migration öncesiyle birebir)
+#   pace-4 çalışan katkısı → 0.25 × 4 = 1.0 efor/gün  (eski 0.5 × tech-2 ile birebir)
+const FOUNDER_SPEED_COEF := 1.0     # kurucunun Teknoloji puanı başına efor/gün
+const EMPLOYEE_SPEED_COEF := 0.25   # çalışanın HIZ puanı başına efor/gün
+const SPEED_MIN := 1.0              # HIZ-0 ekip bile günde 1 efor ilerler (sonsuz build imkansız)
 const STRENGTHEN_EFOR := 5          # bir güçlendirme pick'inin eforu (~orta feature)
 const STRENGTHEN_AXIS_BONUS := 4.0  # ship'te pick'in dominant eksenine düz bonus
+# Ürün Yöneticisi UZMANLIK'ı → Deneyim ekip bonusu (design doc §5, working tavan +3).
+# YÜKSEK KALDIRAÇLI: quality_model.gd'nin duran balance flag'i v1 kompozitlerinin ~7-12'de
+# oturduğunu söylüyor, yani üç eksenden birine düz +3 normalize kalitede ~%10-15'lik bir
+# hareket demek. Tasarımın working tavanıyla gönderiliyor, ölçülen kayma done message'da.
+const PM_EXPERIENCE_PER_POINT := 0.5
+const PM_EXPERIENCE_CAP := 3.0
 # --- Faz bantları: toplam eforun oranı; sınırda OTOMATİK geçiş, oyuncu faz-aksiyonu yok ---
 const PHASE_DESIGN_END := 0.20      # Tasarım  ("iteration"):    [0.00, 0.20)
 const PHASE_DEV_END := 0.80         # Geliştirme ("development"): [0.20, 0.80); Beta ("bugfix"): [0.80, 1.0]+
@@ -60,6 +75,13 @@ const TECH_DEBT_BUG_PENALTY := 5
 # build adds bugs ∝ its complexity. Separate channel from the hourly dev-phase accrual
 # above; a hardening build (no new features) seeds nothing. BALANCE-TUNABLE.
 const FEATURE_BUG_SEED_COEF := 1.0
+# Yazılımcı UZMANLIK'ı tohumu ne kadar oynatır. PIVOT cetvelin ortası: orada çarpan tam 1.0,
+# altında bug artar, üstünde azalır. Yazılımcısı olmayan bir ekipte de tam 1.0 — bu yüzden
+# migration öncesi tohum sayıları (feature_bug_seed_by_complexity) bire bir korundu.
+const SEED_EXPERTISE_PIVOT := 5.0
+const SEED_EXPERTISE_SLOPE := 0.12   # UZMANLIK puanı başına ±%12
+const SEED_EXPERTISE_MULT_MIN := 0.5
+const SEED_EXPERTISE_MULT_MAX := 1.6
 
 # Bonus bug count applied at launch when the player left a critical bug
 # in (ev_mvp_bugfix_001_critical_bug "Bırak, gönder" choice → flag).
@@ -69,6 +91,15 @@ const CRITICAL_BUG_LAUNCH_PENALTY := 5
 # BETA: test gizli bug'ları bulur (find) ve bulunanları çözer (fix: mevcut
 # POLISH_BUG_FIX_PER_DAY hızı). working value — Erdem balance-pass.
 const BETA_BUG_FIND_PER_DAY := 6.0
+# TEST bölümü (design doc §5): bulma İSABETİ Test Uzmanı UZMANLIK'ından, bulma/çözme TEMPOSU
+# Test Uzmanı + Yazılımcı HIZ karışımından, hata sprinti süresi Test Uzmanı ile kısalır.
+# Üçü de PIVOT'lu: test uzmanı YOKKEN çarpanlar tam 1.0, yani bugünkü beta davranışı aynen
+# korunur ve bir test uzmanı işe almak gerçek bir hızlanma olur.
+const TESTER_FIND_PER_EXPERTISE := 0.08    # UZMANLIK puanı başına bulma isabeti (+%8)
+const TESTER_FIND_MULT_MAX := 1.8
+const TESTER_TEMPO_PER_PACE := 0.05        # Test Uzmanı HIZ puanı başına tempo (+%5)
+const TESTER_TEMPO_MULT_MAX := 1.6
+const TESTER_SPRINT_PER_EXPERTISE := 0.06  # UZMANLIK puanı başına sprint süresinden kısma
 # Build iptali: ilk gün "bedelsiz" sayılır (onay metni basit — yanlış-tık affı);
 # sonrasında onay yanan gün/parayı söyler. Mekanik refund yok (yanan yanmıştır).
 # working value — Erdem balance-pass.
@@ -120,7 +151,11 @@ static func daily_tick() -> void:
 
 static func capacity_total() -> int:
 	# Kurucu hep var → min 1; kapasite 0 yapısal olarak imkansız.
-	return CAPACITY_BASE + CharacterRegistry.count_engineers()
+	# İzindeki çalışan SAYILMAZ (ücretli izin ama kapasite dışı — design doc §8).
+	# TÜM Ürün Geliştirme rolleri sayılır, yalnız yazılımcılar değil: bir test uzmanı da bir
+	# tasarımcı da build işinin içinde ve aynı anda başka bir işe koşulamaz. Eskiden yalnız
+	# yazılımcı sayılıyordu, yani bir tasarımcı işe almak kapasiteye hiçbir şey katmıyordu.
+	return CAPACITY_BASE + CharacterRegistry.count_active_in_department(HRConstants.DEPT_PRODUCT_DEV)
 
 
 static func capacity_demand() -> int:
@@ -158,38 +193,138 @@ static func days_at_factor(days: int, f: float) -> int:
 #  Ekip hızı (Rev3) — SORUMLU + asistanlar; saf, her çağrıda taze
 # =========================================================================
 
-static func _tech_of(member_id: String) -> int:
-	# ""/"founder"/kurucu-id → kurucu tech'i (0-5); çalışan → role_stats.tech
-	# (yoksa ENGINEER_DEFAULT_TECH). Bilinmeyen id kurucuya düşer (güvenli).
+# Hangi rol hangi fazda çalışır (design doc §5). Faz bazlı: bir tasarımcı GELİŞTİRME fazında
+# kod yazmıyor, bir yazılımcı TASARIM fazında ekran çizmiyor. Eski formül her fazda YALNIZ
+# yazılımcı okuyordu — yani tasarımcı/test uzmanı/ürün yöneticisi hiçbir şeye katkı vermiyordu.
+# Ürün Yöneticisi tasarım fazına İKİNCİL katkı verir (design doc §5: "Ürün Yöneticisi HIZ'ı
+# ikincil katkı"), bu yüzden ağırlığı ayrı.
+const PHASE_CREW := {
+	"iteration": ["designer", "product_manager"],
+	"development": ["developer"],
+	"bugfix": ["tester", "developer"],
+}
+const PM_SECONDARY_WEIGHT := 0.5    # Ürün Yöneticisi'nin tasarım fazına ikincil HIZ katkısı
+
+
+static func _phase_crew_roles(phase: String) -> Array:
+	# Bilinmeyen/planning faz → geliştirme ekibi (commit öncesi projeksiyonun varsayılanı).
+	return PHASE_CREW.get(phase, PHASE_CREW["development"])
+
+
+static func _lead_coordination(lead_id: String) -> float:
+	# Koordinasyon çarpanı sorumludan gelir: kurucu → Liderlik, çalışan → UYUM.
+	# STALE LEAD: commit'ten sonra lead_engineer_id'yi kimse yeniden yazmıyor, yani sorumlu
+	# işten çıkarılmış ya da izne çıkmış olabilir. Eskiden bu SESSİZCE kurucu tech'ine
+	# düşüyordu; artık açıkça kurucu-sorumlu olarak çözülüyor, çünkü sessiz bir yanlış
+	# çarpan sessiz bir yanlış hızdan daha zor fark edilir.
 	var founder: Character = CharacterRegistry.get_founder()
-	if member_id == "" or member_id == "founder" or (founder != null and member_id == founder.id):
-		return GameState.get_founder_skill("tech")
-	var c: Character = CharacterRegistry.get_character(member_id)
-	if c == null:
-		return GameState.get_founder_skill("tech")
-	return int(c.role_stats.get("tech", ENGINEER_DEFAULT_TECH))
+	var founder_id: String = founder.id if founder != null else "founder"
+	if lead_id != "" and lead_id != "founder" and lead_id != founder_id:
+		var lead: Character = CharacterRegistry.get_character(lead_id)
+		if lead != null and lead.category == "employee" and lead.status == HRConstants.STATUS_ACTIVE:
+			return HRConstants.coordination_for_employee(
+				int(lead.role_stats.get(HRConstants.AXIS_RAPPORT, 0)),
+				HRConstants.trait_has(lead.traits, "coordination_bonus"))
+	var founder_traits: Array = founder.traits if founder != null else []
+	return HRConstants.coordination_for_founder(
+		GameState.get_founder_skill("leadership"),
+		HRConstants.trait_has(founder_traits, "coordination_bonus"))
+
+
+static func _phase_pace_sum(phase: String, lead_id: String) -> float:
+	# O fazın ekibindeki İŞ BAŞINDAKİ herkesin HIZ toplamı. Sorumlu da normal bir üye olarak
+	# sayılır (ağırlık yok) — sorumlu olmanın etkisi koordinasyon çarpanında. İzindeki
+	# çalışan katkı VERMEZ (izinde kapasite dışıdır).
+	var roles: Array = _phase_crew_roles(phase)
+	var total: float = 0.0
+	for c in CharacterRegistry.get_active_employees():
+		if not roles.has(c.role):
+			continue
+		# "Yalnız çalışır": ekip tarafı katkı vermez — kendi işini yapar ama toplama girmez.
+		# Sorumluysa muaf: başındaki işi yapmayı reddetmiyor, yalnız ekibe eklenmiyor.
+		if c.id != lead_id and HRConstants.trait_has(c.traits, "no_team_bonus"):
+			continue
+		var pace: float = float(int(c.role_stats.get(HRConstants.AXIS_PACE, 0)))
+		# "Söylenmezse yapmaz": sorumlu değilken belirgin biçimde az katkı verir.
+		if c.id != lead_id:
+			pace *= HRConstants.trait_mult(c.traits, "non_lead_mult")
+		if c.role == HRConstants.ROLE_PRODUCT_MANAGER:
+			pace *= PM_SECONDARY_WEIGHT
+		total += pace
+	return total
+
+
+static func _speed_for_phase(phase: String, lead_id: String) -> float:
+	# THE hız yasası. Kurucu her zaman tam katsayıyla katılır (o hep odadadır); çalışanlar
+	# fazlarına göre. Floor SPEED_MIN — HIZ-0 bir ekiple bile build ilerler.
+	var speed: float = FOUNDER_SPEED_COEF * float(GameState.get_founder_skill("tech"))
+	speed += EMPLOYEE_SPEED_COEF * _phase_pace_sum(phase, lead_id)
+	return maxf(SPEED_MIN, speed * _lead_coordination(lead_id))
 
 
 static func _speed_for_lead(lead_id: String) -> float:
-	# Ekip = kurucu + TÜM istihdam edilen Engineer'lar; sorumlu LEAD ağırlığında,
-	# kalan herkes otomatik asistan (working call). Floor SPEED_MIN.
+	# Faz bilmeyen çağıranlar için (commit öncesi projeksiyon): geliştirme fazı varsayılanı.
+	return _speed_for_phase("development", lead_id)
+
+
+# Bug ve wear'in kaynağı: ekibin UZMANLIK AĞIRLIKLI ORTALAMASI (design doc §4) —
+# sorumlu ×1.5, diğerleri ×1.0, kurucu Teknoloji'siyle ortalamaya girer.
+# ORTALAMA, TOPLAM DEĞİL: iki yönlü keser. İyi kurucu + zayıf ekip → ortalama düşer, bug artar;
+# zayıf kurucu + iyi ekip → ekip taşır. Kurucu kendini sorumlu yaptığında hız cezası yemez ama
+# en iyi yazılımcısının ×1.5 kalite ağırlığını kaybeder — karar gerçek ve iki uçlu.
+#
+# EŞDEĞERLİK: kurucu YALNIZ (normal bir oyunun başlangıcı — DEBUG_SEED kapalı) ve sorumlu iken
+# ortalama = (1.5 × tech) / 1.5 = tech, yani migration öncesi founder-only okumayla BİREBİR.
+# Bu yüzden BUG_TECH_REDUCER / WEAR_TECH_REDUCER yeniden ölçeklenMEDİ.
+const LEAD_EXPERTISE_WEIGHT := 1.5
+const MEMBER_EXPERTISE_WEIGHT := 1.0
+
+
+static func _team_expertise_avg(roles: Array, lead_id: String) -> float:
 	var founder: Character = CharacterRegistry.get_founder()
 	var founder_id: String = founder.id if founder != null else "founder"
-	if lead_id == "" or lead_id == "founder":
-		lead_id = founder_id
-	var speed: float = SPEED_LEAD_WEIGHT * float(_tech_of(lead_id))
-	if lead_id != founder_id:
-		speed += SPEED_ASSIST_WEIGHT * float(GameState.get_founder_skill("tech"))
-	for c in CharacterRegistry.get_employees():
-		if c.role == "Engineer" and c.id != lead_id:
-			speed += SPEED_ASSIST_WEIGHT * float(int(c.role_stats.get("tech", ENGINEER_DEFAULT_TECH)))
-	return maxf(SPEED_MIN, speed)
+	var lead_is_founder: bool = lead_id == "" or lead_id == "founder" or lead_id == founder_id
+	# Kurucu her zaman ortalamada: ürünün kalitesinden her hâlükârda sorumludur.
+	var weight_sum: float = LEAD_EXPERTISE_WEIGHT if lead_is_founder else MEMBER_EXPERTISE_WEIGHT
+	var weighted: float = weight_sum * float(GameState.get_founder_skill("tech"))
+	for c in CharacterRegistry.get_active_employees():
+		if not roles.has(c.role):
+			continue
+		var w: float = LEAD_EXPERTISE_WEIGHT if c.id == lead_id else MEMBER_EXPERTISE_WEIGHT
+		weighted += w * float(int(c.role_stats.get(HRConstants.AXIS_EXPERTISE, 0)))
+		weight_sum += w
+	if weight_sum <= 0.0:
+		return 0.0
+	return weighted / weight_sum
+
+
+static func _active_role_sum(role_id: String, axis: String) -> float:
+	var total: float = 0.0
+	for c in CharacterRegistry.get_active_employees():
+		if c.role == role_id:
+			total += float(int(c.role_stats.get(axis, 0)))
+	return total
+
+
+static func tester_find_mult() -> float:
+	# Bulma isabeti: kaç gizli bug'ın gün içinde yüzeye çıktığı. Test uzmanı yok → 1.0.
+	return minf(1.0 + _active_role_sum(HRConstants.ROLE_TESTER, HRConstants.AXIS_EXPERTISE)
+		* TESTER_FIND_PER_EXPERTISE, TESTER_FIND_MULT_MAX)
+
+
+static func tester_tempo_mult() -> float:
+	# Bulma/çözme temposu: Test Uzmanı HIZ'ı. (Yazılımcı HIZ'ı beta'ya team_speed üzerinden
+	# zaten giriyor — PHASE_CREW["bugfix"] test uzmanı VE yazılımcı içerir.)
+	return minf(1.0 + _active_role_sum(HRConstants.ROLE_TESTER, HRConstants.AXIS_PACE)
+		* TESTER_TEMPO_PER_PACE, TESTER_TEMPO_MULT_MAX)
 
 
 static func team_speed(b: FeatureBuild) -> float:
 	# SAF FONKSİYON, her çağrıda taze (mid-build hire/fire anında etki —
 	# capacity_speed_factor ile aynı tazelik sözleşmesi; capacity_split smoke kanunu).
-	return _speed_for_lead(b.lead_engineer_id)
+	# Faz DUYARLI: build'in o anki fazı hangi rollerin çalıştığını belirler, yani aynı ekip
+	# TASARIM'da ve GELİŞTİRME'de farklı hızda koşar (design doc §5).
+	return _speed_for_phase(b.current_phase, b.lead_engineer_id)
 
 
 # =========================================================================
@@ -210,6 +345,8 @@ static func estimate_build_days(new_ids: Array, strengthen_ids: Array, sorumlu_i
 	var total: float = float(ProductCatalog.sum_efor(new_ids) + STRENGTHEN_EFOR * strengthen_ids.size())
 	if total <= 0.0:
 		return 0
+	# Commit öncesi henüz faz yok; GELİŞTİRME hızıyla projekte edilir (eforun %60'ı o bantta,
+	# üç fazın en uzunu — tek sayı gösterilecekse en temsili olan o).
 	var rate: float = _speed_for_lead(sorumlu_id) * projected_speed_factor_with_extra_job()
 	return int(ceil(total / maxf(0.01, rate)))
 
@@ -260,7 +397,12 @@ static func _tick_build_hourly(f: float) -> void:
 	var b := active_build
 	# 1) Efor harcaması (%100'de durur; build Beta'da SÜRESİZ bekleyebilir — auto-ship YOK).
 	if b.efor_spent < b.total_efor:
-		b.efor_spent = minf(b.total_efor, b.efor_spent + team_speed(b) * f / float(HOURS_PER_BUILD_DAY))
+		# Ek mesai KAZANCI yalnız BURADA uygulanır (design doc §7b). f (kapasite çarpanı)
+		# aynı zamanda _accrue_bugs_hourly ve _tick_beta_hourly'ye de gidiyor, o yüzden hız
+		# bonusunu f'ye katlamak bug birikimini ve beta temposunu da sessizce çarpardı.
+		var overtime: float = HROvertimeSystem.speed_multiplier(HRConstants.DEPT_PRODUCT_DEV)
+		b.efor_spent = minf(b.total_efor,
+			b.efor_spent + team_speed(b) * overtime * f / float(HOURS_PER_BUILD_DAY))
 	# 2) Faz sınırı OTOMATİK geçişleri (ratchet — asla geri gitmez, apply_speed_bonus
 	#    totali büyütse bile).
 	var frac: float = b.efor_spent / maxf(0.001, b.total_efor)
@@ -308,13 +450,13 @@ static func _tick_beta_hourly(f: float = 1.0) -> void:
 	var b := active_build
 	var hidden: int = b.bug_count - (b.bugs_found - b.bugs_fixed)
 	if hidden > 0:
-		b.bug_find_progress += BETA_BUG_FIND_PER_DAY * f / float(HOURS_PER_BUILD_DAY)
+		b.bug_find_progress += BETA_BUG_FIND_PER_DAY * tester_find_mult() * tester_tempo_mult() * f / float(HOURS_PER_BUILD_DAY)
 		while b.bug_find_progress >= 1.0 and hidden > 0:
 			b.bugs_found += 1
 			hidden -= 1
 			b.bug_find_progress -= 1.0
 	if b.bugs_found - b.bugs_fixed > 0:
-		b.bug_fix_progress += float(POLISH_BUG_FIX_PER_DAY) * f / float(HOURS_PER_BUILD_DAY)
+		b.bug_fix_progress += float(POLISH_BUG_FIX_PER_DAY) * tester_tempo_mult() * f / float(HOURS_PER_BUILD_DAY)
 		while b.bug_fix_progress >= 1.0 and b.bugs_found - b.bugs_fixed > 0:
 			b.bugs_fixed += 1
 			b.bug_count -= 1
@@ -327,8 +469,14 @@ static func _accrue_bugs_hourly(f: float = 1.0) -> void:
 	# Complexity-driven, tech reduces but never zeros (BUG_FLOOR). Fractional bugs
 	# accumulate on bug_progress and tick bug_count up as they cross 1.0.
 	var b := active_build
-	var tech: int = GameState.get_founder_skill("tech")
-	var rate: float = maxf(BUG_FLOOR, float(b.get_total_complexity()) * BUG_COMPLEXITY_COEF - float(tech) * BUG_TECH_REDUCER)
+	# Eskiden burada YALNIZ kurucu tech'i okunuyordu — bir çalışan sorumlu olsa bile. Artık
+	# GELİŞTİRME ekibinin UZMANLIK ağırlıklı ortalaması: düşük uzmanlıklı ekip aynı komplekste
+	# daha çok bug üretir (design doc §5). Katsayı aynı kaldı, çünkü kurucu-yalnız hâli birebir.
+	var expertise: float = _team_expertise_avg(_phase_crew_roles("development"), b.lead_engineer_id)
+	var rate: float = maxf(BUG_FLOOR, float(b.get_total_complexity()) * BUG_COMPLEXITY_COEF - expertise * BUG_TECH_REDUCER)
+	# Bedel 3, kalite: Ürün Geliştirme mesaisinde yorgun insan hata yazar (design doc §7b).
+	# YALNIZ burada — kapasite çarpanı f'ye katlanmaz, yoksa beta temposunu da çarpardı.
+	rate *= HROvertimeSystem.bug_multiplier()
 	b.bug_progress += rate * f
 	while b.bug_progress >= 1.0:
 		b.bug_count += 1
@@ -342,11 +490,32 @@ static func _seed_feature_bugs(feature_ids: Array) -> int:
 	# "Yeni feature = yeni bug": each feature's complexity seeds bugs at build commit.
 	# Flows into b.bug_count → effective_stability → mvp_live_bug_count (same channel as
 	# every other bug). Duration is unaffected (that reads efor, not bugs).
+	# Bug TOHUMLAMA çarpanı Yazılımcı UZMANLIK ortalamasına bağlıdır (design doc §5).
+	# PIVOT, ortalama değil: SEED_EXPERTISE_PIVOT'ta çarpan tam 1.0, yani "vasat bir ekip =
+	# bugünkü davranış". Yazılımcı YOKKEN de tam 1.0 (aşağıdaki erken dönüş), bu yüzden
+	# migration öncesi tohum sayıları bire bir korunur. Mesai çarpanı buraya GİRMEZ: tohum
+	# commit anında bir kez atılır, yorgunluk ise bloğa yayılan saatlik bir maliyet.
+	var mult: float = _seed_expertise_mult()
 	var seeded: int = 0
 	for fid in feature_ids:
 		var cx: int = int(ProductCatalog.get_feature_by_id(String(fid)).get("complexity", 0))
-		seeded += int(round(float(cx) * FEATURE_BUG_SEED_COEF))
+		seeded += int(round(float(cx) * FEATURE_BUG_SEED_COEF * mult))
 	return seeded
+
+
+static func _seed_expertise_mult() -> float:
+	var devs: Array[Character] = []
+	for c in CharacterRegistry.get_active_employees():
+		if c.role == HRConstants.ROLE_DEVELOPER:
+			devs.append(c)
+	if devs.is_empty():
+		return 1.0   # yazılımcı yok → kurucu tek başına yazıyor, bugünkü tohum aynen
+	var total: float = 0.0
+	for c in devs:
+		total += float(int(c.role_stats.get(HRConstants.AXIS_EXPERTISE, 0)))
+	var avg: float = total / float(devs.size())
+	return clampf(1.0 + (SEED_EXPERTISE_PIVOT - avg) * SEED_EXPERTISE_SLOPE,
+		SEED_EXPERTISE_MULT_MIN, SEED_EXPERTISE_MULT_MAX)
 
 
 # --- Post-ship wear (Product Lifecycle Part 2A) ---
@@ -357,8 +526,11 @@ static func _post_ship_wear_hourly() -> void:
 	# ticks up smoothly. Audience/MRR then erode automatically (economy reads live bug).
 	var audience: float = float(GameState.get_flag("b2c_audience", 0))
 	var complexity: int = _shipped_total_complexity()
-	var tech: int = GameState.get_founder_skill("tech")
-	var rate: float = maxf(WEAR_FLOOR, audience * WEAR_AUD_COEF + float(complexity) * WEAR_CPLX_COEF - float(tech) * WEAR_TECH_REDUCER)
+	# Post-ship wear azaltımı AYNI GRAMERLE ekip UZMANLIK ortalamasına bağlı (design doc §4);
+	# migration öncesi founder-only okuma kaldırıldı. Canlı üründe faz yok → bakımı yapan
+	# ekip = geliştirme ekibi. Sorumlu yok (build bitti), yani ağırlıklar kurucuda toplanır.
+	var expertise: float = _team_expertise_avg(_phase_crew_roles("development"), "")
+	var rate: float = maxf(WEAR_FLOOR, audience * WEAR_AUD_COEF + float(complexity) * WEAR_CPLX_COEF - expertise * WEAR_TECH_REDUCER)
 	var prog: float = float(GameState.get_flag("mvp_live_bug_progress", 0.0)) + rate
 	var count: int = int(GameState.get_flag("mvp_live_bug_count", 0))
 	while prog >= 1.0:
@@ -379,8 +551,12 @@ static func _shipped_total_complexity() -> int:
 # --- Bug sprint (Product Lifecycle Part 2A) — the founder's repair action ---
 
 static func sprint_duration_for(bug_count: int) -> int:
+	# Hata sprinti süresi Test Uzmanı ile KISALIR (design doc §5). Süre sprint başlarken bir
+	# kez damgalanan bir flag, o yüzden okuma tick'te değil BURADA olmak zorunda.
 	# Days to clear `bug_count` at the sprint rate, clamped. Shown pre-commit (§10).
-	return clampi(int(ceil(float(bug_count) / float(SPRINT_BUG_FIX_PER_DAY))), MIN_SPRINT_DAYS, MAX_SPRINT_DAYS)
+	var rate: float = float(SPRINT_BUG_FIX_PER_DAY) * (1.0
+		+ _active_role_sum(HRConstants.ROLE_TESTER, HRConstants.AXIS_EXPERTISE) * TESTER_SPRINT_PER_EXPERTISE)
+	return clampi(int(ceil(float(bug_count) / maxf(0.01, rate))), MIN_SPRINT_DAYS, MAX_SPRINT_DAYS)
 
 
 static func start_bug_sprint() -> bool:
@@ -464,7 +640,27 @@ static func projected_axes(new_feature_ids: Array, strengthen_ids: Array, base_d
 	for sid in strengthen_ids:
 		var ax_s: String = _dominant_axis_of(String(sid))
 		out[ax_s] = float(out[ax_s]) + STRENGTHEN_AXIS_BONUS
+	# TASARIM bölümünün kalite katkısı: Ürün Yöneticisi UZMANLIK'ı, commit anında Deneyim
+	# eksenine ekip bonusu olarak girer (design doc §5). BURADA, damga yerinde DEĞİL: bu
+	# fonksiyon aynı zamanda kurma ekranının radar önizlemesini de besliyor, bonusu yalnız
+	# start_build/start_version_build'e koymak "önizleme == ship" yapısal garantisini kırardı.
+	# Ekip commit anında belli olduğu için radar bonusu baştan gösterir.
+	# TAVAN BONUS TERİMİNE uygulanır, eksen toplamına değil — aksi hâlde v2'de birikmiş
+	# Deneyim tavana çarpar ve yeni bonus sessizce yutulur.
+	out["experience"] = float(out["experience"]) + _pm_experience_bonus()
 	return out
+
+
+static func _pm_experience_bonus() -> float:
+	# İŞ BAŞINDAKİ Ürün Yöneticileri'nin UZMANLIK toplamı × katsayı, PM_EXPERIENCE_CAP'te
+	# kesilir. PM yoksa tam 0.0 — bu yüzden PM'siz her mevcut smoke case'i bire bir aynı.
+	var total: float = 0.0
+	for c in CharacterRegistry.get_active_employees():
+		if c.role == HRConstants.ROLE_PRODUCT_MANAGER:
+			total += float(int(c.role_stats.get(HRConstants.AXIS_EXPERTISE, 0)))
+	if total <= 0.0:
+		return 0.0
+	return minf(total * PM_EXPERIENCE_PER_POINT, PM_EXPERIENCE_CAP)
 
 
 static func _dominant_axis_of(fid: String) -> String:

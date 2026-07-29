@@ -109,6 +109,13 @@ var prep: Dictionary = {}              # {vc_id, focus, done} — one prep per s
 var run_pitches: int = 0               # run-cumulative: completed meetings (newspaper seam)
 var run_sheets_won: int = 0            # run-cumulative: sheets granted (distinct from run_pushes_*)
 
+# --- HR Core state (same "fields not systems" rule as the VC block above; all reset in
+# initialize_run). The owning system writes each one; nothing else touches them. ---
+var hr_search: Dictionary = {}          # HRSearchSystem: {state, role, band, seed, started_day, arrival_day, files}
+var hr_overtime: Dictionary = {}        # HROvertimeSystem: department id -> {block_days, day_index, ...}
+var hr_last_overtime_day: int = 0       # HROvertimeSystem stamps; the "sakin dönem" trigger reads it
+var hr_last_positive_event_day: int = 0 # HRMoraleSystem: positive-morale-event cooldown cursor
+
 # --- Setters (the only way to mutate from outside) ---
 
 func set_cash(value: int) -> void:
@@ -222,10 +229,19 @@ func get_runway_months() -> float:
 	# NET runway (revenue-aware) — the player's canonical lens; VC surfaces deliberately
 	# use GROSS (VCPitchSystem._gross_runway_months / term-sheet table days).
 	# Returns INF when positive net flow; otherwise months remaining.
-	var daily_net: float = float(get_net_daily_flow())
-	if daily_net >= 0.0:
+	# Delegates to runway_months_for so the arithmetic has exactly one home.
+	return runway_months_for(cash, get_net_daily_flow())
+
+
+func runway_months_for(cash_value: int, daily_net: int) -> float:
+	# The same NET runway question asked about HYPOTHETICAL cash and flow, which is what a
+	# preview needs: a hire moves cash and burn at once, so "runway after" cannot be answered
+	# by get_runway_months() (that one only knows today). PURE arithmetic on purpose — it
+	# carries no presentation guard, so get_runway_months() delegates to it byte-identically
+	# and a caller that wants to floor a negative month count does so at its own edge.
+	if daily_net >= 0:
 		return INF
-	return cash / (-daily_net) / float(DAYS_PER_MONTH)
+	return float(cash_value) / float(-daily_net) / float(DAYS_PER_MONTH)
 
 func get_founder_equity() -> float:
 	# Derived from CharacterRegistry employee equity_pct values. Matches the
@@ -397,6 +413,15 @@ func initialize_run(payload: Dictionary) -> void:
 	run_pitches = 0
 	run_sheets_won = 0
 
+	# HR Core state. Dicts via .clear() in case a system cached the reference (same
+	# reasoning as the VC block). NOTE: HRSystem.reset() deliberately does NOT run here —
+	# it seeds the HR RNG from run_seed and may set flags, and both of those happen further
+	# down. It is called after the seed block instead.
+	hr_search.clear()
+	hr_overtime.clear()
+	hr_last_overtime_day = 0
+	hr_last_positive_event_day = 0
+
 	# Flags survive nothing: fresh run = fresh world-state (hardening for any
 	# future in-place restart; harmless in a fresh process).
 	flags.clear()
@@ -414,6 +439,12 @@ func initialize_run(payload: Dictionary) -> void:
 	# Seeded RNG per TECH_SPEC §10.4
 	run_seed = Time.get_ticks_msec()
 	seed(run_seed)
+
+	# HR sub-system static state (the HR RNG included) — MUST come after run_seed is
+	# assigned and after flags.clear(), or the HR stream would be seeded from the previous
+	# run's value and anything it flags would be wiped a moment later. A fresh process
+	# would not need this, but the debug onboarding re-trigger reuses the process.
+	HRSystem.reset()
 
 	# Roster: ensure mentor exists, add founder
 	CharacterRegistry.ensure_mentor()
@@ -444,7 +475,7 @@ func _build_founder(payload: Dictionary) -> Character:
 	var f := Character.new()
 	f.id = "char_founder"
 	f.character_name = display_name
-	f.role = "Founder"
+	f.role = HRConstants.ROLE_FOUNDER   # typed id; label "Kurucu" via HRConstants.role_label
 	f.category = "founder"
 	f.monthly_salary = 0
 	f.equity_pct = 100.0

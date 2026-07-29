@@ -121,43 +121,6 @@ static func make_card(content: Control = null, tight: bool = false, attention: b
 		card.add_child(content)
 	return card
 
-## Event choice card. Returns {root, label, row}; caller wires gui_input + badges.
-## When cost_line is non-empty the card becomes a two-row cell: the bold label on top
-## and the cost on its own dim line beneath (CK3-style retention rows). In that mode the
-## caller should NOT append inline effect badges — the cost line carries them. Default
-## "" preserves the original single-row card byte-for-byte for every existing caller.
-static func make_choice_card(label_text: String, locked: bool = false, cost_line: String = "") -> Dictionary:
-	var root := PanelContainer.new()
-	root.theme_type_variation = &"ChoiceCard"
-	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(row)
-	var arrow := make_label("→", &"ChoiceLabel", UiTokens.INK_DIM)
-	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(arrow)
-	var lbl := make_label(label_text, &"ChoiceLabel")
-	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if cost_line != "":
-		var col := VBoxContainer.new()
-		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_theme_constant_override("separation", 2)
-		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		col.add_child(lbl)
-		var cost := make_label(cost_line, &"RowMeta", UiTokens.INK_DIM)
-		cost.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		cost.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		col.add_child(cost)
-		row.add_child(col)
-	else:
-		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(lbl)
-	if locked:
-		root.modulate = Color(1, 1, 1, 0.5)
-	return {"root": root, "label": lbl, "row": row}
-
 ## Drawn dot (replaces the ● glyph). A Panel with a circular StyleBoxFlat.
 static func make_dot(color: Color, diameter: int = 6) -> Panel:
 	var dot := Panel.new()

@@ -403,10 +403,19 @@ func _apply_modifiers(modifiers: Array) -> void:
 				if c == null:
 					push_warning("[EventManager] morale modifier targets unknown character: %s" % cid)
 					continue
-				CharacterRegistry.set_morale(cid, c.morale + delta)
+				# Route through the HR morale seam, not straight to set_morale: apply_delta is
+				# where the carrier's trait multiplier and the founder's Liderlik CLIMATE
+				# coefficient live. Writing the raw delta here would leave leadership's gain
+				# side dead exactly where the design puts it to work ("toparlanmaları
+				# büyütür"), and would ignore a trait's morale floor. Non-employees (the
+				# founder, the mentor) still take the raw delta — they have no HR machine.
+				if c.category == "employee":
+					HRMoraleSystem.apply_delta(c, delta, "event")
+				else:
+					CharacterRegistry.set_morale(cid, c.morale + delta)
 			"morale_all_employees":
 				for emp in CharacterRegistry.get_employees():
-					CharacterRegistry.set_morale(emp.id, emp.morale + delta)
+					HRMoraleSystem.apply_delta(emp, delta, "event")
 			"set_flag":
 				var key: String = m.get("key", "")
 				if key == "":
@@ -428,7 +437,9 @@ func _apply_modifiers(modifiers: Array) -> void:
 				var new_c: Character = Character.new()
 				new_c.id = new_cid
 				new_c.character_name = String(cdata.get("character_name", ""))
-				new_c.role = String(cdata.get("role", ""))
+				# Typed role id (HRConstants.ROLE_*), never free text. An author who omits
+				# it gets a developer — at least a valid employee shape; add() key-locks it.
+				new_c.role = String(cdata.get("role", HRConstants.ROLE_DEVELOPER))
 				new_c.category = String(cdata.get("category", "employee"))
 				new_c.monthly_salary = int(cdata.get("monthly_salary", 0))
 				new_c.equity_pct = float(cdata.get("equity_pct", 0.0))
@@ -441,9 +452,31 @@ func _apply_modifiers(modifiers: Array) -> void:
 				for tr in traits_in:
 					typed_traits.append(String(tr))
 				new_c.traits = typed_traits
-				new_c.role_stats = cdata.get("role_stats", {})
+				# Employees must carry the three axes; default to a mid-band file rather than
+				# an empty dict so an event hire is a valid employee shape out of the box.
+				new_c.role_stats = cdata.get("role_stats",
+					HRConstants.default_axes() if new_c.category == "employee" else {})
+				if new_c.category == "employee" and new_c.traits.is_empty():
+					new_c.traits = ["warms_up_fast"]   # >=1 positive per the employee formula
 				new_c.attention_flag = String(cdata.get("attention_flag", ""))
 				CharacterRegistry.add(new_c)
+			# --- HR modifiers (HR Core). Each routes to the owning system's seam so the
+			#     state change still happens on resolve, through the sanctioned path. ---
+			"hr_departure":
+				# A resignation the player has acknowledged. The roll already happened;
+				# this is the removal, via CharacterRegistry.remove (run_departures++).
+				var leaver_id: String = String(m.get("character_id", ""))
+				if leaver_id == "":
+					push_warning("[EventManager] hr_departure requires character_id")
+					continue
+				HRMoraleSystem.confirm_departure(leaver_id)
+			"hr_overtime_stop":
+				HROvertimeSystem.stop(String(m.get("department", "")))
+			"hr_overtime_continue":
+				# Nobody is auto-removed from overtime; continuing raises THAT person's
+				# resignation odds, which is the informed risk the player just took.
+				HROvertimeSystem.note_valve_continued(
+					String(m.get("department", "")), String(m.get("character_id", "")))
 			# --- Build modifiers (Product Lifecycle Part 1: clear two-rule vocabulary) ---
 			"dimension_delta":
 				# {axis, amount} — grow (+) or penalize (−) a quality axis, bounded via grow().
@@ -662,6 +695,8 @@ func _build_event_from_dict(d: Dictionary) -> GameEvent:
 	ev.illustration_path = String(d.get("illustration_path", ""))
 	ev.character_id = String(d.get("character_id", ""))
 	ev.body_text = String(d.get("body_text", ""))
+	ev.mentor_line = String(d.get("mentor_line", ""))
+	ev.mentor_choice = int(d.get("mentor_choice", -1))
 	ev.trigger_conditions = d.get("trigger_conditions", []) as Array
 	ev.cooldown_days = int(d.get("cooldown_days", 0))
 	ev.one_shot = bool(d.get("one_shot", false))
@@ -675,8 +710,23 @@ func _build_event_from_dict(d: Dictionary) -> GameEvent:
 			continue
 		var c := EventChoice.new()
 		c.label = String(cdict.get("label", ""))
+		c.description = String(cdict.get("description", ""))
 		c.modifiers = cdict.get("modifiers", []) as Array
 		c.unlock_condition = cdict.get("unlock_condition", {}) as Dictionary
 		c.unlock_reason_text = String(cdict.get("unlock_reason_text", ""))
 		ev.choices.append(c)
 	return ev
+
+
+## DEBUG-ONLY (screenshot harness): parse one event JSON directly, bypassing the
+## live pool and the ev_debug_ skip. Never touches _all_events/_queue/_hour_windows.
+func debug_build_event_from_file(path: String) -> GameEvent:
+	if not OS.is_debug_build():
+		return null
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return null
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return null
+	return _build_event_from_dict(parsed)

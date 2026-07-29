@@ -17,16 +17,20 @@ extends RefCounted
 # pattern; reads GameState + the ledger, writes nothing.
 #
 # EDITORIAL RULES (all enforced below): newspaper language not stat language; NO raw
-# day count in prose (calendar framing via _span_phrase); NO cash figures / "$"
-# (origin-aware founding clause); investment figures allowed spelled-out ("milyon
-# dolar"); quote attribution goes to the CROWD never to one person (no "danışman"/
-# "mentor"); no em-dash, no emoji, no English finance terms ("Series A" is a proper noun).
+# day count in prose (calendar framing via _span_phrase); NO cash figures / "$" in
+# PROSE (origin-aware founding clause) — the stat_cells row is the ONE sanctioned "$"
+# surface: it is an infographic, not prose (mockup grammar, 2026-07-29); investment
+# figures in prose stay spelled-out ("milyon dolar"); quote attribution goes to the
+# CROWD never to one person (no "danışman"/"mentor"); no em-dash, no emoji, no English
+# finance terms ("Series A" is a proper noun; stat LABELS may use the ruled loanwords
+# already in game vocabulary: MRR, pitch — never ARR).
 
 # --- Tuning / working constants (single surface) ---
 const FF_MAX_EQUITY := 18          # Founder-Friendly ceiling (inclusive): equity <= 18 AND no veto
 const MIN_LEDGER_LINES := 4
 const MAX_LEDGER_LINES := 6
 const YEAR_DAYS := 350             # >= → "bir yıla yakın" framing
+const ISSUE_PERIOD_DAYS := 7       # weekly paper: masthead "SAYI N" = run day / 7  # WORKING
 const ENGRAVING_DIR := "res://assets/endings/"
 
 # Turkish title-case month names. Do NOT derive by lowercasing MONTH_NAMES_TR — Godot's
@@ -114,6 +118,13 @@ static func _series_a(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.ledger_lines = _assemble(pool, [
 		"Sektör, turun ardında güçlü bir ürün hikâyesi görüyor.",
 		"Yatırımın bu aşamada gelmesi, pazarın ilgisini koruduğunun işareti sayılıyor."])
+	# Stat row (mockup: 4 big figures under the photo). Set per template. # WORKING
+	vs.stat_cells = [
+		_stat(UiTokens.format_money(investment), "YATIRIM"),
+		_stat(UiTokens.format_money(valuation * 1_000_000), "DEĞERLEME"),
+		_stat(str(int(ledger.get("employees", 0))), "ÇALIŞAN"),
+		_stat(_pct(_founder_share(ledger)), "KURUCU HİSSESİ"),
+	]
 	return vs
 
 
@@ -138,6 +149,13 @@ static func _acquisition(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.ledger_lines = _assemble(pool, [
 		"Bu ölçekteki satışlar, sessiz ama sık rastlanan çıkışlar olarak görülüyor.",
 		"Alıcı tarafın ekibe olan ilgisi, ürünün değerini teyit ediyor."])
+	# No sale price exists in the ledger — survival/team figures instead. # WORKING
+	vs.stat_cells = [
+		_stat(_months_figure(_day(ledger)), "AYAKTA KALDIĞI AY"),
+		_stat(str(int(ledger.get("customers_signed", 0))), "MÜŞTERİ"),
+		_stat(str(int(ledger.get("employees", 0))), "ÇALIŞAN"),
+		_stat(UiTokens.format_money(int(ledger.get("mrr", 0))), "MRR"),
+	]
 	return vs
 
 
@@ -176,6 +194,14 @@ static func _bankruptcy(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.ledger_lines = _assemble(pool, [
 		"Nakit tükenmesinin çoğu kapanışın görünürdeki tek sebebi olduğu belirtiliyor.",
 		"Benzer hikâyelerin çoğunda sorunun ürün değil, zamanlama olduğu konuşuluyor."])
+	# Faz 2-3 only (the quiet faz-1 path returned above with no stat row). "$0" SON MRR
+	# is editorially correct on a bankruptcy paper. # WORKING
+	vs.stat_cells = [
+		_stat(_months_figure(_day(ledger)), "AYAKTA KALDIĞI AY"),
+		_stat(str(int(ledger.get("customers_signed", 0))), "MÜŞTERİ"),
+		_stat(str(int(ledger.get("employees", 0))), "ÇALIŞAN"),
+		_stat(UiTokens.format_money(int(ledger.get("mrr", 0))), "SON MRR"),
+	]
 	return vs
 
 
@@ -214,6 +240,13 @@ static func _brand_collapse(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.ledger_lines = _assemble(pool, [
 		"Sektör, itibar krizlerinin çoğu zaman rakamlardan önce güveni tükettiğini hatırlatıyor.",
 		"Benzer vakalarda toparlanmanın aylar sürdüğü, çoğu şirketin bunu bekleyemediği belirtiliyor."])
+	# WORKING
+	vs.stat_cells = [
+		_stat(str(int(ledger.get("brand", 0))), "MARKA"),
+		_stat(str(int(ledger.get("customers_lost", 0))), "KAYBEDİLEN MÜŞTERİ"),
+		_stat(str(int(ledger.get("employees", 0))), "ÇALIŞAN"),
+		_stat(UiTokens.format_money(int(ledger.get("mrr", 0))), "SON MRR"),
+	]
 	return vs
 
 
@@ -237,6 +270,13 @@ static func _vc_cascade(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.ledger_lines = _assemble(pool, [
 		"Art arda gelen retlerin çoğu zaman şirketin kaderinden çok zamanlamayla ilgili olduğu konuşuluyor.",
 		"Yatırım ikliminin daraldığı bir dönemde kapıların ağırlaştığı belirtiliyor."])
+	# WORKING
+	vs.stat_cells = [
+		_stat(str(int(ledger.get("vc_rejections", 0))), "RET"),
+		_stat(str(int(ledger.get("pitches", 0))), "PİTCH"),
+		_stat(UiTokens.format_money(int(ledger.get("mrr", 0))), "MRR"),
+		_stat(_months_figure(_day(ledger)), "AYAKTA KALDIĞI AY"),
+	]
 	return vs
 
 
@@ -260,6 +300,13 @@ static func _bootstrap(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.ledger_lines = _assemble(pool, [
 		"Dışarıdan yatırım almadan büyümenin kontrolü kurucuda tuttuğu için giderek daha çok tercih edildiği belirtiliyor.",
 		"Sektör, bu tür şirketlerin krizlere daha dayanıklı olduğunu hatırlatıyor."])
+	# _founder_share reads 100 here — no signed terms on a bootstrap run. # WORKING
+	vs.stat_cells = [
+		_stat(UiTokens.format_money(int(ledger.get("mrr", 0))), "MRR"),
+		_stat(str(int(ledger.get("customers_active", 0))), "MÜŞTERİ"),
+		_stat(str(int(ledger.get("employees", 0))), "ÇALIŞAN"),
+		_stat(_pct(_founder_share(ledger)), "KURUCU HİSSESİ"),
+	]
 	return vs
 
 
@@ -287,6 +334,13 @@ static func _fumes(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.ledger_lines = _assemble(pool, [
 		"Sektör, çoğu şirketin zaferle yıkım arasındaki bu gri bölgede sonlandığını hatırlatıyor.",
 		"Zamanında bir karar ya da bir turun hikâyeyi değiştirebileceği konuşuluyor."])
+	# WORKING
+	vs.stat_cells = [
+		_stat(_months_figure(_day(ledger)), "AYAKTA KALDIĞI AY"),
+		_stat(UiTokens.format_money(int(ledger.get("mrr", 0))), "MRR"),
+		_stat(str(int(ledger.get("customers_active", 0))), "MÜŞTERİ"),
+		_stat(str(int(ledger.get("employees", 0))), "ÇALIŞAN"),
+	]
 	return vs
 
 
@@ -302,13 +356,14 @@ static func _common(ending_id: String, tone: String, ledger: Dictionary, data: D
 		"is_win": tone == "win" or tone == "soft_win",
 		"variant": "",
 		"masthead": "EKONOMİ POSTASI",
-		"date_line": _date_line(),
+		"date_line": _date_line(ledger),
 		"headline": "",
 		"subhead": "",
 		"engraving_path": _engraving_path(ending_id, ledger),
 		"engraving_caption": "",
 		"ledger_title": "RAKAMLARLA %s" % _tr_upper(company),
 		"ledger_lines": [],
+		"stat_cells": [],
 		"is_quiet_closure": false,
 		"is_generic_masthead": false,
 		"quiet_notice": "",
@@ -327,6 +382,31 @@ static func _num(n: int) -> String:
 	if n >= 0 and n < NUM_TR.size():
 		return NUM_TR[n]
 	return str(n)
+
+
+static func _stat(figure: String, label: String) -> Dictionary:
+	# One stat-row cell: a big serif FIGURE over a small mono LABEL (mockup grammar).
+	# Labels arrive pre-uppercased TR literals — tr_upper is only for derived text.
+	return {"figure": figure, "label": label}
+
+
+static func _months_figure(days: int) -> String:
+	# Stat-row month count as DIGITS — the infographic surface, unlike _span_phrase
+	# which frames the same span as prose (Rule 2 keeps raw day counts off the paper).
+	return str(int(ceil(days / 30.0)))
+
+
+static func _pct(n: int) -> String:
+	# Turkish percent style: sign before the number ("%82" — mockup grammar).
+	return "%%%d" % n
+
+
+static func _founder_share(ledger: Dictionary) -> int:
+	# Founder's remaining share after the signed round; run_equity_pct reads 0 unless a
+	# term sheet was signed (bootstrap → 100). NOT GameState.get_founder_equity(): hires
+	# carry no equity and the investor's dilution never enters CharacterRegistry, so that
+	# read would say 100 on the very paper whose headline announces the round.
+	return maxi(0, 100 - int(ledger.get("equity_pct", 0)))
 
 
 static func _span_phrase(days: int) -> String:
@@ -355,11 +435,15 @@ static func _founding_month(ledger: Dictionary) -> String:
 	return MONTHS_TR_TITLE[clampi(m - 1, 0, 11)]
 
 
-static func _date_line() -> String:
-	# The ending day's full calendar date (mockup: "13 TEMMUZ 2026"). A date, not a day
-	# count — MONTH_NAMES_TR is already correct Turkish uppercase.
-	var d: Dictionary = GameState.get_date_dict()
-	return "%d %s %d" % [int(d.day), GameState.MONTH_NAMES_TR[int(d.month) - 1], int(d.year)]
+static func _date_line(ledger: Dictionary) -> String:
+	# Masthead meta line: full calendar date + issue number ("14 KASIM 2027 · SAYI 214").
+	# A date and an edition, never a day count — the raw count lives ONLY in the rail's
+	# run-meta line (Rule 2). Ledger-driven (not GameState.day) so debug_all_view_states
+	# renders deterministically. MONTH_NAMES_TR is already correct Turkish uppercase.
+	var day := _day(ledger)
+	var d: Dictionary = GameState.get_date_dict(day if day > 0 else -1)
+	var issue := maxi(1, int(float(day) / ISSUE_PERIOD_DAYS))
+	return "%d %s %d · SAYI %d" % [int(d.day), GameState.MONTH_NAMES_TR[int(d.month) - 1], int(d.year), issue]
 
 
 static func _valuation_tr(valuation_m: int) -> String:

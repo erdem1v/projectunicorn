@@ -671,8 +671,11 @@ func _make_commit_card() -> Control:
 	_sorumlu.add_item(founder.character_name if founder != null else "Kurucu")
 	_sorumlu.set_item_metadata(0, founder.id if founder != null else "")
 	var idx: int = 1
-	for c in CharacterRegistry.get_employees():
-		if c.role == "Engineer":
+	# İş başındaki TÜM Ürün Geliştirme çalışanları — izindeki birini sorumlu olarak teklif
+	# etmek hata olur. Yalnız yazılımcı değil: koordinasyon çarpanı sorumlunun UYUM'undan
+	# geliyor, o yüzden bir tasarımcıyı ya da test uzmanını başa koymak gerçek bir seçenek.
+	for c in CharacterRegistry.get_active_employees():
+		if HRConstants.department_of(c.role) == HRConstants.DEPT_PRODUCT_DEV:
 			_sorumlu.add_item(c.character_name)
 			_sorumlu.set_item_metadata(idx, c.id)
 			idx += 1

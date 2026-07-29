@@ -16,7 +16,8 @@ func _ready() -> void:
 	var mentor: Character = CharacterRegistry.get_mentor()
 	if mentor != null:
 		name_label.text = mentor.character_name
-		role_label.text = mentor.role
+		# role is a typed id — never print it raw (renders "Operating Partner").
+		role_label.text = HRConstants.role_label(mentor.role)
 	# Body text is keyed to Self-Made (only playable origin this turn).
 	# Future variants will live in a dict keyed by GameState.origin.
 	continue_btn.pressed.connect(_on_continue_pressed)

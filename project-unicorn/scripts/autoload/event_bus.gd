@@ -16,7 +16,7 @@ signal phase_changed(new_phase: int)
 signal runway_recalculated(months: float)
 
 # --- UI / time signals (§13.2) ---
-signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=4x
+signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=3x, 4=4x
 signal tab_changed(tab_id: String)  # "product", "hr", "finance", "sales", "ops", "rnd", "personal", "events"
 
 # --- Settings / audio signals ---
@@ -100,6 +100,12 @@ signal pitch_requested(prospect_id: String)
 signal pitch_finished()
 # Frank's RightPanel advisory line — updated by intro/customer events/traction.
 signal mentor_advisory_changed(text: String)
+
+# Live ticker line. The ONLY non-modal notification channel: a system pushes one line and
+# NewsTicker scrolls it ahead of the ambient pool. `source` is the attribution shown in
+# accent ("Atlas Seçme & Yerleştirme", "İK"). Use this for beats that must NOT interrupt
+# the player — candidate files arriving, an employee going on leave.
+signal headline_added(source: String, text: String)
 
 # --- Endgame signals (ENDGAME_DESIGN.md §2/§3) ---
 # Gate condition satisfied (slot 8). Phase has NOT changed yet — the transition

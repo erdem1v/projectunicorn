@@ -161,7 +161,11 @@ func _build_paper(vs: Dictionary) -> PanelContainer:
 		caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		col.add_child(caption)
 		col.add_child(_rule(1))
-		col.add_child(_build_ledger_box(vs))
+		# Mockup body: big-figure stat row, then the editorial prose in two columns.
+		var stats := _build_stat_block(vs)
+		if stats != null:
+			col.add_child(stats)
+		col.add_child(_build_prose_columns(vs))
 
 	return panel
 
@@ -200,28 +204,81 @@ func _build_engraving(vs: Dictionary) -> Control:
 	return frame
 
 
-func _build_ledger_box(vs: Dictionary) -> Control:
+func _build_stat_block(vs: Dictionary) -> Control:
+	# Mockup stat row: the "RAKAMLARLA <ŞİRKET>" title over 4 big serif FIGURES with
+	# small mono labels beneath. Returns null when the composer supplied no cells
+	# (quiet closure, defensive fallback) — the caller skips the block entirely.
+	var cells: Array = vs.get("stat_cells", [])
+	if cells.is_empty():
+		return null
+
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 6)
 
 	var title := UiFactory.make_label(String(vs.get("ledger_title", "")), &"NewsMeta")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 
-	# Two-column layout like the mockup's "Rakamlarla" box.
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 32)
-	grid.add_theme_constant_override("v_separation", 8)
-	box.add_child(grid)
-
-	for line in vs.get("ledger_lines", []):
-		var cell := UiFactory.make_label(String(line), &"NewsBodySerif")
-		cell.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cell.custom_minimum_size = Vector2(220, 0)
-		grid.add_child(cell)
+	# 4 equal cells: EXPAND_FILL at default stretch splits the row evenly (~300px each
+	# at 1080p — far above any figure/label min width, so no custom_minimum_size).
+	var row := HBoxContainer.new()
+	box.add_child(row)
+	for cell in cells:
+		var cv := VBoxContainer.new()
+		cv.add_theme_constant_override("separation", 2)
+		cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var figure := UiFactory.make_label(String(cell.get("figure", "")), &"NewsStatSerif")
+		figure.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cv.add_child(figure)
+		var lbl := UiFactory.make_label(String(cell.get("label", "")), &"NewsMeta")
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cv.add_child(lbl)
+		row.add_child(cv)
 	return box
+
+
+func _build_prose_columns(vs: Dictionary) -> Control:
+	# The editorial ledger sentences flow as TWO balanced newspaper columns (mockup).
+	var lines: Array = []
+	for l in vs.get("ledger_lines", []):
+		if String(l) != "":
+			lines.append(String(l))
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 28)
+	for part in _balanced_split(lines):
+		if String(part) == "":
+			continue
+		var column := UiFactory.make_label(String(part), &"NewsBodySerif")
+		column.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		column.custom_minimum_size = Vector2(220, 0)   # first-frame autowrap guard
+		row.add_child(column)
+	return row
+
+
+func _balanced_split(lines: Array) -> Array:
+	# Split sentences into two paragraphs at the boundary whose left cumulative char
+	# count lands nearest half the total — sentence lengths vary 2-4x, so a plain
+	# half-by-count split visibly unbalances the columns. <2 sentences → one column.
+	if lines.size() < 2:
+		return [" ".join(PackedStringArray(lines)), ""]
+	var total := 0
+	for l in lines:
+		total += String(l).length()
+	var best_idx := 1
+	var best_diff := total
+	var acc := 0
+	for i in range(lines.size() - 1):
+		acc += String(lines[i]).length()
+		var diff: int = abs(acc * 2 - total)   # |left − right|
+		if diff < best_diff:
+			best_diff = diff
+			best_idx = i + 1
+	return [
+		" ".join(PackedStringArray(lines.slice(0, best_idx))),
+		" ".join(PackedStringArray(lines.slice(best_idx))),
+	]
 
 
 func _build_quiet_notice(vs: Dictionary) -> Control:
@@ -430,6 +487,7 @@ func _fallback_view_state(ending_data: Dictionary, ledger: Dictionary) -> Dictio
 		"engraving_caption": "",
 		"ledger_title": "RAKAMLARLA",
 		"ledger_lines": [],
+		"stat_cells": [],
 		"is_quiet_closure": false,
 		"is_generic_masthead": false,
 		"quiet_notice": "",

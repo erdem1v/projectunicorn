@@ -47,16 +47,21 @@ static func _tick_satisfaction(c: Customer) -> void:
 	# CS delegation (Stage D): a good CS keeps hands-off customers happier — dampen the
 	# EROSION (downward drift) by the rep's skill. Upward recovery stays full-strength.
 	if delta < 0 and c.assigned_to != "":
-		delta = int(float(delta) * B2BConstants.cs_dampen(_cs_skill_of(c)))
+		delta = int(float(delta) * B2BConstants.cs_dampen(_cs_expertise_of(c)))
 	if delta != 0:
 		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 
 
-static func _cs_skill_of(c: Customer) -> int:
+static func _cs_expertise_of(c: Customer) -> int:
+	# The assigned rep's UZMANLIK, read straight off the axis — the conversion shim is gone.
+	# An ON-LEAVE rep dampens nothing (design doc §8: capacity/CS contribution stops), so the
+	# account erodes at full strength while they are away.
 	if c.assigned_to == "":
 		return 0
 	var cs: Character = CharacterRegistry.get_character(c.assigned_to)
-	return int(cs.role_stats.get("cs_skill", 0)) if cs != null else 0
+	if cs == null or cs.status != HRConstants.STATUS_ACTIVE:
+		return 0
+	return int(cs.role_stats.get(HRConstants.AXIS_EXPERTISE, 0))
 
 
 static func _satisfaction_target(c: Customer) -> int:

@@ -2,14 +2,16 @@ extends Node
 
 # Game clock per TECH_SPEC §6.1, §8.1, §8.2.
 #
-# Time rule (§8.1):
-#   At 1x speed, one real second equals one in-game hour.
-#   One in-game day = 24 in-game hours = 24 real seconds at 1x.
-#   Speed multipliers: pause=0, 1x=1, 2x=2, 4x=4.
+# Time rule (§8.1, ladder retuned 2026-07-29):
+#   Tempo is expressed as REAL SECONDS PER IN-GAME DAY, one entry per speed —
+#   1x=12s, 2x=6s, 3x=3s, 4x=1.5s. See SECONDS_PER_DAY below (the single home).
+#   A day is ALWAYS HOURS_PER_DAY hourly ticks; only the real-time rate of
+#   delivery changes, so game-time behaviour is identical at every speed.
+#   (The old rule was "1 real second = 1 in-game hour" → 24s/day at 1x.)
 #
 # Initial state (TECH_SPEC §20 Decision Log entry 2026-05-15):
 #   Day 1 starts at 09:00 (business-day-start). First day runs 09:00 → 24:00 =
-#   15 in-game hours = 15 real seconds at 1x. Subsequent days start at 00:00
+#   15 in-game hours = 7.5 real seconds at 1x. Subsequent days start at 00:00
 #   and run a full 24 in-game hours per cycle.
 #
 # Pause policy:
@@ -34,7 +36,11 @@ extends Node
 # sync_to_current_hour() ÇAĞRILMALI, yoksa accumulator geride kalır ve ilk gün
 # boyunca Case-1 hiç tetiklenmez ("ilk gün ölü" bug'ı).
 
-const SPEED_MULTIPLIERS := [0.0, 1.0, 2.0, 4.0]  # idx: 0=pause, 1=1x, 2=2x, 3=4x
+# THE tempo home. Real seconds one in-game day takes, by speed index.
+# idx: 0=pause, 1=1x, 2=2x, 3=3x, 4=4x
+# Retuning the pace = editing this array and nothing else. Values are WORKING
+# (calibration §10 "numbers last"); the ladder shape is the locked part.
+const SECONDS_PER_DAY := [0.0, 12.0, 6.0, 3.0, 1.5]
 const HOURS_PER_DAY := 24
 const INITIAL_HOUR := 9                          # Game starts at 09:00 on Day 1
 
@@ -59,12 +65,23 @@ func _ready() -> void:
 	EventBus.speed_change_requested.connect(_on_speed_change_requested)
 
 
+static func hours_per_real_second(idx: int) -> float:
+	# In-game hours accrued per real second at a given speed. DERIVED from the
+	# ladder, never stored separately — that is what keeps SECONDS_PER_DAY the
+	# only place tempo is expressed. Pause (and any out-of-range index) = 0.0.
+	# NOT to be confused with HROvertimeSystem.speed_multiplier() or
+	# ProductSystem.capacity_speed_factor() — those are build throughput, not clock rate.
+	if idx <= 0 or idx >= SECONDS_PER_DAY.size():
+		return 0.0
+	return float(HOURS_PER_DAY) / float(SECONDS_PER_DAY[idx])
+
+
 func _process(delta: float) -> void:
 	if not GameState.run_active:
 		# Terminal reached (ENDGAME_DESIGN.md §7.3): world stops. No hours accrue,
 		# no MRR behind the ending screen.
 		return
-	var multiplier: float = SPEED_MULTIPLIERS[current_speed]
+	var multiplier: float = hours_per_real_second(current_speed)
 	if multiplier == 0.0:
 		# Defensive: get_tree().paused already prevents this _process from
 		# running when speed=0. Guard kept for debug paths that set speed
@@ -118,7 +135,7 @@ func sync_to_current_hour() -> void:
 # --- Speed control ---
 
 func _on_speed_change_requested(speed: int) -> void:
-	if speed < 0 or speed >= SPEED_MULTIPLIERS.size():
+	if speed < 0 or speed >= SECONDS_PER_DAY.size():
 		push_warning("[TimeManager] Invalid speed requested: %d" % speed)
 		return
 	if speed > 0 and not GameState.run_active:

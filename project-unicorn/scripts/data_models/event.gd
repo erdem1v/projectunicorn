@@ -35,6 +35,12 @@ extends Resource
 @export var character_id: String = ""              # Empty when no character context strip
 @export var body_text: String = ""                 # **bold** *italic* via markdown→BBCode in modal
 
+# --- Mentor aside (presentation-only; both optional with safe defaults; the
+#     content phase decides which events carry Frank's opinion) ---
+@export var mentor_line: String = ""               # One italic mentor line above the choices; "" = row absent
+@export var mentor_choice: int = -1                # Index of the MENTOR TAVSİYESİ choice; -1 = none.
+                                                   # Index-addressed: EventChoice carries no id.
+
 # --- Synthetic speaker context (B2B Sales System). When character_id is EMPTY but
 #     speaker_name is set, the modal renders a non-Character speaker strip (a customer
 #     speaking in their own voice) from these fields directly, no CharacterRegistry

@@ -36,6 +36,7 @@ const PHASE_NAMES := ["Bootstrap", "Traction", "Series A"]
 	$Margin/Row/TimeGroup/SpeedControls/PauseBtn,
 	$Margin/Row/TimeGroup/SpeedControls/Speed1Btn,
 	$Margin/Row/TimeGroup/SpeedControls/Speed2Btn,
+	$Margin/Row/TimeGroup/SpeedControls/Speed3Btn,
 	$Margin/Row/TimeGroup/SpeedControls/Speed4Btn,
 ]
 
@@ -44,7 +45,7 @@ const PHASE_NAMES := ["Bootstrap", "Traction", "Series A"]
 # → TimeManager._on_speed_change_requested → TimeManager.speed_changed →
 # _on_time_manager_speed_changed (round-trip). That round-trip is what keeps
 # the indicator honest after event-pause restore, build commits, etc.
-var current_speed: int = 1  # 0=pause, 1=1x, 2=2x, 3=4x
+var current_speed: int = 1  # 0=pause, 1=1x, 2=2x, 3=3x, 4=4x
 
 # Active/idle look is driven by theme type variations (master_theme.tres):
 # PhaseDotActive/PhaseDotDim and SpeedButtonActive/SpeedButton.

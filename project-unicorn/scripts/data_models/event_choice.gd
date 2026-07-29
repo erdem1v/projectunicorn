@@ -19,6 +19,7 @@ extends Resource
 
 # --- Used now ---
 @export var label: String = ""
+@export var description: String = ""               # Optional italic sub-line under the label; "" = absent
 @export var modifiers: Array = []                  # Array of Dictionaries (loose-typed; dispatcher reads "type")
 @export var unlock_condition: Dictionary = {}      # {} = unlocked; otherwise same shape as a trigger condition
 @export var unlock_reason_text: String = ""        # Shown on locked choices, e.g. "Reputation 10+ gerekli"

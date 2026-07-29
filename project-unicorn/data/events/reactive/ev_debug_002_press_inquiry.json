@@ -6,6 +6,8 @@
   "illustration_path": "",
   "character_id": "",
   "body_text": "TechCrunch muhabiri bir alıntı istiyor: *son altı ayda 'AI startup'ları nasıl ayakta kalır?'* Cevabın yarın yayınlanacak. [DEBUG content]",
+  "mentor_line": "Basınla konuşurken cümlenin yarısı manşet olur. Kısa tut, sonra genişletirsin.",
+  "mentor_choice": 0,
   "trigger_conditions": [
     {"type": "day_min", "value": 5},
     {"type": "random", "chance": 0.20}
@@ -16,6 +18,7 @@
   "choices": [
     {
       "label": "Hazırlanmış, ölçülü bir açıklama gönder",
+      "description": "Ölçülü ton. Yarınki manşette kontrol sende kalır.",
       "modifiers": [
         {"type": "brand", "delta": 3},
         {"type": "reputation", "delta": 1}
@@ -33,6 +36,7 @@
     },
     {
       "label": "Sıcağı sıcağına konuş",
+      "description": "Riskli ama akılda kalır.",
       "modifiers": [
         {"type": "brand", "delta": 6}
       ],

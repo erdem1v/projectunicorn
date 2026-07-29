@@ -14,10 +14,18 @@ extends Panel
 #    label has scrolled past one copy width we add the same amount
 #    back. Visual: zero gap, zero jump.
 #
+#  - LIVE LINES (HR Core): EventBus.headline_added pushes a real gameplay line, which is
+#    prepended to the ambient pool and the stream is rebuilt. This is the game's only
+#    non-modal notification channel — the HR spec needs candidate arrival to raise a badge
+#    and a ticker line WITHOUT interrupting the player. Rebuilding resets the scroll
+#    position, so a line landing mid-scroll causes one visible jump; acceptable for a
+#    once-in-a-while beat, and the fix (splice without reset) belongs to the news engine.
+#
 # TODO when news engine comes online:
 #   - Replace HEADLINES const with EventManager.get_news_pool(phase)
-#   - Connect EventBus.headline_added / .scandal_breaking for live updates
+#   - Connect .scandal_breaking for breaking news
 #   - Add critical-news visual treatment (red accent, slower scroll)
+#   - Splice live lines without resetting scroll position
 
 const SCROLL_SPEED := 50.0  # pixels per second
 const SEPARATOR := "   ·   "
@@ -36,15 +44,39 @@ const HEADLINES := [
 	{"src": "Reuters",       "txt": "YC Demo Day shifts to live-streamed format"},
 ]
 
+# Live gameplay lines, newest first, capped so the loop never grows without bound.
+const MAX_LIVE_LINES := 6
+
 @onready var stream: RichTextLabel = $Stream
 
 var _half_width: float = 0.0
+var _live_lines: Array[Dictionary] = []
 
 
 func _ready() -> void:
+	EventBus.headline_added.connect(_on_headline_added)
+	await _rebuild()
+
+
+func _exit_tree() -> void:
+	if EventBus.headline_added.is_connected(_on_headline_added):
+		EventBus.headline_added.disconnect(_on_headline_added)
+
+
+func _on_headline_added(source: String, text: String) -> void:
+	if text.strip_edges() == "":
+		return
+	_live_lines.push_front({"src": source, "txt": text})
+	while _live_lines.size() > MAX_LIVE_LINES:
+		_live_lines.pop_back()
+	await _rebuild()
+
+
+func _rebuild() -> void:
 	# Two identical copies of the stream end-to-end → seamless loop.
 	var single: String = _build_bbcode()
 	stream.text = single + single
+	stream.position.x = 0.0
 
 	# Layout needs one frame to settle before get_content_width returns
 	# a meaningful value. Same for get_content_height (used for y-center).
@@ -55,6 +87,9 @@ func _ready() -> void:
 
 func _build_bbcode() -> String:
 	var parts: PackedStringArray = []
+	# Live gameplay lines lead; the ambient pool follows so the ticker never runs empty.
+	for h in _live_lines:
+		parts.append("[color=%s]%s[/color]  %s" % [SOURCE_COLOR, h.src, h.txt])
 	for h in HEADLINES:
 		parts.append("[color=%s]%s[/color]  %s" % [SOURCE_COLOR, h.src, h.txt])
 	return SEPARATOR.join(parts) + SEPARATOR

@@ -6,7 +6,9 @@ extends Panel
 # attention badge (top-right corner). Tab definition source: UiTokens.TABS.
 #
 # Badge data sources (UI mini-spec §4):
-#   - HR: count of employees with morale < 40
+#   - HR: HRSystem.attention_count() — employees carrying any derived badge
+#     (TÜKENİYOR / KAÇMA RİSKİ / AŞIRI YÜKLÜ) plus a waiting candidate file.
+#     Thresholds live in HRConstants; never re-derive them here.
 #   - Finance: 1 when runway < 3 months, 0 otherwise
 #   - Events: EventManager.get_queue_size()
 #   - Other tabs: no badge (their systems do not exist yet)
@@ -114,11 +116,11 @@ func _apply_visual(active_idx: int) -> void:
 # --- Badge refresh helpers (data sources per UI mini-spec §4) ---
 
 func _refresh_hr_badge() -> void:
-	var n: int = 0
-	for emp in CharacterRegistry.get_employees():
-		if emp.morale < 40:
-			n += 1
-	_set_badge_count(1, n)  # tab index 1 = HR
+	# One number from one place: HRSystem.attention_count() counts employees carrying any
+	# derived badge (thresholds live in HRConstants, never as a literal here) plus a
+	# waiting candidate file — the arrival signal the design wants as a badge, not a modal.
+	# On-leave employees are INCLUDED: still on the team, still need attention.
+	_set_badge_count(1, HRSystem.attention_count())  # tab index 1 = HR
 
 func _refresh_finance_badge() -> void:
 	# Net runway (Package 5): warn only on LOW FINITE months. INF (profitable/"Kârlı")

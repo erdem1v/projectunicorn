@@ -333,6 +333,12 @@ Mechanics:
 
 ## §5 Time & speed
 
+> **SUPERSEDED 2026-07-29 — do not reuse these numbers.** The ladder was retuned to
+> seconds-per-day (1x=12s, 2x=6s, 3x=3s, 4x=1.5s) and a 3x step was added;
+> `SPEED_MULTIPLIERS` no longer exists (now `TimeManager.SECONDS_PER_DAY`, with the
+> multiplier derived). See TECH_SPEC §8.1 + §20 Decision Log 2026-07-29. Everything
+> below is the pre-retune snapshot and is kept only as the measurement record.
+
 ### Tick engine — scripts/autoload/time_manager.gd
 
 - `SPEED_MULTIPLIERS = [0.0, 1.0, 2.0, 4.0]` — :37 — pause/1x/2x/4x.

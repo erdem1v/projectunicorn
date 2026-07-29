@@ -186,9 +186,19 @@ static func cs_capacity(skill: int) -> int:
 	return CS_BASE_CAPACITY + int(float(maxi(skill, 0)) / float(CS_SKILL_PER_SLOT))
 
 
-static func cs_dampen(skill: int) -> float:
-	# Higher CS skill → slower satisfaction erosion for hands-off customers.
-	return clampf(1.0 - float(maxi(skill, 0)) / 200.0, CS_DAMPEN_MIN, 1.0)
+# Churn suppression per UZMANLIK point (HR Coupling). DERIVED, not chosen: the old law was
+# `1 − cs_skill/200` on a 0-100 scale, and the equivalence anchor is that a UZMANLIK-5 rep
+# dampens exactly as the seeded cs_skill-55 rep did → 1 − 5×0.055 = 0.725 = 1 − 55/200, byte-equal.
+# At the top of the ruler this gives 1 − 9×0.055 = 0.505, essentially the old 0.5 at cs_skill 100 —
+# so CS_DAMPEN_MIN stays structurally unreachable, exactly as it was before. That floor is kept
+# rather than deleted because it is the guard if the per-point value is ever raised.
+const CS_DAMPEN_PER_POINT := 0.055
+
+
+static func cs_dampen(expertise: int) -> float:
+	# Higher UZMANLIK → slower satisfaction erosion for hands-off customers. Erosion ONLY;
+	# upward recovery is full-strength (see B2BSalesSystem._tick_satisfaction).
+	return clampf(1.0 - float(maxi(expertise, 0)) * CS_DAMPEN_PER_POINT, CS_DAMPEN_MIN, 1.0)
 
 
 # ======================= Stage E — 2nd product / affinity / expansion =========

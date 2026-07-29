@@ -18,14 +18,16 @@ extends RefCounted
 # ($10K cash, ~6.6 months runway). Solo founder, no hires, no marketing spend.
 
 # Bootstrap solo founder baseline burn (sums to $50/day = ~$1,500/month).
-# Salaries are PULLED from CharacterRegistry at the top of daily_tick — one-way
-# pull, HR ticks at slot 3 so the registry is quiescent by slot 5.
+# Salaries AND overtime are PULLED at the top of daily_tick — one-way pull, HR ticks at
+# slot 3 so the registry and the overtime stamp are both quiescent by slot 5. Both start
+# at 0, so the day-1 baseline is unchanged at $50.
 # Player marketing spend mechanic will mutate "marketing" via set_burn_category().
 # Single home for the day-1 breakdown; burn_breakdown starts as a mutable copy,
 # and GameState's starting daily_burn derives from it (starting_daily_burn()).
 # NOT: static var reset'i süreç relaunch'una dayanır (TEKRAR DENE = OS restart); in-place reset seam'i ana menü / SaveManager task'ının işi.
 const STARTING_BURN_BREAKDOWN := {
 	"salaries": 0,        # Overwritten daily by pull from CharacterRegistry
+	"overtime": 0,        # Overwritten daily by pull from HROvertimeSystem; 0 when no block runs
 	"tools": 7,           # SaaS subscriptions, hosting, dev tooling (~$210/mo)
 	"office": 25,         # Coworking desk (~$750/mo)
 	"marketing": 0,       # TODO when player marketing spend mechanic exists
@@ -50,7 +52,12 @@ static func daily_tick() -> void:
 	#    state is settled). Convert monthly payroll to a daily figure using
 	#    GameState.DAYS_PER_MONTH — same conversion as MRR → daily revenue (line below).
 	var monthly_salaries: int = CharacterRegistry.get_total_monthly_salaries()
-	burn_breakdown["salaries"] = int(round(monthly_salaries / float(GameState.DAYS_PER_MONTH)))
+	burn_breakdown["salaries"] = daily_salary_for(monthly_salaries)
+	# 0b. Same one-way PULL for today's overtime accrual. HR stamped it at slot 3, two
+	#     slots ago. Pulling (rather than letting HR push via set_burn_category) is what
+	#     keeps daily_burn from ever publishing fresh overtime against stale salaries,
+	#     and avoids two extra burn_changed/runway signal passes every single day.
+	burn_breakdown["overtime"] = HROvertimeSystem.pay_accrued_today()
 
 	# 1. Recompute total burn from breakdown (may have shifted via salary pull / marketing)
 	var total_burn: int = compute_total_burn()
@@ -84,6 +91,14 @@ static func apply_one_time_cost(amount: int, label: String) -> void:
 
 
 # --- Burn breakdown API (consumed by future systems) ---
+
+static func daily_salary_for(monthly_total: int) -> int:
+	# Monthly payroll → the daily figure that lands in burn_breakdown["salaries"]. Same
+	# conversion as MRR → daily revenue (GameState.DAYS_PER_MONTH), rounded ONCE. Exposed so a
+	# preview (HRSearchSystem.preview_hire) can promise the exact number this tick will publish
+	# instead of mirroring the arithmetic and drifting from it.
+	return int(round(float(monthly_total) / float(GameState.DAYS_PER_MONTH)))
+
 
 static func compute_total_burn() -> int:
 	var total: int = 0

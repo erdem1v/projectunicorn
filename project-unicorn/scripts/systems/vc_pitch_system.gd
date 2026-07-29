@@ -621,7 +621,9 @@ static func _sorgu_metrics() -> Dictionary:
 static func _sorgu_team() -> Dictionary:
 	if GameState.unmanaged_major_scandal:
 		return {"key": "scandal", "vc_line": "\"Yönetemediğin bir skandal var. Ben neden bu ekibe para vereyim?\"", "mono": "Skandalı soracak. Sorduğunda gözünü kaçırma."}
-	if CharacterRegistry.count_engineers() == 0:
+	# Headcount lens, not capacity: a company whose only developer is on holiday has
+	# not become an engineer-less company, so this reads the unfiltered count.
+	if CharacterRegistry.count_developers() == 0:
 		return {"key": "no_engineers", "vc_line": "\"Tek mühendisin bile yok. Bu ürünü kim taşıyacak?\"", "mono": "Ekibin inceliğini görecek."}
 	if CharacterRegistry.get_employees().is_empty():
 		return {"key": "solo", "vc_line": "\"Tek başınasın. Sen düşersen şirket de düşer. Bu riski nasıl kapatıyorsun?\"", "mono": "Tek-kurucu riskini soracak."}
@@ -708,7 +710,7 @@ static func _callback_met(cb: Dictionary) -> bool:
 	match String(cb.get("type", "")):
 		"mrr_growth": return GameState.mrr >= int(cb.get("target", 0))
 		"bugs_under": return int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0))) < int(cb.get("target", 0))
-		"first_engineer": return CharacterRegistry.count_engineers() >= 1
+		"first_engineer": return CharacterRegistry.count_developers() >= 1
 		"scandal_resolved": return not GameState.unmanaged_major_scandal
 		_: return false
 

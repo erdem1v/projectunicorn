@@ -94,9 +94,19 @@ func _input(event: InputEvent) -> void:
 			return
 		_debug_endgame_key(key.keycode)
 		return
-	if key.keycode != KEY_SPACE:
+	# Speed control: Space toggles pause, 1-4 pick a running speed off the ladder.
+	# Both share the two guards below. Note 1-4 are ALSO dialogue-choice keys inside
+	# MeetingScene / FrankPopup / TermSheetTable — Guard 2 is what keeps that
+	# unambiguous, since those only exist while a modal is mounted.
+	var speed_idx: int = -1
+	match key.keycode:
+		KEY_1, KEY_KP_1: speed_idx = 1
+		KEY_2, KEY_KP_2: speed_idx = 2
+		KEY_3, KEY_KP_3: speed_idx = 3
+		KEY_4, KEY_KP_4: speed_idx = 4
+	if speed_idx < 0 and key.keycode != KEY_SPACE:
 		return
-	# Guard 1: a text field is focused → let Space type a space (e.g. product name).
+	# Guard 1: a text field is focused → let the key type its character (e.g. product name).
 	var focus: Control = get_viewport().gui_get_focus_owner()
 	if focus is LineEdit or focus is TextEdit:
 		return
@@ -106,8 +116,11 @@ func _input(event: InputEvent) -> void:
 	if modal_layer != null and modal_layer.get_child_count() > 0:
 		return
 	get_viewport().set_input_as_handled()
-	# Toggle: pause if running, else resume the last running speed. Routes through
-	# the same signal the TopBar buttons use, so the TopBar stays in sync.
+	# Routes through the same signal the TopBar buttons use, so the TopBar stays in sync.
+	if speed_idx >= 0:
+		EventBus.speed_change_requested.emit(speed_idx)
+		return
+	# Space toggle: pause if running, else resume the last running speed.
 	var target: int = 0 if TimeManager.current_speed > 0 else TimeManager.last_running_speed
 	EventBus.speed_change_requested.emit(target)
 

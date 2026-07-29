@@ -63,6 +63,7 @@ func _initialize() -> void:
 	_lbl(th, &"TabLabel", sans_reg, T.SIZE_TAB_LABEL, T.INK_DIM)
 	_lbl(th, &"BadgeLabel", mono_reg, T.SIZE_BADGE, T.INK)
 	_lbl(th, &"ChoiceLabel", sans_reg, 14, T.INK)
+	_lbl(th, &"ChoiceLabelStrong", sans_sb, 14, T.INK)
 	_lbl(th, &"FeedDay", mono_reg, T.SIZE_CAPTION, T.INK_MUTED)
 	_lbl(th, &"ChromeSerif", serif_reg, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"ChromeLabel", mono_label, T.SIZE_STAT_LABEL, T.CREAM_DIM)
@@ -101,6 +102,7 @@ func _initialize() -> void:
 	_lbl(th, &"NewsCaptionSerif", serif_it, 11, T.INK_DIM)    # engraving caption (italic, dim)
 	_lbl(th, &"NewsMeta", mono_label, 9, T.INK_DIM)           # date / edition caps (mono uppercase)
 	_lbl(th, &"NewsBodySerif", serif_reg, 13, T.INK)          # ledger-line / notice body prose
+	_lbl(th, &"NewsStatSerif", serif_sb, 44, T.INK)           # stat-row display figures ("$4.0M")
 
 	# ---- Panel variations ----
 	_panel(th, &"TopBarPanel", "Panel", _box(T.BG_TOPBAR, 0, Color.TRANSPARENT, 0, [0,0,0,1], T.SEPARATOR))
@@ -125,6 +127,11 @@ func _initialize() -> void:
 	_panel(th, &"CardPanelTight", "PanelContainer", _box(T.CARD_BG, 1, T.CARD_BORDER, 4, [1,1,1,1], T.CARD_BORDER, 10, 8))
 	_panel(th, &"CardAttention", "PanelContainer", _box(T.CARD_ATTENTION_BG, 1, Color(0.80, 0.62, 0.58, 1), 4, [1,1,1,1], Color(0.80, 0.62, 0.58, 1), 12, 10))
 	_panel(th, &"ChoiceCard", "PanelContainer", _box(T.CARD_BG, 1, T.CARD_BORDER, 4, [1,1,1,1], T.CARD_BORDER, 12, 8))
+	# ChoiceCardHover/Mentor: event-modal choice states — amber border on hover
+	# (dialogue_choice_card swap precedent) and the MENTOR TAVSİYESİ endorsed card.
+	# Mentor stays shadow-free: the tab chip must overlap its top edge cleanly.
+	_panel(th, &"ChoiceCardHover", "PanelContainer", _box(T.CARD_BG, 1, T.ACCENT, 4, [1,1,1,1], T.ACCENT, 12, 8))
+	_panel(th, &"ChoiceCardMentor", "PanelContainer", _box(T.CARD_BG, 1, T.ACCENT, 4, [1,1,1,1], T.ACCENT, 12, 8))
 	_panel(th, &"HeaderBand", "PanelContainer", _box(T.ACCENT, 0, Color.TRANSPARENT, 4, [1,1,1,1], Color.TRANSPARENT, 14, 8))
 
 	# ---- Cinematic dialogue register (Spec 5): DARK panels ----
@@ -154,6 +161,13 @@ func _initialize() -> void:
 	paper_sb.shadow_size = 12
 	paper_sb.shadow_offset = Vector2(0, 5)
 	_panel(th, &"PaperPanel", "PanelContainer", paper_sb)
+	# PaperModal: the event-modal decision card — same paper register as PaperPanel
+	# but modal-scaled inner margins (780×660 card, not the full ending sheet).
+	var paper_modal_sb := _box(T.PAPER_BG, 0, Color.TRANSPARENT, 2, [0, 2, 0, 2], T.PAPER_EDGE, 28, 22)
+	paper_modal_sb.shadow_color = T.PAPER_SHADOW
+	paper_modal_sb.shadow_size = 12
+	paper_modal_sb.shadow_offset = Vector2(0, 5)
+	_panel(th, &"PaperModal", "PanelContainer", paper_modal_sb)
 	# RailPanel: the dark meta rail — same charcoal as the screen, a left hairline divides it.
 	_panel(th, &"RailPanel", "PanelContainer", _box(T.DIALOGUE_BG, 0, Color.TRANSPARENT, 0, [1, 0, 0, 0], T.SEPARATOR, 20, 20))
 	# RailCard: Coming-Soon Tier2/Tier3 cards on the rail (a step lighter, hairline border).
@@ -182,13 +196,20 @@ func _initialize() -> void:
 	th.set_color("font_pressed_color", &"DialogueGhost", T.CREAM_DIM)
 
 	# ---- RichTextLabel variations ----
+	# NOTE: Godot 4's RichTextLabel theme items are "italics_font"/"bold_italics_font"
+	# (with the s) — the old "italic_font" keys were silently ignored and *italic*
+	# spans fell back to the engine-default sans at 16px.
 	th.set_type_variation(&"BodyRich", &"RichTextLabel")
 	th.set_font("normal_font", &"BodyRich", serif_reg)
 	th.set_font("bold_font", &"BodyRich", serif_sb)
-	th.set_font("italic_font", &"BodyRich", serif_it)
-	th.set_font("bold_italic_font", &"BodyRich", serif_sb)
+	th.set_font("italics_font", &"BodyRich", serif_it)
+	th.set_font("bold_italics_font", &"BodyRich", serif_sb)
 	th.set_font("mono_font", &"BodyRich", mono_reg)
 	th.set_font_size("normal_font_size", &"BodyRich", 14)
+	th.set_font_size("bold_font_size", &"BodyRich", 14)
+	th.set_font_size("italics_font_size", &"BodyRich", 14)
+	th.set_font_size("bold_italics_font_size", &"BodyRich", 14)
+	th.set_font_size("mono_font_size", &"BodyRich", 14)
 	th.set_color("default_color", &"BodyRich", T.INK)
 
 	th.set_type_variation(&"NewsRich", &"RichTextLabel")

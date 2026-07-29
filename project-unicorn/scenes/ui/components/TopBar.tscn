@@ -303,6 +303,12 @@ layout_mode = 2
 theme_type_variation = &"SpeedButton"
 text = "2x"
 
+[node name="Speed3Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
+custom_minimum_size = Vector2(28, 22)
+layout_mode = 2
+theme_type_variation = &"SpeedButton"
+text = "3x"
+
 [node name="Speed4Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(28, 22)
 layout_mode = 2

@@ -61,7 +61,7 @@ Project Unicorn is a narrative-strategy startup simulator. The player founds a t
 **Design pillars (derived from GDD + TECH_SPEC §1):**
 
 - **Narrative-strategy.** Tone and depth comparable to CK3, Frostpunk, Disco Elysium — transposed to a 2020s tech startup setting.
-- **Text-heavy, event-driven.** No real-time action. Continuous time at adjustable speed (pause/1x/2x/4x).
+- **Text-heavy, event-driven.** No real-time action. Continuous time at adjustable speed (pause/1x/2x/3x/4x).
 - **Progressive disclosure.** UI defaults to summary; detail surfaces on hover/click. Strategy depth accessible, not overwhelming.
 - **Founder modes yok.** Tek bir oyuncu durumu var. Founder olarak şirketi yönetiyor; atadığı kişiler arka planda iş yapıyor, oyuncu trigger ettiği action'ları başlatıyor, gelen event'lere cevap veriyor. Arka planda sürekli işleyen sistemler.
 - **Replay value.** 3 origins × 3 subgenres × trait combinations.
@@ -250,8 +250,8 @@ Total target: ~3-4 minutes from launch to first in-game day.
 
 #### Zaman akışı
 
-- **1x = 1 saat / saniye.** 1 in-game gün = 24 saniye.
-- **Hızlar:** pause / 1x / 2x / 4x.
+- **Tempo = gün başına gerçek saniye.** 1x = 12 sn/gün. Bir gün her hızda aynı 24 saatlik tik; yalnız tiklerin gerçek zamandaki akış hızı değişir (oyun-zamanı davranışı hızdan bağımsız).
+- **Hızlar:** pause / 1x / 2x / 3x / 4x → 12 / 6 / 3 / 1.5 sn/gün. Tek ev: `TimeManager.SECONDS_PER_DAY` (bkz. TECH_SPEC §8.1).
 - **MVP arc:** ~150 in-game gün ≈ 60-90 dk gerçek gameplay.
 
 #### Founder modes yok
