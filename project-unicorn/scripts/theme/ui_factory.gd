@@ -121,6 +121,38 @@ static func make_card(content: Control = null, tight: bool = false, attention: b
 		card.add_child(content)
 	return card
 
+## Initials-in-a-circle avatar placeholder (portrait art is a separate track).
+## The `Avatar` variation's corner radius is fixed at 18, so this reads as a circle up to
+## ~36px and as a rounded square beyond it — keep diameter at or below 36.
+## Lifted from the private copies in event_modal.gd and creation_flow.gd; those two still
+## carry their own and are filed as a follow-up rather than refactored here.
+static func make_avatar(initials_text: String, diameter: int = 24) -> Panel:
+	var avatar := Panel.new()
+	avatar.theme_type_variation = &"Avatar"
+	avatar.custom_minimum_size = Vector2(diameter, diameter)
+	avatar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	avatar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var initial := Label.new()
+	initial.theme_type_variation = &"AvatarInitial"
+	initial.text = initials_text
+	initial.set_anchors_preset(Control.PRESET_FULL_RECT)
+	initial.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	initial.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	initial.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	avatar.add_child(initial)
+	return avatar
+
+## Up to two initials from a full name. Uppercases through UiTokens.tr_upper — raw to_upper()
+## turns "i" into "I" instead of "İ", which is visibly wrong on Turkish names (İpek → Ipek).
+static func initials_of(full_name: String) -> String:
+	var out: String = ""
+	for word in full_name.split(" ", false):
+		if String(word).length() > 0:
+			out += UiTokens.tr_upper(String(word).substr(0, 1))
+		if out.length() >= 2:
+			break
+	return out if out != "" else "?"
+
 ## Drawn dot (replaces the ● glyph). A Panel with a circular StyleBoxFlat.
 static func make_dot(color: Color, diameter: int = 6) -> Panel:
 	var dot := Panel.new()

@@ -50,9 +50,16 @@ static func daily_tick() -> void:
 	HRMoraleSystem.tick_positive_events()
 
 	if OS.is_debug_build():
-		var employees: Array[Character] = CharacterRegistry.get_employees()
-		var on_leave: int = employees.size() - CharacterRegistry.get_active_employees().size()
-		print("[HRSystem] Daily tick — %d employees (%d izinde)" % [employees.size(), on_leave])
+		print("[HRSystem] Daily tick — %d employees (%d izinde)" % [
+			CharacterRegistry.count_employees(), CharacterRegistry.count_on_leave(),
+		])
+
+	# LAST LINE, and it has to be: EventBus.day_advanced fires inside GameState.advance_day(),
+	# which TimeManager calls BEFORE dispatching the daily ticks — so a screen that repaints on
+	# day_advanced reads HR state from BEFORE the seven steps above ran (search strip a day
+	# behind, arriving files invisible until tomorrow). This is the same trap
+	# build_progress_changed was added to fix for the build tracker. The HR tab listens here.
+	EventBus.hr_day_processed.emit()
 
 
 # --- Run reset (called from GameState.initialize_run, after the flags clear) ---
@@ -76,10 +83,49 @@ static func badges_for(emp: Character) -> Array[String]:
 static func attention_count() -> int:
 	# What the left-rail HR badge counts: people who need looking at, plus a waiting
 	# candidate file. Kept here so the UI reads one number from one place.
+	var n: int = attention_people_count()
+	if HRSearchSystem.has_files_ready():
+		n += 1
+	return n
+
+
+static func attention_people_count() -> int:
+	# PEOPLE only — the Ekip header's "N dikkat gerektiriyor". Deliberately not the same number
+	# as attention_count() above: the rail badge also counts a waiting candidate file, but on
+	# the Ekip page those files have their own strip, so counting them again in a sentence about
+	# the team would be a lie. Splitting it here rather than subtracting in the UI keeps the
+	# rail's verified behaviour untouched.
 	var n: int = 0
 	for emp in CharacterRegistry.get_employees():
 		if not HRMoraleSystem.badges_for(emp).is_empty():
 			n += 1
-	if HRSearchSystem.has_files_ready():
-		n += 1
 	return n
+
+
+static func tenure_line(emp: Character) -> String:
+	# "Ocak'tan beri · 6. ay" — the employee card's tenure line, composed here because it needs
+	# GameState.day and this file is already the HR read surface. Three branches, because
+	# hire_day is stamped to the day AFTER the hire (a hire starts tomorrow at full performance):
+	#   hire_day > today  → the player just paid; they have not started yet
+	#   hire_day == today → their first day
+	#   otherwise         → month name + ordinal month of tenure
+	# The ordinal counts CALENDAR months (GameState.months_elapsed_since), not 30-day blocks, so
+	# it cannot contradict the month name printed beside it.
+	# WORKING TR.
+	if emp == null:
+		return ""
+	if emp.hire_day > GameState.day:
+		return "Yarın başlıyor"
+	if emp.hire_day == GameState.day:
+		return "Bugün başladı"
+	var months: int = GameState.months_elapsed_since(emp.hire_day)
+	return "%s'tan beri · %d. ay" % [GameState.month_name_tr(emp.hire_day), months + 1]
+
+
+static func leave_line(emp: Character) -> String:
+	# "İZİNDE · 4 gün kaldı" for the Kare 7 muted card. Empty for anyone at work, so the caller
+	# can render it unconditionally and get nothing when there is nothing to say.
+	# WORKING TR.
+	if emp == null or emp.status != HRConstants.STATUS_ON_LEAVE:
+		return ""
+	return "İzinde · %d gün kaldı" % HRMoraleSystem.days_until_return(emp)

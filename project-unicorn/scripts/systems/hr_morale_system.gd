@@ -352,6 +352,16 @@ static func is_capacity_overloaded() -> bool:
 	return bool(GameState.get_flag("needs_engineer", false))
 
 
+static func days_until_return(emp: Character) -> int:
+	# Remaining leave days for an on-leave employee, for the "İZİNDE · N gün kaldı" line.
+	# Character.leave_until_day is the raw absolute day; the subtraction lives here because
+	# leave is this file's domain and a card must not do arithmetic on engine state.
+	# 0 for anyone at work, and never negative (tick_leave_returns brings them back at 0).
+	if emp == null or emp.status != HRConstants.STATUS_ON_LEAVE:
+		return 0
+	return maxi(emp.leave_until_day - GameState.day, 0)
+
+
 static func has_pending_departure(character_id: String) -> bool:
 	# A resignation event for this person is queued and unresolved. HRActions refuses every
 	# card action while it is: the person is already leaving, and acting behind an open modal

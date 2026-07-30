@@ -109,6 +109,17 @@ static func days_waiting() -> int:
 	return maxi(0, GameState.day - int(GameState.hr_search.get(KEY_STARTED_DAY, GameState.day)))
 
 
+static func current_role() -> String:
+	# What the in-flight search is looking for. The waiting strip has to name the role and the
+	# band, and without these two the only way to get them was to reach into GameState.hr_search
+	# from the UI — i.e. past the system that owns that dictionary. "" when idle.
+	return String(GameState.hr_search.get(KEY_ROLE, ""))
+
+
+static func current_band() -> String:
+	return String(GameState.hr_search.get(KEY_BAND, ""))
+
+
 # --- Commissioning a search ---
 
 static func start_search(role_id: String, band_id: String) -> bool:

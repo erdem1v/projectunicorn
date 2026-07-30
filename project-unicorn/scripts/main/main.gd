@@ -137,6 +137,14 @@ func _ready() -> void:
 		if ending_shot != "":
 			_run_ending_shot(ending_shot)
 			return
+		var hr_shot: String = _hr_shot_requested()
+		if hr_shot != "":
+			_run_hr_shot(hr_shot)
+			return
+		var finance_shot: String = _finance_shot_requested()
+		if finance_shot != "":
+			_run_finance_shot(finance_shot)
+			return
 
 	if OS.is_debug_build() and _skip_onboarding_requested():
 		_skip_to_shell()
@@ -377,6 +385,225 @@ func _ending_shot_requested() -> String:
 		if s.begins_with("--ending-shot="):
 			return s.trim_prefix("--ending-shot=")
 	return ""
+
+
+func _hr_shot_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--hr-shot="):
+			return s.trim_prefix("--hr-shot=")
+	return ""
+
+
+func _finance_shot_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--finance-shot="):
+			return s.trim_prefix("--finance-shot=")
+	return ""
+
+
+# Debug: --finance-shot=<ozet|artida|uyari> (windowed). Finance Tab v1 doğrulaması: gerçek
+# seam'lerle ~40 gün oynanmış durum kurar (nakit ring buffer + işlem ledger'ı gerçek
+# akıştan dolar), GameShell'i Finans sekmesinde 1920×1080 açar, screenshot alır, çıkar.
+#   ozet   — negatif net: çatallı projeksiyonlar, son işlemlerde imza + retainer karışık
+#   artida — MRR > burn: yeşil ARTIDA durumu, kırmızı erime projeksiyonu YOK
+#   uyari  — runway < 6 ay: krem mentor kartı + ERTELE görünür
+func _run_finance_shot(kind: String) -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	_seed_hr_roster()
+	var start_cash: int = 150000 if kind == "uyari" else 300000
+	GameState.set_cash(start_cash)
+	# Fixture nakdi gün-1 örneğinin üstüne yazılır — tek-yazar kuralının TEK debug istisnası
+	# (initialize_run origin nakdiyle örnekledi; eğri fixture nakdinden başlamalı).
+	GameState.cash_history = [{"day": GameState.day, "cash": GameState.cash}]
+	# artida: 3 imza × 20K = 60K MRR → günlük gelir 2000 > kadro burn'ü (~1500) → net pozitif
+	var sign_mrr: int = 20000 if kind == "artida" else 1100
+	for i in range(40):
+		GameState.advance_day()
+		if i == 10 or (kind == "artida" and (i == 12 or i == 14)):
+			var pr: Prospect = PitchSystem.spawn_prospect("mid", "find")
+			SalesSystem.add_b2b_customer(pr, sign_mrr, 70)   # pozitif işlem satırı + MRR
+			ProspectRegistry.remove(pr.id)
+		if i == 20 and kind != "artida":
+			# Peşin arayış ücreti → negatif işlem satırı ("İşe alım")
+			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, "mid")
+		if i == 30 and kind == "ozet":
+			var pr2: Prospect = PitchSystem.spawn_prospect("small", "find")
+			SalesSystem.add_b2b_customer(pr2, 800, 72)
+			ProspectRegistry.remove(pr2.id)
+		FinanceSystem.daily_tick()
+	# Açık pipeline kalsın: iyimser projeksiyon gerçek prospect'lerden beslenir.
+	PitchSystem.spawn_prospect("small", "find")
+	PitchSystem.spawn_prospect("mid", "find")
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	EventBus.tab_changed.emit("finance")
+	await get_tree().process_frame
+	await get_tree().create_timer(0.4).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://finance_shot_%s.png" % kind
+	img.save_png(path)
+	print("[FinanceShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
+
+
+# Debug: --hr-shot=<ekip|atlas|dosyalar|zam|mesai> (windowed). Seeds a roster across all
+# three departments (one on leave, one burning out, one fresh hire), mounts GameShell on the
+# HR tab at 1920×1080, drives it to the requested surface, screenshots to user://, and quits.
+# Mirrors the --product-shot harness. Debug builds only.
+func _run_hr_shot(kind: String) -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	GameState.day = 64
+	if kind != "bos":
+		_seed_hr_roster()
+		# Beş kişilik bir kadro $10K başlangıç nakdiyle tutarsız (runway anında 0 okur ve
+		# işe alım önizlemesi anlamsızlaşır). Seri-A öncesi bir şirketin kasası + burn'ün
+		# maaşları görmesi için tek finans tick'i: üst bar ile önizlemeler aynı gerçeği okur.
+		GameState.set_cash(240000)
+		FinanceSystem.daily_tick()
+	match kind:
+		"dosyalar":
+			# Files ON THE TABLE: start a search, then run the arrival window's worth of
+			# HR ticks so the generator's real output is what renders.
+			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, "mid")
+			for _i in HRConstants.SEARCH_ARRIVAL_MAX_DAYS:
+				GameState.day += 1
+				HRSearchSystem.daily_tick()
+		"atlas":
+			pass   # temiz modal: rol/bant seçimi
+		"mesai":
+			pass   # panel departman başlığından açılır, aşağıda
+		"gider":
+			# §5 doğrulaması: bir arayış başlat (peşin ücret) ve bir mesai bloğu çalıştır,
+			# sonra Finans sekmesine geç — gider dökümünde hem "İşe alım" tek seferlik
+			# satırı hem de "Ek mesai" kalemi görünmeli.
+			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, "mid")
+			HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 7)
+			HROvertimeSystem.daily_tick()
+			FinanceSystem.daily_tick()
+			# daily_tick ledger'ı temizler (yeni gün), o yüzden tek seferlik gider tick'ten
+			# SONRA yeniden işleniyor — oyunda da böyle olur: harcama gün içinde yapılır.
+			FinanceSystem.apply_one_time_cost(
+				HRConstants.SEARCH_RETAINER, HRConstants.COST_LABEL_HIRE)
+		_:
+			# "ekip": bekleyen bir arayış da görünsün (Kare 3 şeridi).
+			HRSearchSystem.start_search(HRConstants.ROLE_DESIGNER, "senior")
+			GameState.day += 1
+			HRSearchSystem.daily_tick()
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	# "gider" Finans sekmesinde çekilir (gider dökümü orada yaşıyor), diğerleri HR'da.
+	EventBus.tab_changed.emit("finance" if kind == "gider" else "hr")
+	if kind == "gider":
+		await get_tree().process_frame
+		await get_tree().create_timer(0.4).timeout
+		var gimg: Image = get_viewport().get_texture().get_image()
+		gimg.save_png("user://hr_shot_gider.png")
+		print("[HRShot] saved %s" % ProjectSettings.globalize_path("user://hr_shot_gider.png"))
+		get_tree().quit()
+		return
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var cv: Node = _shell.find_child("CenterViewport", true, false)
+	var tab: Node = cv._current_tab_node
+	match kind:
+		"atlas", "dosyalar":
+			tab._open_atlas()
+		"zam":
+			# Kartı aç, sonra GERÇEK butona bas: popover'ın çapası buton olmalı, yoksa
+			# konumlandırma kodu (sağa yerleş / taşarsa sola dön / kenara kelepçele)
+			# doğrulanmamış kalır.
+			var target: Character = CharacterRegistry.get_employees()[0]
+			tab._expanded_id = target.id
+			tab._rebuild()
+			await get_tree().process_frame
+			await get_tree().process_frame
+			_press_button_labelled(tab, "ZAM YAP")
+		"mesai":
+			_press_button_labelled(tab, "EK MESAİ")
+		_:
+			pass
+	await get_tree().process_frame
+	await get_tree().create_timer(0.5).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://hr_shot_%s.png" % kind
+	img.save_png(path)
+	print("[HRShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
+
+
+func _press_button_labelled(root: Node, label: String) -> bool:
+	# Ağaçta metni eşleşen İLK etkin Button'a basar. Shot harness'ı gerçek etkileşimi
+	# taklit etsin diye: doğrudan _open_* çağırmak popover'ın çapa/konum kodunu atlar.
+	if root is Button and not (root as Button).disabled \
+			and String((root as Button).text).begins_with(label):
+		(root as Button).pressed.emit()
+		return true
+	for child in root.get_children():
+		if _press_button_labelled(child, label):
+			return true
+	return false
+
+
+func _seed_hr_roster() -> void:
+	# Üç departmanın hepsinde kadro: Ürün Geliştirme'nin üç alt bölümü dolu, Satış'ta bir
+	# kişi, Müşteri BOŞ (empty-state satırı da görünsün). Biri izinde, biri tükeniyor,
+	# biri de bugün başlamış (YENİ etiketi).
+	# Huylar TRAIT_MIN_POSITIVE..MAX kuralına uymak ZORUNDA (registry _validate_shape'i
+	# reddeder): en az 1, en çok 2 pozitif, en çok 1 negatif.
+	var seeds: Array = [
+		{"name": "Elif Demir", "role": HRConstants.ROLE_PRODUCT_MANAGER, "salary": 9800,
+			"axes": {"expertise": 7, "pace": 5, "rapport": 6}, "morale": 72,
+			"traits": ["natural_leader"]},
+		{"name": "Deniz Arslan", "role": HRConstants.ROLE_DESIGNER, "salary": 7400,
+			"axes": {"expertise": 6, "pace": 7, "rapport": 5}, "morale": 38,
+			"traits": ["pressure_proof", "works_alone"]},
+		{"name": "Mert Yıldız", "role": HRConstants.ROLE_DEVELOPER, "salary": 11200,
+			"axes": {"expertise": 8, "pace": 6, "rapport": 4}, "morale": 61,
+			"traits": ["wont_jump_ship"]},
+		{"name": "Selin Kaya", "role": HRConstants.ROLE_TESTER, "salary": 6900,
+			"axes": {"expertise": 5, "pace": 6, "rapport": 7}, "morale": 22,
+			"traits": ["mentors_peers"]},
+		{"name": "Burak Şahin", "role": HRConstants.ROLE_SALES_REP, "salary": 8300,
+			"axes": {"expertise": 6, "pace": 5, "rapport": 8}, "morale": 55,
+			"traits": ["warms_up_fast"]},
+	]
+	var ordinal: int = 0
+	for seed_data in seeds:
+		var emp := Character.new()
+		emp.id = "char_emp_shot_%d" % ordinal
+		emp.character_name = String(seed_data["name"])
+		emp.role = String(seed_data["role"])
+		emp.category = "employee"
+		emp.monthly_salary = int(seed_data["salary"])
+		emp.morale = int(seed_data["morale"])
+		emp.role_stats = (seed_data["axes"] as Dictionary).duplicate()
+		emp.traits.assign(seed_data["traits"] as Array)
+		emp.status = HRConstants.STATUS_ACTIVE
+		CharacterRegistry.add(emp)
+		# add() bugünü damgalar; kıdem satırının üç dalını da göstermek için geriye alınıyor.
+		emp.hire_day = maxi(1, GameState.day - (ordinal * 26))
+		ordinal += 1
+	# Biri izinde (Kare 7): seam üzerinden, alan doğrudan yazılmadan.
+	var on_leave: Character = CharacterRegistry.get_character("char_emp_shot_2")
+	if on_leave != null:
+		HRMoraleSystem.send_on_leave(on_leave, HRConstants.LEAVE_DAYS, false)
+	# Biri bugün başlamış (YENİ etiketi).
+	var fresh: Character = CharacterRegistry.get_character("char_emp_shot_4")
+	if fresh != null:
+		fresh.hire_day = GameState.day
 
 
 # Debug: --ending-shot=<key> (windowed). Seeds a representative Run Ledger, mounts the

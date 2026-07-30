@@ -248,16 +248,21 @@ func _on_customer_changed(_id: String) -> void:
 
 
 func _refresh_captable() -> void:
+	# Language Integrity: bu iki satır ekranda yaşayan ham İngilizce ihlaliydi. Türkçede
+	# çoğul için ayrı bir sözcük gerekmiyor ("2 çalışan"), o yüzden noun seçimi de düştü.
+	# NOT: bu panelin GERİ KALANI hâlâ İngilizce — .tscn statikleri (MENTOR, TOP CUSTOMERS,
+	# ACTIVE RIVALS, CAP TABLE, "$0 raised", "Investors · 0%", "Option pool · 0%") ve bu
+	# dosyadaki :134 "%d of %d", :148 "%d seats", :224 "UPCOMING — DAY %d TO %d". Onlar ODA
+	# rework task'ına yazılı yükümlülük olarak devredildi (task 3 planı, Follow-ups).
 	var founder_pct: int = int(round(GameState.get_founder_equity() * 100.0))
-	captable_founder_label.text = "Founder · %d%%" % founder_pct
+	captable_founder_label.text = "Kurucu · %%%d" % founder_pct
 
 	var count: int = 0
 	for emp in CharacterRegistry.get_employees():
 		if emp.equity_pct > 0.0:
 			count += 1
 	if count > 0:
-		var noun: String = "employee" if count == 1 else "employees"
-		captable_employees_equity_label.text = "%d %s with equity" % [count, noun]
+		captable_employees_equity_label.text = "%d çalışanın hissesi var" % count
 		captable_employees_equity_row.visible = true
 	else:
 		captable_employees_equity_row.visible = false

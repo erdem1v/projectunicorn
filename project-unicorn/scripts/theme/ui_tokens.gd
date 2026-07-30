@@ -261,13 +261,18 @@ static func tr_upper(s: String) -> String:
 
 
 ## Net-runway display (Package 5): revenue-aware runway. INF (net_burn ≤ 0) → the
-## "default alive" status word; finite → whole months. Uses TranslationServer because
-## statics can't call tr(). The single home for the months-vs-status + localization
-## decision, feeding every net-runway surface (TopBar, Month-End summary).
+## "default alive" status word ("Artıda"); finite → whole months. Uses TranslationServer
+## because statics can't call tr(). The single home for the months-vs-status +
+## localization decision, feeding every net-runway surface (TopBar, Finance tab,
+## HR previews, Month-End summary) — one edit here flips them all.
+## `positive` lets a caller color the status green; `note` is the hover/sub-line
+## explaining why no month figure is shown (never render infinity or a fake number).
 static func net_runway_parts(months: float) -> Dictionary:
 	if months == INF:
-		return {"value": TranslationServer.translate("RUNWAY_PROFITABLE"), "unit": ""}
-	return {"value": str(int(round(months))), "unit": TranslationServer.translate("RUNWAY_UNIT_MONTHS")}
+		return {"value": TranslationServer.translate("RUNWAY_PROFITABLE"), "unit": "",
+				"positive": true, "note": TranslationServer.translate("RUNWAY_PROFITABLE_NOTE")}
+	return {"value": str(int(round(months))), "unit": TranslationServer.translate("RUNWAY_UNIT_MONTHS"),
+			"positive": false, "note": ""}
 
 
 static func net_runway_text(months: float) -> String:

@@ -29,6 +29,10 @@ const SATISFACTION_BUG_GATE := 5         # bug_count > → satisfaction drifts d
 const TRACTION_MRR_TARGET := 5000
 const TRACTION_CUSTOMER_TARGET := 8
 
+# WORKING: optimistic close-rate weight on the open pipeline — feeds only the Finance
+# tab's "satış hedefi tutarsa" projection (FinanceSystem.get_optimistic_daily_net).
+const PIPELINE_WEIGHT := 0.5
+
 # --- Hourly audience flow (Economy Model v2 — bidirectional, MRR derives from it) ---
 # Audience is the live B2C user base; it changes every in-game hour. quality/brand/
 # (positive) reputation grow it; bugs / low reputation / price hikes erode it. Per-hour
@@ -232,6 +236,23 @@ static func add_b2c_audience(n: int) -> void:
 	_mrr_bridge()
 
 
+# --- Pipeline read seam (Finance Tab v1 optimistic projection) ---
+
+static func pipeline_optimistic_mrr() -> int:
+	# WORKING: Σ over open prospects of the value-band midpoint × PIPELINE_WEIGHT.
+	# Reads the same value_band numbers the Sales tab shows; archetype-band fallback
+	# for prospects spawned without a band. Pitch-odds weighting deliberately NOT
+	# modeled — one flat optimism constant until the curve session.
+	var total: float = 0.0
+	for prospect in ProspectRegistry.get_all():
+		var mid: float = float(prospect.value_band_min + prospect.value_band_max) / 2.0
+		if mid <= 0.0:
+			var band: Dictionary = CustomerArchetypes.mrr_band(prospect.archetype)
+			mid = float(int(band.low) + int(band.high)) / 2.0
+		total += mid * PIPELINE_WEIGHT
+	return int(round(total))
+
+
 # --- B2B customer creation (called by PitchSystem on SIGNED) ---
 
 static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int) -> Customer:
@@ -265,6 +286,10 @@ static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int) ->
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
 	GameState.run_customers_signed += 1  # run counter seam (Spec 3 §3) — sole B2B signing path
+	# Finance transactions log: signing lands as a positive entry, label = company name
+	# (passes through one_time_label_display unchanged — only registered ids map).
+	# WORKING: amount shown = the deal's monthly MRR (the number the player negotiated).
+	FinanceSystem.record_transaction(c.company_name, c.mrr)
 	_mrr_bridge()  # reflect the signed deal immediately (canonical bridge)
 	return c
 

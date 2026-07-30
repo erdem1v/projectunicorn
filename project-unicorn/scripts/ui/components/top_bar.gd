@@ -135,12 +135,21 @@ func _refresh_net() -> void:
 	net_value_label.add_theme_color_override("font_color", UiTokens.delta_color_bright(net))
 
 func _on_runway_changed(months: float) -> void:
-	# Net runway (Package 5): profitable (net_burn ≤ 0) → status word ("Kârlı"), unit hidden;
+	# Net runway (Package 5): profitable (net_burn ≤ 0) → status word ("Artıda"), unit hidden;
 	# else whole months. All formatting/localization lives in UiTokens.net_runway_parts.
 	var p: Dictionary = UiTokens.net_runway_parts(months)
 	runway_value_label.text = String(p.value)
 	runway_unit_label.text = String(p.unit)
 	runway_unit_label.visible = String(p.unit) != ""
+	# ARTIDA convention (Finance Tab v1): status green + the why as a hover note.
+	if bool(p.get("positive", false)):
+		runway_value_label.add_theme_color_override("font_color", UiTokens.POSITIVE_BRIGHT)
+		runway_value_label.tooltip_text = String(p.get("note", ""))
+		runway_value_label.mouse_filter = Control.MOUSE_FILTER_STOP  # Labels default IGNORE; tooltip needs hover
+	else:
+		runway_value_label.remove_theme_color_override("font_color")
+		runway_value_label.tooltip_text = ""
+		runway_value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func _on_language_changed(_locale: String) -> void:

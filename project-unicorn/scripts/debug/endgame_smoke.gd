@@ -1646,7 +1646,7 @@ static func _case_runway_net_status() -> String:
 	# Net runway: profitable → localized status word (no unit); finite → months + "ay".
 	TranslationServer.set_locale("tr")
 	var alive: Dictionary = UiTokens.net_runway_parts(INF)
-	if String(alive.value) != "Kârlı" or String(alive.unit) != "":
+	if String(alive.value) != "Artıda" or String(alive.unit) != "":
 		return "profitable(tr) wrong: '%s' / '%s'" % [alive.value, alive.unit]
 	TranslationServer.set_locale("en")
 	if String(UiTokens.net_runway_parts(INF).value) != "Default Alive":
@@ -1684,7 +1684,7 @@ static func _case_locale_switch() -> String:
 	if TranslationServer.translate("RUNWAY_GROSS_LABEL") != "Gross Burn Runway":
 		return "en RUNWAY_GROSS_LABEL: '%s'" % TranslationServer.translate("RUNWAY_GROSS_LABEL")
 	TranslationServer.set_locale("tr")
-	if TranslationServer.translate("RUNWAY_PROFITABLE") != "Kârlı":
+	if TranslationServer.translate("RUNWAY_PROFITABLE") != "Artıda":
 		return "tr RUNWAY_PROFITABLE: '%s'" % TranslationServer.translate("RUNWAY_PROFITABLE")
 	if TranslationServer.translate("RUNWAY_GROSS_LABEL") != "Brüt Runway":
 		return "tr RUNWAY_GROSS_LABEL: '%s'" % TranslationServer.translate("RUNWAY_GROSS_LABEL")

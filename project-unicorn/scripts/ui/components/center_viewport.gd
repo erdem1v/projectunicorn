@@ -7,6 +7,7 @@ extends Panel
 
 const TAB_SCENES := {
 	"product": preload("res://scenes/tabs/ProductTab.tscn"),
+	"hr": preload("res://scenes/tabs/HRTab.tscn"),   # Ekip sayfası (task 3)
 	"sales": preload("res://scenes/tabs/SalesTab.tscn"),
 	"finance": preload("res://scenes/tabs/FinanceTab.tscn"),  # Spec 6 — hosts the Yatırım sub-page
 }

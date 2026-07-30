@@ -365,7 +365,26 @@ func _build_rail(vs: Dictionary) -> PanelContainer:
 	hard.text = tr("ENDING_HARD_MODE")
 	hard.disabled = true                       # visible-LOCKED telegraph, no mechanic
 	hard.tooltip_text = tr("ENDING_SOON_TOOLTIP")
-	actions.add_child(hard)
+	# Kilit ikonu: mockup parite kalemi. Button.icon DENENDİ ve yanlıştı — kaynak SVG 24px
+	# ve beyaz stroke'lu, expand_icon = true onu butonun tamamına yayıp yazının arkasına
+	# kocaman bir beyaz kutu bastı. Bu dosyanın tier kartlarında kullandığı reçete
+	# (12px TextureRect + CREAM_DIM) butonun YANINDA duruyor: ölçü ve renk kontrolü bizde.
+	if ResourceLoader.exists(LOCK_ICON):
+		var hard_row := HBoxContainer.new()
+		hard_row.add_theme_constant_override("separation", 5)
+		var hard_lock := TextureRect.new()
+		hard_lock.texture = load(LOCK_ICON)
+		hard_lock.custom_minimum_size = Vector2(12, 12)
+		hard_lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		hard_lock.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hard_lock.modulate = UiTokens.CREAM_DIM
+		hard_lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hard_lock.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		hard_row.add_child(hard_lock)
+		hard_row.add_child(hard)
+		actions.add_child(hard_row)
+	else:
+		actions.add_child(hard)
 
 	var share := Button.new()
 	share.theme_type_variation = &"DialogueGhost"

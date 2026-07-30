@@ -121,6 +121,43 @@ func count_active_developers() -> int:
 	return n
 
 
+func get_in_department(dept_id: String) -> Array[Character]:
+	# Roster of a main department, ON-LEAVE INCLUDED — the DISPLAY lens, sibling of
+	# count_active_in_department() above, which is the WORK lens and excludes leave.
+	# The distinction is load-bearing for the Ekip page: a department whose only member is on
+	# holiday must render that person's card, not an "Henüz kimse yok" empty row.
+	# Insertion-ordered (hire order) because _characters is a Dictionary — deterministic.
+	var out: Array[Character] = []
+	for c in get_employees():
+		if HRConstants.department_of(c.role) == dept_id:
+			out.append(c)
+	return out
+
+
+func get_in_section(section_id: String) -> Array[Character]:
+	# Same display lens, one level down (Tasarım / Geliştirme / Test). Single-level departments
+	# have no sections, so this is never called for Satış or Müşteri.
+	var out: Array[Character] = []
+	for c in get_employees():
+		if HRConstants.section_of(c.role) == section_id:
+			out.append(c)
+	return out
+
+
+func count_employees() -> int:
+	return get_employees().size()
+
+
+func count_on_leave() -> int:
+	# The Ekip header's "N izinde". Was previously computed inline inside a debug print in
+	# HRSystem.daily_tick, i.e. not available to anything that had to render it.
+	var n: int = 0
+	for c in get_employees():
+		if c.status == HRConstants.STATUS_ON_LEAVE:
+			n += 1
+	return n
+
+
 func get_mentor() -> Character:
 	for c in _characters.values():
 		if c.category == "mentor":

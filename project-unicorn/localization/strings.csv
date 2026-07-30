@@ -1,5 +1,6 @@
 keys,tr,en
-RUNWAY_PROFITABLE,Kârlı,Default Alive
+RUNWAY_PROFITABLE,Artıda,Default Alive
+RUNWAY_PROFITABLE_NOTE,"Gider gelirin altında; kasa erimiyor. Sayaç, günlük net eksiye dönerse işler.","Expenses run below revenue; the treasury holds. The clock starts only if daily net turns negative."
 RUNWAY_UNIT_MONTHS,ay,mo
 RUNWAY_GROSS_LABEL,Brüt Runway,Gross Burn Runway
 SETTINGS_LANGUAGE,Dil,Language

@@ -39,6 +39,13 @@ signal language_changed(locale: String)
 signal character_added(character_id: String)
 signal character_removed(character_id: String)
 signal morale_changed(character_id: String, new_morale: int)
+# Emitted at the END of HRSystem.daily_tick, once all seven HR steps have settled — the HR
+# tab's day-boundary repaint hook. Exactly the same reason build_progress_changed exists:
+# day_advanced fires inside GameState.advance_day(), which TimeManager calls BEFORE the daily
+# ticks dispatch, so a repaint on day_advanced would read PRE-tick HR state (Atlas strip one
+# day behind, arriving candidate files invisible until the next day). No payload — a repaint
+# hook, not a data channel; every number is still read from the owning system.
+signal hr_day_processed()
 
 # --- Customer signals (§13.2) ---
 signal customer_added(customer_id: String)

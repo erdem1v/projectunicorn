@@ -14,6 +14,11 @@ const MONTH_ABBR := ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Se
 const DOW_ABBR := ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 # TR month display names (Month-End Summary header; localization pass externalizes later)
 const MONTH_NAMES_TR := ["OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK"]
+# Same months in Title Case, for prose that is not a header ("Ocak'tan beri"). Kept as a
+# separate literal table on purpose: .to_lower()/.capitalize() on the UPPERCASE table above
+# mangles the dotted İ, so deriving one from the other is not safe (EndingsCopy §36-37).
+# Read through month_name_tr(); EndingsCopy.MONTHS_TR_TITLE is the older private twin.
+const MONTH_NAMES_TR_TITLE := ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
 
 # --- Run identity ---
 var company_name: String = "Unicorn Inc."
@@ -56,6 +61,20 @@ var unmanaged_major_scandal: bool = false  # RESERVED — day-180 fork input (§
 var cash_went_negative: bool = false   # latched in set_cash; day-180 fork input
 var brand_low_since_day: int = -1      # brand-collapse 30-day window anchor (§4.4)
 var net_history_90: Array[int] = []    # daily net ring buffer — fork wants CUMULATIVE 90-day sum > 0
+
+# --- Finance surface state (Finance Tab v1 — serialized set; SaveManager plugs in later) ---
+# cash_history: daily {day, cash} samples for the cash curve. Single writer:
+# FinanceSystem.daily_tick via append_cash_sample (slot 5, once per day). Intra-day
+# one-time costs are deliberately NOT re-sampled — the single-writer rule holds;
+# they land in the next day's point and, itemised, in `transactions`.
+const CASH_HISTORY_CAP := 200          # run max 180 days + headroom; oldest dropped
+var cash_history: Array = []           # [{day: int, cash: int}]
+# transactions: persistent signed money-event log (negative = spend, positive = income).
+# Sole append point: FinanceSystem.record_transaction. Labels stored RAW — display maps
+# through FinanceSystem.one_time_label_display, so registered ids render TR and free-form
+# labels (customer names) pass through unchanged.
+const TRANSACTIONS_CAP := 50           # oldest dropped beyond this
+var transactions: Array = []           # [{day: int, label: String, amount: int}]
 
 # --- Month-End Summary state (Spec 3; serialized-set extension of §7.7) ---
 # MonthLedger: month-start snapshot for the summary's deltas. Shape:
@@ -243,6 +262,18 @@ func runway_months_for(cash_value: int, daily_net: int) -> float:
 		return INF
 	return float(cash_value) / float(-daily_net) / float(DAYS_PER_MONTH)
 
+func append_cash_sample(sample_cash: int) -> void:
+	# Finance Tab v1 curve feed. Called EXACTLY once per day by FinanceSystem.daily_tick
+	# (before its set_cash, so the synchronous cash_changed repaint reads a fresh buffer).
+	cash_history.append({"day": day, "cash": sample_cash})
+	while cash_history.size() > CASH_HISTORY_CAP:
+		cash_history.pop_front()
+
+
+func get_cash_history() -> Array:
+	return cash_history.duplicate()  # readonly snapshot (get_burn_breakdown contract)
+
+
 func get_founder_equity() -> float:
 	# Derived from CharacterRegistry employee equity_pct values. Matches the
 	# get_runway_months pattern — single source of truth, recompute on demand.
@@ -282,6 +313,26 @@ func get_display_date(with_year: bool = false) -> String:
 	if with_year:
 		return "%s, %s %d, %d" % [DOW_ABBR[d.weekday], MONTH_ABBR[d.month - 1], d.day, d.year]
 	return "%s, %s %d" % [DOW_ABBR[d.weekday], MONTH_ABBR[d.month - 1], d.day]
+
+
+func month_name_tr(for_day: int = -1) -> String:
+	# Day N → "Ocak" (Title Case). THE Turkish month-name seam for player-facing prose;
+	# get_display_date() above is English and cannot serve it. Reads its own Title-Case
+	# table because Godot's case ops MANGLE the dotted İ — .capitalize() on MONTH_NAMES_TR
+	# would print "Nisan" as "Nisan" but "İstanbul"-class strings as "İstanbul"→"istanbul"
+	# (see EndingsCopy's note); a second literal table is the cheap, correct answer.
+	return MONTH_NAMES_TR_TITLE[int(get_date_dict(for_day).month) - 1]
+
+
+func months_elapsed_since(start_day: int) -> int:
+	# Whole CALENDAR months between start_day and today (0 on the same month), using
+	# get_date_dict — NOT the economy constant DAYS_PER_MONTH. The two disagree by design
+	# (real 28/30/31-day months vs a flat 30), so a tenure line that prints a month NAME
+	# must count with the same calendar that produced the name or the two contradict.
+	# Negative when start_day is in a later month (a hire whose first day has not arrived).
+	var a: Dictionary = get_date_dict(start_day)
+	var b: Dictionary = get_date_dict()
+	return (int(b.year) * 12 + int(b.month)) - (int(a.year) * 12 + int(a.month))
 
 func get_run_ledger() -> Dictionary:
 	# The newspaper ending screen's single read seam. Recompute-on-demand (like
@@ -381,6 +432,11 @@ func initialize_run(payload: Dictionary) -> void:
 	cash_went_negative = false
 	brand_low_since_day = -1
 	net_history_90 = []
+
+	# Finance surface state (Finance Tab v1). Day-1 point seeded here so the curve
+	# renders a valid single sample before the first daily tick.
+	cash_history = [{"day": 1, "cash": cash}]
+	transactions = []
 
 	# Month-End Summary + run counters reset (Spec 3; month_ledger snapshot
 	# happens at the END of this function — it needs the roster in place)

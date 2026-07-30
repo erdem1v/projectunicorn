@@ -118,6 +118,24 @@ const ROLE_AXIS_MEANING := {
 	"customer_rep": {"expertise": "Müşteri tutma", "pace": "Talep işleme temposu"},
 }
 
+# Which BUILD PHASE each role accelerates, in the phase vocabulary the player actually sees
+# on the build tracker (TASARIM / GELİŞTİRME / BETA). ROLE_AXIS_MEANING above could not serve
+# this: it speaks in SECTION vocabulary and never names BETA at all, so a player reading the
+# Test Uzmanı's file had no way to learn what that hire speeds up. Keyed to
+# ProductSystem.PHASE_CREW — iteration→TASARIM, development→GELİŞTİRME, bugfix→BETA — so the
+# copy cannot drift from the crew table without this comment being wrong too.
+# The Coupling task's UI obligation: "oyuncu 'yazılımcı aldım, tasarım hızlanmadı' şaşkınlığını
+# yaşamasın, bunu bilerek alsın."
+# WORKING TR (voice pass later).
+const ROLE_PHASE_HINT := {
+	"product_manager": "TASARIM fazına ikincil hız · ekibe deneyim bonusu",
+	"designer": "TASARIM fazını hızlandırır",
+	"developer": "GELİŞTİRME fazını hızlandırır",
+	"tester": "BETA'yı hızlandırır",
+	"sales_rep": "Aday bulma ve anlaşma kapamayı hızlandırır",
+	"customer_rep": "Müşteri taleplerini karşılar, kaybı yavaşlatır",
+}
+
 const DEPT_PRODUCT_DEV := "product_dev"
 const DEPT_SALES := "sales"
 const DEPT_CUSTOMER := "customer"
@@ -194,6 +212,26 @@ static func roles_in_department(dept_id: String) -> Array:
 		if String(ROLE_DEPARTMENT.get(role_id, "")) == dept_id:
 			out.append(role_id)
 	return out
+
+
+static func section_ids_in_department(dept_id: String) -> Array:
+	# Sub-section ids of a department, in CANON ORDER (Tasarım → Geliştirme → Test), deduped.
+	# The order is a design fact, not a UI preference — the Ekip page renders headers in it —
+	# so it lives here rather than being re-asserted by whatever draws the page.
+	# Empty for single-level departments (Satış, Müşteri), whose cards sit straight under the
+	# main header with no sub-header.
+	var out: Array = []
+	for role_id in roles_in_department(dept_id):
+		var section_id: String = String(ROLE_SECTION.get(role_id, ""))
+		if section_id != "" and not out.has(section_id):
+			out.append(section_id)
+	return out
+
+
+static func role_phase_hint(role_id: String) -> String:
+	# One line naming what this role accelerates. Empty for non-employee roles (kurucu/mentor
+	# have no build-phase contribution to advertise) — the caller renders nothing.
+	return String(ROLE_PHASE_HINT.get(role_id, ""))
 
 
 # ================================== Traits ===================================
@@ -489,7 +527,21 @@ const BADGE_LABELS := {
 	"FLIGHT_RISK": "Kaçma riski",
 	"BURNING_OUT": "Tükeniyor",
 	"OVERLOADED": "Aşırı yüklü",
+	"NEW": "Yeni",
 }
+# Worst-first severity, matching the order HRSystem.badges_for returns. Exposed so a card
+# list can sort "needs attention" rows to the top without re-deciding which badge is worse.
+const BADGE_SEVERITY := {
+	"FLIGHT_RISK": 3,
+	"BURNING_OUT": 2,
+	"OVERLOADED": 1,
+}
+
+# YENİ is INFORMATIONAL, not an attention badge — it must never enter badges_for(), because
+# that array is what attention_count() counts and what lights the left-rail badge. A fresh
+# hire is good news; it does not belong in the same channel as "this person is about to quit".
+const BADGE_NEW := "NEW"
+const NEW_HIRE_BADGE_DAYS := 3      # WORKING: kaç gün "Yeni" etiketi taşınır
 
 # Employee status (Character.status) — deliberately NOT attention_flag.
 const STATUS_ACTIVE := "active"
@@ -498,6 +550,19 @@ const STATUS_ON_LEAVE := "on_leave"
 
 static func badge_label(badge_id: String) -> String:
 	return String(BADGE_LABELS.get(badge_id, badge_id))
+
+
+static func badge_severity(badge_id: String) -> int:
+	# 0 for anything that is not an attention badge (including BADGE_NEW), so an
+	# informational tag can never out-rank a real warning in a sort.
+	return int(BADGE_SEVERITY.get(badge_id, 0))
+
+
+static func is_new_hire(hire_day: int, today: int) -> bool:
+	# Fresh-hire window. hire_day is stamped to the day AFTER the hire (HRSearchSystem: a hire
+	# starts the next day), so on the day the player pays, today < hire_day — hence the
+	# two-sided test rather than a plain subtraction.
+	return today <= hire_day + NEW_HIRE_BADGE_DAYS
 
 
 # ONE comparison home for the two thresholds. The design says "moral < 40" and "moral < 25"
@@ -617,6 +682,15 @@ static func leave_month_for(hire_month: int, hire_ordinal: int) -> int:
 	var span: int = 12 - LEAVE_MONTH_MIN_GAP
 	var offset: int = LEAVE_MONTH_MIN_GAP + (LEAVE_MONTH_STRIDE * maxi(hire_ordinal, 0)) % span
 	return ((hire_month - 1 + offset) % 12) + 1
+
+
+static func leave_month_label(month: int) -> String:
+	# Character.leave_month is a bare 1-12 int and preview_vacation passes it through raw, so
+	# every consumer would otherwise print a number where a month belongs. Delegates to the
+	# calendar's own Title-Case table rather than keeping a fourth copy of the month names.
+	if month < 1 or month > 12:
+		return ""
+	return String(GameState.MONTH_NAMES_TR_TITLE[month - 1])
 
 
 # ======================= Player actions (çalışan kartı) ======================
