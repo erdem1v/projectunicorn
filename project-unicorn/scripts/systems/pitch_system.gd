@@ -46,8 +46,16 @@ static var _last_band: String = ""
 
 static func spawn_prospect(archetype: String, source: String) -> Prospect:
 	var p := Prospect.new()
+	# The id counter is MONOTONIC (GameState.run_prospects_spawned), not the live pool size:
+	# ProspectRegistry.count() drops when a lead is signed or lost, so a same-day respawn
+	# rebuilt an id that already existed. ProspectRegistry.add then push_warning'd and DROPPED
+	# the lead while this function still returned it — the caller reports success and nothing
+	# is registered. Rare while spawning is pull-based; routine once a sales rep spawns daily.
+	# The content mixer `n` deliberately keeps reading count(): it selects sector/company/pain
+	# and is not required to be unique, and changing it would move every existing fixture.
 	var n: int = (GameState.day * 7 + ProspectRegistry.count() * 13)
-	p.id = "lead_%d_%d" % [GameState.day, ProspectRegistry.count()]
+	GameState.run_prospects_spawned += 1
+	p.id = "lead_%d_%d" % [GameState.day, GameState.run_prospects_spawned]
 	p.archetype = archetype
 	# E.2: draw the industry from the ACTIVE product's sector affinity (a vector-search
 	# product yields only tech/finance prospects; ops yields only construction/etc.), and

@@ -95,6 +95,11 @@ var month_highlight_priority: int = -1
 var run_customers_signed: int = 0      # SalesSystem.add_b2b_customer
 var run_customers_lost: int = 0        # churn_customer modifier, B2B branch
 var run_customers_expanded: int = 0    # B2BSalesSystem.expand (genuine seat/MRR upsell)
+# MONOTONIC, never decremented — it exists to make prospect ids unique, not to be read as a
+# statistic. PitchSystem.spawn_prospect used to build ids off ProspectRegistry.count(), which
+# is the LIVE pool size: removing a lead lowers it, so a same-day respawn collided and
+# ProspectRegistry.add silently dropped the new lead while spawn_prospect still returned it.
+var run_prospects_spawned: int = 0     # PitchSystem.spawn_prospect (id uniqueness only)
 var run_hires: int = 0                 # CharacterRegistry.add, category "employee"
 # B2B pitch customer-rep portrait rotation (sequential over the non-selected founder
 # portraits; read+written each meeting, so it's real run state, not a write-only counter).
@@ -445,6 +450,7 @@ func initialize_run(payload: Dictionary) -> void:
 	run_customers_signed = 0
 	run_customers_lost = 0
 	run_customers_expanded = 0
+	run_prospects_spawned = 0
 	b2b_rep_portrait_rotation_index = 0
 	b2b_last_rep_portrait = ""
 	run_hires = 0
