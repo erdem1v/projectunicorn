@@ -145,6 +145,10 @@ func _ready() -> void:
 		if finance_shot != "":
 			_run_finance_shot(finance_shot)
 			return
+		var font_spec: String = _font_spec_requested()
+		if font_spec != "":
+			_run_font_spec(font_spec)
+			return
 
 	if OS.is_debug_build() and _skip_onboarding_requested():
 		_skip_to_shell()
@@ -401,6 +405,48 @@ func _finance_shot_requested() -> String:
 		if s.begins_with("--finance-shot="):
 			return s.trim_prefix("--finance-shot=")
 	return ""
+
+
+func _font_spec_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--font-spec="):
+			return s.trim_prefix("--font-spec=")
+	return ""
+
+
+# Debug: --font-spec=<a|b|c|c-opsz> (windowed) — "Font Duruşması", the type specimen the
+# Theme Core task picks a family from. Renders IDENTICAL real-game content (gazete başlığı,
+# event modal, HR kartı, veri şeridi, Türkçe diakritik satırı, mikro boy satırı) in one
+# candidate font set at 1920×1080, screenshots, and quits.
+#   a       — current: Source Serif 4 / IBM Plex Sans / JetBrains Mono
+#   b       — literary: Spectral / Public Sans / IBM Plex Mono
+#   c       — warm: Fraunces / Inter / Space Mono (variable axes at family defaults)
+#   c-opsz  — same as c with the opsz axis pinned to each label's px size
+# Unlike every other shot flag this one seeds NO game state — the specimen is pure type. The
+# candidate TTFs live in user://font_spec/ (outside the repo) and are loaded at runtime, so
+# nothing is imported into the project. Throwaway harness; remove once Theme Core is verified.
+func _run_font_spec(set_id: String) -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	# load() not preload(): the normal boot path never touches the debug scene, and deleting
+	# the debug folder after the pick cannot break main.gd.
+	var spec: Control = load("res://scenes/debug/FontSpecimen.tscn").instantiate()
+	layer.add_child(spec)
+	if not spec.build(set_id):
+		get_tree().quit(1)
+		return
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().create_timer(0.35).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://font_spec_%s.png" % set_id
+	img.save_png(path)
+	print("[FontSpec] saved %s (%dx%d)" % [
+		ProjectSettings.globalize_path(path), img.get_width(), img.get_height()])
+	get_tree().quit()
 
 
 # Debug: --finance-shot=<ozet|artida|uyari> (windowed). Finance Tab v1 doğrulaması: gerçek
