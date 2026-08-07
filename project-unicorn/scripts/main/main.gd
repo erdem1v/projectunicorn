@@ -1741,6 +1741,14 @@ func _on_quickload_requested() -> void:
 # hiçbir yayın fırtınası gerekmiyor. Kayıt okuma, hiçbir şeye dokunmadan önce
 # doğrulanır: yarısı yıkılmış bir dünyada "dosya bozuk" demek en kötü sonuçtur.
 func _load_slot(slot_id: String) -> void:
+	# Çözülmemiş bir zorunlu karar varken yükleme YOK. Kaydet/Yükle modalından
+	# buraya zaten gelinemez (ESC menüsü olay modalı üstündeyken açılmıyor), ama
+	# F9 o kapıdan geçmiyor — tek bir tuş vuruşu, oyuncunun önündeki cevaplanmamış
+	# seçimi sessizce çöpe atardı. Kaydetmeyle AYNI kural (SaveManager.can_save):
+	# yarıda kalan karar taşınmaz.
+	if EventManager._active_event_id != "":
+		print("[Main] yükleme reddedildi: %s" % "SAVE_ERR_MODAL_OPEN")
+		return
 	var payload: Dictionary = SaveManager.read_slot(slot_id)
 	if not bool(payload.get("ok", false)):
 		push_warning("[Main] yükleme reddedildi (%s): %s" % [slot_id, payload.get("error_key", "")])
