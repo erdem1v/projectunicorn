@@ -158,7 +158,7 @@ func _refresh_customers() -> void:
 			var initial: Label = customer_rows[i].get_node("Avatar/Initial")
 			initial.text = UiTokens.tr_upper(c.company_name.substr(0, 1)) if c.company_name != "" else "?"
 			# Health dots: green placeholder until the customer-health system lands.
-			_paint_dot(customer_rows[i].get_node("HealthDot"), UiTokens.HEALTH_GREEN)
+			_paint_dot(customer_rows[i].get_node("HealthDot"), UiTokens.health_green())
 
 
 func _paint_dot(panel: Panel, color: Color) -> void:

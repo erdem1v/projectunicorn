@@ -126,7 +126,7 @@ func _make_origin_card(origin: Dictionary) -> PanelContainer:
 	else:
 		for chip in origin.get("chips", []):
 			var plus: bool = chip["kind"] == "plus"
-			var fg: Color = UiTokens.ACCENT if plus else UiTokens.NEGATIVE_BRIGHT
+			var fg: Color = UiTokens.ACCENT if plus else UiTokens.negative_bright()
 			chips.add_child(UiFactory.make_pill(tr(chip["key"]),
 				Color(fg.r, fg.g, fg.b, 0.12), fg))
 

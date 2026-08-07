@@ -22,6 +22,8 @@ const MONTH_SUMMARY_MODAL := preload("res://scenes/modals/MonthSummaryModal.tscn
 const MEETING_SCENE := preload("res://scenes/modals/MeetingScene.tscn")
 const FRANK_POPUP := preload("res://scenes/modals/FrankPopup.tscn")
 const TERM_TABLE_SCENE := preload("res://scenes/modals/TermSheetTableScene.tscn")
+const SYSTEM_MENU_MODAL := preload("res://scenes/modals/SystemMenuModal.tscn")
+const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
 
 var _flow: Node = null
 var _shell: Node = null
@@ -43,6 +45,11 @@ var _pre_confirm_speed: int = -1     # Speed to restore when the confirm closes
 # _pre_event_speed because the player can open settings at any speed (incl.
 # already-paused) and we must return to exactly that.
 var _pre_settings_speed: int = -1
+# ESC sistem menüsü + Kaydet/Yükle modalı (SaveManager task'ı). Aynı
+# yakala-ve-geri-yükle disiplini: menü hangi hızda açıldıysa oraya döner.
+var _system_menu: Node = null        # Currently-open ESC system menu, or null
+var _save_load_modal: Node = null    # Currently-open save/load modal, or null
+var _pre_system_speed: int = -1
 var _shell_mounted: bool = false
 var _event_signals_wired: bool = false
 # Speed at the moment the first event in a chain pauses the game. When the
@@ -184,12 +191,72 @@ func _ready() -> void:
 		if oda_shot != "":
 			_run_oda_shot(oda_shot)
 			return
+		if "--display-check" in OS.get_cmdline_args():
+			_run_display_check()
+			return
 
 	if OS.is_debug_build() and _skip_onboarding_requested():
 		_skip_to_shell()
 		return
 
 	_mount_flow()
+
+
+# Debug: --display-check (windowed) applies every display setting through the REAL
+# DisplaySettings seam and prints what DisplayServer actually reports back, then quits.
+# The screenshot harnesses cannot cover this ground — they own the window on purpose,
+# so DisplaySettings.is_inert() switches itself off for them. The flag is deliberately
+# NOT spelled "-shot"/"audit"/"smoke"/"spec", which are exactly the substrings the
+# inert guard and SaveManager's harness sniffer match on.
+# Asserting against DisplayServer rather than against our own setting is the whole
+# point: it is the difference between "we wrote 1600×900 somewhere" and "the window is
+# 1600×900".
+func _run_display_check() -> void:
+	print("DISPLAY_CHECK_BEGIN")
+	print("inert=%s (must be false or nothing below is applied)" % str(DisplaySettings.is_inert()))
+
+	# Snapshot and restore: these are the PERSISTING setters, so the check writes to
+	# the player's settings.json. Driving apply_*() instead would be a weaker test that
+	# also silently passes — apply_resolution gates on the STORED mode, so an applier-only
+	# check leaves the store saying "borderless" and every resize is correctly refused.
+	var prev_mode: String = DisplaySettings.get_window_mode()
+	var prev_res: Vector2i = DisplaySettings.get_resolution()
+	var prev_vsync: bool = DisplaySettings.get_vsync()
+
+	for mode_id in [DisplaySettings.MODE_FULLSCREEN, DisplaySettings.MODE_BORDERLESS,
+			DisplaySettings.MODE_WINDOWED]:
+		DisplaySettings.set_window_mode(mode_id)
+		await get_tree().process_frame
+		await get_tree().create_timer(0.25).timeout
+		print("MODE|%s|reported=%d|borderless_flag=%s|size=%s|res_row_editable=%s" % [
+			mode_id, DisplayServer.window_get_mode(),
+			str(DisplayServer.window_get_flag(DisplayServer.WINDOW_FLAG_BORDERLESS)),
+			str(DisplayServer.window_get_size()),
+			str(DisplaySettings.is_resolution_editable())])
+
+	# Resolution only means anything in windowed mode, which the loop above left us in.
+	for res in [Vector2i(1600, 900), Vector2i(1280, 720), Vector2i(1920, 1080)]:
+		DisplaySettings.set_resolution(res)
+		await get_tree().process_frame
+		await get_tree().create_timer(0.25).timeout
+		print("RES|requested=%s|actual=%s" % [str(res), str(DisplayServer.window_get_size())])
+
+	for on in [false, true]:
+		DisplaySettings.set_vsync(on)
+		await get_tree().process_frame
+		print("VSYNC|requested=%s|reported=%d" % [str(on), DisplayServer.window_get_vsync_mode()])
+
+	for step in DisplaySettings.UI_SCALE_STEPS:
+		print("SCALE|%d%%|allowed=%s|clamped=%d%%" % [
+			int(round(step * 100.0)), str(DisplaySettings.is_step_allowed(step)),
+			int(round(DisplaySettings.clamp_step(step) * 100.0))])
+
+	DisplaySettings.set_window_mode(prev_mode)
+	DisplaySettings.set_resolution(prev_res)
+	DisplaySettings.set_vsync(prev_vsync)
+	print("restored mode=%s res=%s vsync=%s" % [prev_mode, str(prev_res), str(prev_vsync)])
+	print("DISPLAY_CHECK_END")
+	get_tree().quit()
 
 
 func _skip_onboarding_requested() -> bool:
@@ -312,7 +379,7 @@ func _b2b_shot_requested() -> String:
 func _run_b2b_shot(kind: String) -> void:
 	# Mount one B2B Sales modal into a CanvasLayer, render a couple frames, screenshot.
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
@@ -375,7 +442,7 @@ func _run_event_shot(event_id: String) -> void:
 	# Mirrors _run_b2b_shot; loads via EventManager.debug_build_event_from_file
 	# so the ev_debug_* fixtures (skipped from the live pool) stay reachable.
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	var ev: GameEvent = EventManager.debug_build_event_from_file(
 		"res://data/events/reactive/%s.json" % event_id)
@@ -400,7 +467,7 @@ func _run_event_shot(event_id: String) -> void:
 
 func _run_sales_shot() -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.day = 95
 	GameState.set_flag("mvp_shipped", true)
@@ -490,7 +557,7 @@ func _font_spec_requested() -> String:
 # nothing is imported into the project. Throwaway harness; remove once Theme Core is verified.
 func _run_font_spec(set_id: String) -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	# load() not preload(): the normal boot path never touches the debug scene, and deleting
@@ -535,6 +602,58 @@ func _seed_run_reproducible() -> void:
 	GameState.initialize_run(_debug_payload())
 	GameState.run_seed = 424242
 	seed(GameState.run_seed)
+
+
+# Her shot harness'ının ikinci ortak satırı. Ham `get_window().size = ...` ARTIK
+# YETMİYOR: Settings task'ıyla birlikte varsayılan pencere modu KENARLIKSIZ oldu ve
+# kenarlıksız/tam-ekran bir pencerede boyut ataması sessizce yutulur — 15 harness da
+# ekranın gerçek çözünürlüğünde kadraj alır, tüm PNG baseline'ları kayar. Önce
+# pencereli moda düşürüp sonra boyutu vermek bunu kapatır.
+# Headless'ta DisplayServer no-op'tur; çağrı zararsızdır, koşul eklemeye gerek yok.
+func _shot_window(size: Vector2i) -> void:
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	var win_size: Vector2i = _shot_size_override(size)
+	get_window().size = win_size
+	# Ölçek doğrulaması (--shot-scale). 15 runner'ın hepsi 1920×1080'e sabitlenmiş
+	# olduğu için ölçek matrisi başka türlü ÖLÇÜLEMEZ: %75 yalnız 1440p ve üstünde
+	# yasal, 1080p'de kapıya takılır — yani sabit pencerede çekilen bir "%75 shot"
+	# aslında %100 olurdu ve hiçbir şey kanıtlamazdı. Kapının KENDİSİNİ çalıştırıyoruz
+	# (clamp_step), atlamıyoruz: ölçek yasadışıysa shot da tıpkı oyun gibi yukarı kırpar.
+	var step: float = _shot_scale_override()
+	if step > 0.0:
+		var legal: float = DisplaySettings.clamp_step(step, win_size)
+		# GECİKTİRİLMİŞ uygulama, ve bu ŞART. Pencere yeniden boyutlanması bir sonraki
+		# kareye kadar yürürlüğe girmiyor; content_scale_factor'ü hemen burada yazarsak
+		# viewport ESKİ boyuta göre hesaplanır ve mantıksal görünüm hiç küçülmez —
+		# sonuç, 1920'lik tasarımın 1.5x büyütülüp KIRPILMASI olur (TopBar'ın iki ucu
+		# birden kesilir). Gerçek oyunda bu tuzak yok: DisplaySettings.apply_ui_scale
+		# zaten yerleşmiş bir pencereye yazıyor. Runner'lar yakalamadan önce ≥0.35s
+		# bekliyor, yani 0.15s buraya rahat sığıyor.
+		get_tree().create_timer(0.15).timeout.connect(
+			func() -> void: get_window().content_scale_factor = legal)
+		print("[Shot] pencere %dx%d · ölçek istendi %d%% → uygulandı %d%%" % [
+			win_size.x, win_size.y, int(round(step * 100.0)), int(round(legal * 100.0))])
+
+
+## --shot-size=2560x1440 → shot penceresini büyütür (varsayılan: runner'ın verdiği boy).
+func _shot_size_override(fallback: Vector2i) -> Vector2i:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--shot-size="):
+			var parts: PackedStringArray = s.trim_prefix("--shot-size=").split("x")
+			if parts.size() == 2 and parts[0].is_valid_int() and parts[1].is_valid_int():
+				return Vector2i(int(parts[0]), int(parts[1]))
+			push_warning("[Shot] --shot-size bozuk (beklenen GENIŞLIKxYÜKSEKLIK): %s" % s)
+	return fallback
+
+
+## --shot-scale=0.75 → arayüz ölçeği adımı. 0.0 = dokunma.
+func _shot_scale_override() -> float:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--shot-scale="):
+			return String(s.trim_prefix("--shot-scale=")).to_float()
+	return 0.0
 
 
 func _tab_shot_requested() -> String:
@@ -585,7 +704,7 @@ func _oda_shot_requested() -> String:
 # edilmiyor) — Settings bayrağına yazmayız, Erdem'in gerçek dosyası kirlenmez.
 func _run_oda_shot(kind: String) -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	# D3 durum fixture'ları: market1 = ürün piyasada değil (pay kartı YOK);
 	# market2 = çıktı ama MRR 0 (tek yönlendirme satırı). Diğerleri ortak yüzey
 	# seed'i (shipped + 3 müşteri → durum-3 tablosu).
@@ -695,7 +814,7 @@ func _seed_theme_surface() -> void:
 # after-set'idir, Tema Çekirdeği baseline'ı değil.
 func _run_tab_shot(tab_id: String) -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_theme_surface()
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
@@ -711,13 +830,14 @@ func _run_tab_shot(tab_id: String) -> void:
 	get_tree().quit()
 
 
-# Debug: --modal-shot=<confirm|settings|month> (windowed). Modal katmanını kadraja alır.
+# Debug: --modal-shot=<confirm|confirm3|settings|month|system|saveload> (windowed).
+# Modal katmanını kadraja alır.
 # Her biri GERÇEK mount yolundan geçer (EventBus sinyali → main.gd handler'ı), böylece
 # fixture ile canlı davranış ayrışamaz. `confirm` ayrıca ConfirmModal.tscn'in 4 ölü
 # font-rengi override'ına ulaşır (süpürme batch 1'in kanıtı).
 func _run_modal_shot(kind: String) -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_theme_surface()
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
@@ -736,6 +856,10 @@ func _run_modal_shot(kind: String) -> void:
 		EventBus.settings_requested.connect(_on_settings_requested)
 	if not EventBus.month_ended.is_connected(_on_month_ended):
 		EventBus.month_ended.connect(_on_month_ended)
+	if not EventBus.system_menu_requested.is_connected(_on_system_menu_requested):
+		EventBus.system_menu_requested.connect(_on_system_menu_requested)
+	if not EventBus.save_load_requested.is_connected(_on_save_load_requested):
+		EventBus.save_load_requested.connect(_on_save_load_requested)
 	match kind:
 		"confirm":
 			EventBus.confirm_requested.emit({
@@ -744,10 +868,27 @@ func _run_modal_shot(kind: String) -> void:
 				"confirm_text": "İPTAL ET",
 				"cancel_text": "VAZGEÇ",
 			})
+		"confirm3":
+			# Üç butonlu hâl (SaveManager task'ı): panel genişlemesinin kanıtı. Aynı
+			# gerçek yoldan geçer — alt_text varlığı butonu açar, yokluğu gizli tutar.
+			EventBus.confirm_requested.emit({
+				"title": tr("SYS_QUIT_TITLE"),
+				"body": tr("SYS_QUIT_BODY"),
+				"confirm_text": tr("SYS_QUIT_SAVE"),
+				"alt_text": tr("SYS_QUIT_DISCARD"),
+				"cancel_text": tr("SYS_CANCEL"),
+			})
 		"settings":
 			EventBus.settings_requested.emit()
 		"month":
 			MonthSummarySystem.debug_force_summary(false)
+		"system":
+			EventBus.system_menu_requested.emit()
+		"saveload":
+			# Önce gerçek bir kayıt yaz, sonra YÜKLE modunda aç — boş liste yerine
+			# gerçek bir slot satırı (meta biçimi + aksiyon butonları) kadraja girsin.
+			SaveManager.quicksave()
+			EventBus.save_load_requested.emit("load")
 		_:
 			push_error("[ThemeShot] unknown --modal-shot kind: %s" % kind)
 			get_tree().quit(1)
@@ -766,7 +907,7 @@ func _run_modal_shot(kind: String) -> void:
 # OnboardingFlow.tscn:108'deki ham `font_size = 18`e ulaşır.
 func _run_onboard_shot(step: int) -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_mount_flow()
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -790,7 +931,7 @@ func _run_onboard_shot(step: int) -> void:
 # süpürmenin avladığı şey tam olarak odur.
 func _run_theme_audit(tab_id: String) -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_theme_surface()
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
@@ -812,7 +953,7 @@ func _run_theme_audit(tab_id: String) -> void:
 # basılır (PROBE_BEGIN/END), piksel ile çözümlenmiş değer birbirini doğrular.
 func _run_probe_shot() -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	var probe: Control = (load("res://scenes/debug/ThemeProbe.tscn") as PackedScene).instantiate()
 	add_child(probe)
 	await get_tree().process_frame
@@ -886,7 +1027,7 @@ func _audit_color(c: Color) -> String:
 #   uyari  — runway < 6 ay: krem mentor kartı + ERTELE görünür
 func _run_finance_shot(kind: String) -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
@@ -936,7 +1077,7 @@ func _run_finance_shot(kind: String) -> void:
 # Mirrors the --product-shot harness. Debug builds only.
 func _run_hr_shot(kind: String) -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.day = 64
 	if kind != "bos":
@@ -1091,7 +1232,7 @@ func _seed_hr_roster() -> void:
 # variant). Mirrors the --b2b-shot / --product-shot harness.
 func _run_ending_shot(key: String) -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.company_name = "PromptPilot"
 	GameState.founder_name = "Deniz"
@@ -1186,7 +1327,7 @@ func _run_ending_shot(key: String) -> void:
 # Rev3 view at 1920×1080, screenshots to user://, and quits.
 func _run_product_shot(kind: String) -> void:
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	var founder_id: String = CharacterRegistry.get_founder().id
 	match kind:
@@ -1283,7 +1424,7 @@ func _run_pitch_shot() -> void:
 	# Mount GameShell, enter a B2B pitch (MeetingScene via B2BPitchMeeting), screenshot the
 	# opening beat: room art + rep portrait + dialogue + choices, NO conviction/stat strip.
 	get_tree().paused = false
-	get_window().size = Vector2i(1920, 1080)
+	_shot_window(Vector2i(1920, 1080))
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.founder_portrait = "founder_01"
 	GameState.set_flag("mvp_shipped", true)
@@ -1349,17 +1490,34 @@ func _swap_to_shell_and_modal() -> void:
 		_flow.queue_free()
 		_flow = null
 
+	await _mount_shell()
+
+	var modal_layer: CanvasLayer = _shell.get_node_or_null("ModalLayer") if _shell != null else null
+	if modal_layer == null:
+		return   # _mount_shell already reported it
+
+	_modal = MENTOR_MODAL.instantiate()
+	_modal.dismissed.connect(_on_modal_dismissed)
+	modal_layer.add_child(_modal)
+
+
+# Instances GameShell and wires the event pipeline. Split out of
+# _swap_to_shell_and_modal because a save LOAD remounts the world WITHOUT the
+# mentor intro — the intro belongs to a new run, not to a restored one.
+# Every shell child paints from GameState in its own _ready(), so this is the
+# "repaint the world" seam: restore state first, mount second.
+func _mount_shell() -> void:
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
 	_shell_mounted = true
 
 	# One frame so TopBar/OdaView finish their initial paint from
-	# GameState before the modal mounts on top.
+	# GameState before anything mounts on top.
 	await get_tree().process_frame
 
 	var modal_layer: CanvasLayer = _shell.get_node_or_null("ModalLayer")
 	if modal_layer == null:
-		push_error("[Main] GameShell/ModalLayer not found — mentor modal cannot mount")
+		push_error("[Main] GameShell/ModalLayer not found — modal pipeline cannot wire")
 		return
 
 	# Wire event pipeline signals now that ModalLayer exists. Done once.
@@ -1375,6 +1533,11 @@ func _swap_to_shell_and_modal() -> void:
 		EventBus.frank_popup_requested.connect(_on_frank_popup_requested)
 		EventBus.term_table_requested.connect(_on_term_table_requested)
 		EventBus.sheet_granted.connect(_on_sheet_granted_prompt)
+		# SaveManager task'ı: ESC menüsü, Kaydet/Yükle modalı, F5/F9.
+		EventBus.system_menu_requested.connect(_on_system_menu_requested)
+		EventBus.save_load_requested.connect(_on_save_load_requested)
+		EventBus.quicksave_requested.connect(_on_quicksave_requested)
+		EventBus.quickload_requested.connect(_on_quickload_requested)
 		_event_signals_wired = true
 
 	_modal = MENTOR_MODAL.instantiate()
@@ -1482,6 +1645,12 @@ func _on_confirm_requested(config: Dictionary) -> void:
 	var on_confirm: Callable = config.get("on_confirm", Callable())
 	if on_confirm.is_valid():
 		_confirm_modal.confirmed.connect(on_confirm)
+	# İSTEĞE BAĞLI üçüncü yol (SaveManager task'ı): config'de alt_text yoksa buton
+	# gizli kalır ve bu bağlantı hiç kurulmaz — mevcut yedi çağıran etkilenmedi.
+	# İlk kullanıcı: "Kaydedilmemiş ilerleme var" → Kaydet ve çık / Çık / Vazgeç.
+	var on_alt: Callable = config.get("on_alt", Callable())
+	if on_alt.is_valid():
+		_confirm_modal.alt_selected.connect(on_alt)
 	_confirm_modal.dismissed.connect(_on_confirm_dismissed)
 	modal_layer.add_child(_confirm_modal)
 	_confirm_modal.populate(config)   # add_child SONRASI — @onready ref'ler ancak o zaman dolu (EventModal deseni)
@@ -1494,6 +1663,100 @@ func _on_confirm_dismissed() -> void:
 		var restore: int = _pre_confirm_speed if _pre_confirm_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_confirm_speed = -1
+
+
+# --- ESC sistem menüsü (SaveManager task'ı §4) ---
+# game_shell yalnız ModalLayer VE PanelLayer boşken system_menu_requested emit eder,
+# yani buraya geldiğimizde üstte hiçbir şey yok. Zorunlu karar zorunlu kalır: olay
+# modalı açıkken ESC bu menüye hiç ulaşmaz.
+
+func _on_system_menu_requested() -> void:
+	if _system_menu != null:
+		return  # already open
+	var modal_layer: CanvasLayer = _shell.get_node_or_null("ModalLayer") if _shell != null else null
+	if modal_layer == null:
+		push_error("[Main] GameShell/ModalLayer missing — system menu can't mount")
+		return
+	_pre_system_speed = TimeManager.current_speed
+	EventBus.speed_change_requested.emit(0)
+	_system_menu = SYSTEM_MENU_MODAL.instantiate()
+	_system_menu.dismissed.connect(_on_system_menu_dismissed)
+	modal_layer.add_child(_system_menu)
+
+
+func _on_system_menu_dismissed() -> void:
+	_system_menu = null
+	if not EventManager.has_pending():
+		var restore: int = _pre_system_speed if _pre_system_speed >= 0 else TimeManager.last_running_speed
+		EventBus.speed_change_requested.emit(restore)
+	_pre_system_speed = -1
+
+
+# --- Kaydet / Yükle modalı ---
+# Sistem menüsünün ÜSTÜNE yığılır (ModalLayer'da add_child sırası = z sırası) ve ESC
+# yalnız en üsttekini kapatır: _unhandled_input ağacı ters sırada gezdiği için en son
+# eklenen önce görür ve olayı tüketir. Kendi hız yakalaması YOK — altındaki menü zaten
+# oyunu duraklattı; ikinci bir _pre_*_speed o durum makinesini bozardı.
+
+func _on_save_load_requested(mode: String) -> void:
+	if _save_load_modal != null:
+		return
+	var modal_layer: CanvasLayer = _shell.get_node_or_null("ModalLayer") if _shell != null else null
+	if modal_layer == null:
+		push_error("[Main] GameShell/ModalLayer missing — save/load modal can't mount")
+		return
+	_save_load_modal = SAVE_LOAD_MODAL.instantiate()
+	_save_load_modal.dismissed.connect(_on_save_load_dismissed)
+	_save_load_modal.load_requested.connect(_load_slot)
+	modal_layer.add_child(_save_load_modal)
+	_save_load_modal.populate(mode)   # add_child SONRASI — @onready ref'ler ancak o zaman dolu
+
+
+func _on_save_load_dismissed() -> void:
+	_save_load_modal = null
+
+
+# --- F5 / F9 ---
+
+func _on_quicksave_requested() -> void:
+	if not _shell_mounted:
+		return
+	if not SaveManager.can_save():
+		print("[Main] hızlı kayıt reddedildi: %s" % SaveManager.cannot_save_reason_key())
+		return
+	if SaveManager.quicksave():
+		print("[Main] hızlı kayıt yazıldı")
+
+
+func _on_quickload_requested() -> void:
+	if not _shell_mounted:
+		return
+	_load_slot(SaveManager.QUICK_SLOT_ID)
+
+
+# --- Yükleme sırası: TEK yol (§5.3) ---
+# Sıralama tesadüf değil. initialize_run alanlara setter'lardan DEĞİL doğrudan yazar
+# ve gerekçesini kendi içinde yazıyor: "GameShell henüz instance edilmedi, dinleyici
+# yok." Shell'i ÖNCE yıkarak o varsayımı yükleme yolunda da doğru tutuyoruz — yani
+# hiçbir yayın fırtınası gerekmiyor. Kayıt okuma, hiçbir şeye dokunmadan önce
+# doğrulanır: yarısı yıkılmış bir dünyada "dosya bozuk" demek en kötü sonuçtur.
+func _load_slot(slot_id: String) -> void:
+	var payload: Dictionary = SaveManager.read_slot(slot_id)
+	if not bool(payload.get("ok", false)):
+		push_warning("[Main] yükleme reddedildi (%s): %s" % [slot_id, payload.get("error_key", "")])
+		return
+
+	_teardown_run_ui()
+	# Shell queue_free() ERTELENMİŞTİR; bir kare beklemeden yeni shell'i mount edersek
+	# iki GameShell aynı anda ağaçta olur (iki _input, iki tab_changed dinleyicisi).
+	await get_tree().process_frame
+
+	if not SaveManager.apply_loaded_state(payload):
+		push_error("[Main] yükleme durumu uygulanamadı (%s)" % slot_id)
+		return
+
+	await _mount_shell()
+	EventBus.game_loaded.emit(slot_id)
 
 
 # --- Month summary modal lifecycle (Spec 3 / ENDGAME_DESIGN.md §1.1) ---
@@ -1789,8 +2052,33 @@ func _on_debug_onboarding_retrigger() -> void:
 	if _flow != null:
 		return  # onboarding already showing — nothing to re-trigger
 
-	# Tear down the shell (frees its ModalLayer children too) and drop all modal
-	# refs + speed trackers so nothing dangles into the next run.
+	_teardown_run_ui()
+
+	# TEK sıfırlama yolu. Burası eskiden üç kaydı elle temizliyordu (roster + olay
+	# hattı + söz defteri) ve müşteri/aday/rakip kayıtları AÇIKTA kalıyordu — audit
+	# S3-39'un "restart tarzı bir sıfırlama ölü koşuyu gösteren hiçbir şeyi
+	# bırakmamalı" bulgusu tam olarak buydu. SaveManager yükleme için zaten on yedi
+	# sahibin tamamını kapsayan bir sıfırlama kurdu; ikinci bir liste tutmak, iki
+	# listenin zamanla ayrışması demekti. Aynı çağrı, aynı sıra, iki giriş noktası.
+	SaveManager.reset_all_owners()
+
+	# Pause (mirrors _ready) and remount the flow from step 1. Completion routes
+	# through _on_flow_completed → _swap_to_shell_and_modal (re-entrant; event
+	# signal wiring is guarded by _event_signals_wired, so no double-connects).
+	EventBus.speed_change_requested.emit(0)
+	_mount_flow()
+
+
+# Frees the shell (which frees its ModalLayer/PanelLayer children with it) and drops
+# EVERY modal ref + speed tracker, so nothing from the outgoing run dangles into the
+# next one. Extracted from the Shift+F4 restart because a SAVE LOAD needs the exact
+# same teardown — one UI-teardown path, not two that drift apart.
+#
+# The cinematic-dialogue six are here for a reason (audit S3-40): they used to leak, so
+# run 2 started holding references to run 1's freed scenes and, worse, a _deal_prompt_vc
+# naming an investor at a company that no longer existed — enough to misroute the next
+# run's first meeting choice.
+func _teardown_run_ui() -> void:
 	if _shell != null:
 		_shell.queue_free()
 		_shell = null
@@ -1801,32 +2089,16 @@ func _on_debug_onboarding_retrigger() -> void:
 	_confirm_modal = null
 	_ending_modal = null
 	_month_modal = null
+	_system_menu = null
+	_save_load_modal = null
 	_pre_event_speed = -1
 	_pre_settings_speed = -1
 	_pre_confirm_speed = -1
 	_pre_month_speed = -1
-	# The cinematic-dialogue half of the same teardown. These six leaked: run 2 started
-	# holding references to run 1's freed scenes and, worse, a _deal_prompt_vc /
-	# _pending_deal_prompt_vc naming an investor from a company that no longer exists —
-	# enough to misroute the next run's first meeting choice.
+	_pre_system_speed = -1
 	_meeting_scene = null
 	_frank_popup = null
 	_term_table = null
 	_pre_dialogue_speed = -1
 	_deal_prompt_vc = ""
 	_pending_deal_prompt_vc = ""
-
-	# Roster reset so initialize_run re-provisions mentor + a fresh founder without
-	# the char_founder id-collision (add() would otherwise drop the new founder).
-	CharacterRegistry.reset()
-	# The event pipeline and the promise book are run state too, and neither is touched by
-	# initialize_run. Without these, run 2 inherits run 1's consumed one-shot beats, its
-	# queued scenes, and promises made to companies that no longer exist.
-	EventManager.reset()
-	PromiseRegistry.reset()
-
-	# Pause (mirrors _ready) and remount the flow from step 1. Completion routes
-	# through _on_flow_completed → _swap_to_shell_and_modal (re-entrant; event
-	# signal wiring is guarded by _event_signals_wired, so no double-connects).
-	EventBus.speed_change_requested.emit(0)
-	_mount_flow()

@@ -25,6 +25,34 @@ func _ready() -> void:
 		EventBus.rival_added.emit(r.id)
 
 
+func reset() -> void:
+	# Run-boundary reset (SaveManager.reset_all_owners). Rivals are the ONE registry that
+	# cannot simply be emptied: advance_all() mutates innovation/stability/experience every
+	# single day, so by day 140 the field is nothing like the catalog — but an empty field
+	# is not a valid state either. _rival_relative_quality benchmarks the player's audience
+	# churn against the same-type startup average, and with no rivals it returns the player's
+	# own quality, i.e. the competitive pressure that Calibration Law 1 calls load-bearing
+	# silently switches off. So this RE-SEEDS from the catalog rather than clearing.
+	#
+	# No rival_added emits: the shell is not in the tree at reset time (same doctrine as
+	# CharacterRegistry.reset()), and _ready already covered the one moment listeners exist.
+	_rivals.clear()
+	for r in RivalCatalog.build_all():
+		r.status = _status_for(r)
+		_rivals[r.id] = r
+
+
+func insert_raw(rival: Rival) -> void:
+	# SAVE RESTORE ONLY. OVERWRITES the catalog-seeded record of the same id rather than
+	# rejecting it, which is what makes restore an OVERLAY on top of reset(): a save written
+	# before a catalog entry existed still gets that rival at its catalog starting values
+	# instead of leaving a hole every share/league query would have to guard against.
+	if rival == null or rival.id == "":
+		push_warning("[RivalRegistry] insert_raw() called with null or missing id")
+		return
+	_rivals[rival.id] = rival
+
+
 # --- Read API ---
 
 func get_rival(rival_id: String) -> Rival:

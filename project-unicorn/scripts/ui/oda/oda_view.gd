@@ -327,7 +327,7 @@ func _build_monitor_screen() -> void:
 	var chip_row := HBoxContainer.new()
 	chip_row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	_mon_chip.add_child(chip_row)
-	_mon_chip_dot = UiFactory.make_dot(UiTokens.HEALTH_GREEN, 6)
+	_mon_chip_dot = UiFactory.make_dot(UiTokens.health_green(), 6)
 	chip_row.add_child(_mon_chip_dot)
 	_mon_chip_label = UiFactory.make_label("", &"ChromeBadgeLabel")
 	chip_row.add_child(_mon_chip_label)
@@ -573,6 +573,7 @@ func _connect_signals() -> void:
 	EventBus.customer_removed.connect(_on_customer_moved)
 	EventBus.customer_health_changed.connect(_on_customer_health)
 	EventBus.language_changed.connect(_on_language_changed)
+	EventBus.palette_changed.connect(_on_palette_changed)
 
 
 func _disconnect_signals() -> void:
@@ -596,6 +597,7 @@ func _disconnect_signals() -> void:
 	EventBus.customer_removed.disconnect(_on_customer_moved)
 	EventBus.customer_health_changed.disconnect(_on_customer_health)
 	EventBus.language_changed.disconnect(_on_language_changed)
+	EventBus.palette_changed.disconnect(_on_palette_changed)
 
 
 func _on_hour_changed(_hour: int) -> void:
@@ -664,6 +666,13 @@ func _on_customer_health(_id: String, _phase: String) -> void:
 	_refresh_dates()
 
 func _on_language_changed(_locale: String) -> void:
+	_refresh_all()
+
+func _on_palette_changed(_cb: bool) -> void:
+	# Renk körü paleti takas edildi. ODA'nın iki semantik rengi de TÜRETİLMİŞ —
+	# monitör çipinin sağlık noktası _refresh_monitor'da, masa kâğıtlarının
+	# noktaları _refresh_papers'ta her seferinde token'dan okunur — yani tam
+	# tazeleme yeterli; yerinde boyanacak ayrı bir override yok.
 	_refresh_all()
 
 func _on_visibility_changed() -> void:
@@ -895,7 +904,7 @@ func _refresh_monitor() -> void:
 		_mon_header.text = "%s · V%d" % [UiTokens.tr_upper(pname), ver]
 		_mon_chip.visible = true
 		var healthy: bool = ProductSystem.health_state() == "saglikli"
-		_set_chip_dot(UiTokens.HEALTH_GREEN if healthy else UiTokens.HEALTH_AMBER)
+		_set_chip_dot(UiTokens.health_green() if healthy else UiTokens.HEALTH_AMBER)
 		_mon_chip_dot.visible = true
 		_mon_chip_label.text = tr("ODA_MONITOR_LIVE_CHIP")
 		_mon_chip_label.add_theme_color_override("font_color", UiTokens.CREAM)
@@ -1310,7 +1319,7 @@ func _gather_papers() -> Array:
 	# kaynağı da motorda karşılıksız (v1'de hiç yok). Done mesajında listeli.
 	for c in CustomerRegistry.get_by_market("b2b"):
 		if c.lifecycle_phase == "expansion":
-			papers.append({"id": "exp_%s" % c.id, "dot": UiTokens.HEALTH_GREEN,
+			papers.append({"id": "exp_%s" % c.id, "dot": UiTokens.health_green(),
 				"tag": UiTokens.tr_upper(c.company_name),
 				"title": tr("ODA_PAPER_EXPANSION_TITLE"),
 				"target": "sales", "subpage": ""})

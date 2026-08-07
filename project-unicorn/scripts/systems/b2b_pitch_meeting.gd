@@ -29,6 +29,18 @@ static func is_active() -> bool:
 	return _active
 
 
+static func reset() -> void:
+	# Run-boundary reset (SaveManager.reset_all_owners). Same contract as PitchSystem.reset:
+	# reset, never serialised, because SaveManager.can_save() refuses while is_active().
+	# _prospect in particular is a HELD REFERENCE that deliberately outlives removal from
+	# ProspectRegistry (see begin_meeting) — leaking it into the next run would keep a dead
+	# company's lead alive behind the scenes.
+	_active = false
+	_prospect = null
+	_rep_id = ""
+	_result = {}
+
+
 # --- Entry: begin the pitch and emit the first beat's view_state (the generic
 #     main.gd mount handler pauses + shows it — no mount code here). ---
 static func begin_meeting(prospect_id: String) -> void:

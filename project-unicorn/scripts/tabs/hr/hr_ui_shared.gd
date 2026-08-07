@@ -79,10 +79,10 @@ static func morale_color(morale: int) -> Color:
 	# sayı yerine motorun bildiği ayrımlar çiziliyor (38 bu yüzden kırmızı değil
 	# amber okur — done mesajında sapma olarak raporlanıyor).
 	if HRConstants.is_flight_risk(morale):
-		return UiTokens.NEGATIVE
+		return UiTokens.negative()
 	if HRConstants.is_burning_out(morale):
 		return UiTokens.HEALTH_AMBER
-	return UiTokens.HEALTH_GREEN
+	return UiTokens.health_green()
 
 
 static func morale_row(morale: int, out_refs: Dictionary = {}) -> Control:

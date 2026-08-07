@@ -293,6 +293,24 @@ func _validate_shape(character: Character) -> void:
 				push_error("[CharacterRegistry] founder role_stats missing skill '%s'" % skill_key)
 
 
+func insert_raw(character: Character) -> void:
+	# SAVE RESTORE ONLY. add() is the wrong door for a load and every reason is a real bug:
+	# it re-stamps hire_day to TODAY (so a founding engineer becomes a day-140 hire), it
+	# assigns a leave_month when the record already carries the one it was hired with, it
+	# increments GameState.run_hires (so loading a run inflates its own hire counter every
+	# time), and it emits character_added into a shell that is not in the tree yet.
+	# The precedent for a direct insert is ensure_mentor() above, which documents the same
+	# reasoning for the same reason: "Direct insert (no add()) so character_added does not
+	# fire for the system-seeded mentor".
+	# _validate_shape IS still run — a save carrying a malformed employee should scream
+	# exactly as loudly as a live hire would; it is non-blocking, so the record still lands.
+	if character == null or character.id == "":
+		push_warning("[CharacterRegistry] insert_raw() called with null or missing id")
+		return
+	_validate_shape(character)
+	_characters[character.id] = character
+
+
 func remove(id: String) -> void:
 	if not _characters.has(id):
 		return

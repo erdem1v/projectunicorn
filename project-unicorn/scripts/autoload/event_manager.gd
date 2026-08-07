@@ -21,11 +21,13 @@ extends Node
 # across daily ticks — autoload over RefCounted system (Finance/HR/Sales are
 # stateless per-tick logic and use the RefCounted pattern).
 #
-# RNG: random_chance triggers use bare randf() against the global seed set by
-# GameState.initialize_run (TECH_SPEC §10.4). Deterministic for the run.
-# Migration cue (TECH_SPEC §20, 2026-05-15): when a second system needs RNG,
-# move to a RandomNumberGenerator instance on GameState to avoid sequencing
-# coupling between systems.
+# RNG: every draw in this file goes through RngStreams.STREAM_EVENTS — the per-priority
+# group shuffle, the "random" trigger condition, and the hourly ambient roll. It used to be
+# bare randf()/Array.shuffle() against the one global seed, which was deterministic from
+# BIRTH but could never resume from a SAVE (Godot exposes no way to read the global
+# generator's position). The migration cue this header carried since 2026-05-15 — "when a
+# second system needs RNG, move to a RandomNumberGenerator instance" — is what RngStreams
+# now is; see scripts/systems/rng_streams.gd.
 
 const EVENTS_DIR := "res://data/events/reactive/"
 
@@ -112,8 +114,8 @@ func hourly_tick(hour: int) -> void:
 			break
 
 
-# Group by priority (descending), shuffle each group, concatenate. Uses the
-# global seeded RNG per TECH_SPEC §10.4 (bare shuffle) for deterministic replay.
+# Group by priority (descending), shuffle each group, concatenate. Draws from the named
+# `events` stream (TECH_SPEC §10.4) so replay survives a save, not just a fresh process.
 func _ordered_by_priority(events: Array[GameEvent]) -> Array[GameEvent]:
 	var by_priority: Dictionary = {}
 	for ev in events:
@@ -126,7 +128,7 @@ func _ordered_by_priority(events: Array[GameEvent]) -> Array[GameEvent]:
 	var ordered: Array[GameEvent] = []
 	for p in priorities:
 		var group: Array = by_priority[p]
-		group.shuffle()
+		RngStreams.shuffle(RngStreams.STREAM_EVENTS, group)
 		for ev in group:
 			ordered.append(ev)
 	return ordered
@@ -228,6 +230,79 @@ func enqueue_front(event: GameEvent) -> void:
 	_pump_queue()
 
 
+func _events_rng() -> RandomNumberGenerator:
+	# One accessor so every roll in this file provably shares one stream (and one line to
+	# change if the stream is ever split).
+	return RngStreams.get_stream(RngStreams.STREAM_EVENTS)
+
+
+# ============================================================================
+#  Serialization (SaveManager)
+# ============================================================================
+
+func event_to_dict(ev: GameEvent) -> Dictionary:
+	# THE inverse of _build_event_from_dict — and then some, deliberately: it delegates to
+	# SaveCodec's generic property walker rather than listing fields by hand, so a field
+	# added to GameEvent tomorrow is covered without anyone remembering to come back here.
+	#
+	# WHY QUEUED EVENTS ARE STORED AS FULL DICTS AND NOT AS IDS: _queue can hold SYNTHETIC
+	# GameEvents built at runtime by B2BEventFactory, HREventFactory, PhaseGateSystem and
+	# VCPitchSystem. Those are not on disk and _all_events has never heard of them, so an
+	# id-only queue would restore as a silently shorter queue — the account that was about
+	# to churn, the person about to resign, and the Frank gate scene would all just be gone.
+	#
+	# The six speaker_* fields are exactly why the hand-written pair was the wrong shape:
+	# _build_event_from_dict ignored all six for years (harmlessly, since no authored JSON
+	# used them), which would have quietly stripped every B2B customer strip of its avatar,
+	# name, status pill and chips on reload. Those fields are now read on the way in too —
+	# see the speaker block in _build_event_from_dict.
+	return SaveCodec.res_to_dict(ev)
+
+
+func event_from_dict(d: Dictionary) -> GameEvent:
+	return SaveCodec.res_from_dict(d, GameEvent) as GameEvent
+
+
+func to_dict() -> Dictionary:
+	# _all_events and _hour_windows are NOT here: they are DISK content, re-read at every
+	# _ready from data/events/reactive/*.json. Persisting them would freeze a content edit
+	# out of every existing save.
+	var queued: Array = []
+	for ev in _queue:
+		queued.append(event_to_dict(ev))
+	return {
+		# In practice this is always empty, because SaveManager.can_save() refuses while
+		# EventManager.has_pending() — and a queued event implies a modal (enqueue pumps
+		# immediately). Written anyway: the schema should describe the state, not depend on
+		# a gate in another file staying exactly as strict as it is today.
+		"queue": queued,
+		"active_event_id": _active_event_id,
+		"active_event": event_to_dict(_active_event) if _active_event != null else null,
+		# THE one entry here that is never empty and never optional. _history is what makes
+		# one_shot mean once-per-RUN and cooldown_days mean anything at all; drop it and a
+		# loaded save re-fires all twelve one-shot beats the player has already lived.
+		"history": _history.duplicate(true),
+		"ambient_fired_day": _ambient_fired_day,
+	}
+
+
+func from_dict(d: Dictionary) -> void:
+	if d.is_empty():
+		return
+	_queue.clear()
+	for entry in (d.get("queue", []) as Array):
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var ev: GameEvent = event_from_dict(entry as Dictionary)
+		if ev != null:
+			_queue.append(ev)
+	_active_event_id = String(d.get("active_event_id", ""))
+	var active_raw: Variant = d.get("active_event", null)
+	_active_event = event_from_dict(active_raw as Dictionary) if typeof(active_raw) == TYPE_DICTIONARY else null
+	_history = SaveCodec.from_json(d.get("history", [])) as Array
+	_ambient_fired_day = int(d.get("ambient_fired_day", -1))
+
+
 func reset() -> void:
 	# EventManager had NO reset at all, and initialize_run contains zero references to it —
 	# so an in-place restart (the debug onboarding re-trigger) carried the whole pipeline
@@ -292,7 +367,7 @@ func is_condition_met(condition: Dictionary) -> bool:
 		"reputation_below":   return GameState.reputation < int(condition.get("value", 0))
 		"reputation_above":   return GameState.reputation > int(condition.get("value", 0))
 		"subgenre":           return GameState.subgenre == String(condition.get("value", ""))
-		"random":             return randf() < float(condition.get("chance", 0.0))
+		"random":             return _events_rng().randf() < float(condition.get("chance", 0.0))
 		"flag_equals":
 			return GameState.get_flag(String(condition.get("key", "")), null) == condition.get("value")
 		"flag_set":
@@ -330,7 +405,9 @@ func is_condition_met(condition: Dictionary) -> bool:
 		"has_prospects":
 			return ProspectRegistry.has_any() == bool(condition.get("value", true))
 		"audience_above":
-			return int(GameState.get_flag("b2c_audience", 0)) > int(condition.get("value", 0))
+			# float compare (S3-43): the flag stores a sub-unit accumulator, so int()-ing it
+			# made an audience of 99.8 fail a "> 99" gate it genuinely passes.
+			return float(GameState.get_flag("b2c_audience", 0.0)) > float(condition.get("value", 0))
 		"customer_satisfaction_below":
 			# Optional "market" key scopes which book arms this event ("" = the whole book,
 			# today's behaviour). Without it a consumer support beat could be armed by an
@@ -393,7 +470,7 @@ func _is_eligible(ev: GameEvent, random_chance_scale: float = 1.0) -> bool:
 			push_warning("[EventManager] trigger_conditions entry not Dictionary in %s" % ev.id)
 			return false
 		if String(c.get("type", "")) == "random":
-			if not (randf() < float(c.get("chance", 0.0)) * random_chance_scale):
+			if not (_events_rng().randf() < float(c.get("chance", 0.0)) * random_chance_scale):
 				return false
 			continue
 		if not is_condition_met(c):
@@ -562,7 +639,11 @@ func _apply_modifiers(modifiers: Array) -> void:
 					CustomerRegistry.get_lowest_satisfaction_customer(_active_event_market()))
 				if victim != null:
 					if victim.market_type == "b2c":
-						var aud: int = int(GameState.get_flag("b2c_audience", 0))
+						# float read (audit S3-43): the stored audience keeps a sub-unit
+						# accumulator, so int()-ing it here rounded the erosion base down
+						# before computing 15% of it. The DELTA is still whole people —
+						# add_b2c_audience takes an int by contract.
+						var aud: float = float(GameState.get_flag("b2c_audience", 0.0))
 						SalesSystem.add_b2c_audience(-int(round(aud * 0.15)))
 					else:
 						CustomerRegistry.remove(victim.id)
@@ -605,7 +686,7 @@ func _apply_modifiers(modifiers: Array) -> void:
 				# an AUDIENCE SPIKE — MRR follows via the hourly derivation, not a chunk.
 				var n: int = int(m.get("count", 0))
 				if m.has("pct"):
-					n = int(round(int(GameState.get_flag("b2c_audience", 0)) * float(m.get("pct", 0.0))))
+					n = int(round(float(GameState.get_flag("b2c_audience", 0.0)) * float(m.get("pct", 0.0))))  # float base (S3-43)
 				SalesSystem.add_b2c_audience(n)
 			"mentor_advisory":
 				EventBus.mentor_advisory_changed.emit(String(m.get("text", "")))
@@ -779,6 +860,18 @@ func _build_event_from_dict(d: Dictionary) -> GameEvent:
 	ev.body_text = String(d.get("body_text", ""))
 	ev.mentor_line = String(d.get("mentor_line", ""))
 	ev.mentor_choice = int(d.get("mentor_choice", -1))
+	# Synthetic speaker strip. Ignored here for years — harmlessly, because no authored JSON
+	# has ever set them (B2BEventFactory assigns them in code). It stops being harmless the
+	# moment this function is also the way a SAVED event comes back: a queued B2B retention
+	# scene would reload with no avatar, no company name, no status pill and no chips, i.e.
+	# a customer speaking anonymously. Absent keys keep the model's defaults, so every
+	# existing event file is byte-for-byte unaffected.
+	ev.speaker_name = String(d.get("speaker_name", ""))
+	ev.speaker_role = String(d.get("speaker_role", ""))
+	ev.speaker_status = String(d.get("speaker_status", ""))
+	ev.speaker_status_kind = String(d.get("speaker_status_kind", "neutral"))
+	ev.speaker_chips = d.get("speaker_chips", []) as Array
+	ev.speaker_initial = String(d.get("speaker_initial", ""))
 	ev.trigger_conditions = d.get("trigger_conditions", []) as Array
 	ev.cooldown_days = int(d.get("cooldown_days", 0))
 	ev.one_shot = bool(d.get("one_shot", false))

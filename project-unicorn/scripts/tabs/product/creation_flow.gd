@@ -29,9 +29,9 @@ extends Control
 
 signal navigate_requested(view_id: String, args: Dictionary)
 
-# Eksen legend renkleri tek kaynaktan (ProductUiShared.AXIS_COLORS) — Ürün
-# Detayı ile aynı üçlü.
-const AXIS_COLORS := ProductUiShared.AXIS_COLORS
+# Eksen legend renkleri tek kaynaktan (ProductUiShared.axis_color) — Ürün Detayı
+# ile aynı üçlü. Sabit kopya EMEKLİ: renk körü paleti "stability"yi çalışma
+# zamanında çevirir, const bir kopya ilk okunan renge çakılırdı.
 
 const _PHASE_ORDER := ["iteration", "development", "bugfix"]
 const _PHASE_DISPLAY := {"iteration": "TASARIM", "development": "GELİŞTİRME", "bugfix": "BETA"}
@@ -579,7 +579,7 @@ func _make_bottom_band() -> Control:
 	for axis in ProductUiShared.AXIS_KEYS:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
-		row.add_child(UiFactory.make_dot(AXIS_COLORS[axis], 8))
+		row.add_child(UiFactory.make_dot(ProductUiShared.axis_color(String(axis)), 8))
 		var name_l := UiFactory.make_label(ProductUiShared.axis_label(String(axis)), &"RowName")
 		name_l.custom_minimum_size = Vector2(76, 0)
 		row.add_child(name_l)
@@ -826,7 +826,7 @@ func _update_status() -> void:
 	for i in _status_phase_labels.size():
 		var color: Color = UiTokens.INK_DIM
 		if i < idx:
-			color = UiTokens.POSITIVE
+			color = UiTokens.positive()
 		elif i == idx:
 			color = UiTokens.ACCENT_DEEP
 		(_status_phase_labels[i] as Label).add_theme_color_override("font_color", color)

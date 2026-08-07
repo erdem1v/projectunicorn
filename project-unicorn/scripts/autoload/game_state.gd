@@ -44,6 +44,96 @@ var phase: int = 1               # 1=Bootstrap, 2=Traction, 3=Series A Hunt
 # means initialize_run does not need an explicit reset line.
 var flags: Dictionary = {}
 
+# --- FLAG TYPING (save-schema constraint, not a style preference) ---
+# `flags` is ~51 untyped keys carrying the entire product state, and its readers do NOT
+# agree on typing: EventManager's conditions coerce through bool()/int(), while systems
+# use plain GDScript truthiness. A String-typed flag satisfies one and fails the other, and
+# a JSON round trip re-types every number to float (Godot's parser returns TYPE_FLOAT even
+# for "5"). So the flag bag needs a declared type or a save cannot restore it faithfully.
+#
+# SaveCodec coerces every restored flag through flag_type_for(); set_flag push_warnings in
+# debug builds when a live write disagrees with the declaration, so drift surfaces while it
+# is still one line of code and not a save-shaped mystery.
+#
+# A key absent from BOTH tables is legal (content can invent flags) — it round-trips
+# best-effort and set_flag stays silent about it.
+const FLAG_TYPES := {
+	# --- product lifecycle ---
+	"mvp_shipped": TYPE_BOOL,
+	"mvp_version": TYPE_INT,
+	"mvp_version_history": TYPE_ARRAY,
+	"mvp_components": TYPE_ARRAY,
+	"mvp_product_name": TYPE_STRING,
+	"mvp_sub_product_type_id": TYPE_STRING,
+	"mvp_market_type": TYPE_STRING,
+	"mvp_launch_day": TYPE_INT,
+	"mvp_quality": TYPE_INT,
+	"mvp_innovation": TYPE_FLOAT,
+	"mvp_stability": TYPE_FLOAT,
+	"mvp_experience": TYPE_FLOAT,
+	"mvp_innovation_prev": TYPE_FLOAT,
+	"mvp_stability_prev": TYPE_FLOAT,
+	"mvp_experience_prev": TYPE_FLOAT,
+	"mvp_bug_count_at_launch": TYPE_INT,
+	"mvp_live_bug_count": TYPE_INT,
+	"mvp_live_bug_progress": TYPE_FLOAT,
+	"mvp_bug_history": TYPE_ARRAY,
+	"mvp_bug_sprint_active": TYPE_BOOL,
+	"mvp_sprint_days_total": TYPE_INT,
+	"mvp_sprint_days_elapsed": TYPE_FLOAT,
+	"mvp_sprint_fix_progress": TYPE_FLOAT,
+	"bug_sprint_days": TYPE_ARRAY,
+	"bug_sprint_just_done": TYPE_BOOL,
+	"critical_bug_unfixed": TYPE_BOOL,
+	"tech_debt_birikti": TYPE_BOOL,
+	"cancelled_build_prefill": TYPE_DICTIONARY,
+	"product_path_frank_seen": TYPE_BOOL,
+	"needs_engineer": TYPE_BOOL,
+	# --- B2C economy ---
+	# b2c_audience is FLOAT and that is the fix for audit S3-43: sales_system's hourly tick
+	# accumulated it as a float precisely so slow erosion survives instead of rounding to
+	# zero each hour, while add_b2c_audience / apply_b2c_price wrote it back as an int and
+	# threw the sub-unit accumulator away every time an event or a price change touched it.
+	"b2c_audience": TYPE_FLOAT,
+	"b2c_price": TYPE_INT,
+	"b2c_paid_tier_open": TYPE_BOOL,
+	# --- sales / customer desks ---
+	"sales_lead_progress": TYPE_FLOAT,
+	"cs_throughput_progress": TYPE_FLOAT,
+	"next_find_prospects_day": TYPE_INT,
+	"next_pitch_day": TYPE_INT,
+	"b2b_high_scale_unlocked": TYPE_BOOL,
+	# --- phase gate / endgame / VC ---
+	"gate_prompt_day": TYPE_INT,
+	"gate_declines": TYPE_INT,
+	"pitch_prep_active": TYPE_BOOL,
+	"pivot_offer_made": TYPE_BOOL,
+	"acquisition_offer_made": TYPE_BOOL,
+	"acquisition_offer_rejected": TYPE_BOOL,
+	"vc_d179_warned": TYPE_BOOL,
+	# --- origin reserves + UI snooze ---
+	"origin_press_sympathy": TYPE_BOOL,
+	"origin_low_capital": TYPE_BOOL,
+	"finance_runway_warn_snooze_until_day": TYPE_INT,
+	# --- debug force flags (smoke harness) ---
+	"debug_skill_force": TYPE_STRING,
+	"debug_hr_force": TYPE_STRING,
+}
+
+# The four DYNAMIC key families — one flag per entity id, so they cannot be listed above.
+# Longest prefix wins (none of these four overlap, but the rule keeps it decidable).
+const FLAG_TYPE_PREFIXES := {
+	"b2b_broke_": TYPE_BOOL,                    # B2BSalesSystem credibility latch, per customer id
+	"hr_manual_leave_": TYPE_BOOL,              # HRMoraleSystem manual-vacation marker, per character id
+	"hr_valve_continued_": TYPE_BOOL,           # HROvertimeSystem "Devam et" memory, per character id
+	"bug_count_at_bugfix_start_": TYPE_INT,     # ProductSystem beta-phase baseline, per build id
+}
+
+# GameState script variables the save deliberately does NOT carry. Empty today — every
+# `var` on this node is run state. It exists so that excluding one later is a one-line,
+# reviewable decision instead of an edit inside SaveCodec's walker.
+const SAVE_EXCLUDE_FIELDS: Array[String] = []
+
 # --- Endgame state (ENDGAME_DESIGN.md §2/§3/§7 ledger item 7 — serialized set) ---
 # Fields, not systems (§7.9): slot-9 evaluator reads these; later systems
 # (VC pitch, scandal) write them with zero retrofit. SaveManager plugs in later.
@@ -226,10 +316,20 @@ func advance_phase() -> void:
 	phase = clampi(pending_next_phase, 1, 3)
 	phase_gate_ready = false
 	pending_next_phase = 0
-	var phase_names := ["Bootstrap", "Traction", "Series A"]
 	submit_month_highlight(
-		"Yeni faza geçildi: %s" % phase_names[clampi(phase - 1, 0, 2)], 80)  # AYIN OLAYI (Spec 3 §4)
+		"Yeni faza geçildi: %s" % phase_display_name(phase), 80)  # AYIN OLAYI (Spec 3 §4)
 	EventBus.phase_changed.emit(phase)
+
+
+# THE phase display-name seam. The same ["Bootstrap", "Traction", "Series A"] literal had
+# grown a copy here and a copy in MonthSummarySystem._build_summary_data (PhaseGateSystem
+# keeps a third as a private helper, now delegating). The save meta block needs a fourth
+# reader, so the array moves to its owner instead of being copied again — GameState is
+# where `phase` itself lives. Out-of-range phases clamp rather than crash: this renders a
+# header, never a decision.
+func phase_display_name(p: int) -> String:
+	var names := ["Bootstrap", "Traction", "Series A"]
+	return names[clampi(p - 1, 0, names.size() - 1)]
 
 
 func set_run_active(value: bool) -> void:
@@ -253,7 +353,42 @@ func submit_month_highlight(text: String, priority: int) -> void:
 
 func set_flag(key: String, value: Variant) -> void:
 	# Flags are read-on-eligibility-eval, never pushed to UI. No EventBus emit.
+	if OS.is_debug_build():
+		_warn_on_flag_type_drift(key, value)
 	flags[key] = value
+
+
+func flag_type_for(key: String) -> int:
+	# Declared Variant type of a flag, or TYPE_NIL when the key is not registered.
+	# SaveCodec's single oracle for the flag bag. Concrete keys first, then the four
+	# dynamic prefix families.
+	if FLAG_TYPES.has(key):
+		return int(FLAG_TYPES[key])
+	for prefix in FLAG_TYPE_PREFIXES:
+		if key.begins_with(prefix):
+			return int(FLAG_TYPE_PREFIXES[prefix])
+	return TYPE_NIL
+
+
+func _warn_on_flag_type_drift(key: String, value: Variant) -> void:
+	# DEBUG-ONLY tripwire. A flag written with a type other than its declaration is a bug
+	# that costs nothing today and costs a broken save later: the save records what the
+	# writer put in, the load coerces to what FLAG_TYPES says, and the two silently differ.
+	# Non-blocking (same grammar as CharacterRegistry._validate_shape) — the write lands,
+	# the log carries the defect.
+	var declared: int = flag_type_for(key)
+	if declared == TYPE_NIL:
+		return  # unregistered content flag — legal, no claim to contradict
+	var actual: int = typeof(value)
+	if actual == declared:
+		return
+	# int↔float is the ONE tolerated pair: GDScript promotes freely and every reader of a
+	# numeric flag casts, so warning on it would be pure noise (`set_flag(k, 0)` into a
+	# FLOAT slot is idiomatic here). Everything else is a genuine type change.
+	if (actual == TYPE_INT or actual == TYPE_FLOAT) and (declared == TYPE_INT or declared == TYPE_FLOAT):
+		return
+	push_warning("[GameState] flag '%s' declared %s but written as %s — see FLAG_TYPES"
+		% [key, type_string(declared), type_string(actual)])
 
 
 func get_flag(key: String, default_value: Variant = null) -> Variant:
@@ -362,6 +497,10 @@ func get_run_ledger() -> Dictionary:
 	return {
 		# timeline
 		"day": day,
+		# The run's RNG seed. Absent from this ledger until now, which is audit S2-40: the
+		# seed existed but was unobtainable, so a reproducible-looking bug across four live
+		# runs could not actually be reproduced. Read-only here, like every other key.
+		"seed": run_seed,
 		"phase": phase,
 		"origin": origin,
 		"start_month": int(start.month),
@@ -409,10 +548,27 @@ func _emit_runway() -> void:
 # --- Run initialization (single seam: onboarding Confirm + F12 debug skip) ---
 
 func initialize_run(payload: Dictionary) -> void:
-	# Called once when the onboarding flow confirms (or F12 skip fires).
+	# Called once when the onboarding flow confirms (or F12 skip fires) — AND on every
+	# load, which is why there is no second init path.
+	#
 	# Direct field assignment — GameShell has not been instanced yet, so no
 	# listeners exist on EventBus and signals would land in the void. Setters
 	# (which emit) are reserved for in-game mutation when listeners are wired.
+	#
+	# THAT ASSUMPTION HOLDS ON THE LOAD PATH TOO, and deliberately: main.gd tears the shell
+	# down BEFORE calling SaveManager.apply_loaded_state, so the restore below runs into the
+	# same empty-listener world onboarding does. Do not "upgrade" the restore to setters —
+	# it would be a 70-signal broadcast storm into nothing, and the one thing it could
+	# achieve (repainting the UI) is what remounting the shell already does.
+	#
+	# TWO OPTIONAL PAYLOAD KEYS:
+	#   "seed"    : int        — the run's RNG seed. A FRESH run generates and records one
+	#                            here (see _generate_seed); a LOAD passes the saved value.
+	#   "restore" : Dictionary — a save's state block, applied OVER the defaults set below.
+	#                            Present ⇒ this is a load: the roster and the month-1 ledger
+	#                            come from the save, so the seeding tail is skipped.
+	var restore_block: Dictionary = _game_state_block(payload.get("restore", {}))
+	var is_restore: bool = not restore_block.is_empty()
 
 	# Identity
 	origin = payload.get("origin_id", "self_made")
@@ -511,19 +667,53 @@ func initialize_run(payload: Dictionary) -> void:
 	for origin_flag in FounderConstants.origin_by_id(origin).get("reserved_flags", []):
 		set_flag(String(origin_flag), true)
 
+	# --- RESTORE POINT. Everything above is the fresh-run baseline; a load now writes the
+	# saved values over it, field by field, and anything the save does not carry keeps the
+	# baseline (that is the whole forward-compat story — no migration code, just defaults).
+	# run_seed is part of the block, so the line below reads the SAVED seed on a load and
+	# the payload/generated one on a fresh run.
+	if is_restore:
+		SaveCodec.apply_game_state(restore_block)
+
+	# Seeded RNG per TECH_SPEC §10.4. A fresh run GENERATES and RECORDS its seed from birth
+	# (it used to be Time.get_ticks_msec() assigned here and never surfaced anywhere — audit
+	# S2-40: four live runs produced a "reproducible" bug that could not be reproduced,
+	# because the seed was unobtainable). It now rides in get_run_ledger() and in every save.
+	# 0 is treated as ABSENT, not as a seed. run_seed's own declaration documents "0 =
+	# unseeded", and a caller that passes the key but reads it out of a save block missing
+	# the field would otherwise hand over a literal 0 and pin every run to one sequence.
+	var seed_in: int = int(payload.get("seed", 0))
+	if seed_in == 0:
+		seed_in = int(restore_block.get("run_seed", 0))
+	if seed_in == 0:
+		seed_in = _generate_seed()
+	run_seed = seed_in
+	# The GLOBAL generator is now a BACKSTOP, not the game's RNG: the four real draw sites
+	# moved to RngStreams (events / skill / hr_morale), which is what makes a save resumable
+	# — Godot exposes no way to read the global generator's position. Kept seeded so any
+	# future bare randf() is at least deterministic for the run rather than wild.
+	seed(run_seed)
+	RngStreams.reseed(run_seed)
+
 	# Saat senkronu: current_hour'u doğrudan yazdık — TimeManager'ın accumulator'ı
 	# da aynı saate kilitlenmeli, yoksa ilk gün saatlik tik atmaz ("ilk gün ölü").
+	# On a load current_hour came from the save, so the same rule applies for the same reason.
 	TimeManager.sync_to_current_hour()
-
-	# Seeded RNG per TECH_SPEC §10.4
-	run_seed = Time.get_ticks_msec()
-	seed(run_seed)
 
 	# HR sub-system static state (the HR RNG included) — MUST come after run_seed is
 	# assigned and after flags.clear(), or the HR stream would be seeded from the previous
 	# run's value and anything it flags would be wiped a moment later. A fresh process
 	# would not need this, but the debug onboarding re-trigger reuses the process.
 	HRSystem.reset()
+
+	if is_restore:
+		# The roster, the month-1 ledger and run_hires all come from the save. Seeding a
+		# mentor + a fresh founder here would collide with the restored records (add() would
+		# drop char_founder on an id collision and leave the SAVED founder in place while
+		# still counting a hire), and MonthSummarySystem.snapshot() would overwrite the
+		# restored month_ledger with a day-N baseline — the month modal would then report
+		# deltas against the moment of loading instead of against the start of the month.
+		return
 
 	# Roster: ensure mentor exists, add founder
 	CharacterRegistry.ensure_mentor()
@@ -534,6 +724,29 @@ func initialize_run(payload: Dictionary) -> void:
 	# (The founder add above must not count as a "hire": category is "founder".)
 	MonthSummarySystem.snapshot()
 	run_hires = 0  # belt-and-braces: whatever roster seeding did, hires start at 0
+
+
+func _game_state_block(restore: Variant) -> Dictionary:
+	# Accepts either the whole save state block ({game_state, registries, systems}) or a
+	# bare GameState field dict, so a caller cannot get it subtly wrong in a way that loads
+	# a run with every field silently at its default.
+	if typeof(restore) != TYPE_DICTIONARY:
+		return {}
+	var d: Dictionary = restore as Dictionary
+	if d.has("game_state") and typeof(d["game_state"]) == TYPE_DICTIONARY:
+		return d["game_state"] as Dictionary
+	return d
+
+
+func _generate_seed() -> int:
+	# Wide entropy, bounded to stay EXACT through JSON. Save files are JSON (TECH_SPEC
+	# §10.1) and JSON numbers are IEEE doubles, so anything past 2^53 would come back
+	# rounded — a save that reproduces a DIFFERENT run than the one it recorded. 2^52 keeps
+	# a comfortable margin and still leaves 4.5 quadrillion distinct runs.
+	# randi() reads the engine's own startup-randomised global stream; this is the one place
+	# the game still draws from it, and it happens exactly once per run.
+	const SEED_CEILING := 1 << 52
+	return absi((randi() << 21) ^ (randi() << 3) ^ int(Time.get_ticks_usec())) % SEED_CEILING
 
 
 func _build_founder(payload: Dictionary) -> Character:

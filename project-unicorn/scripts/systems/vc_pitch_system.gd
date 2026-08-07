@@ -46,6 +46,24 @@ static func is_meeting_active() -> bool:
 	return _active
 
 
+static func is_active() -> bool:
+	# The uniform name SaveManager.can_save() asks all four sitting-scoped systems
+	# (PitchSystem / B2BPitchMeeting / TermSheetTableSystem / this one). Kept as an alias
+	# rather than a rename so the existing is_meeting_active() callers stay untouched.
+	return _active
+
+
+static func reset() -> void:
+	# Run-boundary reset (SaveManager.reset_all_owners). The eleven statics below are
+	# MEETING-LOCAL by design — this file's own header records that persistent VC state
+	# lives on GameState (vc_states / active_sheets / pending_meeting / prep) while
+	# conviction, beat and intel never leave the room. They are reset, never serialised, and
+	# SaveManager.can_save() refuses while is_active() so a sitting is provably idle at every
+	# save point. `pitch_prep_active` is a FLAG, so it rides in the GameState block and is
+	# not touched here.
+	_reset()
+
+
 static func begin_meeting(vc_id: String) -> void:
 	if not GameState.run_active:          # ledger 20 — no meeting behind a terminal
 		return

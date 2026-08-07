@@ -80,7 +80,7 @@ static func _block_card(dept_id: String, block_days: int, on_change: Callable) -
 		&"RowMeta", UiTokens.INK_MUTED))
 	if int(pv.get("bug_pct", 0)) > 0:
 		col.add_child(UiFactory.make_label(
-			"Hata oranı +%%%d" % int(pv.get("bug_pct", 0)), &"RowMeta", UiTokens.NEGATIVE))
+			"Hata oranı +%%%d" % int(pv.get("bug_pct", 0)), &"RowMeta", UiTokens.negative()))
 	if block_days >= HRConstants.OVERTIME_DIMINISH_DAY:
 		# Azalan verim yalnız bloğun o güne uzadığı hallerde anlamlı.
 		col.add_child(UiFactory.make_label(

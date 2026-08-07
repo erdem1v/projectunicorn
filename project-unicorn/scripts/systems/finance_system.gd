@@ -72,6 +72,49 @@ const ONE_TIME_LABELS := {
 }
 
 
+# --- Run boundary + save (SaveManager) ---
+# The in-place seam both notes above promised ("static var reset'i süreç relaunch'una
+# dayanır ... in-place reset seam'i ana menü / SaveManager task'ının işi"). Now it exists,
+# so neither static depends on an OS restart any more.
+
+static func reset() -> void:
+	# burn_breakdown carries the previous run's payroll and marketing lines, and the salary
+	# pull only overwrites the "salaries" key — so a leaked "marketing" figure would keep
+	# charging a new company for a campaign the old one bought. duplicate() (not a reference
+	# to the const) so a later set_burn_category cannot edit STARTING_BURN_BREAKDOWN itself.
+	burn_breakdown = STARTING_BURN_BREAKDOWN.duplicate()
+	one_time_today.clear()
+
+
+static func to_dict() -> Dictionary:
+	# one_time_today is a SINGLE DAY's ledger, and it is genuinely worth saving: a save
+	# taken after the player paid a hire commission should reopen showing that charge in the
+	# day's gider dökümü, exactly as it did a moment before. The multi-day transactions log
+	# lives on GameState (GameState.transactions) and rides in the GameState block.
+	return {
+		"burn_breakdown": burn_breakdown.duplicate(),
+		"one_time_today": one_time_today.duplicate(),
+	}
+
+
+static func from_dict(d: Dictionary) -> void:
+	if d.is_empty():
+		return
+	# Restored key-by-key ONTO the starting shape rather than replacing it wholesale: a save
+	# written before a burn category existed must still end up with every category the
+	# current build expects, or compute_total_burn silently stops counting one of them.
+	var restored: Dictionary = STARTING_BURN_BREAKDOWN.duplicate()
+	var saved: Dictionary = d.get("burn_breakdown", {}) as Dictionary
+	for category in saved.keys():
+		if restored.has(category):
+			restored[String(category)] = int(saved[category])
+	burn_breakdown = restored
+	one_time_today = {}
+	var saved_one_time: Dictionary = d.get("one_time_today", {}) as Dictionary
+	for label in saved_one_time.keys():
+		one_time_today[String(label)] = int(saved_one_time[label])
+
+
 static func starting_daily_burn() -> int:
 	# Day-1 baseline total ($50/day) — GameState defaults + initialize_run read it.
 	var total: int = 0

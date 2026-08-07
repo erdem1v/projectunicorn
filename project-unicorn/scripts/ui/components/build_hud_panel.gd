@@ -87,10 +87,13 @@ func _ready() -> void:
 	EventBus.build_progress_changed.connect(_refresh)
 	EventBus.build_iteration_decision_pending.connect(_on_iter_pending_changed)
 	EventBus.tab_changed.connect(_on_tab_changed)
+	EventBus.palette_changed.connect(_on_palette_changed)
 	_refresh()
 
 
 func _exit_tree() -> void:
+	if EventBus.palette_changed.is_connected(_on_palette_changed):
+		EventBus.palette_changed.disconnect(_on_palette_changed)
 	if EventBus.build_phase_changed.is_connected(_on_build_phase_changed):
 		EventBus.build_phase_changed.disconnect(_on_build_phase_changed)
 	if EventBus.build_progress_changed.is_connected(_refresh):
@@ -111,6 +114,14 @@ func _on_tab_changed(tab_id: String) -> void:
 	_refresh()
 
 
+# Renk körü paleti takas edildi: stylebox'lar ve BETA satırının iki rengi
+# yeniden token'dan okunur. Kart yerinde onarılır (yeniden kurulmaz) —
+# language_changed'in dilbilgisi.
+func _on_palette_changed(_cb: bool) -> void:
+	_build_styles()
+	_refresh()
+
+
 func _build_styles() -> void:
 	_sb_track = StyleBoxFlat.new()
 	_sb_track.bg_color = UiTokens.NEUTRAL_BADGE_BG.lerp(UiTokens.CARD_BORDER, 0.5)
@@ -122,7 +133,7 @@ func _build_styles() -> void:
 	fill.add_theme_stylebox_override("panel", _sb_fill)
 	# Mini faz şeridi: biten = pozitif, aktif = amber + accent çerçeve, bekleyen = soluk.
 	_sb_mini_done = StyleBoxFlat.new()
-	_sb_mini_done.bg_color = UiTokens.POSITIVE_BG
+	_sb_mini_done.bg_color = UiTokens.positive_bg()
 	_sb_mini_done.set_corner_radius_all(3)
 	_sb_mini_active = StyleBoxFlat.new()
 	_sb_mini_active.bg_color = UiTokens.AMBER_BG
@@ -132,6 +143,16 @@ func _build_styles() -> void:
 	_sb_mini_pending = StyleBoxFlat.new()
 	_sb_mini_pending.bg_color = UiTokens.NEUTRAL_BADGE_BG.lerp(UiTokens.CARD_BG, 0.6)
 	_sb_mini_pending.set_corner_radius_all(3)
+	_apply_semantic_colors()
+
+
+# BETA satırının iki semantik rengi (ÇÖZÜLEN yeşil / KALAN kırmızı) sahnede
+# BAYT-SABİT Color literalleriydi — projedeki son iki tanesi. Renk körü paleti
+# çalışma zamanında takas ettiği için sahne artık renk taşımıyor: değer
+# UiTokens'ın accessor'ından okunur ve palette_changed'de yeniden okunur.
+func _apply_semantic_colors() -> void:
+	beta_fixed_val.add_theme_color_override("font_color", UiTokens.positive())
+	beta_remain_val.add_theme_color_override("font_color", UiTokens.negative())
 
 
 func _set_fill_fraction(f: float) -> void:

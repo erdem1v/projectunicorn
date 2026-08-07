@@ -196,6 +196,12 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_market_gate_b2c_run":            fail = _case_b2b_market_gate_b2c_run()
 		"sales_autoclose_empty_pain":         fail = _case_sales_autoclose_empty_pain()
 		"event_queue_dedupe_by_id":           fail = _case_event_queue_dedupe_by_id()
+		# --- SaveManager task 2026-08-08. Bunlar ŞEMAYI değil RESET MİMARİSİNİ ölçer:
+		#     serileştirme biçimi kolay %20; zor %80, yüklemenin ÇALIŞAN bir süreci
+		#     eskiden yalnız bir OS restart'ının üretebildiği duruma döndürmesi.
+		"save_roundtrip_fingerprint":         fail = _case_save_roundtrip_fingerprint()
+		"save_continuity_seeded":             fail = _case_save_continuity_seeded()
+		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -5214,4 +5220,251 @@ static func _case_cs_request_kind_state_driven() -> String:
 	# Determinizm: aynı durum + aynı gün → aynı sonuç.
 	if B2BEventFactory.pick_request_kind(b) != B2BEventFactory.pick_request_kind(b):
 		return "kind selection is not deterministic"
+	return ""
+
+
+# ============================================================================
+#  SaveManager — reset mimarisi (2026-08-08)
+#  Bu üçlü ŞEMAYI değil YÜKLEMEYİ ölçer. Serileştirme biçimi kolay %20'dir; zor
+#  %80, yüklemenin ÇALIŞAN bir süreci eskiden yalnız bir OS restart'ının
+#  üretebildiği duruma döndürmesidir. Reset'ten kaçan her sahip eski koşuyu
+#  yenisine sızdırır ve sızıntı günler sonra "imkânsız" bir hata olarak yüzeye
+#  çıkar — asıl kanıt bu yüzden case 3'tür.
+# ============================================================================
+
+const SAVE_SLOT_A := "manual_9001"
+const SAVE_SLOT_B := "manual_9002"
+
+
+## Önemsiz olmayan bir dünya: her sahipten en az bir kayıt, artı serileştirmenin
+## sessizce düşürebileceği tipler (kesirli float, tipli dizi, iç içe Resource ve
+## DİSKTE OLMAYAN sentetik bir event).
+static func _seed_save_world() -> void:
+	GameState.day = 40
+	GameState.set_cash(120000)
+	_seed_b2b(3000)                      # müşteri + shipped ürün eksenleri
+	CharacterRegistry.add(_make_employee("emp_save", "Kayit Testi", "developer"))
+	PromiseRegistry.create("cust_smoke_corp", "ai_vec_embed_api", 10)
+	RivalRegistry.advance_all()
+	GameState.set_flag("b2c_audience", 1234.5)      # KESİRLİ: int'e yuvarlanırsa yakalanır
+	GameState.set_flag("b2c_price", 29)             # int kalmalı
+	FinanceSystem.burn_breakdown["marketing"] = 777
+	GameState.net_history_90.append(42)             # Array[int] tipli kalmalı
+
+	# Sentetik event: hiçbir JSON dosyasında yok, id'den geri kurulamaz. Altı
+	# speaker_* alanı bilerek dolu — _build_event_from_dict bunları hiç okumuyordu.
+	var ev := GameEvent.new()
+	ev.id = "ev_smoke_synthetic"
+	ev.title = "Sentetik"
+	ev.speaker_name = "Smoke Corp"
+	ev.speaker_role = "Satin alma"
+	ev.speaker_status = "RISK ALTINDA"
+	ev.speaker_status_kind = "negative"
+	ev.speaker_initial = "SC"
+	ev.speaker_chips = [{"text": "cip", "kind": "neutral"}]
+	var ch := EventChoice.new()
+	ch.label = "Secenek"
+	ev.choices.append(ch)
+	EventManager._queue.append(ev)
+
+
+## Diske YAZ, geri OKU, normalleştir. Gerçek yolu kullanır (atomik yazım + JSON
+## gidiş-dönüşü + şema kapısı), bellek içi bir kopya değil.
+static func _save_fingerprint(slot_id: String) -> String:
+	if not SaveManager.save_to_slot(slot_id):
+		return ""
+	var payload: Dictionary = SaveManager.read_slot(slot_id)
+	if not bool(payload.get("ok", false)):
+		return ""
+	var state: Dictionary = payload["state"]
+	# Hız BİLEREK normalleştirilir: yükleme duraklamış döner (TimeManager.from_dict),
+	# yani ikinci kayıt ilkinden yalnız bu alanda ayrılır ve bu bir tasarım kararı.
+	var sys: Dictionary = state.get("systems", {}) as Dictionary
+	var t: Dictionary = sys.get("time", {}) as Dictionary
+	t["current_speed"] = 0
+	t["last_running_speed"] = 0
+	return JSON.stringify(state, "", true, true)
+
+
+static func _cleanup_save_slots() -> void:
+	SaveManager.delete_slot(SAVE_SLOT_A)
+	SaveManager.delete_slot(SAVE_SLOT_B)
+
+
+# --- 1. Gidiş-dönüş parmak izi: kaydet → yükle → tekrar kaydet = aynı yük ---
+static func _case_save_roundtrip_fingerprint() -> String:
+	_seed_save_world()
+	var before: String = _save_fingerprint(SAVE_SLOT_A)
+	if before == "":
+		_cleanup_save_slots()
+		return "first save/read failed"
+
+	var emp_before: Character = CharacterRegistry.get_character("emp_save")
+	if emp_before == null:
+		_cleanup_save_slots()
+		return "seed failed: emp_save missing before the load"
+	var hire_day_before: int = emp_before.hire_day
+	var hires_before: int = GameState.run_hires
+
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
+		_cleanup_save_slots()
+		return "apply_loaded_state returned false"
+
+	var after: String = _save_fingerprint(SAVE_SLOT_B)
+	if after != before:
+		_cleanup_save_slots()
+		return "payload differs after a load round-trip (%d vs %d bytes)" % [before.length(), after.length()]
+
+	# Tip bütünlüğü: JSON her sayıyı float döndürür, geri kazanım şart.
+	var aud: Variant = GameState.get_flag("b2c_audience", 0.0)
+	if typeof(aud) != TYPE_FLOAT or not is_equal_approx(float(aud), 1234.5):
+		_cleanup_save_slots()
+		return "b2c_audience lost its float accumulator (%s)" % str(aud)
+	if typeof(GameState.get_flag("b2c_price", 0)) != TYPE_INT:
+		_cleanup_save_slots()
+		return "b2c_price came back as a non-int"
+	if GameState.net_history_90.get_typed_builtin() != TYPE_INT:
+		_cleanup_save_slots()
+		return "net_history_90 lost its Array[int] typing"
+
+	# insert_raw yolu: add() hire_day damgalar ve run_hires artırır — yükleme etmemeli.
+	var emp: Character = CharacterRegistry.get_character("emp_save")
+	if emp == null:
+		_cleanup_save_slots()
+		return "restored roster lost emp_save"
+	if emp.hire_day != hire_day_before:
+		_cleanup_save_slots()
+		return "hire_day re-stamped on load (%d then %d)" % [hire_day_before, emp.hire_day]
+	if GameState.run_hires != hires_before:
+		_cleanup_save_slots()
+		return "run_hires incremented by a load (%d then %d)" % [hires_before, GameState.run_hires]
+
+	# Sentetik event, altı speaker_* alanı ve iç içe EventChoice ile döndü mü?
+	var found: GameEvent = null
+	for e in EventManager._queue:
+		if e.id == "ev_smoke_synthetic":
+			found = e
+	if found == null:
+		_cleanup_save_slots()
+		return "synthetic queued event did not survive the round-trip"
+	if found.speaker_name != "Smoke Corp" or found.speaker_status_kind != "negative" \
+			or found.speaker_chips.size() != 1:
+		_cleanup_save_slots()
+		return "synthetic event lost its speaker_* fields"
+	if found.choices.size() != 1 or not (found.choices[0] is EventChoice):
+		_cleanup_save_slots()
+		return "synthetic event lost its nested EventChoice"
+
+	_cleanup_save_slots()
+	return ""
+
+
+# --- 2. Süreklilik: tohum GİRDİ, RNG akışları DURUMLARIYLA döner ---
+static func _case_save_continuity_seeded() -> String:
+	_seed_save_world()
+	var skill: RandomNumberGenerator = RngStreams.get_stream(RngStreams.STREAM_SKILL)
+	for i in 17:
+		skill.randf()                     # akışı önemsiz olmayan bir konuma taşı
+
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		_cleanup_save_slots()
+		return "save failed"
+	# Kayıt ÖNCE, çekiliş SONRA: yükleme tam olarak bu çekilişi tekrarlamalı.
+	var expected: float = RngStreams.get_stream(RngStreams.STREAM_SKILL).randf()
+
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
+		_cleanup_save_slots()
+		return "apply_loaded_state returned false"
+	var actual: float = RngStreams.get_stream(RngStreams.STREAM_SKILL).randf()
+	if not is_equal_approx(actual, expected):
+		_cleanup_save_slots()
+		return "skill stream did not resume: expected %.17f, got %.17f" % [expected, actual]
+
+	# Tohum artık okunabilir durum (audit S2-40: dört canlı koşuda bir kez alınamadı).
+	var ledger: Dictionary = GameState.get_run_ledger()
+	if not ledger.has("seed"):
+		_cleanup_save_slots()
+		return "run ledger still does not expose the seed"
+	if int(ledger["seed"]) != GameState.run_seed:
+		_cleanup_save_slots()
+		return "ledger seed %d != run_seed %d" % [int(ledger["seed"]), GameState.run_seed]
+
+	# Taze koşu doğuştan tohumlu ve JSON'un güvenli tam-sayı aralığında.
+	GameState.initialize_run({"origin_id": "self_made", "company_name": "Seed Co"})
+	if GameState.run_seed == 0:
+		_cleanup_save_slots()
+		return "a fresh run was born unseeded"
+	if absi(GameState.run_seed) >= (1 << 53):
+		_cleanup_save_slots()
+		return "fresh seed %d exceeds the JSON-safe integer range" % GameState.run_seed
+
+	_cleanup_save_slots()
+	return ""
+
+
+# --- 3. İKİ YÜKLEME, TEK SÜREÇ: reset mimarisinin asıl kanıtı ---
+static func _case_save_double_load_no_residue() -> String:
+	_seed_save_world()
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		_cleanup_save_slots()
+		return "save failed"
+
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
+		_cleanup_save_slots()
+		return "first load failed"
+	var fp2: String = _save_fingerprint(SAVE_SLOT_B)
+	var roster_size: int = CharacterRegistry.get_all().size()
+
+	# ARADA OYNA: ikinci yükleme bu artığın hiçbirini taşımamalı.
+	var intruder := Customer.new()
+	intruder.id = "cust_intruder"
+	intruder.company_name = "Residue Ltd"
+	CustomerRegistry.add(intruder)
+	CharacterRegistry.add(_make_employee("emp_intruder", "Artik", "developer"))
+	GameState.set_flag("residue_marker", true)
+
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
+		_cleanup_save_slots()
+		return "second load failed"
+	var fp3: String = _save_fingerprint(SAVE_SLOT_B)
+
+	if fp3 != fp2:
+		_cleanup_save_slots()
+		return "load B inherited residue from the run played after load A"
+	if CustomerRegistry.get_customer("cust_intruder") != null:
+		_cleanup_save_slots()
+		return "the intruding customer survived a load"
+	if CharacterRegistry.get_character("emp_intruder") != null:
+		_cleanup_save_slots()
+		return "the intruding employee survived a load"
+	if GameState.flags.has("residue_marker"):
+		_cleanup_save_slots()
+		return "a flag set between loads survived the second load"
+	if CharacterRegistry.get_all().size() != roster_size:
+		_cleanup_save_slots()
+		return "roster size drifted across two loads (%d then %d)" % [roster_size, CharacterRegistry.get_all().size()]
+
+	# reset_all_owners TEK giriş noktası: her kayıt boşalır — RAKİPLER HARİÇ, çünkü
+	# boş bir rakip alanı geçerli durum değil (RivalCatalog'dan yeniden tohumlanır).
+	SaveManager.reset_all_owners()
+	if not CustomerRegistry.get_all().is_empty():
+		_cleanup_save_slots()
+		return "reset_all_owners left customers behind"
+	if not CharacterRegistry.get_all().is_empty():
+		_cleanup_save_slots()
+		return "reset_all_owners left characters behind"
+	if not PromiseRegistry.get_all().is_empty():
+		_cleanup_save_slots()
+		return "reset_all_owners left promises behind"
+	if not ProspectRegistry.get_all().is_empty():
+		_cleanup_save_slots()
+		return "reset_all_owners left prospects behind"
+	if RivalRegistry.get_all().is_empty():
+		_cleanup_save_slots()
+		return "reset_all_owners emptied the rival field instead of re-seeding it"
+	if ProductSystem.active_build != null:
+		_cleanup_save_slots()
+		return "reset_all_owners left an active build behind"
+
+	_cleanup_save_slots()
 	return ""

@@ -14,13 +14,23 @@ extends RefCounted
 const AXIS_KEYS := ["innovation", "stability", "experience"]
 const MONTH_ABBR_TR := ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"]
 
-# Eksen renk üçlüsü (legend dot + ince bar; creation önizleme ve Ürün Detayı aynı
-# üçlüyü kullanır).
-const AXIS_COLORS := {
-	"innovation": UiTokens.ACCENT_DEEP,
-	"stability": UiTokens.POSITIVE,
-	"experience": UiTokens.AXIS_EXPERIENCE,
-}
+## Eksen renk üçlüsü (legend dot + ince bar; creation önizleme ve Ürün Detayı aynı
+## üçlüyü kullanır). Sabit DEĞİL fonksiyon: "stability" semantik POSITIVE'i taşır ve
+## renk körü paleti onu ÇALIŞMA ZAMANINDA maviye çevirir — const bir sözlük paleti
+## süreç ömrü boyunca ilk okunan değere çakardı (GDScript const'ı fonksiyon çağıramaz).
+## "experience" de aynı sebeple accessor'dan okunur: CB modunda Kararlılık maviye
+## döndüğü için Deneyim mora kayar, yoksa legend'da iki mavi yan yana gelirdi.
+static func axis_colors() -> Dictionary:
+	return {
+		"innovation": UiTokens.ACCENT_DEEP,
+		"stability": UiTokens.positive(),
+		"experience": UiTokens.axis_experience(),
+	}
+
+
+## Tek eksenin rengi (çağıranlar sözlüğü her seferinde kurmasın diye).
+static func axis_color(axis_id: String) -> Color:
+	return axis_colors().get(axis_id, UiTokens.INK_MUTED)
 
 
 ## Gün N → "Oca 2026" (SÜRÜMLER satırı). GameState.get_date_dict gerçek takvimi verir.

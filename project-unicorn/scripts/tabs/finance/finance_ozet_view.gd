@@ -218,9 +218,9 @@ func _build_curve_card() -> PanelContainer:
 	legend.add_theme_constant_override("separation", 16)
 	vb.add_child(legend)
 	legend.add_child(_legend_chip("Gerçekleşen nakit", UiTokens.INK))
-	_legend_current = _legend_chip("Projeksiyon · mevcut gidiş", UiTokens.NEGATIVE)
+	_legend_current = _legend_chip("Projeksiyon · mevcut gidiş", UiTokens.negative())
 	legend.add_child(_legend_current)
-	legend.add_child(_legend_chip("Projeksiyon · satış hedefi tutarsa", UiTokens.POSITIVE))
+	legend.add_child(_legend_chip("Projeksiyon · satış hedefi tutarsa", UiTokens.positive()))
 
 	return _card(vb)
 
@@ -380,7 +380,7 @@ func _refresh_header() -> void:
 	var sign_str: String = "+" if net > 0 else ""
 	_net_val.text = "%s%s" % [sign_str, UiTokens.format_money(net)]
 	_net_val.add_theme_color_override("font_color",
-			UiTokens.POSITIVE if net > 0 else (UiTokens.NEGATIVE if net < 0 else UiTokens.INK))
+			UiTokens.positive() if net > 0 else (UiTokens.negative() if net < 0 else UiTokens.INK))
 
 	var months: float = GameState.get_runway_months()
 	var p: Dictionary = UiTokens.net_runway_parts(months)
@@ -388,7 +388,7 @@ func _refresh_header() -> void:
 		# ARTIDA sözleşmesi: asla sonsuz ya da uydurma sayı yazılmaz — durum etiketi
 		# yeşil, gerekçe alt satırda (tek ev UiTokens.net_runway_parts).
 		_runway_val.text = UiTokens.tr_upper(String(p.value))
-		_runway_val.add_theme_color_override("font_color", UiTokens.POSITIVE)
+		_runway_val.add_theme_color_override("font_color", UiTokens.positive())
 		_runway_note.text = String(p.get("note", ""))
 		_runway_note.visible = _runway_note.text != ""
 	else:
@@ -397,7 +397,7 @@ func _refresh_header() -> void:
 		# yalnız günlük nete bakar, kasanın işaretine bakmaz), o yüzden tek başına eşik
 		# karşılaştırması ödemesi geciken bir şirketi varsayılan mürekkeple basıyordu.
 		_runway_val.add_theme_color_override("font_color",
-				UiTokens.NEGATIVE if (months < RUNWAY_WARN_MONTHS or GameState.cash < 0) else UiTokens.INK)
+				UiTokens.negative() if (months < RUNWAY_WARN_MONTHS or GameState.cash < 0) else UiTokens.INK)
 		_runway_note.visible = false
 
 
@@ -450,11 +450,11 @@ func _refresh_flow() -> void:
 	var flow: Dictionary = FinanceSystem.get_monthly_flow()
 	var biggest: int = maxi(1, maxi(absi(int(flow.income)),
 			maxi(absi(int(flow.expense)), absi(int(flow.net)))))
-	_set_flow_row("income", int(flow.income), biggest, UiTokens.POSITIVE, "+")
-	_set_flow_row("expense", int(flow.expense), biggest, UiTokens.NEGATIVE, "-")
+	_set_flow_row("income", int(flow.income), biggest, UiTokens.positive(), "+")
+	_set_flow_row("expense", int(flow.expense), biggest, UiTokens.negative(), "-")
 	var net: int = int(flow.net)
 	_set_flow_row("net", net, biggest,
-			UiTokens.POSITIVE if net >= 0 else UiTokens.NEGATIVE,
+			UiTokens.positive() if net >= 0 else UiTokens.negative(),
 			"+" if net > 0 else ("-" if net < 0 else ""))
 
 
@@ -536,7 +536,7 @@ func _refresh_transactions() -> void:
 		var amount: int = int(t.amount)
 		var v := UiFactory.make_label(
 				"%s%s" % ["+" if amount > 0 else "", UiTokens.format_money_exact(amount)],
-				&"RowMeta", UiTokens.POSITIVE if amount > 0 else UiTokens.NEGATIVE)
+				&"RowMeta", UiTokens.positive() if amount > 0 else UiTokens.negative())
 		row.add_child(v)
 		_tx_list.add_child(row)
 

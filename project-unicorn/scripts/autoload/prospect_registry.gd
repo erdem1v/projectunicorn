@@ -54,6 +54,24 @@ func add(prospect: Prospect) -> void:
 	EventBus.prospect_added.emit(prospect.id)
 
 
+func insert_raw(prospect: Prospect) -> void:
+	# SAVE RESTORE ONLY — no prospect_added emit (the shell is not in the tree during a
+	# load). Mirrors CustomerRegistry.insert_raw / CharacterRegistry.insert_raw.
+	if prospect == null or prospect.id == "":
+		push_warning("[ProspectRegistry] insert_raw() called with null or missing id")
+		return
+	_prospects[prospect.id] = prospect
+
+
+func reset() -> void:
+	# Run-boundary reset (SaveManager.reset_all_owners). Without it an in-place restart
+	# began with the previous company's open leads sitting in the pipeline — and worse,
+	# PitchSystem's spawn dedup reads get_company_names(), so those ghosts also silently
+	# excluded their own companies from the new run's prospect pool.
+	# Direct clear, no prospect_removed emits — same doctrine as CustomerRegistry.reset().
+	_prospects.clear()
+
+
 func remove(prospect_id: String) -> void:
 	if not _prospects.has(prospect_id):
 		return

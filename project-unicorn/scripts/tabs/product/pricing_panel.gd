@@ -209,9 +209,9 @@ func _rebuild_bands(optimal: int, floor_p: int, smax: int, can_read: bool) -> vo
 			ch.queue_free()
 	var a: float = maxf(1.0, optimal * ZONE_LOW_RATIO)
 	var b: float = maxf(a + 1.0, optimal * ZONE_HIGH_RATIO)
-	_add_band(UiTokens.POSITIVE, a - 1.0)
+	_add_band(UiTokens.positive(), a - 1.0)
 	_add_band(UiTokens.HEALTH_AMBER, b - a)
-	_add_band(UiTokens.NEGATIVE, maxf(1.0, float(smax) - b))
+	_add_band(UiTokens.negative(), maxf(1.0, float(smax) - b))
 	if can_read:
 		var span: float = maxf(1.0, float(smax - 1))
 		_add_notch(clampf(float(floor_p - 1) / span, 0.0, 1.0))

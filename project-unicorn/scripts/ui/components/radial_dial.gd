@@ -103,8 +103,8 @@ func _sync_readout() -> void:
 
 func _needle_color() -> Color:
 	match _result:
-		"success": return UiTokens.POSITIVE_BRIGHT
-		"failure": return UiTokens.NEGATIVE_BRIGHT
+		"success": return UiTokens.positive_bright()
+		"failure": return UiTokens.negative_bright()
 		_: return UiTokens.ACCENT
 
 
@@ -115,8 +115,8 @@ func _draw() -> void:
 		return
 	var w: float = maxf(r * 0.15, 7.0)
 	var boundary: float = PI + _chance * PI          # top semicircle: PI (left) → TAU (right)
-	draw_arc(c, r, PI, boundary, 40, UiTokens.POSITIVE_BRIGHT, w, true)
-	draw_arc(c, r, boundary, TAU, 40, UiTokens.NEGATIVE_BRIGHT, w, true)
+	draw_arc(c, r, PI, boundary, 40, UiTokens.positive_bright(), w, true)
+	draw_arc(c, r, boundary, TAU, 40, UiTokens.negative_bright(), w, true)
 	var na: float = PI + clampf(_needle_v, 0.0, 1.0) * PI
 	var tip: Vector2 = c + Vector2(cos(na), sin(na)) * (r - w * 0.15)
 	draw_line(c, tip, _needle_color(), maxf(r * 0.045, 3.0), true)

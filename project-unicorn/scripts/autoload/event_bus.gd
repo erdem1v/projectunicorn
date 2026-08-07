@@ -40,6 +40,13 @@ signal music_volume_changed(volume: float)
 # Localization (Package 5): emitted by the Localization autoload when the language
 # changes so live surfaces re-translate (e.g. TopBar runway). Payload = locale "tr"/"en".
 signal language_changed(locale: String)
+# Accessibility: the colourblind-safe semantic palette was toggled. Semantic colour is
+# never baked into master_theme.tres (build_theme.gd holds zero POSITIVE/NEGATIVE refs),
+# so the swap is a pure runtime repaint — UiTokens resolves the pair, this signal tells
+# live surfaces to re-read it. Payload = true when the CB palette is active.
+# Same self-healing grammar as language_changed: resident shell children repaint in
+# place, the open tab page rebuilds via a tab_changed re-emit.
+signal palette_changed(colorblind: bool)
 
 # --- Character signals (§13.2) ---
 signal character_added(character_id: String)
@@ -160,6 +167,36 @@ signal meeting_requested(vc_id: String)         # Hunt "TOPLANTI İSTE" → VCPi
 signal offer_countdown_changed(days_left: int)  # min sheet validity ≤ threshold; -1 = hide chip
 signal term_table_requested(vc_id: String)      # Finance>Yatırım "Masaya otur" / deal-prompt → main mounts the table (Spec 6)
 signal sheet_walked(vc_id: String)              # a table walk destroyed a sheet — HuntTab repaints (Spec 6)
+
+# --- Save / system-menu signals (SaveManager task) ---
+# Emitted at the very END of TimeManager._dispatch_daily_tick, once all twelve daily
+# slots have settled. NOT a duplicate of day_advanced: that one fires inside
+# GameState.advance_day(), which TimeManager calls BEFORE the ticks dispatch, so an
+# autosave hooked there would snapshot PRE-tick state (yesterday's finance, yesterday's
+# HR). Same rationale that already justifies hr_day_processed / news_stream_changed /
+# build_progress_changed — this is the run-state-settled hook, and it is the only
+# correct autosave boundary.
+signal day_tick_completed(day: int)
+# A save slot finished restoring AND the shell has been remounted. Payload = slot id.
+# Load order is teardown → reset_all_owners → initialize_run(restore) → registries →
+# remount, so every shell child has already painted from GameState by the time this
+# fires; it exists for surfaces that need a post-mount nudge, not for the initial paint.
+signal game_loaded(slot_id: String)
+# ESC on the shell with no tab page, no ModalLayer child and no PanelLayer child.
+# main.gd mounts SystemMenuModal (pause on open, restore prior speed on close) — the
+# same lifecycle as settings_requested.
+signal system_menu_requested
+# System menu → main.gd mounts SaveLoadModal. mode = "save" | "load".
+signal save_load_requested(mode: String)
+# F5 / F9. game_shell stays a pure input router (same shape as
+# speed_change_requested / debug_onboarding_retrigger_requested) — main.gd owns
+# the orchestration, because a quickload is the full teardown → reset → restore →
+# remount sequence and only main.gd holds the shell and the modal refs.
+# These fire in release builds too: the two debug endgame fixtures that used to
+# own F5/F9 moved to Ctrl+F5 / Ctrl+F9 precisely so the binding cannot behave
+# differently in dev than it does for the player.
+signal quicksave_requested
+signal quickload_requested
 
 # --- Debug signals (OS.is_debug_build only; emitter game_shell.gd) ---
 # Shift+F4 re-triggers onboarding on a running game (screenshot/mockup capture).

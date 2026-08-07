@@ -36,9 +36,11 @@ extends RefCounted
 
 # --- Local, non-tunable constants (keys and sentinels, not knobs) ---
 
-# Mixed into GameState.run_seed so the resignation roll is NOT the same stream as the global
-# one. A string hash rather than a magic number: String.hash() is stable for a given string
-# (same guarantee HRConstants.resign_voice already leans on).
+# SUPERSEDED by RngStreams.STREAM_HR_MORALE, which salts `run_seed ^ <name>.hash()` with
+# exactly the same technique for exactly the reason recorded here. Kept as a named constant
+# because HRConstants.resign_voice and the file's own header both cite it, and because it
+# documents WHY the salt is a string hash rather than a magic number: String.hash() is
+# stable for a given string. Nothing seeds from it any more — see _roll().
 const RNG_SALT := "hr_morale_system"
 
 # Per-record marker for "this leave was the MANUAL vacation, not the automatic annual one",
@@ -54,12 +56,14 @@ const NEVER := -1
 
 
 # --- Static state ---
-# Our OWN generator. SkillCheck.roll_against ends in a bare randf(), which draws from the one
-# global seed that event random-triggers and EventManager's per-priority shuffle also consume;
-# drawing from there would displace that stream and could flip a long-horizon case that has
-# nothing to do with HR. So the resignation roll holds its own.
-static var _rng := RandomNumberGenerator.new()
-static var _seeded_for: int = -1                 # run_seed the generator is currently keyed to
+# THE GENERATOR MOVED, THE REASONING DID NOT. This file used to hold a private
+# RandomNumberGenerator because SkillCheck ended in a bare randf() drawing from the one
+# global seed that event triggers and EventManager's shuffle also consumed — so an HR roll
+# could displace that stream and flip a long-horizon case with nothing to do with HR. That
+# insight is now the whole design: RngStreams gives events, skill and hr_morale one named
+# stream each, and this file draws from RngStreams.STREAM_HR_MORALE. The private _rng and
+# its _seeded_for cursor are gone (RngStreams keeps that cursor for all three streams), and
+# in exchange the HR sequence is now RESUMABLE from a save rather than only from birth.
 # Pending-departure latch. A resignation event sits in the queue until the player acknowledges
 # it; without this the roll would be re-attempted every day in between, and even though
 # EventManager.enqueue dedupes the event, the wasted draws would push the effective odds
@@ -427,12 +431,38 @@ static func forget_employee(character_id: String) -> void:
 
 
 static func reset_rng() -> void:
-	# Called by HRSystem.reset() from GameState.initialize_run, which now runs it AFTER
-	# run_seed is assigned (it used to run before, which would have keyed this generator to
-	# the PREVIOUS run's seed). _ensure_seeded() stays as a belt-and-braces re-key at the
-	# first roll so a future reordering cannot silently break determinism again.
-	_seed_from_run(GameState.run_seed)
+	# Called by HRSystem.reset() from GameState.initialize_run, which runs it AFTER run_seed
+	# is assigned (it used to run before, which would have keyed the generator to the
+	# PREVIOUS run's seed). RngStreams.get_stream() keeps the belt-and-braces re-key at the
+	# first roll, so a future reordering cannot silently break determinism again.
+	#
+	# NOTE ON THE LOAD PATH: this re-keys the hr_morale stream from run_seed, i.e. back to
+	# the START of the sequence. That is correct for a fresh run and would be wrong for a
+	# load — which is why SaveCodec.restore_systems runs RngStreams.from_dict() AFTER
+	# initialize_run has finished, restoring the saved position over this re-key.
+	RngStreams.reseed(GameState.run_seed)
 	_pending.clear()
+
+
+static func to_dict() -> Dictionary:
+	# _pending is the resignation latch: an employee whose roll already succeeded sits here
+	# until the player acknowledges the event, and without it the roll is re-attempted every
+	# day in between, pushing the effective odds silently above RESIGN_CHANCE_PER_DAY.
+	#
+	# It is PROVABLY empty at every save point today (the latch is set in the same breath as
+	# the enqueue, and SaveManager.can_save() refuses while EventManager.has_pending()), so
+	# this could have been justified as an exclusion. It is saved anyway: that invariant
+	# lives in a different file, and a schema that silently depends on another module's gate
+	# staying exactly this strict is a trap for whoever loosens it.
+	return {"pending_departures": _pending.duplicate()}
+
+
+static func from_dict(d: Dictionary) -> void:
+	if d.is_empty():
+		return
+	_pending.clear()
+	for id in (d.get("pending_departures", []) as Array):
+		_pending.append(String(id))
 
 
 # ============================================================================
@@ -477,20 +507,7 @@ static func _roll(chance: float) -> bool:
 		return true
 	if OS.is_debug_build() and forced == "fail":
 		return false
-	_ensure_seeded()
-	return _rng.randf() < chance
-
-
-static func _ensure_seeded() -> void:
-	if _seeded_for != GameState.run_seed:
-		_seed_from_run(GameState.run_seed)
-
-
-static func _seed_from_run(run_seed: int) -> void:
-	# Assigning `seed` also resets the generator's state, so the same run_seed always replays
-	# the same sequence of HR rolls.
-	_rng.seed = run_seed ^ RNG_SALT.hash()
-	_seeded_for = run_seed
+	return RngStreams.get_stream(RngStreams.STREAM_HR_MORALE).randf() < chance
 
 
 static func _positive_off_cooldown() -> bool:

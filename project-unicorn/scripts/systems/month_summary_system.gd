@@ -57,11 +57,10 @@ static func _build_summary_data() -> Dictionary:
 	# YESTERDAY's month (this runs on the 1st of the new one).
 	var closed: Dictionary = GameState.get_date_dict(GameState.day - 1)
 	var ledger: Dictionary = GameState.month_ledger
-	var phase_names := ["Bootstrap", "Traction", "Series A"]  # TopBar display names
 	var data := {
 		"month_title": "%s %d" % [GameState.MONTH_NAMES_TR[int(closed.month) - 1], int(closed.year)],
 		"day_range": "Gün %d–%d" % [int(ledger.get("start_day", 1)), GameState.day - 1],
-		"phase_name": phase_names[clampi(GameState.phase - 1, 0, phase_names.size() - 1)],
+		"phase_name": GameState.phase_display_name(GameState.phase),  # single home (game_state.gd)
 		"mrr": {"from": int(ledger.get("mrr", 0)), "to": GameState.mrr},
 		"cash": {"from": int(ledger.get("cash", 0)), "to": GameState.cash},
 		"team": {"from": int(ledger.get("employees", 1)), "to": _team_size()},

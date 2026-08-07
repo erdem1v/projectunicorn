@@ -46,6 +46,10 @@ const PHASE_NAMES := ["Bootstrap", "Traction", "Series A"]
 # _on_time_manager_speed_changed (round-trip). That round-trip is what keeps
 # the indicator honest after event-pause restore, build commits, etc.
 var current_speed: int = 1  # 0=pause, 1=1x, 2=2x, 3=3x, 4=4x
+# Son teklif geri sayımı. Yalnız kendi sinyali geldiğinde boyanan tek çip bu; renk
+# körü paleti takas edildiğinde yeniden boyayabilmek için değeri hatırlıyoruz
+# (sinyalin kendisi tekrar atmaz). -1 = çip gizli.
+var _offer_days_left: int = -1
 
 # Active/idle look is driven by theme type variations (master_theme.tres):
 # PhaseDotActive/PhaseDotDim and SpeedButtonActive/SpeedButton.
@@ -69,8 +73,9 @@ func _ready() -> void:
 	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
 	TimeManager.speed_changed.connect(_on_time_manager_speed_changed)
 	EventBus.language_changed.connect(_on_language_changed)
+	EventBus.palette_changed.connect(_on_palette_changed)
 	# Kepenk counter is danger-red on the dark chrome (bright variant for contrast).
-	shutter_label.add_theme_color_override("font_color", UiTokens.NEGATIVE_BRIGHT)
+	shutter_label.add_theme_color_override("font_color", UiTokens.negative_bright())
 	# Initial sync — TimeManager's _ready ran first (autoload order) and the
 	# field is whatever it landed on (default 1, or main.gd may have already
 	# emitted 0 to pause for onboarding before we got here).
@@ -94,6 +99,7 @@ func _exit_tree() -> void:
 	EventBus.offer_countdown_changed.disconnect(_on_offer_countdown_changed)
 	TimeManager.speed_changed.disconnect(_on_time_manager_speed_changed)
 	EventBus.language_changed.disconnect(_on_language_changed)
+	EventBus.palette_changed.disconnect(_on_palette_changed)
 
 
 # --- Refresh helpers ---
@@ -143,7 +149,7 @@ func _on_runway_changed(months: float) -> void:
 	runway_unit_label.visible = String(p.unit) != ""
 	# ARTIDA convention (Finance Tab v1): status green + the why as a hover note.
 	if bool(p.get("positive", false)):
-		runway_value_label.add_theme_color_override("font_color", UiTokens.POSITIVE_BRIGHT)
+		runway_value_label.add_theme_color_override("font_color", UiTokens.positive_bright())
 		runway_value_label.tooltip_text = String(p.get("note", ""))
 		runway_value_label.mouse_filter = Control.MOUSE_FILTER_STOP  # Labels default IGNORE; tooltip needs hover
 	else:
@@ -154,6 +160,15 @@ func _on_runway_changed(months: float) -> void:
 
 func _on_language_changed(_locale: String) -> void:
 	# Re-translate live surfaces (the runway status word) on a language switch.
+	_refresh_all()
+
+func _on_palette_changed(_cb: bool) -> void:
+	# Colourblind palette swapped. The three semantic tints on the chrome are
+	# per-instance color overrides, so they only move when re-read: the kepenk
+	# counter is set once at tree-enter (re-set here), the runway ARTIDA green and
+	# the offer countdown are both re-derived by _refresh_all.
+	shutter_label.add_theme_color_override("font_color", UiTokens.negative_bright())
+	_on_offer_countdown_changed(_offer_days_left)
 	_refresh_all()
 
 func _on_brand_changed(value: int) -> void:
@@ -199,10 +214,11 @@ func _on_shutter_changed(days_left: int) -> void:
 func _on_offer_countdown_changed(days_left: int) -> void:
 	# Term-sheet validity chip (Spec 4 / ledger 14): shown only when the soonest sheet
 	# is ≤ WARNING_DAYS. Amber above 1 day, red on the last day. -1 = hide.
+	_offer_days_left = days_left
 	offer_label.visible = days_left >= 0
 	if days_left >= 0:
 		offer_label.text = "TEKLİF: %d GÜN" % days_left
-		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT if days_left > 1 else UiTokens.NEGATIVE_BRIGHT)
+		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT if days_left > 1 else UiTokens.negative_bright())
 
 func _on_phase_changed(new_phase: int) -> void:
 	var idx: int = clampi(new_phase - 1, 0, PHASE_NAMES.size() - 1)

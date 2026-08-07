@@ -1,0 +1,122 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/modals/system_menu_modal.gd" id="1_sysmenu"]
+
+[node name="SystemMenuModal" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_sysmenu")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="CenterPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -190.0
+offset_top = -215.0
+offset_right = 190.0
+offset_bottom = 215.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ModalPanel"
+
+[node name="Body" type="VBoxContainer" parent="CenterPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 24.0
+offset_right = -28.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"TitleSerif"
+text = ""
+
+[node name="TitleGap" type="Control" parent="CenterPanel/Body"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="ResumeBtn" type="Button" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_type_variation = &"CommitButton"
+text = ""
+
+[node name="SaveBtn" type="Button" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = ""
+
+[node name="LoadBtn" type="Button" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = ""
+
+[node name="SettingsBtn" type="Button" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = ""
+
+[node name="MainMenuRow" type="HBoxContainer" parent="CenterPanel/Body"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MainMenuBtn" type="Button" parent="CenterPanel/Body/MainMenuRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = ""
+
+[node name="SoonBadge" type="Label" parent="CenterPanel/Body/MainMenuRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"BadgeLabel"
+text = ""
+
+[node name="QuitBtn" type="Button" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = ""
+
+[node name="Spacer" type="Control" parent="CenterPanel/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ReasonLabel" type="Label" parent="CenterPanel/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"RowMeta"
+text = ""
+autowrap_mode = 3

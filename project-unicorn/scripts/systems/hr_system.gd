@@ -66,9 +66,34 @@ static func daily_tick() -> void:
 
 static func reset() -> void:
 	# Static state in the HR sub-systems must not survive into a fresh run (the smoke
-	# harness runs one case per process, but the debug onboarding re-trigger does not).
+	# harness runs one case per process, but the debug onboarding re-trigger does not — and
+	# neither does a load).
+	# Verified complete against the two sub-systems' statics:
+	#   HRMoraleSystem  — the RNG cursor (now RngStreams' concern) + _pending. Both cleared.
+	#   HROvertimeSystem — _pay_today / _pay_stamped_day / _pay_carry. All three cleared.
+	# HRSearchSystem holds NO statics: its whole state machine lives on GameState.hr_search,
+	# which initialize_run clears and the save carries.
 	HRMoraleSystem.reset_rng()
 	HROvertimeSystem.reset()
+
+
+# --- Save routing (SaveManager). This file is the HR orchestrator, so it is also the one
+#     door the codec knocks on; each sub-system still owns its own payload. ---
+
+static func to_dict() -> Dictionary:
+	# HROvertimeSystem's three statics are deliberately NOT here. _pay_today /
+	# _pay_stamped_day are a SINGLE DAY's stamp, self-verifying against GameState.day
+	# (pay_accrued_today returns 0 when the stamp is not today's), so a restored run simply
+	# reads 0 until the next daily tick re-stamps — which is the same answer the stamp would
+	# have given. _pay_carry only holds value between a same-day stop and the next tick, a
+	# window no save can land in. The overtime BLOCKS themselves live on GameState.hr_overtime.
+	return {"morale": HRMoraleSystem.to_dict()}
+
+
+static func from_dict(d: Dictionary) -> void:
+	if d.is_empty():
+		return
+	HRMoraleSystem.from_dict(d.get("morale", {}) as Dictionary)
 
 
 # --- Read surface for the HR tab (task 3) and the left-rail badge ---

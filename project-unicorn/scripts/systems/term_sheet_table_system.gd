@@ -41,6 +41,16 @@ static func is_active() -> bool:
 	return _active
 
 
+static func reset() -> void:
+	# Run-boundary reset (SaveManager.reset_all_owners) — the public door onto the private
+	# _reset() the lifecycle already used. Same contract as the other three sitting-scoped
+	# systems: the eleven statics are reset, never serialised, because SaveManager.can_save()
+	# refuses while is_active() and a table is therefore provably closed at every save point.
+	# The SHEET itself is persistent and lives in GameState.active_sheets, which the save
+	# carries; what dies here is the negotiation in progress.
+	_reset()
+
+
 # ============================================================================
 # Lifecycle
 # ============================================================================

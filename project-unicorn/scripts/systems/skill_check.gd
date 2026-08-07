@@ -20,6 +20,15 @@ const MAX_CHANCE := 0.95
 const SALES_READ_THRESHOLD := 2   # Satış >= this "reads" a prospect (reveals budget/need)
 
 
+static func _rng() -> RandomNumberGenerator:
+	# Every founder skill roll draws from the named `skill` stream, not the global one. The
+	# global generator's position cannot be read back (Godot exposes no getter), so a save
+	# could record its seed and still never resume its sequence — which for this file would
+	# mean the pitch you reload is not the pitch you saved. Both roll sites below share this
+	# one accessor so the stream can never fork.
+	return RngStreams.get_stream(RngStreams.STREAM_SKILL)
+
+
 static func chance_for(skill_name: String, difficulty: int, bonus: int = 0) -> float:
 	var skill_val: int = GameState.get_founder_skill(skill_name)
 	return clampf(
@@ -54,7 +63,7 @@ static func roll_against(chance: float) -> bool:
 		return true
 	if OS.is_debug_build() and forced == "fail":
 		return false
-	return randf() < chance
+	return _rng().randf() < chance
 
 
 static func resolve(skill_name: String, difficulty: int, bonus: int = 0) -> Dictionary:
@@ -68,7 +77,7 @@ static func resolve(skill_name: String, difficulty: int, bonus: int = 0) -> Dict
 	elif OS.is_debug_build() and forced == "fail":
 		roll = 1.0
 	else:
-		roll = randf()
+		roll = _rng().randf()
 	var passed: bool = roll < chance
 	var margin: float = chance - roll  # >0 comfortable pass; <0 how badly failed
 	return {

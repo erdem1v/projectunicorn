@@ -240,3 +240,78 @@ TICKER_07,Melek yatırım ağları yeni dönem başvurularını açtı.,Angel ne
 TICKER_08,Yazılım ihracatçıları yeni pazar arayışında; fuar takvimi dolu.,Software exporters hunt for new markets; the trade-fair calendar is full.
 TICKER_09,Ofis pazarında küçülme sürüyor; paylaşımlı katlar dolu.,Office downsizing continues; shared floors are full.
 TICKER_10,Teknoloji basınında değerleme sohbeti hiç bitmiyor.,Valuation chatter never stops in the tech press.
+SET_TITLE,Ayarlar,Settings
+SET_SEC_DISPLAY,Görüntü,Display
+SET_SEC_AUDIO,Ses,Audio
+SET_SEC_GAME,Oyun,Game
+SET_SEC_ACCESSIBILITY,Erişilebilirlik,Accessibility
+SET_SEC_DATA,Veri,Data
+SET_WINDOW_MODE,Pencere modu,Window mode
+SET_WINDOW_FULLSCREEN,Tam ekran,Fullscreen
+SET_WINDOW_BORDERLESS,Kenarlıksız,Borderless
+SET_WINDOW_WINDOWED,Pencereli,Windowed
+SET_RESOLUTION,Çözünürlük,Resolution
+SET_RESOLUTION_LOCKED,Yalnız pencereli modda değiştirilebilir.,Adjustable in windowed mode only.
+SET_UI_SCALE,Arayüz ölçeği,Interface scale
+SET_UI_SCALE_TOO_SMALL,%d%% bu pencere boyutunda okunmuyor; daha geniş bir ekran gerekiyor.,%d%% is unreadable at this window size; it needs a wider display.
+SET_VSYNC,Dikey eşitleme,Vertical sync
+SET_VOL_MASTER,Ana ses,Master volume
+SET_VOL_MUSIC,Müzik,Music
+SET_VOL_SFX,Efektler,Effects
+SET_MUSIC_ENABLED,Arka plan müziği,Background music
+SET_MUTE_UNFOCUSED,Odak kaybında sessize al,Mute when unfocused
+SET_AUTOSAVE,Otomatik kayıt sıklığı,Autosave frequency
+SET_AUTOSAVE_OFF,Kapalı,Off
+SET_AUTOSAVE_DAILY,Her gün,Every day
+SET_AUTOSAVE_WEEKLY,Her hafta,Every week
+SET_AUTOSAVE_MONTHLY,Her ay,Every month
+SET_COLORBLIND,Renk körü dostu palet,Colourblind-friendly palette
+SET_COLORBLIND_NOTE,Olumlu ve olumsuz renk çifti maviye ve turuncuya döner.,The positive and negative colour pair becomes blue and orange.
+SET_OPEN_SAVE_FOLDER,Kayıt klasörünü aç,Open save folder
+SET_RESET_DEFAULTS,Ayarları varsayılana döndür,Reset settings to defaults
+SET_RESET_CONFIRM_TITLE,Ayarlar sıfırlansın mı?,Reset settings?
+SET_RESET_CONFIRM_BODY,"Görüntü, ses ve oyun ayarları varsayılana döner. Kayıtların etkilenmez.","Display, audio and game settings return to their defaults. Your saves are untouched."
+SET_RESET_CONFIRM_OK,Sıfırla,Reset
+SET_RESET_CONFIRM_CANCEL,Vazgeç,Cancel
+SET_CLOSE,Kapat,Close
+SYS_TITLE,Menü,Menu
+SYS_RESUME,Devam,Resume
+SYS_SAVE,Kaydet,Save
+SYS_LOAD,Yükle,Load
+SYS_SETTINGS,Ayarlar,Settings
+SYS_MAIN_MENU,Ana menüye dön,Return to main menu
+SYS_SOON,YAKINDA,SOON
+SYS_QUIT,Masaüstüne çık,Quit to desktop
+SYS_QUIT_TITLE,Kaydedilmemiş ilerleme var.,You have unsaved progress.
+SYS_QUIT_BODY,Son kayıttan bu yana oynadığın günler kaybolur.,The days you have played since your last save will be lost.
+SYS_QUIT_SAVE,Kaydet ve çık,Save and quit
+SYS_QUIT_DISCARD,Çık,Quit
+SYS_CANCEL,Vazgeç,Cancel
+SAVE_TITLE_SAVE,Kaydet,Save
+SAVE_TITLE_LOAD,Yükle,Load
+SAVE_NEW_SLOT,Yeni kayıt,New save
+SAVE_QUICK_SLOT,Hızlı kayıt,Quicksave
+SAVE_AUTO_SLOT,Otomatik kayıt %d,Autosave %d
+SAVE_MANUAL_SLOT,Kayıt %d,Save %d
+SAVE_META_DAY,Gün %d,Day %d
+SAVE_META_CASH,Kasa %s,Cash %s
+SAVE_META_MRR,MRR %s,MRR %s
+SAVE_EMPTY,Henüz kayıt yok.,No saves yet.
+SAVE_DELETE,Sil,Delete
+SAVE_OVERWRITE_TITLE,Üzerine yazılsın mı?,Overwrite?
+SAVE_OVERWRITE_BODY,%s kaydının yerini bu kayıt alır.,This save takes the place of %s.
+SAVE_OVERWRITE_OK,Üzerine yaz,Overwrite
+SAVE_DELETE_TITLE,Kayıt silinsin mi?,Delete this save?
+SAVE_DELETE_BODY,%s geri getirilemez.,%s cannot be brought back.
+SAVE_DELETE_OK,Sil,Delete
+SAVE_LOAD_CONFIRM_TITLE,Kaydedilmemiş ilerleme var.,You have unsaved progress.
+SAVE_LOAD_CONFIRM_BODY,Bu kaydı açarsan son kayıttan bu yana oynadığın günler kaybolur.,Opening this save loses the days you have played since your last save.
+SAVE_LOAD_CONFIRM_OK,Yükle,Load
+SAVE_SAVED,Kaydedildi.,Saved.
+SAVE_LOADED,Yüklendi.,Loaded.
+SAVE_NEVER_SAVED,Bu oyun hiç kaydedilmedi.,This run has never been saved.
+SAVE_ERR_CORRUPT,Dosya okunamıyor.,This file cannot be read.
+SAVE_ERR_NEWER,Bu kayıt daha yeni bir sürümden; açılamıyor.,This save comes from a newer version and cannot be opened.
+SAVE_ERR_MODAL_OPEN,Bir karar ekranı açıkken kaydedilemez.,Saving is unavailable while a decision screen is open.
+SAVE_ERR_WRITE,Kayıt yazılamadı.,The save could not be written.
+SAVE_ERR_NO_RUN,Kaydedilecek bir oyun yok.,There is no run to save.

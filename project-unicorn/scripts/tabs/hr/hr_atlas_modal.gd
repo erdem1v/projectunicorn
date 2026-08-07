@@ -199,7 +199,7 @@ func _fee_block() -> Control:
 				HRUiShared.money(int(pv.get("commission_high", 0))),
 			], &"RowMeta", UiTokens.INK_MUTED))
 		for warning in pv.get("warnings", []):
-			col.add_child(UiFactory.make_label(String(warning), &"RowMeta", UiTokens.NEGATIVE))
+			col.add_child(UiFactory.make_label(String(warning), &"RowMeta", UiTokens.negative()))
 	return col
 
 

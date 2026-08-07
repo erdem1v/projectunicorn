@@ -42,7 +42,7 @@ func setup(index: int, choice: Dictionary) -> void:
 	_caption.visible = caption != ""
 	_caption.text = caption
 	# Danger captions read in the dark-surface warning tint; ordinary ones stay dim.
-	var caption_col: Color = UiTokens.NEGATIVE_BRIGHT if bool(choice.get("caption_danger", false)) else UiTokens.CREAM_DIM
+	var caption_col: Color = UiTokens.negative_bright() if bool(choice.get("caption_danger", false)) else UiTokens.CREAM_DIM
 	_caption.add_theme_color_override("font_color", caption_col)
 
 	_marked.visible = bool(choice.get("marked", false))

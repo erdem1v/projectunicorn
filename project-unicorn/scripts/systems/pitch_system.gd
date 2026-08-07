@@ -178,6 +178,21 @@ static func is_active() -> bool:
 	return _active
 
 
+static func reset() -> void:
+	# Run-boundary reset (SaveManager.reset_all_owners). MEETING-LOCAL STATE IS RESET, NEVER
+	# SERIALISED — and the save gate is what makes that honest rather than a carve-out:
+	# SaveManager.can_save() refuses while is_active(), so a pitch is provably idle at every
+	# save point and there is nothing mid-sitting for a schema to describe. A pitch is one
+	# sitting; it does not survive closing the game, and it must not survive the company.
+	_active = false
+	_prospect = null
+	_stage_idx = 0
+	_accum_bonus = 0
+	_price_mult = 0.55
+	_close_diff_delta = 0
+	_last_band = ""
+
+
 static func can_pitch() -> bool:
 	return GameState.day >= int(GameState.get_flag("next_pitch_day", 0))
 

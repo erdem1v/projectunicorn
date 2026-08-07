@@ -66,6 +66,39 @@ const GATES := [
 static var _gate_event: GameEvent = null
 
 
+# --- Run boundary + save (SaveManager) ---
+
+static func reset() -> void:
+	# The cache comment above used to end "the cache itself is reset on the next gate open /
+	# initialize_run via a fresh process" — that is exactly the process-relaunch dependency
+	# this seam removes. A leaked _gate_event is a Frank scene belonging to a dead company,
+	# and it survives an in-place restart precisely because _open_gate is the only writer and
+	# the ratchet stops it re-running.
+	_gate_event = null
+
+
+static func restore_gate_cache() -> void:
+	# Called on load. NOTHING IS SERIALISED HERE, on purpose: the gate scene is a pure
+	# function of the GATES table plus GameState (phase + the gate_declines flag picks the
+	# escalation body), both of which the save already carries. Rebuilding beats storing a
+	# copy that would go stale the moment the copy is edited.
+	#
+	# WITHOUT THIS A LOADED GATE IS LOST FOREVER, and silently: phase_gate_ready is a
+	# one-way ratchet, so daily_tick takes the _tick_reminder branch and never re-evaluates
+	# conditions — and _tick_reminder returns immediately on a null _gate_event. The player
+	# would sit at a satisfied gate that never prompts again, with no way to advance a phase.
+	if not GameState.phase_gate_ready:
+		return
+	var gate: Dictionary = _gate_for_phase(GameState.phase)
+	if gate.is_empty():
+		return
+	_gate_event = _build_gate_event(gate)
+	_refresh_gate_copy()   # re-apply the escalation body the decline count has earned
+	# Deliberately NOT re-enqueued: saving is blocked while anything is queued or showing,
+	# so at save time the scene was waiting on the reminder cadence. gate_prompt_day rode
+	# along in the save, so _tick_reminder resumes that cadence exactly where it was.
+
+
 static func daily_tick() -> void:
 	if not GameState.run_active:
 		return
@@ -155,9 +188,10 @@ static func _gate_for_phase(phase: int) -> Dictionary:
 
 
 static func _phase_display_name(phase: int) -> String:
-	# TopBar display names (top_bar.gd PHASE_NAMES) — keep in sync.
-	var names := ["Bootstrap", "Traction", "Series A"]
-	return names[clampi(phase - 1, 0, names.size() - 1)]
+	# Delegates to the single home (GameState.phase_display_name). This used to hold its own
+	# copy of ["Bootstrap", "Traction", "Series A"] with a "keep in sync" comment, which is
+	# the comment a codebase writes instead of a seam.
+	return GameState.phase_display_name(phase)
 
 
 static func _build_gate_event(gate: Dictionary) -> GameEvent:

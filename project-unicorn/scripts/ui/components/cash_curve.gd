@@ -98,7 +98,7 @@ func _draw() -> void:
 		var gy: float = lerpf(y0, y1, float(i) / float(GRID_LINES + 1))
 		draw_line(Vector2(x0, gy), Vector2(x1, gy), UiTokens.DIVIDER_LIGHT, 1.0)
 	if cash_min < 0.0:
-		var zero_color: Color = UiTokens.NEGATIVE
+		var zero_color: Color = UiTokens.negative()
 		zero_color.a = 0.4
 		var zy: float = to_px.call(day_min, 0.0).y
 		draw_line(Vector2(x0, zy), Vector2(x1, zy), zero_color, 1.0)
@@ -143,11 +143,11 @@ func _draw() -> void:
 	#     kasa erimiyorken kırmızı erime çizgisi çizilmez). ---
 	if current_net < 0:
 		var end_c: Vector2 = to_px.call(day_max, end_current)
-		draw_dashed_line(today_px, end_c, UiTokens.NEGATIVE, PROJECTION_WIDTH, DASH_LEN)
+		draw_dashed_line(today_px, end_c, UiTokens.negative(), PROJECTION_WIDTH, DASH_LEN)
 
 	# --- 6. Projeksiyon "satış hedefi tutarsa" ---
 	var end_o: Vector2 = to_px.call(day_max, end_optimistic)
-	draw_dashed_line(today_px, end_o, UiTokens.POSITIVE, PROJECTION_WIDTH, DASH_LEN)
+	draw_dashed_line(today_px, end_o, UiTokens.positive(), PROJECTION_WIDTH, DASH_LEN)
 
 	# --- 7. Bugün noktası en üstte ---
 	draw_circle(today_px, TODAY_DOT_R, UiTokens.ACCENT_DEEP)

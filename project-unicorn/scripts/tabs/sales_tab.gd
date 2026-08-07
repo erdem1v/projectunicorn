@@ -333,7 +333,7 @@ func _card_risk(c: Customer) -> Control:
 	col.add_child(UiFactory.make_label(tr("SALES_REASON_PREFIX") % _risk_reason(c), &"QuoteSerif"))
 	# Watched churn countdown (brick, mono).
 	if c.churn_countdown >= 0:
-		col.add_child(UiFactory.make_label(tr("SALES_CHURN_COUNTDOWN") % c.churn_countdown, &"RowMeta", UiTokens.NEGATIVE))
+		col.add_child(UiFactory.make_label(tr("SALES_CHURN_COUNTDOWN") % c.churn_countdown, &"RowMeta", UiTokens.negative()))
 	_add_steward_line(col, c)
 	# Action → the existing retention decision modal (backend-built; state-free trigger).
 	col.add_child(_action_button(tr("SALES_ACTION_RETAIN") + " →", func() -> void:

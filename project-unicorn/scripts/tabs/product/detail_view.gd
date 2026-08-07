@@ -15,9 +15,9 @@ signal navigate_requested(view_id: String, args: Dictionary)
 
 const PricingPanelScript := preload("res://scripts/tabs/product/pricing_panel.gd")
 
-# Eksen renk üçlüsü tek kaynaktan (ProductUiShared.AXIS_COLORS) — creation
-# önizlemesiyle aynı legend renkleri.
-const AXIS_COLORS := ProductUiShared.AXIS_COLORS
+# Eksen renk üçlüsü tek kaynaktan (ProductUiShared.axis_color) — creation
+# önizlemesiyle aynı legend renkleri. Sabit kopya EMEKLİ: renk körü paleti
+# "stability"yi çalışma zamanında çevirir, const bir kopya ilk renge çakılırdı.
 
 var _is_b2b := false
 
@@ -174,7 +174,7 @@ func _build_left_column(left: VBoxContainer) -> void:
 	for axis in ProductUiShared.AXIS_KEYS:
 		var lrow := HBoxContainer.new()
 		lrow.add_theme_constant_override("separation", 6)
-		lrow.add_child(UiFactory.make_dot(AXIS_COLORS[axis], 7))
+		lrow.add_child(UiFactory.make_dot(ProductUiShared.axis_color(String(axis)), 7))
 		var alabel := UiFactory.make_label(ProductUiShared.axis_label(axis), &"RowMeta", UiTokens.INK)
 		alabel.custom_minimum_size = Vector2(70, 0)
 		alabel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -185,7 +185,7 @@ func _build_left_column(left: VBoxContainer) -> void:
 		abar.show_percentage = false
 		abar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		abar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		_override_bar_fill(abar, AXIS_COLORS[axis])
+		_override_bar_fill(abar, ProductUiShared.axis_color(String(axis)))
 		lrow.add_child(abar)
 		var aval := UiFactory.make_label("+0", &"RowName")
 		aval.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -399,7 +399,7 @@ func _repaint_profile(ver: int, bugs: int) -> void:
 	var risk: String = ProductSystem.product_bug_risk()
 	_risk_value.text = ProductUiShared.risk_label(risk)
 	_risk_value.add_theme_color_override("font_color",
-		UiTokens.NEGATIVE_BRIGHT if risk == "yuksek" else UiTokens.INK)
+		UiTokens.negative_bright() if risk == "yuksek" else UiTokens.INK)
 	# Rozetler: 2 chip — palet/metin birlikte değiştiği için yeniden kurulur
 	# (liste değil; tam-ağaç rebuild sayılmaz).
 	_clear(_badges_row)
@@ -522,7 +522,7 @@ func _repaint_bottom(sub: String, ver: int) -> void:
 		line += " · %s %s" % [String(above["name"]), RivalRegistry.format_share(float(above["share_pct"]))]
 	_league_label.text = line + ((" · %s seni geçti." % passer) if passer != "" else "")
 	_league_label.add_theme_color_override("font_color",
-		UiTokens.NEGATIVE if passer != "" else UiTokens.INK_MUTED)
+		UiTokens.negative() if passer != "" else UiTokens.INK_MUTED)
 	var bugs_heavy: bool = ProductSystem.product_bug_risk() == "yuksek"
 	_frank_line.text = ProductUiShared.frank_line(_weakest_axis_id(), ver + 1, passer, bugs_heavy)
 

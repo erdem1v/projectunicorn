@@ -168,9 +168,43 @@ const CAPACITY_BASE := 1
 static var active_build: FeatureBuild = null
 # Run'ın ilk iterasyon kararında öğretici modalın BİR KEZ atıldığının bayrağı
 # (Erdem kararı 2026-08-06: kalıcı gramer park + tracker butonları, modal yalnız ilk
-# karşılaşmada). NOT: static reset süreç relaunch'una dayanır (TEKRAR DENE = OS
-# restart — FinanceSystem statics ile aynı kural; in-place seam SaveManager'ın işi).
+# karşılaşmada). In-place seam ARTIK VAR: reset() / to_dict() / from_dict() aşağıda —
+# eski "süreç relaunch'una dayanır" notu SaveManager task'ıyla kapandı.
 static var _iter_intro_shown := false
+
+
+# --- Run boundary + save (SaveManager) ---
+
+static func reset() -> void:
+	# The in-place reset the header note above promised. Without it an in-place restart
+	# (and every load) carried the previous run's BUILD into the new company: capacity_demand
+	# counts it, _is_eligible suppresses every event that does not match its phase, and the
+	# Product tab renders a tracker for a product nobody committed to. _iter_intro_shown
+	# leaking is milder but the same class — the new founder never gets the tutorial beat
+	# because a founder who no longer exists already saw it.
+	active_build = null
+	_iter_intro_shown = false
+
+
+static func to_dict() -> Dictionary:
+	# The live product itself (axes, version, bug counts, shipped set) is NOT here: it lives
+	# in GameState.flags under the mvp_* keys, which the GameState block already carries.
+	# This is only the in-flight BUILD plus the tutorial latch.
+	return {
+		"active_build": SaveCodec.res_to_dict(active_build) if active_build != null else null,
+		"iter_intro_shown": _iter_intro_shown,
+	}
+
+
+static func from_dict(d: Dictionary) -> void:
+	if d.is_empty():
+		return
+	var raw: Variant = d.get("active_build", null)
+	if typeof(raw) == TYPE_DICTIONARY:
+		active_build = SaveCodec.res_from_dict(raw as Dictionary, FeatureBuild) as FeatureBuild
+	else:
+		active_build = null
+	_iter_intro_shown = bool(d.get("iter_intro_shown", false))
 
 
 # --- Entry point (called by TimeManager._tick_product at slot 1) ---

@@ -200,7 +200,6 @@ text = "ÇÖZÜLEN"
 
 [node name="Val" type="Label" parent="Root/Panel/VBox/BetaRow/FixedBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.243, 0.42, 0.2, 1)
 text = "0"
 
 [node name="RemainBox" type="VBoxContainer" parent="Root/Panel/VBox/BetaRow"]
@@ -215,7 +214,6 @@ text = "KALAN"
 
 [node name="Val" type="Label" parent="Root/Panel/VBox/BetaRow/RemainBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.639, 0.2, 0.153, 1)
 text = "0"
 
 [node name="IterLine" type="Label" parent="Root/Panel/VBox"]

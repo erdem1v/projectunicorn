@@ -341,8 +341,8 @@ func _render_pips(p: Dictionary) -> void:
 
 func _caption_color(result: String) -> Color:
 	match result:
-		"success": return UiTokens.POSITIVE_BRIGHT
-		"failure": return UiTokens.NEGATIVE_BRIGHT
+		"success": return UiTokens.positive_bright()
+		"failure": return UiTokens.negative_bright()
 		_: return UiTokens.CREAM
 
 

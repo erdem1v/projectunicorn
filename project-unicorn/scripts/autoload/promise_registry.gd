@@ -74,6 +74,18 @@ func reset() -> void:
 	_promises.clear()
 
 
+func insert_raw(promise: Promise) -> void:
+	# SAVE RESTORE ONLY — no promise_created emit (create() is the seam for a promise that
+	# is actually being MADE; restoring one is not a new commitment).
+	# SaveCodec deliberately restores promises LAST, after every customer is seated: this
+	# registry binds customer_removed → drop_open_for at _ready, so any customer churn that
+	# happened between the two would silently delete restored promises.
+	if promise == null or promise.id == "":
+		push_warning("[PromiseRegistry] insert_raw() called with null or missing id")
+		return
+	_promises[promise.id] = promise
+
+
 func _on_customer_removed(customer_id: String) -> void:
 	drop_open_for(customer_id)
 

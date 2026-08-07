@@ -183,7 +183,7 @@ func _build_offer_card(sheet) -> Control:
 	var t: Dictionary = sheet.term_bands
 	card.add_child(_label("Değerleme: %s · Hisse: %s · Board: %s" % [t.get("valuation", "—"), t.get("dilution", "—"), t.get("board", "—")], C_DIM, 11, true))
 	var days: int = sheet.days_left(GameState.day)
-	var dl := _label("Geçerlilik: %d gün" % days, UiTokens.ACCENT_DEEP if days > PitchConstants.WARNING_DAYS else UiTokens.NEGATIVE, 11)
+	var dl := _label("Geçerlilik: %d gün" % days, UiTokens.ACCENT_DEEP if days > PitchConstants.WARNING_DAYS else UiTokens.negative(), 11)
 	card.add_child(dl)
 	# Actions.
 	var actions := HBoxContainer.new()

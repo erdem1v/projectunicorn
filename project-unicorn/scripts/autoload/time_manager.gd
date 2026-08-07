@@ -57,6 +57,18 @@ var _in_game_hours: float = float(INITIAL_HOUR)  # Accumulator within current da
 # Debug-only: track real-time delta between daily ticks for tempo verification
 var _last_tick_msec: int = 0
 
+# Hard stop for _process, independent of speed and of get_tree().paused. Held by
+# SaveManager.apply_loaded_state for the duration of a load.
+#
+# WHY IT HAS TO EXIST: a load runs across several statements — reset every owner, re-init
+# GameState, restore the registries, restore the systems. The tree is NOT paused during
+# that (main.gd has just freed the shell, so nothing is holding a pause), which means this
+# node's _process is still live and a single frame landing mid-restore would tick a day
+# against a half-restored world: employees reset but customers not yet seated, a build
+# already back but the clock still on the old run's hour. Speed-0 would not be enough —
+# it is player-facing state that the restore itself then overwrites.
+var _suspended: bool = false
+
 
 func _ready() -> void:
 	get_tree().paused = false
@@ -81,6 +93,8 @@ static func hours_per_real_second(idx: int) -> float:
 
 
 func _process(delta: float) -> void:
+	if _suspended:
+		return  # a load is rebuilding the world; see _suspended
 	if not GameState.run_active:
 		# Terminal reached (ENDGAME_DESIGN.md §7.3): world stops. No hours accrue,
 		# no MRR behind the ending screen.
@@ -130,10 +144,74 @@ func _drain_boundaries() -> void:
 
 
 func sync_to_current_hour() -> void:
-	# GameState.current_hour dışarıdan yazıldığında (initialize_run / debug skip)
-	# accumulator'ı aynı saate kilitler — ilk günün saatlik tikleri ilk saatten
+	# GameState.current_hour dışarıdan yazıldığında (initialize_run / debug skip / save
+	# restore) accumulator'ı aynı saate kilitler — ilk günün saatlik tikleri ilk saatten
 	# itibaren akar ("ilk gün ölü" bug fix'i).
 	_in_game_hours = float(GameState.current_hour)
+
+
+# --- Run boundary + save (SaveManager) ---
+
+func set_suspended(value: bool) -> void:
+	# See _suspended. Deliberately NOT routed through the speed system: speed is player
+	# state that a load restores, and borrowing it as a load lock would mean the restore
+	# has to guess what to hand back.
+	_suspended = value
+
+
+func reset() -> void:
+	# Run-boundary reset (SaveManager.reset_all_owners). TimeManager had no reset, so an
+	# in-place restart inherited the previous run's clock: _in_game_hours frozen wherever
+	# the old company stopped (initialize_run's sync_to_current_hour repaired that one by
+	# luck, not by contract) and — the part nothing repaired — the SPEED, so a new run
+	# opened at whatever 4x the last one was left running at.
+	current_speed = 1
+	last_running_speed = 1
+	_in_game_hours = float(INITIAL_HOUR)
+	_last_tick_msec = 0
+	get_tree().paused = false
+	# _suspended IS DELIBERATELY NOT TOUCHED. It is a lock held by the CALLER, not a piece of
+	# clock state: SaveManager.apply_loaded_state takes it and then calls reset_all_owners(),
+	# which lands here — so clearing it would hand the clock back mid-rebuild, which is the
+	# exact frame this lock exists to prevent. On the standalone restart path nobody has
+	# taken it, so it is already false and there is nothing to clear.
+
+
+func to_dict() -> Dictionary:
+	# The float accumulator is the load-bearing one: GameState.current_hour is only its
+	# integer floor, so restoring the hour alone would round the day's position down and
+	# hand the player back up to an hour of free build progress on every load.
+	return {
+		"in_game_hours": _in_game_hours,
+		"current_speed": current_speed,
+		"last_running_speed": last_running_speed,
+	}
+
+
+func from_dict(d: Dictionary) -> void:
+	if d.is_empty():
+		return
+	# The accumulator is authoritative over GameState.current_hour, which is only its integer
+	# floor — but only while the two AGREE. _drain_boundaries maintains the invariant
+	# int(_in_game_hours) == GameState.current_hour outside a drain, so a save where they
+	# disagree is a corrupt or hand-edited file, and trusting the float there would either
+	# replay hours already lived or skip a stretch of the day. Fall back to the integer hour
+	# and say so, rather than restoring a clock that lies.
+	var restored_hours: float = float(d.get("in_game_hours", float(GameState.current_hour)))
+	if int(restored_hours) != GameState.current_hour:
+		push_warning("[TimeManager] save disagrees with itself: in_game_hours %.3f vs current_hour %d — using the hour"
+			% [restored_hours, GameState.current_hour])
+		restored_hours = float(GameState.current_hour)
+	_in_game_hours = restored_hours
+	last_running_speed = clampi(int(d.get("last_running_speed", 1)), 1, SECONDS_PER_DAY.size() - 1)
+	# The clock comes back PAUSED regardless of the speed the save was written at, and that
+	# is a decision rather than an omission: a load drops the player into a company they may
+	# not have seen for days, and resuming at 4x would spend that company's next day before
+	# they had read the top bar. The saved speed survives as last_running_speed, so the
+	# Space-toggle (or any TopBar click) resumes exactly where they left off.
+	current_speed = 0
+	get_tree().paused = true
+	speed_changed.emit(0)
 
 
 # --- Speed control ---
@@ -189,6 +267,15 @@ func _dispatch_daily_tick() -> void:
 		var delta_ms: int = (now - _last_tick_msec) if _last_tick_msec > 0 else 0
 		_last_tick_msec = now
 		print("[TimeManager] Daily tick — Day %d (Δ %d ms)" % [GameState.day, delta_ms])
+
+	# THE LAST LINE OF THE DAY, and it has to be. This is the autosave boundary, and the
+	# only moment at which "the day is finished" is true for every system at once.
+	# NOT EventBus.day_advanced, which is the obvious-looking choice and is wrong: that one
+	# fires inside GameState.advance_day(), i.e. BEFORE the twelve slots above have run — a
+	# save taken there would record the new day number against yesterday's product, finance,
+	# sales and event state. (HRSystem.daily_tick's closing hr_day_processed emit documents
+	# the same trap for the same reason, one scope down.)
+	EventBus.day_tick_completed.emit(GameState.day)
 
 
 # --- Hourly tick dispatch (lighter; for time-of-day events + schedule) ---

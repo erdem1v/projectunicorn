@@ -399,6 +399,58 @@ func _initialize() -> void:
 		th.set_icon("unchecked_disabled", &"SettingsSwitch", sw_off)
 	th.set_color("font_color", &"SettingsSwitch", T.INK)
 
+	# ---- SettingsDropdown / SettingsPopup: the settings screen's OptionButton and
+	# the PopupMenu it opens. Both base types were COMPLETELY unthemed — an
+	# un-varied OptionButton fell through to Godot's default dark slab at 16px,
+	# which is the same "random flat text" the base-type block below exists to
+	# kill, and its popup is a SEPARATE Window with its OWN theme type (the button's
+	# stylebox never reaches it). The settings panel is the first screen with real
+	# dropdowns, so the pair is defined here rather than left to a scene override.
+	#
+	# Register: light body, i.e. the base LineEdit's grammar (SURFACE_INPUT fill +
+	# CARD_BORDER hairline, amber on focus) rather than the base Button's — a
+	# dropdown reads as a FIELD you pick a value in, not as an action you press.
+	th.set_type_variation(&"SettingsDropdown", &"OptionButton")
+	th.set_stylebox("normal", &"SettingsDropdown", _box(T.SURFACE_INPUT, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_INPUT.x, T.PAD_INPUT.y))
+	th.set_stylebox("hover", &"SettingsDropdown", _box(T.SURFACE_INPUT, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_INPUT.x, T.PAD_INPUT.y))
+	th.set_stylebox("pressed", &"SettingsDropdown", _box(T.SURFACE_PRESSED, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_INPUT.x, T.PAD_INPUT.y))
+	th.set_stylebox("focus", &"SettingsDropdown", _box(Color.TRANSPARENT, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_INPUT.x, T.PAD_INPUT.y))
+	th.set_stylebox("disabled", &"SettingsDropdown", _box(T.SURFACE_DISABLED, T.BORDER_HAIRLINE, T.BORDER_DISABLED, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_INPUT.x, T.PAD_INPUT.y))
+	th.set_font_size("font_size", &"SettingsDropdown", T.SIZE_BODY)
+	th.set_color("font_color", &"SettingsDropdown", T.INK)
+	th.set_color("font_hover_color", &"SettingsDropdown", T.INK)
+	th.set_color("font_pressed_color", &"SettingsDropdown", T.INK)
+	th.set_color("font_focus_color", &"SettingsDropdown", T.INK)
+	th.set_color("font_hover_pressed_color", &"SettingsDropdown", T.INK)
+	th.set_color("font_disabled_color", &"SettingsDropdown", T.INK_DIM)
+	# modulate_arrow = 1 tints the engine's arrow icon with the font color; without
+	# it the arrow keeps its default near-white and vanishes on the cream field.
+	th.set_constant("modulate_arrow", &"SettingsDropdown", 1)
+	th.set_constant("arrow_margin", &"SettingsDropdown", T.SPACE_M)
+	th.set_constant("h_separation", &"SettingsDropdown", T.SPACE_XS)
+
+	# The popup is its own Window: assign this variation to it in code with
+	# `option.get_popup().theme_type_variation = &"SettingsPopup"`.
+	th.set_type_variation(&"SettingsPopup", &"PopupMenu")
+	th.set_stylebox("panel", &"SettingsPopup", _box(T.CARD_BG, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [], Color.TRANSPARENT, T.SPACE_XS, T.SPACE_XS))
+	th.set_stylebox("hover", &"SettingsPopup", _box(T.SURFACE_HOVER, 0, Color.TRANSPARENT, T.RADIUS_S))
+	var popup_rule := StyleBoxLine.new()
+	popup_rule.color = T.DIVIDER_LIGHT
+	popup_rule.thickness = T.BORDER_HAIRLINE
+	th.set_stylebox("separator", &"SettingsPopup", popup_rule)
+	th.set_font_size("font_size", &"SettingsPopup", T.SIZE_BODY)
+	th.set_color("font_color", &"SettingsPopup", T.INK)
+	th.set_color("font_hover_color", &"SettingsPopup", T.INK)
+	th.set_color("font_accelerator_color", &"SettingsPopup", T.INK_DIM)
+	th.set_color("font_separator_color", &"SettingsPopup", T.INK_DIM)
+	# A row the readability floor has locked out must READ as unavailable, not as a
+	# rendering accident — the disabled tone is the whole point of the UI-scale gate.
+	th.set_color("font_disabled_color", &"SettingsPopup", T.INK_DIM)
+	th.set_constant("v_separation", &"SettingsPopup", T.SPACE_XS)
+	th.set_constant("h_separation", &"SettingsPopup", T.SPACE_M)
+	th.set_constant("item_start_padding", &"SettingsPopup", T.SPACE_S)
+	th.set_constant("item_end_padding", &"SettingsPopup", T.SPACE_S)
+
 	# ---- Base Button: light secondary default for every un-varied Button (onboarding
 	# Back/steppers, sales Find/Pitch, build-HUD iteration/dev, modal Continue…).
 	# Variations (CommitButton/SpeedButton/TabButton) still override this. ----

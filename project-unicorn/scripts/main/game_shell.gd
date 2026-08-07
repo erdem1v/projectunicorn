@@ -30,7 +30,9 @@ func _on_tab_changed_shell(tab_id: String) -> void:
 	_active_tab_id = tab_id
 
 # Grants Anchor + Nexus sheets (the mockup's leverage state) if absent and opens the table on
-# Anchor via the normal entry signal. Shared by Shift+F6 and --debug-open-table.
+# Anchor via the normal entry signal. Sole caller: Shift+F6. (The comment used to also name a
+# `--debug-open-table` flag; no such flag exists anywhere in the codebase — removed rather than
+# left to send the next reader hunting for it.)
 func _debug_open_term_table() -> void:
 	if not OS.is_debug_build():
 		return
@@ -48,6 +50,20 @@ func _input(event: InputEvent) -> void:
 		return
 	var key: InputEventKey = event
 	if not key.pressed or key.echo:
+		return
+	# Hızlı kayıt / hızlı yükleme (F5 / F9) — debug bandının ÜSTÜNDE.
+	# Neden burada: aşağıdaki blok F1-F11'i daha dağıtım yapmadan HANDLED işaretliyor,
+	# yani bir _unhandled_input dinleyicisi debug build'de F5'i hiç göremezdi. Bu,
+	# Shift+F2..F6'nın zaten kullandığı yakalama deseninin aynısı.
+	# ÇIPLAK F5/F9 = hızlı kayıt/yükleme (debug VE release'de aynı davranır);
+	# Ctrl+F5 / Ctrl+F9 = eski iki endgame fikstürü; Shift+F5 = VC toplantısı (değişmedi).
+	if (key.keycode == KEY_F5 or key.keycode == KEY_F9) \
+			and not key.ctrl_pressed and not key.shift_pressed and not key.alt_pressed:
+		get_viewport().set_input_as_handled()
+		if key.keycode == KEY_F5:
+			EventBus.quicksave_requested.emit()
+		else:
+			EventBus.quickload_requested.emit()
 		return
 	# Debug endgame forcing (F1-F11, debug builds only) — ENDGAME_DESIGN.md §7.8:
 	# every ending testable from day one, series_a_closed settable pre-VC-system.
@@ -151,9 +167,25 @@ func _input(event: InputEvent) -> void:
 	# o handler ODA rework'ünde silindi — odadaki Esc bugün gerçekten no-op ve bu
 	# doğru davranış.)
 	if key.keycode == KEY_ESCAPE:
+		# Guard 3 (SaveManager task): PanelLayer sakini Esc'in SAHİBİDİR.
+		# HRAtlasModal / HRPopover / OdaTour ModalLayer'a değil PanelLayer'a mount
+		# oluyor (hız kontrolünü öldürmesinler diye) — yani Guard 2 onları görmüyor.
+		# Bu satır olmadan, Atlas açıkken Esc "sekmeyi kapat"a düşüyor: HR SAYFASI
+		# serbest bırakılıyor ama Atlas (sayfanın değil PanelLayer'ın çocuğu) ekranda
+		# öksüz kalıyordu. HANDLED İŞARETLEMEDEN dönüyoruz ki kendi ui_cancel'larına
+		# aksın — Guard 1 ve 2'nin aynı disiplini.
+		var panel_layer: Node = get_node_or_null("PanelLayer")
+		if panel_layer != null and panel_layer.get_child_count() > 0:
+			return
 		if _active_tab_id != "":
 			get_viewport().set_input_as_handled()
 			EventBus.tab_changed.emit("")
+			return
+		# Odada, açık sayfa/modal/panel yokken Esc artık no-op DEĞİL: sistem menüsü.
+		# Buraya varmış olmak zaten "ModalLayer boş"un kanıtı (Guard 2 yukarıda döndü),
+		# yani zorunlu karar zorunlu kalır — olay modalı üstündeyken bu satır çalışmaz.
+		get_viewport().set_input_as_handled()
+		EventBus.system_menu_requested.emit()
 		return
 	get_viewport().set_input_as_handled()
 	# Routes through the same signal the TopBar buttons use, so the TopBar stays in sync.
@@ -200,6 +232,9 @@ func debug_force_vc_meeting(vc_id: String = "anchor") -> void:
 # Class B cases set preconditions and let the NEXT daily tick (slot 8/9) fire
 # them — that exercises the real scan path, not a shortcut. F3 is the Class A
 # instant path by design.
+# İKİ İSTİSNA: F5 ve F9 artık CTRL ile çağrılır. Çıplak F5/F9 hızlı kayıt/yükleme
+# oldu ve bu bağlama release'de de yaşadığı için debug'da da aynı tuşu tutmak
+# zorundaydı — yoksa aynı tuş dev'de başka, oyuncuda başka iş yapardı.
 
 func _debug_endgame_key(keycode: Key) -> void:
 	match keycode:
@@ -221,7 +256,8 @@ func _debug_endgame_key(keycode: Key) -> void:
 			GameState.set_brand(40)
 			GameState.vc_rejections = maxi(GameState.vc_rejections, 1)
 		KEY_F5:
-			print("[Debug] F5 → cash -1000 (Kepenk starts next daily tick)")
+			# Ctrl+F5 (çıplak F5 hızlı kayda taşındı — bkz. _input üstü).
+			print("[Debug] Ctrl+F5 → cash -1000 (Kepenk starts next daily tick)")
 			GameState.set_cash(-1000)
 		KEY_F6:
 			print("[Debug] F6 → brand collapse preconditions (brand 10, scandal, 30 gün geride)")
@@ -243,7 +279,8 @@ func _debug_endgame_key(keycode: Key) -> void:
 				GameState.set_cash(1000)
 			GameState.day = 179
 		KEY_F9:
-			print("[Debug] F9 → running on fumes (cash_went_negative) + day 179")
+			# Ctrl+F9 (çıplak F9 hızlı yüklemeye taşındı — bkz. _input üstü).
+			print("[Debug] Ctrl+F9 → running on fumes (cash_went_negative) + day 179")
 			GameState.cash_went_negative = true
 			GameState.day = 179
 		KEY_F10:

@@ -244,7 +244,14 @@ static func open_b2c_paid_tier(price: int, _initial_pct: float = 0.0) -> void:
 # live audience. MRR follows automatically via the hourly derivation. Replaces the old
 # "convert N audience → seats" chunk path.
 static func add_b2c_audience(n: int) -> void:
-	var audience: int = maxi(0, int(GameState.get_flag("b2c_audience", 0)) + n)
+	# FLOAT, not int (audit S3-43). The hourly tick accumulates this as a float ON PURPOSE —
+	# _tick_b2c_audience's own comment says so: "Accumulate as float so small per-hour deltas
+	# (especially slow erosion) survive instead of rounding to zero each hour". This function
+	# used to read it back with int(), which truncated the accumulator, and then wrote an int
+	# — so every event spike and every price change silently threw away the fractional part
+	# the erosion model depends on. The delta `n` stays an int (callers count whole people);
+	# only the STORED value keeps its precision. GameState.FLAG_TYPES pins the type.
+	var audience: float = maxf(0.0, float(GameState.get_flag("b2c_audience", 0.0)) + float(n))
 	GameState.set_flag("b2c_audience", audience)
 	_derive_b2c_mrr()
 	_mrr_bridge()
@@ -505,7 +512,12 @@ static func apply_b2c_price(new_price: int) -> Dictionary:
 	var drop_pct: float = 0.0
 	if was_open and new_price > old_price:
 		drop_pct = churn_fraction(old_price, new_price)
-		GameState.set_flag("b2c_audience", maxi(0, int(round(audience_before * (1.0 - drop_pct)))))
+		# Stored as a float (audit S3-43) — same reasoning as add_b2c_audience: rounding the
+		# hike reaction to a whole person here discarded the sub-unit accumulator that
+		# _tick_b2c_audience maintains. audience_before stays an int for the return dict,
+		# which is display data.
+		GameState.set_flag("b2c_audience",
+			maxf(0.0, float(GameState.get_flag("b2c_audience", 0.0)) * (1.0 - drop_pct)))
 
 	_derive_b2c_mrr()
 	_mrr_bridge()

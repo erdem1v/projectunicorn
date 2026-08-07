@@ -26,10 +26,12 @@ const PAGE_CHROME := preload("res://scripts/ui/components/tab_page_chrome.gd")
 @onready var oda_view: Control = get_node_or_null("OdaView")
 
 var _current_page: Control = null   # TabPageChrome sarmalayıcısı ya da null (= oda)
+var _active_tab_id: String = ""     # açık sayfanın id'si ("" = oda) — palet yenilemesi buradan okur
 
 
 func _ready() -> void:
 	EventBus.tab_changed.connect(_on_tab_changed)
+	EventBus.palette_changed.connect(_on_palette_changed)
 	# Açılış durumu ODA'dır ("home sekmesi" kavramı emekli; left_tabs'ın eski
 	# default-product emit'i de silindi — zaten sibling-ready sırası gereği
 	# buradaki connect'ten ÖNCE ateşleniyordu, hiç duyulmuyordu).
@@ -38,9 +40,23 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	EventBus.tab_changed.disconnect(_on_tab_changed)
+	EventBus.palette_changed.disconnect(_on_palette_changed)
+
+
+## Renk körü paleti değişti: açık sayfayı YENİDEN KUR. Sayfa gövdeleri semantik
+## rengi kendi _ready'lerinde okuyup override olarak basıyor, yani yerinde bir
+## repaint seam'i yok — free-and-rebuild zaten bu router'ın tek kurulum yolu
+## (audit Group 7 bunu "dil yenilemesini kendi kendini iyileştiren şey" diye
+## adlandırıyor; palet için de aynı kanal doğru olanı).
+## Oda açıkken hiçbir şey yapmıyoruz: OdaView resident ve palette_changed'e kendisi
+## bağlı, bir daha kurmak gereksiz iş olurdu.
+func _on_palette_changed(_colorblind: bool) -> void:
+	if _active_tab_id != "":
+		_on_tab_changed(_active_tab_id)
 
 
 func _on_tab_changed(tab_id: String) -> void:
+	_active_tab_id = tab_id
 	if _current_page != null:
 		_current_page.queue_free()
 		_current_page = null

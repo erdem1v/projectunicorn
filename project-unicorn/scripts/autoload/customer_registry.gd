@@ -150,6 +150,30 @@ func add(customer: Customer) -> void:
 	EventBus.customer_added.emit(customer.id)
 
 
+func insert_raw(customer: Customer) -> void:
+	# SAVE RESTORE ONLY — no customer_added emit. Mirrors CharacterRegistry.insert_raw and
+	# the _seed_debug_customers precedent below ("writes directly to _customers; does NOT
+	# call add() so no phantom customer_added signals fire").
+	if customer == null or customer.id == "":
+		push_warning("[CustomerRegistry] insert_raw() called with null or missing id")
+		return
+	_customers[customer.id] = customer
+
+
+func reset() -> void:
+	# Run-boundary reset (SaveManager.reset_all_owners). This registry had NO reset, so the
+	# whole customer book survived an in-place restart: the new company opened its doors
+	# already owning the previous run's accounts, with their MRR aggregating into a fresh
+	# GameState the moment SalesSystem's bridge ran.
+	#
+	# DIRECT CLEAR, NOT remove()-in-a-loop, and that is load-bearing rather than an
+	# optimisation: remove() emits customer_removed, which PromiseRegistry._on_customer_removed
+	# turns into drop_open_for — so a reset that went through remove() would fire N promise
+	# drops on the way out, and on a LOAD would race the restore that is about to seat those
+	# same promises. Same "direct clear, no signals" doctrine as CharacterRegistry.reset().
+	_customers.clear()
+
+
 func remove(customer_id: String) -> void:
 	if not _customers.has(customer_id):
 		return

@@ -62,7 +62,7 @@ extends RefCounted
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs,
 ## which is the cheap guard against a stale master_theme.tres shipping silently.
-const THEME_STAMP := 4
+const THEME_STAMP := 5
 # ============================================================================
 
 # ============================================================================
@@ -124,8 +124,38 @@ const POSITIVE_BRIGHT := Color(0.498, 0.690, 0.408, 1)   # #7fb068 · on dark ch
 const NEGATIVE_BRIGHT := Color(0.851, 0.435, 0.353, 1)   # #d96f5a · on dark chrome
 const HEALTH_GREEN := Color(0.369, 0.541, 0.275, 1)      # #5e8a46 · status dot
 const HEALTH_AMBER := Color(0.788, 0.588, 0.180, 1)      # #c9962e · status dot
+
+# --- STATE · semantic, COLOURBLIND-SAFE counterparts (Settings > Erişilebilirlik) ---
+# The green/red pair is the ONE place the game encodes meaning in hue alone, so it
+# is the one pair that needs a swap. Blue/orange, because blue↔orange survives all
+# three dichromacies (deuter-, prot-, tritanopia) while green↔red survives none.
+# Anchored on the Okabe-Ito / Paul Tol accessible sets, then darkened per register
+# so contrast on the cream body stays ≥4.5:1 (the light values) and legibility on
+# the charcoal chrome stays high (the *_BRIGHT values).
+#
+# Only the pair moves. HEALTH_AMBER and ACCENT are already colourblind-safe (amber
+# reads as amber to a dichromat) and stay put in BOTH palettes, which is also what
+# keeps the three-state health dot readable: blue / amber / orange.
+#
+# ALL SEVEN ARE # WORKING — Erdem's F5 eye seals the hues, exactly like the ODA and
+# newspaper registers. Consts are the DEFAULT palette; nothing reads these directly,
+# everything goes through the accessors below.
+const POSITIVE_CB := Color(0.000, 0.357, 0.561, 1)        # #005b8f · blue on light
+const POSITIVE_BG_CB := Color(0.839, 0.894, 0.933, 1)     # #d6e4ee · pale blue chip
+const NEGATIVE_CB := Color(0.659, 0.263, 0.000, 1)        # #a84300 · orange on light
+const NEGATIVE_BG_CB := Color(0.973, 0.882, 0.812, 1)     # #f8e1cf · pale orange chip
+const POSITIVE_BRIGHT_CB := Color(0.310, 0.702, 0.910, 1) # #4fb3e8 · on dark chrome
+const NEGATIVE_BRIGHT_CB := Color(0.933, 0.467, 0.200, 1) # #ee7733 · on dark chrome
+const HEALTH_GREEN_CB := Color(0.184, 0.475, 0.671, 1)    # #3079ab · status dot (blue twin)
 const DOT_IDLE := Color(0.350, 0.320, 0.270, 1)          # #595245 · unreached phase dot
 const AXIS_EXPERIENCE := Color("#3b5b92")                # #3b5b92 · ürün ekseni "Deneyim" (Rev3 mavi; legend dot + ince bar). Hex form: birebir mockup değeri, float yuvarlaması yok.
+# Ürün ekseni üçlüsü KATEGORİKTİR (İnovasyon/Kararlılık/Deneyim), semantik değil —
+# ama üçlünün iki üyesi semantik token'lardan besleniyor (innovation=ACCENT_DEEP,
+# stability=positive()). Renk körü paletinde positive() maviye döndüğü an "Kararlılık"
+# ile "Deneyim" İKİ MAVİ olur ve aynı legend'da ayırt edilemez. Deneyim'e bu yüzden
+# kendi CB ikizi verildi: üçlü her iki palette de üç ayrı renk kalır
+# (varsayılan: kehribar / yeşil / mavi · CB: kehribar / mavi / mor).
+const AXIS_EXPERIENCE_CB := Color("#7d4f9c")             # #7d4f9c · CB "Deneyim" (moru kehribardan da CB maviden de ayrı okunur)
 
 # --- BADGE / CHIP ---
 const BADGE_BG := Color(0.620, 0.169, 0.145, 1)          # #9e2b25 · solid "ATTENTION" red
@@ -354,27 +384,80 @@ const TABS := [
 ]
 
 # ============================================================================
+# SEMANTIC PALETTE SWITCH — the accessibility swap (Settings > Erişilebilirlik).
+# ============================================================================
+# Semantic colour is never baked into master_theme.tres (build_theme.gd holds
+# zero POSITIVE/NEGATIVE references — verified), so switching palettes is a pure
+# RUNTIME re-read: no theme regeneration, no stamp bump, no .tres rewrite.
+#
+# THE RULE that makes this cheap: read semantic colour through the ACCESSOR
+# (`UiTokens.positive()`), never through the const (`UiTokens.POSITIVE`). The
+# consts remain the default-palette VALUES; the accessors are the only sanctioned
+# door. A new site that reaches for the const is invisible to the toggle.
+#
+# Live surfaces repaint on EventBus.palette_changed — the same self-healing
+# grammar as language_changed (resident shell children repaint in place, the open
+# tab page rebuilds via a tab_changed re-emit).
+static var _cb_palette: bool = false
+
+## Settings applies this at boot and on every toggle. It does NOT emit the signal —
+## the caller owns that, exactly as Localization owns language_changed.
+static func set_colorblind(on: bool) -> void:
+	_cb_palette = on
+
+static func is_colorblind() -> bool:
+	return _cb_palette
+
+static func positive() -> Color:
+	return POSITIVE_CB if _cb_palette else POSITIVE
+
+static func negative() -> Color:
+	return NEGATIVE_CB if _cb_palette else NEGATIVE
+
+static func positive_bg() -> Color:
+	return POSITIVE_BG_CB if _cb_palette else POSITIVE_BG
+
+static func negative_bg() -> Color:
+	return NEGATIVE_BG_CB if _cb_palette else NEGATIVE_BG
+
+static func positive_bright() -> Color:
+	return POSITIVE_BRIGHT_CB if _cb_palette else POSITIVE_BRIGHT
+
+static func negative_bright() -> Color:
+	return NEGATIVE_BRIGHT_CB if _cb_palette else NEGATIVE_BRIGHT
+
+static func health_green() -> Color:
+	return HEALTH_GREEN_CB if _cb_palette else HEALTH_GREEN
+
+## Ürün ekseni "Deneyim". Semantik DEĞİL — palete bağlı olmasının tek sebebi,
+## CB modunda "Kararlılık"ın maviye dönüp bu eksenle çakışması (bkz. AXIS_EXPERIENCE_CB).
+static func axis_experience() -> Color:
+	return AXIS_EXPERIENCE_CB if _cb_palette else AXIS_EXPERIENCE
+
+# ============================================================================
 # Runtime color-decision helpers — centralize sign/kind -> color logic so it
 # isn't re-implemented across top_bar / event_modal / product_tab.
 # ============================================================================
+# All five route through the accessors above, so every consumer that already
+# obeys the "never re-invent sign→colour" law inherits the palette swap for free.
 
 ## Delta color for LIGHT surfaces (rationale rows, etc.).
 static func delta_color(value: int) -> Color:
-	if value > 0: return POSITIVE
-	if value < 0: return NEGATIVE
+	if value > 0: return positive()
+	if value < 0: return negative()
 	return INK_MUTED
 
 ## Delta color for the DARK chrome (top-bar metric deltas).
 static func delta_color_bright(value: int) -> Color:
-	if value > 0: return POSITIVE_BRIGHT
-	if value < 0: return NEGATIVE_BRIGHT
+	if value > 0: return positive_bright()
+	if value < 0: return negative_bright()
 	return CREAM_DIM
 
 ## {bg, fg} for a tinted chip. kind: "positive" | "negative" | "neutral" | "accent" | "attention".
 static func badge_palette(kind: StringName) -> Dictionary:
 	match kind:
-		&"positive": return {"bg": POSITIVE_BG, "fg": POSITIVE}
-		&"negative": return {"bg": NEGATIVE_BG, "fg": NEGATIVE}
+		&"positive": return {"bg": positive_bg(), "fg": positive()}
+		&"negative": return {"bg": negative_bg(), "fg": negative()}
 		&"accent":   return {"bg": AMBER_BG, "fg": ACCENT_DEEP}
 		&"attention": return {"bg": BADGE_BG, "fg": BADGE_FG}
 		_: return {"bg": NEUTRAL_BADGE_BG, "fg": NEUTRAL_BADGE_FG}
@@ -388,9 +471,9 @@ static func badge_palette_for_delta(value: int) -> Dictionary:
 ## Health dot color. state: "healthy" | "warn" | "bad".
 static func health_color(state: StringName) -> Color:
 	match state:
-		&"healthy": return HEALTH_GREEN
-		&"warn": return HEALTH_AMBER
-		&"bad": return NEGATIVE
+		&"healthy": return health_green()
+		&"warn": return HEALTH_AMBER   # amber is already colourblind-safe — same in both palettes
+		&"bad": return negative()
 		_: return INK_DIM
 
 ## {bg, fg} chip palette for a relationship tier (event character strip).
