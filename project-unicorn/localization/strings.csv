@@ -252,6 +252,7 @@ SET_WINDOW_BORDERLESS,Kenarlıksız,Borderless
 SET_WINDOW_WINDOWED,Pencereli,Windowed
 SET_RESOLUTION,Çözünürlük,Resolution
 SET_RESOLUTION_LOCKED,Yalnız pencereli modda değiştirilebilir.,Adjustable in windowed mode only.
+SET_RESOLUTION_NATIVE,doğal,native
 SET_UI_SCALE,Arayüz ölçeği,Interface scale
 SET_UI_SCALE_TOO_SMALL,%d%% bu pencere boyutunda okunmuyor; daha geniş bir ekran gerekiyor.,%d%% is unreadable at this window size; it needs a wider display.
 SET_VSYNC,Dikey eşitleme,Vertical sync

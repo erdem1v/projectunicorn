@@ -215,6 +215,21 @@ func _run_display_check() -> void:
 	print("DISPLAY_CHECK_BEGIN")
 	print("inert=%s (must be false or nothing below is applied)" % str(DisplaySettings.is_inert()))
 
+	# Tespit önce: aşağıdaki her şey bu üç sayıdan türüyor.
+	print("SCREENS|count=%d|current=%d" % [
+		DisplayServer.get_screen_count(), DisplayServer.window_get_current_screen()])
+	print("NATIVE|%s|usable=%s|default=%s" % [
+		str(DisplaySettings.native_resolution()), str(DisplaySettings.usable_size()),
+		str(DisplaySettings.default_resolution())])
+	var res_list: Array[Vector2i] = DisplaySettings.available_resolutions()
+	var res_strs: PackedStringArray = []
+	for r in res_list:
+		res_strs.append("%dx%d" % [r.x, r.y])
+	print("RESLIST|%d|%s" % [res_list.size(), ", ".join(res_strs)])
+	print("RESLIST_HAS_NATIVE|%s" % str(res_list.has(DisplaySettings.native_resolution())))
+	print("EFFECTIVE|mode=%s|shown_in_settings=%s" % [
+		DisplaySettings.get_window_mode(), str(DisplaySettings.effective_resolution())])
+
 	# Snapshot and restore: these are the PERSISTING setters, so the check writes to
 	# the player's settings.json. Driving apply_*() instead would be a weaker test that
 	# also silently passes — apply_resolution gates on the STORED mode, so an applier-only

@@ -37,15 +37,26 @@ const MODE_KEYS: Array[String] = ["SET_WINDOW_FULLSCREEN", "SET_WINDOW_BORDERLES
 # --- Resolutions ------------------------------------------------------------
 # docs/TECH_SPEC.md §14.1's supported list, in order. 1280×720 is the documented
 # MINIMUM, so it is never filtered away even on a smaller-than-expected screen.
+## §14.1 zaten 16:10 ve 32:9'u DESTEKLENİYOR diye sayıyordu ama listede ikisinden
+## de tek satır yoktu — spec ile kod bu noktada ayrışmıştı. Eklendi. Yine de bu
+## tablo tek başına yeterli DEĞİL: gerçek panel boyutları (dizüstü 2880x1800,
+## 3024x1964 vb.) hiçbir sabit listeye sığmaz, o yüzden available_resolutions()
+## ölçülen native'i listeye AYRICA ekler.
 const RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(1280, 720),
 	Vector2i(1366, 768),
 	Vector2i(1600, 900),
+	Vector2i(1680, 1050),   # 16:10
 	Vector2i(1920, 1080),
-	Vector2i(2560, 1080),
+	Vector2i(1920, 1200),   # 16:10
+	Vector2i(2560, 1080),   # 21:9
 	Vector2i(2560, 1440),
-	Vector2i(3440, 1440),
+	Vector2i(2560, 1600),   # 16:10
+	Vector2i(3440, 1440),   # 21:9
+	Vector2i(3840, 1600),   # 21:9 UWQHD+
 	Vector2i(3840, 2160),
+	Vector2i(3840, 2400),   # 16:10
+	Vector2i(5120, 1440),   # 32:9
 ]
 
 # --- UI scale ---------------------------------------------------------------
@@ -175,22 +186,84 @@ static func apply_window_mode(mode: String) -> void:
 
 # --- Resolution -------------------------------------------------------------
 
-## The §14.1 list filtered to what this screen can actually show. The minimum
-## (1280×720) always survives so the dropdown is never empty.
+# --- Ekran tespiti ----------------------------------------------------------
+# Hepsi is_inert() arkasında: harness'lar pencerenin sahibidir, onlara ekran
+# sorulmaz. `allow_hidpi` Godot 4'te varsayılan olarak açık (ProjectSettings'ten
+# doğrulandı), yani screen_get_size GERÇEK fiziksel pikseli döndürür — Windows'ta
+# %150 ölçeklenmiş bir 4K panel 2560x1440 değil 3840x2160 der.
+
+## Bu pencerenin AÇILDIĞI monitörün native boyutu. Çok monitörlü kurulumda
+## window_get_current_screen doğru olanı seçer — birincil ekran değil, oyunun
+## bulunduğu ekran.
+static func native_resolution() -> Vector2i:
+	if is_inert():
+		return Vector2i(int(BASE_VIEWPORT.x), int(BASE_VIEWPORT.y))
+	return DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
+
+
+## Görev çubuğu düşülmüş kullanılabilir alan. Pencereli modun gerçek tavanı budur:
+## native boyutta bir PENCERE ekrana sığmaz (başlık çubuğu + görev çubuğu taşırır).
+static func usable_size() -> Vector2i:
+	if is_inert():
+		return native_resolution()
+	return DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen()).size
+
+
+## Pencereli modun ÖLÇÜLEN varsayılanı: kullanılabilir alana sığan en büyük
+## desteklenen boyut. Sabit 1920x1080 literali buydu; 1440p bir monitörde yalan
+## söylüyordu ve oyuncu Pencereli'yi seçer seçmez onu 1080p'ye düşürüyordu.
+## EN-BOY, ALANDAN ÖNCE GELİR. Ham "sığan en büyük alan" kuralı bu makinede
+## 2560x1440 bir panele 2560x1080'i (21:9) seçiyordu: alanı daha büyük, ama şekli
+## monitörün şekli değil — oyuncuya sebepsiz mektup kutusu bir pencere verirdi.
+## Önce panelin oranına uyan adaylar arasından en büyüğü; hiç uymuyorsa sığan en
+## büyüğe düşülür (alışılmadık panellerde liste zaten native'i içeriyor).
+static func default_resolution() -> Vector2i:
+	var fits: Vector2i = usable_size()
+	var native: Vector2i = native_resolution()
+	var want: float = float(native.x) / maxf(1.0, float(native.y))
+	var best_match: Vector2i = Vector2i.ZERO
+	var best_any: Vector2i = RESOLUTIONS[0]
+	for r in available_resolutions():
+		if r.x > fits.x or r.y > fits.y:
+			continue
+		if r.x * r.y > best_any.x * best_any.y:
+			best_any = r
+		if absf(float(r.x) / maxf(1.0, float(r.y)) - want) <= ASPECT_EPSILON \
+				and r.x * r.y > best_match.x * best_match.y:
+			best_match = r
+	return best_match if best_match != Vector2i.ZERO else best_any
+
+
+## 16:9 (1.778) ile 16:10 (1.600) arasını ayıracak kadar dar, aynı ailedeki küçük
+## yuvarlama farklarını (1366x768 = 1.779) yutacak kadar geniş.
+const ASPECT_EPSILON := 0.05
+
+
+## The §14.1 list filtered to what this screen can actually show, PLUS the screen's
+## own native mode. The filter used to be subtractive only, so a panel whose native
+## size was not one of the hardcoded entries (every 16:10, 32:9 and laptop panel)
+## simply could not be selected. The minimum (1280×720) always survives so the
+## dropdown is never empty.
 static func available_resolutions() -> Array[Vector2i]:
-	var screen: Vector2i = Vector2i(int(BASE_VIEWPORT.x), int(BASE_VIEWPORT.y))
-	if not is_inert():
-		screen = DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
+	var screen: Vector2i = native_resolution()
 	var out: Array[Vector2i] = []
 	for r in RESOLUTIONS:
 		if r.x <= screen.x and r.y <= screen.y:
 			out.append(r)
+	if not out.has(screen) and screen.x > 0 and screen.y > 0:
+		out.append(screen)
 	if out.is_empty():
 		out.append(RESOLUTIONS[0])
+	out.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.x * a.y < b.x * b.y)
 	return out
 
 
+## Saklanmış bir değer YOKSA varsayılan ÖLÇÜLÜR (Settings.DEFAULTS'taki literal
+## yalnız headless yedeğidir). İlk açılış ve "varsayılana döndür" sonrası aynı
+## yoldan geçer: reset anahtarı siler, burası yeniden tespit eder.
 static func get_resolution() -> Vector2i:
+	if not (Settings.has_stored(KEY_RES_W) and Settings.has_stored(KEY_RES_H)):
+		return default_resolution()
 	return Vector2i(
 		int(Settings.get_value(KEY_RES_W, Settings.get_default(KEY_RES_W))),
 		int(Settings.get_value(KEY_RES_H, Settings.get_default(KEY_RES_H))))
@@ -219,6 +292,15 @@ static func apply_resolution(res: Vector2i) -> void:
 
 static func is_resolution_editable() -> bool:
 	return get_window_mode() == MODE_WINDOWED
+
+
+## Ekranda GERÇEKTEN geçerli olan çözünürlük. İki tam-ekran modunda bu, saklanan
+## pencereli tercih DEĞİL, monitörün native boyutudur — pencere onu kaplar.
+## Ayarlar satırı bunu göstermeli: aksi hâlde oyun 2560x1440'ta koşarken kilitli
+## satır "1920 × 1080" yazar ve panel yine yalan söylemiş olur. Pencereli modda
+## saklanan tercih zaten geçerli olandır.
+static func effective_resolution() -> Vector2i:
+	return get_resolution() if get_window_mode() == MODE_WINDOWED else native_resolution()
 
 
 # --- VSync ------------------------------------------------------------------

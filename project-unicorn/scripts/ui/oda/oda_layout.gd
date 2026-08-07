@@ -95,12 +95,59 @@ const PAPER_SLOTS := [
 ]
 
 
-# --- KEEP_ASPECT_COVERED matematiği -----------------------------------------
+# --- KEEP_ASPECT_COVERED matematiği + EN-BOY TAVANI --------------------------
 
+## Odanın en-boy tavanı — bir KIRPMA BÜTÇESİ olarak ifade edilir (MAX_CROP).
+##
+## Neden bir tavan gerekiyor: kompozisyon dikeyde 0.0'dan (pencere) 0.98'e
+## (kâğıtlar) UZANIYOR, yani DİKEY KIRPMA BÜTÇESİ SIFIR. Saf COVER, viewport
+## 16:9'dan genişledikçe tam da dikeyden kırpar. Ölçüldü (5120x1440 shot'ı):
+## görünür bant [0.261, 0.739]'e iniyor ve üç çerçeve, kâğıtlar ve TELEFON
+## tamamen ekran dışında kalıyor — üçü de tıklanabilir çapa, telefon mentor/olay
+## yüzeyi. 3440x1440'ta bant [0.128, 0.872] ve çerçeveler ortadan ikiye bölünüyor.
+##
+## Tavan YALNIZ GENİŞ yönde uygulanır: 16:9 ve DAHA DAR (16:10, 4:3) viewport'lar
+## bugünkü davranışı bire bir korur, yani mevcut kurulumlarda hiçbir gerileme yok.
+## 16:10'un ~%5 yatay kırpması bilinçli kalıyor: yalnız pencere resminin sağ
+## kenarına değiyor ve o çapa tıklanmaz (tur bölgesi).
+## Değer NEDEN bir KIRPMA BÜTÇESİ, sabit bir en-boy değil: bütçe aşılana kadar
+## hiçbir şey değişmez, aşıldığında oda bütçeyi SONUNA KADAR kullanır — geçiş
+## yumuşaktır, eşikte görsel uçurum yoktur.
+##
+## Ve NEDEN 0.02, veri türevi değil: kompozisyonun gerçek alt payı 0.012'dir
+## (PAPER_SLOTS'un üçüncüsü 0.988'de biter), ama 1920x1080'de CenterViewport
+## zaten ~1.851 oranında ve %1.94 kırpıyor — yani üçüncü kâğıt yuvası BUGÜN de
+## kıl payı kırpılıyor. Bütçeyi 0.012'ye çekmek, ÖNCEDEN VAR OLAN bir yerleşim
+## meselesini düzeltmek uğruna BİRİNCİL çözünürlüğe şeritler koymak olurdu; bu
+## daha büyük bir gerileme. 0.02 = bugünkü 16:9 çalışma noktası, yukarı yuvarlanmış.
+## Kâğıt payı polish dalgasının işi — bu tavan onu ÇÖZMEZ, korur.
+const MAX_CROP := 0.02
+
+
+## Bütçenin izin verdiği en geniş oran. crop = 0.5 * (1 - A/r) → r = A / (1 - 2C).
+static func max_room_aspect() -> float:
+	return (ART.x / ART.y) / (1.0 - 2.0 * MAX_CROP)
+
+
+## Viewport içinde odanın gerçekten çizildiği rect. Geniş ekranlarda ortalanır ve
+## iki yanda boşluk bırakır (oda_view onu BG_ART plakasıyla doldurur).
+static func room_rect(view: Vector2) -> Rect2:
+	if view.y <= 0.0:
+		return Rect2(Vector2.ZERO, view)
+	var max_w: float = view.y * max_room_aspect()
+	if view.x <= max_w:
+		return Rect2(Vector2.ZERO, view)
+	return Rect2(Vector2((view.x - max_w) * 0.5, 0.0), Vector2(max_w, view.y))
+
+
+## TEK dönüşüm. Her çapa, her host-türetimli yüzey ve visible_band_y bundan
+## türediği için tavanı BURAYA koymak hepsini birlikte taşır — tek çağrı sitesi
+## değişmedi.
 static func cover_transform(view: Vector2) -> Dictionary:
-	var s: float = maxf(view.x / ART.x, view.y / ART.y)
+	var room: Rect2 = room_rect(view)
+	var s: float = maxf(room.size.x / ART.x, room.size.y / ART.y)
 	var drawn: Vector2 = ART * s
-	return {"scale": s, "offset": (view - drawn) * 0.5}
+	return {"scale": s, "offset": room.position + (room.size - drawn) * 0.5}
 
 
 static func place(n: Rect2, view: Vector2) -> Rect2:

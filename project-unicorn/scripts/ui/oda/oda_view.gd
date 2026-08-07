@@ -54,6 +54,7 @@ signal anchor_clicked(anchor_id: String)
 # Katman / düğüm referansları (kod-kurulu)
 var _day_art: TextureRect
 var _night_art: TextureRect
+var _surround: ColorRect            # 16:9 tavanının iki yanında kalan boşluğun plakası
 var _scene_layer: Control
 var _object_layer: Control
 var _sprites: Dictionary = {}          # id -> TextureRect
@@ -158,6 +159,18 @@ func _mk_layer(layer_name: String) -> Control:
 
 func _build_scene_layer() -> void:
 	_scene_layer = _mk_layer("SceneLayer")
+	# Kuşatma plakası: oda 16:9 tavanına oturduğu için ultra-geniş ekranlarda iki
+	# yanda boşluk kalır (OdaLayout.room_rect). Krem ViewportPanel şeritleri koyu
+	# bir odanın yanında hata gibi okunurdu; BG_ART zaten "sanat plakası" için
+	# adlandırılmış token. _scene_layer'ın İÇİNDE, çünkü gece tint'i (modulate
+	# tween'i) kuşatmayı da odayla birlikte karartmalı.
+	_surround = ColorRect.new()
+	_surround.name = "Surround"
+	_surround.color = UiTokens.BG_ART
+	_surround.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_surround.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_scene_layer.add_child(_surround)
+
 	_day_art = _mk_scene_art("DayArt", TEX_DAY)
 	_night_art = _mk_scene_art("NightArt", TEX_NIGHT)
 	_night_art.modulate.a = 0.0
@@ -165,15 +178,17 @@ func _build_scene_layer() -> void:
 
 
 func _mk_scene_art(art_name: String, tex: Texture2D) -> TextureRect:
-	# MeetingScene reçetesi: IGNORE_SIZE + KEEP_ASPECT_COVERED = tam-kaplama,
+	# MeetingScene reçetesi: IGNORE_SIZE + KEEP_ASPECT_COVERED = kaplama +
 	# merkezli kırpma. Mipmap'li filtre: 4K→~1400px küçültmede shimmer olmasın.
+	# FULL_RECT preset'i KALDIRILDI: sanat artık OdaLayout.room_rect'e oturuyor ve
+	# rect'i _relayout sürüyor — çapalarla TEK rect'i paylaşmalı, yoksa boyama ile
+	# tıklanabilir çapalar ultra-geniş ekranda birbirinden ayrışır.
 	var tr_node := TextureRect.new()
 	tr_node.name = art_name
 	tr_node.texture = tex
 	tr_node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tr_node.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	tr_node.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	tr_node.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	tr_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_scene_layer.add_child(tr_node)
 	return tr_node
@@ -703,6 +718,14 @@ func _relayout() -> void:
 	var view: Vector2 = size
 	if view.x < 2.0 or view.y < 2.0:
 		return
+	# Boyama ve çapalar TEK rect'i paylaşır. 16:9 ve daha dar viewport'ta bu
+	# rect tam viewport'tur (bugünkü davranış), daha geniştekinde ortalanmış
+	# 16:9 bandıdır — cover_transform da aynı rect'ten türediği için sanat ile
+	# çapalar yapısal olarak ayrışamaz.
+	var room: Rect2 = OdaLayoutRef.room_rect(view)
+	for art in [_day_art, _night_art]:
+		art.position = room.position
+		art.size = room.size
 	for id in ["monitor", "phone", "lamp", "mug"]:
 		var r: Rect2 = OdaLayoutRef.place(OdaLayoutRef.padded_target(id), view)
 		var spr: TextureRect = _sprites[id]

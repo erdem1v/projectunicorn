@@ -39,6 +39,10 @@ const DisplaySettingsLib := preload("res://scripts/systems/display_settings.gd")
 const DEFAULTS := {
 	# --- Görüntü (DisplaySettings applies) ---
 	"window_mode": "borderless",        # "fullscreen" | "borderless" | "windowed"
+	# Bu ikisi yalnız HEADLESS/inert yedeğidir. Gerçek varsayılan ÖLÇÜLÜR:
+	# DisplaySettings.default_resolution() monitörün native boyutunu okur ve
+	# görev çubuğunu düşer. Tabloda kalmalarının sebebi reset_to_defaults'un
+	# yalnız buradaki anahtarları silmesi — silinince tespit yeniden koşar.
 	"resolution_w": 1920,
 	"resolution_h": 1080,
 	"vsync": true,
@@ -87,6 +91,16 @@ func _ready() -> void:
 # DEFAULTS should pass get_default(key) rather than re-typing the literal.
 func get_value(key: String, default_value: Variant) -> Variant:
 	return _data.get(key, default_value)
+
+
+## "Bu anahtar diske gerçekten YAZILDI mı?" — get_value ile ayırt edilemez, çünkü
+## o, saklanmış bir değerle varsayılanı aynı şekilde döndürür. DisplaySettings buna
+## ihtiyaç duyuyor: çözünürlüğün varsayılanı artık sabit bir literal değil, ÖLÇÜLEN
+## monitör değeri; yani "kullanıcı seçmedi" ile "kullanıcı 1920x1080 seçti" ayrımı
+## gerçek bir ayrım hâline geldi. Sıfırlama sonrası da doğru çalışır: reset_to_defaults
+## anahtarı SİLER, dolayısıyla tespit yeniden koşar.
+func has_stored(key: String) -> bool:
+	return _data.has(key)
 
 
 func set_value(key: String, value: Variant) -> void:

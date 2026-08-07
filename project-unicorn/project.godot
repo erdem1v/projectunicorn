@@ -36,10 +36,23 @@ MCPRuntime="*uid://bvdfxyfwqs84q"
 
 [display]
 
+; viewport_* = TASARIM TABANI (canvas_items stretch'in paydası). DOKUNMAYIN:
+; DisplaySettings.BASE_VIEWPORT bunun elle kopyalanmış aynasıdır ve değişirse
+; okunabilirlik tabanı, tasarım-genişliği kapısı ve TÜM ekran görüntüsü
+; baseline'ları aynı anda geçersizleşir.
 window/size/viewport_width=1920
 window/size/viewport_height=1080
-window/size/window_width_override=1920
-window/size/window_height_override=1080
+; mode=3 (WINDOW_MODE_FULLSCREEN = kenarlıksız pencereli tam ekran) = Settings'in
+; varsayılan pencere modu. Motor pencereyi HERHANGİ bir GDScript koşmadan yaratıyor,
+; Settings ise 12. autoload — yani eskiden ilk kare 1920x1080 KENARLI bir pencereydi
+; ve hemen ardından kenarlıksıza geçiyordu: görünür bir sıçrama. Aynı modda doğmak
+; onu kapatır. Kaydı "Pencereli" olan oyuncu tek kare tam ekran görür; varsayılan
+; yol sıçramasız. Shot harness'ları etkilenmez — _shot_window() önce WINDOWED'a
+; düşürüp boyutu elle veriyor.
+window/size/mode=3
+; override'lar mode=3 altında anlamsız; 0 = "viewport_* kullan".
+window/size/window_width_override=0
+window/size/window_height_override=0
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

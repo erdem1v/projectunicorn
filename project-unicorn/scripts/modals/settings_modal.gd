@@ -108,15 +108,7 @@ func _build_display_section() -> void:
 	_add_row(_display_body, "SET_WINDOW_MODE", _mode_option)
 
 	_res_option = _dropdown()
-	var current: Vector2i = DisplaySettingsLib.get_resolution()
-	var list: Array[Vector2i] = DisplaySettingsLib.available_resolutions()
-	for i in list.size():
-		# Çözünürlük bir ÖLÇÜ, çeviri değil: "1920 × 1080" her iki dilde de aynı.
-		_res_option.add_item("%d × %d" % [list[i].x, list[i].y], i)
-		if list[i] == current:
-			_res_option.select(i)
-	if _res_option.selected < 0 and list.size() > 0:
-		_res_option.select(0)
+	_fill_resolution_options()
 	_res_option.item_selected.connect(_on_resolution_selected)
 	_add_row(_display_body, "SET_RESOLUTION", _res_option)
 	_res_note = _note_label("SET_RESOLUTION_LOCKED")
@@ -139,8 +131,42 @@ func _build_display_section() -> void:
 
 func _on_window_mode_selected(idx: int) -> void:
 	DisplaySettingsLib.set_window_mode(DisplaySettingsLib.MODE_ORDER[idx])
+	# Mod değişimi GEÇERLİ çözünürlüğü de değiştirir (tam ekranda native, pencerelide
+	# saklanan tercih), o yüzden seçili satır yeniden hesaplanmalı.
+	_fill_resolution_options()
 	_refresh_resolution_row()
 	_refresh_scale_options()
+
+
+## Listeyi kurar VE doğru satırı seçer. Tek yerde toplandı çünkü eskiden iki ayrı
+## kopyası vardı (kurulum + _sync_from_state) ve ikisi de aynı hatayı taşıyordu:
+## saklanan değer listede yoksa sessizce 0. indekse (1280×720) düşüyordu, üstelik
+## seçimi Settings'e GERİ YAZMADAN. Panel yalan söylüyordu ve oyuncunun açılır
+## listeye ilk dokunuşu onu 720p'ye indiriyordu. Eşleşme yoksa artık motorun
+## gerçekten kullanacağı değere düşüyoruz — UI ölçeği satırının zaten doğru
+## yaptığı şeyin aynısı.
+func _fill_resolution_options() -> void:
+	# effective_resolution, get_resolution DEĞİL: tam-ekran modlarında satır kilitli
+	# ve ekranda geçerli olan native boyuttur — saklanan pencereli tercihi göstermek
+	# panelin yeniden yalan söylemesi olurdu.
+	var current: Vector2i = DisplaySettingsLib.effective_resolution()
+	var native: Vector2i = DisplaySettingsLib.native_resolution()
+	var list: Array[Vector2i] = DisplaySettingsLib.available_resolutions()
+	_res_option.clear()
+	for i in list.size():
+		# Çözünürlük bir ÖLÇÜ, çeviri değil: "1920 × 1080" her iki dilde de aynı.
+		# Yalnız "doğal" işareti çeviriye tabi.
+		var label: String = "%d × %d" % [list[i].x, list[i].y]
+		if list[i] == native:
+			label += " (%s)" % tr("SET_RESOLUTION_NATIVE")
+		_res_option.add_item(label, i)
+		if list[i] == current:
+			_res_option.select(i)
+	if _res_option.selected < 0:
+		var fallback: Vector2i = DisplaySettingsLib.default_resolution()
+		for i in list.size():
+			if list[i] == fallback:
+				_res_option.select(i)
 
 
 func _on_resolution_selected(idx: int) -> void:
@@ -361,11 +387,9 @@ func _apply_reset() -> void:
 ## Sıfırlama sonrası her kontrolü canlı durumdan yeniden tohumla (panel açık kalır).
 func _sync_from_state() -> void:
 	_mode_option.select(DisplaySettingsLib.MODE_ORDER.find(DisplaySettingsLib.get_window_mode()))
-	var list: Array[Vector2i] = DisplaySettingsLib.available_resolutions()
-	var current: Vector2i = DisplaySettingsLib.get_resolution()
-	for i in list.size():
-		if list[i] == current:
-			_res_option.select(i)
+	# Sıfırlama çözünürlük anahtarlarını SİLER, yani get_resolution yeniden tespit
+	# eder — liste de yeniden kurulmalı, yoksa eski seçim ekranda kalır.
+	_fill_resolution_options()
 	_vsync_toggle.set_pressed_no_signal(DisplaySettingsLib.get_vsync())
 	_master_slider.set_value_no_signal(AudioManager.get_master_volume() * 100.0)
 	_music_slider.set_value_no_signal(AudioManager.get_music_volume() * 100.0)

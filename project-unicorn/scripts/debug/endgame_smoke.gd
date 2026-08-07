@@ -202,6 +202,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_roundtrip_fingerprint":         fail = _case_save_roundtrip_fingerprint()
 		"save_continuity_seeded":             fail = _case_save_continuity_seeded()
 		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
+		# --- Native çözünürlük / ultrawide 2026-08-08 ---
+		"oda_anchors_stay_in_band":           fail = _case_oda_anchors_stay_in_band()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -5467,4 +5469,50 @@ static func _case_save_double_load_no_residue() -> String:
 		return "reset_all_owners left an active build behind"
 
 	_cleanup_save_slots()
+	return ""
+
+
+# --- ODA çapaları her en-boy oranında GÖRÜNÜR bandın içinde kalmalı -----------
+# Saf matematik: pencere de sahne de gerekmez, yalnız OdaLayout'un kapak dönüşümü.
+# Oda 3840x2160 (16:9) boyanmış ve kompozisyon y 0.0'dan 0.98'e kadar UZANIYOR —
+# yani DİKEY kırpma bütçesi SIFIR. KEEP_ASPECT_COVERED daha geniş bir en-boy
+# oranında tam da bunu yapar: 32:9'da görünür bant [0.261, 0.739]'e iner ve üç
+# çerçeve, kâğıtlar ve TELEFON tamamen ekran dışında kalır. Hepsi tıklanabilir
+# çapa; telefon mentor/olay yüzeyi. Ölçüldü (5120x1440 shot'ı), sonra bu case
+# yazıldı — case önce KIRMIZI doğdu, düzeltmeyle yeşile döndü.
+static func _case_oda_anchors_stay_in_band() -> String:
+	# EN-BOY ORANIYLA parametrelenir, pencere boyutuyla değil: OdaView'in gördüğü
+	# rect viewport DEĞİL, CenterViewport'tur (sol ray genişliği, TopBar + ticker
+	# yüksekliği düşülmüş). 1920x1080'de bu ~1.851 oranına denk geliyor — ilk
+	# taslak ham 1920x1080'i (1.778) test etmişti ve BİRİNCİL çözünürlükteki
+	# şerit gerilemesini tam da bu yüzden kaçırdı.
+	var aspects := {
+		"16:9  (1.778)": 16.0 / 9.0,
+		"16:9 kabuk (1.851)": 1836.0 / 992.0,
+		"16:10 (1.600)": 1.6,
+		"21:9  (2.333)": 21.0 / 9.0,
+		"32:9  (3.556)": 32.0 / 9.0,
+	}
+	# window: boyalı, TIKLANMAZ (yalnız tur bölgesi) ve tepeden y=0.0'da başlar —
+	# hiçbir kırpma bütçesi onu kurtaramaz, kompozisyonun kenarıdır.
+	# overtime_chip: place_clamped kullanır, tanımı gereği banda kendisi sığar.
+	var exempt := ["window", "overtime_chip"]
+	for label in aspects:
+		var view := Vector2(1000.0 * float(aspects[label]), 1000.0)
+		var band: Vector2 = OdaLayout.visible_band_y(view)
+		for id in OdaLayout.RECTS:
+			if id in exempt:
+				continue
+			var r: Rect2 = OdaLayout.RECTS[id]
+			if r.position.y < band.x - 0.001:
+				return "%s: '%s' üst kenarı bandın dışında (y %.3f < %.3f)" % [label, id, r.position.y, band.x]
+			if r.end.y > band.y + 0.001:
+				return "%s: '%s' alt kenarı bandın dışında (y %.3f > %.3f)" % [label, id, r.end.y, band.y]
+
+	# BİRİNCİL ÇÖZÜNÜRLÜK GERİLEME KAPISI: 1920x1080'in kabuk oranında oda tam
+	# viewport'u doldurmalı. Tavan oraya inerse oyuncu 16:9'da yan şeritler görür —
+	# ultrawide'ı kurtarmak uğruna ana durumu bozmak kabul edilebilir değil.
+	var shell := Vector2(1836.0, 992.0)
+	if OdaLayout.room_rect(shell).size != shell:
+		return "16:9 kabuk oranında oda kapaklandı — birincil çözünürlükte yan şerit oluşur"
 	return ""
