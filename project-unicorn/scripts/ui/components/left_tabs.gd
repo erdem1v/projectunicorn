@@ -26,13 +26,14 @@ extends Panel
 
 @onready var settings_btn: Button = $Margin/Col/SettingsBtn
 
-var current_tab_idx: int = 0  # Default: Product
+var current_tab_idx: int = -1  # -1 = ODA (oda görünür, hiçbir sekme açık değil) — ODA rework varsayılanı
 
 # (Spec 6: the Yatırım tab was relocated into Finance>Yatırım; its phase-3 lock now lives on
 # the Finance sub-page selector, not on the rail.)
 
-# Active/idle look is driven by theme type variations (TabButtonActive/TabButton);
-# icon + label colors are tinted at runtime in _apply_visual.
+# Active/idle look is driven by theme type variations (ChromeTabButtonActive/
+# ChromeTabButton — ODA rework'te ray koyu kabuğa geçti); icon + label colors are
+# tinted at runtime in _apply_visual (CREAM/CREAM_DIM register).
 
 
 func _ready() -> void:
@@ -44,7 +45,10 @@ func _ready() -> void:
 	settings_btn.pressed.connect(_on_settings_button)
 
 	_apply_visual(current_tab_idx)
-	EventBus.tab_changed.emit(UiTokens.TABS[current_tab_idx].id)
+	# (ODA rework) Eski default-product emit'i silindi: açılış durumu oda,
+	# center_viewport kendi _ready'sinde _on_tab_changed("") ile kendini kurar.
+	# O emit zaten sibling-ready sırası gereği center_viewport connect'inden
+	# ÖNCE ateşleniyordu — ölü koddu.
 
 	# Programatik tab geçişlerinde highlight'ı senkron tut (Tracker Card
 	# "PostShip'e geç →" + product_tab'ın sales yönlendirmesi tab_changed emit
@@ -79,6 +83,11 @@ func _exit_tree() -> void:
 
 func _on_tab_button(idx: int) -> void:
 	if idx == current_tab_idx:
+		# Aktif sekmeye tekrar tıklama = kapat → odaya dön (ODA rework §2,
+		# ✕ ve Esc ile aynı kanal).
+		current_tab_idx = -1
+		_apply_visual(-1)
+		EventBus.tab_changed.emit("")
 		return
 	current_tab_idx = idx
 	_apply_visual(idx)
@@ -92,6 +101,12 @@ func _on_settings_button() -> void:
 func _on_tab_changed_external(tab_id: String) -> void:
 	# id → index; bilinmeyen id no-op. Kendi butonumuzdan gelen emit'te idx zaten
 	# doğru — idempotent boya, RE-EMIT YOK (sonsuz döngü engeli).
+	if tab_id == "":
+		# Odaya dönüş (✕ / Esc / programatik) — tüm sekmeler idle'a.
+		if current_tab_idx != -1:
+			current_tab_idx = -1
+			_apply_visual(-1)
+		return
 	for i in UiTokens.TABS.size():
 		if String(UiTokens.TABS[i].id) == tab_id:
 			if current_tab_idx != i:
@@ -101,14 +116,15 @@ func _on_tab_changed_external(tab_id: String) -> void:
 
 
 func _apply_visual(active_idx: int) -> void:
-	# Active tab: amber-left-border tile (TabButtonActive) + ink icon/label.
-	# Idle tabs: transparent (TabButton) + dim icon/label.
+	# Active tab: amber-left-border veil tile (ChromeTabButtonActive) + cream icon/label.
+	# Idle tabs: transparent (ChromeTabButton) + dim cream. active_idx == -1 → hepsi
+	# idle (ODA görünür, hiçbir sekme açık değil).
 	for i in tab_buttons.size():
 		var is_active: bool = i == active_idx
-		tab_buttons[i].theme_type_variation = &"TabButtonActive" if is_active else &"TabButton"
+		tab_buttons[i].theme_type_variation = &"ChromeTabButtonActive" if is_active else &"ChromeTabButton"
 		var icon: TextureRect = tab_buttons[i].get_node("Stack/Icon")
 		var name_label: Label = tab_buttons[i].get_node("Stack/NameLabel")
-		var color: Color = UiTokens.INK if is_active else UiTokens.INK_DIM
+		var color: Color = UiTokens.CREAM if is_active else UiTokens.CREAM_DIM
 		icon.modulate = color
 		name_label.add_theme_color_override("font_color", color)
 

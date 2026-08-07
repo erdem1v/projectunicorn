@@ -38,8 +38,10 @@ static func fill(dept_id: String, body: VBoxContainer, on_change: Callable) -> v
 
 	var participants: Array[Character] = HROvertimeSystem.participants(dept_id)
 	var who: String = "%d kişi" % participants.size()
-	if HROvertimeSystem.founder_participates(dept_id):
-		who += " · kurucu da dahil"
+	# `founder_participates` requires an ACTIVE block, and this panel half only ever renders
+	# BEFORE one starts — so the suffix was unreachable in both branches. Left out rather
+	# than made reachable: whether the founder pulls product_dev nights is a design question,
+	# not a rendering one, and the active half already reports the crew.
 	body.add_child(UiFactory.make_label(who, &"RowMeta", UiTokens.INK_DIM))
 
 	for block_days in HRConstants.OVERTIME_BLOCKS:
@@ -110,8 +112,11 @@ static func _fill_active(dept_id: String, body: VBoxContainer, on_change: Callab
 		"Bugünün hız kazancı +%%%d" % int(round(
 			HRConstants.overtime_speed_bonus(day_index) * 100.0)),
 		&"RowMeta", UiTokens.INK_MUTED))
+	# Bu cümle eskiden "durdurulan blok O GÜNDEN SONRA bedel üretmez" diyordu ve doğruydu —
+	# fazlasıyla: durdurulan gün de bedelsizdi, çünkü kazanç saatlik, bedel günlük
+	# işliyordu. Motor artık başlanan günü faturalıyor; kopya da onu söylüyor.
 	body.add_child(UiFactory.make_label(
-		"Erken durdurabilirsin; durdurulan blok o günden sonra bedel üretmez.",
+		"Erken durdurabilirsin; başlanan gün tam ücretlenir, sonrası için bedel üretmez.",
 		&"QuoteSerif"))
 	var on_stop: Callable = func() -> void:
 		if HROvertimeSystem.stop(dept_id) and on_change.is_valid():

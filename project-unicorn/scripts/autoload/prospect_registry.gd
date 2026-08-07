@@ -33,6 +33,14 @@ func has_any() -> bool:
 	return not _prospects.is_empty()
 
 
+func get_company_names() -> Array:
+	# Company names of every live lead — PitchSystem's spawn-dedup input (Fix 1).
+	var out: Array = []
+	for p in _prospects.values():
+		out.append(p.company_name)
+	return out
+
+
 # --- Write API ---
 
 func add(prospect: Prospect) -> void:

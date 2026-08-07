@@ -87,7 +87,7 @@ text = "Frank Köseoğlu"
 [node name="RoleLabel" type="Label" parent="CenterPanel/Body/Header/HeaderText"]
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "OPERATING PARTNER"
+text = "OPERASYON ORTAĞI"
 
 [node name="BodyRichText" type="RichTextLabel" parent="CenterPanel/Body"]
 layout_mode = 2
@@ -98,7 +98,7 @@ scroll_active = false
 theme_type_variation = &"BodyRich"
 text = "Frank kahvesinden bir yudum alıyor.
 
-\"Product Hunt'taki sunumun fena değildi. O yüzden buradayım.\"
+\"Vitrin'deki sunumun fena değildi. O yüzden buradayım.\"
 
 \"Şirketini kurdun. Kolay kısmı buydu. Şimdi bir ürün lazım — birinin para vereceği bir şey. İlk versiyonu kendin yapacaksın.\"
 

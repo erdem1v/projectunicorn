@@ -54,8 +54,10 @@ var _burn_list: VBoxContainer
 var _tx_list: VBoxContainer
 var _cap_founder_rect: ColorRect
 var _cap_investor_rect: ColorRect
+var _cap_employee_rect: ColorRect   # ODA rework: RightPanel'in çalışan-hisse yarısı buraya taşındı
 var _cap_rows: Label
 var _cap_raised: Label
+var _cap_equity_note: Label         # "%d çalışanın hissesi var" (RightPanel'den taşınan TR satırı)
 var _mentor_card: PanelContainer
 
 var _signals: Array = []
@@ -68,6 +70,9 @@ func _ready() -> void:
 		[EventBus.mrr_changed, _on_state_changed],
 		[EventBus.burn_changed, _on_state_changed],
 		[EventBus.language_changed, _on_state_changed],
+		# ODA rework: işe alım/ayrılık çalışan-hisse dilimini oynatabilir.
+		[EventBus.character_added, _on_state_changed],
+		[EventBus.character_removed, _on_state_changed],
 	]
 	for s in _signals:
 		(s[0] as Signal).connect(s[1])
@@ -243,7 +248,11 @@ func _legend_chip(text: String, color: Color) -> Control:
 func _build_flow_card() -> PanelContainer:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
-	vb.add_child(UiFactory.make_section_header("Bu ay nakit akışı"))
+	# get_monthly_flow() ay-başından-bugüne DEĞİL, mevcut hızın 30 güne uzatılmış hali —
+	# başlık bunu söylemek zorunda: ayın 5'inde "bu ay" yazıp tam ay göstermek, yanındaki
+	# boş "Son işlemler" listesiyle doğrudan çelişiyordu. "mevcut gidiş" eğrinin
+	# projeksiyon göstergesiyle aynı kelime (bkz. _legend_current).
+	vb.add_child(UiFactory.make_section_header("Aylık akış · mevcut gidişle"))
 	for entry in [["income", "Gelir"], ["expense", "Gider"], ["net", "Net"]]:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
@@ -311,9 +320,18 @@ func _build_captable_card() -> PanelContainer:
 	_cap_investor_rect.color = UiTokens.ACCENT
 	_cap_investor_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar.add_child(_cap_investor_rect)
+	# Çalışan dilimi (ODA rework — RightPanel cap-table göçü): BG_AVATAR token
+	# yorumu zaten "avatar disc + cap-table bar" diyor. Hisse 0 iken gizli.
+	_cap_employee_rect = ColorRect.new()
+	_cap_employee_rect.color = UiTokens.BG_AVATAR
+	_cap_employee_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.add_child(_cap_employee_rect)
 
 	_cap_rows = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
 	vb.add_child(_cap_rows)
+	_cap_equity_note = UiFactory.make_label("", &"CaptionMuted")
+	_cap_equity_note.visible = false
+	vb.add_child(_cap_equity_note)
 	# Opsiyon havuzu: motorda alan YOK (gelecek alan adayı: GameState.run_option_pool_pct).
 	# Satır, state gelmeden asla kurulmaz — mockup'taki %10 icat edilmiş bir rakamdı.
 	return _card(vb)
@@ -375,8 +393,11 @@ func _refresh_header() -> void:
 		_runway_note.visible = _runway_note.text != ""
 	else:
 		_runway_val.text = "%s %s" % [p.value, p.unit]
+		# Negatif kasa da KIRMIZI. `months` bu durumda INF olabiliyor (get_runway_months
+		# yalnız günlük nete bakar, kasanın işaretine bakmaz), o yüzden tek başına eşik
+		# karşılaştırması ödemesi geciken bir şirketi varsayılan mürekkeple basıyordu.
 		_runway_val.add_theme_color_override("font_color",
-				UiTokens.NEGATIVE if months < RUNWAY_WARN_MONTHS else UiTokens.INK)
+				UiTokens.NEGATIVE if (months < RUNWAY_WARN_MONTHS or GameState.cash < 0) else UiTokens.INK)
 		_runway_note.visible = false
 
 
@@ -521,18 +542,36 @@ func _refresh_transactions() -> void:
 
 
 func _refresh_captable() -> void:
-	# Mevcut state'ten: kurucu = 100 − imzalanan dilüsyon; opsiyon havuzu alanı yok.
+	# Mevcut state'ten: kurucu = 100 − imzalanan dilüsyon − çalışan hisseleri.
+	# (ODA rework 2026-08-06: RightPanel'in çalışan-hisse yarısı buraya taşındı,
+	# iki yarım görünüm birleşti.) Opsiyon havuzu alanı motorda hâlâ yok.
 	var investors: int = GameState.run_equity_pct
-	var founder: int = 100 - investors
+	var employee_frac: float = 0.0
+	var employees_with_equity: int = 0
+	for emp in CharacterRegistry.get_employees():
+		if emp.equity_pct > 0.0:
+			employees_with_equity += 1
+			employee_frac += emp.equity_pct
+	# equity_pct kurucu sözleşmesiyle aynı 0..1 kesir (get_founder_equity emsali);
+	# emniyet kelepçesi yatırımcı payını asla taşırmaz.
+	var employees: int = mini(int(round(employee_frac * 100.0)), maxi(0, 100 - investors))
+	var founder: int = maxi(0, 100 - investors - employees)
 	_cap_founder_rect.size_flags_stretch_ratio = float(maxi(founder, 0))
 	_cap_investor_rect.size_flags_stretch_ratio = float(maxi(investors, 0))
 	_cap_investor_rect.visible = investors > 0
+	_cap_employee_rect.size_flags_stretch_ratio = float(maxi(employees, 0))
+	_cap_employee_rect.visible = employees > 0
 	var parts: Array = ["Kurucu · %%%d" % founder]
 	if investors > 0:
 		parts.append("Yatırımcılar · %%%d" % investors)
+	if employees > 0:
+		parts.append("Çalışanlar · %%%d" % employees)
 	_cap_rows.text = " · ".join(parts)
 	var raised: int = GameState.run_investment_amount
 	_cap_raised.text = "Toplanan · %s" % UiTokens.format_money(raised) if raised > 0 else ""
+	_cap_equity_note.visible = employees_with_equity > 0
+	if employees_with_equity > 0:
+		_cap_equity_note.text = "%d çalışanın hissesi var" % employees_with_equity
 
 
 func _refresh_mentor() -> void:

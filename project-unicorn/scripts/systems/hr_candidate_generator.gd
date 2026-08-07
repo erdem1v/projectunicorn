@@ -23,8 +23,9 @@ extends RefCounted
 # a choice and the arayış is a formality with an extra click. So it is not a comment: it is
 # is_non_dominated_set(), called as a post-condition of generate() and asserted over 100+
 # generations in the smoke suite. The predicate is deliberately SHAPE-AGNOSTIC — it never
-# asserts equal totals and never asserts a distinct strict argmax — so the balance pass can add
-# balanced profiles to HRConstants.BAND_SHAPE without a single test being rewritten.
+# asserts equal totals and never asserts a distinct strict argmax — which is why the mixed
+# BAND_SHAPE profiles (strictly increasing totals per band) landed without rewriting it:
+# rising totals force rising quotes, and a pricier file can never dominate on price.
 #
 # NO RNG. AT ALL. No randi/randf/RandomNumberGenerator/shuffle/pick_random, no Time: every
 # varying field is pure integer arithmetic on the seed, then pool[n % pool.size()] — the house
@@ -76,9 +77,10 @@ const SEED_BAND_STRIDE := 17
 # being silently rounded into a fixed number.
 const TRAIT_SHARE_RESOLUTION := 100
 
-# Salaries are quoted to the nearest hundred — nobody asks for $9.873 a month. Presentation
-# granularity, not a knob.
-const SALARY_ROUND_TO := 100
+# Salaries are quoted to a $50 step — nobody asks for $9.873 a month. Presentation
+# granularity, not a knob: at $100 the tightest junior window cannot hold three distinct
+# quotes (BAND_SHAPE's gap rule needs window_low·PREMIUM·Δ(peak+total)/36 >= this step).
+const SALARY_ROUND_TO := 50
 
 
 # --- Public surface ---
@@ -87,8 +89,7 @@ static func generate(role_id: String, band_id: String, seed_value: int) -> Array
 	var files: Array = []
 	if not HRConstants.is_employee_role(role_id):
 		push_warning("[HRCandidateGenerator] generate for non-employee role '%s' — see HRConstants.EMPLOYEE_ROLES" % role_id)
-	var shape: Array = HRConstants.band_shape(band_id)
-	if shape.is_empty():
+	if HRConstants.band_shape(band_id, 0).is_empty():
 		push_error("[HRCandidateGenerator] band_shape('%s') is empty — see HRConstants.BAND_SHAPE" % band_id)
 		return files
 
@@ -106,7 +107,10 @@ static func generate(role_id: String, band_id: String, seed_value: int) -> Array
 
 	for k in range(HRConstants.CANDIDATE_COUNT):
 		var salt: int = SALT_CANDIDATE_STRIDE * k
-		var axes: Dictionary = _axes_for(shape, k)
+		# Candidate k = profile k of the band (cheapest first), rotated k so the peak lands
+		# on a distinct axis per file. Profile AND rotation share the index on purpose:
+		# mixed totals price the files apart, rotation spreads the peaks.
+		var axes: Dictionary = _axes_for(HRConstants.band_shape(band_id, k), k)
 		if not HRConstants.validate_employee_axes(axes):
 			push_error("[HRCandidateGenerator] generated axes are not the employee ruler: %s" % str(axes))
 		var first_name: String = _take_unused(HRConstants.FIRST_NAMES, used_first,
@@ -136,9 +140,9 @@ static func generate(role_id: String, band_id: String, seed_value: int) -> Array
 
 static func is_non_dominated_set(files: Array) -> bool:
 	# The invariant VERBATIM, price included: for every ordered pair, NOT (A >= B on all three
-	# axes AND A.salary <= B.salary). Deliberately shape-agnostic — it must not assume equal
-	# totals or a distinct strict argmax, so the balance pass can add balanced profiles to
-	# HRConstants.BAND_SHAPE without any test being rewritten.
+	# axes AND A.salary <= B.salary). Deliberately shape-agnostic — it assumes neither equal
+	# totals nor a distinct strict argmax, so BAND_SHAPE's profile mix can keep evolving in
+	# the balance pass without any test being rewritten.
 	#
 	# Paired by INDEX, not by value: `a != b` on two Dictionaries is an equality question with
 	# its own semantics, and two files that happen to be identical DO dominate each other,
@@ -169,11 +173,12 @@ static func seed_for(role_id: String, band_id: String) -> int:
 # --- Axes: the k'th cyclic rotation of the band shape ---
 
 static func _axes_for(shape: Array, rotation: int) -> Dictionary:
-	# Candidate k IS the k'th cyclic rotation of HRConstants.band_shape(): equal totals, and
-	# the peak lands on a DIFFERENT axis in each file, which is what makes the set
-	# non-dominated by construction. Deriving the shape from a total instead would hand back a
-	# flat profile with no strict max at every total divisible by three — three interchangeable
-	# files and no choice at all.
+	# The k'th cyclic rotation of the profile the caller picked for candidate k: the peak
+	# lands on a DIFFERENT axis in each file. Rotation spreads the peaks; the PROFILES
+	# (HRConstants.BAND_SHAPE, strictly increasing totals) price the files apart — the two
+	# together make the set non-dominated by construction. Deriving a shape from a total
+	# instead would hand back a flat profile with no strict max at every total divisible
+	# by three — interchangeable files and no choice at all.
 	#
 	# Built by walking AXES (not the shape) so the result always holds EXACTLY the three ruler
 	# keys and passes the CharacterRegistry key-lock, whatever length a future BAND_SHAPE entry
@@ -230,12 +235,14 @@ static func _shape_premium(axes: Dictionary) -> float:
 	#   - the TOTAL term is what keeps a MIXED set non-dominated. Beating another profile on
 	#     all three axes always raises the total, so a strictly better file automatically
 	#     quotes a strictly higher salary and cannot dominate on price too.
-	# Under pure rotation all three files share one multiset, so all three land on the SAME
-	# number today: that is what "flat" means here, not a bug in the candidate card. The moment
-	# the balance pass puts a balanced profile next to a spiky one, the term goes live on its
-	# own. Granularity caveat for that pass: SALARY_ROUND_TO quantises the quote, so two shapes
-	# whose (peak + total) differ by only a point or two can still round to one number — if
-	# they also dominate component-wise, generate()'s post-condition will say so.
+	# The term is LIVE: BAND_SHAPE holds three profiles per band with strictly increasing
+	# totals, so the three quotes are pairwise distinct by arithmetic, not luck. The gap
+	# rule that keeps rounding from collapsing them: adjacent profiles differ in
+	# (peak + total) by >= 4 (junior) / 3 (mid, senior), and the tightest windows give
+	#   junior 5000·0.10·4/36 = 55.6 · mid 7600·0.10·3/36 = 63.3 · senior 10800·0.10·3/36 = 90.0
+	# — all >= SALARY_ROUND_TO (50), and two raw values >= a rounding step apart can never
+	# round onto one multiple. Shrink a band floor or a profile gap below that line and the
+	# smoke's distinct-salary assertion screams.
 	var total: int = 0
 	var peak: int = HRConstants.AXIS_MIN
 	for axis_key in HRConstants.AXES:

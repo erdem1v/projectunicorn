@@ -123,7 +123,6 @@ func _build() -> void:
 
 	# Alt şerit (tam genişlik): lig satırı + Frank.
 	_league_label = Label.new()
-	_league_label.add_theme_font_size_override("font_size", 12)
 	_league_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root.add_child(_league_label)
 	root.add_child(_build_frank_strip())
@@ -188,8 +187,7 @@ func _build_left_column(left: VBoxContainer) -> void:
 		abar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_override_bar_fill(abar, AXIS_COLORS[axis])
 		lrow.add_child(abar)
-		var aval := UiFactory.make_label("+0", &"MetricValueInk")
-		aval.add_theme_font_size_override("font_size", 14)
+		var aval := UiFactory.make_label("+0", &"RowName")
 		aval.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		lrow.add_child(aval)
 		legend.add_child(lrow)
@@ -469,8 +467,7 @@ func _make_promise_row(p) -> PanelContainer:
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	row.add_child(mid)
-	var days_lbl := UiFactory.make_label("", &"MetricValueInk")
-	days_lbl.add_theme_font_size_override("font_size", 13)
+	var days_lbl := UiFactory.make_label("", &"RowName")
 	days_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(days_lbl)
 	_promise_rows.append({"label": days_lbl, "promise": p})
@@ -513,13 +510,32 @@ func _repaint_action_cards(ver: int, bugs: int) -> void:
 
 func _repaint_bottom(sub: String, ver: int) -> void:
 	var comp: float = _shipped_composite(sub)
-	var rank: Dictionary = RivalRegistry.get_player_rank_in_startup_league(sub, comp)
 	var passer: String = _rival_passed_name(sub, comp)
-	_league_label.text = String(rank["text"]) + ((" · %s seni geçti." % passer) if passer != "" else "")
+	# Pazar payı satırı (Fix 3, lig çerçevesinin yerine) — WORKING TR. Oyuncunun
+	# MRR'dan türeyen dilimi + hemen üstündeki adlandırılmış rakibin dilimi: kıymık
+	# küçükken bile bir sonraki basamak görünür kalır. Kalite-bazlı "seni geçti"
+	# eki ayrı bir sinyaldir ve aynen kalır.
+	var snap: Dictionary = RivalRegistry.get_market_snapshot(sub)
+	var line: String = "pazar payı " + RivalRegistry.format_share(float(snap["player_pct"]))
+	var above: Dictionary = _nearest_rival_above(snap)
+	if not above.is_empty():
+		line += " · %s %s" % [String(above["name"]), RivalRegistry.format_share(float(above["share_pct"]))]
+	_league_label.text = line + ((" · %s seni geçti." % passer) if passer != "" else "")
 	_league_label.add_theme_color_override("font_color",
 		UiTokens.NEGATIVE if passer != "" else UiTokens.INK_MUTED)
 	var bugs_heavy: bool = ProductSystem.product_bug_risk() == "yuksek"
 	_frank_line.text = ProductUiShared.frank_line(_weakest_axis_id(), ver + 1, passer, bugs_heavy)
+
+
+func _nearest_rival_above(snap: Dictionary) -> Dictionary:
+	# Payı oyuncununkinin üstünde olan EN KÜÇÜK adlandırılmış rakip (liste pay-azalan
+	# sıralı gelir — sondan yürümek ilk "üstteki basamağı" verir).
+	var player: float = float(snap["player_pct"])
+	var rivals: Array = snap["rivals"]
+	for i in range(rivals.size() - 1, -1, -1):
+		if float(rivals[i]["share_pct"]) > player:
+			return rivals[i]
+	return {}
 
 
 # --- girişler ------------------------------------------------------------------

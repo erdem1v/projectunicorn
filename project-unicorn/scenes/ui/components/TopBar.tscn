@@ -70,6 +70,7 @@ text = "$50,000"
 clip_text = true
 
 [node name="StatCol_MRR" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
+custom_minimum_size = Vector2(104, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 2
@@ -288,29 +289,34 @@ theme_override_constants/separation = 4
 [node name="PauseBtn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(28, 22)
 layout_mode = 2
+focus_mode = 0
 theme_type_variation = &"SpeedButton"
 text = "II"
 
 [node name="Speed1Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(28, 22)
 layout_mode = 2
+focus_mode = 0
 theme_type_variation = &"SpeedButtonActive"
 text = "1x"
 
 [node name="Speed2Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(28, 22)
 layout_mode = 2
+focus_mode = 0
 theme_type_variation = &"SpeedButton"
 text = "2x"
 
 [node name="Speed3Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(28, 22)
 layout_mode = 2
+focus_mode = 0
 theme_type_variation = &"SpeedButton"
 text = "3x"
 
 [node name="Speed4Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(28, 22)
 layout_mode = 2
+focus_mode = 0
 theme_type_variation = &"SpeedButton"
 text = "4x"

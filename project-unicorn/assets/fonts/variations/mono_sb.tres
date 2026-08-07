@@ -1,0 +1,9 @@
+[gd_resource type="FontVariation" format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/mono/JetBrainsMono-SemiBold.ttf" id="1_exl22"]
+[ext_resource type="FontFile" path="res://assets/fonts/fallback/NotoSansSymbols2-Regular.ttf" id="2_2lmyu"]
+
+[resource]
+fallbacks = Array[Font]([ExtResource("2_2lmyu")])
+base_font = ExtResource("1_exl22")
+spacing_glyph = 1

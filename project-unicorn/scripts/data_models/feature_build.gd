@@ -89,14 +89,19 @@ extends Resource
 # version-ADD build → zero behavior change.
 @export var strengthened_feature_ids: Array[String] = []
 
-# --- DEPRECATED Software Inc.-style phase machinery (Spec #4 → Rev3) ---
-# The Rev3 efor engine (total_efor / efor_spent + 20/60/20 auto phase bands)
-# superseded the iteration-cycle + development-day counters. Fields stay declared
-# for save compat; ProductSystem no longer writes them.
+# --- İterasyon döngüsü (player-gated restore, 2026-08) ---
+# Rev3 efor motorunun üstünde yaşayan karar-durumu: tasarım bandı dolunca
+# decision_pending yanar (build parkta, efor donuk), her "Bir tur daha"
+# count'u artırıp round_days'i ITER_ROUND_DAYS'e kurar; tur sonunda kazanç
+# uygulanır ve pending yeniden yanar. Tur 1 = tasarım bandının kendisi.
 @export var iteration_count: int = 0
-@export var iteration_days_in_current: float = 0.0
-@export var iteration_round_days: float = 0.0
+@export var iteration_round_days: float = 0.0   # koşan ek turun kalan günü; 0 = tur yok
 @export var iteration_decision_pending: bool = false
+
+# --- DEPRECATED Software Inc.-style phase machinery (Spec #4 → Rev3) ---
+# The Rev3 efor engine (total_efor / efor_spent + auto dev→beta band) superseded
+# the day counters below. Fields stay declared for save compat; nothing writes them.
+@export var iteration_days_in_current: float = 0.0
 @export var development_days_total: int = 0
 @export var development_days_elapsed: float = 0.0
 

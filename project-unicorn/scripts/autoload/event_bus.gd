@@ -17,7 +17,13 @@ signal runway_recalculated(months: float)
 
 # --- UI / time signals (§13.2) ---
 signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=3x, 4=4x
-signal tab_changed(tab_id: String)  # "product", "hr", "finance", "sales", "ops", "rnd", "personal", "events"
+# ODA rework: "" = sekme yok, oda görünür (varsayılan durum). Sekme id'leri:
+# "product", "hr", "finance", "sales", "ops", "rnd", "personal", "events".
+signal tab_changed(tab_id: String)
+# Kâğıt deep-link'i (ODA rework §5.3): mount edilmiş Finance sekmesine alt sayfa
+# seçtirir ("ozet"|"yatirim"). tab_changed("finance") emit'i SENKRON mount eder,
+# ardışık emit bu yüzden güvenli — handler bağlanmış olur.
+signal finance_subpage_requested(page_id: String)
 
 # --- Settings / audio signals ---
 # Gear button (below the left tab column) → main.gd mounts SettingsModal
@@ -46,6 +52,12 @@ signal morale_changed(character_id: String, new_morale: int)
 # day behind, arriving candidate files invisible until the next day). No payload — a repaint
 # hook, not a data channel; every number is still read from the owning system.
 signal hr_day_processed()
+
+# Emitted at the END of NewsFeedSystem.daily_tick (slot 7), once the day's news lines are
+# composed — the ticker's day-boundary repaint hook. Same rationale as hr_day_processed:
+# day_advanced fires BEFORE the daily ticks dispatch, so a feed repaint on day_advanced
+# would read yesterday's stream. No payload — read NewsFeedSystem.get_stream().
+signal news_stream_changed()
 
 # --- Customer signals (§13.2) ---
 signal customer_added(customer_id: String)
@@ -77,9 +89,10 @@ signal modal_requested(event: GameEvent)
 # Emitted by ProductSystem whenever current_phase transitions. BuildHUDPanel
 # subscribes to drive its faz-aware paint instead of polling active_build.
 signal build_phase_changed(new_phase: String)
-# DEPRECATED (Build Tracker Card, dört-faz akış): emitter YOK — iterasyonlar
-# otomatik döner, karar-bekleme modeli kalktı. Declared kalıyor (en az churn);
-# yeni kod bağlanmasın.
+# CANLANDI (player-gated iterasyon restore, 2026-08): tasarım bandı dolunca ve her
+# ek tur bitince true, oyuncu karar verince false. Emitter'lar ProductSystem'de
+# (_pend_iteration_decision / advance_iteration / enter_development); BuildHUDPanel
+# bağlanır, creation_flow zaten build_progress_changed üzerinden repaint oluyor.
 signal build_iteration_decision_pending(pending: bool)
 # Emitted at the END of ProductSystem.daily_tick (after the phase tick advances
 # its counters), so build progress bars repaint with the post-tick value.
@@ -90,7 +103,7 @@ signal build_progress_changed()
 # --- Rival signals (Product Lifecycle Part 1) ---
 # Emitted by RivalRegistry. rival_added on seed; rival_status_changed when a
 # rival's display band flips; rival_advanced once per day after advance_all so
-# RightPanel repaints its ACTIVE RIVALS section.
+# the ODA board league repaints (RightPanel retired — ODA rework 2026-08-06).
 signal rival_added(rival_id: String)
 signal rival_status_changed(rival_id: String, status: String)
 signal rival_advanced()
@@ -105,7 +118,8 @@ signal pitch_requested(prospect_id: String)
 # Emitted by B2BPitchMeeting when the pitch flow ends (any outcome) so the Sales/Hunt
 # tabs repaint. Speed restore + scene teardown happen in main.gd's dialogue close path.
 signal pitch_finished()
-# Frank's RightPanel advisory line — updated by intro/customer events/traction.
+# Frank's advisory line — updated by intro/customer events/traction. Its RightPanel
+# home retired with the ODA rework; the mentor surfaces read it now.
 signal mentor_advisory_changed(text: String)
 
 # Live ticker line. The ONLY non-modal notification channel: a system pushes one line and

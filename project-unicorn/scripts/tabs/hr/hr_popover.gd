@@ -149,13 +149,17 @@ func close() -> void:
 # --- Mount ------------------------------------------------------------------
 
 static func mount(anchor: Control) -> HRPopover:
-	# ModalLayer'ı bulur, açık olan popover'ı kapatır, yenisini monte edip döndürür.
+	# PanelLayer'ı bulur, açık olan popover'ı kapatır, yenisini monte edip döndürür.
 	# Çağıran sırası: mount → body()'yi doldur → open_at(anchor).
+	#
+	# ModalLayer DEĞİL (bkz. hr_tab._open_atlas): oradayken game_shell'in 2. bekçisi
+	# Space/1-4'ü yutuyordu, yani bir mesai panelini açmak saati durdurma yeteneğini
+	# sessizce elden alıyordu. Popover bir panel, bir karar anı değil.
 	if anchor == null or not anchor.is_inside_tree():
 		return null
-	var layer: Node = anchor.get_tree().get_root().find_child("ModalLayer", true, false)
+	var layer: Node = anchor.get_tree().get_root().find_child("PanelLayer", true, false)
 	if layer == null:
-		push_error("[HRPopover] GameShell/ModalLayer bulunamadı — popover monte edilemiyor")
+		push_error("[HRPopover] GameShell/PanelLayer bulunamadı — popover monte edilemiyor")
 		return null
 	for child in layer.get_children():
 		if child is HRPopover:

@@ -169,29 +169,29 @@ static func worst_badge_severity(emp: Character) -> int:
 
 # --- Huy çipleri ------------------------------------------------------------
 
-static func trait_chip(trait_id: String, with_effect: bool = false) -> Control:
+static func trait_chip(trait_id: String, with_tooltip: bool = false) -> Control:
 	# Yeşil/kırmızı huy çipi. Polarite ve etki metni registry'den; ham id ekrana
-	# asla çıkmaz.
+	# asla çıkmaz. Etki metni satır olarak DEĞİL, hover tooltip'inde (CLAUDE.md
+	# Effect-Visibility Rule'un beklediği EU4/CK3 grameri): kart sakin kalır,
+	# merak eden imleci getirir.
 	var polarity: String = HRConstants.trait_polarity(trait_id)
 	var kind: StringName = &"positive" if polarity == "positive" else &"negative"
-	var label: String = HRConstants.trait_label(trait_id)
-	if not with_effect:
-		return UiFactory.make_badge(label, kind)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 2)
-	var chip_row := HBoxContainer.new()
-	chip_row.add_child(UiFactory.make_badge(label, kind))
-	col.add_child(chip_row)
-	col.add_child(UiFactory.make_label(HRConstants.trait_effect_text(trait_id), &"RowMeta", UiTokens.INK_DIM))
-	return col
+	var chip: Control = UiFactory.make_badge(HRConstants.trait_label(trait_id), kind)
+	if with_tooltip:
+		# make_badge çipi MOUSE_FILTER_IGNORE ile verir (UiFactory çipleri varsayılan
+		# inert); tooltip hover ister, o yüzden yalnız bu çip STOP'a çevrilir
+		# (top_bar.gd'nin runway-notu reçetesi). İç Label IGNORE kalır, hover panele düşer.
+		chip.mouse_filter = Control.MOUSE_FILTER_STOP
+		chip.tooltip_text = HRConstants.trait_effect_text(trait_id)
+	return chip
 
 
-static func trait_row(trait_ids: Array, with_effect: bool = false) -> Control:
-	# Etki metniyle basılınca dikey (aday dosyası, Kare 4); metinsiz yatay (çalışan kartı).
-	var row: BoxContainer = VBoxContainer.new() if with_effect else HBoxContainer.new()
-	row.add_theme_constant_override("separation", 4 if with_effect else 5)
+static func trait_row(trait_ids: Array, with_tooltip: bool = false) -> Control:
+	# Hep yatay çip sırası; aday dosyasında tooltip'li, çalışan kartında düz.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 5)
 	for trait_id in trait_ids:
-		row.add_child(trait_chip(String(trait_id), with_effect))
+		row.add_child(trait_chip(String(trait_id), with_tooltip))
 	return row
 
 

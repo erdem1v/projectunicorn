@@ -39,5 +39,5 @@ func _draw() -> void:
 		elif i < fillable:
 			color = UiTokens.CONVICTION_TRACK_BG
 		else:
-			color = Color(1, 1, 1, 0.03)   # ceiling slots — visible, unreachable now
+			color = UiTokens.VEIL_FAINT   # ceiling slots — visible, unreachable now
 		draw_rect(Rect2(i * (w + SLOT_GAP), y, w, SLOT_HEIGHT), color)

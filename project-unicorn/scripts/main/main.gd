@@ -5,7 +5,7 @@ extends Node
 #   2. Pause the clock (TimeManager auto-starts at 1x in its own _ready;
 #      we override it for onboarding so day/hour stay at 1/09:00).
 #   3. Instance OnboardingFlow into self. GameShell is NOT instanced upfront —
-#      its child components (TopBar, RightPanel) paint from GameState in
+#      its child components (TopBar, LeftTabs, OdaView) paint from GameState in
 #      _ready(), so it can only mount after initialize_run completes.
 #   4. On flow completed signal (or F12 debug skip): swap flow for GameShell,
 #      then instance MentorIntroModal into GameShell/ModalLayer.
@@ -56,6 +56,18 @@ var _tempo_last_msec: int = 0
 
 func _ready() -> void:
 	get_window().min_size = Vector2i(1280, 720)
+
+	# Bayat-tema bekçisi (Tema Çekirdeği): master_theme.tres UiTokens'tan ÜRETİLİR ve
+	# jeneratör elle koşulur — token değişip regen unutulursa bunu başka hiçbir şey fark
+	# etmez. build_theme damgayı .tres'e gömer (UiTokensStamp/stamp); burada karşılaştırıp
+	# farkta bağırırız. Damgasız (eski) bir .tres'te get_constant 0 döner — o da doğru
+	# şekilde uyarıya düşer.
+	if OS.is_debug_build():
+		var proj_theme: Theme = ThemeDB.get_project_theme()
+		if proj_theme != null:
+			var baked_stamp: int = proj_theme.get_constant(&"stamp", &"UiTokensStamp")
+			if baked_stamp != UiTokens.THEME_STAMP:
+				push_warning("[Theme] master_theme.tres BAYAT: gömülü damga %d != UiTokens.THEME_STAMP %d — regen: godot --headless --path . -s res://scripts/theme/build_theme.gd" % [baked_stamp, UiTokens.THEME_STAMP])
 
 	# Pause before any UI loads. TimeManager's _ready ran first (autoload
 	# order) and set paused=false; we override here. Sending through the
@@ -129,6 +141,9 @@ func _ready() -> void:
 			if String(arg) == "--pitch-shot":
 				_run_pitch_shot()
 				return
+			if String(arg) == "--probe-shot":
+				_run_probe_shot()
+				return
 		var product_shot: String = _product_shot_requested()
 		if product_shot != "":
 			_run_product_shot(product_shot)
@@ -148,6 +163,26 @@ func _ready() -> void:
 		var font_spec: String = _font_spec_requested()
 		if font_spec != "":
 			_run_font_spec(font_spec)
+			return
+		var tab_shot: String = _tab_shot_requested()
+		if tab_shot != "":
+			_run_tab_shot(tab_shot)
+			return
+		var modal_shot: String = _modal_shot_requested()
+		if modal_shot != "":
+			_run_modal_shot(modal_shot)
+			return
+		var onboard_shot: String = _onboard_shot_requested()
+		if onboard_shot != "":
+			_run_onboard_shot(int(onboard_shot))
+			return
+		var theme_audit: String = _theme_audit_requested()
+		if theme_audit != "":
+			_run_theme_audit(theme_audit)
+			return
+		var oda_shot: String = _oda_shot_requested()
+		if oda_shot != "":
+			_run_oda_shot(oda_shot)
 			return
 
 	if OS.is_debug_build() and _skip_onboarding_requested():
@@ -212,14 +247,41 @@ func _run_tempo_probe(idx: int) -> void:
 	# very thing this probe proves (tick purity: real tempo must not touch outcomes).
 	GameState.run_seed = 424242
 	seed(GameState.run_seed)
-	# Give the HOURLY path real work to do — build effort, B2C audience flow and bug
-	# accrual all tick hourly, and that is where a speed-coupled bug would surface.
-	# A daily-burn-only run would pass this probe trivially.
+	# Give the HOURLY path real work to do — build effort, B2C audience flow, post-ship
+	# wear and bug accrual all tick hourly, and that is where a speed-coupled bug would
+	# surface. A daily-burn-only run would pass this probe trivially.
+	#
+	# mvp_shipped is LOAD-BEARING and was missing: SalesSystem.hourly_tick gates the whole
+	# B2C half on it, and ProductSystem gates post-ship wear on it, so without it the
+	# audience sat frozen at its seed value, MRR held whatever open_b2c_paid_tier derived
+	# once, and the fingerprint's aud= column was a constant. The probe was proving tick
+	# purity by CONSTRUCTION rather than by measurement. Real bools, not strings — event
+	# conditions compare through bool() and a String-typed flag reads differently there.
 	GameState.set_cash(50000)
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2c")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
+	# Wear rate reads _shipped_total_complexity(); with no components it runs at WEAR_FLOOR.
+	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
+	GameState.set_flag("mvp_innovation", 20.0)
+	GameState.set_flag("mvp_stability", 25.0)
+	GameState.set_flag("mvp_experience", 22.0)
+	GameState.set_flag("mvp_version", 2)
+	GameState.set_flag("mvp_product_name", "Nova")
 	GameState.set_flag("b2c_audience", 4000)
 	SalesSystem.open_b2c_paid_tier(15)   # real seam — makes MRR derive hourly too
 	ProductSystem.start_build("ai_assistant",
 		["ai_assistant_chat", "ai_assistant_memory"], "", "Nova")
+	# start_build parks at the design band edge (PHASE_DESIGN_END) and waits for a PLAYER
+	# seam. The probe never sat in that seat, so from day 3 efor= was a frozen number and
+	# the build channel measured nothing. Take the seat: drive to the decision, then enter
+	# development so effort keeps flowing for the probe's whole window.
+	for i in 24 * 3:
+		var pb: FeatureBuild = ProductSystem.get_active_build()
+		if pb == null or pb.iteration_decision_pending:
+			break
+		ProductSystem.hourly_tick(i % 24)
+	ProductSystem.enter_development()
 	print("TEMPO START speed=%d want_ms=%d" % [idx, int(TimeManager.SECONDS_PER_DAY[idx] * 1000.0)])
 	EventBus.day_advanced.connect(func(day: int) -> void:
 		var now: int = Time.get_ticks_msec()
@@ -251,7 +313,7 @@ func _run_b2b_shot(kind: String) -> void:
 	# Mount one B2B Sales modal into a CanvasLayer, render a couple frames, screenshot.
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
@@ -314,7 +376,7 @@ func _run_event_shot(event_id: String) -> void:
 	# so the ev_debug_* fixtures (skipped from the live pool) stay reachable.
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	var ev: GameEvent = EventManager.debug_build_event_from_file(
 		"res://data/events/reactive/%s.json" % event_id)
 	if ev == null:
@@ -339,7 +401,7 @@ func _run_event_shot(event_id: String) -> void:
 func _run_sales_shot() -> void:
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.day = 95
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
@@ -449,6 +511,373 @@ func _run_font_spec(set_id: String) -> void:
 	get_tree().quit()
 
 
+# ============================================================================
+# Tema Çekirdeği doğrulama koşumu (2026-08-03) — --tab-shot / --modal-shot /
+# --onboard-shot / --theme-audit. Hepsi debug-only ve YALNIZ cmdline okur
+# (main_args istisnası --endgame-smoke'a ait, orada kalıyor).
+#
+# Neden ayrı bir aile: temanın base-type varsayılanları (default_font_size, base
+# Label font_color, base Panel stylebox) STİLSİZ kontrolleri etkiler — yani tam
+# olarak mevcut shot harness'larının kadraja almadığı yüzeyleri. Bu dördü o boşluğu
+# kapatır ve before/after karşılaştırmasını mümkün kılar.
+# ============================================================================
+
+# Her shot harness'ının ortak açılışı. `initialize_run` payload'ı boş GEÇİLEMEZ
+# (iki kurucu validator'ı da takılır), ama asıl mesele ikinci satır:
+#
+# initialize_run tohumu `Time.get_ticks_msec()`ten alır — yani her başlatmada FARKLI.
+# Ekran görüntüsü matrisi bunu kaldıramaz: before/after karşılaştırması, temanın
+# değiştirdiği pikselleri tohumun değiştirdiklerinden ayırt edemez ve hash-eşitlik
+# kapısı anlamını yitirir. Sabitlenmiş tohum karşılaştırmayı geçerli kılan şeydir.
+# Aynı gerekçeyle _run_tempo_probe zaten 424242'yi elle sabitliyordu (orada tick
+# saflığını ölçebilmek için); bu yardımcı o kararı tüm shot ailesine yayıyor.
+func _seed_run_reproducible() -> void:
+	GameState.initialize_run(_debug_payload())
+	GameState.run_seed = 424242
+	seed(GameState.run_seed)
+
+
+func _tab_shot_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--tab-shot="):
+			return s.trim_prefix("--tab-shot=")
+	return ""
+
+
+func _modal_shot_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--modal-shot="):
+			return s.trim_prefix("--modal-shot=")
+	return ""
+
+
+func _onboard_shot_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--onboard-shot="):
+			return s.trim_prefix("--onboard-shot=")
+	return ""
+
+
+func _theme_audit_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--theme-audit="):
+			return s.trim_prefix("--theme-audit=")
+	return ""
+
+
+func _oda_shot_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--oda-shot="):
+			return s.trim_prefix("--oda-shot=")
+	return ""
+
+
+# Debug: --oda-shot=<day|night|event|tab> (windowed). ODA merkez görünümünün dört
+# durum fotoğrafı (task doğrulama #9): day = temiz masa + canlı ürün monitörü;
+# night = saat 23 + mesai + masada kâğıtlar (crossfade otursun diye uzun bekleme);
+# event = gerçek pipeline'dan debug olayı (telefon buzz + telefondan doğan kart);
+# tab = sekme sayfası + ODAYA DÖN ✕. Tur burada TETİKLENMEZ (MentorIntro mount
+# edilmiyor) — Settings bayrağına yazmayız, Erdem'in gerçek dosyası kirlenmez.
+func _run_oda_shot(kind: String) -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	# D3 durum fixture'ları: market1 = ürün piyasada değil (pay kartı YOK);
+	# market2 = çıktı ama MRR 0 (tek yönlendirme satırı). Diğerleri ortak yüzey
+	# seed'i (shipped + 3 müşteri → durum-3 tablosu).
+	if kind == "market1":
+		_seed_run_reproducible()
+	elif kind == "market2":
+		_seed_run_reproducible()
+		GameState.day = 40
+		GameState.set_flag("mvp_shipped", true)
+		GameState.set_flag("mvp_product_name", "Pulse")
+		GameState.set_flag("mvp_market_type", "b2b")
+		GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	else:
+		_seed_theme_surface()
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	_shell_mounted = true
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var oda: Control = _shell.get_node_or_null("MidRow/CenterViewport/OdaView")
+	if oda == null:
+		push_error("[OdaShot] OdaView bulunamadı")
+		get_tree().quit(1)
+		return
+	var settle: float = 0.6
+	match kind:
+		"day":
+			GameState.set_current_hour(14)
+		"night":
+			HROvertimeSystem.start("product_dev", 3)
+			GameState.set_current_hour(23)
+			oda.debug_seed_papers()
+			settle = 3.2   # gece crossfade'i (2.5 sn) otursun
+		"event":
+			if not _event_signals_wired:
+				EventBus.modal_requested.connect(_on_event_modal_requested)
+				_event_signals_wired = true
+			var ev: GameEvent = EventManager.debug_build_event_from_file(
+				"res://data/events/reactive/ev_debug_002_press_inquiry.json")
+			if ev == null:
+				push_error("[OdaShot] debug olayı yüklenemedi")
+				get_tree().quit(1)
+				return
+			EventManager.enqueue(ev)
+			settle = 1.0
+		"tab":
+			EventBus.tab_changed.emit("product")
+		"tour":
+			# Açılış turunun TEK doğrulama yüzeyi. Turun kendi kapsama alanı yoktu, ve
+			# tam olarak orada bir hata yaşıyordu: OdaView'un çocuğuyken dim'i yalnız
+			# CenterViewport'u kaplıyor, TopBar ile sol ray altında canlı kalıyordu.
+			# Bu shot'ın kanıtlaması gereken şey, karartmanın kenardan kenara olduğu.
+			Settings.set_value("oda_intro_seen", false)
+			GameState.set_current_hour(14)
+			oda.start_intro_tour_if_unseen()
+			settle = 1.0
+		"hover":
+			# G2 kapısı kanıtı: dört hover muamelesi tek karede (rim ×2 + kart
+			# kenarı + çerçeve halkaları) — dikdörtgen/dolgu parlarsa burada görünür.
+			GameState.set_current_hour(14)
+			oda.debug_hover_anchors()
+		"milestones":
+			# D5 dokümanı kanıtı: çerçeve tıkının rotası.
+			EventBus.tab_changed.emit("milestones")
+		"market1", "market2":
+			GameState.set_current_hour(14)
+		_:
+			push_error("[OdaShot] bilinmeyen tür: %s" % kind)
+			get_tree().quit(1)
+			return
+	await get_tree().process_frame
+	await get_tree().create_timer(settle).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://oda_shot_%s.png" % kind
+	img.save_png(path)
+	print("[OdaShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
+
+
+# Tema matrisinin ORTAK seed'i: --tab-shot ile --theme-audit AYNI durumu görmeli,
+# yoksa metinsel denetim ile ekran görüntüsü birbirini doğrulayamaz. Sekmelerin
+# dolu render etmesi yeter — bu bir görsel regresyon fixture'ı, ekonomi testi değil.
+func _seed_theme_surface() -> void:
+	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
+	GameState.day = 95
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	GameState.set_flag("mvp_innovation", 45.0)
+	GameState.set_flag("mvp_stability", 70.0)
+	GameState.set_flag("mvp_experience", 45.0)
+	GameState.set_flag("mvp_live_bug_count", 12)
+	_seed_hr_roster()
+	_shot_customer("co_kuzey", "Kuzey İnşaat", "İnşaat", "active", 1000, 12, 90, false)
+	_shot_customer("co_ege", "Ege Sigorta", "Sigorta", "risk", 1000, 12, 60, false)
+	_shot_customer("co_nordica", "Nordica", "Lojistik", "expansion", 2000, 20, 180, false)
+	PitchSystem.spawn_prospect("small", "find")
+	PitchSystem.spawn_prospect("mid", "find")
+	SalesSystem.reflect_mrr()
+
+
+# Debug: --tab-shot=<product|hr|finance|sales|ops|rnd|personal|events> (windowed).
+# 8 ray sekmesinin HEPSİ tek seed'li durumdan 1920×1080. Ops/R&D/Personal/Events'in
+# sahnesi yok — kod-boyalı placeholder render ederler (TabPageChrome sarmalayıcısı
+# içinde). NOT (ODA rework, 2026-08-06): sarmalayıcı şeridi + RightPanel emekliliği
+# TÜM tab-shot baseline'larını bilinçli yeniden kurdu; bayt-diff referansı o günün
+# after-set'idir, Tema Çekirdeği baseline'ı değil.
+func _run_tab_shot(tab_id: String) -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	_seed_theme_surface()
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	EventBus.tab_changed.emit(tab_id)
+	await get_tree().process_frame
+	await get_tree().create_timer(0.4).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://tab_shot_%s.png" % tab_id
+	img.save_png(path)
+	print("[TabShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
+
+
+# Debug: --modal-shot=<confirm|settings|month> (windowed). Modal katmanını kadraja alır.
+# Her biri GERÇEK mount yolundan geçer (EventBus sinyali → main.gd handler'ı), böylece
+# fixture ile canlı davranış ayrışamaz. `confirm` ayrıca ConfirmModal.tscn'in 4 ölü
+# font-rengi override'ına ulaşır (süpürme batch 1'in kanıtı).
+func _run_modal_shot(kind: String) -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	_seed_theme_surface()
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	_shell_mounted = true
+	await get_tree().process_frame
+	await get_tree().process_frame
+	# The normal flow wires these in _swap_to_shell_and_modal; this shot mounts the shell
+	# by hand, so without them all three emits below land in the VOID and the harness
+	# saves three byte-identical pictures of the empty room — which is what the team was
+	# byte-diffing its modal baselines against. Guarded is_connected form (the --pitch-shot
+	# precedent) rather than the shared _event_signals_wired latch, which guards a
+	# different, larger connect set.
+	if not EventBus.confirm_requested.is_connected(_on_confirm_requested):
+		EventBus.confirm_requested.connect(_on_confirm_requested)
+	if not EventBus.settings_requested.is_connected(_on_settings_requested):
+		EventBus.settings_requested.connect(_on_settings_requested)
+	if not EventBus.month_ended.is_connected(_on_month_ended):
+		EventBus.month_ended.connect(_on_month_ended)
+	match kind:
+		"confirm":
+			EventBus.confirm_requested.emit({
+				"title": "Geliştirmeyi iptal et?",
+				"body": "Nova v3 build'i durur ve harcanan efor geri gelmez.",
+				"confirm_text": "İPTAL ET",
+				"cancel_text": "VAZGEÇ",
+			})
+		"settings":
+			EventBus.settings_requested.emit()
+		"month":
+			MonthSummarySystem.debug_force_summary(false)
+		_:
+			push_error("[ThemeShot] unknown --modal-shot kind: %s" % kind)
+			get_tree().quit(1)
+			return
+	await get_tree().process_frame
+	await get_tree().create_timer(0.4).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://modal_shot_%s.png" % kind
+	img.save_png(path)
+	print("[ModalShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
+
+
+# Debug: --onboard-shot=<1|2|3> (windowed). Onboarding'in KOYU register'ı — açık gövde
+# varsayılanlarının koyu yüzeye sızmadığını gösteren tek kontrol noktası. Ayrıca
+# OnboardingFlow.tscn:108'deki ham `font_size = 18`e ulaşır.
+func _run_onboard_shot(step: int) -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	_mount_flow()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var idx: int = clampi(step - 1, 0, 2)
+	if idx > 0:
+		_flow._mount_step(idx)   # doğrudan seam: adım geçerliliği fixture'da doldurulmuş olmayabilir
+		await get_tree().process_frame
+	await get_tree().create_timer(0.4).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://onboard_shot_%d.png" % step
+	img.save_png(path)
+	print("[OnboardShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
+
+
+# Debug: --theme-audit=<tab_id> (windowed, ekran görüntüsü YOK). Monte edilmiş ağacı
+# gezer ve her Control için ÇÖZÜMLENMİŞ tema değerlerini basar. Bu, matrisin BİRİNCİL
+# kanıtıdır: metinsel diff kenar yumuşatma gürültüsüne bağışıktır ve "hangi 40 düğüm
+# neden değişti" sorusunu ekran görüntüsünün cevaplayamadığı kesinlikte cevaplar.
+# Son alan yerel override bayrağı — S=font_size, C=font_color, P=panel stylebox:
+# süpürmenin avladığı şey tam olarak odur.
+func _run_theme_audit(tab_id: String) -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	_seed_theme_surface()
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	EventBus.tab_changed.emit(tab_id)
+	await get_tree().process_frame
+	await get_tree().create_timer(0.4).timeout
+	print("AUDIT_BEGIN %s" % tab_id)
+	_audit_walk(_shell, "")
+	print("AUDIT_END %s" % tab_id)
+	get_tree().quit()
+
+
+# Debug: --probe-shot (windowed, 1920×1080). ThemeProbe.tscn — SIFIR-stil kontrol
+# envanteri: her temel Control sınıfından varyasyonsuz/override'sız birer örnek. Base-type
+# varsayılanlarının çıplak bir Control'ü marka içinde render ettiğinin kalıcı kanıtı; oyun
+# durumu GEREKMEZ (sahne saf Control). Ekran görüntüsü + _audit_walk dökümü AYNI koşudan
+# basılır (PROBE_BEGIN/END), piksel ile çözümlenmiş değer birbirini doğrular.
+func _run_probe_shot() -> void:
+	get_tree().paused = false
+	get_window().size = Vector2i(1920, 1080)
+	var probe: Control = (load("res://scenes/debug/ThemeProbe.tscn") as PackedScene).instantiate()
+	add_child(probe)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().create_timer(0.4).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = "user://probe_shot.png"
+	img.save_png(path)
+	print("[ProbeShot] saved %s" % ProjectSettings.globalize_path(path))
+	print("PROBE_BEGIN")
+	_audit_walk(probe, "")
+	print("PROBE_END")
+	get_tree().quit()
+
+
+# Metin ÇİZEN sınıflar. Bir Panel ya da ColorRect için get_theme_font_size("font_size")
+# de 16 döner ama o değer hiçbir yere çizilmez — denetime karışırsa gerçek sinyali
+# gömer. RichTextLabel bilerek ayrı: onun anahtarları normal_font_size/default_color,
+# "font_size" sorarsak sessizce motor varsayılanına düşer ve 16 diye YALAN söyler.
+const _AUDIT_TEXT_CLASSES := [
+	"Label", "Button", "LineEdit", "CheckBox", "CheckButton", "OptionButton",
+	"MenuButton", "LinkButton", "TextEdit", "SpinBox",
+]
+
+
+func _audit_walk(node: Node, path: String) -> void:
+	for child in node.get_children():
+		var p: String = path + "/" + String(child.name)
+		var c := child as Control
+		if c != null:
+			var variation: String = String(c.theme_type_variation)
+			if variation == "":
+				variation = "--"
+			var cls: String = c.get_class()
+			var size_key: String = ""
+			var color_key: String = ""
+			if cls == "RichTextLabel":
+				size_key = "normal_font_size"
+				color_key = "default_color"
+			elif cls in _AUDIT_TEXT_CLASSES:
+				size_key = "font_size"
+				color_key = "font_color"
+			var fs: String = "-"
+			var col: String = "-"
+			if size_key != "" and c.has_theme_font_size(size_key):
+				fs = str(c.get_theme_font_size(size_key))
+			if color_key != "" and c.has_theme_color(color_key):
+				col = _audit_color(c.get_theme_color(color_key))
+			var ovr: String = ""
+			if c.has_theme_font_size_override("font_size") or c.has_theme_font_size_override("normal_font_size"):
+				ovr += "S"
+			if c.has_theme_color_override("font_color") or c.has_theme_color_override("default_color"):
+				ovr += "C"
+			if c.has_theme_stylebox_override("panel"):
+				ovr += "P"
+			if ovr == "":
+				ovr = "-"
+			print("AUDIT|%s|%s|%s|%s|%s|%s" % [p, cls, variation, fs, col, ovr])
+		_audit_walk(child, p)
+
+
+func _audit_color(c: Color) -> String:
+	return "%.3f,%.3f,%.3f,%.2f" % [c.r, c.g, c.b, c.a]
+
+
 # Debug: --finance-shot=<ozet|artida|uyari> (windowed). Finance Tab v1 doğrulaması: gerçek
 # seam'lerle ~40 gün oynanmış durum kurar (nakit ring buffer + işlem ledger'ı gerçek
 # akıştan dolar), GameShell'i Finans sekmesinde 1920×1080 açar, screenshot alır, çıkar.
@@ -458,7 +887,7 @@ func _run_font_spec(set_id: String) -> void:
 func _run_finance_shot(kind: String) -> void:
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
@@ -508,7 +937,7 @@ func _run_finance_shot(kind: String) -> void:
 func _run_hr_shot(kind: String) -> void:
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.day = 64
 	if kind != "bos":
 		_seed_hr_roster()
@@ -563,7 +992,11 @@ func _run_hr_shot(kind: String) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var cv: Node = _shell.find_child("CenterViewport", true, false)
-	var tab: Node = cv._current_tab_node
+	var tab: Node = cv.get_current_page_body()   # TabPageChrome sarmalayıcısı içinden (ODA rework onarımı)
+	if tab == null:
+		push_error("[HRShot] sekme gövdesi bulunamadı (get_current_page_body null)")
+		get_tree().quit(1)
+		return
 	match kind:
 		"atlas", "dosyalar":
 			tab._open_atlas()
@@ -659,7 +1092,7 @@ func _seed_hr_roster() -> void:
 func _run_ending_shot(key: String) -> void:
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.company_name = "PromptPilot"
 	GameState.founder_name = "Deniz"
 	GameState.day = 156
@@ -754,7 +1187,7 @@ func _run_ending_shot(key: String) -> void:
 func _run_product_shot(kind: String) -> void:
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	var founder_id: String = CharacterRegistry.get_founder().id
 	match kind:
 		"detail_b2b", "portfoy":
@@ -822,7 +1255,11 @@ func _run_product_shot(kind: String) -> void:
 	EventBus.tab_changed.emit("product")
 	await get_tree().process_frame
 	var cv: Node = _shell.find_child("CenterViewport", true, false)
-	var tab: Node = cv._current_tab_node
+	var tab: Node = cv.get_current_page_body()   # TabPageChrome sarmalayıcısı içinden (ODA rework onarımı)
+	if tab == null:
+		push_error("[ProductShot] sekme gövdesi bulunamadı (get_current_page_body null)")
+		get_tree().quit(1)
+		return
 	match kind:
 		"ozellikler":
 			tab._navigate("creation", {"step": 3, "prefill": {"type": "saas_ops",
@@ -847,7 +1284,7 @@ func _run_pitch_shot() -> void:
 	# opening beat: room art + rep portrait + dialogue + choices, NO conviction/stat strip.
 	get_tree().paused = false
 	get_window().size = Vector2i(1920, 1080)
-	GameState.initialize_run(_debug_payload())   # not {}: an empty payload trips both founder validators
+	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.founder_portrait = "founder_01"
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
@@ -916,7 +1353,7 @@ func _swap_to_shell_and_modal() -> void:
 	add_child(_shell)
 	_shell_mounted = true
 
-	# One frame so TopBar/RightPanel finish their initial paint from
+	# One frame so TopBar/OdaView finish their initial paint from
 	# GameState before the modal mounts on top.
 	await get_tree().process_frame
 
@@ -952,6 +1389,9 @@ func _on_modal_dismissed() -> void:
 	# çıkarır, koşan hızı ezmez). Manual TopBar unpause also works as an
 	# escape hatch.
 	_modal = null
+	# ODA ilk-açılış turu: MentorIntro kapandıktan sonra, yalnız bayrak
+	# görülmemişse (Settings 'oda_intro_seen'). Pause altında çalışır.
+	get_tree().call_group("oda_view", "start_intro_tour_if_unseen")
 
 
 # --- Event modal lifecycle ---
@@ -1365,10 +1805,25 @@ func _on_debug_onboarding_retrigger() -> void:
 	_pre_settings_speed = -1
 	_pre_confirm_speed = -1
 	_pre_month_speed = -1
+	# The cinematic-dialogue half of the same teardown. These six leaked: run 2 started
+	# holding references to run 1's freed scenes and, worse, a _deal_prompt_vc /
+	# _pending_deal_prompt_vc naming an investor from a company that no longer exists —
+	# enough to misroute the next run's first meeting choice.
+	_meeting_scene = null
+	_frank_popup = null
+	_term_table = null
+	_pre_dialogue_speed = -1
+	_deal_prompt_vc = ""
+	_pending_deal_prompt_vc = ""
 
 	# Roster reset so initialize_run re-provisions mentor + a fresh founder without
 	# the char_founder id-collision (add() would otherwise drop the new founder).
 	CharacterRegistry.reset()
+	# The event pipeline and the promise book are run state too, and neither is touched by
+	# initialize_run. Without these, run 2 inherits run 1's consumed one-shot beats, its
+	# queued scenes, and promises made to companies that no longer exist.
+	EventManager.reset()
+	PromiseRegistry.reset()
 
 	# Pause (mirrors _ready) and remount the flow from step 1. Completion routes
 	# through _on_flow_completed → _swap_to_shell_and_modal (re-entrant; event

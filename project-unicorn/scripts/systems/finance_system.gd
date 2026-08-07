@@ -15,24 +15,28 @@ extends RefCounted
 # directly (one-way dataflow, TECH_SPEC §6.2).
 #
 # Burn breakdown defaults: $50/day baseline for the pressure-from-day-one start
-# ($10K cash, ~6.6 months runway). Solo founder, no hires, no marketing spend.
+# ($10K cash, ~6.6 months runway). The WHOLE baseline is the founder's own cost —
+# ofis, araç, hukuk mekanikleri motorda yok, o yüzden hiçbir öyle satır rakam taşımaz.
 
 # Bootstrap solo founder baseline burn (sums to $50/day = ~$1,500/month).
+# KATEGORİ VAR OLMA KURALI: bir kalem burada ya bir sistem YAZDIĞI için durur
+# (salaries/overtime pull'ları, marketing set_burn_category ile) ya da 0-değerli TODO
+# hook'tur ve mekaniği gelene dek görünmez (get_burn_breakdown_pct sıfır satırı atlar).
+# Uydurma sabit kalem YOK — eski tools(7)/office(25)/legal(11)/misc(7) literalleri
+# motorda karşılıksız oldukları için SİLİNDİ (yeniden adlandırılmadı); day-1'in tamamı
+# artık kurucunun kendi gideri olarak dürüst tek satır.
 # Salaries AND overtime are PULLED at the top of daily_tick — one-way pull, HR ticks at
 # slot 3 so the registry and the overtime stamp are both quiescent by slot 5. Both start
 # at 0, so the day-1 baseline is unchanged at $50.
-# Player marketing spend mechanic will mutate "marketing" via set_burn_category().
 # Single home for the day-1 breakdown; burn_breakdown starts as a mutable copy,
-# and GameState's starting daily_burn derives from it (starting_daily_burn()).
+# and GameState's starting daily_burn derives from it (starting_daily_burn()). ALL WORKING.
 # NOT: static var reset'i süreç relaunch'una dayanır (TEKRAR DENE = OS restart); in-place reset seam'i ana menü / SaveManager task'ının işi.
 const STARTING_BURN_BREAKDOWN := {
-	"salaries": 0,        # Overwritten daily by pull from CharacterRegistry
-	"overtime": 0,        # Overwritten daily by pull from HROvertimeSystem; 0 when no block runs
-	"tools": 7,           # SaaS subscriptions, hosting, dev tooling (~$210/mo)
-	"office": 25,         # Coworking desk (~$750/mo)
-	"marketing": 0,       # TODO when player marketing spend mechanic exists
-	"legal": 11,          # Light retainer / freelance accountant (~$330/mo)
-	"misc": 7,            # Software, supplies, fees (~$210/mo)
+	"salaries": 0,     # Overwritten daily by pull from CharacterRegistry
+	"overtime": 0,     # Overwritten daily by pull from HROvertimeSystem; 0 when no block runs
+	"founder": 50,     # WORKING: kurucunun kendi yaşam gideri — day-1 baseline'ın tamamı
+	"marketing": 0,    # TODO hook: player marketing spend mechanic (set_burn_category ile yazar)
+	"office": 0,       # TODO hook: ofis/kira mekaniği curve session'ın işi; 0 iken görünmez
 }
 static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
 
@@ -43,11 +47,9 @@ static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
 const BURN_LABELS := {
 	"salaries": "Maaşlar",
 	"overtime": "Ek mesai",
-	"tools": "Araçlar ve altyapı",
-	"office": "Ofis",
+	"founder": "Kurucu yaşam gideri",
 	"marketing": "Pazarlama",
-	"legal": "Hukuk ve muhasebe",
-	"misc": "Diğer",
+	"office": "Ofis",
 }
 
 # TODAY's one-time charges, label → summed amount. apply_one_time_cost appends; daily_tick
@@ -119,8 +121,8 @@ static func daily_tick() -> void:
 # --- One-time spend seam (Rev3 build commit: API/lisans maliyeti) ---
 # Write-Through: Finance owns cash. Charged EXACTLY once by the commit seam
 # (ProductSystem.start_build / start_version_build) after validation. Aylık
-# yinelenen API-maliyeti modeli (burn_breakdown["tools"] kalemi) BİLİNÇLİ
-# ERTELENDİ — economy-curve redesign'da ele alınacak. Affordability gate yok
+# yinelenen API-maliyeti modeli (gelecekte mekaniğiyle birlikte doğacak bir "tools"
+# kalemi) BİLİNÇLİ ERTELENDİ — economy-curve redesign'da ele alınacak. Affordability gate yok
 # (nakit eksiye düşebilir — mevcut iflas baskısıyla aynı kanal); iptal + yeniden
 # commit YENİDEN tahsil eder (yanan yanmıştır — working call). `label` ARTIK gerçekten
 # kaydediliyor: one_time_today ledger'ına yazılır ve gider dökümünde satır olur
@@ -199,9 +201,16 @@ static func one_time_label_display(label: String) -> String:
 
 # --- Transactions log (Finance Tab v1 "Son işlemler") ---
 # Persistent multi-day extension of the one_time_today seam — NOT a parallel ledger:
-# apply_one_time_cost appends here in the same breath, and SalesSystem.add_b2b_customer
-# adds signings as positive entries. Storage lives on GameState (reset by initialize_run,
-# SaveManager serializes later); this is the sole append point.
+# apply_one_time_cost appends here in the same breath. Storage lives on GameState (reset
+# by initialize_run, SaveManager serializes later); this is the sole append point.
+#
+# THE INVARIANT: every row is a real cash movement that actually happened, paired with a
+# set_cash. Signings used to be appended here too, carrying the account's MONTHLY MRR as
+# though that money had entered the treasury — so "İşe alım −$600" (cash genuinely gone)
+# and "Ferrum Endüstri +$1,100" (a subscription not yet collected even once) rendered
+# identically, signed and coloured, in a card sitting directly under the cash curve. The
+# signing reaches the player through the news/headline channel instead. Do not re-add a
+# row for anything the treasury did not actually move.
 
 static func record_transaction(label: String, amount: int) -> void:
 	# Signed: negative = spend, positive = income. Labels stored RAW; display goes

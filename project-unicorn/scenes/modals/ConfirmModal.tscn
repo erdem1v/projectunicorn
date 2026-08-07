@@ -73,10 +73,6 @@ theme_override_constants/separation = 10
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 38)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_colors/font_hover_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_colors/font_focus_color = Color(0.169, 0.149, 0.125, 1)
-theme_override_colors/font_pressed_color = Color(0.169, 0.149, 0.125, 1)
 text = "Vazgeç"
 
 [node name="FooterSpacer" type="Control" parent="CenterPanel/Body/Footer"]

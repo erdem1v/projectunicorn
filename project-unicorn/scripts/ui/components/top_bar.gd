@@ -170,9 +170,24 @@ func _on_day_advanced(_new_day: int) -> void:
 func _on_hour_changed(_hour: int) -> void:
 	_update_day_label()
 
+# Gün adı kısaltmaları — Time.weekday 0=Pazar. Kendi tablosu, çünkü Godot'nun
+# case op'ları noktalı İ'yi bozar (GameState.MONTH_NAMES_TR_TITLE ile aynı gerekçe).
+# ODA rework (2026-08-06): üst bar tarihi TR'ye geçti; biçim sunum tarafında kurulur.
+# GameState'teki İngilizce get_display_date + ABBR tabloları o geçişten sonra hiçbir
+# yerden okunmadığı için kaldırıldı — motorun tek tarih seam'i get_date_dict().
+# Mockup: "Çar, 9 Eyl 2026 · 10:00".
+const DOW_ABBR_TR := ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"]
+
+
+func _display_date_tr() -> String:
+	var d: Dictionary = GameState.get_date_dict()
+	return "%s, %d %s %d" % [DOW_ABBR_TR[int(d.weekday)], int(d.day),
+		GameState.month_name_tr().substr(0, 3), int(d.year)]
+
+
 func _update_day_label() -> void:
-	# In-fiction date per UI overhaul mini-spec (e.g. "Wed, Jan 1 · 09:00").
-	day_label.text = "%s · %02d:00" % [GameState.get_display_date(true), GameState.current_hour]
+	# In-fiction date (TR): "Çar, 9 Eyl 2026 · 10:00".
+	day_label.text = "%s · %02d:00" % [_display_date_tr(), GameState.current_hour]
 
 func _on_shutter_changed(days_left: int) -> void:
 	# Kepenk counter (ENDGAME_DESIGN.md §4.3): visible red countdown while cash

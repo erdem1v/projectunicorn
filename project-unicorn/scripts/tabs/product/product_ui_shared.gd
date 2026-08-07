@@ -15,11 +15,11 @@ const AXIS_KEYS := ["innovation", "stability", "experience"]
 const MONTH_ABBR_TR := ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"]
 
 # Eksen renk üçlüsü (legend dot + ince bar; creation önizleme ve Ürün Detayı aynı
-# üçlüyü kullanır). Deneyim için token yok — tek yeni mavi, Rev3 mockup rengi.
+# üçlüyü kullanır).
 const AXIS_COLORS := {
 	"innovation": UiTokens.ACCENT_DEEP,
 	"stability": UiTokens.POSITIVE,
-	"experience": Color("#3b5b92"),
+	"experience": UiTokens.AXIS_EXPERIENCE,
 }
 
 

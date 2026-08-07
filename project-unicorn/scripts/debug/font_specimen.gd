@@ -15,7 +15,12 @@ extends Control
 ##   * allow_system_fallback is OFF and no fallback font is attached, so a family missing a Turkish
 ##     glyph renders a visible tofu box instead of silently borrowing a Windows font
 ##
-## Colors and sizes are read from UiTokens so the specimen cannot drift from the real palette.
+## Colors are read from UiTokens so the specimen cannot drift from the real palette.
+##
+## SIZES ARE FROZEN as literals (2026-08-03, Tema Çekirdeği). They used to read UiTokens.SIZE_*,
+## but the type scale renamed and moved several of those steps. This specimen documents a
+## decision that was already made at specific sizes — floating it with the scale would desync
+## it from the PNGs the Set-A verdict was rendered on. Frozen, not forgotten.
 
 # --- candidate sets -----------------------------------------------------------------------
 # Per role: file = filename under user://font_spec/<dir>/, wght = variable-axis weight to pin
@@ -265,7 +270,7 @@ func _chip(text: String, bg: Color, fg: Color) -> PanelContainer:
 	var p := _panel(_box(bg, 0, Color.TRANSPARENT, 3, 6, 2))
 	p.size_flags_horizontal = Control.SIZE_SHRINK_END
 	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	p.add_child(_lbl(text, "mono_reg", UiTokens.SIZE_BADGE, fg))
+	p.add_child(_lbl(text, "mono_reg", 9, fg))
 	return p
 
 
@@ -273,7 +278,7 @@ func _chip(text: String, bg: Color, fg: Color) -> PanelContainer:
 func _axis_chip(text: String) -> PanelContainer:
 	var p := _panel(_box(Color(0, 0, 0, 0), 1, UiTokens.CARD_BORDER, 3, 7, 3))
 	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	p.add_child(_lbl(text, "mono_reg", UiTokens.SIZE_BADGE, UiTokens.INK_MUTED))
+	p.add_child(_lbl(text, "mono_reg", 9, UiTokens.INK_MUTED))
 	return p
 
 
@@ -340,8 +345,8 @@ func _build_chrome() -> PanelContainer:
 	for pair in [["CASH", "$62,400"], ["MRR", "$12.0K"], ["RUNWAY", "5,2 ay"]]:
 		var cell := _vbox(2)
 		cell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		cell.add_child(_lbl(pair[0], "mono_label", UiTokens.SIZE_STAT_LABEL, UiTokens.CREAM_DIM))
-		cell.add_child(_lbl(pair[1], "sans_sb", UiTokens.SIZE_STAT_VALUE, UiTokens.CREAM))
+		cell.add_child(_lbl(pair[0], "mono_label", 9, UiTokens.CREAM_DIM))
+		cell.add_child(_lbl(pair[1], "sans_sb", 15, UiTokens.CREAM))
 		row.add_child(cell)
 		var sep := ColorRect.new()
 		sep.color = UiTokens.SEPARATOR
@@ -405,7 +410,7 @@ func _build_event_block() -> VBoxContainer:
 
 	var head := _hbox(8)
 	head.add_child(_chip("MÜŞTERİ", UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP))
-	head.add_child(_lbl("KARAR · GÜN 96", "mono_label", UiTokens.SIZE_SECTION_HEADER, UiTokens.INK_DIM))
+	head.add_child(_lbl("KARAR · GÜN 96", "mono_label", 10, UiTokens.INK_DIM))
 	v.add_child(head)
 
 	v.add_child(_lbl(T_EVENT_TITLE, "serif_sb", 30, UiTokens.INK))
@@ -455,7 +460,7 @@ func _build_hr_card() -> PanelContainer:
 
 	var who := _vbox(2)
 	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	who.add_child(_lbl("Zeynep Şahin", "serif_sb", UiTokens.SIZE_NAME, UiTokens.INK))
+	who.add_child(_lbl("Zeynep Şahin", "serif_sb", 14, UiTokens.INK))
 	who.add_child(_lbl("TEST UZMANI", "mono_reg", 10, UiTokens.INK_DIM))
 	ident.add_child(who)
 
@@ -475,7 +480,7 @@ func _build_hr_card() -> PanelContainer:
 
 	var morale := _hbox(8)
 	morale.alignment = BoxContainer.ALIGNMENT_END
-	morale.add_child(_lbl("MORAL", "mono_label", UiTokens.SIZE_SECTION_HEADER, UiTokens.INK_DIM))
+	morale.add_child(_lbl("MORAL", "mono_label", 10, UiTokens.INK_DIM))
 	var bar := ProgressBar.new()
 	bar.show_percentage = false
 	bar.min_value = 0
@@ -500,14 +505,14 @@ func _build_bottom_band() -> PanelContainer:
 	var v := _vbox(9)
 	band.add_child(v)
 
-	v.add_child(_torture_row("SERİF 13", "serif_reg", UiTokens.SIZE_BODY))
+	v.add_child(_torture_row("SERİF 13", "serif_reg", 13))
 	v.add_child(_torture_row("SANS 14", "sans_reg", 14))
 	v.add_child(_torture_row("MONO 11", "mono_reg", 11))
 	v.add_child(_rule(UiTokens.DIVIDER_LIGHT, 1))
-	v.add_child(_torture_row("MONO 9", "mono_label", UiTokens.SIZE_BADGE))
+	v.add_child(_torture_row("MONO 9", "mono_label", 9))
 	v.add_child(_torture_row("MONO 10", "mono_reg", 10))
-	v.add_child(_torture_row("SANS 11", "sans_reg", UiTokens.SIZE_TAB_LABEL))
-	v.add_child(_torture_row("SERİF 11", "serif_reg", UiTokens.SIZE_CAPTION))
+	v.add_child(_torture_row("SANS 11", "sans_reg", 11))
+	v.add_child(_torture_row("SERİF 11", "serif_reg", 11))
 	return band
 
 

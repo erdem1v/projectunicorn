@@ -20,10 +20,8 @@ const CLOSE_BASE_DIFFICULTY := 1
 
 # Target MRR bands per archetype live in CustomerArchetypes (single data home).
 
-# Prospect generation pools (working drafts; Erdem revises).
-const _COMPANY_NAMES := ["Nordica Lojistik", "Palmiye Holding", "Beykoz Tekstil", "Ege Sigorta",
-	"Anadolu Market", "Bosphorus Legal", "Kuzey İnşaat", "Marmara Klinik"]
-const _INDUSTRIES := ["Lojistik", "Emlak", "Tekstil", "Sigorta", "Perakende", "Hukuk", "İnşaat", "Sağlık"]
+# Prospect generation pools (working drafts; Erdem revises). Company names live
+# in CompanyCatalog (single source, Fix 2) — only the need lines remain here.
 const _NEEDS := ["Ekip dağınık, tek bir yerde toplamak istiyorlar.",
 	"Manuel süreçler zaman yiyor, otomasyon arıyorlar.",
 	"Mevcut araçları pahalı ve şişkin, sade bir şey istiyorlar.",
@@ -45,7 +43,12 @@ static var _last_band: String = ""
 # --- Lead generation (Frank intro / Find Prospects / referral events) ---
 
 static func spawn_prospect(archetype: String, source: String) -> Prospect:
-	var p := Prospect.new()
+	# NULL CONTRACT (Fix 1): returns null — nothing registered, no counter burned — when
+	# every catalog company in the product's affinity sectors is already excluded. Exclusion
+	# set = every company SIGNED this run (GameState.b2b_signed_company_names; churn does NOT
+	# re-open cold prospecting — win-back is a future dedicated path) ∪ every company live in
+	# ProspectRegistry. A LOST lead's name is freed and may return later; a signed one never.
+	#
 	# The id counter is MONOTONIC (GameState.run_prospects_spawned), not the live pool size:
 	# ProspectRegistry.count() drops when a lead is signed or lost, so a same-day respawn
 	# rebuilt an id that already existed. ProspectRegistry.add then push_warning'd and DROPPED
@@ -54,17 +57,31 @@ static func spawn_prospect(archetype: String, source: String) -> Prospect:
 	# The content mixer `n` deliberately keeps reading count(): it selects sector/company/pain
 	# and is not required to be unique, and changing it would move every existing fixture.
 	var n: int = (GameState.day * 7 + ProspectRegistry.count() * 13)
+	# E.2: draw the industry from the ACTIVE product's sector affinity (a vector-search
+	# product yields only tech/finance prospects; ops yields only construction/etc.), and
+	# the company name from that sector so the fiction matches. The walk starts at the
+	# mixer's sector and stays INSIDE the affinity pool (smoke asserts industry ∈ pool);
+	# a sector whose companies are all taken defers to the pool's next sector.
+	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
+	var sectors: Array = B2BConstants.sector_pool(sub_id)
+	var excluded: Dictionary = _excluded_names()
+	var chosen_sector: String = ""
+	var eligible: Array = []
+	for off in sectors.size():
+		var s: String = String(sectors[(n + off) % sectors.size()])
+		var cand: Array = _eligible_for_sector(s, excluded)
+		if not cand.is_empty():
+			chosen_sector = s
+			eligible = cand
+			break
+	if chosen_sector == "":
+		return null
+	var p := Prospect.new()
 	GameState.run_prospects_spawned += 1
 	p.id = "lead_%d_%d" % [GameState.day, GameState.run_prospects_spawned]
 	p.archetype = archetype
-	# E.2: draw the industry from the ACTIVE product's sector affinity (a vector-search
-	# product yields only tech/finance prospects; ops yields only construction/etc.), and
-	# the company name from that sector so the fiction matches.
-	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
-	var sectors: Array = B2BConstants.sector_pool(sub_id)
-	p.industry = String(sectors[n % sectors.size()])
-	var names: Array = B2BConstants.sector_companies(p.industry)
-	p.company_name = String(names[n % names.size()])
+	p.industry = chosen_sector
+	p.company_name = String(eligible[n % eligible.size()])
 	# B.4: tie the surface need to a feature that EXISTS in the active product's pool,
 	# so a later special request maps to something the player can actually build.
 	var pain_fid: String = B2BSalesSystem.pick_pain_feature(sub_id, n)
@@ -83,6 +100,37 @@ static func spawn_prospect(archetype: String, source: String) -> Prospect:
 	p.spawned_on_day = GameState.day
 	ProspectRegistry.add(p)
 	return p
+
+
+static func eligible_company_count() -> int:
+	# UI predicate for the find card's "havuz kuru" state: how many catalog companies
+	# in the active product's affinity sectors could still become a lead right now.
+	# Shares the exclusion arithmetic with spawn_prospect via the two helpers below,
+	# so the predicate and the picker cannot drift apart.
+	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
+	var excluded: Dictionary = _excluded_names()
+	var total: int = 0
+	for s in B2BConstants.sector_pool(sub_id):
+		total += _eligible_for_sector(String(s), excluded).size()
+	return total
+
+
+static func _excluded_names() -> Dictionary:
+	# Set (Dictionary keys) of company names spawn may not offer (Fix 1).
+	var ex: Dictionary = {}
+	for nm in GameState.b2b_signed_company_names:
+		ex[nm] = true
+	for nm in ProspectRegistry.get_company_names():
+		ex[nm] = true
+	return ex
+
+
+static func _eligible_for_sector(sector: String, excluded: Dictionary) -> Array:
+	var out: Array = []
+	for nm in CompanyCatalog.names_for_sector(sector):
+		if not excluded.has(nm):
+			out.append(nm)
+	return out
 
 
 static func _difficulty_for(archetype: String) -> int:
@@ -247,7 +295,11 @@ static func choose(idx: int) -> Dictionary:
 				_close_diff_delta -= 1
 		"close":
 			var chk2: Dictionary = SkillCheck.resolve("sales",
-				CLOSE_BASE_DIFFICULTY + _close_diff_delta + _prospect.difficulty_stars - 1, _accum_bonus)
+				CLOSE_BASE_DIFFICULTY + _close_diff_delta + _prospect.difficulty_stars - 1,
+					_accum_bonus + SalesRepSystem.warm_bonus_for(_prospect))
+				# The sales desk's groundwork rides the EXISTING bonus channel. SkillCheck stays
+				# founder-only and that is correct: the founder is the one in the room, the rep
+				# warmed the lead up to the door.
 			var mrr_mult: float = float(c.get("mrr_mult", 1.0))
 			out = {"done": true, "result": _resolve_outcome(chk2, mrr_mult)}
 			return out
@@ -256,13 +308,19 @@ static func choose(idx: int) -> Dictionary:
 	return out
 
 
+static func signing_satisfaction_seed() -> int:
+	# A signed B2B account's initial satisfaction: Stability + Experience (reliability + ease —
+	# what a business buyer feels on day one), off effective stability. Extracted from
+	# _resolve_outcome so SalesRepSystem's autonomous close seeds an account IDENTICALLY to a
+	# played pitch; two copies of this expression would silently drift apart.
+	var dims: Dictionary = QualityModel.economy_dims_from_flags()
+	return int(round(
+		(QualityModel.axis_score(dims, "stability") + QualityModel.axis_score(dims, "experience")) * 0.5))
+
+
 static func _resolve_outcome(chk: Dictionary, mrr_mult: float) -> Dictionary:
 	var band: String = String(chk.get("band", "fail"))
-	# Signed B2B account's initial satisfaction seeds from Stability + Experience
-	# (reliability + ease — what a business buyer feels day one), effective stability.
-	var _seed_dims: Dictionary = QualityModel.economy_dims_from_flags()
-	var quality_seed: int = int(round(
-		(QualityModel.axis_score(_seed_dims, "stability") + QualityModel.axis_score(_seed_dims, "experience")) * 0.5))
+	var quality_seed: int = signing_satisfaction_seed()
 	# Cooldown applies regardless of outcome.
 	GameState.set_flag("next_pitch_day", GameState.day + PITCH_COOLDOWN_DAYS)
 

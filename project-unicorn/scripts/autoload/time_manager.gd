@@ -63,6 +63,10 @@ func _ready() -> void:
 	# Sync GameState with our initial accumulator so TopBar paints "Day 1 · 09:00".
 	GameState.set_current_hour(INITIAL_HOUR)
 	EventBus.speed_change_requested.connect(_on_speed_change_requested)
+	# News feed "Biz" source: the feed passively captures the existing non-modal
+	# notification channel (deal closes, HR notices; future milestone emitters land
+	# here for free). Wired at the tick owner so the static system needs no bootstrap.
+	EventBus.headline_added.connect(NewsFeedSystem.on_headline_added)
 
 
 static func hours_per_real_second(idx: int) -> float:
@@ -243,7 +247,11 @@ func _tick_events() -> void:
 	EventManager.daily_tick()
 
 func _tick_industry_events() -> void:
-	pass  # TODO when IndustryEventScheduler comes online
+	# Slot 7a: the news feed composes the day's ticker lines (sektör/rakip/biz) —
+	# runs AFTER sales and rivals so it reads the day's settled state. The slot is
+	# SHARED, not consumed: calendar industry events (TC Disrupt, YC Demo Day —
+	# the original IndustryEventScheduler reservation) still land here when built.
+	NewsFeedSystem.daily_tick()
 
 func _tick_phase_check() -> void:
 	# Slot 8: gate evaluator per docs/ENDGAME_DESIGN.md §2. Opens gates (latch +

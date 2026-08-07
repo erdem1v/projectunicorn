@@ -118,22 +118,21 @@ const ROLE_AXIS_MEANING := {
 	"customer_rep": {"expertise": "Müşteri tutma", "pace": "Talep işleme temposu"},
 }
 
-# Which BUILD PHASE each role accelerates, in the phase vocabulary the player actually sees
-# on the build tracker (TASARIM / GELİŞTİRME / BETA). ROLE_AXIS_MEANING above could not serve
-# this: it speaks in SECTION vocabulary and never names BETA at all, so a player reading the
-# Test Uzmanı's file had no way to learn what that hire speeds up. Keyed to
-# ProductSystem.PHASE_CREW — iteration→TASARIM, development→GELİŞTİRME, bugfix→BETA — so the
-# copy cannot drift from the crew table without this comment being wrong too.
-# The Coupling task's UI obligation: "oyuncu 'yazılımcı aldım, tasarım hızlanmadı' şaşkınlığını
-# yaşamasın, bunu bilerek alsın."
+# One-line, founder-voice effect per role — what hiring this person actually buys you,
+# in the player's own language (iç-not sicili emekli: "TASARIM fazına ikincil hız" tarzı
+# satırlar kurucu cümlesine çevrildi). Still keyed to ProductSystem.PHASE_CREW AND the
+# iteration ceiling law (designer/developer/PM raise their axis ceilings —
+# ProductSystem.ITER_CEIL_AXIS_ROLE), so the copy cannot drift from the mechanics
+# without this comment being wrong too. The Coupling task's UI obligation stands:
+# "oyuncu 'yazılımcı aldım, tasarım hızlanmadı' şaşkınlığını yaşamasın, bunu bilerek alsın."
 # WORKING TR (voice pass later).
 const ROLE_PHASE_HINT := {
-	"product_manager": "TASARIM fazına ikincil hız · ekibe deneyim bonusu",
-	"designer": "TASARIM fazını hızlandırır",
-	"developer": "GELİŞTİRME fazını hızlandırır",
-	"tester": "BETA'yı hızlandırır",
-	"sales_rep": "Aday bulma ve anlaşma kapamayı hızlandırır",
-	"customer_rep": "Müşteri taleplerini karşılar, kaybı yavaşlatır",
+	"product_manager": "Ekibe yön verir: ürünün deneyim tavanını yükseltir, tasarıma hız katar.",
+	"designer": "Tasarım aşamasını hızlandırır, tasarım kalitesinin tavanını yükseltir.",
+	"developer": "Geliştirmeyi hızlandırır, kod kalitesinin tavanını yükseltir.",
+	"tester": "Hataları yayına çıkmadan yakalar, beta süresini kısaltır.",
+	"sales_rep": "Kendi müşteri adaylarını bulur, anlaşmaları senin yerine kapatır.",
+	"customer_rep": "Müşteri taleplerine yetişir, müşteri kaybını yavaşlatır.",
 }
 
 const DEPT_PRODUCT_DEV := "product_dev"
@@ -232,6 +231,32 @@ static func role_phase_hint(role_id: String) -> String:
 	# One line naming what this role accelerates. Empty for non-employee roles (kurucu/mentor
 	# have no build-phase contribution to advertise) — the caller renders nothing.
 	return String(ROLE_PHASE_HINT.get(role_id, ""))
+
+
+static func role_lock_reason_key(role_id: String) -> String:
+	# "" = this role is hireable right now. Otherwise a CSV key naming, in the player's
+	# words, WHY it is not — the game's coming-soon grammar (locked, visible, explained),
+	# never a silently absent option.
+	#
+	# LOCKED, NOT HIDDEN, and EMPLOYEE_ROLES deliberately stays a flat six-id array:
+	# HRCandidateGenerator derives its seed index from find() on that array, and the smoke
+	# contract asserts its size, so filtering it would silently reshuffle every candidate
+	# pool in the game.
+	match role_id:
+		ROLE_SALES_REP:
+			# The enterprise desk only exists in a B2B market; a Satış Uzmanı hired into a
+			# consumer run used to mint enterprise prospects and close contracts with no
+			# pitch ever played.
+			return "" if ProductSystem.has_b2b_product() else "HR_ROLE_LOCK_SALES"
+		ROLE_CUSTOMER_REP:
+			# Same gate today, because the request/stewardship channel this role works is
+			# part of the B2B customer engine.
+			return "" if ProductSystem.has_b2b_product() else "HR_ROLE_LOCK_CS"
+	return ""
+
+
+static func is_role_hireable(role_id: String) -> bool:
+	return role_lock_reason_key(role_id) == ""
 
 
 # ================================== Traits ===================================
@@ -416,10 +441,13 @@ const BAND_JUNIOR := "junior"
 const BAND_MID := "mid"
 const BAND_SENIOR := "senior"
 const BANDS := ["junior", "mid", "senior"]
+# Bant adları BÜTÇE SEVİYESİ söyler, havuz boyutu değil — aday sayısı her bantta
+# CANDIDATE_COUNT'tur ("dar havuz" daha az aday İMA ettiği için emekli edildi).
+# WORKING TR (voice pass later).
 const BAND_LABELS := {
-	"junior": "dar havuz",
+	"junior": "ekonomik",
 	"mid": "dengeli",
-	"senior": "güçlü adaylar",
+	"senior": "üst segment",
 }
 
 # Developer bands are the mockup anchor ($5-8K / $8-12K / $12-18K); the other roles
@@ -433,19 +461,23 @@ const SALARY_BANDS := {
 	"customer_rep": {"junior": [4000, 6500], "mid": [6500, 9500], "senior": [9500, 13500]},
 }
 
-# Axis SHAPE per band tier — the constant IS the shape; the total is derived from it.
-# Candidate k takes the k'th cyclic rotation, so the three files have equal totals and
-# a strict max on a DISTINCT axis. INVARIANT: peak > mid >= low (a flat shape has no
-# strict max, and deriving a shape from a total instead breaks at every total ≡ 0 mod 3).
-#
-# The balance pass may add BALANCED profiles here for the design's uzman/dengeli/
-# farklı-güçlü mixture. Nothing may depend on rotation's incidental properties: the
-# invariant that must hold is pairwise non-dominance INCLUDING price, and that is what
-# HRCandidateGenerator.is_non_dominated_set() checks and the smoke asserts.
+# Axis PROFILES per band tier — CANDIDATE_COUNT profiles per band, cheapest first.
+# Candidate k = profile k rotated k (HRCandidateGenerator._axes_for), so the peak
+# lands on a DISTINCT axis per file AND the files differ in TOTAL: fiyat artık bir
+# kaldıraç, üç dosya üç ayrı rakam ister. Per-profile INVARIANT: peak > mid >= low
+# (a flat profile has no strict max). Per-band INVARIANTS (contract case asserts):
+#   - totals STRICTLY increase across profiles — non-dominance is then automatic
+#     once the quotes strictly increase too (A >= B on all axes forces
+#     total(A) >= total(B), and the pricier file can never undercut on salary);
+#   - adjacent (peak+total) gaps stay wide enough that the quote NEVER rounds two
+#     files onto one number in the tightest salary window: gap >= 4 (junior) / 3
+#     (mid, senior) at SALARY_ROUND_TO 50 — the arithmetic lives at
+#     HRCandidateGenerator._shape_premium.
+# ALL WORKING — the balance pass owns the numbers, the invariants own the structure.
 const BAND_SHAPE := {
-	"junior": [4, 2, 1],
-	"mid": [6, 4, 3],
-	"senior": [8, 6, 5],
+	"junior": [[3, 2, 1], [4, 3, 2], [5, 4, 3]],
+	"mid": [[5, 4, 3], [6, 5, 3], [7, 5, 4]],
+	"senior": [[7, 6, 5], [8, 7, 5], [9, 7, 6]],
 }
 
 
@@ -458,8 +490,11 @@ static func band_label(band_id: String) -> String:
 	return String(BAND_LABELS.get(band_id, band_id))
 
 
-static func band_shape(band_id: String) -> Array:
-	return BAND_SHAPE.get(band_id, BAND_SHAPE["mid"])
+static func band_shape(band_id: String, profile_index: int = 0) -> Array:
+	var profiles: Array = BAND_SHAPE.get(band_id, BAND_SHAPE["mid"])
+	if profiles.is_empty():
+		return []
+	return profiles[clampi(profile_index, 0, profiles.size() - 1)]
 
 
 # ========================= Search (Atlas Seçme & Yerleştirme) ================

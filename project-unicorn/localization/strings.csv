@@ -2,6 +2,7 @@ keys,tr,en
 RUNWAY_PROFITABLE,Artıda,Default Alive
 RUNWAY_PROFITABLE_NOTE,"Gider gelirin altında; kasa erimiyor. Sayaç, günlük net eksiye dönerse işler.","Expenses run below revenue; the treasury holds. The clock starts only if daily net turns negative."
 RUNWAY_UNIT_MONTHS,ay,mo
+RUNWAY_UNIT_DAYS,gün,d
 RUNWAY_GROSS_LABEL,Brüt Runway,Gross Burn Runway
 SETTINGS_LANGUAGE,Dil,Language
 LANG_TR,Türkçe,Turkish
@@ -101,6 +102,7 @@ SALES_STRIP_GAINED,BU AY KAZANILAN,GAINED THIS MONTH
 SALES_STRIP_NET,BU AY NET,NET THIS MONTH
 SALES_FIND,+ Prospect bul,+ Find prospect
 SALES_FIND_COOLDOWN,Cooldown · %d gün,Cooldown · %d days
+SALES_FIND_EXHAUSTED,Aday havuzu şimdilik kuru; bu sektörde konuşulacak yeni kimse kalmadı.,Lead pool is dry for now; no one new left to approach in this sector.
 SALES_PROSPECT_ACTION,Görüşmeye git,Go to meeting
 SALES_PROSPECTS_EMPTY,Henüz aday yok.,No leads yet.
 SALES_CUSTOMERS_EMPTY,Henüz müşteri yok.,No customers yet.
@@ -112,6 +114,12 @@ SALES_SEATS,%d koltuk,%d seats
 SALES_TENURE,%d aydır müşteri,customer for %d mo
 SALES_TENURE_NEW,yeni müşteri,new customer
 SALES_VALUE_RANGE,%s–%s/ay,%s–%s/mo
+SALES_LOG_HEADER,SON HAREKETLER,RECENT ACTIVITY
+SALES_LOG_CLOSE,%s · %s anlaşmasını kapattı · %s/ay,%s · closed %s · %s/mo
+SALES_LOG_ABSORB,%s · %s tarafındaki talebi karşıladı,%s · handled a request from %s
+SALES_CHIP_WARMING,Hazırlanıyor,Warming up
+SALES_CHIP_WARM,Isındı,Warmed up
+SALES_FOUNDER_STRETCHED,Doğrudan yönettiğin %d hesap var,You are managing %d accounts directly
 SALES_CHIP_HEALTHY,SAĞLIKLI,HEALTHY
 SALES_CHIP_RISK,RİSK ALTINDA,AT RISK
 SALES_CHIP_EXPANSION,BÜYÜMEK İSTİYOR,WANTS TO GROW
@@ -132,13 +140,103 @@ ENDING_CARD_EA_BODY,"Oyun Series A'da bitmez. Çok ürün, işe alım dalgası, 
 ENDING_CARD_FULL_TAG,TİER 3 · TEKNOLOJİ DEVİ,TIER 3 · TECH GIANT
 ENDING_CARD_FULL_TITLE,Teknoloji Devi,Tech Giant
 ENDING_BADGE_FULL,TAM SÜRÜMDE,IN FULL RELEASE
-ENDING_CARD_FULL_BODY,"Halka arz, regülasyon, mega-şirket ligi.","IPO, regulation, the mega-corp league."
+ENDING_CARD_FULL_BODY,"Halka arz, regülasyon, devlerle aynı pazar.","IPO, regulation, sharing the market with giants."
 ENDING_WISHLIST,WISHLIST'E EKLE,ADD TO WISHLIST
 ENDING_RUN_META,BU RUN: %d GÜN · NORMAL MOD,THIS RUN: %d DAYS · NORMAL MODE
 ENDING_RETRY,TEKRAR DENE,TRY AGAIN
-ENDING_HARD_MODE,ZOR MOD AÇILDI,HARD MODE UNLOCKED
+ENDING_HARD_MODE,ZOR MOD · YAKINDA,HARD MODE · SOON
 ENDING_SOON_TOOLTIP,Yakında,Coming soon
 ENDING_SHARE,GAZETEYİ PAYLAŞ,SHARE THE PAPER
 ENDING_SAVED_TOAST,"Gazete kaydedildi: %s","Paper saved: %s"
 ENDING_OPEN_FOLDER,KLASÖRÜ AÇ,OPEN FOLDER
 ENDING_ENGRAVING_SOON,GÖRSEL YAKINDA,ART COMING SOON
+SALES_STEWARD_CHANGE,Değiştir,Change
+SALES_STEWARD_PICK,Sorumlu ata,Assign account manager
+SALES_STEWARD_CURRENT,zaten sorumlu,already assigned
+SALES_STEWARD_FULL,kapasite dolu,at capacity
+SALES_STEWARD_FOUNDER,Kurucu (kendim tutayım),Founder (keep it myself)
+HR_CS_LOAD,%d hesap taşıyor · kapasite %d,Handling %d accounts · capacity %d
+HR_ROLE_LOCK_SALES,Bu rol için B2B ürün gerekir.,This role needs a B2B product.
+HR_ROLE_LOCK_CS,Destek sistemi ile açılacak.,Opens with the support system.
+ODA_RETURN,ODAYA DÖN,BACK TO ROOM
+ODA_PAGE_PLACEHOLDER,İçerik yolda,Content on the way
+ODA_MONITOR_IDLE,Geliştirme bekleniyor,Awaiting development
+ODA_MONITOR_IDLE_META,sistem sakin,all quiet
+ODA_MONITOR_BUILD_TITLE,%s geliştirmesi,%s in development
+ODA_MONITOR_BUILD_META,~%d gün kaldı · sorumlu: %s,~%d days left · lead: %s
+ODA_MONITOR_PROGRESS,İlerleme,Progress
+ODA_MONITOR_LEAD_FOUNDER,Kurucu,Founder
+ODA_MONITOR_LIVE_CHIP,CANLI,LIVE
+ODA_MONITOR_OK_TITLE,Her şey yolunda,All systems calm
+ODA_MONITOR_RISK_TITLE,Sistem zorlanıyor,System under strain
+ODA_MON_CAP_BUGS,hata,bugs
+ODA_MON_CAP_STAB,kararlılık,stability
+ODA_MON_CAP_MRR,MRR,MRR
+ODA_MON_CAP_ACCOUNTS,hesap,accounts
+ODA_MON_CAP_USERS,kullanıcı,users
+ODA_MONITOR_CALM,sistem sakin · uyarı yok,all quiet · no warnings
+ODA_MONITOR_BUGS,sistem ayakta · %d açık hata,holding up · %d open bugs
+ODA_MONITOR_WARN,hatalar birikiyor — bakım gerek,bugs piling up — needs care
+ODA_PAPER_TAG_GATE,EŞİK,GATE
+ODA_PAPER_TAG_FUNDING,YATIRIM,FUNDING
+ODA_PAPER_TAG_ATLAS,ATLAS,ATLAS
+ODA_PAPER_GATE_TITLE,Faz kapısı açık — karar bekliyor,Phase gate open — decision pending
+ODA_PAPER_SHEET_TITLE,Yatırım teklifi masada — son %d gün,Offer on the table — %d days left
+ODA_PAPER_SHEETS_TITLE,%d yatırım teklifi masada,%d offers on the table
+ODA_PAPER_ATLAS_TITLE,%d aday dosyası hazır,%d candidate files ready
+ODA_PAPER_EXPANSION_TITLE,Büyüme talebi masada,Expansion request waiting
+ODA_BOARD_GOAL_P1_LABEL,Traction'a:,To Traction:
+ODA_BOARD_GOAL_P1_META,Sürüm + ilk müşteri + ilk gelir,Ship + first customer + first revenue
+ODA_BOARD_GOAL_P2_LABEL,Series A'ya:,To Series A:
+ODA_BOARD_GOAL_P2_BRAND,marka %d / %d,brand %d / %d
+ODA_BOARD_GOAL_P3_LABEL,Series A avı:,Series A hunt:
+ODA_BOARD_GOAL_P3_HUNT,%d teklif masada,%d offers on the table
+ODA_BOARD_GOAL_P3_CLOSED,Series A kapandı,Series A closed
+ODA_BOARD_MARKET_TITLE,Pazar payı,Market share
+ODA_BOARD_LEAGUE_YOU,SEN,YOU
+ODA_BOARD_DATES_TITLE,İşaretli tarihler,Marked dates
+ODA_BOARD_DATE_MEETING,VC görüşmesi,VC meeting
+ODA_BOARD_DATE_SHEET,Teklif süresi dolar,Offer expires
+ODA_BOARD_DATE_PROMISE,Söz teslimi,Promise due
+ODA_BOARD_DATE_CHURN,Churn riski · %s,Churn risk · %s
+ODA_BOARD_DATE_MONTH,Ay kapanışı,Month close
+ODA_DATE_TODAY,BUGÜN,TODAY
+ODA_DATE_TOMORROW,YARIN,TOMORROW
+ODA_DATE_IN_DAYS,%dG,%dD
+ODA_BOARD_POSTIT,%s — konuş,%s — talk
+ODA_WINDOW_OVERTIME,EK MESAİ · %d. GÜN,OVERTIME · DAY %d
+ODA_FRAME_FOUNDING,Kuruluş,Founding
+ODA_FRAME_FIRST_SHIP,İlk sürüm,First release
+ODA_FRAME_FIRST_FUNDING,İlk yatırım,First funding
+ODA_MILESTONES_TITLE,Kilometre Taşları,Milestones
+ODA_EVENTS_FRANK_HEADER,Frank'ten not,A note from Frank
+ODA_MS_FOUNDING_NOTE,Kapıya isim asıldı; defterin ilk satırı.,The name went on the door; the ledger's first line.
+ODA_MS_SHIP_NOTE,Ürün raflara çıktı — artık dünya da oynuyor.,The product hit the shelves — now the world plays too.
+ODA_MS_FUNDING_NOTE,İlk çek yazıldı; masadaki sandalyeler arttı.,The first cheque was signed; more chairs at the table.
+ODA_BOARD_MARKET_EMPTY,Piyasadasın. Kimse almadı.,You are on the market. Nobody has bought.
+ODA_BOARD_MARKET_OTHERS,diğerleri,others
+ODA_ANCHOR_MONITOR,Monitör,Monitor
+ODA_ANCHOR_PHONE,Telefon,Phone
+ODA_ANCHOR_PAPERS,Kâğıtlar,Papers
+ODA_ANCHOR_BOARD,Pano,Board
+ODA_ANCHOR_FRAMES,Çerçeveler,Frames
+ODA_ANCHOR_WINDOW,Pencere,Window
+ODA_TOUR_MONITOR_DESC,Aktif geliştirme ya da ürünün nabzı burada.,The active build or your product's pulse lives here.
+ODA_TOUR_PHONE_DESC,Olaylar buradan gelir; Frank'in son sözü burada durur.,Events arrive here; Frank's last word waits here.
+ODA_TOUR_PAPERS_DESC,"Bekleyen kararlar masaya düşer. Temiz masa, işler yolunda demek.","Waiting decisions land on the desk. A clean desk means all is well."
+ODA_TOUR_BOARD_DESC,"Faz hedefi, pazar payı ve işaretli tarihler panoda.","Phase goal, market share and marked dates live on the board."
+ODA_TOUR_FRAMES_DESC,Kilometre taşları çerçevelere asılır.,Milestones get framed on this wall.
+ODA_TOUR_WINDOW_DESC,Gün ışığı ve mesai — yalnız zamanı söyler.,Daylight and overtime — it only tells the time.
+ODA_TOUR_NEXT,İLERİ,NEXT
+ODA_TOUR_SKIP,GEÇ,SKIP
+ODA_TOUR_DONE,BAŞLA,BEGIN
+TICKER_01,Tohum yatırımcıları takvim dolduruyor; erken aşamada trafik yoğun.,Seed investors are booking out their calendars; early-stage traffic is heavy.
+TICKER_02,Kurumsal alım listeleri kısalıyor; alıcılar az ama kararlı.,Enterprise shortlists are getting shorter; fewer buyers with firmer intent.
+TICKER_03,Genç girişimlerde kurucu maaşı tartışması yeniden alevlendi.,The founder-salary debate flares up again among young startups.
+TICKER_04,Teknoloji kampüslerinde staj kontenjanları rekor kırdı.,Internship quotas hit a record across tech campuses.
+TICKER_05,Sunucu kiralarında indirim sezonu; altyapı ekipleri pazarlıkta.,Discount season on server leases; infrastructure teams are negotiating.
+TICKER_06,Sanayi bölgelerinde dijital dönüşüm ihaleleri sıraya girdi.,Digital transformation tenders are queuing up in industrial zones.
+TICKER_07,Melek yatırım ağları yeni dönem başvurularını açtı.,Angel networks open applications for the new season.
+TICKER_08,Yazılım ihracatçıları yeni pazar arayışında; fuar takvimi dolu.,Software exporters hunt for new markets; the trade-fair calendar is full.
+TICKER_09,Ofis pazarında küçülme sürüyor; paylaşımlı katlar dolu.,Office downsizing continues; shared floors are full.
+TICKER_10,Teknoloji basınında değerleme sohbeti hiç bitmiyor.,Valuation chatter never stops in the tech press.

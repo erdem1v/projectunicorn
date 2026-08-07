@@ -21,28 +21,28 @@ extends Panel
 #    position, so a line landing mid-scroll causes one visible jump; acceptable for a
 #    once-in-a-while beat, and the fix (splice without reset) belongs to the news engine.
 #
-# TODO when news engine comes online:
-#   - Replace HEADLINES const with EventManager.get_news_pool(phase)
-#   - Connect .scandal_breaking for breaking news
-#   - Add critical-news visual treatment (red accent, slower scroll)
-#   - Splice live lines without resetting scroll position
+# NEWS ENGINE BAĞLAMASI (Dünya İnandırıcılığı, 2026-08-06): ambient içerik artık
+# NewsFeedSystem.get_stream()'den akar (üç kaynaklı gerçek akış: sektör/rakip/biz,
+# 50/30/≤20) ve gün sonunda EventBus.news_stream_changed ile tazelenir. TICKER_01..10
+# anahtarları SOĞUK-BAŞLANGIÇ yedeğidir: akış boşken (gün 1, ilk tick öncesi) ve akış
+# kısayken döngüyü doldurur — ANAHTAR ADLARI SABİT SÖZLEŞMEDİR (ODA task'ı, Erdem
+# onay düzeltmesi #3); içerikleri bu bağlamayla gerçek dünya-sesine yazıldı.
+# Kalan TODO'lar: .scandal_breaking bağlantısı + kritik-haber görsel muamelesi +
+# canlı satırı scroll sıfırlamadan ekleme (splice).
 
 const SCROLL_SPEED := 50.0  # pixels per second
 const SEPARATOR := "   ·   "
 const SOURCE_COLOR := UiTokens.ACCENT_HEX  # amber source name (single token source)
 
-const HEADLINES := [
-	{"src": "Webrazzi",      "txt": "Vertical SaaS valuations cool 12% in Q1"},
-	{"src": "TechCrunch",    "txt": "Mavi-Loop raises $4M seed for compliance AI"},
-	{"src": "Bloomberg HT",  "txt": "TCMB holds policy rate steady, lira flat"},
-	{"src": "Hürriyet Tech", "txt": "KVKK draft tightens vendor data residency rules"},
-	{"src": "Reuters",       "txt": "OpenAI launches enterprise tier with on-prem option"},
-	{"src": "Webrazzi",      "txt": "Founders Brunch Istanbul opens RSVP for May"},
-	{"src": "TechCrunch",    "txt": "Volthane hires four ex-Meta engineers in Berlin"},
-	{"src": "Bloomberg HT",  "txt": "Inflation print beats estimate, equities rally"},
-	{"src": "Hürriyet Tech", "txt": "ISO 27001 audits surge as SaaS deals require it"},
-	{"src": "Reuters",       "txt": "YC Demo Day shifts to live-streamed format"},
-]
+# Soğuk-başlangıç havuzunun anahtarları (içerik strings.csv'de; kaynak rozetleri
+# NewsFeedSystem.OUTLETS'ten döner — kurgusal yayın seti tek evde kalsın).
+const AMBIENT_KEYS := ["TICKER_01", "TICKER_02", "TICKER_03", "TICKER_04", "TICKER_05",
+	"TICKER_06", "TICKER_07", "TICKER_08", "TICKER_09", "TICKER_10"]
+
+# Akıştan ambient döngüye giren en yeni satır sayısı + döngünün hedef alt uzunluğu
+# (kısa döngü aynı üç cümleyi belirgin tekrar eder; eksik kalan ambient'ten dolar).
+const STREAM_SHOWN := 12
+const LOOP_MIN_PARTS := 8
 
 # Live gameplay lines, newest first, capped so the loop never grows without bound.
 const MAX_LIVE_LINES := 6
@@ -55,12 +55,29 @@ var _live_lines: Array[Dictionary] = []
 
 func _ready() -> void:
 	EventBus.headline_added.connect(_on_headline_added)
+	# Gün-sonu akış tazelemesi (post-tick sinyal — day_advanced tick'ten ÖNCE atılır,
+	# ona bağlanmak dünkü akışı okurdu; sinyalin kendi yorumuna bak).
+	EventBus.news_stream_changed.connect(_on_stream_changed)
+	# Ambient yedek tr() anahtarlarından geliyor — dil değişince yeniden kur.
+	EventBus.language_changed.connect(_on_language_changed)
 	await _rebuild()
 
 
 func _exit_tree() -> void:
 	if EventBus.headline_added.is_connected(_on_headline_added):
 		EventBus.headline_added.disconnect(_on_headline_added)
+	if EventBus.news_stream_changed.is_connected(_on_stream_changed):
+		EventBus.news_stream_changed.disconnect(_on_stream_changed)
+	if EventBus.language_changed.is_connected(_on_language_changed):
+		EventBus.language_changed.disconnect(_on_language_changed)
+
+
+func _on_language_changed(_locale: String) -> void:
+	await _rebuild()
+
+
+func _on_stream_changed() -> void:
+	await _rebuild()
 
 
 func _on_headline_added(source: String, text: String) -> void:
@@ -87,11 +104,39 @@ func _rebuild() -> void:
 
 func _build_bbcode() -> String:
 	var parts: PackedStringArray = []
-	# Live gameplay lines lead; the ambient pool follows so the ticker never runs empty.
+	# Canlı satırlar önde (anlık beat'ler); ardından haber akışı (en yeni STREAM_SHOWN
+	# satır). Biz-kaynaklı akış satırı zaten canlı satır olarak dönmüş olabilir —
+	# aynı cümle döngüde iki kez akmasın diye metin bazlı ayıklanır. Döngü kısa
+	# kalırsa (ilk günler) soğuk-başlangıç ambient anahtarları tamamlar.
+	var seen_txt: Dictionary = {}
 	for h in _live_lines:
 		parts.append("[color=%s]%s[/color]  %s" % [SOURCE_COLOR, h.src, h.txt])
-	for h in HEADLINES:
-		parts.append("[color=%s]%s[/color]  %s" % [SOURCE_COLOR, h.src, h.txt])
+		seen_txt[String(h.txt)] = true
+	var shown: int = 0
+	for line in NewsFeedSystem.get_stream():
+		if shown >= STREAM_SHOWN:
+			break
+		if seen_txt.has(String(line["txt"])):
+			continue
+		parts.append("[color=%s]%s[/color]  %s" % [SOURCE_COLOR, String(line["src"]), String(line["txt"])])
+		seen_txt[String(line["txt"])] = true
+		shown += 1
+	if parts.size() < LOOP_MIN_PARTS:
+		# Dolgu her seferinde 0'dan başlayıp LOOP_MIN_PARTS'ta kesiliyordu: on anahtarın
+		# son ikisi (TICKER_09/10) hiçbir koşuda akmıyor, soğuk başlangıç da her koşuda
+		# birebir aynı sekiz cümle oluyordu. Başlangıç indeksi artık koşu tohumu +
+		# günden türeyen deterministik bir kaydırma (ev kuralı: RNG yok, hash var) ve
+		# tur AMBIENT_KEYS boyunca dolanıyor — onunun da sırası geliyor, açılış koşudan
+		# koşuya değişiyor. Rozet anahtarla eşleşir (indeksle değil), böylece bir cümle
+		# hangi pencerede çıkarsa çıksın hep aynı yayının altında akar.
+		var offset: int = absi(hash("ticker_ambient|%d|%d" % [GameState.run_seed, GameState.day])) \
+			% AMBIENT_KEYS.size()
+		for i in AMBIENT_KEYS.size():
+			if parts.size() >= LOOP_MIN_PARTS:
+				break
+			var k: int = (offset + i) % AMBIENT_KEYS.size()
+			var outlet: String = NewsFeedSystem.OUTLETS[k % NewsFeedSystem.OUTLETS.size()]
+			parts.append("[color=%s]%s[/color]  %s" % [SOURCE_COLOR, outlet, tr(String(AMBIENT_KEYS[k]))])
 	return SEPARATOR.join(parts) + SEPARATOR
 
 

@@ -2,7 +2,7 @@
   "id": "ev_mvp_dev_002_tech_debt_callout",
   "category": "reactive",
   "title": "Borç faturayı kesiyor",
-  "subtitle": "Stack Overflow sekmesi · 14:33",
+  "subtitle": "Geliştirici forumu · 14:33",
   "illustration_path": "",
   "character_id": "",
   "body_text": "İlk hafta açtığın o kestirme — *'şimdilik böyle, sonra düzeltiriz'* — şimdi üç ayrı yerden bağırıyor. Her yeni şey eklemek zorlaşıyor.\n\nDurup düzeltmek = iki gün kayıp ama ileride pürüzsüz.\nÜstüne eklemek = bugünün hızı, yarının daha büyük faturası.\n\n*'Yarının ekibi yarının problemidir,'* diyen yazıyı bir yerlerde okumuştun. Şu an yarının ekibi de sensin.",

@@ -327,7 +327,16 @@ static func _fumes(ledger: Dictionary, data: Dictionary) -> Dictionary:
 		pool.append("Geride %d müşteri ilişkisi ve tamamlanmamış bir hikâye kaldı." % int(ledger.get("customers_signed", 0)))
 	if int(ledger.get("hires", 0)) > 0:
 		pool.append("Kurulan kadro son güne kadar iş başındaydı.")
-	pool.append("Gelir vardı, ama ne kâr ne de yeni bir tur için yeterliydi.")
+	# Bu satır KOŞULSUZDU: sıfır gelirli bir run'da bile "Gelir vardı" diyordu — üstelik
+	# hemen yanında MRR $0 yazan istatistik hücresiyle aynı ekranda, ve _assemble havuzu
+	# MIN_LEDGER_LINES'a tamamladığı için o yalan GARANTİLİ basılıyordu. Demo'nun dönüşüm
+	# ekranı burası.
+	# ELSE şart: satırı yalnızca koşullamak havuzu en kötü durumda 1 satır + 2 yedek = 3'e
+	# düşürür ve gazete eksik dizilirdi. Her iki dal da tam bir satır ekler.
+	if int(ledger.get("mrr", 0)) > 0 or int(ledger.get("customers_signed", 0)) > 0:
+		pool.append("Gelir vardı, ama ne kâr ne de yeni bir tur için yeterliydi.")
+	else:
+		pool.append("Gelir hiç başlamadı; sayaç, ilk ödeme gelmeden doldu.")
 	if int(ledger.get("product_ships", 0)) > 1:
 		pool.append("Ürün %d sürüm görmüş, gelişmeye devam ediyordu." % int(ledger.get("product_ships", 0)))
 

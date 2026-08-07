@@ -23,6 +23,10 @@ extends Resource
 @export var pain_feature_id: String = ""      # the ProductCatalog feature the surface need maps to (B.4)
 @export var value_band_min: int = 0           # E.3: prospect value RANGE floor (shown as $min-$max/ay)
 @export var value_band_max: int = 0           # E.3: prospect value RANGE ceiling
+# Task 2b: how far a Satış Uzmanı has worked this lead. ONE accumulator, TWO outcomes — at
+# AUTO_CLOSE_PROGRESS a routine lead signs itself; on anything bigger the same number is the
+# bonus the founder inherits at the close stage. Zero sales reps = never advances.
+@export var warm_progress: float = 0.0        # 0..n; SalesRepSystem owns it
 @export var rep_portrait_id: String = ""      # customer-rep face for the pitch MeetingScene; assigned once, kept across a re-meeting (CALLBACK)
 
 # --- Hidden until the founder's Satış (sales) skill is high enough to "read" them.

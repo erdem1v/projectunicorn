@@ -4,8 +4,8 @@ extends Node
 # Single source of truth for all customers (acquired accounts).
 #
 # Mutations route through registry methods. State changes emit on EventBus
-# (TECH_SPEC §13) so scenes (RightPanel, future Sales Tab) update themselves
-# without the registry knowing who is listening.
+# (TECH_SPEC §13) so scenes (Sales tab, ODA) update themselves without the registry
+# knowing who is listening.
 #
 # Tick interaction (TECH_SPEC §8.2):
 #   - SalesSystem.daily_tick (slot 4) reads get_total_mrr and pushes to
@@ -52,7 +52,7 @@ func get_active() -> Array[Customer]:
 	return out
 
 
-# --- Queries (consumed by SalesSystem and RightPanel) ---
+# --- Queries (consumed by SalesSystem, the Sales tab and the ODA board) ---
 
 func get_total_mrr() -> int:
 	var total: int = 0
@@ -90,23 +90,36 @@ func get_total_seats() -> int:
 	return total
 
 
-func get_min_satisfaction() -> int:
+func get_min_satisfaction(market: String = "") -> int:
 	# Lowest satisfaction among active customers (drives churn-risk event gating).
 	# Returns 100 when there are no customers (nothing at risk).
+	# `market` — "" scans the whole book; "b2c"/"b2b" scopes it. A consumer-support event
+	# must not be ARMED by an unhappy enterprise account, which is what the unscoped scan
+	# allowed in any mixed portfolio.
 	var lowest: int = 100
 	var any: bool = false
 	for c in _customers.values():
-		if c.status == "active":
+		if c.status == "active" and (market == "" or c.market_type == market):
 			any = true
 			lowest = mini(lowest, c.satisfaction)
 	return lowest if any else 100
 
 
-func get_lowest_satisfaction_customer() -> Customer:
+func get_lowest_satisfaction_customer(market: String = "") -> Customer:
 	# The single most-at-risk active customer (churn target). Null if none.
+	# Scoped by `market` for the same reason as get_min_satisfaction — and with an explicit
+	# id TIEBREAK, because on equal satisfaction this used to return whichever record the
+	# backing dictionary happened to iterate first. get_top_customers already tiebreaks on
+	# id "for future seeded-RNG replay"; a churn victim deserves at least as much.
 	var worst: Customer = null
 	for c in _customers.values():
-		if c.status == "active" and (worst == null or c.satisfaction < worst.satisfaction):
+		if c.status != "active":
+			continue
+		if market != "" and c.market_type != market:
+			continue
+		if worst == null \
+				or c.satisfaction < worst.satisfaction \
+				or (c.satisfaction == worst.satisfaction and c.id < worst.id):
 			worst = c
 	return worst
 
@@ -158,8 +171,8 @@ func set_mrr(customer_id: String, value: int) -> void:
 
 func set_seats(customer_id: String, value: int) -> void:
 	# Seat-level write — B2C dynamic pricing (seat-granular churn) and B2B seat upsell.
-	# WRITE-THROUGH LAW: the ONLY seam for `seats`. Emits customer_seats_changed so the
-	# RightPanel seat display repaints live (no raw Customer.seats pokes elsewhere).
+	# WRITE-THROUGH LAW: the ONLY seam for `seats`. Emits customer_seats_changed so every
+	# seat display repaints live (no raw Customer.seats pokes elsewhere).
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:
 		push_warning("[CustomerRegistry] set_seats on unknown id: %s" % customer_id)
@@ -174,7 +187,7 @@ func set_seats(customer_id: String, value: int) -> void:
 func set_satisfaction(customer_id: String, value: int) -> void:
 	# Satisfaction seam (WRITE-THROUGH LAW): the ONLY place events/systems change a
 	# customer's satisfaction. Clamps 0-100, keeps the derived health band in sync,
-	# and emits so future health-dot UI can bind (RightPanel TODO).
+	# and emits so health-band UI can bind without polling.
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:
 		push_warning("[CustomerRegistry] set_satisfaction on unknown id: %s" % customer_id)
@@ -233,16 +246,80 @@ func set_risk_streak(customer_id: String, value: int) -> void:
 	c.risk_streak = maxi(value, 0)
 
 
-func assign_customer(customer_id: String, employee_id: String) -> void:
+func set_trust_offset(customer_id: String, value: float) -> void:
+	# HIDDEN trust ledger (Task 2b) — no signal, same shape as set_tolerance above. Clamped by
+	# the sales domain's constants because the sales domain owns what a promise is worth.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		push_warning("[CustomerRegistry] set_trust_offset on unknown id: %s" % customer_id)
+		return
+	c.trust_offset = clampf(value, B2BConstants.TRUST_OFFSET_MIN, B2BConstants.TRUST_OFFSET_MAX)
+
+
+func set_support_request(customer_id: String, since_day: int) -> void:
+	# HIDDEN request-channel bookkeeping (Task 2b) — no signal. since_day == -1 means the
+	# account has no open request; any other value is the day one opened (the escalation
+	# clock AND the once-only latch, so the latch lives in state the system owns).
+	# The old `progress` parameter is gone: it was written 1.0/0.0 and read by nothing.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.support_request_since_day = since_day
+
+
+func set_request_phase(customer_id: String, phase: int) -> void:
+	# HIDDEN — the account's day-offset inside CS_REQUEST_INTERVAL_DAYS. Written once at
+	# signing (see SalesSystem.add_b2b_customer); nothing else may move it, or the whole
+	# book drifts back toward filing on the same morning.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.cs_request_phase = phase
+
+
+func set_last_request_kind(customer_id: String, kind: String) -> void:
+	# HIDDEN — blocks the same request kind arriving twice running from one account.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.last_request_kind = kind
+
+
+func set_last_expansion_day(customer_id: String, day: int) -> void:
+	# HIDDEN expansion latch (K2) — no signal; the phase change that accompanies it is
+	# what the UI repaints on. -1 means the moment has not happened. Like the support
+	# request latch, this lives in state the SYSTEM owns rather than in a property of the
+	# event, because EventManager.enqueue bypasses one_shot and cooldown entirely.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.last_expansion_day = day
+
+
+func assign_customer(customer_id: String, employee_id: String, pinned: bool = false) -> void:
 	# Delegation seam (Stage D): "" = founder-managed, else a Customer Success employee id.
+	# `pinned` marks the assignment as a PLAYER decision. reconcile_assignments() runs every
+	# morning and would otherwise silently undo a manual choice — automatic callers leave the
+	# default false, the Sales-tab picker passes true. Note "" + pinned is meaningful: it is
+	# the player deliberately keeping an account on the founder's desk.
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:
 		push_warning("[CustomerRegistry] assign_customer on unknown id: %s" % customer_id)
 		return
-	if c.assigned_to == employee_id:
+	if c.assigned_to == employee_id and c.cs_pinned == pinned:
 		return  # No-op: don't emit a redundant signal
 	c.assigned_to = employee_id
+	c.cs_pinned = pinned
 	EventBus.customer_assigned.emit(customer_id, employee_id)
+
+
+func set_cs_pinned(customer_id: String, pinned: bool) -> void:
+	# Clears (or sets) player intent without touching the assignment itself — used when a
+	# pinned rep leaves and reconcile has to release the account.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.cs_pinned = pinned
 
 
 # --- Debug seed (writes directly to _customers; does NOT call add() so no

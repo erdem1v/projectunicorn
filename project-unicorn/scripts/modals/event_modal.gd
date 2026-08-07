@@ -17,6 +17,7 @@ extends Control
 
 var _event: GameEvent = null
 var _resolved: bool = false  # one-shot guard against double-click
+var _intro_played: bool = false  # ODA telefon-orijin girişi tek sefer oynar
 
 var _header_row: HBoxContainer
 var _title_label: Label
@@ -40,6 +41,35 @@ func populate(event: GameEvent) -> void:
 	_build_speaker_row()
 	_build_mentor_row()
 	_render_choices()
+	_play_intro()
+
+
+# ODA rework §6: oda görünürken olay kartı TELEFONDAN doğar — tek seferlik
+# 0.22 sn scale+translate tween'i. Oda görünmüyorsa (sekme açık / oda dışı
+# mount) hiçbir şey değişmez: varsayılan anlık görünüm. Koordinatlar düz
+# ekran-uzayı (ModalLayer CanvasLayer'ının transformu kimlik). Pause altında
+# çalışır: kök PROCESS_MODE_ALWAYS, create_tween pause-bound onu izler.
+func _play_intro() -> void:
+	if _intro_played:
+		return
+	_intro_played = true
+	var anchor: Node = get_tree().get_first_node_in_group("oda_phone_anchor")
+	if anchor == null or not (anchor is Control) or not (anchor as Control).is_visible_in_tree():
+		return
+	var panel: Control = get_node("CenterPanel")
+	var dimmer: Control = get_node("Dimmer")
+	await get_tree().process_frame  # panel boyutu ilk layout'tan sonra geçerli
+	var from_center: Vector2 = (anchor as Control).get_global_rect().get_center()
+	panel.pivot_offset = panel.size * 0.5
+	var delta: Vector2 = from_center - panel.get_global_rect().get_center()
+	var home: Vector2 = panel.position
+	panel.scale = Vector2(0.25, 0.25)
+	panel.position = home + delta
+	dimmer.modulate.a = 0.0
+	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(panel, "scale", Vector2.ONE, 0.22)
+	tw.tween_property(panel, "position", home, 0.22)
+	tw.tween_property(dimmer, "modulate:a", 1.0, 0.22)
 
 
 # --- Static frame (built once from _ready) ---
@@ -134,9 +164,40 @@ func _fill_header() -> void:
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_header_row.add_child(spacer)
 	if _event.subtitle != "":
-		var sub := UiFactory.make_label(UiTokens.tr_upper(_event.subtitle), &"NewsMeta")
+		var sub := UiFactory.make_label(UiTokens.tr_upper(_live_subtitle(_event.subtitle)), &"NewsMeta")
 		sub.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_header_row.add_child(sub)
+
+
+# The " · HH:MM" in an event header used to be a STATIC string baked into the event's JSON,
+# copied verbatim to the screen. The engine has no minute concept at all, and the TopBar
+# renders the live hour in the same frame roughly 40 px away — so a modal could assert
+# 11:14 beside a TopBar reading 09:00, off by as much as the event's whole allowed window.
+#
+# The authoring discipline itself is sound and is preserved: all thirteen windowed stamps
+# sit inside their own `allowed_hours`, and the three clock-free deterministic beats
+# correctly carry no clock. So this rewrites the HOUR from the live clock and keeps the
+# authored minutes, which are the only part with any texture — the subtitle stays within
+# the hour the TopBar is showing.
+#
+# OPT-IN, never unconditional: it fires only when the subtitle actually ends in " · HH:MM".
+# Three debug fixtures carry a clock with no `allowed_hours` at all, and a subtitle that
+# merely contains a colon (a time-less source tag) must be left exactly as written.
+static func _live_subtitle(raw: String) -> String:
+	var sep: int = raw.rfind(" · ")
+	if sep < 0:
+		return raw
+	var tail: String = raw.substr(sep + 3)
+	var colon: int = tail.find(":")
+	if colon != 2 or tail.length() < 5:
+		return raw
+	var hh: String = tail.substr(0, 2)
+	var mm: String = tail.substr(3, 2)
+	if not (hh.is_valid_int() and mm.is_valid_int()):
+		return raw
+	# Anything after the stamp (e.g. a " [DEBUG]" marker) rides along untouched.
+	var suffix: String = tail.substr(5)
+	return "%s · %02d:%s%s" % [raw.substr(0, sep), GameState.current_hour, mm, suffix]
 
 
 static func _source_tag(ev: GameEvent) -> Dictionary:
@@ -411,6 +472,9 @@ func _describe_modifier(m) -> Dictionary:
 		"speed_bonus":
 			var sb: int = int(m.get("days", 0))
 			return {"text": "%s gün" % _fmt_signed(sb), "kind": (&"negative" if sb > 0 else &"positive")}
+		# İterasyon karar momenti (player-gated restore): süre bedeli / faz geçişi okunur olsun.
+		"advance_iteration": return {"text": "Bir tasarım turu · %d gün" % ProductSystem.ITER_ROUND_DAYS, "kind": &"accent"}
+		"enter_development": return {"text": "Geliştirme başlar", "kind": &"neutral"}
 		# Player-facing effects that previously rendered no badge (choices were blind).
 		"churn_customer": return {"text": "Müşteri kaybı", "kind": &"negative"}
 		"add_prospect": return {"text": "Yeni aday", "kind": &"positive"}
@@ -472,10 +536,17 @@ static func _fmt_signed(value: int) -> String:
 
 
 static func _fmt_money_delta(value: int) -> String:
+	# Integer division TRUNCATED, so −$1.500 read "NAKİT -$1K" — the chip understated the
+	# cost of a choice by up to a third, and per the EFFECT-VISIBILITY RULE this chip IS
+	# the player's source of truth for what a decision costs. One decimal below $10K keeps
+	# the difference legible without widening the chip; above that the rounding error is
+	# already under a percent and the shorter form reads better.
 	var sign_str: String = "+" if value >= 0 else "-"
 	var abs_v: int = absi(value)
+	if abs_v >= 10000:
+		return "%s$%dK" % [sign_str, int(round(abs_v / 1000.0))]
 	if abs_v >= 1000:
-		return "%s$%dK" % [sign_str, int(abs_v / 1000)]
+		return "%s$%sK" % [sign_str, String.num(abs_v / 1000.0, 1)]
 	return "%s$%d" % [sign_str, abs_v]
 
 

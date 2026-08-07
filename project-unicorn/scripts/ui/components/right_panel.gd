@@ -1,3 +1,12 @@
+# ============================================================================
+# RETIRED (ODA rework, 2026-08-06): bu panel artık HİÇBİR yerde mount edilmiyor
+# (GameShell.tscn referansları silindi; _ready hiç koşmaz, 13 signal connect'i
+# ölü). İçerik göç tablosu: mentor satırı → oda telefonu (OdaView latch'i),
+# UPCOMING → pano işaretli tarihler, ACTIVE RIVALS ligi → pano lig kupürü,
+# CAP TABLE → Finance Özet kartı (+çalışan hissesi), TOP CUSTOMERS → Sales
+# (zaten oradaydı). Buradaki İngilizce statikler canlı-string denetimine
+# SAYILMAZ (ölü dosya). Canlandırmayın; referans gerekirse OdaView'a bakın.
+# ============================================================================
 extends Panel
 
 # Actor panel per PROJECT_SPEC §5 + TECH_SPEC §5.2 / §11.3.

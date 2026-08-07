@@ -8,10 +8,9 @@ const DAYS_PER_MONTH := 30  # Single home for the monthly → daily conversion; 
 
 # Calendar anchor — Day 1 = Thu Jan 1, 2026 (game starts in 2026; year advances
 # with playtime). Godot Time computes the real weekday from the date, so no
-# offset hack. get_display_date() does the conversion.
+# offset hack. get_date_dict() is the seam; display formatting lives with whoever
+# renders it (top_bar's Turkish weekday/month tables, product_ui_shared's short form).
 const START_DATE := {"year": 2026, "month": 1, "day": 1}
-const MONTH_ABBR := ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-const DOW_ABBR := ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 # TR month display names (Month-End Summary header; localization pass externalizes later)
 const MONTH_NAMES_TR := ["OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK"]
 # Same months in Title Case, for prose that is not a header ("Ocak'tan beri"). Kept as a
@@ -75,6 +74,12 @@ var cash_history: Array = []           # [{day: int, cash: int}]
 # labels (customer names) pass through unchanged.
 const TRANSACTIONS_CAP := 50           # oldest dropped beyond this
 var transactions: Array = []           # [{day: int, label: String, amount: int}]
+# sales_log: what the sales/customer desks did on their own, so the player can reconstruct a
+# cause the ticker has already scrolled past (Calibration Law 3 — the CAUSE must be readable).
+# Same ring-buffer shape as `transactions` above. Sole append point:
+# SalesSystem.record_sales_event.
+const SALES_LOG_CAP := 12              # oldest dropped beyond this
+var sales_log: Array = []              # [{day, kind, actor, company, mrr}]
 
 # --- Month-End Summary state (Spec 3; serialized-set extension of §7.7) ---
 # MonthLedger: month-start snapshot for the summary's deltas. Shape:
@@ -100,6 +105,16 @@ var run_customers_expanded: int = 0    # B2BSalesSystem.expand (genuine seat/MRR
 # is the LIVE pool size: removing a lead lowers it, so a same-day respawn collided and
 # ProspectRegistry.add silently dropped the new lead while spawn_prospect still returned it.
 var run_prospects_spawned: int = 0     # PitchSystem.spawn_prospect (id uniqueness only)
+# Every company name ever SIGNED this run (writer: SalesSystem.add_b2b_customer, the sole
+# B2B signing path). Superset of "currently a customer": churn erases the Customer entity
+# (all three removal flows), but the name stays here so cold prospecting can never re-offer
+# a former customer (Fix 1). Win-back (future) derives churned = this minus live names.
+var b2b_signed_company_names: Array[String] = []
+# Day stamps of CS escalations that actually reached the player, newest last. Read as a
+# rolling window (CS_ESCALATION_WINDOW_DAYS) to enforce the company-wide weekly ceiling —
+# without it, per-account pacing alone cannot stop a bad week, because _escalate_stale
+# deliberately bypasses both the throughput budget and the absorb ceiling.
+var cs_escalation_days: Array[int] = []
 var run_hires: int = 0                 # CharacterRegistry.add, category "employee"
 # B2B pitch customer-rep portrait rotation (sequential over the non-selected founder
 # portraits; read+written each meeting, so it's real run state, not a write-only counter).
@@ -139,6 +154,13 @@ var hr_search: Dictionary = {}          # HRSearchSystem: {state, role, band, se
 var hr_overtime: Dictionary = {}        # HROvertimeSystem: department id -> {block_days, day_index, ...}
 var hr_last_overtime_day: int = 0       # HROvertimeSystem stamps; the "sakin dönem" trigger reads it
 var hr_last_positive_event_day: int = 0 # HRMoraleSystem: positive-morale-event cooldown cursor
+
+# --- News feed state (same "fields not systems" rule; owner: NewsFeedSystem, the sole
+# writer). JSON-primitive throughout: {used_sektor, reshuffles, counts, biz_buffer,
+# biz_dropped, recent_rivals, stream}. Reset in initialize_run.
+# `biz_dropped` counts milestone lines the ≤20 % "biz" quota refused, so the quota's real
+# cost is countable rather than silent — calibration data, not a bug counter. ---
+var news_feed: Dictionary = {}
 
 # --- Setters (the only way to mutate from outside) ---
 
@@ -311,15 +333,6 @@ func get_date_dict(for_day: int = -1) -> Dictionary:
 	return Time.get_datetime_dict_from_unix_time(anchor_unix + (d - 1) * 86400)
 
 
-func get_display_date(with_year: bool = false) -> String:
-	# Day N → "Thu, Jan 1" (or "Thu, Jan 1, 2026" with_year) using the START_DATE
-	# anchor. Godot Time built-ins; no external calendar lib.
-	var d: Dictionary = get_date_dict()
-	if with_year:
-		return "%s, %s %d, %d" % [DOW_ABBR[d.weekday], MONTH_ABBR[d.month - 1], d.day, d.year]
-	return "%s, %s %d" % [DOW_ABBR[d.weekday], MONTH_ABBR[d.month - 1], d.day]
-
-
 func month_name_tr(for_day: int = -1) -> String:
 	# Day N → "Ocak" (Title Case). THE Turkish month-name seam for player-facing prose;
 	# get_display_date() above is English and cannot serve it. Reads its own Title-Case
@@ -442,6 +455,7 @@ func initialize_run(payload: Dictionary) -> void:
 	# renders a valid single sample before the first daily tick.
 	cash_history = [{"day": 1, "cash": cash}]
 	transactions = []
+	sales_log = []
 
 	# Month-End Summary + run counters reset (Spec 3; month_ledger snapshot
 	# happens at the END of this function — it needs the roster in place)
@@ -451,6 +465,8 @@ func initialize_run(payload: Dictionary) -> void:
 	run_customers_lost = 0
 	run_customers_expanded = 0
 	run_prospects_spawned = 0
+	b2b_signed_company_names = []
+	cs_escalation_days.clear()
 	b2b_rep_portrait_rotation_index = 0
 	b2b_last_rep_portrait = ""
 	run_hires = 0
@@ -483,6 +499,7 @@ func initialize_run(payload: Dictionary) -> void:
 	hr_overtime.clear()
 	hr_last_overtime_day = 0
 	hr_last_positive_event_day = 0
+	news_feed.clear()
 
 	# Flags survive nothing: fresh run = fresh world-state (hardening for any
 	# future in-place restart; harmless in a fresh process).

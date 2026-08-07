@@ -13,7 +13,7 @@
 
 [node name="LeftTabs" type="Panel"]
 custom_minimum_size = Vector2(84, 0)
-theme_type_variation = &"SidePanel"
+theme_type_variation = &"ChromeRailPanel"
 script = ExtResource("1_lefttabs")
 
 [node name="Margin" type="MarginContainer" parent="."]
@@ -35,7 +35,8 @@ theme_override_constants/separation = 0
 [node name="ProductBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_type_variation = &"TabButtonActive"
+focus_mode = 0
+theme_type_variation = &"ChromeTabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/ProductBtn"]
@@ -56,12 +57,12 @@ mouse_filter = 2
 texture = ExtResource("2_product")
 expand_mode = 1
 stretch_mode = 5
-modulate = Color(0.169, 0.149, 0.125, 1)
+modulate = Color(0.663, 0.62, 0.525, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/ProductBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"TabLabel"
+theme_type_variation = &"ChromeTabLabel"
 text = "Product"
 horizontal_alignment = 1
 
@@ -96,7 +97,8 @@ vertical_alignment = 1
 [node name="HRBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_type_variation = &"TabButton"
+focus_mode = 0
+theme_type_variation = &"ChromeTabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/HRBtn"]
@@ -117,12 +119,12 @@ mouse_filter = 2
 texture = ExtResource("3_hr")
 expand_mode = 1
 stretch_mode = 5
-modulate = Color(0.576, 0.545, 0.471, 1)
+modulate = Color(0.663, 0.62, 0.525, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/HRBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"TabLabel"
+theme_type_variation = &"ChromeTabLabel"
 text = "HR"
 horizontal_alignment = 1
 
@@ -157,7 +159,8 @@ vertical_alignment = 1
 [node name="FinanceBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_type_variation = &"TabButton"
+focus_mode = 0
+theme_type_variation = &"ChromeTabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/FinanceBtn"]
@@ -178,12 +181,12 @@ mouse_filter = 2
 texture = ExtResource("4_finance")
 expand_mode = 1
 stretch_mode = 5
-modulate = Color(0.576, 0.545, 0.471, 1)
+modulate = Color(0.663, 0.62, 0.525, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/FinanceBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"TabLabel"
+theme_type_variation = &"ChromeTabLabel"
 text = "Finance"
 horizontal_alignment = 1
 
@@ -218,7 +221,8 @@ vertical_alignment = 1
 [node name="SalesBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_type_variation = &"TabButton"
+focus_mode = 0
+theme_type_variation = &"ChromeTabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/SalesBtn"]
@@ -239,12 +243,12 @@ mouse_filter = 2
 texture = ExtResource("5_sales")
 expand_mode = 1
 stretch_mode = 5
-modulate = Color(0.576, 0.545, 0.471, 1)
+modulate = Color(0.663, 0.62, 0.525, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/SalesBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"TabLabel"
+theme_type_variation = &"ChromeTabLabel"
 text = "Sales"
 horizontal_alignment = 1
 
@@ -279,7 +283,8 @@ vertical_alignment = 1
 [node name="OpsBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_type_variation = &"TabButton"
+focus_mode = 0
+theme_type_variation = &"ChromeTabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/OpsBtn"]
@@ -300,12 +305,12 @@ mouse_filter = 2
 texture = ExtResource("6_ops")
 expand_mode = 1
 stretch_mode = 5
-modulate = Color(0.576, 0.545, 0.471, 1)
+modulate = Color(0.663, 0.62, 0.525, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/OpsBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"TabLabel"
+theme_type_variation = &"ChromeTabLabel"
 text = "Ops"
 horizontal_alignment = 1
 
@@ -340,7 +345,8 @@ vertical_alignment = 1
 [node name="RnDBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_type_variation = &"TabButton"
+focus_mode = 0
+theme_type_variation = &"ChromeTabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/RnDBtn"]
@@ -361,12 +367,12 @@ mouse_filter = 2
 texture = ExtResource("7_rnd")
 expand_mode = 1
 stretch_mode = 5
-modulate = Color(0.576, 0.545, 0.471, 1)
+modulate = Color(0.663, 0.62, 0.525, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/RnDBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"TabLabel"
+theme_type_variation = &"ChromeTabLabel"
 text = "R&D"
 horizontal_alignment = 1
 
@@ -401,7 +407,8 @@ vertical_alignment = 1
 [node name="PersonalBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_type_variation = &"TabButton"
+focus_mode = 0
+theme_type_variation = &"ChromeTabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/PersonalBtn"]
@@ -422,12 +429,12 @@ mouse_filter = 2
 texture = ExtResource("8_personal")
 expand_mode = 1
 stretch_mode = 5
-modulate = Color(0.576, 0.545, 0.471, 1)
+modulate = Color(0.663, 0.62, 0.525, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/PersonalBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"TabLabel"
+theme_type_variation = &"ChromeTabLabel"
 text = "Personal"
 horizontal_alignment = 1
 
@@ -462,7 +469,8 @@ vertical_alignment = 1
 [node name="EventsBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_type_variation = &"TabButton"
+focus_mode = 0
+theme_type_variation = &"ChromeTabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/EventsBtn"]
@@ -483,12 +491,12 @@ mouse_filter = 2
 texture = ExtResource("9_events")
 expand_mode = 1
 stretch_mode = 5
-modulate = Color(0.576, 0.545, 0.471, 1)
+modulate = Color(0.663, 0.62, 0.525, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/EventsBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"TabLabel"
+theme_type_variation = &"ChromeTabLabel"
 text = "Events"
 horizontal_alignment = 1
 
@@ -527,12 +535,13 @@ size_flags_vertical = 3
 [node name="Divider" type="ColorRect" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
-color = Color(0, 0, 0, 0.1)
+color = Color(1, 1, 1, 0.08)
 
 [node name="SettingsBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_type_variation = &"TabButton"
+focus_mode = 0
+theme_type_variation = &"ChromeTabButton"
 text = ""
 
 [node name="Stack" type="VBoxContainer" parent="Margin/Col/SettingsBtn"]
@@ -553,11 +562,11 @@ mouse_filter = 2
 texture = ExtResource("10_settings")
 expand_mode = 1
 stretch_mode = 5
-modulate = Color(0.576, 0.545, 0.471, 1)
+modulate = Color(0.663, 0.62, 0.525, 1)
 
 [node name="NameLabel" type="Label" parent="Margin/Col/SettingsBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"TabLabel"
+theme_type_variation = &"ChromeTabLabel"
 text = "Ayarlar"
 horizontal_alignment = 1

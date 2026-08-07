@@ -11,12 +11,18 @@ extends RefCounted
 # - Süre: build'in toplam işi EFOR (feature efor toplamı); ekip HIZI (sorumlu +
 #   asistanların tech'i) her saat taze hesaplanıp efor_spent'e harcanır. Süre
 #   türetilir (~N gün = kalan efor / hız), sabit gün sayısı yok.
-# - Fazlar OTOMATİK: %0-20 TASARIM, %20-80 GELİŞTİRME, %80-100 BETA (ratchet,
-#   geri gitmez). Oyuncunun tek faz aksiyonu Beta'daki "Yayınla" (launch) —
-#   build %100'de Beta'da SÜRESİZ park eder, auto-ship YOK.
-# - Eksenler DETERMİNİSTİK: commit'te projected_axes ile damgalanır (katkı
-#   toplamları), build boyunca SABİT — yalnız event dimension_delta oynatır.
-#   Önizleme == ship, yapısal garanti (Director decision 1, 2026-07-17).
+# - Faz bantları: %0-20 TASARIM, %20-80 GELİŞTİRME, %80-100 BETA. İterasyon→geliştirme
+#   geçişi OYUNCUNUN KARARI (player-gated restore 2026-08, dafd33c kanonuna dönüş):
+#   tasarım bandı dolunca build karar bekleyerek PARK eder (süre/burn akar), "Bir tur
+#   daha / Geliştirmeye geç" tracker kartlarında; ek turlar eksenleri EKİP tavanlarına
+#   doğru büyütür (iteration_axis_ceilings + QualityModel.grow). Dev→beta OTOMATİK
+#   kalır (ratchet, geri gitmez); Beta'daki tek aksiyon "Yayınla" (launch) — build
+#   %100'de Beta'da SÜRESİZ park eder, auto-ship YOK.
+# - Eksenler commit'te projected_axes ile damgalanır (katkı toplamları); build boyunca
+#   yalnız event dimension_delta VE iterasyon tur kazançları oynatır. Eski "önizleme ==
+#   ship" yapısal garantisi (Director decision 1, 2026-07-17) bu restorasyonla
+#   "ship ≥ preview"e yumuşadı — tavan yasası yalnız TUR kazançlarını bağlar, commit
+#   damgası ve event delta'ları serbest kalır.
 # - Bug kanalı aynen: commit'te complexity tohumu, GELİŞTİRME bandında saatlik
 #   birikim, dev→beta geçişinde tech-debt, BETA'da bul/çöz (bekleyen temiz ship'ler).
 # - Ship moment narrative-only kalır — launch() durumu damgalar, modal seçimi
@@ -45,9 +51,39 @@ const STRENGTHEN_AXIS_BONUS := 4.0  # ship'te pick'in dominant eksenine düz bon
 # hareket demek. Tasarımın working tavanıyla gönderiliyor, ölçülen kayma done message'da.
 const PM_EXPERIENCE_PER_POINT := 0.5
 const PM_EXPERIENCE_CAP := 3.0
-# --- Faz bantları: toplam eforun oranı; sınırda OTOMATİK geçiş, oyuncu faz-aksiyonu yok ---
+# --- Faz bantları: toplam eforun oranı. Dev→beta sınırda OTOMATİK; iterasyon→dev
+#     OYUNCU KARARI (aşağıdaki iterasyon döngüsü bloğu) ---
 const PHASE_DESIGN_END := 0.20      # Tasarım  ("iteration"):    [0.00, 0.20)
 const PHASE_DEV_END := 0.80         # Geliştirme ("development"): [0.20, 0.80); Beta ("bugfix"): [0.80, 1.0]+
+# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı — ALL WORKING ---
+# Tasarım bandı (tur 1) dolunca build karar bekleyerek PARK eder; her ek tur
+# ITER_ROUND_DAYS takvim günü sürer (ekip hızından BİLİNÇLİ bağımsız — tasarım turu
+# bir takvim ritüeli, bedeli "N gün" olarak okunmalı; working karar) ve eksenleri
+# tavanlarına doğru büyütür. ITER_MAX_ROUNDS güvenlik tavanı: kaçak döngü bir run'ı
+# kilitleyemesin — tavanda yalnız "Geliştirmeye geç" kalır.
+const ITER_ROUND_DAYS := 4          # WORKING — bir ek turun takvim günü (dafd33c ITERATION_LENGTH_DAYS halefi)
+const ITER_MAX_ROUNDS := 12         # WORKING — tur sayacı tavanı (tur 1 = tasarım bandının kendisi)
+# Tavan formülü: eksen tavanı = ITER_CEIL_FOUNDER_COEF × kurucu tech (0-5)
+#              + min(rolün aktif UZMANLIK toplamı × ITER_CEIL_ROLE_COEF, ITER_CEIL_ROLE_CAP)
+# İki katsayının varlığı hız yasasıyla aynı ÖLÇEK meselesi (bkz. :32-36): kurucu 0-3
+# bandında, çalışan UZMANLIK'ı 5-8 bandında yaşar. Çıpalar: tech-2 solo → tavan 8 (v1
+# damgalarının ~5-12 bandının içi — solo kurucu biraz cilalar, elite'e İTEREMEZ);
+# + UZMANLIK-7 Tasarımcı → 8+14 = 22 (bir sürümlük tasarım payı — işe alım fantezisi).
+const ITER_CEIL_FOUNDER_COEF := 4.0   # WORKING — kurucu Teknoloji puanı başına taban tavan
+const ITER_CEIL_ROLE_COEF := 2.0      # WORKING — rol UZMANLIK puanı başına tavan katkısı
+const ITER_CEIL_ROLE_CAP := 18.0      # WORKING — rol teriminin üst sınırı (çoklu işe alım istifi)
+# Hangi rol hangi eksenin tavanını yükseltir (Tasarımcı→İnovasyon, Yazılımcı→Kararlılık,
+# ÜY→Deneyim). HRConstants.ROLE_PHASE_HINT'in "tavanını yükseltir" cümleleri bu tabloya
+# bakar; rol id'leri PHASE_CREW ile aynı sözlükten.
+const ITER_CEIL_AXIS_ROLE := {
+	"innovation": "designer",
+	"stability": "developer",
+	"experience": "product_manager",
+}
+# Tur başına ham kazanç (QualityModel.grow raw'ı), eksen başına — tasarım BİRİNCİL
+# kaldıraç (Erdem kararı 2026-08-06: üç eksen de oynar, tasarım ağırlıklı; üç rolün
+# tavanı da ilk günden gerçek olsun diye Kararlılık/Deneyim sıfır DEĞİL).
+const ITER_ROUND_RAW := {"innovation": 3.0, "stability": 1.0, "experience": 1.0}  # WORKING
 # --- Canlı ürün sağlık/trend türetmeleri (Ürün Detayı verisi) ---
 const BUG_HISTORY_DAYS := 7         # mvp_bug_history penceresi (günlük örnek sayısı)
 const TREND_DELTA := 2              # |son - ilk| >= bu → ARTIYOR/AZALIYOR; altı SABİT
@@ -130,6 +166,11 @@ const ENGINEER_WINDOW_DAYS := 20
 const CAPACITY_BASE := 1
 
 static var active_build: FeatureBuild = null
+# Run'ın ilk iterasyon kararında öğretici modalın BİR KEZ atıldığının bayrağı
+# (Erdem kararı 2026-08-06: kalıcı gramer park + tracker butonları, modal yalnız ilk
+# karşılaşmada). NOT: static reset süreç relaunch'una dayanır (TEKRAR DENE = OS
+# restart — FinanceSystem statics ile aynı kural; in-place seam SaveManager'ın işi).
+static var _iter_intro_shown := false
 
 
 # --- Entry point (called by TimeManager._tick_product at slot 1) ---
@@ -396,20 +437,43 @@ static func hourly_tick(_hour: int) -> void:
 static func _tick_build_hourly(f: float) -> void:
 	var b := active_build
 	# 1) Efor harcaması (%100'de durur; build Beta'da SÜRESİZ bekleyebilir — auto-ship YOK).
-	if b.efor_spent < b.total_efor:
+	#    İTERASYON BEKLEMESİ: karar beklerken ya da ek tur koşarken efor DONUK — tasarım
+	#    bandı dolu, motorun harcayacağı iş yok; süre (burn) yine akar, bekleme bedava değil.
+	var in_iter_hold: bool = b.current_phase == "iteration" \
+		and (b.iteration_decision_pending or b.iteration_round_days > 0.0)
+	# Tasarım bandı sınırında TAŞMA YOK: park noktası tam PHASE_DESIGN_END·total —
+	# smoke bunu eşitlikle assert edebilir. apply_speed_bonus totali büyütse bile
+	# aşağıdaki alt-makine frac'a değil ALANLARA baktığı için park bozulmaz.
+	var cap: float = b.total_efor
+	if b.current_phase == "iteration":
+		cap = minf(cap, PHASE_DESIGN_END * b.total_efor)
+	# Kapı cap'e bakar, total'e değil: dışarıdan (debug fikstürü) cap üstüne zorlanmış
+	# bir efor'u minf'in sessizce AŞAĞI çekmesi ratchet'i bozardı — accrual o durumda
+	# hiç koşmaz, alt-makine build'i olduğu yerden karara düşürür.
+	if b.efor_spent < cap and not in_iter_hold:
 		# Ek mesai KAZANCI yalnız BURADA uygulanır (design doc §7b). f (kapasite çarpanı)
 		# aynı zamanda _accrue_bugs_hourly ve _tick_beta_hourly'ye de gidiyor, o yüzden hız
 		# bonusunu f'ye katlamak bug birikimini ve beta temposunu da sessizce çarpardı.
 		var overtime: float = HROvertimeSystem.speed_multiplier(HRConstants.DEPT_PRODUCT_DEV)
-		b.efor_spent = minf(b.total_efor,
+		b.efor_spent = minf(cap,
 			b.efor_spent + team_speed(b) * overtime * f / float(HOURS_PER_BUILD_DAY))
-	# 2) Faz sınırı OTOMATİK geçişleri (ratchet — asla geri gitmez, apply_speed_bonus
+	# 2a) İterasyon alt-makinesi (player-gated restore): FAZ FLIP YOK — iterasyondan tek
+	#     çıkış enter_development() seam'i, yani oyuncunun kararı (beta parkının aynası).
+	if b.current_phase == "iteration":
+		if b.iteration_round_days > 0.0:
+			# Ek tur geri sayımı: kapasite çarpanı süreyi esnetir (sprint grameri) — bir
+			# takvim ritüeli bile paralel iş baskısında uzar; ekip hızı BİLEREK girmiyor.
+			b.iteration_round_days = maxf(0.0, b.iteration_round_days - f / float(HOURS_PER_BUILD_DAY))
+			if b.iteration_round_days == 0.0:
+				_apply_iteration_round_gains(b)
+				_pend_iteration_decision(b)
+		elif not b.iteration_decision_pending \
+				and b.efor_spent >= PHASE_DESIGN_END * b.total_efor - 0.0001:
+			_pend_iteration_decision(b)
+		return   # dev/beta bant kontrolleri ve yan süreçler iterasyonu ilgilendirmez
+	# 2b) Dev→beta faz sınırı OTOMATİK geçişi (ratchet — asla geri gitmez, apply_speed_bonus
 	#    totali büyütse bile).
 	var frac: float = b.efor_spent / maxf(0.001, b.total_efor)
-	if b.current_phase == "iteration" and frac >= PHASE_DESIGN_END:
-		b.current_phase = "development"
-		b._sync_status_from_phase()
-		EventBus.build_phase_changed.emit("development")
 	if b.current_phase == "development" and frac >= PHASE_DEV_END:
 		_apply_tech_debt_due(b)                        # borç beta girişinde düşer (mevcut kural)
 		b.current_phase = "bugfix"
@@ -440,6 +504,104 @@ static func _apply_tech_debt_due(b: FeatureBuild) -> void:
 	if GameState.get_flag("tech_debt_birikti", false):
 		b.bug_count += TECH_DEBT_BUG_PENALTY
 		GameState.set_flag("tech_debt_birikti", false)
+
+
+# =========================================================================
+#  İterasyon döngüsü (player-gated restore, 2026-08) + ekip kalite tavanı
+# =========================================================================
+# Kanonun aslına dönüş: dafd33c'nin advance_iteration/enter_development çifti,
+# Rev3 efor motorunun üstünde. Tasarım bandı dolunca build PARK eder (beta parkı
+# grameri — süre ve burn akar), tracker kartları iki buton yakar; fazdan çıkış
+# YALNIZ oyuncunun "Geliştirmeye geç" kararı.
+
+static func iteration_axis_ceilings() -> Dictionary:
+	# Eksen başına iterasyon-kazanç tavanı: KİM çalışıyorsa o belirler, kaç tur
+	# döndüğün değil. Kurucu tabanı her eksende (tech 0-5); rolün İŞ BAŞINDAKİ
+	# UZMANLIK toplamı (0-9/kişi) kendi eksenini yükseltir, terim CAP'te kesilir
+	# (PM_EXPERIENCE_CAP grameri: cap TERİME, eksene değil). Rolde kimse yok →
+	# terim 0 → tavan = kurucu taban (zero-staff neutrality).
+	var base: float = ITER_CEIL_FOUNDER_COEF * float(GameState.get_founder_skill("tech"))
+	var out := {}
+	for ax in QualityModel.AXES:
+		var role_id: String = String(ITER_CEIL_AXIS_ROLE.get(ax, ""))
+		var term: float = minf(
+			_active_role_sum(role_id, HRConstants.AXIS_EXPERTISE) * ITER_CEIL_ROLE_COEF,
+			ITER_CEIL_ROLE_CAP)
+		out[ax] = base + term
+	return out
+
+
+static func can_advance_iteration() -> bool:
+	# UI kapısı: karar bekleniyor VE güvenlik tavanına gelinmedi. Tavanda yalnız
+	# "Geliştirmeye geç" kalır.
+	return active_build != null and active_build.current_phase == "iteration" \
+		and active_build.iteration_decision_pending \
+		and active_build.iteration_count < ITER_MAX_ROUNDS
+
+
+static func advance_iteration() -> void:
+	# Oyuncu kararı 1/2: "Bir tur daha." ITER_ROUND_DAYS'lik tur başlar; kazanç tur
+	# SONUNDA uygulanır (_tick_build_hourly geri sayar → _apply_iteration_round_gains).
+	if not can_advance_iteration():
+		push_warning("[ProductSystem] advance_iteration outside a pending iteration decision")
+		return
+	var b := active_build
+	b.iteration_count += 1
+	b.iteration_round_days = float(ITER_ROUND_DAYS)
+	b.iteration_decision_pending = false
+	EventBus.build_iteration_decision_pending.emit(false)
+	EventBus.build_progress_changed.emit()
+	if OS.is_debug_build():
+		print("[ProductSystem] Iteration round %d started (%d days)" % [b.iteration_count, ITER_ROUND_DAYS])
+
+
+static func enter_development() -> void:
+	# Oyuncu kararı 2/2: "Geliştirmeye geç." İterasyondan TEK çıkış — otomatik yol yok.
+	if active_build == null or active_build.current_phase != "iteration" \
+			or not active_build.iteration_decision_pending:
+		push_warning("[ProductSystem] enter_development outside a pending iteration decision")
+		return
+	var b := active_build
+	b.iteration_decision_pending = false
+	b.iteration_round_days = 0.0
+	b.current_phase = "development"
+	b._sync_status_from_phase()
+	EventBus.build_iteration_decision_pending.emit(false)
+	EventBus.build_phase_changed.emit("development")
+
+
+static func _pend_iteration_decision(b: FeatureBuild) -> void:
+	b.iteration_decision_pending = true
+	EventBus.build_iteration_decision_pending.emit(true)
+	EventBus.build_progress_changed.emit()
+	# Run'ın İLK karar anında bir kez: öğretici moment. Sonraki pend'ler sessiz park —
+	# butonlar tracker kartlarında yanıyor.
+	if not _iter_intro_shown:
+		_iter_intro_shown = true
+		EventManager.enqueue(_build_iter_decision_intro_event())
+
+
+static func _apply_iteration_round_gains(b: FeatureBuild) -> void:
+	# Tur kazancı: her eksen KENDİ tavanına doğru azalan getiriyle (grow asimptotik —
+	# tavan aşımı yapısal olarak imkânsız; damga tavanın üstündeyse kazanç tam 0 ve
+	# damga asla geri alınmaz, grow pozitif raw'da current'ı düşürmez). Sıfır tavan
+	# guard'ı grow'un bölenini korur (kurucu tech 0 + rolsüz ekip).
+	# TAVAN YALNIZ iterasyon kazançlarına — commit damgası ve event dimension_delta bu
+	# yasanın dışında (başlıktaki "ship ≥ preview" doktrin notu).
+	var ceilings: Dictionary = iteration_axis_ceilings()
+	var c_inno: float = float(ceilings.get("innovation", 0.0))
+	var c_stab: float = float(ceilings.get("stability", 0.0))
+	var c_exp: float = float(ceilings.get("experience", 0.0))
+	if c_inno > 0.0:
+		b.innovation = QualityModel.grow(b.innovation, float(ITER_ROUND_RAW["innovation"]), c_inno)
+	if c_stab > 0.0:
+		b.stability = QualityModel.grow(b.stability, float(ITER_ROUND_RAW["stability"]), c_stab)
+	if c_exp > 0.0:
+		b.experience = QualityModel.grow(b.experience, float(ITER_ROUND_RAW["experience"]), c_exp)
+	_sync_legacy_quality(b)
+	if OS.is_debug_build():
+		print("[ProductSystem] Iteration round %d gains: I%.2f S%.2f E%.2f (tavan %.1f/%.1f/%.1f)" % [
+			b.iteration_count, b.innovation, b.stability, b.experience, c_inno, c_stab, c_exp])
 
 
 static func _tick_beta_hourly(f: float = 1.0) -> void:
@@ -742,6 +904,22 @@ static func launch() -> void:
 
 # --- Public helpers ---
 
+# Is the company committed to a B2B product — shipped OR currently building one?
+#
+# Deliberately BROADER than SalesSystem.is_b2b_market(), and the two are not
+# interchangeable. That one asks "does the enterprise desk run today", so it reads the
+# SHIPPED market only; this one asks "may the founder staff for enterprise work", and the
+# answer becomes yes the moment they commit to building it — otherwise the roles would
+# unlock only after the product ships, which is exactly when the desk is already busy.
+static func has_b2b_product() -> bool:
+	if String(GameState.get_flag("mvp_market_type", "")) == "b2b":
+		return true
+	var b: FeatureBuild = get_active_build()
+	if b == null or b.sub_product_type_id == "":
+		return false
+	return ProductCatalog.get_market_type(b.sub_product_type_id) == "b2b"
+
+
 static func get_active_build() -> FeatureBuild:
 	return active_build
 
@@ -801,6 +979,10 @@ static func start_build(
 	b.bug_progress = 0.0
 	b.is_mvp = true
 	b.current_phase = "iteration"
+	# İterasyon döngüsü sayaçları: tur 1 = tasarım bandının kendisi.
+	b.iteration_count = 1
+	b.iteration_decision_pending = false
+	b.iteration_round_days = 0.0
 	# Rev3 efor engine: süre türetilir (efor / hız), sabit gün modeli öldü.
 	b.total_efor = float(ProductCatalog.sum_efor(typed_features))
 	b.efor_spent = 0.0
@@ -898,6 +1080,10 @@ static func start_version_build(new_feature_ids: Array, assigned_engineer_id: St
 	b.is_mvp = true
 	b.is_version_build = true
 	b.current_phase = "iteration"
+	# İterasyon döngüsü sayaçları v-build'de de sıfırdan: tur 1 = tasarım bandı.
+	b.iteration_count = 1
+	b.iteration_decision_pending = false
+	b.iteration_round_days = 0.0
 	# Rev3 efor: yalnız YENİ iş sayılır (yeni feature eforu + strengthen pick başına sabit).
 	b.total_efor = float(ProductCatalog.sum_efor(typed_new) + STRENGTHEN_EFOR * typed_strengthen.size())
 	b.efor_spent = 0.0
@@ -1081,7 +1267,7 @@ static func _build_ship_moment_event() -> GameEvent:
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = "Demo'ya bir kez daha bakıyorsun. Frank arkanda duruyor, telefonuna bakmıyor.\n\n\"Tamam,\" diyor. \"Bu kadar kötü değil.\"\n\nYayına alıyorsun. Birkaç dakika sonra GitHub'da depo herkese açık, küçük bir açılış sayfası canlı, Frank elini cebine atıyor.\n\n\"Şimdi zor kısmı başlıyor. Bunun parasını verecek birini bulmamız lazım.\""
+	ev.body_text = "Demo'ya bir kez daha bakıyorsun. Frank arkanda duruyor, telefonuna bakmıyor.\n\n\"Tamam,\" diyor. \"Bu kadar kötü değil.\"\n\nYayına alıyorsun. Birkaç dakika sonra depo herkese açık, küçük bir açılış sayfası canlı, Frank elini cebine atıyor.\n\n\"Şimdi zor kısmı başlıyor. Bunun parasını verecek birini bulmamız lazım.\""
 	ev.cooldown_days = 0
 	ev.one_shot = true
 	ev.priority = 10
@@ -1097,4 +1283,51 @@ static func _build_ship_moment_event() -> GameEvent:
 	var choices: Array[EventChoice] = []
 	choices.append(choice)
 	ev.choices = choices
+	return ev
+
+
+static func _build_iter_decision_intro_event() -> GameEvent:
+	# Run'ın İLK tasarım-kararında bir kez atılan öğretici moment (Erdem kararı
+	# 2026-08-06: kalıcı gramer park + tracker butonları, modal yalnız ilk
+	# karşılaşmada). Seçimler tracker butonlarının birebir aynı seam'lerine gider —
+	# modal kapatılsa bile build parkta kalır ve kart butonları çalışır.
+	# WORKING TR (voice pass later).
+	var ev: GameEvent = GameEvent.new()
+	ev.id = "ev_mvp_iter_decision_intro"
+	ev.category = "reactive"
+	ev.title = "Tasarım masasında karar"
+	ev.subtitle = ""
+	ev.illustration_path = ""
+	ev.character_id = "char_mentor_frank"
+	var iter_line: String = ""
+	if active_build != null:
+		var ceilings: Dictionary = iteration_axis_ceilings()
+		# Bu cümle oyuncuya tavanı ÖĞRETEN yer, o yüzden neyin tavanı olduğunu da söylemeli:
+		# tur kazançlarının. Aksi hâlde intro "tavanı ekip belirler" diye öğretirken ekranda
+		# tavanın üstünde bir sayı duruyor (commit damgası / event katkısı) ve ikisi
+		# birbirini yalanlıyor.
+		iter_line = "\n\nİnovasyon %d / tur kazancı tavanı %d — tavanı tur sayısı değil, masadaki ekip belirler." % [
+			int(round(active_build.innovation)),
+			int(round(float(ceilings.get("innovation", 0.0))))]
+	ev.body_text = "Tasarım turu bitti. Frank prototipin başında.\n\n\"İstersen bir tur daha döneriz — zaman yakar, tasarımı parlatır. Ama her turun getirisi bir öncekinden az. Bir noktada daha iyi insanlar lazım olur, daha çok tur değil.\"%s" % iter_line
+	ev.cooldown_days = 0
+	ev.one_shot = true
+	ev.priority = 10
+	# build_safe: bu moment aktif build'in İÇİNDE yaşıyor — ship moment ile aynı muafiyet.
+	ev.tags = ["build_safe", "iter_decision"]
+	ev.trigger_conditions = []
+	var more: EventChoice = EventChoice.new()
+	more.label = "Bir tur daha (%d gün)" % ITER_ROUND_DAYS
+	more.modifiers = [{"type": "advance_iteration"}]
+	more.unlock_condition = {}
+	more.unlock_reason_text = ""
+	var dev: EventChoice = EventChoice.new()
+	dev.label = "Geliştirmeye geç"
+	dev.modifiers = [{"type": "enter_development"}]
+	dev.unlock_condition = {}
+	dev.unlock_reason_text = ""
+	var iter_choices: Array[EventChoice] = []
+	iter_choices.append(more)
+	iter_choices.append(dev)
+	ev.choices = iter_choices
 	return ev

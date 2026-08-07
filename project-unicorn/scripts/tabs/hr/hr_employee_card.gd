@@ -93,6 +93,17 @@ static func build(emp: Character, on_action: Callable, expanded: bool, refs: Dic
 	bottom.add_child(HRUiShared.badge_row(emp))
 	col.add_child(bottom)
 
+	# Müşteri Temsilcisi'nin yükü. Kart hiçbir sayıyı kendi hesaplamaz (dosya başlığındaki
+	# kural) — ikisi de motor çağrısı. Bu satır olmadan kapasite görünmez bir sayıydı:
+	# oyuncu ne kadar hesap taşındığını da, bir MT daha almanın ne açacağını da göremiyordu.
+	if emp.role == HRConstants.ROLE_CUSTOMER_REP:
+		var load: int = CustomerRepSystem.roster_size(emp.id)
+		var cap: int = B2BConstants.cs_capacity(int(emp.role_stats.get(HRConstants.AXIS_PACE, 0)))
+		# TranslationServer, not tr(): build() is static and statics cannot call tr()
+		# (same reason UiTokens.net_runway_parts does it this way).
+		var fmt: String = TranslationServer.translate("HR_CS_LOAD")
+		col.add_child(UiFactory.make_label(fmt % [load, cap], &"RowMeta", UiTokens.INK_DIM))
+
 	if not emp.traits.is_empty():
 		col.add_child(HRUiShared.trait_row(emp.traits))
 

@@ -113,20 +113,29 @@ func _build_search_step() -> void:
 func _role_card(role_id: String) -> Control:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"CardPanelTight"
-	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)
-	col.add_child(UiFactory.make_label(HRConstants.role_label(role_id), &"NameSerif"))
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 6)
+	head.add_child(UiFactory.make_label(HRConstants.role_label(role_id), &"NameSerif"))
+	col.add_child(head)
 	# Faz okunabilirliği aday dosyasından ÖNCE, seçim anında: oyuncu neyi hızlandıran
 	# birini aradığını bilerek seçsin (Coupling'in UI yükümlülüğü).
 	col.add_child(HRUiShared.phase_hint_label(role_id))
-	var meaning: Dictionary = HRConstants.ROLE_AXIS_MEANING.get(role_id, {})
-	col.add_child(UiFactory.make_label(
-		"%s: %s" % [UiTokens.tr_upper(HRConstants.axis_label("expertise")),
-			String(meaning.get("expertise", ""))], &"RowMeta", UiTokens.INK_MUTED))
 	card.add_child(col)
 	HRUiShared.set_mouse_ignore(col)
+	# KİLİTLİ AMA GİZLİ DEĞİL — bant kartlarının (_band_card) grameriyle birebir aynı:
+	# 0.55 alfa, kilit ikonu, gui_input HİÇ bağlanmaz, işaretçi el olmaz. Fark, burada
+	# kilidin bir GEREKÇESİ olması: rol neden kapalı, oyuncunun kendi diliyle yazıyor.
+	# "Yakında" değil "şu koşulda açılır" — bu bir eksik değil, bir kapı.
+	var lock_key: String = HRConstants.role_lock_reason_key(role_id)
+	if lock_key != "":
+		head.add_child(HRUiShared.lock_glyph())
+		col.add_child(UiFactory.make_label(tr(lock_key), &"RowMeta", UiTokens.INK_DIM))
+		card.modulate = Color(1, 1, 1, 0.55)
+		return card
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	if role_id == _selected_role:
 		_apply_selected_style(card)
 	card.gui_input.connect(func(ev: InputEvent) -> void:
@@ -139,7 +148,6 @@ func _role_card(role_id: String) -> Control:
 func _band_card(band_id: String) -> Control:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"CardPanelTight"
-	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)
@@ -153,10 +161,15 @@ func _band_card(band_id: String) -> Control:
 			col.add_child(UiFactory.make_label(
 				"%s – %s/ay" % [HRUiShared.money(int(window[0])), HRUiShared.money(int(window[1]))],
 				&"RowMeta", UiTokens.INK_MUTED))
-	else:
-		col.add_child(UiFactory.make_label("Önce rol seç", &"RowMeta", UiTokens.INK_DIM))
 	card.add_child(col)
 	HRUiShared.set_mouse_ignore(col)
+	if _selected_role == "":
+		# Rol seçilmeden bant kartları GÖRSEL disabled — açıklama cümlesi yerine temanın
+		# disabled grameri (locked_telegraph'ın 0.55 alfası). gui_input bağlanmaz; her rol
+		# tıkı modalı tam yeniden kurduğu için geçişin ek state'i yok.
+		card.modulate = Color(1, 1, 1, 0.55)
+		return card
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	if band_id == _selected_band:
 		_apply_selected_style(card)
 	card.gui_input.connect(func(ev: InputEvent) -> void:
@@ -232,16 +245,11 @@ func _build_files_step() -> void:
 	_root_box.add_child(row)
 
 	_root_box.add_child(HRUiShared.hairline())
-	var footer := VBoxContainer.new()
-	footer.add_theme_constant_override("separation", 3)
+	# "İade edilmez" cümlesi burada YOK (bilgi-tekrarı kuralı: her bilgi bir kez, önem
+	# anında) — kayıp uyarısı _on_dismiss_pressed'in onay diyaloğunda, kararın tam anında.
 	var dismiss := HRUiShared.action_button("Hiçbirini alma", _on_dismiss_pressed)
 	dismiss.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	footer.add_child(dismiss)
-	var note := UiFactory.make_label(
-		"Arayış kapanır, dosyalar iade edilir. Peşin ücret geri gelmez.", &"RowMeta", UiTokens.INK_DIM)
-	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	footer.add_child(note)
-	_root_box.add_child(footer)
+	_root_box.add_child(dismiss)
 
 
 func _file_card(index: int, file: Dictionary) -> Control:
@@ -316,6 +324,20 @@ func _on_hire_pressed(index: int) -> void:
 
 
 func _on_dismiss_pressed() -> void:
+	# Sessiz kapanış değil: peşin ödenen retainer geri gelmiyor, kayıp anında onay şart.
+	# hr_tab._on_cancel_search ile aynı sözleşme (bağlı METOT referansı, lambda değil);
+	# ConfirmModal ModalLayer'a (layer 10) gider, bu modal PanelLayer'da (layer 9) durur —
+	# yani onay her zaman üstte çizilir, artık ekleme sırasına bağlı olmadan.
+	EventBus.confirm_requested.emit({
+		"title": "Hiçbirini alma",
+		"body": "Hiçbirini almazsan arayış kapanır ve peşin ödenen %s geri gelmez." % HRUiShared.money(HRConstants.SEARCH_RETAINER),
+		"confirm_text": "Dosyaları kapat",
+		"cancel_text": "Vazgeç",
+		"on_confirm": _do_dismiss,
+	})
+
+
+func _do_dismiss() -> void:
 	if HRSearchSystem.dismiss_files():
 		state_changed.emit()
 		_close()

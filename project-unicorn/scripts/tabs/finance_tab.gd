@@ -21,6 +21,11 @@ var _current: String = "ozet"
 func _ready() -> void:
 	_build()
 	EventBus.phase_changed.connect(_on_phase_changed)
+	# ODA kâğıt deep-link'i: oda YATIRIM kâğıdı tab_changed("finance") + bu
+	# sinyali ardışık emit eder; tab mount'u senkron olduğu için bu connect
+	# ikinci emit'ten önce hazırdır. _show_page'in faz bekçisi (yatirim, phase<3
+	# → erken dönüş) deep-link'i yapısal olarak güvenli kılar.
+	EventBus.finance_subpage_requested.connect(_show_page)
 	_apply_phase_lock(GameState.phase < 3)
 	_show_page("ozet")
 
@@ -28,6 +33,8 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if EventBus.phase_changed.is_connected(_on_phase_changed):
 		EventBus.phase_changed.disconnect(_on_phase_changed)
+	if EventBus.finance_subpage_requested.is_connected(_show_page):
+		EventBus.finance_subpage_requested.disconnect(_show_page)
 
 
 func _build() -> void:

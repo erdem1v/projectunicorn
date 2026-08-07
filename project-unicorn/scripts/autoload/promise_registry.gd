@@ -15,6 +15,12 @@ var _promises: Dictionary = {}  # id (String) -> Promise
 func _ready() -> void:
 	# Ship-coupling (§C): a Product feature reaching live keeps a matching open promise.
 	EventBus.build_phase_changed.connect(_on_build_phase_changed)
+	# A promise cannot outlive the company it was made to. Bound to the REMOVAL SIGNAL
+	# rather than to B2BSalesSystem's churn seam on purpose: accounts also leave through
+	# the `churn_customer` event modifier, which deletes the record directly, and a promise
+	# left behind by that path breaks days later — charging brand a second time for a
+	# company that already took its churn hit and is gone from every screen.
+	EventBus.customer_removed.connect(_on_customer_removed)
 
 
 # --- Read API ---
@@ -66,6 +72,27 @@ func create(customer_id: String, feature_id: String, deadline_days: int) -> Prom
 
 func reset() -> void:
 	_promises.clear()
+
+
+func _on_customer_removed(customer_id: String) -> void:
+	drop_open_for(customer_id)
+
+
+func drop_open_for(customer_id: String) -> int:
+	# DROPPED, not resolved. "broken" would emit promise_broken and run the whole penalty
+	# chain — a second brand hit, with no event and no attributable cause the player can
+	# read — for an account that no longer exists. Meanwhile the Product tab kept rendering
+	# "SÖZ VERİLDİ · Müşteri · <özellik> · N gün" (that literal "Müşteri" IS the null
+	# lookup) and counting down for a company that left days ago.
+	# CLOSED promises stay: kept/partial/broken are history, and history outlives the
+	# customer. Returns how many open ones were dropped.
+	var dropped: int = 0
+	for pid in _promises.keys():
+		var p: Promise = _promises[pid]
+		if p.customer_id == customer_id and p.status == "open":
+			_promises.erase(pid)
+			dropped += 1
+	return dropped
 
 
 # --- Resolution (§C): ship-coupling keeps, deadline sweep breaks, late ship is partial ---

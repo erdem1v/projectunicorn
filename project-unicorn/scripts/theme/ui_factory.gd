@@ -11,10 +11,6 @@ extends RefCounted
 # event_modal.gd, product_tab.gd, etc.
 # ============================================================================
 
-const CHIP_RADIUS := 3
-const CHIP_PAD_X := 6
-const CHIP_PAD_Y := 2
-
 # --- Internal: tinted chip (PanelContainer > Label[BadgeLabel]) -------------
 static func _make_chip(text: String, bg: Color, fg: Color, uppercase: bool = true) -> PanelContainer:
 	var chip := PanelContainer.new()
@@ -23,11 +19,11 @@ static func _make_chip(text: String, bg: Color, fg: Color, uppercase: bool = tru
 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg
-	sb.set_corner_radius_all(CHIP_RADIUS)
-	sb.content_margin_left = CHIP_PAD_X
-	sb.content_margin_right = CHIP_PAD_X
-	sb.content_margin_top = CHIP_PAD_Y
-	sb.content_margin_bottom = CHIP_PAD_Y
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	sb.content_margin_left = UiTokens.PAD_CHIP.x
+	sb.content_margin_right = UiTokens.PAD_CHIP.x
+	sb.content_margin_top = UiTokens.PAD_CHIP.y
+	sb.content_margin_bottom = UiTokens.PAD_CHIP.y
 	chip.add_theme_stylebox_override("panel", sb)
 	var lbl := Label.new()
 	lbl.theme_type_variation = &"BadgeLabel"

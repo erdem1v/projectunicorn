@@ -12,6 +12,22 @@ extends Control
 var _meeting_fixture_toggle: bool = false
 # Spec 4 debug: cycles the roster across Shift+F5 presses.
 var _vc_debug_idx: int = 0
+# ODA rework: tab_changed aynası — "" = oda görünür, sekme yok. Esc yönlendirmesi
+# buradan okur (LeftTabs'a path-coupling yok).
+var _active_tab_id: String = ""
+
+
+func _ready() -> void:
+	EventBus.tab_changed.connect(_on_tab_changed_shell)
+
+
+func _exit_tree() -> void:
+	if EventBus.tab_changed.is_connected(_on_tab_changed_shell):
+		EventBus.tab_changed.disconnect(_on_tab_changed_shell)
+
+
+func _on_tab_changed_shell(tab_id: String) -> void:
+	_active_tab_id = tab_id
 
 # Grants Anchor + Nexus sheets (the mockup's leverage state) if absent and opens the table on
 # Anchor via the normal entry signal. Shared by Shift+F6 and --debug-open-table.
@@ -42,6 +58,15 @@ func _input(event: InputEvent) -> void:
 			# Intercept BEFORE the endgame dispatch below — _debug_endgame_key ignores
 			# shift, so without this Shift+F4 would fire plain-F4's action. Plain F4
 			# stays the acquisition-preconditions key.
+			# The ModalLayer guard its four siblings already carry, and the one it was
+			# missing. Fired with an event modal up, this frees the shell WITHOUT the
+			# modal ever resolving — so EventManager._active_event_id stays set forever,
+			# _pump_queue early-returns on every later call (no event modal ever mounts
+			# again), has_pending() is permanently true, and every dismiss handler skips
+			# its speed restore. The process ends up paused with a dead event pipeline.
+			var ml_onb: Node = get_node_or_null("ModalLayer")
+			if ml_onb != null and ml_onb.get_child_count() > 0:
+				return
 			print("[Debug] Shift+F4 → onboarding re-triggered")
 			EventBus.debug_onboarding_retrigger_requested.emit()
 			return
@@ -104,16 +129,31 @@ func _input(event: InputEvent) -> void:
 		KEY_2, KEY_KP_2: speed_idx = 2
 		KEY_3, KEY_KP_3: speed_idx = 3
 		KEY_4, KEY_KP_4: speed_idx = 4
-	if speed_idx < 0 and key.keycode != KEY_SPACE:
+	if speed_idx < 0 and key.keycode != KEY_SPACE and key.keycode != KEY_ESCAPE:
 		return
 	# Guard 1: a text field is focused → let the key type its character (e.g. product name).
+	# Esc etkileşimi: odaklıyken burada döneriz, Godot'nun LineEdit'i ui_cancel ile
+	# odağı bırakır; BİR SONRAKİ Esc (odaksız) sayfayı kapatır. Doğru katmanlama.
 	var focus: Control = get_viewport().gui_get_focus_owner()
 	if focus is LineEdit or focus is TextEdit:
 		return
 	# Guard 2: a blocking modal (event/pitch/settings) owns pause via main.gd —
 	# don't desync that _pre_*_speed state machine.
+	# Esc etkileşimi: modal açıkken burada HANDLED işaretlemeden döneriz — event
+	# modalın kendi _unhandled_input ui_cancel'ına akar (modal kapanır, sayfa kalır).
 	var modal_layer: Node = get_node_or_null("ModalLayer")
 	if modal_layer != null and modal_layer.get_child_count() > 0:
+		return
+	# Esc: açık tam-sayfa sekmeyi kapat → odaya dön (ODA rework §2; ✕ ve
+	# aktif-sekmeye-tekrar-tıklamayla aynı kanal). Odadayken bilinçli no-op ve
+	# event HANDLED İŞARETLENMEZ, ki Esc'i bekleyen başka bir dinleyici varsa
+	# alabilsin. (Gerekçe eskiden OdaView'un _unhandled_input'unu adlandırıyordu;
+	# o handler ODA rework'ünde silindi — odadaki Esc bugün gerçekten no-op ve bu
+	# doğru davranış.)
+	if key.keycode == KEY_ESCAPE:
+		if _active_tab_id != "":
+			get_viewport().set_input_as_handled()
+			EventBus.tab_changed.emit("")
 		return
 	get_viewport().set_input_as_handled()
 	# Routes through the same signal the TopBar buttons use, so the TopBar stays in sync.

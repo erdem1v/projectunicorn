@@ -47,6 +47,9 @@ func _ready() -> void:
 		EventBus.character_added, EventBus.character_removed, EventBus.morale_changed,
 		EventBus.headline_added, EventBus.cash_changed, EventBus.burn_changed,
 		EventBus.runway_recalculated, EventBus.hr_day_processed,
+		# The MT card shows a live account count, so a stewardship change has to repaint it —
+		# otherwise the number sits stale until some unrelated HR signal happens to fire.
+		EventBus.customer_assigned,
 	]
 	for sig in _signals:
 		sig.connect(_on_state_changed)
@@ -133,6 +136,11 @@ func _compute_structure_key() -> String:
 		HRSearchSystem.days_waiting(), _expanded_id])
 	for dept_id in HRConstants.DEPARTMENTS:
 		parts.append("%s%d" % [dept_id, HROvertimeSystem.day_index(String(dept_id))])
+	# Bir MT'nin taşıdığı hesap sayısı kartın ÜSTÜNDE yazıyor, yani kart şeklinin parçası.
+	# Anahtara girmezse atama değişince satır bayat kalır (moral gibi yerinde boyanan bir
+	# şey değil — kart yeniden kurulmalı).
+	for rep in CharacterRegistry.get_active_by_role(HRConstants.ROLE_CUSTOMER_REP):
+		parts.append("cs%s%d" % [rep.id, CustomerRepSystem.roster_size(rep.id)])
 	for emp in CharacterRegistry.get_employees():
 		parts.append("%s|%s|%d|%d" % [emp.id, emp.status, emp.monthly_salary,
 			HRUiShared.worst_badge_severity(emp)])
@@ -160,20 +168,20 @@ func _rebuild() -> void:
 func _paint_summary() -> void:
 	if _summary == null:
 		return
-	# Dört sayı, dördü de motordan. Dikkat sayısı attention_PEOPLE_count: sol raydaki
-	# rozet bekleyen aday dosyasını da sayar, ama bu cümle EKİP hakkında, ve dosyaların
-	# kendi şeridi var — ikisini aynı sayıda toplamak yalan olurdu.
+	# Yalnız alt şeritte OLMAYAN bilgiler (bilgi-tekrarı kuralı: her bilgi bir kez) —
+	# çalışan sayısı ve maaş yükü alt şeridin işi; buradaki iki sayı dikkat çağrısı.
+	# Dikkat sayısı attention_PEOPLE_count: sol raydaki rozet bekleyen aday dosyasını da
+	# sayar, ama bu cümle EKİP hakkında, ve dosyaların kendi şeridi var — ikisini aynı
+	# sayıda toplamak yalan olurdu.
 	var parts := PackedStringArray()
-	parts.append("%d çalışan" % CharacterRegistry.count_employees())
 	var on_leave: int = CharacterRegistry.count_on_leave()
 	if on_leave > 0:
 		parts.append("%d izinde" % on_leave)
-	parts.append("%s aylık maaş yükü" % HRUiShared.money(
-		CharacterRegistry.get_total_monthly_salaries()))
 	var attention: int = HRSystem.attention_people_count()
 	if attention > 0:
 		parts.append("%d dikkat gerektiriyor" % attention)
 	_summary.text = " · ".join(parts)
+	_summary.visible = not parts.is_empty()
 
 
 func _paint_footer() -> void:
@@ -217,22 +225,20 @@ func _atlas_strip() -> Control:
 		col.add_child(head)
 		return card
 
-	# Arayış sürüyor: rol · bant · kaçıncı gün. Rol ve bant HRSearchSystem'in accessor'larından
-	# okunuyor; GameState.hr_search sözlüğüne UI'dan uzanmak o sözlüğün sahibini atlamak olurdu.
+	# Arayış sürüyor: TEK durum satırı (bilgi-tekrarı kuralı) — rol + kaçıncı gün. Bant
+	# oyuncunun verilmiş kararı, burada tekrarlanmaz; "iade edilmez" uyarısı ödeme anında
+	# (modal ücret bloğu) ve kayıp anında (iptal onayı) yaşıyor, bekleme şeridinde değil.
+	# Rol HRSearchSystem accessor'ından; GameState.hr_search sözlüğüne UI'dan uzanmak o
+	# sözlüğün sahibini atlamak olurdu.
 	var role_id: String = HRSearchSystem.current_role()
-	var band_id: String = HRSearchSystem.current_band()
-	var line: String = "%s aranıyor · %s bandı · adaylar bekleniyor" % [
+	var line: String = "%s aranıyor · %d. gün" % [
 		HRConstants.role_label(role_id) if role_id != "" else "Aday",
-		HRConstants.band_label(band_id),
+		HRSearchSystem.days_waiting(),
 	]
 	info.add_child(UiFactory.make_label(line, &"BodySerif"))
 	head.add_child(info)
-	head.add_child(UiFactory.make_label(
-		"%d. gün" % HRSearchSystem.days_waiting(), &"RowName"))
 	head.add_child(HRUiShared.action_button("ARAYIŞI İPTAL ET", _on_cancel_search))
 	col.add_child(head)
-	col.add_child(UiFactory.make_label(
-		"Arayış ücreti iade edilmez.", &"RowMeta", UiTokens.INK_DIM))
 	return card
 
 
@@ -348,9 +354,16 @@ func _overtime_control(dept_id: String) -> Control:
 # --- Akışlar ---------------------------------------------------------------
 
 func _open_atlas() -> void:
-	var layer: Node = get_tree().get_root().find_child("ModalLayer", true, false)
+	# PanelLayer, ModalLayer DEĞİL. Atlas kendi başlığında "saati durdurmaz" diyor ve bu
+	# bir sekme SAYFASI için doğru — ama ModalLayer'ın içindeyken tam tersi oluyordu:
+	# game_shell'in 2. bekçisi ModalLayer boş değilken Space ve 1-4'ü yutuyor, dimmer de
+	# TopBar'ı kaplayıp hız düğmelerini tıklanamaz yapıyordu. Yani saat 4x'te akmaya devam
+	# ederken oyuncunun onu durduracak HİÇBİR yolu kalmıyordu — işe alım kararı boyunca.
+	# Politika sağlamdı, yeri yanlıştı; kendi katmanına taşındı (layer 9, gerçek bir modal
+	# hâlâ üstünü örter).
+	var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
 	if layer == null:
-		push_error("[HRTab] GameShell/ModalLayer yok — Atlas modalı monte edilemiyor")
+		push_error("[HRTab] GameShell/PanelLayer yok — Atlas modalı monte edilemiyor")
 		return
 	var scene: PackedScene = load(ATLAS_MODAL) as PackedScene
 	if scene == null:

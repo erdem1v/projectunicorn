@@ -91,12 +91,26 @@ const AUD_PRICE_MULT_MAX := 1.8
 static func daily_tick() -> void:
 	# Daily: satisfaction drift + a backstop MRR bridge. B2C audience/MRR now flow on
 	# the HOURLY tick (hourly_tick); this is the slot-4 sink + B2B reflection.
+	#
+	# THE MARKET GATE, symmetric with hourly_tick's. It was missing here, and only here:
+	# the daily half entered the whole B2B desk — lifecycle, retention, expansion, the two
+	# autonomous rep systems — on ANY shipped product. One Satış Uzmanı hire inside a
+	# consumer run therefore minted enterprise prospects and closed enterprise contracts,
+	# with no pitch ever played, in a game about a consumer app.
 	if GameState.get_flag("mvp_shipped", false):
 		_tick_satisfaction()          # B2C aggregate only (B2B is routed away — see guard)
-		B2BSalesSystem.daily_tick()   # B2B per-customer lifecycle (two-layer satisfaction / churn)
+		if is_b2b_market():
+			B2BSalesSystem.daily_tick()   # B2B per-customer lifecycle (two-layer satisfaction / churn)
 	_mrr_bridge()
 	if OS.is_debug_build():
 		print("[SalesSystem] Daily tick — MRR $%d" % GameState.mrr)
+
+
+# Is the SHIPPED product a B2B one? The one answer to "does the enterprise desk run",
+# shared by the daily gate above and the HR role locks (a founder cannot hire a Satış
+# Uzmanı into a market that has no enterprise desk to work).
+static func is_b2b_market() -> bool:
+	return String(GameState.get_flag("mvp_market_type", "b2c")) == "b2b"
 
 
 # --- Hourly tick (Economy Model v2): bidirectional audience → derived MRR ---
@@ -226,7 +240,7 @@ static func open_b2c_paid_tier(price: int, _initial_pct: float = 0.0) -> void:
 	_mrr_bridge()
 
 
-# Event growth-spike lever (Product Hunt / power-user / referral): adds interest to the
+# Event growth-spike lever (Vitrin / power-user / referral): adds interest to the
 # live audience. MRR follows automatically via the hourly derivation. Replaces the old
 # "convert N audience → seats" chunk path.
 static func add_b2c_audience(n: int) -> void:
@@ -253,9 +267,30 @@ static func pipeline_optimistic_mrr() -> int:
 	return int(round(total))
 
 
-# --- B2B customer creation (called by PitchSystem on SIGNED) ---
+# --- Sales desk activity log (Task 2b). The owning system holds the seam, GameState holds
+#     the array + cap — the same split FinanceSystem.record_transaction uses. `kind` is an
+#     internal id ("auto_close" | "cs_absorb"); the Sales tab maps it to a localized line, so
+#     nothing player-facing is stored here. ---
 
-static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int) -> Customer:
+static func record_sales_event(kind: String, actor: String, company: String, mrr: int) -> void:
+	GameState.sales_log.append({
+		"day": GameState.day, "kind": kind, "actor": actor, "company": company, "mrr": mrr,
+	})
+	while GameState.sales_log.size() > GameState.SALES_LOG_CAP:
+		GameState.sales_log.pop_front()
+
+
+static func get_sales_log() -> Array:
+	return GameState.sales_log.duplicate()  # readonly snapshot (get_burn_breakdown contract)
+
+
+# --- B2B customer creation (called by PitchSystem on SIGNED, and by SalesRepSystem on an
+#     autonomous routine close). STILL the sole B2B signing path: the rep does not get a
+#     private way to mint a customer, it comes through here like every other deal. `source`
+#     defaults to the played-pitch value so every pre-2b caller is byte-identical. ---
+
+static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int,
+		source: String = "founder_pitch") -> Customer:
 	var c := Customer.new()
 	c.id = "co_" + prospect.id  # stable, derived from the lead id
 	c.company_name = prospect.company_name
@@ -267,7 +302,7 @@ static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int) ->
 	c.satisfaction = clampi(satisfaction, 0, 100)
 	c.difficulty_stars = prospect.difficulty_stars
 	c.warning_flags = prospect.warning_flags.duplicate()
-	c.acquisition_source = "founder_pitch"
+	c.acquisition_source = source
 	c.acquired_on_day = GameState.day
 	# B2B lifecycle seed (Stage A): scale + hidden tolerance (scale + sector), fresh
 	# onboarding window. Larger/older/loyal accounts endure low satisfaction longer.
@@ -276,8 +311,13 @@ static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int) ->
 	c.lifecycle_phase = "onboarding"
 	c.churn_countdown = -1
 	c.risk_streak = 0
-	c.support_load = B2BConstants.support_load_for(prospect.scale)
 	c.onboarding_until = GameState.day + B2BConstants.ONBOARDING_DAYS
+	# Request-channel phase, assigned ONCE here and never moved. A stride walk over a counter
+	# that is coprime with the interval spreads the book by construction — the previous
+	# id.hash() derivation produced consecutive phases because customer ids differ only in
+	# their last character (see Customer.cs_request_phase for the measurement).
+	c.cs_request_phase = (GameState.run_customers_signed * B2BConstants.CS_PHASE_STRIDE) \
+		% B2BConstants.CS_REQUEST_INTERVAL_DAYS
 	# The feature this account wants (drives special requests + the retention promise).
 	c.pain_feature_id = prospect.pain_feature_id
 	if c.pain_feature_id == "":
@@ -286,10 +326,15 @@ static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int) ->
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
 	GameState.run_customers_signed += 1  # run counter seam (Spec 3 §3) — sole B2B signing path
-	# Finance transactions log: signing lands as a positive entry, label = company name
-	# (passes through one_time_label_display unchanged — only registered ids map).
-	# WORKING: amount shown = the deal's monthly MRR (the number the player negotiated).
-	FinanceSystem.record_transaction(c.company_name, c.mrr)
+	# Fix 1 ledger: a signed company never re-enters cold prospecting (churn included —
+	# the entity is erased on churn, this name is the durable memory).
+	if not GameState.b2b_signed_company_names.has(c.company_name):
+		GameState.b2b_signed_company_names.append(c.company_name)
+	# Deliberately NO transactions-log row here. That ledger sits under the cash curve and
+	# every other row in it is paired with a real set_cash movement; a subscription's monthly
+	# MRR is not collected cash, so a signed "+$1,100" beside a real "−$600" hire would read
+	# as treasury income the player never received. The signing reaches them through the
+	# headline/news channel instead, and the MRR itself lands via the bridge below.
 	_mrr_bridge()  # reflect the signed deal immediately (canonical bridge)
 	return c
 

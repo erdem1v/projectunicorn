@@ -152,7 +152,10 @@ func _make_building_card(build: FeatureBuild) -> Control:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hb.add_child(spacer)
-	var pct: int = int(round(ProductSystem.build_progress() * 100.0))
+	# Yüzdenin TEK evi UiTokens.build_percent — yüzen build kartı bu sayfanın üstünde
+	# durur, iki yüzey aynı build'i aynı karede basar; rozet ile bar da aynı int'ten
+	# türer (ham kesir bara verilirse yanındaki sayıyla tutmaz).
+	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())
 	var badge := UiFactory.make_badge("GELİŞTİRMEDE %%%d" % pct, &"accent")
 	_build_badge_label = badge.get_child(0) as Label
 	hb.add_child(badge)
@@ -202,7 +205,7 @@ func _make_locked_slot() -> Control:
 func _update_texts() -> void:
 	if _live_numbers != null and is_instance_valid(_live_numbers):
 		_live_numbers.text = _key_numbers_text(String(GameState.get_flag("mvp_market_type", "b2c")))
-	var pct: int = int(round(ProductSystem.build_progress() * 100.0))
+	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())   # kurulumla aynı tek ev
 	if _build_badge_label != null and is_instance_valid(_build_badge_label):
 		_build_badge_label.text = "GELİŞTİRMEDE %%%d" % pct
 	if _build_bar != null and is_instance_valid(_build_bar):

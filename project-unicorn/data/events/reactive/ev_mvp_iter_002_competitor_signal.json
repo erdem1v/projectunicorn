@@ -2,10 +2,10 @@
   "id": "ev_mvp_iter_002_competitor_signal",
   "category": "reactive",
   "title": "Rakip benzer şey duyurdu",
-  "subtitle": "Twitter · 11:02",
+  "subtitle": "Akış · 11:02",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Sabah akışı karıştırırken bir paylaşım dizisi denk geldi. **Y Combinator W26 grubundan bir ekip** — neredeyse aynı problemi vuruyorlar. Onların paylaşımı temiz, demo videosu pürüzsüz, yorumları iyi.\n\nİlk içgüdü: panik. İkinci içgüdü: *'Bizimkini onların yapamadığı bir şeye eğip ayrışalım.'*\n\nÜçüncü içgüdü, bir saat sonra geliyor: belki ikisi de yanlış cevap.",
+  "body_text": "Sabah akışı karıştırırken bir paylaşım dizisi denk geldi. **Meridyen'in bu dönem ekibinden biri** — neredeyse aynı problemi vuruyorlar. Onların paylaşımı temiz, demo videosu pürüzsüz, yorumları iyi.\n\nİlk içgüdü: panik. İkinci içgüdü: *'Bizimkini onların yapamadığı bir şeye eğip ayrışalım.'*\n\nÜçüncü içgüdü, bir saat sonra geliyor: belki ikisi de yanlış cevap.",
   "trigger_conditions": [
     {"type": "build_phase", "value": "iteration"},
     {"type": "random", "chance": 0.25}

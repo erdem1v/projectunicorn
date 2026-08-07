@@ -43,6 +43,7 @@ const KEY_BLOCK_DAYS := "block_days"
 const KEY_DAY_INDEX := "day_index"
 const KEY_STARTED_DAY := "started_day"   # RESERVED: stored for the HR tab's "X. günden beri"
 const KEY_VALVE_FIRED := "valve_fired"   # per-block latch: character ids already warned
+const KEY_CHARGED_DAY := "charged_day"   # the last calendar day this block was billed
 
 # day_index is 1-BASED inside the current block: HRConstants.overtime_morale_drop(1) is
 # the first mesai night. A block record is created at day_index 0 (started, not yet
@@ -66,6 +67,12 @@ const VALVE_FLAG_PREFIX := "hr_valve_continued_"
 static var _pay_today: int = 0
 static var _pay_stamped_day: int = -1
 
+# Money owed for a day that was billed AFTER Finance already pulled. An early stop can only
+# ever happen during hours 1..23, i.e. after slot 5 has run for today, so its pay would be
+# zeroed by tomorrow's reset before Finance ever saw it. It rides here for one day instead
+# and is folded into tomorrow's total at the top of daily_tick, ahead of the pull.
+static var _pay_carry: int = 0
+
 
 # --- Daily entry (called by HRSystem.daily_tick, slot 3) ---
 
@@ -74,7 +81,8 @@ static func daily_tick() -> void:
 	# the START of the day, and NOWHERE else. HR ticks at slot 3 and Finance pulls at slot
 	# 5 of the SAME day, so a block that auto-ends tonight must leave tonight's total
 	# readable — clearing on block end would work the final night for free.
-	_pay_today = 0
+	_pay_today = _pay_carry
+	_pay_carry = 0
 	_pay_stamped_day = GameState.day
 	if GameState.hr_overtime.is_empty():
 		return   # no block anywhere: zero roster reads, zero cost
@@ -93,8 +101,25 @@ static func _tick_department(dept_id: String) -> void:
 	# Contract order inside the tick: advance the index, apply the morale cost at the NEW
 	# index, stamp the pay, bump each participant's counter, stamp the calm-period cursor,
 	# then auto-end.
+	_charge_day(dept_id, block, true)
+	if int(block.get(KEY_DAY_INDEX, 0)) >= _block_length(block):
+		# Auto-end on the final night. Today's stamp is deliberately untouched.
+		_end_block(dept_id, false)
+
+
+# THE ONE PLACE A MESAI DAY IS BILLED — morale to every participant, money into today's
+# total, each participant's own counter, and the calm-period cursor. Both the daily tick
+# and an early stop route through here, which is what makes "a day you started mesai is a
+# day you paid for" true however the day ends.
+#
+# `to_carry` sends the money to tomorrow's total instead of today's: an early stop happens
+# during hours 1..23, so Finance has already pulled for today and a same-day credit would
+# be wiped by tomorrow's reset before the pull. Morale is NOT carried — it lands the
+# instant it is spent, which is what the player feels.
+static func _charge_day(dept_id: String, block: Dictionary, fire_valve: bool, to_carry: bool = false) -> void:
 	var idx: int = int(block.get(KEY_DAY_INDEX, 0)) + 1
 	block[KEY_DAY_INDEX] = idx
+	block[KEY_CHARGED_DAY] = GameState.day
 	var drop: int = HRConstants.overtime_morale_drop(idx)
 	var crew: Array[Character] = participants(dept_id)
 	for emp in crew:
@@ -102,15 +127,17 @@ static func _tick_department(dept_id: String) -> void:
 		# apply_delta. Folding either in here would apply it twice.
 		HRMoraleSystem.apply_delta(emp, -drop, HRConstants.REASON_OVERTIME)
 		emp.overtime_days += 1
-		_pay_today += HRConstants.overtime_daily_pay(emp.monthly_salary)
-		# Valve check AFTER the drop lands, so tonight's mesai is what trips it.
-		_maybe_enqueue_valve(block, emp, dept_id)
+		var pay: int = HRConstants.overtime_daily_pay(emp.monthly_salary)
+		if to_carry:
+			_pay_carry += pay
+		else:
+			_pay_today += pay
+		if fire_valve:
+			# Valve check AFTER the drop lands, so tonight's mesai is what trips it.
+			_maybe_enqueue_valve(block, emp, dept_id)
 	# The "sakin dönem" positive event reads this cursor (HRMoraleSystem.days_since_last_
 	# overtime). Stamped on every day a block actually runs, even if the crew is empty.
 	GameState.hr_last_overtime_day = GameState.day
-	if idx >= _block_length(block):
-		# Auto-end on the final night. Today's stamp is deliberately untouched.
-		_end_block(dept_id, false)
 
 
 # --- Start / stop ---
@@ -151,12 +178,24 @@ static func start(dept_id: String, block_days: int) -> bool:
 
 
 static func stop(dept_id: String) -> bool:
-	# Early stop is fully supported and costs nothing to reverse: the days already worked
-	# stay paid (nothing is refunded, including today's stamp), nothing further accrues
-	# because the record is gone, and no morale cost lands again. Stopping while day_index
-	# reads 4 on a 7-day block therefore totals exactly 4 days of pay.
+	# Early stop is fully supported: the days already worked stay paid (nothing is
+	# refunded), nothing further accrues because the record is gone, and no morale cost
+	# lands again afterwards. Stopping the morning after the 4th night therefore totals
+	# exactly 4 days of pay.
+	#
+	# WHAT IS NOT FREE ANY MORE: the day being stopped, if it has not been billed yet. The
+	# speed bonus is consumed on the HOURLY tick while the cost was charged only on the
+	# daily one, so a block whose whole life fit between two daily ticks — start at 10:00,
+	# "Bitir" at 22:00 — delivered up to 23 hours of +%30 build speed for zero money and
+	# zero morale, every single day, and the panel's own copy invited it. A day the crew
+	# worked is a day the company pays for, however the day ends.
 	if not is_active(dept_id):
 		return false
+	var block: Dictionary = GameState.hr_overtime[dept_id]
+	if int(block.get(KEY_CHARGED_DAY, -1)) != GameState.day:
+		# The valve is deliberately NOT fired here: "devam edelim mi?" is not a question to
+		# ask about a block that is ending this second.
+		_charge_day(dept_id, block, false, true)
 	_end_block(dept_id, true)
 	return true
 
@@ -194,12 +233,20 @@ static func speed_multiplier(dept_id: String) -> float:
 	# Exactly 1.0 when no block runs, so multiplying by it is always safe.
 	#
 	# On the START day the index still reads 0 and the block is already active, so the
-	# opening rate applies. That is not a free day: ProductSystem's phase counter reads
-	# this at slot 1, BEFORE this system ticks at slot 3, so the bonus is collected on the
-	# days where the index reads 0..block_days-1 at slot-1 time — exactly block_days build
-	# days of bonus against exactly block_days paid nights. (A start-and-stop inside one
-	# day is a pure loss, not an exploit: slot 1 has already run, so no speed is gained,
-	# while the hourly bug accrual has already been running at OVERTIME_BUG_MULT.)
+	# opening rate applies from the next hourly tick onward.
+	#
+	# THE OLD JUSTIFICATION HERE WAS NOT MERELY STALE, IT WAS INVERTED, and that is what
+	# hid the exploit for so long. It argued that ProductSystem reads this multiplier at
+	# daily slot 1, before HR ticks at slot 3, and concluded that "a start-and-stop inside
+	# one day is a pure loss." There is no such read: ProductSystem.daily_tick only appends
+	# to mvp_bug_history, and the ONLY product-side consumer is _tick_build_hourly — up to
+	# 24 reads a day, both before and after slot 3. So the same-day start/stop was the
+	# opposite of a loss; it was free speed. stop() now bills the day it ends, which is
+	# what makes the sentence below true rather than aspirational.
+	#
+	# (Historic note kept because it is still the right way to think about the shape —
+	# the bonus is collected on the days where the index reads 0..block_days-1, against
+	# block_days paid nights. The hourly bug accrual runs at OVERTIME_BUG_MULT throughout.)
 	if not is_active(dept_id):
 		return 1.0
 	return 1.0 + HRConstants.overtime_speed_bonus(day_index(dept_id))
@@ -366,6 +413,7 @@ static func reset() -> void:
 	# stamp would otherwise be pulled into burn on day 1 of the next one.
 	_pay_today = 0
 	_pay_stamped_day = -1
+	_pay_carry = 0
 
 
 # --- Internals ---

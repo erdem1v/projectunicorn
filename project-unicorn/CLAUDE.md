@@ -101,6 +101,51 @@ seams; future events must match claims to modifiers.
 
 ---
 
+## UI / STYLE LAW (LOCKED — Tema Çekirdeği, 2026-08-06)
+
+Görsel kimliğin tek kaynağı vardır ve mülkiyet dörde bölünmüştür. Bu hükümler
+`scripts/theme/ui_tokens.gd` başlığındaki OWNERSHIP bloğunun yasalaşmış halidir.
+
+**1. Vokabüler `UiTokens`'ındır.** Oyundaki her renk `ui_tokens.gd` palet tablosunda adlıdır;
+her yazı boyutu 6 adımlı tip skalasından (`SIZE_MICRO..SIZE_DISPLAY`) ya da belgeli
+editorial-display istisnasından (`SIZE_ED_*`) gelir. Palet tablosu dışına ham `Color(...)`,
+skala dışına ham font boyutu YAZILMAZ. Runtime/state'e bağlı stil `UiTokens` helper'larından
+okunur (`delta_color`, `badge_palette`, `health_color`, …) — sign→renk mantığı bir daha
+icat edilmez.
+
+**2. `themes/master_theme.tres` ÜRETİLMİŞ artefakttır — elle düzenlenmez.** Üretici:
+`godot --headless --path . -s res://scripts/theme/build_theme.gd`
+(temiz checkout önce `--import` ister). Token ya da `build_theme.gd` değişikliği AYNI
+commit'te `UiTokens.THEME_STAMP`'i artırır ve regen koşar; `main.gd` debug boot'ta bayat
+`.tres`'e `push_warning` ile bağırır.
+
+**3. `build_theme.gd`, token'ı tema öğesine çeviren TEK dosyadır.** Tema içinde: SKALA
+boyut+leading'in sahibidir (bir varyasyon adımının boyutunu ASLA override etmez); VARYASYON
+yüz+rengin sahibidir (register ekseni: açık gövde / koyu kabuk / sinematik / gazete).
+
+**4. Sahneler ve script'ler yalnız YERLEŞİM'in sahibidir** (anchor, separation, margin,
+min-size). Font boyutu, renk ya da stylebox taşımazlar — bir `theme_type_variation`'a uzanır
+ya da bir yenisini `build_theme.gd`'ye eklerler. Mevcut literaller GRANDFATHERED'dır: çevresi
+değişen satırla birlikte taşınır (TECH_SPEC Decision Log'un inline-Color konvansiyonu).
+Envanter ve bilinçli istisnalar: `docs/design/theme_sweep_ledger.md`.
+
+**Chrome kuralı (ODA rework ile revize, 2026-08-06).** `Chrome*` varyasyonları (koyu
+kabuk ailesi) artık tanımlı-VE-YAŞAYAN'dır, ama yalnız şu yüzeylerde: **TopBar ·
+MonthSummary bandı · sol sekme rayı (LeftTabs) · sayfa-üstü chrome şeridi
+(TabPageChrome) · OdaView'un koyu bilgi yüzeyleri (monitör ekranı, mesai çipi vb.) ·
+tooltip kabuğu.** Bu liste dışında `Chrome` deseni eşleşmesi = ihlal; listeye yeni
+yüzey eklemek yine ayrı, gate'li bir karardır. Sekme SAYFA İÇERİĞİ krem gövdede
+kalır — Chrome oraya sızmaz. NewsTicker görsel kimliğini korur (`NewsPanel`/`NewsRich`
+kendi adlarıyla kalır — zaten en koyu yüzeydir, karartma gerekmedi).
+
+**Doğrulama yüzeyleri** (debug build, main.gd): `--tab-shot=<id>` · `--modal-shot=<kind>` ·
+`--onboard-shot=<1|2|3>` · `--probe-shot` (sıfır-stil kontrol sahnesi) ·
+`--theme-audit=<id>` (çözümlenmiş tema değerleri + S/C/P override bayrakları). Tema
+değişikliği iddiası bu yüzeylerin before/after'ıyla kanıtlanır — hash eşitliği "hiçbir şey
+kımıldamadı"nın, bbox raporu "yalnız hedef kımıldadı"nın kanıtıdır.
+
+---
+
 ## Document References
 
 - **Game design master:** [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md) — vision, pillars, mechanics, content, systems, win/lose conditions, endings

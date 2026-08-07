@@ -68,7 +68,9 @@ func get_player_rank_in_startup_league(sub_type_id: String, player_composite: fl
 				better += 1
 	var total: int = league + 1
 	var rank: int = better + 1
-	return {"rank": rank, "total": total, "text": "startup liginde %d/%d" % [rank, total]}
+	# WORKING TR — "lig" vokabüleri emekli (Fix 3): sıralama artık kalite kıyası
+	# olarak okunur, pazar anlatısı get_market_snapshot'ındır.
+	return {"rank": rank, "total": total, "text": "startup sınıfında %d/%d" % [rank, total]}
 
 
 # --- Advancement (called daily by TimeManager) ---
@@ -98,3 +100,115 @@ func _status_for(r: Rival) -> String:
 	if r.tier == "established":
 		return "STEADY"
 	return "SCALING" if r.momentum >= 0.6 else "QUIET"
+
+
+# ======================= Pazar payı (Dünya İnandırıcılığı Fix 3) ================
+# LİG çerçevesinin yerini alan sunum katmanı. STATELESS: get_market_snapshot her
+# çağrıda yalnız (RivalCatalog seed'leri + momentum, GameState.day, GameState.mrr,
+# MARKET_TOTAL_MRR) girdilerinden türetilen SAF fonksiyondur — canlı kalite
+# eksenleri OKUNMAZ (advance_all onları her gün mutasyona uğratır; bugünden
+# "geçen haftanın payı"nı hesaplamak ancak saf bir fonksiyonla doğru kalır).
+# Kalite ligi (composite, rank API, ekonomi bağı) olduğu gibi durur: pay, MRR
+# anlatısıdır, kalite yarışı değil. RNG yok — doku, hafta-bloklu hash wobble.
+#
+# Tüketiciler (ODA board + ticker feed): get_market_snapshot(sub_id) /
+# get_player_share_pct() / format_share(pct). Repaint sinyali: day_advanced +
+# mrr_changed yeterlidir (snapshot durumsuz olduğundan her okuma günceldir).
+
+const SHARE_GROWTH_PER_DAY := 0.004    # momentum başına günlük göreli büyüme  # WORKING
+const SHARE_WOBBLE_AMP := 0.08         # hafta-bloklu doku genliği (momentum ölçekli)  # WORKING
+# Eşik, rakiplerin HAFTALIK rutin hamlesinin altında durmalı, yoksa rakip haber
+# kaynağı açlıktan ölür (90 günlük smoke bunu ölçer). Ölçülen rutin bant (10 alt-tür
+# × 11 satır × 200 gün): 0,006 (en küçük startup) … 0,051 (lider startup); yerleşikler
+# 0,025 ve 0,045, holdingler 0,009-0,015, dev tam 0,000. 0,02 bandın İÇİNDE durur —
+# en küçük iki startup ile iki holding "yatay" sayılır, kalan her satır kımıldar.
+# Kardeş sabit NewsFeedSystem.RIVAL_BIG_MOVE_PCT aynı taramadan türedi: o, rutin
+# bandın ÜSTÜNDE durup yalnız sıçramayı yakalar. % puan.
+const SHARE_TREND_EPSILON := 0.02      # altı "yatay" sayılır  # WORKING
+const SHARE_MOVED_WINDOW_DAYS := 7     # trend + moved_recently penceresi
+
+
+func get_market_snapshot(sub_type_id: String) -> Dictionary:
+	# {player_pct, others_pct, market_total_mrr, rivals: [{id, name, tier, share_pct,
+	#  trend(-1|0|+1), moved_recently}] pay-azalan}. Toplam (player + rivals + others)
+	# = 100 — "diğerleri" (uzun kuyruk) artıktır, taşmada adlandırılmışlar ölçeklenir.
+	var day: int = GameState.day
+	var player_pct: float = clampf(100.0 * float(GameState.mrr) / float(RivalCatalog.MARKET_TOTAL_MRR), 0.0, 90.0)
+	var rows: Array = []
+	var raw_sum: float = 0.0
+	for i in RivalCatalog.TEMPLATE.size():
+		var t: Dictionary = RivalCatalog.TEMPLATE[i]
+		var rid: String = "rv_%s_%d" % [sub_type_id, i]
+		var r: Rival = get_rival(rid)
+		var display_name: String = r.product_name if r != null else "%s #%d" % [sub_type_id, i]
+		rows.append(_share_row(rid, display_name, String(t["tier"]),
+			float(RivalCatalog.SHARE_SEED[i]), float(t["momentum"]), day))
+	for actor in RivalCatalog.MARKET_ACTORS:
+		rows.append(_share_row(String(actor["id"]), String(actor["name"]), "holding",
+			float(actor["share"]), float(actor["momentum"]), day))
+	for row in rows:
+		raw_sum += float(row["share_pct"])
+	var budget: float = 100.0 - player_pct
+	if raw_sum > budget:
+		var scale: float = budget / raw_sum
+		for row in rows:
+			row["share_pct"] = float(row["share_pct"]) * scale
+		raw_sum = budget
+	rows.sort_custom(func(a, b): return float(a["share_pct"]) > float(b["share_pct"]))
+	return {
+		"player_pct": player_pct,
+		"others_pct": maxf(budget - raw_sum, 0.0),
+		"market_total_mrr": RivalCatalog.MARKET_TOTAL_MRR,
+		"rivals": rows,
+	}
+
+
+func get_player_share_pct() -> float:
+	return clampf(100.0 * float(GameState.mrr) / float(RivalCatalog.MARKET_TOTAL_MRR), 0.0, 90.0)
+
+
+func format_share(pct: float) -> String:
+	# Kıymığın görünmesi tasarımın kalbi: tek ondalık + Türkçe virgül; eşiğin
+	# altı "<%0,1" (görünmez değil, "henüz yok denecek kadar küçük" okunur).
+	if pct < 0.1:
+		return "<%0,1"
+	return ("%" + "%.1f" % pct).replace(".", ",")
+
+
+func _share_row(rid: String, display_name: String, tier: String,
+		seed: float, momentum: float, day: int) -> Dictionary:
+	var now: float = _share_at(rid, seed, momentum, day)
+	var prev: float = _share_at(rid, seed, momentum, maxi(day - SHARE_MOVED_WINDOW_DAYS, 0))
+	var delta: float = now - prev
+	var trend: int = 0
+	if delta > SHARE_TREND_EPSILON:
+		trend = 1
+	elif delta < -SHARE_TREND_EPSILON:
+		trend = -1
+	return {
+		"id": rid, "name": display_name, "tier": tier,
+		"share_pct": now, "trend": trend,
+		"delta_pct": absf(delta),
+		"moved_recently": absf(delta) >= SHARE_TREND_EPSILON,
+	}
+
+
+func _share_at(rid: String, seed: float, momentum: float, day: int) -> float:
+	# Saf pay eğrisi: yavaş momentum büyümesi × hafta-bloklu deterministik wobble.
+	# Momentum 0 (dev) → tamamen durağan; kalite modelindeki "giants are static"
+	# ile aynı fiction. Wobble genliği momentumla ölçeklenir: yerleşikler kıpırdar,
+	# startup'lar oynar.
+	#
+	# ÖLÇÜM NOTU (curve seansının maddesi): wobble PRATİKTE doku üretmiyor. hash()
+	# djb2'dir ve hafta numarası dizginin SONUNA yazılır — ardışık hafta anahtarları
+	# ardışık tamsayıya düşer, %1000 sonrası w haftada yalnız +0,001 kayar. Tek gerçek
+	# sıçrama haftanın basamak sayısı değişince olur (hafta 9→10, yani gün 70). Sonuç:
+	# haftalık delta neredeyse tamamen büyüme terimidir (seed × momentum × 0,028) ve
+	# koşu başına TEK büyük hamle penceresi vardır. Paylar tutarlı, ama "doku" iddiası
+	# şu an gerçekleşmiyor; düzeltmek ODA panosundaki görünen payları oynatır, o yüzden
+	# ayrı karar. Haber eşikleri bu GERÇEK dağılıma göre ayarlandı, iddiaya göre değil.
+	var grown: float = seed * (1.0 + momentum * SHARE_GROWTH_PER_DAY * float(day))
+	var week: int = int(float(day) / float(SHARE_MOVED_WINDOW_DAYS))
+	var w: float = float(absi(hash("%s|%d" % [rid, week])) % 1000) / 1000.0
+	var amp: float = SHARE_WOBBLE_AMP * momentum
+	return maxf(grown * (1.0 + amp * (w * 2.0 - 1.0)), 0.0)

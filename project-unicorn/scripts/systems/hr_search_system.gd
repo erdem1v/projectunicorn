@@ -41,7 +41,10 @@ const KEY_STARTED_DAY := "started_day"
 const KEY_ARRIVAL_DAY := "arrival_day"
 const KEY_FILES := "files"
 
-# ProductSystem's "mühendis lazım" signal (product_system.gd:462) — written there, cleared here.
+# ProductSystem's "mühendis lazım" signal (written by ProductSystem's bug-sprint frequency
+# check, cleared here on a developer hire). Cited by SYMBOL, not by line: the old
+# `product_system.gd:462` pointer had drifted onto the iteration sub-machine, which is a
+# worse failure than a stale number because the reader believes what they find there.
 const FLAG_NEEDS_ENGINEER := "needs_engineer"
 
 # Arrival-day mixer (arithmetic, NOT tunables). The window itself is
@@ -128,6 +131,11 @@ static func start_search(role_id: String, band_id: String) -> bool:
 		return false
 	if not HRConstants.is_employee_role(role_id):
 		push_warning("[HRSearchSystem] start_search with non-employee role '%s' — see HRConstants.EMPLOYEE_ROLES" % role_id)
+		return false
+	# Engine-side back-stop for the Atlas's visual lock: the UI must not be the only thing
+	# standing between a consumer run and an enterprise hire.
+	if not HRConstants.is_role_hireable(role_id):
+		push_warning("[HRSearchSystem] start_search for locked role '%s' — see HRConstants.role_lock_reason_key" % role_id)
 		return false
 	if not HRConstants.BANDS.has(band_id):
 		push_warning("[HRSearchSystem] start_search with unknown band '%s' — see HRConstants.BANDS" % band_id)
@@ -323,7 +331,7 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	var commission: int = HRConstants.commission_for(salary)
 	var payroll_after: int = payroll_before + salary
 	# FinanceSystem PULLS the whole payroll and converts it in ONE rounding pass
-	# (finance_system.gd:55), so tomorrow's burn is today's published total with the salary slice
+	# (FinanceSystem.daily_tick), so tomorrow's burn is today's published total with the salary slice
 	# swapped out. NOT today's total plus this salary rounded on its own: that would sit a dollar
 	# off the figure Finance publishes, and it would double-count if the player already hired
 	# today (the registry already holds that salary, the published burn does not yet).

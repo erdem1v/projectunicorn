@@ -1,0 +1,90 @@
+[gd_scene format=3 uid="uid://themeprobetscn001"]
+
+[node name="ThemeProbe" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Backdrop" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 48
+
+[node name="Col" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+
+[node name="BareLabel" type="Label" parent="Margin/Col"]
+layout_mode = 2
+text = "Label · sıfır stil · beklenen: sans 13 INK"
+
+[node name="BareRich" type="RichTextLabel" parent="Margin/Col"]
+layout_mode = 2
+bbcode_enabled = true
+text = "RichTextLabel · [b]kalın[/b] · [i]italik[/i] · [code]mono[/code] · beklenen: serif 13 INK"
+fit_content = true
+
+[node name="BareButton" type="Button" parent="Margin/Col"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Button · beklenen: açık ikincil, 15"
+
+[node name="BareLineEdit" type="LineEdit" parent="Margin/Col"]
+layout_mode = 2
+size_flags_horizontal = 0
+custom_minimum_size = Vector2(420, 0)
+text = "LineEdit metni"
+placeholder_text = "placeholder"
+
+[node name="BareProgress" type="ProgressBar" parent="Margin/Col"]
+layout_mode = 2
+size_flags_horizontal = 0
+custom_minimum_size = Vector2(420, 0)
+value = 40.0
+
+[node name="BareHSep" type="HSeparator" parent="Margin/Col"]
+layout_mode = 2
+
+[node name="Row" type="HBoxContainer" parent="Margin/Col"]
+layout_mode = 2
+
+[node name="RowLeft" type="Label" parent="Margin/Col/Row"]
+layout_mode = 2
+text = "VSeparator solu"
+
+[node name="BareVSep" type="VSeparator" parent="Margin/Col/Row"]
+layout_mode = 2
+
+[node name="RowRight" type="Label" parent="Margin/Col/Row"]
+layout_mode = 2
+text = "VSeparator sağı"
+
+[node name="BareCheck" type="CheckButton" parent="Margin/Col"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "CheckButton"
+
+[node name="BareCard" type="PanelContainer" parent="Margin/Col"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="CardLabel" type="Label" parent="Margin/Col/BareCard"]
+layout_mode = 2
+text = "PanelContainer içinde Label · base 0/0 margin"

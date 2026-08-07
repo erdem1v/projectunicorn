@@ -31,18 +31,62 @@ const TEMPLATE := [
 ]
 
 # Per-type product names (index 0 = giant, 1-2 = established, 3-7 = startup).
+#
+# TESCİLLİ MARKA YASAĞI (CompanyCatalog'un adlandırma yasası, aynı kural burada da
+# geçerli): gerçek marka yok, şaka ad yok. Bu tablo bir zamanlar oyuncunun ODA
+# panosunda, ticker'da ve Ürün sekmesinde GERÇEK rakiplerin tescilli adlarını
+# gösteriyordu — üstelik trademark sahibiyle AYNI pazarda rakip ENTITY olarak, ki bu
+# bir metin içinde markadan söz etmekten bambaşka bir maruziyet sınıfı. CompanyCatalog
+# temizlenirken (Anadolu Sigorta → Poyraz Sigorta) bu dosya atlanmıştı; 2026-08-07
+# süpürmesinde kapatıldı. İNDEKS SIRASI KİLİTLİ: TEMPLATE tier'ları ve SHARE_SEED
+# payları indeks-hizalı, o yüzden adlar YERİNDE değişir, asla yeniden sıralanmaz.
 const NAMES := {
-	"ai_assistant":      ["OpenChat", "Claria", "Muse AI", "Kestrel", "Pocket Aide", "Verba", "Nook", "Echo Desk"],
-	"ai_photo_editor":   ["PixelForge", "Retušo", "Lumina", "SnapMint", "GlowKit", "Frame9", "Tint", "Kolaj"],
-	"ai_code_copilot":   ["DevPilot", "Cursor+", "Syntaxa", "PairUp", "Loopcraft", "Semic", "Refacto", "Junie"],
-	"ai_multimodal_app": ["OmniStudio", "Polymind", "Fusio", "MixModal", "Vizion", "Sesbir", "Multi", "Kanvas"],
-	"ai_vector_search":  ["VectorScale", "Pinelake", "Embedda", "Nöronet", "Simqore", "Metrika", "Aramax", "Indexa"],
-	"saas_project_mgmt": ["Asana", "MonDay", "Trellium", "Sprintboard", "Kanbo", "Planera", "Tasket", "Roadmapp"],
-	"saas_crm":          ["Salesloop", "HubOrbit", "Pipeplus", "Dealflow", "Leada", "CRMkolay", "Kontakt", "Satışçı"],
-	"saas_analytics":    ["Lookera", "Metrion", "Dashy", "Insighta", "Grafkatör", "Queryn", "Panelist", "Veritas"],
-	"saas_billing":      ["Stripe+", "Faturon", "Billwise", "Tahsila", "Subskript", "Prorata", "Ödemely", "Recurro"],
-	"saas_dev_tools":    ["Datadoggo", "Sentrio", "Logstream", "CIforge", "Sandboxy", "Devkit", "APIgate", "Terminus"],
+	"ai_assistant":      ["Refik AI", "Aselia", "Perga AI", "Kestrel", "Pocket Aide", "Söyleç", "Kovan", "Echo Desk"],
+	"ai_photo_editor":   ["PixelForge", "Retušo", "Işılt", "Kadraj", "GlowKit", "Frame9", "Poz", "Kolaj"],
+	"ai_code_copilot":   ["Zanaat", "Kalfa", "Syntaxa", "PairUp", "Loopcraft", "Semic", "Refacto", "Çırak"],
+	"ai_vector_search":  ["VectorScale", "Bulgu", "Embedda", "Nöronet", "Simqore", "Nirengi", "İzsürer", "Fihrist"],
+	"saas_project_mgmt": ["Vardiya", "Çizelge", "Panoya", "Sprintboard", "Dizge", "Tasarı", "Tasket", "Roadmapp"],
+	"saas_crm":          ["Sadakat", "Yörünge", "Pipeplus", "Dealflow", "Leada", "CRMkolay", "Rehber", "Satışçı"],
+	"saas_analytics":    ["Mercek", "Metrion", "Dashy", "Insighta", "Grafkatör", "Queryn", "Panelist", "Sağlama"],
+	"saas_billing":      ["Kasadar", "Faturon", "Billwise", "Tahsila", "Subskript", "Oranla", "Ödemely", "Recurro"],
+	"saas_dev_tools":    ["Nöbetçi", "Karakol", "Kütükçü", "CIforge", "Sandboxy", "Devkit", "APIgate", "Uçbirim"],
+	"saas_ops":          ["FlowSuite", "Prosedo", "Operanda", "Akista", "Otomo", "Süreçly", "Rutin", "Adımla"],
 }
+# (Dünya İnandırıcılığı onarımı: saas_ops satırı eklendi — canlı üründü ama isimsizdi,
+# board'da "saas_ops #0..7" fallback'i görünüyordu. Yetim ai_multimodal_app satırı
+# silindi — o alt-tür ProductCatalog'dan kaldırılmıştı.)
+
+
+# ======================= Pazar payı seed'leri (Fix 3) ==========================
+# LİG çerçevesinin yerini alan pazar payı modelinin veri tabanı. TEMPLATE ile
+# indeks-hizalı: SHARE_SEED[i], TEMPLATE[i] rakibinin pazar payı yüzdesi çekirdeği.
+# Bir avuç büyük firma pazarın çoğunu tutar; startup'lar oyuncunun bandına yakın
+# küçük dilimlerde oturur. Payların toplamı 100 olmak zorunda DEĞİL — kalan,
+# snapshot'ta "uzun kuyruk" (diğerleri) dilimi olur. Tümü WORKING (curve seansı).
+const SHARE_SEED := [34.0, 16.0, 11.0, 2.6, 1.9, 1.4, 0.9, 0.5]
+
+# Yalnız-pay pazar aktörleri: her alt-tür pazarında AYNI adlarla görünen, holding
+# tarzı global oyuncular. Rival ENTITY DEĞİLLER — kalite ligi, ekonomi bağı
+# (_rival_relative_quality), VC sorgusu ve rank API'si onları hiç görmez; yalnız
+# get_market_snapshot dilim üretir. Adlandırılmış rakip sayısını pazar başına
+# 8+3 = 11'e çıkarırlar (görev bandı 8-12). Paylar + momentum WORKING.
+# (Marka süpürmesi 2026-08-07: "Doruk Teknoloji Holding" YAŞAYAN bir Türk markasıydı —
+# CompanyCatalog'da temizlenen Anadolu Sigorta/Anadolu Yatırım ile aynı sınıf, ve bu
+# aktörler ODA panosunda pazar payı satırı olarak GÖRÜNÜYOR. "Silverbirch Software" da
+# gerçek bir yazılım firması. İkisi de aynı anlam alanında kurgusal karşılıklarıyla
+# değişti; id'ler kasten korundu, çünkü kayıtlı durum ve shot fixture'ları onlara bakar.)
+const MARKET_ACTORS := [
+	{"id": "ma_silverbirch", "name": "Akkavak Yazılım", "share": 6.5, "momentum": 0.06},
+	{"id": "ma_doruk",       "name": "Yalçın Teknoloji Holding", "share": 5.2, "momentum": 0.10},
+	{"id": "ma_ostrand",     "name": "Ostrand Systems", "share": 3.8, "momentum": 0.08},
+]
+
+# Modellenen pazarın toplam aylık geliri (MRR cinsinden). Oyuncunun payı =
+# GameState.mrr / bu sabit. WORKING — kalibrasyon defteri maddesi (2026-08-06):
+# MRR 5.000 (Traction hedefi) → %0,33; erken oyun → %0,1 altı ("kıymık");
+# Series A kapısı bandındaki oyuncu (~40-80K MRR) → ~%2,7-5,3. His meselesi,
+# curve seansında tartışılacak — şimdilik dokunma.
+const MARKET_TOTAL_MRR := 1_500_000
 
 
 # Build one Rival per (sub-type, TEMPLATE row). Status is set by RivalRegistry.

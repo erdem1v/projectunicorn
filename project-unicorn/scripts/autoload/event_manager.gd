@@ -88,7 +88,13 @@ func hourly_tick(hour: int) -> void:
 	#     hourly roll uses chance / window_length_hours (24 h when the event
 	#     has no window). Daily fire probability ≈ 1-(1-p/n)^n — same ballpark
 	#     as p (slightly below), instead of silently multiplying frequency.
-	if _ambient_fired_day == GameState.day:
+	# HANGİ GÜNÜN kotası: saat 0 tiki YENİ günün ilk saatidir, ama motorun sınır sırası
+	# gereği (_drain_boundaries: set_current_hour(0) → hourly(0) → advance_day() → daily)
+	# GameState.day o anda hâlâ DÜNÜ gösteriyor. Damgayı olduğu gibi basmak, saat 1'de
+	# kotanın yeniden açılması demekti: bir takvim günü iki ambient alabiliyordu, ve
+	# "günde en fazla bir tane" sözleşmesi tam da gün dönümünde sızıyordu.
+	var slot_day: int = GameState.day + (1 if hour == 0 else 0)
+	if _ambient_fired_day == slot_day:
 		return  # today's ambient slot already used
 	var eligible: Array[GameEvent] = []
 	for ev in _all_events.values():
@@ -101,7 +107,7 @@ func hourly_tick(hour: int) -> void:
 	# At most one ambient event enters the queue per day.
 	for ev in _ordered_by_priority(eligible):
 		if _enqueue_eligible(ev):
-			_ambient_fired_day = GameState.day
+			_ambient_fired_day = slot_day
 			_pump_queue()
 			break
 
@@ -126,10 +132,29 @@ func _ordered_by_priority(events: Array[GameEvent]) -> Array[GameEvent]:
 	return ordered
 
 
+# Is this event id already sitting in the queue?
+#
+# WHY BY ID AND NOT BY INSTANCE: `_queue` is Array[GameEvent] and GameEvent is RefCounted,
+# so Array.has() compares REFERENCES. Events loaded from JSON are cached one-instance-per-id
+# (_all_events), so for those identity and id agree and nothing changes. But every
+# code-built event — the whole B2B/HR/product factory surface, 40 of the game's 71 live
+# choices — mints a fresh GameEvent on each call, so the same id walked straight past the
+# dedupe and the queue could hold N copies of one decision. remove_queued() below was
+# ALREADY id-based, so the file was half-migrated; this finishes it.
+#
+# Note this deliberately preserves today's ordering behaviour: enqueue_front on an event
+# that is already mid-queue still does NOT promote it to the front.
+func _queue_has_id(event_id: String) -> bool:
+	for ev in _queue:
+		if ev.id == event_id:
+			return true
+	return false
+
+
 # Queue an eligible event unless it is already queued / currently showing.
 # Returns true only when it was newly added (so the ambient cap can count it).
 func _enqueue_eligible(ev: GameEvent) -> bool:
-	if _queue.has(ev) or ev.id == _active_event_id:
+	if _queue_has_id(ev.id) or ev.id == _active_event_id:
 		return false
 	_queue.append(ev)
 	EventBus.event_triggered.emit(ev.id)
@@ -177,7 +202,7 @@ func enqueue(event: GameEvent) -> void:
 	if event == null:
 		push_warning("[EventManager] enqueue called with null event")
 		return
-	if _queue.has(event) or event.id == _active_event_id:
+	if _queue_has_id(event.id) or event.id == _active_event_id:
 		return
 	_queue.append(event)
 	EventBus.event_triggered.emit(event.id)
@@ -187,18 +212,34 @@ func enqueue(event: GameEvent) -> void:
 func enqueue_front(event: GameEvent) -> void:
 	# High-priority deterministic injection (ENDGAME_DESIGN.md §2.4): the Frank
 	# gate scene must jump ahead of already-queued ambient/beat events. Same
-	# dedupe as enqueue() — re-enqueueing the SAME cached GameEvent instance is
-	# a no-op, which is what makes gate reminders stack-proof (§7.10).
+	# dedupe as enqueue() — re-enqueueing an id that is already queued or showing
+	# is a no-op, which is what makes gate reminders stack-proof (§7.10). That was
+	# only accidentally true while PhaseGateSystem happened to cache one instance;
+	# it is now literally true for any caller.
 	if not GameState.run_active:
 		return
 	if event == null:
 		push_warning("[EventManager] enqueue_front called with null event")
 		return
-	if _queue.has(event) or event.id == _active_event_id:
+	if _queue_has_id(event.id) or event.id == _active_event_id:
 		return
 	_queue.push_front(event)
 	EventBus.event_triggered.emit(event.id)
 	_pump_queue()
+
+
+func reset() -> void:
+	# EventManager had NO reset at all, and initialize_run contains zero references to it —
+	# so an in-place restart (the debug onboarding re-trigger) carried the whole pipeline
+	# into the next run: a still-set _active_event_id that blocks every future modal, a
+	# queue of scenes belonging to a dead company, and a _history that keeps all twelve
+	# one-shot beats consumed so run 2 never sees them.
+	_queue.clear()
+	_active_event_id = ""
+	_active_event = null
+	_history.clear()
+	_ambient_fired_day = -1
+	# _all_events and _hour_windows are DISK content, not run state — they stay loaded.
 
 
 func flush_queue() -> void:
@@ -291,7 +332,11 @@ func is_condition_met(condition: Dictionary) -> bool:
 		"audience_above":
 			return int(GameState.get_flag("b2c_audience", 0)) > int(condition.get("value", 0))
 		"customer_satisfaction_below":
-			return CustomerRegistry.get_min_satisfaction() < int(condition.get("value", 0))
+			# Optional "market" key scopes which book arms this event ("" = the whole book,
+			# today's behaviour). Without it a consumer support beat could be armed by an
+			# unhappy enterprise account it can never be about.
+			return CustomerRegistry.get_min_satisfaction(String(condition.get("market", ""))) \
+				< int(condition.get("value", 0))
 		_:
 			push_warning("[EventManager] Unknown condition type: %s" % t)
 			return false
@@ -494,6 +539,11 @@ func _apply_modifiers(modifiers: Array) -> void:
 				ProductSystem.apply_dimension_delta("innovation", int(m.get("amount", 0)))
 			"ship_active_build":
 				ProductSystem.ship_active_build()
+			# İterasyon karar momenti (öğretici modal) — tracker butonlarıyla AYNI seam'ler.
+			"advance_iteration":
+				ProductSystem.advance_iteration()
+			"enter_development":
+				ProductSystem.enter_development()
 			# --- PostShip / sales modifiers (§10: revenue only via played choices) ---
 			"add_prospect":
 				PitchSystem.spawn_prospect(String(m.get("archetype", "small")), String(m.get("source", "event")))
@@ -501,7 +551,15 @@ func _apply_modifiers(modifiers: Array) -> void:
 				# Most-at-risk customer leaves. B2C is one aggregate record, so for B2C
 				# erode the AUDIENCE (derived MRR follows) instead of deleting the whole
 				# userbase; B2B removes the account record. (Economy Model v2.)
-				var victim: Customer = CustomerRegistry.get_lowest_satisfaction_customer()
+				#
+				# TARGETED like every other customer-scoped modifier. This one accepted no
+				# target and no market scope at all, so a consumer support event could reach
+				# an enterprise contract and DELETE it outright — no risk streak, no
+				# countdown, no retention decision, none of the visible machinery the B2B
+				# engine's own header calls inviolable. The default is now scoped to the
+				# event's own declared market.
+				var victim: Customer = _resolve_customer_target(m.get("customer_id", ""),
+					CustomerRegistry.get_lowest_satisfaction_customer(_active_event_market()))
 				if victim != null:
 					if victim.market_type == "b2c":
 						var aud: int = int(GameState.get_flag("b2c_audience", 0))
@@ -531,8 +589,11 @@ func _apply_modifiers(modifiers: Array) -> void:
 					CustomerRegistry.set_mrr(tgt.id, tgt.mrr + delta)
 					SalesSystem.reflect_mrr()
 			"satisfaction_delta":
-				# Target-threaded; default = the most-at-risk customer (legacy behavior).
-				var sc: Customer = _resolve_customer_target(m.get("customer_id", ""), CustomerRegistry.get_lowest_satisfaction_customer())
+				# Target-threaded; default = the most-at-risk customer IN THIS EVENT'S MARKET
+				# (the unscoped default let a consumer event land its bump on an enterprise
+				# account, which is also what armed it in the first place).
+				var sc: Customer = _resolve_customer_target(m.get("customer_id", ""),
+					CustomerRegistry.get_lowest_satisfaction_customer(_active_event_market()))
 				if sc != null:
 					CustomerRegistry.set_satisfaction(sc.id, sc.satisfaction + delta)
 			"audience_delta":
@@ -540,7 +601,7 @@ func _apply_modifiers(modifiers: Array) -> void:
 			"open_paid_tier":
 				SalesSystem.open_b2c_paid_tier(int(m.get("price", 15)), float(m.get("initial_pct", 0.1)))
 			"convert_audience":
-				# Economy Model v2: growth-move events (Product Hunt, power-user) are now
+				# Economy Model v2: growth-move events (Vitrin, power-user) are now
 				# an AUDIENCE SPIKE — MRR follows via the hourly derivation, not a chunk.
 				var n: int = int(m.get("count", 0))
 				if m.has("pct"):
@@ -598,17 +659,38 @@ func _apply_modifiers(modifiers: Array) -> void:
 				push_warning("[EventManager] Unknown modifier type: %s" % t)
 
 
+# The market the event currently resolving DECLARED for itself, read off its own
+# `market_type` trigger condition; "" when it declares none (then targeting stays
+# book-wide, i.e. today's behaviour). This is what lets a customer-scoped modifier default
+# to "the most at-risk account THIS EVENT COULD BE ABOUT" instead of the most at-risk
+# account anywhere. _active_event is still live here: resolve_choice nulls it AFTER
+# _apply_modifiers returns.
+func _active_event_market() -> String:
+	if _active_event == null:
+		return ""
+	for cond in _active_event.trigger_conditions:
+		if cond is Dictionary and String(cond.get("type", "")) == "market_type":
+			return String(cond.get("value", ""))
+	return ""
+
+
+# Target selector for customer-scoped modifiers (WRITE-THROUGH §A.3): a concrete
+# customer id, the "primary_b2b" / "primary_b2c" selectors, or "" → the caller's
+# documented fallback. Lets one event hit ONE consistent account across its
+# seats / MRR / satisfaction modifiers.
 func _resolve_customer_target(customer_id_raw: Variant, fallback: Customer) -> Customer:
-	# Target selector for customer-scoped modifiers (WRITE-THROUGH §A.3): a concrete
-	# customer id, the "primary_b2b" selector (first active B2B account), or "" → the
-	# caller's documented fallback. Lets one event hit ONE consistent account across
-	# its seats / MRR / satisfaction modifiers.
 	var sel: String = String(customer_id_raw)
 	if sel == "":
 		return fallback
 	if sel == "primary_b2b":
 		var b2bs: Array[Customer] = CustomerRegistry.get_by_market("b2b")
 		return b2bs[0] if not b2bs.is_empty() else null
+	if sel == "primary_b2c":
+		# The consumer side had no selector at all, so a B2C-authored event could only ever
+		# reach for the "most at risk in the whole book" default — which in a mixed portfolio
+		# is an enterprise account.
+		var b2cs: Array[Customer] = CustomerRegistry.get_by_market("b2c")
+		return b2cs[0] if not b2cs.is_empty() else null
 	var by_id: Customer = CustomerRegistry.get_customer(sel)
 	if by_id == null:
 		push_warning("[EventManager] modifier customer_id not found: %s" % sel)

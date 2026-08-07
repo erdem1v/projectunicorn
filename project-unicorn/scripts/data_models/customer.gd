@@ -27,7 +27,7 @@ extends Resource
 
 # --- Commercial (used now — feeds GameState.mrr via Sales aggregation) ---
 @export var mrr: int = 0                      # Monthly recurring revenue, dollars
-@export var seats: int = 0                    # Per PROJECT_SPEC §5.4 RightPanel format
+@export var seats: int = 0                    # Per PROJECT_SPEC §5.4 customer-row format
 
 # --- Status (used now) ---
 @export var status: String = "active"         # "active" | "trial" | "churned"
@@ -35,7 +35,7 @@ extends Resource
 @export var satisfaction: int = 70            # 0-100; init from product quality, drifts daily; drives health band
 
 # --- Acquisition (used now — set when a customer is created via pitch/event/organic) ---
-@export var acquisition_source: String = ""   # "founder_pitch" | "organic" | "event" | "referral"
+@export var acquisition_source: String = ""   # "founder_pitch" | "sales_rep:<id>" | "organic" | "event" | "referral"
 @export var acquired_on_day: int = 0          # GameState.day at signing (serves as signed_day)
 @export var difficulty_stars: int = 0         # 1-5 carried from the prospect
 
@@ -47,11 +47,42 @@ extends Resource
 @export var churn_countdown: int = -1         # -1 inactive; N..0 = the visible "Churn'e ~N gün" counter
 @export var risk_streak: int = 0              # consecutive days satisfaction < tolerance
 @export var assigned_to: String = ""          # "" = founder-managed; else a Customer Success employee id
-@export var support_load: int = 1             # CS-capacity cost (scale/seat weighted)
+# `support_load` DELETED (Task 2b): written twice, read never, and with no registry seam it
+# was a standing WRITE-THROUGH LAW exception. It only ever mirrored `scale`, which is still here.
 @export var onboarding_until: int = 0         # day the onboarding window closes (signed_day + ONBOARDING_DAYS)
 @export var pain_feature_id: String = ""      # the ProductCatalog feature this account wants (drives promises)
 @export var retain_stalls: int = 0            # how many times "Oyala" has been used (works 1-2x, then caught on)
+# HIDDEN expansion latch (K2). -1 = this account has never had its expansion moment.
+# The promotion test in _tick_healthy is MONOTONE (day - acquired_on_day >= MATURE_DAYS)
+# and BOTH resolutions put the account back to "active", so without a record that the
+# moment already happened the same modal re-fired every single morning, forever, and
+# "Büyüt" became an unbounded free MRR faucet. Stored as the DAY rather than a bool so a
+# future re-arm rule can read it without a schema migration.
+@export var last_expansion_day: int = -1      # -1 = expansion moment not yet offered
 @export var cs_escalated: bool = false        # a CS-managed account has raised its one escalation (until it recovers)
+# --- Task 2b: trust ledger + the customer-rep request channel (all HIDDEN, no signals) ---
+# trust_offset is what makes a broken promise LAST: it shifts this account's satisfaction
+# TARGET, so the one-shot PROMISE_BROKEN_SAT is no longer erased by SAT_DRIFT_STEP within a
+# week. It decays back to 0 daily, so the account forgives on its own.
+@export var trust_offset: float = 0.0         # signed target shift from kept/broken promises
+@export var support_request_since_day: int = -1    # -1 = no open request; else the day it opened
+# `support_request_progress` DELETED (2b fixes): written 1.0/0.0, read by nothing. The real
+# latch is support_request_since_day, which doubles as the escalation clock.
+#
+# The request cadence used to derive its phase from `absi(id.hash()) % INTERVAL`. That is
+# structurally broken here: customer ids are "co_lead_<day>_<counter>", identical but for the
+# trailing character, and Godot's String.hash() is djb2 — a last-character delta shifts the
+# hash by exactly that delta, so consecutive ids get CONSECUTIVE phases. Measured:
+# co_lead_3_0/1/2/3 -> phases 9, 10, 11, 0, i.e. the whole book files on four consecutive
+# mornings and then goes silent for eight days. Widening the interval alone would not have
+# fixed it. The phase is now assigned explicitly at signing from a stride walk (see
+# B2BConstants.CS_PHASE_STRIDE), which spreads by construction rather than by luck.
+@export var cs_request_phase: int = 0         # day-offset within CS_REQUEST_INTERVAL_DAYS
+@export var last_request_kind: String = ""    # blocks the same request kind twice in a row
+# Player-set stewardship. reconcile_assignments() runs every morning and would otherwise undo
+# a manual choice the same night; this flag is what lets player intent outlive the automation.
+# Cleared automatically if the pinned rep leaves or goes inactive, so no dead pins accumulate.
+@export var cs_pinned: bool = false           # true = assigned_to was chosen by the player
 
 # --- Reserved for future systems (declared, not used this turn) ---
 @export var renewal_day: int = 0              # When the next renewal event fires (churn/renewal — next spec)
@@ -60,8 +91,9 @@ extends Resource
 @export var notes: String = ""                # Free text
 
 
-# Map the satisfaction int onto the legacy `health` band string. RightPanel
-# health dots + customer-event conditions read `health`; SalesSystem calls this
+# Map the satisfaction int onto the legacy `health` band string. Customer-event
+# conditions read `health` (the health-dot UI it was also built for retired with
+# RightPanel, so the event layer is its one live reader); SalesSystem calls this
 # after each daily satisfaction tick. Bands per PostShip spec tunables.
 func update_health_from_satisfaction() -> void:
 	if satisfaction >= 60:

@@ -134,20 +134,59 @@ func _refresh_prospects(is_b2b: bool) -> void:
 		prospects_list.add_child(_build_prospect_card(p))
 	if is_b2b:
 		prospects_list.add_child(_build_tier2_teaser())
+		_append_activity_log()
+
+
+func _append_activity_log() -> void:
+	# "SON HAREKETLER" — what the sales and customer desks did on their own. The ticker carries
+	# these too, but it scrolls away after six lines; this is where the player reconstructs a
+	# cause after the fact (Calibration Law 3 — the CAUSE must be readable). Rendered into the
+	# EXISTING prospects column, which already lives inside a ScrollContainer, so the tab needs
+	# no .tscn change and stays a pure read-only rebuild-on-signal reader.
+	var log: Array = SalesSystem.get_sales_log()
+	if log.is_empty():
+		return
+	prospects_list.add_child(UiFactory.make_label(tr("SALES_LOG_HEADER"), &"SectionLabel", UiTokens.INK_DIM))
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 4)
+	# Newest first — the player looks here because something just happened.
+	for i in range(log.size() - 1, -1, -1):
+		var e: Dictionary = log[i]
+		col.add_child(UiFactory.make_label(_activity_line(e), &"RowMeta", UiTokens.INK_DIM))
+	prospects_list.add_child(UiFactory.make_card(col))
+
+
+func _activity_line(e: Dictionary) -> String:
+	# `kind` is an internal id; the player-facing sentence is assembled here from CSV so the
+	# stored record carries no localized text.
+	var actor: String = String(e.get("actor", ""))
+	var company: String = String(e.get("company", ""))
+	match String(e.get("kind", "")):
+		"auto_close":
+			return tr("SALES_LOG_CLOSE") % [actor, company, UiTokens.format_money(int(e.get("mrr", 0)))]
+		"cs_absorb":
+			return tr("SALES_LOG_ABSORB") % [actor, company]
+	return "%s · %s" % [actor, company]
 
 
 func _build_find_card() -> Control:
 	var on_cooldown: bool = GameState.day < int(GameState.get_flag("next_find_prospects_day", 0))
+	# Fix 1: reading the engine predicate keeps this a pure renderer — the REASON the card
+	# is inert comes from PitchSystem, the tab never re-derives eligibility itself.
+	var exhausted: bool = not on_cooldown and PitchSystem.eligible_company_count() == 0
+	var actionable: bool = not on_cooldown and not exhausted
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	var lbl := UiFactory.make_label(tr("SALES_FIND"), &"RowName", UiTokens.INK if not on_cooldown else UiTokens.INK_DIM)
+	var lbl := UiFactory.make_label(tr("SALES_FIND"), &"RowName", UiTokens.INK if actionable else UiTokens.INK_DIM)
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(lbl)
 	if on_cooldown:
 		var days: int = int(GameState.get_flag("next_find_prospects_day", 0)) - GameState.day
 		row.add_child(UiFactory.make_label(tr("SALES_FIND_COOLDOWN") % days, &"RowMeta", UiTokens.INK_DIM))
+	elif exhausted:
+		row.add_child(UiFactory.make_label(tr("SALES_FIND_EXHAUSTED"), &"RowMeta", UiTokens.INK_DIM))
 	var card := UiFactory.make_card(row)
-	if not on_cooldown:
+	if actionable:
 		card.mouse_filter = Control.MOUSE_FILTER_STOP
 		card.gui_input.connect(_on_find_card_input)
 	return card
@@ -181,6 +220,16 @@ func _build_prospect_card(p: Prospect) -> Control:
 		var chip := UiFactory.make_pill("\"%s\"" % pain, pal.bg, pal.fg, false)
 		chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		mid.add_child(chip)
+	# Warmth: what the sales desk has done to this lead. Without it the rep's work on a deal
+	# too big to auto-close would be invisible, and "let it warm vs pitch now" would not be a
+	# decision the player can see themselves making.
+	var warm: int = SalesRepSystem.warm_bonus_for(p)
+	if warm > 0:
+		var wpal: Dictionary = UiTokens.badge_palette(&"accent")
+		var wkey: String = "SALES_CHIP_WARM" if warm >= B2BConstants.WARM_BONUS_MAX else "SALES_CHIP_WARMING"
+		var wchip := UiFactory.make_pill(tr(wkey), wpal.bg, wpal.fg, false)
+		wchip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		mid.add_child(wchip)
 	col.add_child(mid)
 	# Value RANGE (min–max/ay, K/M formatter).
 	var vr: String = tr("SALES_VALUE_RANGE") % [UiTokens.format_money(p.value_band_min), UiTokens.format_money(p.value_band_max)]
@@ -222,6 +271,13 @@ func _refresh_portfolio() -> void:
 	customers_empty.visible = custs.is_empty()
 	# Attention-badged rows (risk, expansion) sort above calm rows (FM grammar).
 	custs.sort_custom(func(a: Customer, b: Customer) -> bool: return _attention_rank(a) > _attention_rank(b))
+	# How stretched the founder is. This is FOUNDER_DIRECT_CAP's readable face: past it a
+	# Müşteri Temsilcisi starts taking accounts over, so the player can see the pressure that
+	# makes the hire worth making instead of discovering it in a spreadsheet.
+	var direct: int = B2BSalesSystem.founder_managed_count()
+	if direct > B2BConstants.FOUNDER_DIRECT_CAP:
+		customers_list.add_child(UiFactory.make_label(
+			tr("SALES_FOUNDER_STRETCHED") % direct, &"RowMeta", UiTokens.INK_DIM))
 	for c in custs:
 		customers_list.add_child(_build_customer_card(c))
 
@@ -278,6 +334,7 @@ func _card_risk(c: Customer) -> Control:
 	# Watched churn countdown (brick, mono).
 	if c.churn_countdown >= 0:
 		col.add_child(UiFactory.make_label(tr("SALES_CHURN_COUNTDOWN") % c.churn_countdown, &"RowMeta", UiTokens.NEGATIVE))
+	_add_steward_line(col, c)
 	# Action → the existing retention decision modal (backend-built; state-free trigger).
 	col.add_child(_action_button(tr("SALES_ACTION_RETAIN") + " →", func() -> void:
 		if EventManager._active_event_id == "":
@@ -298,21 +355,75 @@ func _card_expansion(c: Customer) -> Control:
 	col.add_child(top)
 	col.add_child(UiFactory.make_label(_meta_line(c), &"RowMeta", UiTokens.INK_MUTED))
 	col.add_child(UiFactory.make_label(tr("SALES_EXPANSION_FICTION"), &"QuoteSerif"))
-	# Action → the existing expansion event (state-free trigger).
+	_add_steward_line(col, c)
+	# Action → the existing expansion event. NOT state-free any more: this path bypasses
+	# _tick_healthy entirely, so it has to ask the same gate the daily sweep asks or the
+	# expansion latch (K2) is only half a latch and the loop stays open through the UI.
 	col.add_child(_action_button(tr("SALES_ACTION_EXPAND") + " →", func() -> void:
-		if EventManager._active_event_id == "":
+		if EventManager._active_event_id == "" and B2BSalesSystem.can_offer_expansion(c):
 			EventManager.enqueue(B2BEventFactory.build_expansion(c))))
 	return UiFactory.make_card(col)
 
 
 func _add_steward_line(col: VBoxContainer, c: Customer) -> void:
-	# ONLY on CS-assigned rows; founder-managed rows show no steward line.
+	# EVERY card shows who holds the account, including "—" for founder-managed. Hiding the
+	# line when unassigned made the whole delegation system invisible: the player could not
+	# see what the Müşteri Temsilcisi was doing, and so could not manage it. The row doubles
+	# as the control — the button opens the picker.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	var who: String = "—"
+	if c.assigned_to != "":
+		var cs: Character = CharacterRegistry.get_character(c.assigned_to)
+		if cs != null:
+			who = cs.character_name
+	row.add_child(UiFactory.make_label(tr("SALES_STEWARD") % who, &"RowMeta", UiTokens.INK_DIM))
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(spacer)
+	var btn := Button.new()
+	btn.text = tr("SALES_STEWARD_CHANGE")
+	btn.theme_type_variation = &"DialogueGhost"
+	btn.pressed.connect(func() -> void: _open_steward_picker(c, btn))
+	row.add_child(btn)
+	col.add_child(row)
+
+
+func _open_steward_picker(c: Customer, anchor: Button) -> void:
+	# HRPopover, not an OptionButton: it mounts into GameShell/PanelLayer, so it escapes
+	# CenterViewport's clip_contents — a raw popup parented into this tab would be clipped.
+	# PanelLayer rather than ModalLayer is what keeps Space/1-4 alive while it is open.
+	# (Same reason hr_tab uses it for raise/overtime.)
+	var pop: HRPopover = HRPopover.mount(self)
+	if pop == null:
+		return
+	var body: VBoxContainer = pop.body()
+	body.add_child(UiFactory.make_section_header(tr("SALES_STEWARD_PICK")))
+	for rep in CharacterRegistry.get_active_by_role(HRConstants.ROLE_CUSTOMER_REP):
+		var cap: int = B2BConstants.cs_capacity(int(rep.role_stats.get(HRConstants.AXIS_PACE, 0)))
+		var load: int = CustomerRepSystem.roster_size(rep.id)
+		var label: String = "%s  ·  %d/%d" % [rep.character_name, load, cap]
+		if rep.id == c.assigned_to:
+			body.add_child(HRUiShared.disabled_button(label, tr("SALES_STEWARD_CURRENT")))
+		elif load >= cap:
+			# Capacity stays a real constraint rather than a suggestion — that is what keeps
+			# the number on the HR card meaningful (Erdem's call, 2026-08-03).
+			body.add_child(HRUiShared.disabled_button(label, tr("SALES_STEWARD_FULL")))
+		else:
+			var rep_id: String = rep.id
+			body.add_child(HRUiShared.action_button(label, func() -> void:
+				CustomerRegistry.assign_customer(c.id, rep_id, true)
+				pop.close(), false))
+	body.add_child(HRUiShared.hairline())
 	if c.assigned_to == "":
-		return
-	var cs: Character = CharacterRegistry.get_character(c.assigned_to)
-	if cs == null:
-		return
-	col.add_child(UiFactory.make_label(tr("SALES_STEWARD") % cs.character_name, &"RowMeta", UiTokens.INK_DIM))
+		body.add_child(HRUiShared.disabled_button(tr("SALES_STEWARD_FOUNDER"), tr("SALES_STEWARD_CURRENT")))
+	else:
+		body.add_child(HRUiShared.action_button(tr("SALES_STEWARD_FOUNDER"), func() -> void:
+			# pinned=true even for the founder: otherwise _delegate_excess hands it straight
+			# back tomorrow morning and the player's choice silently evaporates.
+			CustomerRegistry.assign_customer(c.id, "", true)
+			pop.close(), false))
+	pop.open_at(anchor)
 
 
 func _action_button(label: String, on_press: Callable) -> Button:
@@ -359,10 +470,15 @@ func _stars(n: int) -> Control:
 func _on_find_pressed() -> void:
 	if GameState.day < int(GameState.get_flag("next_find_prospects_day", 0)):
 		return
+	var spawned: int = 0
 	for i in FIND_PROSPECTS_COUNT:
 		var archetype: String = "mid" if (GameState.day + i) % 3 == 0 else "small"
-		PitchSystem.spawn_prospect(archetype, "find")
-	GameState.set_flag("next_find_prospects_day", GameState.day + FIND_PROSPECTS_COOLDOWN_DAYS)
+		if PitchSystem.spawn_prospect(archetype, "find") != null:
+			spawned += 1
+	# Fix 1 null contract: an exhausted catalog spawns nothing — burning the 5-day
+	# cooldown on an empty press would punish the player for the world being small.
+	if spawned >= 1:
+		GameState.set_flag("next_find_prospects_day", GameState.day + FIND_PROSPECTS_COOLDOWN_DAYS)
 	_refresh()
 
 

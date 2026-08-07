@@ -8,8 +8,9 @@ extends Control
 # İçerik: header (ikon + ad + V·TİP + ✕ iptal), mini 3-faz şeridi
 # (TASARIM/GELİŞTİRME/BETA), amber dolgulu faz hücresi ("%N · ~N gün"),
 # Beta'da BULUNAN/ÇÖZÜLEN/KALAN satırı + "Yayınla →" butonu.
-# Eksen kolonu restore EDİLMEDİ: Rev3'te eksenler commit'te sabitlenir, build
-# boyunca değer oynamaz (ölü gösterge olurdu).
+# İterasyon kararında (player-gated restore 2026-08) kart "İnovasyon X / tavan Y"
+# satırı + "Bir tur daha / Geliştirmeye geç" butonlarını yakar — eksenler artık tur
+# kazançlarıyla build sırasında OYNUYOR, eski "ölü gösterge" gerekçesi tersine döndü.
 #
 # SÜRÜKLENEBİLİR: kart CenterViewport'un çocuğu; Root parent rect'ine clamp'lenir
 # → top bar / sol bar / sağ bar (ve ticker) yapısal olarak erişilemez. Konum
@@ -36,6 +37,10 @@ extends Control
 @onready var beta_found_val: Label = $Root/Panel/VBox/BetaRow/FoundBox/Val
 @onready var beta_fixed_val: Label = $Root/Panel/VBox/BetaRow/FixedBox/Val
 @onready var beta_remain_val: Label = $Root/Panel/VBox/BetaRow/RemainBox/Val
+@onready var iter_line: Label = $Root/Panel/VBox/IterLine
+@onready var decision_row: HBoxContainer = $Root/Panel/VBox/DecisionRow
+@onready var iterate_btn: Button = $Root/Panel/VBox/DecisionRow/IterateBtn
+@onready var dev_btn: Button = $Root/Panel/VBox/DecisionRow/DevBtn
 @onready var action_button: Button = $Root/Panel/VBox/ActionButton
 
 # Faz görünen adları — iç id'ler değişmedi (event/promise tüketicileri okur).
@@ -47,6 +52,7 @@ const _PHASE_ORDER := ["iteration", "development", "bugfix"]
 const CARD_W := 320.0
 const H_NORMAL := 140.0
 const H_BETA := 190.0
+const H_DECISION := 205.0   # iterasyon kararı: tavan satırı + iki buton için uzar
 
 # Dolgu/şerit tonları — bir kez kurulur, paint yalnız stylebox swap eder.
 var _sb_track: StyleBoxFlat = null
@@ -60,10 +66,11 @@ var _sb_mini_pending: StyleBoxFlat = null
 var _dragging := false
 var _drag_free := false
 
-# Yalnız iptal yönlendirmesi için izlenir (görünürlük artık taba bağlı DEĞİL):
-# Product'tayken canlı router "cancelled" emit'inde prefill'i tüketir — tab_changed
-# emit edilirse remount o navigasyonu ezer. Başka sekmedeyse tab_changed şart.
-var _current_tab: String = "product"   # CenterViewport default tab (UiTokens.TABS[0])
+# İki rol izler (ODA rework): (1) iptal yönlendirmesi — Product'tayken canlı
+# router "cancelled" emit'inde prefill'i tüketir, tab_changed emit edilirse
+# remount o navigasyonu ezer; başka sekmede/odada tab_changed şart. (2) oda
+# gizlemesi — "" (oda görünür) iken kart gizlenir, _refresh başı okur.
+var _current_tab: String = ""   # tab_changed aynası; "" = ODA (açılış durumu)
 
 
 func _ready() -> void:
@@ -71,11 +78,14 @@ func _ready() -> void:
 	_build_styles()
 	action_button.pressed.connect(_on_action_pressed)
 	cancel_btn.pressed.connect(_on_cancel_pressed)
+	iterate_btn.pressed.connect(_on_iterate_pressed)
+	dev_btn.pressed.connect(_on_dev_pressed)
 	panel.gui_input.connect(_on_panel_gui_input)
 	resized.connect(_clamp_root)
 	EventBus.build_phase_changed.connect(_on_build_phase_changed)
 	EventBus.day_advanced.connect(func(_d: int) -> void: _refresh())
 	EventBus.build_progress_changed.connect(_refresh)
+	EventBus.build_iteration_decision_pending.connect(_on_iter_pending_changed)
 	EventBus.tab_changed.connect(_on_tab_changed)
 	_refresh()
 
@@ -85,12 +95,20 @@ func _exit_tree() -> void:
 		EventBus.build_phase_changed.disconnect(_on_build_phase_changed)
 	if EventBus.build_progress_changed.is_connected(_refresh):
 		EventBus.build_progress_changed.disconnect(_refresh)
+	if EventBus.build_iteration_decision_pending.is_connected(_on_iter_pending_changed):
+		EventBus.build_iteration_decision_pending.disconnect(_on_iter_pending_changed)
 	if EventBus.tab_changed.is_connected(_on_tab_changed):
 		EventBus.tab_changed.disconnect(_on_tab_changed)
 
 
+func _on_iter_pending_changed(_pending: bool) -> void:
+	_refresh()
+
+
 func _on_tab_changed(tab_id: String) -> void:
 	_current_tab = tab_id
+	# Oda ↔ sayfa geçişinde gizle/göster kararı değişir (aşağıdaki oda bekçisi).
+	_refresh()
 
 
 func _build_styles() -> void:
@@ -125,6 +143,12 @@ func _on_build_phase_changed(_new_phase: String) -> void:
 
 
 func _refresh() -> void:
+	# ODA bekçisi (Erdem onayı 2026-08-06): oda görünürken kart gizli — monitör
+	# çapası aynı build verisini taşır, resmin üstünde kart yüzmez. Sekme sayfası
+	# açılınca kart bugünkü davranışıyla döner.
+	if _current_tab == "":
+		visible = false
+		return
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if b == null or b.is_bug_sprint or not (b.current_phase in _PHASE_ORDER):
 		visible = false
@@ -151,13 +175,36 @@ func _paint_one(b: FeatureBuild) -> void:
 			UiTokens.ACCENT_DEEP if i == idx else UiTokens.INK_DIM)
 	# Faz hücresi + ilerleme — Rev3 tek kaynaklar: build_progress() + build_days_remaining().
 	phase_name_label.text = String(_PHASE_DISPLAY.get(b.current_phase, ""))
-	var pct: int = int(floor(ProductSystem.build_progress() * 100.0))
+	# Yüzdenin TEK evi UiTokens.build_percent: kart her sekme sayfasının ÜSTÜNDE yüzer,
+	# yani portföy rozetiyle aynı karede aynı build'i basar — biri yuvarlayıp öteki
+	# aşağı kırparsa aynı iş iki ayrı yüzde olur. Dolgu da aynı int'ten türer; ham
+	# kesirle beslenen çubuk, yanına yazdığımız sayıyla tutmaz.
+	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())
 	var status: String = "%%%d · ~%d gün" % [pct, max(0, ProductSystem.build_days_remaining())]
 	# Kapasite bölünmüşse (sprint/pitch-prep ile paralel) build yarı hızda akar.
 	if ProductSystem.capacity_speed_factor() < 1.0:
 		status += " · yarı hız"
 	phase_status_label.text = status
-	_set_fill_fraction(ProductSystem.build_progress())
+	_set_fill_fraction(float(pct) / 100.0)
+	# İterasyon karar/tur durumu (player-gated restore): pending'de tavan satırı + iki
+	# buton; tur koşarken durum satırı geri sayımı basar. Kompakt kartta iki eksen
+	# (tasarım kaldıracı + deneyim); üçünün tamamı in-tab durum kartında. WORKING TR.
+	var pending: bool = b.current_phase == "iteration" and b.iteration_decision_pending
+	var in_round: bool = b.current_phase == "iteration" and b.iteration_round_days > 0.0
+	iter_line.visible = pending
+	decision_row.visible = pending
+	if pending:
+		var ceilings: Dictionary = ProductSystem.iteration_axis_ceilings()
+		# Nitelik satır başında bir kez — sayı yalnız TUR kazançlarını bağlıyor, ekseni
+		# değil (in-tab kartın uzun sürümüyle aynı gramer).
+		iter_line.text = "Tur kazancı tavanı — İnovasyon %d / %d · Deneyim %d / %d" % [
+			int(round(b.innovation)), int(round(float(ceilings.get("innovation", 0.0)))),
+			int(round(b.experience)), int(round(float(ceilings.get("experience", 0.0))))]
+		iterate_btn.visible = ProductSystem.can_advance_iteration()
+		iterate_btn.text = "Bir tur daha (%d gün)" % ProductSystem.ITER_ROUND_DAYS
+		phase_status_label.text = "Tur %d · karar bekliyor" % b.iteration_count
+	elif in_round:
+		phase_status_label.text = "Tur %d · ~%d gün" % [b.iteration_count, int(ceil(b.iteration_round_days))]
 	# Beta: bug sayaçları + Yayınla (launch bugfix-gated; buton yalnız burada).
 	var in_beta: bool = b.current_phase == "bugfix"
 	beta_row.visible = in_beta
@@ -166,7 +213,7 @@ func _paint_one(b: FeatureBuild) -> void:
 		beta_found_val.text = str(b.bugs_found)
 		beta_fixed_val.text = str(b.bugs_fixed)
 		beta_remain_val.text = str(max(0, b.bugs_found - b.bugs_fixed))
-	_set_card_height(H_BETA if in_beta else H_NORMAL)
+	_set_card_height(H_BETA if in_beta else (H_DECISION if pending else H_NORMAL))
 
 
 # --- Aksiyonlar -------------------------------------------------------------
@@ -176,6 +223,15 @@ func _on_action_pressed() -> void:
 	if b == null or b.current_phase != "bugfix":
 		return
 	ProductSystem.launch()
+
+
+func _on_iterate_pressed() -> void:
+	# Guard seam'de (can_advance_iteration) — çift tık / bayat kart zararsız.
+	ProductSystem.advance_iteration()
+
+
+func _on_dev_pressed() -> void:
+	ProductSystem.enter_development()
 
 
 func _on_cancel_pressed() -> void:

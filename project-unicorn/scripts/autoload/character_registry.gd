@@ -5,8 +5,8 @@ extends Node
 # their relationships, traits, morale, and compensation.
 #
 # Mutations route through registry methods. State changes emit on EventBus
-# (TECH_SPEC §13) so scenes (RightPanel, future HR Tab) update themselves
-# without the registry knowing who is listening.
+# (TECH_SPEC §13) so scenes (HR tab, ODA) update themselves without the registry
+# knowing who is listening.
 #
 # Tick interaction (TECH_SPEC §8.2):
 #   - HRSystem.daily_tick (slot 3) reads employees and writes morale via set_morale
@@ -21,7 +21,7 @@ extends Node
 # so a fresh game starts with zero employees and zero salary burn (Economic
 # Outcome Principle, PROJECT_SPEC §10). With this off, the mentor is still
 # provisioned by ensure_mentor() during GameState.initialize_run — no regression
-# to onboarding or the RightPanel mentor section. Flip to true to restore the
+# to onboarding or to the mentor surfaces. Flip to true to restore the
 # Debug Engineer A / Debug Designer B placeholders for HR/Finance pipeline tests.
 const DEBUG_SEED := false
 
@@ -88,6 +88,31 @@ func get_customer_reps() -> Array[Character]:
 
 func count_customer_reps() -> int:
 	return get_customer_reps().size()
+
+
+func get_active_by_role(role_id: String) -> Array[Character]:
+	# Task 2b work lens: everyone AT WORK in one role. The sales and customer desks read this
+	# rather than get_customer_reps() above, which is the leave-INCLUSIVE payroll/headcount
+	# lens — an on-leave rep is still on the payroll and still counts as a hire, but they are
+	# not prospecting and not answering tickets today (the same split get_active_employees
+	# documents). Sorted by id so every desk that ranks its people ranks them deterministically.
+	var out: Array[Character] = []
+	for c in get_active_employees():
+		if c.role == role_id:
+			out.append(c)
+	out.sort_custom(func(a: Character, b: Character) -> bool: return a.id < b.id)
+	return out
+
+
+func count_active_by_role(role_id: String) -> int:
+	# The cheap guard the two new desks test FIRST — zero people in the role means the whole
+	# channel returns before touching any state, which is what keeps a run with no sales/CS
+	# staff byte-identical to before Task 2b.
+	var n: int = 0
+	for c in get_active_employees():
+		if c.role == role_id:
+			n += 1
+	return n
 
 
 func count_developers() -> int:

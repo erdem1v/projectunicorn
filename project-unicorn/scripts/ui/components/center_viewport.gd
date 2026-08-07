@@ -1,9 +1,16 @@
 extends Panel
 
-# Center viewport per TECH_SPEC §5.2. Hosts either the desk view or the
-# active dashboard tab. Tab scenes that exist (Spec #1 ships Product) mount
-# as a child of self. Tabs without a scene file still fall back to the
-# title-paint placeholder.
+# Center viewport per TECH_SPEC §5.2 — ODA rework'ten (2026-08-06) sonra:
+# varsayılan durum ODA'dır (masa POV oda sahnesi), sekmeler odanın ÜSTÜNE
+# tam-sayfa açılır ve TabPageChrome sarmalayıcısında mount edilir (üst koyu
+# şerit + "ODAYA DÖN ✕"). tab_changed("") = "sekme yok, oda görünür"
+# (event_bus.gd sözleşmesi; kapatmanın üç yolu — ✕, Esc, aktif sekmeye tekrar
+# tıklama — hepsi bu sinyale çıkar, router tek yerden dinler).
+#
+# OdaView GameShell.tscn'de resident çocuktur (hep canlı, visible toggle):
+# telefonun mentor latch'i, kâğıt seti ve gece durumu sekme gezintisinde yaşar.
+# Sayfalar ModalLayer'a ASLA gitmez — game_shell Guard 2 orada Space/1-4'ü
+# yutuyor; sayfa açıkken hız kontrolü çalışmalı.
 
 const TAB_SCENES := {
 	"product": preload("res://scenes/tabs/ProductTab.tscn"),
@@ -11,17 +18,22 @@ const TAB_SCENES := {
 	"sales": preload("res://scenes/tabs/SalesTab.tscn"),
 	"finance": preload("res://scenes/tabs/FinanceTab.tscn"),  # Spec 6 — hosts the Yatırım sub-page
 }
+# preload (global class cache'e bağımlılık yok — yeni class_name + headless tuzağı).
+const PAGE_CHROME := preload("res://scripts/ui/components/tab_page_chrome.gd")
 
-@onready var content_box: VBoxContainer = $Content
-@onready var title_label: Label = $Content/TitleLabel
+# OdaView sahnesi GameShell.tscn'e P5 adımında girer; o gelene dek null-tolerant
+# (oda durumu = boş krem viewport, ara-durum F5'i için yeterli).
+@onready var oda_view: Control = get_node_or_null("OdaView")
 
-var _current_tab_node: Node = null
+var _current_page: Control = null   # TabPageChrome sarmalayıcısı ya da null (= oda)
 
 
 func _ready() -> void:
 	EventBus.tab_changed.connect(_on_tab_changed)
-	# Initial paint to the default tab (Product).
-	_on_tab_changed(UiTokens.TABS[0].id)
+	# Açılış durumu ODA'dır ("home sekmesi" kavramı emekli; left_tabs'ın eski
+	# default-product emit'i de silindi — zaten sibling-ready sırası gereği
+	# buradaki connect'ten ÖNCE ateşleniyordu, hiç duyulmuyordu).
+	_on_tab_changed("")
 
 
 func _exit_tree() -> void:
@@ -29,27 +41,126 @@ func _exit_tree() -> void:
 
 
 func _on_tab_changed(tab_id: String) -> void:
-	# Free previous tab instance (if any)
-	if _current_tab_node != null:
-		_current_tab_node.queue_free()
-		_current_tab_node = null
+	if _current_page != null:
+		_current_page.queue_free()
+		_current_page = null
 
+	if tab_id == "":
+		if oda_view != null:
+			oda_view.visible = true   # çift-kapatmada idempotent
+		return
+
+	if oda_view != null:
+		oda_view.visible = false
+	var body: Control
 	if TAB_SCENES.has(tab_id):
-		# Real tab scene exists — mount it and hide the placeholder Content
-		# VBox entirely (TitleLabel + SubtitleLabel both bleed through if
-		# only the title is hidden).
-		_current_tab_node = (TAB_SCENES[tab_id] as PackedScene).instantiate()
-		add_child(_current_tab_node)
-		# Keep the BuildHUD overlay (a sibling declared in GameShell.tscn) drawn
-		# on top of the freshly-mounted tab. add_child() appends, so the new tab
-		# would otherwise render last (over the HUD); push it to the bottom of the
-		# sibling draw order instead.
-		move_child(_current_tab_node, 0)
-		content_box.visible = false
+		body = (TAB_SCENES[tab_id] as PackedScene).instantiate()
+	elif tab_id == "milestones":
+		# D5 pseudo-dokümanı: rayda sekmesi yok (highlight boş kalır — doğru),
+		# TabPageChrome sarmalayıcısı ✕/Esc'i bedava verir.
+		body = _make_milestones_body()
 	else:
-		# Placeholder path — show Content with the tab's uppercase label
-		content_box.visible = true
-		for tab in UiTokens.TABS:
-			if tab.id == tab_id:
-				title_label.text = UiTokens.tr_upper(tab.label as String)
-				return
+		body = _make_placeholder_body(tab_id)   # ops / rnd / personal / events
+	_current_page = PAGE_CHROME.wrap(body)
+	add_child(_current_page)
+	# BuildHUD (GameShell.tscn'de SON çocuk) sayfanın üstünde kalsın: add_child
+	# sona ekler, sayfayı çizim sırasının en altına it. OdaView o anda görünmez
+	# olduğundan 0-indeksin onun altına düşmesi önemsiz.
+	move_child(_current_page, 0)
+
+
+func get_current_page_body() -> Control:
+	# Harness/debug erişimi (hr-shot / product-shot): mount edilmiş sekme
+	# instance'ı — TabPageChrome sarmalayıcısındaki PageHost'un tek çocuğu.
+	# Sayfa yokken (oda görünür) null. Sarmalayıcı yeniden adlandırması eski
+	# `_current_tab_node` erişimini kırmıştı; dış dünya artık YALNIZ bu seam'i kullanır.
+	if _current_page == null:
+		return null
+	var host: Node = _current_page.get_node_or_null("PageHost")
+	if host == null or host.get_child_count() == 0:
+		return null
+	return host.get_child(0) as Control
+
+
+func _make_placeholder_body(tab_id: String) -> Control:
+	# Sahnesi olmayan sekmeler: sarmalayıcı içinde ortalanmış başlık + tek satır.
+	# (GameShell.tscn'deki eski paylaşımlı Content VBox'ı — baked İngilizce
+	# "PRODUCT" / "Content coming" — bununla emekli oldu.)
+	var body := Control.new()
+	var col := VBoxContainer.new()
+	col.set_anchors_preset(Control.PRESET_CENTER)
+	col.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	col.grow_vertical = Control.GROW_DIRECTION_BOTH
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	body.add_child(col)
+	var title := UiFactory.make_label("", &"TitleSerif")
+	for tab in UiTokens.TABS:
+		if String(tab.id) == tab_id:
+			title.text = UiTokens.tr_upper(String(tab.label))
+			break
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title)
+	var sub := UiFactory.make_label(tr("ODA_PAGE_PLACEHOLDER"), &"CaptionMuted")
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(sub)
+	# D2: Events sayfası Frank'in TAM mesajını taşır (telefon camında yalnız
+	# bildirim var; latch'in tek evi oda_view — get_mentor_line seam'i).
+	if tab_id == "events" and oda_view != null:
+		var line: String = String(oda_view.get_mentor_line())
+		if line != "":
+			var gap := Control.new()
+			gap.custom_minimum_size = Vector2(0, UiTokens.SPACE_XL)
+			col.add_child(gap)
+			col.add_child(UiFactory.make_section_header(tr("ODA_EVENTS_FRANK_HEADER")))
+			var quote := UiFactory.make_label("\"%s\"" % line, &"QuoteSerif")
+			quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			quote.custom_minimum_size = Vector2(420, 0)
+			quote.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			col.add_child(quote)
+	return body
+
+
+func _make_milestones_body() -> Control:
+	# D5: milestone DETAYI — mühür + ad + tarih/tutar + tek cümle not. Veri tek
+	# evden (oda_view.get_milestones); kazanılmamışlar sönük satır.
+	var note_keys: Array = ["ODA_MS_FOUNDING_NOTE", "ODA_MS_SHIP_NOTE", "ODA_MS_FUNDING_NOTE"]
+	var body := Control.new()
+	var col := VBoxContainer.new()
+	col.set_anchors_preset(Control.PRESET_CENTER)
+	col.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	col.grow_vertical = Control.GROW_DIRECTION_BOTH
+	col.custom_minimum_size = Vector2(520, 0)
+	col.add_theme_constant_override("separation", UiTokens.SPACE_XL)
+	body.add_child(col)
+	var title := UiFactory.make_label(tr("ODA_MILESTONES_TITLE"), &"TitleSerif")
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title)
+	var data: Array = oda_view.get_milestones() if oda_view != null else []
+	for i in data.size():
+		var m: Dictionary = data[i]
+		var earned: bool = bool(m["earned"])
+		var card := UiFactory.make_card(null, false, false)
+		col.add_child(card)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", UiTokens.SPACE_L)
+		card.add_child(row)
+		var seal_holder := VBoxContainer.new()
+		seal_holder.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_child(seal_holder)
+		seal_holder.add_child(UiFactory.make_dot(
+			UiTokens.ACCENT_DEEP if earned else UiTokens.DOT_IDLE, 16))
+		var text_col := VBoxContainer.new()
+		text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		text_col.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
+		row.add_child(text_col)
+		text_col.add_child(UiFactory.make_label(String(m["name"]), &"RowName",
+			UiTokens.INK if earned else UiTokens.INK_DIM))
+		if earned and i < note_keys.size():
+			var note := UiFactory.make_label(tr(String(note_keys[i])), &"CaptionMuted")
+			note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			text_col.add_child(note)
+		var meta := UiFactory.make_label(String(m["meta"]) if earned else "—", &"RowMeta")
+		meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(meta)
+	return body

@@ -90,6 +90,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"satisfaction_seam_emits": fail = _case_satisfaction_seam_emits()
 		"targeted_modifier_hits_named_customer": fail = _case_targeted_modifier_hits_named_customer()
 		"burn_refresh_same_tick": fail = _case_burn_refresh_same_tick()
+		"burn_day1_breakdown":  fail = _case_burn_day1_breakdown()
 		"feature_bug_seed_by_complexity": fail = _case_feature_bug_seed_by_complexity()
 		"hardening_seeds_no_bugs": fail = _case_hardening_seeds_no_bugs()
 		"single_feature_build_legal": fail = _case_single_feature_build_legal()
@@ -97,6 +98,13 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"phase_bands_20_60_20": fail = _case_phase_bands_20_60_20()
 		"speed_tracks_team_change": fail = _case_speed_tracks_team_change()
 		"deterministic_axes_at_ship": fail = _case_deterministic_axes_at_ship()
+		# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
+		"iter_decision_gates_development": fail = _case_iter_decision_gates_development()
+		"iter_ceiling_founder_vs_designer": fail = _case_iter_ceiling_founder_vs_designer()
+		"iter_diminishing_returns": fail = _case_iter_diminishing_returns()
+		"iter_ceiling_never_exceeded": fail = _case_iter_ceiling_never_exceeded()
+		"iter_zero_staff_neutrality_and_axis_lock": fail = _case_iter_zero_staff_neutrality_and_axis_lock()
+		"iter_version_build_same_loop": fail = _case_iter_version_build_same_loop()
 		"runway_net_status":    fail = _case_runway_net_status()
 		"gross_runway_months":  fail = _case_gross_runway_months()
 		"locale_switch":        fail = _case_locale_switch()
@@ -136,6 +144,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_overtime_cost_tiers":   fail = _case_hr_overtime_cost_tiers()
 		"hr_overtime_multipliers":  fail = _case_hr_overtime_multipliers()
 		"hr_overtime_early_stop":   fail = _case_hr_overtime_early_stop()
+		"hr_overtime_same_day_stop_bills": fail = _case_hr_overtime_same_day_stop_bills()
 		"hr_overtime_safety_valve": fail = _case_hr_overtime_safety_valve()
 		"hr_raise_and_vacation":    fail = _case_hr_raise_and_vacation()
 		"hr_frank_guard":           fail = _case_hr_frank_guard()
@@ -153,6 +162,40 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"coupling_tester_beta_sprint":   fail = _case_coupling_tester_beta_and_sprint()
 		"coupling_cs_dampen_axis":       fail = _case_coupling_cs_dampen_axis()
 		"coupling_overtime_applied":     fail = _case_coupling_overtime_applied()
+		# --- Sales/Customer×HR Coupling (task 2b) ---
+		"sales_pipeline_rate_by_pace":       fail = _case_sales_pipeline_rate_by_pace()
+		"sales_pipeline_stack_diminishes":   fail = _case_sales_pipeline_stack_diminishes()
+		"sales_autonomous_close_routine":    fail = _case_sales_autonomous_close_routine()
+		"sales_close_threshold_surfaces":    fail = _case_sales_close_threshold_surfaces()
+		"sales_threshold_separates_tiers":   fail = _case_sales_threshold_separates_tiers()
+		"sales_concession_deal_surfaces":    fail = _case_sales_concession_deal_surfaces()
+		"sales_close_speed_by_expertise":    fail = _case_sales_close_speed_by_expertise()
+		"sales_overtime_multiplier":         fail = _case_sales_overtime_multiplier()
+		"cs_auto_assignment_capacity":       fail = _case_cs_auto_assignment_capacity()
+		"cs_capacity_resolution":            fail = _case_cs_capacity_resolution()
+		"cs_request_absorption_by_expertise": fail = _case_cs_request_absorption_by_expertise()
+		"cs_request_throughput_by_pace":     fail = _case_cs_request_throughput_by_pace()
+		"cs_request_covers_founder_managed": fail = _case_cs_request_covers_founder_managed()
+		"cs_request_channel_gated_on_rep":   fail = _case_cs_request_channel_gated_on_rep()
+		"promise_broken_penalty":            fail = _case_promise_broken_penalty()
+		"sales_cs_zero_staff_identical":     fail = _case_sales_cs_zero_staff_identical()
+		"prospect_id_unique_after_removal":  fail = _case_prospect_id_unique_after_removal()
+		# --- Dünya İnandırıcılığı (şirket havuzu / pazar payı / haber akışı / event ilgililiği) ---
+		"b2b_prospect_dedup_excludes_signed": fail = _case_b2b_prospect_dedup_excludes_signed()
+		"company_catalog_pool_integrity":     fail = _case_company_catalog_pool_integrity()
+		"market_share_tracks_mrr":            fail = _case_market_share_tracks_mrr()
+		"news_feed_weights_and_no_repeat":    fail = _case_news_feed_weights_and_no_repeat()
+		"cs_request_kind_state_driven":       fail = _case_cs_request_kind_state_driven()
+		# --- Bug cleanup 2026-08-07 (AUDIT_2026-08-06): each of these FAILS against the
+		#     pre-fix engine, which is what makes them regression guards rather than décor.
+		"b2b_expansion_no_refire":            fail = _case_b2b_expansion_no_refire()
+		"fumes_zero_revenue_ledger":          fail = _case_fumes_zero_revenue_ledger()
+		"promise_orphan_no_brand_hit":        fail = _case_promise_orphan_no_brand_hit()
+		"build_percent_single_source":        fail = _case_build_percent_single_source()
+		"runway_days_and_negative_cash":      fail = _case_runway_days_and_negative_cash()
+		"b2b_market_gate_b2c_run":            fail = _case_b2b_market_gate_b2c_run()
+		"sales_autoclose_empty_pain":         fail = _case_sales_autoclose_empty_pain()
+		"event_queue_dedupe_by_id":           fail = _case_event_queue_dedupe_by_id()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -163,7 +206,32 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 
 # --- Day driver + seeds ---
 
+# GÜNLÜK-YARIM sürücü: yalnız advance_day + günlük slotlar. Saatlik hiçbir şey koşmaz,
+# yani build eforu, B2C audience/MRR akışı, hata birikimi ve ambient event'ler DURUR ve
+# GameState.current_hour hiç kımıldamaz. Saatlik yola dokunmayan case'ler için doğru ve
+# hızlı sürücü; saatlik/günlük SINIRINDA doğan bir davranışı ölçemez — onun için
+# _sim_day_full() var.
 static func _sim_day() -> void:
+	GameState.advance_day()
+	TimeManager._dispatch_daily_tick()
+
+
+# TAM GÜN sürücü: motorun gerçek gün sınırını birebir yansıtır.
+# TimeManager._drain_boundaries sırası: saat 1..23 → saat 0 → advance_day() → günlük
+# slotlar. Günlük tik saat 0 ile saat 1'in ARASINDA durur; maliyeti günlük, faydayı
+# saatlik işleyen her mekanizma tam olarak orada ayrışır (S1-3 ek mesai bedava hızı ve
+# S2-37 bonus/ödeme asimetrisi bu boşlukta yaşıyordu, 135 case boyunca görünmeden).
+#
+# set_current_hour ŞART: EventManager._is_eligible `allowed_hours`'ı dispatch'e geçilen
+# argümandan değil GameState.current_hour'dan okur — saat yazılmazsa saatlik pencereli
+# her event yanlış saate karşı ölçülür.
+static func _sim_day_full() -> void:
+	while GameState.current_hour < TimeManager.HOURS_PER_DAY - 1:
+		var next_hour: int = GameState.current_hour + 1
+		GameState.set_current_hour(next_hour)
+		TimeManager._dispatch_hourly_tick(next_hour)
+	GameState.set_current_hour(0)
+	TimeManager._dispatch_hourly_tick(0)
 	GameState.advance_day()
 	TimeManager._dispatch_daily_tick()
 
@@ -252,6 +320,9 @@ static func _instances_of(event_id: String) -> int:
 
 # Rev3: aktif build'i hedef faza gelene dek ProductSystem.hourly_tick ile sürer
 # (sınırlı döngü; gün ilerletmez — saf build-motoru sürüşü).
+# Player-gated iterasyon restore: tasarım kararı beklerken hedef İLERİ bir fazsa
+# helper oyuncu koltuğuna oturup "Geliştirmeye geç" der — SIFIR ek tur, yani sıfır
+# tur kazancı; determinizm case'leri (axes/ship damgaları) bire bir aynı kalır.
 static func _run_build_to_phase(phase: String, max_hours: int = 24 * 120) -> bool:
 	for i in max_hours:
 		var b: FeatureBuild = ProductSystem.get_active_build()
@@ -259,9 +330,37 @@ static func _run_build_to_phase(phase: String, max_hours: int = 24 * 120) -> boo
 			return false
 		if b.current_phase == phase:
 			return true
+		if b.current_phase == "iteration" and b.iteration_decision_pending and phase != "iteration":
+			ProductSystem.enter_development()
+			continue
 		ProductSystem.hourly_tick(i % 24)
 	var b_end: FeatureBuild = ProductSystem.get_active_build()
 	return b_end != null and b_end.current_phase == phase
+
+
+# İterasyon-döngüsü sürücüleri (player-gated restore): tasarım bandını karar anına
+# sürer / bir "Bir tur daha" turunu baştan sona koşar (yeniden pending'e dönene dek).
+static func _drive_to_iter_pending(max_hours: int = 24 * 60) -> bool:
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if b == null:
+		return false
+	for i in max_hours:
+		if b.iteration_decision_pending:
+			return true
+		ProductSystem.hourly_tick(i % 24)
+	return b.iteration_decision_pending
+
+
+static func _run_iteration_round(max_hours: int = 24 * 30) -> bool:
+	ProductSystem.advance_iteration()
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if b == null or b.iteration_round_days <= 0.0:
+		return false
+	for i in max_hours:
+		if b.iteration_decision_pending:
+			return true
+		ProductSystem.hourly_tick(i % 24)
+	return b.iteration_decision_pending
 
 
 # --- Run Ledger + newspaper copy (Ending Screen) ---
@@ -512,12 +611,11 @@ static func _case_live_during_vbuild() -> String:
 		return "v3 build could not start"
 	var aud0: float = float(GameState.get_flag("b2c_audience", 0))
 	var mrr0: int = GameState.mrr
-	# 10 gün: saatlik ekonomi + günlük slotlar (_sim_day yalnız daily koşar —
-	# audience/wear saatlik akar, o yüzden saat döngüsü şart).
+	# 10 gün: saatlik ekonomi + günlük slotlar. Bu döngü elle yazılmıştı ve günlük tiki
+	# saat 23'ten SONRA atıyordu; motor onu saat 0 ile saat 1'in arasına koyuyor.
+	# _sim_day_full() gerçek sırayı taşıyor.
 	for d in 10:
-		for h in 24:
-			TimeManager._dispatch_hourly_tick(h)
-		_sim_day()
+		_sim_day_full()
 		if not GameState.run_active:
 			return "run ended mid-case (day %d, endings %s)" % [GameState.day, str(_endings)]
 	var aud1: float = float(GameState.get_flag("b2c_audience", 0))
@@ -612,6 +710,16 @@ static func _case_capacity_split() -> String:
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if absf(ProductSystem.capacity_speed_factor() - 0.5) > 0.001:
 		return "parallel factor not 0.5 (%.2f)" % ProductSystem.capacity_speed_factor()
+	# Player-gated iterasyon: v-build'in minik tasarım bandı ölçüm penceresinin İÇİNE
+	# düşmesin — karar anına sür, "Geliştirmeye geç" de; iki pencere de development'ta
+	# ölçülür (mid-job developer kıyası da ancak orada anlamlı — design doc §5).
+	for ih in 24 * 30:
+		if b.iteration_decision_pending:
+			break
+		ProductSystem.hourly_tick(ih % 24)
+	if not b.iteration_decision_pending:
+		return "v-build design band never pended"
+	ProductSystem.enter_development()
 	var want_day: float = 0.0
 	var e0: float = b.efor_spent
 	s0 = float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0))
@@ -1382,6 +1490,40 @@ static func _case_targeted_modifier_hits_named_customer() -> String:
 	return ""
 
 
+static func _case_burn_day1_breakdown() -> String:
+	# Gider dağılımı DÜRÜST: day-1'de motorda karşılığı olmayan kalem yok — tek satır
+	# kurucu gideri (%100). Uydurma tools(7)/office(25)/legal(11)/misc(7) kalemleri
+	# silindi; toplam 50 kaldı (runway kalibrasyonu oynamadı).
+	if FinanceSystem.starting_daily_burn() != 50:
+		return "starting_daily_burn %d, want 50 (baseline calibration moved)" % FinanceSystem.starting_daily_burn()
+	if GameState.daily_burn != FinanceSystem.starting_daily_burn():
+		return "GameState.daily_burn (%d) does not derive from the breakdown" % GameState.daily_burn
+	var want_keys: Array = ["salaries", "overtime", "founder", "marketing", "office"]
+	var keys: Array = FinanceSystem.STARTING_BURN_BREAKDOWN.keys()
+	if keys.size() != want_keys.size():
+		return "breakdown holds %d categories, want %d: %s" % [keys.size(), want_keys.size(), str(keys)]
+	for key in want_keys:
+		if not FinanceSystem.STARTING_BURN_BREAKDOWN.has(key):
+			return "breakdown lost category '%s'" % key
+		if not FinanceSystem.BURN_LABELS.has(key):
+			return "category '%s' has no TR label" % key
+	for key in keys:
+		var v: int = int(FinanceSystem.STARTING_BURN_BREAKDOWN[key])
+		if String(key) == "founder":
+			if v != 50:
+				return "founder cost %d, want the whole $50 baseline" % v
+		elif v != 0:
+			return "category '%s' carries %d with no mechanic behind it (fiction)" % [key, v]
+	# Day-1 render sözleşmesi: tek satır, founder, %100 (sıfır satırlar atlanır).
+	var rows: Array = FinanceSystem.get_burn_breakdown_pct()
+	if rows.size() != 1:
+		return "day-1 breakdown renders %d rows, want exactly 1: %s" % [rows.size(), str(rows)]
+	var row: Dictionary = rows[0]
+	if String(row.get("id", "")) != "founder" or int(row.get("pct", 0)) != 100 or int(row.get("amount", 0)) != 50:
+		return "day-1 row is not founder/100/50: %s" % str(row)
+	return ""
+
+
 static func _case_burn_refresh_same_tick() -> String:
 	# §F-10/§E-D.2: set_burn_category refreshes GameState.daily_burn immediately (no daily tick).
 	var burn0: int = GameState.daily_burn
@@ -1485,8 +1627,10 @@ static func _case_commit_cost_charged_once() -> String:
 
 
 static func _case_phase_bands_20_60_20() -> String:
-	# Fazlar OTOMATİK: frac<.20 iteration, [.20,.80) development, >=.80 bugfix;
-	# %100'de Beta'da PARK (auto-ship yok); launch yalnız Beta'da iş yapar.
+	# Player-gated iterasyon (restore 2026-08): tasarım bandı dolunca build KARAR
+	# bekleyerek park eder — auto-advance YOK, çıkış yalnız enter_development().
+	# Sonrası eski kanun: [.20,.80) development, >=.80 bugfix OTOMATİK; %100'de
+	# Beta'da PARK (auto-ship yok); launch yalnız Beta'da iş yapar.
 	GameState.set_cash(50000)
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
 		return "start_build failed"
@@ -1495,18 +1639,41 @@ static func _case_phase_bands_20_60_20() -> String:
 	ProductSystem.launch()
 	if GameState.get_flag("mvp_shipped", false) or ProductSystem.get_active_build() == null:
 		return "launch outside beta was not a no-op"
+	# 1) Tasarım bandı: karar yanana dek sür; faz kendi kendine asla değişmez.
 	var hours: int = 0
+	while not b.iteration_decision_pending:
+		if b.current_phase != "iteration":
+			return "left iteration without a decision (phase %s)" % b.current_phase
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 120:
+			return "design band never pended (%.2f / %.2f)" % [b.efor_spent, b.total_efor]
+	var design_cap: float = ProductSystem.PHASE_DESIGN_END * b.total_efor
+	if absf(b.efor_spent - design_cap) > 0.001:
+		return "park efor not clamped at design band (%.3f, want %.3f)" % [b.efor_spent, design_cap]
+	if b.iteration_count != 1:
+		return "iteration_count at first pend: %d (want 1)" % b.iteration_count
+	# 2) Tasarım parkı (beta parkının aynası): 3 gün daha tik → faz aynı, efor donuk.
+	for i in 24 * 3:
+		ProductSystem.hourly_tick(i % 24)
+	if b.current_phase != "iteration":
+		return "auto-advanced out of design park (phase %s)" % b.current_phase
+	if absf(b.efor_spent - design_cap) > 0.001:
+		return "efor moved during design park (%.3f)" % b.efor_spent
+	# 3) Oyuncu kararı → development; dev→beta bandı OTOMATİK kalır.
+	ProductSystem.enter_development()
+	if b.current_phase != "development":
+		return "enter_development did not flip phase (%s)" % b.current_phase
+	hours = 0
 	while b.efor_spent < b.total_efor:
 		ProductSystem.hourly_tick(hours % 24)
 		hours += 1
 		if hours > 24 * 120:
 			return "efor never completed (%.1f / %.1f)" % [b.efor_spent, b.total_efor]
 		var frac: float = b.efor_spent / maxf(0.001, b.total_efor)
-		var want: String = "iteration"
+		var want: String = "development"
 		if frac >= ProductSystem.PHASE_DEV_END:
 			want = "bugfix"
-		elif frac >= ProductSystem.PHASE_DESIGN_END:
-			want = "development"
 		if b.current_phase != want:
 			return "phase %s at frac %.3f (want %s)" % [b.current_phase, frac, want]
 	# %100 → Beta'da SÜRESİZ park: 3 gün daha tik, ship YOK, build slotu dolu.
@@ -1527,6 +1694,217 @@ static func _case_phase_bands_20_60_20() -> String:
 		return "ship did not set mvp_shipped"
 	if ProductSystem.get_active_build() != null:
 		return "build slot not cleared after ship"
+	return ""
+
+
+# --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
+
+static func _case_iter_decision_gates_development() -> String:
+	# İterasyon ASLA kendi kendine ilerlemez: tasarım bandı dolunca park (efor donuk,
+	# faz aynı), çıkış yalnız enter_development() — ve öğretici moment tam BİR kez düşer.
+	GameState.set_cash(50000)
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if not _drive_to_iter_pending():
+		return "design band never pended"
+	if b.current_phase != "iteration":
+		return "left iteration without a decision (phase %s)" % b.current_phase
+	var cap: float = ProductSystem.PHASE_DESIGN_END * b.total_efor
+	if absf(b.efor_spent - cap) > 0.001:
+		return "park efor %.3f, want the design cap %.3f" % [b.efor_spent, cap]
+	# 5 gün park: auto-advance yok, efor kımıldamaz.
+	for i in 24 * 5:
+		ProductSystem.hourly_tick(i % 24)
+	if b.current_phase != "iteration" or absf(b.efor_spent - cap) > 0.001:
+		return "park violated (phase %s, efor %.3f)" % [b.current_phase, b.efor_spent]
+	if _instances_of("ev_mvp_iter_decision_intro") != 1:
+		return "iter intro event enqueued %d times, want exactly 1" % _instances_of("ev_mvp_iter_decision_intro")
+	ProductSystem.enter_development()
+	if b.current_phase != "development" or b.iteration_decision_pending:
+		return "enter_development did not flip cleanly"
+	var e0: float = b.efor_spent
+	for i in 24:
+		ProductSystem.hourly_tick(i % 24)
+	if b.efor_spent <= e0 + 0.001:
+		return "efor did not resume after the decision"
+	return ""
+
+
+static func _case_iter_ceiling_founder_vs_designer() -> String:
+	# Çift yönlü plato: solo kurucu (tech 2) tavana dayanır; Tasarımcı (UZMANLIK 7)
+	# gelince tavan formül kadar yükselir ve bir sonraki tur, solo platonun son
+	# kazancından fazla verir — "daha iyi insanlar lazım" hissinin sayısal kanıtı.
+	var founder: Character = CharacterRegistry.get_founder()
+	founder.role_stats["tech"] = 2
+	var want0: float = ProductSystem.ITER_CEIL_FOUNDER_COEF * 2.0
+	var ceil0: Dictionary = ProductSystem.iteration_axis_ceilings()
+	if absf(float(ceil0["innovation"]) - want0) > 0.001:
+		return "solo innovation ceiling %.2f, want %.2f" % [float(ceil0["innovation"]), want0]
+	GameState.set_cash(200000)
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if not _drive_to_iter_pending():
+		return "design band never pended"
+	var stamp0: float = b.innovation
+	var last_gain: float = INF
+	var rounds: int = 0
+	while ProductSystem.can_advance_iteration() and rounds < ProductSystem.ITER_MAX_ROUNDS - 2:
+		var before: float = b.innovation
+		if not _run_iteration_round():
+			return "iteration round %d did not complete" % (rounds + 1)
+		last_gain = b.innovation - before
+		rounds += 1
+		if last_gain < 0.05:
+			break
+	if last_gain >= 0.05:
+		return "solo build never plateaued (%d rounds, last gain %.3f)" % [rounds, last_gain]
+	if b.innovation > maxf(stamp0, want0) + 0.001:
+		return "solo plateau %.2f exceeded the ceiling %.2f" % [b.innovation, want0]
+	var solo_plateau: float = b.innovation
+	_make_employee("char_iter_designer", "Iter Designer", HRConstants.ROLE_DESIGNER,
+		SEED_PACE, 0, 50, 7)
+	var want1: float = want0 + minf(7.0 * ProductSystem.ITER_CEIL_ROLE_COEF, ProductSystem.ITER_CEIL_ROLE_CAP)
+	var ceil1: Dictionary = ProductSystem.iteration_axis_ceilings()
+	if absf(float(ceil1["innovation"]) - want1) > 0.001:
+		return "designer ceiling %.2f, want %.2f" % [float(ceil1["innovation"]), want1]
+	if not ProductSystem.can_advance_iteration():
+		return "cannot run the post-hire round (safety cap hit during the solo drive)"
+	var before2: float = b.innovation
+	if not _run_iteration_round():
+		return "post-hire round did not complete"
+	var gain2: float = b.innovation - before2
+	if gain2 <= last_gain + 0.001:
+		return "hire did not lift the plateau (gain %.3f vs solo last %.3f)" % [gain2, last_gain]
+	if b.innovation <= solo_plateau + 0.05:
+		return "axis did not move visibly above the solo plateau (%.2f vs %.2f)" % [b.innovation, solo_plateau]
+	return ""
+
+
+static func _case_iter_diminishing_returns() -> String:
+	# Azalan getiri: tur N+1'in kazancı tur N'inkinden KÜÇÜK (ikisi de > 0).
+	# Tasarımcı baştan masada → tavan yüksek, iki tur boyunca bol headroom.
+	var founder: Character = CharacterRegistry.get_founder()
+	founder.role_stats["tech"] = 2
+	_make_employee("char_iter_dr_designer", "DR Designer", HRConstants.ROLE_DESIGNER,
+		SEED_PACE, 0, 50, 7)
+	GameState.set_cash(200000)
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if not _drive_to_iter_pending():
+		return "design band never pended"
+	var v0: float = b.innovation
+	if not _run_iteration_round():
+		return "round 2 did not complete"
+	var gain_a: float = b.innovation - v0
+	var v1: float = b.innovation
+	if not _run_iteration_round():
+		return "round 3 did not complete"
+	var gain_b: float = b.innovation - v1
+	if gain_a <= 0.0 or gain_b <= 0.0:
+		return "rounds gave no gain (%.3f, %.3f) — headroom seeding broken" % [gain_a, gain_b]
+	if gain_b >= gain_a - 0.0001:
+		return "round N+1 gain %.3f is not smaller than round N gain %.3f" % [gain_b, gain_a]
+	return ""
+
+
+static func _case_iter_ceiling_never_exceeded() -> String:
+	# Güvenlik tavanına (ITER_MAX_ROUNDS) kadar sür: hiçbir eksen kendi tavanını (ya da
+	# tavan üstü commit damgasını) aşamaz; tavanda advance reddeder, çıkış hâlâ oyuncuda.
+	var founder: Character = CharacterRegistry.get_founder()
+	founder.role_stats["tech"] = 1   # taban tavan 4 → damga tavanın üstünde kalabilir
+	GameState.set_cash(200000)
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if not _drive_to_iter_pending():
+		return "design band never pended"
+	var stamp := {"innovation": b.innovation, "stability": b.stability, "experience": b.experience}
+	var ceilings: Dictionary = ProductSystem.iteration_axis_ceilings()
+	while ProductSystem.can_advance_iteration():
+		if not _run_iteration_round():
+			return "round %d did not complete" % b.iteration_count
+		for ax in QualityModel.AXES:
+			var v: float = float(QualityModel.dims_from_build(b).get(ax, 0.0))
+			var lim: float = maxf(float(stamp[ax]), float(ceilings[ax]))
+			if v > lim + 0.001:
+				return "axis %s (%.3f) exceeded its ceiling/stamp (%.3f) at round %d" % [ax, v, lim, b.iteration_count]
+	if b.iteration_count != ProductSystem.ITER_MAX_ROUNDS:
+		return "loop stopped at round %d, want the safety cap %d" % [b.iteration_count, ProductSystem.ITER_MAX_ROUNDS]
+	if not b.iteration_decision_pending:
+		return "cap reached but the decision is not pending — the build would be stuck"
+	ProductSystem.advance_iteration()
+	if b.iteration_count != ProductSystem.ITER_MAX_ROUNDS:
+		return "advance_iteration ran past the safety cap"
+	if float(stamp["innovation"]) > float(ceilings["innovation"]) \
+			and absf(b.innovation - float(stamp["innovation"])) > 0.0001:
+		return "an above-ceiling stamp moved (%.3f -> %.3f)" % [float(stamp["innovation"]), b.innovation]
+	ProductSystem.enter_development()
+	if b.current_phase != "development":
+		return "exit blocked at the safety cap"
+	return ""
+
+
+static func _case_iter_zero_staff_neutrality_and_axis_lock() -> String:
+	# Sıfır ekip → her tavan kurucu tabanı; alakasız roller tavan OYNATMAZ; her rol
+	# YALNIZ kendi eksenini yükseltir (sızıntı kontrolü — coupling_pm_experience aynası);
+	# rol terimi ITER_CEIL_ROLE_CAP'te kesilir (çoklu işe alım istifi).
+	var founder: Character = CharacterRegistry.get_founder()
+	founder.role_stats["tech"] = 3
+	var base: float = ProductSystem.ITER_CEIL_FOUNDER_COEF * 3.0
+	var c: Dictionary = ProductSystem.iteration_axis_ceilings()
+	for ax in QualityModel.AXES:
+		if absf(float(c[ax]) - base) > 0.001:
+			return "zero-staff ceiling for %s is %.2f, want founder base %.2f" % [ax, float(c[ax]), base]
+	_make_employee("char_iter_zs_tester", "ZS Tester", HRConstants.ROLE_TESTER, SEED_PACE, 0, 50, 9)
+	_make_employee("char_iter_zs_sales", "ZS Sales", HRConstants.ROLE_SALES_REP, SEED_PACE, 0, 50, 9)
+	c = ProductSystem.iteration_axis_ceilings()
+	for ax in QualityModel.AXES:
+		if absf(float(c[ax]) - base) > 0.001:
+			return "an unrelated role moved the %s ceiling (%.2f)" % [ax, float(c[ax])]
+	_make_employee("char_iter_zs_designer", "ZS Designer", HRConstants.ROLE_DESIGNER, SEED_PACE, 0, 50, 6)
+	c = ProductSystem.iteration_axis_ceilings()
+	if absf(float(c["innovation"]) - (base + 6.0 * ProductSystem.ITER_CEIL_ROLE_COEF)) > 0.001:
+		return "designer term wrong (%.2f)" % float(c["innovation"])
+	if absf(float(c["stability"]) - base) > 0.001 or absf(float(c["experience"]) - base) > 0.001:
+		return "designer leaked into stability/experience"
+	_make_employee("char_iter_zs_dev", "ZS Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 0, 50, 4)
+	c = ProductSystem.iteration_axis_ceilings()
+	if absf(float(c["stability"]) - (base + 4.0 * ProductSystem.ITER_CEIL_ROLE_COEF)) > 0.001:
+		return "developer term wrong (%.2f)" % float(c["stability"])
+	if absf(float(c["experience"]) - base) > 0.001:
+		return "developer leaked into experience"
+	_make_employee("char_iter_zs_pm", "ZS PM", HRConstants.ROLE_PRODUCT_MANAGER, SEED_PACE, 0, 50, 9)
+	_make_employee("char_iter_zs_pm2", "ZS PM 2", HRConstants.ROLE_PRODUCT_MANAGER, SEED_PACE, 0, 50, 9)
+	c = ProductSystem.iteration_axis_ceilings()
+	var want_pm: float = base + minf(18.0 * ProductSystem.ITER_CEIL_ROLE_COEF, ProductSystem.ITER_CEIL_ROLE_CAP)
+	if absf(float(c["experience"]) - want_pm) > 0.001:
+		return "PM term not capped at ITER_CEIL_ROLE_CAP (%.2f, want %.2f)" % [float(c["experience"]), want_pm]
+	return ""
+
+
+static func _case_iter_version_build_same_loop() -> String:
+	# v-build aynı oyuncu-kapılı döngüyü yaşar: sayaçlar v-commit'te sıfırdan, park →
+	# tur → karar → geliştirme.
+	_seed_live_product()
+	if not ProductSystem.start_version_build(["ai_assistant_voice"], ""):
+		return "start_version_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if b.iteration_count != 1 or b.iteration_decision_pending or b.iteration_round_days > 0.0:
+		return "v-commit did not reset the iteration counters"
+	if not _drive_to_iter_pending():
+		return "v-build design band never pended"
+	if b.current_phase != "iteration":
+		return "v-build auto-advanced (phase %s)" % b.current_phase
+	if not _run_iteration_round():
+		return "v-build round did not complete"
+	if b.iteration_count != 2:
+		return "round did not increment the counter (%d)" % b.iteration_count
+	ProductSystem.enter_development()
+	if b.current_phase != "development":
+		return "v-build exit did not flip to development"
 	return ""
 
 
@@ -2230,9 +2608,20 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 		return "customer_expanded never fired"
 	# Event-driven path: a healthy, mature account auto-enqueues the expansion family on
 	# the daily tick (state-bound, not calendar-polled) and resolving "Büyüt" upsells it.
+	#
+	# A SECOND, DISTINCT account — not a re-seed of co_lead_smoke. `expand()` above already
+	# spent that account's one expansion moment, and since K2 the engine remembers it. The
+	# re-seed only ever looked like a fresh start because expansion had no memory at all.
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
-	_seed_b2b(1000)
-	var m: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	var pm := Prospect.new()
+	pm.id = "lead_mature"
+	pm.company_name = "Mature A.Ş."
+	pm.industry = "Testing"
+	pm.archetype = "small"
+	SalesSystem.add_b2b_customer(pm, 1000, 70)
+	var m: Customer = CustomerRegistry.get_customer("co_lead_mature")
+	if m == null:
+		return "the mature fixture account was not created"
 	m.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)  # mature
 	CustomerRegistry.set_lifecycle_phase(m.id, "active")
 	CustomerRegistry.set_satisfaction(m.id, 80)  # healthy (>= tolerance)
@@ -2245,6 +2634,271 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	EventManager.resolve_choice(eid, 0)  # "Büyüt"
 	if m.seats <= seats_before:
 		return "event-driven expansion did not grow seats"
+	return ""
+
+
+static func _case_build_percent_single_source() -> String:
+	# S2-8. The same build printed different percentages in one frame: the portfolio badge
+	# rounded, the floating HUD floored, the HUD's own bar took the raw float, and the
+	# in-tab tracker floored a second time. The HUD floats OVER any open tab page, so two
+	# of those were visible simultaneously. One formatter, one answer.
+	# FAILS against the pre-fix engine, which had no shared formatter at all.
+	var probes: Array = [0.4761, 0.005, 0.999, 0.5, 0.0, 1.0]
+	for f in probes:
+		var pct: int = UiTokens.build_percent(float(f))
+		if pct != int(round(clampf(float(f), 0.0, 1.0) * 100.0)):
+			return "build_percent(%f) = %d, not the rounded value" % [float(f), pct]
+	# The specific value that used to split the two surfaces: floor 47 vs round 48.
+	if UiTokens.build_percent(0.4761) != 48:
+		return "0.4761 should read 48, got %d" % UiTokens.build_percent(0.4761)
+	# Clamped at both ends, so no caller can render %101 or a negative bar.
+	if UiTokens.build_percent(1.7) != 100 or UiTokens.build_percent(-0.3) != 0:
+		return "build_percent does not clamp (%d / %d)" % [
+			UiTokens.build_percent(1.7), UiTokens.build_percent(-0.3)]
+	return ""
+
+
+static func _case_runway_days_and_negative_cash() -> String:
+	# S2-9 + S2-10, both of which live in net_runway_parts and only there.
+	# FAILS against the pre-fix engine: sub-month printed "0 ay", and negative cash printed
+	# the green "Artıda" two cells from a running bankruptcy counter.
+	GameState.set_cash(8597)
+	# 0.2047 months ≈ 6 days. int(round()) rendered a bare 0 — insolvency, on a company
+	# that is solvent for most of a week.
+	var sub: Dictionary = UiTokens.net_runway_parts(0.2047)
+	if String(sub.get("value", "")) == "0":
+		return "sub-month runway still renders as a bare 0"
+	if String(sub.get("unit", "")) == TranslationServer.translate("RUNWAY_UNIT_MONTHS"):
+		return "sub-month runway is still labelled in months"
+	if bool(sub.get("positive", false)):
+		return "a six-day runway reads as positive"
+	# The months path above one month is untouched.
+	var normal: Dictionary = UiTokens.net_runway_parts(6.4)
+	if String(normal.get("value", "")) != "6" \
+			or String(normal.get("unit", "")) != TranslationServer.translate("RUNWAY_UNIT_MONTHS"):
+		return "the months path moved: %s %s" % [str(normal.get("value")), str(normal.get("unit"))]
+	# Negative cash can never read as "Artıda", whatever the daily net says.
+	GameState.set_cash(-4000)
+	var broke: Dictionary = UiTokens.net_runway_parts(INF)
+	if bool(broke.get("positive", false)):
+		return "negative cash still renders as positive runway"
+	GameState.set_cash(20000)
+	if not bool(UiTokens.net_runway_parts(INF).get("positive", false)):
+		return "a solvent, profitable company lost its ARTIDA — the guard is a wall"
+	return ""
+
+
+static func _case_promise_orphan_no_brand_hit() -> String:
+	# S1-6. A promise used to outlive the account it was made to: tick_deadlines had no
+	# liveness check, and in on_promise_resolved the brand write and the credibility flag
+	# sat OUTSIDE the `if c != null` guard that protects every customer-side write beside
+	# them. So the orphan still resolved to "broken" and charged brand a second time — for
+	# a company that had already taken its churn hit and was gone from every screen — while
+	# the Product tab kept counting a deadline down for it.
+	# FAILS against the pre-fix engine: brand drops again and the ghost promise survives.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	var pr: Promise = PromiseRegistry.create(c.id, "ai_vec_filter", 3)
+	if pr.status != "open":
+		return "promise did not open"
+	# The account leaves BEFORE the deadline — the ordering the engine never guarded.
+	B2BSalesSystem.ignore_risk(c.id)   # no-op if not at risk; the removal below is the point
+	CustomerRegistry.remove(c.id)
+	if PromiseRegistry.has_open_for("co_lead_smoke"):
+		return "an open promise survived the account it was made to"
+	var brand_after_loss: int = GameState.brand
+	# Ride past the deadline: nothing may resolve, and brand may not move again.
+	for i in 6:
+		GameState.advance_day()
+		PromiseRegistry.tick_deadlines(GameState.day)
+	if GameState.brand != brand_after_loss:
+		return "brand moved for a company that no longer exists (%d -> %d)" % [
+			brand_after_loss, GameState.brand]
+	if pr.status == "broken":
+		return "the orphan promise still resolved to broken"
+	# Control: a promise whose customer is ALIVE still breaks and still costs brand.
+	var p2 := Prospect.new()
+	p2.id = "lead_alive"
+	p2.company_name = "Alive A.Ş."
+	p2.industry = "Testing"
+	p2.archetype = "small"
+	SalesSystem.add_b2b_customer(p2, 900, 70)
+	var live_c: Customer = CustomerRegistry.get_customer("co_lead_alive")
+	PromiseRegistry.create(live_c.id, "ai_vec_filter", 1)
+	var brand_before_break: int = GameState.brand
+	GameState.advance_day()
+	GameState.advance_day()
+	PromiseRegistry.tick_deadlines(GameState.day)
+	if GameState.brand >= brand_before_break:
+		return "a live customer's broken promise stopped costing brand — the guard is a wall"
+	return ""
+
+
+static func _case_fumes_zero_revenue_ledger() -> String:
+	# S2-6. "Running on Fumes" is the demo's conversion screen, and its ledger pool carried
+	# ONE unconditioned line — "Gelir vardı, ama…" — while _assemble tops the pool up to
+	# MIN_LEDGER_LINES. On a zero-activity run that false line was therefore GUARANTEED to
+	# print, directly under a stat cell reading MRR $0.
+	# FAILS against the pre-fix engine on the first assertion.
+	var claim: String = "Gelir vardı"
+	# A run that earned nothing and signed nobody.
+	var barren: Dictionary = {
+		"phase": 1, "day": 180, "mrr": 0, "customers_signed": 0, "customers_active": 0,
+		"hires": 0, "employees": 0, "product_ships": 0,
+	}
+	var vs: Dictionary = EndingsCopy.build("running_on_fumes", barren, {})
+	var lines: Array = vs.get("ledger_lines", []) as Array
+	for line in lines:
+		if String(line).begins_with(claim):
+			return "the zero-revenue run was told revenue existed: '%s'" % String(line)
+	# THE TRAP: gating that line without an else-branch drops the worst-case pool to one
+	# line plus two backups, and the paper silently sets short.
+	if lines.size() < EndingsCopy.MIN_LEDGER_LINES:
+		return "ledger under-filled after gating: %d lines, want >= %d" % [
+			lines.size(), EndingsCopy.MIN_LEDGER_LINES]
+	# Control: a run that DID earn keeps the original line, so the gate is a gate.
+	var earning: Dictionary = barren.duplicate()
+	earning["mrr"] = 4000
+	earning["customers_signed"] = 3
+	var vs2: Dictionary = EndingsCopy.build("running_on_fumes", earning, {})
+	var found: bool = false
+	for line in (vs2.get("ledger_lines", []) as Array):
+		if String(line).begins_with(claim):
+			found = true
+	if not found:
+		return "an earning run lost the revenue line entirely"
+	return ""
+
+
+static func _case_b2b_expansion_no_refire() -> String:
+	# K2 / S1-1. The promotion test is MONOTONE (day - acquired_on_day >= MATURE_DAYS) and
+	# BOTH resolutions used to put the account straight back to "active" — the exact state
+	# that predicate passes — so the identical modal re-fired every morning forever and
+	# "Büyüt" was an unbounded free MRR faucet for one click a day.
+	# FAILS against the pre-fix engine on the first re-tick, on BOTH branches.
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	_seed_b2b(1000)
+
+	# --- Branch 1: ACCEPT ---
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	c.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
+	CustomerRegistry.set_lifecycle_phase(c.id, "active")
+	CustomerRegistry.set_satisfaction(c.id, 80)
+	var eid: String = "ev_b2b_expand_%s" % c.id
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if EventManager._active_event_id != eid:
+		return "expansion never offered (%s)" % EventManager._active_event_id
+	EventManager.resolve_choice(eid, 0)   # "Büyüt"
+	var mrr_after_upsell: int = c.mrr
+	for i in 6:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+		if EventManager._active_event_id == eid or _instances_of(eid) > 0:
+			return "expansion re-fired after ACCEPT (day %d)" % GameState.day
+	if c.mrr != mrr_after_upsell:
+		return "MRR kept growing after one upsell (%d -> %d)" % [mrr_after_upsell, c.mrr]
+
+	# --- Branch 2: DECLINE, on a second account ---
+	var p := Prospect.new()
+	p.id = "lead_decliner"
+	p.company_name = "Decline A.Ş."
+	p.industry = "Testing"
+	p.archetype = "small"
+	SalesSystem.add_b2b_customer(p, 900, 80)
+	var d: Customer = CustomerRegistry.get_customer("co_lead_decliner")
+	if d == null:
+		return "second account was not created"
+	d.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
+	CustomerRegistry.set_lifecycle_phase(d.id, "active")
+	CustomerRegistry.set_satisfaction(d.id, 80)
+	var did: String = "ev_b2b_expand_%s" % d.id
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if not _drain_to(did):
+		return "expansion never offered to the second account"
+	EventManager.resolve_choice(did, 1)   # "Şimdilik gerek yok"
+	for i in 6:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+		if EventManager._active_event_id == did or _instances_of(did) > 0:
+			return "expansion re-fired after DECLINE (day %d)" % GameState.day
+	# The Sales-tab button asks the same gate, so the loop cannot be reopened through the UI.
+	if B2BSalesSystem.can_offer_expansion(d):
+		return "the manual trigger's gate still reads as offerable after a decision"
+	return ""
+
+
+static func _case_b2b_market_gate_b2c_run() -> String:
+	# S1-2. daily_tick's only gate was `mvp_shipped`, so the ENTIRE B2B desk ran inside a
+	# consumer game: one Satış Uzmanı hire minted enterprise prospects and, past the §10
+	# line, signed enterprise contracts with no pitch ever played.
+	# FAILS against the pre-fix engine (prospects appear within ~20 days).
+	_seed_live_product()          # a shipped B2C world
+	var rep: Character = _make_employee("char_b2c_sales", "Sales In B2C",
+		HRConstants.ROLE_SALES_REP, SEED_PACE, 7000, 100)
+	_park_leave([rep])
+	var p0: int = ProspectRegistry.get_all().size()
+	var c0: int = CustomerRegistry.get_by_market("b2b").size()
+	for i in 25:
+		_sim_day_full()
+		if not GameState.run_active:
+			return "run ended mid-case (day %d)" % GameState.day
+	var p1: int = ProspectRegistry.get_all().size()
+	if p1 != p0:
+		return "B2B leads were minted inside a B2C run (%d -> %d)" % [p0, p1]
+	var c1: int = CustomerRegistry.get_by_market("b2b").size()
+	if c1 != c0:
+		return "a B2B contract was signed inside a B2C run (%d -> %d)" % [c0, c1]
+	# Control: the same roster in a B2B market DOES work, so the gate is a gate, not a wall.
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	for i in 25:
+		_sim_day_full()
+		if not GameState.run_active:
+			break
+	if ProspectRegistry.get_all().size() == p1:
+		return "the enterprise desk stayed inert in a B2B market — the gate is a wall"
+	return ""
+
+
+static func _case_sales_autoclose_empty_pain() -> String:
+	# S1-7. An UNMAPPABLE pain is the conservative case, not the permissive one. This
+	# branch returned true, so the §10 concession gate opened widest exactly where the
+	# engine knew least — and mvp_components was never consulted at all.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	GameState.set_flag("mvp_components", ["ai_vec_search_api"])
+	var blank: Prospect = _add_prospect("nopain", "small", "")
+	if SalesRepSystem.is_auto_closable(blank):
+		return "a lead with no mapped pain still reads as auto-closable"
+	# Control: a lead whose pain IS shipped stays routine, so the gate did not just close.
+	var known: Prospect = _add_prospect("known", "small", "ai_vec_search_api")
+	if not SalesRepSystem.is_auto_closable(known):
+		return "a lead whose pain is already shipped should still be auto-closable"
+	return ""
+
+
+static func _case_event_queue_dedupe_by_id() -> String:
+	# Array.has() on Array[GameEvent] compares REFERENCES, and every factory mints a fresh
+	# GameEvent per call, so one id could occupy the queue N times over.
+	# FAILS against the pre-fix engine (two instances land).
+	_seed_b2b(500)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	# Occupy the modal slot, so the two events under test must QUEUE rather than mount —
+	# the already-active id was guarded even before this fix; the QUEUE was not.
+	EventManager.enqueue(B2BEventFactory.build_retention(c))
+	if EventManager._active_event_id == "":
+		return "could not occupy the active slot"
+	var a: GameEvent = B2BEventFactory.build_expansion(c)
+	var b: GameEvent = B2BEventFactory.build_expansion(c)
+	if a == b:
+		return "the factory returned one instance twice — the case would prove nothing"
+	EventManager.enqueue(a)
+	EventManager.enqueue(b)
+	if _instances_of(a.id) != 1:
+		return "one event id entered the pipeline %d times" % _instances_of(a.id)
 	return ""
 
 
@@ -2584,9 +3238,11 @@ static func _case_hr_axis_key_lock() -> String:
 static func _case_hr_candidate_invariants() -> String:
 	# THE heart of the mechanic: the moment one dominant file can appear, "which do I need"
 	# collapses into "just buy the best one". Asserted over 100+ generations across every
-	# role and band. Deliberately SHAPE-AGNOSTIC — no equal-total and no distinct-argmax
-	# assertion — so the balance pass can add balanced profiles to HRConstants.BAND_SHAPE
-	# without any of this being rewritten.
+	# role and band (quotes are seed-independent — salary is a pure function of role/band/
+	# profile — so all 18 role×band windows are covered exhaustively). Shape-agnostic on
+	# the NUMBERS, but two design invariants are pinned: pairwise non-dominance (price
+	# included) and pairwise-DISTINCT salary quotes — the mixed BAND_SHAPE profiles exist
+	# precisely so price is a live lever.
 	var generations: int = 0
 	for role_id in HRConstants.EMPLOYEE_ROLES:
 		for band_id in HRConstants.BANDS:
@@ -2603,12 +3259,19 @@ static func _case_hr_candidate_invariants() -> String:
 				var seen_traits: Array = []
 				var seen_names: Array = []
 				var seen_notes: Array = []
+				var seen_salaries: Array = []
 				for f in files:
 					var sal: int = int(f["salary"])
 					if sal < int(band[0]) or sal > int(band[1]):
 						return "%s: salary %d outside band %s" % [tag, sal, str(band)]
 					lo = mini(lo, sal)
 					hi = maxi(hi, sal)
+					# Fiyat bir kaldıraç: üç dosya üç AYRI rakam ister (BAND_SHAPE karma
+					# profilleri — kesin artan toplamlar). İki dosya aynı rakama yuvarlanırsa
+					# gap kuralı delinmiştir (_shape_premium'daki aritmetik notu).
+					if seen_salaries.has(sal):
+						return "%s: two files quote the same salary %d — the price axis collapsed" % [tag, sal]
+					seen_salaries.append(sal)
 					if not HRConstants.validate_employee_axes(f["axes"]):
 						return "%s: axes off the ruler: %s" % [tag, str(f["axes"])]
 					if not HRConstants.validate_employee_traits(f["traits"]):
@@ -2721,7 +3384,12 @@ static func _case_hr_search_cycle() -> String:
 
 static func _case_hr_search_cancel_dismiss() -> String:
 	# Cancelling burns the retainer; dismissing all files closes the search for free.
+	# The second leg hires a Satış Uzmanı, and that role is locked outside a B2B market
+	# (HRConstants.role_lock_reason_key) — the market flag alone opens it. Deliberately NOT
+	# _seed_b2b(): this case is about the search state machine, and a live account would
+	# drag the B2B daily chain through the arrival loop below.
 	GameState.set_cash(100000)
+	GameState.set_flag("mvp_market_type", "b2b")
 	var c0: int = GameState.cash
 	if not HRSearchSystem.start_search(HRConstants.ROLE_TESTER, HRConstants.BAND_JUNIOR):
 		return "start_search refused"
@@ -2937,9 +3605,12 @@ static func _case_hr_overtime_cost_tiers() -> String:
 	if ids.has("char_mentor_frank"):
 		return "the mentor was included in overtime"
 	var want_daily: int = HRConstants.overtime_daily_pay(9000) + HRConstants.overtime_daily_pay(6000)
+	# TAM gün sürücü: ek mesainin FAYDASI saatlik yolda tüketiliyor (product_system.gd),
+	# BEDELİ günlük slot 3'te tahakkuk ediyor. Yalnız günlük yarısını koşan bir sürücü bu
+	# ikisinin ayrıştığı yeri hiç göremez — S1-3 tam orada saklanmıştı.
 	for d in range(1, 9):
 		var m_before: int = a.morale
-		_sim_day()
+		_sim_day_full()
 		if HROvertimeSystem.day_index(HRConstants.DEPT_PRODUCT_DEV) != d:
 			return "day index is %d on overtime day %d" % [HROvertimeSystem.day_index(HRConstants.DEPT_PRODUCT_DEV), d]
 		if HROvertimeSystem.pay_accrued_today() != want_daily:
@@ -2948,8 +3619,9 @@ static func _case_hr_overtime_cost_tiers() -> String:
 		var drop: int = m_before - a.morale
 		if drop != HRConstants.overtime_morale_drop(d):
 			return "day %d morale drop %d, want %d" % [d, drop, HRConstants.overtime_morale_drop(d)]
-	# The pay reaches burn through Finance's PULL, not an HR push.
-	FinanceSystem.daily_tick()
+	# The pay reaches burn through Finance's PULL, not an HR push. Slot 5 of the last
+	# _sim_day_full() already ran that pull, so calling daily_tick() again here would
+	# re-pull AND re-apply a second day of net cash for one calendar day.
 	if int(FinanceSystem.get_burn_breakdown().get("overtime", -1)) != want_daily:
 		return "overtime pay is not in the burn breakdown (%s)" % str(FinanceSystem.get_burn_breakdown().get("overtime"))
 	return ""
@@ -2968,7 +3640,7 @@ static func _case_hr_overtime_multipliers() -> String:
 	if not HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 14):
 		return "start refused"
 	for d in range(1, 15):
-		_sim_day()
+		_sim_day_full()
 		if d >= 14:
 			break
 		var bonus: float = HRConstants.OVERTIME_SPEED_BONUS_LATE if d >= HRConstants.OVERTIME_DIMINISH_DAY else HRConstants.OVERTIME_SPEED_BONUS_EARLY
@@ -3005,23 +3677,69 @@ static func _case_hr_overtime_early_stop() -> String:
 	var daily: int = HRConstants.overtime_daily_pay(9000)
 	var paid: int = 0
 	for d in 4:
-		_sim_day()
+		_sim_day_full()
 		paid += HROvertimeSystem.pay_accrued_today()
 	if paid != daily * 4:
 		return "four worked days accrued %d, want %d" % [paid, daily * 4]
+	# Day 4's daily tick already ran, so stop() lands on an ALREADY-CHARGED day and must
+	# not bill it twice — the same-day billing rule only fires when the day is unbilled.
 	var morale_at_stop: int = e.morale
 	if not HROvertimeSystem.stop(HRConstants.DEPT_PRODUCT_DEV):
 		return "early stop refused"
 	if HROvertimeSystem.is_active(HRConstants.DEPT_PRODUCT_DEV):
 		return "the block is still active after stop()"
+	if HROvertimeSystem.pay_accrued_today() != daily:
+		return "stop() on an already-charged day re-billed it (%d, want %d)" % [
+			HROvertimeSystem.pay_accrued_today(), daily]
 	for d in 3:
-		_sim_day()
+		_sim_day_full()
 		if HROvertimeSystem.pay_accrued_today() != 0:
 			return "pay kept accruing after the early stop (%d)" % HROvertimeSystem.pay_accrued_today()
 	if e.morale != morale_at_stop:
 		return "morale kept dropping after the early stop (%d -> %d)" % [morale_at_stop, e.morale]
 	if e.overtime_days != 0:
 		return "overtime_days not reset on stop (%d)" % e.overtime_days
+	return ""
+
+
+static func _case_hr_overtime_same_day_stop_bills() -> String:
+	# S1-3: a block that starts AND stops between two daily ticks must still bill that day.
+	# The speed bonus is consumed on the HOURLY tick; the cost used to be charged only on
+	# the daily one, so start-at-10:00 / "Bitir"-at-22:00 bought up to 23 hours of +%30
+	# build speed for $0 and zero morale, repeatable every single day.
+	#
+	# This case FAILS against the pre-fix engine: pay stays 0 and morale never moves.
+	GameState.set_cash(200000)
+	var e: Character = _make_employee("char_sameday", "Same Day", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 9000, 100)
+	_park_leave([e])
+	# Land on a clean day boundary first, so the pay stamp belongs to "today".
+	_sim_day_full()
+	var morale_before: int = e.morale
+	if not HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 7):
+		return "start refused"
+	# Mid-day: the hours where the bonus is actually collected.
+	for h in range(10, 22):
+		TimeManager._dispatch_hourly_tick(h)
+	if is_equal_approx(HROvertimeSystem.speed_multiplier(HRConstants.DEPT_PRODUCT_DEV), 1.0):
+		return "no speed bonus was on offer during the block — case proves nothing"
+	if not HROvertimeSystem.stop(HRConstants.DEPT_PRODUCT_DEV):
+		return "early stop refused"
+	if e.morale >= morale_before:
+		return "same-day stop cost no morale (%d -> %d)" % [morale_before, e.morale]
+	# The money rides the carry into the next day's total, because Finance already pulled
+	# for today by the time any in-day stop can happen.
+	var daily: int = HRConstants.overtime_daily_pay(9000)
+	_sim_day_full()
+	if HROvertimeSystem.pay_accrued_today() != daily:
+		return "same-day stop billed %d, want %d" % [HROvertimeSystem.pay_accrued_today(), daily]
+	if int(FinanceSystem.get_burn_breakdown().get("overtime", -1)) != daily:
+		return "the billed day never reached burn (%s)" % str(
+			FinanceSystem.get_burn_breakdown().get("overtime"))
+	# …and it is billed ONCE: the day after, nothing lingers.
+	_sim_day_full()
+	if HROvertimeSystem.pay_accrued_today() != 0:
+		return "the stopped block kept billing (%d)" % HROvertimeSystem.pay_accrued_today()
 	return ""
 
 
@@ -3278,23 +3996,44 @@ static func _case_hr_constants_contract() -> String:
 	if not is_equal_approx(HRConstants.trait_mult([], "morale_drop_mult"), 1.0):
 		return "an empty trait list is not multiplicatively neutral"
 
-	# --- Band shapes: the STRUCTURAL invariant behind non-dominance ---
+	# --- Band shapes: the STRUCTURAL invariants behind non-dominance + distinct prices ---
+	# Karma profiller (B1): bant başına CANDIDATE_COUNT profil, ucuzdan pahalıya;
+	# aday k = profil k rotasyon k. Toplamlar kesin artar — non-dominance'ın ve ayrık
+	# fiyatların yapısal ön koşulu (A her eksende >= B ⇒ total(A) >= total(B)).
 	for band_id in HRConstants.BANDS:
-		var shape: Array = HRConstants.band_shape(band_id)
-		if shape.size() != HRConstants.AXES.size():
-			return "band '%s' shape is not one value per axis" % band_id
-		if not (int(shape[0]) > int(shape[1]) and int(shape[1]) >= int(shape[2])):
-			return "band '%s' shape breaks peak>mid>=low, so a rotation has no strict max: %s" % [band_id, str(shape)]
-		if int(shape[0]) > HRConstants.AXIS_MAX or int(shape[2]) < HRConstants.AXIS_MIN:
-			return "band '%s' shape leaves the 0-%d ruler: %s" % [band_id, HRConstants.AXIS_MAX, str(shape)]
+		var profiles: Array = HRConstants.BAND_SHAPE.get(band_id, [])
+		if profiles.size() != HRConstants.CANDIDATE_COUNT:
+			return "band '%s' holds %d profiles, want CANDIDATE_COUNT (%d)" % [
+				band_id, profiles.size(), HRConstants.CANDIDATE_COUNT]
+		var prev_total: int = -1
+		for k in profiles.size():
+			var shape: Array = HRConstants.band_shape(band_id, k)
+			if shape.size() != HRConstants.AXES.size():
+				return "band '%s' profile %d is not one value per axis" % [band_id, k]
+			if not (int(shape[0]) > int(shape[1]) and int(shape[1]) >= int(shape[2])):
+				return "band '%s' profile %d breaks peak>mid>=low, so a rotation has no strict max: %s" % [band_id, k, str(shape)]
+			if int(shape[0]) > HRConstants.AXIS_MAX or int(shape[2]) < HRConstants.AXIS_MIN:
+				return "band '%s' profile %d leaves the 0-%d ruler: %s" % [band_id, k, HRConstants.AXIS_MAX, str(shape)]
+			var total: int = 0
+			for v in shape:
+				total += int(v)
+			if total <= prev_total:
+				return "band '%s' profile totals do not strictly increase (%d after %d): %s" % [
+					band_id, total, prev_total, str(profiles)]
+			prev_total = total
 		for role_id in HRConstants.EMPLOYEE_ROLES:
 			var b: Array = HRConstants.salary_band(role_id, band_id)
 			if b.size() != 2 or int(b[0]) >= int(b[1]):
 				return "salary band %s/%s is not a low..high pair: %s" % [role_id, band_id, str(b)]
-	# Money must buy level, or the three tiers are decoration.
-	if not (int(HRConstants.band_shape(HRConstants.BAND_JUNIOR)[0]) < int(HRConstants.band_shape(HRConstants.BAND_MID)[0]) \
-			and int(HRConstants.band_shape(HRConstants.BAND_MID)[0]) < int(HRConstants.band_shape(HRConstants.BAND_SENIOR)[0])):
-		return "the band tiers do not climb the ruler"
+	# Money must buy level, or the three tiers are decoration — the cheapest AND the
+	# priciest profile peaks both climb across the tiers.
+	var top: int = HRConstants.CANDIDATE_COUNT - 1
+	if not (int(HRConstants.band_shape(HRConstants.BAND_JUNIOR, 0)[0]) < int(HRConstants.band_shape(HRConstants.BAND_MID, 0)[0]) \
+			and int(HRConstants.band_shape(HRConstants.BAND_MID, 0)[0]) < int(HRConstants.band_shape(HRConstants.BAND_SENIOR, 0)[0])):
+		return "the band tiers do not climb the ruler (cheapest profiles)"
+	if not (int(HRConstants.band_shape(HRConstants.BAND_JUNIOR, top)[0]) < int(HRConstants.band_shape(HRConstants.BAND_MID, top)[0]) \
+			and int(HRConstants.band_shape(HRConstants.BAND_MID, top)[0]) < int(HRConstants.band_shape(HRConstants.BAND_SENIOR, top)[0])):
+		return "the band tiers do not climb the ruler (top profiles)"
 
 	# --- Economy + action math ---
 	if HRConstants.commission_for(9200) != 1380:
@@ -3757,4 +4496,722 @@ static func _case_coupling_overtime_applied() -> String:
 	if not is_equal_approx(HROvertimeSystem.speed_multiplier(HRConstants.DEPT_PRODUCT_DEV), 1.0) \
 			or not is_equal_approx(HROvertimeSystem.bug_multiplier(), 1.0):
 		return "the multipliers stayed raised after the block stopped"
+	return ""
+
+
+# ============ Sales/Customer x HR Coupling (task 2b) ============================
+# Shared shape: seed a shipped B2B product, hire the desk staff the case is about, drive whole
+# days, and assert against the OWNING constants file (never a literal) so a calibration retune
+# does not rewrite the tests.
+
+static func _make_sales_rep(id: String, pace: int, expertise: int) -> Character:
+	return _make_employee(id, "Satis " + id, HRConstants.ROLE_SALES_REP,
+		pace, 0, 50, expertise, SEED_RAPPORT)
+
+
+static func _make_cs_rep(id: String, pace: int, expertise: int) -> Character:
+	return _make_employee(id, "Temsilci " + id, HRConstants.ROLE_CUSTOMER_REP,
+		pace, 0, 50, expertise, SEED_RAPPORT)
+
+
+static func _add_prospect(pid: String, archetype: String, pain: String) -> Prospect:
+	# Hand-built so a case controls archetype and pain exactly (spawn_prospect derives both).
+	var p := Prospect.new()
+	p.id = pid
+	p.company_name = "Lead " + pid
+	p.industry = "Testing"
+	p.archetype = archetype
+	p.scale = CustomerArchetypes.scale_base(archetype)
+	p.difficulty_stars = CustomerArchetypes.difficulty_stars(archetype)
+	p.pain_feature_id = pain
+	ProspectRegistry.add(p)
+	return p
+
+
+static func _case_sales_pipeline_rate_by_pace() -> String:
+	# HIZ drives the autonomous lead cadence, and ZERO sales staff produces zero leads.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var before: int = ProspectRegistry.count()
+	for i in 10:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	if ProspectRegistry.count() != before:
+		return "leads appeared with NO sales rep (%d -> %d)" % [before, ProspectRegistry.count()]
+	if not is_equal_approx(SalesRepSystem.lead_rate_per_day(), 0.0):
+		return "lead rate non-zero with no rep: %f" % SalesRepSystem.lead_rate_per_day()
+	var rep: Character = _make_sales_rep("char_sr_1", 6, 1)
+	var pace: float = float(int(rep.role_stats.get(HRConstants.AXIS_PACE, 0)))
+	var want: float = B2BConstants.LEAD_PER_PACE_POINT * pace
+	if not is_equal_approx(SalesRepSystem.lead_rate_per_day(), want):
+		return "lead rate %f, want %f" % [SalesRepSystem.lead_rate_per_day(), want]
+	# Over N days the accumulator emits floor(N x rate) leads (soft cap not reached).
+	var base: int = ProspectRegistry.count()
+	var days: int = 10
+	for i in days:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	var expected: int = int(floor(float(days) * want + 0.0000001))
+	if ProspectRegistry.count() - base != expected:
+		return "emitted %d leads over %d days, want %d" % [
+			ProspectRegistry.count() - base, days, expected]
+	return ""
+
+
+static func _case_sales_pipeline_stack_diminishes() -> String:
+	# A second rep adds STRICTLY MORE than zero and STRICTLY LESS than a second full rep.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	_make_sales_rep("char_sr_1", 6, 1)
+	var one: float = SalesRepSystem.lead_rate_per_day()
+	_make_sales_rep("char_sr_2", 6, 1)
+	var two: float = SalesRepSystem.lead_rate_per_day()
+	if two <= one:
+		return "second rep added nothing (%f -> %f)" % [one, two]
+	if two >= one * 2.0:
+		return "second rep stacked linearly (%f -> %f); diminishing returns missing" % [one, two]
+	var want: float = one * (1.0 + B2BConstants.REP_STACK_DECAY)
+	if not is_equal_approx(two, want):
+		return "stacked rate %f, want %f (decay %f)" % [two, want, B2BConstants.REP_STACK_DECAY]
+	return ""
+
+
+static func _case_sales_autonomous_close_routine() -> String:
+	# A ROUTINE lead closes itself, lands in the small band, names the closer, and logs.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	GameState.set_flag("mvp_components", ["ai_vec_filter"])  # pain SHIPPED -> no concession
+	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)
+	_add_prospect("routine", "small", "ai_vec_filter")
+	var signed0: int = GameState.run_customers_signed
+	var closed: bool = false
+	for i in 40:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+		if ProspectRegistry.get_prospect("routine") == null:
+			closed = true
+			break
+	if not closed:
+		return "a routine lead never closed autonomously"
+	if GameState.run_customers_signed != signed0 + 1:
+		return "signing counter did not move (%d -> %d)" % [signed0, GameState.run_customers_signed]
+	var c: Customer = CustomerRegistry.get_customer("co_routine")
+	if c == null:
+		return "no customer created for the auto-closed lead"
+	if c.acquisition_source != "sales_rep:%s" % rep.id:
+		return "acquisition_source does not name the closer: %s" % c.acquisition_source
+	var band: Dictionary = CustomerArchetypes.mrr_band("small")
+	if c.mrr < int(band["low"]) or c.mrr > int(band["high"]):
+		return "auto-closed MRR %d outside the small band" % c.mrr
+	if c.mrr > B2BConstants.AUTONOMOUS_CLOSE_MRR_MAX:
+		return "auto-closed MRR %d crossed the threshold" % c.mrr
+	var log: Array = SalesSystem.get_sales_log()
+	if log.is_empty():
+		return "the autonomous close produced no activity-log line"
+	var last: Dictionary = log[log.size() - 1]
+	if String(last.get("kind", "")) != "auto_close" or String(last.get("actor", "")) != rep.character_name:
+		return "activity line does not name who closed it: %s" % str(last)
+	return ""
+
+
+static func _case_sales_close_threshold_surfaces() -> String:
+	# THE BOUNDARY PROOF: a lead above the threshold warms but NEVER closes itself.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	GameState.set_flag("mvp_components", ["ai_vec_filter"])
+	_make_sales_rep("char_sr_1", 0, 9)
+	_add_prospect("big", "mid", "ai_vec_filter")
+	var signed0: int = GameState.run_customers_signed
+	for i in 40:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	var p: Prospect = ProspectRegistry.get_prospect("big")
+	if p == null:
+		return "an above-threshold lead was closed autonomously"
+	if GameState.run_customers_signed != signed0:
+		return "signing counter moved without a played pitch (%d -> %d)" % [
+			signed0, GameState.run_customers_signed]
+	if p.warm_progress < B2BConstants.AUTO_CLOSE_PROGRESS:
+		return "the rep never worked the big lead (warm=%f)" % p.warm_progress
+	if SalesRepSystem.warm_bonus_for(p) != B2BConstants.WARM_BONUS_MAX:
+		return "warm bonus %d, want the cap %d" % [
+			SalesRepSystem.warm_bonus_for(p), B2BConstants.WARM_BONUS_MAX]
+	return ""
+
+
+static func _case_sales_threshold_separates_tiers() -> String:
+	# The threshold must sit in the GAP between the small and mid bands. If a balance pass
+	# moves a band, this trips before an above-threshold deal can start auto-closing.
+	var small_high: int = int(CustomerArchetypes.mrr_band("small")["high"])
+	var mid_low: int = int(CustomerArchetypes.mrr_band("mid")["low"])
+	if small_high >= B2BConstants.AUTONOMOUS_CLOSE_MRR_MAX \
+			or B2BConstants.AUTONOMOUS_CLOSE_MRR_MAX >= mid_low:
+		return "threshold %d is not inside the band gap (%d..%d)" % [
+			B2BConstants.AUTONOMOUS_CLOSE_MRR_MAX, small_high, mid_low]
+	# SIZE is the only variable here, so the concession gate must be held OPEN: every lead
+	# voices a pain the product has ALREADY shipped. A bare Prospect leaves pain_feature_id
+	# empty, and an unmappable pain is (correctly) the conservative case — it would fail
+	# these three on the wrong axis and hide a real band regression.
+	GameState.set_flag("mvp_components", ["ai_vec_search_api"])
+	var s := Prospect.new()
+	s.archetype = "small"
+	s.pain_feature_id = "ai_vec_search_api"
+	var m := Prospect.new()
+	m.archetype = "mid"
+	m.pain_feature_id = "ai_vec_search_api"
+	var e := Prospect.new()
+	e.archetype = "enterprise"
+	e.pain_feature_id = "ai_vec_search_api"
+	if not SalesRepSystem.is_auto_closable(s):
+		return "a small lead is not auto-closable"
+	if SalesRepSystem.is_auto_closable(m) or SalesRepSystem.is_auto_closable(e):
+		return "a mid/enterprise lead is auto-closable"
+	return ""
+
+
+static func _case_sales_concession_deal_surfaces() -> String:
+	# A lead whose pain maps to an UNSHIPPED feature needs the founder's word -> never auto.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	GameState.set_flag("mvp_components", ["ai_vec_search_api"])  # NOT the pain below
+	_make_sales_rep("char_sr_1", 0, 9)
+	var p: Prospect = _add_prospect("concession", "small", "ai_vec_filter")
+	if SalesRepSystem.is_auto_closable(p):
+		return "a concession lead reads as auto-closable"
+	for i in 40:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	if ProspectRegistry.get_prospect("concession") == null:
+		return "a concession lead closed without the founder"
+	# Ship the feature and the SAME lead becomes routine - proves the gate IS the concession.
+	GameState.set_flag("mvp_components", ["ai_vec_search_api", "ai_vec_filter"])
+	if not SalesRepSystem.is_auto_closable(ProspectRegistry.get_prospect("concession")):
+		return "shipping the promised feature did not make the lead routine"
+	return ""
+
+
+static func _case_sales_close_speed_by_expertise() -> String:
+	# TWO-DIRECTIONAL: higher UZMANLIK closes a routine lead in strictly fewer days.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	GameState.set_flag("mvp_components", ["ai_vec_filter"])
+	var weak: Character = _make_sales_rep("char_sr_weak", 0, 2)
+	_add_prospect("slow", "small", "ai_vec_filter")
+	var slow_days: int = 0
+	for i in 200:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+		slow_days += 1
+		if ProspectRegistry.get_prospect("slow") == null:
+			break
+	if ProspectRegistry.get_prospect("slow") != null:
+		return "the weak rep never closed a routine lead"
+	CharacterRegistry.remove(weak.id)
+	_make_sales_rep("char_sr_strong", 0, 9)
+	_add_prospect("fast", "small", "ai_vec_filter")
+	var fast_days: int = 0
+	for i in 200:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+		fast_days += 1
+		if ProspectRegistry.get_prospect("fast") == null:
+			break
+	if ProspectRegistry.get_prospect("fast") != null:
+		return "the strong rep never closed a routine lead"
+	if fast_days >= slow_days:
+		return "UZMANLIK did not speed the close (weak=%d days, strong=%d days)" % [slow_days, fast_days]
+	return ""
+
+
+static func _case_sales_overtime_multiplier() -> String:
+	# Sales overtime finally BUYS something. Before task 2b a Satis block cost cash and morale
+	# and raised nothing: speed_multiplier was only ever read with DEPT_PRODUCT_DEV.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	_make_sales_rep("char_sr_1", 6, 5)
+	var base_rate: float = SalesRepSystem.lead_rate_per_day()
+	HROvertimeSystem.start(HRConstants.DEPT_SALES, HRConstants.OVERTIME_BLOCKS[0])
+	var mult: float = HROvertimeSystem.speed_multiplier(HRConstants.DEPT_SALES)
+	if is_equal_approx(mult, 1.0):
+		return "starting a sales overtime block produced no multiplier"
+	if not is_equal_approx(SalesRepSystem.lead_rate_per_day(), base_rate * mult):
+		return "lead rate %f, want base %f x overtime %f" % [
+			SalesRepSystem.lead_rate_per_day(), base_rate, mult]
+	HROvertimeSystem.stop(HRConstants.DEPT_SALES)
+	if not is_equal_approx(SalesRepSystem.lead_rate_per_day(), base_rate):
+		return "the lead rate stayed raised after the block stopped"
+	return ""
+
+
+static func _case_cs_auto_assignment_capacity() -> String:
+	# Delegation is EXCESS-driven: under FOUNDER_DIRECT_CAP nothing moves; above it the
+	# overflow goes over, bounded by cs_capacity(HIZ). Leave releases the roster.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var rep: Character = _make_cs_rep("char_cs_1", 9, 5)
+	for i in B2BConstants.FOUNDER_DIRECT_CAP:
+		var p: Prospect = _add_prospect("cap%d" % i, "small", "ai_vec_filter")
+		var c: Customer = SalesSystem.add_b2b_customer(p, 300, 70)
+		ProspectRegistry.remove(p.id)
+		CustomerRegistry.set_lifecycle_phase(c.id, "active")
+	CustomerRegistry.set_lifecycle_phase("co_lead_smoke", "active")
+	CustomerRepSystem.reconcile_assignments()
+	# co_lead_smoke + FOUNDER_DIRECT_CAP more = cap + 1, so exactly ONE hands over.
+	var assigned: int = 0
+	for c in CustomerRegistry.get_by_market("b2b"):
+		if c.assigned_to == rep.id:
+			assigned += 1
+	if assigned != 1:
+		return "expected exactly the 1 excess account delegated, got %d" % assigned
+	if B2BSalesSystem.founder_managed_count() != B2BConstants.FOUNDER_DIRECT_CAP:
+		return "founder kept %d accounts, want the cap %d" % [
+			B2BSalesSystem.founder_managed_count(), B2BConstants.FOUNDER_DIRECT_CAP]
+	CharacterRegistry.set_status(rep.id, HRConstants.STATUS_ON_LEAVE)
+	CustomerRepSystem.reconcile_assignments()
+	for c in CustomerRegistry.get_by_market("b2b"):
+		if c.assigned_to != "":
+			return "an on-leave rep still holds %s" % c.id
+	return ""
+
+
+static func _case_cs_capacity_resolution() -> String:
+	# The dead-symbol sweep, asserted. cs_capacity now reads HIZ and actually spreads; the
+	# retired 0-100-scale divisor is gone; FOUNDER_DIRECT_CAP has a live reader.
+	if B2BConstants.cs_capacity(0) != B2BConstants.CS_BASE_CAPACITY:
+		return "cs_capacity(0) is not the base capacity"
+	if B2BConstants.cs_capacity(HRConstants.AXIS_MAX) <= B2BConstants.cs_capacity(0):
+		return "cs_capacity does not rise across the ruler (the old /25 bug)"
+	var want_top: int = B2BConstants.CS_BASE_CAPACITY + int(
+		float(HRConstants.AXIS_MAX) / float(B2BConstants.CS_PACE_PER_SLOT))
+	if B2BConstants.cs_capacity(HRConstants.AXIS_MAX) != want_top:
+		return "cs_capacity(9) is %d, want %d" % [B2BConstants.cs_capacity(HRConstants.AXIS_MAX), want_top]
+	for i in HRConstants.AXIS_MAX:
+		if B2BConstants.cs_capacity(i + 1) < B2BConstants.cs_capacity(i):
+			return "cs_capacity is not monotone at HIZ %d" % i
+	_seed_b2b(1000)
+	if B2BSalesSystem.founder_managed_count() != 1:
+		return "founder_managed_count does not report the founder book"
+	return ""
+
+
+static func _case_cs_request_absorption_by_expertise() -> String:
+	# THE AXIS-SPLIT PROOF: the SAME request is absorbed at one UZMANLIK and escalated one
+	# point lower. Difficulty is built so the ceiling lands exactly between the two.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	c.pain_feature_id = "ai_vec_filter"
+	GameState.set_flag("mvp_components", [])          # pain UNSHIPPED -> +2
+	CustomerRegistry.set_satisfaction(c.id, 20)       # under tolerance -> +2
+	var diff: int = CustomerRepSystem.request_difficulty(c)
+	var strong_expertise: int = diff - B2BConstants.CS_ABSORB_BASE
+	if strong_expertise < 1 or strong_expertise > HRConstants.AXIS_MAX:
+		return "difficulty %d cannot be straddled on the 0-9 ruler" % diff
+	var strong: Character = _make_cs_rep("char_cs_strong", 9, strong_expertise)
+	if CustomerRepSystem.absorb_ceiling() < diff:
+		return "the strong rep should absorb difficulty %d (ceiling %d)" % [
+			diff, CustomerRepSystem.absorb_ceiling()]
+	CustomerRegistry.set_support_request(c.id, GameState.day)
+	CustomerRepSystem.daily_tick()
+	if c.support_request_since_day >= 0:
+		return "the strong rep did not clear the request"
+	if _instances_of("ev_b2b_request_%s" % c.id) != 0:
+		return "the strong rep escalated a request it should have absorbed"
+	CharacterRegistry.remove(strong.id)
+	_make_cs_rep("char_cs_weak", 9, strong_expertise - 1)
+	CustomerRegistry.set_support_request(c.id, GameState.day)
+	CustomerRepSystem.daily_tick()
+	if _instances_of("ev_b2b_request_%s" % c.id) == 0:
+		return "the weaker rep absorbed a request that should have escalated"
+	return ""
+
+
+static func _case_cs_request_throughput_by_pace() -> String:
+	# HIZ is volume: a faster desk clears strictly more, and the surplus QUEUES.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	GameState.set_flag("mvp_components", ["ai_vec_filter"])
+	var slow: Character = _make_cs_rep("char_cs_slow", 0, 9)
+	var fast: Character = _make_cs_rep("char_cs_fast", 9, 9)
+	if CustomerRepSystem.throughput_of(fast) <= CustomerRepSystem.throughput_of(slow):
+		return "HIZ does not raise throughput (%f vs %f)" % [
+			CustomerRepSystem.throughput_of(fast), CustomerRepSystem.throughput_of(slow)]
+	var want: float = B2BConstants.CS_THROUGHPUT_BASE \
+		+ float(HRConstants.AXIS_MAX) * B2BConstants.CS_THROUGHPUT_PER_PACE
+	if not is_equal_approx(CustomerRepSystem.throughput_of(fast), want):
+		return "throughput %f, want %f" % [CustomerRepSystem.throughput_of(fast), want]
+	CharacterRegistry.remove(fast.id)
+	var opened: Array[String] = []
+	for i in 6:
+		var p: Prospect = _add_prospect("thr%d" % i, "small", "ai_vec_filter")
+		var c: Customer = SalesSystem.add_b2b_customer(p, 300, 70)
+		ProspectRegistry.remove(p.id)
+		CustomerRegistry.set_support_request(c.id, GameState.day)
+		opened.append(c.id)
+	CustomerRepSystem.daily_tick()
+	var still_open: int = 0
+	for cid in opened:
+		var cc: Customer = CustomerRegistry.get_customer(cid)
+		if cc != null and cc.support_request_since_day >= 0:
+			still_open += 1
+	if still_open == 0:
+		return "a slow desk cleared every request in one day; the queue is not bounded"
+	return ""
+
+
+static func _case_cs_request_covers_founder_managed() -> String:
+	# THE NO-IDLE-HIRE GUARANTEE. One rep, one account, nothing delegated (well under the
+	# cap) -> the rep STILL fields that account request on day one.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	GameState.set_flag("mvp_components", ["ai_vec_filter"])
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	c.pain_feature_id = "ai_vec_filter"
+	_make_cs_rep("char_cs_1", 9, 9)
+	CustomerRepSystem.reconcile_assignments()
+	if c.assigned_to != "":
+		return "an account under the founder cap was delegated"
+	CustomerRegistry.set_support_request(c.id, GameState.day)
+	CustomerRepSystem.daily_tick()
+	if c.support_request_since_day >= 0:
+		return "the rep ignored a founder-managed account request (idle hire)"
+	var log: Array = SalesSystem.get_sales_log()
+	if log.is_empty() or String(log[log.size() - 1].get("kind", "")) != "cs_absorb":
+		return "absorbing a founder-managed request produced no activity line"
+	return ""
+
+
+static func _case_cs_request_channel_gated_on_rep() -> String:
+	# With no customer rep the channel does not exist: no request is ever opened.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	for i in 30:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+		if c.support_request_since_day >= 0:
+			return "a request opened with no customer rep on staff (day %d)" % GameState.day
+	if _instances_of("ev_b2b_request_%s" % c.id) != 0:
+		return "a request event fired with no customer rep on staff"
+	return ""
+
+
+static func _case_promise_broken_penalty() -> String:
+	# PROMISE_BROKEN_SAT is APPLIED (the assertion the old broken-promise case never made),
+	# and the hit is DURABLE: before task 2b the daily drift erased it inside a week because
+	# _promise_offset was a permanent `return 0.0` stub.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	CustomerRegistry.set_satisfaction(c.id, 70)
+	var sat_before: int = c.satisfaction
+	var pr: Promise = PromiseRegistry.create(c.id, "ai_vec_filter", 1)
+	GameState.advance_day()
+	GameState.advance_day()
+	PromiseRegistry.tick_deadlines(GameState.day)
+	if pr.status != "broken":
+		return "promise did not break (status=%s)" % pr.status
+	# (a) the one-shot actually lands
+	if c.satisfaction != clampi(sat_before + B2BConstants.PROMISE_BROKEN_SAT, 0, 100):
+		return "PROMISE_BROKEN_SAT not applied (%d -> %d)" % [sat_before, c.satisfaction]
+	# (b) the durable half is recorded on the trust ledger
+	if not is_equal_approx(c.trust_offset, B2BConstants.PROMISE_BROKEN_OFFSET):
+		return "trust offset %f, want %f" % [c.trust_offset, B2BConstants.PROMISE_BROKEN_OFFSET]
+	# (c) a week later the account is STILL below where it started. A return to the 0.0 stub
+	#     fails HERE - that is the whole point of this case.
+	for i in 7:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	if c.satisfaction >= sat_before:
+		return "the broken promise was erased by drift within a week (now %d, started %d)" % [
+			c.satisfaction, sat_before]
+	# (d) and it forgives: the offset decays back toward zero on its own
+	if absf(c.trust_offset) >= absf(B2BConstants.PROMISE_BROKEN_OFFSET):
+		return "the grudge is not decaying (%f)" % c.trust_offset
+	return ""
+
+
+static func _case_sales_cs_zero_staff_identical() -> String:
+	# THE ADDITIVITY GATE. With no sales rep and no customer rep, a long run touches none of
+	# the new state: no leads, no assignments, no requests, no activity log, no flags.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1000)
+	var prospects0: int = ProspectRegistry.count()
+	var mrr0: int = GameState.mrr
+	for i in 60:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+	if ProspectRegistry.count() != prospects0:
+		return "prospects changed with no sales staff (%d -> %d)" % [prospects0, ProspectRegistry.count()]
+	if GameState.mrr != mrr0:
+		return "MRR moved with no sales staff (%d -> %d)" % [mrr0, GameState.mrr]
+	for c in CustomerRegistry.get_by_market("b2b"):
+		if c.assigned_to != "":
+			return "an account was delegated with no customer rep on staff"
+		if c.support_request_since_day >= 0:
+			return "a request opened with no customer rep on staff"
+	if not GameState.sales_log.is_empty():
+		return "the activity log grew with no desk staff"
+	if float(GameState.get_flag("sales_lead_progress", 0.0)) != 0.0:
+		return "the lead accumulator advanced with no sales staff"
+	if float(GameState.get_flag("cs_throughput_progress", 0.0)) != 0.0:
+		return "the throughput accumulator advanced with no customer rep"
+	return ""
+
+
+static func _case_prospect_id_unique_after_removal() -> String:
+	# Regression: prospect ids were built off ProspectRegistry.count(), which DROPS when a lead
+	# is signed or lost, so a same-day respawn rebuilt an existing id, ProspectRegistry.add
+	# warned, and the lead was silently discarded while spawn_prospect still returned it.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	var a: Prospect = PitchSystem.spawn_prospect("small", "test")
+	ProspectRegistry.remove(a.id)
+	var b: Prospect = PitchSystem.spawn_prospect("small", "test")   # SAME day, count back to 0
+	if a.id == b.id:
+		return "same-day respawn reused the id %s" % a.id
+	if ProspectRegistry.get_prospect(b.id) == null:
+		return "the respawned lead was not registered (silently dropped)"
+	if ProspectRegistry.count() != 1:
+		return "registry holds %d prospects, want 1" % ProspectRegistry.count()
+	return ""
+
+
+# ============ Dünya İnandırıcılığı (şirket havuzu + dedup) ======================
+
+static func _case_b2b_prospect_dedup_excludes_signed() -> String:
+	# Fix 1: a SIGNED company never re-enters cold prospecting (churn included), live
+	# leads hold distinct names, and an exhausted catalog returns null without burning
+	# the id counter or registering anything.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	# Sign the first spawned company through the real path (the pitch SIGNED sequence).
+	var first: Prospect = PitchSystem.spawn_prospect("small", "find")
+	if first == null:
+		return "fresh run spawned null"
+	var signed_name: String = first.company_name
+	var c: Customer = SalesSystem.add_b2b_customer(first, 400, 70)
+	ProspectRegistry.remove(first.id)
+	if not GameState.b2b_signed_company_names.has(signed_name):
+		return "ledger missed the signed name"
+	# Drain the whole affinity pool. Expected supply derives from the catalog (owning
+	# source, never a literal): every company in the pool's sectors minus the signed one.
+	var expected: int = 0
+	for s in B2BConstants.sector_pool("ai_vector_search"):
+		expected += CompanyCatalog.names_for_sector(String(s)).size()
+	expected -= 1
+	var names_seen: Dictionary = {}
+	for i in expected + 10:
+		var p: Prospect = PitchSystem.spawn_prospect("small", "find")
+		if p == null:
+			break
+		if p.company_name == signed_name:
+			return "signed company respawned as a prospect: %s" % signed_name
+		if names_seen.has(p.company_name):
+			return "duplicate live prospect name: %s" % p.company_name
+		names_seen[p.company_name] = true
+	if names_seen.size() != expected:
+		return "drained %d distinct names, want %d" % [names_seen.size(), expected]
+	if PitchSystem.eligible_company_count() != 0:
+		return "pool drained but eligible_company_count()=%d" % PitchSystem.eligible_company_count()
+	var live_before: int = ProspectRegistry.count()
+	var counter_before: int = GameState.run_prospects_spawned
+	if PitchSystem.spawn_prospect("small", "find") != null:
+		return "spawn returned a lead from an exhausted pool"
+	if ProspectRegistry.count() != live_before:
+		return "null spawn registered a lead anyway"
+	if GameState.run_prospects_spawned != counter_before:
+		return "null spawn burned the id counter"
+	# Churn the signed account (shared loss seam) — the name must STAY excluded: churned
+	# companies return through a future win-back path, never through cold prospecting.
+	B2BSalesSystem._remove_lost(c)
+	if CustomerRegistry.get_customer(c.id) != null:
+		return "churn did not remove the customer record"
+	if PitchSystem.eligible_company_count() != 0:
+		return "churn re-opened cold prospecting for the signed name"
+	if PitchSystem.spawn_prospect("small", "find") != null:
+		return "churned company respawned as a prospect"
+	return ""
+
+
+static func _case_company_catalog_pool_integrity() -> String:
+	# Fix 2: >= 60 companies, every canonical sector populated, globally unique names,
+	# a non-empty background line per record, and every sector any affinity pool can
+	# request resolves to at least one company (the old 4-sector fallback hole).
+	var all_companies: Array = CompanyCatalog.all()
+	if all_companies.size() < 60:
+		return "catalog holds %d companies, want >= 60" % all_companies.size()
+	var seen: Dictionary = {}
+	for rec in all_companies:
+		var nm: String = String(rec["name"])
+		if seen.has(nm):
+			return "duplicate company name: %s" % nm
+		seen[nm] = true
+		if String(rec["background"]).strip_edges() == "":
+			return "empty background line: %s" % nm
+		if CompanyCatalog.background_for(nm) == "":
+			return "background_for() returned empty for %s" % nm
+	var counts: Dictionary = CompanyCatalog.count_by_sector()
+	for sector in B2BConstants.SECTOR_CONTACT:   # the 13-sector canon
+		if int(counts.get(sector, 0)) < 4:
+			return "sector %s holds %d companies, want >= 4" % [sector, int(counts.get(sector, 0))]
+	var pools: Array = []
+	for sub_id in B2BConstants.SECTOR_AFFINITY:
+		pools.append(B2BConstants.sector_pool(String(sub_id)))
+	pools.append(B2BConstants.SECTOR_AFFINITY_FALLBACK)
+	for pool in pools:
+		for s in pool:
+			if CompanyCatalog.names_for_sector(String(s)).is_empty():
+				return "affinity sector %s resolves to zero companies" % s
+	return ""
+
+
+static func _case_market_share_tracks_mrr() -> String:
+	# Fix 3: player share derives from MRR (rises with it), the snapshot sums to ~100,
+	# the roster holds every catalog rival + market actor, the formatter keeps the
+	# sliver legible, and the computation is pure (two same-day calls byte-equal).
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1500)   # real customer record — set_mrr alone would be bridge-clobbered
+	var snap: Dictionary = RivalRegistry.get_market_snapshot("ai_vector_search")
+	var p1: float = float(snap["player_pct"])
+	if p1 >= 1.0:
+		return "seed MRR should start the share under 1%% (got %f)" % p1
+	var expected_rows: int = RivalCatalog.TEMPLATE.size() + RivalCatalog.MARKET_ACTORS.size()
+	var rivals: Array = snap["rivals"]
+	if rivals.size() != expected_rows:
+		return "snapshot lists %d rivals, want %d" % [rivals.size(), expected_rows]
+	var total: float = p1 + float(snap["others_pct"])
+	for row in rivals:
+		total += float(row["share_pct"])
+		if not [-1, 0, 1].has(int(row["trend"])):
+			return "trend out of range for %s" % String(row["name"])
+		if String(row["name"]).contains("#"):
+			return "fallback rival name leaked into the market: %s" % String(row["name"])
+	if absf(total - 100.0) > 0.11:
+		return "market sums to %f, want ~100" % total
+	for i in rivals.size() - 1:
+		if float(rivals[i]["share_pct"]) < float(rivals[i + 1]["share_pct"]):
+			return "rivals not sorted by share desc"
+	if str(snap) != str(RivalRegistry.get_market_snapshot("ai_vector_search")):
+		return "same-day snapshots differ (computation is not pure)"
+	# Formatter: comma decimal above the floor, "<" form under it.
+	if not RivalRegistry.format_share(p1).contains(","):
+		return "format_share(%f) lost the comma decimal: %s" % [p1, RivalRegistry.format_share(p1)]
+	if RivalRegistry.format_share(0.02) != "<%0,1":
+		return "sub-floor share formats as %s, want <%%0,1" % RivalRegistry.format_share(0.02)
+	# MRR up → share strictly up (a second real customer record).
+	var p := Prospect.new()
+	p.id = "lead_smoke_growth"
+	p.company_name = "Smoke Corp Growth"
+	p.industry = "Testing"
+	p.archetype = "mid"
+	SalesSystem.add_b2b_customer(p, 30000, 70)
+	var p2: float = float(RivalRegistry.get_market_snapshot("ai_vector_search")["player_pct"])
+	if p2 <= p1:
+		return "share did not rise with MRR (%f -> %f)" % [p1, p2]
+	return ""
+
+
+static func _case_news_feed_weights_and_no_repeat() -> String:
+	# Fix 4: 90 simulated days on the ISOLATED driver (advance_day + explicit feed tick —
+	# full dispatch would drag phase gates/endings into a feed test; same rationale as the
+	# 2b additivity case). Asserts the source distribution (sektör ~50%, biz hard-capped
+	# at 20%), the no-repeat-until-reshuffle contract, and the stream cap. Writes the
+	# line-by-line audit to user://news_feed_audit_90d.txt — stdout stays one SMOKE line.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	_seed_b2b(1500)
+	var audit: Array[String] = []
+	var sektor_seen: Dictionary = {}     # txt -> true, cleared at each observed reshuffle
+	var days: int = 90
+	for i in days:
+		GameState.advance_day()
+		# "Biz" injections through the real channel (TimeManager._ready wired the feed).
+		# DAILY on purpose: with surplus supply the hard cap is what limits the source,
+		# so the ≤20% assertion below tests the cap, not the scarcity of milestones.
+		EventBus.headline_added.emit(B2BConstants.NOTICE_SOURCE_SALES, "Smoke kapanışı %d" % i)
+		var reshuffles_before: int = int(GameState.news_feed.get("reshuffles", 0))
+		NewsFeedSystem.daily_tick()
+		var boundary_day: bool = int(GameState.news_feed["reshuffles"]) != reshuffles_before
+		if boundary_day:
+			sektor_seen.clear()   # epoch changed mid-day; today's lines span two epochs — skip dup check
+		for line in NewsFeedSystem.get_lines_for_day(GameState.day):
+			audit.append("%d|%s|%s|%s" % [int(line["day"]), String(line["kind"]), String(line["src"]), String(line["txt"])])
+			if String(line["kind"]) == "sektor" and not boundary_day:
+				if sektor_seen.has(String(line["txt"])):
+					return "sektor line repeated before pool exhaustion: %s" % String(line["txt"])
+				sektor_seen[String(line["txt"])] = true
+	var counts: Dictionary = GameState.news_feed["counts"]
+	var total: float = float(int(counts["sektor"]) + int(counts["rakip"]) + int(counts["biz"]))
+	if total < float(days * NewsFeedSystem.DAILY_LINES_MIN):
+		return "only %d lines over %d days" % [int(total), days]
+	var sektor_frac: float = float(counts["sektor"]) / total
+	var rakip_frac: float = float(counts["rakip"]) / total
+	var biz_frac: float = float(counts["biz"]) / total
+	if biz_frac > NewsFeedSystem.BIZ_HARD_CAP + 0.01:
+		return "biz source broke the hard cap: %.3f" % biz_frac
+	if sektor_frac < 0.40 or sektor_frac > 0.62:
+		return "sektor share off band: %.3f" % sektor_frac
+	if int(counts["rakip"]) == 0:
+		return "rival source never fired over %d days" % days
+	if (GameState.news_feed["stream"] as Array).size() > NewsFeedSystem.STREAM_CAP:
+		return "stream exceeded its cap"
+	# Audit report for the done message (distribution header + every line).
+	var f: FileAccess = FileAccess.open("user://news_feed_audit_90d.txt", FileAccess.WRITE)
+	if f != null:
+		f.store_line("days=%d total=%d sektor=%.3f rakip=%.3f biz=%.3f reshuffles=%d" % [
+			days, int(total), sektor_frac, rakip_frac, biz_frac, int(GameState.news_feed["reshuffles"])])
+		for entry in audit:
+			f.store_line(entry)
+		f.close()
+	return ""
+
+
+static func _case_cs_request_kind_state_driven() -> String:
+	# Fix 5: the request KIND derives from relationship state (satisfaction/tolerance,
+	# broken word, tenure, stalls, unmet pain), deterministically — never from the
+	# calendar. Detached Customer fixtures, direct pick_request_kind calls.
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	GameState.set_flag("mvp_components", ["ai_vec_embed_api"])
+	# A — düşük memnuniyet + kırılmış söz → şikâyet.
+	var a := Customer.new()
+	a.id = "co_state_a"
+	a.company_name = "Durum A"
+	a.industry = "Teknoloji"
+	a.satisfaction = 25
+	a.tolerance = 50
+	a.acquired_on_day = GameState.day
+	a.pain_feature_id = "ai_vec_search_api"
+	GameState.set_flag("b2b_broke_co_state_a", true)
+	if B2BEventFactory.pick_request_kind(a) != B2BConstants.CS_KIND_COMPLAINT:
+		return "unhappy broken-promise account did not complain (got %s)" % B2BEventFactory.pick_request_kind(a)
+	# B — sağlıklı + karşılanmamış acı özelliği → özellik talebi.
+	var b := Customer.new()
+	b.id = "co_state_b"
+	b.company_name = "Durum B"
+	b.industry = "Finans"
+	b.satisfaction = 85
+	b.tolerance = 40
+	b.acquired_on_day = GameState.day
+	b.pain_feature_id = "ai_vec_filter"
+	if B2BEventFactory.pick_request_kind(b) != B2BConstants.CS_KIND_FEATURE:
+		return "healthy unmet-pain account did not ask for the feature (got %s)" % B2BEventFactory.pick_request_kind(b)
+	# C — uzun kıdem + oyalama izi, acısı karşılanmış → yenileme masası.
+	var c := Customer.new()
+	c.id = "co_state_c"
+	c.company_name = "Durum C"
+	c.industry = "Medya"
+	c.satisfaction = 70
+	c.tolerance = 40
+	c.acquired_on_day = GameState.day - 180
+	c.pain_feature_id = "ai_vec_embed_api"   # shipped → unmet-pain bonus yok
+	c.retain_stalls = 1
+	if B2BEventFactory.pick_request_kind(c) != B2BConstants.CS_KIND_RENEWAL:
+		return "long-tenure account did not reach renewal (got %s)" % B2BEventFactory.pick_request_kind(c)
+	# No-repeat korunuyor: A az önce şikâyet açtıysa bir daha şikâyet açamaz.
+	a.last_request_kind = B2BConstants.CS_KIND_COMPLAINT
+	if B2BEventFactory.pick_request_kind(a) == B2BConstants.CS_KIND_COMPLAINT:
+		return "no-repeat rule broken by the state scorer"
+	# Determinizm: aynı durum + aynı gün → aynı sonuç.
+	if B2BEventFactory.pick_request_kind(b) != B2BEventFactory.pick_request_kind(b):
+		return "kind selection is not deterministic"
 	return ""
