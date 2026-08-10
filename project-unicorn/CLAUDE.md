@@ -63,11 +63,25 @@ Playtest tripwires (when the calibration pass runs): a naive policy winning >60-
 
 ---
 
-## Content & Language Laws (LOCKED — Editorial Package 4, 2026-07-14)
+## Content & Language Laws (LOCKED — Editorial Package 4, 2026-07-14 · Bilingual Birth 2026-08-08)
 
 These govern all player-facing text and event authoring. They are enforcement rules, not suggestions.
 
-**LANGUAGE INTEGRITY LAW.** Turkish is canonical; English is a literary translation delivered via the localization layer (Godot `TranslationServer` + `localization/strings.csv`, language toggle in Settings — Package 5). **No MIXED TR/EN inside a single player-facing string** (that original intent stands) — full-language EN via the locale switch is correct. Within the Turkish canonical text, English tech terms appear only where they are genuine Turkish-tech loanwords founders actually say — the ruled accepted set is: `pitch, startup, demo, momentum, MRR, runway, churn` (plus proper nouns and the established loanwords `laptop, mail, VC`). Everything else translates to its clean Turkish form (e.g. bug→hata, feature→özellik, feedback→geri bildirim, roadmap→yol haritası, deadline→son tarih, build→geliştirme, push→gönder/yayınla, launch→çıkış/lansman). English lives only in code and specs, never on screen.
+**LANGUAGE INTEGRITY LAW.** Turkish is canonical; English is a literary translation delivered via the localization layer (`localization/strings.csv`, parsed at runtime by the `Localization` autoload into Godot's `TranslationServer`; language toggle in Settings — Package 5). **No MIXED TR/EN inside a single player-facing string** (that original intent stands) — full-language EN via the locale switch is correct. Within the Turkish canonical text, English tech terms appear only where they are genuine Turkish-tech loanwords founders actually say — the ruled accepted set is: `pitch, startup, demo, momentum, MRR, runway, churn, burn` (`burn` added by gate ruling 2026-08-08; plus proper nouns and the established loanwords `laptop, mail, VC`). Everything else translates to its clean Turkish form (e.g. bug→hata, feature→özellik, feedback→geri bildirim, roadmap→yol haritası, deadline→son tarih, build→geliştirme, push→gönder/yayınla, launch→çıkış/lansman). English lives only in code and specs, never on screen.
+
+**BILINGUAL BIRTH LAW.** Every player-visible string is born as a localization key with **both TR and EN
+filled in the same commit** — TR canonical, EN written natively (never machine-translation register), the
+glossary (`docs/design/localization_glossary.md`) binding on every term it rules. No player-visible literal
+lives in a script or scene: static scene text carries the KEY itself (auto-translate renders it — probe-verified);
+composed text goes through `tr(KEY).format({...})` with **named placeholders only** — positional `%s`/`%d`
+are banned from player-visible strings, an interpolated value never takes a suffix or grammatical agreement
+(restructure the sentence: `Sözleşme: {company}`, never `{company}'nin sözleşmesi`), and no literal braces in
+CSV values. Proper nouns do not localize. Localized text is never written into state — store ids, render at
+display time. A task that adds a player-visible string without both locales is **incomplete — reviewers reject
+it**; agent done-messages list every key they added. Event JSON carries `*_en` sibling fields; empty `_en`
+means TR-fallback by design (factory events), absent `_en` on authored content means the task is not done.
+**Proof is a command, not a claim:** `loc_residue.gd` exits zero, `loc_csv_integrity` passes, and both stay
+green in every commit that touches strings.
 
 **EVENT AUTHORING LAW.** No fake choices. No choice pre-labels its own wisdom (don't tell the player which path is "mantıklı"/"pratik"/right). Effects are shown in readable Turkish, never as internal codes. No event implies an unbuilt system. Time-of-day fiction must match a real firing window — or omit the clock entirely (deterministic beats fire at the day boundary, so they must not assert a specific `· HH:MM`). NPC register stays short and dry; monologue stays coherent. Never name an internal UI node or tab in fiction — a mentor guides as a person ("satış tarafına bak"), not as a UI manual ("Sales sekmesine tıkla").
 
@@ -231,8 +245,10 @@ The agent stays strictly within `PROJECT_SPEC.md`. **It does not invent mechanic
 - `docs/TECH_SPEC.md` ✅
 - `CLAUDE.md` ✅ (this file)
 - `icon.svg` (default Godot icon — replace during Visual Identity phase)
-- No scenes, no scripts, no data, no theme, no autoloads, no localization files yet
-- TECH_SPEC §4 directory layout (`scenes/`, `scripts/`, `data/`, `assets/`, `themes/`, `localization/`) **not yet created** — pending skeleton review with the developer
+- The TECH_SPEC §4 skeleton is long since built and live: scenes, scripts (14 autoloads, 33 systems), data,
+  themes, and `localization/` (`strings.csv`, TR+EN, parsed by the `Localization` autoload) all exist —
+  see git history for the current build state. (This block's old "nothing exists yet" claims were the
+  audit-flagged stale documentation; corrected 2026-08-10 during the localization sweep's Step 0.)
 
 ---
 

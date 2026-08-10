@@ -5,5 +5,9 @@
 # Godot editor cache (also covered by project-unicorn/.gitignore)
 project-unicorn/.godot/
 
+# Compiled translation artifacts — inert (Localization autoload parses the CSV directly);
+# tracked copies deleted in the localization sweep Step 0 (S3-54)
+project-unicorn/localization/*.translation
+
 # Local backup of an older version — not part of the project
 project-unicorn-OLD-backup/
