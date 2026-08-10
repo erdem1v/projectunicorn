@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/ui/components/top_bar.gd" id="1_topbar"]
 
 [node name="TopBar" type="Panel"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 54)
 theme_type_variation = &"TopBarPanel"
 script = ExtResource("1_topbar")
 
@@ -14,9 +14,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 18
+theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 0
-theme_override_constants/margin_right = 18
+theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 0
 
 [node name="Row" type="HBoxContainer" parent="Margin"]
@@ -33,7 +33,7 @@ theme_override_constants/separation = 10
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(0.886, 0.639, 0.235, 1)
+color = Color(1, 0.627, 0.157, 1)
 
 [node name="CompanyNameLabel" type="Label" parent="Margin/Row/IdentityGroup"]
 layout_mode = 2
@@ -41,16 +41,10 @@ size_flags_vertical = 4
 theme_type_variation = &"ChromeValue"
 text = "Unicorn Inc."
 
-[node name="Sep1" type="ColorRect" parent="Margin/Row"]
-custom_minimum_size = Vector2(1, 22)
-layout_mode = 2
-size_flags_vertical = 4
-color = Color(1, 1, 1, 0.08)
-
 [node name="FinanceGroup" type="HBoxContainer" parent="Margin/Row"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 24
+theme_override_constants/separation = 28
 
 [node name="StatCol_Cash" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
 custom_minimum_size = Vector2(104, 0)
@@ -164,16 +158,10 @@ size_flags_vertical = 8
 theme_type_variation = &"MetricUnit"
 text = "mo"
 
-[node name="Sep2" type="ColorRect" parent="Margin/Row"]
-custom_minimum_size = Vector2(1, 22)
-layout_mode = 2
-size_flags_vertical = 4
-color = Color(1, 1, 1, 0.08)
-
 [node name="ReputationGroup" type="HBoxContainer" parent="Margin/Row"]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/separation = 24
+theme_override_constants/separation = 28
 
 [node name="StatCol_Brand" type="VBoxContainer" parent="Margin/Row/ReputationGroup"]
 layout_mode = 2
@@ -220,28 +208,22 @@ theme_override_constants/separation = 16
 custom_minimum_size = Vector2(210, 0)
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"ChromeSerif"
+theme_type_variation = &"ChromeClock"
 text = "Thu, Jan 1, 2026 · 09:00"
 
 [node name="ShutterLabel" type="Label" parent="Margin/Row/TimeGroup"]
 visible = false
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"ChromeValue"
+theme_type_variation = &"ChromeAlert"
 text = "KEPENK: 7 GÜN"
 
 [node name="OfferLabel" type="Label" parent="Margin/Row/TimeGroup"]
 visible = false
 layout_mode = 2
 size_flags_vertical = 4
-theme_type_variation = &"ChromeValue"
+theme_type_variation = &"ChromeAlert"
 text = "TEKLİF: 3 GÜN"
-
-[node name="Sep3" type="ColorRect" parent="Margin/Row/TimeGroup"]
-custom_minimum_size = Vector2(1, 22)
-layout_mode = 2
-size_flags_vertical = 4
-color = Color(1, 1, 1, 0.08)
 
 [node name="PhaseGroup" type="VBoxContainer" parent="Margin/Row/TimeGroup"]
 custom_minimum_size = Vector2(108, 0)
@@ -275,47 +257,41 @@ custom_minimum_size = Vector2(24, 4)
 layout_mode = 2
 theme_type_variation = &"PhaseDotDim"
 
-[node name="Sep4" type="ColorRect" parent="Margin/Row/TimeGroup"]
-custom_minimum_size = Vector2(1, 22)
-layout_mode = 2
-size_flags_vertical = 4
-color = Color(1, 1, 1, 0.08)
-
 [node name="SpeedControls" type="HBoxContainer" parent="Margin/Row/TimeGroup"]
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 4
 
 [node name="PauseBtn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(28, 22)
+custom_minimum_size = Vector2(26, 22)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SpeedButton"
 text = "II"
 
 [node name="Speed1Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(28, 22)
+custom_minimum_size = Vector2(26, 22)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SpeedButtonActive"
 text = "1x"
 
 [node name="Speed2Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(28, 22)
+custom_minimum_size = Vector2(26, 22)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SpeedButton"
 text = "2x"
 
 [node name="Speed3Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(28, 22)
+custom_minimum_size = Vector2(26, 22)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SpeedButton"
 text = "3x"
 
 [node name="Speed4Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(28, 22)
+custom_minimum_size = Vector2(26, 22)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SpeedButton"

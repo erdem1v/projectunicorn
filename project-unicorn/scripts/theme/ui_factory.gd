@@ -45,6 +45,26 @@ static func make_delta_badge(text: String, value: int) -> PanelContainer:
 	return _make_chip(text, p.bg, p.fg, true)
 
 ## Trait / relationship pill with explicit colors (kept uppercase, mixed-case allowed).
+## Terminal DURUM ÇİPİ: ince RENKLİ kenar + koyu dolgu (kilitli reçete).
+## ÇALIŞMA ZAMANINDA kurulur, tema varyasyonu olarak DEĞİL — semantik çiftin
+## renk körü takası bir .tres'e gömülemez (tema statiktir, palet değil).
+static func make_state_chip(text: String, fg: Color, bg: Color, border: Color) -> PanelContainer:
+	var chip := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.border_color = border
+	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	sb.content_margin_left = UiTokens.PAD_CHIP.x
+	sb.content_margin_right = UiTokens.PAD_CHIP.x
+	sb.content_margin_top = UiTokens.PAD_CHIP.y
+	sb.content_margin_bottom = UiTokens.PAD_CHIP.y
+	chip.add_theme_stylebox_override("panel", sb)
+	var l := make_label(text, &"BadgeLabel", fg)
+	chip.add_child(l)
+	return chip
+
+
 static func make_pill(text: String, bg: Color, fg: Color, uppercase: bool = true) -> PanelContainer:
 	return _make_chip(text, bg, fg, uppercase)
 

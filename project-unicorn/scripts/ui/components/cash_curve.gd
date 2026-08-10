@@ -27,8 +27,14 @@ const PAD_BOTTOM := 20.0         # ay etiketleri için alt bant
 const REALIZED_WIDTH := 2.0
 const PROJECTION_WIDTH := 1.5
 const DASH_LEN := 5.0
+# İKİ PROJEKSİYONUN AYRI RİTMİ. Eskiden ikisi de aynı kalınlık ve aynı kesik
+# boyundaydı, yani onları ayıran TEK şey renkti — tasarımdaki sıfır-yedeklilikli
+# iki yerden biri (öteki 4a'daki çıplak "CANLI" metni). Renk körü modu açıkken
+# mavi/turuncu ayrımı hâlâ okunur, ama ritim farkı renkten BAĞIMSIZ bir ikinci
+# işarettir ve grafiğin tek dayanağı hue olmaktan çıkar.
+const DASH_CURRENT := 4.0        # "mevcut gidiş" — sık kesik
+const DASH_TARGET := 11.0        # "satış hedefi tutarsa" — uzun kesik
 const TODAY_DOT_R := 3.5
-const FILL_ALPHA := 0.10         # gerçekleşen çizgi altı dolgu saydamlığı
 const TICK_FONT_SIZE := 9
 const GRID_LINES := 3            # yatay kılavuz çizgisi sayısı
 
@@ -125,13 +131,8 @@ func _draw() -> void:
 	if pts.size() == 1:
 		draw_circle(pts[0], TODAY_DOT_R, UiTokens.INK)
 	else:
-		var fill := PackedVector2Array(pts)
-		var base_y: float = to_px.call(day_min, maxf(cash_min, 0.0)).y
-		fill.append(Vector2(pts[pts.size() - 1].x, base_y))
-		fill.append(Vector2(pts[0].x, base_y))
-		var fill_color: Color = UiTokens.ACCENT
-		fill_color.a = FILL_ALPHA
-		draw_colored_polygon(fill, fill_color)
+		# DOLGU YOK (Terminal, mockup 5i): grafikteki her path `fill="none"`.
+		# Sayfanın kendi notu "tek dolgu" diyor ama SVG'de dolgu yok — SVG yönetir.
 		draw_polyline(pts, UiTokens.INK, REALIZED_WIDTH, true)
 
 	# --- 4. Bugün: kesikli dikey hairline + nokta; projeksiyonlar buradan çatallanır ---
@@ -143,11 +144,11 @@ func _draw() -> void:
 	#     kasa erimiyorken kırmızı erime çizgisi çizilmez). ---
 	if current_net < 0:
 		var end_c: Vector2 = to_px.call(day_max, end_current)
-		draw_dashed_line(today_px, end_c, UiTokens.negative(), PROJECTION_WIDTH, DASH_LEN)
+		draw_dashed_line(today_px, end_c, UiTokens.negative(), PROJECTION_WIDTH, DASH_CURRENT)
 
 	# --- 6. Projeksiyon "satış hedefi tutarsa" ---
 	var end_o: Vector2 = to_px.call(day_max, end_optimistic)
-	draw_dashed_line(today_px, end_o, UiTokens.positive(), PROJECTION_WIDTH, DASH_LEN)
+	draw_dashed_line(today_px, end_o, UiTokens.positive(), PROJECTION_WIDTH, DASH_TARGET)
 
 	# --- 7. Bugün noktası en üstte ---
 	draw_circle(today_px, TODAY_DOT_R, UiTokens.ACCENT_DEEP)

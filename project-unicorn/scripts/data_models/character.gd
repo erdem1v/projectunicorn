@@ -55,6 +55,14 @@ extends Resource
 @export var flight_risk_days: int = 0        # consecutive days under MORALE_FLIGHT_RISK
 @export var overtime_days: int = 0           # days worked in the CURRENT overtime block
 
+# --- DENEYİM / EĞİTİM (Terminal UI görevi, 2026-08-08) ---
+# Onaylı HR defterinin [PROPOSAL] etiketli DENEYİM sütunu. Çalışan İŞ BAŞINDA
+# deneyim biriktirir; 100'de eğitime gönderilebilir; eğitim UZMANLIK'ı +1 yapar
+# ve deneyimi sıfırlar. Kurucu HARİÇ (kurucu gelişimi ayrı, park edilmiş sistem).
+# Her ikisi de 0 varsayılanıyla giriyor, yani eski kayıtlar ileri-uyumlu okunur.
+@export var experience: int = 0              # 0..100; HRConstants.EXPERIENCE_MAX'ta eğitime hazır
+@export var training_days_left: int = 0      # >0 iken çalışan EDİLGEN (İzinde gibi); 0 = eğitimde değil
+
 # --- Reserved for future systems (declared, not used) ---
 @export var loyalty: int = 50                # event-driven; future
 @export var relationship: String = "neutral" # ally | friendly | neutral | wary | hostile

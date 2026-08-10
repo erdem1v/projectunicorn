@@ -48,6 +48,14 @@ static func daily_tick() -> void:
 	HRMoraleSystem.tick_thresholds()
 	HRMoraleSystem.tick_trait_effects()
 	HRMoraleSystem.tick_positive_events()
+	#  7. DENEYİM: bugün gerçekten ÇALIŞMIŞ olanlar biriktirir. Eğitimdekiler
+	#     STATUS_TRAINING taşıdığı için get_active_employees zaten dışarıda bırakır.
+	#  8. EĞİTİM en sonda. SIRA ÖNEMLİ ve tersi ÖLÇÜLDÜ: eğitim önce koşarsa
+	#     bitiş günü deneyimi sıfırlar, sonra tick_experience aynı gün içinde bir
+	#     puan geri verir ve "biterken sıfırlanır" sözleşmesi sessizce yalan olur
+	#     (hr_training_completion tam olarak bunu yakaladı).
+	tick_experience()
+	tick_training()
 
 	if OS.is_debug_build():
 		print("[HRSystem] Daily tick — %d employees (%d izinde)" % [
@@ -60,6 +68,61 @@ static func daily_tick() -> void:
 	# behind, arriving files invisible until tomorrow). This is the same trap
 	# build_progress_changed was added to fix for the build tracker. The HR tab listens here.
 	EventBus.hr_day_processed.emit()
+
+
+# --- DENEYİM / EĞİTİM (Terminal UI görevi, 2026-08-08) ---
+# Onaylı defterin [PROPOSAL] DENEYİM sütunu. Tüm sayılar HRConstants'ta ve WORKING.
+
+## Günlük deneyim birikimi. YALNIZ gerçekten çalışanlar: izindeki ya da eğitimdeki
+## biri edilgendir ve get_active_employees zaten ikisini de dışarıda bırakır.
+## Kurucu bu listede hiç yok (category "founder"), yani hariç tutma bedavaya geliyor.
+static func tick_experience() -> void:
+	var gain: int = HRConstants.EXPERIENCE_PER_DAY
+	if _build_phase_running():
+		gain = HRConstants.EXPERIENCE_PER_BUILD_DAY
+	for emp in CharacterRegistry.get_active_employees():
+		CharacterRegistry.add_experience(emp.id, gain)
+
+
+## Eğitim günlerini işler; biten her eğitim bir haber satırı bırakır.
+static func tick_training() -> void:
+	for emp in CharacterRegistry.get_employees():
+		if emp.training_days_left <= 0:
+			continue
+		if CharacterRegistry.tick_training(emp.id):
+			# Mevcut haber grameri: "biz" kaynağı EventBus.headline_added'a yazar,
+			# NewsFeedSystem kotayı kendi yürütür (HRMoraleSystem'in izin satırlarıyla
+			# aynı yol).
+			# TranslationServer, tr() DEĞİL: statik fonksiyonun çeviri yapacağı bir
+			# Object'i yok (UiTokens.net_runway_parts ile aynı sebep).
+			EventBus.headline_added.emit(HRConstants.NOTICE_SOURCE_HR,
+				TranslationServer.translate("HR_NEWS_TRAINING_DONE").format({
+					"name": emp.character_name,
+					"role": HRConstants.role_label(emp.role),
+				}))
+
+
+## Oyuncunun kararı: birini eğitime gönder. Ücreti HR gider hattından TAHSİL EDER
+## ve ancak ödeme geçtiyse eğitimi başlatır — §10: bedeli olan, oynanmış bir karar.
+## `false` döner uygun değilse ya da kasa yetmiyorsa (çağıran düğmeyi kapatır).
+static func send_to_training(id: String) -> bool:
+	if not CharacterRegistry.can_train(id):
+		return false
+	if GameState.cash < HRConstants.TRAINING_FEE:
+		return false
+	# Tek seferlik gider, HR gider hattına — işe alım retainer'ıyla aynı sızdırmazlık.
+	FinanceSystem.apply_one_time_cost(HRConstants.TRAINING_FEE, HRConstants.COST_LABEL_TRAINING)
+	CharacterRegistry.begin_training(id)
+	return true
+
+
+## Bir geliştirme fazı KOŞUYOR mu? ProductSystem'in kendi faz listesiyle aynı üçlü
+## (iteration/development/bugfix) — kopya bir liste tutmamak için tek yerden okunur.
+static func _build_phase_running() -> bool:
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if b == null:
+		return false
+	return b.current_phase in ["iteration", "development", "bugfix"]
 
 
 # --- Run reset (called from GameState.initialize_run, after the flags clear) ---

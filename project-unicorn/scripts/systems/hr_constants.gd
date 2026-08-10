@@ -511,6 +511,7 @@ const SALARY_PEAK_PREMIUM := 0.10       # WORKING: keskin uzman, düz profilden 
 # Finance one-time charge labels (FinanceSystem.apply_one_time_cost's ledger hook).
 const COST_LABEL_HIRE := "İşe alım"
 const COST_LABEL_SEVERANCE := "Kıdem tazminatı"
+const COST_LABEL_TRAINING := "Eğitim ücreti"   # DENEYİM/EĞİTİM tek seferlik gideri
 
 # Ticker attribution (EventBus.headline_added source). Shared so the HR systems do not each
 # hold their own copy of the same literal.
@@ -581,6 +582,23 @@ const NEW_HIRE_BADGE_DAYS := 3      # WORKING: kaç gün "Yeni" etiketi taşın�
 # Employee status (Character.status) — deliberately NOT attention_flag.
 const STATUS_ACTIVE := "active"
 const STATUS_ON_LEAVE := "on_leave"
+# EĞİTİMDE: çıktı üretmeyen ÜÇÜNCÜ durum. İzinde ile mekanik olarak aynı
+# (kapasite dışı, mesai dışı, SORUMLU seçilemez) ama sebebi ve süresi farklı,
+# ve satırda kendi çipini taşır. Ayrı bir status olması şart: `on_leave` sayılsaydı
+# yıllık izin latch'i ve izin-dönüşü moral ödülü yanlışlıkla tetiklenirdi.
+const STATUS_TRAINING := "training"
+
+# --- DENEYİM / EĞİTİM (Terminal UI görevi, 2026-08-08) ---
+# Onaylı defterdeki [PROPOSAL] DENEYİM sütununun mekaniği. TÜM SAYILAR WORKING:
+# şema değişmeden yeniden ayarlanabilsin diye bilerek basit tutuldu.
+# §10 KORUNUR: burada OTOMATİK bir ekonomik kazanç YOK — ücret ve yokluk,
+# oynanmış bir kararın oynanmış bedelidir.
+const EXPERIENCE_MAX := 100          # WORKING: eğitime uygunluk eşiği
+const EXPERIENCE_PER_DAY := 1        # WORKING: çalışan ve EDİLGEN OLMAYAN her gün
+const EXPERIENCE_PER_BUILD_DAY := 2  # WORKING: bir geliştirme fazı koşarken
+const TRAINING_DAYS := 5             # WORKING: eğitim süresi
+const TRAINING_FEE := 500            # WORKING: tek seferlik ücret, HR gider hattına
+const EXPERTISE_CAP := 8             # WORKING: eğitimin UZMANLIK tavanı (AXIS_MAX 9'un altında bilerek)
 
 
 static func badge_label(badge_id: String) -> String:

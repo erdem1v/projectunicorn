@@ -30,7 +30,7 @@ const ATLAS_MODAL := "res://scenes/modals/HRAtlasModal.tscn"
 var _signals: Array = []
 var _list: VBoxContainer = null
 var _summary: Label = null
-var _footer: Label = null
+var _training_control: Control = null
 var _structure_key: String = ""
 var _expanded_id: String = ""
 # Kart başına yerinde-repaint referansları: emp.id → {"bar":…, "value":…}
@@ -50,9 +50,18 @@ func _ready() -> void:
 		# The MT card shows a live account count, so a stewardship change has to repaint it —
 		# otherwise the number sits stale until some unrelated HR signal happens to fire.
 		EventBus.customer_assigned,
+		# DENEYİM barı ve EĞİTİMDE çipi satırın parçası — kendi sinyalleri olmadan
+		# yalnız gün sınırında tazelenirdi.
+		EventBus.employee_experience_changed, EventBus.employee_training_changed,
+		# Renk körü takası: durum çipleri ÇALIŞMA ZAMANINDA erişimcilerden kuruluyor,
+		# yani yeniden kurulmadan yeni paleti almazlar.
+		EventBus.palette_changed,
 	]
 	for sig in _signals:
-		sig.connect(_on_state_changed)
+		if sig == EventBus.palette_changed:
+			sig.connect(_on_palette_changed)
+		else:
+			sig.connect(_on_state_changed)
 	_refresh()
 
 
@@ -60,11 +69,19 @@ func _exit_tree() -> void:
 	for sig in _signals:
 		if sig.is_connected(_on_state_changed):
 			sig.disconnect(_on_state_changed)
+		if sig.is_connected(_on_palette_changed):
+			sig.disconnect(_on_palette_changed)
 
 
 # Üç opsiyonel parametre: 0/1/2 argümanlı sinyaller aynı işleyiciye bağlanabilsin.
 func _on_state_changed(_a = null, _b = null, _c = null) -> void:
 	_refresh()
+
+
+func _on_palette_changed(_cb: bool) -> void:
+	# Yapı anahtarı DEĞİŞMEZ (kadro aynı), o yüzden _refresh yalnız morali boyar ve
+	# çipler eski palette kalırdı. Palet takası zorla yeniden kurar.
+	_rebuild_forced()
 
 
 # --- Sayfa kromu ------------------------------------------------------------
@@ -80,19 +97,26 @@ func _build_chrome() -> void:
 	margin.add_child(outer)
 
 	# Başlık satırı: Ekip + özet · sağda EĞİTİM · KİLİTLİ telgrafı + ARAYIŞ BAŞLAT
+	# BAŞLIK SATIRI (kilitli reçete): özet başlığın YANINDA yaşar, kopuk bir alt
+	# şeritte değil. Eski _footer SİLİNDİ — aynı sayılar iki yerde durmuyor.
 	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 12)
-	var title_col := VBoxContainer.new()
-	title_col.add_theme_constant_override("separation", 2)
-	title_col.add_child(UiFactory.make_label("Ekip", &"TitleSerif"))
-	_summary = UiFactory.make_label("", &"CaptionMuted")
-	title_col.add_child(_summary)
-	title_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(title_col)
-	head.add_child(HRUiShared.locked_telegraph("Eğitim · Kilitli"))
-	head.add_child(HRUiShared.action_button("+ ARAYIŞ BAŞLAT", _open_atlas, true))
+	head.add_theme_constant_override("separation", 14)
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	head.add_child(UiFactory.make_label(tr("HR_PAGE_TITLE"), &"PageTitleSerif"))
+	_summary = UiFactory.make_label("", &"TitleRowSummary")
+	_summary.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(_summary)
+	var head_spacer := Control.new()
+	head_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(head_spacer)
+	_training_control = _build_training_control()
+	head.add_child(_training_control)
+	head.add_child(HRUiShared.action_button(tr("HR_SEARCH_START"), _open_atlas, true))
 	outer.add_child(head)
 	outer.add_child(HRUiShared.hairline())
+	# Sütun başlıkları tablonun başlığıdır — bir kez, kaydırma alanının DIŞINDA,
+	# yani sayfa kayarken de görünür kalır.
+	outer.add_child(HRLedger.column_header())
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -103,9 +127,7 @@ func _build_chrome() -> void:
 	_list.add_theme_constant_override("separation", 10)
 	scroll.add_child(_list)
 
-	outer.add_child(HRUiShared.hairline())
-	_footer = UiFactory.make_label("", &"SectionLabel")
-	outer.add_child(_footer)
+
 
 
 # --- Tazeleme ---------------------------------------------------------------
@@ -117,7 +139,6 @@ func _refresh() -> void:
 	# değişmeden de oynayan bir sayı. Yalnız _rebuild'de boyanınca morale_changed'in
 	# yerinde-güncelleme yolunda bayat kalıyordu.
 	_paint_summary()
-	_paint_footer()
 	if _structure_key != _compute_structure_key():
 		_rebuild()
 		return
@@ -162,8 +183,6 @@ func _rebuild() -> void:
 	for dept_id in HRConstants.DEPARTMENTS:
 		_add_department(String(dept_id))
 
-	_paint_footer()
-
 
 func _paint_summary() -> void:
 	if _summary == null:
@@ -173,25 +192,16 @@ func _paint_summary() -> void:
 	# Dikkat sayısı attention_PEOPLE_count: sol raydaki rozet bekleyen aday dosyasını da
 	# sayar, ama bu cümle EKİP hakkında, ve dosyaların kendi şeridi var — ikisini aynı
 	# sayıda toplamak yalan olurdu.
-	var parts := PackedStringArray()
-	var on_leave: int = CharacterRegistry.count_on_leave()
-	if on_leave > 0:
-		parts.append("%d izinde" % on_leave)
-	var attention: int = HRSystem.attention_people_count()
-	if attention > 0:
-		parts.append("%d dikkat gerektiriyor" % attention)
-	_summary.text = " · ".join(parts)
-	_summary.visible = not parts.is_empty()
-
-
-func _paint_footer() -> void:
-	if _footer == null:
-		return
-	_footer.text = UiTokens.tr_upper("Çalışan %d · Ortalama moral %d · Aylık maaş yükü %s" % [
-		CharacterRegistry.count_employees(),
-		int(round(HRMoraleSystem.average_morale())),
-		HRUiShared.money(CharacterRegistry.get_total_monthly_salaries()),
-	])
+	# Alt şeridin taşıdığı üç toplam buraya taşındı (kilitli reçete: özet başlık
+	# satırında). Dikkat/izin sayıları GİTMEDİ — durum çipleri satırın kendisinde
+	# duruyor, yani sayfa hâlâ "kaç kişi dikkat istiyor"u gösteriyor, ama artık
+	# aynı bilgiyi iki ayrı cümlede tekrarlamıyor.
+	_summary.text = tr("HR_SUMMARY").format({
+		"count": CharacterRegistry.count_employees(),
+		"morale": int(round(HRMoraleSystem.average_morale())),
+		"payroll": HRUiShared.money(CharacterRegistry.get_total_monthly_salaries()),
+	})
+	_summary.visible = true
 
 
 # --- Atlas şeridi (Kare 3) --------------------------------------------------
@@ -261,13 +271,62 @@ func _do_cancel_search() -> void:
 	_rebuild_forced()
 
 
+# --- EĞİTİM (DENEYİM/EĞİTİM mekaniği) ---------------------------------------
+# Mockup'ta bu yüzey "EĞİTİM · KİLİTLİ" telgrafıydı. Artık CANLI: deneyimi dolan
+# en az bir çalışan varsa düğmeye döner ve uygun adayların listesini açar.
+# Kilitli hâli yalan söylemiyor — gerçekten yapılacak bir şey yokken kilitli.
+
+func _build_training_control() -> Control:
+	if _eligible_for_training().is_empty():
+		return HRUiShared.locked_telegraph(tr("HR_TRAINING_LOCKED"))
+	return HRUiShared.action_button(tr("HR_TRAINING"), _open_training_picker)
+
+
+func _eligible_for_training() -> Array[Character]:
+	var out: Array[Character] = []
+	for emp in CharacterRegistry.get_employees():
+		if CharacterRegistry.can_train(emp.id):
+			out.append(emp)
+	return out
+
+
+func _open_training_picker() -> void:
+	var eligible: Array[Character] = _eligible_for_training()
+	if eligible.is_empty():
+		return
+	# Tek aday varsa liste açmak gereksiz bir tıklama olurdu — doğrudan onay.
+	# Çoklu adayda seçim modalı ayrı bir tasarım turunun işi; şimdilik ilk
+	# adaydan başlayarak onay zinciri, hepsi aynı sözleşmeden geçiyor.
+	_confirm_training(eligible[0])
+
+
+func _confirm_training(emp: Character) -> void:
+	EventBus.confirm_requested.emit({
+		"title": tr("HR_TRAINING_PICK_TITLE"),
+		"body": "%s · %s
+%s" % [emp.character_name,
+			HRConstants.role_label(emp.role),
+			tr("HR_TRAINING_PICK_NOTE").format({
+				"days": HRConstants.TRAINING_DAYS,
+				"fee": HRUiShared.money(HRConstants.TRAINING_FEE),
+			})],
+		"confirm_text": tr("HR_TRAINING_SEND"),
+		"on_confirm": _do_send_to_training.bind(emp.id),
+	})
+
+
+func _do_send_to_training(emp_id: String) -> void:
+	if HRSystem.send_to_training(emp_id):
+		_rebuild_forced()
+
+
 # --- Departman bölümleri ---------------------------------------------------
 
 func _add_department(dept_id: String) -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 10)
-	header.add_child(HRUiShared.section_header(
-		HRConstants.department_label(dept_id), false))
+	header.add_child(UiFactory.make_label(
+		UiTokens.tr_upper(HRConstants.department_label(dept_id)), &"SectionAmber"))
 	var rule := HRUiShared.hairline()
 	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -317,23 +376,12 @@ func _add_roster(roster: Array[Character], dept_id: String) -> void:
 		return a.id < b.id)
 	for emp in sorted:
 		var refs: Dictionary = {}
-		_list.add_child(HREmployeeCard.build(emp, _on_card_action, emp.id == _expanded_id, refs))
+		_list.add_child(HRLedger.row(emp, _on_card_action, refs))
 		_morale_refs[emp.id] = refs
 
 
 func _empty_row(_dept_id: String) -> Control:
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardPanelTight"
-	card.modulate = Color(1, 1, 1, 0.6)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	var lbl := UiFactory.make_label("Henüz kimse yok", &"RowMeta")
-	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(lbl)
-	row.add_child(HRUiShared.action_button("ARAYIŞ BAŞLAT", _open_atlas))
-	card.add_child(row)
-	return card
+	return HRLedger.empty_row(_open_atlas)
 
 
 func _overtime_control(dept_id: String) -> Control:
@@ -408,6 +456,8 @@ func _on_card_action(emp_id: String, action: String, anchor: Control) -> void:
 			_confirm_vacation(emp)
 		HREmployeeCard.ACTION_FIRE:
 			_confirm_fire(emp)
+		HRLedger.ACTION_TRAIN:
+			_confirm_training(emp)
 
 
 # --- Zam popover (Kare 6) --------------------------------------------------

@@ -85,7 +85,7 @@ static func morale_color(morale: int) -> Color:
 	return UiTokens.health_green()
 
 
-static func morale_row(morale: int, out_refs: Dictionary = {}) -> Control:
+static func morale_row(morale: int, out_refs: Dictionary = {}, with_caption: bool = true) -> Control:
 	# MORAL etiketi · bar · sayı. out_refs verilirse "bar" ve "value" anahtarlarına
 	# düğümleri koyar; çağıran yerinde-repaint için saklar (kart yeniden kurulmaz).
 	# Bar SABİT genişlikte ve satır sağa yapışık: EXPAND_FILL verilince bar kart
@@ -94,7 +94,10 @@ static func morale_row(morale: int, out_refs: Dictionary = {}) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	row.size_flags_horizontal = Control.SIZE_SHRINK_END
-	row.add_child(UiFactory.make_label(UiTokens.tr_upper("Moral"), &"SectionLabel"))
+	# Defterde başlık SÜTUNUN kendisinde ("MORAL"), o yüzden hücre içi etiket
+	# kapatılabilir — aynı kelimeyi iki kez basmak reçetenin yasakladığı şey.
+	if with_caption:
+		row.add_child(UiFactory.make_label(UiTokens.tr_upper("Moral"), &"SectionLabel"))
 	var bar := ProgressBar.new()
 	bar.theme_type_variation = &"BuildProgress"
 	bar.show_percentage = false

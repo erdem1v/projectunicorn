@@ -62,7 +62,7 @@ extends RefCounted
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs,
 ## which is the cheap guard against a stale master_theme.tres shipping silently.
-const THEME_STAMP := 5
+const THEME_STAMP := 6
 # ============================================================================
 
 # ============================================================================
@@ -73,57 +73,92 @@ const THEME_STAMP := 5
 # POSITIVE / NEGATIVE. Picking the wrong register is the one palette mistake that
 # renders text invisible rather than merely off-brand.
 
-# --- SURFACE · dark chrome ---
-const BG_TOPBAR := Color(0.125, 0.106, 0.086, 1)   # #201b16 · top bar charcoal
-const BG_NEWS := Color(0.086, 0.067, 0.051, 1)     # #16110d · news ticker (deepest)
-const BG_ART := Color(0.220, 0.188, 0.149, 1)      # #383026 · ArtPanel deep sepia plate
-const BG_AVATAR := Color(0.450, 0.380, 0.320, 1)   # #736152 · avatar disc + cap-table bar
+# ============================================================================
+# TERMINAL REGISTER (2026-08-08) — near-black surfaces, amber as the SINGLE
+# accent, green/red reserved for meaning. Values are read from the approved
+# mockups (`Unicorn Skins.dc.html`, 4a + 5a-5o), not eyeballed from renders.
+#
+# The names below are UNCHANGED on purpose: their ROLE is the same, only the
+# value moved. That is what lets ~117 theme variations, 383 UiFactory call
+# sites and every scene-baked `theme_type_variation` inherit the new skin
+# without being touched one by one.
+#
+# TWO REGISTERS STAY LIGHT and must never be fed from these names:
+#   · ODA  → `themes/oda_frozen_theme.tres` + the ODA_* frozen block below
+#   · the newspaper ending → the PAPER_* / PAPER_INK_* block below
+# Both are deliberate light islands in a dark game; wiring them to INK/CREAM
+# would render their text invisible on cream paper.
+# ============================================================================
 
-# --- SURFACE · light body ---
-const BG_BODY := Color(0.925, 0.902, 0.839, 1)     # #ece6d6 · center viewport / body bone
-const BG_PANEL := Color(0.914, 0.886, 0.820, 1)    # #e9e2d1 · left rail + right panel
-const CARD_BG := Color(0.965, 0.949, 0.910, 1)     # #f6f2e8 · cards/panels on body (ivory)
-const CARD_ATTENTION_BG := Color(0.953, 0.902, 0.882, 1)  # #f3e6e1 · "attention" cards (dusty pink)
-const CARD_FLOATING_BG := Color(CARD_BG, 0.98)     # gövde ÜSTÜNDE yüzen kart (BuildHUD) — %98 alfa, altı hayal meyal geçer (derived, never re-typed)
+# --- SURFACE · chrome (topbar · rail · page strip · ticker) ---
+const BG_TOPBAR := Color(0.027, 0.035, 0.043, 1)   # #07090B · chrome ground
+const BG_NEWS := Color(0.027, 0.035, 0.043, 1)     # #07090B · ticker (same ground as chrome)
+const BG_ART := Color(0.063, 0.086, 0.110, 1)      # #10161C · deep plate
+const BG_AVATAR := Color(0.106, 0.137, 0.169, 1)   # #1B232B · avatar disc + cap-table bar
 
-# --- SURFACE · control states (light) ---
-const SURFACE_INPUT := Color(0.980, 0.969, 0.941, 1)     # #faf7f0 · LineEdit fill (lightest tier)
-const SURFACE_HOVER := BG_BODY                            # #ece6d6 · Button hover (was a near-dup of BG_BODY, merged)
-const SURFACE_PRESSED := Color(0.898, 0.871, 0.816, 1)   # #e5ded0 · Button pressed
-const SURFACE_DISABLED := Color(0.940, 0.925, 0.890, 1)  # #f0ece3 · Button disabled fill
-const SURFACE_SUNKEN := Color(0.860, 0.830, 0.760, 1)    # #dbd4c2 · progress track, disabled CTA
-const SURFACE_FRAME := Color(0.898, 0.878, 0.816, 1)     # #e5e0d0 · EngravingFrame empty plate
-const SHADE_HOVER := Color(0, 0, 0, 0.04)                # hover veil on the LIGHT rail
-const SHADOW_SOFT := Color(0, 0, 0, 0.10)                # yüzen kart gölgesi (CardFloating; PAPER_SHADOW'un yumuşak kardeşi)
+# --- SURFACE · page body ---
+const BG_BODY := Color(0.051, 0.067, 0.082, 1)     # #0D1115 · page ground
+const BG_PANEL := Color(0.027, 0.035, 0.043, 1)    # #07090B · left rail
+const CARD_BG := Color(0.063, 0.086, 0.110, 1)     # #10161C · cards / panels / rows
+const CARD_ATTENTION_BG := Color(1.0, 0.361, 0.286, 0.06)  # rgba(255,92,73,.06) · attention strip fill
+const CARD_FLOATING_BG := Color(CARD_BG, 0.98)     # gövde ÜSTÜNDE yüzen kart (BuildHUD) — %98 alfa (derived, never re-typed)
 
-# --- INK · text on light surfaces ---
-const INK := Color(0.169, 0.149, 0.125, 1)         # #2b2620 · primary text / values / names
-const INK_MUTED := Color(0.431, 0.400, 0.337, 1)   # #6e6656 · secondary
-const INK_DIM := Color(0.576, 0.545, 0.471, 1)     # #938b78 · labels, section headers, idle
+# --- SURFACE · control states ---
+# HOVER, DELIBERATELY: Terminal's hover is EDGE emphasis, never a filled rect
+# (locked recipe). SURFACE_HOVER therefore equals the resting card fill — the
+# fill does not move and the hover reads on the BORDER. Anything that wants a
+# visible hover reaches for BORDER_HOVER, not for a lighter surface.
+const SURFACE_INPUT := Color(0.051, 0.067, 0.082, 1)     # #0D1115 · deep input fill
+const SURFACE_HOVER := CARD_BG                            # #10161C · hover keeps the resting fill
+const SURFACE_PRESSED := Color(0.118, 0.153, 0.188, 1)   # #1E2730 · pressed / active key
+const SURFACE_DISABLED := Color(0.118, 0.153, 0.188, 1)  # #1E2730 · disabled button fill
+const SURFACE_SUNKEN := Color(0.137, 0.173, 0.204, 1)    # #232C34 · meter track
+const SURFACE_FRAME := Color(0.059, 0.078, 0.102, 1)     # #0F141A · inset / chip plate
+const SHADE_HOVER := Color(1, 1, 1, 0.03)                # faint lift on chrome
+const SHADOW_SOFT := Color(0, 0, 0, 0.50)                # floating-card shadow (popover)
 
-# --- CREAM · text on dark chrome ---
-const CREAM := Color(0.941, 0.918, 0.851, 1)       # #f0ead9 · values/names on chrome
-const CREAM_DIM := Color(0.663, 0.620, 0.525, 1)   # #a99e86 · captions/labels on chrome
+# --- INK · primary text (Terminal is dark throughout, so INK is LIGHT) ---
+const INK := Color(0.910, 0.929, 0.949, 1)         # #E8EDF2 · primary text / values / names
+const INK_MUTED := Color(0.624, 0.690, 0.749, 1)   # #9FB0BF · secondary / prose
+const INK_DIM := Color(0.337, 0.392, 0.439, 1)     # #566470 · column headers, labels, idle
+const INK_FAINT := Color(0.275, 0.322, 0.365, 1)   # #46525D · stat captions, units, locked telegraph
+
+# --- CREAM · text on chrome. Terminal collapses the two registers: chrome and
+# body share one ground family, so CREAM == INK by design (kept as a name so the
+# ~200 chrome call sites keep reading correctly). ---
+const CREAM := Color(0.910, 0.929, 0.949, 1)       # #E8EDF2 · values/names on chrome
+const CREAM_DIM := Color(0.455, 0.510, 0.561, 1)   # #74828F · captions/labels on chrome
 const CREAM_DIM_DISABLED := Color(CREAM_DIM, 0.40) # disabled text on dark (derived, never re-typed)
 
-# --- ACCENT · amber, with its full state ramp ---
-const ACCENT := Color(0.886, 0.639, 0.235, 1)      # #e2a33c · active tab, +action, badge counts
-const ACCENT_HOVER := Color(0.940, 0.710, 0.330, 1)    # #f0b554 · CTA hover, slider highlight
-const ACCENT_PRESSED := Color(0.800, 0.570, 0.200, 1)  # #cc9133 · CTA pressed
-const ACCENT_DIM := Color(0.494, 0.353, 0.220, 1)      # #7e5a38 · amber fill ON charcoal (active speed btn)
-const ACCENT_DEEP := Color(0.541, 0.353, 0.071, 1)     # #8a5a12 · amber TEXT on light surfaces
-const AMBER_BG := Color(0.961, 0.890, 0.753, 1)        # #f5e3c0 · pale amber chip bg
-const ACCENT_HEX := "#e2a33c"                      # BBCode form of ACCENT (NewsTicker source name)
+# --- ACCENT · amber, the single accent ---
+const ACCENT := Color(1.0, 0.627, 0.157, 1)        # #FFA028 · active tab, CTA, badge counts
+const ACCENT_HOVER := Color(1.0, 0.698, 0.353, 1)      # #FFB25A · CTA hover  # WORKING (mockups show no hover)
+const ACCENT_PRESSED := Color(0.878, 0.541, 0.110, 1)  # #E08A1C · CTA pressed # WORKING
+const ACCENT_DIM := Color(0.118, 0.153, 0.188, 1)      # #1E2730 · amber-keyed fill ON chrome (active speed btn)
+const ACCENT_DEEP := Color(1.0, 0.627, 0.157, 1)       # #FFA028 · amber TEXT (on dark it is just the accent)
+const AMBER_BG := Color(1.0, 0.627, 0.157, 0.08)       # rgba(255,160,40,.08) · amber chip fill
+const AMBER_WASH := Color(1.0, 0.627, 0.157, 0.05)     # rgba(255,160,40,.05) · selected-card wash
+const ACCENT_HEX := "#FFA028"                      # BBCode form of ACCENT (NewsTicker source name)
+const ON_ACCENT := Color(0.043, 0.055, 0.067, 1)   # #0B0E11 · text ON the amber fill
 
-# --- STATE · semantic ---
-const POSITIVE := Color(0.243, 0.420, 0.200, 1)          # #3e6b33 · on light
-const POSITIVE_BG := Color(0.882, 0.922, 0.839, 1)       # #e1ebd6
-const NEGATIVE := Color(0.639, 0.200, 0.153, 1)          # #a33327 · on light
-const NEGATIVE_BG := Color(0.941, 0.855, 0.831, 1)       # #f0dad4
-const POSITIVE_BRIGHT := Color(0.498, 0.690, 0.408, 1)   # #7fb068 · on dark chrome
-const NEGATIVE_BRIGHT := Color(0.851, 0.435, 0.353, 1)   # #d96f5a · on dark chrome
-const HEALTH_GREEN := Color(0.369, 0.541, 0.275, 1)      # #5e8a46 · status dot
-const HEALTH_AMBER := Color(0.788, 0.588, 0.180, 1)      # #c9962e · status dot
+# --- STATE · semantic. Green/red carry MEANING ONLY; they are the one pair the
+# colourblind toggle swaps, and they route exclusively through the accessors. ---
+const POSITIVE := Color(0.247, 0.839, 0.549, 1)          # #3FD68C
+const POSITIVE_BG := Color(0.247, 0.839, 0.549, 0.08)    # rgba(63,214,140,.08)
+const POSITIVE_RULE := Color(0.247, 0.839, 0.549, 0.35)  # rgba(63,214,140,.35) · chip border
+const NEGATIVE := Color(1.0, 0.361, 0.286, 1)            # #FF5C49
+const NEGATIVE_BG := Color(1.0, 0.361, 0.286, 0.08)      # rgba(255,92,73,.08)
+const NEGATIVE_RULE := Color(1.0, 0.361, 0.286, 0.35)    # rgba(255,92,73,.35) · chip border
+const NEGATIVE_RULE_STRONG := Color(1.0, 0.361, 0.286, 0.45)  # attention-strip border
+const POSITIVE_BRIGHT := Color(0.247, 0.839, 0.549, 1)   # dark ground already; same value
+const NEGATIVE_BRIGHT := Color(1.0, 0.361, 0.286, 1)     # dark ground already; same value
+const HEALTH_GREEN := Color(0.247, 0.839, 0.549, 1)      # #3FD68C · status dot
+const HEALTH_AMBER := Color(1.0, 0.627, 0.157, 1)        # #FFA028 · status dot
+# The price band's MUTED triad (4a). A second semantic set hiding in a data
+# graphic — it swaps with the pair or the band lies to a colourblind player.
+const BAND_SAFE := Color(0.184, 0.478, 0.333, 1)         # #2F7A55
+const BAND_OPTIMAL := Color(0.753, 0.494, 0.122, 1)      # #C07E1F
+const BAND_OVER := Color(0.635, 0.220, 0.169, 1)         # #A2382B
 
 # --- STATE · semantic, COLOURBLIND-SAFE counterparts (Settings > Erişilebilirlik) ---
 # The green/red pair is the ONE place the game encodes meaning in hue alone, so it
@@ -140,36 +175,50 @@ const HEALTH_AMBER := Color(0.788, 0.588, 0.180, 1)      # #c9962e · status dot
 # ALL SEVEN ARE # WORKING — Erdem's F5 eye seals the hues, exactly like the ODA and
 # newspaper registers. Consts are the DEFAULT palette; nothing reads these directly,
 # everything goes through the accessors below.
-const POSITIVE_CB := Color(0.000, 0.357, 0.561, 1)        # #005b8f · blue on light
-const POSITIVE_BG_CB := Color(0.839, 0.894, 0.933, 1)     # #d6e4ee · pale blue chip
-const NEGATIVE_CB := Color(0.659, 0.263, 0.000, 1)        # #a84300 · orange on light
-const NEGATIVE_BG_CB := Color(0.973, 0.882, 0.812, 1)     # #f8e1cf · pale orange chip
-const POSITIVE_BRIGHT_CB := Color(0.310, 0.702, 0.910, 1) # #4fb3e8 · on dark chrome
-const NEGATIVE_BRIGHT_CB := Color(0.933, 0.467, 0.200, 1) # #ee7733 · on dark chrome
-const HEALTH_GREEN_CB := Color(0.184, 0.475, 0.671, 1)    # #3079ab · status dot (blue twin)
+# RETUNED for the Terminal ground (2026-08-08). The previous twins (#005b8f /
+# #a84300) were darkened for a CREAM body; on #0D1115 they fall under 4.5:1 and
+# read as smudges. These are the Okabe-Ito pair at their intended screen
+# brightness, which is what a dark ground wants. ALL # WORKING — Erdem's F5 seals.
+const POSITIVE_CB := Color(0.337, 0.706, 0.914, 1)        # #56B4E9 · blue
+const POSITIVE_BG_CB := Color(0.337, 0.706, 0.914, 0.08)  # rgba(86,180,233,.08)
+const POSITIVE_RULE_CB := Color(0.337, 0.706, 0.914, 0.35)
+const NEGATIVE_CB := Color(0.902, 0.624, 0.0, 1)          # #E69F00 · orange
+const NEGATIVE_BG_CB := Color(0.902, 0.624, 0.0, 0.08)    # rgba(230,159,0,.08)
+const NEGATIVE_RULE_CB := Color(0.902, 0.624, 0.0, 0.35)
+const NEGATIVE_RULE_STRONG_CB := Color(0.902, 0.624, 0.0, 0.45)
+const POSITIVE_BRIGHT_CB := Color(0.337, 0.706, 0.914, 1) # same value on dark
+const NEGATIVE_BRIGHT_CB := Color(0.902, 0.624, 0.0, 1)   # same value on dark
+const HEALTH_GREEN_CB := Color(0.337, 0.706, 0.914, 1)    # #56B4E9 · status dot (blue twin)
+# Price-band twins. Amber sits BETWEEN the pair in both palettes, so the middle
+# band keeps its hue and only the outer two move.
+const BAND_SAFE_CB := Color(0.157, 0.404, 0.541, 1)       # muted #56B4E9
+const BAND_OVER_CB := Color(0.549, 0.376, 0.0, 1)         # muted #E69F00
 const DOT_IDLE := Color(0.350, 0.320, 0.270, 1)          # #595245 · unreached phase dot
-const AXIS_EXPERIENCE := Color("#3b5b92")                # #3b5b92 · ürün ekseni "Deneyim" (Rev3 mavi; legend dot + ince bar). Hex form: birebir mockup değeri, float yuvarlaması yok.
+const AXIS_EXPERIENCE := Color("#5B8FF9")                # ürün ekseni "Deneyim" — Terminal zeminde okunan mavi (eski #3b5b92 koyu gövde içindi)
 # Ürün ekseni üçlüsü KATEGORİKTİR (İnovasyon/Kararlılık/Deneyim), semantik değil —
 # ama üçlünün iki üyesi semantik token'lardan besleniyor (innovation=ACCENT_DEEP,
 # stability=positive()). Renk körü paletinde positive() maviye döndüğü an "Kararlılık"
 # ile "Deneyim" İKİ MAVİ olur ve aynı legend'da ayırt edilemez. Deneyim'e bu yüzden
 # kendi CB ikizi verildi: üçlü her iki palette de üç ayrı renk kalır
 # (varsayılan: kehribar / yeşil / mavi · CB: kehribar / mavi / mor).
-const AXIS_EXPERIENCE_CB := Color("#7d4f9c")             # #7d4f9c · CB "Deneyim" (moru kehribardan da CB maviden de ayrı okunur)
+const AXIS_EXPERIENCE_CB := Color("#B07AD6")             # CB "Deneyim" — mor; CB mavisinden de kehribardan da ayrı okunur
 
 # --- BADGE / CHIP ---
-const BADGE_BG := Color(0.620, 0.169, 0.145, 1)          # #9e2b25 · solid "ATTENTION" red
-const BADGE_FG := CREAM                                   # text on attention badge
-const NEUTRAL_BADGE_BG := Color(0.906, 0.875, 0.800, 1)  # #e7dfcc · parchment trait chip
-const NEUTRAL_BADGE_FG := INK_MUTED                       # was a 0.004-off near-dup of INK_MUTED, merged
-const TAB_ACTIVE_BG := Color(CARD_BG, 0.70)               # active rail tab — body tint reads through
+const BADGE_BG := Color(1.0, 0.627, 0.157, 1)            # #FFA028 · rail count badge (amber pill)
+const BADGE_FG := Color(0.043, 0.055, 0.067, 1)          # #0B0E11 · text on the amber badge
+const NEUTRAL_BADGE_BG := Color(0.059, 0.078, 0.102, 1)  # #0F141A · neutral chip plate
+const NEUTRAL_BADGE_FG := Color(0.624, 0.690, 0.749, 1)  # #9FB0BF · neutral chip text
+const TAB_ACTIVE_BG := Color(0.063, 0.086, 0.110, 1)     # #10161C · active rail item fill
 
 # --- EDGE · borders, dividers, hairlines ---
-const CARD_BORDER := Color(0.847, 0.816, 0.737, 1)       # #d8d0bc · 1px card border (warm tan)
-const CARD_ATTENTION_BORDER := Color(0.800, 0.620, 0.580, 1)  # #cc9e94 · dusty-pink card edge
-const BORDER_DISABLED := Color(0.900, 0.880, 0.830, 1)   # #e6e0d4 · disabled control edge
-const DIVIDER_LIGHT := Color(0, 0, 0, 0.08)              # hairline on light body
-const SEPARATOR := Color(1, 1, 1, 0.08)                  # hairline on dark chrome
+const CARD_BORDER := Color(0.137, 0.173, 0.204, 1)       # #232C34 · 1px card border
+const BORDER_HOVER := Color(0.165, 0.204, 0.239, 1)      # #2A343D · hover/ghost edge (hover lives HERE, never in a fill)
+const CARD_ATTENTION_BORDER := Color(1.0, 0.361, 0.286, 0.45)  # attention-strip edge
+const BORDER_DISABLED := Color(0.165, 0.204, 0.239, 1)   # #2A343D · disabled control edge
+const BORDER_DASHED := Color(0.149, 0.188, 0.227, 1)     # #26303A · empty-slot dashed edge
+const DIVIDER_LIGHT := Color(0.118, 0.149, 0.180, 1)     # #1E262E · in-card hairline
+const SEPARATOR := Color(0.106, 0.137, 0.169, 1)         # #1B232B · chrome hairline
+const TICKER_SEP := Color(0.200, 0.243, 0.282, 1)        # #333E48 · ticker item separator
 
 # --- VEIL · translucent whites on dark chrome ---
 # Six alpha steps (0.02/0.03/0.04/0.05/0.06/0.09) collapsed to three. Every move
@@ -186,25 +235,36 @@ const VEIL_STRONG := Color(1, 1, 1, 0.10)   # hover
 # context rule above. Amber fill/edge reuse ACCENT; danger captions reuse
 # NEGATIVE_BRIGHT; monologue (interior voice) text uses CREAM_DIM. Working values
 # sampled toward the approved mockups — final hues sealed by Erdem's F5 eye.
-const SCRIM_MODAL := Color(0, 0, 0, 0.55)            # standard modal dimmer (matches existing modals)
+const SCRIM_MODAL := Color(0.020, 0.027, 0.035, 0.62)  # rgba(5,7,9,.62) · modal dimmer (mockup value, all four modals)
 const SCRIM_ROOM := Color(0, 0, 0, 0.18)              # readability scrim over full-bleed room art
-const STAT_STRIP_BG := Color(0, 0, 0, 0.45)          # bottom-left translucent stat band over art
-const DIALOGUE_BG := Color(0.098, 0.086, 0.075, 1)   # deep warm charcoal (solid — Frank card)
-const DIALOGUE_COLUMN_BG := Color(0.098, 0.086, 0.075, 0.92)  # floating column (art shows through)
-const DIALOGUE_CARD_BG := Color(0.145, 0.129, 0.114, 1)       # choice / quote card (a step lighter)
-const DIALOGUE_CARD_BORDER := Color(1, 1, 1, 0.10)   # subtle hairline on dark
-const CONVICTION_TRACK_BG := Color(1, 1, 1, 0.07)    # İKNA gauge groove
-const PORTRAIT_FRAME := CREAM                        # was an exact re-typing of CREAM, merged
+const STAT_STRIP_BG := Color(0.027, 0.035, 0.043, 0.72)  # translucent stat band over art
+const DIALOGUE_BG := Color(0.063, 0.086, 0.110, 1)   # #10161C · modal / Frank card ground
+const DIALOGUE_COLUMN_BG := Color(0.063, 0.086, 0.110, 0.92)  # floating column (art shows through)
+const DIALOGUE_CARD_BG := Color(0.059, 0.078, 0.102, 1)       # #0F141A · choice / quote card (recessed)
+const DIALOGUE_CARD_BORDER := Color(0.137, 0.173, 0.204, 1)   # #232C34 · card hairline
+const CONVICTION_TRACK_BG := Color(0.137, 0.173, 0.204, 1)    # #232C34 · İKNA gauge groove
+const PORTRAIT_FRAME := Color(0.910, 0.929, 0.949, 1)         # #E8EDF2 · portrait rule
 
 # --- Newspaper ending register ("Ekonomi Postası") ---
 # The cream PAPER is a LIGHT surface (INK text) sitting inside the DARK screen
 # (DIALOGUE_BG). It is a touch warmer/brighter than CARD_BG so the page reads as
 # newsprint, not a UI card. The second-page edge + shadow give the single-sheet
 # depth from the mockup. Working values — Erdem's F5 seals the final hues.
-const PAPER_BG := Color(0.953, 0.933, 0.878, 1)     # newsprint cream (warmer than CARD_BG)
-const PAPER_EDGE := Color(0.878, 0.851, 0.780, 1)   # right/bottom second-page edge tint
-const PAPER_RULE := INK                             # was an exact re-typing of INK, merged (name kept — it reads better at its 2 sites)
+# ⚠ DELIBERATE LIGHT EXCEPTION. The mockup note is explicit: "gazete diegetik
+# kağıt olarak kaldı (serif); sağ ray reçeteye geçti." The paper stays cream
+# inside a Terminal screen, so it needs its OWN ink ladder — PAPER_RULE used to
+# be `:= INK`, and INK is now #E8EDF2, which would have printed white-on-cream.
+# That single alias is the trap this block exists to close.
+const PAPER_BG := Color(0.937, 0.914, 0.863, 1)     # #EFE9DC · newsprint
+const PAPER_EDGE := Color(0.227, 0.204, 0.165, 1)   # #3A342A · sheet border
+const PAPER_RULE := Color(0.165, 0.141, 0.110, 1)   # #2A241C · masthead + section rules
 const PAPER_SHADOW := Color(0, 0, 0, 0.38)          # page drop shadow on the dark screen
+const PAPER_INK := Color(0.149, 0.125, 0.098, 1)      # #262019 · headline
+const PAPER_INK_BODY := Color(0.243, 0.212, 0.169, 1) # #3E362B · body copy
+const PAPER_INK_DECK := Color(0.420, 0.384, 0.322, 1) # #6B6252 · deck / italic standfirst
+const PAPER_INK_MAST := Color(0.290, 0.259, 0.220, 1) # #4A4238 · masthead
+const PAPER_INK_META := Color(0.596, 0.557, 0.482, 1) # #988E7B · dateline / captions
+const PAPER_PLATE := Color(0.890, 0.859, 0.792, 1)    # #E3DBCA · gazete üstündeki boş gravür plakası
 
 # --- ODA merkez görünümü (masa POV oda sahnesi; ODA rework 2026-08-06) ---
 # Sahne çifti (gündüz/gece 3840×2160 sanat) + motor-çizimi bilgi katmanı. Roller:
@@ -219,9 +279,37 @@ const ODA_LAMP_GLOW := Color(1.0, 0.78, 0.45, 1)     # gece: lamba başı additi
 # serin. Saatlik adım ÖLDÜ; tint yalnız durum sınırında 1.5 sn tween'lenir.
 const ODA_TINT_EVENING := Color(1.0, 0.93, 0.84, 1)  # AKŞAM saati (belirgin ılık tek vuruş)
 const ODA_TINT_DAWN := Color(0.92, 0.95, 1.0, 1)     # ŞAFAK saati (belirgin serin tek vuruş)
-const ODA_RIM_GLOW := Color(ACCENT, 0.55)            # hover rim shader uniform'u (derived, never re-typed)
-const ODA_SCREEN_GLOW := Color(ACCENT, 0.30)         # gece monitör panelinin gölge-glow'u (derived)
-const ODA_ANCHOR_GLOW_SHADOW := Color(ACCENT, 0.35)  # boyalı çapa hover/tur glow gölgesi (derived)
+# ⚠ DONDURULDU (Terminal reskin 2026-08-08). Bu üçü eskiden `Color(ACCENT, a)`
+# diye TÜRETİLİYORDU. ACCENT artık Terminal amber'ini (#FFA028) taşıyor; türetme
+# kalsaydı oda ışığı reskin'le birlikte sessizce kayardı. Değerler eski ACCENT'in
+# (#e2a33c = 0.886,0.639,0.235) birebir açılımıdır — ODA'nın kendi register'ı
+# olduğu için artık paylaşılan token'ı İZLEMEZ.
+const ODA_RIM_GLOW := Color(0.886, 0.639, 0.235, 0.55)          # hover rim shader uniform'u
+const ODA_SCREEN_GLOW := Color(0.886, 0.639, 0.235, 0.30)       # gece monitör panelinin gölge-glow'u
+const ODA_ANCHOR_GLOW_SHADOW := Color(0.886, 0.639, 0.235, 0.35) # boyalı çapa hover/tur glow gölgesi
+
+# --- ODA DONDURULMUŞ RENK REGISTER'I (Terminal reskin 2026-08-08) ---
+# ODA'nın TEMA'sı `themes/oda_frozen_theme.tres` ile donduruldu (OdaView.tscn +
+# oda_tour.gd), ama oda_view.gd bazı renkleri temadan değil DOĞRUDAN token'dan
+# okuyup `add_theme_color_override` / runtime StyleBoxFlat olarak basıyor
+# (make_label'ın color argümanı, make_dot). Kanonik adlar (ACCENT, INK, CREAM…)
+# bu reskin'le Terminal değerlerine geçtiği için o okumalar odayı da boyardı.
+# Aşağıdakiler o okumaların dondurulmuş ikizidir: eski paletin BİREBİR literalleri.
+# Kanıt: --theme-audit=oda dökümü (122 satır) reskin öncesi ve sonrası aynı kalır.
+const ODA_ACCENT := Color(0.886, 0.639, 0.235, 1)       # eski ACCENT #e2a33c
+const ODA_ACCENT_DEEP := Color(0.541, 0.353, 0.071, 1)  # eski ACCENT_DEEP #8a5a12
+const ODA_INK := Color(0.169, 0.149, 0.125, 1)          # eski INK #2b2620
+const ODA_INK_MUTED := Color(0.431, 0.400, 0.337, 1)    # eski INK_MUTED #6e6656
+const ODA_INK_DIM := Color(0.576, 0.545, 0.471, 1)      # eski INK_DIM #938b78
+const ODA_CREAM := Color(0.941, 0.918, 0.851, 1)        # eski CREAM #f0ead9
+const ODA_BADGE_BG := Color(0.620, 0.169, 0.145, 1)     # eski BADGE_BG #9e2b25
+const ODA_HEALTH_AMBER := Color(0.788, 0.588, 0.180, 1) # eski HEALTH_AMBER #c9962e
+const ODA_VEIL_SOFT := Color(1, 1, 1, 0.06)             # eski VEIL_SOFT
+const ODA_SCRIM := Color(0, 0, 0, 0.55)                 # eski SCRIM_MODAL (tur karartması)
+# Sağlık noktası ODA'da da renk körü moduna UYMAYA devam eder — dondurulan şey
+# varsayılan paletteki piksel, erişilebilirlik davranışı değil.
+const ODA_HEALTH_GREEN := Color(0.369, 0.541, 0.275, 1)     # eski HEALTH_GREEN #5e8a46
+const ODA_HEALTH_GREEN_CB := Color(0.184, 0.475, 0.671, 1)  # eski HEALTH_GREEN_CB #3079ab
 
 # ============================================================================
 # TYPE SCALE — six steps, and the ONLY sizes new UI may reach for.
@@ -248,11 +336,28 @@ const ODA_ANCHOR_GLOW_SHADOW := Color(ACCENT, 0.35)  # boyalı çapa hover/tur g
 #   SIZE_LEAD      15   sans_sb        names, choices, figures, controls
 #   SIZE_TITLE     18   sans_sb        stat figures, sub-heads
 #   SIZE_DISPLAY   22   serif_sb       modal / screen titles
+# TERMINAL LADDER (2026-08-08). The mockups are authored in half-steps
+# (8.5 / 9.5 / 10.5 / 11.5 / 12.5 / 13.5) that Godot's INTEGER font sizes cannot
+# carry. Rule applied: ROUND HALF-UP, and verify the ORDERING survives — it does,
+# so nothing that was visually smaller becomes larger. Two steps are new (META,
+# DATA); TITLE moved 18→16 to match the mockup's card/context serif.
+#
+#   token         px   voice (measured site)
+#   SIZE_MICRO     9   [PROPOSAL] chip 8.5, phase caption 9
+#   SIZE_META     10   column headers 9.5, rail labels 10, chips 10
+#   SIZE_SMALL    11   section headers 10.5, ticker 11, title-row summary 11
+#   SIZE_DATA     12   primary CTA 11.5, empty rows 12, clock 12, inputs
+#   SIZE_BODY     13   prose 12.5-13, card names 13
+#   SIZE_LEAD     15   TopBar + month-summary figures 15
+#   SIZE_TITLE    16   card / context serif titles
+#   SIZE_DISPLAY  22   Ayarlar + secondary page titles
 const SIZE_MICRO := 9
+const SIZE_META := 10
 const SIZE_SMALL := 11
+const SIZE_DATA := 12
 const SIZE_BODY := 13
 const SIZE_LEAD := 15
-const SIZE_TITLE := 18
+const SIZE_TITLE := 16
 const SIZE_DISPLAY := 22
 
 # --- Editorial display tier — a documented EXCEPTION, not extra scale steps ---
@@ -260,10 +365,11 @@ const SIZE_DISPLAY := 22
 # scale: these are typographic set pieces composed against a fixed page, not part
 # of the reading rhythm. RULE: any size above SIZE_DISPLAY must be named here, and
 # may appear ONLY in the newspaper ("Ekonomi Postası") or ceremony registers.
-const SIZE_ED_CEREMONY := 26    # onboarding page title; MonthSummary band title
-const SIZE_ED_HEADLINE := 30    # newspaper headline; event drop-cap (retired SIZE_DROPCAP)
+const SIZE_ED_MODAL := 24       # modal titles (event · Atlas · month summary)
+const SIZE_ED_CEREMONY := 26    # PAGE titles (Ekip / Portföy / Finans / Sales …); onboarding
+const SIZE_ED_HEADLINE := 32    # newspaper headline (mockup 5l); path-card display 30 rounds here
 const SIZE_ED_FIGURE := 44      # newspaper stat figures "$1.2M"
-const SIZE_ED_MASTHEAD := 54    # "EKONOMİ POSTASI"
+const SIZE_ED_MASTHEAD := 52    # "EKONOMİ POSTASI" (mockup 5l)
 
 # --- Leading (line-height) ---
 # Godot's Label has NO line_height property. The line box is the font's own
@@ -315,18 +421,23 @@ const SPACE_4XL := 32
 # StyleBoxFlat clamps a radius to half the box, so RADIUS_PILL is a true circle
 # or pill at ANY size — which is why make_avatar no longer needs its old
 # "keep the diameter at or below 36" caveat.
+# TERMINAL: the mockups use radius 2 for EVERYTHING that is not a pill. The
+# named steps are kept (call sites keep reading the name that describes their
+# role) but they all resolve to 2 — a rounded-corner ladder is a light-editorial
+# idea, and Terminal simply does not have one. The pill exceptions are real and
+# stay: toggle track/knob, rail badge, avatar.
 const RADIUS_NONE := 0          # full-bleed chrome bands, rails, sunken tracks, focus killers
 const RADIUS_XS := 2            # dots, cap bars, the paper sheet
-const RADIUS_S := 3             # chips, progress bars, speed buttons, sliders
-const RADIUS_M := 4             # DEFAULT — cards, buttons, inputs
-const RADIUS_L := 6             # modals, portrait cells
-const RADIUS_XL := 8            # dialogue choice cards, tab badge
-const RADIUS_XXL := 12          # dialogue column, portrait frame
+const RADIUS_S := 2             # chips, progress bars, speed buttons, sliders
+const RADIUS_M := 2             # DEFAULT — cards, buttons, inputs
+const RADIUS_L := 2             # modals, portrait cells
+const RADIUS_XL := 2            # dialogue choice cards, tab badge
+const RADIUS_XXL := 2           # dialogue column, portrait frame
 const RADIUS_PILL := 999        # fully rounded at any size
-# Documented shape exceptions — surfaces whose radius predates the scale. Snapping
-# them is visible motion (+2 / -4), so the polish wave owns that call, not this task.
-const RADIUS_PORTRAIT := 10     # PortraitFrame
-const RADIUS_CARD_LG := 16      # DialogueCard
+# The two light-editorial shape exceptions are RETIRED by Terminal: the recipe
+# has one non-pill radius and these were the only survivors of the old ladder.
+const RADIUS_PORTRAIT := 2      # PortraitFrame (was 10)
+const RADIUS_CARD_LG := 2       # DialogueCard (was 16)
 
 # --- Border widths ---
 const BORDER_HAIRLINE := 1      # cards, inputs, chips, tooltip
@@ -428,6 +539,38 @@ static func negative_bright() -> Color:
 
 static func health_green() -> Color:
 	return HEALTH_GREEN_CB if _cb_palette else HEALTH_GREEN
+
+
+## Çip KENARLARI da semantiktir. Dolgu/metin takas olup kenar sabit kalsaydı
+## renk körü modunda çip iki paletten karışık okunurdu.
+static func positive_rule() -> Color:
+	return POSITIVE_RULE_CB if _cb_palette else POSITIVE_RULE
+
+
+static func negative_rule() -> Color:
+	return NEGATIVE_RULE_CB if _cb_palette else NEGATIVE_RULE
+
+
+static func negative_rule_strong() -> Color:
+	return NEGATIVE_RULE_STRONG_CB if _cb_palette else NEGATIVE_RULE_STRONG
+
+
+## Fiyat bandının MAT üçlüsü (4a). Bir veri grafiğinin içine saklanmış İKİNCİ bir
+## semantik küme; kaçırılsaydı renk körü modunda bant oyuncuya yalan söylerdi.
+## Orta bant kehribardır ve iki palette de yerinde kalır — yalnız uçlar takas olur.
+static func band_safe() -> Color:
+	return BAND_SAFE_CB if _cb_palette else BAND_SAFE
+
+
+static func band_over() -> Color:
+	return BAND_OVER_CB if _cb_palette else BAND_OVER
+
+
+## ODA'nın dondurulmuş sağlık yeşili. health_green()'in ikizi: aynı erişilebilirlik
+## davranışı (CB modunda maviye döner), ama varsayılan piksel eski palete pinlenmiş
+## — bkz. ODA DONDURULMUŞ RENK REGISTER'I.
+static func oda_health_green() -> Color:
+	return ODA_HEALTH_GREEN_CB if _cb_palette else ODA_HEALTH_GREEN
 
 ## Ürün ekseni "Deneyim". Semantik DEĞİL — palete bağlı olmasının tek sebebi,
 ## CB modunda "Kararlılık"ın maviye dönüp bu eksenle çakışması (bkz. AXIS_EXPERIENCE_CB).

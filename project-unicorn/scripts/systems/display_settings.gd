@@ -81,6 +81,18 @@ const READABLE_EPSILON := 0.01
 
 const BASE_VIEWPORT := Vector2(1920.0, 1080.0)
 
+## Kabuğun HAYATTA KALDIĞI en küçük mantıksal viewport. Eskiden üst kapı
+## BASE_VIEWPORT'a bakıyordu, yani 1080p'de %100 üstü HİÇBİR adım yasal değildi —
+## Ayarlar açılır listesi tek seçenekten ibaretti ve bu bir arıza gibi okunuyordu.
+## Kapının gerçek gerekçesi "tasarım genişliği" değil, "kabuk kırpılıyor" idi
+## (şirket adı soldan, 3x/4x sağdan düşüyordu). Terminal reskin'iyle TopBar'a
+## yoğunluk kademesi eklendi (top_bar.gd `_apply_density`, eşik 1600): dar
+## viewport'ta ad gizlenir, sütun boşlukları 28→18 daralır, tarih kısalır ve HİÇBİR
+## sayı ya da kontrol kaybolmaz. Ölçülen taban 1280×720 — TECH_SPEC §14.1'in
+## belgelenmiş minimum penceresi. Bu yüzden kapı artık ORAYA bakıyor:
+## 1920 pencere → %125 (1536×864) ve %150 (1280×720) yasal.
+const MIN_CHROME_VIEWPORT := Vector2(1280.0, 720.0)
+
 # Settings keys this file reads (declared in Settings.DEFAULTS).
 const KEY_WINDOW_MODE := "window_mode"
 const KEY_RES_W := "resolution_w"
@@ -375,14 +387,18 @@ static func _fits_design_width(step: float, win: Vector2i) -> bool:
 	if win.x <= 0 or win.y <= 0:
 		return true   # boyut henüz bilinmiyor (headless/erken boot) — kapıyı kapatma
 	var logical := Vector2(float(win.x) / step, float(win.y) / step)
-	return logical.x >= BASE_VIEWPORT.x - 0.5 and logical.y >= BASE_VIEWPORT.y - 0.5
+	return logical.x >= MIN_CHROME_VIEWPORT.x - 0.5 and logical.y >= MIN_CHROME_VIEWPORT.y - 0.5
 
 
 ## The disabled row's explanation, already formatted ("%d%% bu pencere boyutunda…").
 ## TranslationServer, not tr(): statics have no Object to translate through — the
 ## same reason UiTokens.net_runway_parts reaches for it.
 static func step_blocked_note(step: float) -> String:
-	return TranslationServer.translate("SET_UI_SCALE_TOO_SMALL") % int(round(step * 100.0))
+	# İKİ kapı var ve gerekçeleri zıt: küçültme adımı OKUNAKLILIK tabanına,
+	# büyütme adımı KABUK genişliğine takılır. Tek metin ikisini de anlatamaz —
+	# %150'nin "okunmuyor" demesi düpedüz yanlış olurdu.
+	var key: String = "SET_UI_SCALE_TOO_LARGE" if step > 1.0 else "SET_UI_SCALE_TOO_SMALL"
+	return TranslationServer.translate(key) % int(round(step * 100.0))
 
 
 ## Nearest LEGAL step, moving TOWARD 100%. The direction is not a preference — each

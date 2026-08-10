@@ -204,6 +204,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
 		# --- Native çözünürlük / ultrawide 2026-08-08 ---
 		"oda_anchors_stay_in_band":           fail = _case_oda_anchors_stay_in_band()
+		"hr_experience_accrues":      fail = _case_hr_experience_accrues()
+		"hr_training_eligibility_edge": fail = _case_hr_training_eligibility_edge()
+		"hr_training_blocks_and_charges_once": fail = _case_hr_training_blocks_and_charges_once()
+		"hr_training_completion":     fail = _case_hr_training_completion()
+		"hr_expertise_cap_respected": fail = _case_hr_expertise_cap_respected()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -5515,4 +5520,124 @@ static func _case_oda_anchors_stay_in_band() -> String:
 	var shell := Vector2(1836.0, 992.0)
 	if OdaLayout.room_rect(shell).size != shell:
 		return "16:9 kabuk oranında oda kapaklandı — birincil çözünürlükte yan şerit oluşur"
+	return ""
+
+
+# ============================ DENEYİM / EĞİTİM ===============================
+# Terminal UI görevi §4. Beşi de MEKANİĞİ ölçer, ekranı değil: sayılar
+# HRConstants'ta WORKING ve değişebilir, ama SÖZLEŞME değişmemeli.
+
+static func _case_hr_experience_accrues() -> String:
+	GameState.set_cash(100000)
+	var emp: Character = _make_employee("char_xp_a", "XP A", HRConstants.ROLE_DEVELOPER)
+	if emp.experience != 0:
+		return "fresh employee started at experience %d, want 0" % emp.experience
+	_sim_day()
+	var after_one: int = emp.experience
+	if after_one != HRConstants.EXPERIENCE_PER_DAY:
+		return "after one idle day experience is %d, want %d" % [after_one, HRConstants.EXPERIENCE_PER_DAY]
+	# İZİNDEKİ biri BİRİKTİRMEZ — edilgenlik gerçekten edilgen olmalı.
+	# İzin GERÇEKTEN sürmeli: tick_leave_returns, leave_until_day geçmişse kişiyi
+	# günün başında aktife çeker ve çıplak bir set_status ölçümü geçersiz kılar.
+	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ON_LEAVE)
+	emp.leave_until_day = GameState.day + 10
+	_sim_day()
+	if emp.experience != after_one:
+		return "an ON-LEAVE employee accrued experience (%d -> %d)" % [after_one, emp.experience]
+	emp.leave_until_day = 0
+	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ACTIVE)
+	# Tavanı aşmaz.
+	CharacterRegistry.add_experience(emp.id, HRConstants.EXPERIENCE_MAX * 2)
+	if emp.experience != HRConstants.EXPERIENCE_MAX:
+		return "experience clamped to %d, want %d" % [emp.experience, HRConstants.EXPERIENCE_MAX]
+	return ""
+
+
+static func _case_hr_training_eligibility_edge() -> String:
+	# TAM 100'de uygun, 99'da DEĞİL. Eşiğin kendisi sözleşmenin parçası.
+	GameState.set_cash(100000)
+	var emp: Character = _make_employee("char_xp_b", "XP B", HRConstants.ROLE_DESIGNER)
+	CharacterRegistry.add_experience(emp.id, HRConstants.EXPERIENCE_MAX - 1)
+	if CharacterRegistry.can_train(emp.id):
+		return "eligible at %d, one short of the threshold" % emp.experience
+	CharacterRegistry.add_experience(emp.id, 1)
+	if not CharacterRegistry.can_train(emp.id):
+		return "NOT eligible at exactly %d" % HRConstants.EXPERIENCE_MAX
+	# İzindeyken uygun olmamalı: eğitim aktif bir karardır.
+	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ON_LEAVE)
+	if CharacterRegistry.can_train(emp.id):
+		return "an ON-LEAVE employee was eligible for training"
+	return ""
+
+
+static func _case_hr_training_blocks_and_charges_once() -> String:
+	GameState.set_cash(100000)
+	var emp: Character = _make_employee("char_xp_c", "XP C", HRConstants.ROLE_DEVELOPER)
+	CharacterRegistry.add_experience(emp.id, HRConstants.EXPERIENCE_MAX)
+	var cash_before: int = GameState.cash
+	if not HRSystem.send_to_training(emp.id):
+		return "send_to_training refused an eligible employee"
+	if GameState.cash != cash_before - HRConstants.TRAINING_FEE:
+		return "fee charged %d, want %d" % [cash_before - GameState.cash, HRConstants.TRAINING_FEE]
+	if emp.status != HRConstants.STATUS_TRAINING:
+		return "status is '%s', want '%s'" % [emp.status, HRConstants.STATUS_TRAINING]
+	# ÇIKTI ÜRETMEZ: aktif listede olmamalı (kapasite, hız, SORUMLU hepsi buradan okur).
+	for a in CharacterRegistry.get_active_employees():
+		if a.id == emp.id:
+			return "a TRAINING employee is still in get_active_employees()"
+	# İkinci kez gönderilemez, yani ücret iki kez alınamaz.
+	var cash_mid: int = GameState.cash
+	if HRSystem.send_to_training(emp.id):
+		return "send_to_training accepted an already-training employee"
+	if GameState.cash != cash_mid:
+		return "a second call charged again (%d -> %d)" % [cash_mid, GameState.cash]
+	return ""
+
+
+static func _case_hr_training_completion() -> String:
+	GameState.set_cash(100000)
+	var emp: Character = _make_employee("char_xp_d", "XP D", HRConstants.ROLE_TESTER, 5, 0, 50, 4)
+	CharacterRegistry.add_experience(emp.id, HRConstants.EXPERIENCE_MAX)
+	var expertise_before: int = int(emp.role_stats[HRConstants.AXIS_EXPERTISE])
+	if not HRSystem.send_to_training(emp.id):
+		return "send_to_training refused an eligible employee"
+	for i in HRConstants.TRAINING_DAYS:
+		if emp.status != HRConstants.STATUS_TRAINING:
+			return "left training early on day %d" % i
+		_sim_day()
+	if emp.status != HRConstants.STATUS_ACTIVE:
+		return "after %d days status is '%s', want active" % [HRConstants.TRAINING_DAYS, emp.status]
+	var expertise_after: int = int(emp.role_stats[HRConstants.AXIS_EXPERTISE])
+	if expertise_after != expertise_before + 1:
+		return "expertise %d -> %d, want +1" % [expertise_before, expertise_after]
+	if emp.experience != 0:
+		return "experience did not reset (%d)" % emp.experience
+	return ""
+
+
+static func _case_hr_expertise_cap_respected() -> String:
+	# Tavandaki biri eğitime GÖNDERİLEMEZ. Ücreti alıp hiçbir şey vermemek §10'un
+	# yasakladığı şeyin aynası olurdu.
+	GameState.set_cash(100000)
+	var emp: Character = _make_employee("char_xp_e", "XP E", HRConstants.ROLE_DEVELOPER,
+		5, 0, 50, HRConstants.EXPERTISE_CAP)
+	CharacterRegistry.add_experience(emp.id, HRConstants.EXPERIENCE_MAX)
+	if CharacterRegistry.can_train(emp.id):
+		return "an employee already at the expertise cap (%d) was eligible" % HRConstants.EXPERTISE_CAP
+	var cash_before: int = GameState.cash
+	if HRSystem.send_to_training(emp.id):
+		return "send_to_training accepted a capped employee"
+	if GameState.cash != cash_before:
+		return "a refused training still charged the fee"
+	# Bir altındaki biri gönderilebilir ve tavanı AŞMAZ.
+	var emp2: Character = _make_employee("char_xp_f", "XP F", HRConstants.ROLE_DEVELOPER,
+		5, 0, 50, HRConstants.EXPERTISE_CAP - 1)
+	CharacterRegistry.add_experience(emp2.id, HRConstants.EXPERIENCE_MAX)
+	if not HRSystem.send_to_training(emp2.id):
+		return "an employee one below the cap was refused"
+	for _i in HRConstants.TRAINING_DAYS:
+		_sim_day()
+	var final_expertise: int = int(emp2.role_stats[HRConstants.AXIS_EXPERTISE])
+	if final_expertise != HRConstants.EXPERTISE_CAP:
+		return "expertise landed at %d, want the cap %d" % [final_expertise, HRConstants.EXPERTISE_CAP]
 	return ""

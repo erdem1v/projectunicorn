@@ -38,7 +38,11 @@ extends Control
 @onready var beta_fixed_val: Label = $Root/Panel/VBox/BetaRow/FixedBox/Val
 @onready var beta_remain_val: Label = $Root/Panel/VBox/BetaRow/RemainBox/Val
 @onready var iter_line: Label = $Root/Panel/VBox/IterLine
-@onready var decision_row: HBoxContainer = $Root/Panel/VBox/DecisionRow
+# BoxContainer, HBoxContainer DEĞİL: karar satırı Terminal'de DİKEY yığıldı (mono
+# butonlar yan yana 320px kartı taşırıyordu). Tip HBoxContainer kalsaydı @onready
+# ataması sessizce düşer, referans null olur ve altındaki buton bağlantıları
+# "Nil üzerinde 'pressed'" hatasıyla ölürdü — battery log'unda 42 kez öyle oldu.
+@onready var decision_row: BoxContainer = $Root/Panel/VBox/DecisionRow
 @onready var iterate_btn: Button = $Root/Panel/VBox/DecisionRow/IterateBtn
 @onready var dev_btn: Button = $Root/Panel/VBox/DecisionRow/DevBtn
 @onready var action_button: Button = $Root/Panel/VBox/ActionButton
@@ -127,9 +131,16 @@ func _build_styles() -> void:
 	_sb_track.bg_color = UiTokens.NEUTRAL_BADGE_BG.lerp(UiTokens.CARD_BORDER, 0.5)
 	_sb_track.set_corner_radius_all(4)
 	track.add_theme_stylebox_override("panel", _sb_track)
+	# TERMINAL: dolgu YIKAMA, düz amber levha DEĞİL (mockup: ilerleme bloğu
+	# `rgba(255,160,40,.06)` + `border-left 2px #FFA028`). Eski %65 opak amber
+	# koyu zeminde okunaklıydı ama Terminal'de üstündeki iki etiket amber levhanın
+	# içinde kayboluyordu — ölçüldü (product_shot_detail_b2b). Alfa, ilerlemenin
+	# hâlâ okunacağı ama metnin önüne geçmeyeceği yerde: 0.22.
 	_sb_fill = StyleBoxFlat.new()
-	_sb_fill.bg_color = UiTokens.ACCENT.lerp(UiTokens.CARD_BG, 0.35)   # net amber
-	_sb_fill.set_corner_radius_all(4)
+	_sb_fill.bg_color = Color(UiTokens.ACCENT, 0.22)
+	_sb_fill.border_color = UiTokens.ACCENT
+	_sb_fill.border_width_left = UiTokens.BORDER_FOCUS   # ilerlemenin ucundaki 2px amber çizgi
+	_sb_fill.set_corner_radius_all(UiTokens.RADIUS_S)
 	fill.add_theme_stylebox_override("panel", _sb_fill)
 	# Mini faz şeridi: biten = pozitif, aktif = amber + accent çerçeve, bekleyen = soluk.
 	_sb_mini_done = StyleBoxFlat.new()

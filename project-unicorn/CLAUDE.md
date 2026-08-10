@@ -101,14 +101,18 @@ seams; future events must match claims to modifiers.
 
 ---
 
-## UI / STYLE LAW (LOCKED — Tema Çekirdeği, 2026-08-06)
+## UI / STYLE LAW (LOCKED — Tema Çekirdeği 2026-08-06 · Terminal reskin 2026-08-08)
 
 Görsel kimliğin tek kaynağı vardır ve mülkiyet dörde bölünmüştür. Bu hükümler
 `scripts/theme/ui_tokens.gd` başlığındaki OWNERSHIP bloğunun yasalaşmış halidir.
 
 **1. Vokabüler `UiTokens`'ındır.** Oyundaki her renk `ui_tokens.gd` palet tablosunda adlıdır;
-her yazı boyutu 6 adımlı tip skalasından (`SIZE_MICRO..SIZE_DISPLAY`) ya da belgeli
-editorial-display istisnasından (`SIZE_ED_*`) gelir. Palet tablosu dışına ham `Color(...)`,
+her yazı boyutu TERMINAL MERDİVENİNDEN — `SIZE_MICRO 9 · SIZE_META 10 · SIZE_SMALL 11 ·
+SIZE_DATA 12 · SIZE_BODY 13 · SIZE_LEAD 15 · SIZE_TITLE 16 · SIZE_DISPLAY 22` — ya da belgeli
+editorial-display istisnasından (`SIZE_ED_MODAL 24 · SIZE_ED_CEREMONY 26 · SIZE_ED_HEADLINE 32 ·
+SIZE_ED_FIGURE 44 · SIZE_ED_MASTHEAD 52`) gelir. Merdiven Terminal reskin'inde 6 adımdan 8'e
+çıktı: onaylı mockup'lar yarım adımlarla (9,5 / 10,5 / 11,5) çizildi, Godot'un tam sayı font
+boyutu bunu taşıyamıyor, YUKARI YUVARLANDI ve sıralamanın korunduğu ölçüldü. Palet tablosu dışına ham `Color(...)`,
 skala dışına ham font boyutu YAZILMAZ. Runtime/state'e bağlı stil `UiTokens` helper'larından
 okunur (`delta_color`, `badge_palette`, `health_color`, …) — sign→renk mantığı bir daha
 icat edilmez.
@@ -118,6 +122,18 @@ icat edilmez.
 (temiz checkout önce `--import` ister). Token ya da `build_theme.gd` değişikliği AYNI
 commit'te `UiTokens.THEME_STAMP`'i artırır ve regen koşar; `main.gd` debug boot'ta bayat
 `.tres`'e `push_warning` ile bağırır.
+
+**2b. `themes/oda_frozen_theme.tres` DONDURULMUŞ artefakttır — YENİDEN ÜRETİLMEZ.**
+Terminal reskin'i (2026-08-08) ODA'yı kendi temasına aldı: dosya, reskin'den HEMEN ÖNCE
+`68ec579`'daki `master_theme.tres`'in birebir kopyasıdır ve `OdaView.tscn` ile `oda_tour.gd`
+tarafından `theme` olarak takılır. Godot temayı en yakın ata `theme`'inden çözer, yani bu tek
+özellik bütün ODA alt ağacını yalıtır. Sebep ölçümdü: ODA 15 PAYLAŞILAN varyasyon
+(`MicroLabel` ×8, `NewsMeta` ×5, `ChromeBadgeLabel` ×3, `ChromeChip`, `RowMeta`,
+`MetricValueInk`, `BodySerif`, `QuoteSerif`, `EngravingFrame`, `DialogueName`, `ChromeSerif`,
+`ChromeButton`, `ChromeGhost`, `BuildProgress`, `OdaTourCard`) ve 11 paylaşılan token okuyordu;
+"token'ları boya, ODA'ya dokunma" mümkün DEĞİLDİ. ODA'nın doğrudan okuduğu renkler ayrıca
+`UiTokens`'ın `ODA_*` DONDURULMUŞ REGISTER'ına pinlendi. Bir sonraki ODA tasarım turu bu
+dosyayı emekliye ayırana kadar: **kopyalanmaz, düzenlenmez, regen edilmez.**
 
 **3. `build_theme.gd`, token'ı tema öğesine çeviren TEK dosyadır.** Tema içinde: SKALA
 boyut+leading'in sahibidir (bir varyasyon adımının boyutunu ASLA override etmez); VARYASYON
@@ -129,18 +145,32 @@ ya da bir yenisini `build_theme.gd`'ye eklerler. Mevcut literaller GRANDFATHERED
 değişen satırla birlikte taşınır (TECH_SPEC Decision Log'un inline-Color konvansiyonu).
 Envanter ve bilinçli istisnalar: `docs/design/theme_sweep_ledger.md`.
 
-**Chrome kuralı (ODA rework ile revize, 2026-08-06).** `Chrome*` varyasyonları (koyu
+**Chrome kuralı (ODA rework ile revize 2026-08-06; Terminal reskin ile daraltıldı 2026-08-08).** `Chrome*` varyasyonları (koyu
 kabuk ailesi) artık tanımlı-VE-YAŞAYAN'dır, ama yalnız şu yüzeylerde: **TopBar ·
 MonthSummary bandı · sol sekme rayı (LeftTabs) · sayfa-üstü chrome şeridi
 (TabPageChrome) · OdaView'un koyu bilgi yüzeyleri (monitör ekranı, mesai çipi vb.) ·
 tooltip kabuğu.** Bu liste dışında `Chrome` deseni eşleşmesi = ihlal; listeye yeni
-yüzey eklemek yine ayrı, gate'li bir karardır. Sekme SAYFA İÇERİĞİ krem gövdede
-kalır — Chrome oraya sızmaz. NewsTicker görsel kimliğini korur (`NewsPanel`/`NewsRich`
-kendi adlarıyla kalır — zaten en koyu yüzeydir, karartma gerekmedi).
+yüzey eklemek yine ayrı, gate'li bir karardır.
+
+TERMINAL REVİZYONU (2026-08-08) İKİ MADDEYİ DEĞİŞTİRDİ:
+· **"Sekme sayfa içeriği krem gövdede kalır" HÜKMÜ DÜŞTÜ.** Terminal'de krem gövde YOK;
+  sayfa zemini `#0D1115`, kabuk `#07090B`. Kabuk ile gövde artık tek register'dır ve bu
+  yüzden `CREAM == INK` (ikisi de `#E8EDF2`) — adlar çağrı yerleri için korundu.
+· **OdaView bu listeden ÇIKTI.** ODA `Chrome*`'u artık `master_theme`'den DEĞİL, kendi
+  dondurulmuş temasından çözüyor (madde 2b). Listedeki "OdaView koyu bilgi yüzeyleri"
+  ifadesi tarihsel; ODA'nın Chrome tüketimi bu dosyayı ilgilendirmiyor.
+· Krem KALAN tek ada gazetedir (`PaperPanel` + `PAPER_INK_*`) ve o bilinçli bir
+  istisnadır (mockup 5l: "gazete diegetik kağıt olarak kaldı").
+NewsTicker görsel kimliğini korur (`NewsPanel`/`NewsRich` kendi adlarıyla kalır).
 
 **Doğrulama yüzeyleri** (debug build, main.gd): `--tab-shot=<id>` · `--modal-shot=<kind>` ·
 `--onboard-shot=<1|2|3>` · `--probe-shot` (sıfır-stil kontrol sahnesi) ·
-`--theme-audit=<id>` (çözümlenmiş tema değerleri + S/C/P override bayrakları). Tema
+`--theme-audit=<id>` (çözümlenmiş tema değerleri + yüz + panel stylebox parmak izi +
+S/C/P override bayrakları) · **`--theme-audit=oda` ODA'NIN KAPISIDIR**: yalnız OdaView alt
+ağacını gezer, 122 satır basar ve reskin öncesi/sonrası BAYT-AYNI çıkmak zorundadır.
+Piksel karşılaştırması ODA için kullanılamaz — ölçüldü: `--oda-shot` kareleri
+`night/market1/market2/event/tab/tour` için iki değer arasında gidip geliyor (tween fazı /
+kare yarışı), yani hash eşitsizliği tema değişikliğinin kanıtı DEĞİL. Tema
 değişikliği iddiası bu yüzeylerin before/after'ıyla kanıtlanır — hash eşitliği "hiçbir şey
 kımıldamadı"nın, bbox raporu "yalnız hedef kımıldadı"nın kanıtıdır.
 

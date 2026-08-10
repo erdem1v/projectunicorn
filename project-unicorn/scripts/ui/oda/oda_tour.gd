@@ -17,6 +17,11 @@ extends Control
 # saati DURDURUR: tur bir an, oynanış değil.
 
 const OdaLayoutRef := preload("res://scripts/ui/oda/oda_layout.gd")
+# ODA'nın DONDURULMUŞ teması. Tur PanelLayer'a mount olur, yani OdaView'un
+# ALTINDA değildir — proje temasını (Terminal) miras alırdı ve `OdaAnchorGlow` /
+# `OdaTourCard` / `ChromeGhost` / `ChromeButton` oradan Terminal renkleriyle
+# çözülürdü. Temayı burada da elle takmak, turu odanın register'ında tutar.
+const ODA_THEME := preload("res://themes/oda_frozen_theme.tres")
 
 const STEPS := [
 	{"rect": "monitor", "name": "ODA_ANCHOR_MONITOR", "desc": "ODA_TOUR_MONITOR_DESC"},
@@ -46,6 +51,7 @@ func set_stage(node: Control) -> void:
 
 
 func _ready() -> void:
+	theme = ODA_THEME   # PanelLayer'da duruyoruz; oda register'ı miras gelmiyor
 	mouse_filter = Control.MOUSE_FILTER_STOP  # arkaya tıklama sızmasın
 	# Saat durur. Oyuncuya odası tanıtılırken gün ilerlemesi, para yanması, event
 	# kuyruğunun dolması için bir sebep yok.
@@ -64,7 +70,7 @@ func _ready() -> void:
 	resized.connect(_apply_step)
 	for i in 4:
 		var dim := ColorRect.new()
-		dim.color = UiTokens.SCRIM_MODAL
+		dim.color = UiTokens.ODA_SCRIM
 		dim.mouse_filter = Control.MOUSE_FILTER_STOP
 		add_child(dim)
 		_dims.append(dim)

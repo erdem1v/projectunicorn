@@ -52,6 +52,11 @@ signal palette_changed(colorblind: bool)
 signal character_added(character_id: String)
 signal character_removed(character_id: String)
 signal morale_changed(character_id: String, new_morale: int)
+## DENEYİM biriktiğinde / sıfırlandığında (Terminal UI görevi). Defter satırı
+## mini-barı bu sinyalle tazeler.
+signal employee_experience_changed(character_id: String, new_experience: int)
+## Eğitim başladığında, her gün ve bittiğinde (0 = bitti/eğitimde değil).
+signal employee_training_changed(character_id: String, days_left: int)
 # Emitted at the END of HRSystem.daily_tick, once all seven HR steps have settled — the HR
 # tab's day-boundary repaint hook. Exactly the same reason build_progress_changed exists:
 # day_advanced fires inside GameState.advance_day(), which TimeManager calls BEFORE the daily

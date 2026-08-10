@@ -15,6 +15,10 @@ extends Panel
 const PHASE_NAMES := ["Bootstrap", "Traction", "Series A"]
 
 @onready var company_name_label: Label = $Margin/Row/IdentityGroup/CompanyNameLabel
+@onready var logo_square: ColorRect = $Margin/Row/IdentityGroup/LogoSquare
+@onready var finance_group: HBoxContainer = $Margin/Row/FinanceGroup
+@onready var reputation_group: HBoxContainer = $Margin/Row/ReputationGroup
+@onready var time_group: HBoxContainer = $Margin/Row/TimeGroup
 @onready var cash_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Cash/ValueLabel
 @onready var mrr_value_label: Label = $Margin/Row/FinanceGroup/StatCol_MRR/ValueLabel
 @onready var burn_value_label: Label = $Margin/Row/FinanceGroup/StatCol_Burn/ValueRow/ValueLabel
@@ -83,6 +87,38 @@ func _ready() -> void:
 
 	for i in speed_btns.size():
 		speed_btns[i].pressed.connect(_on_speed_button.bind(i))
+
+	# Marka karesi token'dan boyanır. Sahnede ham bir amber literali duruyordu ve
+	# Terminal'e geçerken sessizce ESKİ amber'de kalmıştı — renk artık tek yerden.
+	logo_square.color = UiTokens.ACCENT
+	# Yoğunluk kademesi: mantıksal viewport daraldığında şerit KIRPILMAZ, SIKIŞIR.
+	get_viewport().size_changed.connect(_apply_density)
+	_apply_density()
+
+
+# --- Yoğunluk kademesi -------------------------------------------------------
+# Mockup 1920 mantıksal genişliğe çizildi ve o genişlikte birebir uygulanıyor.
+# Ama %150 UI ölçeği 1080p'de mantıksal viewport'u 1280×720'ye DÜŞÜRÜR ve ölçülen
+# içerik ~1331px: şirket adı soldan, 3x/4x tuşları sağdan taşardı. Hız kontrolünü
+# kaybetmek kozmetik değil işlevsel bir kayıp, o yüzden şerit dar viewport'ta
+# kendini toplar. Bu, DisplaySettings'in ölçek kapısını genişletmenin ön koşulu.
+const COMPACT_BELOW := 1600   # WORKING — ölçülen taşma sınırının üstünde ilk yuvarlak adım
+
+func _apply_density() -> void:
+	if not is_inside_tree():
+		return
+	var logical_w: float = get_viewport_rect().size.x
+	var compact: bool = logical_w < float(COMPACT_BELOW)
+	company_name_label.visible = not compact
+	# Sayı sütunlarının nefesi: 28 → 18. Sütunların KENDİSİ hiç gitmez — hiçbir
+	# sayı gizlenmez, yalnız aralarındaki boşluk daralır.
+	var gap: int = 18 if compact else 28
+	finance_group.add_theme_constant_override("separation", gap)
+	reputation_group.add_theme_constant_override("separation", gap)
+	time_group.add_theme_constant_override("separation", 10 if compact else 16)
+	# Tarih kısa biçime düşer: "Paz, 4 Oca 2026 · 14:00" → "4 Oca · 14:00".
+	day_label.custom_minimum_size.x = 0.0 if compact else 210.0
+	_update_day_label()
 
 
 func _exit_tree() -> void:
@@ -201,8 +237,16 @@ func _display_date_tr() -> String:
 
 
 func _update_day_label() -> void:
-	# In-fiction date (TR): "Çar, 9 Eyl 2026 · 10:00".
-	day_label.text = "%s · %02d:00" % [_display_date_tr(), GameState.current_hour]
+	# In-fiction date (TR): "Çar, 9 Eyl 2026 · 10:00". Dar viewport'ta gün adı ve
+	# yıl düşer — "9 Eyl · 10:00". Bilgi kaybı yok: yıl zaten ay sonu özetinde,
+	# gün adı ise hiçbir kararın girdisi değil.
+	var d: Dictionary = GameState.get_date_dict()
+	var compact: bool = is_inside_tree() and get_viewport_rect().size.x < float(COMPACT_BELOW)
+	if compact:
+		day_label.text = "%d %s · %02d:00" % [int(d.day),
+			GameState.month_name_tr().substr(0, 3), GameState.current_hour]
+	else:
+		day_label.text = "%s · %02d:00" % [_display_date_tr(), GameState.current_hour]
 
 func _on_shutter_changed(days_left: int) -> void:
 	# Kepenk counter (ENDGAME_DESIGN.md §4.3): visible red countdown while cash

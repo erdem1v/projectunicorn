@@ -86,7 +86,7 @@ func _build_skeleton() -> void:
 	# center anchor when the minimum size rises — mockup card, no fixed void).
 	var panel := PanelContainer.new()
 	panel.name = "CenterPanel"
-	panel.theme_type_variation = &"PaperModal"
+	panel.theme_type_variation = &"ModalCard"
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.custom_minimum_size = Vector2(780, 420)
 	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -102,7 +102,7 @@ func _build_skeleton() -> void:
 	_header_row.add_theme_constant_override("separation", 8)
 	body.add_child(_header_row)
 
-	_title_label = UiFactory.make_label("", &"NewsHeadlineSerif")
+	_title_label = UiFactory.make_label("", &"ModalTitleSerif")
 	_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(_title_label)
 
@@ -136,7 +136,7 @@ func _build_skeleton() -> void:
 	body.add_child(_rule())
 
 	var footer := UiFactory.make_label(
-		UiTokens.tr_upper("Seçim kalıcıdır · Oyun duraklatıldı"), &"NewsMeta")
+		UiTokens.tr_upper("Seçim kalıcıdır · Oyun duraklatıldı"), &"MicroLabel")
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.add_child(footer)
 
@@ -164,7 +164,7 @@ func _fill_header() -> void:
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_header_row.add_child(spacer)
 	if _event.subtitle != "":
-		var sub := UiFactory.make_label(UiTokens.tr_upper(_live_subtitle(_event.subtitle)), &"NewsMeta")
+		var sub := UiFactory.make_label(UiTokens.tr_upper(_live_subtitle(_event.subtitle)), &"MicroLabel")
 		sub.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_header_row.add_child(sub)
 

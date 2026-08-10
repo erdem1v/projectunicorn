@@ -72,11 +72,11 @@ func _initialize() -> void:
 	# el yapımı font_size=8 taşıyordu (skala dışı) — süpürme B3 onları buraya topladı;
 	# 8→9 (+1px) Erdem onayıyla sanksiyonlu tek görünür harekettir.
 	_lbl(th, &"MicroLabel", mono_label, T.SIZE_MICRO, T.INK_DIM)
-	_lbl(th, &"MetricCaption", mono_label, T.SIZE_MICRO, T.CREAM_DIM)
-	_lbl(th, &"MetricValue", sans_sb, T.SIZE_LEAD, T.CREAM)
+	_lbl(th, &"MetricCaption", mono_label, T.SIZE_META, T.INK_FAINT)
+	_lbl(th, &"MetricValue", mono_sb, T.SIZE_LEAD, T.CREAM)
 	_lbl(th, &"MetricDelta", mono_reg, T.SIZE_SMALL, T.CREAM_DIM)
-	_lbl(th, &"MetricUnit", mono_reg, T.SIZE_MICRO, T.CREAM_DIM)
-	_lbl(th, &"TabLabel", sans_reg, T.SIZE_SMALL, T.INK_DIM)
+	_lbl(th, &"MetricUnit", mono_reg, T.SIZE_META, T.INK_FAINT)
+	_lbl(th, &"TabLabel", mono_label, T.SIZE_META, T.INK_DIM)
 	_lbl(th, &"BadgeLabel", mono_reg, T.SIZE_MICRO, T.INK)
 	_lbl(th, &"ChoiceLabel", sans_reg, T.SIZE_LEAD, T.INK)
 	_lbl(th, &"ChoiceLabelStrong", sans_sb, T.SIZE_LEAD, T.INK)
@@ -84,6 +84,27 @@ func _initialize() -> void:
 	_lbl(th, &"ChromeSerif", serif_reg, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"ChromeLabel", mono_label, T.SIZE_MICRO, T.CREAM_DIM)
 	_lbl(th, &"ChromeValue", sans_sb, T.SIZE_BODY, T.CREAM)
+	# ChromeClock: TopBar tarih/saat — mockup mono 12 #74828F (ChromeSerif serif
+	# kalıyor; onu ODA turu ve dondurulmuş tema da okuyor).
+	_lbl(th, &"ChromeClock", mono_reg, T.SIZE_DATA, T.CREAM_DIM)
+	# ChromeAlert: KEPENK / TEKLİF geri sayımı — mockup 700 11 mono #FF5C49.
+	# Renk SEMANTİK: negative() üzerinden değil sabit okunuyor gibi görünmesin diye
+	# not: tema statiktir, renk körü takası bu etiketi top_bar.gd'de yeniden boyar.
+	_lbl(th, &"ChromeAlert", mono_sb, T.SIZE_SMALL, T.NEGATIVE)
+	# ColumnHeader: defter sütun başlığı — mockup 400 9.5 mono #566470.
+	_lbl(th, &"ColumnHeader", mono_label, T.SIZE_META, T.INK_DIM)
+	# SectionAmber: amber bölüm başlığı (kural çizgisiyle birlikte kullanılır).
+	_lbl(th, &"SectionAmber", mono_label, T.SIZE_SMALL, T.ACCENT)
+	# PageTitle / ModalTitle: serif YALNIZ sayfa ve modal başlığıdır.
+	_lbl(th, &"PageTitleSerif", serif_sb, T.SIZE_ED_CEREMONY, T.INK)
+	_lbl(th, &"ModalTitleSerif", serif_sb, T.SIZE_ED_MODAL, T.INK)
+	# TitleRowSummary: özet ARTIK başlık satırında yaşar (kilitli reçete: asla
+	# kopuk bir alt şerit).
+	_lbl(th, &"TitleRowSummary", mono_label, T.SIZE_SMALL, T.INK_DIM)
+	# EmptyRowLabel: "Henüz kimse yok" — mockup 400 12 mono #46525D.
+	_lbl(th, &"EmptyRowLabel", mono_reg, T.SIZE_DATA, T.INK_FAINT)
+	# LockedTelegraph: "EĞİTİM · KİLİTLİ" — mockup 400 10.5 mono #46525D.
+	_lbl(th, &"LockedTelegraph", mono_label, T.SIZE_SMALL, T.INK_FAINT)
 	_lbl(th, &"RowName", sans_sb, T.SIZE_BODY, T.INK)
 	_lbl(th, &"RowMeta", mono_reg, T.SIZE_SMALL, T.INK_MUTED)
 	_lbl(th, &"AvatarInitial", sans_sb, T.SIZE_BODY, T.CREAM)
@@ -112,13 +133,16 @@ func _initialize() -> void:
 	# ---- Newspaper ending register ("Ekonomi Postası"): INK text on the cream PAPER
 	# (a LIGHT surface — INK/INK_MUTED/INK_DIM, not the CREAM chrome tones). Masthead is
 	# a large muted grey; the headline is the darkest element (mockup contrast). ----
-	_lbl(th, &"MastheadSerif", serif_sb, T.SIZE_ED_MASTHEAD, T.INK_MUTED)  # "EKONOMİ POSTASI" masthead
-	_lbl(th, &"NewsHeadlineSerif", serif_sb, T.SIZE_ED_HEADLINE, T.INK)    # story headline (darkest)
-	_lbl(th, &"NewsDeckSerif", serif_it, T.SIZE_LEAD, T.INK_MUTED)         # italic subhead / quoted deck
-	_lbl(th, &"NewsCaptionSerif", serif_it, T.SIZE_SMALL, T.INK_DIM)       # engraving caption (italic, dim)
-	_lbl(th, &"NewsMeta", mono_label, T.SIZE_MICRO, T.INK_DIM)             # date / edition caps
-	_lbl(th, &"NewsBodySerif", serif_reg, T.SIZE_BODY, T.INK)              # ledger-line / notice body prose
-	_lbl(th, &"NewsStatSerif", serif_sb, T.SIZE_ED_FIGURE, T.INK)          # stat-row figures ("$4.0M")
+	# GAZETE = bilinçli AÇIK ADA (mockup 5l: "gazete diegetik kağıt olarak kaldı").
+	# Bu yedisi eskiden INK/INK_MUTED/INK_DIM okuyordu; Terminal'de o üçü AÇIK renk
+	# oldu, yani krem kâğıda beyaz basacaktı. Kendi mürekkep merdivenine taşındılar.
+	_lbl(th, &"MastheadSerif", serif_sb, T.SIZE_ED_MASTHEAD, T.PAPER_INK_MAST)  # "EKONOMİ POSTASI"
+	_lbl(th, &"NewsHeadlineSerif", serif_sb, T.SIZE_ED_HEADLINE, T.PAPER_INK)   # story headline (darkest)
+	_lbl(th, &"NewsDeckSerif", serif_it, T.SIZE_LEAD, T.PAPER_INK_DECK)         # italic subhead / quoted deck
+	_lbl(th, &"NewsCaptionSerif", serif_it, T.SIZE_SMALL, T.PAPER_INK_META)     # engraving caption (italic, dim)
+	_lbl(th, &"NewsMeta", mono_label, T.SIZE_META, T.PAPER_INK_META)            # date / edition caps
+	_lbl(th, &"NewsBodySerif", serif_reg, T.SIZE_BODY, T.PAPER_INK_BODY)        # ledger-line / notice body prose
+	_lbl(th, &"NewsStatSerif", serif_sb, T.SIZE_ED_FIGURE, T.PAPER_INK)         # stat-row figures ("$4.0M")
 
 	# ---- Panel variations ----
 	_panel(th, &"TopBarPanel", "Panel", _box(T.BG_TOPBAR, 0, Color.TRANSPARENT, T.RADIUS_NONE, [0,0,0,T.BORDER_HAIRLINE], T.SEPARATOR))
@@ -145,13 +169,31 @@ func _initialize() -> void:
 	_panel(th, &"CardCta", "PanelContainer", _box(Color.TRANSPARENT, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_CARD.x, T.PAD_CARD.y))
 	_panel(th, &"CardPanelTight", "PanelContainer", _box(T.CARD_BG, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [1,1,1,1], T.CARD_BORDER, T.PAD_CARD_TIGHT.x, T.PAD_CARD_TIGHT.y))
 	_panel(th, &"CardAttention", "PanelContainer", _box(T.CARD_ATTENTION_BG, T.BORDER_HAIRLINE, T.CARD_ATTENTION_BORDER, T.RADIUS_M, [1,1,1,1], T.CARD_ATTENTION_BORDER, T.PAD_CARD.x, T.PAD_CARD.y))
+	# --- TERMINAL grameri: uyarı şeridi · boş satır · durum çipleri ---
+	# AttentionStrip: KIRMIZI DİKKAT ŞERİDİ, sayfa başlığının hemen ALTINDA
+	# (mockup 4a — dosyadaki tek örnek, ve kilitli reçetenin uyarı biçimi).
+	_panel(th, &"AttentionStrip", "PanelContainer", _box(T.CARD_ATTENTION_BG, T.BORDER_HAIRLINE, T.CARD_ATTENTION_BORDER, T.RADIUS_M, [1,1,1,1], T.CARD_ATTENTION_BORDER, T.PAD_BAND.x, T.PAD_BAND.y))
+	# EmptyRow: boş departman satırı. Mockup kesikli çizgi istiyor; Godot'un
+	# StyleBoxFlat'ında kesikli kenar YOK, o yüzden en yakın dürüst karşılık tek
+	# piksellik #26303A düz kenar — dolgu yok, böylece "boş" okunuyor.
+	_panel(th, &"EmptyRow", "PanelContainer", _box(Color.TRANSPARENT, T.BORDER_HAIRLINE, T.BORDER_DASHED, T.RADIUS_M, [1,1,1,1], T.BORDER_DASHED, T.PAD_ROW.x, T.PAD_ROW.y))
+	# LedgerRow(+Hover): defterin çalışan satırı. HOVER YALNIZ KENAR — dolgu
+	# bayt-aynı kalır, yoksa satır hover'da zıplar (OdaBoardCardHover emsali).
+	_panel(th, &"LedgerRow", "PanelContainer", _box(T.CARD_BG, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [1,1,1,1], T.CARD_BORDER, T.PAD_ROW.x, T.PAD_ROW.y))
+	_panel(th, &"LedgerRowHover", "PanelContainer", _box(T.CARD_BG, T.BORDER_HAIRLINE, T.BORDER_HOVER, T.RADIUS_M, [1,1,1,1], T.BORDER_HOVER, T.PAD_ROW.x, T.PAD_ROW.y))
+	# Durum çipleri: ince RENKLİ kenar + koyu dolgu (kilitli reçete). Dördü de
+	# aynı kutu; yalnız kenar/dolgu çifti değişiyor.
+	_panel(th, &"ChipNeutral", "PanelContainer", _box(T.NEUTRAL_BADGE_BG, T.BORDER_HAIRLINE, T.BORDER_DISABLED, T.RADIUS_S, [1,1,1,1], T.BORDER_DISABLED, T.PAD_CHIP.x, T.PAD_CHIP.y))
+	_panel(th, &"ChipAmber", "PanelContainer", _box(T.AMBER_BG, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_S, [1,1,1,1], T.ACCENT, T.PAD_CHIP.x, T.PAD_CHIP.y))
+	_panel(th, &"ChipPositive", "PanelContainer", _box(T.POSITIVE_BG, T.BORDER_HAIRLINE, T.POSITIVE_RULE, T.RADIUS_S, [1,1,1,1], T.POSITIVE_RULE, T.PAD_CHIP.x, T.PAD_CHIP.y))
+	_panel(th, &"ChipNegative", "PanelContainer", _box(T.NEGATIVE_BG, T.BORDER_HAIRLINE, T.NEGATIVE_RULE, T.RADIUS_S, [1,1,1,1], T.NEGATIVE_RULE, T.PAD_CHIP.x, T.PAD_CHIP.y))
 	_panel(th, &"ChoiceCard", "PanelContainer", _box(T.CARD_BG, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [1,1,1,1], T.CARD_BORDER, T.PAD_CHOICE.x, T.PAD_CHOICE.y))
 	# ChoiceCardHover/Mentor: event-modal choice states — amber border on hover
 	# (dialogue_choice_card swap precedent) and the MENTOR TAVSİYESİ endorsed card.
 	# Mentor stays shadow-free: the tab chip must overlap its top edge cleanly.
 	_panel(th, &"ChoiceCardHover", "PanelContainer", _box(T.CARD_BG, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_M, [1,1,1,1], T.ACCENT, T.PAD_CHOICE.x, T.PAD_CHOICE.y))
 	_panel(th, &"ChoiceCardMentor", "PanelContainer", _box(T.CARD_BG, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_M, [1,1,1,1], T.ACCENT, T.PAD_CHOICE.x, T.PAD_CHOICE.y))
-	_panel(th, &"HeaderBand", "PanelContainer", _box(T.ACCENT, 0, Color.TRANSPARENT, T.RADIUS_M, [1,1,1,1], Color.TRANSPARENT, T.PAD_BAND.x, T.PAD_BAND.y))
+	_panel(th, &"HeaderBand", "PanelContainer", _box(Color.TRANSPARENT, T.BORDER_HAIRLINE, T.BORDER_DISABLED, T.RADIUS_NONE, [0,0,0,T.BORDER_HAIRLINE], T.BORDER_DISABLED, T.PAD_STRIP.x, T.PAD_STRIP.y))
 	# CardFloating: gövde üstünde YÜZEN kart (BuildHUD overlay'i). CardPanelTight'ın
 	# 0.98-alfa + yumuşak-gölge kardeşi; BuildHUDPanel.tscn'in el yapımı SubResource'u
 	# buraya emekli edildi (süpürme B5) — shadow sayıları PaperPanel emsalini izler.
@@ -185,25 +227,32 @@ func _initialize() -> void:
 	# PaperPanel: the cream page — a floating single sheet on the dark screen. Right/bottom
 	# PAPER_EDGE border reads as the second-page edge from the mockup; a soft drop shadow
 	# lifts it off DIALOGUE_BG. Generous inner margins (masthead breathing room).
-	var paper_sb := _box(T.PAPER_BG, 0, Color.TRANSPARENT, T.RADIUS_XS, [0, T.BORDER_FOCUS, 0, T.BORDER_FOCUS], T.PAPER_EDGE, T.PAD_SHEET.x, T.PAD_SHEET.y)
-	paper_sb.shadow_color = T.PAPER_SHADOW
-	paper_sb.shadow_size = 12
-	paper_sb.shadow_offset = Vector2(0, 5)
-	_panel(th, &"PaperPanel", "PanelContainer", paper_sb)
-	# PaperModal: the event-modal decision card — same paper register as PaperPanel
-	# but modal-scaled inner margins (780×660 card, not the full ending sheet).
-	var paper_modal_sb := _box(T.PAPER_BG, 0, Color.TRANSPARENT, T.RADIUS_XS, [0, T.BORDER_FOCUS, 0, T.BORDER_FOCUS], T.PAPER_EDGE, T.PAD_PAGE.x, T.PAD_PAGE.y)
-	paper_modal_sb.shadow_color = T.PAPER_SHADOW
-	paper_modal_sb.shadow_size = 12
-	paper_modal_sb.shadow_offset = Vector2(0, 5)
-	_panel(th, &"PaperModal", "PanelContainer", paper_modal_sb)
+	# TERMINAL (5l): the sheet is FLAT PRINT — 1px #3A342A on all four sides,
+	# NO corner radius and NO drop shadow. The old lifted-sheet treatment was a
+	# light-editorial idea; the mockup deliberately drops it so the page reads as
+	# a printed object rather than a UI card.
+	_panel(th, &"PaperPanel", "PanelContainer", _box(
+		T.PAPER_BG, T.BORDER_HAIRLINE, T.PAPER_EDGE, T.RADIUS_NONE,
+		[1, 1, 1, 1], T.PAPER_EDGE, T.PAD_SHEET.x, T.PAD_SHEET.y))
+	# ModalCard: the standard Terminal modal panel (event · Atlas · Ayarlar · ay
+	# sonu). RETIRED `PaperModal` — in Terminal the decision modal is DARK
+	# (mockup 5f: #10161C on a 1px #232C34 edge, one soft shadow), so the paper
+	# register no longer has anything to do with it. Only the newspaper stays cream.
+	var modal_card_sb := _box(T.DIALOGUE_BG, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [1,1,1,1], T.CARD_BORDER, T.PAD_PAGE.x, T.PAD_PAGE.y)
+	modal_card_sb.shadow_color = Color(0, 0, 0, 0.60)
+	modal_card_sb.shadow_size = 40
+	modal_card_sb.shadow_offset = Vector2(0, 10)
+	_panel(th, &"ModalCard", "PanelContainer", modal_card_sb)
 	# RailPanel: the dark meta rail — same charcoal as the screen, a left hairline divides it.
 	_panel(th, &"RailPanel", "PanelContainer", _box(T.DIALOGUE_BG, 0, Color.TRANSPARENT, T.RADIUS_NONE, [T.BORDER_HAIRLINE, 0, 0, 0], T.SEPARATOR, T.PAD_RAIL.x, T.PAD_RAIL.y))
 	# RailCard: Coming-Soon Tier2/Tier3 cards on the rail (a step lighter, hairline border).
 	_panel(th, &"RailCard", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.BORDER_HAIRLINE, T.DIALOGUE_CARD_BORDER, T.RADIUS_M, [1,1,1,1], T.DIALOGUE_CARD_BORDER, T.PAD_CARD_RAIL.x, T.PAD_CARD_RAIL.y))
 	# EngravingFrame: the illustration frame on the PAPER (light-surface counterpart to
 	# PortraitFrame). Muted tan fill + thin tan border = neutral empty frame until the PNG lands.
-	_panel(th, &"EngravingFrame", "PanelContainer", _box(T.SURFACE_FRAME, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_XS, [1,1,1,1], T.CARD_BORDER, 0, 0))
+	# Terminal'de bu varyasyonun TEK tüketicisi gazetedir (ODA kendi dondurulmuş
+	# temasından okuyor), o yüzden kâğıt mürekkebine taşındı — SURFACE_FRAME artık
+	# koyu ve krem sayfada kara bir delik açardı.
+	_panel(th, &"EngravingFrame", "PanelContainer", _box(T.PAPER_PLATE, T.BORDER_HAIRLINE, T.PAPER_INK_META, T.RADIUS_NONE, [1,1,1,1], T.PAPER_INK_META, 0, 0))
 
 	# ---- Button variations ----
 	_tab_button(th, &"TabButton", false)
@@ -266,7 +315,7 @@ func _initialize() -> void:
 	_chrome_tab_button(th, &"ChromeTabButton", false)
 	_chrome_tab_button(th, &"ChromeTabButtonActive", true)
 	# ChromeTabLabel: ray sekme etiketi (TabLabel'in koyu ikizi).
-	_lbl(th, &"ChromeTabLabel", sans_reg, T.SIZE_SMALL, T.CREAM_DIM)
+	_lbl(th, &"ChromeTabLabel", mono_label, T.SIZE_META, T.INK_DIM)
 	# ChromeGhost: kabuk şeridinin sessiz mono butonu ("ODAYA DÖN ✕" kümesi).
 	# DialogueGhost'un stylebox merdiveni + mono_label yüzü — sinematik register
 	# değil kabuk grameri olduğu için ayrı ad taşır (Chrome yasallık grep'i anlamlı kalır).
@@ -350,7 +399,7 @@ func _initialize() -> void:
 	th.set_type_variation(&"NewsRich", &"RichTextLabel")
 	th.set_font("normal_font", &"NewsRich", mono_reg)
 	th.set_font_size("normal_font_size", &"NewsRich", T.SIZE_SMALL)
-	th.set_color("default_color", &"NewsRich", T.CREAM)
+	th.set_color("default_color", &"NewsRich", T.CREAM_DIM)
 
 	# ---- ProgressBar variation (amber fill) ----
 	th.set_type_variation(&"BuildProgress", &"ProgressBar")
@@ -454,11 +503,16 @@ func _initialize() -> void:
 	# ---- Base Button: light secondary default for every un-varied Button (onboarding
 	# Back/steppers, sales Find/Pitch, build-HUD iteration/dev, modal Continue…).
 	# Variations (CommitButton/SpeedButton/TabButton) still override this. ----
-	th.set_stylebox("normal", &"Button", _box(T.CARD_BG, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_BTN.x, T.PAD_BTN.y))
-	th.set_stylebox("hover", &"Button", _box(T.SURFACE_HOVER, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_BTN.x, T.PAD_BTN.y))
-	th.set_stylebox("pressed", &"Button", _box(T.SURFACE_PRESSED, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_BTN.x, T.PAD_BTN.y))
-	th.set_stylebox("disabled", &"Button", _box(T.SURFACE_DISABLED, T.BORDER_HAIRLINE, T.BORDER_DISABLED, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_BTN.x, T.PAD_BTN.y))
-	th.set_color("font_color", &"Button", T.INK)
+	# TERMINAL: base Button IS the ghost button (mockup: `1px solid #2A343D`,
+	# radius 2, mono, no fill). Hover moves the BORDER to amber and leaves the
+	# fill alone — the recipe's hover law, applied at the base type so every
+	# un-varied Button in the game obeys it without a per-site decision.
+	th.set_stylebox("normal", &"Button", _box(Color.TRANSPARENT, T.BORDER_HAIRLINE, T.BORDER_HOVER, T.RADIUS_M, [1,1,1,1], T.BORDER_HOVER, T.PAD_BTN.x, T.PAD_BTN.y))
+	th.set_stylebox("hover", &"Button", _box(Color.TRANSPARENT, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_M, [1,1,1,1], T.ACCENT, T.PAD_BTN.x, T.PAD_BTN.y))
+	th.set_stylebox("pressed", &"Button", _box(T.SURFACE_PRESSED, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_M, [1,1,1,1], T.ACCENT, T.PAD_BTN.x, T.PAD_BTN.y))
+	th.set_stylebox("disabled", &"Button", _box(Color.TRANSPARENT, T.BORDER_HAIRLINE, T.BORDER_DISABLED, T.RADIUS_M, [1,1,1,1], T.BORDER_DISABLED, T.PAD_BTN.x, T.PAD_BTN.y))
+	th.set_font("font", &"Button", mono_label)
+	th.set_color("font_color", &"Button", T.INK_MUTED)
 	th.set_color("font_hover_color", &"Button", T.INK)
 	th.set_color("font_pressed_color", &"Button", T.INK)
 	th.set_color("font_disabled_color", &"Button", T.INK_DIM)
@@ -514,10 +568,14 @@ func _initialize() -> void:
 	# rather than 13 deliberately: it keeps the whole pass to ±1px. Tightening
 	# 15→13 later is one line per pin, and belongs to the polish wave.
 	th.set_default_font_size(T.SIZE_BODY)
-	for pinned in [&"Button", &"CommitButton", &"TabButton", &"TabButtonActive",
-			&"ChromeTabButton", &"ChromeTabButtonActive",
-			&"LineEdit", &"DialogueInput", &"SettingsSwitch"]:
-		th.set_font_size("font_size", pinned, T.SIZE_LEAD)
+	# TERMINAL: controls are MONO and small. The old pin was SIZE_LEAD (15) because
+	# the light register set buttons in sans; every button in the Terminal mockups
+	# is mono between 10.5 and 11.5, which rounds to SIZE_DATA (12). Rail labels are
+	# a step below that (SIZE_META), so they are pinned separately.
+	for pinned in [&"Button", &"CommitButton", &"LineEdit", &"DialogueInput", &"SettingsSwitch"]:
+		th.set_font_size("font_size", pinned, T.SIZE_DATA)
+	for rail in [&"TabButton", &"TabButtonActive", &"ChromeTabButton", &"ChromeTabButtonActive"]:
+		th.set_font_size("font_size", rail, T.SIZE_META)
 	# Base Button had no focus color, so ConfirmModal.tscn hand-set all four states.
 	# With this the whole group becomes dead weight the sweep can delete.
 	th.set_color("font_focus_color", &"Button", T.INK)
@@ -638,16 +696,23 @@ func _panel(th: Theme, name: StringName, base: StringName, sb: StyleBox) -> void
 	th.set_stylebox("panel", name, sb)
 
 
+# TERMINAL RAY ÖĞESİ (mockup 5g/5i/5o). Aktif: `border-left 2px #FFA028` +
+# `#10161C` dolgu, etiket #E8EDF2. Boşta: TAMAMEN düz — mockup'ta ne alt hairline
+# ne dolgu var, yalnız #566470 etiket. HOVER DOLGU DEĞİL KENARDIR: sol bar
+# #2A343D'ye döner, dolgu kımıldamaz (kilitli reçete: "hover is edge emphasis,
+# never a filled rect"). Aktif öğede hover = normal, çünkü zaten amber bar var.
 func _tab_button(th: Theme, name: StringName, active: bool) -> void:
 	th.set_type_variation(name, &"Button")
 	var normal: StyleBoxFlat
+	var hover: StyleBoxFlat
 	if active:
-		normal = _box(T.TAB_ACTIVE_BG, 0, Color.TRANSPARENT, T.RADIUS_NONE, [T.BORDER_ACCENT,0,0,0], T.ACCENT)
+		normal = _box(T.TAB_ACTIVE_BG, 0, Color.TRANSPARENT, T.RADIUS_NONE, [T.BORDER_FOCUS,0,0,0], T.ACCENT)
+		hover = normal
 	else:
-		normal = _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, T.RADIUS_NONE, [0,0,T.BORDER_HAIRLINE,0], T.DIVIDER_LIGHT)
-	var hover := _box(T.SHADE_HOVER, 0, Color.TRANSPARENT, T.RADIUS_NONE)
+		normal = _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, T.RADIUS_NONE, [T.BORDER_FOCUS,0,0,0], Color.TRANSPARENT)
+		hover = _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, T.RADIUS_NONE, [T.BORDER_FOCUS,0,0,0], T.BORDER_HOVER)
 	th.set_stylebox("normal", name, normal)
-	th.set_stylebox("hover", name, hover if not active else normal)
+	th.set_stylebox("hover", name, hover)
 	th.set_stylebox("pressed", name, normal)
 	th.set_stylebox("focus", name, _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, T.RADIUS_NONE))
 	var fc: Color = T.INK if active else T.INK_DIM
@@ -658,56 +723,48 @@ func _tab_button(th: Theme, name: StringName, active: bool) -> void:
 
 
 func _chrome_tab_button(th: Theme, name: StringName, active: bool) -> void:
-	# Işık rayının _tab_button'ının koyu ikizi: birebir aynı geometri (üst hairline /
-	# 3px amber sol bar), yalnız register renkleri değişir (SEPARATOR/VEIL/CREAM).
-	th.set_type_variation(name, &"Button")
-	var normal: StyleBoxFlat
-	if active:
-		normal = _box(T.VEIL_SOFT, 0, Color.TRANSPARENT, T.RADIUS_NONE, [T.BORDER_ACCENT,0,0,0], T.ACCENT)
-	else:
-		normal = _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, T.RADIUS_NONE, [0,0,T.BORDER_HAIRLINE,0], T.SEPARATOR)
-	var hover := _box(T.VEIL_SOFT, 0, Color.TRANSPARENT, T.RADIUS_NONE)
-	th.set_stylebox("normal", name, normal)
-	th.set_stylebox("hover", name, hover if not active else normal)
-	th.set_stylebox("pressed", name, normal)
-	th.set_stylebox("focus", name, _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, T.RADIUS_NONE))
-	var fc: Color = T.CREAM if active else T.CREAM_DIM
-	th.set_color("font_color", name, fc)
-	th.set_color("font_hover_color", name, T.CREAM)
-	th.set_color("font_pressed_color", name, fc)
-	th.set_color("font_focus_color", name, fc)
+	# Terminal'de kabuk ile gövde aynı register'a düştü, o yüzden ray ikizi artık
+	# _tab_button ile BİREBİR aynı geometri VE aynı renkler. Ad korunuyor: LeftTabs
+	# bu adı okuyor ve Chrome yasallık grep'i anlamlı kalıyor.
+	_tab_button(th, name, active)
 
 
+# TERMINAL HIZ TUŞU (26×22, mockup): aktif = #1E2730 dolgu + 1px amber kenar +
+# amber metin; boşta = dolgusuz + 1px #232C34 kenar + #566470 metin. Hover yine
+# yalnız KENAR: #232C34 → #2A343D.
 func _speed_button(th: Theme, name: StringName, active: bool) -> void:
 	th.set_type_variation(name, &"Button")
 	var normal: StyleBoxFlat
+	var hover: StyleBoxFlat
 	if active:
-		normal = _box(T.ACCENT_DIM, 0, Color.TRANSPARENT, T.RADIUS_S, [], Color.TRANSPARENT, T.PAD_BTN_XS.x, T.PAD_BTN_XS.y)
+		normal = _box(T.ACCENT_DIM, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_S, [1,1,1,1], T.ACCENT, T.PAD_BTN_XS.x, T.PAD_BTN_XS.y)
+		hover = normal
 	else:
-		normal = _box(T.VEIL_FAINT, 0, Color.TRANSPARENT, T.RADIUS_S, [], Color.TRANSPARENT, T.PAD_BTN_XS.x, T.PAD_BTN_XS.y)
-	var hover := _box(T.VEIL_STRONG, 0, Color.TRANSPARENT, T.RADIUS_S, [], Color.TRANSPARENT, T.PAD_BTN_XS.x, T.PAD_BTN_XS.y)
+		normal = _box(Color.TRANSPARENT, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_S, [1,1,1,1], T.CARD_BORDER, T.PAD_BTN_XS.x, T.PAD_BTN_XS.y)
+		hover = _box(Color.TRANSPARENT, T.BORDER_HAIRLINE, T.BORDER_HOVER, T.RADIUS_S, [1,1,1,1], T.BORDER_HOVER, T.PAD_BTN_XS.x, T.PAD_BTN_XS.y)
 	th.set_stylebox("normal", name, normal)
-	th.set_stylebox("hover", name, hover if not active else normal)
+	th.set_stylebox("hover", name, hover)
 	th.set_stylebox("pressed", name, normal)
 	th.set_stylebox("focus", name, _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, T.RADIUS_NONE))
-	# The one deliberate SHRINK in the scale pass (12→11): the speed control is mono
-	# meta sitting in a fixed-height chrome bar, so SMALL is its right step and −1px
-	# is the safe direction inside a bar that cannot grow.
 	th.set_font_size("font_size", name, T.SIZE_SMALL)
-	th.set_color("font_color", name, T.CREAM if active else T.CREAM_DIM)
-	th.set_color("font_hover_color", name, T.CREAM)
-	th.set_color("font_pressed_color", name, T.CREAM)
+	th.set_color("font_color", name, T.ACCENT if active else T.INK_DIM)
+	th.set_color("font_hover_color", name, T.ACCENT if active else T.INK_MUTED)
+	th.set_color("font_pressed_color", name, T.ACCENT)
 
 
+# TERMINAL BİRİNCİL BUTON: dolu amber + SİYAH metin (#0B0E11), kenarsız.
+# `font_color = INK` idi ve INK artık AÇIK — amber üstüne beyaz basardı; ON_ACCENT
+# tam olarak bu tuzağı kapatmak için var. Devre dışı hâli mockup'ın ikinci
+# reçetesi: #1E2730 dolgu + 1px #2A343D kenar + #566470 metin.
 func _commit_button(th: Theme) -> void:
 	var name := &"CommitButton"
 	th.set_type_variation(name, &"Button")
 	th.set_stylebox("normal", name, _box(T.ACCENT, 0, Color.TRANSPARENT, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_CTA.x, T.PAD_CTA.y))
 	th.set_stylebox("hover", name, _box(T.ACCENT_HOVER, 0, Color.TRANSPARENT, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_CTA.x, T.PAD_CTA.y))
 	th.set_stylebox("pressed", name, _box(T.ACCENT_PRESSED, 0, Color.TRANSPARENT, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_CTA.x, T.PAD_CTA.y))
-	th.set_stylebox("disabled", name, _box(T.SURFACE_SUNKEN, 0, Color.TRANSPARENT, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_CTA.x, T.PAD_CTA.y))
+	th.set_stylebox("disabled", name, _box(T.SURFACE_DISABLED, T.BORDER_HAIRLINE, T.BORDER_DISABLED, T.RADIUS_M, [1,1,1,1], T.BORDER_DISABLED, T.PAD_CTA.x, T.PAD_CTA.y))
 	th.set_stylebox("focus", name, _box(Color.TRANSPARENT, 0, Color.TRANSPARENT, T.RADIUS_NONE))
-	th.set_color("font_color", name, T.INK)
-	th.set_color("font_hover_color", name, T.INK)
-	th.set_color("font_pressed_color", name, T.INK)
+	th.set_color("font_color", name, T.ON_ACCENT)
+	th.set_color("font_hover_color", name, T.ON_ACCENT)
+	th.set_color("font_pressed_color", name, T.ON_ACCENT)
 	th.set_color("font_disabled_color", name, T.INK_DIM)

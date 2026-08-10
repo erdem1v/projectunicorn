@@ -4,7 +4,7 @@
 
 [node name="NewsTicker" type="Panel"]
 clip_contents = true
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 34)
 process_mode = 3
 theme_type_variation = &"NewsPanel"
 script = ExtResource("1_newsticker")
@@ -12,7 +12,7 @@ script = ExtResource("1_newsticker")
 [node name="Stream" type="RichTextLabel" parent="."]
 layout_mode = 0
 offset_right = 1.0
-offset_bottom = 32.0
+offset_bottom = 34.0
 mouse_filter = 2
 bbcode_enabled = true
 fit_content = true

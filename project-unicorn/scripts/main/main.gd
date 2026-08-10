@@ -944,6 +944,14 @@ func _run_onboard_shot(step: int) -> void:
 # neden değişti" sorusunu ekran görüntüsünün cevaplayamadığı kesinlikte cevaplar.
 # Son alan yerel override bayrağı — S=font_size, C=font_color, P=panel stylebox:
 # süpürmenin avladığı şey tam olarak odur.
+## `--theme-audit=oda` ODA'nın KAPISIDIR ve ayrı bir moddur. Terminal reskin'i
+## sırasında "ODA kımıldamadı" iddiasının PİKSELLE kanıtlanamayacağı ölçüldü:
+## --oda-shot kareleri iki değer arasında gidip geliyor (night/market1/market2/
+## event/tab/tour üç koşuda bimodal çıktı — tween fazı/kare yarışı, tema değil).
+## Bu yüzden ODA kapısı METİNSEL: yalnız OdaView alt ağacını gezer ve her düğümün
+## ÇÖZÜMLENMİŞ tema değerlerini basar. Zamanlamaya bağışıktır, kabuk değişikliğinden
+## etkilenmez (kabuk ağacın dışında kalır) ve tam olarak değiştirdiğim şeyi —
+## tema çözümlemesini — ölçer.
 func _run_theme_audit(tab_id: String) -> void:
 	get_tree().paused = false
 	_shot_window(Vector2i(1920, 1080))
@@ -952,11 +960,23 @@ func _run_theme_audit(tab_id: String) -> void:
 	add_child(_shell)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	EventBus.tab_changed.emit(tab_id)
+	var oda_mode: bool = tab_id == "oda"
+	if oda_mode:
+		GameState.set_current_hour(14)      # sabit ışık durumu: gündüz
+		EventBus.tab_changed.emit("")       # sekme yok → OdaView görünür
+	else:
+		EventBus.tab_changed.emit(tab_id)
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
+	var root: Node = _shell
+	if oda_mode:
+		root = _shell.get_node_or_null("MidRow/CenterViewport/OdaView")
+		if root == null:
+			push_error("[ThemeAudit] OdaView bulunamadı")
+			get_tree().quit(1)
+			return
 	print("AUDIT_BEGIN %s" % tab_id)
-	_audit_walk(_shell, "")
+	_audit_walk(root, "")
 	print("AUDIT_END %s" % tab_id)
 	get_tree().quit()
 
@@ -1026,8 +1046,46 @@ func _audit_walk(node: Node, path: String) -> void:
 				ovr += "P"
 			if ovr == "":
 				ovr = "-"
-			print("AUDIT|%s|%s|%s|%s|%s|%s" % [p, cls, variation, fs, col, ovr])
+			# YÜZ ve YÜZEY (Terminal reskin'iyle eklendi). Renk+boyut tek başına bir
+			# tema parmak izi DEĞİL: kart arka planı ya da font yüzü değiştiğinde
+			# eski altı alan kımıldamıyordu. `font` yüz dosyasının adı, `sb` ise
+			# çözümlenmiş `panel` stylebox'ının dolgu/kenar/yarıçapı — ODA kapısının
+			# arka plan repaint'ini yakalayabilmesi tam olarak buna bağlı.
+			print("AUDIT|%s|%s|%s|%s|%s|%s|%s|%s" % [
+				p, cls, variation, fs, col, ovr, _audit_font(c, size_key), _audit_stylebox(c)])
 		_audit_walk(child, p)
+
+
+## Çözümlenmiş yazı yüzünün dosya adı ("mono_label" gibi) — yalnız metin çizen
+## sınıflar için; ötekilerde motor varsayılanı döner ve gürültü olur.
+func _audit_font(c: Control, size_key: String) -> String:
+	if size_key == "":
+		return "-"
+	var font_key: String = "normal_font" if size_key == "normal_font_size" else "font"
+	if not c.has_theme_font(font_key):
+		return "-"
+	var f: Font = c.get_theme_font(font_key)
+	if f == null:
+		return "-"
+	return f.resource_path.get_file().get_basename() if f.resource_path != "" else f.get_class()
+
+
+## Çözümlenmiş `panel` stylebox'ının parmak izi. StyleBoxFlat olmayanlar (çizgi,
+## boş) sınıf adıyla geçilir — tip değişimi de bir sinyaldir.
+func _audit_stylebox(c: Control) -> String:
+	if not c.has_theme_stylebox("panel"):
+		return "-"
+	var sb: StyleBox = c.get_theme_stylebox("panel")
+	if sb == null:
+		return "-"
+	var flat := sb as StyleBoxFlat
+	if flat == null:
+		return sb.get_class()
+	return "bg:%s|bd:%s|w:%d,%d,%d,%d|r:%d" % [
+		_audit_color(flat.bg_color), _audit_color(flat.border_color),
+		flat.border_width_left, flat.border_width_top,
+		flat.border_width_right, flat.border_width_bottom,
+		flat.corner_radius_top_left]
 
 
 func _audit_color(c: Color) -> String:
@@ -1135,6 +1193,17 @@ func _run_hr_shot(kind: String) -> void:
 	add_child(_shell)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	# "egitim": DENEYİM/EĞİTİM satır durumlarının TEK görsel kanıtı. Biri deneyimi
+	# dolmuş (EĞİTİME GÖNDER görünür), biri eğitimde (geri sayan çip), biri yarı yolda
+	# (mini bar dolu değil) — üç durum tek karede.
+	if kind == "egitim":
+		var roster: Array[Character] = CharacterRegistry.get_employees()
+		if roster.size() >= 3:
+			CharacterRegistry.add_experience(roster[0].id, HRConstants.EXPERIENCE_MAX)
+			CharacterRegistry.add_experience(roster[1].id, HRConstants.EXPERIENCE_MAX)
+			CharacterRegistry.begin_training(roster[1].id)
+			CharacterRegistry.add_experience(roster[2].id, 42)
+
 	# "gider" Finans sekmesinde çekilir (gider dökümü orada yaşıyor), diğerleri HR'da.
 	EventBus.tab_changed.emit("finance" if kind == "gider" else "hr")
 	if kind == "gider":
@@ -1157,15 +1226,27 @@ func _run_hr_shot(kind: String) -> void:
 		"atlas", "dosyalar":
 			tab._open_atlas()
 		"zam":
-			# Kartı aç, sonra GERÇEK butona bas: popover'ın çapası buton olmalı, yoksa
-			# konumlandırma kodu (sağa yerleş / taşarsa sola dön / kenara kelepçele)
-			# doğrulanmamış kalır.
+			# TERMINAL DEFTERİ ONARIMI (2026-08-08). Eskiden kart açılıp satır İÇİNDEKİ
+			# "ZAM YAP" butonuna basılıyordu. Defter düzeninde satır içi aksiyon butonu
+			# YOK — aksiyonlar satır tıklamasının açtığı HRPopover'da yaşıyor, yani
+			# `_press_button_labelled` sessizce hiçbir şey bulamıyor ve bu shot çıplak
+			# defteri çekiyordu (ölçüldü: hr_shot_zam popover'sız çıktı). Artık satırın
+			# GERÇEK yolu sürülüyor: `_on_card_action("open", id)` — popover'ın konum
+			# kodu (sağa yerleş / taşarsa sola dön / kenara kelepçele) doğrulanmış kalır.
 			var target: Character = CharacterRegistry.get_employees()[0]
-			tab._expanded_id = target.id
-			tab._rebuild()
-			await get_tree().process_frame
-			await get_tree().process_frame
-			_press_button_labelled(tab, "ZAM YAP")
+			# ÇAPA GERÇEK SATIR OLMALI: popover konum kodu (sağa yerleş / taşarsa sola
+			# dön / kenara kelepçele) çapanın ekrandaki dikdörtgeninden türüyor, o yüzden
+			# sayfayı çapa geçmek testi sessizce zayıflatırdı.
+			var row_anchor: Control = null
+			for child in tab._list.get_children():
+				if child is PanelContainer and String(child.theme_type_variation) == "LedgerRow":
+					row_anchor = child
+					break
+			if row_anchor == null:
+				push_error("[HRShot] defter satırı bulunamadı — zam popover'ı çapasız")
+				get_tree().quit(1)
+				return
+			tab._on_card_action(target.id, HREmployeeCard.ACTION_RAISE, row_anchor)
 		"mesai":
 			_press_button_labelled(tab, "EK MESAİ")
 		_:

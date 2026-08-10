@@ -53,6 +53,8 @@ var _sprint_card: PanelContainer = null
 var _sprint_status: Label = null
 # alt şerit
 var _league_label: Label = null
+var _league_strip: PanelContainer = null
+var _league_icon: Control = null
 var _frank_line: Label = null
 
 
@@ -121,10 +123,27 @@ func _build() -> void:
 	_build_left_column(left)
 	_build_right_column(right)
 
-	# Alt şerit (tam genişlik): lig satırı + Frank.
+	# Alt şerit (tam genişlik): pazar payı satırı + Frank.
+	# DİKKAT ŞERİDİ (mockup 4a — dosyadaki TEK uyarı biçimi ve kilitli reçetenin
+	# uyarı grameri): bir rakip seni geçtiğinde satır çıplak kırmızı metin DEĞİL,
+	# üçgen ikonlu kırmızı şerit olur. Şerit yalnız o durumda görünür; normalde
+	# etiket sade bir bilgi satırıdır ve kutusuz kalır.
+	_league_strip = PanelContainer.new()
+	_league_strip.theme_type_variation = &"AttentionStrip"
+	var strip_row := HBoxContainer.new()
+	strip_row.add_theme_constant_override("separation", UiTokens.SPACE_S)
+	# Uyarı üçgeni. Mockup inline SVG kullanıyor; burada sembol yedeği
+	# (NotoSansSymbols2) üzerinden glif — ekstra asset gerektirmiyor ve renk
+	# semantik erişimciden geliyor.
+	_league_icon = UiFactory.make_label("⚠", &"RowMeta", UiTokens.negative())
+	_league_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	strip_row.add_child(_league_icon)
 	_league_label = Label.new()
 	_league_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	root.add_child(_league_label)
+	_league_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	strip_row.add_child(_league_label)
+	_league_strip.add_child(strip_row)
+	root.add_child(_league_strip)
 	root.add_child(_build_frank_strip())
 
 
@@ -520,9 +539,15 @@ func _repaint_bottom(sub: String, ver: int) -> void:
 	var above: Dictionary = _nearest_rival_above(snap)
 	if not above.is_empty():
 		line += " · %s %s" % [String(above["name"]), RivalRegistry.format_share(float(above["share_pct"]))]
-	_league_label.text = line + ((" · %s seni geçti." % passer) if passer != "" else "")
+	var passed: bool = passer != ""
+	_league_label.text = line + ((" · %s seni geçti." % passer) if passed else "")
 	_league_label.add_theme_color_override("font_color",
-		UiTokens.negative() if passer != "" else UiTokens.INK_MUTED)
+		UiTokens.negative() if passed else UiTokens.INK_MUTED)
+	# Şerit KUTUSU yalnız gerçekten bir uyarı varken çizilir. Panel'i her zaman
+	# göstermek "her şey yolunda"yı da kırmızı bir çerçeveye alırdı.
+	_league_strip.self_modulate.a = 1.0 if passed else 0.0
+	_league_icon.visible = passed
+	_league_icon.add_theme_color_override("font_color", UiTokens.negative())
 	var bugs_heavy: bool = ProductSystem.product_bug_risk() == "yuksek"
 	_frank_line.text = ProductUiShared.frank_line(_weakest_axis_id(), ver + 1, passer, bugs_heavy)
 

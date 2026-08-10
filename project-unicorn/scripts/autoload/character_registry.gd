@@ -76,6 +76,72 @@ func get_active_employees() -> Array[Character]:
 	return out
 
 
+# --- DENEYİM / EĞİTİM sızdırmazlıkları (Terminal UI görevi) ---
+# WRITE-THROUGH YASASI: `experience` ve `training_days_left` alanlarını bu
+# dosyanın DIŞINDA kimse yazmaz. Üçü de sinyal atar, çünkü defter satırı bu
+# değerleri çiziyor ve HR sekmesi yapı-anahtarıyla yeniden kuruluyor.
+
+## Deneyim ekler (0..EXPERIENCE_MAX arasına kırpılır). Kurucu HARİÇ — kurucu
+## gelişimi ayrı bir sistem ve bu tabloda hiç görünmez.
+func add_experience(id: String, amount: int) -> void:
+	var c: Character = _characters.get(id, null)
+	if c == null:
+		push_warning("[CharacterRegistry] add_experience on unknown id: %s" % id)
+		return
+	if c.category != "employee":
+		return
+	var clamped: int = clampi(c.experience + amount, 0, HRConstants.EXPERIENCE_MAX)
+	if c.experience == clamped:
+		return
+	c.experience = clamped
+	EventBus.employee_experience_changed.emit(id, clamped)
+
+
+## Eğitime uygun mu? Yalnız çalışan, YALNIZ tam dolu deneyimle, edilgen değilken
+## ve uzmanlık tavanının altındayken. Tavandaki bir çalışan eğitime GÖNDERİLEMEZ:
+## ücreti alıp hiçbir şey vermemek §10'un yasakladığı şeyin aynası olurdu.
+func can_train(id: String) -> bool:
+	var c: Character = _characters.get(id, null)
+	if c == null or c.category != "employee":
+		return false
+	if c.status != HRConstants.STATUS_ACTIVE:
+		return false
+	if c.experience < HRConstants.EXPERIENCE_MAX:
+		return false
+	return int(c.role_stats.get(HRConstants.AXIS_EXPERTISE, 0)) < HRConstants.EXPERTISE_CAP
+
+
+## Eğitimi BAŞLATIR. Ücreti burada TAHSİL ETMEZ — para FinanceSystem'in işi ve
+## çağıran taraf (HRSystem.send_to_training) o sızdırmazlıktan geçirir.
+func begin_training(id: String) -> void:
+	var c: Character = _characters.get(id, null)
+	if c == null:
+		push_warning("[CharacterRegistry] begin_training on unknown id: %s" % id)
+		return
+	c.training_days_left = HRConstants.TRAINING_DAYS
+	c.status = HRConstants.STATUS_TRAINING
+	EventBus.employee_training_changed.emit(id, c.training_days_left)
+
+
+## Bir eğitim gününü işler. Biten eğitimde UZMANLIK +1 (tavanla), deneyim sıfır,
+## durum ACTIVE. `true` döner yalnız eğitim BİTTİYSE — haber satırını çağıran atar.
+func tick_training(id: String) -> bool:
+	var c: Character = _characters.get(id, null)
+	if c == null or c.training_days_left <= 0:
+		return false
+	c.training_days_left -= 1
+	if c.training_days_left > 0:
+		EventBus.employee_training_changed.emit(id, c.training_days_left)
+		return false
+	var cur: int = int(c.role_stats.get(HRConstants.AXIS_EXPERTISE, 0))
+	c.role_stats[HRConstants.AXIS_EXPERTISE] = mini(cur + 1, HRConstants.EXPERTISE_CAP)
+	c.experience = 0
+	c.status = HRConstants.STATUS_ACTIVE
+	EventBus.employee_training_changed.emit(id, 0)
+	EventBus.employee_experience_changed.emit(id, 0)
+	return true
+
+
 func get_customer_reps() -> Array[Character]:
 	# Müşteri Temsilcisi — a hired employee type (category "employee") so they count
 	# toward payroll + run_hires + the morale machine, distinguished by role (not category).
@@ -356,7 +422,7 @@ func set_status(id: String, value: String) -> void:
 	if c == null:
 		push_warning("[CharacterRegistry] set_status on unknown id: %s" % id)
 		return
-	if value != HRConstants.STATUS_ACTIVE and value != HRConstants.STATUS_ON_LEAVE:
+	if value != HRConstants.STATUS_ACTIVE and value != HRConstants.STATUS_ON_LEAVE 			and value != HRConstants.STATUS_TRAINING:
 		push_error("[CharacterRegistry] unknown employee status '%s' for %s" % [value, id])
 		return
 	c.status = value

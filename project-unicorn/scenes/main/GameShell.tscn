@@ -22,7 +22,7 @@ script = ExtResource("7_shell")
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 56.0
+offset_bottom = 54.0
 grow_horizontal = 2
 
 [node name="MidRow" type="HBoxContainer" parent="." unique_id=1513243657]
@@ -30,8 +30,8 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 56.0
-offset_bottom = -32.0
+offset_top = 54.0
+offset_bottom = -34.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 0
@@ -55,7 +55,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -32.0
+offset_top = -34.0
 grow_horizontal = 2
 grow_vertical = 0
 

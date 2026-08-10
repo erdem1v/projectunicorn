@@ -255,7 +255,7 @@ func _build_fx_layer() -> void:
 	_lamp_glow.modulate.a = 0.0
 	fx.add_child(_lamp_glow)
 	# Telefon kırmızı noktası: bekleyen olay latch'i (animasyon değil, durum).
-	_phone_dot = UiFactory.make_dot(UiTokens.BADGE_BG, 10)
+	_phone_dot = UiFactory.make_dot(UiTokens.ODA_BADGE_BG, 10)
 	_phone_dot.name = "PhoneDot"
 	_phone_dot.visible = false
 	fx.add_child(_phone_dot)
@@ -342,7 +342,7 @@ func _build_monitor_screen() -> void:
 	var chip_row := HBoxContainer.new()
 	chip_row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	_mon_chip.add_child(chip_row)
-	_mon_chip_dot = UiFactory.make_dot(UiTokens.health_green(), 6)
+	_mon_chip_dot = UiFactory.make_dot(UiTokens.oda_health_green(), 6)
 	chip_row.add_child(_mon_chip_dot)
 	_mon_chip_label = UiFactory.make_label("", &"ChromeBadgeLabel")
 	chip_row.add_child(_mon_chip_label)
@@ -388,13 +388,13 @@ func _build_monitor_screen() -> void:
 	_mon_track = Panel.new()
 	_mon_track.custom_minimum_size = Vector2(0, 10)
 	var sb_track := StyleBoxFlat.new()
-	sb_track.bg_color = UiTokens.VEIL_SOFT
+	sb_track.bg_color = UiTokens.ODA_VEIL_SOFT
 	sb_track.set_corner_radius_all(UiTokens.RADIUS_XS)
 	_mon_track.add_theme_stylebox_override("panel", sb_track)
 	_mon_progress_block.add_child(_mon_track)
 	_mon_fill = Panel.new()
 	var sb_fill := StyleBoxFlat.new()
-	sb_fill.bg_color = UiTokens.ACCENT
+	sb_fill.bg_color = UiTokens.ODA_ACCENT
 	sb_fill.set_corner_radius_all(UiTokens.RADIUS_XS)
 	_mon_fill.add_theme_stylebox_override("panel", sb_fill)
 	_mon_fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -424,7 +424,7 @@ func _build_phone_glass() -> void:
 	var dot_holder := VBoxContainer.new()
 	dot_holder.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_child(dot_holder)
-	dot_holder.add_child(UiFactory.make_dot(UiTokens.BADGE_BG, 8))
+	dot_holder.add_child(UiFactory.make_dot(UiTokens.ODA_BADGE_BG, 8))
 	_phone_glass_label = UiFactory.make_label("", &"ChromeBadgeLabel")
 	row.add_child(_phone_glass_label)
 
@@ -524,7 +524,7 @@ func _build_overtime_chip() -> void:
 	_overtime_chip.visible = false
 	_info_layer.add_child(_overtime_chip)
 	_overtime_label = UiFactory.make_label("", &"ChromeBadgeLabel")
-	_overtime_label.add_theme_color_override("font_color", UiTokens.ACCENT)
+	_overtime_label.add_theme_color_override("font_color", UiTokens.ODA_ACCENT)
 	_overtime_chip.add_child(_overtime_label)
 
 
@@ -902,7 +902,7 @@ func _refresh_monitor() -> void:
 		_mon_chip.visible = true
 		_mon_chip_dot.visible = false
 		_mon_chip_label.text = String(phase_labels.get(b.current_phase, ""))
-		_mon_chip_label.add_theme_color_override("font_color", UiTokens.ACCENT)
+		_mon_chip_label.add_theme_color_override("font_color", UiTokens.ODA_ACCENT)
 		_mon_title.text = tr("ODA_MONITOR_BUILD_TITLE") % bname
 		var lead: String = tr("ODA_MONITOR_LEAD_FOUNDER")
 		if b.lead_engineer_id != "" and b.lead_engineer_id != "founder":
@@ -927,10 +927,10 @@ func _refresh_monitor() -> void:
 		_mon_header.text = "%s · V%d" % [UiTokens.tr_upper(pname), ver]
 		_mon_chip.visible = true
 		var healthy: bool = ProductSystem.health_state() == "saglikli"
-		_set_chip_dot(UiTokens.health_green() if healthy else UiTokens.HEALTH_AMBER)
+		_set_chip_dot(UiTokens.oda_health_green() if healthy else UiTokens.ODA_HEALTH_AMBER)
 		_mon_chip_dot.visible = true
 		_mon_chip_label.text = tr("ODA_MONITOR_LIVE_CHIP")
-		_mon_chip_label.add_theme_color_override("font_color", UiTokens.CREAM)
+		_mon_chip_label.add_theme_color_override("font_color", UiTokens.ODA_CREAM)
 		_mon_title.text = tr("ODA_MONITOR_OK_TITLE") if healthy else tr("ODA_MONITOR_RISK_TITLE")
 		var bugs: int = int(GameState.get_flag("mvp_live_bug_count", 0))
 		var raw_stab: float = float(GameState.get_flag("mvp_stability", 0.0))
@@ -1183,10 +1183,10 @@ func _refresh_league() -> void:
 	if others >= 0.1:
 		var orow := HBoxContainer.new()
 		orow.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-		var olbl := UiFactory.make_label("… %s" % tr("ODA_BOARD_MARKET_OTHERS"), &"MicroLabel", UiTokens.INK_DIM)
+		var olbl := UiFactory.make_label("… %s" % tr("ODA_BOARD_MARKET_OTHERS"), &"MicroLabel", UiTokens.ODA_INK_DIM)
 		olbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		orow.add_child(olbl)
-		orow.add_child(UiFactory.make_label(RivalRegistry.format_share(others), &"MicroLabel", UiTokens.INK_DIM))
+		orow.add_child(UiFactory.make_label(RivalRegistry.format_share(others), &"MicroLabel", UiTokens.ODA_INK_DIM))
 		_league_rows.add_child(orow)
 
 
@@ -1219,16 +1219,16 @@ func _league_row(no: int, display: String, is_player: bool, value: String = "") 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	var label := UiFactory.make_label("%d · %s" % [no, UiTokens.tr_upper(display)], &"MicroLabel",
-		UiTokens.INK if is_player else UiTokens.INK_MUTED)
+		UiTokens.ODA_INK if is_player else UiTokens.ODA_INK_MUTED)
 	label.clip_text = true
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(label)
 	if is_player:
-		row.add_child(UiFactory.make_label(tr("ODA_BOARD_LEAGUE_YOU"), &"MicroLabel", UiTokens.ACCENT_DEEP))
+		row.add_child(UiFactory.make_label(tr("ODA_BOARD_LEAGUE_YOU"), &"MicroLabel", UiTokens.ODA_ACCENT_DEEP))
 	if value != "":
 		# Pay kolonu (pazar payı panosu): SEN satırında vurgulu, rakipte sönük.
 		row.add_child(UiFactory.make_label(value, &"MicroLabel",
-			UiTokens.ACCENT_DEEP if is_player else UiTokens.INK_DIM))
+			UiTokens.ODA_ACCENT_DEEP if is_player else UiTokens.ODA_INK_DIM))
 	return row
 
 
@@ -1270,7 +1270,7 @@ func _refresh_dates() -> void:
 		lbl.clip_text = true
 		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(lbl)
-		row.add_child(UiFactory.make_label(_date_delta_text(int(it["day"]) - today), &"NewsMeta", UiTokens.INK))
+		row.add_child(UiFactory.make_label(_date_delta_text(int(it["day"]) - today), &"NewsMeta", UiTokens.ODA_INK))
 		_dates_rows.add_child(row)
 		shown += 1
 	_board_wraps["dates"].visible = shown > 0
@@ -1319,7 +1319,7 @@ func _gather_papers() -> Array:
 	# Öncelik sırası (plan §5.3). Kâğıt akış TETİKLEMEZ — yalnız navigasyon.
 	var papers: Array = []
 	if GameState.phase_gate_ready and GameState.pending_next_phase > 0:
-		papers.append({"id": "gate", "dot": UiTokens.ACCENT_DEEP,
+		papers.append({"id": "gate", "dot": UiTokens.ODA_ACCENT_DEEP,
 			"tag": tr("ODA_PAPER_TAG_GATE"), "title": tr("ODA_PAPER_GATE_TITLE"),
 			"target": "finance", "subpage": ""})
 	var sheet_count: int = GameState.active_sheets.size()
@@ -1329,11 +1329,11 @@ func _gather_papers() -> Array:
 			min_left = mini(min_left, sheet.days_left(GameState.day))
 		var title: String = (tr("ODA_PAPER_SHEET_TITLE") % maxi(0, min_left)) if sheet_count == 1 \
 			else (tr("ODA_PAPER_SHEETS_TITLE") % sheet_count)
-		papers.append({"id": "sheet", "dot": UiTokens.HEALTH_AMBER,
+		papers.append({"id": "sheet", "dot": UiTokens.ODA_HEALTH_AMBER,
 			"tag": tr("ODA_PAPER_TAG_FUNDING"), "title": title,
 			"target": "finance", "subpage": "yatirim"})
 	if HRSearchSystem.has_files_ready():
-		papers.append({"id": "atlas", "dot": UiTokens.INK_MUTED,
+		papers.append({"id": "atlas", "dot": UiTokens.ODA_INK_MUTED,
 			"tag": tr("ODA_PAPER_TAG_ATLAS"),
 			"title": tr("ODA_PAPER_ATLAS_TITLE") % HRSearchSystem.get_files().size(),
 			"target": "hr", "subpage": ""})
@@ -1342,15 +1342,15 @@ func _gather_papers() -> Array:
 	# kaynağı da motorda karşılıksız (v1'de hiç yok). Done mesajında listeli.
 	for c in CustomerRegistry.get_by_market("b2b"):
 		if c.lifecycle_phase == "expansion":
-			papers.append({"id": "exp_%s" % c.id, "dot": UiTokens.health_green(),
+			papers.append({"id": "exp_%s" % c.id, "dot": UiTokens.oda_health_green(),
 				"tag": UiTokens.tr_upper(c.company_name),
 				"title": tr("ODA_PAPER_EXPANSION_TITLE"),
 				"target": "sales", "subpage": ""})
 	if _debug_papers:
-		papers.append({"id": "dbg_gate", "dot": UiTokens.ACCENT_DEEP,
+		papers.append({"id": "dbg_gate", "dot": UiTokens.ODA_ACCENT_DEEP,
 			"tag": tr("ODA_PAPER_TAG_GATE"), "title": tr("ODA_PAPER_GATE_TITLE"),
 			"target": "finance", "subpage": ""})
-		papers.append({"id": "dbg_atlas", "dot": UiTokens.INK_MUTED,
+		papers.append({"id": "dbg_atlas", "dot": UiTokens.ODA_INK_MUTED,
 			"tag": tr("ODA_PAPER_TAG_ATLAS"), "title": tr("ODA_PAPER_ATLAS_TITLE") % 3,
 			"target": "hr", "subpage": ""})
 	return papers
@@ -1405,7 +1405,7 @@ func _mk_paper_card(p: Dictionary) -> PanelContainer:
 	title.clip_text = true
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title)
-	var overflow := UiFactory.make_label("", &"MicroLabel", UiTokens.ACCENT_DEEP)
+	var overflow := UiFactory.make_label("", &"MicroLabel", UiTokens.ODA_ACCENT_DEEP)
 	overflow.name = "OverflowChip"
 	overflow.visible = false
 	row.add_child(overflow)
@@ -1510,8 +1510,8 @@ func _refresh_frames() -> void:
 		var seal_row := HBoxContainer.new()
 		seal_row.alignment = BoxContainer.ALIGNMENT_CENTER
 		col.add_child(seal_row)
-		seal_row.add_child(UiFactory.make_dot(UiTokens.ACCENT_DEEP, 14))
-		var nm := UiFactory.make_label(String(m["name"]), &"MicroLabel", UiTokens.INK_MUTED)
+		seal_row.add_child(UiFactory.make_dot(UiTokens.ODA_ACCENT_DEEP, 14))
+		var nm := UiFactory.make_label(String(m["name"]), &"MicroLabel", UiTokens.ODA_INK_MUTED)
 		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		nm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		col.add_child(nm)

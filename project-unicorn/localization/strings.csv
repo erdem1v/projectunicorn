@@ -316,3 +316,28 @@ SAVE_ERR_NEWER,Bu kayıt daha yeni bir sürümden; açılamıyor.,This save come
 SAVE_ERR_MODAL_OPEN,Bir karar ekranı açıkken kaydedilemez.,Saving is unavailable while a decision screen is open.
 SAVE_ERR_WRITE,Kayıt yazılamadı.,The save could not be written.
 SAVE_ERR_NO_RUN,Kaydedilecek bir oyun yok.,There is no run to save.
+HR_COL_EMPLOYEE,ÇALIŞAN,EMPLOYEE
+HR_COL_EXPERTISE,UZMANLIK,EXPERTISE
+HR_COL_PACE,HIZ,PACE
+HR_COL_RAPPORT,UYUM,RAPPORT
+HR_COL_EXPERIENCE,DENEYİM,EXPERIENCE
+HR_COL_STATE,DURUM,STATE
+HR_COL_SALARY,MAAŞ,SALARY
+HR_COL_MORALE,MORAL,MORALE
+HR_PAGE_TITLE,Ekip,Team
+HR_SUMMARY,ÇALIŞAN {count} · ORTALAMA MORAL {morale} · AYLIK MAAŞ YÜKÜ {payroll},HEADCOUNT {count} · AVERAGE MORALE {morale} · MONTHLY PAYROLL {payroll}
+HR_SEARCH_START,+ ARAYIŞ BAŞLAT,+ START A SEARCH
+HR_SEARCH_START_INLINE,ARAYIŞ BAŞLAT,START A SEARCH
+HR_EMPTY_ROW,Henüz kimse yok,Nobody here yet
+HR_STATE_NEW,YENİ,NEW
+HR_STATE_ON_LEAVE,İzinde,On leave
+HR_STATE_TRAINING,Eğitimde · {days} gün,In training · {days} d
+HR_TRAINING,EĞİTİM,TRAINING
+HR_TRAINING_LOCKED,EĞİTİM · KİLİTLİ,TRAINING · LOCKED
+HR_TRAINING_SEND,EĞİTİME GÖNDER,SEND TO TRAINING
+HR_TRAINING_PICK_TITLE,Eğitime gönder,Send to training
+HR_TRAINING_PICK_NOTE,{days} gün boyunca çalışmaz. Tek seferlik {fee}. Dönüşte uzmanlık +1.,Away for {days} days. One-off {fee}. Returns with expertise +1.
+HR_TRAINING_NONE_ELIGIBLE,Deneyimi dolan kimse yok.,Nobody has filled their experience bar yet.
+HR_TRAINING_CAPPED,Uzmanlık tavanda.,Expertise is at the cap.
+HR_NEWS_TRAINING_DONE,{name} eğitimden döndü; uzmanlığı arttı.,{name} is back from training with sharper expertise.
+SET_UI_SCALE_TOO_LARGE,%d%% bu pencere boyutunda arayüzü kırpar; daha büyük bir ekran gerekiyor.,%d%% would crop the interface at this window size; it needs a larger display.

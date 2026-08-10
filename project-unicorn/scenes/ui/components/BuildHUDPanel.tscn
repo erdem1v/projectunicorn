@@ -17,7 +17,7 @@ layout_mode = 3
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -340.0
+offset_left = -360.0
 offset_top = 60.0
 offset_right = -20.0
 offset_bottom = 200.0
@@ -159,7 +159,7 @@ theme_override_constants/separation = 0
 
 [node name="PhaseName" type="Label" parent="Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin/PhaseVBox"]
 layout_mode = 2
-theme_type_variation = &"SectionLabel"
+theme_type_variation = &"SectionAmber"
 text = "TASARIM"
 
 [node name="PhaseStatus" type="Label" parent="Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin/PhaseVBox"]
@@ -222,7 +222,7 @@ layout_mode = 2
 theme_type_variation = &"RowMeta"
 text = "İnovasyon 0 / tavan 0"
 
-[node name="DecisionRow" type="HBoxContainer" parent="Root/Panel/VBox"]
+[node name="DecisionRow" type="VBoxContainer" parent="Root/Panel/VBox"]
 visible = false
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
