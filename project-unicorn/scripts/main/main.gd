@@ -556,7 +556,7 @@ func _run_b2b_shot(kind: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.35).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://b2b_shot_%s.png" % kind
+	var path: String = _shot_path("b2b_shot_%s" % kind)
 	img.save_png(path)
 	print("[B2BShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
@@ -592,7 +592,7 @@ func _run_event_shot(event_id: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.35).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://event_shot_%s.png" % event_id
+	var path: String = _shot_path("event_shot_%s" % event_id)
 	img.save_png(path)
 	print("[EventShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
@@ -632,8 +632,9 @@ func _run_sales_shot() -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	img.save_png("user://sales_shot.png")
-	print("[SalesShot] saved %s" % ProjectSettings.globalize_path("user://sales_shot.png"))
+	var path: String = _shot_path("sales_shot")
+	img.save_png(path)
+	print("[SalesShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
 
 
@@ -704,7 +705,7 @@ func _run_font_spec(set_id: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.35).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://font_spec_%s.png" % set_id
+	var path: String = _shot_path("font_spec_%s" % set_id)
 	img.save_png(path)
 	print("[FontSpec] saved %s (%dx%d)" % [
 		ProjectSettings.globalize_path(path), img.get_width(), img.get_height()])
@@ -766,6 +767,18 @@ func _shot_window(size: Vector2i) -> void:
 			func() -> void: get_window().content_scale_factor = legal)
 		print("[Shot] pencere %dx%d · ölçek istendi %d%% → uygulandı %d%%" % [
 			win_size.x, win_size.y, int(round(step * 100.0)), int(round(legal * 100.0))])
+
+
+# Her shot harness'ının ÜÇÜNCÜ ortak satırı: çıktı yolu. Dosya adı DİLİ taşır, çünkü
+# lokalizasyon doğrulaması aynı ekranın TR ve EN çiftini yan yana okumak zorunda —
+# sabit adlarla ikinci koşu birincinin üstüne yazar ve matris sessizce tek dil olur.
+# TR tarihsel adı KORUR (`tab_shot_product.png`), yani süpürme öncesi çekilen her
+# baseline yolu geçerli kalır; yalnız EN koşusu `_en` eki alır. Kaynak locale'in
+# KENDİSİ, `--lang` değil: Ayarlar'dan gelen dil de, zorlanan dil de aynı biçimde
+# adlandırılsın (bir EN shot'ı hangi yolla EN olduğuna bakılmaksızın _en'dir).
+func _shot_path(basename: String) -> String:
+	var suffix: String = "_en" if TranslationServer.get_locale().begins_with("en") else ""
+	return "user://%s%s.png" % [basename, suffix]
 
 
 ## --shot-size=2560x1440 → shot penceresini büyütür (varsayılan: runner'ın verdiği boy).
@@ -923,7 +936,7 @@ func _run_oda_shot(kind: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(settle).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://oda_shot_%s.png" % kind
+	var path: String = _shot_path("oda_shot_%s" % kind)
 	img.save_png(path)
 	print("[OdaShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
@@ -969,7 +982,7 @@ func _run_tab_shot(tab_id: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://tab_shot_%s.png" % tab_id
+	var path: String = _shot_path("tab_shot_%s" % tab_id)
 	img.save_png(path)
 	print("[TabShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
@@ -1041,7 +1054,7 @@ func _run_modal_shot(kind: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://modal_shot_%s.png" % kind
+	var path: String = _shot_path("modal_shot_%s" % kind)
 	img.save_png(path)
 	print("[ModalShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
@@ -1062,7 +1075,7 @@ func _run_onboard_shot(step: int) -> void:
 		await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://onboard_shot_%d.png" % step
+	var path: String = _shot_path("onboard_shot_%d" % step)
 	img.save_png(path)
 	print("[OnboardShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
@@ -1125,7 +1138,7 @@ func _run_probe_shot() -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://probe_shot.png"
+	var path: String = _shot_path("probe_shot")
 	img.save_png(path)
 	print("[ProbeShot] saved %s" % ProjectSettings.globalize_path(path))
 	print("PROBE_BEGIN")
@@ -1268,7 +1281,7 @@ func _run_finance_shot(kind: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://finance_shot_%s.png" % kind
+	var path: String = _shot_path("finance_shot_%s" % kind)
 	img.save_png(path)
 	print("[FinanceShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
@@ -1340,8 +1353,9 @@ func _run_hr_shot(kind: String) -> void:
 		await get_tree().process_frame
 		await get_tree().create_timer(0.4).timeout
 		var gimg: Image = get_viewport().get_texture().get_image()
-		gimg.save_png("user://hr_shot_gider.png")
-		print("[HRShot] saved %s" % ProjectSettings.globalize_path("user://hr_shot_gider.png"))
+		var gpath: String = _shot_path("hr_shot_gider")
+		gimg.save_png(gpath)
+		print("[HRShot] saved %s" % ProjectSettings.globalize_path(gpath))
 		get_tree().quit()
 		return
 	await get_tree().process_frame
@@ -1384,7 +1398,7 @@ func _run_hr_shot(kind: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.5).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://hr_shot_%s.png" % kind
+	var path: String = _shot_path("hr_shot_%s" % kind)
 	img.save_png(path)
 	print("[HRShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
@@ -1540,7 +1554,7 @@ func _run_ending_shot(key: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://ending_shot_%s.png" % key
+	var path: String = _shot_path("ending_shot_%s" % key)
 	img.save_png(path)
 	print("[EndingShot] saved %s" % ProjectSettings.globalize_path(path))
 	# Also run the real share export so every shot verifies the paper crop bounds.
@@ -1640,7 +1654,7 @@ func _run_product_shot(kind: String) -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = "user://product_shot_%s.png" % kind
+	var path: String = _shot_path("product_shot_%s" % kind)
 	img.save_png(path)
 	print("[ProductShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
@@ -1669,8 +1683,9 @@ func _run_pitch_shot() -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.5).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	img.save_png("user://pitch_shot.png")
-	print("[PitchShot] saved %s" % ProjectSettings.globalize_path("user://pitch_shot.png"))
+	var path: String = _shot_path("pitch_shot")
+	img.save_png(path)
+	print("[PitchShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
 
 

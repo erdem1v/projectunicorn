@@ -20,7 +20,7 @@ const SUPPORTED := ["tr", "en"]
 
 func _ready() -> void:
 	_load_csv_translations()
-	TranslationServer.set_locale(get_language())
+	TranslationServer.set_locale(get_effective_language())
 
 
 # --- Public API (SettingsModal drives set_language live) ---
@@ -28,6 +28,37 @@ func _ready() -> void:
 func get_language() -> String:
 	var lang: String = String(Settings.get_value(KEY_LANGUAGE, DEFAULT_LANG))
 	return lang if lang in SUPPORTED else DEFAULT_LANG
+
+
+## The locale this boot actually uses: `--lang=` beats the stored preference.
+## WHY the override exists: verification has to be able to FORCE a language. The stored
+## `language` value is whatever the developer last clicked (on this machine it is "en"),
+## so a TR/EN screenshot matrix that trusted the default would silently shoot the same
+## locale twice. Non-persisting by construction — it never touches Settings, so a forced
+## run cannot rewrite the player's preference.
+func get_effective_language() -> String:
+	var forced: String = cmdline_language()
+	return forced if forced != "" else get_language()
+
+
+## `--lang=tr|en` from either source, "" when absent/unsupported. Dual source mirrors
+## main.gd's harness flags: Godot forwards `application/run/main_args` only on an editor
+## F5 run, and only real argv on a CLI run, so a flag that must work in both reads both.
+func cmdline_language() -> String:
+	var sources: Array[String] = []
+	for a in OS.get_cmdline_args():
+		sources.append(String(a))
+	sources.append(String(ProjectSettings.get_setting("application/run/main_args", "")))
+	for s in sources:
+		for token in s.split(" ", false):
+			var t: String = String(token).strip_edges()
+			if not t.begins_with("--lang="):
+				continue
+			var loc: String = t.trim_prefix("--lang=")
+			if loc in SUPPORTED:
+				return loc
+			push_warning("[Localization] unsupported --lang: %s" % loc)
+	return ""
 
 
 func set_language(locale: String) -> void:
