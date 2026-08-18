@@ -65,10 +65,10 @@ const ORIGINS := [
 		"reserved_flags": ["origin_press_sympathy", "origin_low_capital"]},
 	{"id": "heir", "locked": true,
 		"name_key": "ONB_ORIGIN_HEIR_NAME", "quote_key": "ONB_ORIGIN_HEIR_QUOTE",
-		"locked_note_key": "ONB_LOCKED_FULL"},
+		"locked_note_key": "LOCK_FULL"},
 	{"id": "corporate_refugee", "locked": true,
 		"name_key": "ONB_ORIGIN_CORP_NAME", "quote_key": "ONB_ORIGIN_CORP_QUOTE",
-		"locked_note_key": "ONB_LOCKED_SOON"},
+		"locked_note_key": "LOCK_SOON"},
 ]
 
 # --- Portraits (onboarding Page 1) — data-driven grid. The mockup shows 12; 11 assets

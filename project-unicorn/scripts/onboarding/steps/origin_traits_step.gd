@@ -121,7 +121,7 @@ func _make_origin_card(origin: Dictionary) -> PanelContainer:
 	chips.add_theme_constant_override("separation", 6)
 	col.add_child(chips)
 	if origin["locked"]:
-		chips.add_child(UiFactory.make_pill(tr("ONB_LOCKED_CHIP"),
+		chips.add_child(UiFactory.make_pill(tr("LOCK_CHIP"),
 			Color(1, 1, 1, 0.05), UiTokens.CREAM_DIM))
 	else:
 		for chip in origin.get("chips", []):

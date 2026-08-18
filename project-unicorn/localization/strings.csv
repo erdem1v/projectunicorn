@@ -31,15 +31,15 @@ ONB_P2_TITLE,Köken ve Karakter,Origin and Character
 ONB_P2_SUB,"Nereden geldiğin, neyi kolay, neyi zor yaşayacağını belirler.","Where you come from decides what will come easy, and what will not."
 ONB_ORIGIN_HEADER,KÖKEN,ORIGIN
 ONB_ORIGIN_SUB,"Nereden geldiğin, nereden başladığını belirler.",Where you come from decides where you start.
-ONB_ORIGIN_SELF_MADE_NAME,Self-Made,Self-Made
+ONB_ORIGIN_SELF_MADE_NAME,Sıfırdan,Self-Made
 ONB_ORIGIN_SELF_MADE_QUOTE,Hiçbir şey yoktu. Her satırı ben yazdım.,There was nothing. I wrote every line myself.
-ONB_ORIGIN_HEIR_NAME,Varis,The Heir
+ONB_ORIGIN_HEIR_NAME,Mirasyedi,The Heir
 ONB_ORIGIN_HEIR_QUOTE,Aile sermayesi arkanda. Ama gözler de üzerinde.,"Family money at your back. And every eye on you."
-ONB_ORIGIN_CORP_NAME,Kurumsal Mülteci,Corporate Refugee
+ONB_ORIGIN_CORP_NAME,Kurumsal Firari,Corporate Refugee
 ONB_ORIGIN_CORP_QUOTE,On yıl büyük şirkette. Şimdi kendi adına.,Ten years in a big company. Now in your own name.
-ONB_LOCKED_FULL,TAM SÜRÜMDE,IN FULL RELEASE
-ONB_LOCKED_SOON,ÇOK YAKINDA,COMING SOON
-ONB_LOCKED_CHIP,KİLİTLİ,LOCKED
+LOCK_FULL,TAM SÜRÜMDE,IN THE FULL GAME
+LOCK_SOON,ÇOK YAKINDA,COMING SOON
+LOCK_CHIP,KİLİTLİ,LOCKED
 ONB_ORIGIN_SM_CHIP_RESILIENT,DAYANIKLI,RESILIENT
 ONB_ORIGIN_SM_CHIP_LOW_CAPITAL,DÜŞÜK SERMAYE,LOW CAPITAL
 ONB_ORIGIN_SM_CHIP_PRESS,BASIN SEMPATİSİ,PRESS SYMPATHY
@@ -130,7 +130,7 @@ SALES_REASON_PREFIX,Sebep: {reason},Reason: {reason}
 SALES_REASON_OUTAGE,sık kesinti şikayeti,frequent outage complaints
 SALES_REASON_SATISFACTION,memnuniyet düşüyor,satisfaction is falling
 SALES_EXPANSION_FICTION,Başka departmana yaymak istiyor.,Wants to roll it out to another department.
-SALES_ACTION_RETAIN,İlgilen,Attend
+SALES_ACTION_RETAIN,İlgilen,Check in
 SALES_ACTION_EXPAND,Değerlendir,Evaluate
 ENDING_NEXT,SIRADA NE VAR?,WHAT'S NEXT?
 ENDING_CARD_EA_TAG,TİER 2 · ORTA ÖLÇEK,TIER 2 · MID-SCALE
@@ -139,7 +139,6 @@ ENDING_BADGE_EA,ERKEN ERİŞİM'DE,IN EARLY ACCESS
 ENDING_CARD_EA_BODY,"Oyun Series A'da bitmez. Çok ürün, işe alım dalgası, rakip evrimi, Series B.","The game doesn't end at Series A. Multiple products, a hiring wave, rival evolution, Series B."
 ENDING_CARD_FULL_TAG,TİER 3 · TEKNOLOJİ DEVİ,TIER 3 · TECH GIANT
 ENDING_CARD_FULL_TITLE,Teknoloji Devi,Tech Giant
-ENDING_BADGE_FULL,TAM SÜRÜMDE,IN FULL RELEASE
 ENDING_CARD_FULL_BODY,"Halka arz, regülasyon, devlerle aynı pazar.","IPO, regulation, sharing the market with giants."
 ENDING_WISHLIST,WISHLIST'E EKLE,ADD TO WISHLIST
 ENDING_RUN_META,BU RUN: {days} GÜN · NORMAL MOD,THIS RUN: {days} DAYS · NORMAL MODE
@@ -398,3 +397,89 @@ TAB_RND,Ar-Ge,R&D
 TAB_PERSONAL,Kişisel,Personal
 TAB_EVENTS,Olaylar,Events
 TAB_SETTINGS,Ayarlar,Settings
+LOCK_SOON_SUFFIX,· YAKINDA,· SOON
+LOCK_BUILD_IN_PROGRESS,İNŞA EDİLİYOR · SEÇİM KİLİTLİ,BUILD IN PROGRESS · CHOICES LOCKED
+FIN_PHASE_BOOTSTRAP,Bootstrap,Bootstrap
+FIN_PHASE_TRACTION,Traction,Traction
+FIN_PHASE_SERIES_A,Series A,Series A
+FIN_PHASE_GATE,Faz kapısı,Phase gate
+FIN_SHUTTER_COUNTDOWN,KEPENK: {n} GÜN,SHUTTER: {n} DAYS
+FIN_CAP_CASH,KASA,CASH
+FIN_CAP_BURN,BURN,BURN
+FIN_CAP_NET,NET,NET
+FIN_CAP_MRR,MRR,MRR
+FIN_CAP_RUNWAY,RUNWAY,RUNWAY
+FIN_CAP_BRAND,MARKA,BRAND
+FIN_CAP_REPUTATION,İTİBAR,REPUTATION
+FIN_OPEN_ROUND,TUR AÇ,OPEN ROUND
+FIN_RAISED,Toplanan,Raised
+FIN_VALUATION,Değerleme,Valuation
+FIN_EQUITY,Hisse,Equity
+FIN_SEAT,Koltuk,Seat
+BUILD_PHASE_DESIGN,TASARIM,DESIGN
+BUILD_PHASE_DEVELOPMENT,GELİŞTİRME,DEVELOPMENT
+BUILD_PHASE_TEST,TEST,TEST
+BUILD_PHASE_BETA,BETA,BETA
+BUILD_ACTION_BUILD,GELİŞTİR →,BUILD →
+BUILD_ACTION_SHIP,Yayınla →,Ship →
+BUILD_RELEASE,Sürüm,Release
+BUILD_FEATURE,Özellik,Feature
+BUILD_BUG_RISK,hata riski,bug risk
+BUILD_TECH_DEBT,Teknik borç,Tech debt
+BUILD_LIVE_VERSION,CANLI V{n},LIVE V{n}
+HR_ROLE_FOUNDER,Kurucu,Founder
+HR_ROLE_PM,Ürün Yöneticisi,Product Manager
+HR_ROLE_DESIGNER,Tasarımcı,Designer
+HR_ROLE_DEVELOPER,Yazılımcı,Developer
+HR_ROLE_TESTER,Test Uzmanı,Tester
+HR_ROLE_SALES_REP,Satış Uzmanı,Sales Rep
+HR_ROLE_ACCOUNT_MANAGER,Müşteri Temsilcisi,Account Manager
+HR_ROLE_OPERATING_PARTNER,Operating Partner,Operating Partner
+HR_DEPT_PRODUCT,Ürün Geliştirme,Product Development
+HR_DEPT_SALES,Satış,Sales
+HR_DEPT_CS,Müşteri,Customer Success
+HR_BAND_BUDGET,ekonomik,budget
+HR_BAND_BALANCED,dengeli,balanced
+HR_BAND_PREMIUM,üst segment,premium
+HR_BADGE_FLIGHT_RISK,Kaçma riski,Flight risk
+HR_BADGE_BURNOUT,Tükeniyor,Burning out
+HR_BADGE_OVERLOADED,Aşırı yüklü,Overloaded
+HR_STATE_STARTS_TOMORROW,Yarın başlıyor,Starts tomorrow
+HR_OVERTIME_BLOCK_3D,3 gün,3 days
+HR_OVERTIME_BLOCK_1W,1 hafta,1 week
+HR_OVERTIME_BLOCK_2W,2 hafta,2 weeks
+HR_SEARCH_CANCEL,ARAYIŞI İPTAL ET,CANCEL SEARCH
+HR_CANDIDATE_FILE,Aday dosyası,Candidate file
+HR_COST_HIRING,İşe alım,Hiring
+HR_COST_SEVERANCE,Kıdem tazminatı,Severance
+HR_COST_TRAINING,Eğitim ücreti,Training fee
+HR_APPLY_RAISE,ZAMMI UYGULA,APPLY RAISE
+HR_LABEL_HR,İK,HR
+SALES_CUSTOMER,Müşteri,Customer
+SALES_LEAD,aday,lead
+SALES_PROSPECT,prospect,prospect
+SALES_SATISFACTION,Memnuniyet,Satisfaction
+SALES_PROMISE,Söz,Promise
+SALES_PROMISE_DUE,Söz teslimi,Promise due
+SALES_VC_MEETING,VC görüşmesi,VC meeting
+SALES_OFFER,Teklif,Offer
+SALES_OFFER_COUNTDOWN,TEKLİF: {n} GÜN,OFFER: {n} DAYS
+SALES_PATIENCE,SABIR,PATIENCE
+SALES_WALK_AWAY,MASADAN KALK,WALK AWAY
+SALES_ZONE_COLD,SOĞUK,COLD
+SALES_ZONE_WARM,ILIK,WARM
+SALES_ZONE_WON,KAZANILDI,WON
+SALES_PITCH_RESOLVE,KARARLILIK,RESOLVE
+SALES_REL_NEUTRAL,NÖTR,NEUTRAL
+WORLD_OUTLET_EKONOMI,Ekonomi Postası,Ekonomi Postası
+WORLD_OUTLET_TEKNOGUNDEM,TeknoGündem,TeknoGündem
+WORLD_OUTLET_GIRISIM,Girişim Bülteni,Girişim Bülteni
+WORLD_OUTLET_SEKTOR,Sektör Telgrafı,Sektör Telgrafı
+WORLD_ISSUE_NO,SAYI {n},No. {n}
+WORLD_RIVAL,Rakip,Rival
+WORLD_SECTOR,Sektör,Sector
+UI_OK,Tamam,OK
+UI_CANCEL,İptal,Cancel
+UI_DISMISS,Vazgeç,Cancel
+UI_CONTINUE,DEVAM ET,CONTINUE
+UI_AVATAR_INITIALS,FK,FK

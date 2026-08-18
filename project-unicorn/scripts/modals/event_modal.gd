@@ -389,7 +389,7 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor
 		root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		root.focus_mode = Control.FOCUS_NONE
 		var reason_src: String = Localization.pick(choice.unlock_reason_text, choice.unlock_reason_text_en)
-		var reason: String = reason_src if reason_src != "" else tr("ONB_LOCKED_CHIP")
+		var reason: String = reason_src if reason_src != "" else tr("LOCK_CHIP")
 		chip_col.add_child(UiFactory.make_badge(reason, &"neutral"))
 	return root
 

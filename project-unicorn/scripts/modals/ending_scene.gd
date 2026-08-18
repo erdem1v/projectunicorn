@@ -315,7 +315,7 @@ func _build_rail(vs: Dictionary) -> PanelContainer:
 		tr("ENDING_BADGE_EA"), tr("ENDING_CARD_EA_BODY")))
 	col.add_child(_build_tier_card(
 		tr("ENDING_CARD_FULL_TAG"), tr("ENDING_CARD_FULL_TITLE"),
-		tr("ENDING_BADGE_FULL"), tr("ENDING_CARD_FULL_BODY")))
+		tr("LOCK_FULL"), tr("ENDING_CARD_FULL_BODY")))
 
 	# WISHLIST'E EKLE — always visible; inert while the store URL is empty.
 	var wishlist := Button.new()
