@@ -436,17 +436,19 @@ static func _value_lines(sub: String, feature_count: int, tendency: String) -> A
 		# Bands re-tuned for the raw scale (axes born 0, asymptote ~110): a shipped
 		# axis ≥70 reads strong, ≥45 mid. Cosmetic only (chip color/label).
 		var axis_sign: int = 1 if s >= 70 else (0 if s >= 45 else -1)
-		var tail: String = "güçlü" if axis_sign > 0 else ("orta" if axis_sign == 0 else "zayıf")
-		lines.append({"text": "%s %d → %s" % [label, s, tail], "sign": axis_sign})
+		var tail: String = TranslationServer.translate("PRICE_VERDICT_STRONG") if axis_sign > 0 else (
+			TranslationServer.translate("PRICE_VERDICT_MID") if axis_sign == 0 else TranslationServer.translate("PRICE_VERDICT_WEAK"))
+		lines.append({"text": TranslationServer.translate("PRICE_TIP_AXIS").format(
+			{"axis": label, "score": s, "verdict": tail}), "sign": axis_sign})
 	if feature_count >= 3:
-		lines.append({"text": "%d feature → dolu bir ürün" % feature_count, "sign": 1})
+		lines.append({"text": TranslationServer.translate("PRICE_TIP_FULL").format({"n": feature_count}), "sign": 1})
 	else:
-		lines.append({"text": "%d feature → ince bir ürün" % feature_count, "sign": 0})
+		lines.append({"text": TranslationServer.translate("PRICE_TIP_THIN").format({"n": feature_count}), "sign": 0})
 	match tendency:
 		"premium":
-			lines.append({"text": "Bu kategori premium fiyatı kaldırır", "sign": 1})
+			lines.append({"text": TranslationServer.translate("PRICE_TIP_PREMIUM"), "sign": 1})
 		"volume":
-			lines.append({"text": "Bu kategori hacim oyunu — düşük fiyat mantıklı", "sign": -1})
+			lines.append({"text": TranslationServer.translate("PRICE_TIP_VOLUME"), "sign": -1})
 	return lines
 
 
@@ -546,12 +548,12 @@ static func growth_band() -> String:
 	# _tick_b2c_audience (R1) so "büyüyor/eriyor" can never contradict the motion.
 	var delta: float = _audience_delta_per_hour()
 	if delta <= -0.1:
-		return "eriyor"
+		return TranslationServer.translate("GROWTH_MELTING")
 	if delta < 0.15:
-		return "duruyor"
+		return TranslationServer.translate("GROWTH_FLAT")
 	if delta >= 0.6:
-		return "hızlı büyüyor"
-	return "büyüyor"
+		return TranslationServer.translate("GROWTH_FAST")
+	return TranslationServer.translate("GROWTH_STEADY")
 
 
 static func _product_name() -> String:
@@ -560,4 +562,4 @@ static func _product_name() -> String:
 		return n
 	var st: Dictionary = ProductCatalog.get_sub_product_type_by_id(
 		String(GameState.get_flag("mvp_sub_product_type_id", "")))
-	return String(st.get("name_human", st.get("name", "Ürün")))
+	return String(st.get("name_human", st.get("name", TranslationServer.translate("PRODUCT_FALLBACK_NAME"))))

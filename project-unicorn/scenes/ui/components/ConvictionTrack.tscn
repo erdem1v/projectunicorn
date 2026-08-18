@@ -13,7 +13,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ZoneLabel"
-text = "İKNA"
+text = "SALES_CONVICTION"
 
 [node name="ValueLabel" type="Label" parent="TopRow"]
 layout_mode = 2
@@ -31,18 +31,18 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ZoneLabel"
-text = "SOĞUK"
+text = "SALES_ZONE_COLD"
 
 [node name="ZoneWarm" type="Label" parent="ZoneRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ZoneLabel"
-text = "ILIK"
+text = "SALES_ZONE_WARM"
 horizontal_alignment = 1
 
 [node name="ZoneWon" type="Label" parent="ZoneRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ZoneLabel"
-text = "KAZANILDI"
+text = "SALES_ZONE_WON"
 horizontal_alignment = 2

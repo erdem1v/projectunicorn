@@ -2,7 +2,7 @@
 # Headless, read-only, exits NONZERO on any hit:
 #   godot --headless --path . -s res://scripts/debug/loc_residue.gd
 #
-# Three checks:
+# Four checks:
 #   1. Script literals: any double-quoted literal in scripts/ (non-comment lines, debug/ excluded)
 #      carrying a Turkish-charclass character.
 #   2. Script literals: ASCII-only Turkish — words whose Turkish identity dies under İ/ı folding
@@ -11,6 +11,11 @@
 #      case-insensitive, tested INSIDE quoted literals only (identifiers never match).
 #   3. Scene text: every non-empty text/tooltip_text/placeholder_text value in scenes/ must be a
 #      localization key THAT ACTUALLY EXISTS in strings.csv, or pure glyph/numeric filler.
+#   4. tr() inside a `static func` — it COMPILES and dies at runtime, because a static has no
+#      Object to translate through. Added 2026-08-19 after keying b2b_event_factory (6 statics)
+#      with tr(): two smoke cases failed with "escalation not active", i.e. the event was never
+#      built and nothing named the cause. Six more batches of static system files follow, so
+#      the checker carries the lesson instead of the next session rediscovering it.
 #
 # THREE GAPS CLOSED 2026-08-18 — the instrument was passing things it should have caught:
 #   a. TRAILING comments were scanned. Only FULL-LINE comments were skipped, so an
@@ -63,6 +68,17 @@ const TR_ASCII_WORDS := [
 	"SUREC", "SUREKLI", "SURUYOR", "TAMAM", "TASARIM", "TEKLIF", "TOPLANTI", "UCRET", "URUN",
 	"VAZGEC", "YAKINDA", "YALNIZ", "YATIRIM", "YATIRIMCI", "YATIRIMCILAR", "YAYINLA", "YAZILIM",
 	"YONETIM", "YUKSEK", "ZAYIF",
+	# EXTENDED 2026-08-19 (B1b). The curated list was measurably incomplete: 15 word kinds
+	# across 29 literal sites were pure-ASCII Turkish the charclass cannot see and the list
+	# did not name — "Oyala" among them, which Phase 1 §2.6 had itself cited as the example
+	# of this blind spot and then not included. An under-reporting meter is worse than a
+	# loud one, because B7's whole gate is the word "zero": these had to go in BEFORE six
+	# more batches were measured against it. Adding them RAISES the count first, then the
+	# batches pay it down.
+	# Still deliberately absent: English-colliding tokens, and "ARA"/"GIDER" which are a
+	# month abbreviation and a shot-kind id respectively, i.e. data rather than copy.
+	"DURDUR", "GELIR", "IMZA", "KABUL", "KAPANDI", "KAPAT", "KARAR", "KASA", "MASAYA",
+	"ONAYLA", "OYALA", "REDDET",
 ]
 
 # Scene values that are legal without being keys: empty, glyphs, numeric/mock fillers.
@@ -77,9 +93,11 @@ var _re_scene_prop: RegEx
 var _re_key: RegEx
 var _re_filler: RegEx
 var _re_logcall: RegEx
+var _re_trcall: RegEx
 
 
 func _initialize() -> void:
+	_re_trcall = _make("\\btr\\(")
 	_re_logcall = _make("\\b(print|prints|printerr|print_rich|push_warning|push_error|assert)\\s*\\(")
 	_re_quoted = _make("\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"")
 	_re_trchar = _make("[çğıöşüÇĞİÖŞÜ]")
@@ -99,14 +117,14 @@ func _initialize() -> void:
 	# Per-kind tally. The sweep runs for nine commits and the ONLY honest progress signal is
 	# each bucket shrinking; a bare total hides a batch that keyed 60 script literals while
 	# quietly adding a scene one. Printed even at zero so a green run states what it checked.
-	var kinds := {"tr-char": 0, "ascii-tr": 0, "scene": 0, "scene-fakekey": 0, "scene-multiline": 0}
+	var kinds := {"tr-char": 0, "ascii-tr": 0, "static-tr": 0, "scene": 0, "scene-fakekey": 0, "scene-multiline": 0}
 	for h in _hits:
 		for k in kinds:
 			if h.contains("[%s]" % k):
 				kinds[k] = int(kinds[k]) + 1
 				break
-	print("LOC RESIDUE BY KIND: script tr-char=%d ascii-tr=%d | scene prose=%d fakekey=%d multiline=%d" % [
-		kinds["tr-char"], kinds["ascii-tr"], kinds["scene"],
+	print("LOC RESIDUE BY KIND: script tr-char=%d ascii-tr=%d static-tr=%d | scene prose=%d fakekey=%d multiline=%d" % [
+		kinds["tr-char"], kinds["ascii-tr"], kinds["static-tr"], kinds["scene"],
 		kinds["scene-fakekey"], kinds["scene-multiline"]])
 	print("LOC RESIDUE: %d hit(s)  [%s]  (csv_keys=%d)" % [
 		n, "FAIL" if n > 0 else "CLEAN", _csv_keys.size()])
@@ -169,9 +187,26 @@ func _check_file(path: String, ext: String) -> void:
 		_check_scene_text(path, f.get_as_text())
 		return
 	var line_no := 0
+	var in_static := false
 	while not f.eof_reached():
 		line_no += 1
-		_check_script_line(path, line_no, f.get_line())
+		var line := f.get_line()
+		# Track whether we are inside a `static func`. tr() is a METHOD — a static has no
+		# Object to translate through, so tr() there compiles clean and dies at RUNTIME.
+		# Measured cost of not checking: keying b2b_event_factory (6 statics) with tr()
+		# produced two smoke failures reading "escalation not active", because the event was
+		# never built and nothing named the cause. The substitute is
+		# TranslationServer.translate, which is what UiTokens.net_runway_parts already uses.
+		var stripped := line.strip_edges()
+		if stripped.begins_with("static func "):
+			in_static = true
+		elif stripped.begins_with("func ") or (line.length() > 0 and not line.begins_with("\t") \
+				and not line.begins_with(" ") and not stripped.begins_with("#") and stripped != ""):
+			in_static = false
+		if in_static and _re_trcall.search(_code_part(line)) != null:
+			_hits.append("%s:%d [static-tr] tr() inside a static func — use TranslationServer.translate" % [
+				path, line_no])
+		_check_script_line(path, line_no, line)
 
 
 func _check_script_line(path: String, line_no: int, line: String) -> void:

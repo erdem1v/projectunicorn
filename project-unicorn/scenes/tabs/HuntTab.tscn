@@ -34,7 +34,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"TitleSerif"
-text = "Series A Avı"
+text = "HUNT_PAGE_TITLE"
 
 [node name="FrankLabel" type="Label" parent="Margin/Layout/TitleBar"]
 layout_mode = 2
@@ -63,7 +63,7 @@ theme_override_constants/separation = 8
 [node name="RHeader" type="Label" parent="Margin/Layout/Columns/RosterPanel/RVBox"]
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "YATIRIMCILAR"
+text = "HUNT_SEC_INVESTORS"
 
 [node name="RosterScroll" type="ScrollContainer" parent="Margin/Layout/Columns/RosterPanel/RVBox"]
 layout_mode = 2
@@ -91,7 +91,7 @@ theme_override_constants/separation = 6
 [node name="OHeader" type="Label" parent="Margin/Layout/Columns/RightCol/OffersPanel/OVBox"]
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "TEKLİFLER"
+text = "HUNT_SEC_OFFERS"
 
 [node name="OffersList" type="VBoxContainer" parent="Margin/Layout/Columns/RightCol/OffersPanel/OVBox"]
 layout_mode = 2
@@ -108,7 +108,7 @@ theme_override_constants/separation = 6
 [node name="PHeader" type="Label" parent="Margin/Layout/Columns/RightCol/PendingPanel/PVBox"]
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "BEKLEYEN"
+text = "HUNT_SEC_PENDING"
 
 [node name="PendingList" type="VBoxContainer" parent="Margin/Layout/Columns/RightCol/PendingPanel/PVBox"]
 layout_mode = 2

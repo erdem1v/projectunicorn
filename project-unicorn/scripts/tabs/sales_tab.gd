@@ -486,7 +486,8 @@ func _on_find_pressed() -> void:
 
 func _refresh_metrics_b2c() -> void:
 	var sat: int = CustomerRegistry.get_min_satisfaction()
-	metrics_label.text = "MRR $%d · %d ödeyen kullanıcı · en düşük memnuniyet %d" % [GameState.mrr, CustomerRegistry.get_total_users(), sat]
+	metrics_label.text = tr("SALES_B2C_METRICS").format({"mrr": Fmt.money(GameState.mrr),
+		"users": CustomerRegistry.get_total_users(), "sat": sat})
 
 
 func _refresh_customers_b2c() -> void:
@@ -498,13 +499,14 @@ func _refresh_customers_b2c() -> void:
 	for c in custs:
 		var col := VBoxContainer.new()
 		col.add_child(UiFactory.make_label(c.display_name(), &"RowName"))
-		col.add_child(UiFactory.make_label("$%d/ay · %s" % [c.mrr, _health_tr(c.health)], &"RowMeta", UiTokens.INK_MUTED))
+		col.add_child(UiFactory.make_label(tr("SALES_B2C_ROW").format({"amount": Fmt.money(c.mrr),
+			"health": _health_tr(c.health)}), &"RowMeta", UiTokens.INK_MUTED))
 		customers_list.add_child(col)
 
 
 func _health_tr(h: String) -> String:
 	match h:
-		"healthy": return "sağlıklı"
-		"at_risk": return "riskli"
-		"churning": return "kaçıyor"
+		"healthy": return tr("HEALTH_HEALTHY")
+		"at_risk": return tr("HEALTH_AT_RISK")
+		"churning": return tr("HEALTH_CHURNING")
 		_: return h

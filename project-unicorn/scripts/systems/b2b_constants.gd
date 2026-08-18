@@ -348,5 +348,13 @@ const TRUST_OFFSET_DECAY_PER_DAY := 0.4   # -12 → 0 in 30 days
 
 # --- Ticker attribution (EventBus.headline_added source; sibling of
 #     HRConstants.NOTICE_SOURCE_HR, kept here because the emitters are sales-domain). ---
-const NOTICE_SOURCE_SALES := "Satış"
-const NOTICE_SOURCE_CUSTOMER := "Müşteri"
+# Localized at EMIT time. The ticker stream is transient, so an item written before a
+# language switch keeps its old attribution until it scrolls off — the same accepted
+# staleness class as an already-open modal. B5 owns the ticker and may move this to a
+# key rendered at display time when it does.
+static func notice_source_sales() -> String:
+	return TranslationServer.translate("NOTICE_SRC_SALES")
+
+
+static func notice_source_customer() -> String:
+	return TranslationServer.translate("NOTICE_SRC_CUSTOMER")

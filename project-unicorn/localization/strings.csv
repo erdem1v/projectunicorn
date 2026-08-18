@@ -555,3 +555,119 @@ B2B_PAIN_SAAS_OPS_MOBILE,"Ekip telefondan giremiyor, saha kopuk kalıyor.",The t
 B2B_PAIN_FALLBACK,"Bu tarafta ciddi bir eksik var, çözecek bir araç arıyoruz.",There is a real gap on this side and we are looking for a tool that closes it.
 SECTOR_CONSUMER,Tüketici,Consumer
 SALES_B2C_USERBASE,{product} kullanıcıları,{product} users
+B2B_EV_RISK_TITLE,Müşteri riski,Account at risk
+B2B_EV_EXPANSION_TITLE,Büyüme fırsatı,Growth opening
+B2B_EV_EXPANSION_BODY,"Ekibimiz büyüyor, sistemi başka birimlere de yaymak istiyoruz. Koltuk ekleyelim.",Our team is growing and we want to roll the system out to other units. Let us add seats.
+B2B_EV_REP_WARN_TITLE,Müşteri temsilcisi uyarısı,Account manager warning
+B2B_EV_REP_WARN_BODY,"Patron, {company} bir süredir '{feature}' istiyor. Oyaladım ama artık tutamıyorum. Gideceklerdi, büyük müşteri, söz vermek zorunda kaldım. En kısa sürede yapalım.","Boss, {company} has been asking for '{feature}' for a while. I stalled them, but I cannot hold it any longer. They were ready to walk — big account — so I had to promise. Let us get it done."
+B2B_EV_COMPLAINT_TITLE,Müşteri şikâyeti,Customer complaint
+B2B_EV_COMPLAINT_HARD,"{company} hattı arıyor, ton sert: ""{voice}"" Kendi başıma yatıştıramadım.","{company} is on the line and the tone is hard: ""{voice}"" I could not calm them down on my own."
+B2B_EV_COMPLAINT_SOFT,"{company} hattı arıyor: ""{voice}"" Şimdilik idare ettim ama karar senin.","{company} is on the line: ""{voice}"" I have held it for now, but the call is yours."
+B2B_EV_RENEWAL_BODY,{company} sözleşme yenilemesini sorguluyor. Fiyatı gözden geçiriyorlar; masaya oturmak gerek.,{company} is questioning the renewal. They are reviewing the price; this needs a meeting.
+B2B_EV_REQUEST_TITLE,Müşteri talebi,Customer request
+B2B_EV_REQUEST_BODY_VOICE,"{company} '{feature}' istiyor: ""{voice}"" Kendi başıma kapatamadım, karar senin.","{company} wants '{feature}': ""{voice}"" I could not close it on my own; the call is yours."
+B2B_EV_REQUEST_BODY_PLAIN,"{company} '{feature}' istiyor. Kendi başıma kapatamadım, karar senin.",{company} wants '{feature}'. I could not close it on my own; the call is yours.
+B2B_CHOICE_PROMISE,Söz ver: '{feature}',Promise it: '{feature}'
+B2B_CHOICE_STALL,Oyala,Stall them
+B2B_CHOICE_DISCOUNT,İndirim ver,Offer a discount
+B2B_CHOICE_LEAVE_ALONE,Kendi haline bırak,Leave it alone
+B2B_CHOICE_EXPAND,Büyüt,Expand
+B2B_CHOICE_NOT_YET,Şimdilik gerek yok,Not needed yet
+B2B_CHOICE_KEEP_PROMISE,"Tamam, sözü tut","All right, keep the promise"
+B2B_CHOICE_REFUSE,"Hayır, yapmıyoruz","No, we are not doing it"
+B2B_CHOICE_PROMISE_FIX,Düzeltme sözü ver,Promise a fix
+B2B_CHOICE_EXPLAIN_REFUSE,Açıkla ve reddet,Explain and decline
+B2B_CHOICE_NEGOTIATE_RENEWAL,Yenilemeyi görüş,Negotiate the renewal
+B2B_CHOICE_BIND_DISCOUNT,İndirimle bağla,Lock them in with a discount
+B2B_CHOICE_PRIORITIZE,Önceliklendir,Prioritize it
+B2B_CHOICE_NOT_NOW,Şimdilik olmaz,Not right now
+B2B_EV_RENEWAL_TITLE,Yenileme sinyali,Renewal signal
+B2B_CHOICE_HOLD,Beklet,Hold it
+B2B_FILE_NOTE,Dosya notu: {note},File note: {note}
+PITCH_BEAT_INTRO,AÇILIŞ,OPENING
+PITCH_BEAT_OBJECTION,İTİRAZ,OBJECTION
+PITCH_BEAT_PRICING,PAZARLIK,NEGOTIATION
+PITCH_BEAT_CLOSE,KAPANIŞ,CLOSING
+PITCH_BEAT_MEETING,GÖRÜŞME,MEETING
+PITCH_OUTCOME_SIGNED,İMZA,SIGNED
+PITCH_OUTCOME_CALLBACK,GERİ DÖNÜŞ,CALLBACK
+PITCH_OUTCOME_CLOSED,KAPANDI,CLOSED
+PITCH_CHECK_CRIT_SUCCESS,→ Tam isabet. Onu yakaladın.,→ Dead on. You had them.
+PITCH_CHECK_SUCCESS,→ İyi gitti.,→ That landed.
+PITCH_CHECK_NEAR_PASS,→ Kıl payı tuttu.,→ Held by a hair.
+PITCH_CHECK_NEAR_MISS,→ Az kalsın — kaçırdın.,→ So close — you lost it.
+PITCH_CHECK_FAIL,→ Tutmadı. Hava soğudu.,→ It did not land. The room cooled.
+PITCH_RESULT_SIGNED,{company} imzaladı. Aylık {amount}. İlk gerçek müşterin.,{company} signed. {amount} a month. Your first real customer.
+PITCH_RESULT_CALLBACK,{company} 'düşünüp döneceğim' dedi. Pipeline'da kaldı — tekrar deneyebilirsin.,{company} said they would think it over. Still in the pipeline — you can try again.
+PITCH_RESULT_CLOSED,{company} bu sefer olmadı. Kapı kapandı.,{company} did not work out this time. That door is closed.
+PITCH_INNER_SIGNED,"Biri, yaptığın şeye para verdi. Küçük ama gerçek.",Someone paid money for the thing you made. Small but real.
+PITCH_INNER_CALLBACK,'Düşüneceğim' — satışın en kaygan cümlesi. Ama kapı tam kapanmadı.,"""I will think about it"" — the slipperiest sentence in sales. But the door is not shut."
+PITCH_INNER_CLOSED,Olmadı. Frank ne der bilmiyorum ama bir sonraki var.,"It did not happen. I do not know what Frank will say, but there is a next one."
+PITCH_CONTINUE,Devam,Continue
+HUNT_PAGE_TITLE,Series A Avı,The Series A Hunt
+HUNT_SEC_INVESTORS,YATIRIMCILAR,INVESTORS
+HUNT_SEC_OFFERS,TEKLİFLER,OFFERS
+HUNT_SEC_PENDING,BEKLEYEN,PENDING
+HUNT_LOCKED_SOON,Yakında,Soon
+HUNT_CONDITION,Koşul: {condition},Condition: {condition}
+HUNT_MEETING_SET,Toplantı ayarlandı.,Meeting is set.
+HUNT_PREP_RUNNING,Hazırlık sürüyor.,Prep in progress.
+HUNT_PREP_REASON,Hazırlık: {reason},Prep: {reason}
+HUNT_NO_OFFERS,Henüz teklif yok.,No offers yet.
+HUNT_EMPTY_SLOT,— boş slot —,— empty slot —
+HUNT_TERMS,Değerleme: {valuation} · Hisse: {equity} · Board: {board},Valuation: {valuation} · Equity: {equity} · Board: {board}
+HUNT_VALIDITY,Geçerlilik: {n} gün,Valid for {n} days
+HUNT_SIT_DOWN,Masaya otur,Sit down
+HUNT_WALK_AWAY,Masadan kalk,Walk away
+HUNT_WALK_CONFIRM_TITLE,Masadan kalkılsın mı?,Walk away from the table?
+HUNT_WALK_CONFIRM_BODY,Bu teklif yanar ve bir kapanan masa daha sayılır (+1 ret). Diğer teklifler durur.,This offer burns and counts as one more closed table (+1 rejection). The other offers pause.
+HUNT_WALK_CONFIRM_OK,Kalk,Walk
+HUNT_MEETING_PENDING,Toplantı — {vc} · {n} gün,Meeting — {vc} · {n} days
+HUNT_PREP_PENDING,Hazırlık — {focus} · {when},Prep — {focus} · {when}
+HUNT_PREP_READY,hazır,ready
+HUNT_DAYS,{n} gün,{n} days
+HUNT_NONE_PENDING,Bekleyen yok.,Nothing pending.
+HUNT_COUNTER_PIVOT,Pivot — bootstrap yolu,Pivot — the bootstrap road
+HUNT_COUNTER_TABLES,Kapanan masa: {closed}/{total},Tables closed: {closed}/{total}
+HUNT_BADGE_OFFERED,Teklif var,Offer in
+HUNT_BADGE_PENDING_SHEET,Teklif bekliyor,Offer pending
+HUNT_BADGE_CALLBACK,Geri dönüş,Callback
+HUNT_BADGE_REJECTED,Reddetti,Declined
+HUNT_BADGE_EXPIRED,Süresi doldu,Expired
+HUNT_BADGE_WALKED,Masadan kalktın,You walked
+HUNT_BADGE_SIGNED,İmzalandı,Signed
+HUNT_BADGE_OPEN,Açık,Open
+HUNT_CB_MRR,MRR {target} ({current}/{target}),MRR {target} ({current}/{target})
+HUNT_CB_BUGS,Aktif hata < {n},Open bugs < {n}
+HUNT_CB_FIRST_ENGINEER,İlk mühendisi işe al,Hire the first engineer
+HUNT_CB_SCANDAL,Skandalı çöz,Resolve the scandal
+HUNT_CB_NONE,—,—
+HUNT_FOCUS_NUMBERS,Rakamlar,Numbers
+HUNT_FOCUS_STORY,Hikâye,Story
+HUNT_FOCUS_REHEARSAL,Prova,Rehearsal
+SALES_CONVICTION,İKNA,CONVICTION
+HUNT_FRANK_LINE,Av açık. Dört masa; üçü kapanırsa yol biter.,The hunt is open. Four tables; if three close the road ends.
+HUNT_REQUEST_AGAIN,Tekrar iste (~{n} gün),Ask again (~{n} days)
+HUNT_REQUEST_MEETING,Toplantı iste (~{n} gün),Request a meeting (~{n} days)
+HUNT_MEETING_BUSY,Başka bir toplantı bekliyor,Another meeting is already pending
+PRICE_TIP_AXIS,{axis} {score} → {verdict},{axis} {score} → {verdict}
+PRICE_VERDICT_STRONG,güçlü,strong
+PRICE_VERDICT_MID,orta,fair
+PRICE_VERDICT_WEAK,zayıf,weak
+PRICE_TIP_FULL,{n} özellik → dolu bir ürün,{n} features → a full product
+PRICE_TIP_THIN,{n} özellik → ince bir ürün,{n} features → a thin product
+PRICE_TIP_PREMIUM,Bu kategori premium fiyatı kaldırır,This category can carry a premium price
+PRICE_TIP_VOLUME,Bu kategori hacim oyunu — düşük fiyat mantıklı,This category is a volume game — a low price makes sense
+GROWTH_MELTING,eriyor,shrinking
+GROWTH_FLAT,duruyor,flat
+GROWTH_FAST,hızlı büyüyor,growing fast
+GROWTH_STEADY,büyüyor,growing
+PRODUCT_FALLBACK_NAME,Ürün,Product
+SALES_B2C_METRICS,MRR {mrr} · {users} ödeyen kullanıcı · en düşük memnuniyet {sat},MRR {mrr} · {users} paying users · lowest satisfaction {sat}
+SALES_B2C_ROW,{amount}/ay · {health},{amount}/mo · {health}
+HEALTH_HEALTHY,sağlıklı,healthy
+HEALTH_AT_RISK,riskli,at risk
+HEALTH_CHURNING,kaçıyor,churning
+NOTICE_SRC_SALES,Satış,Sales
+NOTICE_SRC_CUSTOMER,Müşteri,Customer
+SALES_LOG_REP_CLOSED,"{rep}, {company} ile anlaşmayı kapattı.",{rep} closed the deal with {company}.

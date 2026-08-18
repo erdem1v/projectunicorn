@@ -816,7 +816,9 @@ func _build_founder(payload: Dictionary) -> Character:
 	var raw_name: String = payload.get("founder_name", "")
 	var display_name: String = raw_name.strip_edges() if raw_name != "" else ""
 	if display_name == "":
-		display_name = "Founder"
+		# S2-42: the default founder name is COPY, not data — it must not be baked into
+		# a persisted field in one language. Rendered from the glossary term instead.
+		display_name = TranslationServer.translate("HR_ROLE_FOUNDER")
 
 	var f := Character.new()
 	f.id = "char_founder"

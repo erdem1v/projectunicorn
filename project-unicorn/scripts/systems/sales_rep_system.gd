@@ -194,7 +194,7 @@ static func _close(p: Prospect) -> void:
 	ProspectRegistry.remove(p.id)
 	# The legible cause, in both channels: who closed it, which customer, what MRR.
 	SalesSystem.record_sales_event("auto_close", closer.character_name, c.company_name, c.mrr)
-	EventBus.headline_added.emit(B2BConstants.NOTICE_SOURCE_SALES,
-		"%s, %s ile anlaşmayı kapattı." % [closer.character_name, c.company_name])
+	EventBus.headline_added.emit(B2BConstants.notice_source_sales(),
+		TranslationServer.translate("SALES_LOG_REP_CLOSED").format({"rep": closer.character_name, "company": c.company_name}))
 	# Deliberately does NOT touch next_pitch_day: a rep closing an account of their own does
 	# not consume the founder's meeting slot.

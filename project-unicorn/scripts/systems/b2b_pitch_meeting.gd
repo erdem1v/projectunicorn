@@ -112,7 +112,7 @@ static func _result_view_state(result: Dictionary) -> Dictionary:
 		"speaker_role": B2BConstants.sector_contact(_industry()),
 		"active_line": {"text": _result_text(outcome, result), "speaker_tag": "", "is_monologue": false},
 		"monologue_text": _result_inner(outcome),
-		"choices": [{"id": "done", "text": "Devam"}],
+		"choices": [{"id": "done", "text": TranslationServer.translate("PITCH_CONTINUE")}],
 		"beat_label": _outcome_label(outcome),
 		"can_withdraw": false,
 	}
@@ -180,45 +180,46 @@ static func _idx_of(choice_id: String) -> int:
 
 static func _beat_label(stage_id: String) -> String:
 	match stage_id:
-		"intro": return "AÇILIŞ"
-		"value": return "İTİRAZ"
-		"pricing": return "PAZARLIK"
-		"close": return "KAPANIŞ"
-		_: return "GÖRÜŞME"
+		"intro": return TranslationServer.translate("PITCH_BEAT_INTRO")
+		"value": return TranslationServer.translate("PITCH_BEAT_OBJECTION")
+		"pricing": return TranslationServer.translate("PITCH_BEAT_PRICING")
+		"close": return TranslationServer.translate("PITCH_BEAT_CLOSE")
+		_: return TranslationServer.translate("PITCH_BEAT_MEETING")
 
 
 static func _outcome_label(outcome: String) -> String:
 	match outcome:
-		"SIGNED": return "İMZA"
-		"CALLBACK": return "GERİ DÖNÜŞ"
-		_: return "KAPANDI"
+		"SIGNED": return TranslationServer.translate("PITCH_OUTCOME_SIGNED")
+		"CALLBACK": return TranslationServer.translate("PITCH_OUTCOME_CALLBACK")
+		_: return TranslationServer.translate("PITCH_OUTCOME_CLOSED")
 
 
 # --- Voice helpers (ported VERBATIM from the retired PitchDialogueModal) ---
 
 static func _check_line(check: Dictionary) -> String:
 	match String(check.get("band", "")):
-		"crit_success": return "→ Tam isabet. Onu yakaladın."
-		"success": return "→ İyi gitti."
-		"near_pass": return "→ Kıl payı tuttu."
-		"near_miss": return "→ Az kalsın — kaçırdın."
-		"fail", "crit_fail": return "→ Tutmadı. Hava soğudu."
+		"crit_success": return TranslationServer.translate("PITCH_CHECK_CRIT_SUCCESS")
+		"success": return TranslationServer.translate("PITCH_CHECK_SUCCESS")
+		"near_pass": return TranslationServer.translate("PITCH_CHECK_NEAR_PASS")
+		"near_miss": return TranslationServer.translate("PITCH_CHECK_NEAR_MISS")
+		"fail", "crit_fail": return TranslationServer.translate("PITCH_CHECK_FAIL")
 		_: return ""
 
 
 static func _result_text(outcome: String, result: Dictionary) -> String:
-	var company: String = String(result.get("company", "Müşteri"))
+	var company: String = String(result.get("company", TranslationServer.translate("SALES_CUSTOMER")))
 	match outcome:
 		"SIGNED":
-			return "%s imzaladı. Aylık $%d. İlk gerçek müşterin." % [company, int(result.get("mrr", 0))]
+			return TranslationServer.translate("PITCH_RESULT_SIGNED").format({"company": company,
+				"amount": Fmt.money(int(result.get("mrr", 0)))})
 		"CALLBACK":
-			return "%s 'düşünüp döneceğim' dedi. Pipeline'da kaldı — tekrar deneyebilirsin." % company
+			return TranslationServer.translate("PITCH_RESULT_CALLBACK").format({"company": company})
 		_:
-			return "%s bu sefer olmadı. Kapı kapandı." % company
+			return TranslationServer.translate("PITCH_RESULT_CLOSED").format({"company": company})
 
 
 static func _result_inner(outcome: String) -> String:
 	match outcome:
-		"SIGNED": return "Biri, yaptığın şeye para verdi. Küçük ama gerçek."
-		"CALLBACK": return "'Düşüneceğim' — satışın en kaygan cümlesi. Ama kapı tam kapanmadı."
-		_: return "Olmadı. Frank ne der bilmiyorum ama bir sonraki var."
+		"SIGNED": return TranslationServer.translate("PITCH_INNER_SIGNED")
+		"CALLBACK": return TranslationServer.translate("PITCH_INNER_CALLBACK")
+		_: return TranslationServer.translate("PITCH_INNER_CLOSED")

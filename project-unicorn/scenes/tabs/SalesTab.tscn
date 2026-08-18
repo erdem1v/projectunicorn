@@ -36,7 +36,7 @@ theme_override_constants/separation = 8
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"TitleSerif"
-text = "Sales"
+text = "TAB_SALES"
 
 [node name="SubtitleLabel" type="Label" parent="Margin/Layout/TitleBar"]
 layout_mode = 2
@@ -75,7 +75,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"SectionLabel"
-text = "PROSPECT'LER"
+text = "SALES_PROSPECTS_HEADER"
 
 [node name="PHeaderCount" type="Label" parent="Margin/Layout/Columns/ProspectsCol/PHeader"]
 layout_mode = 2
@@ -114,7 +114,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"SectionLabel"
-text = "MÜŞTERİ PORTFÖYÜ"
+text = "SALES_PORTFOLIO_HEADER"
 
 [node name="CHeaderCount" type="Label" parent="Margin/Layout/Columns/CustomersCol/CHeader"]
 layout_mode = 2

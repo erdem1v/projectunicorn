@@ -2389,8 +2389,13 @@ static func _case_b2b_pitch_meeting_signs() -> String:
 	var rc: Dictionary = B2BPitchMeeting.advance("c0")  # close → result screen
 	if rc.get("done", true):
 		return "close should show a result screen, not close immediately"
-	if String(rc.get("view_state", {}).get("beat_label", "")) != "İMZA":
-		return "expected SIGNED (İMZA), got %s" % String(rc.get("view_state", {}).get("beat_label", ""))
+	# Compared against the KEY's resolution, not against Turkish bytes: the label is
+	# localized now, so a byte-pin would assert the developer's current locale rather than
+	# the outcome. (Same fix as the format_share pin in Step 1c.)
+	var want_signed: String = TranslationServer.translate("PITCH_OUTCOME_SIGNED")
+	if String(rc.get("view_state", {}).get("beat_label", "")) != want_signed:
+		return "expected the SIGNED beat label (%s), got %s" % [
+			want_signed, String(rc.get("view_state", {}).get("beat_label", ""))]
 	var rd: Dictionary = B2BPitchMeeting.advance("done")  # Devam → close
 	if not rd.get("done", false):
 		return "Devam did not close the meeting"
@@ -5672,7 +5677,7 @@ static func _case_news_feed_weights_and_no_repeat() -> String:
 		# "Biz" injections through the real channel (TimeManager._ready wired the feed).
 		# DAILY on purpose: with surplus supply the hard cap is what limits the source,
 		# so the ≤20% assertion below tests the cap, not the scarcity of milestones.
-		EventBus.headline_added.emit(B2BConstants.NOTICE_SOURCE_SALES, "Smoke kapanışı %d" % i)
+		EventBus.headline_added.emit(B2BConstants.notice_source_sales(), "Smoke kapanışı %d" % i)
 		var reshuffles_before: int = int(GameState.news_feed.get("reshuffles", 0))
 		NewsFeedSystem.daily_tick()
 		var boundary_day: bool = int(GameState.news_feed["reshuffles"]) != reshuffles_before

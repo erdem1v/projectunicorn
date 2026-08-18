@@ -6,7 +6,14 @@ extends RefCounted
 # ship-moment synthetic pattern — events are built in code and injected via
 # EventManager.enqueue, then rendered by the (widened) EventModal.
 #
-# Copy law: single-language TR, no raw numbers, no em-dash, no emoji. The customer
+# TranslationServer.translate, NOT tr(): every function in this file is `static`, and a
+# static has no Object to translate through — tr() is simply not available there. Same
+# reason B2BConstants._derived and UiTokens.net_runway_parts reach for it. Learned the
+# expensive way: keying these with tr() compiled fine and then failed at RUNTIME, which
+# surfaced as two smoke cases reporting "escalation not active" — the event was never
+# built at all, and nothing said why.
+#
+# Copy law: no raw numbers, no em-dash, no emoji. The customer
 # speaks in their own SECTOR voice; the effect costs are NOT hand-authored into the
 # labels — the modal derives them from the modifiers (single source of truth).
 #
@@ -18,15 +25,15 @@ static func build_retention(c: Customer) -> GameEvent:
 	var ev := GameEvent.new()
 	ev.id = "ev_b2b_retain_%s" % c.id
 	ev.category = "reactive"
-	ev.title = "Müşteri riski"
+	ev.title = TranslationServer.translate("B2B_EV_RISK_TITLE")
 	ev.tags = ["build_safe", "b2b_retention"]  # survives the active-build gate; cost-line render
 	# Speaker = the customer, in their own voice (synthetic; no CharacterRegistry lookup).
 	ev.speaker_name = c.company_name
 	ev.speaker_role = B2BConstants.sector_contact(c.industry)
-	ev.speaker_status = "RİSK ALTINDA"
+	ev.speaker_status = TranslationServer.translate("SALES_CHIP_RISK")
 	ev.speaker_status_kind = "negative"
 	if c.churn_countdown >= 0:
-		ev.speaker_chips = [{"text": "Churn'e ~%d gün" % c.churn_countdown, "kind": "accent"}]
+		ev.speaker_chips = [{"text": TranslationServer.translate("SALES_CHURN_COUNTDOWN").format({"n": c.churn_countdown}), "kind": "accent"}]
 	ev.body_text = B2BConstants.complaint_voice(c.industry)
 
 	var label: String = B2BConstants.feature_label(c.pain_feature_id)
@@ -51,16 +58,16 @@ static func build_retention(c: Customer) -> GameEvent:
 	var live_now: Array = GameState.get_flag("mvp_components", [])
 	if c.pain_feature_id != "" and not live_now.has(c.pain_feature_id) \
 			and not PromiseRegistry.has_open_for(c.id):
-		choices.append(_choice("Söz ver: '%s'" % label, [
+		choices.append(_choice(TranslationServer.translate("B2B_CHOICE_PROMISE").format({"feature": label}), [
 			{"type": "b2b_promise_create", "customer_id": c.id, "feature_id": c.pain_feature_id,
 				"deadline_days": B2BConstants.PROMISE_DEADLINE_DAYS},
 			{"type": "reputation", "delta": B2BConstants.RETAIN_PROMISE_REP},
 		]))
-	choices.append(_choice("Oyala", [
+	choices.append(_choice(TranslationServer.translate("B2B_CHOICE_STALL"), [
 		{"type": "b2b_retain_delay", "customer_id": c.id},
 		{"type": "brand", "delta": B2BConstants.RETAIN_DELAY_BRAND},
 	]))
-	choices.append(_choice("İndirim ver", [
+	choices.append(_choice(TranslationServer.translate("B2B_CHOICE_DISCOUNT"), [
 		{"type": "b2b_retain_discount", "customer_id": c.id, "mrr_delta": -discount_cut},
 		{"type": "reputation", "delta": B2BConstants.RETAIN_DISCOUNT_REP},
 	]))
@@ -68,7 +75,7 @@ static func build_retention(c: Customer) -> GameEvent:
 	# the customer stays in Risk, keeps paying, the churn countdown keeps running. If it
 	# expires the account leaves on its own (brand hit lands at that churn moment). The
 	# player can reopen İlgilen before expiry and still rescue (recoverable pressure).
-	choices.append(_choice("Kendi haline bırak", [
+	choices.append(_choice(TranslationServer.translate("B2B_CHOICE_LEAVE_ALONE"), [
 		{"type": "b2b_retain_ignore", "customer_id": c.id},
 	]))
 	ev.choices = choices
@@ -81,20 +88,20 @@ static func build_expansion(c: Customer) -> GameEvent:
 	var ev := GameEvent.new()
 	ev.id = "ev_b2b_expand_%s" % c.id
 	ev.category = "reactive"
-	ev.title = "Büyüme fırsatı"
+	ev.title = TranslationServer.translate("B2B_EV_EXPANSION_TITLE")
 	ev.tags = ["build_safe", "b2b_expansion"]
 	ev.speaker_name = c.company_name
 	ev.speaker_role = B2BConstants.sector_contact(c.industry)
-	ev.speaker_status = "BÜYÜMEK İSTİYOR"
+	ev.speaker_status = TranslationServer.translate("SALES_CHIP_EXPANSION")
 	ev.speaker_status_kind = "positive"
-	ev.body_text = "Ekibimiz büyüyor, sistemi başka birimlere de yaymak istiyoruz. Koltuk ekleyelim."
+	ev.body_text = TranslationServer.translate("B2B_EV_EXPANSION_BODY")
 	var add_seats: int = B2BConstants.expansion_seats(c.company_size)
 	var choices: Array[EventChoice] = []
-	choices.append(_choice("Büyüt", [
+	choices.append(_choice(TranslationServer.translate("B2B_CHOICE_EXPAND"), [
 		{"type": "b2b_expand", "customer_id": c.id, "add_seats": add_seats,
 			"per_seat_mrr": B2BConstants.EXPANSION_PER_SEAT_MRR},
 	]))
-	choices.append(_choice("Şimdilik gerek yok", [
+	choices.append(_choice(TranslationServer.translate("B2B_CHOICE_NOT_YET"), [
 		{"type": "b2b_expand_decline", "customer_id": c.id},
 	]))
 	ev.choices = choices
@@ -108,17 +115,17 @@ static func build_cs_escalation(c: Customer, cs: Character) -> GameEvent:
 	var ev := GameEvent.new()
 	ev.id = "ev_b2b_escalation_%s" % c.id
 	ev.category = "reactive"
-	ev.title = "Müşteri temsilcisi uyarısı"
+	ev.title = TranslationServer.translate("B2B_EV_REP_WARN_TITLE")
 	ev.tags = ["build_safe", "b2b_escalation"]
 	ev.character_id = cs.id  # registry character strip: "<ad> · Müşteri Temsilcisi" (role_label)
 	var label: String = B2BConstants.feature_label(c.pain_feature_id)
-	ev.body_text = "Patron, %s bir süredir '%s' istiyor. Oyaladım ama artık tutamıyorum. Gideceklerdi, büyük müşteri, söz vermek zorunda kaldım. En kısa sürede yapalım." % [c.company_name, label]
+	ev.body_text = TranslationServer.translate("B2B_EV_REP_WARN_BODY").format({"company": c.company_name, "feature": label})
 	var choices: Array[EventChoice] = []
-	choices.append(_choice("Tamam, sözü tut", [
+	choices.append(_choice(TranslationServer.translate("B2B_CHOICE_KEEP_PROMISE"), [
 		{"type": "b2b_cs_promise_honor", "customer_id": c.id, "feature_id": c.pain_feature_id,
 			"deadline_days": B2BConstants.PROMISE_DEADLINE_DAYS},
 	]))
-	choices.append(_choice("Hayır, yapmıyoruz", [
+	choices.append(_choice(TranslationServer.translate("B2B_CHOICE_REFUSE"), [
 		{"type": "b2b_cs_promise_refuse", "customer_id": c.id},
 		{"type": "brand", "delta": -B2BConstants.CS_REFUSE_BRAND},
 		{"type": "morale", "character_id": cs.id, "delta": -B2BConstants.CS_REFUSE_MORALE},
@@ -227,35 +234,35 @@ static func build_cs_request(c: Customer, cs: Character) -> GameEvent:
 			# (Fix 5): below the hidden tolerance line the rep reports a HARD tone, above it a
 			# manageable one — same kind, different temperature. # WORKING TR
 			var voice: String = B2BConstants.complaint_voice(c.industry)
-			ev.title = "Müşteri şikâyeti"
+			ev.title = TranslationServer.translate("B2B_EV_COMPLAINT_TITLE")
 			if c.satisfaction < c.tolerance:
-				ev.body_text = "%s hattı arıyor, ton sert: \"%s\" Kendi başıma yatıştıramadım." % [c.company_name, voice]
+				ev.body_text = TranslationServer.translate("B2B_EV_COMPLAINT_HARD").format({"company": c.company_name, "voice": voice})
 			else:
-				ev.body_text = "%s hattı arıyor: \"%s\" Şimdilik idare ettim ama karar senin." % [c.company_name, voice]
+				ev.body_text = TranslationServer.translate("B2B_EV_COMPLAINT_SOFT").format({"company": c.company_name, "voice": voice})
 			var cut: int = maxi(int(round(float(c.mrr) * B2BConstants.CS_DISCOUNT_PCT / 100.0)), 1)
-			choices.append(_choice("İndirim ver", [
+			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_DISCOUNT"), [
 				{"type": "b2b_retain_discount", "customer_id": c.id, "mrr_delta": -cut},
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_DISCOUNT_SAT},
 			]))
-			choices.append(_choice("Düzeltme sözü ver", [
+			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_PROMISE_FIX"), [
 				{"type": "b2b_promise_create", "customer_id": c.id, "feature_id": c.pain_feature_id,
 					"deadline_days": B2BConstants.PROMISE_DEADLINE_DAYS},
 			]))
-			choices.append(_choice("Açıkla ve reddet", [
+			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_EXPLAIN_REFUSE"), [
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_EXPLAIN_SAT},
 			]))
 		B2BConstants.CS_KIND_RENEWAL:
-			ev.title = "Yenileme sinyali"
-			ev.body_text = "%s sözleşme yenilemesini sorguluyor. Fiyatı gözden geçiriyorlar; masaya oturmak gerek." % c.company_name
+			ev.title = TranslationServer.translate("B2B_EV_RENEWAL_TITLE")
+			ev.body_text = TranslationServer.translate("B2B_EV_RENEWAL_BODY").format({"company": c.company_name})
 			var cut2: int = maxi(int(round(float(c.mrr) * B2BConstants.CS_DISCOUNT_PCT / 100.0)), 1)
-			choices.append(_choice("Yenilemeyi görüş", [
+			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_NEGOTIATE_RENEWAL"), [
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_RENEWAL_TALK_SAT},
 			]))
-			choices.append(_choice("İndirimle bağla", [
+			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_BIND_DISCOUNT"), [
 				{"type": "b2b_retain_discount", "customer_id": c.id, "mrr_delta": -cut2},
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_DISCOUNT_SAT},
 			]))
-			choices.append(_choice("Beklet", [
+			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_HOLD"), [
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_RENEWAL_STALL_SAT},
 			]))
 		_:
@@ -263,29 +270,29 @@ static func build_cs_request(c: Customer, cs: Character) -> GameEvent:
 			# State colors the wording (Fix 5): an UNSHIPPED pain feature gets the customer's
 			# own pain line quoted; the company background (CompanyCatalog) may add ONE color
 			# clause — it flavors the file note, it never picks the subject. # WORKING TR
-			ev.title = "Müşteri talebi"
+			ev.title = TranslationServer.translate("B2B_EV_REQUEST_TITLE")
 			var live: Array = GameState.get_flag("mvp_components", [])
 			if c.pain_feature_id != "" and not live.has(c.pain_feature_id):
-				ev.body_text = "%s '%s' istiyor: \"%s\" Kendi başıma kapatamadım, karar senin." % [
-					c.company_name, label, B2BConstants.pain_phrase(c.pain_feature_id)]
+				ev.body_text = TranslationServer.translate("B2B_EV_REQUEST_BODY_VOICE").format({"company": c.company_name,
+					"feature": label, "voice": B2BConstants.pain_phrase(c.pain_feature_id)})
 			else:
-				ev.body_text = "%s '%s' istiyor. Kendi başıma kapatamadım, karar senin." % [c.company_name, label]
+				ev.body_text = TranslationServer.translate("B2B_EV_REQUEST_BODY_PLAIN").format({"company": c.company_name, "feature": label})
 			var background: String = CompanyCatalog.background_for(c.company_name)
 			if background != "":
-				ev.body_text += " Dosya notu: %s" % background
+				ev.body_text += " " + TranslationServer.translate("B2B_FILE_NOTE").format({"note": background})
 			# Aynı borç kapısı retention kartındaki gibi (bkz. build_retention): açık söz
 			# varken ikinci söz verilmez. pick_request_kind bu durumu −25 ile CEZALANDIRIYOR
 			# ama YASAKLAMIYOR — skor yine de FEATURE'ı seçebilir, ve seçtiğinde kart
 			# ikinci borcu teklif ederdi.
 			if not PromiseRegistry.has_open_for(c.id):
-				choices.append(_choice("Söz ver: '%s'" % label, [
+				choices.append(_choice(TranslationServer.translate("B2B_CHOICE_PROMISE").format({"feature": label}), [
 					{"type": "b2b_promise_create", "customer_id": c.id, "feature_id": c.pain_feature_id,
 						"deadline_days": B2BConstants.PROMISE_DEADLINE_DAYS},
 				]))
-			choices.append(_choice("Önceliklendir", [
+			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_PRIORITIZE"), [
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_PRIORITIZE_SAT},
 			]))
-			choices.append(_choice("Şimdilik olmaz", [
+			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_NOT_NOW"), [
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_REQUEST_IGNORE_SAT},
 			]))
 
