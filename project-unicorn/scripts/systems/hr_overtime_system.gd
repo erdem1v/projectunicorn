@@ -432,12 +432,14 @@ static func _end_block(dept_id: String, was_stopped: bool) -> void:
 		# but a block reaching its final night ends on its own — and a speed bonus that
 		# silently disappears is exactly the invisible state change Calibration Law 3
 		# forbids. Non-modal on purpose: this must not interrupt anyone.
-		EventBus.headline_added.emit(HRConstants.NOTICE_SOURCE_HR, "%s bölümünde %s süren ek mesai bitti." % [
-			HRConstants.department_label(dept_id), _block_label(length),
-		])
+		EventBus.headline_added.emit(HRConstants.notice_source_hr(),
+			TranslationServer.translate("HR_NEWS_OVERTIME_DONE").format({
+				"dept": HRConstants.department_label(dept_id),
+				"length": block_label(length),
+			}))
 	if OS.is_debug_build():
 		print("[HROvertimeSystem] %s ek mesai bitti (%s)"
-			% [dept_id, "durduruldu" if was_stopped else "blok tamamlandı"])
+			% [dept_id, "durduruldu" if was_stopped else TranslationServer.translate("HR_OVERTIME_BLOCK_DONE")])
 
 
 static func _reset_overtime_days(dept_id: String) -> void:
@@ -456,10 +458,14 @@ static func _block_length(block: Dictionary) -> int:
 	return maxi(int(block.get(KEY_BLOCK_DAYS, 0)), BLOCK_FIRST_DAY)
 
 
-static func _block_label(length: int) -> String:
-	# "3 gün" / "1 hafta" / "2 hafta" from HRConstants; a non-canon length still prints
-	# readable Turkish rather than a raw number.
-	return String(HRConstants.OVERTIME_BLOCK_LABELS.get(length, "%d gün" % length))
+## Overtime block length -> localized label ("3 gün"/"3 days", "1 hafta"/"1 week").
+## PUBLIC because the overtime panel renders it too; it used to reach into a constant
+## table in HRConstants, which is exactly the second source of truth this sweep removes.
+## A non-canon length still prints a readable duration rather than a raw number.
+static func block_label(length: int) -> String:
+	var key: String = "HR_OVERTIME_BLOCK_%d" % length
+	var out: String = TranslationServer.translate(key)
+	return out if out != key else TranslationServer.translate("HUNT_DAYS").format({"n": length})
 
 
 static func _valve_flag(character_id: String) -> String:

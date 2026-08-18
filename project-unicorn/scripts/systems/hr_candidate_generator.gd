@@ -37,7 +37,7 @@ extends RefCounted
 # Candidate file shape (plain Dictionary — transient data, no Resource):
 #   {"name": String, "role": String, "band": String,
 #    "axes": {"expertise": int, "pace": int, "rapport": int},
-#    "salary": int, "traits": Array[String], "note": String}
+#    "salary": int, "traits": Array[String], "note_index": int}
 
 
 # --- Deterministic mixer (arithmetic, NOT tunables) ---
@@ -124,8 +124,11 @@ static func generate(role_id: String, band_id: String, seed_value: int) -> Array
 			"axes": axes,
 			"salary": _salary_for(role_id, band_id, axes),
 			"traits": _pick_traits(seed_value, k, bool(carries_negative[k]), used_traits),
-			"note": _take_unused(HRConstants.FILE_NOTES, used_notes,
-				_mix(seed_value, SALT_NOTE + salt) % maxi(HRConstants.FILE_NOTES.size(), 1)),
+			# The INDEX is stored, never the sentence. A candidate file is state, and a
+			# stored sentence would freeze one language into it — the same rule that moved
+			# the B2C user-base name out of Customer.company_name.
+			"note_index": _take_unused_index(used_notes,
+				_mix(seed_value, SALT_NOTE + salt) % maxi(HRConstants.FILE_NOTES_COUNT, 1)),
 		})
 
 	# THE post-condition. Not a warning: a dominated file kills the mechanic, so it has to be
@@ -376,3 +379,17 @@ static func _floor_to(value: float, step: int) -> int:
 	if step <= 1:
 		return int(floor(value))
 	return int(floor(value / float(step))) * step
+
+
+## _take_unused's twin for a pool addressed by INDEX rather than by value. Needed because
+## the file note is stored as an index now (the sentence lives in strings.csv), and the
+## batch still has to avoid handing two candidates the same note. Same deterministic
+## forward walk, same bounded exhaustion behaviour.
+static func _take_unused_index(used: Array, start_index: int) -> int:
+	var size: int = maxi(HRConstants.FILE_NOTES_COUNT, 1)
+	for step in range(size):
+		var idx: int = (start_index + step) % size
+		if not used.has(idx):
+			used.append(idx)
+			return idx
+	return start_index % size

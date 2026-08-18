@@ -78,9 +78,9 @@ func _add_masthead() -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 2)
 	col.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(HRConstants.SEARCH_AGENCY_NAME), &"SectionLabel"))
+		UiTokens.tr_upper(HRConstants.search_agency_name()), &"SectionLabel"))
 	col.add_child(UiFactory.make_label(
-		"\"Doğru kişiyi bulmak zaman alır. Acele eden yanlış kişiyi bulur.\"", &"QuoteSerif"))
+		tr("HR_ATLAS_QUOTE"), &"QuoteSerif"))
 	row.add_child(col)
 	_root_box.add_child(row)
 	_root_box.add_child(HRUiShared.hairline())
@@ -89,7 +89,7 @@ func _add_masthead() -> void:
 # --- ADIM 1-2: rol + bant (Kare 2) ------------------------------------------
 
 func _build_search_step() -> void:
-	_root_box.add_child(UiFactory.make_section_header("Adım 1 · Rol"))
+	_root_box.add_child(UiFactory.make_section_header(tr("HR_ATLAS_STEP_ROLE")))
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 10)
@@ -98,7 +98,7 @@ func _build_search_step() -> void:
 		grid.add_child(_role_card(String(role_id)))
 	_root_box.add_child(grid)
 
-	_root_box.add_child(UiFactory.make_section_header("Adım 2 · Bütçe bandı"))
+	_root_box.add_child(UiFactory.make_section_header(tr("HR_ATLAS_STEP_BAND")))
 	var bands := HBoxContainer.new()
 	bands.add_theme_constant_override("separation", 10)
 	for band_id in HRConstants.BANDS:
@@ -186,10 +186,11 @@ func _fee_block() -> Control:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)
 	col.add_child(UiFactory.make_label(
-		"%s peşin, iade edilmez · işe alımda ilk ay maaşının %%%d'i komisyon · adaylar %d-%d gün içinde gelir" % [
-			HRUiShared.money(HRConstants.SEARCH_RETAINER),
-			int(round(HRConstants.SEARCH_COMMISSION_PCT * 100.0)),
-			HRConstants.SEARCH_ARRIVAL_MIN_DAYS, HRConstants.SEARCH_ARRIVAL_MAX_DAYS,
+		tr("HR_ATLAS_TERMS").format({
+			"retainer": HRUiShared.money(HRConstants.SEARCH_RETAINER),
+			"pct": int(round(HRConstants.SEARCH_COMMISSION_PCT * 100.0)),
+			"min": HRConstants.SEARCH_ARRIVAL_MIN_DAYS,
+			"max": HRConstants.SEARCH_ARRIVAL_MAX_DAYS,
 		], &"BodySerif"))
 	if _selected_role != "" and _selected_band != "":
 		var pv: Dictionary = HRSearchSystem.preview_search(_selected_role, _selected_band)
@@ -206,13 +207,13 @@ func _fee_block() -> Control:
 func _search_footer() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	row.add_child(HRUiShared.action_button("VAZGEÇ", _close))
+	row.add_child(HRUiShared.action_button(tr("HR_ATLAS_CANCEL"), _close))
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
-	var cta_label: String = "ARAYIŞI BAŞLAT · %s" % HRUiShared.money(HRConstants.SEARCH_RETAINER)
+	var cta_label: String = tr("HR_ATLAS_START").format({"amount": HRUiShared.money(HRConstants.SEARCH_RETAINER)})
 	if _selected_role == "" or _selected_band == "":
-		row.add_child(HRUiShared.disabled_button(cta_label, "Rol ve bütçe bandı seçilmeli."))
+		row.add_child(HRUiShared.disabled_button(cta_label, tr("HR_ATLAS_NEED_SELECTION")))
 		return row
 	var pv: Dictionary = HRSearchSystem.preview_search(_selected_role, _selected_band)
 	if not bool(pv.get("can_start", false)):
@@ -237,7 +238,7 @@ func _on_start_pressed() -> void:
 func _build_files_step() -> void:
 	var files: Array = HRSearchSystem.get_files()
 	_root_box.add_child(UiFactory.make_section_header(
-		"Aday dosyaları · %d" % files.size()))
+		tr("HR_ATLAS_FILES_COUNT").format({"n": files.size()})))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	for i in files.size():
@@ -247,7 +248,7 @@ func _build_files_step() -> void:
 	_root_box.add_child(HRUiShared.hairline())
 	# "İade edilmez" cümlesi burada YOK (bilgi-tekrarı kuralı: her bilgi bir kez, önem
 	# anında) — kayıp uyarısı _on_dismiss_pressed'in onay diyaloğunda, kararın tam anında.
-	var dismiss := HRUiShared.action_button("Hiçbirini alma", _on_dismiss_pressed)
+	var dismiss := HRUiShared.action_button(tr("HR_ATLAS_TAKE_NONE"), _on_dismiss_pressed)
 	dismiss.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_root_box.add_child(dismiss)
 
@@ -287,12 +288,12 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	col.add_child(UiFactory.make_label("\"%s\"" % String(file.get("note", "")), &"QuoteSerif"))
 	col.add_child(HRUiShared.axis_chips(file.get("axes", {})))
 	col.add_child(UiFactory.make_label(
-		"Maaş talebi %s/ay" % HRUiShared.money(int(file.get("salary", 0))), &"RowMeta"))
+		tr("HR_ATLAS_SALARY_ASK").format({"amount": HRUiShared.money(int(file.get("salary", 0)))}), &"RowMeta"))
 	if not Array(file.get("traits", [])).is_empty():
 		col.add_child(HRUiShared.trait_row(file.get("traits", []), true))
 
 	col.add_child(HRUiShared.hairline())
-	var cta_label: String = "İŞE AL · %s/AY" % HRUiShared.money(int(file.get("salary", 0)))
+	var cta_label: String = tr("HR_ATLAS_HIRE").format({"amount": HRUiShared.money(int(file.get("salary", 0)))})
 	if bool(pv.get("affordable", false)):
 		var on_hire: Callable = func() -> void: _on_hire_pressed(index)
 		var btn := HRUiShared.action_button(cta_label, on_hire, true)
@@ -329,10 +330,10 @@ func _on_dismiss_pressed() -> void:
 	# ConfirmModal ModalLayer'a (layer 10) gider, bu modal PanelLayer'da (layer 9) durur —
 	# yani onay her zaman üstte çizilir, artık ekleme sırasına bağlı olmadan.
 	EventBus.confirm_requested.emit({
-		"title": "Hiçbirini alma",
-		"body": "Hiçbirini almazsan arayış kapanır ve peşin ödenen %s geri gelmez." % HRUiShared.money(HRConstants.SEARCH_RETAINER),
-		"confirm_text": "Dosyaları kapat",
-		"cancel_text": "Vazgeç",
+		"title": tr("HR_ATLAS_TAKE_NONE"),
+		"body": tr("HR_ATLAS_CLOSE_BODY").format({"amount": HRUiShared.money(HRConstants.SEARCH_RETAINER)}),
+		"confirm_text": tr("HR_ATLAS_CLOSE_OK"),
+		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_dismiss,
 	})
 

@@ -4507,8 +4507,9 @@ static func _case_hr_constants_contract() -> String:
 			return "role '%s' has no display label" % role_id
 		if HRConstants.department_of(role_id) == "":
 			return "role '%s' has no department" % role_id
-		if not HRConstants.ROLE_AXIS_MEANING.has(role_id):
-			return "role '%s' has no per-axis meaning copy" % role_id
+		for axis_key in HRConstants.AXES:
+			if HRConstants.role_axis_meaning(role_id, axis_key) == "":
+				return "role '%s' has no meaning copy for axis '%s'" % [role_id, axis_key]
 	if HRConstants.role_label(HRConstants.ROLE_MENTOR) != "Operating Partner":
 		return "the mentor label drifted (it is already on screen): '%s'" % HRConstants.role_label(HRConstants.ROLE_MENTOR)
 	if HRConstants.roles_in_department(HRConstants.DEPT_PRODUCT_DEV).size() != 4:

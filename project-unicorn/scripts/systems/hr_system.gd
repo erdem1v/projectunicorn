@@ -95,7 +95,7 @@ static func tick_training() -> void:
 			# aynı yol).
 			# TranslationServer, tr() DEĞİL: statik fonksiyonun çeviri yapacağı bir
 			# Object'i yok (UiTokens.net_runway_parts ile aynı sebep).
-			EventBus.headline_added.emit(HRConstants.NOTICE_SOURCE_HR,
+			EventBus.headline_added.emit(HRConstants.notice_source_hr(),
 				TranslationServer.translate("HR_NEWS_TRAINING_DONE").format({
 					"name": emp.character_name,
 					"role": HRConstants.role_label(emp.role),
@@ -111,7 +111,7 @@ static func send_to_training(id: String) -> bool:
 	if GameState.cash < HRConstants.TRAINING_FEE:
 		return false
 	# Tek seferlik gider, HR gider hattına — işe alım retainer'ıyla aynı sızdırmazlık.
-	FinanceSystem.apply_one_time_cost(HRConstants.TRAINING_FEE, HRConstants.COST_LABEL_TRAINING)
+	FinanceSystem.apply_one_time_cost(HRConstants.TRAINING_FEE, HRConstants.cost_label_training())
 	CharacterRegistry.begin_training(id)
 	return true
 
@@ -210,11 +210,11 @@ static func tenure_line(emp: Character) -> String:
 	if emp == null:
 		return ""
 	if emp.hire_day > GameState.day:
-		return "Yarın başlıyor"
+		return TranslationServer.translate("HR_STATE_STARTS_TOMORROW")
 	if emp.hire_day == GameState.day:
-		return "Bugün başladı"
+		return TranslationServer.translate("HR_STATE_STARTS_TODAY")
 	var months: int = GameState.months_elapsed_since(emp.hire_day)
-	return "%s'tan beri · %d. ay" % [GameState.month_name_tr(emp.hire_day), months + 1]
+	return TranslationServer.translate("HR_TENURE_SINCE").format({"month": GameState.month_name_tr(emp.hire_day), "n": months + 1})
 
 
 static func leave_line(emp: Character) -> String:
@@ -223,4 +223,4 @@ static func leave_line(emp: Character) -> String:
 	# WORKING TR.
 	if emp == null or emp.status != HRConstants.STATUS_ON_LEAVE:
 		return ""
-	return "İzinde · %d gün kaldı" % HRMoraleSystem.days_until_return(emp)
+	return TranslationServer.translate("HR_STATE_ON_LEAVE_DAYS").format({"n": HRMoraleSystem.days_until_return(emp)})

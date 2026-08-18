@@ -51,3 +51,37 @@ One per product feature plus the fallback. In-voice statements of what the prosp
 
 ### Price tips (`sales_system`)
 `PRICE_TIP_PREMIUM` · `PRICE_TIP_VOLUME` — the two category-pricing judgements.
+
+---
+
+## B2 — HR (2026-08-19)
+
+### Employee voices (`hr_constants`)
+| Key | What it is |
+|---|---|
+| `HR_RESIGN_VOICE_1..4` | what a person says on the way out, one line each, first person |
+| `HR_VALVE_VOICE_1..3` | the overtime safety-valve warning, before anyone quits |
+| `HR_FILE_NOTE_1..12` | the one-line temperament note on a candidate file |
+
+### Trait catalogue (`HR_TRAIT_*_LABEL` / `_EFFECT`, 20 rows)
+Ten traits, each a name and an effect sentence. The names carry most of the character
+(`Kol kanat gerer`, `Havayı bozar`, `Bir ayağı kapıda`) and are the rows most worth a
+native pass — the current English is accurate but plainer than the Turkish.
+
+### Role help copy
+`HR_ROLE_HINT_*` (6) — one line per role naming what it accelerates.
+`HR_AXIS_MEANING_*` (12) — what each role's expertise / pace axis drives.
+
+### HR event bodies (`hr_event_factory`)
+`HR_EV_VALVE_BODY` · `HR_EV_CALM_BODY` · `HR_EV_SIGNED_BODY` · `HR_EV_SHIPPED_BODY` —
+the four morale beats. `HR_EV_CALM_BODY` in particular ("nobody is at a screen at eight in
+the evening, and it is noticed") is doing real tonal work in Turkish.
+
+### Warnings and previews
+`HR_WARN_RETAINER_CASH` · `HR_WARN_COMMISSION_CASH` · `HR_WARN_SALARY_CASHFLOW` ·
+`HR_OT_NOTE` · `HR_OT_EARLY_STOP` · `HR_ATLAS_QUOTE`.
+
+### Not for the pass
+`HR_AGENCY_NAME` ("Atlas Seçme & Yerleştirme") is deliberately identical in both columns —
+a proper noun, on the same rule that keeps `Ekonomi Postası` untranslated. Flagging it here
+only so it is not mistaken for a missed row.

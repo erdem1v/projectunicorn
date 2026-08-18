@@ -224,14 +224,14 @@ func _atlas_strip() -> Control:
 	var info := VBoxContainer.new()
 	info.add_theme_constant_override("separation", 2)
 	info.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(HRConstants.SEARCH_AGENCY_NAME), &"SectionLabel"))
+		UiTokens.tr_upper(HRConstants.search_agency_name()), &"SectionLabel"))
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	if state == HRConstants.SEARCH_FILES_READY:
 		info.add_child(UiFactory.make_label(
-			"%d aday dosyası masada." % HRSearchSystem.get_files().size(), &"BodySerif"))
+			tr("HR_FILES_ON_DESK").format({"n": HRSearchSystem.get_files().size()}), &"BodySerif"))
 		head.add_child(info)
-		head.add_child(HRUiShared.action_button("DOSYALARI AÇ", _open_atlas, true))
+		head.add_child(HRUiShared.action_button(tr("HR_OPEN_FILES"), _open_atlas, true))
 		col.add_child(head)
 		return card
 
@@ -241,13 +241,13 @@ func _atlas_strip() -> Control:
 	# Rol HRSearchSystem accessor'ından; GameState.hr_search sözlüğüne UI'dan uzanmak o
 	# sözlüğün sahibini atlamak olurdu.
 	var role_id: String = HRSearchSystem.current_role()
-	var line: String = "%s aranıyor · %d. gün" % [
-		HRConstants.role_label(role_id) if role_id != "" else "Aday",
-		HRSearchSystem.days_waiting(),
-	]
+	var line: String = tr("HR_SEARCHING").format({
+		"role": HRConstants.role_label(role_id) if role_id != "" else tr("HR_CANDIDATE_GENERIC"),
+		"n": HRSearchSystem.days_waiting(),
+	})
 	info.add_child(UiFactory.make_label(line, &"BodySerif"))
 	head.add_child(info)
-	head.add_child(HRUiShared.action_button("ARAYIŞI İPTAL ET", _on_cancel_search))
+	head.add_child(HRUiShared.action_button(tr("HR_SEARCH_CANCEL"), _on_cancel_search))
 	col.add_child(head)
 	return card
 
@@ -257,11 +257,11 @@ func _on_cancel_search() -> void:
 	# ama peşin ücreti yakıyor, o yüzden onay isteniyor. on_confirm bağlı METOT referansı
 	# (creation_flow'un confirm şekli) — sözlük içine çok satırlı lambda gömülmüyor.
 	EventBus.confirm_requested.emit({
-		"title": "Arayışı iptal et",
-		"body": "Atlas arayışı kapanır. Peşin ödenen %s iade edilmez." % HRUiShared.money(
-			HRConstants.SEARCH_RETAINER),
-		"confirm_text": "İptal et",
-		"cancel_text": "Vazgeç",
+		"title": tr("HR_SEARCH_CANCEL_TITLE"),
+		"body": tr("HR_SEARCH_CANCEL_BODY").format({
+			"amount": HRUiShared.money(HRConstants.SEARCH_RETAINER)}),
+		"confirm_text": tr("HR_SEARCH_CANCEL_OK"),
+		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_cancel_search,
 	})
 
@@ -387,9 +387,9 @@ func _empty_row(_dept_id: String) -> Control:
 func _overtime_control(dept_id: String) -> Control:
 	# Aktifken şerit ("EK MESAİ · N. GÜN"), değilken aksiyon butonu. İkisi de aynı
 	# paneli açıyor; panel aktif blokta DURDUR gösteriyor (erken durdurma).
-	var anchor_label: String = "EK MESAİ"
+	var anchor_label: String = tr("HR_OVERTIME_CHIP")
 	if HROvertimeSystem.is_active(dept_id):
-		anchor_label = "EK MESAİ · %d. GÜN" % HROvertimeSystem.day_index(dept_id)
+		anchor_label = tr("ODA_WINDOW_OVERTIME").format({"n": HROvertimeSystem.day_index(dept_id)})
 	var btn := Button.new()
 	btn.text = anchor_label
 	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -487,9 +487,9 @@ func _open_raise(emp: Character, anchor: Control) -> void:
 
 	var bounds := HBoxContainer.new()
 	bounds.add_theme_constant_override("separation", 8)
-	bounds.add_child(UiFactory.make_label("%%%d" % HRConstants.RAISE_MIN_PCT, &"RowMeta", UiTokens.INK_DIM))
+	bounds.add_child(UiFactory.make_label(Fmt.percent(HRConstants.RAISE_MIN_PCT, 0), &"RowMeta", UiTokens.INK_DIM))
 	bounds.add_child(slider)
-	bounds.add_child(UiFactory.make_label("%%%d" % HRConstants.RAISE_MAX_PCT, &"RowMeta", UiTokens.INK_DIM))
+	bounds.add_child(UiFactory.make_label(Fmt.percent(HRConstants.RAISE_MAX_PCT, 0), &"RowMeta", UiTokens.INK_DIM))
 
 	var commit := HRUiShared.action_button("", Callable(), true)
 	commit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -498,13 +498,13 @@ func _open_raise(emp: Character, anchor: Control) -> void:
 		# Önizlemenin TAMAMI motordan: preview_raise hazır Türkçe `lines` döndürüyor
 		# (moral önce→sonra, aylık yük önce→sonra), moral kazancı da ÖLÇEKLENMİŞ.
 		var pv: Dictionary = HRActions.preview_raise(emp, pct)
-		pct_label.text = "%%%d" % int(pv.get("pct", pct))
+		pct_label.text = Fmt.percent(int(pv.get("pct", pct)), 0)
 		for c in lines_box.get_children():
 			lines_box.remove_child(c)
 			c.queue_free()
 		for line in pv.get("lines", []):
 			lines_box.add_child(UiFactory.make_label(String(line), &"BodySerif"))
-		commit.text = "ZAMMI UYGULA · +%%%d" % int(pv.get("pct", pct))
+		commit.text = tr("HR_APPLY_RAISE_PCT").format({"pct": Fmt.percent(int(pv.get("pct", pct)), 0)})
 
 	slider.value_changed.connect(func(v: float) -> void: paint.call(int(v)))
 	commit.pressed.connect(func() -> void:
@@ -532,10 +532,10 @@ func _confirm_vacation(emp: Character) -> void:
 	if not bool(pv.get("ok", false)):
 		return
 	EventBus.confirm_requested.emit({
-		"title": "%s · tatile gönder" % emp.character_name,
+		"title": tr("HR_HOLIDAY_CONFIRM_TITLE").format({"name": emp.character_name}),
 		"body": "\n".join(PackedStringArray(pv.get("lines", []))),
-		"confirm_text": "Tatile gönder",
-		"cancel_text": "Vazgeç",
+		"confirm_text": tr("HR_HOLIDAY_CONFIRM_OK"),
+		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_vacation.bind(emp.id),
 	})
 
@@ -554,10 +554,10 @@ func _confirm_fire(emp: Character) -> void:
 	if not bool(pv.get("ok", false)):
 		return
 	EventBus.confirm_requested.emit({
-		"title": "%s · işten çıkar" % emp.character_name,
+		"title": tr("HR_FIRE_CONFIRM_TITLE").format({"name": emp.character_name}),
 		"body": "\n".join(PackedStringArray(pv.get("lines", []))),
-		"confirm_text": "İşten çıkar",
-		"cancel_text": "Vazgeç",
+		"confirm_text": tr("HR_FIRE_CONFIRM_OK"),
+		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_fire.bind(emp.id),
 	})
 

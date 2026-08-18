@@ -29,15 +29,12 @@ const AXIS_MIN := 0
 const AXIS_MAX := 9
 
 # Title case in data; every uppercase surface renders through UiTokens.tr_upper.
-const AXIS_LABELS := {
-	"expertise": "Uzmanlık",
-	"pace": "Hız",
-	"rapport": "Uyum",
-}
+# AXIS_LABELS is gone: the label is derived from the axis id (HR_AXIS_ + ID). See the
+# note over role_label for why every label table in this file left for strings.csv.
 
 
 static func axis_label(axis_key: String) -> String:
-	return String(AXIS_LABELS.get(axis_key, axis_key))
+	return _derived("HR_AXIS_", axis_key)
 
 
 static func default_axes() -> Dictionary:
@@ -93,30 +90,20 @@ const EMPLOYEE_ROLES := ["product_manager", "designer", "developer", "tester", "
 
 # Rol adları tam Türkçe; melez adlar kullanılmaz (design doc §1). The mockups' English
 # DESIGNER/DEVELOPER/TESTER chips are pre-canon.
-const ROLE_LABELS := {
-	"product_manager": "Ürün Yöneticisi",
-	"designer": "Tasarımcı",
-	"developer": "Yazılımcı",
-	"tester": "Test Uzmanı",
-	"sales_rep": "Satış Uzmanı",
-	"customer_rep": "Müşteri Temsilcisi",
-	"founder": "Kurucu",
-	# BYTE-EXACT, DO NOT TRANSLATE: already on screen today via mentor_intro_modal and the
-	# three live JSON events whose character_id is char_mentor_frank. Changing it is a
-	# visible regression in the paid-tier and first-revenue moments.
-	"mentor": "Operating Partner",
-}
+# ROLE_LABELS, DEPT_LABELS, SECTION_LABELS, BAND_LABELS and BADGE_LABELS all left this
+# file for strings.csv (Lokalizasyon Faz 2 · B2). The label is now DERIVED from the id the
+# code already carries — HR_ROLE_ + ID, HR_DEPT_ + ID, and so on — so one id yields one row
+# in both languages and a table can no longer drift from the CSV.
+#
+# "Operating Partner" is still BYTE-EXACT in both columns: it is already on screen via
+# mentor_intro_modal and the three live JSON events whose character_id is char_mentor_frank,
+# and the glossary rules it untranslatable. It is a CSV row now, but the same row twice.
+#
+# Derived keys are invisible to a grep for tr("LITERAL"), so `loc_hr_derived_keys` walks the
+# real id lists and asserts each key resolves in both locales.
 
 # What each role's UZMANLIK / HIZ axis drives (design doc §4 table). Player-facing help
 # copy for the candidate file and the HR card; the mechanics live in the Coupling task.
-const ROLE_AXIS_MEANING := {
-	"product_manager": {"expertise": "Deneyim ekip bonusu", "pace": "Tasarım fazına ikincil hız"},
-	"designer": {"expertise": "Tasarım kalitesi katkısı", "pace": "Tasarım fazı hızı"},
-	"developer": {"expertise": "Kod kalitesi (hata çarpanı)", "pace": "Geliştirme hızı"},
-	"tester": {"expertise": "Hata bulma isabeti", "pace": "Bulma ve çözme temposu"},
-	"sales_rep": {"expertise": "Anlaşma kapama gücü", "pace": "Aday üretim hızı"},
-	"customer_rep": {"expertise": "Müşteri tutma", "pace": "Talep işleme temposu"},
-}
 
 # One-line, founder-voice effect per role — what hiring this person actually buys you,
 # in the player's own language (iç-not sicili emekli: "TASARIM fazına ikincil hız" tarzı
@@ -126,34 +113,18 @@ const ROLE_AXIS_MEANING := {
 # without this comment being wrong too. The Coupling task's UI obligation stands:
 # "oyuncu 'yazılımcı aldım, tasarım hızlanmadı' şaşkınlığını yaşamasın, bunu bilerek alsın."
 # WORKING TR (voice pass later).
-const ROLE_PHASE_HINT := {
-	"product_manager": "Ekibe yön verir: ürünün deneyim tavanını yükseltir, tasarıma hız katar.",
-	"designer": "Tasarım aşamasını hızlandırır, tasarım kalitesinin tavanını yükseltir.",
-	"developer": "Geliştirmeyi hızlandırır, kod kalitesinin tavanını yükseltir.",
-	"tester": "Hataları yayına çıkmadan yakalar, beta süresini kısaltır.",
-	"sales_rep": "Kendi müşteri adaylarını bulur, anlaşmaları senin yerine kapatır.",
-	"customer_rep": "Müşteri taleplerine yetişir, müşteri kaybını yavaşlatır.",
-}
 
 const DEPT_PRODUCT_DEV := "product_dev"
 const DEPT_SALES := "sales"
 const DEPT_CUSTOMER := "customer"
 # Overtime is started per MAIN department, never per sub-section (design doc §7b).
 const DEPARTMENTS := ["product_dev", "sales", "customer"]
-const DEPT_LABELS := {
-	"product_dev": "Ürün Geliştirme",
-	"sales": "Satış",
-	"customer": "Müşteri",
-}
+
 
 const SECTION_DESIGN := "design"
 const SECTION_DEVELOPMENT := "development"
 const SECTION_TEST := "test"
-const SECTION_LABELS := {
-	"design": "Tasarım",
-	"development": "Geliştirme",
-	"test": "Test",
-}
+
 
 # Department and section are DERIVED from role, never stored on Character — one source
 # of truth, no sync risk (the audit's §5 recommendation). Sales and Müşteri are
@@ -176,13 +147,24 @@ const ROLE_SECTION := {
 }
 
 
+## Never let a raw internal code reach the screen: an unknown id screams in the log and
+## falls back to itself, so a typo surfaces there rather than silently in the UI.
 static func role_label(role_id: String) -> String:
-	# Never let a raw internal code reach the screen: an unknown id falls back to itself
-	# only after screaming, so a typo surfaces in the log rather than in the UI silently.
-	if not ROLE_LABELS.has(role_id):
+	if not ROLE_DEPARTMENT.has(role_id) and role_id not in [ROLE_FOUNDER, ROLE_MENTOR]:
 		push_error("[HRConstants] role_label on unknown role id: '%s'" % role_id)
 		return role_id
-	return String(ROLE_LABELS[role_id])
+	return _derived("HR_ROLE_", role_id)
+
+
+## id -> localized label. TranslationServer (not tr()) because this file is all statics;
+## an unresolved key returns the id itself, which the callers above already treat as the
+## "screamed" case rather than rendering a raw token as if it were copy.
+static func _derived(prefix: String, id: String) -> String:
+	if id == "":
+		return ""
+	var key: String = prefix + id.to_upper()
+	var out: String = TranslationServer.translate(key)
+	return out if out != key else id
 
 
 static func is_employee_role(role_id: String) -> bool:
@@ -198,11 +180,11 @@ static func section_of(role_id: String) -> String:
 
 
 static func department_label(dept_id: String) -> String:
-	return String(DEPT_LABELS.get(dept_id, dept_id))
+	return _derived("HR_DEPT_", dept_id)
 
 
 static func section_label(section_id: String) -> String:
-	return String(SECTION_LABELS.get(section_id, section_id))
+	return _derived("HR_SECTION_", section_id)
 
 
 static func roles_in_department(dept_id: String) -> Array:
@@ -227,10 +209,12 @@ static func section_ids_in_department(dept_id: String) -> Array:
 	return out
 
 
+## One line naming what this role accelerates. Empty for non-employee roles (founder /
+## mentor advertise no build-phase contribution) — the caller renders nothing.
 static func role_phase_hint(role_id: String) -> String:
-	# One line naming what this role accelerates. Empty for non-employee roles (kurucu/mentor
-	# have no build-phase contribution to advertise) — the caller renders nothing.
-	return String(ROLE_PHASE_HINT.get(role_id, ""))
+	if not is_employee_role(role_id):
+		return ""
+	return _derived("HR_ROLE_HINT_", role_id)
 
 
 static func role_lock_reason_key(role_id: String) -> String:
@@ -272,65 +256,48 @@ static func is_role_hireable(role_id: String) -> bool:
 #   coordination_bonus  DORMANT — koordinasyon çarpanı, HR Coupling (task 2) uygular
 #   no_team_bonus       DORMANT — ekip taraflı bonus terimleri, Coupling uygular
 #   non_lead_mult       DORMANT — sorumlu değilken katkı çarpanı, Coupling uygular
+# Copy fields (label / effect_text) LEFT this table for strings.csv; what remains is the
+# MECHANICS (polarity and the effect numbers). The words are derived from the trait id —
+# HR_TRAIT_<ID>_LABEL / _EFFECT — so a trait cannot exist with a label in one language only.
 const TRAITS := {
 	"warms_up_fast": {
-		"label": "Çabuk ısınır",
 		"polarity": "positive",
-		"effect_text": "Morali bir tabanın altına inmez",
 		"morale_floor": 35,
 	},
 	"pressure_proof": {
-		"label": "Baskıya dayanıklı",
 		"polarity": "positive",
-		"effect_text": "Moral düşüşleri ve ek mesai bedeli yarı yarıya",
 		"morale_drop_mult": 0.5,
 	},
 	"mentors_peers": {
-		"label": "Kol kanat gerer",
 		"polarity": "positive",
-		"effect_text": "Aynı bölümdeki arkadaşlarına moral desteği verir",
 		"dept_morale_weekly": 2,
 	},
 	"wont_jump_ship": {
-		"label": "Gemiyi terk etmez",
 		"polarity": "positive",
-		"effect_text": "Zor koşulda bile ayrılmaya daha az meyilli",
 		"resign_chance_mult": 0.6,
 	},
 	"natural_leader": {
-		"label": "Doğal lider",
 		"polarity": "positive",
-		"effect_text": "Sorumlu olduğunda ekibi daha iyi koordine eder",
 		"coordination_bonus": 0.05,
 	},
 	"works_alone": {
-		"label": "Yalnız çalışır",
 		"polarity": "negative",
-		"effect_text": "Ekibe katkı vermez, yalnız kendi işini yapar",
 		"no_team_bonus": true,
 	},
 	"glass_heart": {
-		"label": "Cam kalp",
 		"polarity": "negative",
-		"effect_text": "Moral düşüşleri ve ek mesai bedeli iki katı",
 		"morale_drop_mult": 2.0,
 	},
 	"sours_the_room": {
-		"label": "Havayı bozar",
 		"polarity": "negative",
-		"effect_text": "Aynı bölümdeki arkadaşlarının moralini aşağı çeker",
 		"dept_morale_weekly": -2,
 	},
 	"one_foot_out": {
-		"label": "Bir ayağı kapıda",
 		"polarity": "negative",
-		"effect_text": "Kötü giderse ayrılmaya daha meyilli",
 		"resign_chance_mult": 1.6,
 	},
 	"needs_direction": {
-		"label": "Söylenmezse yapmaz",
 		"polarity": "negative",
-		"effect_text": "Sorumlu değilken belirgin biçimde az katkı verir",
 		"non_lead_mult": 0.5,
 	},
 }
@@ -348,11 +315,13 @@ const TRAIT_DEPT_MORALE_PERIOD_DAYS := 7
 
 
 static func trait_label(trait_id: String) -> String:
-	return String((TRAITS.get(trait_id, {}) as Dictionary).get("label", trait_id))
+	return _derived("HR_TRAIT_", trait_id + "_LABEL")
 
 
 static func trait_effect_text(trait_id: String) -> String:
-	return String((TRAITS.get(trait_id, {}) as Dictionary).get("effect_text", ""))
+	if not TRAITS.has(trait_id):
+		return ""
+	return _derived("HR_TRAIT_", trait_id + "_EFFECT")
 
 
 static func trait_polarity(trait_id: String) -> String:
@@ -444,11 +413,7 @@ const BANDS := ["junior", "mid", "senior"]
 # Bant adları BÜTÇE SEVİYESİ söyler, havuz boyutu değil — aday sayısı her bantta
 # CANDIDATE_COUNT'tur ("dar havuz" daha az aday İMA ettiği için emekli edildi).
 # WORKING TR (voice pass later).
-const BAND_LABELS := {
-	"junior": "ekonomik",
-	"mid": "dengeli",
-	"senior": "üst segment",
-}
+
 
 # Developer bands are the mockup anchor ($5-8K / $8-12K / $12-18K); the other roles
 # are offsets from it. ALL WORKING — the balance pass owns these.
@@ -487,7 +452,7 @@ static func salary_band(role_id: String, band_id: String) -> Array:
 
 
 static func band_label(band_id: String) -> String:
-	return String(BAND_LABELS.get(band_id, band_id))
+	return _derived("HR_BAND_", band_id)
 
 
 static func band_shape(band_id: String, profile_index: int = 0) -> Array:
@@ -499,7 +464,11 @@ static func band_shape(band_id: String, profile_index: int = 0) -> Array:
 
 # ========================= Search (Atlas Seçme & Yerleştirme) ================
 # Çift ücret (design doc §2, KANON): peşin retainer + işe alımda komisyon.
-const SEARCH_AGENCY_NAME := "Atlas Seçme & Yerleştirme"
+# The agency is a PROPER NOUN and stays itself in both languages, on the same rule that
+# keeps "Ekonomi Postası" untranslated on the ending gazette (glossary §6). It is a CSV
+# row so it is not residue, but the row carries the same value twice.
+static func search_agency_name() -> String:
+	return TranslationServer.translate("HR_AGENCY_NAME")
 const SEARCH_RETAINER := 600            # peşin, iptalde İADE EDİLMEZ
 const SEARCH_COMMISSION_PCT := 0.15     # işe alımda ilk ay maaşının oranı
 const SEARCH_ARRIVAL_MIN_DAYS := 2      # dosyalar en erken bu kadar gün sonra gelir
@@ -509,13 +478,24 @@ const SALARY_SPREAD_MAX := 0.15         # en pahalı/en ucuz − 1 üst sınır�
 const SALARY_PEAK_PREMIUM := 0.10       # WORKING: keskin uzman, düz profilden bu oranda pahalı
 
 # Finance one-time charge labels (FinanceSystem.apply_one_time_cost's ledger hook).
-const COST_LABEL_HIRE := "İşe alım"
-const COST_LABEL_SEVERANCE := "Kıdem tazminatı"
-const COST_LABEL_TRAINING := "Eğitim ücreti"   # DENEYİM/EĞİTİM tek seferlik gideri
+# Cost labels are FUNCTIONS now, not consts: a const is evaluated once at load, long before
+# a locale can be chosen, so it would have frozen whichever language happened to be active.
+static func cost_label_hire() -> String:
+	return TranslationServer.translate("HR_COST_HIRING")
+
+
+static func cost_label_severance() -> String:
+	return TranslationServer.translate("HR_COST_SEVERANCE")
+
+
+static func cost_label_training() -> String:
+	return TranslationServer.translate("HR_COST_TRAINING")
 
 # Ticker attribution (EventBus.headline_added source). Shared so the HR systems do not each
 # hold their own copy of the same literal.
-const NOTICE_SOURCE_HR := "İK"
+# Localized at emit time; see the sibling note in B2BConstants for the staleness contract.
+static func notice_source_hr() -> String:
+	return TranslationServer.translate("HR_LABEL_HR")
 
 # apply_delta reason vocabulary — debug/telemetry only, never player-facing, but it needs a
 # single home or every caller invents its own spelling.
@@ -559,12 +539,7 @@ const MORALE_RAISE_AT_MAX_PCT := 16 # %15 zamda moral kazancı (WORKING)
 const BADGE_FLIGHT_RISK := "FLIGHT_RISK"
 const BADGE_BURNING_OUT := "BURNING_OUT"
 const BADGE_OVERLOADED := "OVERLOADED"
-const BADGE_LABELS := {
-	"FLIGHT_RISK": "Kaçma riski",
-	"BURNING_OUT": "Tükeniyor",
-	"OVERLOADED": "Aşırı yüklü",
-	"NEW": "Yeni",
-}
+
 # Worst-first severity, matching the order HRSystem.badges_for returns. Exposed so a card
 # list can sort "needs attention" rows to the top without re-deciding which badge is worse.
 const BADGE_SEVERITY := {
@@ -602,7 +577,7 @@ const EXPERTISE_CAP := 8             # WORKING: eğitimin UZMANLIK tavanı (AXIS
 
 
 static func badge_label(badge_id: String) -> String:
-	return String(BADGE_LABELS.get(badge_id, badge_id))
+	return _derived("HR_BADGE_", badge_id)
 
 
 static func badge_severity(badge_id: String) -> int:
@@ -775,11 +750,7 @@ static func severance_amount(monthly_salary: int, days_served: int) -> int:
 # Üç blok; departman başlığından başlatılır, alt bölümden değil (design doc §7b).
 # Founder katılır ama EK ÜCRET ALMAZ. İzindeki çalışan asla katılmaz.
 const OVERTIME_BLOCKS := [3, 7, 14]           # gün: 3 gün · 1 hafta · 2 hafta
-const OVERTIME_BLOCK_LABELS := {
-	3: "3 gün",
-	7: "1 hafta",
-	14: "2 hafta",
-}
+
 # Kazanç — bu task yalnız SORGULANABİLİR yapar; build/satış/CS formüllerine bağlamak
 # HR Coupling (task 2) işidir (state vs application: tek formül evi korunur).
 const OVERTIME_SPEED_BONUS_EARLY := 0.30      # 1-7. gün hız kazancı
@@ -836,64 +807,69 @@ const POSITIVE_EVENT_COOLDOWN_DAYS := 14
 # so the same person always says the same line. WORKING TR — the content sprint replaces
 # the copy, not the mechanism. Ayrılış isim ve yüzle, TEK REPLİKLİ event olarak sunulur
 # (design doc §6), so these are one line each and stay in first person.
-const RESIGN_VOICE := [
-	"\"Bir süre düşündüm. Burada tükeniyorum, daha fazla taşımak istemiyorum.\"",
-	"\"Kimseyle sorunum yok. Sadece her sabah biraz daha zor kalkıyorum. O kadar.\"",
-	"\"Bana kötü davranıldı demeyeceğim. Ama fark edilmedim.\"",
-	"\"Başka bir yerden teklif geldi. Doğrusunu istersen, aramayı ben yaptım.\"",
-]
-const VALVE_VOICE := [
-	"\"Bu tempoyla devam edemem. Şimdi söylüyorum ki sonra sürpriz olmasın.\"",
-	"\"Haftalardır eve gece yarısı gidiyorum. Bir yere kadar.\"",
-	"\"Kimse sormadı diye iyi olduğum sanılmasın.\"",
-]
+# RESIGN_VOICE left this file for strings.csv: the lines are copy, and an array of copy in
+# code cannot carry a second language. RESIGN_VOICE_COUNT is the pool size; resign_voice_line(i)
+# resolves the row. Index stays the selector, so the deterministic
+# id-hash pick that chose a line still chooses the same one.
+const RESIGN_VOICE_COUNT := 4
 
 
+static func resign_voice_line(index: int) -> String:
+	return TranslationServer.translate("HR_RESIGN_VOICE_%d" % (posmod(index, RESIGN_VOICE_COUNT) + 1))
+# VALVE_VOICE left this file for strings.csv: the lines are copy, and an array of copy in
+# code cannot carry a second language. VALVE_VOICE_COUNT is the pool size; valve_voice_line(i)
+# resolves the row. Index stays the selector, so the deterministic
+# id-hash pick that chose a line still chooses the same one.
+const VALVE_VOICE_COUNT := 3
+
+
+static func valve_voice_line(index: int) -> String:
+	return TranslationServer.translate("HR_VALVE_VOICE_%d" % (posmod(index, VALVE_VOICE_COUNT) + 1))
+
+
+## Deterministically indexed by character id, so the same person always says the same
+## line — the index is the selector, the sentence lives in strings.csv.
 static func resign_voice(character_id: String) -> String:
-	return String(RESIGN_VOICE[absi(character_id.hash()) % RESIGN_VOICE.size()])
+	return resign_voice_line(absi(character_id.hash()))
 
 
 static func valve_voice(character_id: String) -> String:
-	return String(VALVE_VOICE[absi(character_id.hash()) % VALVE_VOICE.size()])
+	return valve_voice_line(absi(character_id.hash()))
 
 
+## HR money. DELEGATES to Fmt now: this used to be a private dot-grouping copy, and its own
+## comment already admitted "the wider codebase has several private copies of this". A
+## private copy is a locale bug waiting to happen, and it was one — the English HR page
+## rendered a Turkish-grouped "$43.600" until this line changed.
 static func money_tr(amount: int) -> String:
-	# "$1.500" — Turkish thousands separator. One home for the HR module so the event copy
-	# and the action previews cannot disagree about how money reads. (The wider codebase has
-	# several private copies of this; unifying them all is a separate editorial pass.)
-	var digits: String = str(absi(amount))
-	var out: String = ""
-	var count: int = 0
-	for i in range(digits.length() - 1, -1, -1):
-		out = digits[i] + out
-		count += 1
-		if count % 3 == 0 and i > 0:
-			out = "." + out
-	return "$%s" % out
+	return Fmt.money_exact(amount)
 
 
 # ============================ Aday dosyası içeriği ===========================
 # WORKING content — deterministically indexed by the generator's pure hash, never RNG.
 const FIRST_NAMES := [
-	"Kerem", "Selin", "Arda", "Deniz", "Ece", "Mert", "Zeynep", "Baran",
-	"Elif", "Onur", "Sena", "Kaan", "Bilge", "Tolga", "Nehir", "Emre",
+	"Kerem", "Selin", "Arda", "Deniz", "Ece", "Mert", "Zeynep", "Baran",   # LOC-DATA name pool
+	"Elif", "Onur", "Sena", "Kaan", "Bilge", "Tolga", "Nehir", "Emre",   # LOC-DATA name pool
 ]
 const LAST_NAMES := [
-	"Aksoy", "Koç", "Güneş", "Demir", "Kaya", "Arslan", "Yıldız", "Çetin",
-	"Doğan", "Şahin", "Erdem", "Polat", "Tekin", "Uysal",
+	"Aksoy", "Koç", "Güneş", "Demir", "Kaya", "Arslan", "Yıldız", "Çetin",   # LOC-DATA name pool
+	"Doğan", "Şahin", "Erdem", "Polat", "Tekin", "Uysal",   # LOC-DATA name pool
 ]
 # Tek satırlık dosya notu — mizaç verir, skill tekrarı yapmaz.
-const FILE_NOTES := [
-	"Sorulardan çok cevapları seviyor.",
-	"CV'si kısa, referansları uzun.",
-	"İki startup batırmış, üçüncüye hazır.",
-	"Görüşmeye kendi yaptığı bir şeyle gelmiş.",
-	"Son işinde kimse gitmesini istemedi.",
-	"Konuşmaktan çok not aldı.",
-	"Maaşı sordu, sonra ürünü sordu, sırayı fark etti.",
-	"Büyük şirketten geliyor, küçüğü merak ediyor.",
-	"Uzun bir aradan sonra dönüyor.",
-	"Herkesi tanıyor, kimseyle çalışmamış.",
-	"Teknik soruda durdu, düşündü, doğru cevapladı.",
-	"Eski ekibinden iki kişi onu tavsiye etti.",
-]
+# FILE_NOTES left this file for strings.csv: the lines are copy, and an array of copy in
+# code cannot carry a second language. FILE_NOTES_COUNT is the pool size; file_notes_line(i)
+# resolves the row. Index stays the selector, so the deterministic
+# id-hash pick that chose a line still chooses the same one.
+const FILE_NOTES_COUNT := 12
+
+
+static func file_notes_line(index: int) -> String:
+	return TranslationServer.translate("HR_FILE_NOTE_%d" % (posmod(index, FILE_NOTES_COUNT) + 1))
+
+
+## What a role's expertise / pace axis drives, as player-facing help copy. Derived from the
+## role id and the axis id together (HR_AXIS_MEANING_<ROLE>_<AXIS>).
+static func role_axis_meaning(role_id: String, axis_key: String) -> String:
+	if not is_employee_role(role_id):
+		return ""
+	return _derived("HR_AXIS_MEANING_", role_id + "_" + axis_key)

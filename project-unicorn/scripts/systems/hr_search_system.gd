@@ -14,7 +14,7 @@ extends RefCounted
 # HRConstants, and the mixer consts below are arithmetic, not balance.
 #
 # WRITE-THROUGH LAW: cash moves ONLY through FinanceSystem.apply_one_time_cost (the retainer
-# and the commission, both under HRConstants.COST_LABEL_HIRE); the employee is created ONLY
+# and the commission, both under HRConstants.cost_label_hire()); the employee is created ONLY
 # through CharacterRegistry.add, which stamps hire_day/leave_month, key-locks role/axes/traits
 # and counts run_hires; the arrival reaches the player ONLY as EventBus.headline_added. Payroll
 # never gets pushed anywhere — FinanceSystem PULLS it at slot 5, so a hire changes burn by
@@ -156,7 +156,7 @@ static func start_search(role_id: String, band_id: String) -> bool:
 	}
 	# Peşin retainer, charged ONCE here and never refunded (design doc §2, çift ücret). Same
 	# ledger label as the commission: both lines are what Atlas costs.
-	FinanceSystem.apply_one_time_cost(HRConstants.SEARCH_RETAINER, HRConstants.COST_LABEL_HIRE)
+	FinanceSystem.apply_one_time_cost(HRConstants.SEARCH_RETAINER, HRConstants.cost_label_hire())
 	return true
 
 
@@ -220,7 +220,7 @@ static func hire(candidate_index: int) -> Character:
 	# SEVERANCE_MIN_MONTHS, so a same-day dismissal pays one month rather than a negative tenure.
 	emp.hire_day = GameState.day + 1
 	# Komisyon: charged ONCE, here, on the hire only — dismissing the files charges nothing.
-	FinanceSystem.apply_one_time_cost(HRConstants.commission_for(salary), HRConstants.COST_LABEL_HIRE)
+	FinanceSystem.apply_one_time_cost(HRConstants.commission_for(salary), HRConstants.cost_label_hire())
 	if role_id == HRConstants.ROLE_DEVELOPER:
 		# needs_engineer is ProductSystem's bug-sprint pressure signal, and a hire is that
 		# flag's answer — so the answer clears the question. HRMoraleSystem.is_capacity_overloaded
@@ -246,9 +246,9 @@ static func preview_search(role_id: String, band_id: String) -> Dictionary:
 	var cash_after: int = GameState.cash - retainer
 	var warnings: Array[String] = []
 	if GameState.cash < retainer:
-		warnings.append("Peşin ücret kasadaki nakitten fazla, bu ödeme kasayı eksiye düşürür.")
+		warnings.append(TranslationServer.translate("HR_WARN_RETAINER_CASH"))
 	if not can_start():
-		warnings.append("Zaten açık bir arayış var, kapanmadan yenisi başlamaz.")
+		warnings.append(TranslationServer.translate("HR_WARN_SEARCH_OPEN"))
 	var valid: bool = HRConstants.is_employee_role(role_id) and HRConstants.BANDS.has(band_id)
 	var band: Array = HRConstants.salary_band(role_id, band_id)
 	var band_low: int = 0
@@ -266,7 +266,10 @@ static func preview_search(role_id: String, band_id: String) -> Dictionary:
 		"band_label": HRConstants.band_label(band_id),
 		# What UZMANLIK and HIZ actually drive for THIS role (design doc §4 table) — the help
 		# copy the arayış card prints so the player picks a band for a reason.
-		"axis_meaning": HRConstants.ROLE_AXIS_MEANING.get(role_id, {}),
+		"axis_meaning": {
+			HRConstants.AXIS_EXPERTISE: HRConstants.role_axis_meaning(role_id, HRConstants.AXIS_EXPERTISE),
+			HRConstants.AXIS_PACE: HRConstants.role_axis_meaning(role_id, HRConstants.AXIS_PACE),
+		},
 		"candidate_count": HRConstants.CANDIDATE_COUNT,
 		"retainer": retainer,
 		"arrival_min_days": HRConstants.SEARCH_ARRIVAL_MIN_DAYS,
@@ -305,7 +308,7 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 		"band_label": "",
 		"axes": {},
 		"traits": no_traits,
-		"note": "",
+		"note_index": -1,
 		"salary": 0,
 		"commission": 0,
 		"payroll_before": payroll_before,
@@ -340,9 +343,9 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	var net_after: int = GameState.get_daily_revenue() - burn_after
 	var cash_after: int = GameState.cash - commission
 	if GameState.cash < commission:
-		warnings.append("Komisyon kasadaki nakitten fazla, bu ödeme kasayı eksiye düşürür.")
+		warnings.append(TranslationServer.translate("HR_WARN_COMMISSION_CASH"))
 	if net_before >= 0 and net_after < 0:
-		warnings.append("Bu maaş nakit akışını eksiye çevirir, kasa erimeye başlar.")
+		warnings.append(TranslationServer.translate("HR_WARN_SALARY_CASHFLOW"))
 
 	out["valid"] = true
 	out["name"] = String(file.get("name", ""))
@@ -352,7 +355,7 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	out["band_label"] = HRConstants.band_label(String(file.get("band", "")))
 	out["axes"] = _axes_copy(file.get("axes", {}))
 	out["traits"] = _traits_copy(file.get("traits", []))
-	out["note"] = String(file.get("note", ""))
+	out["note"] = HRConstants.file_notes_line(int(file.get("note_index", 0)))
 	out["salary"] = salary
 	out["commission"] = commission
 	out["payroll_after"] = payroll_after
@@ -379,8 +382,8 @@ static func _deliver_files() -> void:
 	# the player looks. Interrupting the day for a piece of post would be the wrong register for
 	# a beat the player asked for and is already waiting on.
 	EventBus.headline_added.emit(
-		HRConstants.SEARCH_AGENCY_NAME,
-		"%s arayışı için %d aday dosyası masanda." % [HRConstants.role_label(role_id), files.size()]
+		HRConstants.search_agency_name(),
+		TranslationServer.translate("HR_NEWS_FILES_READY").format({"role": HRConstants.role_label(role_id), "n": files.size()})
 	)
 	if OS.is_debug_build():
 		print("[HRSearchSystem] %d aday dosyası hazır (%s / %s, seed %d)" % [files.size(), role_id, band_id, seed_value])

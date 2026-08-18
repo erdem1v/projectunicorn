@@ -96,8 +96,8 @@ static func tick_leave_returns() -> void:
 			apply_delta(emp, HRConstants.MORALE_VACATION_RETURN, HRConstants.REASON_VACATION_RETURN)
 		else:
 			apply_delta(emp, HRConstants.MORALE_LEAVE_RETURN, HRConstants.REASON_LEAVE_RETURN)
-		var whence: String = "tatilden" if was_manual else "izinden"
-		EventBus.headline_added.emit(HRConstants.NOTICE_SOURCE_HR, "%s %s döndü" % [emp.character_name, whence])
+		var whence: String = TranslationServer.translate("HR_WHENCE_HOLIDAY") if was_manual else TranslationServer.translate("HR_WHENCE_LEAVE")
+		EventBus.headline_added.emit(HRConstants.notice_source_hr(), TranslationServer.translate("HR_NEWS_BACK_FROM").format({"name": emp.character_name, "whence": whence}))
 
 
 static func tick_leave_departures() -> void:
@@ -397,9 +397,9 @@ static func send_on_leave(emp: Character, days: int, is_manual: bool) -> void:
 	# Non-interrupting notice: nobody is asked to APPROVE leave (design doc §8), so this is a
 	# ticker line and never a modal.
 	if is_manual:
-		EventBus.headline_added.emit(HRConstants.NOTICE_SOURCE_HR, "%s %d gün tatilde" % [emp.character_name, days])
+		EventBus.headline_added.emit(HRConstants.notice_source_hr(), TranslationServer.translate("HR_NEWS_ON_HOLIDAY").format({"name": emp.character_name, "n": days}))
 	else:
-		EventBus.headline_added.emit(HRConstants.NOTICE_SOURCE_HR, "%s bu ay izinde" % emp.character_name)
+		EventBus.headline_added.emit(HRConstants.notice_source_hr(), TranslationServer.translate("HR_NEWS_ON_LEAVE_MONTH").format({"name": emp.character_name}))
 
 
 static func confirm_departure(character_id: String) -> void:

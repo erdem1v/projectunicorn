@@ -146,7 +146,7 @@ static func _experience_cell(emp: Character, refs: Dictionary) -> Control:
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	var pct: int = int(round(
 		float(emp.experience) / float(HRConstants.EXPERIENCE_MAX) * 100.0))
-	var val := UiFactory.make_label("%%%d" % pct, &"RowMeta")
+	var val := UiFactory.make_label(Fmt.percent(pct, 0), &"RowMeta")
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if emp.experience >= HRConstants.EXPERIENCE_MAX:
 		val.add_theme_color_override("font_color", UiTokens.ACCENT)

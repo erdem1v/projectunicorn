@@ -56,7 +56,7 @@ static func can_raise(emp: Character, pct: int) -> bool:
 static func preview_raise(emp: Character, pct: int) -> Dictionary:
 	var reason: String = _block_reason(emp)
 	if reason == "" and emp.monthly_salary <= 0:
-		reason = "Maaş kaydı yok"
+		reason = TranslationServer.translate("HR_ERR_NO_SALARY")
 	if reason != "":
 		return _refusal(reason)
 	var p: int = _clamp_pct(pct)
@@ -82,10 +82,11 @@ static func preview_raise(emp: Character, pct: int) -> Dictionary:
 		"morale_gain": gain,
 		"permanent": true,
 		"lines": [
-			"Maaş %s → %s (aylık %s)" % [_money(before), _money(after), _signed_money(after - before)],
-			"Moral %d → %d" % [emp.morale, emp.morale + gain],
-			"Aylık maaş yükü %s → %s" % [_money(payroll_before), _money(payroll_after)],
-			"Zam kalıcıdır, geri alınmaz",
+			TranslationServer.translate("HR_RAISE_LINE").format({"old": _money(before), "new": _money(after),
+				"monthly": _signed_money(after - before)}),
+			TranslationServer.translate("HR_MORALE_LINE").format({"old": emp.morale, "new": emp.morale + gain}),
+			TranslationServer.translate("HR_PAYROLL_LINE").format({"old": _money(payroll_before), "new": _money(payroll_after)}),
+			TranslationServer.translate("HR_RAISE_PERMANENT"),
 		],
 	}
 
@@ -129,7 +130,7 @@ static func preview_vacation(emp: Character) -> Dictionary:
 	if reason == "" and emp.status != HRConstants.STATUS_ACTIVE:
 		reason = "Zaten izinde"
 	if reason == "" and emp.leave_taken_year == _current_year():
-		reason = "Bu yılın izni kullanılmış"
+		reason = TranslationServer.translate("HR_LEAVE_USED")
 	if reason != "":
 		return _refusal(reason)
 	var days: int = HRConstants.VACATION_DAYS
@@ -145,10 +146,10 @@ static func preview_vacation(emp: Character) -> Dictionary:
 		"consumes_annual_leave": true,
 		"leave_month": emp.leave_month,
 		"lines": [
-			"%d gün kapasite dışı" % days,
-			"Maaş akmaya devam eder, ücretli izindir",
-			"Dönüşte moral %d → %d" % [emp.morale, emp.morale + gain],
-			"Bu yılın otomatik yıllık izni kullanılmış sayılır",
+			TranslationServer.translate("HR_LEAVE_DAYS_OUT").format({"n": days}),
+			TranslationServer.translate("HR_LEAVE_PAID"),
+			TranslationServer.translate("HR_LEAVE_MORALE").format({"old": emp.morale, "new": emp.morale + gain}),
+			TranslationServer.translate("HR_LEAVE_ANNUAL_SPENT"),
 		],
 	}
 
@@ -198,10 +199,12 @@ static func preview_fire(emp: Character) -> Dictionary:
 		"team_size_after": remaining,
 		"team_morale_drop": HRConstants.MORALE_FIRE_TEAM,
 		"lines": [
-			"%s: %s (%d ay)" % [HRConstants.COST_LABEL_SEVERANCE, _money(severance), months],
-			"Nakit %s → %s" % [_money(GameState.cash), _money(GameState.cash - severance)],
-			"Aylık maaş yükü %s → %s" % [_money(payroll_before), _money(payroll_after)],
-			"Kalan ekipte moral %+d" % (-HRConstants.MORALE_FIRE_TEAM),
+			TranslationServer.translate("HR_SEVERANCE_LINE").format({"label": HRConstants.cost_label_severance(),
+				"amount": _money(severance), "months": months}),
+			TranslationServer.translate("HR_CASH_LINE").format({"old": _money(GameState.cash),
+				"new": _money(GameState.cash - severance)}),
+			TranslationServer.translate("HR_PAYROLL_LINE").format({"old": _money(payroll_before), "new": _money(payroll_after)}),
+			TranslationServer.translate("HR_TEAM_MORALE_DELTA").format({"delta": -HRConstants.MORALE_FIRE_TEAM}),
 		],
 	}
 
@@ -215,7 +218,7 @@ static func fire(emp: Character) -> bool:
 	# ONCE, through the Finance seam. Charged before the removal so the ledger line and the
 	# roster change cannot come apart if anything below screams.
 	if severance > 0:
-		FinanceSystem.apply_one_time_cost(severance, HRConstants.COST_LABEL_SEVERANCE)
+		FinanceSystem.apply_one_time_cost(severance, HRConstants.cost_label_severance())
 	# Kalan ekip görür ve hisseder. get_employees() (not the active list) on purpose: someone
 	# on leave hears about it too. The leaver is skipped — their own morale is moot.
 	for other in CharacterRegistry.get_employees():
@@ -239,20 +242,20 @@ static func _block_reason(emp: Character) -> String:
 	# The refusals every action shares, as a printable Turkish reason so preview_* can say WHY
 	# instead of returning a silent empty dict.
 	if emp == null:
-		return "Kayıt bulunamadı"
+		return TranslationServer.translate("HR_ERR_NO_RECORD")
 	if emp.category != "employee":
 		# FRANK VE KURUCU DOKUNULMAZ. Frank is category "mentor" and the founder is "founder";
 		# neither is staff, neither draws a staff salary, neither can be fired, raised or sent
 		# on holiday. Checked here rather than assumed of the caller's Character.
-		return "Bu aksiyon yalnız çalışanlar için"
+		return TranslationServer.translate("HR_ERR_EMPLOYEES_ONLY")
 	if CharacterRegistry.get_character(emp.id) == null:
 		# Idempotency guard against a stale reference, the same race EventManager.resolve_choice
 		# blocks: a Character is a Resource, so a double-clicked confirm still holds a live
 		# reference to someone already removed. Without this, a second fire() would charge
 		# severance twice for a person who is already gone.
-		return "Kayıt bulunamadı"
+		return TranslationServer.translate("HR_ERR_NO_RECORD")
 	if HRMoraleSystem.has_pending_departure(emp.id):
-		return "Ayrılık bekliyor"
+		return TranslationServer.translate("HR_ERR_LEAVING")
 	return ""
 
 

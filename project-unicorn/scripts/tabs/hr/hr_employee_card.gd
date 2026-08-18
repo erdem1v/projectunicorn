@@ -57,7 +57,7 @@ static func build(emp: Character, on_action: Callable, expanded: bool, refs: Dic
 	money_col.add_theme_constant_override("separation", 2)
 	money_col.alignment = BoxContainer.ALIGNMENT_END
 	var salary := UiFactory.make_label(
-		"Maaş %s/ay" % HRUiShared.money(emp.monthly_salary), &"RowMeta")
+		TranslationServer.translate("HR_CARD_SALARY").format({"amount": HRUiShared.money(emp.monthly_salary)}), &"RowMeta")
 	salary.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	money_col.add_child(salary)
 	var tenure := UiFactory.make_label(HRSystem.tenure_line(emp), &"RowMeta", UiTokens.INK_DIM)
@@ -129,14 +129,14 @@ static func _action_row(emp: Character, on_action: Callable) -> Control:
 	row.add_child(_maybe_button("ZAM YAP", raise_pv, emp, ACTION_RAISE, on_action, true))
 
 	var vac_pv: Dictionary = HRActions.preview_vacation(emp)
-	row.add_child(_maybe_button("TATİLE GÖNDER", vac_pv, emp, ACTION_VACATION, on_action, false))
+	row.add_child(_maybe_button(TranslationServer.translate("HR_CARD_HOLIDAY"), vac_pv, emp, ACTION_VACATION, on_action, false))
 
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
 
 	var fire_pv: Dictionary = HRActions.preview_fire(emp)
-	row.add_child(_maybe_button("İŞTEN ÇIKAR", fire_pv, emp, ACTION_FIRE, on_action, false))
+	row.add_child(_maybe_button(TranslationServer.translate("HR_CARD_FIRE"), fire_pv, emp, ACTION_FIRE, on_action, false))
 	return row
 
 

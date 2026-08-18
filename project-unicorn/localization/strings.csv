@@ -428,26 +428,26 @@ BUILD_BUG_RISK,hata riski,bug risk
 BUILD_TECH_DEBT,Teknik borç,Tech debt
 BUILD_LIVE_VERSION,CANLI V{n},LIVE V{n}
 HR_ROLE_FOUNDER,Kurucu,Founder
-HR_ROLE_PM,Ürün Yöneticisi,Product Manager
+HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
 HR_ROLE_DESIGNER,Tasarımcı,Designer
 HR_ROLE_DEVELOPER,Yazılımcı,Developer
 HR_ROLE_TESTER,Test Uzmanı,Tester
 HR_ROLE_SALES_REP,Satış Uzmanı,Sales Rep
-HR_ROLE_ACCOUNT_MANAGER,Müşteri Temsilcisi,Account Manager
-HR_ROLE_OPERATING_PARTNER,Operating Partner,Operating Partner
-HR_DEPT_PRODUCT,Ürün Geliştirme,Product Development
+HR_ROLE_CUSTOMER_REP,Müşteri Temsilcisi,Account Manager
+HR_ROLE_MENTOR,Operating Partner,Operating Partner
+HR_DEPT_PRODUCT_DEV,Ürün Geliştirme,Product Development
 HR_DEPT_SALES,Satış,Sales
-HR_DEPT_CS,Müşteri,Customer Success
-HR_BAND_BUDGET,ekonomik,budget
-HR_BAND_BALANCED,dengeli,balanced
-HR_BAND_PREMIUM,üst segment,premium
+HR_DEPT_CUSTOMER,Müşteri,Customer Success
+HR_BAND_JUNIOR,ekonomik,budget
+HR_BAND_MID,dengeli,balanced
+HR_BAND_SENIOR,üst segment,premium
 HR_BADGE_FLIGHT_RISK,Kaçma riski,Flight risk
-HR_BADGE_BURNOUT,Tükeniyor,Burning out
+HR_BADGE_BURNING_OUT,Tükeniyor,Burning out
 HR_BADGE_OVERLOADED,Aşırı yüklü,Overloaded
 HR_STATE_STARTS_TOMORROW,Yarın başlıyor,Starts tomorrow
-HR_OVERTIME_BLOCK_3D,3 gün,3 days
-HR_OVERTIME_BLOCK_1W,1 hafta,1 week
-HR_OVERTIME_BLOCK_2W,2 hafta,2 weeks
+HR_OVERTIME_BLOCK_3,3 gün,3 days
+HR_OVERTIME_BLOCK_7,1 hafta,1 week
+HR_OVERTIME_BLOCK_14,2 hafta,2 weeks
 HR_SEARCH_CANCEL,ARAYIŞI İPTAL ET,CANCEL SEARCH
 HR_CANDIDATE_FILE,Aday dosyası,Candidate file
 HR_COST_HIRING,İşe alım,Hiring
@@ -671,3 +671,160 @@ HEALTH_CHURNING,kaçıyor,churning
 NOTICE_SRC_SALES,Satış,Sales
 NOTICE_SRC_CUSTOMER,Müşteri,Customer
 SALES_LOG_REP_CLOSED,"{rep}, {company} ile anlaşmayı kapattı.",{rep} closed the deal with {company}.
+HR_AXIS_EXPERTISE,Uzmanlık,Expertise
+HR_AXIS_PACE,Hız,Pace
+HR_AXIS_RAPPORT,Uyum,Rapport
+HR_SECTION_DESIGN,Tasarım,Design
+HR_SECTION_DEVELOPMENT,Geliştirme,Development
+HR_SECTION_TEST,Test,Test
+HR_BADGE_NEW,Yeni,New
+HR_SEVERANCE_LINE,{label}: {amount} ({months} ay),{label}: {amount} ({months} mo)
+HR_TRAIT_WARMS_UP_FAST_LABEL,Çabuk ısınır,Warms up fast
+HR_TRAIT_WARMS_UP_FAST_EFFECT,Morali bir tabanın altına inmez,Morale never drops below a floor
+HR_TRAIT_PRESSURE_PROOF_LABEL,Baskıya dayanıklı,Pressure-proof
+HR_TRAIT_PRESSURE_PROOF_EFFECT,Moral düşüşleri ve ek mesai bedeli yarı yarıya,Morale hits and overtime costs are halved
+HR_TRAIT_MENTORS_PEERS_LABEL,Kol kanat gerer,Takes people under their wing
+HR_TRAIT_MENTORS_PEERS_EFFECT,Aynı bölümdeki arkadaşlarına moral desteği verir,Lifts morale for others in the same department
+HR_TRAIT_WONT_JUMP_SHIP_LABEL,Gemiyi terk etmez,Will not jump ship
+HR_TRAIT_WONT_JUMP_SHIP_EFFECT,Zor koşulda bile ayrılmaya daha az meyilli,Less likely to leave even when things get hard
+HR_TRAIT_NATURAL_LEADER_LABEL,Doğal lider,Natural leader
+HR_TRAIT_NATURAL_LEADER_EFFECT,Sorumlu olduğunda ekibi daha iyi koordine eder,Coordinates the team better when they are the lead
+HR_TRAIT_WORKS_ALONE_LABEL,Yalnız çalışır,Works alone
+HR_TRAIT_WORKS_ALONE_EFFECT,"Ekibe katkı vermez, yalnız kendi işini yapar","Contributes nothing to the team, only their own work"
+HR_TRAIT_GLASS_HEART_LABEL,Cam kalp,Glass heart
+HR_TRAIT_GLASS_HEART_EFFECT,Moral düşüşleri ve ek mesai bedeli iki katı,Morale hits and overtime costs are doubled
+HR_TRAIT_SOURS_THE_ROOM_LABEL,Havayı bozar,Sours the room
+HR_TRAIT_SOURS_THE_ROOM_EFFECT,Aynı bölümdeki arkadaşlarının moralini aşağı çeker,Drags down morale for others in the same department
+HR_TRAIT_ONE_FOOT_OUT_LABEL,Bir ayağı kapıda,One foot out the door
+HR_TRAIT_ONE_FOOT_OUT_EFFECT,Kötü giderse ayrılmaya daha meyilli,More likely to leave if things go badly
+HR_TRAIT_NEEDS_DIRECTION_LABEL,Söylenmezse yapmaz,Needs to be told
+HR_TRAIT_NEEDS_DIRECTION_EFFECT,Sorumlu değilken belirgin biçimde az katkı verir,Contributes markedly less when not the lead
+HR_AXIS_MEANING_PRODUCT_MANAGER_EXPERTISE,Deneyim ekip bonusu,Team experience bonus
+HR_AXIS_MEANING_PRODUCT_MANAGER_PACE,Tasarım fazına ikincil hız,Secondary speed in the design phase
+HR_AXIS_MEANING_DESIGNER_EXPERTISE,Tasarım kalitesi katkısı,Design quality contribution
+HR_AXIS_MEANING_DESIGNER_PACE,Tasarım fazı hızı,Design phase speed
+HR_AXIS_MEANING_DEVELOPER_EXPERTISE,Kod kalitesi (hata çarpanı),Code quality (bug multiplier)
+HR_AXIS_MEANING_DEVELOPER_PACE,Geliştirme hızı,Development speed
+HR_AXIS_MEANING_TESTER_EXPERTISE,Hata bulma isabeti,Bug-finding accuracy
+HR_AXIS_MEANING_TESTER_PACE,Bulma ve çözme temposu,Find-and-fix tempo
+HR_AXIS_MEANING_SALES_REP_EXPERTISE,Anlaşma kapama gücü,Closing power
+HR_AXIS_MEANING_SALES_REP_PACE,Aday üretim hızı,Lead generation speed
+HR_AXIS_MEANING_CUSTOMER_REP_EXPERTISE,Müşteri tutma,Customer retention
+HR_AXIS_MEANING_CUSTOMER_REP_PACE,Talep işleme temposu,Request handling tempo
+HR_ROLE_HINT_PRODUCT_MANAGER,"Ekibe yön verir: ürünün deneyim tavanını yükseltir, tasarıma hız katar.","Gives the team direction: raises the product's experience ceiling and speeds up design."
+HR_ROLE_HINT_DESIGNER,"Tasarım aşamasını hızlandırır, tasarım kalitesinin tavanını yükseltir.",Speeds up the design stage and raises the ceiling on design quality.
+HR_ROLE_HINT_DEVELOPER,"Geliştirmeyi hızlandırır, kod kalitesinin tavanını yükseltir.",Speeds up development and raises the ceiling on code quality.
+HR_ROLE_HINT_TESTER,"Hataları yayına çıkmadan yakalar, beta süresini kısaltır.",Catches bugs before they ship and shortens beta.
+HR_ROLE_HINT_SALES_REP,"Kendi müşteri adaylarını bulur, anlaşmaları senin yerine kapatır.",Finds their own leads and closes deals for you.
+HR_ROLE_HINT_CUSTOMER_REP,"Müşteri taleplerine yetişir, müşteri kaybını yavaşlatır.",Keeps up with customer requests and slows churn.
+HR_AGENCY_NAME,Atlas Seçme & Yerleştirme,Atlas Seçme & Yerleştirme
+HR_RESIGN_VOICE_1,"""Bir süre düşündüm. Burada tükeniyorum, daha fazla taşımak istemiyorum.""","""I have thought about it for a while. I am burning out here and I do not want to carry it any longer."""
+HR_RESIGN_VOICE_2,"""Kimseyle sorunum yok. Sadece her sabah biraz daha zor kalkıyorum. O kadar.""","""I have no problem with anyone. Every morning is just a little harder to get up. That is all."""
+HR_RESIGN_VOICE_3,"""Bana kötü davranıldı demeyeceğim. Ama fark edilmedim.""","""I will not say I was treated badly. But I was not noticed."""
+HR_RESIGN_VOICE_4,"""Başka bir yerden teklif geldi. Doğrusunu istersen, aramayı ben yaptım.""","""An offer came from somewhere else. If you want the truth, I made the call."""
+HR_VALVE_VOICE_1,"""Bu tempoyla devam edemem. Şimdi söylüyorum ki sonra sürpriz olmasın.""","""I cannot keep this pace. I am saying it now so it is not a surprise later."""
+HR_VALVE_VOICE_2,"""Haftalardır eve gece yarısı gidiyorum. Bir yere kadar.""","""I have been getting home at midnight for weeks. There is a limit."""
+HR_VALVE_VOICE_3,"""Kimse sormadı diye iyi olduğum sanılmasın.""","""Do not assume I am fine just because nobody asked."""
+HR_FILE_NOTE_1,Sorulardan çok cevapları seviyor.,Likes answers more than questions.
+HR_FILE_NOTE_2,"CV'si kısa, referansları uzun.","Short CV, long list of references."
+HR_FILE_NOTE_3,"İki startup batırmış, üçüncüye hazır.","Sank two startups, ready for a third."
+HR_FILE_NOTE_4,Görüşmeye kendi yaptığı bir şeyle gelmiş.,Came to the interview with something they had built.
+HR_FILE_NOTE_5,Son işinde kimse gitmesini istemedi.,Nobody at their last job wanted them to leave.
+HR_FILE_NOTE_6,Konuşmaktan çok not aldı.,Took more notes than they spoke.
+HR_FILE_NOTE_7,"Maaşı sordu, sonra ürünü sordu, sırayı fark etti.","Asked about salary, then about the product, and caught the order."
+HR_FILE_NOTE_8,"Büyük şirketten geliyor, küçüğü merak ediyor.","Coming from a big company, curious about a small one."
+HR_FILE_NOTE_9,Uzun bir aradan sonra dönüyor.,Coming back after a long break.
+HR_FILE_NOTE_10,"Herkesi tanıyor, kimseyle çalışmamış.","Knows everyone, has worked with no one."
+HR_FILE_NOTE_11,"Teknik soruda durdu, düşündü, doğru cevapladı.","Paused on the technical question, thought, answered correctly."
+HR_FILE_NOTE_12,Eski ekibinden iki kişi onu tavsiye etti.,Two people from their old team recommended them.
+HR_ERR_NO_SALARY,Maaş kaydı yok,No salary on record
+HR_RAISE_LINE,Maaş {old} → {new} (aylık {monthly}),Salary {old} → {new} ({monthly} a month)
+HR_PAYROLL_LINE,Aylık maaş yükü {old} → {new},Monthly payroll {old} → {new}
+HR_RAISE_PERMANENT,"Zam kalıcıdır, geri alınmaz","A raise is permanent and cannot be undone"
+HR_LEAVE_USED,Bu yılın izni kullanılmış,This year's leave is already used
+HR_LEAVE_DAYS_OUT,{n} gün kapasite dışı,{n} days out of capacity
+HR_LEAVE_PAID,"Maaş akmaya devam eder, ücretli izindir","Salary keeps running; this is paid leave"
+HR_LEAVE_MORALE,Dönüşte moral {old} → {new},Morale on return {old} → {new}
+HR_LEAVE_ANNUAL_SPENT,Bu yılın otomatik yıllık izni kullanılmış sayılır,This counts as the automatic annual leave for the year
+HR_TEAM_MORALE_DELTA,Kalan ekipte moral {delta},Morale on the remaining team {delta}
+HR_ERR_NO_RECORD,Kayıt bulunamadı,No record found
+HR_ERR_EMPLOYEES_ONLY,Bu aksiyon yalnız çalışanlar için,This action is for employees only
+HR_ERR_LEAVING,Ayrılık bekliyor,A departure is already pending
+HR_WARN_RETAINER_CASH,"Peşin ücret kasadaki nakitten fazla, bu ödeme kasayı eksiye düşürür.","The retainer is more than the cash on hand; this payment puts the treasury below zero."
+HR_WARN_SEARCH_OPEN,"Zaten açık bir arayış var, kapanmadan yenisi başlamaz.",A search is already open; another cannot start until it closes.
+HR_WARN_COMMISSION_CASH,"Komisyon kasadaki nakitten fazla, bu ödeme kasayı eksiye düşürür.","The commission is more than the cash on hand; this payment puts the treasury below zero."
+HR_WARN_SALARY_CASHFLOW,"Bu maaş nakit akışını eksiye çevirir, kasa erimeye başlar.","This salary turns cash flow negative and the treasury starts draining."
+HR_NEWS_FILES_READY,{role} arayışı için {n} aday dosyası masanda.,{n} candidate files for the {role} search are on your desk.
+HR_NEWS_OVERTIME_DONE,{dept} bölümünde {length} süren ek mesai bitti.,The {length} overtime block in {dept} has ended.
+HR_OVERTIME_BLOCK_DONE,blok tamamlandı,block complete
+HR_EV_RESIGN_TITLE,Ayrılık,A departure
+HR_EV_RESIGN_ACK,Anlaşıldı,Understood
+HR_EV_VALVE_TITLE,Mesai sınırı,Overtime limit
+HR_EV_VALVE_BODY,"{voice}
+
+**{dept}** bölümündeki ek mesai sürüyor. Devam edilirse bu riski bilerek alıyorsun.","{voice}
+
+Overtime in **{dept}** is still running. If it continues you are taking this risk knowingly."
+HR_EV_VALVE_CONTINUE,Devam et,Carry on
+HR_EV_CALM_TITLE,Sakin bir dönem,A calm stretch
+HR_EV_CALM_BODY,"Ekip {n} gündür ek mesai görmedi. Kimse akşam sekizde ekran başında değil, ve bu fark ediliyor.","The team has gone {n} days without overtime. Nobody is at a screen at eight in the evening, and it is noticed."
+HR_EV_CALM_ACK,İyi,Good
+HR_EV_SIGNED_BODY,"**{company}** imzaladı, aylık {amount}. Haber mutfağa varmadan herkes duymuş.","**{company}** signed, {amount} a month. Everyone heard before the news reached the kitchen."
+HR_EV_SHIPPED_TITLE,Yayında,Live
+HR_EV_SHIPPED_BODY,Sürüm {version} çıktı ve tutuyor. Aylardır uğraşılan şeyin karşılığını görmek ekibi ayağa kaldırdı.,Version {version} is out and it is holding. Seeing months of work pay off put the team on its feet.
+HR_EV_SHIPPED_ACK,Devam,Carry on
+HR_STATE_STARTS_TODAY,Bugün başladı,Started today
+HR_STATE_ON_LEAVE_DAYS,İzinde · {n} gün kaldı,On leave · {n} days left
+HR_NEWS_BACK_FROM,{name} {whence} döndü,{name} is back from {whence}
+HR_NEWS_ON_HOLIDAY,{name} {n} gün tatilde,{name} is on holiday for {n} days
+HR_NEWS_ON_LEAVE_MONTH,{name} bu ay izinde,{name} is on leave this month
+HR_MORALE_LINE,Moral {old} → {new},Morale {old} → {new}
+HR_EV_OVERTIME_STOP,Mesaiyi durdur,Stop the overtime
+HR_EV_SIGNING_TITLE,Ofiste iyi haber,Good news in the office
+HR_EV_SIGNING_ACK,Hak ettiler,They earned it
+HR_TENURE_SINCE,{month}'tan beri · {n}. ay,Since {month} · month {n}
+HR_WHENCE_HOLIDAY,tatilden,holiday
+HR_WHENCE_LEAVE,izinden,leave
+HR_FILES_ON_DESK,{n} aday dosyası masada.,{n} candidate files on your desk.
+HR_OPEN_FILES,DOSYALARI AÇ,OPEN THE FILES
+HR_SEARCHING,{role} aranıyor · {n}. gün,Searching for {role} · day {n}
+HR_SEARCH_CANCEL_TITLE,Arayışı iptal et,Cancel the search
+HR_SEARCH_CANCEL_BODY,Atlas arayışı kapanır. Peşin ödenen {amount} iade edilmez.,The Atlas search closes. The {amount} retainer is not refunded.
+HR_SEARCH_CANCEL_OK,İptal et,Cancel it
+HR_OVERTIME_CHIP,EK MESAİ,OVERTIME
+HR_HOLIDAY_CONFIRM_TITLE,{name} · tatile gönder,{name} · send on holiday
+HR_HOLIDAY_CONFIRM_OK,Tatile gönder,Send on holiday
+HR_FIRE_CONFIRM_TITLE,{name} · işten çıkar,{name} · let go
+HR_FIRE_CONFIRM_OK,İşten çıkar,Let go
+HR_ATLAS_QUOTE,"""Doğru kişiyi bulmak zaman alır. Acele eden yanlış kişiyi bulur.""","""Finding the right person takes time. Whoever rushes finds the wrong one."""
+HR_ATLAS_STEP_ROLE,Adım 1 · Rol,Step 1 · Role
+HR_ATLAS_STEP_BAND,Adım 2 · Bütçe bandı,Step 2 · Budget band
+HR_ATLAS_TERMS,"{retainer} peşin, iade edilmez · işe alımda ilk ay maaşının %{pct} komisyonu · adaylar {min}-{max} gün içinde gelir","{retainer} up front, non-refundable · {pct}% commission on the first month's salary at hire · candidates arrive within {min}-{max} days"
+HR_ATLAS_CANCEL,VAZGEÇ,CANCEL
+HR_ATLAS_START,ARAYIŞ BAŞLAT · {amount},START SEARCH · {amount}
+HR_ATLAS_NEED_SELECTION,Rol ve bütçe bandı seçilmeli.,Pick a role and a budget band.
+HR_ATLAS_FILES_COUNT,Aday dosyaları · {n},Candidate files · {n}
+HR_ATLAS_TAKE_NONE,Hiçbirini alma,Take none
+HR_ATLAS_SALARY_ASK,Maaş talebi {amount}/ay,Asking {amount}/mo
+HR_ATLAS_HIRE,İŞE AL · {amount}/AY,HIRE · {amount}/MO
+HR_ATLAS_CLOSE_BODY,Hiçbirini almazsan arayış kapanır ve peşin ödenen {amount} geri gelmez.,If you take none the search closes and the {amount} retainer does not come back.
+HR_ATLAS_CLOSE_OK,Dosyaları kapat,Close the files
+HR_OT_TITLE,Ek mesai · {dept},Overtime · {dept}
+HR_OT_EMPTY,Bu departmanda işbaşında kimse yok.,Nobody is on duty in this department.
+HR_OT_HEADCOUNT,{n} kişi,{n} people
+HR_OT_NOTE,Blok boyunca her gün ek ücret tahakkuk eder ve moral düşer.,Every day of the block accrues extra pay and costs morale.
+HR_OT_SPEED,+%{pct} hız,+{pct}% speed
+HR_OT_EST_COST,Tahmini ek ücret {amount},Estimated extra pay {amount}
+HR_OT_MORALE_COST,Moral bedeli kişi başı {delta},Morale cost {delta} per person
+HR_OT_BUG_RATE,Hata oranı +%{pct},Bug rate +{pct}%
+HR_OT_LATE_SPEED,{day}. günden sonra hız kazancı: %{pct},After day {day} the speed gain drops to {pct}%
+HR_OT_START,BAŞLAT,START
+HR_OT_PROGRESS,{day}. gün · {len} günlük blok,Day {day} · {len}-day block
+HR_OT_TODAY_SPEED,Bugünün hız kazancı +%{pct},Today's speed gain +{pct}%
+HR_OT_EARLY_STOP,"Erken durdurabilirsin; başlanan gün tam ücretlenir, sonrası için bedel üretmez.",You can stop early; the day you started bills in full and nothing accrues after that.
+HR_CARD_SALARY,Maaş {amount}/ay,Salary {amount}/mo
+HR_CARD_HOLIDAY,TATİLE GÖNDER,SEND ON HOLIDAY
+HR_CARD_FIRE,İŞTEN ÇIKAR,LET GO
+HR_CANDIDATE_GENERIC,Aday,Candidate
+HR_CASH_LINE,Nakit {old} → {new},Cash {old} → {new}
+HR_APPLY_RAISE_PCT,ZAMMI UYGULA · +{pct},APPLY RAISE · +{pct}

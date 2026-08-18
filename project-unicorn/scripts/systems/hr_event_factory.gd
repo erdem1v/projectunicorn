@@ -35,10 +35,10 @@ static func build_resignation(emp: Character) -> GameEvent:
 	ev.category = "reactive"
 	ev.tags = [TAG_BUILD_SAFE, "hr_departure"]
 	ev.priority = 9
-	ev.title = "Ayrılık"
+	ev.title = TranslationServer.translate("HR_EV_RESIGN_TITLE")
 	ev.character_id = emp.id     # portrait + "İsim · Rol" + trait chips come free
 	ev.body_text = HRConstants.resign_voice(emp.id)
-	ev.choices = [_choice("Anlaşıldı", [{"type": "hr_departure", "character_id": emp.id}])]
+	ev.choices = [_choice(TranslationServer.translate("HR_EV_RESIGN_ACK"), [{"type": "hr_departure", "character_id": emp.id}])]
 	return ev
 
 
@@ -50,15 +50,15 @@ static func build_overtime_valve(emp: Character, dept_id: String) -> GameEvent:
 	ev.category = "reactive"
 	ev.tags = [TAG_BUILD_SAFE, "hr_overtime"]
 	ev.priority = 10             # a person about to quit outranks routine beats
-	ev.title = "Mesai sınırı"
+	ev.title = TranslationServer.translate("HR_EV_VALVE_TITLE")
 	ev.character_id = emp.id
-	ev.body_text = "%s\n\n**%s** bölümündeki ek mesai sürüyor. Devam edilirse bu riski bilerek alıyorsun." % [
-		HRConstants.valve_voice(emp.id),
-		HRConstants.department_label(dept_id),
-	]
+	ev.body_text = TranslationServer.translate("HR_EV_VALVE_BODY").format({
+		"voice": HRConstants.valve_voice(emp.id),
+		"dept": HRConstants.department_label(dept_id),
+	})
 	ev.choices = [
-		_choice("Mesaiyi durdur", [{"type": "hr_overtime_stop", "department": dept_id}]),
-		_choice("Devam et", [{"type": "hr_overtime_continue", "department": dept_id, "character_id": emp.id}]),
+		_choice(TranslationServer.translate("HR_EV_OVERTIME_STOP"), [{"type": "hr_overtime_stop", "department": dept_id}]),
+		_choice(TranslationServer.translate("HR_EV_VALVE_CONTINUE"), [{"type": "hr_overtime_continue", "department": dept_id, "character_id": emp.id}]),
 	]
 	return ev
 
@@ -70,25 +70,23 @@ static func build_overtime_valve(emp: Character, dept_id: String) -> GameEvent:
 # so they need no new modifier type and render with the "Ekip +N" badge for free.
 
 static func build_calm_stretch(days: int) -> GameEvent:
-	var ev := _positive("ev_hr_calm_stretch", "Sakin bir dönem")
-	ev.body_text = "Ekip %d gündür ek mesai görmedi. Kimse akşam sekizde ekran başında değil, ve bu fark ediliyor." % days
-	ev.choices = [_choice("İyi", [{"type": "morale_all_employees", "delta": HRConstants.CALM_STRETCH_MORALE}])]
+	var ev := _positive("ev_hr_calm_stretch", TranslationServer.translate("HR_EV_CALM_TITLE"))
+	ev.body_text = TranslationServer.translate("HR_EV_CALM_BODY").format({"n": days})
+	ev.choices = [_choice(TranslationServer.translate("HR_EV_CALM_ACK"), [{"type": "morale_all_employees", "delta": HRConstants.CALM_STRETCH_MORALE}])]
 	return ev
 
 
 static func build_big_signing(customer_name: String, mrr: int) -> GameEvent:
-	var ev := _positive("ev_hr_big_signing", "Ofiste iyi haber")
-	ev.body_text = "**%s** imzaladı, aylık %s. Haber mutfağa varmadan herkes duymuş." % [
-		customer_name, _money(mrr),
-	]
-	ev.choices = [_choice("Hak ettiler", [{"type": "morale_all_employees", "delta": HRConstants.BIG_SIGNING_MORALE}])]
+	var ev := _positive("ev_hr_big_signing", TranslationServer.translate("HR_EV_SIGNING_TITLE"))
+	ev.body_text = TranslationServer.translate("HR_EV_SIGNED_BODY").format({"company": customer_name, "amount": _money(mrr)})
+	ev.choices = [_choice(TranslationServer.translate("HR_EV_SIGNING_ACK"), [{"type": "morale_all_employees", "delta": HRConstants.BIG_SIGNING_MORALE}])]
 	return ev
 
 
 static func build_ship_glow(version: int) -> GameEvent:
-	var ev := _positive("ev_hr_ship_glow", "Yayında")
-	ev.body_text = "Sürüm %d çıktı ve tutuyor. Aylardır uğraşılan şeyin karşılığını görmek ekibi ayağa kaldırdı." % version
-	ev.choices = [_choice("Devam", [{"type": "morale_all_employees", "delta": HRConstants.SHIP_GLOW_MORALE}])]
+	var ev := _positive("ev_hr_ship_glow", TranslationServer.translate("HR_EV_SHIPPED_TITLE"))
+	ev.body_text = TranslationServer.translate("HR_EV_SHIPPED_BODY").format({"version": version})
+	ev.choices = [_choice(TranslationServer.translate("HR_EV_SHIPPED_ACK"), [{"type": "morale_all_employees", "delta": HRConstants.SHIP_GLOW_MORALE}])]
 	return ev
 
 

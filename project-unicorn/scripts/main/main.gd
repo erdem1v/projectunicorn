@@ -1379,7 +1379,7 @@ func _run_hr_shot(kind: String) -> void:
 			# daily_tick ledger'ı temizler (yeni gün), o yüzden tek seferlik gider tick'ten
 			# SONRA yeniden işleniyor — oyunda da böyle olur: harcama gün içinde yapılır.
 			FinanceSystem.apply_one_time_cost(
-				HRConstants.SEARCH_RETAINER, HRConstants.COST_LABEL_HIRE)
+				HRConstants.SEARCH_RETAINER, HRConstants.cost_label_hire())
 		_:
 			# "ekip": bekleyen bir arayış da görünsün (Kare 3 şeridi).
 			HRSearchSystem.start_search(HRConstants.ROLE_DESIGNER, "senior")
