@@ -51,9 +51,27 @@ extends RefCounted
 #
 # FONT IMPORT STANDARD (documented, not re-decided here): all faces share
 # antialiasing=1 (grayscale), hinting=1 (light), subpixel_positioning=4 (auto),
-# msdf off, mipmaps off, oversampling=0. Changing any of these interacts with
-# window/stretch/mode="canvas_items" + aspect="expand" at non-1080p sizes and
-# belongs to a resolution pass, not to a theme edit.
+# msdf off, mipmaps off, oversampling=0.
+#
+# THE RESOLUTION PASS RAN (2026-08-18) AND THE STANDARD STANDS — UNCHANGED.
+# This block used to defer the question ("belongs to a resolution pass, not to a
+# theme edit"). That pass measured it, so the deferral is retired: under Godot
+# 4.6.2 with stretch mode "canvas_items", TEXT IS ALREADY RASTERIZED AT THE
+# PHYSICAL RESOLUTION. `oversampling=0.0` means "inherit the viewport", and the
+# viewport oversamples on its own — no font import param needed changing.
+#
+# Proof, so the next session does not re-litigate it by eye: shoot one screen at
+# 1920x1080 and at 3840x2160, then compare the 4K frame against a bilinear 2x
+# upscale of the 1080p frame. Measured MAE was 3.8 (mono) / 5.5 (sans) / 17.7
+# (serif display) — nowhere near an upscale — and the anti-aliased edge fraction
+# stayed flat or fell (0.060 -> 0.063, 0.053 -> 0.039, 0.102 -> 0.051), i.e. glyph
+# edges still resolve in ~1 PHYSICAL pixel at 4K. An upscaled bitmap does the
+# opposite: its edge fraction grows with resolution. The 22 SVG icons DID fail
+# that same test (MAE vs bilinear upscale 0.06-0.14, edges 0.21 -> 0.29) and were
+# fixed at import (svg/scale 1.0 -> 2.0), which is a texture matter, not a font one.
+#
+# STILL TRUE, AND STILL A TRAP: these params interact with canvas_items +
+# aspect="expand" at non-1080p sizes. Do not change one as part of a theme edit.
 #
 # KNOWN GAPS (deliberate, not oversights): no base Control focus ring; Tree /
 # ItemList / TabContainer are unstyled because the game uses none.
@@ -269,14 +287,30 @@ const PAPER_PLATE := Color(0.890, 0.859, 0.792, 1)    # #E3DBCA · gazete üstü
 # --- ODA merkez görünümü (masa POV oda sahnesi; ODA rework 2026-08-06) ---
 # Sahne çifti (gündüz/gece 3840×2160 sanat) + motor-çizimi bilgi katmanı. Roller:
 # gece tint'i obje sprite'larına MULTIPLY biner (objeler gündüz-nötr boyandı),
-# lamba halesi ADDITIVE'dir (GECE sahnesindeki baked ışık havuzunun lamba başına
-# düşen payı), gün ışığı eğrisi SceneLayer modulate'ine saat başı adımla biner.
+# gün ışığı eğrisi SceneLayer modulate'ine saat başı adımla biner. Lamba halesi
+# (ODA_LAMP_GLOW + LampGlow node) 2026-08-18'de KALDIRILDI: additive hale siyah
+# lamba gövdesinin üstüne binip onu yarı saydam gösteriyordu; gece ışığını artık
+# yalnız emissive ampul katmanı ve plakaya baked havuz taşıyor.
 # Tüm değerler # WORKING — Erdem'in F5 gözü mühürler.
-const ODA_NIGHT_TINT := Color(0.72, 0.78, 0.92, 1)   # gece: obje sprite'larına serin multiply
-const ODA_LAMP_GLOW := Color(1.0, 0.78, 0.45, 1)     # gece: lamba başı additive hale
+# 2026-08-17 mühürlü sanat turu: bu token TERS YÖNDEYDİ. Eski (0.72, 0.78, 0.92)
+# SERİN bir multiply'dı (B > G > R) ve emekli olan serin mehtap rig'ine göre
+# ayarlanmıştı (hemi 0x39435c + 0x7d8fb8 mehtap). Mühürlü gece rig'i ILIK TUNGSTEN
+# tek tavan lambası (0xffd2a0) — serin tint sanata karşı çalışıyordu.
+# Yeni değer GÖZ KARARI DEĞİL, ÖLÇÜM: monitör katmanının gece/gündüz render'ları
+# paylaşılan opak maske üzerinde kanal kanal bölündü (ekranın karanlık camı hariç
+# tutuldu, çünkü tint bilgisi taşımıyor) → (0.9058, 0.7826, 0.6209). Yani mühürlü
+# gece rig'inin bu objeye YAPTIĞI şeyin birebir kendisi; inşası gereği doğru.
+# Hepsi < 1 olduğu için multiply ile temsil edilebiliyor — monitörün ayrı gece
+# katmanına gerek kalmamasının da sebebi bu (bkz. oda_view._apply_night_textures).
+const ODA_NIGHT_TINT := Color(0.906, 0.783, 0.621, 1)   # gece: obje sprite'larına ILIK multiply — ÖLÇÜLDÜ
 # Dört-durum ışık makinesi (kalite turu v2 / D6): GÜNDÜZ nötr (WHITE — token
 # gerekmez) · AKŞAM 18 ılık · GECE 19-05 (sahne çifti + ODA_NIGHT_TINT) · ŞAFAK 06
 # serin. Saatlik adım ÖLDÜ; tint yalnız durum sınırında 1.5 sn tween'lenir.
+# 2026-08-17: ikisi de DEĞİŞMEDİ ve bu bir karardır, atlama değil.
+# AKŞAM zaten yeni ILIK geceye doğru kısmi bir adım: lerp(WHITE, yeni GECE, 0.35)
+# = (0.967, 0.924, 0.867), yani eldeki (1.0, 0.93, 0.84) ölçümle tutarlı.
+# ŞAFAK serin kalıyor ve artık DAHA GÜÇLÜ bir vuruş: gece de serinken şafak geceye
+# benziyordu; gece ılıklaştığı için şafak odanın TEK serin durumu oldu.
 const ODA_TINT_EVENING := Color(1.0, 0.93, 0.84, 1)  # AKŞAM saati (belirgin ılık tek vuruş)
 const ODA_TINT_DAWN := Color(0.92, 0.95, 1.0, 1)     # ŞAFAK saati (belirgin serin tek vuruş)
 # ⚠ DONDURULDU (Terminal reskin 2026-08-08). Bu üçü eskiden `Color(ACCENT, a)`
@@ -295,7 +329,11 @@ const ODA_ANCHOR_GLOW_SHADOW := Color(0.886, 0.639, 0.235, 0.35) # boyalı çapa
 # (make_label'ın color argümanı, make_dot). Kanonik adlar (ACCENT, INK, CREAM…)
 # bu reskin'le Terminal değerlerine geçtiği için o okumalar odayı da boyardı.
 # Aşağıdakiler o okumaların dondurulmuş ikizidir: eski paletin BİREBİR literalleri.
-# Kanıt: --theme-audit=oda dökümü (122 satır) reskin öncesi ve sonrası aynı kalır.
+# Kanıt: --theme-audit=oda dökümü reskin öncesi ve sonrası aynı kalır. (Satır SAYISI
+# burada kasıtlı olarak yazılmıyor: düğüm ekleyen/silen her yerleşim turu onu meşru
+# biçimde değiştiriyor ve bu satır iki kez bayatladı. Güncel sayı tek bir yerde,
+# CLAUDE.md'nin UI/STYLE LAW bölümünde tutuluyor. Kanıt zaten sayı değil, dökümün
+# otomatik @Sınıf@NN sayaçları normalize edildikten sonra BAYT-AYNI çıkması.)
 const ODA_ACCENT := Color(0.886, 0.639, 0.235, 1)       # eski ACCENT #e2a33c
 const ODA_ACCENT_DEEP := Color(0.541, 0.353, 0.071, 1)  # eski ACCENT_DEEP #8a5a12
 const ODA_INK := Color(0.169, 0.149, 0.125, 1)          # eski INK #2b2620

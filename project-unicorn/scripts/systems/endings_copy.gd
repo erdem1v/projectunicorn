@@ -415,7 +415,10 @@ static func _founder_share(ledger: Dictionary) -> int:
 	# term sheet was signed (bootstrap → 100). NOT GameState.get_founder_equity(): hires
 	# carry no equity and the investor's dilution never enters CharacterRegistry, so that
 	# read would say 100 on the very paper whose headline announces the round.
-	return maxi(0, 100 - int(ledger.get("equity_pct", 0)))
+	# investor_equity_pct, not equity_pct: the founder really does own Frank's 4% less,
+	# even though the newspaper's valuation sentence stays about the Series A alone.
+	# Falls back to the Series-A field so an older ledger dict still reads correctly.
+	return maxi(0, 100 - int(ledger.get("investor_equity_pct", ledger.get("equity_pct", 0))))
 
 
 static func _span_phrase(days: int) -> String:

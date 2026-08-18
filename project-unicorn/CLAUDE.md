@@ -149,6 +149,18 @@ tarafından `theme` olarak takılır. Godot temayı en yakın ata `theme`'inden 
 `UiTokens`'ın `ODA_*` DONDURULMUŞ REGISTER'ına pinlendi. Bir sonraki ODA tasarım turu bu
 dosyayı emekliye ayırana kadar: **kopyalanmaz, düzenlenmez, regen edilmez.**
 
+MÜHÜRLÜ SANAT TURU (2026-08-17) — UNFREEZE GEREKMEDİ. Görev şartnamesi "yaptırımlı
+unfreeze" öngörüyordu; ölçüm gerekmediğini gösterdi. Plakalar ve katmanlar değişti,
+`REGIONS`/`RECTS`/cam sabitleri yeniden türetildi, `monitor_night` emekli edildi, hover
+rim'i yeniden ayarlandı — ve `--theme-audit=oda` **121 satırda BAYT-AYNI** kaldı. Sebep
+yapısal: bu turun dokunduğu her şey DOKU, KOORDİNAT ya da `ODA_*` register'ıdır; hiçbiri
+tema öğesi değil. Dolayısıyla dosya donmuş kalır ve gömülü damgasının 5 olması —
+`UiTokens.THEME_STAMP` 6'nın BİR GERİSİ — DOĞRUDUR; regen edilmediği için artırılmaz.
+ODA tint token'ları (`ODA_NIGHT_TINT`, `ODA_TINT_EVENING`, `ODA_TINT_DAWN`) yalnız
+`oda_view.gd` tarafından runtime'da okunur; `build_theme.gd` bunlardan HİÇBİRİNİ okumaz
+(yalnız `ODA_ANCHOR_GLOW_SHADOW`), o yüzden değerlerini değiştirmek `master_theme.tres`'i
+etkilemez ve THEME_STAMP artırımı gerektirmez.
+
 **3. `build_theme.gd`, token'ı tema öğesine çeviren TEK dosyadır.** Tema içinde: SKALA
 boyut+leading'in sahibidir (bir varyasyon adımının boyutunu ASLA override etmez); VARYASYON
 yüz+rengin sahibidir (register ekseni: açık gövde / koyu kabuk / sinematik / gazete).
@@ -181,7 +193,20 @@ NewsTicker görsel kimliğini korur (`NewsPanel`/`NewsRich` kendi adlarıyla kal
 `--onboard-shot=<1|2|3>` · `--probe-shot` (sıfır-stil kontrol sahnesi) ·
 `--theme-audit=<id>` (çözümlenmiş tema değerleri + yüz + panel stylebox parmak izi +
 S/C/P override bayrakları) · **`--theme-audit=oda` ODA'NIN KAPISIDIR**: yalnız OdaView alt
-ağacını gezer, 122 satır basar ve reskin öncesi/sonrası BAYT-AYNI çıkmak zorundadır.
+ağacını gezer, **122 `AUDIT|` satırı** (AUDIT_BEGIN/END dahil 124 satırlık blok) basar ve
+öncesi/sonrası BAYT-AYNI çıkmak zorundadır. Sayının tarihi: 2026-08-10 sanat
+migrasyonunda 120→121 (eklenen TEK satır `AUDIT|/ObjectLayer/Keyboard|TextureRect|--|…`,
+tamamı tire — hiçbir tema değeri çözmüyor, sprite düğümünün yapısal eklenmesi), sonra
+2026-08-17 F5 turunda 121→123 (pano hedef kartı diğer kartların register'ına alındı:
+başlık HBox'ı + boşluk Control'ü eklendi), sonra 2026-08-18'de 123→122 (lamba halesi
+`/FXLayer/LampGlow` kaldırıldı — siyah lamba gövdesini yarı saydam gösteriyordu).
+Bu belge uzun süre "122 satır" diyordu; o sayı blok toplamıydı ve migrasyondan sonra
+güncellenmemişti — bugün aynı sayıya BAŞKA bir sebeple geri gelindi, tesadüf.
+**Sayının DEĞİŞMESİ tek başına ihlal değildir — ihlal, DEĞİŞMEMESİ gerekirken
+değişmesidir.** Düğüm ekleyen bir yerleşim işi satır sayısını meşru biçimde artırır;
+kanıt, otomatik `@Sınıf@NN` sayaçları normalize edildikten sonra diff'in YALNIZ hedeflenen
+alt ağaçta kalmasıdır. F5 turunda ölçülen: `@…@NN`→`@…@N` normalizasyonundan sonra
+GoalWrap dışında **0** satır değişti.
 Piksel karşılaştırması ODA için kullanılamaz — ölçüldü: `--oda-shot` kareleri
 `night/market1/market2/event/tab/tour` için iki değer arasında gidip geliyor (tween fazı /
 kare yarışı), yani hash eşitsizliği tema değişikliğinin kanıtı DEĞİL. Tema

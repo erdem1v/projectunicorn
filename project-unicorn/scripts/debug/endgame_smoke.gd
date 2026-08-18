@@ -196,6 +196,19 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_market_gate_b2c_run":            fail = _case_b2b_market_gate_b2c_run()
 		"sales_autoclose_empty_pain":         fail = _case_sales_autoclose_empty_pain()
 		"event_queue_dedupe_by_id":           fail = _case_event_queue_dedupe_by_id()
+		# --- Playable Run Sprint 2026-08-17. Each one FAILS against the pre-fix engine;
+		#     each was found by a 90-day driver run (--run-log), not by reading.
+		"promise_no_duplicate_word":          fail = _case_promise_no_duplicate_word()
+		"promise_kept_stops_countdown":       fail = _case_promise_kept_stops_countdown()
+		"recover_preserves_onboarding":       fail = _case_recover_preserves_onboarding()
+		"angel_fires_at_crossing":            fail = _case_angel_fires_at_crossing()
+		"angel_never_pre_ship":               fail = _case_angel_never_pre_ship()
+		"angel_not_below_threshold":          fail = _case_angel_not_below_threshold()
+		"angel_accept_is_atomic":             fail = _case_angel_accept_is_atomic()
+		"angel_locked_choice_inert":          fail = _case_angel_locked_choice_inert()
+		"angel_one_shot_falsified":           fail = _case_angel_one_shot_falsified()
+		"angel_survives_series_a":            fail = _case_angel_survives_series_a()
+		"angel_hire_nudge":                   fail = _case_angel_hire_nudge()
 		# --- SaveManager task 2026-08-08. Bunlar ŞEMAYI değil RESET MİMARİSİNİ ölçer:
 		#     serileştirme biçimi kolay %20; zor %80, yüklemenin ÇALIŞAN bir süreci
 		#     eskiden yalnız bir OS restart'ının üretebildiği duruma döndürmesi.
@@ -2698,6 +2711,495 @@ static func _case_runway_days_and_negative_cash() -> String:
 	GameState.set_cash(20000)
 	if not bool(UiTokens.net_runway_parts(INF).get("positive", false)):
 		return "a solvent, profitable company lost its ARTIDA — the guard is a wall"
+	return ""
+
+
+# ============================================================================
+#  Frank's angel round (Playable Run Sprint 2026-08-17)
+# ============================================================================
+
+# Seed a shipped B2B world at a chosen MRR, through the real signing seam, and hand back
+# the account so a case can move its MRR later. _seed_b2b sets mvp_shipped for us.
+static func _seed_angel_world(mrr: int) -> Customer:
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	_seed_b2b(mrr)
+	return CustomerRegistry.get_customer("co_lead_smoke")
+
+
+static func _case_angel_fires_at_crossing() -> String:
+	# Frank's cheque arrives the first day a shipped product's MRR clears the bar — and it
+	# reaches the player AHEAD of the phase gate when the two land together.
+	var c: Customer = _seed_angel_world(1000)   # below the bar
+	if c == null:
+		return "fixture: no customer"
+	if GameState.mrr != 1000:
+		return "fixture drifted: MRR is %d, wanted 1000" % GameState.mrr
+	# Clear the opening beats (first_revenue / frank_intro / traction gate) so the crossing
+	# day starts with an EMPTY queue — which is both the realistic case (the seed fires
+	# deep into a run, not on the noisy first morning) and the only condition under which
+	# enqueue_front ordering is decidable at all. See the note below.
+	for i in 3:
+		_sim_day_full()
+		_drain_all_modals()
+	if GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
+		return "the offer opened below the bar (MRR %d)" % GameState.mrr
+
+	# Cross BOTH bars in one day: the 2,500 seed bar and the 5,000 Series A gate. Brand
+	# starts at 50, so gate 2's brand condition is already satisfied.
+	CustomerRegistry.set_mrr(c.id, 6000)
+	SalesSystem.reflect_mrr()
+	# The crossing day is driven by hand rather than through _sim_day_full, for one reason:
+	# the assertion below is a claim about two DETERMINISTIC beats, and it is only decidable
+	# when the queue is empty when they fire (see the note at the assertion). The hourly
+	# pass can drop a random ambient event in first — and it cannot be hoped away, because
+	# run_case does NOT pin GameState.run_seed (initialize_run seeds off
+	# Time.get_ticks_msec), so the ambient roll is a fresh coin every invocation. This case
+	# passed solo and failed 4 times in 12 on that toss.
+	#
+	# So: run the hours exactly as the engine does, answer whatever the hourly pool raised,
+	# and only then cross the day boundary into the daily slots that carry the two beats.
+	# Nothing about the ordering under test is bypassed — only the unrelated noise is.
+	while GameState.current_hour < TimeManager.HOURS_PER_DAY - 1:
+		var h: int = GameState.current_hour + 1
+		GameState.set_current_hour(h)
+		TimeManager._dispatch_hourly_tick(h)
+	GameState.set_current_hour(0)
+	TimeManager._dispatch_hourly_tick(0)
+	_drain_all_modals()          # the queue is now provably empty
+	GameState.advance_day()
+	TimeManager._dispatch_daily_tick()
+
+	if not GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
+		return "the offer never opened at MRR %d" % GameState.mrr
+	if _instances_of(AngelRoundSystem.EVENT_ID) != 1:
+		return "expected exactly one seed scene, found %d" % _instances_of(AngelRoundSystem.EVENT_ID)
+
+	# ORDERING GUARD (do not drain before reading this). enqueue_front does NOT simply mean
+	# "front": it ends in _pump_queue, which mounts immediately when nothing is active. So
+	# with an EMPTY queue the FIRST caller owns the screen and later ones stack behind it,
+	# while with a modal already up the LAST caller pushes to the head of the queue. Slot
+	# order therefore only decides the reading order in the empty-queue case — which is the
+	# case this asserts, and the reason AngelRoundSystem sits at slot 8a, one line ahead of
+	# PhaseGateSystem: the money should land before "you're ready for Series A".
+	var seed_at: int = _queue_position_of(AngelRoundSystem.EVENT_ID)
+	var gate_at: int = _queue_position_of(GATE2_ID)
+	if gate_at < 0:
+		return "fixture: the Series A gate did not open at MRR %d / brand %d" % [GameState.mrr, GameState.brand]
+	if seed_at > gate_at:
+		return "the phase gate is ahead of the seed scene (seed %d, gate %d)" % [seed_at, gate_at]
+	return ""
+
+
+# Answer every modal currently pending (always choice 0), so a case can reach a known
+# empty-queue state. Bounded: a queue that will not drain is itself the finding.
+static func _drain_all_modals() -> void:
+	for i in 32:
+		if EventManager._active_event_id == "":
+			return
+		EventManager.resolve_choice(EventManager._active_event_id, 0)
+
+
+# Where an id sits in the player's reading order: 0 = the modal on screen now, 1.. = the
+# queue behind it, −1 = not pending.
+static func _queue_position_of(event_id: String) -> int:
+	if EventManager._active_event_id == event_id:
+		return 0
+	for i in EventManager._queue.size():
+		if EventManager._queue[i].id == event_id:
+			return i + 1
+	return -1
+
+
+static func _case_angel_never_pre_ship() -> String:
+	# Money without a product is not the beat. The guard under test is exactly the one the
+	# seeder would otherwise satisfy, so it is cleared after seeding, on purpose.
+	var c: Customer = _seed_angel_world(AngelRoundSystem.MRR_THRESHOLD * 2)
+	if c == null:
+		return "fixture: no customer"
+	GameState.set_flag("mvp_shipped", false)
+	for i in 3:
+		_sim_day_full()
+	if GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
+		return "the offer opened with no shipped product"
+	if _instances_of(AngelRoundSystem.EVENT_ID) != 0:
+		return "a seed scene queued with no shipped product"
+	if GameState.run_angel_equity_pct != 0:
+		return "equity moved with no shipped product"
+	return ""
+
+
+static func _case_angel_not_below_threshold() -> String:
+	# BOTH sides of the boundary in one case: silence at threshold-1 proves nothing on its
+	# own (a feature that never fires would pass it), so the same account is then raised
+	# over the line through the real seam and must fire.
+	var c: Customer = _seed_angel_world(AngelRoundSystem.MRR_THRESHOLD - 1)
+	if c == null:
+		return "fixture: no customer"
+	if GameState.mrr != AngelRoundSystem.MRR_THRESHOLD - 1:
+		return "fixture drifted: MRR is %d" % GameState.mrr
+	_sim_day_full()
+	if GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
+		return "the offer opened one dollar under the bar (MRR %d)" % GameState.mrr
+	# Over the line, through CustomerRegistry + the MRR bridge (a bare set_mrr would be
+	# clobbered by SalesSystem._mrr_bridge on the next tick).
+	CustomerRegistry.set_mrr(c.id, AngelRoundSystem.MRR_THRESHOLD)
+	SalesSystem.reflect_mrr()
+	_sim_day_full()
+	if not GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
+		return "the offer did not open at the bar itself (MRR %d)" % GameState.mrr
+	return ""
+
+
+static func _case_angel_accept_is_atomic() -> String:
+	# The round lands whole or not at all. A plain end-state check would pass against an
+	# implementation that wrote cash FIRST and the cap table after — and that ordering ships
+	# a one-frame Finance bar reading 0% beside $25,000 of new money, because cash_changed
+	# is synchronous and the tab repaints inside it. So the probe below samples the world
+	# FROM INSIDE the cash_changed emit.
+	var c: Customer = _seed_angel_world(AngelRoundSystem.MRR_THRESHOLD)
+	if c == null:
+		return "fixture: no customer"
+	var seen_equity: Array = [-1]
+	var seen_tx: Array = [-1]
+	var equity_emits: Array = [0]
+	var probe := func(_v: int) -> void:
+		seen_equity[0] = GameState.get_investor_equity_pct()
+		seen_tx[0] = FinanceSystem.get_transactions().size()
+	EventBus.equity_changed.connect(func(_p: int) -> void: equity_emits[0] += 1)
+	_sim_day_full()
+	if not _drain_to(AngelRoundSystem.EVENT_ID):
+		return "the seed scene never became active"
+	# Baselines taken AFTER the day has settled: _sim_day_full runs the finance slot, which
+	# applies the day's net flow, so a pre-tick snapshot would be off by exactly that net
+	# and the case would be measuring the burn model rather than the round.
+	var cash0: int = GameState.cash
+	var tx0: int = FinanceSystem.get_transactions().size()
+	EventBus.cash_changed.connect(probe)
+	EventManager.resolve_choice(AngelRoundSystem.EVENT_ID, 0)   # KABUL
+	EventBus.cash_changed.disconnect(probe)
+
+	if GameState.cash != cash0 + AngelRoundSystem.CASH_AMOUNT:
+		return "cash %d -> %d, wanted +%d" % [cash0, GameState.cash, AngelRoundSystem.CASH_AMOUNT]
+	if GameState.run_angel_equity_pct != AngelRoundSystem.EQUITY_PCT:
+		return "angel equity is %d%%" % GameState.run_angel_equity_pct
+	if GameState.get_investor_equity_pct() != AngelRoundSystem.EQUITY_PCT:
+		return "composed investor equity is %d%%" % GameState.get_investor_equity_pct()
+	if GameState.get_total_raised() != AngelRoundSystem.CASH_AMOUNT:
+		return "total raised is %d" % GameState.get_total_raised()
+	var txs: Array = FinanceSystem.get_transactions()
+	if txs.size() != tx0 + 1:
+		return "transactions grew by %d, wanted 1" % (txs.size() - tx0)
+	var row: Dictionary = txs[txs.size() - 1]
+	if String(row.get("label", "")) != AngelRoundSystem.TX_LABEL \
+			or int(row.get("amount", 0)) != AngelRoundSystem.CASH_AMOUNT:
+		return "ledger row is %s" % str(row)
+	# The atomicity assertions proper.
+	if seen_equity[0] != AngelRoundSystem.EQUITY_PCT:
+		return "cash_changed fired with the cap table still at %d%% — the round is not atomic" % seen_equity[0]
+	if seen_tx[0] != tx0 + 1:
+		return "cash_changed fired before the ledger row was appended"
+	if equity_emits[0] != 1:
+		return "equity_changed fired %d times, wanted exactly 1" % equity_emits[0]
+	if int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, 0)) != GameState.day:
+		return "the accepted-day stamp did not land"
+	return ""
+
+
+static func _case_angel_locked_choice_inert() -> String:
+	# REDDET · ZOR MOD is visible and unusable, and the lock is honest: not a fake
+	# threshold that could accidentally come true, but a flag with no writer in the engine.
+	var ev: GameEvent = AngelRoundSystem.build_offer_event()
+	if ev.choices.size() != 2:
+		return "the seed scene has %d choices, wanted 2" % ev.choices.size()
+	var refuse: EventChoice = ev.choices[1]
+	# The SAME call the modal makes (event_modal.gd:330), not a mirror of it.
+	if EventManager.is_condition_met(refuse.unlock_condition):
+		return "the hard-mode choice is unlocked"
+	if refuse.unlock_reason_text == "":
+		return "the locked choice carries no telegraph text"
+	if not refuse.modifiers.is_empty():
+		return "the locked choice carries modifiers — the lock is the only thing stopping them"
+	# FALSIFY THE LOCK: it must be a live predicate over one named key, not a constant.
+	GameState.set_flag(AngelRoundSystem.HARD_MODE_FLAG, true)
+	if not EventManager.is_condition_met(refuse.unlock_condition):
+		return "the lock did not open when hard_mode_unlocked was set — it is not a real condition"
+	GameState.set_flag(AngelRoundSystem.HARD_MODE_FLAG, false)
+	if EventManager.is_condition_met(refuse.unlock_condition):
+		return "flag_equals matched a false value — the gate is flag_set, not flag_equals"
+	return ""
+
+
+static func _case_angel_one_shot_falsified() -> String:
+	# Once, ever — and the second half proves the LATCH is what makes it so, rather than
+	# some unrelated dedupe doing the work (or the feature simply never firing twice).
+	var c: Customer = _seed_angel_world(AngelRoundSystem.MRR_THRESHOLD)
+	if c == null:
+		return "fixture: no customer"
+	_sim_day_full()
+	if not _drain_to(AngelRoundSystem.EVENT_ID):
+		return "the seed scene never became active"
+	EventManager.resolve_choice(AngelRoundSystem.EVENT_ID, 0)
+	# Ten more days INCLUDING a genuine re-crossing: down under the bar, then back over.
+	for i in 10:
+		if i == 3:
+			CustomerRegistry.set_mrr(c.id, AngelRoundSystem.MRR_THRESHOLD - 900)
+			SalesSystem.reflect_mrr()
+		if i == 6:
+			CustomerRegistry.set_mrr(c.id, AngelRoundSystem.MRR_THRESHOLD + 2000)
+			SalesSystem.reflect_mrr()
+		_sim_day_full()
+		if _instances_of(AngelRoundSystem.EVENT_ID) != 0:
+			return "the seed scene re-opened on day %d" % GameState.day
+	if GameState.run_angel_equity_pct != AngelRoundSystem.EQUITY_PCT:
+		return "equity compounded to %d%%" % GameState.run_angel_equity_pct
+	var paid: int = 0
+	for row in FinanceSystem.get_transactions():
+		if String(row.get("label", "")) == AngelRoundSystem.TX_LABEL:
+			paid += 1
+	if paid != 1:
+		return "the treasury took the cheque %d times" % paid
+	# THE FALSIFICATION: clear the latch by hand and the offer MUST come back. Without
+	# this half the case would pass just as happily against an engine where the beat never
+	# fires at all, or where something other than the flag is doing the suppressing.
+	GameState.set_flag(AngelRoundSystem.FLAG_OFFERED, false)
+	_sim_day_full()
+	if _instances_of(AngelRoundSystem.EVENT_ID) != 1:
+		return "clearing the latch did not re-open the offer — the one-shot is not the latch's doing"
+	return ""
+
+
+static func _case_angel_survives_series_a() -> String:
+	# The regression guard for the collision this design exists to avoid:
+	# _persist_signed_terms writes run_equity_pct by PLAIN ASSIGNMENT, so an angel slice
+	# folded into that field would be erased by the signature. FAILS against any design
+	# that shares one scalar between the two rounds.
+	var c: Customer = _seed_angel_world(AngelRoundSystem.MRR_THRESHOLD)
+	if c == null:
+		return "fixture: no customer"
+	_sim_day_full()
+	if not _drain_to(AngelRoundSystem.EVENT_ID):
+		return "the seed scene never became active"
+	EventManager.resolve_choice(AngelRoundSystem.EVENT_ID, 0)
+	VCPitchSystem._persist_signed_terms({
+		"valuation_m": 22, "dilution_pct": 18, "board_seats": 1, "board_veto": false})
+	if GameState.run_angel_equity_pct != AngelRoundSystem.EQUITY_PCT:
+		return "the Series A erased the angel slice (%d%%)" % GameState.run_angel_equity_pct
+	if GameState.run_equity_pct != 18:
+		return "the Series A slice is %d%%" % GameState.run_equity_pct
+	if GameState.get_investor_equity_pct() != 22:
+		return "composed investor equity is %d%%, wanted 22" % GameState.get_investor_equity_pct()
+	var want_raised: int = AngelRoundSystem.CASH_AMOUNT + int(round(22 * 1_000_000.0 * 18 / 100.0))
+	if GameState.get_total_raised() != want_raised:
+		return "total raised is %d, wanted %d" % [GameState.get_total_raised(), want_raised]
+	var ledger: Dictionary = GameState.get_run_ledger()
+	# The newspaper's valuation sentence stays about the Series A alone...
+	if int(ledger.get("equity_pct", 0)) != 18:
+		return "the ledger's Series A slice moved to %d" % int(ledger.get("equity_pct", 0))
+	# ...while the founder's remaining share counts BOTH rounds.
+	if int(ledger.get("investor_equity_pct", 0)) != 22:
+		return "the ledger's composed investor slice is %d" % int(ledger.get("investor_equity_pct", 0))
+	return ""
+
+
+static func _case_angel_hire_nudge() -> String:
+	# Frank's line about being one person: once, a couple of days after the money, and only
+	# while the founder actually is alone. The HR rail badge rides with it and clears itself.
+	var c: Customer = _seed_angel_world(AngelRoundSystem.MRR_THRESHOLD)
+	if c == null:
+		return "fixture: no customer"
+	var badge0: int = HRSystem.attention_count()
+	_sim_day_full()
+	if not _drain_to(AngelRoundSystem.EVENT_ID):
+		return "the seed scene never became active"
+	EventManager.resolve_choice(AngelRoundSystem.EVENT_ID, 0)
+	if HRSystem.attention_count() != badge0 + 1:
+		return "the HR badge did not light after the seed (%d -> %d)" % [badge0, HRSystem.attention_count()]
+	# Too early: the day after acceptance is inside the delay.
+	_sim_day_full()
+	if _instances_of(AngelRoundSystem.NUDGE_EVENT_ID) != 0:
+		return "the nudge fired before its delay elapsed"
+	for i in AngelRoundSystem.NUDGE_DELAY_DAYS:
+		_sim_day_full()
+	if not _drain_to(AngelRoundSystem.NUDGE_EVENT_ID):
+		return "the hire nudge never arrived"
+	EventManager.resolve_choice(AngelRoundSystem.NUDGE_EVENT_ID, 0)
+	# Advisory only: nothing economic may have moved.
+	if GameState.run_angel_equity_pct != AngelRoundSystem.EQUITY_PCT:
+		return "the nudge moved equity"
+	for i in 6:
+		_sim_day_full()
+		if _instances_of(AngelRoundSystem.NUDGE_EVENT_ID) != 0:
+			return "the nudge repeated on day %d" % GameState.day
+	# Hiring clears the badge — the signpost is self-retiring, not a standing demand.
+	_make_employee("emp_nudge_hire", "İlk Çalışan", HRConstants.ROLE_DEVELOPER)
+	if HRSystem.attention_count() != badge0:
+		return "the HR badge survived the hire (%d, wanted %d)" % [HRSystem.attention_count(), badge0]
+	return ""
+
+
+static func _case_promise_no_duplicate_word() -> String:
+	# Playable Run Sprint. A word already given may not be given again: while a promise to
+	# an account is OPEN, no retention or CS-request card may offer that account a second
+	# "Söz ver". The rule already existed in the sibling channel (pick_request_kind scores
+	# has_open_for at −25) but no gate enforced it anywhere.
+	#
+	# Measured cost of the gap, 90-day driver run (--run-log=b2b_risk:90:sim), 5 accounts:
+	# 142 promises created, 117 broken — three open promises for the SAME customer and the
+	# SAME feature at once. Broken, it charged three penalties for one unbuilt feature
+	# (brand 50 → 0 by day 30); kept, one ship redeemed all three (+45 satisfaction for one
+	# build). FAILS against the pre-fix engine on the very first re-offer.
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	c.pain_feature_id = "saas_ops_scheduling"
+	# Fixture guard: the promise row must be reachable at all, or this case proves nothing.
+	var live: Array = GameState.get_flag("mvp_components", [])
+	if live.has(c.pain_feature_id):
+		return "fixture drifted: pain feature is already shipped"
+	var first: GameEvent = B2BEventFactory.build_retention(c)
+	if _promise_row_index(first) < 0:
+		return "the retention card offered no promise row with nothing outstanding"
+
+	# Give the word once, through the real modifier seam.
+	B2BSalesSystem.accept_promise(c.id, c.pain_feature_id, B2BConstants.PROMISE_DEADLINE_DAYS)
+	if not PromiseRegistry.has_open_for(c.id):
+		return "accept_promise did not open a promise"
+
+	# Now every card that could mint a second debt must withhold it.
+	var again: GameEvent = B2BEventFactory.build_retention(c)
+	if _promise_row_index(again) >= 0:
+		return "the retention card offered a SECOND word while one was still open"
+	if again.choices.is_empty():
+		return "withholding the promise row emptied the card — the player would be stuck"
+	var req: GameEvent = B2BEventFactory.build_cs_request(c, _make_employee(
+		"emp_cs_dup", "Dup CS", HRConstants.ROLE_CUSTOMER_REP))
+	if _promise_row_index(req) >= 0:
+		return "the CS request card offered a SECOND word while one was still open"
+
+	# Control: once the debt is settled, the card offers a word again — the gate is the
+	# OPEN promise, not a permanent ban.
+	for p in PromiseRegistry.get_open_for(c.id):
+		p.status = "broken"
+	if PromiseRegistry.has_open_for(c.id):
+		return "fixture: the promise did not close"
+	c.pain_feature_id = "saas_ops_field"   # a still-unshipped feature
+	if _promise_row_index(B2BEventFactory.build_retention(c)) < 0:
+		return "the promise row never came back after the debt closed"
+	return ""
+
+
+# Index of the row that would MINT A NEW PROMISE, found by modifier type rather than by
+# label (labels are player-facing text) or position (the rows are conditional).
+static func _promise_row_index(ev: GameEvent) -> int:
+	for i in ev.choices.size():
+		for m in ev.choices[i].modifiers:
+			if String(m.get("type", "")) == "b2b_promise_create":
+				return i
+	return -1
+
+
+static func _case_promise_kept_stops_countdown() -> String:
+	# Playable Run Sprint. KEEPING the word must stop the churn clock, exactly as GIVING it
+	# already did. accept_promise ran _recover (countdown → −1, streak → 0); the "kept"
+	# branch of on_promise_resolved wrote satisfaction and nothing else, so the clock kept
+	# running straight through the delivery. Reproduced in a driver run
+	# (--run-log=b2b_risk_keep:90:sim): the feature shipped on day 12 into
+	# "status=kept ... countdown=5 phase=risk".
+	#
+	# The gap is only survivable when +PROMISE_KEPT_SAT / −PROMISE_KEPT_TOLERANCE happens to
+	# clear the bar in one step; on an account whose tolerance had been ratcheted up by
+	# earlier broken words it does not, and the player pays cash and days for a feature and
+	# loses the account anyway. FAILS against the pre-fix engine: countdown stays live.
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	c.pain_feature_id = "saas_ops_scheduling"
+	var p: Promise = PromiseRegistry.create(c.id, c.pain_feature_id, 14)
+
+	# Put the account in a REAL risk state with a live countdown, through the seams.
+	CustomerRegistry.set_tolerance(c.id, 60)
+	CustomerRegistry.set_satisfaction(c.id, 20)   # gap 40: far wider than +15/−5 can close
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	CustomerRegistry.set_churn_countdown(c.id, 3)
+	CustomerRegistry.set_risk_streak(c.id, 5)
+
+	# Ship the promised feature — the real coupling: mvp_components, then the phase signal.
+	var comps: Array = GameState.get_flag("mvp_components", [])
+	comps.append(c.pain_feature_id)
+	GameState.set_flag("mvp_components", comps)
+	EventBus.build_phase_changed.emit("shipped")
+
+	if p.status != "kept":
+		return "the shipped feature did not keep the promise (status=%s)" % p.status
+	var after: Customer = CustomerRegistry.get_customer(c.id)
+	if after == null:
+		return "the account was removed by its own rescue"
+	if after.churn_countdown != -1:
+		return "kept promise left the churn countdown running (%d)" % after.churn_countdown
+	if after.lifecycle_phase == "risk":
+		return "kept promise left the account in risk phase"
+	if after.risk_streak != 0:
+		return "kept promise left the risk streak at %d" % after.risk_streak
+	# The satisfaction bump must still be exactly PROMISE_KEPT_SAT — routing it through
+	# _recover moved WHERE it is applied, never HOW MUCH. 20 + 15 = 35.
+	if after.satisfaction != 35:
+		return "kept-promise satisfaction drifted from PROMISE_KEPT_SAT (20 -> %d, want 35)" % after.satisfaction
+	if after.tolerance != 60 + B2BConstants.PROMISE_KEPT_TOLERANCE:
+		return "kept-promise tolerance drifted (%d)" % after.tolerance
+
+	# The rescue must be REAL, not one tick deep: the account still sits under its bar
+	# (35 < 55), so the next day legitimately restarts the streak — but from zero, and
+	# without a countdown, which is the whole difference between a reprieve and none.
+	_sim_day_full()
+	var d2: Customer = CustomerRegistry.get_customer(c.id)
+	if d2 == null:
+		return "the account churned the day after its promise was kept"
+	if d2.churn_countdown >= 0:
+		return "the countdown restarted immediately (%d) — the streak was not reset" % d2.churn_countdown
+	return ""
+
+
+static func _case_recover_preserves_onboarding() -> String:
+	# Playable Run Sprint. _recover stamped "active" unconditionally, while _tick_healthy's
+	# own risk branch preserves "onboarding" inside the window — the identical bug that
+	# branch carries a comment about, still live on this one. An account rescued in its
+	# first ONBOARDING_DAYS left the window early while _tick_satisfaction kept amplifying
+	# its drift, so phase and model disagreed for the rest of the window.
+	# Observed in a driver run: signed day 1, stamped "active" on day 4, onboarding_until 31.
+	# FAILS against the pre-fix engine: phase reads "active".
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	if GameState.day >= c.onboarding_until:
+		return "fixture: the account is already out of its onboarding window"
+	CustomerRegistry.set_tolerance(c.id, 60)
+	CustomerRegistry.set_satisfaction(c.id, 30)
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	CustomerRegistry.set_churn_countdown(c.id, 4)
+	B2BSalesSystem.apply_discount(c.id, -100)   # any rescue path: they all run _recover
+	var after: Customer = CustomerRegistry.get_customer(c.id)
+	if after.churn_countdown != -1:
+		return "the rescue did not clear the countdown"
+	if after.lifecycle_phase != "onboarding":
+		return "rescue inside the onboarding window stamped '%s'" % after.lifecycle_phase
+
+	# Control: the SAME rescue past the window must settle to "active", or the fix would
+	# just be a different unconditional write.
+	var p2 := Prospect.new()
+	p2.id = "lead_mature"
+	p2.company_name = "Mature A.Ş."
+	p2.industry = "Testing"
+	p2.archetype = "small"
+	SalesSystem.add_b2b_customer(p2, 900, 70)
+	var m: Customer = CustomerRegistry.get_customer("co_lead_mature")
+	m.onboarding_until = GameState.day - 1     # window already closed
+	CustomerRegistry.set_tolerance(m.id, 60)
+	CustomerRegistry.set_satisfaction(m.id, 30)
+	CustomerRegistry.set_lifecycle_phase(m.id, "risk")
+	CustomerRegistry.set_churn_countdown(m.id, 4)
+	B2BSalesSystem.apply_discount(m.id, -100)
+	if CustomerRegistry.get_customer(m.id).lifecycle_phase != "active":
+		return "a rescue past the window did not settle to active"
 	return ""
 
 

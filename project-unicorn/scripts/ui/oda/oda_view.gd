@@ -27,12 +27,19 @@ extends Control
 const OdaLayoutRef := preload("res://scripts/ui/oda/oda_layout.gd")
 const OdaTourRef := preload("res://scripts/ui/oda/oda_tour.gd")
 const RIM_SHADER := preload("res://scenes/desk/oda_rim_glow.gdshader")
-const TEX_DAY := preload("res://assets/art/center_view/empty_desk_LIGHT_4K_3840x2160.png")
-const TEX_NIGHT := preload("res://assets/art/center_view/empty_desk_DARK_4K_3840x2160.png")
-const TEX_MONITOR := preload("res://assets/art/center_view/pc_3840x2160.png")
+const TEX_DAY := preload("res://assets/art/center_view/room_day_3840x2160.png")
+const TEX_NIGHT := preload("res://assets/art/center_view/room_night_3840x2160.png")
+const TEX_MONITOR := preload("res://assets/art/center_view/monitor_3840x2160.png")
+const TEX_KEYBOARD := preload("res://assets/art/center_view/keyboard_3840x2160.png")
 const TEX_PHONE := preload("res://assets/art/center_view/phone_3840x2160.png")
 const TEX_LAMP := preload("res://assets/art/center_view/lamp_3840x2160.png")
 const TEX_MUG := preload("res://assets/art/center_view/mug_3840x2160.png")
+# Gece varyantları: monitörün emissive ekranı + lambanın yanan ampulü. Yalnız bu
+# ikisinin gece hali FARKLI render edilir; mug/telefon/klavye gece tint'iyle
+# yeterince oturuyor, ayrı katman taşımanın bedeli kadar değeri yok.
+# monitor_night EMEKLİ (2026-08-17): mühürlü sahnede ekran gece de karanlık cam,
+# gece monitörü = gündüz katmanı + ObjectLayer modulate. Gerekçe _apply_night_textures'ta.
+const TEX_LAMP_NIGHT := preload("res://assets/art/center_view/lamp_night_3840x2160.png")
 
 # --- # WORKING değerleri (Erdem F5 mühürler) --------------------------------
 const FRAMES_CLICKABLE := true      # Erdem onayı 2026-08-06 (task metni kanon; eski kanon "pasif" derdi)
@@ -41,7 +48,6 @@ const FRAMES_CLICKABLE := true      # Erdem onayı 2026-08-06 (task metni kanon;
 # (serin tint). Mesai bloğu GECE'yi zorlar. Geçiş yalnız DURUM değişince, tek tween.
 const LIGHT_FADE_S := 1.5           # her durum geçişinin crossfade süresi (D6: 1.5 sn)
 const HOVER_FADE_S := 0.15          # hover glow aç/kapa
-const LAMP_GLOW_NIGHT_A := 0.55     # lamba halesi gece alfası
 const BUZZ_S := 0.30                # telefon titreşimi süresi
 const BUZZ_PX := 3.0                # titreşim genliği
 const PAPER_ARRIVE_S := 0.35        # kâğıt geliş animasyonu
@@ -59,7 +65,6 @@ var _scene_layer: Control
 var _object_layer: Control
 var _sprites: Dictionary = {}          # id -> TextureRect
 var _sprite_mats: Dictionary = {}      # id -> ShaderMaterial (monitor/phone)
-var _lamp_glow: TextureRect
 var _phone_dot: Panel
 var _info_layer: Control
 # D4 sarmalayıcıları: host-türetimli her yüzeyin kırpan dış Control'ü.
@@ -196,9 +201,11 @@ func _mk_scene_art(art_name: String, tex: Texture2D) -> TextureRect:
 
 func _build_object_layer() -> void:
 	_object_layer = _mk_layer("ObjectLayer")
-	# Çizim sırası: lamba (arka) → monitör → mug → telefon (en ön / izleyiciye en yakın).
+	# Çizim sırası: lamba (arka) → monitör → klavye → mug → telefon (en ön).
+	# Klavye monitörden SONRA: monitör ayağının önünde duruyor.
 	_sprites["lamp"] = _mk_object_sprite("Lamp", TEX_LAMP, "lamp", false)
 	_sprites["monitor"] = _mk_object_sprite("Monitor", TEX_MONITOR, "monitor", true)
+	_sprites["keyboard"] = _mk_object_sprite("Keyboard", TEX_KEYBOARD, "keyboard", false)
 	_sprites["mug"] = _mk_object_sprite("Mug", TEX_MUG, "mug", false)
 	_sprites["phone"] = _mk_object_sprite("Phone", TEX_PHONE, "phone", true)
 
@@ -230,30 +237,16 @@ func _mk_object_sprite(node_name: String, tex: Texture2D, layout_id: String, hov
 
 func _build_fx_layer() -> void:
 	var fx := _mk_layer("FXLayer")
-	# Lamba halesi: runtime radyal gradyan + additive blend. GECE sahnesindeki
-	# baked ışık havuzu ağır işi yapar; bu hale yalnız SÖNÜK lamba sprite'ının
-	# başını "yakar" (tek lamba sprite'ı var — yanık varyant motor boşluğu).
-	var grad := Gradient.new()
-	grad.set_color(0, UiTokens.ODA_LAMP_GLOW)
-	grad.set_color(1, Color(UiTokens.ODA_LAMP_GLOW, 0.0))
-	var gtex := GradientTexture2D.new()
-	gtex.gradient = grad
-	gtex.fill = GradientTexture2D.FILL_RADIAL
-	gtex.fill_from = Vector2(0.5, 0.5)
-	gtex.fill_to = Vector2(0.5, 0.0)
-	gtex.width = 256
-	gtex.height = 256
-	_lamp_glow = TextureRect.new()
-	_lamp_glow.name = "LampGlow"
-	_lamp_glow.texture = gtex
-	_lamp_glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_lamp_glow.stretch_mode = TextureRect.STRETCH_SCALE
-	_lamp_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var add_mat := CanvasItemMaterial.new()
-	add_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	_lamp_glow.material = add_mat
-	_lamp_glow.modulate.a = 0.0
-	fx.add_child(_lamp_glow)
+	# LAMBA HALESİ KALDIRILDI (2026-08-18, Erdem). Burada additive radyal bir
+	# gradyan (LampGlow) vardı ve gece lamba sprite'ının ÜSTÜNE biniyordu. Sorun
+	# şuydu: gövde düz siyah ama hale onun üzerine ekleniyor, dolayısıyla siyah
+	# abajur sütlü/yarı saydam görünüyor — sanki lambanın KENDİSİ parlıyormuş gibi.
+	# Sözleşme bunun tersi: gövde her iki modda düz siyah kalır, gece yalnız AMPUL
+	# yanar. Işığı taşıyan iki şey zaten var ve ikisi de gövdeyi boyamıyor:
+	# `lamp_night` katmanındaki emissive ampul + gece plakasına baked ışık havuzu.
+	# Ölçümle doğrulandı: her iki lamba PNG'sinde soluk-alfa (1..39) pikseli SIFIR,
+	# yani sanatta hiçbir parlama yok — görülen hale %100 bu node'du.
+	# FXLayer KALIYOR: PhoneDot burada yaşıyor (silinirse onun audit yolu değişir).
 	# Telefon kırmızı noktası: bekleyen olay latch'i (animasyon değil, durum).
 	_phone_dot = UiFactory.make_dot(UiTokens.ODA_BADGE_BG, 10)
 	_phone_dot.name = "PhoneDot"
@@ -290,7 +283,7 @@ func _mk_surface_wrap(parent: Control, wrap_name: String) -> Control:
 
 
 func _build_screen_glow() -> void:
-	# Gece ekran parlaması (görev §7) — LampGlow kalıbı: additive radyal gradyan,
+	# Gece ekran parlaması (görev §7) — additive radyal gradyan,
 	# monitör sarmalayıcısının DIŞINDA/arkasında (stylebox gölgesi olsaydı D4
 	# sarmalayıcısı yarım-glow'a kırpardı). Gündüz alfa 0.
 	var grad := Gradient.new()
@@ -443,15 +436,37 @@ func _build_board_cards() -> void:
 	var gcol := VBoxContainer.new()
 	gcol.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	_board_goal.add_child(gcol)
-	_goal_label = UiFactory.make_label("", &"NewsDeckSerif")
-	gcol.add_child(_goal_label)
-	_goal_value = UiFactory.make_label("", &"MetricValueInk")
-	gcol.add_child(_goal_value)
+	# F5 turu (2026-08-17): hedef kartı panonun REGISTER'ına alındı. Eskiden tek
+	# başına serif-deck etiketi + `MetricValueInk` (18px sans) taşıyordu, yani BİR
+	# CÜMLE büyük-figür yuvasında oturuyordu — o yuva SAYI içindir (P3-kapandı
+	# dalında aynı alan format_money taşıyor, doğru kullanımı o). Kart bu yüzden
+	# bağırıyordu. Artık pazar payı / tarihler kalıbı birebir: başlık HBox'ı
+	# (mono, BÜYÜK HARF, değer SAĞA yaslı) → satır → ince çizgi.
+	# Kullanılan varyasyonların HEPSİ frozen temada zaten var — unfreeze YOK.
+	var ghead := HBoxContainer.new()
+	gcol.add_child(ghead)
+	_goal_label = UiFactory.make_label("", &"NewsMeta")
+	ghead.add_child(_goal_label)
+	var gsp := Control.new()
+	gsp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ghead.add_child(gsp)
 	_goal_sub = UiFactory.make_label("", &"NewsMeta")
-	gcol.add_child(_goal_sub)
+	ghead.add_child(_goal_sub)
+	_goal_value = UiFactory.make_label("", &"RowMeta")
+	# clip_text + expand-fill = satır grameri (lig/tarih satırlarıyla aynı).
+	# Bunun yan faydası gerçek bir kırığı kapatmak: hedef kartının HİÇBİR
+	# etiketinde ne clip_text ne autowrap vardı, yani uzun bir P2/P3 değeri
+	# zarifçe kısalmak yerine sarmalayıcı tarafından SESSİZCE kesiliyordu.
+	_goal_value.clip_text = true
+	_goal_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gcol.add_child(_goal_value)
 	_goal_bar = ProgressBar.new()
 	_goal_bar.theme_type_variation = &"BuildProgress"
-	_goal_bar.custom_minimum_size = Vector2(0, 6)
+	# 6 → 3 px: dolu amber şerit bütün panonun en ağır öğesiydi ve başka hiçbir
+	# kartta karşılığı yok. `BuildProgress` stylebox'ları FROZEN temada, o yüzden
+	# renk/radius dokunulmuyor — yükseklik tek serbest değişken, ve 3px'te
+	# radius-3 dolgu şerit değil ÇİZGİ okuyor.
+	_goal_bar.custom_minimum_size = Vector2(0, 3)
 	_goal_bar.show_percentage = false
 	_goal_bar.max_value = 100.0
 	gcol.add_child(_goal_bar)
@@ -726,12 +741,11 @@ func _relayout() -> void:
 	for art in [_day_art, _night_art]:
 		art.position = room.position
 		art.size = room.size
-	for id in ["monitor", "phone", "lamp", "mug"]:
+	for id in ["monitor", "keyboard", "phone", "lamp", "mug"]:
 		var r: Rect2 = OdaLayoutRef.place(OdaLayoutRef.padded_target(id), view)
 		var spr: TextureRect = _sprites[id]
 		spr.position = r.position
 		spr.size = r.size
-	_place(_lamp_glow, "lamp_glow")
 	# Telefon noktası: telefon içerik-kutusunun sağ-üst köşesi.
 	var phone_r: Rect2 = OdaLayoutRef.place(OdaLayoutRef.RECTS["phone"], view)
 	_phone_dot.position = phone_r.position + Vector2(phone_r.size.x - 8.0, -4.0)
@@ -779,9 +793,6 @@ func _relayout() -> void:
 func _set_rect(node: Control, r: Rect2) -> void:
 	node.position = r.position
 	node.size = r.size
-
-func _place(node: Control, id: String) -> void:
-	_set_rect(node, OdaLayoutRef.place(OdaLayoutRef.RECTS[id], size))
 
 func _place_clamped(node: Control, id: String) -> void:
 	_set_rect(node, OdaLayoutRef.place_clamped(OdaLayoutRef.RECTS[id], size))
@@ -846,15 +857,18 @@ func _eval_light(instant: bool) -> void:
 		&"dawn":
 			scene_tint = UiTokens.ODA_TINT_DAWN
 	var target_a: float = 1.0 if night else 0.0
-	var obj_tint: Color = UiTokens.ODA_NIGHT_TINT if night else Color.WHITE
-	var glow_a: float = LAMP_GLOW_NIGHT_A if night else 0.0
+	# Objeler sahne tint'ini de yer. Suluboyada objeler kendi ışığıyla boyanmıştı ve
+	# akşam/şafakta tint'siz kalmaları yutulabiliyordu; prosedürel katmanlar plakayla
+	# AYNI ışıktan render edildiği için tint'siz obje turuncu odanın üstünde gündüz
+	# gibi durur. Çarpım: gece ODA_NIGHT_TINT, akşam/şafak sahne tint'i, gündüz beyaz.
+	var obj_tint: Color = (UiTokens.ODA_NIGHT_TINT if night else Color.WHITE) * scene_tint
+	_apply_night_textures(night)
 	if _night_tween != null and _night_tween.is_valid():
 		_night_tween.kill()
 	if instant or not is_visible_in_tree():
 		_night_art.visible = night
 		_night_art.modulate.a = target_a
 		_object_layer.modulate = obj_tint
-		_lamp_glow.modulate.a = glow_a
 		_scene_layer.modulate = scene_tint
 		_apply_screen_glow(night, true)
 		return
@@ -862,7 +876,6 @@ func _eval_light(instant: bool) -> void:
 	_night_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_night_tween.tween_property(_night_art, "modulate:a", target_a, LIGHT_FADE_S)
 	_night_tween.tween_property(_object_layer, "modulate", obj_tint, LIGHT_FADE_S)
-	_night_tween.tween_property(_lamp_glow, "modulate:a", glow_a, LIGHT_FADE_S)
 	_night_tween.tween_property(_scene_layer, "modulate", scene_tint, LIGHT_FADE_S)
 	_apply_screen_glow(night, false)
 	# Gündüz-quad'ı kapatma fade bitiminde (tek kare değişimi kuyruğunda erir).
@@ -872,8 +885,37 @@ func _eval_light(instant: bool) -> void:
 	)
 
 
+func _apply_night_textures(night: bool) -> void:
+	# YALNIZ LAMBA gece ayrı render edilir. Bunun sebebi ölçüldü, tercih değil:
+	# lambanın gece/gündüz kanal oranı (1.72, 1.37, 0.89) — yani ampul KENDİ ışığıyla
+	# aydınlandığı için bazı kanallarda 1'in ÜSTÜNDE. Bir multiply (modulate) 1'in
+	# üstüne çıkamaz, o yüzden lamba ayrı katman olmak ZORUNDA.
+	# MONİTÖR 2026-08-17'de bu listeden ÇIKTI: mühürlü sahnede ekran her iki modda da
+	# KARANLIK CAM (emissive 0x000000) — içeriği oyun basıyor — dolayısıyla gece
+	# monitörü gündüz katmanının ObjectLayer modulate'i altındaki hâlidir ve
+	# monitor_night_3840x2160.png EMEKLİ EDİLDİ. Ölçülen oran (0.906, 0.783, 0.621),
+	# hepsi < 1, yani multiply ile birebir temsil edilebiliyor → UiTokens.ODA_NIGHT_TINT.
+	# Region aynı kalır, çünkü her iki varyant da aynı kameradan aynı kanvasa çizildi.
+	# imported_scale yeniden hesaplanır: size_limit varyantları farklı ölçekleyebilir.
+	var swap := {
+		"lamp": TEX_LAMP_NIGHT if night else TEX_LAMP,
+	}
+	for id in swap:
+		var spr: TextureRect = _sprites.get(id)
+		if spr == null:
+			continue
+		var atlas := spr.texture as AtlasTexture
+		if atlas == null:
+			continue
+		var tex: Texture2D = swap[id]
+		if atlas.atlas == tex:
+			continue
+		atlas.atlas = tex
+		atlas.region = OdaLayoutRef.padded_region(id, tex.get_width() / OdaLayoutRef.ART.x)
+
+
 func _apply_screen_glow(night: bool, instant: bool) -> void:
-	# Gece ekran parlaması — additive node (LampGlow kalıbı). Stylebox gölgesi
+	# Gece ekran parlaması — additive node. Stylebox gölgesi
 	# DEĞİL: D4 sarmalayıcısı onu yarım-glow'a kırpardı.
 	if _screen_glow == null:
 		return
@@ -1050,13 +1092,22 @@ func _play_phone_buzz() -> void:
 # PANO (çapa 4) — hedef / lig / tarihler / post-it
 # =========================================================================
 
+## Pano başlık register'ı: mono + BÜYÜK HARF, pazar payı / tarihler başlıklarıyla
+## aynı. Sondaki iki nokta serif-deck çağının kalıntısıydı ("Traction'a:" /
+## "To Traction:") ve büyük harfte "TO TRACTION:" diye okunuyordu — diğer iki
+## başlıkta iki nokta YOK. Kesme bilinçli olarak ÇAĞRI YERİNDE: bu sunum kararı,
+## içerik değil, o yüzden strings.csv'ye dokunulmuyor (sahibi Lokalizasyon Faz 2).
+static func _goal_head(s: String) -> String:
+	return UiTokens.tr_upper(s.trim_suffix(":"))
+
+
 func _refresh_goal() -> void:
 	# Eşikler HER boyamada konstanttan CANLI okunur (Erdem onay düzeltmesi #1):
 	# curve oturumu değerleri değiştirdiğinde pano kendiliğinden doğru kalır.
 	_goal_bar.visible = true
 	match GameState.phase:
 		1:
-			_goal_label.text = tr("ODA_BOARD_GOAL_P1_LABEL")
+			_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P1_LABEL"))
 			_goal_value.text = tr("ODA_BOARD_GOAL_P1_META")
 			var met: int = 0
 			if bool(GameState.get_flag("mvp_shipped", false)): met += 1
@@ -1065,7 +1116,7 @@ func _refresh_goal() -> void:
 			_goal_sub.text = "%d/3" % met
 			_goal_bar.value = met / 3.0 * 100.0
 		2:
-			_goal_label.text = tr("ODA_BOARD_GOAL_P2_LABEL")
+			_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P2_LABEL"))
 			_goal_value.text = "%s / %s MRR" % [
 				UiTokens.format_money(GameState.mrr),
 				UiTokens.format_money(SalesSystem.TRACTION_MRR_TARGET)]
@@ -1073,12 +1124,12 @@ func _refresh_goal() -> void:
 			_goal_bar.value = SalesSystem.traction_progress() * 100.0
 		_:
 			if GameState.series_a_closed:
-				_goal_label.text = tr("ODA_BOARD_GOAL_P3_CLOSED")
+				_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P3_CLOSED"))
 				_goal_value.text = UiTokens.format_money(GameState.run_investment_amount)
 				_goal_sub.text = ""
 				_goal_bar.visible = false
 			else:
-				_goal_label.text = tr("ODA_BOARD_GOAL_P3_LABEL")
+				_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P3_LABEL"))
 				_goal_value.text = tr("ODA_BOARD_GOAL_P3_HUNT") % GameState.active_sheets.size()
 				_goal_sub.text = ""
 				_goal_bar.visible = false

@@ -73,6 +73,10 @@ func _ready() -> void:
 		# ODA rework: işe alım/ayrılık çalışan-hisse dilimini oynatabilir.
 		[EventBus.character_added, _on_state_changed],
 		[EventBus.character_removed, _on_state_changed],
+		# Cap table: melek turu nakit de yazdığı için cash_changed BUGÜN yetiyordu — ama
+		# bu bir tesadüf. Nakit taşımayan ilk hisse hareketi (opsiyon havuzu, ikincil
+		# satış) barı sessizce bayat bırakırdı ve hiçbir test bunu yakalamazdı.
+		[EventBus.equity_changed, _on_state_changed],
 	]
 	for s in _signals:
 		(s[0] as Signal).connect(s[1])
@@ -545,7 +549,10 @@ func _refresh_captable() -> void:
 	# Mevcut state'ten: kurucu = 100 − imzalanan dilüsyon − çalışan hisseleri.
 	# (ODA rework 2026-08-06: RightPanel'in çalışan-hisse yarısı buraya taşındı,
 	# iki yarım görünüm birleşti.) Opsiyon havuzu alanı motorda hâlâ yok.
-	var investors: int = GameState.run_equity_pct
+	# Yatırımcı dilimi TÜM turların toplamıdır (melek + imzalanan Series A) ve toplamı
+	# GameState türetir — çağrı yerinde ham alanlar toplanmaz, yoksa bir sonraki tur
+	# eklendiğinde bu satır sessizce eksik kalır.
+	var investors: int = GameState.get_investor_equity_pct()
 	var employee_frac: float = 0.0
 	var employees_with_equity: int = 0
 	for emp in CharacterRegistry.get_employees():
@@ -562,12 +569,17 @@ func _refresh_captable() -> void:
 	_cap_employee_rect.size_flags_stretch_ratio = float(maxi(employees, 0))
 	_cap_employee_rect.visible = employees > 0
 	var parts: Array = ["Kurucu · %%%d" % founder]
-	if investors > 0:
-		parts.append("Yatırımcılar · %%%d" % investors)
+	# Melek turu KENDİ satırını alır: tek "Yatırımcılar" kalemi, bir kurucunun cap
+	# table'da ayırt ettiği iki farklı şeyi (melek çeki ve imzalanan tur) tek sayıya
+	# katlıyordu. Dilimler yine tek ColorRect — ayrılan okuma, çizim değil.
+	if GameState.run_angel_equity_pct > 0:
+		parts.append(tr("ANGEL_CAP_ROW").format({"pct": GameState.run_angel_equity_pct}))
+	if GameState.run_equity_pct > 0:
+		parts.append("Yatırımcılar · %%%d" % GameState.run_equity_pct)
 	if employees > 0:
 		parts.append("Çalışanlar · %%%d" % employees)
 	_cap_rows.text = " · ".join(parts)
-	var raised: int = GameState.run_investment_amount
+	var raised: int = GameState.get_total_raised()
 	_cap_raised.text = "Toplanan · %s" % UiTokens.format_money(raised) if raised > 0 else ""
 	_cap_equity_note.visible = employees_with_equity > 0
 	if employees_with_equity > 0:

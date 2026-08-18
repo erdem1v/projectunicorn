@@ -157,6 +157,7 @@ func _queue_has_id(event_id: String) -> bool:
 # Returns true only when it was newly added (so the ambient cap can count it).
 func _enqueue_eligible(ev: GameEvent) -> bool:
 	if _queue_has_id(ev.id) or ev.id == _active_event_id:
+		_trace_dedupe(ev.id)
 		return false
 	_queue.append(ev)
 	EventBus.event_triggered.emit(ev.id)
@@ -205,6 +206,7 @@ func enqueue(event: GameEvent) -> void:
 		push_warning("[EventManager] enqueue called with null event")
 		return
 	if _queue_has_id(event.id) or event.id == _active_event_id:
+		_trace_dedupe(event.id)
 		return
 	_queue.append(event)
 	EventBus.event_triggered.emit(event.id)
@@ -224,10 +226,22 @@ func enqueue_front(event: GameEvent) -> void:
 		push_warning("[EventManager] enqueue_front called with null event")
 		return
 	if _queue_has_id(event.id) or event.id == _active_event_id:
+		_trace_dedupe(event.id)
 		return
 	_queue.push_front(event)
 	EventBus.event_triggered.emit(event.id)
 	_pump_queue()
+
+
+# All three admission paths reject a duplicate id SILENTLY, which is exactly the shape a
+# K2-style loop hides behind: the owning system re-offers the same decision every tick, the
+# queue absorbs it, and nothing anywhere counts the attempts. This makes the rejected
+# attempt as readable as the accepted one ("Eligible:" / "Resolved:" above), so a run log
+# can tell "fired once" apart from "tried to fire ninety times and was absorbed".
+# Debug-gated, print-only — behaviour is untouched.
+func _trace_dedupe(event_id: String) -> void:
+	if OS.is_debug_build():
+		print("[EventManager] Dedupe-rejected: %s" % event_id)
 
 
 func _events_rng() -> RandomNumberGenerator:
@@ -698,6 +712,13 @@ func _apply_modifiers(modifiers: Array) -> void:
 			"phase_gate_decline":
 				# "Henüz değil" — no penalty; re-arms the 5-day reminder clock.
 				PhaseGateSystem.on_gate_declined()
+			"angel_accept":
+				# Frank's seed taken. ONE seam owns cash + ledger + cap table + latch.
+				# Deliberately NOT expressed as a {"type":"cash"} modifier plus a
+				# bookkeeping sibling: two modifiers are two writes this dispatcher applies
+				# in a loop, and a half-applied round would become representable the day
+				# someone reorders the array.
+				AngelRoundSystem.accept_offer()
 			"accept_acquisition":
 				# Class A instant soft win — fired by the played moment, not the daily scan.
 				EndingsSystem.trigger_ending("acquisition")

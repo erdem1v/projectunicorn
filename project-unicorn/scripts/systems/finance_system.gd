@@ -69,6 +69,7 @@ static var one_time_today := {}
 const ONE_TIME_LABELS := {
 	"build_commit": "Özellik maliyeti",
 	"version_build_commit": "Sürüm özellikleri",
+	"angel_seed": "ANGEL_TX_LABEL",   # localization key; see one_time_label_display
 }
 
 
@@ -187,6 +188,22 @@ static func apply_one_time_cost(amount: int, label: String) -> void:
 		print("[FinanceSystem] one-time cost $%d (%s)" % [amount, label])
 
 
+static func apply_one_time_income(amount: int, label: String) -> void:
+	# The income sibling of apply_one_time_cost, and it exists so no caller has to
+	# open-code the ordering. Deliberately NOT folded into one signed function: a cost also
+	# writes one_time_today (today's "gider dökümü" is a spend list, and an investment is
+	# not a spend), while income only needs the multi-day transactions log.
+	#
+	# SAME LOAD-BEARING ORDER: ledger row FIRST, set_cash LAST. cash_changed is synchronous
+	# and the Finance tab repaints inside it; it must read an already-appended log.
+	if amount <= 0:
+		return
+	record_transaction(label, amount)
+	GameState.set_cash(GameState.cash + amount)   # emits cash_changed + runway_recalculated
+	if OS.is_debug_build():
+		print("[FinanceSystem] one-time income $%d (%s)" % [amount, label])
+
+
 # --- Burn breakdown API (consumed by future systems) ---
 
 static func daily_salary_for(monthly_total: int) -> int:
@@ -239,7 +256,11 @@ static func one_time_label_display(label: String) -> String:
 	# _SEVERANCE) and falls through unchanged; ProductSystem's raw ids are mapped.
 	# NOTE for future callers: pass a Turkish label, or register the id in ONE_TIME_LABELS —
 	# an unregistered English id will render as-is and break the no-internal-codes law.
-	return String(ONE_TIME_LABELS.get(label, label))
+	# The mapped value may itself be a LOCALIZATION KEY (the Bilingual Birth direction of
+	# travel): TranslationServer.translate returns a non-key unchanged, so the two existing
+	# literal values and HR's free-form Turkish labels pass through exactly as before. This
+	# is a static, so tr() is unavailable — translate() is the documented statics path.
+	return TranslationServer.translate(String(ONE_TIME_LABELS.get(label, label)))
 
 
 # --- Transactions log (Finance Tab v1 "Son işlemler") ---

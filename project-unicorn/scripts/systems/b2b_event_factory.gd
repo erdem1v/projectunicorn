@@ -38,8 +38,19 @@ static func build_retention(c: Customer) -> GameEvent:
 	# bedava kazanç (bir sonraki herhangi bir ship sözü "tutuldu"ya çevirip +15 memnuniyet
 	# / +6 güven topluyordu, yapılmış iş için) ya da haksız kayıp (14 gün içinde bir şey
 	# çıkmazsa aynı söz kırılıyordu — ve modal "zaten var" demeyi hiç önermiyordu).
+	# ...ve AÇIK BİR SÖZ VARKEN de masada olmaz. Bu koşul eksikti ve bedeli ölçüldü:
+	# 90 günlük bir sürücü koşusunda (ürün tökezliyor, oyuncu her kartta "Söz ver" diyor)
+	# 5 müşteriye 142 SÖZ verildi ve 117'si kırıldı — aynı müşteriye aynı özellik için
+	# üç açık söz aynı anda duruyordu. Her yönden bozuk:
+	#   · kırılırsa: tek yapılmamış iş için üç ayrı ceza (−60 memnuniyet, +15 tolerans,
+	#     −9 marka). Marka 50'den 0'a 30 günde indi.
+	#   · tutulursa: tek ship üçünü birden "tutuldu"ya çevirdi (+45 memnuniyet, −15
+	#     tolerans) — yapılmış TEK iş için üç kat ödül.
+	# Kural kardeş kanalda (pick_request_kind, has_open_for → −25) zaten vardı; niyet
+	# buradaydı, kapı yoktu. Söz bir BORÇTUR: kapanmadan ikincisi verilmez.
 	var live_now: Array = GameState.get_flag("mvp_components", [])
-	if c.pain_feature_id != "" and not live_now.has(c.pain_feature_id):
+	if c.pain_feature_id != "" and not live_now.has(c.pain_feature_id) \
+			and not PromiseRegistry.has_open_for(c.id):
 		choices.append(_choice("Söz ver: '%s'" % label, [
 			{"type": "b2b_promise_create", "customer_id": c.id, "feature_id": c.pain_feature_id,
 				"deadline_days": B2BConstants.PROMISE_DEADLINE_DAYS},
@@ -263,10 +274,15 @@ static func build_cs_request(c: Customer, cs: Character) -> GameEvent:
 			var background: String = CompanyCatalog.background_for(c.company_name)
 			if background != "":
 				ev.body_text += " Dosya notu: %s" % background
-			choices.append(_choice("Söz ver: '%s'" % label, [
-				{"type": "b2b_promise_create", "customer_id": c.id, "feature_id": c.pain_feature_id,
-					"deadline_days": B2BConstants.PROMISE_DEADLINE_DAYS},
-			]))
+			# Aynı borç kapısı retention kartındaki gibi (bkz. build_retention): açık söz
+			# varken ikinci söz verilmez. pick_request_kind bu durumu −25 ile CEZALANDIRIYOR
+			# ama YASAKLAMIYOR — skor yine de FEATURE'ı seçebilir, ve seçtiğinde kart
+			# ikinci borcu teklif ederdi.
+			if not PromiseRegistry.has_open_for(c.id):
+				choices.append(_choice("Söz ver: '%s'" % label, [
+					{"type": "b2b_promise_create", "customer_id": c.id, "feature_id": c.pain_feature_id,
+						"deadline_days": B2BConstants.PROMISE_DEADLINE_DAYS},
+				]))
 			choices.append(_choice("Önceliklendir", [
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_PRIORITIZE_SAT},
 			]))

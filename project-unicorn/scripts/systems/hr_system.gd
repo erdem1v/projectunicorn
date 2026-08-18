@@ -174,6 +174,13 @@ static func attention_count() -> int:
 	var n: int = attention_people_count()
 	if HRSearchSystem.has_files_ready():
 		n += 1
+	# Frank's hire nudge (Playable Run Sprint): the seed is in the bank and the founder is
+	# still alone. A SIGNPOST, not a demand — it clears itself the moment anyone is hired,
+	# and nothing anywhere reads it as a requirement. Counted here rather than in the rail
+	# so the badge keeps reading one number from one place.
+	if int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, 0)) > 0 \
+			and CharacterRegistry.get_employees().is_empty():
+		n += 1
 	return n
 
 

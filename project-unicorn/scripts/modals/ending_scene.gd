@@ -412,6 +412,11 @@ func _build_tier_card(tag: String, title: String, badge_text: String, body: Stri
 		var lock := TextureRect.new()
 		lock.texture = load(LOCK_ICON)
 		lock.custom_minimum_size = Vector2(12, 12)
+		# EXPAND_IGNORE_SIZE, tıpkı 12 satır yukarıdaki hard_lock gibi. Eksikti:
+		# KEEP_SIZE (varsayılan) min-size'ı DOKUNUN boyutuna sabitler, yani bu kilit
+		# 12 değil 24px çiziliyordu ve custom_minimum_size sessizce yutuluyordu.
+		# svg/scale 1.0→2.0 ile bu 48px olurdu — kusur görünür hâle gelirdi.
+		lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		lock.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		lock.modulate = UiTokens.CREAM_DIM
 		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE

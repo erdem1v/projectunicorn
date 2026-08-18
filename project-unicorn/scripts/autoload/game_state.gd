@@ -111,6 +111,17 @@ const FLAG_TYPES := {
 	"acquisition_offer_made": TYPE_BOOL,
 	"acquisition_offer_rejected": TYPE_BOOL,
 	"vc_d179_warned": TYPE_BOOL,
+	# --- angel round (Frank's seed) + the locked hard path ---
+	# The one-shot latch lives HERE and not on the event object: AngelRoundSystem injects
+	# through enqueue_front, which bypasses _is_eligible entirely, so GameEvent.one_shot is
+	# dead code for every synthetic event (event_manager.gd:198-212).
+	"angel_seed_offered": TYPE_BOOL,
+	"angel_seed_accepted_day": TYPE_INT,
+	"angel_nudge_shown": TYPE_BOOL,
+	# RESERVED — NO WRITER EXISTS ANYWHERE. This is the guaranteed-false gate behind
+	# "REDDET · ZOR MOD"; the Frank-less path ships after the demo. Declared so the day a
+	# writer appears, the save schema already knows its type.
+	"hard_mode_unlocked": TYPE_BOOL,
 	# --- origin reserves + UI snooze ---
 	"origin_press_sympathy": TYPE_BOOL,
 	"origin_low_capital": TYPE_BOOL,
@@ -225,6 +236,17 @@ var run_valuation_m: int = 0           # pre-money valuation, millions
 var run_equity_pct: int = 0            # equity given == signed dilution_pct
 var run_board_seats: int = 0           # board seats granted to the investor
 var run_board_veto: bool = false       # investor veto right granted
+
+# Frank's angel round — DELIBERATELY SEPARATE from the signed-terms block above.
+# VCPitchSystem._persist_signed_terms writes run_equity_pct / run_investment_amount by
+# PLAIN ASSIGNMENT (vc_pitch_system.gd:326,329). Folding the angel slice into those fields
+# would let a Series A signature silently erase 4% of the cap table and $25,000 of raised
+# capital, and would light ODA's "İlk Yatırım" diploma (which reads run_investment_amount
+# raw) on a round it was never meant to describe. Two scalars cost two lines and make that
+# collision unrepresentable. Cap-table and ledger readers compose them via the two derived
+# seams below — never by summing the raw fields at the call site.
+var run_angel_amount: int = 0          # dollars the angel put in
+var run_angel_equity_pct: int = 0      # the angel's slice, percent
 
 # --- VC Pitch / Series A Hunt state (Spec 4 / VC_PITCH_DESIGN.md §7 — serialized
 # set, same "fields not systems" rule as the endgame block). VCPitchSystem writes;
@@ -445,6 +467,28 @@ func get_founder_equity() -> float:
 	return clamp(1.0 - employee_total, 0.0, 1.0)
 
 
+func get_investor_equity_pct() -> int:
+	# THE cap-table denominator: angel + signed Series A. Recompute-on-demand (the
+	# get_runway_months / get_founder_equity pattern) so a future round is one summand
+	# here and zero edits at the read sites.
+	return run_angel_equity_pct + run_equity_pct
+
+
+func get_total_raised() -> int:
+	# Every dollar raised this run, across rounds. Same reasoning as above.
+	return run_angel_amount + run_investment_amount
+
+
+func record_angel_round(equity_pct: int, amount: int) -> void:
+	# The single write seam for the angel slice (WRITE-THROUGH LAW). Emits, because the
+	# Finance cap-table bar otherwise repaints only as a SIDE EFFECT of the cash movement
+	# that happens to accompany a round — true for the angel seam by construction, false
+	# for the first equity change that moves no cash.
+	run_angel_equity_pct = equity_pct
+	run_angel_amount = amount
+	EventBus.equity_changed.emit(get_investor_equity_pct())
+
+
 func get_founder_skill(skill_name: String) -> int:
 	# Reads from founder.role_stats. Populated by _build_founder from the
 	# onboarding skill allocation. Returns 0 if founder or skill missing.
@@ -529,12 +573,20 @@ func get_run_ledger() -> Dictionary:
 		"vc_rejections": vc_rejections,
 		"pushes_attempted": run_pushes_attempted,
 		"pushes_won": run_pushes_won,
-		# signed term sheet (0 unless series_a_close)
+		# signed term sheet (0 unless series_a_close). These three stay SERIES-A-ONLY on
+		# purpose: the ending newspaper composes them into one sentence ("at valuation X,
+		# raised Y, gave Z%"), and folding the angel round into them would make that
+		# sentence false — the angel money was not raised at that valuation.
 		"investment_amount": run_investment_amount,
 		"valuation_m": run_valuation_m,
 		"equity_pct": run_equity_pct,
 		"board_seats": run_board_seats,
 		"board_veto": run_board_veto,
+		# the angel round, and the run-wide totals the cap table actually owes
+		"angel_amount": run_angel_amount,
+		"angel_equity_pct": run_angel_equity_pct,
+		"investor_equity_pct": get_investor_equity_pct(),
+		"total_raised": get_total_raised(),
 		# scandals (reserved — read 0 today)
 		"scandals_total": run_scandals_total,
 		"scandals_managed": run_scandals_managed,
@@ -635,6 +687,8 @@ func initialize_run(payload: Dictionary) -> void:
 	run_investment_amount = 0
 	run_valuation_m = 0
 	run_equity_pct = 0
+	run_angel_amount = 0
+	run_angel_equity_pct = 0
 	run_board_seats = 0
 	run_board_veto = false
 

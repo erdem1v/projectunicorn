@@ -118,6 +118,39 @@ func _ready() -> void:
 			_run_tempo_probe(tempo_idx)
 			return
 
+	# Debug: --render-probe[=<tab id>] (+ --shot-size) mounts the real shell at one
+	# window size and prints FRAME COST and TEXTURE/VIDEO MEMORY, then quits. The
+	# screenshot runners prove what a frame LOOKS like and can't price it; the smoke
+	# suite runs headless and has no raster at all. Written for the render-sharpness
+	# pass, whose §5 asks for a frame-time and VRAM delta at 4K — a texture-import
+	# change (mipmaps, svg/scale) costs memory and sampling, and "it feels fine" is
+	# not a number.
+	# VSYNC IS FORCED OFF here, deliberately: at 60Hz every frame measures ~16.7ms
+	# and the probe would report the monitor's refresh rate instead of the game's
+	# cost. Safe because this arg is registered in DisplaySettings._is_harness_arg,
+	# so is_inert() is true and the player's real vsync preference is never touched.
+	if OS.is_debug_build():
+		var render_probe: String = _render_probe_requested()
+		if render_probe != "":
+			_run_render_probe(render_probe)
+			return
+
+	# Debug: --run-log=<preset>:<days>:<mode> drives a whole run headless and prints a
+	# LEDGER (every event fire with its source, every choice, daily economy state) instead
+	# of an assertion. mode "sim" drives the dispatch directly; mode 1-4 uses the real
+	# clock at that speed index and quits itself from the day_advanced handler.
+	# See scripts/debug/run_probe.gd.
+	if OS.is_debug_build():
+		var run_log: String = _run_log_requested()
+		if run_log != "":
+			RunProbe.run(run_log, _debug_payload())
+			# "sim" is synchronous and has already finished by the time run() returns;
+			# the real-clock modes have only ARMED their signal handlers and must be left
+			# alive to tick. Same split as the smoke harness's CLI-vs-MCP quit rule.
+			if run_log.ends_with(":sim") or not run_log.contains(":"):
+				get_tree().quit()
+			return
+
 	# Debug: --b2b-shot=<kind> (windowed) renders one B2B Sales modal at 1920×1080,
 	# saves a screenshot to user://, and quits. Visual verification of the widened
 	# EventModal populated with the retention / escalation content. Debug builds only.
@@ -304,6 +337,20 @@ func _smoke_case_on_cmdline() -> bool:
 	return false
 
 
+func _run_log_requested() -> String:
+	# Same dual source as --endgame-smoke: cmdline for CLI runs, run/main_args for the
+	# editor/MCP path (Godot only forwards main_args on editor F5).
+	var sources: Array[String] = []
+	for arg in OS.get_cmdline_args():
+		sources.append(String(arg))
+	sources.append(String(ProjectSettings.get_setting("application/run/main_args", "")))
+	for src in sources:
+		for token in src.split(" ", false):
+			if token.begins_with("--run-log="):
+				return token.trim_prefix("--run-log=")
+	return ""
+
+
 func _tempo_probe_requested() -> int:
 	# -1 = not requested. Cmdline only (this is a stopwatch harness, not an editor path).
 	for arg in OS.get_cmdline_args():
@@ -311,6 +358,70 @@ func _tempo_probe_requested() -> int:
 		if s.begins_with("--tempo-probe="):
 			return int(s.trim_prefix("--tempo-probe="))
 	return -1
+
+
+## "" = not requested. Bare --render-probe defaults to the HR ledger, the densest
+## text surface in the game and therefore the worst case for glyph rasterization.
+func _render_probe_requested() -> String:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s == "--render-probe":
+			return "hr"
+		if s.begins_with("--render-probe="):
+			return s.trim_prefix("--render-probe=")
+	return ""
+
+
+const RENDER_PROBE_WARMUP := 45
+const RENDER_PROBE_FRAMES := 180
+
+
+func _run_render_probe(tab_id: String) -> void:
+	get_tree().paused = false
+	_shot_window(Vector2i(1920, 1080))          # --shot-size overrides
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	_seed_theme_surface()
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	EventBus.tab_changed.emit(tab_id)
+	await get_tree().create_timer(0.4).timeout
+
+	# Warm-up is not politeness: the first frames pay shader compilation and texture
+	# upload, and with mipmaps the upload is the very thing under test. Averaging them
+	# in would credit the change with a cost it does not have per frame.
+	for _i in RENDER_PROBE_WARMUP:
+		await get_tree().process_frame
+
+	var samples: PackedFloat64Array = []
+	for _i in RENDER_PROBE_FRAMES:
+		var t0: int = Time.get_ticks_usec()
+		await get_tree().process_frame
+		samples.append(float(Time.get_ticks_usec() - t0) / 1000.0)
+	var sorted_ms: Array = Array(samples)
+	sorted_ms.sort()
+	var total: float = 0.0
+	for v in sorted_ms:
+		total += float(v)
+	var win: Vector2i = get_window().size
+
+	print("RENDER_PROBE_BEGIN")
+	print("WINDOW|%dx%d|scale=%.3f|vsync=off" % [
+		win.x, win.y, get_window().content_scale_factor])
+	print("FRAME_MS|avg=%.3f|median=%.3f|p95=%.3f|min=%.3f|max=%.3f|n=%d" % [
+		total / float(sorted_ms.size()),
+		float(sorted_ms[int(sorted_ms.size() * 0.50)]),
+		float(sorted_ms[int(sorted_ms.size() * 0.95)]),
+		float(sorted_ms[0]), float(sorted_ms[sorted_ms.size() - 1]), sorted_ms.size()])
+	print("MEM|texture_mib=%.2f|video_mib=%.2f" % [
+		Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED) / 1048576.0,
+		Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0])
+	print("DRAW|calls=%d|objects=%d" % [
+		int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+		int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))])
+	print("RENDER_PROBE_END")
+	get_tree().quit()
 
 
 func _run_tempo_probe(idx: int) -> void:
@@ -425,6 +536,13 @@ func _run_b2b_shot(kind: String) -> void:
 	elif kind == "expansion":
 		CustomerRegistry.set_lifecycle_phase(c.id, "expansion")
 		ev = B2BEventFactory.build_expansion(c)
+	elif kind == "angel":
+		# Frank's seed card. Not a B2B customer scene, but this is the harness that already
+		# mounts one factory-built GameEvent in a real EventModal, and the seed card has two
+		# things only a rendered frame can check: the KABUL effect chip (a modifier with no
+		# _describe_modifier entry renders BLIND, and no headless case can see that) and the
+		# locked REDDET row's dimmed, chip-less, non-interactive treatment.
+		ev = AngelRoundSystem.build_offer_event()
 	else:
 		CustomerRegistry.set_lifecycle_phase(c.id, "risk")
 		CustomerRegistry.set_churn_countdown(c.id, 8)
@@ -711,7 +829,8 @@ func _oda_shot_requested() -> String:
 	return ""
 
 
-# Debug: --oda-shot=<day|night|event|tab> (windowed). ODA merkez görünümünün dört
+# Debug: --oda-shot=<day|evening|night|dawn|event|tab|tour|hover|market1|market2>
+# (windowed). ODA merkez görünümünün dört
 # durum fotoğrafı (task doğrulama #9): day = temiz masa + canlı ürün monitörü;
 # night = saat 23 + mesai + masada kâğıtlar (crossfade otursun diye uzun bekleme);
 # event = gerçek pipeline'dan debug olayı (telefon buzz + telefondan doğan kart);
@@ -752,7 +871,18 @@ func _run_oda_shot(kind: String) -> void:
 			HROvertimeSystem.start("product_dev", 3)
 			GameState.set_current_hour(23)
 			oda.debug_seed_papers()
-			settle = 3.2   # gece crossfade'i (2.5 sn) otursun
+			settle = 3.2   # gece crossfade'i (LIGHT_FADE_S = 1.5 sn) otursun, payla
+		# Dört-durum ışık makinesinin ARA iki durumu (mühürlü sanat turu 2026-08-17).
+		# Eskiden shot yüzeyi yoktu, yani AKŞAM ve ŞAFAK tint'leri contact sheet'te
+		# hiç görünmüyordu — üstelik gece ILIK olunca akşamın hâlâ ayrı bir vuruş
+		# olarak okuyup okumadığı tam da gözle karara kalan şey. _light_state_for_hour
+		# eşikleri: 18 = akşam, 6 = şafak (19-05 gece, kalanı gündüz).
+		"evening":
+			GameState.set_current_hour(18)
+			settle = 3.2
+		"dawn":
+			GameState.set_current_hour(6)
+			settle = 3.2
 		"event":
 			if not _event_signals_wired:
 				EventBus.modal_requested.connect(_on_event_modal_requested)

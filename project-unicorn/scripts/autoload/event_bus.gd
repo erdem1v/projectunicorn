@@ -14,6 +14,12 @@ signal day_advanced(new_day: int)
 signal hour_changed(hour: int)            # 0-23, emitted every in-game hour boundary
 signal phase_changed(new_phase: int)
 signal runway_recalculated(months: float)
+# Cap table moved (Frank's angel round today; Series B later). Payload = TOTAL investor
+# percent, GameState.get_investor_equity_pct(). Exists because the Finance cap-table bar
+# otherwise repaints only as a side effect of the cash write that happens to accompany a
+# round — true for the angel seam by construction, false for the first equity change that
+# moves no cash (an option pool, a secondary, a re-cap).
+signal equity_changed(investor_pct: int)
 
 # --- UI / time signals (§13.2) ---
 signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=3x, 4=4x

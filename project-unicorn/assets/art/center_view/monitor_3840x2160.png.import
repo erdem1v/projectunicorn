@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cbkwe76tiy56u"
-path="res://.godot/imported/empty_desk_LIGHT_4K_3840x2160.png-9e2f233d7ae8fb49da73fe2f3f58231f.ctex"
+uid="uid://c51t6koosollp"
+path="res://.godot/imported/monitor_3840x2160.png-e2f6af38c6bf8ea0a9fd3faf16674215.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/center_view/empty_desk_LIGHT_4K_3840x2160.png"
-dest_files=["res://.godot/imported/empty_desk_LIGHT_4K_3840x2160.png-9e2f233d7ae8fb49da73fe2f3f58231f.ctex"]
+source_file="res://assets/art/center_view/monitor_3840x2160.png"
+dest_files=["res://.godot/imported/monitor_3840x2160.png-e2f6af38c6bf8ea0a9fd3faf16674215.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

@@ -9,5 +9,14 @@ project-unicorn/.godot/
 # tracked copies deleted in the localization sweep Step 0 (S3-54)
 project-unicorn/localization/*.translation
 
+# ODA render rig — SOURCE is tracked (layers.html, desk-builders.js, serve.py, run.sh,
+# README.md), DERIVED data is not. The rig drives a Chrome instance in its own profile;
+# that profile is 66 MB of cache/cookies/extensions, and out/ is 11 MB of intermediate
+# and diagnostic renders — 4.5x the shipped plates in assets/art/center_view, and
+# regenerable by running the rig. Only the finished plates belong in the repo.
+project-unicorn/tools/oda_render_rig/chrome-profile/
+project-unicorn/tools/oda_render_rig/out/
+project-unicorn/tools/oda_render_rig/*.log
+
 # Local backup of an older version — not part of the project
 project-unicorn-OLD-backup/

@@ -500,6 +500,15 @@ func _describe_modifier(m) -> Dictionary:
 			var em: int = es * int(m.get("per_seat_mrr", 0))
 			return {"text": "Koltuk +%d · MRR %s" % [es, _fmt_money_delta(em)], "kind": &"positive"}
 		"b2b_expand_decline": return {"text": "Değişiklik yok", "kind": &"neutral"}
+		"angel_accept":
+			# Two facts on one chip (the b2b_expand precedent above). This chip is the
+			# player's only source of truth for what the decision COSTS, and the cost is
+			# the equity, not the cash — so both ride, and the kind is "accent" (a trade)
+			# rather than "positive" (a gift).
+			return {"text": tr("ANGEL_CHIP_ACCEPT").format({
+					"cash": _fmt_money_delta(AngelRoundSystem.CASH_AMOUNT),
+					"equity": AngelRoundSystem.EQUITY_PCT}),
+				"kind": &"accent"}
 	return {}  # set_flag / mentor_advisory / ship_active_build / endgame types — bookkeeping or self-describing, no badge
 
 

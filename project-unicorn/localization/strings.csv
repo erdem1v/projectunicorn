@@ -341,3 +341,27 @@ HR_TRAINING_NONE_ELIGIBLE,Deneyimi dolan kimse yok.,Nobody has filled their expe
 HR_TRAINING_CAPPED,Uzmanlık tavanda.,Expertise is at the cap.
 HR_NEWS_TRAINING_DONE,{name} eğitimden döndü; uzmanlığı arttı.,{name} is back from training with sharper expertise.
 SET_UI_SCALE_TOO_LARGE,%d%% bu pencere boyutunda arayüzü kırpar; daha büyük bir ekran gerekiyor.,%d%% would crop the interface at this window size; it needs a larger display.
+ANGEL_EVENT_TITLE,Frank'in çeki,Frank's cheque
+ANGEL_EVENT_BODY,"Frank rakamlara bakıyor, sonra ceketinin iç cebinden bir çek defteri çıkarıyor. Acele etmiyor.
+
+""Kendi paranla buraya kadar geldin. Buradan sonrası daha pahalı.""
+
+""Yirmi beş bin veriyorum. Karşılığında yüzde dört. Pazarlık yok, acele de yok — ama bir kere soruyorum.""","Frank looks at the numbers, then takes a chequebook out of his inside pocket. He is in no hurry.
+
+""You got this far on your own money. It gets more expensive from here.""
+
+""Twenty-five thousand in. Four percent back. No haggling, no rush — but I ask once."""
+ANGEL_CHOICE_ACCEPT,KABUL,ACCEPT
+ANGEL_CHOICE_REFUSE,REDDET · ZOR MOD,REFUSE · HARD MODE
+ANGEL_CHOICE_REFUSE_LOCK,Frank'siz yol zor modda açılır.,The road without Frank opens in hard mode.
+ANGEL_CHIP_ACCEPT,Nakit {cash} · Frank'e %{equity} hisse,Cash {cash} · {equity}% to Frank
+ANGEL_TX_LABEL,Melek yatırımı · Frank,Angel investment · Frank
+ANGEL_CAP_ROW,Melek · %{pct},Angel · {pct}%
+ANGEL_MONTH_HIGHLIGHT,Frank çeki yazdı — melek turu kapandı,Frank wrote the cheque — angel round closed
+ANGEL_NUDGE_TITLE,Frank'ten not,A note from Frank
+ANGEL_NUDGE_BODY,"Frank kapıda duruyor, oturmuyor.
+
+""Paran var artık. Yalnız adam şirket değildir. Git kendine bir çalışan al.""","Frank stops in the doorway. He does not sit down.
+
+""You have money now. One man is not a company. Go and hire someone."""
+ANGEL_NUDGE_ACK,Bakacağım,I'll look into it

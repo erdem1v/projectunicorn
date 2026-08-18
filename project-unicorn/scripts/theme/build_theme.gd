@@ -347,7 +347,8 @@ func _initialize() -> void:
 	_lbl(th, &"OdaScreenCaption", mono_label, T.SIZE_SMALL, T.CREAM_DIM)
 	# OdaMonitorScreen: monitör camının içindeki bilgi paneli (bezel sanatta boyalı).
 	# Gece parlaması artık stylebox gölgesi DEĞİL (D4: sarmalayıcı klibi yarım-glow
-	# üretirdi) — ScreenGlow additive node'u oda_view'da, LampGlow kalıbıyla.
+	# üretirdi) — ScreenGlow additive node'u oda_view'da. (Bu kalıp eskiden lamba
+	# halesiyle paylaşılıyordu; hale 2026-08-18'de kaldırıldı, ekran parlaması kaldı.)
 	_panel(th, &"OdaMonitorScreen", "PanelContainer", _box(T.DIALOGUE_BG, 0, Color.TRANSPARENT, T.RADIUS_XS, [], Color.TRANSPARENT, T.PAD_CARD.x, T.PAD_CARD.y))
 	# OdaBoardCard(+Hover): panoya raptiyeli kart (hedef / pazar payı / tarihler) —
 	# newsprint. Hover ikizi (D2/F2 — kalite turu v2): DOLGU ASLA PARLAMAZ, yalnız

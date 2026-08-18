@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bjrp8t1gblaka"
-path="res://.godot/imported/empty_desk_DARK_4K_3840x2160.png-7f801c8dbe0113038e8eaba8e9746a60.ctex"
+uid="uid://cia7u36r6vbi0"
+path="res://.godot/imported/room_day_3840x2160.png-7b7a7b48a5f546b2e995e79fe5be4077.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/center_view/empty_desk_DARK_4K_3840x2160.png"
-dest_files=["res://.godot/imported/empty_desk_DARK_4K_3840x2160.png-7f801c8dbe0113038e8eaba8e9746a60.ctex"]
+source_file="res://assets/art/center_view/room_day_3840x2160.png"
+dest_files=["res://.godot/imported/room_day_3840x2160.png-7b7a7b48a5f546b2e995e79fe5be4077.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

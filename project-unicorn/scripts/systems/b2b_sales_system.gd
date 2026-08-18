@@ -391,7 +391,16 @@ static func _recover(c: Customer, sat_bump: int) -> void:
 	CustomerRegistry.set_risk_streak(c.id, 0)
 	if c.lifecycle_phase == "risk":
 		CustomerRegistry.set_churn_countdown(c.id, -1)
-		CustomerRegistry.set_lifecycle_phase(c.id, "active")
+		# Same onboarding-window rule _tick_healthy already follows (see the note at its
+		# "risk" branch): the window is a fact about the CALENDAR, not about how the
+		# account felt in between, and _tick_satisfaction keeps amplifying until it
+		# closes. Writing "active" unconditionally ended onboarding early for any account
+		# rescued inside its first 30 days and left the phase and the drift model
+		# disagreeing for the rest of the window — the identical bug that branch was
+		# fixed for, still live on this one. Observed in a driver run: an account signed
+		# on day 1 was stamped "active" on day 4 with onboarding_until = 31.
+		CustomerRegistry.set_lifecycle_phase(c.id,
+			"onboarding" if GameState.day < c.onboarding_until else "active")
 
 
 # --- Stage C: the sales-domain reaction to a promise resolving (called by
@@ -403,10 +412,22 @@ static func on_promise_resolved(p: Promise) -> void:
 			# Word kept on time: satisfaction + tolerance jump, loyalty up, credibility
 			# restored (a future promise lands full-strength again).
 			if c != null:
-				CustomerRegistry.set_satisfaction(c.id, c.satisfaction + B2BConstants.PROMISE_KEPT_SAT)
 				CustomerRegistry.set_tolerance(c.id, c.tolerance + B2BConstants.PROMISE_KEPT_TOLERANCE)
 				# Lift the TARGET too, so the goodwill outlives the day it was earned.
 				CustomerRegistry.set_trust_offset(c.id, c.trust_offset + B2BConstants.PROMISE_KEPT_OFFSET)
+				# THE SATISFACTION BUMP GOES THROUGH _recover, NOT through a bare
+				# set_satisfaction, and the difference is the churn countdown.
+				#
+				# accept_promise — merely GIVING the word — already calls _recover, which
+				# clears the countdown and the risk streak on the spot. KEEPING the word
+				# used to write satisfaction and nothing else, so the clock kept running
+				# through the delivery: the rescue had to wait for the next daily tick and
+				# only arrived if the +15/−5 happened to clear the tolerance bar in one
+				# step. When the gap was wider than that (an account whose tolerance had
+				# been ratcheted up by earlier broken promises), the player paid cash and
+				# days for a feature and watched the account leave anyway.
+				# Promising saved the customer; delivering did not. Same seam now, both.
+				_recover(c, B2BConstants.PROMISE_KEPT_SAT)
 			GameState.set_flag("b2b_broke_%s" % p.customer_id, false)
 		"partial":
 			# Shipped late: a soft satisfaction penalty (better than an outright break).

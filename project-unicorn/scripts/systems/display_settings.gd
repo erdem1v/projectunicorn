@@ -130,7 +130,8 @@ static func _is_harness_arg(s: String) -> bool:
 	if s.contains("-shot"):
 		return true
 	return s.begins_with("--endgame-smoke") or s.begins_with("--font-spec") \
-		or s.begins_with("--theme-audit") or s.begins_with("--tempo-probe")
+		or s.begins_with("--theme-audit") or s.begins_with("--tempo-probe") \
+		or s.begins_with("--render-probe")
 
 
 static func _root() -> Window:

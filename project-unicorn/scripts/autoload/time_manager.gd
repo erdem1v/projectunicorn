@@ -257,6 +257,7 @@ func _dispatch_daily_tick() -> void:
 	_tick_finance()
 	_tick_events()
 	_tick_industry_events()
+	_tick_angel_round()
 	_tick_phase_check()
 	_tick_pitch()
 	_tick_endings_check()
@@ -339,6 +340,20 @@ func _tick_industry_events() -> void:
 	# SHARED, not consumed: calendar industry events (TC Disrupt, YC Demo Day —
 	# the original IndustryEventScheduler reservation) still land here when built.
 	NewsFeedSystem.daily_tick()
+
+func _tick_angel_round() -> void:
+	# Slot 8a: Frank's angel round (one-shot; latch on GameState). Placed AFTER Sales and
+	# Finance so it reads the day's settled MRR — the same number the TopBar shows and the
+	# same one the phase gate reads on the next line.
+	#
+	# AND DELIBERATELY BEFORE _tick_phase_check, because "enqueue_front" does NOT mean
+	# "front": enqueue_front ends in _pump_queue(), which mounts immediately when no modal
+	# is active, so on a day when two systems both inject, the FIRST caller owns the modal
+	# and the second queues behind it. Frank's cheque should land before the "you're ready
+	# for Series A" conversation, not after it. (At the ruled 2,500 bar the two rarely
+	# collide, but the ordering is the mitigation if a run ever crosses both at once.)
+	AngelRoundSystem.daily_tick()
+
 
 func _tick_phase_check() -> void:
 	# Slot 8: gate evaluator per docs/ENDGAME_DESIGN.md §2. Opens gates (latch +

@@ -188,10 +188,38 @@ func _on_vsync_toggled(on: bool) -> void:
 
 ## Çözünürlük YALNIZ pencereli modda anlamlı — iki tam-ekran modunda pencere zaten
 ## ekranı doldurur. Satır kilitlenir ve nedeni altındaki notta yazar.
+##
+## Notun anahtarı MODA GÖRE seçilir. Tek paylaşılan metin ("Yalnız pencereli modda
+## değiştirilebilir.") kilidin NE olduğunu söylüyordu, NEDEN'ini değil — kilitli bir
+## kontrol de bozuk bir kontrol gibi okunuyordu. Kenarlıksız modun kendi gerekçesi var
+## (pencere ekranın doğal çözünürlüğünü kaplar) ve kendi satırını hak ediyor.
+## `SET_RESOLUTION_BORDERLESS` HENÜZ YOK: strings.csv'nin sahibi şu an başka bir task,
+## o yüzden anahtar bu commit'te CSV'ye eklenmiyor. Anahtar inene kadar kenarlıksız
+## dalı da mevcut metni gösterir — `tr()` çözemediği anahtarı ham hâliyle basacağı
+## için burada fallback ŞART, yoksa panelde "SET_RESOLUTION_BORDERLESS" yazar.
+const RES_NOTE_DEFAULT := "SET_RESOLUTION_LOCKED"
+const RES_NOTE_BORDERLESS := "SET_RESOLUTION_BORDERLESS"
+
+
+func _resolution_note_key() -> String:
+	if DisplaySettingsLib.get_window_mode() != DisplaySettingsLib.MODE_BORDERLESS:
+		return RES_NOTE_DEFAULT
+	# Çeviri tablosunda yoksa TranslationServer anahtarı AYNEN geri verir.
+	if TranslationServer.translate(RES_NOTE_BORDERLESS) == RES_NOTE_BORDERLESS:
+		return RES_NOTE_DEFAULT
+	return RES_NOTE_BORDERLESS
+
+
 func _refresh_resolution_row() -> void:
 	var editable: bool = DisplaySettingsLib.is_resolution_editable()
 	_res_option.disabled = not editable
 	_res_note.visible = not editable
+	# _label_keys KAYDI da güncellenir, yalnız .text değil: dil değişiminde
+	# retranslate döngüsü kayıttan okuyor, yani yalnız metni yazmak bir sonraki
+	# dil takasında eski anahtarı geri getirirdi.
+	var key: String = _resolution_note_key()
+	_label_keys[_res_note] = key
+	_res_note.text = tr(key)
 
 
 ## Okunabilirlik tabanı (fiziksel piksel) her pencere boyutunda yeniden ölçülür:

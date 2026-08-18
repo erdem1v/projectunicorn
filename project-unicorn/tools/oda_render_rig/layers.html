@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>ODA layer export rig</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js"
+  }
+}
+</script>
+<style>html,body{margin:0;height:100%;background:#111;color:#ddd;font:12px ui-monospace,monospace}
+canvas{display:block;width:100vw;height:100vh}
+#log{position:fixed;left:8px;top:8px;white-space:pre;background:rgba(0,0,0,.6);padding:8px;max-height:96vh;overflow:auto}</style>
+</head>
+<body>
+<div id="log">rig booting…</div>
+<script type="module">
+import * as THREE from 'three';
+import { box, buildMonitor, buildKeyboard, buildLamp, buildPhone, buildMug, buildFrame, buildCorkboard } from './desk-builders.js';
+
+// ============================================================================
+// ODA LAYER EXPORT RIG — throwaway tool, NOT shipped content.
+//
+// Scene construction below is a VERBATIM copy of the approved design scene
+// (`office-room.html` in Claude Design project aaaa43ee…), so camera, lights,
+// materials and object transforms are reproduced BY CONSTRUCTION rather than
+// by approximation. The only deliberate differences:
+//   1. WebGLRenderer gets `alpha: true` — the source scene omits it, which is
+//      why its own 4K export writes opaque black and cannot emit a layer.
+//   2. OrbitControls dropped; the camera is pinned with lookAt() to the same
+//      point the source set as controls.target.
+//   3. Layer isolation + alpha-bbox measurement added.
+// Everything else is byte-for-byte the source's values.
+// ============================================================================
+
+const LOG = document.getElementById('log');
+const say = m => { LOG.textContent += '\n' + m; console.log(m); };
+
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true, alpha:true});
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.setClearAlpha(0);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(44, 16/9, 0.05, 40);
+camera.position.set(0, 1.08, 2.15);
+camera.lookAt(0.02, 1.02, -0.9);   // == source controls.target
+
+// ---- room materials (verbatim) ----
+const plaster  = new THREE.MeshStandardMaterial({color:0xd7c1a0, roughness:0.95});
+const plasterR = new THREE.MeshStandardMaterial({color:0xcbb48f, roughness:0.95});
+const floorMat = new THREE.MeshStandardMaterial({color:0x9c7546, roughness:0.85});
+const deskWood = new THREE.MeshStandardMaterial({color:0xb98a52, roughness:0.72});
+const deskWoodD= new THREE.MeshStandardMaterial({color:0x8f6636, roughness:0.75});
+const mullion  = new THREE.MeshStandardMaterial({color:0xa87e4e, roughness:0.7});
+const skyMat   = new THREE.MeshBasicMaterial({color:0xffedc8});
+
+function shadowed(o, cast=true, recv=true){ o.traverse(m=>{ if(m.isMesh){ m.castShadow=cast; m.receiveShadow=recv; } }); return o; }
+
+const room = new THREE.Group(); scene.add(room);
+const floor = box('floor', floorMat, 4.2, 0.02, 4.6, -0.1, -0.01, 1.0); floor.receiveShadow = true; room.add(floor);
+room.add(shadowed(box('wall_back', plaster, 3.9, 2.7, 0.06, -0.25, 1.35, -0.99), false, true));
+room.add(shadowed(box('wall_left', plasterR, 0.06, 2.7, 4.6, -2.17, 1.35, 1.0), false, true));
+
+const RW = 1.72;
+const rw = new THREE.Group(); rw.name = 'wall_right'; room.add(rw);
+const rseg = (n,y,h,z,d)=>{ const s = box(n, plasterR, 0.06, h, d, RW, y, z); s.receiveShadow = true; rw.add(s); };
+rseg('rw_below', 0.375, 0.75, 1.0, 4.6);
+rseg('rw_above', 2.5,  0.4,  1.0, 4.6);
+rseg('rw_back',  1.525, 1.55, -0.925, 0.35);
+rseg('rw_front', 1.525, 1.55, 1.975, 2.05);
+const fr = new THREE.Group(); fr.name = 'window_frame'; rw.add(fr);
+const fbar = (n,y,h,z,d)=>{ const b = box(n, mullion, 0.07, h, d, RW-0.005, y, z); b.castShadow = true; b.receiveShadow = true; fr.add(b); };
+fbar('sill',    0.76, 0.05, 0.1, 1.78);
+fbar('head',    2.29, 0.05, 0.1, 1.78);
+fbar('jamb_b',  1.525, 1.5, -0.73, 0.05);
+fbar('jamb_f',  1.525, 1.5, 0.93, 0.05);
+fbar('mull_v1', 1.525, 1.5, -0.19, 0.04);
+fbar('mull_v2', 1.525, 1.5, 0.38, 0.04);
+fbar('mull_h',  1.62, 0.04, 0.1, 1.66);
+const sky = box('sky', skyMat, 0.02, 2.4, 2.6, RW+0.35, 1.6, 0.1); rw.add(sky);
+
+const cork = shadowed(buildCorkboard()); cork.scale.setScalar(1.45);
+// SEALED SOURCE DELTA + AUTHORIZED CORRECTION (2026-08-17). The sealed scene moved the
+// corkboard to (0.62, 1.44). At the solved camera that projects board_inner to y = -17 —
+// clipped off the frame top — and 220 px right of the layout contract. The vertical drop
+// alone cannot close the horizontal, so the director authorized the full source move:
+// left 20.4 cm, down 15.4 cm. board_inner then lands at 1368.2, 150.6 = exact contract,
+// camera and the four BOARD_REL cards untouched. Mirror this in office-room.html.
+cork.position.set(0.4155, 1.2855, -0.955); room.add(cork);
+for(let i=0;i<3;i++){
+  const f = shadowed(buildFrame()); f.scale.setScalar(1.55);
+  f.position.set(-1.28 + i*0.37, 1.85, -0.955); room.add(f);
+}
+
+const desk = new THREE.Group(); desk.name = 'desk'; room.add(desk);
+desk.add(shadowed(box('desk_top', deskWood, 2.9, 0.045, 0.98, 0, 0.7175, -0.42)));
+desk.add(shadowed(box('desk_panel_l', deskWoodD, 0.04, 0.695, 0.9, -1.38, 0.3475, -0.42)));
+desk.add(shadowed(box('desk_panel_r', deskWoodD, 0.04, 0.695, 0.9, 1.38, 0.3475, -0.42)));
+desk.add(shadowed(box('desk_back', deskWoodD, 2.76, 0.4, 0.03, 0, 0.5, -0.85)));
+
+const T = 0.74;
+const monitor = shadowed(buildMonitor()); monitor.scale.setScalar(1.32); monitor.position.set(0, T, -0.56); room.add(monitor);
+const keyboard = shadowed(buildKeyboard()); keyboard.scale.setScalar(1.15); keyboard.position.set(0, T, -0.16); room.add(keyboard);
+// LAMBA KONUMU + YAW — BİLİNÇLİ SEALED-SOURCE OVERRIDE (2026-08-18, yönetmen onayı).
+// Mühürlü kaynak: position (-0.92, T, -0.5), rotation.y 0.5 (28.6°).
+// Sorun ölçüldü: lambanın ağzı 28.6° azimutta, kendi ışık havuzu ise 95° azimutta —
+// yani lamba KENDİ IŞIĞINDAN 66° sapmış duruyordu, bakan göz bunu uyumsuz okuyor.
+// yaw 85.156° havuzun merkezine TAM nişan alır (artık sapma 0.000°).
+// Yalnız döndürmek yetmiyor: lamba yandan görünüşe geçince kol derinlik yerine
+// GENİŞLİK kaplıyor, siluet 200px→332px büyüyor ve sağ kenarı 0.1092'den 0.1402'ye
+// çıkıp masa kâğıtlarının (PAPER_SLOTS, 0.120'de başlar) ÜSTÜNE biniyordu.
+// Çözüm olarak kâğıtları daraltmak yerine lamba 12cm sola alındı (Erdem kararı):
+// sağ kenar 0.1004, kâğıtlara boşluk 0.0196 — bugünkünden (0.0108) DAHA GENİŞ.
+// lampSpot.position = bulbWorld olduğu için ışık kaynağı lambayla birlikte taşınır,
+// poolTarget sabit kalır → havuz yerinde durur ama iki plaka da yeniden render edilir.
+const lamp = shadowed(buildLamp()); lamp.position.set(-1.04, T, -0.5); lamp.rotation.y = 1.48625; room.add(lamp);
+// ---- BİLİNÇLİ SEALED-SOURCE OVERRIDE (2026-08-17, yönetmen onayı) -----------
+// Mühürlü office-room.html burada başı ışık havuzuna NİŞANLIYOR:
+//   lampHead.quaternion.setFromUnitVectors(new THREE.Vector3(0,-1,0), dirL)
+// ("baktığı nokta = ışığın düştüğü nokta, twist yok"). O blok BİLEREK ALINMADI.
+// Ölçülen sebep: nişan başı döndürüp AĞZI KAMERAYA çeviriyor, böylece aydınlanmayan
+// iç yüzey objenin en büyük görünen yüzeyi oluyor ve lamba gündüz "kapüşonlu göz"
+// gibi biçimsiz bir siyah kütle olarak okunuyor. İlk assette (2026-08-10) baş SABİT
+// pitch'teydi, ağız aşağı/uzağa bakıyordu ve lamba düz siyah bir lambaydı.
+// Sözleşme: lamba HER İKİ MODDA düz siyah; değişen tek şey AYDINLATMA, gece ampul
+// yanar (emissive) + masada havuz + hale. Bu satırların kaldırılması office-room
+// .html'e de yansıtılmalı.
+// lampHead ve poolTarget YAŞAMAYA DEVAM EDİYOR: lampSpot.target ve mouthGlow'un
+// konumu ikisini de kullanıyor.
+const lampHead = lamp.getObjectByName('head');
+const poolTarget = new THREE.Vector3(-0.45, T, -0.45);
+const mug = shadowed(buildMug()); mug.position.set(0.56, T, -0.22); mug.rotation.y = 2.6; room.add(mug);
+// SEALED SOURCE DELTA + AUTHORIZED CORRECTION (2026-08-17). Sealed position (0.38, T, -0.05)
+// is kept. Sealed yaw was -0.28 rad (-16.04 deg), which projects the screen quad as a
+// 29.2-deg-sheared parallelogram — PHONE_GLASS_* models a ROTATED RECT and cannot seat that.
+// Shear falls monotonically toward -2 deg, where it is 0.17 deg (a clean rectangle) with the
+// glass area still 1.27x the shipped value. Director authorized the 14-deg reduction.
+// Residual 6.2-deg trapezoid is perspective non-affinity and is irreducible by yaw.
+const phone = shadowed(buildPhone()); phone.position.set(0.38, T, -0.05); phone.rotation.y = -0.034907; room.add(phone);
+
+const monScreen = monitor.getObjectByName('screen');
+const lampBulb = lamp.getObjectByName('bulb');
+
+// ---- lighting rigs (verbatim) ----
+const dayRig = new THREE.Group(); scene.add(dayRig);
+dayRig.add(new THREE.HemisphereLight(0xfff1da, 0x8a6f4d, 0.85));
+const sun = new THREE.DirectionalLight(0xffd6a0, 3.4);
+sun.position.set(5.2, 3.1, 0.55);
+sun.target.position.set(-1.4, 0.3, -0.45);
+sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096);
+sun.shadow.camera.left = -3.4; sun.shadow.camera.right = 3.4;
+sun.shadow.camera.top = 3; sun.shadow.camera.bottom = -3;
+sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 14;
+sun.shadow.bias = -0.0002;
+sun.shadow.normalBias = 0.02;
+dayRig.add(sun, sun.target);
+const dayFill = new THREE.DirectionalLight(0xfff6e8, 0.4);
+dayFill.position.set(-2, 2.4, 3); dayRig.add(dayFill);
+
+const nightRig = new THREE.Group(); nightRig.visible = false; scene.add(nightRig);
+// SEALED SOURCE DELTA — the night rig was reworked wholesale: cool moonlight (hemi 0x39435c
+// + a 0x7d8fb8 moon + a monitor glow + a keyboard wash) is retired in favour of ONE warm
+// tungsten ceiling lamp plus the desk-lamp accent. No other source.
+nightRig.add(new THREE.HemisphereLight(0x8a7154, 0x241c12, 0.3));
+const ceil = new THREE.PointLight(0xffd2a0, 5, 9, 1.6);   // ~2800K tungsten, above room centre
+ceil.position.set(-0.1, 2.55, 0.4);
+ceil.castShadow = true;
+ceil.shadow.mapSize.set(2048, 2048);
+ceil.shadow.bias = -0.0008;
+ceil.shadow.normalBias = 0.03;
+nightRig.add(ceil);
+// Desk lamp: bright warm pool above ambience, cone ENDS on the desk (distance 1.2). This is
+// why it cannot reach the back wall ~5.6 units away — the wall shadow the director saw is
+// the ceiling light's, and it is absent from a plate rendered with the objects hidden.
+const lampSpot = new THREE.SpotLight(0xffb866, 9, 1.2, 0.45, 0.5, 1.7);
+const bulbWorld = new THREE.Vector3(); lampBulb.getWorldPosition(bulbWorld);
+lampSpot.position.copy(bulbWorld);
+lampSpot.target.position.copy(poolTarget);
+// Tiny warm glint at the shade mouth so the pool reads as having a source.
+// MÜHÜRLÜ DEĞER (0.45). Bu tur içinde 0.8'e çıkarıp 0.30'a çekmişimdir; ikisi de
+// krem astarın patlamasını yönetmek içindi. Astar gitti, değer mühürlüye döndü.
+const mouthGlow = new THREE.PointLight(0xffb866, 0.45, 0.32, 1.8);
+{
+  const headW = new THREE.Vector3(); lampHead.getWorldPosition(headW);
+  mouthGlow.position.copy(headW).addScaledVector(poolTarget.clone().sub(headW).normalize(), 0.09);
+}
+nightRig.add(mouthGlow);
+lampSpot.castShadow = true;
+lampSpot.shadow.mapSize.set(2048, 2048);
+lampSpot.shadow.normalBias = 0.01;
+lampSpot.shadow.bias = -0.0005;
+nightRig.add(lampSpot, lampSpot.target);
+
+// ---- day/night (verbatim setMode) ----
+function setMode(m){
+  const day = m === 'day';
+  dayRig.visible = day; nightRig.visible = !day;
+  skyMat.color.set(day ? 0xffedc8 : 0x1e2638);       // window: pale blue, casts no light
+  renderer.toneMappingExposure = day ? 1.05 : 1.0;   // dim but nothing goes black
+  // SEALED SOURCE DELTA: the screen is DARK GLASS in BOTH modes — the game paints its
+  // content. This is what retires monitor_night_3840x2160.png: at night the monitor is the
+  // day layer under ObjectLayer modulate, so there is no emissive variant to export.
+  monScreen.material.emissive.set(0x000000);
+  monScreen.material.emissiveIntensity = 0;
+  monScreen.material.roughness = 0.15;
+  lampBulb.material.emissive.set(day ? 0xffdda0 : 0xff9d4a);
+  // MÜHÜRLÜ DEĞER (gece 1.2). Bu tur içinde 0.6'ya düşürmüştüm çünkü krem astar
+  // ampulle birlikte beyaza patlıyordu. Astar gittiğine ve ağız kameradan uzağa
+  // baktığına göre 1.2 geri geliyor: LAMBANIN YANDIĞINI OKUTAN ŞEY BU.
+  // Sözleşme: gövde düz siyah kalır, gece DEĞİŞEN tek şey ışıktır.
+  lampBulb.material.emissiveIntensity = day ? 0.15 : 1.2;
+}
+
+// ---- layer isolation ----
+const DESK = { monitor, keyboard, desk_lamp: lamp, mug, phone };
+const DESK_SET = new Set(Object.values(DESK));
+
+function showPlate(){ room.children.forEach(c => c.visible = !DESK_SET.has(c)); }
+function showOnly(obj){ room.children.forEach(c => c.visible = (c === obj)); }
+function showAll(){ room.children.forEach(c => c.visible = true); }
+
+// ---- render + measure ----
+const W = 3840, H = 2160;
+function renderAt(){
+  renderer.setPixelRatio(1);
+  renderer.setSize(W, H, false);
+  camera.aspect = W/H; camera.updateProjectionMatrix();
+  renderer.render(scene, camera);
+}
+
+/** Tight alpha bounding box of the current frame, in source pixels.
+ *  This is what REGIONS[id] wants — measured from the render itself,
+ *  never from a ruler on a screenshot. */
+function alphaBounds(){
+  const gl = renderer.getContext();
+  const px = new Uint8Array(W * H * 4);
+  gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
+  let minX = W, minY = H, maxX = -1, maxY = -1;
+  for (let y = 0; y < H; y++) {
+    const rowBase = y * W * 4;
+    for (let x = 0; x < W; x++) {
+      if (px[rowBase + x*4 + 3] > 8) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) return null;
+  // readPixels is bottom-up; flip to top-left origin (Godot/image space).
+  return { x: minX, y: H - 1 - maxY, w: maxX - minX + 1, h: maxY - minY + 1 };
+}
+
+/** Screen-space rect of a named mesh, by projecting its 8 world corners.
+ *  Used to DERIVE MONITOR_GLASS_REL from geometry (task §2). */
+function projectMesh(root, meshName){
+  const mesh = root.getObjectByName(meshName);
+  if (!mesh) return null;
+  mesh.updateWorldMatrix(true, false);
+  mesh.geometry.computeBoundingBox();
+  const bb = mesh.geometry.boundingBox;
+  let minX=1e9, minY=1e9, maxX=-1e9, maxY=-1e9;
+  for (let i=0;i<8;i++){
+    const v = new THREE.Vector3(
+      i&1 ? bb.max.x : bb.min.x,
+      i&2 ? bb.max.y : bb.min.y,
+      i&4 ? bb.max.z : bb.min.z);
+    v.applyMatrix4(mesh.matrixWorld).project(camera);
+    const sx = (v.x * 0.5 + 0.5) * W, sy = (-v.y * 0.5 + 0.5) * H;
+    minX=Math.min(minX,sx); maxX=Math.max(maxX,sx);
+    minY=Math.min(minY,sy); maxY=Math.max(maxY,sy);
+  }
+  return { x:minX, y:minY, w:maxX-minX, h:maxY-minY };
+}
+
+// POST rather than <a download>: Chrome throttles a burst of nine downloads
+// behind an "allow multiple downloads" prompt (measured — 1 of 9 arrived), and
+// a blocked export is worse than a slow one. serve.py writes them to ./out/.
+function download(name){
+  return new Promise((res, rej) => renderer.domElement.toBlob(async b => {
+    try {
+      const r = await fetch('/save/' + name, { method:'POST', body:b });
+      if (!r.ok) throw new Error(name + ' -> HTTP ' + r.status);
+      res();
+    } catch (e) { rej(e); }
+  }, 'image/png'));
+}
+
+const results = { plates:{}, objects:{}, glass:null };
+
+async function exportPlate(mode){
+  setMode(mode); showPlate(); renderAt();
+  await download(`oda-plate-${mode}.png`);
+  results.plates[mode] = 'ok';
+  say(`plate ${mode} ✓`);
+}
+
+// ---- contact-shadow pass -----------------------------------------------
+// Hiding an object also removes its shadow, so the plate has clean desk where
+// each object used to sit. Rather than hand-author "soft blob" layers (§2's
+// [WORKING] fallback), render the REAL shadow: keep the object in the scene but
+// stop it painting (colorWrite=false — it still casts), and swap the desk/floor
+// to ShadowMaterial so only the shadow is drawn. Result is a true contact
+// shadow with correct softness and direction, on its own alpha layer.
+// opacity: round 1 shipped 1.0 and the layers came back near-opaque (alpha mean
+// 157-237 of 255, p95 255) — pure black bars composited onto lit wood, which is
+// what the F5 rejection called "gölgeler kötü". A contact shadow on a warm-lit
+// desk wants roughly a quarter-strength darkening, not a silhouette.
+let SHADOW_OPACITY = 0.25;                                          // WORKING
+const shadowMat = new THREE.ShadowMaterial({ opacity: SHADOW_OPACITY });
+window.RIG_SHADOW_OPACITY = v => { shadowMat.opacity = SHADOW_OPACITY = v; return v; };
+const deskTop = desk.getObjectByName('desk_top');
+
+async function exportShadow(key, mode){
+  setMode(mode);
+  const obj = DESK[key];
+  const restore = [];
+  // Catcher is the DESK TOP ONLY. Including the floor put the desk's own
+  // floor-shadow in every layer — measured: all five came back with the same
+  // 2505x656 box. And the desk must stop CASTING for the pass, or it shadows
+  // itself; it is here purely to receive.
+  room.children.forEach(c => c.visible = (c === obj || c === desk));
+  desk.children.forEach(c => { restore.push(['v', c, c.visible]); c.visible = (c === deskTop); });
+  restore.push(['c', deskTop, deskTop.castShadow]); deskTop.castShadow = false;
+  [deskTop].forEach(m => { restore.push(['m', m, m.material]); m.material = shadowMat; });
+  obj.traverse(m => {
+    if (!m.isMesh) return;
+    restore.push(['m', m, m.material]);
+    const c = m.material.clone(); c.colorWrite = false; m.material = c;
+  });
+  renderAt();
+  const b = alphaBounds();
+  await download(`oda-shadow-${key}-${mode}.png`);
+  restore.forEach(([kind, node, val]) => {
+    if (kind === 'm') node.material = val;
+    else if (kind === 'c') node.castShadow = val;
+    else node.visible = val;
+  });
+  results.objects[`shadow-${key}-${mode}`] = b;
+  say(`shadow ${key} ${mode} ✓ ${b ? `${b.x},${b.y} ${b.w}x${b.h}` : 'EMPTY'}`);
+}
+
+async function exportObject(key, mode){
+  setMode(mode); showOnly(DESK[key]); renderAt();
+  const b = alphaBounds();
+  await download(`oda-${key}-${mode}.png`);
+  results.objects[`${key}-${mode}`] = b;
+  say(`${key} ${mode} ✓  bounds ${b ? `${b.x},${b.y} ${b.w}x${b.h}` : 'EMPTY'}`);
+}
+
+// ============================================================================
+// CAMERA FIT
+// The approved proof renders were NOT taken from this file's default camera —
+// the design page states "Kamera sürüklenebilir; render o anki açıyı kullanır",
+// so the director orbited before exporting and that pose exists only inside the
+// approved PNG. Rather than eyeball it (the one thing the brief forbids), solve
+// for it: render candidates small, score against the reference, hill-climb.
+// FOV is NOT a parameter — OrbitControls dollies, it never changes fov.
+// ============================================================================
+const FITW = 384, FITH = 216;
+
+async function refGray(url){
+  const img = new Image();
+  await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = url; });
+  const c = document.createElement('canvas');
+  c.width = FITW; c.height = FITH;
+  const ctx = c.getContext('2d', { willReadFrequently:true });
+  ctx.drawImage(img, 0, 0, FITW, FITH);
+  const d = ctx.getImageData(0, 0, FITW, FITH).data;
+  const g = new Float32Array(FITW*FITH);
+  for (let i=0;i<g.length;i++) g[i] = (d[i*4]*0.299 + d[i*4+1]*0.587 + d[i*4+2]*0.114);
+  return g;
+}
+
+const _fitBuf = new Uint8Array(FITW*FITH*4);
+function renderGray(p){
+  camera.position.set(p[0], p[1], p[2]);
+  camera.lookAt(p[3], p[4], p[5]);
+  camera.aspect = FITW/FITH; camera.updateProjectionMatrix();
+  renderer.setSize(FITW, FITH, false);
+  renderer.render(scene, camera);
+  const gl = renderer.getContext();
+  gl.readPixels(0, 0, FITW, FITH, gl.RGBA, gl.UNSIGNED_BYTE, _fitBuf);
+  const g = new Float32Array(FITW*FITH);
+  for (let y=0;y<FITH;y++){                       // readPixels is bottom-up
+    const src = (FITH-1-y)*FITW*4, dst = y*FITW;
+    for (let x=0;x<FITW;x++){
+      const i = src + x*4;
+      g[dst+x] = _fitBuf[i]*0.299 + _fitBuf[i+1]*0.587 + _fitBuf[i+2]*0.114;
+    }
+  }
+  return g;
+}
+
+function mae(a,b){ let s=0; for(let i=0;i<a.length;i++) s += Math.abs(a[i]-b[i]); return s/a.length; }
+
+window.RIG_FIT = async function(){
+  const ref = await refGray('./ref-day.png');
+  setMode('day'); showAll();
+  let p = [0, 1.08, 2.15, 0.02, 1.02, -0.9];     // file default = starting guess
+  let best = mae(renderGray(p), ref);
+  const steps = [0.8, 0.4, 0.2, 0.1, 0.05, 0.02, 0.01];
+  let evals = 1;
+  for (const st of steps){
+    let improved = true;
+    while (improved){
+      improved = false;
+      for (let k=0;k<6;k++){
+        for (const dir of [1,-1]){
+          const q = p.slice(); q[k] += st*dir;
+          const s = mae(renderGray(q), ref); evals++;
+          if (s < best - 1e-6){ best = s; p = q; improved = true; }
+        }
+      }
+    }
+  }
+  return { mae: +best.toFixed(3), evals,
+           position: p.slice(0,3).map(n=>+n.toFixed(4)),
+           target: p.slice(3,6).map(n=>+n.toFixed(4)) };
+};
+
+/** Projected screen AABB of an Object3D and all its descendant meshes.
+ *  The PAINTED anchors (board, frames, window, desk) are not sprites, so they
+ *  have no alpha layer to measure — but they are real geometry, so their rects
+ *  can be projected exactly instead of eyeballed off the plate. */
+function projectObject(root){
+  let minX=1e9, minY=1e9, maxX=-1e9, maxY=-1e9, found=false;
+  root.updateWorldMatrix(true, true);
+  root.traverse(m => {
+    if (!m.isMesh) return;
+    const r = projectMesh({ getObjectByName: () => m }, null) || (()=>{
+      m.geometry.computeBoundingBox();
+      const bb = m.geometry.boundingBox;
+      let a=1e9,b=1e9,c=-1e9,d=-1e9;
+      for (let i=0;i<8;i++){
+        const v = new THREE.Vector3(i&1?bb.max.x:bb.min.x, i&2?bb.max.y:bb.min.y, i&4?bb.max.z:bb.min.z);
+        v.applyMatrix4(m.matrixWorld).project(camera);
+        const sx=(v.x*0.5+0.5)*W, sy=(-v.y*0.5+0.5)*H;
+        a=Math.min(a,sx); c=Math.max(c,sx); b=Math.min(b,sy); d=Math.max(d,sy);
+      }
+      return {x:a,y:b,w:c-a,h:d-b};
+    })();
+    found = true;
+    minX=Math.min(minX,r.x); minY=Math.min(minY,r.y);
+    maxX=Math.max(maxX,r.x+r.w); maxY=Math.max(maxY,r.y+r.h);
+  });
+  return found ? {x:minX, y:minY, w:maxX-minX, h:maxY-minY} : null;
+}
+
+window.RIG_ANCHORS = function(){
+  const frames = room.children.filter(c => c.name === 'picture_frame');
+  const px = o => { const r = projectObject(o); return r && {
+    x:+r.x.toFixed(1), y:+r.y.toFixed(1), w:+r.w.toFixed(1), h:+r.h.toFixed(1) }; };
+  const out = {
+    board_outer: px(cork),
+    board_inner: px(cork.getObjectByName('cork_panel')),
+    window_frame: px(fr),
+    desk_top: px(deskTop),
+    lamp_head: px(lamp.getObjectByName('head'))
+  };
+  frames.forEach((f,i) => out['frame_outer_'+i] = px(f));
+  return out;
+};
+
+// ============================================================================
+// ANCHOR FIT — solve the camera against the WATERCOLOUR room's own geometry.
+//
+// Round 1 fitted the camera to the director's approved proof PNG and was
+// rejected at F5: "perspektif kötü, placementlar kötü". The measured cause is
+// that every anchor collapsed against the retired watercolour room —
+// board_inner 58% of its old width, monitor 46%, lamp 17%. Objects ended up
+// tiny and huddled at frame centre, and the board could no longer host its
+// cards.
+//
+// So do not fit to a picture. Fit to the REQUIREMENT: the normalized rects in
+// OdaLayout.RECTS are the layout contract every host, card and hotspot was
+// built against. Reproduce those and the room is compositionally the one that
+// worked, drawn in the new style — and OdaLayout barely changes.
+//
+// This scores projected geometry rather than pixels, so it needs no renders:
+// pure matrix math, thousands of evaluations per second.
+// ============================================================================
+
+// OdaLayout.RECTS @ HEAD — the layout contract. Fractions of the 3840x2160 art.
+const WC = {
+  board_outer:   [0.405, 0.042, 0.390, 0.418],
+  board_inner:   [0.418, 0.058, 0.364, 0.386],
+  frames_band:   [0.118, 0.060, 0.235, 0.155],
+  window:        [0.868, 0.000, 0.132, 0.630],
+  monitor:       [0.315, 0.375, 0.280, 0.527],
+  lamp:          [0.100, 0.462, 0.130, 0.318],
+  mug:           [0.630, 0.700, 0.062, 0.107],
+  phone:         [0.700, 0.735, 0.100, 0.147],
+  frame_outer_0: [0.127, 0.075, 0.051, 0.128],
+  frame_outer_1: [0.204, 0.073, 0.057, 0.130],
+  frame_outer_2: [0.285, 0.071, 0.059, 0.135]
+};
+
+// Position and SIZE are weighted separately, because the watercolour room is a
+// painting, not a projection of this 3D room — measured: its mug implies 2705
+// px/m while its monitor implies 1481 px/m, which would put the camera at
+// z=0.19, inside the desk. No camera reproduces both. So:
+//   * hosts (board, monitor glass, frames) must match SIZE — their content is
+//     laid out in host-relative fractions and clips if the host shrinks;
+//   * decorative props (lamp, mug, phone) must match POSITION — they should sit
+//     where the room's composition puts them — but their size is whatever the
+//     honest 3D proportions give. Their REGIONS are re-measured anyway.
+const WEIGHT = {
+  board_inner:  {p:3.0, s:4.0},   // the host that broke — heaviest
+  board_outer:  {p:1.0, s:1.0},
+  frames_band:  {p:1.5, s:1.5},
+  monitor:      {p:2.0, s:2.5},   // hosts the dashboard glass
+  window:       {p:0.0, s:0.0},   // scored by the COMP.window* terms instead:
+                                  // its AABB runs off-frame toward the camera,
+                                  // so matching the raw box is meaningless
+  lamp:         {p:1.0, s:0.2},
+  mug:          {p:0.8, s:0.1},
+  // STALE TARGET — zeroed 2026-08-17. The sealed scene MOVED the phone from
+  // (0.88, T, -0.18) to (0.38, T, -0.05), roughly half a metre left. RECTS.phone still
+  // holds the OLD projection, so that target is now physically unreachable. Left at 0.8
+  // the solver chased it and paid for it with the board: measured, it walked the camera to
+  // pitch -9.05 deg and left board_inner 214 px right of contract — the exact failure the
+  // round-1 F5 rejection was about. Props are position-scored to keep the camera honest,
+  // not to pin a prop that the director has since relocated; RECTS.phone is rewritten from
+  // this render's own alpha bounds instead.
+  phone:        {p:0.0, s:0.0},
+  frame_outer_0:{p:0.3, s:0.3},
+  frame_outer_1:{p:0.3, s:0.3},
+  frame_outer_2:{p:0.3, s:0.3}
+};
+
+// The director asked for frontal, eye-level, long lens. Left to the anchors
+// alone the solver drifts off-axis (measured: yaw -1.03, pitch 0.72) chasing
+// sizes it cannot reach, so the brief is encoded as explicit cost.
+// Angles, not coordinate differences. Expressing frontality as
+// |pos.x - target.x| let the solver game it by pushing the look-at target 494 m
+// away, where any offset is angularly nil (measured: it did exactly that, and
+// wandered 17k evaluations doing it). Degrees cannot be gamed by distance.
+const COMP = {
+  yawPerDeg:   0.03,  // back wall square — small yaw allowed, the room is a corner view
+  pitchPerDeg: 0.04,  // beyond pitchFree — stop looking down at the desk
+  pitchFree:   5.0,
+  fovLo: 28, fovHi: 46, fovW: 1.5,
+  deskFloor:   6.0,   // desk top must reach the frame bottom (no dead floor)
+  // The window is a TOUR STOP ("tıklanmaz — yalnız tur"), so framing it out
+  // leaves the tour pointing at nothing — and it is the room's only light
+  // source, which is why the first solve rendered flat and brown. Geometry:
+  // the window wall sits at x=1.72 but a 32-deg frustum only reaches x=1.32 at
+  // the window's depth, so it must be paid for explicitly.
+  windowVis:  25.0,   // penalty per unit of missing visible width
+  windowMinW:  0.10,
+  windowPos:   2.0    // left edge belongs at ~0.868, as the room expects
+};
+window.RIG_WEIGHT = WEIGHT; window.RIG_COMP = COMP;
+
+function anchorsNorm(){
+  const frames = room.children.filter(c => c.name === 'picture_frame');
+  const n = o => { const r = projectObject(o); return r && [r.x/W, r.y/H, r.w/W, r.h/H]; };
+  const fr0 = n(frames[0]), fr1 = n(frames[1]), fr2 = n(frames[2]);
+  const band = (fr0 && fr2) ? [
+    Math.min(fr0[0], fr1[0], fr2[0]),
+    Math.min(fr0[1], fr1[1], fr2[1]),
+    Math.max(fr0[0]+fr0[2], fr1[0]+fr1[2], fr2[0]+fr2[2]) - Math.min(fr0[0], fr1[0], fr2[0]),
+    Math.max(fr0[1]+fr0[3], fr1[1]+fr1[3], fr2[1]+fr2[3]) - Math.min(fr0[1], fr1[1], fr2[1])
+  ] : null;
+  return {
+    board_outer: n(cork),
+    board_inner: n(cork.getObjectByName('cork_panel')),
+    frames_band: band,
+    window: n(fr),
+    monitor: n(monitor), lamp: n(lamp), mug: n(mug), phone: n(phone),
+    frame_outer_0: fr0, frame_outer_1: fr1, frame_outer_2: fr2
+  };
+}
+
+// A host that is the right shape but too SMALL still clips its cards, so
+// undersize is penalised harder than oversize (asymmetric): a slightly roomy
+// board is harmless, a slightly tight one reopens the F5 defect.
+function sizeErr(got, want){
+  const d = got - want;
+  return d < 0 ? -d * 1.6 : d;
+}
+
+function anchorScore(a, p){
+  let s = 0;
+  for (const k in WC){
+    const r = a[k]; if (!r) { s += 10; continue; }
+    const t = WC[k], w = WEIGHT[k];
+    s += w.p * (Math.abs(r[0]-t[0]) + Math.abs(r[1]-t[1]));
+    s += w.s * (sizeErr(r[2], t[2]) + sizeErr(r[3], t[3]));
+  }
+  if (p){
+    s += COMP.yawPerDeg   * Math.abs(p[3]);
+    s += COMP.pitchPerDeg * Math.max(0, Math.abs(p[4]) - COMP.pitchFree);
+    s += COMP.fovW  * (Math.max(0, COMP.fovLo - p[5]) + Math.max(0, p[5] - COMP.fovHi));
+    // Dead floor was a third of the rejected frame. The desk top is the room's
+    // foreground; if it stops short of the bottom edge, floor fills the gap.
+    const d = projectObject(deskTop);
+    if (d) s += COMP.deskFloor * Math.max(0, 1.0 - (d.y + d.h) / H);
+    // Window must actually be ON SCREEN, measured as visible width after
+    // clipping to the frame — not as its unclipped AABB.
+    const wr = a.window;
+    if (wr){
+      const vw = Math.max(0, Math.min(1, wr[0]+wr[2]) - Math.max(0, wr[0]));
+      s += COMP.windowVis * Math.max(0, COMP.windowMinW - vw);
+      s += COMP.windowPos * Math.abs(wr[0] - 0.868);
+    } else s += 5;
+  }
+  return s;
+}
+
+// Camera parameters are [x, y, z, yawDeg, pitchDeg, fov]. yaw 0 looks down -Z
+// (straight at the back wall); negative pitch looks down. The look-at target is
+// derived, never solved for — that is what closes the 494 m loophole.
+const DEG = Math.PI / 180;
+function camTarget(p){
+  const yaw = p[3]*DEG, pit = p[4]*DEG, cp = Math.cos(pit);
+  return [ p[0] + Math.sin(yaw)*cp, p[1] + Math.sin(pit), p[2] - Math.cos(yaw)*cp ];
+}
+
+function applyCam(p){
+  camera.fov = p[5];
+  camera.position.set(p[0], p[1], p[2]);
+  camera.aspect = W/H;
+  camera.updateProjectionMatrix();
+  const t = camTarget(p);
+  camera.lookAt(t[0], t[1], t[2]);
+  camera.updateMatrixWorld(true);
+}
+
+function scoreCam(p){
+  if (p[5] < 20 || p[5] > 55) return 1e6;
+  if (Math.abs(p[3]) > 45 || Math.abs(p[4]) > 45) return 1e6;
+  if (p[2] < 0.3 || p[2] > 6 || p[1] < 0.3 || p[1] > 3.2) return 1e6;
+  applyCam(p);
+  return anchorScore(anchorsNorm(), p);
+}
+
+window.RIG_SOLVE = function(seed){
+  // Seed on the design file's OWN default camera, not the orbited proof: the
+  // author set (0,1.08,2.15) -> (0.02,1.02,-0.9) as the scene's resting pose,
+  // and its near-zero yaw and pitch are already the frontal eye-level view the
+  // director asked for.
+  let p = seed ? seed.slice() : [0, 1.08, 2.15, 0, 0, 44];
+  let best = scoreCam(p), evals = 1;
+  const scale = [1, 1, 1, 20, 20, 25];   // angles in degrees, fov in degrees
+  // Caps: accepted moves only have to beat `best` by 1e-9, so from a distant
+  // seed the descent can crawl thousands of lattice steps (measured: seed
+  // [0,1.2,3.2,...] never returned). Terminate and report instead of hanging.
+  const MAX_EVALS = 40000, DEADLINE = performance.now() + 4000;
+  let capped = false;
+  outer:
+  for (const st of [0.4, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]){
+    let improved = true;
+    while (improved){
+      improved = false;
+      for (let k=0;k<6;k++){
+        for (const dir of [1,-1]){
+          const q = p.slice(); q[k] += st*dir*scale[k];
+          const s = scoreCam(q); evals++;
+          if (s < best - 1e-9){ best = s; p = q; improved = true; }
+        }
+      }
+      if (evals > MAX_EVALS || performance.now() > DEADLINE){ capped = true; break outer; }
+    }
+  }
+  applyCam(p);
+  const got = anchorsNorm();
+  const report = {};
+  for (const k in WC){
+    const r = got[k], t = WC[k];
+    report[k] = r ? {
+      target: t.map(n=>+n.toFixed(3)),
+      got:    r.map(n=>+n.toFixed(3)),
+      dw:     +(r[2]-t[2]).toFixed(3),
+      dh:     +(r[3]-t[3]).toFixed(3)
+    } : 'MISSING';
+  }
+  const dsk = projectObject(deskTop);
+  return {
+    score: +best.toFixed(4), evals, capped,
+    position: p.slice(0,3).map(n=>+n.toFixed(4)),
+    target:   camTarget(p).map(n=>+n.toFixed(4)),
+    fov:      +p[5].toFixed(3),
+    yaw_deg:   +p[3].toFixed(3),
+    pitch_deg: +p[4].toFixed(3),
+    desk_bottom:  dsk ? +((dsk.y+dsk.h)/H).toFixed(4) : null,
+    cam: p.map(n=>+n.toFixed(4)),
+    anchors: report
+  };
+};
+
+// Report anchors at an arbitrary camera without solving — used to show what the
+// file default and the round-1 fitted camera each produce.
+window.RIG_REPORT = function(p){
+  applyCam(p);
+  const got = anchorsNorm(), out = {};
+  for (const k in WC){
+    const r = got[k], t = WC[k];
+    out[k] = r ? { target:t.map(n=>+n.toFixed(3)), got:r.map(n=>+n.toFixed(3)) } : 'MISSING';
+  }
+  const dsk = projectObject(deskTop);
+  return { score:+anchorScore(got, p).toFixed(4),
+           yaw_deg:p[3], pitch_deg:p[4], fov:p[5],
+           desk_bottom: dsk ? +((dsk.y+dsk.h)/H).toFixed(4) : null,
+           anchors: out };
+};
+
+/** Apply a 6-param solved camera [x,y,z,yawDeg,pitchDeg,fov]. */
+window.RIG_APPLY = function(p){ applyCam(p); return { target: camTarget(p) }; };
+
+/** Full-scene proof render at the current camera, straight to ./out/. */
+window.RIG_SHOT = async function(name, mode){
+  setMode(mode || 'day'); showAll(); renderAt();
+  await download(name);
+  return name;
+};
+
+/** Oriented screen rect of the phone's glass, derived from the `screen` mesh.
+ *  The phone plate lies flat and is yawed, so its glass is a ROTATED quad, not
+ *  an AABB — OdaLayout models it as {center, size, angle} for exactly that
+ *  reason. Project the four corners of the screen's top face and read the
+ *  orientation off the long edge, rather than carrying the watercolour room's
+ *  hand-set 31 degrees onto art that no longer matches it. */
+window.RIG_PHONE_GLASS = function(){
+  const mesh = phone.getObjectByName('screen');
+  if (!mesh) return null;
+  mesh.updateWorldMatrix(true, false);
+  mesh.geometry.computeBoundingBox();
+  const bb = mesh.geometry.boundingBox, zc = (bb.min.z + bb.max.z) * 0.5;
+  const P = (x, y) => {
+    const v = new THREE.Vector3(x, y, zc).applyMatrix4(mesh.matrixWorld).project(camera);
+    return { x: (v.x*0.5+0.5)*W, y: (-v.y*0.5+0.5)*H };
+  };
+  const p00 = P(bb.min.x, bb.min.y), p10 = P(bb.max.x, bb.min.y), p01 = P(bb.min.x, bb.max.y);
+  const A = { x: p10.x-p00.x, y: p10.y-p00.y };     // short edge on the plate
+  const B = { x: p01.x-p00.x, y: p01.y-p00.y };     // long edge on the plate
+  const lenA = Math.hypot(A.x, A.y), lenB = Math.hypot(B.x, B.y);
+  const long_ = lenB >= lenA ? B : A, short_ = lenB >= lenA ? A : B;
+  const cx = p00.x + (A.x + B.x)*0.5, cy = p00.y + (A.y + B.y)*0.5;
+  let deg = Math.atan2(long_.y, long_.x) * 180/Math.PI;
+  while (deg > 90) deg -= 180;                       // keep it in [-90, 90]
+  while (deg < -90) deg += 180;
+  const r = REGIONS_PHONE;                           // phone alpha bbox, source px
+  return {
+    glass_px: { cx:+cx.toFixed(2), cy:+cy.toFixed(2),
+                w:+Math.max(lenA,lenB).toFixed(2), h:+Math.min(lenA,lenB).toFixed(2) },
+    phone_px: r,
+    center_rel: [ +((cx - r.x)/r.w).toFixed(4), +((cy - r.y)/r.h).toFixed(4) ],
+    size_rel:   [ +(Math.max(lenA,lenB)/r.w).toFixed(4), +(Math.min(lenA,lenB)/r.h).toFixed(4) ],
+    angle_deg:  +deg.toFixed(2)
+  };
+};
+let REGIONS_PHONE = { x:2721, y:1865, w:124, h:95 };  // overwritten by the export pass
+window.RIG_SET_PHONE_REGION = r => { REGIONS_PHONE = r; return r; };
+
+window.RIG_SETCAM = function(pos, tgt){
+  camera.position.set(pos[0], pos[1], pos[2]);
+  camera.lookAt(tgt[0], tgt[1], tgt[2]);
+  camera.updateProjectionMatrix();
+  return 'ok';
+};
+
+window.RIG = {
+  async runAll(){
+    await exportPlate('day');
+    await exportPlate('night');
+    const KEYS = ['monitor','keyboard','desk_lamp','mug','phone'];
+    for (const k of KEYS) await exportObject(k, 'day');
+    await exportObject('desk_lamp', 'night');
+    // monitor-night is NO LONGER SHIPPED (the sealed screen is dark glass in both modes, so
+    // monitor_night_3840x2160.png is retired and the night monitor is the day layer under
+    // ObjectLayer modulate). It is still exported as the MEASUREMENT REFERENCE for that
+    // modulate: mean(night)/mean(day) over the shared alpha mask gives ODA_NIGHT_TINT
+    // empirically instead of by eye. Do not install it.
+    await exportObject('monitor', 'night');
+    for (const k of KEYS) await exportShadow(k, 'day');
+    for (const k of KEYS) await exportShadow(k, 'night');
+    // Glass derivation must be measured in the SAME projection.
+    setMode('day'); showOnly(monitor); renderAt();
+    results.glass = { screenPx: projectMesh(monitor, 'screen'), monitorPx: alphaBounds() };
+    showAll(); setMode('day'); renderAt();
+    say('ALL DONE');
+    return results;
+  },
+  results: () => results
+};
+
+setMode('day'); showAll();
+renderer.setPixelRatio(1);
+renderer.setSize(innerWidth, innerHeight, false);
+camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+renderer.render(scene, camera);
+say('rig ready — call RIG.runAll()');
+window.__RIG_READY = true;
+
+// ---------------------------------------------------------------------------
+// SELF-DRIVING EXPORT  (?auto=1&cam=x,y,z,yawDeg,pitchDeg,fov)
+//
+// Driving this page from the MCP browser bridge failed: Chrome froze the
+// background tab, so toBlob() callbacks and fetch().then() never ran — measured
+// with an 8x8 canvas, which also never fired. Synchronous code still evaluated,
+// which is what made the freeze easy to misread as a slow encode.
+//
+// So the page drives itself and a dedicated FOREGROUND Chrome window runs it
+// (own profile, --app). Foreground means no freezing, and a real GPU means the
+// output matches the approved look rather than a software rasteriser.
+// Progress is reported by writing files; the runner polls the filesystem.
+// ---------------------------------------------------------------------------
+async function postText(name, text){
+  await fetch('/save/' + name, { method:'POST', body:text });
+}
+
+(async function auto(){
+  const q = new URLSearchParams(location.search);
+  if (q.get('auto') !== '1') return;
+  try {
+    let cam = (q.get('cam') || '').split(',').map(Number);
+    if (cam.length === 6 && cam.every(n => Number.isFinite(n))){
+      RIG_APPLY(cam);
+      say('camera ' + JSON.stringify(cam));
+    }
+    if (q.get('shadow')) RIG_SHADOW_OPACITY(Number(q.get('shadow')));
+
+    // Solve here rather than over the MCP bridge: the bridge tab is frozen, and
+    // the solve is pure matrix math anyway (no GPU), so it costs ~100ms.
+    let solveReport = null;
+    if (q.get('solve') === '1'){
+      const seeds = [
+        [0,     1.08, 2.15, 0.38, -1.13, 44],
+        [0.30,  1.30, 2.00, 4,    -3,    36],
+        [0.50,  1.40, 2.20, 0,    -2,    34],
+        [0.20,  1.35, 1.90, 8,    -3,    38],
+        [0.60,  1.50, 2.40, 3,    -5,    32],
+        [0.081, 1.602,2.433,0,    -5,    32]   // previous solve, now re-scored
+      ];
+      const runs = seeds.map(s => RIG_SOLVE(s)).sort((a,b) => a.score - b.score);
+      solveReport = runs.map(r => ({score:r.score, cam:r.cam, fov:r.fov,
+        yaw:r.yaw_deg, pitch:r.pitch_deg, desk:r.desk_bottom, capped:r.capped}));
+      cam = runs[0].cam;
+      RIG_APPLY(cam);
+      say('solved ' + JSON.stringify(cam) + '  score ' + runs[0].score);
+      await postText('solve.json', JSON.stringify({best: runs[0], all: solveReport}, null, 2));
+    }
+    const anchors = anchorsNorm();
+    // Whole-room proofs first: these are what the F5 gate is judged on, so if
+    // anything later fails they still exist.
+    await RIG_SHOT('proof-day.png', 'day');
+    await RIG_SHOT('proof-night.png', 'night');
+    // proofonly: skip the 19-layer export while the framing is still iterating.
+    const res = q.get('proofonly') === '1' ? {objects:null, glass:null} : await RIG.runAll();
+    if (res.objects && res.objects['phone-day']) RIG_SET_PHONE_REGION(res.objects['phone-day']);
+    await postText('anchors.json', JSON.stringify({
+      cam, shadow_opacity: shadowMat.opacity, anchors, regions: res.objects, glass: res.glass,
+      phone_glass: RIG_PHONE_GLASS(),
+      lamp_head: projectObject(lamp.getObjectByName('head')),
+      lamp_bulb: projectObject(lamp.getObjectByName('bulb'))
+    }, null, 2));
+    await postText('DONE.txt', 'ok');
+    say('AUTO EXPORT COMPLETE');
+  } catch (e){
+    await postText('DONE.txt', 'ERR ' + (e && e.message ? e.message : e));
+    say('AUTO EXPORT FAILED: ' + e);
+  }
+})();
+</script>
+</body>
+</html>

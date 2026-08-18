@@ -8,7 +8,16 @@ shader_type canvas_item;
 
 uniform vec4 glow_color : source_color = vec4(1.0, 1.0, 1.0, 0.0);
 uniform float glow_strength : hint_range(0.0, 1.0) = 0.0;
-uniform float rim_px = 10.0; // kaynak texel cinsinden rim kalınlığı — # WORKING
+// Rim kalınlığı, KAYNAK texel cinsinden — # WORKING.
+// 2026-08-17 mühürlü sanat turunda 10.0'dan 3.0'a indi. Sebep, shader'ın matematiği:
+// silüetin DIŞINDA tex.a = 0'dır, yani rim = na (komşuların maks alfası). Suluboya
+// kenarı YUMUŞAK olduğu için na kademeli iniyordu ve 10 texel gerçekten "hale" gibi
+// okunuyordu. Render sprite'larının kenarı KESKİN: na, şekle rim_px'ten yakın her
+// pikselde 1'dir, yani aynı uniform artık yumuşak hale değil 10 texel'lik DÜZ BİR
+// ŞERİT basıyor (1836px viewport'ta ~4.8 ekran px'i %55 turuncu blok).
+// 3.0 texel ≈ 1080p'de 1.4 ekran px'i — dolgu değil, KENAR VURGUSU. Doldurma yine
+// imkânsız: rim yalnız tex.a = 0 olan yere eklenir ("DOLGU ASLA PARLAMAZ").
+uniform float rim_px = 3.0;
 
 void fragment() {
 	vec4 tex = texture(TEXTURE, UV);

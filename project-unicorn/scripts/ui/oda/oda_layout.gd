@@ -5,10 +5,12 @@ extends RefCounted
 # ODA yerleşim defteri — TEK ayar yüzeyi (ODA rework 2026-08-06; D4 standardı
 # kalite turu v2'de eklendi).
 # ============================================================================
-# Sahne sanatı 3840×2160 (LIGHT gündüz / DARK gece); obje sprite'ları AYNI
-# kanvasta ama SAHNE-HİZALI DEĞİL — merkezlenmiş hero render'lar. Her obje,
-# kaynak içerik-kutusundan (REGIONS, px) normalize hedef-rect'e (RECTS, 0..1)
-# yerleştirilir. Hedef aspect == region aspect (STRETCH_SCALE güvenli).
+# Sahne sanatı 3840×2160 (room_day / room_night); obje sprite'ları AYNI kanvasta
+# ve artık SAHNE-HİZALI (2026-08-10 sanat migrasyonu): plaka ile her obje aynı
+# kameradan render edildi, o yüzden RECTS[id] == REGIONS[id] / ART ve sprite
+# plakadaki baked gölgesinin tam üstüne oturur. (Suluboya çağında sprite'lar
+# merkezlenmiş hero render'lardı ve hedef rect elle ayarlanıyordu — artık değil.)
+# Hedef aspect == region aspect bu yüzden HESAPLA değil YAPISAL (STRETCH_SCALE güvenli).
 #
 # ── D4 İÇERİK YERLEŞİM STANDARDI (Erdem, kalite turu v2 — bağlayıcı) ──────────
 # 1. HOST-TÜRETİMLİ her bilgi yüzeyi (monitör camı, pano kartları, çerçeve
@@ -27,8 +29,10 @@ extends RefCounted
 # Ayar = bu tablo; oda_view.gd'de koordinat sabiti ARANMAZ.
 #
 # Kadraj notları (sanat incelemesinden):
-#   * Masa/duvar birleşimi ~y 0.63-0.68; pano, çerçeve üçlüsü, pencere BOYALI.
-#   * GECE sahnesinde lamba ışık havuzu SOLDA baked → lamba hedefi ona oturur.
+#   * Masa/duvar birleşimi ~y 0.76 (ölçüldü; suluboyada 0.63-0.68'di — yeni kadraj
+#     masayı öne getirdi ve ölü zemini sıfırladı). Pano, çerçeve üçlüsü, pencere BOYALI.
+#   * GECE sahnesinde lamba ışık havuzu hâlâ SOLDA baked (ölçülen merkez x 0.283,
+#     y 0.893) → lamba hedefi ve kâğıt yuvaları ona oturuyor.
 #   * frame_outer_N ölçümleri AHŞAP DAHİL dış kutudur (kalite turu bulgusu) —
 #     belge rect'i FRAME_DOC_INSET ile içeri alınır, ahşap hep görünür kalır.
 
@@ -37,31 +41,99 @@ const REGION_PAD := 24.0            # rim-glow shader kenar payı (kaynak px) �
 const MIN_READABLE_FONT_PX := 9     # tip skalasının MICRO adımı = mutlak okunabilirlik tabanı (D4.3)
 
 # --- Obje sprite'ları: kaynak içerik-kutusu (px) + hedef (normalize) ---------
+# Sanat migrasyonu (2026-08-10): suluboya oda emekli, prosedürel render geldi.
+# Objeler ARTIK sahne-hizalı: plaka ve her obje katmanı AYNI kameradan, aynı
+# 3840×2160 kanvasa render edildi, o yüzden RECTS[id] == REGIONS[id] / ART.
+# Bu, aspect değişmezini (hedef aspect == region aspect) HESAPLA değil YAPISAL
+# olarak sağlar ve sprite'ı plakaya baked gölgesinin tam üstüne oturtur.
+# Değerler ölçüldü, tahmin edilmedi: REGIONS render'ın kendi alfa kanalından
+# (alphaBounds), boyalı çapalar oda geometrisinin izdüşümünden. Kamera:
+# pos (0.298, 1.35, 1.56) · yaw 0.38° · pitch −1.91° · fov 44 — suluboya odanın
+# yerleşim sözleşmesine (aşağıdaki eski değerler) çözülerek bulundu.
+# Defter: docs/design/oda_art_pipeline.md
+#
+# ── MÜHÜRLÜ SANAT TURU (2026-08-17) ───────────────────────────────────────────
+# Yönetmen gündüz/gece render'larını mühürledi; sahne 2026-08-10'dakinden FARKLI.
+# Kamera AYNI KALDI (yukarıdaki değer) — bilinçli: solver'ı serbest bırakmak onu
+# pitch −9.05°'ye götürdü ve board_inner'ı sözleşmeden 214px sağa attı, yani tam
+# tur-1 F5 reddinin hatasına geri döndü. Sebep ölçüldü: mühürlü sahne TELEFONU
+# yarım metre sola taşıdı, RECTS.phone'daki hedef fiziksel olarak ULAŞILAMAZ
+# hâle geldi ve solver onu kovalarken panoyu feda etti. Prop hedefi sıfırlandı
+# (rig'de RIG_WEIGHT.phone = 0) ve kamera SABİTLENDİ.
+# İki KAYNAK düzeltmesi yönetmen onayıyla yapıldı (rig'de uygulandı; office-room
+# .html'e aynen yansıtılmalı):
+#   * Mantar pano (0.62, 1.44) → (0.4155, 1.2855): sol 20.4cm + aşağı 15.4cm.
+#     Mühürlü konum board_inner'ı y = −17'ye, yani KADRAJIN ÜSTÜNDEN DIŞARI
+#     atıyordu; dikey düşüş tek başına yatay 220px'i kapatmıyor.
+#   * Telefon yaw −16.04° → −2°: mühürlü yaw ekran dörtgenini 29.2° MAKASLI
+#     paralelkenar yapıyordu, PHONE_GLASS_* ise DÖNMÜŞ DİKDÖRTGEN modelliyor.
+#     −2°'de makas 0.17° (temiz dikdörtgen) ve cam alanı yine 1.27× kalıyor.
+# Değişen tek REGION: phone. monitor/keyboard/mug/lamp bire bir aynı çıktı —
+# kamera sabit olduğunun kanıtı.
+#
+# LAMBA: bu turda bir git-gel yaşandı ve GERİ ALINDI, kaydı burada duruyor çünkü
+# dersi sabitlerden daha değerli. Mühürlü kaynak başı ışık havuzuna NİŞANLIYOR
+# (layers.html'deki quaternion bloğu); onu portlayınca ağız kameraya döndü,
+# aydınlanmayan iç yüzey objenin en büyük yüzeyi oldu ve lamba "kapüşonlu göz"
+# gibi biçimsiz bir kütle olarak okundu. O noktada BELİRTİYİ tedavi ettim (içe
+# krem astar + profili spline'a çevirme) ve lamba siyah olmaktan çıktı. Yönetmen
+# haklı olarak durdurdu: lamba HER İKİ MODDA DÜZ SİYAHTIR, değişen tek şey
+# AYDINLATMA, gece ampul yanar. Nişan bloğu bilinçli override ile alınmadı,
+# astar/spline silindi ve REGIONS.lamp ilk assetteki (219, 1308, 200, 494)
+# değerine BİREBİR döndü. Ders: pose/oryantasyon/materyal değiştiren bir
+# kaynak-delta objenin OKUNUŞUNU değiştirir — sessizce portlanmaz, bildirilir.
+#
+# LAMBA NİŞANI (2026-08-18, Erdem kararı — yukarıdaki geri almanın DEVAMI değil,
+# ayrı ve kasıtlı bir tasarım değişikliği): lambanın ağzı 28.6° azimuttaydı ama
+# kendi ışık havuzu 95° azimutta — yani lamba KENDİ IŞIĞINDAN 66° sapmış
+# duruyordu. yaw 85.156° havuzun merkezine tam nişan alır (artık sapma 0.000°).
+# Yalnız döndürmek YETMEDİ: lamba yandan görünüşe geçince kol derinlik yerine
+# GENİŞLİK kaplıyor, siluet 200→338px büyüyor ve sağ kenarı 0.1402'ye çıkıp
+# PAPER_SLOTS'un (0.120) ÜSTÜNE biniyordu. Kâğıtları daraltmak yerine lamba
+# 12cm sola alındı (x -0.92 → -1.04): sağ kenar 0.1005, kâğıtlara boşluk 0.0195
+# — bugünkünden (0.0108) DAHA GENİŞ, yani şerit iyileşti. Sol kenar 48px, yani
+# REGION_PAD 24'ün üstünde (padded_region tam 24'ten başlar — sınırda ama geçerli;
+# lamba daha sola alınırsa bu KIRILIR, sonraki tur için uyarı).
+# monitor/keyboard/mug/phone REGIONS'ları değişmedi — kamera yine sabit.
 const REGIONS := {
-	"monitor": Rect2(1248, 378, 1348, 1428),
-	"phone": Rect2(1069, 384, 1703, 1405),
-	"lamp": Rect2(1482, 532, 845, 1162),
-	"mug": Rect2(1450, 599, 1107, 1075),
+	"monitor": Rect2(1051, 951, 935, 871),
+	"keyboard": Rect2(1163, 1877, 541, 91),
+	"lamp": Rect2(48, 1297, 338, 506),
+	"mug": Rect2(2185, 1742, 174, 175),
+	"phone": Rect2(1976, 1935, 126, 106),
 }
 const RECTS := {
-	# Objeler (hedef aspect == region aspect):
-	"monitor": Rect2(0.315, 0.375, 0.280, 0.527),
-	"phone": Rect2(0.700, 0.735, 0.100, 0.147),
-	"lamp": Rect2(0.100, 0.462, 0.130, 0.318),
-	"mug": Rect2(0.630, 0.700, 0.062, 0.107),
-	# Boyalı çapalar (hotspot / tur bölgeleri):
-	"board_outer": Rect2(0.405, 0.042, 0.390, 0.418),
-	"board_inner": Rect2(0.418, 0.058, 0.364, 0.386),  # mantar yüzey — pano kartlarının HOST'u
-	"frames_band": Rect2(0.118, 0.060, 0.235, 0.155),
-	"window": Rect2(0.868, 0.0, 0.132, 0.63),          # tıklanmaz — yalnız tur
-	"papers_zone": Rect2(0.320, 0.790, 0.200, 0.190),  # hotspot değil; tur + kümeleme
-	# Host'suz tek yüzey (pencere altı çipi — place_clamped'in kalan tek kullanıcısı):
-	"overtime_chip": Rect2(0.688, 0.024, 0.130, 0.036),
-	"lamp_glow": Rect2(0.137, 0.477, 0.160, 0.284),    # lamba başı halesi (merkez ~0.197, 0.537)
+	# Objeler — REGIONS / ART (aspect değişmezi yapısal):
+	"monitor": Rect2(0.27370, 0.44028, 0.24349, 0.40324),
+	"keyboard": Rect2(0.30286, 0.86898, 0.14089, 0.04213),  # YENİ katman: suluboyada klavye "pc" sprite'ının içindeydi
+	"lamp": Rect2(0.01250, 0.60046, 0.08802, 0.23426),
+	"mug": Rect2(0.56901, 0.80648, 0.04531, 0.08102),
+	"phone": Rect2(0.51458, 0.89583, 0.03281, 0.04907),
+	# Boyalı çapalar (hotspot / tur bölgeleri) — mesh köşelerinin izdüşümü:
+	# Pano 2026-08-17'de 5-6px kaydı (kaynak düzeltmesi sözleşmeyi tam tutturmuyor,
+	# kıl payı ıskalıyor). ÖLÇÜLEN değer yazıldı, sözleşme değeri değil: kural
+	# "render'dan ölç, cetvelle bakma". Kaymanın kartlara etkisi yok — BOARD_REL'in
+	# %4 iç payı 53px, kayma 6px.
+	"board_outer": Rect2(0.3400, 0.0392, 0.3762, 0.4515),
+	"board_inner": Rect2(0.3550, 0.0669, 0.3459, 0.3994),  # mantar yüzey — pano kartlarının HOST'u
+	"frames_band": Rect2(0.0191, 0.0596, 0.2734, 0.1517),
+	"window": Rect2(0.9000, 0.0, 0.1000, 0.8070),      # tıklanmaz — yalnız tur; camın ÖLÇÜLEN parlak bandı
+	"papers_zone": Rect2(0.120, 0.836, 0.170, 0.142),  # hotspot değil; tur + kümeleme
+	# ^ alt kenar 0.978: GÖRÜNÜR BANDIN (0.020..0.980) içinde kalmak zorunda.
+	#   İlk taşımada 0.984 yazmıştım ve oda_anchors_stay_in_band case'i yakaladı.
+	# Host'suz tek yüzey (place_clamped'in kalan tek kullanıcısı) — pano ile
+	# pencere ARASINDAKİ boşluğa taşındı (pano sağ kenarı 0.7009, pencere 0.9000 —
+	# pano kaynak düzeltmesiyle 0.7175'ten sola çekildi, boşluk BÜYÜDÜ):
+	"overtime_chip": Rect2(0.745, 0.024, 0.130, 0.036),
+	# LAMBA HALESİ KALDIRILDI (2026-08-18, Erdem): additive hale gece lamba
+	# sprite'ının ÜSTÜNE biniyor ve düz siyah gövdeyi sütlü/yarı saydam
+	# gösteriyordu — sanki lambanın kendisi parlıyormuş gibi. Gövde her iki
+	# modda siyah kalır, gece yalnız AMPUL yanar; ışığı emissive ampul ile
+	# plakaya baked havuz taşır. Node, token ve bu rect birlikte silindi.
 	# Boyalı çerçeveler — DIŞ kutular (ahşap dahil):
-	"frame_outer_0": Rect2(0.127, 0.075, 0.051, 0.128),
-	"frame_outer_1": Rect2(0.204, 0.073, 0.057, 0.130),
-	"frame_outer_2": Rect2(0.285, 0.071, 0.059, 0.135),
+	"frame_outer_0": Rect2(0.0191, 0.0596, 0.0668, 0.1512),
+	"frame_outer_1": Rect2(0.1239, 0.0600, 0.0653, 0.1511),
+	"frame_outer_2": Rect2(0.2286, 0.0604, 0.0639, 0.1509),
 }
 
 # --- D4 host-göreli tablolar (0..1, HOST rect'inin kesirleri) ----------------
@@ -78,20 +150,55 @@ const BOARD_REL := {
 # Monitör camı: monitor İÇERİK rect'ine göre (padded_target'a DEĞİL — pad payı
 # camı kaydırır). Bezel içinde emniyetli inset (üst pay F5 turu 2'de büyüdü —
 # CANLI çipi kenarda yarım kalıyordu).
-const MONITOR_GLASS_REL := Rect2(0.07, 0.085, 0.855, 0.44)
+# Sanat migrasyonunda YENİDEN TÜRETİLDİ: `screen` mesh'inin 8 dünya köşesi aynı
+# kameradan izdüşürüldü ve monitör içerik-kutusuna oranlandı — göz kararı değil.
+# Yüksekliğin 0.44'ten 0.62'ye çıkması gerçek: eski "monitor" sprite'ı klavyeyi
+# de içeriyordu (pc_*.png), yeni monitör katmanı yalnız monitör.
+# 2026-08-17 mühürlü sanat turunda AYNI YÖNTEMLE yeniden türetildi ve 5 ondalığa
+# kadar AYNI çıktı (0.022676, 0.013814, 0.955390, 0.617586) — monitör de kamera da
+# kımıldamadı. Bu, türetmenin tekrarlanabilir olduğunun bağımsız kanıtı.
+# F5 turunda BİR KEZ daha değişti (~1px): rig'in `screen` mesh'i z=0.0148'deydi,
+# mühürlü kaynak 0.017 diyor — rig eski bir sürümden kopyalanmış, fidelity düzeltildi.
+# 2.2mm derinlik farkı camı kamera yönünde ~1px kaydırıyor. Değer yine ÖLÇÜM.
+const MONITOR_GLASS_REL := Rect2(0.02144, 0.01339, 0.95672, 0.61844)
 # Çerçeve belgesi: dış kutunun her kenardan içeri payı (ahşap + iç gölge görünür kalır).
 const FRAME_DOC_INSET := Vector2(0.20, 0.15)
 # Telefon camı ({merkez, boyut, açı} — AABB değil: kırpma DÖNMÜŞ sarmalayıcının
-# yerel uzayında cama oturur; açının işareti ilk shot'ta doğrulanır).
-const PHONE_GLASS_CENTER_REL := Vector2(0.50, 0.50)
-const PHONE_GLASS_SIZE_REL := Vector2(0.72, 0.34)
-const PHONE_GLASS_ANGLE_DEG := 31.0
+# yerel uzayında cama oturur).
+# Sanat migrasyonunda ÜÇÜ DE YENİDEN TÜRETİLDİ (monitör camıyla aynı yöntem):
+# telefonun `screen` mesh'inin üst yüzünün dört köşesi izdüşürüldü, açı UZUN
+# kenardan okundu. Eski değerler suluboya çağındandı ve yeni sanatta YANLIŞTI —
+# özellikle 31° dönme: gerçek yatış 6.5°, yani bildirim rozeti belirgin biçimde
+# eğri oturuyordu. Yan fayda: cam 59×21'den 72×46 px'e çıktı (1080p, ×2.68 alan),
+# çünkü eski 0.34 yükseklik oranı suluboyanın dik telefonuna göreydi; buradaki
+# telefon masada YATIYOR ve ekranı görünen alanın çoğunu kaplıyor.
+#
+# 2026-08-17: ÜÇÜ DE YİNE değişti, çünkü mühürlü sahne telefonu hem taşıdı hem
+# çevirdi. Buradaki asıl ders MODELİN SINIRI: bu üçlü DÖNMÜŞ DİKDÖRTGEN tanımlar,
+# masaya yatık bir dörtgenin izdüşümü ise genel bir dörtgendir. Mühürlü yaw
+# (−16.04°) makası 29.2°'ye çıkarıyordu ve dönmüş-dikdörtgen ARTIK OTURMUYORDU —
+# rozet camın dışına taşardı. Çözüm rect'i küçültmek değil KAYNAĞI düzeltmek oldu
+# (yaw → −2°, yönetmen onayı): makas 0.17°, yani cam pratikte eksen-hizalı.
+# Kalan 6.2° "paralel-olmama" perspektif trapezidir ve yaw ile giderilemez —
+# modelin kabul edilen artık hatası, bu satır onun kaydı.
+const PHONE_GLASS_CENTER_REL := Vector2(0.5039, 0.4307)
+const PHONE_GLASS_SIZE_REL := Vector2(0.8997, 0.8234)
+const PHONE_GLASS_ANGLE_DEG := 0.63
 
-# Masa kâğıdı slotları: {rect (x,y,w — h ipucu), rot (derece)} — klavyenin sol-altı.
+# Masa kâğıdı slotları: {rect (x,y,w — h ipucu), rot (derece)} — klavyenin SOLU.
+# Sanat migrasyonunda TAŞINDI (Erdem onayı 2026-08-10). Suluboya odada bu yuvalar
+# klavyenin sol-altındaki AÇIK zemindeydi; gerçek 3B masada klavye tam oraya
+# oturuyor (ölçüldü: klavye x 0.3029..0.4437, y 0.8690..0.9111) ve ilk iki yuva
+# tuşların üstüne düşüyordu. Yeni şerit lamba ile klavye ARASINDAKİ açık masa:
+# lamba sağ kenarı 0.1091, klavye sol kenarı 0.3029 — üçü de ölçümle temiz.
+# Kaydırma ve dönme açıları korundu; genişlik 0.170→0.158 (şerit daha dar).
+# Üçü de artık GÖRÜNÜR BANDIN İÇİNDE bitiyor (sonuncusu 0.978 < 0.980). Bu,
+# devraldığım durumdan daha iyi: eski üçüncü yuva 0.988'de bitiyordu ve
+# MAX_CROP notunun kendisi onun "bugün de kıl payı kırpıldığını" kabul ediyordu.
 const PAPER_SLOTS := [
-	{"rect": Rect2(0.300, 0.832, 0.170, 0.050), "rot": -1.5},
-	{"rect": Rect2(0.316, 0.890, 0.170, 0.050), "rot": 1.0},
-	{"rect": Rect2(0.307, 0.938, 0.170, 0.050), "rot": -0.5},
+	{"rect": Rect2(0.120, 0.836, 0.158, 0.048), "rot": -1.5},
+	{"rect": Rect2(0.132, 0.883, 0.158, 0.048), "rot": 1.0},
+	{"rect": Rect2(0.124, 0.930, 0.158, 0.048), "rot": -0.5},
 ]
 
 
@@ -114,13 +221,17 @@ const PAPER_SLOTS := [
 ## hiçbir şey değişmez, aşıldığında oda bütçeyi SONUNA KADAR kullanır — geçiş
 ## yumuşaktır, eşikte görsel uçurum yoktur.
 ##
-## Ve NEDEN 0.02, veri türevi değil: kompozisyonun gerçek alt payı 0.012'dir
-## (PAPER_SLOTS'un üçüncüsü 0.988'de biter), ama 1920x1080'de CenterViewport
-## zaten ~1.851 oranında ve %1.94 kırpıyor — yani üçüncü kâğıt yuvası BUGÜN de
-## kıl payı kırpılıyor. Bütçeyi 0.012'ye çekmek, ÖNCEDEN VAR OLAN bir yerleşim
-## meselesini düzeltmek uğruna BİRİNCİL çözünürlüğe şeritler koymak olurdu; bu
-## daha büyük bir gerileme. 0.02 = bugünkü 16:9 çalışma noktası, yukarı yuvarlanmış.
-## Kâğıt payı polish dalgasının işi — bu tavan onu ÇÖZMEZ, korur.
+## Ve NEDEN 0.02: bu, 1920x1080'de CenterViewport'un zaten çalıştığı nokta
+## (~1.851 oran, %1.94 kırpma), yukarı yuvarlanmış.
+##
+## GÜNCELLEME (sanat migrasyonu 2026-08-10): bu notun eski hali "kompozisyonun
+## gerçek alt payı 0.012'dir (PAPER_SLOTS'un üçüncüsü 0.988'de biter) ve o yuva
+## BUGÜN de kıl payı kırpılıyor" diyordu. ARTIK DOĞRU DEĞİL — kâğıt yuvaları
+## taşınırken üçü de bandın içine alındı (sonuncusu 0.978 < 0.980), yani
+## kompozisyonun alt payı tam olarak 0.020 ve hiçbir çapa kırpılmıyor.
+## Bütçe 0.02'de KALIYOR: artık bir gerilemeyi tolere etmek için değil,
+## kompozisyonun ölçülen sınırına birebir oturduğu için. Bandı daraltmak
+## (0.012'ye çekmek) birincil çözünürlüğe yan şerit koyar — hâlâ kabul edilemez.
 const MAX_CROP := 0.02
 
 
