@@ -19,7 +19,7 @@ const TOLERANCE_BASE := 35              # scale-1 tolerance floor
 const TOLERANCE_PER_SCALE := 5          # + per star (larger/loyal endures low satisfaction longer)
 # Sector stickiness nudge (some sectors switch vendors less). Working; default 0.
 const SECTOR_TOLERANCE_BONUS := {
-	"İnşaat": 5, "Sağlık": 5, "Sigorta": 3,
+	"construction": 5, "health": 5, "insurance": 3,
 }
 
 
@@ -60,72 +60,71 @@ const RETAIN_DISCOUNT_REP := -1
 const CHURN_BRAND := -2                 # brand hit at the ACTUAL churn moment (countdown expiry)
 
 
-# --- Content tables (working TR drafts; Erdem voice-passes) ---------------------
-# Sector-voiced product complaints — the customer speaks their lived experience of a
-# failing product (bug-load / low stability). NO raw numbers. Keyed by industry.
-const COMPLAINT_VOICE := {
-	"Sigorta": "Sisteminiz son haftalarda sürekli düşüyor, ekibim poliçe işlerini yürütemiyor.",
-	"İnşaat": "Sahadaki ekip sisteme bağlanamıyor, bağlantı sürekli kopuyor. Böyle iş yürümez.",
-	"Lojistik": "Sevkiyat saatinde sistem donuyor, operasyon aksıyor.",
-	"Sağlık": "Ekranlar sürekli çöküyor, hasta kapıda beklerken sistemi açamıyoruz.",
-	"Üretim": "Hat başında sistem takılıyor, üretim raporu tutmuyor.",
-	"Perakende": "Yoğun saatte sistem kilitleniyor, kasa akmıyor.",
-	"Emlak": "Sistem sık sık kopuyor, ekip müşteriye dönemiyor.",
-	"Tekstil": "Sipariş ekranı sürekli hata veriyor, üretim planı kayıyor.",
-	"Hukuk": "Dosyalara erişemiyoruz, sistem gün içinde defalarca düşüyor.",
-	"Teknoloji": "Sisteminiz sürekli hata veriyor, ekibimiz üretime dönemiyor.",
-	"E-ticaret": "Kampanya saatinde sistem çöküyor, siparişleri kaybediyoruz.",
-	"Medya": "Yayın anında sistem donuyor, akış kesiliyor.",
-	"Finans": "Sistem gün içinde düşüyor, işlemler askıda kalıyor.",
-	"Testing": "Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor.",
-}
-const COMPLAINT_VOICE_FALLBACK := "Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor."
+# --- Sector identity ----------------------------------------------------------
+# SECTORS ARE IDS, NOT WORDS. They used to be Turkish display names ("İnşaat") doing
+# double duty as dictionary keys AND as the label on screen — and `industry` is a
+# persisted @export on Customer and Prospect, so that Turkish text was being written
+# into save files. That is the exact thing the BILINGUAL BIRTH LAW forbids: store ids,
+# render labels at display time. The id is now ASCII and the label comes from
+# strings.csv via sector_label().
+const SECTORS := ["construction", "health", "logistics", "insurance", "manufacturing",
+	"retail", "real_estate", "textile", "legal", "technology", "ecommerce", "media",
+	"finance"]
+# A FIXTURE sector, deliberately outside SECTORS: smoke and the run probe need a prospect
+# whose sector is not one of the thirteen the CompanyCatalog stocks. It carries its own
+# copy rows so the derived-key check covers it, but no company pool and no affinity entry.
+const SECTOR_FIXTURE := "testing"
 
-# Short TR labels for demo B2B features — used in promise button copy (no English on
-# screen). Covers both demo products (ai_vector_search + saas_ops).
-const FEATURE_LABEL_TR := {
-	"ai_vec_embed_api": "anlam altyapısı",
-	"ai_vec_search_api": "anlamlı arama",
-	"ai_vec_filter": "gelişmiş filtreleme",
-	"ai_vec_dashboard": "yönetim paneli",
-	"ai_vec_scaling": "ölçeklenme",
-	"ai_vec_sdk": "hazır kütüphane",
-	"saas_ops_workflow": "süreç otomasyonu",
-	"saas_ops_reporting": "raporlama panosu",
-	"saas_ops_integration": "sistem entegrasyonu",
-	"saas_ops_scheduling": "randevu planlama",
-	"saas_ops_field": "saha bağlantısı",
-	"saas_ops_mobile": "mobil uygulama",
+# Saves written before this migration carry the old Turkish name in `industry`.
+# SaveManager's v1→v2 migration maps them through this table; it is the ONLY place the
+# legacy spellings survive, and it is data, not copy.
+const LEGACY_SECTOR_IDS := {
+	"İnşaat": "construction", "Sağlık": "health", "Lojistik": "logistics",        # LOC-DATA legacy save values
+	"Sigorta": "insurance", "Üretim": "manufacturing", "Perakende": "retail",     # LOC-DATA legacy save values
+	"Emlak": "real_estate", "Tekstil": "textile", "Hukuk": "legal",               # LOC-DATA legacy save values
+	"Teknoloji": "technology", "E-ticaret": "ecommerce", "Medya": "media",        # LOC-DATA legacy save values
+	"Finans": "finance", "Testing": "testing",                                    # LOC-DATA legacy save values
 }
-const FEATURE_LABEL_FALLBACK := "yeni özellik"
 
-# In-voice surface pain lines for prospects/special-requests, keyed by feature id
-# (B.4: the pain maps to a feature that EXISTS in the product pool).
-const PAIN_PHRASE := {
-	"ai_vec_embed_api": "Verimizi anlamlandıracak bir altyapı arıyoruz, kelime eşleşmesi yetmiyor.",
-	"ai_vec_search_api": "Aradığımızı tarif edebilmek istiyoruz, birebir kelime değil.",
-	"ai_vec_filter": "Aramayı tarihe ve etikete göre daraltamıyoruz, ekip boğuluyor.",
-	"ai_vec_dashboard": "Kullanımı göremiyoruz, yönetim kör uçuyor.",
-	"ai_vec_scaling": "Yoğunlukta sistem yavaşlıyor, ölçeklenme derdimiz var.",
-	"ai_vec_sdk": "Entegrasyon zor, hazır bir kütüphane olmadan bağlanamıyoruz.",
-	"saas_ops_workflow": "Süreçler hâlâ elle yürüyor, otomasyon arıyoruz.",
-	"saas_ops_reporting": "Raporlama karmaşası içindeyiz, yönetim net veri istiyor.",
-	"saas_ops_integration": "Sistemlerimiz birbiriyle konuşmuyor, entegrasyon şart.",
-	"saas_ops_scheduling": "Randevu ve planlama dağınık, çakışmalar yaşıyoruz.",
-	"saas_ops_field": "Sahadaki ekip bağlantı sorunundan çalışamıyor.",
-	"saas_ops_mobile": "Ekip telefondan giremiyor, saha kopuk kalıyor.",
-}
-const PAIN_PHRASE_FALLBACK := "Bu tarafta ciddi bir eksik var, çözecek bir araç arıyoruz."
 
-# Sector-appropriate contact role shown under the customer name in the modal.
-const SECTOR_CONTACT := {
-	"Sigorta": "BT Müdürü", "İnşaat": "Saha Sorumlusu", "Lojistik": "Operasyon Müdürü",
-	"Sağlık": "Başhekim Yardımcısı", "Üretim": "Üretim Müdürü", "Perakende": "Mağaza Müdürü",
-	"Emlak": "Satış Müdürü", "Tekstil": "Planlama Şefi", "Hukuk": "Ofis Yöneticisi",
-	"Teknoloji": "CTO", "E-ticaret": "Operasyon Direktörü", "Medya": "Yayın Yönetmeni",
-	"Finans": "Risk Müdürü",
-}
-const SECTOR_CONTACT_FALLBACK := "Yetkili"
+# --- Sector / feature copy ------------------------------------------------------
+# The four tables that used to live here (COMPLAINT_VOICE, PAIN_PHRASE, SECTOR_CONTACT,
+# FEATURE_LABEL_TR) are now rows in strings.csv, derived from the id. One id therefore
+# yields one key in both languages and the table cannot drift from the CSV.
+# A derived key is invisible to a grep for tr("LITERAL"), so the smoke case
+# `loc_b2b_derived_keys` walks SECTORS and the feature ids and asserts every derived key
+# resolves — that is what stops a typo rendering a raw token on screen.
+
+static func sector_label(industry: String) -> String:
+	return _derived("SECTOR_", industry, "SECTOR_FALLBACK")
+
+
+static func sector_contact(industry: String) -> String:
+	return _derived("B2B_CONTACT_", industry, "B2B_CONTACT_FALLBACK")
+
+
+static func complaint_voice(industry: String) -> String:
+	return _derived("B2B_COMPLAINT_", industry, "B2B_COMPLAINT_FALLBACK")
+
+
+static func feature_label(feature_id: String) -> String:
+	return _derived("FEATURE_LABEL_", feature_id, "FEATURE_LABEL_FALLBACK")
+
+
+static func pain_phrase(feature_id: String) -> String:
+	return _derived("B2B_PAIN_", feature_id, "B2B_PAIN_FALLBACK")
+
+
+# TranslationServer returns the KEY itself when a row is missing, which on screen looks
+# like a raw token. Rather than ship that, an unresolved derived key falls back to the
+# family's fallback row — the same behaviour the old .get(key, FALLBACK) tables had.
+# TranslationServer (not tr()) because these are statics with no Object to translate through.
+static func _derived(prefix: String, id: String, fallback_key: String) -> String:
+	if id == "":
+		return TranslationServer.translate(fallback_key)
+	var key: String = prefix + id.to_upper()
+	var out: String = TranslationServer.translate(key)
+	return out if out != key else TranslationServer.translate(fallback_key)
 
 # Sector-appropriate company names for prospect generation (E.2 keeps fiction clean —
 # a construction prospect reads "Kuzey İnşaat", not a generic label) live in
@@ -133,22 +132,6 @@ const SECTOR_CONTACT_FALLBACK := "Yetkili"
 # SECTOR_COMPANIES table here covered 9 of 13 sectors at 3 names each and served
 # four sectors one shared fallback list, which is how "Beykoz Tekstil" appeared
 # as an Emlak, Hukuk AND Perakende prospect in one run.
-
-
-static func sector_contact(industry: String) -> String:
-	return String(SECTOR_CONTACT.get(industry, SECTOR_CONTACT_FALLBACK))
-
-
-static func complaint_voice(industry: String) -> String:
-	return String(COMPLAINT_VOICE.get(industry, COMPLAINT_VOICE_FALLBACK))
-
-
-static func feature_label(feature_id: String) -> String:
-	return String(FEATURE_LABEL_TR.get(feature_id, FEATURE_LABEL_FALLBACK))
-
-
-static func pain_phrase(feature_id: String) -> String:
-	return String(PAIN_PHRASE.get(feature_id, PAIN_PHRASE_FALLBACK))
 
 
 # ======================= Stage C — promises ==================================
@@ -217,10 +200,10 @@ static func cs_dampen(expertise: int) -> float:
 # mvp_sub_product_type_id selects the sector list; a prospect's industry is drawn
 # only from it, so a vector-search product never yields a construction prospect.
 const SECTOR_AFFINITY := {
-	"ai_vector_search": ["Teknoloji", "E-ticaret", "Medya", "Finans"],
-	"saas_ops": ["İnşaat", "Lojistik", "Sağlık", "Sigorta", "Üretim"],
+	"ai_vector_search": ["technology", "ecommerce", "media", "finance"],
+	"saas_ops": ["construction", "logistics", "health", "insurance", "manufacturing"],
 }
-const SECTOR_AFFINITY_FALLBACK := ["Lojistik", "Emlak", "Tekstil", "Sigorta", "Perakende", "Hukuk", "İnşaat", "Sağlık"]
+const SECTOR_AFFINITY_FALLBACK := ["logistics", "real_estate", "textile", "insurance", "retail", "legal", "construction", "health"]
 
 # Prospect value shown as a RANGE, not a fixed number (E.3): the floor if it goes
 # poorly, the ceiling if well. Placeholder half-width fractions around the archetype
@@ -244,9 +227,9 @@ static func sector_pool(sub_id: String) -> Array:
 #     one-line remap to res://assets/art/rooms/room_<sector>.webp. ---
 const SECTOR_ROOM_DEFAULT := "res://assets/art/rooms/room_anchor.webp"
 const SECTOR_ROOM := {
-	"İnşaat": SECTOR_ROOM_DEFAULT, "Lojistik": SECTOR_ROOM_DEFAULT, "Sağlık": SECTOR_ROOM_DEFAULT,
-	"Sigorta": SECTOR_ROOM_DEFAULT, "Üretim": SECTOR_ROOM_DEFAULT, "Teknoloji": SECTOR_ROOM_DEFAULT,
-	"E-ticaret": SECTOR_ROOM_DEFAULT, "Medya": SECTOR_ROOM_DEFAULT, "Finans": SECTOR_ROOM_DEFAULT,
+	"construction": SECTOR_ROOM_DEFAULT, "logistics": SECTOR_ROOM_DEFAULT, "health": SECTOR_ROOM_DEFAULT,
+	"insurance": SECTOR_ROOM_DEFAULT, "manufacturing": SECTOR_ROOM_DEFAULT, "technology": SECTOR_ROOM_DEFAULT,
+	"ecommerce": SECTOR_ROOM_DEFAULT, "media": SECTOR_ROOM_DEFAULT, "finance": SECTOR_ROOM_DEFAULT,
 }
 
 

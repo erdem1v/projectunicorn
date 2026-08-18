@@ -21,7 +21,11 @@ extends Resource
 # --- Identity (used now) ---
 @export var id: String = ""                   # "co_<slug>" per TECH_SPEC §12 prefix
 @export var company_name: String = ""         # Avoid `name` for consistency with Character
-@export var industry: String = ""             # e.g. "Logistics", "Real Estate", "Textile"
+# COMPOSED names are NOT stored here — see display_name(). company_name holds a proper
+# noun ("Nordica Logistics") and proper nouns do not localize.
+@export var name_key: String = ""             # "" = company_name is the name; else a CSV key
+@export var name_arg: String = ""             # {product} for name_key, when it takes one
+@export var industry: String = ""             # SECTOR ID, ASCII ("logistics", "real_estate")
 @export var company_size: String = "mid"      # "small" | "mid" | "enterprise" — B2B archetype; "individual" for B2C
 @export var market_type: String = "b2c"       # "b2c" | "b2b" — PostShip sales model this customer came from
 
@@ -102,3 +106,18 @@ func update_health_from_satisfaction() -> void:
 		health = "at_risk"
 	else:
 		health = "churning"
+
+
+## The name to SHOW. Two kinds of customer, two rules:
+##  · a real company carries a PROPER NOUN in company_name, and proper nouns do not localize
+##  · the B2C user base is not a company — its name is composed copy ("<product> kullanıcıları")
+##
+## The composed one used to be BAKED INTO company_name at creation, which froze one language
+## into a persisted field: a save taken in Turkish showed Turkish user-base copy forever, in
+## either locale, and no language switch could heal it. Storing the key and rendering here is
+## the law's "store ids, render labels at display time" applied to a name.
+## TranslationServer, not tr(): Resource has no Object to translate through.
+func display_name() -> String:
+	if name_key == "":
+		return company_name
+	return TranslationServer.translate(name_key).format({"product": name_arg})

@@ -233,6 +233,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_format_locale_flip":    fail = _case_loc_format_locale_flip()
 		"loc_event_en_coverage":     fail = _case_loc_event_en_coverage()
 		"loc_pick_fallback":         fail = _case_loc_pick_fallback()
+		"loc_b2b_derived_keys":      fail = _case_loc_b2b_derived_keys()
+		"loc_save_sector_migration": fail = _case_loc_save_sector_migration()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -306,7 +308,7 @@ static func _seed_b2b(mrr: int) -> void:
 	var p := Prospect.new()
 	p.id = "lead_smoke"
 	p.company_name = "Smoke Corp"
-	p.industry = "Testing"
+	p.industry = "testing"
 	p.archetype = "small"
 	SalesSystem.add_b2b_customer(p, mrr, 70)
 
@@ -887,7 +889,7 @@ static func _case_month_summary() -> String:
 	var p := Prospect.new()
 	p.id = "lead_month_smoke"
 	p.company_name = "Month Corp"
-	p.industry = "Testing"
+	p.industry = "testing"
 	p.archetype = "small"
 	SalesSystem.add_b2b_customer(p, 500, 70)  # no mvp_shipped flag → gate 1 stays closed
 	if GameState.run_customers_signed != 1:
@@ -1511,7 +1513,7 @@ static func _case_targeted_modifier_hits_named_customer() -> String:
 	var p := Prospect.new()
 	p.id = "lead_two"
 	p.company_name = "Second Corp"
-	p.industry = "Testing"
+	p.industry = "testing"
 	p.archetype = "mid"
 	SalesSystem.add_b2b_customer(p, 2000, 70)   # co_lead_two, seats 12
 	var c1: Customer = CustomerRegistry.get_customer("co_lead_smoke")
@@ -2184,7 +2186,7 @@ static func _case_b2b_satisfaction_leaves_b2c_identical() -> String:
 	var p := Prospect.new()
 	p.id = "lead_iso"
 	p.company_name = "Iso Corp"
-	p.industry = "Testing"
+	p.industry = "testing"
 	p.archetype = "small"
 	SalesSystem.add_b2b_customer(p, 1000, 70)   # coexisting B2B account
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
@@ -2221,7 +2223,7 @@ static func _add_risk_b2b(pid: String, mrr: int) -> Customer:
 	var p := Prospect.new()
 	p.id = pid
 	p.company_name = "R_" + pid
-	p.industry = "Sigorta"
+	p.industry = "insurance"
 	p.archetype = "small"
 	p.pain_feature_id = "ai_vec_filter"
 	var c: Customer = SalesSystem.add_b2b_customer(p, mrr, 70)
@@ -2542,7 +2544,7 @@ static func _case_b2b_cs_absorbs_routine() -> String:
 	var p := Prospect.new()
 	p.id = "csm"
 	p.company_name = "CS Managed"
-	p.industry = "Sigorta"
+	p.industry = "insurance"
 	p.archetype = "small"
 	p.pain_feature_id = "ai_vec_filter"
 	var cs_mgd: Customer = SalesSystem.add_b2b_customer(p, 1000, 70)
@@ -2575,7 +2577,7 @@ static func _case_b2b_cs_escalation_refuse() -> String:
 	var p := Prospect.new()
 	p.id = "esc"
 	p.company_name = "Ege Sigorta"
-	p.industry = "Sigorta"
+	p.industry = "insurance"
 	p.archetype = "small"
 	p.pain_feature_id = "ai_vec_filter"
 	var c: Customer = SalesSystem.add_b2b_customer(p, 2000, 70)
@@ -2653,7 +2655,7 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	var pm := Prospect.new()
 	pm.id = "lead_mature"
 	pm.company_name = "Mature A.Ş."
-	pm.industry = "Testing"
+	pm.industry = "testing"
 	pm.archetype = "small"
 	SalesSystem.add_b2b_customer(pm, 1000, 70)
 	var m: Customer = CustomerRegistry.get_customer("co_lead_mature")
@@ -3199,7 +3201,7 @@ static func _case_recover_preserves_onboarding() -> String:
 	var p2 := Prospect.new()
 	p2.id = "lead_mature"
 	p2.company_name = "Mature A.Ş."
-	p2.industry = "Testing"
+	p2.industry = "testing"
 	p2.archetype = "small"
 	SalesSystem.add_b2b_customer(p2, 900, 70)
 	var m: Customer = CustomerRegistry.get_customer("co_lead_mature")
@@ -3247,7 +3249,7 @@ static func _case_promise_orphan_no_brand_hit() -> String:
 	var p2 := Prospect.new()
 	p2.id = "lead_alive"
 	p2.company_name = "Alive A.Ş."
-	p2.industry = "Testing"
+	p2.industry = "testing"
 	p2.archetype = "small"
 	SalesSystem.add_b2b_customer(p2, 900, 70)
 	var live_c: Customer = CustomerRegistry.get_customer("co_lead_alive")
@@ -3330,7 +3332,7 @@ static func _case_b2b_expansion_no_refire() -> String:
 	var p := Prospect.new()
 	p.id = "lead_decliner"
 	p.company_name = "Decline A.Ş."
-	p.industry = "Testing"
+	p.industry = "testing"
 	p.archetype = "small"
 	SalesSystem.add_b2b_customer(p, 900, 80)
 	var d: Customer = CustomerRegistry.get_customer("co_lead_decliner")
@@ -4960,7 +4962,7 @@ static func _case_coupling_cs_dampen_axis() -> String:
 	var p := Prospect.new()
 	p.id = "dmp"
 	p.company_name = "Dampen Co"
-	p.industry = "Sigorta"
+	p.industry = "insurance"
 	p.archetype = "small"
 	p.pain_feature_id = "ai_vec_filter"
 	var bb: Customer = SalesSystem.add_b2b_customer(p, 1000, 70)
@@ -5045,7 +5047,7 @@ static func _add_prospect(pid: String, archetype: String, pain: String) -> Prosp
 	var p := Prospect.new()
 	p.id = pid
 	p.company_name = "Lead " + pid
-	p.industry = "Testing"
+	p.industry = "testing"
 	p.archetype = archetype
 	p.scale = CustomerArchetypes.scale_base(archetype)
 	p.difficulty_stars = CustomerArchetypes.difficulty_stars(archetype)
@@ -5578,7 +5580,7 @@ static func _case_company_catalog_pool_integrity() -> String:
 		if CompanyCatalog.background_for(nm) == "":
 			return "background_for() returned empty for %s" % nm
 	var counts: Dictionary = CompanyCatalog.count_by_sector()
-	for sector in B2BConstants.SECTOR_CONTACT:   # the 13-sector canon
+	for sector in B2BConstants.SECTORS:   # the 13-sector canon
 		if int(counts.get(sector, 0)) < 4:
 			return "sector %s holds %d companies, want >= 4" % [sector, int(counts.get(sector, 0))]
 	var pools: Array = []
@@ -5645,7 +5647,7 @@ static func _case_market_share_tracks_mrr() -> String:
 	var p := Prospect.new()
 	p.id = "lead_smoke_growth"
 	p.company_name = "Smoke Corp Growth"
-	p.industry = "Testing"
+	p.industry = "testing"
 	p.archetype = "mid"
 	SalesSystem.add_b2b_customer(p, 30000, 70)
 	var p2: float = float(RivalRegistry.get_market_snapshot("ai_vector_search")["player_pct"])
@@ -5718,7 +5720,7 @@ static func _case_cs_request_kind_state_driven() -> String:
 	var a := Customer.new()
 	a.id = "co_state_a"
 	a.company_name = "Durum A"
-	a.industry = "Teknoloji"
+	a.industry = "technology"
 	a.satisfaction = 25
 	a.tolerance = 50
 	a.acquired_on_day = GameState.day
@@ -5730,7 +5732,7 @@ static func _case_cs_request_kind_state_driven() -> String:
 	var b := Customer.new()
 	b.id = "co_state_b"
 	b.company_name = "Durum B"
-	b.industry = "Finans"
+	b.industry = "finance"
 	b.satisfaction = 85
 	b.tolerance = 40
 	b.acquired_on_day = GameState.day
@@ -5741,7 +5743,7 @@ static func _case_cs_request_kind_state_driven() -> String:
 	var c := Customer.new()
 	c.id = "co_state_c"
 	c.company_name = "Durum C"
-	c.industry = "Medya"
+	c.industry = "media"
 	c.satisfaction = 70
 	c.tolerance = 40
 	c.acquired_on_day = GameState.day - 180
@@ -6410,3 +6412,84 @@ static func _case_loc_pick_fallback() -> String:
 			out = "empty _en under tr must return the Turkish text"
 	TranslationServer.set_locale(loc0)
 	return out
+
+
+## Derived keys resolve. B2BConstants builds its copy keys from ids at runtime
+## (SECTOR_ + id, B2B_COMPLAINT_ + id, FEATURE_LABEL_ + feature_id …), which is what keeps
+## one id yielding one row in both languages — but it also means NO grep for tr("LITERAL")
+## can see them, and a typo would reach the player as a raw token or silently fall back to
+## the generic line. This walks the real id lists and asserts each derived key resolves to
+## something OTHER than the fallback, in BOTH locales.
+static func _case_loc_b2b_derived_keys() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var feature_ids: Array = []
+	for pid in ["ai_vector_search", "saas_ops"]:
+		for f in ProductCatalog.get_feature_pool(pid):
+			feature_ids.append(String(f.get("id", "")))
+	if feature_ids.is_empty():
+		TranslationServer.set_locale(loc0)
+		return "no feature ids found — the scan is not looking where it thinks"
+	var families := [
+		{"prefix": "SECTOR_", "fallback": "SECTOR_FALLBACK", "ids": _sector_ids_with_fixture()},
+		{"prefix": "B2B_CONTACT_", "fallback": "B2B_CONTACT_FALLBACK", "ids": B2BConstants.SECTORS},   # no fixture contact by design
+		{"prefix": "B2B_COMPLAINT_", "fallback": "B2B_COMPLAINT_FALLBACK", "ids": B2BConstants.SECTORS},
+		{"prefix": "FEATURE_LABEL_", "fallback": "FEATURE_LABEL_FALLBACK", "ids": feature_ids},
+		{"prefix": "B2B_PAIN_", "fallback": "B2B_PAIN_FALLBACK", "ids": feature_ids},
+	]
+	for loc in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		for fam in families:
+			var fallback: String = TranslationServer.translate(String(fam["fallback"]))
+			for id in (fam["ids"] as Array):
+				var sid: String = String(id)
+				if sid == "":
+					continue
+				var key: String = String(fam["prefix"]) + sid.to_upper()
+				var got: String = TranslationServer.translate(key)
+				if got == key:
+					TranslationServer.set_locale(loc0)
+					return "[%s] %s has no row (renders the raw key)" % [loc, key]
+				if got == fallback:
+					TranslationServer.set_locale(loc0)
+					return "[%s] %s silently resolved to the family fallback" % [loc, key]
+	TranslationServer.set_locale(loc0)
+	return ""
+
+
+## The 13 market sectors plus the fixture one. Only the SECTOR_ label family covers the
+## fixture — it has no contact, no complaint voice and no company pool by design.
+static func _sector_ids_with_fixture() -> Array:
+	var out: Array = B2BConstants.SECTORS.duplicate()
+	out.append(B2BConstants.SECTOR_FIXTURE)
+	return out
+
+
+## The v1→v2 save migration actually remaps. `industry` is persisted, so every save taken
+## before the sector-id change carries a Turkish name where the code now expects an ASCII
+## id. Without the migration such a save loads "fine" and is quietly wrong — the sector tag
+## falls through to the generic label and affinity pools stop matching. Asserted on a
+## hand-built v1 state rather than on a file, so the test cannot be fooled by a stale save.
+static func _case_loc_save_sector_migration() -> String:
+	var state := {
+		"customers": [
+			{"id": "co_a", "industry": "İnşaat"},      # LOC-DATA legacy fixture
+			{"id": "co_b", "industry": "Sağlık"},      # LOC-DATA legacy fixture
+			{"id": "co_c", "industry": "logistics"},   # already migrated — must not double-map
+			{"id": "co_d", "industry": "Marslılar"},   # LOC-DATA unknown — must be LEFT ALONE
+		],
+		"prospects": [{"id": "p_a", "industry": "Finans"}],   # LOC-DATA legacy fixture
+	}
+	SaveManager._migrate_sector_ids(state)
+	var got: Array = []
+	for row in (state["customers"] as Array):
+		got.append(String((row as Dictionary)["industry"]))
+	got.append(String(((state["prospects"] as Array)[0] as Dictionary)["industry"]))
+	var want := ["construction", "health", "logistics", "Marslılar", "finance"]   # LOC-DATA
+	if got != want:
+		return "sector migration produced %s, want %s" % [str(got), str(want)]
+	# Every legacy value must land on a REAL sector id, or the table itself is the bug.
+	for legacy in B2BConstants.LEGACY_SECTOR_IDS:
+		var mapped: String = String(B2BConstants.LEGACY_SECTOR_IDS[legacy])
+		if not B2BConstants.SECTORS.has(mapped) and mapped != B2BConstants.SECTOR_FIXTURE:
+			return "legacy map sends '%s' to unknown id '%s'" % [legacy, mapped]
+	return ""

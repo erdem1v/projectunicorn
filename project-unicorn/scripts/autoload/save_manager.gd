@@ -35,7 +35,7 @@ extends Node
 # every point a save can be taken, and there is nothing mid-resolution for a schema to
 # describe. One sitting, one sitting only — it does not survive closing the game.
 
-const SCHEMA_VERSION := 1
+const SCHEMA_VERSION := 2   # v2: sector ids became ASCII (see _migrate_sector_ids)
 const SAVE_DIR := "user://saves/"
 
 # Slot ids are also FILENAMES on disk, i.e. a compatibility surface. Named once so a rename
@@ -195,6 +195,8 @@ func read_slot(slot_id: String) -> Dictionary:
 		return {"ok": false, "error_key": "SAVE_ERR_NEWER", "meta": data.get("meta", {}), "state": {}}
 	if typeof(data.get("state", null)) != TYPE_DICTIONARY:
 		return {"ok": false, "error_key": "SAVE_ERR_CORRUPT", "meta": data.get("meta", {}), "state": {}}
+	if version < 2:
+		_migrate_sector_ids(data["state"])
 	return {
 		"ok": true,
 		"error_key": "",
@@ -552,3 +554,33 @@ func _game_version() -> String:
 	# fallback. Stored anyway: the day a version is set, every save written from then on
 	# records it, and the meta block does not need a schema bump to gain the field.
 	return String(ProjectSettings.get_setting("application/config/version", "0.0.0-dev"))  # [WORKING]
+
+
+## v1 → v2: `industry` stopped being a Turkish display name and became an ASCII id.
+##
+## WHY A MIGRATION AT ALL: `industry` is a persisted @export on Customer and Prospect, so
+## every save written before the localization sweep carries "İnşaat" where the code now
+## expects "construction". Without this the sector tag on a loaded customer would render
+## through the fallback and the sector-affinity pools would stop matching — a save that
+## looks fine and is quietly wrong, which is the failure mode this file's own header
+## refuses to ship. The mapping is data and lives with the sector knowledge
+## (B2BConstants.LEGACY_SECTOR_IDS), not here.
+##
+## Unknown values are LEFT ALONE rather than blanked: a value this table does not know is
+## more likely a future sector than corruption, and dropping it would lose information the
+## next build might understand.
+func _migrate_sector_ids(state: Dictionary) -> void:
+	var moved: int = 0
+	for bucket in ["customers", "prospects"]:
+		var rows: Array = state.get(bucket, []) as Array
+		for row in rows:
+			if typeof(row) != TYPE_DICTIONARY:
+				continue
+			var d: Dictionary = row
+			var old_id: String = String(d.get("industry", ""))
+			if old_id == "" or not B2BConstants.LEGACY_SECTOR_IDS.has(old_id):
+				continue
+			d["industry"] = String(B2BConstants.LEGACY_SECTOR_IDS[old_id])
+			moved += 1
+	if moved > 0 and OS.is_debug_build():
+		print("[SaveManager] v1→v2: remapped %d legacy sector id(s)" % moved)

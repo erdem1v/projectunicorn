@@ -355,7 +355,7 @@ func _seed_debug_customers() -> void:
 	var nordica := Customer.new()
 	nordica.id = "co_debug_nordica"
 	nordica.company_name = "Nordica Logistics"
-	nordica.industry = "Logistics"
+	nordica.industry = "logistics"
 	nordica.mrr = 3200
 	nordica.seats = 12
 	_customers[nordica.id] = nordica
@@ -363,7 +363,7 @@ func _seed_debug_customers() -> void:
 	var palmiye := Customer.new()
 	palmiye.id = "co_debug_palmiye"
 	palmiye.company_name = "Palmiye Holding"
-	palmiye.industry = "Real Estate"
+	palmiye.industry = "real_estate"
 	palmiye.mrr = 1800
 	palmiye.seats = 8
 	_customers[palmiye.id] = palmiye
@@ -371,7 +371,7 @@ func _seed_debug_customers() -> void:
 	var beykoz := Customer.new()
 	beykoz.id = "co_debug_beykoz"
 	beykoz.company_name = "Beykoz Tekstil"
-	beykoz.industry = "Textile"
+	beykoz.industry = "textile"
 	beykoz.mrr = 900
 	beykoz.seats = 4
 	_customers[beykoz.id] = beykoz

@@ -25,91 +25,91 @@ extends RefCounted
 # Sigorta, Argos Yatırım). Every other legacy name carried over unchanged.
 
 const COMPANIES := {
-	"Sigorta": [
+	"insurance": [
 		{"name": "Ege Sigorta", "background": "Bölgesel oyuncu; acente ağı geniş, evrak işi hâlâ kâğıtta."},
 		{"name": "Poyraz Sigorta", "background": "Fiyat kırarak büyüdü, şimdi hasar dosyalarının altında eziliyor."},
 		{"name": "Deniz Sigorta", "background": "Kurumsal müşteriye çalışır, temkinli; yeni tedarikçiyi zor kabul eder."},
 		{"name": "Adriatic Assurance", "background": "Balkan pazarından bölgeye açıldı; merkez uzak, yerel ekip küçük."},
 		{"name": "Vega Sigorta", "background": "Genç yönetim, poliçeyi telefondan satıyor; büyüme hızlı, süreç dağınık."},
 	],
-	"İnşaat": [
+	"construction": [
 		{"name": "Kuzey İnşaat", "background": "Kamu ihalesiyle büyüdü; şantiyesi çok, merkez ofisi az."},
 		{"name": "Anadolu Yapı", "background": "Aile şirketi, üçüncü kuşak yönetimde; dijitalleşmeye geç başladı."},
 		{"name": "Marmara İnşaat", "background": "Konut projelerinde iddialı; nakit akışı gelgitli, karar tek adamda."},
 		{"name": "Terra Yapı", "background": "Yabancı ortaklı; raporlama standardı yüksek, sabrı az."},
 		{"name": "Donau Bau", "background": "Avusturyalı; altyapı projeleriyle geldi, kalıcı mı belli değil."},
 	],
-	"Lojistik": [
+	"logistics": [
 		{"name": "Deniz Lojistik", "background": "Liman çevresinde güçlü; filosu yaşlı, yazılımı daha yaşlı."},
 		{"name": "Nordica Lojistik", "background": "İskandinav ortaklı; süreç disiplini yüksek, esnekliği düşük."},
 		{"name": "Ege Kargo", "background": "Şehirlerarası dağıtımda eski toprak; el yazısı irsaliyeden yeni çıktı."},
 		{"name": "Marmara Lojistik", "background": "Depoculuğa yeni girdi; büyüme iştahı yüksek, ekibi yorgun."},
 		{"name": "Nordwind GmbH", "background": "Alman butik nakliyeci; bölge ofisi kendi kararını alamıyor."},
 	],
-	"Sağlık": [
+	"health": [
 		{"name": "Aras Klinik", "background": "Tek şubeli butik klinik; randevu defteri hâlâ resepsiyonda."},
 		{"name": "Marmara Klinik", "background": "Zincirleşme yolunda; her şube kendi usulünce çalışıyor, merkez bunu dert etti."},
 		{"name": "Bosphorus Sağlık", "background": "Yabancı hasta ağırlıklı; itibarına düşkün, hata payı tanımıyor."},
 		{"name": "Vita Medikal", "background": "Cihaz satışından hizmete döndü; satışı güçlü, operasyonu zayıf."},
 		{"name": "Medisa Grup", "background": "Bölge hastaneleriyle anlaşmalı; ihale takvimiyle yaşar, acelesi yoktur."},
 	],
-	"Üretim": [
+	"manufacturing": [
 		{"name": "Beykoz Üretim", "background": "Yan sanayi tedarikçisi; müşterisi ne derse o, kendi sistemi yok gibi."},
 		{"name": "Trakya Fabrika", "background": "Vardiya düzeni oturmuş, veri toplamaz; ustabaşının hafızası veritabanıdır."},
 		{"name": "Ege Metal", "background": "İhracat ağırlıklı; Avrupa müşterisi belge istedikçe yazılım ihtiyacı büyüyor."},
 		{"name": "Vulkan Döküm", "background": "Ağır sanayi, ağır karar alır; ama imza atınca yıllarca kalır."},
 		{"name": "Ferrum Endüstri", "background": "Makine parkı yeni, yönetim anlayışı eski; genç mühendisler sıkışmış durumda."},
 	],
-	"Perakende": [
+	"retail": [
 		{"name": "Anadolu Market", "background": "Bölgesel market zinciri; kasa sayısı arttıkça kaos da arttı."},
 		{"name": "Brightline Retail", "background": "Uluslararası zincirin bölge iştiraki; merkezle konuşmak ayrı bir proje."},
 		{"name": "Kardelen Mağazacılık", "background": "Cadde mağazacılığında eski isim; AVM kiralarıyla boğuşuyor."},
 		{"name": "Ekin Gıda Marketleri", "background": "İlçe pazarından zincire dönüştü; patron her şubeyi hâlâ tek tek arar."},
 		{"name": "Modena Concept", "background": "Ev tekstili ve mobilya satar; sezon döngüsüne bağlı, stok takibi elde."},
 	],
-	"Emlak": [
+	"real_estate": [
 		{"name": "Palmiye Holding", "background": "Turizm arazileriyle büyüdü; portföyü geniş, kayıt düzeni dar."},
 		{"name": "Kıyı Gayrimenkul", "background": "Sahil projelerine odaklı; satışı hızlı, tapu sonrası ilgisi yavaş."},
 		{"name": "Metrekare Danışmanlık", "background": "Genç ekip, şube modeliyle büyüyor; şube açtıkça standart kayboluyor."},
 		{"name": "Vestera Holding", "background": "Yabancı fonlarla ortak proje geliştirir; rapor ister, hem de her hafta."},
 		{"name": "Panorama Emlak", "background": "Üç şehirde ofisi var; danışmanlar kendi telefonuyla çalışır, merkez göremez."},
 	],
-	"Tekstil": [
+	"textile": [
 		{"name": "Beykoz Tekstil", "background": "Aile şirketi; fason üretimden marka olmaya çalışıyor, sancılı."},
 		{"name": "Menderes Dokuma", "background": "Havlu ve ev tekstili ihracatçısı; sipariş takibi faks kokan bir sistemde."},
 		{"name": "İplikhane", "background": "Butik üretici; tasarımı güçlü, teslim tarihi zayıf."},
 		{"name": "Nova Tekstil", "background": "Hızlı moda tedarikçisi; büyük müşteri ne isterse ona koşar, kendine vakti yok."},
 		{"name": "Aegea Textile Group", "background": "Yunan ortaklı; iki ülkede üretim var, tek düzgün rapor yok."},
 	],
-	"Hukuk": [
+	"legal": [
 		{"name": "Bosphorus Legal", "background": "Kurumsal müvekkil ağırlıklı; saat ücretiyle yaşar, verim onun için paradır."},
 		{"name": "Kavanagh & Sons", "background": "İrlandalı butik ofisin bölge masası; usule düşkün, yeniliğe mesafeli."},
 		{"name": "Aslan & Duru Hukuk", "background": "İki ortak, on avukat; dosya sayısı büyüdü, arşiv düzeni büyüyemedi."},
 		{"name": "Meridyen Hukuk", "background": "Şirket birleşmelerinde isim yaptı; gizlilik takıntısı her aracı zorlaştırır."},
 		{"name": "Lex Anadolu", "background": "Uluslararası ağın yerel üyesi; standartları dışarıdan, kadrosu içeriden."},
 	],
-	"Teknoloji": [
+	"technology": [
 		{"name": "Nexus Yazılım", "background": "Kurumsal proje geliştirir; kendi ürünü yok, herkesinkini bilir."},
 		{"name": "Piksel Teknoloji", "background": "Ajans kökenli; işi çok, faturası geç."},
 		{"name": "Volt Sistemleri", "background": "Donanım ağırlıklı entegratör; yazılıma mecbur kaldıkça alışıyor."},
 		{"name": "Atlas Bilişim", "background": "Kamu projeleriyle büyüdü; güvenlik şartnamesi her cümlede."},
 		{"name": "Origo Labs", "background": "Genç ürün stüdyosu; hızlı dener, hızlı vazgeçer."},
 	],
-	"E-ticaret": [
+	"ecommerce": [
 		{"name": "Sepet Ticaret", "background": "Pazaryerinde büyüdü, kendi sitesine geçti; kampanya günleri kâbusu."},
 		{"name": "Hızlı Pazar", "background": "Aynı gün teslimat iddiasında; operasyon bu iddiaya yetişemiyor."},
 		{"name": "Vitrin Online", "background": "Niş kategoride lider; ekip küçük, her şey kurucunun telefonunda."},
 		{"name": "Loka Store", "background": "Sosyal medyadan doğdu; markası güçlü, altyapısı emekleme döneminde."},
 		{"name": "Adriatica Market", "background": "Balkanlara satış yapan bölgesel platform; gümrük ve iade derdi bitmez."},
 	],
-	"Medya": [
+	"media": [
 		{"name": "Kanal Medya", "background": "Yerel televizyondan dijitale döndü; arşivi altın, sistemi hurda."},
 		{"name": "Punto Yayın", "background": "Dergi grubundan kalan çekirdek; az kadro, çok başlık."},
 		{"name": "Ekran Prodüksiyon", "background": "Dizi seti kökenli; proje bazlı yaşar, düzenli gider sevmez."},
 		{"name": "Anadolu Digital", "background": "Ajans ile içerik stüdyosu karışımı; müşteri raporu gecede biter, kendi raporu hiç."},
 		{"name": "Nordlicht Studio", "background": "Alman yapım ortağıyla belgesel çeker; bütçe disiplini sıkı."},
 	],
-	"Finans": [
+	"finance": [
 		{"name": "Kule Finans", "background": "Faktoring ağırlıklı; risk iştahı düşük, evrak iştahı yüksek."},
 		{"name": "Argos Yatırım", "background": "Halka arz danışmanlığına soyundu; itibar hassasiyeti aşırı."},
 		{"name": "Pusula Portföy", "background": "Varlıklı aile fonlarını yönetir; sessiz, sadık, yavaş."},

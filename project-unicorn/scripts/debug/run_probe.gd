@@ -636,11 +636,11 @@ static func _seed_b2b_world(rep_count: int) -> void:
 	# their bar that ordinary product wear can push them under, which is the only way
 	# the retention → promise → churn chain is reachable without hand-forcing it.
 	var specs := [
-		{"id": "probe_a", "name": "Kuzey Lojistik", "industry": "Lojistik", "arch": "small", "mrr": 350, "sat": 72},
-		{"id": "probe_b", "name": "Ege Sağlık", "industry": "Sağlık", "arch": "mid", "mrr": 800, "sat": 64},
-		{"id": "probe_c", "name": "Marmara İnşaat", "industry": "İnşaat", "arch": "mid", "mrr": 700, "sat": 52},
-		{"id": "probe_d", "name": "Toros Sigorta", "industry": "Sigorta", "arch": "small", "mrr": 300, "sat": 68},
-		{"id": "probe_e", "name": "Anadolu Üretim", "industry": "Üretim", "arch": "enterprise", "mrr": 550, "sat": 57},
+		{"id": "probe_a", "name": "Kuzey Lojistik", "industry": "logistics", "arch": "small", "mrr": 350, "sat": 72},
+		{"id": "probe_b", "name": "Ege Sağlık", "industry": "health", "arch": "mid", "mrr": 800, "sat": 64},
+		{"id": "probe_c", "name": "Marmara İnşaat", "industry": "construction", "arch": "mid", "mrr": 700, "sat": 52},
+		{"id": "probe_d", "name": "Toros Sigorta", "industry": "insurance", "arch": "small", "mrr": 300, "sat": 68},
+		{"id": "probe_e", "name": "Anadolu Üretim", "industry": "manufacturing", "arch": "enterprise", "mrr": 550, "sat": 57},
 	]
 	for s in specs:
 		var p := Prospect.new()

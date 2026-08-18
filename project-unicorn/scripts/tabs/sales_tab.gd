@@ -206,7 +206,7 @@ func _build_prospect_card(p: Prospect) -> Control:
 	var name_lbl := UiFactory.make_label(p.company_name, &"RowName")
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_lbl)
-	var sector := UiFactory.make_label(UiTokens.tr_upper(p.industry), &"SectionLabel")
+	var sector := UiFactory.make_label(Fmt.upper(B2BConstants.sector_label(p.industry)), &"SectionLabel")
 	sector.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(sector)
 	col.add_child(top)
@@ -304,7 +304,7 @@ func _card_calm(c: Customer) -> Control:
 	col.add_theme_constant_override("separation", 4)
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
-	var name_lbl := UiFactory.make_label(c.company_name, &"RowName", ink)
+	var name_lbl := UiFactory.make_label(c.display_name(), &"RowName", ink)
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_lbl)
 	if is_new:
@@ -322,7 +322,7 @@ func _card_risk(c: Customer) -> Control:
 	col.add_theme_constant_override("separation", 4)
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
-	var name_lbl := UiFactory.make_label(c.company_name, &"RowName")
+	var name_lbl := UiFactory.make_label(c.display_name(), &"RowName")
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_lbl)
 	top.add_child(UiFactory.make_badge(tr("SALES_CHIP_RISK"), &"negative"))
@@ -347,7 +347,7 @@ func _card_expansion(c: Customer) -> Control:
 	col.add_theme_constant_override("separation", 4)
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
-	var name_lbl := UiFactory.make_label(c.company_name, &"RowName")
+	var name_lbl := UiFactory.make_label(c.display_name(), &"RowName")
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_lbl)
 	top.add_child(UiFactory.make_badge(tr("SALES_CHIP_EXPANSION"), &"accent"))
@@ -497,7 +497,7 @@ func _refresh_customers_b2c() -> void:
 	customers_empty.visible = custs.is_empty()
 	for c in custs:
 		var col := VBoxContainer.new()
-		col.add_child(UiFactory.make_label(c.company_name, &"RowName"))
+		col.add_child(UiFactory.make_label(c.display_name(), &"RowName"))
 		col.add_child(UiFactory.make_label("$%d/ay · %s" % [c.mrr, _health_tr(c.health)], &"RowMeta", UiTokens.INK_MUTED))
 		customers_list.add_child(col)
 

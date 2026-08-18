@@ -217,8 +217,12 @@ static func _ensure_b2c_record() -> void:
 	var seed_sat: int = int(round(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")))
 	var base := Customer.new()
 	base.id = B2C_USERBASE_ID
-	base.company_name = _product_name() + " kullanıcıları"
-	base.industry = "Consumer"
+	# NOT baked: the name is composed copy, so it is stored as a key + argument and
+	# rendered by Customer.display_name(). Baking it froze one language into the save.
+	base.company_name = ""
+	base.name_key = "SALES_B2C_USERBASE"
+	base.name_arg = _product_name()
+	base.industry = "consumer"
 	base.company_size = "individual"
 	base.market_type = "b2c"
 	base.seats = 0

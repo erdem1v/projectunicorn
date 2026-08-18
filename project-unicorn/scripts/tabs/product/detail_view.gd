@@ -481,7 +481,7 @@ func _make_promise_row(p) -> PanelContainer:
 	var cname: String = "Müşteri"
 	var cust = CustomerRegistry.get_customer(p.customer_id)
 	if cust != null:
-		cname = cust.company_name
+		cname = cust.display_name()
 	var mid := UiFactory.make_label("%s · %s" % [cname, B2BConstants.feature_label(p.feature_id)], &"RowMeta")
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS

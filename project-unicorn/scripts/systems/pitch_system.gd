@@ -223,7 +223,7 @@ static func get_stage() -> Dictionary:
 				reveal = "Satış okuması — bütçe: %s. %s" % [_prospect.budget_band, _prospect.real_need]
 			return {
 				"id": "intro",
-				"speaker": "%s · %s" % [_prospect.company_name, _prospect.industry],
+				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
 				"npc": "« Frank iyi şeyler söyledi. Göster bakalım — neyi farklı yapıyorsun? »",
 				"inner": "İlk on saniye. Adam zaten Frank'e güveniyor; kapı aralık. Mesele kapıyı nasıl açtığım.",
 				"reveal": reveal,
@@ -236,7 +236,7 @@ static func get_stage() -> Dictionary:
 		1:
 			return {
 				"id": "value",
-				"speaker": "%s · %s" % [_prospect.company_name, _prospect.industry],
+				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
 				"npc": "« Bizde zaten bir sistem var. Seninki ne ekliyor? »",
 				"inner": "Klasik itiraz: 'zaten bir şeyimiz var.' Çerçeveyi cevabım belirler.",
 				"reveal": "",
@@ -250,7 +250,7 @@ static func get_stage() -> Dictionary:
 			var hint := _pitch_value_hint()
 			return {
 				"id": "pricing",
-				"speaker": "%s · %s" % [_prospect.company_name, _prospect.industry],
+				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
 				"npc": "« Tamam, ilgimi çektin. Rakam konuşalım. »",
 				"inner": "İşin döndüğü yer. Yüksek tutarsam ya kaparım ya kaçar; düşük tutarsam garanti ama masada para bırakırım. %s" % hint,
 				"reveal": "",
@@ -264,7 +264,7 @@ static func get_stage() -> Dictionary:
 			var band_line := _band_flavor(_last_band)
 			return {
 				"id": "close",
-				"speaker": "%s · %s" % [_prospect.company_name, _prospect.industry],
+				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
 				"npc": "« Bir düşüneyim... yoksa hemen mi karar versem? »",
 				"inner": "Son viraj. Geri çekilirsem kaçar; itersem ya imza ya kapı. %s" % band_line,
 				"reveal": "",

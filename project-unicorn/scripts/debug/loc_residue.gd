@@ -179,6 +179,13 @@ func _check_script_line(path: String, line_no: int, line: String) -> void:
 		return  # full-line comments are documentation, not residue
 	if _re_logcall.search(line) != null:
 		return  # print/push_* console output is developer-facing, not player-visible
+	# `# LOC-DATA <reason>` — a per-LINE opt-out for quoted strings that are DATA, not copy.
+	# The sweep meets this genuinely: a save-migration table has to name the legacy values it
+	# maps FROM, and those were Turkish. Marking the line beats a file-level SKIP (which would
+	# blind the checker to real copy in the same file) and beats obfuscating the data. Every
+	# exception is one grep away — `rg "LOC-DATA"` is the complete list, each with its reason.
+	if line.contains("# LOC-DATA"):
+		return
 	for m in _re_quoted.search_all(_code_part(line)):
 		var lit := m.get_string(1)
 		if lit == "":

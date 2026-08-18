@@ -551,7 +551,7 @@ func _run_b2b_shot(kind: String) -> void:
 	var p := Prospect.new()
 	p.id = "shot"
 	p.company_name = "Ege Sigorta"
-	p.industry = "Sigorta"
+	p.industry = "insurance"
 	p.archetype = "small"
 	p.pain_feature_id = "ai_vec_filter"
 	var c: Customer = SalesSystem.add_b2b_customer(p, 1000, 70)
@@ -651,12 +651,12 @@ func _run_sales_shot() -> void:
 	PitchSystem.spawn_prospect("small", "find")
 	PitchSystem.spawn_prospect("mid", "find")
 	PitchSystem.spawn_prospect("small", "find")
-	_shot_customer("co_kuzey", "Kuzey İnşaat", "İnşaat", "active", 1000, 12, 90, false)
-	_shot_customer("co_palmiye", "Palmiye Holding", "Sigorta", "active", 1500, 16, 150, true)
-	_shot_customer("co_aras", "Aras Klinik", "Sağlık", "onboarding", 700, 6, 10, false)
-	_shot_customer("co_ege", "Ege Sigorta", "Sigorta", "risk", 1000, 12, 60, false)
+	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)
+	_shot_customer("co_palmiye", "Palmiye Holding", "insurance", "active", 1500, 16, 150, true)
+	_shot_customer("co_aras", "Aras Klinik", "health", "onboarding", 700, 6, 10, false)
+	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 60, false)
 	CustomerRegistry.set_churn_countdown("co_ege", 8)
-	_shot_customer("co_nordica", "Nordica", "Lojistik", "expansion", 2000, 20, 180, false)
+	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 180, false)
 	# Monthly strip figures: gained 1 / lost 2 / net -1 (mockup).
 	GameState.run_customers_signed = 5
 	GameState.run_customers_lost = 2
@@ -994,9 +994,9 @@ func _seed_theme_surface() -> void:
 	GameState.set_flag("mvp_experience", 45.0)
 	GameState.set_flag("mvp_live_bug_count", 12)
 	_seed_hr_roster()
-	_shot_customer("co_kuzey", "Kuzey İnşaat", "İnşaat", "active", 1000, 12, 90, false)
-	_shot_customer("co_ege", "Ege Sigorta", "Sigorta", "risk", 1000, 12, 60, false)
-	_shot_customer("co_nordica", "Nordica", "Lojistik", "expansion", 2000, 20, 180, false)
+	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)
+	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 60, false)
+	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 180, false)
 	PitchSystem.spawn_prospect("small", "find")
 	PitchSystem.spawn_prospect("mid", "find")
 	SalesSystem.reflect_mrr()
@@ -1552,7 +1552,7 @@ func _run_ending_shot(key: String) -> void:
 		var pr := Prospect.new()
 		pr.id = "shot_cust_%d" % ci
 		pr.company_name = ["Ege Sigorta", "Kule Lojistik"][ci]
-		pr.industry = "Sigorta"
+		pr.industry = "insurance"
 		pr.archetype = "small"
 		pr.pain_feature_id = "ai_vec_filter"
 		SalesSystem.add_b2b_customer(pr, 1000, 70)
@@ -1644,7 +1644,7 @@ func _run_product_shot(kind: String) -> void:
 			var p := Prospect.new()
 			p.id = "shot_ege"
 			p.company_name = "Ege Sigorta"
-			p.industry = "Sigorta"
+			p.industry = "insurance"
 			p.archetype = "small"
 			p.pain_feature_id = "saas_ops_integration"
 			var c: Customer = SalesSystem.add_b2b_customer(p, 402, 70)

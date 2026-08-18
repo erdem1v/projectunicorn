@@ -226,8 +226,7 @@ static func build_cs_request(c: Customer, cs: Character) -> GameEvent:
 			# grievance sounds like its industry rather than like the UI. State colors the frame
 			# (Fix 5): below the hidden tolerance line the rep reports a HARD tone, above it a
 			# manageable one — same kind, different temperature. # WORKING TR
-			var voice: String = B2BConstants.COMPLAINT_VOICE.get(c.industry,
-				B2BConstants.COMPLAINT_VOICE_FALLBACK)
+			var voice: String = B2BConstants.complaint_voice(c.industry)
 			ev.title = "Müşteri şikâyeti"
 			if c.satisfaction < c.tolerance:
 				ev.body_text = "%s hattı arıyor, ton sert: \"%s\" Kendi başıma yatıştıramadım." % [c.company_name, voice]

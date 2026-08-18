@@ -483,3 +483,75 @@ UI_CANCEL,İptal,Cancel
 UI_DISMISS,Vazgeç,Cancel
 UI_CONTINUE,DEVAM ET,CONTINUE
 UI_AVATAR_INITIALS,FK,FK
+SECTOR_CONSTRUCTION,İnşaat,Construction
+SECTOR_HEALTH,Sağlık,Healthcare
+SECTOR_LOGISTICS,Lojistik,Logistics
+SECTOR_INSURANCE,Sigorta,Insurance
+SECTOR_MANUFACTURING,Üretim,Manufacturing
+SECTOR_RETAIL,Perakende,Retail
+SECTOR_REAL_ESTATE,Emlak,Real Estate
+SECTOR_TEXTILE,Tekstil,Textiles
+SECTOR_LEGAL,Hukuk,Legal
+SECTOR_TECHNOLOGY,Teknoloji,Technology
+SECTOR_ECOMMERCE,E-ticaret,E-commerce
+SECTOR_MEDIA,Medya,Media
+SECTOR_FINANCE,Finans,Finance
+SECTOR_TESTING,Testing,Testing
+SECTOR_FALLBACK,Sektör,Sector
+B2B_CONTACT_CONSTRUCTION,Saha Sorumlusu,Site Supervisor
+B2B_CONTACT_HEALTH,Başhekim Yardımcısı,Deputy Chief Physician
+B2B_CONTACT_LOGISTICS,Operasyon Müdürü,Operations Manager
+B2B_CONTACT_INSURANCE,BT Müdürü,IT Manager
+B2B_CONTACT_MANUFACTURING,Üretim Müdürü,Production Manager
+B2B_CONTACT_RETAIL,Mağaza Müdürü,Store Manager
+B2B_CONTACT_REAL_ESTATE,Satış Müdürü,Sales Manager
+B2B_CONTACT_TEXTILE,Planlama Şefi,Planning Lead
+B2B_CONTACT_LEGAL,Ofis Yöneticisi,Office Manager
+B2B_CONTACT_TECHNOLOGY,CTO,CTO
+B2B_CONTACT_ECOMMERCE,Operasyon Direktörü,Director of Operations
+B2B_CONTACT_MEDIA,Yayın Yönetmeni,Broadcast Director
+B2B_CONTACT_FINANCE,Risk Müdürü,Risk Manager
+B2B_CONTACT_FALLBACK,Yetkili,Contact
+FEATURE_LABEL_AI_VEC_EMBED_API,anlam altyapısı,semantic layer
+FEATURE_LABEL_AI_VEC_SEARCH_API,anlamlı arama,semantic search
+FEATURE_LABEL_AI_VEC_FILTER,gelişmiş filtreleme,advanced filtering
+FEATURE_LABEL_AI_VEC_DASHBOARD,yönetim paneli,admin dashboard
+FEATURE_LABEL_AI_VEC_SCALING,ölçeklenme,scaling
+FEATURE_LABEL_AI_VEC_SDK,hazır kütüphane,client library
+FEATURE_LABEL_SAAS_OPS_WORKFLOW,süreç otomasyonu,workflow automation
+FEATURE_LABEL_SAAS_OPS_REPORTING,raporlama panosu,reporting board
+FEATURE_LABEL_SAAS_OPS_INTEGRATION,sistem entegrasyonu,system integration
+FEATURE_LABEL_SAAS_OPS_SCHEDULING,randevu planlama,scheduling
+FEATURE_LABEL_SAAS_OPS_FIELD,saha bağlantısı,field connectivity
+FEATURE_LABEL_SAAS_OPS_MOBILE,mobil uygulama,mobile app
+FEATURE_LABEL_FALLBACK,yeni özellik,a new feature
+B2B_COMPLAINT_CONSTRUCTION,"Sahadaki ekip sisteme bağlanamıyor, bağlantı sürekli kopuyor. Böyle iş yürümez.",The site crew cannot stay connected — it drops constantly. This is no way to work.
+B2B_COMPLAINT_HEALTH,"Ekranlar sürekli çöküyor, hasta kapıda beklerken sistemi açamıyoruz.",The screens keep crashing and we cannot bring the system up with a patient waiting at the door.
+B2B_COMPLAINT_LOGISTICS,"Sevkiyat saatinde sistem donuyor, operasyon aksıyor.",The system freezes right at dispatch and the whole operation stalls.
+B2B_COMPLAINT_INSURANCE,"Sisteminiz son haftalarda sürekli düşüyor, ekibim poliçe işlerini yürütemiyor.",Your system has been going down for weeks and my team cannot process policies.
+B2B_COMPLAINT_MANUFACTURING,"Hat başında sistem takılıyor, üretim raporu tutmuyor.",It hangs at the line and the production report never adds up.
+B2B_COMPLAINT_RETAIL,"Yoğun saatte sistem kilitleniyor, kasa akmıyor.",It locks up at peak hour and the tills stop moving.
+B2B_COMPLAINT_REAL_ESTATE,"Sistem sık sık kopuyor, ekip müşteriye dönemiyor.",The system drops out constantly and the team cannot get back to clients.
+B2B_COMPLAINT_TEXTILE,"Sipariş ekranı sürekli hata veriyor, üretim planı kayıyor.",The order screen throws errors all day and the production plan slips.
+B2B_COMPLAINT_LEGAL,"Dosyalara erişemiyoruz, sistem gün içinde defalarca düşüyor.",We cannot reach our files — it goes down several times a day.
+B2B_COMPLAINT_TECHNOLOGY,"Sisteminiz sürekli hata veriyor, ekibimiz üretime dönemiyor.",Your system keeps erroring out and our team cannot get back to shipping.
+B2B_COMPLAINT_ECOMMERCE,"Kampanya saatinde sistem çöküyor, siparişleri kaybediyoruz.",It crashes the moment a campaign goes live and we lose orders.
+B2B_COMPLAINT_MEDIA,"Yayın anında sistem donuyor, akış kesiliyor.",It freezes mid-broadcast and the stream cuts out.
+B2B_COMPLAINT_FINANCE,"Sistem gün içinde düşüyor, işlemler askıda kalıyor.",It goes down during the day and transactions hang.
+B2B_COMPLAINT_TESTING,"Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor.",Your system has been failing often lately and my team cannot do their job.
+B2B_COMPLAINT_FALLBACK,"Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor.",Your system has been failing often lately and my team cannot do their job.
+B2B_PAIN_AI_VEC_EMBED_API,"Verimizi anlamlandıracak bir altyapı arıyoruz, kelime eşleşmesi yetmiyor.",We need something that understands our data — keyword matching is not enough.
+B2B_PAIN_AI_VEC_SEARCH_API,"Aradığımızı tarif edebilmek istiyoruz, birebir kelime değil.",We want to describe what we are looking for rather than guess the exact word.
+B2B_PAIN_AI_VEC_FILTER,"Aramayı tarihe ve etikete göre daraltamıyoruz, ekip boğuluyor.",We cannot narrow a search by date or tag and the team is drowning.
+B2B_PAIN_AI_VEC_DASHBOARD,"Kullanımı göremiyoruz, yönetim kör uçuyor.",We cannot see usage at all — management is flying blind.
+B2B_PAIN_AI_VEC_SCALING,"Yoğunlukta sistem yavaşlıyor, ölçeklenme derdimiz var.",It slows to a crawl under load; scaling is our problem.
+B2B_PAIN_AI_VEC_SDK,"Entegrasyon zor, hazır bir kütüphane olmadan bağlanamıyoruz.",Integration is hard — without a ready library we cannot connect.
+B2B_PAIN_SAAS_OPS_WORKFLOW,"Süreçler hâlâ elle yürüyor, otomasyon arıyoruz.",Everything still runs by hand; we are looking for automation.
+B2B_PAIN_SAAS_OPS_REPORTING,"Raporlama karmaşası içindeyiz, yönetim net veri istiyor.",Our reporting is a mess and management wants clean numbers.
+B2B_PAIN_SAAS_OPS_INTEGRATION,"Sistemlerimiz birbiriyle konuşmuyor, entegrasyon şart.",Our systems do not talk to each other; integration is a must.
+B2B_PAIN_SAAS_OPS_SCHEDULING,"Randevu ve planlama dağınık, çakışmalar yaşıyoruz.",Scheduling is scattered and we keep double-booking.
+B2B_PAIN_SAAS_OPS_FIELD,Sahadaki ekip bağlantı sorunundan çalışamıyor.,The field crew cannot work because the connection keeps failing.
+B2B_PAIN_SAAS_OPS_MOBILE,"Ekip telefondan giremiyor, saha kopuk kalıyor.",The team cannot get in from a phone so the field stays cut off.
+B2B_PAIN_FALLBACK,"Bu tarafta ciddi bir eksik var, çözecek bir araç arıyoruz.",There is a real gap on this side and we are looking for a tool that closes it.
+SECTOR_CONSUMER,Tüketici,Consumer
+SALES_B2C_USERBASE,{product} kullanıcıları,{product} users
