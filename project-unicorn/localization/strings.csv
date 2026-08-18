@@ -365,3 +365,27 @@ ANGEL_NUDGE_BODY,"Frank kapıda duruyor, oturmuyor.
 
 ""You have money now. One man is not a company. Go and hire someone."""
 ANGEL_NUDGE_ACK,Bakacağım,I'll look into it
+MONTH_1,Ocak,January
+MONTH_2,Şubat,February
+MONTH_3,Mart,March
+MONTH_4,Nisan,April
+MONTH_5,Mayıs,May
+MONTH_6,Haziran,June
+MONTH_7,Temmuz,July
+MONTH_8,Ağustos,August
+MONTH_9,Eylül,September
+MONTH_10,Ekim,October
+MONTH_11,Kasım,November
+MONTH_12,Aralık,December
+DOW_0,Paz,Sun
+DOW_1,Pzt,Mon
+DOW_2,Sal,Tue
+DOW_3,Çar,Wed
+DOW_4,Per,Thu
+DOW_5,Cum,Fri
+DOW_6,Cmt,Sat
+DATE_LINE,"{dow}, {day} {mon} {year}","{dow}, {mon} {day}, {year}"
+PCT_PATTERN,%{v},{v}%
+SHARE_FLOOR,"<%0,1",<0.1%
+NUM_GROUP_SEP,.,","
+NUM_DECIMAL_SEP,",",.

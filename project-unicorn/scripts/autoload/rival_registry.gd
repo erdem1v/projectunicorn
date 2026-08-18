@@ -196,11 +196,13 @@ func get_player_share_pct() -> float:
 
 
 func format_share(pct: float) -> String:
-	# Kıymığın görünmesi tasarımın kalbi: tek ondalık + Türkçe virgül; eşiğin
-	# altı "<%0,1" (görünmez değil, "henüz yok denecek kadar küçük" okunur).
+	# Kıymığın görünmesi tasarımın kalbi: tek ondalık; eşiğin altı "henüz yok denecek
+	# kadar küçük" okunur, görünmez değil. BİÇİM ARTIK YERELDEN geliyor (Fmt): işaretin
+	# yeri ve ondalık ayracı dile göre değişir (%0,3 ↔ 0.3%), taban metni SHARE_FLOOR
+	# anahtarında. Buradaki KARAR yalnız eşiğin kendisi — 0,1'in altı ayrı bir cümledir.
 	if pct < 0.1:
-		return "<%0,1"
-	return ("%" + "%.1f" % pct).replace(".", ",")
+		return TranslationServer.translate("SHARE_FLOOR")
+	return Fmt.percent(pct, 1)
 
 
 func _share_row(rid: String, display_name: String, tier: String,

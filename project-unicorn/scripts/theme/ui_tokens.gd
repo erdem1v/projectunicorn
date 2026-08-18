@@ -678,20 +678,14 @@ static func bug_severity(bug_count: int) -> Dictionary:
 ## leading "-". TopBar's variants moved here (format_money_chip/exact, 2026-07-21
 ## sweep); remaining local formatters are deliberate: ProductUiShared.money_tr
 ## (Rev3 exact dot-grouping), EventModal._fmt_money_delta. NEW code must use this.
+##
+## LOCALIZATION (2026-08-18): the BODY moved to Fmt, which is where the locale's
+## numeric separators live — these three are now one-line delegates kept for their
+## ~40 call sites. The theme file owning money formatting was always a category
+## error (its own OWNERSHIP law says UiTokens is the visual vocabulary); a locale
+## flip is the natural moment to evict it. New code may call either name.
 static func format_money(amount: int) -> String:
-	var a: int = absi(amount)
-	var s: String
-	if a >= 1_000_000:
-		var millions: float = a / 1_000_000.0
-		if a >= 10_000_000 and a % 1_000_000 == 0:
-			s = "$%dM" % int(millions)
-		else:
-			s = "$%.1fM" % millions
-	elif a >= 1_000:
-		s = "$%.1fK" % (a / 1_000.0)
-	else:
-		s = "$%d" % a
-	return ("-" + s) if amount < 0 else s
+	return Fmt.money(amount)
 
 
 ## TopBar finance-chip format (moved verbatim from top_bar.gd — 2026-07-21 sweep).
@@ -701,45 +695,24 @@ static func format_money(amount: int) -> String:
 ## format_money (the ≥$10K no-decimal branch) — merge decision belongs to the curve session.
 ## Negative → leading "-", exactly like format_money.
 static func format_money_chip(value: int) -> String:
-	# The sign is peeled off ONCE and re-attached around the finished magnitude form.
-	# The branches pick on absi() so they must also DIVIDE absi(): dividing the signed
-	# value strands the minus inside the number ("$-12K" instead of "-$12K"). Positive
-	# output stays byte-identical — fmt_probe.gd's chip column pins it.
-	var a: int = absi(value)
-	var s: String
-	if a >= 1000000:
-		s = "$%.1fM" % (a / 1000000.0)
-	elif a >= 10000:
-		s = "$%.0fK" % (a / 1000.0)
-	elif a >= 1000:
-		s = "$%.1fK" % (a / 1000.0)
-	else:
-		s = "$%d" % a
-	return ("-" + s) if value < 0 else s
+	return Fmt.money_chip(value)
 
 
-## Exact money, comma-grouped (moved verbatim from top_bar.gd — 2026-07-21 sweep).
-## CASH is shown in FULL with thousands separators (Erdem: money management is precise, wants
-## the exact figure) — "$12,340", "$1,234,567". Godot has no locale grouping, so group manually.
-## The StatCol_Cash width bound (+ clip_text) keeps even 7-digit values from shoving the chrome.
+## Exact money, thousands-grouped ("$12.340"/"$12,340", "$1.234.567"/"$1,234,567").
+## CASH is shown in FULL because money management is precise (Erdem). The StatCol_Cash
+## width bound (+ clip_text) keeps even 7-digit values from shoving the chrome.
 static func format_money_exact(value: int) -> String:
-	var digits: String = str(absi(value))
-	var out: String = ""
-	var c: int = 0
-	for i in range(digits.length() - 1, -1, -1):
-		out = digits[i] + out
-		c += 1
-		if c % 3 == 0 and i > 0:
-			out = "," + out
-	return ("-$" if value < 0 else "$") + out
+	return Fmt.money_exact(value)
 
 
-## Turkish-aware uppercase — the single home. Godot's String.to_upper() is not
-## locale-aware: "i" → "I" (dotless — wrong in Turkish, must be "İ"). Pre-substitute
-## i→İ, then to_upper; "ı" → "I" already maps correctly via the default Unicode rules.
-## Player-facing uppercasing goes through this, never raw to_upper().
+## Turkish-aware uppercase. DEPRECATED IN FAVOUR OF Fmt.upper — this name now delegates.
+## The reason is a bug, not tidiness: 15 sites called tr_upper on ALREADY-TRANSLATED text,
+## so under English the Turkish i→İ rule mangled real words (Display→DİSPLAY,
+## Audio→AUDİO, Accessibility→ACCESSİBİLİTY). Fmt.upper branches on the locale, so the
+## Turkish rule applies only to Turkish. Existing callers are correct as they stand; new
+## code should say Fmt.upper.
 static func tr_upper(s: String) -> String:
-	return s.replace("i", "İ").to_upper()
+	return Fmt.upper(s)
 
 
 ## Net-runway display (Package 5): revenue-aware runway. INF (net_burn ≤ 0) → the

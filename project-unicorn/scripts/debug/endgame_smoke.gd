@@ -222,6 +222,10 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_training_blocks_and_charges_once": fail = _case_hr_training_blocks_and_charges_once()
 		"hr_training_completion":     fail = _case_hr_training_completion()
 		"hr_expertise_cap_respected": fail = _case_hr_expertise_cap_respected()
+		"ui_scale_ladder_fits_settings": fail = _case_ui_scale_ladder_fits_settings()
+		# --- Lokalizasyon Faz 2 (2026-08-18) ---
+		"loc_csv_integrity":         fail = _case_loc_csv_integrity()
+		"loc_format_locale_flip":    fail = _case_loc_format_locale_flip()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -5609,11 +5613,27 @@ static func _case_market_share_tracks_mrr() -> String:
 			return "rivals not sorted by share desc"
 	if str(snap) != str(RivalRegistry.get_market_snapshot("ai_vector_search")):
 		return "same-day snapshots differ (computation is not pure)"
-	# Formatter: comma decimal above the floor, "<" form under it.
-	if not RivalRegistry.format_share(p1).contains(","):
-		return "format_share(%f) lost the comma decimal: %s" % [p1, RivalRegistry.format_share(p1)]
-	if RivalRegistry.format_share(0.02) != "<%0,1":
-		return "sub-floor share formats as %s, want <%%0,1" % RivalRegistry.format_share(0.02)
+	# Formatter: the share SHAPE is locale data now (Fmt + PCT_PATTERN/SHARE_FLOOR), so it
+	# is asserted per locale instead of pinned to the Turkish bytes. Turkish leads with the
+	# sign and a comma decimal ("%0,3"); English trails it with a dot ("0.3%"). Under the
+	# floor each locale says its own sentence. The locale is captured and restored so the
+	# rest of the case runs in the environment it started in.
+	var loc0: String = TranslationServer.get_locale()
+	TranslationServer.set_locale("tr")
+	var tr_above: String = RivalRegistry.format_share(p1)
+	var tr_floor: String = RivalRegistry.format_share(0.02)
+	TranslationServer.set_locale("en")
+	var en_above: String = RivalRegistry.format_share(p1)
+	var en_floor: String = RivalRegistry.format_share(0.02)
+	TranslationServer.set_locale(loc0)
+	if not tr_above.begins_with("%") or not tr_above.contains(","):
+		return "tr share wants a leading %% and a comma decimal, got: %s" % tr_above
+	if tr_floor != "<%0,1":
+		return "tr sub-floor share is %s, want <%%0,1" % tr_floor
+	if not en_above.ends_with("%") or not en_above.contains("."):
+		return "en share wants a trailing %% and a dot decimal, got: %s" % en_above
+	if en_floor != "<0.1%":
+		return "en sub-floor share is %s, want <0.1%%" % en_floor
 	# MRR up → share strictly up (a second real customer record).
 	var p := Prospect.new()
 	p.id = "lead_smoke_growth"
@@ -6142,4 +6162,169 @@ static func _case_hr_expertise_cap_respected() -> String:
 	var final_expertise: int = int(emp2.role_stats[HRConstants.AXIS_EXPERTISE])
 	if final_expertise != HRConstants.EXPERTISE_CAP:
 		return "expertise landed at %d, want the cap %d" % [final_expertise, HRConstants.EXPERTISE_CAP]
+	return ""
+
+
+## The UI-scale ladder must never be able to push a shell modal off the screen.
+## Written because %150 did exactly that: content_scale_factor SHRINKS the logical
+## viewport, so a 1920×1080 window at %150 reported 1280×720 while SettingsModal's
+## FIXED CenterPanel was 860px tall — the Footer holding KAPAT fell off the bottom
+## edge and the panel could only be dismissed with ESC.
+##
+## Why 1080/step is the right bound, and resolution-independent: with canvas_items
+## the stretch is min(win.x/1920, win.y/1080), which on ANY 16:9 window is win.y/1080,
+## so the logical height collapses to 1080/step whatever the panel measures. 16:10
+## and ultrawide only ever give MORE height. So the primary resolution is the floor,
+## not merely an example.
+##
+## The panel height is READ FROM THE SCENE and never re-typed here — a copied number
+## keeps passing while the thing it guards drifts. SceneState rather than
+## instantiate() keeps this a pure read: no _ready(), no signal wiring, no Settings
+## access, nothing to leak into the next case.
+static func _case_ui_scale_ladder_fits_settings() -> String:
+	var packed: PackedScene = load("res://scenes/modals/SettingsModal.tscn")
+	if packed == null:
+		return "SettingsModal.tscn could not be loaded"
+	var state: SceneState = packed.get_state()
+	var top: float = INF
+	var bottom: float = INF
+	for i in state.get_node_count():
+		if String(state.get_node_name(i)) != "CenterPanel":
+			continue
+		for j in state.get_node_property_count(i):
+			match String(state.get_node_property_name(i, j)):
+				"offset_top":    top = float(state.get_node_property_value(i, j))
+				"offset_bottom": bottom = float(state.get_node_property_value(i, j))
+	if is_inf(top) or is_inf(bottom):
+		return "CenterPanel's offset_top/offset_bottom not found in the scene"
+	var panel_h: float = bottom - top
+	if panel_h <= 0.0:
+		return "CenterPanel height read as %.1f — unexpected scene shape" % panel_h
+
+	var top_step: float = 0.0
+	for s in DisplaySettings.UI_SCALE_STEPS:
+		top_step = maxf(top_step, float(s))
+	if top_step <= 0.0:
+		return "UI_SCALE_STEPS is empty"
+	var tightest_h: float = DisplaySettings.BASE_VIEWPORT.y / top_step
+	if tightest_h < panel_h:
+		return "top step %d%% leaves a %.0fpx logical viewport; Settings panel is %.0fpx — KAPAT lands off-screen" % [
+			int(round(top_step * 100.0)), tightest_h, panel_h]
+
+	# İkinci hüküm: merdivenin tavanı üyelik kapısından da geçmeli, yoksa
+	# is_step_allowed onu reddeder ve açılır listenin en üst adımı ölü görünür.
+	if not DisplaySettings.is_step_allowed(top_step, Vector2i(1920, 1080)):
+		return "top step %d%% is not legal at the primary resolution" % int(round(top_step * 100.0))
+	return ""
+
+
+## BILINGUAL BIRTH LAW's CSV half, as a command. Every row must carry BOTH locales, use
+## only named placeholders, and expose the SAME token set in both columns — a tr/en token
+## mismatch is the one .format failure that renders a literal "{company}" to the player.
+## Also resolves every key through the real TranslationServer in both locales, which is
+## what catches a row the parser silently dropped (the multi-line quoted event bodies are
+## exactly the shape that can shift a column).
+static func _case_loc_csv_integrity() -> String:
+	var f := FileAccess.open("res://localization/strings.csv", FileAccess.READ)
+	if f == null:
+		return "strings.csv unreadable"
+	var header: PackedStringArray = f.get_csv_line()
+	if header.size() < 3:
+		return "strings.csv header wants keys,tr,en — got %s" % str(header)
+	var re_key := RegEx.new()
+	re_key.compile("^[A-Z][A-Z0-9_]*$")
+	var re_printf := RegEx.new()
+	re_printf.compile("%[0-9]*[dsfx]")
+	var re_token := RegEx.new()
+	# Braces via character classes, not backslashes: GDScript rejects "\{" as an invalid
+	# string escape, and "[{]" is the same thing to PCRE without fighting the string parser.
+	re_token.compile("[{]([a-z_]+)[}]")
+	var keys: Array[String] = []
+	var seen := {}
+	while not f.eof_reached():
+		var row: PackedStringArray = f.get_csv_line()
+		if row.size() == 0 or row[0].strip_edges() == "":
+			continue
+		var key: String = row[0].strip_edges()
+		if re_key.search(key) == null:
+			return "key is not SCREAMING_SNAKE: '%s'" % key
+		if seen.has(key):
+			return "duplicate key: %s" % key
+		seen[key] = true
+		if row.size() < 3:
+			return "%s has %d columns, wants 3" % [key, row.size()]
+		var tr_v: String = row[1]
+		var en_v: String = row[2]
+		if tr_v.strip_edges() == "" or en_v.strip_edges() == "":
+			return "%s is single-locale (tr=%d chars, en=%d chars)" % [
+				key, tr_v.length(), en_v.length()]
+		if re_printf.search(tr_v) != null or re_printf.search(en_v) != null:
+			return "%s still carries a positional printf token" % key
+		var tr_tokens: Array[String] = []
+		for m in re_token.search_all(tr_v):
+			tr_tokens.append(m.get_string(1))
+		var en_tokens: Array[String] = []
+		for m in re_token.search_all(en_v):
+			en_tokens.append(m.get_string(1))
+		tr_tokens.sort()
+		en_tokens.sort()
+		if tr_tokens != en_tokens:
+			return "%s token sets differ: tr=%s en=%s" % [key, str(tr_tokens), str(en_tokens)]
+		# A brace that is not part of a {name} token would survive .format and reach the screen.
+		if tr_v.count("{") != tr_tokens.size() or tr_v.count("}") != tr_tokens.size():
+			return "%s tr has a stray brace" % key
+		if en_v.count("{") != en_tokens.size() or en_v.count("}") != en_tokens.size():
+			return "%s en has a stray brace" % key
+		keys.append(key)
+	if keys.size() < 300:
+		return "only %d keys parsed — the CSV reader lost rows" % keys.size()
+	var loc0: String = TranslationServer.get_locale()
+	for loc in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		for k in keys:
+			if TranslationServer.translate(k) == k:
+				TranslationServer.set_locale(loc0)
+				return "%s does not resolve under '%s' (renders as the raw key)" % [k, loc]
+	TranslationServer.set_locale(loc0)
+	return ""
+
+
+## Fmt actually flips. Replaces the byte-pins that asserted the Turkish-only forms and
+## could not have noticed English rendering Turkish. Asserts the SHAPES that differ:
+## thousands separator, decimal mark, percent side, date field ORDER, and the uppercase
+## rule (the English branch exists because tr_upper was mangling Display→DİSPLAY).
+static func _case_loc_format_locale_flip() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var d := {"weekday": 3, "day": 9, "month": 9, "year": 2026}
+	var want := {
+		"tr": {
+			"money_exact": "$1.234.567", "money": "$3,5K", "pct": "%12,5",
+			"date": "Çar, 9 Eyl 2026", "upper": "İYİ", "month": "Eylül",
+		},
+		"en": {
+			"money_exact": "$1,234,567", "money": "$3.5K", "pct": "12.5%",
+			"date": "Wed, Sep 9, 2026", "upper": "IYI", "month": "September",
+		},
+	}
+	for loc in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		var w: Dictionary = want[loc]
+		var got := {
+			"money_exact": Fmt.money_exact(1234567),
+			"money": Fmt.money(3500),
+			"pct": Fmt.percent(12.5, 1),
+			"date": Fmt.date_line(d),
+			"upper": Fmt.upper("iyi"),
+			"month": Fmt.month_name(9),
+		}
+		for field in w:
+			if String(got[field]) != String(w[field]):
+				TranslationServer.set_locale(loc0)
+				return "%s.%s = '%s', want '%s'" % [loc, field, got[field], w[field]]
+	# The English branch of upper() is the bug fix; assert it on the word that was mangled.
+	TranslationServer.set_locale("en")
+	if Fmt.upper("Display") != "DISPLAY":
+		TranslationServer.set_locale(loc0)
+		return "en upper('Display') = '%s', want DISPLAY (the tr i→İ rule leaked)" % Fmt.upper("Display")
+	TranslationServer.set_locale(loc0)
 	return ""
