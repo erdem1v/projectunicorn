@@ -671,7 +671,7 @@ func _type_name_human(sub_type_id: String) -> String:
 	var data: Dictionary = ProductCatalog.get_sub_product_type_by_id(sub_type_id)
 	if data.is_empty():
 		return sub_type_id
-	return String(data.get("name_human", data.get("name", sub_type_id)))
+	return ProductCatalog.type_name(sub_type_id)
 
 
 func _tr_upper(s: String) -> String:

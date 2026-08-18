@@ -235,6 +235,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_pick_fallback":         fail = _case_loc_pick_fallback()
 		"loc_b2b_derived_keys":      fail = _case_loc_b2b_derived_keys()
 		"loc_save_sector_migration": fail = _case_loc_save_sector_migration()
+		"loc_product_derived_keys":  fail = _case_loc_product_derived_keys()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -6498,4 +6499,44 @@ static func _case_loc_save_sector_migration() -> String:
 		var mapped: String = String(B2BConstants.LEGACY_SECTOR_IDS[legacy])
 		if not B2BConstants.SECTORS.has(mapped) and mapped != B2BConstants.SECTOR_FIXTURE:
 			return "legacy map sends '%s' to unknown id '%s'" % [legacy, mapped]
+	return ""
+
+
+## Product catalog derived keys resolve. Same guard as loc_b2b_derived_keys: the catalog
+## builds its copy keys from ids at runtime (PROD_TYPE_ + ID + _NAME, PROD_FEAT_ + ID +
+## _VOICE …), so no grep for tr("LITERAL") can see them, and a typo would reach the player
+## as the raw id. Walks every sub-product type and every feature in both locales.
+static func _case_loc_product_derived_keys() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var types: Array = ProductCatalog.get_all_sub_product_types()
+	if types.size() < 8:
+		TranslationServer.set_locale(loc0)
+		return "only %d sub product types found — the scan is not looking where it thinks" % types.size()
+	for loc in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		for st in types:
+			var tid: String = String((st as Dictionary).get("id", ""))
+			for suffix in ["_NAME", "_CATEGORY", "_DESC", "_TRADEOFF", "_BET", "_PITCH"]:
+				var key: String = "PROD_TYPE_" + tid.to_upper() + suffix
+				if TranslationServer.translate(key) == key:
+					TranslationServer.set_locale(loc0)
+					return "[%s] %s has no row" % [loc, key]
+			for sid in (st as Dictionary).get("sectors", []):
+				var skey: String = "SECTOR_" + String(sid).to_upper()
+				if TranslationServer.translate(skey) == skey:
+					TranslationServer.set_locale(loc0)
+					return "[%s] %s has no row" % [loc, skey]
+			for f in ProductCatalog.get_feature_pool(tid):
+				var fid: String = String((f as Dictionary).get("id", ""))
+				for fsuffix in ["_NAME", "_VOICE"]:
+					var fkey: String = "PROD_FEAT_" + fid.to_upper() + fsuffix
+					if TranslationServer.translate(fkey) == fkey:
+						TranslationServer.set_locale(loc0)
+						return "[%s] %s has no row" % [loc, fkey]
+		for axis in ["innovation", "stability", "experience"]:
+			var akey: String = "PROD_AXIS_" + axis.to_upper()
+			if TranslationServer.translate(akey) == akey:
+				TranslationServer.set_locale(loc0)
+				return "[%s] %s has no row" % [loc, akey]
+	TranslationServer.set_locale(loc0)
 	return ""

@@ -828,3 +828,201 @@ HR_CARD_FIRE,İŞTEN ÇIKAR,LET GO
 HR_CANDIDATE_GENERIC,Aday,Candidate
 HR_CASH_LINE,Nakit {old} → {new},Cash {old} → {new}
 HR_APPLY_RAISE_PCT,ZAMMI UYGULA · +{pct},APPLY RAISE · +{pct}
+PROD_FEAT_AI_ASSISTANT_CHAT_NAME,Sohbet Ekranı,Chat Interface
+PROD_FEAT_AI_ASSISTANT_MEMORY_NAME,Konuşma Hafızası,Conversation Memory
+PROD_FEAT_AI_ASSISTANT_TOOLS_NAME,Araç Kullanımı,Tool Use
+PROD_FEAT_AI_ASSISTANT_VOICE_NAME,Sesli Mod,Voice Mode
+PROD_FEAT_AI_ASSISTANT_IMAGE_NAME,Görsel Anlama,Image Understanding
+PROD_FEAT_AI_ASSISTANT_STREAMING_NAME,Akan Yanıt,Streaming Output
+PROD_FEAT_AI_PHOTO_BG_REMOVAL_NAME,Arka Plan Silme,Background Removal
+PROD_FEAT_AI_PHOTO_INPAINT_NAME,Üretken Doldurma,Generative Inpaint
+PROD_FEAT_AI_PHOTO_UPSCALE_NAME,Yapay Zeka Netleştirme,AI Upscaling
+PROD_FEAT_AI_PHOTO_STYLE_TRANSFER_NAME,Stil Aktarımı,Style Transfer
+PROD_FEAT_AI_PHOTO_BATCH_NAME,Toplu İşleme,Batch Processing
+PROD_FEAT_AI_PHOTO_FILTERS_NAME,Akıllı Filtreler,Smart Filters
+PROD_FEAT_AI_CODE_AUTOCOMPLETE_NAME,Satır İçi Tamamlama,Inline Autocomplete
+PROD_FEAT_AI_CODE_CHAT_NAME,Kod Sohbeti Paneli,Code Chat Sidebar
+PROD_FEAT_AI_CODE_REFACTOR_NAME,Akıllı Yeniden Düzenleme,Smart Refactor
+PROD_FEAT_AI_CODE_EXPLAIN_NAME,Kod Açıklama,Code Explanation
+PROD_FEAT_AI_CODE_TEST_GEN_NAME,Test Üretimi,Test Generation
+PROD_FEAT_AI_CODE_MULTI_FILE_NAME,Çok Dosyalı Bağlam,Multi-File Context
+PROD_FEAT_AI_CODE_DIFF_REVIEW_NAME,PR İnceleme Yardımı,PR Review Assist
+PROD_FEAT_AI_VEC_EMBED_API_NAME,Gömme API'si,Embedding API
+PROD_FEAT_AI_VEC_SEARCH_API_NAME,Benzerlik Arama API'si,Similarity Search API
+PROD_FEAT_AI_VEC_FILTER_NAME,Üstveri Filtreleme,Metadata Filtering
+PROD_FEAT_AI_VEC_DASHBOARD_NAME,Yönetim Paneli,Admin Dashboard
+PROD_FEAT_AI_VEC_SCALING_NAME,Otomatik Ölçeklenme,Auto Scaling
+PROD_FEAT_AI_VEC_SDK_NAME,İstemci SDK'sı,Client SDK
+PROD_FEAT_SAAS_PM_TASKS_NAME,Görev Panosu,Task Board
+PROD_FEAT_SAAS_PM_GANTT_NAME,Gantt Zaman Çizelgesi,Gantt Timeline
+PROD_FEAT_SAAS_PM_COMMENTS_NAME,Konu Bazlı Yorumlar,Threaded Comments
+PROD_FEAT_SAAS_PM_INTEGRATIONS_NAME,Üçüncü Parti Entegrasyonlar,Third-Party Integrations
+PROD_FEAT_SAAS_PM_AUTOMATION_NAME,Süreç Otomasyonu,Workflow Automation
+PROD_FEAT_SAAS_PM_REPORTING_NAME,Raporlama,Reporting
+PROD_FEAT_SAAS_CRM_CONTACTS_NAME,Kişi Veritabanı,Contact Database
+PROD_FEAT_SAAS_CRM_PIPELINE_NAME,Satış Hattı,Sales Pipeline
+PROD_FEAT_SAAS_CRM_EMAIL_NAME,E-posta Eşitleme,Email Sync
+PROD_FEAT_SAAS_CRM_FORECAST_NAME,Gelir Tahmini,Revenue Forecast
+PROD_FEAT_SAAS_CRM_MOBILE_NAME,Mobil Uygulama,Mobile App
+PROD_FEAT_SAAS_CRM_CALL_LOG_NAME,Görüşme Kaydı,Call Logging
+PROD_FEAT_SAAS_AN_DASHBOARDS_NAME,Özel Panolar,Custom Dashboards
+PROD_FEAT_SAAS_AN_QUERY_NAME,SQL Sorgu Editörü,SQL Query Editor
+PROD_FEAT_SAAS_AN_ALERTS_NAME,Anormallik Uyarıları,Anomaly Alerts
+PROD_FEAT_SAAS_AN_SHARE_NAME,Paylaşılabilir Raporlar,Shareable Reports
+PROD_FEAT_SAAS_AN_ETL_NAME,Veri Bağlayıcıları,Data Connectors
+PROD_FEAT_SAAS_AN_EMBED_NAME,Gömülü Analitik,Embedded Analytics
+PROD_FEAT_SAAS_BILL_SUBSCRIPTIONS_NAME,Abonelik Yönetimi,Subscription Management
+PROD_FEAT_SAAS_BILL_INVOICE_NAME,Fatura Üretimi,Invoice Generation
+PROD_FEAT_SAAS_BILL_TAX_NAME,Vergi Hesaplama,Tax Calculation
+PROD_FEAT_SAAS_BILL_DUNNING_NAME,Başarısız Tahsilat Kurtarma,Failed Payment Recovery
+PROD_FEAT_SAAS_BILL_WEBHOOKS_NAME,Webhook Sistemi,Webhook System
+PROD_FEAT_SAAS_BILL_PRORATION_NAME,Plan Oranlama,Plan Proration
+PROD_FEAT_SAAS_DEV_CLI_NAME,Komut Satırı Aracı,Command-Line Tool
+PROD_FEAT_SAAS_DEV_API_NAME,REST API,REST API
+PROD_FEAT_SAAS_DEV_DOCS_NAME,Etkileşimli Dokümantasyon,Interactive Docs
+PROD_FEAT_SAAS_DEV_CI_PLUGIN_NAME,CI Eklentisi,CI Plugin
+PROD_FEAT_SAAS_DEV_LOGS_NAME,Canlı Log Akışı,Live Log Stream
+PROD_FEAT_SAAS_DEV_SANDBOX_NAME,Test Ortamı,Test Sandbox
+PROD_FEAT_SAAS_OPS_WORKFLOW_NAME,Süreç Otomasyonu,Workflow Automation
+PROD_FEAT_SAAS_OPS_REPORTING_NAME,Raporlama Panoları,Reporting Dashboards
+PROD_FEAT_SAAS_OPS_INTEGRATION_NAME,Sistem Entegrasyonu,System Integration
+PROD_FEAT_SAAS_OPS_SCHEDULING_NAME,Randevu ve Planlama,Scheduling & Appointments
+PROD_FEAT_SAAS_OPS_FIELD_NAME,Saha Bağlantısı,Field Connectivity
+PROD_FEAT_SAAS_OPS_MOBILE_NAME,Mobil Uygulama,Mobile App
+PROD_FEAT_AI_ASSISTANT_CHAT_VOICE,Kullanıcının asistanla konuştuğu ekran. Olmazsa olmaz; müşteri ilk buna bakar.,The screen where the user talks to the assistant. Non-negotiable; it is the first thing a customer looks at.
+PROD_FEAT_AI_ASSISTANT_MEMORY_VOICE,Önceki konuşmaları hatırlayan asistan. Pahalı ama vazgeçilmez.,"An assistant that remembers earlier conversations. Expensive, and impossible to do without."
+PROD_FEAT_AI_ASSISTANT_TOOLS_VOICE,"Asistan sadece konuşmaz, işlemi de yapar. Yazması ayrı bir cehennem.","The assistant does not just talk, it acts. Writing it is its own particular hell."
+PROD_FEAT_AI_ASSISTANT_VOICE_VOICE,Asistanla sesli konuşma. Konuşmak yazmaktan kolay — çoğu zaman.,Talking to the assistant out loud. Speaking is easier than typing — most of the time.
+PROD_FEAT_AI_ASSISTANT_IMAGE_VOICE,Asistan görsele bakıp anlıyor. En azından biz öyle söylüyoruz.,"The assistant looks at an image and understands it. That is what we say, anyway."
+PROD_FEAT_AI_ASSISTANT_STREAMING_VOICE,"Cevaplar bir anda değil, yazarak gelir. Daha az korkutucu.",Answers arrive as they are written rather than all at once. Less intimidating.
+PROD_FEAT_AI_PHOTO_BG_REMOVAL_VOICE,Arka planı tek tıkla sil. Herkesin beklediği şey; olmazsa uygulama indirilmez bile.,Delete the background in one click. Everyone expects it; without it nobody even downloads the app.
+PROD_FEAT_AI_PHOTO_INPAINT_VOICE,"Fotoğraftan istemediğini sil, boşluğu yapay zeka doldursun. Eski sevgililer dahil.",Remove what you do not want and let the model fill the gap. Ex-partners included.
+PROD_FEAT_AI_PHOTO_UPSCALE_VOICE,"Bulanık görseli netleştir. Sihir gibi görünür, mühendislik gibi maliyetlidir.","Sharpen a blurry image. Looks like magic, costs like engineering."
+PROD_FEAT_AI_PHOTO_STYLE_TRANSFER_VOICE,Selfie'yi Van Gogh'a çevir. Influencer'lar bayılır.,Turn a selfie into a Van Gogh. Influencers love it.
+PROD_FEAT_AI_PHOTO_BATCH_VOICE,100 fotoğrafı aynı anda işle. Kurumsal müşterinin gözleri parlar.,Process a hundred photos at once. An enterprise buyer's eyes light up.
+PROD_FEAT_AI_PHOTO_FILTERS_VOICE,"Telefon filtrelerinin yaptığını yap, biraz daha akıllı. Çok değil.","Do what phone filters do, a little smarter. Not much."
+PROD_FEAT_AI_CODE_AUTOCOMPLETE_VOICE,"Kod yazarken satır ortasında öneri. Hızlıysa seviliyor, gecikirse kapatılıyor.","Suggestions mid-line while you type. Loved when it is fast, switched off when it lags."
+PROD_FEAT_AI_CODE_CHAT_VOICE,Editörden çıkmadan asistanla sohbet. Pencereler arası gidip gelmek tarih oluyor.,Chat with the assistant without leaving the editor. Window-hopping becomes history.
+PROD_FEAT_AI_CODE_REFACTOR_VOICE,Çirkin kodu temiz koda çevir. Çoğu zaman.,Turn ugly code into clean code. Most of the time.
+PROD_FEAT_AI_CODE_EXPLAIN_VOICE,Bu kod ne yapıyor? Junior'ın en sevdiği buton.,What does this code do? A junior's favourite button.
+PROD_FEAT_AI_CODE_TEST_GEN_VOICE,"Testleri senin yerine yazar. CI yeşillenir, ruh huzura erer.","Writes the tests for you. CI goes green, the soul finds peace."
+PROD_FEAT_AI_CODE_MULTI_FILE_VOICE,Tek dosyayı değil bütün repo'yu görerek öneri verir. Teknik olarak en zor kısım bu.,"Suggests with the whole repo in view, not one file. Technically the hardest part."
+PROD_FEAT_AI_CODE_DIFF_REVIEW_VOICE,PR'ı senin yerine okuyup yorum bırakır. Kıdemlilerin yeni gözdesi.,Reads the PR for you and leaves comments. The seniors' new favourite.
+PROD_FEAT_AI_VEC_EMBED_API_VOICE,Metni anlam taşıyan vektöre çeviren API. Müşteri nasıl çalıştığını anlamaz ama kullanır.,"An API that turns text into a vector carrying meaning. The customer will not understand how it works, but will use it."
+PROD_FEAT_AI_VEC_SEARCH_API_VOICE,"Bir sorgu ver, anlamca en yakın kayıtları bulsun. Ürünün kalbi burası.","Give it a query, get the closest records by meaning. This is the heart of the product."
+PROD_FEAT_AI_VEC_FILTER_VOICE,Anlam aramasını tarih ve etiketle daralt. Kurumsal müşterinin ilk sorduğu şey.,Narrow a semantic search by date and tag. The first thing an enterprise buyer asks about.
+PROD_FEAT_AI_VEC_DASHBOARD_VOICE,"Kullanım grafiklerini gösteren yönetim paneli. Geliştirici bakmaz, CTO bakar.",An admin panel showing usage charts. The developer never looks; the CTO does.
+PROD_FEAT_AI_VEC_SCALING_VOICE,Trafik arttıkça sistem kendini büyütür. Kimse fark etmez — çökene kadar.,The system grows itself as traffic rises. Nobody notices — until it falls over.
+PROD_FEAT_AI_VEC_SDK_VOICE,Python ve JS için hazır kütüphane. Yoksa kimse entegre etmeye uğraşmaz.,A ready library for Python and JS. Without it nobody bothers integrating.
+PROD_FEAT_SAAS_PM_TASKS_VOICE,Görevlerin sürüklendiği Kanban panosu. Yoksa ürün sayılmazsın.,The Kanban board tasks get dragged across. Without it you do not count as a product.
+PROD_FEAT_SAAS_PM_GANTT_VOICE,"Projeyi zaman çizelgesi olarak göster. Kullanıcı istemez, satın alan yönetici ister.",Show the project as a timeline. Users do not want it; the manager who signs does.
+PROD_FEAT_SAAS_PM_COMMENTS_VOICE,"Görevin altında tartışma. Ekip sohbetinin trafiğini azaltmaz, sadece taşır.","Discussion under the task. It does not reduce chat traffic, it just moves it."
+PROD_FEAT_SAAS_PM_INTEGRATIONS_VOICE,"Kod deposu, ekip sohbeti, tasarım aracı bağlantıları. Üçü de yoksa kurumsal müşteri kapıdan döner.","Links to the code repo, team chat and design tool. Miss all three and the enterprise buyer walks."
+PROD_FEAT_SAAS_PM_AUTOMATION_VOICE,"""Şu olunca şunu yap"" kuralları. Meraklı kullanıcıyı ürüne bağlayan şey.","""When this, then that"" rules. What ties a curious user to the product."
+PROD_FEAT_SAAS_PM_REPORTING_VOICE,Yöneticinin haftalık rapor ihtiyacını karşılar. Renkli pasta grafik şart.,Covers the manager's weekly report habit. A colourful pie chart is mandatory.
+PROD_FEAT_SAAS_CRM_CONTACTS_VOICE,Müşteri ve kişi kayıtlarının tutulduğu veritabanı. Bu olmadan CRM diyemezsin.,The database holding customer and contact records. Without it you cannot call it a CRM.
+PROD_FEAT_SAAS_CRM_PIPELINE_VOICE,Her satış fırsatının hangi aşamada olduğunu gösteren hat. Satış müdürünün ilk baktığı ekran.,"Deals as stages, dragged toward the close. The salesperson lives on this screen."
+PROD_FEAT_SAAS_CRM_EMAIL_VOICE,Kurumsal e-postayı bağla. OAuth cehennemi seni bekliyor.,Correspondence lands on the record by itself. Nobody wants to copy-paste.
+PROD_FEAT_SAAS_CRM_FORECAST_VOICE,Gelecek ay ne kadar satılacağını tahmin eden grafik. Yanılır ama satar.,"How much closes this month, estimated. Management's favourite number, and the least reliable."
+PROD_FEAT_SAAS_CRM_MOBILE_VOICE,Saha satış ekibi telefondan girmek ister. Sadece web'de kalan CRM ölür.,Enter a meeting note from the car. The field team either uses it or ignores the product.
+PROD_FEAT_SAAS_CRM_CALL_LOG_VOICE,"Müşteri aramasını kaydet, özetini otomatik çıkar. Yapay zeka dokunuşu artık mecburi.","Who called whom and when, on the record. Boring, and asked for in every demo."
+PROD_FEAT_SAAS_AN_DASHBOARDS_VOICE,Herkes kendi panosunu sürükle-bırakla kurar. Olmazsa veriye kimse bakmaz.,Panels the customer builds themselves. Once they build one they cannot leave.
+PROD_FEAT_SAAS_AN_QUERY_VOICE,SQL yazıp veriyi doğrudan sorgulama. Veri ekibi bunu bulamazsa rakibe gider.,Write SQL directly for those who want to. The analyst's respect is earned here.
+PROD_FEAT_SAAS_AN_ALERTS_VOICE,Bir metrik ters gittiğinde ekip sohbetine uyarı düşer. Geç düşerse iş işten geçmiş olur.,Warns when a number goes strange. Too sensitive and it gets muted.
+PROD_FEAT_SAAS_AN_SHARE_VOICE,Raporu tek linkle dışarı paylaş. Kimin görebileceği kısmı 'küçük' bir detay.,A report you can send by link. It spreads the product for free.
+PROD_FEAT_SAAS_AN_ETL_VOICE,"Kasadar, veritabanı, ürün analitiği — veriyi hepsinden içeri çek. Bakımı ayrı bir işkence.","Pull data in from other systems. The unglamorous work, and the reason the product is bought."
+PROD_FEAT_SAAS_AN_EMBED_VOICE,Müşterinin kendi ürününe gömülen dashboard. Enterprise satışın anahtarı.,"The customer puts your panels inside their own product. Sticky, and hard to build."
+PROD_FEAT_SAAS_BILL_SUBSCRIPTIONS_VOICE,"Abonelikleri kur, aylık tahsilatı otomatik yürüt. Ürünün varlık sebebi.","Plans, upgrades, cancellations. The engine of the whole product."
+PROD_FEAT_SAAS_BILL_INVOICE_VOICE,"PDF üret, mail at. Muhasebenin kalbini kazan.","A legally valid invoice, generated automatically. Finance will not sign without it."
+PROD_FEAT_SAAS_BILL_TAX_VOICE,"KDV, satış vergisi, VAT — vergiyi doğru hesapla. Ülke sayısı kadar kural, ülke sayısı kadar bug.","Calculates the right rate per country. Nobody enjoys it, everybody needs it."
+PROD_FEAT_SAAS_BILL_DUNNING_VOICE,"Reddedilen kartı tekrar dene, müşteriye hatırlatma gönder. Sessizce kaybedilen aboneleri kurtarır.",Chases a failed payment instead of losing the customer. Quietly saves real revenue.
+PROD_FEAT_SAAS_BILL_WEBHOOKS_VOICE,Ödeme olaylarını müşterinin kendi sistemine anında bildir. Kasadar standardı; herkes bekler.,Notifies other systems the moment something happens. The developer's first question.
+PROD_FEAT_SAAS_BILL_PRORATION_VOICE,"Plan değişince kalan günleri kuruşuna kadar hesapla. Tek bug, support cehennemi demek.","Fair billing for a mid-month plan change. Small feature, endless support tickets without it."
+PROD_FEAT_SAAS_DEV_CLI_VOICE,Ürünü terminalden kullandıran komut satırı aracı. Yoksa ilk issue bunun için açılır.,Drive the product from the terminal. A developer trusts what they can script.
+PROD_FEAT_SAAS_DEV_API_VOICE,Ürünün dışa açılan kapısı; her şey buradan geçer. Versiyonlamayı bozan müşteri kaybeder.,The API everything else is built on. If it is missing there is no product.
+PROD_FEAT_SAAS_DEV_DOCS_VOICE,"İçinde canlı deneme yapılan dokümantasyon. Okunmayan doküman, entegre edilmeyen ürün demek.",Documentation you can try in the browser. Good docs sell better than a sales call.
+PROD_FEAT_SAAS_DEV_CI_PLUGIN_VOICE,Yaygın sürekli entegrasyon araçlarının eklentileri. Hattı olmayan araç unutulur.,Runs inside the build pipeline. Once it is in the pipeline it never leaves.
+PROD_FEAT_SAAS_DEV_LOGS_VOICE,Hata ararken canlı log akışı. Yoksa herkes yine SSH'a döner.,Watch what is happening live. The first place anyone looks when something breaks.
+PROD_FEAT_SAAS_DEV_SANDBOX_VOICE,"Geliştirici prod'a dokunmadan güvenle denesin. Olmazsa korkar, hiç kullanmaz.",An environment to try things without breaking production. Trust is built here.
+PROD_FEAT_SAAS_OPS_WORKFLOW_VOICE,"""Şu olunca şunu yap"" kurallarıyla süreci otomatikleştir. Manuel takip biter.","Automate the process with ""when this, then that"" rules. Manual chasing ends."
+PROD_FEAT_SAAS_OPS_REPORTING_VOICE,Yönetimin tek bakışta gördüğü panolar. Rapor kâbusu biter.,The panels management sees at a glance. The report nightmare ends.
+PROD_FEAT_SAAS_OPS_INTEGRATION_VOICE,Mevcut sistemlerle konuşur; veri iki kez girilmez. Kurumsalın ilk sorduğu şey.,Talks to the existing systems; data is not entered twice. The first thing an enterprise asks.
+PROD_FEAT_SAAS_OPS_SCHEDULING_VOICE,"Randevu ve planlamayı tek takvimde topla. Çakışma, unutma kalmaz.",Appointments and planning in one place. Double-booking stops.
+PROD_FEAT_SAAS_OPS_FIELD_VOICE,"Sahadaki ekip zayıf bağlantıda bile çalışır, sonra senkronlar. Sahanın bel kemiği.",The field team connects from anywhere. A product that stays on the desktop dies in the field.
+PROD_FEAT_SAAS_OPS_MOBILE_VOICE,Saha ekibi telefondan girer. Sadece masaüstünde kalan ürün sahada ölür.,The field team gets in from a phone. A product that stays on the desktop dies in the field.
+PROD_TYPE_AI_ASSISTANT_NAME,Yapay Zeka Asistanı,AI Assistant
+PROD_TYPE_AI_ASSISTANT_CATEGORY,ASİSTAN,ASSISTANT
+PROD_TYPE_AI_ASSISTANT_DESC,Genel amaçlı sohbet asistanı.,A general-purpose chat assistant.
+PROD_TYPE_AI_ASSISTANT_TRADEOFF,Kitle büyük ama sadakat düşük; dev şirketlerin gölgesinde yaşarsın.,The audience is huge but loyalty is thin; you live in the shadow of giants.
+PROD_TYPE_AI_ASSISTANT_BET,"İnsanların her gün sorduğu şeye hızlı, temiz cevap. Refik'in üşendiği nişi kap.","A fast, clean answer to what people ask every day. Take the niche Refik cannot be bothered with."
+PROD_TYPE_AI_ASSISTANT_PITCH,Refik'in yetmediği yerlerde devreye giren asistan.,The assistant that steps in where Refik falls short.
+PROD_TYPE_AI_PHOTO_EDITOR_NAME,Görsel Düzenleyici,Photo Editor
+PROD_TYPE_AI_PHOTO_EDITOR_CATEGORY,GÖRSEL · ÜRETKEN,VISUAL · GENERATIVE
+PROD_TYPE_AI_PHOTO_EDITOR_DESC,Görsel düzenleme ve üretim aracı.,An image editing and generation tool.
+PROD_TYPE_AI_PHOTO_EDITOR_TRADEOFF,Viral büyüme şansı var; API maliyeti marjı yer.,There is a shot at viral growth; API cost eats the margin.
+PROD_TYPE_AI_PHOTO_EDITOR_BET,"PixelForge açmaya üşenen milyonlar var. Tek tıkla iyi görünsünler, para versinler.","Millions cannot be bothered to open PixelForge. Let them look good in one click, and pay for it."
+PROD_TYPE_AI_PHOTO_EDITOR_PITCH,PixelForge'un karmaşıklığını unutturan bir araç.,A tool that makes you forget how complicated PixelForge is.
+PROD_TYPE_AI_CODE_COPILOT_NAME,Kod Yazan Asistan,Code Copilot
+PROD_TYPE_AI_CODE_COPILOT_CATEGORY,GELİŞTİRİCİ,DEVELOPER
+PROD_TYPE_AI_CODE_COPILOT_DESC,Kod yazımını hızlandıran yardımcı.,A helper that speeds up writing code.
+PROD_TYPE_AI_CODE_COPILOT_TRADEOFF,Geliştirici severse yayar; beğenmezse ilk gün siler.,If developers love it they spread it; if not they delete it on day one.
+PROD_TYPE_AI_CODE_COPILOT_BET,"Junior geliştiricinin yanında 7/24 duran bir kıdemli. Önce güvenini kazan, ekipler peşinden gelsin.","A senior sitting beside every junior, around the clock. Win their trust first and the teams follow."
+PROD_TYPE_AI_CODE_COPILOT_PITCH,"Kod yazarken öneren, tamamlayan, açıklayan asistan. Geliştiricinin yeni masa arkadaşı.","An assistant that suggests, completes and explains while you write. The developer's new desk mate."
+PROD_TYPE_AI_VECTOR_SEARCH_NAME,Kurumsal Arama,Enterprise Search
+PROD_TYPE_AI_VECTOR_SEARCH_CATEGORY,ARAMA,SEARCH
+PROD_TYPE_AI_VECTOR_SEARCH_DESC,Anlamsal kurumsal arama motoru.,A semantic enterprise search engine.
+PROD_TYPE_AI_VECTOR_SEARCH_TRADEOFF,Bütçeler büyük ama karar yavaş; imza altı ay sürebilir.,The budgets are large but the decision is slow; a signature can take six months.
+PROD_TYPE_AI_VECTOR_SEARCH_BET,"Şirketler kendi verisinde kayboluyor. Anlamlı aramayı sat, IT bütçesi açılır.",Companies are lost inside their own data. Sell meaningful search and the IT budget opens.
+PROD_TYPE_AI_VECTOR_SEARCH_PITCH,Şirket verisinde kelimeyle değil anlamla arama yapan motor. Aradığını tarif edemesen de bulur.,An engine that searches company data by meaning rather than by word. It finds what you cannot quite describe.
+PROD_TYPE_SAAS_PROJECT_MGMT_NAME,Proje Yönetimi,Project Management
+PROD_TYPE_SAAS_PROJECT_MGMT_CATEGORY,İŞ AKIŞI,WORKFLOW
+PROD_TYPE_SAAS_PROJECT_MGMT_DESC,Ekiplerin işi tek panodan yürüttüğü araç.,One board for a team to run its work from.
+PROD_TYPE_SAAS_PROJECT_MGMT_TRADEOFF,Pazar kalabalık; ucuz ve hızlı olan sıyrılır.,The market is crowded; cheap and fast is what breaks through.
+PROD_TYPE_SAAS_PROJECT_MGMT_BET,"Vardiya'dan bıkan çok. Daha hafif, daha hızlı bir alternatif ol.","Plenty of people are tired of Vardiya. Be the lighter, faster alternative."
+PROD_TYPE_SAAS_PROJECT_MGMT_PITCH,Kim neyi ne zaman yapacak — ekiplerin işi tek panodan takip ettiği araç.,"Who does what, and when — one board a team runs its work from."
+PROD_TYPE_SAAS_CRM_NAME,Müşteri Takip (CRM),Customer Tracking (CRM)
+PROD_TYPE_SAAS_CRM_CATEGORY,SATIŞ,SALES
+PROD_TYPE_SAAS_CRM_DESC,Müşteri ve görüşmeleri tek ekranda toplar.,Customers and conversations gathered on one screen.
+PROD_TYPE_SAAS_CRM_TRADEOFF,"Her şirkete lazım; geçiş maliyeti seni de korur, rakibi de.",Every company needs one; switching cost protects you and your rival alike.
+PROD_TYPE_SAAS_CRM_BET,"Satış ekipleri deal kaybediyor. Hepsini tek ekranda topla, vazgeçemesinler.",Sales teams are losing deals. Put it all on one screen and they cannot walk away.
+PROD_TYPE_SAAS_CRM_PITCH,"Satış ekibinin müşterileri ve görüşmeleri tek ekranda takip ettiği sistem. Unutulan müşteri, kaçan satış kalmaz.","The system a sales team tracks its customers and conversations from. No forgotten customer, no lost sale."
+PROD_TYPE_SAAS_ANALYTICS_NAME,Veri Panosu,Analytics Dashboard
+PROD_TYPE_SAAS_ANALYTICS_CATEGORY,ANALİTİK,ANALYTICS
+PROD_TYPE_SAAS_ANALYTICS_DESC,Metrik ve gösterge paneli seti.,A set of metric and indicator panels.
+PROD_TYPE_SAAS_ANALYTICS_TRADEOFF,Yönetici grafiğe para öder; veri bağlantıları sürekli bakım ister.,Managers pay for charts; the data connectors want constant maintenance.
+PROD_TYPE_SAAS_ANALYTICS_BET,Yönetici grafiğe para verir. Karmaşık veriyi tek bakışta anlaşılır yap.,A manager will pay for a chart. Make complex data legible at a glance.
+PROD_TYPE_SAAS_ANALYTICS_PITCH,Dağınık şirket verisini yöneticinin tek bakışta anlayacağı grafiklere çevirir.,Turns scattered company data into charts a manager understands at a glance.
+PROD_TYPE_SAAS_BILLING_NAME,Faturalama Altyapısı,Billing Infrastructure
+PROD_TYPE_SAAS_BILLING_CATEGORY,FİNANS · ALTYAPI,FINANCE · INFRASTRUCTURE
+PROD_TYPE_SAAS_BILLING_DESC,Abonelik ve tahsilat altyapısı.,Subscription and collection infrastructure.
+PROD_TYPE_SAAS_BILLING_TRADEOFF,Sıkıcı ama vazgeçilmez; tek hata pahalıya patlar.,Boring but indispensable; one mistake is expensive.
+PROD_TYPE_SAAS_BILLING_BET,"Herkes tahsilat ister, kimse kurmak istemez. Sıkıcı ama vazgeçilmez ol.","Everyone wants collections, nobody wants to build it. Be boring and indispensable."
+PROD_TYPE_SAAS_BILLING_PITCH,"Abonelik, fatura ve tahsilatı şirketler adına yürüten altyapı. Sıkıcı, ama herkes muhtaç.","The infrastructure that runs subscriptions, invoices and collection on a company's behalf. Boring, and everyone depends on it."
+PROD_TYPE_SAAS_DEV_TOOLS_NAME,Geliştirici Araçları,Developer Tools
+PROD_TYPE_SAAS_DEV_TOOLS_CATEGORY,GELİŞTİRİCİ,DEVELOPER
+PROD_TYPE_SAAS_DEV_TOOLS_DESC,Geliştiricinin günlük angaryasını üstlenir.,Takes the developer's daily drudgery off their hands.
+PROD_TYPE_SAAS_DEV_TOOLS_TRADEOFF,Mühendis severse şirketine sokar; o güven yavaş kazanılır.,If an engineer loves it they bring it into the company; that trust is slow to earn.
+PROD_TYPE_SAAS_DEV_TOOLS_BET,Mühendislerin günlük acısını çöz. Severlerse şirketlerine sokarlar.,"Solve the daily pain of engineers. If they love it, they carry it inside."
+PROD_TYPE_SAAS_DEV_TOOLS_PITCH,Geliştiricilerin her gün uğraştığı angaryayı üstlenen araç seti. Mühendisten mühendise.,A toolset that takes on the drudgery developers face every day. From engineer to engineer.
+PROD_TYPE_SAAS_OPS_NAME,Süreç Otomasyon Platformu,Process Automation Platform
+PROD_TYPE_SAAS_OPS_CATEGORY,OPERASYON,OPERATIONS
+PROD_TYPE_SAAS_OPS_DESC,Sahadan yönetime süreçleri tek yerde toplar.,Gathers processes from the field to management in one place.
+PROD_TYPE_SAAS_OPS_TRADEOFF,Sektörde para var ama satış döngüsü uzun.,There is money in the sector but the sales cycle is long.
+PROD_TYPE_SAAS_OPS_BET,"Sahada iş yürüten şirketler kâğıtla boğuluyor. Süreci dijitalleştir, vazgeçemesinler.",Companies running work in the field are drowning in paper. Digitise the process and they cannot go back.
+PROD_TYPE_SAAS_OPS_PITCH,"İnşaattan lojistiğe, süreçleri uçtan uca otomatikleştiren operasyon platformu.","An operations platform that automates processes end to end, from construction to logistics."
+SECTOR_SUBSCRIPTION,Abonelik,Subscription
+SECTOR_AGENCY,Ajans,Agency
+SECTOR_EDUCATION,Eğitim,Education
+SECTOR_FINTECH,Fintech,Fintech
+SECTOR_ENTERPRISE,Kurumsal,Enterprise
+SECTOR_SAAS,SaaS,SaaS
+SECTOR_SALES,Satış,Sales
+SECTOR_SOCIAL_MEDIA,Sosyal Medya,Social Media
+SECTOR_PRODUCTIVITY,Verimlilik,Productivity
+SECTOR_SOFTWARE,Yazılım,Software
+PROD_AXIS_INNOVATION,İnovasyon,Innovation
+PROD_AXIS_STABILITY,Kararlılık,Stability
+PROD_AXIS_EXPERIENCE,Deneyim,Experience
+PROD_RISK_LOW,Düşük,Low
+PROD_RISK_MID,Orta,Medium
+PROD_RISK_HIGH,Yüksek,High

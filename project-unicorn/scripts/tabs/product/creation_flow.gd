@@ -233,7 +233,7 @@ func _make_path_card(market: String, kicker: String, big: String, desc: String, 
 	for st in ProductCatalog.get_all_sub_product_types():
 		if String(st.get("market_type", "")) != market or shown >= 3:
 			continue
-		pills.add_child(UiFactory.make_pill(String(st.get("name_human", "")),
+		pills.add_child(UiFactory.make_pill(ProductCatalog.type_name(String(st.get("id", ""))),
 			UiTokens.NEUTRAL_BADGE_BG, UiTokens.NEUTRAL_BADGE_FG, false))
 		shown += 1
 	vb.add_child(pills)
@@ -335,19 +335,19 @@ func _make_type_card(st: Dictionary) -> Control:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 6)
 	card.add_child(vb)
-	vb.add_child(UiFactory.make_label(String(st.get("name_human", "")), &"NameSerif"))
-	vb.add_child(UiFactory.make_label(String(st.get("category_tr", "")), &"SectionLabel"))
-	var d := UiFactory.make_label(String(st.get("desc_tr", "")), &"BodySerif")
+	vb.add_child(UiFactory.make_label(ProductCatalog.type_name(String(st.get("id", ""))), &"NameSerif"))
+	vb.add_child(UiFactory.make_label(ProductCatalog.type_category(String(st.get("id", ""))), &"SectionLabel"))
+	var d := UiFactory.make_label(ProductCatalog.type_desc(String(st.get("id", ""))), &"BodySerif")
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(d)
 	var pills := HFlowContainer.new()
 	pills.add_theme_constant_override("h_separation", 6)
 	pills.add_theme_constant_override("v_separation", 4)
-	for s in st.get("sectors_tr", []):
+	for s in ProductCatalog.type_sector_labels(String(st.get("id", ""))):
 		pills.add_child(UiFactory.make_pill(String(s),
 			UiTokens.NEUTRAL_BADGE_BG, UiTokens.NEUTRAL_BADGE_FG, false))
 	vb.add_child(pills)
-	var pm := UiFactory.make_label(String(st.get("plus_minus_tr", "")), &"QuoteSerif")
+	var pm := UiFactory.make_label(ProductCatalog.type_tradeoff(String(st.get("id", ""))), &"QuoteSerif")
 	pm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(pm)
 	_set_mouse_ignore(vb)
@@ -390,15 +390,15 @@ func _build_step3(body: VBoxContainer) -> void:
 	if _locked_mode:
 		# Ürün adı başrolde; pazar/tip meta satırına düşer (detail header grameri).
 		var b: FeatureBuild = ProductSystem.get_active_build()
-		var pname: String = b.product_name if b != null and b.product_name != "" else String(st.get("name_human", ""))
+		var pname: String = b.product_name if b != null and b.product_name != "" else ProductCatalog.type_name(String(st.get("id", "")))
 		head.add_child(UiFactory.make_label(pname, &"NameSerif"))
 		var meta := UiFactory.make_label(
-			"%s · %s" % [UiTokens.tr_upper(_market), UiTokens.tr_upper(String(st.get("name_human", "")))], &"SectionLabel")
+			"%s · %s" % [UiTokens.tr_upper(_market), UiTokens.tr_upper(ProductCatalog.type_name(String(st.get("id", ""))))], &"SectionLabel")
 		meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		head.add_child(meta)
 	else:
 		head.add_child(UiFactory.make_label(
-			"%s / %s" % [UiTokens.tr_upper(_market), String(st.get("name_human", ""))], &"NameSerif"))
+			"%s / %s" % [UiTokens.tr_upper(_market), ProductCatalog.type_name(String(st.get("id", "")))], &"NameSerif"))
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
@@ -474,7 +474,8 @@ func _make_feature_row(f: Dictionary) -> Control:
 	rich.bbcode_enabled = true
 	rich.fit_content = true
 	rich.scroll_active = false
-	rich.text = "[b]%s[/b]  %s" % [String(f.get("name", "")), String(f.get("voice", ""))]
+	rich.text = "[b]%s[/b]  %s" % [ProductCatalog.feature_name(String(f.get("id", ""))),
+		ProductCatalog.feature_voice(String(f.get("id", "")))]
 	col.add_child(rich)
 	var info := UiFactory.make_label(ProductUiShared.feature_info_line(f), &"RowMeta")
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

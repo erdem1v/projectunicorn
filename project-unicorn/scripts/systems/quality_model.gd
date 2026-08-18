@@ -30,9 +30,10 @@ const AXES := ["innovation", "stability", "experience"]
 
 # Fallback weights + labels when a sub-type omits quality_axes (equal blend).
 const DEFAULT_AXES := [
-	{"axis": "innovation", "weight": 1.0, "display_label": "İnovasyon"},
-	{"axis": "stability",  "weight": 1.0, "display_label": "Kararlılık"},
-	{"axis": "experience", "weight": 1.0, "display_label": "Deneyim"},
+	# Labels come from ProductCatalog.axis_label(axis) — the words live in strings.csv.
+	{"axis": "innovation", "weight": 1.0},
+	{"axis": "stability",  "weight": 1.0},
+	{"axis": "experience", "weight": 1.0},
 ]
 
 # --- BALANCE-TUNABLE constants (Erdem tunes at the last pass) ---

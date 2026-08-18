@@ -1000,7 +1000,7 @@ static func start_build(
 	b.feature_ids = typed_features
 	b.assigned_engineer_id = assigned_engineer_id
 	b.lead_engineer_id = assigned_engineer_id   # SORUMLU (Rev3: hız formülünün lead'i; boş → kurucu)
-	var st_name: String = String(sub_type.get("name_human", sub_type.get("name", sub_product_type_id)))
+	var st_name: String = ProductCatalog.type_name(sub_product_type_id)
 	b.product_name = product_name.strip_edges() if product_name.strip_edges() != "" else st_name
 	b.start_day = GameState.day
 	# Rev3 deterministik eksenler: commit'te damgalanır (v1 base = sıfırlar),

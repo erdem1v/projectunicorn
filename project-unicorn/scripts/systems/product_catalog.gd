@@ -19,68 +19,28 @@ extends RefCounted
 # İçerik working-metin — Erdem voice-pass bekliyor (final copy kilitlemeyin).
 const SUB_PRODUCT_TYPES := {
 	"ai": [
-		{"id": "ai_assistant", "name": "AI Assistant", "name_human": "Yapay Zeka Asistanı",
-			"category_tr": "ASİSTAN", "desc_tr": "Genel amaçlı sohbet asistanı.",
-			"sectors_tr": ["Tüketici", "Eğitim", "Verimlilik"],
-			"plus_minus_tr": "Kitle büyük ama sadakat düşük; dev şirketlerin gölgesinde yaşarsın.",
-			"bet": "İnsanların her gün sorduğu şeye hızlı, temiz cevap. Refik'in üşendiği nişi kap.",
-			"pitch": "Refik'in yetmediği yerlerde devreye giren asistan.", "market_type": "b2c"},
-		{"id": "ai_photo_editor", "name": "Photo Editor", "name_human": "Görsel Düzenleyici",
-			"category_tr": "GÖRSEL · ÜRETKEN", "desc_tr": "Görsel düzenleme ve üretim aracı.",
-			"sectors_tr": ["Tüketici", "Sosyal Medya", "E-ticaret"],
-			"plus_minus_tr": "Viral büyüme şansı var; API maliyeti marjı yer.",
-			"bet": "PixelForge açmaya üşenen milyonlar var. Tek tıkla iyi görünsünler, para versinler.",
-			"pitch": "PixelForge'un karmaşıklığını unutturan bir araç.", "market_type": "b2c", "price_tendency": "volume"},
-		{"id": "ai_code_copilot", "name": "Code Copilot", "name_human": "Kod Yazan Asistan",
-			"category_tr": "GELİŞTİRİCİ", "desc_tr": "Kod yazımını hızlandıran yardımcı.",
-			"sectors_tr": ["Yazılım", "Teknoloji"],
-			"plus_minus_tr": "Geliştirici severse yayar; beğenmezse ilk gün siler.",
-			"bet": "Junior geliştiricinin yanında 7/24 duran bir kıdemli. Önce güvenini kazan, ekipler peşinden gelsin.",
-			"pitch": "Kod yazarken öneren, tamamlayan, açıklayan asistan. Geliştiricinin yeni masa arkadaşı.", "market_type": "b2c"},
-		{"id": "ai_vector_search", "name": "Vector Search", "name_human": "Kurumsal Arama",
-			"category_tr": "ARAMA", "desc_tr": "Anlamsal kurumsal arama motoru.",
-			"sectors_tr": ["Kurumsal", "Finans", "Hukuk"],
-			"plus_minus_tr": "Bütçeler büyük ama karar yavaş; imza altı ay sürebilir.",
-			"bet": "Şirketler kendi verisinde kayboluyor. Anlamlı aramayı sat, IT bütçesi açılır.",
-			"pitch": "Şirket verisinde kelimeyle değil anlamla arama yapan motor. Aradığını tarif edemesen de bulur.", "market_type": "b2b", "price_tendency": "premium"},
+		{"id": "ai_assistant",
+			"sectors": ["consumer", "education", "productivity"], "market_type": "b2c"},
+		{"id": "ai_photo_editor",
+			"sectors": ["consumer", "social_media", "ecommerce"], "market_type": "b2c", "price_tendency": "volume"},
+		{"id": "ai_code_copilot",
+			"sectors": ["software", "technology"], "market_type": "b2c"},
+		{"id": "ai_vector_search",
+			"sectors": ["enterprise", "finance", "legal"], "market_type": "b2b", "price_tendency": "premium"},
 	],
 	"saas": [
-		{"id": "saas_project_mgmt", "name": "Project Management", "name_human": "Proje Yönetimi",
-			"category_tr": "İŞ AKIŞI", "desc_tr": "Ekiplerin işi tek panodan yürüttüğü araç.",
-			"sectors_tr": ["Ajans", "Yazılım", "İnşaat"],
-			"plus_minus_tr": "Pazar kalabalık; ucuz ve hızlı olan sıyrılır.",
-			"bet": "Vardiya'dan bıkan çok. Daha hafif, daha hızlı bir alternatif ol.",
-			"pitch": "Kim neyi ne zaman yapacak — ekiplerin işi tek panodan takip ettiği araç.", "market_type": "b2b"},
-		{"id": "saas_crm", "name": "CRM", "name_human": "Müşteri Takip (CRM)",
-			"category_tr": "SATIŞ", "desc_tr": "Müşteri ve görüşmeleri tek ekranda toplar.",
-			"sectors_tr": ["Satış", "Sigorta", "Emlak"],
-			"plus_minus_tr": "Her şirkete lazım; geçiş maliyeti seni de korur, rakibi de.",
-			"bet": "Satış ekipleri deal kaybediyor. Hepsini tek ekranda topla, vazgeçemesinler.",
-			"pitch": "Satış ekibinin müşterileri ve görüşmeleri tek ekranda takip ettiği sistem. Unutulan müşteri, kaçan satış kalmaz.", "market_type": "b2b"},
-		{"id": "saas_analytics", "name": "Analytics Dashboard", "name_human": "Veri Panosu",
-			"category_tr": "ANALİTİK", "desc_tr": "Metrik ve gösterge paneli seti.",
-			"sectors_tr": ["Perakende", "Finans", "Medya"],
-			"plus_minus_tr": "Yönetici grafiğe para öder; veri bağlantıları sürekli bakım ister.",
-			"bet": "Yönetici grafiğe para verir. Karmaşık veriyi tek bakışta anlaşılır yap.",
-			"pitch": "Dağınık şirket verisini yöneticinin tek bakışta anlayacağı grafiklere çevirir.", "market_type": "b2b"},
-		{"id": "saas_billing", "name": "Billing Platform", "name_human": "Faturalama Altyapısı",
-			"category_tr": "FİNANS · ALTYAPI", "desc_tr": "Abonelik ve tahsilat altyapısı.",
-			"sectors_tr": ["SaaS", "Abonelik", "Fintech"],
-			"plus_minus_tr": "Sıkıcı ama vazgeçilmez; tek hata pahalıya patlar.",
-			"bet": "Herkes tahsilat ister, kimse kurmak istemez. Sıkıcı ama vazgeçilmez ol.",
-			"pitch": "Abonelik, fatura ve tahsilatı şirketler adına yürüten altyapı. Sıkıcı, ama herkes muhtaç.", "market_type": "b2b"},
-		{"id": "saas_dev_tools", "name": "Dev Tools", "name_human": "Geliştirici Araçları",
-			"category_tr": "GELİŞTİRİCİ", "desc_tr": "Geliştiricinin günlük angaryasını üstlenir.",
-			"sectors_tr": ["Yazılım", "Teknoloji", "Fintech"],
-			"plus_minus_tr": "Mühendis severse şirketine sokar; o güven yavaş kazanılır.",
-			"bet": "Mühendislerin günlük acısını çöz. Severlerse şirketlerine sokarlar.",
-			"pitch": "Geliştiricilerin her gün uğraştığı angaryayı üstlenen araç seti. Mühendisten mühendise.", "market_type": "b2b", "price_tendency": "premium"},
-		{"id": "saas_ops", "name": "Ops Platform", "name_human": "Süreç Otomasyon Platformu",
-			"category_tr": "OPERASYON", "desc_tr": "Sahadan yönetime süreçleri tek yerde toplar.",
-			"sectors_tr": ["İnşaat", "Lojistik", "Sağlık"],
-			"plus_minus_tr": "Sektörde para var ama satış döngüsü uzun.",
-			"bet": "Sahada iş yürüten şirketler kâğıtla boğuluyor. Süreci dijitalleştir, vazgeçemesinler.",
-			"pitch": "İnşaattan lojistiğe, süreçleri uçtan uca otomatikleştiren operasyon platformu.", "market_type": "b2b", "price_tendency": "neutral"},
+		{"id": "saas_project_mgmt",
+			"sectors": ["agency", "software", "construction"], "market_type": "b2b"},
+		{"id": "saas_crm",
+			"sectors": ["sales", "insurance", "real_estate"], "market_type": "b2b"},
+		{"id": "saas_analytics",
+			"sectors": ["retail", "finance", "media"], "market_type": "b2b"},
+		{"id": "saas_billing",
+			"sectors": ["saas", "subscription", "fintech"], "market_type": "b2b"},
+		{"id": "saas_dev_tools",
+			"sectors": ["software", "technology", "fintech"], "market_type": "b2b", "price_tendency": "premium"},
+		{"id": "saas_ops",
+			"sectors": ["construction", "logistics", "health"], "market_type": "b2b", "price_tendency": "neutral"},
 	],
 	"social": [],
 }
@@ -107,85 +67,85 @@ const SUB_PRODUCT_TYPES := {
 # İçerik working-metin — Erdem voice-pass bekliyor (final copy kilitlemeyin).
 const FEATURE_POOLS := {
 	"ai_assistant": [
-		{"id": "ai_assistant_chat", "name": "Chat Interface", "voice": "Kullanıcının asistanla konuştuğu ekran. Olmazsa olmaz; müşteri ilk buna bakar.", "complexity": 2, "efor": 6, "pull": 4, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "ai_assistant_memory", "name": "Conversation Memory", "voice": "Önceki konuşmaları hatırlayan asistan. Pahalı ama vazgeçilmez.", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_assistant_tools", "name": "Tool Use", "voice": "Asistan sadece konuşmaz, işlemi de yapar. Yazması ayrı bir cehennem.", "complexity": 4, "efor": 8, "pull": 5, "stakes": 5, "dimension_contribution": {"innovation": 6}, "requires_research": false, "tags": []},
-		{"id": "ai_assistant_voice", "name": "Voice Mode", "voice": "Asistanla sesli konuşma. Konuşmak yazmaktan kolay — çoğu zaman.", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "cost": 800, "cost_source": "api", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_assistant_image", "name": "Image Understanding", "voice": "Asistan görsele bakıp anlıyor. En azından biz öyle söylüyoruz.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "cost": 1200, "cost_source": "api", "dimension_contribution": {"innovation": 6}, "requires_research": false, "tags": []},
-		{"id": "ai_assistant_streaming", "name": "Streaming Output", "voice": "Cevaplar bir anda değil, yazarak gelir. Daha az korkutucu.", "complexity": 2, "efor": 6, "pull": 3, "stakes": 1, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
+		{"id": "ai_assistant_chat", "complexity": 2, "efor": 6, "pull": 4, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
+		{"id": "ai_assistant_memory", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_assistant_tools", "complexity": 4, "efor": 8, "pull": 5, "stakes": 5, "dimension_contribution": {"innovation": 6}, "requires_research": false, "tags": []},
+		{"id": "ai_assistant_voice", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "cost": 800, "cost_source": "api", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_assistant_image", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "cost": 1200, "cost_source": "api", "dimension_contribution": {"innovation": 6}, "requires_research": false, "tags": []},
+		{"id": "ai_assistant_streaming", "complexity": 2, "efor": 6, "pull": 3, "stakes": 1, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
 	],
 	"ai_photo_editor": [
-		{"id": "ai_photo_bg_removal", "name": "Background Removal", "voice": "Arka planı tek tıkla sil. Herkesin beklediği şey; olmazsa uygulama indirilmez bile.", "complexity": 2, "efor": 6, "pull": 5, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "ai_photo_inpaint", "name": "Generative Inpaint", "voice": "Fotoğraftan istemediğini sil, boşluğu yapay zeka doldursun. Eski sevgililer dahil.", "complexity": 4, "efor": 8, "pull": 5, "stakes": 4, "cost": 1500, "cost_source": "api", "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_photo_upscale", "name": "AI Upscaling", "voice": "Bulanık görseli netleştir. Sihir gibi görünür, mühendislik gibi maliyetlidir.", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "cost": 900, "cost_source": "license", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_photo_style_transfer", "name": "Style Transfer", "voice": "Selfie'yi Van Gogh'a çevir. Influencer'lar bayılır.", "complexity": 3, "efor": 7, "pull": 4, "stakes": 2, "cost": 500, "cost_source": "license", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_photo_batch", "name": "Batch Processing", "voice": "100 fotoğrafı aynı anda işle. Kurumsal müşterinin gözleri parlar.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_photo_filters", "name": "Smart Filters", "voice": "Telefon filtrelerinin yaptığını yap, biraz daha akıllı. Çok değil.", "complexity": 1, "efor": 5, "pull": 3, "stakes": 1, "dimension_contribution": {"experience": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_photo_bg_removal", "complexity": 2, "efor": 6, "pull": 5, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
+		{"id": "ai_photo_inpaint", "complexity": 4, "efor": 8, "pull": 5, "stakes": 4, "cost": 1500, "cost_source": "api", "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_photo_upscale", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "cost": 900, "cost_source": "license", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_photo_style_transfer", "complexity": 3, "efor": 7, "pull": 4, "stakes": 2, "cost": 500, "cost_source": "license", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_photo_batch", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_photo_filters", "complexity": 1, "efor": 5, "pull": 3, "stakes": 1, "dimension_contribution": {"experience": 3}, "requires_research": false, "tags": []},
 	],
 	"ai_code_copilot": [
-		{"id": "ai_code_autocomplete", "name": "Inline Autocomplete", "voice": "Kod yazarken satır ortasında öneri. Hızlıysa seviliyor, gecikirse kapatılıyor.", "complexity": 3, "efor": 7, "pull": 5, "stakes": 4, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "ai_code_chat", "name": "Code Chat Sidebar", "voice": "Editörden çıkmadan asistanla sohbet. Pencereler arası gidip gelmek tarih oluyor.", "complexity": 2, "efor": 6, "pull": 4, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "ai_code_refactor", "name": "Smart Refactor", "voice": "Çirkin kodu temiz koda çevir. Çoğu zaman.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_code_explain", "name": "Code Explanation", "voice": "Bu kod ne yapıyor? Junior'ın en sevdiği buton.", "complexity": 2, "efor": 6, "pull": 3, "stakes": 1, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "ai_code_test_gen", "name": "Test Generation", "voice": "Testleri senin yerine yazar. CI yeşillenir, ruh huzura erer.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
-		{"id": "ai_code_multi_file", "name": "Multi-File Context", "voice": "Tek dosyayı değil bütün repo'yu görerek öneri verir. Teknik olarak en zor kısım bu.", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "dimension_contribution": {"innovation": 7}, "requires_research": true, "tags": []},
-		{"id": "ai_code_diff_review", "name": "PR Review Assist", "voice": "PR'ı senin yerine okuyup yorum bırakır. Kıdemlilerin yeni gözdesi.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_code_autocomplete", "complexity": 3, "efor": 7, "pull": 5, "stakes": 4, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
+		{"id": "ai_code_chat", "complexity": 2, "efor": 6, "pull": 4, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
+		{"id": "ai_code_refactor", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_code_explain", "complexity": 2, "efor": 6, "pull": 3, "stakes": 1, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
+		{"id": "ai_code_test_gen", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
+		{"id": "ai_code_multi_file", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "dimension_contribution": {"innovation": 7}, "requires_research": true, "tags": []},
+		{"id": "ai_code_diff_review", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false, "tags": []},
 	],
 	"ai_vector_search": [
-		{"id": "ai_vec_embed_api", "name": "Embedding API", "voice": "Metni anlam taşıyan vektöre çeviren API. Müşteri nasıl çalıştığını anlamaz ama kullanır.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
-		{"id": "ai_vec_search_api", "name": "Similarity Search API", "voice": "Bir sorgu ver, anlamca en yakın kayıtları bulsun. Ürünün kalbi burası.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"stability": 5}, "requires_research": false, "tags": []},
-		{"id": "ai_vec_filter", "name": "Metadata Filtering", "voice": "Anlam aramasını tarih ve etiketle daralt. Kurumsal müşterinin ilk sorduğu şey.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_vec_dashboard", "name": "Admin Dashboard", "voice": "Kullanım grafiklerini gösteren yönetim paneli. Geliştirici bakmaz, CTO bakar.", "complexity": 2, "efor": 6, "pull": 2, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "ai_vec_scaling", "name": "Auto Scaling", "voice": "Trafik arttıkça sistem kendini büyütür. Kimse fark etmez — çökene kadar.", "complexity": 5, "efor": 9, "pull": 3, "stakes": 5, "dimension_contribution": {"stability": 7}, "requires_research": true, "tags": []},
-		{"id": "ai_vec_sdk", "name": "Client SDK", "voice": "Python ve JS için hazır kütüphane. Yoksa kimse entegre etmeye uğraşmaz.", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
+		{"id": "ai_vec_embed_api", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
+		{"id": "ai_vec_search_api", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"stability": 5}, "requires_research": false, "tags": []},
+		{"id": "ai_vec_filter", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_vec_dashboard", "complexity": 2, "efor": 6, "pull": 2, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
+		{"id": "ai_vec_scaling", "complexity": 5, "efor": 9, "pull": 3, "stakes": 5, "dimension_contribution": {"stability": 7}, "requires_research": true, "tags": []},
+		{"id": "ai_vec_sdk", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
 	],
 	"saas_project_mgmt": [
-		{"id": "saas_pm_tasks", "name": "Task Board", "voice": "Görevlerin sürüklendiği Kanban panosu. Yoksa ürün sayılmazsın.", "complexity": 2, "efor": 6, "pull": 4, "stakes": 2, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
-		{"id": "saas_pm_gantt", "name": "Gantt Timeline", "voice": "Projeyi zaman çizelgesi olarak göster. Kullanıcı istemez, satın alan yönetici ister.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_pm_comments", "name": "Threaded Comments", "voice": "Görevin altında tartışma. Ekip sohbetinin trafiğini azaltmaz, sadece taşır.", "complexity": 2, "efor": 6, "pull": 3, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "saas_pm_integrations", "name": "Third-Party Integrations", "voice": "Kod deposu, ekip sohbeti, tasarım aracı bağlantıları. Üçü de yoksa kurumsal müşteri kapıdan döner.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "cost": 700, "cost_source": "api", "dimension_contribution": {"stability": 6, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_pm_automation", "name": "Workflow Automation", "voice": "\"Şu olunca şunu yap\" kuralları. Meraklı kullanıcıyı ürüne bağlayan şey.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_pm_reporting", "name": "Reporting", "voice": "Yöneticinin haftalık rapor ihtiyacını karşılar. Renkli pasta grafik şart.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_pm_tasks", "complexity": 2, "efor": 6, "pull": 4, "stakes": 2, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
+		{"id": "saas_pm_gantt", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"experience": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_pm_comments", "complexity": 2, "efor": 6, "pull": 3, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
+		{"id": "saas_pm_integrations", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "cost": 700, "cost_source": "api", "dimension_contribution": {"stability": 6, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_pm_automation", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_pm_reporting", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
 	],
 	"saas_crm": [
-		{"id": "saas_crm_contacts", "name": "Contact Database", "voice": "Müşteri ve kişi kayıtlarının tutulduğu veritabanı. Bu olmadan CRM diyemezsin.", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
-		{"id": "saas_crm_pipeline", "name": "Sales Pipeline", "voice": "Her satış fırsatının hangi aşamada olduğunu gösteren hat. Satış müdürünün ilk baktığı ekran.", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_crm_email", "name": "Email Sync", "voice": "Kurumsal e-postayı bağla. OAuth cehennemi seni bekliyor.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 5, "cost": 600, "cost_source": "api", "dimension_contribution": {"stability": 6, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_crm_forecast", "name": "Revenue Forecast", "voice": "Gelecek ay ne kadar satılacağını tahmin eden grafik. Yanılır ama satar.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_crm_mobile", "name": "Mobile App", "voice": "Saha satış ekibi telefondan girmek ister. Sadece web'de kalan CRM ölür.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 3, "experience": 6}, "requires_research": false, "tags": []},
-		{"id": "saas_crm_call_log", "name": "Call Logging", "voice": "Müşteri aramasını kaydet, özetini otomatik çıkar. Yapay zeka dokunuşu artık mecburi.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "cost": 800, "cost_source": "api", "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_crm_contacts", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
+		{"id": "saas_crm_pipeline", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_crm_email", "complexity": 4, "efor": 8, "pull": 4, "stakes": 5, "cost": 600, "cost_source": "api", "dimension_contribution": {"stability": 6, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_crm_forecast", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_crm_mobile", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 3, "experience": 6}, "requires_research": false, "tags": []},
+		{"id": "saas_crm_call_log", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "cost": 800, "cost_source": "api", "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false, "tags": []},
 	],
 	"saas_analytics": [
-		{"id": "saas_an_dashboards", "name": "Custom Dashboards", "voice": "Herkes kendi panosunu sürükle-bırakla kurar. Olmazsa veriye kimse bakmaz.", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_an_query", "name": "SQL Query Editor", "voice": "SQL yazıp veriyi doğrudan sorgulama. Veri ekibi bunu bulamazsa rakibe gider.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 6}, "requires_research": false, "tags": []},
-		{"id": "saas_an_alerts", "name": "Anomaly Alerts", "voice": "Bir metrik ters gittiğinde ekip sohbetine uyarı düşer. Geç düşerse iş işten geçmiş olur.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_an_share", "name": "Shareable Reports", "voice": "Raporu tek linkle dışarı paylaş. Kimin görebileceği kısmı 'küçük' bir detay.", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
-		{"id": "saas_an_etl", "name": "Data Connectors", "voice": "Kasadar, veritabanı, ürün analitiği — veriyi hepsinden içeri çek. Bakımı ayrı bir işkence.", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "cost": 1000, "cost_source": "api", "dimension_contribution": {"stability": 7}, "requires_research": true, "tags": []},
-		{"id": "saas_an_embed", "name": "Embedded Analytics", "voice": "Müşterinin kendi ürününe gömülen dashboard. Enterprise satışın anahtarı.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_an_dashboards", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_an_query", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 6}, "requires_research": false, "tags": []},
+		{"id": "saas_an_alerts", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_an_share", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
+		{"id": "saas_an_etl", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "cost": 1000, "cost_source": "api", "dimension_contribution": {"stability": 7}, "requires_research": true, "tags": []},
+		{"id": "saas_an_embed", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false, "tags": []},
 	],
 	"saas_billing": [
-		{"id": "saas_bill_subscriptions", "name": "Subscription Management", "voice": "Abonelikleri kur, aylık tahsilatı otomatik yürüt. Ürünün varlık sebebi.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_bill_invoice", "name": "Invoice Generation", "voice": "PDF üret, mail at. Muhasebenin kalbini kazan.", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 4, "experience": 2}, "requires_research": false, "tags": []},
-		{"id": "saas_bill_tax", "name": "Tax Calculation", "voice": "KDV, satış vergisi, VAT — vergiyi doğru hesapla. Ülke sayısı kadar kural, ülke sayısı kadar bug.", "complexity": 5, "efor": 9, "pull": 2, "stakes": 5, "cost": 2000, "cost_source": "license", "dimension_contribution": {"stability": 7}, "requires_research": true, "tags": []},
-		{"id": "saas_bill_dunning", "name": "Failed Payment Recovery", "voice": "Reddedilen kartı tekrar dene, müşteriye hatırlatma gönder. Sessizce kaybedilen aboneleri kurtarır.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_bill_webhooks", "name": "Webhook System", "voice": "Ödeme olaylarını müşterinin kendi sistemine anında bildir. Kasadar standardı; herkes bekler.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"stability": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_bill_proration", "name": "Plan Proration", "voice": "Plan değişince kalan günleri kuruşuna kadar hesapla. Tek bug, support cehennemi demek.", "complexity": 4, "efor": 8, "pull": 2, "stakes": 5, "dimension_contribution": {"stability": 6}, "requires_research": false, "tags": []},
+		{"id": "saas_bill_subscriptions", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_bill_invoice", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 4, "experience": 2}, "requires_research": false, "tags": []},
+		{"id": "saas_bill_tax", "complexity": 5, "efor": 9, "pull": 2, "stakes": 5, "cost": 2000, "cost_source": "license", "dimension_contribution": {"stability": 7}, "requires_research": true, "tags": []},
+		{"id": "saas_bill_dunning", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_bill_webhooks", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"stability": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_bill_proration", "complexity": 4, "efor": 8, "pull": 2, "stakes": 5, "dimension_contribution": {"stability": 6}, "requires_research": false, "tags": []},
 	],
 	"saas_dev_tools": [
-		{"id": "saas_dev_cli", "name": "Command-Line Tool", "voice": "Ürünü terminalden kullandıran komut satırı aracı. Yoksa ilk issue bunun için açılır.", "complexity": 2, "efor": 6, "pull": 3, "stakes": 2, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
-		{"id": "saas_dev_api", "name": "REST API", "voice": "Ürünün dışa açılan kapısı; her şey buradan geçer. Versiyonlamayı bozan müşteri kaybeder.", "complexity": 3, "efor": 7, "pull": 4, "stakes": 5, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_dev_docs", "name": "Interactive Docs", "voice": "İçinde canlı deneme yapılan dokümantasyon. Okunmayan doküman, entegre edilmeyen ürün demek.", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_dev_ci_plugin", "name": "CI Plugin", "voice": "Yaygın sürekli entegrasyon araçlarının eklentileri. Hattı olmayan araç unutulur.", "complexity": 4, "efor": 8, "pull": 3, "stakes": 4, "dimension_contribution": {"innovation": 3, "stability": 6}, "requires_research": false, "tags": []},
-		{"id": "saas_dev_logs", "name": "Live Log Stream", "voice": "Hata ararken canlı log akışı. Yoksa herkes yine SSH'a döner.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_dev_sandbox", "name": "Test Sandbox", "voice": "Geliştirici prod'a dokunmadan güvenle denesin. Olmazsa korkar, hiç kullanmaz.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_dev_cli", "complexity": 2, "efor": 6, "pull": 3, "stakes": 2, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
+		{"id": "saas_dev_api", "complexity": 3, "efor": 7, "pull": 4, "stakes": 5, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_dev_docs", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"experience": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_dev_ci_plugin", "complexity": 4, "efor": 8, "pull": 3, "stakes": 4, "dimension_contribution": {"innovation": 3, "stability": 6}, "requires_research": false, "tags": []},
+		{"id": "saas_dev_logs", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_dev_sandbox", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
 	],
 	"saas_ops": [
-		{"id": "saas_ops_workflow", "name": "Workflow Automation", "voice": "\"Şu olunca şunu yap\" kurallarıyla süreci otomatikleştir. Manuel takip biter.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_ops_reporting", "name": "Reporting Dashboards", "voice": "Yönetimin tek bakışta gördüğü panolar. Rapor kâbusu biter.", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_ops_integration", "name": "System Integration", "voice": "Mevcut sistemlerle konuşur; veri iki kez girilmez. Kurumsalın ilk sorduğu şey.", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "cost": 1800, "cost_source": "license", "dimension_contribution": {"stability": 7}, "requires_research": false, "tags": []},
-		{"id": "saas_ops_scheduling", "name": "Scheduling & Appointments", "voice": "Randevu ve planlamayı tek takvimde topla. Çakışma, unutma kalmaz.", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_ops_field", "name": "Field Connectivity", "voice": "Sahadaki ekip zayıf bağlantıda bile çalışır, sonra senkronlar. Sahanın bel kemiği.", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "dimension_contribution": {"innovation": 4, "stability": 7}, "requires_research": true, "tags": []},
-		{"id": "saas_ops_mobile", "name": "Mobile App", "voice": "Saha ekibi telefondan girer. Sadece masaüstünde kalan ürün sahada ölür.", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 3, "experience": 6}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_workflow", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_reporting", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_integration", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "cost": 1800, "cost_source": "license", "dimension_contribution": {"stability": 7}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_scheduling", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_field", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "dimension_contribution": {"innovation": 4, "stability": 7}, "requires_research": true, "tags": []},
+		{"id": "saas_ops_mobile", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 3, "experience": 6}, "requires_research": false, "tags": []},
 	],
 }
 
@@ -200,55 +160,55 @@ const FEATURE_POOLS := {
 const QUALITY_AXES := {
 	# --- AI (mostly B2C) ---
 	"ai_assistant": [
-		{"axis": "innovation", "weight": 1.4, "display_label": "İnovasyon"},
-		{"axis": "stability", "weight": 0.7, "display_label": "Kararlılık"},
-		{"axis": "experience", "weight": 1.3, "display_label": "Deneyim"},
+		{"axis": "innovation", "weight": 1.4},
+		{"axis": "stability", "weight": 0.7},
+		{"axis": "experience", "weight": 1.3},
 	],
 	"ai_photo_editor": [
-		{"axis": "innovation", "weight": 1.3, "display_label": "İnovasyon"},
-		{"axis": "stability", "weight": 0.6, "display_label": "Kararlılık"},
-		{"axis": "experience", "weight": 1.4, "display_label": "Deneyim"},
+		{"axis": "innovation", "weight": 1.3},
+		{"axis": "stability", "weight": 0.6},
+		{"axis": "experience", "weight": 1.4},
 	],
 	"ai_code_copilot": [
-		{"axis": "innovation", "weight": 1.0, "display_label": "İnovasyon"},
-		{"axis": "stability", "weight": 1.4, "display_label": "Kararlılık"},
-		{"axis": "experience", "weight": 0.9, "display_label": "Deneyim"},
+		{"axis": "innovation", "weight": 1.0},
+		{"axis": "stability", "weight": 1.4},
+		{"axis": "experience", "weight": 0.9},
 	],
 	"ai_vector_search": [
-		{"axis": "innovation", "weight": 0.8, "display_label": "İnovasyon"},
-		{"axis": "stability", "weight": 1.6, "display_label": "Kararlılık"},
-		{"axis": "experience", "weight": 0.9, "display_label": "Deneyim"},
+		{"axis": "innovation", "weight": 0.8},
+		{"axis": "stability", "weight": 1.6},
+		{"axis": "experience", "weight": 0.9},
 	],
 	# --- SaaS (all B2B) ---
 	"saas_project_mgmt": [
-		{"axis": "innovation", "weight": 0.8, "display_label": "İnovasyon"},
-		{"axis": "stability", "weight": 1.1, "display_label": "Kararlılık"},
-		{"axis": "experience", "weight": 1.3, "display_label": "Deneyim"},
+		{"axis": "innovation", "weight": 0.8},
+		{"axis": "stability", "weight": 1.1},
+		{"axis": "experience", "weight": 1.3},
 	],
 	"saas_crm": [
-		{"axis": "innovation", "weight": 0.8, "display_label": "İnovasyon"},
-		{"axis": "stability", "weight": 1.2, "display_label": "Kararlılık"},
-		{"axis": "experience", "weight": 1.2, "display_label": "Deneyim"},
+		{"axis": "innovation", "weight": 0.8},
+		{"axis": "stability", "weight": 1.2},
+		{"axis": "experience", "weight": 1.2},
 	],
 	"saas_analytics": [
-		{"axis": "innovation", "weight": 1.1, "display_label": "İnovasyon"},
-		{"axis": "stability", "weight": 1.2, "display_label": "Kararlılık"},
-		{"axis": "experience", "weight": 0.9, "display_label": "Deneyim"},
+		{"axis": "innovation", "weight": 1.1},
+		{"axis": "stability", "weight": 1.2},
+		{"axis": "experience", "weight": 0.9},
 	],
 	"saas_billing": [
-		{"axis": "innovation", "weight": 0.7, "display_label": "İnovasyon"},
-		{"axis": "stability", "weight": 1.6, "display_label": "Kararlılık"},
-		{"axis": "experience", "weight": 0.9, "display_label": "Deneyim"},
+		{"axis": "innovation", "weight": 0.7},
+		{"axis": "stability", "weight": 1.6},
+		{"axis": "experience", "weight": 0.9},
 	],
 	"saas_dev_tools": [
-		{"axis": "innovation", "weight": 1.1, "display_label": "İnovasyon"},
-		{"axis": "stability", "weight": 1.4, "display_label": "Kararlılık"},
-		{"axis": "experience", "weight": 0.9, "display_label": "Deneyim"},
+		{"axis": "innovation", "weight": 1.1},
+		{"axis": "stability", "weight": 1.4},
+		{"axis": "experience", "weight": 0.9},
 	],
 	"saas_ops": [
-		{"axis": "innovation", "weight": 0.9, "display_label": "İnovasyon"},
-		{"axis": "stability", "weight": 1.5, "display_label": "Kararlılık"},
-		{"axis": "experience", "weight": 1.1, "display_label": "Deneyim"},
+		{"axis": "innovation", "weight": 0.9},
+		{"axis": "stability", "weight": 1.5},
+		{"axis": "experience", "weight": 1.1},
 	],
 }
 
@@ -359,16 +319,16 @@ static func sum_cost(feature_ids: Array) -> int:
 static func feature_risk_band(complexity: int) -> String:
 	# "dusuk" | "orta" | "yuksek" — UI TR etikete çevirir (Düşük/Orta/Yüksek).
 	if complexity <= FEATURE_RISK_LOW_MAX:
-		return "dusuk"
+		return "dusuk"   # LOC-DATA risk band id
 	if complexity >= FEATURE_RISK_HIGH_MIN:
-		return "yuksek"
-	return "orta"
+		return "yuksek"   # LOC-DATA risk band id
+	return "orta"   # LOC-DATA risk band id
 
 
 static func selection_risk_band(feature_ids: Array) -> String:
 	# Seçimin bandı = round(ortalama complexity) bandı (working kural).
 	if feature_ids.is_empty():
-		return "dusuk"
+		return "dusuk"   # LOC-DATA risk band id
 	var total: int = 0
 	for fid in feature_ids:
 		total += int(get_feature_by_id(String(fid)).get("complexity", 0))
@@ -385,5 +345,77 @@ const PRODUCT_NAME_POOL := [
 
 static func suggest_product_name(index: int) -> String:
 	if PRODUCT_NAME_POOL.is_empty():
-		return "Ürün"
+		return TranslationServer.translate("PRODUCT_FALLBACK_NAME")
 	return String(PRODUCT_NAME_POOL[abs(index) % PRODUCT_NAME_POOL.size()])
+
+
+# ============================================================================
+# COPY ACCESSORS — the words left this file for strings.csv (Lokalizasyon Faz 2 · B3a).
+# ============================================================================
+# The catalog used to hold the display name, category, description, trade-off line, bet,
+# pitch, feature name and feature voice as literals. Two problems, one of them a LAW
+# violation: the feature NAME was stored in ENGLISH while its description was Turkish, and
+# the creation flow renders them side by side — the Turkish feature picker literally read
+# "**Workflow Automation** Şu olunca şunu yap…". LANGUAGE INTEGRITY LAW: English never
+# appears on screen. So the Turkish names here were AUTHORED, not translated.
+#
+# Everything is derived from the id the code already carries, so one id yields one row in
+# both languages. Derived keys are invisible to a tr("LITERAL") grep, which is why
+# `loc_product_derived_keys` walks the real id lists and asserts each key resolves.
+# TranslationServer, not tr(): this file is all statics.
+
+static func _derived(prefix: String, id: String, suffix: String = "") -> String:
+	if id == "":
+		return ""
+	var key: String = prefix + id.to_upper() + suffix
+	var out: String = TranslationServer.translate(key)
+	return out if out != key else id
+
+
+## Player-facing product name ("Görsel Düzenleyici" / "Photo Editor").
+static func type_name(sub_product_type_id: String) -> String:
+	return _derived("PROD_TYPE_", sub_product_type_id, "_NAME")
+
+
+static func type_category(sub_product_type_id: String) -> String:
+	return _derived("PROD_TYPE_", sub_product_type_id, "_CATEGORY")
+
+
+static func type_desc(sub_product_type_id: String) -> String:
+	return _derived("PROD_TYPE_", sub_product_type_id, "_DESC")
+
+
+## The one-line "what you gain, what it costs you" under a product type.
+static func type_tradeoff(sub_product_type_id: String) -> String:
+	return _derived("PROD_TYPE_", sub_product_type_id, "_TRADEOFF")
+
+
+## The founder's wager, in their own voice.
+static func type_bet(sub_product_type_id: String) -> String:
+	return _derived("PROD_TYPE_", sub_product_type_id, "_BET")
+
+
+static func type_pitch(sub_product_type_id: String) -> String:
+	return _derived("PROD_TYPE_", sub_product_type_id, "_PITCH")
+
+
+## The market tags under a product type, localized. Stored as ids (B1a's SECTOR_* rows).
+static func type_sector_labels(sub_product_type_id: String) -> Array:
+	var out: Array = []
+	for sid in get_sub_product_type_by_id(sub_product_type_id).get("sectors", []):
+		out.append(_derived("SECTOR_", String(sid)))
+	return out
+
+
+static func feature_name(feature_id: String) -> String:
+	return _derived("PROD_FEAT_", feature_id, "_NAME")
+
+
+## The wry one-liner under a feature name in the picker.
+static func feature_voice(feature_id: String) -> String:
+	return _derived("PROD_FEAT_", feature_id, "_VOICE")
+
+
+## Quality-axis display label ("İnovasyon" / "Innovation").
+static func axis_label(axis_id: String) -> String:
+	return _derived("PROD_AXIS_", axis_id)

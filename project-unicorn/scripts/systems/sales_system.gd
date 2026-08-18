@@ -427,7 +427,7 @@ static func _value_lines(sub: String, feature_count: int, tendency: String) -> A
 		axes = QualityModel.DEFAULT_AXES
 	for a in axes:
 		var axis: String = String(a.get("axis", ""))
-		var label: String = String(a.get("display_label", axis))
+		var label: String = ProductCatalog.axis_label(axis)
 		# A1 single-source-of-truth: show the RAW axis value (stability = effective,
 		# since dims come from economy_dims_from_flags) so this badge matches the
 		# left "Ürün Durumu" card byte-for-byte. The price formula is unaffected — it
@@ -562,4 +562,7 @@ static func _product_name() -> String:
 		return n
 	var st: Dictionary = ProductCatalog.get_sub_product_type_by_id(
 		String(GameState.get_flag("mvp_sub_product_type_id", "")))
-	return String(st.get("name_human", st.get("name", TranslationServer.translate("PRODUCT_FALLBACK_NAME"))))
+	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
+	if sub_id == "":
+		return TranslationServer.translate("PRODUCT_FALLBACK_NAME")
+	return ProductCatalog.type_name(sub_id)

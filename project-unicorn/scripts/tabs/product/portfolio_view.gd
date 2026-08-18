@@ -86,7 +86,7 @@ func _make_live_card() -> Control:
 	var st: Dictionary = ProductCatalog.get_sub_product_type_by_id(type_id)
 	var pname: String = String(GameState.get_flag("mvp_product_name", ""))
 	if pname == "":
-		pname = String(st.get("name_human", type_id))
+		pname = ProductCatalog.type_name(type_id)
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"CardPanel"
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -97,7 +97,7 @@ func _make_live_card() -> Control:
 	id_col.add_theme_constant_override("separation", 2)
 	id_col.add_child(UiFactory.make_label(pname, &"NameSerif"))
 	id_col.add_child(UiFactory.make_label(
-		"%s · %s" % [UiTokens.tr_upper(market), UiTokens.tr_upper(String(st.get("name_human", "")))], &"RowMeta"))
+		"%s · %s" % [UiTokens.tr_upper(market), UiTokens.tr_upper(ProductCatalog.type_name(String(st.get("id", ""))))], &"RowMeta"))
 	hb.add_child(id_col)
 	# make_pill (uppercase=false): make_badge her şeyi büyütür, "v1"in küçük v'si
 	# mockup'ın sürüm imzası — palet aynı (positive).
