@@ -101,10 +101,10 @@ func _meta_line(slot: Dictionary) -> String:
 		return tr(String(slot.get("error_key", "SAVE_ERR_CORRUPT")))
 	var meta: Dictionary = slot.get("meta", {}) as Dictionary
 	var parts: Array[String] = []
-	parts.append(tr("SAVE_META_DAY") % int(meta.get("day", 0)))
+	parts.append(tr("SAVE_META_DAY").format({"n": int(meta.get("day", 0))}))
 	parts.append(String(meta.get("phase_name", "")))
-	parts.append(tr("SAVE_META_CASH") % UiTokens.format_money(int(meta.get("cash", 0))))
-	parts.append(tr("SAVE_META_MRR") % UiTokens.format_money(int(meta.get("mrr", 0))))
+	parts.append(tr("SAVE_META_CASH").format({"amount": UiTokens.format_money(int(meta.get("cash", 0)))}))
+	parts.append(tr("SAVE_META_MRR").format({"amount": UiTokens.format_money(int(meta.get("mrr", 0)))}))
 	parts.append(_stamp(int(slot.get("unix_time", 0))))
 	var out: Array[String] = []
 	for p in parts:
@@ -135,7 +135,7 @@ func _on_overwrite(slot: Dictionary) -> void:
 		return
 	EventBus.confirm_requested.emit({
 		"title": tr("SAVE_OVERWRITE_TITLE"),
-		"body": tr("SAVE_OVERWRITE_BODY") % String(slot.get("label", "")),
+		"body": tr("SAVE_OVERWRITE_BODY").format({"label": String(slot.get("label", ""))}),
 		"confirm_text": tr("SAVE_OVERWRITE_OK"),
 		"cancel_text": tr("SYS_CANCEL"),
 		"on_confirm": _do_overwrite.bind(String(slot.get("slot_id", ""))),
@@ -170,7 +170,7 @@ func _emit_load(slot_id: String) -> void:
 func _on_delete(slot: Dictionary) -> void:
 	EventBus.confirm_requested.emit({
 		"title": tr("SAVE_DELETE_TITLE"),
-		"body": tr("SAVE_DELETE_BODY") % String(slot.get("label", "")),
+		"body": tr("SAVE_DELETE_BODY").format({"label": String(slot.get("label", ""))}),
 		"confirm_text": tr("SAVE_DELETE_OK"),
 		"cancel_text": tr("SYS_CANCEL"),
 		"on_confirm": _do_delete.bind(String(slot.get("slot_id", ""))),

@@ -15,7 +15,7 @@ SKILL_LABEL_INFLUENCE,nüfuz,influence
 ONB_STEP_CHARACTER,KARAKTER,CHARACTER
 ONB_STEP_ORIGIN,KÖKEN,ORIGIN
 ONB_STEP_COMPANY,ŞİRKET,COMPANY
-ONB_STEP_COUNTER,ADIM %d / %d,STEP %d / %d
+ONB_STEP_COUNTER,ADIM {step} / {total},STEP {step} / {total}
 ONB_BACK,Geri,Back
 ONB_NEXT,İleri,Next
 ONB_START,Kur ve Başla,Found and Begin
@@ -25,8 +25,8 @@ ONB_P1_SUB,"Bu, aynada göreceğin yüz. Bir istatistik değil, bir kimlik.","Th
 ONB_NAME_LABEL,ADIN,YOUR NAME
 ONB_NAME_PLACEHOLDER,Boş bırakırsan 'Founder' kullanılır,Leave empty to use 'Founder'
 ONB_FOUNDER_TAG,KURUCU,FOUNDER
-ONB_PORTRAIT_HEADER,PORTRE SEÇ · %d SEÇENEK,CHOOSE A PORTRAIT · %d OPTIONS
-ONB_SELECTED_CHIP,SEÇİLİ · PORTRE %s,SELECTED · PORTRAIT %s
+ONB_PORTRAIT_HEADER,PORTRE SEÇ · {n} SEÇENEK,CHOOSE A PORTRAIT · {n} OPTIONS
+ONB_SELECTED_CHIP,SEÇİLİ · PORTRE {id},SELECTED · PORTRAIT {id}
 ONB_P2_TITLE,Köken ve Karakter,Origin and Character
 ONB_P2_SUB,"Nereden geldiğin, neyi kolay, neyi zor yaşayacağını belirler.","Where you come from decides what will come easy, and what will not."
 ONB_ORIGIN_HEADER,KÖKEN,ORIGIN
@@ -90,18 +90,18 @@ LOGO_STYLE_SERIOUS,CİDDİ,SERIOUS
 ONB_SLOGAN_LABEL,SLOGAN (OPSİYONEL),SLOGAN (OPTIONAL)
 ONB_SLOGAN_PLACEHOLDER,Bir cümlede ne yapıyorsun,What you do in one sentence
 ONB_PREVIEW_LABEL,ÖNİZLEME,PREVIEW
-ONB_PREVIEW_FOUNDER_TAG,KURUCU · %d,FOUNDER · %d
+ONB_PREVIEW_FOUNDER_TAG,KURUCU · {year},FOUNDER · {year}
 SALES_SUBTITLE,B2B · PORTFÖY YÖNETİMİ,B2B · PORTFOLIO MANAGEMENT
 SALES_PROSPECTS_HEADER,PROSPECT'LER,PROSPECTS
 SALES_PORTFOLIO_HEADER,MÜŞTERİ PORTFÖYÜ,CUSTOMER PORTFOLIO
-SALES_PROSPECTS_COUNT,%d aday,%d leads
-SALES_CUSTOMERS_COUNT,%d müşteri,%d customers
+SALES_PROSPECTS_COUNT,{n} aday,{n} leads
+SALES_CUSTOMERS_COUNT,{n} müşteri,{n} customers
 SALES_STRIP_CUSTOMERS,MÜŞTERİ,CUSTOMERS
 SALES_STRIP_SATISFACTION,ORT. MEMNUNİYET,AVG. SATISFACTION
 SALES_STRIP_GAINED,BU AY KAZANILAN,GAINED THIS MONTH
 SALES_STRIP_NET,BU AY NET,NET THIS MONTH
 SALES_FIND,+ Prospect bul,+ Find prospect
-SALES_FIND_COOLDOWN,Cooldown · %d gün,Cooldown · %d days
+SALES_FIND_COOLDOWN,Cooldown · {n} gün,Cooldown · {n} days
 SALES_FIND_EXHAUSTED,Aday havuzu şimdilik kuru; bu sektörde konuşulacak yeni kimse kalmadı.,Lead pool is dry for now; no one new left to approach in this sector.
 SALES_PROSPECT_ACTION,Görüşmeye git,Go to meeting
 SALES_PROSPECTS_EMPTY,Henüz aday yok.,No leads yet.
@@ -110,23 +110,23 @@ SALES_TIER2_TITLE,Kurumsal segment,Enterprise segment
 SALES_TIER2_TAG,TİER 2,TIER 2
 SALES_TIER2_HINT,4-5 yıldız · çok yakında,4-5 stars · coming soon
 SALES_PER_MONTH,/ay,/mo
-SALES_SEATS,%d koltuk,%d seats
-SALES_TENURE,%d aydır müşteri,customer for %d mo
+SALES_SEATS,{n} koltuk,{n} seats
+SALES_TENURE,{n} aydır müşteri,customer for {n} mo
 SALES_TENURE_NEW,yeni müşteri,new customer
-SALES_VALUE_RANGE,%s–%s/ay,%s–%s/mo
+SALES_VALUE_RANGE,{min}–{max}/ay,{min}–{max}/mo
 SALES_LOG_HEADER,SON HAREKETLER,RECENT ACTIVITY
-SALES_LOG_CLOSE,%s · %s anlaşmasını kapattı · %s/ay,%s · closed %s · %s/mo
-SALES_LOG_ABSORB,%s · %s tarafındaki talebi karşıladı,%s · handled a request from %s
+SALES_LOG_CLOSE,{actor} · {company} anlaşmasını kapattı · {amount}/ay,{actor} · closed {company} · {amount}/mo
+SALES_LOG_ABSORB,{actor} · {company} tarafındaki talebi karşıladı,{actor} · handled a request from {company}
 SALES_CHIP_WARMING,Hazırlanıyor,Warming up
 SALES_CHIP_WARM,Isındı,Warmed up
-SALES_FOUNDER_STRETCHED,Doğrudan yönettiğin %d hesap var,You are managing %d accounts directly
+SALES_FOUNDER_STRETCHED,Doğrudan yönettiğin {n} hesap var,You are managing {n} accounts directly
 SALES_CHIP_HEALTHY,SAĞLIKLI,HEALTHY
 SALES_CHIP_RISK,RİSK ALTINDA,AT RISK
 SALES_CHIP_EXPANSION,BÜYÜMEK İSTİYOR,WANTS TO GROW
 SALES_CHIP_NEW,YENİ,NEW
-SALES_STEWARD,Müşteri temsilcisi: %s,Account manager: %s
-SALES_CHURN_COUNTDOWN,Churn'e ~%d gün,~%d days to churn
-SALES_REASON_PREFIX,Sebep: %s,Reason: %s
+SALES_STEWARD,Müşteri temsilcisi: {name},Account manager: {name}
+SALES_CHURN_COUNTDOWN,Churn'e ~{n} gün,~{n} days to churn
+SALES_REASON_PREFIX,Sebep: {reason},Reason: {reason}
 SALES_REASON_OUTAGE,sık kesinti şikayeti,frequent outage complaints
 SALES_REASON_SATISFACTION,memnuniyet düşüyor,satisfaction is falling
 SALES_EXPANSION_FICTION,Başka departmana yaymak istiyor.,Wants to roll it out to another department.
@@ -142,12 +142,12 @@ ENDING_CARD_FULL_TITLE,Teknoloji Devi,Tech Giant
 ENDING_BADGE_FULL,TAM SÜRÜMDE,IN FULL RELEASE
 ENDING_CARD_FULL_BODY,"Halka arz, regülasyon, devlerle aynı pazar.","IPO, regulation, sharing the market with giants."
 ENDING_WISHLIST,WISHLIST'E EKLE,ADD TO WISHLIST
-ENDING_RUN_META,BU RUN: %d GÜN · NORMAL MOD,THIS RUN: %d DAYS · NORMAL MODE
+ENDING_RUN_META,BU RUN: {days} GÜN · NORMAL MOD,THIS RUN: {days} DAYS · NORMAL MODE
 ENDING_RETRY,TEKRAR DENE,TRY AGAIN
 ENDING_HARD_MODE,ZOR MOD · YAKINDA,HARD MODE · SOON
 ENDING_SOON_TOOLTIP,Yakında,Coming soon
 ENDING_SHARE,GAZETEYİ PAYLAŞ,SHARE THE PAPER
-ENDING_SAVED_TOAST,"Gazete kaydedildi: %s","Paper saved: %s"
+ENDING_SAVED_TOAST,"Gazete kaydedildi: {path}","Paper saved: {path}"
 ENDING_OPEN_FOLDER,KLASÖRÜ AÇ,OPEN FOLDER
 ENDING_ENGRAVING_SOON,GÖRSEL YAKINDA,ART COMING SOON
 SALES_STEWARD_CHANGE,Değiştir,Change
@@ -155,15 +155,15 @@ SALES_STEWARD_PICK,Sorumlu ata,Assign account manager
 SALES_STEWARD_CURRENT,zaten sorumlu,already assigned
 SALES_STEWARD_FULL,kapasite dolu,at capacity
 SALES_STEWARD_FOUNDER,Kurucu (kendim tutayım),Founder (keep it myself)
-HR_CS_LOAD,%d hesap taşıyor · kapasite %d,Handling %d accounts · capacity %d
+HR_CS_LOAD,{n} hesap taşıyor · kapasite {cap},Handling {n} accounts · capacity {cap}
 HR_ROLE_LOCK_SALES,Bu rol için B2B ürün gerekir.,This role needs a B2B product.
 HR_ROLE_LOCK_CS,Destek sistemi ile açılacak.,Opens with the support system.
 ODA_RETURN,ODAYA DÖN,BACK TO ROOM
 ODA_PAGE_PLACEHOLDER,İçerik yolda,Content on the way
 ODA_MONITOR_IDLE,Geliştirme bekleniyor,Awaiting development
 ODA_MONITOR_IDLE_META,sistem sakin,all quiet
-ODA_MONITOR_BUILD_TITLE,%s geliştirmesi,%s in development
-ODA_MONITOR_BUILD_META,~%d gün kaldı · sorumlu: %s,~%d days left · lead: %s
+ODA_MONITOR_BUILD_TITLE,{product} geliştirmesi,{product} in development
+ODA_MONITOR_BUILD_META,~{days} gün kaldı · sorumlu: {lead},~{days} days left · lead: {lead}
 ODA_MONITOR_PROGRESS,İlerleme,Progress
 ODA_MONITOR_LEAD_FOUNDER,Kurucu,Founder
 ODA_MONITOR_LIVE_CHIP,CANLI,LIVE
@@ -175,22 +175,22 @@ ODA_MON_CAP_MRR,MRR,MRR
 ODA_MON_CAP_ACCOUNTS,hesap,accounts
 ODA_MON_CAP_USERS,kullanıcı,users
 ODA_MONITOR_CALM,sistem sakin · uyarı yok,all quiet · no warnings
-ODA_MONITOR_BUGS,sistem ayakta · %d açık hata,holding up · %d open bugs
+ODA_MONITOR_BUGS,sistem ayakta · {n} açık hata,holding up · {n} open bugs
 ODA_MONITOR_WARN,hatalar birikiyor — bakım gerek,bugs piling up — needs care
 ODA_PAPER_TAG_GATE,EŞİK,GATE
 ODA_PAPER_TAG_FUNDING,YATIRIM,FUNDING
 ODA_PAPER_TAG_ATLAS,ATLAS,ATLAS
 ODA_PAPER_GATE_TITLE,Faz kapısı açık — karar bekliyor,Phase gate open — decision pending
-ODA_PAPER_SHEET_TITLE,Yatırım teklifi masada — son %d gün,Offer on the table — %d days left
-ODA_PAPER_SHEETS_TITLE,%d yatırım teklifi masada,%d offers on the table
-ODA_PAPER_ATLAS_TITLE,%d aday dosyası hazır,%d candidate files ready
+ODA_PAPER_SHEET_TITLE,Yatırım teklifi masada — son {days} gün,Offer on the table — {days} days left
+ODA_PAPER_SHEETS_TITLE,{n} yatırım teklifi masada,{n} offers on the table
+ODA_PAPER_ATLAS_TITLE,{n} aday dosyası hazır,{n} candidate files ready
 ODA_PAPER_EXPANSION_TITLE,Büyüme talebi masada,Expansion request waiting
 ODA_BOARD_GOAL_P1_LABEL,Traction'a:,To Traction:
 ODA_BOARD_GOAL_P1_META,Sürüm + ilk müşteri + ilk gelir,Ship + first customer + first revenue
 ODA_BOARD_GOAL_P2_LABEL,Series A'ya:,To Series A:
-ODA_BOARD_GOAL_P2_BRAND,marka %d / %d,brand %d / %d
+ODA_BOARD_GOAL_P2_BRAND,marka {value} / {target},brand {value} / {target}
 ODA_BOARD_GOAL_P3_LABEL,Series A avı:,Series A hunt:
-ODA_BOARD_GOAL_P3_HUNT,%d teklif masada,%d offers on the table
+ODA_BOARD_GOAL_P3_HUNT,{n} teklif masada,{n} offers on the table
 ODA_BOARD_GOAL_P3_CLOSED,Series A kapandı,Series A closed
 ODA_BOARD_MARKET_TITLE,Pazar payı,Market share
 ODA_BOARD_LEAGUE_YOU,SEN,YOU
@@ -198,13 +198,13 @@ ODA_BOARD_DATES_TITLE,İşaretli tarihler,Marked dates
 ODA_BOARD_DATE_MEETING,VC görüşmesi,VC meeting
 ODA_BOARD_DATE_SHEET,Teklif süresi dolar,Offer expires
 ODA_BOARD_DATE_PROMISE,Söz teslimi,Promise due
-ODA_BOARD_DATE_CHURN,Churn riski · %s,Churn risk · %s
+ODA_BOARD_DATE_CHURN,Churn riski · {company},Churn risk · {company}
 ODA_BOARD_DATE_MONTH,Ay kapanışı,Month close
 ODA_DATE_TODAY,BUGÜN,TODAY
 ODA_DATE_TOMORROW,YARIN,TOMORROW
-ODA_DATE_IN_DAYS,%dG,%dD
-ODA_BOARD_POSTIT,%s — konuş,%s — talk
-ODA_WINDOW_OVERTIME,EK MESAİ · %d. GÜN,OVERTIME · DAY %d
+ODA_DATE_IN_DAYS,{n}G,{n}D
+ODA_BOARD_POSTIT,{name} — konuş,{name} — talk
+ODA_WINDOW_OVERTIME,EK MESAİ · {n}. GÜN,OVERTIME · DAY {n}
 ODA_FRAME_FOUNDING,Kuruluş,Founding
 ODA_FRAME_FIRST_SHIP,İlk sürüm,First release
 ODA_FRAME_FIRST_FUNDING,İlk yatırım,First funding
@@ -254,7 +254,7 @@ SET_RESOLUTION,Çözünürlük,Resolution
 SET_RESOLUTION_LOCKED,Yalnız pencereli modda değiştirilebilir.,Adjustable in windowed mode only.
 SET_RESOLUTION_NATIVE,doğal,native
 SET_UI_SCALE,Arayüz ölçeği,Interface scale
-SET_UI_SCALE_TOO_SMALL,%d%% bu pencere boyutunda okunmuyor; daha geniş bir ekran gerekiyor.,%d%% is unreadable at this window size; it needs a wider display.
+SET_UI_SCALE_TOO_SMALL,{pct}% bu pencere boyutunda okunmuyor; daha geniş bir ekran gerekiyor.,{pct}% is unreadable at this window size; it needs a wider display.
 SET_VSYNC,Dikey eşitleme,Vertical sync
 SET_VOL_MASTER,Ana ses,Master volume
 SET_VOL_MUSIC,Müzik,Music
@@ -292,18 +292,18 @@ SAVE_TITLE_SAVE,Kaydet,Save
 SAVE_TITLE_LOAD,Yükle,Load
 SAVE_NEW_SLOT,Yeni kayıt,New save
 SAVE_QUICK_SLOT,Hızlı kayıt,Quicksave
-SAVE_AUTO_SLOT,Otomatik kayıt %d,Autosave %d
-SAVE_MANUAL_SLOT,Kayıt %d,Save %d
-SAVE_META_DAY,Gün %d,Day %d
-SAVE_META_CASH,Kasa %s,Cash %s
-SAVE_META_MRR,MRR %s,MRR %s
+SAVE_AUTO_SLOT,Otomatik kayıt {n},Autosave {n}
+SAVE_MANUAL_SLOT,Kayıt {n},Save {n}
+SAVE_META_DAY,Gün {n},Day {n}
+SAVE_META_CASH,Kasa {amount},Cash {amount}
+SAVE_META_MRR,MRR {amount},MRR {amount}
 SAVE_EMPTY,Henüz kayıt yok.,No saves yet.
 SAVE_DELETE,Sil,Delete
 SAVE_OVERWRITE_TITLE,Üzerine yazılsın mı?,Overwrite?
-SAVE_OVERWRITE_BODY,%s kaydının yerini bu kayıt alır.,This save takes the place of %s.
+SAVE_OVERWRITE_BODY,{label} kaydının yerini bu kayıt alır.,This save takes the place of {label}.
 SAVE_OVERWRITE_OK,Üzerine yaz,Overwrite
 SAVE_DELETE_TITLE,Kayıt silinsin mi?,Delete this save?
-SAVE_DELETE_BODY,%s geri getirilemez.,%s cannot be brought back.
+SAVE_DELETE_BODY,{label} geri getirilemez.,{label} cannot be brought back.
 SAVE_DELETE_OK,Sil,Delete
 SAVE_LOAD_CONFIRM_TITLE,Kaydedilmemiş ilerleme var.,You have unsaved progress.
 SAVE_LOAD_CONFIRM_BODY,Bu kaydı açarsan son kayıttan bu yana oynadığın günler kaybolur.,Opening this save loses the days you have played since your last save.
@@ -340,7 +340,7 @@ HR_TRAINING_PICK_NOTE,{days} gün boyunca çalışmaz. Tek seferlik {fee}. Dön�
 HR_TRAINING_NONE_ELIGIBLE,Deneyimi dolan kimse yok.,Nobody has filled their experience bar yet.
 HR_TRAINING_CAPPED,Uzmanlık tavanda.,Expertise is at the cap.
 HR_NEWS_TRAINING_DONE,{name} eğitimden döndü; uzmanlığı arttı.,{name} is back from training with sharper expertise.
-SET_UI_SCALE_TOO_LARGE,%d%% bu pencere boyutunda arayüzü kırpar; daha büyük bir ekran gerekiyor.,%d%% would crop the interface at this window size; it needs a larger display.
+SET_UI_SCALE_TOO_LARGE,{pct}% bu pencere boyutunda arayüzü kırpar; daha büyük bir ekran gerekiyor.,{pct}% would crop the interface at this window size; it needs a larger display.
 ANGEL_EVENT_TITLE,Frank'in çeki,Frank's cheque
 ANGEL_EVENT_BODY,"Frank rakamlara bakıyor, sonra ceketinin iç cebinden bir çek defteri çıkarıyor. Acele etmiyor.
 

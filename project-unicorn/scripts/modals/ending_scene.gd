@@ -326,7 +326,7 @@ func _build_rail(vs: Dictionary) -> PanelContainer:
 	col.add_child(wishlist)
 
 	# Run-meta line — the ONLY place the raw day count is rendered.
-	var meta := UiFactory.make_label(tr("ENDING_RUN_META") % int(_ledger.get("day", 0)), &"ZoneLabel")
+	var meta := UiFactory.make_label(tr("ENDING_RUN_META").format({"days": int(_ledger.get("day", 0))}), &"ZoneLabel")
 	meta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(meta)
 
@@ -453,7 +453,7 @@ func _on_share() -> void:
 	var path: String = await _export_paper_png()
 	if path == "":
 		return
-	_toast.text = tr("ENDING_SAVED_TOAST") % ProjectSettings.globalize_path(path)
+	_toast.text = tr("ENDING_SAVED_TOAST").format({"path": ProjectSettings.globalize_path(path)})
 	_toast.visible = true
 	_open_folder_btn.visible = true
 

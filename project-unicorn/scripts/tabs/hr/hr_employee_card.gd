@@ -102,7 +102,7 @@ static func build(emp: Character, on_action: Callable, expanded: bool, refs: Dic
 		# TranslationServer, not tr(): build() is static and statics cannot call tr()
 		# (same reason UiTokens.net_runway_parts does it this way).
 		var fmt: String = TranslationServer.translate("HR_CS_LOAD")
-		col.add_child(UiFactory.make_label(fmt % [load, cap], &"RowMeta", UiTokens.INK_DIM))
+		col.add_child(UiFactory.make_label(fmt.format({"n": load, "cap": cap}), &"RowMeta", UiTokens.INK_DIM))
 
 	if not emp.traits.is_empty():
 		col.add_child(HRUiShared.trait_row(emp.traits))

@@ -542,9 +542,9 @@ func _label_for(slot_id: String) -> String:
 		"quick":
 			return tr("SAVE_QUICK_SLOT")
 		"auto":
-			return tr("SAVE_AUTO_SLOT") % (AUTO_SLOT_IDS.find(slot_id) + 1)
+			return tr("SAVE_AUTO_SLOT").format({"n": AUTO_SLOT_IDS.find(slot_id) + 1})
 		_:
-			return tr("SAVE_MANUAL_SLOT") % slot_id.trim_prefix(MANUAL_SLOT_PREFIX).to_int()
+			return tr("SAVE_MANUAL_SLOT").format({"n": slot_id.trim_prefix(MANUAL_SLOT_PREFIX).to_int()})
 
 
 func _game_version() -> String:

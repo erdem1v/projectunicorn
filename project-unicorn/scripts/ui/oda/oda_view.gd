@@ -945,14 +945,14 @@ func _refresh_monitor() -> void:
 		_mon_chip_dot.visible = false
 		_mon_chip_label.text = String(phase_labels.get(b.current_phase, ""))
 		_mon_chip_label.add_theme_color_override("font_color", UiTokens.ODA_ACCENT)
-		_mon_title.text = tr("ODA_MONITOR_BUILD_TITLE") % bname
+		_mon_title.text = tr("ODA_MONITOR_BUILD_TITLE").format({"product": bname})
 		var lead: String = tr("ODA_MONITOR_LEAD_FOUNDER")
 		if b.lead_engineer_id != "" and b.lead_engineer_id != "founder":
 			var emp: Character = CharacterRegistry.get_character(b.lead_engineer_id)
 			if emp != null:
 				lead = emp.character_name
 		_mon_meta.visible = true
-		_mon_meta.text = UiTokens.tr_upper(tr("ODA_MONITOR_BUILD_META") % [maxi(0, ProductSystem.build_days_remaining()), lead])
+		_mon_meta.text = UiTokens.tr_upper(tr("ODA_MONITOR_BUILD_META").format({"days": maxi(0, ProductSystem.build_days_remaining()), "lead": lead}))
 		_mon_grid.visible = false
 		_mon_slack.visible = true
 		_mon_footer.visible = false
@@ -1000,7 +1000,7 @@ func _refresh_monitor() -> void:
 		# cam üstündeki HATA hücresi ile hemen altındaki satır birbirini yalanlar.
 		var footer: String = tr("ODA_MONITOR_WARN")
 		if healthy:
-			footer = tr("ODA_MONITOR_CALM") if bugs == 0 else tr("ODA_MONITOR_BUGS") % bugs
+			footer = tr("ODA_MONITOR_CALM") if bugs == 0 else tr("ODA_MONITOR_BUGS").format({"n": bugs})
 		_mon_footer.text = UiTokens.tr_upper(footer)
 		_mon_progress_block.visible = false
 		return
@@ -1120,7 +1120,7 @@ func _refresh_goal() -> void:
 			_goal_value.text = "%s / %s MRR" % [
 				UiTokens.format_money(GameState.mrr),
 				UiTokens.format_money(SalesSystem.TRACTION_MRR_TARGET)]
-			_goal_sub.text = UiTokens.tr_upper(tr("ODA_BOARD_GOAL_P2_BRAND") % [GameState.brand, _gate2_brand_floor()])
+			_goal_sub.text = UiTokens.tr_upper(tr("ODA_BOARD_GOAL_P2_BRAND").format({"value": GameState.brand, "target": _gate2_brand_floor()}))
 			_goal_bar.value = SalesSystem.traction_progress() * 100.0
 		_:
 			if GameState.series_a_closed:
@@ -1130,7 +1130,7 @@ func _refresh_goal() -> void:
 				_goal_bar.visible = false
 			else:
 				_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P3_LABEL"))
-				_goal_value.text = tr("ODA_BOARD_GOAL_P3_HUNT") % GameState.active_sheets.size()
+				_goal_value.text = tr("ODA_BOARD_GOAL_P3_HUNT").format({"n": GameState.active_sheets.size()})
 				_goal_sub.text = ""
 				_goal_bar.visible = false
 
@@ -1302,7 +1302,7 @@ func _refresh_dates() -> void:
 	for c in CustomerRegistry.get_by_market("b2b"):
 		if c.churn_countdown >= 0:
 			items.append({"day": today + int(c.churn_countdown),
-				"label": tr("ODA_BOARD_DATE_CHURN") % c.company_name})
+				"label": tr("ODA_BOARD_DATE_CHURN").format({"company": c.company_name})})
 	var d: int = today + 1
 	while d <= today + 31:
 		if int(GameState.get_date_dict(d)["day"]) == 1:
@@ -1332,7 +1332,7 @@ func _date_delta_text(delta: int) -> String:
 		return tr("ODA_DATE_TODAY")
 	if delta == 1:
 		return tr("ODA_DATE_TOMORROW")
-	return tr("ODA_DATE_IN_DAYS") % delta
+	return tr("ODA_DATE_IN_DAYS").format({"n": delta})
 
 
 func _refresh_postit() -> void:
@@ -1347,7 +1347,7 @@ func _refresh_postit() -> void:
 		_board_wraps["postit"].visible = false
 		return
 	_board_wraps["postit"].visible = true
-	_postit_line.text = tr("ODA_BOARD_POSTIT") % target_name
+	_postit_line.text = tr("ODA_BOARD_POSTIT").format({"name": target_name})
 
 
 func _refresh_overtime_chip() -> void:
@@ -1359,7 +1359,7 @@ func _refresh_overtime_chip() -> void:
 			max_day = maxi(max_day, maxi(1, HROvertimeSystem.day_index(dept)))
 	_overtime_chip.visible = max_day > 0
 	if max_day > 0:
-		_overtime_label.text = tr("ODA_WINDOW_OVERTIME") % max_day
+		_overtime_label.text = tr("ODA_WINDOW_OVERTIME").format({"n": max_day})
 
 
 # =========================================================================
@@ -1378,15 +1378,15 @@ func _gather_papers() -> Array:
 		var min_left: int = 999
 		for sheet in GameState.active_sheets:
 			min_left = mini(min_left, sheet.days_left(GameState.day))
-		var title: String = (tr("ODA_PAPER_SHEET_TITLE") % maxi(0, min_left)) if sheet_count == 1 \
-			else (tr("ODA_PAPER_SHEETS_TITLE") % sheet_count)
+		var title: String = tr("ODA_PAPER_SHEET_TITLE").format({"days": maxi(0, min_left)}) if sheet_count == 1 \
+			else tr("ODA_PAPER_SHEETS_TITLE").format({"n": sheet_count})
 		papers.append({"id": "sheet", "dot": UiTokens.ODA_HEALTH_AMBER,
 			"tag": tr("ODA_PAPER_TAG_FUNDING"), "title": title,
 			"target": "finance", "subpage": "yatirim"})
 	if HRSearchSystem.has_files_ready():
 		papers.append({"id": "atlas", "dot": UiTokens.ODA_INK_MUTED,
 			"tag": tr("ODA_PAPER_TAG_ATLAS"),
-			"title": tr("ODA_PAPER_ATLAS_TITLE") % HRSearchSystem.get_files().size(),
+			"title": tr("ODA_PAPER_ATLAS_TITLE").format({"n": HRSearchSystem.get_files().size()}),
 			"target": "hr", "subpage": ""})
 	# İKAME: tasarımın istediği "sözleşme yenileme penceresi" motorda yok —
 	# renewal sistemi gelince bu kaynak onunla değiştirilir. Fatura/ödeme vadesi
@@ -1402,7 +1402,7 @@ func _gather_papers() -> Array:
 			"tag": tr("ODA_PAPER_TAG_GATE"), "title": tr("ODA_PAPER_GATE_TITLE"),
 			"target": "finance", "subpage": ""})
 		papers.append({"id": "dbg_atlas", "dot": UiTokens.ODA_INK_MUTED,
-			"tag": tr("ODA_PAPER_TAG_ATLAS"), "title": tr("ODA_PAPER_ATLAS_TITLE") % 3,
+			"tag": tr("ODA_PAPER_TAG_ATLAS"), "title": tr("ODA_PAPER_ATLAS_TITLE").format({"n": 3}),
 			"target": "hr", "subpage": ""})
 	return papers
 

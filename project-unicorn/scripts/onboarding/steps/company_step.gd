@@ -123,7 +123,7 @@ func _build() -> void:
 	_preview_founder = UiFactory.make_label("Founder", &"DialogueName")
 	founder_col.add_child(_preview_founder)
 	founder_col.add_child(UiFactory.make_label(
-		tr("ONB_PREVIEW_FOUNDER_TAG") % GameState.START_DATE.year, &"DialogueTag"))
+		tr("ONB_PREVIEW_FOUNDER_TAG").format({"year": GameState.START_DATE.year}), &"DialogueTag"))
 
 
 func _make_style_card(style: Dictionary) -> PanelContainer:

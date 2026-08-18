@@ -154,7 +154,7 @@ func _mount_step(index: int) -> void:
 
 	# Header + footer sync
 	_refresh_stepper(index)
-	footer_step_label.text = tr("ONB_STEP_COUNTER") % [index + 1, _steps.size()]
+	footer_step_label.text = tr("ONB_STEP_COUNTER").format({"step": index + 1, "total": _steps.size()})
 	back_btn.disabled = (index == 0)
 	next_btn.text = tr("ONB_START") if index == _steps.size() - 1 else tr("ONB_NEXT")
 	_refresh_next_enabled()

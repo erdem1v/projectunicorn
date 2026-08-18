@@ -128,7 +128,7 @@ func _refresh_prospects(is_b2b: bool) -> void:
 	if is_b2b:
 		find_slot.add_child(_build_find_card())
 	var prospects: Array[Prospect] = ProspectRegistry.get_all()
-	phead_count.text = tr("SALES_PROSPECTS_COUNT") % prospects.size()
+	phead_count.text = tr("SALES_PROSPECTS_COUNT").format({"n": prospects.size()})
 	prospects_empty.visible = prospects.is_empty()
 	for p in prospects:
 		prospects_list.add_child(_build_prospect_card(p))
@@ -163,9 +163,9 @@ func _activity_line(e: Dictionary) -> String:
 	var company: String = String(e.get("company", ""))
 	match String(e.get("kind", "")):
 		"auto_close":
-			return tr("SALES_LOG_CLOSE") % [actor, company, UiTokens.format_money(int(e.get("mrr", 0)))]
+			return tr("SALES_LOG_CLOSE").format({"actor": actor, "company": company, "amount": UiTokens.format_money(int(e.get("mrr", 0)))})
 		"cs_absorb":
-			return tr("SALES_LOG_ABSORB") % [actor, company]
+			return tr("SALES_LOG_ABSORB").format({"actor": actor, "company": company})
 	return "%s · %s" % [actor, company]
 
 
@@ -182,7 +182,7 @@ func _build_find_card() -> Control:
 	row.add_child(lbl)
 	if on_cooldown:
 		var days: int = int(GameState.get_flag("next_find_prospects_day", 0)) - GameState.day
-		row.add_child(UiFactory.make_label(tr("SALES_FIND_COOLDOWN") % days, &"RowMeta", UiTokens.INK_DIM))
+		row.add_child(UiFactory.make_label(tr("SALES_FIND_COOLDOWN").format({"n": days}), &"RowMeta", UiTokens.INK_DIM))
 	elif exhausted:
 		row.add_child(UiFactory.make_label(tr("SALES_FIND_EXHAUSTED"), &"RowMeta", UiTokens.INK_DIM))
 	var card := UiFactory.make_card(row)
@@ -232,7 +232,7 @@ func _build_prospect_card(p: Prospect) -> Control:
 		mid.add_child(wchip)
 	col.add_child(mid)
 	# Value RANGE (min–max/ay, K/M formatter).
-	var vr: String = tr("SALES_VALUE_RANGE") % [UiTokens.format_money(p.value_band_min), UiTokens.format_money(p.value_band_max)]
+	var vr: String = tr("SALES_VALUE_RANGE").format({"min": UiTokens.format_money(p.value_band_min), "max": UiTokens.format_money(p.value_band_max)})
 	col.add_child(UiFactory.make_label(vr, &"RowMeta", UiTokens.INK))
 	# Action → the existing pitch flow (unchanged).
 	var btn := Button.new()
@@ -267,7 +267,7 @@ func _refresh_portfolio() -> void:
 	for ch in customers_list.get_children():
 		ch.queue_free()
 	var custs: Array[Customer] = CustomerRegistry.get_by_market("b2b")
-	chead_count.text = tr("SALES_CUSTOMERS_COUNT") % custs.size()
+	chead_count.text = tr("SALES_CUSTOMERS_COUNT").format({"n": custs.size()})
 	customers_empty.visible = custs.is_empty()
 	# Attention-badged rows (risk, expansion) sort above calm rows (FM grammar).
 	custs.sort_custom(func(a: Customer, b: Customer) -> bool: return _attention_rank(a) > _attention_rank(b))
@@ -277,7 +277,7 @@ func _refresh_portfolio() -> void:
 	var direct: int = B2BSalesSystem.founder_managed_count()
 	if direct > B2BConstants.FOUNDER_DIRECT_CAP:
 		customers_list.add_child(UiFactory.make_label(
-			tr("SALES_FOUNDER_STRETCHED") % direct, &"RowMeta", UiTokens.INK_DIM))
+			tr("SALES_FOUNDER_STRETCHED").format({"n": direct}), &"RowMeta", UiTokens.INK_DIM))
 	for c in custs:
 		customers_list.add_child(_build_customer_card(c))
 
@@ -330,10 +330,10 @@ func _card_risk(c: Customer) -> Control:
 	col.add_child(top)
 	col.add_child(UiFactory.make_label(_meta_line(c), &"RowMeta", UiTokens.INK_MUTED))
 	# Reason — in-voice, no raw numbers (dim italic).
-	col.add_child(UiFactory.make_label(tr("SALES_REASON_PREFIX") % _risk_reason(c), &"QuoteSerif"))
+	col.add_child(UiFactory.make_label(tr("SALES_REASON_PREFIX").format({"reason": _risk_reason(c)}), &"QuoteSerif"))
 	# Watched churn countdown (brick, mono).
 	if c.churn_countdown >= 0:
-		col.add_child(UiFactory.make_label(tr("SALES_CHURN_COUNTDOWN") % c.churn_countdown, &"RowMeta", UiTokens.negative()))
+		col.add_child(UiFactory.make_label(tr("SALES_CHURN_COUNTDOWN").format({"n": c.churn_countdown}), &"RowMeta", UiTokens.negative()))
 	_add_steward_line(col, c)
 	# Action → the existing retention decision modal (backend-built; state-free trigger).
 	col.add_child(_action_button(tr("SALES_ACTION_RETAIN") + " →", func() -> void:
@@ -377,7 +377,7 @@ func _add_steward_line(col: VBoxContainer, c: Customer) -> void:
 		var cs: Character = CharacterRegistry.get_character(c.assigned_to)
 		if cs != null:
 			who = cs.character_name
-	row.add_child(UiFactory.make_label(tr("SALES_STEWARD") % who, &"RowMeta", UiTokens.INK_DIM))
+	row.add_child(UiFactory.make_label(tr("SALES_STEWARD").format({"name": who}), &"RowMeta", UiTokens.INK_DIM))
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
@@ -437,9 +437,9 @@ func _action_button(label: String, on_press: Callable) -> Button:
 
 func _meta_line(c: Customer) -> String:
 	var mrr_part: String = UiTokens.format_money(c.mrr) + tr("SALES_PER_MONTH")
-	var seats_part: String = tr("SALES_SEATS") % c.seats
+	var seats_part: String = tr("SALES_SEATS").format({"n": c.seats})
 	var months: int = int((GameState.day - c.acquired_on_day) / GameState.DAYS_PER_MONTH)
-	var tenure: String = tr("SALES_TENURE_NEW") if months < 1 else (tr("SALES_TENURE") % months)
+	var tenure: String = tr("SALES_TENURE_NEW") if months < 1 else tr("SALES_TENURE").format({"n": months})
 	return "%s · %s · %s" % [mrr_part, seats_part, tenure]
 
 

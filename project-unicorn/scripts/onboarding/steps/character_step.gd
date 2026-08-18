@@ -75,7 +75,7 @@ func _build() -> void:
 	content.add_child(right)
 
 	right.add_child(UiFactory.make_label(
-		tr("ONB_PORTRAIT_HEADER") % FounderConstants.PORTRAIT_IDS.size(), &"ZoneLabel"))
+		tr("ONB_PORTRAIT_HEADER").format({"n": FounderConstants.PORTRAIT_IDS.size()}), &"ZoneLabel"))
 
 	var grid := GridContainer.new()
 	grid.columns = GRID_COLUMNS
@@ -136,7 +136,7 @@ func _refresh_visual() -> void:
 		cell.modulate = Color(1, 1, 1, 1.0 if selected else 0.55)
 	if _portrait_id != "":
 		_preview_card.set_portrait(FounderConstants.portrait_path(_portrait_id), "")
-		_selected_chip.text = tr("ONB_SELECTED_CHIP") % _portrait_id.get_slice("_", 1)
+		_selected_chip.text = tr("ONB_SELECTED_CHIP").format({"id": _portrait_id.get_slice("_", 1)})
 	_refresh_preview_name()
 
 

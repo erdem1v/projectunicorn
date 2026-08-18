@@ -399,7 +399,7 @@ static func step_blocked_note(step: float) -> String:
 	# büyütme adımı KABUK genişliğine takılır. Tek metin ikisini de anlatamaz —
 	# %150'nin "okunmuyor" demesi düpedüz yanlış olurdu.
 	var key: String = "SET_UI_SCALE_TOO_LARGE" if step > 1.0 else "SET_UI_SCALE_TOO_SMALL"
-	return TranslationServer.translate(key) % int(round(step * 100.0))
+	return TranslationServer.translate(key).format({"pct": int(round(step * 100.0))})
 
 
 ## Nearest LEGAL step, moving TOWARD 100%. The direction is not a preference — each
