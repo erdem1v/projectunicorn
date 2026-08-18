@@ -108,6 +108,15 @@ func _ready() -> void:
 	_next_btn.pressed.connect(_advance)
 	btn_row.add_child(_next_btn)
 	resized.connect(_apply_step)
+	# Dil değişirse açık adımı yeniden boya. Tur kartının metinleri zaten anahtarlı ama
+	# tr() ile ÇÖZÜLMÜŞ hâlde yazılıyor, yani auto-translate onları geri almaz; ve tur
+	# OdaView'un çocuğu değil (PanelLayer'da duruyor), dolayısıyla OdaView._refresh_all
+	# de buraya ulaşmıyor. _apply_step zaten tek boyama yolu.
+	EventBus.language_changed.connect(_apply_step_on_language)
+	_apply_step()
+
+
+func _apply_step_on_language(_locale: String) -> void:
 	_apply_step()
 
 
@@ -128,6 +137,8 @@ func _finish() -> void:
 	Settings.set_value("oda_intro_seen", true)
 	if EventBus.tab_changed.is_connected(_on_tab_changed):
 		EventBus.tab_changed.disconnect(_on_tab_changed)
+	if EventBus.language_changed.is_connected(_apply_step_on_language):
+		EventBus.language_changed.disconnect(_apply_step_on_language)
 	# Saati turun bulduğu yere bırak. Tur MentorIntro'nun hemen ardından açıldığı için
 	# bu pratikte 0'dır; yine de varsayım değil ölçüm.
 	if _pre_tour_speed >= 0:

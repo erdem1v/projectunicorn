@@ -61,6 +61,33 @@ func cmdline_language() -> String:
 	return ""
 
 
+## Has the player never chosen a language? True only when nothing has ever been written
+## to the `language` key — Settings.has_stored draws exactly this line, because get_value
+## cannot tell "stored tr" apart from "defaulted to tr". Drives the first-boot gate.
+## NOTE for verification: on a machine that has ever opened Settings > Language this is
+## false forever, so the gate cannot be reached by playing — use --force-language-gate.
+func is_first_boot() -> bool:
+	return not Settings.has_stored(KEY_LANGUAGE)
+
+
+## Choose between a Turkish source string and its English sibling.
+##
+## WHY THIS EXISTS INSTEAD OF A KEY: authored event JSON carries its prose inline, and the
+## event cache is built once at boot and compared BY REFERENCE, so the text cannot be
+## resolved at load time without freezing the boot locale into the cache. pick() defers the
+## choice to render time, which is what makes a mid-run language switch show the next event
+## in the new language.
+##
+## EMPTY en IS A CONTRACT, NOT A GAP: code factories (B2BEventFactory, HREventFactory)
+## already write finished, localized text into the Turkish field and leave the sibling
+## empty. Falling back returns that text unchanged in both locales — "already localized"
+## behaviour with no discriminator field to keep in sync.
+static func pick(tr_text: String, en_text: String) -> String:
+	if en_text != "" and TranslationServer.get_locale().begins_with("en"):
+		return en_text
+	return tr_text   # TR canonical fallback
+
+
 func set_language(locale: String) -> void:
 	if locale not in SUPPORTED:
 		push_warning("[Localization] unsupported locale: %s" % locale)

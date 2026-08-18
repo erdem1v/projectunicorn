@@ -881,6 +881,13 @@ func _build_event_from_dict(d: Dictionary) -> GameEvent:
 	ev.body_text = String(d.get("body_text", ""))
 	ev.mentor_line = String(d.get("mentor_line", ""))
 	ev.mentor_choice = int(d.get("mentor_choice", -1))
+	# English siblings. Absent keys keep the model's "" default, which Localization.pick
+	# reads as "fall back to Turkish" — so every event file that has not been translated
+	# yet behaves exactly as it did before this schema existed.
+	ev.title_en = String(d.get("title_en", ""))
+	ev.subtitle_en = String(d.get("subtitle_en", ""))
+	ev.body_text_en = String(d.get("body_text_en", ""))
+	ev.mentor_line_en = String(d.get("mentor_line_en", ""))
 	# Synthetic speaker strip. Ignored here for years — harmlessly, because no authored JSON
 	# has ever set them (B2BEventFactory assigns them in code). It stops being harmless the
 	# moment this function is also the way a SAVED event comes back: a queued B2B retention
@@ -910,6 +917,9 @@ func _build_event_from_dict(d: Dictionary) -> GameEvent:
 		c.modifiers = cdict.get("modifiers", []) as Array
 		c.unlock_condition = cdict.get("unlock_condition", {}) as Dictionary
 		c.unlock_reason_text = String(cdict.get("unlock_reason_text", ""))
+		c.label_en = String(cdict.get("label_en", ""))
+		c.description_en = String(cdict.get("description_en", ""))
+		c.unlock_reason_text_en = String(cdict.get("unlock_reason_text_en", ""))
 		ev.choices.append(c)
 	return ev
 

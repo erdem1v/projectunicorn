@@ -21,6 +21,11 @@ extends RefCounted
 # line. The process is left ALIVE deliberately — editor-run output is only
 # readable while the process lives (godot-mcp gotcha); editor-stop ends it.
 
+## Authored event text fields still awaiting an English sibling. A RATCHET: the real count
+## may only fall. Measured 79 when the *_en schema landed (Lokalizasyon Faz 2 · Step 1d);
+## batch B6 authors the values and drives this to 0. Lower it as batches land — never raise it.
+const LOC_EVENT_EN_PENDING := 79
+
 const GATE1_ID := "ev_phase_gate_traction"
 const GATE2_ID := "ev_phase_gate_series_a"
 
@@ -226,6 +231,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		# --- Lokalizasyon Faz 2 (2026-08-18) ---
 		"loc_csv_integrity":         fail = _case_loc_csv_integrity()
 		"loc_format_locale_flip":    fail = _case_loc_format_locale_flip()
+		"loc_event_en_coverage":     fail = _case_loc_event_en_coverage()
+		"loc_pick_fallback":         fail = _case_loc_pick_fallback()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -6328,3 +6335,78 @@ static func _case_loc_format_locale_flip() -> String:
 		return "en upper('Display') = '%s', want DISPLAY (the tr i→İ rule leaked)" % Fmt.upper("Display")
 	TranslationServer.set_locale(loc0)
 	return ""
+
+
+## Every authored (non-debug) reactive event must carry an English sibling for each text
+## field it fills. Runs against the JSON on disk rather than the loaded cache, because the
+## cache skips ev_debug_* and the point is to audit what SHIPS. The three ev_debug_*
+## fixtures are exempt by director ruling — they are developer surfaces.
+static func _case_loc_event_en_coverage() -> String:
+	var dir := DirAccess.open("res://data/events/reactive")
+	if dir == null:
+		return "cannot open res://data/events/reactive"
+	var missing: Array[String] = []
+	var checked: int = 0
+	dir.list_dir_begin()
+	var entry: String = dir.get_next()
+	while entry != "":
+		if entry.ends_with(".json") and not entry.begins_with("ev_debug_"):
+			var f := FileAccess.open("res://data/events/reactive/" + entry, FileAccess.READ)
+			if f == null:
+				return "%s unreadable" % entry
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			if typeof(parsed) != TYPE_DICTIONARY:
+				return "%s is not a JSON object" % entry
+			var d: Dictionary = parsed
+			checked += 1
+			for field in ["title", "subtitle", "body_text", "mentor_line"]:
+				if String(d.get(field, "")).strip_edges() != "" \
+						and String(d.get(field + "_en", "")).strip_edges() == "":
+					missing.append("%s:%s" % [entry, field])
+			var choices: Array = d.get("choices", []) as Array
+			for i in choices.size():
+				if typeof(choices[i]) != TYPE_DICTIONARY:
+					continue
+				var c: Dictionary = choices[i]
+				for cf in ["label", "description", "unlock_reason_text"]:
+					if String(c.get(cf, "")).strip_edges() != "" \
+							and String(c.get(cf + "_en", "")).strip_edges() == "":
+						missing.append("%s:choices[%d].%s" % [entry, i, cf])
+		entry = dir.get_next()
+	dir.list_dir_end()
+	if checked == 0:
+		return "no authored event files found — the scan is not looking where it thinks"
+	# RATCHET, not a pass/fail line. Step 1d landed the SCHEMA; batch B6 authors the ~79
+	# English values. A case that simply failed until B6 would sit red across six commits
+	# and train everyone to ignore the suite, and one that simply passed would prove
+	# nothing. So it fails only if coverage goes BACKWARDS: the count may fall freely
+	# (that is B6 working), never rise (that is a new event authored TR-only, which the
+	# BILINGUAL BIRTH LAW forbids). Lower the constant as batches land; 0 is B6's done.
+	if missing.size() > LOC_EVENT_EN_PENDING:
+		return "_en coverage REGRESSED: %d missing, ratchet allows %d. New offenders: %s" % [
+			missing.size(), LOC_EVENT_EN_PENDING, ", ".join(missing.slice(0, 6))]
+	if not missing.is_empty():
+		print("  [loc_event_en_coverage] %d/%d authored fields still awaiting _en (ratchet %d, target 0 at B6)" % [
+			missing.size(), checked, LOC_EVENT_EN_PENDING])
+	return ""
+
+
+## Localization.pick's contract, including the one that is easy to get backwards: an EMPTY
+## English sibling means "fall back to Turkish" and is how code-factory events stay correct
+## in both locales without carrying a discriminator field.
+static func _case_loc_pick_fallback() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var out: String = ""
+	TranslationServer.set_locale("en")
+	if Localization.pick("TR metni", "EN text") != "EN text":
+		out = "en locale did not take the English sibling"
+	elif Localization.pick("TR metni", "") != "TR metni":
+		out = "empty _en under en must fall back to Turkish (the factory contract)"
+	if out == "":
+		TranslationServer.set_locale("tr")
+		if Localization.pick("TR metni", "EN text") != "TR metni":
+			out = "tr locale must ignore the English sibling"
+		elif Localization.pick("TR metni", "") != "TR metni":
+			out = "empty _en under tr must return the Turkish text"
+	TranslationServer.set_locale(loc0)
+	return out

@@ -12,6 +12,7 @@ extends Node
 #   5. On modal dismissed: unpause via EventBus.speed_change_requested(1).
 
 const ONBOARDING_FLOW := preload("res://scenes/onboarding/OnboardingFlow.tscn")
+const LANGUAGE_GATE := preload("res://scenes/onboarding/LanguageGate.tscn")
 const GAME_SHELL := preload("res://scenes/main/GameShell.tscn")
 const MENTOR_MODAL := preload("res://scenes/modals/MentorIntroModal.tscn")
 const EVENT_MODAL := preload("res://scenes/modals/EventModal.tscn")
@@ -232,6 +233,39 @@ func _ready() -> void:
 		_skip_to_shell()
 		return
 
+	# FIRST BOOT: pick a language before anything else builds. Placing the gate HERE, in
+	# front of _mount_flow, is what lets the whole onboarding be constructed once in the
+	# chosen locale instead of being re-rendered after the fact. Every harness above has
+	# already returned by this line, and --skip-onboarding returns just above it, so only
+	# a genuine first boot can reach the gate.
+	if Localization.is_first_boot() or _force_language_gate():
+		_mount_language_gate()
+		return
+
+	_mount_flow()
+
+
+## The gate is unreachable once a language has ever been stored, which on any developer
+## machine is immediately and forever. This flag re-opens it so the first-boot walk can
+## actually be verified without deleting the player's settings file. Debug builds only,
+## and it does NOT clear the stored preference — the gate simply writes it again.
+func _force_language_gate() -> bool:
+	if not OS.is_debug_build():
+		return false
+	if "--force-language-gate" in OS.get_cmdline_args():
+		return true
+	return "--force-language-gate" in String(
+		ProjectSettings.get_setting("application/run/main_args", ""))
+
+
+func _mount_language_gate() -> void:
+	var gate: Control = LANGUAGE_GATE.instantiate()
+	gate.chosen.connect(_on_language_chosen.bind(gate))
+	add_child(gate)
+
+
+func _on_language_chosen(_locale: String, gate: Control) -> void:
+	gate.queue_free()
 	_mount_flow()
 
 
@@ -407,8 +441,12 @@ func _run_render_probe(tab_id: String) -> void:
 	var win: Vector2i = get_window().size
 
 	print("RENDER_PROBE_BEGIN")
-	print("WINDOW|%dx%d|scale=%.3f|vsync=off" % [
-		win.x, win.y, get_window().content_scale_factor])
+	# Viewport size, not just the window: content_scale_factor is a REQUEST, and the
+	# logical viewport is the only place it can be observed to have landed. The two
+	# disagreeing is exactly the --shot-scale defect this line was added to diagnose.
+	var vis: Vector2 = get_viewport().get_visible_rect().size
+	print("WINDOW|%dx%d|scale=%.3f|viewport=%dx%d|vsync=off" % [
+		win.x, win.y, get_window().content_scale_factor, int(vis.x), int(vis.y)])
 	print("FRAME_MS|avg=%.3f|median=%.3f|p95=%.3f|min=%.3f|max=%.3f|n=%d" % [
 		total / float(sorted_ms.size()),
 		float(sorted_ms[int(sorted_ms.size() * 0.50)]),
@@ -1066,6 +1104,21 @@ func _run_modal_shot(kind: String) -> void:
 func _run_onboard_shot(step: int) -> void:
 	get_tree().paused = false
 	_shot_window(Vector2i(1920, 1080))
+	# STEP 0 IS THE LANGUAGE GATE. It sits in front of the flow and is unreachable by
+	# playing once a language has ever been stored, so without a shot surface it would be
+	# the one screen in the game that nobody could verify. It is mounted directly rather
+	# than through the first-boot branch — the harness must not depend on the developer's
+	# settings file being pristine.
+	if step == 0:
+		_mount_language_gate()
+		await get_tree().process_frame
+		await get_tree().create_timer(0.4).timeout
+		var gate_img: Image = get_viewport().get_texture().get_image()
+		var gate_path: String = _shot_path("onboard_shot_0")
+		gate_img.save_png(gate_path)
+		print("[OnboardShot] saved %s" % ProjectSettings.globalize_path(gate_path))
+		get_tree().quit()
+		return
 	_mount_flow()
 	await get_tree().process_frame
 	await get_tree().process_frame

@@ -518,16 +518,20 @@ const TAB_GLYPH_RND := "⚡"
 const TAB_GLYPH_PERSONAL := "★"
 const TAB_GLYPH_EVENTS := "●"
 
-# --- Tab definition (id, label, glyph, icon) — canonical 8-tab list ---
+# --- Tab definition (id, glyph, icon) — canonical 8-tab list ---
+# NO `label` FIELD, deliberately (S2-34, 2026-08-18). The rail's caption is a localization
+# key derived from the id — TAB_ + ID.to_upper() — so LeftTabs.tscn carries the key and
+# center_viewport derives the same one. An English `label` here was the SECOND source of
+# those captions, which is exactly why the rail stayed English-only in Turkish.
 const TABS := [
-	{"id": "product",  "label": "Product",  "glyph": TAB_GLYPH_PRODUCT,  "icon": "res://assets/icons/tabs/product.svg"},
-	{"id": "hr",       "label": "HR",       "glyph": TAB_GLYPH_HR,       "icon": "res://assets/icons/tabs/hr.svg"},
-	{"id": "finance",  "label": "Finance",  "glyph": TAB_GLYPH_FINANCE,  "icon": "res://assets/icons/tabs/finance.svg"},
-	{"id": "sales",    "label": "Sales",    "glyph": TAB_GLYPH_SALES,    "icon": "res://assets/icons/tabs/sales.svg"},
-	{"id": "ops",      "label": "Ops",      "glyph": TAB_GLYPH_OPS,      "icon": "res://assets/icons/tabs/ops.svg"},
-	{"id": "rnd",      "label": "R&D",      "glyph": TAB_GLYPH_RND,      "icon": "res://assets/icons/tabs/rnd.svg"},
-	{"id": "personal", "label": "Personal", "glyph": TAB_GLYPH_PERSONAL, "icon": "res://assets/icons/tabs/personal.svg"},
-	{"id": "events",   "label": "Events",   "glyph": TAB_GLYPH_EVENTS,   "icon": "res://assets/icons/tabs/events.svg"},
+	{"id": "product", "glyph": TAB_GLYPH_PRODUCT,  "icon": "res://assets/icons/tabs/product.svg"},
+	{"id": "hr", "glyph": TAB_GLYPH_HR,       "icon": "res://assets/icons/tabs/hr.svg"},
+	{"id": "finance", "glyph": TAB_GLYPH_FINANCE,  "icon": "res://assets/icons/tabs/finance.svg"},
+	{"id": "sales", "glyph": TAB_GLYPH_SALES,    "icon": "res://assets/icons/tabs/sales.svg"},
+	{"id": "ops", "glyph": TAB_GLYPH_OPS,      "icon": "res://assets/icons/tabs/ops.svg"},
+	{"id": "rnd", "glyph": TAB_GLYPH_RND,      "icon": "res://assets/icons/tabs/rnd.svg"},
+	{"id": "personal", "glyph": TAB_GLYPH_PERSONAL, "icon": "res://assets/icons/tabs/personal.svg"},
+	{"id": "events", "glyph": TAB_GLYPH_EVENTS,   "icon": "res://assets/icons/tabs/events.svg"},
 	# Spec 6 — the standalone "Yatırım" rail tab was relocated INTO the Finance tab as a
 	# sub-page (Finance>Yatırım); the 9th rail entry is gone (badge indices 1/2/7 stay valid).
 ]

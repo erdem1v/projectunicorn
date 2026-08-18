@@ -42,6 +42,10 @@ const SKIP_PREFIXES := [
 	"res://scenes/debug/",             # ThemeProbe etc.
 	"res://scripts/ui/components/right_panel.gd",  # RETIRED surface (ODA rework 2026-08-06) — not swept
 	"res://scenes/ui/components/RightPanel.tscn",  # RETIRED surface — not swept
+	# The first-boot language gate names its two options in their OWN languages
+	# ("Türkçe" / "English") ON PURPOSE — an option rendered in a language the player
+	# cannot read is not an option. This is the one sanctioned player-visible literal.
+	"res://scripts/onboarding/language_gate.gd",
 ]
 
 # ASCII-only Turkish wordlist — folded forms with no Turkish charclass character left.

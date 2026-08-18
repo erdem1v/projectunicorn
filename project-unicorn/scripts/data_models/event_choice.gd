@@ -23,3 +23,16 @@ extends Resource
 @export var modifiers: Array = []                  # Array of Dictionaries (loose-typed; dispatcher reads "type")
 @export var unlock_condition: Dictionary = {}      # {} = unlocked; otherwise same shape as a trigger condition
 @export var unlock_reason_text: String = ""        # Shown on locked choices, e.g. "Reputation 10+ gerekli"
+
+# --- English siblings (BILINGUAL BIRTH LAW, 2026-08-18) ---
+# Additive `*_en` fields rather than nested {tr:, en:} objects: every existing JSON stays
+# valid untouched, diffs are pure insertions, and the coming event-rebuild arc discards
+# this schema anyway — a nested migration would be real cost spent on a condemned shape.
+# Resolved at RENDER time via Localization.pick, never at load (the event cache is built
+# once at boot, so resolving early would freeze the boot locale into it).
+# EMPTY means TR-fallback BY DESIGN — that is how code factories, which write finished
+# localized text into the Turkish field, get correct behaviour with no discriminator.
+# ABSENT on authored content means the task is not done.
+@export var label_en: String = ""
+@export var description_en: String = ""
+@export var unlock_reason_text_en: String = ""

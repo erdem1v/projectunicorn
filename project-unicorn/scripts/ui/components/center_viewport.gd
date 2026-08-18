@@ -32,6 +32,7 @@ var _active_tab_id: String = ""     # açık sayfanın id'si ("" = oda) — pale
 func _ready() -> void:
 	EventBus.tab_changed.connect(_on_tab_changed)
 	EventBus.palette_changed.connect(_on_palette_changed)
+	EventBus.language_changed.connect(_on_language_changed)
 	# Açılış durumu ODA'dır ("home sekmesi" kavramı emekli; left_tabs'ın eski
 	# default-product emit'i de silindi — zaten sibling-ready sırası gereği
 	# buradaki connect'ten ÖNCE ateşleniyordu, hiç duyulmuyordu).
@@ -41,6 +42,7 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	EventBus.tab_changed.disconnect(_on_tab_changed)
 	EventBus.palette_changed.disconnect(_on_palette_changed)
+	EventBus.language_changed.disconnect(_on_language_changed)
 
 
 ## Renk körü paleti değişti: açık sayfayı YENİDEN KUR. Sayfa gövdeleri semantik
@@ -51,6 +53,19 @@ func _exit_tree() -> void:
 ## Oda açıkken hiçbir şey yapmıyoruz: OdaView resident ve palette_changed'e kendisi
 ## bağlı, bir daha kurmak gereksiz iş olurdu.
 func _on_palette_changed(_colorblind: bool) -> void:
+	if _active_tab_id != "":
+		_on_tab_changed(_active_tab_id)
+
+
+## Dil değişti: açık sayfayı YENİDEN KUR — palet yenilemesiyle aynı kanal, aynı gerekçe.
+## Sahne-anahtarlı statik metin auto-translate ile kendi kendine dönüyor (probe'la
+## kanıtlandı), ama sayfa gövdeleri metnin ÇOĞUNU kod tarafında BESTELİYOR
+## (tr(KEY).format({...}), Fmt ile biçimlenmiş sayı ve tarihler) ve besteleme çıktısı
+## ham anahtar DEĞİL, çözülmüş metindir — yani kendiliğinden çevrilmez. Router'ın tek
+## kurulum yolu zaten free-and-rebuild olduğu için burada yeni bir repaint seam'i icat
+## etmiyoruz; var olanı çağırıyoruz.
+## Oda açıkken hiçbir şey yapmıyoruz: OdaView resident ve kendi yenilemesine sahip.
+func _on_language_changed(_locale: String) -> void:
 	if _active_tab_id != "":
 		_on_tab_changed(_active_tab_id)
 
@@ -110,11 +125,10 @@ func _make_placeholder_body(tab_id: String) -> Control:
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	body.add_child(col)
-	var title := UiFactory.make_label("", &"TitleSerif")
-	for tab in UiTokens.TABS:
-		if String(tab.id) == tab_id:
-			title.text = UiTokens.tr_upper(String(tab.label))
-			break
+	# The caption is DERIVED from the id (TAB_ + ID), not looked up in a second table:
+	# UiTokens.TABS no longer carries an English `label`, so the rail and this page title
+	# now read the same localization key and cannot drift apart (S2-34).
+	var title := UiFactory.make_label(Fmt.upper(tr("TAB_" + tab_id.to_upper())), &"TitleSerif")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
 	var sub := UiFactory.make_label(tr("ODA_PAGE_PLACEHOLDER"), &"CaptionMuted")

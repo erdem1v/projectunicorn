@@ -389,3 +389,12 @@ PCT_PATTERN,%{v},{v}%
 SHARE_FLOOR,"<%0,1",<0.1%
 NUM_GROUP_SEP,.,","
 NUM_DECIMAL_SEP,",",.
+TAB_PRODUCT,Ürün,Product
+TAB_HR,İK,HR
+TAB_FINANCE,Finans,Finance
+TAB_SALES,Satış,Sales
+TAB_OPS,Operasyon,Ops
+TAB_RND,Ar-Ge,R&D
+TAB_PERSONAL,Kişisel,Personal
+TAB_EVENTS,Olaylar,Events
+TAB_SETTINGS,Ayarlar,Settings

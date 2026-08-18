@@ -36,8 +36,12 @@ func populate(event: GameEvent) -> void:
 	if not is_node_ready():
 		await ready
 	_fill_header()
-	_title_label.text = event.title
-	_body_rich.text = _markdown_to_bbcode(event.body_text)
+	# Every authored string goes through Localization.pick, which returns the English
+	# sibling when one exists and the locale is English, and the Turkish canonical text
+	# otherwise. Resolution happens HERE, at render, not at load: the event cache is built
+	# once at boot, so resolving earlier would freeze the boot locale into it.
+	_title_label.text = Localization.pick(event.title, event.title_en)
+	_body_rich.text = _markdown_to_bbcode(Localization.pick(event.body_text, event.body_text_en))
 	_build_speaker_row()
 	_build_mentor_row()
 	_render_choices()
@@ -163,8 +167,9 @@ func _fill_header() -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_header_row.add_child(spacer)
-	if _event.subtitle != "":
-		var sub := UiFactory.make_label(UiTokens.tr_upper(_live_subtitle(_event.subtitle)), &"MicroLabel")
+	var subtitle_text: String = Localization.pick(_event.subtitle, _event.subtitle_en)
+	if subtitle_text != "":
+		var sub := UiFactory.make_label(UiTokens.tr_upper(_live_subtitle(subtitle_text)), &"MicroLabel")
 		sub.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_header_row.add_child(sub)
 
@@ -307,13 +312,14 @@ func _trait_label(trait_id: String) -> String:
 func _build_mentor_row() -> void:
 	for child in _mentor_row.get_children():
 		child.queue_free()
-	_mentor_row.visible = _event.mentor_line != ""
+	var mentor_text: String = Localization.pick(_event.mentor_line, _event.mentor_line_en)
+	_mentor_row.visible = mentor_text != ""
 	if not _mentor_row.visible:
 		return
 	var mentor: Character = CharacterRegistry.get_mentor()
 	var initials_text: String = _initials(mentor.character_name) if mentor != null else ""
 	_mentor_row.add_child(_make_avatar(initials_text))
-	var quote := UiFactory.make_label(_event.mentor_line, &"QuoteSerif")
+	var quote := UiFactory.make_label(mentor_text, &"QuoteSerif")
 	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quote.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	quote.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -351,12 +357,13 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor
 	text_col.add_theme_constant_override("separation", 2)
 	text_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(text_col)
-	var lbl := UiFactory.make_label(choice.label, &"ChoiceLabelStrong")
+	var lbl := UiFactory.make_label(Localization.pick(choice.label, choice.label_en), &"ChoiceLabelStrong")
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text_col.add_child(lbl)
-	if choice.description != "":
-		var desc := UiFactory.make_label(choice.description, &"QuoteSerif")
+	var desc_text: String = Localization.pick(choice.description, choice.description_en)
+	if desc_text != "":
+		var desc := UiFactory.make_label(desc_text, &"QuoteSerif")
 		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		text_col.add_child(desc)
@@ -381,7 +388,8 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor
 		root.modulate = Color(1, 1, 1, 0.5)
 		root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		root.focus_mode = Control.FOCUS_NONE
-		var reason: String = choice.unlock_reason_text if choice.unlock_reason_text != "" else "KİLİTLİ"
+		var reason_src: String = Localization.pick(choice.unlock_reason_text, choice.unlock_reason_text_en)
+		var reason: String = reason_src if reason_src != "" else tr("ONB_LOCKED_CHIP")
 		chip_col.add_child(UiFactory.make_badge(reason, &"neutral"))
 	return root
 

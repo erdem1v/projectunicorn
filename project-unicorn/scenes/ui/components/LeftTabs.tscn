@@ -63,7 +63,7 @@ modulate = Color(0.663, 0.62, 0.525, 1)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "Product"
+text = "TAB_PRODUCT"
 horizontal_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/ProductBtn"]
@@ -125,7 +125,7 @@ modulate = Color(0.663, 0.62, 0.525, 1)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "HR"
+text = "TAB_HR"
 horizontal_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/HRBtn"]
@@ -187,7 +187,7 @@ modulate = Color(0.663, 0.62, 0.525, 1)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "Finance"
+text = "TAB_FINANCE"
 horizontal_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/FinanceBtn"]
@@ -249,7 +249,7 @@ modulate = Color(0.663, 0.62, 0.525, 1)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "Sales"
+text = "TAB_SALES"
 horizontal_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/SalesBtn"]
@@ -311,7 +311,7 @@ modulate = Color(0.663, 0.62, 0.525, 1)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "Ops"
+text = "TAB_OPS"
 horizontal_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/OpsBtn"]
@@ -373,7 +373,7 @@ modulate = Color(0.663, 0.62, 0.525, 1)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "R&D"
+text = "TAB_RND"
 horizontal_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/RnDBtn"]
@@ -435,7 +435,7 @@ modulate = Color(0.663, 0.62, 0.525, 1)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "Personal"
+text = "TAB_PERSONAL"
 horizontal_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/PersonalBtn"]
@@ -497,7 +497,7 @@ modulate = Color(0.663, 0.62, 0.525, 1)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "Events"
+text = "TAB_EVENTS"
 horizontal_alignment = 1
 
 [node name="Badge" type="Panel" parent="Margin/Col/EventsBtn"]
@@ -568,5 +568,5 @@ modulate = Color(0.663, 0.62, 0.525, 1)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "Ayarlar"
+text = "TAB_SETTINGS"
 horizontal_alignment = 1

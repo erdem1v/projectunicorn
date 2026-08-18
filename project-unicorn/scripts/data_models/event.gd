@@ -65,6 +65,17 @@ extends Resource
 # "build_safe" tag (e.g. the ship-moment cinematic, system narrators).
 @export var tags: Array[String] = []
 
+# --- English siblings (BILINGUAL BIRTH LAW, 2026-08-18) ---
+# See EventChoice for the full rationale. Short version: additive `*_en` fields, resolved
+# at render time through Localization.pick, empty = deliberate TR fallback (code
+# factories), absent on authored content = unfinished. Save/load needs no work — the
+# codec walks properties generically (EventManager.event_to_dict → SaveCodec.res_to_dict),
+# so a field added here is persisted without anyone remembering to come back.
+@export var title_en: String = ""
+@export var subtitle_en: String = ""
+@export var body_text_en: String = ""
+@export var mentor_line_en: String = ""
+
 
 func has_tag(tag: String) -> bool:
 	return tag in tags
