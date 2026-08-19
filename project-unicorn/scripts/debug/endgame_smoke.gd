@@ -282,6 +282,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"speed_save_clamps_to_ladder":     fail = _case_speed_save_clamps_to_ladder()
 		"topbar_speed_cluster_three_rungs": fail = _case_topbar_speed_cluster_three_rungs()
 		"smoke_seed_pinned":               fail = _case_smoke_seed_pinned()
+		"ambient_hourly_chance_exact":     fail = _case_ambient_hourly_chance_exact()
+		"ambient_one_per_day_across_hour0": fail = _case_ambient_one_per_day_across_hour0()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -7760,5 +7762,59 @@ static func _case_smoke_seed_pinned() -> String:
 	var seed_now: int = int(GameState.get_run_ledger().get("seed", 0))
 	if seed_now != 424242:
 		return "smoke seed is %d, want 424242 (run_case no longer pins it)" % seed_now
+	return ""
+
+
+# --- §14 · the ambient rate model reproduces the authored daily chance; ≤1 ambient/day ---
+
+static func _case_ambient_hourly_chance_exact() -> String:
+	# 1 − (1 − p_h)^n == p for the authored pool (0.5 over a 10-hour window → 0.0670/h, not
+	# 0.05/h), 24-hour windows, and the edges.
+	var p_h: float = EventManager.hourly_chance(0.5, 10)
+	if absf(p_h - 0.066967) > 1e-5:
+		return "hourly_chance(0.5, 10) = %.6f, want 0.066967" % p_h
+	if absf((1.0 - pow(1.0 - p_h, 10)) - 0.5) > 1e-9:
+		return "ten rolls at p_h do not reproduce 0.5"
+	var p24: float = EventManager.hourly_chance(0.3, 24)
+	if absf((1.0 - pow(1.0 - p24, 24)) - 0.3) > 1e-9:
+		return "24 rolls do not reproduce 0.3"
+	if not is_equal_approx(EventManager.hourly_chance(0.4, 1), 0.4):
+		return "a one-hour window must roll the daily chance as written"
+	if not is_equal_approx(EventManager.hourly_chance(0.0, 10), 0.0) or not is_equal_approx(EventManager.hourly_chance(1.0, 10), 1.0):
+		return "edges (0, 1) must pass through"
+	# The old approximation was p/n — make sure the exact form is what the engine uses.
+	if absf(p_h - 0.05) < 1e-6:
+		return "the engine still uses the p/n approximation"
+	return ""
+
+
+static func _case_ambient_one_per_day_across_hour0() -> String:
+	# Drive 30 full engine days (hour 1..23 → 0 → advance → daily) on a B2C world where the
+	# four ambient cards are all eligible and count ambient (pool, random-trigger) entries per
+	# calendar day: never two on one day, including across the hour-0 rollover.
+	_seed_b2c()
+	GameState.set_cash(500000)
+	GameState.set_flag("mvp_innovation", 15.0)
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_experience", 17.5)
+	GameState.set_flag("b2c_audience", 500.0)
+	SalesSystem.add_b2c_audience(0)
+	var per_day: Dictionary = {}
+	EventBus.event_triggered.connect(func(id: String) -> void:
+		var ev: GameEvent = EventManager._all_events.get(id, null)
+		if ev != null and ev.has_random_trigger():
+			# hour 0 belongs to the NEW calendar day (GameState.day still shows yesterday)
+			var slot: int = GameState.day + (1 if GameState.current_hour == 0 else 0)
+			per_day[slot] = int(per_day.get(slot, 0)) + 1)
+	var total: int = 0
+	for i in 30:
+		_sim_day_full()
+		_drain_all_modals()
+	for d in per_day.keys():
+		total += int(per_day[d])
+		if int(per_day[d]) > 1:
+			return "day %d received %d ambient cards (want ≤ 1)" % [d, int(per_day[d])]
+	if total == 0:
+		return "fixture: no ambient card fired in 30 days (pool not eligible?)"
 	return ""
 

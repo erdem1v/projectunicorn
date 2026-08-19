@@ -86,10 +86,11 @@ func hourly_tick(hour: int) -> void:
 	#     later if a modal is up.
 	#   - ≤1 ambient per day survives via _ambient_fired_day (counts ENTRY).
 	#   - Chance normalization: the JSON "chance" keeps meaning per-DAY
-	#     probability. The roll now repeats every in-window hour, so each
-	#     hourly roll uses chance / window_length_hours (24 h when the event
-	#     has no window). Daily fire probability ≈ 1-(1-p/n)^n — same ballpark
-	#     as p (slightly below), instead of silently multiplying frequency.
+	#     probability. The roll repeats every in-window hour (24 h when the event
+	#     has no window), so each hourly roll uses the EXACT per-hour probability
+	#     p_h = 1 − (1 − p)^(1/n) — the daily fire probability is then p again.
+	#     (Calibration Round A §14 / audit S3-48: the old p/n approximation read
+	#     7-20 % under the authored number — bug_complaint's 0.5 landed at ~0.40.)
 	# HANGİ GÜNÜN kotası: saat 0 tiki YENİ günün ilk saatidir, ama motorun sınır sırası
 	# gereği (_drain_boundaries: set_current_hour(0) → hourly(0) → advance_day() → daily)
 	# GameState.day o anda hâlâ DÜNÜ gösteriyor. Damgayı olduğu gibi basmak, saat 1'de
@@ -104,7 +105,7 @@ func hourly_tick(hour: int) -> void:
 			continue  # beats stay on the daily path
 		if not _is_hour_in_window(hour, _hour_windows.get(ev.id, []) as Array):
 			continue  # cheap pre-filter; _is_eligible re-gates via GameState.current_hour
-		if _is_eligible(ev, 1.0 / float(_window_length_hours(ev))):
+		if _is_eligible(ev, _window_length_hours(ev)):
 			eligible.append(ev)
 	# At most one ambient event enters the queue per day.
 	for ev in _ordered_by_priority(eligible):
@@ -446,7 +447,7 @@ func is_condition_met(condition: Dictionary) -> bool:
 
 # --- Private helpers ---
 
-func _is_eligible(ev: GameEvent, random_chance_scale: float = 1.0) -> bool:
+func _is_eligible(ev: GameEvent, window_hours: int = 0) -> bool:
 	# 1. Active or already queued — skip.
 	if ev.id == _active_event_id:
 		return false
@@ -487,15 +488,17 @@ func _is_eligible(ev: GameEvent, random_chance_scale: float = 1.0) -> bool:
 	# Windowless events always pass.
 	if not _is_hour_in_window(GameState.current_hour, _hour_windows.get(ev.id, []) as Array):
 		return false
-	# 5. Trigger conditions (AND logic). "random" rolls are scaled by
-	# random_chance_scale — the hourly ambient path passes 1/window_hours so
-	# the JSON chance keeps meaning per-DAY probability; daily path uses 1.0.
+	# 5. Trigger conditions (AND logic). "random" rolls: the hourly ambient path passes the
+	# event's window length so the JSON chance keeps meaning per-DAY probability
+	# (hourly_chance); the daily path passes 0 and rolls the chance as written.
 	for c in ev.trigger_conditions:
 		if typeof(c) != TYPE_DICTIONARY:
 			push_warning("[EventManager] trigger_conditions entry not Dictionary in %s" % ev.id)
 			return false
 		if String(c.get("type", "")) == "random":
-			if not (_events_rng().randf() < float(c.get("chance", 0.0)) * random_chance_scale):
+			var p_day: float = float(c.get("chance", 0.0))
+			var p_roll: float = hourly_chance(p_day, window_hours) if window_hours > 0 else p_day
+			if not (_events_rng().randf() < p_roll):
 				return false
 			continue
 		if not is_condition_met(c):
@@ -515,6 +518,15 @@ func _is_hour_in_window(hour: int, window: Array) -> bool:
 	if start_h <= end_h:
 		return hour >= start_h and hour <= end_h
 	return hour >= start_h or hour <= end_h
+
+
+## The per-hour probability that reproduces a per-DAY probability over `window_hours`
+## independent hourly rolls: 1 − (1 − p)^(1/n). Exact, where the old p/n read 7-20 % low.
+static func hourly_chance(p_day: float, window_hours: int) -> float:
+	var p: float = clampf(p_day, 0.0, 1.0)
+	if window_hours <= 1 or p >= 1.0:
+		return p
+	return 1.0 - pow(1.0 - p, 1.0 / float(window_hours))
 
 
 func _window_length_hours(ev: GameEvent) -> int:
