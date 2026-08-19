@@ -1947,3 +1947,4 @@ FIN_REQ_MRR_BAR,gelir çıtası,the revenue bar
 FIN_REQ_GROWTH,{n} ay üst üste büyüme,{n} months of growth in a row
 ODA_GOAL_SIGNAL,{state} · büyüme {streak}/{need} ay,{state} · growth {streak}/{need} mo
 EFFECT_AUDIENCE_PCT,Kitle {pct},Audience {pct}
+B2B_DISCOUNT_SPENT_DESC,İki kez indirim verdin. Bu hesabı fiyat değil ürün tutar.,You have discounted twice. Price will not keep this account; the product will.

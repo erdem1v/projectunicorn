@@ -263,6 +263,12 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"conversion_bug_penalty":          fail = _case_conversion_bug_penalty()
 		"audience_pct_modifier":           fail = _case_audience_pct_modifier()
 		"bug_complaint_costs_audience_not_cash": fail = _case_bug_complaint_costs_audience_not_cash()
+		"discount_cap_two_uses":           fail = _case_discount_cap_two_uses()
+		"risk_reentry_hysteresis":         fail = _case_risk_reentry_hysteresis()
+		"risk_exit_stamps_day":            fail = _case_risk_exit_stamps_day()
+		"discount_row_locked_past_cap":    fail = _case_discount_row_locked_past_cap()
+		"retention_gate_shared":           fail = _case_retention_gate_shared()
+		"manual_retention_respects_cap":   fail = _case_manual_retention_respects_cap()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -7440,5 +7446,189 @@ static func _case_bug_complaint_costs_audience_not_cash() -> String:
 		return "ignoring it did not churn audience"
 	if GameState.cash != cash0:
 		return "ignoring it moved cash"
+	return ""
+
+
+# --- §8 / §13 · the discount cap, the risk hysteresis, one retention gate ---
+
+static func _seed_risk_account() -> Customer:
+	# One B2B account parked IN Risk with a running countdown and a degrading product.
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	CustomerRegistry.set_tolerance(c.id, 50)
+	CustomerRegistry.set_satisfaction(c.id, 30)
+	GameState.set_flag("mvp_stability", 5.0)
+	GameState.set_flag("mvp_live_bug_count", 30)
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	CustomerRegistry.set_churn_countdown(c.id, B2BConstants.CHURN_COUNTDOWN_DAYS)
+	return c
+
+
+static func _case_discount_cap_two_uses() -> String:
+	# Two discounts cut MRR and recover the account; the third is refused by the seam itself.
+	var c: Customer = _seed_risk_account()
+	var mrr0: int = c.mrr
+	B2BSalesSystem.apply_discount(c.id, -150)
+	if c.mrr != mrr0 - 150 or c.retain_discounts != 1:
+		return "first discount: mrr %d (want %d), uses %d" % [c.mrr, mrr0 - 150, c.retain_discounts]
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	B2BSalesSystem.apply_discount(c.id, -150)
+	if c.mrr != mrr0 - 300 or c.retain_discounts != 2:
+		return "second discount: mrr %d (want %d), uses %d" % [c.mrr, mrr0 - 300, c.retain_discounts]
+	var sat_after_two: int = c.satisfaction
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	B2BSalesSystem.apply_discount(c.id, -150)
+	if c.mrr != mrr0 - 300 or c.retain_discounts != 2 or c.satisfaction != sat_after_two:
+		return "third discount went through (mrr %d, uses %d, sat %d)" % [c.mrr, c.retain_discounts, c.satisfaction]
+	return ""
+
+
+static func _case_risk_reentry_hysteresis() -> String:
+	# Rescued on day D, still under the bar: the account stays OUT of Risk until D+21, with
+	# no countdown and no card, then re-enters the day the window closes.
+	var c: Customer = _seed_risk_account()
+	var day0: int = GameState.day
+	B2BSalesSystem.apply_discount(c.id, -100)   # _recover → leaves Risk, stamps the exit day
+	if c.lifecycle_phase == "risk" or c.last_risk_exit_day != day0:
+		return "rescue did not leave Risk / stamp the day (phase %s, exit %d)" % [c.lifecycle_phase, c.last_risk_exit_day]
+	var cards: Array = [0]
+	EventBus.event_triggered.connect(func(id: String) -> void:
+		if id.begins_with("ev_b2b_retain_"):
+			cards[0] += 1)
+	for i in B2BConstants.RISK_REENTRY_DAYS - 1:
+		CustomerRegistry.set_satisfaction(c.id, 10)   # hold it far under the bar
+		_sim_day()
+		if c.lifecycle_phase == "risk":
+			return "re-entered Risk on day %d, %d days after the rescue (window %d)" % [
+				GameState.day, GameState.day - day0, B2BConstants.RISK_REENTRY_DAYS]
+	if c.risk_streak < B2BConstants.RISK_TRIGGER_DAYS:
+		return "the streak stopped counting during the window (%d)" % c.risk_streak
+	if int(cards[0]) != 0:
+		return "a retention card fired inside the window"
+	CustomerRegistry.set_satisfaction(c.id, 10)
+	_sim_day()   # D + 21
+	if c.lifecycle_phase != "risk" or c.churn_countdown < 0:
+		return "did not re-enter Risk when the window closed (day %d, phase %s)" % [GameState.day, c.lifecycle_phase]
+	_drain_all_modals()
+	return ""
+
+
+static func _case_risk_exit_stamps_day() -> String:
+	# Both exit sites stamp last_risk_exit_day: the daily sweep's healthy branch and _recover.
+	var c: Customer = _seed_risk_account()
+	if c.last_risk_exit_day != -1:
+		return "fresh account already carries an exit day"
+	GameState.set_flag("mvp_stability", 80.0)
+	GameState.set_flag("mvp_live_bug_count", 0)
+	CustomerRegistry.set_satisfaction(c.id, 90)   # over the bar → _tick_healthy's risk branch
+	_sim_day()
+	if c.lifecycle_phase == "risk" or c.last_risk_exit_day != GameState.day:
+		return "healthy-branch exit did not stamp (phase %s, exit %d, day %d)" % [c.lifecycle_phase, c.last_risk_exit_day, GameState.day]
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	CustomerRegistry.set_churn_countdown(c.id, 5)
+	GameState.day += 10
+	B2BSalesSystem.accept_promise(c.id, "ai_vec_filter", 14)   # the promise path → _recover
+	if c.last_risk_exit_day != GameState.day:
+		return "_recover exit did not stamp (exit %d, day %d)" % [c.last_risk_exit_day, GameState.day]
+	_drain_all_modals()
+	return ""
+
+
+static func _case_discount_row_locked_past_cap() -> String:
+	# Past the cap every discount row (retention card AND the CS complaint/renewal cards)
+	# is present, locked by a real condition, and carries the reason on its sub-line.
+	var c: Customer = _seed_risk_account()
+	var ev: GameEvent = B2BEventFactory.build_retention(c)
+	var row: EventChoice = null
+	for ch in ev.choices:
+		for m in ch.modifiers:
+			if String(m.get("type", "")) == "b2b_retain_discount":
+				row = ch
+	if row == null:
+		return "no discount row on the retention card"
+	if not EventManager.is_condition_met(row.unlock_condition):
+		return "discount row locked before any discount"
+	CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
+	ev = B2BEventFactory.build_retention(c)
+	row = null
+	for ch in ev.choices:
+		for m in ch.modifiers:
+			if String(m.get("type", "")) == "b2b_retain_discount":
+				row = ch
+	if row == null:
+		return "the capped discount row was withheld — it must stay visible"
+	if EventManager.is_condition_met(row.unlock_condition):
+		return "capped discount row is still unlocked"
+	var want: String = TranslationServer.translate("B2B_DISCOUNT_SPENT_DESC")
+	if row.description != want or want == "B2B_DISCOUNT_SPENT_DESC":
+		return "capped row lacks the reason line (desc '%s')" % row.description
+	# The CS channel: a complaint card's discount row locks the same way.
+	var cs := Character.new()
+	cs.id = "char_cs_cap"
+	cs.character_name = "Cap Rep"
+	cs.role = HRConstants.ROLE_CUSTOMER_REP
+	cs.category = "employee"
+	cs.monthly_salary = 5000
+	cs.role_stats = {"expertise": 2, "pace": 5, "rapport": 5}
+	CharacterRegistry.add(cs)
+	CustomerRegistry.assign_customer(c.id, cs.id)
+	CustomerRegistry.set_last_request_kind(c.id, "")
+	var req: GameEvent = B2BEventFactory.build_cs_request(c, cs)
+	var locked_found: bool = false
+	for ch in req.choices:
+		for m in ch.modifiers:
+			if String(m.get("type", "")) == "b2b_retain_discount":
+				if EventManager.is_condition_met(ch.unlock_condition):
+					return "the CS card's discount row is unlocked past the cap"
+				locked_found = true
+	# (a feature-kind request has no discount row — that is not a failure)
+	return ""
+
+
+static func _case_retention_gate_shared() -> String:
+	# ONE gate: healthy / countdown −1 / delegated+escalated → no card; live Risk → card.
+	var c: Customer = _seed_risk_account()
+	if not B2BSalesSystem.can_offer_retention(c):
+		return "live Risk account refused"
+	CustomerRegistry.set_churn_countdown(c.id, -1)
+	if B2BSalesSystem.can_offer_retention(c):
+		return "offered with no countdown running"
+	CustomerRegistry.set_churn_countdown(c.id, 5)
+	CustomerRegistry.set_lifecycle_phase(c.id, "active")
+	if B2BSalesSystem.can_offer_retention(c):
+		return "offered to an active (non-Risk) account"
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	c.assigned_to = "someone"
+	c.cs_escalated = true
+	if B2BSalesSystem.can_offer_retention(c):
+		return "offered while the rep's escalation is open"
+	c.assigned_to = ""
+	c.cs_escalated = false
+	# The sweep's enqueue goes through the same gate: a recovered account raises no card.
+	B2BSalesSystem.apply_discount(c.id, -50)   # leaves Risk
+	var before: int = EventManager._queue.size() + (1 if EventManager._active_event_id != "" else 0)
+	B2BSalesSystem._maybe_enqueue_retention(c)
+	var after: int = EventManager._queue.size() + (1 if EventManager._active_event_id != "" else 0)
+	if after != before:
+		return "the sweep enqueued a card for an account that is not in Risk"
+	_drain_all_modals()
+	return ""
+
+
+static func _case_manual_retention_respects_cap() -> String:
+	# The Sales-tab path and the cap together: after two discounts the manual card's discount
+	# row is locked, and forcing the modifier through the seam changes nothing.
+	var c: Customer = _seed_risk_account()
+	CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
+	var ev: GameEvent = B2BEventFactory.build_retention(c)
+	var mrr0: int = c.mrr
+	for ch in ev.choices:
+		for m in ch.modifiers:
+			if String(m.get("type", "")) == "b2b_retain_discount":
+				if EventManager.is_condition_met(ch.unlock_condition):
+					return "manual card offers an unlocked discount past the cap"
+				EventManager._apply_modifiers(ch.modifiers)   # the bypass a UI bug could make
+	if c.mrr != mrr0 or c.retain_discounts != B2BConstants.RETAIN_DISCOUNT_MAX_USES:
+		return "a forced discount past the cap changed state (mrr %d→%d, uses %d)" % [mrr0, c.mrr, c.retain_discounts]
 	return ""
 

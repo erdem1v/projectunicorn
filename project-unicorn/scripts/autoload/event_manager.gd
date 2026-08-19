@@ -414,6 +414,11 @@ func is_condition_met(condition: Dictionary) -> bool:
 			return GameState.mrr > int(condition.get("value", 0))
 		"mrr_below":
 			return GameState.mrr < int(condition.get("value", 0))
+		"b2b_discounts_below":
+			# Calibration Round A §8: the discount row's unlock — true while the account has
+			# been given fewer than `value` discounts (both channels; Customer.retain_discounts).
+			var cc: Customer = CustomerRegistry.get_customer(String(condition.get("customer_id", "")))
+			return cc != null and cc.retain_discounts < int(condition.get("value", 0))
 		"mrr_growth_streak":
 			# A COUNT, not a crossing (Calibration Round A §3): consecutive CLOSED calendar months
 			# with month-over-month MRR growth ≥ `pct` (default PhaseGateSystem.GROWTH_MIN_PCT).

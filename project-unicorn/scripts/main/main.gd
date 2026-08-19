@@ -584,6 +584,10 @@ func _run_b2b_shot(kind: String) -> void:
 	else:
 		CustomerRegistry.set_lifecycle_phase(c.id, "risk")
 		CustomerRegistry.set_churn_countdown(c.id, 8)
+		if kind == "retention_capped":   # LOC-DATA debug seed / id
+			# Calibration Round A §8: the account has spent both discounts — the row renders
+			# locked-visible with its reason line.
+			CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
 		ev = B2BEventFactory.build_retention(c)
 	var layer := CanvasLayer.new()
 	add_child(layer)

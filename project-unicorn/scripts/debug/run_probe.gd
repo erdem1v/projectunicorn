@@ -106,6 +106,9 @@ static var _beta_wait: bool = false        # full_run only: hold the ship in Bet
 static var _beta_since_day: int = -1       # first day the build was seen parked in Beta (bugfix phase)
 static var _hire_started: bool = false
 static var _last_appetite: String = ""     # PROBE SIGNAL on change (Calibration Round A §3)
+static var _discount_uses: Dictionary = {}  # customer id -> discounts taken (Calibration Round A §8)
+static var _retain_days: Dictionary = {}    # customer id -> Array of fire days (retention cards)
+static var _fires_by_day: Dictionary = {}   # day -> {family: count} for PROBE WEEK
 
 
 # ============================================================================
@@ -198,8 +201,26 @@ static func _on_build_phase(new_phase: String) -> void:
 		str(GameState.get_flag("mvp_components", []))])
 
 
+static func _family_of(event_id: String) -> String:
+	if event_id.begins_with("ev_b2b_retain_"): return "retain"
+	if event_id.begins_with("ev_b2b_request_") or event_id.begins_with("ev_b2b_escalation_"): return "cs"
+	if event_id.begins_with("ev_b2b_expand_"): return "expand"
+	if event_id.begins_with("ev_mvp_"): return "build"
+	if event_id.begins_with("ev_ps_"): return "post_ship"
+	return "other"
+
+
 static func _on_fire(event_id: String) -> void:
 	_fires[event_id] = int(_fires.get(event_id, 0)) + 1
+	var by: Dictionary = _fires_by_day.get(GameState.day, {})
+	var fam: String = _family_of(event_id)
+	by[fam] = int(by.get(fam, 0)) + 1
+	_fires_by_day[GameState.day] = by
+	if fam == "retain":
+		var cid: String = event_id.trim_prefix("ev_b2b_retain_")
+		var days: Array = _retain_days.get(cid, [])
+		days.append(GameState.day)
+		_retain_days[cid] = days
 	print("PROBE FIRE day=%d hour=%d id=%s src=%s" % [
 		GameState.day, GameState.current_hour, event_id, _source_of(event_id)])
 
@@ -326,6 +347,12 @@ static func _drain_modals() -> void:
 		var label: String = ev.choices[idx].label
 		print("PROBE PICK day=%d id=%s choice=%d label=%s" % [GameState.day, id, idx, label])
 		_picks[id] = int(_picks.get(id, 0)) + 1
+		# §8: count discounts BY MODIFIER TYPE (labels are player-facing text).
+		for m in ev.choices[idx].modifiers:
+			if String(m.get("type", "")) == "b2b_retain_discount":
+				var cid: String = String(m.get("customer_id", ""))
+				_discount_uses[cid] = int(_discount_uses.get(cid, 0)) + 1
+				print("PROBE DISCOUNT day=%d cust=%s uses=%d" % [GameState.day, cid, int(_discount_uses[cid])])
 		EventManager.resolve_choice(id, idx)
 
 
@@ -468,7 +495,42 @@ static func _run_realtime(speed_idx: int) -> void:
 	EventBus.speed_change_requested.emit(speed_idx)
 
 
+static func _log_cadence() -> void:
+	# §8/§13 verdict lines: per-account retention cadence (fires, the densest 30-day window,
+	# discounts taken) and fires per week by family.
+	var ids: Array = _retain_days.keys()
+	ids.sort()
+	for cid in ids:
+		var days: Array = _retain_days[cid]
+		var max30: int = 0
+		for i in days.size():
+			var n: int = 0
+			for j in range(i, days.size()):
+				if int(days[j]) - int(days[i]) < 30:
+					n += 1
+			max30 = maxi(max30, n)
+		print("PROBE RETAIN %s fires=%d max30=%d discounts=%d" % [cid, days.size(), max30, int(_discount_uses.get(cid, 0))])
+	var last_day: int = GameState.day
+	var week: int = 1
+	var d: int = 1
+	while d <= last_day:
+		var tot: Dictionary = {}
+		for k in range(d, mini(d + 7, last_day + 1)):
+			var by: Dictionary = _fires_by_day.get(k, {})
+			for fam in by.keys():
+				tot[fam] = int(tot.get(fam, 0)) + int(by[fam])
+		var all: int = 0
+		for fam in tot.keys():
+			all += int(tot[fam])
+		print("PROBE WEEK w=%d fires=%d retain=%d cs=%d expand=%d build=%d post_ship=%d other=%d" % [
+			week, all, int(tot.get("retain", 0)), int(tot.get("cs", 0)), int(tot.get("expand", 0)),
+			int(tot.get("build", 0)), int(tot.get("post_ship", 0)), int(tot.get("other", 0))])
+		week += 1
+		d += 7
+
+
 static func _finish() -> void:
+	_log_cadence()
 	_log_tally()
 	print("PROBE END day=%d run_active=%s ending=%s" % [
 		GameState.day, str(GameState.run_active), GameState.ending_id])
