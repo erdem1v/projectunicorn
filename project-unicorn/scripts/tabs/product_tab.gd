@@ -43,6 +43,14 @@ func _ready() -> void:
 		GameState.flags.erase("cancelled_build_prefill")
 		_navigate("creation", {"step": 3, "prefill": pf})
 		return
+	# S2-33 (Kalibrasyon Turu A §16): sekme değişiminde saklanan kurma TASLAĞI geri gelir —
+	# yalnız hâlâ bir taslağın anlamlı olduğu durumda (build yok, ürün henüz çıkmamış).
+	var draft: Dictionary = GameState.get_flag("creation_draft", {})
+	if not draft.is_empty():
+		GameState.flags.erase("creation_draft")
+		if ProductSystem.get_active_build() == null and not bool(GameState.get_flag("mvp_shipped", false)):
+			_navigate("creation", {"step": int(draft.get("step", 1)), "prefill": draft})
+			return
 	_navigate("portfoy", {})   # LOC-DATA sub-page id
 
 

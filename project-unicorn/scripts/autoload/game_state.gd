@@ -85,6 +85,7 @@ const FLAG_TYPES := {
 	"critical_bug_unfixed": TYPE_BOOL,
 	"tech_debt_birikti": TYPE_BOOL,
 	"cancelled_build_prefill": TYPE_DICTIONARY,
+	"creation_draft": TYPE_DICTIONARY,   # S2-33 draft guard (Calibration Round A §16): {step, market, type, features, name}
 	"product_path_frank_seen": TYPE_BOOL,
 	"needs_engineer": TYPE_BOOL,
 	# --- B2C economy ---

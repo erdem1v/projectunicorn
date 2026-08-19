@@ -110,10 +110,14 @@ func setup(args: Dictionary) -> void:
 			_shipped_ids.append(String(fid))
 		_strengthen_mode = _pool_exhausted()
 	elif not _prefill.is_empty():
-		# İptal edilen build'in seçimi geri gelir (yanlış-tık affı).
+		# İptal edilen build'in seçimi geri gelir (yanlış-tık affı) — ya da sekme değişiminde
+		# saklanan TASLAK (S2-33, Kalibrasyon Turu A §16): aynı şekil, artı yalnız yol seçilmişse
+		# `market`.
 		_type_id = String(_prefill.get("type", ""))
 		if _type_id != "":
 			_market = ProductCatalog.get_market_type(_type_id)
+		elif String(_prefill.get("market", "")) != "":
+			_market = String(_prefill.get("market", ""))
 		for fid in _prefill.get("features", []):
 			_selected.append(String(fid))
 	# Adım tutarlılığı: tip yoksa 03, yol yoksa 02 açılamaz.
@@ -941,7 +945,31 @@ func _on_commit_pressed() -> void:
 		var pname: String = _name_edit.text if _name_edit != null else ""
 		ok = ProductSystem.start_build(_type_id, _selected, _sorumlu_id(), pname)
 	if ok:
+		GameState.flags.erase("creation_draft")   # the draft became a build
 		navigate_requested.emit("tracker", {})
+
+
+## S2-33 draft guard (Calibration Round A §16). The tab router calls this on every page it
+## frees (Esc, ✕, rail, ODA click-through, palette/language rebuild). An in-progress v1 draft
+## — a chosen path, a type, ticked features, a typed name — is stashed into the typed
+## `creation_draft` flag; ProductTab re-hydrates it on its next mount through the same
+## prefill path a cancelled build uses. Locked views and the v2 picker (a few clicks, the
+## live product's own flags) are not drafts.
+func on_page_closing() -> void:
+	if _locked_mode or _v2_mode:
+		return
+	var name_text: String = _name_edit.text if _name_edit != null else ""
+	var dirty: bool = _market != "" or _type_id != "" or not _selected.is_empty() or name_text != ""
+	if not dirty:
+		GameState.flags.erase("creation_draft")
+		return
+	GameState.set_flag("creation_draft", draft_state())
+
+
+## The draft as the prefill dict (also what the smoke suite reads).
+func draft_state() -> Dictionary:
+	var name_text: String = _name_edit.text if _name_edit != null else ""
+	return {"step": _step, "market": _market, "type": _type_id, "features": _selected.duplicate(), "name": name_text}
 
 
 # --- Yardımcılar ---------------------------------------------------------------

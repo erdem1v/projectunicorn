@@ -284,6 +284,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"smoke_seed_pinned":               fail = _case_smoke_seed_pinned()
 		"ambient_hourly_chance_exact":     fail = _case_ambient_hourly_chance_exact()
 		"ambient_one_per_day_across_hour0": fail = _case_ambient_one_per_day_across_hour0()
+		"creation_draft_survives_navigation": fail = _case_creation_draft_survives_navigation()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -7816,5 +7817,56 @@ static func _case_ambient_one_per_day_across_hour0() -> String:
 			return "day %d received %d ambient cards (want ≤ 1)" % [d, int(per_day[d])]
 	if total == 0:
 		return "fixture: no ambient card fired in 30 days (pool not eligible?)"
+	return ""
+
+
+# --- §16 · S2-33: a creation draft survives navigation ---
+
+static func _case_creation_draft_survives_navigation() -> String:
+	# A half-built product (path, type, two features, a name) on the creation flow; the router
+	# tells the page it is closing → the draft lands in the typed flag → a fresh ProductTab
+	# mount re-hydrates it at the same step with the same selection. Clean flows stash nothing.
+	var root: Node = Engine.get_main_loop().root
+	var flow_script: GDScript = load("res://scripts/tabs/product/creation_flow.gd")
+	var flow: Control = flow_script.new()
+	root.add_child(flow)
+	flow.setup({"step": 3, "prefill": {"type": "saas_ops", "features": ["saas_ops_integration", "saas_ops_field"], "name": "Sahra"}})
+	var d: Dictionary = flow.draft_state()
+	if String(d.get("type", "")) != "saas_ops" or (d.get("features", []) as Array).size() != 2 or String(d.get("name", "")) != "Sahra":
+		flow.free()
+		return "fixture: draft_state did not read the prefilled selection (%s)" % str(d)
+	flow.on_page_closing()
+	flow.free()
+	var stashed: Dictionary = GameState.get_flag("creation_draft", {})
+	if stashed.is_empty():
+		return "on_page_closing stashed nothing for a dirty draft"
+	if int(stashed.get("step", 0)) != 3 or String(stashed.get("type", "")) != "saas_ops":
+		return "stashed draft is wrong: %s" % str(stashed)
+	# The router actually calls it: the seam name must appear in center_viewport's free path.
+	var router_src: String = (load("res://scripts/ui/components/center_viewport.gd") as GDScript).source_code
+	if router_src.find('propagate_call("on_page_closing")') < 0:
+		return "center_viewport does not notify the page before freeing it"
+	# Re-mount: ProductTab consumes the draft and lands on the creation view with the selection.
+	var tab: Control = (load("res://scenes/tabs/ProductTab.tscn") as PackedScene).instantiate()
+	root.add_child(tab)
+	var view: Node = tab.get("_view_node")
+	if tab.get("_view_id") != "creation" or view == null:
+		tab.free()
+		return "ProductTab did not re-open the creation flow (view %s)" % str(tab.get("_view_id"))
+	var restored: Dictionary = view.draft_state()
+	tab.free()
+	if String(restored.get("type", "")) != "saas_ops" or (restored.get("features", []) as Array).size() != 2 \
+			or String(restored.get("name", "")) != "Sahra" or int(restored.get("step", 0)) != 3:
+		return "re-hydrated draft differs: %s" % str(restored)
+	if GameState.has_flag("creation_draft"):
+		return "the draft flag was not consumed on re-mount"
+	# A clean flow stashes nothing (and clears a stale flag).
+	var clean: Control = flow_script.new()
+	root.add_child(clean)
+	clean.setup({"step": 1})
+	clean.on_page_closing()
+	clean.free()
+	if GameState.has_flag("creation_draft"):
+		return "a clean flow stashed a draft"
 	return ""
 
