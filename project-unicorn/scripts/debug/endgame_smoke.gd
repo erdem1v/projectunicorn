@@ -42,7 +42,15 @@ static var _endings: Array = []        # run_ended ending_ids
 
 
 static func run_case(case_name: String, payload: Dictionary) -> void:
-	GameState.initialize_run(payload)
+	# RNG PIN (Calibration Round A §11; research S4 / sprint §5.7): initialize_run seeds from
+	# Time.get_ticks_msec() unless the payload carries a seed, so every case that touched the
+	# ambient pool was a fresh coin flip per invocation (angel_fires_at_crossing passed solo
+	# and failed 4 in 12). The suite now runs on the same seed the probes use — 424242 — and
+	# a case that needs a specific seed sets it in its own payload first.
+	var pinned: Dictionary = payload.duplicate()
+	if int(pinned.get("seed", 0)) == 0:
+		pinned["seed"] = 424242
+	GameState.initialize_run(pinned)
 	_gate_signals = []
 	_endings = []
 	EventBus.phase_gate_reached.connect(func(p: int) -> void: _gate_signals.append(p))
@@ -273,6 +281,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"profit_predicate_margin_scale_red": fail = _case_profit_predicate_margin_scale_red()
 		"speed_save_clamps_to_ladder":     fail = _case_speed_save_clamps_to_ladder()
 		"topbar_speed_cluster_three_rungs": fail = _case_topbar_speed_cluster_three_rungs()
+		"smoke_seed_pinned":               fail = _case_smoke_seed_pinned()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -7740,5 +7749,16 @@ static func _case_topbar_speed_cluster_three_rungs() -> String:
 	var src: String = (load("res://scripts/ui/components/top_bar.gd") as GDScript).source_code
 	if src.find("Speed4Btn") >= 0:
 		return "top_bar.gd still references Speed4Btn"
+	return ""
+
+
+# --- §11 · the suite runs on one seed ---
+
+static func _case_smoke_seed_pinned() -> String:
+	# run_case pins GameState.run_seed to the probes' seed unless the case asked for its own;
+	# the ledger exposes it (audit S2-40), so this is one read.
+	var seed_now: int = int(GameState.get_run_ledger().get("seed", 0))
+	if seed_now != 424242:
+		return "smoke seed is %d, want 424242 (run_case no longer pins it)" % seed_now
 	return ""
 
