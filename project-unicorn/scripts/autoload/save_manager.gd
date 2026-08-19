@@ -50,8 +50,8 @@ const AUTOSAVE_FREQUENCY_DEFAULT := "weekly"                       # [WORKING]
 const AUTOSAVE_INTERVAL_DAYS := {"off": 0, "daily": 1, "weekly": 7, "monthly": 30}   # [WORKING]
 
 # Real-time floor between two autosaves. THE SPEED LADDER MAKES THIS NECESSARY, not
-# paranoid: TimeManager.SECONDS_PER_DAY is [0, 12, 6, 3, 1.5] REAL SECONDS PER IN-GAME DAY,
-# so at 4x a day is 1.5 s and "Her gün" would try to write ~40 saves a minute — each one a
+# paranoid: TimeManager.SECONDS_PER_DAY is [0, 12, 6, 3] REAL SECONDS PER IN-GAME DAY,
+# so at 3x a day is 3 s and "Her gün" would try to write ~20 saves a minute — each one a
 # full state walk plus three file operations. Skipped writes become pending and land at the
 # next safe boundary, so nothing is lost, only coalesced.
 const AUTOSAVE_MIN_REAL_SECONDS := 20                              # [WORKING]

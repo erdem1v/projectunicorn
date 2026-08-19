@@ -290,9 +290,3 @@ focus_mode = 0
 theme_type_variation = &"SpeedButton"
 text = "3x"
 
-[node name="Speed4Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
-custom_minimum_size = Vector2(26, 22)
-layout_mode = 2
-focus_mode = 0
-theme_type_variation = &"SpeedButton"
-text = "4x"

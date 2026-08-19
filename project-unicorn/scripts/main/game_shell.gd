@@ -135,16 +135,16 @@ func _input(event: InputEvent) -> void:
 			return
 		_debug_endgame_key(key.keycode)
 		return
-	# Speed control: Space toggles pause, 1-4 pick a running speed off the ladder.
-	# Both share the two guards below. Note 1-4 are ALSO dialogue-choice keys inside
-	# MeetingScene / FrankPopup / TermSheetTable — Guard 2 is what keeps that
-	# unambiguous, since those only exist while a modal is mounted.
+	# Speed control: Space toggles pause, 1-3 pick a running speed off the ladder (4 does
+	# nothing since the 4x rung was removed — Calibration Round A §10). Both share the two
+	# guards below. Note 1-4 are ALSO dialogue-choice keys inside MeetingScene / FrankPopup /
+	# TermSheetTable — Guard 2 is what keeps that unambiguous, since those only exist while
+	# a modal is mounted.
 	var speed_idx: int = -1
 	match key.keycode:
 		KEY_1, KEY_KP_1: speed_idx = 1
 		KEY_2, KEY_KP_2: speed_idx = 2
 		KEY_3, KEY_KP_3: speed_idx = 3
-		KEY_4, KEY_KP_4: speed_idx = 4
 	if speed_idx < 0 and key.keycode != KEY_SPACE and key.keycode != KEY_ESCAPE:
 		return
 	# Guard 1: a text field is focused → let the key type its character (e.g. product name).

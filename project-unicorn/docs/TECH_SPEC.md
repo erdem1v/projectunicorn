@@ -204,7 +204,7 @@ GDScript and the Node class reserve some common names. The reserved name `name` 
 
 ### 8.1. Time system
 
-Time advances continuously at the speed the player selects. Tempo is expressed as **real seconds per in-game day**, one entry per speed: 1x = 12s, 2x = 6s, 3x = 3s, 4x = 1.5s. Available speeds are pause, 1x, 2x, 3x, and 4x.
+Time advances continuously at the speed the player selects. Tempo is expressed as **real seconds per in-game day**, one entry per speed: 1x = 12s, 2x = 6s, 3x = 3s. Available speeds are pause, 1x, 2x and 3x. *(The 4x rung — 1.5 s/day — was removed 2026-08-19, Calibration Round A §10: the canon ladder is 1×/2×/3×; a stored 4 clamps to 3 on load.)*
 
 An in-game day is always 24 hourly ticks regardless of speed — only the real-time rate at which those ticks are delivered changes, so game-time behaviour (build durations, event frequency per game-day, economy) is identical at every speed. The ladder lives in exactly one place, `TimeManager.SECONDS_PER_DAY`; the hours-per-real-second multiplier is derived from it (`TimeManager.speed_multiplier`) and never stored separately.
 

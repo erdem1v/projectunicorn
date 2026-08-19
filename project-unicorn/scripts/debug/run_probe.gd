@@ -20,11 +20,11 @@ extends RefCounted
 #   sim   — drives TimeManager's dispatch directly (hour 1..23 → hour 0 → advance_day →
 #           daily), no wall clock. Deterministic, instant, exact slot attribution. This
 #           is what the fire tables are built from.
-#   1|2|3|4 — the REAL clock at that speed index, exactly as a player experiences it
+#   1|2|3 — the REAL clock at that speed index, exactly as a player experiences it
 #           (TimeManager._drain_boundaries, frame pacing and all). Slower but honest;
 #           this is the only mode that can catch a real-time-only defect such as the
 #           ≤1-ambient-per-day throttle leaking across the hour-0 rollover
-#           (event_manager.gd:98). Step 4's played run uses mode 4.
+#           (event_manager.gd:98). Step 4's played run used mode 4 (the rung is gone; use 3).
 #
 # Output contract — one line per record, all prefixed PROBE so a grep separates them
 # from the engine's own [EventManager] chatter:

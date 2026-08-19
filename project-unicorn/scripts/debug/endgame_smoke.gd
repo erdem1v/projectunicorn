@@ -271,6 +271,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"manual_retention_respects_cap":   fail = _case_manual_retention_respects_cap()
 		"profit_condition_fires":          fail = _case_profit_condition_fires()
 		"profit_predicate_margin_scale_red": fail = _case_profit_predicate_margin_scale_red()
+		"speed_save_clamps_to_ladder":     fail = _case_speed_save_clamps_to_ladder()
+		"topbar_speed_cluster_three_rungs": fail = _case_topbar_speed_cluster_three_rungs()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -4714,10 +4716,11 @@ static func _case_hr_constants_contract() -> String:
 # of ticks at every speed (only the real-time rate differs).
 
 static func _case_speed_ladder() -> String:
+	# Calibration Round A §10 (2026-08-19): the 4x rung is gone — pause + 1x/2x/3x.
 	var ladder: Array = TimeManager.SECONDS_PER_DAY
-	if ladder.size() != 5:
-		return "the ladder has %d entries, want 5 (pause + 1x/2x/3x/4x)" % ladder.size()
-	var want: Array = [0.0, 12.0, 6.0, 3.0, 1.5]
+	if ladder.size() != 4:
+		return "the ladder has %d entries, want 4 (pause + 1x/2x/3x)" % ladder.size()
+	var want: Array = [0.0, 12.0, 6.0, 3.0]
 	for i in ladder.size():
 		if not is_equal_approx(float(ladder[i]), float(want[i])):
 			return "speed %d is %.3f s/day, want %.3f" % [i, ladder[i], want[i]]
@@ -4737,18 +4740,18 @@ static func _case_speed_ladder() -> String:
 	if not is_equal_approx(TimeManager.hours_per_real_second(ladder.size()), 0.0):
 		return "an out-of-range speed index returned a live multiplier"
 
-	# Bounds: the NEW top index is accepted, one past it is refused.
+	# Bounds: the top index (3) is accepted, one past it (the old 4x) is refused.
+	EventBus.speed_change_requested.emit(3)
+	if TimeManager.current_speed != 3:
+		return "top speed 3 was rejected (current %d)" % TimeManager.current_speed
 	EventBus.speed_change_requested.emit(4)
-	if TimeManager.current_speed != 4:
-		return "top speed 4 was rejected (current %d)" % TimeManager.current_speed
-	EventBus.speed_change_requested.emit(ladder.size())
-	if TimeManager.current_speed != 4:
-		return "an out-of-range speed was accepted (current %d)" % TimeManager.current_speed
+	if TimeManager.current_speed != 3:
+		return "the retired 4x index was accepted (current %d)" % TimeManager.current_speed
 
-	# Pause/resume round-trip at the new top index (speed_preserve covers idx 2).
+	# Pause/resume round-trip at the top index (speed_preserve covers idx 2).
 	EventBus.speed_change_requested.emit(0)
 	TimeManager.resume_if_paused()
-	if TimeManager.current_speed != 4:
+	if TimeManager.current_speed != 3:
 		return "paused game did not resume to last_running_speed (%d)" % TimeManager.current_speed
 	if TimeManager.get_tree().paused:
 		return "tree still paused after resume"
@@ -7700,5 +7703,42 @@ static func _case_profit_predicate_margin_scale_red() -> String:
 	sig = EndingsSystem.profitability_signal()
 	if bool(sig.get("met", false)) or int(sig.get("streak", 9)) != 0:
 		return "a red day inside the window should break the streak (%s)" % str(sig)
+	return ""
+
+
+# --- §10 · the speed ladder is 1×/2×/3× ---
+
+static func _case_speed_save_clamps_to_ladder() -> String:
+	# A save written under the 5-rung ladder carries last_running_speed 4; from_dict clamps it
+	# to the array's top (3) and the resume lands there — no 4x ghost in the accumulator.
+	TimeManager.from_dict({"in_game_hours": 0.0, "current_speed": 4, "last_running_speed": 4})
+	if TimeManager.last_running_speed != 3:
+		return "stored speed 4 came back as %d, want 3" % TimeManager.last_running_speed
+	TimeManager.resume_if_paused()
+	if TimeManager.current_speed != 3:
+		return "resume after a 4x save landed on %d, want 3" % TimeManager.current_speed
+	if not is_equal_approx(TimeManager.hours_per_real_second(4), 0.0):
+		return "index 4 still yields a live multiplier"
+	return ""
+
+
+static func _case_topbar_speed_cluster_three_rungs() -> String:
+	# The TopBar scene carries pause + three rungs and no Speed4Btn; the script's button
+	# array matches the ladder size exactly (index == speed index).
+	var packed: PackedScene = load("res://scenes/ui/components/TopBar.tscn")
+	if packed == null:
+		return "TopBar.tscn failed to load"
+	var state: SceneState = packed.get_state()
+	var names: Array = []
+	for i in state.get_node_count():
+		names.append(String(state.get_node_name(i)))
+	if names.has("Speed4Btn"):
+		return "TopBar.tscn still carries Speed4Btn"
+	for want in ["PauseBtn", "Speed1Btn", "Speed2Btn", "Speed3Btn"]:
+		if not names.has(want):
+			return "TopBar.tscn is missing %s" % want
+	var src: String = (load("res://scripts/ui/components/top_bar.gd") as GDScript).source_code
+	if src.find("Speed4Btn") >= 0:
+		return "top_bar.gd still references Speed4Btn"
 	return ""
 

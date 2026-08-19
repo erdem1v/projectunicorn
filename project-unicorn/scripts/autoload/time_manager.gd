@@ -4,7 +4,8 @@ extends Node
 #
 # Time rule (§8.1, ladder retuned 2026-07-29):
 #   Tempo is expressed as REAL SECONDS PER IN-GAME DAY, one entry per speed —
-#   1x=12s, 2x=6s, 3x=3s, 4x=1.5s. See SECONDS_PER_DAY below (the single home).
+#   1x=12s, 2x=6s, 3x=3s. See SECONDS_PER_DAY below (the single home). The 4x rung
+#   (1.5 s/day) was removed 2026-08-19 (Calibration Round A §10): the ladder is 1×/2×/3×.
 #   A day is ALWAYS HOURS_PER_DAY hourly ticks; only the real-time rate of
 #   delivery changes, so game-time behaviour is identical at every speed.
 #   (The old rule was "1 real second = 1 in-game hour" → 24s/day at 1x.)
@@ -37,10 +38,13 @@ extends Node
 # boyunca Case-1 hiç tetiklenmez ("ilk gün ölü" bug'ı).
 
 # THE tempo home. Real seconds one in-game day takes, by speed index.
-# idx: 0=pause, 1=1x, 2=2x, 3=3x, 4=4x
+# idx: 0=pause, 1=1x, 2=2x, 3=3x
 # Retuning the pace = editing this array and nothing else. Values are WORKING
 # (calibration §10 "numbers last"); the ladder shape is the locked part.
-const SECONDS_PER_DAY := [0.0, 12.0, 6.0, 3.0, 1.5]
+# Calibration Round A §10 (2026-08-19): the 4x rung (1.5 s/day) is gone — the canon ladder
+# is 1×/2×/3×. A save that stored last_running_speed 4 clamps to 3 on load (from_dict reads
+# the array's size), KEY_4 is inert in game_shell, TopBar lost Speed4Btn.
+const SECONDS_PER_DAY := [0.0, 12.0, 6.0, 3.0]
 const HOURS_PER_DAY := 24
 const INITIAL_HOUR := 9                          # Game starts at 09:00 on Day 1
 
@@ -164,7 +168,7 @@ func reset() -> void:
 	# in-place restart inherited the previous run's clock: _in_game_hours frozen wherever
 	# the old company stopped (initialize_run's sync_to_current_hour repaired that one by
 	# luck, not by contract) and — the part nothing repaired — the SPEED, so a new run
-	# opened at whatever 4x the last one was left running at.
+	# opened at whatever 3x the last one was left running at.
 	current_speed = 1
 	last_running_speed = 1
 	_in_game_hours = float(INITIAL_HOUR)
@@ -206,7 +210,7 @@ func from_dict(d: Dictionary) -> void:
 	last_running_speed = clampi(int(d.get("last_running_speed", 1)), 1, SECONDS_PER_DAY.size() - 1)
 	# The clock comes back PAUSED regardless of the speed the save was written at, and that
 	# is a decision rather than an omission: a load drops the player into a company they may
-	# not have seen for days, and resuming at 4x would spend that company's next day before
+	# not have seen for days, and resuming at 3x would spend that company's next day before
 	# they had read the top bar. The saved speed survives as last_running_speed, so the
 	# Space-toggle (or any TopBar click) resumes exactly where they left off.
 	current_speed = 0
@@ -234,7 +238,7 @@ func _on_speed_change_requested(speed: int) -> void:
 
 func resume_if_paused() -> void:
 	# Aksiyon butonları (build commit, sprint start): pause'daysa son koşan hıza
-	# döner; koşuyorsa hıza DOKUNMAZ (speed-hijack fix — mevcut 2x/4x korunur).
+	# döner; koşuyorsa hıza DOKUNMAZ (speed-hijack fix — mevcut 2x/3x korunur).
 	# Ölü run'da _on_speed_change_requested zaten yutar (§7.3).
 	if current_speed == 0:
 		_on_speed_change_requested(last_running_speed)

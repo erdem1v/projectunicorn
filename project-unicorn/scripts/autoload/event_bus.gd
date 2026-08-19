@@ -22,7 +22,7 @@ signal runway_recalculated(months: float)
 signal equity_changed(investor_pct: int)
 
 # --- UI / time signals (§13.2) ---
-signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=3x, 4=4x
+signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=3x (4x removed 2026-08-19)
 # ODA rework: "" = sekme yok, oda görünür (varsayılan durum). Sekme id'leri:
 # "product", "hr", "finance", "sales", "ops", "rnd", "personal", "events".
 signal tab_changed(tab_id: String)
