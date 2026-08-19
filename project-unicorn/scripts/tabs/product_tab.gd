@@ -18,7 +18,7 @@ extends Control
 # ============================================================================
 
 const VIEW_PATHS := {
-	"portfoy": "res://scripts/tabs/product/portfolio_view.gd",
+	"portfoy": "res://scripts/tabs/product/portfolio_view.gd",   # LOC-DATA sub-page id
 	"creation": "res://scripts/tabs/product/creation_flow.gd",
 	# "tracker" = kurma ekranının KİLİTLİ hali (eski kalıp: build sürerken oyuncu
 	# neyi kurduğunu görür, dokunamaz) — ayrı boş tracker sayfası Erdem tarafından
@@ -43,7 +43,7 @@ func _ready() -> void:
 		GameState.flags.erase("cancelled_build_prefill")
 		_navigate("creation", {"step": 3, "prefill": pf})
 		return
-	_navigate("portfoy", {})
+	_navigate("portfoy", {})   # LOC-DATA sub-page id
 
 
 func _exit_tree() -> void:
@@ -141,13 +141,13 @@ func _on_state_changed() -> void:
 	# Geçersiz-durum korkulukları: görünümün dayandığı state altından kaymışsa
 	# repaint yerine güvenli rotaya dön.
 	if _view_id == "detail" and not GameState.get_flag("mvp_shipped", false):
-		_navigate("portfoy", {})
+		_navigate("portfoy", {})   # LOC-DATA sub-page id
 		return
 	if _view_id == "tracker" and ProductSystem.get_active_build() == null:
 		if GameState.get_flag("mvp_shipped", false):
 			_navigate("detail", {})
 		else:
-			_navigate("portfoy", {})
+			_navigate("portfoy", {})   # LOC-DATA sub-page id
 		return
 	if _view_node.has_method("repaint"):
 		_view_node.repaint()

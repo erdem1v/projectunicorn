@@ -122,6 +122,6 @@ static func _fill_active(dept_id: String, body: VBoxContainer, on_change: Callab
 	var on_stop: Callable = func() -> void:
 		if HROvertimeSystem.stop(dept_id) and on_change.is_valid():
 			on_change.call()
-	var stop := HRUiShared.action_button("DURDUR", on_stop, true)
+	var stop := HRUiShared.action_button(TranslationServer.translate("HR_OT_STOP"), on_stop, true)
 	stop.size_flags_horizontal = Control.SIZE_SHRINK_END
 	body.add_child(stop)

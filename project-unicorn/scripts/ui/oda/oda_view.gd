@@ -969,7 +969,7 @@ func _refresh_monitor() -> void:
 		var ver: int = int(GameState.get_flag("mvp_version", 1))
 		_mon_header.text = "%s · V%d" % [UiTokens.tr_upper(pname), ver]
 		_mon_chip.visible = true
-		var healthy: bool = ProductSystem.health_state() == "saglikli"
+		var healthy: bool = ProductSystem.health_state() == "saglikli"   # LOC-DATA state / route id
 		_set_chip_dot(UiTokens.oda_health_green() if healthy else UiTokens.ODA_HEALTH_AMBER)
 		_mon_chip_dot.visible = true
 		_mon_chip_label.text = tr("ODA_MONITOR_LIVE_CHIP")
@@ -1383,7 +1383,7 @@ func _gather_papers() -> Array:
 			else tr("ODA_PAPER_SHEETS_TITLE").format({"n": sheet_count})
 		papers.append({"id": "sheet", "dot": UiTokens.ODA_HEALTH_AMBER,
 			"tag": tr("ODA_PAPER_TAG_FUNDING"), "title": title,
-			"target": "finance", "subpage": "yatirim"})
+			"target": "finance", "subpage": "yatirim"})   # LOC-DATA state / route id
 	if HRSearchSystem.has_files_ready():
 		papers.append({"id": "atlas", "dot": UiTokens.ODA_INK_MUTED,
 			"tag": tr("ODA_PAPER_TAG_ATLAS"),

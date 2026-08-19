@@ -18,14 +18,14 @@ const INVESTORS := [
 	{
 		"id": "anchor",
 		"display_name": "Anchor Capital",
-		"role_line": "Kıdemli Ortak",
-		"archetype_line": "Agresif ama cömert. Kontrolü sever.",
+		"role_key": "INV_ROLE_SENIOR_PARTNER",
+		"archetype_key": "INV_ARCH_ANCHOR",
 		"domain": "metrics",
-		"domain_chip": "METRİK",
+		"domain_chip_key": "INV_CHIP_METRICS",
 		"weights": {"metrik": PitchConstants.DIFF_KOLAY, "vizyon": PitchConstants.DIFF_CETIN, "traction": PitchConstants.DIFF_ORTA},
 		"interrogation_intensity": "mid",
 		"patience_pool": 3,
-		"term_bands": {"valuation": "yüksek", "dilution": "yüksek", "board": "koltuk + veto ister"},
+		"term_bands": {"valuation": "high", "dilution": "high", "board": "seat_veto"},
 		"opening_terms": {"valuation_m": 18, "dilution_pct": 22, "board_seats": 1, "board_veto": true},
 		"warm_intro": false,
 		"portrait_path": "res://assets/art/investors/portrait_anchor.webp",
@@ -34,14 +34,14 @@ const INVESTORS := [
 	{
 		"id": "nexus",
 		"display_name": "Nexus Ventures",
-		"role_line": "Yönetici Ortak",
-		"archetype_line": "Temkinli. Kurucuyu sever, riski sevmez.",
+		"role_key": "INV_ROLE_MANAGING_PARTNER",
+		"archetype_key": "INV_ARCH_NEXUS",
 		"domain": "team",
-		"domain_chip": "EKİP",
+		"domain_chip_key": "INV_CHIP_TEAM",
 		"weights": {"metrik": PitchConstants.DIFF_ORTA, "vizyon": PitchConstants.DIFF_ORTA, "traction": PitchConstants.DIFF_KOLAY},
 		"interrogation_intensity": "mid",
 		"patience_pool": 4,
-		"term_bands": {"valuation": "düşük", "dilution": "düşük", "board": "temiz"},
+		"term_bands": {"valuation": "low", "dilution": "low", "board": "clean"},
 		"opening_terms": {"valuation_m": 10, "dilution_pct": 15, "board_seats": 0, "board_veto": false},
 		"warm_intro": false,
 		"portrait_path": "res://assets/art/investors/portrait_nexus.webp",
@@ -50,14 +50,14 @@ const INVESTORS := [
 	{
 		"id": "bosphorus",
 		"display_name": "Bosphorus Partners",
-		"role_line": "Kurucu Ortak",
-		"archetype_line": "İlişki adamı. Kapıyı Frank açar.",
+		"role_key": "INV_ROLE_FOUNDING_PARTNER",
+		"archetype_key": "INV_ARCH_BOSPHORUS",
 		"domain": "narrative",
-		"domain_chip": "ANLATI",
+		"domain_chip_key": "INV_CHIP_NARRATIVE",
 		"weights": {"metrik": PitchConstants.DIFF_CETIN, "vizyon": PitchConstants.DIFF_KOLAY, "traction": PitchConstants.DIFF_ORTA},
 		"interrogation_intensity": "soft",
 		"patience_pool": 2,
-		"term_bands": {"valuation": "orta", "dilution": "orta", "board": "koltuk (esnek)"},
+		"term_bands": {"valuation": "mid", "dilution": "mid", "board": "seat_flex"},
 		"opening_terms": {"valuation_m": 14, "dilution_pct": 18, "board_seats": 1, "board_veto": false},
 		"warm_intro": true,
 		"portrait_path": "res://assets/art/investors/portrait_bosphorus.webp",
@@ -66,14 +66,14 @@ const INVESTORS := [
 	{
 		"id": "meridian",
 		"display_name": "Meridian Growth",
-		"role_line": "Büyüme Ortağı",
-		"archetype_line": "Sektörü senden iyi bilir. Sabrı yoktur.",
+		"role_key": "INV_ROLE_GROWTH_PARTNER",
+		"archetype_key": "INV_ARCH_MERIDIAN",
 		"domain": "product",
-		"domain_chip": "ÜRÜN",
+		"domain_chip_key": "INV_CHIP_PRODUCT",
 		"weights": {"metrik": PitchConstants.DIFF_KOLAY, "vizyon": PitchConstants.DIFF_CETIN, "traction": PitchConstants.DIFF_ORTA},
 		"interrogation_intensity": "hard",
 		"patience_pool": 2,
-		"term_bands": {"valuation": "cömert", "dilution": "orta", "board": "gözlemci"},
+		"term_bands": {"valuation": "generous", "dilution": "mid", "board": "observer"},
 		"opening_terms": {"valuation_m": 16, "dilution_pct": 18, "board_seats": 0, "board_veto": false},
 		"warm_intro": false,
 		"portrait_path": "res://assets/art/investors/portrait_meridian.webp",
@@ -83,10 +83,10 @@ const INVESTORS := [
 	{
 		"id": "locked_tier2",
 		"display_name": "— · Tier 2'de",
-		"role_line": "",
-		"archetype_line": "",
+		"role_key": "",
+		"archetype_key": "",
 		"domain": "",
-		"domain_chip": "",
+		"domain_chip_key": "",
 		"weights": {},
 		"interrogation_intensity": "",
 		"patience_pool": 0,
@@ -136,3 +136,38 @@ func favored_angle(vc_id: String) -> String:
 			best_diff = int(w[angle])
 			best = angle
 	return best
+
+
+# ============================================================================
+# COPY ACCESSORS — the words left this table for strings.csv (Faz 2 · B7).
+# ============================================================================
+# role_line / archetype_line / domain_chip held finished Turkish, and term_bands held
+# Turkish words that rode along on TermSheet (an @export) into whatever read it. The table
+# keeps ids; the words are resolved at render time.
+
+## "Kıdemli Ortak" / "Senior Partner". "" for the locked Tier-2 slot.
+func role_line(investor_id: String) -> String:
+	return _copy(investor_id, "role_key")
+
+
+## The one-line read on how this VC behaves in the room.
+func archetype_line(investor_id: String) -> String:
+	return _copy(investor_id, "archetype_key")
+
+
+## The domain badge shown on the hunt card ("METRİK" / "METRICS").
+func domain_chip(investor_id: String) -> String:
+	return _copy(investor_id, "domain_chip_key")
+
+
+func _copy(investor_id: String, field: String) -> String:
+	var key: String = String(get_investor(investor_id).get(field, ""))
+	return "" if key == "" else TranslationServer.translate(key)
+
+
+## Term-band id → word ("yüksek" / "high"). The bands are stored as ids on TermSheet, so a
+## sheet written in one language reads correctly in the other.
+func term_band_label(band_id: String) -> String:
+	if band_id == "":
+		return ""
+	return TranslationServer.translate("TERM_BAND_" + band_id.to_upper())

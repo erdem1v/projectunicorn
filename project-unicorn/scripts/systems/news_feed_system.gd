@@ -205,7 +205,7 @@ static func _ensure_state() -> Dictionary:
 	if nf.is_empty():
 		nf["used_sektor"] = []
 		nf["reshuffles"] = 0
-		nf["counts"] = {"sektor": 0, "rakip": 0, "biz": 0}
+		nf["counts"] = {"sektor": 0, "rakip": 0, "biz": 0}   # LOC-DATA news line kind id
 		nf["biz_buffer"] = []
 		nf["biz_dropped"] = 0      # kuyruk doluyken geri çevrilen milestone sayısı
 		nf["recent_rivals"] = {}   # rival id -> son haber günü (cooldown penceresi)
@@ -218,9 +218,9 @@ static func _pick_source(nf: Dictionary, rival_pool: Array) -> String:
 	# göre en aç olanı seçilir. Biz'in sert kapısı burada — hedefe değil TAVANA
 	# bakar: bir sonraki satır biz olursa oran %20'yi aşacaksa biz seçilemez.
 	var counts: Dictionary = nf["counts"]
-	var total: float = float(int(counts["sektor"]) + int(counts["rakip"]) + int(counts["biz"]))
-	var best: String = "sektor"
-	var best_deficit: float = TARGET_SEKTOR - (float(counts["sektor"]) / maxf(total, 1.0))
+	var total: float = float(int(counts["sektor"]) + int(counts["rakip"]) + int(counts["biz"]))   # LOC-DATA news line kind id
+	var best: String = "sektor"   # LOC-DATA news line kind id
+	var best_deficit: float = TARGET_SEKTOR - (float(counts["sektor"]) / maxf(total, 1.0))   # LOC-DATA news line kind id
 	if not rival_pool.is_empty():
 		var d: float = TARGET_RAKIP - (float(counts["rakip"]) / maxf(total, 1.0))
 		if d > best_deficit:
@@ -249,8 +249,8 @@ static func _emit_sektor(nf: Dictionary, slot: int) -> void:
 	var rec: Dictionary = eligible[idx]
 	(nf["used_sektor"] as Array).append(String(rec["id"]))
 	var counts: Dictionary = nf["counts"]
-	counts["sektor"] = int(counts["sektor"]) + 1
-	_append(nf, "sektor", outlet_name(absi(hash(String(rec["id"])))),
+	counts["sektor"] = int(counts["sektor"]) + 1   # LOC-DATA news line kind id
+	_append(nf, "sektor", outlet_name(absi(hash(String(rec["id"])))),   # LOC-DATA news line kind id
 		TranslationServer.translate("NEWS_" + String(rec["id"]).to_upper()))
 
 

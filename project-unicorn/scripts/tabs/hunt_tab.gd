@@ -97,7 +97,8 @@ func _build_roster_card(inv: Dictionary, pivoted: bool) -> Control:
 	# Archetype line + domain chip.
 	var meta := HBoxContainer.new()
 	meta.add_theme_constant_override("separation", 8)
-	meta.add_child(UiFactory.make_pill(String(inv.get("domain_chip", "")), UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP))
+	meta.add_child(UiFactory.make_pill(
+		InvestorRegistry.domain_chip(String(inv.get("id", ""))), UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP))
 	var arc := _label(String(inv.get("archetype_line", "")), C_DIM, 11, true)
 	arc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	meta.add_child(arc)
@@ -186,8 +187,10 @@ func _build_offer_card(sheet) -> Control:
 	card.add_child(_label(String(inv.get("display_name", "")), C_INK, 13))
 	# Terms preview (mono-ish via RowMeta) + validity countdown, amber → red ≤3.
 	var t: Dictionary = sheet.term_bands
-	card.add_child(_label(tr("HUNT_TERMS").format({"valuation": t.get("valuation", "—"),
-		"equity": t.get("dilution", "—"), "board": t.get("board", "—")}), C_DIM, 11, true))
+	card.add_child(_label(tr("HUNT_TERMS").format({
+		"valuation": InvestorRegistry.term_band_label(String(t.get("valuation", ""))),
+		"equity": InvestorRegistry.term_band_label(String(t.get("dilution", ""))),
+		"board": InvestorRegistry.term_band_label(String(t.get("board", "")))}), C_DIM, 11, true))
 	var days: int = sheet.days_left(GameState.day)
 	var dl := _label(tr("HUNT_VALIDITY").format({"n": days}), UiTokens.ACCENT_DEEP if days > PitchConstants.WARNING_DAYS else UiTokens.negative(), 11)
 	card.add_child(dl)

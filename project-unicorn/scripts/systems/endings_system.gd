@@ -25,43 +25,31 @@ const PIVOT_MRR_MIN := 2000        # §4.5 "metrics are alive" floor
 const BOOTSTRAP_WIN_MRR := SalesSystem.TRACTION_MRR_TARGET  # §4.6 fork MRR threshold — single home sales_system.gd
 const NET_WINDOW := 90             # §4.6 cumulative net window (Erdem 2026-07-13)
 
-# Ending metadata — 7 endings (§4). Titles/frank_lines are working copy;
-# the newspaper ending screens (content phase) replace the presentation only.
+# Ending metadata — 7 endings (§4). Only the TONE lives here now; the title and Frank's
+# closing line are END_META_<ID>_TITLE / _FRANK in strings.csv, read through ending_title()
+# and ending_frank_line(). A const cannot hold them: it is evaluated when the file loads,
+# before a locale exists.
 const ENDINGS := {
 	"series_a_close": {
-		"title": "Series A Kapandı",
-		"tone": "win",
-		"frank_line": "İmzaladın. Şimdi asıl iş başlıyor — ama o başka bir oyunun konusu.",
+				"tone": "win",
 	},
 	"acquisition": {
-		"title": "Şirket Satıldı",
-		"tone": "soft_win",
-		"frank_line": "Sattın. Kazanmak değil; kaybetmek de değil. Çoğu kurucu bunu bile göremez.",
+				"tone": "soft_win",
 	},
 	"bankruptcy": {
-		"title": "Kepenk İndi",
-		"tone": "loss",
-		"frank_line": "Yedi gün kırmızıda kaldın. Rakamlar kaba değildir — sadece sabırlıdır.",
+				"tone": "loss",
 	},
 	"brand_collapse": {
-		"title": "Marka Çöktü",
-		"tone": "loss",
-		"frank_line": "Skandalı sen yönetmedin; o seni yönetti.",
+				"tone": "loss",
 	},
 	"vc_rejection_cascade": {
-		"title": "Üç Masa, Üç Ret",
-		"tone": "loss",
-		"frank_line": "Para bulamamak öldürmez. Vazgeçilmiş görünmek öldürür.",
+				"tone": "loss",
 	},
 	"profitable_bootstrap": {
-		"title": "Kendi Paranla",
-		"tone": "win",
-		"frank_line": "Onlara ihtiyacın yokmuş. Gerçek bir şey kurdun.",
+				"tone": "win",
 	},
 	"running_on_fumes": {
-		"title": "Son Damla",
-		"tone": "soft_loss",
-		"frank_line": "Kaybetmedin. Sadece kazanmadın.",
+				"tone": "soft_loss",
 	},
 }
 
@@ -113,7 +101,7 @@ static func _tick_shutter() -> bool:
 			# Extension socket: a future loan / cash-injection mechanic resets
 			# this by pushing cash ≥ 0 — no extra seam needed (DEFERRED BACKLOG).
 			GameState.set_shutter_days_left(SHUTTER_DAYS)
-			GameState.submit_month_highlight("Kepenk sayacı başladı — kasa ekside", 90)  # AYIN OLAYI (Spec 3 §4)
+			GameState.submit_month_highlight(TranslationServer.translate("END_HL_SHUTTER_STARTED"), 90)  # AYIN OLAYI (Spec 3 §4)
 			PhaseGateSystem.on_shutter_started()
 			EventManager.enqueue_front(_build_shutter_warning_event())
 		else:
@@ -220,7 +208,7 @@ static func _check_acquisition_offer() -> void:
 	if GameState.vc_rejections < 1:
 		return
 	GameState.set_flag("acquisition_offer_made", true)
-	GameState.submit_month_highlight("Satın alma teklifi masada", 90)  # AYIN OLAYI (Spec 3 §4)
+	GameState.submit_month_highlight(TranslationServer.translate("END_HL_ACQ_OFFER"), 90)  # AYIN OLAYI (Spec 3 §4)
 	EventManager.enqueue_front(_build_acquisition_offer_event())
 
 
@@ -248,9 +236,9 @@ static func _build_ending_data(ending_id: String, extra: Dictionary) -> Dictiona
 	var meta: Dictionary = ENDINGS[ending_id]
 	var data := {
 		"ending_id": ending_id,
-		"title": meta.title,
+		"title": ending_title(ending_id),
 		"tone": meta.tone,
-		"frank_line": meta.frank_line,
+		"frank_line": ending_frank_line(ending_id),
 		"day": GameState.day,
 		"cash": GameState.cash,
 		"mrr": GameState.mrr,
@@ -272,20 +260,20 @@ static func _build_shutter_warning_event() -> GameEvent:
 	var ev: GameEvent = GameEvent.new()
 	ev.id = "ev_shutter_warning"
 	ev.category = "reactive"
-	ev.title = "Kırmızıdasın"
+	ev.title = TranslationServer.translate("END_EV_SHUTTER_TITLE")
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
 	# §4.3 Frank line. Loan clause ("ya da birinden borç iste") lands when the
 	# deferred loan mechanic ships.
-	ev.body_text = "Frank ekrana bakmıyor; sana bakıyor.\n\n\"Kırmızıdasın. %d günün var. Ya bir şey sat, ya bir şey kes.\"\n\nBugünden itibaren bir geri sayım başladı. Kasa artıya dönerse durur." % SHUTTER_DAYS
+	ev.body_text = TranslationServer.translate("END_EV_SHUTTER_BODY").format({"days": SHUTTER_DAYS})
 	ev.cooldown_days = 0
 	ev.one_shot = false  # a NEW shutter start after a recovery warns again
 	ev.priority = 10
 	ev.tags = ["build_safe", "endgame"]
 	ev.trigger_conditions = []
 	var ack: EventChoice = EventChoice.new()
-	ack.label = "Anlaşıldı"
+	ack.label = TranslationServer.translate("VC_EV_ACK")
 	ack.modifiers = []
 	ack.unlock_condition = {}
 	ack.unlock_reason_text = ""
@@ -299,23 +287,23 @@ static func _build_pivot_offer_event() -> GameEvent:
 	var ev: GameEvent = GameEvent.new()
 	ev.id = "ev_pivot_offer"
 	ev.category = "reactive"
-	ev.title = "Üçüncü kapı da kapandı"
+	ev.title = TranslationServer.translate("END_EV_PIVOT_TITLE")
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = "Üçüncü ret maili kısa. Hepsi kısadır.\n\nFrank uzun bir süre bir şey demiyor. Sonra:\n\n\"Belki bu yıl değil. Belki bu şirket değil. Ama sen bitmedin.\"\n\nVC yolu kapanıyor. Kendi paranla, kendi müşterinle, %d. güne kadar — hâlâ gerçek bir şirket kurabilirsin." % RUN_END_DAY
+	ev.body_text = TranslationServer.translate("END_EV_PIVOT_BODY").format({"day": RUN_END_DAY})
 	ev.cooldown_days = 0
 	ev.one_shot = false  # one-shot enforced by the pivot_offer_made flag
 	ev.priority = 10
 	ev.tags = ["build_safe", "endgame"]
 	ev.trigger_conditions = []
 	var accept: EventChoice = EventChoice.new()
-	accept.label = "Pivot — devam ediyoruz"
+	accept.label = TranslationServer.translate("END_EV_PIVOT_ACCEPT")
 	accept.modifiers = [{"type": "accept_pivot"}]
 	accept.unlock_condition = {}
 	accept.unlock_reason_text = ""
 	var decline: EventChoice = EventChoice.new()
-	decline.label = "Hayır. Bitti."
+	decline.label = TranslationServer.translate("END_EV_PIVOT_DECLINE")
 	decline.modifiers = [{"type": "decline_pivot"}]
 	decline.unlock_condition = {}
 	decline.unlock_reason_text = ""
@@ -330,25 +318,25 @@ static func _build_acquisition_offer_event() -> GameEvent:
 	var ev: GameEvent = GameEvent.new()
 	ev.id = "ev_acquisition_offer"
 	ev.category = "reactive"
-	ev.title = "Satın alma teklifi"
+	ev.title = TranslationServer.translate("END_EV_ACQ_TITLE")
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
 	# §4.2: "you sold, but you didn't quite win" register. The drama is in the
 	# option to refuse — reject costs nothing extra, the run just continues.
-	ev.body_text = "Mail bir cuma akşamı geliyor; büyük oyuncular hep cuma yazar.\n\nSeni satın almak istiyorlar. Ekip kalır, isim kalmaz. Rakam fena değil — hayat değiştirmez, ama kepenk de indirtmez.\n\nFrank omuz silkiyor:\n\n\"Satmak yenilgi değildir. Ama bunu sana kimse imza gecesi söylemez.\""
+	ev.body_text = TranslationServer.translate("END_EV_ACQ_BODY")
 	ev.cooldown_days = 0
 	ev.one_shot = false  # one-shot enforced by the acquisition_offer_made flag
 	ev.priority = 10
 	ev.tags = ["build_safe", "endgame"]
 	ev.trigger_conditions = []
 	var accept: EventChoice = EventChoice.new()
-	accept.label = "Kabul et — sat"
+	accept.label = TranslationServer.translate("END_EV_ACQ_ACCEPT")
 	accept.modifiers = [{"type": "accept_acquisition"}]
 	accept.unlock_condition = {}
 	accept.unlock_reason_text = ""
 	var decline: EventChoice = EventChoice.new()
-	decline.label = "Reddet — devam"
+	decline.label = TranslationServer.translate("END_EV_ACQ_DECLINE")
 	decline.modifiers = [{"type": "set_flag", "key": "acquisition_offer_rejected", "value": true}]
 	decline.unlock_condition = {}
 	decline.unlock_reason_text = ""
@@ -357,3 +345,13 @@ static func _build_acquisition_offer_event() -> GameEvent:
 	choices.append(decline)
 	ev.choices = choices
 	return ev
+
+
+## Ending title ("Series A Kapandı" / "Series A Closed"). The table holds tone only.
+static func ending_title(ending_id: String) -> String:
+	return TranslationServer.translate("END_META_%s_TITLE" % ending_id.to_upper())
+
+
+## Frank's closing line for an ending.
+static func ending_frank_line(ending_id: String) -> String:
+	return TranslationServer.translate("END_META_%s_FRANK" % ending_id.to_upper())

@@ -60,7 +60,7 @@ static func is_english() -> bool:
 static func upper(s: String) -> String:
 	if is_english():
 		return s.to_upper()
-	return s.replace("i", "İ").to_upper()
+	return s.replace("i", "İ").to_upper()   # LOC-DATA Turkish dotted-i mapping
 
 
 # --- Calendar ---------------------------------------------------------------

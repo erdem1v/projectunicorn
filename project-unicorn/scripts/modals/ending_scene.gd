@@ -503,7 +503,7 @@ func _fallback_view_state(ending_data: Dictionary, ledger: Dictionary) -> Dictio
 	return {
 		"tone": String(ending_data.get("tone", "loss")),
 		"is_win": false,
-		"masthead": "EKONOMİ POSTASI",
+		"masthead": TranslationServer.translate("WORLD_OUTLET_EKONOMI_CAPS"),
 		"date_line": "",
 		"headline": String(ending_data.get("title", "")),
 		"subhead": String(ending_data.get("frank_line", "")),

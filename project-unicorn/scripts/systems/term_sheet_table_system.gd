@@ -192,7 +192,7 @@ static func view_state() -> Dictionary:
 		"state": _state,
 		"vc_id": _vc_id,
 		"display_name": inv.get("display_name", ""),
-		"archetype_line": inv.get("archetype_line", ""),
+		"archetype_line": InvestorRegistry.archetype_line(_vc_id),
 		"portrait_path": inv.get("portrait_path", ""),
 		"patience": {"current": _patience, "max": _patience_max},
 		"levers": _lever_views(),

@@ -275,3 +275,45 @@ Turkish here is new copy, so it wants a read as much as the English does.**
 `MENTOR_NAME` is a proper noun, identical in both columns. The `--pitch-shot` and layout
 fixtures in `meeting_scene` / `frank_popup` are `# LOC-DATA`: the long ones exist to overflow
 the box, so keying them would defeat what they are for.
+
+---
+
+## B7 — Endings (2026-08-19) · residue reaches ZERO
+
+### The ending newspaper (`endings_copy`, 133 keys)
+The director's ruling reversed Phase 1 §4.6: the prose pools move to the CSV, the
+grammar-assembly logic does not. The file argued for keeping its strings because the lines
+are "grammar-ASSEMBLED Turkish" — true of the assembly (which ledger line enters, how
+bankruptcy branches on phase, which headline set Series A picks), and all of that stayed
+put. What moved is the finished sentences, which is what a translator needs side by side.
+
+The editorial rules the Turkish obeys are carried into the English and must survive the pass:
+newspaper language not stat language · **no raw day count in prose** (time is framed in
+calendar months via `END_SPAN_*`) · **no "$" in prose** — investment figures are spelled out
+(`END_MILLIONS`), and the stat row is the one sanctioned "$" surface because it is an
+infographic · quotes attributed to the trade at large, **never to a named person** · no
+em-dash, no emoji.
+
+Seven papers, each with a headline, a subhead, an engraving caption, a ledger pool and two
+closers: `END_SA_*` (two variants — founder-friendly vs aggressive), `END_ACQ_*`, `END_BK*`
+(three phases, plus the phase-1 quiet closure with its generic masthead pool), `END_BC_*`,
+`END_VC_*`, `END_BS_*`, `END_RF_*`.
+
+**`END_BC_HEAD` is `# COPY-RESTRUCTURED`**: the Turkish read "İtibar Krizi {company}'i
+Devirdi" — an accusative suffix on the company NAME, unknowable for an arbitrary name.
+
+**Nine `_ONE` rows exist for a reason.** English inflects a noun after a numeral and Turkish
+does not, so "{n} enterprise customers were won" reads "1 enterprise customers" on a run that
+signed one — caught in an English screenshot, not in review. Each affected line has a
+singular twin picked by `_n()`. **The Turkish is deliberately identical in both rows**; do
+not "fix" the duplication.
+
+### Ending metadata and endgame beats (`endings_system`, 26 keys)
+`END_META_*_TITLE` / `_FRANK` — the seven ending titles and Frank's closing line for each,
+now derived from the ending id. Plus the three endgame events: the shutter warning, the
+pivot offer after the third rejection, and the acquisition offer. All Tier B.
+
+### Not for the pass
+`WORLD_OUTLET_EKONOMI_CAPS` and `MENTOR_NAME` are proper nouns, identical in both columns.
+`NUM_0..12` are spelled-out numerals, not prose. The debug fixtures in `main.gd`,
+`endings_copy.debug_all_view_states`, `meeting_scene` and `frank_popup` are `# LOC-DATA`.

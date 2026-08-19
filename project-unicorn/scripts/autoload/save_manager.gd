@@ -598,15 +598,15 @@ func _migrate_sector_ids(state: Dictionary) -> void:
 ## with no help from here) or a string from a build we do not know. Either way the field is
 ## simply dropped rather than guessed at: -1 renders as empty, never as the wrong sentence.
 const _LEGACY_NEEDS := [
-	"Ekip dağınık, tek bir yerde toplamak istiyorlar.",
-	"Manuel süreçler zaman yiyor, otomasyon arıyorlar.",
-	"Mevcut araçları pahalı ve şişkin, sade bir şey istiyorlar.",
-	"Raporlama kâbus, yönetim net veri istiyor.",
+	"Ekip dağınık, tek bir yerde toplamak istiyorlar.",   # LOC-DATA legacy save value
+	"Manuel süreçler zaman yiyor, otomasyon arıyorlar.",   # LOC-DATA legacy save value
+	"Mevcut araçları pahalı ve şişkin, sade bir şey istiyorlar.",   # LOC-DATA legacy save value
+	"Raporlama kâbus, yönetim net veri istiyor.",   # LOC-DATA legacy save value
 ]
 const _LEGACY_REAL_NEEDS := [
-	"Aslında derdi bütçe değil — patronuna 'modernleştik' diyebilmek.",
-	"Asıl korkusu rakibin gerisinde kalmak.",
-	"Geçen yıl yanlış araca para yatırdı, bu sefer garanti istiyor.",
+	"Aslında derdi bütçe değil — patronuna 'modernleştik' diyebilmek.",   # LOC-DATA legacy save value
+	"Asıl korkusu rakibin gerisinde kalmak.",   # LOC-DATA legacy save value
+	"Geçen yıl yanlış araca para yatırdı, bu sefer garanti istiyor.",   # LOC-DATA legacy save value
 ]
 
 

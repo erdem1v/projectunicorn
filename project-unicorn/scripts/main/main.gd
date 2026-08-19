@@ -559,7 +559,7 @@ func _run_b2b_shot(kind: String) -> void:
 	if kind == "escalation":
 		var cs := Character.new()
 		cs.id = "char_cs_shot"
-		cs.character_name = "Burcu Çetin"
+		cs.character_name = "Burcu Çetin"   # LOC-DATA debug seed / id
 		cs.role = HRConstants.ROLE_CUSTOMER_REP
 		cs.category = "employee"
 		cs.monthly_salary = 5000
@@ -651,7 +651,7 @@ func _run_sales_shot() -> void:
 	PitchSystem.spawn_prospect("small", "find")
 	PitchSystem.spawn_prospect("mid", "find")
 	PitchSystem.spawn_prospect("small", "find")
-	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)
+	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)   # LOC-DATA debug seed / id
 	_shot_customer("co_palmiye", "Palmiye Holding", "insurance", "active", 1500, 16, 150, true)
 	_shot_customer("co_aras", "Aras Klinik", "health", "onboarding", 700, 6, 10, false)
 	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 60, false)
@@ -994,7 +994,7 @@ func _seed_theme_surface() -> void:
 	GameState.set_flag("mvp_experience", 45.0)
 	GameState.set_flag("mvp_live_bug_count", 12)
 	_seed_hr_roster()
-	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)
+	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)   # LOC-DATA debug seed / id
 	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 60, false)
 	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 180, false)
 	PitchSystem.spawn_prospect("small", "find")
@@ -1059,10 +1059,10 @@ func _run_modal_shot(kind: String) -> void:
 	match kind:
 		"confirm":
 			EventBus.confirm_requested.emit({
-				"title": "Geliştirmeyi iptal et?",
-				"body": "Nova v3 build'i durur ve harcanan efor geri gelmez.",
-				"confirm_text": "İPTAL ET",
-				"cancel_text": "VAZGEÇ",
+				"title": "Geliştirmeyi iptal et?",   # LOC-DATA debug seed / id
+				"body": "Nova v3 build'i durur ve harcanan efor geri gelmez.",   # LOC-DATA debug seed / id
+				"confirm_text": "İPTAL ET",   # LOC-DATA debug seed / id
+				"cancel_text": "VAZGEÇ",   # LOC-DATA debug seed / id
 			})
 		"confirm3":
 			# Üç butonlu hâl (SaveManager task'ı): panel genişlemesinin kanıtı. Aynı
@@ -1308,14 +1308,14 @@ func _run_finance_shot(kind: String) -> void:
 	# (initialize_run origin nakdiyle örnekledi; eğri fixture nakdinden başlamalı).
 	GameState.cash_history = [{"day": GameState.day, "cash": GameState.cash}]
 	# artida: 3 imza × 20K = 60K MRR → günlük gelir 2000 > kadro burn'ü (~1500) → net pozitif
-	var sign_mrr: int = 20000 if kind == "artida" else 1100
+	var sign_mrr: int = 20000 if kind == "artida" else 1100   # LOC-DATA debug seed / id
 	for i in range(40):
 		GameState.advance_day()
-		if i == 10 or (kind == "artida" and (i == 12 or i == 14)):
+		if i == 10 or (kind == "artida" and (i == 12 or i == 14)):   # LOC-DATA debug seed / id
 			var pr: Prospect = PitchSystem.spawn_prospect("mid", "find")
 			SalesSystem.add_b2b_customer(pr, sign_mrr, 70)   # pozitif işlem satırı + MRR
 			ProspectRegistry.remove(pr.id)
-		if i == 20 and kind != "artida":
+		if i == 20 and kind != "artida":   # LOC-DATA debug seed / id
 			# Peşin arayış ücreti → negatif işlem satırı ("İşe alım")
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, "mid")
 		if i == 30 and kind == "ozet":
@@ -1366,7 +1366,7 @@ func _run_hr_shot(kind: String) -> void:
 				HRSearchSystem.daily_tick()
 		"atlas":
 			pass   # temiz modal: rol/bant seçimi
-		"mesai":
+		"mesai":   # LOC-DATA debug seed / id
 			pass   # panel departman başlığından açılır, aşağıda
 		"gider":
 			# §5 doğrulaması: bir arayış başlat (peşin ücret) ve bir mesai bloğu çalıştır,
@@ -1392,7 +1392,7 @@ func _run_hr_shot(kind: String) -> void:
 	# "egitim": DENEYİM/EĞİTİM satır durumlarının TEK görsel kanıtı. Biri deneyimi
 	# dolmuş (EĞİTİME GÖNDER görünür), biri eğitimde (geri sayan çip), biri yarı yolda
 	# (mini bar dolu değil) — üç durum tek karede.
-	if kind == "egitim":
+	if kind == "egitim":   # LOC-DATA debug seed / id
 		var roster: Array[Character] = CharacterRegistry.get_employees()
 		if roster.size() >= 3:
 			CharacterRegistry.add_experience(roster[0].id, HRConstants.EXPERIENCE_MAX)
@@ -1444,8 +1444,10 @@ func _run_hr_shot(kind: String) -> void:
 				get_tree().quit(1)
 				return
 			tab._on_card_action(target.id, HREmployeeCard.ACTION_RAISE, row_anchor)
-		"mesai":
-			_press_button_labelled(tab, "EK MESAİ")
+		"mesai":   # LOC-DATA debug seed / id
+			# By KEY, not by the Turkish word: this harness runs under --lang=en too, and the
+			# button it is looking for says OVERTIME there.
+			_press_button_labelled(tab, TranslationServer.translate("HR_OVERTIME_CHIP"))
 		_:
 			pass
 	await get_tree().process_frame
@@ -1483,13 +1485,13 @@ func _seed_hr_roster() -> void:
 		{"name": "Deniz Arslan", "role": HRConstants.ROLE_DESIGNER, "salary": 7400,
 			"axes": {"expertise": 6, "pace": 7, "rapport": 5}, "morale": 38,
 			"traits": ["pressure_proof", "works_alone"]},
-		{"name": "Mert Yıldız", "role": HRConstants.ROLE_DEVELOPER, "salary": 11200,
+		{"name": "Mert Yıldız", "role": HRConstants.ROLE_DEVELOPER, "salary": 11200,   # LOC-DATA debug seed / id
 			"axes": {"expertise": 8, "pace": 6, "rapport": 4}, "morale": 61,
 			"traits": ["wont_jump_ship"]},
 		{"name": "Selin Kaya", "role": HRConstants.ROLE_TESTER, "salary": 6900,
 			"axes": {"expertise": 5, "pace": 6, "rapport": 7}, "morale": 22,
 			"traits": ["mentors_peers"]},
-		{"name": "Burak Şahin", "role": HRConstants.ROLE_SALES_REP, "salary": 8300,
+		{"name": "Burak Şahin", "role": HRConstants.ROLE_SALES_REP, "salary": 8300,   # LOC-DATA debug seed / id
 			"axes": {"expertise": 6, "pace": 5, "rapport": 8}, "morale": 55,
 			"traits": ["warms_up_fast"]},
 	]
@@ -1562,7 +1564,7 @@ func _run_ending_shot(key: String) -> void:
 	# 3 minimal employees so the ÇALIŞAN stat cell renders non-zero — ledger.employees
 	# reads CharacterRegistry live headcount, not run_hires (mirrors the _run_b2b_shot
 	# seeding pattern).
-	var emp_names := ["Burcu Çetin", "Mert Aydın", "Selin Koç"]
+	var emp_names := ["Burcu Çetin", "Mert Aydın", "Selin Koç"]   # LOC-DATA debug seed / id
 	for i in range(emp_names.size()):
 		var emp := Character.new()
 		emp.id = "char_shot_emp_%d" % i
@@ -1624,7 +1626,7 @@ func _run_product_shot(kind: String) -> void:
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	var founder_id: String = CharacterRegistry.get_founder().id
 	match kind:
-		"detail_b2b", "portfoy":
+		"detail_b2b", "portfoy":   # LOC-DATA debug seed / id
 			GameState.day = 95
 			GameState.set_flag("mvp_shipped", true)
 			GameState.set_flag("mvp_market_type", "b2b")
@@ -1649,7 +1651,7 @@ func _run_product_shot(kind: String) -> void:
 			p.pain_feature_id = "saas_ops_integration"
 			var c: Customer = SalesSystem.add_b2b_customer(p, 402, 70)
 			PromiseRegistry.create(c.id, "saas_ops_integration", 12)
-			if kind == "portfoy":
+			if kind == "portfoy":   # LOC-DATA debug seed / id
 				ProductSystem.start_version_build(["saas_ops_scheduling"], founder_id, [])
 				var b: FeatureBuild = ProductSystem.get_active_build()
 				if b != null:
@@ -1675,7 +1677,7 @@ func _run_product_shot(kind: String) -> void:
 		"tracker", "beta":
 			ProductSystem.start_build("saas_ops",
 				["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"],
-				founder_id, "Nova İki")
+				founder_id, "Nova İki")   # LOC-DATA debug seed / id
 			var b: FeatureBuild = ProductSystem.get_active_build()
 			if b != null:
 				b.efor_spent = b.total_efor * (0.9 if kind == "beta" else 0.5)
@@ -1758,7 +1760,7 @@ func _shot_customer(id: String, cname: String, industry: String, phase: String, 
 	if cs:
 		var rep := Character.new()
 		rep.id = "char_cs_" + id
-		rep.character_name = "Burcu Çetin"
+		rep.character_name = "Burcu Çetin"   # LOC-DATA debug seed / id
 		rep.role = HRConstants.ROLE_CUSTOMER_REP
 		rep.category = "employee"
 		rep.role_stats = HRConstants.default_axes()
@@ -2239,16 +2241,18 @@ func _deal_prompt_view_state(vc_id: String) -> Dictionary:
 	var days: int = sheet.days_left(GameState.day) if sheet != null else PitchConstants.SHEET_VALIDITY_DAYS
 	return {
 		"portrait_path": "res://assets/art/investors/portrait_frank.webp",
-		"speaker_name": "Frank Köseoğlu",
-		"speaker_role": "Mentor / Operating Partner",
+		"speaker_name": TranslationServer.translate("MENTOR_NAME"),
+		"speaker_role": TranslationServer.translate("MENTOR_ROLE_LINE"),
 		"active_line": {
-			"text": "\"%s teklif verdi. %d gün geçerli. İstersen masaya şimdi otur, şartları zorla. İstersen teklifi cebine koy, başka VC'lerle de görüş — cebinde ikinci teklif olduğunda pazarlık gücün artar.\"" % [String(inv.get("display_name", "")), days],
-			"speaker_tag": "Frank",
+			"text": TranslationServer.translate("DEAL_PROMPT_LINE").format(
+				{"investor": String(inv.get("display_name", "")), "days": days}),
+			"speaker_tag": TranslationServer.translate("ODA_MENTOR_TAG_FALLBACK"),
 			"is_monologue": false,
 		},
 		"choices": [
-			{"id": "open_table", "text": "Masaya şimdi otur.", "marked": true, "marked_text": "Geçerlilik: %d gün" % days},
-			{"id": "defer", "text": "Sonra — teklifi al, başka VC'lerle görüş."},
+			{"id": "open_table", "text": TranslationServer.translate("DEAL_PROMPT_SIT"), "marked": true,
+				"marked_text": TranslationServer.translate("DEAL_PROMPT_VALIDITY").format({"days": days})},
+			{"id": "defer", "text": TranslationServer.translate("DEAL_PROMPT_DEFER")},
 		],
 		"beat_label": "%s — Term Sheet" % String(inv.get("display_name", "")),
 		"can_withdraw": false,

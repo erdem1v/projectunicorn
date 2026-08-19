@@ -300,9 +300,9 @@ func _on_mute_unfocused_toggled(on: bool) -> void:
 
 
 func _update_pct_labels() -> void:
-	_master_pct.text = "%d%%" % int(round(_master_slider.value))
-	_music_pct.text = "%d%%" % int(round(_music_slider.value))
-	_sfx_pct.text = "%d%%" % int(round(_sfx_slider.value))
+	_master_pct.text = Fmt.percent(int(round(_master_slider.value)), 0)
+	_music_pct.text = Fmt.percent(int(round(_music_slider.value)), 0)
+	_sfx_pct.text = Fmt.percent(int(round(_sfx_slider.value)), 0)
 
 
 # =============================================================================

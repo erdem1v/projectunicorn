@@ -278,7 +278,7 @@ func ensure_mentor() -> void:
 		return
 	var m := Character.new()
 	m.id = "char_mentor_frank"
-	m.character_name = "Frank Köseoğlu"
+	m.character_name = TranslationServer.translate("MENTOR_NAME")
 	# Typed id whose label is the byte-exact "Operating Partner" already on screen via
 	# MentorIntroModal and the three live JSON events that speak as Frank.
 	m.role = HRConstants.ROLE_MENTOR
@@ -452,7 +452,7 @@ func _seed_debug_characters() -> void:
 	# decision. Keep marker so future agents know this is unblessed.
 	var mentor := Character.new()
 	mentor.id = "char_mentor_frank"
-	mentor.character_name = "Frank Köseoğlu"
+	mentor.character_name = TranslationServer.translate("MENTOR_NAME")
 	# Was "Mentor" here and "Operating Partner" in ensure_mentor — two strings for one
 	# role. Typing collapses the divergence onto the id whose label is the visible one.
 	mentor.role = HRConstants.ROLE_MENTOR

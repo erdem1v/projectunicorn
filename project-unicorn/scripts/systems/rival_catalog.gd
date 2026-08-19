@@ -41,16 +41,16 @@ const TEMPLATE := [
 # süpürmesinde kapatıldı. İNDEKS SIRASI KİLİTLİ: TEMPLATE tier'ları ve SHARE_SEED
 # payları indeks-hizalı, o yüzden adlar YERİNDE değişir, asla yeniden sıralanmaz.
 const NAMES := {
-	"ai_assistant":      ["Refik AI", "Aselia", "Perga AI", "Kestrel", "Pocket Aide", "Söyleç", "Kovan", "Echo Desk"],
-	"ai_photo_editor":   ["PixelForge", "Retušo", "Işılt", "Kadraj", "GlowKit", "Frame9", "Poz", "Kolaj"],
-	"ai_code_copilot":   ["Zanaat", "Kalfa", "Syntaxa", "PairUp", "Loopcraft", "Semic", "Refacto", "Çırak"],
-	"ai_vector_search":  ["VectorScale", "Bulgu", "Embedda", "Nöronet", "Simqore", "Nirengi", "İzsürer", "Fihrist"],
-	"saas_project_mgmt": ["Vardiya", "Çizelge", "Panoya", "Sprintboard", "Dizge", "Tasarı", "Tasket", "Roadmapp"],
-	"saas_crm":          ["Sadakat", "Yörünge", "Pipeplus", "Dealflow", "Leada", "CRMkolay", "Rehber", "Satışçı"],
-	"saas_analytics":    ["Mercek", "Metrion", "Dashy", "Insighta", "Grafkatör", "Queryn", "Panelist", "Sağlama"],
-	"saas_billing":      ["Kasadar", "Faturon", "Billwise", "Tahsila", "Subskript", "Oranla", "Ödemely", "Recurro"],
-	"saas_dev_tools":    ["Nöbetçi", "Karakol", "Kütükçü", "CIforge", "Sandboxy", "Devkit", "APIgate", "Uçbirim"],
-	"saas_ops":          ["FlowSuite", "Prosedo", "Operanda", "Akista", "Otomo", "Süreçly", "Rutin", "Adımla"],
+	"ai_assistant":      ["Refik AI", "Aselia", "Perga AI", "Kestrel", "Pocket Aide", "Söyleç", "Kovan", "Echo Desk"],   # LOC-DATA product name (proper noun)
+	"ai_photo_editor":   ["PixelForge", "Retušo", "Işılt", "Kadraj", "GlowKit", "Frame9", "Poz", "Kolaj"],   # LOC-DATA product name (proper noun)
+	"ai_code_copilot":   ["Zanaat", "Kalfa", "Syntaxa", "PairUp", "Loopcraft", "Semic", "Refacto", "Çırak"],   # LOC-DATA product name (proper noun)
+	"ai_vector_search":  ["VectorScale", "Bulgu", "Embedda", "Nöronet", "Simqore", "Nirengi", "İzsürer", "Fihrist"],   # LOC-DATA product name (proper noun)
+	"saas_project_mgmt": ["Vardiya", "Çizelge", "Panoya", "Sprintboard", "Dizge", "Tasarı", "Tasket", "Roadmapp"],   # LOC-DATA product name (proper noun)
+	"saas_crm":          ["Sadakat", "Yörünge", "Pipeplus", "Dealflow", "Leada", "CRMkolay", "Rehber", "Satışçı"],   # LOC-DATA product name (proper noun)
+	"saas_analytics":    ["Mercek", "Metrion", "Dashy", "Insighta", "Grafkatör", "Queryn", "Panelist", "Sağlama"],   # LOC-DATA product name (proper noun)
+	"saas_billing":      ["Kasadar", "Faturon", "Billwise", "Tahsila", "Subskript", "Oranla", "Ödemely", "Recurro"],   # LOC-DATA product name (proper noun)
+	"saas_dev_tools":    ["Nöbetçi", "Karakol", "Kütükçü", "CIforge", "Sandboxy", "Devkit", "APIgate", "Uçbirim"],   # LOC-DATA product name (proper noun)
+	"saas_ops":          ["FlowSuite", "Prosedo", "Operanda", "Akista", "Otomo", "Süreçly", "Rutin", "Adımla"],   # LOC-DATA product name (proper noun)
 }
 # (Dünya İnandırıcılığı onarımı: saas_ops satırı eklendi — canlı üründü ama isimsizdi,
 # board'da "saas_ops #0..7" fallback'i görünüyordu. Yetim ai_multimodal_app satırı
@@ -76,9 +76,9 @@ const SHARE_SEED := [34.0, 16.0, 11.0, 2.6, 1.9, 1.4, 0.9, 0.5]
 # gerçek bir yazılım firması. İkisi de aynı anlam alanında kurgusal karşılıklarıyla
 # değişti; id'ler kasten korundu, çünkü kayıtlı durum ve shot fixture'ları onlara bakar.)
 const MARKET_ACTORS := [
-	{"id": "ma_silverbirch", "name": "Akkavak Yazılım", "share": 6.5, "momentum": 0.06},
-	{"id": "ma_doruk",       "name": "Yalçın Teknoloji Holding", "share": 5.2, "momentum": 0.10},
-	{"id": "ma_ostrand",     "name": "Ostrand Systems", "share": 3.8, "momentum": 0.08},
+	{"id": "ma_silverbirch", "name": "Akkavak Yazılım", "share": 6.5, "momentum": 0.06},   # LOC-DATA market actor name (proper noun)
+	{"id": "ma_doruk",       "name": "Yalçın Teknoloji Holding", "share": 5.2, "momentum": 0.10},   # LOC-DATA market actor name (proper noun)
+	{"id": "ma_ostrand",     "name": "Ostrand Systems", "share": 3.8, "momentum": 0.08},   # LOC-DATA market actor name (proper noun)
 ]
 
 # Modellenen pazarın toplam aylık geliri (MRR cinsinden). Oyuncunun payı =

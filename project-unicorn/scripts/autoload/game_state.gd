@@ -11,13 +11,11 @@ const DAYS_PER_MONTH := 30  # Single home for the monthly → daily conversion; 
 # offset hack. get_date_dict() is the seam; display formatting lives with whoever
 # renders it (top_bar's Turkish weekday/month tables, product_ui_shared's short form).
 const START_DATE := {"year": 2026, "month": 1, "day": 1}
-# TR month display names (Month-End Summary header; localization pass externalizes later)
-const MONTH_NAMES_TR := ["OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK"]
-# Same months in Title Case, for prose that is not a header ("Ocak'tan beri"). Kept as a
-# separate literal table on purpose: .to_lower()/.capitalize() on the UPPERCASE table above
-# mangles the dotted İ, so deriving one from the other is not safe (EndingsCopy §36-37).
-# Read through month_name_tr(); EndingsCopy.MONTHS_TR_TITLE is the older private twin.
-const MONTH_NAMES_TR_TITLE := ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
+# The two Turkish month tables that used to live here (UPPERCASE for headers, Title Case for
+# prose) are RETIRED. Month words are Fmt.month_name / Fmt.month_upper now — one home, both
+# languages, and the dotted-İ problem that forced two literal tables is handled there: the
+# CSV holds each form outright rather than deriving one from the other with a case op that
+# Godot does not localise.
 
 # --- Run identity ---
 var company_name: String = "Unicorn Inc."
@@ -339,7 +337,8 @@ func advance_phase() -> void:
 	phase_gate_ready = false
 	pending_next_phase = 0
 	submit_month_highlight(
-		"Yeni faza geçildi: %s" % phase_display_name(phase), 80)  # AYIN OLAYI (Spec 3 §4)
+		TranslationServer.translate("MONTH_HL_PHASE_ADVANCED").format(
+			{"phase": phase_display_name(phase)}), 80)  # AYIN OLAYI (Spec 3 §4)
 	EventBus.phase_changed.emit(phase)
 
 
@@ -512,13 +511,10 @@ func get_date_dict(for_day: int = -1) -> Dictionary:
 	return Time.get_datetime_dict_from_unix_time(anchor_unix + (d - 1) * 86400)
 
 
-func month_name_tr(for_day: int = -1) -> String:
-	# Day N → "Ocak" (Title Case). THE Turkish month-name seam for player-facing prose;
-	# get_display_date() above is English and cannot serve it. Reads its own Title-Case
-	# table because Godot's case ops MANGLE the dotted İ — .capitalize() on MONTH_NAMES_TR
-	# would print "Nisan" as "Nisan" but "İstanbul"-class strings as "İstanbul"→"istanbul"
-	# (see EndingsCopy's note); a second literal table is the cheap, correct answer.
-	return MONTH_NAMES_TR_TITLE[int(get_date_dict(for_day).month) - 1]
+## Day N → the month word in the CURRENT locale ("Ocak" / "January"). Kept as a seam because
+## callers pass a day, not a month; the words themselves come from Fmt.
+func month_name_for_day(for_day: int = -1) -> String:
+	return Fmt.month_name(int(get_date_dict(for_day).month))
 
 
 func months_elapsed_since(start_day: int) -> int:

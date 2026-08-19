@@ -3294,7 +3294,11 @@ static func _case_fumes_zero_revenue_ledger() -> String:
 	# MIN_LEDGER_LINES. On a zero-activity run that false line was therefore GUARANTEED to
 	# print, directly under a stat cell reading MRR $0.
 	# FAILS against the pre-fix engine on the first assertion.
-	var claim: String = "Gelir vardı"
+	# The SENTENCE comes from the CSV; pinning its Turkish bytes made this case pass only
+	# while the process happened to run in Turkish (it failed the moment B7 keyed the pool).
+	# What the case actually asserts is WHICH of the two lines the branch picked.
+	var claim: String = TranslationServer.translate("END_RF_REVENUE_SOME")
+	var claim_none: String = TranslationServer.translate("END_RF_REVENUE_NONE")
 	# A run that earned nothing and signed nobody.
 	var barren: Dictionary = {
 		"phase": 1, "day": 180, "mrr": 0, "customers_signed": 0, "customers_active": 0,
@@ -3302,9 +3306,14 @@ static func _case_fumes_zero_revenue_ledger() -> String:
 	}
 	var vs: Dictionary = EndingsCopy.build("running_on_fumes", barren, {})
 	var lines: Array = vs.get("ledger_lines", []) as Array
+	var saw_none: bool = false
 	for line in lines:
-		if String(line).begins_with(claim):
+		if String(line) == claim:
 			return "the zero-revenue run was told revenue existed: '%s'" % String(line)
+		if String(line) == claim_none:
+			saw_none = true
+	if not saw_none:
+		return "the zero-revenue run printed neither revenue line — the else-branch is gone"
 	# THE TRAP: gating that line without an else-branch drops the worst-case pool to one
 	# line plus two backups, and the paper silently sets short.
 	if lines.size() < EndingsCopy.MIN_LEDGER_LINES:
@@ -3317,7 +3326,7 @@ static func _case_fumes_zero_revenue_ledger() -> String:
 	var vs2: Dictionary = EndingsCopy.build("running_on_fumes", earning, {})
 	var found: bool = false
 	for line in (vs2.get("ledger_lines", []) as Array):
-		if String(line).begins_with(claim):
+		if String(line) == claim:
 			found = true
 	if not found:
 		return "an earning run lost the revenue line entirely"

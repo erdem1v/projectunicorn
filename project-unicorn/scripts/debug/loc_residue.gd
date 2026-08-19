@@ -39,7 +39,7 @@ extends SceneTree
 const SCRIPT_ROOT := "res://scripts"
 const SCENE_ROOT := "res://scenes"
 const STRINGS_CSV := "res://localization/strings.csv"
-const MAX_PRINTED := 200
+const MAX_PRINTED := 600
 
 # Sanctioned exclusions (path prefix match):
 const SKIP_PREFIXES := [

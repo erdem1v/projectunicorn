@@ -30,9 +30,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -320.0
-offset_top = -430.0
+offset_top = -410.0
 offset_right = 320.0
-offset_bottom = 430.0
+offset_bottom = 410.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_type_variation = &"ModalPanel"
@@ -54,7 +54,7 @@ theme_override_constants/separation = 16
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleSerif"
-text = "Ayarlar"
+text = "SET_TITLE"
 
 [node name="Scroll" type="ScrollContainer" parent="CenterPanel/Body"]
 layout_mode = 2
@@ -74,7 +74,7 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "GÖRÜNTÜ"
+text = "SET_SEC_DISPLAY"
 
 [node name="Card" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/DisplaySection"]
 layout_mode = 2
@@ -93,7 +93,7 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "SES"
+text = "SET_SEC_AUDIO"
 
 [node name="Card" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/AudioSection"]
 layout_mode = 2
@@ -112,7 +112,7 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "OYUN"
+text = "SET_SEC_GAME"
 
 [node name="Card" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/GameSection"]
 layout_mode = 2
@@ -131,7 +131,7 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "DİL"
+text = "SETTINGS_LANGUAGE"
 
 [node name="LangCard" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/LanguageSection"]
 layout_mode = 2
@@ -146,7 +146,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"BodySerif"
-text = "Dil"
+text = "SETTINGS_LANGUAGE"
 
 [node name="LangSpacer" type="Control" parent="CenterPanel/Body/Scroll/Sections/LanguageSection/LangCard/LangCardBody"]
 layout_mode = 2
@@ -167,7 +167,7 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "ERİŞİLEBİLİRLİK"
+text = "SET_SEC_ACCESSIBILITY"
 
 [node name="Card" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/AccessibilitySection"]
 layout_mode = 2
@@ -186,7 +186,7 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "VERİ"
+text = "SET_SEC_DATA"
 
 [node name="Card" type="PanelContainer" parent="CenterPanel/Body/Scroll/Sections/DataSection"]
 layout_mode = 2
@@ -210,4 +210,4 @@ custom_minimum_size = Vector2(140, 38)
 layout_mode = 2
 size_flags_horizontal = 8
 theme_type_variation = &"CommitButton"
-text = "Kapat"
+text = "SET_CLOSE"

@@ -520,7 +520,7 @@ static func _base_view_state() -> Dictionary:
 		"background_path": inv.get("room_path", ""),
 		"portrait_path": inv.get("portrait_path", ""),
 		"speaker_name": inv.get("display_name", ""),
-		"speaker_role": inv.get("role_line", ""),
+		"speaker_role": InvestorRegistry.role_line(_vc_id),
 		"conviction": {"value": mini(_conviction, _cap), "zone_bounds": PitchConstants.ZONE_BOUNDS},
 		"stat_strip": {"left_text": _t("VC_STAT_STRIP").format({
 			"cash": UiTokens.format_money(GameState.cash),
@@ -799,7 +799,8 @@ static func _build_meeting_prompt_event(vc_id: String) -> GameEvent:
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
 	ev.body_text = _t("VC_EV_MEETING_BODY").format({
-		"investor": inv.get("display_name", ""), "line": inv.get("archetype_line", "")})
+		"investor": inv.get("display_name", ""),
+		"line": InvestorRegistry.archetype_line(String(inv.get("id", "")))})
 	ev.cooldown_days = 0
 	ev.one_shot = false
 	ev.priority = 10

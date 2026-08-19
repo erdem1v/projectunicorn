@@ -47,7 +47,7 @@ func setup(index: int, choice: Dictionary) -> void:
 
 	_marked.visible = bool(choice.get("marked", false))
 	if _marked.visible:
-		_marked.text = String(choice.get("marked_text", "PROVA EDİLDİ"))
+		_marked.text = String(choice.get("marked_text", tr("VC_REHEARSED")))
 
 	if _disabled:
 		modulate = Color(1, 1, 1, 0.5)          # muted (standard disabled alpha, not a hue)

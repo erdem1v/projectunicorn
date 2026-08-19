@@ -55,7 +55,7 @@ func _build() -> void:
 	seg.add_theme_constant_override("separation", 8)
 	col.add_child(seg)
 	_ozet_btn = _make_segment(tr("FIN_SUBTAB_SUMMARY"), "ozet")
-	_yatirim_btn = _make_segment(tr("FIN_SUBTAB_INVESTMENT"), "yatirim")
+	_yatirim_btn = _make_segment(tr("FIN_SUBTAB_INVESTMENT"), "yatirim")   # LOC-DATA sub-page id
 	seg.add_child(_ozet_btn)
 	seg.add_child(_yatirim_btn)
 
@@ -83,14 +83,14 @@ func _make_segment(label: String, id: String) -> Button:
 
 
 func _show_page(id: String) -> void:
-	if id == "yatirim" and GameState.phase < 3:
+	if id == "yatirim" and GameState.phase < 3:   # LOC-DATA sub-page id
 		return  # locked — the disabled button + tooltip already tell the player why
 	_current = id
 	_ozet_view.visible = id == "ozet"
-	_yatirim_view.visible = id == "yatirim"
+	_yatirim_view.visible = id == "yatirim"   # LOC-DATA sub-page id
 	_ozet_btn.modulate = Color(1, 1, 1, 1) if id == "ozet" else Color(1, 1, 1, 0.6)
 	if not _yatirim_btn.disabled:
-		_yatirim_btn.modulate = Color(1, 1, 1, 1) if id == "yatirim" else Color(1, 1, 1, 0.6)
+		_yatirim_btn.modulate = Color(1, 1, 1, 1) if id == "yatirim" else Color(1, 1, 1, 0.6)   # LOC-DATA sub-page id
 	if id == "ozet":
 		_ozet_view.refresh()  # görünür olurken taze boya — sinyaller görünmezken erken döner
 
@@ -100,9 +100,9 @@ func _apply_phase_lock(locked: bool) -> void:
 	_yatirim_btn.tooltip_text = tr("FIN_SUBTAB_LOCKED") if locked else ""
 	if locked:
 		_yatirim_btn.modulate = Color(1, 1, 1, 0.4)
-		if _current == "yatirim":
+		if _current == "yatirim":   # LOC-DATA sub-page id
 			_show_page("ozet")
-	elif _current != "yatirim":
+	elif _current != "yatirim":   # LOC-DATA sub-page id
 		_yatirim_btn.modulate = Color(1, 1, 1, 0.6)
 
 

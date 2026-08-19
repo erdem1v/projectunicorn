@@ -1717,3 +1717,220 @@ MENTOR_INTRO_BODY,"Frank kahvesinden bir yudum alıyor.
 TOPBAR_UNIT_PER_DAY,/g,/d
 MEETING_WITHDRAW,Toplantıdan çekil,Withdraw from the meeting
 TOPBAR_PAUSE,II,II
+NUM_0,sıfır,zero
+NUM_1,bir,one
+NUM_2,iki,two
+NUM_3,üç,three
+NUM_4,dört,four
+NUM_5,beş,five
+NUM_6,altı,six
+NUM_7,yedi,seven
+NUM_8,sekiz,eight
+NUM_9,dokuz,nine
+NUM_10,on,ten
+NUM_11,on bir,eleven
+NUM_12,on iki,twelve
+WORLD_OUTLET_EKONOMI_CAPS,EKONOMİ POSTASI,EKONOMİ POSTASI
+END_LEDGER_TITLE,RAKAMLARLA {company},{company} BY THE NUMBERS
+END_DATE_LINE,{day} {month} {year} · SAYI {issue},"{month} {day}, {year} · ISSUE {issue}"
+END_MILLIONS,{n} milyon dolar,{n} million dollars
+END_SPAN_NEAR_YEAR,bir yıla yakın sürede,in close to a year
+END_SPAN_UNDER_MONTH,bir aydan kısa sürede,in under a month
+END_SPAN_UNDER_N_MONTHS,{n} aydan kısa sürede,in under {n} months
+END_FOUNDING_SELF_MADE,Kurucunun kendi birikimiyle kurduğu şirket,The company the founder started on their own savings
+END_FOUNDING_HEIR,Aile sermayesiyle kurulan şirket,The company founded on family capital
+END_FOUNDING_CORP,Kurumsal bir geçmişin ardından kurulan şirket,The company founded after a corporate career
+END_FOUNDING_MONTH,{month} ayında kurulan şirket,The company founded in {month}
+END_STAT_INVESTMENT,YATIRIM,INVESTMENT
+END_STAT_VALUATION,DEĞERLEME,VALUATION
+END_STAT_EMPLOYEES,ÇALIŞAN,EMPLOYEES
+END_STAT_FOUNDER_SHARE,KURUCU HİSSESİ,FOUNDER'S SHARE
+END_STAT_MONTHS_ALIVE,AYAKTA KALDIĞI AY,MONTHS ALIVE
+END_STAT_CUSTOMERS,MÜŞTERİ,CUSTOMERS
+END_STAT_MRR,MRR,MRR
+END_STAT_LAST_MRR,SON MRR,FINAL MRR
+END_STAT_BRAND,MARKA,BRAND
+END_STAT_CUSTOMERS_LOST,KAYBEDİLEN MÜŞTERİ,CUSTOMERS LOST
+END_STAT_REJECTIONS,RET,REJECTIONS
+END_STAT_PITCHES,PİTCH,PITCHES
+END_SA_HEAD_FF,{company} Series A Turunu Kapattı,{company} Closes Its Series A
+END_SA_SUB_FF,"""Temiz bir tur; kurucu masaya sağlam oturmuş."" değerlendirmesi yatırım çevrelerinde dolaşıyor.","""A clean round; the founder sat down at that table from a position of strength."" The assessment is going round the investment community."
+END_SA_CAP_FF,İmza töreninden bir an.,A moment from the signing.
+END_SA_HEAD_AGG,"{company} Series A'yı Kapattı, Kontrol El Değiştirdi","{company} Closes Its Series A, and Control Changes Hands"
+END_SA_SUB_AGG,"""Para geldi, ama koltukların çoğu artık yatırımcının."" yorumu bir fon yöneticisinin ağzından duyuldu.","""The money came in, but most of the seats belong to the investor now."" The remark was heard from a fund manager."
+END_SA_CAP_AGG,Toplantı masasında yeni dengeler.,New balances of power at the meeting table.
+END_SA_TERMS,{valuation} değerleme üzerinden {investment} yatırım alındı; karşılığında yüzde {equity} hisse verildi.,{investment} was raised at a valuation of {valuation}; {equity} per cent of the company went the other way.
+END_SA_BOARD,Yönetim kurulunda yatırımcıya {seats} koltuk tanındı.,The investor was granted {seats} seats on the board.
+END_SA_VETO, Kritik kararlarda veto hakkı da verildi., A veto over critical decisions came with them.
+END_SA_OPENED,"{founding}, {span} Series A kapısını araladı.",{founding} pushed the Series A door open {span}.
+END_SA_CUSTOMERS,Yolda {n} kurumsal müşteri kazanıldı.,{n} enterprise customers were won along the way.
+END_SA_TEAM,Ekip {n} kişilik bir kadroya ulaştı.,The team grew to a headcount of {n}.
+END_SA_MANY_TABLES,Birden fazla masaya oturuldu; imza sonunda geldi.,More than one table was sat at; the signature came in the end.
+END_SA_CLOSER_1,"Sektör, turun ardında güçlü bir ürün hikâyesi görüyor.",The trade sees a strong product story behind the round.
+END_SA_CLOSER_2,"Yatırımın bu aşamada gelmesi, pazarın ilgisini koruduğunun işareti sayılıyor.",Investment arriving at this stage is being read as a sign the market is still paying attention.
+END_ACQ_HEAD,"{company} El Değiştirdi: Ekip Kaldı, Bayrak İndi","{company} Changes Hands: The Team Stays, the Flag Comes Down"
+END_ACQ_SUB,"""Ne tam bir zafer ne de bir yenilgi; temkinli bir çıkış olarak okunuyor."" değerlendirmesi sektörde konuşuluyor.","""Neither a victory nor a defeat; it reads as a cautious exit."" The assessment is going round the trade."
+END_ACQ_CAP,Devir sonrası boşalan bir çalışma masası.,A desk emptied after the handover.
+END_ACQ_NEW_ROOF,"{founding}, {span} yeni bir çatının altına girdi.",{founding} moved under a new roof {span}.
+END_ACQ_BOOK,Devralınan defterde {n} müşteri ilişkisi bulunuyordu.,The book that changed hands held {n} customer relationships.
+END_ACQ_CORE,Ekibin {n} kişilik çekirdeği alıcı şirkete geçti.,A core of {n} moved across to the buyer.
+END_ACQ_SHIPS,"Ürün, kapanışa kadar {n} kez yeni sürümle güncellenmişti.",The product had shipped {n} new versions by the time it closed.
+END_ACQ_DOORS,"Bağımsız bir tur için birkaç kapı çalınmış, sonunda satış yolu seçilmişti.",A few doors had been knocked on for an independent round; the sale was chosen in the end.
+END_ACQ_CLOSER_1,"Bu ölçekteki satışlar, sessiz ama sık rastlanan çıkışlar olarak görülüyor.",Sales at this scale are seen as quiet but common exits.
+END_ACQ_CLOSER_2,"Alıcı tarafın ekibe olan ilgisi, ürünün değerini teyit ediyor.",The buyer's interest in the team confirms the product's worth.
+END_BK2_HEAD,{company} İçin Umut Veren Çıkış Yarıda Kaldı,A Promising Run Cut Short for {company}
+END_BK2_SUB,"""İvmesi vardı; ama nakit yetişmedi."" değerlendirmesi sektörde konuşuluyor.","""It had momentum; the cash did not keep up."" The assessment is going round the trade."
+END_BK2_CAP,Yarım kalmış bir ürün panosu.,A product board left half finished.
+END_BK3_HEAD,Series A Kapısındaki {company} Kepenk İndirdi,{company} Pulls Down the Shutters at the Series A Door
+END_BK3_SUB,"""Kapıya kadar geldi, eşiği geçemedi. Bu piyasa affetmiyor."" yorumu yatırım çevrelerinde dolaşıyor.","""It got to the door and could not cross the threshold. This market does not forgive."" The remark is going round the investment community."
+END_BK3_CAP,Kapatılmış bir ofisin önünden geçenler.,Passers-by outside a shuttered office.
+END_BK_SHUTTERED,"{founding}, {span} kepenk indirdi.",{founding} pulled down the shutters {span}.
+END_BK_LEFT_BEHIND,Geride {n} müşteri ilişkisi kaldı.,{n} customer relationships were left behind.
+END_BK_LOST,Son aylarda {n} müşteri ilişkisi koptu.,{n} customer relationships broke off in the final months.
+END_BK_TEAM_SCATTERED,İşe alınan kadro dağıldı.,The team that was hired scattered.
+END_BK_SHIPS,Ürün {n} sürüme ulaşmıştı.,The product had reached {n} versions.
+END_BK_NO_SIGNATURE,"Yatırım için masalara oturuldu, ama imza gelmedi.","Tables were sat at for investment, but no signature came."
+END_BK_CLOSER_1,Nakit tükenmesinin çoğu kapanışın görünürdeki tek sebebi olduğu belirtiliyor.,Running out of cash is noted as the only visible cause of most closures.
+END_BK_CLOSER_2,"Benzer hikâyelerin çoğunda sorunun ürün değil, zamanlama olduğu konuşuluyor.","In most stories like it, the problem is said to have been timing rather than product."
+END_BK1_NOTICE,Kısa Kısa: {company} sessizce kapandı. Kurucusu yeni bir şey üzerinde çalıştığını söylüyor.,In Brief: {company} has quietly closed. Its founder says they are working on something new.
+END_GENERIC_HEAD_0,Rakip Girişim Yeni Yatırım Turunu Kapattı,Rival Startup Closes a New Funding Round
+END_GENERIC_SUB_0,"""Bu çeyrek yatırım iştahının canlı kaldığı görülüyor."" değerlendirmesi sektörde konuşuluyor.","""Appetite for investment appears to have held up this quarter."" The assessment is going round the trade."
+END_GENERIC_HEAD_1,Yatırımcılar Erken Aşamaya Bu Yıl Daha Temkinli,Investors More Cautious About Early Stage This Year
+END_GENERIC_SUB_1,Fonların ilk turlarda giderek daha seçici davrandığı belirtiliyor.,Funds are reported to be growing steadily more selective about first rounds.
+END_GENERIC_HEAD_2,Pazar Raporu: Erken Aşamada Sağ Kalım Düşük,Market Report: Early-Stage Survival Is Low
+END_GENERIC_SUB_2,"Analistler, ilk yılını çıkaramayan şirket oranının yükseldiğini söylüyor.",Analysts say the share of companies that do not see out their first year is rising.
+END_BC_HEAD,İtibar Krizi {company} Şirketini Devirdi,A Reputation Crisis Brings Down {company}
+END_BC_SUB,"""Skandalı şirket değil, skandal şirketi yönetti."" değerlendirmesi sektörde ortak kanaate dönüştü.","""The company did not manage the scandal; the scandal managed the company."" The assessment has become the common view in the trade."
+END_BC_CAP,Kapanan bir ofisin karartılmış tabelası.,The darkened sign of a closed office.
+END_BC_TRUST_LOST,"{founding}, {span} güven kaybının altında kaldı.",{founding} was buried under a loss of trust {span}.
+END_BC_ONE_BY_ONE,Kriz büyürken {n} müşteri ilişkisi teker teker koptu.,"As the crisis grew, {n} customer relationships broke off one by one."
+END_BC_BELOW_THRESHOLD,"Marka değeri, toparlanamayacağı bir eşiğin altına indi.",Brand value fell below a threshold it could not recover from.
+END_BC_TEAM_SCATTERED,"Kurulan kadro, kapanışın gölgesinde dağıldı.",The team that had been built scattered in the shadow of the closure.
+END_BC_CLOSER_1,"Sektör, itibar krizlerinin çoğu zaman rakamlardan önce güveni tükettiğini hatırlatıyor.",The trade points out that reputation crises usually exhaust trust before they touch the numbers.
+END_BC_CLOSER_2,"Benzer vakalarda toparlanmanın aylar sürdüğü, çoğu şirketin bunu bekleyemediği belirtiliyor.","In comparable cases recovery is reported to take months, and most companies cannot wait that long."
+END_VC_HEAD,{company} Yatırımcı Kapılarını Kapalı Buldu,{company} Finds the Investors' Doors Closed
+END_VC_SUB,"""Para bulamamak öldürmez; vazgeçilmiş görünmek öldürür."" sözü yatırım çevrelerinde dolaşıyor.","""Failing to raise does not kill you; looking like you have been given up on does."" The line is going round the investment community."
+END_VC_CAP,Boş bir toplantı masası ve kapanmış klasörler.,An empty meeting table and closed folders.
+END_VC_INCOMPLETE,"{founding}, {span} Series A turunu tamamlayamadı.",{founding} could not complete its Series A {span}.
+END_VC_NO_SIGNATURE,"Farklı masalarda görüşmeler yapıldı, ancak imza gelmedi.","Talks were held at several tables, but no signature came."
+END_VC_OFFER_CAME,"Bir ara masaya teklif geldi, fakat sonuca bağlanamadı.","An offer did reach the table at one point, but it was never closed."
+END_VC_CUSTOMERS,Ürünün {n} kurumsal müşterisi vardı; bu bile turu açmaya yetmedi.,The product had {n} enterprise customers; even that was not enough to open the round.
+END_VC_NO_MOMENTUM,"İşleyen bir gelir vardı, ama yatırımcıyı ikna edecek ivme yakalanamadı.","There was working revenue, but never the momentum to convince an investor."
+END_VC_CLOSER_1,Art arda gelen retlerin çoğu zaman şirketin kaderinden çok zamanlamayla ilgili olduğu konuşuluyor.,Rejections in a row are usually said to be about timing rather than a company's fate.
+END_VC_CLOSER_2,Yatırım ikliminin daraldığı bir dönemde kapıların ağırlaştığı belirtiliyor.,"In a tightening investment climate, the doors are reported to swing heavier."
+END_BS_HEAD,{company} Kimseye El Açmadan Ayakta,{company} Still Standing Without Asking Anyone
+END_BS_SUB,"""Dışarıdan tek kuruş almadan büyüyen bir şirket bu piyasada nadir görülür."" değerlendirmesi sektörde konuşuluyor.","""A company that grows without taking a penny from outside is a rare thing in this market."" The assessment is going round the trade."
+END_BS_CAP,Kendi imkânlarıyla kurulmuş bir çalışma odası.,A workroom put together out of its own means.
+END_BS_OWN_FEET,"{founding}, {span} kendi ayakları üzerinde durmayı başardı.",{founding} managed to stand on its own feet {span}.
+END_BS_BALANCED,Yol boyunca {n} müşteri kazanıldı ve defter dengede tutuldu.,{n} customers were won along the way and the book was kept in balance.
+END_BS_PAYROLL,Kadro {n} kişiye çıktı; hepsi kendi gelirinden ödendi.,Headcount rose to {n}; every one of them paid out of its own revenue.
+END_BS_SHIPS,Ürün {n} kez yenilendi.,The product was renewed {n} times.
+END_BS_COVERS_COSTS,"Aylık gelir, gideri karşılayacak bir seviyeye taşındı.",Monthly revenue was carried to a level that covers the outgoings.
+END_BS_CLOSER_1,Dışarıdan yatırım almadan büyümenin kontrolü kurucuda tuttuğu için giderek daha çok tercih edildiği belirtiliyor.,"Growing without outside investment is reported to be chosen more and more often, because it keeps control with the founder."
+END_BS_CLOSER_2,"Sektör, bu tür şirketlerin krizlere daha dayanıklı olduğunu hatırlatıyor.",The trade points out that companies like this weather crises better.
+END_RF_HEAD,"{company} İçin Süre Doldu, Zil Çalmadan Bitti","Time Runs Out for {company}, and It Ends Before the Bell"
+END_RF_SUB_P1,"""Daha ilk viraja gelmeden zaman tükendi."" değerlendirmesi konuşuluyor.","""Time ran out before it even reached the first bend."" The assessment is going round."
+END_RF_SUB_P2,"""İvme vardı ama süre yetmedi."" yorumu sektörde dolaşıyor.","""There was momentum, but not enough time."" The remark is going round the trade."
+END_RF_SUB_P3,"""Series A kapısına kadar geldi, ama zaman kalmadı."" değerlendirmesi yatırım çevrelerinde dolaşıyor.","""It reached the Series A door, but there was no time left."" The assessment is going round the investment community."
+END_RF_CAP,Işıkları hâlâ yanan ama boşalmış bir ofis.,An office with the lights still on and nobody in it.
+END_RF_JUST_MADE_IT,"{founding}, {span} belirlenen sürenin sonuna ancak yetişti.",{founding} only just reached the end of its allotted time {span}.
+END_RF_UNFINISHED,Geride {n} müşteri ilişkisi ve tamamlanmamış bir hikâye kaldı.,{n} customer relationships and an unfinished story were left behind.
+END_RF_TEAM_STAYED,Kurulan kadro son güne kadar iş başındaydı.,The team that had been built was at work until the last day.
+END_RF_REVENUE_SOME,"Gelir vardı, ama ne kâr ne de yeni bir tur için yeterliydi.","There was revenue, but not enough for profit or for another round."
+END_RF_REVENUE_NONE,"Gelir hiç başlamadı; sayaç, ilk ödeme gelmeden doldu.",Revenue never started; the clock ran out before the first payment arrived.
+END_RF_SHIPS,"Ürün {n} sürüm görmüş, gelişmeye devam ediyordu.",The product had seen {n} versions and was still developing.
+END_RF_CLOSER_1,"Sektör, çoğu şirketin zaferle yıkım arasındaki bu gri bölgede sonlandığını hatırlatıyor.",The trade points out that most companies end in this grey zone between triumph and collapse.
+END_RF_CLOSER_2,Zamanında bir karar ya da bir turun hikâyeyi değiştirebileceği konuşuluyor.,"A decision made in time, or a single round, is said to have been enough to change the story."
+MONTH_HL_PHASE_ADVANCED,Yeni faza geçildi: {phase},Moved into a new phase: {phase}
+INV_ROLE_SENIOR_PARTNER,Kıdemli Ortak,Senior Partner
+INV_ROLE_MANAGING_PARTNER,Yönetici Ortak,Managing Partner
+INV_ROLE_FOUNDING_PARTNER,Kurucu Ortak,Founding Partner
+INV_ROLE_GROWTH_PARTNER,Büyüme Ortağı,Growth Partner
+INV_ARCH_ANCHOR,Agresif ama cömert. Kontrolü sever.,Aggressive but generous. Likes control.
+INV_ARCH_NEXUS,"Temkinli. Kurucuyu sever, riski sevmez.","Cautious. Likes the founder, dislikes the risk."
+INV_ARCH_BOSPHORUS,İlişki adamı. Kapıyı Frank açar.,A relationship man. Frank opens the door.
+INV_ARCH_MERIDIAN,Sektörü senden iyi bilir. Sabrı yoktur.,Knows the sector better than you do. Has no patience.
+INV_CHIP_METRICS,METRİK,METRICS
+INV_CHIP_TEAM,EKİP,TEAM
+INV_CHIP_NARRATIVE,ANLATI,NARRATIVE
+INV_CHIP_PRODUCT,ÜRÜN,PRODUCT
+TERM_BAND_HIGH,yüksek,high
+TERM_BAND_LOW,düşük,low
+TERM_BAND_MID,orta,middling
+TERM_BAND_GENEROUS,cömert,generous
+TERM_BAND_SEAT_VETO,koltuk + veto ister,a seat plus a veto
+TERM_BAND_CLEAN,temiz,clean
+TERM_BAND_SEAT_FLEX,koltuk (esnek),a seat (flexible)
+TERM_BAND_OBSERVER,gözlemci,observer
+END_META_SERIES_A_CLOSE_TITLE,Series A Kapandı,Series A Closed
+END_META_SERIES_A_CLOSE_FRANK,İmzaladın. Şimdi asıl iş başlıyor — ama o başka bir oyunun konusu.,You signed. Now the real work starts — but that is another game's subject.
+END_META_ACQUISITION_TITLE,Şirket Satıldı,The Company Was Sold
+END_META_ACQUISITION_FRANK,Sattın. Kazanmak değil; kaybetmek de değil. Çoğu kurucu bunu bile göremez.,You sold. Not winning; not losing either. Most founders never even get this far.
+END_META_BANKRUPTCY_TITLE,Kepenk İndi,The Shutters Came Down
+END_META_BANKRUPTCY_FRANK,Yedi gün kırmızıda kaldın. Rakamlar kaba değildir — sadece sabırlıdır.,You stayed in the red for seven days. Numbers are not cruel — only patient.
+END_META_BRAND_COLLAPSE_TITLE,Marka Çöktü,The Brand Collapsed
+END_META_BRAND_COLLAPSE_FRANK,Skandalı sen yönetmedin; o seni yönetti.,You did not manage the scandal; it managed you.
+END_META_VC_REJECTION_CASCADE_TITLE,"Üç Masa, Üç Ret","Three Tables, Three Rejections"
+END_META_VC_REJECTION_CASCADE_FRANK,Para bulamamak öldürmez. Vazgeçilmiş görünmek öldürür.,Failing to raise does not kill you. Looking like you have been given up on does.
+END_META_PROFITABLE_BOOTSTRAP_TITLE,Kendi Paranla,On Your Own Money
+END_META_PROFITABLE_BOOTSTRAP_FRANK,Onlara ihtiyacın yokmuş. Gerçek bir şey kurdun.,It turns out you did not need them. You built something real.
+END_META_RUNNING_ON_FUMES_TITLE,Son Damla,The Last Drop
+END_META_RUNNING_ON_FUMES_FRANK,Kaybetmedin. Sadece kazanmadın.,You did not lose. You just did not win.
+END_HL_SHUTTER_STARTED,Kepenk sayacı başladı — kasa ekside,The shutter clock has started — the account is in the red
+END_HL_ACQ_OFFER,Satın alma teklifi masada,An acquisition offer is on the table
+END_EV_SHUTTER_TITLE,Kırmızıdasın,You Are in the Red
+END_EV_SHUTTER_BODY,"Frank ekrana bakmıyor; sana bakıyor.
+
+""Kırmızıdasın. {days} günün var. Ya bir şey sat, ya bir şey kes.""
+
+Bugünden itibaren bir geri sayım başladı. Kasa artıya dönerse durur.","Frank is not looking at the screen; he is looking at you.
+
+""You are in the red. You have {days} days. Either sell something or cut something.""
+
+A countdown started today. It stops if the account goes positive."
+END_EV_PIVOT_TITLE,Üçüncü kapı da kapandı,The Third Door Closed Too
+END_EV_PIVOT_BODY,"Üçüncü ret maili kısa. Hepsi kısadır.
+
+Frank uzun bir süre bir şey demiyor. Sonra:
+
+""Belki bu yıl değil. Belki bu şirket değil. Ama sen bitmedin.""
+
+VC yolu kapanıyor. Kendi paranla, kendi müşterinle, {day}. güne kadar — hâlâ gerçek bir şirket kurabilirsin.","The third rejection email is short. They all are.
+
+Frank says nothing for a long while. Then:
+
+""Maybe not this year. Maybe not this company. But you are not finished.""
+
+The VC road is closing. On your own money, with your own customers, up to day {day} — you can still build a real company."
+END_EV_PIVOT_ACCEPT,Pivot — devam ediyoruz,Pivot — we keep going
+END_EV_PIVOT_DECLINE,Hayır. Bitti.,No. It is over.
+END_EV_ACQ_TITLE,Satın alma teklifi,An Acquisition Offer
+END_EV_ACQ_BODY,"Mail bir cuma akşamı geliyor; büyük oyuncular hep cuma yazar.
+
+Seni satın almak istiyorlar. Ekip kalır, isim kalmaz. Rakam fena değil — hayat değiştirmez, ama kepenk de indirtmez.
+
+Frank omuz silkiyor:
+
+""Satmak yenilgi değildir. Ama bunu sana kimse imza gecesi söylemez.""","The email comes on a Friday evening; the big players always write on Fridays.
+
+They want to buy you. The team stays, the name does not. The figure is not bad — it will not change your life, but it will not pull the shutters down either.
+
+Frank shrugs:
+
+""Selling is not a defeat. But nobody tells you that on the night you sign."""
+END_EV_ACQ_ACCEPT,Kabul et — sat,Accept — sell
+END_EV_ACQ_DECLINE,Reddet — devam,Decline — keep going
+MENTOR_ROLE_LINE,Mentor / Operasyon Ortağı,Mentor / Operating Partner
+DEAL_PROMPT_LINE,"""{investor} teklif verdi. {days} gün geçerli. İstersen masaya şimdi otur, şartları zorla. İstersen teklifi cebine koy, başka VC'lerle de görüş — cebinde ikinci teklif olduğunda pazarlık gücün artar.""","""{investor} has made an offer. It is good for {days} days. Sit down at the table now if you like and push the terms. Or pocket it and go see other VCs — a second offer in your pocket is leverage."""
+DEAL_PROMPT_SIT,Masaya şimdi otur.,Sit down at the table now.
+DEAL_PROMPT_VALIDITY,Geçerlilik: {days} gün,Valid for {days} days
+DEAL_PROMPT_DEFER,"Sonra — teklifi al, başka VC'lerle görüş.",Later — take the offer and go see other VCs.
+END_SA_BOARD_ONE,Yönetim kurulunda yatırımcıya {seats} koltuk tanındı.,The investor was granted {seats} seat on the board.
+END_SA_CUSTOMERS_ONE,Yolda {n} kurumsal müşteri kazanıldı.,{n} enterprise customer was won along the way.
+END_ACQ_BOOK_ONE,Devralınan defterde {n} müşteri ilişkisi bulunuyordu.,The book that changed hands held {n} customer relationship.
+END_BK_LEFT_BEHIND_ONE,Geride {n} müşteri ilişkisi kaldı.,{n} customer relationship was left behind.
+END_BK_LOST_ONE,Son aylarda {n} müşteri ilişkisi koptu.,{n} customer relationship broke off in the final months.
+END_BC_ONE_BY_ONE_ONE,Kriz büyürken {n} müşteri ilişkisi teker teker koptu.,"As the crisis grew, {n} customer relationship broke off."
+END_VC_CUSTOMERS_ONE,Ürünün {n} kurumsal müşterisi vardı; bu bile turu açmaya yetmedi.,The product had {n} enterprise customer; even that was not enough to open the round.
+END_BS_BALANCED_ONE,Yol boyunca {n} müşteri kazanıldı ve defter dengede tutuldu.,{n} customer was won along the way and the book was kept in balance.
+END_RF_UNFINISHED_ONE,Geride {n} müşteri ilişkisi ve tamamlanmamış bir hikâye kaldı.,{n} customer relationship and an unfinished story were left behind.
