@@ -213,7 +213,8 @@ static func tenure_line(emp: Character) -> String:
 	if emp.hire_day == GameState.day:
 		return TranslationServer.translate("HR_STATE_STARTS_TODAY")
 	var months: int = GameState.months_elapsed_since(emp.hire_day)
-	return TranslationServer.translate("HR_TENURE_SINCE").format({"month": GameState.month_name_tr(emp.hire_day), "n": months + 1})
+	return TranslationServer.translate("HR_TENURE_SINCE").format({
+		"month": Fmt.month_name(int(GameState.get_date_dict(emp.hire_day).month)), "n": months + 1})
 
 
 static func leave_line(emp: Character) -> String:

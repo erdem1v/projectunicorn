@@ -101,7 +101,7 @@ static func build_all() -> Array:
 			for i in TEMPLATE.size():
 				var t: Dictionary = TEMPLATE[i]
 				var r := Rival.new()
-				r.id = "rv_%s_%d" % [sub_id, i]
+				r.id = "rv_%s_%d" % [sub_id, i]   # LOC-DATA rival id
 				r.product_name = String(names[i]) if i < names.size() else "%s #%d" % [sub_id, i]
 				r.sub_product_type_id = sub_id
 				r.tier = String(t["tier"])

@@ -59,14 +59,14 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"TitleSerif"
-text = "OCAK 2026"
+text = "—"
 
 [node name="MetaLabel" type="Label" parent="CenterPanel/Body/HeaderBand/HeaderRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"ChromeLabel"
-text = "Gün 1–31 · Bootstrap"
+text = "—"
 
 [node name="BodyMargin" type="MarginContainer" parent="CenterPanel/Body"]
 layout_mode = 2
@@ -97,7 +97,7 @@ theme_override_constants/separation = 10
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"SectionLabel"
-text = "✦ AYIN OLAYI"
+text = "MONTH_EVENT_OF_THE_MONTH"
 
 [node name="HighlightText" type="Label" parent="CenterPanel/Body/BodyMargin/BodyCol/HighlightStrip/HighlightRow"]
 unique_name_in_owner = true
@@ -145,7 +145,7 @@ autowrap_mode = 3
 [node name="FrankCaption" type="Label" parent="CenterPanel/Body/BodyMargin/BodyCol/FrankRow/FrankCol"]
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "FRANK KÖSEOĞLU — MENTOR"
+text = "PROD_MENTOR_TAG"
 
 [node name="FooterBand" type="PanelContainer" parent="CenterPanel/Body"]
 unique_name_in_owner = true
@@ -159,7 +159,7 @@ theme_override_constants/separation = 12
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"ChromeLabel"
-text = "Otomatik özet · her ay sonu"
+text = "MONTH_AUTO_SUMMARY"
 
 [node name="FooterSpacer" type="Control" parent="CenterPanel/Body/FooterBand/FooterRow"]
 layout_mode = 2
@@ -170,4 +170,4 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(150, 38)
 layout_mode = 2
 theme_type_variation = &"CommitButton"
-text = "DEVAM ET"
+text = "UI_CONTINUE"

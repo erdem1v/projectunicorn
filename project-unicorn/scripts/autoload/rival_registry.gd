@@ -98,7 +98,9 @@ func get_player_rank_in_startup_league(sub_type_id: String, player_composite: fl
 	var rank: int = better + 1
 	# WORKING TR — "lig" vokabüleri emekli (Fix 3): sıralama artık kalite kıyası
 	# olarak okunur, pazar anlatısı get_market_snapshot'ındır.
-	return {"rank": rank, "total": total, "text": "startup sınıfında %d/%d" % [rank, total]}
+	return {"rank": rank, "total": total,
+		"text": TranslationServer.translate("RIVAL_RANK_TEXT").format(
+			{"rank": rank, "total": total})}
 
 
 # --- Advancement (called daily by TimeManager) ---
@@ -122,12 +124,15 @@ func advance_all(days: int = 1) -> void:
 		EventBus.rival_advanced.emit()
 
 
+# Status is an ID, not copy — it is compared, never printed. The one surface that ever
+# rendered it raw (RightPanel) was retired in the ODA rework and is on loc_residue's skip
+# list; anything that shows it again needs a RIVAL_STATUS_<ID> row first.
 func _status_for(r: Rival) -> String:
 	if r.tier == "giant":
-		return "DOMINANT"
+		return "DOMINANT"   # LOC-DATA rival status id
 	if r.tier == "established":
-		return "STEADY"
-	return "SCALING" if r.momentum >= 0.6 else "QUIET"
+		return "STEADY"   # LOC-DATA rival status id
+	return "SCALING" if r.momentum >= 0.6 else "QUIET"   # LOC-DATA rival status ids
 
 
 # ======================= Pazar payı (Dünya İnandırıcılığı Fix 3) ================
@@ -166,7 +171,7 @@ func get_market_snapshot(sub_type_id: String) -> Dictionary:
 	var raw_sum: float = 0.0
 	for i in RivalCatalog.TEMPLATE.size():
 		var t: Dictionary = RivalCatalog.TEMPLATE[i]
-		var rid: String = "rv_%s_%d" % [sub_type_id, i]
+		var rid: String = "rv_%s_%d" % [sub_type_id, i]   # LOC-DATA rival id
 		var r: Rival = get_rival(rid)
 		var display_name: String = r.product_name if r != null else "%s #%d" % [sub_type_id, i]
 		rows.append(_share_row(rid, display_name, String(t["tier"]),

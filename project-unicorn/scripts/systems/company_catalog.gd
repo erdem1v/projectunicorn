@@ -14,9 +14,10 @@ extends RefCounted
 #   - Mix: Turkish firms, Turkish-international hybrids, foreign firms operating
 #     regionally. No joke names, no real trademarks. Names are proper nouns
 #     (LANGUAGE INTEGRITY LAW exempts them); backgrounds are clean Turkish.
-#   - `background` is ONE line of character (sector feel, size feel, temperament).
-#     The event system may QUOTE it to color wording; it must never DRIVE an
-#     event's subject (Fix 5 rule). UI may show it on a customer card.
+#   - The background line is ONE line of character (sector feel, size feel,
+#     temperament). The event system may QUOTE it to color wording; it must never
+#     DRIVE an event's subject (Fix 5 rule). UI may show it on a customer card.
+#     It lives in strings.csv as COMPANY_BG_<ID>, not here — see background_for.
 #   - The smoke suite's synthetic "Testing" sector is deliberately absent —
 #     hand-built fixtures stay outside the catalog.
 #
@@ -26,95 +27,95 @@ extends RefCounted
 
 const COMPANIES := {
 	"insurance": [
-		{"name": "Ege Sigorta", "background": "Bölgesel oyuncu; acente ağı geniş, evrak işi hâlâ kâğıtta."},
-		{"name": "Poyraz Sigorta", "background": "Fiyat kırarak büyüdü, şimdi hasar dosyalarının altında eziliyor."},
-		{"name": "Deniz Sigorta", "background": "Kurumsal müşteriye çalışır, temkinli; yeni tedarikçiyi zor kabul eder."},
-		{"name": "Adriatic Assurance", "background": "Balkan pazarından bölgeye açıldı; merkez uzak, yerel ekip küçük."},
-		{"name": "Vega Sigorta", "background": "Genç yönetim, poliçeyi telefondan satıyor; büyüme hızlı, süreç dağınık."},
+		{"name": "Ege Sigorta", "id": "EGE_SIGORTA"},
+		{"name": "Poyraz Sigorta", "id": "POYRAZ_SIGORTA"},
+		{"name": "Deniz Sigorta", "id": "DENIZ_SIGORTA"},
+		{"name": "Adriatic Assurance", "id": "ADRIATIC_ASSURANCE"},
+		{"name": "Vega Sigorta", "id": "VEGA_SIGORTA"},
 	],
 	"construction": [
-		{"name": "Kuzey İnşaat", "background": "Kamu ihalesiyle büyüdü; şantiyesi çok, merkez ofisi az."},
-		{"name": "Anadolu Yapı", "background": "Aile şirketi, üçüncü kuşak yönetimde; dijitalleşmeye geç başladı."},
-		{"name": "Marmara İnşaat", "background": "Konut projelerinde iddialı; nakit akışı gelgitli, karar tek adamda."},
-		{"name": "Terra Yapı", "background": "Yabancı ortaklı; raporlama standardı yüksek, sabrı az."},
-		{"name": "Donau Bau", "background": "Avusturyalı; altyapı projeleriyle geldi, kalıcı mı belli değil."},
+		{"name": "Kuzey İnşaat", "id": "KUZEY_INSAAT"},
+		{"name": "Anadolu Yapı", "id": "ANADOLU_YAPI"},
+		{"name": "Marmara İnşaat", "id": "MARMARA_INSAAT"},
+		{"name": "Terra Yapı", "id": "TERRA_YAPI"},
+		{"name": "Donau Bau", "id": "DONAU_BAU"},
 	],
 	"logistics": [
-		{"name": "Deniz Lojistik", "background": "Liman çevresinde güçlü; filosu yaşlı, yazılımı daha yaşlı."},
-		{"name": "Nordica Lojistik", "background": "İskandinav ortaklı; süreç disiplini yüksek, esnekliği düşük."},
-		{"name": "Ege Kargo", "background": "Şehirlerarası dağıtımda eski toprak; el yazısı irsaliyeden yeni çıktı."},
-		{"name": "Marmara Lojistik", "background": "Depoculuğa yeni girdi; büyüme iştahı yüksek, ekibi yorgun."},
-		{"name": "Nordwind GmbH", "background": "Alman butik nakliyeci; bölge ofisi kendi kararını alamıyor."},
+		{"name": "Deniz Lojistik", "id": "DENIZ_LOJISTIK"},
+		{"name": "Nordica Lojistik", "id": "NORDICA_LOJISTIK"},
+		{"name": "Ege Kargo", "id": "EGE_KARGO"},
+		{"name": "Marmara Lojistik", "id": "MARMARA_LOJISTIK"},
+		{"name": "Nordwind GmbH", "id": "NORDWIND_GMBH"},
 	],
 	"health": [
-		{"name": "Aras Klinik", "background": "Tek şubeli butik klinik; randevu defteri hâlâ resepsiyonda."},
-		{"name": "Marmara Klinik", "background": "Zincirleşme yolunda; her şube kendi usulünce çalışıyor, merkez bunu dert etti."},
-		{"name": "Bosphorus Sağlık", "background": "Yabancı hasta ağırlıklı; itibarına düşkün, hata payı tanımıyor."},
-		{"name": "Vita Medikal", "background": "Cihaz satışından hizmete döndü; satışı güçlü, operasyonu zayıf."},
-		{"name": "Medisa Grup", "background": "Bölge hastaneleriyle anlaşmalı; ihale takvimiyle yaşar, acelesi yoktur."},
+		{"name": "Aras Klinik", "id": "ARAS_KLINIK"},
+		{"name": "Marmara Klinik", "id": "MARMARA_KLINIK"},
+		{"name": "Bosphorus Sağlık", "id": "BOSPHORUS_SAGLIK"},
+		{"name": "Vita Medikal", "id": "VITA_MEDIKAL"},
+		{"name": "Medisa Grup", "id": "MEDISA_GRUP"},
 	],
 	"manufacturing": [
-		{"name": "Beykoz Üretim", "background": "Yan sanayi tedarikçisi; müşterisi ne derse o, kendi sistemi yok gibi."},
-		{"name": "Trakya Fabrika", "background": "Vardiya düzeni oturmuş, veri toplamaz; ustabaşının hafızası veritabanıdır."},
-		{"name": "Ege Metal", "background": "İhracat ağırlıklı; Avrupa müşterisi belge istedikçe yazılım ihtiyacı büyüyor."},
-		{"name": "Vulkan Döküm", "background": "Ağır sanayi, ağır karar alır; ama imza atınca yıllarca kalır."},
-		{"name": "Ferrum Endüstri", "background": "Makine parkı yeni, yönetim anlayışı eski; genç mühendisler sıkışmış durumda."},
+		{"name": "Beykoz Üretim", "id": "BEYKOZ_URETIM"},
+		{"name": "Trakya Fabrika", "id": "TRAKYA_FABRIKA"},
+		{"name": "Ege Metal", "id": "EGE_METAL"},
+		{"name": "Vulkan Döküm", "id": "VULKAN_DOKUM"},
+		{"name": "Ferrum Endüstri", "id": "FERRUM_ENDUSTRI"},
 	],
 	"retail": [
-		{"name": "Anadolu Market", "background": "Bölgesel market zinciri; kasa sayısı arttıkça kaos da arttı."},
-		{"name": "Brightline Retail", "background": "Uluslararası zincirin bölge iştiraki; merkezle konuşmak ayrı bir proje."},
-		{"name": "Kardelen Mağazacılık", "background": "Cadde mağazacılığında eski isim; AVM kiralarıyla boğuşuyor."},
-		{"name": "Ekin Gıda Marketleri", "background": "İlçe pazarından zincire dönüştü; patron her şubeyi hâlâ tek tek arar."},
-		{"name": "Modena Concept", "background": "Ev tekstili ve mobilya satar; sezon döngüsüne bağlı, stok takibi elde."},
+		{"name": "Anadolu Market", "id": "ANADOLU_MARKET"},
+		{"name": "Brightline Retail", "id": "BRIGHTLINE_RETAIL"},
+		{"name": "Kardelen Mağazacılık", "id": "KARDELEN_MAGAZACILIK"},
+		{"name": "Ekin Gıda Marketleri", "id": "EKIN_GIDA_MARKETLERI"},
+		{"name": "Modena Concept", "id": "MODENA_CONCEPT"},
 	],
 	"real_estate": [
-		{"name": "Palmiye Holding", "background": "Turizm arazileriyle büyüdü; portföyü geniş, kayıt düzeni dar."},
-		{"name": "Kıyı Gayrimenkul", "background": "Sahil projelerine odaklı; satışı hızlı, tapu sonrası ilgisi yavaş."},
-		{"name": "Metrekare Danışmanlık", "background": "Genç ekip, şube modeliyle büyüyor; şube açtıkça standart kayboluyor."},
-		{"name": "Vestera Holding", "background": "Yabancı fonlarla ortak proje geliştirir; rapor ister, hem de her hafta."},
-		{"name": "Panorama Emlak", "background": "Üç şehirde ofisi var; danışmanlar kendi telefonuyla çalışır, merkez göremez."},
+		{"name": "Palmiye Holding", "id": "PALMIYE_HOLDING"},
+		{"name": "Kıyı Gayrimenkul", "id": "KIYI_GAYRIMENKUL"},
+		{"name": "Metrekare Danışmanlık", "id": "METREKARE_DANISMANLIK"},
+		{"name": "Vestera Holding", "id": "VESTERA_HOLDING"},
+		{"name": "Panorama Emlak", "id": "PANORAMA_EMLAK"},
 	],
 	"textile": [
-		{"name": "Beykoz Tekstil", "background": "Aile şirketi; fason üretimden marka olmaya çalışıyor, sancılı."},
-		{"name": "Menderes Dokuma", "background": "Havlu ve ev tekstili ihracatçısı; sipariş takibi faks kokan bir sistemde."},
-		{"name": "İplikhane", "background": "Butik üretici; tasarımı güçlü, teslim tarihi zayıf."},
-		{"name": "Nova Tekstil", "background": "Hızlı moda tedarikçisi; büyük müşteri ne isterse ona koşar, kendine vakti yok."},
-		{"name": "Aegea Textile Group", "background": "Yunan ortaklı; iki ülkede üretim var, tek düzgün rapor yok."},
+		{"name": "Beykoz Tekstil", "id": "BEYKOZ_TEKSTIL"},
+		{"name": "Menderes Dokuma", "id": "MENDERES_DOKUMA"},
+		{"name": "İplikhane", "id": "IPLIKHANE"},
+		{"name": "Nova Tekstil", "id": "NOVA_TEKSTIL"},
+		{"name": "Aegea Textile Group", "id": "AEGEA_TEXTILE_GROUP"},
 	],
 	"legal": [
-		{"name": "Bosphorus Legal", "background": "Kurumsal müvekkil ağırlıklı; saat ücretiyle yaşar, verim onun için paradır."},
-		{"name": "Kavanagh & Sons", "background": "İrlandalı butik ofisin bölge masası; usule düşkün, yeniliğe mesafeli."},
-		{"name": "Aslan & Duru Hukuk", "background": "İki ortak, on avukat; dosya sayısı büyüdü, arşiv düzeni büyüyemedi."},
-		{"name": "Meridyen Hukuk", "background": "Şirket birleşmelerinde isim yaptı; gizlilik takıntısı her aracı zorlaştırır."},
-		{"name": "Lex Anadolu", "background": "Uluslararası ağın yerel üyesi; standartları dışarıdan, kadrosu içeriden."},
+		{"name": "Bosphorus Legal", "id": "BOSPHORUS_LEGAL"},
+		{"name": "Kavanagh & Sons", "id": "KAVANAGH_SONS"},
+		{"name": "Aslan & Duru Hukuk", "id": "ASLAN_DURU_HUKUK"},
+		{"name": "Meridyen Hukuk", "id": "MERIDYEN_HUKUK"},
+		{"name": "Lex Anadolu", "id": "LEX_ANADOLU"},
 	],
 	"technology": [
-		{"name": "Nexus Yazılım", "background": "Kurumsal proje geliştirir; kendi ürünü yok, herkesinkini bilir."},
-		{"name": "Piksel Teknoloji", "background": "Ajans kökenli; işi çok, faturası geç."},
-		{"name": "Volt Sistemleri", "background": "Donanım ağırlıklı entegratör; yazılıma mecbur kaldıkça alışıyor."},
-		{"name": "Atlas Bilişim", "background": "Kamu projeleriyle büyüdü; güvenlik şartnamesi her cümlede."},
-		{"name": "Origo Labs", "background": "Genç ürün stüdyosu; hızlı dener, hızlı vazgeçer."},
+		{"name": "Nexus Yazılım", "id": "NEXUS_YAZILIM"},
+		{"name": "Piksel Teknoloji", "id": "PIKSEL_TEKNOLOJI"},
+		{"name": "Volt Sistemleri", "id": "VOLT_SISTEMLERI"},
+		{"name": "Atlas Bilişim", "id": "ATLAS_BILISIM"},
+		{"name": "Origo Labs", "id": "ORIGO_LABS"},
 	],
 	"ecommerce": [
-		{"name": "Sepet Ticaret", "background": "Pazaryerinde büyüdü, kendi sitesine geçti; kampanya günleri kâbusu."},
-		{"name": "Hızlı Pazar", "background": "Aynı gün teslimat iddiasında; operasyon bu iddiaya yetişemiyor."},
-		{"name": "Vitrin Online", "background": "Niş kategoride lider; ekip küçük, her şey kurucunun telefonunda."},
-		{"name": "Loka Store", "background": "Sosyal medyadan doğdu; markası güçlü, altyapısı emekleme döneminde."},
-		{"name": "Adriatica Market", "background": "Balkanlara satış yapan bölgesel platform; gümrük ve iade derdi bitmez."},
+		{"name": "Sepet Ticaret", "id": "SEPET_TICARET"},
+		{"name": "Hızlı Pazar", "id": "HIZLI_PAZAR"},
+		{"name": "Vitrin Online", "id": "VITRIN_ONLINE"},
+		{"name": "Loka Store", "id": "LOKA_STORE"},
+		{"name": "Adriatica Market", "id": "ADRIATICA_MARKET"},
 	],
 	"media": [
-		{"name": "Kanal Medya", "background": "Yerel televizyondan dijitale döndü; arşivi altın, sistemi hurda."},
-		{"name": "Punto Yayın", "background": "Dergi grubundan kalan çekirdek; az kadro, çok başlık."},
-		{"name": "Ekran Prodüksiyon", "background": "Dizi seti kökenli; proje bazlı yaşar, düzenli gider sevmez."},
-		{"name": "Anadolu Digital", "background": "Ajans ile içerik stüdyosu karışımı; müşteri raporu gecede biter, kendi raporu hiç."},
-		{"name": "Nordlicht Studio", "background": "Alman yapım ortağıyla belgesel çeker; bütçe disiplini sıkı."},
+		{"name": "Kanal Medya", "id": "KANAL_MEDYA"},
+		{"name": "Punto Yayın", "id": "PUNTO_YAYIN"},
+		{"name": "Ekran Prodüksiyon", "id": "EKRAN_PRODUKSIYON"},
+		{"name": "Anadolu Digital", "id": "ANADOLU_DIGITAL"},
+		{"name": "Nordlicht Studio", "id": "NORDLICHT_STUDIO"},
 	],
 	"finance": [
-		{"name": "Kule Finans", "background": "Faktoring ağırlıklı; risk iştahı düşük, evrak iştahı yüksek."},
-		{"name": "Argos Yatırım", "background": "Halka arz danışmanlığına soyundu; itibar hassasiyeti aşırı."},
-		{"name": "Pusula Portföy", "background": "Varlıklı aile fonlarını yönetir; sessiz, sadık, yavaş."},
-		{"name": "Helvetia Data AG", "background": "İsviçre merkezli finansal veri sağlayıcı; bölge ofisi üç kişi, beklentisi otuz kişilik."},
-		{"name": "Lira Kapital", "background": "KOBİ finansmanına odaklı; regülasyon her ay kapıyı çalar."},
+		{"name": "Kule Finans", "id": "KULE_FINANS"},
+		{"name": "Argos Yatırım", "id": "ARGOS_YATIRIM"},
+		{"name": "Pusula Portföy", "id": "PUSULA_PORTFOY"},
+		{"name": "Helvetia Data AG", "id": "HELVETIA_DATA_AG"},
+		{"name": "Lira Kapital", "id": "LIRA_KAPITAL"},
 	],
 }
 
@@ -127,16 +128,19 @@ static func _index() -> Dictionary:
 	if _by_name.is_empty():
 		for sector in COMPANIES:
 			for rec in COMPANIES[sector]:
-				_by_name[rec["name"]] = {"name": rec["name"], "sector": sector, "background": rec["background"]}
+				_by_name[rec["name"]] = {"name": rec["name"], "sector": sector, "id": rec["id"]}
 	return _by_name
 
 
 static func all() -> Array:
-	# Flattened [{name, sector, background}] — smoke integrity checks iterate this.
+	# Flattened [{name, sector, id, background}] — smoke integrity checks iterate this.
+	# `background` is resolved here rather than stored, so the list reads the same as it
+	# always did while the words themselves live in the CSV.
 	var out: Array = []
 	for sector in COMPANIES:
 		for rec in COMPANIES[sector]:
-			out.append({"name": rec["name"], "sector": sector, "background": rec["background"]})
+			out.append({"name": rec["name"], "sector": sector, "id": rec["id"],
+				"background": _background_by_id(String(rec["id"]))})
 	return out
 
 
@@ -153,7 +157,18 @@ static func background_for(company_name: String) -> String:
 	# One-line character color for events/cards. Empty for names outside the
 	# catalog (hand-built fixtures, legacy saves) — callers treat "" as "skip".
 	var rec: Dictionary = _index().get(company_name, {})
-	return String(rec.get("background", ""))
+	return _background_by_id(String(rec.get("id", "")))
+
+
+## COMPANY_BG_<ID> → the line, or "" for an unknown id. TranslationServer hands back the
+## key itself when a row is missing, which would put a raw token on a customer card, so an
+## unresolved id is reported as absent instead.
+static func _background_by_id(id: String) -> String:
+	if id == "":
+		return ""
+	var key: String = "COMPANY_BG_" + id
+	var out: String = TranslationServer.translate(key)
+	return "" if out == key else out
 
 
 static func sector_for(company_name: String) -> String:

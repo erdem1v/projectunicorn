@@ -19,7 +19,10 @@ extends RefCounted
 # Static, stateless (FinanceSystem pattern); all persistent state lives on
 # GameState (§7.9): month_ledger, month_highlight_*.
 
-const HIGHLIGHT_FALLBACK := "Sakin bir ay. Sakin aylar ucuz değildir."
+# Fallback highlight when nothing claimed the month. Not a const — a const is evaluated
+# at load, before a locale exists.
+static func highlight_fallback() -> String:
+	return TranslationServer.translate("MONTH_HIGHLIGHT_FALLBACK")
 
 
 static func daily_tick() -> void:
@@ -58,15 +61,17 @@ static func _build_summary_data() -> Dictionary:
 	var closed: Dictionary = GameState.get_date_dict(GameState.day - 1)
 	var ledger: Dictionary = GameState.month_ledger
 	var data := {
-		"month_title": "%s %d" % [GameState.MONTH_NAMES_TR[int(closed.month) - 1], int(closed.year)],
-		"day_range": "Gün %d–%d" % [int(ledger.get("start_day", 1)), GameState.day - 1],
+		"month_title": TranslationServer.translate("MONTH_TITLE").format(
+			{"month": Fmt.month_upper(int(closed.month)), "year": int(closed.year)}),
+		"day_range": TranslationServer.translate("MONTH_DAY_RANGE").format(
+			{"from": int(ledger.get("start_day", 1)), "to": GameState.day - 1}),
 		"phase_name": GameState.phase_display_name(GameState.phase),  # single home (game_state.gd)
 		"mrr": {"from": int(ledger.get("mrr", 0)), "to": GameState.mrr},
 		"cash": {"from": int(ledger.get("cash", 0)), "to": GameState.cash},
 		"team": {"from": int(ledger.get("employees", 1)), "to": _team_size()},
 		"brand": {"from": int(ledger.get("brand", 50)), "to": GameState.brand},
 		"runway_text": UiTokens.net_runway_text(GameState.get_runway_months()),
-		"highlight": GameState.month_highlight_text if GameState.month_highlight_text != "" else HIGHLIGHT_FALLBACK,
+		"highlight": GameState.month_highlight_text if GameState.month_highlight_text != "" else highlight_fallback(),
 		"shutter_active": GameState.shutter_days_left >= 0,
 	}
 	data["frank_line"] = _pick_frank_line(data)
@@ -83,19 +88,21 @@ static func _team_size() -> int:
 static func debug_force_summary(extreme: bool = false) -> void:
 	# F11: emit the summary NOW with live data (layout/flow check without
 	# waiting a month). Shift+F11: extreme-value fixture — the spec §5 layout
-	# stress test ("$999.9K → $1.2M", 3-digit team) stays reproducible.
+	# stress test ("$999.9K → $1.2M", 3-digit team) stays reproducible. Its strings are a
+	# FIXTURE, not shipped copy: the point is a long Turkish headline overflowing the band,
+	# so keying them would defeat the test. Debug build only (F11 is gated on it).
 	if extreme:
 		EventBus.month_ended.emit({
-			"month_title": "AĞUSTOS 2026",
-			"day_range": "Gün 212–242",
-			"phase_name": "Series A",
+			"month_title": "AĞUSTOS 2026",   # LOC-DATA layout fixture
+			"day_range": "Gün 212–242",   # LOC-DATA layout fixture
+			"phase_name": "Series A",   # LOC-DATA layout fixture
 			"mrr": {"from": 999_900, "to": 1_200_000},
 			"cash": {"from": 999_900, "to": 1_200_000},
 			"team": {"from": 98, "to": 120},
 			"brand": {"from": 12, "to": 100},
-			"runway_text": "8 ay",
-			"highlight": "Uzun bir başlık taşma testi — satın alma teklifi masada, Nordica $1.2K/ay imzalandı",
-			"frank_line": "İyi bir ay. Not al — nadir gelirler.",
+			"runway_text": "8 ay",   # LOC-DATA layout fixture
+			"highlight": "Uzun bir başlık taşma testi — satın alma teklifi masada, Nordica $1.2K/ay imzalandı",   # LOC-DATA layout fixture
+			"frank_line": "İyi bir ay. Not al — nadir gelirler.",   # LOC-DATA layout fixture
 			"shutter_active": false,
 		})
 		return
@@ -110,11 +117,11 @@ static func _pick_frank_line(data: Dictionary) -> String:
 	var team_delta: int = int(data.team.to) - int(data.team.from)
 	var brand_delta: int = int(data.brand.to) - int(data.brand.from)
 	if bool(data.shutter_active):
-		return "Kepenk sayıyor. Özet güzel görünse de sayıyor."
+		return TranslationServer.translate("MONTH_FRANK_SHUTTER")
 	if cash_delta < 0 and mrr_delta > 0:
-		return "Para yakıyorsun ama bir şey satıyorsun. Şimdilik doğru sıradasın."
+		return TranslationServer.translate("MONTH_FRANK_BURNING_BUT_SELLING")
 	if mrr_delta < 0:
-		return "Küçülen rakam yalan söylemez. Sebebini sen bul."
+		return TranslationServer.translate("MONTH_FRANK_SHRINKING")
 	if mrr_delta > 0 and cash_delta > 0 and team_delta > 0 and brand_delta > 0:
-		return "İyi bir ay. Not al — nadir gelirler."
-	return "Bir ay daha. Ayakta olmak da bir metrik."
+		return TranslationServer.translate("MONTH_FRANK_GOOD")
+	return TranslationServer.translate("MONTH_FRANK_ANOTHER")

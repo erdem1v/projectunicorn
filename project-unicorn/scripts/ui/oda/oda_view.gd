@@ -938,7 +938,8 @@ func _refresh_monitor() -> void:
 		# BUILD YÜZÜ: başlık + sorumlu satırı, esnek dolgu, ilerleme CAM ALTINDA.
 		# Faz etiketi sunum kopyasıdır (BuildHUD'un private const'una import yok).
 		# Dil yasası: build→geliştirme ("build" kabul edilen loanword setinde değil).
-		var phase_labels := {"iteration": "TASARIM", "development": "GELİŞTİRME", "bugfix": "BETA"}
+		var phase_labels := {"iteration": tr("BUILD_PHASE_DESIGN"),
+			"development": tr("BUILD_PHASE_DEVELOPMENT"), "bugfix": tr("BUILD_PHASE_BETA")}
 		var bname: String = b.product_name if b.product_name != "" else tr("ODA_MONITOR_IDLE")
 		_mon_header.text = UiTokens.tr_upper(bname)
 		_mon_chip.visible = true
@@ -1054,7 +1055,7 @@ func _refresh_phone_notice() -> void:
 		_phone_glass.visible = false
 		return
 	_phone_glass.visible = true
-	var tag: String = "FRANK"
+	var tag: String = tr("ODA_MENTOR_TAG_FALLBACK")
 	var mentor: Character = CharacterRegistry.get_mentor()
 	if mentor != null and mentor.character_name != "":
 		tag = UiTokens.tr_upper(mentor.character_name.get_slice(" ", 0))
@@ -1113,13 +1114,13 @@ func _refresh_goal() -> void:
 			if bool(GameState.get_flag("mvp_shipped", false)): met += 1
 			if CustomerRegistry.get_all().size() > 0: met += 1
 			if GameState.mrr > 0: met += 1
-			_goal_sub.text = "%d/3" % met
+			_goal_sub.text = tr("ODA_GOAL_PROGRESS").format({"met": met, "total": 3})
 			_goal_bar.value = met / 3.0 * 100.0
 		2:
 			_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P2_LABEL"))
-			_goal_value.text = "%s / %s MRR" % [
-				UiTokens.format_money(GameState.mrr),
-				UiTokens.format_money(SalesSystem.TRACTION_MRR_TARGET)]
+			_goal_value.text = tr("ODA_GOAL_MRR").format({
+				"mrr": UiTokens.format_money(GameState.mrr),
+				"target": UiTokens.format_money(SalesSystem.TRACTION_MRR_TARGET)})
 			_goal_sub.text = UiTokens.tr_upper(tr("ODA_BOARD_GOAL_P2_BRAND").format({"value": GameState.brand, "target": _gate2_brand_floor()}))
 			_goal_bar.value = SalesSystem.traction_progress() * 100.0
 		_:
@@ -1519,13 +1520,13 @@ func get_milestones() -> Array:
 	var founding_date: Dictionary = GameState.get_date_dict(1)
 	var out: Array = [{
 		"name": tr("ODA_FRAME_FOUNDING"), "earned": true,
-		"meta": "%s %d" % [GameState.MONTH_NAMES_TR_TITLE[int(founding_date["month"]) - 1], int(founding_date["year"])],
+		"meta": Fmt.month_name(int(founding_date["month"])) + " " + str(int(founding_date["year"])),
 	}]
 	var launch_day: int = int(GameState.get_flag("mvp_launch_day", 0))
 	if launch_day > 0:
 		var ld: Dictionary = GameState.get_date_dict(launch_day)
 		out.append({"name": tr("ODA_FRAME_FIRST_SHIP"), "earned": true,
-			"meta": "%s %d" % [GameState.MONTH_NAMES_TR_TITLE[int(ld["month"]) - 1], int(ld["year"])]})
+			"meta": Fmt.month_name(int(ld["month"])) + " " + str(int(ld["year"]))})
 	else:
 		out.append({"name": tr("ODA_FRAME_FIRST_SHIP"), "earned": false, "meta": ""})
 	if GameState.run_investment_amount > 0:

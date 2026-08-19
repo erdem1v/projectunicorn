@@ -239,6 +239,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_format_args":           fail = _case_loc_format_args()
 		"all_scripts_load":          fail = _case_all_scripts_load()
 		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
+		"loc_b5_derived_keys":       fail = _case_loc_b5_derived_keys()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -869,10 +870,17 @@ static func _case_month_summary() -> String:
 	if months.size() != 1:
 		return "expected exactly 1 month_ended at day 32, got %d" % months.size()
 	var m: Dictionary = months[0]
-	if String(m.month_title) != "OCAK 2026":
-		return "month_title: %s" % String(m.month_title)
-	if String(m.day_range) != "Gün 1–31":
-		return "day_range: %s" % String(m.day_range)
+	# Locale-independent: builds the expected string from the same keys the system uses,
+	# instead of pinning the Turkish bytes (the old pin only held because the process
+	# happened to run in Turkish).
+	var want_title: String = TranslationServer.translate("MONTH_TITLE").format(
+		{"month": Fmt.month_upper(1), "year": 2026})
+	if String(m.month_title) != want_title:
+		return "month_title: %s (want %s)" % [String(m.month_title), want_title]
+	var want_range: String = TranslationServer.translate("MONTH_DAY_RANGE").format(
+		{"from": 1, "to": 31})
+	if String(m.day_range) != want_range:
+		return "day_range: %s (want %s)" % [String(m.day_range), want_range]
 	if int(m.brand.from) != 50 or int(m.brand.to) != 60:
 		return "brand delta: %s" % str(m.brand)
 	if int(m.mrr.from) != 0 or int(m.mrr.to) != 0:
@@ -882,10 +890,12 @@ static func _case_month_summary() -> String:
 		return "cash delta: %s (want 10000 → %d)" % [str(m.cash), 10000 - 31 * 50]
 	if int(m.team.from) != 1 or int(m.team.to) != 1:
 		return "team delta: %s" % str(m.team)
-	if String(m.highlight) != MonthSummarySystem.HIGHLIGHT_FALLBACK:
+	if String(m.highlight) != MonthSummarySystem.highlight_fallback():
 		return "quiet month should use fallback highlight, got: %s" % String(m.highlight)
-	if String(m.frank_line) != "Bir ay daha. Ayakta olmak da bir metrik.":
-		return "frank rule mismatch: %s" % String(m.frank_line)
+	# Which RULE fired is the assertion; the sentence is whatever the CSV says it is.
+	var want_frank: String = TranslationServer.translate("MONTH_FRANK_ANOTHER")
+	if String(m.frank_line) != want_frank:
+		return "frank rule mismatch: %s (want %s)" % [String(m.frank_line), want_frank]
 	if int(GameState.month_ledger.get("start_day", 0)) != 32:
 		return "ledger not re-snapshotted (start_day %s)" % str(GameState.month_ledger.get("start_day"))
 
@@ -6734,6 +6744,47 @@ static func _case_loc_b4_derived_keys() -> String:
 	if wanted.size() < 25:
 		TranslationServer.set_locale(loc0)
 		return "only %d derived keys collected — the id lists are not being read" % wanted.size()
+	for loc in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		for k in wanted:
+			if TranslationServer.translate(k) == k:
+				TranslationServer.set_locale(loc0)
+				return "[%s] %s has no row" % [loc, k]
+	TranslationServer.set_locale(loc0)
+	return ""
+
+
+## Every derived key B5 introduced resolves, in both locales.
+##
+## Same reasoning as loc_b4_derived_keys: COMPANY_BG_<ID> and NEWS_<POOL_ID> are assembled
+## from ids at run time, so a typo is invisible to every grep and reaches the player as a
+## raw token on a customer card or in the ticker. The id lists are walked for real.
+static func _case_loc_b5_derived_keys() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var wanted: Array[String] = []
+	for rec in CompanyCatalog.all():
+		var cid: String = String((rec as Dictionary).get("id", ""))
+		if cid == "":
+			TranslationServer.set_locale(loc0)
+			return "a company row has no id"
+		wanted.append("COMPANY_BG_" + cid)
+	for row in NewsFeedSystem.SEKTOR_POOL:
+		wanted.append("NEWS_" + String((row as Dictionary)["id"]).to_upper())
+	for i in NewsFeedSystem.RIVAL_UP_COUNT:
+		wanted.append("NEWS_RIVAL_UP_%d" % i)
+	for i in NewsFeedSystem.RIVAL_DOWN_COUNT:
+		wanted.append("NEWS_RIVAL_DOWN_%d" % i)
+	for k in NewsFeedSystem.OUTLET_KEYS:
+		wanted.append(String(k))
+	if wanted.size() < 100:
+		return "only %d derived keys collected — the id lists are not being read" % wanted.size()
+	# An id with a non-ASCII character cannot form a clean derived key; three of the ticker
+	# ids carried ç/ö before this batch, so the shape is asserted rather than assumed.
+	var re_ascii := RegEx.new()
+	re_ascii.compile("^[A-Z0-9_]+$")
+	for k in wanted:
+		if re_ascii.search(k) == null:
+			return "derived key is not ASCII SCREAMING_SNAKE: %s" % k
 	for loc in ["tr", "en"]:
 		TranslationServer.set_locale(loc)
 		for k in wanted:

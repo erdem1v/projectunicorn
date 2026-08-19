@@ -35,7 +35,7 @@ const SEPARATOR := "   ·   "
 const SOURCE_COLOR := UiTokens.ACCENT_HEX  # amber source name (single token source)
 
 # Soğuk-başlangıç havuzunun anahtarları (içerik strings.csv'de; kaynak rozetleri
-# NewsFeedSystem.OUTLETS'ten döner — kurgusal yayın seti tek evde kalsın).
+# NewsFeedSystem.outlet_name()'den döner — kurgusal yayın seti tek evde kalsın).
 const AMBIENT_KEYS := ["TICKER_01", "TICKER_02", "TICKER_03", "TICKER_04", "TICKER_05",
 	"TICKER_06", "TICKER_07", "TICKER_08", "TICKER_09", "TICKER_10"]
 
@@ -135,7 +135,7 @@ func _build_bbcode() -> String:
 			if parts.size() >= LOOP_MIN_PARTS:
 				break
 			var k: int = (offset + i) % AMBIENT_KEYS.size()
-			var outlet: String = NewsFeedSystem.OUTLETS[k % NewsFeedSystem.OUTLETS.size()]
+			var outlet: String = NewsFeedSystem.outlet_name(k)
 			parts.append("[color=%s]%s[/color]  %s" % [SOURCE_COLOR, outlet, tr(String(AMBIENT_KEYS[k]))])
 	return SEPARATOR.join(parts) + SEPARATOR
 

@@ -12,7 +12,9 @@ extends Panel
 #  - Speed buttons: transparent idle / subtle hover / walnut active
 #    (emil-design-eng §buttons must feel responsive).
 
-const PHASE_NAMES := ["Bootstrap", "Traction", "Series A"]
+# Ruled identical in both locales (gate ruling 3, 2026-08-08) — these are the canon terms,
+# not translatable copy. Keys all the same, so nothing in a scene or script holds the words.
+const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SERIES_A"]
 
 @onready var company_name_label: Label = $Margin/Row/IdentityGroup/CompanyNameLabel
 @onready var logo_square: ColorRect = $Margin/Row/IdentityGroup/LogoSquare
@@ -221,19 +223,16 @@ func _on_day_advanced(_new_day: int) -> void:
 func _on_hour_changed(_hour: int) -> void:
 	_update_day_label()
 
-# Gün adı kısaltmaları — Time.weekday 0=Pazar. Kendi tablosu, çünkü Godot'nun
-# case op'ları noktalı İ'yi bozar (GameState.MONTH_NAMES_TR_TITLE ile aynı gerekçe).
-# ODA rework (2026-08-06): üst bar tarihi TR'ye geçti; biçim sunum tarafında kurulur.
-# GameState'teki İngilizce get_display_date + ABBR tabloları o geçişten sonra hiçbir
-# yerden okunmadığı için kaldırıldı — motorun tek tarih seam'i get_date_dict().
+# The weekday and month words, and the ORDER they go in, are Fmt's — DATE_LINE is
+# "{dow}, {day} {mon} {year}" in Turkish and "{dow}, {mon} {day}, {year}" in English, which
+# is exactly the kind of difference a local table cannot express. This file used to keep its
+# own DOW_ABBR_TR and slice month_name_tr() to three characters, so the shell clock stayed
+# Turkish in the English build long after Fmt existed.
 # Mockup: "Çar, 9 Eyl 2026 · 10:00".
-const DOW_ABBR_TR := ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"]
 
 
-func _display_date_tr() -> String:
-	var d: Dictionary = GameState.get_date_dict()
-	return "%s, %d %s %d" % [DOW_ABBR_TR[int(d.weekday)], int(d.day),
-		GameState.month_name_tr().substr(0, 3), int(d.year)]
+func _display_date() -> String:
+	return Fmt.date_line(GameState.get_date_dict())
 
 
 func _update_day_label() -> void:
@@ -243,17 +242,19 @@ func _update_day_label() -> void:
 	var d: Dictionary = GameState.get_date_dict()
 	var compact: bool = is_inside_tree() and get_viewport_rect().size.x < float(COMPACT_BELOW)
 	if compact:
-		day_label.text = "%d %s · %02d:00" % [int(d.day),
-			GameState.month_name_tr().substr(0, 3), GameState.current_hour]
+		day_label.text = tr("TOPBAR_CLOCK_COMPACT").format({
+			"day": int(d.day), "mon": Fmt.month_abbr(int(d.month)),
+			"hour": "%02d" % GameState.current_hour})
 	else:
-		day_label.text = "%s · %02d:00" % [_display_date_tr(), GameState.current_hour]
+		day_label.text = tr("TOPBAR_CLOCK").format({
+			"date": _display_date(), "hour": "%02d" % GameState.current_hour})
 
 func _on_shutter_changed(days_left: int) -> void:
 	# Kepenk counter (ENDGAME_DESIGN.md §4.3): visible red countdown while cash
 	# is under zero. -1 = inactive/cleared → hidden.
 	shutter_label.visible = days_left >= 0
 	if days_left >= 0:
-		shutter_label.text = "KEPENK: %d GÜN" % days_left
+		shutter_label.text = tr("FIN_SHUTTER_COUNTDOWN").format({"n": days_left})
 
 func _on_offer_countdown_changed(days_left: int) -> void:
 	# Term-sheet validity chip (Spec 4 / ledger 14): shown only when the soonest sheet
@@ -261,12 +262,14 @@ func _on_offer_countdown_changed(days_left: int) -> void:
 	_offer_days_left = days_left
 	offer_label.visible = days_left >= 0
 	if days_left >= 0:
-		offer_label.text = "TEKLİF: %d GÜN" % days_left
+		offer_label.text = tr("FIN_OFFER_COUNTDOWN").format({"n": days_left})
 		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT if days_left > 1 else UiTokens.negative_bright())
 
 func _on_phase_changed(new_phase: int) -> void:
-	var idx: int = clampi(new_phase - 1, 0, PHASE_NAMES.size() - 1)
-	phase_name_label.text = PHASE_NAMES[idx].to_upper()  # English canon terms — raw to_upper deliberate (tr_upper would corrupt "Traction"/"Series A")
+	var idx: int = clampi(new_phase - 1, 0, PHASE_KEYS.size() - 1)
+	# RAW to_upper on purpose: these are the English canon terms in both locales, and
+	# Fmt.upper's Turkish branch would turn "Traction" into "TRACTİON".
+	phase_name_label.text = tr(PHASE_KEYS[idx]).to_upper()
 	for i in phase_dots.size():
 		phase_dots[i].theme_type_variation = &"PhaseDotActive" if i <= idx else &"PhaseDotDim"
 

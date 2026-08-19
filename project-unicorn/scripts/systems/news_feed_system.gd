@@ -60,9 +60,10 @@ const RIVAL_COOLDOWN_DAYS := 2
 const RIVAL_BIG_MOVE_PCT := 0.06
 const RIVAL_NEAR_BAND_PCT := 3.0    # startup, oyuncunun payına bu kadar yakınsa ilgilidir
 
-# Kurgusal yayın adları (gerçek marka yok; Ekonomi Postası ending gazetesiyle
-# aynı evren). Sektör + rakip satırlarının kaynak rozeti buradan seçilir.
-const OUTLETS := ["Ekonomi Postası", "TeknoGündem", "Girişim Bülteni", "Sektör Telgrafı"]
+# Kurgusal yayın adları (gerçek marka yok; Ekonomi Postası ending gazetesiyle aynı
+# evren). ÖZEL AD oldukları için iki dilde de aynı — CSV satırları kasten birebir.
+const OUTLET_KEYS := ["WORLD_OUTLET_EKONOMI", "WORLD_OUTLET_TEKNOGUNDEM",
+	"WORLD_OUTLET_GIRISIM", "WORLD_OUTLET_SEKTOR"]
 
 # --- Sektör havuzu: {id, txt, phases: [1..3], pool: "ai"|"saas"|"any"} --------
 # Faz 1 Bootstrap = tohum iklimi; Faz 2 Traction = değerleme/kanıt sohbeti;
@@ -70,72 +71,65 @@ const OUTLETS := ["Ekonomi Postası", "TeknoGündem", "Girişim Bülteni", "Sekt
 # (pitch, startup, demo, momentum, MRR, runway, churn + VC) dışında İngilizce yok.
 const SEKTOR_POOL := [
 	# --- Faz 1 — tohum iklimi (any) ---
-	{"id": "s_seed_temkin", "txt": "Tohum yatırımcıları bu çeyrek temkinli; kapılar kapanmıyor ama yavaş açılıyor.", "phases": [1], "pool": "any"},
-	{"id": "s_seed_istah", "txt": "Erken aşama iştahı canlı; melek ağları yeni dosya kabul ediyor.", "phases": [1], "pool": "any"},
-	{"id": "s_demo_sezon", "txt": "Demo günü sezonu açıldı; yatırımcı takvimleri şimdiden dolu.", "phases": [1, 2], "pool": "any"},
-	{"id": "s_kurucu_yorgun", "txt": "Kurucu tükenmişliği panellerde konuşuluyor; çözüm öneren yok.", "phases": [1, 2, 3], "pool": "any"},
-	{"id": "s_maas_dalga", "txt": "Yazılımcı maaşları yine gündemde; küçük ekipler işe alımda zorlanıyor.", "phases": [1, 2], "pool": "any"},
-	{"id": "s_ofis_tarti", "txt": "Uzaktan çalışma tartışması bitmedi; ofise dönüş çağrıları sertleşti.", "phases": [1, 2, 3], "pool": "any"},
-	{"id": "s_bulut_fatura", "txt": "Bulut faturaları masada; altyapı maliyeti yeniden pazarlık konusu.", "phases": [1, 2], "pool": "any"},
-	{"id": "s_hukuk_sirket", "txt": "Şirket kuruluş işlemleri kolaylaştı; girişim sayısı rekor kırıyor.", "phases": [1], "pool": "any"},
-	{"id": "s_yurtdisi_fon", "txt": "Yabancı fonlar bölgeye bakıyor; köprü ofisler art arda açılıyor.", "phases": [1, 2], "pool": "any"},
-	{"id": "s_banka_kredi", "txt": "Bankalar girişim kredisinde hâlâ ürkek; teminat şartları ağır.", "phases": [1], "pool": "any"},
-	{"id": "s_kuluçka", "txt": "Kuluçka merkezleri kontenjan artırdı; başvuru yığılması var.", "phases": [1], "pool": "any"},
-	{"id": "s_hackathon", "txt": "Hafta sonu maratonlarından çıkan ekipler yatırımcı radarında.", "phases": [1], "pool": "any"},
+	{"id": "s_seed_temkin", "phases": [1], "pool": "any"},
+	{"id": "s_seed_istah", "phases": [1], "pool": "any"},
+	{"id": "s_demo_sezon", "phases": [1, 2], "pool": "any"},
+	{"id": "s_kurucu_yorgun", "phases": [1, 2, 3], "pool": "any"},
+	{"id": "s_maas_dalga", "phases": [1, 2], "pool": "any"},
+	{"id": "s_ofis_tarti", "phases": [1, 2, 3], "pool": "any"},
+	{"id": "s_bulut_fatura", "phases": [1, 2], "pool": "any"},
+	{"id": "s_hukuk_sirket", "phases": [1], "pool": "any"},
+	{"id": "s_yurtdisi_fon", "phases": [1, 2], "pool": "any"},
+	{"id": "s_banka_kredi", "phases": [1], "pool": "any"},
+	{"id": "s_kulucka", "phases": [1], "pool": "any"},
+	{"id": "s_hackathon", "phases": [1], "pool": "any"},
 	# --- Faz 1-2 — ürün/pazar (ai) ---
-	{"id": "s_ai_furya", "txt": "Yapay zeka furyası sürüyor; her sunumda aynı iki kelime.", "phases": [1, 2], "pool": "ai"},
-	{"id": "s_ai_maliyet", "txt": "Model maliyetleri düşüyor; küçük ekipler için kapı aralanıyor.", "phases": [1, 2], "pool": "ai"},
-	{"id": "s_ai_veri", "txt": "Eğitim verisi tartışması büyüyor; kim neyi kimden almış, belli değil.", "phases": [1, 2, 3], "pool": "ai"},
-	{"id": "s_ai_yetenek", "txt": "Model ekipleri arasında transfer savaşı; maaşlar kulaktan kulağa.", "phases": [1, 2], "pool": "ai"},
-	{"id": "s_ai_demo_hayal", "txt": "Gösterişli demo, zayıf ürün: alıcılar arayı fark etmeye başladı.", "phases": [1, 2], "pool": "ai"},
-	{"id": "s_ai_donanim", "txt": "İşlemci kıtlığı gevşiyor; kapasite kiralamak yeniden makul.", "phases": [1, 2, 3], "pool": "ai"},
+	{"id": "s_ai_furya", "phases": [1, 2], "pool": "ai"},
+	{"id": "s_ai_maliyet", "phases": [1, 2], "pool": "ai"},
+	{"id": "s_ai_veri", "phases": [1, 2, 3], "pool": "ai"},
+	{"id": "s_ai_yetenek", "phases": [1, 2], "pool": "ai"},
+	{"id": "s_ai_demo_hayal", "phases": [1, 2], "pool": "ai"},
+	{"id": "s_ai_donanim", "phases": [1, 2, 3], "pool": "ai"},
 	# --- Faz 1-2 — ürün/pazar (saas) ---
-	{"id": "s_saas_kobi", "txt": "KOBİ'lerin dijitalleşme harcaması artıyor; satıcılar sıraya girdi.", "phases": [1, 2], "pool": "saas"},
-	{"id": "s_saas_yorgun", "txt": "Kurumsal yazılımda abonelik yorgunluğu; alıcılar sadeleşme istiyor.", "phases": [1, 2], "pool": "saas"},
-	{"id": "s_saas_excel", "txt": "Orta ölçekli şirketlerin yarısı hâlâ tabloyla yönetiliyor; pazar bakir.", "phases": [1], "pool": "saas"},
-	{"id": "s_saas_entegre", "txt": "Sistemler birbiriyle konuşmuyor; entegrasyon vaadi satış kapatıyor.", "phases": [1, 2], "pool": "saas"},
-	{"id": "s_saas_ihale", "txt": "Kamu dijital ihaleleri yerli yazılımcıya açılıyor; şartname ağır.", "phases": [2, 3], "pool": "saas"},
-	{"id": "s_saas_guvenlik", "txt": "Kurumsal alıcının ilk sorusu artık fiyat değil, güvenlik belgesi.", "phases": [2, 3], "pool": "saas"},
+	{"id": "s_saas_kobi", "phases": [1, 2], "pool": "saas"},
+	{"id": "s_saas_yorgun", "phases": [1, 2], "pool": "saas"},
+	{"id": "s_saas_excel", "phases": [1], "pool": "saas"},
+	{"id": "s_saas_entegre", "phases": [1, 2], "pool": "saas"},
+	{"id": "s_saas_ihale", "phases": [2, 3], "pool": "saas"},
+	{"id": "s_saas_guvenlik", "phases": [2, 3], "pool": "saas"},
 	# --- Faz 2 — değerleme/kanıt (any) ---
-	{"id": "s_val_carpan", "txt": "Değerleme sohbetleri ısındı; çarpanlar yine masada.", "phases": [2], "pool": "any"},
-	{"id": "s_kopru_tur", "txt": "Köprü turları çoğaldı; uzatma turu yeni normal sayılıyor.", "phases": [2], "pool": "any"},
-	{"id": "s_tutundurma", "txt": "Yatırımcılar büyüme yerine tutundurma soruyor; sunum şablonları değişti.", "phases": [2], "pool": "any"},
-	{"id": "s_mrr_esik", "txt": "Aylık gelir eşiği yatırım sohbetlerinin ilk sorusu oldu.", "phases": [2], "pool": "any"},
-	{"id": "s_konsolide", "txt": "Pazarda birleşme fısıltıları; küçük oyuncular masaya oturuyor.", "phases": [2, 3], "pool": "any"},
-	{"id": "s_kurumsal_alici", "txt": "Kurumsal satın alma ekipleri yavaşladı; satış döngüleri uzuyor.", "phases": [2, 3], "pool": "any"},
-	{"id": "s_pilot_tuzak", "txt": "Bitmeyen pilot projeler tartışılıyor; bedava deneme kültürü sorgulanıyor.", "phases": [2], "pool": "any"},
-	{"id": "s_ilk_yuz", "txt": "İlk yüz müşteri nasıl bulunur panelleri gişe rekoru kırıyor.", "phases": [1, 2], "pool": "any"},
-	{"id": "s_churn_panel", "txt": "Churn panelde: kurumsal müşteri kolay gelmiyor, kolay da gitmiyor.", "phases": [2], "pool": "saas"},
-	{"id": "s_ai_kanit", "txt": "Yapay zekada vitrin bitti, kanıt dönemi başladı; alıcılar sonuç istiyor.", "phases": [2, 3], "pool": "ai"},
-	{"id": "s_ai_fiyat", "txt": "Yapay zeka ürünlerinde fiyatlama karmaşası; kimse ne sattığını bilmiyor.", "phases": [2], "pool": "ai"},
-	{"id": "s_saas_yenileme", "txt": "Yıllık sözleşme yenilemeleri sertleşti; satın alma pazarlığı üç tur sürüyor.", "phases": [2, 3], "pool": "saas"},
+	{"id": "s_val_carpan", "phases": [2], "pool": "any"},
+	{"id": "s_kopru_tur", "phases": [2], "pool": "any"},
+	{"id": "s_tutundurma", "phases": [2], "pool": "any"},
+	{"id": "s_mrr_esik", "phases": [2], "pool": "any"},
+	{"id": "s_konsolide", "phases": [2, 3], "pool": "any"},
+	{"id": "s_kurumsal_alici", "phases": [2, 3], "pool": "any"},
+	{"id": "s_pilot_tuzak", "phases": [2], "pool": "any"},
+	{"id": "s_ilk_yuz", "phases": [1, 2], "pool": "any"},
+	{"id": "s_churn_panel", "phases": [2], "pool": "saas"},
+	{"id": "s_ai_kanit", "phases": [2, 3], "pool": "ai"},
+	{"id": "s_ai_fiyat", "phases": [2], "pool": "ai"},
+	{"id": "s_saas_yenileme", "phases": [2, 3], "pool": "saas"},
 	# --- Faz 3 — regülasyon + geç aşama (any) ---
-	{"id": "s_veri_yerel", "txt": "Veri yerelliği taslağı yeniden gündemde; tedarikçi sözleşmeleri elden geçiyor.", "phases": [3], "pool": "any"},
-	{"id": "s_seriesa_cita", "txt": "Series A çıtası yükseldi; masaya gelen dosya azaldı, kalitesi arttı.", "phases": [3], "pool": "any"},
-	{"id": "s_geç_asama", "txt": "Geç aşama fonlar iştahlı; erken aşamada seçicilik sürüyor.", "phases": [3], "pool": "any"},
-	{"id": "s_kur_dalga", "txt": "Kur dalgası bütçe planlarını bozdu; sözleşmeler yeniden fiyatlanıyor.", "phases": [2, 3], "pool": "any"},
-	{"id": "s_denetim", "txt": "Yatırım alan şirketlerde bağımsız denetim şartı yaygınlaşıyor.", "phases": [3], "pool": "any"},
-	{"id": "s_halka_arz", "txt": "Teknoloji halka arzları için pencere aralanıyor; bankalar dosya topluyor.", "phases": [3], "pool": "any"},
-	{"id": "s_ai_regul", "txt": "Yapay zeka yönetmeliği taslağı sızdı; uyum maliyeti şimdiden konuşuluyor.", "phases": [3], "pool": "ai"},
-	{"id": "s_ai_telif", "txt": "Üretilen içerikte telif davaları emsal arıyor; hukukçular bölünmüş durumda.", "phases": [3], "pool": "ai"},
-	{"id": "s_saas_vergi", "txt": "Yazılım ihracatında vergi istisnası tartışması yeniden alevlendi.", "phases": [3], "pool": "saas"},
-	{"id": "s_saas_konsol", "txt": "Kurumsal yazılımda satın alma dalgası; büyükler küçükleri topluyor.", "phases": [3], "pool": "saas"},
-	{"id": "s_yetenek_göç", "txt": "Kıdemli mühendis göçü tersine döndü; dönüş paketleri konuşuluyor.", "phases": [3], "pool": "any"},
-	{"id": "s_vc_rapor", "txt": "VC'lerin çeyrek raporları çıktı; portföy şişkin, çıkış az.", "phases": [2, 3], "pool": "any"},
+	{"id": "s_veri_yerel", "phases": [3], "pool": "any"},
+	{"id": "s_seriesa_cita", "phases": [3], "pool": "any"},
+	{"id": "s_gec_asama", "phases": [3], "pool": "any"},
+	{"id": "s_kur_dalga", "phases": [2, 3], "pool": "any"},
+	{"id": "s_denetim", "phases": [3], "pool": "any"},
+	{"id": "s_halka_arz", "phases": [3], "pool": "any"},
+	{"id": "s_ai_regul", "phases": [3], "pool": "ai"},
+	{"id": "s_ai_telif", "phases": [3], "pool": "ai"},
+	{"id": "s_saas_vergi", "phases": [3], "pool": "saas"},
+	{"id": "s_saas_konsol", "phases": [3], "pool": "saas"},
+	{"id": "s_yetenek_goc", "phases": [3], "pool": "any"},
+	{"id": "s_vc_rapor", "phases": [2, 3], "pool": "any"},
 ]
 
-# --- Rakip satır şablonları: {name} + {share} yer tutucularıyla (String.format) --
-const RIVAL_UP_TEMPLATES := [
-	"{name} pazar payını {share} bandına taşıdı; sessiz ama istikrarlı büyüyor.",
-	"{name} yeni sürümünü duyurdu; payı {share} seviyesine oturdu.",
-	"{name} bu hafta iki kurumsal anlaşma kapattı; pay {share} oldu.",
-	"{name} fiyat kampanyasıyla alan kazanıyor; pazar payı {share}.",
-]
-const RIVAL_DOWN_TEMPLATES := [
-	"{name} bu hafta pay kaybetti; koridorlarda indirim söylentisi dolaşıyor.",
-	"{name} müşterilerinin yenileme pazarlığı sertleşti; payı {share} seviyesine geriledi.",
-	"{name} kilit bir hesabını kaybetti; pazar payı {share} bandına indi.",
-]
+# --- Rakip satır şablonları: NEWS_RIVAL_UP_<n> / NEWS_RIVAL_DOWN_<n> (CSV), {name} +
+# {share} yer tutucularıyla. Burada yalnız SAYILARI duruyor — bir const yüklenirken
+# değerlenir, o an henüz bir dil yok.
+const RIVAL_UP_COUNT := 4
+const RIVAL_DOWN_COUNT := 3
 
 
 # --- Günlük kompozisyon ------------------------------------------------------
@@ -251,12 +245,13 @@ static func _emit_sektor(nf: Dictionary, slot: int) -> void:
 		eligible = _eligible_sektor(nf)
 	if eligible.is_empty():
 		return   # içerik deliği (faz+pool kombinasyonuna hiç satır yok) — sessiz geç
-	var idx: int = absi(hash("sektor|%d|%d|%d" % [GameState.day, slot, int(nf["reshuffles"])])) % eligible.size()
+	var idx: int = absi(hash("sektor|%d|%d|%d" % [GameState.day, slot, int(nf["reshuffles"])])) % eligible.size()   # LOC-DATA rng seed
 	var rec: Dictionary = eligible[idx]
 	(nf["used_sektor"] as Array).append(String(rec["id"]))
 	var counts: Dictionary = nf["counts"]
 	counts["sektor"] = int(counts["sektor"]) + 1
-	_append(nf, "sektor", OUTLETS[absi(hash(String(rec["id"]))) % OUTLETS.size()], String(rec["txt"]))
+	_append(nf, "sektor", outlet_name(absi(hash(String(rec["id"])))),
+		TranslationServer.translate("NEWS_" + String(rec["id"]).to_upper()))
 
 
 static func _eligible_sektor(nf: Dictionary) -> Array:
@@ -306,15 +301,18 @@ static func _emit_rakip(nf: Dictionary, rival_pool: Array) -> void:
 	for rid in recent.keys():
 		if GameState.day - int(recent[rid]) > RIVAL_COOLDOWN_DAYS * 4:
 			recent.erase(rid)   # süresi çoktan dolmuş girdileri temizle (sözlük küçük kalsın)
-	var templates: Array = RIVAL_UP_TEMPLATES if int(row["trend"]) >= 0 else RIVAL_DOWN_TEMPLATES
-	var tmpl: String = templates[absi(hash("%s|%d" % [String(row["id"]), GameState.day])) % templates.size()]
+	var up: bool = int(row["trend"]) >= 0
+	var count: int = RIVAL_UP_COUNT if up else RIVAL_DOWN_COUNT
+	var idx: int = absi(hash("%s|%d" % [String(row["id"]), GameState.day])) % count
+	var tmpl: String = TranslationServer.translate(
+		"NEWS_RIVAL_%s_%d" % ["UP" if up else "DOWN", idx])
 	var txt: String = tmpl.format({
 		"name": String(row["name"]),
 		"share": RivalRegistry.format_share(float(row["share_pct"])),
 	})
 	var counts: Dictionary = nf["counts"]
 	counts["rakip"] = int(counts["rakip"]) + 1
-	_append(nf, "rakip", OUTLETS[absi(hash(String(row["id"]) + str(GameState.day))) % OUTLETS.size()], txt)
+	_append(nf, "rakip", outlet_name(absi(hash(String(row["id"]) + str(GameState.day)))), txt)
 
 
 static func _emit_biz(nf: Dictionary) -> void:
@@ -332,3 +330,10 @@ static func _append(nf: Dictionary, kind: String, src: String, txt: String) -> v
 	stream.append({"day": GameState.day, "kind": kind, "src": src, "txt": txt})
 	while stream.size() > STREAM_CAP:
 		stream.pop_front()
+
+
+## Source badge for a line, picked deterministically from a hash. Outlet names are proper
+## nouns and read identically in both columns; they go through the CSV anyway so that no
+## player-visible string is a literal in this file.
+static func outlet_name(h: int) -> String:
+	return TranslationServer.translate(OUTLET_KEYS[h % OUTLET_KEYS.size()])

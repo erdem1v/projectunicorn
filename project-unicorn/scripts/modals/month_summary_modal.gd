@@ -49,21 +49,21 @@ func populate(data: Dictionary) -> void:
 	var team: Dictionary = data.get("team", {"from": 0, "to": 0})
 	var brand: Dictionary = data.get("brand", {"from": 0, "to": 0})
 
-	_add_row("MRR",
+	_add_row(tr("FIN_CAP_MRR"),
 		"%s → %s" % [UiTokens.format_money(int(mrr.from)), UiTokens.format_money(int(mrr.to))],
 		_mrr_chip(int(mrr.from), int(mrr.to)))
 	_add_separator()
-	_add_row("Kasa",
+	_add_row(tr("MONTH_ROW_CASH"),
 		"%s → %s" % [UiTokens.format_money(int(cash.from)), UiTokens.format_money(int(cash.to))],
 		_money_chip(int(cash.to) - int(cash.from)))
 	_add_separator()
-	_add_row("Ekip", "%d → %d" % [int(team.from), int(team.to)],
+	_add_row(tr("MONTH_ROW_TEAM"), "%d → %d" % [int(team.from), int(team.to)],
 		_int_chip(int(team.to) - int(team.from)))
 	_add_separator()
-	_add_row("Marka", "%d → %d" % [int(brand.from), int(brand.to)],
+	_add_row(tr("MONTH_ROW_BRAND"), "%d → %d" % [int(brand.from), int(brand.to)],
 		_int_chip(int(brand.to) - int(brand.from)))
 	_add_separator()
-	_add_row("Runway", String(data.get("runway_text", "")), {})  # net runway (Package 5); no chip
+	_add_row(tr("FIN_RUNWAY"), String(data.get("runway_text", "")), {})  # net runway (Package 5); no chip
 
 
 # --- Row construction (code-built: values are dynamic, layout is uniform) ---
@@ -125,7 +125,8 @@ func _mrr_chip(from: int, to: int) -> Dictionary:
 	var delta: int = to - from
 	if from > 0 and delta != 0:
 		var pct: int = int(round(abs(delta) / float(from) * 100.0))
-		return _chip_for(delta, "%s%%%d %s" % ["+" if delta > 0 else "−", pct, _arrow(delta)])
+		return _chip_for(delta, "%s%s %s" % [
+			"+" if delta > 0 else "−", Fmt.percent(pct, 0), _arrow(delta)])
 	return _money_chip(delta)  # month started at $0 (or flat) → absolute fallback
 
 

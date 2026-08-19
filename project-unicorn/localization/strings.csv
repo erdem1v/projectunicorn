@@ -1512,3 +1512,143 @@ FIN_SUBTAB_INVESTMENT,Yatırım,Investment
 FIN_SUBTAB_LOCKED,Series A Hunt'ta açılır,Opens in the Series A Hunt
 DIALOGUE_YOUR_ANSWER,YANITIN:,YOUR ANSWER:
 DIALOGUE_PICK_ONE,Bir seçenek seç,Pick an option
+COMPANY_BG_EGE_SIGORTA,"Bölgesel oyuncu; acente ağı geniş, evrak işi hâlâ kâğıtta.","A regional player; a wide agency network, and the paperwork is still on paper."
+COMPANY_BG_POYRAZ_SIGORTA,"Fiyat kırarak büyüdü, şimdi hasar dosyalarının altında eziliyor.","Grew by undercutting on price, and is now buried under the claims files."
+COMPANY_BG_DENIZ_SIGORTA,"Kurumsal müşteriye çalışır, temkinli; yeni tedarikçiyi zor kabul eder.","Works with corporate clients, cautious; slow to accept a new supplier."
+COMPANY_BG_ADRIATIC_ASSURANCE,"Balkan pazarından bölgeye açıldı; merkez uzak, yerel ekip küçük.","Came into the region from the Balkan market; head office is far away, the local team is small."
+COMPANY_BG_VEGA_SIGORTA,"Genç yönetim, poliçeyi telefondan satıyor; büyüme hızlı, süreç dağınık.","Young management selling policies over the phone; growth is fast, process is scattered."
+COMPANY_BG_KUZEY_INSAAT,"Kamu ihalesiyle büyüdü; şantiyesi çok, merkez ofisi az.","Grew on public tenders; plenty of sites, not much head office."
+COMPANY_BG_ANADOLU_YAPI,"Aile şirketi, üçüncü kuşak yönetimde; dijitalleşmeye geç başladı.","A family firm, third generation in charge; late to start going digital."
+COMPANY_BG_MARMARA_INSAAT,"Konut projelerinde iddialı; nakit akışı gelgitli, karar tek adamda.","Ambitious in housing projects; cash flow comes in tides, decisions rest with one man."
+COMPANY_BG_TERRA_YAPI,"Yabancı ortaklı; raporlama standardı yüksek, sabrı az.","Foreign-owned partner; reporting standards are high, patience is short."
+COMPANY_BG_DONAU_BAU,"Avusturyalı; altyapı projeleriyle geldi, kalıcı mı belli değil.","Austrian; arrived with infrastructure projects, and nobody knows if they are staying."
+COMPANY_BG_DENIZ_LOJISTIK,"Liman çevresinde güçlü; filosu yaşlı, yazılımı daha yaşlı.",Strong around the port; the fleet is old and the software is older.
+COMPANY_BG_NORDICA_LOJISTIK,"İskandinav ortaklı; süreç disiplini yüksek, esnekliği düşük.","Scandinavian partner; high process discipline, low flexibility."
+COMPANY_BG_EGE_KARGO,Şehirlerarası dağıtımda eski toprak; el yazısı irsaliyeden yeni çıktı.,An old hand at intercity distribution; only just out of handwritten waybills.
+COMPANY_BG_MARMARA_LOJISTIK,"Depoculuğa yeni girdi; büyüme iştahı yüksek, ekibi yorgun.","New to warehousing; hungry for growth, and the team is tired."
+COMPANY_BG_NORDWIND_GMBH,Alman butik nakliyeci; bölge ofisi kendi kararını alamıyor.,A German boutique carrier; the regional office cannot make its own decisions.
+COMPANY_BG_ARAS_KLINIK,Tek şubeli butik klinik; randevu defteri hâlâ resepsiyonda.,A single-branch boutique clinic; the appointment book is still on the front desk.
+COMPANY_BG_MARMARA_KLINIK,"Zincirleşme yolunda; her şube kendi usulünce çalışıyor, merkez bunu dert etti.",On its way to becoming a chain; every branch works its own way and head office has started to mind.
+COMPANY_BG_BOSPHORUS_SAGLIK,"Yabancı hasta ağırlıklı; itibarına düşkün, hata payı tanımıyor.","Mostly foreign patients; protective of its reputation, allows no margin for error."
+COMPANY_BG_VITA_MEDIKAL,"Cihaz satışından hizmete döndü; satışı güçlü, operasyonu zayıf.","Moved from selling devices to selling services; strong at sales, weak at operations."
+COMPANY_BG_MEDISA_GRUP,"Bölge hastaneleriyle anlaşmalı; ihale takvimiyle yaşar, acelesi yoktur.",Contracted to the regional hospitals; lives by the tender calendar and is never in a hurry.
+COMPANY_BG_BEYKOZ_URETIM,"Yan sanayi tedarikçisi; müşterisi ne derse o, kendi sistemi yok gibi.","A sub-industry supplier; whatever the customer says goes, and it barely has a system of its own."
+COMPANY_BG_TRAKYA_FABRIKA,"Vardiya düzeni oturmuş, veri toplamaz; ustabaşının hafızası veritabanıdır.",The shift pattern is settled and no data is collected; the foreman's memory is the database.
+COMPANY_BG_EGE_METAL,İhracat ağırlıklı; Avrupa müşterisi belge istedikçe yazılım ihtiyacı büyüyor.,"Mostly export; the more documents European customers ask for, the more software it needs."
+COMPANY_BG_VULKAN_DOKUM,"Ağır sanayi, ağır karar alır; ama imza atınca yıllarca kalır.","Heavy industry, heavy decisions; but once they sign, they stay for years."
+COMPANY_BG_FERRUM_ENDUSTRI,"Makine parkı yeni, yönetim anlayışı eski; genç mühendisler sıkışmış durumda.","New machinery, old management thinking; the young engineers are stuck in between."
+COMPANY_BG_ANADOLU_MARKET,Bölgesel market zinciri; kasa sayısı arttıkça kaos da arttı.,"A regional grocery chain; the more tills they added, the more chaos came with them."
+COMPANY_BG_BRIGHTLINE_RETAIL,Uluslararası zincirin bölge iştiraki; merkezle konuşmak ayrı bir proje.,The regional arm of an international chain; talking to head office is a project of its own.
+COMPANY_BG_KARDELEN_MAGAZACILIK,Cadde mağazacılığında eski isim; AVM kiralarıyla boğuşuyor.,An old name in high-street retail; wrestling with shopping-centre rents.
+COMPANY_BG_EKIN_GIDA_MARKETLERI,İlçe pazarından zincire dönüştü; patron her şubeyi hâlâ tek tek arar.,Grew from a district market into a chain; the owner still calls every branch himself.
+COMPANY_BG_MODENA_CONCEPT,"Ev tekstili ve mobilya satar; sezon döngüsüne bağlı, stok takibi elde.","Sells home textiles and furniture; tied to the season cycle, stock tracked by hand."
+COMPANY_BG_PALMIYE_HOLDING,"Turizm arazileriyle büyüdü; portföyü geniş, kayıt düzeni dar.",Grew on tourism land; a broad portfolio and narrow record-keeping.
+COMPANY_BG_KIYI_GAYRIMENKUL,"Sahil projelerine odaklı; satışı hızlı, tapu sonrası ilgisi yavaş.","Focused on coastal developments; quick to sell, slow to care once the deed is signed."
+COMPANY_BG_METREKARE_DANISMANLIK,"Genç ekip, şube modeliyle büyüyor; şube açtıkça standart kayboluyor.",A young team growing through branches; every new branch loses a little more of the standard.
+COMPANY_BG_VESTERA_HOLDING,"Yabancı fonlarla ortak proje geliştirir; rapor ister, hem de her hafta.","Develops projects with foreign funds; wants reports, and wants them weekly."
+COMPANY_BG_PANORAMA_EMLAK,"Üç şehirde ofisi var; danışmanlar kendi telefonuyla çalışır, merkez göremez.",Offices in three cities; the agents work off their own phones and head office cannot see any of it.
+COMPANY_BG_BEYKOZ_TEKSTIL,"Aile şirketi; fason üretimden marka olmaya çalışıyor, sancılı.","A family firm trying to move from contract manufacturing to a brand of its own, painfully."
+COMPANY_BG_MENDERES_DOKUMA,Havlu ve ev tekstili ihracatçısı; sipariş takibi faks kokan bir sistemde.,A towel and home-textile exporter; order tracking runs on a system that still smells of fax.
+COMPANY_BG_IPLIKHANE,"Butik üretici; tasarımı güçlü, teslim tarihi zayıf.","A boutique producer; strong on design, weak on delivery dates."
+COMPANY_BG_NOVA_TEKSTIL,"Hızlı moda tedarikçisi; büyük müşteri ne isterse ona koşar, kendine vakti yok.",A fast-fashion supplier; runs after whatever the big customer wants and has no time for itself.
+COMPANY_BG_AEGEA_TEXTILE_GROUP,"Yunan ortaklı; iki ülkede üretim var, tek düzgün rapor yok.",Greek partner; production in two countries and not one clean report.
+COMPANY_BG_BOSPHORUS_LEGAL,"Kurumsal müvekkil ağırlıklı; saat ücretiyle yaşar, verim onun için paradır.","Mostly corporate clients; lives on the billable hour, and efficiency is money to them."
+COMPANY_BG_KAVANAGH_SONS,"İrlandalı butik ofisin bölge masası; usule düşkün, yeniliğe mesafeli.","The regional desk of an Irish boutique firm; devoted to procedure, wary of anything new."
+COMPANY_BG_ASLAN_DURU_HUKUK,"İki ortak, on avukat; dosya sayısı büyüdü, arşiv düzeni büyüyemedi.","Two partners, ten lawyers; the caseload grew and the filing system could not keep up."
+COMPANY_BG_MERIDYEN_HUKUK,Şirket birleşmelerinde isim yaptı; gizlilik takıntısı her aracı zorlaştırır.,Made its name on mergers; an obsession with confidentiality makes every tool harder.
+COMPANY_BG_LEX_ANADOLU,"Uluslararası ağın yerel üyesi; standartları dışarıdan, kadrosu içeriden.","The local member of an international network; standards from outside, staff from inside."
+COMPANY_BG_NEXUS_YAZILIM,"Kurumsal proje geliştirir; kendi ürünü yok, herkesinkini bilir.",Builds corporate projects; has no product of its own but knows everyone else's.
+COMPANY_BG_PIKSEL_TEKNOLOJI,"Ajans kökenli; işi çok, faturası geç.","Agency roots; plenty of work, late invoices."
+COMPANY_BG_VOLT_SISTEMLERI,Donanım ağırlıklı entegratör; yazılıma mecbur kaldıkça alışıyor.,A hardware-led integrator; getting used to software as it is forced into it.
+COMPANY_BG_ATLAS_BILISIM,Kamu projeleriyle büyüdü; güvenlik şartnamesi her cümlede.,Grew on public-sector projects; the security specification is in every sentence.
+COMPANY_BG_ORIGO_LABS,"Genç ürün stüdyosu; hızlı dener, hızlı vazgeçer.","A young product studio; tries fast, gives up fast."
+COMPANY_BG_SEPET_TICARET,"Pazaryerinde büyüdü, kendi sitesine geçti; kampanya günleri kâbusu.","Grew on a marketplace, then moved to its own site; campaign days are a nightmare."
+COMPANY_BG_HIZLI_PAZAR,Aynı gün teslimat iddiasında; operasyon bu iddiaya yetişemiyor.,Claims same-day delivery; operations cannot keep up with the claim.
+COMPANY_BG_VITRIN_ONLINE,"Niş kategoride lider; ekip küçük, her şey kurucunun telefonunda.","Leader in a niche category; small team, and everything lives on the founder's phone."
+COMPANY_BG_LOKA_STORE,"Sosyal medyadan doğdu; markası güçlü, altyapısı emekleme döneminde.",Born on social media; a strong brand on infrastructure that is still crawling.
+COMPANY_BG_ADRIATICA_MARKET,Balkanlara satış yapan bölgesel platform; gümrük ve iade derdi bitmez.,A regional platform selling into the Balkans; customs and returns never stop.
+COMPANY_BG_KANAL_MEDYA,"Yerel televizyondan dijitale döndü; arşivi altın, sistemi hurda.","Turned from local television to digital; the archive is gold, the system is scrap."
+COMPANY_BG_PUNTO_YAYIN,"Dergi grubundan kalan çekirdek; az kadro, çok başlık.","What is left of a magazine group; few staff, many titles."
+COMPANY_BG_EKRAN_PRODUKSIYON,"Dizi seti kökenli; proje bazlı yaşar, düzenli gider sevmez.",Came up on drama sets; lives project to project and hates fixed costs.
+COMPANY_BG_ANADOLU_DIGITAL,"Ajans ile içerik stüdyosu karışımı; müşteri raporu gecede biter, kendi raporu hiç.","Half agency, half content studio; a client report gets done overnight, its own report never does."
+COMPANY_BG_NORDLICHT_STUDIO,Alman yapım ortağıyla belgesel çeker; bütçe disiplini sıkı.,Shoots documentaries with a German production partner; tight budget discipline.
+COMPANY_BG_KULE_FINANS,"Faktoring ağırlıklı; risk iştahı düşük, evrak iştahı yüksek.","Mostly factoring; low appetite for risk, high appetite for paperwork."
+COMPANY_BG_ARGOS_YATIRIM,Halka arz danışmanlığına soyundu; itibar hassasiyeti aşırı.,Has taken up IPO advisory; extremely sensitive about reputation.
+COMPANY_BG_PUSULA_PORTFOY,"Varlıklı aile fonlarını yönetir; sessiz, sadık, yavaş.","Manages wealthy family funds; quiet, loyal, slow."
+COMPANY_BG_HELVETIA_DATA_AG,"İsviçre merkezli finansal veri sağlayıcı; bölge ofisi üç kişi, beklentisi otuz kişilik.",A Swiss-based financial data provider; the regional office is three people with the expectations of thirty.
+COMPANY_BG_LIRA_KAPITAL,KOBİ finansmanına odaklı; regülasyon her ay kapıyı çalar.,Focused on SME finance; regulation knocks on the door every month.
+NEWS_S_SEED_TEMKIN,Tohum yatırımcıları bu çeyrek temkinli; kapılar kapanmıyor ama yavaş açılıyor.,"Seed investors are cautious this quarter; the doors are not shut, but they open slowly."
+NEWS_S_SEED_ISTAH,Erken aşama iştahı canlı; melek ağları yeni dosya kabul ediyor.,Early-stage appetite is alive; angel networks are taking new files.
+NEWS_S_DEMO_SEZON,Demo günü sezonu açıldı; yatırımcı takvimleri şimdiden dolu.,Demo day season has opened; investor calendars are already full.
+NEWS_S_KURUCU_YORGUN,Kurucu tükenmişliği panellerde konuşuluyor; çözüm öneren yok.,Founder burnout is on every panel; nobody is offering a fix.
+NEWS_S_MAAS_DALGA,Yazılımcı maaşları yine gündemde; küçük ekipler işe alımda zorlanıyor.,Engineer salaries are back in the conversation; small teams are struggling to hire.
+NEWS_S_OFIS_TARTI,Uzaktan çalışma tartışması bitmedi; ofise dönüş çağrıları sertleşti.,The remote work argument is not over; the calls to return to the office have hardened.
+NEWS_S_BULUT_FATURA,Bulut faturaları masada; altyapı maliyeti yeniden pazarlık konusu.,Cloud bills are on the table; infrastructure cost is up for negotiation again.
+NEWS_S_HUKUK_SIRKET,Şirket kuruluş işlemleri kolaylaştı; girişim sayısı rekor kırıyor.,Incorporating has got easier; the number of new startups is breaking records.
+NEWS_S_YURTDISI_FON,Yabancı fonlar bölgeye bakıyor; köprü ofisler art arda açılıyor.,Foreign funds are looking at the region; bridge offices are opening one after another.
+NEWS_S_BANKA_KREDI,Bankalar girişim kredisinde hâlâ ürkek; teminat şartları ağır.,Banks are still skittish on startup lending; collateral terms are heavy.
+NEWS_S_KULUCKA,Kuluçka merkezleri kontenjan artırdı; başvuru yığılması var.,Incubators have raised their intake; applications are piling up.
+NEWS_S_HACKATHON,Hafta sonu maratonlarından çıkan ekipler yatırımcı radarında.,Teams coming out of weekend marathons are on investors' radar.
+NEWS_S_AI_FURYA,Yapay zeka furyası sürüyor; her sunumda aynı iki kelime.,The AI rush continues; every deck has the same two words in it.
+NEWS_S_AI_MALIYET,Model maliyetleri düşüyor; küçük ekipler için kapı aralanıyor.,Model costs are falling; the door is opening for small teams.
+NEWS_S_AI_VERI,"Eğitim verisi tartışması büyüyor; kim neyi kimden almış, belli değil.",The training-data argument is growing; who took what from whom is anyone's guess.
+NEWS_S_AI_YETENEK,Model ekipleri arasında transfer savaşı; maaşlar kulaktan kulağa.,A transfer war among model teams; the salaries travel by word of mouth.
+NEWS_S_AI_DEMO_HAYAL,"Gösterişli demo, zayıf ürün: alıcılar arayı fark etmeye başladı.","Flashy demo, weak product: buyers are starting to notice the gap."
+NEWS_S_AI_DONANIM,İşlemci kıtlığı gevşiyor; kapasite kiralamak yeniden makul.,The chip shortage is easing; renting capacity is reasonable again.
+NEWS_S_SAAS_KOBI,KOBİ'lerin dijitalleşme harcaması artıyor; satıcılar sıraya girdi.,SME spending on digitisation is rising; the vendors have formed a queue.
+NEWS_S_SAAS_YORGUN,Kurumsal yazılımda abonelik yorgunluğu; alıcılar sadeleşme istiyor.,Subscription fatigue in enterprise software; buyers want fewer tools.
+NEWS_S_SAAS_EXCEL,Orta ölçekli şirketlerin yarısı hâlâ tabloyla yönetiliyor; pazar bakir.,Half of mid-sized companies are still run on a spreadsheet; the market is untouched.
+NEWS_S_SAAS_ENTEGRE,Sistemler birbiriyle konuşmuyor; entegrasyon vaadi satış kapatıyor.,Systems do not talk to each other; the promise of integration is closing deals.
+NEWS_S_SAAS_IHALE,Kamu dijital ihaleleri yerli yazılımcıya açılıyor; şartname ağır.,Public digital tenders are opening to domestic software; the specification is heavy.
+NEWS_S_SAAS_GUVENLIK,"Kurumsal alıcının ilk sorusu artık fiyat değil, güvenlik belgesi.","The corporate buyer's first question is no longer price, it is the security certificate."
+NEWS_S_VAL_CARPAN,Değerleme sohbetleri ısındı; çarpanlar yine masada.,Valuation talk has warmed up; multiples are back on the table.
+NEWS_S_KOPRU_TUR,Köprü turları çoğaldı; uzatma turu yeni normal sayılıyor.,Bridge rounds are multiplying; an extension round now counts as normal.
+NEWS_S_TUTUNDURMA,Yatırımcılar büyüme yerine tutundurma soruyor; sunum şablonları değişti.,Investors are asking about retention instead of growth; the deck templates have changed.
+NEWS_S_MRR_ESIK,Aylık gelir eşiği yatırım sohbetlerinin ilk sorusu oldu.,Monthly revenue has become the first question in any investment conversation.
+NEWS_S_KONSOLIDE,Pazarda birleşme fısıltıları; küçük oyuncular masaya oturuyor.,Merger whispers in the market; the smaller players are sitting down at the table.
+NEWS_S_KURUMSAL_ALICI,Kurumsal satın alma ekipleri yavaşladı; satış döngüleri uzuyor.,Corporate procurement teams have slowed; sales cycles are getting longer.
+NEWS_S_PILOT_TUZAK,Bitmeyen pilot projeler tartışılıyor; bedava deneme kültürü sorgulanıyor.,Endless pilot projects are under discussion; the free-trial culture is being questioned.
+NEWS_S_ILK_YUZ,İlk yüz müşteri nasıl bulunur panelleri gişe rekoru kırıyor.,"""How to find your first hundred customers"" panels are selling out."
+NEWS_S_CHURN_PANEL,"Churn panelde: kurumsal müşteri kolay gelmiyor, kolay da gitmiyor.",Churn on the panel: an enterprise customer does not come easily and does not leave easily.
+NEWS_S_AI_KANIT,"Yapay zekada vitrin bitti, kanıt dönemi başladı; alıcılar sonuç istiyor.",In AI the showroom is over and the proof period has begun; buyers want results.
+NEWS_S_AI_FIYAT,Yapay zeka ürünlerinde fiyatlama karmaşası; kimse ne sattığını bilmiyor.,Pricing confusion in AI products; nobody knows what they are selling.
+NEWS_S_SAAS_YENILEME,Yıllık sözleşme yenilemeleri sertleşti; satın alma pazarlığı üç tur sürüyor.,Annual renewals have hardened; procurement now takes three rounds.
+NEWS_S_VERI_YEREL,Veri yerelliği taslağı yeniden gündemde; tedarikçi sözleşmeleri elden geçiyor.,The data-residency draft is back on the agenda; supplier contracts are being reworked.
+NEWS_S_SERIESA_CITA,"Series A çıtası yükseldi; masaya gelen dosya azaldı, kalitesi arttı.","The Series A bar has risen; fewer files reach the table, and better ones."
+NEWS_S_GEC_ASAMA,Geç aşama fonlar iştahlı; erken aşamada seçicilik sürüyor.,Late-stage funds are hungry; early stage stays selective.
+NEWS_S_KUR_DALGA,Kur dalgası bütçe planlarını bozdu; sözleşmeler yeniden fiyatlanıyor.,A currency swing has wrecked budget plans; contracts are being repriced.
+NEWS_S_DENETIM,Yatırım alan şirketlerde bağımsız denetim şartı yaygınlaşıyor.,Independent audit is becoming standard at funded companies.
+NEWS_S_HALKA_ARZ,Teknoloji halka arzları için pencere aralanıyor; bankalar dosya topluyor.,A window is opening for tech listings; the banks are gathering files.
+NEWS_S_AI_REGUL,Yapay zeka yönetmeliği taslağı sızdı; uyum maliyeti şimdiden konuşuluyor.,A draft AI regulation has leaked; the cost of compliance is already being discussed.
+NEWS_S_AI_TELIF,Üretilen içerikte telif davaları emsal arıyor; hukukçular bölünmüş durumda.,Copyright suits over generated content are looking for a precedent; the lawyers are split.
+NEWS_S_SAAS_VERGI,Yazılım ihracatında vergi istisnası tartışması yeniden alevlendi.,The tax exemption argument for software exports has flared up again.
+NEWS_S_SAAS_KONSOL,Kurumsal yazılımda satın alma dalgası; büyükler küçükleri topluyor.,An acquisition wave in enterprise software; the big ones are collecting the small ones.
+NEWS_S_YETENEK_GOC,Kıdemli mühendis göçü tersine döndü; dönüş paketleri konuşuluyor.,The senior-engineer exodus has reversed; return packages are being talked about.
+NEWS_S_VC_RAPOR,"VC'lerin çeyrek raporları çıktı; portföy şişkin, çıkış az.","The VCs' quarterly reports are out; portfolios are bloated, exits are few."
+NEWS_RIVAL_UP_0,{name} pazar payını {share} bandına taşıdı; sessiz ama istikrarlı büyüyor.,"{name} has moved its market share into the {share} band; quiet, but growing steadily."
+NEWS_RIVAL_UP_1,{name} yeni sürümünü duyurdu; payı {share} seviyesine oturdu.,{name} announced a new version; its share has settled at {share}.
+NEWS_RIVAL_UP_2,{name} bu hafta iki kurumsal anlaşma kapattı; pay {share} oldu.,{name} closed two enterprise deals this week; share is now {share}.
+NEWS_RIVAL_UP_3,{name} fiyat kampanyasıyla alan kazanıyor; pazar payı {share}.,{name} is gaining ground with a price campaign; market share {share}.
+NEWS_RIVAL_DOWN_0,{name} bu hafta pay kaybetti; koridorlarda indirim söylentisi dolaşıyor.,{name} lost share this week; there is a discount rumour going round the corridors.
+NEWS_RIVAL_DOWN_1,{name} müşterilerinin yenileme pazarlığı sertleşti; payı {share} seviyesine geriledi.,{name}'s customers have hardened in renewal talks; its share has slipped to {share}.
+NEWS_RIVAL_DOWN_2,{name} kilit bir hesabını kaybetti; pazar payı {share} bandına indi.,{name} lost a key account; its market share has dropped into the {share} band.
+TOPBAR_CLOCK,{date} · {hour}:00,{date} · {hour}:00
+TOPBAR_CLOCK_COMPACT,{day} {mon} · {hour}:00,{mon} {day} · {hour}:00
+FIN_OFFER_COUNTDOWN,TEKLİF: {n} GÜN,OFFER: {n} DAYS
+RIVAL_RANK_TEXT,startup sınıfında {rank}/{total},{rank}/{total} in the startup class
+MONTH_TITLE,{month} {year},{month} {year}
+MONTH_DAY_RANGE,Gün {from}–{to},Days {from}–{to}
+MONTH_HIGHLIGHT_FALLBACK,Sakin bir ay. Sakin aylar ucuz değildir.,A quiet month. Quiet months are not cheap.
+MONTH_FRANK_SHUTTER,Kepenk sayıyor. Özet güzel görünse de sayıyor.,The shutter is counting. It counts whether or not the summary looks good.
+MONTH_FRANK_BURNING_BUT_SELLING,Para yakıyorsun ama bir şey satıyorsun. Şimdilik doğru sıradasın.,"You are burning money, but you are selling something. For now you are in the right queue."
+MONTH_FRANK_SHRINKING,Küçülen rakam yalan söylemez. Sebebini sen bul.,A shrinking number does not lie. Find the reason yourself.
+MONTH_FRANK_GOOD,İyi bir ay. Not al — nadir gelirler.,A good month. Write it down — they do not come often.
+MONTH_FRANK_ANOTHER,Bir ay daha. Ayakta olmak da bir metrik.,Another month. Still standing is a metric too.
+MONTH_EVENT_OF_THE_MONTH,✦ AYIN OLAYI,✦ EVENT OF THE MONTH
+MONTH_AUTO_SUMMARY,Otomatik özet · her ay sonu,Automatic summary · at each month end
+ODA_MENTOR_TAG_FALLBACK,FRANK,FRANK
+ODA_GOAL_PROGRESS,{met}/{total},{met}/{total}
+ODA_GOAL_MRR,{mrr} / {target} MRR,{mrr} / {target} MRR
+MONTH_ROW_CASH,Kasa,Cash
+MONTH_ROW_TEAM,Ekip,Team
+MONTH_ROW_BRAND,Marka,Brand

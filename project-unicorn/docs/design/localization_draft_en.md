@@ -190,3 +190,40 @@ has to move if `RUNWAY_WARN_MONTHS` moves) and `FIN_LEGEND_PROJECTION_TARGET`.
 `TERM_BOARD_SEAT_ONE` and `TERM_BOARD_SEATS` are **two rows for one idea**: English needs a
 singular ("1 seat"), Turkish does not inflect after a numeral, so both of its rows read
 "{n} koltuk". That is a deliberate duplication, not a missed merge.
+
+---
+
+## B5 — Shell / World (2026-08-19)
+
+### Company backgrounds (`COMPANY_BG_*`, 65 rows)
+One line of character per company — sector feel, size feel, temperament. The company NAMES
+stay in `company_catalog.gd` and are **not** listed here: they are proper nouns and the
+LANGUAGE INTEGRITY LAW exempts them. The ids exist only to address these rows.
+
+These lines do a specific job: they are quoted by the event layer to colour wording, and the
+Turkish carries a lot of dry humour that the English draft flattens ("the foreman's memory is
+the database", "quiet, loyal, slow"). High value for a voice pass, low risk — nothing branches
+on them.
+
+### Ticker lines (`NEWS_S_*`, 48 rows + `NEWS_RIVAL_UP_*` / `_DOWN_*`, 7 templates)
+The sector climate lines that scroll along the bottom of every screen, phase-gated
+(seed climate → valuation talk → regulation) and pool-gated (`ai` / `saas` / `any`). The
+rival templates take `{name}` and `{share}`.
+
+**Staleness note.** These translate at EMIT time, not at render time, so a mid-run language
+switch leaves already-emitted lines in the previous language until they scroll out of the
+50-line buffer. That is gate ruling 7 territory (modal staleness accepted) and the buffer is
+not persisted — `GameState.news_feed` is absent from `SaveCodec`, so it never survives a
+reload. Flagged rather than fixed, because rendering-time translation would mean storing
+key + args for the composed rival lines.
+
+### Month-end summary (`MONTH_*`)
+`MONTH_FRANK_*` — five one-line verdicts, chosen by rule (shutter counting / burning but
+selling / shrinking / good / another one). Tier B; the rest of the modal is Tier A labels.
+
+### Not for the pass
+`WORLD_OUTLET_*` (four fictional mastheads) and `PROD_MENTOR_TAG` are identical in both
+columns — proper nouns. `FIN_PHASE_BOOTSTRAP` / `_TRACTION` / `_SERIES_A` likewise, by gate
+ruling 3. The Shift+F11 extreme-value fixture in `month_summary_system` is `# LOC-DATA`: its
+whole purpose is a long Turkish headline overflowing the band, so keying it would defeat the
+test.
