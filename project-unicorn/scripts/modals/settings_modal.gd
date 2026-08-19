@@ -117,7 +117,7 @@ func _build_display_section() -> void:
 	_scale_option = _dropdown()
 	for i in DisplaySettingsLib.UI_SCALE_STEPS.size():
 		var step: float = DisplaySettingsLib.UI_SCALE_STEPS[i]
-		_scale_option.add_item("%%%d" % int(round(step * 100.0)), i)
+		_scale_option.add_item(Fmt.percent(int(round(step * 100.0)), 0), i)
 	_scale_option.item_selected.connect(_on_ui_scale_selected)
 	_add_row(_display_body, "SET_UI_SCALE", _scale_option)
 	_refresh_scale_options()

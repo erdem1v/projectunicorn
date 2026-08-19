@@ -118,7 +118,11 @@ func _stamp(unix_time: int) -> String:
 		return ""
 	# Sayısal tarih — locale'den bağımsız, anahtar gerektirmez.
 	var d: Dictionary = Time.get_datetime_dict_from_unix_time(unix_time)
-	return "%02d.%02d.%d %02d:%02d" % [d.day, d.month, d.year, d.hour, d.minute]
+	# Real-world wall clock on the save slot, not in-fiction time. The FIELD ORDER is a
+	# locale property: TR writes 19.08.2026, EN writes 08/19/2026.
+	return tr("SAVE_SLOT_TIMESTAMP").format({
+		"day": "%02d" % d.day, "month": "%02d" % d.month, "year": d.year,
+		"hour": "%02d" % d.hour, "minute": "%02d" % d.minute})
 
 
 # --- Aksiyonlar ---

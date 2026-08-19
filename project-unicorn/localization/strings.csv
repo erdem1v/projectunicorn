@@ -1934,3 +1934,4 @@ END_BC_ONE_BY_ONE_ONE,Kriz büyürken {n} müşteri ilişkisi teker teker koptu.
 END_VC_CUSTOMERS_ONE,Ürünün {n} kurumsal müşterisi vardı; bu bile turu açmaya yetmedi.,The product had {n} enterprise customer; even that was not enough to open the round.
 END_BS_BALANCED_ONE,Yol boyunca {n} müşteri kazanıldı ve defter dengede tutuldu.,{n} customer was won along the way and the book was kept in balance.
 END_RF_UNFINISHED_ONE,Geride {n} müşteri ilişkisi ve tamamlanmamış bir hikâye kaldı.,{n} customer relationship and an unfinished story were left behind.
+SAVE_SLOT_TIMESTAMP,{day}.{month}.{year} {hour}:{minute},{month}/{day}/{year} {hour}:{minute}

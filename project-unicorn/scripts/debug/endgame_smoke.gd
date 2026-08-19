@@ -240,6 +240,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"all_scripts_load":          fail = _case_all_scripts_load()
 		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
 		"loc_b5_derived_keys":       fail = _case_loc_b5_derived_keys()
+		"loc_language_switch":       fail = _case_loc_language_switch()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -6802,3 +6803,53 @@ static func _case_loc_b5_derived_keys() -> String:
 				return "[%s] %s has no row" % [loc, k]
 	TranslationServer.set_locale(loc0)
 	return ""
+
+
+## A mid-run language switch actually changes what the game COMPOSES, and the signal the
+## resident surfaces repaint on actually fires.
+##
+## Scene-baked static text re-translates itself (auto-translate, probe-verified in Phase 1),
+## but most of the game's text is composed in code — tr(KEY).format({...}), Fmt-formatted
+## numbers and dates — and composition output is RESOLVED TEXT, not a key, so it cannot
+## re-translate on its own. That is why CenterViewport rebuilds the open page on
+## language_changed. This case proves the half a headless run can prove: flip the locale and
+## the composed strings genuinely change, in both directions, and the signal fires.
+static func _case_loc_language_switch() -> String:
+	var loc0: String = Localization.get_language()
+	var fired: Array[String] = []
+	var probe := func(l: String) -> void: fired.append(l)
+	EventBus.language_changed.connect(probe)
+
+	var out: String = ""
+	# Three different composition paths: a derived key, a .format() sentence, and Fmt.
+	var samples := func() -> Array:
+		return [
+			FinanceSystem.burn_category_label("salaries"),
+			TranslationServer.translate("PROD_DEV_VERSION").format({"version": 3}),
+			Fmt.money_exact(1234567),
+			Fmt.date_line({"weekday": 3, "day": 9, "month": 9, "year": 2026}),
+		]
+	Localization.set_language("tr")
+	var tr_out: Array = samples.call()
+	Localization.set_language("en")
+	var en_out: Array = samples.call()
+
+	for i in tr_out.size():
+		if String(tr_out[i]) == String(en_out[i]):
+			out = "sample %d did not change across the switch: '%s'" % [i, String(tr_out[i])]
+			break
+	if out == "":
+		# And back again — a one-way switch would pass the check above and still be broken.
+		Localization.set_language("tr")
+		var back: Array = samples.call()
+		for i in back.size():
+			if String(back[i]) != String(tr_out[i]):
+				out = "sample %d did not come back: '%s' vs '%s'" % [
+					i, String(back[i]), String(tr_out[i])]
+				break
+	if out == "" and fired.size() < 3:
+		out = "language_changed fired %d times, wanted 3 — resident surfaces never repaint" % fired.size()
+
+	EventBus.language_changed.disconnect(probe)
+	Localization.set_language(loc0)
+	return out

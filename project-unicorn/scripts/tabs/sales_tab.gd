@@ -94,7 +94,7 @@ func _refresh_strip() -> void:
 	var lost: int = GameState.run_customers_lost - int(ledger.get("customers_lost", 0))
 	var net: int = gained - lost
 	_add_pulse_cell(tr("SALES_STRIP_CUSTOMERS"), str(count))
-	_add_pulse_cell(tr("SALES_STRIP_SATISFACTION"), "%%%d" % avg)
+	_add_pulse_cell(tr("SALES_STRIP_SATISFACTION"), Fmt.percent(avg, 0))
 	_add_pulse_cell(tr("SALES_STRIP_GAINED"), "+%d" % gained, UiTokens.delta_color(gained))
 	var net_str: String = ("+%d" % net) if net > 0 else str(net)
 	_add_pulse_cell(tr("SALES_STRIP_NET"), net_str, UiTokens.delta_color(net), "(+%d / -%d)" % [gained, lost])

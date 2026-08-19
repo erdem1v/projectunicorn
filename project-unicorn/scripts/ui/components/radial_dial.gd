@@ -97,7 +97,7 @@ func _kill_tween() -> void:
 func _sync_readout() -> void:
 	if _readout == null:
 		return
-	_readout.text = "%%%d" % int(round(_chance * 100.0))
+	_readout.text = Fmt.percent(int(round(_chance * 100.0)), 0)
 	_readout.add_theme_color_override("font_color", _needle_color())
 
 
