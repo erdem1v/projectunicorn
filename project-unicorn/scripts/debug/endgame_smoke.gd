@@ -60,8 +60,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"cascade":              fail = _case_cascade()
 		"pivot_accept":         fail = _case_pivot_accept()
 		"pivot_decline":        fail = _case_pivot_decline()
-		"fork_win":             fail = _case_fork_win()
-		"fork_loss":            fail = _case_fork_loss()
+		# fork_win / fork_loss retired 2026-08-19 with the Day-180 fork (Calibration Round A §2);
+		# the soft cap's guards live in the Calibration Round A block at the end of this match.
 		"terminal_kills_gate":  fail = _case_terminal_kills_gate()
 		"live_during_vbuild":   fail = _case_live_during_vbuild()
 		"sprint_no_freeze":     fail = _case_sprint_no_freeze()
@@ -248,6 +248,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"field_unlocked_for_saas_ops":     fail = _case_field_unlocked_for_saas_ops()
 		"b2c_satisfaction_gate_experience": fail = _case_b2c_satisfaction_gate_experience()
 		"rival_relative_uses_template_half_sat": fail = _case_rival_relative_uses_template_half_sat()
+		"soft_cap_ends_run_at_730":        fail = _case_soft_cap_ends_run_at_730()
+		"no_calendar_stop_before_cap":     fail = _case_no_calendar_stop_before_cap()
+		"soft_cap_no_defer_for_sheet":     fail = _case_soft_cap_no_defer_for_sheet()
+		"soft_cap_warning_day":            fail = _case_soft_cap_warning_day()
+		"soft_cap_paper_names_unsigned_sheet": fail = _case_soft_cap_paper_names_unsigned_sheet()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -825,30 +830,6 @@ static func _case_speed_preserve() -> String:
 		return "paused game did not resume to last_running_speed (%d)" % TimeManager.current_speed
 	if TimeManager.get_tree().paused:
 		return "tree still paused after resume"
-	return ""
-
-
-static func _case_fork_win() -> String:
-	_seed_b2b(6000)  # net +150/day, cash never dips, MRR ≥ threshold
-	for i in 185:
-		if not GameState.run_active:
-			break
-		_sim_day()
-	if _endings != ["profitable_bootstrap"]:
-		return "endings: %s (day %d, cash %d)" % [str(_endings), GameState.day, GameState.cash]
-	if GameState.day != 180:
-		return "fork fired on day %d, want 180" % GameState.day
-	return ""
-
-
-static func _case_fork_loss() -> String:
-	GameState.cash_went_negative = true  # one fork condition failed → fumes
-	for i in 185:
-		if not GameState.run_active:
-			break
-		_sim_day()
-	if _endings != ["running_on_fumes"]:
-		return "endings: %s" % str(_endings)
 	return ""
 
 
@@ -3309,7 +3290,7 @@ static func _case_fumes_zero_revenue_ledger() -> String:
 	var claim_none: String = TranslationServer.translate("END_RF_REVENUE_NONE")
 	# A run that earned nothing and signed nobody.
 	var barren: Dictionary = {
-		"phase": 1, "day": 180, "mrr": 0, "customers_signed": 0, "customers_active": 0,
+		"phase": 1, "day": 730, "mrr": 0, "customers_signed": 0, "customers_active": 0,
 		"hires": 0, "employees": 0, "product_ships": 0,
 	}
 	var vs: Dictionary = EndingsCopy.build("running_on_fumes", barren, {})
@@ -5830,7 +5811,7 @@ static func _seed_save_world() -> void:
 	GameState.set_flag("b2c_audience", 1234.5)      # KESİRLİ: int'e yuvarlanırsa yakalanır
 	GameState.set_flag("b2c_price", 29)             # int kalmalı
 	FinanceSystem.burn_breakdown["marketing"] = 777
-	GameState.net_history_90.append(42)             # Array[int] tipli kalmalı
+	GameState.cs_escalation_days.append(42)         # Array[int] tipli kalmalı (net_history_90 2026-08-19'da emekli)
 
 	# Sentetik event: hiçbir JSON dosyasında yok, id'den geri kurulamaz. Altı
 	# speaker_* alanı bilerek dolu — _build_event_from_dict bunları hiç okumuyordu.
@@ -5904,9 +5885,9 @@ static func _case_save_roundtrip_fingerprint() -> String:
 	if typeof(GameState.get_flag("b2c_price", 0)) != TYPE_INT:
 		_cleanup_save_slots()
 		return "b2c_price came back as a non-int"
-	if GameState.net_history_90.get_typed_builtin() != TYPE_INT:
+	if GameState.cs_escalation_days.get_typed_builtin() != TYPE_INT:
 		_cleanup_save_slots()
-		return "net_history_90 lost its Array[int] typing"
+		return "cs_escalation_days lost its Array[int] typing"
 
 	# insert_raw yolu: add() hire_day damgalar ve run_hires artırır — yükleme etmemeli.
 	var emp: Character = CharacterRegistry.get_character("emp_save")
@@ -7009,5 +6990,110 @@ static func _case_rival_relative_uses_template_half_sat() -> String:
 		return "q at raw parity = %.2f, want %.2f (rivals must normalize at the template half-point)" % [q_parity, want]
 	if q_parity <= 50.0:
 		return "q at raw parity = %.2f — the bridge is not lifting the played product" % q_parity
+	return ""
+
+
+# --- §2 · the calendar wall is gone; the soft cap is a catch, not a fork ---
+
+static func _case_soft_cap_ends_run_at_730() -> String:
+	# A run with no goal ending reaches the soft cap and ends there, as running_on_fumes,
+	# on exactly SOFT_CAP_DAY — never earlier, never silently.
+	GameState.set_cash(500000)   # no Kepenk on the way: cash is not the subject here
+	GameState.day = EndingsSystem.SOFT_CAP_DAY - 3
+	for i in 6:
+		if not GameState.run_active:
+			break
+		_sim_day()
+	if _endings != ["running_on_fumes"]:
+		return "endings: %s (day %d)" % [str(_endings), GameState.day]
+	if GameState.day != EndingsSystem.SOFT_CAP_DAY:
+		return "soft cap fired on day %d, want %d" % [GameState.day, EndingsSystem.SOFT_CAP_DAY]
+	return ""
+
+
+static func _case_no_calendar_stop_before_cap() -> String:
+	# Day 180 is just a day now. A solvent run with nothing else going on is still alive at
+	# day 400 — the Day-180 fork used to end every run here.
+	GameState.set_cash(500000)
+	GameState.day = 176
+	for i in 224:
+		if not GameState.run_active:
+			break
+		_sim_day()
+	if not GameState.run_active or not _endings.is_empty():
+		return "run ended early: %s at day %d (the calendar wall is back)" % [str(_endings), GameState.day]
+	if GameState.day != 400:
+		return "sim drifted: day %d, want 400" % GameState.day
+	return ""
+
+
+static func _case_soft_cap_no_defer_for_sheet() -> String:
+	# VC_PITCH_DESIGN ledger 16: a live term sheet does NOT hold the cap (no auto-sign); the
+	# ledger names the unsigned offer instead.
+	GameState.set_cash(500000)
+	GameState.phase = 3
+	GameState.day = EndingsSystem.SOFT_CAP_DAY - 2
+	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
+	for i in 4:
+		if not GameState.run_active:
+			break
+		_sim_day()
+	if _endings != ["running_on_fumes"]:
+		return "a live sheet deferred the soft cap: endings %s at day %d" % [str(_endings), GameState.day]
+	if int(GameState.get_run_ledger().get("unsigned_sheets", 0)) != 1:
+		return "the ledger does not name the unsigned sheet (unsigned_sheets=%s)" % str(GameState.get_run_ledger().get("unsigned_sheets"))
+	return ""
+
+
+static func _case_soft_cap_warning_day() -> String:
+	# The D-1 Frank line fires once, on the eve, only when a sheet is live.
+	GameState.set_cash(500000)
+	GameState.phase = 3
+	GameState.day = PitchConstants.SOFT_CAP_WARN_DAY - 2
+	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
+	# A lambda captures an int by VALUE; count through an Array so the increment is visible.
+	var fired: Array = [0]
+	EventBus.event_triggered.connect(func(id: String) -> void:
+		if id == VCPitchSystem.SOFT_CAP_WARN_ID:
+			fired[0] += 1)
+	_sim_day()   # WARN_DAY - 1
+	if int(fired[0]) != 0:
+		return "warning fired before the eve (day %d)" % GameState.day
+	_sim_day()   # WARN_DAY
+	if int(fired[0]) != 1:
+		return "warning did not fire on the eve (day %d, fired %d)" % [GameState.day, int(fired[0])]
+	if not bool(GameState.get_flag("vc_soft_cap_warned", false)):
+		return "vc_soft_cap_warned flag not set"
+	_drain_all_modals()
+	return ""
+
+
+static func _case_soft_cap_paper_names_unsigned_sheet() -> String:
+	# The rewritten paper: an unsigned offer on the table is a ledger line; none → no line.
+	var with_sheet: Dictionary = {
+		"phase": 3, "day": 730, "mrr": 4000, "customers_signed": 3, "customers_active": 3,
+		"hires": 1, "employees": 1, "product_ships": 2, "unsigned_sheets": 1,
+	}
+	var claim: String = TranslationServer.translate("END_RF_UNSIGNED_SHEET")
+	var vs: Dictionary = EndingsCopy.build("running_on_fumes", with_sheet, {})
+	var found: bool = false
+	for line in (vs.get("ledger_lines", []) as Array):
+		if String(line) == claim:
+			found = true
+	if not found:
+		return "the unsigned sheet was not named on the paper"
+	var without: Dictionary = with_sheet.duplicate()
+	without["unsigned_sheets"] = 0
+	var vs2: Dictionary = EndingsCopy.build("running_on_fumes", without, {})
+	for line in (vs2.get("ledger_lines", []) as Array):
+		if String(line) == claim:
+			return "the paper named an unsigned sheet that does not exist"
+	# Two-year span phrase: a 730-day run is not "close to a year".
+	var span_two: String = TranslationServer.translate("END_SPAN_NEAR_TWO_YEARS")
+	if span_two == "" or span_two == "END_SPAN_NEAR_TWO_YEARS":
+		return "END_SPAN_NEAR_TWO_YEARS missing"
+	var head_line: String = String((vs.get("ledger_lines", []) as Array)[0])
+	if head_line.find(span_two) < 0:
+		return "730-day paper does not use the two-year span phrase: '%s'" % head_line
 	return ""
 

@@ -269,20 +269,13 @@ func _debug_endgame_key(keycode: Key) -> void:
 			GameState.vc_rejections = 3
 			GameState.set_mrr(0)
 		KEY_F8:
-			print("[Debug] F8 → profitable bootstrap preconditions + day 179")
-			GameState.cash_went_negative = false
-			GameState.net_history_90.clear()
-			for i in 90:
-				GameState.net_history_90.append(10)
-			GameState.set_mrr(6000)
-			if GameState.cash < 0:
-				GameState.set_cash(1000)
-			GameState.day = 179
+			# Kalibrasyon Turu A §2/§9: Day-180 çatalı kalktı; kârlılık artık aylık deftere
+			# bakan bir KOŞUL (§9 bu tuşu 6 artıda ay kapanışı tohumlayacak şekilde bağlar).
+			print("[Debug] F8 → (kalibrasyon) kârlılık koşulu aylık deftere taşındı; §9 bu tuşu yeniden bağlar")
 		KEY_F9:
 			# Ctrl+F9 (çıplak F9 hızlı yüklemeye taşındı — bkz. _input üstü).
-			print("[Debug] Ctrl+F9 → running on fumes (cash_went_negative) + day 179")
-			GameState.cash_went_negative = true
-			GameState.day = 179
+			print("[Debug] Ctrl+F9 → yumuşak tavan arifesi (gün %d)" % (EndingsSystem.SOFT_CAP_DAY - 1))
+			GameState.day = EndingsSystem.SOFT_CAP_DAY - 1
 		KEY_F10:
 			print("[Debug] F10 → pivot offer preconditions (3 ret, canlı metrikler)")
 			GameState.vc_rejections = 3

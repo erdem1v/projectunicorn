@@ -351,7 +351,7 @@ MVP boyunca ~150 in-game gün, gerçek 60-90 dk. **3 faza** bölünüyor.
 - **Demo end trigger'lar:**
   - Series A close başarılı → win cinematic
   - 3 VC rejection → fail / recovery branch
-  - Day 180 geçti, henüz funded değil → time-out ending
+  - Yumuşak tavan (gün 730) geçti, hiçbir hedef bitişe ulaşılmadı → Running on Fumes (2026-08-19: Day 180 duvarı kalktı; koşu hedefle biter)
 
 #### Faz geçişleri
 
@@ -411,10 +411,10 @@ Yumuşak geçişler. Loading screen yok. Şu yumuşak kayışlar fazları ayır�
 
 - **Yol:** $50K+ MRR + 3 ay üst üste profitable + hiç VC almamış.
 - **Koşullar:**
-  - Cash 0'a hiç düşmemiş
-  - Day 180'i ulaşılmış
-  - Net positive cash flow 90+ gün
+  - 6 ardışık "Artıda" takvim ayı (ay neti > 0 VE ay içinde kasa hiç eksiye düşmemiş)
+  - 6 aylık net marj ≥ %15, MRR ≥ ölçek tabanı ($20K) [WORKING]
   - Hiç major scandal yaşamamış
+  - *(2026-08-19, Kalibrasyon Turu A §9: "Day 180'e ulaşılmış + 90 gün net artı" çatalı kalktı; kârlılık her gün değerlendirilen bir KOŞUL.)*
 - **Cinematic outcome:** Indie hero ending. "You don't need them. You built something real."
 
 ---
@@ -450,11 +450,11 @@ Yumuşak geçişler. Loading screen yok. Şu yumuşak kayışlar fazları ayır�
 
 #### Time-Out — "Running on Fumes"
 
-- **Yol:** Day 180'e ulaşıldı, hiçbir terminal state tetiklenmedi ama hâlâ sustainable değil.
-- **Cinematic outcome:** Calendar Day 180+ gösterip durmadan akıyor, founder başını masaya koyuyor. Soft fade-out. Açık ending — "What happens next? You decide."
+- **Yol:** Yumuşak tavan (gün 730) geldi, hiçbir hedef bitiş tetiklenmedi: ne Series A, ne kârlılık koşulu, ne de iflas. *(2026-08-19: Day 180 duvarı kalktı; koşu hedefle biter.)*
+- **Kayıt:** "yatırımcılar ilgisini kaybetti" — şirket kapanmadı, gündemden düştü. Gazete başlığı "İlgi Söndü / Interest Faded"; Frank'in hükmü: "Takvim bitti. Kapı açıktı, kimse girmedi. Kaybetmedin. Sadece kazanmadın."
 - **Retry screen:** Bu daha çok bittersweet tonda — sen kaybetmedin tam olarak, sadece kazanmadın.
 - **Trigger conditions:**
-  - Day 180+ + henüz funded değil + hâlâ profitable değil ama bankruptcy de yok
+  - Gün 730 [WORKING] + henüz funded değil + kârlılık koşulu sağlanmamış + iflas yok (canlı term sheet tavanı ERTELEMEZ; D-1 Frank uyarısı + gazetede imzasız teklif satırı)
 
 ---
 

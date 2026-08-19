@@ -21,7 +21,7 @@ extends RefCounted
 
 const MEETING_PROMPT_ID := "ev_vc_meeting_prompt"
 const SHEET_WARN_ID := "ev_sheet_expiry_warning"
-const D179_ID := "ev_vc_d179_warning"
+const SOFT_CAP_WARN_ID := "ev_vc_soft_cap_warning"   # was ev_vc_d179_warning (Day-180 wall)
 
 # --- Meeting-local state (never serialized) ---
 static var _active: bool = false
@@ -421,7 +421,7 @@ static func daily_tick() -> void:
 	_tick_prep()
 	_tick_meeting_day()
 	_tick_countdown_chip()
-	_tick_d179()
+	_tick_soft_cap_warning()
 
 
 static func _tick_sheets() -> void:
@@ -490,11 +490,13 @@ static func _tick_countdown_chip() -> void:
 	EventBus.offer_countdown_changed.emit(min_days if (min_days <= PitchConstants.WARNING_DAYS) else -1)
 
 
-static func _tick_d179() -> void:
-	if GameState.day == PitchConstants.DAY180_WARN_DAY and not GameState.active_sheets.is_empty():
-		if not GameState.get_flag("vc_d179_warned", false):
-			GameState.set_flag("vc_d179_warned", true)
-			EventManager.enqueue_front(_build_d179_event())
+static func _tick_soft_cap_warning() -> void:
+	# Ledger 16: a live sheet on the eve of the soft cap gets ONE Frank line; the cap itself
+	# does not wait for it (no auto-sign).
+	if GameState.day == PitchConstants.SOFT_CAP_WARN_DAY and not GameState.active_sheets.is_empty():
+		if not GameState.get_flag("vc_soft_cap_warned", false):
+			GameState.set_flag("vc_soft_cap_warned", true)
+			EventManager.enqueue_front(_build_soft_cap_warning_event())
 
 
 # --- Pivot cleanup hook (called by EndingsSystem.on_pivot_accepted) ---
@@ -843,9 +845,9 @@ static func _build_expiry_warning_event(vc_id: String, days: int) -> GameEvent:
 	return ev
 
 
-static func _build_d179_event() -> GameEvent:
+static func _build_soft_cap_warning_event() -> GameEvent:
 	var ev := GameEvent.new()
-	ev.id = D179_ID
+	ev.id = SOFT_CAP_WARN_ID
 	ev.category = "reactive"
 	ev.title = _t("VC_EV_LAST_DAY_TITLE")
 	ev.subtitle = ""

@@ -1828,19 +1828,18 @@ END_BS_SHIPS,Ürün {n} kez yenilendi.,The product was renewed {n} times.
 END_BS_COVERS_COSTS,"Aylık gelir, gideri karşılayacak bir seviyeye taşındı.",Monthly revenue was carried to a level that covers the outgoings.
 END_BS_CLOSER_1,Dışarıdan yatırım almadan büyümenin kontrolü kurucuda tuttuğu için giderek daha çok tercih edildiği belirtiliyor.,"Growing without outside investment is reported to be chosen more and more often, because it keeps control with the founder."
 END_BS_CLOSER_2,"Sektör, bu tür şirketlerin krizlere daha dayanıklı olduğunu hatırlatıyor.",The trade points out that companies like this weather crises better.
-END_RF_HEAD,"{company} İçin Süre Doldu, Zil Çalmadan Bitti","Time Runs Out for {company}, and It Ends Before the Bell"
-END_RF_SUB_P1,"""Daha ilk viraja gelmeden zaman tükendi."" değerlendirmesi konuşuluyor.","""Time ran out before it even reached the first bend."" The assessment is going round."
-END_RF_SUB_P2,"""İvme vardı ama süre yetmedi."" yorumu sektörde dolaşıyor.","""There was momentum, but not enough time."" The remark is going round the trade."
-END_RF_SUB_P3,"""Series A kapısına kadar geldi, ama zaman kalmadı."" değerlendirmesi yatırım çevrelerinde dolaşıyor.","""It reached the Series A door, but there was no time left."" The assessment is going round the investment community."
-END_RF_CAP,Işıkları hâlâ yanan ama boşalmış bir ofis.,An office with the lights still on and nobody in it.
-END_RF_JUST_MADE_IT,"{founding}, {span} belirlenen sürenin sonuna ancak yetişti.",{founding} only just reached the end of its allotted time {span}.
-END_RF_UNFINISHED,Geride {n} müşteri ilişkisi ve tamamlanmamış bir hikâye kaldı.,{n} customer relationships and an unfinished story were left behind.
-END_RF_TEAM_STAYED,Kurulan kadro son güne kadar iş başındaydı.,The team that had been built was at work until the last day.
-END_RF_REVENUE_SOME,"Gelir vardı, ama ne kâr ne de yeni bir tur için yeterliydi.","There was revenue, but not enough for profit or for another round."
-END_RF_REVENUE_NONE,"Gelir hiç başlamadı; sayaç, ilk ödeme gelmeden doldu.",Revenue never started; the clock ran out before the first payment arrived.
-END_RF_SHIPS,"Ürün {n} sürüm görmüş, gelişmeye devam ediyordu.",The product had seen {n} versions and was still developing.
-END_RF_CLOSER_1,"Sektör, çoğu şirketin zaferle yıkım arasındaki bu gri bölgede sonlandığını hatırlatıyor.",The trade points out that most companies end in this grey zone between triumph and collapse.
-END_RF_CLOSER_2,Zamanında bir karar ya da bir turun hikâyeyi değiştirebileceği konuşuluyor.,"A decision made in time, or a single round, is said to have been enough to change the story."
+END_RF_HEAD,{company} İçin Yatırımcı İlgisi Söndü,Investor Interest in {company} Has Gone Cold
+END_RF_SUB_P1,"""İki yıl geçti, hâlâ ilk müşteriyi bekliyorlardı."" değerlendirmesi konuşuluyor.","""Two years on, they were still waiting for the first customer."" The assessment is going round."
+END_RF_SUB_P2,"""Gelir vardı, ivme yoktu; yatırımcılar başka masaya geçti."" yorumu sektörde dolaşıyor.","""There was revenue and no momentum; the investors moved to another table."" The remark is going round the trade."
+END_RF_SUB_P3,"""Series A masasına oturdu ama kimse kalemi uzatmadı."" değerlendirmesi yatırım çevrelerinde dolaşıyor.","""It sat at the Series A table, but nobody passed the pen."" The assessment is going round the investment community."
+END_RF_CAP,"Işıkları yanan, telefonu susmuş bir ofis.",An office with the lights on and the phone gone quiet.
+END_RF_UNFINISHED,"Geride {n} müşteri ilişkisi kaldı; hikâye kapanmadı, gündemden düştü.","{n} customer relationships remained; the story did not close, it dropped off the agenda."
+END_RF_TEAM_STAYED,Kurulan kadro iş başındaydı; kimse bir kapanış duyurusu yapmadı.,The team was still at work; nobody announced a closure.
+END_RF_REVENUE_SOME,Gelir vardı; ne bir turu ne de kendi kendine yeten bir defteri taşıyacak kadar.,There was revenue; not enough to carry a round or a self-sustaining book.
+END_RF_REVENUE_NONE,Gelir hiç başlamadı; ilk ödeme hiç gelmedi.,Revenue never started; the first payment never came.
+END_RF_SHIPS,"Ürün {n} sürüm görmüştü; gelişiyordu, ama artık kimse izlemiyordu.","The product had seen {n} versions; it was developing, but nobody was watching any more."
+END_RF_CLOSER_1,"Sektör, yatırımcı ilgisinin bir pencere olduğunu ve pencerelerin sessizce kapandığını hatırlatıyor.","The trade points out that investor interest is a window, and windows close quietly."
+END_RF_CLOSER_2,"Şirketin kapanmadığı, yalnızca gündemden düştüğü belirtiliyor.","The company, it is noted, did not close; it merely dropped off the agenda."
 MONTH_HL_PHASE_ADVANCED,Yeni faza geçildi: {phase},Moved into a new phase: {phase}
 INV_ROLE_SENIOR_PARTNER,Kıdemli Ortak,Senior Partner
 INV_ROLE_MANAGING_PARTNER,Yönetici Ortak,Managing Partner
@@ -1874,8 +1873,8 @@ END_META_VC_REJECTION_CASCADE_TITLE,"Üç Masa, Üç Ret","Three Tables, Three R
 END_META_VC_REJECTION_CASCADE_FRANK,Para bulamamak öldürmez. Vazgeçilmiş görünmek öldürür.,Failing to raise does not kill you. Looking like you have been given up on does.
 END_META_PROFITABLE_BOOTSTRAP_TITLE,Kendi Paranla,On Your Own Money
 END_META_PROFITABLE_BOOTSTRAP_FRANK,Onlara ihtiyacın yokmuş. Gerçek bir şey kurdun.,It turns out you did not need them. You built something real.
-END_META_RUNNING_ON_FUMES_TITLE,Son Damla,The Last Drop
-END_META_RUNNING_ON_FUMES_FRANK,Kaybetmedin. Sadece kazanmadın.,You did not lose. You just did not win.
+END_META_RUNNING_ON_FUMES_TITLE,İlgi Söndü,Interest Faded
+END_META_RUNNING_ON_FUMES_FRANK,"Takvim bitti. Kapı açıktı, kimse girmedi. Kaybetmedin. Sadece kazanmadın.",The calendar ran out before you did. The door was open; nobody walked through it. Nobody took it from you. You just didn't win.
 END_HL_SHUTTER_STARTED,Kepenk sayacı başladı — kasa ekside,The shutter clock has started — the account is in the red
 END_HL_ACQ_OFFER,Satın alma teklifi masada,An acquisition offer is on the table
 END_EV_SHUTTER_TITLE,Kırmızıdasın,You Are in the Red
@@ -1895,13 +1894,13 @@ Frank uzun bir süre bir şey demiyor. Sonra:
 
 ""Belki bu yıl değil. Belki bu şirket değil. Ama sen bitmedin.""
 
-VC yolu kapanıyor. Kendi paranla, kendi müşterinle, {day}. güne kadar — hâlâ gerçek bir şirket kurabilirsin.","The third rejection email is short. They all are.
+VC yolu kapanıyor. Kendi paranla, kendi müşterinle, hâlâ gerçek bir şirket kurabilirsin. Ölçü artık takvim değil, defter: {months} ay üst üste artıda kal.","The third rejection email is short. They all are.
 
 Frank says nothing for a long while. Then:
 
 ""Maybe not this year. Maybe not this company. But you are not finished.""
 
-The VC road is closing. On your own money, with your own customers, up to day {day} — you can still build a real company."
+The VC road is closing. Your own money, your own customers, and you can still build a real company. The measure is no longer the calendar but the books: stay in the black {months} months in a row."
 END_EV_PIVOT_ACCEPT,Pivot — devam ediyoruz,Pivot — we keep going
 END_EV_PIVOT_DECLINE,Hayır. Bitti.,No. It is over.
 END_EV_ACQ_TITLE,Satın alma teklifi,An Acquisition Offer
@@ -1933,5 +1932,9 @@ END_BK_LOST_ONE,Son aylarda {n} müşteri ilişkisi koptu.,{n} customer relation
 END_BC_ONE_BY_ONE_ONE,Kriz büyürken {n} müşteri ilişkisi teker teker koptu.,"As the crisis grew, {n} customer relationship broke off."
 END_VC_CUSTOMERS_ONE,Ürünün {n} kurumsal müşterisi vardı; bu bile turu açmaya yetmedi.,The product had {n} enterprise customer; even that was not enough to open the round.
 END_BS_BALANCED_ONE,Yol boyunca {n} müşteri kazanıldı ve defter dengede tutuldu.,{n} customer was won along the way and the book was kept in balance.
-END_RF_UNFINISHED_ONE,Geride {n} müşteri ilişkisi ve tamamlanmamış bir hikâye kaldı.,{n} customer relationship and an unfinished story were left behind.
+END_RF_UNFINISHED_ONE,"Geride {n} müşteri ilişkisi kaldı; hikâye kapanmadı, gündemden düştü.","{n} customer relationship remained; the story did not close, it dropped off the agenda."
 SAVE_SLOT_TIMESTAMP,{day}.{month}.{year} {hour}:{minute},{month}/{day}/{year} {hour}:{minute}
+END_RF_STAYED_STANDING,"{founding}, {span} ayakta kalmayı başardı; yatırımcı ilgisi ise çoktan başka masalara geçmişti.",{founding} managed to stay standing {span}; investor interest had long since moved to other tables.
+END_RF_UNSIGNED_SHEET,Masada imzalanmamış bir teklif kaldı.,An unsigned offer was left on the table.
+END_SPAN_OVER_YEAR,bir yılı aşkın sürede,in over a year
+END_SPAN_NEAR_TWO_YEARS,iki yıla yakın sürede,in close to two years

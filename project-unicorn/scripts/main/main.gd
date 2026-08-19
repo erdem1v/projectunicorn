@@ -1594,7 +1594,13 @@ func _run_ending_shot(key: String) -> void:
 			GameState.run_board_seats = 2 if aggressive else 1
 			GameState.run_board_veto = aggressive
 			GameState.run_investment_amount = int(round(22_000_000.0 * (32 if aggressive else 18) / 100.0))
-		"running_on_fumes", "acquisition", "vc_rejection_cascade", "brand_collapse", "profitable_bootstrap":
+		"running_on_fumes":
+			# The soft cap's paper: a two-year run (the ledger's span phrase and the dateline
+			# must read the cap, not the old 156-day fixture), one unsigned offer on the table.
+			GameState.phase = 3
+			GameState.day = EndingsSystem.SOFT_CAP_DAY
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day - 5))
+		"acquisition", "vc_rejection_cascade", "brand_collapse", "profitable_bootstrap":
 			GameState.phase = 3
 		_:
 			GameState.phase = 3

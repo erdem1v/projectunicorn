@@ -108,7 +108,7 @@ const FLAG_TYPES := {
 	"pivot_offer_made": TYPE_BOOL,
 	"acquisition_offer_made": TYPE_BOOL,
 	"acquisition_offer_rejected": TYPE_BOOL,
-	"vc_d179_warned": TYPE_BOOL,
+	"vc_soft_cap_warned": TYPE_BOOL,   # was vc_d179_warned (Day-180 wall) — the warning now precedes the soft cap
 	# --- angel round (Frank's seed) + the locked hard path ---
 	# The one-shot latch lives HERE and not on the event object: AngelRoundSystem injects
 	# through enqueue_front, which bypasses _is_eligible entirely, so GameEvent.one_shot is
@@ -156,16 +156,20 @@ var vc_rejections: int = 0             # closed pitch tables; future VC pitch in
 var pivot_used: bool = false           # true → VC path permanently closed (Erdem 2026-07-13)
 var active_scandal: bool = false           # RESERVED — no scandal system yet; debug-settable
 var unmanaged_major_scandal: bool = false  # RESERVED — day-180 fork input (§4.6)
-var cash_went_negative: bool = false   # latched in set_cash; day-180 fork input
 var brand_low_since_day: int = -1      # brand-collapse 30-day window anchor (§4.4)
-var net_history_90: Array[int] = []    # daily net ring buffer — fork wants CUMULATIVE 90-day sum > 0
+# (cash_went_negative and net_history_90 — the Day-180 fork's inputs — were retired with the
+# fork on 2026-08-19, Calibration Round A §2. Profitability is a daily-evaluated CONDITION
+# on the calendar-month ledger, §9: a month is "Artıda" only if its net is positive AND the
+# treasury never sampled below zero inside it — the red-day test moved from a run-lifetime
+# latch, which made the win permanently unreachable after one early Kepenk in a 24-month
+# run, to a per-month count.)
 
 # --- Finance surface state (Finance Tab v1 — serialized set; SaveManager plugs in later) ---
 # cash_history: daily {day, cash} samples for the cash curve. Single writer:
 # FinanceSystem.daily_tick via append_cash_sample (slot 5, once per day). Intra-day
 # one-time costs are deliberately NOT re-sampled — the single-writer rule holds;
 # they land in the next day's point and, itemised, in `transactions`.
-const CASH_HISTORY_CAP := 200          # run max 180 days + headroom; oldest dropped
+const CASH_HISTORY_CAP := 760          # soft cap 730 days + headroom; oldest dropped (was 200 for the 180-day wall)
 var cash_history: Array = []           # [{day: int, cash: int}]
 # transactions: persistent signed money-event log (negative = spend, positive = income).
 # Sole append point: FinanceSystem.record_transaction. Labels stored RAW — display maps
@@ -276,8 +280,6 @@ var news_feed: Dictionary = {}
 
 func set_cash(value: int) -> void:
 	cash = value
-	if cash < 0:
-		cash_went_negative = true  # latch here (not in the finance tick) so intra-day event deltas count too
 	EventBus.cash_changed.emit(cash)
 	_emit_runway()
 
@@ -567,6 +569,9 @@ func get_run_ledger() -> Dictionary:
 		"pitches": run_pitches,
 		"sheets_won": run_sheets_won,
 		"vc_rejections": vc_rejections,
+		# live term sheets at the moment of reading — the soft-cap paper names an unsigned
+		# offer left on the table (Calibration Round A §2; VC_PITCH_DESIGN ledger 16)
+		"unsigned_sheets": active_sheets.size(),
 		"pushes_attempted": run_pushes_attempted,
 		"pushes_won": run_pushes_won,
 		# signed term sheet (0 unless series_a_close). These three stay SERIES-A-ONLY on
@@ -651,9 +656,7 @@ func initialize_run(payload: Dictionary) -> void:
 	pivot_used = false
 	active_scandal = false
 	unmanaged_major_scandal = false
-	cash_went_negative = false
 	brand_low_since_day = -1
-	net_history_90 = []
 
 	# Finance surface state (Finance Tab v1). Day-1 point seeded here so the curve
 	# renders a valid single sample before the first daily tick.
