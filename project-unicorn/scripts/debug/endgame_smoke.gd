@@ -258,6 +258,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"series_a_gate_needs_streak":      fail = _case_series_a_gate_needs_streak()
 		"series_a_signal_states":          fail = _case_series_a_signal_states()
 		"month_history_save_typing":       fail = _case_month_history_save_typing()
+		"b2c_wom_needs_satisfaction":      fail = _case_b2c_wom_needs_satisfaction()
+		"b2c_growth_multiplier_floor":     fail = _case_b2c_growth_multiplier_floor()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -7268,5 +7270,69 @@ static func _case_month_history_save_typing() -> String:
 		return "mrr_close came back as %s (%s)" % [str(e.get("mrr_close")), type_string(typeof(e.get("mrr_close")))]
 	if GameState.get_mrr_growth_streak(12) != 2:
 		return "streak after load = %d, want 2" % GameState.get_mrr_growth_streak(12)
+	return ""
+
+
+# --- §5 · B2C growth compounds both ways (word of mouth on the aggregate's satisfaction) ---
+
+static func _b2c_delta_at_satisfaction(sat: int) -> float:
+	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	CustomerRegistry.set_satisfaction(ub.id, sat)
+	return SalesSystem._audience_delta_per_hour()
+
+
+static func _case_b2c_wom_needs_satisfaction() -> String:
+	# Above the gate the hourly delta carries audience·WOM_COEF·(sat−gate)/100 — proportional
+	# to the AUDIENCE (that is the compounding); below the gate there is no such term.
+	_seed_b2c()
+	GameState.set_flag("mvp_innovation", 15.0)
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_experience", 17.5)
+	GameState.set_flag("b2c_audience", 1000.0)
+	var d50: float = _b2c_delta_at_satisfaction(50)
+	var d60: float = _b2c_delta_at_satisfaction(60)
+	var d80: float = _b2c_delta_at_satisfaction(80)
+	if absf(d60 - d50) > 1e-6:
+		return "satisfaction 60 (the gate) already adds word of mouth (%.4f vs %.4f)" % [d60, d50]
+	var want: float = 1000.0 * SalesSystem.WOM_COEF * 0.2
+	if absf((d80 - d50) - want) > 1e-6:
+		return "sat 80 adds %.4f/h over sat 50, want audience·WOM_COEF·0.2 = %.4f" % [d80 - d50, want]
+	# Proportional to the audience: double the audience, double the word-of-mouth term.
+	GameState.set_flag("b2c_audience", 2000.0)
+	var d80b: float = _b2c_delta_at_satisfaction(80)
+	var d50b: float = _b2c_delta_at_satisfaction(50)
+	if absf((d80b - d50b) - 2.0 * want) > 1e-6:
+		return "word of mouth is not proportional to the audience (%.4f vs %.4f)" % [d80b - d50b, 2.0 * want]
+	if SalesSystem.WOM_COEF <= 0.0:
+		return "WOM_COEF is %.4f — the compounding term is off" % SalesSystem.WOM_COEF
+	return ""
+
+
+static func _case_b2c_growth_multiplier_floor() -> String:
+	# Below the pivot the BASE growth is scaled by sat/50, floored at 0.3; at and above the
+	# pivot it runs at full strength. Measured as the gap to the sat-50 delta with a tiny
+	# audience so churn and word of mouth are negligible.
+	_seed_b2c()
+	GameState.set_flag("mvp_innovation", 15.0)
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_experience", 17.5)
+	GameState.set_flag("b2c_audience", 0.0)   # no audience → no churn, no word of mouth: pure base growth
+	var d50: float = _b2c_delta_at_satisfaction(50)
+	var d100: float = _b2c_delta_at_satisfaction(100)
+	var d25: float = _b2c_delta_at_satisfaction(25)
+	var d0: float = _b2c_delta_at_satisfaction(0)
+	if d50 <= 0.0:
+		return "fixture: base growth is not positive (%.4f)" % d50
+	if absf(d100 - d50) > 1e-6:
+		return "satisfaction above the pivot changed base growth (%.4f vs %.4f)" % [d100, d50]
+	if absf(d25 - 0.5 * d50) > 1e-6:
+		return "satisfaction 25 should halve base growth (%.4f vs %.4f)" % [d25, 0.5 * d50]
+	if absf(d0 - SalesSystem.WOM_MULT_MIN * d50) > 1e-6:
+		return "satisfaction 0 should floor at ×%.1f (%.4f vs %.4f)" % [SalesSystem.WOM_MULT_MIN, d0, SalesSystem.WOM_MULT_MIN * d50]
+	# No aggregate record yet (paid tier closed) → the pre-revenue trickle is untouched.
+	CustomerRegistry.remove(SalesSystem.B2C_USERBASE_ID)
+	var d_none: float = SalesSystem._audience_delta_per_hour()
+	if absf(d_none - d50) > 1e-6:
+		return "without the aggregate record growth should equal the pivot reading (%.4f vs %.4f)" % [d_none, d50]
 	return ""
 

@@ -342,6 +342,14 @@ const RETAIN_PREFERENCE := ["b2b_promise_create", "b2b_retain_discount", "b2b_re
 
 
 static func _pick_choice(ev: GameEvent) -> int:
+	# b2c_neglect (Calibration Round A §5): the untended consumer product — every post-ship
+	# card is answered with its LAST unlocked row (the "ignore it" grammar), never the paid
+	# satisfaction boost. Without this the "neglect" arm still bought +20 satisfaction per
+	# complaint and read as tended.
+	if _preset == "b2c_neglect" and ev.id.begins_with("ev_ps_"):
+		for idx in range(ev.choices.size() - 1, -1, -1):
+			if EventManager.is_condition_met(ev.choices[idx].unlock_condition):
+				return idx
 	# Runs the modal's OWN gate (EventManager.is_condition_met on unlock_condition —
 	# event_modal.gd:330), not a mirror of it, so the probe can never pick a row a human
 	# is forbidden to click.

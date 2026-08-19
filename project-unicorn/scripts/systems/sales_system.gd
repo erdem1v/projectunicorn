@@ -78,6 +78,19 @@ const RIVAL_RELATIVE := true
 # per-audience-member rate: at the reference (audience 200, gap 18) → 0.0002·18·200 =
 # 0.72, matching the originally-verified flat erosion at that point.
 const CHURN_COEF := 0.0002
+# WORD OF MOUTH — Calibration Round A §5 (2026-08-19). Growth was an ABSOLUTE per-hour trickle
+# while churn was PROPORTIONAL to the audience, so the consumer economy was a fixed point
+# (A_eq = grow / (CHURN_COEF·(42−q))) that could never compound and shrank as rivals advanced.
+# Two terms on the aggregate's SATISFACTION (the B2C record, 0-100): a loved product compounds
+# — grow += audience · WOM_COEF · max(0, sat − WOM_SAT_GATE)/100 — and a disliked one grows
+# slower — grow *= clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1). WOM_COEF [ÖLÇ]: swept on
+# --run-log=b2c_keep:180 (the maintained fixture) for the smallest value that keeps the 30-day
+# MRR means non-decreasing to day 180 while b2c_neglect still declines; the sweep and the
+# equilibrium arithmetic are in docs/audits/calibration_round_A_2026-08-19.md.
+const WOM_COEF := 0.005            # [ÖLÇ] per hour · per audience member · per satisfaction point/100 over the gate
+const WOM_SAT_GATE := 60.0         # [WORKING] satisfaction above which word of mouth starts
+const WOM_MULT_PIVOT := 50.0       # [WORKING] satisfaction at which base growth runs at full strength
+const WOM_MULT_MIN := 0.3          # [WORKING] floor of the base-growth multiplier (satisfaction 0)
 const EROSION_THRESHOLD := 42.0
 
 # --- Dynamic pricing / value algorithm (working values; balance is the last pass) ---
@@ -183,12 +196,18 @@ static func _audience_delta_per_hour() -> float:
 		+ GameState.brand * HOURLY_AUD_BRAND_COEF \
 		+ GameState.reputation * HOURLY_AUD_REPUTATION_COEF) \
 		* audience_growth_multiplier(int(GameState.get_flag("b2c_price", 0)))
+	var audience: float = float(GameState.get_flag("b2c_audience", 0))
+	# Calibration Round A §5 — word of mouth, both directions (see WOM_* above). `sat` is
+	# the aggregate B2C record's satisfaction; before the record exists (no paid tier yet)
+	# it reads WOM_MULT_PIVOT so the pre-revenue trickle is untouched.
+	var sat: float = _b2c_satisfaction()
+	grow *= clampf(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1.0)
+	grow += audience * WOM_COEF * maxf(0.0, sat - WOM_SAT_GATE) / 100.0
 	# Product Lifecycle Part 2A: a product below the bar bleeds users. quality_term
 	# already folds in both erosion causes (bugs → effective stability; rival passing
 	# → rival-relative drop), so this one term covers both. Churn is PROPORTIONAL to
 	# the current audience (loss of existing users → 0 at audience 0, so a fresh
 	# product still grows from nothing). Price-independent (outside the multiplier).
-	var audience: float = float(GameState.get_flag("b2c_audience", 0))
 	var churn: float = CHURN_COEF * maxf(0.0, EROSION_THRESHOLD - quality_term) * audience
 	return grow - churn
 
@@ -225,6 +244,15 @@ static func _derive_b2c_mrr() -> void:
 	_ensure_b2c_record()
 	CustomerRegistry.set_seats(B2C_USERBASE_ID, paying)
 	CustomerRegistry.set_mrr(B2C_USERBASE_ID, paying * price)
+
+
+## The aggregate B2C record's satisfaction (0-100), or WOM_MULT_PIVOT when the record does
+## not exist yet (before the paid tier opens) — the word-of-mouth terms read this.
+static func _b2c_satisfaction() -> float:
+	var ub: Customer = CustomerRegistry.get_customer(B2C_USERBASE_ID)
+	if ub == null:
+		return WOM_MULT_PIVOT
+	return float(ub.satisfaction)
 
 
 # Create the single aggregate B2C userbase record if it doesn't exist yet.
