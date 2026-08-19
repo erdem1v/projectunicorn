@@ -56,7 +56,9 @@ const SUB_PRODUCT_TYPES := {
 #   dimension_contribution — 1-2 eksene TAM SAYI katkı ({innovation, stability, experience}).
 #     Rev3 deterministik model: ship edilen eksen değeri = seçili katkıların toplamı
 #     (ProductSystem.projected_axes). Önizleme == ship, yapısal garanti.
-#   requires_research (bool) — Ar-Ge kilidi; 5 cx-5 feature'da true (UI kilitli çizer).
+#   requires_research (bool) — Ar-Ge kilidi; 4 cx-5 feature'da true (UI kilitli çizer).
+#     saas_ops_field 2026-08-19'da açıldı (Kalibrasyon Turu A §1): havuzun iki kararlılık-7
+#     satırından biri kilitliyken 3 özellikli bir demo v1 ham kararlılıkta 13'te tavan yapıyordu.
 #
 # BALANCE CONSEQUENCE (flag, do NOT retune here): deterministic sums read LOWER into
 # normalized quality than the old grown axes (v1 composite ~7-12 → normalized ~12-20
@@ -144,7 +146,7 @@ const FEATURE_POOLS := {
 		{"id": "saas_ops_reporting", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
 		{"id": "saas_ops_integration", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "cost": 1800, "cost_source": "license", "dimension_contribution": {"stability": 7}, "requires_research": false, "tags": []},
 		{"id": "saas_ops_scheduling", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_ops_field", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "dimension_contribution": {"innovation": 4, "stability": 7}, "requires_research": true, "tags": []},
+		{"id": "saas_ops_field", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "dimension_contribution": {"innovation": 4, "stability": 7}, "requires_research": false, "tags": []},   # unlocked 2026-08-19 (Calibration Round A §1): one of only two stability-7 rows — locked, a 3-feature demo v1 capped at raw stability 13
 		{"id": "saas_ops_mobile", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 3, "experience": 6}, "requires_research": false, "tags": []},
 	],
 }

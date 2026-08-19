@@ -23,7 +23,14 @@ extends RefCounted
 const B2C_PRICE_DEFAULT := 15            # $/user/month; the pricing ruler sets this
 const B2C_USERBASE_ID := "co_b2c_userbase"
 
-const SATISFACTION_QUALITY_GATE := 70    # quality ≥ → satisfaction drifts up
+# B2C aggregate satisfaction drift. Calibration Round A §1/§5 (2026-08-19): the gate was
+# 70 on the retired scale (it needed raw 117 under HALF_SAT 50 — never true for any played
+# product) and it read STABILITY, an axis consumer sub-types barely carry (ai_assistant's
+# pool tops out at raw 3). It now reads the EXPERIENCE axis — the axis the B2C record is
+# SEEDED from (_ensure_b2c_record), and what a consumer feels day to day — at 40, the
+# axis of a raw-20 v1 carrying the bug gate's worth of bugs: axis(20 − 0.8·5) = 39.0.
+# Bugs still erode (SATISFACTION_BUG_GATE). Director ruling 2026-08-19.
+const SATISFACTION_QUALITY_GATE := 40    # experience axis ≥ → satisfaction drifts up
 const SATISFACTION_BUG_GATE := 5         # bug_count > → satisfaction drifts down
 
 const TRACTION_MRR_TARGET := 5000
@@ -188,7 +195,7 @@ static func _rival_relative_quality(player_nq: float) -> float:
 	var n: int = 0
 	for r in RivalRegistry.get_by_type(sub):
 		if r.tier == "startup":
-			total += QualityModel.normalized_quality(r.composite(axes))
+			total += QualityModel.normalized_quality_rival(r.composite(axes))   # rival scale bridge
 			n += 1
 	if n == 0:
 		return player_nq
@@ -357,15 +364,15 @@ static func _seats_for_archetype(archetype: String) -> int:
 # --- Shared satisfaction tick ---
 
 static func _tick_satisfaction() -> void:
-	# Satisfaction rises on strong STABILITY (effective — bugs eat it) and falls
-	# when the open bug count is high (the direct churn driver).
-	var stab: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
+	# B2C satisfaction rises on strong EXPERIENCE (the axis the record was seeded from) and
+	# falls when the open bug count is high (the direct churn driver). See the gate's note.
+	var exp_axis: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")
 	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0)))
 	for c in CustomerRegistry.get_active():
 		if c.market_type != "b2c":
 			continue  # B2B satisfaction is owned by B2BSalesSystem (two-layer model); leave B2C byte-identical
 		var delta: int = 0
-		if stab >= SATISFACTION_QUALITY_GATE:
+		if exp_axis >= SATISFACTION_QUALITY_GATE:
 			delta += 1
 		if bugs > SATISFACTION_BUG_GATE:
 			delta -= 1

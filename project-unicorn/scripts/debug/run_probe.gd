@@ -42,7 +42,15 @@ extends RefCounted
 # "[EventManager] Dedupe-rejected: <id>" debug line, which is why that print exists.
 
 const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_risk_keep",
-	"b2b_slip", "b2b_slip_keep", "b2c", "full_run"]
+	"b2b_slip", "b2b_slip_keep", "b2c", "b2c_keep", "b2c_neglect", "full_run", "full_run_weak"]
+# Calibration Round A (2026-08-19) added three presets:
+#   full_run_weak — the played run with the ORIGINAL v1 set (workflow+reporting+scheduling,
+#                   raw stability 6) and an immediate launch: the "bad v1" the tolerance
+#                   band is measured against. full_run itself now builds the stability-
+#                   competent set and waits in Beta (see _open_the_company / _keep_the_word).
+#   b2c_keep      — the b2c fixture PLUS the sprint policy (_keep grammar): bugs are cleared,
+#                   so the aggregate satisfaction can climb — the "maintained" B2C product.
+#   b2c_neglect   — a stability-poor, bug-heavy B2C fixture nobody tends: satisfaction erodes.
 
 # Deterministic answer policy, per id prefix. Absent → choice 0. A locked choice is
 # never picked (the probe re-runs the modal's own gate, see _pick_choice), so a policy
@@ -93,6 +101,9 @@ static var _mode: String = ""
 static var _wired: bool = false
 static var _build_promises: bool = false   # presets ending "_keep": the founder builds what he promised
 static var _full_run: bool = false         # "full_run": day 1, nothing seeded, the founder plays it
+static var _weak_v1: bool = false          # "full_run_weak": the original weak feature set + immediate launch
+static var _beta_wait: bool = false        # full_run only: hold the ship in Beta until the backlog is small
+static var _beta_since_day: int = -1       # first day the build was seen parked in Beta (bugfix phase)
 static var _hire_started: bool = false
 
 
@@ -153,6 +164,19 @@ static func _wire_log() -> void:
 	EventBus.promise_created.connect(func(pid: String) -> void: _log_promise(pid, "created"))
 	EventBus.promise_kept.connect(func(pid: String) -> void: _log_promise(pid, "resolved"))
 	EventBus.promise_broken.connect(func(pid: String) -> void: _log_promise(pid, "resolved"))
+	EventBus.build_phase_changed.connect(_on_build_phase)
+
+
+static func _on_build_phase(new_phase: String) -> void:
+	# The ship moment, with the raw axes the economy will read from now on. Bug count is the
+	# LIVE count after launch (launch() copies the build's backlog into mvp_live_bug_count).
+	if new_phase != "shipped":
+		return
+	print("PROBE SHIP day=%d version=%d stability=%.1f innovation=%.1f experience=%.1f bugs=%d components=%s" % [
+		GameState.day, int(GameState.get_flag("mvp_version", 0)),
+		float(GameState.get_flag("mvp_stability", 0.0)), float(GameState.get_flag("mvp_innovation", 0.0)),
+		float(GameState.get_flag("mvp_experience", 0.0)), int(GameState.get_flag("mvp_live_bug_count", 0)),
+		str(GameState.get_flag("mvp_components", []))])
 
 
 static func _on_fire(event_id: String) -> void:
@@ -198,11 +222,20 @@ static func _log_promise(promise_id: String, stage: String) -> void:
 
 static func _log_state() -> void:
 	var runway: float = GameState.get_runway_months()
-	print("PROBE STATE day=%d cash=%d mrr=%d brand=%d burn=%d runway=%s cust=%d emp=%d promises=%d phase=%d" % [
+	# Calibration Round A: the B2C aggregate (audience, its satisfaction, live bugs) and the
+	# rival-relative quality q that the audience formula actually reads — the four numbers
+	# the §5/§6 verdicts are read from. q is -1 before a ship (nothing to compare).
+	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	var q: float = -1.0
+	if GameState.get_flag("mvp_shipped", false):
+		q = SalesSystem._rival_relative_quality(QualityModel.shipped_normalized())
+	print("PROBE STATE day=%d cash=%d mrr=%d brand=%d burn=%d runway=%s cust=%d emp=%d promises=%d phase=%d aud=%d sat=%d bugs=%d q=%.1f" % [
 		GameState.day, GameState.cash, GameState.mrr, GameState.brand, GameState.daily_burn,
 		("INF" if is_inf(runway) else "%.2f" % runway),
 		CustomerRegistry.get_all().size(), CharacterRegistry.get_employees().size(),
-		PromiseRegistry.get_all().size(), GameState.phase])
+		PromiseRegistry.get_all().size(), GameState.phase,
+		int(GameState.get_flag("b2c_audience", 0)), (ub.satisfaction if ub != null else -1),
+		int(GameState.get_flag("mvp_live_bug_count", 0)), q])
 
 
 static func _log_customers() -> void:
@@ -212,12 +245,21 @@ static func _log_customers() -> void:
 	# because "why did nobody slide" and "why did everybody slide" are the same question
 	# asked of these three numbers.
 	var health: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
-	for c in CustomerRegistry.get_by_market("b2b"):
+	var book: Array = CustomerRegistry.get_by_market("b2b")
+	var satisfied: int = 0
+	for c in book:
+		if c.satisfaction >= c.tolerance:
+			satisfied += 1
 		print("PROBE CUST day=%d id=%s sat=%d tol=%d target=%d trust=%.1f phase=%s streak=%d cd=%d mrr=%d bugs=%d" % [
 			GameState.day, c.id, c.satisfaction, c.tolerance,
 			clampi(int(round(health + c.trust_offset)), 0, 100), c.trust_offset,
 			c.lifecycle_phase, c.risk_streak, c.churn_countdown, c.mrr,
 			int(GameState.get_flag("mvp_live_bug_count", 0))])
+	# Calibration Round A §1: the fraction of the book at or above its bar — the number the
+	# tolerance re-seat is judged by ("~60-70% of a 5-account book for a good v1, ~20% bad").
+	if not book.is_empty():
+		print("PROBE SAT day=%d satisfied=%d/%d target=%d" % [GameState.day, satisfied, book.size(),
+			clampi(int(round(health)), 0, 100)])
 
 
 static func _log_tally() -> void:
@@ -426,11 +468,17 @@ static func _open_the_company() -> void:
 	if not GameState.get_flag("mvp_shipped", false):
 		if ProductSystem.get_active_build() != null:
 			return
-		# Three features, complexity 9 — inside the documented 2-4 feature band, and short
-		# enough that the first version ships inside a month.
-		if ProductSystem.start_build("saas_ops",
-				["saas_ops_workflow", "saas_ops_reporting", "saas_ops_scheduling"], "", "Sahra"):
-			print("PROBE PLAY day=%d start_build v1 Sahra (b2b)" % GameState.day)
+		# Calibration Round A §1: the COMPETENT v1 is the stability-heavy set — integration (7)
+		# + field (7, unlocked from research this round) + scheduling (3): raw stability 17,
+		# complexity 13, an $1,800 licence out of the $10,000 opening cash. The original set
+		# (workflow+reporting+scheduling, raw stability 6, complexity 9) is what the played
+		# run measured its retention hell with; it stays reachable as full_run_weak — the
+		# "bad v1" the tolerance band is seated against.
+		var features: Array = ["saas_ops_integration", "saas_ops_field", "saas_ops_scheduling"]
+		if _weak_v1:
+			features = ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_scheduling"]
+		if ProductSystem.start_build("saas_ops", features, "", "Sahra"):
+			print("PROBE PLAY day=%d start_build v1 Sahra (b2b) set=%s" % [GameState.day, "weak" if _weak_v1 else "competent"])
 		return
 	_work_the_pipeline()
 
@@ -525,7 +573,18 @@ static func _keep_the_word() -> void:
 			ProductSystem.enter_development()
 			print("PROBE PLAY day=%d enter_development" % GameState.day)
 		elif b.current_phase == "bugfix":
-			print("PROBE PLAY day=%d launch build=%s" % [GameState.day, str(b.component_ids)])
+			# Beta is a PARK with no auto-ship: waiting is free apart from burn and clears the
+			# backlog at POLISH_BUG_FIX_PER_DAY. The competent founder (full_run) waits until the
+			# backlog is small or five Beta days have passed; every other preset (and the weak
+			# v1) ships the day Beta opens, exactly as before.
+			if _beta_wait:
+				if _beta_since_day < 0:
+					_beta_since_day = GameState.day
+				var beta_days: int = GameState.day - _beta_since_day
+				if b.bug_count > 3 and beta_days < 5:
+					return
+			_beta_since_day = -1
+			print("PROBE PLAY day=%d launch build=%s bugs=%d" % [GameState.day, str(b.component_ids), b.bug_count])
 			ProductSystem.launch()   # fires the ship-moment modal; the drain resolves it,
 			_drain_modals()          # and ITS OWN modifier calls ship_active_build
 		return
@@ -551,17 +610,21 @@ static func _seed_world(preset: String) -> void:
 	# world and differ ONLY in whether the promise is delivered, which makes the pair a
 	# controlled experiment rather than two anecdotes.
 	_build_promises = preset.ends_with("_keep")
-	if preset == "full_run":
+	if preset == "full_run" or preset == "full_run_weak":
 		# THE PLAYED RUN. Nothing is seeded: no product, no customers, no money beyond the
 		# origin's opening cash. Day 1 is day 1. Everything the log shows after this line
 		# was earned by _play_the_founder through the same seams the tabs call.
 		_full_run = true
 		_build_promises = true
+		_weak_v1 = preset == "full_run_weak"
+		_beta_wait = not _weak_v1
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log
 	match preset.trim_suffix("_keep"):
 		"b2c":
-			_seed_b2c_world()
+			_seed_b2c_world(false)
+		"b2c_neglect":
+			_seed_b2c_world(true)
 		"b2b_solo":
 			_seed_b2b_world(0)
 		"b2b_reps":
@@ -574,8 +637,9 @@ static func _seed_world(preset: String) -> void:
 			# book at target 49-51 against tolerances of 35-50 and nothing ever slides,
 			# which is itself one of Step 0's findings.
 			_seed_b2b_world(0)
-			GameState.set_flag("mvp_stability", 34.0)
-			GameState.set_flag("mvp_live_bug_count", 14)
+			# Calibration Round A §1: DERIVED, not authored. Unsalvageable = the zero-bug axis
+			# sits 8 under the SMALL bar; the backlog (14) only makes it worse.
+			_seed_stability_fixture("b2b_risk", _raw_for_axis(_bar_small() - 8.0), 14)
 		"b2b_slip":
 			# RECOVERABLE pressure, and the distinction from b2b_risk is the whole point.
 			# b2b_risk is UNSALVAGEABLE by construction: raw stability 34 puts the
@@ -588,22 +652,79 @@ static func _seed_world(preset: String) -> void:
 			# pressure) and it is the only world in which "retained" is a real outcome
 			# rather than a fixture gift.
 			_seed_b2b_world(0)
-			GameState.set_flag("mvp_stability", 52.0)
-			GameState.set_flag("mvp_live_bug_count", 12)
+			# Calibration Round A §1: DERIVED. With the backlog live the axis sits 2 over the
+			# MID bar (inside [T_mid, T_mid+5): small accounts safe, sector-picky mids and the
+			# enterprise under); cleared, it must clear T_mid+7 — checked at seed time.
+			_seed_stability_fixture("b2b_slip", _raw_for_axis(_bar_mid() + 2.0) + QualityModel.BUG_STABILITY_COEF * 9.0, 9)
 
 
-static func _seed_b2c_world() -> void:
+static func _seed_b2c_world(neglect: bool) -> void:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2c")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
 	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
 	GameState.set_flag("mvp_version", 1)
 	GameState.set_flag("mvp_product_name", "Nova")
-	GameState.set_flag("mvp_innovation", 30.0)
-	GameState.set_flag("mvp_stability", 40.0)
-	GameState.set_flag("mvp_experience", 35.0)
+	if neglect:
+		# Calibration Round A §5: the UNTENDED consumer product. Experience under the B2C
+		# satisfaction gate (no daily +1), a live backlog over SATISFACTION_BUG_GATE (daily −1),
+		# and nobody sprints — satisfaction erodes, the WOM term never opens, the multiplier
+		# shrinks growth. The "declining" arm of the §5 measurement.
+		GameState.set_flag("mvp_innovation", 10.0)
+		GameState.set_flag("mvp_stability", 8.0)
+		GameState.set_flag("mvp_experience", 8.0)
+		GameState.set_flag("mvp_live_bug_count", 12)
+	else:
+		# A modest v1. Raw axes were 30/40/35 on the retired grown scale; halved 2026-08-19
+		# with NORMALIZE_HALF_SAT (50 → 25) so the fixture's NORMALIZED meaning — and, with
+		# the rival scale bridge, its rival-relative q ≈ 41 — is byte-for-byte what the
+		# before/after table measured against.
+		GameState.set_flag("mvp_innovation", 15.0)
+		GameState.set_flag("mvp_stability", 20.0)
+		GameState.set_flag("mvp_experience", 17.5)
 	SalesSystem.add_b2c_audience(200)
 	SalesSystem.open_b2c_paid_tier(15)
+
+
+# --- Fixture arithmetic (Calibration Round A §1) ---
+# axis(s) = 100·s/(s+H) (QualityModel.normalized_quality) and its inverse. Fixture
+# stability is DERIVED from the tolerance bars at seed time so each preset's documented
+# intent line survives a tolerance move; _seed_stability_fixture prints the derived value
+# and a PROBE ERROR if the intent inequality it was derived for no longer holds.
+static func _raw_for_axis(axis: float) -> float:
+	var a: float = clampf(axis, 0.0, 99.0)
+	return QualityModel.NORMALIZE_HALF_SAT * a / (100.0 - a)
+
+
+static func _axis_of(raw_stability: float, bugs: int) -> float:
+	return QualityModel.axis_score({"stability": QualityModel.effective_stability(raw_stability, bugs)}, "stability")
+
+
+static func _bar_small() -> float:
+	return float(B2BConstants.seed_tolerance(2, ""))   # demo small archetype: scale_base 2, no sector
+
+
+static func _bar_mid() -> float:
+	return float(B2BConstants.seed_tolerance(3, ""))   # demo mid/enterprise: scale 3 (SCALE_DEMO_MAX), no sector
+
+
+static func _seed_stability_fixture(preset: String, raw_stability: float, bugs: int) -> void:
+	GameState.set_flag("mvp_stability", raw_stability)
+	GameState.set_flag("mvp_live_bug_count", bugs)
+	var live_axis: float = _axis_of(raw_stability, bugs)
+	var clear_axis: float = _axis_of(raw_stability, 0)
+	var ok: bool = true
+	match preset:
+		"b2b_solo":
+			ok = live_axis >= _bar_small() + 3.0 and live_axis < _bar_mid()
+		"b2b_slip":
+			ok = live_axis >= _bar_mid() and live_axis < _bar_mid() + 5.0 and clear_axis >= _bar_mid() + 7.0
+		"b2b_risk":
+			ok = clear_axis < _bar_small() - 5.0
+	print("PROBE FIXTURE preset=%s stability=%.1f bugs=%d axis_live=%.1f axis_clear=%.1f bar_small=%d bar_mid=%d" % [
+		preset, raw_stability, bugs, live_axis, clear_axis, int(_bar_small()), int(_bar_mid())])
+	if not ok:
+		print("PROBE ERROR fixture drifted: %s no longer satisfies its intent inequality (re-derive after a tolerance move)" % preset)
 
 
 static func _seed_b2b_world(rep_count: int) -> void:
@@ -613,15 +734,17 @@ static func _seed_b2b_world(rep_count: int) -> void:
 	GameState.set_flag("mvp_components", ["saas_ops_workflow", "saas_ops_reporting"])
 	GameState.set_flag("mvp_version", 1)
 	GameState.set_flag("mvp_product_name", "Sahra")
-	# A MID product on purpose: stability 55 sits above a small account's tolerance seed
-	# (35) and below a scaled one's, so the book holds a mix of steady and sliding
-	# accounts instead of being uniformly safe or uniformly doomed. The satisfaction
-	# TARGET is this stability number (b2b_sales_system.gd:96-106), so it is the single
-	# most load-bearing fixture value in the whole log.
-	GameState.set_flag("mvp_innovation", 40.0)
-	GameState.set_flag("mvp_stability", 55.0)
-	GameState.set_flag("mvp_experience", 45.0)
-	GameState.set_flag("mvp_live_bug_count", 4)
+	# A MID product on purpose: with its 4 live bugs the stability AXIS sits above a small
+	# account's tolerance bar and below a scaled one's, so the book holds a mix of steady
+	# and sliding accounts instead of being uniformly safe or uniformly doomed. The
+	# satisfaction TARGET is this axis (b2b_sales_system.gd:96-106), so it is the single
+	# most load-bearing fixture value in the whole log — which is why it is DERIVED from
+	# the live bars (Calibration Round A §1) rather than authored as a raw number (it was
+	# 55 on the retired grown scale; under NORMALIZE_HALF_SAT 25 that reads "excellent").
+	GameState.set_flag("mvp_innovation", 20.0)
+	GameState.set_flag("mvp_experience", 22.5)
+	_seed_stability_fixture("b2b_solo",
+		_raw_for_axis((_bar_small() + 3.0 + _bar_mid()) * 0.5) + QualityModel.BUG_STABILITY_COEF * 4.0, 4)
 
 	# Five accounts through the real signing seam (SalesSystem.add_b2b_customer — the
 	# sole B2B signing path), spread across archetypes so tolerance seeds differ and the
@@ -631,10 +754,11 @@ static func _seed_b2b_world(rep_count: int) -> void:
 	# brand ≥ 25). Seeded higher, the run rockets to phase 3 in two days and the log
 	# stops describing the early game it is supposed to describe.
 	#
-	# Satisfaction seeds straddle the tolerance seeds on purpose (35 small / 45 mid /
-	# 55 enterprise, before sector bonuses): probe_c and probe_e start close enough to
-	# their bar that ordinary product wear can push them under, which is the only way
-	# the retention → promise → churn chain is reachable without hand-forcing it.
+	# Satisfaction seeds straddle the tolerance seeds on purpose (re-seated bars 2026-08-19:
+	# 42 small / 51 mid and enterprise, before sector bonuses of +3/+5): probe_c and
+	# probe_e start close enough to their bar that ordinary product wear can push them
+	# under, which is the only way the retention → promise → churn chain is reachable
+	# without hand-forcing it.
 	var specs := [
 		{"id": "probe_a", "name": "Kuzey Lojistik", "industry": "logistics", "arch": "small", "mrr": 350, "sat": 72},
 		{"id": "probe_b", "name": "Ege Sağlık", "industry": "health", "arch": "mid", "mrr": 800, "sat": 64},

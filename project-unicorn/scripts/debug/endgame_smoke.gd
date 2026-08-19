@@ -243,6 +243,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_language_switch":       fail = _case_loc_language_switch()
 		# --- Calibration Round A (2026-08-19) — one commit per section, one guard per number ---
 		"harness_sniffer_matches_run_log": fail = _case_harness_sniffer_matches_run_log()
+		"quality_half_sat_25":             fail = _case_quality_half_sat_25()
+		"b2b_v1_lands_mid_band":           fail = _case_b2b_v1_lands_mid_band()
+		"field_unlocked_for_saas_ops":     fail = _case_field_unlocked_for_saas_ops()
+		"b2c_satisfaction_gate_experience": fail = _case_b2c_satisfaction_gate_experience()
+		"rival_relative_uses_template_half_sat": fail = _case_rival_relative_uses_template_half_sat()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -6873,5 +6878,136 @@ static func _case_harness_sniffer_matches_run_log() -> String:
 		return "existing harness flags stopped matching"
 	if SaveManager._is_harness_arg("C:/games/screenshots/project-unicorn") or SaveManager._is_harness_arg("res://run-log"):
 		return "a bare (non --) argument matched the sniffer"
+	return ""
+
+
+# --- §1 · a played product is born INSIDE the tolerance band (three levers together) ---
+
+# The two raw stability values --run-log measured at ship (seed 424242, 2026-08-19): the
+# stability-competent v1 (integration+field+scheduling, build events +14, Beta cleared) and
+# the weak set (workflow+reporting+scheduling, events +12, backlog sprinted). They are the
+# numbers the tolerance band was seated against, so they are pinned here as the band's guard.
+const CAL_V1_GOOD_RAW_STABILITY := 31.0
+const CAL_V1_BAD_RAW_STABILITY := 18.3
+
+
+static func _case_quality_half_sat_25() -> String:
+	# Lever 1 by value: 25 maps to normalized 50, and the catalog-competent 3-feature v1
+	# (raw 17) reads 40.5 — inside the band instead of 15-30 points under it.
+	if not is_equal_approx(QualityModel.NORMALIZE_HALF_SAT, 25.0):
+		return "NORMALIZE_HALF_SAT is %.1f, want 25" % QualityModel.NORMALIZE_HALF_SAT
+	if not is_equal_approx(QualityModel.normalized_quality(25.0), 50.0):
+		return "normalized_quality(25) = %.2f, want 50" % QualityModel.normalized_quality(25.0)
+	var a17: float = QualityModel.axis_score({"stability": 17.0}, "stability")
+	if absf(a17 - 40.476) > 0.01:
+		return "axis_score(raw 17) = %.3f, want 40.476" % a17
+	# The rival bridge keeps its own half-point: a raw-50 rival composite still reads 50.
+	if not is_equal_approx(QualityModel.normalized_quality_rival(50.0), 50.0):
+		return "normalized_quality_rival(50) = %.2f, want 50" % QualityModel.normalized_quality_rival(50.0)
+	return ""
+
+
+static func _case_b2b_v1_lands_mid_band() -> String:
+	# Lever 2 by outcome, with the measured raws as constants. The good v1 must clear the
+	# plain mid/enterprise bar (scale 3, no sector) and fall under the sector-picky mid bar;
+	# the bad v1 must clear the plain small bar (scale 2) and fall under small+insurance.
+	# Moving ONE lever alone breaks it: HALF_SAT back at 50 reads the good v1 at 38 (under
+	# every bar); the old (35, 5) band reads the bad v1 over every small and mid bar.
+	var good: float = QualityModel.axis_score({"stability": CAL_V1_GOOD_RAW_STABILITY}, "stability")
+	var bad: float = QualityModel.axis_score({"stability": CAL_V1_BAD_RAW_STABILITY}, "stability")
+	var mid_plain: int = B2BConstants.seed_tolerance(3, "manufacturing")
+	var mid_picky: int = B2BConstants.seed_tolerance(3, "health")
+	var small_plain: int = B2BConstants.seed_tolerance(2, "logistics")
+	var small_picky: int = B2BConstants.seed_tolerance(2, "insurance")
+	if not (good >= float(mid_plain) and good < float(mid_picky)):
+		return "good v1 axis %.1f is outside [mid %d, mid+sector %d)" % [good, mid_plain, mid_picky]
+	if not (bad >= float(small_plain) and bad < float(small_picky)):
+		return "bad v1 axis %.1f is outside [small %d, small+sector %d)" % [bad, small_plain, small_picky]
+	# The probe's 5-account book (2 small · 2 mid+sector · 1 enterprise): 3/5 for the good
+	# v1, 1/5 for the bad one — the director's ~60 % / ~20 %.
+	var bars: Array = [small_plain, small_picky, mid_picky, mid_picky, mid_plain]
+	var good_ok: int = 0
+	var bad_ok: int = 0
+	for b in bars:
+		if good >= float(b): good_ok += 1
+		if bad >= float(b): bad_ok += 1
+	if good_ok != 3 or bad_ok != 1:
+		return "book fractions good=%d/5 bad=%d/5, want 3/5 and 1/5" % [good_ok, bad_ok]
+	return ""
+
+
+static func _case_field_unlocked_for_saas_ops() -> String:
+	# Lever 3: saas_ops_field is buildable in the demo and the competent set stamps raw 17.
+	for f in ProductCatalog.get_feature_pool("saas_ops"):
+		if String(f.get("id", "")) == "saas_ops_field" and bool(f.get("requires_research", false)):
+			return "saas_ops_field is still research-locked"
+	GameState.set_cash(20000)
+	var picks := ["saas_ops_integration", "saas_ops_field", "saas_ops_scheduling"]
+	if not ProductSystem.start_build("saas_ops", picks, "", "Sahra"):
+		return "start_build refused the competent set"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if absf(b.stability - 17.0) > 0.001:
+		return "competent set stamps stability %.1f, want 17" % b.stability
+	return ""
+
+
+static func _case_b2c_satisfaction_gate_experience() -> String:
+	# §5 precondition (director ruling 2026-08-19): the B2C aggregate's daily +1 reads the
+	# EXPERIENCE axis at the re-seated gate (40). Raw 25 → 50 ≥ 40 climbs; raw 10 → 28.6
+	# does not; a heavy backlog still erodes either way.
+	_seed_b2c()
+	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	if ub == null:
+		return "no B2C aggregate record after seed"
+	GameState.set_flag("mvp_stability", 0.0)
+	GameState.set_flag("mvp_innovation", 0.0)
+	GameState.set_flag("mvp_experience", 25.0)
+	GameState.set_flag("mvp_live_bug_count", 0)
+	CustomerRegistry.set_satisfaction(ub.id, 50)
+	_sim_day()
+	if ub.satisfaction != 51:
+		return "experience 25 (axis 50) did not lift satisfaction (+%d)" % (ub.satisfaction - 50)
+	GameState.set_flag("mvp_experience", 10.0)
+	CustomerRegistry.set_satisfaction(ub.id, 50)
+	_sim_day()
+	if ub.satisfaction != 50:
+		return "experience 10 (axis 28.6) moved satisfaction (%d)" % ub.satisfaction
+	GameState.set_flag("mvp_experience", 25.0)
+	GameState.set_flag("mvp_live_bug_count", SalesSystem.SATISFACTION_BUG_GATE + 1)
+	CustomerRegistry.set_satisfaction(ub.id, 50)
+	_sim_day()
+	if ub.satisfaction != 50:
+		return "over-gate bugs did not cancel the experience gain (%d)" % ub.satisfaction
+	return ""
+
+
+static func _case_rival_relative_uses_template_half_sat() -> String:
+	# The rival scale bridge: rivals normalize at RIVAL_TEMPLATE_HALF_SAT (50), the player at
+	# NORMALIZE_HALF_SAT (25). A player composite equal to the startup rivals' raw average
+	# therefore reads ABOVE parity (q > 50) — which is the whole point: the bridge stops the
+	# half-point move from doubling the rivals' lead over a played product.
+	if not is_equal_approx(QualityModel.RIVAL_TEMPLATE_HALF_SAT, 50.0):
+		return "RIVAL_TEMPLATE_HALF_SAT is %.1f, want 50" % QualityModel.RIVAL_TEMPLATE_HALF_SAT
+	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
+	var axes: Array = ProductCatalog.get_quality_axes("ai_assistant")
+	var total: float = 0.0
+	var total_norm: float = 0.0
+	var n: int = 0
+	for r in RivalRegistry.get_by_type("ai_assistant"):
+		if r.tier == "startup":
+			total += r.composite(axes)
+			total_norm += QualityModel.normalized_quality_rival(r.composite(axes))
+			n += 1
+	if n == 0:
+		return "fixture: no startup rivals for ai_assistant"
+	var avg_raw: float = total / float(n)
+	var q_parity: float = SalesSystem._rival_relative_quality(QualityModel.normalized_quality(avg_raw))
+	# The engine averages the NORMALIZED rival scores (not the raw composites), so the
+	# expectation is built the same way.
+	var want: float = 50.0 + QualityModel.normalized_quality(avg_raw) - total_norm / float(n)
+	if absf(q_parity - want) > 0.01:
+		return "q at raw parity = %.2f, want %.2f (rivals must normalize at the template half-point)" % [q_parity, want]
+	if q_parity <= 50.0:
+		return "q at raw parity = %.2f — the bridge is not lifting the played product" % q_parity
 	return ""
 

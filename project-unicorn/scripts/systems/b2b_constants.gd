@@ -15,8 +15,22 @@ const ONBOARDING_AMP := 1.5             # onboarding-window swing amplifier
 const RIVAL_SATISFACTION_HOOK := false  # TODO: rival pressure (−); OFF until a rival system exists
 const SCALE_DEMO_MAX := 3               # demo generates 1..3 star; 4-5 (Tier 2) gated
 
-const TOLERANCE_BASE := 35              # scale-1 tolerance floor
-const TOLERANCE_PER_SCALE := 5          # + per star (larger/loyal endures low satisfaction longer)
+# TOLERANCE BAND — re-seated 2026-08-19 (Calibration Round A §1, [ÖLÇ]) together with
+# QualityModel.NORMALIZE_HALF_SAT 50→25 and the saas_ops_field unlock. The bars were
+# (35, 5): small 40 / mid 45 / enterprise 45+sector — authored against the retired grown
+# axes, under which a played v1 (axis 20-27) sat 15-30 points under every account and the
+# retention modal was the default state of play. MEASURED with --run-log (seed 424242):
+# the stability-competent v1 (integration+field+scheduling, catalog 17, build events +14,
+# Beta cleared → raw 31, 0 bugs) reads target T_good = 55; the weak set (catalog 6, events
+# +12, backlog sprinted → raw 18.3) reads T_bad = 42. The director's fractions for the
+# probe's 5-account book (2 small · 2 mid+sector · 1 enterprise) — ~60 % satisfied for a
+# good v1, ~20 % for a bad one — pin T_mid ∈ (50, 55] and T_small ∈ (39, 42]; the SMALLEST
+# per-scale step that satisfies both is 9, and BASE = T_small − PER = 33:
+#   bars: small(scale 2) 42 · small+insurance 45 · mid/enterprise(scale 3) 51 · +health/
+#   construction 56. Good v1 55 → a,d,e ✓ b,c ✗ (60 %); bad v1 42 → a ✓ (20 %).
+# Sign note (see PROMISE_* below): higher scale = pickier; unchanged, intended.
+const TOLERANCE_BASE := 33              # scale-1 tolerance floor
+const TOLERANCE_PER_SCALE := 9          # + per star (larger = pickier; Tier-2 scale 5 → 69, re-seat with that unlock)
 # Sector stickiness nudge (some sectors switch vendors less). Working; default 0.
 const SECTOR_TOLERANCE_BONUS := {
 	"construction": 5, "health": 5, "insurance": 3,

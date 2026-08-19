@@ -948,7 +948,7 @@ PROD_FEAT_SAAS_OPS_WORKFLOW_VOICE,"""Şu olunca şunu yap"" kurallarıyla sürec
 PROD_FEAT_SAAS_OPS_REPORTING_VOICE,Yönetimin tek bakışta gördüğü panolar. Rapor kâbusu biter.,The panels management sees at a glance. The report nightmare ends.
 PROD_FEAT_SAAS_OPS_INTEGRATION_VOICE,Mevcut sistemlerle konuşur; veri iki kez girilmez. Kurumsalın ilk sorduğu şey.,Talks to the existing systems; data is not entered twice. The first thing an enterprise asks.
 PROD_FEAT_SAAS_OPS_SCHEDULING_VOICE,"Randevu ve planlamayı tek takvimde topla. Çakışma, unutma kalmaz.",Appointments and planning in one place. Double-booking stops.
-PROD_FEAT_SAAS_OPS_FIELD_VOICE,"Sahadaki ekip zayıf bağlantıda bile çalışır, sonra senkronlar. Sahanın bel kemiği.",The field team connects from anywhere. A product that stays on the desktop dies in the field.
+PROD_FEAT_SAAS_OPS_FIELD_VOICE,"Sahadaki ekip zayıf bağlantıda bile çalışır, sonra senkronlar. Sahanın bel kemiği.","The field crew keeps working on a weak signal and syncs later. The backbone of field work."
 PROD_FEAT_SAAS_OPS_MOBILE_VOICE,Saha ekibi telefondan girer. Sadece masaüstünde kalan ürün sahada ölür.,The field team gets in from a phone. A product that stays on the desktop dies in the field.
 PROD_TYPE_AI_ASSISTANT_NAME,Yapay Zeka Asistanı,AI Assistant
 PROD_TYPE_AI_ASSISTANT_CATEGORY,ASİSTAN,ASSISTANT
