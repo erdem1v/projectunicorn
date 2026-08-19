@@ -34,7 +34,10 @@ signal navigate_requested(view_id: String, args: Dictionary)
 # zamanında çevirir, const bir kopya ilk okunan renge çakılırdı.
 
 const _PHASE_ORDER := ["iteration", "development", "bugfix"]
-const _PHASE_DISPLAY := {"iteration": "TASARIM", "development": "GELİŞTİRME", "bugfix": "BETA"}
+## Build fazının ekran adı. Faz id'si state'te yaşar, sözcük CSV'de. Bir CONST olamaz:
+## const dosya yüklenirken değerlenir — o an daha bir dil seçilmemiştir.
+const _PHASE_KEYS := {"iteration": "BUILD_PHASE_DESIGN", "development": "BUILD_PHASE_DEVELOPMENT",
+	"bugfix": "BUILD_PHASE_BETA"}
 
 var _step: int = 1
 var _v2_mode: bool = false
@@ -182,7 +185,7 @@ func _rebuild() -> void:
 func _make_breadcrumb() -> Control:
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 8)
-	var items := ["01 YOL", "02 TİP", "03 ÖZELLİKLER"]
+	var items := [tr("PROD_STEP_PATH"), tr("PROD_STEP_TYPE"), tr("PROD_STEP_FEATURES")]
 	for i in items.size():
 		if i > 0:
 			hb.add_child(UiFactory.make_label("→", &"SectionLabel", UiTokens.INK_DIM))
@@ -195,17 +198,17 @@ func _make_breadcrumb() -> Control:
 # --- 01 YOL ------------------------------------------------------------------
 
 func _build_step1(body: VBoxContainer) -> void:
-	body.add_child(UiFactory.make_label("Yolunu seç", &"TitleSerif"))
+	body.add_child(UiFactory.make_label(tr("PROD_PATH_TITLE"), &"TitleSerif"))
 	body.add_child(UiFactory.make_label(
-		"Bu seçim ürünün nasıl para kazandığını belirler. Sonradan değişmez.", &"CaptionMuted"))
+		tr("PROD_PATH_SUB"), &"CaptionMuted"))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	row.add_child(_make_path_card("b2c", "KİTLE", "B2C",
-		"Kitleye satarsın. Kullanıcılar gelir, gider, sayılar dalgalanır.",
-		["Kitle kendiliğinden büyür", "Kullanıcı başına küçük gelir", "Kaprisli"]))
-	row.add_child(_make_path_card("b2b", "KONTRAT", "B2B",
-		"Şirketlere satarsın. Her kontrat büyük para, her müşteri senin eserin.",
-		["Kontrat başına yüksek gelir", "Satışı sen yaparsın", "Müşteri tutmak iş ister"]))
+	row.add_child(_make_path_card("b2c", tr("PROD_PATH_B2C"), "B2C",
+		tr("PROD_PATH_B2C_DESC"),
+		[tr("PROD_PATH_B2C_PRO"), tr("PROD_PATH_B2C_CON"), tr("PROD_PATH_B2C_CON2")]))
+	row.add_child(_make_path_card("b2b", tr("PROD_PATH_B2B"), "B2B",
+		tr("PROD_PATH_B2B_DESC"),
+		[tr("PROD_PATH_B2B_PRO"), tr("PROD_PATH_B2B_CON1"), tr("PROD_PATH_B2B_CON2")]))
 	body.add_child(row)
 	if not GameState.get_flag("product_path_frank_seen", false):
 		body.add_child(_make_frank_strip())
@@ -225,7 +228,7 @@ func _make_path_card(market: String, kicker: String, big: String, desc: String, 
 	var d := UiFactory.make_label(desc, &"BodySerif")
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(d)
-	vb.add_child(UiFactory.make_label("TİP ÖRNEKLERİ", &"SectionLabel"))
+	vb.add_child(UiFactory.make_label(tr("PROD_TYPE_EXAMPLES"), &"SectionLabel"))
 	var pills := HFlowContainer.new()
 	pills.add_theme_constant_override("h_separation", 6)
 	pills.add_theme_constant_override("v_separation", 4)
@@ -246,7 +249,7 @@ func _make_path_card(market: String, kicker: String, big: String, desc: String, 
 	vb.add_child(spacer)
 	var btn := Button.new()
 	btn.theme_type_variation = &"CommitButton"
-	btn.text = "Bu yolu seç →"
+	btn.text = tr("PROD_PATH_PICK")
 	btn.pressed.connect(_on_path_chosen.bind(market))
 	vb.add_child(btn)
 	return card
@@ -286,15 +289,15 @@ func _make_frank_strip() -> Control:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 2)
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_child(UiFactory.make_label("FRANK KÖSEOĞLU · MENTOR", &"SectionLabel", UiTokens.CREAM_DIM))
+	col.add_child(UiFactory.make_label(tr("PROD_MENTOR_TAG"), &"SectionLabel", UiTokens.CREAM_DIM))
 	var quote := UiFactory.make_label(
-		"B2C'de kalabalığa satarsın, kimseyi tanımazsın. B2B'de herkesi tanırsın, herkes seni tanır. İkisi de para. Farklı dertler.",
+		tr("PROD_MENTOR_LINE"),
 		&"QuoteSerifCream")
 	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(quote)
 	hb.add_child(col)
 	var ok := Button.new()
-	ok.text = "Tamam"
+	ok.text = tr("UI_OK")
 	ok.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	ok.pressed.connect(func() -> void:
 		GameState.set_flag("product_path_frank_seen", true)
@@ -307,15 +310,16 @@ func _make_frank_strip() -> Control:
 
 func _build_step2(body: VBoxContainer) -> void:
 	var back := Button.new()
-	back.text = "← GERİ · YOL SEÇİMİ"
+	back.text = tr("PROD_BACK_PATH")
 	back.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	back.pressed.connect(func() -> void:
 		_step = 1
 		_rebuild())
 	body.add_child(back)
-	body.add_child(UiFactory.make_label("%s · Ürün tipini seç" % UiTokens.tr_upper(_market), &"TitleSerif"))
 	body.add_child(UiFactory.make_label(
-		"Hangi problemi çözüyoruz? Sektör, müşterinin dünyasını belirler.", &"CaptionMuted"))
+		tr("PROD_TYPE_STEP_TITLE").format({"market": Fmt.upper(_market)}), &"TitleSerif"))
+	body.add_child(UiFactory.make_label(
+		tr("PROD_TYPE_STEP_SUB"), &"CaptionMuted"))
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 12)
@@ -371,14 +375,14 @@ func _build_step3(body: VBoxContainer) -> void:
 	var st: Dictionary = ProductCatalog.get_sub_product_type_by_id(_type_id)
 	if _locked_mode:
 		var back_p := Button.new()
-		back_p.text = "← GERİ · PORTFÖY"
+		back_p.text = tr("PROD_BACK_PORTFOLIO")
 		back_p.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		back_p.pressed.connect(func() -> void:
-			navigate_requested.emit("portfoy", {}))
+			navigate_requested.emit("portfoy", {}))   # LOC-DATA route id
 		body.add_child(back_p)
 	elif not _v2_mode:
 		var back := Button.new()
-		back.text = "← GERİ · TİP SEÇİMİ"
+		back.text = tr("PROD_BACK_TYPE")
 		back.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		back.pressed.connect(func() -> void:
 			_step = 2
@@ -407,7 +411,7 @@ func _build_step3(body: VBoxContainer) -> void:
 	if _locked_mode:
 		# Kilit telgrafı: seçim sayacı yerine durum rozeti (satırlar inert).
 		_sel_count_label.visible = false
-		head.add_child(UiFactory.make_badge("İNŞA EDİLİYOR · SEÇİM KİLİTLİ", &"accent"))
+		head.add_child(UiFactory.make_badge(tr("LOCK_BUILD_IN_PROGRESS"), &"accent"))
 	body.add_child(head)
 
 	# Feature listesi — kategori = dominant eksen (working gruplama), her grup
@@ -489,7 +493,7 @@ func _make_feature_row(f: Dictionary) -> Control:
 	var research_locked: bool = bool(f.get("requires_research", false)) and not shipped
 	var frozen_shipped: bool = shipped and not _strengthen_mode  # v2: ön-işaretli, geri alınamaz
 	if research_locked:
-		var badge := UiFactory.make_badge("ARAŞTIRMA GEREKLİ", &"neutral")
+		var badge := UiFactory.make_badge(tr("PROD_RESEARCH_REQUIRED"), &"neutral")
 		badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		hb.add_child(badge)
 		card.modulate = Color(1, 1, 1, 0.5)
@@ -576,7 +580,7 @@ func _make_bottom_band() -> Control:
 	legend.add_theme_constant_override("separation", 6)
 	legend.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	legend.size_flags_stretch_ratio = 1.2
-	legend.add_child(UiFactory.make_section_header("ÜRÜN PROFİLİ"))
+	legend.add_child(UiFactory.make_section_header(tr("PROD_PROFILE")))
 	for axis in ProductUiShared.AXIS_KEYS:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
@@ -607,7 +611,7 @@ func _make_bottom_band() -> Control:
 
 func _make_build_status_card() -> Control:
 	# Kilitli modda commit kartının yerini alır: faz satırı + efor ilerlemesi +
-	# ~gün + Beta'da bug sayaçları ve "Yayınla →" + iptal. Yüzen Build Takip
+	# ~gün + Beta'da bug sayaçları ve tr("BUILD_ACTION_SHIP") + iptal. Yüzen Build Takip
 	# Kartı'yla aynı tek-kaynak API'lar (build_progress / build_days_remaining).
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"CardPanel"
@@ -616,11 +620,11 @@ func _make_build_status_card() -> Control:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 6)
 	card.add_child(vb)
-	vb.add_child(UiFactory.make_section_header("BUILD DURUMU"))
+	vb.add_child(UiFactory.make_section_header(tr("PROD_BUILD_STATUS_HEADER")))
 	var phase_row := HBoxContainer.new()
 	phase_row.add_theme_constant_override("separation", 10)
 	for phase in _PHASE_ORDER:
-		var pl := UiFactory.make_label(String(_PHASE_DISPLAY[phase]), &"SectionLabel", UiTokens.INK_DIM)
+		var pl := UiFactory.make_label(_phase_display(phase), &"SectionLabel", UiTokens.INK_DIM)
 		phase_row.add_child(pl)
 		_status_phase_labels.append(pl)
 	vb.add_child(phase_row)
@@ -649,20 +653,20 @@ func _make_build_status_card() -> Control:
 	_iter_decision_row.add_child(_iterate_btn)
 	_enter_dev_btn = Button.new()
 	_enter_dev_btn.theme_type_variation = &"CommitButton"
-	_enter_dev_btn.text = "Geliştirmeye geç →"
+	_enter_dev_btn.text = tr("PROD_TO_DEVELOPMENT")
 	_enter_dev_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_enter_dev_btn.pressed.connect(_on_enter_dev_pressed)
 	_iter_decision_row.add_child(_enter_dev_btn)
 	vb.add_child(_iter_decision_row)
 	_publish_btn = Button.new()
 	_publish_btn.theme_type_variation = &"CommitButton"
-	_publish_btn.text = "Yayınla →"
+	_publish_btn.text = tr("BUILD_ACTION_SHIP")
 	_publish_btn.visible = false
 	_publish_btn.pressed.connect(_on_publish_pressed)
 	vb.add_child(_publish_btn)
 	var cancel := Button.new()
 	cancel.flat = true
-	cancel.text = "Build'i iptal et"
+	cancel.text = tr("PROD_CANCEL_BUILD")
 	cancel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	cancel.add_theme_color_override("font_color", UiTokens.INK_MUTED)
 	cancel.pressed.connect(_on_cancel_pressed)
@@ -685,20 +689,20 @@ func _make_commit_card() -> Control:
 		var name_row := HBoxContainer.new()
 		name_row.add_theme_constant_override("separation", 6)
 		_name_edit = LineEdit.new()
-		_name_edit.placeholder_text = "Ürün adı"
+		_name_edit.placeholder_text = tr("PROD_NAME_LABEL")
 		_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if not _prefill.is_empty():
 			_name_edit.text = String(_prefill.get("name", ""))
 		name_row.add_child(_name_edit)
 		var sug := Button.new()
-		sug.text = "ÖNER"
+		sug.text = tr("PROD_NAME_SUGGEST")
 		sug.pressed.connect(_on_suggest_pressed)
 		name_row.add_child(sug)
 		vb.add_child(name_row)
-	vb.add_child(UiFactory.make_label("SORUMLU", &"SectionLabel"))
+	vb.add_child(UiFactory.make_label(tr("PROD_LEAD_HEADER"), &"SectionLabel"))
 	_sorumlu = OptionButton.new()
 	var founder: Character = CharacterRegistry.get_founder()
-	_sorumlu.add_item(founder.character_name if founder != null else "Kurucu")
+	_sorumlu.add_item(founder.character_name if founder != null else tr("HR_ROLE_FOUNDER"))
 	_sorumlu.set_item_metadata(0, founder.id if founder != null else "")
 	var idx: int = 1
 	# İş başındaki TÜM Ürün Geliştirme çalışanları — izindeki birini sorumlu olarak teklif
@@ -754,18 +758,19 @@ func _update_dynamic() -> void:
 		bar.value = float(axes[axis])
 		var gain: int = int(round(float(axes[axis]) - float(base.get(axis, 0.0))))
 		(cell.plus as Label).text = "+%d" % gain
-	_risk_label.text = "Hata riski: %s" \
-		% ProductUiShared.risk_label(ProductCatalog.selection_risk_band(_selected))
+	_risk_label.text = tr("PROD_BUG_RISK").format(
+		{"level": ProductUiShared.risk_label(ProductCatalog.selection_risk_band(_selected))})
 	# Sayaç + grup başlıkları ("%s · %d/%d") — işaretli satır sayılır.
 	var picked_total: int = _selected.size() + _strengthen.size()
-	_sel_count_label.text = "%d seçili" % picked_total
+	_sel_count_label.text = tr("PROD_SELECTED_COUNT").format({"n": picked_total})
 	for gh in _group_headers:
 		var checked: int = 0
 		for fid in gh.ids:
 			if _selected.has(fid) or _strengthen.has(fid) \
 					or (_v2_mode and not _strengthen_mode and _shipped_ids.has(fid)):
 				checked += 1
-		(gh.label as Label).text = "%s · %d/%d" % [gh.title, checked, (gh.ids as Array).size()]
+		(gh.label as Label).text = tr("PROD_GROUP_COUNT").format(
+			{"title": gh.title, "checked": checked, "total": (gh.ids as Array).size()})
 	# Kilitli mod: commit kartı yok — durum kartı güncellenir, gerisi atlanır.
 	if _locked_mode:
 		_update_status()
@@ -776,17 +781,17 @@ func _update_dynamic() -> void:
 	var cost: int = ProductCatalog.sum_cost(_selected)
 	var days: int = ProductSystem.estimate_build_days(_selected, _strengthen, _sorumlu_id())
 	if cost > 0:
-		_totals_label.text = "Toplam efor %d · Maliyet %s · Süre ~%d gün" \
-			% [efor, ProductUiShared.money_tr(cost), days]
+		_totals_label.text = tr("PROD_TOTALS_COST").format(
+			{"efor": efor, "amount": ProductUiShared.money_tr(cost), "days": days})
 	else:
-		_totals_label.text = "Toplam efor %d · Süre ~%d gün" % [efor, days]
-	_cash_label.text = "Bittiğinde kasada %s kalır" \
-		% ProductUiShared.money_tr(ProductUiShared.cash_after_build(cost, days))
+		_totals_label.text = tr("PROD_TOTALS").format({"efor": efor, "days": days})
+	_cash_label.text = tr("PROD_CASH_AFTER").format(
+		{"amount": ProductUiShared.money_tr(ProductUiShared.cash_after_build(cost, days))})
 	_commit_btn.disabled = picked_total <= 0
 	var suffix: String = ""
 	if cost > 0:
-		suffix = " · %s kasadan düşer" % ProductUiShared.money_tr(cost)
-	_commit_btn.text = "Onayla ve Başlat" + suffix
+		suffix = tr("PROD_CASH_DEDUCT").format({"amount": ProductUiShared.money_tr(cost)})
+	_commit_btn.text = tr("PROD_CONFIRM_START") + suffix
 
 
 func _base_dims() -> Dictionary:
@@ -837,19 +842,19 @@ func _update_status() -> void:
 	# duruyordu. Çubuk da aynı yuvarlanmış değerden besleniyor ki dolgu yazıyla çelişmesin.
 	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())
 	_status_bar.value = float(pct)
-	var line: String = "%s · %%%d · ~%d gün" % [
-		String(_PHASE_DISPLAY.get(b.current_phase, "")),
-		pct,
-		max(0, ProductSystem.build_days_remaining())]
+	var line: String = tr("PROD_PHASE_LINE").format({
+		"phase": _phase_display(b.current_phase),
+		"pct": Fmt.percent(pct, 0),
+		"days": max(0, ProductSystem.build_days_remaining())})
 	if ProductSystem.capacity_speed_factor() < 1.0:
-		line += " · yarı hız"
+		line += tr("PROD_HALF_SPEED")
 	_status_line.text = line
 	var in_beta: bool = b.current_phase == "bugfix"
 	_beta_line.visible = in_beta
 	_publish_btn.visible = in_beta
 	if in_beta:
-		_beta_line.text = "Beta · bulunan %d · çözülen %d · açık %d" \
-			% [b.bugs_found, b.bugs_fixed, b.bug_count]
+		_beta_line.text = tr("PROD_BETA_LINE").format(
+			{"found": b.bugs_found, "fixed": b.bugs_fixed, "open": b.bug_count})
 	# İterasyon kararı (player-gated restore): üç eksenin tamamı + tavanları burada
 	# (yüzen kart kompakt iki eksen basar). Karar anı bilgili olsun: mevcut değer /
 	# tavan yan yana — "daha çok tur mu, daha iyi insan mı" sorusu buradan okunur.
@@ -865,18 +870,18 @@ func _update_status() -> void:
 		# bonusunu ve v2 mirasını bağlamaz — hepsi tasarımca tavanın DIŞINDA. O yüzden
 		# ekranda "Kararlılık 10 / tavan 8" görmek mümkün ve doğru; yanlış olan etiketti.
 		# Nitelik satır başında bir kez söyleniyor, üç eksende üç kez tekrarlanmıyor.
-		_iter_line.text = "Tur kazancı tavanı — İnovasyon %d / %d · Kararlılık %d / %d · Deneyim %d / %d" % [
-			int(round(b.innovation)), int(round(float(ceilings.get("innovation", 0.0)))),
-			int(round(b.stability)), int(round(float(ceilings.get("stability", 0.0)))),
-			int(round(b.experience)), int(round(float(ceilings.get("experience", 0.0))))]
+		_iter_line.text = tr("PROD_ROUND_CEILING").format({
+			"inn": int(round(b.innovation)), "inn_max": int(round(float(ceilings.get("innovation", 0.0)))),
+			"stab": int(round(b.stability)), "stab_max": int(round(float(ceilings.get("stability", 0.0)))),
+			"exp": int(round(b.experience)), "exp_max": int(round(float(ceilings.get("experience", 0.0))))})
 		_iterate_btn.visible = ProductSystem.can_advance_iteration()
-		_iterate_btn.text = "Bir tur daha (%d gün)" % ProductSystem.ITER_ROUND_DAYS
-		_status_line.text = "%s · Tur %d · karar bekliyor" % [
-			String(_PHASE_DISPLAY.get(b.current_phase, "")), b.iteration_count]
+		_iterate_btn.text = tr("PROD_ONE_MORE_ROUND").format({"days": ProductSystem.ITER_ROUND_DAYS})
+		_status_line.text = tr("PROD_ROUND_PENDING").format(
+			{"phase": _phase_display(b.current_phase), "round": b.iteration_count})
 	elif in_round:
-		_status_line.text = "%s · Tur %d · ~%d gün" % [
-			String(_PHASE_DISPLAY.get(b.current_phase, "")), b.iteration_count,
-			int(ceil(b.iteration_round_days))]
+		_status_line.text = tr("PROD_ROUND_LINE").format({
+			"phase": _phase_display(b.current_phase), "round": b.iteration_count,
+			"days": int(ceil(b.iteration_round_days))})
 
 
 func _on_publish_pressed() -> void:
@@ -909,11 +914,12 @@ func _on_cancel_pressed() -> void:
 		"name": b.product_name,
 	}
 	EventBus.confirm_requested.emit({
-		"title": "Build'i iptal et?",
-		"body": "Kurma ekranına dönersin · seçimlerini düzenleyip yeniden başlarsın." if early
-			else "%d gün + %s yandı · geri gelmez. Sadece bundan sonrası durur." % [burned_days, ProductUiShared.money_tr(burned_cash)],
-		"confirm_text": "İptal et",
-		"cancel_text": "Vazgeç",
+		"title": tr("PROD_CANCEL_BUILD_Q"),
+		"body": tr("PROD_CANCEL_BUILD_BODY") if early
+			else tr("PROD_CANCEL_BUILD_COST").format(
+				{"days": burned_days, "amount": ProductUiShared.money_tr(burned_cash)}),
+		"confirm_text": tr("HR_SEARCH_CANCEL_OK"),
+		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_cancel.bind(prefill),
 	})
 
@@ -951,3 +957,10 @@ func _set_mouse_ignore(n: Node) -> void:
 		(n as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for c in n.get_children():
 		_set_mouse_ignore(c)
+
+
+## Faz id → ekran adı. _PHASE_KEYS const olabilir (sadece anahtar tutar), sözcük burada
+## çalışma anında çözülür — dil ortada değişirse doğru olanı basar.
+func _phase_display(phase: String) -> String:
+	var key: String = String(_PHASE_KEYS.get(phase, ""))
+	return tr(key) if key != "" else ""

@@ -85,3 +85,52 @@ the evening, and it is noticed") is doing real tonal work in Turkish.
 `HR_AGENCY_NAME` ("Atlas Seçme & Yerleştirme") is deliberately identical in both columns —
 a proper noun, on the same rule that keeps `Ekonomi Postası` untranslated. Flagging it here
 only so it is not mistaken for a missed row.
+
+---
+
+## B3 — Product (2026-08-19)
+
+### Product-type copy (`product_catalog`, from B3a)
+Ten sub-product types, each with four Tier B fields — `PROD_TYPE_<ID>_DESC` ·
+`_TRADEOFF` · `_BET` · `_PITCH` (**40 rows**). `_NAME` and `_CATEGORY` are Tier A labels and
+are *not* listed.
+
+The Turkish here was **authored, not translated**. The catalog previously stored the product
+name in English (`"Workflow Automation"`) beside a Turkish description, and the creation flow
+renders the two side by side — the Turkish feature picker literally read
+"**Workflow Automation** Şu olunca şunu yap…". So the English column of these rows is the
+draft, and the Turkish is the original.
+
+### Feature voices (`PROD_FEAT_*_VOICE`, 61 rows, from B3a)
+The wry one-liner under each feature name in the picker ("Şu olunca şunu yap" kurallarıyla
+süreci otomatikleştir. Manuel takip biter.). One per feature. These carry most of the
+picker's personality and want a native pass more than anything else in this batch.
+
+### Frank's product-detail lines (`product_ui_shared`)
+| Key | What it is |
+|---|---|
+| `PROD_TIP_WEAK` | weak-axis advice naming the rival directly above you |
+| `PROD_TIP_GOOD` | the "keep going" line |
+| `PROD_TIP_BUGS` | the bleeding-out line that overrides both |
+
+`PROD_TIP_WEAK` is **`# COPY-RESTRUCTURED`**: the Turkish read "v2'te onu güçlendir,
+{rival}'i yakala" — two suffixes on interpolated values, which the law forbids because the
+correct suffix depends on how the *value* sounds. Rewritten so both placeholders are followed
+by a fixed word instead ("v{version} sürümünde", "{rival} rakibini"). Any literary pass must
+keep that property.
+
+### Ship / iteration event bodies (`product_system`)
+`PROD_EV_FIRST_SHIP_BODY` · `PROD_EV_VERSION_SHIP_BODY` · `PROD_EV_ITER_DECISION_BODY` —
+three Frank scenes: the first launch, every later version, and the "one more round or move
+on" decision. Multi-paragraph with quoted dialogue; the English is flat-correct and
+undramatic next to the Turkish.
+
+`PROD_ITER_CEILING_NOTE` — the teaching sentence appended to the iteration decision when a
+build is active. It is doing precise mechanical work ("the ceiling comes from the team at the
+table, not the number of rounds") and must stay unambiguous ahead of sounding good.
+
+### Not for the pass
+`PROD_COST_API` ("API") is identical in both columns on purpose. `PROD_DEV_VERSION`
+("Geliştir · v{version}") is Tier A but was **restructured** away from "v3'ü geliştir", which
+carried a hand-written vowel-harmony table for 2..9 — the number is terminal now and must
+stay that way.

@@ -48,7 +48,9 @@ extends Control
 @onready var action_button: Button = $Root/Panel/VBox/ActionButton
 
 # Faz görünen adları — iç id'ler değişmedi (event/promise tüketicileri okur).
-const _PHASE_DISPLAY := {"iteration": "TASARIM", "development": "GELİŞTİRME", "bugfix": "BETA"}
+## Faz adları CSV'den; const olamaz (yükleme anında dil yok). creation_flow'un aynısı.
+const _PHASE_KEYS := {"iteration": "BUILD_PHASE_DESIGN", "development": "BUILD_PHASE_DEVELOPMENT",
+	"bugfix": "BUILD_PHASE_BETA"}
 const _PHASE_ORDER := ["iteration", "development", "bugfix"]
 
 # Kart boyutu (tuning): genişlik sabit; yükseklik normal fazlarda kompakt,
@@ -193,7 +195,8 @@ func _paint_one(b: FeatureBuild) -> void:
 	# Başlık: ikon + ad + "V2 · AI ASSISTANT".
 	name_label.text = b.product_name if b.product_name != "" else _sub_type_display(b.sub_product_type_id)
 	var version: int = (int(GameState.get_flag("mvp_version", 1)) + 1) if b.is_version_build else 1
-	meta_label.text = "V%d · %s" % [version, UiTokens.tr_upper(_sub_type_display(b.sub_product_type_id))]
+	meta_label.text = tr("PROD_META_VERSION").format(
+		{"version": version, "type": Fmt.upper(_sub_type_display(b.sub_product_type_id))})
 	_paint_icon(b.sub_product_type_id)
 	# Mini 3-faz şeridi: aktif fazın solu biten, sağı bekleyen.
 	var idx: int = _PHASE_ORDER.find(b.current_phase)
@@ -206,16 +209,17 @@ func _paint_one(b: FeatureBuild) -> void:
 		cap.add_theme_color_override("font_color",
 			UiTokens.ACCENT_DEEP if i == idx else UiTokens.INK_DIM)
 	# Faz hücresi + ilerleme — Rev3 tek kaynaklar: build_progress() + build_days_remaining().
-	phase_name_label.text = String(_PHASE_DISPLAY.get(b.current_phase, ""))
+	phase_name_label.text = _phase_display(b.current_phase)
 	# Yüzdenin TEK evi UiTokens.build_percent: kart her sekme sayfasının ÜSTÜNDE yüzer,
 	# yani portföy rozetiyle aynı karede aynı build'i basar — biri yuvarlayıp öteki
 	# aşağı kırparsa aynı iş iki ayrı yüzde olur. Dolgu da aynı int'ten türer; ham
 	# kesirle beslenen çubuk, yanına yazdığımız sayıyla tutmaz.
 	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())
-	var status: String = "%%%d · ~%d gün" % [pct, max(0, ProductSystem.build_days_remaining())]
+	var status: String = tr("PROD_PHASE_PCT").format(
+		{"pct": Fmt.percent(pct, 0), "days": max(0, ProductSystem.build_days_remaining())})
 	# Kapasite bölünmüşse (sprint/pitch-prep ile paralel) build yarı hızda akar.
 	if ProductSystem.capacity_speed_factor() < 1.0:
-		status += " · yarı hız"
+		status += tr("PROD_HALF_SPEED")
 	phase_status_label.text = status
 	_set_fill_fraction(float(pct) / 100.0)
 	# İterasyon karar/tur durumu (player-gated restore): pending'de tavan satırı + iki
@@ -229,14 +233,15 @@ func _paint_one(b: FeatureBuild) -> void:
 		var ceilings: Dictionary = ProductSystem.iteration_axis_ceilings()
 		# Nitelik satır başında bir kez — sayı yalnız TUR kazançlarını bağlıyor, ekseni
 		# değil (in-tab kartın uzun sürümüyle aynı gramer).
-		iter_line.text = "Tur kazancı tavanı — İnovasyon %d / %d · Deneyim %d / %d" % [
-			int(round(b.innovation)), int(round(float(ceilings.get("innovation", 0.0)))),
-			int(round(b.experience)), int(round(float(ceilings.get("experience", 0.0))))]
+		iter_line.text = tr("PROD_ROUND_CEILING_2AX").format({
+			"inn": int(round(b.innovation)), "inn_max": int(round(float(ceilings.get("innovation", 0.0)))),
+			"exp": int(round(b.experience)), "exp_max": int(round(float(ceilings.get("experience", 0.0))))})
 		iterate_btn.visible = ProductSystem.can_advance_iteration()
-		iterate_btn.text = "Bir tur daha (%d gün)" % ProductSystem.ITER_ROUND_DAYS
-		phase_status_label.text = "Tur %d · karar bekliyor" % b.iteration_count
+		iterate_btn.text = tr("PROD_ONE_MORE_ROUND").format({"days": ProductSystem.ITER_ROUND_DAYS})
+		phase_status_label.text = tr("PROD_ROUND_PENDING_SHORT").format({"round": b.iteration_count})
 	elif in_round:
-		phase_status_label.text = "Tur %d · ~%d gün" % [b.iteration_count, int(ceil(b.iteration_round_days))]
+		phase_status_label.text = tr("PROD_ROUND_SHORT").format(
+			{"round": b.iteration_count, "days": int(ceil(b.iteration_round_days))})
 	# Beta: bug sayaçları + Yayınla (launch bugfix-gated; buton yalnız burada).
 	var in_beta: bool = b.current_phase == "bugfix"
 	beta_row.visible = in_beta
@@ -281,11 +286,12 @@ func _on_cancel_pressed() -> void:
 		"name": b.product_name,
 	}
 	EventBus.confirm_requested.emit({
-		"title": "Build'i iptal et?",
-		"body": "Kurma ekranına dönersin — seçimlerini düzenleyip yeniden başlarsın." if early
-			else "%d gün + $%d yandı — geri gelmez. Sadece bundan sonrası durur." % [burned_days, burned_cash],
-		"confirm_text": "İptal et",
-		"cancel_text": "Vazgeç",
+		"title": tr("PROD_CANCEL_BUILD_Q"),
+		"body": tr("PROD_CANCEL_BUILD_BODY") if early
+			else tr("PROD_CANCEL_BUILD_COST").format(
+				{"days": burned_days, "amount": Fmt.money_exact(burned_cash)}),
+		"confirm_text": tr("HR_SEARCH_CANCEL_OK"),
+		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_cancel.bind(prefill),
 	})
 
@@ -363,10 +369,14 @@ func _paint_icon(sub_type_id: String) -> void:
 
 
 func _sub_type_display(sub_type_id: String) -> String:
-	# Meta satırı KISA EN etiketi kullanır ("AI ASSISTANT") — working call.
+	# B3a'ya kadar katalogdaki kısa EN "name" alanını okuyordu; o alan artık yok (sözcükler
+	# CSV'ye taşındı), yani bu satır ham id basıyordu. Yerelleşmiş ada bağlandı.
 	if sub_type_id == "":
-		return "Build"
-	var data: Dictionary = ProductCatalog.get_sub_product_type_by_id(sub_type_id)
-	if data.is_empty():
-		return sub_type_id
-	return String(data.get("name", sub_type_id))
+		return tr("PROD_BUILD_FALLBACK")
+	return ProductCatalog.type_name(sub_type_id)
+
+
+## Faz id → ekran adı (creation_flow ile aynı sözleşme).
+func _phase_display(phase: String) -> String:
+	var key: String = String(_PHASE_KEYS.get(phase, ""))
+	return tr(key) if key != "" else ""

@@ -303,13 +303,14 @@ func _open_training_picker() -> void:
 func _confirm_training(emp: Character) -> void:
 	EventBus.confirm_requested.emit({
 		"title": tr("HR_TRAINING_PICK_TITLE"),
-		"body": "%s · %s
-%s" % [emp.character_name,
-			HRConstants.role_label(emp.role),
-			tr("HR_TRAINING_PICK_NOTE").format({
+		"body": tr("HR_TRAINING_PICK_BODY").format({
+			"name": emp.character_name,
+			"role": HRConstants.role_label(emp.role),
+			"note": tr("HR_TRAINING_PICK_NOTE").format({
 				"days": HRConstants.TRAINING_DAYS,
 				"fee": HRUiShared.money(HRConstants.TRAINING_FEE),
-			})],
+			}),
+		}),
 		"confirm_text": tr("HR_TRAINING_SEND"),
 		"on_confirm": _do_send_to_training.bind(emp.id),
 	})

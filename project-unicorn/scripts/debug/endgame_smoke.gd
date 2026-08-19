@@ -236,6 +236,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_b2b_derived_keys":      fail = _case_loc_b2b_derived_keys()
 		"loc_save_sector_migration": fail = _case_loc_save_sector_migration()
 		"loc_product_derived_keys":  fail = _case_loc_product_derived_keys()
+		"loc_format_args":           fail = _case_loc_format_args()
+		"all_scripts_load":          fail = _case_all_scripts_load()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -6540,3 +6542,156 @@ static func _case_loc_product_derived_keys() -> String:
 				return "[%s] %s has no row" % [loc, akey]
 	TranslationServer.set_locale(loc0)
 	return ""
+
+
+# ============================================================================
+# Two guards added in B3b, both because a green suite had already hidden a real defect.
+# ============================================================================
+
+## Every .gd under res://scripts actually COMPILES.
+##
+## Why this exists: B2 shipped `hr_tab.gd` and `hr_atlas_modal.gd` with unbalanced braces —
+## real parse errors — and the suite reported 135/135 PASS on top of them. Nothing was wrong
+## with the suite: no case instantiates those two UI scripts, and a script that is never
+## loaded is never compiled, so the error had nowhere to surface. The runner's
+## "Parse Error" grep could not help either, for the same reason.
+##
+## A localization sweep rewrites hundreds of call sites across files no headless case
+## touches, which is exactly the shape of change that produces this failure. So: load
+## everything, and let the engine be the judge.
+## Matches a whole `class_name Foo` line, kept as a file-level constant so the regex is
+## compiled once rather than once per script.
+static var RE_CLASS_NAME: RegEx = RegEx.create_from_string("(?m)^class_name[ 	]+[A-Za-z0-9_]+[ 	]*$")
+
+
+static func _case_all_scripts_load() -> String:
+	var files: Array[String] = []
+	_collect_by_ext("res://scripts", "gd", files)
+	_collect_by_ext("res://scenes", "gd", files)
+	if files.size() < 100:
+		return "only %d scripts found — the walk is broken, not the tree" % files.size()
+	# Two dead ends worth recording, because both look like the obvious answer:
+	#   ResourceLoader.load() alone PASSES a script with a parse error — it hands back a
+	#     Resource anyway (measured against a deliberately broken hr_tab.gd).
+	#   reload() on the loaded script CRASHES the engine here: the suite boots main.gd, so
+	#     autoloads and the live scene tree are running on those very script objects.
+	# So compile a DETACHED copy: a fresh GDScript that owns only the source text. Nothing
+	# in the running game points at it, and reload() is then just a compile.
+	var broken: Array[String] = []
+	for path in files:
+		var src: String = FileAccess.get_file_as_string(path)
+		if src == "":
+			broken.append(path + " (unreadable)")
+			continue
+		var probe := GDScript.new()
+		# Blank out `class_name X`: the real file legitimately owns that global name, so a
+		# second declaration of it fails to compile and every class_name file in the project
+		# reports as broken (measured: 73 false positives). Replaced with an empty line
+		# rather than deleted, so reported line numbers still match the file on disk.
+		probe.source_code = RE_CLASS_NAME.sub(src, "", true)
+		if probe.reload() != OK:
+			broken.append(path)
+	if not broken.is_empty():
+		return "%d script(s) failed to compile: %s" % [broken.size(), ", ".join(broken)]
+	return ""
+
+
+## The names passed to `.format({...})` match the {tokens} in that key's CSV row.
+##
+## Why this exists: a mismatch is SILENT. String.format leaves an unmatched {token} sitting
+## on screen, and an argument with no slot simply evaporates — so the sentence quietly loses
+## the number it promised, with no error anywhere. `loc_csv_integrity` cannot see it: it
+## proves tr and en agree with EACH OTHER, not that the CALLER agrees with either.
+##
+## Found two already-committed defects the day it was written: HR_NEWS_TRAINING_DONE was
+## passing a `role` the sentence had no slot for, and PROD_MARKET_SHARE was being handed a
+## `share` its value never interpolated — the market-share number was being dropped.
+static func _case_loc_format_args() -> String:
+	var want := {}
+	var f := FileAccess.open("res://localization/strings.csv", FileAccess.READ)
+	if f == null:
+		return "strings.csv unreadable"
+	f.get_csv_line()  # header
+	var re_token := RegEx.new()
+	re_token.compile("[{]([a-z_0-9]+)[}]")
+	while not f.eof_reached():
+		var row: PackedStringArray = f.get_csv_line()
+		if row.size() < 3 or row[0].strip_edges() == "":
+			continue
+		var toks: Array[String] = []
+		for m in re_token.search_all(row[1]):
+			if not toks.has(m.get_string(1)):
+				toks.append(m.get_string(1))
+		toks.sort()
+		want[row[0].strip_edges()] = toks
+
+	var files: Array[String] = []
+	_collect_by_ext("res://scripts", "gd", files)
+	var re_call := RegEx.new()
+	re_call.compile('(?:\\btr|TranslationServer\\.translate)\\([ \t\r\n]*"([A-Z0-9_]+)"[ \t\r\n]*\\)[ \t\r\n]*\\.format\\([ \t\r\n]*[{]')
+	var re_nested := RegEx.new()
+	re_nested.compile('\\.format\\([ \t\r\n]*[{]')
+	var re_arg := RegEx.new()
+	re_arg.compile('"([a-z_0-9]+)"[ \t]*:')
+	var checked: int = 0
+	for path in files:
+		var src: String = FileAccess.get_file_as_string(path)
+		for m in re_call.search_all(src):
+			var key: String = m.get_string(1)
+			if not want.has(key):
+				continue  # missing-key coverage belongs to loc_residue, not here
+			var body: String = _brace_body(src, m.get_end() - 1)
+			# Strip NESTED format bodies first, or tr(A).format({"x": tr(B).format({"n": v})})
+			# lends B's "n" to A and this case fails on a call that is perfectly correct.
+			while true:
+				var nm: RegExMatch = re_nested.search(body)
+				if nm == null:
+					break
+				var inner: String = _brace_body(body, nm.get_end() - 1)
+				body = body.substr(0, nm.get_start()) \
+					+ body.substr(nm.get_end() + inner.length() + 1)
+			var args: Array[String] = []
+			for a in re_arg.search_all(body):
+				if not args.has(a.get_string(1)):
+					args.append(a.get_string(1))
+			args.sort()
+			if args != want[key]:
+				return "%s: %s passes %s, CSV row wants %s" % [
+					path.get_file(), key, str(args), str(want[key])]
+			checked += 1
+	if checked < 40:
+		return "only %d format sites inspected — the scan is broken, not the code" % checked
+	return ""
+
+
+## Substring between the brace at `open_idx` and its match, exclusive. "" if unbalanced.
+static func _brace_body(s: String, open_idx: int) -> String:
+	var depth: int = 0
+	var j: int = open_idx
+	while j < s.length():
+		var c: String = s[j]
+		if c == "{":
+			depth += 1
+		elif c == "}":
+			depth -= 1
+			if depth == 0:
+				return s.substr(open_idx + 1, j - open_idx - 1)
+		j += 1
+	return ""
+
+
+static func _collect_by_ext(root: String, ext: String, out: Array[String]) -> void:
+	var dir := DirAccess.open(root)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var name: String = dir.get_next()
+	while name != "":
+		var path: String = root.path_join(name)
+		if dir.current_is_dir():
+			if not name.begins_with("."):
+				_collect_by_ext(path, ext, out)
+		elif name.get_extension() == ext:
+			out.append(path)
+		name = dir.get_next()
+	dir.list_dir_end()

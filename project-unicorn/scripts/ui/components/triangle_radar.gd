@@ -27,11 +27,15 @@ const CORNER_ANGLES_DEG := {     # Godot y-aşağı: 30/150 alt yarıya düşer
 	"experience": 150.0,
 	"stability": 30.0,
 }
-const DEFAULT_LABELS := {
-	"innovation": "İNOVASYON",
-	"experience": "DENEYİM",
-	"stability": "KARARLILIK",
-}
+## Corner captions. Was a Turkish literal table, which left the radar reading İNOVASYON /
+## DENEYİM / KARARLILIK inside the English build while the legend two inches away said
+## Innovation / Stability / Experience. Derived from the axis id now, uppercased through
+## Fmt so the Turkish dotted İ survives and English does not gain one.
+const AXIS_IDS := ["innovation", "experience", "stability"]
+
+
+static func default_label(axis_id: String) -> String:
+	return Fmt.upper(ProductCatalog.axis_label(axis_id))
 
 var _values := {"innovation": 0.0, "stability": 0.0, "experience": 0.0}
 var _max: float = DEFAULT_MAX
@@ -46,7 +50,7 @@ func _ready() -> void:
 		lbl.theme_type_variation = &"SectionLabel"
 		lbl.add_theme_color_override("font_color", UiTokens.INK_DIM)  # küçük ve soluk (spec)
 		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		lbl.text = String(DEFAULT_LABELS[axis])
+		lbl.text = default_label(axis)
 		add_child(lbl)
 		_labels[axis] = lbl
 	resized.connect(_on_resized)

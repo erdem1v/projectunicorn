@@ -14,7 +14,10 @@ extends Control
 
 signal navigate_requested(view_id: String, args: Dictionary)
 
-const LOCKED_SLOT_TEXT := "KİLİTLİ · Series A sonrası"
+## Kilitli slot metni. Fonksiyon, const DEĞİL: const dosya yüklenirken değerlenir
+## (henüz dil yok) ve tr() bir Object ister.
+func _locked_slot_text() -> String:
+	return tr("PROD_LOCKED_SERIES_A")
 
 var _count_label: Label = null
 var _list: VBoxContainer = null
@@ -34,7 +37,7 @@ func setup(_args: Dictionary) -> void:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 10)
 	margin.add_child(vb)
-	vb.add_child(UiFactory.make_label("Portföy", &"TitleSerif"))
+	vb.add_child(UiFactory.make_label(tr("PROD_PORTFOLIO"), &"TitleSerif"))
 	_count_label = UiFactory.make_label("", &"CaptionMuted")
 	vb.add_child(_count_label)
 	_list = VBoxContainer.new()
@@ -70,7 +73,7 @@ func _rebuild_cards() -> void:
 	var shipped: bool = GameState.get_flag("mvp_shipped", false)
 	var build: FeatureBuild = ProductSystem.get_active_build()
 	var n: int = (1 if shipped else 0) + (1 if build != null else 0)
-	_count_label.text = "%d ürün · tıkla ve yönet" % n
+	_count_label.text = tr("PROD_PORTFOLIO_COUNT").format({"n": n})
 	if shipped:
 		_list.add_child(_make_live_card())
 	if build != null:
@@ -102,7 +105,8 @@ func _make_live_card() -> Control:
 	# make_pill (uppercase=false): make_badge her şeyi büyütür, "v1"in küçük v'si
 	# mockup'ın sürüm imzası — palet aynı (positive).
 	var pal: Dictionary = UiTokens.badge_palette(&"positive")
-	var badge := UiFactory.make_pill("CANLI v%d" % int(GameState.get_flag("mvp_version", 1)),
+	var badge := UiFactory.make_pill(
+		tr("PROD_LIVE_VERSION_LC").format({"version": int(GameState.get_flag("mvp_version", 1))}),
 		pal.bg, pal.fg, false)
 	hb.add_child(badge)
 	_live_numbers = UiFactory.make_label(_key_numbers_text(market), &"RowMeta")
@@ -130,13 +134,14 @@ func _key_numbers_text(market: String) -> String:
 		if not custs.is_empty():
 			var avg: float = float(sat_sum) / float(custs.size())
 			arrow = "↗" if avg >= 60.0 else ("→" if avg >= 40.0 else "↘")
-		return "MRR katkısı %s/ay · Açık hata %d · Memnuniyet %s" \
-			% [ProductUiShared.money_tr(mrr_sum), bugs, arrow]
+		return tr("PROD_ROW_B2B").format(
+			{"amount": ProductUiShared.money_tr(mrr_sum), "bugs": bugs, "sat": arrow})
 	var deneyen: int = int(GameState.get_flag("b2c_audience", 0))
-	var price_part: String = "Fiyat taslak"
+	var price_part: String = tr("PROD_PRICE_DRAFT")
 	if GameState.get_flag("b2c_paid_tier_open", false):
-		price_part = "Fiyat %s" % ProductUiShared.money_tr(int(GameState.get_flag("b2c_price", 0)))
-	return "Deneyen %d · Açık hata %d · %s" % [deneyen, bugs, price_part]
+		price_part = tr("PROD_PRICE_N").format(
+			{"amount": ProductUiShared.money_tr(int(GameState.get_flag("b2c_price", 0)))})
+	return tr("PROD_ROW_B2C").format({"users": deneyen, "bugs": bugs, "price": price_part})
 
 
 func _make_building_card(build: FeatureBuild) -> Control:
@@ -156,7 +161,8 @@ func _make_building_card(build: FeatureBuild) -> Control:
 	# durur, iki yüzey aynı build'i aynı karede basar; rozet ile bar da aynı int'ten
 	# türer (ham kesir bara verilirse yanındaki sayıyla tutmaz).
 	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())
-	var badge := UiFactory.make_badge("GELİŞTİRMEDE %%%d" % pct, &"accent")
+	var badge := UiFactory.make_badge(
+		tr("PROD_IN_DEV_PCT").format({"pct": Fmt.percent(pct, 0)}), &"accent")
 	_build_badge_label = badge.get_child(0) as Label
 	hb.add_child(badge)
 	vb.add_child(hb)
@@ -176,7 +182,7 @@ func _make_cta_card() -> Control:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"CardCta"
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var lbl := UiFactory.make_label("+ Yeni Ürün", &"NameSerif", UiTokens.ACCENT_DEEP)
+	var lbl := UiFactory.make_label(tr("PROD_NEW_PRODUCT"), &"NameSerif", UiTokens.ACCENT_DEEP)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(lbl)
@@ -192,8 +198,8 @@ func _make_locked_slot() -> Control:
 	card.focus_mode = Control.FOCUS_NONE
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 10)
-	# Tek metin: LOCKED_SLOT_TEXT zaten "KİLİTLİ" ile başlar — ayrı chip çift yazardı.
-	var lbl := UiFactory.make_label(LOCKED_SLOT_TEXT, &"RowMeta")
+	# Tek metin: _locked_slot_text() zaten "KİLİTLİ" ile başlar — ayrı chip çift yazardı.
+	var lbl := UiFactory.make_label(_locked_slot_text(), &"RowMeta")
 	lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hb.add_child(lbl)
 	card.add_child(hb)
@@ -207,7 +213,7 @@ func _update_texts() -> void:
 		_live_numbers.text = _key_numbers_text(String(GameState.get_flag("mvp_market_type", "b2c")))
 	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())   # kurulumla aynı tek ev
 	if _build_badge_label != null and is_instance_valid(_build_badge_label):
-		_build_badge_label.text = "GELİŞTİRMEDE %%%d" % pct
+		_build_badge_label.text = tr("PROD_IN_DEV_PCT").format({"pct": Fmt.percent(pct, 0)})
 	if _build_bar != null and is_instance_valid(_build_bar):
 		_build_bar.value = float(pct)
 

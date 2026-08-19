@@ -152,8 +152,8 @@ func _build_header() -> HBoxContainer:
 	header.add_theme_constant_override("separation", 10)
 	var back := Button.new()
 	back.flat = true
-	back.text = "← GERİ · PORTFÖY"
-	back.pressed.connect(func() -> void: navigate_requested.emit("portfoy", {}))
+	back.text = tr("PROD_BACK_PORTFOLIO")
+	back.pressed.connect(func() -> void: navigate_requested.emit("portfoy", {}))   # LOC-DATA route id
 	header.add_child(back)
 	_name_label = UiFactory.make_label("", &"NameSerif")
 	_name_label.add_theme_font_size_override("font_size", 20)
@@ -162,7 +162,7 @@ func _build_header() -> HBoxContainer:
 	_meta_label = UiFactory.make_label("", &"RowMeta")
 	_meta_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	header.add_child(_meta_label)
-	var live_badge := UiFactory.make_badge("CANLI V1", &"positive")
+	var live_badge := UiFactory.make_badge(tr("BUILD_LIVE_VERSION").format({"n": 1}), &"positive")
 	_live_badge_label = live_badge.get_child(0) as Label
 	header.add_child(live_badge)
 	var spacer := Control.new()
@@ -180,7 +180,7 @@ func _build_left_column(left: VBoxContainer) -> void:
 	# ÜRÜN PROFİLİ kartı: radar + legend + hata riski + rozetler.
 	var prof := VBoxContainer.new()
 	prof.add_theme_constant_override("separation", 8)
-	prof.add_child(UiFactory.make_label("ÜRÜN PROFİLİ", &"SectionLabel"))
+	prof.add_child(UiFactory.make_label(tr("PROD_PROFILE"), &"SectionLabel"))
 	var prof_row := HBoxContainer.new()
 	prof_row.add_theme_constant_override("separation", 12)
 	_radar = TriangleRadar.new()
@@ -215,7 +215,7 @@ func _build_left_column(left: VBoxContainer) -> void:
 	prof.add_child(prof_row)
 	var risk_row := HBoxContainer.new()
 	risk_row.add_theme_constant_override("separation", 4)
-	risk_row.add_child(UiFactory.make_label("Hata riski:", &"RowMeta"))
+	risk_row.add_child(UiFactory.make_label(tr("PROD_BUG_RISK_CAP"), &"RowMeta"))
 	_risk_value = UiFactory.make_label("", &"RowMeta")
 	risk_row.add_child(_risk_value)
 	prof.add_child(risk_row)
@@ -228,10 +228,10 @@ func _build_left_column(left: VBoxContainer) -> void:
 	var tr_body := VBoxContainer.new()
 	tr_body.add_theme_constant_override("separation", 6)
 	var tr_head := HBoxContainer.new()
-	var tr_title := UiFactory.make_label("TRACTİON'A DOĞRU", &"SectionLabel")
+	var tr_title := UiFactory.make_label(tr("PROD_TOWARD_TRACTION"), &"SectionLabel")
 	tr_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tr_head.add_child(tr_title)
-	_traction_ready_badge = UiFactory.make_badge("HAZIR · FRANK'LE KONUŞ", &"positive")
+	_traction_ready_badge = UiFactory.make_badge(tr("PROD_READY_TALK_FRANK"), &"positive")
 	_traction_ready_badge.visible = false
 	tr_head.add_child(_traction_ready_badge)
 	tr_body.add_child(tr_head)
@@ -249,12 +249,12 @@ func _build_left_column(left: VBoxContainer) -> void:
 	if not _is_b2b:
 		var st := VBoxContainer.new()
 		st.add_theme_constant_override("separation", 8)
-		st.add_child(UiFactory.make_label("DURUM", &"SectionLabel"))
+		st.add_child(UiFactory.make_label(tr("PROD_STATUS"), &"SectionLabel"))
 		var srow := HBoxContainer.new()
 		srow.add_theme_constant_override("separation", 18)
-		_add_stat(srow, "deneyen", "DENEYEN")
-		_add_stat(srow, "bugs", "AÇIK HATA")
-		_add_stat(srow, "stab", "ETKİN KARARLILIK")
+		_add_stat(srow, "deneyen", tr("PROD_TRYING_CAP"))   # LOC-DATA stat slot id
+		_add_stat(srow, "bugs", tr("PROD_OPEN_BUGS"))
+		_add_stat(srow, "stab", tr("PROD_EFFECTIVE_STABILITY"))
 		st.add_child(srow)
 		left.add_child(UiFactory.make_card(st))
 
@@ -264,19 +264,19 @@ func _build_right_column(right: VBoxContainer) -> void:
 		# DURUM kartı İLK.
 		var st := VBoxContainer.new()
 		st.add_theme_constant_override("separation", 8)
-		st.add_child(UiFactory.make_label("DURUM", &"SectionLabel"))
+		st.add_child(UiFactory.make_label(tr("PROD_STATUS"), &"SectionLabel"))
 		var srow := HBoxContainer.new()
 		srow.add_theme_constant_override("separation", 18)
-		_add_stat(srow, "musteri", "MÜŞTERİ")
-		_add_stat(srow, "mrr", "MRR KATKISI")
-		_add_stat(srow, "bugs", "AÇIK HATA")
-		_add_stat(srow, "stab", "ETKİN KARARLILIK")
+		_add_stat(srow, "musteri", tr("PROD_CUSTOMERS_CAP"))   # LOC-DATA stat slot id
+		_add_stat(srow, "mrr", tr("PROD_MRR_CONTRIB_CAP"))   # LOC-DATA stat slot id
+		_add_stat(srow, "bugs", tr("PROD_OPEN_BUGS"))
+		_add_stat(srow, "stab", tr("PROD_EFFECTIVE_STABILITY"))
 		st.add_child(srow)
 		right.add_child(UiFactory.make_card(st))
 		# Sales CTA.
 		var sales_btn := Button.new()
 		sales_btn.theme_type_variation = &"CommitButton"
-		sales_btn.text = "Sales sekmesine git →"
+		sales_btn.text = tr("PROD_GO_TO_SALES")
 		sales_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		sales_btn.pressed.connect(func() -> void: EventBus.tab_changed.emit("sales"))
 		right.add_child(sales_btn)
@@ -296,14 +296,14 @@ func _build_right_column(right: VBoxContainer) -> void:
 	right.add_child(_versions_label)
 
 	# Aksiyon kartları.
-	var v_parts := _make_action_card("", "", "Yeni özellik / güçlendirme · daha yüksek rekabet. (Yeni özellik = yeni bug.)", true)
+	var v_parts := _make_action_card("", "", tr("PROD_ACTION_FEATURE_DESC"), true)
 	_v_card = v_parts["card"]
 	_v_title = v_parts["title"]
 	_v_status = v_parts["status"]
 	_v_card.gui_input.connect(_on_v_card_input)
 	right.add_child(_v_card)
 
-	var s_parts := _make_action_card("Hata sprinti", "", "Bug'ları temizle · kararlılık geri gelir (build'le paralelse ikisi yavaşlar).", false)
+	var s_parts := _make_action_card(tr("PROD_ACTION_HARDEN"), "", tr("PROD_ACTION_HARDEN_DESC"), false)
 	_sprint_card = s_parts["card"]
 	_sprint_status = s_parts["status"]
 	_sprint_card.gui_input.connect(_on_sprint_card_input)
@@ -311,7 +311,7 @@ func _build_right_column(right: VBoxContainer) -> void:
 
 	if _is_b2b:
 		# Fiyatlandır kartı: INERT — B2B'de taban fiyat/paket mekanizması yok.
-		var p_parts := _make_action_card("Fiyatlandır", "SALES İLE", "B2B'de fiyat kontratta konuşulur · paket ve taban fiyatı ayarla.", false)
+		var p_parts := _make_action_card(tr("PROD_ACTION_PRICE"), tr("PROD_WITH_SALES"), tr("PROD_ACTION_PRICE_B2B"), false)
 		var p_card: PanelContainer = p_parts["card"]
 		p_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		right.add_child(p_card)
@@ -395,9 +395,9 @@ func _repaint_header(ver: int, sub: String) -> void:
 	_name_label.text = pname if pname != "" else type_name
 	var market: String = UiTokens.tr_upper(String(GameState.get_flag("mvp_market_type", "b2c")))
 	_meta_label.text = "%s · %s" % [market, _tr_upper(type_name)]
-	_live_badge_label.text = "CANLI V%d" % ver
+	_live_badge_label.text = tr("BUILD_LIVE_VERSION").format({"n": ver})
 	var hs: String = ProductSystem.health_state()
-	_set_dot_color(_health_dot, UiTokens.health_color(&"healthy" if hs == "saglikli" else &"warn"))
+	_set_dot_color(_health_dot, UiTokens.health_color(&"healthy" if hs == "saglikli" else &"warn"))   # LOC-DATA health band id
 	_health_text.text = ProductUiShared.health_label(hs)
 
 
@@ -418,23 +418,25 @@ func _repaint_profile(ver: int, bugs: int) -> void:
 	var risk: String = ProductSystem.product_bug_risk()
 	_risk_value.text = ProductUiShared.risk_label(risk)
 	_risk_value.add_theme_color_override("font_color",
-		UiTokens.negative_bright() if risk == "yuksek" else UiTokens.INK)
+		UiTokens.negative_bright() if risk == "yuksek" else UiTokens.INK)   # LOC-DATA risk band id
 	# Rozetler: 2 chip — palet/metin birlikte değiştiği için yeniden kurulur
 	# (liste değil; tam-ağaç rebuild sayılmaz).
 	_clear(_badges_row)
 	var pal: Dictionary = UiTokens.bug_severity(bugs)
 	_badges_row.add_child(UiFactory.make_pill(
-		"%d BUG · %s" % [bugs, ProductUiShared.trend_label(ProductSystem.bug_trend())], pal.bg, pal.fg))
+		tr("PROD_BUGS_TREND").format(
+			{"bugs": bugs, "trend": ProductUiShared.trend_label(ProductSystem.bug_trend())}),
+		pal.bg, pal.fg))
 	var live_days: int = max(0, GameState.day - int(GameState.get_flag("mvp_launch_day", GameState.day)))
-	_badges_row.add_child(UiFactory.make_badge("V%d · %d GÜN CANLI" % [ver, live_days], &"neutral"))
+	_badges_row.add_child(UiFactory.make_badge(tr("PROD_LIVE_DAYS").format({"version": ver, "days": live_days}), &"neutral"))
 
 
 func _repaint_traction() -> void:
 	_traction_ready_badge.visible = GameState.phase_gate_ready
 	_traction_bar.value = SalesSystem.traction_progress() * 100.0
-	_traction_meta.text = "MRR %s / %s" % [
-		ProductUiShared.money_tr(GameState.mrr),
-		ProductUiShared.money_tr(SalesSystem.TRACTION_MRR_TARGET)]
+	_traction_meta.text = tr("PROD_MRR_OF_TARGET").format({
+		"mrr": ProductUiShared.money_tr(GameState.mrr),
+		"target": ProductUiShared.money_tr(SalesSystem.TRACTION_MRR_TARGET)})
 
 
 func _repaint_stats(bugs: int) -> void:
@@ -448,8 +450,9 @@ func _repaint_stats(bugs: int) -> void:
 			if c.status == "active":
 				count += 1
 				mrr_sum += c.mrr
-		(_stat_values["musteri"] as Label).text = str(count)
-		(_stat_values["mrr"] as Label).text = "%s /ay" % ProductUiShared.money_tr(mrr_sum)
+		(_stat_values["musteri"] as Label).text = str(count)   # LOC-DATA stat slot id
+		(_stat_values["mrr"] as Label).text = tr("PROD_PER_MONTH").format(
+			{"amount": ProductUiShared.money_tr(mrr_sum)})
 	else:
 		(_stat_values["deneyen"] as Label).text = str(int(GameState.get_flag("b2c_audience", 0)))
 	(_stat_values["bugs"] as Label).text = str(bugs)
@@ -471,14 +474,14 @@ func _repaint_promises() -> void:
 	# Gün sayıları yerinde güncellenir (satırlar sayı değişmeden yeniden kurulmaz).
 	for entry in _promise_rows:
 		var days: int = max(0, int(entry["promise"].deadline_day) - GameState.day)
-		(entry["label"] as Label).text = "%d gün" % days
+		(entry["label"] as Label).text = tr("PROD_DAYS").format({"n": days})
 
 
 func _make_promise_row(p) -> PanelContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	row.add_child(UiFactory.make_label("SÖZ VERİLDİ", &"SectionLabel", UiTokens.ACCENT_DEEP))
-	var cname: String = "Müşteri"
+	row.add_child(UiFactory.make_label(tr("PROD_PROMISED"), &"SectionLabel", UiTokens.ACCENT_DEEP))
+	var cname: String = tr("SALES_CUSTOMER")
 	var cust = CustomerRegistry.get_customer(p.customer_id)
 	if cust != null:
 		cname = cust.display_name()
@@ -502,26 +505,28 @@ func _versions_line(current_ver: int) -> String:
 		var v: int = int(e.get("version", 1))
 		var seg: String = "v%d · %s" % [v, ProductUiShared.month_year(int(e.get("day", GameState.day)))]
 		if v == current_ver:
-			seg += " · CANLI"
+			seg += tr("PROD_LIVE_SUFFIX")
 		segs.append(seg)
 	if segs.is_empty():
 		# Eski save'ler (history yok): canlı sürümü launch gününden türet.
-		segs.append("v%d · %s · CANLI" % [current_ver,
-			ProductUiShared.month_year(int(GameState.get_flag("mvp_launch_day", GameState.day)))])
+		segs.append(tr("PROD_VERSION_LIVE").format({"version": current_ver,
+			"date": ProductUiShared.month_year(int(GameState.get_flag("mvp_launch_day", GameState.day)))}))
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	var next_state: String = "GELİŞTİRMEDE" if (b != null and b.is_version_build) else "planlanmadı"
+	var next_state: String = tr("PROD_IN_DEVELOPMENT") if (b != null and b.is_version_build) else tr("PROD_UNPLANNED")
 	segs.append("v%d · %s" % [current_ver + 1, next_state])
-	return "SÜRÜMLER  " + " → ".join(segs)
+	return tr("PROD_VERSIONS") + " " + " → ".join(segs)
 
 
 func _repaint_action_cards(ver: int, bugs: int) -> void:
 	var building: bool = ProductSystem.get_active_build() != null
 	var nextv: int = ver + 1
 	_v_title.text = _dev_title(nextv)
-	_v_status.text = "~%d+ GÜN" % max(3, ProductSystem.estimate_build_days([], [], ""))
+	_v_status.text = tr("PROD_ETA_DAYS").format(
+		{"n": max(3, ProductSystem.estimate_build_days([], [], ""))})
 	_set_card_locked(_v_card, building)
 	var sprinting: bool = GameState.get_flag("mvp_bug_sprint_active", false)
-	_sprint_status.text = "%d BUG · ~%d GÜN" % [bugs, ProductSystem.sprint_duration_for(bugs)]
+	_sprint_status.text = tr("PROD_BUGS_ETA").format(
+		{"bugs": bugs, "days": ProductSystem.sprint_duration_for(bugs)})
 	# Kilit kuralları (eski _paint_action_card): sprint satırı sprint sürerken /
 	# temizken kilitli — build SÜRERKEN AÇIK (bedel = kapasite bölünmesi).
 	_set_card_locked(_sprint_card, sprinting or bugs <= 0)
@@ -535,12 +540,13 @@ func _repaint_bottom(sub: String, ver: int) -> void:
 	# küçükken bile bir sonraki basamak görünür kalır. Kalite-bazlı "seni geçti"
 	# eki ayrı bir sinyaldir ve aynen kalır.
 	var snap: Dictionary = RivalRegistry.get_market_snapshot(sub)
-	var line: String = "pazar payı " + RivalRegistry.format_share(float(snap["player_pct"]))
+	var line: String = tr("PROD_MARKET_SHARE").format(
+		{"share": RivalRegistry.format_share(float(snap["player_pct"]))})
 	var above: Dictionary = _nearest_rival_above(snap)
 	if not above.is_empty():
 		line += " · %s %s" % [String(above["name"]), RivalRegistry.format_share(float(above["share_pct"]))]
 	var passed: bool = passer != ""
-	_league_label.text = line + ((" · %s seni geçti." % passer) if passed else "")
+	_league_label.text = line + (tr("PROD_RIVAL_PASSED").format({"rival": passer}) if passed else "")
 	_league_label.add_theme_color_override("font_color",
 		UiTokens.negative() if passed else UiTokens.INK_MUTED)
 	# Şerit KUTUSU yalnız gerçekten bir uyarı varken çizilir. Panel'i her zaman
@@ -548,7 +554,7 @@ func _repaint_bottom(sub: String, ver: int) -> void:
 	_league_strip.self_modulate.a = 1.0 if passed else 0.0
 	_league_icon.visible = passed
 	_league_icon.add_theme_color_override("font_color", UiTokens.negative())
-	var bugs_heavy: bool = ProductSystem.product_bug_risk() == "yuksek"
+	var bugs_heavy: bool = ProductSystem.product_bug_risk() == "yuksek"   # LOC-DATA risk band id
 	_frank_line.text = ProductUiShared.frank_line(_weakest_axis_id(), ver + 1, passer, bugs_heavy)
 
 
@@ -632,10 +638,11 @@ func _weakest_axis_id() -> String:
 
 # --- yardımcılar ----------------------------------------------------------------
 
+## "Geliştir · v3". Eski metin "v3'ü geliştir"di ve 2..9 için elle yazılmış bir ek tablosu
+## taşıyordu — Türkçe ünlü uyumu sayının OKUNUŞUNA bağlı olduğu için. Yasa tam da bu yüzden
+## araya giren değere ek getirmeyi yasaklıyor: tablo bir sonraki dilde çöker. Sayı sona alındı.
 func _dev_title(v: int) -> String:
-	# "v2'yi geliştir" — 2..9 için ek tablosu (working; tam ünlü uyumu overkill).
-	var sfx: Dictionary = {2: "yi", 3: "ü", 4: "ü", 5: "i", 6: "yı", 7: "yi", 8: "i", 9: "u"}
-	return "v%d'%s geliştir" % [v, String(sfx.get(v, "i"))]
+	return tr("PROD_DEV_VERSION").format({"version": v})
 
 
 func _set_card_locked(card: PanelContainer, locked: bool) -> void:
@@ -667,7 +674,7 @@ func _override_bar_fill(bar: ProgressBar, c: Color) -> void:
 
 func _type_name_human(sub_type_id: String) -> String:
 	if sub_type_id == "":
-		return "Ürün"
+		return tr("PRODUCT_FALLBACK_NAME")
 	var data: Dictionary = ProductCatalog.get_sub_product_type_by_id(sub_type_id)
 	if data.is_empty():
 		return sub_type_id

@@ -55,9 +55,9 @@ func _build() -> void:
 	vb.add_theme_constant_override("separation", 10)
 	add_child(vb)
 
-	# 1. Başlık: "FİYATLANDIRMA" + durum chip'i (TASLAK → CANLI · $N).
+	# 1. Başlık: tr("PROD_PRICING") + durum chip'i (TASLAK → CANLI · $N).
 	_header_row = HBoxContainer.new()
-	var hdr := UiFactory.make_label("FİYATLANDIRMA", &"SectionLabel")
+	var hdr := UiFactory.make_label(tr("PROD_PRICING"), &"SectionLabel")
 	hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hdr.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_header_row.add_child(hdr)
@@ -69,7 +69,7 @@ func _build() -> void:
 	_figure_label = UiFactory.make_label("", &"TitleSerif")
 	_figure_label.add_theme_font_size_override("font_size", 24)
 	fig_row.add_child(_figure_label)
-	var per := UiFactory.make_label("/ kullanıcı", &"CaptionMuted")
+	var per := UiFactory.make_label(tr("PROD_PER_USER"), &"CaptionMuted")
 	per.size_flags_vertical = Control.SIZE_SHRINK_END
 	fig_row.add_child(per)
 	vb.add_child(fig_row)
@@ -159,16 +159,16 @@ func _paint() -> void:
 		_pricing_initialized = true
 
 	_rebuild_header_chip(is_open)
-	_figure_label.text = ("~%s" % ProductUiShared.money_tr(optimal)) if can_read else "belirsiz"
+	_figure_label.text = ("~" + ProductUiShared.money_tr(optimal)) if can_read else tr("PROD_UNKNOWN")
 	_rebuild_axis_chips()
 	_rebuild_bands(optimal, floor_p, smax, can_read)
-	_mark_floor.text = "Alt sınır %s" % ProductUiShared.money_tr(floor_p)
+	_mark_floor.text = tr("PROD_FLOOR").format({"amount": ProductUiShared.money_tr(floor_p)})
 	if can_read:
-		_mark_optimal.text = "Optimal %s" % ProductUiShared.money_tr(optimal)
-		_mark_top.text = "üst açık"
+		_mark_optimal.text = tr("PROD_OPTIMAL").format({"amount": ProductUiShared.money_tr(optimal)})
+		_mark_top.text = tr("PROD_UPPER_OPEN")
 	else:
 		# Satış gate'i (port): optimal düşük Satış becerisine gizli kalır.
-		_mark_optimal.text = "Optimal belirsiz (Markets düşük)"
+		_mark_optimal.text = tr("PROD_OPTIMAL_UNKNOWN")
 		_mark_top.text = ""
 	_update_projection(int(_slider.value))
 
@@ -180,9 +180,10 @@ func _rebuild_header_chip(is_open: bool) -> void:
 		_status_chip.queue_free()
 	if is_open:
 		_status_chip = UiFactory.make_badge(
-			"CANLI · %s" % ProductUiShared.money_tr(int(GameState.get_flag("b2c_price", 0))), &"positive")
+			tr("PROD_LIVE_PRICE").format(
+				{"amount": ProductUiShared.money_tr(int(GameState.get_flag("b2c_price", 0)))}), &"positive")
 	else:
-		_status_chip = UiFactory.make_badge("TASLAK", &"neutral")
+		_status_chip = UiFactory.make_badge(tr("PROD_DRAFT_CHIP"), &"neutral")
 	_status_chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_header_row.add_child(_status_chip)
 
@@ -193,10 +194,10 @@ func _rebuild_axis_chips() -> void:
 	var stab: int = int(round(float(GameState.get_flag("mvp_stability", 0.0))))
 	var exp: int = int(round(float(GameState.get_flag("mvp_experience", 0.0))))
 	var comp_count: int = (GameState.get_flag("mvp_components", []) as Array).size()
-	_chips_row.add_child(UiFactory.make_badge("İNOVASYON %d" % inn, &"neutral"))
-	_chips_row.add_child(UiFactory.make_badge("KARARLILIK %d" % stab, &"neutral"))
-	_chips_row.add_child(UiFactory.make_badge("DENEYİM %d" % exp, &"neutral"))
-	_chips_row.add_child(UiFactory.make_badge("%d ÖZELLİK" % comp_count, &"neutral"))
+	_chips_row.add_child(UiFactory.make_badge(tr("PROD_AXIS_INNOVATION_N").format({"n": inn}), &"neutral"))
+	_chips_row.add_child(UiFactory.make_badge(tr("PROD_AXIS_STABILITY_N").format({"n": stab}), &"neutral"))
+	_chips_row.add_child(UiFactory.make_badge(tr("PROD_AXIS_EXPERIENCE_N").format({"n": exp}), &"neutral"))
+	_chips_row.add_child(UiFactory.make_badge(tr("PROD_FEATURE_COUNT").format({"n": comp_count}), &"neutral"))
 
 
 func _rebuild_bands(optimal: int, floor_p: int, smax: int, can_read: bool) -> void:
@@ -264,30 +265,31 @@ func _update_projection(price: int) -> void:
 	var is_open: bool = GameState.get_flag("b2c_paid_tier_open", false)
 
 	_clear(_stat_row)
-	_stat_row.add_child(UiFactory.make_stat("SEÇİLEN", ProductUiShared.money_tr(price), 0, "", UiTokens.ACCENT_DEEP))
+	_stat_row.add_child(UiFactory.make_stat(tr("PROD_SELECTED"), ProductUiShared.money_tr(price), 0, "", UiTokens.ACCENT_DEEP))
 	var dpay: int = new_paying - cur_paying
-	_stat_row.add_child(UiFactory.make_stat("ÖDEYEN", str(new_paying), dpay,
+	_stat_row.add_child(UiFactory.make_stat(tr("PROD_PAYING"), str(new_paying), dpay,
 		_signed(dpay) if (is_open and dpay != 0) else ""))
 	var dmrr: int = new_mrr - old_mrr
 	_stat_row.add_child(UiFactory.make_stat("MRR", ProductUiShared.money_tr(new_mrr), dmrr,
 		_signed_money(dmrr) if (is_open and dmrr != 0) else ""))
-	_stat_row.add_child(UiFactory.make_stat("DÖNÜŞÜM", "%%%d" % conv))
+	_stat_row.add_child(UiFactory.make_stat(tr("PROD_CONVERSION"), Fmt.percent(conv, 0)))
 
 	# Bölge etiketi — band'la AYNI const çifti; can_read gate'i porttan.
 	_clear(_zone_slot)
 	if not can_read:
-		_zone_slot.add_child(UiFactory.make_badge("İÇGÜDÜSEL FİYAT", &"neutral"))
+		_zone_slot.add_child(UiFactory.make_badge(tr("PROD_GUT_PRICE"), &"neutral"))
 	elif float(price) < float(optimal) * ZONE_LOW_RATIO:
-		_zone_slot.add_child(UiFactory.make_badge("UCUZ · HIZLI BÜYÜME", &"positive"))
+		_zone_slot.add_child(UiFactory.make_badge(tr("PROD_PRICE_CHEAP"), &"positive"))
 	elif float(price) > float(optimal) * ZONE_HIGH_RATIO:
-		_zone_slot.add_child(UiFactory.make_badge("PAHALI · YAVAŞ BÜYÜME", &"negative"))
+		_zone_slot.add_child(UiFactory.make_badge(tr("PROD_PRICE_EXPENSIVE"), &"negative"))
 	else:
-		_zone_slot.add_child(UiFactory.make_badge("OPTIMAL · DENGELİ", &"accent"))
+		_zone_slot.add_child(UiFactory.make_badge(tr("PROD_PRICE_OPTIMAL"), &"accent"))
 	if bool(est["is_raise"]):
 		_zone_slot.add_child(UiFactory.make_badge(
-			"ZAM · KİTLE −%%%d" % int(round(float(est["audience_drop_pct"]) * 100.0)), &"negative"))
+			tr("PROD_PRICE_RAISE").format(
+				{"pct": Fmt.percent(int(round(float(est["audience_drop_pct"]) * 100.0)), 0)}), &"negative"))
 
-	_apply.text = "Fiyatı koy · %s" % ProductUiShared.money_tr(price)
+	_apply.text = tr("PROD_PRICE_COMMIT").format({"amount": ProductUiShared.money_tr(price)})
 
 
 func _on_apply_pressed() -> void:

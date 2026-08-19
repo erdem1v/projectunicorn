@@ -1026,3 +1026,212 @@ PROD_AXIS_EXPERIENCE,Deneyim,Experience
 PROD_RISK_LOW,Düşük,Low
 PROD_RISK_MID,Orta,Medium
 PROD_RISK_HIGH,Yüksek,High
+PROD_STEP_TYPE,02 TİP,02 TYPE
+PROD_STEP_FEATURES,03 ÖZELLİKLER,03 FEATURES
+PROD_PATH_TITLE,Yolunu seç,Choose your road
+PROD_PATH_SUB,Bu seçim ürünün nasıl para kazandığını belirler. Sonradan değişmez.,This choice decides how the product makes money. It cannot be changed later.
+PROD_PATH_B2C,KİTLE,CONSUMER
+PROD_PATH_B2C_DESC,"Kitleye satarsın. Kullanıcılar gelir, gider, sayılar dalgalanır.","You sell to a crowd. Users arrive, users leave, the numbers swing."
+PROD_PATH_B2C_PRO,Kitle kendiliğinden büyür,The audience grows on its own
+PROD_PATH_B2C_CON,Kullanıcı başına küçük gelir,Small revenue per user
+PROD_PATH_B2B_DESC,"Şirketlere satarsın. Her kontrat büyük para, her müşteri senin eserin.","You sell to companies. Every contract is real money, every customer is your own work."
+PROD_PATH_B2B_PRO,Kontrat başına yüksek gelir,High revenue per contract
+PROD_PATH_B2B_CON1,Satışı sen yaparsın,You do the selling
+PROD_PATH_B2B_CON2,Müşteri tutmak iş ister,Keeping customers is work
+PROD_TYPE_EXAMPLES,TİP ÖRNEKLERİ,TYPE EXAMPLES
+PROD_PATH_PICK,Bu yolu seç →,Take this road →
+PROD_MENTOR_TAG,FRANK KÖSEOĞLU · MENTOR,FRANK KÖSEOĞLU · MENTOR
+PROD_MENTOR_LINE,"B2C'de kalabalığa satarsın, kimseyi tanımazsın. B2B'de herkesi tanırsın, herkes seni tanır. İkisi de para. Farklı dertler.","In B2C you sell to a crowd and know nobody. In B2B you know everybody, and everybody knows you. Both are money. Different headaches."
+PROD_BACK_PATH,← GERİ · YOL SEÇİMİ,← BACK · PATH
+PROD_TYPE_STEP_TITLE,{market} · Ürün tipini seç,{market} · Choose a product type
+PROD_TYPE_STEP_SUB,"Hangi problemi çözüyoruz? Sektör, müşterinin dünyasını belirler.",Which problem are we solving? The sector decides the customer's world.
+PROD_BACK_PORTFOLIO,← GERİ · PORTFÖY,← BACK · PORTFOLIO
+PROD_BACK_TYPE,← GERİ · TİP SEÇİMİ,← BACK · TYPE
+PROD_RESEARCH_REQUIRED,ARAŞTIRMA GEREKLİ,RESEARCH REQUIRED
+PROD_PROFILE,ÜRÜN PROFİLİ,PRODUCT PROFILE
+PROD_TO_DEVELOPMENT,Geliştirmeye geç →,Move to development →
+PROD_CANCEL_BUILD,Geliştirmeyi iptal et,Cancel development
+PROD_CANCEL_BUILD_Q,Geliştirmeyi iptal et?,Cancel development?
+PROD_CANCEL_BUILD_BODY,Kurma ekranına dönersin · seçimlerini düzenleyip yeniden başlarsın.,You return to the setup screen · you can edit your picks and start again.
+PROD_CANCEL_BUILD_COST,{days} gün + {amount} yandı · geri gelmez. Sadece bundan sonrası durur.,{days} days and {amount} are burned · they do not come back. Only what follows stops.
+PROD_NAME_LABEL,Ürün adı,Product name
+PROD_NAME_SUGGEST,ÖNER,SUGGEST
+PROD_SELECTED_COUNT,{n} seçili,{n} selected
+PROD_TOTALS_COST,Toplam efor {efor} · Maliyet {amount} · Süre ~{days} gün,Total effort {efor} · Cost {amount} · About {days} days
+PROD_TOTALS,Toplam efor {efor} · Süre ~{days} gün,Total effort {efor} · About {days} days
+PROD_CASH_AFTER,Bittiğinde kasada {amount} kalır,{amount} left in the treasury when it is done
+PROD_CASH_DEDUCT, · {amount} kasadan düşer, · {amount} comes out of the treasury
+PROD_CONFIRM_START,Onayla ve Başlat,Confirm and Start
+PROD_PHASE_LINE,{phase} · {pct} · ~{days} gün,{phase} · {pct} · about {days} days
+PROD_HALF_SPEED, · yarı hız, · half speed
+PROD_BETA_LINE,Beta · bulunan {found} · çözülen {fixed} · açık {open},Beta · found {found} · fixed {fixed} · open {open}
+PROD_ROUND_CEILING,Tur kazancı tavanı — İnovasyon {inn} / {inn_max} · Kararlılık {stab} / {stab_max} · Deneyim {exp} / {exp_max},Round gain ceiling — Innovation {inn} / {inn_max} · Stability {stab} / {stab_max} · Experience {exp} / {exp_max}
+PROD_ONE_MORE_ROUND,Bir tur daha ({days} gün),One more round ({days} days)
+PROD_ROUND_LINE,{phase} · Tur {round} · ~{days} gün,{phase} · Round {round} · about {days} days
+PROD_TOWARD_TRACTION,TRACTION'A DOĞRU,TOWARD TRACTION
+PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
+PROD_STATUS,DURUM,STATUS
+PROD_OPEN_BUGS,AÇIK HATA,OPEN BUGS
+PROD_EFFECTIVE_STABILITY,ETKİN KARARLILIK,EFFECTIVE STABILITY
+PROD_CUSTOMERS_CAP,MÜŞTERİ,CUSTOMERS
+PROD_ACTION_FEATURE_DESC,Yeni özellik / güçlendirme · daha yüksek rekabet. (Yeni özellik = yeni hata.),New feature / reinforcement · stronger competition. (A new feature means new bugs.)
+PROD_ACTION_HARDEN_DESC,Hataları temizle · kararlılık geri gelir (geliştirmeyle paralelse ikisi de yavaşlar).,Clear the bugs · stability comes back (run it alongside development and both slow down).
+PROD_ACTION_PRICE,Fiyatlandır,Set the price
+PROD_WITH_SALES,SATIŞ İLE,WITH SALES
+PROD_ACTION_PRICE_B2B,B2B'de fiyat kontratta konuşulur · paket ve taban fiyatı ayarla.,In B2B the price is settled in the contract · set the package and the floor.
+PROD_LIVE_DAYS,V{version} · {days} GÜN CANLI,V{version} · {days} DAYS LIVE
+PROD_DAYS,{n} gün,{n} days
+PROD_PROMISED,SÖZ VERİLDİ,PROMISED
+PROD_LIVE_SUFFIX, · CANLI, · LIVE
+PROD_VERSION_LIVE,v{version} · {date} · CANLI,v{version} · {date} · LIVE
+PROD_IN_DEVELOPMENT,GELİŞTİRMEDE,IN DEVELOPMENT
+PROD_UNPLANNED,planlanmadı,not planned
+PROD_VERSIONS,SÜRÜMLER,VERSIONS
+PROD_ETA_DAYS,~{n}+ GÜN,~{n}+ DAYS
+PROD_BUGS_ETA,{bugs} HATA · ~{days} GÜN,{bugs} BUGS · ~{days} DAYS
+PROD_MARKET_SHARE,pazar payı {share},market share {share}
+PROD_RIVAL_PASSED, · {rival} seni geçti., · {rival} passed you.
+PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}
+PROD_PRICING,FİYATLANDIRMA,PRICING
+PROD_PER_USER,/ kullanıcı,/ user
+PROD_FLOOR,Alt sınır {amount},Floor {amount}
+PROD_UPPER_OPEN,üst açık,no ceiling
+PROD_OPTIMAL_UNKNOWN,Optimal belirsiz (pazar verisi düşük),Optimum unclear (thin market data)
+PROD_LIVE_NAMED,CANLI · {name},LIVE · {name}
+PROD_AXIS_INNOVATION_N,İNOVASYON {n},INNOVATION {n}
+PROD_AXIS_STABILITY_N,KARARLILIK {n},STABILITY {n}
+PROD_AXIS_EXPERIENCE_N,DENEYİM {n},EXPERIENCE {n}
+PROD_FEATURE_COUNT,{n} ÖZELLİK,{n} FEATURES
+PROD_SELECTED,SEÇİLEN,SELECTED
+PROD_PAYING,ÖDEYEN,PAYING
+PROD_CONVERSION,DÖNÜŞÜM,CONVERSION
+PROD_GUT_PRICE,İÇGÜDÜSEL FİYAT,GUT PRICE
+PROD_PRICE_CHEAP,UCUZ · HIZLI BÜYÜME,CHEAP · FAST GROWTH
+PROD_PRICE_EXPENSIVE,PAHALI · YAVAŞ BÜYÜME,EXPENSIVE · SLOW GROWTH
+PROD_PRICE_OPTIMAL,OPTİMAL · DENGELİ,OPTIMUM · BALANCED
+PROD_PRICE_RAISE,ZAM · KİTLE −{pct},RAISE · AUDIENCE −{pct}
+PROD_PRICE_COMMIT,Fiyatı koy · {amount},Set the price · {amount}
+PROD_LOCKED_SERIES_A,KİLİTLİ · Series A sonrası,LOCKED · after Series A
+PROD_PORTFOLIO,Portföy,Portfolio
+PROD_PORTFOLIO_COUNT,{n} ürün · tıkla ve yönet,{n} products · click to manage
+PROD_LIVE_VERSION_LC,CANLI v{version},LIVE v{version}
+PROD_ROW_B2B,MRR katkısı {amount}/ay · Açık hata {bugs} · Memnuniyet {sat},MRR {amount}/mo · Open bugs {bugs} · Satisfaction {sat}
+PROD_ROW_B2C,Deneyen {users} · Açık hata {bugs} · {price},Trying it {users} · Open bugs {bugs} · {price}
+PROD_IN_DEV_PCT,GELİŞTİRMEDE {pct},IN DEVELOPMENT {pct}
+PROD_NEW_PRODUCT,+ Yeni Ürün,+ New Product
+PROD_HEALTHY,SAĞLIKLI,HEALTHY
+PROD_RISKY,RİSKLİ,AT RISK
+PROD_FLAT,SABİT,FLAT
+PROD_TIP_WEAK,Zayıf yanın {axis} · v{version} sürümünde onu güçlendir ve {rival} rakibini yakala.,Your weak side is {axis} · strengthen it in v{version} and catch {rival}.
+PROD_TIP_GOOD,İyi gidiyor · büyümeyi bırakma. Zayıf yanın {axis}.,Going well · keep growing. Your weak side is {axis}.
+PROD_SHIP_FIRST_TITLE,İlk versiyon yayında,First version is live
+PROD_SHIP_VERSION_TITLE,v{version} yayında,v{version} is live
+PROD_SHIP_VERSION_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
+
+""Büyüdü. Yeni özellikler tuttu — ama yeni yüzey, yeni hata demek. Gözünü ayırma.""
+
+Kullanıcılar farkı görecek. Rakipler de.","You push the new version live. Frank looks at the screen and nods slightly.
+
+""It grew. The new features landed — but new surface means new bugs. Keep your eyes on it.""
+
+Users will see the difference. So will your rivals."
+PROD_SHIP_CONTINUE,Yayına devam,Keep it live
+PROD_SHIP_FIRST_READY,İlk versiyonun hazır,Your first version is ready
+PROD_SHIP_FIRST_BODY,"Demo'ya bir kez daha bakıyorsun. Frank arkanda duruyor, telefonuna bakmıyor.
+
+""Tamam,"" diyor. ""Bu kadar kötü değil.""
+
+Yayına alıyorsun. Birkaç dakika sonra depo herkese açık, küçük bir açılış sayfası canlı, Frank elini cebine atıyor.
+
+""Şimdi zor kısmı başlıyor. Bunun parasını verecek birini bulmamız lazım.""","You look at the demo one more time. Frank stands behind you, not looking at his phone.
+
+""All right,"" he says. ""It is not that bad.""
+
+You ship it. A few minutes later the repo is public, a small landing page is live, and Frank puts a hand in his pocket.
+
+""Now the hard part starts. We need to find someone who will pay for this."""
+PROD_SHIP_PUBLISH,Yayınla,Ship it
+PROD_DESIGN_DECISION_TITLE,Tasarım masasında karar,A decision at the design table
+PROD_DESIGN_CEILING_NOTE,"
+
+İnovasyon {inn} / tur kazancı tavanı {cap} — tavanı tur sayısı değil, masadaki ekip belirler.","
+
+Innovation {inn} / round gain ceiling {cap} — the ceiling is set by the team at the table, not by the number of rounds."
+PROD_DESIGN_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
+
+""İstersen bir tur daha döneriz — zaman yakar, tasarımı parlatır. Ama her turun getirisi bir öncekinden az. Bir noktada daha iyi insanlar lazım olur, daha çok tur değil.""{note}","The design round is done. Frank is standing over the prototype.
+
+""We can run another round if you want — it burns time and polishes the design. But every round returns less than the last. At some point you need better people, not more rounds.""{note}"
+PROD_TO_DEVELOPMENT_PLAIN,Geliştirmeye geç,Move to development
+PROD_ROUND_CEILING_2AX,Tur kazancı tavanı — İnovasyon {inn} / {inn_max} · Deneyim {exp} / {exp_max},Round gain ceiling — Innovation {inn} / {inn_max} · Experience {exp} / {exp_max}
+PROD_PHASE_PCT,{pct} · ~{days} gün,{pct} · about {days} days
+PROD_ROUND_SHORT,Tur {round} · ~{days} gün,Round {round} · about {days} days
+PROD_TREND_FALLING,AZALIYOR,FALLING
+HR_ATLAS_COMMISSION_RANGE,Komisyon bu bantta {low} – {high},Commission in this band: {low} – {high}
+HR_TRAINING_PICK_BODY,"{name} · {role}
+{note}","{name} · {role}
+{note}"
+PROD_AXIS_DELTA,{axis} {delta},{axis} {delta}
+PROD_BUG_RISK,Hata riski: {level},Bug risk: {level}
+PROD_BUGS_TREND,{bugs} HATA · {trend},{bugs} BUGS · {trend}
+PROD_BUILD_FALLBACK,Geliştirme,Build
+PROD_BUILD_STATUS_HEADER,GELİŞTİRME DURUMU,BUILD STATUS
+PROD_COST_API,API,API
+PROD_COST_LICENSE,Lisans,License
+PROD_EFFORT_N,Efor {n},Effort {n}
+PROD_GROUP_COUNT,{title} · {checked}/{total},{title} · {checked}/{total}
+PROD_LIVE_PRICE,CANLI · {amount},LIVE · {amount}
+PROD_META_VERSION,V{version} · {type},V{version} · {type}
+PROD_MRR_OF_TARGET,MRR {mrr} / {target},MRR {mrr} / {target}
+PROD_OPTIMAL,Optimal {amount},Optimal {amount}
+PROD_PER_MONTH,{amount} /ay,{amount} /mo
+PROD_PRICE_DRAFT,Fiyat taslak,Price draft
+PROD_PRICE_N,Fiyat {amount},Price {amount}
+PROD_ROUND_PENDING,{phase} · Tur {round} · karar bekliyor,{phase} · Round {round} · awaiting your call
+PROD_ROUND_PENDING_SHORT,Tur {round} · karar bekliyor,Round {round} · awaiting your call
+PROD_TIP_BUGS,Kan kaybediyorsun · hata sprinti vakti.,You're bleeding · time for a bug sprint.
+PROD_UNKNOWN,belirsiz,unclear
+PROD_ITER_CEILING_NOTE,"İnovasyon {inn} / tur kazancı tavanı {inn_max} — tavanı tur sayısı değil, masadaki ekip belirler.","Innovation {inn} / round gain ceiling {inn_max} — the ceiling comes from the team at the table, not from the number of rounds."
+PROD_EV_VERSION_SHIP_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
+
+""Büyüdü. Yeni özellikler tuttu — ama yeni yüzey, yeni hata demek. Gözünü ayırma.""
+
+Kullanıcılar farkı görecek. Rakipler de.","You push the new version live. Frank watches the screen and gives a small nod.
+
+""It grew. The new features landed — but new surface means new bugs. Don't take your eyes off it.""
+
+Users will notice the difference. So will your rivals."
+PROD_EV_FIRST_SHIP_BODY,"Demo'ya bir kez daha bakıyorsun. Frank arkanda duruyor, telefonuna bakmıyor.
+
+""Tamam,"" diyor. ""Bu kadar kötü değil.""
+
+Yayına alıyorsun. Birkaç dakika sonra depo herkese açık, küçük bir açılış sayfası canlı, Frank elini cebine atıyor.
+
+""Şimdi zor kısmı başlıyor. Bunun parasını verecek birini bulmamız lazım.""","You look at the demo one more time. Frank is standing behind you, not looking at his phone.
+
+""Fine,"" he says. ""It's not that bad.""
+
+You push it live. A few minutes later the repo is public, a small landing page is up, and Frank puts a hand in his pocket.
+
+""Now the hard part starts. We need to find someone who'll pay for this."""
+PROD_EV_ITER_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
+
+""İstersen bir tur daha döneriz — zaman yakar, tasarımı parlatır. Ama her turun getirisi bir öncekinden az. Bir noktada daha iyi insanlar lazım olur, daha çok tur değil.""","The design round is done. Frank is standing over the prototype.
+
+""We can go around once more if you want — it burns time and polishes the design. But every round returns less than the one before. At some point you need better people, not more rounds."""
+BUILD_FOUND,BULUNAN,FOUND
+BUILD_FIXED,ÇÖZÜLEN,FIXED
+BUILD_REMAINING,KALAN,OPEN
+PROD_ONE_MORE_ROUND_PLAIN,Bir tur daha,One more round
+PROD_TO_DEVELOPMENT_ARROW,Geliştirmeye geç →,Move to development →
+PROD_STEP_PATH,01 YOL,01 PATH
+PROD_LEAD_HEADER,SORUMLU,LEAD
+PROD_PATH_B2B,KONTRAT,CONTRACT
+PROD_PATH_B2C_CON2,Kaprisli,Fickle
+PROD_BUG_RISK_CAP,Hata riski:,Bug risk:
+PROD_TRYING_CAP,DENEYEN,TRYING IT
+PROD_MRR_CONTRIB_CAP,MRR KATKISI,MRR CONTRIBUTION
+PROD_GO_TO_SALES,Satış sekmesine git →,Go to Sales →
+PROD_ACTION_HARDEN,Hata sprinti,Bug sprint
+PROD_DRAFT_CHIP,TASLAK,DRAFT
+PROD_TREND_RISING,ARTIYOR,RISING

@@ -191,14 +191,14 @@ func _fee_block() -> Control:
 			"pct": int(round(HRConstants.SEARCH_COMMISSION_PCT * 100.0)),
 			"min": HRConstants.SEARCH_ARRIVAL_MIN_DAYS,
 			"max": HRConstants.SEARCH_ARRIVAL_MAX_DAYS,
-		], &"BodySerif"))
+		}), &"BodySerif"))
 	if _selected_role != "" and _selected_band != "":
 		var pv: Dictionary = HRSearchSystem.preview_search(_selected_role, _selected_band)
 		col.add_child(UiFactory.make_label(
-			"Komisyon bu bantta %s – %s" % [
-				HRUiShared.money(int(pv.get("commission_low", 0))),
-				HRUiShared.money(int(pv.get("commission_high", 0))),
-			], &"RowMeta", UiTokens.INK_MUTED))
+			tr("HR_ATLAS_COMMISSION_RANGE").format({
+				"low": HRUiShared.money(int(pv.get("commission_low", 0))),
+				"high": HRUiShared.money(int(pv.get("commission_high", 0))),
+			}), &"RowMeta", UiTokens.INK_MUTED))
 		for warning in pv.get("warnings", []):
 			col.add_child(UiFactory.make_label(String(warning), &"RowMeta", UiTokens.negative()))
 	return col

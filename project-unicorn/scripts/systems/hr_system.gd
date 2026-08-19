@@ -98,7 +98,6 @@ static func tick_training() -> void:
 			EventBus.headline_added.emit(HRConstants.notice_source_hr(),
 				TranslationServer.translate("HR_NEWS_TRAINING_DONE").format({
 					"name": emp.character_name,
-					"role": HRConstants.role_label(emp.role),
 				}))
 
 

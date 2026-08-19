@@ -1196,7 +1196,8 @@ static func ship_active_build() -> void:
 	# AYIN OLAYI (Spec 3 §4, working copy) — version-aware ship line.
 	var ship_ver: int = int(GameState.get_flag("mvp_version", 1))
 	GameState.submit_month_highlight(
-		"İlk versiyon yayında" if ship_ver <= 1 else "v%d yayında" % ship_ver, 50)
+		TranslationServer.translate("PROD_SHIP_FIRST_TITLE") if ship_ver <= 1
+		else TranslationServer.translate("PROD_SHIP_VERSION_TITLE").format({"version": ship_ver}), 50)
 	# Display-only: stamp the FIRST ship day once, so the status chip can read the
 	# product's live age ("N gün canlı"). Not overwritten on later versions.
 	if not GameState.has_flag("mvp_launch_day"):
@@ -1245,7 +1246,7 @@ static func health_state() -> String:
 	var eff: float = QualityModel.effective_stability(raw, int(GameState.get_flag("mvp_live_bug_count", 0)))
 	var ratio: float = eff / maxf(raw, 0.001)
 	if ratio >= HEALTH_EFF_STAB_RATIO and _bug_trend_delta() < TREND_SPIKE:
-		return "saglikli"
+		return "saglikli"   # LOC-DATA health band id
 	return "riskli"
 
 
@@ -1253,10 +1254,10 @@ static func product_bug_risk() -> String:
 	# "dusuk" | "orta" | "yuksek" — canlı bug / ship edilmiş toplam complexity oranı.
 	var ratio: float = float(int(GameState.get_flag("mvp_live_bug_count", 0))) / float(max(1, _shipped_total_complexity()))
 	if ratio >= BUG_RISK_YUKSEK:
-		return "yuksek"
+		return "yuksek"   # LOC-DATA risk band id
 	if ratio >= BUG_RISK_ORTA:
 		return "orta"
-	return "dusuk"
+	return "dusuk"   # LOC-DATA risk band id
 
 
 # --- Synthetic ship-moment event ---
@@ -1272,18 +1273,18 @@ static func _build_version_ship_moment_event() -> GameEvent:
 	ev.id = "ev_mvp_version_ship_moment"
 	ev.category = "reactive"
 	var ver: int = int(GameState.get_flag("mvp_version", 2))
-	ev.title = "v%d yayında" % ver
+	ev.title = TranslationServer.translate("PROD_SHIP_VERSION_TITLE").format({"version": ver})
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = "Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.\n\n\"Büyüdü. Yeni özellikler tuttu — ama yeni yüzey, yeni hata demek. Gözünü ayırma.\"\n\nKullanıcılar farkı görecek. Rakipler de."
+	ev.body_text = TranslationServer.translate("PROD_EV_VERSION_SHIP_BODY")
 	ev.cooldown_days = 0
 	ev.one_shot = false
 	ev.priority = 10
 	ev.tags = ["build_safe", "ship_moment"]
 	ev.trigger_conditions = []
 	var choice: EventChoice = EventChoice.new()
-	choice.label = "Yayına devam"
+	choice.label = TranslationServer.translate("PROD_SHIP_CONTINUE")
 	choice.modifiers = [{"type": "ship_active_build"}]
 	choice.unlock_condition = {}
 	choice.unlock_reason_text = ""
@@ -1297,11 +1298,11 @@ static func _build_ship_moment_event() -> GameEvent:
 	var ev: GameEvent = GameEvent.new()
 	ev.id = "ev_mvp_ship_moment"
 	ev.category = "reactive"
-	ev.title = "İlk versiyonun hazır"
+	ev.title = TranslationServer.translate("PROD_SHIP_FIRST_READY")
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = "Demo'ya bir kez daha bakıyorsun. Frank arkanda duruyor, telefonuna bakmıyor.\n\n\"Tamam,\" diyor. \"Bu kadar kötü değil.\"\n\nYayına alıyorsun. Birkaç dakika sonra depo herkese açık, küçük bir açılış sayfası canlı, Frank elini cebine atıyor.\n\n\"Şimdi zor kısmı başlıyor. Bunun parasını verecek birini bulmamız lazım.\""
+	ev.body_text = TranslationServer.translate("PROD_EV_FIRST_SHIP_BODY")
 	ev.cooldown_days = 0
 	ev.one_shot = true
 	ev.priority = 10
@@ -1310,7 +1311,7 @@ static func _build_ship_moment_event() -> GameEvent:
 	ev.tags = ["build_safe", "ship_moment"]
 	ev.trigger_conditions = []
 	var choice: EventChoice = EventChoice.new()
-	choice.label = "Yayınla"
+	choice.label = TranslationServer.translate("PROD_SHIP_PUBLISH")
 	choice.modifiers = [{"type": "ship_active_build"}]
 	choice.unlock_condition = {}
 	choice.unlock_reason_text = ""
@@ -1329,7 +1330,7 @@ static func _build_iter_decision_intro_event() -> GameEvent:
 	var ev: GameEvent = GameEvent.new()
 	ev.id = "ev_mvp_iter_decision_intro"
 	ev.category = "reactive"
-	ev.title = "Tasarım masasında karar"
+	ev.title = TranslationServer.translate("PROD_DESIGN_DECISION_TITLE")
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
@@ -1340,10 +1341,10 @@ static func _build_iter_decision_intro_event() -> GameEvent:
 		# tur kazançlarının. Aksi hâlde intro "tavanı ekip belirler" diye öğretirken ekranda
 		# tavanın üstünde bir sayı duruyor (commit damgası / event katkısı) ve ikisi
 		# birbirini yalanlıyor.
-		iter_line = "\n\nİnovasyon %d / tur kazancı tavanı %d — tavanı tur sayısı değil, masadaki ekip belirler." % [
-			int(round(active_build.innovation)),
-			int(round(float(ceilings.get("innovation", 0.0))))]
-	ev.body_text = "Tasarım turu bitti. Frank prototipin başında.\n\n\"İstersen bir tur daha döneriz — zaman yakar, tasarımı parlatır. Ama her turun getirisi bir öncekinden az. Bir noktada daha iyi insanlar lazım olur, daha çok tur değil.\"%s" % iter_line
+		iter_line = "\n\n" + TranslationServer.translate("PROD_ITER_CEILING_NOTE").format({
+			"inn": int(round(active_build.innovation)),
+			"inn_max": int(round(float(ceilings.get("innovation", 0.0))))})
+	ev.body_text = TranslationServer.translate("PROD_EV_ITER_DECISION_BODY") + iter_line
 	ev.cooldown_days = 0
 	ev.one_shot = true
 	ev.priority = 10
@@ -1351,12 +1352,12 @@ static func _build_iter_decision_intro_event() -> GameEvent:
 	ev.tags = ["build_safe", "iter_decision"]
 	ev.trigger_conditions = []
 	var more: EventChoice = EventChoice.new()
-	more.label = "Bir tur daha (%d gün)" % ITER_ROUND_DAYS
+	more.label = TranslationServer.translate("PROD_ONE_MORE_ROUND").format({"days": ITER_ROUND_DAYS})
 	more.modifiers = [{"type": "advance_iteration"}]
 	more.unlock_condition = {}
 	more.unlock_reason_text = ""
 	var dev: EventChoice = EventChoice.new()
-	dev.label = "Geliştirmeye geç"
+	dev.label = TranslationServer.translate("PROD_TO_DEVELOPMENT_PLAIN")
 	dev.modifiers = [{"type": "enter_development"}]
 	dev.unlock_condition = {}
 	dev.unlock_reason_text = ""

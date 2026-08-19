@@ -57,13 +57,13 @@ theme_override_constants/separation = 0
 [node name="NameLabel" type="Label" parent="Root/Panel/VBox/HeaderRow/TitleBox"]
 layout_mode = 2
 theme_type_variation = &"NameSerif"
-text = "Build"
+text = "PROD_BUILD_FALLBACK"
 text_overrun_behavior = 3
 
 [node name="MetaLabel" type="Label" parent="Root/Panel/VBox/HeaderRow/TitleBox"]
 layout_mode = 2
 theme_type_variation = &"MicroLabel"
-text = "V1"
+text = "—"
 
 [node name="CancelBtn" type="Button" parent="Root/Panel/VBox/HeaderRow"]
 layout_mode = 2
@@ -72,7 +72,7 @@ theme_override_colors/font_color = Color(0.576, 0.545, 0.471, 1)
 theme_override_font_sizes/font_size = 11
 flat = true
 text = "✕"
-tooltip_text = "Build'i iptal et"
+tooltip_text = "PROD_CANCEL_BUILD"
 
 [node name="MiniPhaseRow" type="HBoxContainer" parent="Root/Panel/VBox"]
 custom_minimum_size = Vector2(0, 16)
@@ -88,7 +88,7 @@ mouse_filter = 2
 [node name="Cap" type="Label" parent="Root/Panel/VBox/MiniPhaseRow/MiniDesign"]
 layout_mode = 2
 theme_type_variation = &"MicroLabel"
-text = "TASARIM"
+text = "BUILD_PHASE_DESIGN"
 horizontal_alignment = 1
 
 [node name="MiniDev" type="PanelContainer" parent="Root/Panel/VBox/MiniPhaseRow"]
@@ -99,7 +99,7 @@ mouse_filter = 2
 [node name="Cap" type="Label" parent="Root/Panel/VBox/MiniPhaseRow/MiniDev"]
 layout_mode = 2
 theme_type_variation = &"MicroLabel"
-text = "GELİŞTİRME"
+text = "BUILD_PHASE_DEVELOPMENT"
 horizontal_alignment = 1
 
 [node name="MiniBeta" type="PanelContainer" parent="Root/Panel/VBox/MiniPhaseRow"]
@@ -110,7 +110,7 @@ mouse_filter = 2
 [node name="Cap" type="Label" parent="Root/Panel/VBox/MiniPhaseRow/MiniBeta"]
 layout_mode = 2
 theme_type_variation = &"MicroLabel"
-text = "BETA"
+text = "BUILD_PHASE_BETA"
 horizontal_alignment = 1
 
 [node name="BodyRow" type="HBoxContainer" parent="Root/Panel/VBox"]
@@ -161,12 +161,12 @@ theme_override_constants/separation = 0
 [node name="PhaseName" type="Label" parent="Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin/PhaseVBox"]
 layout_mode = 2
 theme_type_variation = &"SectionAmber"
-text = "TASARIM"
+text = "BUILD_PHASE_DESIGN"
 
 [node name="PhaseStatus" type="Label" parent="Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin/PhaseVBox"]
 layout_mode = 2
 theme_type_variation = &"RowMeta"
-text = "%0 · ~0 gün"
+text = "—"
 
 [node name="BetaRow" type="HBoxContainer" parent="Root/Panel/VBox"]
 visible = false
@@ -183,7 +183,7 @@ theme_override_constants/separation = 0
 [node name="Cap" type="Label" parent="Root/Panel/VBox/BetaRow/FoundBox"]
 layout_mode = 2
 theme_type_variation = &"MicroLabel"
-text = "BULUNAN"
+text = "BUILD_FOUND"
 
 [node name="Val" type="Label" parent="Root/Panel/VBox/BetaRow/FoundBox"]
 layout_mode = 2
@@ -197,7 +197,7 @@ theme_override_constants/separation = 0
 [node name="Cap" type="Label" parent="Root/Panel/VBox/BetaRow/FixedBox"]
 layout_mode = 2
 theme_type_variation = &"MicroLabel"
-text = "ÇÖZÜLEN"
+text = "BUILD_FIXED"
 
 [node name="Val" type="Label" parent="Root/Panel/VBox/BetaRow/FixedBox"]
 layout_mode = 2
@@ -211,7 +211,7 @@ theme_override_constants/separation = 0
 [node name="Cap" type="Label" parent="Root/Panel/VBox/BetaRow/RemainBox"]
 layout_mode = 2
 theme_type_variation = &"MicroLabel"
-text = "KALAN"
+text = "BUILD_REMAINING"
 
 [node name="Val" type="Label" parent="Root/Panel/VBox/BetaRow/RemainBox"]
 layout_mode = 2
@@ -221,7 +221,7 @@ text = "0"
 visible = false
 layout_mode = 2
 theme_type_variation = &"RowMeta"
-text = "İnovasyon 0 / tavan 0"
+text = "—"
 
 [node name="DecisionRow" type="VBoxContainer" parent="Root/Panel/VBox"]
 visible = false
@@ -233,17 +233,17 @@ theme_override_constants/separation = 8
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"CommitButton"
-text = "Bir tur daha"
+text = "PROD_ONE_MORE_ROUND_PLAIN"
 
 [node name="DevBtn" type="Button" parent="Root/Panel/VBox/DecisionRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"CommitButton"
-text = "Geliştirmeye geç →"
+text = "PROD_TO_DEVELOPMENT_ARROW"
 
 [node name="ActionButton" type="Button" parent="Root/Panel/VBox"]
 visible = false
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 theme_type_variation = &"CommitButton"
-text = "Yayınla →"
+text = "BUILD_ACTION_SHIP"
