@@ -241,6 +241,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
 		"loc_b5_derived_keys":       fail = _case_loc_b5_derived_keys()
 		"loc_language_switch":       fail = _case_loc_language_switch()
+		# --- Calibration Round A (2026-08-19) — one commit per section, one guard per number ---
+		"harness_sniffer_matches_run_log": fail = _case_harness_sniffer_matches_run_log()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -6853,3 +6855,23 @@ static func _case_loc_language_switch() -> String:
 	EventBus.language_changed.disconnect(probe)
 	Localization.set_language(loc0)
 	return out
+
+
+# ============================ Calibration Round A (2026-08-19) ============================
+# Guards for the calibration package. Each case names the number or contract it pins; every
+# one was falsified once (the fix reverted, the case failing with the right diagnosis) before
+# it was trusted. Fixture helpers used across the section live at the top of the block.
+
+static func _case_harness_sniffer_matches_run_log() -> String:
+	# §0 hygiene: RunProbe (--run-log) drives whole runs headless and its ticks reach
+	# day_tick_completed like any other, so before this the probe autosaved fixture worlds into
+	# the player's slots. The sniffer is a substring list; this pins the entry and the FLAGS-ONLY
+	# rule (a bare project path must never match).
+	if not SaveManager._is_harness_arg("--run-log=b2c:180:sim"):
+		return "--run-log is not recognised as a harness flag (probe runs would autosave)"
+	if not SaveManager._is_harness_arg("--endgame-smoke=x") or not SaveManager._is_harness_arg("--tab-shot=finance"):
+		return "existing harness flags stopped matching"
+	if SaveManager._is_harness_arg("C:/games/screenshots/project-unicorn") or SaveManager._is_harness_arg("res://run-log"):
+		return "a bare (non --) argument matched the sniffer"
+	return ""
+

@@ -454,15 +454,22 @@ func _is_harness_run() -> bool:
 	# inherit the exclusion, not silently start writing saves.
 	var args: Array = OS.get_cmdline_args() + OS.get_cmdline_user_args()
 	for a in args:
-		var arg: String = String(a)
-		# FLAGS ONLY. Matching bare arguments would sweep in the project path, and a player
-		# who happens to install the game under a folder called "screenshots" would silently
-		# lose autosave with no message and no way to guess why.
-		if not arg.begins_with("--"):
-			continue
-		if arg.contains("smoke") or arg.contains("-shot") or arg.contains("audit") or arg.contains("spec"):
+		if _is_harness_arg(String(a)):
 			return true
 	return false
+
+
+## One argument's verdict, split out so the smoke suite can assert the list without faking a
+## command line. FLAGS ONLY: matching bare arguments would sweep in the project path, and a
+## player who happens to install the game under a folder called "screenshots" would silently
+## lose autosave with no message and no way to guess why.
+## `run-log` joined the list 2026-08-19 (Calibration Round A §0): the RunProbe drives whole
+## 180-730 day runs headless and its daily ticks reach day_tick_completed like any other, so
+## it was autosaving fixture worlds into the player's slots every 20 real seconds.
+static func _is_harness_arg(arg: String) -> bool:
+	if not arg.begins_with("--"):
+		return false
+	return arg.contains("smoke") or arg.contains("-shot") or arg.contains("audit") \n		or arg.contains("spec") or arg.contains("run-log")
 
 
 # ============================================================================
