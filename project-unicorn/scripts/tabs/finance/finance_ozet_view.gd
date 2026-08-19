@@ -13,7 +13,7 @@ extends Control
 #
 # Mockup'tan bilinçli sapmalar (yönetmen kararı, görev spec'i):
 #   * Mentor kartı KREM tonda (koyu değil); yalnız runway eşiğin altındayken.
-#   * Gider dağılımı GERÇEK kalemlerden (BURN_LABELS) — Pazarlama/Ofis icat edilmez.
+#   * Gider dağılımı GERÇEK kalemlerden (BURN_IDS) — Pazarlama/Ofis icat edilmez.
 #   * "TUR AÇ · SERIES A" yalnız KİLİTLİ durumda; tooltip gerçek kapı
 #     sabitlerinden okunur (PhaseGateSystem.GATES). Üç-durumlu makine sonraki iş.
 #
@@ -26,16 +26,16 @@ const RUNWAY_WARN_MONTHS := 6.0   # WORKING: mentor uyarısı eşiği (ay)
 const WARN_SNOOZE_DAYS := 14      # WORKING: ERTELE süresi (oyun günü)
 const SNOOZE_FLAG := "finance_runway_warn_snooze_until_day"
 const TX_SHOWN := 8               # WORKING: Son işlemler'de gösterilen satır sayısı
-# WORKING TR: mentor uyarı repliği (danışma sicili yok — çalışma metni; eşik
-# değişirse metin de güncellenmeli).
-const MENTOR_QUOTE := "Altı aydan az yolun kaldı. Kasadaki para fikir değil, takvim. Ya gideri kısarsın ya geliri bulursun; ikisi de karar ister."
+# Mentor warning line: FIN_MENTOR_QUOTE in strings.csv. Not a const — a const is evaluated
+# when the file loads, and no locale exists yet. If RUNWAY_WARN_MONTHS moves, the copy has to
+# move with it (the sentence names the threshold in words).
 
 # Aralık düğmeleri: id -> {window: pencere gün sayısı (0 = tümü), horizon: projeksiyon günü}.
 # WORKING: horizon = pencere/3; TÜMÜ için 60.
 const RANGES := {
-	"6ay": {"label": "6 AY", "window": 180, "horizon": 60},
-	"12ay": {"label": "12 AY", "window": 360, "horizon": 120},
-	"tum": {"label": "TÜMÜ", "window": 0, "horizon": 60},
+	"6ay": {"label_key": "FIN_RANGE_6M", "window": 180, "horizon": 60},
+	"12ay": {"label_key": "FIN_RANGE_12M", "window": 360, "horizon": 120},
+	"tum": {"label_key": "FIN_RANGE_ALL", "window": 0, "horizon": 60},
 }
 const RANGE_ORDER := ["6ay", "12ay", "tum"]
 
@@ -112,7 +112,7 @@ func _build() -> void:
 	# Başlık satırı: sayfa adı + kilitli Series A düğmesi
 	var title_row := HBoxContainer.new()
 	page.add_child(title_row)
-	var title := UiFactory.make_label("Finans", &"TitleSerif")
+	var title := UiFactory.make_label(tr("TAB_FINANCE"), &"TitleSerif")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_row.add_child(title)
 	title_row.add_child(_build_series_a_button())
@@ -158,7 +158,7 @@ func _build_series_a_button() -> Button:
 	# gerçek kapı motoru geldiğinde ayrı bir iş. Tıklama aksiyonu yok; tooltip kapı
 	# gereksinimlerini SABİTLERDEN okur (grep kanıtı: bu dosyada eşik literal'i yok).
 	var b := Button.new()
-	b.text = UiTokens.tr_upper("Tur aç · Series A")
+	b.text = Fmt.upper(tr("FIN_OPEN_ROUND_SERIES_A"))
 	b.disabled = true
 	b.focus_mode = Control.FOCUS_NONE
 	b.modulate = Color(1, 1, 1, 0.5)
@@ -176,10 +176,11 @@ func _series_a_tooltip() -> String:
 			# (PhaseGateSystem.GATES yorumundaki eşik-1 sözleşmesi).
 			match String(cond.type):
 				"mrr_above":
-					reqs.append("MRR ≥ %s" % UiTokens.format_money(int(cond.value) + 1))
+					reqs.append(tr("FIN_REQ_MRR").format(
+						{"amount": UiTokens.format_money(int(cond.value) + 1)}))
 				"brand_above":
-					reqs.append("Marka ≥ %d" % (int(cond.value) + 1))
-	return "Series A Hunt'ta açılır: %s" % " · ".join(reqs)
+					reqs.append(tr("FIN_REQ_BRAND").format({"n": int(cond.value) + 1}))
+	return tr("FIN_REQ_OPENS").format({"reqs": " · ".join(reqs)})
 
 
 func _build_curve_card() -> PanelContainer:
@@ -190,9 +191,9 @@ func _build_curve_card() -> PanelContainer:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 24)
 	vb.add_child(head)
-	_nakit_val = _add_headline_stat(head, "Nakit")
-	_net_val = _add_headline_stat(head, "Aylık net")
-	_runway_val = _add_headline_stat(head, "Runway")
+	_nakit_val = _add_headline_stat(head, tr("FIN_CASH"))
+	_net_val = _add_headline_stat(head, tr("FIN_MONTHLY_NET"))
+	_runway_val = _add_headline_stat(head, tr("FIN_RUNWAY"))
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
@@ -202,7 +203,7 @@ func _build_curve_card() -> PanelContainer:
 	head.add_child(toggles)
 	for id in RANGE_ORDER:
 		var b := Button.new()
-		b.text = String(RANGES[id].label)
+		b.text = tr(String(RANGES[id].label_key))
 		b.focus_mode = Control.FOCUS_NONE
 		b.pressed.connect(_on_range_pressed.bind(id))
 		toggles.add_child(b)
@@ -221,10 +222,10 @@ func _build_curve_card() -> PanelContainer:
 	var legend := HBoxContainer.new()
 	legend.add_theme_constant_override("separation", 16)
 	vb.add_child(legend)
-	legend.add_child(_legend_chip("Gerçekleşen nakit", UiTokens.INK))
-	_legend_current = _legend_chip("Projeksiyon · mevcut gidiş", UiTokens.negative())
+	legend.add_child(_legend_chip(tr("FIN_LEGEND_ACTUAL"), UiTokens.INK))
+	_legend_current = _legend_chip(tr("FIN_LEGEND_PROJECTION"), UiTokens.negative())
 	legend.add_child(_legend_current)
-	legend.add_child(_legend_chip("Projeksiyon · satış hedefi tutarsa", UiTokens.positive()))
+	legend.add_child(_legend_chip(tr("FIN_LEGEND_PROJECTION_TARGET"), UiTokens.positive()))
 
 	return _card(vb)
 
@@ -256,8 +257,9 @@ func _build_flow_card() -> PanelContainer:
 	# başlık bunu söylemek zorunda: ayın 5'inde "bu ay" yazıp tam ay göstermek, yanındaki
 	# boş "Son işlemler" listesiyle doğrudan çelişiyordu. "mevcut gidiş" eğrinin
 	# projeksiyon göstergesiyle aynı kelime (bkz. _legend_current).
-	vb.add_child(UiFactory.make_section_header("Aylık akış · mevcut gidişle"))
-	for entry in [["income", "Gelir"], ["expense", "Gider"], ["net", "Net"]]:
+	vb.add_child(UiFactory.make_section_header(tr("FIN_MONTHLY_FLOW")))
+	for entry in [["income", tr("FIN_INCOME")], ["expense", tr("FIN_EXPENSE")],
+			["net", tr("FIN_NET")]]:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
 		vb.add_child(row)
@@ -282,7 +284,7 @@ func _build_flow_card() -> PanelContainer:
 func _build_burn_card() -> PanelContainer:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
-	vb.add_child(UiFactory.make_section_header("Gider dağılımı"))
+	vb.add_child(UiFactory.make_section_header(tr("FIN_BURN_SECTION")))
 	_burn_list = VBoxContainer.new()
 	_burn_list.add_theme_constant_override("separation", 6)
 	vb.add_child(_burn_list)
@@ -292,7 +294,7 @@ func _build_burn_card() -> PanelContainer:
 func _build_transactions_card() -> PanelContainer:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
-	vb.add_child(UiFactory.make_section_header("Son işlemler"))
+	vb.add_child(UiFactory.make_section_header(tr("FIN_RECENT_TX")))
 	_tx_list = VBoxContainer.new()
 	_tx_list.add_theme_constant_override("separation", 4)
 	vb.add_child(_tx_list)
@@ -304,7 +306,7 @@ func _build_captable_card() -> PanelContainer:
 	vb.add_theme_constant_override("separation", 8)
 	var head := HBoxContainer.new()
 	vb.add_child(head)
-	var h := UiFactory.make_section_header("Hisse dağılımı")
+	var h := UiFactory.make_section_header(tr("FIN_CAPTABLE_HEADER"))
 	h.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(h)
 	_cap_raised = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
@@ -346,8 +348,9 @@ func _build_mentor_card() -> PanelContainer:
 	# CardAttention DEĞİL. Yalnız runway eşiğin altındayken görünür.
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
-	vb.add_child(UiFactory.make_section_header("Mentor uyarısı"))
-	var quote := UiFactory.make_label("\"%s\"" % MENTOR_QUOTE, &"QuoteSerif")
+	vb.add_child(UiFactory.make_section_header(tr("FIN_MENTOR_WARNING")))
+	var quote := UiFactory.make_label(
+		tr("FIN_MENTOR_QUOTE_WRAPPED").format({"quote": tr("FIN_MENTOR_QUOTE")}), &"QuoteSerif")
 	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(quote)
 	var row := HBoxContainer.new()
@@ -356,7 +359,7 @@ func _build_mentor_card() -> PanelContainer:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
 	var btn := Button.new()
-	btn.text = UiTokens.tr_upper("Ertele")
+	btn.text = Fmt.upper(tr("FIN_SNOOZE"))
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.pressed.connect(_on_snooze_pressed)
 	row.add_child(btn)
@@ -435,13 +438,13 @@ func _refresh_curve() -> void:
 
 func _month_ticks(day_min: int, day_max: int) -> Array:
 	# Ay başlangıçları GERÇEK takvimden (GameState.get_date_dict — 28/30/31 günlü aylar),
-	# asla ekonomi sabiti DAYS_PER_MONTH'tan değil. Etiket: "OCA" (MONTH_NAMES_TR ilk 3).
+	# asla ekonomi sabiti DAYS_PER_MONTH'tan değil. Etiket: Fmt.month_abbr (yerele göre).
 	var ticks: Array = []
 	for d in range(maxi(day_min, 1), day_max + 1):
 		var date: Dictionary = GameState.get_date_dict(d)
 		if int(date.day) == 1:
 			ticks.append({"day": d,
-					"label": String(GameState.MONTH_NAMES_TR[int(date.month) - 1]).substr(0, 3)})
+					"label": Fmt.month_abbr(int(date.month))})
 	return ticks
 
 
@@ -506,11 +509,12 @@ func _refresh_burn() -> void:
 		bar.value = float(row_data.pct)
 		_override_bar_fill(bar, UiTokens.INK)
 		row.add_child(bar)
-		var v := UiFactory.make_label("%%%d" % int(row_data.pct), &"RowMeta", UiTokens.INK)
+		var v := UiFactory.make_label(Fmt.percent(int(row_data.pct), 0), &"RowMeta", UiTokens.INK)
 		v.custom_minimum_size = Vector2(36, 0)
 		v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		row.add_child(v)
-		row.tooltip_text = "%s / gün" % UiTokens.format_money(int(row_data.amount))
+		row.tooltip_text = tr("FIN_PER_DAY").format(
+			{"amount": UiTokens.format_money(int(row_data.amount))})
 		_burn_list.add_child(row)
 
 
@@ -520,7 +524,7 @@ func _refresh_transactions() -> void:
 		c.queue_free()
 	var txs: Array = FinanceSystem.get_transactions()
 	if txs.is_empty():
-		_tx_list.add_child(UiFactory.make_label("Henüz işlem yok", &"CaptionMuted", UiTokens.INK_DIM))
+		_tx_list.add_child(UiFactory.make_label(tr("FIN_NO_TX"), &"CaptionMuted", UiTokens.INK_DIM))
 		return
 	var start: int = maxi(0, txs.size() - TX_SHOWN)
 	for i in range(txs.size() - 1, start - 1, -1):  # en yeni üstte
@@ -528,8 +532,8 @@ func _refresh_transactions() -> void:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 12)
 		var date: Dictionary = GameState.get_date_dict(int(t.day))
-		var d := UiFactory.make_label("%d %s" % [int(date.day),
-				String(GameState.MONTH_NAMES_TR[int(date.month) - 1]).substr(0, 3)],
+		var d := UiFactory.make_label(tr("FIN_TX_DATE").format({
+					"day": int(date.day), "month": Fmt.month_abbr(int(date.month))}),
 				&"FeedDay", UiTokens.INK_DIM)
 		d.custom_minimum_size = Vector2(52, 0)
 		row.add_child(d)
@@ -568,22 +572,24 @@ func _refresh_captable() -> void:
 	_cap_investor_rect.visible = investors > 0
 	_cap_employee_rect.size_flags_stretch_ratio = float(maxi(employees, 0))
 	_cap_employee_rect.visible = employees > 0
-	var parts: Array = ["Kurucu · %%%d" % founder]
+	var parts: Array = [tr("FIN_CAPTABLE_FOUNDER").format({"pct": Fmt.percent(founder, 0)})]
 	# Melek turu KENDİ satırını alır: tek "Yatırımcılar" kalemi, bir kurucunun cap
 	# table'da ayırt ettiği iki farklı şeyi (melek çeki ve imzalanan tur) tek sayıya
 	# katlıyordu. Dilimler yine tek ColorRect — ayrılan okuma, çizim değil.
 	if GameState.run_angel_equity_pct > 0:
 		parts.append(tr("ANGEL_CAP_ROW").format({"pct": GameState.run_angel_equity_pct}))
 	if GameState.run_equity_pct > 0:
-		parts.append("Yatırımcılar · %%%d" % GameState.run_equity_pct)
+		parts.append(tr("FIN_CAPTABLE_INVESTORS").format(
+			{"pct": Fmt.percent(GameState.run_equity_pct, 0)}))
 	if employees > 0:
-		parts.append("Çalışanlar · %%%d" % employees)
+		parts.append(tr("FIN_CAPTABLE_EMPLOYEES").format({"pct": Fmt.percent(employees, 0)}))
 	_cap_rows.text = " · ".join(parts)
 	var raised: int = GameState.get_total_raised()
-	_cap_raised.text = "Toplanan · %s" % UiTokens.format_money(raised) if raised > 0 else ""
+	_cap_raised.text = tr("FIN_CAPTABLE_RAISED").format(
+		{"amount": UiTokens.format_money(raised)}) if raised > 0 else ""
 	_cap_equity_note.visible = employees_with_equity > 0
 	if employees_with_equity > 0:
-		_cap_equity_note.text = "%d çalışanın hissesi var" % employees_with_equity
+		_cap_equity_note.text = tr("FIN_CAPTABLE_EQUITY_NOTE").format({"n": employees_with_equity})
 
 
 func _refresh_mentor() -> void:

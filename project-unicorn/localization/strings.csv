@@ -1235,3 +1235,280 @@ PROD_GO_TO_SALES,Satış sekmesine git →,Go to Sales →
 PROD_ACTION_HARDEN,Hata sprinti,Bug sprint
 PROD_DRAFT_CHIP,TASLAK,DRAFT
 PROD_TREND_RISING,ARTIYOR,RISING
+VC_WHY_MRR_STRONG,MRR güçlü,MRR is strong
+VC_WHY_MRR_WEAK,MRR zayıf,MRR is weak
+VC_WHY_BRAND_SOLID,Marka sağlam,Brand holds up
+VC_WHY_BRAND_LOW,Marka düşük,Brand is low
+VC_WHY_SHUTTER,Kepenk sayacı,Shutter clock
+VC_WHY_RUNWAY_THIN,Runway dar,Runway is thin
+VC_WHY_SCANDAL,Skandal izi,A scandal on the record
+VC_WHY_LEVERAGE,Cebinde teklif,An offer in your pocket
+VC_WHY_WARM_INTRO,Frank'in tanıştırması,Frank's introduction
+VC_WHY_DOMAIN_MATCH,Sektör eşleşmesi,Sector match
+VC_WHY_CALLBACK,Kapı yeniden açık,The door reopened
+VC_PREP_BUSY,Zaten bir hazırlık sürüyor,A prep is already running
+VC_PREP_NEED_MEETING,Önce bu VC'yle toplantı iste,Ask this VC for a meeting first
+VC_PREP_TOO_SOON,Toplantıya {days} günden az kaldı,Fewer than {days} days left before the meeting
+VC_CALLBACK_REOPENED,Kapı yeniden açıldı — {investor}. Tekrar iste.,The door reopened — {investor}. Ask again.
+VC_SPEAKER_LIVE,{name} — Canlı,{name} — Live
+VC_STAT_STRIP,Kasa: {cash} · {runway_label}: {months} ay · Gün {day},Cash: {cash} · {runway_label}: {months} mo · Day {day}
+VC_ODDS,{approach} — {difficulty} · {pct},{approach} — {difficulty} · {pct}
+VC_REHEARSED,PROVA EDİLDİ,REHEARSED
+VC_BEAT1_LABEL,Odayı Oku · 1/4,Read the Room · 1/4
+VC_B1_LINE,"""{investor}. Otur. Vaktim kısa — beni neden buraya çağırdığını göster.""","""{investor}. Sit. My time is short — show me why you called me here."""
+VC_B1_MONO,Odayı oku.,Read the room.
+VC_B1_MONO_WHY,Odayı oku: {reasons},Read the room: {reasons}
+VC_B1_CHOICE,Odayı oku — karşındakini tart.,Read the room — take their measure.
+VC_APPROACH_PERCEPTION,Algı,Perception
+VC_BEAT2_LABEL,Anlatı · 2/4,Narrative · 2/4
+VC_B2_LINE,"""Tamam. Anlat bakalım — neden sen, neden şimdi?""","""All right. Tell me — why you, why now?"""
+VC_B2_MONO,Açı seç. Yanlış açı beni sıkar.,Pick an angle. The wrong one bores me.
+VC_B2_METRIC,Metrik: rakamlar konuşsun.,Metrics: let the numbers talk.
+VC_B2_VISION,Vizyon: nereye gittiğimizi göster.,Vision: show them where this goes.
+VC_B2_TRACTION,Traction: ivmeyi anlat.,Traction: tell them about the momentum.
+VC_APPROACH_NARRATIVE,Anlatı,Narrative
+VC_BEAT3_LABEL,Sorgu · 3/4,Interrogation · 3/4
+VC_B3_HONEST,"Dürüst: kabul et, planı göster.","Honest: admit it, show the plan."
+VC_APPROACH_HONEST,Dürüst,Honest
+VC_B3_HONEST_CAP,"Düşük risk, dürüst duruş.","Low risk, straight answer."
+VC_B3_SPIN,Spin: zayıflığı güce çevir.,Spin: turn the weakness into a strength.
+VC_APPROACH_SPIN,Spin,Spin
+VC_B3_SPIN_CAP,"Yüksek risk, yüksek getiri.","High risk, high return."
+VC_B3_DEFLECT,Geçiştir: konuyu kaydır.,Deflect: move them off it.
+VC_APPROACH_DEFLECT,Geçiştir,Deflect
+VC_B3_DEFLECT_CAP,"Güvenli, ama masa buradan çıkmaz ({cap} tavan).","Safe, but the table stops here ({cap} ceiling)."
+VC_Q_CHURN,"""Churn'ün konuşuyor. Kaçan müşterileri anlat — neden gittiler?""","""Your churn is talking. Tell me about the customers who left — why did they go?"""
+VC_Q_CHURN_MONO,Churn'ü soracak. Sayıları hazırla.,They will ask about churn. Have the numbers ready.
+VC_Q_GROWTH,"""Büyüme grafiği düz. Bu çizgiyi neden yukarı kaldıramadın?""","""The growth chart is flat. Why couldn't you lift that line?"""
+VC_Q_GROWTH_MONO,Büyümenin durgunluğunu görecek.,They will see the growth has stalled.
+VC_Q_CONCENTRATION,"""Gelirin tek bir müşteriye yaslanıyor. O giderse ne kalır?""","""Your revenue leans on one customer. What is left if they walk?"""
+VC_Q_CONCENTRATION_MONO,Gelir yoğunlaşmasını soracak.,They will ask about revenue concentration.
+VC_Q_SCANDAL,"""Yönetemediğin bir skandal var. Ben neden bu ekibe para vereyim?""","""There is a scandal you did not manage. Why would I put money into this team?"""
+VC_Q_SCANDAL_MONO,Skandalı soracak. Sorduğunda gözünü kaçırma.,They will ask about the scandal. Do not look away when they do.
+VC_Q_NO_ENGINEERS,"""Tek mühendisin bile yok. Bu ürünü kim taşıyacak?""","""You do not have a single engineer. Who is going to carry this product?"""
+VC_Q_NO_ENGINEERS_MONO,Ekibin inceliğini görecek.,They will see how thin the team is.
+VC_Q_SOLO,"""Tek başınasın. Sen düşersen şirket de düşer. Bu riski nasıl kapatıyorsun?""","""You are alone. If you go down, the company goes down. How do you cover that risk?"""
+VC_Q_SOLO_MONO,Tek-kurucu riskini soracak.,They will ask about solo-founder risk.
+VC_Q_RIVAL,"""Bir rakip senden önde. Ligde ikinci olan neden kazansın?""","""A rival is ahead of you. Why should second place in the league win?"""
+VC_Q_RIVAL_MONO,Rakibi masaya koyacak.,They will put the rival on the table.
+VC_Q_REFUSED_ACQ,"""Bir satın almayı geri çevirmişsin. Kibir mi, vizyon mu?""","""You turned down an acquisition. Arrogance, or vision?"""
+VC_Q_REFUSED_ACQ_MONO,Reddettiğin teklifi soracak.,They will ask about the offer you refused.
+VC_Q_REPUTATION,"""İtibarın zedeli. Bu hikâyeye kim inanır?""","""Your reputation is damaged. Who believes this story?"""
+VC_Q_REPUTATION_MONO,İtibarını yoklayacak.,They will probe your reputation.
+VC_Q_BUGS,"""Ürünün hata kaynıyor. Kalite senin için ne ifade ediyor?""","""Your product is crawling with bugs. What does quality mean to you?"""
+VC_Q_BUGS_MONO,Hata sayını soracak.,They will ask about your bug count.
+VC_Q_WEAK_DIM,"""{axis} tarafın zayıf. Sektörü bilen biri bunu ilk bakışta görür.""","""Your {axis} side is weak. Anyone who knows the sector sees it at a glance."""
+VC_Q_WEAK_DIM_MONO,En zayıf ekseni bulacak.,They will find the weakest axis.
+VC_Q_CLEAN,"""Doğrusu, saldıracak bir yer bulamadım. Bu iyi bir işaret. Devam et.""","""Honestly, I could not find anywhere to attack. That is a good sign. Go on."""
+VC_Q_CLEAN_MONO,Temiz alan. Nefes al.,Clear ground. Take a breath.
+VC_REACT_GOOD,"""İyi.""","""Good."""
+VC_REACT_OK,"""Hmm. İdare eder.""","""Hmm. It will do."""
+VC_REACT_BAD,"""Beni ikna etmedi.""","""That did not convince me."""
+VC_BEAT4_LABEL,Kapanış · 4/4,Closing · 4/4
+VC_B4_WIN_LINE,"""Sana bir teklif göndereceğim. Beğenmeyebilirsin ama ciddi.""","""I am going to send you an offer. You may not like it, but it is serious."""
+VC_B4_WIN_CHOICE,Teşekkürler. Bekliyorum.,Thank you. I will be waiting.
+VC_B4_LOSS_LINE,"""Bugün olmadı. Rakamlar beni buraya getirmedi.""","""Not today. The numbers did not bring me here."""
+VC_B4_LOSS_MONO,Soğuk oda. En azından nedenini biliyorsun.,A cold room. At least you know why.
+VC_B4_LOSS_CHOICE,Anladım. Çıkıyorum.,Understood. I will show myself out.
+VC_B4_WARM_LINE,"""Kararsızım. Bir yol var: sana bir koşul koyayım, tuttur, geri gel. Ya da şansını burada zorla.""","""I am undecided. There is a way: let me set you a condition, meet it, come back. Or push your luck right here."""
+VC_B4_WARM_MONO,"Ilık. Güvenli kapı mı, açgözlü kumar mı?","Lukewarm. The safe door, or the greedy bet?"
+VC_B4_QUIT,İkinci kez ılık. Bırak gitsin.,Lukewarm a second time. Let it go.
+VC_B4_QUIT_CAP,Reddedilme sayılır.,This counts as a rejection.
+VC_B4_CALLBACK,Callback'i kabul et — koşulu tuttur.,Take the callback — meet the condition.
+VC_B4_CALLBACK_CAP,Güvenli. Kapı açık kalır.,Safe. The door stays open.
+VC_B4_PUSH,Masayı zorla — şimdi karar ver.,Push the table — decide now.
+VC_APPROACH_PUSH,Zorla,Push
+VC_B4_PUSH_CAP,Başarısızsan masa kapanır.,Fail and the table closes.
+VC_B4_CLOSE,Kapat.,Close.
+VC_RES_CALLBACK,"""Koşulu biliyorsun. Tuttur, kapı açık.""","""You know the condition. Meet it and the door is open."""
+VC_RES_PUSH_WIN,"""Cesaretin varmış. Teklif yolda.""","""You had nerve. The offer is on its way."""
+VC_RES_PUSH_LOSS,"""Zorladın ve tutmadı. Kapı kapandı.""","""You pushed and it did not hold. The door is closed."""
+VC_RES_DEFAULT,"""Bugün olmadı.""","""Not today."""
+VC_EV_MEETING_TITLE,Toplantı zamanı — {investor},Meeting time — {investor}
+VC_EV_MEETING_BODY,"Randevu günü geldi. {investor} masada.
+
+""{line}""
+
+Hazırsan gir. Hazır değilsen de gir — takvim beklemez.","The day of the meeting is here. {investor} is at the table.
+
+""{line}""
+
+Go in if you are ready. Go in if you are not — the calendar does not wait."
+VC_EV_ENTER_MEETING,Toplantıya gir,Go into the meeting
+VC_EV_SKIP_MEETING,Bugün değil (randevu yanar),Not today (the meeting is forfeit)
+VC_EV_OFFER_EXPIRING_TITLE,Teklifin süresi doluyor,Your offer is expiring
+VC_EV_OFFER_EXPIRING_BODY,"Teklif {days} gün sonra yanıyor — sahibi {investor}.
+
+""Karar ver. Masaya otur ya da bırak — ama sallanma.""","The offer burns in {days} days — it belongs to {investor}.
+
+""Decide. Sit at the table or walk away — but do not dither."""
+VC_EV_ACK,Anlaşıldı,Understood
+VC_EV_LAST_DAY_TITLE,Yarın son gün,Tomorrow is the last day
+VC_EV_LAST_DAY_BODY,"Frank kapıda.
+
+""Yarın son gün. Cebinde teklif var. İmzalayacaksan bugün imzala.""","Frank is in the doorway.
+
+""Tomorrow is the last day. You have an offer in your pocket. If you are going to sign, sign today."""
+PITCH_NEED_0,"Ekip dağınık, tek bir yerde toplamak istiyorlar.",The team is scattered; they want it all in one place.
+PITCH_NEED_1,"Manuel süreçler zaman yiyor, otomasyon arıyorlar.",Manual work is eating their time; they are looking to automate.
+PITCH_NEED_2,"Mevcut araçları pahalı ve şişkin, sade bir şey istiyorlar.",Their current tools are expensive and bloated; they want something plain.
+PITCH_NEED_3,"Raporlama kâbus, yönetim net veri istiyor.",Reporting is a nightmare and management wants clean numbers.
+PITCH_REAL_NEED_0,Aslında derdi bütçe değil — patronuna 'modernleştik' diyebilmek.,It is not really about budget — it is being able to tell the boss they modernised.
+PITCH_REAL_NEED_1,Asıl korkusu rakibin gerisinde kalmak.,What they actually fear is falling behind a competitor.
+PITCH_REAL_NEED_2,"Geçen yıl yanlış araca para yatırdı, bu sefer garanti istiyor.",They backed the wrong tool last year and want a sure thing this time.
+PITCH_BUDGET_LOW,dar,tight
+PITCH_BUDGET_MID,orta,middling
+PITCH_BUDGET_HIGH,geniş,generous
+PITCH_BUDGET_READ,Satış okuması — bütçe: {band}. {need},Sales read — budget: {band}. {need}
+PITCH_VALUE_BLIND,Bütçesini kestiremiyorsun — körlemesine teklif vereceksin.,You cannot read their budget — you will be quoting blind.
+PITCH_VALUE_READ,Satış okuması — {seats} seat. Ürün değerin bu segmentte seat başına ~${per_lo}-{per_hi} → ~${lo}-{hi}/ay. Bu aralıkta oyna.,Sales read — {seats} seats. In this segment your product is worth about ${per_lo}-{per_hi} per seat → about ${lo}-{hi}/mo. Play inside that range.
+PITCH_S0_NPC,« Frank iyi şeyler söyledi. Göster bakalım — neyi farklı yapıyorsun? »,« Frank spoke well of you. Show me — what are you doing differently? »
+PITCH_S0_INNER,İlk on saniye. Adam zaten Frank'e güveniyor; kapı aralık. Mesele kapıyı nasıl açtığım.,The first ten seconds. He already trusts Frank; the door is ajar. The question is how I open it.
+PITCH_S0_C1,Sıcak başla — önce onu dinle,Open warm — let him talk first
+PITCH_S0_C2,Direkt ürüne gir,Go straight to the product
+PITCH_S0_C3,Kendinden emin gir — 'bunu görmen lazım',Open with confidence — 'you need to see this'
+PITCH_S1_NPC,« Bizde zaten bir sistem var. Seninki ne ekliyor? »,« We already have a system. What does yours add? »
+PITCH_S1_INNER,Klasik itiraz: 'zaten bir şeyimiz var.' Çerçeveyi cevabım belirler.,The classic objection: 'we already have something.' My answer sets the frame.
+PITCH_S1_C1,Dürüst ol — taze ama derdine birebir,"Be honest — new, but built for exactly this"
+PITCH_S1_C2,Vizyon sat — nereye gittiğimizi anlat,Sell the vision — tell him where this goes
+PITCH_S1_C3,"Onun derdine odaklan, dilinden konuş","Focus on his problem, speak his language"
+PITCH_S2_NPC,"« Tamam, ilgimi çektin. Rakam konuşalım. »","« All right, you have my interest. Let us talk numbers. »"
+PITCH_S2_INNER,İşin döndüğü yer. Yüksek tutarsam ya kaparım ya kaçar; düşük tutarsam garanti ama masada para bırakırım. {hint},This is where it turns. Price high and I either win big or lose him; price low and it is safe but I leave money on the table. {hint}
+PITCH_S2_C1,Yüksek çıpa at — değerine güven,Anchor high — trust the value
+PITCH_S2_C2,Adil fiyat — orta nokta,Fair price — the middle
+PITCH_S2_C3,Güvenli fiyat — anlaşmayı garantile,Safe price — lock the deal in
+PITCH_S3_NPC,« Bir düşüneyim... yoksa hemen mi karar versem? »,« Let me think about it... or should I just decide now? »
+PITCH_S3_INNER,Son viraj. Geri çekilirsem kaçar; itersem ya imza ya kapı. {flavor},The last bend. Back off and he drifts; push and it is either a signature or the door. {flavor}
+PITCH_S3_C1,Nazikçe ama kararlı kapat,Close gently but firmly
+PITCH_S3_C2,"Bir taviz ver, güven inşa et","Give a concession, build trust"
+PITCH_S3_C3,Sert kapat — 'bugün karar ver',Close hard — 'decide today'
+PITCH_BAND_CRIT_SUCCESS,Az önce onu tam yakaladın — havada bir güven var.,You had him completely just now — there is confidence in the room.
+PITCH_BAND_SUCCESS,"İyi gitti, beni ciddiye alıyor.",That went well; he is taking me seriously.
+PITCH_BAND_NEAR_PASS,İkna oldu ama tam değil; pürüz kaldı.,"He is convinced, but not entirely; something is still catching."
+PITCH_BAND_NEAR_MISS,Tereddüt ediyor. Az kalsın.,He is hesitating. So close.
+PITCH_BAND_FAIL,Çuvalladım galiba. Toparlamam lazım.,I think I fumbled that. I need to recover.
+PITCH_DIFF_EASY,Kolay,Easy
+PITCH_DIFF_MEDIUM,Orta,Medium
+PITCH_DIFF_HARD,Zorlu,Hard
+GATE_OPENED,{phase} kapısı açıldı,The {phase} gate is open
+GATE_ADVANCE,Hazırız — geçelim,We are ready — let us move
+GATE_DECLINE,Henüz değil,Not yet
+GATE_TRACTION_TITLE,Traction zamanı,Traction time
+GATE_TRACTION_BODY_0,"Frank ekrandaki rakamları çeviriyor, acele etmiyor.
+
+""Bir şey sattın. Demek ki alan var. Şimdi soru şu: tekrar yapabilir misin?""
+
+Traction fazı vites değiştirmek demek: ölçek baskısı, churn, daha büyük masalar. Geri dönüşü yok — zaten geriye bakan da yok.","Frank scrolls through the numbers on the screen, in no hurry.
+
+""You sold something. So there is a market. Now the question is: can you do it again?""
+
+The Traction phase means changing gear: pressure to scale, churn, bigger tables. There is no going back — and nobody is looking back anyway."
+GATE_TRACTION_BODY_1,"Frank kapıda, ceketi hâlâ üstünde.
+
+""Hâlâ buradayız. Rakamlar hâlâ aynı şeyi söylüyor. Rakipler beklemiyor, biliyorsun.""","Frank is in the doorway, coat still on.
+
+""We are still here. The numbers still say the same thing. Your rivals are not waiting, you know that."""
+GATE_TRACTION_BODY_2,"Frank bu sefer oturmuyor bile.
+
+""Beklemek de bir karar. Kirasını sen ödüyorsun.""","This time Frank does not even sit down.
+
+""Waiting is a decision too. You are the one paying rent on it."""
+GATE_SERIES_A_TITLE,Series A masası,The Series A table
+GATE_SERIES_A_BODY_0,"Frank telefonunu ters çevirip masaya koyuyor. Ciddi olduğunda yapar bunu.
+
+""MRR tutuyor, marka ayakta. Series A avı açık. Runway'in dar mı geniş mi — girebilirsin, ama masada kokusunu alırlar.""
+
+Bundan sonrası saatli bir av: pitch takvimi ve runway, ikisi de sayacak.","Frank turns his phone face down on the table. He does that when he is serious.
+
+""MRR is holding, the brand is standing. The Series A hunt is open. Thin runway or not — you can walk in, but they will smell it at the table.""
+
+From here it is a hunt on a clock: the pitch calendar and the runway both count down."
+GATE_SERIES_A_BODY_1,"Frank pencereden dışarı bakıyor.
+
+""Masalar sonsuza kadar açık kalmaz. Metrikler bugün iyi; yarını kimse garanti etmiyor.""","Frank looks out of the window.
+
+""Tables do not stay open forever. The metrics are good today; nobody is guaranteeing tomorrow."""
+GATE_SERIES_A_BODY_2,"Frank bu sefer oturmuyor bile.
+
+""Beklemek de bir karar. Kirasını sen ödüyorsun.""","This time Frank does not even sit down.
+
+""Waiting is a decision too. You are the one paying rent on it."""
+TERM_SPLIT_BASE,temel {pct},base {pct}
+TERM_SPLIT_SKILL, · +{pct} {skill}, · +{pct} {skill}
+TERM_SPLIT_LEVERAGE, · +{pct} kaldıraç, · +{pct} leverage
+TERM_SPLIT_DECAY, · −{pct} tekrar, · −{pct} repeat
+TERM_PATIENCE,SABIR,PATIENCE
+TERM_OFFER_HEADER,MASADAKİ TEKLİF,THE OFFER ON THE TABLE
+TERM_PUSH,İTİR,PUSH
+TERM_RESULT_HEADER,SONUÇ,RESULT
+TERM_LEVER_BOARD,Board,Board
+TERM_BOARD_CLEAN,temiz,clean
+TERM_BOARD_SEATS,{n} koltuk,{n} seats
+TERM_BOARD_VETO, + veto, + veto
+TERM_INVESTMENT,{amount} yatırım,{amount} investment
+TERM_CASH_RUNWAY,Kasa: {cash} · Runway: {days} gün,Cash: {cash} · Runway: {days} days
+TERM_TABLES_CLOSED,Kapanan masa: {closed}/{total},Tables closed: {closed}/{total}
+TERM_LEVERAGE_BOX,Cebinde 2. term sheet var — {investor}. Bunu onlar da biliyor.,You have a second term sheet in your pocket — {investor}. They know it too.
+TERM_RESULT_ACCEPTED,Kabul ettiler. {move}.,They accepted. {move}.
+TERM_RESULT_REFUSED,Reddettiler. Olduğu yerde kaldı: {value}.,They refused. It stays where it was: {value}.
+TERM_RESULT_FINAL,"Son teklifim bu. İmzala, ya da masadan kalk.","This is my final offer. Sign, or walk away from the table."
+TERM_LEVER_MAXED,{lever}: {value} · itilecek yer yok.,{lever}: {value} · nowhere left to push.
+TERM_LEVER_ODDS,{lever}: {from} → {to} · {pct},{lever}: {from} → {to} · {pct}
+TERM_FRANK_WON,"Kazandığın kalem: {lever}. İyi. Şimdi dur, ya da başka bir kaldıraca bas. Sabırları sonsuz değil.","You won that one: {lever}. Good. Now stop, or lean on another lever. Their patience is not infinite."
+TERM_FRANK_RESISTED,"Olmadı. Direndikleri kalem: {lever}. Israr etme, başka yere geç.",No luck. They are dug in on this one: {lever}. Do not push it — move somewhere else.
+TERM_FRANK_LAST_MOVE,Gerginleşiyorlar. Bir hamlen kaldı. Dikkatli seç.,They are tensing up. You have one move left. Choose carefully.
+TERM_FRANK_OTHER_TABLE,"Masada bir teklifin daha var — {investor}. Kalk, değerlendir, sonra dön.","You have another offer on the table — {investor}. Walk, weigh it, come back."
+TERM_FRANK_NO_TABLE,"Başka masan yok. Bu teklif, ya da hiçbir şey.","You have no other table. This offer, or nothing."
+TERM_FRANK_OPENING,İlk teklifleri bu. İlk teklif hiçbir zaman son teklif değildir. Zorla.,This is their opening offer. An opening offer is never the final one. Push.
+TERM_FRANK_NEXT_MOVE,Sıradaki hamleni seç. Sabırları sonsuz değil.,Pick your next move. Their patience is not infinite.
+TERM_SIGN_Q,İmzala?,Sign?
+TERM_SIGN_BODY,{amount} yatırım · {terms} ile imzala? Bu turu kapatır.,Sign for {amount} on {terms}? That closes this round.
+TERM_SIGN_OK,İMZALA,SIGN
+TERM_WALK_Q,Masadan kalk?,Walk away?
+TERM_WALK_BODY,Masadan kalkarsan bu teklif gider. Bu bir kapanan masa sayılır.,Walk away and this offer is gone. It counts as a closed table.
+TERM_WALK_OK,MASADAN KALK,WALK AWAY
+FIN_BURN_SALARIES,Maaşlar,Salaries
+FIN_BURN_OVERTIME,Ek mesai,Overtime
+FIN_BURN_FOUNDER,Kurucu yaşam gideri,Founder living costs
+FIN_BURN_MARKETING,Pazarlama,Marketing
+FIN_BURN_OFFICE,Ofis,Office
+FIN_ONETIME_BUILD,Özellik maliyeti,Feature cost
+FIN_ONETIME_VERSION,Sürüm özellikleri,Version features
+FIN_MENTOR_WARNING,Mentor uyarısı,Mentor warning
+FIN_MENTOR_QUOTE,"Altı aydan az yolun kaldı. Kasadaki para fikir değil, takvim. Ya gideri kısarsın ya geliri bulursun; ikisi de karar ister.","You have less than six months of road left. The money in the account is not an idea, it is a calendar. Either you cut costs or you find revenue; both take a decision."
+FIN_MENTOR_QUOTE_WRAPPED,"""{quote}""","""{quote}"""
+FIN_OPEN_ROUND_SERIES_A,Tur aç · Series A,Open round · Series A
+FIN_SNOOZE,Ertele,Snooze
+FIN_CASH,Nakit,Cash
+FIN_MONTHLY_NET,Aylık net,Monthly net
+FIN_RUNWAY,Runway,Runway
+FIN_RANGE_6M,6 AY,6 MO
+FIN_RANGE_12M,12 AY,12 MO
+FIN_RANGE_ALL,TÜMÜ,ALL
+FIN_LEGEND_ACTUAL,Gerçekleşen nakit,Actual cash
+FIN_LEGEND_PROJECTION,Projeksiyon · mevcut gidiş,Projection · current course
+FIN_LEGEND_PROJECTION_TARGET,Projeksiyon · satış hedefi tutarsa,Projection · if the sales target holds
+FIN_MONTHLY_FLOW,Aylık akış · mevcut gidişle,Monthly flow · at the current pace
+FIN_INCOME,Gelir,Income
+FIN_EXPENSE,Gider,Expense
+FIN_NET,Net,Net
+FIN_BURN_SECTION,Gider dağılımı,Expense breakdown
+FIN_RECENT_TX,Son işlemler,Recent transactions
+FIN_NO_TX,Henüz işlem yok,No transactions yet
+FIN_TX_DATE,{day} {month},{month} {day}
+FIN_PER_DAY,{amount} / gün,{amount} / day
+FIN_REQ_MRR,MRR ≥ {amount},MRR ≥ {amount}
+FIN_REQ_BRAND,Marka ≥ {n},Brand ≥ {n}
+FIN_REQ_OPENS,Series A Hunt'ta açılır: {reqs},Opens in the Series A Hunt: {reqs}
+FIN_CAPTABLE_HEADER,Hisse dağılımı,Cap table
+FIN_CAPTABLE_FOUNDER,Kurucu · {pct},Founder · {pct}
+FIN_CAPTABLE_INVESTORS,Yatırımcılar · {pct},Investors · {pct}
+FIN_CAPTABLE_EMPLOYEES,Çalışanlar · {pct},Employees · {pct}
+FIN_CAPTABLE_RAISED,Toplanan · {amount},Raised · {amount}
+FIN_CAPTABLE_EQUITY_NOTE,{n} çalışanın hissesi var,{n} employees hold equity
+TERM_BOARD_SEAT_ONE,{n} koltuk,{n} seat
+FIN_SUBTAB_SUMMARY,Özet,Summary
+FIN_SUBTAB_INVESTMENT,Yatırım,Investment
+FIN_SUBTAB_LOCKED,Series A Hunt'ta açılır,Opens in the Series A Hunt
+DIALOGUE_YOUR_ANSWER,YANITIN:,YOUR ANSWER:
+DIALOGUE_PICK_ONE,Bir seçenek seç,Pick an option

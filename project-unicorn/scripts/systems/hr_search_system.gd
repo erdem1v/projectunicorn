@@ -156,7 +156,7 @@ static func start_search(role_id: String, band_id: String) -> bool:
 	}
 	# Peşin retainer, charged ONCE here and never refunded (design doc §2, çift ücret). Same
 	# ledger label as the commission: both lines are what Atlas costs.
-	FinanceSystem.apply_one_time_cost(HRConstants.SEARCH_RETAINER, HRConstants.cost_label_hire())
+	FinanceSystem.apply_one_time_cost(HRConstants.SEARCH_RETAINER, "hire")
 	return true
 
 
@@ -220,7 +220,7 @@ static func hire(candidate_index: int) -> Character:
 	# SEVERANCE_MIN_MONTHS, so a same-day dismissal pays one month rather than a negative tenure.
 	emp.hire_day = GameState.day + 1
 	# Komisyon: charged ONCE, here, on the hire only — dismissing the files charges nothing.
-	FinanceSystem.apply_one_time_cost(HRConstants.commission_for(salary), HRConstants.cost_label_hire())
+	FinanceSystem.apply_one_time_cost(HRConstants.commission_for(salary), "hire")
 	if role_id == HRConstants.ROLE_DEVELOPER:
 		# needs_engineer is ProductSystem's bug-sprint pressure signal, and a hire is that
 		# flag's answer — so the answer clears the question. HRMoraleSystem.is_capacity_overloaded

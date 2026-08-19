@@ -714,11 +714,12 @@ static func leave_month_for(hire_month: int, hire_ordinal: int) -> int:
 
 static func leave_month_label(month: int) -> String:
 	# Character.leave_month is a bare 1-12 int and preview_vacation passes it through raw, so
-	# every consumer would otherwise print a number where a month belongs. Delegates to the
-	# calendar's own Title-Case table rather than keeping a fourth copy of the month names.
+	# every consumer would otherwise print a number where a month belongs. Fmt.month_name is
+	# the single home for month words in either language (it used to read the calendar's
+	# Turkish Title-Case table, which stayed Turkish in the English build).
 	if month < 1 or month > 12:
 		return ""
-	return String(GameState.MONTH_NAMES_TR_TITLE[month - 1])
+	return Fmt.month_name(month)
 
 
 # ======================= Player actions (çalışan kartı) ======================

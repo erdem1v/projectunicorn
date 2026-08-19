@@ -103,12 +103,12 @@ const LEVERAGE_OPEN_NOTCH := 4          # opening valuation starts +$4M better w
 # Dial spin duration (seconds) — the push roll presentation.
 const DIAL_SPIN_SECS := 0.8
 
-## Difficulty label (Turkish, shown in odds text) for a diff int.
+## Difficulty label shown in the odds text, for a diff int.
 static func diff_label(diff: int) -> String:
 	match diff:
-		DIFF_KOLAY: return "Kolay"
-		DIFF_ORTA: return "Orta"
-		_: return "Zorlu"
+		DIFF_KOLAY: return TranslationServer.translate("PITCH_DIFF_EASY")
+		DIFF_ORTA: return TranslationServer.translate("PITCH_DIFF_MEDIUM")
+		_: return TranslationServer.translate("PITCH_DIFF_HARD")
 
 
 ## Founder-skill display label for the odds split (§5). Single label home is

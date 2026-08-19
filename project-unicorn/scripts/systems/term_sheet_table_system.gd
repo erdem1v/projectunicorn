@@ -167,13 +167,15 @@ static func odds_for(lever: String) -> Dictionary:
 
 
 static func _split_text(bd: Dictionary, leverage: bool, decay: float) -> String:
-	var s: String = "temel %%%d" % _pct(bd.base)
+	var s: String = TranslationServer.translate("TERM_SPLIT_BASE").format({"pct": Fmt.percent(_pct(bd.base), 0)})
 	if float(bd.skill) > 0.0:
-		s += " · +%%%d %s" % [_pct(bd.skill), PitchConstants.skill_label(bd.skill_name)]
+		s += TranslationServer.translate("TERM_SPLIT_SKILL").format({
+			"pct": Fmt.percent(_pct(bd.skill), 0),
+			"skill": PitchConstants.skill_label(bd.skill_name)})
 	if leverage and float(bd.bonus) > 0.0:
-		s += " · +%%%d kaldıraç" % _pct(bd.bonus)
+		s += TranslationServer.translate("TERM_SPLIT_LEVERAGE").format({"pct": Fmt.percent(_pct(bd.bonus), 0)})
 	if decay > 0.0:
-		s += " · −%%%d tekrar" % _pct(decay)
+		s += TranslationServer.translate("TERM_SPLIT_DECAY").format({"pct": Fmt.percent(_pct(decay), 0)})
 	return s
 
 
@@ -200,13 +202,14 @@ static func view_state() -> Dictionary:
 		"leverage": {
 			"active": lev_active,
 			"other_vc_name": other_name,
-			"box_text": ("Cebinde 2. term sheet var — %s. Bunu onlar da biliyor." % other_name) if lev_active else "",
+			"box_text": TranslationServer.translate("TERM_LEVERAGE_BOX").format({"investor": other_name}) if lev_active else "",
 		},
 		"frank_line": _frank_line(lev_active, other_name),
 		"money_raised": money_raised(),
 		"footer": {
 			"kasa_runway_text": _kasa_runway_text(),
-			"counter_text": "Kapanan masa: %d/%d" % [GameState.vc_rejections, EndingsSystem.CASCADE_TABLES],
+			"counter_text": TranslationServer.translate("TERM_TABLES_CLOSED").format({
+				"closed": GameState.vc_rejections, "total": EndingsSystem.CASCADE_TABLES}),
 		},
 		"sign_enabled": _active,
 		"walk_enabled": _active,
@@ -244,38 +247,48 @@ static func _dial_view() -> Dictionary:
 static func _result_caption() -> String:
 	match _state:
 		PUSH_SUCCESS:
-			return "Kabul ettiler. %s." % _last_move
+			return TranslationServer.translate("TERM_RESULT_ACCEPTED").format({"move": _last_move})
 		PUSH_FAILURE:
-			return "Reddettiler. %s'de kaldı." % _current_text(_last_lever_acted)
+			# COPY-RESTRUCTURED: was "{value}'de kaldı" — a locative suffix on a rendered
+			# number ("$18M'de"). The value is terminal now.
+			return TranslationServer.translate("TERM_RESULT_REFUSED").format(
+				{"value": _current_text(_last_lever_acted)})
 		PATIENCE_ZERO:
-			return "Son teklifim bu. İmzala, ya da masadan kalk."
+			return TranslationServer.translate("TERM_RESULT_FINAL")
 		_:
 			if _lever_at_best(_selected_lever):
-				return "%s: %s · itilecek yer yok." % [_lever_name(_selected_lever), _current_text(_selected_lever)]
+				return TranslationServer.translate("TERM_LEVER_MAXED").format({
+					"lever": _lever_name(_selected_lever), "value": _current_text(_selected_lever)})
 			var od: Dictionary = odds_for(_selected_lever)
-			return "%s: %s → %s · %%%d" % [
-				_lever_name(_selected_lever), _current_text(_selected_lever),
-				_preview_target(_selected_lever), _pct(od.chance)]
+			return TranslationServer.translate("TERM_LEVER_ODDS").format({
+				"lever": _lever_name(_selected_lever),
+				"from": _current_text(_selected_lever),
+				"to": _preview_target(_selected_lever),
+				"pct": Fmt.percent(_pct(od.chance), 0)})
 
 
 static func _frank_line(lev_active: bool, other_name: String) -> String:
 	match _state:
 		PUSH_SUCCESS:
-			return "%s aldın. İyi. Şimdi dur, ya da başka bir kaldıraca bas. Sabırları sonsuz değil." % _lever_name_acc(_last_lever_acted)
+			# COPY-RESTRUCTURED: was "{lever}'yi aldın", which needed a declined lever name.
+			return TranslationServer.translate("TERM_FRANK_WON").format(
+				{"lever": _lever_name(_last_lever_acted)})
 		PUSH_FAILURE:
 			if _patience <= 1:
-				return "Gerginleşiyorlar. Bir hamlen kaldı. Dikkatli seç."
-			return "Olmadı. %s direniyorlar. Israr etme, başka yere geç." % _lever_name_loc(_last_lever_acted)
+				return TranslationServer.translate("TERM_FRANK_LAST_MOVE")
+			# COPY-RESTRUCTURED: was "{lever}'de direniyorlar", which needed a declined name.
+			return TranslationServer.translate("TERM_FRANK_RESISTED").format(
+				{"lever": _lever_name(_last_lever_acted)})
 		PATIENCE_ZERO:
 			if lev_active:
-				return "Masada bir teklifin daha var — %s. Kalk, değerlendir, sonra dön." % other_name
-			return "Başka masan yok. Bu teklif, ya da hiçbir şey."
+				return TranslationServer.translate("TERM_FRANK_OTHER_TABLE").format({"investor": other_name})
+			return TranslationServer.translate("TERM_FRANK_NO_TABLE")
 		IDLE:
-			return "İlk teklifleri bu. İlk teklif hiçbir zaman son teklif değildir. Zorla."
+			return TranslationServer.translate("TERM_FRANK_OPENING")
 		_:
 			if _patience <= 1:
-				return "Gerginleşiyorlar. Bir hamlen kaldı. Dikkatli seç."
-			return "Sıradaki hamleni seç. Sabırları sonsuz değil."
+				return TranslationServer.translate("TERM_FRANK_LAST_MOVE")
+			return TranslationServer.translate("TERM_FRANK_NEXT_MOVE")
 
 
 # ============================================================================
@@ -311,7 +324,7 @@ static func _current_text(lever: String) -> String:
 		"valuation":
 			return "$%dM" % int(_terms.get("valuation_m", 0))
 		"dilution":
-			return "%%%d" % int(_terms.get("dilution_pct", 0))
+			return Fmt.percent(int(_terms.get("dilution_pct", 0)), 0)
 		"board":
 			return _board_text(int(_terms.get("board_seats", 0)), bool(_terms.get("board_veto", false)))
 	return ""
@@ -324,7 +337,7 @@ static func _ghost_text(lever: String) -> String:
 		"valuation":
 			return "$%dM" % (int(_terms.get("valuation_m", 0)) + PitchConstants.VAL_STEP)
 		"dilution":
-			return "%%%d" % maxi(int(_terms.get("dilution_pct", 0)) - PitchConstants.DIL_STEP, PitchConstants.DIL_FLOOR)
+			return Fmt.percent(maxi(int(_terms.get("dilution_pct", 0)) - PitchConstants.DIL_STEP, PitchConstants.DIL_FLOOR), 0)
 		"board":
 			if bool(_terms.get("board_veto", false)):
 				return _board_text(int(_terms.get("board_seats", 0)), false)
@@ -339,35 +352,28 @@ static func _preview_target(lever: String) -> String:
 
 static func _board_text(seats: int, veto: bool) -> String:
 	if seats <= 0 and not veto:
-		return "temiz"
-	var s: String = "%d koltuk" % seats
+		return TranslationServer.translate("TERM_BOARD_CLEAN")
+	# English needs a singular form; Turkish does not inflect after a numeral, so both of
+	# its rows read "{n} koltuk". Two rows, not a plural engine.
+	var key: String = "TERM_BOARD_SEAT_ONE" if seats == 1 else "TERM_BOARD_SEATS"
+	var s: String = TranslationServer.translate(key).format({"n": seats})
 	if veto:
-		s += " + veto"
+		s += TranslationServer.translate("TERM_BOARD_VETO")
 	return s
 
 
 static func _lever_name(lever: String) -> String:
 	match lever:
-		"valuation": return "Değerleme"
-		"dilution": return "Hisse"
-		_: return "Board"
+		"valuation": return TranslationServer.translate("FIN_VALUATION")
+		"dilution": return TranslationServer.translate("FIN_EQUITY")
+		_: return TranslationServer.translate("TERM_LEVER_BOARD")
 
 
-static func _lever_name_acc(lever: String) -> String:
-	# Accusative form for Frank's "%s aldın" line — the Turkish suffix follows vowel
-	# harmony per lever name, so one shared "'ı" template can't fit all three.
-	match lever:
-		"valuation": return "Değerleme'yi"
-		"dilution": return "Hisse'yi"
-		_: return "Board'u"
-
-
-static func _lever_name_loc(lever: String) -> String:
-	# Locative form for Frank's "%s direniyorlar" line (see _lever_name_acc note).
-	match lever:
-		"valuation": return "Değerleme'de"
-		"dilution": return "Hisse'de"
-		_: return "Board'da"
+# _lever_name_acc / _lever_name_loc USED TO LIVE HERE. They held accusative and locative
+# spellings of the three lever names, because Turkish case endings follow vowel harmony and
+# "Değerleme", "Hisse" and "Board" each take a different one. Both callers were restructured
+# so the lever name sits in a terminal slot and needs no ending at all, which is the only
+# form that survives translation — English has no case ending to supply.
 
 
 static func _kasa_runway_text() -> String:
@@ -375,7 +381,8 @@ static func _kasa_runway_text() -> String:
 	# shell shows NET months). Days-vs-months unit deferred to the curve session.
 	var burn: int = maxi(GameState.daily_burn, 1)
 	var days: int = int(floor(float(GameState.cash) / float(burn)))
-	return "Kasa: %s · Runway: %d gün" % [UiTokens.format_money(GameState.cash), days]
+	return TranslationServer.translate("TERM_CASH_RUNWAY").format({
+		"cash": UiTokens.format_money(GameState.cash), "days": days})
 
 
 # ============================================================================

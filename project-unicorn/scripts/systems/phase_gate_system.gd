@@ -33,12 +33,8 @@ const GATES := [
 			{"type": "customer_count_min", "value": 1},    # first real customer (B2C record or B2B account)
 			{"type": "mrr_above", "value": 0},             # MRR > 0
 		],
-		"title": "Traction zamanı",
-		"bodies": [
-			"Frank ekrandaki rakamları çeviriyor, acele etmiyor.\n\n\"Bir şey sattın. Demek ki alan var. Şimdi soru şu: tekrar yapabilir misin?\"\n\nTraction fazı vites değiştirmek demek: ölçek baskısı, churn, daha büyük masalar. Geri dönüşü yok — zaten geriye bakan da yok.",
-			"Frank kapıda, ceketi hâlâ üstünde.\n\n\"Hâlâ buradayız. Rakamlar hâlâ aynı şeyi söylüyor. Rakipler beklemiyor, biliyorsun.\"",
-			"Frank bu sefer oturmuyor bile.\n\n\"Beklemek de bir karar. Kirasını sen ödüyorsun.\"",
-		],
+		"copy_key": "TRACTION",       # GATE_TRACTION_TITLE / _BODY_0..2 in strings.csv
+		"body_count": 3,
 	},
 	{
 		"from": 2, "to": 3,
@@ -49,12 +45,8 @@ const GATES := [
 			{"type": "mrr_above", "value": SalesSystem.TRACTION_MRR_TARGET - 1},
 			{"type": "brand_above", "value": 24},          # brand ≥ 25 (working floor; calibration item)
 		],  # runway deliberately NOT a condition (§2.2 — deadlock; low runway feeds pitch odds instead)
-		"title": "Series A masası",
-		"bodies": [
-			"Frank telefonunu ters çevirip masaya koyuyor. Ciddi olduğunda yapar bunu.\n\n\"MRR tutuyor, marka ayakta. Series A avı açık. Runway'in dar mı geniş mi — girebilirsin, ama masada kokusunu alırlar.\"\n\nBundan sonrası saatli bir av: pitch takvimi ve runway, ikisi de sayacak.",
-			"Frank pencereden dışarı bakıyor.\n\n\"Masalar sonsuza kadar açık kalmaz. Metrikler bugün iyi; yarını kimse garanti etmiyor.\"",
-			"Frank bu sefer oturmuyor bile.\n\n\"Beklemek de bir karar. Kirasını sen ödüyorsun.\"",
-		],
+		"copy_key": "SERIES_A",       # GATE_SERIES_A_TITLE / _BODY_0..2 in strings.csv
+		"body_count": 3,
 	},
 	# Phase 3 has no exit gate — the run resolves through terminals (§2.2 Gate 3).
 ]
@@ -120,8 +112,8 @@ static func _open_gate(gate: Dictionary) -> void:
 	EventBus.phase_gate_reached.emit(int(gate.to))
 	GameState.set_flag("gate_prompt_day", GameState.day)
 	GameState.set_flag("gate_declines", 0)
-	GameState.submit_month_highlight(
-		"%s kapısı açıldı" % _phase_display_name(int(gate.to)), 70)  # AYIN OLAYI (Spec 3 §4)
+	GameState.submit_month_highlight(TranslationServer.translate("GATE_OPENED").format(
+		{"phase": _phase_display_name(int(gate.to))}), 70)  # AYIN OLAYI (Spec 3 §4)
 	_gate_event = _build_gate_event(gate)
 	if OS.is_debug_build():
 		print("[PhaseGateSystem] Gate open: phase %d → %d" % [int(gate.from), int(gate.to)])
@@ -201,23 +193,23 @@ static func _build_gate_event(gate: Dictionary) -> GameEvent:
 	var ev: GameEvent = GameEvent.new()
 	ev.id = String(gate.event_id)
 	ev.category = "reactive"
-	ev.title = String(gate.title)
+	ev.title = _gate_title(gate)
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = String((gate.bodies as Array)[0])
+	ev.body_text = _gate_body(gate, 0)
 	ev.cooldown_days = 0
 	ev.one_shot = false
 	ev.priority = 10
 	ev.tags = ["build_safe", "phase_gate"]
 	ev.trigger_conditions = []
 	var advance: EventChoice = EventChoice.new()
-	advance.label = "Hazırız — geçelim"
+	advance.label = TranslationServer.translate("GATE_ADVANCE")
 	advance.modifiers = [{"type": "advance_phase"}]  # zero economic delta (§2.1)
 	advance.unlock_condition = {}
 	advance.unlock_reason_text = ""
 	var decline: EventChoice = EventChoice.new()
-	decline.label = "Henüz değil"
+	decline.label = TranslationServer.translate("GATE_DECLINE")
 	decline.modifiers = [{"type": "phase_gate_decline"}]
 	decline.unlock_condition = {}
 	decline.unlock_reason_text = ""
@@ -236,6 +228,20 @@ static func _refresh_gate_copy() -> void:
 	var gate: Dictionary = _gate_for_phase(GameState.phase)
 	if gate.is_empty():
 		return
-	var bodies: Array = gate.bodies as Array
-	var idx: int = clampi(int(GameState.get_flag("gate_declines", 0)), 0, bodies.size() - 1)
-	_gate_event.body_text = String(bodies[idx])
+	# _gate_body clamps to the gate's body_count, so the decline counter can be handed over raw.
+	_gate_event.body_text = _gate_body(gate, int(GameState.get_flag("gate_declines", 0)))
+
+
+## Gate copy lives in strings.csv under GATE_<KEY>_TITLE / GATE_<KEY>_BODY_<n>. The table
+## keeps the id and the count; a const cannot hold the words, because a const is evaluated
+## when the file loads and no locale exists yet.
+static func _gate_title(gate: Dictionary) -> String:
+	return TranslationServer.translate("GATE_%s_TITLE" % String(gate.get("copy_key", "")))
+
+
+## Body variant `idx`, clamped to the gate's count. Which variant is shown depends on how
+## many times the player has declined — that arithmetic is unchanged and lives at the caller.
+static func _gate_body(gate: Dictionary, idx: int) -> String:
+	var n: int = int(gate.get("body_count", 1))
+	return TranslationServer.translate("GATE_%s_BODY_%d" % [
+		String(gate.get("copy_key", "")), clampi(idx, 0, n - 1)])

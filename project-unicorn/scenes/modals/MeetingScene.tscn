@@ -156,12 +156,12 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ZoneLabel"
-text = "YANITIN:"
+text = "DIALOGUE_YOUR_ANSWER"
 
 [node name="HintLabel" type="Label" parent="Column/Body/Content/ChoicesHeader"]
 layout_mode = 2
 theme_type_variation = &"DialogueOdds"
-text = "Bir seçenek seç"
+text = "DIALOGUE_PICK_ONE"
 
 [node name="Choices" type="VBoxContainer" parent="Column/Body/Content"]
 layout_mode = 2

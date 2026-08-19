@@ -110,7 +110,7 @@ static func send_to_training(id: String) -> bool:
 	if GameState.cash < HRConstants.TRAINING_FEE:
 		return false
 	# Tek seferlik gider, HR gider hattına — işe alım retainer'ıyla aynı sızdırmazlık.
-	FinanceSystem.apply_one_time_cost(HRConstants.TRAINING_FEE, HRConstants.cost_label_training())
+	FinanceSystem.apply_one_time_cost(HRConstants.TRAINING_FEE, "training")
 	CharacterRegistry.begin_training(id)
 	return true
 

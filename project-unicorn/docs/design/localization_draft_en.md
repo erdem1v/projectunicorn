@@ -134,3 +134,59 @@ table, not the number of rounds") and must stay unambiguous ahead of sounding go
 ("Geliştir · v{version}") is Tier A but was **restructured** away from "v3'ü geliştir", which
 carried a hand-written vowel-harmony table for 2..9 — the number is terminal now and must
 stay that way.
+
+---
+
+## B4 — Finance / VC (2026-08-19)
+
+### The VC pitch scene (`vc_pitch_system`, 98 keys)
+The whole four-beat encounter. Tier B throughout — this is the most performed scene in the
+game and the English is a flat draft next to it.
+
+| Family | What it is |
+|---|---|
+| `VC_B1_*` … `VC_B4_*` | the four beats: read the room, narrative, interrogation, close |
+| `VC_Q_*` (24) | what the VC attacks — churn, flat growth, revenue concentration, an unmanaged scandal, no engineers, solo-founder risk, a rival ahead, a refused acquisition, reputation, bugs, the weakest axis, and the "I found nothing" clean read. Each is a `vc_line` (spoken) plus a `mono` (what the founder notices coming) |
+| `VC_RES_*` | the four resolutions, including the callback and the two outcomes of pushing |
+| `VC_REACT_*` | three one-word reactions folded onto the front of the next line |
+| `VC_WHY_*` (11) | the seed read-out ("Odayı oku: MRR güçlü · Marka düşük · …") |
+| `VC_EV_*` | the three calendar events — meeting day, offer expiring, last day |
+
+**`VC_EV_OFFER_EXPIRING_BODY` is `# COPY-RESTRUCTURED`.** The Turkish read
+`"{investor}'in teklifi …"` — a genitive suffix on a proper noun, where the correct ending
+depends on how the *name* sounds. Rewritten so the investor is a terminal label. Any literary
+pass must keep that property.
+
+### The B2B pitch (`pitch_system`, 34 keys)
+Four stages (`PITCH_S0_*` … `PITCH_S3_*`), each an NPC line, the founder's interior line, and
+three answers. Plus `PITCH_BAND_*` — five one-line reads of how the last check went, in the
+founder's head — and `PITCH_NEED_*` / `PITCH_REAL_NEED_*`, the prospect's stated need and the
+one behind it.
+
+### Phase gates (`phase_gate_system`, 8 keys)
+`GATE_TRACTION_*` and `GATE_SERIES_A_*`: a title and three body variants each, the variant
+chosen by how many times the player has declined. Frank gets colder each time; `_BODY_2` is
+the same line for both gates on purpose ("Beklemek de bir karar. Kirasını sen ödüyorsun.").
+
+### The term sheet table (`term_sheet_table_system`, 34 keys)
+`TERM_FRANK_*` is Frank talking over your shoulder during the negotiation; `TERM_RESULT_*` is
+the table's own voice.
+
+**Two of these are `# COPY-RESTRUCTURED`, and this file is why the rule exists.** It carried
+three parallel spellings of the same three lever names — `_lever_name`, `_lever_name_acc` and
+`_lever_name_loc` — because "Değerleme", "Hisse" and "Board" take different Turkish case
+endings. The file's own comment conceded that "one shared 'ı' template can't fit all three."
+`TERM_FRANK_WON` and `TERM_FRANK_RESISTED` were rewritten so the lever name sits in a terminal
+slot, and both helper tables were deleted. `TERM_RESULT_REFUSED` got the same treatment for a
+locative ending that was landing on a rendered *number* (`"$18M'de kaldı"`).
+
+### Finance summary (`finance_ozet_view`, `finance_system`)
+Mostly Tier A labels and therefore not listed. Two exceptions want the pass:
+`FIN_MENTOR_QUOTE` (the runway warning — it names its own six-month threshold in words, so it
+has to move if `RUNWAY_WARN_MONTHS` moves) and `FIN_LEGEND_PROJECTION_TARGET`.
+
+### Not for the pass
+`TERM_LEVER_BOARD` ("Board") and `PITCH_BUDGET_*` are deliberately terse in both columns.
+`TERM_BOARD_SEAT_ONE` and `TERM_BOARD_SEATS` are **two rows for one idea**: English needs a
+singular ("1 seat"), Turkish does not inflect after a numeral, so both of its rows read
+"{n} koltuk". That is a deliberate duplication, not a missed merge.

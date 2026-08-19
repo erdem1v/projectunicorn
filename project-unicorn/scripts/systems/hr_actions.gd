@@ -218,7 +218,7 @@ static func fire(emp: Character) -> bool:
 	# ONCE, through the Finance seam. Charged before the removal so the ledger line and the
 	# roster change cannot come apart if anything below screams.
 	if severance > 0:
-		FinanceSystem.apply_one_time_cost(severance, HRConstants.cost_label_severance())
+		FinanceSystem.apply_one_time_cost(severance, "severance")
 	# Kalan ekip görür ve hisseder. get_employees() (not the active list) on purpose: someone
 	# on leave hears about it too. The leaver is skipped — their own morale is moot.
 	for other in CharacterRegistry.get_employees():

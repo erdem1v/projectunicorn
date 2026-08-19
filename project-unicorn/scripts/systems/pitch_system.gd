@@ -22,13 +22,10 @@ const CLOSE_BASE_DIFFICULTY := 1
 
 # Prospect generation pools (working drafts; Erdem revises). Company names live
 # in CompanyCatalog (single source, Fix 2) — only the need lines remain here.
-const _NEEDS := ["Ekip dağınık, tek bir yerde toplamak istiyorlar.",
-	"Manuel süreçler zaman yiyor, otomasyon arıyorlar.",
-	"Mevcut araçları pahalı ve şişkin, sade bir şey istiyorlar.",
-	"Raporlama kâbus, yönetim net veri istiyor."]
-const _REAL_NEEDS := ["Aslında derdi bütçe değil — patronuna 'modernleştik' diyebilmek.",
-	"Asıl korkusu rakibin gerisinde kalmak.",
-	"Geçen yıl yanlış araca para yatırdı, bu sefer garanti istiyor."]
+# The pools are PITCH_NEED_0..3 and PITCH_REAL_NEED_0..2 in strings.csv. Only the counts
+# live here, because a const is evaluated at load time — before any locale exists.
+const NEEDS_COUNT := 4
+const REAL_NEEDS_COUNT := 3
 
 # --- Per-pitch state ---
 static var _active: bool = false
@@ -78,7 +75,7 @@ static func spawn_prospect(archetype: String, source: String) -> Prospect:
 		return null
 	var p := Prospect.new()
 	GameState.run_prospects_spawned += 1
-	p.id = "lead_%d_%d" % [GameState.day, GameState.run_prospects_spawned]
+	p.id = "lead_%d_%d" % [GameState.day, GameState.run_prospects_spawned]   # LOC-DATA prospect id
 	p.archetype = archetype
 	p.industry = chosen_sector
 	p.company_name = String(eligible[n % eligible.size()])
@@ -86,8 +83,10 @@ static func spawn_prospect(archetype: String, source: String) -> Prospect:
 	# so a later special request maps to something the player can actually build.
 	var pain_fid: String = B2BSalesSystem.pick_pain_feature(sub_id, n)
 	p.pain_feature_id = pain_fid
-	p.need_summary = B2BConstants.pain_phrase(pain_fid) if pain_fid != "" else _NEEDS[n % _NEEDS.size()]
-	p.real_need = _REAL_NEEDS[n % _REAL_NEEDS.size()]
+	# Indices, not sentences: pain_feature_id already rides along, so the surface need can be
+	# rebuilt at render time from whichever of the two applies.
+	p.need_index = n % NEEDS_COUNT
+	p.real_need_index = n % REAL_NEEDS_COUNT
 	p.difficulty_stars = _difficulty_for(archetype)
 	p.scale = B2BConstants.roll_scale(archetype)   # 1..5 stars; demo-capped to 1-3 (A.4)
 	p.budget_band = _budget_for(archetype)
@@ -160,7 +159,7 @@ static func _pitch_value_hint() -> String:
 	# Satış-gated value range for the pricing stage (E.1/E.2). Below threshold the
 	# precise range is hidden — the player offers blind (mirrors the budget_band gate).
 	if not SkillCheck.can_read_prospect():
-		return "Bütçesini kestiremiyorsun — körlemesine teklif vereceksin."
+		return TranslationServer.translate("PITCH_VALUE_BLIND")
 	var win: Dictionary = _price_mult_window()
 	var band: Dictionary = CustomerArchetypes.mrr_band(_prospect.archetype)
 	var lo_mo: int = int(round(lerpf(float(band["low"]), float(band["high"]), win["lo"])))
@@ -168,8 +167,9 @@ static func _pitch_value_hint() -> String:
 	var seats: int = SalesSystem._seats_for_archetype(_prospect.archetype)
 	var per_lo: int = int(round(float(lo_mo) / maxf(1.0, float(seats))))
 	var per_hi: int = int(round(float(hi_mo) / maxf(1.0, float(seats))))
-	return "Satış okuması — %d seat. Ürün değerin bu segmentte seat başına ~$%d-%d → ~$%d-%d/ay. Bu aralıkta oyna." \
-		% [seats, per_lo, per_hi, lo_mo, hi_mo]
+	return TranslationServer.translate("PITCH_VALUE_READ").format({
+		"seats": seats, "per_lo": Fmt.group(per_lo), "per_hi": Fmt.group(per_hi),
+		"lo": Fmt.group(lo_mo), "hi": Fmt.group(hi_mo)})
 
 
 # --- Pitch lifecycle ---
@@ -220,30 +220,32 @@ static func get_stage() -> Dictionary:
 		0:
 			var reveal := ""
 			if SkillCheck.can_read_prospect():
-				reveal = "Satış okuması — bütçe: %s. %s" % [_prospect.budget_band, _prospect.real_need]
+				reveal = TranslationServer.translate("PITCH_BUDGET_READ").format({
+					"band": budget_band_label(_prospect.budget_band),
+					"need": _prospect.display_real_need()})
 			return {
 				"id": "intro",
 				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
-				"npc": "« Frank iyi şeyler söyledi. Göster bakalım — neyi farklı yapıyorsun? »",
-				"inner": "İlk on saniye. Adam zaten Frank'e güveniyor; kapı aralık. Mesele kapıyı nasıl açtığım.",
+				"npc": TranslationServer.translate("PITCH_S0_NPC"),
+				"inner": TranslationServer.translate("PITCH_S0_INNER"),
 				"reveal": reveal,
 				"choices": [
-					{"label": "Sıcak başla — önce onu dinle", "bonus": 1},
-					{"label": "Direkt ürüne gir", "bonus": 0},
-					{"label": "Kendinden emin gir — 'bunu görmen lazım'", "bonus": 1},
+					{"label": TranslationServer.translate("PITCH_S0_C1"), "bonus": 1},
+					{"label": TranslationServer.translate("PITCH_S0_C2"), "bonus": 0},
+					{"label": TranslationServer.translate("PITCH_S0_C3"), "bonus": 1},
 				],
 			}
 		1:
 			return {
 				"id": "value",
 				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
-				"npc": "« Bizde zaten bir sistem var. Seninki ne ekliyor? »",
-				"inner": "Klasik itiraz: 'zaten bir şeyimiz var.' Çerçeveyi cevabım belirler.",
+				"npc": TranslationServer.translate("PITCH_S1_NPC"),
+				"inner": TranslationServer.translate("PITCH_S1_INNER"),
 				"reveal": "",
 				"choices": [
-					{"label": "Dürüst ol — taze ama derdine birebir", "skill": "sales", "diff": VALUE_BASE_DIFFICULTY},
-					{"label": "Vizyon sat — nereye gittiğimizi anlat", "skill": "influence", "diff": VALUE_BASE_DIFFICULTY + 1},
-					{"label": "Onun derdine odaklan, dilinden konuş", "skill": "sales", "diff": VALUE_BASE_DIFFICULTY - 1},
+					{"label": TranslationServer.translate("PITCH_S1_C1"), "skill": "sales", "diff": VALUE_BASE_DIFFICULTY},
+					{"label": TranslationServer.translate("PITCH_S1_C2"), "skill": "influence", "diff": VALUE_BASE_DIFFICULTY + 1},
+					{"label": TranslationServer.translate("PITCH_S1_C3"), "skill": "sales", "diff": VALUE_BASE_DIFFICULTY - 1},
 				],
 			}
 		2:
@@ -251,13 +253,13 @@ static func get_stage() -> Dictionary:
 			return {
 				"id": "pricing",
 				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
-				"npc": "« Tamam, ilgimi çektin. Rakam konuşalım. »",
-				"inner": "İşin döndüğü yer. Yüksek tutarsam ya kaparım ya kaçar; düşük tutarsam garanti ama masada para bırakırım. %s" % hint,
+				"npc": TranslationServer.translate("PITCH_S2_NPC"),
+				"inner": TranslationServer.translate("PITCH_S2_INNER").format({"hint": hint}),
 				"reveal": "",
 				"choices": [
-					{"label": "Yüksek çıpa at — değerine güven", "price_mult": 1.0, "close_diff": 2},
-					{"label": "Adil fiyat — orta nokta", "price_mult": 0.55, "close_diff": 0},
-					{"label": "Güvenli fiyat — anlaşmayı garantile", "price_mult": 0.2, "close_diff": -1},
+					{"label": TranslationServer.translate("PITCH_S2_C1"), "price_mult": 1.0, "close_diff": 2},
+					{"label": TranslationServer.translate("PITCH_S2_C2"), "price_mult": 0.55, "close_diff": 0},
+					{"label": TranslationServer.translate("PITCH_S2_C3"), "price_mult": 0.2, "close_diff": -1},
 				],
 			}
 		_:
@@ -265,13 +267,13 @@ static func get_stage() -> Dictionary:
 			return {
 				"id": "close",
 				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
-				"npc": "« Bir düşüneyim... yoksa hemen mi karar versem? »",
-				"inner": "Son viraj. Geri çekilirsem kaçar; itersem ya imza ya kapı. %s" % band_line,
+				"npc": TranslationServer.translate("PITCH_S3_NPC"),
+				"inner": TranslationServer.translate("PITCH_S3_INNER").format({"flavor": band_line}),
 				"reveal": "",
 				"choices": [
-					{"label": "Nazikçe ama kararlı kapat", "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY, "mrr_mult": 1.0},
-					{"label": "Bir taviz ver, güven inşa et", "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY - 1, "mrr_mult": 0.9},
-					{"label": "Sert kapat — 'bugün karar ver'", "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY + 1, "mrr_mult": 1.1},
+					{"label": TranslationServer.translate("PITCH_S3_C1"), "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY, "mrr_mult": 1.0},
+					{"label": TranslationServer.translate("PITCH_S3_C2"), "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY - 1, "mrr_mult": 0.9},
+					{"label": TranslationServer.translate("PITCH_S3_C3"), "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY + 1, "mrr_mult": 1.1},
 				],
 			}
 
@@ -372,9 +374,17 @@ static func _resolve_outcome(chk: Dictionary, mrr_mult: float) -> Dictionary:
 
 static func _band_flavor(band: String) -> String:
 	match band:
-		"crit_success": return "Az önce onu tam yakaladın — havada bir güven var."
-		"success": return "İyi gitti, beni ciddiye alıyor."
-		"near_pass": return "İkna oldu ama tam değil; pürüz kaldı."
-		"near_miss": return "Tereddüt ediyor. Az kalsın."
-		"fail", "crit_fail": return "Çuvalladım galiba. Toparlamam lazım."
+		"crit_success": return TranslationServer.translate("PITCH_BAND_CRIT_SUCCESS")
+		"success": return TranslationServer.translate("PITCH_BAND_SUCCESS")
+		"near_pass": return TranslationServer.translate("PITCH_BAND_NEAR_PASS")
+		"near_miss": return TranslationServer.translate("PITCH_BAND_NEAR_MISS")
+		"fail", "crit_fail": return TranslationServer.translate("PITCH_BAND_FAIL")
 		_: return ""
+
+
+## Budget band id -> player-facing label. The id ("low"/"mid"/"high") used to be printed
+## straight into the sales read-out, so the player saw "bütçe: mid".
+static func budget_band_label(band: String) -> String:
+	if band == "":
+		return ""
+	return TranslationServer.translate("PITCH_BUDGET_" + band.to_upper())

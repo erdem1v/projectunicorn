@@ -40,17 +40,11 @@ const STARTING_BURN_BREAKDOWN := {
 }
 static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
 
-# Turkish display names for the standing burn categories. The keys above are internal ids in
-# English; rendering them raw would break the Content Law against internal codes on screen, and
-# a UI-side map would put finance vocabulary in a tab file. Single home, here.
-# WORKING TR (voice pass later).
-const BURN_LABELS := {
-	"salaries": "Maaşlar",
-	"overtime": "Ek mesai",
-	"founder": "Kurucu yaşam gideri",
-	"marketing": "Pazarlama",
-	"office": "Ofis",
-}
+# The standing burn categories. The ids above are internal and English; rendering them raw
+# would break the Content Law against internal codes on screen. The words now live in
+# strings.csv as FIN_BURN_<ID>, derived by burn_category_label — so this list only has to say
+# which ids are legal, and the "unknown id screams" guarantee is kept.
+const BURN_IDS := ["salaries", "overtime", "founder", "marketing", "office"]
 
 # TODAY's one-time charges, label → summed amount. apply_one_time_cost appends; daily_tick
 # clears at its top, so a charge stays readable for the rest of the day it happened and is gone
@@ -66,10 +60,16 @@ static var one_time_today := {}
 # (HRConstants.COST_LABEL_HIRE / _SEVERANCE) and they fall through unchanged; ProductSystem
 # passes raw internal ids, which are mapped here so no product-side file has to change.
 # WORKING TR.
+# One-time charge id -> localization key. Every caller passes an ID now; HR used to pass
+# already-translated text, which made the expense breakdown keep the language it was written
+# in until the next daily tick.
 const ONE_TIME_LABELS := {
-	"build_commit": "Özellik maliyeti",
-	"version_build_commit": "Sürüm özellikleri",
-	"angel_seed": "ANGEL_TX_LABEL",   # localization key; see one_time_label_display
+	"build_commit": "FIN_ONETIME_BUILD",
+	"version_build_commit": "FIN_ONETIME_VERSION",
+	"angel_seed": "ANGEL_TX_LABEL",
+	"hire": "HR_COST_HIRING",
+	"severance": "HR_COST_SEVERANCE",
+	"training": "HR_COST_TRAINING",
 }
 
 
@@ -243,12 +243,12 @@ static func get_one_time_today() -> Dictionary:
 
 
 static func burn_category_label(category: String) -> String:
-	# Internal burn id → Turkish display name. Unknown ids fall back to themselves only after
+	# Internal burn id → display name. Unknown ids fall back to themselves only after
 	# screaming, so a typo shows up in the log rather than as an English word on screen.
-	if not BURN_LABELS.has(category):
+	if not BURN_IDS.has(category):
 		push_error("[FinanceSystem] burn_category_label on unknown category: '%s'" % category)
 		return category
-	return String(BURN_LABELS[category])
+	return TranslationServer.translate("FIN_BURN_" + category.to_upper())
 
 
 static func one_time_label_display(label: String) -> String:

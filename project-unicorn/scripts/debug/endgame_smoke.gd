@@ -238,6 +238,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_product_derived_keys":  fail = _case_loc_product_derived_keys()
 		"loc_format_args":           fail = _case_loc_format_args()
 		"all_scripts_load":          fail = _case_all_scripts_load()
+		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -1352,11 +1353,17 @@ static func _case_table_board_push_sequence() -> String:
 	TermSheetTableSystem.open("anchor")
 	TermSheetTableSystem.select_lever("board")
 	TermSheetTableSystem.push()  # drop veto
-	if String(TermSheetTableSystem.view_state().levers[2].current_text) != "1 koltuk":
-		return "after veto push: %s (want '1 koltuk')" % String(TermSheetTableSystem.view_state().levers[2].current_text)
+	# Locale-independent: asserts the SHAPE, not the Turkish bytes. The old byte-pin passed
+	# only because the process happened to be running in Turkish.
+	var want_seat: String = TranslationServer.translate("TERM_BOARD_SEAT_ONE").format({"n": 1})
+	var got_seat: String = String(TermSheetTableSystem.view_state().levers[2].current_text)
+	if got_seat != want_seat:
+		return "after veto push: %s (want '%s')" % [got_seat, want_seat]
 	TermSheetTableSystem.push()  # drop seat
-	if String(TermSheetTableSystem.view_state().levers[2].current_text) != "temiz":
-		return "after seat push: %s (want 'temiz')" % String(TermSheetTableSystem.view_state().levers[2].current_text)
+	var want_clean: String = TranslationServer.translate("TERM_BOARD_CLEAN")
+	var got_clean: String = String(TermSheetTableSystem.view_state().levers[2].current_text)
+	if got_clean != want_clean:
+		return "after seat push: %s (want '%s')" % [got_clean, want_clean]
 	if TermSheetTableSystem.can_push("board"):
 		return "board still pushable at temiz"
 	return ""
@@ -1547,7 +1554,7 @@ static func _case_burn_day1_breakdown() -> String:
 	for key in want_keys:
 		if not FinanceSystem.STARTING_BURN_BREAKDOWN.has(key):
 			return "breakdown lost category '%s'" % key
-		if not FinanceSystem.BURN_LABELS.has(key):
+		if not FinanceSystem.BURN_IDS.has(key):
 			return "category '%s' has no TR label" % key
 	for key in keys:
 		var v: int = int(FinanceSystem.STARTING_BURN_BREAKDOWN[key])
@@ -2453,8 +2460,8 @@ static func _case_b2b_prospect_pain_references_real_feature() -> String:
 			return "prospect %d has empty pain_feature_id" % i
 		if not pool_ids.has(p.pain_feature_id):
 			return "pain_feature_id %s not in the product pool" % p.pain_feature_id
-		if p.need_summary == "":
-			return "prospect %d need_summary empty" % i
+		if p.display_need() == "":
+			return "prospect %d renders no need line" % i
 	return ""
 
 
@@ -6695,3 +6702,43 @@ static func _collect_by_ext(root: String, ext: String, out: Array[String]) -> vo
 			out.append(path)
 		name = dir.get_next()
 	dir.list_dir_end()
+
+
+## Every derived key B4 introduced resolves, in both locales.
+##
+## Derived keys are built at run time from an id — "FIN_BURN_" + category.to_upper(),
+## "PITCH_NEED_%d", "GATE_%s_TITLE" — so no grep for tr("LITERAL") can see them and a typo
+## reaches the player as a raw token instead of a sentence. The only honest check walks the
+## real id lists and asks the translation server.
+static func _case_loc_b4_derived_keys() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var wanted: Array[String] = []
+	for cat in FinanceSystem.BURN_IDS:
+		wanted.append("FIN_BURN_" + String(cat).to_upper())
+	for v in FinanceSystem.ONE_TIME_LABELS.values():
+		wanted.append(String(v))
+	for i in PitchSystem.NEEDS_COUNT:
+		wanted.append("PITCH_NEED_%d" % i)
+	for i in PitchSystem.REAL_NEEDS_COUNT:
+		wanted.append("PITCH_REAL_NEED_%d" % i)
+	for band in ["low", "mid", "high"]:
+		wanted.append("PITCH_BUDGET_" + band.to_upper())
+	for gate in PhaseGateSystem.GATES:
+		var k: String = String((gate as Dictionary).get("copy_key", ""))
+		if k == "":
+			TranslationServer.set_locale(loc0)
+			return "a gate row has no copy_key"
+		wanted.append("GATE_%s_TITLE" % k)
+		for i in int((gate as Dictionary).get("body_count", 0)):
+			wanted.append("GATE_%s_BODY_%d" % [k, i])
+	if wanted.size() < 25:
+		TranslationServer.set_locale(loc0)
+		return "only %d derived keys collected — the id lists are not being read" % wanted.size()
+	for loc in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		for k in wanted:
+			if TranslationServer.translate(k) == k:
+				TranslationServer.set_locale(loc0)
+				return "[%s] %s has no row" % [loc, k]
+	TranslationServer.set_locale(loc0)
+	return ""

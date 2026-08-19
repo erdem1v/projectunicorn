@@ -35,7 +35,7 @@ extends Node
 # every point a save can be taken, and there is nothing mid-resolution for a schema to
 # describe. One sitting, one sitting only — it does not survive closing the game.
 
-const SCHEMA_VERSION := 2   # v2: sector ids became ASCII (see _migrate_sector_ids)
+const SCHEMA_VERSION := 3   # v2: ASCII sector ids · v3: prospect need lines became indices
 const SAVE_DIR := "user://saves/"
 
 # Slot ids are also FILENAMES on disk, i.e. a compatibility surface. Named once so a rename
@@ -197,6 +197,8 @@ func read_slot(slot_id: String) -> Dictionary:
 		return {"ok": false, "error_key": "SAVE_ERR_CORRUPT", "meta": data.get("meta", {}), "state": {}}
 	if version < 2:
 		_migrate_sector_ids(data["state"])
+	if version < 3:
+		_migrate_prospect_needs(data["state"])
 	return {
 		"ok": true,
 		"error_key": "",
@@ -584,3 +586,50 @@ func _migrate_sector_ids(state: Dictionary) -> void:
 			moved += 1
 	if moved > 0 and OS.is_debug_build():
 		print("[SaveManager] v1→v2: remapped %d legacy sector id(s)" % moved)
+
+
+## v2 → v3: prospect need lines were finished Turkish sentences living in @export Strings,
+## so every save carried prose that no language switch could reach. They are indices now.
+##
+## The mapping is done by REVERSE LOOKUP against the shipped Turkish, which is exact for the
+## seven pool rows — the same seven strings this build now serves as PITCH_NEED_* and
+## PITCH_REAL_NEED_*. A value that matches none of them is a pain-phrase (those came from a
+## feature id, and `pain_feature_id` is already in the save, so `display_need()` rebuilds it
+## with no help from here) or a string from a build we do not know. Either way the field is
+## simply dropped rather than guessed at: -1 renders as empty, never as the wrong sentence.
+const _LEGACY_NEEDS := [
+	"Ekip dağınık, tek bir yerde toplamak istiyorlar.",
+	"Manuel süreçler zaman yiyor, otomasyon arıyorlar.",
+	"Mevcut araçları pahalı ve şişkin, sade bir şey istiyorlar.",
+	"Raporlama kâbus, yönetim net veri istiyor.",
+]
+const _LEGACY_REAL_NEEDS := [
+	"Aslında derdi bütçe değil — patronuna 'modernleştik' diyebilmek.",
+	"Asıl korkusu rakibin gerisinde kalmak.",
+	"Geçen yıl yanlış araca para yatırdı, bu sefer garanti istiyor.",
+]
+
+
+func _migrate_prospect_needs(state: Dictionary) -> void:
+	var mapped: int = 0
+	var dropped: int = 0
+	for row in (state.get("prospects", []) as Array):
+		if typeof(row) != TYPE_DICTIONARY:
+			continue
+		var d: Dictionary = row
+		for pair in [["need_summary", "need_index", _LEGACY_NEEDS],
+				["real_need", "real_need_index", _LEGACY_REAL_NEEDS]]:
+			var old_field: String = String(pair[0])
+			if not d.has(old_field):
+				continue
+			var text: String = String(d[old_field])
+			d.erase(old_field)
+			var idx: int = (pair[2] as Array).find(text)
+			d[String(pair[1])] = idx
+			if idx >= 0:
+				mapped += 1
+			elif text != "":
+				dropped += 1
+	if (mapped > 0 or dropped > 0) and OS.is_debug_build():
+		print("[SaveManager] v2→v3: %d need line(s) mapped to indices, %d not in the pool" % [
+			mapped, dropped])

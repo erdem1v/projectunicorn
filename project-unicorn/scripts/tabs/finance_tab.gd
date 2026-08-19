@@ -54,8 +54,8 @@ func _build() -> void:
 	var seg := HBoxContainer.new()
 	seg.add_theme_constant_override("separation", 8)
 	col.add_child(seg)
-	_ozet_btn = _make_segment("Özet", "ozet")
-	_yatirim_btn = _make_segment("Yatırım", "yatirim")
+	_ozet_btn = _make_segment(tr("FIN_SUBTAB_SUMMARY"), "ozet")
+	_yatirim_btn = _make_segment(tr("FIN_SUBTAB_INVESTMENT"), "yatirim")
 	seg.add_child(_ozet_btn)
 	seg.add_child(_yatirim_btn)
 
@@ -97,7 +97,7 @@ func _show_page(id: String) -> void:
 
 func _apply_phase_lock(locked: bool) -> void:
 	_yatirim_btn.disabled = locked
-	_yatirim_btn.tooltip_text = "Series A Hunt'ta açılır" if locked else ""
+	_yatirim_btn.tooltip_text = tr("FIN_SUBTAB_LOCKED") if locked else ""
 	if locked:
 		_yatirim_btn.modulate = Color(1, 1, 1, 0.4)
 		if _current == "yatirim":

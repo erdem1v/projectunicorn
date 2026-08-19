@@ -121,36 +121,36 @@ static func seed_conviction(vc_id: String) -> Dictionary:
 	var mrr_ratio: float = clampf(float(GameState.mrr) / float(PitchConstants.SEED_MRR_REFERENCE), 0.0, 1.5)
 	var mrr_delta: int = int(round((mrr_ratio - 0.5) * PitchConstants.SEED_MRR_MAX_BONUS))
 	v += mrr_delta
-	why.append({"d": mrr_delta, "l": "MRR güçlü" if mrr_delta >= 0 else "MRR zayıf"})
+	why.append({"d": mrr_delta, "l": _t("VC_WHY_MRR_STRONG") if mrr_delta >= 0 else _t("VC_WHY_MRR_WEAK")})
 
 	# Brand distance to floor.
 	var brand_delta: int = clampi(int(round((GameState.brand - PitchConstants.SEED_BRAND_FLOOR) * 0.4)), -PitchConstants.SEED_BRAND_MAX, PitchConstants.SEED_BRAND_MAX)
 	v += brand_delta
-	why.append({"d": brand_delta, "l": "Marka sağlam" if brand_delta >= 0 else "Marka düşük"})
+	why.append({"d": brand_delta, "l": _t("VC_WHY_BRAND_SOLID") if brand_delta >= 0 else _t("VC_WHY_BRAND_LOW")})
 
 	# Runway health.
 	if GameState.shutter_days_left >= 0:
 		v += PitchConstants.SEED_SHUTTER_PENALTY
-		why.append({"d": PitchConstants.SEED_SHUTTER_PENALTY, "l": "Kepenk sayacı"})
+		why.append({"d": PitchConstants.SEED_SHUTTER_PENALTY, "l": _t("VC_WHY_SHUTTER")})
 	elif _gross_runway_months() < 1.0:
 		v += PitchConstants.SEED_THIN_RUNWAY_PENALTY
-		why.append({"d": PitchConstants.SEED_THIN_RUNWAY_PENALTY, "l": "Runway dar"})
+		why.append({"d": PitchConstants.SEED_THIN_RUNWAY_PENALTY, "l": _t("VC_WHY_RUNWAY_THIN")})
 
 	if GameState.unmanaged_major_scandal:
 		v += PitchConstants.SEED_SCANDAL_PENALTY
-		why.append({"d": PitchConstants.SEED_SCANDAL_PENALTY, "l": "Skandal izi"})
+		why.append({"d": PitchConstants.SEED_SCANDAL_PENALTY, "l": _t("VC_WHY_SCANDAL")})
 	if not GameState.active_sheets.is_empty():
 		v += PitchConstants.SEED_LEVERAGE_BONUS
-		why.append({"d": PitchConstants.SEED_LEVERAGE_BONUS, "l": "Cebinde teklif"})
+		why.append({"d": PitchConstants.SEED_LEVERAGE_BONUS, "l": _t("VC_WHY_LEVERAGE")})
 	if inv.get("warm_intro", false):
 		v += PitchConstants.SEED_WARM_INTRO_BONUS
-		why.append({"d": PitchConstants.SEED_WARM_INTRO_BONUS, "l": "Frank'in tanıştırması"})
+		why.append({"d": PitchConstants.SEED_WARM_INTRO_BONUS, "l": _t("VC_WHY_WARM_INTRO")})
 	if inv.get("domain", "") == "product" and GameState.get_flag("mvp_shipped", false):
 		v += PitchConstants.SEED_DIMENSION_MATCH_BONUS
-		why.append({"d": PitchConstants.SEED_DIMENSION_MATCH_BONUS, "l": "Sektör eşleşmesi"})
+		why.append({"d": PitchConstants.SEED_DIMENSION_MATCH_BONUS, "l": _t("VC_WHY_DOMAIN_MATCH")})
 	if _vc(vc_id).get("reentry_bonus", false):
 		v += PitchConstants.SEED_CALLBACK_BONUS
-		why.append({"d": PitchConstants.SEED_CALLBACK_BONUS, "l": "Kapı yeniden açık"})
+		why.append({"d": PitchConstants.SEED_CALLBACK_BONUS, "l": _t("VC_WHY_CALLBACK")})
 
 	# Top-3 |delta| for the legibility breakdown (≤3 lines).
 	why.sort_custom(func(a, b): return absi(a.d) > absi(b.d))
@@ -381,12 +381,12 @@ static func request_meeting(vc_id: String) -> bool:
 static func prep_blocked_reason(vc_id: String) -> String:
 	# "" = allowed; else the reason to show (no fake choices — ledger 24).
 	if not GameState.prep.is_empty():
-		return "Zaten bir hazırlık sürüyor"
+		return _t("VC_PREP_BUSY")
 	if GameState.pending_meeting.get("vc_id", "") != vc_id:
-		return "Önce bu VC'yle toplantı iste"
+		return _t("VC_PREP_NEED_MEETING")
 	var days_before: int = int(GameState.pending_meeting.get("day", 0)) - GameState.day
 	if days_before < PitchConstants.PREP_MIN_DAYS_BEFORE:
-		return "Toplantıya %d günden az kaldı" % PitchConstants.PREP_MIN_DAYS_BEFORE
+		return _t("VC_PREP_TOO_SOON").format({"days": PitchConstants.PREP_MIN_DAYS_BEFORE})
 	return ""
 
 
@@ -460,7 +460,8 @@ static func _tick_callbacks() -> void:
 			cb.met = true
 			st.reentry_bonus = true
 			EventBus.callback_ready.emit(inv.id)
-			EventBus.mentor_advisory_changed.emit("Kapı yeniden açıldı — %s. Tekrar iste." % inv.display_name)
+			EventBus.mentor_advisory_changed.emit(
+				_t("VC_CALLBACK_REOPENED").format({"investor": inv.display_name}))
 
 
 static func _tick_prep() -> void:
@@ -521,7 +522,11 @@ static func _base_view_state() -> Dictionary:
 		"speaker_name": inv.get("display_name", ""),
 		"speaker_role": inv.get("role_line", ""),
 		"conviction": {"value": mini(_conviction, _cap), "zone_bounds": PitchConstants.ZONE_BOUNDS},
-		"stat_strip": {"left_text": "Kasa: %s · %s: %d ay · Gün %d" % [UiTokens.format_money(GameState.cash), TranslationServer.translate("RUNWAY_GROSS_LABEL"), int(floor(_gross_runway_months())), GameState.day]},
+		"stat_strip": {"left_text": _t("VC_STAT_STRIP").format({
+			"cash": UiTokens.format_money(GameState.cash),
+			"runway_label": _t("RUNWAY_GROSS_LABEL"),
+			"months": int(floor(_gross_runway_months())),
+			"day": GameState.day})},
 		"can_withdraw": false,
 	}
 
@@ -529,25 +534,30 @@ static func _base_view_state() -> Dictionary:
 static func _beat1_view_state(why: Array) -> Dictionary:
 	var inv: Dictionary = InvestorRegistry.get_investor(_vc_id)
 	var vs: Dictionary = _base_view_state()
-	vs["active_line"] = {"text": "\"%s. Otur. Vaktim kısa — beni neden buraya çağırdığını göster.\"" % inv.get("display_name", ""), "speaker_tag": "%s — Canlı" % inv.get("display_name", ""), "is_monologue": false}
-	vs["monologue_text"] = ("Odayı oku: " + " · ".join(PackedStringArray(why))) if not why.is_empty() else "Odayı oku."
-	vs["beat_label"] = "Odayı Oku · 1/4"
+	vs["active_line"] = {
+		"text": _t("VC_B1_LINE").format({"investor": inv.get("display_name", "")}),
+		"speaker_tag": _speaker_tag(String(inv.get("display_name", ""))), "is_monologue": false}
+	vs["monologue_text"] = _t("VC_B1_MONO_WHY").format(
+		{"reasons": " · ".join(PackedStringArray(why))}) if not why.is_empty() else _t("VC_B1_MONO")
+	vs["beat_label"] = _t("VC_BEAT1_LABEL")
 	vs["can_withdraw"] = true                       # only before the first check (ledger)
-	vs["choices"] = [{"id": "b1_read", "text": "Odayı oku — karşındakini tart.", "odds_text": _odds("Algı", PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0)}]
+	vs["choices"] = [{"id": "b1_read", "text": _t("VC_B1_CHOICE"), "odds_text": _odds(_t("VC_APPROACH_PERCEPTION"), PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0)}]
 	return vs
 
 
 static func _beat2_view_state(prev: Dictionary) -> Dictionary:
 	var vs: Dictionary = _base_view_state()
 	var react: String = _react_line(prev)
-	vs["active_line"] = {"text": "%s\"Tamam. Anlat bakalım — neden sen, neden şimdi?\"" % react, "speaker_tag": "%s — Canlı" % InvestorRegistry.get_investor(_vc_id).get("display_name", ""), "is_monologue": false}
-	vs["monologue_text"] = "Açı seç. Yanlış açı beni sıkar." if not _intel else ""
-	vs["beat_label"] = "Anlatı · 2/4"
+	vs["active_line"] = {"text": react + _t("VC_B2_LINE"),
+		"speaker_tag": _speaker_tag(String(InvestorRegistry.get_investor(_vc_id).get("display_name", ""))),
+		"is_monologue": false}
+	vs["monologue_text"] = _t("VC_B2_MONO") if not _intel else ""
+	vs["beat_label"] = _t("VC_BEAT2_LABEL")
 	var favored: String = InvestorRegistry.favored_angle(_vc_id) if _intel else ""
 	var out: Array = []
-	for a in [["metrik", "Metrik: rakamlar konuşsun."], ["vizyon", "Vizyon: nereye gittiğimizi göster."], ["traction", "Traction: ivmeyi anlat."]]:
+	for a in [["metrik", _t("VC_B2_METRIC")], ["vizyon", _t("VC_B2_VISION")], ["traction", _t("VC_B2_TRACTION")]]:
 		var diff: int = int(InvestorRegistry.get_investor(_vc_id).get("weights", {}).get(a[0], PitchConstants.DIFF_ORTA))
-		out.append({"id": "b2_" + a[0], "text": a[1], "odds_text": _odds("Anlatı", _angle_skill(a[0]), diff, _beat2_bonus(a[0])), "marked": (a[0] == favored)})
+		out.append({"id": "b2_" + a[0], "text": a[1], "odds_text": _odds(_t("VC_APPROACH_NARRATIVE"), _angle_skill(a[0]), diff, _beat2_bonus(a[0])), "marked": (a[0] == favored)})
 	vs["choices"] = out
 	return vs
 
@@ -555,14 +565,16 @@ static func _beat2_view_state(prev: Dictionary) -> Dictionary:
 static func _beat3_view_state(prev: Dictionary) -> Dictionary:
 	var vs: Dictionary = _base_view_state()
 	var react: String = _react_line(prev)
-	vs["active_line"] = {"text": "%s%s" % [react, _sorgu.get("vc_line", "")], "speaker_tag": "%s — Canlı" % InvestorRegistry.get_investor(_vc_id).get("display_name", ""), "is_monologue": false}
+	vs["active_line"] = {"text": react + String(_sorgu.get("vc_line", "")),
+		"speaker_tag": _speaker_tag(String(InvestorRegistry.get_investor(_vc_id).get("display_name", ""))),
+		"is_monologue": false}
 	vs["monologue_text"] = String(_sorgu.get("mono", ""))
-	vs["beat_label"] = "Sorgu · 3/4"
+	vs["beat_label"] = _t("VC_BEAT3_LABEL")
 	var prova: bool = _prep_focus == "prova"
 	vs["choices"] = [
-		{"id": "b3_durust", "text": "Dürüst: kabul et, planı göster.", "odds_text": _odds("Dürüst", PitchConstants.BEAT3_SKILL, PitchConstants.DURUST_DIFF, PitchConstants.PREP_BONUS if prova else 0), "caption": "Düşük risk, dürüst duruş.", "marked": prova, "marked_text": "PROVA EDİLDİ"},
-		{"id": "b3_spin", "text": "Spin: zayıflığı güce çevir.", "odds_text": _odds("Spin", PitchConstants.BEAT3_SKILL, PitchConstants.SPIN_DIFF, 0), "caption": "Yüksek risk, yüksek getiri."},
-		{"id": "b3_gecistir", "text": "Geçiştir: konuyu kaydır.", "odds_text": _odds("Geçiştir", PitchConstants.BEAT3_SKILL, PitchConstants.GECISTIR_DIFF, 0), "caption": "Güvenli, ama masa buradan çıkmaz (%d tavan)." % PitchConstants.GECISTIR_CAP, "caption_danger": true},
+		{"id": "b3_durust", "text": _t("VC_B3_HONEST"), "odds_text": _odds(_t("VC_APPROACH_HONEST"), PitchConstants.BEAT3_SKILL, PitchConstants.DURUST_DIFF, PitchConstants.PREP_BONUS if prova else 0), "caption": _t("VC_B3_HONEST_CAP"), "marked": prova, "marked_text": _t("VC_REHEARSED")},
+		{"id": "b3_spin", "text": _t("VC_B3_SPIN"), "odds_text": _odds(_t("VC_APPROACH_SPIN"), PitchConstants.BEAT3_SKILL, PitchConstants.SPIN_DIFF, 0), "caption": _t("VC_B3_SPIN_CAP")},
+		{"id": "b3_gecistir", "text": _t("VC_B3_DEFLECT"), "odds_text": _odds(_t("VC_APPROACH_DEFLECT"), PitchConstants.BEAT3_SKILL, PitchConstants.GECISTIR_DIFF, 0), "caption": _t("VC_B3_DEFLECT_CAP").format({"cap": PitchConstants.GECISTIR_CAP}), "caption_danger": true},
 	]
 	return vs
 
@@ -570,44 +582,44 @@ static func _beat3_view_state(prev: Dictionary) -> Dictionary:
 static func _beat4_view_state() -> Dictionary:
 	var vs: Dictionary = _base_view_state()
 	var inv: Dictionary = InvestorRegistry.get_investor(_vc_id)
-	var tag: String = "%s — Canlı" % inv.get("display_name", "")
+	var tag: String = _speaker_tag(String(inv.get("display_name", "")))
 	var zone_val: int = mini(_conviction, _cap)
-	vs["beat_label"] = "Kapanış · 4/4"
+	vs["beat_label"] = _t("VC_BEAT4_LABEL")
 	if zone_val >= PitchConstants.WON_MIN:
-		vs["active_line"] = {"text": "\"Sana bir teklif göndereceğim. Beğenmeyebilirsin ama ciddi.\"", "speaker_tag": tag, "is_monologue": false}
-		vs["choices"] = [{"id": "b4_ack", "text": "Teşekkürler. Bekliyorum."}]
+		vs["active_line"] = {"text": _t("VC_B4_WIN_LINE"), "speaker_tag": tag, "is_monologue": false}
+		vs["choices"] = [{"id": "b4_ack", "text": _t("VC_B4_WIN_CHOICE")}]
 	elif zone_val < PitchConstants.ILIK_MIN:
-		vs["active_line"] = {"text": "\"Bugün olmadı. Rakamlar beni buraya getirmedi.\"", "speaker_tag": tag, "is_monologue": false}
-		vs["monologue_text"] = "Soğuk oda. En azından nedenini biliyorsun."
-		vs["choices"] = [{"id": "b4_leave", "text": "Anladım. Çıkıyorum."}]
+		vs["active_line"] = {"text": _t("VC_B4_LOSS_LINE"), "speaker_tag": tag, "is_monologue": false}
+		vs["monologue_text"] = _t("VC_B4_LOSS_MONO")
+		vs["choices"] = [{"id": "b4_leave", "text": _t("VC_B4_LOSS_CHOICE")}]
 	else:
-		vs["active_line"] = {"text": "\"Kararsızım. Bir yol var: sana bir koşul koyayım, tuttur, geri gel. Ya da şansını burada zorla.\"", "speaker_tag": tag, "is_monologue": false}
-		vs["monologue_text"] = "Ilık. Güvenli kapı mı, açgözlü kumar mı?"
+		vs["active_line"] = {"text": _t("VC_B4_WARM_LINE"), "speaker_tag": tag, "is_monologue": false}
+		vs["monologue_text"] = _t("VC_B4_WARM_MONO")
 		if _reentry:
 			vs["choices"] = [
-				{"id": "b4_zorla", "text": "Masayı zorla — şimdi karar ver.", "odds_text": _odds("Zorla", PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": "Başarısızsan masa kapanır.", "caption_danger": true},
-				{"id": "b4_ret", "text": "İkinci kez ılık. Bırak gitsin.", "caption": "Reddedilme sayılır."},
+				{"id": "b4_zorla", "text": _t("VC_B4_PUSH"), "odds_text": _odds(_t("VC_APPROACH_PUSH"), PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": _t("VC_B4_PUSH_CAP"), "caption_danger": true},
+				{"id": "b4_ret", "text": _t("VC_B4_QUIT"), "caption": _t("VC_B4_QUIT_CAP")},
 			]
 		else:
 			vs["choices"] = [
-				{"id": "b4_callback", "text": "Callback'i kabul et — koşulu tuttur.", "caption": "Güvenli. Kapı açık kalır."},
-				{"id": "b4_zorla", "text": "Masayı zorla — şimdi karar ver.", "odds_text": _odds("Zorla", PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": "Başarısızsan masa kapanır.", "caption_danger": true},
+				{"id": "b4_callback", "text": _t("VC_B4_CALLBACK"), "caption": _t("VC_B4_CALLBACK_CAP")},
+				{"id": "b4_zorla", "text": _t("VC_B4_PUSH"), "odds_text": _odds(_t("VC_APPROACH_PUSH"), PitchConstants.BEAT4_PUSH_SKILL, PitchConstants.MASAYI_ZORLA_DIFF, 0), "caption": _t("VC_B4_PUSH_CAP"), "caption_danger": true},
 			]
 	return vs
 
 
 static func _result_view_state(kind: String) -> Dictionary:
 	var vs: Dictionary = _base_view_state()
-	var tag: String = "%s — Canlı" % InvestorRegistry.get_investor(_vc_id).get("display_name", "")
+	var tag: String = _speaker_tag(String(InvestorRegistry.get_investor(_vc_id).get("display_name", "")))
 	var line := ""
 	match kind:
-		"callback": line = "\"Koşulu biliyorsun. Tuttur, kapı açık.\""
-		"zorla_win": line = "\"Cesaretin varmış. Teklif yolda.\""
-		"zorla_ret": line = "\"Zorladın ve tutmadı. Kapı kapandı.\""
-		_: line = "\"Bugün olmadı.\""
+		"callback": line = _t("VC_RES_CALLBACK")
+		"zorla_win": line = _t("VC_RES_PUSH_WIN")
+		"zorla_ret": line = _t("VC_RES_PUSH_LOSS")
+		_: line = _t("VC_RES_DEFAULT")
 	vs["active_line"] = {"text": line, "speaker_tag": tag, "is_monologue": false}
-	vs["beat_label"] = "Kapanış · 4/4"
-	vs["choices"] = [{"id": "b4_close", "text": "Kapat."}]
+	vs["beat_label"] = _t("VC_BEAT4_LABEL")
+	vs["choices"] = [{"id": "b4_close", "text": _t("VC_B4_CLOSE")}]
 	return vs
 
 
@@ -628,48 +640,50 @@ static func _pick_sorgu_target() -> Dictionary:
 static func _sorgu_metrics() -> Dictionary:
 	# WORKING PROXY: no churn/concentration fields yet — inferred from run counters + MRR.
 	if GameState.run_customers_lost > 0:
-		return {"key": "churn", "vc_line": "\"Churn'ün konuşuyor. Kaçan müşterileri anlat — neden gittiler?\"", "mono": "Churn'ü soracak. Sayıları hazırla."}
+		return {"key": "churn", "vc_line": _t("VC_Q_CHURN"), "mono": _t("VC_Q_CHURN_MONO")}
 	if GameState.mrr < PitchConstants.SEED_MRR_REFERENCE:
-		return {"key": "growth_flat", "vc_line": "\"Büyüme grafiği düz. Bu çizgiyi neden yukarı kaldıramadın?\"", "mono": "Büyümenin durgunluğunu görecek."}
+		return {"key": "growth_flat", "vc_line": _t("VC_Q_GROWTH"), "mono": _t("VC_Q_GROWTH_MONO")}
 	if _b2b_concentration():
-		return {"key": "concentration", "vc_line": "\"Gelirin tek bir müşteriye yaslanıyor. O giderse ne kalır?\"", "mono": "Gelir yoğunlaşmasını soracak."}
+		return {"key": "concentration", "vc_line": _t("VC_Q_CONCENTRATION"), "mono": _t("VC_Q_CONCENTRATION_MONO")}
 	return _clean_sorgu()
 
 
 static func _sorgu_team() -> Dictionary:
 	if GameState.unmanaged_major_scandal:
-		return {"key": "scandal", "vc_line": "\"Yönetemediğin bir skandal var. Ben neden bu ekibe para vereyim?\"", "mono": "Skandalı soracak. Sorduğunda gözünü kaçırma."}
+		return {"key": "scandal", "vc_line": _t("VC_Q_SCANDAL"), "mono": _t("VC_Q_SCANDAL_MONO")}
 	# Headcount lens, not capacity: a company whose only developer is on holiday has
 	# not become an engineer-less company, so this reads the unfiltered count.
 	if CharacterRegistry.count_developers() == 0:
-		return {"key": "no_engineers", "vc_line": "\"Tek mühendisin bile yok. Bu ürünü kim taşıyacak?\"", "mono": "Ekibin inceliğini görecek."}
+		return {"key": "no_engineers", "vc_line": _t("VC_Q_NO_ENGINEERS"), "mono": _t("VC_Q_NO_ENGINEERS_MONO")}
 	if CharacterRegistry.get_employees().is_empty():
-		return {"key": "solo", "vc_line": "\"Tek başınasın. Sen düşersen şirket de düşer. Bu riski nasıl kapatıyorsun?\"", "mono": "Tek-kurucu riskini soracak."}
+		return {"key": "solo", "vc_line": _t("VC_Q_SOLO"), "mono": _t("VC_Q_SOLO_MONO")}
 	return _clean_sorgu()
 
 
 static func _sorgu_narrative() -> Dictionary:
 	# WORKING PROXY: rival lead + refused-acquisition inferred from registry/flags.
 	if _rival_ahead():
-		return {"key": "rival", "vc_line": "\"Bir rakip senden önde. Ligde ikinci olan neden kazansın?\"", "mono": "Rakibi masaya koyacak."}
-	if GameState.get_flag("acquisition_offer_rejected", false):
-		return {"key": "refused_acq", "vc_line": "\"Bir satın almayı geri çevirmişsin. Kibir mi, vizyon mu?\"", "mono": "Reddettiğin teklifi soracak."}
+		return {"key": "rival", "vc_line": _t("VC_Q_RIVAL"), "mono": _t("VC_Q_RIVAL_MONO")}
+	if GameState.get_flag("acquisition_offer_rejected", false):   # LOC-DATA run flag id
+		return {"key": "refused_acq", "vc_line": _t("VC_Q_REFUSED_ACQ"), "mono": _t("VC_Q_REFUSED_ACQ_MONO")}
 	if GameState.reputation < 0:
-		return {"key": "reputation", "vc_line": "\"İtibarın zedeli. Bu hikâyeye kim inanır?\"", "mono": "İtibarını yoklayacak."}
+		return {"key": "reputation", "vc_line": _t("VC_Q_REPUTATION"), "mono": _t("VC_Q_REPUTATION_MONO")}
 	return _clean_sorgu()
 
 
 static func _sorgu_product() -> Dictionary:
 	if int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0))) > 0:
-		return {"key": "bugs", "vc_line": "\"Ürünün hata kaynıyor. Kalite senin için ne ifade ediyor?\"", "mono": "Hata sayını soracak."}
+		return {"key": "bugs", "vc_line": _t("VC_Q_BUGS"), "mono": _t("VC_Q_BUGS_MONO")}
 	var weak: String = _weakest_dimension()
 	if weak != "":
-		return {"key": "weak_dim", "vc_line": "\"%s tarafın zayıf. Sektörü bilen biri bunu ilk bakışta görür.\"" % weak, "mono": "En zayıf ekseni bulacak."}
+		return {"key": "weak_dim",
+			"vc_line": _t("VC_Q_WEAK_DIM").format({"axis": ProductCatalog.axis_label(weak)}),
+			"mono": _t("VC_Q_WEAK_DIM_MONO")}
 	return _clean_sorgu()
 
 
 static func _clean_sorgu() -> Dictionary:
-	return {"key": "clean", "vc_line": "\"Doğrusu, saldıracak bir yer bulamadım. Bu iyi bir işaret. Devam et.\"", "mono": "Temiz alan. Nefes al."}
+	return {"key": "clean", "vc_line": _t("VC_Q_CLEAN"), "mono": _t("VC_Q_CLEAN_MONO")}
 
 
 # ============================================================================
@@ -712,15 +726,16 @@ static func _posture_diff(posture: String) -> int:
 
 static func _odds(label: String, skill: String, diff: int, bonus: int) -> String:
 	var pct: int = int(round(SkillCheck.chance_for(skill, diff, bonus) * 100.0))
-	return "%s — %s · %%%d" % [label, PitchConstants.diff_label(diff), pct]
+	return _t("VC_ODDS").format({
+		"approach": label, "difficulty": PitchConstants.diff_label(diff), "pct": Fmt.percent(pct, 0)})
 
 
 static func _react_line(chk: Dictionary) -> String:
 	# Short VC reaction to the previous check (folded into the next line; inline resolution).
 	match String(chk.get("band", "")):
-		"crit_success", "success": return "\"İyi.\" "
-		"near_pass": return "\"Hmm. İdare eder.\" "
-		"near_miss", "fail", "crit_fail": return "\"Beni ikna etmedi.\" "
+		"crit_success", "success": return _t("VC_REACT_GOOD") + " "
+		"near_pass": return _t("VC_REACT_OK") + " "
+		"near_miss", "fail", "crit_fail": return _t("VC_REACT_BAD") + " "
 		_: return ""
 
 
@@ -733,8 +748,15 @@ static func _callback_met(cb: Dictionary) -> bool:
 		_: return false
 
 
+## The weakest quality axis, as an ID ("innovation" / "stability" / "experience") or "".
+## It used to return the Turkish LABEL, because the dictionary it scanned was keyed by
+## display name — so a translated string was carrying identity, which the law forbids
+## ("store ids, render at display time"). The caller localizes it now.
 static func _weakest_dimension() -> String:
-	var dims := {"İnovasyon": float(GameState.get_flag("mvp_innovation", 0.0)), "Kararlılık": float(GameState.get_flag("mvp_stability", 0.0)), "Deneyim": float(GameState.get_flag("mvp_experience", 0.0))}
+	var dims := {
+		"innovation": float(GameState.get_flag("mvp_innovation", 0.0)),
+		"stability": float(GameState.get_flag("mvp_stability", 0.0)),
+		"experience": float(GameState.get_flag("mvp_experience", 0.0))}
 	var worst := ""
 	var worst_v := 999.0
 	for k in dims:
@@ -758,7 +780,7 @@ static func _b2b_concentration() -> bool:
 static func _rival_ahead() -> bool:
 	# A rival in the DOMINANT display band leads the league (Rival.status vocabulary).
 	for r in RivalRegistry.get_all():
-		if r.status == "DOMINANT":
+		if r.status == "DOMINANT":   # LOC-DATA rival status id
 			return true
 	return false
 
@@ -772,21 +794,22 @@ static func _build_meeting_prompt_event(vc_id: String) -> GameEvent:
 	var ev := GameEvent.new()
 	ev.id = MEETING_PROMPT_ID
 	ev.category = "reactive"
-	ev.title = "Toplantı zamanı — %s" % inv.get("display_name", "")
+	ev.title = _t("VC_EV_MEETING_TITLE").format({"investor": inv.get("display_name", "")})
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = "Randevu günü geldi. %s masada.\n\n\"%s\"\n\nHazırsan gir. Hazır değilsen de gir — takvim beklemez." % [inv.get("display_name", ""), inv.get("archetype_line", "")]
+	ev.body_text = _t("VC_EV_MEETING_BODY").format({
+		"investor": inv.get("display_name", ""), "line": inv.get("archetype_line", "")})
 	ev.cooldown_days = 0
 	ev.one_shot = false
 	ev.priority = 10
 	ev.tags = ["build_safe", "endgame"]
 	ev.trigger_conditions = []
 	var go := EventChoice.new()
-	go.label = "Toplantıya gir"
+	go.label = _t("VC_EV_ENTER_MEETING")
 	go.modifiers = [{"type": "start_vc_meeting", "vc_id": vc_id}]
 	var skip := EventChoice.new()
-	skip.label = "Bugün değil (randevu yanar)"
+	skip.label = _t("VC_EV_SKIP_MEETING")
 	skip.modifiers = [{"type": "decline_vc_meeting"}]
 	var choices: Array[EventChoice] = []
 	choices.append(go)
@@ -800,17 +823,18 @@ static func _build_expiry_warning_event(vc_id: String, days: int) -> GameEvent:
 	var ev := GameEvent.new()
 	ev.id = SHEET_WARN_ID
 	ev.category = "reactive"
-	ev.title = "Teklifin süresi doluyor"
+	ev.title = _t("VC_EV_OFFER_EXPIRING_TITLE")
 	ev.subtitle = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = "%s'in teklifi %d gün sonra yanıyor.\n\n\"Karar ver. Masaya otur ya da bırak — ama sallanma.\"" % [inv.get("display_name", ""), days]
+	ev.body_text = _t("VC_EV_OFFER_EXPIRING_BODY").format(
+		{"investor": inv.get("display_name", ""), "days": days})
 	ev.cooldown_days = 0
 	ev.one_shot = false
 	ev.priority = 9
 	ev.tags = ["build_safe", "endgame"]
 	ev.trigger_conditions = []
 	var ack := EventChoice.new()
-	ack.label = "Anlaşıldı"
+	ack.label = _t("VC_EV_ACK")
 	ack.modifiers = []
 	var wchoices: Array[EventChoice] = []
 	wchoices.append(ack)
@@ -822,17 +846,17 @@ static func _build_d179_event() -> GameEvent:
 	var ev := GameEvent.new()
 	ev.id = D179_ID
 	ev.category = "reactive"
-	ev.title = "Yarın son gün"
+	ev.title = _t("VC_EV_LAST_DAY_TITLE")
 	ev.subtitle = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = "Frank kapıda.\n\n\"Yarın son gün. Cebinde teklif var. İmzalayacaksan bugün imzala.\""
+	ev.body_text = _t("VC_EV_LAST_DAY_BODY")
 	ev.cooldown_days = 0
 	ev.one_shot = false
 	ev.priority = 10
 	ev.tags = ["build_safe", "endgame"]
 	ev.trigger_conditions = []
 	var ack := EventChoice.new()
-	ack.label = "Anlaşıldı"
+	ack.label = _t("VC_EV_ACK")
 	ack.modifiers = []
 	var dchoices: Array[EventChoice] = []
 	dchoices.append(ack)
@@ -852,3 +876,14 @@ static func _reset() -> void:
 	_reentry = false
 	_sorgu = {}
 	_pending_outcome = ""
+
+
+## Shorthand for TranslationServer.translate. This file is 60-odd STATIC functions, and a
+## static func has no Object, so tr() would compile here and then die at run time.
+static func _t(key: String) -> String:
+	return TranslationServer.translate(key)
+
+
+## "Kaplan Yatırım — Canlı" / "Kaplan Ventures — Live".
+static func _speaker_tag(display_name: String) -> String:
+	return _t("VC_SPEAKER_LIVE").format({"name": display_name})

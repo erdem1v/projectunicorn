@@ -120,7 +120,7 @@ func _build_header() -> Control:
 	hb.add_child(patcol)
 	var sabir := Label.new()
 	sabir.theme_type_variation = &"ZoneLabel"
-	sabir.text = "SABIR"
+	sabir.text = tr("TERM_PATIENCE")
 	sabir.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	patcol.add_child(sabir)
 	_pip_box = HBoxContainer.new()
@@ -142,7 +142,7 @@ func _build_left_column() -> Control:
 
 	var header := Label.new()
 	header.theme_type_variation = &"ZoneLabel"
-	header.text = "MASADAKİ TEKLİF"
+	header.text = tr("TERM_OFFER_HEADER")
 	vb.add_child(header)
 
 	_lever_rows.clear()
@@ -171,7 +171,7 @@ func _build_lever_row(lever_id: String) -> Control:
 	var push_btn := Button.new()
 	push_btn.theme_type_variation = &"CommitButton"
 	push_btn.focus_mode = Control.FOCUS_NONE     # ledger 11 — mouse only, no keyboard grab
-	push_btn.text = "İTİR"
+	push_btn.text = tr("TERM_PUSH")
 	push_btn.pressed.connect(_on_push_pressed.bind(lever_id))
 	top.add_child(push_btn)
 
@@ -200,7 +200,7 @@ func _build_right_column() -> Control:
 
 	var header := Label.new()
 	header.theme_type_variation = &"ZoneLabel"
-	header.text = "SONUÇ"
+	header.text = tr("TERM_RESULT_HEADER")
 	vb.add_child(header)
 
 	_dial = RadialDial.new()
@@ -254,7 +254,7 @@ func _build_footer() -> Control:
 	_walk_btn = Button.new()
 	_walk_btn.theme_type_variation = &"DialogueGhost"
 	_walk_btn.focus_mode = Control.FOCUS_NONE
-	_walk_btn.text = "MASADAN KALK"
+	_walk_btn.text = tr("TERM_WALK_OK")
 	_walk_btn.pressed.connect(_on_walk_pressed)
 	actions.add_child(_walk_btn)
 
@@ -268,7 +268,7 @@ func _build_footer() -> Control:
 	_sign_btn = Button.new()
 	_sign_btn.theme_type_variation = &"CommitButton"
 	_sign_btn.focus_mode = Control.FOCUS_NONE
-	_sign_btn.text = "İMZALA"
+	_sign_btn.text = tr("TERM_SIGN_OK")
 	_sign_btn.custom_minimum_size = Vector2(200, 0)
 	_sign_btn.pressed.connect(_on_sign_pressed)
 	actions.add_child(_sign_btn)
@@ -322,7 +322,8 @@ func _render(vs: Dictionary) -> void:
 	var footer: Dictionary = vs.get("footer", {})
 	_kasa_label.text = String(footer.get("kasa_runway_text", ""))
 	_counter_label.text = String(footer.get("counter_text", ""))
-	_investment_label.text = "%s yatırım" % UiTokens.format_money(int(vs.get("money_raised", 0)))
+	_investment_label.text = tr("TERM_INVESTMENT").format(
+		{"amount": UiTokens.format_money(int(vs.get("money_raised", 0)))})
 	_sign_btn.disabled = (not bool(vs.get("sign_enabled", false))) or _spinning
 	_walk_btn.disabled = (not bool(vs.get("walk_enabled", false))) or _spinning
 
@@ -392,11 +393,12 @@ func _on_sign_pressed() -> void:
 		return
 	var vs: Dictionary = TermSheetTableSystem.view_state()
 	EventBus.confirm_requested.emit({
-		"title": "İmzala?",
-		"body": "%s yatırım · %s ile imzala? Bu turu kapatır." % [
-			UiTokens.format_money(int(vs.get("money_raised", 0))), _terms_line(vs)],
-		"confirm_text": "İMZALA",
-		"cancel_text": "Vazgeç",
+		"title": tr("TERM_SIGN_Q"),
+		"body": tr("TERM_SIGN_BODY").format({
+			"amount": UiTokens.format_money(int(vs.get("money_raised", 0))),
+			"terms": _terms_line(vs)}),
+		"confirm_text": tr("TERM_SIGN_OK"),
+		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": Callable(self, "_do_sign"),
 	})
 
@@ -410,10 +412,10 @@ func _on_walk_pressed() -> void:
 	if _spinning:
 		return
 	EventBus.confirm_requested.emit({
-		"title": "Masadan kalk?",
-		"body": "Masadan kalkarsan bu teklif gider. Bu bir kapanan masa sayılır.",
-		"confirm_text": "MASADAN KALK",
-		"cancel_text": "Vazgeç",
+		"title": tr("TERM_WALK_Q"),
+		"body": tr("TERM_WALK_BODY"),
+		"confirm_text": tr("TERM_WALK_OK"),
+		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": Callable(self, "_do_walk"),
 	})
 
