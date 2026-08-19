@@ -469,7 +469,8 @@ func _is_harness_run() -> bool:
 static func _is_harness_arg(arg: String) -> bool:
 	if not arg.begins_with("--"):
 		return false
-	return arg.contains("smoke") or arg.contains("-shot") or arg.contains("audit") \n		or arg.contains("spec") or arg.contains("run-log")
+	var harness_flag: bool = arg.contains("smoke") or arg.contains("-shot") or arg.contains("audit")
+	return harness_flag or arg.contains("spec") or arg.contains("run-log")
 
 
 # ============================================================================
