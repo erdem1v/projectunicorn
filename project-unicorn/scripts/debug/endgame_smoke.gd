@@ -253,6 +253,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"soft_cap_no_defer_for_sheet":     fail = _case_soft_cap_no_defer_for_sheet()
 		"soft_cap_warning_day":            fail = _case_soft_cap_warning_day()
 		"soft_cap_paper_names_unsigned_sheet": fail = _case_soft_cap_paper_names_unsigned_sheet()
+		"month_history_close_and_cap":     fail = _case_month_history_close_and_cap()
+		"growth_streak_semantics":         fail = _case_growth_streak_semantics()
+		"series_a_gate_needs_streak":      fail = _case_series_a_gate_needs_streak()
+		"series_a_signal_states":          fail = _case_series_a_signal_states()
+		"month_history_save_typing":       fail = _case_month_history_save_typing()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -329,6 +334,32 @@ static func _seed_b2b(mrr: int) -> void:
 	p.industry = "testing"
 	p.archetype = "small"
 	SalesSystem.add_b2b_customer(p, mrr, 70)
+
+
+## "Healthy Series A MRR" for the VC fixtures (Calibration Round A §3): the revenue bar moved
+## 5,000 → the $40-80K band and VCPitchSystem's conviction seeding reads SEED_MRR_REFERENCE =
+## the bar, so a fixture hard-pinned at 6,000 would read as a WEAK company. Bar + 1,000.
+static func _seed_b2b_series_a() -> void:
+	_seed_b2b(SalesSystem.TRACTION_MRR_TARGET + 1000)
+
+
+## Closed calendar months on GameState.month_history (Calibration Round A §3/§9): sequential
+## 30-day spans, the given MRR closes, one income/expense pair per month.
+static func _seed_month_closes(mrr_closes: Array, income: int = 30000, expense: int = 24000, red_days: int = 0) -> void:
+	GameState.month_history.clear()
+	var start: int = 1
+	for m in mrr_closes:
+		GameState.push_month_close({"start_day": start, "end_day": start + 29, "mrr_close": int(m),
+			"income": income, "expense": expense, "net": income - expense, "red_days": red_days})
+		start += 30
+
+
+## Four closes at +15 % a month ending at `last` — three qualifying growth months.
+static func _seed_growth_streak(last: int) -> void:
+	var m3: int = int(round(last / 1.15))
+	var m2: int = int(round(m3 / 1.15))
+	var m1: int = int(round(m2 / 1.15))
+	_seed_month_closes([m1, m2, m3, last])
 
 
 static func _seed_b2c() -> void:
@@ -529,10 +560,20 @@ static func _expect_gate1_opens_and_advances() -> String:
 
 static func _case_gate2() -> String:
 	GameState.set_phase(2)  # debug backdoor — gate 1 already passed
-	_seed_b2b(6000)         # MRR ≥ 5000; brand stays at neutral 50 ≥ 25
+	# Calibration Round A §3: the bar alone does not open the door — the signal reads
+	# "warming"; three closed months of ≥12 % growth on top of it open it.
+	_seed_b2b_series_a()    # MRR over the bar; brand stays at neutral 50 ≥ 25
+	_sim_day()
+	if GameState.phase_gate_ready:
+		return "gate 2 opened on the revenue bar alone (the growth streak is not a condition)"
+	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "warming":
+		return "bar cleared without growth should read warming, got %s" % str(PhaseGateSystem.series_a_signal())
+	_seed_growth_streak(GameState.mrr)
 	_sim_day()
 	if not GameState.phase_gate_ready or GameState.pending_next_phase != 3:
 		return "gate 2 did not open (ready=%s pending=%d)" % [GameState.phase_gate_ready, GameState.pending_next_phase]
+	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "open":
+		return "latched gate should read open"
 	if not _drain_to(GATE2_ID):
 		return "gate 2 scene never became active"
 	EventManager.resolve_choice(GATE2_ID, 0)
@@ -964,7 +1005,7 @@ static func _case_full_loop() -> String:
 	# THE vertical slice: phase 3 → request → prompt accept → beats → sheet → sign → ending.
 	GameState.set_phase(3)
 	_force("pass")
-	_seed_b2b(6000)
+	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
 	_sim_day()  # aggregate MRR to 6000 (SalesSystem mrr bridge)
 	if not VCPitchSystem.request_meeting("anchor"):
 		return "request_meeting refused"
@@ -1017,7 +1058,7 @@ static func _case_pitch_ret_counter() -> String:
 static func _case_gecistir_cap() -> String:
 	GameState.set_phase(3)
 	_force("pass")
-	_seed_b2b(6000)
+	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
 	_sim_day()
 	VCPitchSystem.begin_meeting("anchor")
 	VCPitchSystem.advance("b1_read")
@@ -1131,7 +1172,7 @@ static func _case_sheet_expiry_no_rejection() -> String:
 static func _case_third_sheet_delayed() -> String:
 	GameState.set_phase(3)
 	_force("pass")
-	_seed_b2b(6000)
+	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
 	_sim_day()
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("nexus", GameState.day))
@@ -1440,7 +1481,7 @@ static func _case_pivot_closes_hunt() -> String:
 static func _case_meeting_during_kepenk() -> String:
 	GameState.set_phase(3)
 	GameState.set_cash(100000)  # fat runway → no thin-runway penalty to confound the diff
-	_seed_b2b(6000)
+	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
 	_sim_day()  # base seed comfortably positive so the [0,100] clamp doesn't hide the penalty
 	var seed_clear: int = int(VCPitchSystem.seed_conviction("anchor").value)
 	GameState.shutter_days_left = 5  # Kepenk active
@@ -2771,10 +2812,13 @@ static func _case_angel_fires_at_crossing() -> String:
 	if GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
 		return "the offer opened below the bar (MRR %d)" % GameState.mrr
 
-	# Cross BOTH bars in one day: the 2,500 seed bar and the 5,000 Series A gate. Brand
-	# starts at 50, so gate 2's brand condition is already satisfied.
-	CustomerRegistry.set_mrr(c.id, 6000)
+	# Cross BOTH bars in one day: the 2,500 seed bar and the Series A gate (the revenue bar
+	# plus, since Calibration Round A §3, three closed months of growth — seeded here so the
+	# gate's growth condition is already met). Brand starts at 50, so gate 2's brand condition
+	# is already satisfied.
+	CustomerRegistry.set_mrr(c.id, SalesSystem.TRACTION_MRR_TARGET + 1000)
 	SalesSystem.reflect_mrr()
+	_seed_growth_streak(GameState.mrr)
 	# The crossing day is driven by hand rather than through _sim_day_full, for one reason:
 	# the assertion below is a claim about two DETERMINISTIC beats, and it is only decidable
 	# when the queue is empty when they fire (see the note at the assertion). The hourly
@@ -7095,5 +7139,134 @@ static func _case_soft_cap_paper_names_unsigned_sheet() -> String:
 	var head_line: String = String((vs.get("ledger_lines", []) as Array)[0])
 	if head_line.find(span_two) < 0:
 		return "730-day paper does not use the two-year span phrase: '%s'" % head_line
+	return ""
+
+
+# --- §3 · the Series A gate: revenue bar (never shown) + a growth streak; the signal is shown ---
+
+static func _case_month_history_close_and_cap() -> String:
+	# The calendar-month ledger closes on the 1st, carries the open month's accruals
+	# (income = Σ daily revenue, expense = Σ burn + one-time costs, red_days), and keeps 12.
+	GameState.set_cash(100000)
+	_seed_b2b(3000)   # daily revenue 100, burn 50 (founder) → net +50/day
+	_sim_day()        # settle the bridge (MRR → GameState)
+	var closes_before: int = GameState.month_history.size()
+	for i in 40:
+		_sim_day()
+	if GameState.month_history.size() != closes_before + 1:
+		return "expected one fiscal close in 40 days, got %d" % (GameState.month_history.size() - closes_before)
+	var e: Dictionary = GameState.month_history[GameState.month_history.size() - 1]
+	if int(e.get("income", 0)) <= 0 or int(e.get("expense", 0)) <= 0:
+		return "close carries no accruals: %s" % str(e)
+	if int(e.get("net", 0)) != int(e.get("income", 0)) - int(e.get("expense", 0)):
+		return "net != income - expense: %s" % str(e)
+	if int(e.get("mrr_close", 0)) != GameState.mrr:
+		return "mrr_close %d != live MRR %d at close" % [int(e.get("mrr_close", 0)), GameState.mrr]
+	if int(e.get("red_days", -1)) != 0:
+		return "a solvent month counted red days: %s" % str(e)
+	for i in 20:
+		GameState.push_month_close({"start_day": 1, "end_day": 30, "mrr_close": 1, "income": 1, "expense": 1, "net": 0, "red_days": 0})
+	if GameState.month_history.size() != GameState.MONTH_HISTORY_CAP:
+		return "ring did not cap at %d (size %d)" % [GameState.MONTH_HISTORY_CAP, GameState.month_history.size()]
+	return ""
+
+
+static func _case_growth_streak_semantics() -> String:
+	# Pure arithmetic of the streak: integer MoM compare, zero previous never counts.
+	var cases := [
+		[[0, 1000], 0],
+		[[1000, 1120], 1],
+		[[1000, 1119], 0],
+		[[1000, 1200, 1400, 1600], 3],
+		[[1000, 1200, 1100, 1300], 1],
+		[[500], 0],
+	]
+	for cs in cases:
+		_seed_month_closes(cs[0])
+		var got: int = GameState.get_mrr_growth_streak(PhaseGateSystem.GROWTH_MIN_PCT)
+		if got != int(cs[1]):
+			return "closes %s → streak %d, want %d" % [str(cs[0]), got, int(cs[1])]
+	_seed_month_closes([1000, 1120])   # exactly one qualifying month
+	if not EventManager.is_condition_met({"type": "mrr_growth_streak", "value": 1, "pct": 12}):
+		return "condition false at streak 1 (value 1)"
+	if EventManager.is_condition_met({"type": "mrr_growth_streak", "value": 2, "pct": 12}):
+		return "condition true at streak 1 (value 2)"
+	return ""
+
+
+static func _case_series_a_gate_needs_streak() -> String:
+	# The falsification guard for §3: remove the streak condition from the gate table and
+	# this fails — MRR over the bar with NO growth history must not open the door.
+	GameState.set_phase(2)
+	_seed_b2b_series_a()
+	GameState.month_history.clear()
+	for i in 3:
+		_sim_day()
+	if GameState.phase_gate_ready:
+		return "the Series A gate opened on MRR alone (no growth streak)"
+	return ""
+
+
+static func _case_series_a_signal_states() -> String:
+	# phase 1 → closed regardless; phase 2 nothing → closed; streak 1 → warming; bar only →
+	# warming; all three → open; phase 3 → open. progress is a ratio, never a figure.
+	GameState.set_phase(1)
+	_seed_b2b_series_a()
+	_seed_growth_streak(GameState.mrr)
+	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "closed":
+		return "phase 1 should read closed"
+	GameState.set_phase(2)
+	GameState.month_history.clear()
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, 500)
+	SalesSystem.reflect_mrr()
+	var sig: Dictionary = PhaseGateSystem.series_a_signal()
+	if String(sig.get("state", "")) != "closed" or float(sig.get("progress", 1.0)) >= 0.5:
+		return "phase 2 with nothing should read closed (got %s)" % str(sig)
+	_seed_month_closes([1000, 1200])   # one growth month
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, 1200)
+	SalesSystem.reflect_mrr()
+	sig = PhaseGateSystem.series_a_signal()
+	if String(sig.get("state", "")) != "warming" or int(sig.get("streak", 0)) != 1:
+		return "one growth month should read warming (got %s)" % str(sig)
+	GameState.month_history.clear()
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, SalesSystem.TRACTION_MRR_TARGET + 1000)
+	SalesSystem.reflect_mrr()
+	sig = PhaseGateSystem.series_a_signal()
+	if String(sig.get("state", "")) != "warming" or not bool(sig.get("mrr_ok", false)):
+		return "bar cleared alone should read warming (got %s)" % str(sig)
+	_seed_growth_streak(GameState.mrr)
+	sig = PhaseGateSystem.series_a_signal()
+	if String(sig.get("state", "")) != "open" or not is_equal_approx(float(sig.get("progress", 0.0)), 1.0):
+		return "all conditions met should read open (got %s)" % str(sig)
+	GameState.set_phase(3)
+	GameState.month_history.clear()
+	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "open":
+		return "phase 3 should read open"
+	return ""
+
+
+static func _case_month_history_save_typing() -> String:
+	# The ring is an Array[Dictionary] of ints; a save round-trip must bring it back typed,
+	# with ints (JSON re-types to float; the codec restores).
+	_seed_month_closes([1000, 1200, 1500])
+	GameState.set_cash(12345)
+	_cleanup_save_slots()
+	if not SaveManager.save_to_slot(SAVE_SLOT_B):
+		_cleanup_save_slots()
+		return "save refused"
+	GameState.month_history.clear()
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_B)):
+		_cleanup_save_slots()
+		return "load refused"
+	_cleanup_save_slots()
+	if GameState.month_history.size() != 3:
+		return "month_history came back with %d entries, want 3" % GameState.month_history.size()
+	if GameState.month_history.get_typed_builtin() != TYPE_DICTIONARY:
+		return "month_history lost its Array[Dictionary] typing"
+	var e: Dictionary = GameState.month_history[2]
+	if typeof(e.get("mrr_close")) != TYPE_INT or int(e.get("mrr_close")) != 1500:
+		return "mrr_close came back as %s (%s)" % [str(e.get("mrr_close")), type_string(typeof(e.get("mrr_close")))]
+	if GameState.get_mrr_growth_streak(12) != 2:
+		return "streak after load = %d, want 2" % GameState.get_mrr_growth_streak(12)
 	return ""
 

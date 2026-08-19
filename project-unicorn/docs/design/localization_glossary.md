@@ -41,6 +41,9 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Ay kapanışı | Month close | |
 | Pazar payı | Market share | |
 | Değerleme / Hisse / Koltuk | Valuation / Equity / Seat(s) | Koltuk iki anlamda da (lisans + yönetim kurulu) seat. |
+| Yatırımcı iştahı | Investor appetite | Kalibrasyon Turu A §3 (2026-08-19): Series A kapısının tek oyuncu-yüzü; rakam asla basılmaz. |
+| KAPALI · ISINIYOR · AÇIK *(iştah çipi)* | CLOSED · WARMING · OPEN | Üç durum; çip ALL-CAPS iki dilde. |
+| Gelir çıtası | Revenue bar | Kapının gelir koşulunun RAKAMSIZ adı (`altında` / `aşıldı` ↔ `below` / `cleared`). |
 
 ## 3. Build & ürün
 
@@ -109,6 +112,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | SAYI {n} | No. {n} | Broadsheet kaydı ("ISSUE" dergi kaydı). |
 | Rakip / Sektör | Rival / Sector | |
 | ZOR MOD / GAZETEYİ PAYLAŞ | HARD MODE / SHARE THE PAPER | Shipped. |
+| İlgi Söndü | Interest Faded | Kalibrasyon Turu A §2 (2026-08-19): yumuşak tavan bitişinin (running_on_fumes) başlığı `[WORKING]`. |
 
 ## 7. Chrome & ortak UI
 

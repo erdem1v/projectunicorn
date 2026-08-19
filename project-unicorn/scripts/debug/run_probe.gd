@@ -105,6 +105,7 @@ static var _weak_v1: bool = false          # "full_run_weak": the original weak 
 static var _beta_wait: bool = false        # full_run only: hold the ship in Beta until the backlog is small
 static var _beta_since_day: int = -1       # first day the build was seen parked in Beta (bugfix phase)
 static var _hire_started: bool = false
+static var _last_appetite: String = ""     # PROBE SIGNAL on change (Calibration Round A §3)
 
 
 # ============================================================================
@@ -165,6 +166,24 @@ static func _wire_log() -> void:
 	EventBus.promise_kept.connect(func(pid: String) -> void: _log_promise(pid, "resolved"))
 	EventBus.promise_broken.connect(func(pid: String) -> void: _log_promise(pid, "resolved"))
 	EventBus.build_phase_changed.connect(_on_build_phase)
+	EventBus.month_ended.connect(_on_month_ended)
+
+
+static func _on_month_ended(_data: Dictionary) -> void:
+	# The calendar-month ledger (§3/§9): the entry MonthSummarySystem just pushed.
+	if GameState.month_history.is_empty():
+		return
+	var e: Dictionary = GameState.month_history[GameState.month_history.size() - 1]
+	var n: int = GameState.month_history.size()
+	var growth: String = "n/a"
+	if n >= 2:
+		var prev: int = int(GameState.month_history[n - 2].get("mrr_close", 0))
+		if prev > 0:
+			growth = "%.1f" % ((float(int(e.get("mrr_close", 0))) / float(prev) - 1.0) * 100.0)
+	print("PROBE MONTH day=%d n=%d mrr_close=%d income=%d expense=%d net=%d red=%d growth_pct=%s streak=%d profit_streak=%d" % [
+		GameState.day, n, int(e.get("mrr_close", 0)), int(e.get("income", 0)), int(e.get("expense", 0)),
+		int(e.get("net", 0)), int(e.get("red_days", 0)), growth,
+		GameState.get_mrr_growth_streak(PhaseGateSystem.GROWTH_MIN_PCT), GameState.get_profitable_month_streak()])
 
 
 static func _on_build_phase(new_phase: String) -> void:
@@ -229,13 +248,20 @@ static func _log_state() -> void:
 	var q: float = -1.0
 	if GameState.get_flag("mvp_shipped", false):
 		q = SalesSystem._rival_relative_quality(QualityModel.shipped_normalized())
-	print("PROBE STATE day=%d cash=%d mrr=%d brand=%d burn=%d runway=%s cust=%d emp=%d promises=%d phase=%d aud=%d sat=%d bugs=%d q=%.1f" % [
+	var sig: Dictionary = PhaseGateSystem.series_a_signal()
+	var appetite: String = String(sig.get("state", "closed"))
+	print("PROBE STATE day=%d cash=%d mrr=%d brand=%d burn=%d runway=%s cust=%d emp=%d promises=%d phase=%d aud=%d sat=%d bugs=%d q=%.1f appetite=%s streak=%d/%d profit_streak=%d" % [
 		GameState.day, GameState.cash, GameState.mrr, GameState.brand, GameState.daily_burn,
 		("INF" if is_inf(runway) else "%.2f" % runway),
 		CustomerRegistry.get_all().size(), CharacterRegistry.get_employees().size(),
 		PromiseRegistry.get_all().size(), GameState.phase,
 		int(GameState.get_flag("b2c_audience", 0)), (ub.satisfaction if ub != null else -1),
-		int(GameState.get_flag("mvp_live_bug_count", 0)), q])
+		int(GameState.get_flag("mvp_live_bug_count", 0)), q,
+		appetite, int(sig.get("streak", 0)), int(sig.get("streak_need", 0)), GameState.get_profitable_month_streak()])
+	if appetite != _last_appetite:
+		print("PROBE SIGNAL day=%d appetite=%s->%s mrr=%d streak=%d" % [
+			GameState.day, _last_appetite, appetite, GameState.mrr, int(sig.get("streak", 0))])
+		_last_appetite = appetite
 
 
 static func _log_customers() -> void:

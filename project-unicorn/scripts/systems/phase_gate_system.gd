@@ -21,6 +21,13 @@ extends RefCounted
 # All persistent/serialized state lives on GameState (§7.9).
 
 const REMIND_INTERVAL_DAYS := 5  # working value (§2.4)
+# Series A gate — the growth half (Calibration Round A §3, 2026-08-19). The revenue bar is
+# SalesSystem.TRACTION_MRR_TARGET (never rendered as a figure — director ruling: the signal is
+# shown, the number is not); the growth half is a STREAK of closed calendar months with
+# month-over-month MRR growth. Both are read through series_a_signal() below, the single
+# home the Finance indicator, the product page and the ODA board all paint from.
+const GROWTH_STREAK_MONTHS := 3   # [WORKING] closed months of MoM growth in a row
+const GROWTH_MIN_PCT := 12        # [WORKING] month-over-month MRR growth, percent
 
 # Gate table (§2.2). Conditions use EventManager.is_condition_met() vocabulary;
 # numeric values are working placeholders (§10 — numbers last).
@@ -40,9 +47,12 @@ const GATES := [
 		"from": 2, "to": 3,
 		"event_id": "ev_phase_gate_series_a",
 		"conditions": [
-			# mrr_above is strict ">" so target-1 ≡ "MRR ≥ TRACTION_MRR_TARGET" —
-			# single source SalesSystem.TRACTION_MRR_TARGET (UI traction bar reads the same).
+			# mrr_above is strict ">" so target-1 ≡ "MRR ≥ TRACTION_MRR_TARGET" — single source
+			# SalesSystem.TRACTION_MRR_TARGET. Never rendered as a figure (series_a_signal paints
+			# a state, not the number).
 			{"type": "mrr_above", "value": SalesSystem.TRACTION_MRR_TARGET - 1},
+			# Sustained growth: GROWTH_STREAK_MONTHS closed months at ≥ GROWTH_MIN_PCT MoM.
+			{"type": "mrr_growth_streak", "value": GROWTH_STREAK_MONTHS, "pct": GROWTH_MIN_PCT},
 			{"type": "brand_above", "value": 24},          # brand ≥ 25 (working floor; calibration item)
 		],  # runway deliberately NOT a condition (§2.2 — deadlock; low runway feeds pitch odds instead)
 		"copy_key": "SERIES_A",       # GATE_SERIES_A_TITLE / _BODY_0..2 in strings.csv
@@ -168,6 +178,39 @@ static func debug_force_gate() -> void:
 		print("[PhaseGateSystem] debug_force_gate: no gate for phase %d" % GameState.phase)
 		return
 	_open_gate(gate)
+
+
+# --- The Series A signal (single home; Calibration Round A §3) ---
+
+## What the player is shown instead of the revenue bar: a three-state reading of the gate's
+## conditions. "open" = the door is open (gate latched/held, or phase ≥ 3, or every condition
+## met right now); "warming" = phase 2 and either signal is moving (the revenue bar cleared OR
+## at least one month of qualifying growth); "closed" = phase 1 (the question is not asked
+## yet) or phase 2 with neither. `progress` is an equal-weight composite of the two signal
+## ratios — a bar that exposes no dollar figure.
+static func series_a_signal() -> Dictionary:
+	var gate: Dictionary = _gate_for_phase(2)
+	var s := {"state": "closed", "mrr_ok": false, "streak_ok": false, "brand_ok": false,
+		"streak": 0, "streak_need": GROWTH_STREAK_MONTHS, "mrr_progress": 0.0, "progress": 0.0}
+	for c in gate.get("conditions", []):
+		match String(c.get("type", "")):
+			"mrr_above":
+				s.mrr_ok = EventManager.is_condition_met(c)
+				s.mrr_progress = clampf(float(GameState.mrr) / float(int(c.get("value", 0)) + 1), 0.0, 1.0)
+			"mrr_growth_streak":
+				s.streak_need = int(c.get("value", GROWTH_STREAK_MONTHS))
+				s.streak = GameState.get_mrr_growth_streak(int(c.get("pct", GROWTH_MIN_PCT)))
+				s.streak_ok = s.streak >= s.streak_need
+			"brand_above":
+				s.brand_ok = EventManager.is_condition_met(c)
+	s.progress = 0.5 * s.mrr_progress + 0.5 * clampf(float(s.streak) / float(maxi(1, s.streak_need)), 0.0, 1.0)
+	var latched: bool = GameState.phase_gate_ready and GameState.pending_next_phase == 3
+	if GameState.phase >= 3 or latched or (GameState.phase == 2 and s.mrr_ok and s.streak_ok and s.brand_ok):
+		s.state = "open"
+		s.progress = 1.0
+	elif GameState.phase == 2 and (s.mrr_ok or s.streak > 0):
+		s.state = "warming"
+	return s
 
 
 # --- Helpers ---

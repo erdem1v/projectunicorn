@@ -414,6 +414,12 @@ func is_condition_met(condition: Dictionary) -> bool:
 			return GameState.mrr > int(condition.get("value", 0))
 		"mrr_below":
 			return GameState.mrr < int(condition.get("value", 0))
+		"mrr_growth_streak":
+			# A COUNT, not a crossing (Calibration Round A §3): consecutive CLOSED calendar months
+			# with month-over-month MRR growth ≥ `pct` (default PhaseGateSystem.GROWTH_MIN_PCT).
+			# ≥, unlike the *_above family. Reads GameState.month_history.
+			return GameState.get_mrr_growth_streak(int(condition.get("pct", PhaseGateSystem.GROWTH_MIN_PCT))) \
+				>= int(condition.get("value", 0))
 		"market_type":
 			return String(GameState.get_flag("mvp_market_type", "")) == String(condition.get("value", ""))
 		"has_prospects":

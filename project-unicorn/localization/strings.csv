@@ -1068,7 +1068,6 @@ PROD_BETA_LINE,Beta · bulunan {found} · çözülen {fixed} · açık {open},Be
 PROD_ROUND_CEILING,Tur kazancı tavanı — İnovasyon {inn} / {inn_max} · Kararlılık {stab} / {stab_max} · Deneyim {exp} / {exp_max},Round gain ceiling — Innovation {inn} / {inn_max} · Stability {stab} / {stab_max} · Experience {exp} / {exp_max}
 PROD_ONE_MORE_ROUND,Bir tur daha ({days} gün),One more round ({days} days)
 PROD_ROUND_LINE,{phase} · Tur {round} · ~{days} gün,{phase} · Round {round} · about {days} days
-PROD_TOWARD_TRACTION,TRACTION'A DOĞRU,TOWARD TRACTION
 PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
 PROD_STATUS,DURUM,STATUS
 PROD_OPEN_BUGS,AÇIK HATA,OPEN BUGS
@@ -1182,7 +1181,6 @@ PROD_EFFORT_N,Efor {n},Effort {n}
 PROD_GROUP_COUNT,{title} · {checked}/{total},{title} · {checked}/{total}
 PROD_LIVE_PRICE,CANLI · {amount},LIVE · {amount}
 PROD_META_VERSION,V{version} · {type},V{version} · {type}
-PROD_MRR_OF_TARGET,MRR {mrr} / {target},MRR {mrr} / {target}
 PROD_OPTIMAL,Optimal {amount},Optimal {amount}
 PROD_PER_MONTH,{amount} /ay,{amount} /mo
 PROD_PRICE_DRAFT,Fiyat taslak,Price draft
@@ -1477,7 +1475,6 @@ FIN_ONETIME_VERSION,Sürüm özellikleri,Version features
 FIN_MENTOR_WARNING,Mentor uyarısı,Mentor warning
 FIN_MENTOR_QUOTE,"Altı aydan az yolun kaldı. Kasadaki para fikir değil, takvim. Ya gideri kısarsın ya geliri bulursun; ikisi de karar ister.","You have less than six months of road left. The money in the account is not an idea, it is a calendar. Either you cut costs or you find revenue; both take a decision."
 FIN_MENTOR_QUOTE_WRAPPED,"""{quote}""","""{quote}"""
-FIN_OPEN_ROUND_SERIES_A,Tur aç · Series A,Open round · Series A
 FIN_SNOOZE,Ertele,Snooze
 FIN_CASH,Nakit,Cash
 FIN_MONTHLY_NET,Aylık net,Monthly net
@@ -1497,7 +1494,6 @@ FIN_RECENT_TX,Son işlemler,Recent transactions
 FIN_NO_TX,Henüz işlem yok,No transactions yet
 FIN_TX_DATE,{day} {month},{month} {day}
 FIN_PER_DAY,{amount} / gün,{amount} / day
-FIN_REQ_MRR,MRR ≥ {amount},MRR ≥ {amount}
 FIN_REQ_BRAND,Marka ≥ {n},Brand ≥ {n}
 FIN_REQ_OPENS,Series A Hunt'ta açılır: {reqs},Opens in the Series A Hunt: {reqs}
 FIN_CAPTABLE_HEADER,Hisse dağılımı,Cap table
@@ -1648,7 +1644,6 @@ MONTH_EVENT_OF_THE_MONTH,✦ AYIN OLAYI,✦ EVENT OF THE MONTH
 MONTH_AUTO_SUMMARY,Otomatik özet · her ay sonu,Automatic summary · at each month end
 ODA_MENTOR_TAG_FALLBACK,FRANK,FRANK
 ODA_GOAL_PROGRESS,{met}/{total},{met}/{total}
-ODA_GOAL_MRR,{mrr} / {target} MRR,{mrr} / {target} MRR
 MONTH_ROW_CASH,Kasa,Cash
 MONTH_ROW_TEAM,Ekip,Team
 MONTH_ROW_BRAND,Marka,Brand
@@ -1938,3 +1933,16 @@ END_RF_STAYED_STANDING,"{founding}, {span} ayakta kalmayı başardı; yatırımc
 END_RF_UNSIGNED_SHEET,Masada imzalanmamış bir teklif kaldı.,An unsigned offer was left on the table.
 END_SPAN_OVER_YEAR,bir yılı aşkın sürede,in over a year
 END_SPAN_NEAR_TWO_YEARS,iki yıla yakın sürede,in close to two years
+INV_APPETITE_TITLE,Yatırımcı iştahı,Investor appetite
+INV_APPETITE_CLOSED,KAPALI,CLOSED
+INV_APPETITE_WARMING,ISINIYOR,WARMING
+INV_APPETITE_OPEN,AÇIK,OPEN
+INV_APPETITE_LINE,Gelir çıtası {bar} · büyüme {streak}/{need} ay,Revenue bar {bar} · growth {streak}/{need} mo
+INV_BAR_BELOW,altında,below
+INV_BAR_CLEARED,aşıldı,cleared
+INV_APPETITE_TOO_EARLY,Series A henüz masada değil,Series A is not on the table yet
+INV_APPETITE_GATE_OPEN,Kapı açık · Frank'le konuş,The door is open · talk to Frank
+INV_APPETITE_HUNT,Series A avı sürüyor,The Series A hunt is on
+FIN_REQ_MRR_BAR,gelir çıtası,the revenue bar
+FIN_REQ_GROWTH,{n} ay üst üste büyüme,{n} months of growth in a row
+ODA_GOAL_SIGNAL,{state} · büyüme {streak}/{need} ay,{state} · growth {streak}/{need} mo

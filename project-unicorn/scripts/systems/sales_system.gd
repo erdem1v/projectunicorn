@@ -33,8 +33,19 @@ const B2C_USERBASE_ID := "co_b2c_userbase"
 const SATISFACTION_QUALITY_GATE := 40    # experience axis ≥ → satisfaction drifts up
 const SATISFACTION_BUG_GATE := 5         # bug_count > → satisfaction drifts down
 
-const TRACTION_MRR_TARGET := 5000
-const TRACTION_CUSTOMER_TARGET := 8
+# THE SERIES A REVENUE BAR — Calibration Round A §3 (2026-08-19), 5_000 → the $40-80K band
+# [ÖLÇ]. Canon: a deliberate 20-40 % compression of a real Series A; the rule that picks the
+# value inside the band is "the smallest band value the competent policy does not cross before
+# month 12; if it crosses none by month 24, the band floor, and the slope is reported".
+# Measured (seed 424242, --run-log=full_run:730:sim after §1/§2): MRR plateaus at ~$33-34K from
+# month 7 because the B2B prospect pool is finite (catalog-bound, 25 accounts) — no band
+# value is crossed by month 24, so the bar sits at the band FLOOR and the gap is a Layer-B
+# revenue-curve finding, not a reason to lower the bar (director ruling).
+# NEVER RENDERED AS A FIGURE (director ruling: the signal is shown, the number is not). Readers:
+# PhaseGateSystem.GATES (the gate), PitchConstants.SEED_MRR_REFERENCE (VC conviction seeding —
+# tracks the bar by design). The old display bar (traction_progress) and its customer-count
+# companion were retired with the figure.
+const TRACTION_MRR_TARGET := 40_000
 
 # WORKING: optimistic close-rate weight on the open pipeline — feeds only the Finance
 # tab's "satış hedefi tutarsa" projection (FinanceSystem.get_optimistic_daily_net).
@@ -381,15 +392,10 @@ static func _tick_satisfaction() -> void:
 
 
 # --- Traction north-star ---
-# Display-only progress for the PostShip bar. The GATE itself lives in
-# PhaseGateSystem (slot 8) — subgenre-agnostic, reads GameState/registry state
-# daily. The old _check_traction/ready_for_traction mechanism (B2C-branch-only,
-# never fired for B2B) was removed with the endgame engine (ENDGAME_DESIGN.md §2.2).
-
-static func traction_progress() -> float:
-	var mrr_ratio: float = float(GameState.mrr) / float(TRACTION_MRR_TARGET)
-	var cust_ratio: float = float(CustomerRegistry.get_active().size()) / float(TRACTION_CUSTOMER_TARGET)
-	return clampf(maxf(mrr_ratio, cust_ratio), 0.0, 1.0)
+# The GATE lives in PhaseGateSystem (slot 8) — subgenre-agnostic, reads GameState/registry
+# state daily. Its player-facing reading is PhaseGateSystem.series_a_signal() (state +
+# progress); the old display bar that divided MRR by the figure (traction_progress) was
+# retired 2026-08-19 with the figure itself.
 
 
 # --- Value algorithm (product worth → optimal price + lower bound + rationale) ---

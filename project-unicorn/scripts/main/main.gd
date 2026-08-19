@@ -1288,7 +1288,7 @@ func _audit_color(c: Color) -> String:
 	return "%.3f,%.3f,%.3f,%.2f" % [c.r, c.g, c.b, c.a]
 
 
-# Debug: --finance-shot=<ozet|artida|uyari> (windowed). Finance Tab v1 doğrulaması: gerçek
+# Debug: --finance-shot=<ozet|artida|uyari|signal> (windowed). Finance Tab v1 doğrulaması: gerçek
 # seam'lerle ~40 gün oynanmış durum kurar (nakit ring buffer + işlem ledger'ı gerçek
 # akıştan dolar), GameShell'i Finans sekmesinde 1920×1080 açar, screenshot alır, çıkar.
 #   ozet   — negatif net: çatallı projeksiyonlar, son işlemlerde imza + retainer karışık
@@ -1326,6 +1326,17 @@ func _run_finance_shot(kind: String) -> void:
 	# Açık pipeline kalsın: iyimser projeksiyon gerçek prospect'lerden beslenir.
 	PitchSystem.spawn_prospect("small", "find")
 	PitchSystem.spawn_prospect("mid", "find")
+	if kind == "signal":   # LOC-DATA debug seed / id
+		# Kalibrasyon Turu A §3/§9 yüzeyleri: faz 2, dört ay kapanışı (+%15/ay → üç büyüme
+		# ayı) ve dördü de artıda → "Yatırımcı iştahı · ISINIYOR" (çıta altında) + "Artıda · 4/6 ay".
+		GameState.set_phase(2)
+		GameState.month_history.clear()
+		var closes: Array = [12000, 13900, 16000, 18400]
+		var start_day: int = 1
+		for m in closes:
+			GameState.push_month_close({"start_day": start_day, "end_day": start_day + 29, "mrr_close": int(m),
+				"income": int(m), "expense": 9000, "net": int(m) - 9000, "red_days": 0})
+			start_day += 30
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
 	await get_tree().process_frame

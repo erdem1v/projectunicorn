@@ -59,6 +59,8 @@ var _cap_rows: Label
 var _cap_raised: Label
 var _cap_equity_note: Label         # "%d çalışanın hissesi var" (RightPanel'den taşınan TR satırı)
 var _mentor_card: PanelContainer
+var _appetite_chip_host: HBoxContainer   # "Yatırımcı iştahı" durum çipi (yeniden kurulur; palet duruma bağlı)
+var _appetite_line: Label                # çipin altındaki tek satır
 
 var _signals: Array = []
 
@@ -77,6 +79,11 @@ func _ready() -> void:
 		# bu bir tesadüf. Nakit taşımayan ilk hisse hareketi (opsiyon havuzu, ikincil
 		# satış) barı sessizce bayat bırakırdı ve hiçbir test bunu yakalamazdı.
 		[EventBus.equity_changed, _on_state_changed],
+		# Yatırımcı iştahı (Kalibrasyon Turu A §3): büyüme serisi ay kapanışında değişir, kapı
+		# ayrıca mandallanır ve faz ilerler — üçü de MRR'siz boya gerektirir.
+		[EventBus.month_ended, _on_state_changed],
+		[EventBus.phase_gate_reached, _on_state_changed],
+		[EventBus.phase_changed, _on_state_changed],
 	]
 	for s in _signals:
 		(s[0] as Signal).connect(s[1])
@@ -109,13 +116,15 @@ func _build() -> void:
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(page)
 
-	# Başlık satırı: sayfa adı + kilitli Series A düğmesi
+	# Başlık satırı: sayfa adı + "Yatırımcı iştahı" göstergesi (Kalibrasyon Turu A §3 —
+	# eski kilitli "TUR AÇ · SERIES A" düğmesinin ve dolarlı tooltip'inin yerine; yönetmen
+	# kararı: sayı gösterilmez, sinyal gösterilir).
 	var title_row := HBoxContainer.new()
 	page.add_child(title_row)
 	var title := UiFactory.make_label(tr("TAB_FINANCE"), &"TitleSerif")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_row.add_child(title)
-	title_row.add_child(_build_series_a_button())
+	title_row.add_child(_build_appetite_group())
 
 	# İki kolon
 	var columns := HBoxContainer.new()
@@ -153,17 +162,27 @@ func _card(content: VBoxContainer) -> PanelContainer:
 	return panel
 
 
-func _build_series_a_button() -> Button:
-	# Yalnız KİLİTLİ durum (# WORKING): üç-durumlu makine (kilitli/hazırlanıyor/açık)
-	# gerçek kapı motoru geldiğinde ayrı bir iş. Tıklama aksiyonu yok; tooltip kapı
-	# gereksinimlerini SABİTLERDEN okur (grep kanıtı: bu dosyada eşik literal'i yok).
-	var b := Button.new()
-	b.text = Fmt.upper(tr("FIN_OPEN_ROUND_SERIES_A"))
-	b.disabled = true
-	b.focus_mode = Control.FOCUS_NONE
-	b.modulate = Color(1, 1, 1, 0.5)
-	b.tooltip_text = _series_a_tooltip()
-	return b
+func _build_appetite_group() -> Control:
+	# The three-state machine this row always anticipated (kilitli / ısınıyor / açık), now
+	# driven by the real gate: PhaseGateSystem.series_a_signal() — Terminal recipe, one chip
+	# + one line, no figure anywhere. The tooltip names the gate's CONDITIONS from the table
+	# (a revenue bar, N months of growth, brand ≥ n) — still no dollar figure.
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	box.size_flags_horizontal = Control.SIZE_SHRINK_END
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 8)
+	head.alignment = BoxContainer.ALIGNMENT_END
+	box.add_child(head)
+	head.add_child(UiFactory.make_label(InvestorAppetiteUi.title_text(), &"CaptionMuted", UiTokens.INK_MUTED))
+	_appetite_chip_host = HBoxContainer.new()
+	head.add_child(_appetite_chip_host)
+	_appetite_line = UiFactory.make_label("", &"CaptionMuted", UiTokens.INK_MUTED)
+	_appetite_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	box.add_child(_appetite_line)
+	box.tooltip_text = _series_a_tooltip()
+	box.mouse_filter = Control.MOUSE_FILTER_PASS
+	return box
 
 
 func _series_a_tooltip() -> String:
@@ -172,15 +191,26 @@ func _series_a_tooltip() -> String:
 		if int(gate["from"]) != 2:
 			continue
 		for cond in gate["conditions"]:
-			# mrr_above/brand_above kesin ">" — oyuncuya "≥ eşik" olarak çevrilir
-			# (PhaseGateSystem.GATES yorumundaki eşik-1 sözleşmesi).
+			# brand_above kesin ">" — oyuncuya "≥ eşik" olarak çevrilir (PhaseGateSystem.GATES
+			# yorumundaki eşik-1 sözleşmesi). Gelir çıtası RAKAMSIZ adlandırılır (yönetmen kararı).
 			match String(cond.type):
 				"mrr_above":
-					reqs.append(tr("FIN_REQ_MRR").format(
-						{"amount": UiTokens.format_money(int(cond.value) + 1)}))
+					reqs.append(tr("FIN_REQ_MRR_BAR"))
+				"mrr_growth_streak":
+					reqs.append(tr("FIN_REQ_GROWTH").format({"n": int(cond.value)}))
 				"brand_above":
 					reqs.append(tr("FIN_REQ_BRAND").format({"n": int(cond.value) + 1}))
 	return tr("FIN_REQ_OPENS").format({"reqs": " · ".join(reqs)})
+
+
+func _refresh_appetite() -> void:
+	if _appetite_chip_host == null:
+		return
+	var sig: Dictionary = PhaseGateSystem.series_a_signal()
+	for c in _appetite_chip_host.get_children():
+		c.queue_free()
+	_appetite_chip_host.add_child(InvestorAppetiteUi.chip(String(sig.get("state", "closed"))))
+	_appetite_line.text = InvestorAppetiteUi.line(sig)
 
 
 func _build_curve_card() -> PanelContainer:
@@ -372,6 +402,7 @@ func refresh() -> void:
 	if _nakit_val == null:
 		return
 	_refresh_header()
+	_refresh_appetite()
 	_refresh_curve()
 	_refresh_flow()
 	_refresh_burn()
