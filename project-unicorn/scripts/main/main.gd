@@ -884,7 +884,7 @@ func _oda_shot_requested() -> String:
 	return ""
 
 
-# Debug: --oda-shot=<day|evening|night|dawn|event|tab|tour|hover|market1|market2>
+# Debug: --oda-shot=<day|evening|night|dawn|event|tab|tour|hover|market1|market2|signal>
 # (windowed). ODA merkez görünümünün dört
 # durum fotoğrafı (task doğrulama #9): day = temiz masa + canlı ürün monitörü;
 # night = saat 23 + mesai + masada kâğıtlar (crossfade otursun diye uzun bekleme);
@@ -908,6 +908,17 @@ func _run_oda_shot(kind: String) -> void:
 		GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
 	else:
 		_seed_theme_surface()
+	if kind == "signal":   # LOC-DATA debug seed / id
+		# Kalibrasyon Turu A §3: pano hedef kartının FAZ-2 dalı (ODA_GOAL_SIGNAL — rakam yok,
+		# sinyal + büyüme ayı). --finance-shot=signal ile aynı dört kapanış → ISINIYOR · 3/3 ay.
+		GameState.set_phase(2)
+		GameState.month_history.clear()
+		var sig_closes: Array = [12000, 13900, 16000, 18400]
+		var sig_start: int = 1
+		for m in sig_closes:
+			GameState.push_month_close({"start_day": sig_start, "end_day": sig_start + 29, "mrr_close": int(m),
+				"income": int(m), "expense": 9000, "net": int(m) - 9000, "red_days": 0})
+			sig_start += 30
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
 	_shell_mounted = true
@@ -969,7 +980,7 @@ func _run_oda_shot(kind: String) -> void:
 		"milestones":
 			# D5 dokümanı kanıtı: çerçeve tıkının rotası.
 			EventBus.tab_changed.emit("milestones")
-		"market1", "market2":
+		"market1", "market2", "signal":
 			GameState.set_current_hour(14)
 		_:
 			push_error("[OdaShot] bilinmeyen tür: %s" % kind)
