@@ -260,6 +260,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"month_history_save_typing":       fail = _case_month_history_save_typing()
 		"b2c_wom_needs_satisfaction":      fail = _case_b2c_wom_needs_satisfaction()
 		"b2c_growth_multiplier_floor":     fail = _case_b2c_growth_multiplier_floor()
+		"conversion_bug_penalty":          fail = _case_conversion_bug_penalty()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -7334,5 +7335,41 @@ static func _case_b2c_growth_multiplier_floor() -> String:
 	var d_none: float = SalesSystem._audience_delta_per_hour()
 	if absf(d_none - d50) > 1e-6:
 		return "without the aggregate record growth should equal the pivot reading (%.4f vs %.4f)" % [d_none, d50]
+	return ""
+
+
+# --- §6 · bugs hit conversion ---
+
+static func _case_conversion_bug_penalty() -> String:
+	# 10 live bugs ≈ −20 % conversion, floored at ×0.4; the pricing ruler's projection
+	# (estimate_price_change → new_paying) moves with it.
+	_seed_b2c()
+	GameState.set_flag("mvp_innovation", 15.0)
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_experience", 17.5)
+	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
+	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
+	GameState.set_flag("b2c_audience", 1000.0)
+	var price: int = int(GameState.get_flag("b2c_price", SalesSystem.B2C_PRICE_DEFAULT))
+	# Bugs ALSO lower product_value (effective stability → composite → optimal), so the
+	# expectation is rebuilt from product_value at each bug level: the penalty factor is what
+	# conversion_rate adds on top of the price curve.
+	for probe in [[0, 1.0], [10, 0.8], [60, SalesSystem.BUG_CONV_FLOOR]]:
+		GameState.set_flag("mvp_live_bug_count", int(probe[0]))
+		var optimal: float = maxf(1.0, float(SalesSystem.product_value()["optimal"]))
+		var price_curve: float = clampf(SalesSystem.CONVERSION_BASE * optimal / maxf(1.0, float(price)),
+			SalesSystem.CONVERSION_MIN, SalesSystem.CONVERSION_MAX)
+		var want: float = clampf(price_curve * float(probe[1]), SalesSystem.CONVERSION_MIN, SalesSystem.CONVERSION_MAX)
+		var got: float = SalesSystem.conversion_rate(price)
+		if absf(got - want) > 1e-6:
+			return "%d bugs → conversion %.4f, want price curve %.4f × %.2f = %.4f" % [int(probe[0]), got, price_curve, float(probe[1]), want]
+		if int(probe[0]) == 0 and (got <= SalesSystem.CONVERSION_MIN or got >= SalesSystem.CONVERSION_MAX):
+			return "fixture: bug-free rate %.3f sits on a clamp; the penalty would be masked" % got
+	GameState.set_flag("mvp_live_bug_count", 0)
+	var paying0: int = int(SalesSystem.estimate_price_change(price)["new_paying"])
+	GameState.set_flag("mvp_live_bug_count", 10)
+	var paying10: int = int(SalesSystem.estimate_price_change(price)["new_paying"])
+	if paying10 >= paying0:
+		return "the pricing projection did not move under bugs (%d vs %d paying)" % [paying10, paying0]
 	return ""
 

@@ -1634,7 +1634,7 @@ func _run_ending_shot(key: String) -> void:
 	get_tree().quit()
 
 
-# Debug: --product-shot=<portfoy|ozellikler|tracker|detail_b2b|detail_b2c> (windowed).
+# Debug: --product-shot=<portfoy|ozellikler|tracker|detail_b2b|detail_b2c|detail_b2c_buggy> (windowed).
 # Mounts GameShell with seeded state, drives the Product tab router to the requested
 # Rev3 view at 1920×1080, screenshots to user://, and quits.
 func _run_product_shot(kind: String) -> void:
@@ -1674,7 +1674,7 @@ func _run_product_shot(kind: String) -> void:
 				if b != null:
 					b.efor_spent = b.total_efor * 0.64
 					ProductSystem.hourly_tick(9)  # faz bandını ilerlemeye oturtur
-		"detail_b2c":
+		"detail_b2c", "detail_b2c_buggy":   # LOC-DATA debug seed / id
 			GameState.set_flag("mvp_shipped", true)
 			GameState.set_flag("mvp_market_type", "b2c")
 			GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
@@ -1685,7 +1685,9 @@ func _run_product_shot(kind: String) -> void:
 			GameState.set_flag("mvp_experience", 5.0)
 			GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
 			GameState.set_flag("mvp_launch_day", GameState.day)
-			GameState.set_flag("mvp_live_bug_count", 5)
+			# detail_b2c_buggy (Calibration Round A §6): the same fixture with 15 live bugs, so
+			# the pricing ruler's conversion projection is seen moving under the bug penalty.
+			GameState.set_flag("mvp_live_bug_count", 15 if kind == "detail_b2c_buggy" else 5)
 			GameState.set_flag("mvp_bug_history", [1, 2, 2, 3, 4, 4, 5])
 			GameState.set_flag("mvp_version_history", [{"version": 1, "day": GameState.day}])
 			GameState.set_flag("b2c_audience", 1.0)
@@ -1719,7 +1721,7 @@ func _run_product_shot(kind: String) -> void:
 				"features": ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"]}})
 		"tracker", "beta":
 			tab._navigate("tracker", {})
-		"detail_b2b", "detail_b2c":
+		"detail_b2b", "detail_b2c", "detail_b2c_buggy":
 			tab._navigate("detail", {})
 		_:
 			pass  # portfoy: varsayılan iniş görünümü

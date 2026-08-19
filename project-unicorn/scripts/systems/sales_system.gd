@@ -109,6 +109,15 @@ const TENDENCY_MULT := {"premium": 1.35, "neutral": 1.0, "volume": 0.8}
 const CONVERSION_BASE := 0.35            # at optimal
 const CONVERSION_MIN := 0.02
 const CONVERSION_MAX := 0.60
+# Bugs hit CONVERSION, not only satisfaction — Calibration Round A §6 (2026-08-19). Until now
+# live bugs reached the consumer economy only through effective stability → the composite →
+# audience growth; a buggy product still converted browsers to payers at full rate. Now the
+# standing conversion is scaled by (1 − live_bugs·BUG_CONV_COEF), floored — the raw live count,
+# the same grammar as SATISFACTION_BUG_GATE ("10 bugs ≈ −20 %"). Applied AFTER the price
+# clamp so a cheap price cannot hide bugs under CONVERSION_MAX, then re-clamped. The pricing
+# ruler's live projection reads conversion_rate, so it moves too.
+const BUG_CONV_COEF := 0.02              # [WORKING] per live bug; 10 bugs ≈ −20 %
+const BUG_CONV_FLOOR := 0.4              # [WORKING] 30+ bugs cap the penalty at −60 %
 
 # Price-hike audience reaction: fraction of the audience that leaves on a raise.
 const CHURN_MAX := 0.45
@@ -497,10 +506,13 @@ static func _value_lines(sub: String, feature_count: int, tendency: String) -> A
 
 static func conversion_rate(price: int) -> float:
 	# Standing fraction of the WHOLE audience that pays at this price (MRR derives
-	# from it each hour). Cheaper than optimal → higher; pricier → lower.
+	# from it each hour). Cheaper than optimal → higher; pricier → lower. Live bugs
+	# suppress it (§6: buyers generate the complaints that suppress buying).
 	var optimal: float = maxf(1.0, float(product_value()["optimal"]))
-	var rate: float = CONVERSION_BASE * (optimal / maxf(1.0, float(price)))
-	return clampf(rate, CONVERSION_MIN, CONVERSION_MAX)
+	var rate: float = clampf(CONVERSION_BASE * (optimal / maxf(1.0, float(price))), CONVERSION_MIN, CONVERSION_MAX)
+	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0)))
+	var bug_factor: float = maxf(BUG_CONV_FLOOR, 1.0 - float(bugs) * BUG_CONV_COEF)
+	return clampf(rate * bug_factor, CONVERSION_MIN, CONVERSION_MAX)
 
 
 static func churn_fraction(old_price: int, new_price: int) -> float:
