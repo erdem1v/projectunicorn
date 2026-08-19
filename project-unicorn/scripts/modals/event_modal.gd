@@ -140,7 +140,7 @@ func _build_skeleton() -> void:
 	body.add_child(_rule())
 
 	var footer := UiFactory.make_label(
-		UiTokens.tr_upper("Seçim kalıcıdır · Oyun duraklatıldı"), &"MicroLabel")
+		UiTokens.tr_upper(tr("EVENT_CHOICE_PERMANENT")), &"MicroLabel")
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.add_child(footer)
 
@@ -160,7 +160,8 @@ func _fill_header() -> void:
 		child.queue_free()
 	var tag: Dictionary = _source_tag(_event)
 	_header_row.add_child(UiFactory.make_badge(String(tag.text), StringName(tag.kind)))
-	var meta := UiFactory.make_label("KARAR · GÜN %d" % GameState.day, &"SectionLabel")
+	var meta := UiFactory.make_label(
+		tr("EVENT_DECISION_DAY").format({"day": GameState.day}), &"SectionLabel")
 	meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_header_row.add_child(meta)
 	var spacer := Control.new()
@@ -211,18 +212,18 @@ static func _source_tag(ev: GameEvent) -> Dictionary:
 	for t in ev.tags:
 		var s := String(t)
 		if s.begins_with("b2b_"):
-			return {"text": "MÜŞTERİ", "kind": &"accent"}
+			return {"text": TranslationServer.translate("EVENT_TAG_CUSTOMER"), "kind": &"accent"}
 		if s.begins_with("hr_"):
-			return {"text": "EKİP", "kind": &"neutral"}
+			return {"text": TranslationServer.translate("EVENT_TAG_TEAM"), "kind": &"neutral"}
 		if s == "endgame":
-			return {"text": "PİYASA", "kind": &"attention"}
+			return {"text": TranslationServer.translate("EVENT_TAG_MARKET"), "kind": &"attention"}
 		if s == "phase_gate":
-			return {"text": "MENTOR", "kind": &"accent"}
+			return {"text": TranslationServer.translate("EVENT_TAG_MENTOR"), "kind": &"accent"}
 		if s == "ship_moment":
-			return {"text": "ÜRÜN", "kind": &"positive"}
+			return {"text": TranslationServer.translate("EVENT_TAG_PRODUCT"), "kind": &"positive"}
 	if ev.character_id == "char_mentor_frank":
-		return {"text": "MENTOR", "kind": &"accent"}
-	return {"text": "GÜNDEM", "kind": &"neutral"}
+		return {"text": TranslationServer.translate("EVENT_TAG_MENTOR"), "kind": &"accent"}
+	return {"text": TranslationServer.translate("EVENT_TAG_AGENDA"), "kind": &"neutral"}
 
 
 # --- Speaker strip (compact single line) ---
@@ -419,7 +420,7 @@ func _wrap_with_mentor_tab(card: PanelContainer) -> Control:
 	pad.custom_minimum_size = Vector2(12, 0)
 	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tab_row.add_child(pad)
-	var tab := UiFactory.make_badge("MENTOR TAVSİYESİ", &"accent")
+	var tab := UiFactory.make_badge(tr("EVENT_MENTOR_ADVICE"), &"accent")
 	tab.z_index = 1
 	tab_row.add_child(tab)
 	wrapper.add_child(tab_row)
@@ -454,60 +455,65 @@ func _describe_modifier(m) -> Dictionary:
 	var t: String = m.get("type", "")
 	var d: int = int(m.get("delta", 0))
 	match t:
-		"cash": return {"text": "Nakit %s" % _fmt_money_delta(d), "kind": _kind(d)}
-		"mrr": return {"text": "MRR %s" % _fmt_money_delta(d), "kind": _kind(d)}  # MRR: ruled accepted TR-tech term
-		"brand": return {"text": "Marka %s" % _fmt_signed(d), "kind": _kind(d)}
-		"reputation": return {"text": "İtibar %s" % _fmt_signed(d), "kind": _kind(d)}
-		"morale": return {"text": "%s %s" % [_char_first(m.get("character_id", "")), _fmt_signed(d)], "kind": _kind(d)}
-		"morale_all_employees": return {"text": "Ekip %s" % _fmt_signed(d), "kind": _kind(d)}
-		"customer_mrr_delta": return {"text": "Müşteri MRR %s" % _fmt_money_delta(d), "kind": _kind(d)}
-		"satisfaction_delta": return {"text": "Memnuniyet %s" % _fmt_signed(d), "kind": _kind(d)}
+		"cash": return {"text": tr("EFFECT_CASH").format({"v": _fmt_money_delta(d)}), "kind": _kind(d)}
+		"mrr": return {"text": tr("EFFECT_MRR").format({"v": _fmt_money_delta(d)}), "kind": _kind(d)}  # MRR: ruled accepted TR-tech term
+		"brand": return {"text": tr("EFFECT_BRAND").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
+		"reputation": return {"text": tr("EFFECT_REPUTATION").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
+		"morale": return {"text": tr("EFFECT_AXIS").format({"axis": _char_first(m.get("character_id", "")), "v": _fmt_signed(d)}), "kind": _kind(d)}
+		"morale_all_employees": return {"text": tr("EFFECT_TEAM").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
+		"customer_mrr_delta": return {"text": tr("EFFECT_CUSTOMER_MRR").format({"v": _fmt_money_delta(d)}), "kind": _kind(d)}
+		"satisfaction_delta": return {"text": tr("EFFECT_SATISFACTION").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
 		"seats":
 			var sa: int = int(m.get("amount", 0))
-			return {"text": "Koltuk %s" % _fmt_signed(sa), "kind": _kind(sa)}
-		"audience_delta": return {"text": "Kitle %s" % _fmt_signed(d), "kind": _kind(d)}
+			return {"text": tr("EFFECT_SEATS").format({"v": _fmt_signed(sa)}), "kind": _kind(sa)}
+		"audience_delta": return {"text": tr("EFFECT_AUDIENCE").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
 		"dimension_delta":
 			var amt: int = int(m.get("amount", 0))
-			var label: String = {"innovation": "İnovasyon", "stability": "Kararlılık", "experience": "Deneyim"}.get(String(m.get("axis", "innovation")), "Kalite")
-			return {"text": "%s %s" % [label, _fmt_signed(amt)], "kind": _kind(amt)}
+			# ProductCatalog.axis_label is the single home for these three words; this file
+			# used to keep its own copy of the table.
+			var axis_id: String = String(m.get("axis", "innovation"))
+			var label: String = ProductCatalog.axis_label(axis_id)
+			if label == axis_id:
+				label = tr("EFFECT_QUALITY")
+			return {"text": tr("EFFECT_AXIS").format({"axis": label, "v": _fmt_signed(amt)}), "kind": _kind(amt)}
 		"bug_delta":
 			var bd: int = int(m.get("amount", 0))
-			return {"text": "Hata %s" % _fmt_signed(bd), "kind": (&"negative" if bd > 0 else (&"positive" if bd < 0 else &"neutral"))}
+			return {"text": tr("EFFECT_BUGS").format({"v": _fmt_signed(bd)}), "kind": (&"negative" if bd > 0 else (&"positive" if bd < 0 else &"neutral"))}
 		"delay_days":
 			var dd: int = int(m.get("days", 0))
-			return {"text": "%s gün" % _fmt_signed(dd), "kind": (&"negative" if dd > 0 else (&"positive" if dd < 0 else &"neutral"))}
-		"quality_bonus": return {"text": "Kalite +%d" % int(m.get("amount", 0)), "kind": &"positive"}
+			return {"text": tr("EFFECT_DAYS").format({"v": _fmt_signed(dd)}), "kind": (&"negative" if dd > 0 else (&"positive" if dd < 0 else &"neutral"))}
+		"quality_bonus": return {"text": tr("EFFECT_QUALITY_BONUS").format({"n": int(m.get("amount", 0))}), "kind": &"positive"}
 		"speed_bonus":
 			var sb: int = int(m.get("days", 0))
-			return {"text": "%s gün" % _fmt_signed(sb), "kind": (&"negative" if sb > 0 else &"positive")}
+			return {"text": tr("EFFECT_DAYS").format({"v": _fmt_signed(sb)}), "kind": (&"negative" if sb > 0 else &"positive")}
 		# İterasyon karar momenti (player-gated restore): süre bedeli / faz geçişi okunur olsun.
-		"advance_iteration": return {"text": "Bir tasarım turu · %d gün" % ProductSystem.ITER_ROUND_DAYS, "kind": &"accent"}
-		"enter_development": return {"text": "Geliştirme başlar", "kind": &"neutral"}
+		"advance_iteration": return {"text": tr("EFFECT_DESIGN_ROUND").format({"days": ProductSystem.ITER_ROUND_DAYS}), "kind": &"accent"}
+		"enter_development": return {"text": tr("EFFECT_DEV_BEGINS"), "kind": &"neutral"}
 		# Player-facing effects that previously rendered no badge (choices were blind).
-		"churn_customer": return {"text": "Müşteri kaybı", "kind": &"negative"}
-		"add_prospect": return {"text": "Yeni aday", "kind": &"positive"}
-		"convert_audience": return {"text": "Kitleden dönüşüm %%%d" % int(round(float(m.get("pct", 0.0)) * 100.0)), "kind": &"positive"}
-		"open_paid_tier": return {"text": "Ücretli katman açılır", "kind": &"accent"}
-		"add_character": return {"text": "Yeni ekip üyesi", "kind": &"positive"}
+		"churn_customer": return {"text": tr("EFFECT_CHURN"), "kind": &"negative"}
+		"add_prospect": return {"text": tr("EFFECT_NEW_PROSPECT"), "kind": &"positive"}
+		"convert_audience": return {"text": tr("EFFECT_CONVERT_AUDIENCE").format({"pct": Fmt.percent(int(round(float(m.get("pct", 0.0)) * 100.0)), 0)}), "kind": &"positive"}
+		"open_paid_tier": return {"text": tr("EFFECT_PAID_TIER"), "kind": &"accent"}
+		"add_character": return {"text": tr("EFFECT_NEW_TEAMMATE"), "kind": &"positive"}
 		# --- HR Core. A modifier with NO label here renders a blind card, so every new
 		#     type gets one (CLAUDE.md EFFECT-VISIBILITY RULE). ---
 		# Not _char_first here: its unknown-id fallback is the literal "Moral", which would
 		# read as "Moral ayrılıyor". A departure badge needs a person or a generic noun.
-		"hr_departure": return {"text": "%s ayrılıyor" % _char_name_or(String(m.get("character_id", "")), "Çalışan"), "kind": &"negative"}
-		"hr_overtime_stop": return {"text": "Ek mesai durur", "kind": &"neutral"}
-		"hr_overtime_continue": return {"text": "Mesai sürer · istifa riski artar", "kind": &"negative"}
+		"hr_departure": return {"text": tr("EFFECT_DEPARTURE").format({"who": _char_name_or(String(m.get("character_id", "")), tr("EFFECT_AN_EMPLOYEE"))}), "kind": &"negative"}
+		"hr_overtime_stop": return {"text": tr("EFFECT_OVERTIME_STOP"), "kind": &"neutral"}
+		"hr_overtime_continue": return {"text": tr("EFFECT_OVERTIME_CONTINUE"), "kind": &"negative"}
 		# --- B2B Sales System retention outcomes (badge + cost-line source of truth) ---
-		"b2b_promise_create": return {"text": "Müşteri kalır · söz borcu", "kind": &"accent"}
-		"b2b_retain_delay": return {"text": "Kısa vadeli hamle", "kind": &"neutral"}
-		"b2b_retain_discount": return {"text": "Müşteri kalır · MRR %s" % _fmt_money_delta(int(m.get("mrr_delta", 0))), "kind": &"negative"}
-		"b2b_retain_ignore": return {"text": "müdahale yok · sayaç işlemeye devam eder", "kind": &"neutral"}
-		"b2b_cs_promise_honor": return {"text": "Müşteri kalır · söz borcu doğar · yol haritasına eklenir", "kind": &"accent"}
-		"b2b_cs_promise_refuse": return {"text": "Müşteriyi kaybet", "kind": &"negative"}
+		"b2b_promise_create": return {"text": tr("EFFECT_PROMISE_CREATE"), "kind": &"accent"}
+		"b2b_retain_delay": return {"text": tr("EFFECT_RETAIN_DELAY"), "kind": &"neutral"}
+		"b2b_retain_discount": return {"text": tr("EFFECT_RETAIN_DISCOUNT").format({"v": _fmt_money_delta(int(m.get("mrr_delta", 0)))}), "kind": &"negative"}
+		"b2b_retain_ignore": return {"text": tr("EFFECT_RETAIN_IGNORE"), "kind": &"neutral"}
+		"b2b_cs_promise_honor": return {"text": tr("EFFECT_PROMISE_HONOR"), "kind": &"accent"}
+		"b2b_cs_promise_refuse": return {"text": tr("EFFECT_PROMISE_REFUSE"), "kind": &"negative"}
 		"b2b_expand":
 			var es: int = int(m.get("add_seats", 0))
 			var em: int = es * int(m.get("per_seat_mrr", 0))
-			return {"text": "Koltuk +%d · MRR %s" % [es, _fmt_money_delta(em)], "kind": &"positive"}
-		"b2b_expand_decline": return {"text": "Değişiklik yok", "kind": &"neutral"}
+			return {"text": tr("EFFECT_EXPAND").format({"seats": es, "mrr": _fmt_money_delta(em)}), "kind": &"positive"}
+		"b2b_expand_decline": return {"text": tr("EFFECT_NO_CHANGE"), "kind": &"neutral"}
 		"angel_accept":
 			# Two facts on one chip (the b2b_expand precedent above). This chip is the
 			# player's only source of truth for what the decision COSTS, and the cost is
@@ -537,12 +543,14 @@ static func _char_name_or(id: String, fallback: String) -> String:
 	return c.character_name.split(" ", false)[0]
 
 
+## First name of the character a morale modifier points at, or the generic noun when it
+## points at nobody. TranslationServer, not tr(): this is a static func and has no Object.
 static func _char_first(id: String) -> String:
 	if id == "":
-		return "Moral"
+		return TranslationServer.translate("EFFECT_MORALE")
 	var c: Character = CharacterRegistry.get_character(id)
 	if c == null:
-		return "Moral"
+		return TranslationServer.translate("EFFECT_MORALE")
 	return c.character_name.split(" ", false)[0]
 
 

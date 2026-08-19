@@ -39,7 +39,7 @@ color = Color(1, 0.627, 0.157, 1)
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"ChromeValue"
-text = "Unicorn Inc."
+text = "—"
 
 [node name="FinanceGroup" type="HBoxContainer" parent="Margin/Row"]
 layout_mode = 2
@@ -55,7 +55,7 @@ theme_override_constants/separation = 2
 [node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Cash"]
 layout_mode = 2
 theme_type_variation = &"MetricCaption"
-text = "CASH"
+text = "FIN_CAP_CASH"
 
 [node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Cash"]
 layout_mode = 2
@@ -72,7 +72,7 @@ theme_override_constants/separation = 2
 [node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_MRR"]
 layout_mode = 2
 theme_type_variation = &"MetricCaption"
-text = "MRR"
+text = "FIN_CAP_MRR"
 
 [node name="ValueLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_MRR"]
 layout_mode = 2
@@ -88,7 +88,7 @@ theme_override_constants/separation = 2
 [node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Burn"]
 layout_mode = 2
 theme_type_variation = &"MetricCaption"
-text = "BURN"
+text = "FIN_CAP_BURN"
 
 [node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Burn"]
 layout_mode = 2
@@ -104,7 +104,7 @@ text = "$500"
 layout_mode = 2
 size_flags_vertical = 8
 theme_type_variation = &"MetricUnit"
-text = "/d"
+text = "TOPBAR_UNIT_PER_DAY"
 
 [node name="StatCol_Net" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
 layout_mode = 2
@@ -114,7 +114,7 @@ theme_override_constants/separation = 2
 [node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Net"]
 layout_mode = 2
 theme_type_variation = &"MetricCaption"
-text = "NET"
+text = "FIN_CAP_NET"
 
 [node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Net"]
 layout_mode = 2
@@ -130,7 +130,7 @@ text = "+$500"
 layout_mode = 2
 size_flags_vertical = 8
 theme_type_variation = &"MetricUnit"
-text = "/d"
+text = "TOPBAR_UNIT_PER_DAY"
 
 [node name="StatCol_Runway" type="VBoxContainer" parent="Margin/Row/FinanceGroup"]
 layout_mode = 2
@@ -140,7 +140,7 @@ theme_override_constants/separation = 2
 [node name="HeaderLabel" type="Label" parent="Margin/Row/FinanceGroup/StatCol_Runway"]
 layout_mode = 2
 theme_type_variation = &"MetricCaption"
-text = "RUNWAY"
+text = "FIN_CAP_RUNWAY"
 
 [node name="ValueRow" type="HBoxContainer" parent="Margin/Row/FinanceGroup/StatCol_Runway"]
 layout_mode = 2
@@ -156,7 +156,7 @@ text = "3.3"
 layout_mode = 2
 size_flags_vertical = 8
 theme_type_variation = &"MetricUnit"
-text = "mo"
+text = "—"
 
 [node name="ReputationGroup" type="HBoxContainer" parent="Margin/Row"]
 layout_mode = 2
@@ -171,7 +171,7 @@ theme_override_constants/separation = 2
 [node name="HeaderLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Brand"]
 layout_mode = 2
 theme_type_variation = &"MetricCaption"
-text = "BRAND"
+text = "FIN_CAP_BRAND"
 
 [node name="ValueLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Brand"]
 layout_mode = 2
@@ -186,7 +186,7 @@ theme_override_constants/separation = 2
 [node name="HeaderLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Rep"]
 layout_mode = 2
 theme_type_variation = &"MetricCaption"
-text = "REPUTATION"
+text = "FIN_CAP_REPUTATION"
 
 [node name="ValueLabel" type="Label" parent="Margin/Row/ReputationGroup/StatCol_Rep"]
 layout_mode = 2
@@ -209,21 +209,21 @@ custom_minimum_size = Vector2(210, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"ChromeClock"
-text = "Thu, Jan 1, 2026 · 09:00"
+text = "—"
 
 [node name="ShutterLabel" type="Label" parent="Margin/Row/TimeGroup"]
 visible = false
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"ChromeAlert"
-text = "KEPENK: 7 GÜN"
+text = "—"
 
 [node name="OfferLabel" type="Label" parent="Margin/Row/TimeGroup"]
 visible = false
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"ChromeAlert"
-text = "TEKLİF: 3 GÜN"
+text = "—"
 
 [node name="PhaseGroup" type="VBoxContainer" parent="Margin/Row/TimeGroup"]
 custom_minimum_size = Vector2(108, 0)
@@ -234,7 +234,7 @@ theme_override_constants/separation = 4
 [node name="PhaseNameLabel" type="Label" parent="Margin/Row/TimeGroup/PhaseGroup"]
 layout_mode = 2
 theme_type_variation = &"ChromeLabel"
-text = "BOOTSTRAP"
+text = "FIN_PHASE_BOOTSTRAP"
 horizontal_alignment = 1
 
 [node name="PhaseDots" type="HBoxContainer" parent="Margin/Row/TimeGroup/PhaseGroup"]
@@ -267,7 +267,7 @@ custom_minimum_size = Vector2(26, 22)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SpeedButton"
-text = "II"
+text = "TOPBAR_PAUSE"
 
 [node name="Speed1Btn" type="Button" parent="Margin/Row/TimeGroup/SpeedControls"]
 custom_minimum_size = Vector2(26, 22)

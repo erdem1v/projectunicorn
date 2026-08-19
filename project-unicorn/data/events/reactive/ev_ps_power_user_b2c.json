@@ -1,6 +1,8 @@
 {
   "id": "ev_ps_power_user_b2c",
-  "tags": ["build_safe"],
+  "tags": [
+    "build_safe"
+  ],
   "category": "opportunity",
   "title": "Erken hayran",
   "subtitle": "Akış · 19:30",
@@ -8,12 +10,27 @@
   "character_id": "",
   "body_text": "Bir kullanıcı ürünü göklere çıkarmış: *\"Bu araç iş akışımı değiştirdi, herkes denemeli.\"* Altında yorumlar birikiyor.\n\nMomentum küçük ama gerçek. Üstüne gidersen büyür.",
   "trigger_conditions": [
-    {"type": "market_type", "value": "b2c"},
-    {"type": "customer_count_min", "value": 1},
-    {"type": "audience_above", "value": 40},
-    {"type": "random", "chance": 0.3}
+    {
+      "type": "market_type",
+      "value": "b2c"
+    },
+    {
+      "type": "customer_count_min",
+      "value": 1
+    },
+    {
+      "type": "audience_above",
+      "value": 40
+    },
+    {
+      "type": "random",
+      "chance": 0.3
+    }
   ],
-  "allowed_hours": [18, 22],
+  "allowed_hours": [
+    18,
+    22
+  ],
   "cooldown_days": 12,
   "one_shot": false,
   "priority": 0,
@@ -21,20 +38,37 @@
     {
       "label": "Tanıtım yaz — momentumu kullan",
       "modifiers": [
-        {"type": "brand", "delta": 4},
-        {"type": "audience_delta", "delta": 25},
-        {"type": "cash", "delta": -600}
+        {
+          "type": "brand",
+          "delta": 4
+        },
+        {
+          "type": "audience_delta",
+          "delta": 25
+        },
+        {
+          "type": "cash",
+          "delta": -600
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Write a post — use the momentum"
     },
     {
       "label": "Sessiz kal",
       "modifiers": [
-        {"type": "audience_delta", "delta": 5}
+        {
+          "type": "audience_delta",
+          "delta": 5
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Stay quiet"
     }
-  ]
+  ],
+  "title_en": "An early admirer",
+  "subtitle_en": "The feed · 19:30",
+  "body_text_en": "A user has been raving about the product: *\"This tool changed how I work, everybody should try it.\"* The replies are piling up underneath.\n\nThe momentum is small but real. Lean on it and it grows."
 }

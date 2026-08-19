@@ -116,23 +116,28 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # --- Debug fixture (§6) — literal view_state, no autoload reads. ---
 
+# --- DEBUG SHOT FIXTURES ---------------------------------------------------
+# Demo payloads for --pitch-shot and the layout overflow test. Their strings are
+# a FIXTURE, not shipped copy: the long ones exist precisely to overflow the box,
+# so keying them would defeat what they are for. Every quoted value below the
+# marker is # LOC-DATA by this note.
 static func debug_fixture() -> Dictionary:
 	return {
 		# portrait_frank.webp is not authored yet — the guard renders the "FK" fallback
 		# and this drops in the real portrait once it lands (§1/§4).
-		"portrait_path": "res://assets/art/investors/portrait_frank.webp",
-		"speaker_name": "Frank Köseoğlu",
-		"speaker_role": "Mentor / Operating Partner, Ex-VC",
-		"active_line": {
-			"text": "\"Evlat, hepsi aynı sunumu yapıyor. Soğukkanlı kal. Savunma yapma, merak et. 'Haklısın, orası zayıf' demek seni zayıf göstermez, dürüst gösterir. Şimdi nefes al — en zor soruya en kısa cevabı ver.\"",
-			"speaker_tag": "Frank — Sayla",
-			"is_monologue": false,
+		"portrait_path": "res://assets/art/investors/portrait_frank.webp",   # LOC-DATA shot fixture
+		"speaker_name": "Frank Köseoğlu",   # LOC-DATA shot fixture
+		"speaker_role": "Mentor / Operating Partner, Ex-VC",   # LOC-DATA shot fixture
+		"active_line": {   # LOC-DATA shot fixture
+			"text": "\"Evlat, hepsi aynı sunumu yapıyor. Soğukkanlı kal. Savunma yapma, merak et. 'Haklısın, orası zayıf' demek seni zayıf göstermez, dürüst gösterir. Şimdi nefes al — en zor soruya en kısa cevabı ver.\"",   # LOC-DATA shot fixture
+			"speaker_tag": "Frank — Sayla",   # LOC-DATA shot fixture
+			"is_monologue": false,   # LOC-DATA shot fixture
 		},
-		"choices": [
-			{"id": "understood", "text": "Anladım. Savunmayı bırakıp veriye döneceğim."},
-			{"id": "rehearse", "text": "Bana o en zor sorunun provasını yaptırır mısın?"},
-			{"id": "why_now", "text": "Kısa ve net: neden şimdi, neden biz, neden sana inanmalı?"},
+		"choices": [   # LOC-DATA shot fixture
+			{"id": "understood", "text": "Anladım. Savunmayı bırakıp veriye döneceğim."},   # LOC-DATA shot fixture
+			{"id": "rehearse", "text": "Bana o en zor sorunun provasını yaptırır mısın?"},   # LOC-DATA shot fixture
+			{"id": "why_now", "text": "Kısa ve net: neden şimdi, neden biz, neden sana inanmalı?"},   # LOC-DATA shot fixture
 		],
-		"beat_label": "",
-		"can_withdraw": false,
+		"beat_label": "",   # LOC-DATA shot fixture
+		"can_withdraw": false,   # LOC-DATA shot fixture
 	}

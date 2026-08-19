@@ -227,3 +227,51 @@ columns — proper nouns. `FIN_PHASE_BOOTSTRAP` / `_TRACTION` / `_SERIES_A` like
 ruling 3. The Shift+F11 extreme-value fixture in `month_summary_system` is `# LOC-DATA`: its
 whole purpose is a long Turkish headline overflowing the band, so keying it would defeat the
 test.
+
+---
+
+## B6 — Events / Modals (2026-08-19)
+
+### The 16 authored reactive events (79 `_en` fields)
+The heaviest literary content in the game and the reason the ratchet existed. Every
+`title` / `subtitle` / `body_text` / choice `label` now carries an `_en` sibling, and
+`loc_event_en_coverage` has gone from a ratchet at 79 to a plain gate at **0** — a new
+TR-only field in an authored event now fails the suite.
+
+The bodies are interior monologue in the Disco Elysium register: second person, present
+tense, two voices arguing inside one head, `**bold**` for the mechanical stake and
+`*italic*` for the intrusive thought. The English preserves the structure and the markers
+but is flat where the Turkish is wry. Worth a pass in file order:
+
+| File | What it turns on |
+|---|---|
+| `ev_mvp_bugfix_001_critical_bug` | one per cent or fifty — "that is not statistics, that is a bet" |
+| `ev_mvp_bugfix_002_early_launch_pressure` | opening and closing the banking app |
+| `ev_mvp_bugfix_003_final_polish` | *'details matter'* vs *'ship first'*, both familiar voices |
+| `ev_mvp_dev_001_integration_broken` | 02:17, the third coffee, *come back and fix it later* |
+| `ev_mvp_dev_002_tech_debt_callout` | "right now you are also tomorrow's team" |
+| `ev_mvp_dev_003_solo_dev_fatigue` | the alarm that went off twice |
+| `ev_mvp_iter_001_scope_creep` | deciding about something nobody knows exists |
+| `ev_mvp_iter_002_competitor_signal` | three instincts, an hour apart |
+| `ev_mvp_iter_003_early_user_feedback` | the three-paragraph message from a non-user |
+| `ev_ps_*` (7) | the shorter beats: first revenue, pricing, a loud complaint, the boss's friend |
+
+### Event-modal chrome and the effect vocabulary (`EVENT_*`, `EFFECT_*`, 43 keys)
+Tier A, but `EFFECT_*` is load-bearing in a way labels usually are not: the
+EFFECT-VISIBILITY RULE makes this table the player's **only** readable account of what a
+choice costs. `EFFECT_RETAIN_IGNORE` ("no intervention · the counter keeps running") and
+`EFFECT_PROMISE_HONOR` are doing real mechanical work and must stay unambiguous ahead of
+sounding good.
+
+### `MENTOR_INTRO_BODY` — REWRITTEN, not translated
+Frank's opening monologue. Its third paragraph read *"Product sekmesine geç, neye
+oynayacağını seç"* — naming a UI tab, which the **EVENT AUTHORING LAW** forbids: a mentor
+guides as a person, not as a manual. Rewritten on the director's ruling (2026-08-19) to
+*"Neye oynayacağını seç, sonra otur ve yap."* The closing aphorism — most founders die of
+indigestion, not starvation — is the best line in the scene and is kept intact. **The
+Turkish here is new copy, so it wants a read as much as the English does.**
+
+### Not for the pass
+`MENTOR_NAME` is a proper noun, identical in both columns. The `--pitch-shot` and layout
+fixtures in `meeting_scene` / `frank_popup` are `# LOC-DATA`: the long ones exist to overflow
+the box, so keying them would defeat what they are for.

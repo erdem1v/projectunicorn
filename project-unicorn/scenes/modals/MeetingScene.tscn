@@ -58,7 +58,7 @@ theme_type_variation = &"StatStrip"
 [node name="StatLabel" type="Label" parent="StatStrip"]
 layout_mode = 2
 theme_type_variation = &"StatStripLabel"
-text = "Kasa: — · Runway: — · Gün —"
+text = "—"
 
 [node name="Column" type="Panel" parent="."]
 layout_mode = 1
@@ -186,4 +186,4 @@ size_flags_horizontal = 3
 [node name="WithdrawBtn" type="Button" parent="Column/Body/Content/Footer"]
 layout_mode = 2
 theme_type_variation = &"DialogueGhost"
-text = "Toplantıdan çekil"
+text = "MEETING_WITHDRAW"

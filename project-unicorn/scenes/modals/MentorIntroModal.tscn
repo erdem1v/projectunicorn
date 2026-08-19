@@ -69,7 +69,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"AvatarInitial"
-text = "FK"
+text = "UI_AVATAR_INITIALS"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -82,12 +82,12 @@ theme_override_constants/separation = 3
 [node name="NameLabel" type="Label" parent="CenterPanel/Body/Header/HeaderText"]
 layout_mode = 2
 theme_type_variation = &"TitleSerif"
-text = "Frank Köseoğlu"
+text = "MENTOR_NAME"
 
 [node name="RoleLabel" type="Label" parent="CenterPanel/Body/Header/HeaderText"]
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
-text = "OPERASYON ORTAĞI"
+text = "MENTOR_ROLE"
 
 [node name="BodyRichText" type="RichTextLabel" parent="CenterPanel/Body"]
 layout_mode = 2
@@ -96,17 +96,11 @@ bbcode_enabled = true
 fit_content = false
 scroll_active = false
 theme_type_variation = &"BodyRich"
-text = "Frank kahvesinden bir yudum alıyor.
-
-\"Vitrin'deki sunumun fena değildi. O yüzden buradayım.\"
-
-\"Şirketini kurdun. Kolay kısmı buydu. Şimdi bir ürün lazım — birinin para vereceği bir şey. İlk versiyonu kendin yapacaksın.\"
-
-\"Product sekmesine geç, neye oynayacağını seç. Çoğu kurucu açlıktan değil, hazımsızlıktan ölür.\""
+text = "MENTOR_INTRO_BODY"
 
 [node name="ContinueBtn" type="Button" parent="CenterPanel/Body"]
 custom_minimum_size = Vector2(180, 38)
 layout_mode = 2
 size_flags_horizontal = 8
 theme_type_variation = &"CommitButton"
-text = "Hadi başlayalım"
+text = "MENTOR_INTRO_CTA"

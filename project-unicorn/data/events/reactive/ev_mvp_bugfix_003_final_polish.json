@@ -7,10 +7,19 @@
   "character_id": "",
   "body_text": "Ekran kaydı çekiyorsun, izliyorsun. Bir geçiş kaba. Bir yazı tipi hizalaması yamuk. Bir hata mesajı pek anlamsız.\n\nHepsi tek tek küçük. Hepsi birlikte... fark eder mi? Belki. Belki etmez.\n\n*'Detaylar mühim'* diyenlerle *'çık önce'* diyenler aynı anda kafanın içinde konuşuyor. İkisi de tanıdık ses.",
   "trigger_conditions": [
-    {"type": "build_phase", "value": "bugfix"},
-    {"type": "random", "chance": 0.25}
+    {
+      "type": "build_phase",
+      "value": "bugfix"
+    },
+    {
+      "type": "random",
+      "chance": 0.25
+    }
   ],
-  "allowed_hours": [21, 1],
+  "allowed_hours": [
+    21,
+    1
+  ],
   "cooldown_days": 12,
   "one_shot": true,
   "priority": 0,
@@ -18,20 +27,39 @@
     {
       "label": "Vakit harca, cila çek",
       "modifiers": [
-        {"type": "dimension_delta", "axis": "experience", "amount": 5},
-        {"type": "cash", "delta": -80}
+        {
+          "type": "dimension_delta",
+          "axis": "experience",
+          "amount": 5
+        },
+        {
+          "type": "cash",
+          "delta": -80
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Spend the time, polish it"
     },
     {
       "label": "Yeterince iyi — devam",
       "modifiers": [
-        {"type": "dimension_delta", "axis": "experience", "amount": -2},
-        {"type": "bug_delta", "amount": 1}
+        {
+          "type": "dimension_delta",
+          "axis": "experience",
+          "amount": -2
+        },
+        {
+          "type": "bug_delta",
+          "amount": 1
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Good enough — move on"
     }
-  ]
+  ],
+  "title_en": "A small chance to polish",
+  "subtitle_en": "Demo video · 23:51",
+  "body_text_en": "You record the screen and watch it back. One transition is rough. One typeface sits crooked. One error message makes very little sense.\n\nEach of them is small on its own. All of them together… does it matter? Maybe. Maybe not.\n\nThe people who say *'details matter'* and the people who say *'ship first'* are talking at the same time inside your head. Both voices are familiar."
 }

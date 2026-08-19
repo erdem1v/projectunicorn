@@ -1,6 +1,8 @@
 {
   "id": "ev_ps_referral_b2b",
-  "tags": ["build_safe"],
+  "tags": [
+    "build_safe"
+  ],
   "category": "opportunity",
   "title": "Patronun arkadaşı",
   "subtitle": "E-posta · 13:05",
@@ -8,11 +10,23 @@
   "character_id": "",
   "body_text": "Müşterilerinden birinin genel müdürü yazmış — sözleşmeye imzayı atan adamın kendisi: *\"Geçen hafta bir tedarikçi yemeğinde başka bir şirketin sahibiyle konuştum, sizin üründen bahsettim. Ciddi ilgilendi — isterseniz tanıştırayım.\"*\n\nE-postanın sonunda bir şart: *\"Tek ricam, şu özelliği yol haritanıza almanız. İki şirket de kullanır.\"*\n\nPatron seviyesinden açılan bir kapı — ama yol haritana bir borç yazıyor.",
   "trigger_conditions": [
-    {"type": "market_type", "value": "b2b"},
-    {"type": "customer_count_min", "value": 1},
-    {"type": "random", "chance": 0.3}
+    {
+      "type": "market_type",
+      "value": "b2b"
+    },
+    {
+      "type": "customer_count_min",
+      "value": 1
+    },
+    {
+      "type": "random",
+      "chance": 0.3
+    }
   ],
-  "allowed_hours": [9, 17],
+  "allowed_hours": [
+    9,
+    17
+  ],
   "cooldown_days": 12,
   "one_shot": false,
   "priority": 1,
@@ -20,27 +34,47 @@
     {
       "label": "Kabul et — özellik sözü ver",
       "modifiers": [
-        {"type": "add_prospect", "archetype": "mid", "source": "referral"},
-        {"type": "cash", "delta": -400}
+        {
+          "type": "add_prospect",
+          "archetype": "mid",
+          "source": "referral"
+        },
+        {
+          "type": "cash",
+          "delta": -400
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Accept — promise the feature"
     },
     {
       "label": "Pazarlık et — söz verme",
       "modifiers": [
-        {"type": "add_prospect", "archetype": "small", "source": "referral"}
+        {
+          "type": "add_prospect",
+          "archetype": "small",
+          "source": "referral"
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Negotiate — promise nothing"
     },
     {
       "label": "Reddet — yol haritan temiz kalsın",
       "modifiers": [
-        {"type": "reputation", "delta": 2}
+        {
+          "type": "reputation",
+          "delta": 2
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Decline — keep your roadmap clean"
     }
-  ]
+  ],
+  "title_en": "The boss's friend",
+  "subtitle_en": "Email · 13:05",
+  "body_text_en": "The managing director of one of your customers has written — the man who signed the contract himself: *\"At a supplier dinner last week I got talking to the owner of another company and mentioned your product. He was seriously interested — I can introduce you if you like.\"*\n\nAt the end of the email, one condition: *\"My only request is that you put a certain feature on your roadmap. Both companies would use it.\"*\n\nA door opened at boss level — and a debt written onto your roadmap."
 }

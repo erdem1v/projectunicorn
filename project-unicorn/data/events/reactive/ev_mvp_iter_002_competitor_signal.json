@@ -7,10 +7,19 @@
   "character_id": "",
   "body_text": "Sabah akışı karıştırırken bir paylaşım dizisi denk geldi. **Meridyen'in bu dönem ekibinden biri** — neredeyse aynı problemi vuruyorlar. Onların paylaşımı temiz, demo videosu pürüzsüz, yorumları iyi.\n\nİlk içgüdü: panik. İkinci içgüdü: *'Bizimkini onların yapamadığı bir şeye eğip ayrışalım.'*\n\nÜçüncü içgüdü, bir saat sonra geliyor: belki ikisi de yanlış cevap.",
   "trigger_conditions": [
-    {"type": "build_phase", "value": "iteration"},
-    {"type": "random", "chance": 0.25}
+    {
+      "type": "build_phase",
+      "value": "iteration"
+    },
+    {
+      "type": "random",
+      "chance": 0.25
+    }
   ],
-  "allowed_hours": [8, 11],
+  "allowed_hours": [
+    8,
+    11
+  ],
   "cooldown_days": 21,
   "one_shot": true,
   "priority": 0,
@@ -18,20 +27,39 @@
     {
       "label": "Tasarımı onların eksik yerine eğ",
       "modifiers": [
-        {"type": "dimension_delta", "axis": "innovation", "amount": 5},
-        {"type": "delay_days", "days": 2}
+        {
+          "type": "dimension_delta",
+          "axis": "innovation",
+          "amount": 5
+        },
+        {
+          "type": "delay_days",
+          "days": 2
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Bend the design toward their blind spot"
     },
     {
       "label": "Kendi yolundan sapma",
       "modifiers": [
-        {"type": "brand", "delta": 2},
-        {"type": "dimension_delta", "axis": "innovation", "amount": -2}
+        {
+          "type": "brand",
+          "delta": 2
+        },
+        {
+          "type": "dimension_delta",
+          "axis": "innovation",
+          "amount": -2
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Do not swerve from your own line"
     }
-  ]
+  ],
+  "title_en": "A rival announced something similar",
+  "subtitle_en": "The feed · 11:02",
+  "body_text_en": "Scrolling the feed this morning you came across a thread. **Someone from Meridyen's cohort this season** — hitting almost exactly the same problem. Their post is clean, the demo video is smooth, the replies are warm.\n\nFirst instinct: panic. Second instinct: *'let us bend ours toward something they cannot do and stand apart.'*\n\nThe third instinct arrives an hour later: maybe both are the wrong answer."
 }

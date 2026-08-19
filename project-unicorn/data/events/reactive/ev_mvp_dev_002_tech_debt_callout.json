@@ -7,11 +7,23 @@
   "character_id": "",
   "body_text": "İlk hafta açtığın o kestirme — *'şimdilik böyle, sonra düzeltiriz'* — şimdi üç ayrı yerden bağırıyor. Her yeni şey eklemek zorlaşıyor.\n\nDurup düzeltmek = iki gün kayıp ama ileride pürüzsüz.\nÜstüne eklemek = bugünün hızı, yarının daha büyük faturası.\n\n*'Yarının ekibi yarının problemidir,'* diyen yazıyı bir yerlerde okumuştun. Şu an yarının ekibi de sensin.",
   "trigger_conditions": [
-    {"type": "build_phase", "value": "development"},
-    {"type": "flag_set", "key": "tech_debt_birikti"},
-    {"type": "random", "chance": 0.25}
+    {
+      "type": "build_phase",
+      "value": "development"
+    },
+    {
+      "type": "flag_set",
+      "key": "tech_debt_birikti"
+    },
+    {
+      "type": "random",
+      "chance": 0.25
+    }
   ],
-  "allowed_hours": [13, 17],
+  "allowed_hours": [
+    13,
+    17
+  ],
   "cooldown_days": 16,
   "one_shot": true,
   "priority": 0,
@@ -19,22 +31,48 @@
     {
       "label": "Dur, düzelt, sonra devam",
       "modifiers": [
-        {"type": "dimension_delta", "axis": "stability", "amount": 6},
-        {"type": "delay_days", "days": 2},
-        {"type": "set_flag", "key": "tech_debt_birikti", "value": false}
+        {
+          "type": "dimension_delta",
+          "axis": "stability",
+          "amount": 6
+        },
+        {
+          "type": "delay_days",
+          "days": 2
+        },
+        {
+          "type": "set_flag",
+          "key": "tech_debt_birikti",
+          "value": false
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Stop, fix it, then carry on"
     },
     {
       "label": "Üstüne eklemeye devam",
       "modifiers": [
-        {"type": "delay_days", "days": -1},
-        {"type": "bug_delta", "amount": 2},
-        {"type": "set_flag", "key": "tech_debt_birikti", "value": true}
+        {
+          "type": "delay_days",
+          "days": -1
+        },
+        {
+          "type": "bug_delta",
+          "amount": 2
+        },
+        {
+          "type": "set_flag",
+          "key": "tech_debt_birikti",
+          "value": true
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Keep building on top"
     }
-  ]
+  ],
+  "title_en": "The debt sends its invoice",
+  "subtitle_en": "Developer forum · 14:33",
+  "body_text_en": "That shortcut you took in the first week — *'like this for now, we will fix it later'* — is shouting from three separate places. Adding anything new is getting harder.\n\nStopping to fix it = two days lost, smooth going afterwards.\nBuilding on top = today's speed, a bigger invoice tomorrow.\n\nYou once read a post that said *'tomorrow's team is tomorrow's problem.'* Right now you are also tomorrow's team."
 }

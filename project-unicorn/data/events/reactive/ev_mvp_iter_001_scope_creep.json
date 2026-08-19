@@ -7,10 +7,19 @@
   "character_id": "",
   "body_text": "Bir saat önce *'bir tarama daha,'* dedin. Şimdi üç sekme açık, hiçbirinde planladığın şey yok.\n\nÖzelliği düşünürken küçüktü. Yazmaya başlayınca bir köşesinden başka bir şey çıktı. Şimdi seçim şu: ya bunu **doğru** yap — birkaç gün daha. Ya da **kırp**, görünürde çalışıyor, derinleşmesi sonraya kalır.\n\nKimsenin bilmediği bir şey hakkında karar veriyorsun. Bu da onun bir parçası.",
   "trigger_conditions": [
-    {"type": "build_phase", "value": "iteration"},
-    {"type": "random", "chance": 0.35}
+    {
+      "type": "build_phase",
+      "value": "iteration"
+    },
+    {
+      "type": "random",
+      "chance": 0.35
+    }
   ],
-  "allowed_hours": [22, 2],
+  "allowed_hours": [
+    22,
+    2
+  ],
   "cooldown_days": 12,
   "one_shot": true,
   "priority": 0,
@@ -18,20 +27,38 @@
     {
       "label": "Düzgün yap — birkaç gün daha gerek",
       "modifiers": [
-        {"type": "dimension_delta", "axis": "experience", "amount": 6},
-        {"type": "delay_days", "days": 2}
+        {
+          "type": "dimension_delta",
+          "axis": "experience",
+          "amount": 6
+        },
+        {
+          "type": "delay_days",
+          "days": 2
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Do it properly — it needs a few more days"
     },
     {
       "label": "Kırp, yüzeyi koru, devam et",
       "modifiers": [
-        {"type": "delay_days", "days": -1},
-        {"type": "bug_delta", "amount": 3}
+        {
+          "type": "delay_days",
+          "days": -1
+        },
+        {
+          "type": "bug_delta",
+          "amount": 3
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Trim it, keep the surface, move on"
     }
-  ]
+  ],
+  "title_en": "This feature runs deeper than I thought",
+  "subtitle_en": "Kitchen table · 23:14",
+  "body_text_en": "An hour ago you said *'one more pass.'* Now three tabs are open and not one of them holds what you planned.\n\nThe feature was small while you were thinking about it. Once you started writing, something else came out of one corner of it. Now the choice is: build it **properly** — a few more days. Or **trim it**, it works on the surface, the depth waits.\n\nYou are deciding about something nobody knows exists. That is part of it too."
 }

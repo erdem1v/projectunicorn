@@ -168,51 +168,56 @@ func _unhandled_input(event: InputEvent) -> void:
 # builds these and emits them through EventBus; main.gd mounts + populates.
 # ============================================================================
 
+# --- DEBUG SHOT FIXTURES ---------------------------------------------------
+# Demo payloads for --pitch-shot and the layout overflow test. Their strings are
+# a FIXTURE, not shipped copy: the long ones exist precisely to overflow the box,
+# so keying them would defeat what they are for. Every quoted value below the
+# marker is # LOC-DATA by this note.
 static func debug_fixture_full() -> Dictionary:
 	return {
-		"background_path": "res://assets/art/rooms/room_anchor.webp",
-		"portrait_path": "res://assets/art/investors/portrait_anchor.webp",
-		"speaker_name": "Anchor Capital",
-		"speaker_role": "Kıdemli Ortak",
-		"active_line": {
-			"text": "\"Dinle. Bize hikaye değil, matematik lazım. Son çeyrekte burn rate %31 artmış ama net retention aynı kalmış. Bu tabloyla Seri A'da masada kalamazsın.\"",
-			"speaker_tag": "Anchor — Canlı",
-			"is_monologue": false,
+		"background_path": "res://assets/art/rooms/room_anchor.webp",   # LOC-DATA shot fixture
+		"portrait_path": "res://assets/art/investors/portrait_anchor.webp",   # LOC-DATA shot fixture
+		"speaker_name": "Anchor Capital",   # LOC-DATA shot fixture
+		"speaker_role": "Kıdemli Ortak",   # LOC-DATA shot fixture
+		"active_line": {   # LOC-DATA shot fixture
+			"text": "\"Dinle. Bize hikaye değil, matematik lazım. Son çeyrekte burn rate %31 artmış ama net retention aynı kalmış. Bu tabloyla Seri A'da masada kalamazsın.\"",   # LOC-DATA shot fixture
+			"speaker_tag": "Anchor — Canlı",   # LOC-DATA shot fixture
+			"is_monologue": false,   # LOC-DATA shot fixture
 		},
-		"monologue_text": "Gözleri rakamlarda, sende değil — bir kurucu değil, bir tablo görmek istiyor.",
-		"conviction": {"value": 52, "zone_bounds": PitchConstants.ZONE_BOUNDS},
-		"choices": [
-			{"id": "retention", "text": "Retention stabil çünkü enterprise tarafa pivot ettik; burn artışı o geçişin yatırımı.", "odds_text": "Zorlu — %58", "marked": true, "marked_text": "PROVA EDİLDİ"},
-			{"id": "plan", "text": "Haklısınız. Önümüzdeki 90 günde burn'ü %22 düşürecek planı devreye aldık.", "odds_text": "Güvenli — %81", "caption": "Düşük risk, düşük getiri."},
-			{"id": "cohort", "text": "Rakamlar tek başına hikayeyi anlatmıyor. Size cohort detayını açayım.", "odds_text": "Riskli — %34", "caption": "Blöf sezilirse İKNA çöker.", "caption_danger": true},
-			{"id": "walk", "text": "Bu şartlarda anlaşamayız. (bu tur kapalı)", "disabled": true},
+		"monologue_text": "Gözleri rakamlarda, sende değil — bir kurucu değil, bir tablo görmek istiyor.",   # LOC-DATA shot fixture
+		"conviction": {"value": 52, "zone_bounds": PitchConstants.ZONE_BOUNDS},   # LOC-DATA shot fixture
+		"choices": [   # LOC-DATA shot fixture
+			{"id": "retention", "text": "Retention stabil çünkü enterprise tarafa pivot ettik; burn artışı o geçişin yatırımı.", "odds_text": "Zorlu — %58", "marked": true, "marked_text": "PROVA EDİLDİ"},   # LOC-DATA shot fixture
+			{"id": "plan", "text": "Haklısınız. Önümüzdeki 90 günde burn'ü %22 düşürecek planı devreye aldık.", "odds_text": "Güvenli — %81", "caption": "Düşük risk, düşük getiri."},   # LOC-DATA shot fixture
+			{"id": "cohort", "text": "Rakamlar tek başına hikayeyi anlatmıyor. Size cohort detayını açayım.", "odds_text": "Riskli — %34", "caption": "Blöf sezilirse İKNA çöker.", "caption_danger": true},   # LOC-DATA shot fixture
+			{"id": "walk", "text": "Bu şartlarda anlaşamayız. (bu tur kapalı)", "disabled": true},   # LOC-DATA shot fixture
 		],
-		"beat_label": "Sorgu · 3/4",
-		"can_withdraw": true,
-		"stat_strip": {"left_text": "Kasa: $8.2K · Runway: 19 gün · Gün 141"},
+		"beat_label": "Sorgu · 3/4",   # LOC-DATA shot fixture
+		"can_withdraw": true,   # LOC-DATA shot fixture
+		"stat_strip": {"left_text": "Kasa: $8.2K · Runway: 19 gün · Gün 141"},   # LOC-DATA shot fixture
 	}
 
 
 static func debug_fixture_long() -> Dictionary:
 	# Extreme-length strings — text-safety proof (verification 6). Nothing may overflow.
 	return {
-		"background_path": "res://assets/art/rooms/room_meridian.webp",
-		"portrait_path": "res://assets/art/investors/portrait_meridian.webp",
-		"speaker_name": "Meridian Growth Partners International",
-		"speaker_role": "Büyümeden Sorumlu Yönetici Ortak ve Kurucu",
-		"active_line": {
-			"text": "\"Benim işim ölçek, senin işin ise bana bu çeyrekte hangi tek metriği ikiye katlayacağını, hangi kaldıraçla, hangi ekiple, hangi bütçeyle ve en önemlisi hangi kanıtla yapacağını tek nefeste, hikâye anlatmadan, doğrudan rakamla söylemen — çünkü whiteboard dolu, roadmap dolu, ama gerçekten kaldıraç olan tek bir şey var ve onu bulamayan her kurucu aynı yerde tıkanıp kalıyor.\"",
-			"speaker_tag": "Meridian — Canlı",
-			"is_monologue": false,
+		"background_path": "res://assets/art/rooms/room_meridian.webp",   # LOC-DATA shot fixture
+		"portrait_path": "res://assets/art/investors/portrait_meridian.webp",   # LOC-DATA shot fixture
+		"speaker_name": "Meridian Growth Partners International",   # LOC-DATA shot fixture
+		"speaker_role": "Büyümeden Sorumlu Yönetici Ortak ve Kurucu",   # LOC-DATA shot fixture
+		"active_line": {   # LOC-DATA shot fixture
+			"text": "\"Benim işim ölçek, senin işin ise bana bu çeyrekte hangi tek metriği ikiye katlayacağını, hangi kaldıraçla, hangi ekiple, hangi bütçeyle ve en önemlisi hangi kanıtla yapacağını tek nefeste, hikâye anlatmadan, doğrudan rakamla söylemen — çünkü whiteboard dolu, roadmap dolu, ama gerçekten kaldıraç olan tek bir şey var ve onu bulamayan her kurucu aynı yerde tıkanıp kalıyor.\"",   # LOC-DATA shot fixture
+			"speaker_tag": "Meridian — Canlı",   # LOC-DATA shot fixture
+			"is_monologue": false,   # LOC-DATA shot fixture
 		},
-		"monologue_text": "Bu çok uzun bir iç ses satırı: taşma testi için bilinçli olarak uzatılmış, kutunun dışında, daha soluk ve girintili render edilmeli ve hiçbir koşulda kolonun kenarından taşmamalı.",
-		"conviction": {"value": 88, "zone_bounds": PitchConstants.ZONE_BOUNDS},
-		"choices": [
-			{"id": "pipeline", "text": "Qualified pipeline. Outbound'ı otomatikleştirdik, toplantı kapasitesini üçe katladık ve dönüşüm oranını çeyrek boyunca istikrarlı biçimde yukarı taşıdık.", "odds_text": "Zorlu — %61", "caption": "Uzun caption taşma testi: bu satır da bilinçli olarak uzun tutuldu ki kart içinde sarılsın, taşmasın.", "marked": true},
-			{"id": "activation", "text": "Aktivasyon. İlk on dakikayı yeniden yazdık — 'aha' anı artık %40 daha erken geliyor.", "odds_text": "Güvenli — %79"},
-			{"id": "expansion", "text": "Expansion revenue: mevcut hesaplara ikinci ürün modülünü açıyoruz.", "odds_text": "Riskli — %36", "caption": "Kanıtlanmadı — sezilirse geri teper.", "caption_danger": true},
+		"monologue_text": "Bu çok uzun bir iç ses satırı: taşma testi için bilinçli olarak uzatılmış, kutunun dışında, daha soluk ve girintili render edilmeli ve hiçbir koşulda kolonun kenarından taşmamalı.",   # LOC-DATA shot fixture
+		"conviction": {"value": 88, "zone_bounds": PitchConstants.ZONE_BOUNDS},   # LOC-DATA shot fixture
+		"choices": [   # LOC-DATA shot fixture
+			{"id": "pipeline", "text": "Qualified pipeline. Outbound'ı otomatikleştirdik, toplantı kapasitesini üçe katladık ve dönüşüm oranını çeyrek boyunca istikrarlı biçimde yukarı taşıdık.", "odds_text": "Zorlu — %61", "caption": "Uzun caption taşma testi: bu satır da bilinçli olarak uzun tutuldu ki kart içinde sarılsın, taşmasın.", "marked": true},   # LOC-DATA shot fixture
+			{"id": "activation", "text": "Aktivasyon. İlk on dakikayı yeniden yazdık — 'aha' anı artık %40 daha erken geliyor.", "odds_text": "Güvenli — %79"},   # LOC-DATA shot fixture
+			{"id": "expansion", "text": "Expansion revenue: mevcut hesaplara ikinci ürün modülünü açıyoruz.", "odds_text": "Riskli — %36", "caption": "Kanıtlanmadı — sezilirse geri teper.", "caption_danger": true},   # LOC-DATA shot fixture
 		],
-		"beat_label": "Kapanış · 4/4",
-		"can_withdraw": false,
-		"stat_strip": {"left_text": "Kasa: $1.24M · Runway: 402 gün · Gün 212 · MRR: $1.2M"},
+		"beat_label": "Kapanış · 4/4",   # LOC-DATA shot fixture
+		"can_withdraw": false,   # LOC-DATA shot fixture
+		"stat_strip": {"left_text": "Kasa: $1.24M · Runway: 402 gün · Gün 212 · MRR: $1.2M"},   # LOC-DATA shot fixture
 	}

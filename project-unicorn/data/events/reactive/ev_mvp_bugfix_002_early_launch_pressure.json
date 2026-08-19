@@ -7,10 +7,19 @@
   "character_id": "",
   "body_text": "Banka uygulamasını açıyorsun, kapatıyorsun. Açıyorsun, kapatıyorsun. Sayı düşmüş.\n\nHataları temizliyorsun ama her gün **runway eriyor**. Bir tarafın *'biraz daha temizle, doğru çıksın'* diyor. Diğer tarafın *'sonsuza kadar bekleyemezsin, kullanıcıya bırak'* diyor.\n\nİkisi de doğru. Bu yüzden zor.",
   "trigger_conditions": [
-    {"type": "build_phase", "value": "bugfix"},
-    {"type": "random", "chance": 0.30}
+    {
+      "type": "build_phase",
+      "value": "bugfix"
+    },
+    {
+      "type": "random",
+      "chance": 0.3
+    }
   ],
-  "allowed_hours": [9, 12],
+  "allowed_hours": [
+    9,
+    12
+  ],
   "cooldown_days": 15,
   "one_shot": true,
   "priority": 0,
@@ -18,20 +27,38 @@
     {
       "label": "Bir tur daha temizlik — gönder olmadı",
       "modifiers": [
-        {"type": "bug_delta", "amount": -4},
-        {"type": "dimension_delta", "axis": "stability", "amount": 2},
-        {"type": "cash", "delta": -100}
+        {
+          "type": "bug_delta",
+          "amount": -4
+        },
+        {
+          "type": "dimension_delta",
+          "axis": "stability",
+          "amount": 2
+        },
+        {
+          "type": "cash",
+          "delta": -100
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "One more cleanup pass — shipping can wait"
     },
     {
       "label": "Hazır olmasa da çık — kullanıcı gösterir",
       "modifiers": [
-        {"type": "brand", "delta": -1}
+        {
+          "type": "brand",
+          "delta": -1
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Ship it ready or not — users will show you"
     }
-  ]
+  ],
+  "title_en": "A voice inside says 'ship now'",
+  "subtitle_en": "At the desk · 10:15",
+  "body_text_en": "You open the banking app, close it. Open it, close it. The number has gone down.\n\nYou are clearing bugs, but every day the **runway melts**. One side of you says *'clean it up a little more, ship it right.'* The other side says *'you cannot wait forever, let the users find them.'*\n\nBoth are true. That is why it is hard."
 }

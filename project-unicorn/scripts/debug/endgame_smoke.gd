@@ -24,7 +24,7 @@ extends RefCounted
 ## Authored event text fields still awaiting an English sibling. A RATCHET: the real count
 ## may only fall. Measured 79 when the *_en schema landed (Lokalizasyon Faz 2 · Step 1d);
 ## batch B6 authors the values and drives this to 0. Lower it as batches land — never raise it.
-const LOC_EVENT_EN_PENDING := 79
+const LOC_EVENT_EN_PENDING := 0
 
 const GATE1_ID := "ev_phase_gate_traction"
 const GATE2_ID := "ev_phase_gate_series_a"

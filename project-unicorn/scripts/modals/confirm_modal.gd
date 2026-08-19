@@ -37,10 +37,10 @@ func _ready() -> void:
 
 
 func populate(cfg: Dictionary) -> void:
-	_title.text = String(cfg.get("title", "Emin misin?"))
+	_title.text = String(cfg.get("title", tr("UI_CONFIRM_TITLE")))
 	_body.text = String(cfg.get("body", ""))
-	_confirm_btn.text = String(cfg.get("confirm_text", "Onayla"))
-	_cancel_btn.text = String(cfg.get("cancel_text", "Vazgeç"))
+	_confirm_btn.text = String(cfg.get("confirm_text", tr("UI_CONFIRM")))
+	_cancel_btn.text = String(cfg.get("cancel_text", tr("UI_DISMISS")))
 
 	var alt_text: String = String(cfg.get("alt_text", ""))
 	_alt_btn.visible = alt_text != ""

@@ -1,6 +1,8 @@
 {
   "id": "ev_ps_bug_complaint",
-  "tags": ["build_safe"],
+  "tags": [
+    "build_safe"
+  ],
   "category": "scandal",
   "title": "Bu çalışmıyor",
   "subtitle": "Destek kutusu · 16:48",
@@ -8,12 +10,27 @@
   "character_id": "",
   "body_text": "Bir müşteri yüksek sesle şikayetçi: *\"Söz verdiğiniz şey çalışmıyor. Paramı boşa mı verdim?\"*\n\nDiğer müşteriler de okuyor. Sessizlik de bir cevap — ama yanlış olanı.",
   "trigger_conditions": [
-    {"type": "market_type", "value": "b2c"},
-    {"type": "customer_count_min", "value": 1},
-    {"type": "customer_satisfaction_below", "value": 60},
-    {"type": "random", "chance": 0.5}
+    {
+      "type": "market_type",
+      "value": "b2c"
+    },
+    {
+      "type": "customer_count_min",
+      "value": 1
+    },
+    {
+      "type": "customer_satisfaction_below",
+      "value": 60
+    },
+    {
+      "type": "random",
+      "chance": 0.5
+    }
   ],
-  "allowed_hours": [9, 18],
+  "allowed_hours": [
+    9,
+    18
+  ],
   "cooldown_days": 8,
   "one_shot": false,
   "priority": 2,
@@ -21,29 +38,52 @@
     {
       "label": "İade + özür dile",
       "modifiers": [
-        {"type": "cash", "delta": -1500},
-        {"type": "satisfaction_delta", "delta": 20}
+        {
+          "type": "cash",
+          "delta": -1500
+        },
+        {
+          "type": "satisfaction_delta",
+          "delta": 20
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Refund and apologise"
     },
     {
       "label": "Hızlı düzeltme sözü ver",
       "modifiers": [
-        {"type": "satisfaction_delta", "delta": 8},
-        {"type": "cash", "delta": -300}
+        {
+          "type": "satisfaction_delta",
+          "delta": 8
+        },
+        {
+          "type": "cash",
+          "delta": -300
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Promise a quick fix"
     },
     {
       "label": "Görmezden gel",
       "modifiers": [
-        {"type": "churn_customer"},
-        {"type": "brand", "delta": -2}
+        {
+          "type": "churn_customer"
+        },
+        {
+          "type": "brand",
+          "delta": -2
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Ignore it"
     }
-  ]
+  ],
+  "title_en": "This does not work",
+  "subtitle_en": "Support inbox · 16:48",
+  "body_text_en": "A customer is complaining loudly: *\"The thing you promised does not work. Did I pay for nothing?\"*\n\nThe other customers are reading it too. Silence is an answer as well — the wrong one."
 }

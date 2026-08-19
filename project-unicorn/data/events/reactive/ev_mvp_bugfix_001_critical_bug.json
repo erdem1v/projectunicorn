@@ -7,10 +7,19 @@
   "character_id": "",
   "body_text": "Test ederken bir yerde tıkadın. Adımları tekrar ettin — tutarlı şekilde çöküyor. **Uç durum**: belki kullanıcıların yüzde biri görür, belki yarısı. Tahmin etmenin yolu yok.\n\nÇözmek belki üç-dört gün. Bırakmak: çıkış günü forumda gözükür mü, kim bilir.\n\n*'Yüzde bir, yüzde elli — istatistik değil bu, kumar.'*",
   "trigger_conditions": [
-    {"type": "build_phase", "value": "bugfix"},
-    {"type": "random", "chance": 0.40}
+    {
+      "type": "build_phase",
+      "value": "bugfix"
+    },
+    {
+      "type": "random",
+      "chance": 0.4
+    }
   ],
-  "allowed_hours": [18, 23],
+  "allowed_hours": [
+    18,
+    23
+  ],
   "cooldown_days": 14,
   "one_shot": true,
   "priority": 1,
@@ -18,21 +27,43 @@
     {
       "label": "Çıkışı ertele, çöz",
       "modifiers": [
-        {"type": "bug_delta", "amount": -6},
-        {"type": "dimension_delta", "axis": "stability", "amount": 4},
-        {"type": "cash", "delta": -150}
+        {
+          "type": "bug_delta",
+          "amount": -6
+        },
+        {
+          "type": "dimension_delta",
+          "axis": "stability",
+          "amount": 4
+        },
+        {
+          "type": "cash",
+          "delta": -150
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Delay the launch, fix it"
     },
     {
       "label": "Bırak, gönder — fark eden olmaz",
       "modifiers": [
-        {"type": "set_flag", "key": "critical_bug_unfixed", "value": true},
-        {"type": "brand", "delta": -2}
+        {
+          "type": "set_flag",
+          "key": "critical_bug_unfixed",
+          "value": true
+        },
+        {
+          "type": "brand",
+          "delta": -2
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Leave it, ship — nobody will notice"
     }
-  ]
+  ],
+  "title_en": "You found a bug of the kind that…",
+  "subtitle_en": "Kitchen table · 19:22",
+  "body_text_en": "Testing, you snagged on something. You repeated the steps — it crashes consistently. **An edge case**: maybe one per cent of users hit it, maybe half. There is no way to know.\n\nFixing it, maybe three or four days. Leaving it: does it turn up on a forum on launch day? Who knows.\n\n*'One per cent, fifty per cent — that is not statistics, that is a bet.'*"
 }

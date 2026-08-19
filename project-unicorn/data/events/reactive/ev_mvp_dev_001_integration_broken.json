@@ -7,10 +7,19 @@
   "character_id": "",
   "body_text": "Saat ikiyi geçiyor. Üçüncü kahve soğumuş. Sunucudan dönen veri ile arayüzün beklediği biçim tutmuyor — büyük bir fark değil, ama bir türlü kapanmıyor.\n\nİki yol var: yarın taze gözle bakmak, ya da geçici bir çözümle şimdi geçip sonra dönmek.\n\n*Sonra dönüp düzeltmek.* O sözü daha önce de duymuştun.",
   "trigger_conditions": [
-    {"type": "build_phase", "value": "development"},
-    {"type": "random", "chance": 0.30}
+    {
+      "type": "build_phase",
+      "value": "development"
+    },
+    {
+      "type": "random",
+      "chance": 0.3
+    }
   ],
-  "allowed_hours": [1, 4],
+  "allowed_hours": [
+    1,
+    4
+  ],
   "cooldown_days": 14,
   "one_shot": true,
   "priority": 0,
@@ -18,21 +27,43 @@
     {
       "label": "Gece boyu uğraş, doğru yap",
       "modifiers": [
-        {"type": "dimension_delta", "axis": "stability", "amount": 6},
-        {"type": "delay_days", "days": 1}
+        {
+          "type": "dimension_delta",
+          "axis": "stability",
+          "amount": 6
+        },
+        {
+          "type": "delay_days",
+          "days": 1
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Work through the night, do it properly"
     },
     {
       "label": "Geçici çözüm — sonraya not et",
       "modifiers": [
-        {"type": "delay_days", "days": -2},
-        {"type": "bug_delta", "amount": 2},
-        {"type": "set_flag", "key": "tech_debt_birikti", "value": true}
+        {
+          "type": "delay_days",
+          "days": -2
+        },
+        {
+          "type": "bug_delta",
+          "amount": 2
+        },
+        {
+          "type": "set_flag",
+          "key": "tech_debt_birikti",
+          "value": true
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Patch it — make a note for later"
     }
-  ]
+  ],
+  "title_en": "Something is not working",
+  "subtitle_en": "Kitchen table · 02:17",
+  "body_text_en": "It is gone two in the morning. The third coffee has gone cold. The data coming back from the server does not match the shape the interface expects — not a big difference, but it will not close.\n\nTwo ways: look at it tomorrow with fresh eyes, or patch around it now and come back later.\n\n*Come back and fix it later.* You have heard that promise before."
 }

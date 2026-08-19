@@ -1,6 +1,8 @@
 {
   "id": "ev_ps_first_revenue",
-  "tags": ["build_safe"],
+  "tags": [
+    "build_safe"
+  ],
   "category": "reactive",
   "title": "Biri ödedi",
   "subtitle": "Kasadar bildirimi",
@@ -8,7 +10,10 @@
   "character_id": "char_mentor_frank",
   "body_text": "Telefon titriyor. Kasadar.\n\n*Bir ödeme geldi.* Küçük bir rakam — ama gerçek. Birisi, senin yaptığın şeye para verdi.\n\nFrank başını sallıyor: \"İşte. Artık bir şirketsin. Küçük, ama şirket.\"",
   "trigger_conditions": [
-    {"type": "mrr_above", "value": 0}
+    {
+      "type": "mrr_above",
+      "value": 0
+    }
   ],
   "cooldown_days": 0,
   "one_shot": true,
@@ -17,10 +22,17 @@
     {
       "label": "Bir nefes al",
       "modifiers": [
-        {"type": "mentor_advisory", "text": "İlk dolar geldi. Şimdi ikinciyi, üçüncüyü bul."}
+        {
+          "type": "mentor_advisory",
+          "text": "İlk dolar geldi. Şimdi ikinciyi, üçüncüyü bul."
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Take a breath"
     }
-  ]
+  ],
+  "title_en": "Someone paid",
+  "subtitle_en": "Kasadar notification",
+  "body_text_en": "The phone buzzes. Kasadar.\n\n*A payment has arrived.* A small number — but real. Somebody paid money for the thing you made.\n\nFrank nods. \"There. You are a company now. A small one, but a company.\""
 }

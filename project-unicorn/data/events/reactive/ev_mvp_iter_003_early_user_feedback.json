@@ -7,10 +7,19 @@
   "character_id": "",
   "body_text": "Eski iş arkadaşına geçen hafta demoyu açmıştın. Bugün uzun bir mesaj attı. **'Aslında şu olsa daha iyi olurdu...'** ile başlıyor. Üç paragraf devam ediyor.\n\nHalbuki o senin hedef kullanıcın bile değil. Ama söyledikleri aklına takıldı.\n\n*'Bir geri bildirim — herkes bir şey söyler.'* Bu cümleyi kaç kere duymuştun ki?",
   "trigger_conditions": [
-    {"type": "build_phase", "value": "iteration"},
-    {"type": "random", "chance": 0.25}
+    {
+      "type": "build_phase",
+      "value": "iteration"
+    },
+    {
+      "type": "random",
+      "chance": 0.25
+    }
   ],
-  "allowed_hours": [16, 20],
+  "allowed_hours": [
+    16,
+    20
+  ],
   "cooldown_days": 18,
   "one_shot": true,
   "priority": 0,
@@ -18,22 +27,47 @@
     {
       "label": "Önerilerini ciddiye al, tasarımı tekrar düşün",
       "modifiers": [
-        {"type": "dimension_delta", "axis": "experience", "amount": 6},
-        {"type": "delay_days", "days": 2},
-        {"type": "cash", "delta": -100}
+        {
+          "type": "dimension_delta",
+          "axis": "experience",
+          "amount": 6
+        },
+        {
+          "type": "delay_days",
+          "days": 2
+        },
+        {
+          "type": "cash",
+          "delta": -100
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Take their notes seriously, rethink the design"
     },
     {
       "label": "Vizyonuna sadık kal, yola devam",
       "modifiers": [
-        {"type": "delay_days", "days": -1},
-        {"type": "brand", "delta": 1},
-        {"type": "dimension_delta", "axis": "experience", "amount": -2}
+        {
+          "type": "delay_days",
+          "days": -1
+        },
+        {
+          "type": "brand",
+          "delta": 1
+        },
+        {
+          "type": "dimension_delta",
+          "axis": "experience",
+          "amount": -2
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "Stay true to your vision, keep going"
     }
-  ]
+  ],
+  "title_en": "Unsolicited feedback from someone you know",
+  "subtitle_en": "Message · 16:48",
+  "body_text_en": "You showed an old colleague the demo last week. Today they sent a long message. It opens with **'Actually it would be better if…'** and goes on for three paragraphs.\n\nThey are not even your target user. But what they said has stuck with you.\n\n*'One piece of feedback — everybody has an opinion.'* How many times have you heard that sentence?"
 }

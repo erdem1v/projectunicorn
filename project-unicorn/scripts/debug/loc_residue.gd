@@ -109,9 +109,23 @@ func _initialize() -> void:
 	_load_csv_keys()
 	_walk(SCRIPT_ROOT, "gd")
 	_walk(SCENE_ROOT, "tscn")
-	var n := _hits.size()
+	# --only=<kind> narrows the printout to one bucket. Without it the 200-line cap is spent
+	# on whichever kind sorts first (script hits, always), and the scene buckets are invisible
+	# exactly when you are trying to clear them. The TALLY below is never filtered.
+	var only: String = ""
+	for arg in OS.get_cmdline_args():
+		if String(arg).begins_with("--only="):
+			only = String(arg).trim_prefix("--only=")
+	var shown: Array[String] = _hits
+	if only != "":
+		shown = []
+		for h in _hits:
+			if h.contains("[%s]" % only):
+				shown.append(h)
+		print("RESIDUE  (filtered to [%s]: %d of %d)" % [only, shown.size(), _hits.size()])
+	var n := shown.size()
 	for i in mini(n, MAX_PRINTED):
-		print("RESIDUE  " + _hits[i])
+		print("RESIDUE  " + shown[i])
 	if n > MAX_PRINTED:
 		print("RESIDUE  ... and %d more" % (n - MAX_PRINTED))
 	# Per-kind tally. The sweep runs for nine commits and the ONLY honest progress signal is

@@ -1652,3 +1652,68 @@ ODA_GOAL_MRR,{mrr} / {target} MRR,{mrr} / {target} MRR
 MONTH_ROW_CASH,Kasa,Cash
 MONTH_ROW_TEAM,Ekip,Team
 MONTH_ROW_BRAND,Marka,Brand
+EVENT_CHOICE_PERMANENT,Seçim kalıcıdır · Oyun duraklatıldı,The choice is permanent · Game paused
+EVENT_DECISION_DAY,KARAR · GÜN {day},DECISION · DAY {day}
+EVENT_MENTOR_ADVICE,MENTOR TAVSİYESİ,MENTOR'S ADVICE
+EVENT_TAG_CUSTOMER,MÜŞTERİ,CUSTOMER
+EVENT_TAG_TEAM,EKİP,TEAM
+EVENT_TAG_MARKET,PİYASA,MARKET
+EVENT_TAG_PRODUCT,ÜRÜN,PRODUCT
+EVENT_TAG_MENTOR,MENTOR,MENTOR
+EVENT_TAG_AGENDA,GÜNDEM,AGENDA
+EFFECT_CASH,Nakit {v},Cash {v}
+EFFECT_MRR,MRR {v},MRR {v}
+EFFECT_BRAND,Marka {v},Brand {v}
+EFFECT_REPUTATION,İtibar {v},Reputation {v}
+EFFECT_TEAM,Ekip {v},Team {v}
+EFFECT_CUSTOMER_MRR,Müşteri MRR {v},Customer MRR {v}
+EFFECT_SATISFACTION,Memnuniyet {v},Satisfaction {v}
+EFFECT_SEATS,Koltuk {v},Seats {v}
+EFFECT_AUDIENCE,Kitle {v},Audience {v}
+EFFECT_AXIS,{axis} {v},{axis} {v}
+EFFECT_QUALITY,Kalite,Quality
+EFFECT_MORALE,Moral,Morale
+EFFECT_BUGS,Hata {v},Bugs {v}
+EFFECT_DAYS,{v} gün,{v} days
+EFFECT_QUALITY_BONUS,Kalite +{n},Quality +{n}
+EFFECT_DESIGN_ROUND,Bir tasarım turu · {days} gün,One design round · {days} days
+EFFECT_DEV_BEGINS,Geliştirme başlar,Development begins
+EFFECT_CHURN,Müşteri kaybı,A customer lost
+EFFECT_NEW_PROSPECT,Yeni aday,A new prospect
+EFFECT_CONVERT_AUDIENCE,Kitleden dönüşüm {pct},{pct} of the audience converts
+EFFECT_PAID_TIER,Ücretli katman açılır,The paid tier opens
+EFFECT_NEW_TEAMMATE,Yeni ekip üyesi,A new teammate
+EFFECT_DEPARTURE,{who} ayrılıyor,{who} is leaving
+EFFECT_AN_EMPLOYEE,Çalışan,An employee
+EFFECT_OVERTIME_STOP,Ek mesai durur,Overtime stops
+EFFECT_OVERTIME_CONTINUE,Mesai sürer · istifa riski artar,Overtime continues · the risk of resignations rises
+EFFECT_PROMISE_CREATE,Müşteri kalır · söz borcu,The customer stays · a promise owed
+EFFECT_RETAIN_DELAY,Kısa vadeli hamle,A short-term move
+EFFECT_RETAIN_DISCOUNT,Müşteri kalır · MRR {v},The customer stays · MRR {v}
+EFFECT_RETAIN_IGNORE,müdahale yok · sayaç işlemeye devam eder,no intervention · the counter keeps running
+EFFECT_PROMISE_HONOR,Müşteri kalır · söz borcu doğar · yol haritasına eklenir,The customer stays · a promise is owed · it goes on the roadmap
+EFFECT_PROMISE_REFUSE,Müşteriyi kaybet,Lose the customer
+EFFECT_EXPAND,Koltuk +{seats} · MRR {mrr},Seats +{seats} · MRR {mrr}
+EFFECT_NO_CHANGE,Değişiklik yok,No change
+UI_CONFIRM_TITLE,Emin misin?,Are you sure?
+UI_CONFIRM,Onayla,Confirm
+UI_CLOSE,Kapat,Close
+MENTOR_NAME,Frank Köseoğlu,Frank Köseoğlu
+MENTOR_ROLE,OPERASYON ORTAĞI,OPERATING PARTNER
+MENTOR_INTRO_CTA,Hadi başlayalım,Let's get started
+MENTOR_INTRO_BODY,"Frank kahvesinden bir yudum alıyor.
+
+""Vitrin'deki sunumun fena değildi. O yüzden buradayım.""
+
+""Şirketini kurdun. Kolay kısmı buydu. Şimdi bir ürün lazım — birinin para vereceği bir şey. İlk versiyonu kendin yapacaksın.""
+
+""Neye oynayacağını seç, sonra otur ve yap. Çoğu kurucu açlıktan değil, hazımsızlıktan ölür.""","Frank takes a sip of his coffee.
+
+""Your pitch on Vitrin wasn't bad. That's why I'm here.""
+
+""You've founded the company. That was the easy part. Now you need a product — something someone will pay for. You'll build the first version yourself.""
+
+""Pick what you're betting on, then sit down and build it. Most founders die of indigestion, not starvation."""
+TOPBAR_UNIT_PER_DAY,/g,/d
+MEETING_WITHDRAW,Toplantıdan çekil,Withdraw from the meeting
+TOPBAR_PAUSE,II,II

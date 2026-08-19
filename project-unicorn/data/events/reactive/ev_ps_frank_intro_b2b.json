@@ -1,6 +1,8 @@
 {
   "id": "ev_ps_frank_intro_b2b",
-  "tags": ["build_safe"],
+  "tags": [
+    "build_safe"
+  ],
   "category": "reactive",
   "title": "Frank bir kapı aralıyor",
   "subtitle": "Telefon",
@@ -8,8 +10,14 @@
   "character_id": "char_mentor_frank",
   "body_text": "Frank kahvesini bitiriyor.\n\n\"Tanıdığım biri var. Operasyon müdürü. Şu yeni şeyini görmek istiyor — toplantı ayarladım.\"\n\n\"Hazırlıklı git. Yumuşatma. Satış tarafında seni bekliyor olacak.\"",
   "trigger_conditions": [
-    {"type": "mvp_shipped", "value": true},
-    {"type": "market_type", "value": "b2b"}
+    {
+      "type": "mvp_shipped",
+      "value": true
+    },
+    {
+      "type": "market_type",
+      "value": "b2b"
+    }
   ],
   "cooldown_days": 0,
   "one_shot": true,
@@ -18,11 +26,22 @@
     {
       "label": "Tamam — hazırlanayım",
       "modifiers": [
-        {"type": "add_prospect", "archetype": "mid", "source": "frank_intro"},
-        {"type": "mentor_advisory", "text": "İlk pitch'in satış tarafında. Yumuşatma, ürünü göster."}
+        {
+          "type": "add_prospect",
+          "archetype": "mid",
+          "source": "frank_intro"
+        },
+        {
+          "type": "mentor_advisory",
+          "text": "İlk pitch'in satış tarafında. Yumuşatma, ürünü göster."
+        }
       ],
       "unlock_condition": {},
-      "unlock_reason_text": ""
+      "unlock_reason_text": "",
+      "label_en": "All right — let me get ready"
     }
-  ]
+  ],
+  "title_en": "Frank opens a door",
+  "subtitle_en": "Phone",
+  "body_text_en": "Frank finishes his coffee.\n\n\"I know someone. Head of operations. Wants to see this new thing of yours — I have set up a meeting.\"\n\n\"Go prepared. Do not soften it. They will be waiting for you on the sales side.\""
 }
