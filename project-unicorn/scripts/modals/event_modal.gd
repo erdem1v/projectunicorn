@@ -466,7 +466,14 @@ func _describe_modifier(m) -> Dictionary:
 		"seats":
 			var sa: int = int(m.get("amount", 0))
 			return {"text": tr("EFFECT_SEATS").format({"v": _fmt_signed(sa)}), "kind": _kind(sa)}
-		"audience_delta": return {"text": tr("EFFECT_AUDIENCE").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
+		"audience_delta":
+			if m.has("pct"):
+				# Proportional form (Calibration Round A §7): "Kitle −%3" / "Audience −3%" —
+				# Fmt.percent is locale-aware (TR prefix, EN suffix); the sign rides the number.
+				var pct_pts: int = int(round(float(m.get("pct", 0.0)) * 100.0))
+				var pct_txt: String = Fmt.percent(absi(pct_pts), 0)
+				return {"text": tr("EFFECT_AUDIENCE_PCT").format({"pct": ("-" if pct_pts < 0 else "+") + pct_txt}), "kind": _kind(pct_pts)}
+			return {"text": tr("EFFECT_AUDIENCE").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
 		"dimension_delta":
 			var amt: int = int(m.get("amount", 0))
 			# ProductCatalog.axis_label is the single home for these three words; this file

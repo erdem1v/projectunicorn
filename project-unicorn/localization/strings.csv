@@ -1946,3 +1946,4 @@ INV_APPETITE_HUNT,Series A avı sürüyor,The Series A hunt is on
 FIN_REQ_MRR_BAR,gelir çıtası,the revenue bar
 FIN_REQ_GROWTH,{n} ay üst üste büyüme,{n} months of growth in a row
 ODA_GOAL_SIGNAL,{state} · büyüme {streak}/{need} ay,{state} · growth {streak}/{need} mo
+EFFECT_AUDIENCE_PCT,Kitle {pct},Audience {pct}

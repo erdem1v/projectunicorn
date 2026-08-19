@@ -8,7 +8,7 @@
   "subtitle": "Destek kutusu · 16:48",
   "illustration_path": "",
   "character_id": "",
-  "body_text": "Bir müşteri yüksek sesle şikayetçi: *\"Söz verdiğiniz şey çalışmıyor. Paramı boşa mı verdim?\"*\n\nDiğer müşteriler de okuyor. Sessizlik de bir cevap — ama yanlış olanı.",
+  "body_text": "Bir kullanıcı herkesin göreceği yere yazmış: *\"Söz verdiğiniz şey çalışmıyor.\"*\n\nAltına başkaları da ekleniyor. Cevap vermemek de bir cevap. Yanlış olanı.",
   "trigger_conditions": [
     {
       "type": "market_type",
@@ -36,36 +36,48 @@
   "priority": 2,
   "choices": [
     {
-      "label": "İade + özür dile",
+      "label": "Herkesin önünde cevap ver",
+      "description": "Hatayı kabul et, düzeltmeyi anlat. Bazıları yine gider.",
       "modifiers": [
         {
-          "type": "cash",
-          "delta": -1500
+          "type": "satisfaction_delta",
+          "delta": 10
         },
         {
-          "type": "satisfaction_delta",
-          "delta": 20
+          "type": "brand",
+          "delta": 2
+        },
+        {
+          "type": "audience_delta",
+          "pct": -0.03
         }
       ],
       "unlock_condition": {},
       "unlock_reason_text": "",
-      "label_en": "Refund and apologise"
+      "label_en": "Answer in the open",
+      "description_en": "Own the bug, say what you will fix. Some leave anyway."
     },
     {
-      "label": "Hızlı düzeltme sözü ver",
+      "label": "Özelden yaz, konuyu kapat",
+      "description": "Sessiz düzelt. Konu açık kalır.",
       "modifiers": [
         {
           "type": "satisfaction_delta",
-          "delta": 8
+          "delta": 6
         },
         {
-          "type": "cash",
-          "delta": -300
+          "type": "brand",
+          "delta": -1
+        },
+        {
+          "type": "audience_delta",
+          "pct": -0.01
         }
       ],
       "unlock_condition": {},
       "unlock_reason_text": "",
-      "label_en": "Promise a quick fix"
+      "label_en": "Reply in private, close the thread",
+      "description_en": "Fix it quietly. The thread stays open."
     },
     {
       "label": "Görmezden gel",
@@ -85,5 +97,5 @@
   ],
   "title_en": "This does not work",
   "subtitle_en": "Support inbox · 16:48",
-  "body_text_en": "A customer is complaining loudly: *\"The thing you promised does not work. Did I pay for nothing?\"*\n\nThe other customers are reading it too. Silence is an answer as well — the wrong one."
+  "body_text_en": "A user has posted it where everyone can see: *\"The thing you promised does not work.\"*\n\nOthers are piling in underneath. Not answering is an answer too. The wrong one."
 }

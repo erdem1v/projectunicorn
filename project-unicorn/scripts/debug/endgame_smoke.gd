@@ -261,6 +261,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2c_wom_needs_satisfaction":      fail = _case_b2c_wom_needs_satisfaction()
 		"b2c_growth_multiplier_floor":     fail = _case_b2c_growth_multiplier_floor()
 		"conversion_bug_penalty":          fail = _case_conversion_bug_penalty()
+		"audience_pct_modifier":           fail = _case_audience_pct_modifier()
+		"bug_complaint_costs_audience_not_cash": fail = _case_bug_complaint_costs_audience_not_cash()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -7371,5 +7373,72 @@ static func _case_conversion_bug_penalty() -> String:
 	var paying10: int = int(SalesSystem.estimate_price_change(price)["new_paying"])
 	if paying10 >= paying0:
 		return "the pricing projection did not move under bugs (%d vs %d paying)" % [paying10, paying0]
+	return ""
+
+
+# --- §7 · the bug complaint costs audience and satisfaction, never cash ---
+
+static func _case_audience_pct_modifier() -> String:
+	# audience_delta {pct} erodes (or grows) the live audience proportionally; flat delta is
+	# unchanged; the badge renders the percentage.
+	_seed_b2c()
+	GameState.set_flag("b2c_audience", 1000.0)
+	EventManager._apply_modifiers([{"type": "audience_delta", "pct": -0.03}])
+	var a: float = float(GameState.get_flag("b2c_audience", 0.0))
+	if absf(a - 970.0) > 0.01:
+		return "pct −0.03 on 1000 left %.2f, want 970" % a
+	EventManager._apply_modifiers([{"type": "audience_delta", "delta": 30}])
+	if absf(float(GameState.get_flag("b2c_audience", 0.0)) - 1000.0) > 0.01:
+		return "flat delta regressed"
+	# event_modal.gd has no class_name; instantiate the script bare — _describe_modifier only
+	# needs tr() and Fmt, neither of which needs the node in the tree.
+	var modal: Node = (load("res://scripts/modals/event_modal.gd") as GDScript).new()
+	var badge: Dictionary = modal._describe_modifier({"type": "audience_delta", "pct": -0.03})
+	modal.free()
+	var txt: String = String(badge.get("text", ""))
+	if txt == "" or txt.find("3") < 0 or txt.find("{") >= 0:
+		return "badge for the pct form is wrong: '%s'" % txt
+	if String(badge.get("kind", "")) != "negative":
+		return "badge kind for a negative pct should be negative, got %s" % str(badge.get("kind"))
+	return ""
+
+
+static func _case_bug_complaint_costs_audience_not_cash() -> String:
+	# Every row of the rewritten event leaves cash alone; the two answers move satisfaction
+	# and the audience, the ignore row keeps its churn grammar.
+	var ev: GameEvent = EventManager._all_events.get("ev_ps_bug_complaint", null)
+	if ev == null:
+		return "ev_ps_bug_complaint not in the live pool"
+	for ch in ev.choices:
+		for m in ch.modifiers:
+			if String(m.get("type", "")) == "cash":
+				return "a cash row survived in '%s'" % ch.label
+	_seed_b2c()
+	GameState.set_flag("b2c_audience", 1000.0)
+	SalesSystem._ensure_b2c_record()
+	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	CustomerRegistry.set_satisfaction(ub.id, 40)
+	var cash0: int = GameState.cash
+	var brand0: int = GameState.brand
+	EventManager._apply_modifiers(ev.choices[0].modifiers)
+	if GameState.cash != cash0:
+		return "answering in the open moved cash (%d → %d)" % [cash0, GameState.cash]
+	if ub.satisfaction != 50:
+		return "answering in the open did not lift satisfaction by 10 (got %d)" % ub.satisfaction
+	if GameState.brand != brand0 + 2:
+		return "answering in the open did not add brand +2"
+	if absf(float(GameState.get_flag("b2c_audience", 0.0)) - 970.0) > 0.01:
+		return "answering in the open did not cost 3 %% of the audience (%.1f)" % float(GameState.get_flag("b2c_audience", 0.0))
+	EventManager._apply_modifiers(ev.choices[1].modifiers)
+	if GameState.cash != cash0:
+		return "the private reply moved cash"
+	if ub.satisfaction != 56 or GameState.brand != brand0 + 1:
+		return "the private reply should be sat +6 / brand −1 (sat %d, brand %d)" % [ub.satisfaction, GameState.brand]
+	var aud_before_ignore: float = float(GameState.get_flag("b2c_audience", 0.0))
+	EventManager._apply_modifiers(ev.choices[2].modifiers)
+	if float(GameState.get_flag("b2c_audience", 0.0)) >= aud_before_ignore:
+		return "ignoring it did not churn audience"
+	if GameState.cash != cash0:
+		return "ignoring it moved cash"
 	return ""
 

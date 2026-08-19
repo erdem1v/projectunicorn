@@ -698,7 +698,14 @@ func _apply_modifiers(modifiers: Array) -> void:
 				if sc != null:
 					CustomerRegistry.set_satisfaction(sc.id, sc.satisfaction + delta)
 			"audience_delta":
-				SalesSystem.add_b2c_audience(delta)  # +/- audience; derived MRR follows
+				# Calibration Round A §7: an optional `pct` key makes the delta PROPORTIONAL to the
+				# live audience (signed; −0.03 = three percent leave) — the cost type a consumer
+				# complaint actually carries. Mirrors convert_audience's pct grammar; flat `delta`
+				# stays the default.
+				if m.has("pct"):
+					SalesSystem.add_b2c_audience(int(round(float(GameState.get_flag("b2c_audience", 0.0)) * float(m.get("pct", 0.0)))))
+				else:
+					SalesSystem.add_b2c_audience(delta)  # +/- audience; derived MRR follows
 			"open_paid_tier":
 				SalesSystem.open_b2c_paid_tier(int(m.get("price", 15)), float(m.get("initial_pct", 0.1)))
 			"convert_audience":
