@@ -1953,3 +1953,4 @@ FIN_PROFIT_QUAL_MARGIN,marj ince,margin thin
 FIN_PROFIT_QUAL_SCALE,ölçek küçük,scale small
 FIN_PROFIT_NOTE,"Artıda ay: net artı ve kasa ay boyunca hiç eksiye düşmedi. Kapanış için {need} ay üst üste artıda, yeterli marj ve yeterli ölçek gerekir.","A month in the black: positive net and the treasury never dipped below zero inside it. The close takes {need} months in a row, enough margin and enough scale."
 END_BS_STREAK,{n} ay üst üste artıda kapattı; defter kendini taşıyor.,It closed {n} months in a row in the black; the books carry themselves.
+SET_RESOLUTION_BORDERLESS,Kenarlıksız mod her zaman ekranın doğal çözünürlüğünde çalışır.,Borderless mode always runs at the display's native resolution.

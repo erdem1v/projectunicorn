@@ -285,6 +285,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"ambient_hourly_chance_exact":     fail = _case_ambient_hourly_chance_exact()
 		"ambient_one_per_day_across_hour0": fail = _case_ambient_one_per_day_across_hour0()
 		"creation_draft_survives_navigation": fail = _case_creation_draft_survives_navigation()
+		"borderless_note_key_exists":      fail = _case_borderless_note_key_exists()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -7868,5 +7869,21 @@ static func _case_creation_draft_survives_navigation() -> String:
 	clean.free()
 	if GameState.has_flag("creation_draft"):
 		return "a clean flow stashed a draft"
+	return ""
+
+
+# --- §12 · held-back strings landed ---
+
+static func _case_borderless_note_key_exists() -> String:
+	# The borderless helper line the sharpness task deferred: the settings modal picks it the
+	# moment it resolves (settings_modal._resolution_note_key), so the whole wire is "the row
+	# exists in both locales".
+	for loc in ["tr", "en"]:
+		var txt: String = TranslationServer.get_translation_object(loc).get_message("SET_RESOLUTION_BORDERLESS") \
+			if TranslationServer.get_translation_object(loc) != null else ""
+		if txt == "" or txt == "SET_RESOLUTION_BORDERLESS":
+			return "SET_RESOLUTION_BORDERLESS does not resolve in %s" % loc
+	if TranslationServer.translate("TOPBAR_UNIT_PER_DAY") == "TOPBAR_UNIT_PER_DAY":
+		return "TOPBAR_UNIT_PER_DAY missing"
 	return ""
 
