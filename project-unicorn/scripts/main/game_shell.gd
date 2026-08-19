@@ -269,9 +269,19 @@ func _debug_endgame_key(keycode: Key) -> void:
 			GameState.vc_rejections = 3
 			GameState.set_mrr(0)
 		KEY_F8:
-			# Kalibrasyon Turu A §2/§9: Day-180 çatalı kalktı; kârlılık artık aylık deftere
-			# bakan bir KOŞUL (§9 bu tuşu 6 artıda ay kapanışı tohumlayacak şekilde bağlar).
-			print("[Debug] F8 → (kalibrasyon) kârlılık koşulu aylık deftere taşındı; §9 bu tuşu yeniden bağlar")
+			# Kalibrasyon Turu A §9: kârlılık KOŞULU — 6 artıda ay kapanışı (marj %20) + MRR
+			# tabanı tohumlanır; canlı MRR slot-4 köprüsüyle yazıldığından bir sonraki günlük
+			# tikte bitiş ateşler (eski F8'in de notuydu).
+			print("[Debug] F8 → kârlılık koşulu ön şartları (%d artıda ay, marj %%20, MRR %d)" % [
+				EndingsSystem.PROFIT_STREAK_MONTHS, EndingsSystem.BOOTSTRAP_WIN_MRR])
+			GameState.month_history.clear()
+			for i in EndingsSystem.PROFIT_STREAK_MONTHS:
+				GameState.push_month_close({"start_day": 1 + i * 30, "end_day": 30 + i * 30,
+					"mrr_close": EndingsSystem.BOOTSTRAP_WIN_MRR, "income": 30_000, "expense": 24_000,
+					"net": 6_000, "red_days": 0})
+			GameState.set_mrr(EndingsSystem.BOOTSTRAP_WIN_MRR)
+			if GameState.cash < 0:
+				GameState.set_cash(1000)
 		KEY_F9:
 			# Ctrl+F9 (çıplak F9 hızlı yüklemeye taşındı — bkz. _input üstü).
 			print("[Debug] Ctrl+F9 → yumuşak tavan arifesi (gün %d)" % (EndingsSystem.SOFT_CAP_DAY - 1))

@@ -269,6 +269,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"discount_row_locked_past_cap":    fail = _case_discount_row_locked_past_cap()
 		"retention_gate_shared":           fail = _case_retention_gate_shared()
 		"manual_retention_respects_cap":   fail = _case_manual_retention_respects_cap()
+		"profit_condition_fires":          fail = _case_profit_condition_fires()
+		"profit_predicate_margin_scale_red": fail = _case_profit_predicate_margin_scale_red()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -7630,5 +7632,73 @@ static func _case_manual_retention_respects_cap() -> String:
 				EventManager._apply_modifiers(ch.modifiers)   # the bypass a UI bug could make
 	if c.mrr != mrr0 or c.retain_discounts != B2BConstants.RETAIN_DISCOUNT_MAX_USES:
 		return "a forced discount past the cap changed state (mrr %d→%d, uses %d)" % [mrr0, c.mrr, c.retain_discounts]
+	return ""
+
+
+# --- §9 · profitability is a condition, not a crossing ---
+
+static func _case_profit_condition_fires() -> String:
+	# Five Artıda closes seeded, live MRR over the floor, the sixth month earned by the sim:
+	# no ending on the close day itself (slot 10 closes after slot 9 reads), the win the day
+	# after; never before the sixth close.
+	GameState.set_cash(100000)
+	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)   # daily revenue ~833 vs burn 50 → an Artıda month
+	_seed_month_closes([20000, 21000, 22000, 23000, 24000], 30000, 24000)   # 5 Artıda closes, margin 20 %
+	var closes0: int = GameState.month_history.size()
+	var fired_day: int = -1
+	for i in 40:
+		_sim_day()
+		if not _endings.is_empty():
+			fired_day = GameState.day
+			break
+		if GameState.month_history.size() == closes0 and not _endings.is_empty():
+			return "ending fired before the sixth close"
+	if _endings != ["profitable_bootstrap"]:
+		return "endings: %s (closes %d, streak %d)" % [str(_endings), GameState.month_history.size(),
+			GameState.get_profitable_month_streak()]
+	if GameState.month_history.size() != closes0 + 1:
+		return "the win needed %d closes, want exactly one more" % (GameState.month_history.size() - closes0)
+	var close_day: int = int(GameState.month_history[GameState.month_history.size() - 1].get("end_day", 0))
+	if fired_day != close_day + 1:
+		return "win fired on day %d, want the day after the close (%d)" % [fired_day, close_day + 1]
+	# The paper names the streak (END_BS_STREAK) when the ledger carries one.
+	var vs: Dictionary = EndingsCopy.build("profitable_bootstrap", GameState.get_run_ledger(), {})
+	var claim: String = TranslationServer.translate("END_BS_STREAK").format({"n": EndingsCopy._num(EndingsSystem.PROFIT_STREAK_MONTHS)})
+	var found: bool = false
+	for line in (vs.get("ledger_lines", []) as Array):
+		if String(line) == claim:
+			found = true
+	if not found:
+		return "the bootstrap paper did not name the %d-month streak" % EndingsSystem.PROFIT_STREAK_MONTHS
+	return ""
+
+
+static func _case_profit_predicate_margin_scale_red() -> String:
+	# Each clause alone blocks the win: thin margin, small scale, a red day inside the window.
+	GameState.set_cash(100000)
+	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)
+	_sim_day()   # settle the MRR bridge
+	_seed_month_closes([20000, 21000, 22000, 23000, 24000, 25000], 30000, 27500)   # margin 8 %
+	var sig: Dictionary = EndingsSystem.profitability_signal()
+	if bool(sig.get("met", false)) or bool(sig.get("margin_ok", true)):
+		return "thin margin should block (%s)" % str(sig)
+	_seed_month_closes([20000, 21000, 22000, 23000, 24000, 25000], 30000, 24000)   # margin 20 %
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, EndingsSystem.BOOTSTRAP_WIN_MRR - 1000)
+	SalesSystem.reflect_mrr()
+	sig = EndingsSystem.profitability_signal()
+	if bool(sig.get("met", false)) or bool(sig.get("mrr_ok", true)):
+		return "small scale should block (%s)" % str(sig)
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)
+	SalesSystem.reflect_mrr()
+	sig = EndingsSystem.profitability_signal()
+	if not bool(sig.get("met", false)):
+		return "all clauses met should read met (%s)" % str(sig)
+	# One red day inside the newest month breaks the streak.
+	var last: Dictionary = GameState.month_history[GameState.month_history.size() - 1]
+	last["red_days"] = 1
+	GameState.month_history[GameState.month_history.size() - 1] = last
+	sig = EndingsSystem.profitability_signal()
+	if bool(sig.get("met", false)) or int(sig.get("streak", 9)) != 0:
+		return "a red day inside the window should break the streak (%s)" % str(sig)
 	return ""
 

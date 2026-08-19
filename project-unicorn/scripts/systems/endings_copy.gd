@@ -297,7 +297,11 @@ static func _bootstrap(ledger: Dictionary, data: Dictionary) -> Dictionary:
 		pool.append(_t("END_BS_PAYROLL").format({"n": _num(int(ledger.get("employees", 0)))}))
 	if int(ledger.get("product_ships", 0)) > 1:
 		pool.append(_t("END_BS_SHIPS").format({"n": int(ledger.get("product_ships", 0))}))
-	pool.append(_t("END_BS_COVERS_COSTS"))
+	# Calibration Round A §9: the win is a streak of Artıda months now; the paper names it.
+	if int(ledger.get("profit_streak", 0)) > 0:
+		pool.append(_t("END_BS_STREAK").format({"n": _num(int(ledger.get("profit_streak", 0)))}))
+	else:
+		pool.append(_t("END_BS_COVERS_COSTS"))
 
 	vs.ledger_lines = _assemble(pool, [_t("END_BS_CLOSER_1"), _t("END_BS_CLOSER_2")])
 	# _founder_share reads 100 here — no signed terms on a bootstrap run. # WORKING

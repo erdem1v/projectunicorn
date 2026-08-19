@@ -46,6 +46,7 @@ var _nakit_val: Label
 var _net_val: Label
 var _runway_val: Label
 var _runway_note: Label
+var _profit_progress: Label             # "Artıda · n/6 ay" — the profitability CONDITION's progress (Kalibrasyon Turu A §9)
 var _curve: CashCurve
 var _range_btns: Dictionary = {}   # id -> Button
 var _legend_current: Control       # "mevcut gidiş" göstergesi — net >= 0 iken gizli
@@ -203,6 +204,26 @@ func _series_a_tooltip() -> String:
 	return tr("FIN_REQ_OPENS").format({"reqs": " · ".join(reqs)})
 
 
+func _refresh_profit_progress() -> void:
+	if _profit_progress == null:
+		return
+	var sig: Dictionary = EndingsSystem.profitability_signal()
+	var streak: int = int(sig.get("streak", 0))
+	var need: int = int(sig.get("need", 1))
+	if streak <= 0:
+		_profit_progress.visible = false
+		return
+	var txt: String = tr("FIN_PROFIT_PROGRESS").format({"streak": mini(streak, need), "need": need})
+	if streak >= need:
+		# The streak is complete; if the condition still has not fired, say which half is short.
+		if not bool(sig.get("margin_ok", false)):
+			txt += " · " + tr("FIN_PROFIT_QUAL_MARGIN")
+		elif not bool(sig.get("mrr_ok", false)):
+			txt += " · " + tr("FIN_PROFIT_QUAL_SCALE")
+	_profit_progress.text = txt
+	_profit_progress.visible = true
+
+
 func _refresh_appetite() -> void:
 	if _appetite_chip_host == null:
 		return
@@ -243,6 +264,14 @@ func _build_curve_card() -> PanelContainer:
 	_runway_note = UiFactory.make_label("", &"CaptionMuted", UiTokens.INK_MUTED)
 	_runway_note.visible = false
 	vb.add_child(_runway_note)
+	# Kalibrasyon Turu A §9: kârlılık bitişi artık her gün değerlendirilen bir KOŞUL (6 ardışık
+	# artıda ay kapanışı + marj + ölçek); ilerlemesi burada okunur — en az bir artıda ay
+	# kapanmışsa görünür, marj/ölçek eksikse nedenini tek kelimeyle söyler.
+	_profit_progress = UiFactory.make_label("", &"CaptionMuted", UiTokens.INK_MUTED)
+	_profit_progress.visible = false
+	_profit_progress.tooltip_text = tr("FIN_PROFIT_NOTE").format({"need": EndingsSystem.PROFIT_STREAK_MONTHS})
+	_profit_progress.mouse_filter = Control.MOUSE_FILTER_PASS
+	vb.add_child(_profit_progress)
 
 	_curve = CashCurve.new()
 	_curve.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -402,6 +431,7 @@ func refresh() -> void:
 	if _nakit_val == null:
 		return
 	_refresh_header()
+	_refresh_profit_progress()
 	_refresh_appetite()
 	_refresh_curve()
 	_refresh_flow()

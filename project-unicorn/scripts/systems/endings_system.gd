@@ -34,9 +34,15 @@ const PIVOT_MRR_MIN := 2000        # §4.5 "metrics are alive" floor
 # auto-sign — the D-1 Frank warning (VCPitchSystem) is the telegraph, and an unsigned
 # sheet is named on the paper. Same day as a profitability close → the win wins (scan order).
 const SOFT_CAP_DAY := 730
-# Profitability condition (§9) — the number the pivot copy names. Seated here so the
-# pivot body and the §9 predicate read one home; the predicate itself lands with §9.
+# PROFITABLE & SELF-SUSTAINING — a CONDITION evaluated daily (Calibration Round A §9), not a
+# crossing read once at a wall. An "Artıda" month = net > 0 AND the treasury never sampled
+# below zero inside it (GameState.month_history, closed by MonthSummarySystem). The run-lifetime
+# cash_went_negative latch it replaces made the win permanently unreachable after one early
+# Kepenk in a 24-month run. The MRR floor is DECOUPLED from SalesSystem.TRACTION_MRR_TARGET
+# (it used to alias the Series A bar, which is now $40K+).
 const PROFIT_STREAK_MONTHS := 6    # [WORKING] consecutive Artıda month-closes
+const PROFIT_MIN_MARGIN_PCT := 15  # [WORKING] Σnet/Σincome over the window, percent
+const BOOTSTRAP_WIN_MRR := 20_000  # [WORKING] scale floor at the moment the condition is met
 
 # Ending metadata — 7 endings (§4). Only the TONE lives here now; the title and Frank's
 # closing line are END_META_<ID>_TITLE / _FRANK in strings.csv, read through ending_title()
@@ -82,6 +88,8 @@ static func daily_tick() -> void:
 	if _check_brand_collapse():
 		return
 	if _check_vc_cascade():
+		return
+	if _check_profitable_bootstrap():
 		return
 	if _check_soft_cap():
 		return
@@ -189,6 +197,33 @@ static func _any_pending_sheet() -> bool:
 		if st is Dictionary and st.get("pending_sheet", false):
 			return true
 	return false
+
+
+# --- Profitable & self-sustaining (Calibration Round A §9) ---
+
+## Single home for the condition's reading: the Finance tab's "Artıda · n/6 ay" line and the
+## daily scan both read this. `met` is the predicate.
+static func profitability_signal() -> Dictionary:
+	var streak: int = GameState.get_profitable_month_streak()
+	var margin: int = GameState.get_window_margin_pct(PROFIT_STREAK_MONTHS)
+	var d := {
+		"streak": streak, "need": PROFIT_STREAK_MONTHS, "streak_ok": streak >= PROFIT_STREAK_MONTHS,
+		"margin_pct": margin, "margin_ok": margin >= PROFIT_MIN_MARGIN_PCT,
+		"mrr_ok": GameState.mrr >= BOOTSTRAP_WIN_MRR,
+		"scandal_ok": not GameState.unmanaged_major_scandal,
+	}
+	d["met"] = bool(d.streak_ok) and bool(d.margin_ok) and bool(d.mrr_ok) and bool(d.scandal_ok)
+	return d
+
+
+static func _check_profitable_bootstrap() -> bool:
+	# A CONDITION evaluated daily, not a crossing. Sits after the cascade (a pivot offer does
+	# not block the win — flush_queue drops the offer) and before the soft cap (same-day tie →
+	# the win wins).
+	if not bool(profitability_signal().get("met", false)):
+		return false
+	trigger_ending("profitable_bootstrap")
+	return true
 
 
 # --- Soft cap (Calibration Round A §2; replaces the Day-180 time-out fork) ---
