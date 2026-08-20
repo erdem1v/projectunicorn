@@ -309,6 +309,26 @@ func set_last_request_kind(customer_id: String, kind: String) -> void:
 	c.last_request_kind = kind
 
 
+func set_retain_discounts(customer_id: String, n: int) -> void:
+	# HIDDEN discount counter (Calibration Round A §8) — no signal; the locked row the
+	# factory renders past the cap is what the player sees. Counts BOTH discount channels
+	# (the retention card and the CS complaint/renewal cards), because both resolve through
+	# B2BSalesSystem.apply_discount.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.retain_discounts = maxi(n, 0)
+
+
+func set_last_risk_exit_day(customer_id: String, day: int) -> void:
+	# HIDDEN hysteresis latch (Calibration Round A §8) — no signal; stamped by both risk-exit
+	# sites (B2BSalesSystem._recover and _tick_healthy's risk branch). -1 = never left Risk.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.last_risk_exit_day = day
+
+
 func set_last_expansion_day(customer_id: String, day: int) -> void:
 	# HIDDEN expansion latch (K2) — no signal; the phase change that accompanies it is
 	# what the UI repaints on. -1 means the moment has not happened. Like the support

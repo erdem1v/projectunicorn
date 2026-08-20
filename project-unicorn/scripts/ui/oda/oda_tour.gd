@@ -156,7 +156,7 @@ func _input(event: InputEvent) -> void:
 		KEY_ESCAPE:
 			get_viewport().set_input_as_handled()
 			_finish()
-		KEY_SPACE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_KP_1, KEY_KP_2, KEY_KP_3, KEY_KP_4:
+		KEY_SPACE, KEY_1, KEY_2, KEY_3, KEY_KP_1, KEY_KP_2, KEY_KP_3:
 			get_viewport().set_input_as_handled()
 
 

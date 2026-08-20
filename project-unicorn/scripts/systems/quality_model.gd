@@ -39,12 +39,26 @@ const DEFAULT_AXES := [
 # --- BALANCE-TUNABLE constants (Erdem tunes at the last pass) ---
 # Saturation half-point: the composite value that maps to normalized 50. This is
 # the knob that decides where a shipped v1 lands on the 0-100 market-quality band.
-# BALANCE FLAG (Rev3 deterministic axes, do NOT retune here): contribution-sum v1
-# composites (~7-12) normalize to ~12-20 vs the old grown ~25-35 — every quality
-# reader (audience, product_value, satisfaction seed, value lines) reads lower.
-# Single-knob candidates for Erdem: this HALF_SAT (50 → ~25) or a global catalog
-# contribution scale (see ProductCatalog.FEATURE_POOLS header).
-const NORMALIZE_HALF_SAT := 50.0
+# CALIBRATION ROUND A §1 (2026-08-19): 50 → 25. The BALANCE FLAG that stood here since
+# Rev3 said it plainly — contribution-sum v1 composites (~7-12) normalized to ~12-20 under
+# 50 where the retired grown axes produced ~25-35, so every quality reader (audience,
+# product_value, satisfaction seed, the B2B satisfaction TARGET) read a played product
+# as worse than any bar authored for it: axis(13) was 20.6 against B2B tolerances of
+# 40-50, and the retention loop was the default state of competent play. At 25 a
+# stability-competent v1 (raw 17-20 from the catalog, before build events) lands at
+# 40-44 — the middle of the re-seated tolerance band (B2BConstants). Moved TOGETHER with
+# the tolerance re-seat, the saas_ops_field research unlock, SalesSystem's B2C
+# satisfaction gate and the rival scale bridge below; the four are one decision.
+const NORMALIZE_HALF_SAT := 25.0
+# RIVAL SCALE BRIDGE. RivalCatalog.TEMPLATE (startups raw 30-82, asymptote 100) and its
+# momentum were authored on the RETIRED grown scale; they are inputs on the same raw axis,
+# and halving the player's half-point alone would double every rival's lead in normalized
+# space (a played v1's rival-relative q ≈ 22 → churn ~8 %/day, B2C dead by construction).
+# Until the rival table is re-authored for the deterministic scale (the world/rival
+# session's job, Layer B), rivals keep normalizing at the half-point they were tuned for.
+# The ONE reader is SalesSystem._rival_relative_quality. Raw-vs-raw comparisons
+# (RivalRegistry ranking, the "seni geçti" strip) are unaffected either way.
+const RIVAL_TEMPLATE_HALF_SAT := 50.0
 # (PHASE1_AXIS_ASYMPTOTE deleted — Rev3 deterministic sums bypass grow() for the
 # player; the ceiling is now the catalog pool sums + strengthen accretion.)
 # How much each open (launch) bug erodes the Stability axis the economy reads.
@@ -86,6 +100,13 @@ static func composite_quality(dims: Dictionary, quality_axes: Array = []) -> flo
 static func normalized_quality(composite: float) -> float:
 	var c := maxf(0.0, composite)
 	return 100.0 * c / (c + NORMALIZE_HALF_SAT)
+
+
+## A RIVAL's composite on the 0-100 band — same curve, the template's own half-point
+## (see RIVAL_TEMPLATE_HALF_SAT). Never use for the player's product.
+static func normalized_quality_rival(composite: float) -> float:
+	var c := maxf(0.0, composite)
+	return 100.0 * c / (c + RIVAL_TEMPLATE_HALF_SAT)
 
 
 static func normalized_from_dims(dims: Dictionary, quality_axes: Array = []) -> float:

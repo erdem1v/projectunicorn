@@ -30,6 +30,8 @@ const FF_MAX_EQUITY := 18          # Founder-Friendly ceiling (inclusive): equit
 const MIN_LEDGER_LINES := 4
 const MAX_LEDGER_LINES := 6
 const YEAR_DAYS := 350             # >= → "bir yıla yakın" framing
+const OVER_YEAR_DAYS := 380           # "bir yılı aşkın" — a run clearly past its first year
+const TWO_YEAR_DAYS := 700            # "iki yıla yakın" — the soft cap's own span (730)
 const ISSUE_PERIOD_DAYS := 7       # weekly paper: masthead "SAYI N" = run day / 7  # WORKING
 const ENGRAVING_DIR := "res://assets/endings/"
 
@@ -295,7 +297,11 @@ static func _bootstrap(ledger: Dictionary, data: Dictionary) -> Dictionary:
 		pool.append(_t("END_BS_PAYROLL").format({"n": _num(int(ledger.get("employees", 0)))}))
 	if int(ledger.get("product_ships", 0)) > 1:
 		pool.append(_t("END_BS_SHIPS").format({"n": int(ledger.get("product_ships", 0))}))
-	pool.append(_t("END_BS_COVERS_COSTS"))
+	# Calibration Round A §9: the win is a streak of Artıda months now; the paper names it.
+	if int(ledger.get("profit_streak", 0)) > 0:
+		pool.append(_t("END_BS_STREAK").format({"n": _num(int(ledger.get("profit_streak", 0)))}))
+	else:
+		pool.append(_t("END_BS_COVERS_COSTS"))
 
 	vs.ledger_lines = _assemble(pool, [_t("END_BS_CLOSER_1"), _t("END_BS_CLOSER_2")])
 	# _founder_share reads 100 here — no signed terms on a bootstrap run. # WORKING
@@ -309,6 +315,11 @@ static func _bootstrap(ledger: Dictionary, data: Dictionary) -> Dictionary:
 
 
 static func _fumes(ledger: Dictionary, data: Dictionary) -> Dictionary:
+	# THE SOFT CAP's paper (Calibration Round A §2, director ruling via Y5.6: the id stays
+	# running_on_fumes; the register is "yatırımcılar ilgisini kaybetti" — a company that
+	# reached no goal ending inside the window investors give it. Not a failure screen:
+	# the company did not close, it dropped off the agenda. Frank's verdict line is the
+	# Y5.6 text (END_META_RUNNING_ON_FUMES_FRANK).
 	var vs := _common("running_on_fumes", "soft_loss", ledger, data)
 	var company := _company(data)
 	var phase := int(ledger.get("phase", 1))
@@ -320,8 +331,11 @@ static func _fumes(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.engraving_caption = _t("END_RF_CAP")
 
 	var pool: Array = []
-	pool.append(_t("END_RF_JUST_MADE_IT").format(
+	pool.append(_t("END_RF_STAYED_STANDING").format(
 		{"founding": _founding_clause(ledger), "span": _span_phrase(_day(ledger))}))
+	# Ledger 16: an unsigned offer left on the table is named, never silently dropped.
+	if int(ledger.get("unsigned_sheets", 0)) > 0:
+		pool.append(_t("END_RF_UNSIGNED_SHEET"))
 	if int(ledger.get("customers_signed", 0)) > 0:
 		pool.append(_n("END_RF_UNFINISHED", int(ledger.get("customers_signed", 0))).format(
 			{"n": int(ledger.get("customers_signed", 0))}))
@@ -423,6 +437,12 @@ static func _founder_share(ledger: Dictionary) -> int:
 
 static func _span_phrase(days: int) -> String:
 	# Rule 2: the paper never prints a raw day count — it frames time in calendar months.
+	# Goal-terminated runs reach two years (soft cap 730): two longer spans were added
+	# 2026-08-19 so a 24-month run is not described as "close to a year".
+	if days >= TWO_YEAR_DAYS:
+		return _t("END_SPAN_NEAR_TWO_YEARS")
+	if days >= OVER_YEAR_DAYS:
+		return _t("END_SPAN_OVER_YEAR")
 	if days >= YEAR_DAYS:
 		return _t("END_SPAN_NEAR_YEAR")
 	var m := int(ceil(days / 30.0))

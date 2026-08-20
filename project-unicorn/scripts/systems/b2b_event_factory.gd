@@ -67,7 +67,7 @@ static func build_retention(c: Customer) -> GameEvent:
 		{"type": "b2b_retain_delay", "customer_id": c.id},
 		{"type": "brand", "delta": B2BConstants.RETAIN_DELAY_BRAND},
 	]))
-	choices.append(_choice(TranslationServer.translate("B2B_CHOICE_DISCOUNT"), [
+	choices.append(_discount_choice(c, TranslationServer.translate("B2B_CHOICE_DISCOUNT"), [
 		{"type": "b2b_retain_discount", "customer_id": c.id, "mrr_delta": -discount_cut},
 		{"type": "reputation", "delta": B2BConstants.RETAIN_DISCOUNT_REP},
 	]))
@@ -240,7 +240,7 @@ static func build_cs_request(c: Customer, cs: Character) -> GameEvent:
 			else:
 				ev.body_text = TranslationServer.translate("B2B_EV_COMPLAINT_SOFT").format({"company": c.company_name, "voice": voice})
 			var cut: int = maxi(int(round(float(c.mrr) * B2BConstants.CS_DISCOUNT_PCT / 100.0)), 1)
-			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_DISCOUNT"), [
+			choices.append(_discount_choice(c, TranslationServer.translate("B2B_CHOICE_DISCOUNT"), [
 				{"type": "b2b_retain_discount", "customer_id": c.id, "mrr_delta": -cut},
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_DISCOUNT_SAT},
 			]))
@@ -258,7 +258,7 @@ static func build_cs_request(c: Customer, cs: Character) -> GameEvent:
 			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_NEGOTIATE_RENEWAL"), [
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_RENEWAL_TALK_SAT},
 			]))
-			choices.append(_choice(TranslationServer.translate("B2B_CHOICE_BIND_DISCOUNT"), [
+			choices.append(_discount_choice(c, TranslationServer.translate("B2B_CHOICE_BIND_DISCOUNT"), [
 				{"type": "b2b_retain_discount", "customer_id": c.id, "mrr_delta": -cut2},
 				{"type": "satisfaction_delta", "customer_id": c.id, "delta": B2BConstants.CS_DISCOUNT_SAT},
 			]))
@@ -304,4 +304,18 @@ static func _choice(label: String, modifiers: Array) -> EventChoice:
 	var ch := EventChoice.new()
 	ch.label = label
 	ch.modifiers = modifiers
+	return ch
+
+
+## A discount row (Calibration Round A §8): the game's locked-choice grammar past the cap —
+## the row stays VISIBLE, dimmed and inert, its effect chips suppressed, the KİLİTLİ chip on
+## the right and the REASON on the italic sub-line: "İki kez indirim verdin. Bu hesabı fiyat
+## değil ürün tutar." The unlock condition is a real, re-evaluated condition (the modal runs
+## EventManager.is_condition_met at render), not a flag the engine would have to invent.
+static func _discount_choice(c: Customer, label: String, modifiers: Array) -> EventChoice:
+	var ch := _choice(label, modifiers)
+	ch.unlock_condition = {"type": "b2b_discounts_below", "customer_id": c.id,
+		"value": B2BConstants.RETAIN_DISCOUNT_MAX_USES}
+	if c.retain_discounts >= B2BConstants.RETAIN_DISCOUNT_MAX_USES:
+		ch.description = TranslationServer.translate("B2B_DISCOUNT_SPENT_DESC")
 	return ch

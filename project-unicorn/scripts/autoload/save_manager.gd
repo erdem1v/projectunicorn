@@ -50,8 +50,8 @@ const AUTOSAVE_FREQUENCY_DEFAULT := "weekly"                       # [WORKING]
 const AUTOSAVE_INTERVAL_DAYS := {"off": 0, "daily": 1, "weekly": 7, "monthly": 30}   # [WORKING]
 
 # Real-time floor between two autosaves. THE SPEED LADDER MAKES THIS NECESSARY, not
-# paranoid: TimeManager.SECONDS_PER_DAY is [0, 12, 6, 3, 1.5] REAL SECONDS PER IN-GAME DAY,
-# so at 4x a day is 1.5 s and "Her gün" would try to write ~40 saves a minute — each one a
+# paranoid: TimeManager.SECONDS_PER_DAY is [0, 12, 6, 3] REAL SECONDS PER IN-GAME DAY,
+# so at 3x a day is 3 s and "Her gün" would try to write ~20 saves a minute — each one a
 # full state walk plus three file operations. Skipped writes become pending and land at the
 # next safe boundary, so nothing is lost, only coalesced.
 const AUTOSAVE_MIN_REAL_SECONDS := 20                              # [WORKING]
@@ -454,15 +454,23 @@ func _is_harness_run() -> bool:
 	# inherit the exclusion, not silently start writing saves.
 	var args: Array = OS.get_cmdline_args() + OS.get_cmdline_user_args()
 	for a in args:
-		var arg: String = String(a)
-		# FLAGS ONLY. Matching bare arguments would sweep in the project path, and a player
-		# who happens to install the game under a folder called "screenshots" would silently
-		# lose autosave with no message and no way to guess why.
-		if not arg.begins_with("--"):
-			continue
-		if arg.contains("smoke") or arg.contains("-shot") or arg.contains("audit") or arg.contains("spec"):
+		if _is_harness_arg(String(a)):
 			return true
 	return false
+
+
+## One argument's verdict, split out so the smoke suite can assert the list without faking a
+## command line. FLAGS ONLY: matching bare arguments would sweep in the project path, and a
+## player who happens to install the game under a folder called "screenshots" would silently
+## lose autosave with no message and no way to guess why.
+## `run-log` joined the list 2026-08-19 (Calibration Round A §0): the RunProbe drives whole
+## 180-730 day runs headless and its daily ticks reach day_tick_completed like any other, so
+## it was autosaving fixture worlds into the player's slots every 20 real seconds.
+static func _is_harness_arg(arg: String) -> bool:
+	if not arg.begins_with("--"):
+		return false
+	var harness_flag: bool = arg.contains("smoke") or arg.contains("-shot") or arg.contains("audit")
+	return harness_flag or arg.contains("spec") or arg.contains("run-log")
 
 
 # ============================================================================

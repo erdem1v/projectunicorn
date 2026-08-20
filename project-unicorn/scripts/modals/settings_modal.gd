@@ -193,10 +193,9 @@ func _on_vsync_toggled(on: bool) -> void:
 ## değiştirilebilir.") kilidin NE olduğunu söylüyordu, NEDEN'ini değil — kilitli bir
 ## kontrol de bozuk bir kontrol gibi okunuyordu. Kenarlıksız modun kendi gerekçesi var
 ## (pencere ekranın doğal çözünürlüğünü kaplar) ve kendi satırını hak ediyor.
-## `SET_RESOLUTION_BORDERLESS` HENÜZ YOK: strings.csv'nin sahibi şu an başka bir task,
-## o yüzden anahtar bu commit'te CSV'ye eklenmiyor. Anahtar inene kadar kenarlıksız
-## dalı da mevcut metni gösterir — `tr()` çözemediği anahtarı ham hâliyle basacağı
-## için burada fallback ŞART, yoksa panelde "SET_RESOLUTION_BORDERLESS" yazar.
+## `SET_RESOLUTION_BORDERLESS` 2026-08-19'da CSV'ye indi (Kalibrasyon Turu A §12 — keskinlik
+## turunun ertelediği satır). `_resolution_note_key` anahtarı çözülüyorsa seçer; çözülmezse
+## (eski bir CSV) varsayılan metne düşer — bu fallback mekanizmanın kendisidir, kaldırılmaz.
 const RES_NOTE_DEFAULT := "SET_RESOLUTION_LOCKED"
 const RES_NOTE_BORDERLESS := "SET_RESOLUTION_BORDERLESS"
 

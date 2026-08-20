@@ -85,6 +85,7 @@ const FLAG_TYPES := {
 	"critical_bug_unfixed": TYPE_BOOL,
 	"tech_debt_birikti": TYPE_BOOL,
 	"cancelled_build_prefill": TYPE_DICTIONARY,
+	"creation_draft": TYPE_DICTIONARY,   # S2-33 draft guard (Calibration Round A §16): {step, market, type, features, name}
 	"product_path_frank_seen": TYPE_BOOL,
 	"needs_engineer": TYPE_BOOL,
 	# --- B2C economy ---
@@ -108,7 +109,7 @@ const FLAG_TYPES := {
 	"pivot_offer_made": TYPE_BOOL,
 	"acquisition_offer_made": TYPE_BOOL,
 	"acquisition_offer_rejected": TYPE_BOOL,
-	"vc_d179_warned": TYPE_BOOL,
+	"vc_soft_cap_warned": TYPE_BOOL,   # was vc_d179_warned (Day-180 wall) — the warning now precedes the soft cap
 	# --- angel round (Frank's seed) + the locked hard path ---
 	# The one-shot latch lives HERE and not on the event object: AngelRoundSystem injects
 	# through enqueue_front, which bypasses _is_eligible entirely, so GameEvent.one_shot is
@@ -156,16 +157,20 @@ var vc_rejections: int = 0             # closed pitch tables; future VC pitch in
 var pivot_used: bool = false           # true → VC path permanently closed (Erdem 2026-07-13)
 var active_scandal: bool = false           # RESERVED — no scandal system yet; debug-settable
 var unmanaged_major_scandal: bool = false  # RESERVED — day-180 fork input (§4.6)
-var cash_went_negative: bool = false   # latched in set_cash; day-180 fork input
 var brand_low_since_day: int = -1      # brand-collapse 30-day window anchor (§4.4)
-var net_history_90: Array[int] = []    # daily net ring buffer — fork wants CUMULATIVE 90-day sum > 0
+# (cash_went_negative and net_history_90 — the Day-180 fork's inputs — were retired with the
+# fork on 2026-08-19, Calibration Round A §2. Profitability is a daily-evaluated CONDITION
+# on the calendar-month ledger, §9: a month is "Artıda" only if its net is positive AND the
+# treasury never sampled below zero inside it — the red-day test moved from a run-lifetime
+# latch, which made the win permanently unreachable after one early Kepenk in a 24-month
+# run, to a per-month count.)
 
 # --- Finance surface state (Finance Tab v1 — serialized set; SaveManager plugs in later) ---
 # cash_history: daily {day, cash} samples for the cash curve. Single writer:
 # FinanceSystem.daily_tick via append_cash_sample (slot 5, once per day). Intra-day
 # one-time costs are deliberately NOT re-sampled — the single-writer rule holds;
 # they land in the next day's point and, itemised, in `transactions`.
-const CASH_HISTORY_CAP := 200          # run max 180 days + headroom; oldest dropped
+const CASH_HISTORY_CAP := 760          # soft cap 730 days + headroom; oldest dropped (was 200 for the 180-day wall)
 var cash_history: Array = []           # [{day: int, cash: int}]
 # transactions: persistent signed money-event log (negative = spend, positive = income).
 # Sole append point: FinanceSystem.record_transaction. Labels stored RAW — display maps
@@ -186,6 +191,20 @@ var sales_log: Array = []              # [{day, kind, actor, company, mrr}]
 # MonthSummarySystem.snapshot(); "what changed this month?" comes from here,
 # never from the run counters below (two data shapes, two questions).
 var month_ledger: Dictionary = {}
+# THE CALENDAR-MONTH LEDGER (Calibration Round A §3/§9, 2026-08-19). Closed fiscal months,
+# oldest → newest, cap MONTH_HISTORY_CAP. Sole writer: push_month_close (MonthSummarySystem,
+# slot 10, on the 1st of each calendar month, BEFORE the recap emit). Entry — all INT (JSON
+# re-types numbers to float on load and SaveCodec restores ints; never store a ratio here,
+# compute margins at read time):
+#   {start_day, end_day, mrr_close, income, expense, net, red_days}
+# Readers: the Series A gate's growth-streak condition (PhaseGateSystem / EventManager
+# mrr_growth_streak), the profitability condition (EndingsSystem §9) and the Finance tab's
+# "Yatırımcı iştahı" + "Artıda · n/6 ay" lines. Accruals for the OPEN month live on
+# month_ledger (income / expense / red_days; reset by snapshot()) through accrue_month_flow /
+# accrue_month_expense — one-time INCOME (the angel cheque) is financing, not operating
+# income, and is deliberately not accrued.
+const MONTH_HISTORY_CAP := 12
+var month_history: Array[Dictionary] = []
 # Month highlight ("AYIN OLAYI") — systems submit via submit_month_highlight();
 # cleared at each month rollover by MonthSummarySystem.snapshot().
 var month_highlight_text: String = ""
@@ -276,8 +295,6 @@ var news_feed: Dictionary = {}
 
 func set_cash(value: int) -> void:
 	cash = value
-	if cash < 0:
-		cash_went_negative = true  # latch here (not in the finance tick) so intra-day event deltas count too
 	EventBus.cash_changed.emit(cash)
 	_emit_runway()
 
@@ -453,6 +470,69 @@ func append_cash_sample(sample_cash: int) -> void:
 		cash_history.pop_front()
 
 
+# --- Calendar-month ledger seams (Calibration Round A §3/§9) ---
+
+func accrue_month_flow(revenue: int, burn: int, closing_cash: int) -> void:
+	# FinanceSystem.daily_tick, once per day, the SAME figures that moved the cash.
+	month_ledger["income"] = int(month_ledger.get("income", 0)) + revenue
+	month_ledger["expense"] = int(month_ledger.get("expense", 0)) + burn
+	if closing_cash < 0:
+		month_ledger["red_days"] = int(month_ledger.get("red_days", 0)) + 1
+
+
+func accrue_month_expense(amount: int) -> void:
+	# One-time COSTS (hire, severance, training, build commit) are outgoings of the month.
+	month_ledger["expense"] = int(month_ledger.get("expense", 0)) + amount
+
+
+func push_month_close(entry: Dictionary) -> void:
+	month_history.append(entry)
+	while month_history.size() > MONTH_HISTORY_CAP:
+		month_history.pop_front()
+
+
+## Consecutive closed months, newest backwards, whose close MRR grew ≥ min_pct over the
+## previous close. Integer math (cur·100 ≥ prev·(100+pct)); a zero or negative previous close
+## never counts. Needs streak+1 closes by construction (the first close has no predecessor).
+func get_mrr_growth_streak(min_pct: int) -> int:
+	var i: int = month_history.size() - 1
+	var streak: int = 0
+	while i >= 1:
+		var prev: int = int(month_history[i - 1].get("mrr_close", 0))
+		var cur: int = int(month_history[i].get("mrr_close", 0))
+		if prev <= 0 or cur * 100 < prev * (100 + min_pct):
+			break
+		streak += 1
+		i -= 1
+	return streak
+
+
+## Consecutive "Artıda" closes, newest backwards: net > 0 AND the treasury never sampled
+## below zero inside the month (red_days == 0).
+func get_profitable_month_streak() -> int:
+	var streak: int = 0
+	for i in range(month_history.size() - 1, -1, -1):
+		var e: Dictionary = month_history[i]
+		if int(e.get("net", 0)) <= 0 or int(e.get("red_days", 0)) > 0:
+			break
+		streak += 1
+	return streak
+
+
+## Σnet·100/Σincome over the last `months` closes; -1 when fewer closes exist or income is 0.
+func get_window_margin_pct(months: int) -> int:
+	if month_history.size() < months or months <= 0:
+		return -1
+	var inc: int = 0
+	var net: int = 0
+	for i in range(month_history.size() - months, month_history.size()):
+		inc += int(month_history[i].get("income", 0))
+		net += int(month_history[i].get("net", 0))
+	if inc <= 0:
+		return -1
+	return int((net * 100) / inc)
+
+
 func get_cash_history() -> Array:
 	return cash_history.duplicate()  # readonly snapshot (get_burn_breakdown contract)
 
@@ -567,6 +647,12 @@ func get_run_ledger() -> Dictionary:
 		"pitches": run_pitches,
 		"sheets_won": run_sheets_won,
 		"vc_rejections": vc_rejections,
+		# live term sheets at the moment of reading — the soft-cap paper names an unsigned
+		# offer left on the table (Calibration Round A §2; VC_PITCH_DESIGN ledger 16)
+		"unsigned_sheets": active_sheets.size(),
+		# calendar-month ledger digest (Calibration Round A §3/§9)
+		"months_closed": month_history.size(),
+		"profit_streak": get_profitable_month_streak(),
 		"pushes_attempted": run_pushes_attempted,
 		"pushes_won": run_pushes_won,
 		# signed term sheet (0 unless series_a_close). These three stay SERIES-A-ONLY on
@@ -651,9 +737,8 @@ func initialize_run(payload: Dictionary) -> void:
 	pivot_used = false
 	active_scandal = false
 	unmanaged_major_scandal = false
-	cash_went_negative = false
 	brand_low_since_day = -1
-	net_history_90 = []
+	month_history.clear()   # the calendar-month ledger (accruals reset by MonthSummarySystem.snapshot below)
 
 	# Finance surface state (Finance Tab v1). Day-1 point seeded here so the curve
 	# renders a valid single sample before the first daily tick.

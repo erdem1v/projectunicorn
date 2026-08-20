@@ -42,7 +42,15 @@ static var _endings: Array = []        # run_ended ending_ids
 
 
 static func run_case(case_name: String, payload: Dictionary) -> void:
-	GameState.initialize_run(payload)
+	# RNG PIN (Calibration Round A §11; research S4 / sprint §5.7): initialize_run seeds from
+	# Time.get_ticks_msec() unless the payload carries a seed, so every case that touched the
+	# ambient pool was a fresh coin flip per invocation (angel_fires_at_crossing passed solo
+	# and failed 4 in 12). The suite now runs on the same seed the probes use — 424242 — and
+	# a case that needs a specific seed sets it in its own payload first.
+	var pinned: Dictionary = payload.duplicate()
+	if int(pinned.get("seed", 0)) == 0:
+		pinned["seed"] = 424242
+	GameState.initialize_run(pinned)
 	_gate_signals = []
 	_endings = []
 	EventBus.phase_gate_reached.connect(func(p: int) -> void: _gate_signals.append(p))
@@ -60,8 +68,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"cascade":              fail = _case_cascade()
 		"pivot_accept":         fail = _case_pivot_accept()
 		"pivot_decline":        fail = _case_pivot_decline()
-		"fork_win":             fail = _case_fork_win()
-		"fork_loss":            fail = _case_fork_loss()
+		# fork_win / fork_loss retired 2026-08-19 with the Day-180 fork (Calibration Round A §2);
+		# the soft cap's guards live in the Calibration Round A block at the end of this match.
 		"terminal_kills_gate":  fail = _case_terminal_kills_gate()
 		"live_during_vbuild":   fail = _case_live_during_vbuild()
 		"sprint_no_freeze":     fail = _case_sprint_no_freeze()
@@ -242,6 +250,43 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
 		"loc_b5_derived_keys":       fail = _case_loc_b5_derived_keys()
 		"loc_language_switch":       fail = _case_loc_language_switch()
+		# --- Calibration Round A (2026-08-19) — one commit per section, one guard per number ---
+		"harness_sniffer_matches_run_log": fail = _case_harness_sniffer_matches_run_log()
+		"quality_half_sat_25":             fail = _case_quality_half_sat_25()
+		"b2b_v1_lands_mid_band":           fail = _case_b2b_v1_lands_mid_band()
+		"field_unlocked_for_saas_ops":     fail = _case_field_unlocked_for_saas_ops()
+		"b2c_satisfaction_gate_experience": fail = _case_b2c_satisfaction_gate_experience()
+		"rival_relative_uses_template_half_sat": fail = _case_rival_relative_uses_template_half_sat()
+		"soft_cap_ends_run_at_730":        fail = _case_soft_cap_ends_run_at_730()
+		"no_calendar_stop_before_cap":     fail = _case_no_calendar_stop_before_cap()
+		"soft_cap_no_defer_for_sheet":     fail = _case_soft_cap_no_defer_for_sheet()
+		"soft_cap_warning_day":            fail = _case_soft_cap_warning_day()
+		"soft_cap_paper_names_unsigned_sheet": fail = _case_soft_cap_paper_names_unsigned_sheet()
+		"month_history_close_and_cap":     fail = _case_month_history_close_and_cap()
+		"growth_streak_semantics":         fail = _case_growth_streak_semantics()
+		"series_a_gate_needs_streak":      fail = _case_series_a_gate_needs_streak()
+		"series_a_signal_states":          fail = _case_series_a_signal_states()
+		"month_history_save_typing":       fail = _case_month_history_save_typing()
+		"b2c_wom_needs_satisfaction":      fail = _case_b2c_wom_needs_satisfaction()
+		"b2c_growth_multiplier_floor":     fail = _case_b2c_growth_multiplier_floor()
+		"conversion_bug_penalty":          fail = _case_conversion_bug_penalty()
+		"audience_pct_modifier":           fail = _case_audience_pct_modifier()
+		"bug_complaint_costs_audience_not_cash": fail = _case_bug_complaint_costs_audience_not_cash()
+		"discount_cap_two_uses":           fail = _case_discount_cap_two_uses()
+		"risk_reentry_hysteresis":         fail = _case_risk_reentry_hysteresis()
+		"risk_exit_stamps_day":            fail = _case_risk_exit_stamps_day()
+		"discount_row_locked_past_cap":    fail = _case_discount_row_locked_past_cap()
+		"retention_gate_shared":           fail = _case_retention_gate_shared()
+		"manual_retention_respects_cap":   fail = _case_manual_retention_respects_cap()
+		"profit_condition_fires":          fail = _case_profit_condition_fires()
+		"profit_predicate_margin_scale_red": fail = _case_profit_predicate_margin_scale_red()
+		"speed_save_clamps_to_ladder":     fail = _case_speed_save_clamps_to_ladder()
+		"topbar_speed_cluster_three_rungs": fail = _case_topbar_speed_cluster_three_rungs()
+		"smoke_seed_pinned":               fail = _case_smoke_seed_pinned()
+		"ambient_hourly_chance_exact":     fail = _case_ambient_hourly_chance_exact()
+		"ambient_one_per_day_across_hour0": fail = _case_ambient_one_per_day_across_hour0()
+		"creation_draft_survives_navigation": fail = _case_creation_draft_survives_navigation()
+		"borderless_note_key_exists":      fail = _case_borderless_note_key_exists()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -318,6 +363,32 @@ static func _seed_b2b(mrr: int) -> void:
 	p.industry = "testing"
 	p.archetype = "small"
 	SalesSystem.add_b2b_customer(p, mrr, 70)
+
+
+## "Healthy Series A MRR" for the VC fixtures (Calibration Round A §3): the revenue bar moved
+## 5,000 → the $40-80K band and VCPitchSystem's conviction seeding reads SEED_MRR_REFERENCE =
+## the bar, so a fixture hard-pinned at 6,000 would read as a WEAK company. Bar + 1,000.
+static func _seed_b2b_series_a() -> void:
+	_seed_b2b(SalesSystem.TRACTION_MRR_TARGET + 1000)
+
+
+## Closed calendar months on GameState.month_history (Calibration Round A §3/§9): sequential
+## 30-day spans, the given MRR closes, one income/expense pair per month.
+static func _seed_month_closes(mrr_closes: Array, income: int = 30000, expense: int = 24000, red_days: int = 0) -> void:
+	GameState.month_history.clear()
+	var start: int = 1
+	for m in mrr_closes:
+		GameState.push_month_close({"start_day": start, "end_day": start + 29, "mrr_close": int(m),
+			"income": income, "expense": expense, "net": income - expense, "red_days": red_days})
+		start += 30
+
+
+## Four closes at +15 % a month ending at `last` — three qualifying growth months.
+static func _seed_growth_streak(last: int) -> void:
+	var m3: int = int(round(last / 1.15))
+	var m2: int = int(round(m3 / 1.15))
+	var m1: int = int(round(m2 / 1.15))
+	_seed_month_closes([m1, m2, m3, last])
 
 
 static func _seed_b2c() -> void:
@@ -524,10 +595,20 @@ static func _expect_gate1_opens_and_advances() -> String:
 
 static func _case_gate2() -> String:
 	GameState.set_phase(2)  # debug backdoor — gate 1 already passed
-	_seed_b2b(6000)         # MRR ≥ 5000; brand stays at neutral 50 ≥ 25
+	# Calibration Round A §3: the bar alone does not open the door — the signal reads
+	# "warming"; three closed months of ≥12 % growth on top of it open it.
+	_seed_b2b_series_a()    # MRR over the bar; brand stays at neutral 50 ≥ 25
+	_sim_day()
+	if GameState.phase_gate_ready:
+		return "gate 2 opened on the revenue bar alone (the growth streak is not a condition)"
+	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "warming":
+		return "bar cleared without growth should read warming, got %s" % str(PhaseGateSystem.series_a_signal())
+	_seed_growth_streak(GameState.mrr)
 	_sim_day()
 	if not GameState.phase_gate_ready or GameState.pending_next_phase != 3:
 		return "gate 2 did not open (ready=%s pending=%d)" % [GameState.phase_gate_ready, GameState.pending_next_phase]
+	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "open":
+		return "latched gate should read open"
 	if not _drain_to(GATE2_ID):
 		return "gate 2 scene never became active"
 	EventManager.resolve_choice(GATE2_ID, 0)
@@ -828,30 +909,6 @@ static func _case_speed_preserve() -> String:
 	return ""
 
 
-static func _case_fork_win() -> String:
-	_seed_b2b(6000)  # net +150/day, cash never dips, MRR ≥ threshold
-	for i in 185:
-		if not GameState.run_active:
-			break
-		_sim_day()
-	if _endings != ["profitable_bootstrap"]:
-		return "endings: %s (day %d, cash %d)" % [str(_endings), GameState.day, GameState.cash]
-	if GameState.day != 180:
-		return "fork fired on day %d, want 180" % GameState.day
-	return ""
-
-
-static func _case_fork_loss() -> String:
-	GameState.cash_went_negative = true  # one fork condition failed → fumes
-	for i in 185:
-		if not GameState.run_active:
-			break
-		_sim_day()
-	if _endings != ["running_on_fumes"]:
-		return "endings: %s" % str(_endings)
-	return ""
-
-
 # --- Month-End Summary (Spec 3) ---
 
 static func _case_month_summary() -> String:
@@ -983,7 +1040,7 @@ static func _case_full_loop() -> String:
 	# THE vertical slice: phase 3 → request → prompt accept → beats → sheet → sign → ending.
 	GameState.set_phase(3)
 	_force("pass")
-	_seed_b2b(6000)
+	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
 	_sim_day()  # aggregate MRR to 6000 (SalesSystem mrr bridge)
 	if not VCPitchSystem.request_meeting("anchor"):
 		return "request_meeting refused"
@@ -1036,7 +1093,7 @@ static func _case_pitch_ret_counter() -> String:
 static func _case_gecistir_cap() -> String:
 	GameState.set_phase(3)
 	_force("pass")
-	_seed_b2b(6000)
+	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
 	_sim_day()
 	VCPitchSystem.begin_meeting("anchor")
 	VCPitchSystem.advance("b1_read")
@@ -1150,7 +1207,7 @@ static func _case_sheet_expiry_no_rejection() -> String:
 static func _case_third_sheet_delayed() -> String:
 	GameState.set_phase(3)
 	_force("pass")
-	_seed_b2b(6000)
+	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
 	_sim_day()
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("nexus", GameState.day))
@@ -1459,7 +1516,7 @@ static func _case_pivot_closes_hunt() -> String:
 static func _case_meeting_during_kepenk() -> String:
 	GameState.set_phase(3)
 	GameState.set_cash(100000)  # fat runway → no thin-runway penalty to confound the diff
-	_seed_b2b(6000)
+	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
 	_sim_day()  # base seed comfortably positive so the [0,100] clamp doesn't hide the penalty
 	var seed_clear: int = int(VCPitchSystem.seed_conviction("anchor").value)
 	GameState.shutter_days_left = 5  # Kepenk active
@@ -2912,10 +2969,13 @@ static func _case_angel_fires_at_crossing() -> String:
 	if GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
 		return "the offer opened below the bar (MRR %d)" % GameState.mrr
 
-	# Cross BOTH bars in one day: the 2,500 seed bar and the 5,000 Series A gate. Brand
-	# starts at 50, so gate 2's brand condition is already satisfied.
-	CustomerRegistry.set_mrr(c.id, 6000)
+	# Cross BOTH bars in one day: the 2,500 seed bar and the Series A gate (the revenue bar
+	# plus, since Calibration Round A §3, three closed months of growth — seeded here so the
+	# gate's growth condition is already met). Brand starts at 50, so gate 2's brand condition
+	# is already satisfied.
+	CustomerRegistry.set_mrr(c.id, SalesSystem.TRACTION_MRR_TARGET + 1000)
 	SalesSystem.reflect_mrr()
+	_seed_growth_streak(GameState.mrr)
 	# The crossing day is driven by hand rather than through _sim_day_full, for one reason:
 	# the assertion below is a claim about two DETERMINISTIC beats, and it is only decidable
 	# when the queue is empty when they fire (see the note at the assertion). The hourly
@@ -3431,7 +3491,7 @@ static func _case_fumes_zero_revenue_ledger() -> String:
 	var claim_none: String = TranslationServer.translate("END_RF_REVENUE_NONE")
 	# A run that earned nothing and signed nobody.
 	var barren: Dictionary = {
-		"phase": 1, "day": 180, "mrr": 0, "customers_signed": 0, "customers_active": 0,
+		"phase": 1, "day": 730, "mrr": 0, "customers_signed": 0, "customers_active": 0,
 		"hires": 0, "employees": 0, "product_ships": 0,
 	}
 	var vs: Dictionary = EndingsCopy.build("running_on_fumes", barren, {})
@@ -4798,10 +4858,11 @@ static func _case_hr_constants_contract() -> String:
 # of ticks at every speed (only the real-time rate differs).
 
 static func _case_speed_ladder() -> String:
+	# Calibration Round A §10 (2026-08-19): the 4x rung is gone — pause + 1x/2x/3x.
 	var ladder: Array = TimeManager.SECONDS_PER_DAY
-	if ladder.size() != 5:
-		return "the ladder has %d entries, want 5 (pause + 1x/2x/3x/4x)" % ladder.size()
-	var want: Array = [0.0, 12.0, 6.0, 3.0, 1.5]
+	if ladder.size() != 4:
+		return "the ladder has %d entries, want 4 (pause + 1x/2x/3x)" % ladder.size()
+	var want: Array = [0.0, 12.0, 6.0, 3.0]
 	for i in ladder.size():
 		if not is_equal_approx(float(ladder[i]), float(want[i])):
 			return "speed %d is %.3f s/day, want %.3f" % [i, ladder[i], want[i]]
@@ -4821,18 +4882,18 @@ static func _case_speed_ladder() -> String:
 	if not is_equal_approx(TimeManager.hours_per_real_second(ladder.size()), 0.0):
 		return "an out-of-range speed index returned a live multiplier"
 
-	# Bounds: the NEW top index is accepted, one past it is refused.
+	# Bounds: the top index (3) is accepted, one past it (the old 4x) is refused.
+	EventBus.speed_change_requested.emit(3)
+	if TimeManager.current_speed != 3:
+		return "top speed 3 was rejected (current %d)" % TimeManager.current_speed
 	EventBus.speed_change_requested.emit(4)
-	if TimeManager.current_speed != 4:
-		return "top speed 4 was rejected (current %d)" % TimeManager.current_speed
-	EventBus.speed_change_requested.emit(ladder.size())
-	if TimeManager.current_speed != 4:
-		return "an out-of-range speed was accepted (current %d)" % TimeManager.current_speed
+	if TimeManager.current_speed != 3:
+		return "the retired 4x index was accepted (current %d)" % TimeManager.current_speed
 
-	# Pause/resume round-trip at the new top index (speed_preserve covers idx 2).
+	# Pause/resume round-trip at the top index (speed_preserve covers idx 2).
 	EventBus.speed_change_requested.emit(0)
 	TimeManager.resume_if_paused()
-	if TimeManager.current_speed != 4:
+	if TimeManager.current_speed != 3:
 		return "paused game did not resume to last_running_speed (%d)" % TimeManager.current_speed
 	if TimeManager.get_tree().paused:
 		return "tree still paused after resume"
@@ -5952,7 +6013,7 @@ static func _seed_save_world() -> void:
 	GameState.set_flag("b2c_audience", 1234.5)      # KESİRLİ: int'e yuvarlanırsa yakalanır
 	GameState.set_flag("b2c_price", 29)             # int kalmalı
 	FinanceSystem.burn_breakdown["marketing"] = 777
-	GameState.net_history_90.append(42)             # Array[int] tipli kalmalı
+	GameState.cs_escalation_days.append(42)         # Array[int] tipli kalmalı (net_history_90 2026-08-19'da emekli)
 
 	# Sentetik event: hiçbir JSON dosyasında yok, id'den geri kurulamaz. Altı
 	# speaker_* alanı bilerek dolu — _build_event_from_dict bunları hiç okumuyordu.
@@ -6026,9 +6087,9 @@ static func _case_save_roundtrip_fingerprint() -> String:
 	if typeof(GameState.get_flag("b2c_price", 0)) != TYPE_INT:
 		_cleanup_save_slots()
 		return "b2c_price came back as a non-int"
-	if GameState.net_history_90.get_typed_builtin() != TYPE_INT:
+	if GameState.cs_escalation_days.get_typed_builtin() != TYPE_INT:
 		_cleanup_save_slots()
-		return "net_history_90 lost its Array[int] typing"
+		return "cs_escalation_days lost its Array[int] typing"
 
 	# insert_raw yolu: add() hire_day damgalar ve run_hires artırır — yükleme etmemeli.
 	var emp: Character = CharacterRegistry.get_character("emp_save")
@@ -6982,3 +7043,976 @@ static func _case_loc_language_switch() -> String:
 	EventBus.language_changed.disconnect(probe)
 	Localization.set_language(loc0)
 	return out
+
+
+# ============================ Calibration Round A (2026-08-19) ============================
+# Guards for the calibration package. Each case names the number or contract it pins; every
+# one was falsified once (the fix reverted, the case failing with the right diagnosis) before
+# it was trusted. Fixture helpers used across the section live at the top of the block.
+
+static func _case_harness_sniffer_matches_run_log() -> String:
+	# §0 hygiene: RunProbe (--run-log) drives whole runs headless and its ticks reach
+	# day_tick_completed like any other, so before this the probe autosaved fixture worlds into
+	# the player's slots. The sniffer is a substring list; this pins the entry and the FLAGS-ONLY
+	# rule (a bare project path must never match).
+	if not SaveManager._is_harness_arg("--run-log=b2c:180:sim"):
+		return "--run-log is not recognised as a harness flag (probe runs would autosave)"
+	if not SaveManager._is_harness_arg("--endgame-smoke=x") or not SaveManager._is_harness_arg("--tab-shot=finance"):
+		return "existing harness flags stopped matching"
+	if SaveManager._is_harness_arg("C:/games/screenshots/project-unicorn") or SaveManager._is_harness_arg("res://run-log"):
+		return "a bare (non --) argument matched the sniffer"
+	return ""
+
+
+# --- §1 · a played product is born INSIDE the tolerance band (three levers together) ---
+
+# The two raw stability values --run-log measured at ship (seed 424242, 2026-08-19): the
+# stability-competent v1 (integration+field+scheduling, build events +14, Beta cleared) and
+# the weak set (workflow+reporting+scheduling, events +12, backlog sprinted). They are the
+# numbers the tolerance band was seated against, so they are pinned here as the band's guard.
+const CAL_V1_GOOD_RAW_STABILITY := 31.0
+const CAL_V1_BAD_RAW_STABILITY := 18.3
+
+
+static func _case_quality_half_sat_25() -> String:
+	# Lever 1 by value: 25 maps to normalized 50, and the catalog-competent 3-feature v1
+	# (raw 17) reads 40.5 — inside the band instead of 15-30 points under it.
+	if not is_equal_approx(QualityModel.NORMALIZE_HALF_SAT, 25.0):
+		return "NORMALIZE_HALF_SAT is %.1f, want 25" % QualityModel.NORMALIZE_HALF_SAT
+	if not is_equal_approx(QualityModel.normalized_quality(25.0), 50.0):
+		return "normalized_quality(25) = %.2f, want 50" % QualityModel.normalized_quality(25.0)
+	var a17: float = QualityModel.axis_score({"stability": 17.0}, "stability")
+	if absf(a17 - 40.476) > 0.01:
+		return "axis_score(raw 17) = %.3f, want 40.476" % a17
+	# The rival bridge keeps its own half-point: a raw-50 rival composite still reads 50.
+	if not is_equal_approx(QualityModel.normalized_quality_rival(50.0), 50.0):
+		return "normalized_quality_rival(50) = %.2f, want 50" % QualityModel.normalized_quality_rival(50.0)
+	return ""
+
+
+static func _case_b2b_v1_lands_mid_band() -> String:
+	# Lever 2 by outcome, with the measured raws as constants. The good v1 must clear the
+	# plain mid/enterprise bar (scale 3, no sector) and fall under the sector-picky mid bar;
+	# the bad v1 must clear the plain small bar (scale 2) and fall under small+insurance.
+	# Moving ONE lever alone breaks it: HALF_SAT back at 50 reads the good v1 at 38 (under
+	# every bar); the old (35, 5) band reads the bad v1 over every small and mid bar.
+	var good: float = QualityModel.axis_score({"stability": CAL_V1_GOOD_RAW_STABILITY}, "stability")
+	var bad: float = QualityModel.axis_score({"stability": CAL_V1_BAD_RAW_STABILITY}, "stability")
+	var mid_plain: int = B2BConstants.seed_tolerance(3, "manufacturing")
+	var mid_picky: int = B2BConstants.seed_tolerance(3, "health")
+	var small_plain: int = B2BConstants.seed_tolerance(2, "logistics")
+	var small_picky: int = B2BConstants.seed_tolerance(2, "insurance")
+	if not (good >= float(mid_plain) and good < float(mid_picky)):
+		return "good v1 axis %.1f is outside [mid %d, mid+sector %d)" % [good, mid_plain, mid_picky]
+	if not (bad >= float(small_plain) and bad < float(small_picky)):
+		return "bad v1 axis %.1f is outside [small %d, small+sector %d)" % [bad, small_plain, small_picky]
+	# The probe's 5-account book (2 small · 2 mid+sector · 1 enterprise): 3/5 for the good
+	# v1, 1/5 for the bad one — the director's ~60 % / ~20 %.
+	var bars: Array = [small_plain, small_picky, mid_picky, mid_picky, mid_plain]
+	var good_ok: int = 0
+	var bad_ok: int = 0
+	for b in bars:
+		if good >= float(b): good_ok += 1
+		if bad >= float(b): bad_ok += 1
+	if good_ok != 3 or bad_ok != 1:
+		return "book fractions good=%d/5 bad=%d/5, want 3/5 and 1/5" % [good_ok, bad_ok]
+	return ""
+
+
+static func _case_field_unlocked_for_saas_ops() -> String:
+	# Lever 3: saas_ops_field is buildable in the demo and the competent set stamps raw 17.
+	for f in ProductCatalog.get_feature_pool("saas_ops"):
+		if String(f.get("id", "")) == "saas_ops_field" and bool(f.get("requires_research", false)):
+			return "saas_ops_field is still research-locked"
+	GameState.set_cash(20000)
+	var picks := ["saas_ops_integration", "saas_ops_field", "saas_ops_scheduling"]
+	if not ProductSystem.start_build("saas_ops", picks, "", "Sahra"):
+		return "start_build refused the competent set"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if absf(b.stability - 17.0) > 0.001:
+		return "competent set stamps stability %.1f, want 17" % b.stability
+	return ""
+
+
+static func _case_b2c_satisfaction_gate_experience() -> String:
+	# §5 precondition (director ruling 2026-08-19): the B2C aggregate's daily +1 reads the
+	# EXPERIENCE axis at the re-seated gate (40). Raw 25 → 50 ≥ 40 climbs; raw 10 → 28.6
+	# does not; a heavy backlog still erodes either way.
+	_seed_b2c()
+	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	if ub == null:
+		return "no B2C aggregate record after seed"
+	GameState.set_flag("mvp_stability", 0.0)
+	GameState.set_flag("mvp_innovation", 0.0)
+	GameState.set_flag("mvp_experience", 25.0)
+	GameState.set_flag("mvp_live_bug_count", 0)
+	CustomerRegistry.set_satisfaction(ub.id, 50)
+	_sim_day()
+	if ub.satisfaction != 51:
+		return "experience 25 (axis 50) did not lift satisfaction (+%d)" % (ub.satisfaction - 50)
+	GameState.set_flag("mvp_experience", 10.0)
+	CustomerRegistry.set_satisfaction(ub.id, 50)
+	_sim_day()
+	if ub.satisfaction != 50:
+		return "experience 10 (axis 28.6) moved satisfaction (%d)" % ub.satisfaction
+	GameState.set_flag("mvp_experience", 25.0)
+	GameState.set_flag("mvp_live_bug_count", SalesSystem.SATISFACTION_BUG_GATE + 1)
+	CustomerRegistry.set_satisfaction(ub.id, 50)
+	_sim_day()
+	if ub.satisfaction != 50:
+		return "over-gate bugs did not cancel the experience gain (%d)" % ub.satisfaction
+	return ""
+
+
+static func _case_rival_relative_uses_template_half_sat() -> String:
+	# The rival scale bridge: rivals normalize at RIVAL_TEMPLATE_HALF_SAT (50), the player at
+	# NORMALIZE_HALF_SAT (25). A player composite equal to the startup rivals' raw average
+	# therefore reads ABOVE parity (q > 50) — which is the whole point: the bridge stops the
+	# half-point move from doubling the rivals' lead over a played product.
+	if not is_equal_approx(QualityModel.RIVAL_TEMPLATE_HALF_SAT, 50.0):
+		return "RIVAL_TEMPLATE_HALF_SAT is %.1f, want 50" % QualityModel.RIVAL_TEMPLATE_HALF_SAT
+	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
+	var axes: Array = ProductCatalog.get_quality_axes("ai_assistant")
+	var total: float = 0.0
+	var total_norm: float = 0.0
+	var n: int = 0
+	for r in RivalRegistry.get_by_type("ai_assistant"):
+		if r.tier == "startup":
+			total += r.composite(axes)
+			total_norm += QualityModel.normalized_quality_rival(r.composite(axes))
+			n += 1
+	if n == 0:
+		return "fixture: no startup rivals for ai_assistant"
+	var avg_raw: float = total / float(n)
+	var q_parity: float = SalesSystem._rival_relative_quality(QualityModel.normalized_quality(avg_raw))
+	# The engine averages the NORMALIZED rival scores (not the raw composites), so the
+	# expectation is built the same way.
+	var want: float = 50.0 + QualityModel.normalized_quality(avg_raw) - total_norm / float(n)
+	if absf(q_parity - want) > 0.01:
+		return "q at raw parity = %.2f, want %.2f (rivals must normalize at the template half-point)" % [q_parity, want]
+	if q_parity <= 50.0:
+		return "q at raw parity = %.2f — the bridge is not lifting the played product" % q_parity
+	return ""
+
+
+# --- §2 · the calendar wall is gone; the soft cap is a catch, not a fork ---
+
+static func _case_soft_cap_ends_run_at_730() -> String:
+	# A run with no goal ending reaches the soft cap and ends there, as running_on_fumes,
+	# on exactly SOFT_CAP_DAY — never earlier, never silently.
+	GameState.set_cash(500000)   # no Kepenk on the way: cash is not the subject here
+	GameState.day = EndingsSystem.SOFT_CAP_DAY - 3
+	for i in 6:
+		if not GameState.run_active:
+			break
+		_sim_day()
+	if _endings != ["running_on_fumes"]:
+		return "endings: %s (day %d)" % [str(_endings), GameState.day]
+	if GameState.day != EndingsSystem.SOFT_CAP_DAY:
+		return "soft cap fired on day %d, want %d" % [GameState.day, EndingsSystem.SOFT_CAP_DAY]
+	return ""
+
+
+static func _case_no_calendar_stop_before_cap() -> String:
+	# Day 180 is just a day now. A solvent run with nothing else going on is still alive at
+	# day 400 — the Day-180 fork used to end every run here.
+	GameState.set_cash(500000)
+	GameState.day = 176
+	for i in 224:
+		if not GameState.run_active:
+			break
+		_sim_day()
+	if not GameState.run_active or not _endings.is_empty():
+		return "run ended early: %s at day %d (the calendar wall is back)" % [str(_endings), GameState.day]
+	if GameState.day != 400:
+		return "sim drifted: day %d, want 400" % GameState.day
+	return ""
+
+
+static func _case_soft_cap_no_defer_for_sheet() -> String:
+	# VC_PITCH_DESIGN ledger 16: a live term sheet does NOT hold the cap (no auto-sign); the
+	# ledger names the unsigned offer instead.
+	GameState.set_cash(500000)
+	GameState.phase = 3
+	GameState.day = EndingsSystem.SOFT_CAP_DAY - 2
+	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
+	for i in 4:
+		if not GameState.run_active:
+			break
+		_sim_day()
+	if _endings != ["running_on_fumes"]:
+		return "a live sheet deferred the soft cap: endings %s at day %d" % [str(_endings), GameState.day]
+	if int(GameState.get_run_ledger().get("unsigned_sheets", 0)) != 1:
+		return "the ledger does not name the unsigned sheet (unsigned_sheets=%s)" % str(GameState.get_run_ledger().get("unsigned_sheets"))
+	return ""
+
+
+static func _case_soft_cap_warning_day() -> String:
+	# The D-1 Frank line fires once, on the eve, only when a sheet is live.
+	GameState.set_cash(500000)
+	GameState.phase = 3
+	GameState.day = PitchConstants.SOFT_CAP_WARN_DAY - 2
+	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
+	# A lambda captures an int by VALUE; count through an Array so the increment is visible.
+	var fired: Array = [0]
+	EventBus.event_triggered.connect(func(id: String) -> void:
+		if id == VCPitchSystem.SOFT_CAP_WARN_ID:
+			fired[0] += 1)
+	_sim_day()   # WARN_DAY - 1
+	if int(fired[0]) != 0:
+		return "warning fired before the eve (day %d)" % GameState.day
+	_sim_day()   # WARN_DAY
+	if int(fired[0]) != 1:
+		return "warning did not fire on the eve (day %d, fired %d)" % [GameState.day, int(fired[0])]
+	if not bool(GameState.get_flag("vc_soft_cap_warned", false)):
+		return "vc_soft_cap_warned flag not set"
+	_drain_all_modals()
+	return ""
+
+
+static func _case_soft_cap_paper_names_unsigned_sheet() -> String:
+	# The rewritten paper: an unsigned offer on the table is a ledger line; none → no line.
+	var with_sheet: Dictionary = {
+		"phase": 3, "day": 730, "mrr": 4000, "customers_signed": 3, "customers_active": 3,
+		"hires": 1, "employees": 1, "product_ships": 2, "unsigned_sheets": 1,
+	}
+	var claim: String = TranslationServer.translate("END_RF_UNSIGNED_SHEET")
+	var vs: Dictionary = EndingsCopy.build("running_on_fumes", with_sheet, {})
+	var found: bool = false
+	for line in (vs.get("ledger_lines", []) as Array):
+		if String(line) == claim:
+			found = true
+	if not found:
+		return "the unsigned sheet was not named on the paper"
+	var without: Dictionary = with_sheet.duplicate()
+	without["unsigned_sheets"] = 0
+	var vs2: Dictionary = EndingsCopy.build("running_on_fumes", without, {})
+	for line in (vs2.get("ledger_lines", []) as Array):
+		if String(line) == claim:
+			return "the paper named an unsigned sheet that does not exist"
+	# Two-year span phrase: a 730-day run is not "close to a year".
+	var span_two: String = TranslationServer.translate("END_SPAN_NEAR_TWO_YEARS")
+	if span_two == "" or span_two == "END_SPAN_NEAR_TWO_YEARS":
+		return "END_SPAN_NEAR_TWO_YEARS missing"
+	var head_line: String = String((vs.get("ledger_lines", []) as Array)[0])
+	if head_line.find(span_two) < 0:
+		return "730-day paper does not use the two-year span phrase: '%s'" % head_line
+	return ""
+
+
+# --- §3 · the Series A gate: revenue bar (never shown) + a growth streak; the signal is shown ---
+
+static func _case_month_history_close_and_cap() -> String:
+	# The calendar-month ledger closes on the 1st, carries the open month's accruals
+	# (income = Σ daily revenue, expense = Σ burn + one-time costs, red_days), and keeps 12.
+	GameState.set_cash(100000)
+	_seed_b2b(3000)   # daily revenue 100, burn 50 (founder) → net +50/day
+	_sim_day()        # settle the bridge (MRR → GameState)
+	var closes_before: int = GameState.month_history.size()
+	for i in 40:
+		_sim_day()
+	if GameState.month_history.size() != closes_before + 1:
+		return "expected one fiscal close in 40 days, got %d" % (GameState.month_history.size() - closes_before)
+	var e: Dictionary = GameState.month_history[GameState.month_history.size() - 1]
+	if int(e.get("income", 0)) <= 0 or int(e.get("expense", 0)) <= 0:
+		return "close carries no accruals: %s" % str(e)
+	if int(e.get("net", 0)) != int(e.get("income", 0)) - int(e.get("expense", 0)):
+		return "net != income - expense: %s" % str(e)
+	if int(e.get("mrr_close", 0)) != GameState.mrr:
+		return "mrr_close %d != live MRR %d at close" % [int(e.get("mrr_close", 0)), GameState.mrr]
+	if int(e.get("red_days", -1)) != 0:
+		return "a solvent month counted red days: %s" % str(e)
+	for i in 20:
+		GameState.push_month_close({"start_day": 1, "end_day": 30, "mrr_close": 1, "income": 1, "expense": 1, "net": 0, "red_days": 0})
+	if GameState.month_history.size() != GameState.MONTH_HISTORY_CAP:
+		return "ring did not cap at %d (size %d)" % [GameState.MONTH_HISTORY_CAP, GameState.month_history.size()]
+	return ""
+
+
+static func _case_growth_streak_semantics() -> String:
+	# Pure arithmetic of the streak: integer MoM compare, zero previous never counts.
+	var cases := [
+		[[0, 1000], 0],
+		[[1000, 1120], 1],
+		[[1000, 1119], 0],
+		[[1000, 1200, 1400, 1600], 3],
+		[[1000, 1200, 1100, 1300], 1],
+		[[500], 0],
+	]
+	for cs in cases:
+		_seed_month_closes(cs[0])
+		var got: int = GameState.get_mrr_growth_streak(PhaseGateSystem.GROWTH_MIN_PCT)
+		if got != int(cs[1]):
+			return "closes %s → streak %d, want %d" % [str(cs[0]), got, int(cs[1])]
+	_seed_month_closes([1000, 1120])   # exactly one qualifying month
+	if not EventManager.is_condition_met({"type": "mrr_growth_streak", "value": 1, "pct": 12}):
+		return "condition false at streak 1 (value 1)"
+	if EventManager.is_condition_met({"type": "mrr_growth_streak", "value": 2, "pct": 12}):
+		return "condition true at streak 1 (value 2)"
+	return ""
+
+
+static func _case_series_a_gate_needs_streak() -> String:
+	# The falsification guard for §3: remove the streak condition from the gate table and
+	# this fails — MRR over the bar with NO growth history must not open the door.
+	GameState.set_phase(2)
+	_seed_b2b_series_a()
+	GameState.month_history.clear()
+	for i in 3:
+		_sim_day()
+	if GameState.phase_gate_ready:
+		return "the Series A gate opened on MRR alone (no growth streak)"
+	return ""
+
+
+static func _case_series_a_signal_states() -> String:
+	# phase 1 → closed regardless; phase 2 nothing → closed; streak 1 → warming; bar only →
+	# warming; all three → open; phase 3 → open. progress is a ratio, never a figure.
+	GameState.set_phase(1)
+	_seed_b2b_series_a()
+	_seed_growth_streak(GameState.mrr)
+	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "closed":
+		return "phase 1 should read closed"
+	GameState.set_phase(2)
+	GameState.month_history.clear()
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, 500)
+	SalesSystem.reflect_mrr()
+	var sig: Dictionary = PhaseGateSystem.series_a_signal()
+	if String(sig.get("state", "")) != "closed" or float(sig.get("progress", 1.0)) >= 0.5:
+		return "phase 2 with nothing should read closed (got %s)" % str(sig)
+	_seed_month_closes([1000, 1200])   # one growth month
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, 1200)
+	SalesSystem.reflect_mrr()
+	sig = PhaseGateSystem.series_a_signal()
+	if String(sig.get("state", "")) != "warming" or int(sig.get("streak", 0)) != 1:
+		return "one growth month should read warming (got %s)" % str(sig)
+	GameState.month_history.clear()
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, SalesSystem.TRACTION_MRR_TARGET + 1000)
+	SalesSystem.reflect_mrr()
+	sig = PhaseGateSystem.series_a_signal()
+	if String(sig.get("state", "")) != "warming" or not bool(sig.get("mrr_ok", false)):
+		return "bar cleared alone should read warming (got %s)" % str(sig)
+	_seed_growth_streak(GameState.mrr)
+	sig = PhaseGateSystem.series_a_signal()
+	if String(sig.get("state", "")) != "open" or not is_equal_approx(float(sig.get("progress", 0.0)), 1.0):
+		return "all conditions met should read open (got %s)" % str(sig)
+	GameState.set_phase(3)
+	GameState.month_history.clear()
+	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "open":
+		return "phase 3 should read open"
+	return ""
+
+
+static func _case_month_history_save_typing() -> String:
+	# The ring is an Array[Dictionary] of ints; a save round-trip must bring it back typed,
+	# with ints (JSON re-types to float; the codec restores).
+	_seed_month_closes([1000, 1200, 1500])
+	GameState.set_cash(12345)
+	_cleanup_save_slots()
+	if not SaveManager.save_to_slot(SAVE_SLOT_B):
+		_cleanup_save_slots()
+		return "save refused"
+	GameState.month_history.clear()
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_B)):
+		_cleanup_save_slots()
+		return "load refused"
+	_cleanup_save_slots()
+	if GameState.month_history.size() != 3:
+		return "month_history came back with %d entries, want 3" % GameState.month_history.size()
+	if GameState.month_history.get_typed_builtin() != TYPE_DICTIONARY:
+		return "month_history lost its Array[Dictionary] typing"
+	var e: Dictionary = GameState.month_history[2]
+	if typeof(e.get("mrr_close")) != TYPE_INT or int(e.get("mrr_close")) != 1500:
+		return "mrr_close came back as %s (%s)" % [str(e.get("mrr_close")), type_string(typeof(e.get("mrr_close")))]
+	if GameState.get_mrr_growth_streak(12) != 2:
+		return "streak after load = %d, want 2" % GameState.get_mrr_growth_streak(12)
+	return ""
+
+
+# --- §5 · B2C growth compounds both ways (word of mouth on the aggregate's satisfaction) ---
+
+static func _b2c_delta_at_satisfaction(sat: int) -> float:
+	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	CustomerRegistry.set_satisfaction(ub.id, sat)
+	return SalesSystem._audience_delta_per_hour()
+
+
+static func _case_b2c_wom_needs_satisfaction() -> String:
+	# Above the gate the hourly delta carries audience·WOM_COEF·(sat−gate)/100 — proportional
+	# to the AUDIENCE (that is the compounding); below the gate there is no such term.
+	_seed_b2c()
+	GameState.set_flag("mvp_innovation", 15.0)
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_experience", 17.5)
+	GameState.set_flag("b2c_audience", 1000.0)
+	var d50: float = _b2c_delta_at_satisfaction(50)
+	var d60: float = _b2c_delta_at_satisfaction(60)
+	var d80: float = _b2c_delta_at_satisfaction(80)
+	if absf(d60 - d50) > 1e-6:
+		return "satisfaction 60 (the gate) already adds word of mouth (%.4f vs %.4f)" % [d60, d50]
+	var want: float = 1000.0 * SalesSystem.WOM_COEF * 0.2
+	if absf((d80 - d50) - want) > 1e-6:
+		return "sat 80 adds %.4f/h over sat 50, want audience·WOM_COEF·0.2 = %.4f" % [d80 - d50, want]
+	# Proportional to the audience: double the audience, double the word-of-mouth term.
+	GameState.set_flag("b2c_audience", 2000.0)
+	var d80b: float = _b2c_delta_at_satisfaction(80)
+	var d50b: float = _b2c_delta_at_satisfaction(50)
+	if absf((d80b - d50b) - 2.0 * want) > 1e-6:
+		return "word of mouth is not proportional to the audience (%.4f vs %.4f)" % [d80b - d50b, 2.0 * want]
+	if SalesSystem.WOM_COEF <= 0.0:
+		return "WOM_COEF is %.4f — the compounding term is off" % SalesSystem.WOM_COEF
+	return ""
+
+
+static func _case_b2c_growth_multiplier_floor() -> String:
+	# Below the pivot the BASE growth is scaled by sat/50, floored at 0.3; at and above the
+	# pivot it runs at full strength. Measured as the gap to the sat-50 delta with a tiny
+	# audience so churn and word of mouth are negligible.
+	_seed_b2c()
+	GameState.set_flag("mvp_innovation", 15.0)
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_experience", 17.5)
+	GameState.set_flag("b2c_audience", 0.0)   # no audience → no churn, no word of mouth: pure base growth
+	var d50: float = _b2c_delta_at_satisfaction(50)
+	var d100: float = _b2c_delta_at_satisfaction(100)
+	var d25: float = _b2c_delta_at_satisfaction(25)
+	var d0: float = _b2c_delta_at_satisfaction(0)
+	if d50 <= 0.0:
+		return "fixture: base growth is not positive (%.4f)" % d50
+	if absf(d100 - d50) > 1e-6:
+		return "satisfaction above the pivot changed base growth (%.4f vs %.4f)" % [d100, d50]
+	if absf(d25 - 0.5 * d50) > 1e-6:
+		return "satisfaction 25 should halve base growth (%.4f vs %.4f)" % [d25, 0.5 * d50]
+	if absf(d0 - SalesSystem.WOM_MULT_MIN * d50) > 1e-6:
+		return "satisfaction 0 should floor at ×%.1f (%.4f vs %.4f)" % [SalesSystem.WOM_MULT_MIN, d0, SalesSystem.WOM_MULT_MIN * d50]
+	# No aggregate record yet (paid tier closed) → the pre-revenue trickle is untouched.
+	CustomerRegistry.remove(SalesSystem.B2C_USERBASE_ID)
+	var d_none: float = SalesSystem._audience_delta_per_hour()
+	if absf(d_none - d50) > 1e-6:
+		return "without the aggregate record growth should equal the pivot reading (%.4f vs %.4f)" % [d_none, d50]
+	return ""
+
+
+# --- §6 · bugs hit conversion ---
+
+static func _case_conversion_bug_penalty() -> String:
+	# 10 live bugs ≈ −20 % conversion, floored at ×0.4; the pricing ruler's projection
+	# (estimate_price_change → new_paying) moves with it.
+	_seed_b2c()
+	GameState.set_flag("mvp_innovation", 15.0)
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_experience", 17.5)
+	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
+	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
+	GameState.set_flag("b2c_audience", 1000.0)
+	var price: int = int(GameState.get_flag("b2c_price", SalesSystem.B2C_PRICE_DEFAULT))
+	# Bugs ALSO lower product_value (effective stability → composite → optimal), so the
+	# expectation is rebuilt from product_value at each bug level: the penalty factor is what
+	# conversion_rate adds on top of the price curve.
+	for probe in [[0, 1.0], [10, 0.8], [60, SalesSystem.BUG_CONV_FLOOR]]:
+		GameState.set_flag("mvp_live_bug_count", int(probe[0]))
+		var optimal: float = maxf(1.0, float(SalesSystem.product_value()["optimal"]))
+		var price_curve: float = clampf(SalesSystem.CONVERSION_BASE * optimal / maxf(1.0, float(price)),
+			SalesSystem.CONVERSION_MIN, SalesSystem.CONVERSION_MAX)
+		var want: float = clampf(price_curve * float(probe[1]), SalesSystem.CONVERSION_MIN, SalesSystem.CONVERSION_MAX)
+		var got: float = SalesSystem.conversion_rate(price)
+		if absf(got - want) > 1e-6:
+			return "%d bugs → conversion %.4f, want price curve %.4f × %.2f = %.4f" % [int(probe[0]), got, price_curve, float(probe[1]), want]
+		if int(probe[0]) == 0 and (got <= SalesSystem.CONVERSION_MIN or got >= SalesSystem.CONVERSION_MAX):
+			return "fixture: bug-free rate %.3f sits on a clamp; the penalty would be masked" % got
+	GameState.set_flag("mvp_live_bug_count", 0)
+	var paying0: int = int(SalesSystem.estimate_price_change(price)["new_paying"])
+	GameState.set_flag("mvp_live_bug_count", 10)
+	var paying10: int = int(SalesSystem.estimate_price_change(price)["new_paying"])
+	if paying10 >= paying0:
+		return "the pricing projection did not move under bugs (%d vs %d paying)" % [paying10, paying0]
+	return ""
+
+
+# --- §7 · the bug complaint costs audience and satisfaction, never cash ---
+
+static func _case_audience_pct_modifier() -> String:
+	# audience_delta {pct} erodes (or grows) the live audience proportionally; flat delta is
+	# unchanged; the badge renders the percentage.
+	_seed_b2c()
+	GameState.set_flag("b2c_audience", 1000.0)
+	EventManager._apply_modifiers([{"type": "audience_delta", "pct": -0.03}])
+	var a: float = float(GameState.get_flag("b2c_audience", 0.0))
+	if absf(a - 970.0) > 0.01:
+		return "pct −0.03 on 1000 left %.2f, want 970" % a
+	EventManager._apply_modifiers([{"type": "audience_delta", "delta": 30}])
+	if absf(float(GameState.get_flag("b2c_audience", 0.0)) - 1000.0) > 0.01:
+		return "flat delta regressed"
+	# event_modal.gd has no class_name; instantiate the script bare — _describe_modifier only
+	# needs tr() and Fmt, neither of which needs the node in the tree.
+	var modal: Node = (load("res://scripts/modals/event_modal.gd") as GDScript).new()
+	var badge: Dictionary = modal._describe_modifier({"type": "audience_delta", "pct": -0.03})
+	modal.free()
+	var txt: String = String(badge.get("text", ""))
+	if txt == "" or txt.find("3") < 0 or txt.find("{") >= 0:
+		return "badge for the pct form is wrong: '%s'" % txt
+	if String(badge.get("kind", "")) != "negative":
+		return "badge kind for a negative pct should be negative, got %s" % str(badge.get("kind"))
+	return ""
+
+
+static func _case_bug_complaint_costs_audience_not_cash() -> String:
+	# Every row of the rewritten event leaves cash alone; the two answers move satisfaction
+	# and the audience, the ignore row keeps its churn grammar.
+	var ev: GameEvent = EventManager._all_events.get("ev_ps_bug_complaint", null)
+	if ev == null:
+		return "ev_ps_bug_complaint not in the live pool"
+	for ch in ev.choices:
+		for m in ch.modifiers:
+			if String(m.get("type", "")) == "cash":
+				return "a cash row survived in '%s'" % ch.label
+	_seed_b2c()
+	GameState.set_flag("b2c_audience", 1000.0)
+	SalesSystem._ensure_b2c_record()
+	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
+	CustomerRegistry.set_satisfaction(ub.id, 40)
+	var cash0: int = GameState.cash
+	var brand0: int = GameState.brand
+	EventManager._apply_modifiers(ev.choices[0].modifiers)
+	if GameState.cash != cash0:
+		return "answering in the open moved cash (%d → %d)" % [cash0, GameState.cash]
+	if ub.satisfaction != 50:
+		return "answering in the open did not lift satisfaction by 10 (got %d)" % ub.satisfaction
+	if GameState.brand != brand0 + 2:
+		return "answering in the open did not add brand +2"
+	if absf(float(GameState.get_flag("b2c_audience", 0.0)) - 970.0) > 0.01:
+		return "answering in the open did not cost 3 %% of the audience (%.1f)" % float(GameState.get_flag("b2c_audience", 0.0))
+	EventManager._apply_modifiers(ev.choices[1].modifiers)
+	if GameState.cash != cash0:
+		return "the private reply moved cash"
+	if ub.satisfaction != 56 or GameState.brand != brand0 + 1:
+		return "the private reply should be sat +6 / brand −1 (sat %d, brand %d)" % [ub.satisfaction, GameState.brand]
+	var aud_before_ignore: float = float(GameState.get_flag("b2c_audience", 0.0))
+	EventManager._apply_modifiers(ev.choices[2].modifiers)
+	if float(GameState.get_flag("b2c_audience", 0.0)) >= aud_before_ignore:
+		return "ignoring it did not churn audience"
+	if GameState.cash != cash0:
+		return "ignoring it moved cash"
+	return ""
+
+
+# --- §8 / §13 · the discount cap, the risk hysteresis, one retention gate ---
+
+static func _seed_risk_account() -> Customer:
+	# One B2B account parked IN Risk with a running countdown and a degrading product.
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	CustomerRegistry.set_tolerance(c.id, 50)
+	CustomerRegistry.set_satisfaction(c.id, 30)
+	GameState.set_flag("mvp_stability", 5.0)
+	GameState.set_flag("mvp_live_bug_count", 30)
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	CustomerRegistry.set_churn_countdown(c.id, B2BConstants.CHURN_COUNTDOWN_DAYS)
+	return c
+
+
+static func _case_discount_cap_two_uses() -> String:
+	# Two discounts cut MRR and recover the account; the third is refused by the seam itself.
+	var c: Customer = _seed_risk_account()
+	var mrr0: int = c.mrr
+	B2BSalesSystem.apply_discount(c.id, -150)
+	if c.mrr != mrr0 - 150 or c.retain_discounts != 1:
+		return "first discount: mrr %d (want %d), uses %d" % [c.mrr, mrr0 - 150, c.retain_discounts]
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	B2BSalesSystem.apply_discount(c.id, -150)
+	if c.mrr != mrr0 - 300 or c.retain_discounts != 2:
+		return "second discount: mrr %d (want %d), uses %d" % [c.mrr, mrr0 - 300, c.retain_discounts]
+	var sat_after_two: int = c.satisfaction
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	B2BSalesSystem.apply_discount(c.id, -150)
+	if c.mrr != mrr0 - 300 or c.retain_discounts != 2 or c.satisfaction != sat_after_two:
+		return "third discount went through (mrr %d, uses %d, sat %d)" % [c.mrr, c.retain_discounts, c.satisfaction]
+	return ""
+
+
+static func _case_risk_reentry_hysteresis() -> String:
+	# Rescued on day D, still under the bar: the account stays OUT of Risk until D+21, with
+	# no countdown and no card, then re-enters the day the window closes.
+	var c: Customer = _seed_risk_account()
+	var day0: int = GameState.day
+	B2BSalesSystem.apply_discount(c.id, -100)   # _recover → leaves Risk, stamps the exit day
+	if c.lifecycle_phase == "risk" or c.last_risk_exit_day != day0:
+		return "rescue did not leave Risk / stamp the day (phase %s, exit %d)" % [c.lifecycle_phase, c.last_risk_exit_day]
+	var cards: Array = [0]
+	EventBus.event_triggered.connect(func(id: String) -> void:
+		if id.begins_with("ev_b2b_retain_"):
+			cards[0] += 1)
+	for i in B2BConstants.RISK_REENTRY_DAYS - 1:
+		CustomerRegistry.set_satisfaction(c.id, 10)   # hold it far under the bar
+		_sim_day()
+		if c.lifecycle_phase == "risk":
+			return "re-entered Risk on day %d, %d days after the rescue (window %d)" % [
+				GameState.day, GameState.day - day0, B2BConstants.RISK_REENTRY_DAYS]
+	if c.risk_streak < B2BConstants.RISK_TRIGGER_DAYS:
+		return "the streak stopped counting during the window (%d)" % c.risk_streak
+	if int(cards[0]) != 0:
+		return "a retention card fired inside the window"
+	CustomerRegistry.set_satisfaction(c.id, 10)
+	_sim_day()   # D + 21
+	if c.lifecycle_phase != "risk" or c.churn_countdown < 0:
+		return "did not re-enter Risk when the window closed (day %d, phase %s)" % [GameState.day, c.lifecycle_phase]
+	_drain_all_modals()
+	return ""
+
+
+static func _case_risk_exit_stamps_day() -> String:
+	# Both exit sites stamp last_risk_exit_day: the daily sweep's healthy branch and _recover.
+	var c: Customer = _seed_risk_account()
+	if c.last_risk_exit_day != -1:
+		return "fresh account already carries an exit day"
+	GameState.set_flag("mvp_stability", 80.0)
+	GameState.set_flag("mvp_live_bug_count", 0)
+	CustomerRegistry.set_satisfaction(c.id, 90)   # over the bar → _tick_healthy's risk branch
+	_sim_day()
+	if c.lifecycle_phase == "risk" or c.last_risk_exit_day != GameState.day:
+		return "healthy-branch exit did not stamp (phase %s, exit %d, day %d)" % [c.lifecycle_phase, c.last_risk_exit_day, GameState.day]
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	CustomerRegistry.set_churn_countdown(c.id, 5)
+	GameState.day += 10
+	B2BSalesSystem.accept_promise(c.id, "ai_vec_filter", 14)   # the promise path → _recover
+	if c.last_risk_exit_day != GameState.day:
+		return "_recover exit did not stamp (exit %d, day %d)" % [c.last_risk_exit_day, GameState.day]
+	_drain_all_modals()
+	return ""
+
+
+static func _case_discount_row_locked_past_cap() -> String:
+	# Past the cap every discount row (retention card AND the CS complaint/renewal cards)
+	# is present, locked by a real condition, and carries the reason on its sub-line.
+	var c: Customer = _seed_risk_account()
+	var ev: GameEvent = B2BEventFactory.build_retention(c)
+	var row: EventChoice = null
+	for ch in ev.choices:
+		for m in ch.modifiers:
+			if String(m.get("type", "")) == "b2b_retain_discount":
+				row = ch
+	if row == null:
+		return "no discount row on the retention card"
+	if not EventManager.is_condition_met(row.unlock_condition):
+		return "discount row locked before any discount"
+	CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
+	ev = B2BEventFactory.build_retention(c)
+	row = null
+	for ch in ev.choices:
+		for m in ch.modifiers:
+			if String(m.get("type", "")) == "b2b_retain_discount":
+				row = ch
+	if row == null:
+		return "the capped discount row was withheld — it must stay visible"
+	if EventManager.is_condition_met(row.unlock_condition):
+		return "capped discount row is still unlocked"
+	var want: String = TranslationServer.translate("B2B_DISCOUNT_SPENT_DESC")
+	if row.description != want or want == "B2B_DISCOUNT_SPENT_DESC":
+		return "capped row lacks the reason line (desc '%s')" % row.description
+	# The CS channel: a complaint card's discount row locks the same way.
+	var cs := Character.new()
+	cs.id = "char_cs_cap"
+	cs.character_name = "Cap Rep"
+	cs.role = HRConstants.ROLE_CUSTOMER_REP
+	cs.category = "employee"
+	cs.monthly_salary = 5000
+	cs.role_stats = {"expertise": 2, "pace": 5, "rapport": 5}
+	CharacterRegistry.add(cs)
+	CustomerRegistry.assign_customer(c.id, cs.id)
+	CustomerRegistry.set_last_request_kind(c.id, "")
+	var req: GameEvent = B2BEventFactory.build_cs_request(c, cs)
+	var locked_found: bool = false
+	for ch in req.choices:
+		for m in ch.modifiers:
+			if String(m.get("type", "")) == "b2b_retain_discount":
+				if EventManager.is_condition_met(ch.unlock_condition):
+					return "the CS card's discount row is unlocked past the cap"
+				locked_found = true
+	# (a feature-kind request has no discount row — that is not a failure)
+	return ""
+
+
+static func _case_retention_gate_shared() -> String:
+	# ONE gate: healthy / countdown −1 / delegated+escalated → no card; live Risk → card.
+	var c: Customer = _seed_risk_account()
+	if not B2BSalesSystem.can_offer_retention(c):
+		return "live Risk account refused"
+	CustomerRegistry.set_churn_countdown(c.id, -1)
+	if B2BSalesSystem.can_offer_retention(c):
+		return "offered with no countdown running"
+	CustomerRegistry.set_churn_countdown(c.id, 5)
+	CustomerRegistry.set_lifecycle_phase(c.id, "active")
+	if B2BSalesSystem.can_offer_retention(c):
+		return "offered to an active (non-Risk) account"
+	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+	c.assigned_to = "someone"
+	c.cs_escalated = true
+	if B2BSalesSystem.can_offer_retention(c):
+		return "offered while the rep's escalation is open"
+	c.assigned_to = ""
+	c.cs_escalated = false
+	# The sweep's enqueue goes through the same gate: a recovered account raises no card.
+	B2BSalesSystem.apply_discount(c.id, -50)   # leaves Risk
+	var before: int = EventManager._queue.size() + (1 if EventManager._active_event_id != "" else 0)
+	B2BSalesSystem._maybe_enqueue_retention(c)
+	var after: int = EventManager._queue.size() + (1 if EventManager._active_event_id != "" else 0)
+	if after != before:
+		return "the sweep enqueued a card for an account that is not in Risk"
+	_drain_all_modals()
+	return ""
+
+
+static func _case_manual_retention_respects_cap() -> String:
+	# The Sales-tab path and the cap together: after two discounts the manual card's discount
+	# row is locked, and forcing the modifier through the seam changes nothing.
+	var c: Customer = _seed_risk_account()
+	CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
+	var ev: GameEvent = B2BEventFactory.build_retention(c)
+	var mrr0: int = c.mrr
+	for ch in ev.choices:
+		for m in ch.modifiers:
+			if String(m.get("type", "")) == "b2b_retain_discount":
+				if EventManager.is_condition_met(ch.unlock_condition):
+					return "manual card offers an unlocked discount past the cap"
+				EventManager._apply_modifiers(ch.modifiers)   # the bypass a UI bug could make
+	if c.mrr != mrr0 or c.retain_discounts != B2BConstants.RETAIN_DISCOUNT_MAX_USES:
+		return "a forced discount past the cap changed state (mrr %d→%d, uses %d)" % [mrr0, c.mrr, c.retain_discounts]
+	return ""
+
+
+# --- §9 · profitability is a condition, not a crossing ---
+
+static func _case_profit_condition_fires() -> String:
+	# Five Artıda closes seeded, live MRR over the floor, the sixth month earned by the sim:
+	# no ending on the close day itself (slot 10 closes after slot 9 reads), the win the day
+	# after; never before the sixth close.
+	GameState.set_cash(100000)
+	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)   # daily revenue ~833 vs burn 50 → an Artıda month
+	_seed_month_closes([20000, 21000, 22000, 23000, 24000], 30000, 24000)   # 5 Artıda closes, margin 20 %
+	var closes0: int = GameState.month_history.size()
+	var fired_day: int = -1
+	for i in 40:
+		_sim_day()
+		if not _endings.is_empty():
+			fired_day = GameState.day
+			break
+		if GameState.month_history.size() == closes0 and not _endings.is_empty():
+			return "ending fired before the sixth close"
+	if _endings != ["profitable_bootstrap"]:
+		return "endings: %s (closes %d, streak %d)" % [str(_endings), GameState.month_history.size(),
+			GameState.get_profitable_month_streak()]
+	if GameState.month_history.size() != closes0 + 1:
+		return "the win needed %d closes, want exactly one more" % (GameState.month_history.size() - closes0)
+	var close_day: int = int(GameState.month_history[GameState.month_history.size() - 1].get("end_day", 0))
+	if fired_day != close_day + 1:
+		return "win fired on day %d, want the day after the close (%d)" % [fired_day, close_day + 1]
+	# The paper names the streak (END_BS_STREAK) when the ledger carries one.
+	var vs: Dictionary = EndingsCopy.build("profitable_bootstrap", GameState.get_run_ledger(), {})
+	var claim: String = TranslationServer.translate("END_BS_STREAK").format({"n": EndingsCopy._num(EndingsSystem.PROFIT_STREAK_MONTHS)})
+	var found: bool = false
+	for line in (vs.get("ledger_lines", []) as Array):
+		if String(line) == claim:
+			found = true
+	if not found:
+		return "the bootstrap paper did not name the %d-month streak" % EndingsSystem.PROFIT_STREAK_MONTHS
+	return ""
+
+
+static func _case_profit_predicate_margin_scale_red() -> String:
+	# Each clause alone blocks the win: thin margin, small scale, a red day inside the window.
+	GameState.set_cash(100000)
+	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)
+	_sim_day()   # settle the MRR bridge
+	_seed_month_closes([20000, 21000, 22000, 23000, 24000, 25000], 30000, 27500)   # margin 8 %
+	var sig: Dictionary = EndingsSystem.profitability_signal()
+	if bool(sig.get("met", false)) or bool(sig.get("margin_ok", true)):
+		return "thin margin should block (%s)" % str(sig)
+	_seed_month_closes([20000, 21000, 22000, 23000, 24000, 25000], 30000, 24000)   # margin 20 %
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, EndingsSystem.BOOTSTRAP_WIN_MRR - 1000)
+	SalesSystem.reflect_mrr()
+	sig = EndingsSystem.profitability_signal()
+	if bool(sig.get("met", false)) or bool(sig.get("mrr_ok", true)):
+		return "small scale should block (%s)" % str(sig)
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)
+	SalesSystem.reflect_mrr()
+	sig = EndingsSystem.profitability_signal()
+	if not bool(sig.get("met", false)):
+		return "all clauses met should read met (%s)" % str(sig)
+	# One red day inside the newest month breaks the streak.
+	var last: Dictionary = GameState.month_history[GameState.month_history.size() - 1]
+	last["red_days"] = 1
+	GameState.month_history[GameState.month_history.size() - 1] = last
+	sig = EndingsSystem.profitability_signal()
+	if bool(sig.get("met", false)) or int(sig.get("streak", 9)) != 0:
+		return "a red day inside the window should break the streak (%s)" % str(sig)
+	return ""
+
+
+# --- §10 · the speed ladder is 1×/2×/3× ---
+
+static func _case_speed_save_clamps_to_ladder() -> String:
+	# A save written under the 5-rung ladder carries last_running_speed 4; from_dict clamps it
+	# to the array's top (3) and the resume lands there — no 4x ghost in the accumulator.
+	TimeManager.from_dict({"in_game_hours": 0.0, "current_speed": 4, "last_running_speed": 4})
+	if TimeManager.last_running_speed != 3:
+		return "stored speed 4 came back as %d, want 3" % TimeManager.last_running_speed
+	TimeManager.resume_if_paused()
+	if TimeManager.current_speed != 3:
+		return "resume after a 4x save landed on %d, want 3" % TimeManager.current_speed
+	if not is_equal_approx(TimeManager.hours_per_real_second(4), 0.0):
+		return "index 4 still yields a live multiplier"
+	return ""
+
+
+static func _case_topbar_speed_cluster_three_rungs() -> String:
+	# The TopBar scene carries pause + three rungs and no Speed4Btn; the script's button
+	# array matches the ladder size exactly (index == speed index).
+	var packed: PackedScene = load("res://scenes/ui/components/TopBar.tscn")
+	if packed == null:
+		return "TopBar.tscn failed to load"
+	var state: SceneState = packed.get_state()
+	var names: Array = []
+	for i in state.get_node_count():
+		names.append(String(state.get_node_name(i)))
+	if names.has("Speed4Btn"):
+		return "TopBar.tscn still carries Speed4Btn"
+	for want in ["PauseBtn", "Speed1Btn", "Speed2Btn", "Speed3Btn"]:
+		if not names.has(want):
+			return "TopBar.tscn is missing %s" % want
+	var src: String = (load("res://scripts/ui/components/top_bar.gd") as GDScript).source_code
+	if src.find("Speed4Btn") >= 0:
+		return "top_bar.gd still references Speed4Btn"
+	return ""
+
+
+# --- §11 · the suite runs on one seed ---
+
+static func _case_smoke_seed_pinned() -> String:
+	# run_case pins GameState.run_seed to the probes' seed unless the case asked for its own;
+	# the ledger exposes it (audit S2-40), so this is one read.
+	var seed_now: int = int(GameState.get_run_ledger().get("seed", 0))
+	if seed_now != 424242:
+		return "smoke seed is %d, want 424242 (run_case no longer pins it)" % seed_now
+	return ""
+
+
+# --- §14 · the ambient rate model reproduces the authored daily chance; ≤1 ambient/day ---
+
+static func _case_ambient_hourly_chance_exact() -> String:
+	# 1 − (1 − p_h)^n == p for the authored pool (0.5 over a 10-hour window → 0.0670/h, not
+	# 0.05/h), 24-hour windows, and the edges.
+	var p_h: float = EventManager.hourly_chance(0.5, 10)
+	if absf(p_h - 0.066967) > 1e-5:
+		return "hourly_chance(0.5, 10) = %.6f, want 0.066967" % p_h
+	if absf((1.0 - pow(1.0 - p_h, 10)) - 0.5) > 1e-9:
+		return "ten rolls at p_h do not reproduce 0.5"
+	var p24: float = EventManager.hourly_chance(0.3, 24)
+	if absf((1.0 - pow(1.0 - p24, 24)) - 0.3) > 1e-9:
+		return "24 rolls do not reproduce 0.3"
+	if not is_equal_approx(EventManager.hourly_chance(0.4, 1), 0.4):
+		return "a one-hour window must roll the daily chance as written"
+	if not is_equal_approx(EventManager.hourly_chance(0.0, 10), 0.0) or not is_equal_approx(EventManager.hourly_chance(1.0, 10), 1.0):
+		return "edges (0, 1) must pass through"
+	# The old approximation was p/n — make sure the exact form is what the engine uses.
+	if absf(p_h - 0.05) < 1e-6:
+		return "the engine still uses the p/n approximation"
+	return ""
+
+
+static func _case_ambient_one_per_day_across_hour0() -> String:
+	# Drive 30 full engine days (hour 1..23 → 0 → advance → daily) on a B2C world where the
+	# four ambient cards are all eligible and count ambient (pool, random-trigger) entries per
+	# calendar day: never two on one day, including across the hour-0 rollover.
+	_seed_b2c()
+	GameState.set_cash(500000)
+	GameState.set_flag("mvp_innovation", 15.0)
+	GameState.set_flag("mvp_stability", 20.0)
+	GameState.set_flag("mvp_experience", 17.5)
+	GameState.set_flag("b2c_audience", 500.0)
+	SalesSystem.add_b2c_audience(0)
+	var per_day: Dictionary = {}
+	EventBus.event_triggered.connect(func(id: String) -> void:
+		var ev: GameEvent = EventManager._all_events.get(id, null)
+		if ev != null and ev.has_random_trigger():
+			# hour 0 belongs to the NEW calendar day (GameState.day still shows yesterday)
+			var slot: int = GameState.day + (1 if GameState.current_hour == 0 else 0)
+			per_day[slot] = int(per_day.get(slot, 0)) + 1)
+	var total: int = 0
+	for i in 30:
+		_sim_day_full()
+		_drain_all_modals()
+	for d in per_day.keys():
+		total += int(per_day[d])
+		if int(per_day[d]) > 1:
+			return "day %d received %d ambient cards (want ≤ 1)" % [d, int(per_day[d])]
+	if total == 0:
+		return "fixture: no ambient card fired in 30 days (pool not eligible?)"
+	return ""
+
+
+# --- §16 · S2-33: a creation draft survives navigation ---
+
+static func _case_creation_draft_survives_navigation() -> String:
+	# A half-built product (path, type, two features, a name) on the creation flow; the router
+	# tells the page it is closing → the draft lands in the typed flag → a fresh ProductTab
+	# mount re-hydrates it at the same step with the same selection. Clean flows stash nothing.
+	var root: Node = Engine.get_main_loop().root
+	var flow_script: GDScript = load("res://scripts/tabs/product/creation_flow.gd")
+	var flow: Control = flow_script.new()
+	root.add_child(flow)
+	flow.setup({"step": 3, "prefill": {"type": "saas_ops", "features": ["saas_ops_integration", "saas_ops_field"], "name": "Sahra"}})
+	var d: Dictionary = flow.draft_state()
+	if String(d.get("type", "")) != "saas_ops" or (d.get("features", []) as Array).size() != 2 or String(d.get("name", "")) != "Sahra":
+		flow.free()
+		return "fixture: draft_state did not read the prefilled selection (%s)" % str(d)
+	flow.on_page_closing()
+	flow.free()
+	var stashed: Dictionary = GameState.get_flag("creation_draft", {})
+	if stashed.is_empty():
+		return "on_page_closing stashed nothing for a dirty draft"
+	if int(stashed.get("step", 0)) != 3 or String(stashed.get("type", "")) != "saas_ops":
+		return "stashed draft is wrong: %s" % str(stashed)
+	# The router actually calls it: the seam name must appear in center_viewport's free path.
+	var router_src: String = (load("res://scripts/ui/components/center_viewport.gd") as GDScript).source_code
+	if router_src.find('propagate_call("on_page_closing")') < 0:
+		return "center_viewport does not notify the page before freeing it"
+	# Re-mount: ProductTab consumes the draft and lands on the creation view with the selection.
+	var tab: Control = (load("res://scenes/tabs/ProductTab.tscn") as PackedScene).instantiate()
+	root.add_child(tab)
+	var view: Node = tab.get("_view_node")
+	if tab.get("_view_id") != "creation" or view == null:
+		tab.free()
+		return "ProductTab did not re-open the creation flow (view %s)" % str(tab.get("_view_id"))
+	var restored: Dictionary = view.draft_state()
+	tab.free()
+	if String(restored.get("type", "")) != "saas_ops" or (restored.get("features", []) as Array).size() != 2 \
+			or String(restored.get("name", "")) != "Sahra" or int(restored.get("step", 0)) != 3:
+		return "re-hydrated draft differs: %s" % str(restored)
+	if GameState.has_flag("creation_draft"):
+		return "the draft flag was not consumed on re-mount"
+	# A clean flow stashes nothing (and clears a stale flag).
+	var clean: Control = flow_script.new()
+	root.add_child(clean)
+	clean.setup({"step": 1})
+	clean.on_page_closing()
+	clean.free()
+	if GameState.has_flag("creation_draft"):
+		return "a clean flow stashed a draft"
+	return ""
+
+
+# --- §12 · held-back strings landed ---
+
+static func _case_borderless_note_key_exists() -> String:
+	# The borderless helper line the sharpness task deferred: the settings modal picks it the
+	# moment it resolves (settings_modal._resolution_note_key), so the whole wire is "the row
+	# exists in both locales".
+	for loc in ["tr", "en"]:
+		var txt: String = TranslationServer.get_translation_object(loc).get_message("SET_RESOLUTION_BORDERLESS") \
+			if TranslationServer.get_translation_object(loc) != null else ""
+		if txt == "" or txt == "SET_RESOLUTION_BORDERLESS":
+			return "SET_RESOLUTION_BORDERLESS does not resolve in %s" % loc
+	if TranslationServer.translate("TOPBAR_UNIT_PER_DAY") == "TOPBAR_UNIT_PER_DAY":
+		return "TOPBAR_UNIT_PER_DAY missing"
+	return ""
+

@@ -43,7 +43,6 @@ const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SER
 	$Margin/Row/TimeGroup/SpeedControls/Speed1Btn,
 	$Margin/Row/TimeGroup/SpeedControls/Speed2Btn,
 	$Margin/Row/TimeGroup/SpeedControls/Speed3Btn,
-	$Margin/Row/TimeGroup/SpeedControls/Speed4Btn,
 ]
 
 # Local mirror of TimeManager.current_speed kept purely for visual paint.
@@ -51,7 +50,7 @@ const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SER
 # → TimeManager._on_speed_change_requested → TimeManager.speed_changed →
 # _on_time_manager_speed_changed (round-trip). That round-trip is what keeps
 # the indicator honest after event-pause restore, build commits, etc.
-var current_speed: int = 1  # 0=pause, 1=1x, 2=2x, 3=3x, 4=4x
+var current_speed: int = 1  # 0=pause, 1=1x, 2=2x, 3=3x (4x removed 2026-08-19, Calibration Round A §10)
 # Son teklif geri sayımı. Yalnız kendi sinyali geldiğinde boyanan tek çip bu; renk
 # körü paleti takas edildiğinde yeniden boyayabilmek için değeri hatırlıyoruz
 # (sinyalin kendisi tekrar atmaz). -1 = çip gizli.
@@ -101,7 +100,7 @@ func _ready() -> void:
 # --- Yoğunluk kademesi -------------------------------------------------------
 # Mockup 1920 mantıksal genişliğe çizildi ve o genişlikte birebir uygulanıyor.
 # Ama %150 UI ölçeği 1080p'de mantıksal viewport'u 1280×720'ye DÜŞÜRÜR ve ölçülen
-# içerik ~1331px: şirket adı soldan, 3x/4x tuşları sağdan taşardı. Hız kontrolünü
+# içerik ~1331px: şirket adı soldan, 2x/3x tuşları sağdan taşardı. Hız kontrolünü
 # kaybetmek kozmetik değil işlevsel bir kayıp, o yüzden şerit dar viewport'ta
 # kendini toplar. Bu, DisplaySettings'in ölçek kapısını genişletmenin ön koşulu.
 const COMPACT_BELOW := 1600   # WORKING — ölçülen taşma sınırının üstünde ilk yuvarlak adım

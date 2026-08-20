@@ -135,16 +135,16 @@ func _input(event: InputEvent) -> void:
 			return
 		_debug_endgame_key(key.keycode)
 		return
-	# Speed control: Space toggles pause, 1-4 pick a running speed off the ladder.
-	# Both share the two guards below. Note 1-4 are ALSO dialogue-choice keys inside
-	# MeetingScene / FrankPopup / TermSheetTable — Guard 2 is what keeps that
-	# unambiguous, since those only exist while a modal is mounted.
+	# Speed control: Space toggles pause, 1-3 pick a running speed off the ladder (4 does
+	# nothing since the 4x rung was removed — Calibration Round A §10). Both share the two
+	# guards below. Note 1-4 are ALSO dialogue-choice keys inside MeetingScene / FrankPopup /
+	# TermSheetTable — Guard 2 is what keeps that unambiguous, since those only exist while
+	# a modal is mounted.
 	var speed_idx: int = -1
 	match key.keycode:
 		KEY_1, KEY_KP_1: speed_idx = 1
 		KEY_2, KEY_KP_2: speed_idx = 2
 		KEY_3, KEY_KP_3: speed_idx = 3
-		KEY_4, KEY_KP_4: speed_idx = 4
 	if speed_idx < 0 and key.keycode != KEY_SPACE and key.keycode != KEY_ESCAPE:
 		return
 	# Guard 1: a text field is focused → let the key type its character (e.g. product name).
@@ -269,20 +269,23 @@ func _debug_endgame_key(keycode: Key) -> void:
 			GameState.vc_rejections = 3
 			GameState.set_mrr(0)
 		KEY_F8:
-			print("[Debug] F8 → profitable bootstrap preconditions + day 179")
-			GameState.cash_went_negative = false
-			GameState.net_history_90.clear()
-			for i in 90:
-				GameState.net_history_90.append(10)
-			GameState.set_mrr(6000)
+			# Kalibrasyon Turu A §9: kârlılık KOŞULU — 6 artıda ay kapanışı (marj %20) + MRR
+			# tabanı tohumlanır; canlı MRR slot-4 köprüsüyle yazıldığından bir sonraki günlük
+			# tikte bitiş ateşler (eski F8'in de notuydu).
+			print("[Debug] F8 → kârlılık koşulu ön şartları (%d artıda ay, marj %%20, MRR %d)" % [
+				EndingsSystem.PROFIT_STREAK_MONTHS, EndingsSystem.BOOTSTRAP_WIN_MRR])
+			GameState.month_history.clear()
+			for i in EndingsSystem.PROFIT_STREAK_MONTHS:
+				GameState.push_month_close({"start_day": 1 + i * 30, "end_day": 30 + i * 30,
+					"mrr_close": EndingsSystem.BOOTSTRAP_WIN_MRR, "income": 30_000, "expense": 24_000,
+					"net": 6_000, "red_days": 0})
+			GameState.set_mrr(EndingsSystem.BOOTSTRAP_WIN_MRR)
 			if GameState.cash < 0:
 				GameState.set_cash(1000)
-			GameState.day = 179
 		KEY_F9:
 			# Ctrl+F9 (çıplak F9 hızlı yüklemeye taşındı — bkz. _input üstü).
-			print("[Debug] Ctrl+F9 → running on fumes (cash_went_negative) + day 179")
-			GameState.cash_went_negative = true
-			GameState.day = 179
+			print("[Debug] Ctrl+F9 → yumuşak tavan arifesi (gün %d)" % (EndingsSystem.SOFT_CAP_DAY - 1))
+			GameState.day = EndingsSystem.SOFT_CAP_DAY - 1
 		KEY_F10:
 			print("[Debug] F10 → pivot offer preconditions (3 ret, canlı metrikler)")
 			GameState.vc_rejections = 3

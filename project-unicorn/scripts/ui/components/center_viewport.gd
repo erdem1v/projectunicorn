@@ -73,6 +73,12 @@ func _on_language_changed(_locale: String) -> void:
 func _on_tab_changed(tab_id: String) -> void:
 	_active_tab_id = tab_id
 	if _current_page != null:
+		# S2-33 (Calibration Round A §16): the free-and-rebuild is what makes the language and
+		# palette refresh self-healing, so the guard is NOT "stop freeing pages" — the page is
+		# told it is closing and stashes any in-progress draft (creation_flow.on_page_closing
+		# → GameState flag `creation_draft`), which the product tab re-hydrates on its next
+		# mount. propagate_call reaches the page AND every descendant that implements it.
+		_current_page.propagate_call("on_page_closing")
 		_current_page.queue_free()
 		_current_page = null
 

@@ -633,6 +633,7 @@ func _on_day_advanced(_d: int) -> void:
 	_refresh_dates()
 	_refresh_papers()
 	_refresh_frames()
+	_refresh_goal()   # ay kapanışı MRR'siz de sinyali oynatır (büyüme serisi)
 
 func _on_mrr_changed(_v: int) -> void:
 	_refresh_monitor()
@@ -1106,12 +1107,16 @@ func _refresh_goal() -> void:
 			_goal_sub.text = tr("ODA_GOAL_PROGRESS").format({"met": met, "total": 3})
 			_goal_bar.value = met / 3.0 * 100.0
 		2:
+			# Kalibrasyon Turu A §3: gelir çıtasının rakamı basılmaz — kapının SİNYALİ basılır
+			# (PhaseGateSystem.series_a_signal: durum + büyüme ayı; çubuk = sinyal ilerlemesi).
+			var sig: Dictionary = PhaseGateSystem.series_a_signal()
 			_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P2_LABEL"))
-			_goal_value.text = tr("ODA_GOAL_MRR").format({
-				"mrr": UiTokens.format_money(GameState.mrr),
-				"target": UiTokens.format_money(SalesSystem.TRACTION_MRR_TARGET)})
+			_goal_value.text = tr("ODA_GOAL_SIGNAL").format({
+				"state": InvestorAppetiteUi.state_text(String(sig.get("state", "closed"))),
+				"streak": mini(int(sig.get("streak", 0)), int(sig.get("streak_need", 1))),
+				"need": int(sig.get("streak_need", 1))})
 			_goal_sub.text = UiTokens.tr_upper(tr("ODA_BOARD_GOAL_P2_BRAND").format({"value": GameState.brand, "target": _gate2_brand_floor()}))
-			_goal_bar.value = SalesSystem.traction_progress() * 100.0
+			_goal_bar.value = float(sig.get("progress", 0.0)) * 100.0
 		_:
 			if GameState.series_a_closed:
 				_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P3_CLOSED"))

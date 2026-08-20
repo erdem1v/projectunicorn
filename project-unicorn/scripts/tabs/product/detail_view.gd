@@ -36,6 +36,7 @@ var _badges_row: HBoxContainer = null
 var _traction_ready_badge: Control = null
 var _traction_bar: ProgressBar = null
 var _traction_meta: Label = null
+var _appetite_chip_host: HBoxContainer = null   # yatırımcı iştahı durum çipi (her boyamada yeniden kurulur)
 # DURUM stat hücreleri (key -> value Label)
 var _stat_values: Dictionary = {}
 # B2B söz satırları
@@ -228,9 +229,13 @@ func _build_left_column(left: VBoxContainer) -> void:
 	var tr_body := VBoxContainer.new()
 	tr_body.add_theme_constant_override("separation", 6)
 	var tr_head := HBoxContainer.new()
-	var tr_title := UiFactory.make_label(tr("PROD_TOWARD_TRACTION"), &"SectionLabel")
+	# "Yatırımcı iştahı" (Kalibrasyon Turu A §3): kapının sinyali — durum çipi + çubuk + tek
+	# satır; gelir çıtasının rakamı hiçbir yerde basılmaz (yönetmen kararı).
+	var tr_title := UiFactory.make_label(UiTokens.tr_upper(InvestorAppetiteUi.title_text()), &"SectionLabel")
 	tr_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tr_head.add_child(tr_title)
+	_appetite_chip_host = HBoxContainer.new()
+	tr_head.add_child(_appetite_chip_host)
 	_traction_ready_badge = UiFactory.make_badge(tr("PROD_READY_TALK_FRANK"), &"positive")
 	_traction_ready_badge.visible = false
 	tr_head.add_child(_traction_ready_badge)
@@ -433,10 +438,13 @@ func _repaint_profile(ver: int, bugs: int) -> void:
 
 func _repaint_traction() -> void:
 	_traction_ready_badge.visible = GameState.phase_gate_ready
-	_traction_bar.value = SalesSystem.traction_progress() * 100.0
-	_traction_meta.text = tr("PROD_MRR_OF_TARGET").format({
-		"mrr": ProductUiShared.money_tr(GameState.mrr),
-		"target": ProductUiShared.money_tr(SalesSystem.TRACTION_MRR_TARGET)})
+	var sig: Dictionary = PhaseGateSystem.series_a_signal()
+	_traction_bar.value = float(sig.get("progress", 0.0)) * 100.0
+	_traction_meta.text = InvestorAppetiteUi.line(sig)
+	if _appetite_chip_host != null:
+		for c in _appetite_chip_host.get_children():
+			c.queue_free()
+		_appetite_chip_host.add_child(InvestorAppetiteUi.chip(String(sig.get("state", "closed"))))
 
 
 func _repaint_stats(bugs: int) -> void:

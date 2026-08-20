@@ -15,9 +15,14 @@ extends RefCounted
 # the same day, run_active is already false and the summary is suppressed —
 # the ending wins (§7.1/§7.2 logic). Kepenk active is deliberately NOT a
 # suppressor: the recap is most valuable mid-countdown.
+# The FISCAL CLOSE lands here too (Calibration Round A §3/§9): the month that just ended
+# is pushed onto GameState.month_history before the recap, so slot 8 (the Series A gate's
+# growth streak) and slot 9 (the profitability condition) read the closed month the NEXT
+# day — a one-day lag, deliberate: the recap is seen before a month-driven gate or ending.
 #
 # Static, stateless (FinanceSystem pattern); all persistent state lives on
-# GameState (§7.9): month_ledger, month_highlight_*.
+# GameState (§7.9): month_ledger (snapshot keys written by snapshot(); accrual keys by
+# the two accrue_* seams), month_history (the closed-month ring), month_highlight_*.
 
 # Fallback highlight when nothing claimed the month. Not a const — a const is evaluated
 # at load, before a locale exists.
@@ -33,8 +38,26 @@ static func daily_tick() -> void:
 	var today: Dictionary = GameState.get_date_dict()
 	if int(today.day) != 1:
 		return  # month closes when the rollover lands on the 1st of the next month
+	_close_fiscal_month()
 	EventBus.month_ended.emit(_build_summary_data())
 	snapshot()  # open the new month's ledger + clear the highlight
+
+
+static func _close_fiscal_month() -> void:
+	# The closed month's accruals become one entry of GameState.month_history. MRR is the
+	# CLOSE value (the month-over-month growth streak compares closes).
+	var l: Dictionary = GameState.month_ledger
+	var income: int = int(l.get("income", 0))
+	var expense: int = int(l.get("expense", 0))
+	GameState.push_month_close({
+		"start_day": int(l.get("start_day", 1)),
+		"end_day": GameState.day,
+		"mrr_close": GameState.mrr,
+		"income": income,
+		"expense": expense,
+		"net": income - expense,
+		"red_days": int(l.get("red_days", 0)),
+	})
 
 
 static func snapshot() -> void:
@@ -50,6 +73,11 @@ static func snapshot() -> void:
 		# modal ignores these (it shows mrr/cash/team/brand deltas — two data shapes).
 		"customers_signed": GameState.run_customers_signed,
 		"customers_lost": GameState.run_customers_lost,
+		# Accrual keys of the OPEN month (Calibration Round A §3/§9) — written by
+		# GameState.accrue_month_flow / accrue_month_expense, read by _close_fiscal_month.
+		"income": 0,
+		"expense": 0,
+		"red_days": 0,
 	}
 	GameState.month_highlight_text = ""
 	GameState.month_highlight_priority = -1

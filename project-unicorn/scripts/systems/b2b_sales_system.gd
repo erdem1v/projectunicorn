@@ -175,10 +175,16 @@ static func _tick_at_risk(c: Customer) -> void:
 	# the visible churn countdown. Churn ONLY at the counter's zero — never instant.
 	CustomerRegistry.set_risk_streak(c.id, c.risk_streak + 1)
 	if c.lifecycle_phase != "risk":
-		if c.risk_streak >= B2BConstants.RISK_TRIGGER_DAYS:
-			CustomerRegistry.set_lifecycle_phase(c.id, "risk")
-			CustomerRegistry.set_churn_countdown(c.id, B2BConstants.CHURN_COUNTDOWN_DAYS)
-			_maybe_enqueue_retention(c)  # founder-managed → present the decision (Stage B)
+		if c.risk_streak < B2BConstants.RISK_TRIGGER_DAYS:
+			return
+		# HYSTERESIS (§8): an account that left Risk inside RISK_REENTRY_DAYS does not re-enter
+		# yet — the streak keeps counting, nothing else starts. The day the window closes it
+		# re-enters immediately if it is still under its bar.
+		if c.last_risk_exit_day >= 0 and GameState.day - c.last_risk_exit_day < B2BConstants.RISK_REENTRY_DAYS:
+			return
+		CustomerRegistry.set_lifecycle_phase(c.id, "risk")
+		CustomerRegistry.set_churn_countdown(c.id, B2BConstants.CHURN_COUNTDOWN_DAYS)
+		_maybe_enqueue_retention(c)  # founder-managed → present the decision (Stage B)
 		return
 	var next_countdown: int = c.churn_countdown - 1
 	CustomerRegistry.set_churn_countdown(c.id, next_countdown)
@@ -192,15 +198,29 @@ static func _tick_at_risk(c: Customer) -> void:
 # or not a rep is stewarding it, and suppressing the decision was the other half of the
 # immunity hole. The rep's own voice is the separate escalation in _tick_cs_escalation.
 static func _maybe_enqueue_retention(c: Customer) -> void:
-	# The ONE narrow case where a delegated account skips this: its rep has an escalation open
-	# right now. That escalation is already a decision about this exact account and resolves it
-	# either way (honour → promise + recovery, refuse → the account leaves), so raising the
-	# generic retention modal on top would be two modals for one situation. This is NOT the old
-	# blanket `assigned_to != ""` guard: the risk machinery keeps running underneath, the
-	# countdown keeps ticking, and it still expires into _churn.
+	# Through the ONE gate the Sales tab's manual button also asks (§13) — the two paths can
+	# never drift apart again.
+	if can_offer_retention(c):
+		EventManager.enqueue(B2BEventFactory.build_retention(c))
+
+
+# THE RETENTION GATE, in one place (Calibration Round A §13, the K2 pattern). The daily sweep
+# (_tick_at_risk → _maybe_enqueue_retention) and the Sales tab's "İlgilen" button both ask it.
+# The button used to ask only "is a modal up?": after a discount resolved, _recover had already
+# put the account back to active, and the card could be re-opened and re-harvested (+8
+# satisfaction, −15 % MRR) for as long as the player cared to click. The card is offered only
+# while the account is IN Risk with its countdown running — which is also the legitimate
+# re-open (the factory's own comment: "the player can reopen İlgilen before expiry and still
+# rescue") — and never while the account's rep has an escalation open (that is the rep's
+# voice, not the founder's).
+static func can_offer_retention(c: Customer) -> bool:
+	if c == null or c.market_type != "b2b" or c.status != "active":
+		return false
+	if c.lifecycle_phase != "risk" or c.churn_countdown < 0:
+		return false
 	if c.assigned_to != "" and c.cs_escalated:
-		return
-	EventManager.enqueue(B2BEventFactory.build_retention(c))
+		return false
+	return true
 
 
 static func _tick_healthy(c: Customer) -> void:
@@ -218,6 +238,7 @@ static func _tick_healthy(c: Customer) -> void:
 
 	if phase_at_entry == "risk":
 		CustomerRegistry.set_churn_countdown(c.id, -1)
+		CustomerRegistry.set_last_risk_exit_day(c.id, GameState.day)   # §8 hysteresis stamp
 		# Recovering INSIDE the onboarding window returns to onboarding, not active: the
 		# window is a fact about the calendar, not about how the account felt in between,
 		# and the satisfaction model keeps amplifying until it closes. Sending it to
@@ -304,9 +325,15 @@ static func apply_discount(customer_id: String, mrr_delta: int) -> void:
 	# "İndirim ver": MRR drops by the pre-computed delta, the customer stays (recovers
 	# from Risk). The delta is computed in B2BEventFactory so the modal can show the
 	# figure; the seam just applies it through the MRR seam + bridge.
+	# CAP (§8): RETAIN_DISCOUNT_MAX_USES per account across both channels. The factories lock
+	# the row past the cap; this guard is the seam's own defense (resolve_choice does not
+	# re-check unlocks).
 	var c: Customer = CustomerRegistry.get_customer(customer_id)
 	if c == null:
 		return
+	if c.retain_discounts >= B2BConstants.RETAIN_DISCOUNT_MAX_USES:
+		return
+	CustomerRegistry.set_retain_discounts(c.id, c.retain_discounts + 1)
 	if mrr_delta != 0:
 		CustomerRegistry.set_mrr(c.id, c.mrr + mrr_delta)
 		SalesSystem.reflect_mrr()
@@ -391,6 +418,7 @@ static func _recover(c: Customer, sat_bump: int) -> void:
 	CustomerRegistry.set_risk_streak(c.id, 0)
 	if c.lifecycle_phase == "risk":
 		CustomerRegistry.set_churn_countdown(c.id, -1)
+		CustomerRegistry.set_last_risk_exit_day(c.id, GameState.day)   # §8 hysteresis stamp
 		# Same onboarding-window rule _tick_healthy already follows (see the note at its
 		# "risk" branch): the window is a fact about the CALENDAR, not about how the
 		# account felt in between, and _tick_satisfaction keeps amplifying until it

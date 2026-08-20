@@ -56,6 +56,10 @@ extends Resource
 @export var onboarding_until: int = 0         # day the onboarding window closes (signed_day + ONBOARDING_DAYS)
 @export var pain_feature_id: String = ""      # the ProductCatalog feature this account wants (drives promises)
 @export var retain_stalls: int = 0            # how many times "Oyala" has been used (works 1-2x, then caught on)
+# Calibration Round A §8 (2026-08-19). Both ride SaveCodec's property walker (every @export
+# is the schema; the default is the migration).
+@export var retain_discounts: int = 0     # how many discounts this account has been given (cap B2BConstants.RETAIN_DISCOUNT_MAX_USES, both channels)
+@export var last_risk_exit_day: int = -1  # HYSTERESIS latch: the day the account last left Risk; -1 = never. No re-entry for RISK_REENTRY_DAYS
 # HIDDEN expansion latch (K2). -1 = this account has never had its expansion moment.
 # The promotion test in _tick_healthy is MONOTONE (day - acquired_on_day >= MATURE_DAYS)
 # and BOTH resolutions put the account back to "active", so without a record that the

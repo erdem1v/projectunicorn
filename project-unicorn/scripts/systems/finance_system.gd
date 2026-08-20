@@ -153,6 +153,9 @@ static func daily_tick() -> void:
 	# 3. Net flow applied once — single set_cash call → single signal pass
 	var net: int = daily_revenue - total_burn
 	var new_cash: int = GameState.cash + net
+	# Calendar-month ledger accrual (Calibration Round A §3/§9): the same figures that move
+	# the cash, once per day, before the sample so the close reads a settled month.
+	GameState.accrue_month_flow(daily_revenue, total_burn, new_cash)
 	# Curve sample BEFORE set_cash: signals are synchronous, so the cash_changed repaint
 	# must read an already-fresh buffer. Slot-5 cash is tick-final (later slots' event
 	# deltas land intra-day at modal resolve, not during dispatch), so this single
@@ -180,6 +183,7 @@ static func apply_one_time_cost(amount: int, label: String) -> void:
 	# COST_LABEL_HIRE, which collapses one whole search into one line.
 	one_time_today[label] = int(one_time_today.get(label, 0)) + amount
 	record_transaction(label, -amount)
+	GameState.accrue_month_expense(amount)   # an outgoing of the open month (Calibration Round A §9)
 	# set_cash LAST: its cash_changed emit is synchronous, and repaints triggered by it
 	# must read both ledgers already-appended (the old emit-first order served the finance
 	# tab a pre-append one_time_today for one frame).

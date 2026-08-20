@@ -77,8 +77,10 @@ const WARNING_DAYS := 3                 # expiry warning event + TopBar chip thr
 const CALLBACK_MRR_GROWTH_PCT := 20     # "MRR +20% over meeting-day value"
 const CALLBACK_BUGS_UNDER := 3          # "active bugs under N"
 
-# --- Run wall ---
-const DAY180_WARN_DAY := 179            # Frank "yarın son gün, cebinde teklif var" (ledger 16)
+# --- Soft cap eve (was the Day-180 run wall) ---
+# Frank "yarın son gün, cebinde teklif var" (ledger 16). The wall is gone (Calibration Round A
+# §2); the warning now precedes EndingsSystem.SOFT_CAP_DAY, which does not defer for a sheet.
+const SOFT_CAP_WARN_DAY := EndingsSystem.SOFT_CAP_DAY - 1
 
 # --- Term Sheet Table (Spec 6 / ENDGAME_DESIGN.md §5) — the push-your-luck negotiation ---
 # Every number is a working placeholder (calibration pass tunes it). Each lever's push reads

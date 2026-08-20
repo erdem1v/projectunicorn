@@ -6,7 +6,13 @@ extends RefCounted
 # Scans terminal conditions daily, reading GameState FIELDS only (§7.9:
 # fields, not systems — the future VC pitch / scandal systems just write the
 # fields and plug in with zero retrofit). Scan order = §7.1 priority chain:
-# Bankruptcy > Brand Collapse > Cascade > Time-out fork.
+# Bankruptcy > Brand Collapse > Cascade > Profitability condition > Soft cap.
+#
+# GOAL-TERMINATED RUN (Calibration Round A §2, 2026-08-19). The Day-180 wall and its
+# time-out fork are gone: a run ends only on an ending — Series A, profitable and
+# self-sustaining (§9, a CONDITION evaluated daily), bankruptcy — or at the SOFT CAP,
+# a narrative non-win for a company that reached no goal inside the window investors
+# give it (running_on_fumes, paper rewritten: "yatırımcılar ilgisini kaybetti").
 #
 # trigger_ending() is the single terminal seam for BOTH classes:
 #   Class A (instant, played moment): acquisition accept, term sheet signed,
@@ -17,13 +23,26 @@ extends RefCounted
 
 # Working values — §10 calibration items, numbers last.
 const SHUTTER_DAYS := 7            # §4.3 Kepenk (7 vs 10 vs 14 open)
-const RUN_END_DAY := 180           # §1 hard wall
 const BRAND_COLLAPSE_FLOOR := 15   # §4.4
 const BRAND_COLLAPSE_WINDOW := 30  # §4.4 "no recovery for 30 days"
 const CASCADE_TABLES := 3          # §4.5 closed pitch tables
 const PIVOT_MRR_MIN := 2000        # §4.5 "metrics are alive" floor
-const BOOTSTRAP_WIN_MRR := SalesSystem.TRACTION_MRR_TARGET  # §4.6 fork MRR threshold — single home sales_system.gd
-const NET_WINDOW := 90             # §4.6 cumulative net window (Erdem 2026-07-13)
+# SOFT CAP [WORKING] — Calibration Round A §2. Not a wall the economy is stretched across
+# (that was RUN_END_DAY = 180, retired); the catch for a run that reached no goal ending in
+# two years. 24 months is the smallest cap at which annual contracts (Layer B) are SEEN
+# renewing. NOT deferred for a live term sheet: VC_PITCH_DESIGN ledger 16 rules no
+# auto-sign — the D-1 Frank warning (VCPitchSystem) is the telegraph, and an unsigned
+# sheet is named on the paper. Same day as a profitability close → the win wins (scan order).
+const SOFT_CAP_DAY := 730
+# PROFITABLE & SELF-SUSTAINING — a CONDITION evaluated daily (Calibration Round A §9), not a
+# crossing read once at a wall. An "Artıda" month = net > 0 AND the treasury never sampled
+# below zero inside it (GameState.month_history, closed by MonthSummarySystem). The run-lifetime
+# cash_went_negative latch it replaces made the win permanently unreachable after one early
+# Kepenk in a 24-month run. The MRR floor is DECOUPLED from SalesSystem.TRACTION_MRR_TARGET
+# (it used to alias the Series A bar, which is now $40K+).
+const PROFIT_STREAK_MONTHS := 6    # [WORKING] consecutive Artıda month-closes
+const PROFIT_MIN_MARGIN_PCT := 15  # [WORKING] Σnet/Σincome over the window, percent
+const BOOTSTRAP_WIN_MRR := 20_000  # [WORKING] scale floor at the moment the condition is met
 
 # Ending metadata — 7 endings (§4). Only the TONE lives here now; the title and Frank's
 # closing line are END_META_<ID>_TITLE / _FRANK in strings.csv, read through ending_title()
@@ -70,18 +89,19 @@ static func daily_tick() -> void:
 		return
 	if _check_vc_cascade():
 		return
-	if _check_day180_fork():
+	if _check_profitable_bootstrap():
+		return
+	if _check_soft_cap():
 		return
 	_check_acquisition_offer()  # non-terminal; deliberately NOT shutter-gated (§7.5)
 
 
-# --- Daily trackers (cheap, serializable — §4.6 fork inputs) ---
+# --- Daily trackers (cheap, serializable) ---
 
 static func _update_trackers() -> void:
-	# Cumulative 90-day net (Erdem 2026-07-13): ring buffer of daily net flow.
-	GameState.net_history_90.append(GameState.get_net_daily_flow())
-	while GameState.net_history_90.size() > NET_WINDOW:
-		GameState.net_history_90.pop_front()
+	# (The 90-day daily-net ring that fed the retired Day-180 fork lived here; the §9
+	# profitability condition reads GameState.month_history — the calendar-month ledger
+	# MonthSummarySystem closes — instead.)
 	# Brand-collapse window anchor: first day brand dipped under the floor;
 	# any recovery to/above the floor resets the 30-day clock.
 	if GameState.brand < BRAND_COLLAPSE_FLOOR:
@@ -168,7 +188,7 @@ static func on_pivot_accepted() -> void:
 	# (ledger 17 defers cascade while any sheet lives), so none to clear.
 	VCPitchSystem.on_pivot()
 	if OS.is_debug_build():
-		print("[EndingsSystem] Pivot accepted — VC path closed, bootstrap run to Day %d" % RUN_END_DAY)
+		print("[EndingsSystem] Pivot accepted — VC path closed; the bootstrap road continues (goal: %d Artıda months)" % PROFIT_STREAK_MONTHS)
 
 
 # Ledger 17 helper: any VC awaiting delayed sheet delivery counts as a live win path.
@@ -179,20 +199,43 @@ static func _any_pending_sheet() -> bool:
 	return false
 
 
-# --- Day-180 time-out fork (§4.6) ---
+# --- Profitable & self-sustaining (Calibration Round A §9) ---
 
-static func _check_day180_fork() -> bool:
-	if GameState.day < RUN_END_DAY:
+## Single home for the condition's reading: the Finance tab's "Artıda · n/6 ay" line and the
+## daily scan both read this. `met` is the predicate.
+static func profitability_signal() -> Dictionary:
+	var streak: int = GameState.get_profitable_month_streak()
+	var margin: int = GameState.get_window_margin_pct(PROFIT_STREAK_MONTHS)
+	var d := {
+		"streak": streak, "need": PROFIT_STREAK_MONTHS, "streak_ok": streak >= PROFIT_STREAK_MONTHS,
+		"margin_pct": margin, "margin_ok": margin >= PROFIT_MIN_MARGIN_PCT,
+		"mrr_ok": GameState.mrr >= BOOTSTRAP_WIN_MRR,
+		"scandal_ok": not GameState.unmanaged_major_scandal,
+	}
+	d["met"] = bool(d.streak_ok) and bool(d.margin_ok) and bool(d.mrr_ok) and bool(d.scandal_ok)
+	return d
+
+
+static func _check_profitable_bootstrap() -> bool:
+	# A CONDITION evaluated daily, not a crossing. Sits after the cascade (a pivot offer does
+	# not block the win — flush_queue drops the offer) and before the soft cap (same-day tie →
+	# the win wins).
+	if not bool(profitability_signal().get("met", false)):
 		return false
-	var net_sum: int = 0
-	for n in GameState.net_history_90:
-		net_sum += n
-	var win: bool = not GameState.cash_went_negative \
-		and GameState.net_history_90.size() >= NET_WINDOW \
-		and net_sum > 0 \
-		and not GameState.unmanaged_major_scandal \
-		and GameState.mrr >= BOOTSTRAP_WIN_MRR
-	trigger_ending("profitable_bootstrap" if win else "running_on_fumes")
+	trigger_ending("profitable_bootstrap")
+	return true
+
+
+# --- Soft cap (Calibration Round A §2; replaces the Day-180 time-out fork) ---
+
+static func _check_soft_cap() -> bool:
+	# The window investors give a company closed without a goal ending. Not deferred for a
+	# live sheet or a pending meeting (ledger 16: no auto-sign; the D-1 warning told the
+	# player). The ledger carries `unsigned_sheets` so the paper can name what was left on
+	# the table.
+	if GameState.day < SOFT_CAP_DAY:
+		return false
+	trigger_ending("running_on_fumes")
 	return true
 
 
@@ -291,7 +334,7 @@ static func _build_pivot_offer_event() -> GameEvent:
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = TranslationServer.translate("END_EV_PIVOT_BODY").format({"day": RUN_END_DAY})
+	ev.body_text = TranslationServer.translate("END_EV_PIVOT_BODY").format({"months": PROFIT_STREAK_MONTHS})
 	ev.cooldown_days = 0
 	ev.one_shot = false  # one-shot enforced by the pivot_offer_made flag
 	ev.priority = 10

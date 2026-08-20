@@ -583,6 +583,10 @@ func _run_b2b_shot(kind: String) -> void:
 	else:
 		CustomerRegistry.set_lifecycle_phase(c.id, "risk")
 		CustomerRegistry.set_churn_countdown(c.id, 8)
+		if kind == "retention_capped":   # LOC-DATA debug seed / id
+			# Calibration Round A §8: the account has spent both discounts — the row renders
+			# locked-visible with its reason line.
+			CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
 		ev = B2BEventFactory.build_retention(c)
 	var layer := CanvasLayer.new()
 	add_child(layer)
@@ -879,8 +883,9 @@ func _oda_shot_requested() -> String:
 	return ""
 
 
-# Debug: --oda-shot=<day|evening|night|dawn|event|tab|tour|hover|market1|market2|build>
-# (windowed; build = Build Bar monitör yüzü, --build-state ile). ODA merkez görünümünün dört
+# Debug: --oda-shot=<day|evening|night|dawn|event|tab|tour|hover|market1|market2|signal|build>
+# (windowed; build = Build Bar monitör yüzü --build-state ile, signal = faz 2
+# yatırımcı iştahı). ODA merkez görünümünün dört
 # durum fotoğrafı (task doğrulama #9): day = temiz masa + canlı ürün monitörü;
 # night = saat 23 + mesai + masada kâğıtlar (crossfade otursun diye uzun bekleme);
 # event = gerçek pipeline'dan debug olayı (telefon buzz + telefondan doğan kart);
@@ -907,6 +912,17 @@ func _run_oda_shot(kind: String) -> void:
 		GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
 	else:
 		_seed_theme_surface()
+	if kind == "signal":   # LOC-DATA debug seed / id
+		# Kalibrasyon Turu A §3: pano hedef kartının FAZ-2 dalı (ODA_GOAL_SIGNAL — rakam yok,
+		# sinyal + büyüme ayı). --finance-shot=signal ile aynı dört kapanış → ISINIYOR · 3/3 ay.
+		GameState.set_phase(2)
+		GameState.month_history.clear()
+		var sig_closes: Array = [12000, 13900, 16000, 18400]
+		var sig_start: int = 1
+		for m in sig_closes:
+			GameState.push_month_close({"start_day": sig_start, "end_day": sig_start + 29, "mrr_close": int(m),
+				"income": int(m), "expense": 9000, "net": int(m) - 9000, "red_days": 0})
+			sig_start += 30
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
 	_shell_mounted = true
@@ -968,7 +984,7 @@ func _run_oda_shot(kind: String) -> void:
 		"milestones":
 			# D5 dokümanı kanıtı: çerçeve tıkının rotası.
 			EventBus.tab_changed.emit("milestones")
-		"market1", "market2", "build":
+		"market1", "market2", "signal", "build":
 			GameState.set_current_hour(14)
 		_:
 			push_error("[OdaShot] bilinmeyen tür: %s" % kind)
@@ -1295,7 +1311,7 @@ func _audit_color(c: Color) -> String:
 	return "%.3f,%.3f,%.3f,%.2f" % [c.r, c.g, c.b, c.a]
 
 
-# Debug: --finance-shot=<ozet|artida|uyari> (windowed). Finance Tab v1 doğrulaması: gerçek
+# Debug: --finance-shot=<ozet|artida|uyari|signal> (windowed). Finance Tab v1 doğrulaması: gerçek
 # seam'lerle ~40 gün oynanmış durum kurar (nakit ring buffer + işlem ledger'ı gerçek
 # akıştan dolar), GameShell'i Finans sekmesinde 1920×1080 açar, screenshot alır, çıkar.
 #   ozet   — negatif net: çatallı projeksiyonlar, son işlemlerde imza + retainer karışık
@@ -1333,6 +1349,17 @@ func _run_finance_shot(kind: String) -> void:
 	# Açık pipeline kalsın: iyimser projeksiyon gerçek prospect'lerden beslenir.
 	PitchSystem.spawn_prospect("small", "find")
 	PitchSystem.spawn_prospect("mid", "find")
+	if kind == "signal":   # LOC-DATA debug seed / id
+		# Kalibrasyon Turu A §3/§9 yüzeyleri: faz 2, dört ay kapanışı (+%15/ay → üç büyüme
+		# ayı) ve dördü de artıda → "Yatırımcı iştahı · ISINIYOR" (çıta altında) + "Artıda · 4/6 ay".
+		GameState.set_phase(2)
+		GameState.month_history.clear()
+		var closes: Array = [12000, 13900, 16000, 18400]
+		var start_day: int = 1
+		for m in closes:
+			GameState.push_month_close({"start_day": start_day, "end_day": start_day + 29, "mrr_close": int(m),
+				"income": int(m), "expense": 9000, "net": int(m) - 9000, "red_days": 0})
+			start_day += 30
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
 	await get_tree().process_frame
@@ -1601,7 +1628,13 @@ func _run_ending_shot(key: String) -> void:
 			GameState.run_board_seats = 2 if aggressive else 1
 			GameState.run_board_veto = aggressive
 			GameState.run_investment_amount = int(round(22_000_000.0 * (32 if aggressive else 18) / 100.0))
-		"running_on_fumes", "acquisition", "vc_rejection_cascade", "brand_collapse", "profitable_bootstrap":
+		"running_on_fumes":
+			# The soft cap's paper: a two-year run (the ledger's span phrase and the dateline
+			# must read the cap, not the old 156-day fixture), one unsigned offer on the table.
+			GameState.phase = 3
+			GameState.day = EndingsSystem.SOFT_CAP_DAY
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day - 5))
+		"acquisition", "vc_rejection_cascade", "brand_collapse", "profitable_bootstrap":
 			GameState.phase = 3
 		_:
 			GameState.phase = 3
@@ -1701,7 +1734,7 @@ func _seed_build_state(state: String) -> void:
 		b.iteration_count, ProductSystem.ITER_MAX_ROUNDS, b.efor_spent, b.total_efor, b.bug_count])
 
 
-# Debug: --product-shot=<portfoy|ozellikler|tracker|detail_b2b|detail_b2c> (windowed).
+# Debug: --product-shot=<portfoy|ozellikler|tracker|detail_b2b|detail_b2c|detail_b2c_buggy> (windowed).
 # Mounts GameShell with seeded state, drives the Product tab router to the requested
 # Rev3 view at 1920×1080, screenshots to user://, and quits.
 func _run_product_shot(kind: String) -> void:
@@ -1741,7 +1774,7 @@ func _run_product_shot(kind: String) -> void:
 				if b != null:
 					b.efor_spent = b.total_efor * 0.64
 					ProductSystem.hourly_tick(9)  # faz bandını ilerlemeye oturtur
-		"detail_b2c":
+		"detail_b2c", "detail_b2c_buggy":   # LOC-DATA debug seed / id
 			GameState.set_flag("mvp_shipped", true)
 			GameState.set_flag("mvp_market_type", "b2c")
 			GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
@@ -1752,7 +1785,9 @@ func _run_product_shot(kind: String) -> void:
 			GameState.set_flag("mvp_experience", 5.0)
 			GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
 			GameState.set_flag("mvp_launch_day", GameState.day)
-			GameState.set_flag("mvp_live_bug_count", 5)
+			# detail_b2c_buggy (Calibration Round A §6): the same fixture with 15 live bugs, so
+			# the pricing ruler's conversion projection is seen moving under the bug penalty.
+			GameState.set_flag("mvp_live_bug_count", 15 if kind == "detail_b2c_buggy" else 5)
 			GameState.set_flag("mvp_bug_history", [1, 2, 2, 3, 4, 4, 5])
 			GameState.set_flag("mvp_version_history", [{"version": 1, "day": GameState.day}])
 			GameState.set_flag("b2c_audience", 1.0)
@@ -1783,7 +1818,7 @@ func _run_product_shot(kind: String) -> void:
 				"features": ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"]}})
 		"tracker", "beta":
 			tab._navigate("tracker", {})
-		"detail_b2b", "detail_b2c":
+		"detail_b2b", "detail_b2c", "detail_b2c_buggy":
 			tab._navigate("detail", {})
 		_:
 			pass  # portfoy: varsayılan iniş görünümü

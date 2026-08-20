@@ -109,7 +109,7 @@ Interior monologue (unnamed italic voice, existing B2B register — we are NOT b
 
 **Sheet expiry:** VC closes permanently ("Süresi doldu" badge) but does **NOT** count as a rejection — the cost was paid in time. Warning at 3 days remaining (visible-counter principle; nothing dies unannounced).
 
-**CALLBACK contract:** concrete condition from a small set (working): MRR +20% over meeting-day value / active bugs under N / first engineer hired / scandal resolved. Auto-checked daily; when met → "Kapı yeniden açıldı — <VC>" notification; re-request grants a conviction starting bonus (+10). **One callback per VC.** A second meeting ending Ilık → RET (no infinite lukewarm loop). Unmet by Day 180 → dies with the run, no penalty.
+**CALLBACK contract:** concrete condition from a small set (working): MRR +20% over meeting-day value / active bugs under N / first engineer hired / scandal resolved. Auto-checked daily; when met → "Kapı yeniden açıldı — <VC>" notification; re-request grants a conviction starting bonus (+10). **One callback per VC.** A second meeting ending Ilık → RET (no infinite lukewarm loop). Unmet by the soft cap (day 730; was Day 180) → dies with the run, no penalty.
 
 **RET:** VC closed ("Reddetti"), `vc_rejections += 1`, feeds the cascade exactly per canon §4.5.
 
@@ -143,7 +143,7 @@ Signing any sheet = instant Hard Win (canon unchanged): `series_a_closed = true`
 13. **Single sitting:** meeting and table are unsaveable mid-flow; speed 0 while open, restore per modal convention.
 14. **Sheet expiry never surprises:** validity visible in the Teklifler panel AND a TopBar chip when ≤3 days ("Teklif: 3 gün"); expiry warning event at day 3.
 15. **Max 2 active sheets** — third sheet cannot be granted while two are live (a VC who WOULD grant states it: "Önce masandakileri temizle." — meeting still counts as won; sheet delivered when a slot frees, validity starts then). *(Working call — the alternative, hard-blocking a third meeting, is simpler; Erdem picks.)*
-16. **Day 180 with a live sheet:** the fork evaluates normally — no auto-sign. D179 Frank warning: "Yarın son gün. Cebinde teklif var." Ending screen references the unsigned sheet (bittersweet line).
+16. **Soft cap (day 730) with a live sheet:** the cap fires normally — no auto-sign, no deferral. D-1 Frank warning (`ev_vc_soft_cap_warning`): "Yarın son gün. Cebinde teklif var." Ending screen references the unsigned sheet (bittersweet line: `END_RF_UNSIGNED_SHEET`). *(Was "Day 180"; amended 2026-08-19, Calibration Round A §2.)*
 17. **Cascade requires zero active sheets.** A player holding a live sheet cannot cascade (they hold a win path). Third rejection while a sheet lives → cascade check DEFERS until that sheet is signed/walked/expired. (Gap caught in design — without this rule, pivot could fire while the player holds victory in hand.)
 18. **Pivot closes the Hunt UI:** after pivot, investor list greys out entirely ("Pivot — bootstrap yolu"), pending callbacks die, active sheets — impossible by 17.
 19. **Acquisition × sheets:** acquisition offer can coexist with a live sheet (choosing the soft win over the gamble is a valid, dramatic decision — deliberate, mirrors ledger 5).

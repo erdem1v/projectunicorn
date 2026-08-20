@@ -23,11 +23,29 @@ extends RefCounted
 const B2C_PRICE_DEFAULT := 15            # $/user/month; the pricing ruler sets this
 const B2C_USERBASE_ID := "co_b2c_userbase"
 
-const SATISFACTION_QUALITY_GATE := 70    # quality ≥ → satisfaction drifts up
+# B2C aggregate satisfaction drift. Calibration Round A §1/§5 (2026-08-19): the gate was
+# 70 on the retired scale (it needed raw 117 under HALF_SAT 50 — never true for any played
+# product) and it read STABILITY, an axis consumer sub-types barely carry (ai_assistant's
+# pool tops out at raw 3). It now reads the EXPERIENCE axis — the axis the B2C record is
+# SEEDED from (_ensure_b2c_record), and what a consumer feels day to day — at 40, the
+# axis of a raw-20 v1 carrying the bug gate's worth of bugs: axis(20 − 0.8·5) = 39.0.
+# Bugs still erode (SATISFACTION_BUG_GATE). Director ruling 2026-08-19.
+const SATISFACTION_QUALITY_GATE := 40    # experience axis ≥ → satisfaction drifts up
 const SATISFACTION_BUG_GATE := 5         # bug_count > → satisfaction drifts down
 
-const TRACTION_MRR_TARGET := 5000
-const TRACTION_CUSTOMER_TARGET := 8
+# THE SERIES A REVENUE BAR — Calibration Round A §3 (2026-08-19), 5_000 → the $40-80K band
+# [ÖLÇ]. Canon: a deliberate 20-40 % compression of a real Series A; the rule that picks the
+# value inside the band is "the smallest band value the competent policy does not cross before
+# month 12; if it crosses none by month 24, the band floor, and the slope is reported".
+# Measured (seed 424242, --run-log=full_run:730:sim after §1/§2): MRR plateaus at ~$33-34K from
+# month 7 because the B2B prospect pool is finite (catalog-bound, 25 accounts) — no band
+# value is crossed by month 24, so the bar sits at the band FLOOR and the gap is a Layer-B
+# revenue-curve finding, not a reason to lower the bar (director ruling).
+# NEVER RENDERED AS A FIGURE (director ruling: the signal is shown, the number is not). Readers:
+# PhaseGateSystem.GATES (the gate), PitchConstants.SEED_MRR_REFERENCE (VC conviction seeding —
+# tracks the bar by design). The old display bar (traction_progress) and its customer-count
+# companion were retired with the figure.
+const TRACTION_MRR_TARGET := 40_000
 
 # WORKING: optimistic close-rate weight on the open pipeline — feeds only the Finance
 # tab's "satış hedefi tutarsa" projection (FinanceSystem.get_optimistic_daily_net).
@@ -60,6 +78,19 @@ const RIVAL_RELATIVE := true
 # per-audience-member rate: at the reference (audience 200, gap 18) → 0.0002·18·200 =
 # 0.72, matching the originally-verified flat erosion at that point.
 const CHURN_COEF := 0.0002
+# WORD OF MOUTH — Calibration Round A §5 (2026-08-19). Growth was an ABSOLUTE per-hour trickle
+# while churn was PROPORTIONAL to the audience, so the consumer economy was a fixed point
+# (A_eq = grow / (CHURN_COEF·(42−q))) that could never compound and shrank as rivals advanced.
+# Two terms on the aggregate's SATISFACTION (the B2C record, 0-100): a loved product compounds
+# — grow += audience · WOM_COEF · max(0, sat − WOM_SAT_GATE)/100 — and a disliked one grows
+# slower — grow *= clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1). WOM_COEF [ÖLÇ]: swept on
+# --run-log=b2c_keep:180 (the maintained fixture) for the smallest value that keeps the 30-day
+# MRR means non-decreasing to day 180 while b2c_neglect still declines; the sweep and the
+# equilibrium arithmetic are in docs/audits/calibration_round_A_2026-08-19.md.
+const WOM_COEF := 0.005            # [ÖLÇ] per hour · per audience member · per satisfaction point/100 over the gate
+const WOM_SAT_GATE := 60.0         # [WORKING] satisfaction above which word of mouth starts
+const WOM_MULT_PIVOT := 50.0       # [WORKING] satisfaction at which base growth runs at full strength
+const WOM_MULT_MIN := 0.3          # [WORKING] floor of the base-growth multiplier (satisfaction 0)
 const EROSION_THRESHOLD := 42.0
 
 # --- Dynamic pricing / value algorithm (working values; balance is the last pass) ---
@@ -78,6 +109,15 @@ const TENDENCY_MULT := {"premium": 1.35, "neutral": 1.0, "volume": 0.8}
 const CONVERSION_BASE := 0.35            # at optimal
 const CONVERSION_MIN := 0.02
 const CONVERSION_MAX := 0.60
+# Bugs hit CONVERSION, not only satisfaction — Calibration Round A §6 (2026-08-19). Until now
+# live bugs reached the consumer economy only through effective stability → the composite →
+# audience growth; a buggy product still converted browsers to payers at full rate. Now the
+# standing conversion is scaled by (1 − live_bugs·BUG_CONV_COEF), floored — the raw live count,
+# the same grammar as SATISFACTION_BUG_GATE ("10 bugs ≈ −20 %"). Applied AFTER the price
+# clamp so a cheap price cannot hide bugs under CONVERSION_MAX, then re-clamped. The pricing
+# ruler's live projection reads conversion_rate, so it moves too.
+const BUG_CONV_COEF := 0.02              # [WORKING] per live bug; 10 bugs ≈ −20 %
+const BUG_CONV_FLOOR := 0.4              # [WORKING] 30+ bugs cap the penalty at −60 %
 
 # Price-hike audience reaction: fraction of the audience that leaves on a raise.
 const CHURN_MAX := 0.45
@@ -165,12 +205,18 @@ static func _audience_delta_per_hour() -> float:
 		+ GameState.brand * HOURLY_AUD_BRAND_COEF \
 		+ GameState.reputation * HOURLY_AUD_REPUTATION_COEF) \
 		* audience_growth_multiplier(int(GameState.get_flag("b2c_price", 0)))
+	var audience: float = float(GameState.get_flag("b2c_audience", 0))
+	# Calibration Round A §5 — word of mouth, both directions (see WOM_* above). `sat` is
+	# the aggregate B2C record's satisfaction; before the record exists (no paid tier yet)
+	# it reads WOM_MULT_PIVOT so the pre-revenue trickle is untouched.
+	var sat: float = _b2c_satisfaction()
+	grow *= clampf(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1.0)
+	grow += audience * WOM_COEF * maxf(0.0, sat - WOM_SAT_GATE) / 100.0
 	# Product Lifecycle Part 2A: a product below the bar bleeds users. quality_term
 	# already folds in both erosion causes (bugs → effective stability; rival passing
 	# → rival-relative drop), so this one term covers both. Churn is PROPORTIONAL to
 	# the current audience (loss of existing users → 0 at audience 0, so a fresh
 	# product still grows from nothing). Price-independent (outside the multiplier).
-	var audience: float = float(GameState.get_flag("b2c_audience", 0))
 	var churn: float = CHURN_COEF * maxf(0.0, EROSION_THRESHOLD - quality_term) * audience
 	return grow - churn
 
@@ -188,7 +234,7 @@ static func _rival_relative_quality(player_nq: float) -> float:
 	var n: int = 0
 	for r in RivalRegistry.get_by_type(sub):
 		if r.tier == "startup":
-			total += QualityModel.normalized_quality(r.composite(axes))
+			total += QualityModel.normalized_quality_rival(r.composite(axes))   # rival scale bridge
 			n += 1
 	if n == 0:
 		return player_nq
@@ -207,6 +253,15 @@ static func _derive_b2c_mrr() -> void:
 	_ensure_b2c_record()
 	CustomerRegistry.set_seats(B2C_USERBASE_ID, paying)
 	CustomerRegistry.set_mrr(B2C_USERBASE_ID, paying * price)
+
+
+## The aggregate B2C record's satisfaction (0-100), or WOM_MULT_PIVOT when the record does
+## not exist yet (before the paid tier opens) — the word-of-mouth terms read this.
+static func _b2c_satisfaction() -> float:
+	var ub: Customer = CustomerRegistry.get_customer(B2C_USERBASE_ID)
+	if ub == null:
+		return WOM_MULT_PIVOT
+	return float(ub.satisfaction)
 
 
 # Create the single aggregate B2C userbase record if it doesn't exist yet.
@@ -357,15 +412,15 @@ static func _seats_for_archetype(archetype: String) -> int:
 # --- Shared satisfaction tick ---
 
 static func _tick_satisfaction() -> void:
-	# Satisfaction rises on strong STABILITY (effective — bugs eat it) and falls
-	# when the open bug count is high (the direct churn driver).
-	var stab: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
+	# B2C satisfaction rises on strong EXPERIENCE (the axis the record was seeded from) and
+	# falls when the open bug count is high (the direct churn driver). See the gate's note.
+	var exp_axis: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")
 	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0)))
 	for c in CustomerRegistry.get_active():
 		if c.market_type != "b2c":
 			continue  # B2B satisfaction is owned by B2BSalesSystem (two-layer model); leave B2C byte-identical
 		var delta: int = 0
-		if stab >= SATISFACTION_QUALITY_GATE:
+		if exp_axis >= SATISFACTION_QUALITY_GATE:
 			delta += 1
 		if bugs > SATISFACTION_BUG_GATE:
 			delta -= 1
@@ -374,15 +429,10 @@ static func _tick_satisfaction() -> void:
 
 
 # --- Traction north-star ---
-# Display-only progress for the PostShip bar. The GATE itself lives in
-# PhaseGateSystem (slot 8) — subgenre-agnostic, reads GameState/registry state
-# daily. The old _check_traction/ready_for_traction mechanism (B2C-branch-only,
-# never fired for B2B) was removed with the endgame engine (ENDGAME_DESIGN.md §2.2).
-
-static func traction_progress() -> float:
-	var mrr_ratio: float = float(GameState.mrr) / float(TRACTION_MRR_TARGET)
-	var cust_ratio: float = float(CustomerRegistry.get_active().size()) / float(TRACTION_CUSTOMER_TARGET)
-	return clampf(maxf(mrr_ratio, cust_ratio), 0.0, 1.0)
+# The GATE lives in PhaseGateSystem (slot 8) — subgenre-agnostic, reads GameState/registry
+# state daily. Its player-facing reading is PhaseGateSystem.series_a_signal() (state +
+# progress); the old display bar that divided MRR by the figure (traction_progress) was
+# retired 2026-08-19 with the figure itself.
 
 
 # --- Value algorithm (product worth → optimal price + lower bound + rationale) ---
@@ -456,10 +506,13 @@ static func _value_lines(sub: String, feature_count: int, tendency: String) -> A
 
 static func conversion_rate(price: int) -> float:
 	# Standing fraction of the WHOLE audience that pays at this price (MRR derives
-	# from it each hour). Cheaper than optimal → higher; pricier → lower.
+	# from it each hour). Cheaper than optimal → higher; pricier → lower. Live bugs
+	# suppress it (§6: buyers generate the complaints that suppress buying).
 	var optimal: float = maxf(1.0, float(product_value()["optimal"]))
-	var rate: float = CONVERSION_BASE * (optimal / maxf(1.0, float(price)))
-	return clampf(rate, CONVERSION_MIN, CONVERSION_MAX)
+	var rate: float = clampf(CONVERSION_BASE * (optimal / maxf(1.0, float(price))), CONVERSION_MIN, CONVERSION_MAX)
+	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0)))
+	var bug_factor: float = maxf(BUG_CONV_FLOOR, 1.0 - float(bugs) * BUG_CONV_COEF)
+	return clampf(rate * bug_factor, CONVERSION_MIN, CONVERSION_MAX)
 
 
 static func churn_fraction(old_price: int, new_price: int) -> float:

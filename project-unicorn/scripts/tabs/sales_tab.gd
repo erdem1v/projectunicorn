@@ -335,9 +335,12 @@ func _card_risk(c: Customer) -> Control:
 	if c.churn_countdown >= 0:
 		col.add_child(UiFactory.make_label(tr("SALES_CHURN_COUNTDOWN").format({"n": c.churn_countdown}), &"RowMeta", UiTokens.negative()))
 	_add_steward_line(col, c)
-	# Action → the existing retention decision modal (backend-built; state-free trigger).
+	# Action → the existing retention decision modal (backend-built). NOT state-free any more
+	# (Calibration Round A §13): this path bypasses _tick_at_risk entirely, so it asks the SAME
+	# gate the daily sweep asks — can_offer_retention — or the card could be re-opened and the
+	# discount re-harvested after every resolution (the account was already back to active).
 	col.add_child(_action_button(tr("SALES_ACTION_RETAIN") + " →", func() -> void:
-		if EventManager._active_event_id == "":
+		if EventManager._active_event_id == "" and B2BSalesSystem.can_offer_retention(c):
 			EventManager.enqueue(B2BEventFactory.build_retention(c))))
 	return UiFactory.make_card(col, false, true)  # CardAttention (amber)
 

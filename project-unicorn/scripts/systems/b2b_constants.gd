@@ -8,6 +8,14 @@ extends RefCounted
 # ============================ Stage A — lifecycle ============================
 const ONBOARDING_DAYS := 30             # first-impressions window after signing
 const RISK_TRIGGER_DAYS := 3            # consecutive days under tolerance → Risk phase
+# HYSTERESIS (Calibration Round A §8, 2026-08-19): after an account LEAVES Risk it cannot
+# re-enter for this many days, however far under its bar it drifts (the streak keeps
+# counting, the countdown and the retention card do not start). Measured before: the same
+# account produced a retention modal every 3 days for 90 days (29 identical decisions,
+# b2b_slip); the bump a rescue buys (+8) decays back under the bar in ~3 days, so the
+# cadence was bounded by nothing. Three weeks is the founder's time to move the CAUSE
+# (a sprint, a version) before the account asks again.
+const RISK_REENTRY_DAYS := 21           # [WORKING] days after leaving Risk before it can re-enter
 const CHURN_COUNTDOWN_DAYS := 7         # visible "Churn'e ~N gün" counter length
 const EXPANSION_MATURE_DAYS := 45       # active + this old → eligible for expansion
 const SAT_DRIFT_STEP := 3               # max satisfaction move per day (drift toward target)
@@ -15,8 +23,22 @@ const ONBOARDING_AMP := 1.5             # onboarding-window swing amplifier
 const RIVAL_SATISFACTION_HOOK := false  # TODO: rival pressure (−); OFF until a rival system exists
 const SCALE_DEMO_MAX := 3               # demo generates 1..3 star; 4-5 (Tier 2) gated
 
-const TOLERANCE_BASE := 35              # scale-1 tolerance floor
-const TOLERANCE_PER_SCALE := 5          # + per star (larger/loyal endures low satisfaction longer)
+# TOLERANCE BAND — re-seated 2026-08-19 (Calibration Round A §1, [ÖLÇ]) together with
+# QualityModel.NORMALIZE_HALF_SAT 50→25 and the saas_ops_field unlock. The bars were
+# (35, 5): small 40 / mid 45 / enterprise 45+sector — authored against the retired grown
+# axes, under which a played v1 (axis 20-27) sat 15-30 points under every account and the
+# retention modal was the default state of play. MEASURED with --run-log (seed 424242):
+# the stability-competent v1 (integration+field+scheduling, catalog 17, build events +14,
+# Beta cleared → raw 31, 0 bugs) reads target T_good = 55; the weak set (catalog 6, events
+# +12, backlog sprinted → raw 18.3) reads T_bad = 42. The director's fractions for the
+# probe's 5-account book (2 small · 2 mid+sector · 1 enterprise) — ~60 % satisfied for a
+# good v1, ~20 % for a bad one — pin T_mid ∈ (50, 55] and T_small ∈ (39, 42]; the SMALLEST
+# per-scale step that satisfies both is 9, and BASE = T_small − PER = 33:
+#   bars: small(scale 2) 42 · small+insurance 45 · mid/enterprise(scale 3) 51 · +health/
+#   construction 56. Good v1 55 → a,d,e ✓ b,c ✗ (60 %); bad v1 42 → a ✓ (20 %).
+# Sign note (see PROMISE_* below): higher scale = pickier; unchanged, intended.
+const TOLERANCE_BASE := 33              # scale-1 tolerance floor
+const TOLERANCE_PER_SCALE := 9          # + per star (larger = pickier; Tier-2 scale 5 → 69, re-seat with that unlock)
 # Sector stickiness nudge (some sectors switch vendors less). Working; default 0.
 const SECTOR_TOLERANCE_BONUS := {
 	"construction": 5, "health": 5, "insurance": 3,
@@ -50,6 +72,13 @@ static func roll_scale(archetype: String) -> int:
 const COMPLAINT_BUG_GATE := 6           # live bugs above this → product-complaint family eligible
 const RIVAL_LURE_ENABLED := false       # TODO: rival-lure family; OFF until a rival system exists
 const RETAIN_DELAY_MAX_USES := 2        # "Oyala" works this many times, then the customer catches on
+# "İndirim ver" use cap (Calibration Round A §8): per account, across BOTH discount channels
+# (retention card + CS complaint/renewal cards — all resolve through apply_discount). Past the
+# cap the row stays VISIBLE but locked, with the reason on its sub-line (B2B_DISCOUNT_SPENT_DESC).
+# Measured before: 628 of 681 retention answers in a played run were the discount, MRR bled
+# from $7,349 to $2,534 and no account ever left — a 15 % cut with no ceiling is a strictly
+# dominant move.
+const RETAIN_DISCOUNT_MAX_USES := 2     # [WORKING] discounts per account, then the row locks
 const RETAIN_DELAY_DAYS := 3            # days the churn countdown is pushed out by a stall
 const RETAIN_DISCOUNT_PCT := 0.15       # "İndirim ver" MRR cut fraction
 const RETAIN_SAT_BUMP := 8              # satisfaction relief from a discount

@@ -18,7 +18,7 @@
 Two principles govern everything below:
 
 - **Every ending is earned.** A losing player must think "those were my decisions," never "that was unfair." Therefore every terminal condition is visible, trackable, and recoverable before it fires. Death never comes as a surprise — it comes from a counter the player watched.
-- **Every run mathematically ends.** Daily burn erodes cash continuously + Day 180 is a hard stop. With these two guarantees no run can become a zombie. Everything else is earned endings layered on top of this safety net.
+- **Every run mathematically ends.** Daily burn erodes cash continuously + the soft cap (day 730) is the catch for a run that reached no goal ending. With these two guarantees no run can become a zombie. Everything else is earned endings layered on top of this safety net. *(Amended 2026-08-19, Calibration Round A §2: the Day-180 hard stop is retired; see §4.6/§4.8 below.)*
 
 The ending screen is not the last screen of the game — it is the demo's conversion moment. A Next Fest player who reaches it either wishlists or closes the game. Design accordingly.
 
@@ -30,10 +30,10 @@ The ending screen is not the last screen of the game — it is the demo's conver
 |---|---|---|---|
 | Bootstrap | D1 – ~D45 | Survival. First product, first customer, first hire. Every dollar hurts. | Gate 1 |
 | Traction | ~D45 – ~D120 | Repeatability. Churn, scale pressure, scandal risk grows. | Gate 2 |
-| Series A Hunt | ~D120 – D180 | A hunt on a ticking clock. Runway melting, pitch calendar full, every meeting is a final. | Terminal (win/lose) |
-| Day 180 | — | Hard stop. | Time-out fork (§4.6) |
+| Series A Hunt | ~D120 onward | A hunt on a ticking clock. Runway melting, pitch calendar full, every meeting is a final. | Terminal (win/lose) |
+| Soft cap | D730 | The window investors give a company closes. | Running on Fumes (§4.8) |
 
-Day numbers are medians, not walls — transitions are gate-driven; a fast player may enter Traction by D30. The only fixed wall is Day 180. (Working value: 180. Revisit if playtests miss the 60–90 min target.)
+Day numbers are medians, not walls — transitions are gate-driven; a fast player may enter Traction by D30. **The run is goal-terminated (2026-08-19, Calibration Round A §2):** it ends only on an ending — Series A close, Profitable & self-sustaining (§4.6, a condition evaluated daily), bankruptcy — or at the soft cap, day 730 [WORKING]. The old "only fixed wall is Day 180" clause is retired; the Series A Hunt has no calendar end.
 
 ### 1.1 Month-End Summary (pacing instrument)
 
@@ -117,17 +117,19 @@ Trigger (working): brand < 15 AND no recovery for 30 days AND active scandal. Ra
 ### 4.5 VC Rejection Cascade (Class B) — with the escape hatch
 
 Trigger: 3 pitch tables closed without signature (see §5.5 for what "closed" means) AND pivot window closed.
-Escape hatch: at the third closed table, if metrics are alive (working: MRR ≥ threshold AND cash positive), Frank offers the pivot: "Belki bu yıl değil. Belki bu şirket değil. Ama sen bitmedin." → player may pivot to the bootstrap path; run continues to Day 180 with a shot at Profitable Bootstrap (§4.6). If metrics are dead, cascade = loss screen.
+Escape hatch: at the third closed table, if metrics are alive (working: MRR ≥ threshold AND cash positive), Frank offers the pivot: "Belki bu yıl değil. Belki bu şirket değil. Ama sen bitmedin." → player may pivot to the bootstrap path; the run continues toward Profitable & self-sustaining (§4.6, a condition) or the soft cap (§4.8). If metrics are dead, cascade = loss screen.
 A hidden corridor from lose to win — the player who discovers it writes our Steam review for us.
 
-### 4.6 Time-out fork (Class B, Day 180)
+### 4.6 Profitable & self-sustaining (Class B, a CONDITION evaluated daily) — amended 2026-08-19
 
-Reaching Day 180 is not an ending — it is an evaluation:
+*Was: "Time-out fork (Class B, Day 180)". The Day-180 wall is retired (Calibration Round A §2); profitability is no longer a crossing read once at a wall but a condition the daily scan evaluates (§9 of the same round):*
 
-- Conditions met (working: cash never went below zero AND net-positive last 90 days AND no unmanaged major scandal AND MRR ≥ threshold) → **Profitable Bootstrap** (rare win, indie-hero register): "Onlara ihtiyacın yokmuş. Gerçek bir şey kurdun."
-- Conditions not met → **Running on Fumes** (soft loss): calendar keeps flipping, founder puts head on desk, soft fade. "Kaybetmedin. Sadece kazanmadın."
+- **Profitable Bootstrap** fires when the company has closed **6 consecutive "Artıda" calendar months** (month net > 0 AND the treasury never sampled below zero inside the month — the red-day test moved from a run-lifetime latch to a per-month count) AND the 6-month net margin is ≥ 15 % AND MRR ≥ the scale floor ($20K) [all WORKING] AND no unmanaged major scandal. Rare win, indie-hero register: "Onlara ihtiyacın yokmuş. Gerçek bir şey kurdun." Finance shows the progress ("Artıda · 4/6 ay").
+- The month ledger it reads (`GameState.month_history`, closed by MonthSummarySystem on the 1st of each calendar month) also feeds the Series A gate's growth-streak condition.
 
-Same trigger moment, two opposite emotions; the collision resolves inside the design.
+### 4.8 Soft cap → Running on Fumes (Class B, day 730) — added 2026-08-19
+
+The catch for a run that reached no goal ending inside the window investors give it. Day 730 [WORKING] → **Running on Fumes** (soft loss, id kept; paper rewritten in the "yatırımcılar ilgisini kaybetti" register — the company did not close, it dropped off the agenda; title "İlgi Söndü / Interest Faded"). Frank's verdict: "Takvim bitti. Kapı açıktı, kimse girmedi. Kaybetmedin. Sadece kazanmadın." Not deferred for a live term sheet (ledger 16: no auto-sign; the D-1 Frank warning precedes it; the paper names an unsigned offer left on the table). Same day as a profitability close → the win wins (scan order).
 
 ### 4.7 Win budget (against the ~70% pillar — calibration targets, not promises)
 
@@ -207,7 +209,7 @@ Demo ships the framework with simple layouts; 30–45s variant cinematics are co
 
 ## 7. Zero-gap ledger — resolved edge cases (copy into specs verbatim)
 
-1. **Priority chain (multiple triggers, same day):** Class A (instant) > Class B (scanned). Within Class B: Bankruptcy > Brand Collapse > Cascade > Time-out fork. (Day 180 + shutter counter expiring same day → Bankruptcy; the more specific wins.)
+1. **Priority chain (multiple triggers, same day):** Class A (instant) > Class B (scanned). Within Class B: Bankruptcy > Brand Collapse > Cascade > Profitability condition > Soft cap. (Soft cap + shutter counter expiring same day → Bankruptcy; the more specific wins. Amended 2026-08-19.)
 2. **Terminal > gate:** if the run ends, any queued Frank transition scene dies. Slot order is already 8→9, but if slot 9 fires, that day's pending scenes are cancelled.
 3. **World stops after terminal:** `run_active = false` → slots 1–8 do not run, event queue flushes, ticker freezes. No MRR accrues behind the ending screen (otherwise run-summary numbers contradict the screen — classic missed bug).
 4. **Ratchet × shutter interaction:** if the shutter counter starts while a gate is open, the Frank transition scene is held — he cannot say "hazırsın, büyü" and "7 günün var" simultaneously. Shutter resolves or run ends; then the transition returns.
@@ -256,7 +258,7 @@ Mockups do NOT block Specs 1–2. Engines land first with placeholder modals; th
 - Patience pool size + skill scaling
 - Push odds formula (skill + context + leverage weights)
 - Win budget percentages (§4.7)
-- Day 180 wall (only if 60–90 min target misses)
+- Soft cap day (730, WORKING — replaced the Day-180 wall 2026-08-19)
 - Gate 2 brand floor value
 
 ---
