@@ -609,3 +609,68 @@ audit's line **count** as its freeze proof, and that number went stale twice. Th
 count now lives in exactly one place (CLAUDE.md's UI/STYLE LAW), and the proof is
 stated as what it actually is — the dump being byte-identical after normalising
 Godot's auto `@Class@NN` counters, not any particular integer.
+
+---
+
+## Part C — 3D bake migration (2026-08-20)
+
+The eight sealed layers were **re-rendered from the Godot 3D scene** (`scenes/oda3d/`) and
+overwritten in place, so `oda_view.gd` and the eight `.import` sidecars were not touched at all.
+Erdem approved the 3D plates on sight; this round is how they became the game's art without
+losing what the layered architecture buys.
+
+**Why layers and not the plate.** The approved plates are single opaque images. ODA's hover glow
+is `oda_rim_glow.gdshader`, which computes `rim = clamp(na - tex.a, 0, 1)` from the sprite's own
+alpha. On an opaque plate `tex.a == 1` everywhere, so the rim is **zero at every pixel** — hover
+would have died silently, with no error, on monitor and phone. The phone's event buzz translates
+`_sprites["phone"]` and dies with it too. Godot can render a transparent-background pass, which is
+exactly what the Three.js rig could not do (Part A: `WebGLRenderer` built without `alpha: true`)
+— so the move to 3D is what made the layer export possible in the first place.
+
+**Two findings worth keeping.**
+
+1. **TAA destroys the alpha channel on a transparent background.** With `use_taa = true` the
+   960×540 phone pass came back fully opaque — 518,400 / 518,400 px at alpha 255. With TAA off,
+   alpha bbox `(494,484)-(526,511)`, i.e. `REGIONS.phone` once scaled. TAA resolves into an opaque
+   history buffer. `oda3d_capture.gd` now forces `use_taa = false` for prop passes rather than
+   trusting the caller; spatial AA is covered by MSAA 4× plus `--oda3d-scale=1.5` supersampling.
+
+2. **Hiding a prop also removes its cast shadow — use `SHADOWS_ONLY`, not `visible = false`.**
+   The first room pass hid the five props and the mug's and phone's shadows vanished from the desk:
+   the sun is a real-time `DirectionalLight3D` and the lightmap bakes only *indirect*. Setting
+   `cast_shadow = SHADOW_CASTING_SETTING_SHADOWS_ONLY` keeps each prop in the shadow map while
+   removing it from the colour pass, so the background carries the shadows and the sprite going
+   back on top does not double-draw them.
+
+**Gate 0 — the decomposition reassembles.** `room + lamp + monitor + keyboard + mug + phone`
+composited in OdaView's order, against a same-settings single-pass reference: mean abs error
+**1.61 / 255** (day) and **2.11 / 255** (night). The residual is screen-space AO/IL around the
+props, which is view-dependent and cannot survive decomposition — the same trade the sealed art
+already made, and the baked contact shadows are present.
+
+**The contract did not move.** Alpha bounds measured from the new sprites against `REGIONS`:
+lamp, monitor and phone **byte-identical**; keyboard `-1` x / `+1` w; mug `+1` w. Both are 1 px,
+well inside `REGION_PAD = 24`, and neither object is clickable. `REGIONS` and `RECTS` were left
+untouched, so `RECTS[id] == REGIONS[id] / ART` still holds by construction.
+
+**Night stays a two-layer problem.** Measured night/day channel ratios on the new art: monitor
+`(0.943, 0.842, 0.686)`, keyboard `(0.730, 0.616, 0.481)`, mug `(0.708, 0.575, 0.419)`, phone
+`(0.688, 0.564, 0.447)` — all below 1, so `ObjectLayer.modulate` reproduces them. The lamp is
+`(1.307, 1.079, 0.732)`: two channels **above 1**, which a multiply cannot reach. `lamp_night`
+therefore stays a separate layer for exactly the reason `oda_view.gd:889-897` records, and
+`monitor_night` stays retired. `ODA_NIGHT_TINT` was left at its sealed-art value.
+
+**Gates.** `--theme-audit=oda` **121 lines, byte-identical** after `@Class@NN` normalization —
+textures and coordinates are not theme items, so the freeze held and `THEME_STAMP` stayed at 6
+(the 2026-08-17 precedent, CLAUDE.md:152-162). Smoke **212/212** from source. Twelve
+`--oda-shot` kinds read by eye, 0 script errors; the `hover` frame diffed against `day` shows the
+rim tracing the monitor's real silhouette (bezel + neck + trapezoidal foot), which is the direct
+proof the new alpha is load-bearing.
+
+**Cost.** `assets/art/center_view/` 2.28 MiB → 12.7 MiB on disk: a baked GI render carries
+per-pixel detail that flat painted regions did not. VRAM is unchanged — same dimensions, same
+`compress/mode=0`, same RGB8/RGBA8.
+
+**Reproduce:** `--oda3d-layer=room|monitor|keyboard|lamp|mug|phone` (plus `full` for the Gate 0
+reference) on `oda3d_capture.tscn`, at `--oda3d-size=3840x2160 --oda3d-scale=1.5 --oda3d-msaa=4
+--oda3d-warmup=60`; `lamp_night` is the `lamp` layer in `--oda3d-mode=night`.

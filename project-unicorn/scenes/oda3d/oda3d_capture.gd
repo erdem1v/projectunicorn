@@ -13,9 +13,22 @@ extends Node
 ##     res://scenes/oda3d/oda3d_capture.tscn -- --oda3d-mode=day --oda3d-size=7680x4320 \
 ##     --oda3d-scale=1.5 --oda3d-msaa=4 --oda3d-warmup=60 --oda3d-downscale=1
 ## Optional: --oda3d-tonemap=aces|agx  --oda3d-gi=lightmap|sdfgi|none  --oda3d-out=res://path.png
+##           --oda3d-layer=room|monitor|keyboard|lamp|mug|phone (ODA katman uretimi, 2026-08-20:
+##           room = bes obje GIZLI, opak zemin, pismis temas golgeleri lightmap'te KALIR;
+##           <obje> = yalniz o obje, SEFFAF zemin -> ODA'nin ObjectLayer'inin istedigi RGBA)
 ##           --oda3d-env=key:value,key:value   (raw Environment property overrides for the fast loop)
 ##           --oda3d-exposure=1.05  --oda3d-anchors-only=1 (no PNG; print projected anchors and quit)
 ##           --oda3d-preview=1 (also copy the frame into the window)
+
+## ODA katman adi -> GLB dugum adi. Adlar oda3d.gd:_find() ile cozulur; bir prop birden cok
+## mesh'ten olusur (klavye 60+ tus), o yuzden alt agacin TAMAMI hedeftir.
+const LAYER_PROPS := {
+	"monitor": "monitor",
+	"keyboard": "keyboard",
+	"lamp": "desk_lamp",
+	"mug": "mug",
+	"phone": "phone",
+}
 
 const CAMERA_LIGHT_JSON := "res://art/oda3d/oda3d_camera_light.json"
 const BAKE_LOG_JSON := "res://art/oda3d/oda3d_bake_log.json"
@@ -121,6 +134,9 @@ func _ready() -> void:
 					_: env.set(p[0], p[1])
 				print("[Oda3D] env override %s = %s" % [p[0], str(env.get(p[0]))])
 
+	var layer := str(args.get("layer", ""))
+	if layer != "":
+		_apply_layer(layer, env)
 	var warmup := int(args.get("warmup", 60))
 	print("[Oda3D] mode=%s size=%s scale=%.2f msaa=%d taa=%s tonemap=%s gi=%s warmup=%d" % [mode, str(vsize), view.scaling_3d_scale, msaa, str(view.use_taa), tm, gi, warmup])
 	print("[Oda3D] lightmap data: %s" % ("yes" if (oda.lightmap_gi.light_data != null and oda.lightmap_gi.light_data.get_lightmap_textures().size() > 0) else "NONE"))
@@ -137,6 +153,12 @@ func _capture(warmup: int, vsize: Vector2i, gi: String, tm: String) -> void:
 		return
 
 	var img: Image = view.get_texture().get_image()
+	# Prop katmani RGBA (rim shader ODA'da alfadan okuyor), oda/zemin RGB (muhurlu sanatla ayni).
+	var layer_arg := str(args.get("layer", ""))
+	if layer_arg != "" and layer_arg != "room":
+		img.convert(Image.FORMAT_RGBA8)
+	elif layer_arg == "room":
+		img.convert(Image.FORMAT_RGB8)
 	if img == null or img.is_empty():
 		push_error("[Oda3D] empty capture")
 		get_tree().quit(2)
@@ -153,7 +175,9 @@ func _capture(warmup: int, vsize: Vector2i, gi: String, tm: String) -> void:
 			var p := out.replace("_%s.png" % label, "_%s.png" % pair[2])
 			d.save_png(p)
 			print("[Oda3D] saved %s" % ProjectSettings.globalize_path(p))
-	_write_json(anchors, vsize, gi, tm, out)
+	# Katman gecisleri kamera/isik defterini YAZMAZ: defter plakalarin kaydi, katmanlarin degil.
+	if layer_arg == "":
+		_write_json(anchors, vsize, gi, tm, out)
 	print("ODA3D_OK")
 	get_tree().quit(0)
 
@@ -186,6 +210,97 @@ func _write_json(anchors: Dictionary, vsize: Vector2i, gi: String, tm: String, o
 	f.store_string(JSON.stringify(all, "  "))
 	f.close()
 	print("[Oda3D] wrote %s" % ProjectSettings.globalize_path(CAMERA_LIGHT_JSON))
+
+
+## ODA katman uretimi (2026-08-20). Iki kip:
+##   room   : bes prop GIZLENIR. Pismis temas golgeleri ve okluzyonu lightmap DOKUSUNDA durur,
+##            mesh'te degil -- yani objeyi gizlemek golgesini goturmez, tam da katmanli
+##            kompozitin istedigi sey. Zemin opak kalir.
+##   <prop> : yalniz o alt agac gorunur, viewport SEFFAF. ODA'nin rim shader'i sprite'in
+##            alfasindan 8 komsu tap okur (oda_rim_glow.gdshader), o yuzden opak bir plaka
+##            hover parildamasini SESSIZCE olduruyor -- katman uretmemizin sebebi bu.
+## Gorunurluk yalniz MeshInstance3D'lere yazilir; ara Node3D'ler acik birakilir, cunku Godot'ta
+## gorunurluk hiyerarsiktir ve bir ebeveyni kapatmak kardes alt agaclari da goturur.
+func _apply_layer(layer: String, env: Environment) -> void:
+	var meshes: Array = []
+	_collect_meshes(oda.room, meshes)
+	if meshes.is_empty():
+		push_error("[Oda3D] layer: no MeshInstance3D under Room")
+		get_tree().quit(3)
+		return
+	if layer == "full":
+		# Gate 0 referansi: hicbir sey gizlenmez, opak. Katman gecisi sayildigi icin kamera/isik
+		# defterini YAZMAZ -- katmanlarin toplami bununla karsilastirilir, ayni ayarlarla.
+		print("[Oda3D] layer=full (reference pass, nothing hidden)")
+		return
+	if layer == "room":
+		var props: Array = []
+		for k in LAYER_PROPS:
+			var n: Node = oda._find(String(LAYER_PROPS[k]))
+			if n == null:
+				push_error("[Oda3D] layer: node not found: %s" % LAYER_PROPS[k])
+				get_tree().quit(3)
+				return
+			props.append(n)
+		# GIZLEME DEGIL, SHADOWS_ONLY. Olculdu 2026-08-20: props'u visible=false yapinca kupanin
+		# ve telefonun masaya dusen GOLGESI de gitti -- cunku gunes GERCEK ZAMANLI bir
+		# DirectionalLight (lightmap yalniz DOLAYLI isigi pisiriyor: 'direct light real-time,
+		# indirect baked'). Gizlenen mesh golge haritasina da girmez. SHADOWS_ONLY mesh'i ana
+		# gecisten cikarir ama golge haritasinda BIRAKIR, yani zemin objelerin golgesini aynen
+		# tasir ve katman geri konunca golge iki kez cizilmez.
+		var shadowed := 0
+		for mi in meshes:
+			if _under_any(mi, props):
+				(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+				shadowed += 1
+		print("[Oda3D] layer=room props -> SHADOWS_ONLY (%d/%d meshes)" % [shadowed, meshes.size()])
+		return
+	if not LAYER_PROPS.has(layer):
+		push_error("[Oda3D] unknown layer: %s (full|room|%s)" % [layer, "|".join(LAYER_PROPS.keys())])
+		get_tree().quit(3)
+		return
+	var target: Node = oda._find(String(LAYER_PROPS[layer]))
+	if target == null:
+		push_error("[Oda3D] layer: node not found: %s" % LAYER_PROPS[layer])
+		get_tree().quit(3)
+		return
+	var shown := 0
+	for mi in meshes:
+		var on: bool = (mi == target or target.is_ancestor_of(mi))
+		mi.visible = on
+		if on:
+			shown += 1
+	if shown == 0:
+		push_error("[Oda3D] layer %s isolated 0 meshes" % layer)
+		get_tree().quit(3)
+		return
+	# Seffaf zemin: viewport + Environment + varsayilan clear color, ucu birden. Ambient'a
+	# DOKUNULMAZ -- ambient_light_source SKY'dir ve background_mode'dan bagimsizdir, yani
+	# prop pismis isigini ve gercek zamanli ambient'ini aynen korur.
+	view.transparent_bg = true
+	env.background_mode = Environment.BG_CLEAR_COLOR
+	RenderingServer.set_default_clear_color(Color(0.0, 0.0, 0.0, 0.0))
+	# TAA SEFFAF ZEMINDE ALFAYI OLDURUYOR -- olculdu 2026-08-20: use_taa=true ile kare tamamen
+	# opak dondu (518400/518400 piksel alfa 255), use_taa=false ile telefonun alfa bbox'i
+	# 960x540'ta (494,484)-(526,511), yani 3840'a olceklenince REGIONS.phone ile ayni yer.
+	# Sebep yapisal: TAA gecmis tamponuna opak cozumluyor. Uzamsal AA'yi MSAA + supersample
+	# (--oda3d-scale) karsiliyor, o yuzden kayip yok. Cagirana birakilmaz, burada zorlanir.
+	view.use_taa = false
+	print("[Oda3D] layer=%s isolated (%d/%d meshes), transparent bg, TAA off" % [layer, shown, meshes.size()])
+
+
+static func _collect_meshes(n: Node, out: Array) -> void:
+	if n is MeshInstance3D:
+		out.append(n)
+	for c in n.get_children():
+		_collect_meshes(c, out)
+
+
+static func _under_any(n: Node, roots: Array) -> bool:
+	for r in roots:
+		if n == r or (r as Node).is_ancestor_of(n):
+			return true
+	return false
 
 
 static func _has_prop(o: Object, prop: String) -> bool:
