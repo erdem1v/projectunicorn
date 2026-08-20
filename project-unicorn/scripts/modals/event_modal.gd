@@ -486,9 +486,9 @@ func _describe_modifier(m) -> Dictionary:
 		"speed_bonus":
 			var sb: int = int(m.get("days", 0))
 			return {"text": tr("EFFECT_DAYS").format({"v": _fmt_signed(sb)}), "kind": (&"negative" if sb > 0 else &"positive")}
-		# İterasyon karar momenti (player-gated restore): süre bedeli / faz geçişi okunur olsun.
-		"advance_iteration": return {"text": tr("EFFECT_DESIGN_ROUND").format({"days": ProductSystem.ITER_ROUND_DAYS}), "kind": &"accent"}
+		# Faz geçiş kararları: geçiş okunur olsun ("advance_iteration" emekli — Build Bar 2026-08-19).
 		"enter_development": return {"text": tr("EFFECT_DEV_BEGINS"), "kind": &"neutral"}
+		"enter_beta": return {"text": tr("EFFECT_BETA_BEGINS"), "kind": &"neutral"}
 		# Player-facing effects that previously rendered no badge (choices were blind).
 		"churn_customer": return {"text": tr("EFFECT_CHURN"), "kind": &"negative"}
 		"add_prospect": return {"text": tr("EFFECT_NEW_PROSPECT"), "kind": &"positive"}

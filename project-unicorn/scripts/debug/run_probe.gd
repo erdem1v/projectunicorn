@@ -76,7 +76,7 @@ const SOURCE_MAP := {
 	"ev_hr_ship_glow": "factory:hr_morale_system:526 (ship_glow)",
 	"ev_mvp_ship_moment": "factory:product_system:1266 (ship)",
 	"ev_mvp_version_ship_moment": "factory:product_system:1266 (version_ship)",
-	"ev_mvp_iter_decision_intro": "factory:product_system:615 (iter_intro)",
+	"ev_mvp_iter_decision_intro": "factory:product_system:_end_round (iter_intro)",
 	"ev_phase_gate_": "factory:phase_gate_system:130 (gate)",
 	"ev_angel_frank_seed": "factory:angel_round_system (seed offer)",
 	"ev_angel_hire_nudge": "factory:angel_round_system (hire nudge)",
@@ -518,12 +518,17 @@ static func _keep_the_word() -> void:
 
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if b != null:
-		# Player-gated iteration: the design band parks on a decision and waits for a human.
-		# Taking the seat with ZERO extra rounds is the smoke harness's own convention
-		# (_run_build_to_phase) — it keeps the build honest without buying free quality.
-		if b.current_phase == "iteration" and b.iteration_decision_pending:
+		# Build Bar 2026-08-19: design rounds chain by themselves; the two human seats are
+		# "Geliştirmeye geç" (opens when round 1 ends) and "Beta'ya geç" (development parks
+		# at 80%). Taking each seat the moment it opens — ZERO completed extra rounds — is
+		# the smoke harness's own convention (_run_build_to_phase): the build stays honest
+		# without buying free quality (a just-started round 2 is abandoned, no gains).
+		if ProductSystem.can_enter_development():
 			ProductSystem.enter_development()
 			print("PROBE PLAY day=%d enter_development" % GameState.day)
+		elif ProductSystem.can_enter_beta():
+			ProductSystem.enter_beta()
+			print("PROBE PLAY day=%d enter_beta" % GameState.day)
 		elif b.current_phase == "bugfix":
 			print("PROBE PLAY day=%d launch build=%s" % [GameState.day, str(b.component_ids)])
 			ProductSystem.launch()   # fires the ship-moment modal; the drain resolves it,

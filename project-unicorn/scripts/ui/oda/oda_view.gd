@@ -30,6 +30,9 @@ const RIM_SHADER := preload("res://scenes/desk/oda_rim_glow.gdshader")
 const TEX_DAY := preload("res://assets/art/center_view/room_day_3840x2160.png")
 const TEX_NIGHT := preload("res://assets/art/center_view/room_night_3840x2160.png")
 const TEX_MONITOR := preload("res://assets/art/center_view/monitor_3840x2160.png")
+# Build Bar (2026-08-19): monitörün build yüzü BuildHUD/tracker ile AYNI sahneyi kurar —
+# kendi çubuğu yok (eski Track/Fill + tween emekli). Preload, class_name yok.
+const BUILD_BAR_SCENE := preload("res://scenes/ui/components/BuildBar.tscn")
 const TEX_KEYBOARD := preload("res://assets/art/center_view/keyboard_3840x2160.png")
 const TEX_PHONE := preload("res://assets/art/center_view/phone_3840x2160.png")
 const TEX_LAMP := preload("res://assets/art/center_view/lamp_3840x2160.png")
@@ -51,7 +54,6 @@ const HOVER_FADE_S := 0.15          # hover glow aç/kapa
 const BUZZ_S := 0.30                # telefon titreşimi süresi
 const BUZZ_PX := 3.0                # titreşim genliği
 const PAPER_ARRIVE_S := 0.35        # kâğıt geliş animasyonu
-const MONITOR_BAR_S := 0.8          # ilerleme barının "sakin" tween'i
 const PAPER_CAP := 3                # masadaki azami kâğıt (fazlası +N çipi)
 const SCREEN_GLOW_NIGHT_A := 0.35   # gece ekran parlaması (additive) alfası
 
@@ -83,8 +85,7 @@ var _mon_cells: Array = []             # 4 × {cap: Label, val: Label}
 var _mon_footer: Label
 var _mon_slack: Control                # grid gizliyken boşluğu yutan esnek dolgu
 var _mon_progress_block: VBoxContainer
-var _mon_track: Panel
-var _mon_fill: Panel
+var _mon_bar: Control                # BuildBar örneği (kendi modelini kendi çeker)
 var _phone_glass: Control              # DÖNMÜŞ kırpan sarmalayıcı (D2: camda yalnız bildirim)
 var _phone_glass_label: Label
 var _board_goal: PanelContainer
@@ -120,7 +121,6 @@ var _debug_papers: bool = false        # --oda-shot=night fixture'ı
 
 # Tween sahipleri (kill-and-replace — asla üst üste binmez)
 var _night_tween: Tween
-var _bar_tween: Tween
 var _buzz_tween: Tween
 var _hover_tweens: Dictionary = {}
 
@@ -370,29 +370,23 @@ func _build_monitor_screen() -> void:
 	_mon_slack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_mon_slack.visible = false
 	col.add_child(_mon_slack)
-	# İlerleme bloğu (yalnız build yüzü): etiket + Track/Fill (BuildHUD deseni —
-	# runtime stylebox, renkler UiTokens'tan; ledger §A yasal).
+	# İlerleme bloğu (yalnız build yüzü): etiket + BuildBar (Software Inc. segment
+	# grameri, 2026-08-19). Bar BuildHUD kartı ve tracker kartıyla AYNI sahne — burada
+	# paralel bir çubuk YOK; renkler bar'ın kendi UiTokens okumasından (ACCENT, ODA_ACCENT
+	# değil — üç ev sahibinde piksel piksel aynı olma emri). KOŞULSUZ kurulur (theme-audit
+	# düğüm deltası deterministik olsun: gizli düğüm de gezilir); yüksekliği _relayout
+	# camdan türetir (D4: host-türetimli, 1280×720'de kırpılmasın).
 	_mon_progress_block = VBoxContainer.new()
 	_mon_progress_block.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	col.add_child(_mon_progress_block)
 	var prog_label := UiFactory.make_label("", &"OdaScreenCaption")
 	prog_label.name = "ProgLabel"
 	_mon_progress_block.add_child(prog_label)
-	_mon_track = Panel.new()
-	_mon_track.custom_minimum_size = Vector2(0, 10)
-	var sb_track := StyleBoxFlat.new()
-	sb_track.bg_color = UiTokens.ODA_VEIL_SOFT
-	sb_track.set_corner_radius_all(UiTokens.RADIUS_XS)
-	_mon_track.add_theme_stylebox_override("panel", sb_track)
-	_mon_progress_block.add_child(_mon_track)
-	_mon_fill = Panel.new()
-	var sb_fill := StyleBoxFlat.new()
-	sb_fill.bg_color = UiTokens.ODA_ACCENT
-	sb_fill.set_corner_radius_all(UiTokens.RADIUS_XS)
-	_mon_fill.add_theme_stylebox_override("panel", sb_fill)
-	_mon_fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_mon_fill.anchor_right = 0.0
-	_mon_track.add_child(_mon_fill)
+	_mon_bar = BUILD_BAR_SCENE.instantiate()
+	_mon_bar.name = "BuildBar"
+	_mon_bar.custom_minimum_size = Vector2(0, 44)
+	_mon_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_mon_progress_block.add_child(_mon_bar)
 	# Alt durum satırı (canlı yüz): "sistem sakin · uyarı yok" / uyarı hali.
 	_mon_footer = UiFactory.make_label("", &"OdaScreenCaption")
 	col.add_child(_mon_footer)
@@ -755,6 +749,11 @@ func _relayout() -> void:
 	var glass: Rect2 = OdaLayoutRef.rect_in(mon_rect, OdaLayoutRef.MONITOR_GLASS_REL)
 	_set_rect(_monitor_wrap, glass)
 	_set_rect(_screen_glow, glass.grow(12.0))
+	# BuildBar yüksekliği CAMDAN türer (D4 host-türetim): 1080p'de 44 (iki satır +
+	# 10px çubuk), 720p camında (~164px) 28'e iner — bar kendi eşiklerinden (36/48)
+	# yazıyı MICRO'ya çeker ve kazanç satırını düşürür; yazı 9px altına ASLA inmez.
+	if _mon_bar != null:
+		_mon_bar.custom_minimum_size = Vector2(0.0, clampf(glass.size.y * 0.17, 28.0, 44.0))
 	# Telefon camı: dönmüş sarmalayıcı — pivot her boyut atamasından SONRA kurulur
 	# (pivot_offset piksel cinsindendir, resize'da kendi kendine güncellenmez).
 	var pglass_size: Vector2 = phone_r.size * OdaLayoutRef.PHONE_GLASS_SIZE_REL
@@ -953,15 +952,18 @@ func _refresh_monitor() -> void:
 			if emp != null:
 				lead = emp.character_name
 		_mon_meta.visible = true
-		_mon_meta.text = UiTokens.tr_upper(tr("ODA_MONITOR_BUILD_META").format({"days": maxi(0, ProductSystem.build_days_remaining()), "lead": lead}))
+		# Geliştirme parkında "~N gün kaldı" bar'la çelişir (bar "hazır" der) → hazır satırı.
+		if ProductSystem.can_enter_beta():
+			_mon_meta.text = UiTokens.tr_upper(tr("ODA_MONITOR_BUILD_META_READY").format({"lead": lead}))
+		else:
+			_mon_meta.text = UiTokens.tr_upper(tr("ODA_MONITOR_BUILD_META").format({"days": maxi(0, ProductSystem.build_days_remaining()), "lead": lead}))
 		_mon_grid.visible = false
 		_mon_slack.visible = true
 		_mon_footer.visible = false
 		_mon_progress_block.visible = true
 		prog_label.text = UiTokens.tr_upper(tr("ODA_MONITOR_PROGRESS"))
-		# Yüzdenin tek evi (UiTokens.build_percent) — monitör çubuğu da oradan beslenir ki
-		# oyuncu odadan sekmeye geçtiğinde dolgu bir anda yer değiştirmesin.
-		_animate_bar(float(UiTokens.build_percent(ProductSystem.build_progress())) / 100.0)
+		# Çubuğun kendisi BuildBar'dır ve modelini KENDİ çeker (aynı sinyaller); monitör
+		# ona hiçbir şey itmez — HUD ile aynı tick'te aynı durum yapısal olarak garantili.
 		return
 	if bool(GameState.get_flag("mvp_shipped", false)):
 		# CANLI ÜRÜN YÜZÜ (D4: cam DOLU — 2×2 stat grid'i + alt durum satırı).
@@ -1025,19 +1027,6 @@ func _set_chip_dot(color: Color) -> void:
 	row.add_child(_mon_chip_dot)
 	row.move_child(_mon_chip_dot, 0)
 	old.queue_free()
-
-
-func _animate_bar(fraction: float) -> void:
-	# "Sakin ilerleme hareketi" (mikro-hareket listesi): saatlik build_progress
-	# sinyalinde bar yeni değere kısa SINE tween'iyle süzülür. Kill-and-replace.
-	var target: float = clampf(fraction, 0.0, 1.0)
-	if _bar_tween != null and _bar_tween.is_valid():
-		_bar_tween.kill()
-	if not is_visible_in_tree():
-		_mon_fill.anchor_right = target
-		return
-	_bar_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_bar_tween.tween_property(_mon_fill, "anchor_right", target, MONITOR_BAR_S)
 
 
 # =========================================================================

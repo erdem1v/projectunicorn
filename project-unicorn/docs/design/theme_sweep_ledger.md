@@ -12,7 +12,8 @@ Süpürme bunları SİLMEZ — yalnız kayda geçirir.
 
 | Site | Ne kuruyor | Not |
 |---|---|---|
-| `scripts/ui/components/build_hud_panel.gd:97-115` | track/fill + 3 mini-phase state kutusu | state paleti UiTokens'tan; kalır |
+| `scripts/ui/components/build_hud_panel.gd:_build_styles` | 3 mini-phase state kutusu (track/fill 2026-08-19'da BuildBar'a taşındı) | state paleti UiTokens'tan; kalır |
+| `scripts/ui/components/build_bar.gd:_build_styles` | Build Bar (2026-08-19): segment dolu/boş kutuları + HATA çipi, `_draw` içinde `draw_style_box` | UiTokens ACCENT/BORDER_HOVER + negative()/positive() accessor'ları; ÜÇ ev sahibinde aynı (HUD/tracker/ODA monitörü — ODA'da bilerek ODA_* register'ı DEĞİL, piksel-aynılık emri); kalır |
 | `scripts/ui/components/right_panel.gd:155-160` | `_paint_dot` sağlık noktası | state rengi (`UiTokens.health_color` ailesi); kalır |
 | `scripts/ui/components/logo_emblem.gd:58` | logo plakası | boyuta bağlı radius; kalır |
 | `scripts/theme/ui_factory.gd:_make_chip / make_dot` | çip + nokta | fabrikanın kendisi; token'ları UiTokens'tan (B6) |

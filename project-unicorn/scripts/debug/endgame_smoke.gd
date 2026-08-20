@@ -197,6 +197,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"fumes_zero_revenue_ledger":          fail = _case_fumes_zero_revenue_ledger()
 		"promise_orphan_no_brand_hit":        fail = _case_promise_orphan_no_brand_hit()
 		"build_percent_single_source":        fail = _case_build_percent_single_source()
+		"build_bar_hosts_agree":              fail = _case_build_bar_hosts_agree()
 		"runway_days_and_negative_cash":      fail = _case_runway_days_and_negative_cash()
 		"b2b_market_gate_b2c_run":            fail = _case_b2b_market_gate_b2c_run()
 		"sales_autoclose_empty_pain":         fail = _case_sales_autoclose_empty_pain()
@@ -365,9 +366,11 @@ static func _instances_of(event_id: String) -> int:
 
 # Rev3: aktif build'i hedef faza gelene dek ProductSystem.hourly_tick ile sürer
 # (sınırlı döngü; gün ilerletmez — saf build-motoru sürüşü).
-# Player-gated iterasyon restore: tasarım kararı beklerken hedef İLERİ bir fazsa
-# helper oyuncu koltuğuna oturup "Geliştirmeye geç" der — SIFIR ek tur, yani sıfır
-# tur kazancı; determinizm case'leri (axes/ship damgaları) bire bir aynı kalır.
+# Build Bar grameri (2026-08-19): iki oyuncu koltuğu var — "Geliştirmeye geç" (tur 1
+# bitince açılır) ve "Beta'ya geç" (geliştirme %80'de park eder). Hedef İLERİ bir fazsa
+# helper açılan koltuğa HEMEN oturur — SIFIR tamamlanmış ek tur (yeni başlamış tur 2
+# kazançsız terk edilir), yani sıfır tur kazancı; determinizm case'leri (axes/ship
+# damgaları) bire bir aynı kalır.
 static func _run_build_to_phase(phase: String, max_hours: int = 24 * 120) -> bool:
 	for i in max_hours:
 		var b: FeatureBuild = ProductSystem.get_active_build()
@@ -375,37 +378,41 @@ static func _run_build_to_phase(phase: String, max_hours: int = 24 * 120) -> boo
 			return false
 		if b.current_phase == phase:
 			return true
-		if b.current_phase == "iteration" and b.iteration_decision_pending and phase != "iteration":
+		if b.current_phase == "iteration" and phase != "iteration" and ProductSystem.can_enter_development():
 			ProductSystem.enter_development()
+			continue
+		if b.current_phase == "development" and phase in ["bugfix", "shipped"] and ProductSystem.can_enter_beta():
+			ProductSystem.enter_beta()
 			continue
 		ProductSystem.hourly_tick(i % 24)
 	var b_end: FeatureBuild = ProductSystem.get_active_build()
 	return b_end != null and b_end.current_phase == phase
 
 
-# İterasyon-döngüsü sürücüleri (player-gated restore): tasarım bandını karar anına
-# sürer / bir "Bir tur daha" turunu baştan sona koşar (yeniden pending'e dönene dek).
-static func _drive_to_iter_pending(max_hours: int = 24 * 60) -> bool:
+# İterasyon-döngüsü sürücüleri (Build Bar): tasarım bandını TUR 1'İN SONUNA sürer
+# (tur 2 kendiliğinden başlar → "Geliştirmeye geç" açılır) / koşan turu bitene dek koşar
+# (sayaç artar ya da tavan parkı düşer).
+static func _drive_to_round_end(max_hours: int = 24 * 60) -> bool:
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if b == null:
 		return false
 	for i in max_hours:
-		if b.iteration_decision_pending:
+		if ProductSystem.can_enter_development():
 			return true
 		ProductSystem.hourly_tick(i % 24)
-	return b.iteration_decision_pending
+	return ProductSystem.can_enter_development()
 
 
 static func _run_iteration_round(max_hours: int = 24 * 30) -> bool:
-	ProductSystem.advance_iteration()
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b == null or b.iteration_round_days <= 0.0:
+	if b == null or b.current_phase != "iteration" or b.iteration_decision_pending:
 		return false
+	var start_count: int = b.iteration_count
 	for i in max_hours:
-		if b.iteration_decision_pending:
+		if b.iteration_count > start_count or b.iteration_decision_pending:
 			return true
 		ProductSystem.hourly_tick(i % 24)
-	return b.iteration_decision_pending
+	return b.iteration_count > start_count or b.iteration_decision_pending
 
 
 # --- Run Ledger + newspaper copy (Ending Screen) ---
@@ -755,15 +762,15 @@ static func _case_capacity_split() -> String:
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if absf(ProductSystem.capacity_speed_factor() - 0.5) > 0.001:
 		return "parallel factor not 0.5 (%.2f)" % ProductSystem.capacity_speed_factor()
-	# Player-gated iterasyon: v-build'in minik tasarım bandı ölçüm penceresinin İÇİNE
-	# düşmesin — karar anına sür, "Geliştirmeye geç" de; iki pencere de development'ta
+	# Build Bar grameri: v-build'in minik tasarım bandı ölçüm penceresinin İÇİNE
+	# düşmesin — tur 1'in sonuna sür, "Geliştirmeye geç" de; iki pencere de development'ta
 	# ölçülür (mid-job developer kıyası da ancak orada anlamlı — design doc §5).
 	for ih in 24 * 30:
-		if b.iteration_decision_pending:
+		if ProductSystem.can_enter_development():
 			break
 		ProductSystem.hourly_tick(ih % 24)
-	if not b.iteration_decision_pending:
-		return "v-build design band never pended"
+	if not ProductSystem.can_enter_development():
+		return "v-build design band never ended round 1"
 	ProductSystem.enter_development()
 	var want_day: float = 0.0
 	var e0: float = b.efor_spent
@@ -1687,10 +1694,10 @@ static func _case_commit_cost_charged_once() -> String:
 
 
 static func _case_phase_bands_20_60_20() -> String:
-	# Player-gated iterasyon (restore 2026-08): tasarım bandı dolunca build KARAR
-	# bekleyerek park eder — auto-advance YOK, çıkış yalnız enter_development().
-	# Sonrası eski kanun: [.20,.80) development, >=.80 bugfix OTOMATİK; %100'de
-	# Beta'da PARK (auto-ship yok); launch yalnız Beta'da iş yapar.
+	# Build Bar grameri (2026-08-19): tasarım bandı dolunca tur 2 KENDİLİĞİNDEN başlar
+	# (efor donuk, faz aynı) — fazdan çıkış yalnız enter_development(). Geliştirme
+	# bandı %80'de PARK eder — çıkış yalnız enter_beta(). %100'de Beta'da PARK
+	# (auto-ship yok); launch yalnız Beta'da iş yapar.
 	GameState.set_cash(50000)
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
 		return "start_build failed"
@@ -1699,43 +1706,64 @@ static func _case_phase_bands_20_60_20() -> String:
 	ProductSystem.launch()
 	if GameState.get_flag("mvp_shipped", false) or ProductSystem.get_active_build() == null:
 		return "launch outside beta was not a no-op"
-	# 1) Tasarım bandı: karar yanana dek sür; faz kendi kendine asla değişmez.
+	# 1) Tasarım bandı: tur 1 bitene dek sür; faz kendi kendine asla değişmez.
 	var hours: int = 0
-	while not b.iteration_decision_pending:
+	while not ProductSystem.can_enter_development():
 		if b.current_phase != "iteration":
 			return "left iteration without a decision (phase %s)" % b.current_phase
 		ProductSystem.hourly_tick(hours % 24)
 		hours += 1
 		if hours > 24 * 120:
-			return "design band never pended (%.2f / %.2f)" % [b.efor_spent, b.total_efor]
+			return "design band never ended round 1 (%.2f / %.2f)" % [b.efor_spent, b.total_efor]
 	var design_cap: float = ProductSystem.PHASE_DESIGN_END * b.total_efor
 	if absf(b.efor_spent - design_cap) > 0.001:
-		return "park efor not clamped at design band (%.3f, want %.3f)" % [b.efor_spent, design_cap]
-	if b.iteration_count != 1:
-		return "iteration_count at first pend: %d (want 1)" % b.iteration_count
-	# 2) Tasarım parkı (beta parkının aynası): 3 gün daha tik → faz aynı, efor donuk.
+		return "efor not clamped at design band (%.3f, want %.3f)" % [b.efor_spent, design_cap]
+	if b.iteration_count != 2 or b.iteration_decision_pending:
+		return "round 2 did not auto-start when round 1 ended (count %d, pending %s)" % [b.iteration_count, str(b.iteration_decision_pending)]
+	# 2) Turlar kendi kendine döner: 3 gün daha tik → faz aynı, efor donuk, tur 2 hâlâ koşuyor.
 	for i in 24 * 3:
 		ProductSystem.hourly_tick(i % 24)
 	if b.current_phase != "iteration":
-		return "auto-advanced out of design park (phase %s)" % b.current_phase
+		return "auto-advanced out of design (phase %s)" % b.current_phase
 	if absf(b.efor_spent - design_cap) > 0.001:
-		return "efor moved during design park (%.3f)" % b.efor_spent
-	# 3) Oyuncu kararı → development; dev→beta bandı OTOMATİK kalır.
+		return "efor moved during design rounds (%.3f)" % b.efor_spent
+	if b.iteration_count != 2 or b.iteration_round_days <= 0.0:
+		return "round 2 not running after 3 days (count %d, days %.2f)" % [b.iteration_count, b.iteration_round_days]
+	# 3) Oyuncu kararı → development (yarım tur 2 kazançsız terk edilir); dev bandı %80'de PARK eder.
 	ProductSystem.enter_development()
 	if b.current_phase != "development":
 		return "enter_development did not flip phase (%s)" % b.current_phase
+	var dev_cap: float = ProductSystem.PHASE_DEV_END * b.total_efor
+	hours = 0
+	while not ProductSystem.can_enter_beta():
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 120:
+			return "development never reached the park (%.1f / %.1f)" % [b.efor_spent, b.total_efor]
+		if b.current_phase != "development":
+			return "left development without a decision (phase %s)" % b.current_phase
+	if absf(b.efor_spent - dev_cap) > 0.001:
+		return "dev park efor not clamped at PHASE_DEV_END (%.3f, want %.3f)" % [b.efor_spent, dev_cap]
+	# 4) Geliştirme parkı: 3 gün daha tik → faz aynı, efor donuk, bug birikmez.
+	var bugs_at_park: int = b.bug_count
+	for i in 24 * 3:
+		ProductSystem.hourly_tick(i % 24)
+	if b.current_phase != "development" or absf(b.efor_spent - dev_cap) > 0.001:
+		return "dev park violated (phase %s, efor %.3f)" % [b.current_phase, b.efor_spent]
+	if b.bug_count != bugs_at_park:
+		return "bugs accrued during the dev park (%d -> %d)" % [bugs_at_park, b.bug_count]
+	# 5) Oyuncu kararı → beta; beta bandında efor %100'e akar.
+	ProductSystem.enter_beta()
+	if b.current_phase != "bugfix":
+		return "enter_beta did not flip phase (%s)" % b.current_phase
 	hours = 0
 	while b.efor_spent < b.total_efor:
 		ProductSystem.hourly_tick(hours % 24)
 		hours += 1
 		if hours > 24 * 120:
 			return "efor never completed (%.1f / %.1f)" % [b.efor_spent, b.total_efor]
-		var frac: float = b.efor_spent / maxf(0.001, b.total_efor)
-		var want: String = "development"
-		if frac >= ProductSystem.PHASE_DEV_END:
-			want = "bugfix"
-		if b.current_phase != want:
-			return "phase %s at frac %.3f (want %s)" % [b.current_phase, frac, want]
+		if b.current_phase != "bugfix":
+			return "phase %s during the beta band" % b.current_phase
 	# %100 → Beta'da SÜRESİZ park: 3 gün daha tik, ship YOK, build slotu dolu.
 	for i in 24 * 3:
 		ProductSystem.hourly_tick(i % 24)
@@ -1760,24 +1788,34 @@ static func _case_phase_bands_20_60_20() -> String:
 # --- İterasyon döngüsü (player-gated restore) + ekip kalite tavanı ---
 
 static func _case_iter_decision_gates_development() -> String:
-	# İterasyon ASLA kendi kendine ilerlemez: tasarım bandı dolunca park (efor donuk,
-	# faz aynı), çıkış yalnız enter_development() — ve öğretici moment tam BİR kez düşer.
+	# İterasyon fazından ASLA kendi kendine çıkılmaz: tur 1 bitince tur 2 kendiliğinden
+	# başlar (efor donuk, faz aynı), Develop kapısı tur 1 bitmeden KAPALI, çıkış yalnız
+	# enter_development() — ve öğretici moment tam BİR kez düşer (5 gün, iki tur bitse de).
 	GameState.set_cash(50000)
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
 		return "start_build failed"
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	if not _drive_to_iter_pending():
-		return "design band never pended"
+	if ProductSystem.can_enter_development():
+		return "Develop offered before round 1 ended"
+	ProductSystem.enter_development()   # guarded no-op before round 1 ends
+	if b.current_phase != "iteration":
+		return "enter_development flipped the phase before round 1 ended"
+	if not _drive_to_round_end():
+		return "design band never ended round 1"
 	if b.current_phase != "iteration":
 		return "left iteration without a decision (phase %s)" % b.current_phase
 	var cap: float = ProductSystem.PHASE_DESIGN_END * b.total_efor
 	if absf(b.efor_spent - cap) > 0.001:
-		return "park efor %.3f, want the design cap %.3f" % [b.efor_spent, cap]
-	# 5 gün park: auto-advance yok, efor kımıldamaz.
+		return "efor %.3f at round end, want the design cap %.3f" % [b.efor_spent, cap]
+	if b.iteration_count != 2:
+		return "round 2 did not auto-start (count %d)" % b.iteration_count
+	# 5 gün: turlar döner, faz aynı, efor kımıldamaz; intro yalnız BİR kez.
 	for i in 24 * 5:
 		ProductSystem.hourly_tick(i % 24)
 	if b.current_phase != "iteration" or absf(b.efor_spent - cap) > 0.001:
-		return "park violated (phase %s, efor %.3f)" % [b.current_phase, b.efor_spent]
+		return "design loop violated (phase %s, efor %.3f)" % [b.current_phase, b.efor_spent]
+	if b.iteration_count < 3:
+		return "rounds did not chain over 5 days (count %d)" % b.iteration_count
 	if _instances_of("ev_mvp_iter_decision_intro") != 1:
 		return "iter intro event enqueued %d times, want exactly 1" % _instances_of("ev_mvp_iter_decision_intro")
 	ProductSystem.enter_development()
@@ -1792,9 +1830,11 @@ static func _case_iter_decision_gates_development() -> String:
 
 
 static func _case_iter_ceiling_founder_vs_designer() -> String:
-	# Çift yönlü plato: solo kurucu (tech 2) tavana dayanır; Tasarımcı (UZMANLIK 7)
-	# gelince tavan formül kadar yükselir ve bir sonraki tur, solo platonun son
-	# kazancından fazla verir — "daha iyi insanlar lazım" hissinin sayısal kanıtı.
+	# Tavana bağlı azalan getiri (tur sınırı 4 — Software Inc. grameri, 2026-08-19): solo
+	# kurucu (tech 2) ile tur 2 ve 3'ün kazançları pozitif ve AZALAN, eksen tavanı (ya da
+	# tavan üstü damgayı) aşmaz; Tasarımcı (UZMANLIK 7) gelince tavan formül kadar yükselir
+	# ve SON tur (4) solo'nun son kazancından fazla verir — "daha iyi insanlar lazım, daha
+	# çok tur değil" hissinin sayısal kanıtı. (Eski "plato" biçimi 12 tur istiyordu.)
 	var founder: Character = CharacterRegistry.get_founder()
 	founder.role_stats["tech"] = 2
 	var want0: float = ProductSystem.ITER_CEIL_FOUNDER_COEF * 2.0
@@ -1805,23 +1845,28 @@ static func _case_iter_ceiling_founder_vs_designer() -> String:
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
 		return "start_build failed"
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	if not _drive_to_iter_pending():
-		return "design band never pended"
+	if not _drive_to_round_end():
+		return "design band never ended round 1"
 	var stamp0: float = b.innovation
 	var last_gain: float = INF
 	var rounds: int = 0
-	while ProductSystem.can_advance_iteration() and rounds < ProductSystem.ITER_MAX_ROUNDS - 2:
+	# Solo turlar: tavana kadar olan turların hepsi değil, SON tur işe alım sonrasına kalsın
+	# (ITER_MAX_ROUNDS - 2 = cap 4'te tur 2 ve 3).
+	while not b.iteration_decision_pending and rounds < ProductSystem.ITER_MAX_ROUNDS - 2:
 		var before: float = b.innovation
 		if not _run_iteration_round():
 			return "iteration round %d did not complete" % (rounds + 1)
-		last_gain = b.innovation - before
+		var g: float = b.innovation - before
+		if g <= 0.0:
+			return "solo round %d gave no gain (%.3f) — headroom seeding broken" % [rounds + 2, g]
+		if g >= last_gain - 0.0001:
+			return "solo round %d gain %.3f is not smaller than the previous %.3f" % [rounds + 2, g, last_gain]
+		last_gain = g
 		rounds += 1
-		if last_gain < 0.05:
-			break
-	if last_gain >= 0.05:
-		return "solo build never plateaued (%d rounds, last gain %.3f)" % [rounds, last_gain]
+	if rounds != ProductSystem.ITER_MAX_ROUNDS - 2:
+		return "solo drive ran %d rounds, want %d" % [rounds, ProductSystem.ITER_MAX_ROUNDS - 2]
 	if b.innovation > maxf(stamp0, want0) + 0.001:
-		return "solo plateau %.2f exceeded the ceiling %.2f" % [b.innovation, want0]
+		return "solo axis %.2f exceeded the ceiling %.2f" % [b.innovation, want0]
 	var solo_plateau: float = b.innovation
 	_make_employee("char_iter_designer", "Iter Designer", HRConstants.ROLE_DESIGNER,
 		SEED_PACE, 0, 50, 7)
@@ -1829,16 +1874,18 @@ static func _case_iter_ceiling_founder_vs_designer() -> String:
 	var ceil1: Dictionary = ProductSystem.iteration_axis_ceilings()
 	if absf(float(ceil1["innovation"]) - want1) > 0.001:
 		return "designer ceiling %.2f, want %.2f" % [float(ceil1["innovation"]), want1]
-	if not ProductSystem.can_advance_iteration():
-		return "cannot run the post-hire round (safety cap hit during the solo drive)"
+	if b.iteration_decision_pending:
+		return "cannot run the post-hire round (cap hit during the solo drive)"
 	var before2: float = b.innovation
 	if not _run_iteration_round():
 		return "post-hire round did not complete"
 	var gain2: float = b.innovation - before2
 	if gain2 <= last_gain + 0.001:
-		return "hire did not lift the plateau (gain %.3f vs solo last %.3f)" % [gain2, last_gain]
+		return "hire did not lift the last round (gain %.3f vs solo last %.3f)" % [gain2, last_gain]
 	if b.innovation <= solo_plateau + 0.05:
-		return "axis did not move visibly above the solo plateau (%.2f vs %.2f)" % [b.innovation, solo_plateau]
+		return "axis did not move visibly above the solo level (%.2f vs %.2f)" % [b.innovation, solo_plateau]
+	if b.iteration_count != ProductSystem.ITER_MAX_ROUNDS or not b.iteration_decision_pending:
+		return "last round did not land on the cap park (count %d, pending %s)" % [b.iteration_count, str(b.iteration_decision_pending)]
 	return ""
 
 
@@ -1853,8 +1900,8 @@ static func _case_iter_diminishing_returns() -> String:
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
 		return "start_build failed"
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	if not _drive_to_iter_pending():
-		return "design band never pended"
+	if not _drive_to_round_end():
+		return "design band never ended round 1"
 	var v0: float = b.innovation
 	if not _run_iteration_round():
 		return "round 2 did not complete"
@@ -1872,18 +1919,18 @@ static func _case_iter_diminishing_returns() -> String:
 
 static func _case_iter_ceiling_never_exceeded() -> String:
 	# Güvenlik tavanına (ITER_MAX_ROUNDS) kadar sür: hiçbir eksen kendi tavanını (ya da
-	# tavan üstü commit damgasını) aşamaz; tavanda advance reddeder, çıkış hâlâ oyuncuda.
+	# tavan üstü commit damgasını) aşamaz; tavanda tur ZİNCİRİ durur (park), çıkış hâlâ oyuncuda.
 	var founder: Character = CharacterRegistry.get_founder()
 	founder.role_stats["tech"] = 1   # taban tavan 4 → damga tavanın üstünde kalabilir
 	GameState.set_cash(200000)
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
 		return "start_build failed"
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	if not _drive_to_iter_pending():
-		return "design band never pended"
+	if not _drive_to_round_end():
+		return "design band never ended round 1"
 	var stamp := {"innovation": b.innovation, "stability": b.stability, "experience": b.experience}
 	var ceilings: Dictionary = ProductSystem.iteration_axis_ceilings()
-	while ProductSystem.can_advance_iteration():
+	while not b.iteration_decision_pending:
 		if not _run_iteration_round():
 			return "round %d did not complete" % b.iteration_count
 		for ax in QualityModel.AXES:
@@ -1895,9 +1942,10 @@ static func _case_iter_ceiling_never_exceeded() -> String:
 		return "loop stopped at round %d, want the safety cap %d" % [b.iteration_count, ProductSystem.ITER_MAX_ROUNDS]
 	if not b.iteration_decision_pending:
 		return "cap reached but the decision is not pending — the build would be stuck"
-	ProductSystem.advance_iteration()
-	if b.iteration_count != ProductSystem.ITER_MAX_ROUNDS:
-		return "advance_iteration ran past the safety cap"
+	for i in 24 * 3:   # tavan parkı: 3 gün daha, sayaç ve efor kımıldamaz
+		ProductSystem.hourly_tick(i % 24)
+	if b.iteration_count != ProductSystem.ITER_MAX_ROUNDS or b.iteration_round_days > 0.0:
+		return "the round chain ran past the safety cap"
 	if float(stamp["innovation"]) > float(ceilings["innovation"]) \
 			and absf(b.innovation - float(stamp["innovation"])) > 0.0001:
 		return "an above-ceiling stamp moved (%.3f -> %.3f)" % [float(stamp["innovation"]), b.innovation]
@@ -1946,22 +1994,24 @@ static func _case_iter_zero_staff_neutrality_and_axis_lock() -> String:
 
 
 static func _case_iter_version_build_same_loop() -> String:
-	# v-build aynı oyuncu-kapılı döngüyü yaşar: sayaçlar v-commit'te sıfırdan, park →
-	# tur → karar → geliştirme.
+	# v-build aynı döngüyü yaşar: sayaçlar v-commit'te sıfırdan, tur 1 → tur 2 (otomatik)
+	# → tur 2 biter → karar → geliştirme.
 	_seed_live_product()
 	if not ProductSystem.start_version_build(["ai_assistant_voice"], ""):
 		return "start_version_build failed"
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if b.iteration_count != 1 or b.iteration_decision_pending or b.iteration_round_days > 0.0:
 		return "v-commit did not reset the iteration counters"
-	if not _drive_to_iter_pending():
-		return "v-build design band never pended"
+	if not _drive_to_round_end():
+		return "v-build design band never ended round 1"
 	if b.current_phase != "iteration":
 		return "v-build auto-advanced (phase %s)" % b.current_phase
-	if not _run_iteration_round():
-		return "v-build round did not complete"
 	if b.iteration_count != 2:
-		return "round did not increment the counter (%d)" % b.iteration_count
+		return "round 2 did not auto-start (%d)" % b.iteration_count
+	if not _run_iteration_round():
+		return "v-build round 2 did not complete"
+	if b.iteration_count != 3:
+		return "round end did not increment the counter (%d)" % b.iteration_count
 	ProductSystem.enter_development()
 	if b.current_phase != "development":
 		return "v-build exit did not flip to development"
@@ -2720,6 +2770,85 @@ static func _case_build_percent_single_source() -> String:
 	if UiTokens.build_percent(1.7) != 100 or UiTokens.build_percent(-0.3) != 0:
 		return "build_percent does not clamp (%d / %d)" % [
 			UiTokens.build_percent(1.7), UiTokens.build_percent(-0.3)]
+	return ""
+
+
+static func _case_build_bar_hosts_agree() -> String:
+	# Build Bar (Software Inc. segment grameri, 2026-08-19): ÜÇ ev sahibi — yüzen BuildHUD,
+	# tracker kartı, ODA monitörü — AYNI BuildBar sahnesini kurar ve bar modelini KENDİ
+	# çeker. Bu case üçünün aynı tick'te aynı modeli gösterdiğini ölçer: mount → 3 bar →
+	# parmak izleri eşit ve türetilen modele eşit → 6 saat tik → parmak izleri değişmiş
+	# ve HÂLÂ eşit. FALSİFİKASYON: monitör barının build_progress_changed bağını sök →
+	# ikinci karşılaştırma FAIL (bar fingerprint()'i yeniden türetmez, önbelleği okur).
+	# İlk smoke case'i ki GameShell'i headless mount eder — parse/instantiate grep'i şart.
+	GameState.set_cash(50000)
+	var founder_id: String = CharacterRegistry.get_founder().id
+	if not ProductSystem.start_build("saas_ops",
+			["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"], founder_id, "Nova"):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	# r3 durumu: iki tur bitmiş, tur 3 yarıda (harness --build-state=r3 ile aynı sürüş).
+	for i in 24 * 90:
+		if b.iteration_count >= 3:
+			break
+		ProductSystem.hourly_tick(i % 24)
+	if b.iteration_count != 3:
+		return "fixture did not reach round 3 (count %d)" % b.iteration_count
+	for i in 24 * 2:
+		ProductSystem.hourly_tick(i % 24)
+	# Ev sahibi = autoload (root main._ready sırasında meşgul — onboarding_pages_contract deseni).
+	var host: Node = EventBus
+	var shell: Node = load("res://scenes/main/GameShell.tscn").instantiate()
+	host.add_child(shell)
+	EventBus.tab_changed.emit("product")
+	var cv: Node = shell.find_child("CenterViewport", true, false)
+	if cv == null:
+		shell.queue_free()
+		return "CenterViewport not found in the mounted shell"
+	var page: Node = cv.get_current_page_body()
+	if page == null or not page.has_method("_navigate"):
+		shell.queue_free()
+		return "product tab body not mounted synchronously"
+	page._navigate("tracker", {})
+	var bars: Array = []
+	for n in host.get_tree().get_nodes_in_group(&"build_bar"):
+		if n.is_queued_for_deletion():
+			continue
+		bars.append(n)
+	if bars.size() != 3:
+		var paths: Array = []
+		for n in bars:
+			paths.append(str(n.get_path()))
+		shell.queue_free()
+		return "expected 3 BuildBar hosts, found %d: %s" % [bars.size(), str(paths)]
+	var model = load("res://scripts/ui/components/build_bar_model.gd").new()
+	if not model.derive():
+		shell.queue_free()
+		return "model did not derive from the seeded build"
+	var want: String = model.fingerprint()
+	if want.begins_with("design|3/") == false:
+		shell.queue_free()
+		return "fixture fingerprint not in round 3: %s" % want
+	for n in bars:
+		if n.fingerprint() != want:
+			var got: String = n.fingerprint()
+			shell.queue_free()
+			return "host %s shows %s, model says %s" % [str(n.get_path()), got, want]
+	# 6 saat tik: durum değişir; üç bar sinyalle birlikte yürümek zorunda.
+	for i in 6:
+		ProductSystem.hourly_tick(12 + i)
+	var model2 = load("res://scripts/ui/components/build_bar_model.gd").new()
+	model2.derive()
+	var want2: String = model2.fingerprint()
+	if want2 == want:
+		shell.queue_free()
+		return "6 hours changed nothing in the model (%s) — the tick did not advance the round" % want
+	for n in bars:
+		if n.fingerprint() != want2:
+			var got2: String = n.fingerprint()
+			shell.queue_free()
+			return "host %s is stale after the tick: %s (want %s)" % [str(n.get_path()), got2, want2]
+	shell.queue_free()
 	return ""
 
 

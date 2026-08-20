@@ -107,10 +107,11 @@ signal modal_requested(event: GameEvent)
 # Emitted by ProductSystem whenever current_phase transitions. BuildHUDPanel
 # subscribes to drive its faz-aware paint instead of polling active_build.
 signal build_phase_changed(new_phase: String)
-# CANLANDI (player-gated iterasyon restore, 2026-08): tasarım bandı dolunca ve her
-# ek tur bitince true, oyuncu karar verince false. Emitter'lar ProductSystem'de
-# (_pend_iteration_decision / advance_iteration / enter_development); BuildHUDPanel
-# bağlanır, creation_flow zaten build_progress_changed üzerinden repaint oluyor.
+# Build Bar 2026-08-19 (Software Inc. segment grameri): turlar kendi kendine döner;
+# true YALNIZ tavan parkında (ITER_MAX_ROUNDS'a gelindi), oyuncu "Geliştirmeye geç"
+# deyince ya da yeni tur başlayınca false. Emitter'lar ProductSystem'de
+# (_pend_iteration_decision / _start_next_round / enter_development); BuildHUDPanel ve
+# BuildBar bağlanır, creation_flow zaten build_progress_changed üzerinden repaint oluyor.
 signal build_iteration_decision_pending(pending: bool)
 # Emitted at the END of ProductSystem.daily_tick (after the phase tick advances
 # its counters), so build progress bars repaint with the post-tick value.

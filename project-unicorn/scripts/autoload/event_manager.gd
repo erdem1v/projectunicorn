@@ -630,11 +630,13 @@ func _apply_modifiers(modifiers: Array) -> void:
 				ProductSystem.apply_dimension_delta("innovation", int(m.get("amount", 0)))
 			"ship_active_build":
 				ProductSystem.ship_active_build()
-			# İterasyon karar momenti (öğretici modal) — tracker butonlarıyla AYNI seam'ler.
-			"advance_iteration":
-				ProductSystem.advance_iteration()
+			# Faz geçiş kararları (öğretici modal / event'ler) — tracker butonlarıyla AYNI
+			# seam'ler. "advance_iteration" emekli (Build Bar 2026-08-19: turlar kendi kendine
+			# döner, "Bir tur daha" yok).
 			"enter_development":
 				ProductSystem.enter_development()
+			"enter_beta":
+				ProductSystem.enter_beta()
 			# --- PostShip / sales modifiers (§10: revenue only via played choices) ---
 			"add_prospect":
 				PitchSystem.spawn_prospect(String(m.get("archetype", "small")), String(m.get("source", "event")))

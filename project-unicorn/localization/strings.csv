@@ -163,6 +163,7 @@ ODA_MONITOR_IDLE,Geliştirme bekleniyor,Awaiting development
 ODA_MONITOR_IDLE_META,sistem sakin,all quiet
 ODA_MONITOR_BUILD_TITLE,{product} geliştirmesi,{product} in development
 ODA_MONITOR_BUILD_META,~{days} gün kaldı · sorumlu: {lead},~{days} days left · lead: {lead}
+ODA_MONITOR_BUILD_META_READY,Beta'ya hazır · sorumlu: {lead},ready for beta · lead: {lead}
 ODA_MONITOR_PROGRESS,İlerleme,Progress
 ODA_MONITOR_LEAD_FOUNDER,Kurucu,Founder
 ODA_MONITOR_LIVE_CHIP,CANLI,LIVE
@@ -427,6 +428,14 @@ BUILD_FEATURE,Özellik,Feature
 BUILD_BUG_RISK,hata riski,bug risk
 BUILD_TECH_DEBT,Teknik borç,Tech debt
 BUILD_LIVE_VERSION,CANLI V{n},LIVE V{n}
+BUILD_ROUND_OF,Tur {n},Round {n}
+BUILD_ROUND_LAST,Tur {n} · son,Round {n} · last
+BUILD_GAIN_LINE,bu tur +{gain} · kalan {left},this round +{gain} · {left} left
+BUILD_BETA_BUGS_CHIP,HATA {n},BUGS {n}
+BUILD_SHIP_TOOLTIP_BUGS,Yayınla · {n} hata canlıya taşınır,Ship · {n} bugs go live
+BUILD_DEV_LINE,Geliştirme · ~{days} gün,Development · about {days} days
+BUILD_DEV_READY,Geliştirme tamam · Beta'ya hazır,Development done · ready for beta
+BUILD_HALF_ROUND_TOOLTIP,Yarım tur sayılmaz,A half round doesn't count
 HR_ROLE_FOUNDER,Kurucu,Founder
 HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
 HR_ROLE_DESIGNER,Tasarımcı,Designer
@@ -1065,8 +1074,7 @@ PROD_CONFIRM_START,Onayla ve Başlat,Confirm and Start
 PROD_PHASE_LINE,{phase} · {pct} · ~{days} gün,{phase} · {pct} · about {days} days
 PROD_HALF_SPEED, · yarı hız, · half speed
 PROD_BETA_LINE,Beta · bulunan {found} · çözülen {fixed} · açık {open},Beta · found {found} · fixed {fixed} · open {open}
-PROD_ROUND_CEILING,Tur kazancı tavanı — İnovasyon {inn} / {inn_max} · Kararlılık {stab} / {stab_max} · Deneyim {exp} / {exp_max},Round gain ceiling — Innovation {inn} / {inn_max} · Stability {stab} / {stab_max} · Experience {exp} / {exp_max}
-PROD_ONE_MORE_ROUND,Bir tur daha ({days} gün),One more round ({days} days)
+PROD_ROUND_CEILING,Tur kazancı tavanı · İnovasyon {inn} / {inn_max} · Kararlılık {stab} / {stab_max} · Deneyim {exp} / {exp_max},Round gain ceiling · Innovation {inn} / {inn_max} · Stability {stab} / {stab_max} · Experience {exp} / {exp_max}
 PROD_ROUND_LINE,{phase} · Tur {round} · ~{days} gün,{phase} · Round {round} · about {days} days
 PROD_TOWARD_TRACTION,TRACTION'A DOĞRU,TOWARD TRACTION
 PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
@@ -1163,9 +1171,6 @@ PROD_DESIGN_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
 
 ""We can run another round if you want — it burns time and polishes the design. But every round returns less than the last. At some point you need better people, not more rounds.""{note}"
 PROD_TO_DEVELOPMENT_PLAIN,Geliştirmeye geç,Move to development
-PROD_ROUND_CEILING_2AX,Tur kazancı tavanı — İnovasyon {inn} / {inn_max} · Deneyim {exp} / {exp_max},Round gain ceiling — Innovation {inn} / {inn_max} · Experience {exp} / {exp_max}
-PROD_PHASE_PCT,{pct} · ~{days} gün,{pct} · about {days} days
-PROD_ROUND_SHORT,Tur {round} · ~{days} gün,Round {round} · about {days} days
 PROD_TREND_FALLING,AZALIYOR,FALLING
 HR_ATLAS_COMMISSION_RANGE,Komisyon bu bantta {low} – {high},Commission in this band: {low} – {high}
 HR_TRAINING_PICK_BODY,"{name} · {role}
@@ -1188,10 +1193,9 @@ PROD_PER_MONTH,{amount} /ay,{amount} /mo
 PROD_PRICE_DRAFT,Fiyat taslak,Price draft
 PROD_PRICE_N,Fiyat {amount},Price {amount}
 PROD_ROUND_PENDING,{phase} · Tur {round} · karar bekliyor,{phase} · Round {round} · awaiting your call
-PROD_ROUND_PENDING_SHORT,Tur {round} · karar bekliyor,Round {round} · awaiting your call
 PROD_TIP_BUGS,Kan kaybediyorsun · hata sprinti vakti.,You're bleeding · time for a bug sprint.
 PROD_UNKNOWN,belirsiz,unclear
-PROD_ITER_CEILING_NOTE,"İnovasyon {inn} / tur kazancı tavanı {inn_max} — tavanı tur sayısı değil, masadaki ekip belirler.","Innovation {inn} / round gain ceiling {inn_max} — the ceiling comes from the team at the table, not from the number of rounds."
+PROD_ITER_CEILING_NOTE,"İnovasyon {inn} / tur kazancı tavanı {inn_max} · tavanı tur sayısı değil, masadaki ekip belirler.","Innovation {inn} / round gain ceiling {inn_max} · the ceiling comes from the team at the table, not from the number of rounds."
 PROD_EV_VERSION_SHIP_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
 
 ""Büyüdü. Yeni özellikler tuttu — ama yeni yüzey, yeni hata demek. Gözünü ayırma.""
@@ -1214,16 +1218,17 @@ Yayına alıyorsun. Birkaç dakika sonra depo herkese açık, küçük bir açı
 You push it live. A few minutes later the repo is public, a small landing page is up, and Frank puts a hand in his pocket.
 
 ""Now the hard part starts. We need to find someone who'll pay for this."""
-PROD_EV_ITER_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
+PROD_EV_ITER_DECISION_BODY,"İlk tasarım turu bitti. Frank prototipin başında.
 
-""İstersen bir tur daha döneriz — zaman yakar, tasarımı parlatır. Ama her turun getirisi bir öncekinden az. Bir noktada daha iyi insanlar lazım olur, daha çok tur değil.""","The design round is done. Frank is standing over the prototype.
+""Turlar kendi kendine döner · her biri zaman yakar, tasarımı biraz daha parlatır. Ama her turun getirisi bir öncekinden az. Yeter dediğin an geliştirmeye geçeriz; bir noktada daha iyi insanlar lazım olur, daha çok tur değil.""","The first design round is done. Frank is standing over the prototype.
 
-""We can go around once more if you want — it burns time and polishes the design. But every round returns less than the one before. At some point you need better people, not more rounds."""
+""The rounds keep going on their own · each one burns time and polishes the design a little more. But every round returns less than the one before. The moment you say enough, we move to development; at some point you need better people, not more rounds."""
 BUILD_FOUND,BULUNAN,FOUND
 BUILD_FIXED,ÇÖZÜLEN,FIXED
 BUILD_REMAINING,KALAN,OPEN
-PROD_ONE_MORE_ROUND_PLAIN,Bir tur daha,One more round
 PROD_TO_DEVELOPMENT_ARROW,Geliştirmeye geç →,Move to development →
+PROD_TO_BETA_ARROW,Beta'ya geç →,Move to beta →
+PROD_ITER_KEEP_GOING,Turlar sürsün,Keep the rounds going
 PROD_STEP_PATH,01 YOL,01 PATH
 PROD_LEAD_HEADER,SORUMLU,LEAD
 PROD_PATH_B2B,KONTRAT,CONTRACT
@@ -1676,8 +1681,8 @@ EFFECT_MORALE,Moral,Morale
 EFFECT_BUGS,Hata {v},Bugs {v}
 EFFECT_DAYS,{v} gün,{v} days
 EFFECT_QUALITY_BONUS,Kalite +{n},Quality +{n}
-EFFECT_DESIGN_ROUND,Bir tasarım turu · {days} gün,One design round · {days} days
 EFFECT_DEV_BEGINS,Geliştirme başlar,Development begins
+EFFECT_BETA_BEGINS,Beta başlar,Beta begins
 EFFECT_CHURN,Müşteri kaybı,A customer lost
 EFFECT_NEW_PROSPECT,Yeni aday,A new prospect
 EFFECT_CONVERT_AUDIENCE,Kitleden dönüşüm {pct},{pct} of the audience converts

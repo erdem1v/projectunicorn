@@ -503,13 +503,12 @@ func _run_tempo_probe(idx: int) -> void:
 	SalesSystem.open_b2c_paid_tier(15)   # real seam — makes MRR derive hourly too
 	ProductSystem.start_build("ai_assistant",
 		["ai_assistant_chat", "ai_assistant_memory"], "", "Nova")
-	# start_build parks at the design band edge (PHASE_DESIGN_END) and waits for a PLAYER
-	# seam. The probe never sat in that seat, so from day 3 efor= was a frozen number and
-	# the build channel measured nothing. Take the seat: drive to the decision, then enter
-	# development so effort keeps flowing for the probe's whole window.
-	for i in 24 * 3:
+	# Design rounds chain by themselves (Build Bar 2026-08-19); "Geliştirmeye geç" opens
+	# when round 1 ends. The probe takes that seat as soon as it is offered so effort keeps
+	# flowing for the probe's whole window (a probe never sits in the design loop).
+	for i in 24 * 30:
 		var pb: FeatureBuild = ProductSystem.get_active_build()
-		if pb == null or pb.iteration_decision_pending:
+		if pb == null or ProductSystem.can_enter_development():
 			break
 		ProductSystem.hourly_tick(i % 24)
 	ProductSystem.enter_development()
@@ -880,8 +879,8 @@ func _oda_shot_requested() -> String:
 	return ""
 
 
-# Debug: --oda-shot=<day|evening|night|dawn|event|tab|tour|hover|market1|market2>
-# (windowed). ODA merkez görünümünün dört
+# Debug: --oda-shot=<day|evening|night|dawn|event|tab|tour|hover|market1|market2|build>
+# (windowed; build = Build Bar monitör yüzü, --build-state ile). ODA merkez görünümünün dört
 # durum fotoğrafı (task doğrulama #9): day = temiz masa + canlı ürün monitörü;
 # night = saat 23 + mesai + masada kâğıtlar (crossfade otursun diye uzun bekleme);
 # event = gerçek pipeline'dan debug olayı (telefon buzz + telefondan doğan kart);
@@ -895,6 +894,10 @@ func _run_oda_shot(kind: String) -> void:
 	# seed'i (shipped + 3 müşteri → durum-3 tablosu).
 	if kind == "market1":
 		_seed_run_reproducible()
+	elif kind == "build":
+		# Build Bar monitör yüzü: --product-shot=tracker ile AYNI fikstür (--build-state).
+		_seed_run_reproducible()
+		_seed_build_state(_build_state_arg("r1"))
 	elif kind == "market2":
 		_seed_run_reproducible()
 		GameState.day = 40
@@ -965,7 +968,7 @@ func _run_oda_shot(kind: String) -> void:
 		"milestones":
 			# D5 dokümanı kanıtı: çerçeve tıkının rotası.
 			EventBus.tab_changed.emit("milestones")
-		"market1", "market2":
+		"market1", "market2", "build":
 			GameState.set_current_hour(14)
 		_:
 			push_error("[OdaShot] bilinmeyen tür: %s" % kind)
@@ -973,8 +976,12 @@ func _run_oda_shot(kind: String) -> void:
 			return
 	await get_tree().process_frame
 	await get_tree().create_timer(settle).timeout
+	get_tree().call_group(&"build_bar", "debug_print")   # monitör barının rect + fingerprint'i
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = _shot_path("oda_shot_%s" % kind)
+	var state_suffix: String = ""
+	if kind == "build" and _build_state_arg("") != "":
+		state_suffix = "_" + _build_state_arg("")
+	var path: String = _shot_path("oda_shot_%s%s" % [kind, state_suffix])
 	img.save_png(path)
 	print("[OdaShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
@@ -1617,6 +1624,83 @@ func _run_ending_shot(key: String) -> void:
 	get_tree().quit()
 
 
+## --build-state=<r1|r3|r4|dev|devpark|beta|beta0> — Build Bar harness durum seçicisi (product-shot
+## tracker/beta + oda-shot build). Yoksa `fallback`.
+func _build_state_arg(fallback: String) -> String:
+	for arg in OS.get_cmdline_args():
+		var a: String = String(arg)
+		if a.begins_with("--build-state="):
+			var v: String = a.trim_prefix("--build-state=")
+			if v in ["r1", "r3", "r4", "dev", "devpark", "beta", "beta0"]:
+				return v
+			push_warning("[Shot] --build-state bilinmiyor: %s" % v)
+	return fallback
+
+
+## Build Bar fikstürü: saas_ops 3 özellikli build'i gerçek seam'lerle istenen duruma sürer.
+## r1 = tur 1 yarıda · r3 = iki tur bitmiş, tur 3 yarıda · r4 = tavan parkı (son tur bitti,
+## çubuk dolu, yalnız "Geliştirmeye geç") · dev = geliştirme yarıda ·
+## devpark = geliştirme %80'de parkta ("Beta'ya geç" açık) · beta = beta'da açık hatalarla ·
+## beta0 = beta'da sıfır açık hata (başlangıç > 0).
+## Sürüş hourly_tick + enter_development / enter_beta (oyuncu seam'leri) — efor'a doğrudan
+## yazmak yalnız bandın İÇİNDE (yarı doluluk), faz atlamak için değil.
+func _seed_build_state(state: String) -> void:
+	var founder_id: String = CharacterRegistry.get_founder().id
+	ProductSystem.start_build("saas_ops",
+		["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"],
+		founder_id, "Nova İki")   # LOC-DATA debug seed / id
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if b == null:
+		push_error("[BuildState] start_build failed")
+		return
+	var design_cap: float = ProductSystem.PHASE_DESIGN_END * b.total_efor
+	match state:
+		"r1":
+			b.efor_spent = design_cap * 0.5
+			ProductSystem.hourly_tick(9)
+		"r3":
+			for i in 24 * 90:
+				if b.iteration_count >= 3:
+					break
+				ProductSystem.hourly_tick(i % 24)
+			for i in 24 * 2:   # tur 3'ün yarısı (ITER_ROUND_DAYS = 4)
+				ProductSystem.hourly_tick(i % 24)
+		"r4":
+			for i in 24 * 90:
+				if b.iteration_decision_pending:
+					break
+				ProductSystem.hourly_tick(i % 24)
+		"dev", "devpark", "beta", "beta0":
+			for i in 24 * 90:
+				if ProductSystem.can_enter_development():
+					break
+				ProductSystem.hourly_tick(i % 24)
+			ProductSystem.enter_development()
+			if state == "dev":
+				b.efor_spent = b.total_efor * 0.5   # bant içi yarı doluluk
+				ProductSystem.hourly_tick(9)
+			else:
+				for i in 24 * 120:
+					if ProductSystem.can_enter_beta():
+						break
+					ProductSystem.hourly_tick(i % 24)
+				if state == "devpark":
+					return   # parkta kal: "Beta'ya geç" butonu + hazır satırları
+				ProductSystem.enter_beta()
+				if b.bug_count <= 0:   # dev birikimi bug üretmediyse fikstür üretir
+					b.bug_count = 12
+					GameState.set_flag("bug_count_at_bugfix_start_%s" % b.id, 12)
+				for i in 24 * 2:   # iki gün test: bulunan/çözülen sayaçları dolsun
+					ProductSystem.hourly_tick(i % 24)
+				if state == "beta0":
+					b.bug_count = 0
+					b.bugs_found = b.bugs_fixed
+		_:
+			pass
+	print("[BuildState] %s → phase=%s round=%d/%d efor=%.2f/%.2f bugs=%d" % [state, b.current_phase,
+		b.iteration_count, ProductSystem.ITER_MAX_ROUNDS, b.efor_spent, b.total_efor, b.bug_count])
+
+
 # Debug: --product-shot=<portfoy|ozellikler|tracker|detail_b2b|detail_b2c> (windowed).
 # Mounts GameShell with seeded state, drives the Product tab router to the requested
 # Rev3 view at 1920×1080, screenshots to user://, and quits.
@@ -1675,13 +1759,10 @@ func _run_product_shot(kind: String) -> void:
 			# Satış okuma kapısını aç: optimal rakam "belirsiz" yerine gerçek değerle çizilsin.
 			CharacterRegistry.get_founder().role_stats["sales"] = SkillCheck.SALES_READ_THRESHOLD
 		"tracker", "beta":
-			ProductSystem.start_build("saas_ops",
-				["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"],
-				founder_id, "Nova İki")   # LOC-DATA debug seed / id
-			var b: FeatureBuild = ProductSystem.get_active_build()
-			if b != null:
-				b.efor_spent = b.total_efor * (0.9 if kind == "beta" else 0.5)
-				ProductSystem.hourly_tick(9)
+			# Build Bar durum fikstürü: --build-state=<r1|r3|dev|beta|beta0> ile üst üste
+			# yazılabilir (varsayılan: tracker=r1, beta=beta). Aynı fikstürü --oda-shot=build
+			# kullanır → HUD/tracker/monitör AYNI tick'te AYNI modeli gösterir.
+			_seed_build_state(_build_state_arg("beta" if kind == "beta" else "r1"))
 		_:
 			pass  # "ozellikler": temiz açılış, navigasyon aşağıda
 	_shell = GAME_SHELL.instantiate()
@@ -1708,8 +1789,12 @@ func _run_product_shot(kind: String) -> void:
 			pass  # portfoy: varsayılan iniş görünümü
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
+	get_tree().call_group(&"build_bar", "debug_print")   # üç ev sahibinin rect + fingerprint'i
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = _shot_path("product_shot_%s" % kind)
+	var state_suffix: String = ""
+	if _build_state_arg("") != "":
+		state_suffix = "_" + _build_state_arg("")
+	var path: String = _shot_path("product_shot_%s%s" % [kind, state_suffix])
 	img.save_png(path)
 	print("[ProductShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://buildhudpaneltscn001"]
+[gd_scene load_steps=3 format=3 uid="uid://buildhudpaneltscn001"]
 
 [ext_resource type="Script" path="res://scripts/ui/components/build_hud_panel.gd" id="1_build_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/BuildBar.tscn" id="2_build_bar"]
 
 [node name="BuildHUDPanel" type="Control"]
 layout_mode = 3
@@ -118,55 +119,11 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="PhaseCell" type="Control" parent="Root/Panel/VBox/BodyRow"]
-custom_minimum_size = Vector2(0, 34)
+[node name="BuildBar" parent="Root/Panel/VBox/BodyRow" instance=ExtResource("2_build_bar")]
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
-mouse_filter = 2
-
-[node name="Track" type="Panel" parent="Root/Panel/VBox/BodyRow/PhaseCell"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="Fill" type="Panel" parent="Root/Panel/VBox/BodyRow/PhaseCell/Track"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="PhaseMargin" type="MarginContainer" parent="Root/Panel/VBox/BodyRow/PhaseCell"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_right = 8
-
-[node name="PhaseVBox" type="VBoxContainer" parent="Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 0
-
-[node name="PhaseName" type="Label" parent="Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin/PhaseVBox"]
-layout_mode = 2
-theme_type_variation = &"SectionAmber"
-text = "BUILD_PHASE_DESIGN"
-
-[node name="PhaseStatus" type="Label" parent="Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin/PhaseVBox"]
-layout_mode = 2
-theme_type_variation = &"RowMeta"
-text = "—"
+size_flags_vertical = 0
 
 [node name="BetaRow" type="HBoxContainer" parent="Root/Panel/VBox"]
 visible = false
@@ -217,29 +174,24 @@ text = "BUILD_REMAINING"
 layout_mode = 2
 text = "0"
 
-[node name="IterLine" type="Label" parent="Root/Panel/VBox"]
-visible = false
-layout_mode = 2
-theme_type_variation = &"RowMeta"
-text = "—"
-
 [node name="DecisionRow" type="VBoxContainer" parent="Root/Panel/VBox"]
 visible = false
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="IterateBtn" type="Button" parent="Root/Panel/VBox/DecisionRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"CommitButton"
-text = "PROD_ONE_MORE_ROUND_PLAIN"
-
 [node name="DevBtn" type="Button" parent="Root/Panel/VBox/DecisionRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"CommitButton"
 text = "PROD_TO_DEVELOPMENT_ARROW"
+
+[node name="PromoteBtn" type="Button" parent="Root/Panel/VBox/DecisionRow"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"CommitButton"
+text = "PROD_TO_BETA_ARROW"
 
 [node name="ActionButton" type="Button" parent="Root/Panel/VBox"]
 visible = false

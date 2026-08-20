@@ -63,7 +63,15 @@ const RESOLUTIONS: Array[Vector2i] = [
 # Applied through the root Window's content_scale_factor, which multiplies the
 # canvas_items stretch the project already runs (project.godot: stretch mode
 # "canvas_items", aspect "expand", base 1920×1080).
-const UI_SCALE_STEPS: Array[float] = [0.75, 0.90, 1.00, 1.10, 1.25, 1.50]
+## %150 KALDIRILDI (Erdem 2026-08-18). Gerekçe ölçüldü: content_scale_factor
+## mantıksal viewport'u KÜÇÜLTÜR, yani 1920×1080 pencere %150'de 1280×720 raporlar —
+## SettingsModal'ın SABİT yükseklikli CenterPanel'i oraya sığmıyor ve Footer'daki
+## KAPAT butonu ekranın altında kalıyordu. Panel bu turda 860→820'ye indi, ama
+## adımın kendisi de gitti: merdivenin tavanı artık %125.
+## Bu liste ADIMLARIN TEK KAYNAĞI — is_step_allowed üyelik kapısını buradan okur,
+## yani buraya eklenmeyen bir değer (elle düzenlenmiş settings.json, eski kayıt)
+## uygulanamaz ve clamp_step onu merdivene geri çeker.
+const UI_SCALE_STEPS: Array[float] = [0.75, 0.90, 1.00, 1.10, 1.25]
 
 ## The readability floor, in PHYSICAL pixels. This is a decided design point:
 ## a 9px badge that the stretch has already shrunk is 9px on glass no matter what
@@ -90,7 +98,9 @@ const BASE_VIEWPORT := Vector2(1920.0, 1080.0)
 ## viewport'ta ad gizlenir, sütun boşlukları 28→18 daralır, tarih kısalır ve HİÇBİR
 ## sayı ya da kontrol kaybolmaz. Ölçülen taban 1280×720 — TECH_SPEC §14.1'in
 ## belgelenmiş minimum penceresi. Bu yüzden kapı artık ORAYA bakıyor:
-## 1920 pencere → %125 (1536×864) ve %150 (1280×720) yasal.
+## 1920 pencere → %125 (1536×864) yasal. (%150 de bu kapıdan GEÇİYORDU — 1280×720
+## tam sınırda — ama adım merdivenden kaldırıldı: kapı kabuğu ölçüyor, modalleri
+## değil, ve SettingsModal 720px'e sığmıyordu. Bkz. UI_SCALE_STEPS.)
 const MIN_CHROME_VIEWPORT := Vector2(1280.0, 720.0)
 
 # Settings keys this file reads (declared in Settings.DEFAULTS).
@@ -348,26 +358,48 @@ static func effective_micro_px(step: float, win: Vector2i) -> float:
 ## Readability gate for one dropdown row. `win` defaults to the live window
 ## (ZERO is the sentinel — a default argument must not depend on call-time state).
 ##
-## 100% AND ABOVE ARE ALWAYS LEGAL, and that exemption is load-bearing rather than
-## a softening of the floor. The canvas_items stretch below 1080p is the ENGINE's
-## designed answer to a small window, not a preference the player picked; 100% is
-## by definition the authored baseline. Gating it produces an actively worse
-## outcome than the small type it was meant to prevent: at the enforced minimum
-## window (1280×720, main.gd:65) the stretch is 0.667, so a floor applied to 100%
-## rejects it and clamps UP to 150% — and 1.5 × 0.667 = 1.0 renders the full
-## 1920×1080 layout at native size inside a 720p window, so a third of it falls off
-## the edge. Worse, `clamp_step` is one-directional, so that 150% would persist
-## after the player moved back to a large display.
+## 100% IS ALWAYS LEGAL, and that exemption is load-bearing rather than a softening
+## of the floor. The canvas_items stretch below 1080p is the ENGINE's designed answer
+## to a small window, not a preference the player picked; 100% is by definition the
+## authored baseline. Gating it produces an actively worse outcome than the small type
+## it was meant to prevent: at the enforced minimum window (1280×720, main.gd:65) the
+## stretch is 0.667, so a floor applied to 100% would reject the ONE step that is
+## guaranteed renderable there — and it has nowhere safe to go, because every
+## enlargement step shrinks the logical viewport further (%110 → 1163×654, %125 →
+## 1024×576, both under MIN_CHROME_VIEWPORT). The player would be left with a clamp
+## that cannot satisfy its own gate.
+## (This passage used to argue the same point through %150 and "1.5 × 0.667 = 1.0".
+## That step no longer exists — see UI_SCALE_STEPS — so the worked example moved to
+## the steps that do.)
 ## So the floor guards only what it was written to guard: the player choosing to
 ## shrink the type BELOW the authored design. 75% and 90% stay gated by physical
 ## pixels exactly as specified.
+##
+## ÜYELİK KAPISI ÖNCE GELİR. Merdivende OLMAYAN bir değer yasadışıdır, çünkü aşağıdaki
+## iki test SALT GEOMETRİK: %150 kaldırıldıktan sonra bile `_fits_design_width(1.5,
+## 1920×1080)` 1280×720 hesaplayıp TRUE döner, yani settings.json'da duran eski bir
+## 1.5 uygulanmaya devam ederdi — üstelik açılır listede artık o adım olmadığı için
+## oyuncunun geri dönüş yolu da kalmazdı (Ayarlar'ın KAPAT'ı ekran dışında). Üyelik
+## kapısı bunu kapatır: clamp_step değeri merdivene çeker, apply_ui_scale düzeltmeyi
+## Settings'e geri yazar. Göç kodu YOK — mevcut mekanizma yeterli.
 static func is_step_allowed(step: float, win: Vector2i = Vector2i.ZERO) -> bool:
+	if not _is_ladder_step(step):
+		return false
 	var w: Vector2i = window_size() if win == Vector2i.ZERO else win
 	if step > 1.0:
 		return _fits_design_width(step, w)
 	if step == 1.0:
 		return true
 	return effective_micro_px(step, w) >= float(MIN_READABLE_FONT_PX) - READABLE_EPSILON
+
+
+## Epsilon karşılaştırması, `Array.has` DEĞİL: değer JSON'dan geçip geliyor ve ondalık
+## bir basamak kayması (0.8999999) adımı listede yokmuş gibi gösterirdi.
+static func _is_ladder_step(step: float) -> bool:
+	for s in UI_SCALE_STEPS:
+		if is_equal_approx(s, step):
+			return true
+	return false
 
 
 ## The UPPER gate, and the mirror image of the readability floor.
@@ -397,7 +429,7 @@ static func _fits_design_width(step: float, win: Vector2i) -> bool:
 static func step_blocked_note(step: float) -> String:
 	# İKİ kapı var ve gerekçeleri zıt: küçültme adımı OKUNAKLILIK tabanına,
 	# büyütme adımı KABUK genişliğine takılır. Tek metin ikisini de anlatamaz —
-	# %150'nin "okunmuyor" demesi düpedüz yanlış olurdu.
+	# %125'in "okunmuyor" demesi düpedüz yanlış olurdu.
 	var key: String = "SET_UI_SCALE_TOO_LARGE" if step > 1.0 else "SET_UI_SCALE_TOO_SMALL"
 	return TranslationServer.translate(key).format({"pct": int(round(step * 100.0))})
 

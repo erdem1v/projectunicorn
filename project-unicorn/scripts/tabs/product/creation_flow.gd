@@ -34,6 +34,10 @@ signal navigate_requested(view_id: String, args: Dictionary)
 # zamanında çevirir, const bir kopya ilk okunan renge çakılırdı.
 
 const _PHASE_ORDER := ["iteration", "development", "bugfix"]
+# Build Bar (Software Inc. segment grameri, 2026-08-19): tracker kartının çubuğu yüzen
+# BuildHUD ve ODA monitörüyle AYNI sahne — sahne preload, class_name yok (paylaşılan
+# checkout'ta class-cache tuzağı; center_viewport.gd:21 ihtiyatı).
+const _BUILD_BAR_SCENE := preload("res://scenes/ui/components/BuildBar.tscn")
 ## Build fazının ekran adı. Faz id'si state'te yaşar, sözcük CSV'de. Bir CONST olamaz:
 ## const dosya yüklenirken değerlenir — o an daha bir dil seçilmemiştir.
 const _PHASE_KEYS := {"iteration": "BUILD_PHASE_DESIGN", "development": "BUILD_PHASE_DEVELOPMENT",
@@ -66,15 +70,15 @@ var _sorumlu: OptionButton = null
 
 # Kilitli mod durum kartı referansları
 var _status_phase_labels: Array = []     # 3 Label (TASARIM/GELİŞTİRME/BETA)
-var _status_bar: ProgressBar = null
+var _status_bar: Control = null          # BuildBar örneği (kendi modelini kendi çeker)
 var _status_line: Label = null
 var _beta_line: Label = null
 var _publish_btn: Button = null
-# İterasyon kararı (player-gated restore): tavan satırı + iki buton
+# Faz geçiş kararı: tavan satırı + faz başına TEK buton (Geliştirmeye geç / Beta'ya geç)
 var _iter_line: Label = null
 var _iter_decision_row: HBoxContainer = null
-var _iterate_btn: Button = null
 var _enter_dev_btn: Button = null
+var _enter_beta_btn: Button = null
 
 
 func setup(args: Dictionary) -> void:
@@ -155,8 +159,8 @@ func _rebuild() -> void:
 	_publish_btn = null
 	_iter_line = null
 	_iter_decision_row = null
-	_iterate_btn = null
 	_enter_dev_btn = null
+	_enter_beta_btn = null
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -628,35 +632,39 @@ func _make_build_status_card() -> Control:
 		phase_row.add_child(pl)
 		_status_phase_labels.append(pl)
 	vb.add_child(phase_row)
-	_status_bar = ProgressBar.new()
-	_status_bar.theme_type_variation = &"BuildProgress"
-	_status_bar.show_percentage = false
-	_status_bar.custom_minimum_size = Vector2(0, 8)
+	# BuildBar: tur segmentleri / tek çubuk / boşalan hata çubuğu — yüzen kart ve ODA
+	# monitörüyle piksel piksel aynı widget; genişliği kart verir, gerisini kendi türetir.
+	_status_bar = _BUILD_BAR_SCENE.instantiate()
+	_status_bar.custom_minimum_size = Vector2(0, 44)
+	_status_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_child(_status_bar)
 	_status_line = UiFactory.make_label("", &"RowMeta")
 	vb.add_child(_status_line)
 	_beta_line = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
 	_beta_line.visible = false
 	vb.add_child(_beta_line)
-	# İterasyon kararı (player-gated restore): üç eksen + tavanları ve iki buton.
-	# Yüzen kartın kompakt ikilisinin tam-genişlik kardeşi; ikisi de aynı seam'leri basar.
+	# Faz geçiş kararı: üç eksen + tavanları (bilgi) ve faz başına TEK buton — TASARIM'da
+	# "Geliştirmeye geç" (tur 1 bitince), GELİŞTİRME parkında "Beta'ya geç". Yüzen kartla
+	# aynı seam'ler; "Bir tur daha" yok, turlar kendi kendine döner (Build Bar 2026-08-19).
 	_iter_line = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
 	_iter_line.visible = false
 	vb.add_child(_iter_line)
 	_iter_decision_row = HBoxContainer.new()
 	_iter_decision_row.add_theme_constant_override("separation", 8)
 	_iter_decision_row.visible = false
-	_iterate_btn = Button.new()
-	_iterate_btn.theme_type_variation = &"CommitButton"
-	_iterate_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_iterate_btn.pressed.connect(_on_iterate_pressed)
-	_iter_decision_row.add_child(_iterate_btn)
 	_enter_dev_btn = Button.new()
 	_enter_dev_btn.theme_type_variation = &"CommitButton"
 	_enter_dev_btn.text = tr("PROD_TO_DEVELOPMENT")
 	_enter_dev_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_enter_dev_btn.pressed.connect(_on_enter_dev_pressed)
 	_iter_decision_row.add_child(_enter_dev_btn)
+	_enter_beta_btn = Button.new()
+	_enter_beta_btn.theme_type_variation = &"CommitButton"
+	_enter_beta_btn.text = tr("PROD_TO_BETA_ARROW")
+	_enter_beta_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_enter_beta_btn.visible = false
+	_enter_beta_btn.pressed.connect(_on_enter_beta_pressed)
+	_iter_decision_row.add_child(_enter_beta_btn)
 	vb.add_child(_iter_decision_row)
 	_publish_btn = Button.new()
 	_publish_btn.theme_type_variation = &"CommitButton"
@@ -841,7 +849,6 @@ func _update_status() -> void:
 	# sayıyı basmak zorunda — burada floor, orada round olduğu sürece %47 ile %48 yan yana
 	# duruyordu. Çubuk da aynı yuvarlanmış değerden besleniyor ki dolgu yazıyla çelişmesin.
 	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())
-	_status_bar.value = float(pct)
 	var line: String = tr("PROD_PHASE_LINE").format({
 		"phase": _phase_display(b.current_phase),
 		"pct": Fmt.percent(pct, 0),
@@ -855,15 +862,21 @@ func _update_status() -> void:
 	if in_beta:
 		_beta_line.text = tr("PROD_BETA_LINE").format(
 			{"found": b.bugs_found, "fixed": b.bugs_fixed, "open": b.bug_count})
-	# İterasyon kararı (player-gated restore): üç eksenin tamamı + tavanları burada
-	# (yüzen kart kompakt iki eksen basar). Karar anı bilgili olsun: mevcut değer /
-	# tavan yan yana — "daha çok tur mu, daha iyi insan mı" sorusu buradan okunur.
-	# WORKING TR.
+		# Yayınla'nın bedeli butonun kendisinde: TÜM açık hatalar canlıya taşınır.
+		_publish_btn.tooltip_text = tr("BUILD_SHIP_TOOLTIP_BUGS").format({"n": maxi(0, b.bug_count)})
+	# Faz geçiş kararı (Build Bar 2026-08-19): TASARIM'da tur 1 bitince "Geliştirmeye geç"
+	# (üç eksen + tavan satırı bilgi olarak yanında — "daha çok tur mu, daha iyi insan mı"
+	# sorusu buradan okunur), GELİŞTİRME parkında "Beta'ya geç". Turlar kendi döner;
+	# tavan parkı (ITER_MAX_ROUNDS) "karar bekliyor" satırıdır. WORKING TR.
+	var can_dev: bool = ProductSystem.can_enter_development()
+	var can_beta: bool = ProductSystem.can_enter_beta()
 	var pending: bool = b.current_phase == "iteration" and b.iteration_decision_pending
 	var in_round: bool = b.current_phase == "iteration" and b.iteration_round_days > 0.0
-	_iter_line.visible = pending
-	_iter_decision_row.visible = pending
-	if pending:
+	_iter_line.visible = can_dev
+	_iter_decision_row.visible = can_dev or can_beta
+	_enter_dev_btn.visible = can_dev
+	_enter_beta_btn.visible = can_beta
+	if can_dev:
 		var ceilings: Dictionary = ProductSystem.iteration_axis_ceilings()
 		# "tavan" TEK BAŞINA yanlış okunuyordu: bu sayı yalnız TUR KAZANÇLARINI bağlar
 		# (QualityModel.grow), commit damgasını, event dimension_delta'sını, PM/güçlendirme
@@ -874,14 +887,20 @@ func _update_status() -> void:
 			"inn": int(round(b.innovation)), "inn_max": int(round(float(ceilings.get("innovation", 0.0)))),
 			"stab": int(round(b.stability)), "stab_max": int(round(float(ceilings.get("stability", 0.0)))),
 			"exp": int(round(b.experience)), "exp_max": int(round(float(ceilings.get("experience", 0.0))))})
-		_iterate_btn.visible = ProductSystem.can_advance_iteration()
-		_iterate_btn.text = tr("PROD_ONE_MORE_ROUND").format({"days": ProductSystem.ITER_ROUND_DAYS})
+		# Yarım tur uyarısı (Erdem): tur ortasında basılırsa koşan tur kazançsız terk edilir.
+		var mid_round: bool = in_round and b.iteration_count >= 2 \
+			and b.iteration_round_days < float(ProductSystem.ITER_ROUND_DAYS)
+		_enter_dev_btn.tooltip_text = tr("BUILD_HALF_ROUND_TOOLTIP") if mid_round else ""
+	if pending:
 		_status_line.text = tr("PROD_ROUND_PENDING").format(
 			{"phase": _phase_display(b.current_phase), "round": b.iteration_count})
 	elif in_round:
 		_status_line.text = tr("PROD_ROUND_LINE").format({
 			"phase": _phase_display(b.current_phase), "round": b.iteration_count,
 			"days": int(ceil(b.iteration_round_days))})
+	elif can_beta:
+		# Parkta "~N gün" yalan olur: bar "hazır" derken kart "3 gün" yazmasın.
+		_status_line.text = tr("BUILD_DEV_READY")
 
 
 func _on_publish_pressed() -> void:
@@ -891,13 +910,14 @@ func _on_publish_pressed() -> void:
 	ProductSystem.launch()   # router "shipped" emit'inde detaya yönlendirir
 
 
-func _on_iterate_pressed() -> void:
-	# Guard seam'de (can_advance_iteration) — çift tık / bayat kart zararsız.
-	ProductSystem.advance_iteration()
-
-
 func _on_enter_dev_pressed() -> void:
+	# Guard seam'de (can_enter_development) — çift tık / bayat kart zararsız.
 	ProductSystem.enter_development()
+
+
+func _on_enter_beta_pressed() -> void:
+	# Guard seam'de (can_enter_beta).
+	ProductSystem.enter_beta()
 
 
 func _on_cancel_pressed() -> void:

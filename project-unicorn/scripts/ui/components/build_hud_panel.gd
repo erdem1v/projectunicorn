@@ -6,18 +6,18 @@ extends Control
 # yaşar, ikisi de aynı ProductSystem API'larını okur).
 #
 # İçerik: header (ikon + ad + V·TİP + ✕ iptal), mini 3-faz şeridi
-# (TASARIM/GELİŞTİRME/BETA), amber dolgulu faz hücresi ("%N · ~N gün"),
-# Beta'da BULUNAN/ÇÖZÜLEN/KALAN satırı + "Yayınla →" butonu.
-# İterasyon kararında (player-gated restore 2026-08) kart "İnovasyon X / tavan Y"
-# satırı + "Bir tur daha / Geliştirmeye geç" butonlarını yakar — eksenler artık tur
-# kazançlarıyla build sırasında OYNUYOR, eski "ölü gösterge" gerekçesi tersine döndü.
+# (TASARIM/GELİŞTİRME/BETA), BuildBar (Software Inc. segment grameri, 2026-08-19: tur
+# başına bir segment / tek çubuk / boşalan hata çubuğu — tracker kartı ve ODA
+# monitörüyle AYNI sahne), Beta'da BULUNAN/ÇÖZÜLEN/KALAN satırı + "Yayınla →" butonu.
+# Karar satırı faz başına TEK buton: TASARIM'da "Geliştirmeye geç →" (tur 1 bitince),
+# GELİŞTİRME parkında "Beta'ya geç →". "Bir tur daha" YOK — turlar kendi kendine döner.
 #
 # SÜRÜKLENEBİLİR: kart CenterViewport'un çocuğu; Root parent rect'ine clamp'lenir
 # → top bar / sol bar / sağ bar (ve ticker) yapısal olarak erişilemez. Konum
 # oturum boyunca kalır (kart tab değişiminde ölmez); yeni run'da varsayılan sağ üst.
 #
-# Progress AYRI BAR DEĞİL: faz hücresinin arka planı soldan sağa dolar (Track+Fill).
-# Signal-driven refresh (no _process poll): build_phase_changed +
+# İlerleme çizimi BuildBar'ın işi (kendi sinyallerini kendi dinler, kart ona hiçbir şey
+# itmez). Kartın kendi refresh'i signal-driven (no _process poll): build_phase_changed +
 # build_progress_changed + day_advanced. process_mode = ALWAYS.
 
 @onready var root: Control = $Root
@@ -29,22 +29,18 @@ extends Control
 @onready var mini_design: PanelContainer = $Root/Panel/VBox/MiniPhaseRow/MiniDesign
 @onready var mini_dev: PanelContainer = $Root/Panel/VBox/MiniPhaseRow/MiniDev
 @onready var mini_beta: PanelContainer = $Root/Panel/VBox/MiniPhaseRow/MiniBeta
-@onready var track: Panel = $Root/Panel/VBox/BodyRow/PhaseCell/Track
-@onready var fill: Panel = $Root/Panel/VBox/BodyRow/PhaseCell/Track/Fill
-@onready var phase_name_label: Label = $Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin/PhaseVBox/PhaseName
-@onready var phase_status_label: Label = $Root/Panel/VBox/BodyRow/PhaseCell/PhaseMargin/PhaseVBox/PhaseStatus
+@onready var build_bar: Control = $Root/Panel/VBox/BodyRow/BuildBar
 @onready var beta_row: HBoxContainer = $Root/Panel/VBox/BetaRow
 @onready var beta_found_val: Label = $Root/Panel/VBox/BetaRow/FoundBox/Val
 @onready var beta_fixed_val: Label = $Root/Panel/VBox/BetaRow/FixedBox/Val
 @onready var beta_remain_val: Label = $Root/Panel/VBox/BetaRow/RemainBox/Val
-@onready var iter_line: Label = $Root/Panel/VBox/IterLine
 # BoxContainer, HBoxContainer DEĞİL: karar satırı Terminal'de DİKEY yığıldı (mono
 # butonlar yan yana 320px kartı taşırıyordu). Tip HBoxContainer kalsaydı @onready
 # ataması sessizce düşer, referans null olur ve altındaki buton bağlantıları
 # "Nil üzerinde 'pressed'" hatasıyla ölürdü — battery log'unda 42 kez öyle oldu.
 @onready var decision_row: BoxContainer = $Root/Panel/VBox/DecisionRow
-@onready var iterate_btn: Button = $Root/Panel/VBox/DecisionRow/IterateBtn
 @onready var dev_btn: Button = $Root/Panel/VBox/DecisionRow/DevBtn
+@onready var promote_btn: Button = $Root/Panel/VBox/DecisionRow/PromoteBtn
 @onready var action_button: Button = $Root/Panel/VBox/ActionButton
 
 # Faz görünen adları — iç id'ler değişmedi (event/promise tüketicileri okur).
@@ -54,15 +50,14 @@ const _PHASE_KEYS := {"iteration": "BUILD_PHASE_DESIGN", "development": "BUILD_P
 const _PHASE_ORDER := ["iteration", "development", "bugfix"]
 
 # Kart boyutu (tuning): genişlik sabit; yükseklik normal fazlarda kompakt,
-# Beta'da beta satırı + Yayınla butonu için uzar. Eski kart 172 sabitti.
+# karar butonu görünürken ve Beta'da (beta satırı + Yayınla) uzar. Eski kart 172 sabitti;
+# BuildBar (44) eski faz hücresinden (34) 10px yüksek — üç sabit de o kadar büyüdü.
 const CARD_W := 320.0
 const H_NORMAL := 140.0
-const H_BETA := 190.0
-const H_DECISION := 205.0   # iterasyon kararı: tavan satırı + iki buton için uzar
+const H_BETA := 200.0
+const H_DECISION := 172.0   # faz geçiş kararı: tek buton için uzar
 
-# Dolgu/şerit tonları — bir kez kurulur, paint yalnız stylebox swap eder.
-var _sb_track: StyleBoxFlat = null
-var _sb_fill: StyleBoxFlat = null
+# Mini şerit tonları — bir kez kurulur, paint yalnız stylebox swap eder.
 var _sb_mini_done: StyleBoxFlat = null
 var _sb_mini_active: StyleBoxFlat = null
 var _sb_mini_pending: StyleBoxFlat = null
@@ -84,8 +79,8 @@ func _ready() -> void:
 	_build_styles()
 	action_button.pressed.connect(_on_action_pressed)
 	cancel_btn.pressed.connect(_on_cancel_pressed)
-	iterate_btn.pressed.connect(_on_iterate_pressed)
 	dev_btn.pressed.connect(_on_dev_pressed)
+	promote_btn.pressed.connect(_on_promote_pressed)
 	panel.gui_input.connect(_on_panel_gui_input)
 	resized.connect(_clamp_root)
 	EventBus.build_phase_changed.connect(_on_build_phase_changed)
@@ -129,21 +124,6 @@ func _on_palette_changed(_cb: bool) -> void:
 
 
 func _build_styles() -> void:
-	_sb_track = StyleBoxFlat.new()
-	_sb_track.bg_color = UiTokens.NEUTRAL_BADGE_BG.lerp(UiTokens.CARD_BORDER, 0.5)
-	_sb_track.set_corner_radius_all(4)
-	track.add_theme_stylebox_override("panel", _sb_track)
-	# TERMINAL: dolgu YIKAMA, düz amber levha DEĞİL (mockup: ilerleme bloğu
-	# `rgba(255,160,40,.06)` + `border-left 2px #FFA028`). Eski %65 opak amber
-	# koyu zeminde okunaklıydı ama Terminal'de üstündeki iki etiket amber levhanın
-	# içinde kayboluyordu — ölçüldü (product_shot_detail_b2b). Alfa, ilerlemenin
-	# hâlâ okunacağı ama metnin önüne geçmeyeceği yerde: 0.22.
-	_sb_fill = StyleBoxFlat.new()
-	_sb_fill.bg_color = Color(UiTokens.ACCENT, 0.22)
-	_sb_fill.border_color = UiTokens.ACCENT
-	_sb_fill.border_width_left = UiTokens.BORDER_FOCUS   # ilerlemenin ucundaki 2px amber çizgi
-	_sb_fill.set_corner_radius_all(UiTokens.RADIUS_S)
-	fill.add_theme_stylebox_override("panel", _sb_fill)
 	# Mini faz şeridi: biten = pozitif, aktif = amber + accent çerçeve, bekleyen = soluk.
 	_sb_mini_done = StyleBoxFlat.new()
 	_sb_mini_done.bg_color = UiTokens.positive_bg()
@@ -166,10 +146,6 @@ func _build_styles() -> void:
 func _apply_semantic_colors() -> void:
 	beta_fixed_val.add_theme_color_override("font_color", UiTokens.positive())
 	beta_remain_val.add_theme_color_override("font_color", UiTokens.negative())
-
-
-func _set_fill_fraction(f: float) -> void:
-	fill.anchor_right = clampf(f, 0.0, 1.0)
 
 
 func _on_build_phase_changed(_new_phase: String) -> void:
@@ -208,40 +184,19 @@ func _paint_one(b: FeatureBuild) -> void:
 		var cap: Label = cell.get_child(0)
 		cap.add_theme_color_override("font_color",
 			UiTokens.ACCENT_DEEP if i == idx else UiTokens.INK_DIM)
-	# Faz hücresi + ilerleme — Rev3 tek kaynaklar: build_progress() + build_days_remaining().
-	phase_name_label.text = _phase_display(b.current_phase)
-	# Yüzdenin TEK evi UiTokens.build_percent: kart her sekme sayfasının ÜSTÜNDE yüzer,
-	# yani portföy rozetiyle aynı karede aynı build'i basar — biri yuvarlayıp öteki
-	# aşağı kırparsa aynı iş iki ayrı yüzde olur. Dolgu da aynı int'ten türer; ham
-	# kesirle beslenen çubuk, yanına yazdığımız sayıyla tutmaz.
-	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())
-	var status: String = tr("PROD_PHASE_PCT").format(
-		{"pct": Fmt.percent(pct, 0), "days": max(0, ProductSystem.build_days_remaining())})
-	# Kapasite bölünmüşse (sprint/pitch-prep ile paralel) build yarı hızda akar.
-	if ProductSystem.capacity_speed_factor() < 1.0:
-		status += tr("PROD_HALF_SPEED")
-	phase_status_label.text = status
-	_set_fill_fraction(float(pct) / 100.0)
-	# İterasyon karar/tur durumu (player-gated restore): pending'de tavan satırı + iki
-	# buton; tur koşarken durum satırı geri sayımı basar. Kompakt kartta iki eksen
-	# (tasarım kaldıracı + deneyim); üçünün tamamı in-tab durum kartında. WORKING TR.
-	var pending: bool = b.current_phase == "iteration" and b.iteration_decision_pending
-	var in_round: bool = b.current_phase == "iteration" and b.iteration_round_days > 0.0
-	iter_line.visible = pending
-	decision_row.visible = pending
-	if pending:
-		var ceilings: Dictionary = ProductSystem.iteration_axis_ceilings()
-		# Nitelik satır başında bir kez — sayı yalnız TUR kazançlarını bağlıyor, ekseni
-		# değil (in-tab kartın uzun sürümüyle aynı gramer).
-		iter_line.text = tr("PROD_ROUND_CEILING_2AX").format({
-			"inn": int(round(b.innovation)), "inn_max": int(round(float(ceilings.get("innovation", 0.0)))),
-			"exp": int(round(b.experience)), "exp_max": int(round(float(ceilings.get("experience", 0.0))))})
-		iterate_btn.visible = ProductSystem.can_advance_iteration()
-		iterate_btn.text = tr("PROD_ONE_MORE_ROUND").format({"days": ProductSystem.ITER_ROUND_DAYS})
-		phase_status_label.text = tr("PROD_ROUND_PENDING_SHORT").format({"round": b.iteration_count})
-	elif in_round:
-		phase_status_label.text = tr("PROD_ROUND_SHORT").format(
-			{"round": b.iteration_count, "days": int(ceil(b.iteration_round_days))})
+	# İlerleme: BuildBar kendi çizer (model türetilmiş, sinyaller onda). Kart yalnız
+	# faz geçiş kararının TEK butonunu yakar: TASARIM'da "Geliştirmeye geç →" (tur 1
+	# bittikten sonra; koşan yarım tur kazançsız terk edilir — tooltip söyler),
+	# GELİŞTİRME parkında "Beta'ya geç →". "Bir tur daha" yok, turlar kendi döner.
+	var can_dev: bool = ProductSystem.can_enter_development()
+	var can_beta: bool = ProductSystem.can_enter_beta()
+	dev_btn.visible = can_dev
+	promote_btn.visible = can_beta
+	decision_row.visible = can_dev or can_beta
+	var mid_round: bool = can_dev and b.iteration_count >= 2 \
+		and not b.iteration_decision_pending and b.iteration_round_days > 0.0 \
+		and b.iteration_round_days < float(ProductSystem.ITER_ROUND_DAYS)
+	dev_btn.tooltip_text = tr("BUILD_HALF_ROUND_TOOLTIP") if mid_round else ""
 	# Beta: bug sayaçları + Yayınla (launch bugfix-gated; buton yalnız burada).
 	var in_beta: bool = b.current_phase == "bugfix"
 	beta_row.visible = in_beta
@@ -250,7 +205,9 @@ func _paint_one(b: FeatureBuild) -> void:
 		beta_found_val.text = str(b.bugs_found)
 		beta_fixed_val.text = str(b.bugs_fixed)
 		beta_remain_val.text = str(max(0, b.bugs_found - b.bugs_fixed))
-	_set_card_height(H_BETA if in_beta else (H_DECISION if pending else H_NORMAL))
+		# Yayınla'nın bedeli butonun kendisinde: TÜM açık hatalar (bug_count) canlıya taşınır.
+		action_button.tooltip_text = tr("BUILD_SHIP_TOOLTIP_BUGS").format({"n": maxi(0, b.bug_count)})
+	_set_card_height(H_BETA if in_beta else (H_DECISION if decision_row.visible else H_NORMAL))
 
 
 # --- Aksiyonlar -------------------------------------------------------------
@@ -262,13 +219,14 @@ func _on_action_pressed() -> void:
 	ProductSystem.launch()
 
 
-func _on_iterate_pressed() -> void:
-	# Guard seam'de (can_advance_iteration) — çift tık / bayat kart zararsız.
-	ProductSystem.advance_iteration()
-
-
 func _on_dev_pressed() -> void:
+	# Guard seam'de (can_enter_development) — çift tık / bayat kart zararsız.
 	ProductSystem.enter_development()
+
+
+func _on_promote_pressed() -> void:
+	# Guard seam'de (can_enter_beta).
+	ProductSystem.enter_beta()
 
 
 func _on_cancel_pressed() -> void:
