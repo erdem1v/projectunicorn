@@ -1,2 +1,12 @@
 # Normalize EOL for all files that Git considers text files.
 * text=auto eol=lf
+
+# Binary assets — declared explicitly rather than left to the NUL-byte heuristic
+# that `* text=auto` relies on. ODA 3D spike (2026-08-19) brought .exr/.glb/.lmbake in.
+*.png  -text
+*.webp -text
+*.exr  -text
+*.glb  -text
+*.lmbake -text
+*.unwrap_cache -text
+*.docx -text

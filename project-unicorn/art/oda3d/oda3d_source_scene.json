@@ -1,0 +1,2054 @@
+{
+  "generated_by": "docs/tools/oda3d/export_glb.html (generated from tools/oda_render_rig/layers.html)",
+  "three_version": "184",
+  "art": [
+    3840,
+    2160
+  ],
+  "camera": {
+    "cam": [
+      0.298,
+      1.35,
+      1.56,
+      0.38,
+      -1.91,
+      44
+    ],
+    "position": [
+      0.298,
+      1.35,
+      1.56
+    ],
+    "target": [
+      0.3046285177772642,
+      1.316670385147562,
+      0.5605775670289042
+    ],
+    "fov_deg": 44,
+    "aspect": 1.7777777777777777,
+    "near": 0.05,
+    "far": 40,
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "note": "fov is VERTICAL (three PerspectiveCamera); look-at target DERIVED from yaw/pitch (layers.html camTarget)"
+  },
+  "renderer": {
+    "toneMapping": "ACESFilmic",
+    "toneMappingExposure_day": 1.05,
+    "toneMappingExposure_night": 1,
+    "shadowMap": "PCFShadowMap"
+  },
+  "lights": {
+    "day": [
+      {
+        "type": "HemisphereLight",
+        "name": "",
+        "color": "#fff1da",
+        "intensity": 0.85,
+        "castShadow": false,
+        "skyColor": "#fff1da",
+        "groundColor": "#8a6f4d"
+      },
+      {
+        "type": "DirectionalLight",
+        "name": "",
+        "color": "#ffd6a0",
+        "intensity": 3.4,
+        "position": [
+          5.2,
+          3.1,
+          0.55
+        ],
+        "castShadow": true,
+        "target": [
+          -1.4,
+          0.3,
+          -0.45
+        ],
+        "shadow": {
+          "mapSize": [
+            4096,
+            4096
+          ],
+          "bias": -0.0002,
+          "normalBias": 0.02
+        }
+      },
+      {
+        "type": "DirectionalLight",
+        "name": "",
+        "color": "#fff6e8",
+        "intensity": 0.4,
+        "position": [
+          -2,
+          2.4,
+          3
+        ],
+        "castShadow": false,
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "shadow": {
+          "mapSize": [
+            512,
+            512
+          ],
+          "bias": 0,
+          "normalBias": 0
+        }
+      }
+    ],
+    "night": [
+      {
+        "type": "HemisphereLight",
+        "name": "",
+        "color": "#8a7154",
+        "intensity": 0.3,
+        "castShadow": false,
+        "skyColor": "#8a7154",
+        "groundColor": "#241c12"
+      },
+      {
+        "type": "PointLight",
+        "name": "",
+        "color": "#ffd2a0",
+        "intensity": 5,
+        "position": [
+          -0.1,
+          2.55,
+          0.4
+        ],
+        "castShadow": true,
+        "distance": 9,
+        "decay": 1.6,
+        "shadow": {
+          "mapSize": [
+            2048,
+            2048
+          ],
+          "bias": -0.0008,
+          "normalBias": 0.03
+        }
+      },
+      {
+        "type": "PointLight",
+        "name": "",
+        "color": "#ffb866",
+        "intensity": 0.45,
+        "position": [
+          -0.8484218596648232,
+          0.9788465663634999,
+          -0.4837643156784699
+        ],
+        "castShadow": false,
+        "distance": 0.32,
+        "decay": 1.8,
+        "shadow": {
+          "mapSize": [
+            512,
+            512
+          ],
+          "bias": 0,
+          "normalBias": 0
+        }
+      },
+      {
+        "type": "SpotLight",
+        "name": "",
+        "color": "#ffb866",
+        "intensity": 9,
+        "position": [
+          -0.9411642872678637,
+          1.0481093972174709,
+          -0.4916238361816553
+        ],
+        "castShadow": true,
+        "target": [
+          -0.45,
+          0.74,
+          -0.45
+        ],
+        "distance": 1.2,
+        "decay": 1.7,
+        "angle": 0.45,
+        "penumbra": 0.5,
+        "shadow": {
+          "mapSize": [
+            2048,
+            2048
+          ],
+          "bias": -0.0005,
+          "normalBias": 0.01
+        }
+      }
+    ]
+  },
+  "setMode": {
+    "sky_day": "#ffedc8",
+    "sky_night": "#1e2638",
+    "screen_emissive": "#000000",
+    "screen_emissiveIntensity": 0,
+    "screen_roughness": 0.15,
+    "bulb_emissive_day": "#ffdda0",
+    "bulb_emissive_night": "#ff9d4a",
+    "bulb_emissiveIntensity_day": 0.15,
+    "bulb_emissiveIntensity_night": 1.2
+  },
+  "materials": {
+    "floor": {
+      "type": "MeshStandardMaterial",
+      "name": "floor",
+      "color": "#9c7546",
+      "roughness": 0.85,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "plaster": {
+      "type": "MeshStandardMaterial",
+      "name": "plaster",
+      "color": "#d7c1a0",
+      "roughness": 0.95,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "plaster_r": {
+      "type": "MeshStandardMaterial",
+      "name": "plaster_r",
+      "color": "#cbb48f",
+      "roughness": 0.95,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "mullion": {
+      "type": "MeshStandardMaterial",
+      "name": "mullion",
+      "color": "#a87e4e",
+      "roughness": 0.7,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "sky": {
+      "type": "MeshBasicMaterial",
+      "name": "sky",
+      "color": "#ffedc8"
+    },
+    "oak_wood_dark": {
+      "type": "MeshStandardMaterial",
+      "name": "oak_wood_dark",
+      "color": "#8f6636",
+      "roughness": 0.7,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "cork": {
+      "type": "MeshStandardMaterial",
+      "name": "cork",
+      "color": "#c79a60",
+      "roughness": 0.95,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "paper": {
+      "type": "MeshStandardMaterial",
+      "name": "paper",
+      "color": "#f6efdf",
+      "roughness": 0.9,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "brass": {
+      "type": "MeshStandardMaterial",
+      "name": "brass",
+      "color": "#d9b36a",
+      "roughness": 0.35,
+      "metalness": 0.4,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "oak_wood": {
+      "type": "MeshStandardMaterial",
+      "name": "oak_wood",
+      "color": "#b5854c",
+      "roughness": 0.7,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "desk_wood": {
+      "type": "MeshStandardMaterial",
+      "name": "desk_wood",
+      "color": "#b98a52",
+      "roughness": 0.72,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "desk_wood_dark": {
+      "type": "MeshStandardMaterial",
+      "name": "desk_wood_dark",
+      "color": "#8f6636",
+      "roughness": 0.75,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "aluminum": {
+      "type": "MeshStandardMaterial",
+      "name": "aluminum",
+      "color": "#c9cbce",
+      "roughness": 0.4,
+      "metalness": 0.35,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "screen_glass": {
+      "type": "MeshStandardMaterial",
+      "name": "screen_glass",
+      "color": "#141117",
+      "roughness": 0.2,
+      "metalness": 0.2,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "aluminum_dark": {
+      "type": "MeshStandardMaterial",
+      "name": "aluminum_dark",
+      "color": "#9fa2a6",
+      "roughness": 0.45,
+      "metalness": 0.35,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "keycap_black": {
+      "type": "MeshStandardMaterial",
+      "name": "keycap_black",
+      "color": "#1e1f22",
+      "roughness": 0.55,
+      "metalness": 0.05,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "matte_black": {
+      "type": "MeshStandardMaterial",
+      "name": "matte_black",
+      "color": "#2b2c2f",
+      "roughness": 0.6,
+      "metalness": 0.1,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    },
+    "warm_bulb": {
+      "type": "MeshStandardMaterial",
+      "name": "warm_bulb",
+      "color": "#ffe9be",
+      "roughness": 0.4,
+      "metalness": 0,
+      "emissive": "#ffdda0",
+      "emissiveIntensity": 0.15
+    },
+    "cream_ceramic": {
+      "type": "MeshStandardMaterial",
+      "name": "cream_ceramic",
+      "color": "#efe6d4",
+      "roughness": 0.45,
+      "metalness": 0,
+      "emissive": "#000000",
+      "emissiveIntensity": 1
+    }
+  },
+  "meshes": [
+    {
+      "path": "floor",
+      "material": "floor",
+      "castShadow": false,
+      "receiveShadow": true,
+      "world": [
+        -0.1,
+        -0.01,
+        1
+      ]
+    },
+    {
+      "path": "wall_back",
+      "material": "plaster",
+      "castShadow": false,
+      "receiveShadow": true,
+      "world": [
+        -0.25,
+        1.35,
+        -0.99
+      ]
+    },
+    {
+      "path": "wall_left",
+      "material": "plaster_r",
+      "castShadow": false,
+      "receiveShadow": true,
+      "world": [
+        -2.17,
+        1.35,
+        1
+      ]
+    },
+    {
+      "path": "wall_right/rw_below",
+      "material": "plaster_r",
+      "castShadow": false,
+      "receiveShadow": true,
+      "world": [
+        1.72,
+        0.375,
+        1
+      ]
+    },
+    {
+      "path": "wall_right/rw_above",
+      "material": "plaster_r",
+      "castShadow": false,
+      "receiveShadow": true,
+      "world": [
+        1.72,
+        2.5,
+        1
+      ]
+    },
+    {
+      "path": "wall_right/rw_back",
+      "material": "plaster_r",
+      "castShadow": false,
+      "receiveShadow": true,
+      "world": [
+        1.72,
+        1.525,
+        -0.925
+      ]
+    },
+    {
+      "path": "wall_right/rw_front",
+      "material": "plaster_r",
+      "castShadow": false,
+      "receiveShadow": true,
+      "world": [
+        1.72,
+        1.525,
+        1.975
+      ]
+    },
+    {
+      "path": "wall_right/window_frame/sill",
+      "material": "mullion",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        1.715,
+        0.76,
+        0.1
+      ]
+    },
+    {
+      "path": "wall_right/window_frame/head",
+      "material": "mullion",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        1.715,
+        2.29,
+        0.1
+      ]
+    },
+    {
+      "path": "wall_right/window_frame/jamb_b",
+      "material": "mullion",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        1.715,
+        1.525,
+        -0.73
+      ]
+    },
+    {
+      "path": "wall_right/window_frame/jamb_f",
+      "material": "mullion",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        1.715,
+        1.525,
+        0.93
+      ]
+    },
+    {
+      "path": "wall_right/window_frame/mull_v1",
+      "material": "mullion",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        1.715,
+        1.525,
+        -0.19
+      ]
+    },
+    {
+      "path": "wall_right/window_frame/mull_v2",
+      "material": "mullion",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        1.715,
+        1.525,
+        0.38
+      ]
+    },
+    {
+      "path": "wall_right/window_frame/mull_h",
+      "material": "mullion",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        1.715,
+        1.62,
+        0.1
+      ]
+    },
+    {
+      "path": "wall_right/sky",
+      "material": "sky",
+      "castShadow": false,
+      "receiveShadow": false,
+      "world": [
+        2.07,
+        1.6,
+        0.1
+      ]
+    },
+    {
+      "path": "cork_board/bar_top",
+      "material": "oak_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.4155,
+        2.1584,
+        -0.955
+      ]
+    },
+    {
+      "path": "cork_board/bar_bottom",
+      "material": "oak_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.4155,
+        1.3116,
+        -0.955
+      ]
+    },
+    {
+      "path": "cork_board/bar_left",
+      "material": "oak_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.2254,
+        1.735,
+        -0.955
+      ]
+    },
+    {
+      "path": "cork_board/bar_right",
+      "material": "oak_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        1.0564,
+        1.735,
+        -0.955
+      ]
+    },
+    {
+      "path": "cork_board/cork_panel",
+      "material": "cork",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.4155,
+        1.735,
+        -0.9608
+      ]
+    },
+    {
+      "path": "cork_board/note_1",
+      "material": "paper",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.169,
+        1.8655,
+        -0.95036
+      ]
+    },
+    {
+      "path": "cork_board/pin_head_1",
+      "material": "brass",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.169,
+        1.90828,
+        -0.94485
+      ]
+    },
+    {
+      "path": "cork_board/note_2",
+      "material": "paper",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.7055,
+        1.706,
+        -0.95036
+      ]
+    },
+    {
+      "path": "cork_board/pin_head_2",
+      "material": "brass",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.7055,
+        1.75965,
+        -0.94485
+      ]
+    },
+    {
+      "path": "picture_frame/bar_top",
+      "material": "oak_wood",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.28,
+        2.13443,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/bar_bottom",
+      "material": "oak_wood",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.28,
+        1.86008,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/bar_left",
+      "material": "oak_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.37843,
+        1.99725,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/bar_right",
+      "material": "oak_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.18158,
+        1.99725,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/backing",
+      "material": "paper",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.28,
+        1.99725,
+        -0.95655
+      ]
+    },
+    {
+      "path": "picture_frame/bar_top",
+      "material": "oak_wood",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.91,
+        2.13443,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/bar_bottom",
+      "material": "oak_wood",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.91,
+        1.86008,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/bar_left",
+      "material": "oak_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.00843,
+        1.99725,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/bar_right",
+      "material": "oak_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.81158,
+        1.99725,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/backing",
+      "material": "paper",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.91,
+        1.99725,
+        -0.95655
+      ]
+    },
+    {
+      "path": "picture_frame/bar_top",
+      "material": "oak_wood",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.54,
+        2.13443,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/bar_bottom",
+      "material": "oak_wood",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.54,
+        1.86008,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/bar_left",
+      "material": "oak_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.63843,
+        1.99725,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/bar_right",
+      "material": "oak_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.44158,
+        1.99725,
+        -0.955
+      ]
+    },
+    {
+      "path": "picture_frame/backing",
+      "material": "paper",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.54,
+        1.99725,
+        -0.95655
+      ]
+    },
+    {
+      "path": "desk/desk_top",
+      "material": "desk_wood",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0,
+        0.7175,
+        -0.42
+      ]
+    },
+    {
+      "path": "desk/desk_panel_l",
+      "material": "desk_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.38,
+        0.3475,
+        -0.42
+      ]
+    },
+    {
+      "path": "desk/desk_panel_r",
+      "material": "desk_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        1.38,
+        0.3475,
+        -0.42
+      ]
+    },
+    {
+      "path": "desk/desk_back",
+      "material": "desk_wood_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0,
+        0.5,
+        -0.85
+      ]
+    },
+    {
+      "path": "monitor/stand_base",
+      "material": "aluminum",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0,
+        0.74396,
+        -0.5006
+      ]
+    },
+    {
+      "path": "monitor/stand_neck",
+      "material": "aluminum",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0,
+        0.8918,
+        -0.5666
+      ]
+    },
+    {
+      "path": "monitor/display/display_body",
+      "material": "aluminum",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0,
+        1.136,
+        -0.5468
+      ]
+    },
+    {
+      "path": "monitor/display/screen",
+      "material": "screen_glass",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0,
+        1.163,
+        -0.5267
+      ]
+    },
+    {
+      "path": "monitor/display/chin",
+      "material": "aluminum_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0,
+        0.94711,
+        -0.5104
+      ]
+    },
+    {
+      "path": "keyboard/body",
+      "material": "aluminum",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0,
+        0.74518,
+        -0.16
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_0",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.1449,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_1",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.12075,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_2",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.0966,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_3",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.07245,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_4",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.0483,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_5",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.02415,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_6",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_7",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.02415,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_8",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.0483,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_9",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.07245,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_10",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.0966,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_11",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.12075,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r0_12",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.1449,
+        0.75236,
+        -0.21322
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_0",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.14651,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_1",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.12558,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_2",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.10465,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_3",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.08372,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_4",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.06279,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_5",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.04186,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_6",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.02093,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_7",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_8",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.02093,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_9",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.04186,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_10",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.06279,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_11",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.08372,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_12",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.10465,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r1_13",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.13604,
+        0.75236,
+        -0.19582
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_0",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.14128,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_1",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.11511,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_2",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.09418,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_3",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.07326,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_4",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.05233,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_5",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.0314,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_6",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.01047,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_7",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.01046,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_8",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.03139,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_9",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.05232,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_10",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.07325,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_11",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.09418,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_12",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.11511,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r2_13",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.14128,
+        0.75236,
+        -0.17351
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_0",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.13814,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_1",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.10884,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_2",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.08791,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_3",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.06698,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_4",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.04605,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_5",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.02512,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_6",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.00419,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_7",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.01674,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_8",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.03767,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_9",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.0586,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_10",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.07953,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_11",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.10046,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r3_12",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.13395,
+        0.75236,
+        -0.1512
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_0",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.13186,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_1",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.09628,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_2",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.07535,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_3",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.05442,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_4",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.03349,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_5",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.01256,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_6",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.00837,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_7",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.0293,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_8",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.05023,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_9",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.07116,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_10",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.09209,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r4_11",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.12977,
+        0.75236,
+        -0.12889
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r5_0",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.14651,
+        0.75236,
+        -0.10658
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r5_1",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.12558,
+        0.75236,
+        -0.10658
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r5_2",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.10465,
+        0.75236,
+        -0.10658
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r5_3",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.08058,
+        0.75236,
+        -0.10658
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r5_4",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.01047,
+        0.75236,
+        -0.10658
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r5_5",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.05965,
+        0.75236,
+        -0.10658
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r5_6",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.08372,
+        0.75236,
+        -0.10658
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r5_7",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.10465,
+        0.75236,
+        -0.10658
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r5_8",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.12558,
+        0.75236,
+        -0.10658
+      ]
+    },
+    {
+      "path": "keyboard/keys/key_r5_9",
+      "material": "keycap_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.14651,
+        0.75236,
+        -0.10658
+      ]
+    },
+    {
+      "path": "desk_lamp/base",
+      "material": "matte_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.04,
+        0.748,
+        -0.5
+      ]
+    },
+    {
+      "path": "desk_lamp/arm_lower",
+      "material": "matte_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.07737,
+        0.8615,
+        -0.50317
+      ]
+    },
+    {
+      "path": "desk_lamp/arm_upper",
+      "material": "matte_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.04,
+        1.0325,
+        -0.5
+      ]
+    },
+    {
+      "path": "desk_lamp/joint_base",
+      "material": "matte_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.04,
+        0.758,
+        -0.5
+      ]
+    },
+    {
+      "path": "desk_lamp/joint_elbow",
+      "material": "matte_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -1.11473,
+        0.965,
+        -0.50633
+      ]
+    },
+    {
+      "path": "desk_lamp/joint_head",
+      "material": "matte_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.96527,
+        1.1,
+        -0.49367
+      ]
+    },
+    {
+      "path": "desk_lamp/head/shade",
+      "material": "matte_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.92541,
+        1.025,
+        -0.49029
+      ]
+    },
+    {
+      "path": "desk_lamp/head/bulb",
+      "material": "warm_bulb",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        -0.94116,
+        1.04811,
+        -0.49162
+      ]
+    },
+    {
+      "path": "mug/body",
+      "material": "cream_ceramic",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.56,
+        0.74,
+        -0.22
+      ]
+    },
+    {
+      "path": "mug/handle",
+      "material": "cream_ceramic",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.51544,
+        0.788,
+        -0.24681
+      ]
+    },
+    {
+      "path": "phone/body",
+      "material": "aluminum_dark",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.38,
+        0.7407,
+        -0.05
+      ]
+    },
+    {
+      "path": "phone/screen",
+      "material": "screen_glass",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.38,
+        0.7478,
+        -0.05
+      ]
+    },
+    {
+      "path": "phone/camera",
+      "material": "matte_black",
+      "castShadow": true,
+      "receiveShadow": true,
+      "world": [
+        0.38216,
+        0.7482,
+        -0.11196
+      ]
+    }
+  ],
+  "layout_contract_WC": {
+    "board_outer": [
+      0.405,
+      0.042,
+      0.39,
+      0.418
+    ],
+    "board_inner": [
+      0.418,
+      0.058,
+      0.364,
+      0.386
+    ],
+    "frames_band": [
+      0.118,
+      0.06,
+      0.235,
+      0.155
+    ],
+    "window": [
+      0.868,
+      0,
+      0.132,
+      0.63
+    ],
+    "monitor": [
+      0.315,
+      0.375,
+      0.28,
+      0.527
+    ],
+    "lamp": [
+      0.1,
+      0.462,
+      0.13,
+      0.318
+    ],
+    "mug": [
+      0.63,
+      0.7,
+      0.062,
+      0.107
+    ],
+    "phone": [
+      0.7,
+      0.735,
+      0.1,
+      0.147
+    ],
+    "frame_outer_0": [
+      0.127,
+      0.075,
+      0.051,
+      0.128
+    ],
+    "frame_outer_1": [
+      0.204,
+      0.073,
+      0.057,
+      0.13
+    ],
+    "frame_outer_2": [
+      0.285,
+      0.071,
+      0.059,
+      0.135
+    ]
+  },
+  "anchors_norm_at_pinned_cam": {
+    "board_outer": [
+      0.3400355741434881,
+      0.039242523052719025,
+      0.3762055213631539,
+      0.451521000535272
+    ],
+    "board_inner": [
+      0.3549919958558163,
+      0.06687397797429384,
+      0.34593458217069023,
+      0.39936115336882233
+    ],
+    "frames_band": [
+      0.0190599078458219,
+      0.059640107594878755,
+      0.27339273570522504,
+      0.15172987539693156
+    ],
+    "window": [
+      0.8999345244647153,
+      -1.7270434845360314,
+      1.4425992344243823,
+      3.456381562252611
+    ],
+    "monitor": [
+      0.27377073093812887,
+      0.44055881769601335,
+      0.2433886197170073,
+      0.4026065945053898
+    ],
+    "lamp": [
+      0.010683566175626713,
+      0.5832810998637536,
+      0.0985244970248897,
+      0.2520138789757187
+    ],
+    "mug": [
+      0.5683665984039404,
+      0.8037734425618073,
+      0.051068508313778814,
+      0.08902337632876464
+    ],
+    "phone": [
+      0.5145435031134176,
+      0.8958667551319769,
+      0.03290896083836887,
+      0.049138392535678574
+    ],
+    "frame_outer_0": [
+      0.0190599078458219,
+      0.059640107594878755,
+      0.06677259561306675,
+      0.15124415304613387
+    ],
+    "frame_outer_1": [
+      0.12391823424100824,
+      0.06003678047932509,
+      0.06532567080902968,
+      0.15109057954714786
+    ],
+    "frame_outer_2": [
+      0.22856832118614323,
+      0.060432665606173885,
+      0.0638843223649037,
+      0.15093731738563643
+    ]
+  },
+  "monitor_screen_px": {
+    "x": 1071.0422380822595,
+    "y": 962.660995018362,
+    "w": 894.5373557702324,
+    "h": 538.6642181468576
+  },
+  "desk_top_px": {
+    "x": -1217.012826845601,
+    "y": 1644.3590534496363,
+    "w": 5149.344149288925,
+    "h": 514.8781400663663
+  },
+  "lamp_bulb_world": [
+    -0.9411642872678637,
+    1.0481093972174709,
+    -0.4916238361816553
+  ],
+  "lamp_head_world": [
+    -0.9254107699068315,
+    1.025,
+    -0.490288751539844
+  ],
+  "pool_target": [
+    -0.45,
+    0.74,
+    -0.45
+  ]
+}

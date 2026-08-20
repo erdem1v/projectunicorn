@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>ODA 3D spike — GLB export (generated from layers.html)</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.184.0/examples/jsm/"
+  }
+}
+</script>
+<style>html,body{margin:0;height:100%;background:#111;color:#ddd;font:12px ui-monospace,monospace}
+canvas{display:block;width:100vw;height:100vh}
+#log{position:fixed;left:8px;top:8px;white-space:pre;background:rgba(0,0,0,.6);padding:8px;max-height:96vh;overflow:auto}</style>
+</head>
+<body>
+<div id="log">export rig booting…</div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { box, buildMonitor, buildKeyboard, buildLamp, buildPhone, buildMug, buildFrame, buildCorkboard } from '../../../tools/oda_render_rig/desk-builders.js';
+
+// ============================================================================
+// ODA 3D SPIKE — GLB EXPORT PAGE. GENERATED FILE — do not edit by hand; edit
+// make_export_page.py and re-run it. Every block marked "VERBATIM layers.html:A-B"
+// is sliced from tools/oda_render_rig/layers.html unchanged. Authored glue is
+// marked "SPIKE". The scene is therefore the sealed rig's scene by construction.
+// ============================================================================
+
+// ---- VERBATIM layers.html:38-52 (log + renderer + scene + camera) ----
+const LOG = document.getElementById('log');
+const say = m => { LOG.textContent += '\n' + m; console.log(m); };
+
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true, alpha:true});
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.setClearAlpha(0);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(44, 16/9, 0.05, 40);
+camera.position.set(0, 1.08, 2.15);
+camera.lookAt(0.02, 1.02, -0.9);   // == source controls.target
+
+// ---- VERBATIM layers.html:54-148 (room materials + geometry + props) ----
+// ---- room materials (verbatim) ----
+const plaster  = new THREE.MeshStandardMaterial({color:0xd7c1a0, roughness:0.95});
+const plasterR = new THREE.MeshStandardMaterial({color:0xcbb48f, roughness:0.95});
+const floorMat = new THREE.MeshStandardMaterial({color:0x9c7546, roughness:0.85});
+const deskWood = new THREE.MeshStandardMaterial({color:0xb98a52, roughness:0.72});
+const deskWoodD= new THREE.MeshStandardMaterial({color:0x8f6636, roughness:0.75});
+const mullion  = new THREE.MeshStandardMaterial({color:0xa87e4e, roughness:0.7});
+const skyMat   = new THREE.MeshBasicMaterial({color:0xffedc8});
+
+function shadowed(o, cast=true, recv=true){ o.traverse(m=>{ if(m.isMesh){ m.castShadow=cast; m.receiveShadow=recv; } }); return o; }
+
+const room = new THREE.Group(); scene.add(room);
+const floor = box('floor', floorMat, 4.2, 0.02, 4.6, -0.1, -0.01, 1.0); floor.receiveShadow = true; room.add(floor);
+room.add(shadowed(box('wall_back', plaster, 3.9, 2.7, 0.06, -0.25, 1.35, -0.99), false, true));
+room.add(shadowed(box('wall_left', plasterR, 0.06, 2.7, 4.6, -2.17, 1.35, 1.0), false, true));
+
+const RW = 1.72;
+const rw = new THREE.Group(); rw.name = 'wall_right'; room.add(rw);
+const rseg = (n,y,h,z,d)=>{ const s = box(n, plasterR, 0.06, h, d, RW, y, z); s.receiveShadow = true; rw.add(s); };
+rseg('rw_below', 0.375, 0.75, 1.0, 4.6);
+rseg('rw_above', 2.5,  0.4,  1.0, 4.6);
+rseg('rw_back',  1.525, 1.55, -0.925, 0.35);
+rseg('rw_front', 1.525, 1.55, 1.975, 2.05);
+const fr = new THREE.Group(); fr.name = 'window_frame'; rw.add(fr);
+const fbar = (n,y,h,z,d)=>{ const b = box(n, mullion, 0.07, h, d, RW-0.005, y, z); b.castShadow = true; b.receiveShadow = true; fr.add(b); };
+fbar('sill',    0.76, 0.05, 0.1, 1.78);
+fbar('head',    2.29, 0.05, 0.1, 1.78);
+fbar('jamb_b',  1.525, 1.5, -0.73, 0.05);
+fbar('jamb_f',  1.525, 1.5, 0.93, 0.05);
+fbar('mull_v1', 1.525, 1.5, -0.19, 0.04);
+fbar('mull_v2', 1.525, 1.5, 0.38, 0.04);
+fbar('mull_h',  1.62, 0.04, 0.1, 1.66);
+const sky = box('sky', skyMat, 0.02, 2.4, 2.6, RW+0.35, 1.6, 0.1); rw.add(sky);
+
+const cork = shadowed(buildCorkboard()); cork.scale.setScalar(1.45);
+// SEALED SOURCE DELTA + AUTHORIZED CORRECTION (2026-08-17). The sealed scene moved the
+// corkboard to (0.62, 1.44). At the solved camera that projects board_inner to y = -17 —
+// clipped off the frame top — and 220 px right of the layout contract. The vertical drop
+// alone cannot close the horizontal, so the director authorized the full source move:
+// left 20.4 cm, down 15.4 cm. board_inner then lands at 1368.2, 150.6 = exact contract,
+// camera and the four BOARD_REL cards untouched. Mirror this in office-room.html.
+cork.position.set(0.4155, 1.2855, -0.955); room.add(cork);
+for(let i=0;i<3;i++){
+  const f = shadowed(buildFrame()); f.scale.setScalar(1.55);
+  f.position.set(-1.28 + i*0.37, 1.85, -0.955); room.add(f);
+}
+
+const desk = new THREE.Group(); desk.name = 'desk'; room.add(desk);
+desk.add(shadowed(box('desk_top', deskWood, 2.9, 0.045, 0.98, 0, 0.7175, -0.42)));
+desk.add(shadowed(box('desk_panel_l', deskWoodD, 0.04, 0.695, 0.9, -1.38, 0.3475, -0.42)));
+desk.add(shadowed(box('desk_panel_r', deskWoodD, 0.04, 0.695, 0.9, 1.38, 0.3475, -0.42)));
+desk.add(shadowed(box('desk_back', deskWoodD, 2.76, 0.4, 0.03, 0, 0.5, -0.85)));
+
+const T = 0.74;
+const monitor = shadowed(buildMonitor()); monitor.scale.setScalar(1.32); monitor.position.set(0, T, -0.56); room.add(monitor);
+const keyboard = shadowed(buildKeyboard()); keyboard.scale.setScalar(1.15); keyboard.position.set(0, T, -0.16); room.add(keyboard);
+// LAMBA KONUMU + YAW — BİLİNÇLİ SEALED-SOURCE OVERRIDE (2026-08-18, yönetmen onayı).
+// Mühürlü kaynak: position (-0.92, T, -0.5), rotation.y 0.5 (28.6°).
+// Sorun ölçüldü: lambanın ağzı 28.6° azimutta, kendi ışık havuzu ise 95° azimutta —
+// yani lamba KENDİ IŞIĞINDAN 66° sapmış duruyordu, bakan göz bunu uyumsuz okuyor.
+// yaw 85.156° havuzun merkezine TAM nişan alır (artık sapma 0.000°).
+// Yalnız döndürmek yetmiyor: lamba yandan görünüşe geçince kol derinlik yerine
+// GENİŞLİK kaplıyor, siluet 200px→332px büyüyor ve sağ kenarı 0.1092'den 0.1402'ye
+// çıkıp masa kâğıtlarının (PAPER_SLOTS, 0.120'de başlar) ÜSTÜNE biniyordu.
+// Çözüm olarak kâğıtları daraltmak yerine lamba 12cm sola alındı (Erdem kararı):
+// sağ kenar 0.1004, kâğıtlara boşluk 0.0196 — bugünkünden (0.0108) DAHA GENİŞ.
+// lampSpot.position = bulbWorld olduğu için ışık kaynağı lambayla birlikte taşınır,
+// poolTarget sabit kalır → havuz yerinde durur ama iki plaka da yeniden render edilir.
+const lamp = shadowed(buildLamp()); lamp.position.set(-1.04, T, -0.5); lamp.rotation.y = 1.48625; room.add(lamp);
+// ---- BİLİNÇLİ SEALED-SOURCE OVERRIDE (2026-08-17, yönetmen onayı) -----------
+// Mühürlü office-room.html burada başı ışık havuzuna NİŞANLIYOR:
+//   lampHead.quaternion.setFromUnitVectors(new THREE.Vector3(0,-1,0), dirL)
+// ("baktığı nokta = ışığın düştüğü nokta, twist yok"). O blok BİLEREK ALINMADI.
+// Ölçülen sebep: nişan başı döndürüp AĞZI KAMERAYA çeviriyor, böylece aydınlanmayan
+// iç yüzey objenin en büyük görünen yüzeyi oluyor ve lamba gündüz "kapüşonlu göz"
+// gibi biçimsiz bir siyah kütle olarak okunuyor. İlk assette (2026-08-10) baş SABİT
+// pitch'teydi, ağız aşağı/uzağa bakıyordu ve lamba düz siyah bir lambaydı.
+// Sözleşme: lamba HER İKİ MODDA düz siyah; değişen tek şey AYDINLATMA, gece ampul
+// yanar (emissive) + masada havuz + hale. Bu satırların kaldırılması office-room
+// .html'e de yansıtılmalı.
+// lampHead ve poolTarget YAŞAMAYA DEVAM EDİYOR: lampSpot.target ve mouthGlow'un
+// konumu ikisini de kullanıyor.
+const lampHead = lamp.getObjectByName('head');
+const poolTarget = new THREE.Vector3(-0.45, T, -0.45);
+const mug = shadowed(buildMug()); mug.position.set(0.56, T, -0.22); mug.rotation.y = 2.6; room.add(mug);
+// SEALED SOURCE DELTA + AUTHORIZED CORRECTION (2026-08-17). Sealed position (0.38, T, -0.05)
+// is kept. Sealed yaw was -0.28 rad (-16.04 deg), which projects the screen quad as a
+// 29.2-deg-sheared parallelogram — PHONE_GLASS_* models a ROTATED RECT and cannot seat that.
+// Shear falls monotonically toward -2 deg, where it is 0.17 deg (a clean rectangle) with the
+// glass area still 1.27x the shipped value. Director authorized the 14-deg reduction.
+// Residual 6.2-deg trapezoid is perspective non-affinity and is irreducible by yaw.
+const phone = shadowed(buildPhone()); phone.position.set(0.38, T, -0.05); phone.rotation.y = -0.034907; room.add(phone);
+
+const monScreen = monitor.getObjectByName('screen');
+const lampBulb = lamp.getObjectByName('bulb');
+
+// SPIKE: material names for glTF (metadata only; the seven room materials are
+// unnamed in layers.html; desk-builders.js names its own).
+plaster.name = 'plaster'; plasterR.name = 'plaster_r'; floorMat.name = 'floor';
+deskWood.name = 'desk_wood'; deskWoodD.name = 'desk_wood_dark'; mullion.name = 'mullion';
+skyMat.name = 'sky';
+
+// ---- VERBATIM layers.html:150-199 (day/night light rigs) ----
+// ---- lighting rigs (verbatim) ----
+const dayRig = new THREE.Group(); scene.add(dayRig);
+dayRig.add(new THREE.HemisphereLight(0xfff1da, 0x8a6f4d, 0.85));
+const sun = new THREE.DirectionalLight(0xffd6a0, 3.4);
+sun.position.set(5.2, 3.1, 0.55);
+sun.target.position.set(-1.4, 0.3, -0.45);
+sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096);
+sun.shadow.camera.left = -3.4; sun.shadow.camera.right = 3.4;
+sun.shadow.camera.top = 3; sun.shadow.camera.bottom = -3;
+sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 14;
+sun.shadow.bias = -0.0002;
+sun.shadow.normalBias = 0.02;
+dayRig.add(sun, sun.target);
+const dayFill = new THREE.DirectionalLight(0xfff6e8, 0.4);
+dayFill.position.set(-2, 2.4, 3); dayRig.add(dayFill);
+
+const nightRig = new THREE.Group(); nightRig.visible = false; scene.add(nightRig);
+// SEALED SOURCE DELTA — the night rig was reworked wholesale: cool moonlight (hemi 0x39435c
+// + a 0x7d8fb8 moon + a monitor glow + a keyboard wash) is retired in favour of ONE warm
+// tungsten ceiling lamp plus the desk-lamp accent. No other source.
+nightRig.add(new THREE.HemisphereLight(0x8a7154, 0x241c12, 0.3));
+const ceil = new THREE.PointLight(0xffd2a0, 5, 9, 1.6);   // ~2800K tungsten, above room centre
+ceil.position.set(-0.1, 2.55, 0.4);
+ceil.castShadow = true;
+ceil.shadow.mapSize.set(2048, 2048);
+ceil.shadow.bias = -0.0008;
+ceil.shadow.normalBias = 0.03;
+nightRig.add(ceil);
+// Desk lamp: bright warm pool above ambience, cone ENDS on the desk (distance 1.2). This is
+// why it cannot reach the back wall ~5.6 units away — the wall shadow the director saw is
+// the ceiling light's, and it is absent from a plate rendered with the objects hidden.
+const lampSpot = new THREE.SpotLight(0xffb866, 9, 1.2, 0.45, 0.5, 1.7);
+const bulbWorld = new THREE.Vector3(); lampBulb.getWorldPosition(bulbWorld);
+lampSpot.position.copy(bulbWorld);
+lampSpot.target.position.copy(poolTarget);
+// Tiny warm glint at the shade mouth so the pool reads as having a source.
+// MÜHÜRLÜ DEĞER (0.45). Bu tur içinde 0.8'e çıkarıp 0.30'a çekmişimdir; ikisi de
+// krem astarın patlamasını yönetmek içindi. Astar gitti, değer mühürlüye döndü.
+const mouthGlow = new THREE.PointLight(0xffb866, 0.45, 0.32, 1.8);
+{
+  const headW = new THREE.Vector3(); lampHead.getWorldPosition(headW);
+  mouthGlow.position.copy(headW).addScaledVector(poolTarget.clone().sub(headW).normalize(), 0.09);
+}
+nightRig.add(mouthGlow);
+lampSpot.castShadow = true;
+lampSpot.shadow.mapSize.set(2048, 2048);
+lampSpot.shadow.normalBias = 0.01;
+lampSpot.shadow.bias = -0.0005;
+nightRig.add(lampSpot, lampSpot.target);
+
+// ---- VERBATIM layers.html:201-219 (setMode) ----
+// ---- day/night (verbatim setMode) ----
+function setMode(m){
+  const day = m === 'day';
+  dayRig.visible = day; nightRig.visible = !day;
+  skyMat.color.set(day ? 0xffedc8 : 0x1e2638);       // window: pale blue, casts no light
+  renderer.toneMappingExposure = day ? 1.05 : 1.0;   // dim but nothing goes black
+  // SEALED SOURCE DELTA: the screen is DARK GLASS in BOTH modes — the game paints its
+  // content. This is what retires monitor_night_3840x2160.png: at night the monitor is the
+  // day layer under ObjectLayer modulate, so there is no emissive variant to export.
+  monScreen.material.emissive.set(0x000000);
+  monScreen.material.emissiveIntensity = 0;
+  monScreen.material.roughness = 0.15;
+  lampBulb.material.emissive.set(day ? 0xffdda0 : 0xff9d4a);
+  // MÜHÜRLÜ DEĞER (gece 1.2). Bu tur içinde 0.6'ya düşürmüştüm çünkü krem astar
+  // ampulle birlikte beyaza patlıyordu. Astar gittiğine ve ağız kameradan uzağa
+  // baktığına göre 1.2 geri geliyor: LAMBANIN YANDIĞINI OKUTAN ŞEY BU.
+  // Sözleşme: gövde düz siyah kalır, gece DEĞİŞEN tek şey ışıktır.
+  lampBulb.material.emissiveIntensity = day ? 0.15 : 1.2;
+}
+
+// ---- VERBATIM layers.html:230-236 (W/H + renderAt) ----
+const W = 3840, H = 2160;
+function renderAt(){
+  renderer.setPixelRatio(1);
+  renderer.setSize(W, H, false);
+  camera.aspect = W/H; camera.updateProjectionMatrix();
+  renderer.render(scene, camera);
+}
+
+// ---- VERBATIM layers.html:262-282 (projectMesh) ----
+/** Screen-space rect of a named mesh, by projecting its 8 world corners.
+ *  Used to DERIVE MONITOR_GLASS_REL from geometry (task §2). */
+function projectMesh(root, meshName){
+  const mesh = root.getObjectByName(meshName);
+  if (!mesh) return null;
+  mesh.updateWorldMatrix(true, false);
+  mesh.geometry.computeBoundingBox();
+  const bb = mesh.geometry.boundingBox;
+  let minX=1e9, minY=1e9, maxX=-1e9, maxY=-1e9;
+  for (let i=0;i<8;i++){
+    const v = new THREE.Vector3(
+      i&1 ? bb.max.x : bb.min.x,
+      i&2 ? bb.max.y : bb.min.y,
+      i&4 ? bb.max.z : bb.min.z);
+    v.applyMatrix4(mesh.matrixWorld).project(camera);
+    const sx = (v.x * 0.5 + 0.5) * W, sy = (-v.y * 0.5 + 0.5) * H;
+    minX=Math.min(minX,sx); maxX=Math.max(maxX,sx);
+    minY=Math.min(minY,sy); maxY=Math.max(maxY,sy);
+  }
+  return { x:minX, y:minY, w:maxX-minX, h:maxY-minY };
+}
+
+// ---- VERBATIM layers.html:430-456 (projectObject) ----
+/** Projected screen AABB of an Object3D and all its descendant meshes.
+ *  The PAINTED anchors (board, frames, window, desk) are not sprites, so they
+ *  have no alpha layer to measure — but they are real geometry, so their rects
+ *  can be projected exactly instead of eyeballed off the plate. */
+function projectObject(root){
+  let minX=1e9, minY=1e9, maxX=-1e9, maxY=-1e9, found=false;
+  root.updateWorldMatrix(true, true);
+  root.traverse(m => {
+    if (!m.isMesh) return;
+    const r = projectMesh({ getObjectByName: () => m }, null) || (()=>{
+      m.geometry.computeBoundingBox();
+      const bb = m.geometry.boundingBox;
+      let a=1e9,b=1e9,c=-1e9,d=-1e9;
+      for (let i=0;i<8;i++){
+        const v = new THREE.Vector3(i&1?bb.max.x:bb.min.x, i&2?bb.max.y:bb.min.y, i&4?bb.max.z:bb.min.z);
+        v.applyMatrix4(m.matrixWorld).project(camera);
+        const sx=(v.x*0.5+0.5)*W, sy=(-v.y*0.5+0.5)*H;
+        a=Math.min(a,sx); c=Math.max(c,sx); b=Math.min(b,sy); d=Math.max(d,sy);
+      }
+      return {x:a,y:b,w:c-a,h:d-b};
+    })();
+    found = true;
+    minX=Math.min(minX,r.x); minY=Math.min(minY,r.y);
+    maxX=Math.max(maxX,r.x+r.w); maxY=Math.max(maxY,r.y+r.h);
+  });
+  return found ? {x:minX, y:minY, w:maxX-minX, h:maxY-minY} : null;
+}
+
+// ---- VERBATIM layers.html:492-505 (WC (layout contract copy)) ----
+// OdaLayout.RECTS @ HEAD — the layout contract. Fractions of the 3840x2160 art.
+const WC = {
+  board_outer:   [0.405, 0.042, 0.390, 0.418],
+  board_inner:   [0.418, 0.058, 0.364, 0.386],
+  frames_band:   [0.118, 0.060, 0.235, 0.155],
+  window:        [0.868, 0.000, 0.132, 0.630],
+  monitor:       [0.315, 0.375, 0.280, 0.527],
+  lamp:          [0.100, 0.462, 0.130, 0.318],
+  mug:           [0.630, 0.700, 0.062, 0.107],
+  phone:         [0.700, 0.735, 0.100, 0.147],
+  frame_outer_0: [0.127, 0.075, 0.051, 0.128],
+  frame_outer_1: [0.204, 0.073, 0.057, 0.130],
+  frame_outer_2: [0.285, 0.071, 0.059, 0.135]
+};
+
+// ---- VERBATIM layers.html:564-582 (anchorsNorm) ----
+function anchorsNorm(){
+  const frames = room.children.filter(c => c.name === 'picture_frame');
+  const n = o => { const r = projectObject(o); return r && [r.x/W, r.y/H, r.w/W, r.h/H]; };
+  const fr0 = n(frames[0]), fr1 = n(frames[1]), fr2 = n(frames[2]);
+  const band = (fr0 && fr2) ? [
+    Math.min(fr0[0], fr1[0], fr2[0]),
+    Math.min(fr0[1], fr1[1], fr2[1]),
+    Math.max(fr0[0]+fr0[2], fr1[0]+fr1[2], fr2[0]+fr2[2]) - Math.min(fr0[0], fr1[0], fr2[0]),
+    Math.max(fr0[1]+fr0[3], fr1[1]+fr1[3], fr2[1]+fr2[3]) - Math.min(fr0[1], fr1[1], fr2[1])
+  ] : null;
+  return {
+    board_outer: n(cork),
+    board_inner: n(cork.getObjectByName('cork_panel')),
+    frames_band: band,
+    window: n(fr),
+    monitor: n(monitor), lamp: n(lamp), mug: n(mug), phone: n(phone),
+    frame_outer_0: fr0, frame_outer_1: fr1, frame_outer_2: fr2
+  };
+}
+
+// ---- VERBATIM layers.html:620-637 (camTarget + applyCam) ----
+// Camera parameters are [x, y, z, yawDeg, pitchDeg, fov]. yaw 0 looks down -Z
+// (straight at the back wall); negative pitch looks down. The look-at target is
+// derived, never solved for — that is what closes the 494 m loophole.
+const DEG = Math.PI / 180;
+function camTarget(p){
+  const yaw = p[3]*DEG, pit = p[4]*DEG, cp = Math.cos(pit);
+  return [ p[0] + Math.sin(yaw)*cp, p[1] + Math.sin(pit), p[2] - Math.cos(yaw)*cp ];
+}
+
+function applyCam(p){
+  camera.fov = p[5];
+  camera.position.set(p[0], p[1], p[2]);
+  camera.aspect = W/H;
+  camera.updateProjectionMatrix();
+  const t = camTarget(p);
+  camera.lookAt(t[0], t[1], t[2]);
+  camera.updateMatrixWorld(true);
+}
+
+// ============================================================================
+// SPIKE — export. Pinned camera (README "do not re-solve"), then: GLB of the
+// `room` group (geometry + materials, no lights/camera — those go to Godot via
+// the JSON so energies can be converted explicitly), plus a JSON that records
+// everything Godot needs and everything the gate compares against.
+// ============================================================================
+const PINNED_CAM = [0.298, 1.35, 1.56, 0.38, -1.91, 44];
+const deskTop = desk.getObjectByName('desk_top');   // SPIKE: same lookup as layers.html:320
+
+async function postBlob(name, blob){
+  const r = await fetch('/save/' + name, { method:'POST', body: blob });
+  if (!r.ok) throw new Error(name + ' -> HTTP ' + r.status);
+}
+async function postText(name, text){ await postBlob(name, new Blob([text], {type:'text/plain'})); }
+
+const hex = c => '#' + c.getHexString();
+function lightInfo(l){
+  const p = new THREE.Vector3(); l.getWorldPosition(p);
+  const o = { type: l.type, name: l.name || '', color: hex(l.color), intensity: l.intensity,
+              position: [p.x, p.y, p.z], castShadow: !!l.castShadow };
+  if (l.isHemisphereLight) { o.skyColor = hex(l.color); o.groundColor = hex(l.groundColor); delete o.position; }
+  if (l.target) { const t = new THREE.Vector3(); l.target.getWorldPosition(t); o.target = [t.x, t.y, t.z]; }
+  if (l.isPointLight || l.isSpotLight) { o.distance = l.distance; o.decay = l.decay; }
+  if (l.isSpotLight) { o.angle = l.angle; o.penumbra = l.penumbra; }
+  if (l.shadow) { o.shadow = { mapSize: [l.shadow.mapSize.x, l.shadow.mapSize.y], bias: l.shadow.bias, normalBias: l.shadow.normalBias }; }
+  return o;
+}
+function matInfo(m){
+  const o = { type: m.type, name: m.name, color: hex(m.color) };
+  if ('roughness' in m) o.roughness = m.roughness;
+  if ('metalness' in m) o.metalness = m.metalness;
+  if (m.emissive) { o.emissive = hex(m.emissive); o.emissiveIntensity = m.emissiveIntensity; }
+  return o;
+}
+function meshInventory(){
+  const out = [];
+  room.updateWorldMatrix(true, true);
+  room.traverse(m => {
+    if (!m.isMesh) return;
+    const p = new THREE.Vector3(); m.getWorldPosition(p);
+    const path = []; let n = m; while (n && n !== room) { path.unshift(n.name || '?'); n = n.parent; }
+    out.push({ path: path.join('/'), material: m.material.name, castShadow: !!m.castShadow,
+               receiveShadow: !!m.receiveShadow, world: [+p.x.toFixed(5), +p.y.toFixed(5), +p.z.toFixed(5)] });
+  });
+  return out;
+}
+
+(async function run(){
+  try {
+    setMode('day'); showAllForExport();
+    applyCam(PINNED_CAM);
+    renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight, false);
+    camera.aspect = W/H; camera.updateProjectionMatrix();
+    renderer.render(scene, camera);
+    say('camera ' + JSON.stringify(PINNED_CAM));
+
+    // ---- JSON first (cheap, and useful even if the GLB fails) ----
+    const mats = {}; room.traverse(m => { if (m.isMesh) mats[m.material.name] = matInfo(m.material); });
+    const info = {
+      generated_by: 'docs/tools/oda3d/export_glb.html (generated from tools/oda_render_rig/layers.html)',
+      three_version: THREE.REVISION,
+      art: [W, H],
+      camera: { cam: PINNED_CAM, position: PINNED_CAM.slice(0,3), target: camTarget(PINNED_CAM), fov_deg: PINNED_CAM[5],
+                aspect: W/H, near: camera.near, far: camera.far, up: [0,1,0], note: 'fov is VERTICAL (three PerspectiveCamera); look-at target DERIVED from yaw/pitch (layers.html camTarget)' },
+      renderer: { toneMapping: 'ACESFilmic', toneMappingExposure_day: 1.05, toneMappingExposure_night: 1.0, shadowMap: 'PCFShadowMap' },
+      lights: { day: dayRig.children.filter(c => c.isLight).map(lightInfo),
+                night: nightRig.children.filter(c => c.isLight).map(lightInfo) },
+      setMode: { sky_day: '#ffedc8', sky_night: '#1e2638',
+                 screen_emissive: '#000000', screen_emissiveIntensity: 0, screen_roughness: 0.15,
+                 bulb_emissive_day: '#ffdda0', bulb_emissive_night: '#ff9d4a', bulb_emissiveIntensity_day: 0.15, bulb_emissiveIntensity_night: 1.2 },
+      materials: mats,
+      meshes: meshInventory(),
+      layout_contract_WC: WC,
+      anchors_norm_at_pinned_cam: anchorsNorm(),
+      monitor_screen_px: projectMesh(monitor, 'screen'),
+      desk_top_px: projectObject(deskTop),
+      lamp_bulb_world: (() => { const v = new THREE.Vector3(); lampBulb.getWorldPosition(v); return [v.x, v.y, v.z]; })(),
+      lamp_head_world: (() => { const v = new THREE.Vector3(); lampHead.getWorldPosition(v); return [v.x, v.y, v.z]; })(),
+      pool_target: [poolTarget.x, poolTarget.y, poolTarget.z]
+    };
+    await postText('oda3d_source_scene.json', JSON.stringify(info, null, 2));
+    say('json ✓');
+
+    // ---- GLB of the room group ----
+    const exporter = new GLTFExporter();
+    const buf = await exporter.parseAsync(room, { binary: true, onlyVisible: true, trs: false });
+    await postBlob('oda3d_room.glb', new Blob([buf], {type:'model/gltf-binary'}));
+    say('glb ✓ ' + buf.byteLength + ' bytes');
+    await postText('DONE.txt', 'ok');
+  } catch (e) {
+    say('EXPORT FAILED: ' + e);
+    await postText('DONE.txt', 'ERR ' + (e && e.message ? e.message : e));
+  }
+})();
+
+function showAllForExport(){ room.children.forEach(c => c.visible = true); }
+</script>
+</body>
+</html>

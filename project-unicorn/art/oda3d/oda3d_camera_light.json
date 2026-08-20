@@ -1,0 +1,873 @@
+{
+  "_about": "ODA 3D spike — camera/light/environment record per plate. Source of truth for geometry/camera: art/oda3d/oda3d_source_scene.json (exported from tools/oda_render_rig/layers.html).",
+  "day": {
+    "anchors_norm": {
+      "board_inner": [
+        0.354991976420085,
+        0.0668739389490198,
+        0.345934613545736,
+        0.399361158300329
+      ],
+      "board_outer": [
+        0.340035533905029,
+        0.0392425042611581,
+        0.376205539703369,
+        0.451521011635109
+      ],
+      "desk_top": [
+        -0.316930421193441,
+        0.761277431911892,
+        1.34097503026327,
+        0.238369581434462
+      ],
+      "frame_outer_0": [
+        0.0190598964691162,
+        0.0596401426527235,
+        0.0667726119359334,
+        0.151244135256167
+      ],
+      "frame_outer_1": [
+        0.123918263117472,
+        0.060036779333044,
+        0.0653256257375081,
+        0.151090537177192
+      ],
+      "frame_outer_2": [
+        0.228568315505981,
+        0.0604326742666739,
+        0.0638842741648356,
+        0.150937285246672
+      ],
+      "frames_band": [
+        0.0190598964691162,
+        0.0596401426527235,
+        0.273392693201701,
+        0.151729816860623
+      ],
+      "lamp": [
+        0.010683536529541,
+        0.583281114366319,
+        0.0985245704650879,
+        0.252013877586082
+      ],
+      "monitor": [
+        0.273770713806152,
+        0.440558765552662,
+        0.243388652801514,
+        0.402606709798177
+      ],
+      "mug": [
+        0.568366622924805,
+        0.803773498535156,
+        0.0510684967041016,
+        0.0890233357747396
+      ],
+      "phone": [
+        0.514543501536051,
+        0.895866789641204,
+        0.0329089800516764,
+        0.0491384435583044
+      ],
+      "window": [
+        0.899934577941895,
+        -1.72704366048177,
+        1.44259955088298,
+        3.45638201678241
+      ]
+    },
+    "bake": {
+      "atlas_count": 1.0,
+      "atlas_size": [
+        2048.0,
+        2048.0,
+        4.0
+      ],
+      "bounces": 4.0,
+      "denoiser": true,
+      "directional": true,
+      "engine": "4.6.2-stable (official)",
+      "errors": [],
+      "light_data_path": "res://scenes/oda3d/oda3d_day.lmbake",
+      "max_texture_size": 16384.0,
+      "mode": "day",
+      "ok": true,
+      "quality": 3.0,
+      "seconds": 93.315,
+      "supersampling": true,
+      "supersampling_factor": 2.0,
+      "texel_scale": 1.0
+    },
+    "camera": {
+      "far": 40.0,
+      "fov_deg": 44.0,
+      "keep_aspect": 1,
+      "near": 0.0500000007450581,
+      "position": [
+        0.298000007867813,
+        1.35000002384186,
+        1.55999994277954
+      ],
+      "projection": 0,
+      "transform": {
+        "basis_x": [
+          0.999978005886078,
+          0.0,
+          0.00663219857960939
+        ],
+        "basis_y": [
+          0.000221048583625816,
+          0.999444425106049,
+          -0.0333288758993149
+        ],
+        "basis_z": [
+          -0.00662851380184293,
+          0.0333296097815037,
+          0.999422430992126
+        ],
+        "origin": [
+          0.298000007867813,
+          1.35000002384186,
+          1.55999994277954
+        ]
+      }
+    },
+    "captured_at": "2026-08-19T12:18:50",
+    "energy_conversion": "godot_energy = three_intensity / PI (non-physical light units; Godot ×π cancels Lambert /π)",
+    "engine_version": "4.6.2.stable.official",
+    "environment": {
+      "agx_contrast": 1.25,
+      "agx_white": 16.2900009155273,
+      "ambient_color": "fff1da",
+      "ambient_energy": 1.0,
+      "ambient_source": 3,
+      "background_color": "fff1da",
+      "background_mode": 1,
+      "glow": {
+        "blend_mode": 1,
+        "bloom": 0.0,
+        "enabled": true,
+        "hdr_threshold": 1.20000004768372,
+        "intensity": 0.300000011920929,
+        "strength": 1.0
+      },
+      "sdfgi": {
+        "bounce_feedback": 0.5,
+        "cascades": 4,
+        "enabled": false,
+        "energy": 1.0,
+        "min_cell_size": 0.200000002980232,
+        "use_occlusion": false
+      },
+      "ssao": {
+        "detail": 0.5,
+        "enabled": true,
+        "horizon": 0.0599999986588955,
+        "intensity": 1.5,
+        "light_affect": 0.0,
+        "power": 1.5,
+        "radius": 0.5,
+        "sharpness": 0.980000019073486
+      },
+      "ssil": {
+        "enabled": true,
+        "intensity": 0.349999994039536,
+        "normal_rejection": 1.0,
+        "radius": 1.0,
+        "sharpness": 0.980000019073486
+      },
+      "ssr": {
+        "depth_tolerance": 0.200000002980232,
+        "enabled": true,
+        "fade_in": 0.150000005960464,
+        "fade_out": 2.0,
+        "max_steps": 256
+      },
+      "tonemap_exposure": 0.944999992847443,
+      "tonemap_mode": 3,
+      "tonemap_white": 1.0,
+      "volumetric_fog": {
+        "albedo": "ffffff",
+        "anisotropy": 0.200000002980232,
+        "density": 0.0500000007450581,
+        "enabled": false,
+        "gi_inject": 1.0
+      }
+    },
+    "gi_method": "LightmapGI (baked; direct light real-time, indirect baked)",
+    "lightmap_gi": {
+      "bounces": 4,
+      "denoiser": true,
+      "directional": true,
+      "env_custom_sky": "",
+      "env_energy": 0.189394384622574,
+      "environment_mode": 3,
+      "has_light_data": true,
+      "light_data_path": "res://scenes/oda3d/oda3d_day.lmbake",
+      "max_texture_size": 16384,
+      "quality": 3,
+      "supersampling": true,
+      "supersampling_factor": 2.0,
+      "texel_scale": 1.0
+    },
+    "lights": [
+      {
+        "angular_distance_deg": 0.5,
+        "bake_mode": 2,
+        "color": "ffd6a0",
+        "energy": 1.08225357532501,
+        "name": "Sun",
+        "rig": "DayRig",
+        "shadow": true,
+        "shadow_bias": 0.0199999995529652,
+        "shadow_max_distance": 12.0,
+        "shadow_mode": 0,
+        "shadow_normal_bias": 1.0,
+        "transform": {
+          "basis_x": [
+            0.149805337190628,
+            0.0,
+            -0.988715529441834
+          ],
+          "basis_y": [
+            -0.382440388202667,
+            0.922161400318146,
+            -0.0579454973340034
+          ],
+          "basis_z": [
+            0.911755323410034,
+            0.386805325746536,
+            0.138144701719284
+          ],
+          "origin": [
+            5.19999980926514,
+            3.09999990463257,
+            0.550000011920929
+          ]
+        },
+        "type": "DirectionalLight3D"
+      },
+      {
+        "angular_distance_deg": 0.5,
+        "bake_mode": 2,
+        "color": "fff6e8",
+        "energy": 0.12732395529747,
+        "name": "Fill",
+        "rig": "DayRig",
+        "shadow": false,
+        "shadow_bias": 0.0199999995529652,
+        "shadow_max_distance": 12.0,
+        "shadow_mode": 0,
+        "shadow_normal_bias": 1.0,
+        "transform": {
+          "basis_x": [
+            0.832050323486328,
+            0.0,
+            0.554700136184692
+          ],
+          "basis_y": [
+            0.307364106178284,
+            0.832444429397583,
+            -0.46104621887207
+          ],
+          "basis_z": [
+            -0.461757034063339,
+            0.554108560085297,
+            0.692635655403137
+          ],
+          "origin": [
+            -2.0,
+            2.40000009536743,
+            3.0
+          ]
+        },
+        "type": "DirectionalLight3D"
+      },
+      {
+        "color": "fff1da",
+        "energy": 0.189394382279355,
+        "name": "HemisphereAmbient",
+        "rig": "DayRig",
+        "type": "Environment.ambient"
+      },
+      {
+        "attenuation": 1.60000002384186,
+        "bake_mode": 2,
+        "color": "ffd2a0",
+        "energy": 1.59154939651489,
+        "light_size": 0.0599999986588955,
+        "name": "Ceiling",
+        "range": 9.0,
+        "rig": "NightRig",
+        "shadow": true,
+        "shadow_bias": 0.0199999995529652,
+        "shadow_normal_bias": 1.5,
+        "transform": {
+          "basis_x": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "basis_y": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "basis_z": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "origin": [
+            -0.100000001490116,
+            2.54999995231628,
+            0.400000005960464
+          ]
+        },
+        "type": "OmniLight3D"
+      },
+      {
+        "attenuation": 1.79999995231628,
+        "bake_mode": 2,
+        "color": "ffb866",
+        "energy": 0.143239453434944,
+        "light_size": 0.0,
+        "name": "MouthGlow",
+        "range": 0.319999992847443,
+        "rig": "NightRig",
+        "shadow": false,
+        "shadow_bias": 0.0199999995529652,
+        "shadow_normal_bias": 1.5,
+        "transform": {
+          "basis_x": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "basis_y": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "basis_z": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "origin": [
+            -0.84842187166214,
+            0.978846549987793,
+            -0.483764320611954
+          ]
+        },
+        "type": "OmniLight3D"
+      },
+      {
+        "angle_attenuation": 1.0,
+        "angle_deg": 25.7831001281738,
+        "attenuation": 1.70000004768372,
+        "bake_mode": 2,
+        "color": "ffb866",
+        "energy": 2.86478900909424,
+        "light_size": 0.0199999995529652,
+        "name": "LampSpot",
+        "range": 1.20000004768372,
+        "rig": "NightRig",
+        "shadow": true,
+        "shadow_bias": 0.0299999993294477,
+        "shadow_normal_bias": 1.0,
+        "transform": {
+          "basis_x": [
+            -0.0844425931572914,
+            0.0,
+            0.996428370475769
+          ],
+          "basis_y": [
+            0.528144657611847,
+            0.847974121570587,
+            0.0447577610611916
+          ],
+          "basis_z": [
+            -0.84494537115097,
+            0.530037760734558,
+            -0.0716051310300827
+          ],
+          "origin": [
+            -0.941164314746857,
+            1.0481094121933,
+            -0.491623848676682
+          ]
+        },
+        "type": "SpotLight3D"
+      },
+      {
+        "color": "8a7154",
+        "energy": 0.066845076098596,
+        "name": "HemisphereAmbient",
+        "rig": "NightRig",
+        "type": "Environment.ambient"
+      }
+    ],
+    "mode": "day",
+    "output": "res://art/oda3d/plates/oda_day_8k.png",
+    "renderer": {
+      "driver": "d3d12",
+      "gpu": "AMD Radeon RX 9070 XT",
+      "method": "forward_plus",
+      "physical_light_units": false
+    },
+    "tonemap_requested": "aces",
+    "viewport": {
+      "debanding": true,
+      "directional_shadow_atlas": 16384,
+      "internal_size": [
+        11520,
+        6480
+      ],
+      "msaa_3d": 2,
+      "positional_shadow_atlas": 16384,
+      "positional_shadow_quadrants": "subdiv 4 (2x2 slots per quadrant), 16-bit",
+      "scaling_3d_scale": 1.5,
+      "size": [
+        7680,
+        4320
+      ],
+      "taa": true,
+      "warmup_frames": 60
+    }
+  },
+  "night": {
+    "anchors_norm": {
+      "board_inner": [
+        0.354991976420085,
+        0.0668739389490198,
+        0.345934613545736,
+        0.399361158300329
+      ],
+      "board_outer": [
+        0.340035533905029,
+        0.0392425042611581,
+        0.376205539703369,
+        0.451521011635109
+      ],
+      "desk_top": [
+        -0.316930421193441,
+        0.761277431911892,
+        1.34097503026327,
+        0.238369581434462
+      ],
+      "frame_outer_0": [
+        0.0190598964691162,
+        0.0596401426527235,
+        0.0667726119359334,
+        0.151244135256167
+      ],
+      "frame_outer_1": [
+        0.123918263117472,
+        0.060036779333044,
+        0.0653256257375081,
+        0.151090537177192
+      ],
+      "frame_outer_2": [
+        0.228568315505981,
+        0.0604326742666739,
+        0.0638842741648356,
+        0.150937285246672
+      ],
+      "frames_band": [
+        0.0190598964691162,
+        0.0596401426527235,
+        0.273392693201701,
+        0.151729816860623
+      ],
+      "lamp": [
+        0.010683536529541,
+        0.583281114366319,
+        0.0985245704650879,
+        0.252013877586082
+      ],
+      "monitor": [
+        0.273770713806152,
+        0.440558765552662,
+        0.243388652801514,
+        0.402606709798177
+      ],
+      "mug": [
+        0.568366622924805,
+        0.803773498535156,
+        0.0510684967041016,
+        0.0890233357747396
+      ],
+      "phone": [
+        0.514543501536051,
+        0.895866789641204,
+        0.0329089800516764,
+        0.0491384435583044
+      ],
+      "window": [
+        0.899934577941895,
+        -1.72704366048177,
+        1.44259955088298,
+        3.45638201678241
+      ]
+    },
+    "bake": {
+      "atlas_count": 1.0,
+      "atlas_size": [
+        2048.0,
+        2048.0,
+        4.0
+      ],
+      "bounces": 4.0,
+      "denoiser": true,
+      "directional": true,
+      "engine": "4.6.2-stable (official)",
+      "errors": [],
+      "light_data_path": "res://scenes/oda3d/oda3d_night.lmbake",
+      "max_texture_size": 16384.0,
+      "mode": "night",
+      "ok": true,
+      "quality": 3.0,
+      "seconds": 93.425,
+      "supersampling": true,
+      "supersampling_factor": 2.0,
+      "texel_scale": 1.0
+    },
+    "camera": {
+      "far": 40.0,
+      "fov_deg": 44.0,
+      "keep_aspect": 1.0,
+      "near": 0.0500000007450581,
+      "position": [
+        0.298000007867813,
+        1.35000002384186,
+        1.55999994277954
+      ],
+      "projection": 0.0,
+      "transform": {
+        "basis_x": [
+          0.999978005886078,
+          0.0,
+          0.00663219857960939
+        ],
+        "basis_y": [
+          0.00022104858362581,
+          0.999444425106049,
+          -0.0333288758993149
+        ],
+        "basis_z": [
+          -0.00662851380184293,
+          0.0333296097815037,
+          0.999422430992126
+        ],
+        "origin": [
+          0.298000007867813,
+          1.35000002384186,
+          1.55999994277954
+        ]
+      }
+    },
+    "captured_at": "2026-08-19T12:17:30",
+    "energy_conversion": "godot_energy = three_intensity / PI (non-physical light units; Godot ×π cancels Lambert /π)",
+    "engine_version": "4.6.2.stable.official",
+    "environment": {
+      "agx_contrast": 1.25,
+      "agx_white": 16.2900009155273,
+      "ambient_color": "fff1da",
+      "ambient_energy": 1.0,
+      "ambient_source": 3.0,
+      "background_color": "8a7154",
+      "background_mode": 1.0,
+      "glow": {
+        "blend_mode": 1.0,
+        "bloom": 0.0,
+        "enabled": true,
+        "hdr_threshold": 1.20000004768372,
+        "intensity": 0.300000011920929,
+        "strength": 1.0
+      },
+      "sdfgi": {
+        "bounce_feedback": 0.5,
+        "cascades": 4.0,
+        "enabled": false,
+        "energy": 1.0,
+        "min_cell_size": 0.200000002980232,
+        "use_occlusion": false
+      },
+      "ssao": {
+        "detail": 0.5,
+        "enabled": true,
+        "horizon": 0.0599999986588955,
+        "intensity": 1.5,
+        "light_affect": 0.0,
+        "power": 1.5,
+        "radius": 0.5,
+        "sharpness": 0.980000019073486
+      },
+      "ssil": {
+        "enabled": true,
+        "intensity": 0.349999994039536,
+        "normal_rejection": 1.0,
+        "radius": 1.0,
+        "sharpness": 0.980000019073486
+      },
+      "ssr": {
+        "depth_tolerance": 0.200000002980232,
+        "enabled": true,
+        "fade_in": 0.150000005960464,
+        "fade_out": 2.0,
+        "max_steps": 256.0
+      },
+      "tonemap_exposure": 0.709999978542328,
+      "tonemap_mode": 3.0,
+      "tonemap_white": 1.0,
+      "volumetric_fog": {
+        "albedo": "ffffff",
+        "anisotropy": 0.200000002980232,
+        "density": 0.0500000007450581,
+        "enabled": false,
+        "gi_inject": 1.0
+      }
+    },
+    "gi_method": "LightmapGI (baked; direct light real-time, indirect baked)",
+    "lightmap_gi": {
+      "bounces": 4.0,
+      "denoiser": true,
+      "directional": true,
+      "env_custom_sky": "",
+      "env_energy": 0.0668450742959976,
+      "environment_mode": 3.0,
+      "has_light_data": true,
+      "light_data_path": "res://scenes/oda3d/oda3d_night.lmbake",
+      "max_texture_size": 16384.0,
+      "quality": 3.0,
+      "supersampling": true,
+      "supersampling_factor": 2.0,
+      "texel_scale": 1.0
+    },
+    "lights": [
+      {
+        "angular_distance_deg": 0.5,
+        "bake_mode": 2.0,
+        "color": "ffd6a0",
+        "energy": 1.08225357532501,
+        "name": "Sun",
+        "rig": "DayRig",
+        "shadow": true,
+        "shadow_bias": 0.0199999995529652,
+        "shadow_max_distance": 12.0,
+        "shadow_mode": 0.0,
+        "shadow_normal_bias": 1.0,
+        "transform": {
+          "basis_x": [
+            0.149805337190628,
+            0.0,
+            -0.988715529441834
+          ],
+          "basis_y": [
+            -0.382440388202667,
+            0.922161400318146,
+            -0.0579454973340034
+          ],
+          "basis_z": [
+            0.911755323410034,
+            0.386805325746536,
+            0.138144701719284
+          ],
+          "origin": [
+            5.19999980926514,
+            3.09999990463257,
+            0.550000011920929
+          ]
+        },
+        "type": "DirectionalLight3D"
+      },
+      {
+        "angular_distance_deg": 0.5,
+        "bake_mode": 2.0,
+        "color": "fff6e8",
+        "energy": 0.12732395529747,
+        "name": "Fill",
+        "rig": "DayRig",
+        "shadow": false,
+        "shadow_bias": 0.0199999995529652,
+        "shadow_max_distance": 12.0,
+        "shadow_mode": 0.0,
+        "shadow_normal_bias": 1.0,
+        "transform": {
+          "basis_x": [
+            0.832050323486328,
+            0.0,
+            0.554700136184692
+          ],
+          "basis_y": [
+            0.307364106178284,
+            0.832444429397583,
+            -0.46104621887207
+          ],
+          "basis_z": [
+            -0.461757034063339,
+            0.554108560085297,
+            0.692635655403137
+          ],
+          "origin": [
+            -2.0,
+            2.40000009536743,
+            3.0
+          ]
+        },
+        "type": "DirectionalLight3D"
+      },
+      {
+        "color": "fff1da",
+        "energy": 0.189394382279355,
+        "name": "HemisphereAmbient",
+        "rig": "DayRig",
+        "type": "Environment.ambient"
+      },
+      {
+        "attenuation": 1.60000002384186,
+        "bake_mode": 2.0,
+        "color": "ffd2a0",
+        "energy": 1.59154939651489,
+        "light_size": 0.0599999986588955,
+        "name": "Ceiling",
+        "range": 9.0,
+        "rig": "NightRig",
+        "shadow": true,
+        "shadow_bias": 0.0199999995529652,
+        "shadow_normal_bias": 1.5,
+        "transform": {
+          "basis_x": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "basis_y": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "basis_z": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "origin": [
+            -0.100000001490116,
+            2.54999995231628,
+            0.400000005960464
+          ]
+        },
+        "type": "OmniLight3D"
+      },
+      {
+        "attenuation": 1.79999995231628,
+        "bake_mode": 2.0,
+        "color": "ffb866",
+        "energy": 0.143239453434944,
+        "light_size": 0.0,
+        "name": "MouthGlow",
+        "range": 0.319999992847443,
+        "rig": "NightRig",
+        "shadow": false,
+        "shadow_bias": 0.0199999995529652,
+        "shadow_normal_bias": 1.5,
+        "transform": {
+          "basis_x": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "basis_y": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "basis_z": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "origin": [
+            -0.84842187166214,
+            0.978846549987793,
+            -0.483764320611954
+          ]
+        },
+        "type": "OmniLight3D"
+      },
+      {
+        "angle_attenuation": 1.0,
+        "angle_deg": 25.7831001281738,
+        "attenuation": 1.70000004768372,
+        "bake_mode": 2.0,
+        "color": "ffb866",
+        "energy": 2.86478900909424,
+        "light_size": 0.0199999995529652,
+        "name": "LampSpot",
+        "range": 1.20000004768372,
+        "rig": "NightRig",
+        "shadow": true,
+        "shadow_bias": 0.0299999993294477,
+        "shadow_normal_bias": 1.0,
+        "transform": {
+          "basis_x": [
+            -0.0844425931572914,
+            0.0,
+            0.996428370475769
+          ],
+          "basis_y": [
+            0.528144657611847,
+            0.847974121570587,
+            0.0447577610611916
+          ],
+          "basis_z": [
+            -0.84494537115097,
+            0.530037760734558,
+            -0.0716051310300827
+          ],
+          "origin": [
+            -0.941164314746857,
+            1.0481094121933,
+            -0.491623848676682
+          ]
+        },
+        "type": "SpotLight3D"
+      },
+      {
+        "color": "8a7154",
+        "energy": 0.066845076098596,
+        "name": "HemisphereAmbient",
+        "rig": "NightRig",
+        "type": "Environment.ambient"
+      }
+    ],
+    "mode": "night",
+    "output": "res://art/oda3d/plates/oda_night_8k.png",
+    "renderer": {
+      "driver": "d3d12",
+      "gpu": "AMD Radeon RX 9070 XT",
+      "method": "forward_plus",
+      "physical_light_units": false
+    },
+    "tonemap_requested": "aces",
+    "viewport": {
+      "debanding": true,
+      "directional_shadow_atlas": 16384.0,
+      "internal_size": [
+        11520.0,
+        6480.0
+      ],
+      "msaa_3d": 2.0,
+      "positional_shadow_atlas": 16384.0,
+      "positional_shadow_quadrants": "subdiv 4 (2x2 slots per quadrant), 16-bit",
+      "scaling_3d_scale": 1.5,
+      "size": [
+        7680.0,
+        4320.0
+      ],
+      "taa": true,
+      "warmup_frames": 60.0
+    }
+  }
+}

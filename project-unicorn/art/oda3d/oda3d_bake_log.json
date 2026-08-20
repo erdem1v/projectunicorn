@@ -1,0 +1,46 @@
+{
+  "day": {
+    "atlas_count": 1,
+    "atlas_size": [
+      2048,
+      2048,
+      4
+    ],
+    "bounces": 4,
+    "denoiser": true,
+    "directional": true,
+    "engine": "4.6.2-stable (official)",
+    "errors": [],
+    "light_data_path": "res://scenes/oda3d/oda3d_day.lmbake",
+    "max_texture_size": 16384,
+    "mode": "day",
+    "ok": true,
+    "quality": 3,
+    "seconds": 93.315,
+    "supersampling": true,
+    "supersampling_factor": 2.0,
+    "texel_scale": 1.0
+  },
+  "night": {
+    "atlas_count": 1,
+    "atlas_size": [
+      2048,
+      2048,
+      4
+    ],
+    "bounces": 4,
+    "denoiser": true,
+    "directional": true,
+    "engine": "4.6.2-stable (official)",
+    "errors": [],
+    "light_data_path": "res://scenes/oda3d/oda3d_night.lmbake",
+    "max_texture_size": 16384,
+    "mode": "night",
+    "ok": true,
+    "quality": 3,
+    "seconds": 93.425,
+    "supersampling": true,
+    "supersampling_factor": 2.0,
+    "texel_scale": 1.0
+  }
+}
