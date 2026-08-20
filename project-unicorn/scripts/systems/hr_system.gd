@@ -196,30 +196,11 @@ static func attention_people_count() -> int:
 	return n
 
 
-static func tenure_line(emp: Character) -> String:
-	# "Ocak'tan beri · 6. ay" — the employee card's tenure line, composed here because it needs
-	# GameState.day and this file is already the HR read surface. Three branches, because
-	# hire_day is stamped to the day AFTER the hire (a hire starts tomorrow at full performance):
-	#   hire_day > today  → the player just paid; they have not started yet
-	#   hire_day == today → their first day
-	#   otherwise         → month name + ordinal month of tenure
-	# The ordinal counts CALENDAR months (GameState.months_elapsed_since), not 30-day blocks, so
-	# it cannot contradict the month name printed beside it.
-	# WORKING TR.
-	if emp == null:
-		return ""
-	if emp.hire_day > GameState.day:
-		return TranslationServer.translate("HR_STATE_STARTS_TOMORROW")
-	if emp.hire_day == GameState.day:
-		return TranslationServer.translate("HR_STATE_STARTS_TODAY")
-	var months: int = GameState.months_elapsed_since(emp.hire_day)
-	return TranslationServer.translate("HR_TENURE_SINCE").format({
-		"month": Fmt.month_name(int(GameState.get_date_dict(emp.hire_day).month)), "n": months + 1})
-
-
 static func leave_line(emp: Character) -> String:
-	# "İZİNDE · 4 gün kaldı" for the Kare 7 muted card. Empty for anyone at work, so the caller
-	# can render it unconditionally and get nothing when there is nothing to say.
+	# "İzinde · 4 gün kaldı" for the ledger's on-leave chip. Empty for anyone at work, so the
+	# caller can render it unconditionally and get nothing when there is nothing to say.
+	# (It was written for the Kare 7 card and went unowned when that card was retired; the
+	# training chip beside it counts down, so the leave chip counting down too is the point.)
 	# WORKING TR.
 	if emp == null or emp.status != HRConstants.STATUS_ON_LEAVE:
 		return ""

@@ -25,6 +25,11 @@ extends Node
 # Debug Engineer A / Debug Designer B placeholders for HR/Finance pipeline tests.
 const DEBUG_SEED := false
 
+# Frank'in portresi. Portre politikası (GDD 14 §7): çalışanların yüzü yok, baş harf;
+# Frank'in ve portre taşıyan adlı karakterlerin portresi var. Frank iki yerde kuruluyor
+# (_seed_debug_characters ve ensure_mentor), yol tek yerde dursun diye burada.
+const MENTOR_PORTRAIT := "res://assets/art/investors/portrait_frank.webp"
+
 var _characters: Dictionary = {}  # id (String) -> Character
 
 
@@ -286,6 +291,7 @@ func ensure_mentor() -> void:
 	m.monthly_salary = 0
 	m.equity_pct = 0.0
 	m.morale = 50
+	m.portrait_path = MENTOR_PORTRAIT
 	_characters[m.id] = m
 
 
@@ -458,6 +464,7 @@ func _seed_debug_characters() -> void:
 	mentor.role = HRConstants.ROLE_MENTOR
 	mentor.category = "mentor"
 	mentor.monthly_salary = 0
+	mentor.portrait_path = MENTOR_PORTRAIT
 	_characters[mentor.id] = mentor
 
 	# DEBUG SEED — placeholder employees so HR + Finance integration can be

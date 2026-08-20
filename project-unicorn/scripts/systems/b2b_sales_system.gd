@@ -412,6 +412,18 @@ static func founder_managed_count() -> int:
 	return n
 
 
+static func attention_count() -> int:
+	# What the left-rail Satış badge counts: live accounts sitting in the RİSK phase — the
+	# ones whose churn countdown is running and who will leave if nothing is done. Kept
+	# here beside the phase machine that writes "risk" so the UI reads one number from one
+	# place, exactly like HRSystem.attention_count() does for the Ekip badge.
+	var n: int = 0
+	for c in CustomerRegistry.get_by_market("b2b"):
+		if c.lifecycle_phase == "risk":
+			n += 1
+	return n
+
+
 static func _recover(c: Customer, sat_bump: int) -> void:
 	# The customer stays: relieve satisfaction and clear the risk machinery.
 	CustomerRegistry.set_satisfaction(c.id, c.satisfaction + sat_bump)

@@ -24,7 +24,15 @@ const W_EXPERIENCE := 110
 const W_STATE := 330
 const W_SALARY := 130
 const W_MORALE := 170
-## Defterin kendi aksiyonu; HREmployeeCard'ın üçlüsüne eklenir.
+## Satırın aksiyon sözlüğü. Kart (HREmployeeCard) emekli olurken buraya taşındı —
+## sabitler kartın SON canlı sembolleriydi, renderer'ı çoktan ölüydü.
+## ACTION_MENU satır tıklamasıdır: üç kişi-aksiyonunu taşıyan küçük popover'ı açar.
+## Eğitim menüde DEĞİL, DURUM hücresinde kendi butonunda kalır (yalnız deneyim
+## dolduğunda görünür ve orada bir DURUM ifadesidir, bir kişi kararı değil).
+const ACTION_MENU := "menu"
+const ACTION_RAISE := "raise"
+const ACTION_VACATION := "vacation"
+const ACTION_FIRE := "fire"
 const ACTION_TRAIN := "train"
 
 
@@ -96,7 +104,21 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 	morale_cell.custom_minimum_size = Vector2(W_MORALE, 0)
 	morale_cell.size_flags_horizontal = Control.SIZE_SHRINK_END
 	row.add_child(morale_cell)
+	_pass_clicks_through(row)
 	return card
+
+
+## Satırın İÇİ tıklamayı yutmasın. Godot'ta ProgressBar (deneyim ve moral barları)
+## MOUSE_FILTER_STOP ile doğar, yani bir satırın tam ortasındaki iki geniş şeride
+## tıklamak gui_input'a HİÇ ulaşmıyordu: satır "bazen açılıyor" gibi davranıyordu.
+## Butonlar hariç her şey IGNORE'a çekiliyor — buton kendi tıklamasının sahibi.
+static func _pass_clicks_through(node: Node) -> void:
+	for child in node.get_children():
+		if child is Button:
+			continue   # EĞİTİME GÖNDER kendi aksiyonunu taşır
+		if child is Control:
+			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_pass_clicks_through(child)
 
 
 ## Boş departman satırı — mockup: kesikli kenar + "Henüz kimse yok" + satır içi hayalet.
@@ -178,20 +200,30 @@ static func _state_cell(emp: Character, on_action: Callable) -> Control:
 		box.add_child(_amber_chip(TranslationServer.translate("HR_STATE_TRAINING").format(
 			{"days": emp.training_days_left})))
 	elif emp.status == HRConstants.STATUS_ON_LEAVE:
-		box.add_child(UiFactory.make_state_chip(tr_key("HR_STATE_ON_LEAVE"),
+		# Eğitim çipi gün sayıyor, izin çipi saymıyordu — oyuncu ikinci bir kişiyi izne
+		# yollamayı göze alıp alamayacağını okuyamıyordu. HRSystem.leave_line zaten
+		# "İzinde · N gün kaldı" üretiyor (kart ölünce sahipsiz kalmıştı); çipler artık
+		# simetrik. Sayı okunamazsa (dönüş günü yoksa) sade forma düşer.
+		var leave_txt: String = HRSystem.leave_line(emp)
+		if leave_txt == "":
+			leave_txt = tr_key("HR_STATE_ON_LEAVE")
+		box.add_child(UiFactory.make_state_chip(leave_txt,
 			UiTokens.INK_MUTED, UiTokens.NEUTRAL_BADGE_BG, UiTokens.BORDER_DISABLED))
 
-	# Rozetler motorun türettiği tek kaynaktan gelir (HRSystem.badges_for): YENİ
-	# bilgilendirici ve amber, gerisi dikkat çağrısı ve kırmızı.
+	# YENİ AYRI KANALDAN gelir ve gelmek zorundadır: badges_for'a girseydi
+	# HRSystem.attention_count()'u şişirir, yani yeni bir işe alım sol rayda "dikkat"
+	# yakardı. Bu satır uzun süre badges_for'un içinde YENİ arıyordu — motor onu asla
+	# döndürmediği için defterin YENİ çipi hiç çizilmedi, oysa dosyanın kendi başlığı
+	# çipler arasında sayıyor.
+	if HRConstants.is_new_hire(emp.hire_day, GameState.day):
+		box.add_child(_amber_chip(UiTokens.tr_upper(HRConstants.badge_label(HRConstants.BADGE_NEW))))
+
+	# Dikkat rozetleri motorun türettiği tek kaynaktan (HRSystem.badges_for), hepsi
+	# kırmızı: bunlar bir çağrıdır, bir bilgi değil.
 	for badge_id in HRSystem.badges_for(emp):
-		var bid: String = String(badge_id)
-		var is_new: bool = bid == HRConstants.BADGE_NEW
-		var text: String = UiTokens.tr_upper(HRConstants.badge_label(bid))
-		if is_new:
-			box.add_child(_amber_chip(text))
-		else:
-			box.add_child(UiFactory.make_state_chip(text,
-				UiTokens.negative(), UiTokens.negative_bg(), UiTokens.negative_rule()))
+		box.add_child(UiFactory.make_state_chip(
+			UiTokens.tr_upper(HRConstants.badge_label(String(badge_id))),
+			UiTokens.negative(), UiTokens.negative_bg(), UiTokens.negative_rule()))
 
 	if CharacterRegistry.can_train(emp.id):
 		var btn: Button = HRUiShared.action_button(tr_key("HR_TRAINING_SEND"), Callable())
@@ -207,12 +239,14 @@ static func _amber_chip(text: String) -> Control:
 	return UiFactory.make_state_chip(text, UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT)
 
 
-## Satır tıklaması = mevcut aksiyon popover'ı (görev §2: "per-employee actions stay
-## in the existing row-click popover"). SÖZLEŞME `(emp_id, action, anchor)` — sıra
-## ve çapa şart, yoksa popover kendini konumlandıramaz.
+## Satır tıklaması = kişi aksiyonları menüsü. Eskiden DOĞRUDAN zam popover'ını
+## açıyordu ve diğer iki aksiyonun (izne gönder, işten çıkar) oyunda hiçbir kapısı
+## yoktu — motor tarafları yazılıydı, onay modalları yazılıydı, yalnız çağıran yoktu.
+## SÖZLEŞME `(emp_id, action, anchor)` — sıra ve çapa şart, yoksa popover kendini
+## konumlandıramaz.
 static func _on_row_input(ev: InputEvent, emp_id: String, on_action: Callable, anchor: Control) -> void:
 	if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-		on_action.call(emp_id, HREmployeeCard.ACTION_RAISE, anchor)
+		on_action.call(emp_id, ACTION_MENU, anchor)
 
 
 ## Statik bağlamda çeviri: tr() bir Object ister, burada yok.

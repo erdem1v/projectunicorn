@@ -98,15 +98,6 @@ func _input(event: InputEvent) -> void:
 			print("[Debug] Shift+F2 → MeetingScene fixture (%s)" % ("full" if _meeting_fixture_toggle else "long"))
 			EventBus.meeting_scene_requested.emit(vs)
 			return
-		if key.shift_pressed and key.keycode == KEY_F3:
-			# Shift+F3 = FrankPopup debug fixture (Spec 5). Plain F3 = Class A hard win;
-			# _debug_endgame_key ignores shift, so intercept here. Same no-stack guard.
-			var ml_frank: Node = get_node_or_null("ModalLayer")
-			if ml_frank != null and ml_frank.get_child_count() > 0:
-				return
-			print("[Debug] Shift+F3 → FrankPopup fixture")
-			EventBus.frank_popup_requested.emit(FrankPopup.debug_fixture())
-			return
 		if key.shift_pressed and key.keycode == KEY_F5:
 			# Shift+F5 = begin a REAL VC pitch (Spec 4), cycling the 4 VCs across presses.
 			# Plain F5 = cash -1000; _debug_endgame_key ignores shift, so intercept here.
@@ -137,7 +128,7 @@ func _input(event: InputEvent) -> void:
 		return
 	# Speed control: Space toggles pause, 1-3 pick a running speed off the ladder (4 does
 	# nothing since the 4x rung was removed — Calibration Round A §10). Both share the two
-	# guards below. Note 1-4 are ALSO dialogue-choice keys inside MeetingScene / FrankPopup /
+	# guards below. Note 1-4 are ALSO dialogue-choice keys inside MeetingScene /
 	# TermSheetTable — Guard 2 is what keeps that unambiguous, since those only exist while
 	# a modal is mounted.
 	var speed_idx: int = -1
@@ -214,11 +205,6 @@ func debug_force_meeting() -> void:
 func debug_force_meeting_long() -> void:
 	if OS.is_debug_build():
 		EventBus.meeting_scene_requested.emit(MeetingScene.debug_fixture_long())
-
-
-func debug_force_frank() -> void:
-	if OS.is_debug_build():
-		EventBus.frank_popup_requested.emit(FrankPopup.debug_fixture())
 
 
 # Argless VC-meeting relay for MCP runtime verification (Spec 4). Begins a real pitch

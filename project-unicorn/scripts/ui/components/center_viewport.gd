@@ -97,7 +97,7 @@ func _on_tab_changed(tab_id: String) -> void:
 		# TabPageChrome sarmalayıcısı ✕/Esc'i bedava verir.
 		body = _make_milestones_body()
 	else:
-		body = _make_placeholder_body(tab_id)   # ops / rnd / personal / events
+		body = _make_placeholder_body(tab_id)   # marketing / rnd / personal / events
 	_current_page = PAGE_CHROME.wrap(body)
 	add_child(_current_page)
 	# BuildHUD (GameShell.tscn'de SON çocuk) sayfanın üstünde kalsın: add_child

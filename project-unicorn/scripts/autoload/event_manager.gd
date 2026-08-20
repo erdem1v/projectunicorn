@@ -767,6 +767,10 @@ func _apply_modifiers(modifiers: Array) -> void:
 			"decline_vc_meeting":
 				# "Bugün değil" — the request is consumed, VC stays open, no penalty.
 				GameState.pending_meeting.clear()
+			"open_term_table":
+				# Spec 6: teklif kartındaki "Masaya otur" → term sheet masası. start_vc_meeting'in
+				# kardeşi; o MeetingScene'i açar, bu masayı. main.gd zaten bu sinyali dinliyor.
+				EventBus.term_table_requested.emit(String(m.get("vc_id", "")))
 			# --- B2B Sales System modifiers (retention outcomes; each routes through a
 			#     B2BSalesSystem seam. Brand/reputation ride as their own modifiers on the
 			#     same choice - see B2BEventFactory - so the fiction matches the state). ---

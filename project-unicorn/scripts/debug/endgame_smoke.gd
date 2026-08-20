@@ -287,6 +287,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"ambient_one_per_day_across_hour0": fail = _case_ambient_one_per_day_across_hour0()
 		"creation_draft_survives_navigation": fail = _case_creation_draft_survives_navigation()
 		"borderless_note_key_exists":      fail = _case_borderless_note_key_exists()
+		# --- Temizlik turu 2026-08-20 (GDD v2 uygunluk denetiminin karar gerektirmeyen
+		#     bulguları). Üçü de ÖNCEKİ motora karşı DÜŞER; falsifikasyonla doğrulandı.
+		"source_tag_speaker_wins":         fail = _case_source_tag_speaker_wins()
+		"ship_tooltip_counts_critical_penalty": fail = _case_ship_tooltip_counts_critical_penalty()
+		"rail_tabs_match_scene_order":     fail = _case_rail_tabs_match_scene_order()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -2827,6 +2832,121 @@ static func _case_build_percent_single_source() -> String:
 	if UiTokens.build_percent(1.7) != 100 or UiTokens.build_percent(-0.3) != 0:
 		return "build_percent does not clamp (%d / %d)" % [
 			UiTokens.build_percent(1.7), UiTokens.build_percent(-0.3)]
+	return ""
+
+
+static func _case_source_tag_speaker_wins() -> String:
+	# Kaynak rozetinin SIRASI. `endgame` etiketi konuşmacı kontrolünün önündeydi, o yüzden
+	# Frank'in ağzından çıkan altı kart "PİYASA" okunuyordu — kepenk uyarısı, pivot teklifi,
+	# satın alma teklifi, VC daveti, teklif süresi uyarısı, son gün uyarısı. Etiket bir KONU,
+	# kaynak KONUŞANDIR.
+	# FALSİFİKASYON: _source_tag'de konuşmacı kontrolünü `has_endgame` dalının ALTINA taşı →
+	# ilk iddia FAIL ("MENTOR bekleniyordu, PİYASA geldi").
+	var modal: GDScript = load("res://scripts/modals/event_modal.gd")
+	var mentor: String = TranslationServer.translate("EVENT_TAG_MENTOR")
+	var market: String = TranslationServer.translate("EVENT_TAG_MARKET")
+	var product: String = TranslationServer.translate("EVENT_TAG_PRODUCT")
+	var customer: String = TranslationServer.translate("EVENT_TAG_CUSTOMER")
+	var team: String = TranslationServer.translate("EVENT_TAG_TEAM")
+	var agenda: String = TranslationServer.translate("EVENT_TAG_AGENDA")
+
+	# Her satır: [tags, character_id, beklenen rozet, ne ölçtüğü]
+	var probes: Array = [
+		[["endgame"], "char_mentor_frank", mentor, "Frank endgame kartı"],
+		[["endgame"], "", market, "konuşmacısız endgame kartı"],
+		[["ship_moment", "endgame"], "char_mentor_frank", product, "sürüm anı Frank anlatsa da ÜRÜN"],
+		[["b2b_risk"], "char_mentor_frank", customer, "müşteri ailesi konuşmacıyı yener"],
+		[["hr_morale"], "char_mentor_frank", team, "ekip ailesi konuşmacıyı yener"],
+		[["phase_gate"], "", mentor, "faz kapısı konuşmacısız da MENTOR"],
+		[[], "", agenda, "etiketsiz, konuşmacısız → GÜNDEM"],
+	]
+	for probe in probes:
+		var ev := GameEvent.new()
+		ev.id = "smoke_source_tag"
+		# GameEvent.tags TİPLİ (Array[String]); Variant'tan gelen ham diziyi doğrudan
+		# atamak çalışma zamanında reddedilir, o yüzden tek tek dolduruluyor.
+		var tags: Array[String] = []
+		for t in probe[0]:
+			tags.append(String(t))
+		ev.tags = tags
+		ev.character_id = String(probe[1])
+		var got: String = String(modal._source_tag(ev).get("text", ""))
+		if got != String(probe[2]):
+			return "%s: '%s' bekleniyordu, '%s' geldi" % [String(probe[3]), String(probe[2]), got]
+	return ""
+
+
+static func _case_ship_tooltip_counts_critical_penalty() -> String:
+	# Yayınla tooltip'i canlıya taşınacak hata sayısını BEŞ EKSİK yazıyordu: iki ev sahibi de
+	# ham bug_count basıyordu, launch() ise yazmadan hemen önce CRITICAL_BUG_LAUNCH_PENALTY
+	# ekliyordu. Yani sayı, tam da riski göze alan oyuncuda yalan söylüyordu.
+	# FALSİFİKASYON: projected_launch_bugs()'ın ceza dalını sil → ikinci iddia FAIL.
+	GameState.set_cash(60000)
+	var founder_id: String = CharacterRegistry.get_founder().id
+	if not ProductSystem.start_build("saas_ops",
+			["saas_ops_workflow", "saas_ops_reporting"], founder_id, "Nova"):
+		return "start_build failed"
+	if not _run_build_to_phase("bugfix"):
+		return "build never reached beta"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	# Bayrak YOKKEN projeksiyon ham sayıya EŞİT — ceza koşulsuz eklenmiyor.
+	GameState.set_flag("critical_bug_unfixed", false)
+	if ProductSystem.projected_launch_bugs() != b.bug_count:
+		return "bayraksız projeksiyon ham sayıdan saptı (%d != %d)" % [
+			ProductSystem.projected_launch_bugs(), b.bug_count]
+	# Bayrak varken projeksiyon TAM OLARAK cezayı ekler...
+	GameState.set_flag("critical_bug_unfixed", true)
+	var raw: int = b.bug_count
+	var projected: int = ProductSystem.projected_launch_bugs()
+	if projected != raw + ProductSystem.CRITICAL_BUG_LAUNCH_PENALTY:
+		return "projeksiyon cezayı saymıyor (ham %d, projeksiyon %d, ceza %d)" % [
+			raw, projected, ProductSystem.CRITICAL_BUG_LAUNCH_PENALTY]
+	# ...ve launch() canlıya TAM O SAYIYI yazar. Tooltip ile gerçeğin ayrılamayacağı yer bu.
+	ProductSystem.launch()
+	var live: int = int(GameState.get_flag("mvp_live_bug_count", -1))
+	if live != projected:
+		return "launch %d yazdı, tooltip %d vaat etti" % [live, projected]
+	return ""
+
+
+static func _case_rail_tabs_match_scene_order() -> String:
+	# SESSİZ KONUMSAL SÖZLEŞME. UiTokens.TABS bir dizi, LeftTabs.tscn bir düğüm listesi ve
+	# left_tabs.gd ikisini İNDEKSLE eşliyor. Hiçbir şey bu eşleşmeyi doğrulamıyordu: sekme
+	# sırası değişince ray doğru görünmeye devam eder, yalnız yanlış sayfayı açar.
+	# Sahne INSTANTIATE EDİLMİYOR (headless'ta EventBus'a bağlanır ve rozet boyar) —
+	# PackedScene.get_state() ile kaydedilmiş hâli okunuyor, ki ölçülen tam da o dosya.
+	# FALSİFİKASYON: TABS'ta iki satırın yerini değiştir → ilk iddia FAIL.
+	var ps: PackedScene = load("res://scenes/ui/components/LeftTabs.tscn")
+	if ps == null:
+		return "LeftTabs.tscn yüklenemedi"
+	var st: SceneState = ps.get_state()
+	var captions := PackedStringArray()
+	for i in st.get_node_count():
+		var path: String = String(st.get_node_path(i))
+		if not path.begins_with("./Margin/Col/") or not path.ends_with("Btn/Stack/NameLabel"):
+			continue
+		if path.contains("SettingsBtn"):
+			continue   # dişli bir sekme değil: aktif stil almaz, tab_changed emit etmez
+		for j in st.get_node_property_count(i):
+			if String(st.get_node_property_name(i, j)) == "text":
+				captions.append(String(st.get_node_property_value(i, j)))
+	if captions.size() != UiTokens.TABS.size():
+		return "ray %d sekme çiziyor, TABS %d tanımlıyor" % [captions.size(), UiTokens.TABS.size()]
+	for i in UiTokens.TABS.size():
+		var want: String = "TAB_" + String(UiTokens.TABS[i].id).to_upper()
+		if captions[i] != want:
+			return "%d. sekme sahnede '%s', TABS'ta '%s'" % [i, captions[i], want]
+	# İkinci iddia: her id BENZERSİZ ve her ikon dosyası GERÇEKTEN var. Yeni bir sekme
+	# eklerken unutulan --import tam burada yakalanır (ikon sessizce boş çizilirdi).
+	var seen := {}
+	for row in UiTokens.TABS:
+		var tid: String = String(row.id)
+		if seen.has(tid):
+			return "TABS'ta yinelenen id: %s" % tid
+		seen[tid] = true
+		var icon: String = String(row.get("icon", ""))
+		if icon == "" or not ResourceLoader.exists(icon):
+			return "%s sekmesinin ikonu yok: %s" % [tid, icon]
 	return ""
 
 

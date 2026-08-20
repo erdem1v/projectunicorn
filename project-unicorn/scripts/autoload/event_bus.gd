@@ -23,8 +23,10 @@ signal equity_changed(investor_pct: int)
 
 # --- UI / time signals (§13.2) ---
 signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=3x (4x removed 2026-08-19)
-# ODA rework: "" = sekme yok, oda görünür (varsayılan durum). Sekme id'leri:
-# "product", "hr", "finance", "sales", "ops", "rnd", "personal", "events".
+# ODA rework: "" = sekme yok, oda görünür (varsayılan durum). Sekme id'leri, ray
+# sırasıyla: "product", "sales", "hr", "finance", "personal", "marketing", "rnd",
+# "events". "marketing" ve "rnd" KİLİTLİ — rayda görünür ama tıklanamaz, yani bu
+# sinyal onları hiç taşımaz. ("ops" 2026-08-20'de kaldırıldı; kimse emit etmiyordu.)
 signal tab_changed(tab_id: String)
 # Kâğıt deep-link'i (ODA rework §5.3): mount edilmiş Finance sekmesine alt sayfa
 # seçtirir ("ozet"|"yatirim"). tab_changed("finance") emit'i SENKRON mount eder,
@@ -161,13 +163,14 @@ signal shutter_changed(days_left: int)
 # MonthSummarySystem._build_summary_data. main.gd mounts MonthSummaryModal.
 signal month_ended(summary_data: Dictionary)
 
-# --- Cinematic dialogue shell (Spec 5) — MeetingScene / FrankPopup ---
-# view_state is the dict populate() consumes (contract on MeetingScene). For now these
-# fire from debug fixtures (game_shell Shift+F2 / Shift+F3) and main.gd mounts the scene
-# into ModalLayer; Spec 4's PitchSystem will emit meeting_scene_requested with a real
-# view state and connect its own listener to the scene's choice_selected signal.
+# --- Cinematic dialogue shell (Spec 5) — MeetingScene ---
+# view_state is the dict populate() consumes (contract on MeetingScene). It fires from a
+# debug fixture (game_shell Shift+F2) and from VCPitchSystem/B2BPitchMeeting with a real
+# view state; main.gd mounts the scene into ModalLayer and relays choice_selected.
+# (A sibling `frank_popup_requested` lived here until 2026-08-20. Its one production
+# caller — the deal-closed prompt — is an ordinary Frank event card now, so Frank speaks
+# on the same surface as everyone else and the second cinematic shell was retired.)
 signal meeting_scene_requested(view_state: Dictionary)
-signal frank_popup_requested(view_state: Dictionary)
 
 # --- VC Pitch / Series A Hunt signals (Spec 4 / VC_PITCH_DESIGN.md §7) ---
 # Roster + Teklifler panel repaint from these; TopBar chip from offer_countdown_changed.

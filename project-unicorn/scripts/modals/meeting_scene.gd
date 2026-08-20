@@ -56,7 +56,7 @@ func populate(view_state: Dictionary) -> void:
 	_name.text = UiTokens.tr_upper(String(view_state.get("speaker_name", "")))
 	_role.text = UiTokens.tr_upper(String(view_state.get("speaker_role", "")))
 
-	# İKNA — optional (FrankPopup and non-scored dialogues omit it → track hidden).
+	# İKNA — optional (non-scored dialogues omit it → track hidden).
 	if view_state.has("conviction"):
 		var c: Dictionary = view_state.conviction
 		_conviction.visible = true

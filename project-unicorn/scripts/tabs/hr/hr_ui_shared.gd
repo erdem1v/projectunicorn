@@ -139,28 +139,6 @@ static func repaint_morale(refs: Dictionary, morale: int) -> void:
 
 # --- Rozetler ---------------------------------------------------------------
 
-static func badge_row(emp: Character) -> HBoxContainer:
-	# Dikkat rozetleri motordan (HRSystem.badges_for — türetilmiş, saklanmış değil),
-	# YENİ rozeti ayrı kanaldan: badges_for'a girmiş olsaydı attention_count'u
-	# şişirir ve yeni bir işe alım sol rayda "dikkat" yakardı.
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 5)
-	if HRConstants.is_new_hire(emp.hire_day, GameState.day):
-		row.add_child(UiFactory.make_badge(HRConstants.badge_label(HRConstants.BADGE_NEW), &"accent"))
-	for badge_id in HRSystem.badges_for(emp):
-		row.add_child(UiFactory.make_badge(HRConstants.badge_label(String(badge_id)),
-			_badge_kind(String(badge_id))))
-	return row
-
-
-static func _badge_kind(badge_id: String) -> StringName:
-	# Kaçma riski en ağırı (kırmızı), diğer iki dikkat rozeti amber. Sıralama motorun:
-	# badge_severity registry'de.
-	if badge_id == HRConstants.BADGE_FLIGHT_RISK:
-		return &"negative"
-	return &"accent"
-
-
 static func worst_badge_severity(emp: Character) -> int:
 	# Kart sıralaması için: dikkat isteyen satırlar üste. badges_for zaten en kötüsü
 	# başta döndürüyor, ağırlık da registry'de — burada karar verilen bir şey yok.

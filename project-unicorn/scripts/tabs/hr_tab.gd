@@ -32,7 +32,6 @@ var _list: VBoxContainer = null
 var _summary: Label = null
 var _training_control: Control = null
 var _structure_key: String = ""
-var _expanded_id: String = ""
 # Kart başına yerinde-repaint referansları: emp.id → {"bar":…, "value":…}
 var _morale_refs: Dictionary = {}
 
@@ -153,8 +152,7 @@ func _compute_structure_key() -> String:
 	# GİRMEZ (yerinde boyanır). Rozet ağırlığı moralle değiştiği için ayrıca yazılıyor,
 	# yoksa TÜKENİYOR eşiği geçildiğinde kartın çerçevesi ve sırası güncellenmez.
 	var parts := PackedStringArray()
-	parts.append("%s|%d|%s" % [HRSearchSystem.get_state(),
-		HRSearchSystem.days_waiting(), _expanded_id])
+	parts.append("%s|%d" % [HRSearchSystem.get_state(), HRSearchSystem.days_waiting()])
 	for dept_id in HRConstants.DEPARTMENTS:
 		parts.append("%s%d" % [dept_id, HROvertimeSystem.day_index(String(dept_id))])
 	# Bir MT'nin taşıdığı hesap sayısı kartın ÜSTÜNDE yazıyor, yani kart şeklinin parçası.
@@ -443,22 +441,59 @@ func _open_overtime(dept_id: String, anchor: Control) -> void:
 
 
 func _on_card_action(emp_id: String, action: String, anchor: Control) -> void:
-	if action == "toggle":
-		_expanded_id = "" if _expanded_id == emp_id else emp_id
-		_refresh()
-		return
 	var emp: Character = CharacterRegistry.get_character(emp_id)
 	if emp == null:
 		return
 	match action:
-		HREmployeeCard.ACTION_RAISE:
+		HRLedger.ACTION_MENU:
+			_open_actions(emp, anchor)
+		HRLedger.ACTION_RAISE:
 			_open_raise(emp, anchor)
-		HREmployeeCard.ACTION_VACATION:
+		HRLedger.ACTION_VACATION:
 			_confirm_vacation(emp)
-		HREmployeeCard.ACTION_FIRE:
+		HRLedger.ACTION_FIRE:
 			_confirm_fire(emp)
 		HRLedger.ACTION_TRAIN:
 			_confirm_training(emp)
+
+
+# --- Satır aksiyon menüsü --------------------------------------------------
+
+func _open_actions(emp: Character, anchor: Control) -> void:
+	# Defter satırına tıklayınca açılan üçlü. Zam kendi popover'ını açar (slider'lı),
+	# diğer ikisi zaten var olan onay modallarını kaldırır — bu fonksiyon hiçbir sonuç
+	# HESAPLAMAZ, yalnız kapıyı açar.
+	#
+	# Kapalı satırın GEREKÇESİ preview_*'tan okunur, can_*'tan DEĞİL: can_* yalnız bool
+	# döner, sebep dizesi yalnız preview_*'ın `reason` anahtarında yaşıyor. (Kartın
+	# kilitli reçetesi buydu; kart öldü, kural kaldı.)
+	var pop: HRPopover = HRPopover.mount(self)
+	if pop == null:
+		return
+	var body: VBoxContainer = pop.body()
+	body.add_child(UiFactory.make_section_header(emp.character_name))
+
+	for spec in [
+			{"key": "HR_CARD_RAISE", "preview": HRActions.preview_raise(emp, HRConstants.RAISE_MIN_PCT),
+				"action": HRLedger.ACTION_RAISE},
+			{"key": "HR_CARD_HOLIDAY", "preview": HRActions.preview_vacation(emp),
+				"action": HRLedger.ACTION_VACATION},
+			{"key": "HR_CARD_FIRE", "preview": HRActions.preview_fire(emp),
+				"action": HRLedger.ACTION_FIRE}]:
+		var preview: Dictionary = spec["preview"]
+		var label: String = tr(String(spec["key"]))
+		var btn: Button
+		if bool(preview.get("ok", false)):
+			var act: String = String(spec["action"])
+			btn = HRUiShared.action_button(label, func() -> void:
+				pop.close()
+				_on_card_action(emp.id, act, anchor))
+		else:
+			btn = HRUiShared.disabled_button(label, String(preview.get("reason", "")))
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		body.add_child(btn)
+
+	pop.open_at(anchor)
 
 
 # --- Zam popover (Kare 6) --------------------------------------------------
@@ -468,7 +503,7 @@ func _open_raise(emp: Character, anchor: Control) -> void:
 	if pop == null:
 		return
 	var body: VBoxContainer = pop.body()
-	body.add_child(UiFactory.make_section_header("Zam yap"))
+	body.add_child(UiFactory.make_section_header(tr("HR_RAISE_POPOVER_TITLE")))
 
 	var pct_label := UiFactory.make_label("", &"TitleSerif", UiTokens.ACCENT_DEEP)
 	pct_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -574,5 +609,4 @@ func _rebuild_forced() -> void:
 	# sinyal atmadığı için zam/tatil sonrası yapı anahtarı kendiliğinden değişse de
 	# tetikleyici sinyal gelmiyor; çağrı buradan yapılıyor.
 	_structure_key = ""
-	_expanded_id = ""
 	_refresh()

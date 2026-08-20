@@ -205,8 +205,10 @@ func _paint_one(b: FeatureBuild) -> void:
 		beta_found_val.text = str(b.bugs_found)
 		beta_fixed_val.text = str(b.bugs_fixed)
 		beta_remain_val.text = str(max(0, b.bugs_found - b.bugs_fixed))
-		# Yayınla'nın bedeli butonun kendisinde: TÜM açık hatalar (bug_count) canlıya taşınır.
-		action_button.tooltip_text = tr("BUILD_SHIP_TOOLTIP_BUGS").format({"n": maxi(0, b.bug_count)})
+		# Yayınla'nın bedeli butonun kendisinde: TÜM açık hatalar canlıya taşınır. İki ev
+		# sahibi de AYNI sayıyı yazsın diye kaynak ProductSystem (bkz. projected_launch_bugs).
+		action_button.tooltip_text = tr("BUILD_SHIP_TOOLTIP_BUGS").format(
+			{"n": ProductSystem.projected_launch_bugs()})
 	_set_card_height(H_BETA if in_beta else (H_DECISION if decision_row.visible else H_NORMAL))
 
 

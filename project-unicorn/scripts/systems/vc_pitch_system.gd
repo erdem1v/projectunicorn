@@ -22,6 +22,7 @@ extends RefCounted
 const MEETING_PROMPT_ID := "ev_vc_meeting_prompt"
 const SHEET_WARN_ID := "ev_sheet_expiry_warning"
 const SOFT_CAP_WARN_ID := "ev_vc_soft_cap_warning"   # was ev_vc_d179_warning (Day-180 wall)
+const DEAL_PROMPT_ID := "ev_vc_deal_prompt"          # + "_<vc_id>"; bkz. _build_deal_prompt_event
 
 # --- Meeting-local state (never serialized) ---
 static var _active: bool = false
@@ -259,11 +260,23 @@ static func _grant_sheet() -> void:
 		GameState.active_sheets.append(_make_sheet(_vc_id, GameState.day))
 		_vc(_vc_id).status = "offered"
 		EventBus.sheet_granted.emit(_vc_id)
+		_offer_deal_prompt(_vc_id)
 	else:
 		# Ledger 15 — delayed delivery; validity starts when a slot frees.
 		var st: Dictionary = _vc(_vc_id)
 		st.pending_sheet = true
 		st.status = "pending_sheet"
+
+
+static func _offer_deal_prompt(vc_id: String) -> void:
+	# Teklif düştü → Frank arıyor. Eski hâlinde main.gd bunu bir kuyruğa alıyor ve "ekranda
+	# başka bir şey yoksa" diye BEŞ yüzeyi tek tek yokluyordu; olay kuyruğu bu işi zaten
+	# yapıyor (aynı anda tek modal), o yüzden bekçilerden yalnız ikisi anlamlı kaldı.
+	if GameState.phase < 3:
+		return
+	if sheet_for(vc_id) == null:
+		return   # sheet gone (expired/walked) before we could offer it
+	EventManager.enqueue(_build_deal_prompt_event(vc_id))
 
 
 static func _make_sheet(vc_id: String, granted_day: int) -> TermSheet:
@@ -445,6 +458,7 @@ static func _deliver_pending_sheet() -> void:
 			st.status = "offered"
 			GameState.active_sheets.append(_make_sheet(inv.id, GameState.day))  # validity starts now
 			EventBus.sheet_granted.emit(inv.id)
+			_offer_deal_prompt(inv.id)
 			return
 
 
@@ -842,6 +856,48 @@ static func _build_expiry_warning_event(vc_id: String, days: int) -> GameEvent:
 	var wchoices: Array[EventChoice] = []
 	wchoices.append(ack)
 	ev.choices = wchoices
+	return ev
+
+
+static func _build_deal_prompt_event(vc_id: String) -> GameEvent:
+	# Teklif masaya düştüğü an (Spec 6). Eskiden bu, FrankPopup adında AYRI bir sinematik
+	# ekrandı; GDD 14 §7 o kabuğu emekliye ayırdı — Frank artık herkesle aynı olay
+	# kartından konuşuyor. Kart, üç kardeşiyle (toplantı daveti, süre uyarısı, son gün)
+	# aynı kalıptan; farkı, kabul seçeneğinin term sheet masasını açması.
+	#
+	# `endgame` etiketi BİLEREK yok: kaynak rozeti sırası artık konuşmacıyı öne alıyor ama
+	# etiketsiz kart zaten doğru okunuyor ve kart bir PİYASA haberi değil, Frank'in araması.
+	# Id VC başına adlandırılıyor (B2B fabrikalarının grameri): iki teklif aynı gün düşerse
+	# sabit id'de ikincisi sessizce dedupe'a takılırdı.
+	var inv: Dictionary = InvestorRegistry.get_investor(vc_id)
+	var sheet: TermSheet = sheet_for(vc_id)
+	var days: int = sheet.days_left(GameState.day) if sheet != null else 0
+	var ev := GameEvent.new()
+	ev.id = "%s_%s" % [DEAL_PROMPT_ID, vc_id]
+	ev.category = "reactive"
+	ev.title = _t("VC_EV_DEAL_TITLE").format({"investor": inv.get("display_name", "")})
+	ev.subtitle = ""
+	ev.character_id = "char_mentor_frank"
+	ev.body_text = _t("DEAL_PROMPT_LINE").format(
+		{"investor": inv.get("display_name", ""), "days": days})
+	ev.cooldown_days = 0
+	ev.one_shot = false
+	ev.priority = 9
+	ev.tags = ["build_safe"]
+	ev.trigger_conditions = []
+	var sit := EventChoice.new()
+	sit.label = _t("DEAL_PROMPT_SIT")
+	sit.description = _t("DEAL_PROMPT_VALIDITY").format({"days": days})
+	sit.modifiers = [{"type": "open_term_table", "vc_id": vc_id}]
+	var later := EventChoice.new()
+	later.label = _t("DEAL_PROMPT_DEFER")
+	# Modifier YOK ve bu bir kaçamak değil: ertelemenin bedeli teklifin saati, o saat
+	# zaten işliyor. Eski FrankPopup'ın "Sonra"sı da tam olarak bunu yapıyordu.
+	later.modifiers = []
+	var dp_choices: Array[EventChoice] = []
+	dp_choices.append(sit)
+	dp_choices.append(later)
+	ev.choices = dp_choices
 	return ev
 
 

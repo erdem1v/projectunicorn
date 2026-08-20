@@ -207,22 +207,34 @@ static func _live_subtitle(raw: String) -> String:
 
 
 static func _source_tag(ev: GameEvent) -> Dictionary:
-	# The ONE source-tag lookup: factory tags first, then the mentor's registry id,
-	# then the generic fallback. Returns {text, kind} for UiFactory.make_badge.
+	# The ONE source-tag lookup. Returns {text, kind} for UiFactory.make_badge.
+	#
+	# SIRA ÖNEMLİ, ve bir kez yanlıştı: `endgame` etiketi konuşmacı kontrolünün ÖNÜNDEYDİ,
+	# o yüzden Frank'in ağzından çıkan altı kart — kepenk uyarısı, pivot teklifi, satın alma
+	# teklifi, VC toplantı daveti, teklif süresi uyarısı, son gün uyarısı — "PİYASA" diye
+	# etiketleniyordu. `endgame` bir KONU başlığıdır, bir kaynak değil; kaynağı konuşan
+	# belirler.
+	#
+	# Bugünkü sıra: önce kaynağı ADLANDIRAN özel aileler (müşteri / ekip / faz kapısı /
+	# sürüm anı), sonra konuşmacı, sonra jenerik `endgame`, sonra GÜNDEM. `ship_moment`
+	# bilerek konuşmacının ÖNÜNDE: sürüm anını Frank anlatsa da o bir ÜRÜN beat'idir.
+	var has_endgame: bool = false
 	for t in ev.tags:
 		var s := String(t)
 		if s.begins_with("b2b_"):
 			return {"text": TranslationServer.translate("EVENT_TAG_CUSTOMER"), "kind": &"accent"}
 		if s.begins_with("hr_"):
 			return {"text": TranslationServer.translate("EVENT_TAG_TEAM"), "kind": &"neutral"}
-		if s == "endgame":
-			return {"text": TranslationServer.translate("EVENT_TAG_MARKET"), "kind": &"attention"}
 		if s == "phase_gate":
 			return {"text": TranslationServer.translate("EVENT_TAG_MENTOR"), "kind": &"accent"}
 		if s == "ship_moment":
 			return {"text": TranslationServer.translate("EVENT_TAG_PRODUCT"), "kind": &"positive"}
+		if s == "endgame":
+			has_endgame = true
 	if ev.character_id == "char_mentor_frank":
 		return {"text": TranslationServer.translate("EVENT_TAG_MENTOR"), "kind": &"accent"}
+	if has_endgame:
+		return {"text": TranslationServer.translate("EVENT_TAG_MARKET"), "kind": &"attention"}
 	return {"text": TranslationServer.translate("EVENT_TAG_AGENDA"), "kind": &"neutral"}
 
 
@@ -244,7 +256,7 @@ func _render_registry_character() -> void:
 		push_warning("[EventModal] event.character_id refers to unknown character: %s" % _event.character_id)
 		return
 	_speaker_row.visible = true
-	_speaker_row.add_child(_make_avatar(_initials(c.character_name)))
+	_speaker_row.add_child(_make_avatar(_initials(c.character_name), c.portrait_path))
 	# role is a TYPED id — resolve it to a display name so no internal code reaches
 	# the speaker strip ("Frank Köseoğlu · Operating Partner").
 	_add_speaker_name("%s · %s" % [c.character_name, HRConstants.role_label(c.role)])
@@ -279,12 +291,30 @@ func _add_speaker_name(text: String) -> void:
 	_speaker_row.add_child(lbl)
 
 
-static func _make_avatar(initials_text: String) -> Panel:
+static func _make_avatar(initials_text: String, portrait_path: String = "") -> Panel:
+	# Kart grameri tek (GDD 14 §7): her olay kartı kaynağının küçük yuvarlak avatarını
+	# gösterir — çalışanlar baş harfleriyle, portre taşıyanlar (Frank, adlı karakterler)
+	# portreleriyle. Yol boşsa ya da çözülmüyorsa baş harflere düşer, yani portresi olmayan
+	# herkes bugünkü davranışı korur.
+	# `Avatar` varyasyonu zaten RADIUS_PILL, dolayısıyla clip_contents yuvarlak kırpmayı
+	# bedavaya verir — yeni tema öğesi yok, THEME_STAMP artışı yok.
 	var avatar := Panel.new()
 	avatar.theme_type_variation = &"Avatar"
 	avatar.custom_minimum_size = Vector2(24, 24)
 	avatar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	avatar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if portrait_path != "" and ResourceLoader.exists(portrait_path):
+		var tex: Texture2D = load(portrait_path) as Texture2D
+		if tex != null:
+			avatar.clip_contents = true
+			var pic := TextureRect.new()
+			pic.texture = tex
+			pic.set_anchors_preset(Control.PRESET_FULL_RECT)
+			pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+			pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			avatar.add_child(pic)
+			return avatar
 	var initial := Label.new()
 	initial.theme_type_variation = &"AvatarInitial"
 	initial.text = initials_text
@@ -319,7 +349,8 @@ func _build_mentor_row() -> void:
 		return
 	var mentor: Character = CharacterRegistry.get_mentor()
 	var initials_text: String = _initials(mentor.character_name) if mentor != null else ""
-	_mentor_row.add_child(_make_avatar(initials_text))
+	var mentor_portrait: String = mentor.portrait_path if mentor != null else ""
+	_mentor_row.add_child(_make_avatar(initials_text, mentor_portrait))
 	var quote := UiFactory.make_label(mentor_text, &"QuoteSerif")
 	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quote.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -496,6 +527,9 @@ func _describe_modifier(m) -> Dictionary:
 		# Faz geçiş kararları: geçiş okunur olsun ("advance_iteration" emekli — Build Bar 2026-08-19).
 		"enter_development": return {"text": tr("EFFECT_DEV_BEGINS"), "kind": &"neutral"}
 		"enter_beta": return {"text": tr("EFFECT_BETA_BEGINS"), "kind": &"neutral"}
+		# Spec 6 teklif kartı: kabul masayı açar. Kör tip bırakmıyoruz — EFFECT-VISIBILITY
+		# kuralı, seçimin ne yaptığını kartın üstünde söylemeyi şart koşuyor.
+		"open_term_table": return {"text": tr("EFFECT_TERM_TABLE"), "kind": &"accent"}
 		# Player-facing effects that previously rendered no badge (choices were blind).
 		"churn_customer": return {"text": tr("EFFECT_CHURN"), "kind": &"negative"}
 		"add_prospect": return {"text": tr("EFFECT_NEW_PROSPECT"), "kind": &"positive"}

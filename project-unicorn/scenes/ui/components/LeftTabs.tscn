@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" path="res://assets/icons/tabs/hr.svg" id="3_hr"]
 [ext_resource type="Texture2D" path="res://assets/icons/tabs/finance.svg" id="4_finance"]
 [ext_resource type="Texture2D" path="res://assets/icons/tabs/sales.svg" id="5_sales"]
-[ext_resource type="Texture2D" path="res://assets/icons/tabs/ops.svg" id="6_ops"]
+[ext_resource type="Texture2D" path="res://assets/icons/tabs/marketing.svg" id="6_marketing"]
 [ext_resource type="Texture2D" path="res://assets/icons/tabs/rnd.svg" id="7_rnd"]
 [ext_resource type="Texture2D" path="res://assets/icons/tabs/personal.svg" id="8_personal"]
 [ext_resource type="Texture2D" path="res://assets/icons/tabs/events.svg" id="9_events"]
@@ -82,6 +82,68 @@ mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
 [node name="BadgeLabel" type="Label" parent="Margin/Col/ProductBtn/Badge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"BadgeLabel"
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SalesBtn" type="Button" parent="Margin/Col"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"ChromeTabButton"
+text = ""
+
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/SalesBtn"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Margin/Col/SalesBtn/Stack"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("5_sales")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(0.663, 0.62, 0.525, 1)
+
+[node name="NameLabel" type="Label" parent="Margin/Col/SalesBtn/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"ChromeTabLabel"
+text = "TAB_SALES"
+horizontal_alignment = 1
+
+[node name="Badge" type="Panel" parent="Margin/Col/SalesBtn"]
+visible = false
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -24.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 24.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"TabBadge"
+
+[node name="BadgeLabel" type="Label" parent="Margin/Col/SalesBtn/Badge"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -218,14 +280,14 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SalesBtn" type="Button" parent="Margin/Col"]
+[node name="PersonalBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"ChromeTabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/SalesBtn"]
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/PersonalBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -236,23 +298,23 @@ mouse_filter = 2
 theme_override_constants/separation = 4
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Margin/Col/SalesBtn/Stack"]
+[node name="Icon" type="TextureRect" parent="Margin/Col/PersonalBtn/Stack"]
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
-texture = ExtResource("5_sales")
+texture = ExtResource("8_personal")
 expand_mode = 1
 stretch_mode = 5
 modulate = Color(0.663, 0.62, 0.525, 1)
 
-[node name="NameLabel" type="Label" parent="Margin/Col/SalesBtn/Stack"]
+[node name="NameLabel" type="Label" parent="Margin/Col/PersonalBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "TAB_SALES"
+text = "TAB_PERSONAL"
 horizontal_alignment = 1
 
-[node name="Badge" type="Panel" parent="Margin/Col/SalesBtn"]
+[node name="Badge" type="Panel" parent="Margin/Col/PersonalBtn"]
 visible = false
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 1
@@ -267,7 +329,7 @@ grow_horizontal = 0
 mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
-[node name="BadgeLabel" type="Label" parent="Margin/Col/SalesBtn/Badge"]
+[node name="BadgeLabel" type="Label" parent="Margin/Col/PersonalBtn/Badge"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -280,14 +342,14 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="OpsBtn" type="Button" parent="Margin/Col"]
+[node name="MarketingBtn" type="Button" parent="Margin/Col"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"ChromeTabButton"
 text = ""
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/OpsBtn"]
+[node name="Stack" type="VBoxContainer" parent="Margin/Col/MarketingBtn"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -298,23 +360,23 @@ mouse_filter = 2
 theme_override_constants/separation = 4
 alignment = 1
 
-[node name="Icon" type="TextureRect" parent="Margin/Col/OpsBtn/Stack"]
+[node name="Icon" type="TextureRect" parent="Margin/Col/MarketingBtn/Stack"]
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 mouse_filter = 2
-texture = ExtResource("6_ops")
+texture = ExtResource("6_marketing")
 expand_mode = 1
 stretch_mode = 5
 modulate = Color(0.663, 0.62, 0.525, 1)
 
-[node name="NameLabel" type="Label" parent="Margin/Col/OpsBtn/Stack"]
+[node name="NameLabel" type="Label" parent="Margin/Col/MarketingBtn/Stack"]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ChromeTabLabel"
-text = "TAB_OPS"
+text = "TAB_MARKETING"
 horizontal_alignment = 1
 
-[node name="Badge" type="Panel" parent="Margin/Col/OpsBtn"]
+[node name="Badge" type="Panel" parent="Margin/Col/MarketingBtn"]
 visible = false
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 1
@@ -329,7 +391,7 @@ grow_horizontal = 0
 mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
-[node name="BadgeLabel" type="Label" parent="Margin/Col/OpsBtn/Badge"]
+[node name="BadgeLabel" type="Label" parent="Margin/Col/MarketingBtn/Badge"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -392,68 +454,6 @@ mouse_filter = 2
 theme_type_variation = &"TabBadge"
 
 [node name="BadgeLabel" type="Label" parent="Margin/Col/RnDBtn/Badge"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_type_variation = &"BadgeLabel"
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="PersonalBtn" type="Button" parent="Margin/Col"]
-custom_minimum_size = Vector2(0, 64)
-layout_mode = 2
-focus_mode = 0
-theme_type_variation = &"ChromeTabButton"
-text = ""
-
-[node name="Stack" type="VBoxContainer" parent="Margin/Col/PersonalBtn"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 1
-
-[node name="Icon" type="TextureRect" parent="Margin/Col/PersonalBtn/Stack"]
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-mouse_filter = 2
-texture = ExtResource("8_personal")
-expand_mode = 1
-stretch_mode = 5
-modulate = Color(0.663, 0.62, 0.525, 1)
-
-[node name="NameLabel" type="Label" parent="Margin/Col/PersonalBtn/Stack"]
-layout_mode = 2
-mouse_filter = 2
-theme_type_variation = &"ChromeTabLabel"
-text = "TAB_PERSONAL"
-horizontal_alignment = 1
-
-[node name="Badge" type="Panel" parent="Margin/Col/PersonalBtn"]
-visible = false
-custom_minimum_size = Vector2(16, 16)
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -24.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 24.0
-grow_horizontal = 0
-mouse_filter = 2
-theme_type_variation = &"TabBadge"
-
-[node name="BadgeLabel" type="Label" parent="Margin/Col/PersonalBtn/Badge"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

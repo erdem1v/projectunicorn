@@ -99,7 +99,11 @@ func _build_roster_card(inv: Dictionary, pivoted: bool) -> Control:
 	meta.add_theme_constant_override("separation", 8)
 	meta.add_child(UiFactory.make_pill(
 		InvestorRegistry.domain_chip(String(inv.get("id", ""))), UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP))
-	var arc := _label(String(inv.get("archetype_line", "")), C_DIM, 11, true)
+	# Tabloda `archetype_key` durur, kelime render anında çözülür (investor_registry.gd:141-146).
+	# Buradaki okuma o taşımadan geri kalmıştı: `inv["archetype_line"]` diye bir alan YOK, o
+	# yüzden dört kartın da altına boş bir genişleyen Label çiziliyordu. Bir üstteki domain
+	# chip'i zaten accessor'ı doğru kullanıyor; satır ona hizalandı.
+	var arc := _label(InvestorRegistry.archetype_line(vc_id), C_DIM, 11, true)
 	arc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	meta.add_child(arc)
 	card.add_child(meta)

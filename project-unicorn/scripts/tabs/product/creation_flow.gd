@@ -866,8 +866,11 @@ func _update_status() -> void:
 	if in_beta:
 		_beta_line.text = tr("PROD_BETA_LINE").format(
 			{"found": b.bugs_found, "fixed": b.bugs_fixed, "open": b.bug_count})
-		# Yayınla'nın bedeli butonun kendisinde: TÜM açık hatalar canlıya taşınır.
-		_publish_btn.tooltip_text = tr("BUILD_SHIP_TOOLTIP_BUGS").format({"n": maxi(0, b.bug_count)})
+		# Yayınla'nın bedeli butonun kendisinde: TÜM açık hatalar canlıya taşınır. Sayı
+		# ProductSystem'den gelir, ham bug_count'tan DEĞİL — kritik-hata cezası da dahil
+		# olsun diye (bkz. projected_launch_bugs).
+		_publish_btn.tooltip_text = tr("BUILD_SHIP_TOOLTIP_BUGS").format(
+			{"n": ProductSystem.projected_launch_bugs()})
 	# Faz geçiş kararı (Build Bar 2026-08-19): TASARIM'da tur 1 bitince "Geliştirmeye geç"
 	# (üç eksen + tavan satırı bilgi olarak yanında — "daha çok tur mu, daha iyi insan mı"
 	# sorusu buradan okunur), GELİŞTİRME parkında "Beta'ya geç". Turlar kendi döner;

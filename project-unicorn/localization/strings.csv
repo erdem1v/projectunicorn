@@ -390,10 +390,10 @@ SHARE_FLOOR,"<%0,1",<0.1%
 NUM_GROUP_SEP,.,","
 NUM_DECIMAL_SEP,",",.
 TAB_PRODUCT,Ürün,Product
-TAB_HR,İK,HR
+TAB_HR,Ekip,Team
 TAB_FINANCE,Finans,Finance
 TAB_SALES,Satış,Sales
-TAB_OPS,Operasyon,Ops
+TAB_MARKETING,Pazarlama,Marketing
 TAB_RND,Ar-Ge,R&D
 TAB_PERSONAL,Kişisel,Personal
 TAB_EVENTS,Olaylar,Events
@@ -751,6 +751,8 @@ HR_RAISE_LINE,Maaş {old} → {new} (aylık {monthly}),Salary {old} → {new} ({
 HR_PAYROLL_LINE,Aylık maaş yükü {old} → {new},Monthly payroll {old} → {new}
 HR_RAISE_PERMANENT,"Zam kalıcıdır, geri alınmaz","A raise is permanent and cannot be undone"
 HR_LEAVE_USED,Bu yılın izni kullanılmış,This year's leave is already used
+HR_ERR_ALREADY_ON_LEAVE,Zaten izinde,Already on leave
+HR_ERR_IN_TRAINING,Eğitimde — dönmesini bekle,In training — wait until they are back
 HR_LEAVE_DAYS_OUT,{n} gün kapasite dışı,{n} days out of capacity
 HR_LEAVE_PAID,"Maaş akmaya devam eder, ücretli izindir","Salary keeps running; this is paid leave"
 HR_LEAVE_MORALE,Dönüşte moral {old} → {new},Morale on return {old} → {new}
@@ -832,8 +834,10 @@ HR_OT_PROGRESS,{day}. gün · {len} günlük blok,Day {day} · {len}-day block
 HR_OT_TODAY_SPEED,Bugünün hız kazancı +%{pct},Today's speed gain +{pct}%
 HR_OT_EARLY_STOP,"Erken durdurabilirsin; başlanan gün tam ücretlenir, sonrası için bedel üretmez.",You can stop early; the day you started bills in full and nothing accrues after that.
 HR_CARD_SALARY,Maaş {amount}/ay,Salary {amount}/mo
+HR_CARD_RAISE,ZAM YAP,GIVE A RAISE
 HR_CARD_HOLIDAY,TATİLE GÖNDER,SEND ON HOLIDAY
 HR_CARD_FIRE,İŞTEN ÇIKAR,LET GO
+HR_RAISE_POPOVER_TITLE,Zam yap,Give a raise
 HR_CANDIDATE_GENERIC,Aday,Candidate
 HR_CASH_LINE,Nakit {old} → {new},Cash {old} → {new}
 HR_APPLY_RAISE_PCT,ZAMMI UYGULA · +{pct},APPLY RAISE · +{pct}
@@ -1352,6 +1356,7 @@ VC_EV_LAST_DAY_BODY,"Frank kapıda.
 ""Yarın son gün. Cebinde teklif var. İmzalayacaksan bugün imzala.""","Frank is in the doorway.
 
 ""Tomorrow is the last day. You have an offer in your pocket. If you are going to sign, sign today."""
+VC_EV_DEAL_TITLE,Teklif masada — {investor},An offer on the table — {investor}
 PITCH_NEED_0,"Ekip dağınık, tek bir yerde toplamak istiyorlar.",The team is scattered; they want it all in one place.
 PITCH_NEED_1,"Manuel süreçler zaman yiyor, otomasyon arıyorlar.",Manual work is eating their time; they are looking to automate.
 PITCH_NEED_2,"Mevcut araçları pahalı ve şişkin, sade bir şey istiyorlar.",Their current tools are expensive and bloated; they want something plain.
@@ -1679,6 +1684,7 @@ EFFECT_QUALITY_BONUS,Kalite +{n},Quality +{n}
 EFFECT_DEV_BEGINS,Geliştirme başlar,Development begins
 EFFECT_BETA_BEGINS,Beta başlar,Beta begins
 EFFECT_CHURN,Müşteri kaybı,A customer lost
+EFFECT_TERM_TABLE,Term sheet masası açılır,The term sheet table opens
 EFFECT_NEW_PROSPECT,Yeni aday,A new prospect
 EFFECT_CONVERT_AUDIENCE,Kitleden dönüşüm {pct},{pct} of the audience converts
 EFFECT_PAID_TIER,Ücretli katman açılır,The paid tier opens
@@ -1697,7 +1703,6 @@ EFFECT_EXPAND,Koltuk +{seats} · MRR {mrr},Seats +{seats} · MRR {mrr}
 EFFECT_NO_CHANGE,Değişiklik yok,No change
 UI_CONFIRM_TITLE,Emin misin?,Are you sure?
 UI_CONFIRM,Onayla,Confirm
-UI_CLOSE,Kapat,Close
 MENTOR_NAME,Frank Köseoğlu,Frank Köseoğlu
 MENTOR_ROLE,OPERASYON ORTAĞI,OPERATING PARTNER
 MENTOR_INTRO_CTA,Hadi başlayalım,Let's get started
@@ -1919,7 +1924,6 @@ Frank shrugs:
 ""Selling is not a defeat. But nobody tells you that on the night you sign."""
 END_EV_ACQ_ACCEPT,Kabul et — sat,Accept — sell
 END_EV_ACQ_DECLINE,Reddet — devam,Decline — keep going
-MENTOR_ROLE_LINE,Mentor / Operasyon Ortağı,Mentor / Operating Partner
 DEAL_PROMPT_LINE,"""{investor} teklif verdi. {days} gün geçerli. İstersen masaya şimdi otur, şartları zorla. İstersen teklifi cebine koy, başka VC'lerle de görüş — cebinde ikinci teklif olduğunda pazarlık gücün artar.""","""{investor} has made an offer. It is good for {days} days. Sit down at the table now if you like and push the terms. Or pocket it and go see other VCs — a second offer in your pocket is leverage."""
 DEAL_PROMPT_SIT,Masaya şimdi otur.,Sit down at the table now.
 DEAL_PROMPT_VALIDITY,Geçerlilik: {days} gün,Valid for {days} days

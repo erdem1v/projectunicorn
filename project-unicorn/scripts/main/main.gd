@@ -21,7 +21,6 @@ const CONFIRM_MODAL := preload("res://scenes/modals/ConfirmModal.tscn")
 const ENDING_MODAL := preload("res://scenes/modals/EndingScene.tscn")  # newspaper ceremony ("Ekonomi Postası") — same populate(ending_data) mount contract
 const MONTH_SUMMARY_MODAL := preload("res://scenes/modals/MonthSummaryModal.tscn")
 const MEETING_SCENE := preload("res://scenes/modals/MeetingScene.tscn")
-const FRANK_POPUP := preload("res://scenes/modals/FrankPopup.tscn")
 const TERM_TABLE_SCENE := preload("res://scenes/modals/TermSheetTableScene.tscn")
 const SYSTEM_MENU_MODAL := preload("res://scenes/modals/SystemMenuModal.tscn")
 const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
@@ -35,10 +34,7 @@ var _confirm_modal: Node = null      # Currently-open confirm modal, or null
 var _ending_modal: Node = null       # Ending summary modal — mounts once, never dismissed back to gameplay
 var _month_modal: Node = null        # Currently-open month summary modal, or null
 var _meeting_scene: Node = null      # Currently-open MeetingScene (Spec 5), or null
-var _frank_popup: Node = null        # Currently-open FrankPopup (Spec 5), or null
 var _term_table: Node = null         # Currently-open TermSheetTableScene (Spec 6), or null
-var _deal_prompt_vc: String = ""     # VC whose deal-closed FrankPopup is showing (Spec 6), or ""
-var _pending_deal_prompt_vc: String = ""  # sheet_granted queued a prompt; shown when no modal is up
 var _pre_dialogue_speed: int = -1    # Speed to restore when a cinematic dialogue closes
 var _pre_month_speed: int = -1       # Speed to restore when the month summary closes
 var _pre_confirm_speed: int = -1     # Speed to restore when the confirm closes
@@ -573,6 +569,15 @@ func _run_b2b_shot(kind: String) -> void:
 	elif kind == "expansion":
 		CustomerRegistry.set_lifecycle_phase(c.id, "expansion")
 		ev = B2BEventFactory.build_expansion(c)
+	elif kind == "deal":
+		# Temizlik turu 2026-08-20: teklif kartı. FrankPopup emekli olduğu için bu kart
+		# artık sıradan bir olay kartı ve tek karede ÜÇ şeyi birden kanıtlıyor —
+		# Frank'in portresi (event kartı bugüne dek hiçbir portre çizemiyordu),
+		# kaynak rozetinin MENTOR okuması (PİYASA değil), ve "Masaya otur" seçeneğinin
+		# open_term_table çipi (chip'siz bir modifier KÖR gider, headless case göremez).
+		GameState.phase = 3
+		GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
+		ev = VCPitchSystem._build_deal_prompt_event("anchor")
 	elif kind == "angel":
 		# Frank's seed card. Not a B2B customer scene, but this is the harness that already
 		# mounts one factory-built GameEvent in a real EventModal, and the seed card has two
@@ -1025,10 +1030,12 @@ func _seed_theme_surface() -> void:
 	SalesSystem.reflect_mrr()
 
 
-# Debug: --tab-shot=<product|hr|finance|sales|ops|rnd|personal|events> (windowed).
-# 8 ray sekmesinin HEPSİ tek seed'li durumdan 1920×1080. Ops/R&D/Personal/Events'in
+# Debug: --tab-shot=<product|sales|hr|finance|personal|marketing|rnd|events> (windowed).
+# 8 ray sekmesinin HEPSİ tek seed'li durumdan 1920×1080. Marketing/R&D/Personal/Events'in
 # sahnesi yok — kod-boyalı placeholder render ederler (TabPageChrome sarmalayıcısı
-# içinde). NOT (ODA rework, 2026-08-06): sarmalayıcı şeridi + RightPanel emekliliği
+# içinde). Marketing ve R&D rayda KİLİTLİ; harness tab_changed'i doğrudan emit ettiği için
+# yine de kadraja alınabilirler — kilit rayın kendisinde, sayfada değil.
+# NOT (ODA rework, 2026-08-06): sarmalayıcı şeridi + RightPanel emekliliği
 # TÜM tab-shot baseline'larını bilinçli yeniden kurdu; bayt-diff referansı o günün
 # after-set'idir, Tema Çekirdeği baseline'ı değil.
 func _run_tab_shot(tab_id: String) -> void:
@@ -1421,6 +1428,13 @@ func _run_hr_shot(kind: String) -> void:
 			HRSearchSystem.daily_tick()
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
+	if kind == "cikar":
+		# Bu harness _mount_shell'den GEÇMEZ (kabuğu doğrudan instantiate eder), yani
+		# _event_signals_wired hiç kurulmaz ve confirm_requested'ın DİNLEYİCİSİ olmaz.
+		# Onay modalını kadraja alan tek shot türü bu olduğu için tek sinyali burada
+		# bağlıyoruz — oyunda aynı bağlantıyı _mount_shell yapıyor.
+		if not EventBus.confirm_requested.is_connected(_on_confirm_requested):
+			EventBus.confirm_requested.connect(_on_confirm_requested)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	# "egitim": DENEYİM/EĞİTİM satır durumlarının TEK görsel kanıtı. Biri deneyimi
@@ -1477,7 +1491,36 @@ func _run_hr_shot(kind: String) -> void:
 				push_error("[HRShot] defter satırı bulunamadı — zam popover'ı çapasız")
 				get_tree().quit(1)
 				return
-			tab._on_card_action(target.id, HREmployeeCard.ACTION_RAISE, row_anchor)
+			tab._on_card_action(target.id, HRLedger.ACTION_RAISE, row_anchor)
+		"menu", "cikar":
+			# Temizlik turu 2026-08-20. "menu" = satır tıklamasının açtığı üçlü aksiyon
+			# popover'ı (Zam · Tatile gönder · İşten çıkar); "cikar" bir adım daha gider ve
+			# İŞTEN ÇIKAR onay modalını kaldırır. İkincisi bu harness ailesinde İLK: hiçbir
+			# shot türü bugüne dek bir ConfirmModal gövdesi kadraja almamıştı, oysa
+			# preview_fire'ın dört satırı (tazminat · kasa · bordro · ekip morali) oyuncunun
+			# kararı verdiği yer. Satır çapası "zam" ile aynı sebeple gerçek satır.
+			var fire_target: Character = CharacterRegistry.get_employees()[0]
+			var menu_anchor: Control = null
+			for child in tab._list.get_children():
+				if child is PanelContainer and String(child.theme_type_variation) == "LedgerRow":
+					menu_anchor = child
+					break
+			if menu_anchor == null:
+				push_error("[HRShot] defter satırı bulunamadı — aksiyon menüsü çapasız")
+				get_tree().quit(1)
+				return
+			tab._on_card_action(fire_target.id, HRLedger.ACTION_MENU, menu_anchor)
+			if kind == "cikar":
+				# Popover yerleşimi iki kare bekliyor (HRPopover.open_at); menüdeki butona
+				# ancak ondan sonra basılabilir.
+				await get_tree().process_frame
+				await get_tree().process_frame
+				await get_tree().create_timer(0.2).timeout
+				var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
+				if layer == null or not _press_button_labelled(layer, TranslationServer.translate("HR_CARD_FIRE")):
+					push_error("[HRShot] menüde İŞTEN ÇIKAR bulunamadı")
+					get_tree().quit(1)
+					return
 		"mesai":   # LOC-DATA debug seed / id
 			# By KEY, not by the Turkish word: this harness runs under --lang=en too, and the
 			# button it is looking for says OVERTIME there.
@@ -1946,9 +1989,7 @@ func _mount_shell() -> void:
 		EventBus.run_ended.connect(_on_run_ended)
 		EventBus.month_ended.connect(_on_month_ended)
 		EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
-		EventBus.frank_popup_requested.connect(_on_frank_popup_requested)
 		EventBus.term_table_requested.connect(_on_term_table_requested)
-		EventBus.sheet_granted.connect(_on_sheet_granted_prompt)
 		# SaveManager task'ı: ESC menüsü, Kaydet/Yükle modalı, F5/F9.
 		EventBus.system_menu_requested.connect(_on_system_menu_requested)
 		EventBus.save_load_requested.connect(_on_save_load_requested)
@@ -1956,9 +1997,12 @@ func _mount_shell() -> void:
 		EventBus.quickload_requested.connect(_on_quickload_requested)
 		_event_signals_wired = true
 
-	_modal = MENTOR_MODAL.instantiate()
-	_modal.dismissed.connect(_on_modal_dismissed)
-	modal_layer.add_child(_modal)
+	# MENTOR INTRO BURADA MOUNT EDİLMEZ — sahibi _swap_to_shell_and_modal.
+	# 2026-08-08'de bu fonksiyon oradan ÇIKARILDI ama mentor bloğu geride kaldı; çağıran
+	# da kendi bloğunu yazdı. Sonuç: yeni koşuda modal İKİ KEZ mount ediliyordu (iki üst
+	# üste scrim, iki kez kapatma) ve _load_slot da buradan geçtiği için KAYIT YÜKLERKEN
+	# de açılıyordu — tam da yukarıdaki yorumun olmaz dediği şey. Blok silindi: yeni koşu
+	# 1, F12 atlaması 1, yükleme 0.
 
 
 func _on_modal_dismissed() -> void:
@@ -2002,7 +2046,11 @@ func _on_event_resolved(_event_id: String, _choice_idx: int) -> void:
 	if _event_modal != null:
 		_event_modal.queue_free()
 		_event_modal = null
-	if not EventManager.has_pending():
+	# A choice can OPEN a cinematic surface: start_vc_meeting mounts MeetingScene and
+	# open_term_table mounts the table — both from _apply_modifiers, which runs BEFORE
+	# event_resolved. Restoring speed here would unpause the clock behind the surface
+	# that just opened; its own close path owns the restore.
+	if not EventManager.has_pending() and _meeting_scene == null and _term_table == null:
 		var restore: int = _pre_event_speed if _pre_event_speed >= 0 else TimeManager.last_running_speed
 		_pre_event_speed = -1
 		EventBus.speed_change_requested.emit(restore)
@@ -2234,12 +2282,23 @@ func _on_run_ended(_ending_id: String, ending_data: Dictionary) -> void:
 	_ending_modal.populate(ending_data)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
 
 
-# --- Cinematic dialogue shell lifecycle (Spec 5: MeetingScene / FrankPopup) ---
-# For now these mount from DEBUG fixtures (game_shell Shift+F2/F3). Spec 4's PitchSystem
+# --- Cinematic dialogue shell lifecycle (Spec 5: MeetingScene) ---
+# For now this mounts from a DEBUG fixture (game_shell Shift+F2). Spec 4's PitchSystem
 # will emit meeting_scene_requested with a real view state and connect its own listener to
 # choice_selected/withdraw_requested; the closer below is a TEMPORARY debug driver that
 # logs the fired id and dismisses. Pause/restore uses the strict gate (run alive AND no
 # event pending), reused from MonthSummary/EndingModal.
+
+# A cinematic surface can open two ways: straight from gameplay, or from an event
+# choice's own modifier (start_vc_meeting, open_term_table) — and in that second case the
+# event modal has ALREADY paused the clock, so reading current_speed would capture the
+# pause itself and the surface's close would leave the game frozen. The surface inherits
+# the event's stored pre-event speed instead, and takes ownership of restoring it.
+func _claim_pre_dialogue_speed() -> void:
+	if _pre_dialogue_speed < 0:
+		_pre_dialogue_speed = _pre_event_speed if _pre_event_speed >= 0 else TimeManager.current_speed
+	_pre_event_speed = -1
+
 
 func _on_meeting_scene_requested(view_state: Dictionary) -> void:
 	if _meeting_scene != null:
@@ -2248,7 +2307,7 @@ func _on_meeting_scene_requested(view_state: Dictionary) -> void:
 	if modal_layer == null:
 		push_error("[Main] GameShell/ModalLayer missing — meeting scene can't mount")
 		return
-	_pre_dialogue_speed = TimeManager.current_speed
+	_claim_pre_dialogue_speed()
 	EventBus.speed_change_requested.emit(0)
 	_meeting_scene = MEETING_SCENE.instantiate()
 	_meeting_scene.choice_selected.connect(_on_dialogue_choice_selected)
@@ -2257,29 +2316,10 @@ func _on_meeting_scene_requested(view_state: Dictionary) -> void:
 	_meeting_scene.populate(view_state)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
 
 
-func _on_frank_popup_requested(view_state: Dictionary) -> void:
-	if _frank_popup != null:
-		return
-	var modal_layer: CanvasLayer = _shell.get_node_or_null("ModalLayer") if _shell != null else null
-	if modal_layer == null:
-		push_error("[Main] GameShell/ModalLayer missing — Frank popup can't mount")
-		return
-	_pre_dialogue_speed = TimeManager.current_speed
-	EventBus.speed_change_requested.emit(0)
-	_frank_popup = FRANK_POPUP.instantiate()
-	_frank_popup.choice_selected.connect(_on_dialogue_choice_selected)
-	_frank_popup.withdraw_requested.connect(_on_dialogue_withdrawn)
-	modal_layer.add_child(_frank_popup)
-	_frank_popup.populate(view_state)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
-
-
-# MeetingScene / FrankPopup choice relay. A live VC meeting drives the beat machine:
+# MeetingScene choice relay. A live VC meeting drives the beat machine:
 # advance() writes the outcome and returns the next view_state (re-populate) or done.
-# The FrankPopup debug fixtures (Spec 5) keep the print-and-close path.
+# The Shift+F2 debug fixture (Spec 5) keeps the print-and-close path.
 func _on_dialogue_choice_selected(id: String) -> void:
-	if _deal_prompt_vc != "":
-		_on_deal_prompt_choice(id)
-		return
 	if VCPitchSystem.is_meeting_active():
 		var r: Dictionary = VCPitchSystem.advance(id)
 		if r.get("done", false):
@@ -2315,85 +2355,14 @@ func _close_dialogue_scenes() -> void:
 	if _meeting_scene != null:
 		_meeting_scene.queue_free()
 		_meeting_scene = null
-	if _frank_popup != null:
-		_frank_popup.queue_free()
-		_frank_popup = null
 	# Yield to a pending event chain / a dead run (strict gate from MonthSummary/Ending).
 	if GameState.run_active and not EventManager.has_pending():
 		var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_dialogue_speed = -1
-	# A won meeting grants a sheet mid-scene; its deal-closed prompt waits until now (§2).
-	_maybe_show_deal_prompt()
 
 
-# --- Term Sheet Table (Spec 6) — deal-closed Frank prompt + table mount ---
-
-func _on_sheet_granted_prompt(vc_id: String) -> void:
-	# A sheet was just granted (won meeting or delayed delivery). Queue the deal-closed prompt;
-	# it shows once nothing else is on screen (a won meeting is still closing when this fires).
-	_pending_deal_prompt_vc = vc_id
-	_maybe_show_deal_prompt()
-
-
-func _maybe_show_deal_prompt() -> void:
-	if _pending_deal_prompt_vc == "":
-		return
-	if not GameState.run_active or GameState.phase < 3:
-		_pending_deal_prompt_vc = ""
-		return
-	if VCPitchSystem.sheet_for(_pending_deal_prompt_vc) == null:
-		_pending_deal_prompt_vc = ""   # sheet gone (expired/walked) before we could offer it
-		return
-	# Don't stack over any modal / dialogue / table / confirm — retried from the close paths.
-	if _frank_popup != null or _meeting_scene != null or _term_table != null \
-			or _event_modal != null or _confirm_modal != null:
-		return
-	var vc: String = _pending_deal_prompt_vc
-	_pending_deal_prompt_vc = ""
-	_deal_prompt_vc = vc
-	EventBus.frank_popup_requested.emit(_deal_prompt_view_state(vc))
-
-
-func _deal_prompt_view_state(vc_id: String) -> Dictionary:
-	var inv: Dictionary = InvestorRegistry.get_investor(vc_id)
-	var sheet: TermSheet = VCPitchSystem.sheet_for(vc_id)
-	var days: int = sheet.days_left(GameState.day) if sheet != null else PitchConstants.SHEET_VALIDITY_DAYS
-	return {
-		"portrait_path": "res://assets/art/investors/portrait_frank.webp",
-		"speaker_name": TranslationServer.translate("MENTOR_NAME"),
-		"speaker_role": TranslationServer.translate("MENTOR_ROLE_LINE"),
-		"active_line": {
-			"text": TranslationServer.translate("DEAL_PROMPT_LINE").format(
-				{"investor": String(inv.get("display_name", "")), "days": days}),
-			"speaker_tag": TranslationServer.translate("ODA_MENTOR_TAG_FALLBACK"),
-			"is_monologue": false,
-		},
-		"choices": [
-			{"id": "open_table", "text": TranslationServer.translate("DEAL_PROMPT_SIT"), "marked": true,
-				"marked_text": TranslationServer.translate("DEAL_PROMPT_VALIDITY").format({"days": days})},
-			{"id": "defer", "text": TranslationServer.translate("DEAL_PROMPT_DEFER")},
-		],
-		"beat_label": "%s — Term Sheet" % String(inv.get("display_name", "")),
-		"can_withdraw": false,
-	}
-
-
-func _on_deal_prompt_choice(id: String) -> void:
-	var vc: String = _deal_prompt_vc
-	_deal_prompt_vc = ""
-	if _frank_popup != null:
-		_frank_popup.queue_free()
-		_frank_popup = null
-	if id == "open_table":
-		EventBus.term_table_requested.emit(vc)   # table inherits _pre_dialogue_speed (kept below)
-	else:
-		# Defer — the sheet waits in Finance>Yatırım with its clock running. Restore speed.
-		if GameState.run_active and not EventManager.has_pending():
-			var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else TimeManager.last_running_speed
-			EventBus.speed_change_requested.emit(restore)
-		_pre_dialogue_speed = -1
-
+# --- Term Sheet Table (Spec 6) — table mount ---
 
 func _on_term_table_requested(vc_id: String) -> void:
 	if _term_table != null:
@@ -2405,8 +2374,7 @@ func _on_term_table_requested(vc_id: String) -> void:
 	if TermSheetTableSystem.open(vc_id).is_empty():
 		push_warning("[Main] term_table_requested for %s with no live sheet" % vc_id)
 		return
-	if _pre_dialogue_speed < 0:
-		_pre_dialogue_speed = TimeManager.current_speed
+	_claim_pre_dialogue_speed()
 	EventBus.speed_change_requested.emit(0)
 	_term_table = TERM_TABLE_SCENE.instantiate()
 	_term_table.closed.connect(_close_term_table)
@@ -2500,10 +2468,9 @@ func _on_debug_onboarding_retrigger() -> void:
 # next one. Extracted from the Shift+F4 restart because a SAVE LOAD needs the exact
 # same teardown — one UI-teardown path, not two that drift apart.
 #
-# The cinematic-dialogue six are here for a reason (audit S3-40): they used to leak, so
-# run 2 started holding references to run 1's freed scenes and, worse, a _deal_prompt_vc
-# naming an investor at a company that no longer existed — enough to misroute the next
-# run's first meeting choice.
+# The cinematic-dialogue refs are here for a reason (audit S3-40): they used to leak, so
+# run 2 started holding references to run 1's freed scenes — enough to misroute the next
+# run's first meeting choice. (The set was six until the FrankPopup surface was retired.)
 func _teardown_run_ui() -> void:
 	if _shell != null:
 		_shell.queue_free()
@@ -2523,8 +2490,5 @@ func _teardown_run_ui() -> void:
 	_pre_month_speed = -1
 	_pre_system_speed = -1
 	_meeting_scene = null
-	_frank_popup = null
 	_term_table = null
 	_pre_dialogue_speed = -1
-	_deal_prompt_vc = ""
-	_pending_deal_prompt_vc = ""

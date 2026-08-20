@@ -2,13 +2,13 @@ class_name DialoguePortraitCard
 extends PanelContainer
 
 # Shared cinematic-register component (Spec 5) — a 4:5 portrait bust in a thin cream
-# rounded frame (PortraitFrame variation). Its consumer (MeetingScene / FrankPopup)
-# anchors it to overlap the dialogue column's top edge — the signature move of the
-# composition.
+# rounded frame (PortraitFrame variation). Its consumer (MeetingScene) anchors it to
+# overlap the dialogue column's top edge — the signature move of the composition.
 #
 # Humble view: reads no autoloads except UiTokens; renders whatever path it is given
 # and falls back gracefully (charcoal fill + initials) when the file is missing, so the
-# scene never crashes on absent art (Frank's portrait is not authored yet — §1/§4).
+# scene never crashes on absent art. (Bu satır uzun süre "Frank'in portresi henüz
+# çizilmedi" diyordu; portre 2026-07-16'da girdi, yorum geride kalmıştı.)
 #
 # Godot concept: PanelContainer fits every child to its content rect, so FallbackBg,
 # Fallback and Portrait stack; the topmost visible one wins. clip_contents crops the

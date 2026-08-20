@@ -30,6 +30,12 @@ extends Resource
 @export var character_name: String = ""   # NOT `name` — Node reserves it (TECH_SPEC §7)
 @export var role: String = ""             # typed id (HRConstants.ROLE_*) — never free text
 @export var category: String = "employee" # "founder" | "employee" | "mentor" | "npc"
+# Portre yolu — BOŞ olması normal ve çoğunluk hâlidir. Portre politikası (GDD 14 §7):
+# çalışanların yüzü YOKTUR, baş harfleriyle görünürler; portresi olanlar Frank ve
+# müşteri/yatırımcı tarafındaki adlı karakterlerdir. Boş bırakıldığında her çizim yeri
+# baş harflere düşer, yani mevcut kayıtlar ve her yeni işe alım hiçbir şey yapmadan
+# bugünkü davranışı korur.
+@export var portrait_path: String = ""
 # NOTE: `department` is deliberately NOT stored — it is derived from `role` via
 # HRConstants.department_of() / section_of() so the two can never fall out of sync.
 

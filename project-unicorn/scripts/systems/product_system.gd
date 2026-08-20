@@ -922,6 +922,22 @@ static func _sync_legacy_quality(b: FeatureBuild) -> void:
 
 # --- Yayınla (Rev3: yalnız BETA'dan; erken-ship yolu kapandı) ---
 
+static func projected_launch_bugs() -> int:
+	# "Yayınla'ya basarsam kaç hata canlıya taşınır?" — TEK cevap, TEK ev.
+	# Yayınla tooltip'i iki ev sahibinde de ham `bug_count` yazıyordu, ama launch()
+	# yazmadan hemen önce CRITICAL_BUG_LAUNCH_PENALTY ekliyor: yani sayı, riski göze
+	# alıp "Bırak, gönder" diyen oyuncuda — tam da dürüst sayıya en çok ihtiyacı olan
+	# oyuncuda — beş eksik çıkıyordu. Formatter'ı paylaştırma disiplini
+	# UiTokens.build_percent ile aynı (S2-8); launch()'ın kendisi de buradan okur, böylece
+	# ceza aritmetiği tek yerde kalır.
+	if active_build == null:
+		return 0
+	var n: int = active_build.bug_count
+	if GameState.get_flag("critical_bug_unfixed", false):
+		n += CRITICAL_BUG_LAUNCH_PENALTY
+	return maxi(n, 0)
+
+
 static func launch() -> void:
 	# Player pressed Yayınla on the tracker. Stamp launch state, fire ship
 	# moment cinematic, then ship_active_build clears active_build when the
@@ -938,7 +954,7 @@ static func launch() -> void:
 	# bug (set by ev_mvp_bugfix_001_critical_bug "Bırak, gönder"). Per-run flag
 	# is consumed here.
 	if GameState.get_flag("critical_bug_unfixed", false):
-		active_build.bug_count += CRITICAL_BUG_LAUNCH_PENALTY
+		active_build.bug_count = projected_launch_bugs()   # ceza aritmetiği orada, tek ev
 		GameState.set_flag("critical_bug_unfixed", false)
 	# Product Lifecycle Part 2B: is this a v2+ ship (increment version, merge axes) or
 	# the first launch (version 1)? Captured before the snapshot below.

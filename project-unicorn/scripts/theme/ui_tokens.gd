@@ -247,7 +247,7 @@ const VEIL_FAINT := Color(1, 1, 1, 0.03)    # at-rest / disabled tint
 const VEIL_SOFT := Color(1, 1, 1, 0.06)     # normal / pressed
 const VEIL_STRONG := Color(1, 1, 1, 0.10)   # hover
 
-# --- Cinematic dialogue register (Spec 5: MeetingScene / FrankPopup) ---
+# --- Cinematic dialogue register (Spec 5: MeetingScene) ---
 # A DARK charcoal register distinct from the light editorial modals — the game's
 # cinematic layer. Text on these surfaces uses the CREAM* / *_BRIGHT tones per the
 # context rule above. Amber fill/edge reuse ACCENT; danger captions reuse
@@ -513,27 +513,34 @@ const TAB_GLYPH_PRODUCT := "▣"
 const TAB_GLYPH_HR := "◉"
 const TAB_GLYPH_FINANCE := "$"
 const TAB_GLYPH_SALES := "↗"
-const TAB_GLYPH_OPS := "◇"
+const TAB_GLYPH_MARKETING := "◇"
 const TAB_GLYPH_RND := "⚡"
 const TAB_GLYPH_PERSONAL := "★"
 const TAB_GLYPH_EVENTS := "●"
 
-# --- Tab definition (id, glyph, icon) — canonical 8-tab list ---
+# --- Tab definition (id, glyph, icon, locked) — canonical 8-tab list ---
 # NO `label` FIELD, deliberately (S2-34, 2026-08-18). The rail's caption is a localization
 # key derived from the id — TAB_ + ID.to_upper() — so LeftTabs.tscn carries the key and
 # center_viewport derives the same one. An English `label` here was the SECOND source of
 # those captions, which is exactly why the rail stayed English-only in Turkish.
+# `locked` = visible-but-unreachable (RELEASE SCOPE: Marketing and R&D are EARLY ACCESS
+# systems). The rail shows them dimmed with a YAKINDA pill and never connects `pressed` —
+# the strongest Coming-Soon telegraph the shell has, and the same recipe the origin cards
+# use. LeftTabs.tscn's button order must match this array position-for-position; the
+# `rail_tabs_match_scene_order` smoke case is what guards that.
 const TABS := [
 	{"id": "product", "glyph": TAB_GLYPH_PRODUCT,  "icon": "res://assets/icons/tabs/product.svg"},
+	{"id": "sales", "glyph": TAB_GLYPH_SALES,    "icon": "res://assets/icons/tabs/sales.svg"},
 	{"id": "hr", "glyph": TAB_GLYPH_HR,       "icon": "res://assets/icons/tabs/hr.svg"},
 	{"id": "finance", "glyph": TAB_GLYPH_FINANCE,  "icon": "res://assets/icons/tabs/finance.svg"},
-	{"id": "sales", "glyph": TAB_GLYPH_SALES,    "icon": "res://assets/icons/tabs/sales.svg"},
-	{"id": "ops", "glyph": TAB_GLYPH_OPS,      "icon": "res://assets/icons/tabs/ops.svg"},
-	{"id": "rnd", "glyph": TAB_GLYPH_RND,      "icon": "res://assets/icons/tabs/rnd.svg"},
 	{"id": "personal", "glyph": TAB_GLYPH_PERSONAL, "icon": "res://assets/icons/tabs/personal.svg"},
+	{"id": "marketing", "glyph": TAB_GLYPH_MARKETING, "icon": "res://assets/icons/tabs/marketing.svg", "locked": true},
+	{"id": "rnd", "glyph": TAB_GLYPH_RND,      "icon": "res://assets/icons/tabs/rnd.svg", "locked": true},
 	{"id": "events", "glyph": TAB_GLYPH_EVENTS,   "icon": "res://assets/icons/tabs/events.svg"},
 	# Spec 6 — the standalone "Yatırım" rail tab was relocated INTO the Finance tab as a
-	# sub-page (Finance>Yatırım); the 9th rail entry is gone (badge indices 1/2/7 stay valid).
+	# sub-page (Finance>Yatırım); the 9th rail entry is gone. The `ops` entry left on
+	# 2026-08-20: GDD v2 ch. 12 has no Operations tab, nothing in the codebase emitted,
+	# matched or preloaded the id, and Marketing took its slot in the icon set.
 ]
 
 # ============================================================================

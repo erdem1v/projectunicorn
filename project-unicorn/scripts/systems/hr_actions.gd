@@ -128,7 +128,13 @@ static func can_send_on_vacation(emp: Character) -> bool:
 static func preview_vacation(emp: Character) -> Dictionary:
 	var reason: String = _block_reason(emp)
 	if reason == "" and emp.status != HRConstants.STATUS_ACTIVE:
-		reason = "Zaten izinde"
+		# Two DIFFERENT refusals wore one sentence here: this branch fires for someone in
+		# TRAINING too, and telling the player that person is "zaten izinde" is simply
+		# false. (It was also a raw Turkish literal — it would have shipped untranslated
+		# into the EN build the moment anything rendered a refusal reason, which nothing
+		# did until the row action menu.)
+		var in_training: bool = emp.status == HRConstants.STATUS_TRAINING or emp.training_days_left > 0
+		reason = TranslationServer.translate("HR_ERR_IN_TRAINING" if in_training else "HR_ERR_ALREADY_ON_LEAVE")
 	if reason == "" and emp.leave_taken_year == _current_year():
 		reason = TranslationServer.translate("HR_LEAVE_USED")
 	if reason != "":
