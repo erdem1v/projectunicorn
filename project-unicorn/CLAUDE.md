@@ -193,13 +193,16 @@ NewsTicker görsel kimliğini korur (`NewsPanel`/`NewsRich` kendi adlarıyla kal
 `--onboard-shot=<1|2|3>` · `--probe-shot` (sıfır-stil kontrol sahnesi) ·
 `--theme-audit=<id>` (çözümlenmiş tema değerleri + yüz + panel stylebox parmak izi +
 S/C/P override bayrakları) · **`--theme-audit=oda` ODA'NIN KAPISIDIR**: yalnız OdaView alt
-ağacını gezer, **122 `AUDIT|` satırı** (AUDIT_BEGIN/END dahil 124 satırlık blok) basar ve
+ağacını gezer, **121 `AUDIT|` satırı** (AUDIT_BEGIN/END dahil 123 satırlık blok) basar ve
 öncesi/sonrası BAYT-AYNI çıkmak zorundadır. Sayının tarihi: 2026-08-10 sanat
 migrasyonunda 120→121 (eklenen TEK satır `AUDIT|/ObjectLayer/Keyboard|TextureRect|--|…`,
 tamamı tire — hiçbir tema değeri çözmüyor, sprite düğümünün yapısal eklenmesi), sonra
 2026-08-17 F5 turunda 121→123 (pano hedef kartı diğer kartların register'ına alındı:
 başlık HBox'ı + boşluk Control'ü eklendi), sonra 2026-08-18'de 123→122 (lamba halesi
 `/FXLayer/LampGlow` kaldırıldı — siyah lamba gövdesini yarı saydam gösteriyordu).
+Sonra 2026-08-19'da 122→**121**: Build Bar, monitörün iki runtime Panel'ini (track +
+fill) tek `BuildBar` örneğiyle değiştirdi — iki düğüm gitti, biri geldi. Normalize
+edilmiş diff YALNIZ `/InfoLayer/MonitorWrap/MonitorScreen` alt ağacındaydı.
 Bu belge uzun süre "122 satır" diyordu; o sayı blok toplamıydı ve migrasyondan sonra
 güncellenmemişti — bugün aynı sayıya BAŞKA bir sebeple geri gelindi, tesadüf.
 **Sayının DEĞİŞMESİ tek başına ihlal değildir — ihlal, DEĞİŞMEMESİ gerekirken
@@ -228,6 +231,39 @@ kımıldamadı"nın, bbox raporu "yalnız hedef kımıldadı"nın kanıtıdır.
 **At the start of every session, read this file + `docs/PROJECT_SPEC.md` + `docs/TECH_SPEC.md` before doing anything else. Do not write gameplay code until both specs are understood and locked.**
 
 If a spec is missing, contradictory, or ambiguous, **stop and ask** — never guess. Spec-driven development is non-negotiable.
+
+---
+
+## DELIVERY LAW — ONE FOLDER, ONE BRANCH (LOCKED — director ruling 2026-08-20, TECH_SPEC §19.7)
+
+Work lands in the working tree and Erdem looks at it. That is the whole review loop. It
+replaces the branch-and-merge practice used through 2026-08-19, which left three finished
+sessions outside the game Erdem was actually playing.
+
+**1. One folder.** `Desktop/project steam` is the only checkout. **No git worktree is ever
+created** — not for a spike, not for a baseline, not "temporarily". The 2026-08-19 recipe of
+`git worktree add --detach` to re-take a theme baseline is **retired**: take the baseline dump
+in this tree *before* you edit, which is what the ODA gate needs anyway.
+
+**2. One branch.** All work is committed directly to `main`. **No feature branch, no merge
+commit, no rebase.** The remote carries `main` and nothing else — GitHub exists so the work is
+reachable from the laptop, not as a second build repository. Whatever is local is what is on
+GitHub.
+
+**3. If a branch or a second folder genuinely seems necessary, STOP AND ASK** — same grammar as
+the spec rule above. Do not open one and report it afterwards.
+
+**4. The review loop is two words.** The agent changes files; Erdem opens the game and looks.
+**"Geri al"** → revert the change. **"Push et"** → push to GitHub. Nothing is pushed unasked,
+and nothing waits on a branch for an approval that a revert would have handled.
+
+**The observable, since a law needs one:** `git branch` prints exactly `* main`, `git worktree
+list` prints exactly one line, and `git ls-remote --heads origin` prints exactly
+`refs/heads/main`. If any of the three prints more, this law has been broken.
+
+Per-commit discipline is unchanged and still applies: TR+EN strings born together,
+`THEME_STAMP` bumped in the same commit as its token change, gates green before the commit
+that claims them.
 
 ---
 
