@@ -240,14 +240,16 @@ var b2b_rep_portrait_rotation_index: int = 0   # sequential cursor into the rep-
 var b2b_last_rep_portrait: String = ""         # last face shown — new assignments skip it (no consecutive repeat)
 var run_departures: int = 0            # CharacterRegistry.remove, category "employee"
 
-# --- Görev liderleri (GDD v2 ch. 07 rev 2 §2/§4) ---
-# {job_id: character_id}. rev 2 §2: "ekip lideri atanan çalışanın altındaki ekibin
+# --- Alan liderleri (GDD v2 ch. 07 rev 2 §2/§4) ---
+# {area_id: character_id}. rev 2 §2: "ekip lideri atanan çalışanın altındaki ekibin
 # verimlilik modifier'ını, moral düşüş hızını ve deneyim kazanım hızını etkiler."
-# Erdem 2026-08-21: lider İŞ BAŞINADIR — Build'in lideri ayrı, Destek'in lideri ayrı.
-# Bu tablo yalnız AÇIK seçimi tutar; boş bırakılan iş için lider TÜRETİLİR (o işteki en
-# yüksek Liderlik, yoksa kurucu) — HRSystem.job_lead. Saklamamanın sebebi: türetilmiş bir
+# Lider ALAN BAŞINADIR — Yazılım'ın lideri ayrı, Müşteri İlişkileri'nin lideri ayrı.
+# Bu tablo yalnız AÇIK seçimi tutar; boş bırakılan alan için lider TÜRETİLİR (o alandaki en
+# yüksek Liderlik, yoksa kurucu) — HRSystem.area_lead. Saklamamanın sebebi: türetilmiş bir
 # lider işe alım/ayrılmayla kendiliğinden güncellenir, saklanan bir lider bayatlar.
-var job_leads: Dictionary = {}
+## SEÇİM SEAM'İ YOK ve bu bilinçli: onaylı tasarımda lider seçme arayüzü çizilmemiş, yani
+## bugün tablo hep boş ve lider hep türetiliyor. Yazan bir seam ancak o ekran gelince doğar.
+var area_leads: Dictionary = {}
 var run_scandals_total: int = 0        # RESERVED — no scandal system yet; debug-settable
 var run_scandals_managed: int = 0      # RESERVED
 var run_pushes_attempted: int = 0      # Term Sheet table push() writes (term_sheet_table_system.gd)
@@ -375,7 +377,9 @@ func advance_phase() -> void:
 # where `phase` itself lives. Out-of-range phases clamp rather than crash: this renders a
 # header, never a decision.
 func phase_display_name(p: int) -> String:
-	var names := ["Bootstrap", "Traction", "Series A"]
+	# "Series A Hunt", "Series A" değil (onaylı tasarım 10a'nın faz listesi). Üçü de
+	# ÖZEL AD, iki dilde aynı — LANGUAGE INTEGRITY LAW'ın proper-noun istisnası.
+	var names := ["Bootstrap", "Traction", "Series A Hunt"]
 	return names[clampi(p - 1, 0, names.size() - 1)]
 
 
@@ -546,6 +550,20 @@ func get_cash_history() -> Array:
 	return cash_history.duplicate()  # readonly snapshot (get_burn_breakdown contract)
 
 
+## Kurucunun başlangıç alanı: Ürün · Tasarım · Yazılım içinde EN YÜKSEK olanı.
+## Beraberlikte AREAS sırası — deterministik olması şart, çünkü smoke bunun üzerine
+## kurulu kadroları pinli seed'le karşılaştırıyor.
+func _founder_start_area(stats: Dictionary) -> String:
+	var best: String = HRConstants.AREA_ENGINEERING
+	var best_v: int = -1
+	for area_key in [HRConstants.AREA_PRODUCT, HRConstants.AREA_DESIGN, HRConstants.AREA_ENGINEERING]:
+		var v: int = int(stats.get(String(area_key), 0))
+		if v > best_v:
+			best_v = v
+			best = String(area_key)
+	return best
+
+
 func get_founder_equity() -> float:
 	# Derived from CharacterRegistry employee equity_pct values. Matches the
 	# get_runway_months pattern — single source of truth, recompute on demand.
@@ -577,15 +595,15 @@ func record_angel_round(equity_pct: int, amount: int) -> void:
 	EventBus.equity_changed.emit(get_investor_equity_pct())
 
 
-func release_job_leads(character_id: String) -> void:
-	## Ayrılan/çıkarılan kişi hangi işlerin lideriyse o koltuklar BOŞALIR (rev 2 §9).
+func release_area_leads(character_id: String) -> void:
+	## Ayrılan/çıkarılan kişi hangi alanların lideriyse o koltuklar BOŞALIR (rev 2 §9).
 	## Otomatik devir yok: bir sonraki okuma türetilmiş lidere düşer, yani canlı kadroya.
 	var freed: Array[String] = []
-	for job_id in job_leads.keys():
-		if String(job_leads[job_id]) == character_id:
-			freed.append(String(job_id))
-	for job_id in freed:
-		job_leads.erase(job_id)
+	for area_id in area_leads.keys():
+		if String(area_leads[area_id]) == character_id:
+			freed.append(String(area_id))
+	for area_id in freed:
+		area_leads.erase(area_id)
 
 
 func get_founder_skill(skill_name: String) -> int:
@@ -780,7 +798,7 @@ func initialize_run(payload: Dictionary) -> void:
 	b2b_last_rep_portrait = ""
 	run_hires = 0
 	run_departures = 0
-	job_leads.clear()
+	area_leads.clear()
 	run_scandals_total = 0
 	run_scandals_managed = 0
 	run_pushes_attempted = 0
@@ -942,10 +960,11 @@ func _build_founder(payload: Dictionary) -> Character:
 		push_error("[GameState] skill_alloc failed validation (pool %d, cap %d): %s"
 			% [FounderConstants.POINT_POOL, FounderConstants.ONBOARDING_CAP, str(skill_alloc)])
 	f.role_stats = stats
-	# ch. 02 §5 / rev 2 §4: the founder holds ONE job. He starts on the build, which is
-	# where every formula has always found him — the model becomes real here, the PRESSURE
-	# arrives when the Görevler tab can move him off it and the build notices.
-	f.assigned_jobs = [HRConstants.JOB_BUILD]
+	# ch. 02 §5 / rev 2 §4: the founder holds ONE AREA. He starts in whichever of the three
+	# BUILD areas he allocated the most into — which is exactly where the retired `build`
+	# job used to put him, so day one still has a staffed build and no formula moves.
+	# The PRESSURE arrives when the Görevler tab moves him off it and the build notices.
+	f.assigned_jobs = [_founder_start_area(stats)]
 	f.traits = traits_arr
 	# loyalty / relationship / trust_score / attention_flag stay at Resource
 	# defaults — forward-compatible per scripts/data_models/character.gd.

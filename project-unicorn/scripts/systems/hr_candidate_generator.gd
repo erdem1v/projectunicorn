@@ -36,7 +36,7 @@ extends RefCounted
 #
 # Candidate file shape (plain Dictionary — transient data, no Resource):
 #   {"name": String, "role": String, "band": String,
-#    "axes": {"expertise": int, "pace": int, "rapport": int},
+#    "axes": {altı alan + leadership},   # HRConstants.EMPLOYEE_SKILL_KEYS, her biri 0..AREA_MAX
 #    "salary": int, "traits": Array[String], "note_index": int}
 
 
@@ -317,35 +317,28 @@ static func _negative_carriers(seed_value: int) -> Array:
 
 
 static func _pick_traits(seed_value: int, index: int, wants_negative: bool, used: Array) -> Array[String]:
-	# Employee formula (HRConstants.validate_employee_traits, deliberately NOT the founder's):
-	# 1-2 positive, at most 1 negative, no duplicates — plus the batch rule that no id repeats
-	# across the three files, which is why `used` is shared by both polarities.
-	var positive_pool: Array = HRConstants.positive_trait_ids()
-	var negative_pool: Array = HRConstants.negative_trait_ids()
+	# TEK TRAIT (HRConstants.TRAIT_COUNT, 2026-08-22). Onaylı tasarım her dosyada bir tane
+	# çiziyor ve dosyalardan birinin tek trait'i OLUMSUZ. Yani kutup artık bir EK değil, tek
+	# başına DİLİM: `_negative_carriers` bir dosyayı işaretlediyse o dosyanın TEK trait'i
+	# olumsuzdur — saf bir yük, ucuz olmasının sebebi de bu.
+	#
+	# `used` iki kutupta da paylaşılır: batch içinde hiçbir trait iki dosyada görünmez.
+	# Havuzlar beşer, dosya üç — tek trait kuralında tükenme ihtimali yok, o yüzden eski
+	# `reserved` rezervasyon aritmetiği de gereksiz kaldı ve gitti.
 	var salt: int = SALT_CANDIDATE_STRIDE * index
-	var span: int = maxi(1, HRConstants.TRAIT_MAX_POSITIVE - HRConstants.TRAIT_MIN_POSITIVE + 1)
-	var wanted: int = HRConstants.TRAIT_MIN_POSITIVE + _mix(seed_value, SALT_POSITIVE_COUNT + salt) % span
-	# The pool is shared and never repeats, so this file must not eat what the files after it
-	# still need: leave TRAIT_MIN_POSITIVE on the table per remaining candidate. Five good
-	# traits over three files means 2+2+1 fits and 2+2+2 does not.
-	var available: int = _unused_count(positive_pool, used)
-	var reserved: int = (HRConstants.CANDIDATE_COUNT - index - 1) * HRConstants.TRAIT_MIN_POSITIVE
-	wanted = clampi(wanted, HRConstants.TRAIT_MIN_POSITIVE, maxi(HRConstants.TRAIT_MIN_POSITIVE, available - reserved))
-
-	# Positives first, negative last: the order the roster fixtures already use and the order the
-	# candidate card reads out. Gizli trait yoktur — every one of these prints on the file, with
-	# its effect, which is why a bad trait is a price the player accepts rather than a trap.
 	var traits: Array[String] = []
-	for j in range(wanted):
-		var positive_id: String = _take_unused(positive_pool, used,
-			_mix(seed_value, SALT_POSITIVE_PICK + salt + j) % maxi(positive_pool.size(), 1))
-		if positive_id != "":
-			traits.append(positive_id)
-	if wants_negative and HRConstants.TRAIT_MAX_NEGATIVE > 0:
+	if wants_negative:
+		var negative_pool: Array = HRConstants.negative_trait_ids()
 		var negative_id: String = _take_unused(negative_pool, used,
 			_mix(seed_value, SALT_NEGATIVE_PICK + salt) % maxi(negative_pool.size(), 1))
 		if negative_id != "":
 			traits.append(negative_id)
+	else:
+		var positive_pool: Array = HRConstants.positive_trait_ids()
+		var positive_id: String = _take_unused(positive_pool, used,
+			_mix(seed_value, SALT_POSITIVE_PICK + salt) % maxi(positive_pool.size(), 1))
+		if positive_id != "":
+			traits.append(positive_id)
 	if not HRConstants.validate_employee_traits(traits):
 		push_error("[HRCandidateGenerator] trait set failed HRConstants.validate_employee_traits: %s" % str(traits))
 	return traits

@@ -44,7 +44,19 @@ const EMPLOYEE_SKILL_KEYS := ["product", "design", "engineering", "qa", "sales",
 	"customer_success", "leadership"]
 
 const AREA_MIN := 0
-const AREA_MAX := 9
+## 10, not 9, since 2026-08-21: the approved skin draws every skill as FIVE stars with a
+## real half star, and the only mapping that makes both ends of the ruler honest is
+## 2 points = 1 star. At 9 the top of the ruler was 4½ stars and five could never fill.
+##
+## Raising the ceiling moved no existing value — but it DID move quoted salaries, because
+## _shape_premium prices against AREA_MAX × 4. Taken deliberately (Erdem 2026-08-21);
+## hr_candidate_invariants is the guard that the three quotes stay distinct.
+const AREA_MAX := 10
+
+## The star ruler. One home, so the ledger, the matrix, the founder card and the training
+## modal can never disagree about what a number looks like.
+const STAR_MAX := 5
+const POINTS_PER_STAR := 2
 
 # TRIPWIRE. FounderConstants.OLD_SKILLS is the precedent (game_state.get_founder_skill
 # push_errors on a retired founder key). Employee axes had no such guard, so a rename
@@ -111,44 +123,21 @@ const ROLE_AREAS := {
 	"customer_rep": {"key": "customer_success", "secondary": "sales"},
 }
 
-# The seven jobs of rev 2 §4. ASSIGNMENT IS TO A JOB, not to an area (Erdem 2026-08-21):
-# §4's table is headed "İş", the founder clause says "bir işe atandığında", and ch. 03 §8
-# ("yeni sürüme başlayınca ekip destekten çekilir") plus ch. 06 §1.3 ("covering head =
-# anyone assigned to support/CS") both need Build and Destek to be separately assignable.
-# Areas do three things only: say who is ELIGIBLE, say which number the formula reads, and
-# say whether that job is the person's key area (normal) or a secondary one (§5, tiring).
-const JOB_BUILD := "build"          # aktif sürüm — hız, tavan, bug oranı
-const JOB_TEST := "test"            # beta keşif hızı
-const JOB_SUPPORT := "support"      # canlı ürün — bilet çözümü, yanıt süresi
-const JOB_ACCOUNTS := "accounts"    # hesap sahipliği — memnuniyet, risk kartları
-const JOB_SALES := "sales"          # lead işleme, kapanış
-const JOB_RESEARCH := "research"    # özellik kilidi açılır
-const JOB_COST := "cost"            # servis maliyeti ↓, teknik borç ↓
-const JOBS := ["build", "test", "support", "accounts", "sales", "research", "cost"]
-
-# rev 2 §4 "Kimler" column. Order matters: the FIRST area a person is strong in is the one
-# the job reads (see area_for_job).
-const JOB_AREAS := {
-	"build": ["product", "design", "engineering"],
-	"test": ["qa"],
-	"support": ["engineering", "customer_success"],
-	"accounts": ["customer_success", "sales"],
-	"sales": ["sales"],
-	"research": ["product", "design", "engineering"],
-	"cost": ["engineering"],
-}
-
-# Where a fresh hire lands so nobody is born idle. This is what keeps every downstream
-# formula seeing the roster it saw before the assignment layer existed: the model is real
-# from this commit, the PRESSURE switches on when the Görevler tab can move people.
-const ROLE_DEFAULT_JOB := {
-	"product_manager": "build",
-	"designer": "build",
-	"developer": "build",
-	"tester": "test",
-	"sales_rep": "sales",
-	"customer_rep": "accounts",
-}
+# ATAMA CETVELİ — rev 2 §4. NOT THE SKILL RULER: `AREAS` above is what a person IS good at,
+# this is what they are DOING today. The two lists overlap by six ids and differ by one, and
+# keeping them apart is the whole reason `research` can be assignable without anybody
+# carrying a Araştırma number.
+#
+# SECOND RULING ON THE SAME SENTENCE (2026-08-21). §4 says "alanlar işaretlenir" but its
+# table is headed "İş", and the first pass (18d27e3) read it as SEVEN JOBS — build · test ·
+# support · accounts · sales · research · cost. The approved skin settles it the other way:
+# the Görevler matrix carries one column per AREA plus Araştırma, and names
+# Build/Destek/Hesap/Maliyet as retired. So the assignment unit is the AREA and the four job
+# ids with no area of their own are gone. `support` and `accounts` both collapse onto
+# Müşteri İlişkileri — which is what ch. 06 §1.3's "covering head" was counting all along.
+const AREA_RESEARCH := "research"   # özellik kilidi açılır — TÜKETİCİSİ YOK (Ürün turunun işi)
+const ASSIGNABLE := ["product", "design", "engineering", "qa", "sales", "customer_success",
+	"research"]
 
 # --- Aşırı yüklenme (rev 2 §5). Every number [WORKING]; §11 lists them as open. ---
 # "Aşırı yük kısa süre tolere edilir, uzun sürerse moral düşer ve kaçma riskine gider."
@@ -168,25 +157,32 @@ static func role_secondary_area(role_id: String) -> String:
 	return String(row.get("secondary", ""))
 
 
-static func job_areas(job_id: String) -> Array:
-	return JOB_AREAS.get(job_id, [])
+static func is_assignable(area_id: String) -> bool:
+	return ASSIGNABLE.has(area_id)
 
 
-static func default_job_for_role(role_id: String) -> String:
-	return String(ROLE_DEFAULT_JOB.get(role_id, ""))
+static func default_area_for_role(role_id: String) -> String:
+	## Where a fresh hire lands so nobody is born idle: their own key area. Replaces
+	## ROLE_DEFAULT_JOB, which had to name a job because three areas shared one.
+	return role_key_area(role_id)
 
 
-static func area_for_job(role_stats: Dictionary, job_id: String) -> String:
-	## Which of the job's eligible areas this person actually works it through: their
-	## strongest. Ties break on JOB_AREAS order, which is why that order is canon.
-	var best: String = ""
-	var best_v: int = -1
-	for area_key in job_areas(job_id):
-		var v: int = int(role_stats.get(String(area_key), 0))
-		if v > best_v:
-			best_v = v
-			best = String(area_key)
-	return best
+static func can_hold_area(role_id: String, area_id: String, category: String) -> bool:
+	## The skin's "ALANI YOK · ATANAMAZ" cell, as a rule. An employee may only work their
+	## KEY or SECONDARY area — which is exactly why every other column in the matrix is drawn
+	## dashed and refuses the click. The founder has no role and no key area, so all seven are
+	## his; ch. 02 §5 limits him by COUNT (one at a time), never by which one.
+	if not is_assignable(area_id):
+		return false
+	if category == "founder":
+		return true
+	return area_id == role_key_area(role_id) or area_id == role_secondary_area(role_id)
+
+
+static func stars_for(points: int) -> float:
+	## Points -> stars, the single mapping. Half stars are real: POINTS_PER_STAR is 2, so an
+	## odd number renders as a half-inked glyph instead of rounding a whole star away.
+	return clampf(float(points) / float(POINTS_PER_STAR), 0.0, float(STAR_MAX))
 
 
 static func experience_gain_mult(lead_leadership: int) -> float:
@@ -218,12 +214,13 @@ static func seed_skills(role_id: String, key_value: int, rest_value: int,
 	return out
 
 
-static func job_fatigue_mult(role_id: String, job_id: String, role_stats: Dictionary) -> float:
+static func area_fatigue_mult(role_id: String, area_id: String) -> float:
 	## rev 2 §5: "ana alanında çalışmak normal, ikincil alanında çalışmak daha yorucudur."
-	## The job is read through area_for_job; if that is the role's KEY area the person is
-	## home and pays nothing, otherwise they pay SECONDARY_AREA_MULT.
-	var worked: String = area_for_job(role_stats, job_id)
-	if worked != "" and worked == role_key_area(role_id):
+	## No lookup left to do — the assignment IS an area now. The founder has no key/secondary
+	## split, so he is never charged the secondary rate.
+	if role_id == "" or role_id == ROLE_FOUNDER:
+		return 1.0
+	if area_id == role_key_area(role_id):
 		return 1.0
 	return SECONDARY_AREA_MULT
 
@@ -306,6 +303,35 @@ const ROLE_DEPARTMENT := {
 	"sales_rep": "sales",
 	"customer_rep": "customer",
 }
+# KADRO GRUPLARI — onaylı tasarımın dört bandı. DEPARTMANIN YERİNE GEÇMİYOR, yanında duruyor:
+# departman EK MESAİ'nin birimidir (üç tane, HROvertimeSystem onları sayıyor), grup ise
+# defterin başlık bandıdır (dört tane). Eskiden defter departman + alt-bölüm diye İKİ
+# seviyede çiziliyordu; tasarım onu tek seviyeye düzledi ve Ürün Yöneticisi ile Tasarımcı'yı
+# bir banda, Yazılım ile Test Mühendisi'ni ötekine aldı.
+const GROUP_PRODUCT_DESIGN := "product_design"
+const GROUP_DEVELOPMENT := "development"
+const GROUP_SALES := "sales"
+const GROUP_CUSTOMER_SUCCESS := "customer_success"
+const ROSTER_GROUPS := ["product_design", "development", "sales", "customer_success"]
+const ROLE_GROUP := {
+	"product_manager": "product_design",
+	"designer": "product_design",
+	"developer": "development",
+	"tester": "development",
+	"sales_rep": "sales",
+	"customer_rep": "customer_success",
+}
+## Bir departmanın EK MESAİ düğmesi hangi grup başlığına asılır. Ürün Geliştirme'nin İKİ
+## grubu var ve tek bir mesai bloğu var, o yüzden düğme İLK grupta durur — iki başlıkta aynı
+## bloğu iki kez göstermek oyuncuya iki ayrı mesai varmış gibi okunurdu.
+const GROUP_OVERTIME_HOST := {
+	"product_design": "product_dev",
+	"development": "",
+	"sales": "sales",
+	"customer_success": "customer",
+}
+
+
 const ROLE_SECTION := {
 	"product_manager": "design",
 	"designer": "design",
@@ -354,6 +380,23 @@ static func department_label(dept_id: String) -> String:
 
 static func section_label(section_id: String) -> String:
 	return _derived("HR_SECTION_", section_id)
+
+
+static func group_label(group_id: String) -> String:
+	return _derived("HR_GROUP_", group_id)
+
+
+static func roles_in_group(group_id: String) -> Array:
+	var out: Array = []
+	for role_id in EMPLOYEE_ROLES:
+		if String(ROLE_GROUP.get(role_id, "")) == group_id:
+			out.append(role_id)
+	return out
+
+
+static func overtime_dept_for_group(group_id: String) -> String:
+	## "" = bu başlıkta EK MESAİ düğmesi yok (bkz. GROUP_OVERTIME_HOST).
+	return String(GROUP_OVERTIME_HOST.get(group_id, ""))
 
 
 static func roles_in_department(dept_id: String) -> Array:
@@ -474,8 +517,18 @@ const TRAITS := {
 # Employee trait formula — DELIBERATELY NOT FounderConstants' formula (that one is
 # founder-specific: 2 positives force exactly 1 negative). Employees: 1-2 positive,
 # at most 1 negative, and roughly half of generated candidates carry that negative.
-const TRAIT_MIN_POSITIVE := 1
-const TRAIT_MAX_POSITIVE := 2
+## TEK TRAIT (2026-08-22). Onaylı tasarım herkeste bir tane çiziyor — defterin TRAIT
+## sütununda bir ikon, aday kartında bir çip — ve dosyalardan birinin tek trait'i OLUMSUZ
+## (11b · Kerem Çetin · HAVAYI BOZAR). Eski kural en az bir OLUMLU istiyordu, yani "yalnız
+## olumsuz" bir dosya geçersizdi; artık bir kişi TAM BİR trait taşır ve o trait iki
+## kutuptan biri olabilir. Bir aday artık saf bir yük olabilir — bu bilinçli bir denge
+## kararıydı (Erdem 2026-08-22), yan etkisi değil.
+##
+## KURUCU ETKİLENMEZ: FounderConstants.validate_traits ayrı bir formül ve Kişisel kartı
+## (10a) kurucuda İKİ trait çiziyor.
+const TRAIT_COUNT := 1
+const TRAIT_MIN_POSITIVE := 0
+const TRAIT_MAX_POSITIVE := 1
 const TRAIT_MAX_NEGATIVE := 1
 const TRAIT_NEGATIVE_SHARE := 0.5   # üretilen adaylarda kötü trait taşıma oranı
 
@@ -516,8 +569,10 @@ static func negative_trait_ids() -> Array:
 
 
 static func validate_employee_traits(trait_ids: Array) -> bool:
-	var pos: int = 0
-	var neg: int = 0
+	## TAM BİR geçerli trait, kutbu serbest (bkz. TRAIT_COUNT). Sayı kuralının kendisi
+	## sabitten okunuyor ki bir sonraki tasarım turu iki'ye çıkarmak isterse tek yer değişsin.
+	if trait_ids.size() != TRAIT_COUNT:
+		return false
 	var seen: Array = []
 	for trait_id in trait_ids:
 		var tid: String = String(trait_id)
@@ -526,13 +581,7 @@ static func validate_employee_traits(trait_ids: Array) -> bool:
 		if seen.has(tid):
 			return false   # no duplicates
 		seen.append(tid)
-		if trait_polarity(tid) == "positive":
-			pos += 1
-		else:
-			neg += 1
-	if pos < TRAIT_MIN_POSITIVE or pos > TRAIT_MAX_POSITIVE:
-		return false
-	return neg <= TRAIT_MAX_NEGATIVE
+	return true
 
 
 static func trait_mult(trait_ids: Array, effect_key: String) -> float:
@@ -621,7 +670,10 @@ const SALARY_BANDS := {
 const BAND_SHAPE := {
 	"junior": [[3, 2, 1], [4, 3, 2], [5, 4, 3]],
 	"mid": [[5, 4, 3], [6, 5, 3], [7, 5, 4]],
-	"senior": [[7, 6, 5], [8, 7, 5], [9, 7, 6]],
+	# ÜST SEGMENT'in tepesi 10, yani BEŞ YILDIZ (2026-08-22). Tasarımın üçüncü adayı (11b ·
+	# Emre Tekin) Ürün'de beş yıldız taşıyor; 9'da kalsaydı oyunda HİÇBİR aday beş yıldız
+	# gösteremezdi ve bandın "tavan" iddiası boş kalırdı.
+	"senior": [[7, 6, 5], [8, 7, 5], [10, 7, 6]],
 }
 
 
@@ -753,7 +805,13 @@ const EXPERIENCE_PER_BUILD_DAY := 2  # WORKING: bir geliştirme fazı koşarken
 const EXPERIENCE_LEAD_BONUS_MAX := 1.5  # WORKING: Liderlik 9'daki lider altında öğrenme hızı
 const TRAINING_DAYS := 14            # rev 2 §8: "Süre iki hafta" (5 idi)
 const TRAINING_FEE := 500            # WORKING: TABAN ücret; gerçek ücret kademeli, aşağıya bak
-const AREA_TRAIN_CAP := 8            # WORKING: eğitimin alan tavanı (AREA_MAX 9'un altında bilerek)
+const AREA_TRAIN_CAP := 8            # WORKING: eğitimin alan tavanı (AREA_MAX 10'un altında bilerek)
+## İKİ KANAL, İKİ TAVAN. Parayla eğitim 8'de, yani DÖRT YILDIZDA durur; BEŞ yıldıza yalnız
+## işi yaparak (add_area_experience, tavanı AREA_MAX) ya da üst segment bir adayı işe alarak
+## çıkılır. Boşluk bilinçli: para her şeyi satın alamaz.
+## LİDERLİK daha pahalı — tasarımın eğitim tablosunda aynı seviyede Liderlik satırı alan
+## satırlarının üstünde fiyatlanıyor. [WORKING]
+const TRAINING_LEADERSHIP_MULT := 1.35
 # rev 2 §8 "Ücret kademeli: düşük yıldızdan yükseltmek ucuz, yüksek yıldızdan yükseltmek
 # pahalı" + "Tekrarında azalan getiri". İkisi de TEK kanaldan ödenir: ücret. Getiri hep +1
 # puandır (tam sayı cetvelde başka türlüsü okunmaz), azalan olan aynı +1'in FİYATIDIR.
@@ -761,11 +819,28 @@ const TRAINING_FEE_PER_POINT := 220  # WORKING: mevcut alan değeri başına ek 
 const TRAINING_REPEAT_SURCHARGE := 0.35  # WORKING: aynı alandaki her tekrarda oransal zam
 
 
-static func training_fee(current_area_value: int, trainings_done_in_area: int) -> int:
+static func training_fee(current_area_value: int, trainings_done_in_area: int,
+		skill_key: String = "") -> int:
 	## Kademeli ücret + azalan getiri, tek yerde. Çağıran yalnız bu sayıyı görür.
+	## `skill_key` YALNIZ Liderlik için fark yaratır; boş bırakılırsa alan fiyatı döner, yani
+	## bu imzadan önceki her çağrı aynı rakamı alır.
 	var base: float = float(TRAINING_FEE) + float(maxi(current_area_value, 0)) * float(TRAINING_FEE_PER_POINT)
 	var repeat: float = 1.0 + float(maxi(trainings_done_in_area, 0)) * TRAINING_REPEAT_SURCHARGE
-	return int(round(base * repeat))
+	var lead: float = TRAINING_LEADERSHIP_MULT if skill_key == SKILL_LEADERSHIP else 1.0
+	return int(round(base * repeat * lead))
+
+
+static func trainable_keys() -> Array:
+	## Eğitime gönderilebilecek yetenekler: altı alan + LİDERLİK. Tasarımın eğitim tablosu
+	## (11c) kişinin ana alanını, ikincil alanını ve Liderlik'i gösteriyor. Karizma YOK —
+	## tasarımın listesinde de yok ve zaten yalnız kurucuda var.
+	var out: Array = AREAS.duplicate()
+	out.append(SKILL_LEADERSHIP)
+	return out
+
+
+static func is_trainable_key(skill_key: String) -> bool:
+	return AREAS.has(skill_key) or skill_key == SKILL_LEADERSHIP
 
 
 static func badge_label(badge_id: String) -> String:

@@ -1,39 +1,30 @@
 class_name HRLedger
 extends RefCounted
 
-# EKİP DEFTERİ — onaylı Terminal düzeni (mockup 5g/5h).
+# EKİP → KADRO defteri — onaylı Terminal düzeni (Unicorn Skins 9b).
 #
 # Kart listesi EMEKLİ. Defter tam genişlikte tek bir tablodur: etiketli mono sütun
 # başlıkları, altlarında ÇIPLAK RAKAMLAR. Kilitli reçetenin çekirdek kuralı bu —
 # "hiçbir sayı, oyuncuya 'bu ne?' dedirtmeden durmaz".
 #
-# Sütun genişlikleri mockup'tan BİREBİR ölçüldü; eyeball yok:
-#   ÇALIŞAN flex · UZMANLIK 92 · HIZ 64 · UYUM 64 · DENEYİM 110 ·
-#   (adsız durum sütunu) 330 · MAAŞ 130 · MORAL 170
-# Adsız 330'luk sütun mockup'ta BOŞ görünüyor çünkü ekran boş-durumu gösteriyor;
-# dolu satırda DURUM ÇİPLERİ orada yaşıyor (YENİ · İzinde · Eğitimde · N gün ·
-# EĞİTİME GÖNDER). Başlığı da o yüzden var: etiketsiz sütun bırakılmıyor.
+# SÜTUN GENİŞLİKLERİ 1920'lik mockup'tan BİREBİR ölçüldü; eyeball yok:
+#   ÇALIŞAN esnek · ROLLER·LİDERLİK 370 · GÖREV 260 · DENEYİM 140 · DURUM 160 ·
+#   TRAIT 90 · MAAŞ 150 · MORAL 160 · ⋯ 44
 #
-# ROL AÇIKLAMASI ARTIK SATIRDA DEĞİL: mockup satırı tek satır yüksekliğinde ve
-# açıklama metni defteri üç katına çıkarırdı. HOVER TOOLTIP'e taşındı (görev §2).
+# ROL AÇIKLAMASI SATIRDA DEĞİL: satır tek satır yüksekliğinde ve açıklama metni defteri
+# üç katına çıkarırdı. HOVER TOOLTIP'te.
+const W_ROLES := 370
+const W_TASK := 260
+const W_EXPERIENCE := 140
+const W_STATE := 160
+const W_TRAIT := 90
+const W_SALARY := 150
+const W_MORALE := 160
+const W_MENU := 44
 
-# 2026-08-21: three bare axis columns became one AREA cell plus Liderlik. rev 2 §3 forbids
-# a flat six-column skill table and asks the closed row for the role's key area and, if it
-# has one, its secondary ("Product Manager: Ürün ★★★ · Tasarım ★"). A shared column header
-# cannot name a per-role area, so the area NAMES live in the cell and the header stays
-# generic. TOTAL WIDTH IS UNCHANGED (92+64+64 == 156+64), so the table does not reflow.
-# The star widget itself is the design turn's; this is the same information in text.
-const W_AREAS := 156
-const W_LEADERSHIP := 64
-const W_EXPERIENCE := 110
-const W_STATE := 330
-const W_SALARY := 130
-const W_MORALE := 170
-## Satırın aksiyon sözlüğü. Kart (HREmployeeCard) emekli olurken buraya taşındı —
-## sabitler kartın SON canlı sembolleriydi, renderer'ı çoktan ölüydü.
-## ACTION_MENU satır tıklamasıdır: üç kişi-aksiyonunu taşıyan küçük popover'ı açar.
-## Eğitim menüde DEĞİL, DURUM hücresinde kendi butonunda kalır (yalnız deneyim
-## dolduğunda görünür ve orada bir DURUM ifadesidir, bir kişi kararı değil).
+## Satırın aksiyon sözlüğü. ACTION_MENU satır (ve ⋯ düğmesi) tıklamasıdır: DÖRT kişi
+## aksiyonunu taşıyan popover'ı açar. Eğitim 2026-08-22'de o menüye girdi — onaylı
+## tasarımda satırda kendi düğmesi yok ve kişi başına bir karar olduğu için menü onun evi.
 const ACTION_MENU := "menu"
 const ACTION_RAISE := "raise"
 const ACTION_VACATION := "vacation"
@@ -41,19 +32,21 @@ const ACTION_FIRE := "fire"
 const ACTION_TRAIN := "train"
 
 
-## Sütun başlığı satırı. Bir kez, defterin en üstünde — her departmanda tekrar
-## ETMEZ (mockup böyle: başlık tablonun başlığıdır, bölümün değil).
+## Sütun başlığı satırı. Bir kez, defterin en üstünde — her grupta tekrar ETMEZ
+## (mockup böyle: başlık tablonun başlığıdır, bölümün değil).
 static func column_header() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 0)
 	row.custom_minimum_size = Vector2(0, 26)
 	row.add_child(_head(tr_key("HR_COL_EMPLOYEE"), 0, HORIZONTAL_ALIGNMENT_LEFT))
-	row.add_child(_head(tr_key("HR_COL_AREAS"), W_AREAS))
-	row.add_child(_head(tr_key("HR_COL_LEADERSHIP"), W_LEADERSHIP))
+	row.add_child(_head(tr_key("HR_COL_ROLES_LEADERSHIP"), W_ROLES))
+	row.add_child(_head(tr_key("HR_COL_TASK"), W_TASK))
 	row.add_child(_head(tr_key("HR_COL_EXPERIENCE"), W_EXPERIENCE))
 	row.add_child(_head(tr_key("HR_COL_STATE"), W_STATE))
+	row.add_child(_head(tr_key("HR_COL_TRAIT"), W_TRAIT))
 	row.add_child(_head(tr_key("HR_COL_SALARY"), W_SALARY))
 	row.add_child(_head(tr_key("HR_COL_MORALE"), W_MORALE))
+	row.add_child(_head("", W_MENU))
 	var wrap := PanelContainer.new()
 	wrap.theme_type_variation = &"HeaderBand"
 	wrap.add_child(row)
@@ -71,34 +64,50 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 	card.mouse_exited.connect(func() -> void: card.theme_type_variation = &"LedgerRow")
 	card.gui_input.connect(_on_row_input.bind(emp.id, on_action, card))
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
-	# Rol açıklaması satırdan tooltip'e taşındı (görev §2).
 	card.tooltip_text = HRConstants.role_phase_hint(emp.role)
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 0)
 	card.add_child(row)
 
-	# --- ÇALIŞAN: ad + rol, tek hücrede iki satır ---
+	var muted: bool = emp.status != HRConstants.STATUS_ACTIVE
+
+	# --- ÇALIŞAN: baş harf rozeti + ad + yer rozeti + rol ---
+	var who_cell := HBoxContainer.new()
+	who_cell.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	who_cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	who_cell.add_child(UiFactory.make_avatar(UiFactory.initials_of(emp.character_name), 32))
 	var who := VBoxContainer.new()
-	who.add_theme_constant_override("separation", 1)
-	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var name_lbl := UiFactory.make_label(emp.character_name, &"RowName")
-	who.add_child(name_lbl)
+	who.add_theme_constant_override("separation", 2)
+	who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	# BOŞTA / AŞIRI YÜK rozetleri AD SATIRINDA durur (9b), DURUM sütununda değil: ikisi de
+	# kişinin O AN NEREDE olduğunu söylüyor — bir olay değil bir konum.
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	name_row.add_child(UiFactory.make_label(emp.character_name, &"RowName"))
+	var here: Control = _placement_badge(emp)
+	if here != null:
+		name_row.add_child(here)
+	who.add_child(name_row)
 	who.add_child(UiFactory.make_label(
 		UiTokens.tr_upper(HRConstants.role_label(emp.role)), &"MicroLabel"))
-	row.add_child(who)
+	who_cell.add_child(who)
+	row.add_child(who_cell)
 
-	# --- ALANLAR: rolün anahtar + ikincil alanı, adlarıyla (rev 2 §3) ---
-	var muted: bool = emp.status != HRConstants.STATUS_ACTIVE
-	row.add_child(HRUiShared.role_area_cell(emp, W_AREAS, muted))
-	row.add_child(_num(str(int(emp.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0))),
-		W_LEADERSHIP, muted))
+	# --- ROLLER · LİDERLİK: iki alan + hairline + Liderlik, hepsi beş yıldız ---
+	row.add_child(HRUiShared.role_area_cell(emp, W_ROLES, muted))
 
-	# --- DENEYİM: mini bar + % (onaylı [PROPOSAL] sütunu) ---
+	# --- GÖREV: aktif sürümün adıyla, ya da alan ifadesiyle ---
+	row.add_child(_task_cell(emp, muted))
+
+	# --- DENEYİM: mini bar + % ---
 	row.add_child(_experience_cell(emp, refs))
 
 	# --- DURUM çipleri ---
-	row.add_child(_state_cell(emp, on_action))
+	row.add_child(_state_cell(emp))
+
+	# --- TRAIT: tek ikon, adı hover'da ---
+	row.add_child(HRUiShared.trait_cell(emp.traits, W_TRAIT))
 
 	# --- MAAŞ ---
 	row.add_child(_num(HRUiShared.money(emp.monthly_salary), W_SALARY, muted))
@@ -108,6 +117,19 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 	morale_cell.custom_minimum_size = Vector2(W_MORALE, 0)
 	morale_cell.size_flags_horizontal = Control.SIZE_SHRINK_END
 	row.add_child(morale_cell)
+
+	# --- ⋯ : satır menüsü. Kendi düğmesi var çünkü 9e menüyü SATIRIN SAĞ KENARINA
+	# hizalıyor — çapa o düğmedir, satırın tamamı değil.
+	var menu_btn := Button.new()
+	menu_btn.text = "⋯"
+	menu_btn.flat = true
+	menu_btn.custom_minimum_size = Vector2(W_MENU, 0)
+	menu_btn.focus_mode = Control.FOCUS_NONE
+	menu_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	menu_btn.add_theme_color_override("font_color", UiTokens.INK_DIM)
+	menu_btn.pressed.connect(func() -> void: on_action.call(emp.id, ACTION_MENU, menu_btn))
+	row.add_child(menu_btn)
+
 	_pass_clicks_through(row)
 	return card
 
@@ -116,16 +138,20 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 ## MOUSE_FILTER_STOP ile doğar, yani bir satırın tam ortasındaki iki geniş şeride
 ## tıklamak gui_input'a HİÇ ulaşmıyordu: satır "bazen açılıyor" gibi davranıyordu.
 ## Butonlar hariç her şey IGNORE'a çekiliyor — buton kendi tıklamasının sahibi.
+## TOOLTIP TAŞIYAN düğümler de muaf: hover'ı yiyen bir IGNORE, 9f'in rozet
+## baloncuklarını sessizce öldürürdü.
 static func _pass_clicks_through(node: Node) -> void:
 	for child in node.get_children():
 		if child is Button:
-			continue   # EĞİTİME GÖNDER kendi aksiyonunu taşır
+			continue
 		if child is Control:
-			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+			var c: Control = child
+			if c.tooltip_text == "":
+				c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_pass_clicks_through(child)
 
 
-## Boş departman satırı — mockup: kesikli kenar + "Henüz kimse yok" + satır içi hayalet.
+## Boş grup satırı — kesikli kenar + "Henüz kimse yok" + satır içi hayalet düğme.
 static func empty_row(on_search: Callable) -> Control:
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"EmptyRow"
@@ -163,38 +189,74 @@ static func _num(text: String, width: int, muted: bool) -> Label:
 	return l
 
 
-## Hangi ALANIN deneyimi gösteriliyor. Deneyim 2026-08-21'den beri alan başına
-## (rev 2 §8) ve tek hücre altı sayaç gösteremez, o yüzden hücre kişinin BUGÜN
-## biriktirdiği alanı gösterir: ilk işinin alanı — HRSystem.tick_experience de tam
-## olarak aynı seçimi yapıyor, yani çubuk gerçekten hareket eden sayaçtır. Boştaki
-## kimse öğrenmiyor; sütun o zaman rolün anahtar alanını gösterir ve kıpırdamaz,
-## ki "boşta duruyor" zaten kendi çipiyle söyleniyor.
+## BOŞTA / AŞIRI YÜK — kişinin AD SATIRINDA duran yer rozeti (9b). Hover açıklamaları
+## 9f'ten birebir; ikisi de motorun türettiği okumalar, saklanan bayrak yok.
+static func _placement_badge(emp: Character) -> Control:
+	if HRSystem.is_overloaded(emp):
+		var over: Control = UiFactory.make_state_chip(tr_key("HR_BADGE_OVERLOADED_JOBS"),
+			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT)
+		over.tooltip_text = tr_key("HR_OVERLOAD_HINT")
+		over.mouse_filter = Control.MOUSE_FILTER_STOP
+		return over
+	if HRSystem.is_idle(emp):
+		var idle: Control = UiFactory.make_state_chip(tr_key("HR_BADGE_IDLE"),
+			UiTokens.INK_DIM, Color(0, 0, 0, 0), UiTokens.SEPARATOR)
+		idle.tooltip_text = tr_key("HR_IDLE_HINT")
+		idle.mouse_filter = Control.MOUSE_FILTER_STOP
+		return idle
+	return null
+
+
+## GÖREV hücresi (9b). Aktif bir sürümün üzerinde çalışıyorsa ÜRÜN ADIYLA yazılır —
+## "Pulse v1'de çalışıyor" — çünkü oyuncunun kafasındaki şey o sürümdür, bir alan adı
+## değil. Satış ve Müşteri İlişkileri ürüne bağlı olmadığı için orada alan ifadesi kalır;
+## ürünsüz dönemde BÜTÜN sütun alan ifadesine düşer. Boştaki için tire.
+static func _task_cell(emp: Character, muted: bool) -> Control:
+	var text: String = tr_key("HR_TASK_NONE")
+	if not emp.assigned_jobs.is_empty():
+		var area_id: String = String(emp.assigned_jobs[0])
+		var build: FeatureBuild = ProductSystem.get_active_build()
+		if build != null and ProductSystem.BUILD_AREAS.has(area_id):
+			text = tr_key("HR_TASK_ON_VERSION").format({
+				"product": build.product_name,
+				"version": int(GameState.get_flag("mvp_version", 1)),
+			})
+		else:
+			text = tr_key("HR_TASK_ON_AREA").format({"area": HRConstants.area_label(area_id)})
+	var lbl := UiFactory.make_label(text, &"RowMeta", UiTokens.INK_MUTED)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.custom_minimum_size = Vector2(W_TASK, 0)
+	lbl.clip_text = true
+	if muted:
+		lbl.modulate = Color(1, 1, 1, 0.45)
+	return lbl
+
+
+## Hangi ALANIN deneyimi gösteriliyor: kişinin BUGÜN biriktirdiği alan, yani ilk
+## atamasının alanı — HRSystem.tick_experience de aynı seçimi yapıyor, o yüzden çubuk
+## gerçekten hareket eden sayaçtır. Boştaki kimse öğrenmiyor; sütun o zaman rolün anahtar
+## alanını gösterir ve kıpırdamaz, ki "boşta duruyor" zaten kendi rozetiyle söyleniyor.
 static func _experience_area(emp: Character) -> String:
 	if not emp.assigned_jobs.is_empty():
-		var assigned: String = HRConstants.area_for_job(emp.role_stats, String(emp.assigned_jobs[0]))
-		if assigned != "":
+		var assigned: String = String(emp.assigned_jobs[0])
+		# Araştırma bir YETENEK değil, yalnız atanabilir bir slot — orada sayaç yok.
+		if HRConstants.AREAS.has(assigned):
 			return assigned
 	return HRConstants.role_key_area(emp.role)
 
 
-## DENEYİM hücresi: 4px iz + amber dolgu + sağda yüzde.
+## DENEYİM hücresi: 4px iz + dolgu + altında yüzde.
 static func _experience_cell(emp: Character, refs: Dictionary) -> Control:
 	var box := VBoxContainer.new()
 	box.custom_minimum_size = Vector2(W_EXPERIENCE, 0)
 	box.add_theme_constant_override("separation", 3)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	# `emp.experience` (tek int) 2026-08-21'de emekli oldu; okuması burada kalmıştı ve
-	# defterdeki HER SATIR için "Invalid access to property or key 'experience'" atıyordu.
 	var area_key: String = _experience_area(emp)
 	var value: int = int(emp.area_experience.get(area_key, 0))
 	var pct: int = int(round(float(value) / float(HRConstants.EXPERIENCE_MAX) * 100.0))
 	var val := UiFactory.make_label(Fmt.percent(pct, 0), &"RowMeta")
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	# ESKİ AMBER KURALI DÜŞTÜ: "sayaç dolu" bir zamanlar "eğitime gönderilebilir"
-	# demekti. rev 2 §8'de eğitimin deneyim şartı yok VE sayaç dolunca kendini +1 puana
-	# çevirip sıfırlanıyor, yani `value >= EXPERIENCE_MAX` artık hiçbir karede doğru
-	# olamaz. Hiç ateşlenemeyecek bir dal bırakmak yerine sildim; dolu-eşiğin yerine ne
-	# koyacağı tasarım turunun işi.
 	var bar := ProgressBar.new()
 	bar.theme_type_variation = &"BuildProgress"
 	bar.show_percentage = false
@@ -209,64 +271,57 @@ static func _experience_cell(emp: Character, refs: Dictionary) -> Control:
 	return box
 
 
-## DURUM sütunu: mockup'ın adsız 330'luk kolonu. En fazla bir çip + (uygunsa)
-## EĞİTİME GÖNDER aksiyonu.
-static func _state_cell(emp: Character, on_action: Callable) -> Control:
+## DURUM sütunu (160px). En fazla bir çip: eğitim · izin · YENİ · dikkat rozeti · tire.
+## EĞİTİME GÖNDER düğmesi buradan ÇIKTI (2026-08-22) — onaylı tasarımda satırda düğme
+## yok, eğitim ⋯ menüsünün dördüncü satırı.
+static func _state_cell(emp: Character) -> Control:
 	var box := HBoxContainer.new()
 	box.custom_minimum_size = Vector2(W_STATE, 0)
 	box.add_theme_constant_override("separation", 6)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 
-	# EDİLGENLİK önce: eğitim ve izin, satırın o gün ne YAPMADIĞINI söyler ve
-	# dikkat rozetlerinden daha yüksek okunur.
+	# EDİLGENLİK önce: eğitim ve izin, satırın o gün ne YAPMADIĞINI söyler ve dikkat
+	# rozetlerinden daha yüksek okunur.
 	if emp.training_days_left > 0:
 		box.add_child(_amber_chip(TranslationServer.translate("HR_STATE_TRAINING").format(
 			{"days": emp.training_days_left})))
-	elif emp.status == HRConstants.STATUS_ON_LEAVE:
-		# Eğitim çipi gün sayıyor, izin çipi saymıyordu — oyuncu ikinci bir kişiyi izne
-		# yollamayı göze alıp alamayacağını okuyamıyordu. HRSystem.leave_line zaten
-		# "İzinde · N gün kaldı" üretiyor (kart ölünce sahipsiz kalmıştı); çipler artık
-		# simetrik. Sayı okunamazsa (dönüş günü yoksa) sade forma düşer.
+		return box
+	if emp.status == HRConstants.STATUS_ON_LEAVE:
 		var leave_txt: String = HRSystem.leave_line(emp)
 		if leave_txt == "":
 			leave_txt = tr_key("HR_STATE_ON_LEAVE")
 		box.add_child(UiFactory.make_state_chip(leave_txt,
 			UiTokens.INK_MUTED, UiTokens.NEUTRAL_BADGE_BG, UiTokens.BORDER_DISABLED))
+		return box
 
 	# YENİ AYRI KANALDAN gelir ve gelmek zorundadır: badges_for'a girseydi
 	# HRSystem.attention_count()'u şişirir, yani yeni bir işe alım sol rayda "dikkat"
-	# yakardı. Bu satır uzun süre badges_for'un içinde YENİ arıyordu — motor onu asla
-	# döndürmediği için defterin YENİ çipi hiç çizilmedi, oysa dosyanın kendi başlığı
-	# çipler arasında sayıyor.
+	# yakardı.
 	if HRConstants.is_new_hire(emp.hire_day, GameState.day):
 		box.add_child(_amber_chip(UiTokens.tr_upper(HRConstants.badge_label(HRConstants.BADGE_NEW))))
+		return box
 
 	# Dikkat rozetleri motorun türettiği tek kaynaktan (HRSystem.badges_for), hepsi
-	# kırmızı: bunlar bir çağrıdır, bir bilgi değil.
-	for badge_id in HRSystem.badges_for(emp):
+	# kırmızı: bunlar bir çağrıdır, bir bilgi değil. En kötüsü önce gelir, biri yeter.
+	var badges: Array[String] = HRSystem.badges_for(emp)
+	if not badges.is_empty():
 		box.add_child(UiFactory.make_state_chip(
-			UiTokens.tr_upper(HRConstants.badge_label(String(badge_id))),
+			UiTokens.tr_upper(HRConstants.badge_label(String(badges[0]))),
 			UiTokens.negative(), UiTokens.negative_bg(), UiTokens.negative_rule()))
+		return box
 
-	if CharacterRegistry.can_train(emp.id):
-		var btn: Button = HRUiShared.action_button(tr_key("HR_TRAINING_SEND"), Callable())
-		# Butonun KENDİSİ çapa: popover kendini ona göre konumluyor.
-		btn.pressed.connect(func() -> void: on_action.call(emp.id, ACTION_TRAIN, btn))
-		box.add_child(btn)
+	box.add_child(UiFactory.make_label(tr_key("HR_TASK_NONE"), &"RowMeta", UiTokens.INK_FAINT))
 	return box
 
 
-## Amber çip. Kehribar SEMANTİK DEĞİL (marka aksanı) ve renk körü modunda
-## yerinde kalır, o yüzden sabit token'dan okunur.
+## Amber çip. Kehribar SEMANTİK DEĞİL (marka aksanı) ve renk körü modunda yerinde kalır,
+## o yüzden sabit token'dan okunur.
 static func _amber_chip(text: String) -> Control:
 	return UiFactory.make_state_chip(text, UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT)
 
 
-## Satır tıklaması = kişi aksiyonları menüsü. Eskiden DOĞRUDAN zam popover'ını
-## açıyordu ve diğer iki aksiyonun (izne gönder, işten çıkar) oyunda hiçbir kapısı
-## yoktu — motor tarafları yazılıydı, onay modalları yazılıydı, yalnız çağıran yoktu.
-## SÖZLEŞME `(emp_id, action, anchor)` — sıra ve çapa şart, yoksa popover kendini
-## konumlandıramaz.
+## Satır tıklaması = kişi aksiyonları menüsü. SÖZLEŞME `(emp_id, action, anchor)` —
+## sıra ve çapa şart, yoksa popover kendini konumlandıramaz.
 static func _on_row_input(ev: InputEvent, emp_id: String, on_action: Callable, anchor: Control) -> void:
 	if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
 		on_action.call(emp_id, ACTION_MENU, anchor)

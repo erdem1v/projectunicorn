@@ -22,9 +22,13 @@ extends Control
 
 signal state_changed          # arayış başladı / iptal edildi / işe alım oldu → sekme tazelensin
 
-const PANEL_MIN := Vector2(720, 0)
+## 11a 1440px, 11b 1560px — iki adımın genişliği tasarımdan birebir. Dosya adımı daha
+## geniş çünkü üç kart yan yana duruyor.
+const PANEL_SEARCH := Vector2(1440, 0)
+const PANEL_FILES := Vector2(1560, 0)
 
 var _root_box: VBoxContainer = null
+var _panel: PanelContainer = null
 var _selected_role: String = ""
 var _selected_band: String = ""
 
@@ -42,7 +46,7 @@ func _ready() -> void:
 	center.set_anchors_preset(Control.PRESET_CENTER)
 	center.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	center.grow_vertical = Control.GROW_DIRECTION_BOTH
-	center.custom_minimum_size = PANEL_MIN
+	_panel = center
 	add_child(center)
 	var margin := MarginContainer.new()
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -66,78 +70,123 @@ func _rebuild() -> void:
 		c.queue_free()
 	_add_masthead()
 	if HRSearchSystem.get_state() == HRConstants.SEARCH_FILES_READY:
+		if _panel != null:
+			_panel.custom_minimum_size = PANEL_FILES
 		_build_files_step()
 	else:
+		if _panel != null:
+			_panel.custom_minimum_size = PANEL_SEARCH
 		_build_search_step()
 
 
+## ATLAS RECRUITMENT — tek satır kimlik (11a/11b). SLOGAN YOK: tasarım Atlas'ın alıntısını
+## kaldırdı, o yüzden HR_ATLAS_QUOTE bu ekrandan düştü.
 func _add_masthead() -> void:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	row.add_child(UiFactory.make_avatar("A", 30))
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 2)
-	col.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(HRConstants.search_agency_name()), &"SectionLabel"))
-	col.add_child(UiFactory.make_label(
-		tr("HR_ATLAS_QUOTE"), &"QuoteSerif"))
-	row.add_child(col)
+	row.add_theme_constant_override("separation", 13)
+	var disc: Panel = UiFactory.make_avatar("A", 32)
+	row.add_child(disc)
+	row.add_child(UiFactory.make_label(
+		HRConstants.search_agency_name(), &"RowName"))
 	_root_box.add_child(row)
-	_root_box.add_child(HRUiShared.hairline())
 
 
-# --- ADIM 1-2: rol + bant (Kare 2) ------------------------------------------
+# --- ADIM 1 · ROL + ADIM 2 · BÜTÇE BANDI (11a) ------------------------------
 
 func _build_search_step() -> void:
-	_root_box.add_child(UiFactory.make_section_header(tr("HR_ATLAS_STEP_ROLE")))
+	_root_box.add_child(_step_header(tr("HR_ATLAS_STEP_ROLE")))
+
 	var grid := GridContainer.new()
 	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 8)
+	# ÜÇ EŞİT SÜTUN (11a): GridContainer artık boşluğu GENİŞLEYEN sütunlara eşit
+	# dağıtıyor — şartı her hücrenin EXPAND_FILL taşıması (aşağıda, _role_card).
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
 	for role_id in HRConstants.EMPLOYEE_ROLES:
 		grid.add_child(_role_card(String(role_id)))
 	_root_box.add_child(grid)
 
-	_root_box.add_child(UiFactory.make_section_header(tr("HR_ATLAS_STEP_BAND")))
+	_root_box.add_child(_step_header(tr("HR_ATLAS_STEP_BAND")))
 	var bands := HBoxContainer.new()
-	bands.add_theme_constant_override("separation", 10)
+	bands.add_theme_constant_override("separation", 12)
 	for band_id in HRConstants.BANDS:
 		bands.add_child(_band_card(String(band_id)))
 	_root_box.add_child(bands)
 
-	_root_box.add_child(HRUiShared.hairline())
-	_root_box.add_child(_fee_block())
+	# MALİYET SATIRINDA YALNIZ SÜRE (11a): ödenen tutar butonun üstünde yazıyor, iki yerde
+	# göstermek aynı sayıyı iki kez sormak olurdu.
+	var arrival := UiFactory.make_label(tr("HR_ATLAS_ARRIVAL").format(
+		{"span": tr("HR_ATLAS_ARRIVAL_SPAN")}), &"RowMeta", UiTokens.INK_MUTED)
+	_root_box.add_child(arrival)
+
 	_root_box.add_child(_search_footer())
 
 
+func _step_header(text: String) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	row.add_child(UiFactory.make_label(UiTokens.tr_upper(text), &"SectionAmber"))
+	var rule := HRUiShared.hairline()
+	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(rule)
+	return row
+
+
+## Rol kartı. SEÇİLİ: 1px amber kenar + 2px AMBER SOL KENAR + amber yıkama.
+## KİLİTLİ: %60 opaklık, ad soluk, kilit glifi, gerekçe AMBER satırda — ve tıklama hiç
+## bağlanmıyor (kilitli bir kart "denenip reddedilen" değil, "kapalı" olmalı).
 func _role_card(role_id: String) -> Control:
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardPanelTight"
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 3)
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 6)
-	head.add_child(UiFactory.make_label(HRConstants.role_label(role_id), &"NameSerif"))
-	col.add_child(head)
-	# Faz okunabilirliği aday dosyasından ÖNCE, seçim anında: oyuncu neyi hızlandıran
-	# birini aradığını bilerek seçsin (Coupling'in UI yükümlülüğü).
-	col.add_child(HRUiShared.phase_hint_label(role_id))
-	card.add_child(col)
-	HRUiShared.set_mouse_ignore(col)
-	# KİLİTLİ AMA GİZLİ DEĞİL — bant kartlarının (_band_card) grameriyle birebir aynı:
-	# 0.55 alfa, kilit ikonu, gui_input HİÇ bağlanmaz, işaretçi el olmaz. Fark, burada
-	# kilidin bir GEREKÇESİ olması: rol neden kapalı, oyuncunun kendi diliyle yazıyor.
-	# "Yakında" değil "şu koşulda açılır" — bu bir eksik değil, bir kapı.
 	var lock_key: String = HRConstants.role_lock_reason_key(role_id)
-	if lock_key != "":
-		head.add_child(HRUiShared.lock_glyph())
-		col.add_child(UiFactory.make_label(tr(lock_key), &"RowMeta", UiTokens.INK_DIM))
-		card.modulate = Color(1, 1, 1, 0.55)
+	var locked: bool = lock_key != ""
+	var selected: bool = _selected_role == role_id
+
+	var card := PanelContainer.new()
+	# Bant kartıyla AYNI kural: kart sütununu doldurur. Taşımadığında altı rol
+	# metin uzunluğuna göre üç farklı genişlikte çıkıyor, panelin sağı boş kalıyordu.
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sb := StyleBoxFlat.new()
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	sb.content_margin_left = 16.0
+	sb.content_margin_right = 16.0
+	sb.content_margin_top = 14.0
+	sb.content_margin_bottom = 14.0
+	if selected:
+		sb.bg_color = UiTokens.AMBER_WASH
+		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+		sb.border_width_left = UiTokens.BORDER_FOCUS
+		sb.border_color = UiTokens.ACCENT
+	else:
+		sb.bg_color = UiTokens.SURFACE_FRAME
+		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+		sb.border_color = UiTokens.SEPARATOR
+	card.add_theme_stylebox_override("panel", sb)
+
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 7)
+	card.add_child(col)
+
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 8)
+	title_row.add_child(UiFactory.make_label(HRConstants.role_label(role_id), &"NameSerif",
+		UiTokens.CREAM_DIM if locked else UiTokens.INK))
+	if locked:
+		title_row.add_child(HRUiShared.lock_glyph(12, UiTokens.CREAM_DIM))
+	col.add_child(title_row)
+
+	# Rol açıklaması: tasarımın kısa nötr yer tutucusu. Nihai metin sonra gelecek.
+	var hint := UiFactory.make_label(
+		HRConstants.role_phase_hint(role_id), &"RowMeta", UiTokens.CREAM_DIM)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(hint)
+
+	if locked:
+		col.add_child(UiFactory.make_label(tr(lock_key), &"RowMeta", UiTokens.ACCENT))
+		card.modulate.a = 0.6
 		return card
+
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	if role_id == _selected_role:
-		_apply_selected_style(card)
 	card.gui_input.connect(func(ev: InputEvent) -> void:
 		if _is_left_click(ev):
 			_selected_role = role_id
@@ -145,33 +194,31 @@ func _role_card(role_id: String) -> Control:
 	return card
 
 
+## Bant kartı. AÇIKLAMA SATIRI YOK — tasarım onları kaldırdı ("sonra eklenecek").
 func _band_card(band_id: String) -> Control:
+	var selected: bool = _selected_band == band_id
 	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardPanelTight"
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 3)
-	col.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(HRConstants.band_label(band_id)), &"RowName"))
-	if _selected_role != "":
-		# Maaş aralığı role BAĞLI, o yüzden rol seçilmeden rakam yazılmaz (yanlış
-		# rakam yazmaktan iyidir).
-		var window: Array = HRConstants.salary_band(_selected_role, band_id)
-		if window.size() == 2:
-			col.add_child(UiFactory.make_label(
-				"%s – %s/ay" % [HRUiShared.money(int(window[0])), HRUiShared.money(int(window[1]))],
-				&"RowMeta", UiTokens.INK_MUTED))
-	card.add_child(col)
-	HRUiShared.set_mouse_ignore(col)
-	if _selected_role == "":
-		# Rol seçilmeden bant kartları GÖRSEL disabled — açıklama cümlesi yerine temanın
-		# disabled grameri (locked_telegraph'ın 0.55 alfası). gui_input bağlanmaz; her rol
-		# tıkı modalı tam yeniden kurduğu için geçişin ek state'i yok.
-		card.modulate = Color(1, 1, 1, 0.55)
-		return card
+	var sb := StyleBoxFlat.new()
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	sb.content_margin_left = 16.0
+	sb.content_margin_right = 16.0
+	sb.content_margin_top = 13.0
+	sb.content_margin_bottom = 13.0
+	if selected:
+		sb.bg_color = UiTokens.AMBER_WASH
+		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+		sb.border_width_left = UiTokens.BORDER_FOCUS
+		sb.border_color = UiTokens.ACCENT
+	else:
+		sb.bg_color = UiTokens.SURFACE_FRAME
+		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+		sb.border_color = UiTokens.SEPARATOR
+	card.add_theme_stylebox_override("panel", sb)
+	card.add_child(UiFactory.make_label(
+		UiTokens.tr_upper(HRConstants.band_label(band_id)), &"RowName",
+		UiTokens.ACCENT if selected else UiTokens.INK_MUTED))
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	if band_id == _selected_band:
-		_apply_selected_style(card)
 	card.gui_input.connect(func(ev: InputEvent) -> void:
 		if _is_left_click(ev):
 			_selected_band = band_id
@@ -179,143 +226,205 @@ func _band_card(band_id: String) -> Control:
 	return card
 
 
-func _fee_block() -> Control:
-	# Ücret cümlesi: peşin + komisyon + varış penceresi. Üç sayı da preview_search'ten;
-	# rol/bant seçilmemişse motor yine geçerli bir sözlük döndürüyor (valid=false), o
-	# yüzden sabitler registry'den okunuyor.
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 3)
-	col.add_child(UiFactory.make_label(
-		tr("HR_ATLAS_TERMS").format({
-			"retainer": HRUiShared.money(HRConstants.SEARCH_RETAINER),
-			"pct": int(round(HRConstants.SEARCH_COMMISSION_PCT * 100.0)),
-			"min": HRConstants.SEARCH_ARRIVAL_MIN_DAYS,
-			"max": HRConstants.SEARCH_ARRIVAL_MAX_DAYS,
-		}), &"BodySerif"))
-	if _selected_role != "" and _selected_band != "":
-		var pv: Dictionary = HRSearchSystem.preview_search(_selected_role, _selected_band)
-		col.add_child(UiFactory.make_label(
-			tr("HR_ATLAS_COMMISSION_RANGE").format({
-				"low": HRUiShared.money(int(pv.get("commission_low", 0))),
-				"high": HRUiShared.money(int(pv.get("commission_high", 0))),
-			}), &"RowMeta", UiTokens.INK_MUTED))
-		for warning in pv.get("warnings", []):
-			col.add_child(UiFactory.make_label(String(warning), &"RowMeta", UiTokens.negative()))
-	return col
-
-
+## Alt bar: VAZGEÇ · boşluk · seçim özeti · ARAYIŞ BAŞLAT · $600.
 func _search_footer() -> Control:
+	_root_box.add_child(HRUiShared.hairline())
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 14)
 	row.add_child(HRUiShared.action_button(tr("HR_ATLAS_CANCEL"), _close))
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(spacer)
-	var cta_label: String = tr("HR_ATLAS_START").format({"amount": HRUiShared.money(HRConstants.SEARCH_RETAINER)})
+	var pad := Control.new()
+	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(pad)
+
+	var cta: String = tr("HR_ATLAS_START").format(
+		{"amount": HRUiShared.money(HRConstants.SEARCH_RETAINER)})
 	if _selected_role == "" or _selected_band == "":
-		row.add_child(HRUiShared.disabled_button(cta_label, tr("HR_ATLAS_NEED_SELECTION")))
+		row.add_child(HRUiShared.disabled_button(cta, tr("HR_ATLAS_NEED_SELECTION")))
 		return row
+
+	row.add_child(UiFactory.make_label("%s · %s" % [
+		HRConstants.role_label(_selected_role), HRConstants.band_label(_selected_band)],
+		&"RowMeta", UiTokens.INK_DIM))
 	var pv: Dictionary = HRSearchSystem.preview_search(_selected_role, _selected_band)
-	if not bool(pv.get("can_start", false)):
-		# Gerekçe motorun `warnings` dizisinden — bu iki önizlemede `reason` anahtarı yok
-		# (HRActions'ta var). İki ayrı önizleme grameri, done mesajında raporlanıyor.
-		var warnings: Array = pv.get("warnings", [])
-		row.add_child(HRUiShared.disabled_button(cta_label,
-			String(warnings[0]) if not warnings.is_empty() else ""))
-		return row
-	row.add_child(HRUiShared.action_button(cta_label, _on_start_pressed, true))
+	var warnings: Array = pv.get("warnings", []) as Array
+	if not bool(pv.get("can_start", false)) or not bool(pv.get("affordable", false)):
+		var reason: String = String(warnings[0]) if not warnings.is_empty() else ""
+		row.add_child(HRUiShared.disabled_button(cta, reason))
+	else:
+		row.add_child(HRUiShared.action_button(cta, _on_start_pressed, true))
 	return row
+
+
+# --- ADAY DOSYALARI (11b) ---------------------------------------------------
+
+func _build_files_step() -> void:
+	var files: Array = HRSearchSystem.get_files()
+	_root_box.add_child(_step_header(
+		tr("HR_ATLAS_FILES_COUNT").format({"n": files.size()})))
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for i in files.size():
+		row.add_child(_file_card(i, files[i]))
+	_root_box.add_child(row)
+
+	_root_box.add_child(HRUiShared.hairline())
+	var footer := HBoxContainer.new()
+	footer.alignment = BoxContainer.ALIGNMENT_CENTER
+	footer.add_child(HRUiShared.action_button(
+		UiTokens.tr_upper(tr("HR_ATLAS_TAKE_NONE")), _on_dismiss_pressed))
+	_root_box.add_child(footer)
+
+
+## Aday kartı (11b). Üstte DOSYA i/n şeridi; sonra baş harf + ad + rol; rol açıklaması;
+## hairline'lar arasında YILDIZ ŞERİDİ (ana alan · ikincil alan · ayraç · Liderlik);
+## TEK trait çipi; esneyen boşluk (kartlar eşit yükseklik); MAAŞ TALEBİ; İŞE AL;
+## KOMİSYON; RUNWAY şeridi.
+##
+## ALINTI ÇİZİLMİYOR: tasarım boş alıntıyı kaldırdı. (Eski kod alıntıyı HAM DOSYA
+## dict'inden okuyordu — `note` yalnız preview_hire'da var — yani ekrana boş bir tırnak
+## çifti basıyordu. Kusur alıntıyla birlikte gitti.)
+func _file_card(index: int, file: Dictionary) -> Control:
+	var pv: Dictionary = HRSearchSystem.preview_hire(index)
+	var role_id: String = String(file.get("role", ""))
+	var axes: Dictionary = file.get("axes", {}) as Dictionary
+	var salary: int = int(file.get("salary", 0))
+
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = UiTokens.SURFACE_FRAME
+	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+	sb.border_color = UiTokens.SEPARATOR
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	card.add_theme_stylebox_override("panel", sb)
+
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 14)
+	card.add_child(col)
+
+	# DOSYA i/n
+	var file_no := UiFactory.make_label(tr("HR_ATLAS_FILE_N").format(
+		{"i": index + 1, "n": HRConstants.CANDIDATE_COUNT}), &"ColumnHeader", UiTokens.INK_DIM)
+	col.add_child(file_no)
+	col.add_child(HRUiShared.hairline())
+
+	# baş harf + ad + rol
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 12)
+	head.add_child(UiFactory.make_avatar(
+		UiFactory.initials_of(String(file.get("name", ""))), 34))
+	var who := VBoxContainer.new()
+	who.add_theme_constant_override("separation", 3)
+	who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	who.add_child(UiFactory.make_label(String(file.get("name", "")), &"NameSerif"))
+	who.add_child(UiFactory.make_label(
+		UiTokens.tr_upper(HRConstants.role_label(role_id)), &"MicroLabel"))
+	head.add_child(who)
+	col.add_child(head)
+
+	var hint := UiFactory.make_label(
+		HRConstants.role_phase_hint(role_id), &"RowMeta", UiTokens.CREAM_DIM)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(hint)
+
+	# yıldız şeridi: iki alan · ayraç · Liderlik
+	col.add_child(HRUiShared.hairline())
+	var stars := HBoxContainer.new()
+	stars.add_theme_constant_override("separation", 26)
+	stars.add_child(HRUiShared.area_stars_row(role_id, axes, 14))
+	stars.add_child(HRUiShared._v_hairline(28))
+	stars.add_child(StarRating.labelled(
+		HRConstants.area_label(HRConstants.SKILL_LEADERSHIP),
+		int(axes.get(HRConstants.SKILL_LEADERSHIP, 0)), 14))
+	col.add_child(stars)
+	col.add_child(HRUiShared.hairline())
+
+	# TEK trait çipi — olumlu yeşil, olumsuz kırmızı.
+	var traits: Array = file.get("traits", []) as Array
+	if not traits.is_empty():
+		col.add_child(HRUiShared.trait_row(traits, true))
+
+	var stretch := Control.new()
+	stretch.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(stretch)
+
+	# MAAŞ TALEBİ
+	var ask := HBoxContainer.new()
+	var ask_cap := UiFactory.make_label(
+		tr("HR_ATLAS_SALARY_LABEL"), &"RowMeta", UiTokens.INK_DIM)
+	ask_cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ask.add_child(ask_cap)
+	ask.add_child(UiFactory.make_label(HRUiShared.money(salary), &"MetricValueInk"))
+	ask.add_child(UiFactory.make_label(tr("HR_PER_MONTH"), &"RowMeta", UiTokens.INK_DIM))
+	col.add_child(ask)
+
+	# İŞE AL
+	var cta: String = tr("HR_ATLAS_HIRE").format({"amount": HRUiShared.money(salary)})
+	var warnings: Array = pv.get("warnings", []) as Array
+	var hire_btn: Button
+	if bool(pv.get("affordable", false)):
+		hire_btn = HRUiShared.action_button(cta, _on_hire_pressed.bind(index), true)
+	else:
+		hire_btn = HRUiShared.disabled_button(cta,
+			String(warnings[0]) if not warnings.is_empty() else "")
+	hire_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_child(hire_btn)
+
+	# KOMİSYON
+	var comm := HBoxContainer.new()
+	var comm_cap := UiFactory.make_label(
+		tr("HR_ATLAS_COMMISSION_LABEL"), &"RowMeta", UiTokens.INK_DIM)
+	comm_cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	comm.add_child(comm_cap)
+	comm.add_child(UiFactory.make_label(
+		"+ %s" % HRUiShared.money(int(pv.get("commission", 0))), &"RowMeta", UiTokens.INK_MUTED))
+	col.add_child(comm)
+
+	col.add_child(_runway_strip(pv))
+	return card
+
+
+## RUNWAY şeridi: "6 ay → 1 ay", sonraki değer KIRMIZI. net_runway_parts kullanılıyor
+## (net_runway_text değil) çünkü değer ve birim ayrı boyanabilmeli. Kırmızı kararı
+## DELTADAN türetiliyor — parts["positive"] yalnız "Artıda" hâli için true, bir sağlık
+## bayrağı değil.
+func _runway_strip(pv: Dictionary) -> Control:
+	var before: float = float(pv.get("runway_before", 0.0))
+	var after: float = float(pv.get("runway_after", 0.0))
+	var worse: bool = after < before
+
+	var strip := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = UiTokens.negative_bg() if worse else UiTokens.SURFACE_FRAME
+	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+	sb.border_color = UiTokens.negative_rule() if worse else UiTokens.SEPARATOR
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	sb.content_margin_left = 12.0
+	sb.content_margin_right = 12.0
+	sb.content_margin_top = 10.0
+	sb.content_margin_bottom = 10.0
+	strip.add_theme_stylebox_override("panel", sb)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 9)
+	row.add_child(UiFactory.make_label(
+		tr("HR_ATLAS_RUNWAY_LABEL"), &"ColumnHeader", UiTokens.INK_DIM))
+	row.add_child(UiFactory.make_label(
+		UiTokens.net_runway_text(before), &"RowMeta", UiTokens.INK_MUTED))
+	row.add_child(UiFactory.make_label("→", &"RowMeta", UiTokens.INK_DIM))
+	row.add_child(UiFactory.make_label(UiTokens.net_runway_text(after), &"RowName",
+		UiTokens.negative() if worse else UiTokens.INK_MUTED))
+	strip.add_child(row)
+	return strip
 
 
 func _on_start_pressed() -> void:
 	if HRSearchSystem.start_search(_selected_role, _selected_band):
 		state_changed.emit()
 		_close()
-
-
-# --- ADIM 3: aday dosyaları (Kare 4) ----------------------------------------
-
-func _build_files_step() -> void:
-	var files: Array = HRSearchSystem.get_files()
-	_root_box.add_child(UiFactory.make_section_header(
-		tr("HR_ATLAS_FILES_COUNT").format({"n": files.size()})))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	for i in files.size():
-		row.add_child(_file_card(i, files[i]))
-	_root_box.add_child(row)
-
-	_root_box.add_child(HRUiShared.hairline())
-	# "İade edilmez" cümlesi burada YOK (bilgi-tekrarı kuralı: her bilgi bir kez, önem
-	# anında) — kayıp uyarısı _on_dismiss_pressed'in onay diyaloğunda, kararın tam anında.
-	var dismiss := HRUiShared.action_button(tr("HR_ATLAS_TAKE_NONE"), _on_dismiss_pressed)
-	dismiss.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_root_box.add_child(dismiss)
-
-
-func _file_card(index: int, file: Dictionary) -> Control:
-	var pv: Dictionary = HRSearchSystem.preview_hire(index)
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardPanel"
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 6)
-	card.add_child(col)
-
-	var tag := HBoxContainer.new()
-	tag.add_theme_constant_override("separation", 6)
-	var spacer0 := Control.new()
-	spacer0.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tag.add_child(spacer0)
-	tag.add_child(UiFactory.make_badge("DOSYA %d/%d" % [index + 1, HRConstants.CANDIDATE_COUNT],
-		&"neutral"))
-	col.add_child(tag)
-
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 8)
-	head.add_child(UiFactory.make_avatar(
-		UiFactory.initials_of(String(file.get("name", ""))), 28))
-	var id_col := VBoxContainer.new()
-	id_col.add_theme_constant_override("separation", 2)
-	id_col.add_child(UiFactory.make_label(String(file.get("name", "")), &"NameSerif"))
-	id_col.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(HRConstants.role_label(String(file.get("role", "")))),
-		&"RowMeta", UiTokens.INK_DIM))
-	head.add_child(id_col)
-	col.add_child(head)
-
-	col.add_child(HRUiShared.phase_hint_label(String(file.get("role", ""))))
-	col.add_child(UiFactory.make_label("\"%s\"" % String(file.get("note", "")), &"QuoteSerif"))
-	col.add_child(HRUiShared.area_chips(String(file.get("role", "")), file.get("axes", {})))
-	col.add_child(UiFactory.make_label(
-		tr("HR_ATLAS_SALARY_ASK").format({"amount": HRUiShared.money(int(file.get("salary", 0)))}), &"RowMeta"))
-	if not Array(file.get("traits", [])).is_empty():
-		col.add_child(HRUiShared.trait_row(file.get("traits", []), true))
-
-	col.add_child(HRUiShared.hairline())
-	var cta_label: String = tr("HR_ATLAS_HIRE").format({"amount": HRUiShared.money(int(file.get("salary", 0)))})
-	if bool(pv.get("affordable", false)):
-		var on_hire: Callable = func() -> void: _on_hire_pressed(index)
-		var btn := HRUiShared.action_button(cta_label, on_hire, true)
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_child(btn)
-	else:
-		var warnings: Array = pv.get("warnings", [])
-		var btn2 := HRUiShared.disabled_button(cta_label,
-			String(warnings[0]) if not warnings.is_empty() else "")
-		btn2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_child(btn2)
-	col.add_child(UiFactory.make_label(
-		"+ %s komisyon" % HRUiShared.money(int(pv.get("commission", 0))),
-		&"RowMeta", UiTokens.INK_MUTED))
-	# Runway satırı — brief'in istediği yer burası, band adımı değil. INF-güvenli:
-	# preview_hire'ın iki alanı da INF olabilir, karar UiTokens.net_runway_parts'ta.
-	col.add_child(UiFactory.make_label(
-		"Runway %s → %s" % [
-			UiTokens.net_runway_text(float(pv.get("runway_before", 0.0))),
-			UiTokens.net_runway_text(float(pv.get("runway_after", 0.0))),
-		], &"RowMeta", UiTokens.INK_MUTED))
-	return card
 
 
 func _on_hire_pressed(index: int) -> void:

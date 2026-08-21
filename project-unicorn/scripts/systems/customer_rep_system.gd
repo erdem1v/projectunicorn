@@ -45,7 +45,7 @@ static func _ranked(axis: String) -> Array:
 	# invariant'ı birebir korunuyor. Kurucu bu masaya sayılmaz: onun doğrudan taşıdığı
 	# hesaplar FOUNDER_DIRECT_CAP ile ayrı ölçülüyor (b2b_sales_system.founder_managed_count).
 	var reps: Array = []
-	for c in HRSystem.assigned_to(HRConstants.JOB_ACCOUNTS):
+	for c in HRSystem.assigned_to(HRConstants.AREA_CUSTOMER_SUCCESS):
 		if c.category == "employee":
 			reps.append(c)
 	reps.sort_custom(func(a: Character, b: Character) -> bool:

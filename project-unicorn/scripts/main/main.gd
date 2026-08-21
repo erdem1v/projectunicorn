@@ -1474,6 +1474,21 @@ func _run_hr_shot(kind: String) -> void:
 	match kind:
 		"atlas", "dosyalar":
 			tab._open_atlas()
+		"gorevler":   # LOC-DATA debug seed / id
+			# GÖREVLER matrisi (onaylı tasarım 10b): kurucu bandı + atama kareleri.
+			# Kadroyu ÖNCE bir karıştırıyoruz ki matris üç durumu birden göstersin:
+			# biri AŞIRI YÜK (iki alan), biri BOŞTA (hiç alan), gerisi normal.
+			var roster: Array[Character] = CharacterRegistry.get_employees()
+			if roster.size() >= 2:
+				CharacterRegistry.assign_area(roster[0].id,
+					HRConstants.role_secondary_area(roster[0].role))
+				CharacterRegistry.clear_areas(roster[1].id)
+			tab._show_view(tab.VIEW_ASSIGNMENTS)
+		"egitim-modal":   # LOC-DATA debug seed / id
+			# 11c: tek kişi için alan seçimi. Kadronun ilk çalışanıyla açılır.
+			var who: Array[Character] = CharacterRegistry.get_employees()
+			if not who.is_empty():
+				tab._confirm_training(who[0])
 		"zam":
 			# TERMINAL DEFTERİ ONARIMI (2026-08-08). Eskiden kart açılıp satır İÇİNDEKİ
 			# "ZAM YAP" butonuna basılıyordu. Defter düzeninde satır içi aksiyon butonu
@@ -1513,6 +1528,16 @@ func _run_hr_shot(kind: String) -> void:
 				push_error("[HRShot] defter satırı bulunamadı — aksiyon menüsü çapasız")
 				get_tree().quit(1)
 				return
+			# ÇAPA ⋯ DÜĞMESİ, satırın kendisi değil (2026-08-22): 9e menüyü SATIRIN SAĞ
+			# KENARINA hizalıyor ve gerçek oyunda menüyü açan o düğmedir. Satırı çapa
+			# vermek HRPopover'ı satırın sağına, yani EKRANIN DIŞINA yolluyordu; taşma
+			# kuralı onu sola çeviriyor ve menü ekranın sol kenarına yapışıyordu — shot
+			# gerçeği değil harness'ı gösteriyordu.
+			var row_box: Node = menu_anchor.get_child(0) if menu_anchor.get_child_count() > 0 else null
+			if row_box != null and row_box.get_child_count() > 0:
+				var last: Node = row_box.get_child(row_box.get_child_count() - 1)
+				if last is Button:
+					menu_anchor = last as Control
 			tab._on_card_action(fire_target.id, HRLedger.ACTION_MENU, menu_anchor)
 			if kind == "cikar":
 				# Popover yerleşimi iki kare bekliyor (HRPopover.open_at); menüdeki butona
@@ -1568,7 +1593,7 @@ func _seed_hr_roster() -> void:
 			"traits": ["natural_leader"]},
 		{"name": "Deniz Arslan", "role": HRConstants.ROLE_DESIGNER, "salary": 7400,
 			"key": 6, "rest": 3, "lead": 2, "morale": 38,
-			"traits": ["pressure_proof", "works_alone"]},
+			"traits": ["pressure_proof"]},   # TEK TRAIT (HRConstants.TRAIT_COUNT)
 		{"name": "Mert Yıldız", "role": HRConstants.ROLE_DEVELOPER, "salary": 11200,   # LOC-DATA debug seed / id
 			"key": 8, "rest": 4, "lead": 3, "morale": 61,
 			"traits": ["wont_jump_ship"]},

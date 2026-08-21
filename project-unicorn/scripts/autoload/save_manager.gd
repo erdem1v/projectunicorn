@@ -35,11 +35,32 @@ extends Node
 # every point a save can be taken, and there is nothing mid-resolution for a schema to
 # describe. One sitting, one sitting only — it does not survive closing the game.
 
-const SCHEMA_VERSION := 4   # v2: ASCII sector ids · v3: prospect need indices · v4: skill AREAS
+const SCHEMA_VERSION := 5   # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti
 const SAVE_DIR := "user://saves/"
 ## v3→v4 migration: what a migrated character gets in an area the old model never stored.
 ## Low but never zero — see _migrate_character_areas.
 const MIGRATE_AREA_FLOOR := 2
+## v4→v5'in kendi EMEKLİ tabloları. Canlı HRConstants'tan okunmuyor ve okunmamalı:
+## bunlar artık var olmayan bir vokabülerin şeklidir, migration'ın görevi de tam olarak
+## o şekli tanıyıp bugünküne çevirmektir. Canlı sabite bağlanan bir migration, sabit bir
+## daha değiştiğinde eski kayıtları sessizce yanlış yerlere taşır.
+const _LEGACY_JOB_AREAS := {
+	"build": ["product", "design", "engineering"],
+	"test": ["qa"],
+	"support": ["customer_success"],
+	"accounts": ["customer_success"],
+	"sales": ["sales"],
+	"research": ["research"],
+	"cost": ["engineering"],
+}
+const _LEGACY_ROLE_DEFAULT_JOB := {
+	"product_manager": "build",
+	"designer": "build",
+	"developer": "build",
+	"tester": "test",
+	"sales_rep": "sales",
+	"customer_rep": "accounts",
+}
 
 # Slot ids are also FILENAMES on disk, i.e. a compatibility surface. Named once so a rename
 # is one edit rather than a hunt through string literals in three files.
@@ -204,6 +225,8 @@ func read_slot(slot_id: String) -> Dictionary:
 		_migrate_prospect_needs(data["state"])
 	if version < 4:
 		_migrate_character_areas(data["state"])
+	if version < 5:
+		_migrate_assignments_to_areas(data["state"])
 	return {
 		"ok": true,
 		"error_key": "",
@@ -686,7 +709,9 @@ func _migrate_character_areas(state: Dictionary) -> void:
 			if String(d.get("training_area", "")) == "" and int(d.get("training_days_left", 0)) > 0:
 				d["training_area"] = key_area
 			if not d.has("assigned_jobs") or (d["assigned_jobs"] as Array).is_empty():
-				var default_job: String = HRConstants.default_job_for_role(role_id)
+				# LEGACY İŞ kimliği, canlı sabitten DEĞİL: v4 hedefi bir İŞ yazmaktı ve o
+				# tablo emekli oldu. v5 adımı birazdan bunu alana çevirecek.
+				var default_job: String = String(_LEGACY_ROLE_DEFAULT_JOB.get(role_id, ""))
 				d["assigned_jobs"] = [default_job] if default_job != "" else []
 			moved += 1
 		elif category == "founder" and stats.has("tech"):
@@ -710,10 +735,86 @@ func _migrate_character_areas(state: Dictionary) -> void:
 			}
 			d["role_stats"] = rebuilt_f
 			if not d.has("assigned_jobs") or (d["assigned_jobs"] as Array).is_empty():
-				d["assigned_jobs"] = [HRConstants.JOB_BUILD]
+				d["assigned_jobs"] = ["build"]   # LEGACY iş kimliği; v5 alana çevirir
 			moved += 1
 	if moved > 0 and OS.is_debug_build():
 		print("[SaveManager] v3→v4: %d character(s) moved onto the skill areas" % moved)
+
+
+## v4 → v5: ATAMA bİR İŞE değil BİR ALANA yapılıyor artık.
+##
+## rev 2 §4'ün aynı cümlesi iki kez okundu: ilk pass (18d27e3) tablonun başlığına bakıp
+## YEDİ İŞ dedi, onaylı tasarım ise matrisi ALAN sütunlarıyla çizdi ve Build/Destek/Hesap/
+## Maliyet'i emekli etti. Kayıtta duran değerler o yüzden taşınmak zorunda.
+##
+## Eşleme İLKELİ: "bu kişi o işi HANGİ ALANDAN yapıyordu". Build üç alanla besleniyordu,
+## o yüzden kişinin o üçü içinde en güçlü olduğu alana iner — emekli area_for_job'ın
+## yaptığının aynısı. Destek ve Hesap ikisi de Müşteri İlişkileri'ne katlanır, ki zaten
+## ch. 06 §1.3'ün "covering head"i onları tek küme saydı. Tekrarlar tekilleştirilir:
+## Destek+Hesap taşıyan biri tek bir alana iner ve AŞIRI YÜK'ten çıkar — doğru sonuç,
+## çünkü artık gerçekten tek bir alanda çalışıyor.
+func _migrate_assignments_to_areas(state: Dictionary) -> void:
+	var moved: int = 0
+	for row in (state.get("characters", []) as Array):
+		if typeof(row) != TYPE_DICTIONARY:
+			continue
+		var d: Dictionary = row
+		var jobs: Array = d.get("assigned_jobs", []) as Array
+		if typeof(jobs) != TYPE_ARRAY or jobs.is_empty():
+			continue
+		var stats: Dictionary = d.get("role_stats", {}) as Dictionary
+		var out: Array = []
+		for job_id in jobs:
+			var area_id: String = _legacy_job_to_area(String(job_id), stats)
+			if area_id != "" and not out.has(area_id):
+				out.append(area_id)
+		d["assigned_jobs"] = out
+		if out.size() <= 1:
+			d["overload_days"] = 0
+		moved += 1
+	# Lider koltukları da iş kimliğiyle saklanıyordu; aynı eşlemeyle taşınır. Alan
+	# kıvrımlı olduğu için (Destek+Hesap → tek alan) iki koltuk çakışırsa İLKİ kalır:
+	# seçim zaten türetilmiş lidere düşebilir, yanlış birini zorlamaktan iyidir.
+	var leads: Dictionary = state.get("job_leads", {}) as Dictionary
+	if typeof(leads) == TYPE_DICTIONARY and not leads.is_empty():
+		var rebuilt_leads: Dictionary = {}
+		for job_id in leads.keys():
+			# Koltuğu tutan KİŞİNİN sayılarıyla çözülüyor: `build` üç alanla besleniyordu ve
+			# boş bir stats ile çözülseydi koltuk her zaman Ürün'e düşerdi — lider, yönettiği
+			# ekipten başka bir alana taşınırdı. (save_migration_v4_to_v5 bunu yakaladı.)
+			var holder: Dictionary = _character_row(state, String(leads[job_id]))
+			var area_id: String = _legacy_job_to_area(String(job_id),
+				holder.get("role_stats", {}) as Dictionary)
+			if area_id != "" and not rebuilt_leads.has(area_id):
+				rebuilt_leads[area_id] = leads[job_id]
+		state["area_leads"] = rebuilt_leads
+	state.erase("job_leads")
+	if moved > 0 and OS.is_debug_build():
+		print("[SaveManager] v4→v5: %d character(s) moved onto area assignments" % moved)
+
+
+## Emekli iş kimliği → alan kimliği. `stats` boş verilirse çok-alanlı işler kendi ilk
+## alanına düşer (lider koltuğu taşınırken kişiye bakmıyoruz).
+## Ham state içinde bir karakter satırı bulur; yoksa boş döner (çözüm ilk alana düşer).
+func _character_row(state: Dictionary, character_id: String) -> Dictionary:
+	for row in (state.get("characters", []) as Array):
+		if typeof(row) == TYPE_DICTIONARY and String((row as Dictionary).get("id", "")) == character_id:
+			return row
+	return {}
+
+
+func _legacy_job_to_area(job_id: String, stats: Dictionary) -> String:
+	var areas: Array = _LEGACY_JOB_AREAS.get(job_id, []) as Array
+	if areas.is_empty():
+		return ""
+	var best: String = String(areas[0])
+	var best_v: int = -1
+	for area_key in areas:
+		var v: int = int(stats.get(String(area_key), 0))
+		if v > best_v:
+			best_v = v
+			best = String(area_key)
+	return best
 
 
 func _migrate_prospect_needs(state: Dictionary) -> void:

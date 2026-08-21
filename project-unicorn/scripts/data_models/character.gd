@@ -71,7 +71,7 @@ extends Resource
 # BOŞ dizi = "Boşta": kişi durur ve maaş yer. Bu bir TÜRETİLMİŞ durumdur, saklanan bir
 # bayrak değil — HRSystem.is_idle. Kurucu 0 ya da 1 iş taşır (ch. 02 §5, sert kilit);
 # çalışan 1'den fazlasını taşıyabilir ve o AŞIRI YÜKLENMEDİR.
-@export var assigned_jobs: Array[String] = []   # HRConstants.JOBS alt kümesi
+@export var assigned_jobs: Array[String] = []   # HRConstants.ASSIGNABLE alt kümesi
 @export var overload_days: int = 0              # 2+ işte geçirilen ardışık gün; 1 ya da 0 işte sıfırlanır
 
 # --- DENEYİM / EĞİTİM (2026-08-08; alan başına ayrıldı 2026-08-21) ---

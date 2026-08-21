@@ -91,14 +91,22 @@ static func tick_experience() -> void:
 	var base: int = HRConstants.EXPERIENCE_PER_DAY
 	if _build_phase_running():
 		base = HRConstants.EXPERIENCE_PER_BUILD_DAY
-	for emp in CharacterRegistry.get_active_employees():
+	# KURUCU DA ÖĞRENİR (2026-08-22). Kişisel sekmesinin kurucu kartı bir DENEYİM çubuğu
+	# çiziyor; kurucu bu döngünün dışında kalırsa o çubuk sonsuza dek %0 okur.
+	var learners: Array[Character] = CharacterRegistry.get_active_employees()
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder != null and founder.status == HRConstants.STATUS_ACTIVE:
+		learners.append(founder)
+	for emp in learners:
 		if emp.assigned_jobs.is_empty():
 			continue
-		var lead_mult: float = HRConstants.experience_gain_mult(job_lead_leadership_for(emp))
+		var lead_mult: float = HRConstants.experience_gain_mult(area_lead_leadership_for(emp))
 		var load_mult: float = 1.0 if emp.assigned_jobs.size() <= 1 else HRConstants.OVERLOAD_OUTPUT_MULT
-		for job_id in emp.assigned_jobs:
-			var area_key: String = HRConstants.area_for_job(emp.role_stats, String(job_id))
-			if area_key == "":
+		for area_id in emp.assigned_jobs:
+			var area_key: String = String(area_id)
+			# Araştırma bir YETENEK değil, yalnız atanabilir bir slot — kimsenin Araştırma
+			# sayısı yok, o yüzden orada deneyim de birikmez.
+			if not HRConstants.AREAS.has(area_key):
 				continue
 			var gain: int = int(round(float(base) * lead_mult * load_mult))
 			CharacterRegistry.add_area_experience(emp.id, area_key, maxi(gain, 1))
@@ -108,8 +116,8 @@ static func tick_experience() -> void:
 # rev 2 §4. CharacterRegistry TEK YAZARDIR; burası okuma tarafı ve dışarıya açılan yüz.
 # Ürün, Satış ve Operasyon "kim meşgul" sorusunu buradan sorar.
 
-static func assigned_to(job_id: String) -> Array[Character]:
-	## O işe atanmış, BUGÜN ÇALIŞABİLİR herkes. İzindeki ve eğitimdeki dışarıda: ataması
+static func assigned_to(area_id: String) -> Array[Character]:
+	## O ALANA atanmış, BUGÜN ÇALIŞABİLİR herkes. İzindeki ve eğitimdeki dışarıda: ataması
 	## durur (dönünce işine döner) ama bugünkü hiçbir formüle girmez.
 	var out: Array[Character] = []
 	for c in CharacterRegistry.get_all():
@@ -117,7 +125,7 @@ static func assigned_to(job_id: String) -> Array[Character]:
 			continue
 		if c.category != "employee" and c.category != "founder":
 			continue
-		if c.assigned_jobs.has(job_id):
+		if c.assigned_jobs.has(area_id):
 			out.append(c)
 	return out
 
@@ -149,36 +157,36 @@ static func idle_count() -> int:
 static func covering_heads() -> int:
 	## ch. 06 §1.3'ün okuyucusu: "covering head = anyone assigned to support/CS, founder
 	## included". Kapsam oranı bu turda HESAPLANMIYOR (Operasyon turunun işi) ama payda
-	## burada doğuyor, çünkü "kim destekte" sorusunun tek cevabı burası.
-	var seen: Dictionary = {}
-	for job_id in [HRConstants.JOB_SUPPORT, HRConstants.JOB_ACCOUNTS]:
-		for c in assigned_to(job_id):
-			seen[c.id] = true
-	return seen.size()
+	## burada doğuyor.
+	##
+	## Destek ve Hesap Sahipliği ayrı İŞLERDİ; atama alana geçince ikisi de Müşteri
+	## İlişkileri alanına katlandı — yani §1.3'ün "support/CS" birleşimi artık tek bir okuma.
+	return assigned_to(HRConstants.AREA_CUSTOMER_SUCCESS).size()
 
 
-static func unstaffed_jobs() -> Array[String]:
-	## §4: "Hangi işin boş kaldığı bu ekranda görünür (ör. 'Destek: kimse yok')."
+static func unstaffed_areas() -> Array[String]:
+	## §4: "Hangi işin boş kaldığı bu ekranda görünür." Görevler matrisi bunu zaten
+	## gösteriyor (boş bir sütun boş okunuyor), ama okuma seam'i dışarıya açık kalıyor.
 	var out: Array[String] = []
-	for job_id in HRConstants.JOBS:
-		if assigned_to(String(job_id)).is_empty():
-			out.append(String(job_id))
+	for area_id in HRConstants.ASSIGNABLE:
+		if assigned_to(String(area_id)).is_empty():
+			out.append(String(area_id))
 	return out
 
 
-static func job_lead(job_id: String) -> Character:
-	## rev 2 §2 + Erdem 2026-08-21: lider İŞ BAŞINA. Açık seçim kazanır; yoksa o işteki en
-	## yüksek Liderlik; hiç kimse yoksa kurucu. Türetilmiş olması bilinçli — saklanan bir
-	## lider işe alım ve ayrılmayla bayatlar, türetilmiş olan kendiliğinden doğrudur.
-	var picked_id: String = String(GameState.job_leads.get(job_id, ""))
+static func area_lead(area_id: String) -> Character:
+	## rev 2 §2: lider ALAN BAŞINA. Açık seçim kazanır; yoksa o alandaki en yüksek Liderlik;
+	## hiç kimse yoksa kurucu. Türetilmiş olması bilinçli — saklanan bir lider işe alım ve
+	## ayrılmayla bayatlar, türetilmiş olan kendiliğinden doğrudur.
+	var picked_id: String = String(GameState.area_leads.get(area_id, ""))
 	if picked_id != "":
 		var picked: Character = CharacterRegistry.get_character(picked_id)
 		if picked != null and picked.status == HRConstants.STATUS_ACTIVE \
-				and picked.assigned_jobs.has(job_id):
+				and picked.assigned_jobs.has(area_id):
 			return picked
 	var best: Character = null
 	var best_v: int = -1
-	for c in assigned_to(job_id):
+	for c in assigned_to(area_id):
 		var v: int = int(c.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0))
 		if v > best_v:
 			best_v = v
@@ -188,15 +196,15 @@ static func job_lead(job_id: String) -> Character:
 	return CharacterRegistry.get_founder()
 
 
-static func job_lead_leadership_for(c: Character) -> int:
-	## Bu kişinin ÜSTÜNDEKİ liderin Liderlik'i — birden fazla işi varsa en yükseği, çünkü
-	## §5 aşırı yükü zaten cezalandırıyor; ikinci bir ceza olarak en kötü lideri seçmek
-	## aynı kararı iki kez faturalandırırdı.
+static func area_lead_leadership_for(c: Character) -> int:
+	## Bu kişinin ÜSTÜNDEKİ liderin Liderlik'i — birden fazla alanı varsa en yüksek olanı,
+	## çünkü §5 aşırı yükü zaten cezalandırıyor; ikinci bir ceza olarak en kötü lideri
+	## seçmek aynı kararı iki kez faturalandırırdı.
 	if c == null:
 		return 0
 	var best: int = 0
-	for job_id in c.assigned_jobs:
-		var lead: Character = job_lead(String(job_id))
+	for area_id in c.assigned_jobs:
+		var lead: Character = area_lead(String(area_id))
 		if lead == null or lead.id == c.id:
 			continue
 		best = maxi(best, int(lead.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0)))
@@ -223,41 +231,36 @@ static func output_mult_for_area(c: Character, area_key: String) -> float:
 	## ısırmaz. (Ölçüldü: `speed_tracks_team_change` bunu yakaladı.)
 	if c == null:
 		return 0.0
-	var m: float = 1.0 if area_key == HRConstants.role_key_area(c.role) else HRConstants.SECONDARY_AREA_MULT
+	var m: float = HRConstants.area_fatigue_mult(c.role, area_key)
 	if overload_bites(c):
 		m *= HRConstants.OVERLOAD_OUTPUT_MULT
 	return m
 
 
-static func output_mult_for(c: Character, job_id: String) -> float:
-	## Bir kişinin BİR İŞTEKİ çıktı çarpanı. İki §5 cümlesi tek yerde:
-	##   "ikincil alanında çalışmak daha yorucudur"  -> job_fatigue_mult
-	##   "birden fazla alan -> verimi düşer"          -> OVERLOAD_OUTPUT_MULT
-	## Her formül bu çarpanı uygular; kimse kendi versiyonunu icat etmez.
-	if c == null:
-		return 0.0
-	var m: float = HRConstants.job_fatigue_mult(c.role, job_id, c.role_stats)
-	if overload_bites(c):
-		m *= HRConstants.OVERLOAD_OUTPUT_MULT
-	return m
-
-
-static func area_sum_for_job(job_id: String) -> float:
-	## O işe atanmış herkesin, o işi çalıştıkları alandaki puanlarının ÇARPANLI toplamı.
-	## Ürün ve Satış formüllerinin yeni ortak girdisi — eski `_active_role_sum`ın yerine
-	## geçer, farkı: rol değil ATAMA sayar.
+static func area_sum_for(area_id: String) -> float:
+	## O ALANA atanmış herkesin, o alandaki puanlarının ÇARPANLI toplamı. Ürün ve Satış
+	## formüllerinin ortak girdisi — rol değil ATAMA sayar.
+	##
+	## `output_mult_for(c, job)` emekli oldu: atama artık alanın kendisi olduğu için "bu işi
+	## hangi alandan yapıyor" diye bir arama kalmadı, output_mult_for_area doğrudan doğru
+	## cevabı veriyor.
 	var total: float = 0.0
-	for c in assigned_to(job_id):
-		var area_key: String = HRConstants.area_for_job(c.role_stats, job_id)
-		if area_key == "":
-			continue
-		total += float(int(c.role_stats.get(area_key, 0))) * output_mult_for(c, job_id)
+	for c in assigned_to(area_id):
+		total += float(int(c.role_stats.get(area_id, 0))) * output_mult_for_area(c, area_id)
 	return total
 
 
 ## Eğitim günlerini işler; biten her eğitim bir haber satırı bırakır.
 static func tick_training() -> void:
-	for emp in CharacterRegistry.get_employees():
+	# KURUCU DAHİL (2026-08-22). get_employees() kurucuyu içermiyor; kurucu eğitime
+	# gidebildiği andan itibaren bu döngünün dışında kalmak, onu STATUS_TRAINING'de
+	# SONSUZA DEK askıda bırakıyordu — geri dönmeyen, hiçbir alanda çalışmayan bir kurucu.
+	# (founder_trains_and_learns bunu yakaladı.)
+	var in_training: Array[Character] = CharacterRegistry.get_employees()
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder != null:
+		in_training.append(founder)
+	for emp in in_training:
 		if emp.training_days_left <= 0:
 			continue
 		if CharacterRegistry.tick_training(emp.id):

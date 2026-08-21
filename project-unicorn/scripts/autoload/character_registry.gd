@@ -87,8 +87,9 @@ func get_active_employees() -> Array[Character]:
 # Hepsi sinyal atar, çünkü defter satırı bu değerleri çiziyor ve HR sekmesi
 # yapı-anahtarıyla yeniden kuruluyor.
 
-## Deneyim ekler — ALAN BAŞINA (rev 2 §8 learn-by-doing). Kurucu HARİÇ, kurucu
-## gelişimi ayrı ve park edilmiş bir sistem.
+## Deneyim ekler — ALAN BAŞINA (rev 2 §8 learn-by-doing). KURUCU DAİL (2026-08-22):
+## Kişisel sekmesinin kurucu kartı bir DENEYİM çubuğu çiziyor, ve kurucu bu kanaldan
+## dışlanırsa o çubuk sonsuza dek %0 okur — yani ekran yalan söyler.
 ## DOLDUĞUNDA O ALAN +1 OLUR ve sayaç sıfırlanır: bu ÜCRETSİZ kanaldır ve ücretli
 ## eğitimden bağımsızdır (§8 ikisini ayrı satırlarda sayıyor). `true` döner yalnız
 ## bir puan kazanıldıysa.
@@ -97,7 +98,9 @@ func add_area_experience(id: String, area_key: String, amount: int) -> bool:
 	if c == null:
 		push_warning("[CharacterRegistry] add_area_experience on unknown id: %s" % id)
 		return false
-	if c.category != "employee" or area_key == "" or not HRConstants.AREAS.has(area_key):
+	if c.category not in ["employee", "founder"]:
+		return false
+	if area_key == "" or not HRConstants.AREAS.has(area_key):
 		return false
 	var cur: int = int(c.area_experience.get(area_key, 0))
 	var raised: int = cur + maxi(amount, 0)
@@ -120,24 +123,29 @@ func add_area_experience(id: String, area_key: String, amount: int) -> bool:
 	return true
 
 
-## Eğitime uygun mu? Yalnız çalışan, edilgen değilken, ve SEÇİLEN alan tavanın
+## Eğitime uygun mu? Edilgen olmayan bir çalışan ya da KURUCU, ve SEÇİLEN yetenek tavanın
 ## altındayken. DENEYİM ŞARTI YOK (rev 2 §8): eğitim parayla alınan ayrı bir kanal,
 ## learn-by-doing'in devamı değil. Tavandaki bir alana eğitim GÖNDERİLEMEZ: ücreti
 ## alıp hiçbir şey vermemek §10'un yasakladığı şeyin aynası olurdu.
+##
+## İKİ KAPI 2026-08-22'de AÇILDI. (1) KURUCU: onaylı tasarımın Kişisel kartında
+## EĞİTİME GÖNDER düğmesi var. (2) LİDERLİK: eğitim tablosunun üçüncü satırı Liderlik,
+## ve Liderlik `AREAS`'ta olmadığı için eski kapı onu sessizce reddediyordu. Yazılan
+## anahtar `role_stats["leadership"]`, yani +1 yolu zaten çalışıyordu.
 func can_train(id: String, area_key: String = "") -> bool:
 	var c: Character = _characters.get(id, null)
-	if c == null or c.category != "employee":
+	if c == null or c.category not in ["employee", "founder"]:
 		return false
 	if c.status != HRConstants.STATUS_ACTIVE:
 		return false
 	if area_key == "":
-		# Alan verilmediyse "herhangi bir alanda eğitilebilir mi" sorusudur — defterin
-		# EĞİTİME GÖNDER düğmesi bunu sorar, alanı sonra seçtirir.
-		for a in HRConstants.AREAS:
+		# Alan verilmediyse "herhangi bir yetenekte eğitilebilir mi" sorusudur — defterin
+		# ve menünün EĞİTİME GÖNDER satırı bunu sorar, yeteneği modal seçtirir.
+		for a in HRConstants.trainable_keys():
 			if int(c.role_stats.get(String(a), 0)) < HRConstants.AREA_TRAIN_CAP:
 				return true
 		return false
-	if not HRConstants.AREAS.has(area_key):
+	if not HRConstants.is_trainable_key(area_key):
 		return false
 	return int(c.role_stats.get(area_key, 0)) < HRConstants.AREA_TRAIN_CAP
 
@@ -148,7 +156,7 @@ func training_fee_for(id: String, area_key: String) -> int:
 	if c == null:
 		return HRConstants.TRAINING_FEE
 	return HRConstants.training_fee(int(c.role_stats.get(area_key, 0)),
-		int(c.trainings_done.get(area_key, 0)))
+		int(c.trainings_done.get(area_key, 0)), area_key)
 
 
 ## Eğitimi BAŞLATIR. Ücreti burada TAHSİL ETMEZ — para FinanceSystem'in işi ve
@@ -158,8 +166,8 @@ func begin_training(id: String, area_key: String) -> void:
 	if c == null:
 		push_warning("[CharacterRegistry] begin_training on unknown id: %s" % id)
 		return
-	if not HRConstants.AREAS.has(area_key):
-		push_error("[CharacterRegistry] begin_training with a non-area target: '%s'" % area_key)
+	if not HRConstants.is_trainable_key(area_key):
+		push_error("[CharacterRegistry] begin_training with an untrainable target: '%s'" % area_key)
 		return
 	c.training_days_left = HRConstants.TRAINING_DAYS
 	c.training_area = area_key
@@ -178,7 +186,7 @@ func tick_training(id: String) -> bool:
 		EventBus.employee_training_changed.emit(id, c.training_days_left)
 		return false
 	var area_key: String = c.training_area
-	if HRConstants.AREAS.has(area_key):
+	if HRConstants.is_trainable_key(area_key):
 		var cur: int = int(c.role_stats.get(area_key, 0))
 		c.role_stats[area_key] = mini(cur + 1, HRConstants.AREA_TRAIN_CAP)
 		c.trainings_done[area_key] = int(c.trainings_done.get(area_key, 0)) + 1
@@ -190,46 +198,52 @@ func tick_training(id: String) -> bool:
 	return true
 
 
-# =========================== Görev ataması (rev 2 §4) ========================
+# =========================== Alan ataması (rev 2 §4) ========================
 # TEK YAZAR. `assigned_jobs` yalnız buradan değişir; WRITE-THROUGH YASASI.
+# (Alanın kendisi değişti, alanın AD I değil: dizinin adı `assigned_jobs` kaldı ki kayıt
+# şemasının alan adı sabit kalsın; içindeki değerler artık HRConstants.ASSIGNABLE.)
 
-## Bir işe atar. Kurucu AYNI ANDA TEK İŞ taşır (ch. 02 §5) — ikinci bir iş sessizce
-## eklenmez, reddedilir ve gerekçe döner. Çalışan birden fazla iş taşıyabilir; o
+## Bir ALANA atar. Kurucu AYNI ANDA TEK ALAN taşır (ch. 02 §5) — ikinci bir alan sessizce
+## eklenmez, reddedilir ve gerekçe döner. Çalışan birden fazla alan taşıyabilir; o
 ## AŞIRI YÜKLENMEDİR (§5) ve bedeli HRSystem'de ölçülür, burada değil.
 ## Boş dize = kabul edildi.
-func assign_job(id: String, job_id: String) -> String:
+func assign_area(id: String, area_id: String) -> String:
 	var c: Character = _characters.get(id, null)
 	if c == null:
 		return "unknown"
-	if not HRConstants.JOBS.has(job_id):
-		push_error("[CharacterRegistry] assign_job with an unknown job: '%s'" % job_id)
-		return "unknown_job"
-	if c.assigned_jobs.has(job_id):
+	if not HRConstants.is_assignable(area_id):
+		push_error("[CharacterRegistry] assign_area with an unknown area: '%s'" % area_id)
+		return "unknown_area"
+	if c.assigned_jobs.has(area_id):
 		return ""
 	if c.status != HRConstants.STATUS_ACTIVE:
 		return "inactive"
 	if c.category == "founder" and not c.assigned_jobs.is_empty():
 		# ch. 02 §5: "While assigned, the other actions are locked-visible with a reason."
-		# Gerekçe dizesi çağırana döner; kilitli-görünür kopyayı arayüz turu çizecek.
 		return "founder_busy"
-	c.assigned_jobs.append(job_id)
+	if not HRConstants.can_hold_area(c.role, area_id, c.category):
+		# Tasarımın "ALANI YOK · ATANAMAZ" hücresi, kural olarak: bir çalışan yalnız ANA ya da
+		# İKİNCİL alanında çalışabilir. Matris o sütunları zaten kesikli çiziyor ve tıklamıyor;
+		# bu kapı arayüze güvenmemek için.
+		return "not_your_area"
+	c.assigned_jobs.append(area_id)
 	EventBus.assignment_changed.emit(id)
 	return ""
 
 
-func unassign_job(id: String, job_id: String) -> void:
+func unassign_area(id: String, area_id: String) -> void:
 	var c: Character = _characters.get(id, null)
-	if c == null or not c.assigned_jobs.has(job_id):
+	if c == null or not c.assigned_jobs.has(area_id):
 		return
-	c.assigned_jobs.erase(job_id)
+	c.assigned_jobs.erase(area_id)
 	if c.assigned_jobs.size() <= 1:
 		c.overload_days = 0
 	EventBus.assignment_changed.emit(id)
 
 
-func clear_jobs(id: String) -> void:
-	## Ayrılma anı (§9): kişinin işleri BOŞALIR. Otomatik devir YOK — "otomatik kurucuya
-	## devir varsayılan değildir", boş kalan iş oyuncuya Görevler ekranında görünür.
+func clear_areas(id: String) -> void:
+	## Ayrılma anı (§9): kişinin alanları BOŞALIR. Otomatik devir YOK — "otomatik kurucuya
+	## devir varsayılan değildir", boş kalan alan oyuncuya Görevler ekranında görünür.
 	var c: Character = _characters.get(id, null)
 	if c == null or c.assigned_jobs.is_empty():
 		return
@@ -428,13 +442,13 @@ func add(character: Character) -> void:
 		character.hire_day = GameState.day
 		# rev 2 §4: an unassigned person stands idle and still draws salary. A HIRE is not
 		# where the player wants to meet that — they just paid a retainer and a commission.
-		# So a fresh hire lands on their role's default job (HRConstants.ROLE_DEFAULT_JOB),
+		# So a fresh hire lands on their OWN KEY AREA (HRConstants.default_area_for_role),
 		# which is also what keeps every downstream formula seeing the roster it saw before
 		# the assignment layer existed. Moving people is the Görevler tab's job.
 		if character.assigned_jobs.is_empty():
-			var default_job: String = HRConstants.default_job_for_role(character.role)
-			if default_job != "":
-				character.assigned_jobs.append(default_job)
+			var default_area: String = HRConstants.default_area_for_role(character.role)
+			if default_area != "":
+				character.assigned_jobs.append(default_area)
 		if character.area_experience.is_empty():
 			for area_key in HRConstants.AREAS:
 				character.area_experience[String(area_key)] = 0
@@ -481,14 +495,17 @@ func _validate_shape(character: Character) -> void:
 		for skill_key in FounderConstants.SKILLS:
 			if not character.role_stats.has(skill_key):
 				push_error("[CharacterRegistry] founder role_stats missing skill '%s'" % skill_key)
-	# Assignment shape is checked for EVERYONE: a job id that is not in JOBS would make
-	# every read seam quietly skip the person.
-	for job_id in character.assigned_jobs:
-		if not HRConstants.JOBS.has(String(job_id)):
-			push_error("[CharacterRegistry] '%s' assigned to unknown job '%s' — see HRConstants.JOBS"
-				% [character.id, String(job_id)])
+	# Assignment shape is checked for EVERYONE: an area id that is not in ASSIGNABLE would
+	# make every read seam quietly skip the person.
+	for area_id in character.assigned_jobs:
+		if not HRConstants.is_assignable(String(area_id)):
+			push_error("[CharacterRegistry] '%s' assigned to unknown area '%s' — see HRConstants.ASSIGNABLE"
+				% [character.id, String(area_id)])
+		elif not HRConstants.can_hold_area(character.role, String(area_id), character.category):
+			push_error("[CharacterRegistry] '%s' (%s) assigned to '%s', which is neither their key nor their secondary area"
+				% [character.id, character.role, String(area_id)])
 	if character.category == "founder" and character.assigned_jobs.size() > 1:
-		push_error("[CharacterRegistry] founder holds %d jobs — ch. 02 §5 allows exactly one"
+		push_error("[CharacterRegistry] founder holds %d areas — ch. 02 §5 allows exactly one"
 			% character.assigned_jobs.size())
 
 
@@ -526,7 +543,7 @@ func remove(id: String) -> void:
 	# documents for a stale lead_engineer_id).
 	if c != null:
 		c.assigned_jobs.clear()
-	GameState.release_job_leads(id)
+	GameState.release_area_leads(id)
 	_characters.erase(id)
 	EventBus.character_removed.emit(id)
 
@@ -631,7 +648,7 @@ func _seed_debug_characters() -> void:
 	des.monthly_salary = 5000
 	des.morale = 40
 	des.role_stats = HRConstants.seed_skills(HRConstants.ROLE_DESIGNER, 4, 3)
-	des.traits = ["warms_up_fast", "glass_heart"]
+	des.traits = ["glass_heart"]   # TEK TRAIT (HRConstants.TRAIT_COUNT, 2026-08-22)
 	des.hire_day = 1
 	des.leave_month = HRConstants.leave_month_for(1, 1)
 	_characters[des.id] = des

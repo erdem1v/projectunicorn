@@ -295,11 +295,61 @@ const PHASE_AREAS := {
 	"development": ["engineering"],
 	"bugfix": ["qa", "engineering"],
 }
+## Üç fazın alanlarının birleşimi: "bu sürümün üzerinde çalışılıyor" demenin alan
+## karşılığı. Emekli `build` işinin tastamam kadrosu; tek farkı artık üç ayrı sütun olması.
+const BUILD_AREAS := ["product", "design", "engineering"]
 
 
 static func _phase_areas(phase: String) -> Array:
 	# Bilinmeyen/planning faz → geliştirme (commit öncesi projeksiyonun varsayılanı).
 	return PHASE_AREAS.get(phase, PHASE_AREAS["development"])
+
+
+static func _founder_on_build() -> bool:
+	## Kurucu bu sürümün üzerinde mi çalışıyor — yani üç build alanından (Ürün · Tasarım ·
+	## Yazılım) birine atanmış mı. ch. 02 §5'in tek-alan kilidi burada da geçerli: satıştaki
+	## kurucu ne hıza ne tavana dokunur.
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return false
+	for area_key in BUILD_AREAS:
+		if founder.assigned_jobs.has(String(area_key)):
+			return true
+	return false
+
+
+static func _founder_phase_area(phase: String) -> String:
+	## Kurucunun bu faza hangi alandan girdiği: atandığı alan bu fazın alanlarından biriyse
+	## o, değilse fazın ilk alanı (eski davranışın birebir devamı).
+	var areas: Array = _phase_areas(phase)
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder != null:
+		for area_key in areas:
+			if founder.assigned_jobs.has(String(area_key)):
+				return String(area_key)
+	return String(areas[0]) if not areas.is_empty() else HRConstants.AREA_ENGINEERING
+
+
+static func _phase_crew(phase: String) -> Array:
+	## Bu fazın alanlarından BİRİNE atanmış herkes, ve her birinin bu faza hangi alandan
+	## katıldığı — atandığı faz alanları içinde EN GÜÇLÜ olduğu.
+	##
+	## BİR KİŞİ BİR KEZ SAYILIR. İki faz alanına birden atanmış biri (ör. Ürün + Tasarım)
+	## toplama iki kez girseydi aşırı yük bir CEZA değil ÖDÜL olurdu — §5'in söylediğinin
+	## tam tersi. Bedeli output_mult_for_area zaten kesiyor.
+	var best_area: Dictionary = {}
+	var who: Dictionary = {}
+	for area_key in _phase_areas(phase):
+		for c in HRSystem.assigned_to(String(area_key)):
+			var v: int = int(c.role_stats.get(String(area_key), 0))
+			if not best_area.has(c.id) \
+					or v > int(c.role_stats.get(String(best_area[c.id]), 0)):
+				best_area[c.id] = String(area_key)
+				who[c.id] = c
+	var out: Array = []
+	for id in who:
+		out.append({"c": who[id], "area": String(best_area[id])})
+	return out
 
 
 static func _best_phase_area(c: Character, phase: String) -> String:
@@ -344,20 +394,20 @@ static func _phase_area_sum(phase: String, lead_id: String) -> float:
 	# koordinasyon çarpanında. İzindeki/eğitimdeki çalışan katkı VERMEZ.
 	#
 	# ATAMA KAPISI BURADA: eskiden "Ürün Geliştirme rolündeki herkes" otomatik olarak her
-	# build'e katılıyordu. Artık yalnız JOB_BUILD'e atanmış olanlar. Bugün davranış aynı
-	# (işe alım kişiyi rolünün varsayılan işine koyuyor), ama ch. 03 §8'in "yeni sürüme
-	# başlayınca ekip destekten çekilir" gerilimi ancak bu kapı varken kurulabilir.
+	# build'e katılıyordu. Artık yalnız BU FAZIN ALANLARINA atanmış olanlar — iterasyon
+	# Ürün+Tasarım, geliştirme Yazılım, hata sprinti Test+Yazılım. Bugün davranış aynı
+	# (işe alım kişiyi kendi ana alanına koyuyor), ama ch. 03 §8'in "yeni sürüme başlayınca
+	# ekip destekten çekilir" gerilimi ancak bu kapı varken kurulabilir.
 	var total: float = 0.0
-	for c in HRSystem.assigned_to(HRConstants.JOB_BUILD):
+	for row in _phase_crew(phase):
+		var c: Character = row["c"]
 		# "Yalnız çalışır": ekip tarafı katkı vermez — kendi işini yapar ama toplama girmez.
 		# Sorumluysa muaf: başındaki işi yapmayı reddetmiyor, yalnız ekibe eklenmiyor.
 		if c.id != lead_id and HRConstants.trait_has(c.traits, "no_team_bonus"):
 			continue
 		if c.category == "founder":
 			continue   # kurucunun katkısı _speed_for_phase'de kendi katsayısıyla ayrı
-		var area_key: String = _best_phase_area(c, phase)
-		if area_key == "":
-			continue
+		var area_key: String = String(row["area"])
 		var contribution: float = float(int(c.role_stats.get(area_key, 0)))
 		# §5: ana alanı dışında çalışmak daha yorucu, iki işte olmak verimi düşürür.
 		# Çarpan BU FAZIN alanından ölçülüyor, işin genelinden değil — bir yazılımcının
@@ -378,8 +428,8 @@ static func _speed_for_phase(phase: String, lead_id: String) -> float:
 	# aldığı andır — Bootstrap baskısının tam olarak istenen yeri.
 	var speed: float = 0.0
 	var founder: Character = CharacterRegistry.get_founder()
-	if founder != null and founder.assigned_jobs.has(HRConstants.JOB_BUILD):
-		speed = FOUNDER_SPEED_COEF * float(GameState.get_founder_skill(_phase_areas(phase)[0]))
+	if founder != null and _founder_on_build():
+		speed = FOUNDER_SPEED_COEF * float(GameState.get_founder_skill(_founder_phase_area(phase)))
 	speed += EMPLOYEE_SPEED_COEF * _phase_area_sum(phase, lead_id)
 	return maxf(SPEED_MIN, speed * _lead_coordination(lead_id))
 
@@ -413,10 +463,10 @@ static func _team_area_avg(area_key: String, lead_id: String) -> float:
 	var weight_sum: float = 0.0
 	var weighted: float = 0.0
 	# Kurucu build'deyse kalitesinden sorumludur; değilse ürünün kalitesine de karışmaz.
-	if founder != null and founder.assigned_jobs.has(HRConstants.JOB_BUILD):
+	if founder != null and _founder_on_build():
 		weight_sum = LEAD_EXPERTISE_WEIGHT if lead_is_founder else MEMBER_EXPERTISE_WEIGHT
 		weighted = weight_sum * float(GameState.get_founder_skill(area_key))
-	for c in HRSystem.assigned_to(HRConstants.JOB_BUILD):
+	for c in HRSystem.assigned_to(area_key):
 		if c.category == "founder":
 			continue
 		var w: float = LEAD_EXPERTISE_WEIGHT if c.id == lead_id else MEMBER_EXPERTISE_WEIGHT
@@ -427,24 +477,24 @@ static func _team_area_avg(area_key: String, lead_id: String) -> float:
 	return weighted / weight_sum
 
 
-static func _job_area_sum(job_id: String) -> float:
+static func _area_sum(area_id: String) -> float:
 	# `_active_role_sum`ın halefi: ROL değil ATAMA sayar (rev 2 §4) ve §5 çarpanlarını
 	# uygular. Tek satırlık bir sarmalayıcı, çünkü ölçü HRSystem'in sözleşmesidir.
-	return HRSystem.area_sum_for_job(job_id)
+	return HRSystem.area_sum_for(area_id)
 
 
 static func tester_find_mult() -> float:
 	# Bulma isabeti: kaç gizli bug'ın gün içinde yüzeye çıktığı. TEST işine atanmış kimse
 	# yoksa 1.0 — rev 2 §4 Test'i kendi işi yaptı, yani "test uzmanım var ama build'de"
 	# artık gerçek ve anlamlı bir durum.
-	return minf(1.0 + _job_area_sum(HRConstants.JOB_TEST)
+	return minf(1.0 + _area_sum(HRConstants.AREA_QA)
 		* TESTER_FIND_PER_EXPERTISE, TESTER_FIND_MULT_MAX)
 
 
 static func tester_tempo_mult() -> float:
 	# Bulma/çözme temposu, aynı Test alanından. (Yazılım beta'ya team_speed üzerinden zaten
 	# giriyor — PHASE_AREAS["bugfix"] hem qa hem engineering içerir.)
-	return minf(1.0 + _job_area_sum(HRConstants.JOB_TEST)
+	return minf(1.0 + _area_sum(HRConstants.AREA_QA)
 		* TESTER_TEMPO_PER_PACE, TESTER_TEMPO_MULT_MAX)
 
 
@@ -617,19 +667,18 @@ static func _founder_build_area(area_key: String) -> int:
 	# Kurucunun bir alandaki puanı, YALNIZ build işindeyse. Değilse 0: ch. 02 §5'in
 	# "tek iş" kilidi burada da geçerli — satıştaki kurucu tasarım tavanını yükseltmez.
 	var founder: Character = CharacterRegistry.get_founder()
-	if founder == null or not founder.assigned_jobs.has(HRConstants.JOB_BUILD):
+	if founder == null or not _founder_on_build():
 		return 0
 	return int(founder.role_stats.get(area_key, 0))
 
 
 static func _build_area_sum(area_key: String) -> float:
-	# Build işindeki ÇALIŞANLARIN tek bir alandaki toplamı, §5 çarpanlarıyla.
+	# O ALANA atanmış ÇALIŞANLARIN toplamı, §5 çarpanlarıyla. Kurucu ayrı saydığı için
+	# (bkz. _founder_build_area) burada dışarıda.
 	var total: float = 0.0
-	for c in HRSystem.assigned_to(HRConstants.JOB_BUILD):
+	for c in HRSystem.assigned_to(area_key):
 		if c.category == "founder":
 			continue
-		# Çarpan SAYILAN ALANDAN: bir tasarımcı Ürün tavanına ikincil alanından katkı verir
-		# ve §5'in bedelini orada öder (aynı düzeltme _phase_area_sum'da da yapıldı).
 		total += float(int(c.role_stats.get(area_key, 0))) \
 			* HRSystem.output_mult_for_area(c, area_key)
 	return total
@@ -812,11 +861,11 @@ static func _seed_feature_bugs(feature_ids: Array) -> int:
 
 
 static func _seed_expertise_mult() -> float:
-	# rev 2 §2: "bug oranı" YAZILIM'ın. Build işindeki çalışanların Yazılım ORTALAMASI —
-	# rol değil alan, ve rol değil ATAMA (2026-08-21). Build'de çalışan yoksa 1.0: kurucu
-	# tek başına yazıyor ve bugünkü tohum aynen korunuyor.
+	# rev 2 §2: "bug oranı" YAZILIM'ın. YAZILIM alanına atanmış çalışanların ortalaması —
+	# rol değil alan, ve rol değil ATAMA. Kimse atanmamışsa 1.0: kurucu tek başına yazıyor
+	# ve bugünkü tohum aynen korunuyor.
 	var crew: Array[Character] = []
-	for c in HRSystem.assigned_to(HRConstants.JOB_BUILD):
+	for c in HRSystem.assigned_to(HRConstants.AREA_ENGINEERING):
 		if c.category != "founder":
 			crew.append(c)
 	if crew.is_empty():
@@ -866,7 +915,7 @@ static func sprint_duration_for(bug_count: int) -> int:
 	# kez damgalanan bir flag, o yüzden okuma tick'te değil BURADA olmak zorunda.
 	# Days to clear `bug_count` at the sprint rate, clamped. Shown pre-commit (§10).
 	var rate: float = float(SPRINT_BUG_FIX_PER_DAY) * (1.0
-		+ _job_area_sum(HRConstants.JOB_TEST) * TESTER_SPRINT_PER_EXPERTISE)
+		+ _area_sum(HRConstants.AREA_QA) * TESTER_SPRINT_PER_EXPERTISE)
 	return clampi(int(ceil(float(bug_count) / maxf(0.01, rate))), MIN_SPRINT_DAYS, MAX_SPRINT_DAYS)
 
 

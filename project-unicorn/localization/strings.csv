@@ -33,11 +33,11 @@ ONB_P2_TITLE,Köken ve Karakter,Origin and Character
 ONB_P2_SUB,"Nereden geldiğin, neyi kolay, neyi zor yaşayacağını belirler.","Where you come from decides what will come easy, and what will not."
 ONB_ORIGIN_HEADER,KÖKEN,ORIGIN
 ONB_ORIGIN_SUB,"Nereden geldiğin, nereden başladığını belirler.",Where you come from decides where you start.
-ONB_ORIGIN_SELF_MADE_NAME,Sıfırdan,Self-Made
+ONB_ORIGIN_SELF_MADE_NAME,Self-Made,Self-Made
 ONB_ORIGIN_SELF_MADE_QUOTE,Hiçbir şey yoktu. Her satırı ben yazdım.,There was nothing. I wrote every line myself.
-ONB_ORIGIN_HEIR_NAME,Mirasyedi,The Heir
+ONB_ORIGIN_HEIR_NAME,The Heir,The Heir
 ONB_ORIGIN_HEIR_QUOTE,Aile sermayesi arkanda. Ama gözler de üzerinde.,"Family money at your back. And every eye on you."
-ONB_ORIGIN_CORP_NAME,Kurumsal Firari,Corporate Refugee
+ONB_ORIGIN_CORP_NAME,Corporate Refugee,Corporate Refugee
 ONB_ORIGIN_CORP_QUOTE,On yıl büyük şirkette. Şimdi kendi adına.,Ten years in a big company. Now in your own name.
 LOCK_FULL,TAM SÜRÜMDE,IN THE FULL GAME
 LOCK_SOON,ÇOK YAKINDA,COMING SOON
@@ -316,23 +316,67 @@ HR_COL_EMPLOYEE,ÇALIŞAN,EMPLOYEE
 HR_COL_EXPERIENCE,DENEYİM,EXPERIENCE
 HR_AREA_PRODUCT,Ürün,Product
 HR_AREA_DESIGN,Tasarım,Design
-HR_AREA_ENGINEERING,Yazılım,Engineering
+HR_AREA_ENGINEERING,Yazılım,Development
 HR_AREA_QA,Test,QA
 HR_AREA_SALES,Satış,Sales
-HR_AREA_CUSTOMER_SUCCESS,Müşteri Başarısı,Customer Success
+HR_AREA_CUSTOMER_SUCCESS,Müşteri İlişkileri,Customer Success
 HR_AREA_LEADERSHIP,Liderlik,Leadership
-HR_COL_AREAS,ALANLAR,AREAS
-HR_COL_LEADERSHIP,LİDERLİK,LEADERSHIP
-HR_JOB_BUILD,Build ekibi,Build team
-HR_JOB_TEST,Test,Testing
-HR_JOB_SUPPORT,Destek,Support
-HR_JOB_ACCOUNTS,Hesap sahipliği,Account ownership
-HR_JOB_SALES,Satış,Sales
-HR_JOB_RESEARCH,Araştırma,Research
-HR_JOB_COST,Maliyet ve teknik borç,Cost and tech debt
-HR_JOB_EMPTY,{job}: kimse yok,{job}: nobody assigned
+HR_AREA_RESEARCH,Araştırma,Research
+HR_ASSIGN_NOT_YOUR_AREA,Bu kişinin bu alanda yıldızı yok.,This person has no stars in that area.
+HR_TAB_ROSTER,KADRO,ROSTER
+HR_TAB_ASSIGNMENTS,GÖREVLER,ASSIGNMENTS
+HR_GROUP_PRODUCT_DESIGN,Ürün & Tasarım,Product & Design
+HR_GROUP_DEVELOPMENT,Geliştirme Ekibi,Development
+HR_GROUP_SALES,Satış,Sales
+HR_GROUP_CUSTOMER_SUCCESS,Müşteri İlişkileri,Customer Success
+HR_COL_ROLES_LEADERSHIP,ROLLER · LİDERLİK,ROLES · LEADERSHIP
+HR_COL_TASK,GÖREV,TASK
+HR_COL_TRAIT,TRAIT,TRAIT
+HR_TASK_ON_VERSION,{product} v{version}'de çalışıyor,Working on {product} v{version}
+HR_TASK_ON_AREA,{area} alanında görev alıyor,Working in {area}
+HR_TASK_NONE,—,—
+HR_LEGEND_PRIMARY,ANA ALAN,PRIMARY AREA
+HR_LEGEND_SECONDARY,İKİNCİL ALAN,SECONDARY AREA
+HR_LEGEND_NO_AREA,ALANI YOK · ATANAMAZ,NO AREA · CANNOT ASSIGN
+HR_FOUNDER_BAND,KURUCU · HER ALANA ATANABİLİR,FOUNDER · CAN TAKE ANY AREA
+HR_CHIP_IDLE_COUNT,{n} BOŞTA,{n} IDLE
+HR_CHIP_OVERLOAD_COUNT,{n} AŞIRI YÜK,{n} OVERLOADED
+HR_ATLAS_ARRIVAL,adaylar {span} içinde gelir,candidates arrive within {span}
+HR_ATLAS_ARRIVAL_SPAN,bir hafta,a week
+HR_ATLAS_FILE_N,DOSYA {i}/{n},FILE {i}/{n}
+HR_ATLAS_SALARY_LABEL,MAAŞ TALEBİ,SALARY ASK
+HR_ATLAS_COMMISSION_LABEL,KOMİSYON,COMMISSION
+HR_ATLAS_RUNWAY_LABEL,RUNWAY,RUNWAY
+HR_PER_MONTH,/ay,/mo
+HR_TRAINING_STEP_AREA,ALAN SEÇ,CHOOSE AN AREA
+HR_TRAINING_COL_AREA,ALAN,AREA
+HR_TRAINING_COL_CURRENT,MEVCUT,CURRENT
+HR_TRAINING_COL_TARGET,HEDEF,TARGET
+HR_TRAINING_COL_FEE,ÜCRET,FEE
+HR_TRAINING_COL_DURATION,SÜRE,DURATION
+HR_TRAINING_DURATION_WEEKS,iki hafta,two weeks
+HR_TRAINING_WARNING,Eğitimdeyken görev alamaz.,Cannot be assigned while in training.
+HR_TRAINING_CTA,EĞİTİME GÖNDER · {fee},SEND TO TRAINING · {fee}
+HR_TRAINING_AT_CAP,Bu alan tavanda.,This area is already at the cap.
+PER_HEADER_META,{origin} · {phase} · KIDEM {n}. GÜN,{origin} · {phase} · TENURE DAY {n}
+PER_ASSIGN_HINT,Günlük görev ataması: Ekip → Görevler,Daily assignment: Team → Assignments
+PER_FOUNDER,KURUCU,FOUNDER
+PER_TENURE,KIDEM · {n}. GÜN,TENURE · DAY {n}
+PER_EXPERIENCE,DENEYİM,EXPERIENCE
+PER_CHARISMA,Karizma,Charisma
+PER_WHERE_AM_I,NEREDE DURUYORUM,WHERE I STAND
+PER_PHASE_GOAL,BU FAZIN HEDEFİ,THIS PHASE'S GOAL
+PER_GOAL_BOOTSTRAP,İlk ödeyen müşterilere ulaş,Reach your first paying customers
+PER_GOAL_TRACTION,Geliri büyüt ve markayı kur,Grow revenue and build the brand
+PER_GOAL_SERIES_A,Masaya otur ve turu kapat,Get to the table and close the round
+PER_NET_WORTH,NET SERVET,NET WORTH
+PER_EQUITY,HİSSE,EQUITY
+PER_VALUATION,SON DEĞERLEME,LATEST VALUATION
+PER_PEAK_VALUE,ZİRVE DEĞER,ALL-TIME PEAK
+PER_NO_VALUATION,Değerleme henüz yok — ilk yatırım turunda hesaplanır.,No valuation yet — calculated at the first funding round.
+PER_CAP_FOUNDER,Kurucu · %{pct},Founder · {pct}%
 HR_BADGE_IDLE,BOŞTA,IDLE
-HR_BADGE_OVERLOADED_JOBS,AŞIRI YÜKLÜ,OVERLOADED
+HR_BADGE_OVERLOADED_JOBS,AŞIRI YÜK,OVERLOADED
 HR_IDLE_HINT,Hiçbir işe atanmadı — duruyor ve maaş alıyor.,Not assigned to any job — standing idle and still on payroll.
 HR_OVERLOAD_HINT,Birden fazla işte çalışıyor: verimi düşer ve morali normalden hızlı erir.,Working more than one job: output drops and morale erodes faster than normal.
 HR_ASSIGN_FOUNDER_BUSY,Kurucu şu an başka bir işte.,The founder is already on another job.
@@ -366,8 +410,8 @@ HR_COL_SALARY,MAAŞ,SALARY
 HR_COL_MORALE,MORAL,MORALE
 HR_PAGE_TITLE,Ekip,Team
 HR_SUMMARY,ÇALIŞAN {count} · ORTALAMA MORAL {morale} · AYLIK MAAŞ YÜKÜ {payroll},HEADCOUNT {count} · AVERAGE MORALE {morale} · MONTHLY PAYROLL {payroll}
-HR_SEARCH_START,+ ARAYIŞ BAŞLAT,+ START A SEARCH
-HR_SEARCH_START_INLINE,ARAYIŞ BAŞLAT,START A SEARCH
+HR_SEARCH_START,+ İŞE ALIM BAŞLAT,+ Start Recruitment
+HR_SEARCH_START_INLINE,İŞE ALIM BAŞLAT,Start Recruitment
 HR_EMPTY_ROW,Henüz kimse yok,Nobody here yet
 HR_STATE_NEW,YENİ,NEW
 HR_STATE_ON_LEAVE,İzinde,On leave
@@ -376,7 +420,6 @@ HR_TRAINING,EĞİTİM,TRAINING
 HR_TRAINING_LOCKED,EĞİTİM · KİLİTLİ,TRAINING · LOCKED
 HR_TRAINING_SEND,EĞİTİME GÖNDER,SEND TO TRAINING
 HR_TRAINING_PICK_TITLE,Eğitime gönder,Send to training
-HR_TRAINING_PICK_NOTE,{days} gün boyunca çalışmaz. Tek seferlik {fee}. Dönüşte {area} +1.,Away for {days} days. One-off {fee}. Returns with {area} +1.
 HR_TRAINING_NONE_ELIGIBLE,Deneyimi dolan kimse yok.,Nobody has filled their experience bar yet.
 HR_TRAINING_CAPPED,Uzmanlık tavanda.,Expertise is at the cap.
 HR_NEWS_TRAINING_DONE,{name} eğitimden döndü; uzmanlığı arttı.,{name} is back from training with sharper expertise.
@@ -479,9 +522,9 @@ BUILD_HALF_ROUND_TOOLTIP,Yarım tur sayılmaz,A half round doesn't count
 HR_ROLE_FOUNDER,Kurucu,Founder
 HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
 HR_ROLE_DESIGNER,Tasarımcı,Designer
-HR_ROLE_DEVELOPER,Yazılımcı,Developer
-HR_ROLE_TESTER,Test Uzmanı,Tester
-HR_ROLE_SALES_REP,Satış Uzmanı,Sales Rep
+HR_ROLE_DEVELOPER,Yazılım Mühendisi,Software Engineer
+HR_ROLE_TESTER,Test Mühendisi,QA Engineer
+HR_ROLE_SALES_REP,Satış Temsilcisi,Sales Representative
 HR_ROLE_CUSTOMER_REP,Müşteri Temsilcisi,Account Manager
 HR_ROLE_MENTOR,Operating Partner,Operating Partner
 HR_DEPT_PRODUCT_DEV,Ürün Geliştirme,Product Development
@@ -490,7 +533,7 @@ HR_DEPT_CUSTOMER,Müşteri,Customer Success
 HR_BAND_JUNIOR,ekonomik,budget
 HR_BAND_MID,dengeli,balanced
 HR_BAND_SENIOR,üst segment,premium
-HR_BADGE_FLIGHT_RISK,Kaçma riski,Flight risk
+HR_BADGE_FLIGHT_RISK,Ayrılabilir,At risk of leaving
 HR_BADGE_BURNING_OUT,Tükeniyor,Burning out
 HR_BADGE_OVERLOADED,Aşırı yüklü,Overloaded
 HR_STATE_STARTS_TOMORROW,Yarın başlıyor,Starts tomorrow
@@ -720,9 +763,6 @@ HEALTH_CHURNING,kaçıyor,churning
 NOTICE_SRC_SALES,Satış,Sales
 NOTICE_SRC_CUSTOMER,Müşteri,Customer
 SALES_LOG_REP_CLOSED,"{rep}, {company} ile anlaşmayı kapattı.",{rep} closed the deal with {company}.
-HR_SECTION_DESIGN,Tasarım,Design
-HR_SECTION_DEVELOPMENT,Geliştirme,Development
-HR_SECTION_TEST,Test,Test
 HR_BADGE_NEW,Yeni,New
 HR_SEVERANCE_LINE,{label}: {amount} ({months} ay),{label}: {amount} ({months} mo)
 HR_TRAIT_WARMS_UP_FAST_LABEL,Çabuk ısınır,Warms up fast
@@ -745,13 +785,13 @@ HR_TRAIT_ONE_FOOT_OUT_LABEL,Bir ayağı kapıda,One foot out the door
 HR_TRAIT_ONE_FOOT_OUT_EFFECT,Kötü giderse ayrılmaya daha meyilli,More likely to leave if things go badly
 HR_TRAIT_NEEDS_DIRECTION_LABEL,Söylenmezse yapmaz,Needs to be told
 HR_TRAIT_NEEDS_DIRECTION_EFFECT,Sorumlu değilken belirgin biçimde az katkı verir,Contributes markedly less when not the lead
-HR_ROLE_HINT_PRODUCT_MANAGER,"Ekibe yön verir: ürünün deneyim tavanını yükseltir, tasarıma hız katar.","Gives the team direction: raises the product's experience ceiling and speeds up design."
-HR_ROLE_HINT_DESIGNER,"Tasarım aşamasını hızlandırır, tasarım kalitesinin tavanını yükseltir.",Speeds up the design stage and raises the ceiling on design quality.
-HR_ROLE_HINT_DEVELOPER,"Geliştirmeyi hızlandırır, kod kalitesinin tavanını yükseltir.",Speeds up development and raises the ceiling on code quality.
-HR_ROLE_HINT_TESTER,"Hataları yayına çıkmadan yakalar, beta süresini kısaltır.",Catches bugs before they ship and shortens beta.
-HR_ROLE_HINT_SALES_REP,"Kendi müşteri adaylarını bulur, anlaşmaları senin yerine kapatır.",Finds their own leads and closes deals for you.
-HR_ROLE_HINT_CUSTOMER_REP,"Müşteri taleplerine yetişir, müşteri kaybını yavaşlatır.",Keeps up with customer requests and slows churn.
-HR_AGENCY_NAME,Atlas Seçme & Yerleştirme,Atlas Seçme & Yerleştirme
+HR_ROLE_HINT_PRODUCT_MANAGER,İnovasyon ve deneyim tavanını yükseltir.,Raises the innovation and experience ceiling.
+HR_ROLE_HINT_DESIGNER,Tasarım kalitesinin tavanını yükseltir.,Raises the ceiling on design quality.
+HR_ROLE_HINT_DEVELOPER,Geliştirme hızını ve kod kalitesini yükseltir.,Raises development speed and code quality.
+HR_ROLE_HINT_TESTER,"Hata oranını düşürür, beta süresini kısaltır.",Lowers the bug rate and shortens beta.
+HR_ROLE_HINT_SALES_REP,Yeni müşteri kazanımını hızlandırır.,Speeds up winning new customers.
+HR_ROLE_HINT_CUSTOMER_REP,Müşteri kaybını yavaşlatır.,Slows customer churn.
+HR_AGENCY_NAME,ATLAS RECRUITMENT,ATLAS RECRUITMENT
 HR_RESIGN_VOICE_1,"""Bir süre düşündüm. Burada tükeniyorum, daha fazla taşımak istemiyorum.""","""I have thought about it for a while. I am burning out here and I do not want to carry it any longer."""
 HR_RESIGN_VOICE_2,"""Kimseyle sorunum yok. Sadece her sabah biraz daha zor kalkıyorum. O kadar.""","""I have no problem with anyone. Every morning is just a little harder to get up. That is all."""
 HR_RESIGN_VOICE_3,"""Bana kötü davranıldı demeyeceğim. Ama fark edilmedim.""","""I will not say I was treated badly. But I was not noticed."""
@@ -832,16 +872,13 @@ HR_HOLIDAY_CONFIRM_TITLE,{name} · tatile gönder,{name} · send on holiday
 HR_HOLIDAY_CONFIRM_OK,Tatile gönder,Send on holiday
 HR_FIRE_CONFIRM_TITLE,{name} · işten çıkar,{name} · let go
 HR_FIRE_CONFIRM_OK,İşten çıkar,Let go
-HR_ATLAS_QUOTE,"""Doğru kişiyi bulmak zaman alır. Acele eden yanlış kişiyi bulur.""","""Finding the right person takes time. Whoever rushes finds the wrong one."""
 HR_ATLAS_STEP_ROLE,Adım 1 · Rol,Step 1 · Role
 HR_ATLAS_STEP_BAND,Adım 2 · Bütçe bandı,Step 2 · Budget band
-HR_ATLAS_TERMS,"{retainer} peşin, iade edilmez · işe alımda ilk ay maaşının %{pct} komisyonu · adaylar {min}-{max} gün içinde gelir","{retainer} up front, non-refundable · {pct}% commission on the first month's salary at hire · candidates arrive within {min}-{max} days"
 HR_ATLAS_CANCEL,VAZGEÇ,CANCEL
 HR_ATLAS_START,ARAYIŞ BAŞLAT · {amount},START SEARCH · {amount}
 HR_ATLAS_NEED_SELECTION,Rol ve bütçe bandı seçilmeli.,Pick a role and a budget band.
 HR_ATLAS_FILES_COUNT,Aday dosyaları · {n},Candidate files · {n}
 HR_ATLAS_TAKE_NONE,Hiçbirini alma,Take none
-HR_ATLAS_SALARY_ASK,Maaş talebi {amount}/ay,Asking {amount}/mo
 HR_ATLAS_HIRE,İŞE AL · {amount}/AY,HIRE · {amount}/MO
 HR_ATLAS_CLOSE_BODY,Hiçbirini almazsan arayış kapanır ve peşin ödenen {amount} geri gelmez.,If you take none the search closes and the {amount} retainer does not come back.
 HR_ATLAS_CLOSE_OK,Dosyaları kapat,Close the files
@@ -859,9 +896,10 @@ HR_OT_PROGRESS,{day}. gün · {len} günlük blok,Day {day} · {len}-day block
 HR_OT_TODAY_SPEED,Bugünün hız kazancı +%{pct},Today's speed gain +{pct}%
 HR_OT_EARLY_STOP,"Erken durdurabilirsin; başlanan gün tam ücretlenir, sonrası için bedel üretmez.",You can stop early; the day you started bills in full and nothing accrues after that.
 HR_CARD_SALARY,Maaş {amount}/ay,Salary {amount}/mo
-HR_CARD_RAISE,ZAM YAP,GIVE A RAISE
-HR_CARD_HOLIDAY,TATİLE GÖNDER,SEND ON HOLIDAY
-HR_CARD_FIRE,İŞTEN ÇIKAR,LET GO
+HR_CARD_RAISE,Zam yap,Give a raise
+HR_CARD_HOLIDAY,İzne gönder,Send on leave
+HR_CARD_FIRE,İşten çıkar,Dismiss
+HR_MENU_PERMANENT,kalıcı,permanent
 HR_RAISE_POPOVER_TITLE,Zam yap,Give a raise
 HR_CANDIDATE_GENERIC,Aday,Candidate
 HR_CASH_LINE,Nakit {old} → {new},Cash {old} → {new}
@@ -1200,10 +1238,6 @@ PROD_DESIGN_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
 ""We can run another round if you want — it burns time and polishes the design. But every round returns less than the last. At some point you need better people, not more rounds.""{note}"
 PROD_TO_DEVELOPMENT_PLAIN,Geliştirmeye geç,Move to development
 PROD_TREND_FALLING,AZALIYOR,FALLING
-HR_ATLAS_COMMISSION_RANGE,Komisyon bu bantta {low} – {high},Commission in this band: {low} – {high}
-HR_TRAINING_PICK_BODY,"{name} · {role}
-{note}","{name} · {role}
-{note}"
 PROD_AXIS_DELTA,{axis} {delta},{axis} {delta}
 PROD_BUG_RISK,Hata riski: {level},Bug risk: {level}
 PROD_BUGS_TREND,{bugs} HATA · {trend},{bugs} BUGS · {trend}

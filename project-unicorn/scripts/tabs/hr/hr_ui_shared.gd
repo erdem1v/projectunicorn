@@ -30,31 +30,115 @@ static func money(amount: int) -> String:
 	return HRConstants.money_tr(amount)
 
 
-# --- Alan çipleri -----------------------------------------------------------
-
-static func area_chips(role_id: String, role_stats: Dictionary, muted: bool = false) -> HBoxContainer:
-	# rev 2 §3: "Kapalı satırda YALNIZ o rolün anahtar alanı ve varsa ikincil alanı görünür"
-	# ve "Altı alan hiçbir zaman düz sıra olarak gösterilmez". İki çip, hiç altı değil.
-	# Etiketler registry'de Title Case duruyor, ekranda büyük harf isteniyor → tr_upper
-	# (ham to_upper noktalı İ'yi bozar).
+# --- Alan yıldızları --------------------------------------------------------
+# Onaylı tasarımın ROLLER · LİDERLİK hücresi (9b): alan adı ÜSTTE, beş yıldız ALTINDA,
+# iki alan yan yana, sonra hairline, sonra Liderlik. ÇİP DEĞİL: çip bir DURUM anlatır,
+# yıldız bir MİKTAR — ve tasarım alanları miktar olarak okutuyor.
+static func area_stars_row(role_id: String, role_stats: Dictionary, glyph_px: int = 14,
+		muted: bool = false) -> HBoxContainer:
+	## Kişinin ANA + İKİNCİL alanı, yıldızla. rev 2 §3 altı alanı düz listede göstermeyi
+	## yasaklıyor — rolün iki alanı yeter ve tasarım da tam olarak ikisini çiziyor.
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 5)
+	row.add_theme_constant_override("separation", UiTokens.SPACE_XL)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for area_key in [HRConstants.role_key_area(role_id), HRConstants.role_secondary_area(role_id)]:
-		var a: String = String(area_key)
-		if a == "":
+		var key: String = String(area_key)
+		if key == "":
 			continue
-		var label: String = UiTokens.tr_upper(HRConstants.area_label(a))
-		row.add_child(_bordered_chip("%s %d" % [label, int(role_stats.get(a, 0))], muted))
+		row.add_child(StarRating.labelled(HRConstants.area_label(key),
+			int(role_stats.get(key, 0)), glyph_px, muted))
 	return row
 
 
 static func role_area_cell(emp: Character, width: int, muted: bool = false) -> Control:
-	## Defter satırının ALANLAR hücresi — sabit genişlikte, ortalanmış iki çip.
+	## Sabit genişlikte ROLLER · LİDERLİK hücresi. Liderlik alanlardan DİKEY HAIRLINE ile
+	## ayrılır (9b): aynı yıldız grameri, ama bir alan değil — ayraç bunu söylüyor.
 	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	box.custom_minimum_size = Vector2(width, 0)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 5)
-	box.add_child(area_chips(emp.role, emp.role_stats, muted))
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(area_stars_row(emp.role, emp.role_stats, 14, muted))
+	box.add_child(_v_hairline())
+	box.add_child(StarRating.labelled(HRConstants.area_label(HRConstants.SKILL_LEADERSHIP),
+		int(emp.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0)), 14, muted))
+	return box
+
+
+static func _v_hairline(height: int = 26) -> Panel:
+	var line := Panel.new()
+	line.custom_minimum_size = Vector2(1, height)
+	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = UiTokens.SEPARATOR
+	line.add_theme_stylebox_override("panel", sb)
+	return line
+
+
+# --- Trait ikonu -----------------------------------------------------------
+# 9b'nin TRAIT sütunu bir çip değil bir İKON çiziyor, adı hover'da. Tasarım ALTI ikonu
+# adıyla çizdi; motorda on çalışan trait'i var, kalan dördü (ve kurucunun sekizi) aynı
+# kutuda NÖTR bir glifle duruyor — uydurulmuyor, isteniyor (bkz. teslim raporu).
+const TRAIT_ICON_DIR := "res://assets/icons/traits/"
+const TRAIT_ICON_DRAWN := ["pressure_proof", "natural_leader", "warms_up_fast",
+	"sours_the_room", "wont_jump_ship", "mentors_peers"]
+
+
+static func trait_icon_path(trait_id: String) -> String:
+	if TRAIT_ICON_DRAWN.has(trait_id):
+		return TRAIT_ICON_DIR + trait_id + ".svg"
+	return TRAIT_ICON_DIR + "unspecified.svg"
+
+
+static func trait_icon(trait_id: String, px: int = 18, boxed: bool = false) -> Control:
+	## `boxed` = Kişisel kartının 28×28 konturlu kutusu (10a); çıplak hâli deftere girer.
+	var tex := TextureRect.new()
+	tex.texture = load(trait_icon_path(trait_id))
+	tex.custom_minimum_size = Vector2(px, px)
+	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex.modulate = UiTokens.INK_MUTED
+	tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if not boxed:
+		return tex
+	var frame := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = UiTokens.SURFACE_FRAME
+	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+	sb.border_color = UiTokens.BORDER_HOVER
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	sb.content_margin_left = 4.0
+	sb.content_margin_right = 4.0
+	sb.content_margin_top = 4.0
+	sb.content_margin_bottom = 4.0
+	frame.add_theme_stylebox_override("panel", sb)
+	frame.custom_minimum_size = Vector2(28, 28)
+	frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	frame.add_child(tex)
+	return frame
+
+
+static func trait_cell(trait_ids: Array, width: int) -> Control:
+	## TEK İKON. Motor 2026-08-22'den beri tek trait taşıyor (HRConstants.TRAIT_COUNT), ama
+	## eski bir kayıt ya da fixture iki taşıyorsa OLUMSUZ olanı gösteririz: bir satırda tek
+	## şey gösterilecekse oyuncunun bilmesi gereken kötü haberdir.
+	var box := CenterContainer.new()
+	box.custom_minimum_size = Vector2(width, 0)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var pick: String = ""
+	for trait_id in trait_ids:
+		var tid: String = String(trait_id)
+		if pick == "" or HRConstants.trait_polarity(tid) == "negative":
+			pick = tid
+	if pick == "":
+		box.add_child(UiFactory.make_label("—", &"RowMeta", UiTokens.INK_FAINT))
+		return box
+	var icon: Control = trait_icon(pick)
+	icon.tooltip_text = "%s — %s" % [
+		HRConstants.trait_label(pick), HRConstants.trait_effect_text(pick)]
+	icon.mouse_filter = Control.MOUSE_FILTER_STOP   # Label/TextureRect IGNORE doğar; tooltip hover ister
+	box.add_child(icon)
 	return box
 
 
@@ -222,6 +306,20 @@ static func hairline() -> Panel:
 	sb.bg_color = UiTokens.DIVIDER_LIGHT
 	line.add_theme_stylebox_override("panel", sb)
 	return line
+
+
+## Dikkat şeridinin ⚠ işareti. Kilit glifinin yerine kendi ikonu var, çünkü kilit
+## "yapamazsın" der, uyarı "bak" der — ikisi aynı şerit değil.
+static func warning_glyph(px: int = 12, color: Color = UiTokens.NEGATIVE) -> TextureRect:
+	var tex := TextureRect.new()
+	tex.texture = load("res://assets/icons/warning.svg")
+	tex.custom_minimum_size = Vector2(px, px)
+	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tex.modulate = color
+	tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return tex
 
 
 static func lock_glyph(px: int = 11, color: Color = UiTokens.INK_DIM) -> TextureRect:

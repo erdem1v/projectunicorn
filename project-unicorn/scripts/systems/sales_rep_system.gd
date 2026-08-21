@@ -30,10 +30,10 @@ extends RefCounted
 
 # --- Daily entry (called by B2BSalesSystem.daily_tick, last) ---
 static func daily_tick() -> void:
-	# rev 2 §4: the SATIŞ JOB staffs the pipeline, not the job title. Nobody assigned →
+	# rev 2 §4: the SATIŞ AREA staffs the pipeline, not the job title. Nobody assigned →
 	# the desk is shut, exactly as it was with nobody hired. Today a sales_rep hire lands
 	# on this job automatically, so the additivity invariant below still holds byte-for-byte.
-	if HRSystem.assigned_to(HRConstants.JOB_SALES).is_empty():
+	if HRSystem.assigned_to(HRConstants.AREA_SALES).is_empty():
 		return
 	# Generate BEFORE advancing, so ProspectRegistry only ever grows within a tick. Fresh
 	# leads start at zero warmth, so they cannot close on the day they appear.
@@ -50,7 +50,7 @@ static func _ranked(axis: String) -> Array:
 	# The founder is included when he is assigned — ch. 02 §5's "sales capacity with no
 	# sales hire = founder only, and only while assigned to selling" lands exactly here.
 	var reps: Array = []
-	for c in HRSystem.assigned_to(HRConstants.JOB_SALES):
+	for c in HRSystem.assigned_to(HRConstants.AREA_SALES):
 		reps.append(c)
 	reps.sort_custom(func(a: Character, b: Character) -> bool:
 		var av: int = int(a.role_stats.get(axis, 0))
@@ -76,7 +76,7 @@ static func _diminished_sum(axis: String) -> float:
 			continue
 		# §5: aşırı yük ve ikincil alan çarpanları burada da geçerli.
 		total += weight * float(int(c.role_stats.get(axis, 0))) \
-			* HRSystem.output_mult_for(c, HRConstants.JOB_SALES)
+			* HRSystem.output_mult_for_area(c, HRConstants.AREA_SALES)
 		weight *= B2BConstants.REP_STACK_DECAY
 	return total
 
