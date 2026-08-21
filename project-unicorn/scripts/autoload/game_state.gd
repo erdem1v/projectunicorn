@@ -238,7 +238,16 @@ var run_hires: int = 0                 # CharacterRegistry.add, category "employ
 # portraits; read+written each meeting, so it's real run state, not a write-only counter).
 var b2b_rep_portrait_rotation_index: int = 0   # sequential cursor into the rep-portrait pool
 var b2b_last_rep_portrait: String = ""         # last face shown — new assignments skip it (no consecutive repeat)
-var run_departures: int = 0            # RESERVED — no fire/quit seam exists yet
+var run_departures: int = 0            # CharacterRegistry.remove, category "employee"
+
+# --- Görev liderleri (GDD v2 ch. 07 rev 2 §2/§4) ---
+# {job_id: character_id}. rev 2 §2: "ekip lideri atanan çalışanın altındaki ekibin
+# verimlilik modifier'ını, moral düşüş hızını ve deneyim kazanım hızını etkiler."
+# Erdem 2026-08-21: lider İŞ BAŞINADIR — Build'in lideri ayrı, Destek'in lideri ayrı.
+# Bu tablo yalnız AÇIK seçimi tutar; boş bırakılan iş için lider TÜRETİLİR (o işteki en
+# yüksek Liderlik, yoksa kurucu) — HRSystem.job_lead. Saklamamanın sebebi: türetilmiş bir
+# lider işe alım/ayrılmayla kendiliğinden güncellenir, saklanan bir lider bayatlar.
+var job_leads: Dictionary = {}
 var run_scandals_total: int = 0        # RESERVED — no scandal system yet; debug-settable
 var run_scandals_managed: int = 0      # RESERVED
 var run_pushes_attempted: int = 0      # Term Sheet table push() writes (term_sheet_table_system.gd)
@@ -568,6 +577,17 @@ func record_angel_round(equity_pct: int, amount: int) -> void:
 	EventBus.equity_changed.emit(get_investor_equity_pct())
 
 
+func release_job_leads(character_id: String) -> void:
+	## Ayrılan/çıkarılan kişi hangi işlerin lideriyse o koltuklar BOŞALIR (rev 2 §9).
+	## Otomatik devir yok: bir sonraki okuma türetilmiş lidere düşer, yani canlı kadroya.
+	var freed: Array[String] = []
+	for job_id in job_leads.keys():
+		if String(job_leads[job_id]) == character_id:
+			freed.append(String(job_id))
+	for job_id in freed:
+		job_leads.erase(job_id)
+
+
 func get_founder_skill(skill_name: String) -> int:
 	# Reads from founder.role_stats. Populated by _build_founder from the
 	# onboarding skill allocation. Returns 0 if founder or skill missing.
@@ -760,6 +780,7 @@ func initialize_run(payload: Dictionary) -> void:
 	b2b_last_rep_portrait = ""
 	run_hires = 0
 	run_departures = 0
+	job_leads.clear()
 	run_scandals_total = 0
 	run_scandals_managed = 0
 	run_pushes_attempted = 0
@@ -921,6 +942,10 @@ func _build_founder(payload: Dictionary) -> Character:
 		push_error("[GameState] skill_alloc failed validation (pool %d, cap %d): %s"
 			% [FounderConstants.POINT_POOL, FounderConstants.ONBOARDING_CAP, str(skill_alloc)])
 	f.role_stats = stats
+	# ch. 02 §5 / rev 2 §4: the founder holds ONE job. He starts on the build, which is
+	# where every formula has always found him — the model becomes real here, the PRESSURE
+	# arrives when the Görevler tab can move him off it and the build notices.
+	f.assigned_jobs = [HRConstants.JOB_BUILD]
 	f.traits = traits_arr
 	# loyalty / relationship / trust_score / attention_flag stay at Resource
 	# defaults — forward-compatible per scripts/data_models/character.gd.

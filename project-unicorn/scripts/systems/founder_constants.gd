@@ -5,24 +5,51 @@ extends RefCounted
 # origins, portraits, logo styles. EVERY number here is a working placeholder — the
 # calibration pass (last, one session) tunes this file and nothing else.
 #
-# SKILL-RENAME ledger (2026-07-16) — the 4-skill system became 5 skills:
-#   tech     -> tech (unchanged)
-#   markets  -> SPLIT by meaning: "sales" (prospect/pitch/deal-close reads)
-#                                 "negotiation" (term-sheet/discount pushes)
-#   charisma -> leadership (identity); every old READ reassigned by meaning:
-#                B2B "Vizyon sat" -> influence; B2B close roll -> sales;
-#                VC pitch persuasion beats -> influence (Erdem decision 2026-07-16)
-#   politics -> influence
+# SKILL-RENAME ledger, second entry (2026-08-21, GDD v2 ch. 07 rev 2 §2/§3).
+#
+# rev 2 §3 gives the founder's absence from the Ekip page this reason: "kurucunun her
+# alanda puanı var". So the founder stopped being a different creature — he now carries
+# THE SAME six areas as every employee, plus Liderlik (which rev 2 moved onto everyone),
+# plus Karizma, which is the one number that stays founder-only.
+#
+#   tech        -> SPLIT across the technical areas by meaning: build speed and the
+#                  iteration ceilings read "engineering" / "product" / "design" / "qa"
+#                  exactly where the role formulas now read them.
+#   sales       -> "sales" (the AREA of the same name; same reads, same value)
+#   influence   -> "charisma" — Karizma comes BACK under its own name. rev 2 §2 names it,
+#                  and ch. 02 §4 defines it (pitch/fundraising odds and terms, plus
+#                  scandal/PR outcomes). It therefore LEAVES the retired list below.
+#   negotiation -> RETIRED. rev 2's six areas have no negotiation, so the one formula that
+#                  read it — the term-sheet dilution lever — is bound to Karizma. That is
+#                  the single binding rev 2 does not itself authorize; it is one line in
+#                  PitchConstants.LEVER_SKILL and belongs to ch. 09's turn.
+#   leadership  -> unchanged key, but no longer founder-only.
+#
+# First entry (2026-07-16) — the 4-skill system became 5 skills:
+#   tech -> tech · markets -> SPLIT into "sales" + "negotiation" ·
+#   charisma -> leadership (identity) · politics -> influence
+#
 # Old keys must never be read again — GameState.get_founder_skill push_errors on
 # OLD_SKILLS so a stale read screams in every log instead of silently returning 0.
 
-const SKILLS := ["tech", "sales", "negotiation", "leadership", "influence"]
-const OLD_SKILLS := ["markets", "charisma", "politics"]
+# Six areas (HRConstants.AREAS, same ids, same 0-9 ruler) + Liderlik + Karizma.
+const SKILLS := ["product", "design", "engineering", "qa", "sales", "customer_success",
+	"leadership", "charisma"]
+const SKILL_CHARISMA := "charisma"
+# "charisma" is NOT here any more — it came back with its own meaning (see the ledger).
+const OLD_SKILLS := ["markets", "politics", "tech", "negotiation", "influence"]
 
 # --- Onboarding allocation ---
 const POINT_POOL := 6        # onboarding skill points; ALL must be spent (İleri gated).
                              # Erdem 2026-07-16: 8 over-equipped the early game — 6 forces
                              # a sharper identity (two strong suits, real gaps).
+                             # HELD AT 6 THROUGH THE AREA MIGRATION ON PURPOSE: with the
+                             # per-skill cap also unchanged at 3, a founder who used to put
+                             # 3 in `tech` now puts 3 in `engineering` and every formula
+                             # that read tech reads the same number. Behaviour does not
+                             # drift. But 6 points now spread over EIGHT columns instead of
+                             # five, so the founder has more true zeros — [WORKING], and a
+                             # real candidate for the calibration pass.
 const ONBOARDING_CAP := 3    # per-skill max at creation
 const SKILL_CEILING := 5     # underlying max — 4-5 reachable only via HR founder
                              # training (LATER task, not built). At 5 the SkillCheck
@@ -90,23 +117,30 @@ const LOGO_STYLES := [
 # --- Skill display keys (localization/strings.csv; TR canonical + EN literary) ---
 # Lowercase odds fragments ("temel %X · +%Y satış") — the single label home,
 # delegated to by PitchConstants.skill_label so existing callers stay diff-free.
+# LOWERCASE ODDS FRAGMENTS, and that is why this table did NOT collapse into
+# HRConstants.area_label when the founder moved onto the areas. Two different registers:
+# the area's own label is Title Case for a column header ("Satış"), while these are inline
+# sentence fragments ("temel %35 · +%15 satış"). One id, two registers, two rows.
 const SKILL_LABEL_KEYS := {
-	"tech": "SKILL_LABEL_TECH", "sales": "SKILL_LABEL_SALES",
-	"negotiation": "SKILL_LABEL_NEGOTIATION", "leadership": "SKILL_LABEL_LEADERSHIP",
-	"influence": "SKILL_LABEL_INFLUENCE",
+	"product": "SKILL_LABEL_PRODUCT", "design": "SKILL_LABEL_DESIGN",
+	"engineering": "SKILL_LABEL_ENGINEERING", "qa": "SKILL_LABEL_QA",
+	"sales": "SKILL_LABEL_SALES", "customer_success": "SKILL_LABEL_CUSTOMER_SUCCESS",
+	"leadership": "SKILL_LABEL_LEADERSHIP", "charisma": "SKILL_LABEL_CHARISMA",
 }
 # Onboarding column headers. CSV values carry FINAL display casing — never raw .to_upper()
 # a Turkish string in code (dotted-İ bug: "liderlik".to_upper() == "LIDERLIK"; use UiTokens.tr_upper).
 const SKILL_NAME_KEYS := {
-	"tech": "ONB_SKILL_TECH", "sales": "ONB_SKILL_SALES",
-	"negotiation": "ONB_SKILL_NEGOTIATION", "leadership": "ONB_SKILL_LEADERSHIP",
-	"influence": "ONB_SKILL_INFLUENCE",
+	"product": "ONB_SKILL_PRODUCT", "design": "ONB_SKILL_DESIGN",
+	"engineering": "ONB_SKILL_ENGINEERING", "qa": "ONB_SKILL_QA",
+	"sales": "ONB_SKILL_SALES", "customer_success": "ONB_SKILL_CUSTOMER_SUCCESS",
+	"leadership": "ONB_SKILL_LEADERSHIP", "charisma": "ONB_SKILL_CHARISMA",
 }
 # One-line skill descriptions under each onboarding column header.
 const SKILL_DESC_KEYS := {
-	"tech": "ONB_SKILL_TECH_DESC", "sales": "ONB_SKILL_SALES_DESC",
-	"negotiation": "ONB_SKILL_NEGOTIATION_DESC", "leadership": "ONB_SKILL_LEADERSHIP_DESC",
-	"influence": "ONB_SKILL_INFLUENCE_DESC",
+	"product": "ONB_SKILL_PRODUCT_DESC", "design": "ONB_SKILL_DESIGN_DESC",
+	"engineering": "ONB_SKILL_ENGINEERING_DESC", "qa": "ONB_SKILL_QA_DESC",
+	"sales": "ONB_SKILL_SALES_DESC", "customer_success": "ONB_SKILL_CUSTOMER_SUCCESS_DESC",
+	"leadership": "ONB_SKILL_LEADERSHIP_DESC", "charisma": "ONB_SKILL_CHARISMA_DESC",
 }
 
 
@@ -116,6 +150,16 @@ static func skill_label(skill_name: String) -> String:
 	if not SKILL_LABEL_KEYS.has(skill_name):
 		return skill_name
 	return TranslationServer.translate(SKILL_LABEL_KEYS[skill_name])
+
+
+## The exact-key shape a founder's role_stats must hold, all zeros. `_build_founder`
+## overlays the onboarding allocation onto this, so a skill the player left alone is 0
+## rather than missing — which is what keeps the key lock satisfiable.
+static func default_founder_skills() -> Dictionary:
+	var out: Dictionary = {}
+	for skill_key in SKILLS:
+		out[String(skill_key)] = 0
+	return out
 
 
 ## Points left to spend for the KALAN PUAN counter. Only canonical keys count.

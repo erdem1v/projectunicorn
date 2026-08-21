@@ -65,6 +65,11 @@ signal morale_changed(character_id: String, new_morale: int)
 signal employee_experience_changed(character_id: String, new_experience: int)
 ## Eğitim başladığında, her gün ve bittiğinde (0 = bitti/eğitimde değil).
 signal employee_training_changed(character_id: String, days_left: int)
+## Görev ataması değiştiğinde (GDD v2 ch. 07 rev 2 §4): atandı, çıkarıldı ya da ayrılma
+## anında işleri boşaldı. TEK argüman kişidir, iş değil — bir atama değişikliği o kişinin
+## SATIRINI ve etkilediği HER işin doluluk okumasını birden tazeler, o yüzden dinleyen
+## taraf zaten iki tarafa da bakmak zorunda. CharacterRegistry tek yayıncıdır.
+signal assignment_changed(character_id: String)
 # Emitted at the END of HRSystem.daily_tick, once all seven HR steps have settled — the HR
 # tab's day-boundary repaint hook. Exactly the same reason build_progress_changed exists:
 # day_advanced fires inside GameState.advance_day(), which TimeManager calls BEFORE the daily

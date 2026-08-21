@@ -305,8 +305,9 @@ func _confirm_training(emp: Character) -> void:
 			"name": emp.character_name,
 			"role": HRConstants.role_label(emp.role),
 			"note": tr("HR_TRAINING_PICK_NOTE").format({
+				"area": HRConstants.area_label(_training_area_for(emp)),
 				"days": HRConstants.TRAINING_DAYS,
-				"fee": HRUiShared.money(HRConstants.TRAINING_FEE),
+				"fee": HRUiShared.money(CharacterRegistry.training_fee_for(emp.id, _training_area_for(emp))),
 			}),
 		}),
 		"confirm_text": tr("HR_TRAINING_SEND"),
@@ -314,8 +315,25 @@ func _confirm_training(emp: Character) -> void:
 	})
 
 
+## Hangi alan eğitilecek. rev 2 §8 bunu OYUNCUYA seçtiriyor ve seçim ekranı tasarım
+## turunun işi; o gelene kadar hedef rolün ANAHTAR alanıdır — yani bugünkü davranışın
+## birebir devamı (eğitim hep "işinin kalitesini" yükseltiyordu). Tavandaysa ilk uygun
+## alana düşer, çünkü ücreti alıp hiçbir şey vermemek §10'un yasağı.
+func _training_area_for(emp: Character) -> String:
+	var key_area: String = HRConstants.role_key_area(emp.role)
+	if CharacterRegistry.can_train(emp.id, key_area):
+		return key_area
+	for area_key in HRConstants.AREAS:
+		if CharacterRegistry.can_train(emp.id, String(area_key)):
+			return String(area_key)
+	return key_area
+
+
 func _do_send_to_training(emp_id: String) -> void:
-	if HRSystem.send_to_training(emp_id):
+	var emp: Character = CharacterRegistry.get_character(emp_id)
+	if emp == null:
+		return
+	if HRSystem.send_to_training(emp_id, _training_area_for(emp)):
 		_rebuild_forced()
 
 

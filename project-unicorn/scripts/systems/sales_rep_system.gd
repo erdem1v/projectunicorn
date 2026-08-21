@@ -30,7 +30,10 @@ extends RefCounted
 
 # --- Daily entry (called by B2BSalesSystem.daily_tick, last) ---
 static func daily_tick() -> void:
-	if CharacterRegistry.count_active_by_role(HRConstants.ROLE_SALES_REP) == 0:
+	# rev 2 §4: the SATIŞ JOB staffs the pipeline, not the job title. Nobody assigned →
+	# the desk is shut, exactly as it was with nobody hired. Today a sales_rep hire lands
+	# on this job automatically, so the additivity invariant below still holds byte-for-byte.
+	if HRSystem.assigned_to(HRConstants.JOB_SALES).is_empty():
 		return
 	# Generate BEFORE advancing, so ProspectRegistry only ever grows within a tick. Fresh
 	# leads start at zero warmth, so they cannot close on the day they appear.
@@ -41,10 +44,14 @@ static func daily_tick() -> void:
 # --- The ranked team ---
 
 static func _ranked(axis: String) -> Array:
-	# Everyone at work in the role, best-on-this-axis first. On-leave reps are excluded by
-	# get_active_by_role: they are still paid and still count as hires, but they are not
-	# prospecting today (the split CharacterRegistry.get_active_employees documents).
-	var reps: Array = CharacterRegistry.get_active_by_role(HRConstants.ROLE_SALES_REP)
+	# Everyone ASSIGNED to the sales job and at work, best-on-Satış first. On-leave and
+	# in-training people are excluded by HRSystem.assigned_to: they keep the assignment
+	# (they return to it) but they are not prospecting today.
+	# The founder is included when he is assigned — ch. 02 §5's "sales capacity with no
+	# sales hire = founder only, and only while assigned to selling" lands exactly here.
+	var reps: Array = []
+	for c in HRSystem.assigned_to(HRConstants.JOB_SALES):
+		reps.append(c)
 	reps.sort_custom(func(a: Character, b: Character) -> bool:
 		var av: int = int(a.role_stats.get(axis, 0))
 		var bv: int = int(b.role_stats.get(axis, 0))
@@ -56,10 +63,10 @@ static func _ranked(axis: String) -> Array:
 
 static func _diminished_sum(axis: String) -> float:
 	# DIMINISHING RETURNS, stated: rank-0 counts full, rank-1 counts REP_STACK_DECAY, rank-2
-	# that squared, and so on. The falloff is role-STRUCTURAL — more people working one
-	# pipeline get in each other's way — which is why it is not a UYUM reading. Sales has no
-	# sorumlu/lead concept, so HRConstants.coordination_for_employee has no referent here and
-	# is deliberately not called (see the task plan's rapport verdict).
+	# that squared, and so on. The falloff is STRUCTURAL — more people working one pipeline
+	# get in each other's way. It is deliberately NOT a leadership reading: rev 2 §4 gives
+	# the sales job a lead like any other, but a lead multiplies a TEAM's output, and this
+	# curve is about the pipeline being one object that several hands crowd.
 	var total: float = 0.0
 	var weight: float = 1.0
 	for c in _ranked(axis):
@@ -67,16 +74,18 @@ static func _diminished_sum(axis: String) -> float:
 		# exempt — a lone rep is not refusing to work, there is simply no team to join.
 		if total > 0.0 and HRConstants.trait_has(c.traits, "no_team_bonus"):
 			continue
-		total += weight * float(int(c.role_stats.get(axis, 0)))
+		# §5: aşırı yük ve ikincil alan çarpanları burada da geçerli.
+		total += weight * float(int(c.role_stats.get(axis, 0))) \
+			* HRSystem.output_mult_for(c, HRConstants.JOB_SALES)
 		weight *= B2BConstants.REP_STACK_DECAY
 	return total
 
 
 static func _top_expertise() -> int:
-	var reps: Array = _ranked(HRConstants.AXIS_EXPERTISE)
+	var reps: Array = _ranked(HRConstants.AREA_SALES)
 	if reps.is_empty():
 		return 0
-	return int(reps[0].role_stats.get(HRConstants.AXIS_EXPERTISE, 0))
+	return int(reps[0].role_stats.get(HRConstants.AREA_SALES, 0))
 
 
 static func _overtime_mult() -> float:
@@ -90,7 +99,7 @@ static func _overtime_mult() -> float:
 
 static func lead_rate_per_day() -> float:
 	# Public so the UI and the smoke suite can read the same number the tick uses.
-	return B2BConstants.LEAD_PER_PACE_POINT * _diminished_sum(HRConstants.AXIS_PACE) * _overtime_mult()
+	return B2BConstants.LEAD_PER_PACE_POINT * _diminished_sum(HRConstants.AREA_SALES) * _overtime_mult()
 
 
 static func _tick_lead_generation() -> void:
@@ -156,7 +165,7 @@ static func _warm_gain(p: Prospect, expertise_sum: float) -> float:
 
 
 static func _tick_prospect_progress() -> void:
-	var expertise_sum: float = _diminished_sum(HRConstants.AXIS_EXPERTISE) * _overtime_mult()
+	var expertise_sum: float = _diminished_sum(HRConstants.AREA_SALES) * _overtime_mult()
 	if expertise_sum <= 0.0:
 		return
 	# Snapshot: _try_auto_close removes from the registry, and get_all() already hands back a
@@ -177,7 +186,7 @@ static func _tick_prospect_progress() -> void:
 
 
 static func _close(p: Prospect) -> void:
-	var reps: Array = _ranked(HRConstants.AXIS_EXPERTISE)
+	var reps: Array = _ranked(HRConstants.AREA_SALES)
 	if reps.is_empty():
 		return
 	var closer: Character = reps[0]

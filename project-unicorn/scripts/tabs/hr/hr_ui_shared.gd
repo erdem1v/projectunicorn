@@ -30,19 +30,32 @@ static func money(amount: int) -> String:
 	return HRConstants.money_tr(amount)
 
 
-# --- Eksen çipleri ----------------------------------------------------------
+# --- Alan çipleri -----------------------------------------------------------
 
-static func axis_chips(role_stats: Dictionary, muted: bool = false) -> HBoxContainer:
-	# UZMANLIK / HIZ / UYUM, kanon sırada (HRConstants.AXES). Etiketler registry'de
-	# Title Case duruyor, ekranda büyük harf isteniyor → tr_upper (ham to_upper
-	# noktalı İ'yi bozar).
+static func area_chips(role_id: String, role_stats: Dictionary, muted: bool = false) -> HBoxContainer:
+	# rev 2 §3: "Kapalı satırda YALNIZ o rolün anahtar alanı ve varsa ikincil alanı görünür"
+	# ve "Altı alan hiçbir zaman düz sıra olarak gösterilmez". İki çip, hiç altı değil.
+	# Etiketler registry'de Title Case duruyor, ekranda büyük harf isteniyor → tr_upper
+	# (ham to_upper noktalı İ'yi bozar).
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 5)
-	for axis_key in HRConstants.AXES:
-		var label: String = UiTokens.tr_upper(HRConstants.axis_label(String(axis_key)))
-		var value: int = int(role_stats.get(String(axis_key), 0))
-		row.add_child(_bordered_chip("%s %d" % [label, value], muted))
+	for area_key in [HRConstants.role_key_area(role_id), HRConstants.role_secondary_area(role_id)]:
+		var a: String = String(area_key)
+		if a == "":
+			continue
+		var label: String = UiTokens.tr_upper(HRConstants.area_label(a))
+		row.add_child(_bordered_chip("%s %d" % [label, int(role_stats.get(a, 0))], muted))
 	return row
+
+
+static func role_area_cell(emp: Character, width: int, muted: bool = false) -> Control:
+	## Defter satırının ALANLAR hücresi — sabit genişlikte, ortalanmış iki çip.
+	var box := HBoxContainer.new()
+	box.custom_minimum_size = Vector2(width, 0)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override("separation", 5)
+	box.add_child(area_chips(emp.role, emp.role_stats, muted))
+	return box
 
 
 static func _bordered_chip(text: String, muted: bool = false) -> PanelContainer:

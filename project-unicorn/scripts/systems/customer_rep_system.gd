@@ -16,14 +16,17 @@ extends RefCounted
 #                  this a rep hired early would sit idle until the founder's fifth account,
 #                  and an employee drawing salary for nothing is a dead hire.
 #
-# AXES (matching the shipped role contract at hr_constants.gd:118, which is player-facing copy
-# on the candidate file — the engine must not promise something different from what the player
-# read when they paid):
-#   HIZ      "Talep işleme temposu" → capacity: accounts stewarded AND requests cleared per day
-#   UZMANLIK "Müşteri tutma"       → quality: cs_dampen, and the absorb-vs-escalate valve
-# Both axes are load-bearing, so a candidate file is a genuine trade-off: a fast rep keeps the
-# queue empty but holds accounts weakly; a deep rep holds them beautifully while a backlog
-# builds behind them and lands on the player's desk.
+# THE AREA (GDD v2 ch. 07 rev 2 §2, 2026-08-21). This desk reads exactly one number now —
+# MÜŞTERİ BAŞARISI — because §2 gives that one area everything this file does: "bilet çözümü,
+# memnuniyet, churn". It drives all four:
+#   capacity     accounts one rep can steward           (B2BConstants.cs_capacity)
+#   throughput   requests cleared per day               (throughput_of)
+#   quality      churn dampening                        (B2BConstants.cs_dampen)
+#   judgement    the absorb-vs-escalate valve           (absorb_ceiling)
+# This USED to be a two-axis trade-off (HIZ bought volume, UZMANLIK bought quality) and it
+# deliberately is not any more: rev 2 deleted Hız, and the trade-off moved OUT of the person
+# and INTO the assignment layer — the real question is now who is on Hesap sahipliği at all,
+# and what else you had to leave unstaffed to put them there (§4/§5).
 #
 # NO RNG — see SalesRepSystem's header for the reasoning; the same rule binds this file.
 #
@@ -37,7 +40,14 @@ extends RefCounted
 # --- The ranked desk ---
 
 static func _ranked(axis: String) -> Array:
-	var reps: Array = CharacterRegistry.get_active_by_role(HRConstants.ROLE_CUSTOMER_REP)
+	# rev 2 §4: HESAP SAHİPLİĞİ işine atanmış herkes — rol değil atama. Bugün bir Müşteri
+	# Temsilcisi işe alındığında bu işe otomatik konuyor, yani yukarıdaki additivity
+	# invariant'ı birebir korunuyor. Kurucu bu masaya sayılmaz: onun doğrudan taşıdığı
+	# hesaplar FOUNDER_DIRECT_CAP ile ayrı ölçülüyor (b2b_sales_system.founder_managed_count).
+	var reps: Array = []
+	for c in HRSystem.assigned_to(HRConstants.JOB_ACCOUNTS):
+		if c.category == "employee":
+			reps.append(c)
 	reps.sort_custom(func(a: Character, b: Character) -> bool:
 		var av: int = int(a.role_stats.get(axis, 0))
 		var bv: int = int(b.role_stats.get(axis, 0))
@@ -48,10 +58,10 @@ static func _ranked(axis: String) -> Array:
 
 
 static func _top_expertise() -> int:
-	var reps: Array = _ranked(HRConstants.AXIS_EXPERTISE)
+	var reps: Array = _ranked(HRConstants.AREA_CUSTOMER_SUCCESS)
 	if reps.is_empty():
 		return 0
-	return int(reps[0].role_stats.get(HRConstants.AXIS_EXPERTISE, 0))
+	return int(reps[0].role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0))
 
 
 static func _overtime_mult() -> float:
@@ -67,7 +77,7 @@ static func throughput_of(rep: Character) -> float:
 	if rep == null:
 		return 0.0
 	return B2BConstants.CS_THROUGHPUT_BASE \
-		+ float(int(rep.role_stats.get(HRConstants.AXIS_PACE, 0))) * B2BConstants.CS_THROUGHPUT_PER_PACE
+		+ float(int(rep.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0))) * B2BConstants.CS_THROUGHPUT_PER_PACE
 
 
 static func desk_throughput() -> float:
@@ -76,7 +86,7 @@ static func desk_throughput() -> float:
 	# queue gets crowded, not the people worse.
 	var total: float = 0.0
 	var weight: float = 1.0
-	for rep in _ranked(HRConstants.AXIS_PACE):
+	for rep in _ranked(HRConstants.AREA_CUSTOMER_SUCCESS):
 		total += weight * throughput_of(rep)
 		weight *= B2BConstants.REP_STACK_DECAY
 	return total * _overtime_mult()
@@ -117,7 +127,7 @@ static func _release_unheld() -> void:
 		if rep == null or rep.status != HRConstants.STATUS_ACTIVE:
 			CustomerRegistry.assign_customer(c.id, "")   # pinned = false: the pin dies with it
 			continue
-		var cap: int = B2BConstants.cs_capacity(int(rep.role_stats.get(HRConstants.AXIS_PACE, 0)))
+		var cap: int = B2BConstants.cs_capacity(int(rep.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0)))
 		var kept: int = int(held.get(rep.id, 0))
 		if kept >= cap:
 			CustomerRegistry.assign_customer(c.id, "")
@@ -149,8 +159,8 @@ static func _delegate_excess() -> void:
 		return a.acquired_on_day < b.acquired_on_day)
 
 	var free_slots: Array = []   # [rep, remaining]
-	for rep in _ranked(HRConstants.AXIS_PACE):
-		var cap: int = B2BConstants.cs_capacity(int(rep.role_stats.get(HRConstants.AXIS_PACE, 0)))
+	for rep in _ranked(HRConstants.AREA_CUSTOMER_SUCCESS):
+		var cap: int = B2BConstants.cs_capacity(int(rep.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0)))
 		var remaining: int = cap - roster_size(rep.id)
 		if remaining > 0:
 			free_slots.append([rep, remaining])
@@ -258,7 +268,7 @@ static func _absorb(c: Customer) -> void:
 	# Deliberately NO satisfaction credit: a delta with no played decision upstream is exactly
 	# what §10 forbids. The value of absorption is the interruption the player never gets.
 	CustomerRegistry.set_support_request(c.id, -1)
-	var reps: Array = _ranked(HRConstants.AXIS_EXPERTISE)
+	var reps: Array = _ranked(HRConstants.AREA_CUSTOMER_SUCCESS)
 	if reps.is_empty():
 		return
 	var rep: Character = reps[0]
@@ -298,7 +308,7 @@ static func _escalate(c: Customer) -> void:
 	# silently disappears.
 	if not _escalation_budget_left():
 		return
-	var reps: Array = _ranked(HRConstants.AXIS_EXPERTISE)
+	var reps: Array = _ranked(HRConstants.AREA_CUSTOMER_SUCCESS)
 	if reps.is_empty():
 		return
 	# Clear the latch AT escalation: the request has left the desk and become the player's, so

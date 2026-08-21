@@ -244,7 +244,7 @@ static func get_stage() -> Dictionary:
 				"reveal": "",
 				"choices": [
 					{"label": TranslationServer.translate("PITCH_S1_C1"), "skill": "sales", "diff": VALUE_BASE_DIFFICULTY},
-					{"label": TranslationServer.translate("PITCH_S1_C2"), "skill": "influence", "diff": VALUE_BASE_DIFFICULTY + 1},
+					{"label": TranslationServer.translate("PITCH_S1_C2"), "skill": "charisma", "diff": VALUE_BASE_DIFFICULTY + 1},
 					{"label": TranslationServer.translate("PITCH_S1_C3"), "skill": "sales", "diff": VALUE_BASE_DIFFICULTY - 1},
 				],
 			}

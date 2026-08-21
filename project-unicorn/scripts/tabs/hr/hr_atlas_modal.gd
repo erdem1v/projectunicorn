@@ -286,7 +286,7 @@ func _file_card(index: int, file: Dictionary) -> Control:
 
 	col.add_child(HRUiShared.phase_hint_label(String(file.get("role", ""))))
 	col.add_child(UiFactory.make_label("\"%s\"" % String(file.get("note", "")), &"QuoteSerif"))
-	col.add_child(HRUiShared.axis_chips(file.get("axes", {})))
+	col.add_child(HRUiShared.area_chips(String(file.get("role", "")), file.get("axes", {})))
 	col.add_child(UiFactory.make_label(
 		tr("HR_ATLAS_SALARY_ASK").format({"amount": HRUiShared.money(int(file.get("salary", 0)))}), &"RowMeta"))
 	if not Array(file.get("traits", [])).is_empty():

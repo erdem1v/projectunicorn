@@ -75,16 +75,20 @@ const ITER_MAX_ROUNDS := 4          # yönetmen kararı 2026-08-19 (12→4): tur
 # bandında, çalışan UZMANLIK'ı 5-8 bandında yaşar. Çıpalar: tech-2 solo → tavan 8 (v1
 # damgalarının ~5-12 bandının içi — solo kurucu biraz cilalar, elite'e İTEREMEZ);
 # + UZMANLIK-7 Tasarımcı → 8+14 = 22 (bir sürümlük tasarım payı — işe alım fantezisi).
-const ITER_CEIL_FOUNDER_COEF := 4.0   # WORKING — kurucu Teknoloji puanı başına taban tavan
-const ITER_CEIL_ROLE_COEF := 2.0      # WORKING — rol UZMANLIK puanı başına tavan katkısı
-const ITER_CEIL_ROLE_CAP := 18.0      # WORKING — rol teriminin üst sınırı (çoklu işe alım istifi)
-# Hangi rol hangi eksenin tavanını yükseltir (Tasarımcı→İnovasyon, Yazılımcı→Kararlılık,
-# ÜY→Deneyim). HRConstants.ROLE_PHASE_HINT'in "tavanını yükseltir" cümleleri bu tabloya
-# bakar; rol id'leri PHASE_CREW ile aynı sözlükten.
-const ITER_CEIL_AXIS_ROLE := {
-	"innovation": "designer",
-	"stability": "developer",
-	"experience": "product_manager",
+const ITER_CEIL_FOUNDER_COEF := 4.0   # WORKING — kurucu alan puanı başına taban tavan
+const ITER_CEIL_ROLE_COEF := 2.0      # WORKING — alan puanı başına tavan katkısı
+const ITER_CEIL_ROLE_CAP := 18.0      # WORKING — terimin üst sınırı (çoklu işe alım istifi)
+# Hangi ALAN hangi kalite ekseninin tavanını yükseltir (2026-08-21; eskiden rol tablosuydu).
+# Deneyim→Tasarım rev 2 §2'de AÇIKÇA yazıyor ("Tasarım ... Deneyim ekseni"); diğer ikisi
+# aynı sütundan çıkarım ve Erdem 2026-08-21'de onayladı:
+#   İnovasyon ← Ürün      (§2: "özellik kararları")
+#   Kararlılık ← Yazılım  (§2: "bug oranı")
+# Bu, eski rol tablosunun bir ROTASYONUDUR (designer→developer→PM sırası değişti), yani
+# bilinçli bir denge değişikliğidir; kalibrasyon turu bunu ölçecek.
+const ITER_CEIL_AXIS_AREA := {
+	"innovation": "product",
+	"stability": "engineering",
+	"experience": "design",
 }
 # Tur başına ham kazanç (QualityModel.grow raw'ı), eksen başına — tasarım BİRİNCİL
 # kaldıraç (Erdem kararı 2026-08-06: üç eksen de oynar, tasarım ağırlıklı; üç rolün
@@ -279,21 +283,43 @@ static func days_at_factor(days: int, f: float) -> int:
 # yazılımcı okuyordu — yani tasarımcı/test uzmanı/ürün yöneticisi hiçbir şeye katkı vermiyordu.
 # Ürün Yöneticisi tasarım fazına İKİNCİL katkı verir (design doc §5: "Ürün Yöneticisi HIZ'ı
 # ikincil katkı"), bu yüzden ağırlığı ayrı.
-const PHASE_CREW := {
-	"iteration": ["designer", "product_manager"],
-	"development": ["developer"],
-	"bugfix": ["tester", "developer"],
+# 2026-08-21 (GDD v2 ch. 07 rev 2): the crew is no longer a ROLE list, it is an AREA list.
+# Same three phases, same intent — "bir tasarımcı GELİŞTİRME fazında kod yazmıyor" — but the
+# question changed from "is this person a designer?" to "which of this phase's areas is this
+# person strongest in?". That is what lets rev 2 §2's one-person-team promise work: a
+# Software Engineer with Tasarım 2 now contributes a little to the design phase instead of
+# nothing at all, and a PM with Yazılım 1 limps through development rather than vanishing.
+# WHO is in the room is decided by the BUILD JOB assignment (rev 2 §4), not by job title.
+const PHASE_AREAS := {
+	"iteration": ["product", "design"],
+	"development": ["engineering"],
+	"bugfix": ["qa", "engineering"],
 }
-const PM_SECONDARY_WEIGHT := 0.5    # Ürün Yöneticisi'nin tasarım fazına ikincil HIZ katkısı
 
 
-static func _phase_crew_roles(phase: String) -> Array:
-	# Bilinmeyen/planning faz → geliştirme ekibi (commit öncesi projeksiyonun varsayılanı).
-	return PHASE_CREW.get(phase, PHASE_CREW["development"])
+static func _phase_areas(phase: String) -> Array:
+	# Bilinmeyen/planning faz → geliştirme (commit öncesi projeksiyonun varsayılanı).
+	return PHASE_AREAS.get(phase, PHASE_AREAS["development"])
+
+
+static func _best_phase_area(c: Character, phase: String) -> String:
+	# Bu kişi bu fazı HANGİ alandan çalışıyor: fazın alanları içinde en güçlü olduğu.
+	var best: String = ""
+	var best_v: int = -1
+	for area_key in _phase_areas(phase):
+		var v: int = int(c.role_stats.get(String(area_key), 0))
+		if v > best_v:
+			best_v = v
+			best = String(area_key)
+	return best
 
 
 static func _lead_coordination(lead_id: String) -> float:
-	# Koordinasyon çarpanı sorumludan gelir: kurucu → Liderlik, çalışan → UYUM.
+	# Koordinasyon çarpanı sorumludan gelir ve artık İKİ TARAF DA LİDERLİK okuyor: rev 2 §2
+	# Liderlik'i herkese verdi ve UYUM'u sayı olmaktan çıkardı, yani "çalışan → UYUM" yolunun
+	# okuyacağı bir sayı kalmadı. Kurucu kendi nötr-sıfırda eğrisini korur (o VARSAYILAN
+	# sorumludur ve bir varsayılan ceza olmamalı); seçilmiş bir çalışan iki yönlü eğriyi
+	# alır, yani düşük Liderlikli birini sorumlu yapmak hâlâ gerçek bir bahistir.
 	# STALE LEAD: commit'ten sonra lead_engineer_id'yi kimse yeniden yazmıyor, yani sorumlu
 	# işten çıkarılmış ya da izne çıkmış olabilir. Eskiden bu SESSİZCE kurucu tech'ine
 	# düşüyordu; artık açıkça kurucu-sorumlu olarak çözülüyor, çünkü sessiz bir yanlış
@@ -303,8 +329,8 @@ static func _lead_coordination(lead_id: String) -> float:
 	if lead_id != "" and lead_id != "founder" and lead_id != founder_id:
 		var lead: Character = CharacterRegistry.get_character(lead_id)
 		if lead != null and lead.category == "employee" and lead.status == HRConstants.STATUS_ACTIVE:
-			return HRConstants.coordination_for_employee(
-				int(lead.role_stats.get(HRConstants.AXIS_RAPPORT, 0)),
+			return HRConstants.coordination_for_lead(
+				int(lead.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0)),
 				HRConstants.trait_has(lead.traits, "coordination_bonus"))
 	var founder_traits: Array = founder.traits if founder != null else []
 	return HRConstants.coordination_for_founder(
@@ -312,34 +338,49 @@ static func _lead_coordination(lead_id: String) -> float:
 		HRConstants.trait_has(founder_traits, "coordination_bonus"))
 
 
-static func _phase_pace_sum(phase: String, lead_id: String) -> float:
-	# O fazın ekibindeki İŞ BAŞINDAKİ herkesin HIZ toplamı. Sorumlu da normal bir üye olarak
-	# sayılır (ağırlık yok) — sorumlu olmanın etkisi koordinasyon çarpanında. İzindeki
-	# çalışan katkı VERMEZ (izinde kapasite dışıdır).
-	var roles: Array = _phase_crew_roles(phase)
+static func _phase_area_sum(phase: String, lead_id: String) -> float:
+	# BUILD İŞİNE atanmış İŞ BAŞINDAKİ herkesin, bu fazı çalıştıkları alandaki puan toplamı.
+	# Sorumlu da normal bir üye olarak sayılır (ağırlık yok) — sorumlu olmanın etkisi
+	# koordinasyon çarpanında. İzindeki/eğitimdeki çalışan katkı VERMEZ.
+	#
+	# ATAMA KAPISI BURADA: eskiden "Ürün Geliştirme rolündeki herkes" otomatik olarak her
+	# build'e katılıyordu. Artık yalnız JOB_BUILD'e atanmış olanlar. Bugün davranış aynı
+	# (işe alım kişiyi rolünün varsayılan işine koyuyor), ama ch. 03 §8'in "yeni sürüme
+	# başlayınca ekip destekten çekilir" gerilimi ancak bu kapı varken kurulabilir.
 	var total: float = 0.0
-	for c in CharacterRegistry.get_active_employees():
-		if not roles.has(c.role):
-			continue
+	for c in HRSystem.assigned_to(HRConstants.JOB_BUILD):
 		# "Yalnız çalışır": ekip tarafı katkı vermez — kendi işini yapar ama toplama girmez.
 		# Sorumluysa muaf: başındaki işi yapmayı reddetmiyor, yalnız ekibe eklenmiyor.
 		if c.id != lead_id and HRConstants.trait_has(c.traits, "no_team_bonus"):
 			continue
-		var pace: float = float(int(c.role_stats.get(HRConstants.AXIS_PACE, 0)))
+		if c.category == "founder":
+			continue   # kurucunun katkısı _speed_for_phase'de kendi katsayısıyla ayrı
+		var area_key: String = _best_phase_area(c, phase)
+		if area_key == "":
+			continue
+		var contribution: float = float(int(c.role_stats.get(area_key, 0)))
+		# §5: ana alanı dışında çalışmak daha yorucu, iki işte olmak verimi düşürür.
+		# Çarpan BU FAZIN alanından ölçülüyor, işin genelinden değil — bir yazılımcının
+		# TASARIM fazına katkısı onun ikincil işidir ve bedelini orada öder.
+		contribution *= HRSystem.output_mult_for_area(c, area_key)
 		# "Söylenmezse yapmaz": sorumlu değilken belirgin biçimde az katkı verir.
 		if c.id != lead_id:
-			pace *= HRConstants.trait_mult(c.traits, "non_lead_mult")
-		if c.role == HRConstants.ROLE_PRODUCT_MANAGER:
-			pace *= PM_SECONDARY_WEIGHT
-		total += pace
+			contribution *= HRConstants.trait_mult(c.traits, "non_lead_mult")
+		total += contribution
 	return total
 
 
 static func _speed_for_phase(phase: String, lead_id: String) -> float:
 	# THE hız yasası. Kurucu her zaman tam katsayıyla katılır (o hep odadadır); çalışanlar
 	# fazlarına göre. Floor SPEED_MIN — HIZ-0 bir ekiple bile build ilerler.
-	var speed: float = FOUNDER_SPEED_COEF * float(GameState.get_founder_skill("tech"))
-	speed += EMPLOYEE_SPEED_COEF * _phase_pace_sum(phase, lead_id)
+	# Kurucu build işine ATANMIŞSA katılır (ch. 02 §5). Bugün her koşuda atanmış doğuyor,
+	# yani bu satır davranışı değiştirmiyor; değiştireceği an, oyuncunun kurucuyu satışa
+	# aldığı andır — Bootstrap baskısının tam olarak istenen yeri.
+	var speed: float = 0.0
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder != null and founder.assigned_jobs.has(HRConstants.JOB_BUILD):
+		speed = FOUNDER_SPEED_COEF * float(GameState.get_founder_skill(_phase_areas(phase)[0]))
+	speed += EMPLOYEE_SPEED_COEF * _phase_area_sum(phase, lead_id)
 	return maxf(SPEED_MIN, speed * _lead_coordination(lead_id))
 
 
@@ -361,42 +402,49 @@ const LEAD_EXPERTISE_WEIGHT := 1.5
 const MEMBER_EXPERTISE_WEIGHT := 1.0
 
 
-static func _team_expertise_avg(roles: Array, lead_id: String) -> float:
+# BU ORTALAMA İKİYE BÖLÜNDÜ (2026-08-21). Tek bir "uzmanlık ortalaması" iki ayrı şeyi
+# besliyordu — commit anındaki hata tohumu ve yayın sonrası aşınma — ve rev 2 §2 bu ikisini
+# AYRI alanlara veriyor: "bug oranı" Yazılım'ın, "canlı bug aşınması" Test'in. Aynı sayıyı
+# iki yere vermek, alan modelinin ayırdığı iki şeyi tekrar birleştirmek olurdu.
+static func _team_area_avg(area_key: String, lead_id: String) -> float:
 	var founder: Character = CharacterRegistry.get_founder()
 	var founder_id: String = founder.id if founder != null else "founder"
 	var lead_is_founder: bool = lead_id == "" or lead_id == "founder" or lead_id == founder_id
-	# Kurucu her zaman ortalamada: ürünün kalitesinden her hâlükârda sorumludur.
-	var weight_sum: float = LEAD_EXPERTISE_WEIGHT if lead_is_founder else MEMBER_EXPERTISE_WEIGHT
-	var weighted: float = weight_sum * float(GameState.get_founder_skill("tech"))
-	for c in CharacterRegistry.get_active_employees():
-		if not roles.has(c.role):
+	var weight_sum: float = 0.0
+	var weighted: float = 0.0
+	# Kurucu build'deyse kalitesinden sorumludur; değilse ürünün kalitesine de karışmaz.
+	if founder != null and founder.assigned_jobs.has(HRConstants.JOB_BUILD):
+		weight_sum = LEAD_EXPERTISE_WEIGHT if lead_is_founder else MEMBER_EXPERTISE_WEIGHT
+		weighted = weight_sum * float(GameState.get_founder_skill(area_key))
+	for c in HRSystem.assigned_to(HRConstants.JOB_BUILD):
+		if c.category == "founder":
 			continue
 		var w: float = LEAD_EXPERTISE_WEIGHT if c.id == lead_id else MEMBER_EXPERTISE_WEIGHT
-		weighted += w * float(int(c.role_stats.get(HRConstants.AXIS_EXPERTISE, 0)))
+		weighted += w * float(int(c.role_stats.get(area_key, 0)))
 		weight_sum += w
 	if weight_sum <= 0.0:
 		return 0.0
 	return weighted / weight_sum
 
 
-static func _active_role_sum(role_id: String, axis: String) -> float:
-	var total: float = 0.0
-	for c in CharacterRegistry.get_active_employees():
-		if c.role == role_id:
-			total += float(int(c.role_stats.get(axis, 0)))
-	return total
+static func _job_area_sum(job_id: String) -> float:
+	# `_active_role_sum`ın halefi: ROL değil ATAMA sayar (rev 2 §4) ve §5 çarpanlarını
+	# uygular. Tek satırlık bir sarmalayıcı, çünkü ölçü HRSystem'in sözleşmesidir.
+	return HRSystem.area_sum_for_job(job_id)
 
 
 static func tester_find_mult() -> float:
-	# Bulma isabeti: kaç gizli bug'ın gün içinde yüzeye çıktığı. Test uzmanı yok → 1.0.
-	return minf(1.0 + _active_role_sum(HRConstants.ROLE_TESTER, HRConstants.AXIS_EXPERTISE)
+	# Bulma isabeti: kaç gizli bug'ın gün içinde yüzeye çıktığı. TEST işine atanmış kimse
+	# yoksa 1.0 — rev 2 §4 Test'i kendi işi yaptı, yani "test uzmanım var ama build'de"
+	# artık gerçek ve anlamlı bir durum.
+	return minf(1.0 + _job_area_sum(HRConstants.JOB_TEST)
 		* TESTER_FIND_PER_EXPERTISE, TESTER_FIND_MULT_MAX)
 
 
 static func tester_tempo_mult() -> float:
-	# Bulma/çözme temposu: Test Uzmanı HIZ'ı. (Yazılımcı HIZ'ı beta'ya team_speed üzerinden
-	# zaten giriyor — PHASE_CREW["bugfix"] test uzmanı VE yazılımcı içerir.)
-	return minf(1.0 + _active_role_sum(HRConstants.ROLE_TESTER, HRConstants.AXIS_PACE)
+	# Bulma/çözme temposu, aynı Test alanından. (Yazılım beta'ya team_speed üzerinden zaten
+	# giriyor — PHASE_AREAS["bugfix"] hem qa hem engineering içerir.)
+	return minf(1.0 + _job_area_sum(HRConstants.JOB_TEST)
 		* TESTER_TEMPO_PER_PACE, TESTER_TEMPO_MULT_MAX)
 
 
@@ -550,19 +598,41 @@ static func _apply_tech_debt_due(b: FeatureBuild) -> void:
 
 static func iteration_axis_ceilings() -> Dictionary:
 	# Eksen başına iterasyon-kazanç tavanı: KİM çalışıyorsa o belirler, kaç tur
-	# döndüğün değil. Kurucu tabanı her eksende (tech 0-5); rolün İŞ BAŞINDAKİ
-	# UZMANLIK toplamı (0-9/kişi) kendi eksenini yükseltir, terim CAP'te kesilir
-	# (PM_EXPERIENCE_CAP grameri: cap TERİME, eksene değil). Rolde kimse yok →
-	# terim 0 → tavan = kurucu taban (zero-staff neutrality).
-	var base: float = ITER_CEIL_FOUNDER_COEF * float(GameState.get_founder_skill("tech"))
+	# döndüğün değil. Kurucu tabanı EKSENİN KENDİ ALANINDAN okunur (eskiden her eksende
+	# aynı `tech`ti — kurucu artık altı alan taşıdığı için tek bir sayıya bakmak onun
+	# profilini düzleştirirdi). Build ekibinin o alandaki toplamı eksenini yükseltir,
+	# terim CAP'te kesilir (PM_EXPERIENCE_CAP grameri: cap TERİME, eksene değil).
+	# O alanda kimse yok → terim 0 → tavan = kurucu taban (zero-staff neutrality).
 	var out := {}
 	for ax in QualityModel.AXES:
-		var role_id: String = String(ITER_CEIL_AXIS_ROLE.get(ax, ""))
+		var area_key: String = String(ITER_CEIL_AXIS_AREA.get(ax, ""))
+		var base: float = ITER_CEIL_FOUNDER_COEF * float(_founder_build_area(area_key))
 		var term: float = minf(
-			_active_role_sum(role_id, HRConstants.AXIS_EXPERTISE) * ITER_CEIL_ROLE_COEF,
-			ITER_CEIL_ROLE_CAP)
+			_build_area_sum(area_key) * ITER_CEIL_ROLE_COEF, ITER_CEIL_ROLE_CAP)
 		out[ax] = base + term
 	return out
+
+
+static func _founder_build_area(area_key: String) -> int:
+	# Kurucunun bir alandaki puanı, YALNIZ build işindeyse. Değilse 0: ch. 02 §5'in
+	# "tek iş" kilidi burada da geçerli — satıştaki kurucu tasarım tavanını yükseltmez.
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null or not founder.assigned_jobs.has(HRConstants.JOB_BUILD):
+		return 0
+	return int(founder.role_stats.get(area_key, 0))
+
+
+static func _build_area_sum(area_key: String) -> float:
+	# Build işindeki ÇALIŞANLARIN tek bir alandaki toplamı, §5 çarpanlarıyla.
+	var total: float = 0.0
+	for c in HRSystem.assigned_to(HRConstants.JOB_BUILD):
+		if c.category == "founder":
+			continue
+		# Çarpan SAYILAN ALANDAN: bir tasarımcı Ürün tavanına ikincil alanından katkı verir
+		# ve §5'in bedelini orada öder (aynı düzeltme _phase_area_sum'da da yapıldı).
+		total += float(int(c.role_stats.get(area_key, 0))) \
+			* HRSystem.output_mult_for_area(c, area_key)
+	return total
 
 
 static func _end_round(b: FeatureBuild) -> void:
@@ -709,7 +779,8 @@ static func _accrue_bugs_hourly(f: float = 1.0) -> void:
 	# Eskiden burada YALNIZ kurucu tech'i okunuyordu — bir çalışan sorumlu olsa bile. Artık
 	# GELİŞTİRME ekibinin UZMANLIK ağırlıklı ortalaması: düşük uzmanlıklı ekip aynı komplekste
 	# daha çok bug üretir (design doc §5). Katsayı aynı kaldı, çünkü kurucu-yalnız hâli birebir.
-	var expertise: float = _team_expertise_avg(_phase_crew_roles("development"), b.lead_engineer_id)
+	# rev 2 §2 verir: "bug oranı" YAZILIM alanının işidir.
+	var expertise: float = _team_area_avg(HRConstants.AREA_ENGINEERING, b.lead_engineer_id)
 	var rate: float = maxf(BUG_FLOOR, float(b.get_total_complexity()) * BUG_COMPLEXITY_COEF - expertise * BUG_TECH_REDUCER)
 	# Bedel 3, kalite: Ürün Geliştirme mesaisinde yorgun insan hata yazar (design doc §7b).
 	# YALNIZ burada — kapasite çarpanı f'ye katlanmaz, yoksa beta temposunu da çarpardı.
@@ -741,16 +812,19 @@ static func _seed_feature_bugs(feature_ids: Array) -> int:
 
 
 static func _seed_expertise_mult() -> float:
-	var devs: Array[Character] = []
-	for c in CharacterRegistry.get_active_employees():
-		if c.role == HRConstants.ROLE_DEVELOPER:
-			devs.append(c)
-	if devs.is_empty():
-		return 1.0   # yazılımcı yok → kurucu tek başına yazıyor, bugünkü tohum aynen
+	# rev 2 §2: "bug oranı" YAZILIM'ın. Build işindeki çalışanların Yazılım ORTALAMASI —
+	# rol değil alan, ve rol değil ATAMA (2026-08-21). Build'de çalışan yoksa 1.0: kurucu
+	# tek başına yazıyor ve bugünkü tohum aynen korunuyor.
+	var crew: Array[Character] = []
+	for c in HRSystem.assigned_to(HRConstants.JOB_BUILD):
+		if c.category != "founder":
+			crew.append(c)
+	if crew.is_empty():
+		return 1.0
 	var total: float = 0.0
-	for c in devs:
-		total += float(int(c.role_stats.get(HRConstants.AXIS_EXPERTISE, 0)))
-	var avg: float = total / float(devs.size())
+	for c in crew:
+		total += float(int(c.role_stats.get(HRConstants.AREA_ENGINEERING, 0)))
+	var avg: float = total / float(crew.size())
 	return clampf(1.0 + (SEED_EXPERTISE_PIVOT - avg) * SEED_EXPERTISE_SLOPE,
 		SEED_EXPERTISE_MULT_MIN, SEED_EXPERTISE_MULT_MAX)
 
@@ -763,10 +837,10 @@ static func _post_ship_wear_hourly() -> void:
 	# ticks up smoothly. Audience/MRR then erode automatically (economy reads live bug).
 	var audience: float = float(GameState.get_flag("b2c_audience", 0))
 	var complexity: int = _shipped_total_complexity()
-	# Post-ship wear azaltımı AYNI GRAMERLE ekip UZMANLIK ortalamasına bağlı (design doc §4);
-	# migration öncesi founder-only okuma kaldırıldı. Canlı üründe faz yok → bakımı yapan
-	# ekip = geliştirme ekibi. Sorumlu yok (build bitti), yani ağırlıklar kurucuda toplanır.
-	var expertise: float = _team_expertise_avg(_phase_crew_roles("development"), "")
+	# rev 2 §2 verir: "canlı bug aşınması" TEST alanının işidir — commit anındaki hata
+	# tohumundan (Yazılım) BİLEREK farklı bir alan. Bu iki okuma 2026-08-21'e kadar tek bir
+	# "uzmanlık ortalaması"ydı; alan modeli onları ayırdı. Sorumlu yok (build bitti).
+	var expertise: float = _team_area_avg(HRConstants.AREA_QA, "")
 	var rate: float = maxf(WEAR_FLOOR, audience * WEAR_AUD_COEF + float(complexity) * WEAR_CPLX_COEF - expertise * WEAR_TECH_REDUCER)
 	var prog: float = float(GameState.get_flag("mvp_live_bug_progress", 0.0)) + rate
 	var count: int = int(GameState.get_flag("mvp_live_bug_count", 0))
@@ -792,7 +866,7 @@ static func sprint_duration_for(bug_count: int) -> int:
 	# kez damgalanan bir flag, o yüzden okuma tick'te değil BURADA olmak zorunda.
 	# Days to clear `bug_count` at the sprint rate, clamped. Shown pre-commit (§10).
 	var rate: float = float(SPRINT_BUG_FIX_PER_DAY) * (1.0
-		+ _active_role_sum(HRConstants.ROLE_TESTER, HRConstants.AXIS_EXPERTISE) * TESTER_SPRINT_PER_EXPERTISE)
+		+ _job_area_sum(HRConstants.JOB_TEST) * TESTER_SPRINT_PER_EXPERTISE)
 	return clampi(int(ceil(float(bug_count) / maxf(0.01, rate))), MIN_SPRINT_DAYS, MAX_SPRINT_DAYS)
 
 
@@ -889,12 +963,17 @@ static func projected_axes(new_feature_ids: Array, strengthen_ids: Array, base_d
 
 
 static func _pm_experience_bonus() -> float:
-	# İŞ BAŞINDAKİ Ürün Yöneticileri'nin UZMANLIK toplamı × katsayı, PM_EXPERIENCE_CAP'te
-	# kesilir. PM yoksa tam 0.0 — bu yüzden PM'siz her mevcut smoke case'i bire bir aynı.
-	var total: float = 0.0
-	for c in CharacterRegistry.get_active_employees():
-		if c.role == HRConstants.ROLE_PRODUCT_MANAGER:
-			total += float(int(c.role_stats.get(HRConstants.AXIS_EXPERTISE, 0)))
+	# Build EKİBİNİN Tasarım alanı toplamı × katsayı, PM_EXPERIENCE_CAP'te kesilir.
+	#
+	# ALAN: TASARIM, Ürün değil. Bu bonus DENEYİM eksenine iniyor ve rev 2 §2 Deneyim
+	# eksenini açıkça Tasarım'a veriyor — ITER_CEIL_AXIS_AREA da aynı eşlemeyi kullanıyor.
+	# Aynı ekseni bir yerde Tasarım'dan, başka yerde Ürün'den beslemek iki farklı yasa olurdu.
+	#
+	# EKİP bonusu, kurucu DAHİL DEĞİL. Adı da bunu söylüyor ("ekip bonusu") ve eski hâlinde
+	# yalnız Ürün Yöneticisi rolündeki ÇALIŞANLAR sayılıyordu. Kurucuyu eklemek onu iki kez
+	# saydırırdı: kalite ortalamasına ve tavana zaten kendi alanlarıyla giriyor. Ekip yoksa
+	# tam 0.0 — "PM'siz her mevcut smoke case'i bire bir aynı" sözleşmesi bu satırda yaşıyor.
+	var total: float = _build_area_sum(HRConstants.AREA_DESIGN)
 	if total <= 0.0:
 		return 0.0
 	return minf(total * PM_EXPERIENCE_PER_POINT, PM_EXPERIENCE_CAP)

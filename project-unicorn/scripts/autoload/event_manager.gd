@@ -614,7 +614,7 @@ func _apply_modifiers(modifiers: Array) -> void:
 				# Employees must carry the three axes; default to a mid-band file rather than
 				# an empty dict so an event hire is a valid employee shape out of the box.
 				new_c.role_stats = cdata.get("role_stats",
-					HRConstants.default_axes() if new_c.category == "employee" else {})
+					HRConstants.default_employee_skills() if new_c.category == "employee" else {})
 				if new_c.category == "employee" and new_c.traits.is_empty():
 					new_c.traits = ["warms_up_fast"]   # >=1 positive per the employee formula
 				new_c.attention_flag = String(cdata.get("attention_flag", ""))

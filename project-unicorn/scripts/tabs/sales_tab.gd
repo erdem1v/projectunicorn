@@ -403,7 +403,7 @@ func _open_steward_picker(c: Customer, anchor: Button) -> void:
 	var body: VBoxContainer = pop.body()
 	body.add_child(UiFactory.make_section_header(tr("SALES_STEWARD_PICK")))
 	for rep in CharacterRegistry.get_active_by_role(HRConstants.ROLE_CUSTOMER_REP):
-		var cap: int = B2BConstants.cs_capacity(int(rep.role_stats.get(HRConstants.AXIS_PACE, 0)))
+		var cap: int = B2BConstants.cs_capacity(int(rep.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0)))
 		var load: int = CustomerRepSystem.roster_size(rep.id)
 		var label: String = "%s  ·  %d/%d" % [rep.character_name, load, cap]
 		if rep.id == c.assigned_to:

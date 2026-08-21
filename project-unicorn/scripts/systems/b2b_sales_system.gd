@@ -90,7 +90,7 @@ static func _cs_expertise_of(c: Customer) -> int:
 	var cs: Character = CharacterRegistry.get_character(c.assigned_to)
 	if cs == null or cs.status != HRConstants.STATUS_ACTIVE:
 		return 0
-	return int(cs.role_stats.get(HRConstants.AXIS_EXPERTISE, 0))
+	return int(cs.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0))
 
 
 static func _satisfaction_target(c: Customer) -> int:

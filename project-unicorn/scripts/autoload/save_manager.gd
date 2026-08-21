@@ -35,8 +35,11 @@ extends Node
 # every point a save can be taken, and there is nothing mid-resolution for a schema to
 # describe. One sitting, one sitting only — it does not survive closing the game.
 
-const SCHEMA_VERSION := 3   # v2: ASCII sector ids · v3: prospect need lines became indices
+const SCHEMA_VERSION := 4   # v2: ASCII sector ids · v3: prospect need indices · v4: skill AREAS
 const SAVE_DIR := "user://saves/"
+## v3→v4 migration: what a migrated character gets in an area the old model never stored.
+## Low but never zero — see _migrate_character_areas.
+const MIGRATE_AREA_FLOOR := 2
 
 # Slot ids are also FILENAMES on disk, i.e. a compatibility surface. Named once so a rename
 # is one edit rather than a hunt through string literals in three files.
@@ -199,6 +202,8 @@ func read_slot(slot_id: String) -> Dictionary:
 		_migrate_sector_ids(data["state"])
 	if version < 3:
 		_migrate_prospect_needs(data["state"])
+	if version < 4:
+		_migrate_character_areas(data["state"])
 	return {
 		"ok": true,
 		"error_key": "",
@@ -616,6 +621,99 @@ const _LEGACY_REAL_NEEDS := [
 	"Asıl korkusu rakibin gerisinde kalmak.",   # LOC-DATA legacy save value
 	"Geçen yıl yanlış araca para yatırdı, bu sefer garanti istiyor.",   # LOC-DATA legacy save value
 ]
+
+
+## v3 → v4: the three employee axes and the five founder skills both became the six skill
+## AREAS of GDD v2 ch. 07 rev 2 §2.
+##
+## WHY A MIGRATION IS UNAVOIDABLE HERE, when neither sibling above needed one for characters:
+## SaveCodec.res_from_dict REPLACES role_stats wholesale (`coerce_like`'s TYPE_DICTIONARY
+## branch returns from_json(raw) and uses the declared default only as a type oracle). So an
+## old save's three keys would land INTACT on a model that expects seven, and
+## CharacterRegistry._validate_shape would then push_error on every single employee — a run
+## that loads, looks fine, and reads 0 for every skill the formulas ask about.
+##
+## Same grammar as the two migrations above: raw state Dictionary before any Resource is
+## built, rows mutated in place, unknown values left alone, debug-build-only count.
+func _migrate_character_areas(state: Dictionary) -> void:
+	var moved: int = 0
+	for row in (state.get("characters", []) as Array):
+		if typeof(row) != TYPE_DICTIONARY:
+			continue
+		var d: Dictionary = row
+		var stats: Dictionary = d.get("role_stats", {}) as Dictionary
+		if typeof(stats) != TYPE_DICTIONARY or stats.is_empty():
+			continue
+		var category: String = String(d.get("category", ""))
+		if category == "employee" and stats.has("expertise"):
+			# UZMANLIK was "how good at your job" → the role's KEY area.
+			# HIZ was "how fast" → the SECONDARY area; it is the only other number the old
+			# model had, and dropping it outright would flatten every migrated employee.
+			# UYUM is DROPPED: rev 2 §2 moved compatibility into traits, and its one
+			# mechanical job (lead coordination) was handed to Liderlik.
+			var role_id: String = String(d.get("role", ""))
+			var key_area: String = HRConstants.role_key_area(role_id)
+			var secondary: String = HRConstants.role_secondary_area(role_id)
+			var expertise: int = int(stats.get("expertise", 5))
+			var pace: int = int(stats.get("pace", 5))
+			var rapport: int = int(stats.get("rapport", 5))
+			var rebuilt: Dictionary = {}
+			for area_key in HRConstants.AREAS:
+				var a: String = String(area_key)
+				if a == key_area:
+					rebuilt[a] = expertise
+				elif a == secondary:
+					rebuilt[a] = pace
+				else:
+					# A floor, never 0: rev 2 §2 wants a one-person team to have no holes,
+					# and a migrated save must not be strictly worse than a fresh one.
+					rebuilt[a] = MIGRATE_AREA_FLOOR
+			# UYUM was morale resilience AND the coordination multiplier, so it is the
+			# closest thing the old model had to Liderlik — carried across rather than lost.
+			rebuilt[HRConstants.SKILL_LEADERSHIP] = clampi(
+				rapport / 2, HRConstants.AREA_MIN, HRConstants.AREA_MAX)
+			d["role_stats"] = rebuilt
+			# `experience` (one int) became `area_experience` (one counter per area).
+			# The whole bar is credited to the key area, which is where a pre-migration
+			# employee was in fact accruing it.
+			var area_xp: Dictionary = {}
+			for area_key2 in HRConstants.AREAS:
+				area_xp[String(area_key2)] = 0
+			if key_area != "":
+				area_xp[key_area] = int(d.get("experience", 0))
+			d["area_experience"] = area_xp
+			d.erase("experience")
+			if String(d.get("training_area", "")) == "" and int(d.get("training_days_left", 0)) > 0:
+				d["training_area"] = key_area
+			if not d.has("assigned_jobs") or (d["assigned_jobs"] as Array).is_empty():
+				var default_job: String = HRConstants.default_job_for_role(role_id)
+				d["assigned_jobs"] = [default_job] if default_job != "" else []
+			moved += 1
+		elif category == "founder" and stats.has("tech"):
+			# tech fed build speed, the quality average and the iteration ceilings; all three
+			# are per-area reads now, so it lands on all four technical areas at once — the
+			# founder behaves EXACTLY as he did before the migration.
+			var tech: int = int(stats.get("tech", 0))
+			var sales: int = int(stats.get("sales", 0))
+			var rebuilt_f: Dictionary = {
+				HRConstants.AREA_PRODUCT: tech,
+				HRConstants.AREA_DESIGN: tech,
+				HRConstants.AREA_ENGINEERING: tech,
+				HRConstants.AREA_QA: tech,
+				HRConstants.AREA_SALES: sales,
+				HRConstants.AREA_CUSTOMER_SUCCESS: sales,
+				HRConstants.SKILL_LEADERSHIP: int(stats.get("leadership", 0)),
+				# influence -> charisma: Karizma came back under its own name (rev 2 §2).
+				# `negotiation` is dropped; its one reader, the term-sheet dilution lever,
+				# is bound to Karizma. See FounderConstants' SKILL-RENAME ledger.
+				FounderConstants.SKILL_CHARISMA: int(stats.get("influence", 0)),
+			}
+			d["role_stats"] = rebuilt_f
+			if not d.has("assigned_jobs") or (d["assigned_jobs"] as Array).is_empty():
+				d["assigned_jobs"] = [HRConstants.JOB_BUILD]
+			moved += 1
+	if moved > 0 and OS.is_debug_build():
+		print("[SaveManager] v3→v4: %d character(s) moved onto the skill areas" % moved)
 
 
 func _migrate_prospect_needs(state: Dictionary) -> void:

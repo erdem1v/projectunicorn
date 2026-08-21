@@ -17,9 +17,14 @@ extends RefCounted
 # ROL AÇIKLAMASI ARTIK SATIRDA DEĞİL: mockup satırı tek satır yüksekliğinde ve
 # açıklama metni defteri üç katına çıkarırdı. HOVER TOOLTIP'e taşındı (görev §2).
 
-const W_EXPERTISE := 92
-const W_PACE := 64
-const W_RAPPORT := 64
+# 2026-08-21: three bare axis columns became one AREA cell plus Liderlik. rev 2 §3 forbids
+# a flat six-column skill table and asks the closed row for the role's key area and, if it
+# has one, its secondary ("Product Manager: Ürün ★★★ · Tasarım ★"). A shared column header
+# cannot name a per-role area, so the area NAMES live in the cell and the header stays
+# generic. TOTAL WIDTH IS UNCHANGED (92+64+64 == 156+64), so the table does not reflow.
+# The star widget itself is the design turn's; this is the same information in text.
+const W_AREAS := 156
+const W_LEADERSHIP := 64
 const W_EXPERIENCE := 110
 const W_STATE := 330
 const W_SALARY := 130
@@ -43,9 +48,8 @@ static func column_header() -> Control:
 	row.add_theme_constant_override("separation", 0)
 	row.custom_minimum_size = Vector2(0, 26)
 	row.add_child(_head(tr_key("HR_COL_EMPLOYEE"), 0, HORIZONTAL_ALIGNMENT_LEFT))
-	row.add_child(_head(tr_key("HR_COL_EXPERTISE"), W_EXPERTISE))
-	row.add_child(_head(tr_key("HR_COL_PACE"), W_PACE))
-	row.add_child(_head(tr_key("HR_COL_RAPPORT"), W_RAPPORT))
+	row.add_child(_head(tr_key("HR_COL_AREAS"), W_AREAS))
+	row.add_child(_head(tr_key("HR_COL_LEADERSHIP"), W_LEADERSHIP))
 	row.add_child(_head(tr_key("HR_COL_EXPERIENCE"), W_EXPERIENCE))
 	row.add_child(_head(tr_key("HR_COL_STATE"), W_STATE))
 	row.add_child(_head(tr_key("HR_COL_SALARY"), W_SALARY))
@@ -84,11 +88,11 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 		UiTokens.tr_upper(HRConstants.role_label(emp.role)), &"MicroLabel"))
 	row.add_child(who)
 
-	# --- ÇIPLAK RAKAMLAR: eksen değerleri, başlıkları yukarıda ---
+	# --- ALANLAR: rolün anahtar + ikincil alanı, adlarıyla (rev 2 §3) ---
 	var muted: bool = emp.status != HRConstants.STATUS_ACTIVE
-	for pair in [[HRConstants.AXIS_EXPERTISE, W_EXPERTISE], [HRConstants.AXIS_PACE, W_PACE],
-			[HRConstants.AXIS_RAPPORT, W_RAPPORT]]:
-		row.add_child(_num(str(int(emp.role_stats.get(pair[0], 0))), int(pair[1]), muted))
+	row.add_child(HRUiShared.role_area_cell(emp, W_AREAS, muted))
+	row.add_child(_num(str(int(emp.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0))),
+		W_LEADERSHIP, muted))
 
 	# --- DENEYİM: mini bar + % (onaylı [PROPOSAL] sütunu) ---
 	row.add_child(_experience_cell(emp, refs))
@@ -159,26 +163,45 @@ static func _num(text: String, width: int, muted: bool) -> Label:
 	return l
 
 
-## DENEYİM hücresi: 4px iz + amber dolgu + sağda yüzde. Dolu olduğunda amber
-## metin, çünkü o an satır bir KARAR taşıyor (eğitime gönderilebilir).
+## Hangi ALANIN deneyimi gösteriliyor. Deneyim 2026-08-21'den beri alan başına
+## (rev 2 §8) ve tek hücre altı sayaç gösteremez, o yüzden hücre kişinin BUGÜN
+## biriktirdiği alanı gösterir: ilk işinin alanı — HRSystem.tick_experience de tam
+## olarak aynı seçimi yapıyor, yani çubuk gerçekten hareket eden sayaçtır. Boştaki
+## kimse öğrenmiyor; sütun o zaman rolün anahtar alanını gösterir ve kıpırdamaz,
+## ki "boşta duruyor" zaten kendi çipiyle söyleniyor.
+static func _experience_area(emp: Character) -> String:
+	if not emp.assigned_jobs.is_empty():
+		var assigned: String = HRConstants.area_for_job(emp.role_stats, String(emp.assigned_jobs[0]))
+		if assigned != "":
+			return assigned
+	return HRConstants.role_key_area(emp.role)
+
+
+## DENEYİM hücresi: 4px iz + amber dolgu + sağda yüzde.
 static func _experience_cell(emp: Character, refs: Dictionary) -> Control:
 	var box := VBoxContainer.new()
 	box.custom_minimum_size = Vector2(W_EXPERIENCE, 0)
 	box.add_theme_constant_override("separation", 3)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	var pct: int = int(round(
-		float(emp.experience) / float(HRConstants.EXPERIENCE_MAX) * 100.0))
+	# `emp.experience` (tek int) 2026-08-21'de emekli oldu; okuması burada kalmıştı ve
+	# defterdeki HER SATIR için "Invalid access to property or key 'experience'" atıyordu.
+	var area_key: String = _experience_area(emp)
+	var value: int = int(emp.area_experience.get(area_key, 0))
+	var pct: int = int(round(float(value) / float(HRConstants.EXPERIENCE_MAX) * 100.0))
 	var val := UiFactory.make_label(Fmt.percent(pct, 0), &"RowMeta")
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	if emp.experience >= HRConstants.EXPERIENCE_MAX:
-		val.add_theme_color_override("font_color", UiTokens.ACCENT)
+	# ESKİ AMBER KURALI DÜŞTÜ: "sayaç dolu" bir zamanlar "eğitime gönderilebilir"
+	# demekti. rev 2 §8'de eğitimin deneyim şartı yok VE sayaç dolunca kendini +1 puana
+	# çevirip sıfırlanıyor, yani `value >= EXPERIENCE_MAX` artık hiçbir karede doğru
+	# olamaz. Hiç ateşlenemeyecek bir dal bırakmak yerine sildim; dolu-eşiğin yerine ne
+	# koyacağı tasarım turunun işi.
 	var bar := ProgressBar.new()
 	bar.theme_type_variation = &"BuildProgress"
 	bar.show_percentage = false
 	bar.custom_minimum_size = Vector2(W_EXPERIENCE - 24, 4)
 	bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	bar.max_value = HRConstants.EXPERIENCE_MAX
-	bar.value = emp.experience
+	bar.value = value
 	box.add_child(bar)
 	box.add_child(val)
 	refs["experience_bar"] = bar

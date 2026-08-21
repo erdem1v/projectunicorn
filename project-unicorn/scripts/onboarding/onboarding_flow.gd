@@ -36,7 +36,7 @@ var draft: Dictionary = {
 	"portrait_id": "",
 	"origin_id": "",
 	"trait_ids": [],
-	"skill_alloc": {"tech": 0, "sales": 0, "negotiation": 0, "leadership": 0, "influence": 0},
+	"skill_alloc": {},   # seeded from FounderConstants.SKILLS in _ready — see below
 	"company_name": "",
 	"logo_style": "",
 	"slogan": "",
@@ -60,6 +60,11 @@ var _step_counter: Label = null
 
 
 func _ready() -> void:
+	# The allocation draft is seeded FROM the canonical skill list, never from a literal:
+	# the 2026-08-21 area migration took the founder from five skills to eight, and a
+	# hand-written seed here would have gone stale silently (validate_alloc counts missing
+	# keys as 0, so the pool would still balance and nothing would scream).
+	draft["skill_alloc"] = FounderConstants.default_founder_skills()
 	_steps = [STEP_CHARACTER, STEP_ORIGIN_TRAITS, STEP_COMPANY]
 	_apply_dark_register()
 	_build_header()

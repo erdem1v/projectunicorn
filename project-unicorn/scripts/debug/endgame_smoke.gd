@@ -29,11 +29,23 @@ const LOC_EVENT_EN_PENDING := 0
 const GATE1_ID := "ev_phase_gate_traction"
 const GATE2_ID := "ev_phase_gate_series_a"
 
-# Fixture axis defaults, each chosen to be the NEUTRAL point of the channel it feeds:
-#   SEED_PACE 4       → 0.25 × 4 = 1.0 efor/day, exactly a pre-Coupling assist engineer
-#   SEED_EXPERTISE 5  → ProductSystem.SEED_EXPERTISE_PIVOT, so the commit-seed multiplier is 1.0
-#   SEED_RAPPORT 5    → mid-ruler coordination when a seeded employee is made SORUMLU
-const SEED_PACE := 4
+# Fixture skill defaults. The three names are KEPT (fifty-odd call sites pass them
+# positionally) but their MEANING moved with the 2026-08-21 area migration, because the
+# three axes they were named after no longer exist:
+#   SEED_EXPERTISE 5 → the role's KEY AREA. Still the neutral point of two channels at
+#                      once: it is ProductSystem.SEED_EXPERTISE_PIVOT (commit-seed
+#                      multiplier exactly 1.0) and, for a build-assigned developer, the
+#                      number that feeds team speed. A seeded employee therefore
+#                      contributes 0.25 × 5 = 1.25 efor/day, not the old 1.0 — the two
+#                      anchors used to sit on two different axes and now share one area,
+#                      so one of them had to move. The pivot was kept and the speed anchor
+#                      moved, because the pivot is a PRODUCTION constant and the speed
+#                      anchor is a test convenience.
+#   SEED_PACE 3      → every OTHER area (the "rest" floor). Low but never zero: rev 2 §2
+#                      wants a one-person team to have no holes.
+#   SEED_RAPPORT 5   → LİDERLİK. Mid-ruler coordination when a seeded employee is SORUMLU,
+#                      which is exactly what the name used to buy through UYUM.
+const SEED_PACE := 3
 const SEED_EXPERTISE := 5
 const SEED_RAPPORT := 5
 
@@ -292,6 +304,12 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"source_tag_speaker_wins":         fail = _case_source_tag_speaker_wins()
 		"ship_tooltip_counts_critical_penalty": fail = _case_ship_tooltip_counts_critical_penalty()
 		"rail_tabs_match_scene_order":     fail = _case_rail_tabs_match_scene_order()
+		# --- Ekip modülü · motor tarafı 2026-08-21 (GDD v2 ch. 07 rev 2). Dördü de ÖNCEKİ
+		#     motora karşı DÜŞER; her biri falsifikasyonla doğrulandı.
+		"job_assignment_and_idle":         fail = _case_job_assignment_and_idle()
+		"overload_costs_output":           fail = _case_overload_costs_output()
+		"job_lead_resolution":             fail = _case_job_lead_resolution()
+		"save_migration_v3_to_v4":         fail = _case_save_migration_v3_to_v4()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -332,14 +350,29 @@ static func _sim_day_full() -> void:
 	TimeManager._dispatch_daily_tick()
 
 
+## Kurucunun `tech`i 2026-08-21'de DÖRDE bölündü (Ürün · Tasarım · Yazılım · Test), çünkü
+## her ürün formülü artık kendi alanını okuyor. Fixture'ların "kurucu şu seviyede teknik"
+## demesi için TEK yer: dördünü birden yazar, yani hangi formül hangi alanı okursa okusun
+## sonuç migration öncesiyle aynı çıkar.
+static func _set_founder_tech(value: int) -> void:
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return
+	for area_key in [HRConstants.AREA_PRODUCT, HRConstants.AREA_DESIGN,
+			HRConstants.AREA_ENGINEERING, HRConstants.AREA_QA]:
+		founder.role_stats[area_key] = value
+
+
 static func _make_employee(id: String, display_name: String, role_id: String,
 		pace: int = SEED_PACE, salary: int = 0, morale: int = 50,
 		expertise: int = SEED_EXPERTISE, rapport: int = SEED_RAPPORT) -> Character:
-	# ONE home for every employee seed. All three axes are parameters now (HR Coupling made
-	# each of them load-bearing: pace → build speed, expertise → bug/wear average and the
-	# commit seed, rapport → the coordination multiplier when this person is the SORUMLU).
-	# Defaults are the NEUTRAL point of each channel, so a seed that does not care about an
-	# axis cannot silently tilt an unrelated formula — see the SEED_* constants.
+	# ONE home for every employee seed. The parameter NAMES are pre-migration and kept on
+	# purpose (fifty-odd positional call sites); what they set is now:
+	#   expertise → the role's KEY AREA — "how good at your actual job"
+	#   pace      → every other area — the floor that keeps a one-person team whole
+	#   rapport   → LİDERLİK — the coordination multiplier when this person is SORUMLU
+	# Defaults are the NEUTRAL point of each channel, so a seed that does not care about a
+	# number cannot silently tilt an unrelated formula — see the SEED_* constants.
 	var c := Character.new()
 	c.id = id
 	c.character_name = display_name
@@ -347,7 +380,7 @@ static func _make_employee(id: String, display_name: String, role_id: String,
 	c.category = "employee"
 	c.monthly_salary = salary
 	c.morale = morale
-	c.role_stats = {"expertise": expertise, "pace": pace, "rapport": rapport}
+	c.role_stats = HRConstants.seed_skills(role_id, expertise, pace, rapport)
 	c.traits = ["warms_up_fast"]
 	CharacterRegistry.add(c)
 	return c
@@ -843,7 +876,13 @@ static func _case_capacity_split() -> String:
 	# exactly how this case first failed: 2.792 measured against a 2.000 sample). Summing the
 	# same per-hour product the engine sums is not a weaker assertion — it is the "taze çarpım"
 	# law this case already claimed, now actually enforced hour by hour.
-	if not ProductSystem.start_version_build(["ai_assistant_voice"], "founder"):
+	# ÜÇ özellik, bir değil: ölçüm iki tam 24 saatlik pencereyi efor TAVANINA ÇARPMADAN
+	# geçirmek zorunda. Tavana dayanan pencere son saatlerde daha az efor yazar ve ölçülen
+	# gün beklenenin altına düşer — 2026-08-21 alan migrasyonunda tam olarak bu oldu
+	# (2.700 ölçüldü, 4.250 bekleniyordu), çünkü ekip hızlandı ve tek özellik erken bitti.
+	# Ölçülen yasa (yarı hız / tam hıza dönüş) değişmedi; pencere dardı.
+	if not ProductSystem.start_version_build(
+			["ai_assistant_voice", "ai_assistant_streaming", "ai_assistant_tools"], "founder"):
 		return "v-build blocked during sprint (guard not removed)"
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if absf(ProductSystem.capacity_speed_factor() - 0.5) > 0.001:
@@ -1898,7 +1937,7 @@ static func _case_iter_ceiling_founder_vs_designer() -> String:
 	# ve SON tur (4) solo'nun son kazancından fazla verir — "daha iyi insanlar lazım, daha
 	# çok tur değil" hissinin sayısal kanıtı. (Eski "plato" biçimi 12 tur istiyordu.)
 	var founder: Character = CharacterRegistry.get_founder()
-	founder.role_stats["tech"] = 2
+	_set_founder_tech(2)
 	var want0: float = ProductSystem.ITER_CEIL_FOUNDER_COEF * 2.0
 	var ceil0: Dictionary = ProductSystem.iteration_axis_ceilings()
 	if absf(float(ceil0["innovation"]) - want0) > 0.001:
@@ -1932,7 +1971,13 @@ static func _case_iter_ceiling_founder_vs_designer() -> String:
 	var solo_plateau: float = b.innovation
 	_make_employee("char_iter_designer", "Iter Designer", HRConstants.ROLE_DESIGNER,
 		SEED_PACE, 0, 50, 7)
-	var want1: float = want0 + minf(7.0 * ProductSystem.ITER_CEIL_ROLE_COEF, ProductSystem.ITER_CEIL_ROLE_CAP)
+	# İnovasyon ← ÜRÜN (rev 2 §2 "özellik kararları"), and Ürün is a designer's SECONDARY
+	# area, so their contribution is (key − 1) charged at SECONDARY_AREA_MULT. It used to be
+	# the designer's raw UZMANLIK, because the old table read İnovasyon ← Tasarımcı, a ROLE.
+	var des_product: float = 7.0 - 1.0
+	var want1: float = want0 + minf(
+		des_product * HRConstants.SECONDARY_AREA_MULT * ProductSystem.ITER_CEIL_ROLE_COEF,
+		ProductSystem.ITER_CEIL_ROLE_CAP)
 	var ceil1: Dictionary = ProductSystem.iteration_axis_ceilings()
 	if absf(float(ceil1["innovation"]) - want1) > 0.001:
 		return "designer ceiling %.2f, want %.2f" % [float(ceil1["innovation"]), want1]
@@ -1955,7 +2000,7 @@ static func _case_iter_diminishing_returns() -> String:
 	# Azalan getiri: tur N+1'in kazancı tur N'inkinden KÜÇÜK (ikisi de > 0).
 	# Tasarımcı baştan masada → tavan yüksek, iki tur boyunca bol headroom.
 	var founder: Character = CharacterRegistry.get_founder()
-	founder.role_stats["tech"] = 2
+	_set_founder_tech(2)
 	_make_employee("char_iter_dr_designer", "DR Designer", HRConstants.ROLE_DESIGNER,
 		SEED_PACE, 0, 50, 7)
 	GameState.set_cash(200000)
@@ -1983,7 +2028,7 @@ static func _case_iter_ceiling_never_exceeded() -> String:
 	# Güvenlik tavanına (ITER_MAX_ROUNDS) kadar sür: hiçbir eksen kendi tavanını (ya da
 	# tavan üstü commit damgasını) aşamaz; tavanda tur ZİNCİRİ durur (park), çıkış hâlâ oyuncuda.
 	var founder: Character = CharacterRegistry.get_founder()
-	founder.role_stats["tech"] = 1   # taban tavan 4 → damga tavanın üstünde kalabilir
+	_set_founder_tech(1)   # taban tavan 4 → damga tavanın üstünde kalabilir
 	GameState.set_cash(200000)
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
 		return "start_build failed"
@@ -2018,11 +2063,15 @@ static func _case_iter_ceiling_never_exceeded() -> String:
 
 
 static func _case_iter_zero_staff_neutrality_and_axis_lock() -> String:
-	# Sıfır ekip → her tavan kurucu tabanı; alakasız roller tavan OYNATMAZ; her rol
-	# YALNIZ kendi eksenini yükseltir (sızıntı kontrolü — coupling_pm_experience aynası);
-	# rol terimi ITER_CEIL_ROLE_CAP'te kesilir (çoklu işe alım istifi).
+	# Sıfır ekip → her tavan kurucu tabanı; BUILD İŞİNDE OLMAYAN kimse tavan OYNATMAZ;
+	# her ALAN kendi eksenini yükseltir ve terim ITER_CEIL_ROLE_CAP'te kesilir.
+	#
+	# 2026-08-21: "her rol yalnız kendi eksenini yükseltir, gerisi sızıntıdır" hükmü DÜŞTÜ.
+	# O bir ROL kapısıydı; rev 2 §2 onu alanlarla değiştirdi ve sızıntı diye bir şey kalmadı —
+	# her alan zaten kendi eksenini besliyor. Yerine geçen kapı ATAMADIR: build'de olmayan
+	# kimse build tavanına dokunmaz, ki ch. 03 §8'in istediği gerilim de tam olarak budur.
 	var founder: Character = CharacterRegistry.get_founder()
-	founder.role_stats["tech"] = 3
+	_set_founder_tech(3)
 	var base: float = ProductSystem.ITER_CEIL_FOUNDER_COEF * 3.0
 	var c: Dictionary = ProductSystem.iteration_axis_ceilings()
 	for ax in QualityModel.AXES:
@@ -2034,24 +2083,41 @@ static func _case_iter_zero_staff_neutrality_and_axis_lock() -> String:
 	for ax in QualityModel.AXES:
 		if absf(float(c[ax]) - base) > 0.001:
 			return "an unrelated role moved the %s ceiling (%.2f)" % [ax, float(c[ax])]
+	# A DESIGNER (Tasarım 6 key · Ürün 5 secondary). Deneyim ekseni ← Tasarım (rev 2 §2 says
+	# so in words), İnovasyon ← Ürün. So a designer raises BOTH, and raises Deneyim by more,
+	# because Ürün is their secondary area and §5 charges SECONDARY_AREA_MULT for it.
+	# THE OLD LAW HERE WAS "each role raises exactly one axis and leaks nowhere" — a role
+	# gate. Areas replace it: nothing leaks, because every area feeds its own axis by design.
 	_make_employee("char_iter_zs_designer", "ZS Designer", HRConstants.ROLE_DESIGNER, SEED_PACE, 0, 50, 6)
 	c = ProductSystem.iteration_axis_ceilings()
-	if absf(float(c["innovation"]) - (base + 6.0 * ProductSystem.ITER_CEIL_ROLE_COEF)) > 0.001:
-		return "designer term wrong (%.2f)" % float(c["innovation"])
-	if absf(float(c["stability"]) - base) > 0.001 or absf(float(c["experience"]) - base) > 0.001:
-		return "designer leaked into stability/experience"
-	_make_employee("char_iter_zs_dev", "ZS Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 0, 50, 4)
+	var des_exp: float = float(c["experience"]) - base
+	var des_inno: float = float(c["innovation"]) - base
+	if des_exp <= 0.0:
+		return "a designer did not raise the Deneyim ceiling, which rev 2 §2 gives to Tasarım"
+	if des_inno <= 0.0:
+		return "a designer did not raise İnovasyon at all — their Ürün number is not zero"
+	if des_inno >= des_exp:
+		return "a designer's secondary area is worth as much as their key one (%.2f vs %.2f)" % [des_inno, des_exp]
+	if absf(float(c["stability"]) - base) <= 0.001:
+		return "a designer contributed nothing to Kararlılık; their Yazılım floor is not zero"
+	# THE ASSIGNMENT GATE, which is what replaces the old role gate: a tester and a sales rep
+	# land on the TEST and SATIŞ jobs, not the build, so they move no build ceiling at all.
+	var before_unrelated: Dictionary = ProductSystem.iteration_axis_ceilings().duplicate()
+	_make_employee("char_iter_zs_t2", "ZS Tester 2", HRConstants.ROLE_TESTER, SEED_PACE, 0, 50, 9)
+	_make_employee("char_iter_zs_s2", "ZS Sales 2", HRConstants.ROLE_SALES_REP, SEED_PACE, 0, 50, 9)
 	c = ProductSystem.iteration_axis_ceilings()
-	if absf(float(c["stability"]) - (base + 4.0 * ProductSystem.ITER_CEIL_ROLE_COEF)) > 0.001:
-		return "developer term wrong (%.2f)" % float(c["stability"])
-	if absf(float(c["experience"]) - base) > 0.001:
-		return "developer leaked into experience"
-	_make_employee("char_iter_zs_pm", "ZS PM", HRConstants.ROLE_PRODUCT_MANAGER, SEED_PACE, 0, 50, 9)
-	_make_employee("char_iter_zs_pm2", "ZS PM 2", HRConstants.ROLE_PRODUCT_MANAGER, SEED_PACE, 0, 50, 9)
+	for ax in QualityModel.AXES:
+		if absf(float(c[ax]) - float(before_unrelated[ax])) > 0.001:
+			return "somebody NOT on the build job moved the %s ceiling (%.2f -> %.2f)" % [
+				ax, float(before_unrelated[ax]), float(c[ax])]
+	# The term still caps: stack enough build hires and ITER_CEIL_ROLE_CAP bites.
+	for i in 6:
+		_make_employee("char_iter_zs_pm%d" % i, "ZS PM %d" % i, HRConstants.ROLE_PRODUCT_MANAGER,
+			SEED_PACE, 0, 50, 9)
 	c = ProductSystem.iteration_axis_ceilings()
-	var want_pm: float = base + minf(18.0 * ProductSystem.ITER_CEIL_ROLE_COEF, ProductSystem.ITER_CEIL_ROLE_CAP)
-	if absf(float(c["experience"]) - want_pm) > 0.001:
-		return "PM term not capped at ITER_CEIL_ROLE_CAP (%.2f, want %.2f)" % [float(c["experience"]), want_pm]
+	if absf(float(c["innovation"]) - (base + ProductSystem.ITER_CEIL_ROLE_CAP)) > 0.001:
+		return "the İnovasyon term is not capped at ITER_CEIL_ROLE_CAP (%.2f, want %.2f)" % [
+			float(c["innovation"]), base + ProductSystem.ITER_CEIL_ROLE_CAP]
 	return ""
 
 
@@ -2085,28 +2151,41 @@ static func _case_speed_tracks_team_change() -> String:
 	# (ve kısalan ~gün). ÖLÇÜM GELİŞTİRME FAZINDA yapılır.
 	#
 	# LEDGER (Coupling): the case MOVED phase, the formula did not. Measurement used to sit
-	# wherever the build happened to be, which was iteration; a developer contributes NOTHING
-	# there, because Tasarım fazı tasarımcı + Ürün Yöneticisi'nin işidir (design doc §5 rol-faz
-	# eşlemesi). That is the correct world, not a bug: kod yazılmayan fazda kod eli çalışmaz.
-	# So the case now measures in the phase the developer OWNS, and asserts the iteration
-	# behaviour explicitly below so the surprise becomes a documented law.
+	# wherever the build happened to be, which was iteration.
+	#
+	# LEDGER 2 (rev 2 area migration, 2026-08-21): THE LAW ASSERTED HERE CHANGED. It used to
+	# be "a developer contributes NOTHING to TASARIM, because that phase belongs to the
+	# designer" — a ROLE gate. rev 2 §2 replaced role gates with areas precisely to kill that
+	# outcome: "böylece tek kişilik ekipte boşluk kalmaz — QA yoksa mühendis test edebilir,
+	# tasarımcı yoksa PM tasarıma bakabilir." A developer with Tasarım 3 now DOES help the
+	# design phase, and §5 is the price: they work it through a non-key area, so the
+	# contribution is multiplied by SECONDARY_AREA_MULT. The case asserts the new law in both
+	# directions — the developer helps, and helps LESS than a designer of equal skill would.
 	GameState.set_cash(50000)
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder == null:
 		return "no founder in registry"
-	founder.role_stats["tech"] = 3
+	_set_founder_tech(3)
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
 		return "start_build failed"   # efor 8+8=16 — ölçüm pencereleri içinde bitmez
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	# A developer must NOT speed up the design phase — the rol-faz mapping, asserted.
 	var iter_speed_solo: float = ProductSystem.team_speed(b)
 	if b.current_phase != "iteration":
 		return "build did not start in the design phase (%s)" % b.current_phase
+	# A developer HELPS the design phase now (rev 2 §2) — out of their Tasarım number.
 	_make_employee("char_iter_dev", "Iter Dev", HRConstants.ROLE_DEVELOPER)
-	if absf(ProductSystem.team_speed(b) - iter_speed_solo) > 0.001:
-		return "a developer changed TASARIM-phase speed (%.3f -> %.3f); that phase belongs to the designer" % [
-			iter_speed_solo, ProductSystem.team_speed(b)]
+	var with_dev: float = ProductSystem.team_speed(b)
+	if with_dev <= iter_speed_solo:
+		return "a developer added nothing to TASARIM (%.3f -> %.3f); rev 2 §2 says a one-person team has no holes" % [
+			iter_speed_solo, with_dev]
 	CharacterRegistry.remove("char_iter_dev")
+	# ...but LESS than a designer of the same calibre, because §5 charges the non-key area.
+	_make_employee("char_iter_des", "Iter Des", HRConstants.ROLE_DESIGNER)
+	var with_designer: float = ProductSystem.team_speed(b)
+	if with_designer <= with_dev:
+		return "a designer is not worth more than a developer in TASARIM (%.3f vs %.3f) — §5's secondary-area cost is not biting" % [
+			with_designer, with_dev]
+	CharacterRegistry.remove("char_iter_des")
 	# Now push into GELİŞTİRME, the phase a developer owns, and measure there.
 	if not _run_build_to_phase("development"):
 		return "build never reached the development phase"
@@ -2131,7 +2210,7 @@ static func _case_speed_tracks_team_change() -> String:
 	# Same number, derived from the new law — anchor b1. No lead/assist split any more.
 	var want_team: float = maxf(ProductSystem.SPEED_MIN,
 		(ProductSystem.FOUNDER_SPEED_COEF * 3.0
-			+ ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_PACE))
+			+ ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE))
 		* HRConstants.coordination_for_founder(GameState.get_founder_skill("leadership")))
 	s0 = b.efor_spent
 	for h in 24:
@@ -2144,6 +2223,14 @@ static func _case_speed_tracks_team_change() -> String:
 static func _case_deterministic_axes_at_ship() -> String:
 	# Eksenler deterministik: commit damgası == projected_axes == ship'teki mvp_*
 	# flag'leri (v1); v2 = önceki canlı + yeni katkılar + strengthen dominant bonusu.
+	#
+	# TAVAN BAŞLIĞI ŞART (2026-08-21). Her kalite ekseni artık KENDİ alanını okuyor
+	# (İnovasyon←Ürün · Kararlılık←Yazılım · Deneyim←Tasarım), yani kurucunun 0 taşıdığı bir
+	# alanın ekseni SIFIR tavanla gelir ve eksen hiç kımıldayamaz. Bu doğru davranıştır —
+	# "tasarım bilmiyorsan tasarımı yükseltemezsin" alan modelinin bütün iddiası — ama bu
+	# case DETERMİNİZMİ ölçüyor, tavanı değil, o yüzden kurucuya dört teknik alanda da
+	# bolca baş açıklığı veriliyor. Tavanın kendisi iter_ceiling_* case'lerinin işi.
+	_set_founder_tech(3)
 	GameState.set_cash(200000)
 	var picks := ["ai_assistant_chat", "ai_assistant_memory"]
 	var want: Dictionary = ProductSystem.projected_axes(picks, [], {})
@@ -2666,7 +2753,7 @@ static func _make_cs(id: String, expertise: int, morale: int = 60) -> Character:
 	# B2BConstants.cs_dampen(5) = 1 - 5x0.055 = 0.725 = the old 1 - 55/200. Mind the margin
 	# when changing it: at the erosion these cases set up, axis 0 ties the founder-managed
 	# twin and axis 3 lands one point off CS_ESCALATION_SAT.
-	cs.role_stats = {"expertise": expertise, "pace": SEED_PACE, "rapport": SEED_RAPPORT}
+	cs.role_stats = HRConstants.seed_skills(HRConstants.ROLE_CUSTOMER_REP, expertise, SEED_PACE, SEED_RAPPORT)
 	cs.traits = ["warms_up_fast"]
 	CharacterRegistry.add(cs)
 	return cs
@@ -3913,7 +4000,7 @@ static func _case_founder_5skill_init() -> String:
 
 static func _case_alloc_guard() -> String:
 	# FounderConstants.validate_alloc truth table (pool 6, cap 3, canonical keys only).
-	var ok := {"tech": 2, "sales": 2, "negotiation": 1, "leadership": 0, "influence": 1}
+	var ok := {"product": 1, "design": 0, "engineering": 2, "qa": 0, "sales": 2, "customer_success": 0, "leadership": 0, "charisma": 1}
 	if not FounderConstants.validate_alloc(ok):
 		return "valid full-pool allocation rejected"
 	if FounderConstants.alloc_remaining(ok) != 0:
@@ -3955,9 +4042,15 @@ static func _case_trait_formula() -> String:
 
 
 static func _case_lever_skill_new_keys() -> String:
-	# Term Sheet levers read the NEW skill keys; can_read_prospect flips on Satış;
+	# Term Sheet levers read the CANONICAL skill keys; can_read_prospect flips on Satış;
 	# the odds-split label resolves through the CSV -> TranslationServer plumbing.
-	var want := {"valuation": "sales", "dilution": "negotiation", "board": "influence"}
+	#
+	# 2026-08-21: `dilution` moved from `negotiation` to `charisma`. rev 2's six areas have no
+	# negotiation, so its one reader had to be rebound, and ch. 02 §4 gives Karizma the TERMS
+	# of a raise and not just the odds. THIS IS THE ONE BINDING rev 2 DOES NOT ITSELF
+	# AUTHORIZE — it is one token in PitchConstants.LEVER_SKILL and ch. 09's turn owns the
+	# ruling. This case is deliberately the place that would notice a silent change of mind.
+	var want := {"valuation": "sales", "dilution": "charisma", "board": "charisma"}
 	for lever in want:
 		var skill_key: String = String(PitchConstants.LEVER_SKILL.get(lever, ""))
 		if skill_key != want[lever]:
@@ -3999,7 +4092,14 @@ static func _case_onboarding_pages_contract() -> String:
 	var full_draft := {
 		"founder_name": "Deneme", "portrait_id": "founder_03", "origin_id": "self_made",
 		"trait_ids": ["visionary", "stubborn"],
-		"skill_alloc": {"tech": 2, "sales": 2, "negotiation": 1, "leadership": 0, "influence": 1},
+		# DEBUG ALLOCATION, chosen to move as little as possible through the 2026-08-21
+		# area migration. The old payload was {tech 2, sales 2, negotiation 1, influence 1};
+		# `tech` fed build speed, the quality average AND the iteration ceilings, and those
+		# three now read four separate areas — so no allocation of 6 points at cap 3 can
+		# reproduce it exactly. engineering 2 holds the build-speed anchor at its old value,
+		# sales 2 holds SkillCheck.SALES_READ_THRESHOLD, charisma 1 holds the pitch beats
+		# non-zero, and the spare point goes to product so the İnovasyon ceiling is not flat.
+		"skill_alloc": {"product": 1, "design": 0, "engineering": 2, "qa": 0, "sales": 2, "customer_success": 0, "leadership": 0, "charisma": 1},
 		"company_name": "Synaptik", "logo_style": "tech", "slogan": "",
 	}
 	var expected_keys := {
@@ -4029,7 +4129,7 @@ static func _case_onboarding_pages_contract() -> String:
 		step.queue_free()
 
 	var unspent: Dictionary = full_draft.duplicate(true)
-	unspent["skill_alloc"]["influence"] = 0
+	unspent["skill_alloc"]["charisma"] = 0
 	var p2: OnboardingStep = scenes["origin_traits"].instantiate()
 	root.add_child(p2)
 	p2.prefill(unspent)
@@ -4076,30 +4176,52 @@ static func _park_leave(employees: Array) -> void:
 
 
 static func _case_hr_axis_key_lock() -> String:
-	# Founder and employee key sets must NEVER mix. get_founder_skill returns 0 for an
-	# unknown key without complaining, so cross-contamination would otherwise be silent.
+	# GDD v2 ch. 07 rev 2 §2/§3: employee and founder now SHARE the six areas and differ only
+	# in the tail — employee + Liderlik, founder + Liderlik + Karizma. That makes the key lock
+	# MORE important, not less: before the migration the two key sets were disjoint, so a
+	# mix-up was obvious; now they overlap and only the tail tells them apart.
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder == null:
 		return "no founder after initialize_run"
-	for axis_key in HRConstants.AXES:
-		if founder.role_stats.has(axis_key):
-			return "founder carries employee axis '%s'" % axis_key
-	if HRConstants.validate_employee_axes(founder.role_stats):
-		return "the FOUNDER dict passed the EMPLOYEE axis validator"
+	# The shared half must genuinely be shared: the founder carries all six areas (§3's
+	# stated reason for keeping him off the Ekip page).
+	for area_key in HRConstants.AREAS:
+		if not founder.role_stats.has(area_key):
+			return "founder is missing area '%s' — rev 2 §3 says he has a score in every one" % area_key
+	if not founder.role_stats.has(FounderConstants.SKILL_CHARISMA):
+		return "founder is missing Karizma, which rev 2 §2 makes founder-only"
+	if HRConstants.validate_employee_skills(founder.role_stats):
+		return "the FOUNDER dict passed the EMPLOYEE validator — the tail is not being checked"
 	var emp: Character = _make_employee("char_lock_emp", "Lock Emp", HRConstants.ROLE_DEVELOPER)
-	for skill_key in FounderConstants.SKILLS:
-		if emp.role_stats.has(skill_key):
-			return "employee carries founder skill '%s'" % skill_key
-	if not HRConstants.validate_employee_axes(emp.role_stats):
-		return "employee axes failed their own validator: %s" % str(emp.role_stats)
-	if emp.role_stats.size() != HRConstants.AXES.size():
-		return "employee role_stats holds %d keys, want exactly %d" % [emp.role_stats.size(), HRConstants.AXES.size()]
+	if emp.role_stats.has(FounderConstants.SKILL_CHARISMA):
+		return "employee carries Karizma, which is founder-only"
+	if not HRConstants.validate_employee_skills(emp.role_stats):
+		return "employee skills failed their own validator: %s" % str(emp.role_stats)
+	if emp.role_stats.size() != HRConstants.EMPLOYEE_SKILL_KEYS.size():
+		return "employee role_stats holds %d keys, want exactly %d" % [
+			emp.role_stats.size(), HRConstants.EMPLOYEE_SKILL_KEYS.size()]
+	# The peak must land where the TITLE says: a developer's key area is Yazılım.
+	if int(emp.role_stats[HRConstants.AREA_ENGINEERING]) != SEED_EXPERTISE:
+		return "a seeded developer's key area is not Yazılım: %s" % str(emp.role_stats)
+	# THE RETIRED-KEY TRIPWIRE. Founder skills have had one since the 2026-07-16 rename;
+	# employee axes never did, so a stray "pace" would have loaded as a dropped key and read
+	# as a silent 0. This is the assertion that makes a bad migration loud.
+	if not HRConstants.has_retired_skill_key({"pace": 4}):
+		return "has_retired_skill_key did not catch a retired axis"
+	if HRConstants.has_retired_skill_key(emp.role_stats):
+		return "a freshly seeded employee still carries a retired axis: %s" % str(emp.role_stats)
 	# Every near-miss shape must be rejected, not just obvious garbage.
-	if HRConstants.validate_employee_axes({"expertise": 5, "pace": 5}):
-		return "a missing axis was accepted"
-	if HRConstants.validate_employee_axes({"expertise": 5, "pace": 5, "rapport": 5, "tech": 2}):
+	var short_dict: Dictionary = HRConstants.default_employee_skills()
+	short_dict.erase(HRConstants.AREA_QA)
+	if HRConstants.validate_employee_skills(short_dict):
+		return "a missing area was accepted"
+	var extra: Dictionary = HRConstants.default_employee_skills()
+	extra[FounderConstants.SKILL_CHARISMA] = 2
+	if HRConstants.validate_employee_skills(extra):
 		return "an extra founder key was accepted"
-	if HRConstants.validate_employee_axes({"expertise": 5, "pace": HRConstants.AXIS_MAX + 1, "rapport": 5}):
+	var off_ruler: Dictionary = HRConstants.default_employee_skills()
+	off_ruler[HRConstants.AREA_SALES] = HRConstants.AREA_MAX + 1
+	if HRConstants.validate_employee_skills(off_ruler):
 		return "an off-ruler value was accepted"
 	# Employee traits use their OWN catalog and formula, not the founder's.
 	if HRConstants.validate_employee_traits(["visionary"]):
@@ -4144,22 +4266,41 @@ static func _case_hr_candidate_invariants() -> String:
 					if seen_salaries.has(sal):
 						return "%s: two files quote the same salary %d — the price axis collapsed" % [tag, sal]
 					seen_salaries.append(sal)
-					if not HRConstants.validate_employee_axes(f["axes"]):
+					if not HRConstants.validate_employee_skills(f["axes"]):
 						return "%s: axes off the ruler: %s" % [tag, str(f["axes"])]
 					if not HRConstants.validate_employee_traits(f["traits"]):
 						return "%s: traits break the employee formula: %s" % [tag, str(f["traits"])]
 					if String(f["role"]) != role_id:
 						return "%s: role mismatch (%s)" % [tag, String(f["role"])]
-					if String(f["name"]).strip_edges() == "" or String(f["note"]).strip_edges() == "":
-						return "%s: empty name or file note" % tag
+					# THE NOTE, BY ITS INDEX. generate() hands back `note_index`; the note TEXT is
+					# resolved one layer up (HRSearchSystem.get_files → file_notes_line). Until
+					# 2026-08-21 this block read f["note"], a key a generated file has never carried:
+					# every iteration logged "Invalid access to property or key 'note'" and BOTH note
+					# assertions were being made about a value that was never a note. The case printed
+					# SMOKE PASS while proving nothing — pre-existing, fixed here because the case was
+					# being rewritten for the areas anyway.
+					#
+					# The bound is the real assertion: _take_unused_index is what keeps the index inside
+					# the pool. The second catches a missing CSV row — TranslationServer.translate hands
+					# back the KEY when there is no row, so comparing against the key is the only way to
+					# tell a note from its own name.
+					var note_index: int = int(f["note_index"])
+					if note_index < 0 or note_index >= HRConstants.FILE_NOTES_COUNT:
+						return "%s: note_index %d outside 0..%d" % [
+							tag, note_index, HRConstants.FILE_NOTES_COUNT - 1]
+					var note_key: String = "HR_FILE_NOTE_%d" % (note_index + 1)
+					if HRConstants.file_notes_line(note_index) == note_key:
+						return "%s: %s has no row in strings.csv" % [tag, note_key]
+					if String(f["name"]).strip_edges() == "":
+						return "%s: empty candidate name" % tag
 					# Batch no-repeat across every drawn pool, not just traits: two identical
 					# names or the same file note twice reads as a generator bug on the card.
 					if seen_names.has(String(f["name"])):
 						return "%s: candidate name '%s' repeated across files" % [tag, String(f["name"])]
 					seen_names.append(String(f["name"]))
-					if seen_notes.has(String(f["note"])):
-						return "%s: file note repeated across files" % tag
-					seen_notes.append(String(f["note"]))
+					if seen_notes.has(note_index):
+						return "%s: file note %d repeated across files" % [tag, note_index]
+					seen_notes.append(note_index)
 					# Cross-distribution: no trait id repeats across the three files.
 					for t in f["traits"]:
 						if seen_traits.has(String(t)):
@@ -4184,9 +4325,13 @@ static func _case_hr_candidate_invariants() -> String:
 	if generations < 100:
 		return "only %d generations exercised, want at least 100" % generations
 	# Negative control: without this the whole case would pass on a `return true` predicate.
+	# The control has to be written in the CURRENT vocabulary. With the retired keys it
+	# still "worked", but for the wrong reason: _dominates reads EMPLOYEE_SKILL_KEYS, both
+	# dicts answered 0 for every one of them, and the pair dominated on PRICE alone — the
+	# skills were never compared at all.
 	var dominant: Array = [
-		{"axes": {"expertise": 9, "pace": 9, "rapport": 9}, "salary": 5000},
-		{"axes": {"expertise": 4, "pace": 4, "rapport": 4}, "salary": 6000},
+		{"axes": HRConstants.seed_skills(HRConstants.ROLE_DEVELOPER, 9, 9, 9), "salary": 5000},
+		{"axes": HRConstants.seed_skills(HRConstants.ROLE_DEVELOPER, 4, 4, 4), "salary": 6000},
 	]
 	if HRCandidateGenerator.is_non_dominated_set(dominant):
 		return "is_non_dominated_set accepted a strictly dominant, cheaper file — the predicate is vacuous"
@@ -4830,9 +4975,10 @@ static func _case_hr_constants_contract() -> String:
 	# --- The equivalence anchors the shims used to guarantee, now on the REAL law ---
 	# These are the whole reason the Coupling could delete the conversion tables: the rescaled
 	# coefficients reproduce the pre-migration numbers exactly at the anchor values.
-	if not is_equal_approx(ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_PACE), 1.0):
-		return "pace %d contributes %.3f efor/day, want the old assist engineer's 1.0" % [
-			SEED_PACE, ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_PACE)]
+	# The seeded employee's KEY AREA is what feeds team speed now (2026-08-21). 5 × 0.25.
+	if not is_equal_approx(ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE), 1.25):
+		return "key area %d contributes %.3f efor/day, want 1.25" % [
+			SEED_EXPERTISE, ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE)]
 	if not is_equal_approx(B2BConstants.cs_dampen(5), 0.725):
 		return "UZMANLIK-5 dampen is %.4f, want the old cs_skill-55 value 0.725" % B2BConstants.cs_dampen(5)
 	if not is_equal_approx(ProductSystem.SEED_EXPERTISE_PIVOT, float(SEED_EXPERTISE)):
@@ -4846,9 +4992,13 @@ static func _case_hr_constants_contract() -> String:
 			return "role '%s' has no display label" % role_id
 		if HRConstants.department_of(role_id) == "":
 			return "role '%s' has no department" % role_id
-		for axis_key in HRConstants.AXES:
-			if HRConstants.role_axis_meaning(role_id, axis_key) == "":
-				return "role '%s' has no meaning copy for axis '%s'" % [role_id, axis_key]
+		# rev 2 §3: only the role's KEY and SECONDARY areas have help copy — the closed card
+		# never shows the other four, so there is nothing to say about them.
+		for area_key in [HRConstants.role_key_area(role_id), HRConstants.role_secondary_area(role_id)]:
+			if String(area_key) == "":
+				return "role '%s' has no key/secondary area — see HRConstants.ROLE_AREAS" % role_id
+			if HRConstants.role_area_meaning(role_id, String(area_key)) == "":
+				return "role '%s' has no meaning copy for area '%s'" % [role_id, String(area_key)]
 	if HRConstants.role_label(HRConstants.ROLE_MENTOR) != "Operating Partner":
 		return "the mentor label drifted (it is already on screen): '%s'" % HRConstants.role_label(HRConstants.ROLE_MENTOR)
 	if HRConstants.roles_in_department(HRConstants.DEPT_PRODUCT_DEV).size() != 4:
@@ -4881,12 +5031,16 @@ static func _case_hr_constants_contract() -> String:
 		var prev_total: int = -1
 		for k in profiles.size():
 			var shape: Array = HRConstants.band_shape(band_id, k)
-			if shape.size() != HRConstants.AXES.size():
-				return "band '%s' profile %d is not one value per axis" % [band_id, k]
+			# THREE values, and they stayed three through the area migration: the shape is now
+			# read by MEANING (key area · secondary area · every other area), not by position
+			# over the axis list. Asserting against AREAS.size() would be wrong — six areas
+			# are filled FROM a 3-long shape.
+			if shape.size() != 3:
+				return "band '%s' profile %d is not [key, secondary, rest]" % [band_id, k]
 			if not (int(shape[0]) > int(shape[1]) and int(shape[1]) >= int(shape[2])):
-				return "band '%s' profile %d breaks peak>mid>=low, so a rotation has no strict max: %s" % [band_id, k, str(shape)]
-			if int(shape[0]) > HRConstants.AXIS_MAX or int(shape[2]) < HRConstants.AXIS_MIN:
-				return "band '%s' profile %d leaves the 0-%d ruler: %s" % [band_id, k, HRConstants.AXIS_MAX, str(shape)]
+				return "band '%s' profile %d breaks key>secondary>=rest, so the file has no strict peak: %s" % [band_id, k, str(shape)]
+			if int(shape[0]) > HRConstants.AREA_MAX or int(shape[2]) < HRConstants.AREA_MIN:
+				return "band '%s' profile %d leaves the 0-%d ruler: %s" % [band_id, k, HRConstants.AREA_MAX, str(shape)]
 			var total: int = 0
 			for v in shape:
 				total += int(v)
@@ -4932,20 +5086,21 @@ static func _case_hr_constants_contract() -> String:
 		return "leadership 0 must be climate-neutral, or every existing number moves"
 	if HRConstants.climate_drop_mult(3) >= 1.0 or HRConstants.climate_gain_mult(3) <= 1.0:
 		return "the climate coefficients do not respond to leadership"
-	if HRConstants.climate_drop_mult(HRConstants.AXIS_MAX) < HRConstants.CLIMATE_DROP_FLOOR:
+	if HRConstants.climate_drop_mult(HRConstants.AREA_MAX) < HRConstants.CLIMATE_DROP_FLOOR:
 		return "the climate drop multiplier fell through its floor"
-	# coordination_mult() was split by source (founder rises from neutral, employee is
-	# two-sided) — the employee variant is the one that spans the whole COORD_MIN..COORD_MAX ruler.
-	if not is_equal_approx(HRConstants.coordination_for_employee(0), HRConstants.COORD_MIN) \
-			or not is_equal_approx(HRConstants.coordination_for_employee(HRConstants.AXIS_MAX), HRConstants.COORD_MAX):
+	# coordination_mult() is split by source (founder rises from neutral, a chosen lead is
+	# two-sided) — the LEAD variant spans the whole COORD_MIN..COORD_MAX ruler. Both read
+	# LİDERLİK since 2026-08-21; the employee side used to read UYUM, which rev 2 §2 deleted.
+	if not is_equal_approx(HRConstants.coordination_for_lead(0), HRConstants.COORD_MIN) \
+			or not is_equal_approx(HRConstants.coordination_for_lead(HRConstants.AREA_MAX), HRConstants.COORD_MAX):
 		return "the coordination multiplier does not span COORD_MIN..COORD_MAX"
-	if HRConstants.coordination_for_employee(HRConstants.AXIS_MAX, true) <= HRConstants.coordination_for_employee(HRConstants.AXIS_MAX, false):
+	if HRConstants.coordination_for_lead(HRConstants.AREA_MAX, true) <= HRConstants.coordination_for_lead(HRConstants.AREA_MAX, false):
 		return "'Doğal lider' adds nothing at the top of the coordination range"
 	# Founder-as-lead is NEUTRAL at Liderlik 0 and only rises — the anchor that keeps a
 	# tech-3 solo founder at exactly 3.0 efor/gün (hr_constants.gd:532-536).
 	if not is_equal_approx(HRConstants.coordination_for_founder(0), HRConstants.COORD_FOUNDER_NEUTRAL):
 		return "founder coordination at Liderlik 0 is not neutral"
-	if HRConstants.coordination_for_founder(HRConstants.AXIS_MAX) <= HRConstants.coordination_for_founder(0):
+	if HRConstants.coordination_for_founder(HRConstants.AREA_MAX) <= HRConstants.coordination_for_founder(0):
 		return "founder coordination does not rise with Liderlik"
 
 	# --- Thresholds asked through ONE comparison home ---
@@ -5073,7 +5228,7 @@ static func _case_coupling_speed_law() -> String:
 	# THE hız yasası, both hard anchors in one place, measured through the real formula.
 	GameState.set_cash(200000)
 	var founder: Character = CharacterRegistry.get_founder()
-	founder.role_stats["tech"] = 3
+	_set_founder_tech(3)
 	var coord: float = HRConstants.coordination_for_founder(GameState.get_founder_skill("leadership"))
 	if not is_equal_approx(coord, 1.0):
 		return "the debug payload no longer gives a neutral coordination multiplier (%.3f) — every anchor below shifts" % coord
@@ -5085,25 +5240,45 @@ static func _case_coupling_speed_law() -> String:
 	# ANCHOR a2: founder tech-3 solo == 3.0 efor/gün, exactly the pre-Coupling number.
 	if absf(ProductSystem.team_speed(b) - 3.0) > 0.001:
 		return "anchor a2 broken: founder tech-3 solo is %.3f efor/day, want 3.0" % ProductSystem.team_speed(b)
-	# ANCHOR b1: a pace-4 developer adds exactly 1.0, what a pre-Coupling assist engineer added.
+	# ANCHOR b1: a seeded developer adds EMPLOYEE_SPEED_COEF × their Yazılım. It was 1.0 (the
+	# pre-Coupling assist engineer) while the seed's build number was HIZ 4; the area
+	# migration made it the KEY AREA, seeded at SEED_EXPERTISE, so the anchor is 1.25.
+	# The COEFFICIENT did not move — the number it multiplies did.
+	var want_b1: float = 3.0 + ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE)
 	_make_employee("char_law_dev", "Law Dev", HRConstants.ROLE_DEVELOPER)
-	if absf(ProductSystem.team_speed(b) - 4.0) > 0.001:
-		return "anchor b1 broken: +pace-4 developer gives %.3f, want 4.0" % ProductSystem.team_speed(b)
-	# ROL-FAZ EŞLEMESİ (design doc §5): a designer does not write code, a developer does not
-	# draw screens. Each role moves the phase it owns and no other.
+	if absf(ProductSystem.team_speed(b) - want_b1) > 0.001:
+		return "anchor b1 broken: +seeded developer gives %.3f, want %.3f" % [
+			ProductSystem.team_speed(b), want_b1]
+	# ALAN-FAZ EŞLEMESİ (rev 2 §2, 2026-08-21 — eskiden ROL-faz eşlemesiydi): a designer no
+	# longer contributes NOTHING to GELİŞTİRME. They write code badly, out of their Yazılım
+	# number, and §5 charges them SECONDARY_AREA_MULT for working outside their key area.
+	# The law that survives is the RANKING, not the zero: whoever owns the phase's area is
+	# worth strictly more there than someone borrowed into it.
+	var before_designer: float = ProductSystem.team_speed(b)
 	_make_employee("char_law_designer", "Law Designer", HRConstants.ROLE_DESIGNER)
-	if absf(ProductSystem.team_speed(b) - 4.0) > 0.001:
-		return "a designer changed GELİŞTİRME speed (%.3f); that phase belongs to the developer" % ProductSystem.team_speed(b)
-	# ...and the mirror: in TASARIM the designer counts and the developer does not.
+	var with_designer: float = ProductSystem.team_speed(b)
+	if with_designer <= before_designer:
+		return "a designer added nothing to GELİŞTİRME (%.3f); rev 2 §2 has no zero-contribution roles" % with_designer
+	var designer_add: float = with_designer - before_designer
+	var developer_add: float = want_b1 - 3.0
+	if designer_add >= developer_add:
+		return "a designer is worth %.3f in GELİŞTİRME against the developer's %.3f — §5's secondary-area cost is not biting" % [
+			designer_add, developer_add]
+	# ...and the mirror, with the same ranking law: in TASARIM the DESIGNER is worth full
+	# price and the developer is the borrowed hand. Both are on the build, so the phase total
+	# is founder + designer(key) + developer(secondary) — the point is the ORDER of the two
+	# employee terms, which is what a role gate used to express as a zero.
 	var iter_speed: float = ProductSystem._speed_for_phase("iteration", "")
 	var want_iter: float = ProductSystem.FOUNDER_SPEED_COEF * 3.0 \
-		+ ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_PACE)
+		+ ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE) \
+		+ ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_PACE) * HRConstants.SECONDARY_AREA_MULT
 	if absf(iter_speed - want_iter) > 0.001:
-		return "TASARIM speed %.3f, want founder + designer only (%.3f)" % [iter_speed, want_iter]
+		return "TASARIM speed %.3f, want founder + designer(key) + developer(secondary) (%.3f)" % [
+			iter_speed, want_iter]
 	# AĞIRLIK YOK among employees: making the developer the SORUMLU must not change the SUM.
 	# (Their quality shows up in the coordination term, which is what replaced the lead weight.)
-	var sum_before: float = ProductSystem._phase_pace_sum("development", "")
-	var sum_as_lead: float = ProductSystem._phase_pace_sum("development", "char_law_dev")
+	var sum_before: float = ProductSystem._phase_area_sum("development", "")
+	var sum_as_lead: float = ProductSystem._phase_area_sum("development", "char_law_dev")
 	if absf(sum_before - sum_as_lead) > 0.001:
 		return "the lead still carries extra HIZ weight (%.3f vs %.3f) — 'ağırlık yok' broken" % [sum_before, sum_as_lead]
 	return ""
@@ -5113,19 +5288,19 @@ static func _case_coupling_coordination_sources() -> String:
 	# The multiplier is asymmetric BY SOURCE, and a stale lead resolves loudly to the founder.
 	GameState.set_cash(200000)
 	var founder: Character = CharacterRegistry.get_founder()
-	founder.role_stats["tech"] = 3
+	_set_founder_tech(3)
 	founder.role_stats["leadership"] = 0
 	# Founder-as-lead is never a penalty: neutral at Liderlik 0, rising after that.
 	if not is_equal_approx(HRConstants.coordination_for_founder(0), 1.0):
 		return "founder coordination at Liderlik 0 is %.3f, want exactly 1.0" % HRConstants.coordination_for_founder(0)
 	if HRConstants.coordination_for_founder(9) <= 1.0:
 		return "founder coordination does not rise with Liderlik"
-	# A CHOSEN employee lead is a real bet — low UYUM genuinely coordinates worse.
-	if HRConstants.coordination_for_employee(0) >= 1.0:
-		return "a UYUM-0 employee lead is not a penalty (%.3f)" % HRConstants.coordination_for_employee(0)
-	if HRConstants.coordination_for_employee(0) >= HRConstants.coordination_for_employee(9):
-		return "employee coordination is not two-sided across the ruler"
-	# The lead's UYUM actually reaches the build speed.
+	# A CHOSEN employee lead is still a real bet — low LİDERLİK genuinely coordinates worse.
+	if HRConstants.coordination_for_lead(0) >= 1.0:
+		return "a Liderlik-0 lead is not a penalty (%.3f)" % HRConstants.coordination_for_lead(0)
+	if HRConstants.coordination_for_lead(0) >= HRConstants.coordination_for_lead(9):
+		return "lead coordination is not two-sided across the ruler"
+	# The lead's LİDERLİK actually reaches the build speed.
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
 		return "start_build failed"
 	var b: FeatureBuild = ProductSystem.get_active_build()
@@ -5156,28 +5331,29 @@ static func _case_coupling_coordination_sources() -> String:
 static func _case_coupling_bug_team_average() -> String:
 	# Bug rate reads the team's UZMANLIK WEIGHTED AVERAGE, and the average cuts BOTH ways.
 	var founder: Character = CharacterRegistry.get_founder()
-	founder.role_stats["tech"] = 3
-	var dev_roles: Array = ProductSystem._phase_crew_roles("development")
+	_set_founder_tech(3)
+	# GELİŞTİRME fazının alanı Yazılım; commit anındaki hata tohumu da onu okur (rev 2 §2).
+	var dev_area: String = HRConstants.AREA_ENGINEERING
 	# Founder alone and in charge: the average IS his Teknoloji — byte-equal to the
 	# pre-Coupling founder-only read, which is why the reducer was not rescaled.
-	if absf(ProductSystem._team_expertise_avg(dev_roles, "") - 3.0) > 0.001:
-		return "founder-solo average is %.3f, want his Teknoloji 3.0 exactly" % ProductSystem._team_expertise_avg(dev_roles, "")
+	if absf(ProductSystem._team_area_avg(dev_area, "") - 3.0) > 0.001:
+		return "founder-solo average is %.3f, want his Teknoloji 3.0 exactly" % ProductSystem._team_area_avg(dev_area, "")
 	# A STRONG team lifts the average (fewer bugs)...
 	var strong: Character = _make_employee("char_bug_strong", "Strong Dev", HRConstants.ROLE_DEVELOPER,
 		SEED_PACE, 0, 50, 9, SEED_RAPPORT)
-	var avg_strong: float = ProductSystem._team_expertise_avg(dev_roles, "")
+	var avg_strong: float = ProductSystem._team_area_avg(dev_area, "")
 	if avg_strong <= 3.0:
 		return "an UZMANLIK-9 developer did not lift the average (%.3f)" % avg_strong
 	CharacterRegistry.remove(strong.id)
 	# ...and a WEAK team drags it below the founder's own number (more bugs). Two-directional.
 	_make_employee("char_bug_weak", "Weak Dev", HRConstants.ROLE_DEVELOPER,
 		SEED_PACE, 0, 50, 0, SEED_RAPPORT)
-	var avg_weak: float = ProductSystem._team_expertise_avg(dev_roles, "")
+	var avg_weak: float = ProductSystem._team_area_avg(dev_area, "")
 	if avg_weak >= 3.0:
 		return "an UZMANLIK-0 developer did not drag the average down (%.3f)" % avg_weak
 	# The SORUMLU carries ×1.5, so who is in charge changes the quality average.
-	var as_member: float = ProductSystem._team_expertise_avg(dev_roles, "")
-	var as_lead: float = ProductSystem._team_expertise_avg(dev_roles, "char_bug_weak")
+	var as_member: float = ProductSystem._team_area_avg(dev_area, "")
+	var as_lead: float = ProductSystem._team_area_avg(dev_area, "char_bug_weak")
 	if as_lead >= as_member:
 		return "making the weak developer SORUMLU did not lower the average (%.3f -> %.3f)" % [as_member, as_lead]
 	return ""
@@ -5187,7 +5363,7 @@ static func _case_coupling_wear_team_average() -> String:
 	# Post-ship wear follows the SAME grammar as bug — the founder-only read is gone.
 	_seed_live_product()
 	var founder: Character = CharacterRegistry.get_founder()
-	founder.role_stats["tech"] = 3
+	_set_founder_tech(3)
 	# The audience must be big enough to keep the wear rate OFF WEAR_FLOOR in BOTH arms —
 	# otherwise both clamp to the floor and read identical, which says nothing about the
 	# expertise term. (That is how this case first failed: 0.0480 == 24 x WEAR_FLOOR exactly.)
@@ -5280,7 +5456,7 @@ static func _case_coupling_tester_beta_and_sprint() -> String:
 	if team_sprint < ProductSystem.MIN_SPRINT_DAYS:
 		return "the sprint fell below MIN_SPRINT_DAYS (%d)" % team_sprint
 	# The tester also joins BETA's speed crew (PHASE_CREW bugfix = tester + developer).
-	if not ProductSystem._phase_crew_roles("bugfix").has(HRConstants.ROLE_TESTER):
+	if not ProductSystem._phase_areas("bugfix").has(HRConstants.AREA_QA):
 		return "the tester is not in the BETA phase crew"
 	return ""
 
@@ -5291,7 +5467,7 @@ static func _case_coupling_cs_dampen_axis() -> String:
 	if not is_equal_approx(B2BConstants.cs_dampen(5), 0.725):
 		return "UZMANLIK-5 dampen is %.4f, want the old cs_skill-55 value 0.725" % B2BConstants.cs_dampen(5)
 	# Today's structural property preserved: the floor stays unreachable across the ruler.
-	if B2BConstants.cs_dampen(HRConstants.AXIS_MAX) <= B2BConstants.CS_DAMPEN_MIN:
+	if B2BConstants.cs_dampen(HRConstants.AREA_MAX) <= B2BConstants.CS_DAMPEN_MIN:
 		return "the dampen now reaches its floor; it did not before, so the erosion band moved"
 	if B2BConstants.cs_dampen(0) < 1.0:
 		return "a UZMANLIK-0 rep dampens erosion (%.4f); zero skill must mean zero help" % B2BConstants.cs_dampen(0)
@@ -5332,9 +5508,15 @@ static func _case_coupling_overtime_applied() -> String:
 	# could only assert the numbers were queryable, so a formula that never read them looked fine.
 	GameState.set_cash(200000)
 	var founder: Character = CharacterRegistry.get_founder()
-	founder.role_stats["tech"] = 3
+	_set_founder_tech(3)
 	_make_employee("char_ot_dev", "OT Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 100)
-	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
+	# DÖRT özellik, iki değil. Ölçüm iki tam günü efor TAVANINA ÇARPMADAN geçirmek zorunda:
+	# tavana dayanan gün son saatlerde daha az efor yazar ve oran sessizce 1.30'un altına
+	# düşer. 2026-08-21'de tam olarak bu oldu — alan migrasyonu çalışanın katkısını 1.0'dan
+	# 1.25'e çıkardı, build daha erken tavana vardı ve oran 1.259 okundu. Ölçülen yasa
+	# değişmedi; ölçüm penceresi dardı.
+	if not ProductSystem.start_build("ai_assistant",
+			["ai_assistant_tools", "ai_assistant_image", "ai_assistant_memory", "ai_assistant_voice"], ""):
 		return "start_build failed"
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if not _run_build_to_phase("development"):
@@ -5415,7 +5597,10 @@ static func _case_sales_pipeline_rate_by_pace() -> String:
 	if not is_equal_approx(SalesRepSystem.lead_rate_per_day(), 0.0):
 		return "lead rate non-zero with no rep: %f" % SalesRepSystem.lead_rate_per_day()
 	var rep: Character = _make_sales_rep("char_sr_1", 6, 1)
-	var pace: float = float(int(rep.role_stats.get(HRConstants.AXIS_PACE, 0)))
+	# rev 2 §2 collapsed lead generation and closing onto ONE area, Satış. This case used to
+	# vary HIZ and read HIZ; it now varies and reads the Satış area — the same shape of test,
+	# one number instead of two.
+	var pace: float = float(int(rep.role_stats.get(HRConstants.AREA_SALES, 0)))
 	var want: float = B2BConstants.LEAD_PER_PACE_POINT * pace
 	if not is_equal_approx(SalesRepSystem.lead_rate_per_day(), want):
 		return "lead rate %f, want %f" % [SalesRepSystem.lead_rate_per_day(), want]
@@ -5653,13 +5838,13 @@ static func _case_cs_capacity_resolution() -> String:
 	# retired 0-100-scale divisor is gone; FOUNDER_DIRECT_CAP has a live reader.
 	if B2BConstants.cs_capacity(0) != B2BConstants.CS_BASE_CAPACITY:
 		return "cs_capacity(0) is not the base capacity"
-	if B2BConstants.cs_capacity(HRConstants.AXIS_MAX) <= B2BConstants.cs_capacity(0):
+	if B2BConstants.cs_capacity(HRConstants.AREA_MAX) <= B2BConstants.cs_capacity(0):
 		return "cs_capacity does not rise across the ruler (the old /25 bug)"
 	var want_top: int = B2BConstants.CS_BASE_CAPACITY + int(
-		float(HRConstants.AXIS_MAX) / float(B2BConstants.CS_PACE_PER_SLOT))
-	if B2BConstants.cs_capacity(HRConstants.AXIS_MAX) != want_top:
-		return "cs_capacity(9) is %d, want %d" % [B2BConstants.cs_capacity(HRConstants.AXIS_MAX), want_top]
-	for i in HRConstants.AXIS_MAX:
+		float(HRConstants.AREA_MAX) / float(B2BConstants.CS_PACE_PER_SLOT))
+	if B2BConstants.cs_capacity(HRConstants.AREA_MAX) != want_top:
+		return "cs_capacity(9) is %d, want %d" % [B2BConstants.cs_capacity(HRConstants.AREA_MAX), want_top]
+	for i in HRConstants.AREA_MAX:
 		if B2BConstants.cs_capacity(i + 1) < B2BConstants.cs_capacity(i):
 			return "cs_capacity is not monotone at HIZ %d" % i
 	_seed_b2b(1000)
@@ -5669,8 +5854,17 @@ static func _case_cs_capacity_resolution() -> String:
 
 
 static func _case_cs_request_absorption_by_expertise() -> String:
-	# THE AXIS-SPLIT PROOF: the SAME request is absorbed at one UZMANLIK and escalated one
-	# point lower. Difficulty is built so the ceiling lands exactly between the two.
+	# THE VALVE PROOF: the SAME request is absorbed at one Müşteri Başarısı and escalated
+	# one point lower. Difficulty is built so the ceiling lands exactly between the two.
+	#
+	# ONE NUMBER, TWO JOBS (rev 2 §2). Müşteri Başarısı is now BOTH the absorb ceiling and
+	# the desk's daily budget — it used to be UZMANLIK and HIZ, and this case pinned HIZ at 9
+	# so only the ceiling moved. There is no second axis to pin any more, and a straddle low
+	# enough to be interesting now STARVES the desk: one rep at MB 2 clears 0,8 requests a day
+	# and never reaches the one on the table, so BOTH halves would pass for the wrong reason.
+	# TWO reps at the SAME level fund the day (0,8 + 0,6×0,8 = 1,28) without touching the
+	# ceiling, which reads the TOP rep only. That is how a variable is held still now that the
+	# two readings share a number.
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
 	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
@@ -5679,9 +5873,12 @@ static func _case_cs_request_absorption_by_expertise() -> String:
 	CustomerRegistry.set_satisfaction(c.id, 20)       # under tolerance -> +2
 	var diff: int = CustomerRepSystem.request_difficulty(c)
 	var strong_expertise: int = diff - B2BConstants.CS_ABSORB_BASE
-	if strong_expertise < 1 or strong_expertise > HRConstants.AXIS_MAX:
-		return "difficulty %d cannot be straddled on the 0-9 ruler" % diff
+	# Lower bound 2, not 1: the WEAK side sits one under, and a desk of two reps at MB 0
+	# clears 0,8 requests a day — under the 1,0 the queue needs to touch anything at all.
+	if strong_expertise < 2 or strong_expertise > HRConstants.AREA_MAX:
+		return "difficulty %d cannot be straddled with a funded desk (MB %d)" % [diff, strong_expertise]
 	var strong: Character = _make_cs_rep("char_cs_strong", 9, strong_expertise)
+	var strong2: Character = _make_cs_rep("char_cs_strong2", 9, strong_expertise)
 	if CustomerRepSystem.absorb_ceiling() < diff:
 		return "the strong rep should absorb difficulty %d (ceiling %d)" % [
 			diff, CustomerRepSystem.absorb_ceiling()]
@@ -5692,7 +5889,10 @@ static func _case_cs_request_absorption_by_expertise() -> String:
 	if _instances_of("ev_b2b_request_%s" % c.id) != 0:
 		return "the strong rep escalated a request it should have absorbed"
 	CharacterRegistry.remove(strong.id)
+	CharacterRegistry.remove(strong2.id)
+	# Same pair shape one point lower: the ceiling drops, the budget stays over 1,0.
 	_make_cs_rep("char_cs_weak", 9, strong_expertise - 1)
+	_make_cs_rep("char_cs_weak2", 9, strong_expertise - 1)
 	CustomerRegistry.set_support_request(c.id, GameState.day)
 	CustomerRepSystem.daily_tick()
 	if _instances_of("ev_b2b_request_%s" % c.id) == 0:
@@ -5701,17 +5901,23 @@ static func _case_cs_request_absorption_by_expertise() -> String:
 
 
 static func _case_cs_request_throughput_by_pace() -> String:
-	# HIZ is volume: a faster desk clears strictly more, and the surplus QUEUES.
+	# VOLUME, read off the one area: a stronger desk clears strictly more, and the surplus
+	# QUEUES. This case used to vary HIZ with UZMANLIK pinned at 9 — rev 2 §2 collapsed both
+	# onto Müşteri Başarısı, so pinning one while varying the other became impossible: the
+	# two seeds ended up identical (1,850000 vs 1,850000) and the assertion could never fire.
+	# It varies the one area now, which is the same shape of test with one number instead of
+	# two. The queue half below is unchanged and still bites: a lone MB-0 rep carries 0,5 a
+	# day, so the six open requests cannot all clear.
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
 	GameState.set_flag("mvp_components", ["ai_vec_filter"])
-	var slow: Character = _make_cs_rep("char_cs_slow", 0, 9)
-	var fast: Character = _make_cs_rep("char_cs_fast", 9, 9)
+	var slow: Character = _make_cs_rep("char_cs_slow", SEED_PACE, 0)
+	var fast: Character = _make_cs_rep("char_cs_fast", SEED_PACE, HRConstants.AREA_MAX)
 	if CustomerRepSystem.throughput_of(fast) <= CustomerRepSystem.throughput_of(slow):
-		return "HIZ does not raise throughput (%f vs %f)" % [
+		return "Müşteri Başarısı does not raise throughput (%f vs %f)" % [
 			CustomerRepSystem.throughput_of(fast), CustomerRepSystem.throughput_of(slow)]
 	var want: float = B2BConstants.CS_THROUGHPUT_BASE \
-		+ float(HRConstants.AXIS_MAX) * B2BConstants.CS_THROUGHPUT_PER_PACE
+		+ float(HRConstants.AREA_MAX) * B2BConstants.CS_THROUGHPUT_PER_PACE
 	if not is_equal_approx(CustomerRepSystem.throughput_of(fast), want):
 		return "throughput %f, want %f" % [CustomerRepSystem.throughput_of(fast), want]
 	CharacterRegistry.remove(fast.id)
@@ -6407,42 +6613,58 @@ static func _case_oda_anchors_stay_in_band() -> String:
 static func _case_hr_experience_accrues() -> String:
 	GameState.set_cash(100000)
 	var emp: Character = _make_employee("char_xp_a", "XP A", HRConstants.ROLE_DEVELOPER)
-	if emp.experience != 0:
-		return "fresh employee started at experience %d, want 0" % emp.experience
+	# rev 2 §8: deneyim ALAN BAŞINA ve YALNIZ atandığı işin alanına. Bir yazılımcı build
+	# işine doğar (ROLE_DEFAULT_JOB), yani biriktirdiği alan Yazılım'dır.
+	var area_key: String = HRConstants.AREA_ENGINEERING
+	if int(emp.area_experience.get(area_key, 0)) != 0:
+		return "fresh employee started at %d experience, want 0" % int(emp.area_experience.get(area_key, 0))
 	_sim_day()
-	var after_one: int = emp.experience
-	if after_one != HRConstants.EXPERIENCE_PER_DAY:
-		return "after one idle day experience is %d, want %d" % [after_one, HRConstants.EXPERIENCE_PER_DAY]
+	var after_one: int = int(emp.area_experience.get(area_key, 0))
+	if after_one < HRConstants.EXPERIENCE_PER_DAY:
+		return "after one day experience is %d, want at least %d" % [after_one, HRConstants.EXPERIENCE_PER_DAY]
+	# BOŞTAKİ kişi öğrenmez — §4'ün "boşta durur ve maaş yer" cümlesinin ikinci yarısı.
+	var idle: Character = _make_employee("char_xp_idle", "XP Idle", HRConstants.ROLE_DEVELOPER)
+	CharacterRegistry.clear_jobs(idle.id)
+	_sim_day()
+	if int(idle.area_experience.get(area_key, 0)) != 0:
+		return "an UNASSIGNED employee learned (%d)" % int(idle.area_experience.get(area_key, 0))
 	# İZİNDEKİ biri BİRİKTİRMEZ — edilgenlik gerçekten edilgen olmalı.
 	# İzin GERÇEKTEN sürmeli: tick_leave_returns, leave_until_day geçmişse kişiyi
 	# günün başında aktife çeker ve çıplak bir set_status ölçümü geçersiz kılar.
 	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ON_LEAVE)
 	emp.leave_until_day = GameState.day + 10
+	var before_leave: int = int(emp.area_experience.get(area_key, 0))
 	_sim_day()
-	if emp.experience != after_one:
-		return "an ON-LEAVE employee accrued experience (%d -> %d)" % [after_one, emp.experience]
+	if int(emp.area_experience.get(area_key, 0)) != before_leave:
+		return "an ON-LEAVE employee accrued experience (%d -> %d)" % [
+			before_leave, int(emp.area_experience.get(area_key, 0))]
 	emp.leave_until_day = 0
 	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ACTIVE)
-	# Tavanı aşmaz.
-	CharacterRegistry.add_experience(emp.id, HRConstants.EXPERIENCE_MAX * 2)
-	if emp.experience != HRConstants.EXPERIENCE_MAX:
-		return "experience clamped to %d, want %d" % [emp.experience, HRConstants.EXPERIENCE_MAX]
+	# Dolduğunda +1 PUAN verir ve sayaç sıfırlanır — learn-by-doing'in ÜCRETSİZ kanalı.
+	var value_before: int = int(emp.role_stats[area_key])
+	if not CharacterRegistry.add_area_experience(emp.id, area_key, HRConstants.EXPERIENCE_MAX * 2):
+		return "a full experience bar did not convert into a point"
+	if int(emp.role_stats[area_key]) != value_before + 1:
+		return "%s went %d -> %d, want +1" % [area_key, value_before, int(emp.role_stats[area_key])]
+	if int(emp.area_experience.get(area_key, 0)) != 0:
+		return "the counter did not reset after paying out a point"
 	return ""
 
 
 static func _case_hr_training_eligibility_edge() -> String:
-	# TAM 100'de uygun, 99'da DEĞİL. Eşiğin kendisi sözleşmenin parçası.
+	# rev 2 §8: eğitimin DENEYİM ŞARTI YOK. İki ayrı kanal — biri parayla, biri işi
+	# yaparak — ve birini diğerinin kapısına koymak ikisini tek kanala indirirdi.
+	# Uygunluk artık yalnız üç şey sorar: çalışan mı, edilgen değil mi, alan tavanda mı.
 	GameState.set_cash(100000)
 	var emp: Character = _make_employee("char_xp_b", "XP B", HRConstants.ROLE_DESIGNER)
-	CharacterRegistry.add_experience(emp.id, HRConstants.EXPERIENCE_MAX - 1)
-	if CharacterRegistry.can_train(emp.id):
-		return "eligible at %d, one short of the threshold" % emp.experience
-	CharacterRegistry.add_experience(emp.id, 1)
 	if not CharacterRegistry.can_train(emp.id):
-		return "NOT eligible at exactly %d" % HRConstants.EXPERIENCE_MAX
+		return "a fresh employee with zero experience was refused — §8 has no XP gate"
+	var key_area: String = HRConstants.role_key_area(HRConstants.ROLE_DESIGNER)
+	if not CharacterRegistry.can_train(emp.id, key_area):
+		return "NOT eligible in the role's own key area"
 	# İzindeyken uygun olmamalı: eğitim aktif bir karardır.
 	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ON_LEAVE)
-	if CharacterRegistry.can_train(emp.id):
+	if CharacterRegistry.can_train(emp.id, key_area):
 		return "an ON-LEAVE employee was eligible for training"
 	return ""
 
@@ -6450,12 +6672,15 @@ static func _case_hr_training_eligibility_edge() -> String:
 static func _case_hr_training_blocks_and_charges_once() -> String:
 	GameState.set_cash(100000)
 	var emp: Character = _make_employee("char_xp_c", "XP C", HRConstants.ROLE_DEVELOPER)
-	CharacterRegistry.add_experience(emp.id, HRConstants.EXPERIENCE_MAX)
+	var area_key: String = HRConstants.role_key_area(HRConstants.ROLE_DEVELOPER)
+	var want_fee: int = CharacterRegistry.training_fee_for(emp.id, area_key)
 	var cash_before: int = GameState.cash
-	if not HRSystem.send_to_training(emp.id):
+	if not HRSystem.send_to_training(emp.id, area_key):
 		return "send_to_training refused an eligible employee"
-	if GameState.cash != cash_before - HRConstants.TRAINING_FEE:
-		return "fee charged %d, want %d" % [cash_before - GameState.cash, HRConstants.TRAINING_FEE]
+	# Ücret KADEMELİ (§8), yani sabit TRAINING_FEE değil — beklenen değer motorun kendi
+	# hesabından okunuyor ki test formülü ikinci kez yazmasın.
+	if GameState.cash != cash_before - want_fee:
+		return "fee charged %d, want %d" % [cash_before - GameState.cash, want_fee]
 	if emp.status != HRConstants.STATUS_TRAINING:
 		return "status is '%s', want '%s'" % [emp.status, HRConstants.STATUS_TRAINING]
 	# ÇIKTI ÜRETMEZ: aktif listede olmamalı (kapasite, hız, SORUMLU hepsi buradan okur).
@@ -6464,7 +6689,7 @@ static func _case_hr_training_blocks_and_charges_once() -> String:
 			return "a TRAINING employee is still in get_active_employees()"
 	# İkinci kez gönderilemez, yani ücret iki kez alınamaz.
 	var cash_mid: int = GameState.cash
-	if HRSystem.send_to_training(emp.id):
+	if HRSystem.send_to_training(emp.id, area_key):
 		return "send_to_training accepted an already-training employee"
 	if GameState.cash != cash_mid:
 		return "a second call charged again (%d -> %d)" % [cash_mid, GameState.cash]
@@ -6474,9 +6699,11 @@ static func _case_hr_training_blocks_and_charges_once() -> String:
 static func _case_hr_training_completion() -> String:
 	GameState.set_cash(100000)
 	var emp: Character = _make_employee("char_xp_d", "XP D", HRConstants.ROLE_TESTER, 5, 0, 50, 4)
-	CharacterRegistry.add_experience(emp.id, HRConstants.EXPERIENCE_MAX)
-	var expertise_before: int = int(emp.role_stats[HRConstants.AXIS_EXPERTISE])
-	if not HRSystem.send_to_training(emp.id):
+	# rev 2 §8: the PLAYER picks the area, and there is no experience prerequisite — training
+	# is a money channel, learn-by-doing is the free one. Both raise the same numbers.
+	var area_key: String = HRConstants.role_key_area(HRConstants.ROLE_TESTER)
+	var before: int = int(emp.role_stats[area_key])
+	if not HRSystem.send_to_training(emp.id, area_key):
 		return "send_to_training refused an eligible employee"
 	for i in HRConstants.TRAINING_DAYS:
 		if emp.status != HRConstants.STATUS_TRAINING:
@@ -6484,11 +6711,16 @@ static func _case_hr_training_completion() -> String:
 		_sim_day()
 	if emp.status != HRConstants.STATUS_ACTIVE:
 		return "after %d days status is '%s', want active" % [HRConstants.TRAINING_DAYS, emp.status]
-	var expertise_after: int = int(emp.role_stats[HRConstants.AXIS_EXPERTISE])
-	if expertise_after != expertise_before + 1:
-		return "expertise %d -> %d, want +1" % [expertise_before, expertise_after]
-	if emp.experience != 0:
-		return "experience did not reset (%d)" % emp.experience
+	var after: int = int(emp.role_stats[area_key])
+	if after != before + 1:
+		return "%s %d -> %d, want +1" % [area_key, before, after]
+	if int(emp.trainings_done.get(area_key, 0)) != 1:
+		return "the repeat counter did not tick, so §8's azalan getiri never bites"
+	# The SECOND course in the same area must cost strictly more (§8 kademeli + tekrar).
+	var fee_now: int = CharacterRegistry.training_fee_for(emp.id, area_key)
+	var fee_fresh: int = HRConstants.training_fee(before, 0)
+	if fee_now <= fee_fresh:
+		return "repeat training costs %d, not more than the first %d" % [fee_now, fee_fresh]
 	return ""
 
 
@@ -6497,26 +6729,26 @@ static func _case_hr_expertise_cap_respected() -> String:
 	# yasakladığı şeyin aynası olurdu.
 	GameState.set_cash(100000)
 	var emp: Character = _make_employee("char_xp_e", "XP E", HRConstants.ROLE_DEVELOPER,
-		5, 0, 50, HRConstants.EXPERTISE_CAP)
-	CharacterRegistry.add_experience(emp.id, HRConstants.EXPERIENCE_MAX)
-	if CharacterRegistry.can_train(emp.id):
-		return "an employee already at the expertise cap (%d) was eligible" % HRConstants.EXPERTISE_CAP
+		5, 0, 50, HRConstants.AREA_TRAIN_CAP)
+	var capped_area: String = HRConstants.role_key_area(emp.role)
+	if CharacterRegistry.can_train(emp.id, capped_area):
+		return "an employee already at the area cap (%d) was eligible" % HRConstants.AREA_TRAIN_CAP
 	var cash_before: int = GameState.cash
-	if HRSystem.send_to_training(emp.id):
+	if HRSystem.send_to_training(emp.id, capped_area):
 		return "send_to_training accepted a capped employee"
 	if GameState.cash != cash_before:
 		return "a refused training still charged the fee"
 	# Bir altındaki biri gönderilebilir ve tavanı AŞMAZ.
 	var emp2: Character = _make_employee("char_xp_f", "XP F", HRConstants.ROLE_DEVELOPER,
-		5, 0, 50, HRConstants.EXPERTISE_CAP - 1)
-	CharacterRegistry.add_experience(emp2.id, HRConstants.EXPERIENCE_MAX)
-	if not HRSystem.send_to_training(emp2.id):
+		5, 0, 50, HRConstants.AREA_TRAIN_CAP - 1)
+	var area2: String = HRConstants.role_key_area(HRConstants.ROLE_DEVELOPER)
+	if not HRSystem.send_to_training(emp2.id, area2):
 		return "an employee one below the cap was refused"
 	for _i in HRConstants.TRAINING_DAYS:
 		_sim_day()
-	var final_expertise: int = int(emp2.role_stats[HRConstants.AXIS_EXPERTISE])
-	if final_expertise != HRConstants.EXPERTISE_CAP:
-		return "expertise landed at %d, want the cap %d" % [final_expertise, HRConstants.EXPERTISE_CAP]
+	var final_value: int = int(emp2.role_stats[area2])
+	if final_value != HRConstants.AREA_TRAIN_CAP:
+		return "%s landed at %d, want the cap %d" % [area2, final_value, HRConstants.AREA_TRAIN_CAP]
 	return ""
 
 
@@ -6815,6 +7047,185 @@ static func _sector_ids_with_fixture() -> Array:
 ## id. Without the migration such a save loads "fine" and is quietly wrong — the sector tag
 ## falls through to the generic label and affinity pools stop matching. Asserted on a
 ## hand-built v1 state rather than on a file, so the test cannot be fooled by a stale save.
+# ===================== Ekip · görev ataması (rev 2 §4/§5) ====================
+
+static func _case_job_assignment_and_idle() -> String:
+	# rev 2 §4'ün üç cümlesi: kişi BİR İŞE atanır, atanmamış olan BOŞTA durur ve maaş yer,
+	# ve hangi işin boş kaldığı görünür. Ayrıca ch. 06 §1.3'ün paydası burada doğuyor.
+	# FALSİFİKASYON: CharacterRegistry.add'deki ROLE_DEFAULT_JOB bloğunu sil → ilk iddia
+	# FAIL ("işe alınan kişi boşta doğdu").
+	var dev: Character = _make_employee("char_as_dev", "As Dev", HRConstants.ROLE_DEVELOPER)
+	var rep: Character = _make_employee("char_as_rep", "As Rep", HRConstants.ROLE_CUSTOMER_REP)
+	# Kimse boşta DOĞMAZ: işe alım kişiyi rolünün varsayılan işine koyar.
+	if HRSystem.is_idle(dev) or HRSystem.is_idle(rep):
+		return "a fresh hire was born idle — nobody should meet 'Boşta' at the moment they pay a commission"
+	if not dev.assigned_jobs.has(HRConstants.JOB_BUILD):
+		return "a developer did not land on the build job: %s" % str(dev.assigned_jobs)
+	if not rep.assigned_jobs.has(HRConstants.JOB_ACCOUNTS):
+		return "a customer rep did not land on account ownership: %s" % str(rep.assigned_jobs)
+	# Seam'den çıkarınca BOŞTA olur — türetilmiş, saklanan bayrak değil.
+	CharacterRegistry.unassign_job(dev.id, HRConstants.JOB_BUILD)
+	if not HRSystem.is_idle(dev):
+		return "an unassigned employee is not idle"
+	if HRSystem.idle_count() != 1:
+		return "idle_count is %d, want exactly 1" % HRSystem.idle_count()
+	# Bilinmeyen iş REDDEDİLİR, sessizce kabul edilmez.
+	if CharacterRegistry.assign_job(dev.id, "not_a_job") == "":
+		return "an unknown job id was accepted"
+	# ch. 06 §1.3: "covering head = anyone assigned to support/CS, founder included."
+	# Müşteri temsilcisi Hesap sahipliğinde, yani kapsayan bir baş.
+	if HRSystem.covering_heads() != 1:
+		return "covering_heads is %d with one CS rep assigned, want 1" % HRSystem.covering_heads()
+	CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT)
+	if HRSystem.covering_heads() != 2:
+		return "covering_heads did not count a support assignment"
+	# §4: "Hangi işin boş kaldığı bu ekranda görünür (ör. 'Destek: kimse yok')."
+	var empty: Array[String] = HRSystem.unstaffed_jobs()
+	if empty.has(HRConstants.JOB_SUPPORT):
+		return "support reads unstaffed while somebody is assigned to it"
+	if not empty.has(HRConstants.JOB_COST):
+		return "the cost job has nobody on it and did not read as unstaffed"
+	# KURUCU TEK İŞ (ch. 02 §5). İkinci iş sessizce eklenmez, gerekçeyle reddedilir.
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder.assigned_jobs.size() != 1:
+		return "the founder holds %d jobs at run start, want exactly 1" % founder.assigned_jobs.size()
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SALES) != "founder_busy":
+		return "the founder took a second job — ch. 02 §5 locks the others with a reason"
+	return ""
+
+
+static func _case_overload_costs_output() -> String:
+	# rev 2 §5: birden fazla iş = aşırı yüklenme. Rozet İLK GÜNDEN çıkar (oyuncu ne
+	# yaptığını görmeli) ama BEDEL toleranstan sonra başlar — "kısa süre tolere edilir,
+	# uzun sürerse moral düşer".
+	# FALSİFİKASYON: HRSystem.output_mult_for'daki overload_bites dalını sil → üçüncü
+	# iddia FAIL (çıktı iki işte de aynı kalır).
+	var dev: Character = _make_employee("char_ov_dev", "OV Dev", HRConstants.ROLE_DEVELOPER)
+	if HRSystem.is_overloaded(dev):
+		return "a single-job employee reads as overloaded"
+	var solo_out: float = HRSystem.output_mult_for(dev, HRConstants.JOB_BUILD)
+	CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT)
+	if not HRSystem.is_overloaded(dev):
+		return "two jobs did not read as overloaded"
+	# TOLERANS: ilk günlerde bedel YOK.
+	if HRSystem.overload_bites(dev):
+		return "the overload cost bit on day 0, before the tolerance window ran out"
+	if not is_equal_approx(HRSystem.output_mult_for(dev, HRConstants.JOB_BUILD), solo_out):
+		return "output dropped during the tolerance window"
+	for _i in HRConstants.OVERLOAD_TOLERANCE_DAYS + 1:
+		_sim_day()
+	if not HRSystem.overload_bites(dev):
+		return "after %d days of two jobs the cost still does not bite" % (HRConstants.OVERLOAD_TOLERANCE_DAYS + 1)
+	var tired_out: float = HRSystem.output_mult_for(dev, HRConstants.JOB_BUILD)
+	if tired_out >= solo_out:
+		return "sustained overload did not reduce output (%.3f vs %.3f)" % [tired_out, solo_out]
+	# Bir işe dönünce sayaç SIFIRLANIR — ceza kalıcı bir damga değil.
+	CharacterRegistry.unassign_job(dev.id, HRConstants.JOB_SUPPORT)
+	if dev.overload_days != 0 or HRSystem.overload_bites(dev):
+		return "dropping back to one job did not clear the overload counter"
+	# İKİNCİL ALAN daha yorucu (§5): bir yazılımcı Hesap sahipliğini ikincil alanından
+	# çalışır, yani aynı iş ona daha pahalıya gelir.
+	var fresh: Character = _make_employee("char_ov_b", "OV B", HRConstants.ROLE_DEVELOPER)
+	CharacterRegistry.unassign_job(fresh.id, HRConstants.JOB_BUILD)
+	CharacterRegistry.assign_job(fresh.id, HRConstants.JOB_ACCOUNTS)
+	if HRSystem.output_mult_for(fresh, HRConstants.JOB_ACCOUNTS) >= solo_out:
+		return "working outside the key area costs nothing — rev 2 §5 says it is more tiring"
+	return ""
+
+
+static func _case_job_lead_resolution() -> String:
+	# Erdem 2026-08-21: lider İŞ BAŞINA. Açık seçim kazanır; yoksa o işteki en yüksek
+	# Liderlik; hiç kimse yoksa kurucu. TÜRETİLMİŞ olması bilinçli — saklanan bir lider
+	# işe alım ve ayrılmayla bayatlar.
+	# FALSİFİKASYON: HRSystem.job_lead'in "en yüksek Liderlik" dalını ilk bulduğu kişiyi
+	# döndürecek şekilde değiştir → ikinci iddia FAIL.
+	var founder: Character = CharacterRegistry.get_founder()
+	# Boş bir işin lideri kurucudur — varsayılan bir kimsesizlik değil.
+	var cost_lead: Character = HRSystem.job_lead(HRConstants.JOB_COST)
+	if cost_lead == null or cost_lead.id != founder.id:
+		return "an unstaffed job did not fall back to the founder"
+	# İki kişi: Liderliği yüksek olan lider olur, rolü ya da işe alım sırası değil.
+	var weak: Character = _make_employee("char_ld_weak", "LD Weak", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 0, 50, SEED_EXPERTISE, 1)
+	var strong: Character = _make_employee("char_ld_strong", "LD Strong", HRConstants.ROLE_DESIGNER,
+		SEED_PACE, 0, 50, SEED_EXPERTISE, 8)
+	var derived: Character = HRSystem.job_lead(HRConstants.JOB_BUILD)
+	if derived == null or derived.id != strong.id:
+		return "the derived build lead is '%s', want the highest Liderlik" % (derived.id if derived != null else "<null>")
+	# AÇIK seçim türetilmişi yener.
+	GameState.job_leads[HRConstants.JOB_BUILD] = weak.id
+	if HRSystem.job_lead(HRConstants.JOB_BUILD).id != weak.id:
+		return "an explicit pick did not win over the derived lead"
+	# Ayrılan lider koltuğu BOŞALTIR (§9) ve okuma canlı kadroya düşer — hayalete değil.
+	CharacterRegistry.remove(weak.id)
+	if GameState.job_leads.has(HRConstants.JOB_BUILD):
+		return "the lead seat still names a departed employee"
+	var after: Character = HRSystem.job_lead(HRConstants.JOB_BUILD)
+	if after == null or after.id != strong.id:
+		return "after the lead left, resolution did not fall to the live roster"
+	# §9: ayrılanın İŞLERİ de boşalır, kimseye devredilmez.
+	if not weak.assigned_jobs.is_empty():
+		return "a departed employee still holds jobs — rev 2 §9 empties them"
+	return ""
+
+
+static func _case_save_migration_v3_to_v4() -> String:
+	# v3 kayıtları üç ekseni taşıyor; v4 modeli altı alan + Liderlik bekliyor. Migration
+	# olmazsa save_codec eski üç anahtarı OLDUĞU GİBİ yükler ve _validate_shape her çalışan
+	# için push_error basar — yüklenen, düzgün görünen ve yanlış olan bir koşu.
+	# FALSİFİKASYON: read_slot'taki `if version < 4` satırını sil → ilk iddia FAIL.
+	var state := {
+		"characters": [
+			{"id": "char_old_dev", "category": "employee", "role": "developer",
+				"role_stats": {"expertise": 7, "pace": 5, "rapport": 6},
+				"experience": 40, "training_days_left": 0},
+			{"id": "char_old_founder", "category": "founder", "role": "founder",
+				"role_stats": {"tech": 3, "sales": 2, "negotiation": 1,
+					"leadership": 4, "influence": 2}},
+		],
+	}
+	SaveManager._migrate_character_areas(state)
+	var dev: Dictionary = (state["characters"] as Array)[0]
+	var stats: Dictionary = dev["role_stats"]
+	if not HRConstants.validate_employee_skills(stats):
+		return "the migrated employee does not satisfy the key lock: %s" % str(stats)
+	# UZMANLIK → anahtar alan, HIZ → ikincil alan, UYUM → düşürüldü.
+	if int(stats[HRConstants.AREA_ENGINEERING]) != 7:
+		return "expertise 7 did not land on the developer's key area: %s" % str(stats)
+	if int(stats[HRConstants.AREA_QA]) != 5:
+		return "pace 5 did not land on the secondary area: %s" % str(stats)
+	if HRConstants.has_retired_skill_key(stats):
+		return "a retired axis survived the migration: %s" % str(stats)
+	# Tek sayaç deneyim → alan başına, anahtar alana yazılmış.
+	if int((dev["area_experience"] as Dictionary)[HRConstants.AREA_ENGINEERING]) != 40:
+		return "the experience bar was not carried onto the key area"
+	if dev.has("experience"):
+		return "the retired scalar experience field survived"
+	# Atama: eski kayıtta yok, rolün varsayılanına düşer — yüklenen koşu boşta uyanmaz.
+	if (dev["assigned_jobs"] as Array) != [HRConstants.JOB_BUILD]:
+		return "the migrated employee was not put on a job: %s" % str(dev["assigned_jobs"])
+	# Kurucu: tech dört teknik alana, influence → charisma, negotiation düşürüldü.
+	var f: Dictionary = (state["characters"] as Array)[1]
+	var fs: Dictionary = f["role_stats"]
+	if fs.size() != FounderConstants.SKILLS.size():
+		return "the migrated founder holds %d keys, want %d" % [fs.size(), FounderConstants.SKILLS.size()]
+	for area_key in [HRConstants.AREA_PRODUCT, HRConstants.AREA_DESIGN,
+			HRConstants.AREA_ENGINEERING, HRConstants.AREA_QA]:
+		if int(fs[area_key]) != 3:
+			return "founder tech 3 did not reach area '%s'" % area_key
+	if int(fs[FounderConstants.SKILL_CHARISMA]) != 2:
+		return "influence did not become Karizma"
+	if fs.has("negotiation") or fs.has("tech") or fs.has("influence"):
+		return "a retired founder skill survived: %s" % str(fs)
+	if (f["assigned_jobs"] as Array) != [HRConstants.JOB_BUILD]:
+		return "the migrated founder was not put on the build job"
+	# İKİNCİ KEZ koşmak zarar vermez: v4 satırında `expertise`/`tech` yok, dokunulmaz.
+	SaveManager._migrate_character_areas(state)
+	if int((dev["role_stats"] as Dictionary)[HRConstants.AREA_ENGINEERING]) != 7:
+		return "running the migration twice corrupted an already-migrated row"
+	return ""
+
+
 static func _case_loc_save_sector_migration() -> String:
 	var state := {
 		"customers": [

@@ -82,54 +82,93 @@ func get_active_employees() -> Array[Character]:
 
 
 # --- DENEYİM / EĞİTİM sızdırmazlıkları (Terminal UI görevi) ---
-# WRITE-THROUGH YASASI: `experience` ve `training_days_left` alanlarını bu
-# dosyanın DIŞINDA kimse yazmaz. Üçü de sinyal atar, çünkü defter satırı bu
-# değerleri çiziyor ve HR sekmesi yapı-anahtarıyla yeniden kuruluyor.
+# WRITE-THROUGH YASASI: `area_experience`, `trainings_done`, `training_days_left`,
+# `training_area` ve `assigned_jobs` alanlarını bu dosyanın DIŞINDA kimse yazmaz.
+# Hepsi sinyal atar, çünkü defter satırı bu değerleri çiziyor ve HR sekmesi
+# yapı-anahtarıyla yeniden kuruluyor.
 
-## Deneyim ekler (0..EXPERIENCE_MAX arasına kırpılır). Kurucu HARİÇ — kurucu
-## gelişimi ayrı bir sistem ve bu tabloda hiç görünmez.
-func add_experience(id: String, amount: int) -> void:
+## Deneyim ekler — ALAN BAŞINA (rev 2 §8 learn-by-doing). Kurucu HARİÇ, kurucu
+## gelişimi ayrı ve park edilmiş bir sistem.
+## DOLDUĞUNDA O ALAN +1 OLUR ve sayaç sıfırlanır: bu ÜCRETSİZ kanaldır ve ücretli
+## eğitimden bağımsızdır (§8 ikisini ayrı satırlarda sayıyor). `true` döner yalnız
+## bir puan kazanıldıysa.
+func add_area_experience(id: String, area_key: String, amount: int) -> bool:
 	var c: Character = _characters.get(id, null)
 	if c == null:
-		push_warning("[CharacterRegistry] add_experience on unknown id: %s" % id)
-		return
-	if c.category != "employee":
-		return
-	var clamped: int = clampi(c.experience + amount, 0, HRConstants.EXPERIENCE_MAX)
-	if c.experience == clamped:
-		return
-	c.experience = clamped
-	EventBus.employee_experience_changed.emit(id, clamped)
+		push_warning("[CharacterRegistry] add_area_experience on unknown id: %s" % id)
+		return false
+	if c.category != "employee" or area_key == "" or not HRConstants.AREAS.has(area_key):
+		return false
+	var cur: int = int(c.area_experience.get(area_key, 0))
+	var raised: int = cur + maxi(amount, 0)
+	if raised < HRConstants.EXPERIENCE_MAX:
+		if raised == cur:
+			return false
+		c.area_experience[area_key] = raised
+		EventBus.employee_experience_changed.emit(id, raised)
+		return false
+	# Tavandaki bir alan deneyim BİRİKTİRMEZ: sayaç dolar, puan verilemez, ve dolu
+	# sayaç oyuncuya "burada yapacak bir şey kalmadı" diye durur.
+	var area_value: int = int(c.role_stats.get(area_key, 0))
+	if area_value >= HRConstants.AREA_MAX:
+		c.area_experience[area_key] = HRConstants.EXPERIENCE_MAX
+		EventBus.employee_experience_changed.emit(id, HRConstants.EXPERIENCE_MAX)
+		return false
+	c.role_stats[area_key] = area_value + 1
+	c.area_experience[area_key] = 0
+	EventBus.employee_experience_changed.emit(id, 0)
+	return true
 
 
-## Eğitime uygun mu? Yalnız çalışan, YALNIZ tam dolu deneyimle, edilgen değilken
-## ve uzmanlık tavanının altındayken. Tavandaki bir çalışan eğitime GÖNDERİLEMEZ:
-## ücreti alıp hiçbir şey vermemek §10'un yasakladığı şeyin aynası olurdu.
-func can_train(id: String) -> bool:
+## Eğitime uygun mu? Yalnız çalışan, edilgen değilken, ve SEÇİLEN alan tavanın
+## altındayken. DENEYİM ŞARTI YOK (rev 2 §8): eğitim parayla alınan ayrı bir kanal,
+## learn-by-doing'in devamı değil. Tavandaki bir alana eğitim GÖNDERİLEMEZ: ücreti
+## alıp hiçbir şey vermemek §10'un yasakladığı şeyin aynası olurdu.
+func can_train(id: String, area_key: String = "") -> bool:
 	var c: Character = _characters.get(id, null)
 	if c == null or c.category != "employee":
 		return false
 	if c.status != HRConstants.STATUS_ACTIVE:
 		return false
-	if c.experience < HRConstants.EXPERIENCE_MAX:
+	if area_key == "":
+		# Alan verilmediyse "herhangi bir alanda eğitilebilir mi" sorusudur — defterin
+		# EĞİTİME GÖNDER düğmesi bunu sorar, alanı sonra seçtirir.
+		for a in HRConstants.AREAS:
+			if int(c.role_stats.get(String(a), 0)) < HRConstants.AREA_TRAIN_CAP:
+				return true
 		return false
-	return int(c.role_stats.get(HRConstants.AXIS_EXPERTISE, 0)) < HRConstants.EXPERTISE_CAP
+	if not HRConstants.AREAS.has(area_key):
+		return false
+	return int(c.role_stats.get(area_key, 0)) < HRConstants.AREA_TRAIN_CAP
+
+
+## Bu çalışanın bu alandaki eğitiminin ücreti — kademeli + tekrarda zamlı (§8).
+func training_fee_for(id: String, area_key: String) -> int:
+	var c: Character = _characters.get(id, null)
+	if c == null:
+		return HRConstants.TRAINING_FEE
+	return HRConstants.training_fee(int(c.role_stats.get(area_key, 0)),
+		int(c.trainings_done.get(area_key, 0)))
 
 
 ## Eğitimi BAŞLATIR. Ücreti burada TAHSİL ETMEZ — para FinanceSystem'in işi ve
 ## çağıran taraf (HRSystem.send_to_training) o sızdırmazlıktan geçirir.
-func begin_training(id: String) -> void:
+func begin_training(id: String, area_key: String) -> void:
 	var c: Character = _characters.get(id, null)
 	if c == null:
 		push_warning("[CharacterRegistry] begin_training on unknown id: %s" % id)
 		return
+	if not HRConstants.AREAS.has(area_key):
+		push_error("[CharacterRegistry] begin_training with a non-area target: '%s'" % area_key)
+		return
 	c.training_days_left = HRConstants.TRAINING_DAYS
+	c.training_area = area_key
 	c.status = HRConstants.STATUS_TRAINING
 	EventBus.employee_training_changed.emit(id, c.training_days_left)
 
 
-## Bir eğitim gününü işler. Biten eğitimde UZMANLIK +1 (tavanla), deneyim sıfır,
-## durum ACTIVE. `true` döner yalnız eğitim BİTTİYSE — haber satırını çağıran atar.
+## Bir eğitim gününü işler. Biten eğitimde SEÇİLEN ALAN +1 (tavanla), tekrar sayacı
+## artar, durum ACTIVE. `true` döner yalnız eğitim BİTTİYSE — haber satırını çağıran atar.
 func tick_training(id: String) -> bool:
 	var c: Character = _characters.get(id, null)
 	if c == null or c.training_days_left <= 0:
@@ -138,13 +177,72 @@ func tick_training(id: String) -> bool:
 	if c.training_days_left > 0:
 		EventBus.employee_training_changed.emit(id, c.training_days_left)
 		return false
-	var cur: int = int(c.role_stats.get(HRConstants.AXIS_EXPERTISE, 0))
-	c.role_stats[HRConstants.AXIS_EXPERTISE] = mini(cur + 1, HRConstants.EXPERTISE_CAP)
-	c.experience = 0
+	var area_key: String = c.training_area
+	if HRConstants.AREAS.has(area_key):
+		var cur: int = int(c.role_stats.get(area_key, 0))
+		c.role_stats[area_key] = mini(cur + 1, HRConstants.AREA_TRAIN_CAP)
+		c.trainings_done[area_key] = int(c.trainings_done.get(area_key, 0)) + 1
+		c.area_experience[area_key] = 0
+	c.training_area = ""
 	c.status = HRConstants.STATUS_ACTIVE
 	EventBus.employee_training_changed.emit(id, 0)
 	EventBus.employee_experience_changed.emit(id, 0)
 	return true
+
+
+# =========================== Görev ataması (rev 2 §4) ========================
+# TEK YAZAR. `assigned_jobs` yalnız buradan değişir; WRITE-THROUGH YASASI.
+
+## Bir işe atar. Kurucu AYNI ANDA TEK İŞ taşır (ch. 02 §5) — ikinci bir iş sessizce
+## eklenmez, reddedilir ve gerekçe döner. Çalışan birden fazla iş taşıyabilir; o
+## AŞIRI YÜKLENMEDİR (§5) ve bedeli HRSystem'de ölçülür, burada değil.
+## Boş dize = kabul edildi.
+func assign_job(id: String, job_id: String) -> String:
+	var c: Character = _characters.get(id, null)
+	if c == null:
+		return "unknown"
+	if not HRConstants.JOBS.has(job_id):
+		push_error("[CharacterRegistry] assign_job with an unknown job: '%s'" % job_id)
+		return "unknown_job"
+	if c.assigned_jobs.has(job_id):
+		return ""
+	if c.status != HRConstants.STATUS_ACTIVE:
+		return "inactive"
+	if c.category == "founder" and not c.assigned_jobs.is_empty():
+		# ch. 02 §5: "While assigned, the other actions are locked-visible with a reason."
+		# Gerekçe dizesi çağırana döner; kilitli-görünür kopyayı arayüz turu çizecek.
+		return "founder_busy"
+	c.assigned_jobs.append(job_id)
+	EventBus.assignment_changed.emit(id)
+	return ""
+
+
+func unassign_job(id: String, job_id: String) -> void:
+	var c: Character = _characters.get(id, null)
+	if c == null or not c.assigned_jobs.has(job_id):
+		return
+	c.assigned_jobs.erase(job_id)
+	if c.assigned_jobs.size() <= 1:
+		c.overload_days = 0
+	EventBus.assignment_changed.emit(id)
+
+
+func clear_jobs(id: String) -> void:
+	## Ayrılma anı (§9): kişinin işleri BOŞALIR. Otomatik devir YOK — "otomatik kurucuya
+	## devir varsayılan değildir", boş kalan iş oyuncuya Görevler ekranında görünür.
+	var c: Character = _characters.get(id, null)
+	if c == null or c.assigned_jobs.is_empty():
+		return
+	c.assigned_jobs.clear()
+	c.overload_days = 0
+	EventBus.assignment_changed.emit(id)
+
+
+func set_overload_days(id: String, days: int) -> void:
+	var c: Character = _characters.get(id, null)
+	if c == null:
+		return
+	c.overload_days = maxi(days, 0)
 
 
 func get_customer_reps() -> Array[Character]:
@@ -328,6 +426,18 @@ func add(character: Character) -> void:
 		# GameState.day + 1 immediately after add() returns, because the design says a hire
 		# starts the NEXT day at full performance (no ramp) — do not "fix" that away.
 		character.hire_day = GameState.day
+		# rev 2 §4: an unassigned person stands idle and still draws salary. A HIRE is not
+		# where the player wants to meet that — they just paid a retainer and a commission.
+		# So a fresh hire lands on their role's default job (HRConstants.ROLE_DEFAULT_JOB),
+		# which is also what keeps every downstream formula seeing the roster it saw before
+		# the assignment layer existed. Moving people is the Görevler tab's job.
+		if character.assigned_jobs.is_empty():
+			var default_job: String = HRConstants.default_job_for_role(character.role)
+			if default_job != "":
+				character.assigned_jobs.append(default_job)
+		if character.area_experience.is_empty():
+			for area_key in HRConstants.AREAS:
+				character.area_experience[String(area_key)] = 0
 		if character.leave_month <= 0:
 			var hire_month: int = int(GameState.get_date_dict().month)
 			character.leave_month = HRConstants.leave_month_for(hire_month, hire_ordinal)
@@ -340,18 +450,26 @@ func add(character: Character) -> void:
 
 
 func _validate_shape(character: Character) -> void:
-	# KEY LOCK: employees and the founder store different things in the same role_stats
-	# dict, and get_founder_skill returns 0 for an unknown key without complaining — so a
-	# founder accidentally given employee axes (or an employee given founder skills) would
-	# be silent. Scream instead. NON-BLOCKING on purpose (mirrors _build_founder's
-	# validators): the character is still added, the log carries the defect.
+	# KEY LOCK: employees and the founder share one role_stats dict but not one key set —
+	# since the 2026-08-21 area migration they share the SIX AREAS and differ only in the
+	# tail (employee: + Liderlik · founder: + Liderlik + Karizma). get_founder_skill returns
+	# 0 for an unknown key without complaining, so a half-migrated record would be silent.
+	# Scream instead. NON-BLOCKING on purpose (mirrors _build_founder's validators): the
+	# character is still added, the log carries the defect.
+	#
+	# The RETIRED-KEY check is the tripwire FounderConstants.OLD_SKILLS has always had and
+	# employee axes never did: a stray "pace" surviving a bad migration would otherwise load
+	# as a dropped key (save_codec drops unknown keys by design) and read as a silent 0.
+	if HRConstants.has_retired_skill_key(character.role_stats):
+		push_error("[CharacterRegistry] '%s' still carries a RETIRED skill key %s — expertise/pace/rapport were replaced by HRConstants.AREAS on 2026-08-21: %s"
+			% [character.id, str(HRConstants.RETIRED_SKILL_KEYS), str(character.role_stats)])
 	if character.category == "employee":
 		if not HRConstants.is_employee_role(character.role):
 			push_error("[CharacterRegistry] employee '%s' has non-employee role '%s' — see HRConstants.EMPLOYEE_ROLES"
 				% [character.id, character.role])
-		if not HRConstants.validate_employee_axes(character.role_stats):
+		if not HRConstants.validate_employee_skills(character.role_stats):
 			push_error("[CharacterRegistry] employee '%s' role_stats must hold EXACTLY %s on 0-%d: %s"
-				% [character.id, str(HRConstants.AXES), HRConstants.AXIS_MAX, str(character.role_stats)])
+				% [character.id, str(HRConstants.EMPLOYEE_SKILL_KEYS), HRConstants.AREA_MAX, str(character.role_stats)])
 		if not HRConstants.validate_employee_traits(character.traits):
 			push_error("[CharacterRegistry] employee '%s' traits failed the employee trait formula: %s"
 				% [character.id, str(character.traits)])
@@ -363,6 +481,15 @@ func _validate_shape(character: Character) -> void:
 		for skill_key in FounderConstants.SKILLS:
 			if not character.role_stats.has(skill_key):
 				push_error("[CharacterRegistry] founder role_stats missing skill '%s'" % skill_key)
+	# Assignment shape is checked for EVERYONE: a job id that is not in JOBS would make
+	# every read seam quietly skip the person.
+	for job_id in character.assigned_jobs:
+		if not HRConstants.JOBS.has(String(job_id)):
+			push_error("[CharacterRegistry] '%s' assigned to unknown job '%s' — see HRConstants.JOBS"
+				% [character.id, String(job_id)])
+	if character.category == "founder" and character.assigned_jobs.size() > 1:
+		push_error("[CharacterRegistry] founder holds %d jobs — ch. 02 §5 allows exactly one"
+			% character.assigned_jobs.size())
 
 
 func insert_raw(character: Character) -> void:
@@ -392,6 +519,14 @@ func remove(id: String) -> void:
 	var c: Character = _characters[id]
 	if c != null and c.category == "employee":
 		GameState.run_departures += 1
+	# rev 2 §9: "Ayrılan kişinin işleri boşalır." The jobs are vacated and NOT handed to
+	# anyone — "otomatik kurucuya devir varsayılan değildir". Any job lead seat this person
+	# held is cleared too, so the next resolution falls through to the live roster rather
+	# than pointing at a ghost (the same class of bug ProductSystem._lead_coordination
+	# documents for a stale lead_engineer_id).
+	if c != null:
+		c.assigned_jobs.clear()
+	GameState.release_job_leads(id)
 	_characters.erase(id)
 	EventBus.character_removed.emit(id)
 
@@ -428,7 +563,8 @@ func set_status(id: String, value: String) -> void:
 	if c == null:
 		push_warning("[CharacterRegistry] set_status on unknown id: %s" % id)
 		return
-	if value != HRConstants.STATUS_ACTIVE and value != HRConstants.STATUS_ON_LEAVE 			and value != HRConstants.STATUS_TRAINING:
+	if value != HRConstants.STATUS_ACTIVE and value != HRConstants.STATUS_ON_LEAVE \
+			and value != HRConstants.STATUS_TRAINING:
 		push_error("[CharacterRegistry] unknown employee status '%s' for %s" % [value, id])
 		return
 	c.status = value
@@ -472,8 +608,8 @@ func _seed_debug_characters() -> void:
 	# Names use explicit DEBUG markers to prevent accidental canonization.
 	# Morale chosen either side of the burnout threshold so the badge derivation is
 	# visibly exercised during dev verification.
-	# pace 4 is the ANCHOR value: at EMPLOYEE_SPEED_COEF 0.25 it contributes exactly
-	# 1.0 efor/day, which is what a pre-Coupling assist engineer contributed.
+	# The key area at 4 is the ANCHOR value: at EMPLOYEE_SPEED_COEF 0.25 it contributes
+	# exactly 1.0 efor/day, which is what a pre-Coupling assist engineer contributed.
 	var eng := Character.new()
 	eng.id = "char_debug_eng_a"
 	eng.character_name = "Debug Engineer A"
@@ -481,7 +617,7 @@ func _seed_debug_characters() -> void:
 	eng.category = "employee"
 	eng.monthly_salary = 6000
 	eng.morale = 60
-	eng.role_stats = {"expertise": 5, "pace": 4, "rapport": 5}
+	eng.role_stats = HRConstants.seed_skills(HRConstants.ROLE_DEVELOPER, 4, 3)
 	eng.traits = ["pressure_proof"]
 	eng.hire_day = 1
 	eng.leave_month = HRConstants.leave_month_for(1, 0)
@@ -494,7 +630,7 @@ func _seed_debug_characters() -> void:
 	des.category = "employee"
 	des.monthly_salary = 5000
 	des.morale = 40
-	des.role_stats = {"expertise": 5, "pace": 4, "rapport": 4}
+	des.role_stats = HRConstants.seed_skills(HRConstants.ROLE_DESIGNER, 4, 3)
 	des.traits = ["warms_up_fast", "glass_heart"]
 	des.hire_day = 1
 	des.leave_month = HRConstants.leave_month_for(1, 1)

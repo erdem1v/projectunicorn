@@ -7,11 +7,13 @@ RUNWAY_GROSS_LABEL,Brüt Runway,Gross Burn Runway
 SETTINGS_LANGUAGE,Dil,Language
 LANG_TR,Türkçe,Turkish
 LANG_EN,İngilizce,English
-SKILL_LABEL_TECH,teknik,tech
 SKILL_LABEL_SALES,satış,sales
-SKILL_LABEL_NEGOTIATION,pazarlık,negotiation
+SKILL_LABEL_PRODUCT,ürün,product
+SKILL_LABEL_DESIGN,tasarım,design
+SKILL_LABEL_ENGINEERING,yazılım,engineering
+SKILL_LABEL_QA,test,QA
+SKILL_LABEL_CUSTOMER_SUCCESS,müşteri başarısı,customer success
 SKILL_LABEL_LEADERSHIP,liderlik,leadership
-SKILL_LABEL_INFLUENCE,nüfuz,influence
 ONB_STEP_CHARACTER,KARAKTER,CHARACTER
 ONB_STEP_ORIGIN,KÖKEN,ORIGIN
 ONB_STEP_COMPANY,ŞİRKET,COMPANY
@@ -65,16 +67,10 @@ TRAIT_LONE_WOLF_NAME,Yalnız Kurt,Lone Wolf
 TRAIT_LONE_WOLF_EFFECT,Mentor etkisi azalır,Mentor guidance lands weaker
 ONB_SKILLS_HEADER,YETENEKLER,SKILLS
 ONB_SKILLS_SUB,Masaya ne getiriyorsun.,What you bring to the table.
-ONB_SKILL_TECH,Teknoloji,Technology
-ONB_SKILL_TECH_DESC,Ürün kalitesi ve Ar-Ge hızı.,Product quality and R&D speed.
 ONB_SKILL_SALES,Satış,Sales
 ONB_SKILL_SALES_DESC,Müşteri adayı kalitesi ve anlaşma kapama.,Prospect quality and closing deals.
-ONB_SKILL_NEGOTIATION,Pazarlık,Negotiation
-ONB_SKILL_NEGOTIATION_DESC,Yatırım şartları ve sözleşme pazarlığı.,Investment terms and contract bargaining.
 ONB_SKILL_LEADERSHIP,Liderlik,Leadership
 ONB_SKILL_LEADERSHIP_DESC,Ekip morali ve kriz yönetimi.,Team morale and crisis management.
-ONB_SKILL_INFLUENCE,Nüfuz,Influence
-ONB_SKILL_INFLUENCE_DESC,"Ağ, medya ve yatırımcı ilişkileri.","Network, media and investor relations."
 ONB_POINTS_LEFT,KALAN PUAN,POINTS LEFT
 ONB_POINTS_HINT,tümünü dağıt,spend them all
 ONB_P3_TITLE,Şirket,Company
@@ -317,10 +313,54 @@ SAVE_ERR_MODAL_OPEN,Bir karar ekranı açıkken kaydedilemez.,Saving is unavaila
 SAVE_ERR_WRITE,Kayıt yazılamadı.,The save could not be written.
 SAVE_ERR_NO_RUN,Kaydedilecek bir oyun yok.,There is no run to save.
 HR_COL_EMPLOYEE,ÇALIŞAN,EMPLOYEE
-HR_COL_EXPERTISE,UZMANLIK,EXPERTISE
-HR_COL_PACE,HIZ,PACE
-HR_COL_RAPPORT,UYUM,RAPPORT
 HR_COL_EXPERIENCE,DENEYİM,EXPERIENCE
+HR_AREA_PRODUCT,Ürün,Product
+HR_AREA_DESIGN,Tasarım,Design
+HR_AREA_ENGINEERING,Yazılım,Engineering
+HR_AREA_QA,Test,QA
+HR_AREA_SALES,Satış,Sales
+HR_AREA_CUSTOMER_SUCCESS,Müşteri Başarısı,Customer Success
+HR_AREA_LEADERSHIP,Liderlik,Leadership
+HR_COL_AREAS,ALANLAR,AREAS
+HR_COL_LEADERSHIP,LİDERLİK,LEADERSHIP
+HR_JOB_BUILD,Build ekibi,Build team
+HR_JOB_TEST,Test,Testing
+HR_JOB_SUPPORT,Destek,Support
+HR_JOB_ACCOUNTS,Hesap sahipliği,Account ownership
+HR_JOB_SALES,Satış,Sales
+HR_JOB_RESEARCH,Araştırma,Research
+HR_JOB_COST,Maliyet ve teknik borç,Cost and tech debt
+HR_JOB_EMPTY,{job}: kimse yok,{job}: nobody assigned
+HR_BADGE_IDLE,BOŞTA,IDLE
+HR_BADGE_OVERLOADED_JOBS,AŞIRI YÜKLÜ,OVERLOADED
+HR_IDLE_HINT,Hiçbir işe atanmadı — duruyor ve maaş alıyor.,Not assigned to any job — standing idle and still on payroll.
+HR_OVERLOAD_HINT,Birden fazla işte çalışıyor: verimi düşer ve morali normalden hızlı erir.,Working more than one job: output drops and morale erodes faster than normal.
+HR_ASSIGN_FOUNDER_BUSY,Kurucu şu an başka bir işte.,The founder is already on another job.
+HR_AREA_MEANING_PRODUCT_MANAGER_PRODUCT,Özellik kararları ve tasarım tavanı,Feature decisions and the design ceiling
+HR_AREA_MEANING_PRODUCT_MANAGER_DESIGN,Deneyim ekseninin tavanı,The ceiling on the Experience axis
+HR_AREA_MEANING_DESIGNER_DESIGN,Deneyim ekseninin tavanı,The ceiling on the Experience axis
+HR_AREA_MEANING_DESIGNER_PRODUCT,Özellik kararları ve tasarım tavanı,Feature decisions and the design ceiling
+HR_AREA_MEANING_DEVELOPER_ENGINEERING,Geliştirme hızı ve hata oranı,Development speed and bug rate
+HR_AREA_MEANING_DEVELOPER_QA,Beta keşif hızı,Beta discovery speed
+HR_AREA_MEANING_TESTER_QA,Beta keşif hızı ve canlı hata aşınması,Beta discovery speed and live bug wear
+HR_AREA_MEANING_TESTER_ENGINEERING,Geliştirme hızı ve hata oranı,Development speed and bug rate
+HR_AREA_MEANING_SALES_REP_SALES,Kapanış olasılığı ve anlaşma boyutu,Close probability and deal size
+HR_AREA_MEANING_SALES_REP_CUSTOMER_SUCCESS,Hesap memnuniyeti ve churn,Account satisfaction and churn
+HR_AREA_MEANING_CUSTOMER_REP_CUSTOMER_SUCCESS,Bilet çözümü ve churn,Ticket resolution and churn
+HR_AREA_MEANING_CUSTOMER_REP_SALES,Kapanış olasılığı ve anlaşma boyutu,Close probability and deal size
+SKILL_LABEL_CHARISMA,karizma,charisma
+ONB_SKILL_PRODUCT,Ürün,Product
+ONB_SKILL_PRODUCT_DESC,Özellik kararları ve tasarım turları.,Feature decisions and design rounds.
+ONB_SKILL_DESIGN,Tasarım,Design
+ONB_SKILL_DESIGN_DESC,Tasarım tavanı ve ürün deneyimi.,The design ceiling and product experience.
+ONB_SKILL_ENGINEERING,Yazılım,Engineering
+ONB_SKILL_ENGINEERING_DESC,Geliştirme hızı ve hata oranı.,Development speed and bug rate.
+ONB_SKILL_QA,Test,QA
+ONB_SKILL_QA_DESC,Hata bulma ve canlı ürünün aşınması.,Finding bugs and live product wear.
+ONB_SKILL_CUSTOMER_SUCCESS,Müşteri Başarısı,Customer Success
+ONB_SKILL_CUSTOMER_SUCCESS_DESC,"Bilet çözümü, memnuniyet ve churn.","Ticket resolution, satisfaction and churn."
+ONB_SKILL_CHARISMA,Karizma,Charisma
+ONB_SKILL_CHARISMA_DESC,"Yatırımcı ikna gücü, şartlar ve kriz anları.","Investor persuasion, terms and moments of crisis."
 HR_COL_STATE,DURUM,STATE
 HR_COL_SALARY,MAAŞ,SALARY
 HR_COL_MORALE,MORAL,MORALE
@@ -336,7 +376,7 @@ HR_TRAINING,EĞİTİM,TRAINING
 HR_TRAINING_LOCKED,EĞİTİM · KİLİTLİ,TRAINING · LOCKED
 HR_TRAINING_SEND,EĞİTİME GÖNDER,SEND TO TRAINING
 HR_TRAINING_PICK_TITLE,Eğitime gönder,Send to training
-HR_TRAINING_PICK_NOTE,{days} gün boyunca çalışmaz. Tek seferlik {fee}. Dönüşte uzmanlık +1.,Away for {days} days. One-off {fee}. Returns with expertise +1.
+HR_TRAINING_PICK_NOTE,{days} gün boyunca çalışmaz. Tek seferlik {fee}. Dönüşte {area} +1.,Away for {days} days. One-off {fee}. Returns with {area} +1.
 HR_TRAINING_NONE_ELIGIBLE,Deneyimi dolan kimse yok.,Nobody has filled their experience bar yet.
 HR_TRAINING_CAPPED,Uzmanlık tavanda.,Expertise is at the cap.
 HR_NEWS_TRAINING_DONE,{name} eğitimden döndü; uzmanlığı arttı.,{name} is back from training with sharper expertise.
@@ -680,9 +720,6 @@ HEALTH_CHURNING,kaçıyor,churning
 NOTICE_SRC_SALES,Satış,Sales
 NOTICE_SRC_CUSTOMER,Müşteri,Customer
 SALES_LOG_REP_CLOSED,"{rep}, {company} ile anlaşmayı kapattı.",{rep} closed the deal with {company}.
-HR_AXIS_EXPERTISE,Uzmanlık,Expertise
-HR_AXIS_PACE,Hız,Pace
-HR_AXIS_RAPPORT,Uyum,Rapport
 HR_SECTION_DESIGN,Tasarım,Design
 HR_SECTION_DEVELOPMENT,Geliştirme,Development
 HR_SECTION_TEST,Test,Test
@@ -708,18 +745,6 @@ HR_TRAIT_ONE_FOOT_OUT_LABEL,Bir ayağı kapıda,One foot out the door
 HR_TRAIT_ONE_FOOT_OUT_EFFECT,Kötü giderse ayrılmaya daha meyilli,More likely to leave if things go badly
 HR_TRAIT_NEEDS_DIRECTION_LABEL,Söylenmezse yapmaz,Needs to be told
 HR_TRAIT_NEEDS_DIRECTION_EFFECT,Sorumlu değilken belirgin biçimde az katkı verir,Contributes markedly less when not the lead
-HR_AXIS_MEANING_PRODUCT_MANAGER_EXPERTISE,Deneyim ekip bonusu,Team experience bonus
-HR_AXIS_MEANING_PRODUCT_MANAGER_PACE,Tasarım fazına ikincil hız,Secondary speed in the design phase
-HR_AXIS_MEANING_DESIGNER_EXPERTISE,Tasarım kalitesi katkısı,Design quality contribution
-HR_AXIS_MEANING_DESIGNER_PACE,Tasarım fazı hızı,Design phase speed
-HR_AXIS_MEANING_DEVELOPER_EXPERTISE,Kod kalitesi (hata çarpanı),Code quality (bug multiplier)
-HR_AXIS_MEANING_DEVELOPER_PACE,Geliştirme hızı,Development speed
-HR_AXIS_MEANING_TESTER_EXPERTISE,Hata bulma isabeti,Bug-finding accuracy
-HR_AXIS_MEANING_TESTER_PACE,Bulma ve çözme temposu,Find-and-fix tempo
-HR_AXIS_MEANING_SALES_REP_EXPERTISE,Anlaşma kapama gücü,Closing power
-HR_AXIS_MEANING_SALES_REP_PACE,Aday üretim hızı,Lead generation speed
-HR_AXIS_MEANING_CUSTOMER_REP_EXPERTISE,Müşteri tutma,Customer retention
-HR_AXIS_MEANING_CUSTOMER_REP_PACE,Talep işleme temposu,Request handling tempo
 HR_ROLE_HINT_PRODUCT_MANAGER,"Ekibe yön verir: ürünün deneyim tavanını yükseltir, tasarıma hız katar.","Gives the team direction: raises the product's experience ceiling and speeds up design."
 HR_ROLE_HINT_DESIGNER,"Tasarım aşamasını hızlandırır, tasarım kalitesinin tavanını yükseltir.",Speeds up the design stage and raises the ceiling on design quality.
 HR_ROLE_HINT_DEVELOPER,"Geliştirmeyi hızlandırır, kod kalitesinin tavanını yükseltir.",Speeds up development and raises the ceiling on code quality.

@@ -264,11 +264,14 @@ static func preview_search(role_id: String, band_id: String) -> Dictionary:
 		"role_label": HRConstants.role_label(role_id) if HRConstants.is_employee_role(role_id) else role_id,
 		"band": band_id,
 		"band_label": HRConstants.band_label(band_id),
-		# What UZMANLIK and HIZ actually drive for THIS role (design doc §4 table) — the help
-		# copy the arayış card prints so the player picks a band for a reason.
-		"axis_meaning": {
-			HRConstants.AXIS_EXPERTISE: HRConstants.role_axis_meaning(role_id, HRConstants.AXIS_EXPERTISE),
-			HRConstants.AXIS_PACE: HRConstants.role_axis_meaning(role_id, HRConstants.AXIS_PACE),
+		# What this role's KEY and SECONDARY areas actually buy (rev 2 §2/§3) — the help copy
+		# the arayış card prints so the player picks a band for a reason. Two areas, never six:
+		# §3 forbids showing all six in a flat list.
+		"area_meaning": {
+			HRConstants.role_key_area(role_id):
+				HRConstants.role_area_meaning(role_id, HRConstants.role_key_area(role_id)),
+			HRConstants.role_secondary_area(role_id):
+				HRConstants.role_area_meaning(role_id, HRConstants.role_secondary_area(role_id)),
 		},
 		"candidate_count": HRConstants.CANDIDATE_COUNT,
 		"retainer": retainer,
@@ -407,12 +410,13 @@ static func _arrival_delay(seed_value: int) -> int:
 
 
 static func _axes_copy(source: Dictionary) -> Dictionary:
-	# EXACTLY HRConstants.AXES, ints, in a dictionary the Character owns — never the candidate
-	# file's own dict, which dies with _clear() and which CharacterRegistry key-locks the shape of.
+	# EXACTLY HRConstants.EMPLOYEE_SKILL_KEYS (six areas + Liderlik), ints, in a dictionary the
+	# Character owns — never the candidate file's own dict, which dies with _clear() and whose
+	# shape CharacterRegistry key-locks.
 	var axes: Dictionary = {}
-	for axis_key in HRConstants.AXES:
-		axes[String(axis_key)] = clampi(
-			int(source.get(axis_key, HRConstants.AXIS_MIN)), HRConstants.AXIS_MIN, HRConstants.AXIS_MAX
+	for skill_key in HRConstants.EMPLOYEE_SKILL_KEYS:
+		axes[String(skill_key)] = clampi(
+			int(source.get(skill_key, HRConstants.AREA_MIN)), HRConstants.AREA_MIN, HRConstants.AREA_MAX
 		)
 	return axes
 

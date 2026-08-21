@@ -43,6 +43,10 @@ static func daily_tick() -> void:
 	#  6. Trait effects and positive events last: they read the settled morale picture.
 	HRMoraleSystem.tick_leave_returns()
 	HRMoraleSystem.tick_leave_departures()
+	#  AŞIRI YÜKLENME sayacı moralden ÖNCE: tick_thresholds ve trait etkileri o günün
+	#  yükünü okur, sayaç sonra artarsa bir gün geriden gelir (deneyim/eğitim sırasında
+	#  ölçülen aynı tuzak).
+	tick_overload()
 	HRSearchSystem.daily_tick()
 	HROvertimeSystem.daily_tick()
 	HRMoraleSystem.tick_thresholds()
@@ -73,15 +77,182 @@ static func daily_tick() -> void:
 # --- DENEYİM / EĞİTİM (Terminal UI görevi, 2026-08-08) ---
 # Onaylı defterin [PROPOSAL] DENEYİM sütunu. Tüm sayılar HRConstants'ta ve WORKING.
 
-## Günlük deneyim birikimi. YALNIZ gerçekten çalışanlar: izindeki ya da eğitimdeki
-## biri edilgendir ve get_active_employees zaten ikisini de dışarıda bırakır.
-## Kurucu bu listede hiç yok (category "founder"), yani hariç tutma bedavaya geliyor.
+## Günlük deneyim birikimi — rev 2 §8 "learn-by-doing: ATANDIĞI ALANIN deneyimi yavaş
+## yükselir". YALNIZ gerçekten çalışanlar: izindeki ya da eğitimdeki biri edilgendir ve
+## get_active_employees zaten ikisini de dışarıda bırakır. Kurucu bu listede hiç yok.
+##
+## BOŞTAKİ KİŞİ ÖĞRENMEZ. Bu, "atanmamış kişi boşta durur ve maaş yer" cümlesinin
+## (§4) ikinci yarısıdır: boşta durmak yalnız bugünü değil, yarını da kaybettirir.
+##
+## Birden fazla işi olan kişi deneyimi BÖLÜŞTÜRMEZ, her işin alanına ayrı ayrı yazar —
+## ama aşırı yük çarpanıyla. §5'in "verimi düşer" cümlesi öğrenmeye de uygulanır, yoksa
+## iki işe koşmak öğrenme sömürüsü olurdu.
 static func tick_experience() -> void:
-	var gain: int = HRConstants.EXPERIENCE_PER_DAY
+	var base: int = HRConstants.EXPERIENCE_PER_DAY
 	if _build_phase_running():
-		gain = HRConstants.EXPERIENCE_PER_BUILD_DAY
+		base = HRConstants.EXPERIENCE_PER_BUILD_DAY
 	for emp in CharacterRegistry.get_active_employees():
-		CharacterRegistry.add_experience(emp.id, gain)
+		if emp.assigned_jobs.is_empty():
+			continue
+		var lead_mult: float = HRConstants.experience_gain_mult(job_lead_leadership_for(emp))
+		var load_mult: float = 1.0 if emp.assigned_jobs.size() <= 1 else HRConstants.OVERLOAD_OUTPUT_MULT
+		for job_id in emp.assigned_jobs:
+			var area_key: String = HRConstants.area_for_job(emp.role_stats, String(job_id))
+			if area_key == "":
+				continue
+			var gain: int = int(round(float(base) * lead_mult * load_mult))
+			CharacterRegistry.add_area_experience(emp.id, area_key, maxi(gain, 1))
+
+
+# ======================= Görev ataması: okuma seam'leri ======================
+# rev 2 §4. CharacterRegistry TEK YAZARDIR; burası okuma tarafı ve dışarıya açılan yüz.
+# Ürün, Satış ve Operasyon "kim meşgul" sorusunu buradan sorar.
+
+static func assigned_to(job_id: String) -> Array[Character]:
+	## O işe atanmış, BUGÜN ÇALIŞABİLİR herkes. İzindeki ve eğitimdeki dışarıda: ataması
+	## durur (dönünce işine döner) ama bugünkü hiçbir formüle girmez.
+	var out: Array[Character] = []
+	for c in CharacterRegistry.get_all():
+		if c == null or c.status != HRConstants.STATUS_ACTIVE:
+			continue
+		if c.category != "employee" and c.category != "founder":
+			continue
+		if c.assigned_jobs.has(job_id):
+			out.append(c)
+	return out
+
+
+static func is_idle(c: Character) -> bool:
+	## "Boşta" — atanmamış çalışan durur ve maaş yer (§4). Kurucu maaş almadığı için
+	## boştalığı bir GİDER değil, kaybedilmiş zamandır; rozet yine de aynı.
+	return c != null and c.category == "employee" and c.assigned_jobs.is_empty()
+
+
+static func is_overloaded(c: Character) -> bool:
+	return c != null and c.assigned_jobs.size() > 1
+
+
+static func overload_bites(c: Character) -> bool:
+	## §5: "Aşırı yük kısa süre tolere edilir, uzun sürerse moral düşer." Rozet ilk günden
+	## çıkar (oyuncu ne yaptığını görmeli), bedel toleranstan SONRA başlar.
+	return is_overloaded(c) and c.overload_days > HRConstants.OVERLOAD_TOLERANCE_DAYS
+
+
+static func idle_count() -> int:
+	var n: int = 0
+	for c in CharacterRegistry.get_active_employees():
+		if c.assigned_jobs.is_empty():
+			n += 1
+	return n
+
+
+static func covering_heads() -> int:
+	## ch. 06 §1.3'ün okuyucusu: "covering head = anyone assigned to support/CS, founder
+	## included". Kapsam oranı bu turda HESAPLANMIYOR (Operasyon turunun işi) ama payda
+	## burada doğuyor, çünkü "kim destekte" sorusunun tek cevabı burası.
+	var seen: Dictionary = {}
+	for job_id in [HRConstants.JOB_SUPPORT, HRConstants.JOB_ACCOUNTS]:
+		for c in assigned_to(job_id):
+			seen[c.id] = true
+	return seen.size()
+
+
+static func unstaffed_jobs() -> Array[String]:
+	## §4: "Hangi işin boş kaldığı bu ekranda görünür (ör. 'Destek: kimse yok')."
+	var out: Array[String] = []
+	for job_id in HRConstants.JOBS:
+		if assigned_to(String(job_id)).is_empty():
+			out.append(String(job_id))
+	return out
+
+
+static func job_lead(job_id: String) -> Character:
+	## rev 2 §2 + Erdem 2026-08-21: lider İŞ BAŞINA. Açık seçim kazanır; yoksa o işteki en
+	## yüksek Liderlik; hiç kimse yoksa kurucu. Türetilmiş olması bilinçli — saklanan bir
+	## lider işe alım ve ayrılmayla bayatlar, türetilmiş olan kendiliğinden doğrudur.
+	var picked_id: String = String(GameState.job_leads.get(job_id, ""))
+	if picked_id != "":
+		var picked: Character = CharacterRegistry.get_character(picked_id)
+		if picked != null and picked.status == HRConstants.STATUS_ACTIVE \
+				and picked.assigned_jobs.has(job_id):
+			return picked
+	var best: Character = null
+	var best_v: int = -1
+	for c in assigned_to(job_id):
+		var v: int = int(c.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0))
+		if v > best_v:
+			best_v = v
+			best = c
+	if best != null:
+		return best
+	return CharacterRegistry.get_founder()
+
+
+static func job_lead_leadership_for(c: Character) -> int:
+	## Bu kişinin ÜSTÜNDEKİ liderin Liderlik'i — birden fazla işi varsa en yükseği, çünkü
+	## §5 aşırı yükü zaten cezalandırıyor; ikinci bir ceza olarak en kötü lideri seçmek
+	## aynı kararı iki kez faturalandırırdı.
+	if c == null:
+		return 0
+	var best: int = 0
+	for job_id in c.assigned_jobs:
+		var lead: Character = job_lead(String(job_id))
+		if lead == null or lead.id == c.id:
+			continue
+		best = maxi(best, int(lead.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0)))
+	return best
+
+
+static func tick_overload() -> void:
+	## §5 sayacı. Yalnız aktif çalışanlar sayar: izindeyken aşırı yük birikmez, ama
+	## SIFIRLANMAZ da — dönen kişi bıraktığı yerden devam eder (kaçma-riski sayacının
+	## izinde donması ile aynı gramer, HRMoraleSystem.tick_flight_risk).
+	for c in CharacterRegistry.get_active_employees():
+		if c.assigned_jobs.size() > 1:
+			CharacterRegistry.set_overload_days(c.id, c.overload_days + 1)
+		elif c.overload_days != 0:
+			CharacterRegistry.set_overload_days(c.id, 0)
+
+
+static func output_mult_for_area(c: Character, area_key: String) -> float:
+	## Çıktı çarpanı, ÇALIŞILAN ALAN bilindiğinde. Bir iş birden fazla alanla beslenebilir
+	## (Build'i Ürün · Tasarım · Yazılım besliyor) ve kişi o işin FAZINA göre farklı bir
+	## alandan katkı verebilir — bir yazılımcı TASARIM fazına Tasarım'ından katılır. Yorgunluk
+	## o zaman GERÇEKTEN çalışılan alandan ölçülmeli, işin genel alanından değil, yoksa
+	## §5'in "ikincil alanında çalışmak daha yorucudur" cümlesi tam da ısırması gereken yerde
+	## ısırmaz. (Ölçüldü: `speed_tracks_team_change` bunu yakaladı.)
+	if c == null:
+		return 0.0
+	var m: float = 1.0 if area_key == HRConstants.role_key_area(c.role) else HRConstants.SECONDARY_AREA_MULT
+	if overload_bites(c):
+		m *= HRConstants.OVERLOAD_OUTPUT_MULT
+	return m
+
+
+static func output_mult_for(c: Character, job_id: String) -> float:
+	## Bir kişinin BİR İŞTEKİ çıktı çarpanı. İki §5 cümlesi tek yerde:
+	##   "ikincil alanında çalışmak daha yorucudur"  -> job_fatigue_mult
+	##   "birden fazla alan -> verimi düşer"          -> OVERLOAD_OUTPUT_MULT
+	## Her formül bu çarpanı uygular; kimse kendi versiyonunu icat etmez.
+	if c == null:
+		return 0.0
+	var m: float = HRConstants.job_fatigue_mult(c.role, job_id, c.role_stats)
+	if overload_bites(c):
+		m *= HRConstants.OVERLOAD_OUTPUT_MULT
+	return m
+
+
+static func area_sum_for_job(job_id: String) -> float:
+	## O işe atanmış herkesin, o işi çalıştıkları alandaki puanlarının ÇARPANLI toplamı.
+	## Ürün ve Satış formüllerinin yeni ortak girdisi — eski `_active_role_sum`ın yerine
+	## geçer, farkı: rol değil ATAMA sayar.
+	var total: float = 0.0
+	for c in assigned_to(job_id):
+		var area_key: String = HRConstants.area_for_job(c.role_stats, job_id)
+		if area_key == "":
+			continue
+		total += float(int(c.role_stats.get(area_key, 0))) * output_mult_for(c, job_id)
+	return total
 
 
 ## Eğitim günlerini işler; biten her eğitim bir haber satırı bırakır.
@@ -101,17 +272,21 @@ static func tick_training() -> void:
 				}))
 
 
-## Oyuncunun kararı: birini eğitime gönder. Ücreti HR gider hattından TAHSİL EDER
-## ve ancak ödeme geçtiyse eğitimi başlatır — §10: bedeli olan, oynanmış bir karar.
+## Oyuncunun kararı: birini eğitime gönder, HANGİ ALANDA olduğunu söyleyerek (rev 2 §8:
+## "Oyuncu hangi alanın yükseleceğini seçer"). Ücreti HR gider hattından TAHSİL EDER ve
+## ancak ödeme geçtiyse eğitimi başlatır — §10: bedeli olan, oynanmış bir karar.
+## Ücret kademelidir ve aynı alandaki tekrarda artar (HRConstants.training_fee), yani
+## "azalan getiri" fiyat tarafından ödenir: kazanç hep +1, pahalılaşan aynı +1'dir.
 ## `false` döner uygun değilse ya da kasa yetmiyorsa (çağıran düğmeyi kapatır).
-static func send_to_training(id: String) -> bool:
-	if not CharacterRegistry.can_train(id):
+static func send_to_training(id: String, area_key: String) -> bool:
+	if not CharacterRegistry.can_train(id, area_key):
 		return false
-	if GameState.cash < HRConstants.TRAINING_FEE:
+	var fee: int = CharacterRegistry.training_fee_for(id, area_key)
+	if GameState.cash < fee:
 		return false
 	# Tek seferlik gider, HR gider hattına — işe alım retainer'ıyla aynı sızdırmazlık.
-	FinanceSystem.apply_one_time_cost(HRConstants.TRAINING_FEE, "training")
-	CharacterRegistry.begin_training(id)
+	FinanceSystem.apply_one_time_cost(fee, "training")
+	CharacterRegistry.begin_training(id, area_key)
 	return true
 
 

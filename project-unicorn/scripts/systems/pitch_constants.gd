@@ -53,13 +53,16 @@ const GECISTIR_CAP := 65               # deflection can never win the room (§4 
 const BEAT1_DIFF := DIFF_ORTA
 const MASAYI_ZORLA_DIFF := DIFF_ZORLU  # Ilık fork gamble; failure = RET (hard, Erdem call C)
 
-# --- Beat skill routing (SKILL-RENAME 2026-07-16) ---
-# Erdem: VC persuasion beats read Nüfuz (investor relations); the traction angle reads
+# --- Beat skill routing (SKILL-RENAME 2026-07-16, re-pointed 2026-08-21) ---
+# Erdem: VC persuasion beats read the founder's persuasion number; the traction angle reads
 # Satış. One const per beat so a per-site remap is a one-token change.
-const BEAT1_SKILL := "influence"        # Odayı oku
-const BEAT3_SKILL := "influence"        # Sorgu postures (dürüst / spin / geçiştir)
-const BEAT4_PUSH_SKILL := "influence"   # Masayı zorla
-const ANGLE_SKILL := {"vizyon": "influence"}   # Beat 2 anlatı; fallback: "sales" (traction)
+# 2026-08-21: `influence` became `charisma` when GDD v2 ch. 07 rev 2 §2 brought Karizma back
+# under its own name. Same number, same reads — ch. 02 §4 already defined Karizma as
+# "pitch/fundraising probability and terms", which is exactly this routing.
+const BEAT1_SKILL := "charisma"         # Odayı oku
+const BEAT3_SKILL := "charisma"         # Sorgu postures (dürüst / spin / geçiştir)
+const BEAT4_PUSH_SKILL := "charisma"    # Masayı zorla
+const ANGLE_SKILL := {"vizyon": "charisma"}   # Beat 2 anlatı; fallback: "sales" (traction)
 
 # --- Prep (§1) ---
 const MEETING_LEAD_DAYS := 3           # request → meeting day
@@ -86,7 +89,11 @@ const SOFT_CAP_WARN_DAY := EndingsSystem.SOFT_CAP_DAY - 1
 # Every number is a working placeholder (calibration pass tunes it). Each lever's push reads
 # ONE founder skill (the payoff of the onboarding skill choice) — kept as an editable data
 # table so the mapping never hides inside table logic:
-const LEVER_SKILL := {"valuation": "sales", "dilution": "negotiation", "board": "influence"}
+# 2026-08-21: `dilution` used to read `negotiation`, which rev 2's six areas RETIRE — there
+# is no negotiation area. Bound to Karizma as the nearest fit (ch. 02 §4 gives Karizma the
+# TERMS of a raise, not just the odds). THIS IS THE ONE BINDING rev 2 DOES NOT AUTHORIZE;
+# it is deliberately one token on one line, and it belongs to ch. 09's turn to rule on.
+const LEVER_SKILL := {"valuation": "sales", "dilution": "charisma", "board": "charisma"}
 # Per-lever base difficulty (SkillCheck diff units). Kept 0-2 so "temel" reads legibly —
 # diff 3 would zero the base (BASE_CHANCE − 3·DIFFICULTY_STEP = 0). Board is hardest (control),
 # valuation easiest (a market argument).

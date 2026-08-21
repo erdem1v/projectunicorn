@@ -7,7 +7,7 @@ extends RefCounted
 # the day the files arrive, with the seed it stored when the search was commissioned — which is
 # why the same three people are on the table tomorrow, after a reload, and in every process.
 #
-# Owns: the candidate file shape, the axis rotation, the salary placement inside the band, the
+# Owns: the candidate file shape, the off-role rotation, the salary placement in the band, the
 # trait cross-distribution, and THE invariant (is_non_dominated_set). Owns no tunable — every
 # number that means anything comes from HRConstants. The consts below are the deterministic
 # mixer's arithmetic (moduli, per-field salts, the quote-rounding step); they carry no balance
@@ -107,12 +107,11 @@ static func generate(role_id: String, band_id: String, seed_value: int) -> Array
 
 	for k in range(HRConstants.CANDIDATE_COUNT):
 		var salt: int = SALT_CANDIDATE_STRIDE * k
-		# Candidate k = profile k of the band (cheapest first), rotated k so the peak lands
-		# on a distinct axis per file. Profile AND rotation share the index on purpose:
-		# mixed totals price the files apart, rotation spreads the peaks.
-		var axes: Dictionary = _axes_for(HRConstants.band_shape(band_id, k), k)
-		if not HRConstants.validate_employee_axes(axes):
-			push_error("[HRCandidateGenerator] generated axes are not the employee ruler: %s" % str(axes))
+		# Candidate k = profile k of the band (cheapest first). The peak is PINNED to the
+		# role's key area; what rotates is which of the four off-role areas gets the +1.
+		var axes: Dictionary = _skills_for(role_id, HRConstants.band_shape(band_id, k), k)
+		if not HRConstants.validate_employee_skills(axes):
+			push_error("[HRCandidateGenerator] generated skills are not the employee shape: %s" % str(axes))
 		var first_name: String = _take_unused(HRConstants.FIRST_NAMES, used_first,
 			_mix(seed_value, SALT_FIRST_NAME + salt) % maxi(HRConstants.FIRST_NAMES.size(), 1))
 		var last_name: String = _take_unused(HRConstants.LAST_NAMES, used_last,
@@ -122,7 +121,7 @@ static func generate(role_id: String, band_id: String, seed_value: int) -> Array
 			"role": role_id,
 			"band": band_id,
 			"axes": axes,
-			"salary": _salary_for(role_id, band_id, axes),
+			"salary": _salary_for(role_id, band_id, HRConstants.band_shape(band_id, k)),
 			"traits": _pick_traits(seed_value, k, bool(carries_negative[k]), used_traits),
 			# The INDEX is stored, never the sentence. A candidate file is state, and a
 			# stored sentence would freeze one language into it — the same rule that moved
@@ -173,36 +172,65 @@ static func seed_for(role_id: String, band_id: String) -> int:
 		+ SEED_BAND_STRIDE * band_index
 
 
-# --- Axes: the k'th cyclic rotation of the band shape ---
+# --- Skills: the band shape read by MEANING, with a rotating off-role bump ---
 
-static func _axes_for(shape: Array, rotation: int) -> Dictionary:
-	# The k'th cyclic rotation of the profile the caller picked for candidate k: the peak
-	# lands on a DIFFERENT axis in each file. Rotation spreads the peaks; the PROFILES
-	# (HRConstants.BAND_SHAPE, strictly increasing totals) price the files apart — the two
-	# together make the set non-dominated by construction. Deriving a shape from a total
-	# instead would hand back a flat profile with no strict max at every total divisible
-	# by three — interchangeable files and no choice at all.
+static func _skills_for(role_id: String, shape: Array, rotation: int) -> Dictionary:
+	# THE SHAPE IS READ BY MEANING, NOT BY POSITION (2026-08-21, GDD v2 ch. 07 rev 2).
+	#   shape[0] -> the role's KEY area        (ROLE_AREAS[role].key)
+	#   shape[1] -> the role's SECONDARY area  (ROLE_AREAS[role].secondary)
+	#   shape[2] -> every OTHER area
+	# Until rev 2 this walked the three axis keys and rotated them, so each file's peak landed
+	# on a different axis. With six areas that same rotation would hand a Tasarımcı his peak
+	# in Satış — a candidate whose title and numbers disagree. The peak is pinned instead.
 	#
-	# Built by walking AXES (not the shape) so the result always holds EXACTLY the three ruler
-	# keys and passes the CharacterRegistry key-lock, whatever length a future BAND_SHAPE entry
-	# has. Note the rotation repeats if CANDIDATE_COUNT ever exceeds AXES.size(): two files
-	# would then share one profile, non-dominance becomes mathematically impossible, and
-	# generate()'s post-condition is what says so out loud.
-	var axes: Dictionary = {}
-	var axis_count: int = HRConstants.AXES.size()
-	for i in range(axis_count):
-		var axis_key: String = String(HRConstants.AXES[(i + rotation) % axis_count])
-		axes[axis_key] = clampi(int(shape[i % shape.size()]), HRConstants.AXIS_MIN, HRConstants.AXIS_MAX)
-	return axes
+	# What rotation still buys, and why it is kept: the three files must differ QUALITATIVELY,
+	# not only in price. Candidate k gets +1 on the k'th off-role area, so one developer knows
+	# a little Ürün and the next a little Müşteri Başarısı. That is also the texture rev 2 §2
+	# asks for when it promises "tek kişilik ekipte boşluk kalmaz".
+	#
+	# NON-DOMINANCE SURVIVES, and for the same reason as before: BAND_SHAPE profiles have
+	# strictly increasing totals and quotes strictly increase with them, so a pricier file can
+	# never undercut a cheaper one, and a cheaper file is strictly lower on the key area. The
+	# +1 bump cannot break it either — it is +1 on both sides of every comparison at most once.
+	# generate()'s post-condition still says so out loud.
+	#
+	# Built by walking AREAS (not the shape) so the result always holds EXACTLY the ruler keys
+	# and passes the CharacterRegistry key-lock, whatever length a future BAND_SHAPE entry has.
+	var out: Dictionary = {}
+	var key_area: String = HRConstants.role_key_area(role_id)
+	var secondary: String = HRConstants.role_secondary_area(role_id)
+	var key_v: int = int(shape[0]) if shape.size() > 0 else HRConstants.AREA_MIN
+	var sec_v: int = int(shape[1]) if shape.size() > 1 else key_v
+	var rest_v: int = int(shape[2]) if shape.size() > 2 else sec_v
+	var others: Array[String] = []
+	for area_key in HRConstants.AREAS:
+		var a: String = String(area_key)
+		if a == key_area:
+			out[a] = clampi(key_v, HRConstants.AREA_MIN, HRConstants.AREA_MAX)
+		elif a == secondary:
+			out[a] = clampi(sec_v, HRConstants.AREA_MIN, HRConstants.AREA_MAX)
+		else:
+			out[a] = clampi(rest_v, HRConstants.AREA_MIN, HRConstants.AREA_MAX)
+			others.append(a)
+	if not others.is_empty():
+		var bumped: String = others[rotation % others.size()]
+		out[bumped] = clampi(int(out[bumped]) + 1, HRConstants.AREA_MIN, HRConstants.AREA_MAX)
+	# Liderlik is drawn from the shape's floor, not from the role: rev 2 §2 puts it on
+	# everyone, and a candidate who happens to lead well is a find, not a job description.
+	# Rotation gives the three files different leadership so "kimi sorumlu yapacağım" has
+	# something to chew on from the first hire.
+	out[HRConstants.SKILL_LEADERSHIP] = clampi(rest_v - 1 + rotation,
+		HRConstants.AREA_MIN, HRConstants.AREA_MAX)
+	return out
 
 
 # --- Salary: a narrow window inside the role/band, priced off the profile ---
 
-static func _salary_for(role_id: String, band_id: String, axes: Dictionary) -> int:
+static func _salary_for(role_id: String, band_id: String, shape: Array) -> int:
 	var window: Array = _salary_window(role_id, band_id)
 	var window_low: int = int(window[0])
 	var window_high: int = int(window[1])
-	var asked: int = _round_to(float(window_low) * (1.0 + _shape_premium(axes)), SALARY_ROUND_TO)
+	var asked: int = _round_to(float(window_low) * (1.0 + _shape_premium(shape)), SALARY_ROUND_TO)
 	return clampi(asked, window_low, window_high)
 
 
@@ -230,7 +258,7 @@ static func _salary_window(role_id: String, band_id: String) -> Array:
 	return [window_low, window_high]
 
 
-static func _shape_premium(axes: Dictionary) -> float:
+static func _shape_premium(shape: Array) -> float:
 	# How much more than the window floor this profile asks for, capped at
 	# HRConstants.SALARY_PEAK_PREMIUM. Measured as (peak + total) against the ceiling both
 	# could reach, which is two rules in one number:
@@ -246,13 +274,18 @@ static func _shape_premium(axes: Dictionary) -> float:
 	# — all >= SALARY_ROUND_TO (50), and two raw values >= a rounding step apart can never
 	# round onto one multiple. Shrink a band floor or a profile gap below that line and the
 	# smoke's distinct-salary assertion screams.
+	# PRICED OFF THE 3-LONG SHAPE, NOT THE SIX AREAS (2026-08-21). Deliberate: the shape is
+	# what BAND_SHAPE's whole invariant table is written about (strictly increasing totals,
+	# gaps wide enough that two quotes cannot round together), and pricing the spread-out
+	# six-key dict instead would change every quoted salary in the game for no design reason.
+	# Same arithmetic, same numbers, same ceiling AREA_MAX × 4 — the migration moved zero lira.
 	var total: int = 0
-	var peak: int = HRConstants.AXIS_MIN
-	for axis_key in HRConstants.AXES:
-		var value: int = int(axes.get(axis_key, HRConstants.AXIS_MIN))
+	var peak: int = HRConstants.AREA_MIN
+	for v in shape:
+		var value: int = int(v)
 		total += value
 		peak = maxi(peak, value)
-	var ceiling: int = HRConstants.AXIS_MAX * (HRConstants.AXES.size() + 1)
+	var ceiling: int = HRConstants.AREA_MAX * 4
 	if ceiling <= 0:
 		return 0.0
 	return HRConstants.SALARY_PEAK_PREMIUM * clampf(float(peak + total) / float(ceiling), 0.0, 1.0)
@@ -357,8 +390,8 @@ static func _dominates(a: Dictionary, b: Dictionary) -> bool:
 	# crashing the predicate the smoke leans on.
 	var a_axes: Dictionary = a.get("axes", {})
 	var b_axes: Dictionary = b.get("axes", {})
-	for axis_key in HRConstants.AXES:
-		if int(a_axes.get(axis_key, HRConstants.AXIS_MIN)) < int(b_axes.get(axis_key, HRConstants.AXIS_MIN)):
+	for axis_key in HRConstants.EMPLOYEE_SKILL_KEYS:
+		if int(a_axes.get(axis_key, HRConstants.AREA_MIN)) < int(b_axes.get(axis_key, HRConstants.AREA_MIN)):
 			return false
 	return int(a.get("salary", 0)) <= int(b.get("salary", 0))
 

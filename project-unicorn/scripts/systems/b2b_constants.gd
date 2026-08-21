@@ -199,14 +199,17 @@ const CS_REFUSE_BRAND := 3              # brand DROP magnitude on refusing a CS'
 const CS_REFUSE_MORALE := 10            # morale DROP magnitude for that CS employee
 
 
-static func cs_capacity(pace: int) -> int:
-	# How many accounts one rep can steward, rising with HIZ. Reads PACE, not UZMANLIK: how
-	# MANY you can carry is a volume question, and the shipped role contract already says so
-	# (hr_constants.gd:118 — pace = "Talep işleme temposu"). UZMANLIK keeps the quality half
-	# (cs_dampen + the absorb/escalate valve), so both axes on a Müşteri Temsilcisi file are
-	# load-bearing and the hire is a real trade-off rather than one stat plus decoration.
-	# Ladder: HIZ 0-2 → 3, 3-5 → 4, 6-8 → 5, 9 → 6.
-	return CS_BASE_CAPACITY + int(float(maxi(pace, 0)) / float(CS_PACE_PER_SLOT))
+static func cs_capacity(customer_success: int) -> int:
+	# How many accounts one rep can steward, rising with MÜŞTERİ BAŞARISI. It read HIZ until
+	# 2026-08-21, when rev 2 §2 deleted Hız outright — and the area it moved to is the one
+	# §2 already gave "bilet çözümü, memnuniyet, churn", i.e. everything this desk does.
+	# The LADDER IS UNCHANGED (0-2 → 3, 3-5 → 4, 6-8 → 5, 9 → 6), which also puts it exactly
+	# inside rev 2 §5's [WORKING 3-6] band for the CS account cap.
+	# One consequence worth stating: capacity and quality now read the SAME number, so a
+	# Müşteri Temsilcisi file is no longer a two-axis trade-off. That is rev 2's choice, not
+	# an accident of the migration — the trade-off moved from inside the person to the
+	# assignment layer (who is on Hesap sahipliği at all).
+	return CS_BASE_CAPACITY + int(float(maxi(customer_success, 0)) / float(CS_PACE_PER_SLOT))
 
 
 # Churn suppression per UZMANLIK point (HR Coupling). DERIVED, not chosen: the old law was
@@ -316,10 +319,9 @@ const AUTO_CLOSE_MRR_FRAC := 0.5
 const AUTO_CLOSE_MRR_PER_EXPERTISE := 0.04
 
 # --- Müşteri masası (CustomerRepSystem) ---
-# Capacity is a VOLUME question, so it reads HIZ — matching the shipped role contract
-# hr_constants.gd:118 ("Talep işleme temposu"). Replaces CS_SKILL_PER_SLOT, which divided by
-# 25 on what used to be a 0-100 cs_skill scale and therefore returned exactly
-# CS_BASE_CAPACITY for every possible rep on the live 0-9 ruler — not merely uncalled, dead.
+# Points of Müşteri Başarısı per extra account slot. Named CS_PACE_PER_SLOT while capacity
+# read Hız; the name is kept so the calibration ledger stays greppable, but the input is the
+# Müşteri Başarısı AREA since 2026-08-21 (see cs_capacity for why).
 const CS_PACE_PER_SLOT := 3
 # The founder onboards every new account personally; delegation begins once it settles.
 const CS_ASSIGNABLE_PHASES := ["active", "risk", "expansion"]

@@ -558,9 +558,9 @@ func _run_b2b_shot(kind: String) -> void:
 		cs.role = HRConstants.ROLE_CUSTOMER_REP
 		cs.category = "employee"
 		cs.monthly_salary = 5000
-		# expertise 5 converts to legacy cs_skill 55 EXACTLY (HRConstants shim table),
-		# so this rep's churn dampen is unchanged by the axis migration.
-		cs.role_stats = {"expertise": 5, "pace": 5, "rapport": 5}
+		# Müşteri Başarısı 5 — bu masanın okuduğu TEK sayı (rev 2 §2), yani churn damperi
+		# de talep temposu da buradan. (Eski yorum silinen bir shim tablosuna atıf yapıyordu.)
+		cs.role_stats = HRConstants.seed_skills(HRConstants.ROLE_CUSTOMER_REP, 5, 4)
 		cs.traits = ["warms_up_fast"]
 		CharacterRegistry.add(cs)
 		CustomerRegistry.assign_customer(c.id, cs.id)
@@ -1443,10 +1443,14 @@ func _run_hr_shot(kind: String) -> void:
 	if kind == "egitim":   # LOC-DATA debug seed / id
 		var roster: Array[Character] = CharacterRegistry.get_employees()
 		if roster.size() >= 3:
-			CharacterRegistry.add_experience(roster[0].id, HRConstants.EXPERIENCE_MAX)
-			CharacterRegistry.add_experience(roster[1].id, HRConstants.EXPERIENCE_MAX)
-			CharacterRegistry.begin_training(roster[1].id)
-			CharacterRegistry.add_experience(roster[2].id, 42)
+			# Deneyim artık ALAN BAŞINA (rev 2 §8), o yüzden üç durum da rolün ANAHTAR
+			# alanına yazılır — defterin DENEYİM sütununun okuduğu yer orası.
+			for i in 3:
+				var key_area: String = HRConstants.role_key_area(roster[i].role)
+				var amount: int = HRConstants.EXPERIENCE_MAX - 1 if i < 2 else 42
+				CharacterRegistry.add_area_experience(roster[i].id, key_area, amount)
+			CharacterRegistry.begin_training(roster[1].id,
+				HRConstants.role_key_area(roster[1].role))
 
 	# "gider" Finans sekmesinde çekilir (gider dökümü orada yaşıyor), diğerleri HR'da.
 	EventBus.tab_changed.emit("finance" if kind == "gider" else "hr")
@@ -1555,21 +1559,24 @@ func _seed_hr_roster() -> void:
 	# biri de bugün başlamış (YENİ etiketi).
 	# Huylar TRAIT_MIN_POSITIVE..MAX kuralına uymak ZORUNDA (registry _validate_shape'i
 	# reddeder): en az 1, en çok 2 pozitif, en çok 1 negatif.
+	# "key"/"rest": HRConstants.seed_skills rolün anahtar alanını `key`e, ikincilini bir
+	# altına, kalan dördünü `rest`e koyar — yani kadro artık rol profilini TAŞIYOR ve
+	# defterin ALANLAR hücresi her satırda anlamlı bir şey gösteriyor.
 	var seeds: Array = [
 		{"name": "Elif Demir", "role": HRConstants.ROLE_PRODUCT_MANAGER, "salary": 9800,
-			"axes": {"expertise": 7, "pace": 5, "rapport": 6}, "morale": 72,
+			"key": 7, "rest": 4, "lead": 6, "morale": 72,
 			"traits": ["natural_leader"]},
 		{"name": "Deniz Arslan", "role": HRConstants.ROLE_DESIGNER, "salary": 7400,
-			"axes": {"expertise": 6, "pace": 7, "rapport": 5}, "morale": 38,
+			"key": 6, "rest": 3, "lead": 2, "morale": 38,
 			"traits": ["pressure_proof", "works_alone"]},
 		{"name": "Mert Yıldız", "role": HRConstants.ROLE_DEVELOPER, "salary": 11200,   # LOC-DATA debug seed / id
-			"axes": {"expertise": 8, "pace": 6, "rapport": 4}, "morale": 61,
+			"key": 8, "rest": 4, "lead": 3, "morale": 61,
 			"traits": ["wont_jump_ship"]},
 		{"name": "Selin Kaya", "role": HRConstants.ROLE_TESTER, "salary": 6900,
-			"axes": {"expertise": 5, "pace": 6, "rapport": 7}, "morale": 22,
+			"key": 5, "rest": 3, "lead": 1, "morale": 22,
 			"traits": ["mentors_peers"]},
 		{"name": "Burak Şahin", "role": HRConstants.ROLE_SALES_REP, "salary": 8300,   # LOC-DATA debug seed / id
-			"axes": {"expertise": 6, "pace": 5, "rapport": 8}, "morale": 55,
+			"key": 6, "rest": 3, "lead": 2, "morale": 55,
 			"traits": ["warms_up_fast"]},
 	]
 	var ordinal: int = 0
@@ -1581,7 +1588,8 @@ func _seed_hr_roster() -> void:
 		emp.category = "employee"
 		emp.monthly_salary = int(seed_data["salary"])
 		emp.morale = int(seed_data["morale"])
-		emp.role_stats = (seed_data["axes"] as Dictionary).duplicate()
+		emp.role_stats = HRConstants.seed_skills(String(seed_data["role"]),
+			int(seed_data["key"]), int(seed_data["rest"]), int(seed_data["lead"]))
 		emp.traits.assign(seed_data["traits"] as Array)
 		emp.status = HRConstants.STATUS_ACTIVE
 		CharacterRegistry.add(emp)
@@ -1649,7 +1657,7 @@ func _run_ending_shot(key: String) -> void:
 		emp.role = HRConstants.ROLE_DEVELOPER
 		emp.category = "employee"
 		emp.monthly_salary = 6000
-		emp.role_stats = {"expertise": 5, "pace": 5, "rapport": 5}
+		emp.role_stats = HRConstants.seed_skills(emp.role, 5, 4)
 		emp.traits = ["pressure_proof"]   # 1 positive satisfies the employee trait formula
 		CharacterRegistry.add(emp)
 
@@ -1926,7 +1934,7 @@ func _shot_customer(id: String, cname: String, industry: String, phase: String, 
 		rep.character_name = "Burcu Çetin"   # LOC-DATA debug seed / id
 		rep.role = HRConstants.ROLE_CUSTOMER_REP
 		rep.category = "employee"
-		rep.role_stats = HRConstants.default_axes()
+		rep.role_stats = HRConstants.seed_skills(HRConstants.ROLE_CUSTOMER_REP, 5, 4)
 		rep.traits = ["warms_up_fast"]
 		CharacterRegistry.add(rep)
 		c.assigned_to = rep.id
@@ -2423,7 +2431,7 @@ func _debug_payload() -> Dictionary:
 	return {
 		"origin_id": "self_made",
 		"portrait_id": "founder_01",
-		"skill_alloc": {"tech": 2, "sales": 2, "negotiation": 1, "leadership": 0, "influence": 1},
+		"skill_alloc": {"product": 1, "design": 0, "engineering": 2, "qa": 0, "sales": 2, "customer_success": 0, "leadership": 0, "charisma": 1},
 		"trait_ids": ["visionary", "stubborn"],
 		"company_name": "Unicorn Inc.",
 		"founder_name": "",
