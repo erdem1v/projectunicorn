@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dh3rq76xlopbq"
-path="res://.godot/imported/pressure_proof.svg-c94e6fee90cf2468d424d008926a2e88.ctex"
+uid="uid://w7y283qwxrbi"
+path="res://.godot/imported/monitor.svg-21d4a22296e6e0b6aba6f4d6f42f67fd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/traits/pressure_proof.svg"
-dest_files=["res://.godot/imported/pressure_proof.svg-c94e6fee90cf2468d424d008926a2e88.ctex"]
+source_file="res://assets/icons/build/monitor.svg"
+dest_files=["res://.godot/imported/monitor.svg-21d4a22296e6e0b6aba6f4d6f42f67fd.ctex"]
 
 [params]
 

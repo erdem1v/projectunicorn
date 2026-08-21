@@ -51,6 +51,12 @@ var _morale_refs: Dictionary = {}
 
 
 func _ready() -> void:
+	# ÖLÇEK MERDİVENİ (2026-08-21): defterin sütun genişlikleri mantıksal viewport'a
+	# göre seçiliyor, ve o genişlik OYUN İÇİNDE değişebiliyor — oyuncu Ayarlar'dan
+	# ölçeği değiştirdiğinde content_scale_factor viewport'u yeniden boyutlandırıyor.
+	# Tek seferlik ölçüm bayatlardı: sayfa açıkken ölçek değişirse tablo eski
+	# genişliklerle kalırdı ve MORAL sütunu ekran dışına çıkardı.
+	get_viewport().size_changed.connect(_on_viewport_resized)
 	_build_chrome()
 	# Sinyal listesi tek yerden bağlanır/çözülür (sales_tab deseni). Kadroyu, morali,
 	# arayışı, parayı ve gün sınırını kapsar; mesai ve arayış durumu için sinyal YOK
@@ -117,6 +123,13 @@ func _build_chrome() -> void:
 	head.alignment = BoxContainer.ALIGNMENT_CENTER
 	head.add_child(UiFactory.make_label(tr("HR_PAGE_TITLE"), &"PageTitleSerif"))
 	_summary = UiFactory.make_label("", &"TitleRowSummary")
+	# BAŞLIK ÖZETİ YER VERİR, CTA VERMEZ (ölçek merdiveni). Özet uzun bir cümle
+	# (ÇALIŞAN · ORTALAMA MORAL · AYLIK MAAŞ YÜKÜ) ve asgari boyu sabitti, yani dar
+	# viewport'ta "+ İŞE ALIM BAŞLAT" düğmesini ekranın dışına itiyordu. Bir eylem
+	# düğmesi asla kaybolmamalı; bir özet cümlesi kısalabilir.
+	_summary.clip_text = true
+	_summary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_summary.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(_summary)
 	# BOŞTA / AŞIRI YÜK sayaçları başlık satırında (9b): kaç kişinin yeri yanlış, tek
@@ -215,11 +228,14 @@ func _rebuild() -> void:
 	_paint_attention_strip()
 	_paint_segments()
 
+	# ÖLÇÜ ÖNCE (ölçek merdiveni): defterin sütun genişlikleri mantıksal viewport'a
+	# göre seçilir. Başlık ve satırlar AYNI ölçümü okumalı, o yüzden kurulumdan önce.
+	HRLedger.measure(get_viewport_rect().size.x)
 	if _view == VIEW_ASSIGNMENTS:
 		# GÖREVLER: kendi başlığını taşıyor, defterin sütun başlığı gizleniyor.
 		if _roster_header != null:
 			_roster_header.visible = false
-		_list.add_child(HRAssignments.build(_on_assignment_toggled))
+		_list.add_child(HRAssignments.build(_on_assignment_toggled, _open_atlas))
 		return
 	if _roster_header != null:
 		_roster_header.visible = true
@@ -856,3 +872,12 @@ func _rebuild_forced() -> void:
 	# tetikleyici sinyal gelmiyor; çağrı buradan yapılıyor.
 	_structure_key = ""
 	_refresh()
+
+
+func _on_viewport_resized() -> void:
+	if not is_inside_tree():
+		return
+	var was_dense: bool = HRLedger._dense
+	HRLedger.measure(get_viewport_rect().size.x)
+	if HRLedger._dense != was_dense:
+		_rebuild_forced()   # yalnız KADEME değiştiyse: her pikselde tabloyu kurmayız

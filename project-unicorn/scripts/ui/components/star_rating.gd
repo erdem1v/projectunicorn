@@ -64,15 +64,30 @@ static func make_stars(stars: float, glyph_px: int = 14, muted: bool = false) ->
 
 
 ## Etiket + yıldız, tasarımın hücre dizilişiyle: alan adı üstte, yıldızlar altında.
+## `compact` = etiket gerekirse KISALABİLİR. Varsayılanı false, çünkü `clip_text`
+## Label'ın asgari genişliğini SIFIRA indiriyor ve o zaman sütunun genişliğini
+## YILDIZLAR belirliyor — yer bol olsa bile uzun başlık üç noktaya düşüyor.
+## Yalnız Kişisel'in sekiz sütunlu şeridi bunu İSTİYOR: sayfayı %125'te ekranda
+## tutan şey o. Görevler matrisi İSTEMİYOR ve sormuyor.
 static func labelled(caption: String, points: int, glyph_px: int = 14,
-		muted: bool = false) -> Control:
+		muted: bool = false, compact: bool = false) -> Control:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var cap := UiFactory.make_label(caption, &"RowMeta", UiTokens.CREAM_DIM)
 	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# ETİKET KISALABİLİR, YILDIZLAR KISALAMAZ (ölçek merdiveni, 2026-08-21).
+	# Burası ne asgari boy ne kırpma yazıyordu, yani bir başlık ancak GENİŞLETEBİLİR,
+	# asla daralamazdı — sekiz sütun yan yana gelince kartın asgari genişliği sayfayı
+	# %125'te ekran dışına taşırıyordu. Artık sütunun tabanı BEŞ YILDIZ; üstteki
+	# kelime gerekirse üç nokta ile kısalır. Bilgi kaybolmuyor — yer değiştiriyor.
+	if compact:
+		cap.clip_text = true
+		cap.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	col.add_child(cap)
-	col.add_child(make(points, glyph_px, muted))
+	var stars: Control = make(points, glyph_px, muted)
+	stars.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	col.add_child(stars)
 	return col
 
 

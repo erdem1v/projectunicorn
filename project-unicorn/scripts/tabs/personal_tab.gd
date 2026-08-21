@@ -18,7 +18,8 @@ extends Control
 # kapatıyor; ekran onu yapıyor. Değerleme seam'i bölüm 09'un işi.
 # ============================================================================
 
-const RIGHT_COL_WIDTH := 620
+const RIGHT_COL_WIDTH := 620   # tasarım genişliği (1920'de); artık ORANİ belirler
+const RIGHT_COL_MIN := 430     # merdivenin tepesinde inebileceği taban
 const PORTRAIT_SIZE := Vector2(150, 186)
 const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
 
@@ -76,15 +77,23 @@ func _build() -> void:
 	cols.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_root.add_child(cols)
 
+	# İKİ KOLON DA ESNER, ORAN SABİT (2026-08-21). Eskiden sağ kolon `SIZE_FILL` +
+	# 620 asgari genışlikti, yani TEK PİKSEL geri vermiyordu; %110'da mantıksal
+	# viewport 1920'den 1745'e İNER (content_scale_factor büyütmez, KÜÇÜLTÜR) ve
+	# açığın tamamı sol karta binerken sağ kolon ekranın dışına taşıyordu.
+	# 2.0 : 1.0 — 1920'de 1244:622, tasarımın 1246:620'siyle pratikte aynı.
 	var left := _founder_card(founder)
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.size_flags_stretch_ratio = 1.35
+	left.size_flags_stretch_ratio = 2.0
 	cols.add_child(left)
 
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 22)
-	right.custom_minimum_size = Vector2(RIGHT_COL_WIDTH, 0)
-	right.size_flags_horizontal = Control.SIZE_FILL
+	# Asgari, tasarım genişliği DEĞİL bir TABAN: merdivenin tepesinde daralmasına
+	# izin veriyoruz, ama okunamayacak kadar değil.
+	right.custom_minimum_size = Vector2(RIGHT_COL_MIN, 0)
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.size_flags_stretch_ratio = 1.0
 	right.add_child(_where_i_stand())
 	right.add_child(_net_worth())
 	cols.add_child(right)
@@ -164,10 +173,16 @@ func _founder_card(founder: Character) -> Control:
 
 	# altı alan + hairline + Liderlik + Karizma, hepsi tek yıldız gramerinde
 	var skills := HBoxContainer.new()
-	skills.add_theme_constant_override("separation", 24)
+	# 24 → 16: sekiz sütunun arasındaki boşluk merdivenin tepesinde geri verilen
+	# ilk şey. İki değer de tasarımdan değil ölçümden geliyor ve %100'de fark
+	# görünmüyor — dar viewport'ta görünüyor.
+	skills.add_theme_constant_override("separation", 16)
+	skills.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for area_key in HRConstants.AREAS:
-		skills.add_child(StarRating.labelled(HRConstants.area_label(String(area_key)),
-			int(founder.role_stats.get(String(area_key), 0)), 15))
+		var cell: Control = StarRating.labelled(HRConstants.area_label(String(area_key)),
+			int(founder.role_stats.get(String(area_key), 0)), 15, false, true)
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		skills.add_child(cell)
 	skills.add_child(HRUiShared._v_hairline(30))
 	for skill_key in [HRConstants.SKILL_LEADERSHIP, FounderConstants.SKILL_CHARISMA]:
 		skills.add_child(StarRating.labelled(_founder_skill_label(String(skill_key)),
@@ -224,9 +239,11 @@ func _founder_trait(trait_id: String) -> Control:
 	var spec: Dictionary = FounderConstants.trait_by_id(trait_id)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 11)
-	# Kurucu trait'lerinin ÇİZİLMİŞ ikonu yok (tasarım altı ÇALIŞAN trait'i çizdi);
-	# nötr kutu duruyor ve eksik liste teslimde raporlanıyor.
-	row.add_child(HRUiShared.trait_icon(trait_id, 16, true))
+	# KURUCU KATALOĞU (A5, 2026-08-21). Burası `trait_id`'yi ÇALIŞAN tablosunda
+	# arıyordu ve `visionary`/`stubborn`/... hiçbir zaman eşleşmiyordu — yani ikon
+	# HER ZAMAN yer tutucuydu ve bu bir KIRIK'tı, bir karar değil. Artık kataloğu
+	# açıkça söylüyoruz; kurucu ikonları çizilene kadar yer tutucu BİLEREK duruyor.
+	row.add_child(HRUiShared.trait_icon(trait_id, 16, true, "founder"))
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)
 	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER

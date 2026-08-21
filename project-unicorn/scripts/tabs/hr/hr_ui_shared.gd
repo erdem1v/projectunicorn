@@ -77,24 +77,28 @@ static func _v_hairline(height: int = 26) -> Panel:
 
 
 # --- Trait ikonu -----------------------------------------------------------
-# 9b'nin TRAIT sütunu bir çip değil bir İKON çiziyor, adı hover'da. Tasarım ALTI ikonu
-# adıyla çizdi; motorda on çalışan trait'i var, kalan dördü (ve kurucunun sekizi) aynı
-# kutuda NÖTR bir glifle duruyor — uydurulmuyor, isteniyor (bkz. teslim raporu).
+# TRAIT sütunu bir çip değil bir İKON çizer, adı hover'da. ÇALIŞANIN SEKİZİ de
+# çizildi (onaylı ikon sayfası 2a, 2026-08-21). KURUCUNUN sekizi hâlâ nötr glifte ve
+# bilerek kapsam dışı — ama artık SESSİZCE değil: `trait_icon` hangi kataloğa
+# bakacağını söylüyor, çünkü çalışan tablosunda aranan kurucu id'si HER ZAMAN
+# kaçıyordu ve kimse fark etmiyordu (A5).
 const TRAIT_ICON_DIR := "res://assets/icons/traits/"
-const TRAIT_ICON_DRAWN := ["pressure_proof", "natural_leader", "warms_up_fast",
-	"sours_the_room", "wont_jump_ship", "mentors_peers"]
+const TRAIT_ICON_DRAWN := ["loyal", "picks_it_up_fast", "takes_them_under",
+	"double_checker", "last_one_out", "cant_say_no", "bag_packed", "mood_buster"]
 
-
-static func trait_icon_path(trait_id: String) -> String:
-	if TRAIT_ICON_DRAWN.has(trait_id):
+## `catalog`: "employee" (varsayılan) ya da "founder". Kurucu trait'lerinin çizilmiş
+## ikonu YOK ve olmayacağını BİLEREK soruyoruz — sessiz bir kayıp değil, açık bir yer tutucu.
+static func trait_icon_path(trait_id: String, catalog: String = "employee") -> String:
+	if catalog == "employee" and TRAIT_ICON_DRAWN.has(trait_id):
 		return TRAIT_ICON_DIR + trait_id + ".svg"
 	return TRAIT_ICON_DIR + "unspecified.svg"
 
 
-static func trait_icon(trait_id: String, px: int = 18, boxed: bool = false) -> Control:
+static func trait_icon(trait_id: String, px: int = 18, boxed: bool = false,
+		catalog: String = "employee") -> Control:
 	## `boxed` = Kişisel kartının 28×28 konturlu kutusu (10a); çıplak hâli deftere girer.
 	var tex := TextureRect.new()
-	tex.texture = load(trait_icon_path(trait_id))
+	tex.texture = load(trait_icon_path(trait_id, catalog))
 	tex.custom_minimum_size = Vector2(px, px)
 	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -120,22 +124,20 @@ static func trait_icon(trait_id: String, px: int = 18, boxed: bool = false) -> C
 
 
 static func trait_cell(trait_ids: Array, width: int) -> Control:
-	## TEK İKON. Motor 2026-08-22'den beri tek trait taşıyor (HRConstants.TRAIT_COUNT), ama
-	## eski bir kayıt ya da fixture iki taşıyorsa OLUMSUZ olanı gösteririz: bir satırda tek
-	## şey gösterilecekse oyuncunun bilmesi gereken kötü haberdir.
+	## TEK İKON. Motor tek trait taşıyor (HRConstants.TRAIT_COUNT). Eski bir kayıt iki
+	## taşıyorsa İLKİNİ gösteririz — eskiden "olumsuz olanı" seçiyorduk, ama R4'ten sonra
+	## trait'lerin olumsuzu yok ve o seçimin dayanağı kalmadı.
 	var box := CenterContainer.new()
 	box.custom_minimum_size = Vector2(width, 0)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var pick: String = ""
-	for trait_id in trait_ids:
-		var tid: String = String(trait_id)
-		if pick == "" or HRConstants.trait_polarity(tid) == "negative":
-			pick = tid
+	var pick: String = String(trait_ids[0]) if not trait_ids.is_empty() else ""
 	if pick == "":
 		box.add_child(UiFactory.make_label("—", &"RowMeta", UiTokens.INK_FAINT))
 		return box
 	var icon: Control = trait_icon(pick)
-	icon.tooltip_text = "%s — %s" % [
+	# TİRE YOK (C3): ad ve etki İKİ SATIR. Ayraç satır sonudur, bir karakter değil —
+	# Kişisel kartının zaten kullandığı gramer (personal_tab._founder_trait).
+	icon.tooltip_text = "%s\n%s" % [
 		HRConstants.trait_label(pick), HRConstants.trait_effect_text(pick)]
 	icon.mouse_filter = Control.MOUSE_FILTER_STOP   # Label/TextureRect IGNORE doğar; tooltip hover ister
 	box.add_child(icon)
@@ -248,13 +250,11 @@ static func worst_badge_severity(emp: Character) -> int:
 # --- Huy çipleri ------------------------------------------------------------
 
 static func trait_chip(trait_id: String, with_tooltip: bool = false) -> Control:
-	# Yeşil/kırmızı huy çipi. Polarite ve etki metni registry'den; ham id ekrana
-	# asla çıkmaz. Etki metni satır olarak DEĞİL, hover tooltip'inde (CLAUDE.md
-	# Effect-Visibility Rule'un beklediği EU4/CK3 grameri): kart sakin kalır,
-	# merak eden imleci getirir.
-	var polarity: String = HRConstants.trait_polarity(trait_id)
-	var kind: StringName = &"positive" if polarity == "positive" else &"negative"
-	var chip: Control = UiFactory.make_badge(HRConstants.trait_label(trait_id), kind)
+	# TEK MUAMELE, VALANS YOK (R4). Eskiden olumlu yeşil / olumsuz kırmızıydı ve o
+	# else-dalı tanımadığı her id'yi de KIRMIZI çiziyordu — yani bilinmeyen bir trait
+	# oyuncuya "kötü" diye gösteriliyordu. Artık sekizi de nötr; ayrım adda ve etkide.
+	# Etki metni satır olarak DEĞİL, hover'da (Effect-Visibility Rule'un EU4/CK3 grameri).
+	var chip: Control = UiFactory.make_badge(HRConstants.trait_label(trait_id), &"neutral")
 	if with_tooltip:
 		# make_badge çipi MOUSE_FILTER_IGNORE ile verir (UiFactory çipleri varsayılan
 		# inert); tooltip hover ister, o yüzden yalnız bu çip STOP'a çevrilir

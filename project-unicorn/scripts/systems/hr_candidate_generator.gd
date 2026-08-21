@@ -71,7 +71,7 @@ const SEED_HIRES_STRIDE := 13
 const SEED_ROLE_STRIDE := 101
 const SEED_BAND_STRIDE := 17
 
-# Fractional-share resolution. TRAIT_NEGATIVE_SHARE × CANDIDATE_COUNT is 1.5 people and half a
+# Fractional-share resolution. TRAIT_COST_SHARE × CANDIDATE_COUNT is 1.5 people and half a
 # person cannot carry a trait, so the remainder becomes a per-search draw in percent: some
 # searches bring one bad trait, some bring two, and the SHARE holds across searches instead of
 # being silently rounded into a fixed number.
@@ -93,10 +93,10 @@ static func generate(role_id: String, band_id: String, seed_value: int) -> Array
 		push_error("[HRCandidateGenerator] band_shape('%s') is empty — see HRConstants.BAND_SHAPE" % band_id)
 		return files
 
-	# Who carries a bad trait is decided for the WHOLE batch first: TRAIT_NEGATIVE_SHARE is a
+	# Who carries a bad trait is decided for the WHOLE batch first: TRAIT_COST_SHARE is a
 	# property of the set, not of one file, and the trait pools have to be reserved before the
 	# per-file loop starts spending them.
-	var carries_negative: Array = _negative_carriers(seed_value)
+	var carries_negative: Array = _cost_carriers(seed_value)
 	# Cross-distribution bookkeeping. One shared list per pool so nothing repeats across the
 	# three files: two Kerems or two "Cam kalp"s in one batch reads as a generator bug, and the
 	# trait no-repeat rule is explicit in the design (design doc §3).
@@ -293,52 +293,55 @@ static func _shape_premium(shape: Array) -> float:
 
 # --- Traits: 1-2 positive, at most 1 negative, nothing repeated across the batch ---
 
-static func _negative_carriers(seed_value: int) -> Array:
-	# Which of the files carry the bad trait, decided once for the batch. The count comes from
-	# TRAIT_NEGATIVE_SHARE with the fractional person resolved by a seed draw (see
-	# TRAIT_SHARE_RESOLUTION), and WHICH files carry it is a seed-derived starting index so the
-	# bad trait is not always on the same card.
+static func _cost_carriers(seed_value: int) -> Array:
+	# ŞEKİL AYNI, KELİME DEĞİŞTİ (2026-08-21, H2). Eskiden "kötü trait taşıyan dosya"ydı;
+	# artık "BEDELLİ trait taşıyan dosya". R4 iyi/kötü ayrımını kaldırdı ama üretici hâlâ
+	# bir ayrım istiyor: her dosya aynı pürüzsüzlükte olursa seçim bir takas olmaktan
+	# çıkar. Ayrım artık görevin kendi Cost sütunundan türetiliyor, icat değil.
+	#
+	# Sayı TRAIT_COST_SHARE'den, kesirli kişi seed çekimiyle (TRAIT_SHARE_RESOLUTION),
+	# HANGİ dosyaların taşıdığı seed türevi bir başlangıç indeksiyle — bedelli trait
+	# hep aynı kartta durmasın.
 	var carriers: Array = []
 	for _k in range(HRConstants.CANDIDATE_COUNT):
 		carriers.append(false)
-	if HRConstants.TRAIT_MAX_NEGATIVE <= 0 or HRConstants.CANDIDATE_COUNT <= 0:
+	if HRConstants.TRAIT_MAX_COST <= 0 or HRConstants.CANDIDATE_COUNT <= 0:
 		return carriers
-	var expected: float = float(HRConstants.CANDIDATE_COUNT) * HRConstants.TRAIT_NEGATIVE_SHARE
+	var expected: float = float(HRConstants.CANDIDATE_COUNT) * HRConstants.TRAIT_COST_SHARE
 	var whole: int = int(floor(expected))
 	var remainder: int = int(round((expected - floor(expected)) * float(TRAIT_SHARE_RESOLUTION)))
 	var count: int = whole
 	if _mix(seed_value, SALT_NEGATIVE_COUNT) % TRAIT_SHARE_RESOLUTION < remainder:
 		count += 1
-	count = mini(count, mini(HRConstants.CANDIDATE_COUNT, HRConstants.negative_trait_ids().size()))
+	count = mini(count, mini(HRConstants.CANDIDATE_COUNT, HRConstants.cost_trait_ids().size()))
 	var start: int = _mix(seed_value, SALT_NEGATIVE_WHICH) % HRConstants.CANDIDATE_COUNT
 	for j in range(count):
 		carriers[(start + j) % HRConstants.CANDIDATE_COUNT] = true
 	return carriers
 
 
-static func _pick_traits(seed_value: int, index: int, wants_negative: bool, used: Array) -> Array[String]:
-	# TEK TRAIT (HRConstants.TRAIT_COUNT, 2026-08-22). Onaylı tasarım her dosyada bir tane
-	# çiziyor ve dosyalardan birinin tek trait'i OLUMSUZ. Yani kutup artık bir EK değil, tek
-	# başına DİLİM: `_negative_carriers` bir dosyayı işaretlediyse o dosyanın TEK trait'i
-	# olumsuzdur — saf bir yük, ucuz olmasının sebebi de bu.
+static func _pick_traits(seed_value: int, index: int, wants_cost: bool, used: Array) -> Array[String]:
+	# TEK TRAIT (HRConstants.TRAIT_COUNT). `_cost_carriers` bir dosyayı işaretlediyse o
+	# dosyanın TEK trait'i BEDELLİ olanıdır; işaretlemediyse bedelsiz üçlüden biri.
 	#
-	# `used` iki kutupta da paylaşılır: batch içinde hiçbir trait iki dosyada görünmez.
-	# Havuzlar beşer, dosya üç — tek trait kuralında tükenme ihtimali yok, o yüzden eski
-	# `reserved` rezervasyon aritmetiği de gereksiz kaldı ve gitti.
+	# `used` iki havuzda da paylaşılır: batch içinde hiçbir trait iki dosyada görünmez.
+	# Havuzlar 3 ve 5, dosya 3 — tek trait kuralında tükenme ihtimali yok. En dar hâl
+	# bedelsiz havuz: üç dosyanın ÜÇÜ de bedelsiz çıkarsa havuz tam tükenir ve hâlâ
+	# yeter; dördüncü dosya olsaydı yetmezdi (CANDIDATE_COUNT 3'te sabit).
 	var salt: int = SALT_CANDIDATE_STRIDE * index
 	var traits: Array[String] = []
-	if wants_negative:
-		var negative_pool: Array = HRConstants.negative_trait_ids()
-		var negative_id: String = _take_unused(negative_pool, used,
-			_mix(seed_value, SALT_NEGATIVE_PICK + salt) % maxi(negative_pool.size(), 1))
-		if negative_id != "":
-			traits.append(negative_id)
+	if wants_cost:
+		var cost_pool: Array = HRConstants.cost_trait_ids()
+		var cost_id: String = _take_unused(cost_pool, used,
+			_mix(seed_value, SALT_NEGATIVE_PICK + salt) % maxi(cost_pool.size(), 1))
+		if cost_id != "":
+			traits.append(cost_id)
 	else:
-		var positive_pool: Array = HRConstants.positive_trait_ids()
-		var positive_id: String = _take_unused(positive_pool, used,
-			_mix(seed_value, SALT_POSITIVE_PICK + salt) % maxi(positive_pool.size(), 1))
-		if positive_id != "":
-			traits.append(positive_id)
+		var free_pool: Array = HRConstants.free_trait_ids()
+		var free_id: String = _take_unused(free_pool, used,
+			_mix(seed_value, SALT_POSITIVE_PICK + salt) % maxi(free_pool.size(), 1))
+		if free_id != "":
+			traits.append(free_id)
 	if not HRConstants.validate_employee_traits(traits):
 		push_error("[HRCandidateGenerator] trait set failed HRConstants.validate_employee_traits: %s" % str(traits))
 	return traits

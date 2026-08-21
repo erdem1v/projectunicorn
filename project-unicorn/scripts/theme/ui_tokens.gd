@@ -159,6 +159,31 @@ const AMBER_WASH := Color(1.0, 0.627, 0.157, 0.05)     # rgba(255,160,40,.05) ·
 const ACCENT_HEX := "#FFA028"                      # BBCode form of ACCENT (NewsTicker source name)
 const ON_ACCENT := Color(0.043, 0.055, 0.067, 1)   # #0B0E11 · text ON the amber fill
 
+# --- BUILD BAR · rampa B ve duraklamış zemin (onaylı sayfa, 2026-08-21) ---
+# Turu SAYIYLA değil RENKLE okutmak için üç kademe: rakam kartta hiçbir yerde yazmıyor.
+# Rampa 1 = ACCENT (yeni bir amber icat edilmedi). Dolgu bu renklerin %13 alfasıdır;
+# ölçülen sebep sayfada yazılı: dolgu bu kadar soluk kaldığı için sayaç dizgisi
+# sınırın üstünden geçse bile iki tarafta aynı kontrastta okunuyor ve KENAR ÇİZGİSİNE
+# gerek kalmıyor.
+#
+# AÇIK: motorda tur tavanı 4 (ProductSystem.ITER_MAX_ROUNDS), rampa üç kademe.
+# DÖRDÜNCÜ HEX TASARIMDAN BEKLENİYOR (H1); o gelene kadar tur 4 rampa 3'ü çizer.
+const BUILD_RAMP_1 := ACCENT                             # #FFA028 · tur 1
+const BUILD_RAMP_2 := Color(0.851, 0.753, 0.420, 1)      # #D9C06B · tur 2 · kum
+const BUILD_RAMP_3 := Color(0.420, 0.686, 0.788, 1)      # #6BAFC9 · tur 3 · soğuk
+const BUILD_FILL_ALPHA := 0.13                           # rampa renginin dolgu alfası
+const BUILD_FILL_PAUSED := Color(0.078, 0.102, 0.125, 1) # #141A20 · durmuş dolgu, DÜZ
+const BUILD_SUPPORT_FILL_ALPHA := 0.10                   # DESTEK koşusu daha da soluk
+
+
+## Turun rengi. Tur SAYISI hiçbir yerde çizilmez — renk tek göstergedir.
+static func build_ramp(round_index: int) -> Color:
+	match maxi(1, round_index):
+		1: return BUILD_RAMP_1
+		2: return BUILD_RAMP_2
+		_: return BUILD_RAMP_3   # H1: 4. tur için hex bekleniyor
+
+
 # --- STATE · semantic. Green/red carry MEANING ONLY; they are the one pair the
 # colourblind toggle swaps, and they route exclusively through the accessors. ---
 const POSITIVE := Color(0.247, 0.839, 0.549, 1)          # #3FD68C

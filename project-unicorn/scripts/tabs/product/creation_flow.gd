@@ -618,64 +618,29 @@ func _make_bottom_band() -> Control:
 
 
 func _make_build_status_card() -> Control:
-	# Kilitli modda commit kartının yerini alır: faz satırı + efor ilerlemesi +
-	# ~gün + Beta'da bug sayaçları ve tr("BUILD_ACTION_SHIP") + iptal. Yüzen Build Takip
-	# Kartı'yla aynı tek-kaynak API'lar (build_progress / build_days_remaining).
+	# ONAYLI KART, DAHA BÜYÜK BOYDA (B5.3). Eskiden burada genişletilmiş bir
+	# dört-faz görünümü vardı: üç faz etiketi, durum satırı, beta satırı, tavan
+	# satırı ve iki geçiş düğmesi. Kartın üç satırı bunların hepsini zaten
+	# söylüyor ve 2i kartta TEK basılabilir şey istiyor, yani ikisi bir arada
+	# duramazdı. İPTAL kalıyor: o sayfanın kendi kontrolü, kartın parçası değil —
+	# düşseydi `ProductSystem.cancel_build` oyunda erişilemez hâle gelirdi.
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"CardPanel"
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_stretch_ratio = 1.4
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 6)
+	vb.add_theme_constant_override("separation", 10)
 	card.add_child(vb)
 	vb.add_child(UiFactory.make_section_header(tr("PROD_BUILD_STATUS_HEADER")))
-	var phase_row := HBoxContainer.new()
-	phase_row.add_theme_constant_override("separation", 10)
-	for phase in _PHASE_ORDER:
-		var pl := UiFactory.make_label(_phase_display(phase), &"SectionLabel", UiTokens.INK_DIM)
-		phase_row.add_child(pl)
-		_status_phase_labels.append(pl)
-	vb.add_child(phase_row)
-	# BuildBar: tur segmentleri / tek çubuk / boşalan hata çubuğu — yüzen kart ve ODA
-	# monitörüyle piksel piksel aynı widget; genişliği kart verir, gerisini kendi türetir.
 	_status_bar = _BUILD_BAR_SCENE.instantiate()
-	_status_bar.custom_minimum_size = Vector2(0, 44)
+	# 1.25×: aynı düzenin büyüğü, yeni bir düzen DEĞİL. size_scale satır
+	# yükseklikleriyle yazı boylarını birlikte büyütür.
+	_status_bar.size_scale = 1.25
+	_status_bar.custom_minimum_size = Vector2(0, 138 * 1.25)
 	_status_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_child(_status_bar)
-	_status_line = UiFactory.make_label("", &"RowMeta")
-	vb.add_child(_status_line)
-	_beta_line = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
-	_beta_line.visible = false
-	vb.add_child(_beta_line)
-	# Faz geçiş kararı: üç eksen + tavanları (bilgi) ve faz başına TEK buton — TASARIM'da
-	# "Geliştirmeye geç" (tur 1 bitince), GELİŞTİRME parkında "Beta'ya geç". Yüzen kartla
-	# aynı seam'ler; "Bir tur daha" yok, turlar kendi kendine döner (Build Bar 2026-08-19).
-	_iter_line = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
-	_iter_line.visible = false
-	vb.add_child(_iter_line)
-	_iter_decision_row = HBoxContainer.new()
-	_iter_decision_row.add_theme_constant_override("separation", 8)
-	_iter_decision_row.visible = false
-	_enter_dev_btn = Button.new()
-	_enter_dev_btn.theme_type_variation = &"CommitButton"
-	_enter_dev_btn.text = tr("PROD_TO_DEVELOPMENT")
-	_enter_dev_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_enter_dev_btn.pressed.connect(_on_enter_dev_pressed)
-	_iter_decision_row.add_child(_enter_dev_btn)
-	_enter_beta_btn = Button.new()
-	_enter_beta_btn.theme_type_variation = &"CommitButton"
-	_enter_beta_btn.text = tr("PROD_TO_BETA_ARROW")
-	_enter_beta_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_enter_beta_btn.visible = false
-	_enter_beta_btn.pressed.connect(_on_enter_beta_pressed)
-	_iter_decision_row.add_child(_enter_beta_btn)
-	vb.add_child(_iter_decision_row)
-	_publish_btn = Button.new()
-	_publish_btn.theme_type_variation = &"CommitButton"
-	_publish_btn.text = tr("BUILD_ACTION_SHIP")
-	_publish_btn.visible = false
-	_publish_btn.pressed.connect(_on_publish_pressed)
-	vb.add_child(_publish_btn)
+	# İptal, ESKİ BODY'DEKİ BİÇİMİYLE korundu (flat + INK_MUTED) — `GhostButton` diye bir
+	# tema varyasyonu YOK ve bir yenisini icat etmek UI/STYLE LAW'un kapısını gerektirirdi.
 	var cancel := Button.new()
 	cancel.flat = true
 	cancel.text = tr("PROD_CANCEL_BUILD")
@@ -835,79 +800,11 @@ func _pool_exhausted() -> bool:
 
 
 func _update_status() -> void:
-	# Durum kartı — yüzen kartla aynı tek-kaynak API'lar; faz etiket renkleri:
-	# biten POSITIVE, aktif ACCENT_DEEP, bekleyen INK_DIM.
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b == null or _status_line == null or not is_instance_valid(_status_line):
-		return
-	var idx: int = _PHASE_ORDER.find(b.current_phase)
-	for i in _status_phase_labels.size():
-		var color: Color = UiTokens.INK_DIM
-		if i < idx:
-			color = UiTokens.positive()
-		elif i == idx:
-			color = UiTokens.ACCENT_DEEP
-		(_status_phase_labels[i] as Label).add_theme_color_override("font_color", color)
-	# Yüzdenin tek evi UiTokens.build_percent. Bu in-tab izleyici, yüzen BuildHUD kartıyla
-	# AYNI karede duruyor (kart her sekme sayfasının üstünde yüzer), o yüzden ikisi aynı
-	# sayıyı basmak zorunda — burada floor, orada round olduğu sürece %47 ile %48 yan yana
-	# duruyordu. Çubuk da aynı yuvarlanmış değerden besleniyor ki dolgu yazıyla çelişmesin.
-	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())
-	var line: String = tr("PROD_PHASE_LINE").format({
-		"phase": _phase_display(b.current_phase),
-		"pct": Fmt.percent(pct, 0),
-		"days": max(0, ProductSystem.build_days_remaining())})
-	if ProductSystem.capacity_speed_factor() < 1.0:
-		line += tr("PROD_HALF_SPEED")
-	_status_line.text = line
-	var in_beta: bool = b.current_phase == "bugfix"
-	_beta_line.visible = in_beta
-	_publish_btn.visible = in_beta
-	if in_beta:
-		_beta_line.text = tr("PROD_BETA_LINE").format(
-			{"found": b.bugs_found, "fixed": b.bugs_fixed, "open": b.bug_count})
-		# Yayınla'nın bedeli butonun kendisinde: TÜM açık hatalar canlıya taşınır. Sayı
-		# ProductSystem'den gelir, ham bug_count'tan DEĞİL — kritik-hata cezası da dahil
-		# olsun diye (bkz. projected_launch_bugs).
-		_publish_btn.tooltip_text = tr("BUILD_SHIP_TOOLTIP_BUGS").format(
-			{"n": ProductSystem.projected_launch_bugs()})
-	# Faz geçiş kararı (Build Bar 2026-08-19): TASARIM'da tur 1 bitince "Geliştirmeye geç"
-	# (üç eksen + tavan satırı bilgi olarak yanında — "daha çok tur mu, daha iyi insan mı"
-	# sorusu buradan okunur), GELİŞTİRME parkında "Beta'ya geç". Turlar kendi döner;
-	# tavan parkı (ITER_MAX_ROUNDS) "karar bekliyor" satırıdır. WORKING TR.
-	var can_dev: bool = ProductSystem.can_enter_development()
-	var can_beta: bool = ProductSystem.can_enter_beta()
-	var pending: bool = b.current_phase == "iteration" and b.iteration_decision_pending
-	var in_round: bool = b.current_phase == "iteration" and b.iteration_round_days > 0.0
-	_iter_line.visible = can_dev
-	_iter_decision_row.visible = can_dev or can_beta
-	_enter_dev_btn.visible = can_dev
-	_enter_beta_btn.visible = can_beta
-	if can_dev:
-		var ceilings: Dictionary = ProductSystem.iteration_axis_ceilings()
-		# "tavan" TEK BAŞINA yanlış okunuyordu: bu sayı yalnız TUR KAZANÇLARINI bağlar
-		# (QualityModel.grow), commit damgasını, event dimension_delta'sını, PM/güçlendirme
-		# bonusunu ve v2 mirasını bağlamaz — hepsi tasarımca tavanın DIŞINDA. O yüzden
-		# ekranda "Kararlılık 10 / tavan 8" görmek mümkün ve doğru; yanlış olan etiketti.
-		# Nitelik satır başında bir kez söyleniyor, üç eksende üç kez tekrarlanmıyor.
-		_iter_line.text = tr("PROD_ROUND_CEILING").format({
-			"inn": int(round(b.innovation)), "inn_max": int(round(float(ceilings.get("innovation", 0.0)))),
-			"stab": int(round(b.stability)), "stab_max": int(round(float(ceilings.get("stability", 0.0)))),
-			"exp": int(round(b.experience)), "exp_max": int(round(float(ceilings.get("experience", 0.0))))})
-		# Yarım tur uyarısı (Erdem): tur ortasında basılırsa koşan tur kazançsız terk edilir.
-		var mid_round: bool = in_round and b.iteration_count >= 2 \
-			and b.iteration_round_days < float(ProductSystem.ITER_ROUND_DAYS)
-		_enter_dev_btn.tooltip_text = tr("BUILD_HALF_ROUND_TOOLTIP") if mid_round else ""
-	if pending:
-		_status_line.text = tr("PROD_ROUND_PENDING").format(
-			{"phase": _phase_display(b.current_phase), "round": b.iteration_count})
-	elif in_round:
-		_status_line.text = tr("PROD_ROUND_LINE").format({
-			"phase": _phase_display(b.current_phase), "round": b.iteration_count,
-			"days": int(ceil(b.iteration_round_days))})
-	elif can_beta:
-		# Parkta "~N gün" yalan olur: bar "hazır" derken kart "3 gün" yazmasın.
-		_status_line.text = tr("BUILD_DEV_READY")
+	# ARTIK BİR ŞEY BOYAMIYOR (B5.3): durum kartı tek bir BuildBar taşıyor ve o
+	# kendi modelini kendi çekiyor, kendi sinyallerini kendi dinliyor. Fonksiyon
+	# duruyor çünkü çağıranları (_update_dynamic · faz sinyalleri) sayfanın başka
+	# parçalarını da tazeliyor; gövdesi bilerek boş.
+	pass
 
 
 func _on_publish_pressed() -> void:

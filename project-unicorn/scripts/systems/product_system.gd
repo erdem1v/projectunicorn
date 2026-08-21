@@ -247,7 +247,12 @@ static func capacity_demand() -> int:
 	var d: int = 0
 	if GameState.get_flag("mvp_bug_sprint_active", false):
 		d += 1
-	if GameState.get_flag("pitch_prep_active", false):
+	# VC HAZIRLIĞI BURADAN ÇIKTI (H6, 2026-08-21). Yanlış aktördü: hazırlık YALNIZ
+	# kurucuyu tutuyor, ama kapasite çarpanı YAPIMIN TAMAMINI yavaşlatıyordu — yapımı
+	# çalışanlar taşırken kurucunun toplantı hazırlığı onların hızını düşürüyordu.
+	# Artık kurucuyu MEŞGUL sayar (bkz. _is_free); tek taşıyıcı oysa yapım DURUR,
+	# değilse hiçbir şey yavaşlamaz. Ara kademe yok.
+	if false:   # emekli: pitch_prep_active
 		d += 1  # VC meeting prep occupies the founder (Spec 4 §3 — product slows, visible)
 	if active_build != null and active_build.current_phase in ["iteration", "development", "bugfix"]:
 		d += 1
@@ -305,12 +310,124 @@ static func _phase_areas(phase: String) -> Array:
 	return PHASE_AREAS.get(phase, PHASE_AREAS["development"])
 
 
+## KURUCUYU AKTİF FAZIN ALANINA OTURT (H4, 2026-08-21). Oyuncunun kurucuyu atayacak
+## bir kapısı yok (R1: Görevler matrisinde satırı bile yok), ama ATAMA HÂLÂ VAR —
+## çünkü hız terimi, kalite ortalaması ve eksen tavanı üçü de `assigned_jobs`'ı okuyor.
+## Yani kurucu ARTIK MOTORUN ATADIĞI biri: faz değiştikçe o fazın alanına taşınır.
+##
+## ch. 02 §5'in TEK ALAN kilidi ayakta: önce boşaltılır, sonra atanır. Kilit artık
+## oyuncuya değil KENDİ YAZARINA karşı duruyor — tek yazar burada.
+# ======================= Meşguliyet ve duraklama (R2 · H5) ====================
+# "Kurucu her şeyi yapabilir, ama aynı anda değil." Kural KİŞİ BAŞINA işler ve
+# kurucuya özel DEĞİLDİR — kurucu yalnız var olma sebebi.
+#
+# MEŞGUL KÜMESİ, bugün kodda gerçekten var olan durumlardan (uydurma yok):
+#   herkes  · STATUS_ON_LEAVE          — izinde
+#   herkes  · STATUS_TRAINING          — eğitimde
+#   kurucu  · pitch_prep_active        — VC toplantısına hazırlanıyor
+# Kurucunun kodda BAŞKA faaliyeti yok: VC toplantısının kendisi ve olay modalları
+# ağacı zaten duraklatıyor, yani ayrı bir meşguliyet değiller.
+
+
+## Bu kişi BUGÜN işe girebilir mi.
+static func _is_free(c: Character) -> bool:
+	if c == null or c.status != HRConstants.STATUS_ACTIVE:
+		return false
+	if c.category == "founder" and GameState.get_flag("pitch_prep_active", false):
+		return false
+	return true
+
+
+## Bu fazı TAŞIYABİLECEK herkes — durumuna BAKMADAN. "Kimse yok" ile "herkes meşgul"
+## arasındaki farkı söyleyebilmenin tek yolu bu: HRSystem.assigned_to zaten
+## STATUS_ACTIVE filtreliyor, yani izindekini hiç görmez ve iki hâl aynı görünürdü.
+static func phase_assignees(phase: String) -> Array[Character]:
+	var out: Array[Character] = []
+	for area_key in _phase_areas(phase):
+		for c in CharacterRegistry.get_all():
+			if c == null or out.has(c):
+				continue
+			if c.category != "employee" and c.category != "founder":
+				continue
+			if c.assigned_jobs.has(String(area_key)):
+				out.append(c)
+	return out
+
+
+## AKTİF YAPIM DURDU MU. Oyuncu duraklatmadı — bu bir SONUÇ ve raporlanıyor, teklif
+## edilmiyor. Türetilmiş, saklanmıyor: kart her boyamada soruyor ve cevap her zaman
+## bugünün gerçeği ("render state, never store it").
+static func build_paused() -> bool:
+	if active_build == null:
+		return false
+	if not PHASE_AREAS.has(active_build.current_phase):
+		return false
+	for c in phase_assignees(active_build.current_phase):
+		if _is_free(c):
+			return false
+	return true
+
+
+## Duraklamanın TÜRÜ, iki dizgeden hangisinin basılacağını seçer. KİŞİ ADI ASLA
+## GEÇMEZ: not ekibin durumu hakkında, bir kişinin değil.
+static func pause_note_key() -> String:
+	if not build_paused():
+		return ""
+	if phase_assignees(active_build.current_phase).is_empty():
+		return "BUILD_BUSY_NOBODY"
+	return "BUILD_BUSY_ELSEWHERE"
+
+
+# ============================ DESTEK okuma seam'leri (B4) ====================
+# ÜÇÜ de bugün HAM BAYRAK olarak okunuyordu, altı ayrı yerde ve iki farklı fallback
+# deyimiyle. Kart bayrak okumaz, seam okur.
+
+## Yayındaki ürünün AÇIK hata sayısı — DOĞRULANMIŞ sayacının ta kendisi.
+static func live_bug_count() -> int:
+	return maxi(0, int(GameState.get_flag("mvp_live_bug_count",
+		GameState.get_flag("mvp_bug_count_at_launch", 0))))
+
+
+static func is_sprint_running() -> bool:
+	return bool(GameState.get_flag("mvp_bug_sprint_active", false))
+
+
+## Koşan düzeltmenin dolumu 0-1; koşu yoksa 0.
+static func sprint_progress() -> float:
+	if not is_sprint_running():
+		return 0.0
+	var total: float = float(GameState.get_flag("mvp_sprint_days_total", 0))
+	if total <= 0.0:
+		return 0.0
+	return clampf(float(GameState.get_flag("mvp_sprint_days_elapsed", 0.0)) / total, 0.0, 1.0)
+
+
+static func _reseat_founder(phase: String) -> void:
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return
+	if not PHASE_AREAS.has(phase):
+		return   # shipped / cancelled / planning: oturacağı bir faz alanı yok, yerinde kalır
+	var area: String = _founder_phase_area(phase)
+	if founder.assigned_jobs.has(area) and founder.assigned_jobs.size() == 1:
+		return
+	CharacterRegistry.clear_areas(founder.id)
+	var refusal: String = CharacterRegistry.assign_area(founder.id, area)
+	if refusal != "":
+		push_error("[ProductSystem] founder refused '%s' for phase '%s': %s" % [
+			area, phase, refusal])
+
+
 static func _founder_on_build() -> bool:
 	## Kurucu bu sürümün üzerinde mi çalışıyor — yani üç build alanından (Ürün · Tasarım ·
 	## Yazılım) birine atanmış mı. ch. 02 §5'in tek-alan kilidi burada da geçerli: satıştaki
 	## kurucu ne hıza ne tavana dokunur.
+	# DURUM KAPISI (2026-08-21): burası kurucunun `status`'una HİÇ bakmıyordu, yani
+	# eğitimdeki bir kurucu tam hızla katkı vermeye devam ediyordu — çalışanlar
+	# HRSystem.assigned_to'nun filtresinden geçerken kurucu geçmiyordu. Duraklama
+	# kuralının kapısı da tam burası.
 	var founder: Character = CharacterRegistry.get_founder()
-	if founder == null:
+	if not _is_free(founder):
 		return false
 	for area_key in BUILD_AREAS:
 		if founder.assigned_jobs.has(String(area_key)):
@@ -378,14 +495,15 @@ static func _lead_coordination(lead_id: String) -> float:
 	var founder_id: String = founder.id if founder != null else "founder"
 	if lead_id != "" and lead_id != "founder" and lead_id != founder_id:
 		var lead: Character = CharacterRegistry.get_character(lead_id)
+		# `coordination_bonus` EMEKLİ (2026-08-21): sekiz trait'lik sette o eksen yok.
+		# Kurucu dalıyla birlikte A5'in ikinci kırığı da kapanıyor — `trait_has` kurucunun
+		# id'lerini ÇALIŞAN tablosunda arıyordu ve DAİMA false dönüyordu, yani bonusun
+		# kurucu dalı başından beri ölü koddu.
 		if lead != null and lead.category == "employee" and lead.status == HRConstants.STATUS_ACTIVE:
 			return HRConstants.coordination_for_lead(
-				int(lead.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0)),
-				HRConstants.trait_has(lead.traits, "coordination_bonus"))
-	var founder_traits: Array = founder.traits if founder != null else []
+				int(lead.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0)), false)
 	return HRConstants.coordination_for_founder(
-		GameState.get_founder_skill("leadership"),
-		HRConstants.trait_has(founder_traits, "coordination_bonus"))
+		GameState.get_founder_skill("leadership"), false)
 
 
 static func _phase_area_sum(phase: String, lead_id: String) -> float:
@@ -401,10 +519,6 @@ static func _phase_area_sum(phase: String, lead_id: String) -> float:
 	var total: float = 0.0
 	for row in _phase_crew(phase):
 		var c: Character = row["c"]
-		# "Yalnız çalışır": ekip tarafı katkı vermez — kendi işini yapar ama toplama girmez.
-		# Sorumluysa muaf: başındaki işi yapmayı reddetmiyor, yalnız ekibe eklenmiyor.
-		if c.id != lead_id and HRConstants.trait_has(c.traits, "no_team_bonus"):
-			continue
 		if c.category == "founder":
 			continue   # kurucunun katkısı _speed_for_phase'de kendi katsayısıyla ayrı
 		var area_key: String = String(row["area"])
@@ -413,9 +527,12 @@ static func _phase_area_sum(phase: String, lead_id: String) -> float:
 		# Çarpan BU FAZIN alanından ölçülüyor, işin genelinden değil — bir yazılımcının
 		# TASARIM fazına katkısı onun ikincil işidir ve bedelini orada öder.
 		contribution *= HRSystem.output_mult_for_area(c, area_key)
-		# "Söylenmezse yapmaz": sorumlu değilken belirgin biçimde az katkı verir.
-		if c.id != lead_id:
-			contribution *= HRConstants.trait_mult(c.traits, "non_lead_mult")
+		# TRAIT ÇARPANLARI (2026-08-21). İkisi de aynı yönde çarpılır ve bir kişi
+		# ikisini birden taşıyamaz (TRAIT_COUNT = 1), ama formül yine de çarpımsal:
+		# TİTİZ yavaş çalışır (0.85), GÖZÜ YÜKSEKTE hızlı (1.15). Emekli
+		# `no_team_bonus` ve `non_lead_mult` ROL kapısıydı; bunlar düz çarpan.
+		contribution *= HRConstants.trait_mult(c.traits, "speed_mult")
+		contribution *= HRConstants.trait_mult(c.traits, "output_mult")
 		total += contribution
 	return total
 
@@ -591,7 +708,9 @@ static func _tick_build_hourly(f: float) -> void:
 	# Kapı cap'e bakar, total'e değil: dışarıdan (debug fikstürü) cap üstüne zorlanmış
 	# bir efor'u minf'in sessizce AŞAĞI çekmesi ratchet'i bozardı — accrual o durumda
 	# hiç koşmaz, alt-makine build'i olduğu yerden karara düşürür.
-	var working: bool = b.efor_spent < cap and not in_iter_hold
+	# DURAKLAMA BURADA ISIRIR (R2): taşıyabilecek kimse boş değilse efor İŞLEMEZ.
+	# SÜRE (burn) yine akar — park grameriyle aynı: beklemek bedava değil.
+	var working: bool = b.efor_spent < cap and not in_iter_hold and not build_paused()
 	if working:
 		# Ek mesai KAZANCI yalnız BURADA uygulanır (design doc §7b). f (kapasite çarpanı)
 		# aynı zamanda _accrue_bugs_hourly ve _tick_beta_hourly'ye de gidiyor, o yüzden hız
@@ -732,6 +851,7 @@ static func enter_development() -> void:
 	b.current_phase = "development"
 	b._sync_status_from_phase()
 	EventBus.build_iteration_decision_pending.emit(false)
+	_reseat_founder("development")
 	EventBus.build_phase_changed.emit("development")
 
 
@@ -762,6 +882,7 @@ static func enter_beta() -> void:
 	# bunu payda olarak okur (bug_count / bug_count_at_bugfix_start).
 	GameState.set_flag("bug_count_at_bugfix_start_%s" % b.id, b.bug_count)
 	_sync_legacy_quality(b)
+	_reseat_founder("bugfix")
 	EventBus.build_phase_changed.emit("bugfix")
 	if OS.is_debug_build():
 		print("[ProductSystem] Development band complete → BETA. hidden_bugs=%d" % b.bug_count)
@@ -834,6 +955,12 @@ static func _accrue_bugs_hourly(f: float = 1.0) -> void:
 	# Bedel 3, kalite: Ürün Geliştirme mesaisinde yorgun insan hata yazar (design doc §7b).
 	# YALNIZ burada — kapasite çarpanı f'ye katlanmaz, yoksa beta temposunu da çarpardı.
 	rate *= HROvertimeSystem.bug_multiplier()
+	# TİTİZ: YAZILIM alanında çalışan her TİTİZ hata oranını düşürür. Çarpımsal ve
+	# kişi başına: iki TİTİZ bir TİTİZ'den iyidir, ama getiri azalarak (0.5 × 0.5).
+	# Alanın kendisi soruluyor çünkü rev 2 §2 hata oranını YAZILIM'a veriyor.
+	for c in HRSystem.assigned_to(HRConstants.AREA_ENGINEERING):
+		rate *= HRConstants.trait_mult(c.traits, "bug_rate_mult")
+	rate = maxf(BUG_FLOOR, rate)
 	b.bug_progress += rate * f
 	while b.bug_progress >= 1.0:
 		b.bug_count += 1
@@ -1213,6 +1340,7 @@ static func start_build(
 	# Finance owns cash). Affordability gate yok — nakit eksiye düşebilir (iflas baskısı).
 	FinanceSystem.apply_one_time_cost(ProductCatalog.sum_cost(typed_features), "build_commit")
 	active_build = b
+	_reseat_founder("iteration")
 	EventBus.build_phase_changed.emit("iteration")
 	if OS.is_debug_build():
 		print("[ProductSystem] Build started: %s with %d features, total_efor=%.0f cost=$%d" % [
@@ -1311,6 +1439,7 @@ static func start_version_build(new_feature_ids: Array, assigned_engineer_id: St
 	# Maliyet: YALNIZ yeni feature'lar (inherited/strengthen asla yeniden tahsil edilmez).
 	FinanceSystem.apply_one_time_cost(ProductCatalog.sum_cost(typed_new), "version_build_commit")
 	active_build = b
+	_reseat_founder("iteration")
 	EventBus.build_phase_changed.emit("iteration")
 	if OS.is_debug_build():
 		print("[ProductSystem] v%d build started: %d features (union), total_efor=%.0f, seeded I%d/S%d/E%d bugs=%d" % [

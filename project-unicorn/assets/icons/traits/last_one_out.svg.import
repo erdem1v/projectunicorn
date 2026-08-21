@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://db8dt7gp8as5v"
-path="res://.godot/imported/natural_leader.svg-b5e53043df057a1a4a37011d2a47cfe5.ctex"
+uid="uid://dcea8e2cjimc8"
+path="res://.godot/imported/last_one_out.svg-83f6428da4ca8d37d8def5b2b2d36a8c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/traits/natural_leader.svg"
-dest_files=["res://.godot/imported/natural_leader.svg-b5e53043df057a1a4a37011d2a47cfe5.ctex"]
+source_file="res://assets/icons/traits/last_one_out.svg"
+dest_files=["res://.godot/imported/last_one_out.svg-83f6428da4ca8d37d8def5b2b2d36a8c.ctex"]
 
 [params]
 

@@ -25,20 +25,24 @@ const W_STATE := 210
 const CELL := 22
 
 ## `on_toggle(character_id, area_id, currently_on)` — TEK yazma kapısı hr_tab'da.
-static func build(on_toggle: Callable) -> Control:
+## KURUCU BURADA YOK (R1, 2026-08-21). Ne satır, ne kutu, ne salt-okunur bant, ne de
+## "nereye gitti" diye açıklayan bir not. Kurucu bir atanabilir işçi DEĞİL: aktif
+## yapımın fazını motor tarafında kendiliğinden takip eder (ProductSystem._reseat_founder)
+## ve oyuncunun onu taşıyacağı bir kapı yok.
+static func build(on_toggle: Callable, on_recruit: Callable = Callable()) -> Control:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 0)
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
 	col.add_child(_header())
-
-	var founder: Character = CharacterRegistry.get_founder()
-	if founder != null:
-		col.add_child(_founder_band(founder, on_toggle))
-
-	for emp in CharacterRegistry.get_employees():
+	var roster: Array[Character] = CharacterRegistry.get_employees()
+	if roster.is_empty():
+		# SİZE MATRİS DEĞİL BİR CÜMLE (C2). Kurucu çıktığı için taze bir koşuda bu sayfa
+		# GERÇEKTEN boş; Kadro'nun zaten onaylı olan boş satırı yeniden çizilmiyor,
+		# OLDUĞU GİBİ kullanılıyor — iki sayfada iki farklı boşluk grameri olmasın.
+		col.add_child(HRLedger.empty_row(on_recruit))
+		return col
+	for emp in roster:
 		col.add_child(_row(emp, on_toggle))
-
 	col.add_child(_legend())
 	return col
 
@@ -61,35 +65,6 @@ static func _header() -> Control:
 	wrap.theme_type_variation = &"HeaderBand"
 	wrap.add_child(row)
 	return wrap
-
-
-## KURUCU bandı: yıldız yok (10b), yalnız kutular. Ad + "KURUCU · HER ALANA ATANABİLİR".
-static func _founder_band(founder: Character, on_toggle: Callable) -> Control:
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"LedgerRow"
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 0)
-	card.add_child(row)
-
-	var who := HBoxContainer.new()
-	who.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	who.custom_minimum_size = Vector2(W_WHO, 0)
-	who.add_child(UiFactory.make_avatar(
-		UiFactory.initials_of(founder.character_name), 30))
-	var stack := VBoxContainer.new()
-	stack.add_theme_constant_override("separation", 2)
-	stack.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	stack.add_child(UiFactory.make_label(founder.character_name, &"RowName"))
-	stack.add_child(UiFactory.make_label(tr_key("HR_FOUNDER_BAND"), &"MicroLabel"))
-	who.add_child(stack)
-	row.add_child(who)
-
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(W_STATE, 0)
-	row.add_child(spacer)
-
-	row.add_child(_cells(founder, on_toggle))
-	return card
 
 
 static func _row(emp: Character, on_toggle: Callable) -> Control:
@@ -171,7 +146,7 @@ static func _cells(c: Character, on_toggle: Callable) -> Control:
 static func _cell(c: Character, area_id: String, on_toggle: Callable) -> Control:
 	var eligible: bool = HRConstants.can_hold_area(c.role, area_id, c.category)
 	var checked: bool = c.assigned_jobs.has(area_id)
-	var primary: bool = c.category == "founder" or area_id == HRConstants.role_key_area(c.role)
+	var primary: bool = area_id == HRConstants.role_key_area(c.role)
 
 	if not eligible:
 		return _dashed_cell()

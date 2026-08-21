@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dmfhc58rmqty6"
-path="res://.godot/imported/warms_up_fast.svg-b1ebff243c008648e2e8d29d830d4985.ctex"
+uid="uid://8q8wv0rtkhkv"
+path="res://.godot/imported/phase_design.svg-9e0d171e70268c2fed08f95aca955197.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/traits/warms_up_fast.svg"
-dest_files=["res://.godot/imported/warms_up_fast.svg-b1ebff243c008648e2e8d29d830d4985.ctex"]
+source_file="res://assets/icons/build/phase_design.svg"
+dest_files=["res://.godot/imported/phase_design.svg-9e0d171e70268c2fed08f95aca955197.ctex"]
 
 [params]
 

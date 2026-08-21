@@ -77,6 +77,15 @@ static func _tick_satisfaction(c: Customer) -> void:
 	# EROSION (downward drift) by the rep's skill. Upward recovery stays full-strength.
 	if delta < 0 and c.assigned_to != "":
 		delta = int(float(delta) * B2BConstants.cs_dampen(_cs_expertise_of(c)))
+		# HAYIR DİYEMEZ: kendi hesaplarında memnuniyet daha yüksek durur. Bir DELTA
+		# ÜRETMİYOR — var olan aşınmayı daha da yumuşatıyor, yani §10'un "oynanmamış
+		# ekonomik sonuç yok" kuralı duruyor: düşüşün sebebi hep ürün sağlığı.
+		# YALNIZ aşağı yönde, yukarı toparlanma tam güçte kalır (üstteki kuralın aynısı).
+		var rep: Character = CharacterRegistry.get_character(c.assigned_to)
+		if rep != null and rep.status == HRConstants.STATUS_ACTIVE:
+			var bonus: float = HRConstants.trait_sum(rep.traits, "satisfaction_bonus")
+			if bonus > 0.0:
+				delta = int(float(delta) * maxf(0.0, 1.0 - bonus / 100.0))
 	if delta != 0:
 		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 

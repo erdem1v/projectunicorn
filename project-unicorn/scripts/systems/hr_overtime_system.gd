@@ -123,9 +123,13 @@ static func _charge_day(dept_id: String, block: Dictionary, fire_valve: bool, to
 	var drop: int = HRConstants.overtime_morale_drop(idx)
 	var crew: Array[Character] = participants(dept_id)
 	for emp in crew:
-		# The trait multiplier and the Liderlik climate coefficient are applied INSIDE
-		# apply_delta. Folding either in here would apply it twice.
-		HRMoraleSystem.apply_delta(emp, -drop, HRConstants.REASON_OVERTIME)
+		# İŞKOLİK BURADA, apply_delta'da DEĞİL (2026-08-21). Emekli `morale_drop_mult`
+		# her moral düşüşüne uygulanıyordu; `overtime_morale_mult` YALNIZ mesaiye ait,
+		# çünkü trait'in cümlesi o: "mesai moral erimesi belirgin şekilde yavaşlar".
+		# apply_delta içinde EKİBİN erime çarpanı ve Liderlik iklimi ayrıca uygulanır.
+		var own_drop: int = int(round(float(drop)
+			* HRConstants.trait_mult(emp.traits, "overtime_morale_mult")))
+		HRMoraleSystem.apply_delta(emp, -own_drop, HRConstants.REASON_OVERTIME)
 		emp.overtime_days += 1
 		var pay: int = HRConstants.overtime_daily_pay(emp.monthly_salary)
 		if to_carry:

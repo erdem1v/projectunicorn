@@ -456,61 +456,79 @@ static func is_role_hireable(role_id: String) -> bool:
 
 
 # ================================== Traits ===================================
-# Trait'ler skill tekrarı DEĞİL davranış tanımıdır (design doc §4): "Dağınık = kılık
-# değiştirmiş düşük UZMANLIK" YANLIŞ; "Yalnız çalışır: ekip katkısı vermez" DOĞRU.
-# 5 iyi + 5 kötü. Gizli trait YOKTUR — hepsi aday dosyasında etkisiyle birlikte yazar.
+# Trait'ler skill tekrarı DEĞİL davranış tanımıdır. SEKİZ TRAIT (2026-08-21, onaylı
+# ikon sayfası + Erdem R3): on trait sekize indi, adları ve etkileri sayfadan geldi.
+# Gizli trait YOKTUR — hepsi aday dosyasında etkisiyle birlikte yazar.
 #
-# Effect keys and who reads them:
-#   morale_floor        HRSystem — moral bu değerin altına inmez
-#   morale_drop_mult    HRSystem + HROvertimeSystem — olay düşüşleri VE mesai bedeli
-#   dept_morale_weekly  HRSystem — aynı departmandaki diğerlerine haftalık dokunuş
-#   resign_chance_mult  HRSystem — istifa roll'unun çarpanı
-#   coordination_bonus  DORMANT — koordinasyon çarpanı, HR Coupling (task 2) uygular
-#   no_team_bonus       DORMANT — ekip taraflı bonus terimleri, Coupling uygular
-#   non_lead_mult       DORMANT — sorumlu değilken katkı çarpanı, Coupling uygular
+# `polarity` EMEKLİ, yerine `carries_cost` (R4). İki sebep, ikisi de ölçüldü:
+#   1. Trait'ler iyi ya da kötü DEĞİLDİR; yeşil/kırmızı rozet ayrımı kalktı ve
+#      HİÇBİR ÇİZİM bu alanı okumuyor — tek okuyucu aday üreticisi.
+#   2. Üretici yine de bir ayrım istiyor ("bir dosya daha sert olanı taşır"), ve o
+#      ayrım artık görevin kendi tablosundan TÜRETİLMİŞ: Cost sütunu dolu olan beş
+#      trait `carries_cost = true`, boş olan üçü false. İcat edilmiş bir sınıflama değil.
+#
+# Effect keys and who reads them (Ö = bu turda bağlandı):
+#   resign_chance_mult      HRMoraleSystem — istifa roll'unun çarpanı
+#   overtime_morale_mult  Ö HROvertimeSystem — YALNIZ mesai moral bedeli
+#   experience_mult       Ö HRSystem.tick_experience — kendi deneyim kazancı
+#   lead_experience_mult  Ö HRSystem.tick_experience — SORUMLUSU olduğu alandakiler
+#   departure_morale_extra Ö HRMoraleSystem — ayrılışın ekibe EK moral bedeli
+#   bug_rate_mult         Ö ProductSystem._accrue_bugs_hourly
+#   speed_mult            Ö ProductSystem._phase_area_sum — kişinin katkı çarpanı
+#   output_mult           Ö ProductSystem._phase_area_sum — aynı yer, ters yön
+#   promise_chance_mult   Ö PromiseRegistry — söz olaylarının bu kişide ateşlenme oranı
+#   satisfaction_bonus    Ö CustomerRepSystem — hesaplarında memnuniyet
+#   dept_morale_decay_mult Ö HRMoraleSystem — ekibinin moral ERİME hızı
+#
+# EMEKLİ EKSENLER: morale_floor · morale_drop_mult · dept_morale_weekly ·
+# coordination_bonus · no_team_bonus · non_lead_mult. Taşıyan trait kalmadı.
+#
 # Copy fields (label / effect_text) LEFT this table for strings.csv; what remains is the
-# MECHANICS (polarity and the effect numbers). The words are derived from the trait id —
-# HR_TRAIT_<ID>_LABEL / _EFFECT — so a trait cannot exist with a label in one language only.
+# MECHANICS. The words are derived from the trait id — HR_TRAIT_<ID>_LABEL / _EFFECT —
+# so a trait cannot exist with a label in one language only.
+#
+# KALİBRASYON YÜZEYİ: aşağıdaki her sayı ya emekli bir trait'in AYNI büyüklüğü, ya da
+# yeni bir eksen için ilk değer. Hiçbiri ölçülmüş değil; teslimde liste veriliyor.
 const TRAITS := {
-	"warms_up_fast": {
-		"polarity": "positive",
-		"morale_floor": 35,
+	# --- bedelsiz üç ------------------------------------------------------
+	"loyal": {                                # SADIK
+		"carries_cost": false,
+		"resign_chance_mult": 0.6,            # `wont_jump_ship`'in büyüklüğü, birebir
 	},
-	"pressure_proof": {
-		"polarity": "positive",
-		"morale_drop_mult": 0.5,
+	"picks_it_up_fast": {                     # ÇABUK KAPAR
+		"carries_cost": false,
+		"experience_mult": 1.5,               # YENİ eksen — "belirgin şekilde hızlı"
 	},
-	"mentors_peers": {
-		"polarity": "positive",
-		"dept_morale_weekly": 2,
+	"last_one_out": {                         # İŞKOLİK
+		"carries_cost": false,
+		"overtime_morale_mult": 0.5,          # `pressure_proof`'un büyüklüğü, ama
+		                                      # YALNIZ mesaide (o hepsinde geçerliydi)
 	},
-	"wont_jump_ship": {
-		"polarity": "positive",
-		"resign_chance_mult": 0.6,
+	# --- bedelli beş -------------------------------------------------------
+	"takes_them_under": {                     # GERÇEK LİDER
+		"carries_cost": true,
+		"lead_experience_mult": 1.5,          # YENİ — picks_it_up_fast ile aynı kademe
+		"departure_morale_extra": -5,         # §: başkaları −5 alırken bunlar −10
 	},
-	"natural_leader": {
-		"polarity": "positive",
-		"coordination_bonus": 0.05,
+	"double_checker": {                       # TİTİZ
+		"carries_cost": true,
+		"bug_rate_mult": 0.5,                 # YENİ — "çok daha az hata"
+		"speed_mult": 0.85,                   # YENİ — hız bedeli
 	},
-	"works_alone": {
-		"polarity": "negative",
-		"no_team_bonus": true,
+	"cant_say_no": {                          # HAYIR DİYEMEZ
+		"carries_cost": true,
+		"promise_chance_mult": 1.6,           # YENİ — one_foot_out'un kademesi
+		"satisfaction_bonus": 5,              # YENİ — hesaplarında memnuniyet
 	},
-	"glass_heart": {
-		"polarity": "negative",
-		"morale_drop_mult": 2.0,
+	"bag_packed": {                           # GÖZÜ YÜKSEKTE
+		"carries_cost": true,
+		"resign_chance_mult": 1.6,            # `one_foot_out`'un büyüklüğü, birebir
+		"output_mult": 1.15,                  # YENİ — "yüksek verim"
 	},
-	"sours_the_room": {
-		"polarity": "negative",
-		"dept_morale_weekly": -2,
-	},
-	"one_foot_out": {
-		"polarity": "negative",
-		"resign_chance_mult": 1.6,
-	},
-	"needs_direction": {
-		"polarity": "negative",
-		"non_lead_mult": 0.5,
+	"mood_buster": {                          # TAT KAÇIRAN
+		"carries_cost": true,
+		"dept_morale_decay_mult": 1.25,       # YENİ — "hafifçe" yükseltir
+		# ŞİKAYETİN KENDİSİ (olay kartı) BAĞLANMADI: içerik henüz yazılmadı.
 	},
 }
 
@@ -527,13 +545,10 @@ const TRAITS := {
 ## KURUCU ETKİLENMEZ: FounderConstants.validate_traits ayrı bir formül ve Kişisel kartı
 ## (10a) kurucuda İKİ trait çiziyor.
 const TRAIT_COUNT := 1
-const TRAIT_MIN_POSITIVE := 0
-const TRAIT_MAX_POSITIVE := 1
-const TRAIT_MAX_NEGATIVE := 1
-const TRAIT_NEGATIVE_SHARE := 0.5   # üretilen adaylarda kötü trait taşıma oranı
-
-# Weekly cadence for the same-department morale traits (dept_morale_weekly).
-const TRAIT_DEPT_MORALE_PERIOD_DAYS := 7
+## ÜRETİCİNİN tek ayarı. TRAIT_MIN/MAX_POSITIVE emekli — ikisi de tanımlıydı ve
+## HİÇBİR YERDE OKUNMUYORDU (2026-08-21 taraması).
+const TRAIT_MAX_COST := 1
+const TRAIT_COST_SHARE := 0.5   # üretilen adaylarda BEDELLİ trait taşıma oranı
 
 
 static func trait_label(trait_id: String) -> String:
@@ -546,23 +561,24 @@ static func trait_effect_text(trait_id: String) -> String:
 	return _derived("HR_TRAIT_", trait_id + "_EFFECT")
 
 
-static func trait_polarity(trait_id: String) -> String:
-	return String((TRAITS.get(trait_id, {}) as Dictionary).get("polarity", ""))
+## Bedelli mi — YALNIZ aday üreticisi okur. Bir çizim bunu okuyorsa R4 ihlalidir.
+static func trait_carries_cost(trait_id: String) -> bool:
+	return bool((TRAITS.get(trait_id, {}) as Dictionary).get("carries_cost", false))
 
 
-static func positive_trait_ids() -> Array:
+static func free_trait_ids() -> Array:
 	var out: Array = []
 	for trait_id in TRAITS.keys():
-		if String(TRAITS[trait_id].get("polarity", "")) == "positive":
+		if not bool(TRAITS[trait_id].get("carries_cost", false)):
 			out.append(trait_id)
 	out.sort()   # deterministic order — the generator indexes into this
 	return out
 
 
-static func negative_trait_ids() -> Array:
+static func cost_trait_ids() -> Array:
 	var out: Array = []
 	for trait_id in TRAITS.keys():
-		if String(TRAITS[trait_id].get("polarity", "")) == "negative":
+		if bool(TRAITS[trait_id].get("carries_cost", false)):
 			out.append(trait_id)
 	out.sort()
 	return out
@@ -610,15 +626,6 @@ static func trait_has(trait_ids: Array, effect_key: String) -> bool:
 		if (TRAITS.get(String(trait_id), {}) as Dictionary).has(effect_key):
 			return true
 	return false
-
-
-static func trait_floor(trait_ids: Array) -> int:
-	# Highest morale floor any carried trait grants; 0 = no floor.
-	var floor_value: int = 0
-	for trait_id in trait_ids:
-		var entry: Dictionary = TRAITS.get(String(trait_id), {})
-		floor_value = maxi(floor_value, int(entry.get("morale_floor", 0)))
-	return floor_value
 
 
 # ============================ Salary bands (Atlas) ===========================

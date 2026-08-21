@@ -193,7 +193,7 @@ NewsTicker görsel kimliğini korur (`NewsPanel`/`NewsRich` kendi adlarıyla kal
 `--onboard-shot=<1|2|3>` · `--probe-shot` (sıfır-stil kontrol sahnesi) ·
 `--theme-audit=<id>` (çözümlenmiş tema değerleri + yüz + panel stylebox parmak izi +
 S/C/P override bayrakları) · **`--theme-audit=oda` ODA'NIN KAPISIDIR**: yalnız OdaView alt
-ağacını gezer, **121 `AUDIT|` satırı** (AUDIT_BEGIN/END dahil 123 satırlık blok) basar ve
+ağacını gezer, **147 `AUDIT|` satırı** (AUDIT_BEGIN/END dahil 149 satırlık blok) basar ve
 öncesi/sonrası BAYT-AYNI çıkmak zorundadır. Sayının tarihi: 2026-08-10 sanat
 migrasyonunda 120→121 (eklenen TEK satır `AUDIT|/ObjectLayer/Keyboard|TextureRect|--|…`,
 tamamı tire — hiçbir tema değeri çözmüyor, sprite düğümünün yapısal eklenmesi), sonra
@@ -210,6 +210,16 @@ değişmesidir.** Düğüm ekleyen bir yerleşim işi satır sayısını meşru 
 kanıt, otomatik `@Sınıf@NN` sayaçları normalize edildikten sonra diff'in YALNIZ hedeflenen
 alt ağaçta kalmasıdır. F5 turunda ölçülen: `@…@NN`→`@…@N` normalizasyonundan sonra
 GoalWrap dışında **0** satır değişti.
+
+2026-08-21'de sayı **121 → 147**. Sebep yapısal ve beklenen: Build Bar bir ÇİZGİ-ÇUBUK
+olmaktan çıkıp onaylı ÜÇ SATIRLIK KARTA dönüştü (R6: monitör aynı kartı alır,
+varyantını değil). Eskiden `_draw` ile tek düğüm olarak çiziliyordu, şimdi gerçek
+Control ağacı — kapak çizgisi, üç satır, dolgu, glifler. **Kanıt sayı değil DIFF:**
+`@Sınıf@NN` normalizasyonundan sonra değişen her satır
+`/InfoLayer/MonitorWrap/MonitorScreen` altında; o alt ağacın DIŞINDA **0** satır
+kıpırdadı. `themes/oda_frozen_theme.tres` açılmadı, `master_theme.tres` regen sonrası
+bayt-aynı kaldı ve THEME_STAMP 6'da durdu — kartın üç yeni rengi runtime token'ıdır,
+`build_theme.gd` onları okumaz (ODA tint'lerinin precedent'i).
 Piksel karşılaştırması ODA için kullanılamaz — ölçüldü: `--oda-shot` kareleri
 `night/market1/market2/event/tab/tour` için iki değer arasında gidip geliyor (tween fazı /
 kare yarışı), yani hash eşitsizliği tema değişikliğinin kanıtı DEĞİL. Tema

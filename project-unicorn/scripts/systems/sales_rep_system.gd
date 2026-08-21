@@ -70,13 +70,13 @@ static func _diminished_sum(axis: String) -> float:
 	var total: float = 0.0
 	var weight: float = 1.0
 	for c in _ranked(axis):
-		# "Yalnız çalışır": does their own work but never compounds with the desk. Rank 0 is
-		# exempt — a lone rep is not refusing to work, there is simply no team to join.
-		if total > 0.0 and HRConstants.trait_has(c.traits, "no_team_bonus"):
-			continue
-		# §5: aşırı yük ve ikincil alan çarpanları burada da geçerli.
+		# §5: aşırı yük ve ikincil alan çarpanları burada da geçerli. `no_team_bonus`
+		# EMEKLİ (2026-08-21) — sekiz trait'lik sette "yalnız çalışır" yok; yerine gelen
+		# çarpanlar kişinin KENDİ verimini değiştiriyor, istifini değil.
 		total += weight * float(int(c.role_stats.get(axis, 0))) \
-			* HRSystem.output_mult_for_area(c, HRConstants.AREA_SALES)
+			* HRSystem.output_mult_for_area(c, HRConstants.AREA_SALES) \
+			* HRConstants.trait_mult(c.traits, "output_mult") \
+			* HRConstants.trait_mult(c.traits, "speed_mult")
 		weight *= B2BConstants.REP_STACK_DECAY
 	return total
 

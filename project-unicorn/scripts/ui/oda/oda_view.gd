@@ -754,7 +754,16 @@ func _relayout() -> void:
 	# 10px çubuk), 720p camında (~164px) 28'e iner — bar kendi eşiklerinden (36/48)
 	# yazıyı MICRO'ya çeker ve kazanç satırını düşürür; yazı 9px altına ASLA inmez.
 	if _mon_bar != null:
-		_mon_bar.custom_minimum_size = Vector2(0.0, clampf(glass.size.y * 0.17, 28.0, 44.0))
+		# Kartın doğal boyu 2+44+48+44 = 138. Cam 1080p'de ~269px: sığar ve altı boş
+		# kalır — B5.2'nin beklediği sonuç tam olarak bu. 720p camında (~164px) küçülür:
+		# size_scale ile satır yükseklikleri ve yazı boyu BİRLİKTE iner, kartın grameri
+		# değişmez (yeni bir düzen değil, aynı düzenin küçüğü).
+		var card_h: float = 138.0
+		var fit: float = clampf(glass.size.y * 0.62 / card_h, 0.62, 1.0)
+		if not is_equal_approx(float(_mon_bar.size_scale), fit):
+			_mon_bar.size_scale = fit
+			_mon_bar.rebuild()
+		_mon_bar.custom_minimum_size = Vector2(0.0, card_h * fit)
 	# Telefon camı: dönmüş sarmalayıcı — pivot her boyut atamasından SONRA kurulur
 	# (pivot_offset piksel cinsindendir, resize'da kendi kendine güncellenmez).
 	var pglass_size: Vector2 = phone_r.size * OdaLayoutRef.PHONE_GLASS_SIZE_REL
@@ -934,37 +943,29 @@ func _apply_screen_glow(night: bool, instant: bool) -> void:
 func _refresh_monitor() -> void:
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	var prog_label: Label = _mon_progress_block.get_node("ProgLabel")
+	# ORTAK TABAN (2026-08-21): kart yüzü kromaı gizliyor, diğer iki yüz onu geri
+	# istiyor. Her yüzün kendi gizlemesini kendi geri alması yerine hepsi aynı
+	# yerden başlıyor — yoksa bir yüzün gizlemesi öbürüne sızıyor.
+	_mon_header.visible = true
+	_mon_title.visible = true
+	prog_label.visible = true
 	if b != null and not b.is_bug_sprint:
-		# BUILD YÜZÜ: başlık + sorumlu satırı, esnek dolgu, ilerleme CAM ALTINDA.
-		# Faz etiketi sunum kopyasıdır (BuildHUD'un private const'una import yok).
-		# Dil yasası: build→geliştirme ("build" kabul edilen loanword setinde değil).
-		var phase_labels := {"iteration": tr("BUILD_PHASE_DESIGN"),
-			"development": tr("BUILD_PHASE_DEVELOPMENT"), "bugfix": tr("BUILD_PHASE_BETA")}
-		var bname: String = b.product_name if b.product_name != "" else tr("ODA_MONITOR_IDLE")
-		_mon_header.text = UiTokens.tr_upper(bname)
-		_mon_chip.visible = true
-		_mon_chip_dot.visible = false
-		_mon_chip_label.text = String(phase_labels.get(b.current_phase, ""))
-		_mon_chip_label.add_theme_color_override("font_color", UiTokens.ODA_ACCENT)
-		_mon_title.text = tr("ODA_MONITOR_BUILD_TITLE").format({"product": bname})
-		var lead: String = tr("ODA_MONITOR_LEAD_FOUNDER")
-		if b.lead_engineer_id != "" and b.lead_engineer_id != "founder":
-			var emp: Character = CharacterRegistry.get_character(b.lead_engineer_id)
-			if emp != null:
-				lead = emp.character_name
-		_mon_meta.visible = true
-		# Geliştirme parkında "~N gün kaldı" bar'la çelişir (bar "hazır" der) → hazır satırı.
-		if ProductSystem.can_enter_beta():
-			_mon_meta.text = UiTokens.tr_upper(tr("ODA_MONITOR_BUILD_META_READY").format({"lead": lead}))
-		else:
-			_mon_meta.text = UiTokens.tr_upper(tr("ODA_MONITOR_BUILD_META").format({"days": maxi(0, ProductSystem.build_days_remaining()), "lead": lead}))
+		# YAPIM YÜZÜ = ONAYLI KART, BAŞKA HİÇBİR ŞEY (R6, 2026-08-21). Monitöre özel
+		# başlık / faz çipi / sorumlu satırı / İLERLEME başlığı, kartın üç satırının
+		# zaten söylediği şeyi ikinci kez söylüyordu. Kart yeniden çizilmedi, yeniden
+		# biçimlenmedi, tek fazı cama doğru büyütülmedi — AYNI kart. Altında kalan boş
+		# cam ŞU AN İÇİN DOĞRU SONUÇ; orayı neyin dolduracağı ayrı bir karar.
+		_mon_header.visible = false
+		_mon_chip.visible = false
+		_mon_title.visible = false
+		_mon_meta.visible = false
 		_mon_grid.visible = false
-		_mon_slack.visible = true
 		_mon_footer.visible = false
+		_mon_slack.visible = true
 		_mon_progress_block.visible = true
-		prog_label.text = UiTokens.tr_upper(tr("ODA_MONITOR_PROGRESS"))
-		# Çubuğun kendisi BuildBar'dır ve modelini KENDİ çeker (aynı sinyaller); monitör
-		# ona hiçbir şey itmez — HUD ile aynı tick'te aynı durum yapısal olarak garantili.
+		prog_label.visible = false
+		# Kart modelini KENDİ çeker (aynı sinyaller); monitör ona hiçbir şey itmez —
+		# tracker ile aynı tick'te aynı durum yapısal olarak garantili.
 		return
 	if bool(GameState.get_flag("mvp_shipped", false)):
 		# CANLI ÜRÜN YÜZÜ (D4: cam DOLU — 2×2 stat grid'i + alt durum satırı).

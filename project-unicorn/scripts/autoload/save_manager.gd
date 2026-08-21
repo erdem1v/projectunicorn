@@ -35,7 +35,7 @@ extends Node
 # every point a save can be taken, and there is nothing mid-resolution for a schema to
 # describe. One sitting, one sitting only — it does not survive closing the game.
 
-const SCHEMA_VERSION := 5   # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti
+const SCHEMA_VERSION := 6   # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi
 const SAVE_DIR := "user://saves/"
 ## v3→v4 migration: what a migrated character gets in an area the old model never stored.
 ## Low but never zero — see _migrate_character_areas.
@@ -227,6 +227,8 @@ func read_slot(slot_id: String) -> Dictionary:
 		_migrate_character_areas(data["state"])
 	if version < 5:
 		_migrate_assignments_to_areas(data["state"])
+	if version < 6:
+		_migrate_traits_to_eight(data["state"])
 	return {
 		"ok": true,
 		"error_key": "",
@@ -607,6 +609,24 @@ func _game_version() -> String:
 ## Unknown values are LEFT ALONE rather than blanked: a value this table does not know is
 ## more likely a future sector than corruption, and dropping it would lose information the
 ## next build might understand.
+## GÖÇ SATIRLARININ TEK KAPISI (2026-08-21). ÖNCEDEN HER GÖÇ ÖLÜ YOLDAN OKUYORDU:
+## `save_to_slot` kayıtları `state["registries"]["characters"]` altına yazıyor
+## (SaveCodec.capture_registries), göçler ise `state["characters"]` okuyordu — yazılmış
+## hiçbir kayıtta olmayan bir anahtar. Yani v3'ten beri KARAKTER GÖÇLERİNİN HEPSİ
+## sessiz no-op'tu ve iki smoke vakası bunu yakalayamıyordu, çünkü fonksiyonu doğrudan,
+## elde kurulmuş düz bir dict'le çağırıyorlardı.
+##
+## DÜZ hâli de kabul ediliyor: eski smoke fixture'ları ve elle kurulmuş yükler
+## çalışmaya devam etsin. Gerçek kayıt her zaman iç teki.
+func _rows(state: Dictionary, key: String) -> Array:
+	var reg: Dictionary = state.get("registries", {}) as Dictionary
+	if typeof(reg.get(key, null)) == TYPE_ARRAY:
+		return reg[key] as Array
+	if typeof(state.get(key, null)) == TYPE_ARRAY:
+		return state[key] as Array
+	return []
+
+
 func _migrate_sector_ids(state: Dictionary) -> void:
 	var moved: int = 0
 	for bucket in ["customers", "prospects"]:
@@ -660,7 +680,7 @@ const _LEGACY_REAL_NEEDS := [
 ## built, rows mutated in place, unknown values left alone, debug-build-only count.
 func _migrate_character_areas(state: Dictionary) -> void:
 	var moved: int = 0
-	for row in (state.get("characters", []) as Array):
+	for row in (_rows(state, "characters") as Array):
 		if typeof(row) != TYPE_DICTIONARY:
 			continue
 		var d: Dictionary = row
@@ -755,7 +775,7 @@ func _migrate_character_areas(state: Dictionary) -> void:
 ## çünkü artık gerçekten tek bir alanda çalışıyor.
 func _migrate_assignments_to_areas(state: Dictionary) -> void:
 	var moved: int = 0
-	for row in (state.get("characters", []) as Array):
+	for row in (_rows(state, "characters") as Array):
 		if typeof(row) != TYPE_DICTIONARY:
 			continue
 		var d: Dictionary = row
@@ -797,7 +817,7 @@ func _migrate_assignments_to_areas(state: Dictionary) -> void:
 ## alanına düşer (lider koltuğu taşınırken kişiye bakmıyoruz).
 ## Ham state içinde bir karakter satırı bulur; yoksa boş döner (çözüm ilk alana düşer).
 func _character_row(state: Dictionary, character_id: String) -> Dictionary:
-	for row in (state.get("characters", []) as Array):
+	for row in (_rows(state, "characters") as Array):
 		if typeof(row) == TYPE_DICTIONARY and String((row as Dictionary).get("id", "")) == character_id:
 			return row
 	return {}
@@ -820,7 +840,7 @@ func _legacy_job_to_area(job_id: String, stats: Dictionary) -> String:
 func _migrate_prospect_needs(state: Dictionary) -> void:
 	var mapped: int = 0
 	var dropped: int = 0
-	for row in (state.get("prospects", []) as Array):
+	for row in (_rows(state, "prospects") as Array):
 		if typeof(row) != TYPE_DICTIONARY:
 			continue
 		var d: Dictionary = row
@@ -840,3 +860,76 @@ func _migrate_prospect_needs(state: Dictionary) -> void:
 	if (mapped > 0 or dropped > 0) and OS.is_debug_build():
 		print("[SaveManager] v2→v3: %d need line(s) mapped to indices, %d not in the pool" % [
 			mapped, dropped])
+
+
+## EMEKLİ ON TRAIT → ONAYLI SEKİZ (2026-08-21). Bir id'yi yeniden adlandırmak bir
+## YENİDEN ADLANDIRMA DEĞİL, bir VERİ GÖÇÜDÜR: kayıttaki dizge bugünün tablosunda
+## yoksa `validate_employee_traits` düşer ve o karakter trait'sız kalır — sessizce
+## yanlış bir kayıt, bir kayıt sisteminin verebileceği en kötü sonuç.
+##
+## EŞLEME EKSENİ KORUR, ADI DEĞİL: `wont_jump_ship` → `loyal` aynı istifa çarpanını
+## taşır; ekseni tamamen emekli olanlar (`works_alone`, `needs_direction`) en yakın
+## davranışa iner. İki eski id aynı yeniye düşebilir — on'dan sekize inen bir sette bu
+## kaçınılmaz ve kayıp bilerek GÖRÜNÜR (aşağıdaki tabloda yan yana duruyorlar).
+##
+## Tablo YEREL ve EMEKLİ: canlı HRConstants'tan okumuyor, çünkü bir sonraki set
+## değişikliği bu göçü sessizce bozmamalı (kardeş göçlerin _LEGACY_* konvansiyonu).
+const _LEGACY_TRAIT_MAP := {
+	"wont_jump_ship": "loyal",              # aynı eksen, aynı büyüklük (0.6)
+	"one_foot_out": "bag_packed",           # aynı eksen, aynı büyüklük (1.6)
+	"sours_the_room": "mood_buster",        # aynı yön: ekibin moralini eritir
+	"glass_heart": "mood_buster",           # ↑ ile BİRLEŞİR — ekseni kalmadı
+	"pressure_proof": "last_one_out",       # moral-düşüş çarpanı → mesai-moral çarpanı
+	"natural_leader": "takes_them_under",   # lider ekseninin tek devamı
+	"mentors_peers": "takes_them_under",    # ↑ ile BİRLEŞİR
+	"warms_up_fast": "picks_it_up_fast",    # "hızlı adapte" → "hızlı öğrenir"
+	"works_alone": "double_checker",        # ekseni emekli; en yakını "yavaş ama temiz"
+	"needs_direction": "double_checker",    # ↑ ile BİRLEŞİR
+}
+
+
+func _migrate_traits_to_eight(state: Dictionary) -> void:
+	var moved: int = 0
+	var dropped: int = 0
+	for row in (_rows(state, "characters") as Array):
+		if typeof(row) != TYPE_DICTIONARY:
+			continue
+		var d: Dictionary = row
+		if typeof(d.get("traits", null)) != TYPE_ARRAY:
+			continue
+		# KURUCUYA DOKUNULMAZ: onun trait'leri FounderConstants'tan gelir ve bu tur
+		# kapsam dışı. Ayrı katalog, ayrı vokabüler, ayrı göç.
+		if String(d.get("category", "")) != "employee":
+			continue
+		var out: Array = []
+		for t in (d["traits"] as Array):
+			var tid: String = String(t)
+			if HRConstants.TRAITS.has(tid):
+				if not out.has(tid):
+					out.append(tid)
+				continue
+			if _LEGACY_TRAIT_MAP.has(tid):
+				var mapped: String = String(_LEGACY_TRAIT_MAP[tid])
+				if not out.has(mapped):
+					out.append(mapped)
+				moved += 1
+				continue
+			# EŞLENEMEYEN BİR ID SESSİZCE DÜŞMEZ. Boş trait listesi
+			# `validate_employee_traits`'i düşürür, yani "sessizce yanlış" yerine
+			# "gürültülü yanlış" oluruz ve karakter yine de bir trait taşır.
+			# Seçim DETERMİNİSTİK (id'nin hash'i): aynı kayıt iki kez yüklenirse aynı
+			# trait'i alır, yoksa parmak izi testi kendi kendine dalgalanırdı.
+			push_error("[SaveManager] v5→v6: unmapped trait '%s' on '%s'" % [
+				tid, String(d.get("id", "?"))])
+			dropped += 1
+		if out.is_empty():
+			var pool: Array = HRConstants.free_trait_ids()
+			if not pool.is_empty():
+				out.append(String(pool[absi(hash(String(d.get("id", "")))) % pool.size()]))
+		# TEK TRAIT (HRConstants.TRAIT_COUNT): iki eski id aynı yeniye düştüyse zaten
+		# tekilleşti; iki FARKLI yeniye düştüyse ilki kalır.
+		if out.size() > HRConstants.TRAIT_COUNT:
+			out = out.slice(0, HRConstants.TRAIT_COUNT)
+		d["traits"] = out
+	if (moved > 0 or dropped > 0) and OS.is_debug_build():
+		print("[SaveManager] v5→v6: %d trait(s) remapped, %d unmapped" % [moved, dropped])

@@ -13,14 +13,49 @@ extends RefCounted
 #
 # ROL AÇIKLAMASI SATIRDA DEĞİL: satır tek satır yüksekliğinde ve açıklama metni defteri
 # üç katına çıkarırdı. HOVER TOOLTIP'te.
-const W_ROLES := 370
-const W_TASK := 260
-const W_EXPERIENCE := 140
-const W_STATE := 160
+# TASARIM GENİŞLİKLERİ (1920'de çizildi). Toplamı 1374 + ÇALIŞAN hücresi — %125'te
+# mantıksal viewport 1536'ya İNİYOR (content_scale_factor büyütmez, küçültür) ve
+# MORAL sütunuyla ⋯ düğmesi ekranın dışına çıkıyordu.
+const W_ROLES_WIDE := 370
+const W_TASK_WIDE := 260
+const W_EXPERIENCE_WIDE := 140
+const W_STATE_WIDE := 160
+const W_SALARY_WIDE := 150
+const W_MORALE_WIDE := 160
+
+# YOĞUN KADEME. top_bar._apply_density'nin aynı grameri: dar viewport'ta geniş
+# sütunlar daralır ve HİÇBİR ŞEY DÜŞMEZ — her sütun içeriğini korur.
+const W_ROLES_DENSE := 300
+const W_TASK_DENSE := 180
+const W_EXPERIENCE_DENSE := 104
+const W_STATE_DENSE := 140
+const W_SALARY_DENSE := 118
+const W_MORALE_DENSE := 124
+const DENSE_BELOW := 1600   # mantıksal genişlik eşiği (top_bar ile aynı sayı)
+# ÖLÇÜLDÜ, RAPORLANDI: bu kademe %125’te MORAL sütununu ve ⋯ düğmesini geri getiriyor
+# ama sayfanın EN SAĞ kenarı hâlâ kırpılıyor. Sütunları 100px daha daraltmak kesim
+# yerini HİÇ oynatmadı — yani kalan taşma defterin genişliğinden DEĞİL, sayfa
+# kabuğundan geliyor ve bu turun dosya kümesinin dışında. Kovalanmadı, yazıldı.
+
 const W_TRAIT := 90
-const W_SALARY := 150
-const W_MORALE := 160
 const W_MENU := 44
+
+## Defter kurulurken bir kez ölçülür. Statik, çünkü çizim de statik ve başlık ile
+## satırların AYNI sayıyı okuması şart — iki farklı genişlik iki farklı tablo demek.
+static var _dense: bool = false
+
+
+## Ev sahibi (hr_tab) defteri kurmadan ÖNCE çağırır.
+static func measure(viewport_width: float) -> void:
+	_dense = viewport_width > 0.0 and viewport_width < float(DENSE_BELOW)
+
+
+static func w_roles() -> int:      return W_ROLES_DENSE if _dense else W_ROLES_WIDE
+static func w_task() -> int:       return W_TASK_DENSE if _dense else W_TASK_WIDE
+static func w_experience() -> int: return W_EXPERIENCE_DENSE if _dense else W_EXPERIENCE_WIDE
+static func w_state() -> int:      return W_STATE_DENSE if _dense else W_STATE_WIDE
+static func w_salary() -> int:     return W_SALARY_DENSE if _dense else W_SALARY_WIDE
+static func w_morale() -> int:     return W_MORALE_DENSE if _dense else W_MORALE_WIDE
 
 ## Satırın aksiyon sözlüğü. ACTION_MENU satır (ve ⋯ düğmesi) tıklamasıdır: DÖRT kişi
 ## aksiyonunu taşıyan popover'ı açar. Eğitim 2026-08-22'de o menüye girdi — onaylı
@@ -39,13 +74,13 @@ static func column_header() -> Control:
 	row.add_theme_constant_override("separation", 0)
 	row.custom_minimum_size = Vector2(0, 26)
 	row.add_child(_head(tr_key("HR_COL_EMPLOYEE"), 0, HORIZONTAL_ALIGNMENT_LEFT))
-	row.add_child(_head(tr_key("HR_COL_ROLES_LEADERSHIP"), W_ROLES))
-	row.add_child(_head(tr_key("HR_COL_TASK"), W_TASK))
-	row.add_child(_head(tr_key("HR_COL_EXPERIENCE"), W_EXPERIENCE))
-	row.add_child(_head(tr_key("HR_COL_STATE"), W_STATE))
+	row.add_child(_head(tr_key("HR_COL_ROLES_LEADERSHIP"), w_roles()))
+	row.add_child(_head(tr_key("HR_COL_TASK"), w_task()))
+	row.add_child(_head(tr_key("HR_COL_EXPERIENCE"), w_experience()))
+	row.add_child(_head(tr_key("HR_COL_STATE"), w_state()))
 	row.add_child(_head(tr_key("HR_COL_TRAIT"), W_TRAIT))
-	row.add_child(_head(tr_key("HR_COL_SALARY"), W_SALARY))
-	row.add_child(_head(tr_key("HR_COL_MORALE"), W_MORALE))
+	row.add_child(_head(tr_key("HR_COL_SALARY"), w_salary()))
+	row.add_child(_head(tr_key("HR_COL_MORALE"), w_morale()))
 	row.add_child(_head("", W_MENU))
 	var wrap := PanelContainer.new()
 	wrap.theme_type_variation = &"HeaderBand"
@@ -80,22 +115,17 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 	var who := VBoxContainer.new()
 	who.add_theme_constant_override("separation", 2)
 	who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	# BOŞTA / AŞIRI YÜK rozetleri AD SATIRINDA durur (9b), DURUM sütununda değil: ikisi de
-	# kişinin O AN NEREDE olduğunu söylüyor — bir olay değil bir konum.
-	var name_row := HBoxContainer.new()
-	name_row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	name_row.add_child(UiFactory.make_label(emp.character_name, &"RowName"))
-	var here: Control = _placement_badge(emp)
-	if here != null:
-		name_row.add_child(here)
-	who.add_child(name_row)
+	# AD SATIRI YALNIZ AD (C3, 2026-08-21). BOŞTA / AŞIRI YÜK buradan DURUM sütununa
+	# taşındı — Görevler sayfası (10b) ikisini de zaten orada çiziyordu, yani iki sayfa
+	# aynı rozeti iki ayrı yerde gösteriyordu.
+	who.add_child(UiFactory.make_label(emp.character_name, &"RowName"))
 	who.add_child(UiFactory.make_label(
 		UiTokens.tr_upper(HRConstants.role_label(emp.role)), &"MicroLabel"))
 	who_cell.add_child(who)
 	row.add_child(who_cell)
 
 	# --- ROLLER · LİDERLİK: iki alan + hairline + Liderlik, hepsi beş yıldız ---
-	row.add_child(HRUiShared.role_area_cell(emp, W_ROLES, muted))
+	row.add_child(HRUiShared.role_area_cell(emp, w_roles(), muted))
 
 	# --- GÖREV: aktif sürümün adıyla, ya da alan ifadesiyle ---
 	row.add_child(_task_cell(emp, muted))
@@ -110,11 +140,11 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 	row.add_child(HRUiShared.trait_cell(emp.traits, W_TRAIT))
 
 	# --- MAAŞ ---
-	row.add_child(_num(HRUiShared.money(emp.monthly_salary), W_SALARY, muted))
+	row.add_child(_num(HRUiShared.money(emp.monthly_salary), w_salary(), muted))
 
 	# --- MORAL: bar + sayı (mevcut yerinde-boyama yolu korunuyor) ---
 	var morale_cell := HRUiShared.morale_row(emp.morale, refs, false)
-	morale_cell.custom_minimum_size = Vector2(W_MORALE, 0)
+	morale_cell.custom_minimum_size = Vector2(w_morale(), 0)
 	morale_cell.size_flags_horizontal = Control.SIZE_SHRINK_END
 	row.add_child(morale_cell)
 
@@ -189,8 +219,8 @@ static func _num(text: String, width: int, muted: bool) -> Label:
 	return l
 
 
-## BOŞTA / AŞIRI YÜK — kişinin AD SATIRINDA duran yer rozeti (9b). Hover açıklamaları
-## 9f'ten birebir; ikisi de motorun türettiği okumalar, saklanan bayrak yok.
+## BOŞTA / AŞIRI YÜK — DURUM sütununun yer rozeti (C3). Hover açıklamaları 9f'ten
+## birebir; ikisi de motorun türettiği okumalar, saklanan bayrak yok.
 static func _placement_badge(emp: Character) -> Control:
 	if HRSystem.is_overloaded(emp):
 		var over: Control = UiFactory.make_state_chip(tr_key("HR_BADGE_OVERLOADED_JOBS"),
@@ -226,7 +256,7 @@ static func _task_cell(emp: Character, muted: bool) -> Control:
 	var lbl := UiFactory.make_label(text, &"RowMeta", UiTokens.INK_MUTED)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lbl.custom_minimum_size = Vector2(W_TASK, 0)
+	lbl.custom_minimum_size = Vector2(w_task(), 0)
 	lbl.clip_text = true
 	if muted:
 		lbl.modulate = Color(1, 1, 1, 0.45)
@@ -249,7 +279,7 @@ static func _experience_area(emp: Character) -> String:
 ## DENEYİM hücresi: 4px iz + dolgu + altında yüzde.
 static func _experience_cell(emp: Character, refs: Dictionary) -> Control:
 	var box := VBoxContainer.new()
-	box.custom_minimum_size = Vector2(W_EXPERIENCE, 0)
+	box.custom_minimum_size = Vector2(w_experience(), 0)
 	box.add_theme_constant_override("separation", 3)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	var area_key: String = _experience_area(emp)
@@ -260,7 +290,7 @@ static func _experience_cell(emp: Character, refs: Dictionary) -> Control:
 	var bar := ProgressBar.new()
 	bar.theme_type_variation = &"BuildProgress"
 	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(W_EXPERIENCE - 24, 4)
+	bar.custom_minimum_size = Vector2(w_experience() - 24, 4)
 	bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	bar.max_value = HRConstants.EXPERIENCE_MAX
 	bar.value = value
@@ -276,9 +306,15 @@ static func _experience_cell(emp: Character, refs: Dictionary) -> Control:
 ## yok, eğitim ⋯ menüsünün dördüncü satırı.
 static func _state_cell(emp: Character) -> Control:
 	var box := HBoxContainer.new()
-	box.custom_minimum_size = Vector2(W_STATE, 0)
+	box.custom_minimum_size = Vector2(w_state(), 0)
 	box.add_theme_constant_override("separation", 6)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	# ROZET CİPTİR, SÜTUN DEĞİL (C3). Kutu çocukları dikeyde FILL doğar, yani çip
+	# satırın TÜM yüksekliğine gerilip 1px kenarı bir hücre çerçevesi gibi okunuyordu —
+	# "YENİ ağır çerçeveli" şikâyeti tam olarak buydu, çipin KENDİ stili kardeşleriyle
+	# bayt-aynı. Bu tek satır dördünü birden düzeltiyor. hr_assignments._state_cell
+	# aynı satırı zaten taşıyordu; defter geride kalmıştı.
+	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 	# EDİLGENLİK önce: eğitim ve izin, satırın o gün ne YAPMADIĞINI söyler ve dikkat
 	# rozetlerinden daha yüksek okunur.
@@ -292,6 +328,14 @@ static func _state_cell(emp: Character) -> Control:
 			leave_txt = tr_key("HR_STATE_ON_LEAVE")
 		box.add_child(UiFactory.make_state_chip(leave_txt,
 			UiTokens.INK_MUTED, UiTokens.NEUTRAL_BADGE_BG, UiTokens.BORDER_DISABLED))
+		return box
+
+	# YER ROZETİ (C3): edilgenliğin altında, YENİ'nin üstünde. Eğitim ve izin "bugün
+	# çalışmıyor" der ve daha yüksek okunur; AŞIRI YÜK / BOŞTA çalışıyor ama YANLIŞ
+	# yerde olduğunu söyler ve bir işe alım rozetinden önce gelir.
+	var placed: Control = _placement_badge(emp)
+	if placed != null:
+		box.add_child(placed)
 		return box
 
 	# YENİ AYRI KANALDAN gelir ve gelmek zorundadır: badges_for'a girseydi

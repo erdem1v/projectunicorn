@@ -50,7 +50,6 @@ static func daily_tick() -> void:
 	HRSearchSystem.daily_tick()
 	HROvertimeSystem.daily_tick()
 	HRMoraleSystem.tick_thresholds()
-	HRMoraleSystem.tick_trait_effects()
 	HRMoraleSystem.tick_positive_events()
 	#  7. DENEYİM: bugün gerçekten ÇALIŞMIŞ olanlar biriktirir. Eğitimdekiler
 	#     STATUS_TRAINING taşıdığı için get_active_employees zaten dışarıda bırakır.
@@ -102,13 +101,24 @@ static func tick_experience() -> void:
 			continue
 		var lead_mult: float = HRConstants.experience_gain_mult(area_lead_leadership_for(emp))
 		var load_mult: float = 1.0 if emp.assigned_jobs.size() <= 1 else HRConstants.OVERLOAD_OUTPUT_MULT
+		# ÇABUK KAPAR: kişinin KENDİ öğrenme hızı.
+		var own_mult: float = HRConstants.trait_mult(emp.traits, "experience_mult")
+		# GERÇEK LİDER: alanın SORUMLUSU taşıyorsa o alandaki HERKES daha hızlı öğrenir
+		# — taşıyıcının kendisi dahil, çünkü öğretmek öğrenmenin bir biçimi. Alan başına
+		# soruluyor, kişi başına değil: bir kişi iki alanda iki farklı sorumlunun altında
+		# olabilir ve ikisinin de aynı anda GERÇEK LİDER olması gerekmez.
 		for area_id in emp.assigned_jobs:
 			var area_key: String = String(area_id)
 			# Araştırma bir YETENEK değil, yalnız atanabilir bir slot — kimsenin Araştırma
 			# sayısı yok, o yüzden orada deneyim de birikmez.
 			if not HRConstants.AREAS.has(area_key):
 				continue
-			var gain: int = int(round(float(base) * lead_mult * load_mult))
+			var mentor: Character = area_lead(area_key)
+			var mentor_mult: float = 1.0
+			if mentor != null:
+				mentor_mult = HRConstants.trait_mult(mentor.traits, "lead_experience_mult")
+			var gain: int = int(round(
+				float(base) * lead_mult * load_mult * own_mult * mentor_mult))
 			CharacterRegistry.add_area_experience(emp.id, area_key, maxi(gain, 1))
 
 

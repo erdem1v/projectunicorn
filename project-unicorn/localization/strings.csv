@@ -338,7 +338,6 @@ HR_TASK_NONE,—,—
 HR_LEGEND_PRIMARY,ANA ALAN,PRIMARY AREA
 HR_LEGEND_SECONDARY,İKİNCİL ALAN,SECONDARY AREA
 HR_LEGEND_NO_AREA,ALANI YOK · ATANAMAZ,NO AREA · CANNOT ASSIGN
-HR_FOUNDER_BAND,KURUCU · HER ALANA ATANABİLİR,FOUNDER · CAN TAKE ANY AREA
 HR_CHIP_IDLE_COUNT,{n} BOŞTA,{n} IDLE
 HR_CHIP_OVERLOAD_COUNT,{n} AŞIRI YÜK,{n} OVERLOADED
 HR_ATLAS_ARRIVAL,adaylar {span} içinde gelir,candidates arrive within {span}
@@ -516,6 +515,15 @@ BUILD_ROUND_LAST,Tur {n} · son,Round {n} · last
 BUILD_GAIN_LINE,bu tur +{gain} · kalan {left},this round +{gain} · {left} left
 BUILD_BETA_BUGS_CHIP,HATA {n},BUGS {n}
 BUILD_SHIP_TOOLTIP_BUGS,Yayınla · {n} hata canlıya taşınır,Ship · {n} bugs go live
+BUILD_BUSY_NOBODY,Kimse üzerinde değil.,Nobody is on it.
+BUILD_BUSY_ELSEWHERE,Ekip başka işte.,The team is on other work.
+BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
+BUILD_SUPPORT_CONFIRMED,DOĞRULANMIŞ {n},CONFIRMED {n}
+BUILD_DEV_BUGS,{n} hata,{n} bugs
+BUILD_BETA_TRIPLET,BULUNAN {found} · ÇÖZÜLEN {fixed} · KALAN {left},FOUND {found} · FIXED {fixed} · LEFT {left}
+PROD_PERCENT,%{n},{n}%
+PROD_TO_BETA_PLAIN,Beta'ya geç,Move to beta
+PROD_LAUNCH_PLAIN,Yayınla,Ship it
 BUILD_DEV_LINE,Geliştirme · ~{days} gün,Development · about {days} days
 BUILD_DEV_READY,Geliştirme tamam · Beta'ya hazır,Development done · ready for beta
 BUILD_HALF_ROUND_TOOLTIP,Yarım tur sayılmaz,A half round doesn't count
@@ -765,26 +773,22 @@ NOTICE_SRC_CUSTOMER,Müşteri,Customer
 SALES_LOG_REP_CLOSED,"{rep}, {company} ile anlaşmayı kapattı.",{rep} closed the deal with {company}.
 HR_BADGE_NEW,Yeni,New
 HR_SEVERANCE_LINE,{label}: {amount} ({months} ay),{label}: {amount} ({months} mo)
-HR_TRAIT_WARMS_UP_FAST_LABEL,Çabuk ısınır,Warms up fast
-HR_TRAIT_WARMS_UP_FAST_EFFECT,Morali bir tabanın altına inmez,Morale never drops below a floor
-HR_TRAIT_PRESSURE_PROOF_LABEL,Baskıya dayanıklı,Pressure-proof
-HR_TRAIT_PRESSURE_PROOF_EFFECT,Moral düşüşleri ve ek mesai bedeli yarı yarıya,Morale hits and overtime costs are halved
-HR_TRAIT_MENTORS_PEERS_LABEL,Kol kanat gerer,Takes people under their wing
-HR_TRAIT_MENTORS_PEERS_EFFECT,Aynı bölümdeki arkadaşlarına moral desteği verir,Lifts morale for others in the same department
-HR_TRAIT_WONT_JUMP_SHIP_LABEL,Gemiyi terk etmez,Will not jump ship
-HR_TRAIT_WONT_JUMP_SHIP_EFFECT,Zor koşulda bile ayrılmaya daha az meyilli,Less likely to leave even when things get hard
-HR_TRAIT_NATURAL_LEADER_LABEL,Doğal lider,Natural leader
-HR_TRAIT_NATURAL_LEADER_EFFECT,Sorumlu olduğunda ekibi daha iyi koordine eder,Coordinates the team better when they are the lead
-HR_TRAIT_WORKS_ALONE_LABEL,Yalnız çalışır,Works alone
-HR_TRAIT_WORKS_ALONE_EFFECT,"Ekibe katkı vermez, yalnız kendi işini yapar","Contributes nothing to the team, only their own work"
-HR_TRAIT_GLASS_HEART_LABEL,Cam kalp,Glass heart
-HR_TRAIT_GLASS_HEART_EFFECT,Moral düşüşleri ve ek mesai bedeli iki katı,Morale hits and overtime costs are doubled
-HR_TRAIT_SOURS_THE_ROOM_LABEL,Havayı bozar,Sours the room
-HR_TRAIT_SOURS_THE_ROOM_EFFECT,Aynı bölümdeki arkadaşlarının moralini aşağı çeker,Drags down morale for others in the same department
-HR_TRAIT_ONE_FOOT_OUT_LABEL,Bir ayağı kapıda,One foot out the door
-HR_TRAIT_ONE_FOOT_OUT_EFFECT,Kötü giderse ayrılmaya daha meyilli,More likely to leave if things go badly
-HR_TRAIT_NEEDS_DIRECTION_LABEL,Söylenmezse yapmaz,Needs to be told
-HR_TRAIT_NEEDS_DIRECTION_EFFECT,Sorumlu değilken belirgin biçimde az katkı verir,Contributes markedly less when not the lead
+HR_TRAIT_LOYAL_LABEL,SADIK,Loyal
+HR_TRAIT_LOYAL_EFFECT,Moral düşükken bile kolay kolay ayrılmaz; rakip teklifine dayanır.,"Unlikely to leave even at low morale, and holds out against a rival offer."
+HR_TRAIT_PICKS_IT_UP_FAST_LABEL,ÇABUK KAPAR,Picks It Up Fast
+HR_TRAIT_PICKS_IT_UP_FAST_EFFECT,Deneyimi belirgin şekilde hızlı kazanır.,Gains experience noticeably faster.
+HR_TRAIT_TAKES_THEM_UNDER_LABEL,GERÇEK LİDER,Takes Them Under
+HR_TRAIT_TAKES_THEM_UNDER_EFFECT,Sorumlusu olduğu alanda herkes daha hızlı öğrenir; ayrılıkları ağır alır.,Everyone in the area they lead learns faster; they take departures hard.
+HR_TRAIT_DOUBLE_CHECKER_LABEL,TİTİZ,Double Checker
+HR_TRAIT_DOUBLE_CHECKER_EFFECT,"Geliştirmede çok daha az hata çıkarır, ama yavaş çalışır.","Generates far fewer bugs during development, but works slower."
+HR_TRAIT_LAST_ONE_OUT_LABEL,İŞKOLİK,Last One Out
+HR_TRAIT_LAST_ONE_OUT_EFFECT,Mesai morali onda çok daha yavaş erir.,Overtime erodes their morale far more slowly.
+HR_TRAIT_CANT_SAY_NO_LABEL,HAYIR DİYEMEZ,Can't Say No
+HR_TRAIT_CANT_SAY_NO_EFFECT,"Hesapları daha memnun, ama üzerinde daha çok söz birikir.","Their accounts stay happier, but more promises pile up on them."
+HR_TRAIT_BAG_PACKED_LABEL,GÖZÜ YÜKSEKTE,Bag Packed
+HR_TRAIT_BAG_PACKED_EFFECT,"Yüksek verimle çalışır, ama rakip teklifinde tutması zor.","Works at high output, but is hard to hold against a rival offer."
+HR_TRAIT_MOOD_BUSTER_LABEL,TAT KAÇIRAN,Mood Buster
+HR_TRAIT_MOOD_BUSTER_EFFECT,Ekibinin morali normalden hızlı erir.,Their team's morale erodes faster than normal.
 HR_ROLE_HINT_PRODUCT_MANAGER,İnovasyon ve deneyim tavanını yükseltir.,Raises the innovation and experience ceiling.
 HR_ROLE_HINT_DESIGNER,Tasarım kalitesinin tavanını yükseltir.,Raises the ceiling on design quality.
 HR_ROLE_HINT_DEVELOPER,Geliştirme hızını ve kod kalitesini yükseltir.,Raises development speed and code quality.

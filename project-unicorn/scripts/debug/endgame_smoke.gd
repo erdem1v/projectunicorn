@@ -316,6 +316,12 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"founder_trains_and_learns":      fail = _case_founder_trains_and_learns()
 		"leadership_is_trainable":        fail = _case_leadership_is_trainable()
 		"save_migration_v4_to_v5":        fail = _case_save_migration_v4_to_v5()
+		# --- Trait seti · Build Bar · Görevler (2026-08-21). Beşi de ÖNCEKİ motora karşı DÜŞER.
+		"build_pauses_when_all_busy":     fail = _case_build_pauses_when_all_busy()
+		"build_resumes_when_one_frees":   fail = _case_build_resumes_when_one_frees()
+		"destek_survives_ship":           fail = _case_destek_survives_ship()
+		"trait_migration_real_load":      fail = _case_trait_migration_real_load()
+		"gorevler_has_no_founder":        fail = _case_gorevler_has_no_founder()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -387,7 +393,7 @@ static func _make_employee(id: String, display_name: String, role_id: String,
 	c.monthly_salary = salary
 	c.morale = morale
 	c.role_stats = HRConstants.seed_skills(role_id, expertise, pace, rapport)
-	c.traits = ["warms_up_fast"]
+	c.traits = ["picks_it_up_fast"]
 	CharacterRegistry.add(c)
 	return c
 
@@ -1525,13 +1531,21 @@ static func _case_prep_bonus_and_capacity() -> String:
 		return "prep refused (should be allowed, 3 days out)"
 	if not GameState.get_flag("pitch_prep_active", false):
 		return "capacity flag not set"
-	if ProductSystem.capacity_demand() < 1:
-		return "prep did not occupy capacity (demand=%d)" % ProductSystem.capacity_demand()
+	# MEKANİZMA DEĞİŞTİ, KONU AYNI (H6, 2026-08-21). Hazırlık eskiden KAPASİTE TALEBİ
+	# sayılıyordu, yani yapımın TAMAMINI yavaşlatıyordu — yanlış aktör: hazırlık yalnız
+	# KURUCUYU tutar, çalışanların hızına dokunmamalı. Artık kurucuyu MEŞGUL sayar;
+	# tek taşıyıcı oysa yapım DURUR, değilse hiçbir şey yavaşlamaz (ara kademe yok).
+	if ProductSystem.capacity_demand() != 0:
+		return "VC prep still eats build capacity (demand=%d) — H6 moved it off the multiplier" \
+			% ProductSystem.capacity_demand()
+	var founder: Character = CharacterRegistry.get_founder()
+	if ProductSystem._is_free(founder):
+		return "a founder in VC prep still counts as FREE for the build"
 	VCPitchSystem.begin_meeting("anchor")  # consumes the prep focus
 	if GameState.get_flag("pitch_prep_active", false):
 		return "capacity flag not cleared at meeting start"
-	if ProductSystem.capacity_demand() != 0:
-		return "capacity not released after prep consumed (%d)" % ProductSystem.capacity_demand()
+	if not ProductSystem._is_free(founder):
+		return "the founder stayed busy after the prep was consumed"
 	return ""
 
 
@@ -2779,7 +2793,7 @@ static func _make_cs(id: String, expertise: int, morale: int = 60) -> Character:
 	# when changing it: at the erosion these cases set up, axis 0 ties the founder-managed
 	# twin and axis 3 lands one point off CS_ESCALATION_SAT.
 	cs.role_stats = HRConstants.seed_skills(HRConstants.ROLE_CUSTOMER_REP, expertise, SEED_PACE, SEED_RAPPORT)
-	cs.traits = ["warms_up_fast"]
+	cs.traits = ["picks_it_up_fast"]
 	CharacterRegistry.add(cs)
 	return cs
 
@@ -5029,19 +5043,30 @@ static func _case_hr_constants_contract() -> String:
 	if HRConstants.roles_in_department(HRConstants.DEPT_PRODUCT_DEV).size() != 4:
 		return "product_dev should hold four roles, holds %d" % HRConstants.roles_in_department(HRConstants.DEPT_PRODUCT_DEV).size()
 
-	# --- Trait catalog: 5 + 5, every entry displayable with its effect ---
-	if HRConstants.positive_trait_ids().size() != 5 or HRConstants.negative_trait_ids().size() != 5:
-		return "trait catalog is %d+/%d-, want 5+/5-" % [
-			HRConstants.positive_trait_ids().size(), HRConstants.negative_trait_ids().size()]
+	# --- Trait catalog: SEKİZ, üçü bedelsiz + beşi bedelli, hepsi gösterilebilir ---
+	# Sayı onaylı ikon sayfasından gelir (sekiz glif); bölünme görevin Cost sütunundan.
+	if HRConstants.TRAITS.size() != 8:
+		return "trait catalog holds %d, the approved sheet draws 8" % HRConstants.TRAITS.size()
+	if HRConstants.free_trait_ids().size() != 3 or HRConstants.cost_trait_ids().size() != 5:
+		return "trait split is %d free / %d cost, want 3/5" % [
+			HRConstants.free_trait_ids().size(), HRConstants.cost_trait_ids().size()]
+	# VALANS ÇİZİMDEN ÇIKTI (R4): hiçbir trait'te `polarity` kalmadı. Bu iddia
+	# bir çizimin yanlışlıkla eski alanı geri getirmesini yakalar.
+	for entry in HRConstants.TRAITS.values():
+		if (entry as Dictionary).has("polarity"):
+			return "a trait still carries `polarity` — R4 retired good/bad"
 	for trait_id in HRConstants.TRAITS.keys():
 		if HRConstants.trait_label(trait_id) == trait_id:
 			return "trait '%s' has no label" % trait_id
 		if HRConstants.trait_effect_text(trait_id) == "":
 			return "trait '%s' has no effect text — a candidate file must state it plainly" % trait_id
-	# The two morale traits are exact inverses, so a mixed file cancels out.
-	if not is_equal_approx(HRConstants.trait_mult(["pressure_proof", "glass_heart"], "morale_drop_mult"), 1.0):
-		return "the opposing morale traits do not cancel"
-	if not is_equal_approx(HRConstants.trait_mult([], "morale_drop_mult"), 1.0):
+	# İstifa ekseninin iki ucu birbirini tam olarak götürür (0.6 × 1.6 değil — SADIK ve
+	# GÖZÜ YÜKSEKTE aynı anda taşınamaz, ama çarpan yine de çarpımsal olmalı).
+	if not is_equal_approx(HRConstants.trait_mult(["loyal"], "resign_chance_mult"), 0.6):
+		return "SADIK's resign multiplier drifted"
+	if not is_equal_approx(HRConstants.trait_mult(["bag_packed"], "resign_chance_mult"), 1.6):
+		return "GÖZÜ YÜKSEKTE's resign multiplier drifted"
+	if not is_equal_approx(HRConstants.trait_mult([], "resign_chance_mult"), 1.0):
 		return "an empty trait list is not multiplicatively neutral"
 
 	# --- Band shapes: the STRUCTURAL invariants behind non-dominance + distinct prices ---
@@ -7259,24 +7284,27 @@ static func _case_star_ruler_contract() -> String:
 
 
 static func _case_single_trait_contract() -> String:
-	# Onaylı tasarım herkeste TEK trait çiziyor (Kadro'da bir ikon, aday kartında bir çip)
-	# ve dosyalardan birinin tek trait'i OLUMSUZ — yani kutup artık bir EK değil, tek başına
-	# dilimin kendisi. Eski kural en az bir OLUMLU istiyordu.
+	# Onaylı tasarım herkeste TEK trait çiziyor ve R4'ten sonra o trait'in KUTBU yok:
+	# ayrım artık BEDEL (`carries_cost`), ve yalnız üretici okuyor.
 	# FALSİFİKASYON: TRAIT_COUNT'ı 2 yap → ilk iddia FAIL.
 	if HRConstants.TRAIT_COUNT != 1:
 		return "TRAIT_COUNT is %d; the approved skin draws exactly one" % HRConstants.TRAIT_COUNT
 	if HRConstants.validate_employee_traits([]):
 		return "an employee with NO trait passed validation"
-	if HRConstants.validate_employee_traits(["warms_up_fast", "pressure_proof"]):
+	if HRConstants.validate_employee_traits(["loyal", "last_one_out"]):
 		return "two traits passed validation — TRAIT_COUNT is not enforced"
-	# YALNIZ OLUMSUZ artık GEÇERLİ: tasarımın Kerem'i (11b, HAVAYI BOZAR) budur.
-	if not HRConstants.validate_employee_traits(["sours_the_room"]):
-		return "a negative-only file was rejected — 11b's second candidate could not exist"
-	if not HRConstants.validate_employee_traits(["natural_leader"]):
-		return "a positive-only file was rejected"
+	# Bedelli TEK başına geçerli: saf yük bir dosya mümkün olmaya devam ediyor.
+	if not HRConstants.validate_employee_traits(["mood_buster"]):
+		return "a cost-only file was rejected — the price side of the choice vanished"
+	if not HRConstants.validate_employee_traits(["loyal"]):
+		return "a free-trait file was rejected"
+	# EMEKLİ BİR ID ARTIK GEÇERSİZ. Bu, kayıt göçünün NEDEN gerekli olduğunun kanıtı:
+	# göç olmasaydı eski bir kayıt tam olarak buraya düşerdi.
+	if HRConstants.validate_employee_traits(["pressure_proof"]):
+		return "a retired trait id still validates — the ten are not gone"
 	# ÜRETEÇ de tek dağıtıyor, ve batch içinde trait tekrarı yok.
 	var seen: Dictionary = {}
-	var negatives: int = 0
+	var cost_files: int = 0
 	var files: Array = HRCandidateGenerator.generate(HRConstants.ROLE_DEVELOPER,
 		HRConstants.BAND_MID, 4242)
 	for f in files:
@@ -7288,10 +7316,10 @@ static func _case_single_trait_contract() -> String:
 		if seen.has(tid):
 			return "trait '%s' repeated inside one batch" % tid
 		seen[tid] = true
-		if HRConstants.trait_polarity(tid) == "negative":
-			negatives += 1
-	if negatives < 1:
-		return "no file in the batch carried the negative — the price side of the choice vanished"
+		if HRConstants.trait_carries_cost(tid):
+			cost_files += 1
+	if cost_files < 1:
+		return "no file in the batch carried a cost trait — every choice was free"
 	return ""
 
 
@@ -8793,3 +8821,194 @@ static func _case_borderless_note_key_exists() -> String:
 		return "TOPBAR_UNIT_PER_DAY missing"
 	return ""
 
+# ============================================================================
+#  Build Bar · duraklama · DESTEK · trait göçü · Görevler (2026-08-21)
+# ============================================================================
+
+## R2: "Kurucu her şeyi yapabilir, ama aynı anda değil" — ve bu BİR KARAR DEĞİL,
+## bir SONUÇ. Taşıyabilecek herkes meşgulse yapım durur ve efor İŞLEMEZ.
+## FALSİFİKASYON: `build_paused()`'ı `return false` yap → ikinci iddia FAIL (efor akar).
+static func _case_build_pauses_when_all_busy() -> String:
+	_set_founder_tech(6)
+	if not ProductSystem.start_build("ai_assistant",
+			["ai_assistant_chat", "ai_assistant_streaming"], ""):
+		return "could not start a build"
+	# Tek kişilik şirket: taşıyan yalnız kurucu ve o BOŞ — yapım koşmalı.
+	if ProductSystem.build_paused():
+		return "a build with a free founder on it reported PAUSED"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var before: float = b.efor_spent
+	ProductSystem.hourly_tick(9)
+	if b.efor_spent <= before:
+		return "a running build did not spend effort"
+	# Şimdi kurucuyu EĞİTİME yolla: kodda gerçekten var olan bir meşguliyet.
+	var founder: Character = CharacterRegistry.get_founder()
+	founder.status = HRConstants.STATUS_TRAINING
+	if not ProductSystem.build_paused():
+		return "every carrier is busy and the build still reports running"
+	if ProductSystem.pause_note_key() != "BUILD_BUSY_ELSEWHERE":
+		return "an ASSIGNED-but-busy team got the 'nobody is on it' note (%s)" % \
+			ProductSystem.pause_note_key()
+	var frozen: float = b.efor_spent
+	ProductSystem.hourly_tick(10)
+	if b.efor_spent > frozen + 0.0001:
+		return "a PAUSED build kept spending effort (%.4f → %.4f)" % [frozen, b.efor_spent]
+	# HİÇ KİMSE ATANMAMIŞSA not değişir — iki hâl birbirine karışmamalı.
+	CharacterRegistry.clear_areas(founder.id)
+	if ProductSystem.pause_note_key() != "BUILD_BUSY_NOBODY":
+		return "with nobody assigned the note was not 'nobody is on it' (%s)" % \
+			ProductSystem.pause_note_key()
+	return ""
+
+
+## Duraklama GERİ ALİNİR: biri boşalınca yapım TAM HIZDA döner (ara kademe yok, H5).
+## FALSİFİKASYON: `_is_free`'den STATUS_ACTIVE kapısını kaldır → ilk iddia FAIL.
+static func _case_build_resumes_when_one_frees() -> String:
+	_set_founder_tech(6)
+	if not ProductSystem.start_build("ai_assistant",
+			["ai_assistant_chat", "ai_assistant_streaming"], ""):
+		return "could not start a build"
+	var founder: Character = CharacterRegistry.get_founder()
+	founder.status = HRConstants.STATUS_TRAINING
+	if not ProductSystem.build_paused():
+		return "a build with its only carrier in training is not paused"
+	# İKİNCİ BİR TAŞIYICI: fazın alanına atanmış, boş bir çalışan.
+	var pm: Character = _make_employee("char_free_pm", "Free Pm",
+		HRConstants.ROLE_PRODUCT_MANAGER)
+	if not ProductSystem.phase_assignees("iteration").has(pm):
+		return "a Product Manager was not counted among the design phase's carriers"
+	if ProductSystem.build_paused():
+		return "one free carrier was not enough to resume — H5 has no middle rung"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var before: float = b.efor_spent
+	ProductSystem.hourly_tick(11)
+	if b.efor_spent <= before:
+		return "a resumed build did not spend effort"
+	# VC HAZIRLIĞI da meşgul eder — ama YALNIZ kurucuyu (H6: kapasite çarpanı değil).
+	CharacterRegistry.clear_areas(pm.id)
+	founder.status = HRConstants.STATUS_ACTIVE
+	if ProductSystem.build_paused():
+		return "the founder came back free and the build stayed paused"
+	GameState.set_flag("pitch_prep_active", true)
+	if not ProductSystem.build_paused():
+		return "the founder went into VC prep and the build kept running"
+	GameState.set_flag("pitch_prep_active", false)
+	return ""
+
+
+## R5: YAYINLAMAK BİR SON DEĞİLDİR. Yayından sonra kart kaybolmaz, DESTEK'e döner
+## ve ürün yaşadıkça yaşar. DOĞRULANMIŞ gerçek veriyi okur; GELEN ÇİZİLMEZ.
+## FALSİFİKASYON: `_derive_support`'ı `return false` yap → ikinci iddia FAIL.
+static func _case_destek_survives_ship() -> String:
+	const BarModel := preload("res://scripts/ui/components/build_bar_model.gd")
+	var before = BarModel.new()
+	if before.derive():
+		return "a card derived with no build and no shipped product"
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_product_name", "Nova")
+	GameState.set_flag("mvp_version", 2)
+	GameState.set_flag("mvp_live_bug_count", 7)
+	var m = BarModel.new()
+	if not m.derive():
+		return "the card vanished after ship — YAYINLANDI is not a terminal state (R5)"
+	if m.phase != BarModel.PHASE_SUPPORT:
+		return "a shipped product did not land on DESTEK (%s)" % String(m.phase)
+	if m.live_bugs != 7:
+		return "DOĞRULANMIŞ read %d, want the real live bug count 7" % m.live_bugs
+	if m.decision_key != "PROD_ACTION_HARDEN":
+		return "DESTEK's decision row is not the bug sprint (%s)" % m.decision_key
+	# KOŞU SIRASINDA KARAR SATIRI DÜŞER (2i: basılabilir tek şey kuralı).
+	if not ProductSystem.start_bug_sprint():
+		return "start_bug_sprint refused a shipped product with 7 open bugs"
+	var running = BarModel.new()
+	running.derive()
+	if running.decision_key != "":
+		return "the decision row survived into a running sprint"
+	if not running.sprint_running:
+		return "the card did not see the running sprint"
+	# DESTEK DURAKLAMAZ: duraklama aktif YAPIMIN hâli, canlı ürünün değil.
+	if running.paused:
+		return "a live product reported PAUSED"
+	return ""
+
+
+## A2: bir id'yi yeniden adlandırmak bir VERİ GÖÇÜDÜR. Bu vaka göçü fonksiyonu
+## doğrudan çağırarak DEĞİL, GERÇEK YÜKLEME YOLUNDAN geçirerek sınar: dosya yazılır,
+## yüklenir, sonuç okunur. Önemi ölçüldü — iki eski göç vakası elde kurulmuş DÜZ bir
+## dict kullandığı için geçiyordu, oysa gerçek kayıt satırları `registries` altında
+## duruyor ve göçlerin hiçbiri onlara DİĞMEMİŞTİ.
+## FALSİFİKASYON: `_rows`'u `state.get(key, [])`'e geri al → son iddia FAIL.
+static func _case_trait_migration_real_load() -> String:
+	var slot: String = "smoke_traitmig"
+	var path: String = SaveManager._path_for(slot)
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var payload: Dictionary = {
+		"schema_version": 5,
+		"game_version": "smoke",
+		"meta": {},
+		"state": {"registries": {"characters": [
+			{"id": "char_old_a", "category": "employee", "traits": ["wont_jump_ship"]},
+			{"id": "char_old_b", "category": "employee", "traits": ["glass_heart"]},
+			{"id": "char_old_c", "category": "employee", "traits": ["no_such_trait"]},
+		]}},
+	}
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		return "could not write the fixture save"
+	f.store_string(JSON.stringify(payload))
+	f.close()
+	# GERÇEK KAPI: dosyayı SaveManager'ın KENDİSİ okur ve sürüm sevkiyatını o yapar.
+	# Göç fonksiyonunu elle çağırmak tam olarak eski iki vakanın hatasıydı.
+	var out: Dictionary = SaveManager.read_slot(slot)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	if not bool(out.get("ok", false)):
+		return "the v5 fixture did not load: %s" % String(out.get("error_key", "?"))
+	var rows: Array = ((out["state"] as Dictionary).get("registries", {}) as Dictionary) \
+		.get("characters", []) as Array
+	if rows.size() != 3:
+		return "the migrated payload lost rows (%d)" % rows.size()
+	var a: Array = (rows[0] as Dictionary).get("traits", []) as Array
+	if a != ["loyal"]:
+		return "`wont_jump_ship` did not become `loyal` through the real load path (%s)" % str(a)
+	var b2: Array = (rows[1] as Dictionary).get("traits", []) as Array
+	if b2 != ["mood_buster"]:
+		return "`glass_heart` did not map (%s)" % str(b2)
+	# EŞLENEMEYEN İD SESSİZCE DÜŞMEZ: boş bırakmak `validate_employee_traits`'i
+	# düşürürdü, yani kayıt sessizce yanlış olurdu.
+	var c: Array = (rows[2] as Dictionary).get("traits", []) as Array
+	if not HRConstants.validate_employee_traits(c):
+		return "an unmapped trait left the character invalid (%s)" % str(c)
+	return ""
+
+
+## R1: kurucu Görevler matrisinde YOK — satır yok, kutu yok, salt-okunur bant yok.
+## Ama atama YAŞAMAYA DEVAM EDİYOR (H4): motor onu aktif fazın alanına oturtuyor,
+## çünkü hız terimi ve kalite ortalaması üçü de `assigned_jobs`'ı okuyor.
+## FALSİFİKASYON: `_founder_band`'i geri koy → ikinci iddia FAIL.
+static func _case_gorevler_has_no_founder() -> String:
+	const Assignments := preload("res://scripts/tabs/hr/hr_assignments.gd")
+	_make_employee("char_matrix_dev", "Matrix Dev", HRConstants.ROLE_DEVELOPER)
+	var founder: Character = CharacterRegistry.get_founder()
+	var page: Control = Assignments.build(func(_a: String, _b: String, _c: bool) -> void: pass)
+	var names: Array[String] = []
+	_collect_label_text(page, names)
+	page.queue_free()
+	for t in names:
+		if t == founder.character_name:
+			return "the founder still has a row on Görevler"
+		if t == TranslationServer.translate("HR_FOUNDER_BAND"):
+			return "the founder band is still drawn"
+	if not names.has("Matrix Dev"):
+		return "the matrix drew no employees at all — the probe is measuring nothing"
+	# ATAMA ÖKSÜZ DEĞİL: motor kurucuyu hâlâ bir alanda tutuyor.
+	if founder.assigned_jobs.size() != 1:
+		return "the founder holds %d areas; the engine must keep exactly one" % \
+			founder.assigned_jobs.size()
+	return ""
+
+
+static func _collect_label_text(n: Node, out: Array[String]) -> void:
+	if n is Label:
+		out.append((n as Label).text)
+	for c in n.get_children():
+		_collect_label_text(c, out)

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b6avncauwgv82"
-path="res://.godot/imported/sours_the_room.svg-16fc77614cf614a5840f0ce8d8875e52.ctex"
+uid="uid://xf0d01gq7tlp"
+path="res://.godot/imported/bag_packed.svg-7dee2e2750ed63d318370b92afed3336.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/traits/sours_the_room.svg"
-dest_files=["res://.godot/imported/sours_the_room.svg-16fc77614cf614a5840f0ce8d8875e52.ctex"]
+source_file="res://assets/icons/traits/bag_packed.svg"
+dest_files=["res://.godot/imported/bag_packed.svg-7dee2e2750ed63d318370b92afed3336.ctex"]
 
 [params]
 

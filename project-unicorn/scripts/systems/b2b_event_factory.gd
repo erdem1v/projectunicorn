@@ -184,6 +184,14 @@ static func pick_request_kind(c: Customer) -> String:
 		feature += 10
 	if PromiseRegistry.has_open_for(c.id):
 		feature -= 25
+	# HAYIR DİYEMEZ: hesabın SORUMLU temsilcisi "hayır" diyemiyorsa o hesap daha sık
+	# özellik ister — söz olayları onun üzerinde birikir. Skor tamsayı ve RNG'siz
+	# kalıyor (yukarıdaki RNG yasağı), çarpan yalnız sıralamayı kaydırıyor.
+	if c.assigned_to != "":
+		var rep: Character = CharacterRegistry.get_character(c.assigned_to)
+		if rep != null and rep.status == HRConstants.STATUS_ACTIVE:
+			feature = int(round(float(feature)
+				* HRConstants.trait_mult(rep.traits, "promise_chance_mult")))
 	scores[B2BConstants.CS_KIND_FEATURE] = feature
 	var best: String = ""
 	var best_score: int = -2147483648

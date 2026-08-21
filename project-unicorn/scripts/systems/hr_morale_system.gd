@@ -145,46 +145,32 @@ static func tick_thresholds() -> void:
 		_maybe_resign(emp)
 
 
-static func tick_trait_effects() -> void:
-	# PERIODIC, NOT DAILY: dept_morale_weekly is a weekly cadence
-	# (HRConstants.TRAIT_DEPT_MORALE_PERIOD_DAYS), so on six days out of seven this function
-	# is a single modulo and a return. On the seventh it still does nothing at all unless
-	# somebody actually carries "Kol kanat gerer" / "Havayı bozar" — no carrier, no writes.
-	if HRConstants.TRAIT_DEPT_MORALE_PERIOD_DAYS <= 0:
-		return
-	if GameState.day % HRConstants.TRAIT_DEPT_MORALE_PERIOD_DAYS != 0:
-		return
-	# İzindeki kimse odada değil: an absent carrier supports nobody and sours nobody, and an
-	# absent colleague feels neither. Same reading as B2BSalesSystem's on-leave CS rep, who
-	# dampens nothing while away.
-	var roster: Array[Character] = CharacterRegistry.get_active_employees()
-	var per_department: Dictionary = {}   # dept id -> summed nudge from its carriers
-	var own_share: Dictionary = {}        # character id -> what THAT person contributes
-	for emp in roster:
-		if emp.category != "employee":
+## `tick_trait_effects` EMEKLİ (2026-08-21). Tek ekseni `dept_morale_weekly` idi
+## (KOL KANAT GERER +2 / HAVAYI BOZAR −2, haftada bir) ve sekiz trait'lik yeni sette o
+## eksen yok. Yerine geçen TAT KAÇIRAN bir HAFTALIK DOKUNUŞ değil bir ERİME ÇARPANI:
+## ekibin her moral DÜŞÜŞÜNÜ büyütüyor, `_team_decay_mult` üzerinden `apply_delta`'da.
+## Fark önemli: eski trait moralİ kendiliğinden aşındırıyordu (§10'un "oynanmamış
+## ekonomik sonuç yok" kuralına sınırda bir şey), yenisi yalnız BAŞKA bir sebeple düşen
+## morali daha sert düşürüyor — sebep hep oynanmış bir şey kalıyor.
+
+
+## Bu kişinin ekibindeki TAT KAÇIRAN'ların moral erime çarpanı. Taşıyıcı KENDİ çarpanına
+## girmez (bir şikayetçi kendi kendini bozmaz), ve izindeki taşıyıcı odada değildir —
+## `get_active_employees` zaten onları dışarıda bırakıyor.
+static func _team_decay_mult(emp: Character) -> float:
+	if emp == null or emp.category != "employee":
+		return 1.0
+	var dept: String = HRConstants.department_of(emp.role)
+	if dept == "":
+		return 1.0
+	var m: float = 1.0
+	for other in CharacterRegistry.get_active_employees():
+		if other == null or other.id == emp.id or other.category != "employee":
 			continue
-		var own: int = int(round(HRConstants.trait_sum(emp.traits, "dept_morale_weekly")))
-		if own == 0:
+		if HRConstants.department_of(other.role) != dept:
 			continue
-		var dept: String = HRConstants.department_of(emp.role)
-		if dept == "":
-			continue
-		per_department[dept] = int(per_department.get(dept, 0)) + own
-		own_share[emp.id] = own
-	if per_department.is_empty():
-		return   # nobody carries a room trait: this day moves nothing
-	for emp in roster:
-		if emp.category != "employee":
-			continue
-		var dept_id: String = HRConstants.department_of(emp.role)
-		if not per_department.has(dept_id):
-			continue
-		# A carrier does not nudge THEMSELVES, which is also why a lone carrier in an
-		# otherwise empty department changes nothing: total minus own share is zero.
-		var delta: int = int(per_department[dept_id]) - int(own_share.get(emp.id, 0))
-		if delta == 0:
-			continue
-		apply_delta(emp, delta, HRConstants.REASON_TRAIT_PEER)
+		m *= HRConstants.trait_mult(other.traits, "dept_morale_decay_mult")
+	return m
 
 
 static func tick_positive_events() -> void:
@@ -254,25 +240,17 @@ static func scaled_delta(emp: Character, delta: int) -> int:
 	var leadership: int = GameState.get_founder_skill("leadership")
 	var scaled: int
 	if delta < 0:
+		# `morale_drop_mult` (KİŞİNİN kendi dayanıklılığı) emekli; yerine EKİBİN erime
+		# çarpanı geldi. Yön değişti ve bu bilinçli: artık "ben dayanıklıyım" diye bir
+		# trait yok, "yanımdaki ortamı bozuyor" diye bir trait var.
 		scaled = int(round(float(delta)
-			* HRConstants.trait_mult(emp.traits, "morale_drop_mult")
+			* _team_decay_mult(emp)
 			* HRConstants.climate_drop_mult(leadership)))
 	else:
 		scaled = int(round(float(delta) * HRConstants.climate_gain_mult(leadership)))
 	if scaled == 0:
 		return 0   # NO DRIFT: a drop worth less than half a point is nothing, not -1.
 	var target: int = emp.morale + scaled
-	if scaled < 0:
-		# "Çabuk ısınır": morale does not fall below the carried floor. The floor CATCHES a fall
-		# from above and does nothing otherwise — it must never PUSH morale up (that would be
-		# drift by another name), and it must never FREEZE someone already beneath it either.
-		# Clamping to mini(current, floor) does both jobs at once and gets the second one wrong:
-		# for anyone below their own floor it pins the target at today's value, which turns the
-		# trait into total immunity from every morale cost in the game. So the floor only binds
-		# while the person is still above it.
-		var floor_value: int = HRConstants.trait_floor(emp.traits)
-		if floor_value > 0 and emp.morale > floor_value:
-			target = maxi(target, floor_value)
 	return clampi(target, HRConstants.MORALE_MIN, HRConstants.MORALE_MAX) - emp.morale
 
 
@@ -417,7 +395,25 @@ static func confirm_departure(character_id: String) -> void:
 		return
 	# İSTİFADA TAZMİNAT YOKTUR (HRConstants.SEVERANCE_ON_RESIGN == 0, design doc §6). Nothing
 	# is charged here on purpose: the price of neglect was the person, not a payment.
+	#
+	# AMA EKİP BEDEL ÖDER (2026-08-21). İşten çıkarma bunu zaten yapıyordu
+	# (HRActions.fire → MORALE_FIRE_TEAM), İSTİFA yapmıyordu — yani oyuncunun ihmali
+	# yüzünden giden biri odada hiç iz bırakmıyordu. GERÇEK LİDER'in bedeli tam olarak
+	# burada okunuyor: "ayrılışı −10 alan, diğerleri −5".
+	_charge_departure(character_id)
 	CharacterRegistry.remove(character_id)   # run_departures++ and character_removed
+
+
+## Bir ayrılışın kalan ekibe moral bedeli. Taban HRConstants.MORALE_FIRE_TEAM (5) —
+## işten çıkarmanın zaten kullandığı sabit, yeni bir sayı icat edilmedi.
+## GERÇEK LİDER taşıyanlar `departure_morale_extra` kadar FAZLA öder.
+static func _charge_departure(leaver_id: String) -> void:
+	for other in CharacterRegistry.get_employees():
+		if other == null or other.id == leaver_id:
+			continue
+		var extra: float = HRConstants.trait_sum(other.traits, "departure_morale_extra")
+		var cost: int = HRConstants.MORALE_FIRE_TEAM + int(round(absf(extra)))
+		apply_delta(other, -cost, HRConstants.REASON_TEAMMATE_FIRED)
 
 
 static func forget_employee(character_id: String) -> void:

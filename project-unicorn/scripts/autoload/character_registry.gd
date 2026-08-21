@@ -635,7 +635,7 @@ func _seed_debug_characters() -> void:
 	eng.monthly_salary = 6000
 	eng.morale = 60
 	eng.role_stats = HRConstants.seed_skills(HRConstants.ROLE_DEVELOPER, 4, 3)
-	eng.traits = ["pressure_proof"]
+	eng.traits = ["last_one_out"]
 	eng.hire_day = 1
 	eng.leave_month = HRConstants.leave_month_for(1, 0)
 	_characters[eng.id] = eng
@@ -648,7 +648,7 @@ func _seed_debug_characters() -> void:
 	des.monthly_salary = 5000
 	des.morale = 40
 	des.role_stats = HRConstants.seed_skills(HRConstants.ROLE_DESIGNER, 4, 3)
-	des.traits = ["glass_heart"]   # TEK TRAIT (HRConstants.TRAIT_COUNT, 2026-08-22)
+	des.traits = ["mood_buster"]   # TEK TRAIT (HRConstants.TRAIT_COUNT)
 	des.hire_day = 1
 	des.leave_month = HRConstants.leave_month_for(1, 1)
 	_characters[des.id] = des

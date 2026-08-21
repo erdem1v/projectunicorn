@@ -561,7 +561,7 @@ func _run_b2b_shot(kind: String) -> void:
 		# Müşteri Başarısı 5 — bu masanın okuduğu TEK sayı (rev 2 §2), yani churn damperi
 		# de talep temposu da buradan. (Eski yorum silinen bir shim tablosuna atıf yapıyordu.)
 		cs.role_stats = HRConstants.seed_skills(HRConstants.ROLE_CUSTOMER_REP, 5, 4)
-		cs.traits = ["warms_up_fast"]
+		cs.traits = ["picks_it_up_fast"]
 		CharacterRegistry.add(cs)
 		CustomerRegistry.assign_customer(c.id, cs.id)
 		CustomerRegistry.set_satisfaction(c.id, 22)
@@ -1390,7 +1390,7 @@ func _run_hr_shot(kind: String) -> void:
 	_shot_window(Vector2i(1920, 1080))
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.day = 64
-	if kind != "bos":
+	if kind != "bos" and kind != "gorevler-bos":
 		_seed_hr_roster()
 		# Beş kişilik bir kadro $10K başlangıç nakdiyle tutarsız (runway anında 0 okur ve
 		# işe alım önizlemesi anlamsızlaşır). Seri-A öncesi bir şirketin kasası + burn'ün
@@ -1398,6 +1398,10 @@ func _run_hr_shot(kind: String) -> void:
 		GameState.set_cash(240000)
 		FinanceSystem.daily_tick()
 	match kind:
+		"gorevler-bos":   # LOC-DATA debug seed / id
+			# C2: kurucu matristen çıktığı için taze bir koşuda GÖREVLER GERÇEKTEN boş.
+			# Kadro'nun `bos` çekimi bunu GÖSTEREMEZ — o sayfa KADRO'da kalıyor.
+			pass
 		"dosyalar":
 			# Files ON THE TABLE: start a search, then run the arrival window's worth of
 			# HR ticks so the generator's real output is what renders.
@@ -1422,6 +1426,12 @@ func _run_hr_shot(kind: String) -> void:
 			FinanceSystem.apply_one_time_cost(
 				HRConstants.SEARCH_RETAINER, "hire")
 		_:
+			# AŞIRI YÜKÜ GÖRÜNÜR KIL (C3): kadronun ilk kişisini ikinci bir alana da
+			# ata. Rozet artık AD SATIRINDA değil DURUM sütununda çıkmalı.
+			var over: Array[Character] = CharacterRegistry.get_employees()
+			if not over.is_empty():
+				CharacterRegistry.assign_area(over[0].id,
+					HRConstants.role_secondary_area(over[0].role))
 			# "ekip": bekleyen bir arayış da görünsün (Kare 3 şeridi).
 			HRSearchSystem.start_search(HRConstants.ROLE_DESIGNER, "senior")
 			GameState.day += 1
@@ -1483,6 +1493,8 @@ func _run_hr_shot(kind: String) -> void:
 				CharacterRegistry.assign_area(roster[0].id,
 					HRConstants.role_secondary_area(roster[0].role))
 				CharacterRegistry.clear_areas(roster[1].id)
+			tab._show_view(tab.VIEW_ASSIGNMENTS)
+		"gorevler-bos":   # LOC-DATA debug seed / id
 			tab._show_view(tab.VIEW_ASSIGNMENTS)
 		"egitim-modal":   # LOC-DATA debug seed / id
 			# 11c: tek kişi için alan seçimi. Kadronun ilk çalışanıyla açılır.
@@ -1590,19 +1602,19 @@ func _seed_hr_roster() -> void:
 	var seeds: Array = [
 		{"name": "Elif Demir", "role": HRConstants.ROLE_PRODUCT_MANAGER, "salary": 9800,
 			"key": 7, "rest": 4, "lead": 6, "morale": 72,
-			"traits": ["natural_leader"]},
+			"traits": ["takes_them_under"]},
 		{"name": "Deniz Arslan", "role": HRConstants.ROLE_DESIGNER, "salary": 7400,
 			"key": 6, "rest": 3, "lead": 2, "morale": 38,
-			"traits": ["pressure_proof"]},   # TEK TRAIT (HRConstants.TRAIT_COUNT)
+			"traits": ["last_one_out"]},   # TEK TRAIT (HRConstants.TRAIT_COUNT)
 		{"name": "Mert Yıldız", "role": HRConstants.ROLE_DEVELOPER, "salary": 11200,   # LOC-DATA debug seed / id
 			"key": 8, "rest": 4, "lead": 3, "morale": 61,
-			"traits": ["wont_jump_ship"]},
+			"traits": ["loyal"]},
 		{"name": "Selin Kaya", "role": HRConstants.ROLE_TESTER, "salary": 6900,
 			"key": 5, "rest": 3, "lead": 1, "morale": 22,
-			"traits": ["mentors_peers"]},
+			"traits": ["double_checker"]},
 		{"name": "Burak Şahin", "role": HRConstants.ROLE_SALES_REP, "salary": 8300,   # LOC-DATA debug seed / id
 			"key": 6, "rest": 3, "lead": 2, "morale": 55,
-			"traits": ["warms_up_fast"]},
+			"traits": ["picks_it_up_fast"]},
 	]
 	var ordinal: int = 0
 	for seed_data in seeds:
@@ -1683,7 +1695,7 @@ func _run_ending_shot(key: String) -> void:
 		emp.category = "employee"
 		emp.monthly_salary = 6000
 		emp.role_stats = HRConstants.seed_skills(emp.role, 5, 4)
-		emp.traits = ["pressure_proof"]   # 1 positive satisfies the employee trait formula
+		emp.traits = ["last_one_out"]   # TEK TRAIT (HRConstants.TRAIT_COUNT)
 		CharacterRegistry.add(emp)
 
 	# Resolve the shot key → real ending_id + phase + signed terms.
@@ -1740,7 +1752,7 @@ func _build_state_arg(fallback: String) -> String:
 		var a: String = String(arg)
 		if a.begins_with("--build-state="):
 			var v: String = a.trim_prefix("--build-state=")
-			if v in ["r1", "r3", "r4", "dev", "devpark", "beta", "beta0"]:
+			if v in ["r1", "r3", "r4", "dev", "devpark", "beta", "beta0", "durdu"]:
 				return v
 			push_warning("[Shot] --build-state bilinmiyor: %s" % v)
 	return fallback
@@ -1764,6 +1776,15 @@ func _seed_build_state(state: String) -> void:
 		return
 	var design_cap: float = ProductSystem.PHASE_DESIGN_END * b.total_efor
 	match state:
+		"durdu":
+			# DURAKLAMIŞ KART: efor bir miktar işlesin, sonra TAŞIYABİLECEK herkesi meşgul
+			# et. Kurucuyu eğitime yollamak kodda gerçekten var olan bir meşguliyet —
+			# fixture yeni bir durum icat etmiyor, var olanı kuruyor.
+			b.efor_spent = design_cap * 0.5
+			ProductSystem.hourly_tick(9)
+			for c in CharacterRegistry.get_all():
+				c.status = HRConstants.STATUS_TRAINING
+				c.training_days_left = 6
 		"r1":
 			b.efor_spent = design_cap * 0.5
 			ProductSystem.hourly_tick(9)
@@ -1960,7 +1981,7 @@ func _shot_customer(id: String, cname: String, industry: String, phase: String, 
 		rep.role = HRConstants.ROLE_CUSTOMER_REP
 		rep.category = "employee"
 		rep.role_stats = HRConstants.seed_skills(HRConstants.ROLE_CUSTOMER_REP, 5, 4)
-		rep.traits = ["warms_up_fast"]
+		rep.traits = ["picks_it_up_fast"]
 		CharacterRegistry.add(rep)
 		c.assigned_to = rep.id
 	c.update_health_from_satisfaction()
