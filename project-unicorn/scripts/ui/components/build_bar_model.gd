@@ -127,7 +127,7 @@ func derive() -> bool:
 			# KALAN = BULUNAN − ÇÖZÜLEN (sayfanın aritmetiği: 20 − 14 = 6).
 			# `bug_count` HENÜZ BULUNMAMIŞ hataları da sayar, yani onu basmak KALAN'ı
 			# BULUNAN'dan BÜYÜK gösterebiliyordu — doğru olamayacak bir sayaç.
-			# Dolgu `bug_count` okumaya devam ediyor: çubuk GERÇEK işin tamamını boşaltır.
+			# Dolgu da `bug_count` OKUR ama artık onu ÇEVİRİR (D3): çubuk BOŞALMAZ, dolar.
 			m.bugs_left = maxi(0, m.bugs_found - m.bugs_fixed)
 			m.fill = beta_fill()
 			m.decision_key = "PROD_LAUNCH_PLAIN"
@@ -199,9 +199,17 @@ func _build_title(b: FeatureBuild) -> String:
 	return "%s v%d" % [pname, version]
 
 
-## Beta dolumu: kalan / başlangıç (event bug ekleyip başlangıcı aşarsa 1'e kırpılır).
+## Beta İLERLEMESİ: 1 − kalan/başlangıç. YÜKSELEN çubuk (D3, 2026-08-22).
+##
+## ÖNCESİ `bugs_remaining / bugs_start` idi — BOŞALAN bir çubuk. Beta açılır açılmaz
+## %100, biterken %0 yazıyordu; diğer üç fazın tam TERSİ yönü. Aynı dolgudan türeyen
+## yüzde etiketi de o yüzden geriye sayıyordu. Kart tek bir gramer konuşmak zorunda:
+## dolu = iş bitti.
+##
+## Event yeni hata ekleyip başlangıcı aşarsa oran 1'i geçer ve kırpılır — yani çubuk
+## GERİ DÜŞEBİLİR ama negatife inmez. Gerçekten de iş artmıştır; çubuk yalan söylemez.
 func beta_fill() -> float:
-	return clampf(float(bugs_remaining) / float(maxi(1, bugs_start)), 0.0, 1.0)
+	return clampf(1.0 - float(bugs_remaining) / float(maxi(1, bugs_start)), 0.0, 1.0)
 
 
 ## Turun rengi — RAMPA B. Tur SAYISI hiçbir yerde çizilmez, renk tek göstergedir (2i).

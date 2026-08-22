@@ -23,7 +23,6 @@ offset_top = 60.0
 offset_right = -20.0
 offset_bottom = 198.0
 grow_horizontal = 0
-mouse_default_cursor_shape = 13
 
 [node name="BuildBar" parent="Root" instance=ExtResource("2_build_bar")]
 layout_mode = 1

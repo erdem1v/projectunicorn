@@ -856,7 +856,27 @@ static func enter_development() -> void:
 
 
 static func can_enter_beta() -> bool:
-	# UI kapısı: GELİŞTİRME bandı dolu (efor tam PHASE_DEV_END·total'de parkta).
+	# EŞİK KALKTI (H1, 2026-08-22). Eskiden geliştirme bandının TAM dolmasını istiyordu;
+	# artık karar satırı HER YÜZDEDE canlı ve beta'ya erken geçmek oyuncunun hakkı.
+	#
+	# RAPORLANIYOR, DÜZELTİLMİYOR: erken geçişin BUGÜN BEDELİ YOK. Hatalar YALNIZ
+	# geliştirme fazında birikiyor (`_tick_development`), kalite eksenleri ise
+	# iterasyondan geliyor — yani erken geçmek daha AZ hata + daha KISA yapım demek ve
+	# baskın strateji. Bedeli (eksik geliştirmenin kaliteye yansıması) bir denge
+	# kararı ve bu turun kapsımı dışında; kapı bilerek bedelsiz açıldı.
+	return active_build != null and active_build.current_phase == "development"
+
+
+static func development_band_complete() -> bool:
+	## "Geliştirme bandı doldu mu" — H1 ÖNCESİ `can_enter_beta`'nın GÖVDESİ.
+	##
+	## Kapı açıldı (oyuncu her yüzdede beta'ya geçebilir) ama bandın KENDİSİ duruyor:
+	## efor `PHASE_DEV_END`'de park ediyor ve orada hata birikmiyor. İki soru aynı
+	## ifadeyle soruluşu TESADÜFTİ — "basılabilir mi" ile "iş bitti mi" aynı şey değil.
+	##
+	## OKUYUCULARI SÜRÜCÜLER: smoke fixture'ları ve `run_probe` TEMSİLÎ bir oyuncuyu
+	## oynuyor; baskın ama bugün bedelsiz olan erken çıkışı almaları, kalibrasyonla
+	## ilgisi olmayan bir sebeple bütün sayılarını değiştirirdi.
 	return active_build != null and active_build.current_phase == "development" \
 		and active_build.efor_spent >= PHASE_DEV_END * active_build.total_efor - 0.0001
 
@@ -865,7 +885,7 @@ static func enter_beta() -> void:
 	# Oyuncu kararı: "Beta'ya geç." Geliştirme parkından TEK çıkış (eski otomatik
 	# dev→beta ratchet'inin gövdesi buraya taşındı — davranış aynı, tetik oyuncuda).
 	if not can_enter_beta():
-		push_warning("[ProductSystem] enter_beta before the development band is complete")
+		push_warning("[ProductSystem] enter_beta outside the development phase")
 		return
 	var b := active_build
 	_apply_tech_debt_due(b)                        # borç beta girişinde düşer (mevcut kural)

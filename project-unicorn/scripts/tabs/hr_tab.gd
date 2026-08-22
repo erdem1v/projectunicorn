@@ -46,6 +46,7 @@ var _seg_assign: Button = null
 var _placement_chips: HBoxContainer = null
 var _attention_strip: VBoxContainer = null
 var _roster_header: Control = null
+var _header_slot: VBoxContainer = null   # başlığın evi; içeriği her kurulumda tazelenir
 # Kart başına yerinde-repaint referansları: emp.id → {"bar":…, "value":…}
 var _morale_refs: Dictionary = {}
 
@@ -106,6 +107,10 @@ func _on_palette_changed(_cb: bool) -> void:
 # --- Sayfa kromu ------------------------------------------------------------
 
 func _build_chrome() -> void:
+	# ÖLÇÜ EN BAŞTA (D5). `HRLedger._dense` STATİK ve `false` doğuyor; aşağıdaki
+	# hiçbir genişlik okuyucusu ölçülmemiş bir kademeyi okumamalı. Eskiden ölçü
+	# `_rebuild`'deydi, yani başlık GENİŞ sabitlerle, satırlar DAR sabitlerle kuruluyordu.
+	HRLedger.measure(get_viewport_rect().size.x)
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -165,8 +170,13 @@ func _build_chrome() -> void:
 
 	# Sütun başlıkları tablonun başlığıdır — bir kez, kaydırma alanının DIŞINDA,
 	# yani sayfa kayarken de görünür kalır. GÖREVLER kendi başlığını taşır.
-	_roster_header = HRLedger.column_header()
-	outer.add_child(_roster_header)
+	# BAŞLIK BİR SLOT'TA YAŞAR, doğrudan `outer`da değil: kademe değiştiğinde
+	# (%100 ↔ %125) satırlar gibi başlık da YENİDEN kurulmalı. Eski hâli bir kez
+	# kurulup yalnız `visible` çevriliyordu ve ScrollContainer'IN DIŞINDA olduğu için
+	# bayat asgari genişliği doğrudan SAYFANIN asgarisi oluyordu.
+	_header_slot = VBoxContainer.new()
+	_header_slot.add_theme_constant_override("separation", 0)
+	outer.add_child(_header_slot)
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -217,6 +227,19 @@ func _compute_structure_key() -> String:
 	return "/".join(parts)
 
 
+## Başlığı ÖLÇÜM SONRASI kurar. `column_header()` genişlikleri `HRLedger`'ın
+## statiklerinden okuyor, o yüzden çağırı sırası bir yerleşim ayrıntısı değil
+## SONUCU BELİRLEYEN ŞEY.
+func _rebuild_header() -> void:
+	if _header_slot == null:
+		return
+	for c in _header_slot.get_children():
+		_header_slot.remove_child(c)
+		c.queue_free()
+	_roster_header = HRLedger.column_header()
+	_header_slot.add_child(_roster_header)
+
+
 func _rebuild() -> void:
 	_structure_key = _compute_structure_key()
 	_morale_refs.clear()
@@ -231,14 +254,13 @@ func _rebuild() -> void:
 	# ÖLÇÜ ÖNCE (ölçek merdiveni): defterin sütun genişlikleri mantıksal viewport'a
 	# göre seçilir. Başlık ve satırlar AYNI ölçümü okumalı, o yüzden kurulumdan önce.
 	HRLedger.measure(get_viewport_rect().size.x)
+	_rebuild_header()
 	if _view == VIEW_ASSIGNMENTS:
 		# GÖREVLER: kendi başlığını taşıyor, defterin sütun başlığı gizleniyor.
-		if _roster_header != null:
-			_roster_header.visible = false
+		_header_slot.visible = false
 		_list.add_child(HRAssignments.build(_on_assignment_toggled, _open_atlas))
 		return
-	if _roster_header != null:
-		_roster_header.visible = true
+	_header_slot.visible = true
 
 	# Atlas şeridi (Kare 3 bekleme / dosyalar hazır) en üstte.
 	var strip: Control = _atlas_strip()
@@ -634,8 +656,6 @@ func _on_card_action(emp_id: String, action: String, anchor: Control) -> void:
 			_open_actions(emp, anchor)
 		HRLedger.ACTION_RAISE:
 			_open_raise(emp, anchor)
-		HRLedger.ACTION_VACATION:
-			_confirm_vacation(emp)
 		HRLedger.ACTION_FIRE:
 			_confirm_fire(emp)
 		HRLedger.ACTION_TRAIN:
@@ -679,9 +699,6 @@ func _open_actions(emp: Character, anchor: Control) -> void:
 				"preview": {"ok": train_ok, "reason": tr("HR_TRAINING_AT_CAP")},
 				"action": HRLedger.ACTION_TRAIN, "icon": "train",
 				"meta": tr("HR_TRAINING_DURATION_WEEKS")},
-			{"key": "HR_CARD_HOLIDAY", "preview": HRActions.preview_vacation(emp),
-				"action": HRLedger.ACTION_VACATION, "icon": "leave",
-				"meta": HRSystem.leave_line(emp)},
 			{"key": "HR_CARD_FIRE", "preview": HRActions.preview_fire(emp),
 				"action": HRLedger.ACTION_FIRE, "icon": "fire",
 				"meta": tr("HR_MENU_PERMANENT")}]:
@@ -758,93 +775,47 @@ func _menu_row(pop: HRPopover, emp: Character, spec: Dictionary, anchor: Control
 	return btn
 
 
-# --- Zam popover (Kare 6) --------------------------------------------------
+# --- Zam (onaylı modal · sayfa 1b) -----------------------------------------
 
-func _open_raise(emp: Character, anchor: Control) -> void:
-	var pop: HRPopover = HRPopover.mount(self)
-	if pop == null:
+func _open_raise(emp: Character, _anchor: Control) -> void:
+	# `_anchor` ARTIK KULLANILMIYOR: modal ekranın ortasında duruyor, satıra
+	# çapalanmıyor. İmza korunuyor çünkü menü dağıtıcısı üç eylemi TEK biçimde
+	# çağırıyor; tek eylem için o biçimi bozmak dağıtıcıya eylem-başına dal eklerdi.
+	if not bool(HRActions.preview_raise(emp, HRConstants.RAISE_MIN_PCT).get("ok", false)):
 		return
-	var body: VBoxContainer = pop.body()
-	body.add_child(UiFactory.make_section_header(tr("HR_RAISE_POPOVER_TITLE")))
+	EventBus.confirm_requested.emit({
+		"modal": "hr_action",
+		# BAŞLIKTA YALNIZ EYLEM (H2): personel adı yok. Kimin olduğu satırdan menüye,
+		# menüden buraya kesintisiz taşınıyor zaten; sayfa kazandı.
+		"title": tr("HR_CARD_RAISE"),
+		"commit_key": "HR_APPLY_RAISE_PCT",
+		"slider": {"min": HRConstants.RAISE_MIN_PCT, "max": HRConstants.RAISE_MAX_PCT,
+			"start": HRConstants.RAISE_MIN_PCT},
+		"preview": _preview_raise.bind(emp),
+		"on_commit": _do_raise.bind(emp.id),
+	})
 
-	var pct_label := UiFactory.make_label("", &"TitleSerif", UiTokens.ACCENT_DEEP)
-	pct_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var lines_box := VBoxContainer.new()
-	lines_box.add_theme_constant_override("separation", 3)
 
-	var slider := HSlider.new()
-	slider.theme_type_variation = &"VolumeSlider"
-	slider.min_value = float(HRConstants.RAISE_MIN_PCT)
-	slider.max_value = float(HRConstants.RAISE_MAX_PCT)
-	slider.step = 1.0
-	slider.custom_minimum_size = Vector2(0, 24)
-	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# value YALNIZCA burada, kurulumda yazılır — tazelemede slider.value'ya asla
-	# dokunulmaz (pricing_panel'in grabber-zıplama korkuluğu).
-	slider.value = float(HRConstants.RAISE_MIN_PCT)
+func _preview_raise(pct: int, emp: Character) -> Dictionary:
+	return HRActions.preview_raise(emp, pct)
 
-	var bounds := HBoxContainer.new()
-	bounds.add_theme_constant_override("separation", 8)
-	bounds.add_child(UiFactory.make_label(Fmt.percent(HRConstants.RAISE_MIN_PCT, 0), &"RowMeta", UiTokens.INK_DIM))
-	bounds.add_child(slider)
-	bounds.add_child(UiFactory.make_label(Fmt.percent(HRConstants.RAISE_MAX_PCT, 0), &"RowMeta", UiTokens.INK_DIM))
 
-	var commit := HRUiShared.action_button("", Callable(), true)
-	commit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var paint: Callable = func(pct: int) -> void:
-		# Önizlemenin TAMAMI motordan: preview_raise hazır Türkçe `lines` döndürüyor
-		# (moral önce→sonra, aylık yük önce→sonra), moral kazancı da ÖLÇEKLENMİŞ.
-		var pv: Dictionary = HRActions.preview_raise(emp, pct)
-		pct_label.text = Fmt.percent(int(pv.get("pct", pct)), 0)
-		for c in lines_box.get_children():
-			lines_box.remove_child(c)
-			c.queue_free()
-		for line in pv.get("lines", []):
-			lines_box.add_child(UiFactory.make_label(String(line), &"BodySerif"))
-		commit.text = tr("HR_APPLY_RAISE_PCT").format({"pct": Fmt.percent(int(pv.get("pct", pct)), 0)})
-
-	slider.value_changed.connect(func(v: float) -> void: paint.call(int(v)))
-	commit.pressed.connect(func() -> void:
-		if HRActions.apply_raise(emp, int(slider.value)):
-			pop.close()
-			# set_salary sinyal ATMIYOR (registry'de eksik-sinyal notu duruyor), o yüzden
-			# tazeleme aksiyondan sonra yerel olarak tetikleniyor.
-			_rebuild_forced())
-
-	body.add_child(pct_label)
-	body.add_child(bounds)
-	body.add_child(lines_box)
-	body.add_child(HRUiShared.hairline())
-	body.add_child(commit)
-	paint.call(HRConstants.RAISE_MIN_PCT)
-	pop.open_at(anchor)
+func _do_raise(pct: int, emp_id: String) -> bool:
+	var emp: Character = CharacterRegistry.get_character(emp_id)
+	if emp == null or not HRActions.apply_raise(emp, pct):
+		return false
+	# set_salary sinyal ATMIYOR (registry'de eksik-sinyal notu duruyor), o yüzden
+	# tazeleme aksiyondan sonra yerel olarak tetikleniyor.
+	_rebuild_forced()
+	return true
 
 
 # --- Tatil / çıkarma onayları ----------------------------------------------
 
-func _confirm_vacation(emp: Character) -> void:
-	# Gövde MOTORUN hazır Türkçe satırları (preview_vacation.lines: 7 gün, dönüş günü,
-	# ölçeklenmiş moral kazancı, yıllık izin tüketimi). UI hiçbirini yeniden yazmıyor.
-	var pv: Dictionary = HRActions.preview_vacation(emp)
-	if not bool(pv.get("ok", false)):
-		return
-	EventBus.confirm_requested.emit({
-		"title": tr("HR_HOLIDAY_CONFIRM_TITLE").format({"name": emp.character_name}),
-		"body": "\n".join(PackedStringArray(pv.get("lines", []))),
-		"confirm_text": tr("HR_HOLIDAY_CONFIRM_OK"),
-		"cancel_text": tr("UI_DISMISS"),
-		"on_confirm": _do_vacation.bind(emp.id),
-	})
-
-
-func _do_vacation(emp_id: String) -> void:
-	# Kimlikle bağlanıyor, nesneyle değil: onay modalı açıkken kayıt değişebilir
-	# (istifa akışı kişiyi kaldırabilir), bayat bir Character referansı üzerinde
-	# aksiyon almak yerine kayıttan yeniden okunuyor.
-	var emp: Character = CharacterRegistry.get_character(emp_id)
-	if emp != null and HRActions.send_on_vacation(emp):
-		_rebuild_forced()
+## `_confirm_vacation` / `_do_vacation` EMEKLİ (H5, 2026-08-22): oyuncunun
+## tatile gönderme yolu kaldırıldı. İzin yalnız otomatik yıllık kanaldan geliyor,
+## yani `leave_taken_year`'a dokunan bir oyuncu eylemi ARTIK YOK — R3 bir sayacı
+## düzenleyerek değil, ona dokunan eli kaldırarak karşılandı.
 
 
 func _confirm_fire(emp: Character) -> void:
@@ -852,18 +823,22 @@ func _confirm_fire(emp: Character) -> void:
 	if not bool(pv.get("ok", false)):
 		return
 	EventBus.confirm_requested.emit({
-		"title": tr("HR_FIRE_CONFIRM_TITLE").format({"name": emp.character_name}),
-		"body": "\n".join(PackedStringArray(pv.get("lines", []))),
-		"confirm_text": tr("HR_FIRE_CONFIRM_OK"),
-		"cancel_text": tr("UI_DISMISS"),
-		"on_confirm": _do_fire.bind(emp.id),
+		"modal": "hr_action",
+		"title": tr("HR_CARD_FIRE"),            # H2: yalnız eylem, ad yok
+		"rows": pv.get("rows", []),
+		"commit_text": tr("HR_FIRE_CONFIRM_OK"),
+		"on_commit": _do_fire.bind(emp.id),
 	})
 
 
-func _do_fire(emp_id: String) -> void:
+func _do_fire(_pct: int, emp_id: String) -> bool:
+	# `_pct` slider'ı olan eylemler için; çıkarmanın slider'ı yok ve modal sıfır
+	# gönderiyor. Tek imza = host'ta tek dal.
 	var emp: Character = CharacterRegistry.get_character(emp_id)
-	if emp != null and HRActions.fire(emp):
-		_rebuild_forced()
+	if emp == null or not HRActions.fire(emp):
+		return false
+	_rebuild_forced()
+	return true
 
 
 func _rebuild_forced() -> void:

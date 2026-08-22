@@ -24,6 +24,7 @@ const CHIP_PAD_X := 7
 const CHIP_PAD_Y := 3
 const MORALE_BAR_HEIGHT := 6
 const MORALE_BAR_WIDTH := 150
+const MORALE_BAR_WIDTH_DENSE := 92
 
 
 static func money(amount: int) -> String:
@@ -95,8 +96,9 @@ static func trait_icon_path(trait_id: String, catalog: String = "employee") -> S
 
 
 static func trait_icon(trait_id: String, px: int = 18, boxed: bool = false,
-		catalog: String = "employee") -> Control:
-	## `boxed` = Kişisel kartının 28×28 konturlu kutusu (10a); çıplak hâli deftere girer.
+		catalog: String = "employee", box_px: int = 28) -> Control:
+	## `boxed` = konturlu kutu. Kişisel kartı 28×28 (10a), Kadro'nun TRAIT hücresi
+	## 26×26 (B4) — tek fark kutunun boyu, içindeki glif ve çerçeve aynı.
 	var tex := TextureRect.new()
 	tex.texture = load(trait_icon_path(trait_id, catalog))
 	tex.custom_minimum_size = Vector2(px, px)
@@ -117,16 +119,33 @@ static func trait_icon(trait_id: String, px: int = 18, boxed: bool = false,
 	sb.content_margin_top = 4.0
 	sb.content_margin_bottom = 4.0
 	frame.add_theme_stylebox_override("panel", sb)
-	frame.custom_minimum_size = Vector2(28, 28)
+	frame.custom_minimum_size = Vector2(box_px, box_px)
 	frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	frame.add_child(tex)
 	return frame
 
 
+## TEK TOOLTIP KAYNAĞI: ad ve etki, ALT ALTA, TİRE YOK. Her iki yüzey de buradan
+## okur — eskiden Kadro `ad\netki`, Atlas ise YALNIZ etki gösteriyordu.
+static func trait_tooltip(trait_id: String) -> String:
+	return "%s\n%s" % [
+		HRConstants.trait_label(trait_id), HRConstants.trait_effect_text(trait_id)]
+
+
+## HOVER HEDEFİ GEOMETRİYİ İZLER, NİYETİ DEĞİL. Tooltip HER ZAMAN VAR OLAN kaba
+## takılır; ikon çizilmediyse (kurucu kataloğu) hedef yine de durur.
+##
+## PASS, STOP DEĞİL: STOP tooltip'i çalıştırır ama satır tıklamasını YUTAR — ve R1'den
+## sonra menüyü açan TEK yol o tıklama. PASS ikisini birden verir.
+static func _hoverable(node: Control, trait_id: String) -> Control:
+	node.tooltip_text = trait_tooltip(trait_id)
+	node.mouse_filter = Control.MOUSE_FILTER_PASS
+	return node
+
+
 static func trait_cell(trait_ids: Array, width: int) -> Control:
-	## TEK İKON. Motor tek trait taşıyor (HRConstants.TRAIT_COUNT). Eski bir kayıt iki
-	## taşıyorsa İLKİNİ gösteririz — eskiden "olumsuz olanı" seçiyorduk, ama R4'ten sonra
-	## trait'lerin olumsuzu yok ve o seçimin dayanağı kalmadı.
+	## TEK İKON, 26×26 konturlu kutuda 15px glif (B4 · onaylı sayfa). Motor tek trait
+	## taşıyor (HRConstants.TRAIT_COUNT); eski bir kayıt iki taşıyorsa İLKİNİ gösteririz.
 	var box := CenterContainer.new()
 	box.custom_minimum_size = Vector2(width, 0)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -134,13 +153,7 @@ static func trait_cell(trait_ids: Array, width: int) -> Control:
 	if pick == "":
 		box.add_child(UiFactory.make_label("—", &"RowMeta", UiTokens.INK_FAINT))
 		return box
-	var icon: Control = trait_icon(pick)
-	# TİRE YOK (C3): ad ve etki İKİ SATIR. Ayraç satır sonudur, bir karakter değil —
-	# Kişisel kartının zaten kullandığı gramer (personal_tab._founder_trait).
-	icon.tooltip_text = "%s\n%s" % [
-		HRConstants.trait_label(pick), HRConstants.trait_effect_text(pick)]
-	icon.mouse_filter = Control.MOUSE_FILTER_STOP   # Label/TextureRect IGNORE doğar; tooltip hover ister
-	box.add_child(icon)
+	box.add_child(_hoverable(trait_icon(pick, 15, true, "employee", 26), pick))
 	return box
 
 
@@ -200,7 +213,11 @@ static func morale_row(morale: int, out_refs: Dictionary = {}, with_caption: boo
 	var bar := ProgressBar.new()
 	bar.theme_type_variation = &"BuildProgress"
 	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(MORALE_BAR_WIDTH, MORALE_BAR_HEIGHT)
+	# KADEMEYİ İZLER (D5). Sabit 150, `HRLedger.W_MORALE_DENSE`in 124'ünden GENİŞTİ ve
+	# asgari boyut daha küçük bir custom_minimum'u yener — yani MORAL hücresi başlığın
+	# bütçesinden ~66px fazla yer alıyordu ve fazlalık sayfanın sağ kenarından çıkıyordu.
+	bar.custom_minimum_size = Vector2(
+		MORALE_BAR_WIDTH_DENSE if HRLedger._dense else MORALE_BAR_WIDTH, MORALE_BAR_HEIGHT)
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.min_value = float(HRConstants.MORALE_MIN)
 	bar.max_value = float(HRConstants.MORALE_MAX)
@@ -250,17 +267,41 @@ static func worst_badge_severity(emp: Character) -> int:
 # --- Huy çipleri ------------------------------------------------------------
 
 static func trait_chip(trait_id: String, with_tooltip: bool = false) -> Control:
-	# TEK MUAMELE, VALANS YOK (R4). Eskiden olumlu yeşil / olumsuz kırmızıydı ve o
-	# else-dalı tanımadığı her id'yi de KIRMIZI çiziyordu — yani bilinmeyen bir trait
-	# oyuncuya "kötü" diye gösteriliyordu. Artık sekizi de nötr; ayrım adda ve etkide.
-	# Etki metni satır olarak DEĞİL, hover'da (Effect-Visibility Rule'un EU4/CK3 grameri).
-	var chip: Control = UiFactory.make_badge(HRConstants.trait_label(trait_id), &"neutral")
+	# TEK MUAMELE, VALANS YOK (R4): sekizi de nötr; ayrım adda, ikonda ve etkide.
+	#
+	# İKON EKLENDİ (B2, 2026-08-22). Sekiz ikon Kadro'ya ulaşmıştı ama aday kartına
+	# ulaşmamıştı: bu yol `make_badge`'den geçiyor ve o yolda HİÇBİR doku yok, yani
+	# rozetin duracağı yerde çıplak bir kelime duruyordu. Çip artık ikon + ad.
+	var p: Dictionary = UiTokens.badge_palette(&"neutral")
+	var chip := PanelContainer.new()
+	chip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = p.bg
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	sb.content_margin_left = UiTokens.PAD_CHIP.x
+	sb.content_margin_right = UiTokens.PAD_CHIP.x
+	sb.content_margin_top = UiTokens.PAD_CHIP.y
+	sb.content_margin_bottom = UiTokens.PAD_CHIP.y
+	chip.add_theme_stylebox_override("panel", sb)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var icon: Control = trait_icon(trait_id, 14)
+	icon.modulate = p.fg
+	row.add_child(icon)
+	var lbl := Label.new()
+	lbl.theme_type_variation = &"BadgeLabel"
+	lbl.text = UiTokens.tr_upper(HRConstants.trait_label(trait_id))
+	lbl.add_theme_color_override("font_color", p.fg)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(lbl)
+	chip.add_child(row)
 	if with_tooltip:
-		# make_badge çipi MOUSE_FILTER_IGNORE ile verir (UiFactory çipleri varsayılan
-		# inert); tooltip hover ister, o yüzden yalnız bu çip STOP'a çevrilir
-		# (top_bar.gd'nin runway-notu reçetesi). İç Label IGNORE kalır, hover panele düşer.
-		chip.mouse_filter = Control.MOUSE_FILTER_STOP
-		chip.tooltip_text = HRConstants.trait_effect_text(trait_id)
+		# Hedef ÇİPİN KENDİSİ — her zaman var. İçerik artık Kadro'yla AYNI: ad + etki.
+		return _hoverable(chip, trait_id)
+	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return chip
 
 
@@ -370,15 +411,9 @@ static func disabled_button(label: String, reason: String) -> Button:
 	return btn
 
 
-static func lines_block(lines: Array, muted: bool = false) -> VBoxContainer:
-	# Motorun hazır Türkçe `lines` dizisini basar. Bu fonksiyonun tamamı
-	# "hesaplama yok" kuralının somut hali: sonucu motor yazdı, UI dizdi.
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 3)
-	for line in lines:
-		col.add_child(UiFactory.make_label(String(line), &"BodySerif",
-			UiTokens.INK_MUTED if muted else UiTokens.INK))
-	return col
+## `lines_block` EMEKLİ (A1, 2026-08-22). Tek işi motorun hazır cümlelerini basmaktı;
+## motor artık cümle değil KAYIT döndürüyor (`rows`) ve onları üç farklı giysiyle
+## dizen yer `hr_action_modal.gd`. Çağıranı kalmadı.
 
 
 static func set_mouse_ignore(n: Node) -> void:

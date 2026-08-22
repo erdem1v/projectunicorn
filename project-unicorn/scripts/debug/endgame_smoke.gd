@@ -171,7 +171,13 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_overtime_early_stop":   fail = _case_hr_overtime_early_stop()
 		"hr_overtime_same_day_stop_bills": fail = _case_hr_overtime_same_day_stop_bills()
 		"hr_overtime_safety_valve": fail = _case_hr_overtime_safety_valve()
-		"hr_raise_and_vacation":    fail = _case_hr_raise_and_vacation()
+		"hr_raise_and_leave":    fail = _case_hr_raise_and_leave()
+		# --- İK modulü kapanışı (2026-08-22) ---
+		"menu_has_one_path":        fail = _case_menu_has_one_path()
+		"vacation_action_retired":  fail = _case_vacation_action_retired()
+		"leave_does_not_pause_build": fail = _case_leave_does_not_pause_build()
+		"money_never_double_minus": fail = _case_money_never_double_minus()
+		"beta_gate_open_early":     fail = _case_beta_gate_open_early()
 		"hr_frank_guard":           fail = _case_hr_frank_guard()
 		"hr_active_filters":        fail = _case_hr_active_filters()
 		"hr_overload_badge":        fail = _case_hr_overload_badge()
@@ -502,7 +508,9 @@ static func _run_build_to_phase(phase: String, max_hours: int = 24 * 120) -> boo
 		if b.current_phase == "iteration" and phase != "iteration" and ProductSystem.can_enter_development():
 			ProductSystem.enter_development()
 			continue
-		if b.current_phase == "development" and phase in ["bugfix", "shipped"] and ProductSystem.can_enter_beta():
+		# BANDI BEKLER, KAPIYI DEĞİL (D2): fixture'lar geliştirmenin gerçekten koştuğu
+		# bir beta istiyor. `can_enter_beta` artık geliştirmenin ilk saatinde de true.
+		if b.current_phase == "development" and phase in ["bugfix", "shipped"] and ProductSystem.development_band_complete():
 			ProductSystem.enter_beta()
 			continue
 		ProductSystem.hourly_tick(i % 24)
@@ -1856,7 +1864,7 @@ static func _case_phase_bands_20_60_20() -> String:
 		return "enter_development did not flip phase (%s)" % b.current_phase
 	var dev_cap: float = ProductSystem.PHASE_DEV_END * b.total_efor
 	hours = 0
-	while not ProductSystem.can_enter_beta():
+	while not ProductSystem.development_band_complete():
 		ProductSystem.hourly_tick(hours % 24)
 		hours += 1
 		if hours > 24 * 120:
@@ -4841,7 +4849,7 @@ static func _case_hr_overtime_safety_valve() -> String:
 	return ""
 
 
-static func _case_hr_raise_and_vacation() -> String:
+static func _case_hr_raise_and_leave() -> String:
 	# Raise bounded 3-15% with morale scaling on the percentage and a PERMANENT salary rise
 	# that reaches burn; manual vacation takes the person out of capacity, refreshes morale
 	# on return, and consumes that year's automatic leave.
@@ -4870,27 +4878,26 @@ static func _case_hr_raise_and_vacation() -> String:
 	FinanceSystem.daily_tick()
 	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(11000.0 / float(GameState.DAYS_PER_MONTH))):
 		return "the raise did not flow to burn"
+	# İZİN ARTIK TEK KANALDAN: OTOMATİK YILLIK (H5, 2026-08-22). Oyuncunun
+	# "Tatile gönder" yolu kaldırıldı; ölçülen yasa aynı kaldı (biri gider,
+	# kapasite düşer, dönüşte moral tazelenir), yalnız kapı değişti.
 	var cap0: int = ProductSystem.capacity_total()
-	var vprev: Dictionary = HRActions.preview_vacation(e)
-	if not bool(vprev.get("consumes_annual_leave", false)):
-		return "the vacation preview does not say it consumes that year's automatic leave"
-	if not HRActions.send_on_vacation(e):
-		return "vacation refused"
+	HRMoraleSystem.send_on_leave(e, HRConstants.LEAVE_DAYS, false)
 	if e.status != HRConstants.STATUS_ON_LEAVE:
-		return "vacation did not take the employee out of capacity"
+		return "annual leave did not take the employee out of capacity"
 	if ProductSystem.capacity_total() != cap0 - 1:
-		return "capacity unchanged during a vacation"
+		return "capacity unchanged during leave"
 	if e.leave_taken_year != int(GameState.get_date_dict().year):
-		return "the manual vacation did not consume this year's automatic leave"
+		return "the automatic leave did not stamp this year's latch"
 	var mv: int = e.morale
-	for i in HRConstants.VACATION_DAYS + 3:
+	for i in HRConstants.LEAVE_DAYS + 3:
 		_sim_day()
 		if e.status == HRConstants.STATUS_ACTIVE:
 			break
 	if e.status != HRConstants.STATUS_ACTIVE:
-		return "never returned from the manual vacation"
+		return "never returned from leave"
 	if e.morale <= mv:
-		return "the vacation return did not refresh morale (%d -> %d)" % [mv, e.morale]
+		return "the leave return did not refresh morale (%d -> %d)" % [mv, e.morale]
 	return ""
 
 
@@ -4912,7 +4919,9 @@ static func _case_hr_frank_guard() -> String:
 			return "the mentor appears in get_active_employees"
 	if CharacterRegistry.get_total_monthly_salaries() != 0:
 		return "the mentor draws payroll (%d)" % CharacterRegistry.get_total_monthly_salaries()
-	if HRActions.can_fire(frank) or HRActions.can_raise(frank, 5) or HRActions.can_send_on_vacation(frank):
+	# `can_send_on_vacation` EMEKLİ (H5): eylem kalktı, dolayısıyla Frank'e karşı
+	# bağışıklığını sınamaya da gerek kalmadı — hiç kimse için çağrılamıyor.
+	if HRActions.can_fire(frank) or HRActions.can_raise(frank, 5):
 		return "an HR action accepts the mentor"
 	if HRActions.can_fire(CharacterRegistry.get_founder()):
 		return "the founder is fireable"
@@ -9012,3 +9021,202 @@ static func _collect_label_text(n: Node, out: Array[String]) -> void:
 		out.append((n as Label).text)
 	for c in n.get_children():
 		_collect_label_text(c, out)
+
+
+# ============================================================================
+#  İK MODULÜ KAPANIŞI (2026-08-22) · R1 · H5 · C3 · C4 · H1
+# ============================================================================
+
+static func _script_methods(path: String) -> PackedStringArray:
+	# Bir script'in KENDİ yüzeyi. "Şu fonksiyon artık YOK" iddiasını kanıtlamanın tek
+	# davranışsal olmayan yolu bu: çağıranı kalmamış ama duran bir fonksiyon hiçbir
+	# davranış testine görünmez, oysa geri dönen ikinci yol tam olarak böyle geri döner.
+	var out := PackedStringArray()
+	var sc: GDScript = load(path) as GDScript
+	if sc == null:
+		return out
+	for m in sc.get_script_method_list():
+		out.append(String(m.get("name", "")))
+	return out
+
+
+static func _case_menu_has_one_path() -> String:
+	# R1: TEK YOL, TEK ÇAPA. ⋯ düğmesi ve onun 44px'lik sütunu SİLİNDİ (gizlenmedi),
+	# pop-over'ın sola dönen ikinci konumu ve çentiği de onunla birlikte gitti.
+	var ledger: GDScript = load("res://scripts/tabs/hr/hr_ledger.gd") as GDScript
+	if ledger == null:
+		return "hr_ledger.gd did not load"
+	var consts: Dictionary = ledger.get_script_constant_map()
+	if consts.has("W_MENU"):
+		return "the ⋯ column width is back (W_MENU)"
+	# ...ama menu YOLU duruyor: silinen şey ikinci giriş, karar değil.
+	if not consts.has("ACTION_MENU"):
+		return "the row menu action itself disappeared"
+	var pop: PackedStringArray = _script_methods("res://scripts/tabs/hr/hr_popover.gd")
+	for gone in ["_place_notch", "_draw_notch"]:
+		if pop.has(gone):
+			return "the notch survived the single-anchor ruling (%s)" % gone
+	if not pop.has("_place"):
+		return "the popover lost its placement function entirely"
+	return ""
+
+
+static func _case_vacation_action_retired() -> String:
+	# H5: oyuncunun "Tatile gönder" yolu KALDIRILDI. İki şey birden kanıtlanıyor —
+	# eylem gitti VE otomatik yıllık izin kanalı DURUYOR. Yalnız birincisi ölçülseydi,
+	# izni tamamen kıran bir değişiklik de bu vakayı yeşil geçerdi.
+	var acts: PackedStringArray = _script_methods("res://scripts/systems/hr_actions.gd")
+	for gone in ["can_send_on_vacation", "preview_vacation", "send_on_vacation"]:
+		if acts.has(gone):
+			return "the retired vacation seam is back (%s)" % gone
+	var tab: PackedStringArray = _script_methods("res://scripts/tabs/hr_tab.gd")
+	for gone in ["_confirm_vacation", "_do_vacation"]:
+		if tab.has(gone):
+			return "the vacation confirm path is back (%s)" % gone
+	var ledger: GDScript = load("res://scripts/tabs/hr/hr_ledger.gd") as GDScript
+	if ledger != null and ledger.get_script_constant_map().has("ACTION_VACATION"):
+		return "the vacation action id is back"
+	# Emekli dizgiler: çevrilmeyen bir anahtar KENDİNİ döndürür.
+	for key in ["HR_CARD_HOLIDAY", "HR_HOLIDAY_CONFIRM_TITLE", "HR_LEAVE_ANNUAL_SPENT"]:
+		if TranslationServer.translate(key) != key:
+			return "a retired vacation string is still in the CSV (%s)" % key
+	# OTOMATİK KANAL YAŞIYOR ve R3 yapısal olarak karşılanıyor: yıl mandalına dokunan
+	# tek şey artık o kanal.
+	var morale: PackedStringArray = _script_methods("res://scripts/systems/hr_morale_system.gd")
+	if not morale.has("send_on_leave") or not morale.has("tick_leave_departures"):
+		return "the automatic annual-leave channel was removed with the manual action"
+	var e: Character = _make_employee("char_vac_gone", "Vac Gone", HRConstants.ROLE_DEVELOPER)
+	_park_leave([e])
+	if e.leave_taken_year != 0:
+		return "the year latch did not start clear"
+	HRMoraleSystem.send_on_leave(e, HRConstants.LEAVE_DAYS, false)
+	if e.leave_taken_year != int(GameState.get_date_dict().year):
+		return "the automatic channel no longer stamps the year latch"
+	return ""
+
+
+static func _case_leave_does_not_pause_build() -> String:
+	# C4/R4: bir çalışan izindeyken KURUCU BOŞSA yapım DURMAZ. Kural HEPSİ-meşgul,
+	# herhangi-biri değil. İki yönü de ölçülüyor: boş kurucuyla koşar, kurucu da
+	# meşgulken durur — yoksa "hiç durmuyor" da bu vakayı geçerdi.
+	GameState.set_cash(200000)
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
+		return "start_build failed"
+	# GELİŞTİRME FAZINDA ölçülüyor: alanı tek ("engineering") ve bir YAZILIM MÜHENDİSİ
+	# onu taşıyabiliyor. Tasarım fazının alanları product/design ve bir developer'a
+	# `assign_area` "not_your_area" der — vaka o zaman kimsenin taşımadığı bir fazı
+	# ölçmeye çalışırdı.
+	if not _run_build_to_phase("development"):
+		return "the build never reached development"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder"
+	var staff: Array[Character] = []
+	for c in ProductSystem.phase_assignees(b.current_phase):
+		if c.category == "employee":
+			staff.append(c)
+	if staff.is_empty():
+		# Fazı taşıyan bir çalışan yoksa vaka ÖLÇECEK BİR ŞEY BULAMAZ ve sessizce yeşil
+		# geçer. Bu ilk yazımda gerçekten oldu: yardımcı ÇALIŞANIN rolüne göre
+		# atanıyordu (engineering), yapım ise "iteration" fazındaydı (product/design),
+		# yani kimse fazı taşımıyordu ve `build_paused` hiç kıpırdamıyordu. Falsifikasyon
+		# bunu yakaladı — vaka bozulmuş motora da PASS basıyordu.
+		var helper: Character = _make_employee("char_pause_help", "Pause Help", HRConstants.ROLE_DEVELOPER)
+		var areas: Array = ProductSystem.PHASE_AREAS.get(b.current_phase, [])
+		if areas.is_empty():
+			return "phase '%s' carries no areas — nothing to measure" % b.current_phase
+		CharacterRegistry.assign_area(helper.id, String(areas[0]))
+		staff = [helper]
+	var carriers: Array[Character] = ProductSystem.phase_assignees(b.current_phase)
+	for c in staff:
+		if not carriers.has(c):
+			return "the fixture employee does not carry phase '%s'" % b.current_phase
+	if ProductSystem.build_paused():
+		return "the build was already paused with everyone active"
+	for c in staff:
+		HRMoraleSystem.send_on_leave(c, HRConstants.LEAVE_DAYS, false)
+		if c.status != HRConstants.STATUS_ON_LEAVE:
+			return "send_on_leave did not park %s" % c.id
+	if founder.status != HRConstants.STATUS_ACTIVE:
+		return "the founder was not active to begin with"
+	if ProductSystem.build_paused():
+		return "an employee on leave paused the build while the founder was free (R4)"
+	# Şimdi kurucuyu da meşgul et: hazIrlık kurucunun meşguliyet kümesinde.
+	GameState.set_flag("pitch_prep_active", true)
+	var paused_now: bool = ProductSystem.build_paused()
+	GameState.set_flag("pitch_prep_active", false)
+	if not paused_now:
+		return "the build kept running with every carrier busy"
+	return ""
+
+
+static func _case_money_never_double_minus() -> String:
+	# C3: `HRConstants.money_tr` (→ `Fmt.money_exact`) işaretini KENDİ basıyor; İK'nın
+	# yerel `_money` sarmalayıcısı üzerine bir eksi daha ekliyordu → "--$4.878".
+	# İşten çıkarma nakdi eksiye geçirebildiği için bu tasarlanmış-ulaşılabilir bir hâldi.
+	var e: Character = _make_employee("char_money", "Money Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 12000, 50)
+	e.hire_day = maxi(GameState.day - 400, 0)
+	GameState.set_cash(1000)   # tazminat kasayı EKSİYE geçirsin
+	var pv: Dictionary = HRActions.preview_fire(e)
+	if not bool(pv.get("ok", false)):
+		return "preview_fire refused: %s" % String(pv.get("reason", ""))
+	if int(pv.get("cash_after", 0)) >= 0:
+		return "the fixture did not push cash negative (%d)" % int(pv.get("cash_after", 0))
+	var seen_negative: bool = false
+	for r in pv.get("rows", []):
+		var row: Dictionary = r
+		for field in ["before", "after", "value", "note"]:
+			var text: String = String(row.get(field, ""))
+			if text.contains("--"):
+				return "a doubled minus sign survived: '%s'" % text
+			if text.begins_with("-"):
+				seen_negative = true
+		if String(row.get("kind", "")) == "delta" and bool(row.get("negative_after", false)):
+			seen_negative = true
+	if not seen_negative:
+		# Tek eksi de yoksa vaka bir şey ölçmüyor demektir.
+		return "no negative value reached the preview at all"
+	return ""
+
+
+static func _case_beta_gate_open_early() -> String:
+	# H1/D2: beta kapısı HER YÜZDEDE açık, ama BANDın kendisi duruyor — iki soru
+	# artık iki ayrı fonksiyon (`can_enter_beta` / `development_band_complete`).
+	# D3: beta dolgusu YÜKSELEN çubuk; hata azaldıkça artar.
+	GameState.set_cash(50000)
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var hours: int = 0
+	while not ProductSystem.can_enter_development():
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 120:
+			return "design band never ended"
+	ProductSystem.enter_development()
+	if b.current_phase != "development":
+		return "enter_development did not flip phase"
+	if not ProductSystem.can_enter_beta():
+		return "the beta gate is still shut at the start of development (H1)"
+	if ProductSystem.development_band_complete():
+		return "the development band claims to be complete on its first hour"
+	ProductSystem.hourly_tick(0)
+	ProductSystem.enter_beta()
+	if b.current_phase != "bugfix":
+		return "enter_beta refused an early crossing (H1)"
+	# D3: dolgu ilerlemedir. Aynı başlangıç, azalan kalan → ARTAN dolgu.
+	var model: RefCounted = load("res://scripts/ui/components/build_bar_model.gd").new()
+	model.bugs_start = 20
+	model.bugs_remaining = 20
+	var at_open: float = model.beta_fill()
+	model.bugs_remaining = 5
+	var near_done: float = model.beta_fill()
+	if at_open > 0.001:
+		return "beta opens at %.2f fill instead of empty (D3)" % at_open
+	if near_done <= at_open:
+		return "the beta bar still drains instead of filling (%.2f -> %.2f)" % [at_open, near_done]
+	model.bugs_remaining = 0
+	if absf(model.beta_fill() - 1.0) > 0.001:
+		return "a cleared backlog does not read as a full bar (%.2f)" % model.beta_fill()
+	return ""

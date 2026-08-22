@@ -82,3 +82,26 @@ Ray sekme etiketi renkleri (left_tabs.gd:113), top_bar delta renkleri (top_bar.g
 `BetaRow` Val POSITIVE/NEGATIVE renkleri, sağlık noktaları (`UiTokens.health_color`).
 Bunlar RUNTIME STATE'tir, ölü override değildir; UiTokens helper'larından beslendikleri
 sürece yasaldır (UI/STYLE LAW).
+
+## F. İK eylem modalı — bilinçli doğrudan override'lar (2026-08-22)
+
+`scripts/modals/hr_action_modal.gd` ve `scripts/ui/components/value_slider.gd`
+yazı YÜZÜNÜ ve BOYUTUNU `theme_type_variation` yerine doğrudan override ile takıyor.
+Bu bir savrukluk değil, tarif edilmiş bir istisna — gerekçesi dosya başlığında da duruyor:
+
+- Onaylı sayfa mono gövdeyi **12px'te** (`SIZE_DATA`) ve sonucu **semibold** istiyor.
+  Temada mono + `SIZE_DATA` + semibold bir varyasyon YOK; açmak `build_theme.gd`'ye
+  dokunmak, yani `THEME_STAMP` 6→7 ve `master_theme.tres` regen'i demek.
+- Kural kaydının **eğik sans** yüzü aynı gerekçeyle TÜRETİLDİ
+  (`assets/fonts/variations/sans_it.tres`, `variation_transform` shear'ı). Dosya bir
+  tema öğesi DEĞİL; `build_theme.gd` onu okumuyor.
+- Slider `_draw` ile çiziliyor (HSlider'ın `grabber`'ı bir DOKU ister; onaylı tutamaç
+  14×18 kutu + iki 1×8 çizgi). `_draw` hiçbir tema öğesi çözmez.
+
+RENK VE BOYUT YİNE TOKEN'DAN: iki dosyada da ham `Color(...)` ve skala dışı sayı yok.
+30px'lik yüzde okunuşu `SIZE_ED_HEADLINE`'a (32) iniyor — ui_tokens.gd:433'ün belgeli
+"path-card display 30 rounds here" precedent'i.
+
+Bir sonraki tema dalgası bu üçünü (mono-data-semibold · eğik sans · slider) varyasyona
+çevirmek isterse yeri burası; bugün çevirmemenin bedeli üç override, çevirmenin bedeli
+üretilmiş artefaktın yeniden doğması.

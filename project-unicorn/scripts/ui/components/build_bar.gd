@@ -382,6 +382,11 @@ func _paint_decision(m) -> void:
 		return
 	_decision_label.text = UiTokens.tr_upper(tr(m.decision_key))
 	var on: bool = m.decision_enabled
+	# İMLEÇ KARARI TAKİP EDER (R5). Kartın kökü artık CURSOR_MOVE taşımıyor — sürükleme
+	# yok, dolayısıyla sürükleme imleci de yok. El YALNIZ satır canlıyken çıkıyor:
+	# ölü bir satırın üstündeki el, ok imlecinin söylemediği bir şeyi vaat eder.
+	_decision_row.mouse_default_cursor_shape = (Control.CURSOR_POINTING_HAND if on
+		else Control.CURSOR_ARROW)
 	var tone: Color = UiTokens.ACCENT if on else UiTokens.INK_DIM
 	_decision_icon.modulate = tone
 	_decision_label.add_theme_color_override(&"font_color",

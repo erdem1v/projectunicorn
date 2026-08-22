@@ -670,7 +670,9 @@ static func _keep_the_word() -> void:
 		if ProductSystem.can_enter_development():
 			ProductSystem.enter_development()
 			print("PROBE PLAY day=%d enter_development" % GameState.day)
-		elif ProductSystem.can_enter_beta():
+		# BANDI BEKLER (D2): kapı artık her yüzdede açık, ama erken çıkış bugün
+		# bedelsiz ve baskın — temsilî koşunun onu alması kalibrasyonu bozardı.
+		elif ProductSystem.development_band_complete():
 			ProductSystem.enter_beta()
 			print("PROBE PLAY day=%d enter_beta" % GameState.day)
 		elif b.current_phase == "bugfix":

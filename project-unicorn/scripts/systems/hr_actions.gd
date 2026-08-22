@@ -81,12 +81,16 @@ static func preview_raise(emp: Character, pct: int) -> Dictionary:
 		"morale_after": emp.morale + gain,
 		"morale_gain": gain,
 		"permanent": true,
-		"lines": [
-			TranslationServer.translate("HR_RAISE_LINE").format({"old": _money(before), "new": _money(after),
-				"monthly": _signed_money(after - before)}),
-			TranslationServer.translate("HR_MORALE_LINE").format({"old": emp.morale, "new": emp.morale + gain}),
-			TranslationServer.translate("HR_PAYROLL_LINE").format({"old": _money(payroll_before), "new": _money(payroll_after)}),
-			TranslationServer.translate("HR_RAISE_PERMANENT"),
+		"rows": [
+			# DELTA — maaşın kendisi. `note` sonucun YANINDA duran ikincil rakam:
+			# aylık fark, sayfanın "(aylık +$1.470)" parantezi.
+			_delta(TranslationServer.translate("HR_ROW_SALARY"), _money(before), _money(after),
+				TranslationServer.translate("HR_ROW_MONTHLY_NOTE").format({
+					"delta": _signed_money(after - before)})),
+			_delta(TranslationServer.translate("HR_ROW_MORALE"), str(emp.morale), str(emp.morale + gain)),
+			_delta(TranslationServer.translate("HR_ROW_PAYROLL"), _money(payroll_before), _money(payroll_after)),
+			# KURAL — sayısı yok, o yüzden delta da olgu da değil. Üçüncü tür bunun için var.
+			_rule(TranslationServer.translate("HR_RAISE_PERMANENT")),
 		],
 	}
 
@@ -109,66 +113,19 @@ static func apply_raise(emp: Character, pct: int) -> bool:
 
 
 # ============================================================================
-#  TATİLE GÖNDER (manual, independent of the automatic annual leave)
+#  TATİLE GÖNDER — EMEKLİ (H5, 2026-08-22)
 # ============================================================================
-
-static func can_send_on_vacation(emp: Character) -> bool:
-	if _block_reason(emp) != "":
-		return false
-	if emp.status != HRConstants.STATUS_ACTIVE:
-		return false
-	# WORKING: refused once that year's leave is gone. The design says this action CONSUMES the
-	# year's automatic leave, and if it could also be repeated after the automatic leave was
-	# already taken, +MORALE_VACATION_RETURN would be an unlimited morale fountain paid for in
-	# capacity only — the exact "player permanently solves a pressure" shape Calibration Law 1
-	# forbids. Loosening this is a balance decision, not a code one.
-	return emp.leave_taken_year != _current_year()
-
-
-static func preview_vacation(emp: Character) -> Dictionary:
-	var reason: String = _block_reason(emp)
-	if reason == "" and emp.status != HRConstants.STATUS_ACTIVE:
-		# Two DIFFERENT refusals wore one sentence here: this branch fires for someone in
-		# TRAINING too, and telling the player that person is "zaten izinde" is simply
-		# false. (It was also a raw Turkish literal — it would have shipped untranslated
-		# into the EN build the moment anything rendered a refusal reason, which nothing
-		# did until the row action menu.)
-		var in_training: bool = emp.status == HRConstants.STATUS_TRAINING or emp.training_days_left > 0
-		reason = TranslationServer.translate("HR_ERR_IN_TRAINING" if in_training else "HR_ERR_ALREADY_ON_LEAVE")
-	if reason == "" and emp.leave_taken_year == _current_year():
-		reason = TranslationServer.translate("HR_LEAVE_USED")
-	if reason != "":
-		return _refusal(reason)
-	var days: int = HRConstants.VACATION_DAYS
-	var gain: int = HRMoraleSystem.scaled_delta(emp, HRConstants.MORALE_VACATION_RETURN)
-	return {
-		"ok": true,
-		"reason": "",
-		"days": days,
-		"return_day": GameState.day + days,
-		"morale_before": emp.morale,
-		"morale_after": emp.morale + gain,
-		"morale_gain": gain,
-		"consumes_annual_leave": true,
-		"leave_month": emp.leave_month,
-		"lines": [
-			TranslationServer.translate("HR_LEAVE_DAYS_OUT").format({"n": days}),
-			TranslationServer.translate("HR_LEAVE_PAID"),
-			TranslationServer.translate("HR_LEAVE_MORALE").format({"old": emp.morale, "new": emp.morale + gain}),
-			TranslationServer.translate("HR_LEAVE_ANNUAL_SPENT"),
-		],
-	}
-
-
-static func send_on_vacation(emp: Character) -> bool:
-	if not can_send_on_vacation(emp):
-		_refuse_loudly(emp, "send_on_vacation")
-		return false
-	# One door for both leave kinds: send_on_leave sets the status, the return day, stamps
-	# leave_taken_year (that is the consumption) and pushes the ticker line. The
-	# +MORALE_VACATION_RETURN lands on the RETURN day, not now — the rest comes back rested.
-	HRMoraleSystem.send_on_leave(emp, HRConstants.VACATION_DAYS, true)
-	return true
+# `can_send_on_vacation` · `preview_vacation` · `send_on_vacation` KALDIRILDI.
+#
+# Sebep zincirlemeydi. R3 "tatile göndermek yıllık izin sayacına dokunmasın" dedi;
+# ama `leave_taken_year` bir sayaç değil bir YIL MANDALI ve manuel tatili SıNIRLAYAN
+# tek şeydi. Mandalı kaldırmak eylemi sınırsız tekrarlanabilir yapıyordu, yani
+# +MORALE_VACATION_RETURN kapasiteyle ödenen bir moral çeşmesine dönüşüyordu —
+# Kalibrasyon Yasası 1'in adıyla yasakladığı şekil. Erdem eylemin KENDİSİNİ kaldırdı.
+#
+# OTOMATİK YILLIK İZİN DURUYOR: HRMoraleSystem.tick_leave_departures → send_on_leave(
+# emp, LEAVE_DAYS, false). `send_on_leave`'in `is_manual` dalı ve MORALE_VACATION_RETURN
+# de duruyor — gelecek olay kanalı (kapsam dışı) onları yeniden kullanacak.
 
 
 # ============================================================================
@@ -204,13 +161,18 @@ static func preview_fire(emp: Character) -> Dictionary:
 		"payroll_after": payroll_after,
 		"team_size_after": remaining,
 		"team_morale_drop": HRConstants.MORALE_FIRE_TEAM,
-		"lines": [
-			TranslationServer.translate("HR_SEVERANCE_LINE").format({"label": HRConstants.cost_label_severance(),
-				"amount": _money(severance), "months": months}),
-			TranslationServer.translate("HR_CASH_LINE").format({"old": _money(GameState.cash),
-				"new": _money(GameState.cash - severance)}),
-			TranslationServer.translate("HR_PAYROLL_LINE").format({"old": _money(payroll_before), "new": _money(payroll_after)}),
-			TranslationServer.translate("HR_TEAM_MORALE_DELTA").format({"delta": -HRConstants.MORALE_FIRE_TEAM}),
+		"rows": [
+			# OLGU — tazminatın bir "önce"si yok, tek bir rakam. Sayfa buna ok ÇİZMİYOR
+			# ve ok çizmemek bir üslup tercihi değil: ok bir GEÇİŞ iddiasıdır.
+			_fact(HRConstants.cost_label_severance(), _money(severance),
+				TranslationServer.translate("HR_ROW_MONTHS_NOTE").format({"months": months})),
+			# Nakit sıfırı geçebilir; `negative_after` onu UI'ya SÖYLER, UI kendi
+			# karşılaştırmasını yapmaz (biçimlenmiş metinden işaret okumak zorunda kalırdı).
+			_delta(TranslationServer.translate("HR_ROW_CASH"), _money(GameState.cash),
+				_money(GameState.cash - severance), "", GameState.cash - severance < 0),
+			_delta(TranslationServer.translate("HR_ROW_PAYROLL"), _money(payroll_before), _money(payroll_after)),
+			_fact(TranslationServer.translate("HR_ROW_TEAM_MORALE"),
+				str(-HRConstants.MORALE_FIRE_TEAM)),
 		],
 	}
 
@@ -275,7 +237,10 @@ static func _refuse_loudly(emp: Character, where: String) -> void:
 
 static func _refusal(reason: String) -> Dictionary:
 	# Same keys as a successful preview's spine, so the UI can bind one card to both.
-	return {"ok": false, "reason": reason, "lines": [reason]}
+	# The reason travels as a RULE record (`rows`): it has no number and no before/after,
+	# which is exactly what that kind means. It used to travel as `lines`, the shape that
+	# no longer has a renderer.
+	return {"ok": false, "reason": reason, "rows": [_rule(reason)]}
 
 
 static func _clamp_pct(pct: int) -> int:
@@ -290,11 +255,33 @@ static func _current_year() -> int:
 	return int(GameState.get_date_dict().year)
 
 
+# --- Kayıt kurucuları -------------------------------------------------------
+# Üç tür, üç kurucu. Sözlükleri çağrı yerinde elle kurmak, alan adlarının zamanla
+# ayrışmasının en kısa yolu; kurucular sözleşmeyi TEK yerde tutar.
+
+static func _delta(label: String, before: String, after: String, note: String = "",
+		negative_after: bool = false) -> Dictionary:
+	return {"kind": "delta", "label": label, "before": before, "after": after,
+		"note": note, "negative_after": negative_after}
+
+
+static func _fact(label: String, value: String, note: String = "") -> Dictionary:
+	return {"kind": "fact", "label": label, "value": value, "note": note}
+
+
+static func _rule(text: String, pause: bool = false) -> Dictionary:
+	# `pause` = sayfanın 12px kırmızı durdurma glifi. Bugün hiçbir kayıt istemiyor;
+	# alan sözleşmede DURUYOR çünkü onu isteyen kayıt (üretimi durduran eylem)
+	# tasarım sayfasında var ve bu turun dışında.
+	return {"kind": "rule", "text": text, "pause": pause}
+
+
 static func _money(amount: int) -> String:
-	# Delegates to HRConstants.money_tr so an HR preview line and an HR event body cannot
-	# disagree about how money reads; only the sign is added here.
-	if amount < 0:
-		return "-%s" % HRConstants.money_tr(amount)
+	# HRConstants.money_tr → Fmt.money_exact ve o KENDİ işaretini kendi basıyor
+	# ("-$4.878"). Burası üstüne BİR EKSİ DAHA ekliyordu → "--$4.878", ve işten
+	# çıkarma nakdi eksiye geçirebildiği için bu tasarlanmış-ulaşılabilir bir hâldi.
+	# "only the sign is added here" yorumu, money_tr ÖZEL ve İŞARETSİZ bir gruplayıcıyken
+	# doğruydu; Fmt'ye bağlanınca sessizce yanlış oldu. İşaret artık TEK yerde eklenir.
 	return HRConstants.money_tr(amount)
 
 

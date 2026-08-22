@@ -1,0 +1,118 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/modals/hr_action_modal.gd" id="1_hract"]
+
+; YERLEŞİM SAHNENİN, GİYSİ SCRIPT'İN. Boşluklar onaylı sayfanın margin'leri
+; (14 / 16 / 22) ve burada AÇIK Control dolgularıyla veriliyor — bir hairline'ın
+; stylebox'ına content_margin koymak ONU KALINLAŞTIRIR (bg rect'in tamamını boyar),
+; boşluk vermez. VBox separation'ı da kullanılamazdı: tek bir değer bütün araları
+; eşitler, sayfanın üç farklı boşluğu var.
+
+[node name="HRActionModal" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_hract")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Shell" type="PanelContainer" parent="Center"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_type_variation = &"ModalCard"
+
+[node name="Body" type="VBoxContainer" parent="Center/Shell"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TitleLabel" type="Label" parent="Center/Shell/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+
+[node name="RulePadTop" type="Control" parent="Center/Shell/Body"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TitleRule" type="Panel" parent="Center/Shell/Body"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="RulePadBottom" type="Control" parent="Center/Shell/Body"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SliderBox" type="VBoxContainer" parent="Center/Shell/Body"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PctLabel" type="Label" parent="Center/Shell/Body/SliderBox"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+text = ""
+
+[node name="SliderPad" type="Control" parent="Center/Shell/Body"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="RowsBox" type="VBoxContainer" parent="Center/Shell/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 11
+
+[node name="FooterPad" type="Control" parent="Center/Shell/Body"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Footer" type="HBoxContainer" parent="Center/Shell/Body"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CancelBtn" type="Button" parent="Center/Shell/Body/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "UI_DISMISS"
+
+[node name="FooterSpacer" type="Control" parent="Center/Shell/Body/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="CommitBtn" type="Button" parent="Center/Shell/Body/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"CommitButton"
+text = ""

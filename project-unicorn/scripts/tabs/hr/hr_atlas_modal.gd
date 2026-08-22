@@ -342,7 +342,7 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	col.add_child(stars)
 	col.add_child(HRUiShared.hairline())
 
-	# TEK trait çipi — olumlu yeşil, olumsuz kırmızı.
+	# TEK trait çipi: ikon + ad, nötr (R4 valansı kaldırdı). Hover ad+etki (B2/B3).
 	var traits: Array = file.get("traits", []) as Array
 	if not traits.is_empty():
 		col.add_child(HRUiShared.trait_row(traits, true))

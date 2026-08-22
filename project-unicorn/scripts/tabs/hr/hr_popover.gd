@@ -24,14 +24,12 @@ extends Control
 
 signal closed
 
-const NOTCH := 7.0              # çentik yarı-yüksekliği
-const GAP := 8.0                # çapa ile panel arası boşluk
+const LIFT := 6.0               # panel çapanın üst kenarından bu kadar yukarı başlar
 const EDGE_MARGIN := 12.0       # ekran kenarına en az bu kadar yaklaşır
 const MIN_WIDTH := 268
 
 var _panel: PanelContainer = null
 var _body: VBoxContainer = null
-var _notch: Control = null
 var _anchor_rect: Rect2 = Rect2()
 
 
@@ -45,14 +43,6 @@ func _ready() -> void:
 	# Kök tüm ekranı kaplar ve tıklamayı YUTAR: dışarı-tıklama kapatması böyle çalışır,
 	# ayrıca arkadaki karta yanlışlıkla tıklanması engellenir.
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	# Çentik panelin ALTINDA, kökün çocuğu olarak duruyor — PanelContainer tek Control
-	# çocuk bekler, ikinci bir çocuk yerleşimi bozardı. Çizim `draw` sinyaliyle
-	# (conviction_track.gd deseni).
-	_notch = Control.new()
-	_notch.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_notch.visible = false
-	_notch.draw.connect(_draw_notch)
-	add_child(_notch)
 	_panel = PanelContainer.new()
 	_panel.theme_type_variation = &"CardPanel"
 	_panel.custom_minimum_size = Vector2(MIN_WIDTH, 0)
@@ -87,46 +77,25 @@ func _place() -> void:
 	var screen: Vector2 = get_viewport_rect().size
 	var panel_size: Vector2 = _panel.get_combined_minimum_size()
 	panel_size.x = maxf(panel_size.x, float(MIN_WIDTH))
-	# Yatay: çapanın sağına; taşarsa soluna geçer.
-	var flipped: bool = false
-	var x: float = _anchor_rect.position.x + _anchor_rect.size.x + GAP
-	if x + panel_size.x > screen.x - EDGE_MARGIN:
-		x = _anchor_rect.position.x - panel_size.x - GAP
-		flipped = true
+	# YATAY — TEK KURAL (R1): panelin SAĞ KENARI çapanın SAĞ KENARIYLA hizalı.
+	# Dal yok, ikinci konum yok. Ölçü ÇAPAYA göre alınıyor, viewport'a göre değil:
+	# ölçek merdiveni de defterin yatay kayması da çapayı taşır, panel onunla gider.
+	var x: float = _anchor_rect.position.x + _anchor_rect.size.x - panel_size.x
+	# Ekran kelepçesi KALIYOR ve tek güvence o: çapa dar bir viewport'ta sola taşarsa
+	# panel yine de ekranda kalır. Kelepçe bir KONUM SEÇİMİ değil, bir korkuluktur.
 	x = clampf(x, EDGE_MARGIN, maxf(EDGE_MARGIN, screen.x - panel_size.x - EDGE_MARGIN))
 	# Dikey: çapanın üstüyle hizalı, ekrana kelepçeli.
-	var y: float = clampf(_anchor_rect.position.y - NOTCH,
+	var y: float = clampf(_anchor_rect.position.y - LIFT,
 		EDGE_MARGIN, maxf(EDGE_MARGIN, screen.y - panel_size.y - EDGE_MARGIN))
 	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_panel.position = Vector2(x, y)
 	_panel.size = panel_size
-	_place_notch(flipped, x, y, panel_size)
 
 
-func _place_notch(flipped: bool, px: float, py: float, panel_size: Vector2) -> void:
-	# Çentik çapanın dikey ORTASINA bakar. Çapa panelin dikey aralığının dışında
-	# kalıyorsa (kelepçe kaydırmıştır) çentik yalan söyler, çizilmez.
-	if _anchor_rect.size == Vector2.ZERO:
-		return
-	var mid_y: float = _anchor_rect.position.y + _anchor_rect.size.y * 0.5
-	if mid_y < py + NOTCH or mid_y > py + panel_size.y - NOTCH:
-		return
-	_notch.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_notch.size = Vector2(NOTCH, NOTCH * 2.0)
-	_notch.position = Vector2(px + panel_size.x if flipped else px - NOTCH, mid_y - NOTCH)
-	_notch.set_meta("flipped", flipped)
-	_notch.visible = true
-	_notch.queue_redraw()
-
-
-func _draw_notch() -> void:
-	var flipped: bool = bool(_notch.get_meta("flipped", false))
-	var pts: PackedVector2Array
-	if flipped:
-		pts = PackedVector2Array([Vector2(0, 0), Vector2(NOTCH, NOTCH), Vector2(0, NOTCH * 2.0)])
-	else:
-		pts = PackedVector2Array([Vector2(NOTCH, 0), Vector2(0, NOTCH), Vector2(NOTCH, NOTCH * 2.0)])
-	_notch.draw_colored_polygon(pts, UiTokens.CARD_BG)
+## `_place_notch` / `_draw_notch` EMEKLİ (R1, 2026-08-22). Çentik, çapanın YANINDA
+## duran ve ona geri işaret eden bir panelin işaretiydi. Panel artık çapanın ÜSTÜNE
+## sağ-hizalı oturuyor; işaret edecek bir yer yok. Gizlenmedi, SİLİNDİ — gizli
+## duran ikinci bir konum kodu, tetikleyiciye dokunan bir sonraki elde geri gelir.
 
 
 func _gui_input(event: InputEvent) -> void:

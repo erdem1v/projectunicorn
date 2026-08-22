@@ -18,6 +18,10 @@ const MENTOR_MODAL := preload("res://scenes/modals/MentorIntroModal.tscn")
 const EVENT_MODAL := preload("res://scenes/modals/EventModal.tscn")
 const SETTINGS_MODAL := preload("res://scenes/modals/SettingsModal.tscn")
 const CONFIRM_MODAL := preload("res://scenes/modals/ConfirmModal.tscn")
+# İK eylem modalı AYNI host'u kullanıyor (`confirm_requested`); config'deki
+# `"modal": "hr_action"` yalnız SAHNEYİ seçiyor. Duraklatma / tek-onay / ESC /
+# hızı geri verme davranışı ikinci kez yazılmadı.
+const HR_ACTION_MODAL := preload("res://scenes/modals/HRActionModal.tscn")
 const ENDING_MODAL := preload("res://scenes/modals/EndingScene.tscn")  # newspaper ceremony ("Ekonomi Postası") — same populate(ending_data) mount contract
 const MONTH_SUMMARY_MODAL := preload("res://scenes/modals/MonthSummaryModal.tscn")
 const MEETING_SCENE := preload("res://scenes/modals/MeetingScene.tscn")
@@ -1438,11 +1442,15 @@ func _run_hr_shot(kind: String) -> void:
 			HRSearchSystem.daily_tick()
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
-	if kind == "cikar":
+	if kind == "cikar" or kind == "cikar-eksi" or kind == "zam":
 		# Bu harness _mount_shell'den GEÇMEZ (kabuğu doğrudan instantiate eder), yani
 		# _event_signals_wired hiç kurulmaz ve confirm_requested'ın DİNLEYİCİSİ olmaz.
-		# Onay modalını kadraja alan tek shot türü bu olduğu için tek sinyali burada
-		# bağlıyoruz — oyunda aynı bağlantıyı _mount_shell yapıyor.
+		# Oyunda aynı bağlantıyı _mount_shell yapıyor.
+		#
+		# "zam" bu listeye 2026-08-22'de katıldı ve KATILMASI GEREKTİĞİNİ çekim gösterdi:
+		# zam artık popover değil modal ve o modal aynı host'tan mount ediliyor. Bağlantısız
+		# hâlde emit SESSİZCE düşüyordu — harness çıplak defteri kaydediyor, hiçbir şey
+		# bağırmıyordu. Çıplak kare "yerleşim bozuk" gibi okunur, "sinyal bağlı değil" gibi değil.
 		if not EventBus.confirm_requested.is_connected(_on_confirm_requested):
 			EventBus.confirm_requested.connect(_on_confirm_requested)
 	await get_tree().process_frame
@@ -1523,7 +1531,7 @@ func _run_hr_shot(kind: String) -> void:
 				get_tree().quit(1)
 				return
 			tab._on_card_action(target.id, HRLedger.ACTION_RAISE, row_anchor)
-		"menu", "cikar":
+		"menu", "cikar", "cikar-eksi":
 			# Temizlik turu 2026-08-20. "menu" = satır tıklamasının açtığı üçlü aksiyon
 			# popover'ı (Zam · Tatile gönder · İşten çıkar); "cikar" bir adım daha gider ve
 			# İŞTEN ÇIKAR onay modalını kaldırır. İkincisi bu harness ailesinde İLK: hiçbir
@@ -1540,18 +1548,16 @@ func _run_hr_shot(kind: String) -> void:
 				push_error("[HRShot] defter satırı bulunamadı — aksiyon menüsü çapasız")
 				get_tree().quit(1)
 				return
-			# ÇAPA ⋯ DÜĞMESİ, satırın kendisi değil (2026-08-22): 9e menüyü SATIRIN SAĞ
-			# KENARINA hizalıyor ve gerçek oyunda menüyü açan o düğmedir. Satırı çapa
-			# vermek HRPopover'ı satırın sağına, yani EKRANIN DIŞINA yolluyordu; taşma
-			# kuralı onu sola çeviriyor ve menü ekranın sol kenarına yapışıyordu — shot
-			# gerçeği değil harness'ı gösteriyordu.
-			var row_box: Node = menu_anchor.get_child(0) if menu_anchor.get_child_count() > 0 else null
-			if row_box != null and row_box.get_child_count() > 0:
-				var last: Node = row_box.get_child(row_box.get_child_count() - 1)
-				if last is Button:
-					menu_anchor = last as Control
+			# ÇAPA SATIRIN KENDİSİ (R1, 2026-08-22). ⋯ düğmesi ARTIK YOK: gerçek oyunda
+			# menüyü açan tek şey satır tıklaması ve çapa o kart. Harness'ın düğmeye
+			# inme kestirmesi de onunla birlikte kalktı — shot artık gerçeğin ta kendisi.
 			tab._on_card_action(fire_target.id, HRLedger.ACTION_MENU, menu_anchor)
-			if kind == "cikar":
+			if kind == "cikar-eksi":
+				# A2'NİN GÖZ KAPISI: tazminat kasayı SIFIRIN ALTINA geçirsin. Kartın
+				# vaat ettiği şey yalnız SONUÇ DEĞERİNİN kırmızıya dönmesi — pankart yok,
+				# engel yok, düğme metni aynı. Görülmeden doğrulanamaz.
+				GameState.set_cash(1200)
+			if kind == "cikar" or kind == "cikar-eksi":
 				# Popover yerleşimi iki kare bekliyor (HRPopover.open_at); menüdeki butona
 				# ancak ondan sonra basılabilir.
 				await get_tree().process_frame
@@ -1580,13 +1586,38 @@ func _run_hr_shot(kind: String) -> void:
 func _press_button_labelled(root: Node, label: String) -> bool:
 	# Ağaçta metni eşleşen İLK etkin Button'a basar. Shot harness'ı gerçek etkileşimi
 	# taklit etsin diye: doğrudan _open_* çağırmak popover'ın çapa/konum kodunu atlar.
+	#
+	# METİN BUTONUN KENDİSİNDE OLMAYABİLİR (2026-08-22 onarımı). İK aksiyon menüsünün
+	# satırları `flat` Button + İÇİNDE bir HBox (ikon · ad · meta) — Button.text BOŞ.
+	# Eski hâli yalnız `Button.text`e bakıyordu, o yüzden "cikar" shot'ı menüdeki
+	# İŞTEN ÇIKAR'ı hiç bulamadı. Harness'ın GÜRÜLTÜLÜ düşmesi doğruydu; bulamaması
+	# harness'ın kendi kusuruydu.
 	if root is Button and not (root as Button).disabled \
-			and String((root as Button).text).begins_with(label):
+			and _button_matches(root as Button, label):
 		(root as Button).pressed.emit()
 		return true
 	for child in root.get_children():
 		if _press_button_labelled(child, label):
 			return true
+	return false
+
+
+## Buton bu etiketi TAŞIYOR MU: kendi `text`i ya da İÇİNDEKİ HERHANGİ bir Label.
+##
+## "İlk Label" YETMİYOR ve bu ölçüldü: İK menü satırının ilk çocuğu `lock_glyph` —
+## kilitli satırda kilit, açık satırda ŞEFFAF ama yine de metinli bir glif. İlk
+## dolu Label'ı döndüren bir sürüm her satır için o glifi buluyordu ve eşleşme hiç
+## olmuyordu. Doğru soru "başlığı ne" değil, "bu etiketi taşıyor mu".
+func _button_matches(btn: Button, label: String) -> bool:
+	if String(btn.text).begins_with(label):
+		return true
+	var stack: Array[Node] = [btn]
+	while not stack.is_empty():
+		var n: Node = stack.pop_front()
+		if n is Label and String((n as Label).text).begins_with(label):
+			return true
+		for c in n.get_children():
+			stack.append(c)
 	return false
 
 
@@ -1810,8 +1841,12 @@ func _seed_build_state(state: String) -> void:
 				b.efor_spent = b.total_efor * 0.5   # bant içi yarı doluluk
 				ProductSystem.hourly_tick(9)
 			else:
+				# BANDI BEKLER, KAPIYI DEĞİL (D2, 2026-08-22). `can_enter_beta` artık
+				# geliştirmenin İLK saatinde de true; onu bekleyen döngü anında çıkıyor ve
+				# "devpark" fiksturü parkta OLMAYAN bir kart üretiyordu (ölçüldü: beta'ya
+				# 24 eforun 8.8'inde giriyordu). Fiksturün adı bandı söylüyor, kapıyı değil.
 				for i in 24 * 120:
-					if ProductSystem.can_enter_beta():
+					if ProductSystem.development_band_complete():
 						break
 					ProductSystem.hourly_tick(i % 24)
 				if state == "devpark":
@@ -2159,7 +2194,8 @@ func _on_confirm_requested(config: Dictionary) -> void:
 	# Settings deseninin aynısı: onay açıkken pause, kapanınca eski hıza dön.
 	_pre_confirm_speed = TimeManager.current_speed
 	EventBus.speed_change_requested.emit(0)
-	_confirm_modal = CONFIRM_MODAL.instantiate()
+	_confirm_modal = (HR_ACTION_MODAL if String(config.get("modal", "")) == "hr_action"
+		else CONFIRM_MODAL).instantiate()
 	var on_confirm: Callable = config.get("on_confirm", Callable())
 	if on_confirm.is_valid():
 		_confirm_modal.confirmed.connect(on_confirm)

@@ -1,0 +1,25 @@
+[gd_resource type="FontVariation" format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/sans/IBMPlexSans-Regular.ttf" id="1_fp1jf"]
+[ext_resource type="FontFile" path="res://assets/fonts/fallback/NotoSansSymbols2-Regular.ttf" id="2_pu60m"]
+
+; EĞİK SANS — TÜRETİLMİŞ, DOSYA DEĞİL (H3, 2026-08-22).
+;
+; Onaylı İK modal sayfası "kural" kaydını sans-İTALİK diziyor; delta ve olgudan onu
+; ayıran giysi bu. Projede sans italik yüz YOK (yalnız sans_reg / sans_sb, italik
+; serif tarafında). İki seçenek vardı: yeni bir .ttf getirmek (yeni varlık + OFL) ya da
+; var olan yüzü EĞMEK. İkincisi seçildi.
+;
+; `variation_transform` bir Transform2D shear'ı: x ekseni y'ye göre 0.21 kayıyor (~12°),
+; dijital tipografinin "oblique" dediği şey. Gerçek bir italik değil — İtalik ayrı
+; harf formları çizer, bu yalnız eğer. Bu metin tek satırlık bir kural cümlesi olduğu
+; için fark okunurluğa değil yalnız KAYDA hizmet ediyor, ve o kayıt burada yeterli.
+;
+; TEMA ÖĞESİ DEĞİL: modal bu kaynağı doğrudan `add_theme_font_override` ile takıyor
+; (BuildBar'ın precedent'i). `build_theme.gd` bunu OKUMUYOR, dolayısıyla
+; master_theme.tres kıpırdamıyor ve THEME_STAMP 6'da kalıyor.
+
+[resource]
+fallbacks = Array[Font]([ExtResource("2_pu60m")])
+base_font = ExtResource("1_fp1jf")
+variation_transform = Transform2D(1, 0, 0.21, 1, 0, 0)

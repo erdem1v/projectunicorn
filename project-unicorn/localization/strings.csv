@@ -772,7 +772,6 @@ NOTICE_SRC_SALES,Satış,Sales
 NOTICE_SRC_CUSTOMER,Müşteri,Customer
 SALES_LOG_REP_CLOSED,"{rep}, {company} ile anlaşmayı kapattı.",{rep} closed the deal with {company}.
 HR_BADGE_NEW,Yeni,New
-HR_SEVERANCE_LINE,{label}: {amount} ({months} ay),{label}: {amount} ({months} mo)
 HR_TRAIT_LOYAL_LABEL,SADIK,Loyal
 HR_TRAIT_LOYAL_EFFECT,Moral düşükken bile kolay kolay ayrılmaz; rakip teklifine dayanır.,"Unlikely to leave even at low morale, and holds out against a rival offer."
 HR_TRAIT_PICKS_IT_UP_FAST_LABEL,ÇABUK KAPAR,Picks It Up Fast
@@ -816,17 +815,9 @@ HR_FILE_NOTE_10,"Herkesi tanıyor, kimseyle çalışmamış.","Knows everyone, h
 HR_FILE_NOTE_11,"Teknik soruda durdu, düşündü, doğru cevapladı.","Paused on the technical question, thought, answered correctly."
 HR_FILE_NOTE_12,Eski ekibinden iki kişi onu tavsiye etti.,Two people from their old team recommended them.
 HR_ERR_NO_SALARY,Maaş kaydı yok,No salary on record
-HR_RAISE_LINE,Maaş {old} → {new} (aylık {monthly}),Salary {old} → {new} ({monthly} a month)
-HR_PAYROLL_LINE,Aylık maaş yükü {old} → {new},Monthly payroll {old} → {new}
 HR_RAISE_PERMANENT,"Zam kalıcıdır, geri alınmaz","A raise is permanent and cannot be undone"
-HR_LEAVE_USED,Bu yılın izni kullanılmış,This year's leave is already used
 HR_ERR_ALREADY_ON_LEAVE,Zaten izinde,Already on leave
 HR_ERR_IN_TRAINING,Eğitimde — dönmesini bekle,In training — wait until they are back
-HR_LEAVE_DAYS_OUT,{n} gün kapasite dışı,{n} days out of capacity
-HR_LEAVE_PAID,"Maaş akmaya devam eder, ücretli izindir","Salary keeps running; this is paid leave"
-HR_LEAVE_MORALE,Dönüşte moral {old} → {new},Morale on return {old} → {new}
-HR_LEAVE_ANNUAL_SPENT,Bu yılın otomatik yıllık izni kullanılmış sayılır,This counts as the automatic annual leave for the year
-HR_TEAM_MORALE_DELTA,Kalan ekipte moral {delta},Morale on the remaining team {delta}
 HR_ERR_NO_RECORD,Kayıt bulunamadı,No record found
 HR_ERR_EMPLOYEES_ONLY,Bu aksiyon yalnız çalışanlar için,This action is for employees only
 HR_ERR_LEAVING,Ayrılık bekliyor,A departure is already pending
@@ -858,7 +849,6 @@ HR_STATE_ON_LEAVE_DAYS,İzinde · {n} gün kaldı,On leave · {n} days left
 HR_NEWS_BACK_FROM,{name} {whence} döndü,{name} is back from {whence}
 HR_NEWS_ON_HOLIDAY,{name} {n} gün tatilde,{name} is on holiday for {n} days
 HR_NEWS_ON_LEAVE_MONTH,{name} bu ay izinde,{name} is on leave this month
-HR_MORALE_LINE,Moral {old} → {new},Morale {old} → {new}
 HR_EV_OVERTIME_STOP,Mesaiyi durdur,Stop the overtime
 HR_EV_SIGNING_TITLE,Ofiste iyi haber,Good news in the office
 HR_EV_SIGNING_ACK,Hak ettiler,They earned it
@@ -872,9 +862,6 @@ HR_SEARCH_CANCEL_TITLE,Arayışı iptal et,Cancel the search
 HR_SEARCH_CANCEL_BODY,Atlas arayışı kapanır. Peşin ödenen {amount} iade edilmez.,The Atlas search closes. The {amount} retainer is not refunded.
 HR_SEARCH_CANCEL_OK,İptal et,Cancel it
 HR_OVERTIME_CHIP,EK MESAİ,OVERTIME
-HR_HOLIDAY_CONFIRM_TITLE,{name} · tatile gönder,{name} · send on holiday
-HR_HOLIDAY_CONFIRM_OK,Tatile gönder,Send on holiday
-HR_FIRE_CONFIRM_TITLE,{name} · işten çıkar,{name} · let go
 HR_FIRE_CONFIRM_OK,İşten çıkar,Let go
 HR_ATLAS_STEP_ROLE,Adım 1 · Rol,Step 1 · Role
 HR_ATLAS_STEP_BAND,Adım 2 · Bütçe bandı,Step 2 · Budget band
@@ -901,13 +888,17 @@ HR_OT_TODAY_SPEED,Bugünün hız kazancı +%{pct},Today's speed gain +{pct}%
 HR_OT_EARLY_STOP,"Erken durdurabilirsin; başlanan gün tam ücretlenir, sonrası için bedel üretmez.",You can stop early; the day you started bills in full and nothing accrues after that.
 HR_CARD_SALARY,Maaş {amount}/ay,Salary {amount}/mo
 HR_CARD_RAISE,Zam yap,Give a raise
-HR_CARD_HOLIDAY,İzne gönder,Send on leave
 HR_CARD_FIRE,İşten çıkar,Dismiss
 HR_MENU_PERMANENT,kalıcı,permanent
-HR_RAISE_POPOVER_TITLE,Zam yap,Give a raise
 HR_CANDIDATE_GENERIC,Aday,Candidate
-HR_CASH_LINE,Nakit {old} → {new},Cash {old} → {new}
 HR_APPLY_RAISE_PCT,ZAMMI UYGULA · +{pct},APPLY RAISE · +{pct}
+HR_ROW_SALARY,Maaş,Salary
+HR_ROW_MORALE,Moral,Morale
+HR_ROW_PAYROLL,Aylık maaş yükü,Monthly payroll
+HR_ROW_CASH,Nakit,Cash
+HR_ROW_TEAM_MORALE,Ekip moral düşümü,Team morale drop
+HR_ROW_MONTHLY_NOTE,(aylık {delta}),({delta} a month)
+HR_ROW_MONTHS_NOTE,({months} ay),({months} mo)
 PROD_FEAT_AI_ASSISTANT_CHAT_NAME,Sohbet Ekranı,Chat Interface
 PROD_FEAT_AI_ASSISTANT_MEMORY_NAME,Konuşma Hafızası,Conversation Memory
 PROD_FEAT_AI_ASSISTANT_TOOLS_NAME,Araç Kullanımı,Tool Use

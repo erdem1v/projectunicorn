@@ -26,19 +26,24 @@ const W_MORALE_WIDE := 160
 # YOĞUN KADEME. top_bar._apply_density'nin aynı grameri: dar viewport'ta geniş
 # sütunlar daralır ve HİÇBİR ŞEY DÜŞMEZ — her sütun içeriğini korur.
 const W_ROLES_DENSE := 300
-const W_TASK_DENSE := 180
+const W_TASK_DENSE := 232   # +52: MORAL çubuğunun geri verdiği pay buraya gitti (D5)
 const W_EXPERIENCE_DENSE := 104
 const W_STATE_DENSE := 140
 const W_SALARY_DENSE := 118
 const W_MORALE_DENSE := 124
 const DENSE_BELOW := 1600   # mantıksal genişlik eşiği (top_bar ile aynı sayı)
-# ÖLÇÜLDÜ, RAPORLANDI: bu kademe %125’te MORAL sütununu ve ⋯ düğmesini geri getiriyor
-# ama sayfanın EN SAĞ kenarı hâlâ kırpılıyor. Sütunları 100px daha daraltmak kesim
-# yerini HİÇ oynatmadı — yani kalan taşma defterin genişliğinden DEĞİL, sayfa
-# kabuğundan geliyor ve bu turun dosya kümesinin dışında. Kovalanmadı, yazıldı.
+# YUKARIDAKİ ESKİ NOT ("sütunları 100px daraltmak kesim yerini oynatmadı, demek ki
+# sorun sayfa kabuğunda") YANLIŞTI ve 2026-08-22'de çürütüldü. Kesim yeri
+# oynamadı çünkü SÜTUN BAŞLIĞI BU SABİTLERİ HİÇ OKUMUYORDU: `_dense` statik ve
+# `false` doğuyor, başlık ise ölçümden ÖNCE kuruluyordu. Okumadığı bir sabiti
+# daraltmak elbette hiçbir şeyi oynatmaz. İki onarım: ölçüm `_build_chrome`in başına
+# taşındı ve başlık `_rebuild`de yeniden kuruluyor (hr_tab._rebuild_header).
+# Kalan taşma MORAL çubuğunun sabit 150'sindeydi — o da kademeye bağlandı.
 
 const W_TRAIT := 90
-const W_MENU := 44
+# `W_MENU` EMEKLİ (R1, 2026-08-22): ⋯ sütunu kalktı. Menüyü açan tek şey satırın
+# kendisi ve çapa o karttir — 44px'lik bir düğme İKİNCİ bir çapa demekti ve iki yol
+# gözünür biçimde farklı yerlerde menü açıyordu.
 
 ## Defter kurulurken bir kez ölçülür. Statik, çünkü çizim de statik ve başlık ile
 ## satırların AYNI sayıyı okuması şart — iki farklı genişlik iki farklı tablo demek.
@@ -62,7 +67,6 @@ static func w_morale() -> int:     return W_MORALE_DENSE if _dense else W_MORALE
 ## tasarımda satırda kendi düğmesi yok ve kişi başına bir karar olduğu için menü onun evi.
 const ACTION_MENU := "menu"
 const ACTION_RAISE := "raise"
-const ACTION_VACATION := "vacation"
 const ACTION_FIRE := "fire"
 const ACTION_TRAIN := "train"
 
@@ -81,7 +85,6 @@ static func column_header() -> Control:
 	row.add_child(_head(tr_key("HR_COL_TRAIT"), W_TRAIT))
 	row.add_child(_head(tr_key("HR_COL_SALARY"), w_salary()))
 	row.add_child(_head(tr_key("HR_COL_MORALE"), w_morale()))
-	row.add_child(_head("", W_MENU))
 	var wrap := PanelContainer.new()
 	wrap.theme_type_variation = &"HeaderBand"
 	wrap.add_child(row)
@@ -148,17 +151,6 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 	morale_cell.size_flags_horizontal = Control.SIZE_SHRINK_END
 	row.add_child(morale_cell)
 
-	# --- ⋯ : satır menüsü. Kendi düğmesi var çünkü 9e menüyü SATIRIN SAĞ KENARINA
-	# hizalıyor — çapa o düğmedir, satırın tamamı değil.
-	var menu_btn := Button.new()
-	menu_btn.text = "⋯"
-	menu_btn.flat = true
-	menu_btn.custom_minimum_size = Vector2(W_MENU, 0)
-	menu_btn.focus_mode = Control.FOCUS_NONE
-	menu_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	menu_btn.add_theme_color_override("font_color", UiTokens.INK_DIM)
-	menu_btn.pressed.connect(func() -> void: on_action.call(emp.id, ACTION_MENU, menu_btn))
-	row.add_child(menu_btn)
 
 	_pass_clicks_through(row)
 	return card
