@@ -50,7 +50,20 @@ static func can_raise(emp: Character, pct: int) -> bool:
 		return false
 	if emp.monthly_salary <= 0:
 		return false
+	# §9.2: "Aynı çalışana ALTI AY geçmeden yeni zam verilemez." Zam artık tekrarlanabilir
+	# bir moral satın alma değil; bekleme süresi onu bir karara çeviriyor.
+	if raise_cooldown_left(emp) > 0:
+		return false
 	return _raised_salary(emp.monthly_salary, _clamp_pct(pct)) > emp.monthly_salary
+
+
+## §9.2 bekleme süresinden KALAN gün. 0 = zam verilebilir. Satır menüsü kilit gerekçesini
+## bundan yazıyor (onaylı 1a: "Son zam 4 ay önce · 2 ay sonra açılır").
+static func raise_cooldown_left(emp: Character) -> int:
+	if emp == null or emp.last_raise_day <= 0:
+		return 0
+	var elapsed: int = GameState.day - emp.last_raise_day
+	return maxi(HRConstants.RAISE_COOLDOWN_DAYS - elapsed, 0)
 
 
 static func preview_raise(emp: Character, pct: int) -> Dictionary:
@@ -106,9 +119,101 @@ static func apply_raise(emp: Character, pct: int) -> bool:
 	# KALICI maaş artışı. It reaches daily_burn on the NEXT FinanceSystem.daily_tick (slot 5),
 	# which pulls get_total_monthly_salaries — no push, no second burn home, no stale mirror.
 	CharacterRegistry.set_salary(emp.id, after)
+	# §9.1 "Maaş hiçbir koşulda düşürülemez" — kuralı TAŞIYAN alan da yükselir.
+	emp.salary_floor = maxi(emp.salary_floor, after)
+	emp.last_raise_day = GameState.day
+	emp.employment_history.append({
+		"day": GameState.day, "kind": "raise", "old": before, "new": after,
+	})
 	HRMoraleSystem.apply_delta(emp, HRConstants.raise_morale_gain(p), HRConstants.REASON_RAISE)
 	if OS.is_debug_build():
 		print("[HRActions] zam %s: %%%d, %d → %d" % [emp.id, p, before, after])
+	return true
+
+
+# ============================== §9.3 TERFİ ==================================
+# Terfi bir SEVİYE atlamasıdır: çalışan bir üst seviyeye çıkar ve unvanı değişir.
+# Atlama TEK ADIMDIR — Junior doğrudan Kıdemli olamaz — ve Kıdemli tavandır.
+#
+# TERFİ EDENİN MAAŞI YENİ SEVİYENİN PİYASA BANDINA OTURMAZ (§9.3). Yalnız seçilen oranda
+# artar, ve bu yüzden içeriden terfi dışarıdan aynı seviyede işe almaktan UCUZDUR. Oyuncuya
+# gerçek bir "yetiştir mi, satın al mı" kararı veren şey bu fark.
+# (Bidwell 2011: dışarıdan gelenler ~%18 fazla ödeniyor, ilk iki yıl daha düşük performans.)
+
+static func can_promote(emp: Character) -> bool:
+	if _block_reason(emp) != "":
+		return false
+	return emp.level < HRConstants.LEVEL_SENIOR
+
+
+## Kilitli satırın gerekçesi (§13.3: "Kilitli olan görünür kalır ve gerekçesini gösterir").
+static func promotion_block_reason(emp: Character) -> String:
+	var shared: String = _block_reason(emp)
+	if shared != "":
+		return shared
+	if emp.level >= HRConstants.LEVEL_SENIOR:
+		return TranslationServer.translate("HR_ERR_TOP_LEVEL")
+	return ""
+
+
+static func preview_promotion(emp: Character, pct: int) -> Dictionary:
+	var reason: String = promotion_block_reason(emp)
+	if reason != "":
+		return {"ok": false, "reason": reason, "rows": [_rule(reason)]}
+	var p: int = clampi(pct, HRConstants.PROMOTION_MIN_PCT, HRConstants.PROMOTION_MAX_PCT)
+	var before: int = emp.monthly_salary
+	var after: int = _raised_salary(before, p)
+	var next_level: int = emp.level + 1
+	var payroll: int = CharacterRegistry.get_total_monthly_salaries()
+	var morale_gain: int = HRMoraleSystem.scaled_delta(emp, HRConstants.promotion_morale_gain(p))
+	return {
+		"ok": true,
+		"reason": "",
+		"pct": p,
+		"salary_before": before,
+		"salary_after": after,
+		"level_after": next_level,
+		"rows": [
+			# §14 DELTA: unvan da bir delta — onaylı 2b onu ilk satırda gösteriyor.
+			_delta(TranslationServer.translate("HR_ROW_TITLE"),
+				HRConstants.job_title(emp.role, emp.level),
+				HRConstants.job_title(emp.role, next_level)),
+			_delta(TranslationServer.translate("HR_ROW_SALARY"),
+				HRConstants.money_tr(before), HRConstants.money_tr(after),
+				TranslationServer.translate("HR_ROW_MONTHLY_NOTE").format({
+					"amount": HRConstants.money_tr(after - before)})),
+			_delta(TranslationServer.translate("HR_ROW_MORALE"),
+				str(emp.morale), str(emp.morale + morale_gain)),
+			_delta(TranslationServer.translate("HR_ROW_PAYROLL"),
+				HRConstants.money_tr(payroll), HRConstants.money_tr(payroll - before + after)),
+			_rule(TranslationServer.translate("HR_PROMOTION_PERMANENT")),
+		],
+	}
+
+
+static func apply_promotion(emp: Character, pct: int) -> bool:
+	if not can_promote(emp):
+		_refuse_loudly(emp, "apply_promotion")
+		return false
+	var p: int = clampi(pct, HRConstants.PROMOTION_MIN_PCT, HRConstants.PROMOTION_MAX_PCT)
+	var before_salary: int = emp.monthly_salary
+	var before_level: int = emp.level
+	var after_salary: int = _raised_salary(before_salary, p)
+	emp.level = before_level + 1
+	CharacterRegistry.set_salary(emp.id, after_salary)
+	emp.salary_floor = maxi(emp.salary_floor, after_salary)
+	emp.last_promotion_day = GameState.day
+	# §9.2'nin bekleme süresi de kurulur: terfi bir zammı İÇERİR, ve ertesi gün üstüne
+	# ayrı bir zam almak bekleme süresini anlamsız kılardı.
+	emp.last_raise_day = GameState.day
+	emp.employment_history.append({
+		"day": GameState.day, "kind": "promotion", "old": before_level, "new": emp.level,
+	})
+	HRMoraleSystem.apply_delta(emp, HRConstants.promotion_morale_gain(p), HRConstants.REASON_RAISE)
+	EventBus.employee_promoted.emit(emp.id, emp.level)
+	if OS.is_debug_build():
+		print("[HRActions] terfi %s: seviye %d → %d, maaş %d → %d (%%%d)" % [
+			emp.id, before_level, emp.level, before_salary, after_salary, p])
 	return true
 
 

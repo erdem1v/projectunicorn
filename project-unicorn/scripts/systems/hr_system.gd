@@ -92,40 +92,34 @@ static func daily_tick() -> void:
 ## ama aşırı yük çarpanıyla. §5'in "verimi düşer" cümlesi öğrenmeye de uygulanır, yoksa
 ## iki işe koşmak öğrenme sömürüsü olurdu.
 static func tick_experience() -> void:
-	var base: int = HRConstants.EXPERIENCE_PER_DAY
+	# §5.1: "Çalışan projelerde aktif rol aldıkça deneyim kazanır." TEK BAR — alan başına
+	# değil. Boştaki kişi öğrenmez: §12.2'nin "Boşta çalışan maaş yemeye devam eder"
+	# cümlesinin ikinci yarısı, boşta durmanın yalnız bugünü değil yarını da kaybettirmesi.
+	#
+	# AŞIRI YÜK ÖĞRENMEYİ YAVAŞLATMAZ. Eski kod §5'in "verimi düşer"ini öğrenmeye de
+	# uyguluyordu; rev 11'de odak katsayısı ÇIKTI hakkındadır (§12.1) ve iki işteki kişi
+	# aynı saatleri çalışır. Aynı sürede aynı deneyim.
+	var base: int = HRConstants.EXPERIENCE_PER_WORKED_DAY
 	if _build_phase_running():
-		base = HRConstants.EXPERIENCE_PER_BUILD_DAY
-	# KURUCU DA ÖĞRENİR (2026-08-22). Kişisel sekmesinin kurucu kartı bir DENEYİM çubuğu
-	# çiziyor; kurucu bu döngünün dışında kalırsa o çubuk sonsuza dek %0 okur.
+		base += HRConstants.EXPERIENCE_BUILD_BONUS
+	# KURUCU DA ÖĞRENİR: Kişisel kartı bir DENEYİM çubuğu çiziyor ve §2.5 onu sabitliyor.
 	var learners: Array[Character] = CharacterRegistry.get_active_employees()
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder != null and founder.status == HRConstants.STATUS_ACTIVE:
 		learners.append(founder)
 	for emp in learners:
-		if emp.assigned_jobs.is_empty():
+		if emp.assigned_job_ids.is_empty():
 			continue
-		var lead_mult: float = HRConstants.experience_gain_mult(area_lead_leadership_for(emp))
-		var load_mult: float = 1.0 if emp.assigned_jobs.size() <= 1 else HRConstants.OVERLOAD_OUTPUT_MULT
-		# ÇABUK KAPAR: kişinin KENDİ öğrenme hızı.
+		# ÇABUK KAPAR: kişinin KENDİ öğrenme hızı (§6).
 		var own_mult: float = HRConstants.trait_mult(emp.traits, "experience_mult")
-		# GERÇEK LİDER: alanın SORUMLUSU taşıyorsa o alandaki HERKES daha hızlı öğrenir
-		# — taşıyıcının kendisi dahil, çünkü öğretmek öğrenmenin bir biçimi. Alan başına
-		# soruluyor, kişi başına değil: bir kişi iki alanda iki farklı sorumlunun altında
-		# olabilir ve ikisinin de aynı anda GERÇEK LİDER olması gerekmez.
-		for area_id in emp.assigned_jobs:
-			var area_key: String = String(area_id)
-			# Araştırma bir YETENEK değil, yalnız atanabilir bir slot — kimsenin Araştırma
-			# sayısı yok, o yüzden orada deneyim de birikmez.
-			if not HRConstants.AREAS.has(area_key):
-				continue
-			var mentor: Character = area_lead(area_key)
-			var mentor_mult: float = 1.0
-			if mentor != null:
-				mentor_mult = HRConstants.trait_mult(mentor.traits, "lead_experience_mult")
-			var gain: int = int(round(
-				float(base) * lead_mult * load_mult * own_mult * mentor_mult))
-			CharacterRegistry.add_area_experience(emp.id, area_key, maxi(gain, 1))
-
+		# GERÇEK LİDER: ekip lideri taşıyorsa altındakiler daha hızlı öğrenir (§6). Lider
+		# ataması §4.2'ye göre YAPIM BAŞINA yapılır ve Ürün modülünün konusudur; burada
+		# kurucu iklim lideri olarak okunuyor, çünkü lidersiz alanların moral ve öğrenme
+		# iklimi kurucudan gelir (§4.2).
+		var lead_mult: float = HRConstants.experience_gain_mult(
+			GameState.get_founder_skill(HRConstants.SKILL_LEADERSHIP))
+		var gain: int = int(round(float(base) * own_mult * lead_mult))
+		CharacterRegistry.add_experience(emp.id, maxi(gain, 1))
 
 # ======================= Görev ataması: okuma seam'leri ======================
 # rev 2 §4. CharacterRegistry TEK YAZARDIR; burası okuma tarafı ve dışarıya açılan yüz.

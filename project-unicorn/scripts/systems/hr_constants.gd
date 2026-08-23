@@ -1463,7 +1463,11 @@ static func severance_months(days_served: int) -> int:
 
 
 static func severance_amount(monthly_salary: int, days_served: int) -> int:
-	return monthly_salary * severance_months(days_served)
+	# §11.1 BASAMAKLI VE TAVANLI: 1 yıldan az ⅓ maaş · 1 yıl 1 · 2 yıl 2 · 3 yıl ve üzeri 3.
+	# Tamamlanmış yıl esas alınır ve ara aylar YUKARI YUVARLANMAZ — bir buçuk yıllık çalışan
+	# BİR maaş alır. severance_months yukarıda duruyor (Faz 7) ama artık okunmuyor: eski
+	# kural iki uçta da yanlıştı, bir yıldan az çalışana tam maaş, on yıllığa on maaş.
+	return int(round(float(monthly_salary) * severance_multiple(days_served)))
 
 
 # ========================= Ek mesai (departman bazlı) ========================

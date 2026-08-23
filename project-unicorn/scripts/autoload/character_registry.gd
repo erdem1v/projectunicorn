@@ -138,25 +138,88 @@ func can_train(id: String, area_key: String = "") -> bool:
 		return false
 	if c.status != HRConstants.STATUS_ACTIVE:
 		return false
+	# §5.2 AKIŞIN İLK ADIMI: "Deneyim barı %100'e ulaşır. Eğitim eylemi AÇILIR."
+	# İki kilit gerekçesi ayrıdır ve §5.4 birbirine karıştırılmamasını söylüyor:
+	#   bar dolmadı        → "henüz hak edilmedi"
+	#   alan 5,0 yıldızda  → "bu alanda öğrenecek bir şey kalmadı"
+	# Paranın yetmemesi bir kilit DEĞİLDİR; bir bedeldir ve modalde okunur.
+	if not experience_bar_full(c):
+		return false
 	if area_key == "":
-		# Alan verilmediyse "herhangi bir yetenekte eğitilebilir mi" sorusudur — defterin
-		# ve menünün EĞİTİME GÖNDER satırı bunu sorar, yeteneği modal seçtirir.
+		# Alan verilmediyse "herhangi bir yetenekte eğitilebilir mi" sorusudur.
 		for a in HRConstants.trainable_keys():
-			if int(c.role_stats.get(String(a), 0)) < HRConstants.AREA_TRAIN_CAP:
+			if int(c.role_stats.get(String(a), 0)) < HRConstants.AREA_MAX:
 				return true
 		return false
 	if not HRConstants.is_trainable_key(area_key):
 		return false
-	return int(c.role_stats.get(area_key, 0)) < HRConstants.AREA_TRAIN_CAP
+	# §5.3 TEK TAVAN: eğitim beşinci yıldıza kadar çıkar. AREA_TRAIN_CAP 8 (dört yıldız)
+	# kalktı — "parayla satın alınamayan bir üst yıldız yoktur".
+	return int(c.role_stats.get(area_key, 0)) < HRConstants.AREA_MAX
+
+
+# ====================== §5.1 DENEYİM — tek bar, büyüyen eşik =================
+# Alan başına sayaçlar (`area_experience`) hâlâ bildirilmiş ve Faz 7'de silinecek; artık
+# YAZILMIYORLAR. Bar hep 0–100 çizilir, çizilen oran experience_raw / experience_threshold.
+
+## Kişinin toplam gelişmişliği — altı alan + Liderlik ham puanı. Eşiğin girdisi budur.
+func total_skill_points(c: Character) -> int:
+	if c == null:
+		return 0
+	var total: int = 0
+	for area_key in HRConstants.AREAS:
+		total += int(c.role_stats.get(String(area_key), 0))
+	total += int(c.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0))
+	return total
+
+
+## Eşiği yeniden hesaplar. Her ÇİZİMDE değil, her YILDIZ DEĞİŞİMİNDE çağrılır — eşik
+## saklanan bir alan, çünkü bar onu her karede yeniden türetmemeli.
+func refresh_experience_threshold(c: Character) -> void:
+	if c == null:
+		return
+	c.experience_threshold = HRConstants.experience_threshold(total_skill_points(c))
+
+
+func experience_bar_full(c: Character) -> bool:
+	if c == null:
+		return false
+	if c.experience_threshold <= 0:
+		refresh_experience_threshold(c)
+	return c.experience_raw >= c.experience_threshold
+
+
+## Barın 0–1 doluluğu — Kadro'nun DENEYİM sütunu ve Kişisel'in çubuğu bunu çizer.
+func experience_ratio(c: Character) -> float:
+	if c == null or c.experience_threshold <= 0:
+		return 0.0
+	return clampf(float(c.experience_raw) / float(c.experience_threshold), 0.0, 1.0)
+
+
+## §5.1: BAR DOLAR VE ORADA DURUR. İşbaşı öğrenme emekli — deneyim kendiliğinden yıldıza
+## dönüşmez, tek çıkışı eğitimdir. Dolduğu AN bir kez sinyal atar (§15.3
+## `experience_bar_full`), böylece olay motoru kenarı yakalayabilir; her gün değil.
+func add_experience(id: String, amount: int) -> void:
+	var c: Character = _characters.get(id, null)
+	if c == null or amount <= 0:
+		return
+	if c.experience_threshold <= 0:
+		refresh_experience_threshold(c)
+	var was_full: bool = c.experience_raw >= c.experience_threshold
+	c.experience_raw = mini(c.experience_raw + amount, c.experience_threshold)
+	if not was_full and c.experience_raw >= c.experience_threshold:
+		EventBus.employee_experience_changed.emit(id, c.experience_raw)
 
 
 ## Bu çalışanın bu alandaki eğitiminin ücreti — kademeli + tekrarda zamlı (§8).
 func training_fee_for(id: String, area_key: String) -> int:
+	# §5.3: bedel YALNIZ hedef alanın MEVCUT yıldız seviyesine göre kademelenir. Tekrar
+	# zammı ve Liderlik çarpanı kalktı — §5.3 ikisini de yetkilendirmiyor ve her ikisi de
+	# aynı +½ yıldızı ikinci bir eksenden fiyatlıyordu.
 	var c: Character = _characters.get(id, null)
 	if c == null:
-		return HRConstants.TRAINING_FEE
-	return HRConstants.training_fee(int(c.role_stats.get(area_key, 0)),
-		int(c.trainings_done.get(area_key, 0)), area_key)
+		return HRConstants.TRAINING_FEE_BASE
+	return HRConstants.training_fee_tiered(int(c.role_stats.get(area_key, 0)))
 
 
 ## Eğitimi BAŞLATIR. Ücreti burada TAHSİL ETMEZ — para FinanceSystem'in işi ve
@@ -187,10 +250,17 @@ func tick_training(id: String) -> bool:
 		return false
 	var area_key: String = c.training_area
 	if HRConstants.is_trainable_key(area_key):
+		# §5.2: dönüşte seçilen alanda +½ YILDIZ (= +1 ham puan, POINTS_PER_STAR 2).
 		var cur: int = int(c.role_stats.get(area_key, 0))
-		c.role_stats[area_key] = mini(cur + 1, HRConstants.AREA_TRAIN_CAP)
+		c.role_stats[area_key] = mini(cur + 1, HRConstants.AREA_MAX)
 		c.trainings_done[area_key] = int(c.trainings_done.get(area_key, 0)) + 1
-		c.area_experience[area_key] = 0
+		# §5.2: "Deneyim barı SIFIRLANIR." Ve eşik yeniden hesaplanır — kişi az önce
+		# geliştiği için bir sonraki bar daha uzun sürecek (§5.1'in ikinci freni).
+		c.experience_raw = 0
+		refresh_experience_threshold(c)
+		c.employment_history.append({
+			"day": GameState.day, "kind": "training", "old": cur, "new": int(c.role_stats[area_key]),
+		})
 	c.training_area = ""
 	c.status = HRConstants.STATUS_ACTIVE
 	EventBus.employee_training_changed.emit(id, 0)
@@ -511,6 +581,10 @@ func add(character: Character) -> void:
 		if character.area_experience.is_empty():
 			for area_key in HRConstants.AREAS:
 				character.area_experience[String(area_key)] = 0
+		# §5.1: eşik gelişmişlikten türer, o yüzden işe alımda bir kez hesaplanır.
+		refresh_experience_threshold(character)
+		if character.salary_floor <= 0:
+			character.salary_floor = character.monthly_salary
 		if character.leave_month <= 0:
 			var hire_month: int = int(GameState.get_date_dict().month)
 			character.leave_month = HRConstants.leave_month_for(hire_month, hire_ordinal)

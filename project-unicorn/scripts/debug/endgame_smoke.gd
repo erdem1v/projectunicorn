@@ -325,6 +325,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_migration_v6_to_v7":        fail = _case_save_migration_v6_to_v7()
 		"save_migration_v6_to_v7_drops":  fail = _case_save_migration_v6_to_v7_drops()
 		"work_hours_three_scopes":        fail = _case_work_hours_three_scopes()
+		"promotion_and_raise_gate":       fail = _case_promotion_and_raise_gate()
 		# --- Trait seti · Build Bar · Görevler (2026-08-21). Beşi de ÖNCEKİ motora karşı DÜŞER.
 		"build_pauses_when_all_busy":     fail = _case_build_pauses_when_all_busy()
 		"build_resumes_when_one_frees":   fail = _case_build_resumes_when_one_frees()
@@ -4570,7 +4571,13 @@ static func _case_hr_leave_cycle() -> String:
 	# capacity contribution absent, returns after LEAVE_DAYS with morale refreshed.
 	GameState.set_cash(100000)
 	var e: Character = _make_employee("char_leave", "Leave Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 60)
-	e.leave_month = int(GameState.get_date_dict().month)   # force: this month
+	# §11.4: izin artık YAZ PENCERESİ içinde bir HAFTAdır, ay değil. Pencereye (Haziran)
+	# atlayıp kişiyi o haftaya pinliyoruz — eski model yılın herhangi bir ayına düşebiliyordu
+	# ve yaz kısıtı yoktu.
+	while int(GameState.get_date_dict().month) != HRConstants.LEAVE_WINDOW_START_MONTH:
+		_sim_day()
+	e.leave_week = 0
+	e.leave_month = 0
 	e.leave_taken_year = 0
 	var cap0: int = ProductSystem.capacity_total()
 	_sim_day()
@@ -4586,12 +4593,12 @@ static func _case_hr_leave_cycle() -> String:
 	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(6000.0 / float(GameState.DAYS_PER_MONTH))):
 		return "paid leave is broken: salary is not charged while on leave"
 	var morale_on_leave: int = e.morale
-	for i in HRConstants.LEAVE_DAYS + 3:
+	for i in HRConstants.LEAVE_DAYS_R11 + 3:
 		_sim_day()
 		if e.status == HRConstants.STATUS_ACTIVE:
 			break
 	if e.status != HRConstants.STATUS_ACTIVE:
-		return "never returned from leave after %d days" % (HRConstants.LEAVE_DAYS + 3)
+		return "never returned from leave after %d days" % (HRConstants.LEAVE_DAYS_R11 + 3)
 	if e.morale <= morale_on_leave:
 		return "return from leave did not refresh morale (%d -> %d)" % [morale_on_leave, e.morale]
 	if ProductSystem.capacity_total() != cap0:
@@ -6789,52 +6796,67 @@ static func _case_oda_anchors_stay_in_band() -> String:
 static func _case_hr_experience_accrues() -> String:
 	GameState.set_cash(100000)
 	var emp: Character = _make_employee("char_xp_a", "XP A", HRConstants.ROLE_DEVELOPER)
-	# rev 2 §8: deneyim ALAN BAŞINA ve YALNIZ atandığı işin alanına. Bir yazılımcı build
-	# işine doğar (ROLE_DEFAULT_JOB), yani biriktirdiği alan Yazılım'dır.
-	var area_key: String = HRConstants.AREA_ENGINEERING
-	if int(emp.area_experience.get(area_key, 0)) != 0:
-		return "fresh employee started at %d experience, want 0" % int(emp.area_experience.get(area_key, 0))
+	# §5.1: DENEYİM TEK BAR. Alan bazlı sayaçlar emekli — "Deneyim tek bir bar olarak
+	# tutulur ve ekranda her zaman 0–100 gösterilir; alan bazlı değildir."
+	if emp.experience_raw != 0:
+		return "fresh employee started at %d experience, want 0" % emp.experience_raw
+	if emp.experience_threshold <= 0:
+		return "a fresh employee has no experience threshold — the bar would divide by zero"
 	_sim_day()
-	var after_one: int = int(emp.area_experience.get(area_key, 0))
-	if after_one < HRConstants.EXPERIENCE_PER_DAY:
-		return "after one day experience is %d, want at least %d" % [after_one, HRConstants.EXPERIENCE_PER_DAY]
+	if emp.experience_raw < HRConstants.EXPERIENCE_PER_WORKED_DAY:
+		return "after one day experience is %d, want at least %d" % [
+			emp.experience_raw, HRConstants.EXPERIENCE_PER_WORKED_DAY]
 	# BOŞTAKİ kişi öğrenmez — §4'ün "boşta durur ve maaş yer" cümlesinin ikinci yarısı.
 	var idle: Character = _make_employee("char_xp_idle", "XP Idle", HRConstants.ROLE_DEVELOPER)
-	CharacterRegistry.clear_areas(idle.id)
+	CharacterRegistry.clear_jobs(idle.id)
 	_sim_day()
-	if int(idle.area_experience.get(area_key, 0)) != 0:
-		return "an UNASSIGNED employee learned (%d)" % int(idle.area_experience.get(area_key, 0))
+	if idle.experience_raw != 0:
+		return "an UNASSIGNED employee learned (%d)" % idle.experience_raw
 	# İZİNDEKİ biri BİRİKTİRMEZ — edilgenlik gerçekten edilgen olmalı.
 	# İzin GERÇEKTEN sürmeli: tick_leave_returns, leave_until_day geçmişse kişiyi
 	# günün başında aktife çeker ve çıplak bir set_status ölçümü geçersiz kılar.
 	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ON_LEAVE)
 	emp.leave_until_day = GameState.day + 10
-	var before_leave: int = int(emp.area_experience.get(area_key, 0))
+	var before_leave: int = emp.experience_raw
 	_sim_day()
-	if int(emp.area_experience.get(area_key, 0)) != before_leave:
+	if emp.experience_raw != before_leave:
 		return "an ON-LEAVE employee accrued experience (%d -> %d)" % [
-			before_leave, int(emp.area_experience.get(area_key, 0))]
+			before_leave, emp.experience_raw]
 	emp.leave_until_day = 0
 	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ACTIVE)
-	# Dolduğunda +1 PUAN verir ve sayaç sıfırlanır — learn-by-doing'in ÜCRETSİZ kanalı.
-	var value_before: int = int(emp.role_stats[area_key])
-	if not CharacterRegistry.add_area_experience(emp.id, area_key, HRConstants.EXPERIENCE_MAX * 2):
-		return "a full experience bar did not convert into a point"
-	if int(emp.role_stats[area_key]) != value_before + 1:
-		return "%s went %d -> %d, want +1" % [area_key, value_before, int(emp.role_stats[area_key])]
-	if int(emp.area_experience.get(area_key, 0)) != 0:
-		return "the counter did not reset after paying out a point"
+	# §5.1 İŞBAŞI ÖĞRENME EMEKLİ: "Deneyim kendiliğinden yıldıza dönüşmez ... Deneyimin tek
+	# çıkışı eğitimdir." Bar DOLAR VE ORADA DURUR; yıldızı hareket ettiren tek şey oynanmış
+	# bir eğitim kararıdır. Eski ÜCRETSİZ kanal buradaydı ve tersini iddia ediyordu.
+	var key_area: String = HRConstants.role_key_area(emp.role)
+	var value_before: int = int(emp.role_stats[key_area])
+	CharacterRegistry.add_experience(emp.id, emp.experience_threshold * 2)
+	if emp.experience_raw != emp.experience_threshold:
+		return "the bar did not stop at its threshold (%d / %d)" % [
+			emp.experience_raw, emp.experience_threshold]
+	if int(emp.role_stats[key_area]) != value_before:
+		return "a full bar moved a star on its own — §5.1 retires learn-by-doing"
 	return ""
 
 
 static func _case_hr_training_eligibility_edge() -> String:
-	# rev 2 §8: eğitimin DENEYİM ŞARTI YOK. İki ayrı kanal — biri parayla, biri işi
-	# yaparak — ve birini diğerinin kapısına koymak ikisini tek kanala indirirdi.
-	# Uygunluk artık yalnız üç şey sorar: çalışan mı, edilgen değil mi, alan tavanda mı.
+	# §5.2 DENEYİM BARI ARTIK KAPIDIR: "Deneyim barı %100'e ulaşır. Eğitim eylemi açılır."
+	# rev 2'de şart YOKTU ve bu case tam tersini iddia ediyordu; iki ayrı kanalı (parayla /
+	# işi yaparak) birbirinden korumak içindi. §5.1 işbaşı öğrenmeyi emekli etti, yani
+	# korunacak ikinci kanal kalmadı — eğitim artık deneyimin TEK ÇIKIŞI.
+	#
+	# §5.4 iki kilit gerekçesini birbirine KARIŞTIRMAMAYI söylüyor:
+	#   bar dolmadı       → "henüz hak edilmedi"
+	#   alan 5,0 yıldızda → "bu alanda öğrenecek bir şey kalmadı"
 	GameState.set_cash(100000)
 	var emp: Character = _make_employee("char_xp_b", "XP B", HRConstants.ROLE_DESIGNER)
+	if CharacterRegistry.can_train(emp.id):
+		return "a fresh employee with an EMPTY bar was eligible — §5.2 makes the bar the gate"
+	# Barı doldur: eylem AÇILIR.
+	CharacterRegistry.add_experience(emp.id, emp.experience_threshold)
+	if not CharacterRegistry.experience_bar_full(emp):
+		return "add_experience did not fill the bar"
 	if not CharacterRegistry.can_train(emp.id):
-		return "a fresh employee with zero experience was refused — §8 has no XP gate"
+		return "a full bar did not open the training action"
 	var key_area: String = HRConstants.role_key_area(HRConstants.ROLE_DESIGNER)
 	if not CharacterRegistry.can_train(emp.id, key_area):
 		return "NOT eligible in the role's own key area"
@@ -6848,6 +6870,8 @@ static func _case_hr_training_eligibility_edge() -> String:
 static func _case_hr_training_blocks_and_charges_once() -> String:
 	GameState.set_cash(100000)
 	var emp: Character = _make_employee("char_xp_c", "XP C", HRConstants.ROLE_DEVELOPER)
+	# §5.2: bar kapıdır. Doldurulmadan send_to_training reddeder.
+	CharacterRegistry.add_experience(emp.id, emp.experience_threshold)
 	var area_key: String = HRConstants.role_key_area(HRConstants.ROLE_DEVELOPER)
 	var want_fee: int = CharacterRegistry.training_fee_for(emp.id, area_key)
 	var cash_before: int = GameState.cash
@@ -6875,8 +6899,9 @@ static func _case_hr_training_blocks_and_charges_once() -> String:
 static func _case_hr_training_completion() -> String:
 	GameState.set_cash(100000)
 	var emp: Character = _make_employee("char_xp_d", "XP D", HRConstants.ROLE_TESTER, 5, 0, 50, 4)
-	# rev 2 §8: the PLAYER picks the area, and there is no experience prerequisite — training
-	# is a money channel, learn-by-doing is the free one. Both raise the same numbers.
+	# §5.2: oyuncu alanı seçer, AMA barın dolu olması şarttır — işbaşı öğrenme (§5.1)
+	# emekli olduğu için eğitim deneyimin tek çıkışı ve bar da onun tek kapısı.
+	CharacterRegistry.add_experience(emp.id, emp.experience_threshold)
 	var area_key: String = HRConstants.role_key_area(HRConstants.ROLE_TESTER)
 	var before: int = int(emp.role_stats[area_key])
 	if not HRSystem.send_to_training(emp.id, area_key):
@@ -6891,12 +6916,21 @@ static func _case_hr_training_completion() -> String:
 	if after != before + 1:
 		return "%s %d -> %d, want +1" % [area_key, before, after]
 	if int(emp.trainings_done.get(area_key, 0)) != 1:
-		return "the repeat counter did not tick, so §8's azalan getiri never bites"
-	# The SECOND course in the same area must cost strictly more (§8 kademeli + tekrar).
-	var fee_now: int = CharacterRegistry.training_fee_for(emp.id, area_key)
-	var fee_fresh: int = HRConstants.training_fee(before, 0)
-	if fee_now <= fee_fresh:
-		return "repeat training costs %d, not more than the first %d" % [fee_now, fee_fresh]
+		return "the training counter did not tick"
+	# §5.3 BEDEL YALNIZ YILDIZ SEVİYESİNE GÖRE KADEMELENİR. rev 2'nin "tekrarda azalan
+	# getiri" zammı KALKTI — aynı +½ yıldızı ikinci bir eksenden fiyatlıyordu, ve §5.3
+	# frenleri açıkça sayıyor: deneyim eşiği (§5.1) ve kademeli bedel, o kadar.
+	#
+	# Doğru iddia "tekrar daha pahalı" değil, "YÜKSEK YILDIZ daha pahalı".
+	var fee_here: int = CharacterRegistry.training_fee_for(emp.id, area_key)
+	var fee_two_stars_up: int = HRConstants.training_fee_tiered(
+		mini(after + 2 * HRConstants.POINTS_PER_STAR, HRConstants.AREA_MAX))
+	if fee_two_stars_up <= fee_here:
+		return "the fee ladder is flat: %d at %d points, %d two stars higher" % [
+			fee_here, after, fee_two_stars_up]
+	# §5.3: "0★→0,5★ ucuzdur; 4,5★→5,0★ pahalıdır." Uçlar arasındaki fark kat kat olmalı.
+	if HRConstants.training_fee_tiered(HRConstants.AREA_MAX - 1) < HRConstants.TRAINING_FEE_BASE * 4:
+		return "the top rung is not meaningfully more expensive than the first"
 	return ""
 
 
@@ -6904,11 +6938,15 @@ static func _case_hr_expertise_cap_respected() -> String:
 	# Tavandaki biri eğitime GÖNDERİLEMEZ. Ücreti alıp hiçbir şey vermemek §10'un
 	# yasakladığı şeyin aynası olurdu.
 	GameState.set_cash(100000)
+	# §5.3 TEK TAVAN: beşinci yıldız (AREA_MAX 10). AREA_TRAIN_CAP 8'in "para her şeyi
+	# satın alamaz" boşluğu kalktı — "parayla satın alınamayan bir üst yıldız yoktur".
+	# Beşinci yıldızı pahalı yapan iki fren artık deneyim eşiği ve kademeli bedeldir.
 	var emp: Character = _make_employee("char_xp_e", "XP E", HRConstants.ROLE_DEVELOPER,
-		5, 0, 50, HRConstants.AREA_TRAIN_CAP)
+		5, 0, 50, HRConstants.AREA_MAX)
+	CharacterRegistry.add_experience(emp.id, emp.experience_threshold)
 	var capped_area: String = HRConstants.role_key_area(emp.role)
 	if CharacterRegistry.can_train(emp.id, capped_area):
-		return "an employee already at the area cap (%d) was eligible" % HRConstants.AREA_TRAIN_CAP
+		return "an employee already at the five-star ceiling (%d) was eligible" % HRConstants.AREA_MAX
 	var cash_before: int = GameState.cash
 	if HRSystem.send_to_training(emp.id, capped_area):
 		return "send_to_training accepted a capped employee"
@@ -6916,15 +6954,19 @@ static func _case_hr_expertise_cap_respected() -> String:
 		return "a refused training still charged the fee"
 	# Bir altındaki biri gönderilebilir ve tavanı AŞMAZ.
 	var emp2: Character = _make_employee("char_xp_f", "XP F", HRConstants.ROLE_DEVELOPER,
-		5, 0, 50, HRConstants.AREA_TRAIN_CAP - 1)
+		5, 0, 50, HRConstants.AREA_MAX - 1)
+	CharacterRegistry.add_experience(emp2.id, emp2.experience_threshold)
 	var area2: String = HRConstants.role_key_area(HRConstants.ROLE_DEVELOPER)
 	if not HRSystem.send_to_training(emp2.id, area2):
-		return "an employee one below the cap was refused"
+		return "an employee one below the ceiling was refused"
 	for _i in HRConstants.TRAINING_DAYS:
 		_sim_day()
 	var final_value: int = int(emp2.role_stats[area2])
-	if final_value != HRConstants.AREA_TRAIN_CAP:
-		return "%s landed at %d, want the cap %d" % [area2, final_value, HRConstants.AREA_TRAIN_CAP]
+	if final_value != HRConstants.AREA_MAX:
+		return "%s landed at %d, want the ceiling %d" % [area2, final_value, HRConstants.AREA_MAX]
+	# §5.2: "Deneyim barı SIFIRLANIR." Ve eşik yeniden hesaplanır, çünkü kişi az önce gelişti.
+	if emp2.experience_raw != 0:
+		return "the bar did not reset after training (%d)" % emp2.experience_raw
 	return ""
 
 
@@ -7462,11 +7504,16 @@ static func _case_founder_trains_and_learns() -> String:
 		return "the founder's area mirror is empty while he holds a job"
 	var area_key: String = String(founder.assigned_jobs[0])
 	# ÖĞRENİR: bir gün geçince atandığı alanda deneyim birikir.
-	var before: int = int(founder.area_experience.get(area_key, 0))
+	# §5.1: kurucunun barı da TEK BAR. Kişisel kartı (§2.5) onu çiziyor ve kurucu bu
+	# döngünün dışında kalırsa çubuk sonsuza dek %0 okur.
+	var before: int = founder.experience_raw
 	_sim_day()
-	if int(founder.area_experience.get(area_key, 0)) <= before:
-		return "the founder accrued no experience in '%s' — the Kişisel bar would read %%0 forever" % area_key
+	if founder.experience_raw <= before:
+		return "the founder accrued no experience — the Kişisel bar would read %0 forever"
 	# EĞİTİME GİDEBİLİR.
+	# §5.2: bar kapıdır, kurucu için de. §5.2'nin kurucu istisnası ALAN sayısıyla ilgili
+	# (yedisi de onun), deneyim şartıyla değil.
+	CharacterRegistry.add_experience(founder.id, founder.experience_threshold)
 	if not CharacterRegistry.can_train(founder.id):
 		return "the founder cannot be trained — 10a draws the button anyway"
 	var value_before: int = int(founder.role_stats.get(area_key, 0))
@@ -7494,15 +7541,16 @@ static func _case_leadership_is_trainable() -> String:
 	GameState.set_cash(100000)
 	var emp: Character = _make_employee("char_ld_train", "LD Train", HRConstants.ROLE_DESIGNER,
 		SEED_PACE, 0, 50, SEED_EXPERTISE, 2)
+	CharacterRegistry.add_experience(emp.id, emp.experience_threshold)   # §5.2 bar kapıdır
 	if not CharacterRegistry.can_train(emp.id, HRConstants.SKILL_LEADERSHIP):
-		return "Liderlik is not trainable — 11c lists it as a row"
-	# LİDERLİK DAHA PAHALI (tasarımın tablosunda aynı seviyede üzerinde fiyatlanıyor).
+		return "Liderlik is not trainable — §5.2 lists it among the selectable areas"
+	# LİDERLİK PRİMİ KALKTI. §5.3 bedeli YALNIZ hedef alanın mevcut yıldız seviyesine göre
+	# kademelendirir; Liderlik'i ayrıca pahalı yapan bir hüküm yok. Doğru iddia artık
+	# "aynı seviyede Liderlik ile alan AYNI fiyattır".
 	var lead_value: int = int(emp.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0))
-	var area_fee: int = HRConstants.training_fee(lead_value, 0)
-	var lead_fee: int = HRConstants.training_fee(lead_value, 0, HRConstants.SKILL_LEADERSHIP)
-	if lead_fee <= area_fee:
-		return "Liderlik costs %d against an area's %d at the same level — no premium" % [
-			lead_fee, area_fee]
+	var lead_fee: int = HRConstants.training_fee_tiered(lead_value)
+	if HRConstants.training_fee_tiered(lead_value) != lead_fee:
+		return "the fee ladder is not a pure function of the star level"
 	if CharacterRegistry.training_fee_for(emp.id, HRConstants.SKILL_LEADERSHIP) != lead_fee:
 		return "training_fee_for does not apply the Liderlik premium"
 	var before: int = lead_value
@@ -7520,6 +7568,86 @@ static func _case_leadership_is_trainable() -> String:
 
 
 
+
+
+static func _case_promotion_and_raise_gate() -> String:
+	# §9.2 ZAM BEKLEME SÜRESİ + §9.3 TERFİ. İkisi birlikte ölçülüyor çünkü terfi bir zammı
+	# İÇERİR ve bekleme süresini de kurar — ertesi gün üstüne ayrı bir zam alınabilseydi
+	# altı aylık kural anlamsız olurdu.
+	#
+	# FALSİFİKASYON: HRActions.can_raise'deki raise_cooldown_left kapısını sil → ikinci zam
+	# geçer ve "cooldown" iddiası FAIL eder. can_promote'taki LEVEL_SENIOR kapısını sil →
+	# "Kıdemli terfi aldı" iddiası FAIL eder.
+	GameState.set_cash(500000)
+	var emp: Character = _make_employee("promo_a", "Promo A", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 3000, 60)
+
+	# --- §9.2 ZAM: aralık %3–10 ---
+	if HRConstants.RAISE_MAX_PCT != 10:
+		return "the raise band ceiling is %d, want §9.2's 10" % HRConstants.RAISE_MAX_PCT
+	var salary_before: int = emp.monthly_salary
+	if not HRActions.apply_raise(emp, HRConstants.RAISE_MAX_PCT):
+		return "the first raise was refused"
+	if emp.monthly_salary <= salary_before:
+		return "the raise did not move the salary"
+	# §9.1 "Maaş hiçbir koşulda düşürülemez" — kuralı TAŞIYAN alan da yükselmeli.
+	if emp.salary_floor != emp.monthly_salary:
+		return "salary_floor did not follow the raise (%d vs %d)" % [
+			emp.salary_floor, emp.monthly_salary]
+
+	# --- §9.2 ALTI AY: ikinci zam REDDEDİLİR, ve gerekçesi okunabilir ---
+	if HRActions.can_raise(emp, HRConstants.RAISE_MAX_PCT):
+		return "a second raise was allowed the same day — §9.2 wants six months"
+	if HRActions.raise_cooldown_left(emp) != HRConstants.RAISE_COOLDOWN_DAYS:
+		return "cooldown reads %d days, want %d" % [
+			HRActions.raise_cooldown_left(emp), HRConstants.RAISE_COOLDOWN_DAYS]
+
+	# --- §9.3 TERFİ: tek adım, unvan değişir, maaş BANDA OTURMAZ ---
+	var level_before: int = emp.level
+	var pay_before: int = emp.monthly_salary
+	if not HRActions.can_promote(emp):
+		return "an Orta employee could not be promoted"
+	if not HRActions.apply_promotion(emp, HRConstants.PROMOTION_MIN_PCT):
+		return "apply_promotion refused"
+	if emp.level != level_before + 1:
+		return "promotion moved the level %d → %d, want a single step" % [level_before, emp.level]
+	var want_pay: int = int(round(float(pay_before) * (1.0 + float(HRConstants.PROMOTION_MIN_PCT) / 100.0)))
+	if absi(emp.monthly_salary - want_pay) > 1:
+		return "promoted salary is %d, want %d — §9.3 raises by the CHOSEN pct, not to the band" % [
+			emp.monthly_salary, want_pay]
+	# §9.3'ün asıl iddiası: maaş YENİ SEVİYENİN piyasa bandına OTURMAZ. İçeriden terfi bu
+	# yüzden dışarıdan aynı seviyede işe almaktan ucuzdur ve "yetiştir mi, satın al mı"
+	# kararı canlı kalır.
+	var band: Array = HRConstants.salary_band_for_level(emp.role, emp.level)
+	if emp.monthly_salary >= int(band[0]):
+		return "the promoted salary landed inside the new band (%d >= %d) — §9.3 forbids re-seating" % [
+			emp.monthly_salary, int(band[0])]
+
+	# --- §3 UNVAN TÜRETİLİR ---
+	var title: String = HRConstants.job_title(emp.role, emp.level)
+	if title == "" or title == emp.role:
+		return "the derived title is empty or raw: '%s'" % title
+	if HRConstants.job_title(emp.role, HRConstants.LEVEL_MID) != HRConstants.role_label(emp.role):
+		return "Orta carries a prefix — §3 says it has none"
+
+	# --- §9.3 KIDEMLİ TAVANDIR ---
+	var senior: Character = _make_employee("promo_b", "Promo B", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 9000, 60)
+	senior.level = HRConstants.LEVEL_SENIOR
+	if HRActions.can_promote(senior):
+		return "a Kıdemli was promotable — §9.3 makes it the ceiling"
+	if HRActions.promotion_block_reason(senior) == "":
+		return "the locked promotion row would show no reason (§13.3)"
+
+	# --- §11.1 KIDEM TAZMİNATI BASAMAKLI VE TAVANLI ---
+	if HRConstants.severance_amount(3000, 100) != int(round(3000.0 / 3.0)):
+		return "under a year did not pay ⅓ salary: %d" % HRConstants.severance_amount(3000, 100)
+	if HRConstants.severance_amount(3000, 550) != 3000:
+		return "a year and a half paid %d, want exactly one salary (ara aylar yuvarlanmaz)" % \
+			HRConstants.severance_amount(3000, 550)
+	if HRConstants.severance_amount(3000, 3650) != 9000:
+		return "ten years paid %d, want the three-salary cap" % HRConstants.severance_amount(3000, 3650)
+	return ""
 
 static func _case_work_hours_three_scopes() -> String:
 	# §8.1 ÜÇ KAPSAM, TEK ÇÖZÜMLEYİCİ:

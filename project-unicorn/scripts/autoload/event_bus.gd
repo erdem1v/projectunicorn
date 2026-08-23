@@ -65,6 +65,10 @@ signal morale_changed(character_id: String, new_morale: int)
 signal employee_experience_changed(character_id: String, new_experience: int)
 ## Eğitim başladığında, her gün ve bittiğinde (0 = bitti/eğitimde değil).
 signal employee_training_changed(character_id: String, days_left: int)
+## §9.3 terfi. §15.3'ün sinyal listesindeki `employee_eligible_for_promotion` ile
+## KARIŞTIRILMAZ: bu OLAN terfiyi bildirir, o UYGUN HÂLE GELMEYİ. İkincisi olay motorunun
+## kenar yakalaması için (§17.3) ve Faz 4'te açılıyor.
+signal employee_promoted(character_id: String, new_level: int)
 ## Görev ataması değiştiğinde (GDD v2 ch. 07 rev 2 §4): atandı, çıkarıldı ya da ayrılma
 ## anında işleri boşaldı. TEK argüman kişidir, iş değil — bir atama değişikliği o kişinin
 ## SATIRINI ve etkilediği HER işin doluluk okumasını birden tazeler, o yüzden dinleyen

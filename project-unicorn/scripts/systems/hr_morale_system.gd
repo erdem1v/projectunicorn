@@ -102,15 +102,24 @@ static func tick_leave_returns() -> void:
 
 static func tick_leave_departures() -> void:
 	# İzin ayı geldiğinde çalışan OTOMATİK izne çıkar, oyuncu onayı istenmez (design doc §8).
+	# §11.4 YAZ PENCERESİ. İzinler Haziran–Ağustos arasına yerleşir ve her çalışana işe
+	# alındığında pencere içinden bir HAFTA atanır; dağıtıcı adım art arda alınan iki kişinin
+	# iznini yan yana haftalara düşürmez. Amaç bütün ekibin aynı hafta izinde olmasını
+	# engellemek — eski ay tabanlı model bunu on iki aya yayıyordu ve yaz kısıtı yoktu.
 	var date: Dictionary = GameState.get_date_dict()
 	var month: int = int(date.month)
 	var year: int = int(date.year)
+	if month < HRConstants.LEAVE_WINDOW_START_MONTH or month > HRConstants.LEAVE_WINDOW_END_MONTH:
+		return
+	# Pencerenin başından bu yana geçen hafta — 0..12.
+	var window_start_day: int = _summer_window_start_day(year)
+	var week_index: int = int(floor(float(GameState.day - window_start_day) / 7.0))
 	for emp in CharacterRegistry.get_employees():
 		if emp.category != "employee":
 			continue
 		if emp.status != HRConstants.STATUS_ACTIVE:
 			continue
-		if emp.leave_month <= 0 or emp.leave_month != month:
+		if emp.leave_week < 0 or emp.leave_week != week_index:
 			continue
 		if emp.leave_taken_year == year:
 			# Already had this year's leave. This guard is ALSO what makes the
@@ -118,7 +127,21 @@ static func tick_leave_departures() -> void:
 			# this same tick is already stamped for the current year, so they cannot be
 			# re-sent today no matter which step runs first.
 			continue
-		send_on_leave(emp, HRConstants.LEAVE_DAYS, false)
+		send_on_leave(emp, HRConstants.LEAVE_DAYS_R11, false)
+
+
+
+## Yaz penceresinin (1 Haziran) o yıldaki RUN GÜNÜ. GameState.day → takvim dönüşümü tek
+## evdedir (get_date_dict), o yüzden geriye doğru arama yerine ileri doğru bir tarama:
+## pencere on üç haftalık ve yılda bir kez çalıştığı için maliyet önemsiz.
+static func _summer_window_start_day(year: int) -> int:
+	var probe: int = GameState.day
+	while probe > 1:
+		var d: Dictionary = GameState.get_date_dict(probe - 1)
+		if int(d.year) != year or int(d.month) < HRConstants.LEAVE_WINDOW_START_MONTH:
+			break
+		probe -= 1
+	return probe
 
 
 static func tick_thresholds() -> void:

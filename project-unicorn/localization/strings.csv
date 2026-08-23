@@ -822,6 +822,9 @@ HR_FILE_NOTE_11,"Teknik soruda durdu, düşündü, doğru cevapladı.","Paused o
 HR_FILE_NOTE_12,Eski ekibinden iki kişi onu tavsiye etti.,Two people from their old team recommended them.
 HR_ERR_NO_SALARY,Maaş kaydı yok,No salary on record
 HR_RAISE_PERMANENT,"Zam kalıcıdır, geri alınmaz","A raise is permanent and cannot be undone"
+HR_PROMOTION_PERMANENT,"Terfi kalıcıdır, geri alınmaz","A promotion is permanent and cannot be undone"
+HR_ERR_TOP_LEVEL,En üst seviye,Top level
+HR_ROW_TITLE,Unvan,Title
 HR_ERR_ALREADY_ON_LEAVE,Zaten izinde,Already on leave
 HR_ERR_IN_TRAINING,Eğitimde — dönmesini bekle,In training — wait until they are back
 HR_ERR_NO_RECORD,Kayıt bulunamadı,No record found
