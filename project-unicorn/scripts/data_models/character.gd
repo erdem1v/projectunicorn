@@ -55,6 +55,21 @@ extends Resource
 # the same six areas + Liderlik + Karizma). One ruler, 0-9, both sides.
 @export var role_stats: Dictionary = {}
 
+# --- §3 SEVİYE (rev 11) ---
+# Rol FONKSİYONDUR ve terfide DEĞİŞMEZ; seviye terfinin değiştirdiği alandır.
+# 0 Junior · 1 Orta · 2 Kıdemli (HRConstants.LEVEL_*). Unvan TÜRETİLİR ve saklanmaz —
+# HRConstants.job_title(role, level). Üstte kasten boşluk bırakılır: Kıdemli tavandır.
+@export var level: int = 1
+
+# --- §9.1 "Maaş hiçbir koşulda düşürülemez" ---
+# Bu kuralı TAŞIYAN alan: sahip olunan en yüksek maaş. Zam ve terfi ikisini de yükseltir;
+# hiçbir yol bunu düşüremez.
+@export var salary_floor: int = 0
+
+# --- §9.2 / §9.3 bekleme süreleri ---
+@export var last_raise_day: int = 0        # 0 = hiç zam almadı; §9.2 altı ay bundan okunur
+@export var last_promotion_day: int = 0    # 0 = hiç terfi etmedi
+
 # --- HR Core employment state (used now) ---
 @export var status: String = "active"        # STATUS_ACTIVE | STATUS_ON_LEAVE | STATUS_TRAINING
 @export var hire_day: int = 0                # stamped in CharacterRegistry.add; 0 = never hired
@@ -74,6 +89,17 @@ extends Resource
 @export var assigned_jobs: Array[String] = []   # HRConstants.ASSIGNABLE alt kümesi
 @export var overload_days: int = 0              # 2+ işte geçirilen ardışık gün; 1 ya da 0 işte sıfırlanır
 
+# --- §12.0 ATANMIŞ İŞLER (rev 11) ---
+# ATAMA BİRİMİ ARTIK İŞ. Beş iş var (HRConstants.JOBS) ve en fazla İKİSİ tutulabilir
+# (MAX_JOBS_PER_PERSON, §12.1 — bir tavan, öneri değil).
+#
+# Yukarıdaki `assigned_jobs` ALAN id'si taşımaya DEVAM EDER ve bilerek eder: sekiz yer onu
+# doğrudan okuyor, ve anlamını yerinde değiştirmek hepsini DERLENMEYE DEVAM EDERKEN
+# ÇALIŞMAZ hâle getirirdi — mümkün olan en kötü kırılma biçimi. CharacterRegistry onu
+# buradan TÜRETİR (iş → taşıyıcı alanları, kişinin gerçekten taşıdığı alanlara daraltılmış);
+# eski okuyucular tam olarak eskisini görür. Ayna Faz 7'de, son okuyucu çevrildiğinde ölür.
+@export var assigned_job_ids: Array[String] = []
+
 # --- DENEYİM / EĞİTİM (2026-08-08; alan başına ayrıldı 2026-08-21) ---
 # rev 2 §8: "Learn-by-doing: ATANDIĞI ALANIN deneyimi yavaş yükselir." Tek bir sayaç bunu
 # söyleyemez — iki işte dönüşümlü çalışan biri tek havuz biriktirirdi ve hangi alanda
@@ -85,6 +111,38 @@ extends Resource
 @export var trainings_done: Dictionary = {}     # {alan_id: kaç kez eğitildi} — §8 azalan getiri
 @export var training_days_left: int = 0      # >0 iken çalışan EDİLGEN (İzinde gibi); 0 = eğitimde değil
 @export var training_area: String = ""       # eğitim bitince hangi alan +1 olacak; "" = eğitimde değil
+
+# --- §5.1 DENEYİM: TEK BAR (rev 11) ---
+# Alan bazlı DEĞİL. Yukarıdaki area_experience, tüketicileri Faz 2c'de çevrilene kadar
+# duruyor ve Faz 7'de silinir. Bar ekranda hep 0–100 çizilir; çizilen oran
+# experience_raw / experience_threshold'dur. Eşik gelişmişlikle büyür (§5.1), o yüzden
+# saklanır: her yıldız değişiminde yeniden hesaplanır, her çizimde değil.
+@export var experience_raw: int = 0
+@export var experience_threshold: int = 0   # 0 = henüz hesaplanmadı
+
+# --- §8.1 kişisel çalışma saati istisnası ---
+# 0 = istisna YOK, kişi grubunu (o da yoksa şirketi) devralır. Kişi grup değiştirse de
+# istisna kendisiyle taşınır. Çözümleme HİÇBİR ZAMAN burada yapılmaz — tek çözümleyici
+# hr.work_hours(kişi)'dir (§15.2).
+@export var work_hours_override: int = 0
+
+# --- §11.4 yaz izni (rev 11) ---
+# Haziran–Ağustos penceresi içinde 0..12 hafta indeksi; -1 = henüz atanmadı. Yukarıdaki
+# leave_month / leave_taken_year ay tabanlı eski modelin alanları ve Faz 7'de silinir.
+@export var leave_week: int = -1
+@export var leave_deferrals: int = 0        # §11.4: bu yıl kaç kez ertelendi, en fazla 2
+
+# --- §7 moral hedefi ---
+# §7 "hedefe doğru sürüklenir, anında sıçramaz". Olay deltaları HEDEFE yazılır; görünen
+# moral hedefe doğru günde MORALE_EASE_PER_DAY kadar yürür. -1 = tohumlanmadı (ilk tikte
+# morale'den doldurulur). §15'in alan listesinde YOK ve bu bilinçli bir ekleme: §7'nin
+# cümlesi kişi başına ikinci bir sayı olmadan uygulanamıyor (plan §9b Q1).
+@export var morale_target: float = -1.0
+
+# --- §15 employment_history: YALNIZ EKLENEN kayıt ---
+# {tarih, tür, eski, yeni} — zam, terfi, eğitim, izin. Hiçbir kayıt güncellenmez ya da
+# silinmez; okuyan taraf en sonuncuyu alır.
+@export var employment_history: Array[Dictionary] = []
 
 # --- Reserved for future systems (declared, not used) ---
 @export var loyalty: int = 50                # event-driven; future

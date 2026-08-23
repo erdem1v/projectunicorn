@@ -545,6 +545,8 @@ HR_DEPT_CUSTOMER,Müşteri,Customer Success
 HR_BAND_JUNIOR,ekonomik,budget
 HR_BAND_MID,dengeli,balanced
 HR_BAND_SENIOR,üst segment,premium
+HR_LEVEL_PREFIX_JUNIOR,Junior,Junior
+HR_LEVEL_PREFIX_SENIOR,Kıdemli,Senior
 HR_BADGE_FLIGHT_RISK,Ayrılabilir,At risk of leaving
 HR_BADGE_BURNING_OUT,Tükeniyor,Burning out
 HR_BADGE_OVERLOADED,Aşırı yüklü,Overloaded

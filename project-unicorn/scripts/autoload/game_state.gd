@@ -297,6 +297,20 @@ var hr_overtime: Dictionary = {}        # HROvertimeSystem: department id -> {bl
 var hr_last_overtime_day: int = 0       # HROvertimeSystem stamps; the "sakin dönem" trigger reads it
 var hr_last_positive_event_day: int = 0 # HRMoraleSystem: positive-morale-event cooldown cursor
 
+# --- §8.1 ÇALIŞMA SAATLERİ: şirket ve grup kapsamları ---
+# Üç kapsam var (şirket → grup → çalışan) ve ikisi burada yaşıyor; üçüncüsü
+# Character.work_hours_override. Devralma zinciri HİÇBİR sistem tarafından elle
+# yürütülmez — tek çözümleyici hr.work_hours(kişi)'dir (§8.1, §15.2).
+#
+# BAŞLANGIÇ SAATİ YALNIZ ŞİRKET KAPSAMINDA. Grup ve çalışan yalnız SÜREYİ değiştirir:
+# ofis tek saatte açılır, değişen kimin ne zaman çıktığıdır. Akşam karanlığı da bu
+# pencereye göre çizilir; istisna taşıyan kişilerin saatleri sahneyi oynatmaz (§8.1).
+var company_start_hour: int = 9         # §8.1 varsayılan 09:00, aralık 06:00-11:00
+var company_work_hours: int = 8         # §8.1 şirket tabanı; herkes bunu devralarak başlar
+# Yalnız İSTİSNASI OLAN grup burada yer alır — boş kayıt tutulmaz (§15). Anahtar
+# HRConstants.ROSTER_GROUPS üyesi, değer 5..11 tam saat.
+var group_work_hours_override: Dictionary = {}
+
 # --- News feed state (same "fields not systems" rule; owner: NewsFeedSystem, the sole
 # writer). JSON-primitive throughout: {used_sektor, reshuffles, counts, biz_buffer,
 # biz_dropped, recent_rivals, stream}. Reset in initialize_run.
@@ -831,6 +845,11 @@ func initialize_run(payload: Dictionary) -> void:
 	hr_overtime.clear()
 	hr_last_overtime_day = 0
 	hr_last_positive_event_day = 0
+	# §8.1 üç kapsam da tabana döner: şirket 09:00 / 8 saat, hiçbir grup istisnası yok.
+	# Kişisel istisnalar Character.work_hours_override'da ve karakterlerle birlikte gider.
+	company_start_hour = HRConstants.START_HOUR_DEFAULT
+	company_work_hours = HRConstants.WORK_HOURS_DEFAULT
+	group_work_hours_override.clear()
 	news_feed.clear()
 
 	# Flags survive nothing: fresh run = fresh world-state (hardening for any
@@ -966,7 +985,16 @@ func _build_founder(payload: Dictionary) -> Character:
 	# BUILD areas he allocated the most into — which is exactly where the retired `build`
 	# job used to put him, so day one still has a staffed build and no formula moves.
 	# The PRESSURE arrives when the Görevler tab moves him off it and the build notices.
-	f.assigned_jobs = [_founder_start_area(stats)]
+	# §12.0: kurucu bir İŞE oturur, alana değil. Alan listesi artık TÜRETİLMİŞ bir aynadır
+	# (CharacterRegistry._sync_area_mirror) ve buradan elle yazılırsa bir sonraki atamada
+	# üzerine yazılır — daha kötüsü, `assigned_job_ids` boş kaldığı için §2.1'in "aynı anda
+	# yapamaz" kilidi hiç devreye girmez.
+	# Tipli diziler düz Array ataması kabul etmez — append ile doldurulur.
+	var start_job: String = HRConstants.primary_job_for_area(_founder_start_area(stats))
+	if start_job != "":
+		f.assigned_job_ids.append(start_job)
+	for area_id in HRConstants.areas_for_jobs(f.role, f.category, f.assigned_job_ids):
+		f.assigned_jobs.append(String(area_id))
 	f.traits = traits_arr
 	# loyalty / relationship / trust_score / attention_flag stay at Resource
 	# defaults — forward-compatible per scripts/data_models/character.gd.

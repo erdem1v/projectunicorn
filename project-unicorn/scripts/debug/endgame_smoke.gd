@@ -321,6 +321,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"founder_trains_and_learns":      fail = _case_founder_trains_and_learns()
 		"leadership_is_trainable":        fail = _case_leadership_is_trainable()
 		"save_migration_v4_to_v5":        fail = _case_save_migration_v4_to_v5()
+		# --- rev 11 · Faz 1. İkisi de ÖNCEKİ motora karşı DÜŞER.
+		"save_migration_v6_to_v7":        fail = _case_save_migration_v6_to_v7()
+		"save_migration_v6_to_v7_drops":  fail = _case_save_migration_v6_to_v7_drops()
 		# --- Trait seti · Build Bar · Görevler (2026-08-21). Beşi de ÖNCEKİ motora karşı DÜŞER.
 		"build_pauses_when_all_busy":     fail = _case_build_pauses_when_all_busy()
 		"build_resumes_when_one_frees":   fail = _case_build_resumes_when_one_frees()
@@ -5039,11 +5042,24 @@ static func _case_hr_constants_contract() -> String:
 			return "role '%s' has no display label" % role_id
 		if HRConstants.department_of(role_id) == "":
 			return "role '%s' has no department" % role_id
-		# rev 2 §3: only the role's KEY and SECONDARY areas have help copy — the closed card
-		# never shows the other four, so there is nothing to say about them.
-		for area_key in [HRConstants.role_key_area(role_id), HRConstants.role_secondary_area(role_id)]:
+		# §3: only the role's KEY and SECONDARY areas have help copy — the closed card never
+		# shows the other four, so there is nothing to say about them.
+		#
+		# İKİNCİL ALAN ARTIK HER ROLDE YOK (§4.4). Cross-cover YALNIZ ürün tarafının kendi
+		# içindedir: "Satış Temsilcisi — ana alanı Satış. İkincil alanı yoktur." Boş ikincil
+		# bir eksiklik değil, verilmiş bir hükümdür, ve vaka artık hükmü doğruluyor.
+		if HRConstants.role_key_area(role_id) == "":
+			return "role '%s' has no key area — see HRConstants.ROLE_AREAS" % role_id
+		var secondary: String = HRConstants.role_secondary_area(role_id)
+		var product_side: bool = role_id in [HRConstants.ROLE_PRODUCT_MANAGER,
+			HRConstants.ROLE_DESIGNER, HRConstants.ROLE_DEVELOPER, HRConstants.ROLE_TESTER]
+		if product_side and secondary == "":
+			return "product-side role '%s' lost its secondary area (§4.4 keeps it)" % role_id
+		if not product_side and secondary != "":
+			return "role '%s' still carries secondary '%s' — §4.4 removes it" % [role_id, secondary]
+		for area_key in [HRConstants.role_key_area(role_id), secondary]:
 			if String(area_key) == "":
-				return "role '%s' has no key/secondary area — see HRConstants.ROLE_AREAS" % role_id
+				continue
 			if HRConstants.role_area_meaning(role_id, String(area_key)) == "":
 				return "role '%s' has no meaning copy for area '%s'" % [role_id, String(area_key)]
 	if HRConstants.role_label(HRConstants.ROLE_MENTOR) != "Operating Partner":
@@ -5459,18 +5475,28 @@ static func _case_coupling_pm_experience_bonus() -> String:
 	var before: Dictionary = ProductSystem.projected_axes(picks, [], {})
 	# Kimse Tasarım'a atanmamışsa bonus tam olarak 0 — PM'siz her case bu yüzden dokunulmamış.
 	#
-	# ATAMA KAPISI (2026-08-22): bonus TASARIM alanını okuyor (rev 2 §2 Deneyim eksenini
-	# Tasarım'a veriyor) ve bir Ürün Yöneticisi kendi ANA alanına, yani Ürün'e doğuyor.
-	# Tasarım onun İKİNCİL alanı; oraya ATANDIĞINDA bonusu verir. Yani bu case artık iki
-	# şey ölçüyor: bonusun varlığı VE onun bir ATAMA kararına bağlı olduğu.
+	# ATAMA KAPISI, rev 11 §12.0 GRANÜLERLİĞİNDE. 2026-08-22'de bu case "PM'i Ürün'e mi
+	# Tasarım'a mı koyuyorsun" kararını koruyordu. §12.0 atama birimini ALANDAN İŞE aldı ve
+	# o karar ortadan kalktı: Build ekibi Ürün · Tasarım · Yazılım alanlarınca taşınır, yani
+	# Build'deki bir Ürün Yöneticisi ikisini de getirir — Ürün'ünü ana (×1,0), Tasarım'ını
+	# ikincil (×0,8) katsayısıyla. §4.3'ün "atanabilir, biraz daha verimsiz" cümlesi tam
+	# olarak budur.
+	#
+	# Case'in ASIL ölçtüğü şey korunuyor: bonus hâlâ bir ATAMA KARARINA bağlı. Yalnız karar
+	# artık "hangi alan" değil, "Build'de mi değil mi".
 	var pm: Character = _make_employee("char_pm", "Pm One", HRConstants.ROLE_PRODUCT_MANAGER,
 		SEED_PACE, 0, 50, 4, SEED_RAPPORT)
+	# Yeni işe alınan Build'e oturur (default_job_for_role) → bonus GELİR.
 	if float(ProductSystem.projected_axes(picks, [], {})["experience"]) \
-		- float(before["experience"]) > 0.001:
-		return "a PM sitting on Ürün moved Deneyim — the bonus must read Tasarım"
-	CharacterRegistry.unassign_area(pm.id, HRConstants.AREA_PRODUCT)
-	if CharacterRegistry.assign_area(pm.id, HRConstants.AREA_DESIGN) != "":
-		return "a PM was refused Tasarım, which is their SECONDARY area"
+		- float(before["experience"]) <= 0.0:
+		return "a PM on the Build job added no Deneyim — §12.0 says Build carries Tasarım"
+	# İŞTEN ÇIKARILINCA bonus GİDER: karar hâlâ karar.
+	CharacterRegistry.clear_jobs(pm.id)
+	if absf(float(ProductSystem.projected_axes(picks, [], {})["experience"])
+			- float(before["experience"])) > 0.001:
+		return "an unassigned PM still moved Deneyim — the bonus must follow the assignment"
+	if CharacterRegistry.assign_job(pm.id, HRConstants.JOB_BUILD) != "":
+		return "a PM was refused the Build job, which their Ürün area carries"
 	var after: Dictionary = ProductSystem.projected_axes(picks, [], {})
 	var gain: float = float(after["experience"]) - float(before["experience"])
 	if gain <= 0.0:
@@ -5483,10 +5509,9 @@ static func _case_coupling_pm_experience_bonus() -> String:
 	# `expertise` 2026-08-21'de emekli oldu; tavanı zorlamak için TASARIM'ı yükseltiyoruz,
 	# çünkü bonusun okuduğu alan o.
 	pm.role_stats[HRConstants.AREA_DESIGN] = HRConstants.AREA_MAX
+	# İkinci PM de Build'e doğar; ayrıca bir alan taşıması gerekmiyor (§12.0).
 	var pm2: Character = _make_employee("char_pm2", "Pm Two", HRConstants.ROLE_PRODUCT_MANAGER,
 		SEED_PACE, 0, 50, 9, SEED_RAPPORT)
-	CharacterRegistry.unassign_area(pm2.id, HRConstants.AREA_PRODUCT)
-	CharacterRegistry.assign_area(pm2.id, HRConstants.AREA_DESIGN)
 	var capped: Dictionary = ProductSystem.projected_axes(picks, [], {})
 	var capped_gain: float = float(capped["experience"]) - float(before["experience"])
 	if capped_gain > ProductSystem.PM_EXPERIENCE_CAP + 0.001:
@@ -7168,16 +7193,27 @@ static func _case_job_assignment_and_idle() -> String:
 		return "Müşteri İlişkileri reads unstaffed while somebody is assigned to it"
 	if not empty.has(HRConstants.AREA_RESEARCH):
 		return "Araştırma has nobody on it and did not read as unstaffed"
-	# KURUCU TEK ALAN (ch. 02 §5). İkincisi sessizce eklenmez, gerekçeyle reddedilir —
-	# ama HANGİ alan olduğu serbest: kurucunun ana/ikincil ayrımı yok, yedisi de onun.
+	# KURUCU TEK İŞ (§2.1 "Her şeyi yapabilir, aynı anda yapamaz"). İkincisi sessizce
+	# eklenmez, gerekçeyle reddedilir — ama HANGİ iş olduğu serbest: kurucunun ana/ikincil
+	# ayrımı yok (§2), beşi de onun.
 	var founder: Character = CharacterRegistry.get_founder()
-	if founder.assigned_jobs.size() != 1:
-		return "the founder holds %d areas at run start, want exactly 1" % founder.assigned_jobs.size()
-	if CharacterRegistry.assign_area(founder.id, HRConstants.AREA_SALES) != "founder_busy":
-		return "the founder took a second area — ch. 02 §5 locks the others with a reason"
-	CharacterRegistry.clear_areas(founder.id)
-	if CharacterRegistry.assign_area(founder.id, HRConstants.AREA_RESEARCH) != "":
-		return "the founder was refused Araştırma — all seven are his (10b: 'HER ALANA ATANABİLİR')"
+	if founder.assigned_job_ids.size() != 1:
+		return "the founder holds %d jobs at run start, want exactly 1" % founder.assigned_job_ids.size()
+	# ALAN AYNASI DAHA GENİŞ OLABİLİR VE BU DOĞRUDUR: Build ekibi Ürün · Tasarım · Yazılım
+	# alanlarınca taşınır (§12.0) ve kurucu altı alanın hepsini taşır (§2), yani Build'deki
+	# bir kurucu üçünde de görünür. ProductSystem._founder_phase_area onu hangi faz koşuyorsa
+	# orada bulabilsin diye böyle; eski tek-alan koltuğu bunu yapamıyordu.
+	if founder.assigned_jobs.is_empty():
+		return "the founder's area mirror is empty while he holds a job"
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SALES) != "founder_busy":
+		return "the founder took a second job — §2.1 locks the others with a reason"
+	CharacterRegistry.clear_jobs(founder.id)
+	if not founder.assigned_jobs.is_empty():
+		return "clearing the jobs left a stale area mirror: %s" % str(founder.assigned_jobs)
+	# §12.0: Araştırma bir ATAMA HEDEFİ DEĞİLDİR. Sütun kalktı; bir araştırma başlatılırken
+	# ona çalışan atanır ve o akış Ar-Ge modülünün konusu. Kurucu için de kalktı.
+	if CharacterRegistry.assign_area(founder.id, HRConstants.AREA_RESEARCH) == "":
+		return "Araştırma was still accepted as an assignment — §12.0 removes the column"
 	return ""
 
 
@@ -7340,9 +7376,11 @@ static func _case_founder_trains_and_learns() -> String:
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder == null:
 		return "no founder in registry"
-	# Kurucu bir ALANA atanmış doğar (ch. 02 §5: tek alan).
-	if founder.assigned_jobs.size() != 1:
-		return "the founder holds %d areas at run start, want exactly 1" % founder.assigned_jobs.size()
+	# Kurucu bir İŞE atanmış doğar (§2.1: aynı anda tek iş).
+	if founder.assigned_job_ids.size() != 1:
+		return "the founder holds %d jobs at run start, want exactly 1" % founder.assigned_job_ids.size()
+	if founder.assigned_jobs.is_empty():
+		return "the founder's area mirror is empty while he holds a job"
 	var area_key: String = String(founder.assigned_jobs[0])
 	# ÖĞRENİR: bir gün geçince atandığı alanda deneyim birikir.
 	var before: int = int(founder.area_experience.get(area_key, 0))
@@ -7401,6 +7439,149 @@ static func _case_leadership_is_trainable() -> String:
 			before, int(emp.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0))]
 	return ""
 
+
+
+static func _case_save_migration_v6_to_v7() -> String:
+	# rev 11 göçü: seviye · tek deneyim barı · ALAN → İŞ · yaz izni · şirket saatleri.
+	#
+	# FIXTURE İÇ İÇE, VE ASIL MESELE BU. save_to_slot karakterleri
+	# state["registries"]["characters"] altına, GameState'i state["game_state"] altına yazar.
+	# Bu dosyadaki diğer göç vakaları DÜZ bir dict veriyor ve v3'ten beri süren
+	# state["characters"] hatasının üç şema sürümü boyunca yaşamasının sebebi tam olarak
+	# buydu: fonksiyonun MANTIĞINI sınayıp ADRESİNİ hiç sınamamışlar.
+	#
+	# FALSİFİKASYON: _migrate_to_rev11'deki `_rows(state, "characters")` çağrısını
+	# `state.get("characters", [])` ile değiştir → tek bir satır bile taşınmaz, ilk iddia FAIL.
+	var state := {
+		"registries": {
+			"characters": [
+				{"id": "c_dev", "category": "employee", "role": "developer",
+					"monthly_salary": 4200,
+					"role_stats": {"product": 2, "design": 1, "engineering": 7, "qa": 4,
+						"sales": 0, "customer_success": 0, "leadership": 3},
+					"area_experience": {"engineering": 80, "qa": 30},
+					"assigned_jobs": ["engineering", "qa"],
+					"leave_month": 3, "morale": 62},
+			],
+		},
+		"game_state": {"area_leads": {"engineering": "c_dev"}},
+	}
+	SaveManager._migrate_to_rev11(state)
+	var dev: Dictionary = ((state["registries"] as Dictionary)["characters"] as Array)[0]
+
+	# --- §12.0 ALAN → İŞ ---
+	var jobs: Array = dev.get("assigned_job_ids", []) as Array
+	if jobs != [HRConstants.JOB_BUILD, HRConstants.JOB_TEST]:
+		return "areas did not remap to jobs: %s" % str(jobs)
+	# ESKİ ALAN LİSTESİ OLDUĞU GİBİ DURUR (R8): sekiz yer onu hâlâ alan olarak okuyor.
+	if (dev.get("assigned_jobs", []) as Array) != ["engineering", "qa"]:
+		return "the legacy area list was mutated: %s" % str(dev.get("assigned_jobs"))
+
+	# --- §3 seviye maaş bandından türetilir ---
+	# $4.200 bir developer için Orta bandın (3.000-6.000) içinde.
+	if int(dev.get("level", -1)) != HRConstants.LEVEL_MID:
+		return "level derived as %d, want Orta" % int(dev.get("level", -1))
+
+	# --- §5.1 tek bar: alan sayaçlarının EN YÜKSEĞİ, toplamı değil ---
+	if int(dev.get("experience_raw", -1)) != 80:
+		return "experience collapsed to %d, want the max (80)" % int(dev.get("experience_raw", -1))
+	# Eşik gelişmişlikle büyür: toplam ham puan 2+1+7+4+0+0+3 = 17 → 40 + 6×17 = 142.
+	if int(dev.get("experience_threshold", -1)) != HRConstants.experience_threshold(17):
+		return "threshold %d, want %d" % [int(dev.get("experience_threshold", -1)),
+			HRConstants.experience_threshold(17)]
+
+	# --- §9.1 maaş tabanı ---
+	if int(dev.get("salary_floor", -1)) != 4200:
+		return "salary floor did not seed from the current salary: %s" % str(dev.get("salary_floor"))
+
+	# --- §11.4 yaz izni: hafta indeksi pencerenin içinde ---
+	var wk: int = int(dev.get("leave_week", -99))
+	if wk < 0 or wk >= HRConstants.LEAVE_WEEK_COUNT:
+		return "leave week %d is outside the summer window" % wk
+
+	# --- §7 moral hedefi bugünkü moralden tohumlanır, yoksa ilk tik sıçrardı ---
+	if int(dev.get("morale_target", -1)) != 62:
+		return "morale target did not seed from morale: %s" % str(dev.get("morale_target"))
+
+	# --- §4.2: alan başına lider koltuğu rev 11'de yok, ve DOĞRU yuvadan silinir ---
+	var gs: Dictionary = state["game_state"] as Dictionary
+	if gs.has("area_leads"):
+		return "area_leads survived the migration"
+	if int(gs.get("company_work_hours", -1)) != HRConstants.WORK_HOURS_DEFAULT:
+		return "company hours did not seed: %s" % str(gs.get("company_work_hours"))
+	if int(gs.get("company_start_hour", -1)) != HRConstants.START_HOUR_DEFAULT:
+		return "company start hour did not seed: %s" % str(gs.get("company_start_hour"))
+	return ""
+
+
+static func _case_save_migration_v6_to_v7_drops() -> String:
+	# ATAMA DÜŞÜRME KURALI. §4.4 iki ikincil alanı kaldırdı, yani eski bir kayıt rev 11'de
+	# GEÇERSİZ olan bir atama taşıyabilir. Eşleme yetmez: her iş yeni ROLE_AREAS'a karşı
+	# yeniden doğrulanır, taşınamayan DÜŞER, ve liste boşalırsa kişi BOŞTA kalır.
+	# Sessiz taşıma yok, sessiz onarım yok, "en yakın geçerli iş" yok.
+	#
+	# FALSİFİKASYON: _migrate_to_rev11'deki `can_hold_job` kapısını sil → müşteri
+	# temsilcisi Satış işinde kalır ve ilk iddia FAIL.
+	var state := {
+		"registries": {
+			"characters": [
+				# Müşteri Temsilcisi SATIŞ alanındaydı — rev 2'de ikincil alanıydı, §4.4'te
+				# artık değil. Satış işini taşıyamaz → düşer → BOŞTA.
+				{"id": "c_cs", "category": "employee", "role": "customer_rep",
+					"monthly_salary": 3000,
+					"role_stats": {"product": 0, "design": 0, "engineering": 0, "qa": 0,
+						"sales": 5, "customer_success": 7, "leadership": 2},
+					"assigned_jobs": ["sales"], "morale": 70},
+				# Satış Temsilcisi MÜŞTERİ İLİŞKİLERİ alanındaydı → Hesap sahipliği işine
+				# eşlenir, ve Hesap sahipliğini SATIŞ alanı da taşıdığı için (§12.0) bu
+				# atama GEÇERLİ kalır. Simetrik görünen iki vaka, farklı sonuç.
+				{"id": "c_sales", "category": "employee", "role": "sales_rep",
+					"monthly_salary": 3000,
+					"role_stats": {"product": 0, "design": 0, "engineering": 0, "qa": 0,
+						"sales": 7, "customer_success": 4, "leadership": 2},
+					"assigned_jobs": ["customer_success"], "morale": 70},
+				# Araştırma bir atama hedefi değil (§12.0) → sessizce düşer, sayıma girmez.
+				{"id": "c_res", "category": "employee", "role": "tester",
+					"monthly_salary": 3000,
+					"role_stats": {"product": 0, "design": 0, "engineering": 4, "qa": 7,
+						"sales": 0, "customer_success": 0, "leadership": 2},
+					"assigned_jobs": ["research", "qa"], "morale": 70},
+			],
+		},
+		"game_state": {},
+	}
+	SaveManager._migrate_to_rev11(state)
+	var rows: Array = (state["registries"] as Dictionary)["characters"] as Array
+
+	var cs: Dictionary = rows[0]
+	if (cs.get("assigned_job_ids", []) as Array) != []:
+		return "a customer_rep kept the Satış job: %s" % str(cs.get("assigned_job_ids"))
+
+	var sales: Dictionary = rows[1]
+	if (sales.get("assigned_job_ids", []) as Array) != [HRConstants.JOB_ACCOUNTS]:
+		return "a sales_rep lost Hesap sahipliği, which Satış carries: %s" % str(sales.get("assigned_job_ids"))
+
+	var res: Dictionary = rows[2]
+	if (res.get("assigned_job_ids", []) as Array) != [HRConstants.JOB_TEST]:
+		return "the research slot did not drop cleanly: %s" % str(res.get("assigned_job_ids"))
+
+	# TAVAN da bir düşürme sebebidir (§12.1): ikiden fazlası atanamaz.
+	var over := {
+		"registries": {"characters": [
+			{"id": "c_f", "category": "founder", "role": "founder",
+				"monthly_salary": 0,
+				"role_stats": {"product": 3, "design": 3, "engineering": 3, "qa": 3,
+					"sales": 3, "customer_success": 3, "leadership": 3, "charisma": 2},
+				"assigned_jobs": ["engineering", "qa", "customer_success", "sales"],
+				"morale": 50},
+		]},
+		"game_state": {},
+	}
+	SaveManager._migrate_to_rev11(over)
+	var f: Dictionary = ((over["registries"] as Dictionary)["characters"] as Array)[0]
+	if (f.get("assigned_job_ids", []) as Array).size() != HRConstants.MAX_JOBS_PER_PERSON:
+		return "four mappable areas did not clamp to the two-job cap: %s" % str(f.get("assigned_job_ids"))
+	return ""
 
 static func _case_save_migration_v4_to_v5() -> String:
 	# v4 kayıtları İŞ kimliği taşıyor (build · test · support · accounts · sales · research ·
@@ -8993,10 +9174,12 @@ static func _case_gorevler_has_no_founder() -> String:
 			return "the founder band is still drawn"
 	if not names.has("Matrix Dev"):
 		return "the matrix drew no employees at all — the probe is measuring nothing"
-	# ATAMA ÖKSÜZ DEĞİL: motor kurucuyu hâlâ bir alanda tutuyor.
-	if founder.assigned_jobs.size() != 1:
-		return "the founder holds %d areas; the engine must keep exactly one" % \
-			founder.assigned_jobs.size()
+	# ATAMA ÖKSÜZ DEĞİL: motor kurucuyu hâlâ bir İŞTE tutuyor (§2.1 — aynı anda tek iş).
+	# Alan aynasının daha geniş olması beklenir ve doğrudur: Build ekibi üç alanca taşınır
+	# (§12.0) ve kurucu altısını da taşır (§2), yani Build'deki bir kurucu üçünde de görünür.
+	if founder.assigned_job_ids.size() != 1:
+		return "the founder holds %d jobs; the engine must keep exactly one" % \
+			founder.assigned_job_ids.size()
 	return ""
 
 

@@ -119,8 +119,11 @@ const ROLE_AREAS := {
 	"designer": {"key": "design", "secondary": "product"},
 	"developer": {"key": "engineering", "secondary": "qa"},
 	"tester": {"key": "qa", "secondary": "engineering"},
-	"sales_rep": {"key": "sales", "secondary": "customer_success"},
-	"customer_rep": {"key": "customer_success", "secondary": "sales"},
+	# §4.4 KISIT: cross-cover YALNIZ ürün tarafının kendi içindedir. Satışçı satış yapar,
+	# müşteri temsilcisi müşteriyle ilgilenir; ikisi de ürün tarafına geçmez, ürün tarafı da
+	# onların yerine geçmez. Boş ikincil bir eksiklik değil, verilmiş bir hükümdür.
+	"sales_rep": {"key": "sales", "secondary": ""},
+	"customer_rep": {"key": "customer_success", "secondary": ""},
 }
 
 # ATAMA CETVELİ — rev 2 §4. NOT THE SKILL RULER: `AREAS` above is what a person IS good at,
@@ -139,12 +142,136 @@ const AREA_RESEARCH := "research"   # özellik kilidi açılır — TÜKETİCİS
 const ASSIGNABLE := ["product", "design", "engineering", "qa", "sales", "customer_success",
 	"research"]
 
+# ============================== İŞLER — §12.0 ================================
+# rev 11 §12.0 ATAMA BİRİMİNİ İŞ YAPAR. `ASSIGNABLE` yukarıda DURUYOR ve bilerek duruyor:
+# yirmi beş dosya onu okuyor, ve hepsini tek hamlede çevirmek ağacı derlenmez bırakır.
+# Tüketiciler tek tek `JOBS`'a çevrilir; son çevrilenden sonra `ASSIGNABLE`, `AREA_RESEARCH`
+# ve `HRSystem.assigned_to(alan)` adaptörü BİRLİKTE silinir (planın Faz 7'si).
+#
+# İki liste FARKLI şeyler söyler: `AREAS` kişinin neyde İYİ olduğu, `JOBS` ne YAPTIĞI.
+# `JOB_AREAS` köprüdür.
+const JOB_BUILD := "build"          # Build ekibi (aktif yapım)
+const JOB_TEST := "test"            # Test
+const JOB_SUPPORT := "support"      # Destek (canlı ürün)
+const JOB_ACCOUNTS := "accounts"    # Hesap sahipliği
+const JOB_SALES := "sales"          # Satış
+const JOBS := ["build", "test", "support", "accounts", "sales"]
+
+## Hangi ALANLAR her işi taşır (§12.0, bağlayıcı). Bir kişi işin alanlarından en az birini
+## taşıyorsa o işi tutabilir; NE KADAR İYİ yaptığı §4.5'in formülüdür, bu tablo değil.
+##
+## Destek bir istisna DEĞİLDİR (§4.4): Yazılım VE Müşteri İlişkileri taşır, yani bir
+## developer destek masasında çalışabilir — bilet → hata düzeltme hattı bu yüzden vardır —
+## ama bunu Yazılım üzerinden yapar ve Müşteri İlişkileri kazanmaz.
+const JOB_AREAS := {
+	"build": ["product", "design", "engineering"],
+	"test": ["qa"],
+	"support": ["engineering", "customer_success"],
+	"accounts": ["customer_success", "sales"],
+	"sales": ["sales"],
+}
+
+## §12 "Bir kişiye en fazla iki iş verilebilir. Bu bir tavandır, bir öneri değil."
+## TEK EV (§15.2): matris kilidi ve yazma tarafı aynı sayıyı okur.
+const MAX_JOBS_PER_PERSON := 2
+
+## §12.1 odak katsayısı. ZAMAN hakkında; §4.3 YETKİNLİK hakkında. İkisi çarpılır,
+## birbirinin yerine geçmez. Tek iş 1,00 · iki iş 0,50 (her iki işe AYRI AYRI).
+const FOCUS_MULT_SINGLE := 1.0
+const FOCUS_MULT_SPLIT := 0.5
+
+
+static func job_areas(job_id: String) -> Array:
+	return (JOB_AREAS.get(job_id, []) as Array).duplicate()
+
+
+static func is_job(job_id: String) -> bool:
+	return JOBS.has(job_id)
+
+
+## Bir rol bu işi tutabilir mi, ve hangi katsayıyla. §4.4'ün türetilmiş atanabilirlik
+## tablosu BU FONKSİYONDAN çıkar; ayrıca saklanmaz (§15.2).
+## Döner: 1.0 ana alan · SECONDARY_AREA_MULT ikincil · 0.0 alanı yok.
+static func job_coefficient(role_id: String, job_id: String, category: String = "employee") -> float:
+	if category == "founder":
+		return 1.0 if is_job(job_id) else 0.0
+	var key: String = role_key_area(role_id)
+	var sec: String = role_secondary_area(role_id)
+	var best: float = 0.0
+	for area_id in job_areas(job_id):
+		if String(area_id) == key:
+			return 1.0
+		if sec != "" and String(area_id) == sec:
+			best = SECONDARY_AREA_MULT
+	return best
+
+
+static func can_hold_job(role_id: String, job_id: String, category: String = "employee") -> bool:
+	return job_coefficient(role_id, job_id, category) > 0.0
+
+
+## §12.1 odak katsayısı, atanmış iş sayısından.
+static func focus_mult(job_count: int) -> float:
+	return FOCUS_MULT_SINGLE if job_count <= 1 else FOCUS_MULT_SPLIT
+
+
+## ALAN → o alanın BİRİNCİL işi. TEK EV (§15.2): hem v6→v7 göçü hem de eski alan yazma
+## yolunun adaptörü buradan okur, yoksa iki yerde iki farklı "engineering hangi işe düşer"
+## cevabı olurdu.
+##
+## Çoğu alan iki işe girebilir (engineering hem Build hem Destek taşır); bu tablo
+## AMBİGÜİTEYİ ÇÖZER, işleri saymaz. Kişiyi başka bir işe taşımak Görevler matrisinin işi.
+## `research` bilerek "" döner: §12.0 Araştırma'yı atama hedefi olmaktan çıkardı.
+const AREA_PRIMARY_JOB := {
+	"product": "build",
+	"design": "build",
+	"engineering": "build",
+	"qa": "test",
+	"customer_success": "accounts",
+	"sales": "sales",
+}
+
+
+static func primary_job_for_area(area_id: String) -> String:
+	return String(AREA_PRIMARY_JOB.get(area_id, ""))
+
+
+## Yeni işe alınanın oturduğu iş. §12.2 "Boşta çalışan maaş yemeye devam eder" doğrudur ama
+## bir İŞE ALIM oyuncunun bununla tanışmak isteyeceği an değildir — parayı yeni ödedi.
+static func default_job_for_role(role_id: String) -> String:
+	return primary_job_for_area(default_area_for_role(role_id))
+
+
+## Bir kişinin işlerinden TÜRETİLEN alan listesi — eski `assigned_jobs` alanının içeriği.
+## Kişinin gerçekten taşıdığı alanlara daraltılır: bir developer Destek'te çalışırken
+## Yazılım üzerinden çalışır ve Müşteri İlişkileri KAZANMAZ (§4.4).
+static func areas_for_jobs(role_id: String, category: String, job_ids: Array) -> Array:
+	var out: Array = []
+	var owned: Array = []
+	if category == "founder":
+		owned = AREAS.duplicate()
+	else:
+		var key: String = role_key_area(role_id)
+		var sec: String = role_secondary_area(role_id)
+		if key != "":
+			owned.append(key)
+		if sec != "":
+			owned.append(sec)
+	for job_id in job_ids:
+		for area_id in job_areas(String(job_id)):
+			if owned.has(String(area_id)) and not out.has(String(area_id)):
+				out.append(String(area_id))
+	return out
+
 # --- Aşırı yüklenme (rev 2 §5). Every number [WORKING]; §11 lists them as open. ---
 # "Aşırı yük kısa süre tolere edilir, uzun sürerse moral düşer ve kaçma riskine gider."
 const OVERLOAD_TOLERANCE_DAYS := 5      # [WORKING] grace before the cost starts
 const OVERLOAD_OUTPUT_MULT := 0.75      # [WORKING] output while carrying 2+ jobs
 const OVERLOAD_MORALE_MULT := 1.6       # [WORKING] multiplier on NEGATIVE morale deltas
-const SECONDARY_AREA_MULT := 0.7        # [WORKING] output when a job reads a secondary area
+## §4.3 ikincil alan ×0,8 — 0,6 DEĞİL ve gerekçe belgede: kişinin o alandaki zayıflığı
+## zaten yıldızlarında yazılı, katsayının işi onu ikinci kez kesmek değil rol kimliğini
+## korumak. (0,7 idi; rev 11 §4.3 sayıyı mühürledi.)
+const SECONDARY_AREA_MULT := 0.8
 
 
 static func role_key_area(role_id: String) -> String:
@@ -635,6 +762,101 @@ const BAND_JUNIOR := "junior"
 const BAND_MID := "mid"
 const BAND_SENIOR := "senior"
 const BANDS := ["junior", "mid", "senior"]
+
+# ==================== SEVİYELER — §3, §9.1, §10.2 ============================
+# BANT DEĞİL SEVİYE. Yukarıdaki BAND_* bir BÜTÇE seçeneğiydi ve işe alımda ATILIYORDU:
+# aday üretilirken okunuyor, Character'a hiç yazılmıyordu. §3 onu bir ALAN yapıyor — her rol
+# üç seviyede bulunur, seviye kişide saklanır, terfinin değiştirdiği alan budur (§15).
+# BAND_* Faz 5b'de Atlas çevrilene kadar duruyor (Faz 7 silme listesinde).
+const LEVEL_JUNIOR := 0
+const LEVEL_MID := 1
+const LEVEL_SENIOR := 2
+const LEVELS := [0, 1, 2]
+
+## §3 unvan TÜRETİLİR, saklanmaz: unvan = ön ek + rol adı; ORTA seviyede ön ek YOKTUR.
+## §3.1: Junior iki dilde de "Junior" kalır ("Kıdemsiz" ve "Yeni Mezun" kullanılmaz);
+## Kıdemli'nin İngilizcesi "Senior".
+const LEVEL_PREFIX_KEYS := {0: "HR_LEVEL_PREFIX_JUNIOR", 1: "", 2: "HR_LEVEL_PREFIX_SENIOR"}
+
+
+static func level_prefix(level: int) -> String:
+	var key: String = String(LEVEL_PREFIX_KEYS.get(clampi(level, LEVEL_JUNIOR, LEVEL_SENIOR), ""))
+	return "" if key == "" else TranslationServer.translate(key)
+
+
+## Unvanın TEK evi. Kadro satırı, aday kartı, terfi modali ve Kişisel hep buradan okur;
+## hiçbiri ön ekle rol adını kendi birleştirmez.
+static func job_title(role_id: String, level: int) -> String:
+	var prefix: String = level_prefix(level)
+	var name: String = role_label(role_id)
+	return name if prefix == "" else "%s %s" % [prefix, name]
+
+
+## §9.1 MAAŞ BANTLARI — TEK KAYNAK (§15.2). İşe alım, terfi ve zam önizlemesi aynı tablodan
+## okur. Hiyerarşi §9.1'den: Yazılım Mühendisi en üstte · Ürün Yöneticisi ve Test Mühendisi
+## eşit, altında · UX/UI Designer, Satış Temsilcisi ve Müşteri Temsilcisi eşit, en altta.
+## Bantlar sınırlarda KASTEN örtüşür — güçlü bir junior ile zayıf bir orta aynı parayı
+## isteyebilir; yarım yıldız sisteminin fiyatlayacağı yer burasıdır. Aylık USD, 1:1.
+const SALARY_BANDS_BY_LEVEL := {
+	"developer":       [[2000, 3000], [3000, 6000], [6000, 10000]],
+	"product_manager": [[1800, 2700], [2700, 5400], [5400, 9000]],
+	"tester":          [[1800, 2700], [2700, 5400], [5400, 9000]],
+	"designer":        [[1500, 2250], [2250, 4500], [4500, 7500]],
+	"sales_rep":       [[1500, 2250], [2250, 4500], [4500, 7500]],
+	"customer_rep":    [[1500, 2250], [2250, 4500], [4500, 7500]],
+}
+
+
+static func salary_band_for_level(role_id: String, level: int) -> Array:
+	var per_role: Array = SALARY_BANDS_BY_LEVEL.get(role_id, SALARY_BANDS_BY_LEVEL["developer"]) as Array
+	return (per_role[clampi(level, LEVEL_JUNIOR, LEVEL_SENIOR)] as Array).duplicate()
+
+
+## Bir maaşın hangi seviyeye düştüğü — göç ve terfi önizlemesi için. Bantlar örtüştüğü için
+## EN YÜKSEK uyan seviye kazanır.
+static func level_for_salary(role_id: String, monthly_salary: int) -> int:
+	for lvl in [LEVEL_SENIOR, LEVEL_MID]:
+		if monthly_salary >= int(salary_band_for_level(role_id, int(lvl))[0]):
+			return int(lvl)
+	return LEVEL_JUNIOR
+
+
+# ------------------------- §10.2 aday arketipleri ----------------------------
+# Üç aday RASTGELE üretilmez; her aramada sabit bir üçlü çekilir, çünkü amaç oyuncunun her
+# aramada GERÇEK ve savunulabilir bir karar vermesidir.
+const ARCHETYPE_UZMAN := "uzman"        # ana alanda üçlünün en yükseği, diğerleri zayıf
+const ARCHETYPE_DENGELI := "dengeli"    # tepe noktası yok, ana ve ikincilde makul
+const ARCHETYPE_PAZARLIK := "pazarlik"  # bir alanda gerçekten iyi, en az birinde kırık
+const ARCHETYPES := ["uzman", "dengeli", "pazarlik"]
+
+## [ANA ALAN, İKİNCİL ALAN, DİĞER HER ALAN] — seviye başına. Taban L = 3 · 5 · 7; Uzman ve
+## Pazarlık ana alanda L+2, Dengeli L. Üçlü arasındaki ana alan farkı böylece TAM OLARAK
+## 1 yıldız (2 ham puan): §10.2'nin tavanı, aşılmadan kullanılıyor. Adaylar
+## karşılaştırılabilir kalmalı — biri diğerinden iki yıldız iyiyse seçim ortadan kalkar.
+const ARCHETYPE_SHAPE := {
+	0: {"uzman": [5, 0, 1], "dengeli": [3, 2, 2], "pazarlik": [5, 0, 0]},
+	1: {"uzman": [7, 2, 2], "dengeli": [5, 4, 3], "pazarlik": [7, 1, 1]},
+	2: {"uzman": [9, 4, 3], "dengeli": [7, 6, 5], "pazarlik": [9, 3, 2]},
+}
+
+
+static func archetype_shape(level: int, archetype: String) -> Array:
+	var per_level: Dictionary = ARCHETYPE_SHAPE.get(clampi(level, LEVEL_JUNIOR, LEVEL_SENIOR), ARCHETYPE_SHAPE[1]) as Dictionary
+	return ((per_level.get(archetype, per_level["dengeli"])) as Array).duplicate()
+
+
+## §10.2 fiyat kuralları. Dengeli üçlünün EN PAHALISI (tepe yok ama hiçbir yeri kırık da
+## değil), Pazarlık en ucuzu. Fark %20–45: alt sınır kararı anlamlı yapar, üst sınır
+## "pahalı olan zaten daha iyi" refleksini engeller. SALARY_SPREAD_MAX 0.15 aşağıda duruyor
+## ve üretici Faz 2c'de çevrilene kadar okunuyor.
+const SALARY_SPREAD_MIN_R11 := 0.20
+const SALARY_SPREAD_MAX_R11 := 0.45
+
+## §10.2 beş yıldızlı aday: NADİR, yalnız Kıdemli bantta, maaş talebi bandın TAVANINDA.
+const FIVE_STAR_CHANCE := 0.08
+## §10.2 ayırt edici eksen HUYDUR: üçlüden en az biri bedelli bir huy taşır — olasılık
+## değil GARANTİ; üretimden sonra kontrol edilir.
+const TRIO_COST_TRAIT_MIN := 1
 # Bant adları BÜTÇE SEVİYESİ söyler, havuz boyutu değil — aday sayısı her bantta
 # CANDIDATE_COUNT'tur ("dar havuz" daha az aday İMA ettiği için emekli edildi).
 # WORKING TR (voice pass later).
@@ -712,6 +934,81 @@ const SEARCH_COMMISSION_PCT := 0.15     # işe alımda ilk ay maaşının oranı
 const SEARCH_ARRIVAL_MIN_DAYS := 2      # dosyalar en erken bu kadar gün sonra gelir
 const SEARCH_ARRIVAL_MAX_DAYS := 4      # ve en geç bu kadar
 const CANDIDATE_COUNT := 3              # her arayış üç dosya getirir
+
+# ========================= ÇALIŞMA SAATLERİ — §8 =============================
+# AYRI BİR "EK MESAİ" MEKANİĞİ YOKTUR (§8.2). Ek mesai çalışma aralığının bir SONUCUDUR:
+# kişinin devraldığı süre sekizi aşarsa mesaidir, altına inerse kısa gündür. Getiri saatin
+# kendisidir (§8.4) — ayrı bir hız çarpanı yok, ayrı bir kalite cezası yok.
+#
+# Aşağıdaki "Ek mesai (departman bazlı)" bloğu — bloklar, hız bonusu, bug çarpanı, %40
+# gecelik ücret, emniyet valfi — HÂLÂ DURUYOR ve bilerek duruyor: ürün, satış, CS, finans ve
+# ODA onu okuyor. Tüketiciler Faz 3'te bu modele çevrilir, blok sistemi Faz 7'de silinir.
+const WORK_HOURS_MIN := 5           # §8.1 en kısa gün
+const WORK_HOURS_MAX := 11          # §8.1 en uzun gün — İş Kanunu md.63'ün günlük sınırı
+const WORK_HOURS_DEFAULT := 8       # §8.1 şirket kapsamı varsayılanı; herkes bunu devralır
+const WORK_HOURS_STEP := 1          # tam saat — yarım saat yoktur
+
+## §8.1: başlangıç saati YALNIZ şirket kapsamındadır. Grup ve çalışan yalnız SÜREYİ
+## değiştirir, başlangıcı değil — ofis tek saatte açılır, değişen kimin ne zaman çıktığıdır.
+const START_HOUR_DEFAULT := 9
+const START_HOUR_MIN := 6
+const START_HOUR_MAX := 11
+
+## §7.1'in YEDİ SATIRLIK tablosu — TEK EV (§15.2). Modalin gösterdiği kademe ifadesi,
+## kontrolün izin verdiği aralık ve motorun uyguladığı çarpan hep buradan okunur.
+## Çarpan TABAN moral sürüklenmesine uygulanır; sıfırın altına indiğinde işaret döner ve
+## moral YÜKSELMEYE başlar. Eğri yukarı doğru hızlanır (ilk saat ucuz, üçüncü saat pahalı),
+## aşağı doğru üç okunaklı dönüm noktası taşır: yedide durur, altıda yükselir, beşte
+## belirgin yükselir.
+const HOUR_MORALE_MULT := {
+	5: -1.0,
+	6: -0.5,
+	7: 0.0,
+	8: 1.0,
+	9: 1.1,
+	10: 1.3,
+	11: 1.5,
+}
+
+## §12.1 aşırı yük çarpanı. Çarpanlar ÇARPILIR, toplanmaz: 11 saat + aşırı yük = ×2,25.
+## (Eski OVERLOAD_MORALE_MULT 1.6 yukarıda duruyor ve REPO'DA TEK OKUYUCUSU YOKTU —
+## kendi bildirimi dışında hiçbir yerde geçmiyordu. Bu sabit onun YERİNE geçen, gerçekten
+## okunan olanı; eskisi Faz 7'de silinir.)
+const OVERLOAD_MORALE_MULT_R11 := 1.5
+
+## §8.2 ek mesai ücreti: aşan saatler için saatlik ücretin %50 fazlası. YALNIZ aşan saatler;
+## ilk sekiz saat normal ücrettir. Dayanak İş Kanunu md.41'in zorunlu %50 zammı.
+const OVERTIME_WAGE_MULT := 1.5
+
+## Aylık maaş → saatlik ücret dönüşümünün TEK sabiti (§8.2, §15.2). 22 iş günü × 8 saat.
+## Ek mesai hesabı, modaldeki burn önizlemesi ve Finans'ın tahakkuku aynı sayıdan okur;
+## maaş kaydında saatlik ücret alanı YOKTUR, saklanan tek rakam aylık maaştır.
+const HOURS_PER_MONTH := 176
+
+
+static func hour_morale_mult(hours: int) -> float:
+	return float(HOUR_MORALE_MULT.get(clampi(hours, WORK_HOURS_MIN, WORK_HOURS_MAX), 1.0))
+
+
+static func is_overtime_hours(hours: int) -> bool:
+	return hours > WORK_HOURS_DEFAULT
+
+
+static func is_short_day_hours(hours: int) -> bool:
+	return hours < WORK_HOURS_DEFAULT
+
+
+static func hourly_wage(monthly_salary: int) -> float:
+	return float(maxi(monthly_salary, 0)) / float(HOURS_PER_MONTH)
+
+
+## Bir günün ek mesai TAHAKKUKU. Yalnız sekizin üstündeki saatler, %50 fazlasıyla.
+## İzindeki/eğitimdeki çalışan için çağrılmaz (§8.6): mesai ücreti tahakkuk etmez.
+static func overtime_pay_for_day(monthly_salary: int, hours: int) -> int:
+	var extra: int = maxi(hours - WORK_HOURS_DEFAULT, 0)
+	if extra <= 0:
+		return 0
+	return int(round(hourly_wage(monthly_salary) * float(extra) * OVERTIME_WAGE_MULT))
 const SALARY_SPREAD_MAX := 0.15         # en pahalı/en ucuz − 1 üst sınırı
 const SALARY_PEAK_PREMIUM := 0.10       # WORKING: keskin uzman, düz profilden bu oranda pahalı
 
@@ -762,14 +1059,60 @@ static func commission_for(monthly_salary: int) -> int:
 # exactly what the write will produce instead of over-promising past the ceiling.
 const MORALE_MIN := 0
 const MORALE_MAX := 100
+
+## §7 BANTLARI — TEK EV (§15.2). Moral YALNIZ hızı etkiler: kaliteye, hata üretimine ya da
+## yıldızlara dokunmaz, çünkü kalite zaten yıldızlarda ve TİTİZ huyunda temsil ediliyor.
+## MORALE_BURNOUT aşağıda DURUYOR — rev 11'de TÜKENİYOR bandı yok, ama sabiti okuyan
+## yüzeyler Faz 5a'da çevrilene kadar derlenmeye devam etmeli (Faz 7 silme listesinde).
+const MORALE_BAND_HIGH := 80        # ve üstü → +%10 hız
+const MORALE_BAND_LOW := 50         # altı → −%15 hız
+const MORALE_BAND_HIGH_MULT := 1.10
+const MORALE_BAND_MID_MULT := 1.0
+const MORALE_BAND_LOW_MULT := 0.85
+
+## Taban günlük düşüş. §7.1'in saat çarpanı YALNIZ buna uygulanır — olay deltaları ham
+## gelir, ham uygulanır, yoksa tek bir saat ayarı moral sistemini tamamen kapatırdı.
+##
+## 0,25 = ayda 7,5 puan; sekiz saatlik günde 75'ten 35'e ~160 gün. Sekiz saat böylece bir
+## geri sayım değil HAFİF bir baskı olur, yedi saat de zorunlu olmayan gerçek bir rahatlama
+## kalır — oyuncu kadranı kullanmaya devam eder. (Erdem 2026-08-23; 0,5 denendi ve aşırı
+## yük senaryosunu 36 güne indiriyordu ama bunu baskı altında OLMAYAN herkesi iki kat hızlı
+## eriterek satın alıyordu. 0,25'te o senaryo 72 gün — hâlâ bir koşuda rahat görülür.)
+const MORALE_BASE_DRIFT_PER_DAY := 0.25
+
+## §7 "hedefe doğru sürüklenir, anında sıçramaz". Delta HEDEFE yazılır; görünen moral
+## hedefe doğru günde en fazla bu kadar yürür. −15'lik bir olay beş günde iner ve
+## oyuncunun tepki penceresi budur.
+const MORALE_EASE_PER_DAY := 3.0
+
+const MORALE_LEAVE_DEFER := 5            # §11.4 erteleme bedeli
+const MORALE_PROMOTION_AT_MIN_PCT := 8   # %10 terfi zammında
+const MORALE_PROMOTION_AT_MAX_PCT := 20  # %25 terfi zammında — onaylı 2b: %15 → +12
+
+
+static func morale_band_mult(morale: int) -> float:
+	if morale >= MORALE_BAND_HIGH:
+		return MORALE_BAND_HIGH_MULT
+	if morale < MORALE_BAND_LOW:
+		return MORALE_BAND_LOW_MULT
+	return MORALE_BAND_MID_MULT
+
+
+## §15.3 hr.morale_band(kişi) — bant KİMLİĞİ, sayı değil.
+static func morale_band_id(morale: int) -> String:
+	if morale >= MORALE_BAND_HIGH:
+		return "high"
+	if morale < MORALE_BAND_LOW:
+		return "low"
+	return "mid"
 const MORALE_BURNOUT := 40          # altı → TÜKENİYOR rozeti (BURNING_OUT)
-const MORALE_FLIGHT_RISK := 25      # altı → KAÇMA RİSKİ rozeti (FLIGHT_RISK)
+const MORALE_FLIGHT_RISK := 35      # §7: altı → Ayrılabilir (25 idi)
 const MORALE_HIRE_START := 75       # WORKING: yeni işe alınanın başlangıç morali
-const MORALE_LEAVE_RETURN := 10     # otomatik yıllık izin dönüşü
+const MORALE_LEAVE_RETURN := 15     # §11.4 izin dönüşü, tek seferde (10 idi)
 const MORALE_VACATION_RETURN := 20  # manuel TATİLE GÖNDER dönüşü (design doc §7)
 const MORALE_FIRE_TEAM := 5         # işten çıkarmada kalan ekipteki DÜŞÜŞ büyüklüğü
 const MORALE_RAISE_AT_MIN_PCT := 4  # %3 zamda moral kazancı  (WORKING)
-const MORALE_RAISE_AT_MAX_PCT := 16 # %15 zamda moral kazancı (WORKING)
+const MORALE_RAISE_AT_MAX_PCT := 10 # %10 zamda moral kazancı — onaylı 2a: 75 → 85
 
 # Badge ids reuse Character.attention_flag's declared vocabulary so the model does not
 # carry two badge concepts — but badges are DERIVED (HRSystem.badges_for), because an
@@ -777,6 +1120,11 @@ const MORALE_RAISE_AT_MAX_PCT := 16 # %15 zamda moral kazancı (WORKING)
 const BADGE_FLIGHT_RISK := "FLIGHT_RISK"
 const BADGE_BURNING_OUT := "BURNING_OUT"
 const BADGE_OVERLOADED := "OVERLOADED"
+## §13.3'ün AŞIRI YÜK rozeti — atanmış iş sayısı 2. BADGE_OVERLOADED yukarıda duruyor ve
+## FARKLI bir şeydir (şirket çapındaki "mühendise ihtiyaç var" bayrağı); §16 aynı kelimenin
+## iki durumu adlandırmasını yasaklıyor, o yüzden yeni rozet kendi id'sini alıyor ve eskisi
+## Faz 5a'da yüzeyden, Faz 7'de koddan kalkıyor.
+const BADGE_OVERLOAD_JOBS := "OVERLOAD_JOBS"
 
 # Worst-first severity, matching the order HRSystem.badges_for returns. Exposed so a card
 # list can sort "needs attention" rows to the top without re-deciding which badge is worse.
@@ -790,7 +1138,9 @@ const BADGE_SEVERITY := {
 # that array is what attention_count() counts and what lights the left-rail badge. A fresh
 # hire is good news; it does not belong in the same channel as "this person is about to quit".
 const BADGE_NEW := "NEW"
-const NEW_HIRE_BADGE_DAYS := 3      # WORKING: kaç gün "Yeni" etiketi taşınır
+## §17.4 kalibrasyon yüzeyi. 3 gündü: 1x hızda 12 sn/gün ile 36 SANİYE, görünmüyordu.
+## 14 gün Atlas'ın bir haftalık bekleyişini ve üstüne bir yerleşme süresini taşır.
+const NEW_HIRE_BADGE_DAYS := 14
 
 # Employee status (Character.status) — deliberately NOT attention_flag.
 const STATUS_ACTIVE := "active"
@@ -810,6 +1160,39 @@ const EXPERIENCE_MAX := 100          # WORKING: eğitime uygunluk eşiği
 const EXPERIENCE_PER_DAY := 1        # WORKING: çalışan ve EDİLGEN OLMAYAN her gün
 const EXPERIENCE_PER_BUILD_DAY := 2  # WORKING: bir geliştirme fazı koşarken
 const EXPERIENCE_LEAD_BONUS_MAX := 1.5  # WORKING: Liderlik 9'daki lider altında öğrenme hızı
+
+## §5.1 DENEYİM — TEK BAR, alan bazlı DEĞİL. Ekranda hep 0–100; değişen arkasındaki eşik.
+## İşbaşı öğrenme EMEKLİ: deneyim kendiliğinden yıldıza dönüşmez, tek çıkışı eğitimdir.
+## Yukarıdaki EXPERIENCE_MAX/PER_DAY/PER_BUILD_DAY, tüketicileri Faz 2c'de çevrilene kadar
+## duruyor (Faz 7 silme listesinde).
+const EXPERIENCE_PER_WORKED_DAY := 2   # en az bir işe atanmış ve edilgen olmayan her gün
+const EXPERIENCE_BUILD_BONUS := 1      # bir geliştirme fazı koşarken üstüne (toplam 3)
+
+## Eşik gelişmişlikle büyür: eşik = BASE + PER_POINT × (altı alan + Liderlik ham toplamı).
+## Tohumlanmış junior (T≈12) ≈37 iş gününde, dört yıldızlı kıdemli (T≈25) ≈63 günde
+## doldurur. 1,7× fark §5.1'in "belirgin şekilde uzun"unu karşılar ama iki yıllık koşuda
+## kıdemliyi eğitilemez yapmaz. Girdi TRAININGS DEĞİL İSTATİSTİK: dışarıdan alınan beş
+## yıldızlı bir çalışan hiç eğitim almamıştır ve yine de yavaş olmalıdır.
+const EXPERIENCE_THRESHOLD_BASE := 40
+const EXPERIENCE_THRESHOLD_PER_POINT := 6
+
+
+static func experience_threshold(total_skill_points: int) -> int:
+	return EXPERIENCE_THRESHOLD_BASE + EXPERIENCE_THRESHOLD_PER_POINT * maxi(total_skill_points, 0)
+
+
+## §5.3 KADEMELİ BEDEL: ücret = BASE × GROWTH^floor(mevcut_puan / 2)
+##   → 400 · 680 · 1156 · 1965 · 3341
+## Onaylı 11c ilk üç kademeyi $400 / $700 / $1.200 gösteriyor. Tekrar zammı ve Liderlik
+## çarpanı YOK: §5.3 bedeli YALNIZ hedef alanın mevcut yıldız seviyesine göre kademelendirir.
+## Tavan da tek: eğitim beşinci yıldıza kadar çıkar, AREA_TRAIN_CAP 8 Faz 7'de kalkar.
+const TRAINING_FEE_BASE := 400
+const TRAINING_FEE_GROWTH := 1.7
+
+
+static func training_fee_tiered(current_area_value: int) -> int:
+	var bucket: int = int(floor(float(clampi(current_area_value, AREA_MIN, AREA_MAX)) / float(POINTS_PER_STAR)))
+	return int(round(float(TRAINING_FEE_BASE) * pow(TRAINING_FEE_GROWTH, float(bucket))))
 const TRAINING_DAYS := 14            # rev 2 §8: "Süre iki hafta" (5 idi)
 const TRAINING_FEE := 500            # WORKING: TABAN ücret; gerçek ücret kademeli, aşağıya bak
 const AREA_TRAIN_CAP := 8            # WORKING: eğitimin alan tavanı (AREA_MAX 10'un altında bilerek)
@@ -975,6 +1358,50 @@ const LEAVE_MONTH_MIN_GAP := 2     # işe alındığı aydan en az bu kadar ay s
 # hires land on ten different months before any repeat.
 const LEAVE_MONTH_STRIDE := 7
 
+# --------------------- §11.4 yaz izni (hafta tabanlı) ------------------------
+# İzin ÇALIŞANIN KENDİSİNE aittir; "tatile gönder" bir oyuncu fiili DEĞİLDİR.
+# Süre iki hafta (10 iş günü), tek blok, Haziran–Ağustos penceresinde. Yukarıdaki AY tabanlı
+# model (LEAVE_DAYS 7, LEAVE_MONTH_*, leave_month_for) tüketicileri Faz 2c'de çevrilene
+# kadar duruyor ve Faz 7'de silinir.
+const LEAVE_DAYS_R11 := 14              # §11.4 "iki hafta (10 iş günü)"
+const LEAVE_WINDOW_START_MONTH := 6     # Haziran
+const LEAVE_WINDOW_END_MONTH := 8       # Ağustos
+## Yaz penceresi ~13 hafta. Adım 5, 13 ile ARALARINDA ASAL — on üç ardışık işe alım on üç
+## FARKLI haftaya düşer. (Aynı gerekçe eski ay adımınınkiydi; taban aydan haftaya taşındı.)
+const LEAVE_WEEK_COUNT := 13
+const LEAVE_WEEK_STRIDE := 5
+## §11.4 erteleme: −5 moral, talep 30 gün sonra döner, en fazla iki kez.
+const LEAVE_MAX_DEFERRALS := 2
+const LEAVE_DEFER_DAYS := 30
+
+
+## hire_ordinal = bu kişiden önce kaç çalışan alındı. Yaz penceresi içinde 0..12 hafta indeksi.
+static func leave_week_for(hire_ordinal: int) -> int:
+	return (LEAVE_WEEK_STRIDE * maxi(hire_ordinal, 0)) % LEAVE_WEEK_COUNT
+
+
+## §9.3 terfi zammının moral kazancı — %10 → MIN, %25 → MAX, arası doğrusal.
+static func promotion_morale_gain(pct: int) -> int:
+	var pp: int = clampi(pct, PROMOTION_MIN_PCT, PROMOTION_MAX_PCT)
+	var span: int = maxi(1, PROMOTION_MAX_PCT - PROMOTION_MIN_PCT)
+	var t: float = float(pp - PROMOTION_MIN_PCT) / float(span)
+	return int(round(lerpf(float(MORALE_PROMOTION_AT_MIN_PCT), float(MORALE_PROMOTION_AT_MAX_PCT), t)))
+
+
+## §11.1 KIDEM TAZMİNATI — basamaklı ve TAVANLI. Tamamlanmış yıl esas alınır, ara aylar
+## yukarı yuvarlanmaz: bir buçuk yıllık çalışan BİR maaş alır, on yıllık da ÜÇ maaş alır.
+## Eski kural (her tam yıl için bir ay, minimum bir, tavansız) iki uçta da yanlıştı.
+## severance_months yukarıda duruyor — okuyanları Faz 5b'de çevrilir.
+const SEVERANCE_UNDER_ONE_YEAR := 1.0 / 3.0
+const SEVERANCE_MAX_MONTHS := 3.0
+
+
+static func severance_multiple(days_served: int) -> float:
+	var years: int = int(floor(float(maxi(days_served, 0)) / float(DAYS_PER_YEAR)))
+	if years < 1:
+		return SEVERANCE_UNDER_ONE_YEAR
+	return minf(float(years), SEVERANCE_MAX_MONTHS)
+
 
 static func leave_month_for(hire_month: int, hire_ordinal: int) -> int:
 	# Distribution rule: offset the leave month MIN_GAP..11 months after the hire month, so
@@ -1001,7 +1428,12 @@ static func leave_month_label(month: int) -> String:
 
 # ======================= Player actions (çalışan kartı) ======================
 const RAISE_MIN_PCT := 3           # zam slider alt sınırı (design doc §7)
-const RAISE_MAX_PCT := 15          # üst sınır — ONAYLI (design doc §12.3)
+## §9.2 aralık %3–10. 15'ti ve ağaçta bulunmayan bir belgeye "ONAYLI" damgası veriyordu.
+const RAISE_MAX_PCT := 10
+const RAISE_COOLDOWN_DAYS := 180   # §9.2 "aynı çalışana altı ay geçmeden yeni zam verilemez"
+## §9.3 terfi: tek seviye atlama, oyuncu %10–25 arası zammı slider'dan seçer, minimum %10.
+const PROMOTION_MIN_PCT := 10
+const PROMOTION_MAX_PCT := 25
 const SEVERANCE_MIN_MONTHS := 1    # her tam çalışılan yıl için 1 ay, minimum 1 ay
 const VACATION_DAYS := 7           # manuel TATİLE GÖNDER süresi
 const DAYS_PER_YEAR := 365         # kıdem hesabı (hire_day → tam yıl)

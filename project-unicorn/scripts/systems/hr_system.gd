@@ -141,13 +141,22 @@ static func assigned_to(area_id: String) -> Array[Character]:
 
 
 static func is_idle(c: Character) -> bool:
-	## "Boşta" — atanmamış çalışan durur ve maaş yer (§4). Kurucu maaş almadığı için
-	## boştalığı bir GİDER değil, kaybedilmiş zamandır; rozet yine de aynı.
-	return c != null and c.category == "employee" and c.assigned_jobs.is_empty()
+	## §12.2 "Boşta" — hiçbir İŞE atanmamış. Çalışan durur ve maaş yemeye devam eder;
+	## kurucu maaş almadığı için boştalığı bir gider değil kaybedilmiş zamandır.
+	## Boşta ayrı bir rozet değildir, GÖREV sütununun kendi metnidir (§12.2).
+	return c != null and c.category == "employee" and c.assigned_job_ids.is_empty()
+
+
+## §15.3 hr.job_count(kişi) → 0, 1 ya da 2.
+static func job_count(c: Character) -> int:
+	return 0 if c == null else c.assigned_job_ids.size()
 
 
 static func is_overloaded(c: Character) -> bool:
-	return c != null and c.assigned_jobs.size() > 1
+	## §12.1 AŞIRI YÜK = atanmış İŞ sayısı 2. Alandan sayılamaz: Build + Destek taşıyan bir
+	## developer İKİ iş tutar ama tek alana (Yazılım) yansır, çünkü iki işi de o alan taşıyor.
+	## Alanı saymak onu aşırı yüklü SAYMAZDI ve §12.1'in bedeli hiç uygulanmazdı.
+	return c != null and c.assigned_job_ids.size() > 1
 
 
 static func overload_bites(c: Character) -> bool:
@@ -181,6 +190,36 @@ static func unstaffed_areas() -> Array[String]:
 	for area_id in HRConstants.ASSIGNABLE:
 		if assigned_to(String(area_id)).is_empty():
 			out.append(String(area_id))
+	return out
+
+
+# ---------------------- §12.0 İŞ TARAFI OKUMA SEAM'LERİ ----------------------
+# Yukarıdaki assigned_to(alan) DURUYOR ve türetilmiş alan aynası üzerinden çalışıyor;
+# tüketiciler tek tek buraya çevrilir ve son çevrilen Faz 7'de o seam'i öldürür.
+
+static func assigned_to_job(job_id: String) -> Array[Character]:
+	## O İŞE atanmış, BUGÜN ÇALIŞABİLİR herkes. İzindeki ve eğitimdeki dışarıda: ataması
+	## durur (§12.3 — hiçbir sistem silemez) ama bugünkü hiçbir formüle girmez (§8.6).
+	var out: Array[Character] = []
+	for c in CharacterRegistry.get_all():
+		if c == null or c.status != HRConstants.STATUS_ACTIVE:
+			continue
+		if c.category != "employee" and c.category != "founder":
+			continue
+		if c.assigned_job_ids.has(job_id):
+			out.append(c)
+	return out
+
+
+## §15.3 hr.unstaffed_jobs() — kimsenin atanmadığı işler.
+## §12.2: bunun bir UYARI SATIRI olarak çizilmediğine dikkat — matris zaten boş sütunu
+## gösteriyor, ve oyunun başında oyuncu her rolü alamayacağı için o uyarılar aynı anda
+## birden fazla iş için çıkar ve gürültü üretir. Seam okunur, ekrana basılmaz.
+static func unstaffed_jobs() -> Array[String]:
+	var out: Array[String] = []
+	for job_id in HRConstants.JOBS:
+		if assigned_to_job(String(job_id)).is_empty():
+			out.append(String(job_id))
 	return out
 
 

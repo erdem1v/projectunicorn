@@ -35,7 +35,7 @@ extends Node
 # every point a save can be taken, and there is nothing mid-resolution for a schema to
 # describe. One sitting, one sitting only — it does not survive closing the game.
 
-const SCHEMA_VERSION := 6   # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi
+const SCHEMA_VERSION := 7   # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi · v7: rev 11 — İŞ ataması, seviye, tek deneyim barı, yaz izni
 const SAVE_DIR := "user://saves/"
 ## v3→v4 migration: what a migrated character gets in an area the old model never stored.
 ## Low but never zero — see _migrate_character_areas.
@@ -229,6 +229,8 @@ func read_slot(slot_id: String) -> Dictionary:
 		_migrate_assignments_to_areas(data["state"])
 	if version < 6:
 		_migrate_traits_to_eight(data["state"])
+	if version < 7:
+		_migrate_to_rev11(data["state"])
 	return {
 		"ok": true,
 		"error_key": "",
@@ -836,6 +838,134 @@ func _legacy_job_to_area(job_id: String, stats: Dictionary) -> String:
 			best = String(area_key)
 	return best
 
+
+
+## v6 → v7: rev 11. Beş yeni şey taşınır ve HİÇBİRİ eskisini bozmaz — §12.0'ın İŞ ataması
+## `assigned_job_ids`e YAZILIR, eski `assigned_jobs` ALAN listesi OLDUĞU GİBİ BIRAKILIR.
+## Sebep R8: sekiz yer o diziyi doğrudan alan olarak okuyor ve anlamını yerinde değiştirmek
+## onları derlenmeye devam ederken ÇALIŞMAZ hâle getirirdi. Ayna Faz 2a'da türetilmeye
+## başlar, eski dizi Faz 7'de silinir.
+##
+## ATAMA DÜŞÜRME KURALI (Erdem 2026-08-23). Eşleme yetmez: §4.4 iki ikincil alanı kaldırdı
+## (sales_rep → customer_success, customer_rep → sales), yani eski bir kayıt rev 11'de
+## GEÇERSİZ olan bir atama taşıyabilir. Her eşlenen iş yeni ROLE_AREAS'a karşı yeniden
+## doğrulanır; rolün artık taşıyamadığı iş DÜŞÜRÜLÜR ve liste boşalırsa kişi BOŞTA kalır.
+## Sessiz taşıma yok, sessiz onarım yok, "en yakın geçerli iş" yok — Boşta okunabilir ve
+## oyuncunun düzeltebileceği bir durumdur, uydurulmuş bir atama değildir. Her düşürme
+## SAYILIR: hiçbir şey değiştirmemiş bir göçle her şeyi değiştirmiş bir göç dışarıdan
+## aynı görünür, ayıran tek şey sayaçtır.
+func _migrate_to_rev11(state: Dictionary) -> void:
+	var moved: int = 0
+	var dropped: int = 0
+	var drop_detail: Dictionary = {}
+	for row in (_rows(state, "characters") as Array):
+		if typeof(row) != TYPE_DICTIONARY:
+			continue
+		var d: Dictionary = row
+		var role_id: String = String(d.get("role", ""))
+		var category: String = String(d.get("category", ""))
+
+		# --- §3 seviye: maaş bandından türetilir (bantlar örtüşür, en yükseği kazanır) ---
+		if not d.has("level"):
+			d["level"] = HRConstants.level_for_salary(role_id, int(d.get("monthly_salary", 0)))
+		# --- §9.1 maaş tabanı: bugünkü maaş zaten "sahip olunan en yüksek"tir ---
+		if not d.has("salary_floor"):
+			d["salary_floor"] = int(d.get("monthly_salary", 0))
+		if not d.has("last_raise_day"):
+			d["last_raise_day"] = 0
+		if not d.has("last_promotion_day"):
+			d["last_promotion_day"] = 0
+
+		# --- §5.1 tek deneyim barı: alan başına sayaçların EN YÜKSEĞİ taşınır ---
+		# En yüksek, toplam değil: barı dolmaya en yakın olan çalışan göçten sonra da
+		# dolmaya en yakın kalmalı. Toplam almak iki yarım alanı bir tam bara çevirirdi.
+		if not d.has("experience_raw"):
+			var best: int = 0
+			var per_area: Dictionary = d.get("area_experience", {}) as Dictionary
+			if typeof(per_area) == TYPE_DICTIONARY:
+				for k in per_area.keys():
+					best = maxi(best, int(per_area[k]))
+			d["experience_raw"] = best
+		if not d.has("experience_threshold"):
+			var total: int = 0
+			var stats: Dictionary = d.get("role_stats", {}) as Dictionary
+			if typeof(stats) == TYPE_DICTIONARY:
+				for area_key in HRConstants.AREAS:
+					total += int(stats.get(String(area_key), 0))
+				total += int(stats.get(HRConstants.SKILL_LEADERSHIP, 0))
+			d["experience_threshold"] = HRConstants.experience_threshold(total)
+
+		# --- §8.1 kişisel saat istisnası: göç eden hiç kimsede yok, hepsi devralır ---
+		if not d.has("work_hours_override"):
+			d["work_hours_override"] = 0
+		# --- §7 moral hedefi: bugünkü moralden tohumlanır, yoksa ilk tik sıçrardı ---
+		if not d.has("morale_target"):
+			d["morale_target"] = float(d.get("morale", 50))
+		if not d.has("employment_history"):
+			d["employment_history"] = []
+
+		# --- §11.4 yaz izni: ay tabanlı model hafta indeksine çevrilir ---
+		# Eski leave_month 1-12'ydi ve yılın herhangi bir ayına düşebiliyordu. Yeni pencere
+		# Haziran-Ağustos, o yüzden ay KORUNAMAZ; dağıtıcı adım yeniden uygulanır ve kişi
+		# yaz penceresi içinde deterministik bir haftaya oturur.
+		if not d.has("leave_week"):
+			var ordinal: int = maxi(int(d.get("leave_month", 1)) - 1, 0)
+			d["leave_week"] = HRConstants.leave_week_for(ordinal)
+		if not d.has("leave_deferrals"):
+			d["leave_deferrals"] = 0
+
+		# --- §12.0 ALAN → İŞ, doğrulanarak ---
+		if not d.has("assigned_job_ids"):
+			var jobs: Array = []
+			for area_id in (d.get("assigned_jobs", []) as Array):
+				var job_id: String = _legacy_area_to_job(String(area_id))
+				if job_id == "" or jobs.has(job_id):
+					continue   # research düşer (§12.0), tekrar eden iş tekilleşir
+				if not HRConstants.can_hold_job(role_id, job_id, category):
+					dropped += 1
+					var key: String = "%s/%s" % [role_id, job_id]
+					drop_detail[key] = int(drop_detail.get(key, 0)) + 1
+					continue
+				if jobs.size() >= HRConstants.MAX_JOBS_PER_PERSON:
+					dropped += 1
+					var over: String = "%s/%s(tavan)" % [role_id, job_id]
+					drop_detail[over] = int(drop_detail.get(over, 0)) + 1
+					continue
+				jobs.append(job_id)
+			d["assigned_job_ids"] = jobs
+			moved += 1
+
+	# --- şirket kapsamı: göç eden kayıtta yok, tabana oturur ---
+	var gs: Dictionary = state.get("game_state", {}) as Dictionary
+	if typeof(gs) == TYPE_DICTIONARY and not gs.is_empty():
+		if not gs.has("company_start_hour"):
+			gs["company_start_hour"] = HRConstants.START_HOUR_DEFAULT
+		if not gs.has("company_work_hours"):
+			gs["company_work_hours"] = HRConstants.WORK_HOURS_DEFAULT
+		if not gs.has("group_work_hours_override"):
+			gs["group_work_hours_override"] = {}
+		# §4.2: alan başına lider koltuğu rev 11'de yok — üretimde hiçbir yazıcısı da yoktu.
+		gs.erase("area_leads")
+
+	if OS.is_debug_build():
+		print("[SaveManager] v6→v7: %d karakter iş atamasına taşındı, %d atama DÜŞÜRÜLDÜ %s" % [
+			moved, dropped, str(drop_detail)])
+
+
+## Emekli ALAN id'si → §12.0 İŞ id'si. `research` bilerek "" döner: §12.0 Araştırma'yı
+## atama hedefi olmaktan çıkardı ve o sütunun zaten hiçbir tüketicisi yoktu.
+func _legacy_area_to_job(area_id: String) -> String:
+	match area_id:
+		"product", "design", "engineering":
+			return HRConstants.JOB_BUILD
+		"qa":
+			return HRConstants.JOB_TEST
+		"customer_success":
+			return HRConstants.JOB_ACCOUNTS
+		"sales":
+			return HRConstants.JOB_SALES
+		_:
+			return ""
 
 func _migrate_prospect_needs(state: Dictionary) -> void:
 	var mapped: int = 0

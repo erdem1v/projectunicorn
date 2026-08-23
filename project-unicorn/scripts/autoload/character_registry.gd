@@ -203,6 +203,73 @@ func tick_training(id: String) -> bool:
 # (Alanın kendisi değişti, alanın AD I değil: dizinin adı `assigned_jobs` kaldı ki kayıt
 # şemasının alan adı sabit kalsın; içindeki değerler artık HRConstants.ASSIGNABLE.)
 
+
+
+# ======================= §12.0 İŞ ATAMASI — kanonik yazıcı ===================
+# ATAMA BİRİMİ İŞ. Aşağıdaki assign_area/unassign_area/clear_areas artık ADAPTÖRDÜR:
+# alanı birincil işine çevirip buraya delege ederler, böylece yirmi beş çağıran hiçbir şey
+# fark etmez. Faz 7'de adaptörler ve `assigned_jobs` aynası birlikte silinir.
+
+## İŞE atar. §12.1 tavanı BURADA uygulanır — arayüz kilidi ve yazma tarafı aynı sabiti
+## okur (§15.2), ve arayüze güvenilmez: matris hücreyi kilitli çizse bile kapı burada.
+## Boş dize = kabul edildi.
+func assign_job(id: String, job_id: String) -> String:
+	var c: Character = _characters.get(id, null)
+	if c == null:
+		return "unknown"
+	if not HRConstants.is_job(job_id):
+		push_error("[CharacterRegistry] assign_job with an unknown job: '%s'" % job_id)
+		return "unknown_job"
+	if c.assigned_job_ids.has(job_id):
+		return ""
+	if c.status != HRConstants.STATUS_ACTIVE:
+		return "inactive"
+	if c.category == "founder" and not c.assigned_job_ids.is_empty():
+		return "founder_busy"
+	if c.assigned_job_ids.size() >= HRConstants.MAX_JOBS_PER_PERSON:
+		# §12.1 "Üçüncü iş atanamaz." Bir tavan, bir öneri değil.
+		return "job_cap"
+	if not HRConstants.can_hold_job(c.role, job_id, c.category):
+		return "not_your_job"
+	c.assigned_job_ids.append(job_id)
+	_sync_area_mirror(c)
+	EventBus.assignment_changed.emit(id)
+	return ""
+
+
+func unassign_job(id: String, job_id: String) -> void:
+	var c: Character = _characters.get(id, null)
+	if c == null or not c.assigned_job_ids.has(job_id):
+		return
+	c.assigned_job_ids.erase(job_id)
+	if c.assigned_job_ids.size() <= 1:
+		c.overload_days = 0
+	_sync_area_mirror(c)
+	EventBus.assignment_changed.emit(id)
+
+
+func clear_jobs(id: String) -> void:
+	## §11.3 ayrılma anı: kişinin işleri BOŞALIR ve otomatik devir YOKTUR. Boşalan iş
+	## matriste boş görünür ve oyuncu doldurmazsa iş yapılmaz.
+	var c: Character = _characters.get(id, null)
+	if c == null or c.assigned_job_ids.is_empty():
+		return
+	c.assigned_job_ids.clear()
+	c.overload_days = 0
+	_sync_area_mirror(c)
+	EventBus.assignment_changed.emit(id)
+
+
+## ESKİ ALAN LİSTESİNİN TEK YAZICISI. `assigned_jobs` artık saklanan bir karar değil,
+## işlerden TÜRETİLEN bir aynadır — sekiz yer onu hâlâ alan olarak okuyor ve bu ayna onların
+## eskisiyle birebir aynı şeyi görmesini sağlıyor. Faz 7'de son okuyucu çevrildiğinde
+## hem ayna hem bu fonksiyon gider.
+func _sync_area_mirror(c: Character) -> void:
+	var mirrored: Array = HRConstants.areas_for_jobs(c.role, c.category, c.assigned_job_ids)
+	c.assigned_jobs.clear()
+	for area_id in mirrored:
+		c.assigned_jobs.append(String(area_id))
+
 ## Bir ALANA atar. Kurucu AYNI ANDA TEK ALAN taşır (ch. 02 §5) — ikinci bir alan sessizce
 ## eklenmez, reddedilir ve gerekçe döner. Çalışan birden fazla alan taşıyabilir; o
 ## AŞIRI YÜKLENMEDİR (§5) ve bedeli HRSystem'de ölçülür, burada değil.
@@ -214,42 +281,31 @@ func assign_area(id: String, area_id: String) -> String:
 	if not HRConstants.is_assignable(area_id):
 		push_error("[CharacterRegistry] assign_area with an unknown area: '%s'" % area_id)
 		return "unknown_area"
-	if c.assigned_jobs.has(area_id):
-		return ""
-	if c.status != HRConstants.STATUS_ACTIVE:
-		return "inactive"
-	if c.category == "founder" and not c.assigned_jobs.is_empty():
-		# ch. 02 §5: "While assigned, the other actions are locked-visible with a reason."
-		return "founder_busy"
-	if not HRConstants.can_hold_area(c.role, area_id, c.category):
-		# Tasarımın "ALANI YOK · ATANAMAZ" hücresi, kural olarak: bir çalışan yalnız ANA ya da
-		# İKİNCİL alanında çalışabilir. Matris o sütunları zaten kesikli çiziyor ve tıklamıyor;
-		# bu kapı arayüze güvenmemek için.
+	# ADAPTÖR (Faz 2a): alan birincil işine çevrilir ve kanonik yazıcıya delege edilir.
+	# Kapıların hepsi orada — durum, kurucu kilidi, §12.1 tavanı, §4.4 uygunluğu — yani bu
+	# yol ile assign_job aynı kuralları uygular ve ikisi ayrışamaz.
+	var job_id: String = HRConstants.primary_job_for_area(area_id)
+	if job_id == "":
+		return "unknown_area"
+	var refusal: String = assign_job(id, job_id)
+	# Eski çağıranlar eski gerekçe sözcüğünü bekliyor.
+	if refusal == "not_your_job":
 		return "not_your_area"
-	c.assigned_jobs.append(area_id)
-	EventBus.assignment_changed.emit(id)
-	return ""
+	return refusal
 
 
 func unassign_area(id: String, area_id: String) -> void:
-	var c: Character = _characters.get(id, null)
-	if c == null or not c.assigned_jobs.has(area_id):
-		return
-	c.assigned_jobs.erase(area_id)
-	if c.assigned_jobs.size() <= 1:
-		c.overload_days = 0
-	EventBus.assignment_changed.emit(id)
+	# ADAPTÖR (Faz 2a) — bkz. assign_area.
+	var job_id: String = HRConstants.primary_job_for_area(area_id)
+	if job_id != "":
+		unassign_job(id, job_id)
 
 
 func clear_areas(id: String) -> void:
 	## Ayrılma anı (§9): kişinin alanları BOŞALIR. Otomatik devir YOK — "otomatik kurucuya
 	## devir varsayılan değildir", boş kalan alan oyuncuya Görevler ekranında görünür.
-	var c: Character = _characters.get(id, null)
-	if c == null or c.assigned_jobs.is_empty():
-		return
-	c.assigned_jobs.clear()
-	c.overload_days = 0
-	EventBus.assignment_changed.emit(id)
+	# ADAPTÖR (Faz 2a) — bkz. assign_area.
+	clear_jobs(id)
 
 
 func set_overload_days(id: String, days: int) -> void:
@@ -445,10 +501,13 @@ func add(character: Character) -> void:
 		# So a fresh hire lands on their OWN KEY AREA (HRConstants.default_area_for_role),
 		# which is also what keeps every downstream formula seeing the roster it saw before
 		# the assignment layer existed. Moving people is the Görevler tab's job.
-		if character.assigned_jobs.is_empty():
-			var default_area: String = HRConstants.default_area_for_role(character.role)
-			if default_area != "":
-				character.assigned_jobs.append(default_area)
+		if character.assigned_job_ids.is_empty():
+			var default_job: String = HRConstants.default_job_for_role(character.role)
+			if default_job != "":
+				character.assigned_job_ids.append(default_job)
+		# Ayna her zaman işlerden türetilir — elle doldurulan bir alan listesi bir sonraki
+		# yazmada zaten üzerine yazılırdı.
+		_sync_area_mirror(character)
 		if character.area_experience.is_empty():
 			for area_key in HRConstants.AREAS:
 				character.area_experience[String(area_key)] = 0
