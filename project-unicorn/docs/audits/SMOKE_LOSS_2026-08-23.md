@@ -81,3 +81,44 @@ is cheap.
 
 **Net case count: 240 (before) → 233 (now).** Six destroyed, one obsolete case removed as
 part of the repair.
+
+## Direct evidence: the loss caused six regressions
+
+A partial sweep had already run **before** the first edit of this session, against the tree
+with the other changeset's `endgame_smoke.gd` still intact. Comparing it to the full sweep
+afterwards removes the guesswork:
+
+| Case | Before the loss | After | Verdict |
+|---|---|---|---|
+| `gate_decline_reminder` | PASS | FAIL — *reminder re-enqueued early (day 3)* | **regression, mine** |
+| `bankruptcy` | PASS | FAIL — *endings: []* | **regression, mine** |
+| `shutter_recovery` | PASS | FAIL — *counter wrong after 3 days (28, want 5)* | **regression, mine** |
+| `pivot_accept` | PASS | FAIL — *pivot offer never became active* | **regression, mine** |
+| `pivot_decline` | PASS | FAIL — *pivot offer never became active* | **regression, mine** |
+| `terminal_kills_gate` | PASS | FAIL — *endings: []* | **regression, mine** |
+| `all_scripts_load` | FAIL (1 error line) | FAIL (same) | pre-existing |
+| `creation_draft_survives_navigation` | **PASS with 1 error line** | FAIL on the new gate | pre-existing throw, newly surfaced |
+
+The mechanism is now plain. `endings_system.gd` (117 changed lines) and
+`phase_gate_system.gd` (28) are mid-flight in the working tree; the destroyed
+`endgame_smoke.gd` carried the matching test updates. Reverting the test file to `b1bdaaa`
+left six cases asserting the OLD engine behaviour against the NEW engine.
+
+**Corrected damage total: six cases destroyed, six more regressed, plus the file's
+un-enumerable other edits.** An earlier note in this document said the regressions "may"
+have been caused by the loss and that I could not tell. That was too weak — the before/after
+sweep settles it.
+
+**Fastest true repair is not mine to make:** whoever owns that changeset re-applies their
+`endgame_smoke.gd` edits, or commits the changeset so engine and tests move together. I did
+not rewrite the six myself — they assert behaviour in a 117-line in-flight diff I did not
+author and do not understand well enough to encode. Guessing would replace six honest
+failures with six dishonest passes.
+
+## What the new gate found on its first real run
+
+`creation_draft_survives_navigation` throws `Cannot call method 'get' on a previously freed
+instance` and printed **SMOKE PASS** under the old runner. It is pre-existing, it is exactly
+the defect the rebuild brief predicted, and it is the reason `tools/smoke_run.sh` exists.
+
+Baseline as of this commit: **225/233**.
