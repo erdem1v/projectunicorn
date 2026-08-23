@@ -21,6 +21,8 @@ extends Control
 const RIGHT_COL_WIDTH := 620   # tasarım genişliği (1920'de); artık ORANİ belirler
 const RIGHT_COL_MIN := 430     # merdivenin tepesinde inebileceği taban
 const PORTRAIT_SIZE := Vector2(150, 186)
+## §2.6'nın nötr huy yuvası — çalışan trait ikonuyla (28×28) aynı ailede, bir tık küçük.
+const TRAIT_SLOT_SIZE := Vector2(26, 26)
 const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
 
 var _signals: Array = []
@@ -114,9 +116,12 @@ func _header(founder: Character) -> Control:
 	var pad := Control.new()
 	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(pad)
-	# Günlük atama BURADA değil — tasarım yönlendirmeyi başlığın sağına koyuyor, ki
-	# oyuncu "kurucuyu nereye koyacağım" sorusunu bu sayfada aramasın.
-	head.add_child(UiFactory.make_label(tr("PER_ASSIGN_HINT"), &"RowMeta", UiTokens.INK_FAINT))
+	# BURADA ESKİDEN "Günlük görev ataması: Ekip → Görevler" YAZIYORDU ve o satır oyuncuyu
+	# kurucunun GÖRÜNMEDİĞİ bir sayfaya yolluyordu (§2: "Kurucu Görevler matrisinde
+	# görünmez") — yapılamayacak bir işin tarifi. §2.5'in sabit içerik listesinde bir
+	# yönlendirme satırı yok. Yerini alan §2.5 satırı (mevcut görev durumu) kartın alt
+	# barında duruyor: başlığın sağ ucu sağ sütunun kartlarıyla çakışıyor, ve orada duran
+	# bir satır ilk çekimde tam olarak öyle kayboldu.
 	return head
 
 
@@ -189,12 +194,9 @@ func _founder_card(founder: Character) -> Control:
 			int(founder.role_stats.get(String(skill_key), 0)), 15))
 	right.add_child(skills)
 
-	# trait'ler: ikon kutusu + ad + tek satır etki
-	var traits := VBoxContainer.new()
-	traits.add_theme_constant_override("separation", 12)
-	for trait_id in founder.traits:
-		traits.add_child(_founder_trait(String(trait_id)))
-	right.add_child(traits)
+	# §2.5 · HUY ALANI: "sekiz kurucu huyu için AYRILMIŞ, şu an NÖTR GLİFTE ve BAĞLANMAMIŞ."
+	# Sekiz yuva, kurucunun taşıdığından bağımsız — "ayrılmış" tam olarak bunu söylüyor.
+	right.add_child(_founder_trait_area())
 
 	col.add_child(HRUiShared.hairline())
 	col.add_child(_founder_footer(founder))
@@ -235,33 +237,61 @@ func _portrait() -> Control:
 	return frame
 
 
-func _founder_trait(trait_id: String) -> Control:
-	var spec: Dictionary = FounderConstants.trait_by_id(trait_id)
+## §2.6 · KURUCU HUYLARI PARK EDİLDİ. "Sekiz adet, ŞU AN NÖTR GLİFTE, BAĞLANMAMIŞ."
+##
+## Sayfa eskiden her huyu ADIYLA ve TEK SATIR ETKİSİYLE çiziyordu — ve o etkileri hiçbir
+## sistem tüketmiyor (FounderConstants.TRAITS'in kendi başlığı bunu yazıyor). Yani ekran iki
+## dilde birden var olmayan bir mekaniği vaat ediyordu; §0'ın "kaynak dosya yalan söylemez"
+## kuralının ekrandaki karşılığı budur. Ad ve etki, huylar BAĞLANDIĞINDA geri gelir.
+##
+## Yuva sayısı FounderConstants.TRAITS'ten okunur, sabit 8 yazılmaz: katalog tek kaynak
+## (§15.2) ve bir gün dokuzuncusu yazılırsa bu satırın yalan söylemesi mümkün olmamalı.
+func _founder_trait_area() -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	box.add_child(UiFactory.make_label(tr("PER_TRAITS"), &"ColumnHeader", UiTokens.INK_DIM))
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 11)
-	# KURUCU KATALOĞU (A5, 2026-08-21). Burası `trait_id`'yi ÇALIŞAN tablosunda
-	# arıyordu ve `visionary`/`stubborn`/... hiçbir zaman eşleşmiyordu — yani ikon
-	# HER ZAMAN yer tutucuydu ve bu bir KIRIK'tı, bir karar değil. Artık kataloğu
-	# açıkça söylüyoruz; kurucu ikonları çizilene kadar yer tutucu BİLEREK duruyor.
-	row.add_child(HRUiShared.trait_icon(trait_id, 16, true, "founder"))
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 3)
-	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	col.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(tr(String(spec.get("name_key", "")))), &"RowMeta", UiTokens.INK))
-	col.add_child(UiFactory.make_label(
-		tr(String(spec.get("effect_key", ""))), &"RowMeta", UiTokens.CREAM_DIM))
-	row.add_child(col)
-	return row
+	row.add_theme_constant_override("separation", 8)
+	for _i in FounderConstants.TRAITS.size():
+		row.add_child(_trait_slot())
+	box.add_child(row)
+	return box
+
+
+## Nötr glif: boş bir yuva çerçevesi. İkon YOK (bir ikon hangi huy olduğunu ima ederdi),
+## renk YOK (renk bir kutup ima ederdi — §6.1 onu zaten emekli etti).
+func _trait_slot() -> Control:
+	var slot := PanelContainer.new()
+	slot.custom_minimum_size = TRAIT_SLOT_SIZE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = UiTokens.SURFACE_FRAME
+	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+	sb.border_color = UiTokens.SEPARATOR
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	slot.add_theme_stylebox_override("panel", sb)
+	return slot
 
 
 func _founder_footer(founder: Character) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 
-	var area_key: String = _experience_area(founder)
-	var value: int = int(founder.area_experience.get(area_key, 0))
-	var pct: int = int(round(float(value) / float(HRConstants.EXPERIENCE_MAX) * 100.0))
+	# §5.1 TEK BAR, ve bar HEP 0–100 görünür; değişen arkasındaki EŞİKTİR. Alan başına
+	# sayaçlar emekli ve artık yazılmıyor — bu blok onları okumaya devam ettiği için kurucunun
+	# çubuğu sonsuza dek %0 gösteriyordu.
+	var value: int = founder.experience_raw
+	var threshold: int = maxi(founder.experience_threshold, 1)
+	var pct: int = int(round(CharacterRegistry.experience_ratio(founder) * 100.0))
+
+	# §2.5 · MEVCUT GÖREV DURUMU — §2.3'ün YEDİ durumundan biri, TEK SATIR. §2.5 onu eğitim
+	# eyleminin yanında sayıyor, ve alt bar zaten o eylemin barı: "ne yapıyor · ne kadar
+	# yaklaştı · gönder" tek satırda okunuyor.
+	var task_row := HBoxContainer.new()
+	task_row.add_theme_constant_override("separation", 10)
+	task_row.add_child(UiFactory.make_label(tr("PER_TASK_LABEL"), &"RowMeta", UiTokens.INK_DIM))
+	task_row.add_child(UiFactory.make_label(HRSystem.founder_task_label(), &"RowMeta", UiTokens.INK))
+	row.add_child(task_row)
+	row.add_child(HRUiShared._v_hairline(13))
 
 	var exp_row := HBoxContainer.new()
 	exp_row.add_theme_constant_override("separation", 11)
@@ -271,7 +301,7 @@ func _founder_footer(founder: Character) -> Control:
 	bar.show_percentage = false
 	bar.custom_minimum_size = Vector2(120, 5)
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bar.max_value = HRConstants.EXPERIENCE_MAX
+	bar.max_value = threshold
 	bar.value = value
 	exp_row.add_child(bar)
 	exp_row.add_child(UiFactory.make_label(Fmt.percent(pct, 0), &"RowMeta", UiTokens.INK_MUTED))

@@ -7914,6 +7914,19 @@ static func _case_hr_read_catalogue() -> String:
 	CharacterRegistry.clear_jobs(CharacterRegistry.get_founder().id)
 	if HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_IDLE:
 		return "an unassigned founder did not read as Boşta"
+	# §2.5: durum Kişisel sayfasında TEK SATIR olarak OKUNUR. Yedi id'nin yedisi de bir
+	# cümleye çözülmek zorunda — çözülmeyen bir id ekrana ham anahtar basar, ve
+	# TranslationServer eksik satırda anahtarın KENDİSİNİ döndürdüğü için bunu yakalamanın
+	# tek yolu anahtarla karşılaştırmaktır.
+	for st in [HRSystem.FOUNDER_STATE_BUILD, HRSystem.FOUNDER_STATE_SALES,
+			HRSystem.FOUNDER_STATE_SUPPORT, HRSystem.FOUNDER_STATE_RESEARCH,
+			HRSystem.FOUNDER_STATE_PITCH_PREP, HRSystem.FOUNDER_STATE_TRAINING,
+			HRSystem.FOUNDER_STATE_IDLE]:
+		var lkey: String = "HR_FOUNDER_STATE_%s" % String(st).to_upper()
+		if TranslationServer.translate(lkey) == lkey:
+			return "§2.3 state '%s' has no sentence — the page would print %s" % [String(st), lkey]
+	if HRSystem.founder_task_label() != TranslationServer.translate("HR_FOUNDER_STATE_IDLE"):
+		return "founder_task_label does not track the state it reports"
 
 	# --- SİNYALLER: adlar KARARLI, ve sekizi bugün YAYINLANIYOR ---
 	for sig in ["experience_bar_full", "morale_band_changed", "employee_eligible_for_promotion",

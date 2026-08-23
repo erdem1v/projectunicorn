@@ -226,6 +226,15 @@ const FOUNDER_STATE_TRAINING := "training"
 const FOUNDER_STATE_IDLE := "idle"
 
 
+## §2.3'ün cümlesi. Durum id'si MOTORUN, cümle EKRANIN — ve §16 gereği ikisi de tek evde
+## durur, yoksa Kişisel sayfası kendi eşlemesini yazar ve id'ler değiştiğinde sessizce
+## eskir. ARAŞTIRMADA bugün ERİŞİLMEZDİR ve bu bilinçlidir: §12.0 Araştırma sütununu
+## kaldırdı ("Araştırma bir atama hedefi değildir"), yani durumun id'si Ar-Ge modülü gelene
+## kadar yazılmayacak. §2.3 onu yine de listeliyor, o yüzden anahtarı da duruyor.
+static func founder_task_label() -> String:
+	return TranslationServer.translate("HR_FOUNDER_STATE_%s" % founder_task_state().to_upper())
+
+
 static func founder_task_state() -> String:
 	var f: Character = CharacterRegistry.get_founder()
 	if f == null:
