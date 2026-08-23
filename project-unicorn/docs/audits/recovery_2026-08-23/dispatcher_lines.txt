@@ -1,0 +1,20 @@
+### HUNK 0  @@ -76,2 +76,3 @@ static func run_case(case_name: String, payload: Dic
+    +		"traction_gate_one_option": fail = _case_traction_gate_is_one_option()
+### HUNK 1  @@ -274,3 +275,8 @@ static func run_case(case_name: String, payload: D
+    -		"soft_cap_warning_day":            fail = _case_soft_cap_warning_day()
+    +		"last_answer_warning":             fail = _case_last_answer_warning()
+    +		"last_answer_warning_suppressed":  fail = _case_last_answer_warning_suppressed()
+    +		"buyout_card_is_inert":            fail = _case_buyout_card_is_inert()
+    +		"deal_prompt_is_inert":            fail = _case_deal_prompt_is_inert()
+    +		"paid_tier_fires_day_after_launch": fail = _case_paid_tier_fires_day_after_launch()
+    ... (1 more changed lines)
+### HUNK 2  @@ -312,2 +318,8 @@ static func run_case(case_name: String, payload: D
+    +		# --- Ekip arayüzü · onaylı tasarım 2026-08-22. Beşi de ÖNCEKİ motora karşı DÜŞER.
+    +		"star_ruler_contract":            fail = _case_star_ruler_contract()
+    +		"single_trait_contract":          fail = _case_single_trait_contract()
+    +		"founder_trains_and_learns":      fail = _case_founder_trains_and_learns()
+    +		"leadership_is_trainable":        fail = _case_leadership_is_trainable()
+    +		"save_migration_v4_to_v5":        fail = _case_save_migration_v4_to_v5()
+### HUNK 3  @@ -658,8 +670,22 @@ static func _case_gate2() -> String:
+    -	_seed_b2b(500)
+    +	# REPOINTED (Frank v6, surface 9): the Traction card became a one-option notification, so

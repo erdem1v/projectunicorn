@@ -1,0 +1,245 @@
+### HUNK 0  @@ -76,2 +76,3 @@ static func run_case(case_name: String, payload: Dic
+    +		"traction_gate_one_option": fail = _case_traction_gate_is_one_option()
+### HUNK 1  @@ -274,3 +275,8 @@ static func run_case(case_name: String, payload: D
+    -		"soft_cap_warning_day":            fail = _case_soft_cap_warning_day()
+    +		"last_answer_warning":             fail = _case_last_answer_warning()
+    +		"last_answer_warning_suppressed":  fail = _case_last_answer_warning_suppressed()
+    +		"buyout_card_is_inert":            fail = _case_buyout_card_is_inert()
+    +		"deal_prompt_is_inert":            fail = _case_deal_prompt_is_inert()
+    +		"paid_tier_fires_day_after_launch": fail = _case_paid_tier_fires_day_after_launch()
+    ... (1 more changed lines)
+### HUNK 2  @@ -312,2 +318,8 @@ static func run_case(case_name: String, payload: D
+    +		# --- Ekip arayüzü · onaylı tasarım 2026-08-22. Beşi de ÖNCEKİ motora karşı DÜŞER.
+    +		"star_ruler_contract":            fail = _case_star_ruler_contract()
+    +		"single_trait_contract":          fail = _case_single_trait_contract()
+    +		"founder_trains_and_learns":      fail = _case_founder_trains_and_learns()
+    +		"leadership_is_trainable":        fail = _case_leadership_is_trainable()
+    +		"save_migration_v4_to_v5":        fail = _case_save_migration_v4_to_v5()
+### HUNK 3  @@ -658,8 +670,22 @@ static func _case_gate2() -> String:
+    -	_seed_b2b(500)
+    +	# REPOINTED (Frank v6, surface 9): the Traction card became a one-option notification, so
+    +	# the decline path, the escalating bodies and the 5-day reminder live ONLY on the Series A
+    +	# gate now. Same mechanism, same assertions, moved to the gate that still owns them - plus
+    +	# a guard that the Traction card really did lose its second option.
+    +	#
+    ... (18 more changed lines)
+### HUNK 4  @@ -668,3 +694,3 @@ static func _case_gate_decline_reminder() -> Strin
+    -		if _instances_of(GATE1_ID) > 0:
+    +		if _instances_of(GATE2_ID) > 0:
+### HUNK 5  @@ -672,6 +698,5 @@ static func _case_gate_decline_reminder() -> Strin
+    -	if _instances_of(GATE1_ID) != 1:
+    -		return "reminder not re-enqueued at interval (instances=%d)" % _instances_of(GATE1_ID)
+    -	var expected_body: String = String((PhaseGateSystem.GATES[0].bodies as Array)[1])
+    -	if PhaseGateSystem._gate_event.body_text != expected_body:
+    +	if _instances_of(GATE2_ID) != 1:
+    +		return "reminder not re-enqueued at interval (instances=%d)" % _instances_of(GATE2_ID)
+    ... (1 more changed lines)
+### HUNK 6  @@ -680,3 +705,3 @@ static func _case_gate_decline_reminder() -> Strin
+    -		if _instances_of(GATE1_ID) > 1:
+    +		if _instances_of(GATE2_ID) > 1:
+### HUNK 7  @@ -685,2 +710,29 @@ static func _case_gate_decline_reminder() -> Stri
+    +## The Traction card is a NOTIFICATION now (Frank v6, surface 9): one body, one option, and
+    +## therefore no decline counter and no 5-day re-ask. Falsification: if the decline choice were
+    +## still built, choices.size() would be 2 and gate_declines could still move.
+    +static func _case_traction_gate_is_one_option() -> String:
+    +	_seed_b2b(500)
+    +	_sim_day()
+    ... (21 more changed lines)
+### HUNK 8  @@ -689,3 +741,3 @@ static func _case_bankruptcy() -> String:
+    -	for i in 10:
+    +	for i in EndingsSystem.SHUTTER_DAYS + 2:
+### HUNK 9  @@ -706,4 +758,7 @@ static func _case_shutter_recovery() -> String:
+    -	if GameState.shutter_days_left != 5:
+    -		return "counter wrong after 3 days (%d, want 5)" % GameState.shutter_days_left
+    +	# Derived from the constant, not typed: the counter moved 7 -> 30 in the Frank v6 pass and
+    +	# a hardcoded expectation would have to be re-typed at every retune.
+    +	var want_left: int = EndingsSystem.SHUTTER_DAYS - 2   # day 1 sets it, days 2 and 3 decrement
+    +	if GameState.shutter_days_left != want_left:
+    ... (1 more changed lines)
+### HUNK 10  @@ -748,5 +803,8 @@ static func _case_pivot_accept() -> String:
+    -	if not _drain_to("ev_pivot_offer"):
+    -		return "pivot offer never became active"
+    -	EventManager.resolve_choice("ev_pivot_offer", 0)  # "Pivot — devam ediyoruz"
+    +	# REPOINTED (Frank v6, 17+18): ev_pivot_offer merged into the buyout card, whose trigger
+    +	# does not exist yet, so there is no card to drain to. The SEAM the card called is
+    +	# untouched and is what this case was ever really about - drive it directly.
+    ... (3 more changed lines)
+### HUNK 11  @@ -761,8 +819,15 @@ static func _case_pivot_accept() -> String:
+    -	_seed_b2b(3000)
+    +	# REPOINTED (Frank v6, 17+18). The card that carried "Hayır. Bitti." is retired, but the
+    +	# ENDING it reached is untouched and still reachable by its own route: three closed tables
+    +	# with the metrics dead (endings_system._check_vc_cascade's else-branch). That is the path
+    +	# this case now drives, so the terminal stays covered rather than merely believed.
+    +	# The MRR must come from the customer record, not from set_mrr: the slot-4 bridge rewrites
+    ... (11 more changed lines)
+### HUNK 12  @@ -1050,3 +1115,3 @@ static func _case_terminal_kills_gate() -> Strin
+    -	for i in 10:
+    +	for i in EndingsSystem.SHUTTER_DAYS + 2:
+### HUNK 13  @@ -1971,10 +2036,12 @@ static func _case_iter_ceiling_founder_vs_desi
+    -	_make_employee("char_iter_designer", "Iter Designer", HRConstants.ROLE_DESIGNER,
+    +	# İŞE ALINAN KİŞİ DEĞİŞTİ (2026-08-22): tasarımcı yerine Ürün Yöneticisi.
+    +	# İnovasyon tavanı ÜRÜN alanını okuyor (rev 2 §2 "özellik kararları") ve atama kapısıyla
+    +	# birlikte artık YALNIZ Ürün'e ATANMIŞ biri o tavanı yükseltebiliyor. Bir tasarımcı kendi
+    +	# ana alanına (Tasarım) doğuyor, yani İnovasyon'a değil DENEYİM'e dokunur — case'in ölçtüğü
+    +	# eksen İnovasyon olduğu için doğru işe alım PM. Ölçülen yasa aynı kaldı: "daha iyi insan,
+    ... (10 more changed lines)
+### HUNK 14  @@ -1982,3 +2049,3 @@ static func _case_iter_ceiling_founder_vs_design
+    -		return "designer ceiling %.2f, want %.2f" % [float(ceil1["innovation"]), want1]
+    +		return "PM ceiling %.2f, want %.2f" % [float(ceil1["innovation"]), want1]
+### HUNK 15  @@ -2085,7 +2152,11 @@ static func _case_iter_zero_staff_neutrality_an
+    -	# A DESIGNER (Tasarım 6 key · Ürün 5 secondary). Deneyim ekseni ← Tasarım (rev 2 §2 says
+    -	# so in words), İnovasyon ← Ürün. So a designer raises BOTH, and raises Deneyim by more,
+    -	# because Ürün is their secondary area and §5 charges SECONDARY_AREA_MULT for it.
+    -	# THE OLD LAW HERE WAS "each role raises exactly one axis and leaks nowhere" — a role
+    -	# gate. Areas replace it: nothing leaks, because every area feeds its own axis by design.
+    +	# A DESIGNER. Tasarım onun ANA alanı, işe alım onu oraya koyuyor — ve Deneyim ekseni
+    ... (8 more changed lines)
+### HUNK 16  @@ -2096,10 +2167,20 @@ static func _case_iter_zero_staff_neutrality_a
+    -	if des_inno <= 0.0:
+    -		return "a designer did not raise İnovasyon at all — their Ürün number is not zero"
+    -	if des_inno >= des_exp:
+    -		return "a designer's secondary area is worth as much as their key one (%.2f vs %.2f)" % [des_inno, des_exp]
+    -	if absf(float(c["stability"]) - base) <= 0.001:
+    -		return "a designer contributed nothing to Kararlılık; their Yazılım floor is not zero"
+    ... (20 more changed lines)
+### HUNK 17  @@ -2110,3 +2191,3 @@ static func _case_iter_zero_staff_neutrality_and
+    -			return "somebody NOT on the build job moved the %s ceiling (%.2f -> %.2f)" % [
+    +			return "somebody NOT assigned to a build area moved the %s ceiling (%.2f -> %.2f)" % [
+### HUNK 18  @@ -2155,10 +2236,13 @@ static func _case_speed_tracks_team_change() -
+    -	# LEDGER 2 (rev 2 area migration, 2026-08-21): THE LAW ASSERTED HERE CHANGED. It used to
+    -	# be "a developer contributes NOTHING to TASARIM, because that phase belongs to the
+    -	# designer" — a ROLE gate. rev 2 §2 replaced role gates with areas precisely to kill that
+    -	# outcome: "böylece tek kişilik ekipte boşluk kalmaz — QA yoksa mühendis test edebilir,
+    -	# tasarımcı yoksa PM tasarıma bakabilir." A developer with Tasarım 3 now DOES help the
+    -	# design phase, and §5 is the price: they work it through a non-key area, so the
+    ... (13 more changed lines)
+### HUNK 19  @@ -2174,15 +2258,15 @@ static func _case_speed_tracks_team_change() -
+    -	# A developer HELPS the design phase now (rev 2 §2) — out of their Tasarım number.
+    +	# ATAMA KAPISI: bir yazılımcı Yazılım alanına doğuyor, tasarım fazının alanlarına
+    +	# (Ürün · Tasarım) atanamaz, dolayısıyla o fazı kıpırdatmaz.
+    -	if with_dev <= iter_speed_solo:
+    -		return "a developer added nothing to TASARIM (%.3f -> %.3f); rev 2 §2 says a one-person team has no holes" 
+    +	if absf(with_dev - iter_speed_solo) > 0.001:
+    ... (8 more changed lines)
+### HUNK 20  @@ -5251,7 +5335,7 @@ static func _case_coupling_speed_law() -> String
+    -	# ALAN-FAZ EŞLEMESİ (rev 2 §2, 2026-08-21 — eskiden ROL-faz eşlemesiydi): a designer no
+    -	# longer contributes NOTHING to GELİŞTİRME. They write code badly, out of their Yazılım
+    -	# number, and §5 charges them SECONDARY_AREA_MULT for working outside their key area.
+    -	# The law that survives is the RANKING, not the zero: whoever owns the phase's area is
+    -	# worth strictly more there than someone borrowed into it.
+    +	# ATAMA KAPISI (onaylı tasarım, 2026-08-22). Bir tasarımcının alanları Tasarım ve Ürün;
+    ... (4 more changed lines)
+### HUNK 21  @@ -5259,19 +5343,12 @@ static func _case_coupling_speed_law() -> Stri
+    -	if with_designer <= before_designer:
+    -		return "a designer added nothing to GELİŞTİRME (%.3f); rev 2 §2 has no zero-contribution roles" % with_desi
+    -	var designer_add: float = with_designer - before_designer
+    -	var developer_add: float = want_b1 - 3.0
+    -	if designer_add >= developer_add:
+    -		return "a designer is worth %.3f in GELİŞTİRME against the developer's %.3f — §5's secondary-area cost is n
+    ... (15 more changed lines)
+### HUNK 22  @@ -6626,3 +6703,3 @@ static func _case_hr_experience_accrues() -> Str
+    -	CharacterRegistry.clear_jobs(idle.id)
+    +	CharacterRegistry.clear_areas(idle.id)
+### HUNK 23  @@ -6924,7 +7001,36 @@ static func _case_loc_format_locale_flip() -> S
+    -	var dir := DirAccess.open("res://data/events/reactive")
+    -	if dir == null:
+    -		return "cannot open res://data/events/reactive"
+    +	# TWO directories (Frank v6). `unwired/` holds finished, reviewed text whose SYSTEM does not
+    +	# exist yet - the loader never opens that folder, so those cards cannot fire, but they are
+    +	# still shipped content and the BILINGUAL BIRTH LAW still binds them. Scanning only the live
+    ... (29 more changed lines)
+### HUNK 24  @@ -6933,3 +7039,3 @@ static func _case_loc_event_en_coverage() -> Str
+    -			var f := FileAccess.open("res://data/events/reactive/" + entry, FileAccess.READ)
+    +			var f := FileAccess.open(base + "/" + entry, FileAccess.READ)
+### HUNK 25  @@ -6940,6 +7046,5 @@ static func _case_loc_event_en_coverage() -> Str
+    -			checked += 1
+    +			_last_scan_count += 1
+    -				if String(d.get(field, "")).strip_edges() != "" \
+    -						and String(d.get(field + "_en", "")).strip_edges() == "":
+    +				if String(d.get(field, "")).strip_edges() != "" and String(d.get(field + "_en", "")).strip_edges() == "":
+### HUNK 26  @@ -6951,21 +7056,17 @@ static func _case_loc_event_en_coverage() -> S
+    -					if String(c.get(cf, "")).strip_edges() != "" \
+    -							and String(c.get(cf + "_en", "")).strip_edges() == "":
+    +					if String(c.get(cf, "")).strip_edges() != "" and String(c.get(cf + "_en", "")).strip_edges() == "":
+    +				# MODIFIER PAYLOADS TOO. mentor_advisory carries player-facing prose inside the
+    +				# MODIFIER, so it slipped past a scan that read only the card's own fields: an
+    +				# English player read Turkish on the phone and nothing went red.
+    ... (22 more changed lines)
+### HUNK 27  @@ -6973,2 +7074,3 @@ static func _case_loc_event_en_coverage() -> Str
+    +
+### HUNK 28  @@ -7052,17 +7154,17 @@ static func _sector_ids_with_fixture() -> Arra
+    -	# rev 2 §4'ün üç cümlesi: kişi BİR İŞE atanır, atanmamış olan BOŞTA durur ve maaş yer,
+    -	# ve hangi işin boş kaldığı görünür. Ayrıca ch. 06 §1.3'ün paydası burada doğuyor.
+    -	# FALSİFİKASYON: CharacterRegistry.add'deki ROLE_DEFAULT_JOB bloğunu sil → ilk iddia
+    -	# FAIL ("işe alınan kişi boşta doğdu").
+    +	# rev 2 §4'ün cümleleri, ALAN kelimesiyle: kişi BİR ALANA atanır, atanmamış olan BOŞTA
+    +	# durur ve maaş yer, ve hangi alanın boş kaldığı görünür. ch. 06 §1.3'ün paydası da burada.
+    ... (14 more changed lines)
+### HUNK 29  @@ -7071,24 +7173,32 @@ static func _case_job_assignment_and_idle() ->
+    -	# Bilinmeyen iş REDDEDİLİR, sessizce kabul edilmez.
+    -	if CharacterRegistry.assign_job(dev.id, "not_a_job") == "":
+    -		return "an unknown job id was accepted"
+    +	# Bilinmeyen alan REDDEDİLİR, sessizce kabul edilmez.
+    +	if CharacterRegistry.assign_area(dev.id, "not_an_area") == "":
+    +		return "an unknown area id was accepted"
+    ... (36 more changed lines)
+### HUNK 30  @@ -7105,4 +7215,4 @@ static func _case_overload_costs_output() -> Str
+    -	var solo_out: float = HRSystem.output_mult_for(dev, HRConstants.JOB_BUILD)
+    -	CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT)
+    +	var solo_out: float = HRSystem.output_mult_for_area(dev, HRConstants.AREA_ENGINEERING)
+    +	CharacterRegistry.assign_area(dev.id, HRConstants.AREA_QA)
+### HUNK 31  @@ -7112,3 +7222,3 @@ static func _case_overload_costs_output() -> Str
+    -	if not is_equal_approx(HRSystem.output_mult_for(dev, HRConstants.JOB_BUILD), solo_out):
+    +	if not is_equal_approx(HRSystem.output_mult_for_area(dev, HRConstants.AREA_ENGINEERING), solo_out):
+### HUNK 32  @@ -7118,3 +7228,3 @@ static func _case_overload_costs_output() -> Str
+    -	var tired_out: float = HRSystem.output_mult_for(dev, HRConstants.JOB_BUILD)
+    +	var tired_out: float = HRSystem.output_mult_for_area(dev, HRConstants.AREA_ENGINEERING)
+### HUNK 33  @@ -7122,11 +7232,11 @@ static func _case_overload_costs_output() -> S
+    -	CharacterRegistry.unassign_job(dev.id, HRConstants.JOB_SUPPORT)
+    +	CharacterRegistry.unassign_area(dev.id, HRConstants.AREA_QA)
+    -	# İKİNCİL ALAN daha yorucu (§5): bir yazılımcı Hesap sahipliğini ikincil alanından
+    -	# çalışır, yani aynı iş ona daha pahalıya gelir.
+    +	# İKİNCİL ALAN daha yorucu (§5): bir yazılımcı Test'i ikincil alanından çalışır, yani
+    +	# aynı gün ona daha pahalıya gelir.
+    ... (6 more changed lines)
+### HUNK 34  @@ -7139,3 +7249,3 @@ static func _case_job_lead_resolution() -> Strin
+    -	# FALSİFİKASYON: HRSystem.job_lead'in "en yüksek Liderlik" dalını ilk bulduğu kişiyi
+    +	# FALSİFİKASYON: HRSystem.area_lead'in "en yüksek Liderlik" dalını ilk bulduğu kişiyi
+### HUNK 35  @@ -7143,16 +7253,18 @@ static func _case_job_lead_resolution() -> Str
+    -	var cost_lead: Character = HRSystem.job_lead(HRConstants.JOB_COST)
+    +	var cost_lead: Character = HRSystem.area_lead(HRConstants.AREA_RESEARCH)
+    -		return "an unstaffed job did not fall back to the founder"
+    -	# İki kişi: Liderliği yüksek olan lider olur, rolü ya da işe alım sırası değil.
+    +		return "an unstaffed area did not fall back to the founder"
+    +	# İki kişi AYNI ALANDA: Liderliği yüksek olan lider olur, rolü ya da işe alım sırası
+    ... (12 more changed lines)
+### HUNK 36  @@ -7160,10 +7272,200 @@ static func _case_job_lead_resolution() -> St
+    -	if GameState.job_leads.has(HRConstants.JOB_BUILD):
+    +	if GameState.area_leads.has(HRConstants.AREA_ENGINEERING):
+    -	var after: Character = HRSystem.job_lead(HRConstants.JOB_BUILD)
+    +	var after: Character = HRSystem.area_lead(HRConstants.AREA_ENGINEERING)
+    -	# §9: ayrılanın İŞLERİ de boşalır, kimseye devredilmez.
+    +	# §9: ayrılanın ALANLARI da boşalır, kimseye devredilmez.
+    ... (192 more changed lines)
+### HUNK 37  @@ -7204,3 +7506,3 @@ static func _case_save_migration_v3_to_v4() -> S
+    -	if (dev["assigned_jobs"] as Array) != [HRConstants.JOB_BUILD]:
+    +	if (dev["assigned_jobs"] as Array) != ["build"]:   # v4 hedefi LEGACY iş kimliği; v5 alana çevirir
+### HUNK 38  @@ -7219,3 +7521,3 @@ static func _case_save_migration_v3_to_v4() -> S
+    -	if (f["assigned_jobs"] as Array) != [HRConstants.JOB_BUILD]:
+    +	if (f["assigned_jobs"] as Array) != ["build"]:     # aynı şekilde LEGACY
+### HUNK 39  @@ -7780,21 +8082,50 @@ static func _case_soft_cap_no_defer_for_sheet(
+    -static func _case_soft_cap_warning_day() -> String:
+    -	# The D-1 Frank line fires once, on the eve, only when a sheet is live.
+    +static func _case_last_answer_warning() -> String:
+    +	# REPOINTED (Frank v6, surface 15). The warning used to be a CALENDAR fact - the eve of the
+    +	# soft cap, and day 179 before that. It is now the situation the line actually describes:
+    +	# today is the last day to answer, and there is no other table to walk to. Both halves are
+    ... (49 more changed lines)
+### HUNK 40  @@ -8549 +8880,127 @@ static func _case_borderless_note_key_exists() -
+    +
+    +## ============================================================================
+    +##  Frank v6 — INERTNESS. "Cannot fire" has to be demonstrated, not assumed.
+    +## ============================================================================
+    +
+    +## The buyout card (surfaces 17+18 merged) carries finished text and has no trigger. These
+    ... (121 more changed lines)
