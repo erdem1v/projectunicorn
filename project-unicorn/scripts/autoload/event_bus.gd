@@ -69,6 +69,42 @@ signal employee_training_changed(character_id: String, days_left: int)
 ## KARIŞTIRILMAZ: bu OLAN terfiyi bildirir, o UYGUN HÂLE GELMEYİ. İkincisi olay motorunun
 ## kenar yakalaması için (§17.3) ve Faz 4'te açılıyor.
 signal employee_promoted(character_id: String, new_level: int)
+
+# ---------------------------------------------------------------------------
+# §15.3 · OLAY MOTORUNA AÇILAN SİNYAL LİSTESİ
+# ---------------------------------------------------------------------------
+# "Dinleyicisi olmasa da BUGÜN yayınlanır, adları KARARLIDIR." Motor geldiğinde işi
+# bunları okumak olacak, keşfetmek değil (§17.3). Eskiler (character_added/_removed,
+# morale_changed, employee_experience_changed) canlı tüketicileriyle birlikte duruyor ve
+# Faz 7'de emekli oluyor; §15.3'ün adlandırdıkları yanlarına geliyor.
+
+## §5.1 barın DOLDUĞU AN — her gün değil, KENAR. §17.3 motorun bugün kenar yakalayamadığını
+## ("Morali 35'i geçtiği an" yoklama modelinde yakalanamıyor) bir mimari borç olarak
+## yazıyor; bu sinyal o borcun Ekip tarafındaki karşılığı.
+signal experience_bar_full(character_id: String)
+
+## §7 bandın DEĞİŞTİĞİ an (80 / 50 / 35 sınırları). Puan puan değil, BANT — çünkü motorun
+## soracağı soru "morali kaç" değil "hangi banda düştü".
+signal morale_band_changed(character_id: String, band_id: String)
+
+## §9.3. HR BUNU YAYINLAMIYOR ve sebebi belgede: §9.3 terfiye seviye tavanı dışında bir
+## KOŞUL vermiyor, yani ateşlenecek GDD tanımlı bir kenar yok. Kenarı seçmek (bir yıllık
+## kıdem? dolmuş bar? yıldız eşiği?) bir tasarım hükmü olurdu; ad kararlı olarak yayınlanıyor,
+## kenar bekliyor.
+signal employee_eligible_for_promotion(character_id: String)
+
+## §9.2. HR BUNU DA YAYINLAMIYOR: "Çalışandan gelen zam talebi AYRI BİR OLAYDIR ve olay
+## motorunun konusudur." HR'ın yayınlaması, HR'ın olayı yazması olurdu.
+signal raise_requested(character_id: String)
+
+## §11.4 izin talebi. Kart olay motorunun (§17.3) ama TALEP bu modülden doğuyor — yaz
+## haftası geldiğinde HR bunu yayınlar ve motor geldiğinde kartı buna bağlar.
+signal leave_requested(character_id: String)
+
+signal employee_hired(character_id: String)
+signal employee_departed(character_id: String)
+signal training_started(character_id: String, area_key: String)
+signal training_completed(character_id: String, area_key: String)
 ## Görev ataması değiştiğinde (GDD v2 ch. 07 rev 2 §4): atandı, çıkarıldı ya da ayrılma
 ## anında işleri boşaldı. TEK argüman kişidir, iş değil — bir atama değişikliği o kişinin
 ## SATIRINI ve etkilediği HER işin doluluk okumasını birden tazeler, o yüzden dinleyen

@@ -209,6 +209,7 @@ func add_experience(id: String, amount: int) -> void:
 	c.experience_raw = mini(c.experience_raw + amount, c.experience_threshold)
 	if not was_full and c.experience_raw >= c.experience_threshold:
 		EventBus.employee_experience_changed.emit(id, c.experience_raw)
+		EventBus.experience_bar_full.emit(id)        # §15.3 — KENAR, her gün değil
 
 
 ## Bu çalışanın bu alandaki eğitiminin ücreti — kademeli + tekrarda zamlı (§8).
@@ -236,6 +237,7 @@ func begin_training(id: String, area_key: String) -> void:
 	c.training_area = area_key
 	c.status = HRConstants.STATUS_TRAINING
 	EventBus.employee_training_changed.emit(id, c.training_days_left)
+	EventBus.training_started.emit(id, area_key)     # §15.3
 
 
 ## Bir eğitim gününü işler. Biten eğitimde SEÇİLEN ALAN +1 (tavanla), tekrar sayacı
@@ -265,6 +267,7 @@ func tick_training(id: String) -> bool:
 	c.status = HRConstants.STATUS_ACTIVE
 	EventBus.employee_training_changed.emit(id, 0)
 	EventBus.employee_experience_changed.emit(id, 0)
+	EventBus.training_completed.emit(id, area_key)   # §15.3
 	return true
 
 
@@ -594,6 +597,8 @@ func add(character: Character) -> void:
 		GameState.run_hires += 1
 	_characters[character.id] = character
 	EventBus.character_added.emit(character.id)
+	if character.category == "employee":
+		EventBus.employee_hired.emit(character.id)   # §15.3
 
 
 func _validate_shape(character: Character) -> void:
@@ -679,6 +684,7 @@ func remove(id: String) -> void:
 	GameState.release_area_leads(id)
 	_characters.erase(id)
 	EventBus.character_removed.emit(id)
+	EventBus.employee_departed.emit(id)              # §15.3
 
 
 # --- Debug reset (onboarding re-trigger) ---
@@ -728,11 +734,21 @@ func set_morale(id: String, value: int) -> void:
 	if c == null:
 		push_warning("[CharacterRegistry] set_morale on unknown id: %s" % id)
 		return
-	var clamped: int = clampi(value, 0, 100)
+	# §15.2 TEK KAYNAK: sınırlar HRConstants'ta adlıdır ve önizleme onları okur; burada
+	# çıplak 0/100 yazmak önizlemenin bir şey vaat edip yazmanın başkasını uygulamasını
+	# mümkün kılardı. (Bugün de aynı sayılardı — ama TESADÜFEN aynıydılar.)
+	var clamped: int = clampi(value, HRConstants.MORALE_MIN, HRConstants.MORALE_MAX)
 	if c.morale == clamped:
 		return  # No-op: don't emit a redundant signal
+	var band_before: String = HRConstants.morale_band_id(c.morale)
 	c.morale = clamped
 	EventBus.morale_changed.emit(id, clamped)
+	# §15.3: motorun soracağı soru "morali kaç" değil "hangi banda düştü". KENAR yayınlanır,
+	# her puan değil — §17.3'ün "Morali 35'i geçtiği an bugünkü yoklama modelinde
+	# yakalanamıyor" borcunun Ekip tarafındaki karşılığı.
+	var band_after: String = HRConstants.morale_band_id(clamped)
+	if band_after != band_before:
+		EventBus.morale_band_changed.emit(id, band_after)
 
 
 # --- Debug seed (writes directly to _characters; does NOT call add() so no

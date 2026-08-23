@@ -121,6 +121,129 @@ static func tick_experience() -> void:
 		var gain: int = int(round(float(base) * own_mult * lead_mult))
 		CharacterRegistry.add_experience(emp.id, maxi(gain, 1))
 
+# ============================================================================
+#  §15.3 · OKUMA YÜZEYİ — olay motoruna açılan katalog
+# ============================================================================
+# Diğer modüller ve olay motoru Ekip verisine DOĞRUDAN UZANARAK değil, bu adlandırılmış
+# katalog üzerinden erişir. Katalog Ekip'in sorumluluğudur ve bu inşayla birlikte açılır —
+# olay motorunu BEKLEMEZ (§17.3).
+#
+# Bugün çoğunun tüketicisi yok ve bu kasıtlı: motor geldiğinde işi bunları OKUMAK olacak,
+# KEŞFETMEK değil. Seçiciler ("en düşük moralli çalışan", "en yeni işe alınan", "şu alanın
+# lideri") bu sorguların ÜZERİNE motorun kendi tarafında kurulur — burada değil.
+#
+# Adlar KARARLIDIR. İç yapı değişse bile korunurlar; §15.3 bunu bir sözleşme olarak yazıyor.
+
+static func morale(c: Character) -> int:
+	return 0 if c == null else c.morale
+
+
+static func morale_band(c: Character) -> String:
+	## Bant KİMLİĞİ döner, sayı değil — §4.2 ve §8.5'in "oyuncu sebebi görür, katsayıyı
+	## görmez" kuralının okuma tarafındaki karşılığı.
+	if c == null:
+		return "mid"
+	return HRConstants.morale_band_id(c.morale)
+
+
+static func headcount() -> int:
+	return CharacterRegistry.count_employees()
+
+
+static func skill(c: Character, area_key: String) -> int:
+	## HAM 0–10. Ekranda beş yıldıza çevrilir (§4.1); ham puan doğrulama içindir,
+	## karar yüzeyi değildir.
+	return 0 if c == null else int(c.role_stats.get(area_key, 0))
+
+
+static func status(c: Character) -> String:
+	return "" if c == null else c.status
+
+
+static func is_busy(c: Character) -> bool:
+	## §2.2'nin cevabı. MEŞGULİYET TEK MODEL: izindeyken · eğitimdeyken · (kurucu)
+	## yatırım hazırlığındayken. Ara kademe, yarı hız çarpanı, kısmi kapasite YOKTUR.
+	if c == null:
+		return false
+	if c.status == HRConstants.STATUS_ON_LEAVE or c.status == HRConstants.STATUS_TRAINING:
+		return true
+	if c.category == "founder" and bool(GameState.get_flag("pitch_prep_active", false)):
+		return true
+	return false
+
+
+static func tenure_days(c: Character) -> int:
+	if c == null or c.hire_day <= 0:
+		return 0
+	return maxi(GameState.day - c.hire_day, 0)
+
+
+static func accounts_of(c: Character) -> Array:
+	## KİŞİ → HESAPLAR ters indeksi. Satış tarafında yalnız Customer.assigned_to vardı, yani
+	## "bu kişi neye bakıyor" sorusunun cevabı müşteri kaydını yürümekten geçiyordu — ve
+	## §11.3'ün ayrılma sorusu ("müşterilerine kim bakacak?") tam olarak bunu soruyor.
+	if c == null:
+		return []
+	var out: Array = []
+	for cu in CustomerRegistry.get_all():
+		if cu != null and String(cu.assigned_to) == c.id:
+			out.append(cu)
+	return out
+
+
+static func work_hours(c: Character) -> int:
+	## §8.1 devralma zinciri. Hiçbir sistem zinciri kendisi yürütmez (§15.2).
+	return WorkHoursSystem.hours_for(c)
+
+
+static func work_hours_company() -> Dictionary:
+	return {
+		"hours": GameState.company_work_hours,
+		"start_hour": WorkHoursSystem.start_hour(),
+	}
+
+
+static func work_hours_overrides() -> int:
+	return WorkHoursSystem.override_count()
+
+
+static func overtime_active(c: Character) -> bool:
+	return WorkHoursSystem.overtime_active(c)
+
+
+static func short_day_active(c: Character) -> bool:
+	return WorkHoursSystem.short_day_active(c)
+
+
+## §2.3 · KURUCUNUN GÖREV DURUMU — TÜRETİLİR, SAKLANMAZ (§15.1'in rozet kuralı).
+## Yedi durumun hepsi bugün var olan state'ten okunur; hiçbir modülden yazma beklenmez.
+const FOUNDER_STATE_BUILD := "build"
+const FOUNDER_STATE_SALES := "sales"
+const FOUNDER_STATE_SUPPORT := "support"
+const FOUNDER_STATE_RESEARCH := "research"
+const FOUNDER_STATE_PITCH_PREP := "pitch_prep"
+const FOUNDER_STATE_TRAINING := "training"
+const FOUNDER_STATE_IDLE := "idle"
+
+
+static func founder_task_state() -> String:
+	var f: Character = CharacterRegistry.get_founder()
+	if f == null:
+		return FOUNDER_STATE_IDLE
+	# SIRA ÖNEMLİ: meşgul durumlar önce okunur (§2.3'ün "Meşgul mü" sütunu). Eğitim ve
+	# yatırım hazırlığı yapımı DURDURUR, o yüzden bir yapım atamasının üstünü örterler.
+	if f.status == HRConstants.STATUS_TRAINING:
+		return FOUNDER_STATE_TRAINING
+	if bool(GameState.get_flag("pitch_prep_active", false)):
+		return FOUNDER_STATE_PITCH_PREP
+	if f.assigned_job_ids.has(HRConstants.JOB_BUILD):
+		return FOUNDER_STATE_BUILD
+	if f.assigned_job_ids.has(HRConstants.JOB_SALES) or f.assigned_job_ids.has(HRConstants.JOB_ACCOUNTS):
+		return FOUNDER_STATE_SALES
+	if f.assigned_job_ids.has(HRConstants.JOB_SUPPORT) or f.assigned_job_ids.has(HRConstants.JOB_TEST):
+		return FOUNDER_STATE_SUPPORT
+	return FOUNDER_STATE_IDLE
+
 # ======================= Görev ataması: okuma seam'leri ======================
 # rev 2 §4. CharacterRegistry TEK YAZARDIR; burası okuma tarafı ve dışarıya açılan yüz.
 # Ürün, Satış ve Operasyon "kim meşgul" sorusunu buradan sorar.

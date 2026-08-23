@@ -127,6 +127,9 @@ static func tick_leave_departures() -> void:
 			# this same tick is already stamped for the current year, so they cannot be
 			# re-sent today no matter which step runs first.
 			continue
+		# §15.3: TALEP bu modülden doğar, KART olay motorunun (§17.3). Motor gelene kadar
+		# izin otomatik başlar (R2) ama sinyal bugünden yayınlanır ki motor ona bağlansın.
+		EventBus.leave_requested.emit(emp.id)
 		send_on_leave(emp, HRConstants.LEAVE_DAYS_R11, false)
 
 

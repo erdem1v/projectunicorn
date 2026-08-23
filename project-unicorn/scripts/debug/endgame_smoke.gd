@@ -327,6 +327,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"work_hours_three_scopes":        fail = _case_work_hours_three_scopes()
 		"promotion_and_raise_gate":       fail = _case_promotion_and_raise_gate()
 		"effective_skill_formula":        fail = _case_effective_skill_formula()
+		"hr_read_catalogue":              fail = _case_hr_read_catalogue()
 		# --- Trait seti · Build Bar · Görevler (2026-08-21). Beşi de ÖNCEKİ motora karşı DÜŞER.
 		"build_pauses_when_all_busy":     fail = _case_build_pauses_when_all_busy()
 		"build_resumes_when_one_frees":   fail = _case_build_resumes_when_one_frees()
@@ -7594,6 +7595,108 @@ static func _case_leadership_is_trainable() -> String:
 
 
 
+
+
+static func _case_hr_read_catalogue() -> String:
+	# §15.3 · OKUMA YÜZEYİ VE SİNYALLER. §17.3 bu borcun kime ait olduğunu yazıyor:
+	# "Ekip'in borcu — bu modülde, inşayla birlikte ödenir. İnşayı bloklamaz ... Ekip'in
+	# yükümlülüğü OKUNABİLİR VE ETİKETLİ OLMAK. Bu ucuzdur, olay motorunu beklemez, ve
+	# motor geldiğinde ona KEŞİF İŞİ BIRAKMAZ."
+	#
+	# Bu vaka tüketici DEĞİL, SÖZLEŞME testi: her anahtarın var olduğunu ve makul bir şey
+	# döndürdüğünü, her sinyalin adının kararlı olduğunu sabitliyor. Motor geldiğinde bu
+	# adlara karşı yazılacak.
+	#
+	# FALSİFİKASYON: HRSystem'den herhangi bir katalog fonksiyonunu sil → parse hatası,
+	# kapı FAIL verir. EventBus'tan bir sinyal adını sil → has_signal iddiası FAIL eder.
+	GameState.set_flag("debug_hr_force", "fail")
+	var emp: Character = _make_employee("cat_a", "Cat A", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 4000, 70)
+	_park_leave([emp])
+
+	# --- SORGULAR ---
+	if HRSystem.morale(emp) != emp.morale:
+		return "hr.morale disagreed with the record"
+	if HRSystem.morale_band(emp) != "mid":
+		return "hr.morale_band at 70 read '%s', want 'mid'" % HRSystem.morale_band(emp)
+	if HRSystem.headcount() < 1:
+		return "hr.headcount reads %d with a seeded employee" % HRSystem.headcount()
+	if HRSystem.skill(emp, HRConstants.AREA_ENGINEERING) != int(emp.role_stats[HRConstants.AREA_ENGINEERING]):
+		return "hr.skill disagreed with role_stats"
+	if HRSystem.effective_skill(emp, HRConstants.AREA_ENGINEERING) <= 0.0:
+		return "hr.effective_skill returned nothing for an assigned developer"
+	if HRSystem.status(emp) != HRConstants.STATUS_ACTIVE:
+		return "hr.status read '%s'" % HRSystem.status(emp)
+	if HRSystem.is_busy(emp):
+		return "an active, assigned employee read as busy"
+	if HRSystem.is_idle(emp):
+		return "a freshly hired employee read as idle — §12.2 seats them on a job"
+	if HRSystem.job_count(emp) != 1:
+		return "hr.job_count is %d, want 1" % HRSystem.job_count(emp)
+	if HRSystem.tenure_days(emp) < 0:
+		return "hr.tenure_days went negative"
+	if HRSystem.assigned_to_job(HRConstants.JOB_BUILD).is_empty():
+		return "hr.assigned_to(iş) found nobody on Build"
+	if not (HRSystem.unstaffed_jobs() is Array):
+		return "hr.unstaffed_jobs did not return a list"
+	if not (HRSystem.accounts_of(emp) is Array):
+		return "hr.accounts_of did not return a list"
+	if HRSystem.work_hours(emp) != HRConstants.WORK_HOURS_DEFAULT:
+		return "hr.work_hours read %d on a fresh run" % HRSystem.work_hours(emp)
+	var company: Dictionary = HRSystem.work_hours_company()
+	if int(company["hours"]) != HRConstants.WORK_HOURS_DEFAULT \
+			or int(company["start_hour"]) != HRConstants.START_HOUR_DEFAULT:
+		return "hr.work_hours_company: %s" % str(company)
+	if HRSystem.work_hours_overrides() != 0:
+		return "hr.work_hours_overrides reads %d on a fresh run" % HRSystem.work_hours_overrides()
+	if HRSystem.overtime_active(emp) or HRSystem.short_day_active(emp):
+		return "eight hours read as overtime or short day"
+
+	# --- §2.3 KURUCU GÖREV DURUMU: yedisi de TÜRETİLİR, hiçbiri saklanmaz ---
+	var state: String = HRSystem.founder_task_state()
+	if state != HRSystem.FOUNDER_STATE_BUILD:
+		return "the founder starts on a build but reads '%s'" % state
+	GameState.set_flag("pitch_prep_active", true)
+	if HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_PITCH_PREP:
+		return "yatırım hazırlığı did not surface as a task state — §2.3 gives it an id"
+	# §2.2/§2.3: yatırım hazırlığı MEŞGULDÜR ve yapım §2.1'e göre duraklar.
+	if not HRSystem.is_busy(CharacterRegistry.get_founder()):
+		return "a founder in pitch prep did not read as busy (§2.2)"
+	GameState.set_flag("pitch_prep_active", false)
+	CharacterRegistry.clear_jobs(CharacterRegistry.get_founder().id)
+	if HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_IDLE:
+		return "an unassigned founder did not read as Boşta"
+
+	# --- SİNYALLER: adlar KARARLI, ve sekizi bugün YAYINLANIYOR ---
+	for sig in ["experience_bar_full", "morale_band_changed", "employee_eligible_for_promotion",
+			"raise_requested", "leave_requested", "assignment_changed", "employee_hired",
+			"employee_departed", "training_started", "training_completed"]:
+		if not EventBus.has_signal(String(sig)):
+			return "§15.3 signal '%s' is missing — the engine would have to discover it" % String(sig)
+
+	# BANT KENARI gerçekten ateşliyor mu: 70 (mid) → 30 (low).
+	var band_hits: Array = []
+	var cb: Callable = func(cid: String, band: String) -> void:
+		if cid == emp.id:
+			band_hits.append(band)
+	EventBus.morale_band_changed.connect(cb)
+	CharacterRegistry.set_morale(emp.id, 30)
+	EventBus.morale_band_changed.disconnect(cb)
+	if band_hits.size() != 1 or String(band_hits[0]) != "low":
+		return "the band edge did not fire once with 'low': %s" % str(band_hits)
+
+	# BAR DOLMA KENARI bir kez ateşler, her gün değil.
+	var full_hits: Array = []
+	var cb2: Callable = func(cid: String) -> void:
+		if cid == emp.id:
+			full_hits.append(cid)
+	EventBus.experience_bar_full.connect(cb2)
+	CharacterRegistry.add_experience(emp.id, emp.experience_threshold)
+	CharacterRegistry.add_experience(emp.id, emp.experience_threshold)   # ikinci kez: SESSİZ
+	EventBus.experience_bar_full.disconnect(cb2)
+	if full_hits.size() != 1:
+		return "experience_bar_full fired %d times, want exactly one edge" % full_hits.size()
+	return ""
 
 static func _case_effective_skill_formula() -> String:
 	# §4.5 KANONİK FORMÜL, beş çarpanın hepsi elle hesaplanmış değerlere karşı sabitleniyor:
