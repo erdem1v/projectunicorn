@@ -287,6 +287,23 @@ Two residual instances survive, and one of them is inside HR:
 | 66 phantom "design doc" comments (~114 with chapter citations) | 13 files, incl. the `ONAYLI` stamp at `hr_constants.gd:1004` |
 | Comments contradicting their own bodies | `character.gd:80-83`; `time_manager.gd:312-313` (drift), `:299` ("9 slots" against 13), `:279` and `event_bus.gd:193` ("twelve"), `:385` ("3 hourly" against 4); "seven steps" in `hr_system.gd:38-43`, `hr_morale_system.gd:5-13`, `hr_search_system.gd:6` against a nine-step body; "DÖRT SATIR" at `hr_tab.gd:690` and `hr_ledger.gd:65-67` against three; `character_registry.gd:322`; `vc_pitch_system.gd:422`; `creation_flow.gd:686-687` (cites the retired UYUM axis) |
 
+### 2a-bis · Phase 7 deletions created by the strangler (R8)
+
+These do not exist today — they are scaffolding this rebuild adds and must remove. Listed
+now so the last step cannot be forgotten.
+
+| What | Where it will live | Dies when |
+|---|---|---|
+| **`assigned_to(alan)` job adapter** | `hr_system.gd`, derived from `JOB_AREAS` | the last area-keyed consumer is converted (all 8 sites in §5a) |
+| `ASSIGNABLE` + `AREA_RESEARCH` | `hr_constants.gd:138-140` | with the adapter, same commit |
+| Old `SALARY_BANDS` (string-keyed) + `BANDS` / `BAND_*` / `band_shape` | `hr_constants.gd` | when the Atlas search and generator read `SALARY_BANDS_BY_LEVEL` |
+| `MORALE_BURNOUT` · `BADGE_BURNING_OUT` · `BADGE_OVERLOADED` | `hr_constants.gd` | when the DURUM column is rebuilt (Phase 5a) |
+| `EXPERIENCE_MAX` · `EXPERIENCE_PER_DAY` · `EXPERIENCE_PER_BUILD_DAY` | `hr_constants.gd` | when the experience ladder lands (Phase 2c) |
+| `AREA_TRAIN_CAP` · old `training_fee` arity | `hr_constants.gd` | when the training modal converts (Phase 5b) |
+| `SEARCH_RETAINER` · old arrival min/max | `hr_constants.gd` | when the Atlas flow converts (Phase 5b) |
+| `leave_month_for` · `leave_month_label` · `LEAVE_MONTH_*` | `hr_constants.gd` | when summer leave lands (Phase 2c) |
+| Overtime block constants + `hr_overtime_system.gd` + `hr_overtime_panel.gd` | as today | when the hours model's consumers convert (Phase 3) |
+
 ### 2b · Deletions with callers to repoint
 
 | What | Where | Callers |
@@ -505,7 +522,14 @@ Sweep all 240 smoke ids (`endgame_smoke.gd:73-336`) with
 `tools/smoke_run.sh --all` (built 2026-08-23; the gate now lives in the runner)
 and treat any id printing both a `SCRIPT ERROR` line and `SMOKE PASS` as a failure. Then change the runner so a case whose output carries `SCRIPT ERROR` / `Parse Error` / `Compile Error` / `Failed to instantiate` reports FAIL regardless of its return value. Then fix whatever the sweep found. Also verify `--hr-shot=ekip` produces a frame — the visual gate depends on it, and it was reported broken by the ODA centre-viewport rework.
 
-**Phase 1 — Constants and data model.** `hr_constants.gd` rewrite; `Character` fields; `GameState` company-hours fields; the v6→v7 migration and its falsification case. Single-owner, no parallelism — every phase below reads these names.
+**Phase 1 — Constants and data model, ADDITIVE ONLY (R8).** New names land beside the old
+ones: `JOBS`/`JOB_AREAS`/`MAX_JOBS_PER_PERSON`/`FOCUS_MULT_*`, the §7 morale bands, the §7.1
+hour table, `SALARY_BANDS_BY_LEVEL` + level/title derivation, the archetype table, the
+experience ladder, the summer-leave constants. Value-only re-seats that break no signature
+(`SECONDARY_AREA_MULT` 0.7→0.8, `MORALE_FLIGHT_RISK` 25→35, `MORALE_LEAVE_RETURN` 10→15,
+`RAISE_MAX_PCT` 15→10, `NEW_HIRE_BADGE_DAYS` 3→14) land here too. **No declaration is
+removed and the tree stays green.** Plus `Character` fields, `GameState` company-hours
+fields, and the v6→v7 migration with its falsification case. Single-owner, no parallelism.
 
 **Phase 2 — Engine, three parallel tracks.**
 - **2a · Jobs + assignment** — JobModel, area→job re-key, the two-job cap on the write side, `assigned_to(iş)`, `unstaffed_jobs()`, the CS area gate.
@@ -588,6 +612,32 @@ The audit is run against the tree, not against this table — this table is what
 **R2 — Leave and departures both stay automatic until the event engine lands.** Leave fires on its summer week with no card; departures keep a daily roll. §7.2's warning against a one-directional morale counter is the reason. Both are built so the engine can take them over without a rewrite: the leave state machine emits `leave_requested` and accepts an external accept/defer, and the departure path emits `employee_departed` — the cards are the engine's job (§17.3), the mechanics are ours.
 
 **R3 — Canvas turn 19 (19a–19d) is the working-hours modal design.** Phase 6 builds against it and may start as soon as the roster page (5a) lands. Its KAYNAK column and the four-state header chip are additive to §8.5 and are kept; §8.5's seven per-step hover sentences are added on top of 19's chevron indicator, since §8.5 names them explicitly.
+
+**R8 — Nothing is deleted before its last caller is gone (Erdem 2026-08-23).** The first
+build attempt removed `ASSIGNABLE` and `AREA_RESEARCH` in Phase 1 and took 25+ files out of
+compilation in one move — a big bang with no green step between start and finish. This plan
+already put the deletions in Phase 7; Phase 1 violated its own sequencing. The corrected
+shape is a strangler:
+
+1. `JOBS`, `JOB_AREAS` and the JobModel land **beside** `ASSIGNABLE`. Nothing is removed.
+2. `hr.assigned_to(iş)` arrives as a new function. The existing `assigned_to(alan)` survives
+   as a **thin adapter** derived from the job → carrying-areas table, so all 25 consumers
+   keep compiling and keep behaving.
+3. Consumers convert **one at a time**. Each conversion is its own green step and the suite
+   runs after it.
+4. When the last consumer is converted, `ASSIGNABLE` and the adapter die **together** in
+   Phase 7, at which point both have zero callers.
+
+The same rule governs every other Phase 1 deletion the first attempt made: the overtime
+block constants, `MORALE_BURNOUT`, `BADGE_BURNING_OUT`, `BADGE_OVERLOADED`, `EXPERIENCE_MAX`,
+`AREA_TRAIN_CAP`, `SEARCH_RETAINER`, `LEAVE_DAYS`'s month model and the old `SALARY_BANDS`
+shape all keep their declarations through Phase 1 and lose them in Phase 7.
+
+The save migration (§4c) is **unaffected** and stays in Phase 1 — the save format does not
+go through the adapter.
+
+**The adapter is this pass's debt, not a permanent one.** It is on the Phase 7 list by name
+so it cannot be forgotten.
 
 **R4 — Chapter and spec debt is flagged, not fixed.** §17.6's orders against ch01 §5, ch02 §2/§6/§10, ch06 §1.2 and ch12 §8 — and `docs/PROJECT_SPEC.md` §4.1–4.3 (`:233`, `:539`) — are outside this task. The plan lists the exact edits each needs; no `.docx` is touched. The two Ekip-owned document deletions in §2d still happen.
 
