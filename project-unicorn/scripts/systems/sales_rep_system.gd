@@ -73,10 +73,9 @@ static func _diminished_sum(axis: String) -> float:
 		# §5: aşırı yük ve ikincil alan çarpanları burada da geçerli. `no_team_bonus`
 		# EMEKLİ (2026-08-21) — sekiz trait'lik sette "yalnız çalışır" yok; yerine gelen
 		# çarpanlar kişinin KENDİ verimini değiştiriyor, istifini değil.
-		total += weight * float(int(c.role_stats.get(axis, 0))) \
-			* HRSystem.output_mult_for_area(c, HRConstants.AREA_SALES) \
-			* HRConstants.trait_mult(c.traits, "output_mult") \
-			* HRConstants.trait_mult(c.traits, "speed_mult")
+		# §4.5: kişinin ne ürettiği TEK EVDE. Bu masanın kendi şekli — istif azalması —
+		# burada kalıyor; §4.5 "bu kişi ne üretiyor"u değiştirir, "bu masa nasıl toplar"ı değil.
+		total += weight * HRSystem.effective_skill(c, axis)
 		weight *= B2BConstants.REP_STACK_DECAY
 	return total
 

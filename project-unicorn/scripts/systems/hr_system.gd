@@ -285,6 +285,75 @@ static func output_mult_for_area(c: Character, area_key: String) -> float:
 	return m
 
 
+# ==================== §4.5 · ETKİN ÇIKTI — KANONİK FORMÜL ====================
+# "Bir kişinin bir işteki etkin çıktısı TEK BİR YERDE tanımlıdır. Başka hiçbir modül kendi
+# hız formülünü kurmaz; hepsi buna referans verir."
+#
+# Ürün, Satış, Destek ve Ar-Ge bu seam'i çağırır ve karakter kaydına DOĞRUDAN UZANMAZ.
+# Bugüne kadar üç ayrı hesap vardı (ProductSystem._phase_area_sum ·
+# SalesRepSystem._diminished_sum · CustomerRepSystem.throughput_of) ve ÜÇÜ DE moral bandını
+# atlıyordu — §7'nin bantları yalnız istifa roll'una bakıyordu.
+
+## Bir kişinin bir ALANDAKİ saatlik etkin çıktısı. Liderlik BURADA YOK: §4.2 onu ALANIN
+## TOPLAMINA uyguluyor, kişi başına değil — kişi başına katlansaydı kadro sayısıyla çarpılırdı.
+static func effective_skill(c: Character, area_key: String) -> float:
+	if c == null:
+		return 0.0
+	# İzindeki ya da eğitimdeki çalışanın günlük katkısı SIFIRDIR (§4.5, §8.6).
+	if c.status != HRConstants.STATUS_ACTIVE:
+		return 0.0
+	var points: float = float(int(c.role_stats.get(area_key, 0)))
+	if points <= 0.0:
+		return 0.0
+	# §4.3 alan katsayısı: ana 1,0 · ikincil 0,8 · alanı yok 0.
+	var area_coef: float = HRConstants.area_fatigue_mult(c.role, area_key)
+	if c.category != "founder" and not HRConstants.can_hold_area(c.role, area_key, c.category):
+		return 0.0
+	# §12.1 odak katsayısı: tek iş 1,00 · iki iş 0,50, her iki işe AYRI AYRI.
+	var focus: float = HRConstants.focus_mult(job_count(c))
+	# §7 moral bandı. §2: KURUCUYA UYGULANMAZ — morali yoktur; diğer bütün çarpanlar
+	# onda da aynen geçerlidir.
+	var morale_band: float = 1.0
+	if c.category == "employee":
+		morale_band = HRConstants.morale_band_mult(c.morale)
+	# §6 huy çarpanları. TİTİZ hız cezası öder, GÖZÜ YÜKSEKTE verimi yüksektir.
+	var traits: float = HRConstants.trait_mult(c.traits, "speed_mult") \
+		* HRConstants.trait_mult(c.traits, "output_mult")
+	return points * area_coef * focus * morale_band * traits
+
+
+## §4.2 liderlik bonusu — ALANIN TOPLAMINA, yarım yıldız başına +%1 (beş yıldızda +%10).
+## Lider yoksa kurucunun Liderliği okunur: "Lideri olmayan alanların moral iklimi kurucunun
+## Liderliğinden okunur" (§4.2) ve çıktı tarafı da aynı kaynağı izler.
+static func leadership_output_mult(lead_leadership: int) -> float:
+	return 1.0 + HRConstants.LEAD_OUTPUT_PER_POINT * float(clampi(lead_leadership, 0, HRConstants.AREA_MAX))
+
+
+## Bir ALANIN toplam etkin çıktısı — §4.5 × §4.2. Bu, "kaç kişilik iş çıkıyor" sorusunun
+## tek cevabı; her masa kendi toplamını burada alır.
+static func area_output(area_key: String, people: Array = []) -> float:
+	var roster: Array = people
+	if roster.is_empty():
+		roster = CharacterRegistry.get_all()
+	var total: float = 0.0
+	for c in roster:
+		if c == null or (c.category != "employee" and c.category != "founder"):
+			continue
+		total += effective_skill(c, area_key)
+	if total <= 0.0:
+		return 0.0
+	return total * leadership_output_mult(GameState.get_founder_skill(HRConstants.SKILL_LEADERSHIP))
+
+
+## §4.5'in ikinci yarısı: "günlük katkı = etkin çıktı × kişinin o günkü çalışma saati".
+## Çalışma saati formülün İÇİNDE değil DIŞINDADIR ve bu ayrım kasıtlı: yetenek, alan, odak,
+## moral ve liderlik kişinin bir SAATTE ne kadar iş çıkardığını belirler; çalışma süresi
+## KAÇ SAAT çıkardığını. İki soru karıştırılmaz.
+static func daily_contribution(c: Character, area_key: String) -> float:
+	if c == null or c.status != HRConstants.STATUS_ACTIVE:
+		return 0.0
+	return effective_skill(c, area_key) * float(WorkHoursSystem.hours_for(c))
+
 static func area_sum_for(area_id: String) -> float:
 	## O ALANA atanmış herkesin, o alandaki puanlarının ÇARPANLI toplamı. Ürün ve Satış
 	## formüllerinin ortak girdisi — rol değil ATAMA sayar.

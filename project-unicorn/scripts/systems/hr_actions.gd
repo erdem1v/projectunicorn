@@ -179,13 +179,13 @@ static func preview_promotion(emp: Character, pct: int) -> Dictionary:
 				HRConstants.job_title(emp.role, emp.level),
 				HRConstants.job_title(emp.role, next_level)),
 			_delta(TranslationServer.translate("HR_ROW_SALARY"),
-				HRConstants.money_tr(before), HRConstants.money_tr(after),
+				_money(before), _money(after),
 				TranslationServer.translate("HR_ROW_MONTHLY_NOTE").format({
-					"amount": HRConstants.money_tr(after - before)})),
+					"delta": _signed_money(after - before)})),
 			_delta(TranslationServer.translate("HR_ROW_MORALE"),
 				str(emp.morale), str(emp.morale + morale_gain)),
 			_delta(TranslationServer.translate("HR_ROW_PAYROLL"),
-				HRConstants.money_tr(payroll), HRConstants.money_tr(payroll - before + after)),
+				_money(payroll), _money(payroll - before + after)),
 			_rule(TranslationServer.translate("HR_PROMOTION_PERMANENT")),
 		],
 	}

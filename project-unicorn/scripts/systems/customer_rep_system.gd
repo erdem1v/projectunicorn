@@ -77,7 +77,10 @@ static func throughput_of(rep: Character) -> float:
 	if rep == null:
 		return 0.0
 	return B2BConstants.CS_THROUGHPUT_BASE \
-		+ float(int(rep.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0))) * B2BConstants.CS_THROUGHPUT_PER_PACE
+		# §4.5: kişinin ne ürettiği TEK EVDE (HRSystem.effective_skill) — alan katsayısı,
+		# odak, moral bandı ve huy çarpanları orada. Masanın kendi şekli (taban + kişi başı
+		# kapasite, ve _ranked'ın istif sırası) burada kalıyor.
+		+ HRSystem.effective_skill(rep, HRConstants.AREA_CUSTOMER_SUCCESS) * B2BConstants.CS_THROUGHPUT_PER_PACE
 
 
 static func desk_throughput() -> float:

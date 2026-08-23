@@ -326,6 +326,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_migration_v6_to_v7_drops":  fail = _case_save_migration_v6_to_v7_drops()
 		"work_hours_three_scopes":        fail = _case_work_hours_three_scopes()
 		"promotion_and_raise_gate":       fail = _case_promotion_and_raise_gate()
+		"effective_skill_formula":        fail = _case_effective_skill_formula()
 		# --- Trait seti · Build Bar · Görevler (2026-08-21). Beşi de ÖNCEKİ motora karşı DÜŞER.
 		"build_pauses_when_all_busy":     fail = _case_build_pauses_when_all_busy()
 		"build_resumes_when_one_frees":   fail = _case_build_resumes_when_one_frees()
@@ -2130,24 +2131,36 @@ static func _case_iter_zero_staff_neutrality_and_axis_lock() -> String:
 	c = ProductSystem.iteration_axis_ceilings()
 	var des_exp: float = float(c["experience"]) - base
 	var des_inno: float = float(c["innovation"]) - base
+	# ÜÇÜNCÜ HÂL, rev 11 §12.0: atama birimi ALAN DEĞİL İŞ. Build ekibi Ürün · Tasarım ·
+	# Yazılım alanlarınca taşınır (§12.0) ve tasarımcı ikisini tutar — Tasarım ana, Ürün
+	# ikincil (§4.4). Yani Build'deki bir tasarımcı İKİ tavanı da oynatır, ama ikincilini
+	# §4.3'ün ×0,8'iyle. "Tasarımcıyı Ürün'e mi koyayım" kararı ortadan kalktı; karar artık
+	# "Build'de mi değil mi" ve bedeli §12.1'in odak katsayısıyla ödeniyor.
 	if des_exp <= 0.0:
-		return "a designer did not raise the Deneyim ceiling, which rev 2 §2 gives to Tasarım"
-	if absf(des_inno) > 0.001:
-		return "a designer raised İnovasyon (%.2f) without being assigned to Ürün" % des_inno
+		return "a designer did not raise the Deneyim ceiling, which §4.4 gives to Tasarım"
+	if des_inno <= 0.0:
+		return "a designer did not raise İnovasyon — §12.0's Build carries Ürün too"
+	# İKİNCİL DAHA AZ. §4.3'ün ×0,8'i tam da burada okunmalı, yoksa ana/ikincil ayrımı
+	# yalnız bir etiket olur.
+	if des_inno >= des_exp:
+		return "the secondary area contributed as much as the key one (%.2f vs %.2f) — §4.3 wants 0,8" % [
+			des_inno, des_exp]
 	if absf(float(c["stability"]) - base) > 0.001:
 		return "a designer raised Kararlılık; Yazılım is not an area they can hold"
-	# ...ve oyuncu onu İKİNCİL alanına TAŞIRSA İnovasyon gerçekten oynar. Kapı bir duvar
-	# değil, bir KARAR: ana alanını bırakıyor.
-	CharacterRegistry.unassign_area("char_iter_zs_designer", HRConstants.AREA_DESIGN)
-	if CharacterRegistry.assign_area("char_iter_zs_designer", HRConstants.AREA_PRODUCT) != "":
-		return "a designer was refused Ürün, which is their SECONDARY area"
+	# ...ve KARAR HÂLÂ BİR KARAR, yalnız granülerliği değişti. rev 2'de oyuncu tasarımcıyı
+	# Tasarım'dan Ürün'e taşıyordu; §12.0'da ikisi de AYNI İŞİN (Build) taşıdığı alanlar, yani
+	# öyle bir hamle yok. Kalan hamle Build'den ÇIKARMAK, ve bedeli ikisini birden kaybetmek:
+	# tasarımcının tuttuğu her iki alan da o işten geliyordu.
+	#
+	# §12.2: "Boş iş için ayrı bir uyarı satırı yoktur ... matrisin kendisinde zaten görünür."
+	# Buradaki ölçüm de o: boşalan iş sıfır üretir, ve bu okunur.
+	CharacterRegistry.clear_jobs("char_iter_zs_designer")
 	c = ProductSystem.iteration_axis_ceilings()
-	if float(c["innovation"]) - base <= 0.0:
-		return "moving the designer onto Ürün did not raise İnovasyon"
 	if absf(float(c["experience"]) - base) > 0.001:
-		return "the designer still raises Deneyim after leaving Tasarım — the move cost nothing"
-	CharacterRegistry.unassign_area("char_iter_zs_designer", HRConstants.AREA_PRODUCT)
-	CharacterRegistry.assign_area("char_iter_zs_designer", HRConstants.AREA_DESIGN)
+		return "an unassigned designer still raises Deneyim — the move cost nothing"
+	if absf(float(c["innovation"]) - base) > 0.001:
+		return "an unassigned designer still raises İnovasyon"
+	CharacterRegistry.assign_job("char_iter_zs_designer", HRConstants.JOB_BUILD)
 	# ATAMA KAPISI, alakasız roller: bir test mühendisi ve bir satış temsilcisi kendi
 	# alanlarına doğar ve hiçbir build tavanını kıpırdatmaz.
 	var before_unrelated: Dictionary = ProductSystem.iteration_axis_ceilings().duplicate()
@@ -5980,8 +5993,19 @@ static func _case_sales_overtime_multiplier() -> String:
 		return "lead rate %f, want base %f x overtime %f" % [
 			SalesRepSystem.lead_rate_per_day(), base_rate, mult]
 	HROvertimeSystem.stop(HRConstants.DEPT_SALES)
-	if not is_equal_approx(SalesRepSystem.lead_rate_per_day(), base_rate):
-		return "the lead rate stayed raised after the block stopped"
+	# ÇARPAN GİTTİ — vakanın asıl iddiası bu ve doğrudan ölçülüyor.
+	if not is_equal_approx(HROvertimeSystem.speed_multiplier(HRConstants.DEPT_SALES), 1.0):
+		return "the overtime multiplier survived the stop"
+	# ORANIN base_rate'e BİREBİR dönmesi ARTIK BEKLENMEZ ve bu doğru: stop() faturalanmamış
+	# gecenin moral bedelini de iniyor, ve rev 11'de moral ÇIKTIYI etkiliyor (§7 bantları,
+	# §4.5'in çarpanlarından biri). Önceden hiçbir üretim formülü morali okumuyordu, o
+	# yüzden oran birebir geri dönüyordu. Doğru iddia: hızlandırma kalktı, ve kalan fark
+	# YALNIZ morale ait, yani oran base_rate'i AŞMIYOR.
+	var after: float = SalesRepSystem.lead_rate_per_day()
+	if after > base_rate + 0.0001:
+		return "the lead rate stayed raised after the block stopped (%f > %f)" % [after, base_rate]
+	if after >= base_rate * mult - 0.0001:
+		return "the lead rate did not come down from the boosted value"
 	return ""
 
 
@@ -7569,6 +7593,114 @@ static func _case_leadership_is_trainable() -> String:
 
 
 
+
+
+static func _case_effective_skill_formula() -> String:
+	# §4.5 KANONİK FORMÜL, beş çarpanın hepsi elle hesaplanmış değerlere karşı sabitleniyor:
+	#
+	#   etkin çıktı = yıldız × alan katsayısı × odak × moral bandı × huy
+	#
+	# Liderlik BİLEREK burada değil: §4.2 onu ALANIN TOPLAMINA uyguluyor, kişi başına değil.
+	# Ayrı bir iddiayla aşağıda ölçülüyor.
+	#
+	# BİRİM HAM PUAN, YILDIZ DEĞİL. §4.1 iki ham puanı bir yıldıza çeviriyor, yani ikisi
+	# sabit bir katsayıyla ayrışıyor ve formülün ŞEKLİ aynı; yıldıza geçmek her çıktıyı
+	# yarıya indirir ve puana göre kalibre edilmiş her aşağı akış sabitini kaydırırdı.
+	#
+	# FALSİFİKASYON: effective_skill'den moral bandı satırını sil → "morale band" iddiası
+	# FAIL. focus_mult'u 1.0 sabitle → "two jobs" iddiası FAIL.
+	GameState.set_flag("debug_hr_force", "fail")
+	var dev: Character = _make_employee("eff_dev", "Eff Dev", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 4000, 60, 8, 2)
+	_park_leave([dev])
+	dev.role_stats[HRConstants.AREA_ENGINEERING] = 8
+	dev.role_stats[HRConstants.AREA_QA] = 4
+	dev.traits = ["picks_it_up_fast"]   # hiçbir hız/çıktı çarpanı taşımaz
+
+	# --- 1 · ANA ALAN, tek iş, nötr moral (50–80) ---
+	# 8 × 1,0 × 1,0 × 1,0 × 1,0 = 8,0
+	var v: float = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
+	if absf(v - 8.0) > 0.001:
+		return "ana alan: %.3f, want 8.000" % v
+
+	# --- 2 · İKİNCİL ALAN ×0,8 (§4.3) ---
+	# 4 × 0,8 = 3,2. 0,6 DEĞİL: zayıflık zaten yıldızlarda yazılı, katsayı onu ikinci kez kesmez.
+	v = HRSystem.effective_skill(dev, HRConstants.AREA_QA)
+	if absf(v - 3.2) > 0.001:
+		return "ikincil alan: %.3f, want 3.200" % v
+
+	# --- 3 · ODAK KATSAYISI: iki iş → 0,50, HER İKİ İŞE AYRI AYRI (§12.1) ---
+	if CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT) != "":
+		return "could not add the second job"
+	v = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
+	if absf(v - 4.0) > 0.001:
+		return "two jobs: %.3f, want 4.000 (8 × 0,50)" % v
+	# §12.1: "İki işe koymak toplamda ASLA daha fazla iş çıkarmaz." En iyi hâlde tam olarak
+	# bir kişilik iş çıkar; bu bir üretim hilesi değil bir KAPSAMA aracıdır.
+	var split_total: float = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING) * 2.0
+	if split_total > 8.0 + 0.001:
+		return "splitting produced MORE than one person's work (%.3f > 8.0)" % split_total
+	CharacterRegistry.unassign_job(dev.id, HRConstants.JOB_SUPPORT)
+
+	# --- 4 · MORAL BANDI (§7) ---
+	# Bu, rev 11'in en büyük davranış değişikliği: ÖNCEDEN HİÇBİR üretim formülü
+	# Character.morale okumuyordu.
+	CharacterRegistry.set_morale(dev.id, 90)          # 80+ → +%10
+	v = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
+	if absf(v - 8.8) > 0.001:
+		return "high morale band: %.3f, want 8.800" % v
+	CharacterRegistry.set_morale(dev.id, 40)          # 50 altı → −%15
+	v = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
+	if absf(v - 6.8) > 0.001:
+		return "low morale band: %.3f, want 6.800" % v
+	CharacterRegistry.set_morale(dev.id, 60)          # nötr
+
+	# --- 5 · HUY ÇARPANI (§6) ---
+	dev.traits = ["double_checker"]                   # TİTİZ: speed_mult 0,85
+	v = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
+	if absf(v - 6.8) > 0.001:
+		return "TİTİZ hız cezası: %.3f, want 6.800" % v
+	dev.traits = ["picks_it_up_fast"]
+
+	# --- ALANI YOK → 0 (§4.4) ---
+	if HRSystem.effective_skill(dev, HRConstants.AREA_SALES) != 0.0:
+		return "a developer produced Satış output — §4.4 says the product side never crosses"
+
+	# --- EDİLGEN → 0 (§4.5, §8.6) ---
+	CharacterRegistry.set_status(dev.id, HRConstants.STATUS_TRAINING)
+	if HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING) != 0.0:
+		return "an in-training employee still produced"
+	CharacterRegistry.set_status(dev.id, HRConstants.STATUS_ACTIVE)
+
+	# --- §2 KURUCUYA MORAL BANDI UYGULANMAZ ---
+	var founder: Character = CharacterRegistry.get_founder()
+	founder.role_stats[HRConstants.AREA_ENGINEERING] = 6
+	CharacterRegistry.set_morale(founder.id, 10)      # bandı olsaydı −%15 yerdi
+	var fv: float = HRSystem.effective_skill(founder, HRConstants.AREA_ENGINEERING)
+	if absf(fv - 6.0 * HRConstants.focus_mult(HRSystem.job_count(founder))) > 0.001:
+		return "the founder took a morale band — §2 says he has no morale (%.3f)" % fv
+
+	# --- §4.2 LİDERLİK ALANIN TOPLAMINA, KİŞİ BAŞINA DEĞİL ---
+	# Yarım yıldız başına +%1, beş yıldızda +%10. Kişi başına katlansaydı kadro sayısıyla
+	# çarpılırdı ve iki kişilik bir ekipte bonus iki kat okunurdu.
+	if absf(HRSystem.leadership_output_mult(10) - 1.10) > 0.001:
+		return "five stars of Liderlik gave %.3f, want 1.100" % HRSystem.leadership_output_mult(10)
+	if absf(HRSystem.leadership_output_mult(0) - 1.0) > 0.001:
+		return "zero Liderlik was not neutral"
+
+	# --- §4.5'in ikinci yarısı: günlük katkı = etkin çıktı × ÇALIŞMA SAATİ ---
+	# Saat formülün İÇİNDE değil DIŞINDA: yetenek bir SAATTE ne çıktığını, süre KAÇ SAAT
+	# çıktığını belirler.
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
+	var per_hour: float = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
+	var daily: float = HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING)
+	if absf(daily - per_hour * float(HRConstants.WORK_HOURS_DEFAULT)) > 0.001:
+		return "daily contribution is not hourly × hours (%.3f vs %.3f)" % [daily, per_hour]
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MAX)
+	var longer: float = HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING)
+	if longer <= daily:
+		return "a longer day did not produce more (§8.4: the return IS the hour)"
+	return ""
 
 static func _case_promotion_and_raise_gate() -> String:
 	# §9.2 ZAM BEKLEME SÜRESİ + §9.3 TERFİ. İkisi birlikte ölçülüyor çünkü terfi bir zammı

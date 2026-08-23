@@ -522,18 +522,11 @@ static func _phase_area_sum(phase: String, lead_id: String) -> float:
 		if c.category == "founder":
 			continue   # kurucunun katkısı _speed_for_phase'de kendi katsayısıyla ayrı
 		var area_key: String = String(row["area"])
-		var contribution: float = float(int(c.role_stats.get(area_key, 0)))
-		# §5: ana alanı dışında çalışmak daha yorucu, iki işte olmak verimi düşürür.
-		# Çarpan BU FAZIN alanından ölçülüyor, işin genelinden değil — bir yazılımcının
+		# §4.5 KANONİK FORMÜL. Burada ayrı bir hız hesabı KURULMAZ — alan katsayısı, odak,
+		# moral bandı ve huy çarpanları hepsi HRSystem.effective_skill'in içinde ve tek evde.
+		# Çarpan BU FAZIN alanından ölçülüyor, işin genelinden değil: bir yazılımcının
 		# TASARIM fazına katkısı onun ikincil işidir ve bedelini orada öder.
-		contribution *= HRSystem.output_mult_for_area(c, area_key)
-		# TRAIT ÇARPANLARI (2026-08-21). İkisi de aynı yönde çarpılır ve bir kişi
-		# ikisini birden taşıyamaz (TRAIT_COUNT = 1), ama formül yine de çarpımsal:
-		# TİTİZ yavaş çalışır (0.85), GÖZÜ YÜKSEKTE hızlı (1.15). Emekli
-		# `no_team_bonus` ve `non_lead_mult` ROL kapısıydı; bunlar düz çarpan.
-		contribution *= HRConstants.trait_mult(c.traits, "speed_mult")
-		contribution *= HRConstants.trait_mult(c.traits, "output_mult")
-		total += contribution
+		total += HRSystem.effective_skill(c, area_key)
 	return total
 
 
@@ -798,8 +791,7 @@ static func _build_area_sum(area_key: String) -> float:
 	for c in HRSystem.assigned_to(area_key):
 		if c.category == "founder":
 			continue
-		total += float(int(c.role_stats.get(area_key, 0))) \
-			* HRSystem.output_mult_for_area(c, area_key)
+		total += HRSystem.effective_skill(c, area_key)   # §4.5
 	return total
 
 
