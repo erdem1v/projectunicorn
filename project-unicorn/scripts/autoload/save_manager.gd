@@ -374,7 +374,7 @@ func reset_all_owners() -> void:
 	ProductSystem.reset()
 	FinanceSystem.reset()
 	PhaseGateSystem.reset()
-	HRSystem.reset()               # → HRMoraleSystem (_pending + RNG key) + HROvertimeSystem
+	HRSystem.reset()               # → HRMoraleSystem (_pending + RNG key)
 
 	# 5. The four sitting-scoped systems — reset, never serialised (see the header).
 	PitchSystem.reset()
@@ -794,23 +794,21 @@ func _migrate_assignments_to_areas(state: Dictionary) -> void:
 		if out.size() <= 1:
 			d["overload_days"] = 0
 		moved += 1
-	# Lider koltukları da iş kimliğiyle saklanıyordu; aynı eşlemeyle taşınır. Alan
-	# kıvrımlı olduğu için (Destek+Hesap → tek alan) iki koltuk çakışırsa İLKİ kalır:
-	# seçim zaten türetilmiş lidere düşebilir, yanlış birini zorlamaktan iyidir.
-	var leads: Dictionary = state.get("job_leads", {}) as Dictionary
-	if typeof(leads) == TYPE_DICTIONARY and not leads.is_empty():
-		var rebuilt_leads: Dictionary = {}
-		for job_id in leads.keys():
-			# Koltuğu tutan KİŞİNİN sayılarıyla çözülüyor: `build` üç alanla besleniyordu ve
-			# boş bir stats ile çözülseydi koltuk her zaman Ürün'e düşerdi — lider, yönettiği
-			# ekipten başka bir alana taşınırdı. (save_migration_v4_to_v5 bunu yakaladı.)
-			var holder: Dictionary = _character_row(state, String(leads[job_id]))
-			var area_id: String = _legacy_job_to_area(String(job_id),
-				holder.get("role_stats", {}) as Dictionary)
-			if area_id != "" and not rebuilt_leads.has(area_id):
-				rebuilt_leads[area_id] = leads[job_id]
-		state["area_leads"] = rebuilt_leads
+	# LİDER KOLTUKLARI YENİDEN KURULMUYOR, SİLİNİYOR. §4.2 lideri YAPIM BAŞINA veriyor
+	# (Ürün'ün seçtiği SORUMLU) ve lidersiz alanı kurucunun Liderlik'ine bağlıyor; alan
+	# başına oturan koltuk rev 11'de yok.
+	#
+	# Bu blok ayrıca kayıt göçünün İKİNCİ adres hatasıydı ve hiç fark edilmemişti: `job_leads`
+	# top-level `state`'ten OKUNUYOR ve `area_leads` top-level `state`'e YAZILIYORDU, oysa
+	# GameState değişkenleri `state["game_state"]` altında saklanıyor (save_codec). Yani okuma
+	# hiçbir zaman bir şey bulmadı ve yazma hiçbir zaman geri yüklenmedi. Vakası geçiyordu
+	# çünkü elle DÜZ bir sözlük kuruyordu — tam olarak §10'un "bir göç, YAZANIN yazdığı şekli
+	# okumalıdır" dersi.
 	state.erase("job_leads")
+	var gs_v5: Variant = state.get("game_state", null)
+	if gs_v5 is Dictionary:
+		(gs_v5 as Dictionary).erase("job_leads")
+		(gs_v5 as Dictionary).erase("area_leads")
 	if moved > 0 and OS.is_debug_build():
 		print("[SaveManager] v4→v5: %d character(s) moved onto area assignments" % moved)
 
@@ -937,7 +935,11 @@ func _migrate_to_rev11(state: Dictionary) -> void:
 
 	# --- şirket kapsamı: göç eden kayıtta yok, tabana oturur ---
 	var gs: Dictionary = state.get("game_state", {}) as Dictionary
-	if typeof(gs) == TYPE_DICTIONARY and not gs.is_empty():
+	# BOŞ BİR game_state BLOĞU DA TOHUMLANIR. Kapı `not gs.is_empty()` diyordu ve bu, hiç
+	# GameState yazmamış bir v6 kaydını saatler alanı NULL olarak yüklüyordu — sonra
+	# WorkHoursSystem bir tamsayı yerine null okuyordu. Boş sözlük "alan yok" demektir,
+	# "tohumlama" değil.
+	if typeof(gs) == TYPE_DICTIONARY:
 		if not gs.has("company_start_hour"):
 			gs["company_start_hour"] = HRConstants.START_HOUR_DEFAULT
 		if not gs.has("company_work_hours"):

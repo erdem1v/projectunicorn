@@ -832,16 +832,20 @@ func _layout_papers() -> void:
 # sınırında (saatlik titreme yapısal olarak imkânsız: aynı durumda tween atılmaz).
 # =========================================================================
 
-func _any_overtime_active() -> bool:
-	for dept in HRConstants.DEPARTMENTS:
-		if HROvertimeSystem.is_active(dept):
-			return true
-	return false
+## §8.1: "MESAİ BİTİMİNDE HAVA KARARIR. Monitör kapanmaz — gece saatlerinde kriz olayı
+## düşebilmelidir. Karanlık ŞİRKET PENCERESİNE göre çizilir; istisna taşıyan kişilerin
+## bireysel saatleri sahneyi OYNATMAZ." Departman blokları gitti; pencerenin kapanışı
+## şirketin başlangıç saati + şirket süresidir, ve bir kişinin istisnası odayı karartmaz.
+func _past_company_close(hour: int) -> bool:
+	var close_h: int = WorkHoursSystem.start_hour() + GameState.company_work_hours
+	if close_h >= 24:
+		return false      # pencere gece yarısını aşıyorsa gün içinde kapanış yok
+	return hour >= close_h
 
 
 func _light_state_for_hour(hour: int) -> StringName:
-	# Mesai bloğu GECE'yi zorlar (task §3 kuralı — mesai gecesi lambası).
-	if _any_overtime_active():
+	# Şirket penceresi kapandıktan sonra GECE (§8.1).
+	if _past_company_close(hour):
 		return &"night"
 	if hour >= 19 or hour <= 5:
 		return &"night"
@@ -1346,16 +1350,15 @@ func _refresh_postit() -> void:
 	_postit_line.text = tr("ODA_BOARD_POSTIT").format({"name": target_name})
 
 
+## ÇİP ARTIK ÇİZİLMİYOR. Taşıdığı sayı bloğun GÜN İNDEKSİYDİ ve blok sistemi kalktı —
+## §8.2'de mesai bir blok değil, kişinin devraldığı saatin sonucu, ve "çalışma saatleri
+## modali aynı zamanda mesainin TEK GÖRÜNÜRLÜK YÜZEYİDİR."
+##
+## DÜĞÜM KALDI, GÖRÜNMEZ. Silmek `--theme-audit=oda`'nın satır sayısını oynatırdı ve o
+## kapı bu turda BAYT-AYNI kalmak zorunda; düğümün emekliye ayrılması ODA'nın kendi
+## tasarım turunun kararıdır ve park edildi.
 func _refresh_overtime_chip() -> void:
-	# day_index blok başladığı gün 0 dönebilir (ilk gece daily tick'te sayılır) —
-	# aktif blokta çip HEP görünsün diye taban 1'e kelepçelenir.
-	var max_day: int = 0
-	for dept in HRConstants.DEPARTMENTS:
-		if HROvertimeSystem.is_active(dept):
-			max_day = maxi(max_day, maxi(1, HROvertimeSystem.day_index(dept)))
-	_overtime_chip.visible = max_day > 0
-	if max_day > 0:
-		_overtime_label.text = tr("ODA_WINDOW_OVERTIME").format({"n": max_day})
+	_overtime_chip.visible = false
 
 
 # =========================================================================

@@ -78,7 +78,6 @@ const SOURCE_MAP := {
 	"ev_b2b_escalation_": "factory:b2b_sales_system:170 (cs_escalation)",
 	"ev_b2b_request_": "factory:customer_rep_system:308 (cs_request)",
 	"ev_hr_resign_": "factory:hr_morale_system:498 (resignation)",
-	"ev_hr_valve_": "factory:hr_overtime_system:373 (overtime_valve)",
 	"ev_hr_calm_stretch": "factory:hr_morale_system:526 (calm)",
 	"ev_hr_big_signing": "factory:hr_morale_system:526 (big_signing)",
 	"ev_hr_ship_glow": "factory:hr_morale_system:526 (ship_glow)",

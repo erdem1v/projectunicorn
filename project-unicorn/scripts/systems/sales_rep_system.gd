@@ -75,7 +75,7 @@ static func _diminished_sum(axis: String) -> float:
 		# çarpanlar kişinin KENDİ verimini değiştiriyor, istifini değil.
 		# §4.5: kişinin ne ürettiği TEK EVDE. Bu masanın kendi şekli — istif azalması —
 		# burada kalıyor; §4.5 "bu kişi ne üretiyor"u değiştirir, "bu masa nasıl toplar"ı değil.
-		total += weight * HRSystem.effective_skill(c, axis)
+		total += weight * HRSystem.daily_contribution(c, axis)
 		weight *= B2BConstants.REP_STACK_DECAY
 	return total
 
@@ -87,18 +87,13 @@ static func _top_expertise() -> int:
 	return int(reps[0].role_stats.get(HRConstants.AREA_SALES, 0))
 
 
-static func _overtime_mult() -> float:
-	# Exactly 1.0 when no Satış block runs. Before Task 2b a player could start one, pay for it
-	# in cash AND morale, and receive nothing: HROvertimeSystem.speed_multiplier was only ever
-	# read with DEPT_PRODUCT_DEV. This is the sales desk's half of closing that.
-	return HROvertimeSystem.speed_multiplier(HRConstants.DEPT_SALES)
-
-
 # --- BULMA: the pipeline ---
 
 static func lead_rate_per_day() -> float:
 	# Public so the UI and the smoke suite can read the same number the tick uses.
-	return B2BConstants.LEAD_PER_PACE_POINT * _diminished_sum(HRConstants.AREA_SALES) * _overtime_mult()
+	# §8.4: AYRI BİR MESAİ ÇARPANI YOK. Saatin getirisi _diminished_sum'ın içinde —
+	# HRSystem.daily_contribution her satışçının katkısını devraldığı saatle ölçüyor.
+	return B2BConstants.LEAD_PER_PACE_POINT * _diminished_sum(HRConstants.AREA_SALES)
 
 
 static func _tick_lead_generation() -> void:
@@ -164,7 +159,7 @@ static func _warm_gain(p: Prospect, expertise_sum: float) -> float:
 
 
 static func _tick_prospect_progress() -> void:
-	var expertise_sum: float = _diminished_sum(HRConstants.AREA_SALES) * _overtime_mult()
+	var expertise_sum: float = _diminished_sum(HRConstants.AREA_SALES)
 	if expertise_sum <= 0.0:
 		return
 	# Snapshot: _try_auto_close removes from the registry, and get_all() already hands back a

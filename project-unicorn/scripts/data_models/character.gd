@@ -37,7 +37,7 @@ extends Resource
 # bugünkü davranışı korur.
 @export var portrait_path: String = ""
 # NOTE: `department` is deliberately NOT stored — it is derived from `role` via
-# HRConstants.department_of() / section_of() so the two can never fall out of sync.
+# HRConstants.ROLE_GROUP so the two can never fall out of sync.
 
 # --- Compensation (used now — feeds Finance via CharacterRegistry pull) ---
 @export var monthly_salary: int = 0
@@ -86,7 +86,7 @@ extends Resource
 # BOŞ dizi = "Boşta": kişi durur ve maaş yer. Bu bir TÜRETİLMİŞ durumdur, saklanan bir
 # bayrak değil — HRSystem.is_idle. Kurucu 0 ya da 1 iş taşır (ch. 02 §5, sert kilit);
 # çalışan 1'den fazlasını taşıyabilir ve o AŞIRI YÜKLENMEDİR.
-@export var assigned_jobs: Array[String] = []   # HRConstants.ASSIGNABLE alt kümesi
+@export var assigned_jobs: Array[String] = []   # HRConstants.AREAS alt kümesi (türetilmiş ayna)
 @export var overload_days: int = 0              # 2+ işte geçirilen ardışık gün; 1 ya da 0 işte sıfırlanır
 
 # --- §12.0 ATANMIŞ İŞLER (rev 11) ---
@@ -107,7 +107,7 @@ extends Resource
 # Dolduğunda o alan +1 olur ve sayaç sıfırlanır (ÜCRETSİZ kanal). Ücretli eğitim ayrı
 # kanaldır: oyuncu alanı seçer, ücret kademelidir, deneyim şartı YOKTUR (§8).
 # Kurucu HARİÇ (kurucu gelişimi ayrı, park edilmiş sistem).
-@export var area_experience: Dictionary = {}    # {HRConstants.AREAS üyesi: 0..EXPERIENCE_MAX}
+@export var area_experience: Dictionary = {}    # EMEKLİ (§5.1 tek bar) — yalnız göç okur
 @export var trainings_done: Dictionary = {}     # {alan_id: kaç kez eğitildi} — §8 azalan getiri
 @export var training_days_left: int = 0      # >0 iken çalışan EDİLGEN (İzinde gibi); 0 = eğitimde değil
 @export var training_area: String = ""       # eğitim bitince hangi alan +1 olacak; "" = eğitimde değil

@@ -219,8 +219,10 @@ func _compute_structure_key() -> String:
 	# yoksa TÜKENİYOR eşiği geçildiğinde kartın çerçevesi ve sırası güncellenmez.
 	var parts := PackedStringArray()
 	parts.append("%s|%d" % [HRSearchSystem.get_state(), HRSearchSystem.days_waiting()])
-	for dept_id in HRConstants.DEPARTMENTS:
-		parts.append("%s%d" % [dept_id, HROvertimeSystem.day_index(String(dept_id))])
+	# ÇALIŞMA SAATLERİ kart şeklini değiştirir: DURUM sütunundaki saat istisnası etiketi ve
+	# başlıktaki çip ikisi de bu iki sayıyı okuyor (§8.5, §13.3). Eskiden burada blokların
+	# gün indeksleri vardı; bloklar kalktı.
+	parts.append("wh%d|%d" % [GameState.company_work_hours, WorkHoursSystem.override_count()])
 	# Bir MT'nin taşıdığı hesap sayısı kartın ÜSTÜNDE yazıyor, yani kart şeklinin parçası.
 	# Anahtara girmezse atama değişince satır bayat kalır (moral gibi yerinde boyanan bir
 	# şey değil — kart yeniden kurulmalı).
@@ -472,9 +474,6 @@ func _confirm_training(emp: Character) -> void:
 ## Bir KADRO GRUBU: amber başlık + hairline + satırlar. Onaylı tasarımın dört düz bandı
 ## (9b), eski departman + alt-bölüm iki seviyesinin yerine.
 ##
-## EK MESAİ hâlâ DEPARTMAN başına: HROvertimeSystem üç departman sayıyor, dört grup değil.
-## Düğme o departmanın İLK grup başlığına asılır (HRConstants.overtime_dept_for_group) —
-## iki başlıkta iki kez göstermek oyuncuya iki ayrı mesai bloğu varmış gibi okunurdu.
 func _add_group(group_id: String) -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 10)
@@ -649,21 +648,6 @@ func _on_assignment_toggled(char_id: String, job_id: String, currently_on: bool)
 	_rebuild_forced()
 
 
-func _overtime_control(dept_id: String) -> Control:
-	# Aktifken şerit ("EK MESAİ · N. GÜN"), değilken aksiyon butonu. İkisi de aynı
-	# paneli açıyor; panel aktif blokta DURDUR gösteriyor (erken durdurma).
-	var anchor_label: String = tr("HR_OVERTIME_CHIP")
-	if HROvertimeSystem.is_active(dept_id):
-		anchor_label = tr("ODA_WINDOW_OVERTIME").format({"n": HROvertimeSystem.day_index(dept_id)})
-	var btn := Button.new()
-	btn.text = anchor_label
-	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	if HROvertimeSystem.is_active(dept_id):
-		btn.theme_type_variation = &"CommitButton"
-	btn.pressed.connect(func() -> void: _open_overtime(dept_id, btn))
-	return btn
-
-
 # --- Akışlar ---------------------------------------------------------------
 
 func _open_atlas() -> void:
@@ -694,16 +678,6 @@ func _on_atlas_changed() -> void:
 	# Arayış başladı / işe alım oldu / dosyalar iade edildi. Motorun bu geçişler için
 	# sinyali yok (hr_search_state_changed mevcut değil), o yüzden modal haber veriyor.
 	_refresh()
-
-
-func _open_overtime(dept_id: String, anchor: Control) -> void:
-	var pop: HRPopover = HRPopover.mount(self)
-	if pop == null:
-		return
-	HROvertimePanel.fill(dept_id, pop.body(), func() -> void:
-		pop.close()
-		_refresh())
-	pop.open_at(anchor)
 
 
 func _on_card_action(emp_id: String, action: String, anchor: Control) -> void:

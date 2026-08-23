@@ -240,7 +240,11 @@ static func capacity_total() -> int:
 	# TÜM Ürün Geliştirme rolleri sayılır, yalnız yazılımcılar değil: bir test uzmanı da bir
 	# tasarımcı da build işinin içinde ve aynı anda başka bir işe koşulamaz. Eskiden yalnız
 	# yazılımcı sayılıyordu, yani bir tasarımcı işe almak kapasiteye hiçbir şey katmıyordu.
-	return CAPACITY_BASE + CharacterRegistry.count_active_in_department(HRConstants.DEPT_PRODUCT_DEV)
+	# §13.1: departman taksonomisi kalktı, kadro grubu kaldı. AYNI DÖRT ROL — product_dev
+	# tam olarak product_design ∪ development'tı, o yüzden kapasite havuzu bir kişi bile
+	# değişmedi; yalnız kimin kimle olduğunu söyleyen tablo tekleşti.
+	return CAPACITY_BASE + CharacterRegistry.count_active_in_groups(
+		[HRConstants.GROUP_PRODUCT_DESIGN, HRConstants.GROUP_DEVELOPMENT])
 
 
 static func capacity_demand() -> int:
@@ -522,11 +526,11 @@ static func _phase_area_sum(phase: String, lead_id: String) -> float:
 		if c.category == "founder":
 			continue   # kurucunun katkısı _speed_for_phase'de kendi katsayısıyla ayrı
 		var area_key: String = String(row["area"])
-		# §4.5 KANONİK FORMÜL. Burada ayrı bir hız hesabı KURULMAZ — alan katsayısı, odak,
-		# moral bandı ve huy çarpanları hepsi HRSystem.effective_skill'in içinde ve tek evde.
-		# Çarpan BU FAZIN alanından ölçülüyor, işin genelinden değil: bir yazılımcının
-		# TASARIM fazına katkısı onun ikincil işidir ve bedelini orada öder.
-		total += HRSystem.effective_skill(c, area_key)
+		# §4.5 KANONİK FORMÜL, İKİ YARISIYLA. Burada ayrı bir hız hesabı KURULMAZ — alan
+		# katsayısı, odak, moral bandı ve huy çarpanları effective_skill'in içinde; kişinin
+		# o gün KAÇ SAAT çalıştığı daily_contribution'ın ikinci yarısında (§8.4: "getiri
+		# saatin kendisidir"). Çarpan BU FAZIN alanından ölçülüyor, işin genelinden değil.
+		total += HRSystem.daily_contribution(c, area_key)
 	return total
 
 
@@ -539,7 +543,13 @@ static func _speed_for_phase(phase: String, lead_id: String) -> float:
 	var speed: float = 0.0
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder != null and _founder_on_build():
-		speed = FOUNDER_SPEED_COEF * float(GameState.get_founder_skill(_founder_phase_area(phase)))
+		# §8.3: "Kurucu kısa günün moral faydasından yararlanmaz; ÇIKTISI YİNE DE SAATLE
+		# ORANTILI DÜŞER." Çalışan terimi oranı daily_contribution'ın içinde taşıyor; kurucu
+		# terimi kendi katsayısıyla ayrı hesaplandığı için oranı burada alır. Bu satır
+		# olmadan on bir saatlik bir gün ekibin yalnız bir kısmını hızlandırıyor ve §8.4'ün
+		# "orantılı olarak daha fazla" cümlesi ölçüldüğünde tutmuyor (1,118 × yerine 1,375 ×).
+		speed = FOUNDER_SPEED_COEF * float(GameState.get_founder_skill(_founder_phase_area(phase))) \
+			* HRConstants.hours_output_mult(WorkHoursSystem.hours_for(founder))
 	speed += EMPLOYEE_SPEED_COEF * _phase_area_sum(phase, lead_id)
 	return maxf(SPEED_MIN, speed * _lead_coordination(lead_id))
 
@@ -705,12 +715,13 @@ static func _tick_build_hourly(f: float) -> void:
 	# SÜRE (burn) yine akar — park grameriyle aynı: beklemek bedava değil.
 	var working: bool = b.efor_spent < cap and not in_iter_hold and not build_paused()
 	if working:
-		# Ek mesai KAZANCI yalnız BURADA uygulanır (design doc §7b). f (kapasite çarpanı)
-		# aynı zamanda _accrue_bugs_hourly ve _tick_beta_hourly'ye de gidiyor, o yüzden hız
-		# bonusunu f'ye katlamak bug birikimini ve beta temposunu da sessizce çarpardı.
-		var overtime: float = HROvertimeSystem.speed_multiplier(HRConstants.DEPT_PRODUCT_DEV)
+		# §8.4: EK MESAİ HIZ BONUSU YOK. "Getiri saatin kendisidir. Ayrı bir hız çarpanı
+		# yoktur, ayrı bir bonus yoktur. ... eski koddaki +%30/+%15 hız bonusu
+		# kaldırılmıştır." Saatin getirisi artık team_speed'in İÇİNDE: her kişinin katkısı
+		# HRSystem.daily_contribution'dan geliyor ve o, kişinin devraldığı saatle orantılı.
+		# Blok çarpanı buna EKLENSEYDİ aynı saat iki kez ödüllendirilirdi.
 		b.efor_spent = minf(cap,
-			b.efor_spent + team_speed(b) * overtime * f / float(HOURS_PER_BUILD_DAY))
+			b.efor_spent + team_speed(b) * f / float(HOURS_PER_BUILD_DAY))
 	# 2a) İterasyon alt-makinesi (Software Inc. segment grameri): turlar KENDİLİĞİNDEN
 	#     zincirlenir; FAZ FLIP YOK — iterasyondan tek çıkış enter_development() seam'i.
 	if b.current_phase == "iteration":
@@ -791,7 +802,7 @@ static func _build_area_sum(area_key: String) -> float:
 	for c in HRSystem.assigned_to(area_key):
 		if c.category == "founder":
 			continue
-		total += HRSystem.effective_skill(c, area_key)   # §4.5
+		total += HRSystem.daily_contribution(c, area_key)   # §4.5 + §8.4
 	return total
 
 
@@ -964,9 +975,9 @@ static func _accrue_bugs_hourly(f: float = 1.0) -> void:
 	# rev 2 §2 verir: "bug oranı" YAZILIM alanının işidir.
 	var expertise: float = _team_area_avg(HRConstants.AREA_ENGINEERING, b.lead_engineer_id)
 	var rate: float = maxf(BUG_FLOOR, float(b.get_total_complexity()) * BUG_COMPLEXITY_COEF - expertise * BUG_TECH_REDUCER)
-	# Bedel 3, kalite: Ürün Geliştirme mesaisinde yorgun insan hata yazar (design doc §7b).
-	# YALNIZ burada — kapasite çarpanı f'ye katlanmaz, yoksa beta temposunu da çarpardı.
-	rate *= HROvertimeSystem.bug_multiplier()
+	# §8.4: EK MESAİ KALİTE CEZASI TAŞIMAZ. "Eski koddaki ×1,25 bug çarpanı kaldırılmıştır.
+	# Gerekçe: §7 moralin kaliteye dokunmadığını söyler; ek mesainin dokunması aynı sınırı
+	# ihlal ederdi. Ek mesainin bedeli NAKİT VE MORALDİR, o kadar."
 	# TİTİZ: YAZILIM alanında çalışan her TİTİZ hata oranını düşürür. Çarpımsal ve
 	# kişi başına: iki TİTİZ bir TİTİZ'den iyidir, ama getiri azalarak (0.5 × 0.5).
 	# Alanın kendisi soruluyor çünkü rev 2 §2 hata oranını YAZILIM'a veriyor.
@@ -1104,8 +1115,11 @@ static func _tick_live_sprint_hourly(f: float = 1.0) -> void:
 
 
 static func _record_sprint_and_check_engineer() -> void:
-	# HR-bridge seed (light): remember recent sprint days; too many in the window → a
-	# needs_engineer signal + Frank line. NO real hire (separate HR task).
+	# Sprint günlerini hatırlar. §17.6 BAYRAĞI ADIYLA KALDIRDI: "'Mühendise ihtiyaç var'
+	# bayrağı — şirket çapında bir sinyali KİŞİ BAŞINA ROZET olarak çiziyor, yalnız developer
+	# işe alınarak temizleniyor ve İngilizcede aşırı yük rozetiyle AYNI KELİMEYİ kullanıyor
+	# (§16). Tamamen kaldırılır; anlatmak istediğini BUILD HIZI ve BUG BİRİKİMİ zaten söyler."
+	# Sayaç kalıyor — bug sprint'lerinin sıklığı Ürün'ün kendi okuması.
 	var history: Array = GameState.get_flag("bug_sprint_days", [])
 	var recent: Array = []
 	for d in history:
@@ -1113,8 +1127,6 @@ static func _record_sprint_and_check_engineer() -> void:
 			recent.append(int(d))
 	recent.append(GameState.day)
 	GameState.set_flag("bug_sprint_days", recent)
-	if recent.size() >= ENGINEER_SPRINT_THRESHOLD:
-		GameState.set_flag("needs_engineer", true)
 
 
 # =========================================================================

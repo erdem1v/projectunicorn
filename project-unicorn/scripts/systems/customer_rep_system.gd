@@ -64,13 +64,6 @@ static func _top_expertise() -> int:
 	return int(reps[0].role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0))
 
 
-static func _overtime_mult() -> float:
-	# Exactly 1.0 with no Müşteri block running. Before Task 2b a player could start one and
-	# pay for it in cash and morale for nothing — HROvertimeSystem.speed_multiplier was only
-	# ever read with DEPT_PRODUCT_DEV. This is the customer desk's half of closing that.
-	return HROvertimeSystem.speed_multiplier(HRConstants.DEPT_CUSTOMER)
-
-
 static func throughput_of(rep: Character) -> float:
 	# Requests one rep clears per day. Public so the UI and the smoke suite read the same
 	# number the tick uses.
@@ -80,7 +73,8 @@ static func throughput_of(rep: Character) -> float:
 		# §4.5: kişinin ne ürettiği TEK EVDE (HRSystem.effective_skill) — alan katsayısı,
 		# odak, moral bandı ve huy çarpanları orada. Masanın kendi şekli (taban + kişi başı
 		# kapasite, ve _ranked'ın istif sırası) burada kalıyor.
-		+ HRSystem.effective_skill(rep, HRConstants.AREA_CUSTOMER_SUCCESS) * B2BConstants.CS_THROUGHPUT_PER_PACE
+		+ HRSystem.daily_contribution(rep, HRConstants.AREA_CUSTOMER_SUCCESS) \
+			* B2BConstants.CS_THROUGHPUT_PER_PACE
 
 
 static func desk_throughput() -> float:
@@ -92,7 +86,8 @@ static func desk_throughput() -> float:
 	for rep in _ranked(HRConstants.AREA_CUSTOMER_SUCCESS):
 		total += weight * throughput_of(rep)
 		weight *= B2BConstants.REP_STACK_DECAY
-	return total * _overtime_mult()
+	# §8.4: ayrı bir mesai çarpanı yok — saat, her temsilcinin katkısının içinde.
+	return total
 
 
 # --- STEWARDSHIP: who holds which account ---
@@ -100,42 +95,17 @@ static func desk_throughput() -> float:
 static func reconcile_assignments() -> void:
 	# Release first, then fill: a rep who went on leave this morning frees their accounts
 	# before anyone else's capacity is measured.
-	_release_unheld()
+	# §11.3: AYRILAN BİR TEMSİLCİNİN HESAPLARI OTOMATİK DEVREDİLMEZ. Eski `_release_unheld`
+	# ayrılanın bütün defterini kurucuya yazıyor ve oyuncunun elle taktığı pini de onunla
+	# birlikte siliyordu — yani ayrılmanın bedeli olan KAPASİTE BOŞLUĞU (§5.7: "ayrılmanın
+	# bedeli kapasitedir: iş boşalır, o işi yapacak kimse kalmaz") sessizce kapanıyordu.
+	# Hesap sahipsiz kalır ve oyuncu onu görür.
 	if CharacterRegistry.count_active_by_role(HRConstants.ROLE_CUSTOMER_REP) == 0:
 		return
 	_delegate_excess()
 
 
-static func _release_unheld() -> void:
-	# An account whose rep is gone, on leave, or beyond that rep's current capacity goes back
-	# to the founder. Capacity can shrink under the account (a rep's HIZ never drops today, but
-	# firing one does), so this is a reconcile rather than a one-way hand-off.
-	# PINNED accounts (player-chosen) are kept first, so a manual assignment can never be the
-	# one evicted by the capacity sweep — otherwise the player's choice would silently lose a
-	# race against registry iteration order. A pin does NOT survive its rep leaving: that
-	# releases the account AND clears the pin, so no dead pins accumulate.
-	var held: Dictionary = {}   # rep id -> count already kept
-	var book: Array[Customer] = CustomerRegistry.get_by_market("b2b")
-	var ordered: Array[Customer] = []
-	for c in book:
-		if c.cs_pinned:
-			ordered.append(c)
-	for c in book:
-		if not c.cs_pinned:
-			ordered.append(c)
-	for c in ordered:
-		if c.assigned_to == "":
-			continue
-		var rep: Character = CharacterRegistry.get_character(c.assigned_to)
-		if rep == null or rep.status != HRConstants.STATUS_ACTIVE:
-			CustomerRegistry.assign_customer(c.id, "")   # pinned = false: the pin dies with it
-			continue
-		var cap: int = B2BConstants.cs_capacity(int(rep.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0)))
-		var kept: int = int(held.get(rep.id, 0))
-		if kept >= cap:
-			CustomerRegistry.assign_customer(c.id, "")
-			continue
-		held[rep.id] = kept + 1
+
 
 
 static func _delegate_excess() -> void:

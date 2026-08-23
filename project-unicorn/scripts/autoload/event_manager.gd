@@ -641,13 +641,6 @@ func _apply_modifiers(modifiers: Array) -> void:
 					push_warning("[EventManager] hr_departure requires character_id")
 					continue
 				HRMoraleSystem.confirm_departure(leaver_id)
-			"hr_overtime_stop":
-				HROvertimeSystem.stop(String(m.get("department", "")))
-			"hr_overtime_continue":
-				# Nobody is auto-removed from overtime; continuing raises THAT person's
-				# resignation odds, which is the informed risk the player just took.
-				HROvertimeSystem.note_valve_continued(
-					String(m.get("department", "")), String(m.get("character_id", "")))
 			# --- Build modifiers (Product Lifecycle Part 1: clear two-rule vocabulary) ---
 			"dimension_delta":
 				# {axis, amount} — grow (+) or penalize (−) a quality axis, bounded via grow().

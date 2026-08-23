@@ -252,14 +252,14 @@ static func _bordered_chip(text: String, muted: bool = false) -> PanelContainer:
 # --- Moral ------------------------------------------------------------------
 
 static func morale_color(morale: int) -> Color:
-	# ÜÇ durum, ve üçü de MOTORUN kendi eşiklerinden geliyor — HRConstants'ın iki
-	# karşılaştırma fonksiyonu (is_flight_risk / is_burning_out). Mockup ortada
-	# dördüncü bir bant ima ediyor ama motorda öyle bir eşik yok; uydurulmuş bir
-	# sayı yerine motorun bildiği ayrımlar çiziliyor (38 bu yüzden kırmızı değil
-	# amber okur — done mesajında sapma olarak raporlanıyor).
+	# RENK §7'NİN BANDLARINI ÇİZER, ayrı bir eşik listesi değil. Eskiden iki karşılaştırma
+	# fonksiyonundan okunuyordu (is_flight_risk / is_burning_out) ve ikincisi rev 2'nin
+	# TÜKENİYOR bandıydı — §7 onu saymıyor, ve mockup'ın ima ettiği "dördüncü bant" aslında
+	# §7'nin ta kendisiydi: 80 üstü İYİ, 50–80 arası nötr, 50 altı DÜŞÜK, 35 altı Ayrılabilir.
+	# Renk üçe iniyor çünkü paletin üç sağlık rengi var; ayrım noktaları artık uydurma değil.
 	if HRConstants.is_flight_risk(morale):
 		return UiTokens.negative()
-	if HRConstants.is_burning_out(morale):
+	if morale < HRConstants.MORALE_BAND_LOW:
 		return UiTokens.HEALTH_AMBER
 	return UiTokens.health_green()
 

@@ -168,11 +168,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_leave_cycle":           fail = _case_hr_leave_cycle()
 		"hr_morale_drift_shape":    fail = _case_hr_morale_drift_shape()
 		"hr_recovery_channels":     fail = _case_hr_recovery_channels()
-		"hr_overtime_cost_tiers":   fail = _case_hr_overtime_cost_tiers()
-		"hr_overtime_multipliers":  fail = _case_hr_overtime_multipliers()
-		"hr_overtime_early_stop":   fail = _case_hr_overtime_early_stop()
-		"hr_overtime_same_day_stop_bills": fail = _case_hr_overtime_same_day_stop_bills()
-		"hr_overtime_safety_valve": fail = _case_hr_overtime_safety_valve()
 		"hr_raise_and_leave":    fail = _case_hr_raise_and_leave()
 		# --- İK modulü kapanışı (2026-08-22) ---
 		"menu_has_one_path":        fail = _case_menu_has_one_path()
@@ -203,7 +198,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sales_threshold_separates_tiers":   fail = _case_sales_threshold_separates_tiers()
 		"sales_concession_deal_surfaces":    fail = _case_sales_concession_deal_surfaces()
 		"sales_close_speed_by_expertise":    fail = _case_sales_close_speed_by_expertise()
-		"sales_overtime_multiplier":         fail = _case_sales_overtime_multiplier()
 		"cs_auto_assignment_capacity":       fail = _case_cs_auto_assignment_capacity()
 		"cs_capacity_resolution":            fail = _case_cs_capacity_resolution()
 		"cs_request_absorption_by_expertise": fail = _case_cs_request_absorption_by_expertise()
@@ -315,7 +309,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		#     motora karşı DÜŞER; her biri falsifikasyonla doğrulandı.
 		"job_assignment_and_idle":         fail = _case_job_assignment_and_idle()
 		"overload_costs_output":           fail = _case_overload_costs_output()
-		"job_lead_resolution":             fail = _case_job_lead_resolution()
 		"save_migration_v3_to_v4":         fail = _case_save_migration_v3_to_v4()
 		# --- Ekip arayüzü · onaylı tasarım 2026-08-22. Beşi de ÖNCEKİ motora karşı DÜŞER.
 		"star_ruler_contract":            fail = _case_star_ruler_contract()
@@ -4235,9 +4228,14 @@ static func _case_onboarding_pages_contract() -> String:
 
 # Shared setup: park an employee's leave month far from the current one so the automatic
 # annual-leave machine does not fire inside a case that is measuring something else.
+## "Bu vaka izin hakkında DEĞİL" demenin yolu. §11.4 izni yılın herhangi bir ayından bir
+## YAZ HAFTASINA taşıdı, ve Faz 5b'den beri her işe alım bir hafta damgalıyor — yani ayı
+## itmek artık hiçbir şeyi park etmiyordu ve fixture'ların bir kısmı vaka ortasında izne
+## çıkıyordu. -1 = haftası yok, ve tick_leave_departures onu açıkça atlıyor.
 static func _park_leave(employees: Array) -> void:
 	var this_month: int = int(GameState.get_date_dict().month)
 	for e in employees:
+		e.leave_week = -1
 		e.leave_month = ((this_month + 5) % 12) + 1
 		e.leave_taken_year = 0
 
@@ -4788,6 +4786,10 @@ static func _case_hr_leave_cycle() -> String:
 	# capacity contribution absent, returns after LEAVE_DAYS with morale refreshed.
 	GameState.set_cash(100000)
 	var e: Character = _make_employee("char_leave", "Leave Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 60)
+	# HERKESİ PARK ET, SONRA YALNIZ BİRİNİ PİNLE. İzin haftası artık işe alımda damgalanıyor
+	# (§11.4), yani kadronun başkaları da aynı haftaya düşebilir ve "kapasite BİR azaldı"
+	# iddiası o zaman iki kişilik bir düşüşü ölçerdi.
+	_park_leave(CharacterRegistry.get_employees())
 	# §11.4: izin artık YAZ PENCERESİ içinde bir HAFTAdır, ay değil. Pencereye (Haziran)
 	# atlayıp kişiyi o haftaya pinliyoruz — eski model yılın herhangi bir ayına düşebiliyordu
 	# ve yaz kısıtı yoktu.
@@ -4943,234 +4945,6 @@ static func _case_hr_recovery_channels() -> String:
 		return "§8.3 kısa gün did not raise morale (%d → %d)" % [before_short, tired.morale]
 	return ""
 
-static func _case_hr_overtime_cost_tiers() -> String:
-	# DRIFT KONTROLÜ (rev 11): bu vaka mesai kademesinin moral bedelini YALNIZ BAŞINA
-	# ölçüyor, ama §7.1'in taban sürüklenmesi artık her gün üstüne biniyor. Toleransı
-	# gevşetmek gerçek bir regresyonu gizlerdi; onun yerine şirketi YEDİ SAATE park
-	# ediyoruz — §7.1'in çarpanı orada tam olarak sıfır, yani morali oynatan tek şey
-	# ölçülmek istenen blok kalıyor.
-	WorkHoursSystem.set_company_hours(7)
-	# Pay accrues per PARTICIPATING employee per day with the founder free, and the morale
-	# cost follows the 1-3 / 4-7 / 8+ tiers exactly.
-	GameState.set_cash(200000)
-	var a: Character = _make_employee("char_ot_a", "OT A", HRConstants.ROLE_DEVELOPER, SEED_PACE, 9000, 100)
-	var b: Character = _make_employee("char_ot_b", "OT B", HRConstants.ROLE_TESTER, SEED_PACE, 6000, 100)
-	var away: Character = _make_employee("char_ot_sales", "OT Sales", HRConstants.ROLE_SALES_REP, SEED_PACE, 7000, 100)
-	_park_leave([a, b, away])
-	if not HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 14):
-		return "overtime block refused"
-	var ids: Array = []
-	for p in HROvertimeSystem.participants(HRConstants.DEPT_PRODUCT_DEV):
-		ids.append(p.id)
-	if ids.has(away.id):
-		return "a sales rep participated in a product_dev block"
-	if not (ids.has(a.id) and ids.has(b.id)):
-		return "product_dev members missing from participants: %s" % str(ids)
-	if ids.has("char_mentor_frank"):
-		return "the mentor was included in overtime"
-	var want_daily: int = HRConstants.overtime_daily_pay(9000) + HRConstants.overtime_daily_pay(6000)
-	# TAM gün sürücü: ek mesainin FAYDASI saatlik yolda tüketiliyor (product_system.gd),
-	# BEDELİ günlük slot 3'te tahakkuk ediyor. Yalnız günlük yarısını koşan bir sürücü bu
-	# ikisinin ayrıştığı yeri hiç göremez — S1-3 tam orada saklanmıştı.
-	for d in range(1, 9):
-		var m_before: int = a.morale
-		_sim_day_full()
-		if HROvertimeSystem.day_index(HRConstants.DEPT_PRODUCT_DEV) != d:
-			return "day index is %d on overtime day %d" % [HROvertimeSystem.day_index(HRConstants.DEPT_PRODUCT_DEV), d]
-		if HROvertimeSystem.pay_accrued_today() != want_daily:
-			return "day %d pay %d, want %d (the founder must cost nothing extra)" % [
-				d, HROvertimeSystem.pay_accrued_today(), want_daily]
-		var drop: int = m_before - a.morale
-		if drop != HRConstants.overtime_morale_drop(d):
-			return "day %d morale drop %d, want %d" % [d, drop, HRConstants.overtime_morale_drop(d)]
-	# ---- §8.2: BURN'E ULAŞAN ŞEY ARTIK BLOK DEĞİL, DEVRALINAN SAAT ----
-	# Blok sistemi hâlâ kendi rakamını hesaplıyor (yukarıdaki iddialar onu ölçüyor) ama o
-	# rakam artık HİÇBİR YERE gitmiyor: Finans slot 5'te WorkHoursSystem'i çekiyor. Şirket
-	# yedi saatte park edilmişti, yani kimse sekizin üstünde değil ve kalem SIFIR olmalı —
-	# blok koşuyor olmasına rağmen.
-	if int(FinanceSystem.get_burn_breakdown().get("overtime", -1)) != 0:
-		return "a running block still reaches burn (%s) — §8.2 moved the source to the hours model" % str(
-			FinanceSystem.get_burn_breakdown().get("overtime"))
-	# Ve POZİTİF taraf: şirketi on saate çıkar, kimse blok başlatmadan kalem dolmalı.
-	WorkHoursSystem.set_company_hours(10)
-	var want_hours: int = HRConstants.overtime_pay_for_day(9000, 10) \
-		+ HRConstants.overtime_pay_for_day(6000, 10) + HRConstants.overtime_pay_for_day(7000, 10)
-	if want_hours <= 0:
-		return "a ten-hour company accrues nothing — §8.2's per-person pricing is inert"
-	_sim_day_full()
-	if int(FinanceSystem.get_burn_breakdown().get("overtime", -1)) != want_hours:
-		return "the hours model billed %s, want %d (three employees at 10h, founder free)" % [
-			str(FinanceSystem.get_burn_breakdown().get("overtime")), want_hours]
-	return ""
-
-
-static func _case_hr_overtime_multipliers() -> String:
-	# STATE, not application: the multipliers must be exact and queryable (task 2 applies
-	# them), bug_multiplier is product_dev-ONLY, and a block auto-ends on its final day.
-	if not is_equal_approx(HROvertimeSystem.speed_multiplier(HRConstants.DEPT_PRODUCT_DEV), 1.0):
-		return "an inactive department does not report 1.0"
-	if not is_equal_approx(HROvertimeSystem.bug_multiplier(), 1.0):
-		return "the inactive bug multiplier is not 1.0"
-	var dev: Character = _make_employee("char_mult_dev", "Mult Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 100)
-	_park_leave([dev])
-	GameState.set_flag("debug_hr_force", "fail")
-	if not HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 14):
-		return "start refused"
-	for d in range(1, 15):
-		_sim_day_full()
-		if d >= 14:
-			break
-		var bonus: float = HRConstants.OVERTIME_SPEED_BONUS_LATE if d >= HRConstants.OVERTIME_DIMINISH_DAY else HRConstants.OVERTIME_SPEED_BONUS_EARLY
-		if not is_equal_approx(HROvertimeSystem.speed_multiplier(HRConstants.DEPT_PRODUCT_DEV), 1.0 + bonus):
-			return "day %d speed multiplier %.4f, want %.4f" % [
-				d, HROvertimeSystem.speed_multiplier(HRConstants.DEPT_PRODUCT_DEV), 1.0 + bonus]
-		if not is_equal_approx(HROvertimeSystem.bug_multiplier(), HRConstants.OVERTIME_BUG_MULT):
-			return "product_dev overtime did not raise the bug multiplier on day %d" % d
-	if HROvertimeSystem.is_active(HRConstants.DEPT_PRODUCT_DEV):
-		return "the 14-day block did not auto-end on its final day"
-	if not is_equal_approx(HROvertimeSystem.bug_multiplier(), 1.0):
-		return "the bug multiplier stayed raised after the block ended"
-	# A non-product department must not touch the bug channel at all.
-	var rep: Character = _make_employee("char_mult_cs", "Mult CS", HRConstants.ROLE_CUSTOMER_REP, SEED_PACE, 5000, 100)
-	_park_leave([rep])
-	if not HROvertimeSystem.start(HRConstants.DEPT_CUSTOMER, 3):
-		return "customer block refused"
-	_sim_day()
-	if not is_equal_approx(HROvertimeSystem.bug_multiplier(), 1.0):
-		return "a customer-department block raised the bug multiplier"
-	if is_equal_approx(HROvertimeSystem.speed_multiplier(HRConstants.DEPT_CUSTOMER), 1.0):
-		return "the customer block produced no speed multiplier"
-	return ""
-
-
-static func _case_hr_overtime_early_stop() -> String:
-	# DRIFT KONTROLÜ (rev 11) — bkz. _case_hr_overtime_cost_tiers. Bu vaka "blok durunca
-	# moral düşüşü DURUR" iddiasını ölçüyor; §7.1'in taban sürüklenmesi o iddiayı kendi
-	# başına bozar. Şirketi yedi saate park ediyoruz: orada çarpan tam sıfır, yani blok
-	# durduktan sonra morali oynatan hiçbir şey kalmıyor ve iddia yeniden ölçülebilir oluyor.
-	WorkHoursSystem.set_company_hours(7)
-	# Stopping on day 4 of a 7-day block accrues EXACTLY four days of pay; nothing is
-	# refunded and nothing further accrues.
-	GameState.set_cash(200000)
-	var e: Character = _make_employee("char_stop", "Stop Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 9000, 100)
-	_park_leave([e])
-	if not HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 7):
-		return "start refused"
-	var daily: int = HRConstants.overtime_daily_pay(9000)
-	var paid: int = 0
-	for d in 4:
-		_sim_day_full()
-		paid += HROvertimeSystem.pay_accrued_today()
-	if paid != daily * 4:
-		return "four worked days accrued %d, want %d" % [paid, daily * 4]
-	# Day 4's daily tick already ran, so stop() lands on an ALREADY-CHARGED day and must
-	# not bill it twice — the same-day billing rule only fires when the day is unbilled.
-	var morale_at_stop: int = e.morale
-	if not HROvertimeSystem.stop(HRConstants.DEPT_PRODUCT_DEV):
-		return "early stop refused"
-	if HROvertimeSystem.is_active(HRConstants.DEPT_PRODUCT_DEV):
-		return "the block is still active after stop()"
-	if HROvertimeSystem.pay_accrued_today() != daily:
-		return "stop() on an already-charged day re-billed it (%d, want %d)" % [
-			HROvertimeSystem.pay_accrued_today(), daily]
-	for d in 3:
-		_sim_day_full()
-		if HROvertimeSystem.pay_accrued_today() != 0:
-			return "pay kept accruing after the early stop (%d)" % HROvertimeSystem.pay_accrued_today()
-	if e.morale != morale_at_stop:
-		return "morale kept dropping after the early stop (%d -> %d)" % [morale_at_stop, e.morale]
-	if e.overtime_days != 0:
-		return "overtime_days not reset on stop (%d)" % e.overtime_days
-	return ""
-
-
-static func _case_hr_overtime_same_day_stop_bills() -> String:
-	# S1-3: a block that starts AND stops between two daily ticks must still bill that day.
-	# The speed bonus is consumed on the HOURLY tick; the cost used to be charged only on
-	# the daily one, so start-at-10:00 / "Bitir"-at-22:00 bought up to 23 hours of +%30
-	# build speed for $0 and zero morale, repeatable every single day.
-	#
-	# This case FAILS against the pre-fix engine: pay stays 0 and morale never moves.
-	GameState.set_cash(200000)
-	var e: Character = _make_employee("char_sameday", "Same Day", HRConstants.ROLE_DEVELOPER,
-		SEED_PACE, 9000, 100)
-	_park_leave([e])
-	# Land on a clean day boundary first, so the pay stamp belongs to "today".
-	_sim_day_full()
-	var morale_before: int = e.morale
-	if not HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 7):
-		return "start refused"
-	# Mid-day: the hours where the bonus is actually collected.
-	for h in range(10, 22):
-		TimeManager._dispatch_hourly_tick(h)
-	if is_equal_approx(HROvertimeSystem.speed_multiplier(HRConstants.DEPT_PRODUCT_DEV), 1.0):
-		return "no speed bonus was on offer during the block — case proves nothing"
-	if not HROvertimeSystem.stop(HRConstants.DEPT_PRODUCT_DEV):
-		return "early stop refused"
-	if e.morale >= morale_before:
-		return "same-day stop cost no morale (%d -> %d)" % [morale_before, e.morale]
-	# The money rides the carry into the next day's total, because Finance already pulled
-	# for today by the time any in-day stop can happen.
-	var daily: int = HRConstants.overtime_daily_pay(9000)
-	_sim_day_full()
-	if HROvertimeSystem.pay_accrued_today() != daily:
-		return "same-day stop billed %d, want %d" % [HROvertimeSystem.pay_accrued_today(), daily]
-	# §8.2: BLOĞUN RAKAMI BURN'E GİTMEZ. Finans WorkHoursSystem'i çekiyor ve şirket sekiz
-	# saatte — yani blok koşup dursa da kalem sıfırdır. Bu, bloğun kendi muhasebesini
-	# ölçen yukarıdaki iddiaları geçersiz kılmaz; yalnız o rakamın artık nereye GİTMEDİĞİNİ
-	# söyler. Blok sistemi Faz 7'de tamamen siliniyor.
-	if int(FinanceSystem.get_burn_breakdown().get("overtime", -1)) != 0:
-		return "a same-day block still reached burn (%s)" % str(
-			FinanceSystem.get_burn_breakdown().get("overtime"))
-	# …and it is billed ONCE: the day after, nothing lingers.
-	_sim_day_full()
-	if HROvertimeSystem.pay_accrued_today() != 0:
-		return "the stopped block kept billing (%d)" % HROvertimeSystem.pay_accrued_today()
-	return ""
-
-
-static func _case_hr_overtime_safety_valve() -> String:
-	# The valve is an EVENT, never a silent exclusion: a participant crossing into KAÇMA
-	# RİSKİ mid-block asks the player, "Devam et" raises THAT person's odds, and nobody is
-	# removed from the block behind the player's back.
-	GameState.set_cash(200000)
-	GameState.set_flag("debug_hr_force", "fail")   # isolate the valve from the resignation roll
-	var e: Character = _make_employee("char_valve", "Valve Guy", HRConstants.ROLE_DEVELOPER,
-		SEED_PACE, 9000, HRConstants.MORALE_FLIGHT_RISK + 2)
-	_park_leave([e])
-	if not HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 14):
-		return "start refused"
-	var valve_id: String = "ev_hr_valve_%s" % e.id
-	var seen: bool = false
-	for d in 5:
-		_sim_day()
-		if _instances_of(valve_id) >= 1:
-			seen = true
-			break
-	if not seen:
-		return "no safety-valve event when a participant crossed the flight-risk line (morale %d)" % e.morale
-	var still_in: bool = false
-	for p in HROvertimeSystem.participants(HRConstants.DEPT_PRODUCT_DEV):
-		if p.id == e.id:
-			still_in = true
-	if not still_in:
-		return "the at-risk employee was silently removed from overtime"
-	if not HROvertimeSystem.is_active(HRConstants.DEPT_PRODUCT_DEV):
-		return "the block stopped on its own"
-	if not _drain_to(valve_id):
-		return "could not bring the valve event to the front"
-	var odds_before: float = HRConstants.resign_chance(e.traits, false)
-	EventManager.resolve_choice(valve_id, 1)   # "Devam et"
-	if not HROvertimeSystem.valve_continued_for(e.id):
-		return "'Devam et' did not record the continued risk"
-	if HRConstants.resign_chance(e.traits, true) <= odds_before:
-		return "continuing did not raise the resignation odds (%.3f vs %.3f)" % [
-			HRConstants.resign_chance(e.traits, true), odds_before]
-	if not HROvertimeSystem.is_active(HRConstants.DEPT_PRODUCT_DEV):
-		return "'Devam et' stopped the block"
-	return ""
-
-
 static func _case_hr_raise_and_leave() -> String:
 	# Raise bounded 3-15% with morale scaling on the percentage and a PERMANENT salary rise
 	# that reaches burn; manual vacation takes the person out of capacity, refreshes morale
@@ -5249,11 +5023,16 @@ static func _case_hr_frank_guard() -> String:
 		return "the founder is fireable"
 	var dev: Character = _make_employee("char_guard_dev", "Guard Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 90)
 	_park_leave([dev])
-	if not HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 3):
-		return "overtime block refused"
-	for p in HROvertimeSystem.participants(HRConstants.DEPT_PRODUCT_DEV):
-		if p.id == frank.id:
-			return "the mentor was included in overtime"
+	# §8.2 / §9.1: mentor bordroda değil ve çalışma saatleri modelinin dışında. Blok
+	# sistemi kalktı, ama sorunun kendisi geçerli — yalnız sorulacak yer değişti: on bir
+	# saatlik bir şirkette bile mentora mesai tahakkuk etmez ve sayaçlarda görünmez.
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MAX)
+	if WorkHoursSystem.overtime_pay_today(frank) != 0:
+		return "the mentor accrued overtime pay (%d)" % WorkHoursSystem.overtime_pay_today(frank)
+	if int(WorkHoursSystem.counts()["overtime"]) != 1:
+		return "the overtime headcount is %d — it must count the one employee and nobody else" % int(
+			WorkHoursSystem.counts()["overtime"])
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
 	var frank_morale: int = frank.morale
 	_sim_day()
 	if frank.morale != frank_morale:
@@ -5286,8 +5065,13 @@ static func _case_hr_active_filters() -> String:
 		return "an on-leave developer is still in the capacity pool"
 	if CharacterRegistry.count_active_developers() != 0:
 		return "an on-leave developer counts as active"
-	if not HROvertimeSystem.participants(HRConstants.DEPT_PRODUCT_DEV).is_empty():
-		return "an on-leave employee can be put on overtime"
+	# §8.6: "İzindeki ya da eğitimdeki çalışan üretmez, ÜCRETLENDİRİLMEZ ve saat çarpanı
+	# yemez. ... Şirket 11 saatteyken izne çıkan bir çalışan MESAİ ÜCRETİ ALMAZ."
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MAX)
+	if WorkHoursSystem.overtime_pay_today(rep) != 0:
+		return "an on-leave employee accrued overtime pay at eleven company hours (%d)" % \
+			WorkHoursSystem.overtime_pay_today(rep)
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
 	if B2BSalesSystem._cs_expertise_of(cust) != 0:
 		return "an on-leave customer rep still dampens churn (%d)" % B2BSalesSystem._cs_expertise_of(cust)
 	# INCLUDED while away.
@@ -5382,7 +5166,7 @@ static func _case_hr_constants_contract() -> String:
 	for role_id in HRConstants.EMPLOYEE_ROLES:
 		if HRConstants.role_label(role_id) == role_id:
 			return "role '%s' has no display label" % role_id
-		if HRConstants.department_of(role_id) == "":
+		if String(HRConstants.ROLE_GROUP.get(role_id, "")) == "":
 			return "role '%s' has no department" % role_id
 		# §3: only the role's KEY and SECONDARY areas have help copy — the closed card never
 		# shows the other four, so there is nothing to say about them.
@@ -5406,8 +5190,17 @@ static func _case_hr_constants_contract() -> String:
 				return "role '%s' has no meaning copy for area '%s'" % [role_id, String(area_key)]
 	if HRConstants.role_label(HRConstants.ROLE_MENTOR) != "Operating Partner":
 		return "the mentor label drifted (it is already on screen): '%s'" % HRConstants.role_label(HRConstants.ROLE_MENTOR)
-	if HRConstants.roles_in_department(HRConstants.DEPT_PRODUCT_DEV).size() != 4:
-		return "product_dev should hold four roles, holds %d" % HRConstants.roles_in_department(HRConstants.DEPT_PRODUCT_DEV).size()
+	# §13.1 DÖRT GRUP, ve altı rolün hepsi tam olarak birine düşer. Departman tablosu kalktı;
+	# bu iddia onun yerine taksonomilerin TEKLİĞİNİ ölçüyor.
+	var seen_groups: Dictionary = {}
+	for role_id2 in HRConstants.EMPLOYEE_ROLES:
+		var g: String = String(HRConstants.ROLE_GROUP.get(role_id2, ""))
+		if not HRConstants.ROSTER_GROUPS.has(g):
+			return "role '%s' maps to '%s', which is not a roster group" % [String(role_id2), g]
+		seen_groups[g] = true
+	if seen_groups.size() != HRConstants.ROSTER_GROUPS.size():
+		return "only %d of the %d roster groups hold a role" % [
+			seen_groups.size(), HRConstants.ROSTER_GROUPS.size()]
 
 	# --- Trait catalog: SEKİZ, üçü bedelsiz + beşi bedelli, hepsi gösterilebilir ---
 	# Sayı onaylı ikon sayfasından gelir (sekiz glif); bölünme görevin Cost sütunundan.
@@ -5501,17 +5294,25 @@ static func _case_hr_constants_contract() -> String:
 		return "the severance year rule drifted"
 	if HRConstants.raise_morale_gain(HRConstants.RAISE_MAX_PCT) <= HRConstants.raise_morale_gain(HRConstants.RAISE_MIN_PCT):
 		return "the raise morale gain does not scale with the percentage"
-	if HRConstants.overtime_daily_pay(9000) != 120:
-		return "overtime daily pay on 9000 is %d, want 120 (40%% of a daily 300)" % HRConstants.overtime_daily_pay(9000)
 
-	# --- Overtime ladder ---
-	if HRConstants.overtime_morale_drop(3) == HRConstants.overtime_morale_drop(4) \
-			or HRConstants.overtime_morale_drop(7) == HRConstants.overtime_morale_drop(8):
-		return "the overtime morale tiers do not step at day 4 and day 8"
-	if not is_equal_approx(HRConstants.overtime_speed_bonus(HRConstants.OVERTIME_DIMINISH_DAY - 1), HRConstants.OVERTIME_SPEED_BONUS_EARLY):
-		return "the day before the diminish point is not the opening rate"
-	if not is_equal_approx(HRConstants.overtime_speed_bonus(HRConstants.OVERTIME_DIMINISH_DAY), HRConstants.OVERTIME_SPEED_BONUS_LATE):
-		return "the diminish point does not drop the rate"
+	# --- §8.2 EK MESAİ ÜCRETİ, SAAT BAŞINA ---
+	# "Aşan saatler için SAATLİK ÜCRETİN %50 FAZLASI ödenir (çarpan 1,5×). YALNIZ aşan
+	# saatler; ilk sekiz saat normal ücrettir." Blok başına günlük yüzde (%40) modeli gitti.
+	var hourly: float = float(9000) / float(HRConstants.HOURS_PER_MONTH)
+	var want_ot: int = int(round(hourly * 3.0 * HRConstants.OVERTIME_WAGE_MULT))
+	if HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_MAX) != want_ot:
+		return "eleven hours on 9000 bills %d, want %d (three hours at 1.5x)" % [
+			HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_MAX), want_ot]
+	# İLK SEKİZ SAAT NORMAL ÜCRET: sekizde ve altında tahakkuk YOKTUR.
+	if HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_DEFAULT) != 0 \
+			or HRConstants.overtime_pay_for_day(9000, HRConstants.WORK_HOURS_MIN) != 0:
+		return "an eight-hour or shorter day accrued overtime"
+	# §8.4 ORAN: 11 saat +%37,5, 5 saat %62,5 — §8.1 ve §8.3'ün KENDİ sayıları.
+	if not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MAX), 1.375) \
+			or not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MIN), 0.625):
+		return "the hour-to-output ratio drifted from §8.1/§8.3's own numbers"
+	if not is_equal_approx(HRConstants.hours_output_mult(HRConstants.WORK_HOURS_DEFAULT), 1.0):
+		return "the standard day is not neutral — every calibrated constant would move"
 
 	# --- Liderlik: climate + coordination ---
 	if not is_equal_approx(HRConstants.climate_drop_mult(0), 1.0) or not is_equal_approx(HRConstants.climate_gain_mult(0), 1.0):
@@ -5540,8 +5341,8 @@ static func _case_hr_constants_contract() -> String:
 		return "exactly the flight-risk threshold must NOT count as at risk (design says 'altı')"
 	if not HRConstants.is_flight_risk(HRConstants.MORALE_FLIGHT_RISK - 1):
 		return "one under the flight-risk threshold is not at risk"
-	if HRConstants.is_burning_out(HRConstants.MORALE_BURNOUT):
-		return "exactly the burnout threshold must NOT count as burning out"
+	# TÜKENİYOR bandı §7'de YOK — sabiti, karşılaştırıcısı ve rozeti birlikte gitti. §7'nin
+	# dört bandı 80 / 50 / 35 eşikleriyle ölçülüyor ve onları morale_band_mult pinliyor.
 
 	# --- Leave distribution: spread across months, and NEVER the hire month ---
 	for hire_month in range(1, 13):
@@ -5983,30 +5784,44 @@ static func _case_coupling_overtime_applied() -> String:
 		ProductSystem.hourly_tick(h)
 	var base_efor: float = b.efor_spent - e0
 	var base_bugs: float = (b.bug_progress + float(b.bug_count)) - bugs0
-	# Same day with a product_dev block running: FASTER, and buggier.
-	if not HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 7):
-		return "overtime block refused"
+	# ---- §8.4 · GETİRİ SAATİN KENDİSİDİR ----
+	# "Ekip 8 saatte belli bir çıktı üretiyorsa 11 saatte ORANTILI OLARAK daha fazla üretir.
+	# Fazladan bir 'ek mesai hızı' katsayısı UYGULANMAZ — eski koddaki +%30/+%15 hız bonusu
+	# kaldırılmıştır." Oran BİR SAYI, ve o sayı §8.1'in kendi cümlesinde yazıyor: "en fazla
+	# üç saat ek mesai, yani EN FAZLA +%37,5 ÇIKTI."
+	#
+	# FALSİFİKASYON: HRSystem.daily_contribution'dan hours_output_mult çarpanını kaldır →
+	# oran 1,0 çıkar ve ilk iddia FAIL eder.
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MAX)
 	e0 = b.efor_spent
 	bugs0 = b.bug_progress + float(b.bug_count)
 	for h in 24:
 		ProductSystem.hourly_tick(h)
-	var ot_efor: float = b.efor_spent - e0
-	var ot_bugs: float = (b.bug_progress + float(b.bug_count)) - bugs0
-	if ot_efor <= base_efor:
-		return "ek mesai did not speed the build up (%.3f -> %.3f efor/day)" % [base_efor, ot_efor]
-	var want_ratio: float = 1.0 + HRConstants.OVERTIME_SPEED_BONUS_EARLY
-	if absf(ot_efor / maxf(0.001, base_efor) - want_ratio) > 0.02:
-		return "ek mesai speed ratio %.3f, want %.3f" % [ot_efor / maxf(0.001, base_efor), want_ratio]
-	if ot_bugs <= base_bugs:
-		return "ek mesai did not raise the bug rate (%.4f -> %.4f)" % [base_bugs, ot_bugs]
-	if absf(ot_bugs / maxf(0.0001, base_bugs) - HRConstants.OVERTIME_BUG_MULT) > 0.05:
-		return "ek mesai bug ratio %.3f, want %.3f" % [
-			ot_bugs / maxf(0.0001, base_bugs), HRConstants.OVERTIME_BUG_MULT]
-	# Stopping the block returns both channels to baseline — the multipliers are not sticky.
-	HROvertimeSystem.stop(HRConstants.DEPT_PRODUCT_DEV)
-	if not is_equal_approx(HROvertimeSystem.speed_multiplier(HRConstants.DEPT_PRODUCT_DEV), 1.0) \
-			or not is_equal_approx(HROvertimeSystem.bug_multiplier(), 1.0):
-		return "the multipliers stayed raised after the block stopped"
+	var long_efor: float = b.efor_spent - e0
+	var long_bugs: float = (b.bug_progress + float(b.bug_count)) - bugs0
+	var want_ratio: float = HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MAX)
+	if absf(long_efor / maxf(0.001, base_efor) - want_ratio) > 0.02:
+		return "an eleven-hour day produced %.3f× the eight-hour day, want %.3f" % [
+			long_efor / maxf(0.001, base_efor), want_ratio]
+	# §8.4: EK MESAİ KALİTE CEZASI TAŞIMAZ. "Eski koddaki ×1,25 bug çarpanı kaldırılmıştır.
+	# Gerekçe: §7 moralin kaliteye dokunmadığını söyler; ek mesainin dokunması aynı sınırı
+	# ihlal ederdi." Bug oranı ÇALIŞILAN SAATLE artmaz — hata birikimi kapasite çarpanından
+	# gelir ve o saatten bağımsızdır, o yüzden iki günün bug'ı BİRBİRİNE EŞİT olmalı.
+	if absf(long_bugs - base_bugs) > 0.0001:
+		return "an eleven-hour day changed the bug rate (%.4f -> %.4f) — §8.4 forbids it" % [
+			base_bugs, long_bugs]
+	# ---- §8.3 · KISA GÜN, AYNI ORANLA AŞAĞI ----
+	# "Beş saatlik gün, sekiz saatlik günün %62,5'i kadar iş çıkarır."
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MIN)
+	e0 = b.efor_spent
+	for h in 24:
+		ProductSystem.hourly_tick(h)
+	var short_efor: float = b.efor_spent - e0
+	var want_short: float = HRConstants.hours_output_mult(HRConstants.WORK_HOURS_MIN)
+	if absf(short_efor / maxf(0.001, base_efor) - want_short) > 0.02:
+		return "a five-hour day produced %.3f× the eight-hour day, want %.3f" % [
+			short_efor / maxf(0.001, base_efor), want_short]
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
 	return ""
 
 
@@ -6237,37 +6052,6 @@ static func _case_sales_close_speed_by_expertise() -> String:
 	return ""
 
 
-static func _case_sales_overtime_multiplier() -> String:
-	# Sales overtime finally BUYS something. Before task 2b a Satis block cost cash and morale
-	# and raised nothing: speed_multiplier was only ever read with DEPT_PRODUCT_DEV.
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
-	_seed_b2b(1000)
-	_make_sales_rep("char_sr_1", 6, 5)
-	var base_rate: float = SalesRepSystem.lead_rate_per_day()
-	HROvertimeSystem.start(HRConstants.DEPT_SALES, HRConstants.OVERTIME_BLOCKS[0])
-	var mult: float = HROvertimeSystem.speed_multiplier(HRConstants.DEPT_SALES)
-	if is_equal_approx(mult, 1.0):
-		return "starting a sales overtime block produced no multiplier"
-	if not is_equal_approx(SalesRepSystem.lead_rate_per_day(), base_rate * mult):
-		return "lead rate %f, want base %f x overtime %f" % [
-			SalesRepSystem.lead_rate_per_day(), base_rate, mult]
-	HROvertimeSystem.stop(HRConstants.DEPT_SALES)
-	# ÇARPAN GİTTİ — vakanın asıl iddiası bu ve doğrudan ölçülüyor.
-	if not is_equal_approx(HROvertimeSystem.speed_multiplier(HRConstants.DEPT_SALES), 1.0):
-		return "the overtime multiplier survived the stop"
-	# ORANIN base_rate'e BİREBİR dönmesi ARTIK BEKLENMEZ ve bu doğru: stop() faturalanmamış
-	# gecenin moral bedelini de iniyor, ve rev 11'de moral ÇIKTIYI etkiliyor (§7 bantları,
-	# §4.5'in çarpanlarından biri). Önceden hiçbir üretim formülü morali okumuyordu, o
-	# yüzden oran birebir geri dönüyordu. Doğru iddia: hızlandırma kalktı, ve kalan fark
-	# YALNIZ morale ait, yani oran base_rate'i AŞMIYOR.
-	var after: float = SalesRepSystem.lead_rate_per_day()
-	if after > base_rate + 0.0001:
-		return "the lead rate stayed raised after the block stopped (%f > %f)" % [after, base_rate]
-	if after >= base_rate * mult - 0.0001:
-		return "the lead rate did not come down from the boosted value"
-	return ""
-
-
 static func _case_cs_auto_assignment_capacity() -> String:
 	# Delegation is EXCESS-driven: under FOUNDER_DIRECT_CAP nothing moves; above it the
 	# overflow goes over, bounded by cs_capacity(HIZ). Leave releases the roster.
@@ -6291,11 +6075,22 @@ static func _case_cs_auto_assignment_capacity() -> String:
 	if B2BSalesSystem.founder_managed_count() != B2BConstants.FOUNDER_DIRECT_CAP:
 		return "founder kept %d accounts, want the cap %d" % [
 			B2BSalesSystem.founder_managed_count(), B2BConstants.FOUNDER_DIRECT_CAP]
+	# §11.3: "AYRILAN KİŞİNİN HESAPLARI KURUCUYA DEVREDİLMEZ." Eski iddia tam tersini
+	# ölçüyordu: temsilci izne çıkınca defterinin BOŞALMASINI bekliyordu, ve o boşaltma
+	# hesapları kurucuya yazan `_release_unheld`'di. §5.7 ayrılmanın bedelini adıyla
+	# koyuyor — "iş boşalır, o işi yapacak kimse kalmaz" — ve sessizce kapanan bir boşluk
+	# bedel değildir. Hesap İZİNDEKİ TEMSİLCİDE KALIR ve oyuncu onu görür.
 	CharacterRegistry.set_status(rep.id, HRConstants.STATUS_ON_LEAVE)
 	CustomerRepSystem.reconcile_assignments()
+	var still_held: int = 0
 	for c in CustomerRegistry.get_by_market("b2b"):
-		if c.assigned_to != "":
-			return "an on-leave rep still holds %s" % c.id
+		if c.assigned_to == rep.id:
+			still_held += 1
+		elif c.assigned_to != "":
+			return "%s was handed to '%s' — §11.3 forbids the automatic hand-off" % [
+				c.id, c.assigned_to]
+	if still_held != 1:
+		return "the on-leave rep's book was emptied (%d held) — the capacity gap must stay visible" % still_held
 	return ""
 
 
@@ -7587,16 +7382,13 @@ static func _case_job_assignment_and_idle() -> String:
 	if CharacterRegistry.assign_area(dev.id, HRConstants.AREA_QA) != "":
 		return "a developer was refused their own SECONDARY area"
 	CharacterRegistry.unassign_area(dev.id, HRConstants.AREA_QA)
-	# ch. 06 §1.3: "covering head = anyone assigned to support/CS, founder included."
-	# Destek ve Hesap ikisi de Müşteri İlişkileri alanına katlandı.
-	if HRSystem.covering_heads() != 1:
-		return "covering_heads is %d with one CS rep assigned, want 1" % HRSystem.covering_heads()
-	# §4: hangi alanın boş kaldığı görünür. Araştırma'ya kimse atanmadı.
-	var empty: Array[String] = HRSystem.unstaffed_areas()
-	if empty.has(HRConstants.AREA_CUSTOMER_SUCCESS):
-		return "Müşteri İlişkileri reads unstaffed while somebody is assigned to it"
-	if not empty.has(HRConstants.AREA_RESEARCH):
-		return "Araştırma has nobody on it and did not read as unstaffed"
+	# §15.3 `hr.unstaffed_jobs()` — alan değil İŞ. Alan-anahtarlı ikizleri (covering_heads,
+	# unstaffed_areas) yalnız bu vakadan çağrılıyordu ve §12.0 ile birlikte gitti.
+	var empty: Array[String] = HRSystem.unstaffed_jobs()
+	if empty.has(HRConstants.JOB_ACCOUNTS):
+		return "Hesap sahipliği reads unstaffed while somebody is assigned to it"
+	if not empty.has(HRConstants.JOB_SALES):
+		return "the Satış job has nobody on it and did not read as unstaffed"
 	# KURUCU TEK İŞ (§2.1 "Her şeyi yapabilir, aynı anda yapamaz"). İkincisi sessizce
 	# eklenmez, gerekçeyle reddedilir — ama HANGİ iş olduğu serbest: kurucunun ana/ikincil
 	# ayrımı yok (§2), beşi de onun.
@@ -7614,9 +7406,9 @@ static func _case_job_assignment_and_idle() -> String:
 	CharacterRegistry.clear_jobs(founder.id)
 	if not founder.assigned_jobs.is_empty():
 		return "clearing the jobs left a stale area mirror: %s" % str(founder.assigned_jobs)
-	# §12.0: Araştırma bir ATAMA HEDEFİ DEĞİLDİR. Sütun kalktı; bir araştırma başlatılırken
-	# ona çalışan atanır ve o akış Ar-Ge modülünün konusu. Kurucu için de kalktı.
-	if CharacterRegistry.assign_area(founder.id, HRConstants.AREA_RESEARCH) == "":
+	# §12.0: Araştırma bir ATAMA HEDEFİ DEĞİLDİR — ve artık bir ID de değil. Alan tamamen
+	# silindi, o yüzden kapı "bilinmeyen alan" kapısıyla AYNI kapı: uydurma bir id reddedilir.
+	if CharacterRegistry.assign_area(founder.id, "research") == "":
 		return "Araştırma was still accepted as an assignment — §12.0 removes the column"
 	return ""
 
@@ -7660,46 +7452,6 @@ static func _case_overload_costs_output() -> String:
 	return ""
 
 
-static func _case_job_lead_resolution() -> String:
-	# Erdem 2026-08-21: lider İŞ BAŞINA. Açık seçim kazanır; yoksa o işteki en yüksek
-	# Liderlik; hiç kimse yoksa kurucu. TÜRETİLMİŞ olması bilinçli — saklanan bir lider
-	# işe alım ve ayrılmayla bayatlar.
-	# FALSİFİKASYON: HRSystem.area_lead'in "en yüksek Liderlik" dalını ilk bulduğu kişiyi
-	# döndürecek şekilde değiştir → ikinci iddia FAIL.
-	var founder: Character = CharacterRegistry.get_founder()
-	# Boş bir işin lideri kurucudur — varsayılan bir kimsesizlik değil.
-	var cost_lead: Character = HRSystem.area_lead(HRConstants.AREA_RESEARCH)
-	if cost_lead == null or cost_lead.id != founder.id:
-		return "an unstaffed area did not fall back to the founder"
-	# İki kişi AYNI ALANDA: Liderliği yüksek olan lider olur, rolü ya da işe alım sırası
-	# değil. İkisi de yazılımcı, yani ikisi de Yazılım alanına doğuyor — lider ALAN başına
-	# çözüldüğü için karşılaştırmanın anlamlı olması için aynı alanda olmaları şart.
-	var weak: Character = _make_employee("char_ld_weak", "LD Weak", HRConstants.ROLE_DEVELOPER,
-		SEED_PACE, 0, 50, SEED_EXPERTISE, 1)
-	var strong: Character = _make_employee("char_ld_strong", "LD Strong", HRConstants.ROLE_DEVELOPER,
-		SEED_PACE, 0, 50, SEED_EXPERTISE, 8)
-	var derived: Character = HRSystem.area_lead(HRConstants.AREA_ENGINEERING)
-	if derived == null or derived.id != strong.id:
-		return "the derived Yazılım lead is '%s', want the highest Liderlik" % (derived.id if derived != null else "<null>")
-	# AÇIK seçim türetilmişi yener.
-	GameState.area_leads[HRConstants.AREA_ENGINEERING] = weak.id
-	if HRSystem.area_lead(HRConstants.AREA_ENGINEERING).id != weak.id:
-		return "an explicit pick did not win over the derived lead"
-	# Ayrılan lider koltuğu BOŞALTIR (§9) ve okuma canlı kadroya düşer — hayalete değil.
-	CharacterRegistry.remove(weak.id)
-	if GameState.area_leads.has(HRConstants.AREA_ENGINEERING):
-		return "the lead seat still names a departed employee"
-	var after: Character = HRSystem.area_lead(HRConstants.AREA_ENGINEERING)
-	if after == null or after.id != strong.id:
-		return "after the lead left, resolution did not fall to the live roster"
-	# §9: ayrılanın ALANLARI da boşalır, kimseye devredilmez.
-	if not weak.assigned_jobs.is_empty():
-		return "a departed employee still holds areas — rev 2 §9 empties them"
-	return ""
-
-
-# =============== Ekip arayüzü · onaylı tasarım (2026-08-22) ==================
-
 static func _case_star_ruler_contract() -> String:
 	# Onaylı tasarım her yeteneği BEŞ YILDIZ çiziyor ve yarım yıldızı destekliyor. Cetvel
 	# tek yerde yaşıyor: HRConstants.stars_for. İki uç da anlamlı olmalı — tavan tam beş,
@@ -7736,7 +7488,6 @@ static func _case_star_ruler_contract() -> String:
 	if HRConstants.FIVE_STAR_CHANCE > 0.25:
 		return "a %.0f%% five-star rate is not rare" % (HRConstants.FIVE_STAR_CHANCE * 100.0)
 	return ""
-
 
 static func _case_single_trait_contract() -> String:
 	# Onaylı tasarım herkeste TEK trait çiziyor ve R4'ten sonra o trait'in KUTBU yok:
@@ -8071,12 +7822,24 @@ static func _case_effective_skill_formula() -> String:
 
 	# --- §4.5'in ikinci yarısı: günlük katkı = etkin çıktı × ÇALIŞMA SAATİ ---
 	# Saat formülün İÇİNDE değil DIŞINDA: yetenek bir SAATTE ne çıktığını, süre KAÇ SAAT
-	# çıktığını belirler.
+	# çıktığını belirler. Çarpan STANDART GÜNE göre normalize (HRConstants.hours_output_mult):
+	# sekiz saat 1,0'dır, yani sekiz saatlik bir günde daily_contribution == effective_skill
+	# ve Ürün/Satış/CS'nin bütün kalibre sabitleri yerinde kalır. §8.1 ile §8.3 oranı zaten
+	# kendileri veriyor ve normalize hâl tam o iki sayıdır.
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
 	var per_hour: float = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
 	var daily: float = HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING)
-	if absf(daily - per_hour * float(HRConstants.WORK_HOURS_DEFAULT)) > 0.001:
-		return "daily contribution is not hourly × hours (%.3f vs %.3f)" % [daily, per_hour]
+	if absf(daily - per_hour) > 0.001:
+		return "the standard day is not neutral (%.3f vs %.3f)" % [daily, per_hour]
+	# ONBİR SAAT: §8.1'in kendi cümlesi, "en fazla +%37,5 çıktı".
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MAX)
+	if absf(HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING) - per_hour * 1.375) > 0.001:
+		return "an eleven-hour day did not raise the daily contribution by 37.5%"
+	# BEŞ SAAT: §8.3'ün kendi cümlesi, "sekiz saatlik günün %62,5'i".
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MIN)
+	if absf(HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING) - per_hour * 0.625) > 0.001:
+		return "a five-hour day did not cut the daily contribution to 62.5%"
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MAX)
 	var longer: float = HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING)
 	if longer <= daily:
@@ -8260,7 +8023,7 @@ static func _case_save_migration_v6_to_v7() -> String:
 					"leave_month": 3, "morale": 62},
 			],
 		},
-		"game_state": {"area_leads": {"engineering": "c_dev"}},
+		"game_state": {},
 	}
 	SaveManager._migrate_to_rev11(state)
 	var dev: Dictionary = ((state["registries"] as Dictionary)["characters"] as Array)[0]
@@ -8301,8 +8064,8 @@ static func _case_save_migration_v6_to_v7() -> String:
 
 	# --- §4.2: alan başına lider koltuğu rev 11'de yok, ve DOĞRU yuvadan silinir ---
 	var gs: Dictionary = state["game_state"] as Dictionary
-	if gs.has("area_leads"):
-		return "area_leads survived the migration"
+	if gs.has("area_leads") or gs.has("job_leads"):
+		return "a lead seat survived the migration — §4.2 has no per-area lead"
 	if int(gs.get("company_work_hours", -1)) != HRConstants.WORK_HOURS_DEFAULT:
 		return "company hours did not seed: %s" % str(gs.get("company_work_hours"))
 	if int(gs.get("company_start_hour", -1)) != HRConstants.START_HOUR_DEFAULT:
@@ -8417,14 +8180,17 @@ static func _case_save_migration_v4_to_v5() -> String:
 	var f: Dictionary = (state["characters"] as Array)[2]
 	if (f["assigned_jobs"] as Array) != [HRConstants.AREA_ENGINEERING]:
 		return "the founder on 'build' landed on %s" % str(f["assigned_jobs"])
-	# LİDER KOLTUKLARI da taşınır, ve eski anahtar silinir.
-	if state.has("job_leads"):
-		return "the retired job_leads table survived the migration"
-	var leads: Dictionary = state.get("area_leads", {}) as Dictionary
-	if String(leads.get(HRConstants.AREA_ENGINEERING, "")) != "char_v4_dev":
-		return "the build lead seat did not move to Yazılım: %s" % str(leads)
-	if String(leads.get(HRConstants.AREA_CUSTOMER_SUCCESS, "")) != "char_v4_cs":
-		return "the accounts lead seat did not move to Müşteri İlişkileri: %s" % str(leads)
+	# LİDER KOLTUKLARI SİLİNİR, TAŞINMAZ. §4.2 lideri YAPIM BAŞINA veriyor; alan başına oturan
+	# koltuk rev 11'de yok. Bu iddia eskiden koltuğun DOĞRU ALANA taşındığını ölçüyordu ve
+	# geçiyordu — ama elle kurulmuş DÜZ bir sözlük üzerinde: göç `job_leads`'i top-level
+	# `state`'ten okuyor, oysa GameState değişkenleri `state["game_state"]` altında yaşıyor.
+	# Yani gerçek bir kayıtta o blok hiçbir zaman çalışmadı ve vaka bunu göremedi — §10'un
+	# "bir göç, YAZANIN yazdığı şekli okumalıdır" dersinin ikinci örneği.
+	if state.has("job_leads") or state.has("area_leads"):
+		return "a lead seat survived at the top level of the migration"
+	var gs_v5: Dictionary = state.get("game_state", {}) as Dictionary
+	if gs_v5.has("job_leads") or gs_v5.has("area_leads"):
+		return "a lead seat survived under game_state"
 	return ""
 
 

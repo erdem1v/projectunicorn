@@ -43,17 +43,10 @@ const KEY_ROLE := "role"
 ## aramanın kaydı hâlâ o anahtarı taşıyabilir, o yüzden okuma tarafı ikisini de tanır
 ## (current_level) — Faz 7'de KEY_BAND ile birlikte o köprü de gider.
 const KEY_LEVEL := "level"
-const KEY_BAND := "band"
 const KEY_SEED := "seed"
 const KEY_STARTED_DAY := "started_day"
 const KEY_ARRIVAL_DAY := "arrival_day"
 const KEY_FILES := "files"
-
-# ProductSystem's "mühendis lazım" signal (written by ProductSystem's bug-sprint frequency
-# check, cleared here on a developer hire). Cited by SYMBOL, not by line: the old
-# `product_system.gd:462` pointer had drifted onto the iteration sub-machine, which is a
-# worse failure than a stale number because the reader believes what they find there.
-const FLAG_NEEDS_ENGINEER := "needs_engineer"
 
 # Arrival-day mixer (arithmetic, NOT tunables). The window itself is
 # §10: tek gün, HRConstants.SEARCH_ARRIVAL_DAYS. Eskiden bir aralıktı ve içinden
@@ -132,12 +125,13 @@ static func current_level() -> int:
 	# zorunda; bu iki okuma olmasa tek yol GameState.hr_search'e UI'dan uzanmaktı — yani o
 	# sözlüğün sahibi olan sistemin yanından dolaşmak.
 	#
-	# ESKİ KAYDIN KÖPRÜSÜ: rev 11 öncesi başlatılmış bir arama "band" taşır. Sessizce Junior
-	# saymak yanlış adayları getirirdi, o yüzden bant adı seviyeye çevrilir.
+	# ESKİ KAYDIN KÖPRÜSÜ: rev 11 öncesi başlatılmış bir arama "band" taşır ve o dizeler
+	# seviye sırasıyla AYNI sırada (junior · mid · senior), o yüzden çeviri indeksten okunur.
+	# Sessizce Junior saymak yanlış adayları getirirdi.
 	if GameState.hr_search.has(KEY_LEVEL):
 		return clampi(int(GameState.hr_search[KEY_LEVEL]),
 			HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
-	var legacy: int = HRConstants.BANDS.find(String(GameState.hr_search.get(KEY_BAND, "")))
+	var legacy: int = ["junior", "mid", "senior"].find(String(GameState.hr_search.get("band", "")))
 	return legacy if legacy >= 0 else HRConstants.LEVEL_MID
 
 
@@ -247,11 +241,6 @@ static func hire(candidate_index: int) -> Character:
 	emp.hire_day = GameState.day + 1
 	# Komisyon: charged ONCE, here, on the hire only — dismissing the files charges nothing.
 	FinanceSystem.apply_one_time_cost(HRConstants.commission_for(salary), "hire")
-	if role_id == HRConstants.ROLE_DEVELOPER:
-		# needs_engineer is ProductSystem's bug-sprint pressure signal, and a hire is that
-		# flag's answer — so the answer clears the question. HRMoraleSystem.is_capacity_overloaded
-		# reads the same flag for the AŞIRI YÜKLÜ badge, which is what finally gives it a reader.
-		GameState.set_flag(FLAG_NEEDS_ENGINEER, false)
 	_clear()
 	if OS.is_debug_build():
 		print("[HRSearchSystem] hire: %s (%s) $%d/mo, komisyon $%d" % [

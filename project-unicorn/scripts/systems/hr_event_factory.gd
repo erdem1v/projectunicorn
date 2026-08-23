@@ -42,55 +42,7 @@ static func build_resignation(emp: Character) -> GameEvent:
 	return ev
 
 
-# --- Overtime safety valve: a CHOICE, never a silent exclusion (design doc §7b) ---
-
-static func build_overtime_valve(emp: Character, dept_id: String) -> GameEvent:
-	var ev := GameEvent.new()
-	ev.id = "ev_hr_valve_%s" % emp.id
-	ev.category = "reactive"
-	ev.tags = [TAG_BUILD_SAFE, "hr_overtime"]
-	ev.priority = 10             # a person about to quit outranks routine beats
-	ev.title = TranslationServer.translate("HR_EV_VALVE_TITLE")
-	ev.character_id = emp.id
-	ev.body_text = TranslationServer.translate("HR_EV_VALVE_BODY").format({
-		"voice": HRConstants.valve_voice(emp.id),
-		"dept": HRConstants.department_label(dept_id),
-	})
-	ev.choices = [
-		_choice(TranslationServer.translate("HR_EV_OVERTIME_STOP"), [{"type": "hr_overtime_stop", "department": dept_id}]),
-		_choice(TranslationServer.translate("HR_EV_VALVE_CONTINUE"), [{"type": "hr_overtime_continue", "department": dept_id, "character_id": emp.id}]),
-	]
-	return ev
-
-
-# --- Placeholder positive morale events (design doc §6 + §12.8) ---
-# Morale never self-heals, so without these the demo is one-directional and broken.
-# Content sprint replaces the copy; the TRIGGERS (HRMoraleSystem's readable surface)
-# and the effect channel stay. All three use the EXISTING morale_all_employees modifier,
-# so they need no new modifier type and render with the "Ekip +N" badge for free.
-
-static func build_calm_stretch(days: int) -> GameEvent:
-	var ev := _positive("ev_hr_calm_stretch", TranslationServer.translate("HR_EV_CALM_TITLE"))
-	ev.body_text = TranslationServer.translate("HR_EV_CALM_BODY").format({"n": days})
-	ev.choices = [_choice(TranslationServer.translate("HR_EV_CALM_ACK"), [{"type": "morale_all_employees", "delta": HRConstants.CALM_STRETCH_MORALE}])]
-	return ev
-
-
-static func build_big_signing(customer_name: String, mrr: int) -> GameEvent:
-	var ev := _positive("ev_hr_big_signing", TranslationServer.translate("HR_EV_SIGNING_TITLE"))
-	ev.body_text = TranslationServer.translate("HR_EV_SIGNED_BODY").format({"company": customer_name, "amount": _money(mrr)})
-	ev.choices = [_choice(TranslationServer.translate("HR_EV_SIGNING_ACK"), [{"type": "morale_all_employees", "delta": HRConstants.BIG_SIGNING_MORALE}])]
-	return ev
-
-
-static func build_ship_glow(version: int) -> GameEvent:
-	var ev := _positive("ev_hr_ship_glow", TranslationServer.translate("HR_EV_SHIPPED_TITLE"))
-	ev.body_text = TranslationServer.translate("HR_EV_SHIPPED_BODY").format({"version": version})
-	ev.choices = [_choice(TranslationServer.translate("HR_EV_SHIPPED_ACK"), [{"type": "morale_all_employees", "delta": HRConstants.SHIP_GLOW_MORALE}])]
-	return ev
-
-
-# --- Internals ---
+# --- Internals ---# --- Internals ---
 
 static func _positive(event_id: String, title: String) -> GameEvent:
 	var ev := GameEvent.new()

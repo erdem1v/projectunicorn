@@ -7,16 +7,14 @@ extends RefCounted
 #   1. tick_leave_returns    — status flips back FIRST, so everything below reads the
 #                              restored `active` (capacity, ek mesai, badges).
 #   2. tick_leave_departures — next, so today's capacity already excludes whoever left.
-#   5. tick_thresholds       — AFTER HROvertimeSystem, so a person pushed under KAÇMA RİSKİ
+#   5. tick_thresholds       — son adım, so a person pushed under KAÇMA RİSKİ
 #                              by tonight's mesai starts their count today, not tomorrow.
 #   6. tick_trait_effects    — periodic (not daily), reads the settled morale picture.
-#   7. tick_positive_events  — the RECOVERY channel, last, on the settled picture.
 #
 # Owns: every movement of Character.morale (the only writer in the game besides the event
 # modifiers), Character.status / leave_until_day / leave_taken_year / flight_risk_days, the
 # flight-risk counter and its resignation roll, the pending-departure latch, the
 # same-department trait nudges, the positive-event trigger surface, and
-# GameState.hr_last_positive_event_day.
 #
 # THERE IS NO DRIFT. The old ±1/day-toward-50 tick is DELETED, not tuned to zero: on a day
 # with no event, no ek mesai, no aşırı yük and no player action, morale does not move by a
@@ -91,7 +89,7 @@ static func tick_leave_returns() -> void:
 		GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, false)
 		# İzin dönüşü moral getirir; manuel TATİLE GÖNDER daha büyük (design doc §7).
 		# The TÜKENİYOR badge clears by itself as soon as morale crosses back over
-		# MORALE_BURNOUT — nothing here touches badges, they are derived.
+		# §7'nin bandları — nothing here touches badges, they are derived.
 		if was_manual:
 			apply_delta(emp, HRConstants.MORALE_VACATION_RETURN, HRConstants.REASON_VACATION_RETURN)
 		else:
@@ -148,7 +146,7 @@ static func _summer_window_start_day(year: int) -> int:
 
 
 static func tick_thresholds() -> void:
-	# KAÇMA RİSKİ counter, then the resignation roll. Runs AFTER HROvertimeSystem so tonight's
+	# KAÇMA RİSKİ counter, then the resignation roll. Runs last so tonight's
 	# mesai is already in the morale number this reads.
 	for emp in CharacterRegistry.get_employees():
 		if emp.category != "employee":
@@ -186,51 +184,30 @@ static func tick_thresholds() -> void:
 static func _team_decay_mult(emp: Character) -> float:
 	if emp == null or emp.category != "employee":
 		return 1.0
-	var dept: String = HRConstants.department_of(emp.role)
-	if dept == "":
+	# §6 TAT KAÇIRAN takım arkadaşlarının moral düşüşünü hızlandırır. "Takım arkadaşı" artık
+	# KADRO GRUBUDUR (§13.1) — departman taksonomisi §8.2 ile birlikte kalktı. Kapsam DARALDI
+	# ve bu doğru yönde bir daralma: dört kişilik bir ürün departmanı yerine, oyuncunun
+	# defterde yan yana gördüğü bant.
+	var group_id: String = String(HRConstants.ROLE_GROUP.get(emp.role, ""))
+	if group_id == "":
 		return 1.0
 	var m: float = 1.0
 	for other in CharacterRegistry.get_active_employees():
 		if other == null or other.id == emp.id or other.category != "employee":
 			continue
-		if HRConstants.department_of(other.role) != dept:
+		if String(HRConstants.ROLE_GROUP.get(other.role, "")) != group_id:
 			continue
 		m *= HRConstants.trait_mult(other.traits, "dept_morale_decay_mult")
 	return m
 
 
-static func tick_positive_events() -> void:
-	# THE RECOVERY CHANNEL (design doc §6 + §12.8). Morale never self-heals, so without these
-	# the demo would be one-directional. Placeholders on the trigger surface: the copy is the
-	# content sprint's, the triggers and the effect channel are ours. The morale itself rides
-	# the EXISTING morale_all_employees modifier inside the factory events, so it lands when
-	# the player reads the beat, and nothing is applied from here.
-	var roster: Array[Character] = CharacterRegistry.get_employees()
-	if roster.is_empty():
-		return   # no team, no team morale (and average_morale() would read 0 and always pass)
-	if not _positive_off_cooldown():
-		return
-	# One per tick, freshest cause first: today's ship outranks today's signature, which
-	# outranks a standing calm stretch. Deterministic order, never a shuffle.
-	if days_since_last_ship() == 0:
-		var ship: Dictionary = _latest_ship()
-		_fire_positive(HREventFactory.build_ship_glow(int(ship.get("version", 1))))
-		return
-	var signing: Customer = _big_signing_today()
-	if signing != null:
-		_fire_positive(HREventFactory.build_big_signing(signing.company_name, signing.mrr))
-		return
-	var calm: int = days_since_last_overtime()
-	if calm >= HRConstants.CALM_STRETCH_DAYS and average_morale() < float(HRConstants.CALM_STRETCH_MAX_MORALE):
-		_fire_positive(HREventFactory.build_calm_stretch(calm))
-
-
 # ============================================================================
+#  THE morale seam# ============================================================================
 #  THE morale seam
 # ============================================================================
 
 static func apply_delta(emp: Character, delta: int, reason: String) -> void:
-	# The single morale entry point for the whole HR module: ek mesai (HROvertimeSystem), the
+	# The single morale entry point for the whole HR module: çalışma saatleri (§7.1), the
 	# three player actions (HRActions), izin dönüşü and the trait nudges all land here, so the
 	# carrier's trait multiplier and the founder's Liderlik climate are folded in exactly once
 	# and in one place. Callers pass the NOMINAL design number and never pre-scale it.
@@ -427,25 +404,6 @@ static func average_morale() -> float:
 	return float(total) / float(n)
 
 
-static func days_since_last_overtime() -> int:
-	# HROvertimeSystem stamps GameState.hr_last_overtime_day. 0 means "hiç mesai olmadı", and
-	# then the calm stretch is measured from the founding day (day 1) — a team that never
-	# worked a late night has genuinely had a quiet stretch, and it must still be able to
-	# reach the recovery event, because nothing else lifts morale on its own. Safe to measure
-	# this way (unlike the two reads below) because its trigger is a >= comparison, never == 0.
-	return GameState.day - maxi(GameState.hr_last_overtime_day, 1)
-
-
-static func days_since_last_ship() -> int:
-	# Reads the mvp_version_history flag ProductSystem appends a {version, day} record to on
-	# every ship. NEVER (not 0) when nothing has shipped: 0 means TODAY and a false "today"
-	# would fire the ship-glow event on day 1 of a run with no product.
-	var latest: Dictionary = _latest_ship()
-	if latest.is_empty():
-		return NEVER
-	return GameState.day - int(latest.get("day", GameState.day))
-
-
 static func days_since_last_signing() -> int:
 	# Reads Customer.acquired_on_day across the registry. NEVER when no account exists, for
 	# the same reason as above.
@@ -455,15 +413,6 @@ static func days_since_last_signing() -> int:
 	if newest <= 0:
 		return NEVER
 	return GameState.day - newest
-
-
-static func is_capacity_overloaded() -> bool:
-	# FIRST READER of `needs_engineer`. ProductSystem has been setting it since the Part 2 HR
-	# bridge (ENGINEER_SPRINT_THRESHOLD sprints inside ENGINEER_WINDOW_DAYS) and nothing has
-	# ever read it — the flag's answer was always "hire someone", and this is the module that
-	# can finally say so. COMPANY-level signal; the badge it feeds is per-employee, which is
-	# why badges_for only hands it to product_dev members.
-	return bool(GameState.get_flag("needs_engineer", false))
 
 
 static func days_until_return(emp: Character) -> int:
@@ -610,8 +559,11 @@ static func _maybe_resign(emp: Character) -> void:
 		return
 	if _pending.has(emp.id):
 		return
-	var chance: float = HRConstants.resign_chance(
-		emp.traits, HROvertimeSystem.valve_continued_for(emp.id))
+	# EMNİYET VALFİ GİTTİ. Valf bir MESAİ BLOĞUNUN olayıydı ("bu kişi tükeniyor, bloğu
+	# durdurayım mı?") ve §8.2 blokları kaldırdı: durdurulacak bir blok yok, o yüzden
+	# "Devam et" diye bir karar da yok. §11.3 ayrılmaları olay motoruna bırakıyor; kişi
+	# başına ceza oraya, kendi kararıyla birlikte döner.
+	var chance: float = HRConstants.resign_chance(emp.traits, false)
 	if emp.flight_risk_days >= HRConstants.RESIGN_WINDOW_MAX_DAYS:
 		# WORKING: the far edge of the canon 10-14 gün window is a CERTAINTY, not a coin flip
 		# that keeps failing. Rolling forever would leave a permanently neglected employee in
@@ -636,48 +588,3 @@ static func _roll(chance: float) -> bool:
 	if OS.is_debug_build() and forced == "fail":
 		return false
 	return RngStreams.get_stream(RngStreams.STREAM_HR_MORALE).randf() < chance
-
-
-static func _positive_off_cooldown() -> bool:
-	# GameState.hr_last_positive_event_day is ours. 0 = hiç tetiklenmedi, which must not read
-	# as "fired on day 0" and gate the first one.
-	if GameState.hr_last_positive_event_day <= 0:
-		return true
-	return GameState.day - GameState.hr_last_positive_event_day >= HRConstants.POSITIVE_EVENT_COOLDOWN_DAYS
-
-
-static func _fire_positive(ev: GameEvent) -> void:
-	# The cooldown stamp IS the once-only latch for these three: their factory ids are shared
-	# (not per-character like the resignation), and a synthetic event ignores one_shot. Stamped
-	# at ENQUEUE, never at resolve, so an unread beat still blocks the next one.
-	GameState.hr_last_positive_event_day = GameState.day
-	EventManager.enqueue(ev)
-
-
-static func _latest_ship() -> Dictionary:
-	# mvp_version_history is an Array of {version, day}; ProductSystem appends on every ship.
-	var history: Array = GameState.get_flag("mvp_version_history", [])
-	var best: Dictionary = {}
-	for entry in history:
-		if not (entry is Dictionary):
-			continue
-		var e: Dictionary = entry
-		if best.is_empty() or int(e.get("day", 0)) >= int(best.get("day", 0)):
-			best = e
-	return best
-
-
-static func _big_signing_today() -> Customer:
-	# BÜYÜK İMZA: an account signed TODAY at or above HRConstants.BIG_SIGNING_MRR. Largest
-	# wins so the beat names the biggest name; ties resolve by registry insertion order, which
-	# is stable. No market_type filter — a $1.500+ account is a big signature either way, and
-	# B2C is aggregate audience rather than discrete records.
-	var best: Customer = null
-	for c in CustomerRegistry.get_all():
-		if c.acquired_on_day != GameState.day:
-			continue
-		if c.mrr < HRConstants.BIG_SIGNING_MRR:
-			continue
-		if best == null or c.mrr > best.mrr:
-			best = c
-	return best

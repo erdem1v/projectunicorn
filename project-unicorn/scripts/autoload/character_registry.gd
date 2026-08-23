@@ -69,7 +69,7 @@ func get_active_employees() -> Array[Character]:
 	#
 	# EXCLUDES on-leave: build capacity (ProductSystem.capacity_total), team speed
 	#   (_speed_for_lead), SORUMLU selection (creation_flow), CS churn dampen
-	#   (B2BSalesSystem), overtime participation (HROvertimeSystem).
+	#   (B2BSalesSystem).
 	# INCLUDES on-leave (i.e. uses get_employees): payroll (paid leave — deliberate),
 	#   the morale machine (leave RESTORES morale), HR badge, team size, run ledger,
 	#   endings data, founder equity, cap table, and the VC team-domain checks (a company
@@ -86,42 +86,6 @@ func get_active_employees() -> Array[Character]:
 # `training_area` ve `assigned_jobs` alanlarını bu dosyanın DIŞINDA kimse yazmaz.
 # Hepsi sinyal atar, çünkü defter satırı bu değerleri çiziyor ve HR sekmesi
 # yapı-anahtarıyla yeniden kuruluyor.
-
-## Deneyim ekler — ALAN BAŞINA (rev 2 §8 learn-by-doing). KURUCU DAİL (2026-08-22):
-## Kişisel sekmesinin kurucu kartı bir DENEYİM çubuğu çiziyor, ve kurucu bu kanaldan
-## dışlanırsa o çubuk sonsuza dek %0 okur — yani ekran yalan söyler.
-## DOLDUĞUNDA O ALAN +1 OLUR ve sayaç sıfırlanır: bu ÜCRETSİZ kanaldır ve ücretli
-## eğitimden bağımsızdır (§8 ikisini ayrı satırlarda sayıyor). `true` döner yalnız
-## bir puan kazanıldıysa.
-func add_area_experience(id: String, area_key: String, amount: int) -> bool:
-	var c: Character = _characters.get(id, null)
-	if c == null:
-		push_warning("[CharacterRegistry] add_area_experience on unknown id: %s" % id)
-		return false
-	if c.category not in ["employee", "founder"]:
-		return false
-	if area_key == "" or not HRConstants.AREAS.has(area_key):
-		return false
-	var cur: int = int(c.area_experience.get(area_key, 0))
-	var raised: int = cur + maxi(amount, 0)
-	if raised < HRConstants.EXPERIENCE_MAX:
-		if raised == cur:
-			return false
-		c.area_experience[area_key] = raised
-		EventBus.employee_experience_changed.emit(id, raised)
-		return false
-	# Tavandaki bir alan deneyim BİRİKTİRMEZ: sayaç dolar, puan verilemez, ve dolu
-	# sayaç oyuncuya "burada yapacak bir şey kalmadı" diye durur.
-	var area_value: int = int(c.role_stats.get(area_key, 0))
-	if area_value >= HRConstants.AREA_MAX:
-		c.area_experience[area_key] = HRConstants.EXPERIENCE_MAX
-		EventBus.employee_experience_changed.emit(id, HRConstants.EXPERIENCE_MAX)
-		return false
-	c.role_stats[area_key] = area_value + 1
-	c.area_experience[area_key] = 0
-	EventBus.employee_experience_changed.emit(id, 0)
-	return true
-
 
 ## Eğitime uygun mu? Edilgen olmayan bir çalışan ya da KURUCU, ve SEÇİLEN yetenek tavanın
 ## altındayken. DENEYİM ŞARTI YOK (rev 2 §8): eğitim parayla alınan ayrı bir kanal,
@@ -301,7 +265,7 @@ func tick_training(id: String) -> bool:
 # =========================== Alan ataması (rev 2 §4) ========================
 # TEK YAZAR. `assigned_jobs` yalnız buradan değişir; WRITE-THROUGH YASASI.
 # (Alanın kendisi değişti, alanın AD I değil: dizinin adı `assigned_jobs` kaldı ki kayıt
-# şemasının alan adı sabit kalsın; içindeki değerler artık HRConstants.ASSIGNABLE.)
+# şemasının alan adı sabit kalsın; içindeki değerler artık HRConstants.AREAS.)
 
 
 
@@ -464,13 +428,16 @@ func count_developers() -> int:
 	return n
 
 
-func count_active_in_department(dept_id: String) -> int:
-	# Everyone AT WORK in a main department (HRConstants.department_of). The capacity pool
-	# reads this rather than the developer count, because a tester or a designer is just as
-	# occupied by the build as a developer is.
+## §13.1 TEK TAKSONOMİ: KADRO GRUBU. Bu fonksiyon eskiden DEPARTMANI sayıyordu ve departman
+## yalnız ek mesai bloklarının birimiydi — §8.2 onları kaldırınca taksonominin tek gerekçesi
+## de kalktı. Sayılan İNSANLAR değişmedi: "product_dev" tam olarak product_design ∪
+## development'tı, ve çağıranlar artık o iki grubu adıyla istiyor.
+##
+## İZİN VE EĞİTİM HARİÇTİR (İŞ merceği). Bordro merceği ayrı bir fonksiyondur ve onları sayar.
+func count_active_in_groups(group_ids: Array) -> int:
 	var n: int = 0
 	for c in get_active_employees():
-		if HRConstants.department_of(c.role) == dept_id:
+		if group_ids.has(String(HRConstants.ROLE_GROUP.get(c.role, ""))):
 			n += 1
 	return n
 
@@ -484,28 +451,6 @@ func count_active_developers() -> int:
 			n += 1
 	return n
 
-
-func get_in_department(dept_id: String) -> Array[Character]:
-	# Roster of a main department, ON-LEAVE INCLUDED — the DISPLAY lens, sibling of
-	# count_active_in_department() above, which is the WORK lens and excludes leave.
-	# The distinction is load-bearing for the Ekip page: a department whose only member is on
-	# holiday must render that person's card, not an "Henüz kimse yok" empty row.
-	# Insertion-ordered (hire order) because _characters is a Dictionary — deterministic.
-	var out: Array[Character] = []
-	for c in get_employees():
-		if HRConstants.department_of(c.role) == dept_id:
-			out.append(c)
-	return out
-
-
-func get_in_section(section_id: String) -> Array[Character]:
-	# Same display lens, one level down (Tasarım / Geliştirme / Test). Single-level departments
-	# have no sections, so this is never called for Satış or Müşteri.
-	var out: Array[Character] = []
-	for c in get_employees():
-		if HRConstants.section_of(c.role) == section_id:
-			out.append(c)
-	return out
 
 
 func count_employees() -> int:
@@ -666,11 +611,11 @@ func _validate_shape(character: Character) -> void:
 		for skill_key in FounderConstants.SKILLS:
 			if not character.role_stats.has(skill_key):
 				push_error("[CharacterRegistry] founder role_stats missing skill '%s'" % skill_key)
-	# Assignment shape is checked for EVERYONE: an area id that is not in ASSIGNABLE would
+	# Assignment shape is checked for EVERYONE: an area id that is not in AREAS would
 	# make every read seam quietly skip the person.
 	for area_id in character.assigned_jobs:
 		if not HRConstants.is_assignable(String(area_id)):
-			push_error("[CharacterRegistry] '%s' assigned to unknown area '%s' — see HRConstants.ASSIGNABLE"
+			push_error("[CharacterRegistry] '%s' assigned to unknown area '%s' — see HRConstants.AREAS"
 				% [character.id, String(area_id)])
 		elif not HRConstants.can_hold_area(character.role, String(area_id), character.category):
 			push_error("[CharacterRegistry] '%s' (%s) assigned to '%s', which is neither their key nor their secondary area"
@@ -718,7 +663,6 @@ func remove(id: String) -> void:
 	# documents for a stale lead_engineer_id).
 	if c != null:
 		c.assigned_jobs.clear()
-	GameState.release_area_leads(id)
 	_characters.erase(id)
 	EventBus.character_removed.emit(id)
 	EventBus.employee_departed.emit(id)              # §15.3

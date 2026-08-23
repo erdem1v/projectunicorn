@@ -89,7 +89,7 @@ static func hours_per_real_second(idx: int) -> float:
 	# In-game hours accrued per real second at a given speed. DERIVED from the
 	# ladder, never stored separately — that is what keeps SECONDS_PER_DAY the
 	# only place tempo is expressed. Pause (and any out-of-range index) = 0.0.
-	# NOT to be confused with HROvertimeSystem.speed_multiplier() or
+	# NOT to be confused with the product build's own speed multipliers or
 	# ProductSystem.capacity_speed_factor() — those are build throughput, not clock rate.
 	if idx <= 0 or idx >= SECONDS_PER_DAY.size():
 		return 0.0

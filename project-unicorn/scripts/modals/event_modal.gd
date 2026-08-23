@@ -541,8 +541,6 @@ func _describe_modifier(m) -> Dictionary:
 		# Not _char_first here: its unknown-id fallback is the literal "Moral", which would
 		# read as "Moral ayrılıyor". A departure badge needs a person or a generic noun.
 		"hr_departure": return {"text": tr("EFFECT_DEPARTURE").format({"who": _char_name_or(String(m.get("character_id", "")), tr("EFFECT_AN_EMPLOYEE"))}), "kind": &"negative"}
-		"hr_overtime_stop": return {"text": tr("EFFECT_OVERTIME_STOP"), "kind": &"neutral"}
-		"hr_overtime_continue": return {"text": tr("EFFECT_OVERTIME_CONTINUE"), "kind": &"negative"}
 		# --- B2B Sales System retention outcomes (badge + cost-line source of truth) ---
 		"b2b_promise_create": return {"text": tr("EFFECT_PROMISE_CREATE"), "kind": &"accent"}
 		"b2b_retain_delay": return {"text": tr("EFFECT_RETAIN_DELAY"), "kind": &"neutral"}

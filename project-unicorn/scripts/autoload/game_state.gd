@@ -87,7 +87,6 @@ const FLAG_TYPES := {
 	"cancelled_build_prefill": TYPE_DICTIONARY,
 	"creation_draft": TYPE_DICTIONARY,   # S2-33 draft guard (Calibration Round A §16): {step, market, type, features, name}
 	"product_path_frank_seen": TYPE_BOOL,
-	"needs_engineer": TYPE_BOOL,
 	# --- B2C economy ---
 	# b2c_audience is FLOAT and that is the fix for audit S3-43: sales_system's hourly tick
 	# accumulated it as a float precisely so slow erosion survives instead of rounding to
@@ -137,7 +136,6 @@ const FLAG_TYPES := {
 const FLAG_TYPE_PREFIXES := {
 	"b2b_broke_": TYPE_BOOL,                    # B2BSalesSystem credibility latch, per customer id
 	"hr_manual_leave_": TYPE_BOOL,              # HRMoraleSystem manual-vacation marker, per character id
-	"hr_valve_continued_": TYPE_BOOL,           # HROvertimeSystem "Devam et" memory, per character id
 	"bug_count_at_bugfix_start_": TYPE_INT,     # ProductSystem beta-phase baseline, per build id
 }
 
@@ -251,7 +249,6 @@ var run_departures: int = 0            # CharacterRegistry.remove, category "emp
 # lider işe alım/ayrılmayla kendiliğinden güncellenir, saklanan bir lider bayatlar.
 ## SEÇİM SEAM'İ YOK ve bu bilinçli: onaylı tasarımda lider seçme arayüzü çizilmemiş, yani
 ## bugün tablo hep boş ve lider hep türetiliyor. Yazan bir seam ancak o ekran gelince doğar.
-var area_leads: Dictionary = {}
 var run_scandals_total: int = 0        # RESERVED — no scandal system yet; debug-settable
 var run_scandals_managed: int = 0      # RESERVED
 var run_pushes_attempted: int = 0      # Term Sheet table push() writes (term_sheet_table_system.gd)
@@ -293,9 +290,6 @@ var run_sheets_won: int = 0            # run-cumulative: sheets granted (distinc
 # --- HR Core state (same "fields not systems" rule as the VC block above; all reset in
 # initialize_run). The owning system writes each one; nothing else touches them. ---
 var hr_search: Dictionary = {}          # HRSearchSystem: {state, role, band, seed, started_day, arrival_day, files}
-var hr_overtime: Dictionary = {}        # HROvertimeSystem: department id -> {block_days, day_index, ...}
-var hr_last_overtime_day: int = 0       # HROvertimeSystem stamps; the "sakin dönem" trigger reads it
-var hr_last_positive_event_day: int = 0 # HRMoraleSystem: positive-morale-event cooldown cursor
 
 # --- §8.1 ÇALIŞMA SAATLERİ: şirket ve grup kapsamları ---
 # Üç kapsam var (şirket → grup → çalışan) ve ikisi burada yaşıyor; üçüncüsü
@@ -611,15 +605,7 @@ func record_angel_round(equity_pct: int, amount: int) -> void:
 	EventBus.equity_changed.emit(get_investor_equity_pct())
 
 
-func release_area_leads(character_id: String) -> void:
-	## Ayrılan/çıkarılan kişi hangi alanların lideriyse o koltuklar BOŞALIR (rev 2 §9).
-	## Otomatik devir yok: bir sonraki okuma türetilmiş lidere düşer, yani canlı kadroya.
-	var freed: Array[String] = []
-	for area_id in area_leads.keys():
-		if String(area_leads[area_id]) == character_id:
-			freed.append(String(area_id))
-	for area_id in freed:
-		area_leads.erase(area_id)
+
 
 
 func get_founder_skill(skill_name: String) -> int:
@@ -814,7 +800,6 @@ func initialize_run(payload: Dictionary) -> void:
 	b2b_last_rep_portrait = ""
 	run_hires = 0
 	run_departures = 0
-	area_leads.clear()
 	run_scandals_total = 0
 	run_scandals_managed = 0
 	run_pushes_attempted = 0
@@ -842,9 +827,6 @@ func initialize_run(payload: Dictionary) -> void:
 	# it seeds the HR RNG from run_seed and may set flags, and both of those happen further
 	# down. It is called after the seed block instead.
 	hr_search.clear()
-	hr_overtime.clear()
-	hr_last_overtime_day = 0
-	hr_last_positive_event_day = 0
 	# §8.1 üç kapsam da tabana döner: şirket 09:00 / 8 saat, hiçbir grup istisnası yok.
 	# Kişisel istisnalar Character.work_hours_override'da ve karakterlerle birlikte gider.
 	company_start_hour = HRConstants.START_HOUR_DEFAULT

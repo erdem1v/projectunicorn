@@ -24,7 +24,7 @@ extends RefCounted
 # is_non_dominated_set(), called as a post-condition of generate() and asserted over 100+
 # generations in the smoke suite. The predicate is deliberately SHAPE-AGNOSTIC — it never
 # asserts equal totals and never asserts a distinct strict argmax — which is why the mixed
-# BAND_SHAPE profiles (strictly increasing totals per band) landed without rewriting it:
+# the archetype shapes landed without rewriting it:
 # rising totals force rising quotes, and a pricier file can never dominate on price.
 #
 # NO RNG. AT ALL. No randi/randf/RandomNumberGenerator/shuffle/pick_random, no Time: every
@@ -91,7 +91,7 @@ const CHANCE_RESOLUTION := 1000
 
 # Salaries are quoted to a $50 step — nobody asks for $9.873 a month. Presentation
 # granularity, not a knob: at $100 the tightest junior window cannot hold three distinct
-# quotes (BAND_SHAPE's gap rule needs window_low·PREMIUM·Δ(peak+total)/36 >= this step).
+# quotes — _salary_trio's arithmetic works IN this step, so two files can never collide.
 const SALARY_ROUND_TO := 50
 
 
@@ -162,7 +162,7 @@ static func generate(role_id: String, level: int, seed_value: int) -> Array:
 static func is_non_dominated_set(files: Array) -> bool:
 	# The invariant VERBATIM, price included: for every ordered pair, NOT (A >= B on all three
 	# axes AND A.salary <= B.salary). Deliberately shape-agnostic — it assumes neither equal
-	# totals nor a distinct strict argmax, so BAND_SHAPE's profile mix can keep evolving in
+	# totals nor a distinct strict argmax, so the archetype shapes can keep evolving in
 	# the balance pass without any test being rewritten.
 	#
 	# Paired by INDEX, not by value: `a != b` on two Dictionaries is an equality question with

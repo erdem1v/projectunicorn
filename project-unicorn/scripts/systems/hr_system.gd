@@ -8,7 +8,6 @@ extends RefCounted
 # sub-systems run in and nothing else; every rule lives in the system that owns it.
 #   HRSearchSystem     — Atlas arayışı, aday dosyaları, işe alım
 #   HRMoraleSystem     — moral, izin, eşikler, istifa, pozitif event'ler
-#   HROvertimeSystem   — departman bazlı ek mesai
 #   HRActions          — zam / tatil / işten çıkarma (oyuncu tetikler, tick'te değil)
 #   HRConstants        — her HR sayısının TEK evi
 #
@@ -21,7 +20,7 @@ extends RefCounted
 # one-directional loop would be a broken demo, not a hard one.
 #
 # Salary→Finance link: HRSystem does NOT push payroll to Finance. FinanceSystem pulls
-# CharacterRegistry.get_total_monthly_salaries() AND HROvertimeSystem.pay_accrued_today()
+# CharacterRegistry.get_total_monthly_salaries() AND WorkHoursSystem.overtime_pay_accrued_today()
 # at the top of its own daily_tick (slot 5, two slots later). One-way pull, single source
 # of truth — nobody writes a burn category from here, which is what keeps GameState's
 # daily_burn from ever publishing fresh overtime against stale salaries.
@@ -48,14 +47,12 @@ static func daily_tick() -> void:
 	#  ölçülen aynı tuzak).
 	tick_overload()
 	HRSearchSystem.daily_tick()
-	HROvertimeSystem.daily_tick()
 	#  §7 TABAN SÜRÜKLENME eşiklerden ÖNCE: bugünün saat ayarı ve aşırı yükü bu tikte
 	#  hedefe yazılır, sonra ease onu morale taşır, sonra eşikler O MORALİ okur. Ters sıra
 	#  Ayrılabilir'i bir gün geriden getirirdi.
 	HRMoraleSystem.tick_drift()
 	HRMoraleSystem.tick_ease()
 	HRMoraleSystem.tick_thresholds()
-	HRMoraleSystem.tick_positive_events()
 	#  7. DENEYİM: bugün gerçekten ÇALIŞMIŞ olanlar biriktirir. Eğitimdekiler
 	#     STATUS_TRAINING taşıdığı için get_active_employees zaten dışarıda bırakır.
 	#  8. EĞİTİM en sonda. SIRA ÖNEMLİ ve tersi ÖLÇÜLDÜ: eğitim önce koşarsa
@@ -304,26 +301,6 @@ static func idle_count() -> int:
 	return n
 
 
-static func covering_heads() -> int:
-	## ch. 06 §1.3'ün okuyucusu: "covering head = anyone assigned to support/CS, founder
-	## included". Kapsam oranı bu turda HESAPLANMIYOR (Operasyon turunun işi) ama payda
-	## burada doğuyor.
-	##
-	## Destek ve Hesap Sahipliği ayrı İŞLERDİ; atama alana geçince ikisi de Müşteri
-	## İlişkileri alanına katlandı — yani §1.3'ün "support/CS" birleşimi artık tek bir okuma.
-	return assigned_to(HRConstants.AREA_CUSTOMER_SUCCESS).size()
-
-
-static func unstaffed_areas() -> Array[String]:
-	## §4: "Hangi işin boş kaldığı bu ekranda görünür." Görevler matrisi bunu zaten
-	## gösteriyor (boş bir sütun boş okunuyor), ama okuma seam'i dışarıya açık kalıyor.
-	var out: Array[String] = []
-	for area_id in HRConstants.ASSIGNABLE:
-		if assigned_to(String(area_id)).is_empty():
-			out.append(String(area_id))
-	return out
-
-
 # ---------------------- §12.0 İŞ TARAFI OKUMA SEAM'LERİ ----------------------
 # Yukarıdaki assigned_to(alan) DURUYOR ve türetilmiş alan aynası üzerinden çalışıyor;
 # tüketiciler tek tek buraya çevrilir ve son çevrilen Faz 7'de o seam'i öldürür.
@@ -354,16 +331,12 @@ static func unstaffed_jobs() -> Array[String]:
 	return out
 
 
+## §4.2: LİDER YAPIM BAŞINADIR (Ürün modülünün seçtiği SORUMLU), ve lidersiz bir alan
+## KURUCUNUN Liderlik'ini okur. ALAN BAŞINA OTURAN KOLTUK KALKTI: GameState.area_leads'in
+## bir tane okuyucusu (burası) ve SIFIR üretim yazıcısı vardı — geri kalan her dokunuş bir
+## silmeydi ya da kayıt göçünün yanlış yuvaya yazan bloğuydu. Kalan şey türetilmiş liderdir:
+## o alandaki en yüksek Liderlik, kimse yoksa kurucu.
 static func area_lead(area_id: String) -> Character:
-	## rev 2 §2: lider ALAN BAŞINA. Açık seçim kazanır; yoksa o alandaki en yüksek Liderlik;
-	## hiç kimse yoksa kurucu. Türetilmiş olması bilinçli — saklanan bir lider işe alım ve
-	## ayrılmayla bayatlar, türetilmiş olan kendiliğinden doğrudur.
-	var picked_id: String = String(GameState.area_leads.get(area_id, ""))
-	if picked_id != "":
-		var picked: Character = CharacterRegistry.get_character(picked_id)
-		if picked != null and picked.status == HRConstants.STATUS_ACTIVE \
-				and picked.assigned_jobs.has(area_id):
-			return picked
 	var best: Character = null
 	var best_v: int = -1
 	for c in assigned_to(area_id):
@@ -481,10 +454,20 @@ static func area_output(area_key: String, people: Array = []) -> float:
 ## Çalışma saati formülün İÇİNDE değil DIŞINDADIR ve bu ayrım kasıtlı: yetenek, alan, odak,
 ## moral ve liderlik kişinin bir SAATTE ne kadar iş çıkardığını belirler; çalışma süresi
 ## KAÇ SAAT çıkardığını. İki soru karıştırılmaz.
+##
+## ÇARPAN STANDART GÜNE GÖRE NORMALİZE (HRConstants.hours_output_mult): sekiz saat 1,0'dır.
+## Ham saatle çarpmak Ürün, Satış ve CS'nin bütün kalibre sabitlerini sekizle çarpardı ve
+## bunun bir tasarım gerekçesi yok. §8.1 ile §8.3 oranı zaten kendileri veriyor — 11 saat
+## +%37,5, 5 saat %62,5 — ve normalize hâl tam o iki sayıdır.
+##
+## ÜÇ MASANIN DA OKUDUĞU ŞEY BUDUR (Faz 7). Öncesinde bu fonksiyonun HİÇBİR tüketicisi
+## yoktu: hepsi effective_skill okuyordu, yani saat kadranı para ve moral harcıyor ama
+## çıktıya dokunmuyordu. §8.4'ün "getiri saatin kendisidir" cümlesi motorda karşılıksızdı.
 static func daily_contribution(c: Character, area_key: String) -> float:
 	if c == null or c.status != HRConstants.STATUS_ACTIVE:
 		return 0.0
-	return effective_skill(c, area_key) * float(WorkHoursSystem.hours_for(c))
+	return effective_skill(c, area_key) \
+		* HRConstants.hours_output_mult(WorkHoursSystem.hours_for(c))
 
 static func area_sum_for(area_id: String) -> float:
 	## O ALANA atanmış herkesin, o alandaki puanlarının ÇARPANLI toplamı. Ürün ve Satış
@@ -561,11 +544,10 @@ static func reset() -> void:
 	# neither does a load).
 	# Verified complete against the two sub-systems' statics:
 	#   HRMoraleSystem  — the RNG cursor (now RngStreams' concern) + _pending. Both cleared.
-	#   HROvertimeSystem — _pay_today / _pay_stamped_day / _pay_carry. All three cleared.
+	#   (Ek mesai blok sistemi §8.2 ile kalktı; sıfırlanacak statiği kalmadı.)
 	# HRSearchSystem holds NO statics: its whole state machine lives on GameState.hr_search,
 	# which initialize_run clears and the save carries.
 	HRMoraleSystem.reset_rng()
-	HROvertimeSystem.reset()
 
 
 # --- Save routing (SaveManager). This file is the HR orchestrator, so it is also the one

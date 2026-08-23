@@ -959,7 +959,9 @@ func _run_oda_shot(kind: String) -> void:
 		"day":
 			GameState.set_current_hour(14)
 		"night":
-			HROvertimeSystem.start("product_dev", 3)
+			# §8.1: karanlık ŞİRKET PENCERESİNE göre çizilir. Mesai bloğu diye bir şey yok;
+			# saat 23 zaten 09:00–17:00 penceresinin dışında ve gece durumunu tek başına
+			# getiriyor.
 			GameState.set_current_hour(23)
 			oda.debug_seed_papers()
 			settle = 3.2   # gece crossfade'i (LIGHT_FADE_S = 1.5 sn) otursun, payla
@@ -1450,15 +1452,14 @@ func _run_hr_shot(kind: String) -> void:
 				HRSearchSystem.daily_tick()
 		"atlas":
 			pass   # temiz modal: rol + seviye seçimi
-		"mesai":   # LOC-DATA debug seed / id
-			pass   # panel departman başlığından açılır, aşağıda
 		"gider":
 			# Gider dökümü doğrulaması: bir mesai bloğu çalıştır ve TEK SEFERLİK bir işe alım
 			# gideri işle. ARAYIŞ ARTIK ÜCRETSİZ (§10), yani "İşe alım" satırını üretecek olan
 			# şey komisyondur — burada onu doğrudan bir aylık maaşın %50'si olarak işliyoruz,
 			# çünkü çekim gerçek bir işe alımı oynatmıyor.
-			HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 7)
-			HROvertimeSystem.daily_tick()
+			# §8.2: mesai artık şirket penceresinin sonucu. On saatlik bir gün, gider
+			# dökümünde "Ek mesai" kalemini kişi başına tahakkukla doldurur.
+			WorkHoursSystem.set_company_hours(10)
 			FinanceSystem.daily_tick()
 			# daily_tick ledger'ı temizler (yeni gün), o yüzden tek seferlik gider tick'ten
 			# SONRA yeniden işleniyor — oyunda da böyle olur: harcama gün içinde yapılır.
@@ -1618,10 +1619,6 @@ func _run_hr_shot(kind: String) -> void:
 					push_error("[HRShot] menüde İŞTEN ÇIKAR bulunamadı")
 					get_tree().quit(1)
 					return
-		"mesai":   # LOC-DATA debug seed / id
-			# By KEY, not by the Turkish word: this harness runs under --lang=en too, and the
-			# button it is looking for says OVERTIME there.
-			_press_button_labelled(tab, TranslationServer.translate("HR_OVERTIME_CHIP"))
 		_:
 			pass
 	await get_tree().process_frame

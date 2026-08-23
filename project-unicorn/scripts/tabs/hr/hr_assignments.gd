@@ -6,7 +6,7 @@ extends RefCounted
 # Sütunlar: ÇALIŞAN 430 · DURUM 210 · sonra YEDİ ATAMA SÜTUNU eşit aralıklı:
 #   Ürün · Tasarım · Yazılım · Test · Satış · Müşteri İlişkileri · Araştırma
 # Build/Destek/Hesap/Maliyet YOK — tasarım onları adıyla emekli etti ve motor
-# 2026-08-22'de atama birimini işten ALANA taşıdı (HRConstants.ASSIGNABLE).
+# 2026-08-22'de atama birimini işten ALANA taşımıştı; rev 11 §12.0 onu İŞE geri aldı.
 #
 # KURUCU BANDI en üstte (10b): yıldızsız satır, yalnız işaretlenebilir kutular, yedi alan
 # da onun. Kurucu KADRO listesinde YOKTUR ve ÇALIŞAN sayısına girmez — o sayı maaş
