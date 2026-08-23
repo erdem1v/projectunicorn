@@ -278,7 +278,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"soft_cap_ends_run_at_730":        fail = _case_soft_cap_ends_run_at_730()
 		"no_calendar_stop_before_cap":     fail = _case_no_calendar_stop_before_cap()
 		"soft_cap_no_defer_for_sheet":     fail = _case_soft_cap_no_defer_for_sheet()
-		"soft_cap_warning_day":            fail = _case_soft_cap_warning_day()
 		"soft_cap_paper_names_unsigned_sheet": fail = _case_soft_cap_paper_names_unsigned_sheet()
 		"month_history_close_and_cap":     fail = _case_month_history_close_and_cap()
 		"growth_streak_semantics":         fail = _case_growth_streak_semantics()
@@ -8061,29 +8060,14 @@ static func _case_soft_cap_no_defer_for_sheet() -> String:
 	return ""
 
 
-static func _case_soft_cap_warning_day() -> String:
-	# The D-1 Frank line fires once, on the eve, only when a sheet is live.
-	GameState.set_cash(500000)
-	GameState.phase = 3
-	GameState.day = PitchConstants.SOFT_CAP_WARN_DAY - 2
-	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
-	# A lambda captures an int by VALUE; count through an Array so the increment is visible.
-	var fired: Array = [0]
-	EventBus.event_triggered.connect(func(id: String) -> void:
-		if id == VCPitchSystem.SOFT_CAP_WARN_ID:
-			fired[0] += 1)
-	_sim_day()   # WARN_DAY - 1
-	if int(fired[0]) != 0:
-		return "warning fired before the eve (day %d)" % GameState.day
-	_sim_day()   # WARN_DAY
-	if int(fired[0]) != 1:
-		return "warning did not fire on the eve (day %d, fired %d)" % [GameState.day, int(fired[0])]
-	if not bool(GameState.get_flag("vc_soft_cap_warned", false)):
-		return "vc_soft_cap_warned flag not set"
-	_drain_all_modals()
-	return ""
-
-
+# REMOVED 2026-08-23 — _case_soft_cap_warning_day.
+# The mechanic it tested no longer exists: the warning was a fixed calendar day
+# (PitchConstants.SOFT_CAP_WARN_DAY) and is now sheet-relative — VCPitchSystem
+# ._tick_last_answer_warning fires once when the sole live sheet has days_left == 1, and
+# suppresses on a pending meeting or another open/callback sheet (vc_pitch_system.gd:519-544).
+# The working tree's replacement cases (last_answer_warning, last_answer_warning_suppressed)
+# were destroyed before they were committed — see docs/audits/SMOKE_LOSS_2026-08-23.md.
+# This stub keeps the suite compiling; the two cases still need re-authoring by their author.
 static func _case_soft_cap_paper_names_unsigned_sheet() -> String:
 	# The rewritten paper: an unsigned offer on the table is a ledger line; none → no line.
 	var with_sheet: Dictionary = {
