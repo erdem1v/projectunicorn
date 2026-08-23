@@ -53,14 +53,16 @@ static func _header() -> Control:
 	row.custom_minimum_size = Vector2(0, 30)
 	row.add_child(_head(tr_key("HR_COL_EMPLOYEE"), W_WHO, HORIZONTAL_ALIGNMENT_LEFT))
 	row.add_child(_head(tr_key("HR_COL_STATE"), W_STATE, HORIZONTAL_ALIGNMENT_LEFT))
-	var areas := HBoxContainer.new()
-	areas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	areas.alignment = BoxContainer.ALIGNMENT_CENTER
-	for area_id in HRConstants.ASSIGNABLE:
-		var cell := _head(HRConstants.area_label(String(area_id)), 0)
+	# §12.0 BEŞ İŞ SÜTUNU. Araştırma sütunu YOK: "Araştırma bir atama hedefi değildir;
+	# bir araştırma başlatılırken o araştırmaya çalışan atanır." (Ar-Ge modülünün akışı.)
+	var jobs := HBoxContainer.new()
+	jobs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	jobs.alignment = BoxContainer.ALIGNMENT_CENTER
+	for job_id in HRConstants.JOBS:
+		var cell := _head(HRConstants.job_label(String(job_id)), 0)
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		areas.add_child(cell)
-	row.add_child(areas)
+		jobs.add_child(cell)
+	row.add_child(jobs)
 	var wrap := PanelContainer.new()
 	wrap.theme_type_variation = &"HeaderBand"
 	wrap.add_child(row)
@@ -102,54 +104,39 @@ static func _row(emp: Character, on_toggle: Callable) -> Control:
 
 ## DURUM: AŞIRI YÜK / BOŞTA / Eğitimde · N gün — hover açıklamalarıyla (9f).
 static func _state_cell(emp: Character) -> Control:
-	var box := HBoxContainer.new()
-	box.custom_minimum_size = Vector2(W_STATE, 0)
-	box.add_theme_constant_override("separation", 6)
-	box.alignment = BoxContainer.ALIGNMENT_BEGIN
-	# ROZET CİPTİR, SÜTUN DEĞİL: kutu çocukları dikeyde FILL doğuyor, yani cip satırın
-	# tüm yüksekliğine geriliyor ve çerçevesi bir hücre gibi okunuyordu (10b'de rozet
-	# metnine yapışık). SHRINK_CENTER kutuyu kendi asgari yüksekliğine indiriyor.
-	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	if emp.training_days_left > 0:
-		box.add_child(UiFactory.make_state_chip(
-			TranslationServer.translate("HR_STATE_TRAINING").format(
-				{"days": emp.training_days_left}),
-			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT))
-		return box
-	if HRSystem.is_overloaded(emp):
-		var over: Control = UiFactory.make_state_chip(tr_key("HR_BADGE_OVERLOADED_JOBS"),
-			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT)
-		over.tooltip_text = tr_key("HR_OVERLOAD_HINT")
-		over.mouse_filter = Control.MOUSE_FILTER_STOP
-		box.add_child(over)
-		return box
-	if HRSystem.is_idle(emp):
-		var idle: Control = UiFactory.make_state_chip(tr_key("HR_BADGE_IDLE"),
-			UiTokens.INK_DIM, Color(0, 0, 0, 0), UiTokens.SEPARATOR)
-		idle.tooltip_text = tr_key("HR_IDLE_HINT")
-		idle.mouse_filter = Control.MOUSE_FILTER_STOP
-		box.add_child(idle)
-	return box
-
+	# §13.3 TEK EV: Kadro ile aynı sütun. Matris eskiden üç durum çiziyordu (Eğitimde ·
+	# AŞIRI YÜK · BOŞTA) ve aynı kişi iki sayfada iki farklı şey okuyordu.
+	#
+	# BOŞTA BU SÜTUNDA DEĞİL (§13.3): "Boşta bu sütunda değildir; GÖREV sütununda metin
+	# olarak okunur (§12.2)." Matriste GÖREV sütunu yok — boş bir satır zaten boş okunuyor.
+	return HRUiShared.status_cell(emp, W_STATE)
 
 static func _cells(c: Character, on_toggle: Callable) -> Control:
-	var areas := HBoxContainer.new()
-	areas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for area_id in HRConstants.ASSIGNABLE:
+	var jobs := HBoxContainer.new()
+	jobs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for job_id in HRConstants.JOBS:
 		var slot := CenterContainer.new()
 		slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		slot.add_child(_cell(c, String(area_id), on_toggle))
-		areas.add_child(slot)
-	return areas
+		slot.add_child(_cell(c, String(job_id), on_toggle))
+		jobs.add_child(slot)
+	return jobs
 
 
-static func _cell(c: Character, area_id: String, on_toggle: Callable) -> Control:
-	var eligible: bool = HRConstants.can_hold_area(c.role, area_id, c.category)
-	var checked: bool = c.assigned_jobs.has(area_id)
-	var primary: bool = area_id == HRConstants.role_key_area(c.role)
+static func _cell(c: Character, job_id: String, on_toggle: Callable) -> Control:
+	# §12.3 hücre durumları: ana alan · ikincil alan · alanı yok · atanamaz.
+	# §12.1 üçüncü iş kilidi "atanamaz durumunun BİR GEREKÇESİDİR" — ayrı bir durum değil,
+	# aynı kapalı kare, farklı gerekçe. Efsaneye yeni satır eklenmemesinin sebebi bu.
+	var coef: float = HRConstants.job_coefficient(c.role, job_id, c.category)
+	var checked: bool = c.assigned_job_ids.has(job_id)
+	var primary: bool = coef >= 1.0
 
-	if not eligible:
-		return _dashed_cell()
+	if coef <= 0.0:
+		return _dashed_cell(tr_key("HR_ASSIGN_NOT_YOUR_AREA"))
+	# ÜÇÜNCÜ İŞ KİLİDİ (§12.1): iki işi olan birinin boş üçüncü hücresi tıklanamaz ve
+	# gerekçesini gösterir. Kilit GÖRÜNÜR KALIR, gizlenmez — oyuncu neyin mümkün olmadığını
+	# görmeli, hücrenin yok olduğunu değil.
+	if not checked and c.assigned_job_ids.size() >= HRConstants.MAX_JOBS_PER_PERSON:
+		return _dashed_cell(tr_key("HR_ASSIGN_JOB_CAP"))
 
 	var box := PanelContainer.new()
 	box.custom_minimum_size = Vector2(CELL, CELL)
@@ -183,7 +170,7 @@ static func _cell(c: Character, area_id: String, on_toggle: Callable) -> Control
 	btn.custom_minimum_size = Vector2(CELL, CELL)
 	for state in ["normal", "hover", "pressed", "focus"]:
 		btn.add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	btn.pressed.connect(func() -> void: on_toggle.call(c.id, area_id, checked))
+	btn.pressed.connect(func() -> void: on_toggle.call(c.id, job_id, checked))
 	box.add_child(btn)
 	return box
 
@@ -192,10 +179,12 @@ static func _cell(c: Character, area_id: String, on_toggle: Callable) -> Control
 ## "biraz daha soluk düz kenar" ölçüldüğünde işe yaramadı: ekranda atanabilir-işaretsiz
 ## kareyle ayırt edilemiyordu, yani oyuncu nereye tıklayabileceğini göremiyordu. Dört kenarı
 ## elle çiziyoruz — tasarımın kapalı karesi bu, ve tıklamayı da almıyor.
-static func _dashed_cell() -> Control:
+static func _dashed_cell(reason: String = "") -> Control:
 	var box := Control.new()
 	box.custom_minimum_size = Vector2(CELL, CELL)
-	box.tooltip_text = tr_key("HR_ASSIGN_NOT_YOUR_AREA")
+	# Gerekçe DIŞARIDAN gelir: aynı kapalı kare iki şey anlatabilir — "bu senin alanın
+	# değil" ve "en fazla iki iş" (§12.1). İkisi de görünür ve ikisi de sebebini söyler.
+	box.tooltip_text = reason if reason != "" else tr_key("HR_ASSIGN_NOT_YOUR_AREA")
 	box.mouse_filter = Control.MOUSE_FILTER_STOP
 	box.draw.connect(func() -> void:
 		var c: Color = UiTokens.BORDER_DASHED

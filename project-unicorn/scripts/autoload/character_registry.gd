@@ -642,9 +642,13 @@ func _validate_shape(character: Character) -> void:
 		elif not HRConstants.can_hold_area(character.role, String(area_id), character.category):
 			push_error("[CharacterRegistry] '%s' (%s) assigned to '%s', which is neither their key nor their secondary area"
 				% [character.id, character.role, String(area_id)])
-	if character.category == "founder" and character.assigned_jobs.size() > 1:
-		push_error("[CharacterRegistry] founder holds %d areas — ch. 02 §5 allows exactly one"
-			% character.assigned_jobs.size())
+	# §2.1 "Her şeyi yapabilir, AYNI ANDA YAPAMAZ" — kilit İŞ sayısındadır, alan sayısında
+	# değil. Kurucunun alan AYNASI meşru biçimde daha geniştir: Build ekibi üç alanca
+	# taşınır (§12.0) ve kurucu altısını da taşır (§2), yani Build'deki bir kurucu üç alanda
+	# görünür. Alanı saymak onu her yapımda kural ihlali gibi gösteriyordu.
+	if character.category == "founder" and character.assigned_job_ids.size() > 1:
+		push_error("[CharacterRegistry] founder holds %d jobs — §2.1 allows exactly one"
+			% character.assigned_job_ids.size())
 
 
 func insert_raw(character: Character) -> void:

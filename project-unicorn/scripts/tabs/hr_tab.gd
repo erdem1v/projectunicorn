@@ -38,7 +38,7 @@ const VIEW_ASSIGNMENTS := "assignments"
 var _signals: Array = []
 var _list: VBoxContainer = null
 var _summary: Label = null
-var _training_control: Control = null
+var _hours_control: Control = null
 var _structure_key: String = ""
 var _view: String = VIEW_ROSTER
 var _seg_roster: Button = null
@@ -146,8 +146,12 @@ func _build_chrome() -> void:
 	var head_spacer := Control.new()
 	head_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(head_spacer)
-	_training_control = _build_training_control()
-	head.add_child(_training_control)
+	# §13.2 EYLEM GRUBU İKİ ÜYELİDİR: çalışma saatleri kontrolü + İŞE ALIM BAŞLAT.
+	# Eski EĞİTİM düğmesi kalktı — §13.2 onu saymıyor, ve zaten kişi seçmeden eligible[0]
+	# ile açıyordu (bir başlık düğmesi oyuncu adına kişi seçiyordu). Eğitim satır
+	# menüsündedir (§13.3), orada kişi zaten seçili.
+	_hours_control = _build_hours_control()
+	head.add_child(_hours_control)
 	head.add_child(HRUiShared.action_button(tr("HR_SEARCH_START"), _open_atlas, true))
 	outer.add_child(head)
 
@@ -366,6 +370,39 @@ func _do_cancel_search() -> void:
 # en az bir çalışan varsa düğmeye döner ve uygun adayların listesini açar.
 # Kilitli hâli yalan söylemiyor — gerçekten yapılacak bir şey yokken kilitli.
 
+## §13.2 / §8.5 · ÇALIŞMA SAATLERİ KONTROLÜ. Kenarlıklı, dolu buton DEĞİL — İŞE ALIM
+## BAŞLAT'ın "bir tık sessizi" (§13.2). Şirket penceresini ve varsa istisna sayısını taşır,
+## ve Kadro ile Görevler sekmelerinin İKİSİNDE de görünür (aynı chrome'da olduğu için bedava).
+func _build_hours_control() -> Control:
+	return HRUiShared.action_button(_hours_chip_text(), _open_hours_modal)
+
+
+## 19d'nin tek ek kuralı: temel hâlde ek yok; mesai varsa çalışan sayısı; mesai yoksa ama
+## kapsamlar şirketten ayrılıyorsa istisna sayısı. İKİSİ BİRDEN doğruysa MESAİ EKİ KAZANIR —
+## para ve moral maliyeti orada.
+func _hours_chip_text() -> String:
+	var start_h: int = WorkHoursSystem.start_hour()
+	var window: String = tr("HR_HOURS_WINDOW").format({
+		"start": "%02d:00" % start_h,
+		"end": "%02d:00" % ((start_h + GameState.company_work_hours) % 24),
+	})
+	var counts: Dictionary = WorkHoursSystem.counts()
+	var over: int = int(counts["overtime"])
+	if over > 0:
+		return tr("HR_HOURS_CHIP_OVERTIME").format({"window": window, "n": over})
+	var exceptions: int = WorkHoursSystem.override_count()
+	if exceptions > 0:
+		return tr("HR_HOURS_CHIP_OVERRIDES").format({"window": window, "n": exceptions})
+	return window
+
+
+func _open_hours_modal() -> void:
+	# Faz 6: çalışma saatleri modali (onaylı 19a–19d). Kontrol bugünden doğru metni taşıyor
+	# ve modal onun üstüne oturuyor.
+	if OS.is_debug_build():
+		print("[HRTab] çalışma saatleri modali — Faz 6")
+
+
 func _build_training_control() -> Control:
 	if _eligible_for_training().is_empty():
 		return HRUiShared.locked_telegraph(tr("HR_TRAINING_LOCKED"))
@@ -426,11 +463,10 @@ func _add_group(group_id: String) -> void:
 	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	header.add_child(rule)
-	var dept_id: String = HRConstants.overtime_dept_for_group(group_id)
-	# EK MESAİ yalnız başlatılabilir ya da hâlihazırda çalışan bir blok varken görünür:
-	# kadrosu boş bir departmanda buton ölü bir aksiyon olurdu. Karar motorun: can_start.
-	if dept_id != "" and (HROvertimeSystem.can_start(dept_id) or HROvertimeSystem.is_active(dept_id)):
-		header.add_child(_overtime_control(dept_id))
+	# §8.2: AYRI BİR "EK MESAİ" BUTONU YOKTUR. Ek mesai ayrı bir mekanik değil, çalışma
+	# aralığının bir SONUCUDUR (§8.1) — ve tek görünürlük yüzeyi başlıktaki çalışma saatleri
+	# kontrolüdür (§8.5). Departman bazlı blok sistemi motor tarafında Faz 7'de siliniyor;
+	# grup başlığındaki düğme bugün gidiyor.
 	_list.add_child(header)
 
 	# get_employees(), get_active_by_role() DEĞİL: defter izindeki ve eğitimdeki kişiyi de
@@ -439,7 +475,7 @@ func _add_group(group_id: String) -> void:
 	for emp in CharacterRegistry.get_employees():
 		if String(HRConstants.ROLE_GROUP.get(emp.role, "")) == group_id:
 			roster.append(emp)
-	_add_roster(roster, dept_id)
+	_add_roster(roster, group_id)
 
 
 func _add_roster(roster: Array[Character], dept_id: String) -> void:
@@ -569,24 +605,26 @@ func _paint_attention_strip() -> void:
 ## KURUCU TAŞINIR, REDDEDİLMEZ: tek alan taşıdığı için işaretsiz bir alana tıklamak
 ## "önce bırak, sonra ata" demektir — yoksa ilk atamadan sonra her tık `founder_busy`
 ## döner ve matris tıklanamaz görünürdü.
-func _on_assignment_toggled(char_id: String, area_id: String, currently_on: bool) -> void:
+func _on_assignment_toggled(char_id: String, job_id: String, currently_on: bool) -> void:
+	# §12.0: matrisin birimi artık İŞ. Kurucu matriste zaten yok (§2), ama ön-boşaltma dalı
+	# duruyor — motor tarafı onu ProductSystem._reseat_founder üzerinden hâlâ oturtuyor ve
+	# bu yol savunma hattı olarak kalıyor.
 	var c: Character = CharacterRegistry.get_character(char_id)
 	if c == null:
 		return
 	if currently_on:
-		CharacterRegistry.unassign_area(char_id, area_id)
+		CharacterRegistry.unassign_job(char_id, job_id)
 		_rebuild_forced()
 		return
-	if c.category == "founder" and not c.assigned_jobs.is_empty():
-		for held in c.assigned_jobs.duplicate():
-			CharacterRegistry.unassign_area(char_id, String(held))
-	var reason: String = CharacterRegistry.assign_area(char_id, area_id)
+	if c.category == "founder" and not c.assigned_job_ids.is_empty():
+		CharacterRegistry.clear_jobs(char_id)
+	var reason: String = CharacterRegistry.assign_job(char_id, job_id)
 	if reason != "":
 		# SAVUNMA DALI, oyuncuya giden bir yol değil: matris atanamaz kareyi kesikli çiziyor
 		# ve tıklamıyor, kurucunun ikinci alanı da yukarıda önce bırakılıyor. Buraya
 		# düşülüyorsa arayüz ile motor ayrışmış demektir — sessiz kalmak yerine loga bağırır.
 		# Oyuncunun "neden tıklayamıyorum" sorusunun cevabı kesikli karenin TOOLTIP'inde.
-		push_warning("[HRTab] assign_area('%s', '%s') refused: %s" % [char_id, area_id, reason])
+		push_warning("[HRTab] assign_job('%s', '%s') refused: %s" % [char_id, job_id, reason])
 	_rebuild_forced()
 
 
@@ -660,6 +698,8 @@ func _on_card_action(emp_id: String, action: String, anchor: Control) -> void:
 			_confirm_fire(emp)
 		HRLedger.ACTION_TRAIN:
 			_confirm_training(emp)
+		HRLedger.ACTION_PROMOTE:
+			_open_promotion(emp, anchor)
 
 
 # --- Satır aksiyon menüsü --------------------------------------------------
@@ -695,6 +735,13 @@ func _open_actions(emp: Character, anchor: Control) -> void:
 			{"key": "HR_CARD_RAISE", "preview": HRActions.preview_raise(emp, HRConstants.RAISE_MIN_PCT),
 				"action": HRLedger.ACTION_RAISE, "icon": "raise",
 				"meta": HRUiShared.money(emp.monthly_salary)},
+			# §13.3 DÖRDÜNCÜ SATIR. Kilitli hâli GÖRÜNÜR kalır ve gerekçesini gösterir —
+			# Kıdemli için "En üst seviye" (onaylı 2b'nin menü şeridi).
+			{"key": "HR_CARD_PROMOTE",
+				"preview": {"ok": HRActions.can_promote(emp),
+					"reason": HRActions.promotion_block_reason(emp)},
+				"action": HRLedger.ACTION_PROMOTE, "icon": "raise",
+				"meta": HRConstants.job_title(emp.role, emp.level)},
 			{"key": "HR_TRAINING_PICK_TITLE",
 				"preview": {"ok": train_ok, "reason": tr("HR_TRAINING_AT_CAP")},
 				"action": HRLedger.ACTION_TRAIN, "icon": "train",
@@ -794,6 +841,37 @@ func _open_raise(emp: Character, _anchor: Control) -> void:
 		"preview": _preview_raise.bind(emp),
 		"on_commit": _do_raise.bind(emp.id),
 	})
+
+
+func _open_promotion(emp: Character, _anchor: Control) -> void:
+	# §9.3 · TERFİ. Zam ile aynı kabuk (§14) ve aynı slider grameri; fark, bunun bir SEVİYE
+	# atlaması olması — unvan da bir delta satırı olarak okunuyor (onaylı 2b).
+	# Minimum %10 (§9.3), yani slider hiçbir zaman "terfi ettim ama zam almadım"a inmez.
+	if not HRActions.can_promote(emp):
+		return
+	EventBus.confirm_requested.emit({
+		"modal": "hr_action",
+		"title": tr("HR_CARD_PROMOTE"),
+		"commit_key": "HR_APPLY_PROMOTE_PCT",
+		"slider": {"min": HRConstants.PROMOTION_MIN_PCT, "max": HRConstants.PROMOTION_MAX_PCT,
+			"start": HRConstants.PROMOTION_MIN_PCT},
+		"preview": _preview_promotion.bind(emp),
+		"on_commit": _do_promotion.bind(emp.id),
+	})
+
+
+func _preview_promotion(pct: int, emp: Character) -> Dictionary:
+	return HRActions.preview_promotion(emp, pct)
+
+
+func _do_promotion(pct: int, emp_id: String) -> bool:
+	var emp: Character = CharacterRegistry.get_character(emp_id)
+	if emp == null:
+		return false
+	if not HRActions.apply_promotion(emp, pct):
+		return false
+	_rebuild_forced()
+	return true
 
 
 func _preview_raise(pct: int, emp: Character) -> Dictionary:

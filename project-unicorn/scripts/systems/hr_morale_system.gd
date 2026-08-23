@@ -395,16 +395,19 @@ static func badges_for(emp: Character) -> Array[String]:
 		return out
 	if HRConstants.is_flight_risk(emp.morale):
 		out.append(HRConstants.BADGE_FLIGHT_RISK)
-	if HRConstants.is_burning_out(emp.morale):
-		out.append(HRConstants.BADGE_BURNING_OUT)
-	# AŞIRI YÜKLÜ is the company-level `needs_engineer` signal read per PERSON: the shortage
-	# belongs to the company, the badge belongs to whoever carries it, and that is exactly why
-	# only product_dev members wear it — a Satış Uzmanı is not overloaded by a missing
-	# engineer. İzindeki kimse de aşırı yüklü değil (WORKING).
-	if is_capacity_overloaded():
-		var in_product_dev: bool = HRConstants.department_of(emp.role) == HRConstants.DEPT_PRODUCT_DEV
-		if in_product_dev and emp.status == HRConstants.STATUS_ACTIVE:
-			out.append(HRConstants.BADGE_OVERLOADED)
+	# §15.1: rozetler SAKLANMAZ, TÜRETİLİR — ve rev 11'de üç tanedir:
+	#   Ayrılabilir  ← moral < 35
+	#   AŞIRI YÜK    ← atanmış iş sayısı 2
+	#   YENİ         ← işe alım tarihi son N gün içinde (bu liste DIŞINDA, çünkü YENİ bir
+	#                  dikkat rozeti değil; attention_count'a girmemeli)
+	# Birden fazlası aynı anda görünebilir ve birbirini BASTIRMAZ.
+	#
+	# TÜKENİYOR kalktı: §7'nin dört bandı üç rozete karşılık geliyor ve 40 eşiği rev 2'nindi.
+	# ŞİRKET ÇAPINDAKİ "mühendise ihtiyaç var" rozeti de kalktı (§17.6, adıyla): bir şirket
+	# sinyalini kişi başına rozet olarak çiziyordu, yalnız developer alınarak temizleniyordu,
+	# ve İngilizcede aşırı yük rozetiyle AYNI kelimeyi kullanıyordu — §16 bunu yasaklıyor.
+	if HRSystem.is_overloaded(emp):
+		out.append(HRConstants.BADGE_OVERLOAD_JOBS)
 	return out
 
 

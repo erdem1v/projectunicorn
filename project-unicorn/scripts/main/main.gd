@@ -1443,7 +1443,7 @@ func _run_hr_shot(kind: String) -> void:
 			# Files ON THE TABLE: start a search, then run the arrival window's worth of
 			# HR ticks so the generator's real output is what renders.
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, "mid")
-			for _i in HRConstants.SEARCH_ARRIVAL_MAX_DAYS:
+			for _i in HRConstants.SEARCH_ARRIVAL_DAYS:
 				GameState.day += 1
 				HRSearchSystem.daily_tick()
 		"atlas":
@@ -1529,11 +1529,16 @@ func _run_hr_shot(kind: String) -> void:
 			# GÖREVLER matrisi (onaylı tasarım 10b): kurucu bandı + atama kareleri.
 			# Kadroyu ÖNCE bir karıştırıyoruz ki matris üç durumu birden göstersin:
 			# biri AŞIRI YÜK (iki alan), biri BOŞTA (hiç alan), gerisi normal.
+			# §12.0: matris artık BEŞ İŞ sütunu taşıyor. Kadroyu karıştırıp dört durumu
+			# birden gösteriyoruz: biri AŞIRI YÜK (iki iş), biri BOŞTA (hiç iş), biri
+			# İKİ İŞLE TAVANDA (üçüncü hücresi §12.1'e göre kilitli), gerisi normal.
 			var roster: Array[Character] = CharacterRegistry.get_employees()
 			if roster.size() >= 2:
-				CharacterRegistry.assign_area(roster[0].id,
-					HRConstants.role_secondary_area(roster[0].role))
-				CharacterRegistry.clear_areas(roster[1].id)
+				for job_id in HRConstants.JOBS:
+					if not roster[0].assigned_job_ids.has(job_id) 							and HRConstants.can_hold_job(roster[0].role, job_id, roster[0].category):
+						CharacterRegistry.assign_job(roster[0].id, String(job_id))
+						break
+				CharacterRegistry.clear_jobs(roster[1].id)
 			tab._show_view(tab.VIEW_ASSIGNMENTS)
 		"gorevler-bos":   # LOC-DATA debug seed / id
 			tab._show_view(tab.VIEW_ASSIGNMENTS)

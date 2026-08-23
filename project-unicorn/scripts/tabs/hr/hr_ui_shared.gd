@@ -143,6 +143,73 @@ static func _hoverable(node: Control, trait_id: String) -> Control:
 	return node
 
 
+## §13.3 · DURUM SÜTUNU — TEK EV. Kadro ve Görevler İKİSİ de buradan çizer; iki yüzeyin iki
+## farklı listesi vardı (defterde beş durum, matriste üç) ve aynı kişi iki sayfada iki farklı
+## şey okuyordu.
+##
+## SÜTUN AYNI ANDA BİRDEN FAZLA ŞEY TAŞIR (§15.1). Eski kod ilk isabetten sonra ERKEN
+## DÖNÜYORDU, yani "aşırı yükten morali düşmüş" bir çalışan — §15.1'in adıyla verdiği örnek —
+## ikinci rozetini ASLA gösteremiyordu. Rozetler birbirini bastırmaz.
+##
+## Sıra §13.3'ün tablosundan: rozetler önce (AŞIRI YÜK · Ayrılabilir · YENİ), sonra süreli
+## etiketler (Eğitimde · İzinde), en sonda en sessizi (saat istisnası).
+static func status_cell(emp: Character, width: int = 0) -> Control:
+	var box := HBoxContainer.new()
+	if width > 0:
+		box.custom_minimum_size = Vector2(width, 0)
+	box.add_theme_constant_override("separation", 6)
+	box.alignment = BoxContainer.ALIGNMENT_BEGIN
+	# Rozet ÇİPTİR, SÜTUN DEĞİL: dikeyde FILL doğduğu için çip satırın tüm yüksekliğine
+	# geriliyor ve çerçevesi bir hücre gibi okunuyordu.
+	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	if HRSystem.is_overloaded(emp):
+		var over: Control = UiFactory.make_state_chip(
+			UiTokens.tr_upper(TranslationServer.translate("HR_BADGE_OVERLOADED_JOBS")),
+			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT)
+		over.tooltip_text = TranslationServer.translate("HR_OVERLOAD_HINT")
+		over.mouse_filter = Control.MOUSE_FILTER_PASS   # §13.3: çip tıklamayı yutmaz
+		box.add_child(over)
+
+	if emp.category == "employee" and HRConstants.is_flight_risk(emp.morale):
+		# Renk körü modunda negatif palet değişiyor, o yüzden SABİT değil FONKSİYON okunur —
+		# defter zaten bu sebeple öyle yapıyordu.
+		box.add_child(UiFactory.make_state_chip(
+			UiTokens.tr_upper(HRConstants.badge_label(HRConstants.BADGE_FLIGHT_RISK)),
+			UiTokens.negative(), UiTokens.negative_bg(), UiTokens.negative_rule()))
+
+	if HRConstants.is_new_hire(emp.hire_day, GameState.day):
+		# Rozetler BÜYÜK HARF (onaylı 1d): AŞIRI YÜK · YENİ · Ayrılabilir aynı sessiz dili
+		# konuşur ve o dilin bir parçası caps'tir. tr_upper Türkçe İ/ı katlamasını doğru yapar.
+		box.add_child(UiFactory.make_state_chip(
+			UiTokens.tr_upper(TranslationServer.translate("HR_BADGE_NEW")),
+			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT))
+
+	# SÜRELİ DURUMLAR ROZET DEĞİL, SAYAÇLI ETİKET (§13.3).
+	if emp.training_days_left > 0:
+		box.add_child(UiFactory.make_label(
+			TranslationServer.translate("HR_STATE_TRAINING").format(
+				{"days": emp.training_days_left}), &"RowMeta"))
+	elif emp.status == HRConstants.STATUS_ON_LEAVE:
+		box.add_child(UiFactory.make_label(HRSystem.leave_line(emp), &"RowMeta"))
+
+	# EN SESSİZİ: saat istisnası (§13.3). Kurucu istisna alamaz (§2), o yüzden hiç çizilmez.
+	if emp.category == "employee":
+		var hours: int = WorkHoursSystem.hours_for(emp)
+		var delta: int = hours - HRConstants.WORK_HOURS_DEFAULT
+		if delta > 0:
+			box.add_child(UiFactory.make_label(
+				TranslationServer.translate("HR_STATE_HOURS_OVER").format({"n": delta}),
+				&"MicroLabel", UiTokens.INK_DIM))
+		elif delta < 0:
+			box.add_child(UiFactory.make_label(
+				TranslationServer.translate("HR_STATE_HOURS_SHORT").format({"n": -delta}),
+				&"MicroLabel", UiTokens.INK_DIM))
+
+	if box.get_child_count() == 0:
+		box.add_child(UiFactory.make_label(TranslationServer.translate("HR_TASK_NONE"), &"RowMeta", UiTokens.INK_DIM))
+	return box
+
 static func trait_cell(trait_ids: Array, width: int) -> Control:
 	## TEK İKON, 26×26 konturlu kutuda 15px glif (B4 · onaylı sayfa). Motor tek trait
 	## taşıyor (HRConstants.TRAIT_COUNT); eski bir kayıt iki taşıyorsa İLKİNİ gösteririz.

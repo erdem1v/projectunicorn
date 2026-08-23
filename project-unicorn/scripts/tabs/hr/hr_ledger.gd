@@ -69,6 +69,7 @@ const ACTION_MENU := "menu"
 const ACTION_RAISE := "raise"
 const ACTION_FIRE := "fire"
 const ACTION_TRAIN := "train"
+const ACTION_PROMOTE := "promote"   # §13.3 dördüncü satır
 
 
 ## Sütun başlığı satırı. Bir kez, defterin en üstünde — her grupta tekrar ETMEZ
@@ -218,13 +219,16 @@ static func _placement_badge(emp: Character) -> Control:
 		var over: Control = UiFactory.make_state_chip(tr_key("HR_BADGE_OVERLOADED_JOBS"),
 			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT)
 		over.tooltip_text = tr_key("HR_OVERLOAD_HINT")
-		over.mouse_filter = Control.MOUSE_FILTER_STOP
+		# §13.3: PASS, STOP DEĞİL. STOP tooltip'i çalıştırır ama satır tıklamasını YUTAR, ve
+		# o tıklama menüyü açan TEK yol (hr_ledger.gd:44-46). Konvansiyon bir dosya ötede
+		# yazılı ve trait ikonunda uygulanıyor (hr_ui_shared.gd:137-139).
+		over.mouse_filter = Control.MOUSE_FILTER_PASS
 		return over
 	if HRSystem.is_idle(emp):
 		var idle: Control = UiFactory.make_state_chip(tr_key("HR_BADGE_IDLE"),
 			UiTokens.INK_DIM, Color(0, 0, 0, 0), UiTokens.SEPARATOR)
 		idle.tooltip_text = tr_key("HR_IDLE_HINT")
-		idle.mouse_filter = Control.MOUSE_FILTER_STOP
+		idle.mouse_filter = Control.MOUSE_FILTER_PASS   # §13.3 — bkz. yukarıdaki gerekçe
 		return idle
 	return null
 
@@ -233,18 +237,42 @@ static func _placement_badge(emp: Character) -> Control:
 ## "Pulse v1'de çalışıyor" — çünkü oyuncunun kafasındaki şey o sürümdür, bir alan adı
 ## değil. Satış ve Müşteri İlişkileri ürüne bağlı olmadığı için orada alan ifadesi kalır;
 ## ürünsüz dönemde BÜTÜN sütun alan ifadesine düşer. Boştaki için tire.
-static func _task_cell(emp: Character, muted: bool) -> Control:
-	var text: String = tr_key("HR_TASK_NONE")
-	if not emp.assigned_jobs.is_empty():
-		var area_id: String = String(emp.assigned_jobs[0])
+## §12.2'nin iş cümleleri. Build, AKTİF SÜRÜMÜN ADIYLA okunur — "oyuncunun kafasındaki
+## şey o sürümdür, bir alan adı değil" — ve ürün yokken alan-nötr bir cümleye düşer.
+static func _job_sentence(job_id: String) -> String:
+	if job_id == HRConstants.JOB_BUILD:
 		var build: FeatureBuild = ProductSystem.get_active_build()
-		if build != null and ProductSystem.BUILD_AREAS.has(area_id):
-			text = tr_key("HR_TASK_ON_VERSION").format({
+		if build != null:
+			return tr_key("HR_TASK_ON_VERSION").format({
 				"product": build.product_name,
 				"version": int(GameState.get_flag("mvp_version", 1)),
 			})
-		else:
-			text = tr_key("HR_TASK_ON_AREA").format({"area": HRConstants.area_label(area_id)})
+	return tr_key("HR_TASK_ON_JOB_%s" % job_id.to_upper())
+
+
+## İki iş hâlinde KISA ETİKET — işin adından türetilir (§12.2).
+static func _short_job_label(job_id: String) -> String:
+	if job_id == HRConstants.JOB_BUILD:
+		var build: FeatureBuild = ProductSystem.get_active_build()
+		if build != null:
+			return "%s v%d" % [build.product_name, int(GameState.get_flag("mvp_version", 1))]
+	return HRConstants.job_label(job_id)
+
+
+static func _task_cell(emp: Character, muted: bool) -> Control:
+	# §12.2: GÖREV hücresi kişinin ne yaptığını CÜMLE olarak okur, iş id'si olarak değil.
+	#   Tek iş  → o işin cümlesi (Pulse v1'de çalışıyor · Satışta görev alıyor · ...)
+	#   İki iş  → iki cümle yerine iki KISA ETİKET, orta nokta ayracıyla; uzun cümle satırı taşırır
+	#   Hiç iş  → Boşta (ayrı bir rozet DEĞİL, bu sütunun kendi metni)
+	var text: String = tr_key("HR_TASK_NONE")
+	var jobs: Array[String] = emp.assigned_job_ids
+	if jobs.size() >= 2:
+		var labels: Array[String] = []
+		for job_id in jobs:
+			labels.append(_short_job_label(String(job_id)))
+		text = " · ".join(labels)
+	elif jobs.size() == 1:
+		text = _job_sentence(String(jobs[0]))
 	var lbl := UiFactory.make_label(text, &"RowMeta", UiTokens.INK_MUTED)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -274,9 +302,12 @@ static func _experience_cell(emp: Character, refs: Dictionary) -> Control:
 	box.custom_minimum_size = Vector2(w_experience(), 0)
 	box.add_theme_constant_override("separation", 3)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	var area_key: String = _experience_area(emp)
-	var value: int = int(emp.area_experience.get(area_key, 0))
-	var pct: int = int(round(float(value) / float(HRConstants.EXPERIENCE_MAX) * 100.0))
+	# §5.1 TEK BAR. Alan başına sayaçlar emekli ve artık YAZILMIYOR — bu sütun onları
+	# okumaya devam ettiği için herkeste %0 gösteriyordu. Bar hep 0–100 çizilir; değişen,
+	# arkasındaki EŞİKTİR ve o kişinin gelişmişliğiyle büyür.
+	var value: int = emp.experience_raw
+	var threshold: int = maxi(emp.experience_threshold, 1)
+	var pct: int = int(round(CharacterRegistry.experience_ratio(emp) * 100.0))
 	var val := UiFactory.make_label(Fmt.percent(pct, 0), &"RowMeta")
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var bar := ProgressBar.new()
@@ -284,7 +315,7 @@ static func _experience_cell(emp: Character, refs: Dictionary) -> Control:
 	bar.show_percentage = false
 	bar.custom_minimum_size = Vector2(w_experience() - 24, 4)
 	bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	bar.max_value = HRConstants.EXPERIENCE_MAX
+	bar.max_value = threshold
 	bar.value = value
 	box.add_child(bar)
 	box.add_child(val)
@@ -297,57 +328,12 @@ static func _experience_cell(emp: Character, refs: Dictionary) -> Control:
 ## EĞİTİME GÖNDER düğmesi buradan ÇIKTI (2026-08-22) — onaylı tasarımda satırda düğme
 ## yok, eğitim ⋯ menüsünün dördüncü satırı.
 static func _state_cell(emp: Character) -> Control:
-	var box := HBoxContainer.new()
-	box.custom_minimum_size = Vector2(w_state(), 0)
-	box.add_theme_constant_override("separation", 6)
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	# ROZET CİPTİR, SÜTUN DEĞİL (C3). Kutu çocukları dikeyde FILL doğar, yani çip
-	# satırın TÜM yüksekliğine gerilip 1px kenarı bir hücre çerçevesi gibi okunuyordu —
-	# "YENİ ağır çerçeveli" şikâyeti tam olarak buydu, çipin KENDİ stili kardeşleriyle
-	# bayt-aynı. Bu tek satır dördünü birden düzeltiyor. hr_assignments._state_cell
-	# aynı satırı zaten taşıyordu; defter geride kalmıştı.
-	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-
-	# EDİLGENLİK önce: eğitim ve izin, satırın o gün ne YAPMADIĞINI söyler ve dikkat
-	# rozetlerinden daha yüksek okunur.
-	if emp.training_days_left > 0:
-		box.add_child(_amber_chip(TranslationServer.translate("HR_STATE_TRAINING").format(
-			{"days": emp.training_days_left})))
-		return box
-	if emp.status == HRConstants.STATUS_ON_LEAVE:
-		var leave_txt: String = HRSystem.leave_line(emp)
-		if leave_txt == "":
-			leave_txt = tr_key("HR_STATE_ON_LEAVE")
-		box.add_child(UiFactory.make_state_chip(leave_txt,
-			UiTokens.INK_MUTED, UiTokens.NEUTRAL_BADGE_BG, UiTokens.BORDER_DISABLED))
-		return box
-
-	# YER ROZETİ (C3): edilgenliğin altında, YENİ'nin üstünde. Eğitim ve izin "bugün
-	# çalışmıyor" der ve daha yüksek okunur; AŞIRI YÜK / BOŞTA çalışıyor ama YANLIŞ
-	# yerde olduğunu söyler ve bir işe alım rozetinden önce gelir.
-	var placed: Control = _placement_badge(emp)
-	if placed != null:
-		box.add_child(placed)
-		return box
-
-	# YENİ AYRI KANALDAN gelir ve gelmek zorundadır: badges_for'a girseydi
-	# HRSystem.attention_count()'u şişirir, yani yeni bir işe alım sol rayda "dikkat"
-	# yakardı.
-	if HRConstants.is_new_hire(emp.hire_day, GameState.day):
-		box.add_child(_amber_chip(UiTokens.tr_upper(HRConstants.badge_label(HRConstants.BADGE_NEW))))
-		return box
-
-	# Dikkat rozetleri motorun türettiği tek kaynaktan (HRSystem.badges_for), hepsi
-	# kırmızı: bunlar bir çağrıdır, bir bilgi değil. En kötüsü önce gelir, biri yeter.
-	var badges: Array[String] = HRSystem.badges_for(emp)
-	if not badges.is_empty():
-		box.add_child(UiFactory.make_state_chip(
-			UiTokens.tr_upper(HRConstants.badge_label(String(badges[0]))),
-			UiTokens.negative(), UiTokens.negative_bg(), UiTokens.negative_rule()))
-		return box
-
-	box.add_child(UiFactory.make_label(tr_key("HR_TASK_NONE"), &"RowMeta", UiTokens.INK_FAINT))
-	return box
+	# §13.3 TEK EV — bkz. HRUiShared.status_cell. Bu fonksiyon eskiden ALTI durumu kendi
+	# çiziyordu ve HER İSABETTEN SONRA DÖNÜYORDU, yani §15.1'in adıyla verdiği örnek
+	# ("aşırı yükten morali 35'in altına düşmüş bir çalışan HEM AŞIRI YÜK HEM Ayrılabilir
+	# taşır") ikinci rozetini ASLA gösteremiyordu. Matris de kendi üç durumluk listesini
+	# çiziyordu; aynı kişi iki sayfada iki farklı şey okuyordu.
+	return HRUiShared.status_cell(emp, w_state())
 
 
 ## Amber çip. Kehribar SEMANTİK DEĞİL (marka aksanı) ve renk körü modunda yerinde kalır,

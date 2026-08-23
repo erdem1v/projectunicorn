@@ -48,7 +48,7 @@ const KEY_FILES := "files"
 const FLAG_NEEDS_ENGINEER := "needs_engineer"
 
 # Arrival-day mixer (arithmetic, NOT tunables). The window itself is
-# HRConstants.SEARCH_ARRIVAL_MIN_DAYS..MAX_DAYS; this only picks a day inside it out of the
+# §10: tek gün, HRConstants.SEARCH_ARRIVAL_DAYS. Eskiden bir aralıktı ve içinden
 # stored seed, because "2-4 gün" has to be unpredictable to the player and identical on reload.
 # Same no-RNG rule as HRCandidateGenerator: the global RNG stream belongs to the event deck and
 # the resignation roll, and commissioning a search must never displace a draw from it.
@@ -154,9 +154,9 @@ static func start_search(role_id: String, band_id: String) -> bool:
 		KEY_ARRIVAL_DAY: GameState.day + _arrival_delay(seed_value),
 		KEY_FILES: [],
 	}
-	# Peşin retainer, charged ONCE here and never refunded (design doc §2, çift ücret). Same
-	# ledger label as the commission: both lines are what Atlas costs.
-	FinanceSystem.apply_one_time_cost(HRConstants.SEARCH_RETAINER, "hire")
+	# §10: "Aday araması Atlas Recruitment modalinden yürür ve ÜCRETSİZDİR." Peşin retainer
+	# KALKTI — ödenen tek şey işe alım GERÇEKLEŞTİĞİNDE komisyondur, ve o da bir aylık
+	# maaşın %50'sidir. İki ücretli eski model oyuncuyu aramadan önce cezalandırıyordu.
 	return true
 
 
@@ -275,8 +275,8 @@ static func preview_search(role_id: String, band_id: String) -> Dictionary:
 		},
 		"candidate_count": HRConstants.CANDIDATE_COUNT,
 		"retainer": retainer,
-		"arrival_min_days": HRConstants.SEARCH_ARRIVAL_MIN_DAYS,
-		"arrival_max_days": HRConstants.SEARCH_ARRIVAL_MAX_DAYS,
+		"arrival_min_days": HRConstants.SEARCH_ARRIVAL_DAYS,
+		"arrival_max_days": HRConstants.SEARCH_ARRIVAL_DAYS,
 		"salary_band_low": band_low,
 		"salary_band_high": band_high,
 		# The commission is a share of the accepted salary, so the band edges bracket it.
@@ -399,14 +399,13 @@ static func _clear() -> void:
 	GameState.hr_search.clear()
 
 
-static func _arrival_delay(seed_value: int) -> int:
-	# A day inside [SEARCH_ARRIVAL_MIN_DAYS, SEARCH_ARRIVAL_MAX_DAYS], derived — never rolled.
-	# Stored on the search, so the wait cannot be re-diced by reloading.
-	var low: int = HRConstants.SEARCH_ARRIVAL_MIN_DAYS
-	var high: int = maxi(HRConstants.SEARCH_ARRIVAL_MAX_DAYS, low)
-	var span: int = high - low + 1
-	var n: int = (absi(seed_value) % ARRIVAL_MIX_MODULUS) * ARRIVAL_MIX_MULTIPLIER + ARRIVAL_MIX_INCREMENT
-	return low + (n % ARRIVAL_MIX_MODULUS) % span
+static func _arrival_delay(_seed_value: int) -> int:
+	# §10: "Arama başlatıldıktan BİR HAFTA sonra aday listesi gelir." Aralık DEĞİL, tek sayı
+	# — o yüzden burada türetilecek bir şey de kalmadı ve `seed_value` kullanılmıyor.
+	#
+	# Gecikme KASTEDİLMİŞTİR: "bir çalışan ayrıldığında ya da bir iş tıkandığında oyuncu
+	# boşluğu O GÜN kapatamaz, arada geçen haftayı yönetmek zorundadır."
+	return HRConstants.SEARCH_ARRIVAL_DAYS
 
 
 static func _axes_copy(source: Dictionary) -> Dictionary:

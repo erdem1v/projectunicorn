@@ -377,7 +377,7 @@ PER_CAP_FOUNDER,Kurucu · %{pct},Founder · {pct}%
 HR_BADGE_IDLE,BOŞTA,IDLE
 HR_BADGE_OVERLOADED_JOBS,AŞIRI YÜK,OVERLOADED
 HR_IDLE_HINT,Hiçbir işe atanmadı — duruyor ve maaş alıyor.,Not assigned to any job — standing idle and still on payroll.
-HR_OVERLOAD_HINT,Birden fazla işte çalışıyor: verimi düşer ve morali normalden hızlı erir.,Working more than one job: output drops and morale erodes faster than normal.
+HR_OVERLOAD_HINT,"Birden fazla işte çalışıyor. Zamanı işler arasında bölünür, her iki işte de hızı belirgin düşer, ve morali normalden hızlı erir.","Working more than one job. Their time is split between them, they are markedly slower in both, and their morale erodes faster than normal."
 HR_ASSIGN_FOUNDER_BUSY,Kurucu şu an başka bir işte.,The founder is already on another job.
 HR_AREA_MEANING_PRODUCT_MANAGER_PRODUCT,Özellik kararları ve tasarım tavanı,Feature decisions and the design ceiling
 HR_AREA_MEANING_PRODUCT_MANAGER_DESIGN,Deneyim ekseninin tavanı,The ceiling on the Experience axis
@@ -533,11 +533,11 @@ BUILD_DEV_READY,Geliştirme tamam · Beta'ya hazır,Development done · ready fo
 BUILD_HALF_ROUND_TOOLTIP,Yarım tur sayılmaz,A half round doesn't count
 HR_ROLE_FOUNDER,Kurucu,Founder
 HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
-HR_ROLE_DESIGNER,Tasarımcı,Designer
+HR_ROLE_DESIGNER,UX/UI Designer,UX/UI Designer
 HR_ROLE_DEVELOPER,Yazılım Mühendisi,Software Engineer
 HR_ROLE_TESTER,Test Mühendisi,QA Engineer
 HR_ROLE_SALES_REP,Satış Temsilcisi,Sales Representative
-HR_ROLE_CUSTOMER_REP,Müşteri Temsilcisi,Account Manager
+HR_ROLE_CUSTOMER_REP,Müşteri Temsilcisi,Customer Success Manager
 HR_ROLE_MENTOR,Operating Partner,Operating Partner
 HR_DEPT_PRODUCT_DEV,Ürün Geliştirme,Product Development
 HR_DEPT_SALES,Satış,Sales
@@ -547,6 +547,22 @@ HR_BAND_MID,dengeli,balanced
 HR_BAND_SENIOR,üst segment,premium
 HR_LEVEL_PREFIX_JUNIOR,Junior,Junior
 HR_LEVEL_PREFIX_SENIOR,Kıdemli,Senior
+HR_JOB_BUILD,Build ekibi,Build team
+HR_JOB_TEST,Test,Test
+HR_JOB_SUPPORT,Destek,Support
+HR_JOB_ACCOUNTS,Hesap sahipliği,Account ownership
+HR_JOB_SALES,Satış,Sales
+HR_TASK_ON_JOB_BUILD,Yapımda görev alıyor,Working on the build
+HR_TASK_ON_JOB_TEST,Test ediyor,Testing
+HR_TASK_ON_JOB_SUPPORT,Destekte görev alıyor,Working support
+HR_TASK_ON_JOB_ACCOUNTS,Hesaplarda görev alıyor,Working the accounts
+HR_TASK_ON_JOB_SALES,Satışta görev alıyor,Working sales
+HR_STATE_HOURS_OVER,+{n}s mesai,+{n}h overtime
+HR_STATE_HOURS_SHORT,−{n}s kısa,−{n}h short
+HR_ASSIGN_JOB_CAP,En fazla iki iş.,Two jobs is the limit.
+HR_HOURS_WINDOW,{start}–{end},{start}–{end}
+HR_HOURS_CHIP_OVERTIME,{window} · {n} çalışan mesaide,{window} · {n} on overtime
+HR_HOURS_CHIP_OVERRIDES,{window} · {n} istisna,{window} · {n} exceptions
 HR_BADGE_FLIGHT_RISK,Ayrılabilir,At risk of leaving
 HR_BADGE_BURNING_OUT,Tükeniyor,Burning out
 HR_BADGE_OVERLOADED,Aşırı yüklü,Overloaded
@@ -824,6 +840,8 @@ HR_ERR_NO_SALARY,Maaş kaydı yok,No salary on record
 HR_RAISE_PERMANENT,"Zam kalıcıdır, geri alınmaz","A raise is permanent and cannot be undone"
 HR_PROMOTION_PERMANENT,"Terfi kalıcıdır, geri alınmaz","A promotion is permanent and cannot be undone"
 HR_ERR_TOP_LEVEL,En üst seviye,Top level
+HR_CARD_PROMOTE,Terfi ettir,Promote
+HR_APPLY_PROMOTE_PCT,Terfi ettir · +%{pct},Promote · +{pct}%
 HR_ROW_TITLE,Unvan,Title
 HR_ERR_ALREADY_ON_LEAVE,Zaten izinde,Already on leave
 HR_ERR_IN_TRAINING,Eğitimde — dönmesini bekle,In training — wait until they are back

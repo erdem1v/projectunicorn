@@ -4419,14 +4419,14 @@ static func _case_hr_search_cycle() -> String:
 	if HRSearchSystem.can_start():
 		return "a second search may start while one is already active"
 	var arrived_on: int = -1
-	for i in HRConstants.SEARCH_ARRIVAL_MAX_DAYS + 3:
+	for i in HRConstants.SEARCH_ARRIVAL_DAYS + 3:
 		_sim_day()
 		if HRSearchSystem.has_files_ready():
 			arrived_on = i + 1
 			break
-	if arrived_on < HRConstants.SEARCH_ARRIVAL_MIN_DAYS or arrived_on > HRConstants.SEARCH_ARRIVAL_MAX_DAYS:
+	if arrived_on < HRConstants.SEARCH_ARRIVAL_DAYS or arrived_on > HRConstants.SEARCH_ARRIVAL_DAYS:
 		return "files arrived on day %d, want %d-%d" % [
-			arrived_on, HRConstants.SEARCH_ARRIVAL_MIN_DAYS, HRConstants.SEARCH_ARRIVAL_MAX_DAYS]
+			arrived_on, HRConstants.SEARCH_ARRIVAL_DAYS, HRConstants.SEARCH_ARRIVAL_DAYS]
 	# Arrival is a badge and a ticker line, never an interruption.
 	if EventManager._active_event_id.begins_with("ev_hr_"):
 		return "candidate arrival opened a modal (%s)" % EventManager._active_event_id
@@ -4483,7 +4483,7 @@ static func _case_hr_search_cancel_dismiss() -> String:
 		return "cancel did not return to idle"
 	if not HRSearchSystem.start_search(HRConstants.ROLE_SALES_REP, HRConstants.BAND_SENIOR):
 		return "could not start a second search after cancelling"
-	for i in HRConstants.SEARCH_ARRIVAL_MAX_DAYS + 3:
+	for i in HRConstants.SEARCH_ARRIVAL_DAYS + 3:
 		_sim_day()
 		if HRSearchSystem.has_files_ready():
 			break
@@ -5084,35 +5084,57 @@ static func _case_hr_active_filters() -> String:
 
 
 static func _case_hr_overload_badge() -> String:
-	# needs_engineer finally has a READER: the AŞIRI YÜKLÜ badge. It was write-only before
-	# this task. And badges are DERIVED, which is what lets one person carry two at once.
-	var dev: Character = _make_employee("char_load_dev", "Load Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 70)
-	var rep: Character = _make_employee("char_load_rep", "Load Rep", HRConstants.ROLE_CUSTOMER_REP, SEED_PACE, 5000, 70)
-	_park_leave([dev, rep])
-	if HRMoraleSystem.is_capacity_overloaded():
-		return "reported overloaded with no capacity pressure"
-	if HRSystem.badges_for(dev).has(HRConstants.BADGE_OVERLOADED):
-		return "AŞIRI YÜKLÜ badge before any capacity pressure"
+	# §15.1 · ROZETLER TÜRETİLİR VE BİRBİRİNİ BASTIRMAZ.
+	#
+	# "Birden fazla rozet aynı anda görünebilir. AŞIRI YÜKTEN MORALİ 35'İN ALTINA DÜŞMÜŞ bir
+	# çalışan HEM AŞIRI YÜK HEM Ayrılabilir taşır." Bu case tam olarak o cümleyi ölçüyor —
+	# ve o cümle rev 11'den önce hiçbir yüzeyde doğru değildi, çünkü hepsi ilk isabetten
+	# sonra dönüyordu.
+	#
+	# ŞİRKET ÇAPINDAKİ "mühendise ihtiyaç var" ROZETİ KALKTI (§17.6, adıyla): bir şirket
+	# sinyalini kişi başına rozet olarak çiziyor, yalnız developer alınarak temizleniyor ve
+	# İngilizcede aşırı yük rozetiyle AYNI KELİMEYİ kullanıyordu (§16 bunu yasaklıyor).
+	# AŞIRI YÜK artık YALNIZ §12.1'in iş sayısıdır.
+	#
+	# FALSİFİKASYON: HRMoraleSystem.badges_for'daki is_overloaded dalını sil → "iki rozet"
+	# iddiası FAIL eder.
+	var dev: Character = _make_employee("char_load_dev", "Load Dev", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 6000, 70)
+	_park_leave([dev])
+	if not HRSystem.badges_for(dev).is_empty():
+		return "a healthy, single-job employee already carries a badge: %s" % str(HRSystem.badges_for(dev))
+
+	# ŞİRKET BAYRAĞI ARTIK KİMSEYE ROZET TAKMAZ.
 	GameState.set_flag("needs_engineer", true)
-	if not HRMoraleSystem.is_capacity_overloaded():
-		return "needs_engineer still has no reader — the flag is write-only"
-	if not HRSystem.badges_for(dev).has(HRConstants.BADGE_OVERLOADED):
-		return "a product_dev member shows no AŞIRI YÜKLÜ under capacity pressure"
-	if HRSystem.badges_for(rep).has(HRConstants.BADGE_OVERLOADED):
-		return "a customer-department member shows a product capacity badge"
-	CharacterRegistry.set_morale(dev.id, HRConstants.MORALE_BURNOUT - 1)
-	if not HRSystem.badges_for(dev).has(HRConstants.BADGE_BURNING_OUT):
-		return "no TÜKENİYOR badge under the burnout threshold"
+	if not HRSystem.badges_for(dev).is_empty():
+		return "the retired needs_engineer flag still paints a per-person badge (§17.6)"
+
+	# İKİNCİ İŞ → AŞIRI YÜK (§12.1: atanmış iş sayısı 2).
+	if CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT) != "":
+		return "could not give the developer a second job"
+	if not HRSystem.badges_for(dev).has(HRConstants.BADGE_OVERLOAD_JOBS):
+		return "two jobs did not produce AŞIRI YÜK"
+
+	# MORAL 35 ALTI → Ayrılabilir, VE AŞIRI YÜK KALIR.
 	CharacterRegistry.set_morale(dev.id, HRConstants.MORALE_FLIGHT_RISK - 1)
-	if not HRSystem.badges_for(dev).has(HRConstants.BADGE_FLIGHT_RISK):
-		return "no KAÇMA RİSKİ badge under the flight-risk threshold"
-	# Two at once is exactly why badges are derived rather than a single String field.
-	if HRSystem.badges_for(dev).size() < 2:
-		return "an employee cannot carry two badges at once: %s" % str(HRSystem.badges_for(dev))
+	var badges: Array[String] = HRSystem.badges_for(dev)
+	if not badges.has(HRConstants.BADGE_FLIGHT_RISK):
+		return "no Ayrılabilir badge under 35"
+	if not badges.has(HRConstants.BADGE_OVERLOAD_JOBS):
+		return "Ayrılabilir SUPPRESSED AŞIRI YÜK — §15.1 says badges do not suppress each other"
+	if badges.size() < 2:
+		return "an employee cannot carry two badges at once: %s" % str(badges)
+
+	# KOŞUL ORTADAN KALKINCA ROZET KENDİLİĞİNDEN GİDER (§15.1): "Rozet kalıcı değildir;
+	# ikinci iş alındığında AŞIRI YÜK aynı çizimde gider."
+	CharacterRegistry.unassign_job(dev.id, HRConstants.JOB_SUPPORT)
+	if HRSystem.badges_for(dev).has(HRConstants.BADGE_OVERLOAD_JOBS):
+		return "AŞIRI YÜK survived losing the second job — a stored badge would do that"
+
+	# SAKLANAN ROZET ALANI YOKTUR (§15.1).
 	if dev.attention_flag != "":
 		return "attention_flag was written; badges must stay derived"
 	return ""
-
 
 static func _case_hr_constants_contract() -> String:
 	# The tuning surface itself, asserted rather than trusted. hr_constants.gd is the single
@@ -5237,8 +5259,11 @@ static func _case_hr_constants_contract() -> String:
 		return "the band tiers do not climb the ruler (top profiles)"
 
 	# --- Economy + action math ---
-	if HRConstants.commission_for(9200) != 1380:
-		return "commission on 9200 is %d, want the mockup's 1380" % HRConstants.commission_for(9200)
+	# §10: "İşe alım gerçekleştiğinde bir aylık maaşın %50'si komisyon olarak ödenir.
+	# $3.000'lik bir çalışanın maliyeti $4.500'dür. RETAINER YOKTUR; tek ücret komisyondur."
+	# Eski çift-ücret modeli (peşin $600 + %15) oyuncuyu ARAMADAN ÖNCE cezalandırıyordu.
+	if HRConstants.commission_for(3000) != 1500:
+		return "commission on 3000 is %d, want §10's 1500 (half a month)" % HRConstants.commission_for(3000)
 	if HRConstants.severance_months(364) != 1 or HRConstants.severance_months(730) != 2:
 		return "the severance year rule drifted"
 	if HRConstants.raise_morale_gain(HRConstants.RAISE_MAX_PCT) <= HRConstants.raise_morale_gain(HRConstants.RAISE_MIN_PCT):

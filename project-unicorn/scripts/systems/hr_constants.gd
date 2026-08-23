@@ -189,6 +189,15 @@ static func is_job(job_id: String) -> bool:
 	return JOBS.has(job_id)
 
 
+## İş adı — matris başlığı ve GÖREV hücresi buradan okur. Bilinmeyen bir id kendi kendini
+## döndürür ve logda bağırır (role_label ile aynı "asla ham token çizme" kuralı).
+static func job_label(job_id: String) -> String:
+	if not JOBS.has(job_id):
+		push_error("[HRConstants] job_label with an unknown job: '%s'" % job_id)
+		return job_id
+	return _derived("HR_JOB_", job_id)
+
+
 ## Bir rol bu işi tutabilir mi, ve hangi katsayıyla. §4.4'ün türetilmiş atanabilirlik
 ## tablosu BU FONKSİYONDAN çıkar; ayrıca saklanmaz (§15.2).
 ## Döner: 1.0 ana alan · SECONDARY_AREA_MULT ikincil · 0.0 alanı yok.
@@ -929,10 +938,16 @@ static func band_shape(band_id: String, profile_index: int = 0) -> Array:
 # row so it is not residue, but the row carries the same value twice.
 static func search_agency_name() -> String:
 	return TranslationServer.translate("HR_AGENCY_NAME")
-const SEARCH_RETAINER := 600            # peşin, iptalde İADE EDİLMEZ
-const SEARCH_COMMISSION_PCT := 0.15     # işe alımda ilk ay maaşının oranı
-const SEARCH_ARRIVAL_MIN_DAYS := 2      # dosyalar en erken bu kadar gün sonra gelir
-const SEARCH_ARRIVAL_MAX_DAYS := 4      # ve en geç bu kadar
+## §10 TEK ÜCRET. "Aday araması Atlas Recruitment modalinden yürür ve ÜCRETSİZDİR."
+## SEARCH_RETAINER hâlâ bildirilmiş çünkü Atlas modali ve iki uyarı satırı onu okuyor;
+## artık TAHSİL EDİLMİYOR ve Faz 7'de o okuyucularla birlikte siliniyor.
+const SEARCH_RETAINER := 600            # EMEKLİ — yalnız eski metin yolları okuyor
+## §10: "bir aylık maaşın %50'si komisyon olarak ödenir. $3.000'lik bir çalışanın maliyeti
+## $4.500'dür." 0,15'ti; tek ücret modeli farkı komisyona yüklüyor.
+const SEARCH_COMMISSION_PCT := 0.50
+## §10: "Arama başlatıldıktan BİR HAFTA sonra aday listesi gelir." Aralık değil, TEK SAYI.
+## Gecikme kastedilmiştir: bir çalışan ayrıldığında oyuncu boşluğu o gün kapatamaz.
+const SEARCH_ARRIVAL_DAYS := 7
 const CANDIDATE_COUNT := 3              # her arayış üç dosya getirir
 
 # ========================= ÇALIŞMA SAATLERİ — §8 =============================
@@ -1138,10 +1153,12 @@ const BADGE_OVERLOAD_JOBS := "OVERLOAD_JOBS"
 
 # Worst-first severity, matching the order HRSystem.badges_for returns. Exposed so a card
 # list can sort "needs attention" rows to the top without re-deciding which badge is worse.
+## §7'nin dört bandının karşılığı ÜÇ rozettir: Ayrılabilir · AŞIRI YÜK · YENİ.
+## TÜKENİYOR (BURNING_OUT) rev 11'de YOK — 40 eşiği rev 2'nindi ve §7 onu saymıyor.
+## Sabit ve etiketi Faz 7'ye kadar duruyor, ama artık hiçbir rozet listesine girmiyor.
 const BADGE_SEVERITY := {
 	"FLIGHT_RISK": 3,
-	"BURNING_OUT": 2,
-	"OVERLOADED": 1,
+	"OVERLOAD_JOBS": 1,
 }
 
 # YENİ is INFORMATIONAL, not an attention badge — it must never enter badges_for(), because
