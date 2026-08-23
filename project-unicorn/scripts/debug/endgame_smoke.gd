@@ -164,8 +164,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"hr_fire_path":             fail = _case_hr_fire_path()
 		"hr_resignation_path":      fail = _case_hr_resignation_path()
 		"hr_leave_cycle":           fail = _case_hr_leave_cycle()
-		"hr_morale_no_drift":       fail = _case_hr_morale_no_drift()
-		"hr_positive_recovery":     fail = _case_hr_positive_recovery()
+		"hr_morale_drift_shape":    fail = _case_hr_morale_drift_shape()
+		"hr_recovery_channels":     fail = _case_hr_recovery_channels()
 		"hr_overtime_cost_tiers":   fail = _case_hr_overtime_cost_tiers()
 		"hr_overtime_multipliers":  fail = _case_hr_overtime_multipliers()
 		"hr_overtime_early_stop":   fail = _case_hr_overtime_early_stop()
@@ -324,6 +324,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		# --- rev 11 · Faz 1. İkisi de ÖNCEKİ motora karşı DÜŞER.
 		"save_migration_v6_to_v7":        fail = _case_save_migration_v6_to_v7()
 		"save_migration_v6_to_v7_drops":  fail = _case_save_migration_v6_to_v7_drops()
+		"work_hours_three_scopes":        fail = _case_work_hours_three_scopes()
 		# --- Trait seti · Build Bar · Görevler (2026-08-21). Beşi de ÖNCEKİ motora karşı DÜŞER.
 		"build_pauses_when_all_busy":     fail = _case_build_pauses_when_all_busy()
 		"build_resumes_when_one_frees":   fail = _case_build_resumes_when_one_frees()
@@ -4598,60 +4599,133 @@ static func _case_hr_leave_cycle() -> String:
 	return ""
 
 
-static func _case_hr_morale_no_drift() -> String:
-	# The autonomous drift is DELETED, not tuned to zero. A day with no event, no overtime,
-	# no overload and no action must not move morale by a single point — in either direction,
-	# and at any starting value.
-	GameState.set_flag("debug_hr_force", "fail")   # no resignation roll may fire
-	var a: Character = _make_employee("char_drift_a", "Drift A", HRConstants.ROLE_DEVELOPER, SEED_PACE, 0, 20)
-	var b: Character = _make_employee("char_drift_b", "Drift B", HRConstants.ROLE_TESTER, SEED_PACE, 0, 90)
-	var c: Character = _make_employee("char_drift_c", "Drift C", HRConstants.ROLE_DESIGNER, SEED_PACE, 0, 50)
-	_park_leave([a, b, c])
-	var before: Array = [a.morale, b.morale, c.morale]
+static func _case_hr_morale_drift_shape() -> String:
+	# §7.1'İN ÜÇ DÖNÜM NOKTASI. Taban sürüklenme AŞAĞI çalışır (§7.2 "Moral kendiliğinden
+	# iyileşmez") ve saat çarpanı sıfırın altına indiğinde İŞARET DÖNER:
+	#   8 saat ×1,0  → erir          (taban)
+	#   7 saat ×0    → DURUR
+	#   5 saat ×−1,0 → taban hızında YÜKSELİR
+	# Kısa günün bütün toparlanma mekaniği bu tek tablodan geliyor; ayrı bir sistem yok.
+	#
+	# FALSİFİKASYON: HRConstants.HOUR_MORALE_MULT'ta 7'yi 0 yerine 1,0 yap → "seven hours"
+	# iddiası FAIL eder. 5'i pozitif yap → "five hours" iddiası FAIL eder.
+	GameState.set_flag("debug_hr_force", "fail")   # istifa roll'u atmasın
+	var days: int = 12
+	var expect: int = int(round(HRConstants.MORALE_BASE_DRIFT_PER_DAY * float(days)))
+
+	# --- 8 SAAT: taban hızında erir ---
+	var base_emp: Character = _make_employee("drift_base", "Drift Base", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 0, 60)
+	_park_leave([base_emp])
+	var before: int = base_emp.morale
+	for i in days:
+		_sim_day()
+	if base_emp.morale != before - expect:
+		return "8h drifted %d over %d days, want -%d (§7.1 taban)" % [
+			base_emp.morale - before, days, expect]
+
+	# --- 7 SAAT: DURUR. Çarpan tam sıfır, yani hiçbir yöne gitmez. ---
+	WorkHoursSystem.set_company_hours(7)
+	var held: int = base_emp.morale
+	for i in days:
+		_sim_day()
+	if base_emp.morale != held:
+		return "7h moved morale by %d — §7.1 says the drift STOPS there" % [base_emp.morale - held]
+
+	# --- 5 SAAT: taban hızında YÜKSELİR (§8.3 kısa gün, §7.2'nin üçüncü kanalı) ---
+	WorkHoursSystem.set_company_hours(5)
+	var low: int = base_emp.morale
+	for i in days:
+		_sim_day()
+	if base_emp.morale != low + expect:
+		return "5h moved %d over %d days, want +%d (§7.1 ×-1,0)" % [
+			base_emp.morale - low, days, expect]
+
+	# --- AŞIRI YÜK BİR TABAN KOYAR (§7.1 / §12.1) ---
+	# "Aşırı yüklü bir çalışan kısa günden en fazla erimesinin durması kadar fayda görür;
+	# morali YÜKSELMEZ." Bu, genel yön kuralından daha sert bir hüküm — ve o kural
+	# yazılmasaydı aşırı yükün toparlanmayı HIZLANDIRDIĞI bir işaret hatası kaçınılmazdı.
+	var loaded: Character = _make_employee("drift_loaded", "Drift Loaded", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 0, 60)
+	_park_leave([loaded])
+	if CharacterRegistry.assign_job(loaded.id, HRConstants.JOB_SUPPORT) != "":
+		return "could not put the second job on the overload fixture"
+	if not HRSystem.is_overloaded(loaded):
+		return "two jobs did not read as overloaded"
+	var loaded_before: int = loaded.morale
+	for i in days:
+		_sim_day()
+	if loaded.morale > loaded_before:
+		return "an overloaded employee RECOVERED on a short day (%d → %d) — §12.1 forbids it" % [
+			loaded_before, loaded.morale]
+	return ""
+
+static func _case_hr_recovery_channels() -> String:
+	# §7.2 — MORALİN YÜKSELME YOLLARI. Moral kendiliğinden iyileşmez ve taban drift yukarı
+	# çalışmaz; bu sürümde üç kanal vardır ve ÜÇÜ DE BU MODÜLDEDİR:
+	#   Zam (§9.2)                → nakitle ödenir
+	#   Yıllık izin dönüşü (§11.4) → o kişinin iki haftasıyla ödenir
+	#   Kısa gün (§8.3)            → bütün ekibin günlük çıktısıyla ödenir
+	# Hiçbiri bedavaya moral üretmez, ve üçü de farklı para birimiyle ödenir.
+	#
+	# Olay kartları DÖRDÜNCÜ kanaldır ama §17.3'e göre BLOKLUDUR (motor insanları göremiyor),
+	# o yüzden burada ölçülmez — ölçülseydi yazılmamış içeriğe bağlı bir vaka olurdu.
+	#
+	# FALSİFİKASYON: HRConstants.MORALE_LEAVE_RETURN'ü 0 yap → izin kanalı FAIL eder.
+	# HOUR_MORALE_MULT[5]'i pozitif yap → kısa gün kanalı FAIL eder.
+	GameState.set_flag("debug_hr_force", "fail")
+
+	# --- 1 · ZAM ---
+	# Maaş VERİLİR: can_raise sıfır maaşlı bir kaydı reddeder (yüzde bir zam sıfırdır ve
+	# yuvarlama no-op'u kapıya takılır), ve _make_employee'nin varsayılanı sıfırdır.
+	var raised: Character = _make_employee("rec_raise", "Rec Raise", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 4000, 50)
+	_park_leave([raised])
+	GameState.set_cash(500000)
+	var before_raise: int = raised.morale
+	if not HRActions.apply_raise(raised, HRConstants.RAISE_MAX_PCT):
+		return "apply_raise refused a healthy employee"
+	if raised.morale <= before_raise:
+		return "§9.2 zam did not raise morale (%d → %d)" % [before_raise, raised.morale]
+
+	# --- 2 · YILLIK İZİN DÖNÜŞÜ ---
+	# §11.4: dönen çalışan +15 kazanır ve bu TEK SEFERDE gelir. §8.6: izin boyunca moral
+	# HİÇ sürüklenmez — aksi hâlde iki hafta erir, sonra +15 alır ve izin NET BİR KAYBA
+	# dönerdi. İkisini birlikte ölçüyoruz: dönüşteki moral, gidişteki moralden yüksek olmalı.
+	var rested: Character = _make_employee("rec_leave", "Rec Leave", HRConstants.ROLE_TESTER,
+		SEED_PACE, 0, 50)
+	var before_leave: int = rested.morale
+	HRMoraleSystem.send_on_leave(rested, HRConstants.LEAVE_DAYS, false)
+	if rested.status != HRConstants.STATUS_ON_LEAVE:
+		return "send_on_leave did not put the employee on leave"
+	for i in HRConstants.LEAVE_DAYS + 2:
+		_sim_day()
+	if rested.status != HRConstants.STATUS_ACTIVE:
+		return "the employee never came back from leave"
+	if rested.morale <= before_leave:
+		return "§11.4 izin dönüşü did not raise morale (%d → %d)" % [before_leave, rested.morale]
+
+	# --- 3 · KISA GÜN ---
+	# §8.3 / §7.1: beş saatte çarpan ×−1,0, yani taban hızında YÜKSELİR. Bu, çalışma süresi
+	# kontrolünü tek yönlü bir baskı aletinden iki yönlü bir kadrana çeviren şeydir.
+	var tired: Character = _make_employee("rec_short", "Rec Short", HRConstants.ROLE_DESIGNER,
+		SEED_PACE, 0, 50)
+	_park_leave([tired])
+	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_MIN)
+	var before_short: int = tired.morale
 	for i in 12:
 		_sim_day()
-	var after: Array = [a.morale, b.morale, c.morale]
-	if after != before:
-		return "morale moved with no played cause: %s -> %s" % [str(before), str(after)]
-	# If a positive event had fired it would explain the (absent) movement — make that a
-	# distinct failure rather than a confusing pass.
-	if _instances_of("ev_hr_calm_stretch") + _instances_of("ev_hr_ship_glow") + _instances_of("ev_hr_big_signing") > 0:
-		return "a positive morale event fired inside the no-drift window"
+	if tired.morale <= before_short:
+		return "§8.3 kısa gün did not raise morale (%d → %d)" % [before_short, tired.morale]
 	return ""
-
-
-static func _case_hr_positive_recovery() -> String:
-	# Morale never self-heals, so the loop must be BIDIRECTIONAL or the demo is broken:
-	# at least one placeholder positive event has to raise team morale.
-	var a: Character = _make_employee("char_pos_a", "Pos A", HRConstants.ROLE_DEVELOPER, SEED_PACE, 0, 45)
-	var b: Character = _make_employee("char_pos_b", "Pos B", HRConstants.ROLE_TESTER, SEED_PACE, 0, 45)
-	_park_leave([a, b])
-	# A long stretch with no overtime is one of the design's named recovery triggers. No stamp is
-	# forced: a team that has never worked a late night genuinely HAS had a quiet stretch, and it
-	# must be able to reach the only recovery channel that needs no player action at all.
-	if HRMoraleSystem.average_morale() > float(HRConstants.CALM_STRETCH_MAX_MORALE):
-		return "test setup wrong: the team is already too happy to trigger recovery"
-	var m0: int = a.morale
-	var fired: String = ""
-	for i in HRConstants.CALM_STRETCH_DAYS + 4:
-		_sim_day()
-		if _instances_of("ev_hr_calm_stretch") >= 1:
-			fired = "ev_hr_calm_stretch"
-			break
-	if HRMoraleSystem.days_since_last_overtime() < HRConstants.CALM_STRETCH_DAYS:
-		return "days_since_last_overtime reads %d after %d quiet days" % [
-			HRMoraleSystem.days_since_last_overtime(), HRConstants.CALM_STRETCH_DAYS]
-	if fired == "":
-		return "no positive morale event fired on a %d-day calm stretch" % HRConstants.CALM_STRETCH_DAYS
-	if not _drain_to(fired):
-		return "could not bring the positive event to the front"
-	EventManager.resolve_choice(fired, 0)
-	if a.morale <= m0 or b.morale <= m0:
-		return "the positive event did not raise team morale (%d -> %d / %d)" % [m0, a.morale, b.morale]
-	return ""
-
 
 static func _case_hr_overtime_cost_tiers() -> String:
+	# DRIFT KONTROLÜ (rev 11): bu vaka mesai kademesinin moral bedelini YALNIZ BAŞINA
+	# ölçüyor, ama §7.1'in taban sürüklenmesi artık her gün üstüne biniyor. Toleransı
+	# gevşetmek gerçek bir regresyonu gizlerdi; onun yerine şirketi YEDİ SAATE park
+	# ediyoruz — §7.1'in çarpanı orada tam olarak sıfır, yani morali oynatan tek şey
+	# ölçülmek istenen blok kalıyor.
+	WorkHoursSystem.set_company_hours(7)
 	# Pay accrues per PARTICIPATING employee per day with the founder free, and the morale
 	# cost follows the 1-3 / 4-7 / 8+ tiers exactly.
 	GameState.set_cash(200000)
@@ -4733,6 +4807,11 @@ static func _case_hr_overtime_multipliers() -> String:
 
 
 static func _case_hr_overtime_early_stop() -> String:
+	# DRIFT KONTROLÜ (rev 11) — bkz. _case_hr_overtime_cost_tiers. Bu vaka "blok durunca
+	# moral düşüşü DURUR" iddiasını ölçüyor; §7.1'in taban sürüklenmesi o iddiayı kendi
+	# başına bozar. Şirketi yedi saate park ediyoruz: orada çarpan tam sıfır, yani blok
+	# durduktan sonra morali oynatan hiçbir şey kalmıyor ve iddia yeniden ölçülebilir oluyor.
+	WorkHoursSystem.set_company_hours(7)
 	# Stopping on day 4 of a 7-day block accrues EXACTLY four days of pay; nothing is
 	# refunded and nothing further accrues.
 	GameState.set_cash(200000)
@@ -7440,6 +7519,82 @@ static func _case_leadership_is_trainable() -> String:
 	return ""
 
 
+
+
+static func _case_work_hours_three_scopes() -> String:
+	# §8.1 ÜÇ KAPSAM, TEK ÇÖZÜMLEYİCİ:
+	#   kişinin saati = çalışan istisnası ?? grubunun istisnası ?? şirket değeri
+	# §15.2 bu zinciri bir tek-kaynak kuralı yapıyor; hiçbir sistem kendisi yürütmez.
+	#
+	# FALSİFİKASYON: WorkHoursSystem.hours_for'daki `c.work_hours_override > 0` dalını sil →
+	# kişisel istisna görünmez olur ve "Cahit" iddiası FAIL eder. Grup dalını sil → grup
+	# iddiası FAIL eder.
+	var dev: Character = _make_employee("wh_dev", "Wh Dev", HRConstants.ROLE_DEVELOPER)
+	var tester: Character = _make_employee("wh_qa", "Wh Qa", HRConstants.ROLE_TESTER)
+	var seller: Character = _make_employee("wh_sales", "Wh Sales", HRConstants.ROLE_SALES_REP)
+	var founder: Character = CharacterRegistry.get_founder()
+
+	# --- TABAN: herkes şirketi devralır (§8.1 varsayılan 8 saat) ---
+	if WorkHoursSystem.hours_for(dev) != HRConstants.WORK_HOURS_DEFAULT:
+		return "a fresh employee did not inherit the company hours: %d" % WorkHoursSystem.hours_for(dev)
+	if WorkHoursSystem.override_count() != 0:
+		return "a fresh run reports %d overrides, want 0" % WorkHoursSystem.override_count()
+
+	# --- GRUP kapsamı: Geliştirme Ekibi 10 saate karar veriyor ---
+	WorkHoursSystem.set_group_hours(HRConstants.GROUP_DEVELOPMENT, 10)
+	if WorkHoursSystem.hours_for(dev) != 10 or WorkHoursSystem.hours_for(tester) != 10:
+		return "the development group override did not reach its members (%d / %d)" % [
+			WorkHoursSystem.hours_for(dev), WorkHoursSystem.hours_for(tester)]
+	if WorkHoursSystem.hours_for(seller) != HRConstants.WORK_HOURS_DEFAULT:
+		return "a group override leaked onto Satış: %d" % WorkHoursSystem.hours_for(seller)
+	if WorkHoursSystem.inherited_from(dev) != "group":
+		return "the KAYNAK column would not say 'gruptan': %s" % WorkHoursSystem.inherited_from(dev)
+
+	# --- ÇALIŞAN kapsamı: bir kişi kendi grubunu geçersiz kılar (§8.5'in Cahit'i) ---
+	WorkHoursSystem.set_person_hours(dev.id, 6)
+	if WorkHoursSystem.hours_for(dev) != 6:
+		return "a personal override did not win over the group: %d" % WorkHoursSystem.hours_for(dev)
+	if WorkHoursSystem.hours_for(tester) != 10:
+		return "the personal override leaked onto a groupmate: %d" % WorkHoursSystem.hours_for(tester)
+	if WorkHoursSystem.inherited_from(dev) != "":
+		return "a deciding row still reads as inherited"
+
+	# --- İSTİSNA KİŞİDE SAKLANIR: grubun değeri değişince kişi KARARINI KORUR (§8.1) ---
+	WorkHoursSystem.set_group_hours(HRConstants.GROUP_DEVELOPMENT, 11)
+	if WorkHoursSystem.hours_for(dev) != 6:
+		return "the personal override did not survive a group change: %d" % WorkHoursSystem.hours_for(dev)
+
+	# --- §8.2 / §8.3 durum okumaları ---
+	if not WorkHoursSystem.overtime_active(tester):
+		return "11 hours did not read as overtime"
+	if not WorkHoursSystem.short_day_active(dev):
+		return "6 hours did not read as a short day"
+	var counts: Dictionary = WorkHoursSystem.counts()
+	if int(counts["overtime"]) != 1 or int(counts["short_day"]) != 1:
+		return "the cost block would miscount: %s" % str(counts)
+
+	# --- §2 KURUCU istisna ALAMAZ ve şirketi devralır ---
+	WorkHoursSystem.set_person_hours(founder.id, 5)
+	if WorkHoursSystem.hours_for(founder) != HRConstants.WORK_HOURS_DEFAULT:
+		return "the founder took a personal exception — §2 forbids it (%d)" % WorkHoursSystem.hours_for(founder)
+
+	# --- §8.2 ücret YALNIZ aşan saatlere, %50 fazlasıyla ---
+	# 11 saat = 3 aşan saat. Saatlik = maaş / 176, ve ödenen 3 × saatlik × 1,5.
+	var want_ot: int = int(round(HRConstants.hourly_wage(tester.monthly_salary) * 3.0 * 1.5))
+	if WorkHoursSystem.overtime_pay_today(tester) != want_ot:
+		return "overtime pay %d, want %d (only the hours above eight, at 1.5x)" % [
+			WorkHoursSystem.overtime_pay_today(tester), want_ot]
+	if WorkHoursSystem.overtime_pay_today(dev) != 0:
+		return "a short day accrued overtime pay"
+
+	# --- §8.5 "Tümünü şirkete eşitle bütün istisnaları temizler" ---
+	WorkHoursSystem.equalise_all()
+	if WorkHoursSystem.override_count() != 0:
+		return "equalise_all left %d override(s)" % WorkHoursSystem.override_count()
+	for c in [dev, tester, seller]:
+		if WorkHoursSystem.hours_for(c) != HRConstants.WORK_HOURS_DEFAULT:
+			return "%s did not fall back to the company value after equalise" % c.id
+	return ""
 
 static func _case_save_migration_v6_to_v7() -> String:
 	# rev 11 göçü: seviye · tek deneyim barı · ALAN → İŞ · yaz izni · şirket saatleri.

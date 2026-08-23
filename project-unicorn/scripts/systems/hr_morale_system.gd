@@ -219,7 +219,22 @@ static func apply_delta(emp: Character, delta: int, reason: String) -> void:
 	var effective: int = scaled_delta(emp, delta)
 	if effective == 0:
 		return
+	# ADLANDIRILMIŞ DELTA ANINDA İNER; SÜRÜKLENEN TABAN DRIFT'TİR.
+	#
+	# §7 "hedefe doğru sürüklenir, anında sıçramaz" ile §11.4 "izin dönüşü +15 ... TEK
+	# SEFERDE gelir" birlikte okunur: sürüklenen şey AMBIENT erimedir, çünkü §7'nin
+	# gerekçesi "oyuncuya tepki verecek pencere bırakmak" ve tepki verilecek şey odur.
+	# Zam, izin dönüşü, ayrılık darbesi gibi ADI OLAN etkiler §14'ün modal gramerinde
+	# taahhütten önce "Moral 75 → 79" diye okunur; onları geciktirmek modali yalancı yapar
+	# ve oyuncunun eylemini tepkisiz gösterirdi.
+	#
+	# Olay deltaları ayrıca TABAN ÇARPANINDAN GEÇMEZ (§7.1): "ham gelir, ham uygulanır.
+	# Yani yedi saatlik gün ambient erimeyi durdurur, DÜNYAYI DURDURMAZ."
+	_seed_target(emp)
 	var before: int = emp.morale
+	# Hedef de birlikte taşınır, yoksa tick_ease morali eski hedefe geri çekerdi.
+	emp.morale_target = clampf(emp.morale_target + float(effective),
+		float(HRConstants.MORALE_MIN), float(HRConstants.MORALE_MAX))
 	CharacterRegistry.set_morale(emp.id, before + effective)   # clamps + emits morale_changed
 	if OS.is_debug_build():
 		print("[HRMoraleSystem] %s moral %d → %d (%s)" % [emp.id, before, emp.morale, reason])
@@ -240,18 +255,106 @@ static func scaled_delta(emp: Character, delta: int) -> int:
 	var leadership: int = GameState.get_founder_skill("leadership")
 	var scaled: int
 	if delta < 0:
-		# `morale_drop_mult` (KİŞİNİN kendi dayanıklılığı) emekli; yerine EKİBİN erime
-		# çarpanı geldi. Yön değişti ve bu bilinçli: artık "ben dayanıklıyım" diye bir
-		# trait yok, "yanımdaki ortamı bozuyor" diye bir trait var.
+		# §4.2 LİDERLİK: yarım yıldız başına moral düşüş hızı −%2, beş yıldızda −%20.
+		# Eski climate_drop_mult −%50'ye kadar iniyordu ve tavanı yanlıştı; sabitler
+		# Faz 7'ye kadar duruyor ama artık okunmuyorlar.
+		#
+		# `_team_decay_mult` KİŞİNİN ALEYHİNEDİR (TAT KAÇIRAN aynı ekiptekilerin erimesini
+		# hızlandırır), o yüzden düşüşte ÇARPAR — §7.1'in yön kuralı. Yükselişteki tersi
+		# _against_mult'ta.
 		scaled = int(round(float(delta)
 			* _team_decay_mult(emp)
-			* HRConstants.climate_drop_mult(leadership)))
+			* _leadership_drop_mult(leadership)))
 	else:
-		scaled = int(round(float(delta) * HRConstants.climate_gain_mult(leadership)))
+		# §4.2 yükseliş tarafına bir bonus VERMİYOR — yalnız "moral düşüş hızını" fiyatlıyor.
+		# Aleyhe olan modifikatör burada yükselişi YAVAŞLATIR (§7.1 yön kuralı).
+		scaled = int(round(float(delta) / maxf(_team_decay_mult(emp), 0.01)))
 	if scaled == 0:
 		return 0   # NO DRIFT: a drop worth less than half a point is nothing, not -1.
 	var target: int = emp.morale + scaled
 	return clampi(target, HRConstants.MORALE_MIN, HRConstants.MORALE_MAX) - emp.morale
+
+
+# ============================================================================
+#  §7 · hedef, taban sürüklenme ve yön kuralı
+# ============================================================================
+
+## §4.2: yarım yıldız başına −%2, beş yıldızda (10 ham puan) −%20. Liderlik kişinin
+## LEHİNEDİR, o yüzden düşüşü KÜÇÜLTÜR.
+static func _leadership_drop_mult(leadership: int) -> float:
+	return maxf(1.0 - HRConstants.LEAD_MORALE_PER_POINT * float(clampi(leadership, 0, HRConstants.AREA_MAX)), 0.0)
+
+
+## morale_target -1 doğar (tohumlanmadı). İlk dokunuşta bugünkü moralden doldurulur, yoksa
+## ilk tik morali sıfıra doğru sıçratırdı.
+static func _seed_target(emp: Character) -> void:
+	if emp.morale_target < 0.0:
+		emp.morale_target = float(emp.morale)
+
+
+## §7.1 TABAN SÜRÜKLENME. Saat çarpanı ve aşırı yük YALNIZ buraya uygulanır.
+##
+## Çarpan sıfırın altına indiğinde İŞARET DÖNER ve moral yükselir — yedide durur, altıda
+## yükselir, beşte taban hızında yükselir (§7.1). Kısa günün bütün mekaniği bu tek
+## tablodan geliyor; ayrı bir "toparlanma" sistemi yok.
+static func tick_drift() -> void:
+	for emp in CharacterRegistry.get_active_employees():
+		_seed_target(emp)
+		# §8.6: İZİNDEKİ çalışanın morali HİÇ sürüklenmez — ne düşer ne yükselir. Kazanç
+		# dönüşte tek seferde gelir (§11.4), yoksa iki hafta erir, sonra +15 alır ve izin
+		# NET BİR KAYBA dönerdi. (get_active_employees izindekini zaten dışarıda bırakıyor;
+		# bu satır sözleşmeyi okunur kılmak için burada.)
+		if emp.status == HRConstants.STATUS_ON_LEAVE:
+			continue
+		# §8.6: EĞİTİMDEKİ çalışan taban sürüklenmeye TABİDİR — eğitim bir tatil değildir.
+		# Yalnız saat çarpanı ve mesai ücreti uygulanmaz.
+		var hour_mult: float = 1.0
+		if emp.status != HRConstants.STATUS_TRAINING:
+			hour_mult = HRConstants.hour_morale_mult(WorkHoursSystem.hours_for(emp))
+		var raw: float = -HRConstants.MORALE_BASE_DRIFT_PER_DAY * hour_mult
+
+		if HRSystem.is_overloaded(emp):
+			if raw < 0.0:
+				# Aleyhe modifikatör, düşüşte: hızlandırır (§7.1, ×1,5).
+				raw *= HRConstants.OVERLOAD_MORALE_MULT_R11
+			else:
+				# §7.1 AŞIRI YÜK BİR TABAN KOYAR: "Aşırı yüklü bir çalışan kısa günden en
+				# fazla erimesinin durması kadar fayda görür; morali YÜKSELMEZ. İki iş
+				# taşırken toparlanma yoktur." Bu, genel yön kuralından DAHA SERT bir
+				# hükümdür ve bilerek öyle.
+				raw = 0.0
+
+		if is_zero_approx(raw):
+			continue
+		# Huy ve liderlik ölçeklemesi TEK YERDE (§7.1): her sistem kendi deltasını ayrı
+		# ölçeklemez, ham verir, ölçekleme merkezde uygulanır.
+		if raw < 0.0:
+			raw *= _team_decay_mult(emp) * _leadership_drop_mult(GameState.get_founder_skill("leadership"))
+		else:
+			raw /= maxf(_team_decay_mult(emp), 0.01)
+		emp.morale_target = clampf(emp.morale_target + raw,
+			float(HRConstants.MORALE_MIN), float(HRConstants.MORALE_MAX))
+
+
+## §7 "anında sıçramaz": görünen moral hedefe doğru günde en fazla MORALE_EASE_PER_DAY
+## yürür. Tek yazıcı CharacterRegistry.set_morale — clamp'i ve morale_changed sinyalini o
+## taşıyor, ve bu fonksiyon onu atlamıyor.
+static func tick_ease() -> void:
+	for emp in CharacterRegistry.get_employees():
+		_seed_target(emp)
+		var gap: float = emp.morale_target - float(emp.morale)
+		if is_zero_approx(gap):
+			continue
+		var step: float = clampf(gap, -HRConstants.MORALE_EASE_PER_DAY, HRConstants.MORALE_EASE_PER_DAY)
+		# MORAL BİR TAM SAYI, TABAN DRIFT İSE GÜNDE 0,25. Adımı zorla ±1'e yuvarlamak
+		# drift'i dört katına çıkarırdı — sekiz saatlik gün günde bir puan eritirdi ve
+		# §7.1'in "hafif baskı" ayarı ölürdü. Onun yerine KESİR HEDEFTE BİRİKİR ve moral
+		# ancak fark yarım puanı geçtiğinde kımıldar: 0,25/gün ≈ üç dört günde bir puan.
+		# Olay deltaları zaten ≥1 olduğu için ilk tikte hareket ederler.
+		var next_value: int = int(round(float(emp.morale) + step))
+		if next_value == emp.morale:
+			continue
+		CharacterRegistry.set_morale(emp.id, next_value)
 
 
 # ============================================================================

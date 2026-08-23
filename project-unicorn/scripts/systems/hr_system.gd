@@ -49,6 +49,11 @@ static func daily_tick() -> void:
 	tick_overload()
 	HRSearchSystem.daily_tick()
 	HROvertimeSystem.daily_tick()
+	#  §7 TABAN SÜRÜKLENME eşiklerden ÖNCE: bugünün saat ayarı ve aşırı yükü bu tikte
+	#  hedefe yazılır, sonra ease onu morale taşır, sonra eşikler O MORALİ okur. Ters sıra
+	#  Ayrılabilir'i bir gün geriden getirirdi.
+	HRMoraleSystem.tick_drift()
+	HRMoraleSystem.tick_ease()
 	HRMoraleSystem.tick_thresholds()
 	HRMoraleSystem.tick_positive_events()
 	#  7. DENEYİM: bugün gerçekten ÇALIŞMIŞ olanlar biriktirir. Eğitimdekiler

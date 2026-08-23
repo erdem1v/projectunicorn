@@ -1078,6 +1078,16 @@ const MORALE_BAND_LOW_MULT := 0.85
 ## kalır — oyuncu kadranı kullanmaya devam eder. (Erdem 2026-08-23; 0,5 denendi ve aşırı
 ## yük senaryosunu 36 güne indiriyordu ama bunu baskı altında OLMAYAN herkesi iki kat hızlı
 ## eriterek satın alıyordu. 0,25'te o senaryo 72 gün — hâlâ bir koşuda rahat görülür.)
+## §4.2 LİDERLİK KATSAYILARI. Ayrım kasıtlıdır ve GDD gerekçesini yazıyor: liderlik bir
+## ÜRETİM istatistiği değil bir İNSAN istatistiğidir. Çıktı tarafı ölçülü tutulur ki moral
+## bandı modülün birincil hız kaldıracı olarak kalsın; moral tarafı cömert tutulur ki
+## "iyi lider ekibi ayakta tutar" gerçekten hissedilsin.
+##   yarım yıldız (= 1 ham puan) başına: çıktı +%1 · moral düşüş hızı −%2
+##   beş yıldızda (10 ham puan):        çıktı +%10 · moral düşüş hızı −%20
+## YÜZDELER EKRANDA GÖRÜNMEZ (§4.2): oyuncu sebebi görür, katsayıyı görmez.
+const LEAD_OUTPUT_PER_POINT := 0.01
+const LEAD_MORALE_PER_POINT := 0.02
+
 const MORALE_BASE_DRIFT_PER_DAY := 0.25
 
 ## §7 "hedefe doğru sürüklenir, anında sıçramaz". Delta HEDEFE yazılır; görünen moral
