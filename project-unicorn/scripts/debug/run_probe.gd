@@ -640,7 +640,7 @@ static func _hire_after_the_seed() -> void:
 		return
 	if _hire_started or not HRSearchSystem.can_start():
 		return
-	if HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.BAND_JUNIOR):
+	if HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_JUNIOR):
 		_hire_started = true
 		print("PROBE PLAY day=%d start_search developer/junior" % GameState.day)
 

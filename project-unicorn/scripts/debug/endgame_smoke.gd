@@ -159,6 +159,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		# --- HR Core (task 1 of 3) ---
 		"hr_axis_key_lock":         fail = _case_hr_axis_key_lock()
 		"hr_candidate_invariants":  fail = _case_hr_candidate_invariants()
+		"hr_archetype_trio":        fail = _case_hr_archetype_trio()
+		"hr_training_locks":        fail = _case_hr_training_locks()
 		"hr_search_cycle":          fail = _case_hr_search_cycle()
 		"hr_search_cancel_dismiss": fail = _case_hr_search_cancel_dismiss()
 		"hr_fire_path":             fail = _case_hr_fire_path()
@@ -4295,60 +4297,89 @@ static func _case_hr_axis_key_lock() -> String:
 
 
 static func _case_hr_candidate_invariants() -> String:
-	# THE heart of the mechanic: the moment one dominant file can appear, "which do I need"
-	# collapses into "just buy the best one". Asserted over 100+ generations across every
-	# role and band (quotes are seed-independent — salary is a pure function of role/band/
-	# profile — so all 18 role×band windows are covered exhaustively). Shape-agnostic on
-	# the NUMBERS, but two design invariants are pinned: pairwise non-dominance (price
-	# included) and pairwise-DISTINCT salary quotes — the mixed BAND_SHAPE profiles exist
-	# precisely so price is a live lever.
+	# §10.2 · ÜÇ ARKETİP VE DÖRT BAĞLAYICI KURAL. "Üç aday rastgele üretilmez. Her aramada
+	# SABİT bir üçlü arketip çekilir. Amaç, oyuncunun her aramada gerçek ve savunulabilir bir
+	# karar vermesidir." Bantlar gitti: seviye artık kişide saklanan bir alan (§3), bant ise
+	# işe alımda ATILAN bir bütçe seçeneğiydi.
+	#
+	# Dört kural da burada ölçülüyor:
+	#   1. Hiçbir aday bir diğerini BÜTÜN EKSENLERDE yenemez.
+	#   2. Ana alandaki yıldız farkı en fazla 1 YILDIZ (iki yarım kademe = 2 ham puan).
+	#   3. Fiyat farkı %20–45.
+	#   4. Üçlüden EN AZ BİRİ bedelli bir huy taşır.
+	#
+	# FALSİFİKASYON, VE ONU ARARKEN ÖĞRENİLEN ŞEY: `is_non_dominated_set` FİYATI DA okuyor
+	# (A her eksende >= B VE A daha ucuz ya da eşit). Fiyat sırası §10.2'de sabit olduğu için
+	# — Pazarlık < Uzman < Dengeli — en pahalı iki dosya hiçbir zaman hâkim OLAMAZ; kuralı
+	# ihlal edebilecek tek şekil "EN UCUZ DOSYA AYNI ZAMANDA EN İYİSİ"dir. Ölçülmüş
+	# falsifikasyon bu yüzden şudur: ARCHETYPE_SHAPE'in kıdemli satırında Pazarlık'ı
+	# [9, 5, 4] yap (Uzman'ın [9, 4, 3]'ünün her yerinde >=) → product_manager/lvl2'de
+	# "one file DOMINATES another" FAIL'i düşer.
+	#
+	# İLK DENENEN VE ÇALIŞMAYAN: ARCHETYPE_LEAD_OFFSET'i sıfırlamak. Case YEŞİL kaldı, çünkü
+	# rotasyon bump'ı (her adayın FARKLI bir rol-dışı alanı +1) zaten iki dosyanın birbirini
+	# her eksende yenmesini engelliyor. Liderlik farkı ikinci ve BAĞIMSIZ bir koruma —
+	# tek başına test edilemez, ve o yüzden onun gerekçesi tasarımdır, bu iddia değil.
 	var generations: int = 0
+	var five_star_seen: int = 0
 	for role_id in HRConstants.EMPLOYEE_ROLES:
-		for band_id in HRConstants.BANDS:
-			for s in 6:
-				var seed_value: int = 1000 + s * 7919 + generations * 31
-				var files: Array = HRCandidateGenerator.generate(role_id, band_id, seed_value)
+		for level in HRConstants.LEVELS:
+			for sd in 8:
+				var seed_value: int = 1000 + sd * 7919 + generations * 31
+				var files: Array = HRCandidateGenerator.generate(role_id, int(level), seed_value)
 				generations += 1
-				var tag: String = "%s/%s seed %d" % [role_id, band_id, seed_value]
+				var tag: String = "%s/lvl%d seed %d" % [role_id, int(level), seed_value]
 				if files.size() != HRConstants.CANDIDATE_COUNT:
 					return "%s: %d files, want %d" % [tag, files.size(), HRConstants.CANDIDATE_COUNT]
-				var band: Array = HRConstants.salary_band(role_id, band_id)
+				var band: Array = HRConstants.salary_band_for_level(role_id, int(level))
+				var key_area: String = HRConstants.role_key_area(role_id)
 				var lo: int = 1 << 30
 				var hi: int = 0
+				var key_lo: int = 1 << 30
+				var key_hi: int = 0
+				var cost_files: int = 0
+				var five_star: bool = false
 				var seen_traits: Array = []
 				var seen_names: Array = []
 				var seen_notes: Array = []
 				var seen_salaries: Array = []
+				var seen_archetypes: Array = []
 				for f in files:
 					var sal: int = int(f["salary"])
 					if sal < int(band[0]) or sal > int(band[1]):
-						return "%s: salary %d outside band %s" % [tag, sal, str(band)]
+						return "%s: salary %d outside the LEVEL band %s" % [tag, sal, str(band)]
 					lo = mini(lo, sal)
 					hi = maxi(hi, sal)
-					# Fiyat bir kaldıraç: üç dosya üç AYRI rakam ister (BAND_SHAPE karma
-					# profilleri — kesin artan toplamlar). İki dosya aynı rakama yuvarlanırsa
-					# gap kuralı delinmiştir (_shape_premium'daki aritmetik notu).
+					# Fiyat bir kaldıraç: üç dosya üç AYRI rakam ister. İki dosya aynı rakama
+					# yuvarlanırsa §10.2'nin fiyat ekseni çökmüştür.
 					if seen_salaries.has(sal):
 						return "%s: two files quote the same salary %d — the price axis collapsed" % [tag, sal]
 					seen_salaries.append(sal)
+					# ÜÇLÜ SABİT: üç arketip, her biri bir kez.
+					var arch: String = String(f["archetype"])
+					if not HRConstants.ARCHETYPES.has(arch):
+						return "%s: unknown archetype '%s'" % [tag, arch]
+					if seen_archetypes.has(arch):
+						return "%s: archetype '%s' appears twice — the trio is not fixed" % [tag, arch]
+					seen_archetypes.append(arch)
+					if int(f["level"]) != int(level):
+						return "%s: file carries level %d" % [tag, int(f["level"])]
+					var key_v: int = int((f["axes"] as Dictionary).get(key_area, -1))
+					key_lo = mini(key_lo, key_v)
+					key_hi = maxi(key_hi, key_v)
+					if key_v >= HRConstants.AREA_MAX:
+						five_star = true
 					if not HRConstants.validate_employee_skills(f["axes"]):
 						return "%s: axes off the ruler: %s" % [tag, str(f["axes"])]
 					if not HRConstants.validate_employee_traits(f["traits"]):
 						return "%s: traits break the employee formula: %s" % [tag, str(f["traits"])]
+					for t in f["traits"]:
+						if HRConstants.trait_carries_cost(String(t)):
+							cost_files += 1
 					if String(f["role"]) != role_id:
 						return "%s: role mismatch (%s)" % [tag, String(f["role"])]
-					# THE NOTE, BY ITS INDEX. generate() hands back `note_index`; the note TEXT is
-					# resolved one layer up (HRSearchSystem.get_files → file_notes_line). Until
-					# 2026-08-21 this block read f["note"], a key a generated file has never carried:
-					# every iteration logged "Invalid access to property or key 'note'" and BOTH note
-					# assertions were being made about a value that was never a note. The case printed
-					# SMOKE PASS while proving nothing — pre-existing, fixed here because the case was
-					# being rewritten for the areas anyway.
-					#
-					# The bound is the real assertion: _take_unused_index is what keeps the index inside
-					# the pool. The second catches a missing CSV row — TranslationServer.translate hands
-					# back the KEY when there is no row, so comparing against the key is the only way to
-					# tell a note from its own name.
+					# THE NOTE, BY ITS INDEX. generate() hands back `note_index`; the note TEXT
+					# is resolved one layer up (HRSearchSystem.get_files → file_notes_line).
 					var note_index: int = int(f["note_index"])
 					if note_index < 0 or note_index >= HRConstants.FILE_NOTES_COUNT:
 						return "%s: note_index %d outside 0..%d" % [
@@ -4358,42 +4389,64 @@ static func _case_hr_candidate_invariants() -> String:
 						return "%s: %s has no row in strings.csv" % [tag, note_key]
 					if String(f["name"]).strip_edges() == "":
 						return "%s: empty candidate name" % tag
-					# Batch no-repeat across every drawn pool, not just traits: two identical
-					# names or the same file note twice reads as a generator bug on the card.
+					# Batch no-repeat across every drawn pool: two identical names or the same
+					# file note twice reads as a generator bug on the card.
 					if seen_names.has(String(f["name"])):
 						return "%s: candidate name '%s' repeated across files" % [tag, String(f["name"])]
 					seen_names.append(String(f["name"]))
 					if seen_notes.has(note_index):
 						return "%s: file note %d repeated across files" % [tag, note_index]
 					seen_notes.append(note_index)
-					# Cross-distribution: no trait id repeats across the three files.
-					for t in f["traits"]:
-						if seen_traits.has(String(t)):
-							return "%s: trait '%s' repeated across files" % [tag, String(t)]
-						seen_traits.append(String(t))
-				if float(hi) / float(maxi(lo, 1)) - 1.0 > HRConstants.SALARY_SPREAD_MAX + 0.0001:
-					return "%s: salary spread %.3f exceeds %.2f (%d..%d)" % [
-						tag, float(hi) / float(maxi(lo, 1)) - 1.0, HRConstants.SALARY_SPREAD_MAX, lo, hi]
-				# Salaries sit in a CONTIGUOUS window, not merely somewhere inside the band:
-				# the design wants three quotes that read as the same tier ("maaşlar birbirine
-				# yakındır"), which band containment alone does not promise.
-				var window_mid: float = float(lo + hi) / 2.0
-				var band_mid: float = float(int(band[0]) + int(band[1])) / 2.0
-				var band_span: float = float(int(band[1]) - int(band[0]))
-				if band_span > 0.0 and absf(window_mid - band_mid) > band_span / 2.0:
-					return "%s: the quote window (%d..%d) is not inside the band %s" % [tag, lo, hi, str(band)]
+					for t2 in f["traits"]:
+						if seen_traits.has(String(t2)):
+							return "%s: trait '%s' repeated across files" % [tag, String(t2)]
+						seen_traits.append(String(t2))
+
+				# 1 · HÂKİM ADAY YOK.
 				if not HRCandidateGenerator.is_non_dominated_set(files):
 					return "%s: one file DOMINATES another" % tag
+				# 4 · Ayırt edici eksen HUY: en az bir bedelli huy, her aramada.
+				if cost_files < HRConstants.TRIO_COST_TRAIT_MIN:
+					return "%s: %d cost traits in the trio, want at least %d — every choice was free" % [
+						tag, cost_files, HRConstants.TRIO_COST_TRAIT_MIN]
+				if five_star:
+					# §10.2 BEŞ YILDIZLI ADAY: yalnız Kıdemli, ve maaş talebi bandın TAVANINDA.
+					# Bu aday §10.2'nin karşılaştırılabilirlik kurallarına konmuş ADI KONMUŞ
+					# istisnadır — "o bir yıldız çalışandır ve öyle fiyatlanır" — o yüzden
+					# yıldız farkı ve fiyat farkı iddiaları ona uygulanmaz.
+					five_star_seen += 1
+					if int(level) != HRConstants.LEVEL_SENIOR:
+						return "%s: a five-star candidate outside the senior level" % tag
+					if hi != maxi(int(band[0]), int(band[1])):
+						return "%s: the five-star ask is %d, want the band ceiling %d" % [
+							tag, hi, maxi(int(band[0]), int(band[1]))]
+				else:
+					# 2 · ANA ALANDA EN FAZLA 1 YILDIZ FARK. "Adaylar karşılaştırılabilir
+					# olmalıdır; biri diğerinden iki yıldız iyiyse karar kendiliğinden verilir
+					# ve seçim ortadan kalkar."
+					if HRConstants.stars_for(key_hi) - HRConstants.stars_for(key_lo) > 1.0 + 0.001:
+						return "%s: key-area spread is %.1f stars (%d..%d), want at most 1" % [
+							tag, HRConstants.stars_for(key_hi) - HRConstants.stars_for(key_lo), key_lo, key_hi]
+					# 3 · FİYAT FARKI %20–45.
+					var spread: float = float(hi) / float(maxi(lo, 1)) - 1.0
+					if spread < HRConstants.SALARY_SPREAD_MIN_R11 - 0.0001 \
+							or spread > HRConstants.SALARY_SPREAD_MAX_R11 + 0.0001:
+						return "%s: salary spread %.3f outside %.2f..%.2f (%d..%d)" % [
+							tag, spread, HRConstants.SALARY_SPREAD_MIN_R11,
+							HRConstants.SALARY_SPREAD_MAX_R11, lo, hi]
 				# Same seed, byte-identical files — no RNG anywhere in the generator.
-				if str(HRCandidateGenerator.generate(role_id, band_id, seed_value)) != str(files):
+				if str(HRCandidateGenerator.generate(role_id, int(level), seed_value)) != str(files):
 					return "%s: generator is not deterministic" % tag
 	if generations < 100:
 		return "only %d generations exercised, want at least 100" % generations
+	# §10.2 "NADİRDİR": beş yıldız çıkabilmeli, ama her aramada değil. İki uçlu iddia —
+	# olasılık 0'a düşerse alternatifin kendisi yok olur, 1'e çıkarsa nadirlik yalan olur.
+	if five_star_seen == 0:
+		return "no five-star candidate in %d generations — §10.2's alternative to training never appears" % generations
+	if five_star_seen * 4 > generations:
+		return "%d of %d generations carried a five-star candidate — that is not rare" % [
+			five_star_seen, generations]
 	# Negative control: without this the whole case would pass on a `return true` predicate.
-	# The control has to be written in the CURRENT vocabulary. With the retired keys it
-	# still "worked", but for the wrong reason: _dominates reads EMPLOYEE_SKILL_KEYS, both
-	# dicts answered 0 for every one of them, and the pair dominated on PRICE alone — the
-	# skills were never compared at all.
 	var dominant: Array = [
 		{"axes": HRConstants.seed_skills(HRConstants.ROLE_DEVELOPER, 9, 9, 9), "salary": 5000},
 		{"axes": HRConstants.seed_skills(HRConstants.ROLE_DEVELOPER, 4, 4, 4), "salary": 6000},
@@ -4403,17 +4456,156 @@ static func _case_hr_candidate_invariants() -> String:
 	return ""
 
 
+static func _case_hr_archetype_trio() -> String:
+	# §10.2'nin TABLOSU, satır satır. Yukarıdaki case kuralların SAĞLANDIĞINI ölçüyor; bu
+	# case üçlünün KİMLİĞİNİ ölçüyor — hangi arketip neyi taşır. İkisi ayrı, çünkü kurallar
+	# şekli değişse de geçerli kalır, kimlik ise tablonun kendisidir.
+	#
+	# FALSİFİKASYON: ARCHETYPE_PRICE_UZMAN_SHARE'i 1.0 yap → Uzman Dengeli ile aynı fiyata
+	# çıkar ve "Dengeli üçlünün en yükseğidir" iddiası FAIL eder.
+	var role_id: String = HRConstants.ROLE_DEVELOPER
+	var level: int = HRConstants.LEVEL_MID
+	var files: Array = HRCandidateGenerator.generate(role_id, level, 90210)
+	var by_arch: Dictionary = {}
+	for f in files:
+		by_arch[String(f["archetype"])] = f
+	for want in HRConstants.ARCHETYPES:
+		if not by_arch.has(String(want)):
+			return "the trio is missing the '%s' archetype" % String(want)
+	var uzman: Dictionary = by_arch[HRConstants.ARCHETYPE_UZMAN]
+	var dengeli: Dictionary = by_arch[HRConstants.ARCHETYPE_DENGELI]
+	var pazarlik: Dictionary = by_arch[HRConstants.ARCHETYPE_PAZARLIK]
+	var key_area: String = HRConstants.role_key_area(role_id)
+
+	# FİYAT: "Dengeli — üçlünün EN YÜKSEĞİ · Pazarlık — üçlünün EN DÜŞÜĞÜ · Uzman — orta-yüksek".
+	if not (int(pazarlik["salary"]) < int(uzman["salary"]) and int(uzman["salary"]) < int(dengeli["salary"])):
+		return "price order is %d/%d/%d (pazarlık/uzman/dengeli), want strictly increasing" % [
+			int(pazarlik["salary"]), int(uzman["salary"]), int(dengeli["salary"])]
+
+	# YILDIZ PROFİLİ: "Uzman — ana alanda üçlünün EN YÜKSEĞİ; diğer alanlar zayıf."
+	# "Dengeli — TEPE NOKTASI YOK; ana ve ikincil alanda makul."
+	var uz_key: int = int((uzman["axes"] as Dictionary).get(key_area, 0))
+	var de_key: int = int((dengeli["axes"] as Dictionary).get(key_area, 0))
+	var pa_key: int = int((pazarlik["axes"] as Dictionary).get(key_area, 0))
+	if uz_key < de_key:
+		return "the Uzman does not hold the top of the key area (%d vs Dengeli %d)" % [uz_key, de_key]
+	if de_key >= uz_key and de_key >= pa_key and (uz_key > de_key or pa_key > de_key):
+		pass   # Dengeli tepe DEĞİL; aşağıdaki iddia bunu doğrudan ölçüyor
+	if de_key > uz_key or de_key > pa_key:
+		return "the Dengeli has the peak (%d) — its whole identity is having none" % de_key
+
+	# "Pazarlık — bir alanda GERÇEKTEN İYİ, en az bir alanda KIRIK."
+	var pa_min: int = 1 << 30
+	var de_min: int = 1 << 30
+	for area_key in HRConstants.AREAS:
+		pa_min = mini(pa_min, int((pazarlik["axes"] as Dictionary).get(String(area_key), 0)))
+		de_min = mini(de_min, int((dengeli["axes"] as Dictionary).get(String(area_key), 0)))
+	if pa_min >= de_min:
+		return "the Pazarlık's worst area (%d) is not below the Dengeli's (%d) — nothing is broken" % [
+			pa_min, de_min]
+
+	# HUY ROLÜ: "Pazarlık — genellikle bedelli huy taşır." Motorda GARANTİ, çünkü
+	# TRIO_COST_TRAIT_MIN'i bir olasılıkla karşılamak bazı aramaları bedelsiz bırakırdı.
+	var pa_traits: Array = pazarlik["traits"]
+	if pa_traits.is_empty() or not HRConstants.trait_carries_cost(String(pa_traits[0])):
+		return "the Pazarlık carries no cost trait — the discriminating axis is gone"
+	# "Dengeli — genellikle güvenli." Motorda hep bedelsiz.
+	var de_traits: Array = dengeli["traits"]
+	if not de_traits.is_empty() and HRConstants.trait_carries_cost(String(de_traits[0])):
+		return "the Dengeli carries a cost trait — the trio's contrast is blurred"
+	return ""
+
+static func _case_hr_training_locks() -> String:
+	# §5.4 · İKİ AYRI GEREKÇE, BİRBİRİNE KARIŞTIRILMAZ. "Eylem her zaman görünür, kilitliyse
+	# gerekçesini gösterir. Deneyim dolu değil → 'henüz hak edilmedi'. Alan 5,0 yıldızda →
+	# 'bu alanda öğrenecek bir şey kalmadı'. PARANIN YETMEMESİ BİR KİLİT DEĞİLDİR; bir
+	# bedeldir ve modalde okunur."
+	#
+	# Üç yüzey (eğitim modali, satır menüsü, Kişisel kartı) kendi gerekçesini yazıyordu ve
+	# ÜÇÜ DE tavanı söylüyordu — barı dolmamış bir junior'a "bu alan tavanda" diyorlardı,
+	# yani oyuncu bekleyerek çözülecek bir durumu çözümsüz sanıyordu.
+	#
+	# FALSİFİKASYON: training_block_reason_key'in bar dalını sil (hep AT_CAP döndür) →
+	# ikinci iddia FAIL eder.
+	GameState.set_cash(500000)
+	var dev: Character = _make_employee("char_lock_dev", "Lock Dev", HRConstants.ROLE_DEVELOPER,
+		SEED_PACE, 6000, 70)
+	_park_leave([dev])
+	var key_area: String = HRConstants.role_key_area(dev.role)
+
+	# 1 · BAR BOŞ → "henüz hak edilmedi", ve tavan gerekçesi DEĞİL.
+	dev.experience_raw = 0
+	CharacterRegistry.refresh_experience_threshold(dev)
+	if CharacterRegistry.can_train(dev.id, key_area):
+		return "an empty experience bar still unlocked training (§5.2 step 1)"
+	if CharacterRegistry.training_block_reason_key(dev.id, key_area) != "HR_TRAINING_NOT_EARNED":
+		return "an unfilled bar reads '%s', want HR_TRAINING_NOT_EARNED" % \
+			CharacterRegistry.training_block_reason_key(dev.id, key_area)
+
+	# 2 · BAR DOLU, ALAN TAVANIN ALTINDA → kilit YOK.
+	dev.experience_raw = dev.experience_threshold
+	if not CharacterRegistry.can_train(dev.id, key_area):
+		return "a full bar did not unlock training"
+	if CharacterRegistry.training_block_reason_key(dev.id, key_area) != "":
+		return "a trainable area still reports a lock reason: '%s'" % \
+			CharacterRegistry.training_block_reason_key(dev.id, key_area)
+
+	# 3 · ALAN 5,0 YILDIZDA → "öğrenecek bir şey kalmadı", ve bar dolu olduğu hâlde.
+	dev.role_stats[key_area] = HRConstants.AREA_MAX
+	CharacterRegistry.refresh_experience_threshold(dev)
+	dev.experience_raw = dev.experience_threshold
+	if CharacterRegistry.can_train(dev.id, key_area):
+		return "an area at the 5.0 ceiling is still trainable"
+	if CharacterRegistry.training_block_reason_key(dev.id, key_area) != "HR_TRAINING_AT_CAP":
+		return "a capped area reads '%s', want HR_TRAINING_AT_CAP" % \
+			CharacterRegistry.training_block_reason_key(dev.id, key_area)
+
+	# 4 · §5.3 EĞİTİM BEŞİNCİ YILDIZA KADAR ÇIKAR. Dört yıldızlı (8 puan) bir alan hâlâ
+	# eğitilebilir olmalı — rev 2'nin AREA_TRAIN_CAP'i tam burada duvar örüyordu.
+	dev.role_stats[key_area] = HRConstants.AREA_MAX - 2
+	CharacterRegistry.refresh_experience_threshold(dev)
+	dev.experience_raw = dev.experience_threshold
+	if not CharacterRegistry.can_train(dev.id, key_area):
+		return "a four-star area is not trainable — money cannot buy the fifth star (§5.3)"
+
+	# 5 · PARA BİR KİLİT DEĞİL (§5.4). Kasa bedeli karşılamıyorken bile eğitim GİDER ve
+	# kasayı eksiye götürür — işe alım komisyonuyla ve kıdem tazminatıyla aynı kanal.
+	var fee: int = CharacterRegistry.training_fee_for(dev.id, key_area)
+	GameState.set_cash(fee - 1)
+	if CharacterRegistry.training_block_reason_key(dev.id, key_area) != "":
+		return "an unaffordable fee was reported as a LOCK — §5.4 calls it a cost"
+	if not HRSystem.send_to_training(dev.id, key_area):
+		return "training refused for lack of cash — §5.4 says money is not a lock"
+	if GameState.cash >= 0:
+		return "the fee did not actually leave the treasury (%d)" % GameState.cash
+	if dev.status != HRConstants.STATUS_TRAINING:
+		return "the employee is not in training after send_to_training"
+
+	# 6 · §5.5 SÜRE TÜRETİLİR. Metin gün sayısından çıkar; sabit bir satır olsaydı
+	# TRAINING_DAYS değiştiğinde iki dilde birden yalan söylerdi (§16).
+	var duration: String = HRConstants.training_duration_text()
+	if duration == "" or duration.begins_with("HR_DURATION_"):
+		return "the derived duration text resolved to a raw key: '%s'" % duration
+	if not duration.contains(str(HRConstants.TRAINING_DAYS / 7)):
+		return "the duration text '%s' does not read %d days" % [duration, HRConstants.TRAINING_DAYS]
+	return ""
+
+
 static func _case_hr_search_cycle() -> String:
-	# Retainer once, files in 2-4 days with NO modal, commission once, employee active the
-	# next day, salary in burn, hires_total +1.
+	# §10: ARAMA ÜCRETSİZ, dosyalar BİR HAFTA sonra ve MODALSİZ gelir, komisyon bir kez ve
+	# yalnız işe alımda, çalışan ertesi gün aktif, maaş burn'de, hires_total +1.
+	#
+	# FALSİFİKASYON: start_search'e bir FinanceSystem.apply_one_time_cost geri koy → ikinci
+	# iddia FAIL eder.
 	GameState.set_cash(100000)
 	if not HRSearchSystem.can_start():
 		return "cannot start a search from idle"
 	var cash0: int = GameState.cash
-	if not HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.BAND_MID):
+	if not HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID):
 		return "start_search refused"
-	if GameState.cash != cash0 - HRConstants.SEARCH_RETAINER:
-		return "retainer not charged exactly once (%d -> %d)" % [cash0, GameState.cash]
+	# §10: "Aday araması ... ÜCRETSİZDİR. Retainer YOKTUR; tek ücret komisyondur."
+	if GameState.cash != cash0:
+		return "commissioning a search moved cash (%d -> %d) — §10 says it is free" % [cash0, GameState.cash]
 	if HRSearchSystem.get_state() != HRConstants.SEARCH_SEARCHING:
 		return "state is '%s', want '%s'" % [HRSearchSystem.get_state(), HRConstants.SEARCH_SEARCHING]
 	if HRSearchSystem.can_start():
@@ -4452,10 +4644,20 @@ static func _case_hr_search_cycle() -> String:
 	if hired.hire_day != GameState.day + 1:
 		return "hire_day is %d, want the next day (%d) — full performance from day one, no ramp" % [
 			hired.hire_day, GameState.day + 1]
-	if hired.leave_month < 1 or hired.leave_month > 12:
-		return "leave_month not assigned at hire (%d)" % hired.leave_month
+	if hired.leave_week < 0:
+		return "leave_week not assigned at hire (%d)" % hired.leave_week
 	if not HRConstants.is_employee_role(hired.role):
 		return "hired with a non-employee role '%s'" % hired.role
+	# §3 SEVİYE İŞE ALIMDA DÜŞMEZ. rev 2'de aday üretilirken okunuyor, Character'a hiç
+	# yazılmıyordu — yani oyunda seviye diye bir şey yoktu ve unvan hep çıplak rol adıydı.
+	if hired.level != HRConstants.LEVEL_MID:
+		return "the hire's level is %d, want the level the search asked for (%d)" % [
+			hired.level, HRConstants.LEVEL_MID]
+	if HRConstants.job_title(hired.role, hired.level) != HRConstants.role_label(hired.role):
+		return "the Orta level rendered a prefix; §3 gives it none"
+	# §9.1 "maaş hiçbir zaman düşürülmez" — tabanı işe alım maaşıdır.
+	if hired.salary_floor != salary:
+		return "salary_floor is %d, want the hiring salary %d" % [hired.salary_floor, salary]
 	if HRSearchSystem.get_state() != HRConstants.SEARCH_IDLE:
 		return "the search did not close after the hire"
 	FinanceSystem.daily_tick()
@@ -4465,7 +4667,8 @@ static func _case_hr_search_cycle() -> String:
 
 
 static func _case_hr_search_cancel_dismiss() -> String:
-	# Cancelling burns the retainer; dismissing all files closes the search for free.
+	# İptal de dosyaları geri çevirmek de PARA HAREKET ETTİRMEZ (§10 — arama ücretsiz).
+	# İkisinin de bedeli beklenmiş HAFTADIR.
 	# The second leg hires a Satış Uzmanı, and that role is locked outside a B2B market
 	# (HRConstants.role_lock_reason_key) — the market flag alone opens it. Deliberately NOT
 	# _seed_b2b(): this case is about the search state machine, and a live account would
@@ -4473,15 +4676,15 @@ static func _case_hr_search_cancel_dismiss() -> String:
 	GameState.set_cash(100000)
 	GameState.set_flag("mvp_market_type", "b2b")
 	var c0: int = GameState.cash
-	if not HRSearchSystem.start_search(HRConstants.ROLE_TESTER, HRConstants.BAND_JUNIOR):
+	if not HRSearchSystem.start_search(HRConstants.ROLE_TESTER, HRConstants.LEVEL_JUNIOR):
 		return "start_search refused"
 	if not HRSearchSystem.cancel_search():
 		return "cancel refused"
-	if GameState.cash != c0 - HRConstants.SEARCH_RETAINER:
-		return "cancel refunded the retainer (%d -> %d)" % [c0, GameState.cash]
+	if GameState.cash != c0:
+		return "cancelling a free search moved cash (%d -> %d)" % [c0, GameState.cash]
 	if HRSearchSystem.get_state() != HRConstants.SEARCH_IDLE:
 		return "cancel did not return to idle"
-	if not HRSearchSystem.start_search(HRConstants.ROLE_SALES_REP, HRConstants.BAND_SENIOR):
+	if not HRSearchSystem.start_search(HRConstants.ROLE_SALES_REP, HRConstants.LEVEL_SENIOR):
 		return "could not start a second search after cancelling"
 	for i in HRConstants.SEARCH_ARRIVAL_DAYS + 3:
 		_sim_day()
@@ -5215,48 +5418,61 @@ static func _case_hr_constants_contract() -> String:
 	if not is_equal_approx(HRConstants.trait_mult([], "resign_chance_mult"), 1.0):
 		return "an empty trait list is not multiplicatively neutral"
 
-	# --- Band shapes: the STRUCTURAL invariants behind non-dominance + distinct prices ---
-	# Karma profiller (B1): bant başına CANDIDATE_COUNT profil, ucuzdan pahalıya;
-	# aday k = profil k rotasyon k. Toplamlar kesin artar — non-dominance'ın ve ayrık
-	# fiyatların yapısal ön koşulu (A her eksende >= B ⇒ total(A) >= total(B)).
-	for band_id in HRConstants.BANDS:
-		var profiles: Array = HRConstants.BAND_SHAPE.get(band_id, [])
-		if profiles.size() != HRConstants.CANDIDATE_COUNT:
-			return "band '%s' holds %d profiles, want CANDIDATE_COUNT (%d)" % [
-				band_id, profiles.size(), HRConstants.CANDIDATE_COUNT]
-		var prev_total: int = -1
-		for k in profiles.size():
-			var shape: Array = HRConstants.band_shape(band_id, k)
-			# THREE values, and they stayed three through the area migration: the shape is now
-			# read by MEANING (key area · secondary area · every other area), not by position
-			# over the axis list. Asserting against AREAS.size() would be wrong — six areas
-			# are filled FROM a 3-long shape.
+	# --- §10.2 arketip şekilleri: hâkimiyetsizliğin ve ayrık fiyatların YAPISAL ön koşulu --
+	# Bantlar gitti (§3): üç profil artık bir BÜTÇE kademesi değil, üç ARKETİP.
+	for level in HRConstants.LEVELS:
+		var per_level: Dictionary = HRConstants.ARCHETYPE_SHAPE.get(int(level), {})
+		if per_level.size() != HRConstants.ARCHETYPES.size():
+			return "level %d holds %d archetypes, want %d" % [
+				int(level), per_level.size(), HRConstants.ARCHETYPES.size()]
+		for arch in HRConstants.ARCHETYPES:
+			var shape: Array = HRConstants.archetype_shape(int(level), String(arch))
+			# ÜÇ değer: şekil ANLAMLA okunur (ana alan · ikincil alan · diğer her alan),
+			# eksen listesi üzerinde POZİSYONLA değil. AREAS.size()'a karşı iddia yanlış
+			# olurdu — altı alan 3 uzunluğunda bir şekilden DOLDURULUYOR.
 			if shape.size() != 3:
-				return "band '%s' profile %d is not [key, secondary, rest]" % [band_id, k]
-			if not (int(shape[0]) > int(shape[1]) and int(shape[1]) >= int(shape[2])):
-				return "band '%s' profile %d breaks key>secondary>=rest, so the file has no strict peak: %s" % [band_id, k, str(shape)]
+				return "level %d archetype '%s' is not [key, secondary, rest]" % [int(level), String(arch)]
+			if int(shape[0]) < int(shape[1]) or int(shape[1]) < int(shape[2]):
+				return "level %d archetype '%s' breaks key>=secondary>=rest: %s" % [
+					int(level), String(arch), str(shape)]
 			if int(shape[0]) > HRConstants.AREA_MAX or int(shape[2]) < HRConstants.AREA_MIN:
-				return "band '%s' profile %d leaves the 0-%d ruler: %s" % [band_id, k, HRConstants.AREA_MAX, str(shape)]
-			var total: int = 0
-			for v in shape:
-				total += int(v)
-			if total <= prev_total:
-				return "band '%s' profile totals do not strictly increase (%d after %d): %s" % [
-					band_id, total, prev_total, str(profiles)]
-			prev_total = total
+				return "level %d archetype '%s' leaves the 0-%d ruler: %s" % [
+					int(level), String(arch), HRConstants.AREA_MAX, str(shape)]
+		# §10.2 kural 2, ŞEKİL DÜZEYİNDE: ana alandaki üç değerin yayılımı en fazla 1 yıldız.
+		var keys: Array = []
+		for arch2 in HRConstants.ARCHETYPES:
+			keys.append(int(HRConstants.archetype_shape(int(level), String(arch2))[0]))
+		if HRConstants.stars_for(keys.max()) - HRConstants.stars_for(keys.min()) > 1.0 + 0.001:
+			return "level %d key-area shapes span %s — more than one star" % [int(level), str(keys)]
 		for role_id in HRConstants.EMPLOYEE_ROLES:
-			var b: Array = HRConstants.salary_band(role_id, band_id)
+			var b: Array = HRConstants.salary_band_for_level(role_id, int(level))
 			if b.size() != 2 or int(b[0]) >= int(b[1]):
-				return "salary band %s/%s is not a low..high pair: %s" % [role_id, band_id, str(b)]
-	# Money must buy level, or the three tiers are decoration — the cheapest AND the
-	# priciest profile peaks both climb across the tiers.
-	var top: int = HRConstants.CANDIDATE_COUNT - 1
-	if not (int(HRConstants.band_shape(HRConstants.BAND_JUNIOR, 0)[0]) < int(HRConstants.band_shape(HRConstants.BAND_MID, 0)[0]) \
-			and int(HRConstants.band_shape(HRConstants.BAND_MID, 0)[0]) < int(HRConstants.band_shape(HRConstants.BAND_SENIOR, 0)[0])):
-		return "the band tiers do not climb the ruler (cheapest profiles)"
-	if not (int(HRConstants.band_shape(HRConstants.BAND_JUNIOR, top)[0]) < int(HRConstants.band_shape(HRConstants.BAND_MID, top)[0]) \
-			and int(HRConstants.band_shape(HRConstants.BAND_MID, top)[0]) < int(HRConstants.band_shape(HRConstants.BAND_SENIOR, top)[0])):
-		return "the band tiers do not climb the ruler (top profiles)"
+				return "salary band %s/lvl%d is not a low..high pair: %s" % [role_id, int(level), str(b)]
+			# EN GENİŞ FİYAT FARKI BANDA SIĞMALI, yoksa üçlü tavana yapışır ve %20-45 kuralı
+			# yuvarlanarak çöker. Şart: tavan/taban >= 1 + SALARY_SPREAD_MAX_R11.
+			if float(b[1]) / float(maxi(int(b[0]), 1)) < 1.0 + HRConstants.SALARY_SPREAD_MAX_R11:
+				return "salary band %s/lvl%d (%s) is narrower than the %.0f%% price spread §10.2 requires" % [
+					role_id, int(level), str(b), HRConstants.SALARY_SPREAD_MAX_R11 * 100.0]
+	# Para SEVİYE satın alır, yoksa üç kademe dekorasyondur — her arketipin ana alanı
+	# kademeler arasında tırmanır.
+	for arch3 in HRConstants.ARCHETYPES:
+		var j: int = int(HRConstants.archetype_shape(HRConstants.LEVEL_JUNIOR, String(arch3))[0])
+		var m: int = int(HRConstants.archetype_shape(HRConstants.LEVEL_MID, String(arch3))[0])
+		var sr: int = int(HRConstants.archetype_shape(HRConstants.LEVEL_SENIOR, String(arch3))[0])
+		if not (j < m and m < sr):
+			return "archetype '%s' does not climb the ruler across the levels (%d/%d/%d)" % [
+				String(arch3), j, m, sr]
+	# §3 UNVAN TÜRETİLİR: Orta'nın ön eki YOKTUR, diğer ikisinin vardır ve farklıdır.
+	if HRConstants.job_title(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID) \
+			!= HRConstants.role_label(HRConstants.ROLE_DEVELOPER):
+		return "the Orta level added a prefix; §3's table leaves that cell empty"
+	if HRConstants.job_title(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_JUNIOR) \
+			== HRConstants.job_title(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_SENIOR):
+		return "Junior and Kıdemli render the same title"
+	# §3 seviyenin ADI ile ÖN EKİ ayrı: Orta'nın ön eki yok ama adı var, ve Atlas onu çizer.
+	if HRConstants.level_label(HRConstants.LEVEL_MID) == "" \
+			or HRConstants.level_label(HRConstants.LEVEL_MID) == "HR_LEVEL_MID":
+		return "the Orta level has no name — the Atlas segment would render a raw key"
 
 	# --- Economy + action math ---
 	# §10: "İşe alım gerçekleştiğinde bir aylık maaşın %50'si komisyon olarak ödenir.
@@ -7481,20 +7697,27 @@ static func _case_star_ruler_contract() -> String:
 		return "zero points is not zero stars"
 	if not is_equal_approx(HRConstants.stars_for(1), 0.5):
 		return "one point is %.2f stars, want the half" % HRConstants.stars_for(1)
-	# EğİTİMİN tavanı cetvelin tavanının ALTINDA ve bu bilinçli: parayla dört yıldız,
-	# beşinci yalnız işi yaparak ya da üst segment bir adayı işe alarak.
-	if HRConstants.AREA_TRAIN_CAP >= HRConstants.AREA_MAX:
-		return "the training cap reaches the ruler's top — money would buy everything"
-	if not is_equal_approx(HRConstants.stars_for(HRConstants.AREA_TRAIN_CAP), 4.0):
-		return "paid training tops out at %.1f stars, want 4" % HRConstants.stars_for(HRConstants.AREA_TRAIN_CAP)
+	# §5.3 TEK TAVAN: "Eğitim beşinci yıldıza kadar çıkabilir. Tavan 5,0 yıldızdır (10/10).
+	# PARAYLA SATIN ALINAMAYAN BİR ÜST YILDIZ YOKTUR." rev 2'nin ayrı eğitim tavanı (8 = dört
+	# yıldız) kalktı; beşinci yıldızı pahalı yapan iki fren artık DENEYİM EŞİĞİ ve KADEMELİ
+	# BEDELDİR, bir duvar değil.
+	if not is_equal_approx(HRConstants.stars_for(HRConstants.AREA_MAX), 5.0):
+		return "the training ceiling renders %.1f stars, want 5" % HRConstants.stars_for(HRConstants.AREA_MAX)
+	# BEDEL FRENİ ÖLÇÜLÜR: son kademe ilk kademeden belirgin şekilde pahalı olmalı, yoksa
+	# §5.3'ün "pahalıdır" cümlesi boş kalır.
+	if HRConstants.training_fee_tiered(HRConstants.AREA_MAX - 1) \
+			< HRConstants.training_fee_tiered(0) * 4:
+		return "the last training rung (%d) is not meaningfully pricier than the first (%d)" % [
+			HRConstants.training_fee_tiered(HRConstants.AREA_MAX - 1),
+			HRConstants.training_fee_tiered(0)]
 	# Cetvel TAŞMAZ: tavanın üstündeki bir değer beş yıldızda kelepçelenir.
 	if not is_equal_approx(HRConstants.stars_for(HRConstants.AREA_MAX + 4), float(HRConstants.STAR_MAX)):
 		return "stars_for does not clamp above the ruler"
-	# ÜST SEGMENT bir aday BEŞ YILDIZ gösterebilmeli — tasarımın üçüncü dosyası (11b) o.
-	var top: Array = HRConstants.band_shape(HRConstants.BAND_SENIOR, 2)
-	if top.is_empty() or not is_equal_approx(HRConstants.stars_for(int(top[0])), 5.0):
-		return "the senior band's peak renders %.1f stars — no candidate can ever show five" % (
-			HRConstants.stars_for(int(top[0])) if not top.is_empty() else -1.0)
+	# §10.2: beş yıldızlı aday NADİR ama MÜMKÜN — ve yalnız Kıdemli seviyede.
+	if HRConstants.FIVE_STAR_CHANCE <= 0.0:
+		return "no candidate can ever show five stars — §5.3's alternative disappears"
+	if HRConstants.FIVE_STAR_CHANCE > 0.25:
+		return "a %.0f%% five-star rate is not rare" % (HRConstants.FIVE_STAR_CHANCE * 100.0)
 	return ""
 
 
@@ -7521,7 +7744,7 @@ static func _case_single_trait_contract() -> String:
 	var seen: Dictionary = {}
 	var cost_files: int = 0
 	var files: Array = HRCandidateGenerator.generate(HRConstants.ROLE_DEVELOPER,
-		HRConstants.BAND_MID, 4242)
+		HRConstants.LEVEL_MID, 4242)
 	for f in files:
 		var traits: Array = f["traits"]
 		if traits.size() != HRConstants.TRAIT_COUNT:

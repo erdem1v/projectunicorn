@@ -347,13 +347,14 @@ func _atlas_strip() -> Control:
 
 
 func _on_cancel_search() -> void:
-	# İptalin önizlemesi yok (motorda preview_cancel_search bulunmuyor — raporlanıyor),
-	# ama peşin ücreti yakıyor, o yüzden onay isteniyor. on_confirm bağlı METOT referansı
+	# Onay hâlâ isteniyor ama gerekçe DEĞİŞTİ: iptal artık para yakmıyor (§10 — arama
+	# ücretsiz), BEKLENMİŞ GÜNLERİ yakıyor. Yeni bir arayış baştan bir hafta sürer, ve §10 o
+	# haftayı kastedilmiş bir bedel olarak tanımlıyor. on_confirm bağlı METOT referansı
 	# (creation_flow'un confirm şekli) — sözlük içine çok satırlı lambda gömülmüyor.
 	EventBus.confirm_requested.emit({
 		"title": tr("HR_SEARCH_CANCEL_TITLE"),
 		"body": tr("HR_SEARCH_CANCEL_BODY").format({
-			"amount": HRUiShared.money(HRConstants.SEARCH_RETAINER)}),
+			"span": tr("HR_ATLAS_ARRIVAL_SPAN")}),
 		"confirm_text": tr("HR_SEARCH_CANCEL_OK"),
 		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_cancel_search,
@@ -743,9 +744,12 @@ func _open_actions(emp: Character, anchor: Control) -> void:
 				"action": HRLedger.ACTION_PROMOTE, "icon": "raise",
 				"meta": HRConstants.job_title(emp.role, emp.level)},
 			{"key": "HR_TRAINING_PICK_TITLE",
-				"preview": {"ok": train_ok, "reason": tr("HR_TRAINING_AT_CAP")},
+				# §5.4 İKİ GEREKÇE: bar dolmadıysa "henüz hak edilmedi", alan tavandaysa
+				# "öğrenecek bir şey kalmadı". Menü ikisini de tavan diye okuyordu.
+				"preview": {"ok": train_ok,
+					"reason": CharacterRegistry.training_block_reason(emp.id)},
 				"action": HRLedger.ACTION_TRAIN, "icon": "train",
-				"meta": tr("HR_TRAINING_DURATION_WEEKS")},
+				"meta": HRConstants.training_duration_text()},
 			{"key": "HR_CARD_FIRE", "preview": HRActions.preview_fire(emp),
 				"action": HRLedger.ACTION_FIRE, "icon": "fire",
 				"meta": tr("HR_MENU_PERMANENT")}]:

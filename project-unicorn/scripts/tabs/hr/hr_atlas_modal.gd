@@ -9,13 +9,15 @@ extends Control
 # process_mode = ALWAYS: pause-gated UI. Saate DOKUNULMAZ — bu kod tabanında
 # sekmeler ve sekme modalları saati oynatmaz.
 #
-# MOCKUP'TAN BİLİNÇLİ SAPMA (tasarım dokümanı kazanır): Kare 2'nin band adımında
-# "runway 5,2 → ~3,4 ay" satırı VAR, burada YOK. Tasarım dokümanı band seçiminde
-# runway etkisi gösterilmez diyor; ekonomik bağlam somut maaşın olduğu ana, yani
-# aday kartına ait. Runway satırı orada (Kare 4) basılıyor.
+# ADIM 2 ARTIK BÜTÇE BANDI DEĞİL SEVİYE (§3). Bant bir bütçe seçeneğiydi ve işe alımda
+# ATILIYORDU: aday üretilirken okunuyor, çalışana hiç yazılmıyordu — yani oyunda seviye diye
+# bir şey yoktu. Seviye kişide saklanır, unvanı türetir ve terfinin değiştirdiği alandır.
 #
-# Her rakam motordan: preview_search (22 anahtar) ve preview_hire (22 anahtar). Tek
-# aritmetik BİÇİMLEMEdir (komisyon oranının kesirden yüzdeye çevrilmesi).
+# ARAMA ÜCRETSİZDİR (§10). Adım 2'de para okunmaz, çünkü orada ödenecek bir şey yok: tek ücret
+# komisyondur ve o da işe alım gerçekleştiğinde, aday kartından okunarak ödenir. Runway satırı
+# da orada (Kare 4) — ekonomik bağlam somut maaşın olduğu ana aittir.
+#
+# Her rakam motordan: preview_search ve preview_hire.
 #
 # # WORKING TR — oyuncuya görünen tüm metin çalışma metni; ses geçişi sonra.
 # ============================================================================
@@ -30,7 +32,8 @@ const PANEL_FILES := Vector2(1560, 0)
 var _root_box: VBoxContainer = null
 var _panel: PanelContainer = null
 var _selected_role: String = ""
-var _selected_band: String = ""
+## -1 = seçilmedi. Seviye bir INT (§3: 0/1/2), o yüzden "" ile boşluk anlatılamaz.
+var _selected_level: int = -1
 
 
 func _ready() -> void:
@@ -105,20 +108,30 @@ func _build_search_step() -> void:
 	grid.add_theme_constant_override("v_separation", 12)
 	for role_id in HRConstants.EMPLOYEE_ROLES:
 		grid.add_child(_role_card(String(role_id)))
+	# §10.6: "Atlas'ta İKİ rol kartı kilitli-görünür durur: Pazarlama ve in-house İK. Kartlar
+	# çizilir, sönüktür, tıklanamaz, kilit gerekçesini gösterir. KİLİTLİ KART GİZLENMEZ —
+	# oyuncu tam sürümde ne geleceğini burada görür." Altı rolün ardına eklenirler, ve
+	# EMPLOYEE_ROLES'a girmezler (gerekçe HRConstants.FUTURE_ROLES).
+	for role_id in HRConstants.FUTURE_ROLES:
+		grid.add_child(_future_role_card(String(role_id)))
 	_root_box.add_child(grid)
 
-	_root_box.add_child(_step_header(tr("HR_ATLAS_STEP_BAND")))
-	var bands := HBoxContainer.new()
-	bands.add_theme_constant_override("separation", 12)
-	for band_id in HRConstants.BANDS:
-		bands.add_child(_band_card(String(band_id)))
-	_root_box.add_child(bands)
+	_root_box.add_child(_step_header(tr("HR_ATLAS_STEP_LEVEL")))
+	var levels := HBoxContainer.new()
+	levels.add_theme_constant_override("separation", 12)
+	for level in HRConstants.LEVELS:
+		levels.add_child(_level_card(int(level)))
+	_root_box.add_child(levels)
 
-	# MALİYET SATIRINDA YALNIZ SÜRE (11a): ödenen tutar butonun üstünde yazıyor, iki yerde
-	# göstermek aynı sayıyı iki kez sormak olurdu.
-	var arrival := UiFactory.make_label(tr("HR_ATLAS_ARRIVAL").format(
-		{"span": tr("HR_ATLAS_ARRIVAL_SPAN")}), &"RowMeta", UiTokens.INK_MUTED)
-	_root_box.add_child(arrival)
+	# İKİ SESSİZ SATIR: ne zaman gelecekler, ve ne ödenecek. §10'un iki cümlesi birebir —
+	# "bir hafta sonra aday listesi gelir" ve "ücretsizdir; tek ücret komisyondur".
+	var meta := HBoxContainer.new()
+	meta.add_theme_constant_override("separation", 10)
+	meta.add_child(UiFactory.make_label(tr("HR_ATLAS_ARRIVAL").format(
+		{"span": tr("HR_ATLAS_ARRIVAL_SPAN")}), &"RowMeta", UiTokens.INK_MUTED))
+	meta.add_child(UiFactory.make_label("·", &"RowMeta", UiTokens.INK_DIM))
+	meta.add_child(UiFactory.make_label(tr("HR_ATLAS_FREE_NOTE"), &"RowMeta", UiTokens.INK_DIM))
+	_root_box.add_child(meta)
 
 	_root_box.add_child(_search_footer())
 
@@ -194,9 +207,51 @@ func _role_card(role_id: String) -> Control:
 	return card
 
 
-## Bant kartı. AÇIKLAMA SATIRI YOK — tasarım onları kaldırdı ("sonra eklenecek").
-func _band_card(band_id: String) -> Control:
-	var selected: bool = _selected_band == band_id
+## §10.6 KİLİTLİ-GÖRÜNÜR KART. Rol kartının kilitli hâliyle AYNI dil — sönük, kilit glifi,
+## gerekçe amber satırda, tıklama hiç bağlanmıyor. Ayrı bir fonksiyon çünkü bunlar rol
+## DEĞİL: EMPLOYEE_ROLES'a girmiyorlar, etiketleri ve açıklamaları kendi anahtarlarından
+## okunuyor, ve hiçbir motor yolu onları tanımıyor.
+func _future_role_card(role_id: String) -> Control:
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sb := StyleBoxFlat.new()
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	sb.content_margin_left = 16.0
+	sb.content_margin_right = 16.0
+	sb.content_margin_top = 14.0
+	sb.content_margin_bottom = 14.0
+	sb.bg_color = UiTokens.SURFACE_FRAME
+	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+	sb.border_color = UiTokens.SEPARATOR
+	card.add_theme_stylebox_override("panel", sb)
+
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 7)
+	card.add_child(col)
+
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 8)
+	title_row.add_child(UiFactory.make_label(
+		HRConstants.future_role_label(role_id), &"NameSerif", UiTokens.CREAM_DIM))
+	title_row.add_child(HRUiShared.lock_glyph(12, UiTokens.CREAM_DIM))
+	col.add_child(title_row)
+
+	var hint := UiFactory.make_label(
+		HRConstants.future_role_hint(role_id), &"RowMeta", UiTokens.CREAM_DIM)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(hint)
+
+	col.add_child(UiFactory.make_label(
+		tr(HRConstants.FUTURE_ROLE_LOCK_KEY), &"RowMeta", UiTokens.ACCENT))
+	card.modulate.a = 0.6
+	return card
+
+
+## §3 SEVİYE KARTI. AÇIKLAMA SATIRI YOK — tasarım onları kaldırdı ("sonra eklenecek").
+## Etiket §3'ün seviye ADIDIR (Junior · Orta · Kıdemli), ön eki değil: onaylı 16. tur orta
+## seviyeyi "Uzman" diye etiketliyordu ve §3 o adı vermiyor.
+func _level_card(level: int) -> Control:
+	var selected: bool = _selected_level == level
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb := StyleBoxFlat.new()
@@ -215,18 +270,24 @@ func _band_card(band_id: String) -> Control:
 		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
 		sb.border_color = UiTokens.SEPARATOR
 	card.add_theme_stylebox_override("panel", sb)
+	# BÜYÜK HARFE ÇEVRİLMİYOR (§3). UiTokens.tr_upper TÜRKÇE büyütür ve "Junior"ı JUNİOR
+	# yapar — noktalı bir İ, yani §3'ün bağlayıcı saydığı İngilizce kelime değil. Bir adım
+	# yukarıdaki rol kartları da büyütmüyor; iki adım artık aynı dili konuşuyor.
 	card.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(HRConstants.band_label(band_id)), &"RowName",
+		HRConstants.level_label(level), &"RowName",
 		UiTokens.ACCENT if selected else UiTokens.INK_MUTED))
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	card.gui_input.connect(func(ev: InputEvent) -> void:
 		if _is_left_click(ev):
-			_selected_band = band_id
+			_selected_level = level
 			_rebuild())
 	return card
 
 
-## Alt bar: VAZGEÇ · boşluk · seçim özeti · ARAYIŞ BAŞLAT · $600.
+## Alt bar: VAZGEÇ · boşluk · seçim özeti · ARAYIŞ BAŞLAT.
+##
+## CTA'DA RAKAM YOK (§10): arama ücretsiz. Eski buton "ARAYIŞ BAŞLAT · $600" diyordu ve o $600
+## peşin, iadesiz bir retainer'dı — oyuncu bakmak için ödüyordu.
 func _search_footer() -> Control:
 	_root_box.add_child(HRUiShared.hairline())
 	var row := HBoxContainer.new()
@@ -236,18 +297,18 @@ func _search_footer() -> Control:
 	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(pad)
 
-	var cta: String = tr("HR_ATLAS_START").format(
-		{"amount": HRUiShared.money(HRConstants.SEARCH_RETAINER)})
-	if _selected_role == "" or _selected_band == "":
+	var cta: String = tr("HR_ATLAS_START")
+	if _selected_role == "" or _selected_level < 0:
 		row.add_child(HRUiShared.disabled_button(cta, tr("HR_ATLAS_NEED_SELECTION")))
 		return row
 
-	row.add_child(UiFactory.make_label("%s · %s" % [
-		HRConstants.role_label(_selected_role), HRConstants.band_label(_selected_band)],
+	var pv: Dictionary = HRSearchSystem.preview_search(_selected_role, _selected_level)
+	# Seçim özeti TÜRETİLMİŞ UNVANDIR (§3), rol ve seviyenin yan yana dizilmesi değil:
+	# "Kıdemli Yazılım Mühendisi" oyuncunun aradığı şeyin adıdır, iki etiketin toplamı değil.
+	row.add_child(UiFactory.make_label(String(pv.get("job_title", "")),
 		&"RowMeta", UiTokens.INK_DIM))
-	var pv: Dictionary = HRSearchSystem.preview_search(_selected_role, _selected_band)
 	var warnings: Array = pv.get("warnings", []) as Array
-	if not bool(pv.get("can_start", false)) or not bool(pv.get("affordable", false)):
+	if not bool(pv.get("can_start", false)):
 		var reason: String = String(warnings[0]) if not warnings.is_empty() else ""
 		row.add_child(HRUiShared.disabled_button(cta, reason))
 	else:
@@ -320,8 +381,11 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	who.add_theme_constant_override("separation", 3)
 	who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	who.add_child(UiFactory.make_label(String(file.get("name", "")), &"NameSerif"))
+	# §10.3: "Ad, UNVAN, rol açıklaması." Unvan TÜRETİLİR (§3) — dosyanın seviyesi + rol adı.
+	# Eskiden burada çıplak rol adı vardı ve kartta seviye hiç okunmuyordu.
 	who.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(HRConstants.role_label(role_id)), &"MicroLabel"))
+		UiTokens.tr_upper(String(pv.get("job_title", HRConstants.role_label(role_id)))),
+		&"MicroLabel"))
 	head.add_child(who)
 	col.add_child(head)
 
@@ -422,7 +486,7 @@ func _runway_strip(pv: Dictionary) -> Control:
 
 
 func _on_start_pressed() -> void:
-	if HRSearchSystem.start_search(_selected_role, _selected_band):
+	if HRSearchSystem.start_search(_selected_role, _selected_level):
 		state_changed.emit()
 		_close()
 
@@ -434,13 +498,15 @@ func _on_hire_pressed(index: int) -> void:
 
 
 func _on_dismiss_pressed() -> void:
-	# Sessiz kapanış değil: peşin ödenen retainer geri gelmiyor, kayıp anında onay şart.
+	# Sessiz kapanış değil — ama artık kayıp PARA DEĞİL ZAMAN. §10: arama ücretsizdir; asıl
+	# bedel, "bir çalışan ayrıldığında oyuncunun boşluğu o gün kapatamaması"dır. Onay metni
+	# artık ödenmemiş bir ücreti değil, yeniden beklenecek haftayı sayıyor.
 	# hr_tab._on_cancel_search ile aynı sözleşme (bağlı METOT referansı, lambda değil);
 	# ConfirmModal ModalLayer'a (layer 10) gider, bu modal PanelLayer'da (layer 9) durur —
 	# yani onay her zaman üstte çizilir, artık ekleme sırasına bağlı olmadan.
 	EventBus.confirm_requested.emit({
 		"title": tr("HR_ATLAS_TAKE_NONE"),
-		"body": tr("HR_ATLAS_CLOSE_BODY").format({"amount": HRUiShared.money(HRConstants.SEARCH_RETAINER)}),
+		"body": tr("HR_ATLAS_CLOSE_BODY").format({"span": tr("HR_ATLAS_ARRIVAL_SPAN")}),
 		"confirm_text": tr("HR_ATLAS_CLOSE_OK"),
 		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_dismiss,

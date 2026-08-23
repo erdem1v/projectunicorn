@@ -13,8 +13,8 @@ extends RefCounted
 # seed, the two Atlas fees and the hire itself. Owns no tunable: every number comes from
 # HRConstants, and the mixer consts below are arithmetic, not balance.
 #
-# WRITE-THROUGH LAW: cash moves ONLY through FinanceSystem.apply_one_time_cost (the retainer
-# and the commission, both under HRConstants.cost_label_hire()); the employee is created ONLY
+# WRITE-THROUGH LAW: cash moves ONLY through FinanceSystem.apply_one_time_cost (the commission,
+# under HRConstants.cost_label_hire()); the employee is created ONLY
 # through CharacterRegistry.add, which stamps hire_day/leave_month, key-locks role/axes/traits
 # and counts run_hires; the arrival reaches the player ONLY as EventBus.headline_added. Payroll
 # never gets pushed anywhere — FinanceSystem PULLS it at slot 5, so a hire changes burn by
@@ -25,16 +25,24 @@ extends RefCounted
 # and a badge (HRSystem.attention_count reads has_files_ready). Nothing is enqueued, nothing
 # steals the screen — the player walks over when they are ready and the files wait.
 #
-# NO AFFORDABILITY GATE, deliberately, on the same contract as the build-commit seam: the
-# retainer and the commission can push cash negative through the ordinary bankruptcy channel.
-# preview_search / preview_hire carry the economic warning (runway before → after) instead of a
-# disabled button. Cancelling does NOT refund the retainer; dismissing the files costs nothing.
+# THE SEARCH IS FREE (§10). "Aday araması Atlas Recruitment modalinden yürür ve ücretsizdir.
+# ... Retainer YOKTUR; tek ücret komisyondur." Commissioning, cancelling and dismissing the
+# files all move zero cash; the ONLY charge in this file is the commission, on the hire, at 50%
+# of one month. The old two-fee model charged the player $600 for the privilege of LOOKING.
+#
+# NO AFFORDABILITY GATE on the commission either, deliberately, on the same contract as the
+# build-commit seam: it can push cash negative through the ordinary bankruptcy channel.
+# preview_hire carries the economic warning (runway before → after) instead of a disabled button.
 
 
 # GameState.hr_search keys — the shape documented at game_state.gd:114. Named so a typo in a
 # write cannot silently diverge from a read.
 const KEY_STATE := "state"
 const KEY_ROLE := "role"
+## §3 SEVİYE. Eski KEY_BAND bir bütçe seçeneğiydi ve işe alımda atılıyordu. Uçuştaki eski bir
+## aramanın kaydı hâlâ o anahtarı taşıyabilir, o yüzden okuma tarafı ikisini de tanır
+## (current_level) — Faz 7'de KEY_BAND ile birlikte o köprü de gider.
+const KEY_LEVEL := "level"
 const KEY_BAND := "band"
 const KEY_SEED := "seed"
 const KEY_STARTED_DAY := "started_day"
@@ -104,7 +112,7 @@ static func get_files() -> Array:
 
 static func days_waiting() -> int:
 	# How long the CURRENT search has been on the table, counted from the day the player
-	# commissioned it — the day the retainer left the account. One meaning in both `searching`
+	# commissioned it. One meaning in both `searching`
 	# and `files_ready`, so a card can print "3 gündür" without first asking which state it is
 	# in. 0 when idle.
 	if get_state() == HRConstants.SEARCH_IDLE:
@@ -119,13 +127,23 @@ static func current_role() -> String:
 	return String(GameState.hr_search.get(KEY_ROLE, ""))
 
 
-static func current_band() -> String:
-	return String(GameState.hr_search.get(KEY_BAND, ""))
+static func current_level() -> int:
+	# Uçuştaki arama hangi SEVİYEYE bakıyor. Bekleme şeridi rolü ve seviyeyi adlandırmak
+	# zorunda; bu iki okuma olmasa tek yol GameState.hr_search'e UI'dan uzanmaktı — yani o
+	# sözlüğün sahibi olan sistemin yanından dolaşmak.
+	#
+	# ESKİ KAYDIN KÖPRÜSÜ: rev 11 öncesi başlatılmış bir arama "band" taşır. Sessizce Junior
+	# saymak yanlış adayları getirirdi, o yüzden bant adı seviyeye çevrilir.
+	if GameState.hr_search.has(KEY_LEVEL):
+		return clampi(int(GameState.hr_search[KEY_LEVEL]),
+			HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
+	var legacy: int = HRConstants.BANDS.find(String(GameState.hr_search.get(KEY_BAND, "")))
+	return legacy if legacy >= 0 else HRConstants.LEVEL_MID
 
 
 # --- Commissioning a search ---
 
-static func start_search(role_id: String, band_id: String) -> bool:
+static func start_search(role_id: String, level: int) -> bool:
 	if not can_start():
 		push_warning("[HRSearchSystem] start_search while state is '%s' — one search at a time" % get_state())
 		return false
@@ -137,18 +155,18 @@ static func start_search(role_id: String, band_id: String) -> bool:
 	if not HRConstants.is_role_hireable(role_id):
 		push_warning("[HRSearchSystem] start_search for locked role '%s' — see HRConstants.role_lock_reason_key" % role_id)
 		return false
-	if not HRConstants.BANDS.has(band_id):
-		push_warning("[HRSearchSystem] start_search with unknown band '%s' — see HRConstants.BANDS" % band_id)
+	if not HRConstants.is_level(level):
+		push_warning("[HRSearchSystem] start_search with unknown level %d — see HRConstants.LEVELS" % level)
 		return false
 
 	# The SEED is stored, not the files. seed_for() reads GameState.day, which has moved on by
 	# the time the files land, so deriving it again at arrival would hand back different people
 	# — and a save/load mid-search would reshuffle a table the player was already thinking about.
-	var seed_value: int = HRCandidateGenerator.seed_for(role_id, band_id)
+	var seed_value: int = HRCandidateGenerator.seed_for(role_id, level)
 	GameState.hr_search = {
 		KEY_STATE: HRConstants.SEARCH_SEARCHING,
 		KEY_ROLE: role_id,
-		KEY_BAND: band_id,
+		KEY_LEVEL: level,
 		KEY_SEED: seed_value,
 		KEY_STARTED_DAY: GameState.day,
 		KEY_ARRIVAL_DAY: GameState.day + _arrival_delay(seed_value),
@@ -161,9 +179,9 @@ static func start_search(role_id: String, band_id: String) -> bool:
 
 
 static func cancel_search() -> bool:
-	# İptal: the retainer is NOT refunded — peşin ücret yanmıştır (design doc §2). Cancelling is
-	# only legal while Atlas is still looking; once the files are on the table the way out is
-	# dismiss_files().
+	# İptal: nothing is refunded because nothing was charged (§10 — the search is free). The
+	# cost of abandoning a search is the WEEK, not the money. Cancelling is only legal while
+	# Atlas is still looking; once the files are on the table the way out is dismiss_files().
 	if get_state() != HRConstants.SEARCH_SEARCHING:
 		return false
 	_clear()
@@ -171,8 +189,9 @@ static func cancel_search() -> bool:
 
 
 static func dismiss_files() -> bool:
-	# Beğenmedin: no commission, no charge of any kind. The retainer stays spent, so a
-	# throwaway search is a real (small) loss rather than a free look.
+	# Beğenmedin: no commission, no charge of any kind. What a throwaway search costs is the
+	# week it took (§10: "arada geçen haftayı yönetmek zorundadır") — the modal's confirm body
+	# says exactly that instead of naming a fee nobody paid.
 	if get_state() != HRConstants.SEARCH_FILES_READY:
 		return false
 	_clear()
@@ -202,6 +221,13 @@ static func hire(candidate_index: int) -> Character:
 	emp.role = role_id
 	emp.category = "employee"          # THE founder/mentor/staff discriminator; Frank is never this
 	emp.monthly_salary = salary
+	# §3 SEVİYE KİŞİDE SAKLANIR. Dosyanın taşıdığı seviye buraya geçer; unvan ondan TÜRETİLİR
+	# (HRConstants.job_title) ve saklanmaz. rev 2'de bu değer işe alımda düşüyordu — aday
+	# üretilirken okunuyor, çalışana hiç yazılmıyordu, yani oyunda seviye diye bir şey yoktu.
+	emp.level = clampi(int(file.get("level", HRConstants.level_for_salary(role_id, salary))),
+		HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
+	# §9.1 "maaş hiçbir zaman DÜŞÜRÜLMEZ" — tabanı işe alım maaşıdır.
+	emp.salary_floor = salary
 	emp.equity_pct = 0.0               # hires get no equity: employee equity is not in the HR design
 	emp.morale = HRConstants.MORALE_HIRE_START
 	emp.status = HRConstants.STATUS_ACTIVE
@@ -236,21 +262,20 @@ static func hire(candidate_index: int) -> Character:
 
 # --- Previews (what the UI prints BEFORE the player commits) ---
 
-static func preview_search(role_id: String, band_id: String) -> Dictionary:
+static func preview_search(role_id: String, level: int) -> Dictionary:
 	# Plain values, no formatting: money stays int, both runway numbers stay float. NOTE
 	# GameState.get_runway_months() returns INF on non-negative net flow, so the card must send
 	# these two through UiTokens.net_runway_parts — the single home for the INF-vs-months
 	# decision. A system file does not own that formatting.
-	var retainer: int = HRConstants.SEARCH_RETAINER
-	var net_daily: int = GameState.get_net_daily_flow()
-	var cash_after: int = GameState.cash - retainer
+	#
+	# §10 THE SEARCH IS FREE, so there is no cash question here at all: no retainer key, no
+	# affordability flag, no runway delta. Commissioning a search moves nothing. The economic
+	# reading belongs to preview_hire, where a real number is finally on the table.
 	var warnings: Array[String] = []
-	if GameState.cash < retainer:
-		warnings.append(TranslationServer.translate("HR_WARN_RETAINER_CASH"))
 	if not can_start():
 		warnings.append(TranslationServer.translate("HR_WARN_SEARCH_OPEN"))
-	var valid: bool = HRConstants.is_employee_role(role_id) and HRConstants.BANDS.has(band_id)
-	var band: Array = HRConstants.salary_band(role_id, band_id)
+	var valid: bool = HRConstants.is_employee_role(role_id) and HRConstants.is_level(level)
+	var band: Array = HRConstants.salary_band_for_level(role_id, level) if valid else [0, 0]
 	var band_low: int = 0
 	var band_high: int = 0
 	if band.size() >= 2:
@@ -262,32 +287,18 @@ static func preview_search(role_id: String, band_id: String) -> Dictionary:
 		"role": role_id,
 		# role_label push_errors on an unknown id by design, so it is only called on a known one.
 		"role_label": HRConstants.role_label(role_id) if HRConstants.is_employee_role(role_id) else role_id,
-		"band": band_id,
-		"band_label": HRConstants.band_label(band_id),
-		# What this role's KEY and SECONDARY areas actually buy (rev 2 §2/§3) — the help copy
-		# the arayış card prints so the player picks a band for a reason. Two areas, never six:
-		# §3 forbids showing all six in a flat list.
-		"area_meaning": {
-			HRConstants.role_key_area(role_id):
-				HRConstants.role_area_meaning(role_id, HRConstants.role_key_area(role_id)),
-			HRConstants.role_secondary_area(role_id):
-				HRConstants.role_area_meaning(role_id, HRConstants.role_secondary_area(role_id)),
-		},
+		"level": level,
+		"level_label": HRConstants.level_label(level),
+		# The TITLE this search is shopping for — §3's derived unvan, so the player reads
+		# "Kıdemli Yazılım Mühendisi" rather than a role and a level they have to combine.
+		"job_title": HRConstants.job_title(role_id, level) if HRConstants.is_employee_role(role_id) else role_id,
 		"candidate_count": HRConstants.CANDIDATE_COUNT,
-		"retainer": retainer,
-		"arrival_min_days": HRConstants.SEARCH_ARRIVAL_DAYS,
-		"arrival_max_days": HRConstants.SEARCH_ARRIVAL_DAYS,
+		"arrival_days": HRConstants.SEARCH_ARRIVAL_DAYS,
 		"salary_band_low": band_low,
 		"salary_band_high": band_high,
 		# The commission is a share of the accepted salary, so the band edges bracket it.
 		"commission_low": HRConstants.commission_for(band_low),
 		"commission_high": HRConstants.commission_for(band_high),
-		"cash_before": GameState.cash,
-		"cash_after": cash_after,
-		"runway_before": GameState.get_runway_months(),
-		# The retainer moves cash only, never the flow, so the "after" reuses today's net.
-		"runway_after": _runway_after(cash_after, net_daily),
-		"affordable": GameState.cash >= retainer,
 		"warnings": warnings,
 	}
 
@@ -307,8 +318,9 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 		"name": "",
 		"role": "",
 		"role_label": "",
-		"band": "",
-		"band_label": "",
+		"level": HRConstants.LEVEL_JUNIOR,
+		"level_label": "",
+		"job_title": "",
 		"axes": {},
 		"traits": no_traits,
 		"note_index": -1,
@@ -354,8 +366,12 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	out["name"] = String(file.get("name", ""))
 	out["role"] = role_id
 	out["role_label"] = HRConstants.role_label(role_id) if HRConstants.is_employee_role(role_id) else role_id
-	out["band"] = String(file.get("band", ""))
-	out["band_label"] = HRConstants.band_label(String(file.get("band", "")))
+	var level: int = clampi(int(file.get("level", HRConstants.LEVEL_JUNIOR)),
+		HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
+	out["level"] = level
+	out["level_label"] = HRConstants.level_label(level)
+	# §10.3 aday kartı "ad, UNVAN, rol açıklaması" istiyor — unvan türetilir (§3).
+	out["job_title"] = HRConstants.job_title(role_id, level) if HRConstants.is_employee_role(role_id) else role_id
 	out["axes"] = _axes_copy(file.get("axes", {}))
 	out["traits"] = _traits_copy(file.get("traits", []))
 	out["note"] = HRConstants.file_notes_line(int(file.get("note_index", 0)))
@@ -376,9 +392,9 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 
 static func _deliver_files() -> void:
 	var role_id: String = String(GameState.hr_search.get(KEY_ROLE, ""))
-	var band_id: String = String(GameState.hr_search.get(KEY_BAND, ""))
+	var level: int = current_level()
 	var seed_value: int = int(GameState.hr_search.get(KEY_SEED, 0))
-	var files: Array = HRCandidateGenerator.generate(role_id, band_id, seed_value)
+	var files: Array = HRCandidateGenerator.generate(role_id, level, seed_value)
 	GameState.hr_search[KEY_FILES] = files
 	GameState.hr_search[KEY_STATE] = HRConstants.SEARCH_FILES_READY
 	# NOT a modal and NOT an enqueued event: one ticker line, then the HR badge carries it until
@@ -389,7 +405,7 @@ static func _deliver_files() -> void:
 		TranslationServer.translate("HR_NEWS_FILES_READY").format({"role": HRConstants.role_label(role_id), "n": files.size()})
 	)
 	if OS.is_debug_build():
-		print("[HRSearchSystem] %d aday dosyası hazır (%s / %s, seed %d)" % [files.size(), role_id, band_id, seed_value])
+		print("[HRSearchSystem] %d aday dosyası hazır (%s / seviye %d, seed %d)" % [files.size(), role_id, level, seed_value])
 
 
 static func _clear() -> void:

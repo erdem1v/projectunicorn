@@ -153,6 +153,9 @@ SALES_STEWARD_FOUNDER,Kurucu (kendim tutayım),Founder (keep it myself)
 HR_CS_LOAD,{n} hesap taşıyor · kapasite {cap},Handling {n} accounts · capacity {cap}
 HR_ROLE_LOCK_SALES,Bu rol için B2B ürün gerekir.,This role needs a B2B product.
 HR_ROLE_LOCK_CS,Destek sistemi ile açılacak.,Opens with the support system.
+HR_ROLE_LOCK_FULL_VERSION,Tam sürümde gelecek.,Coming in the full version.
+HR_ROLE_MARKETING,Pazarlama,Marketing
+HR_ROLE_HR_INHOUSE,İnsan Kaynakları,In-house HR
 ODA_RETURN,ODAYA DÖN,BACK TO ROOM
 ODA_PAGE_PLACEHOLDER,İçerik yolda,Content on the way
 ODA_MONITOR_IDLE,Geliştirme bekleniyor,Awaiting development
@@ -357,6 +360,9 @@ HR_TRAINING_DURATION_WEEKS,iki hafta,two weeks
 HR_TRAINING_WARNING,Eğitimdeyken görev alamaz.,Cannot be assigned while in training.
 HR_TRAINING_CTA,EĞİTİME GÖNDER · {fee},SEND TO TRAINING · {fee}
 HR_TRAINING_AT_CAP,Bu alan tavanda.,This area is already at the cap.
+HR_TRAINING_NOT_EARNED,Deneyim barı dolmadı.,The experience bar is not full yet.
+HR_DURATION_WEEKS,{n} hafta,{n} weeks
+HR_DURATION_DAYS,{n} gün,{n} days
 PER_HEADER_META,{origin} · {phase} · KIDEM {n}. GÜN,{origin} · {phase} · TENURE DAY {n}
 PER_ASSIGN_HINT,Günlük görev ataması: Ekip → Görevler,Daily assignment: Team → Assignments
 PER_FOUNDER,KURUCU,FOUNDER
@@ -547,6 +553,9 @@ HR_BAND_MID,dengeli,balanced
 HR_BAND_SENIOR,üst segment,premium
 HR_LEVEL_PREFIX_JUNIOR,Junior,Junior
 HR_LEVEL_PREFIX_SENIOR,Kıdemli,Senior
+HR_LEVEL_JUNIOR,Junior,Junior
+HR_LEVEL_MID,Orta,Mid
+HR_LEVEL_SENIOR,Kıdemli,Senior
 HR_JOB_BUILD,Build ekibi,Build team
 HR_JOB_TEST,Test,Test
 HR_JOB_SUPPORT,Destek,Support
@@ -810,12 +819,14 @@ HR_TRAIT_BAG_PACKED_LABEL,GÖZÜ YÜKSEKTE,Bag Packed
 HR_TRAIT_BAG_PACKED_EFFECT,"Yüksek verimle çalışır, ama rakip teklifinde tutması zor.","Works at high output, but is hard to hold against a rival offer."
 HR_TRAIT_MOOD_BUSTER_LABEL,TAT KAÇIRAN,Mood Buster
 HR_TRAIT_MOOD_BUSTER_EFFECT,Ekibinin morali normalden hızlı erir.,Their team's morale erodes faster than normal.
-HR_ROLE_HINT_PRODUCT_MANAGER,İnovasyon ve deneyim tavanını yükseltir.,Raises the innovation and experience ceiling.
-HR_ROLE_HINT_DESIGNER,Tasarım kalitesinin tavanını yükseltir.,Raises the ceiling on design quality.
-HR_ROLE_HINT_DEVELOPER,Geliştirme hızını ve kod kalitesini yükseltir.,Raises development speed and code quality.
-HR_ROLE_HINT_TESTER,"Hata oranını düşürür, beta süresini kısaltır.",Lowers the bug rate and shortens beta.
-HR_ROLE_HINT_SALES_REP,Yeni müşteri kazanımını hızlandırır.,Speeds up winning new customers.
-HR_ROLE_HINT_CUSTOMER_REP,Müşteri kaybını yavaşlatır.,Slows customer churn.
+HR_ROLE_HINT_PRODUCT_MANAGER,"Ne yapılacağına karar verir, ekibi aynı hedefe bakar tutar.",Decides what gets built and keeps everyone pointed at it.
+HR_ROLE_HINT_DESIGNER,Ürünün nasıl göründüğünü ve nasıl kullanıldığını kurar.,Shapes how the product looks and how it is used.
+HR_ROLE_HINT_DEVELOPER,Ürünü yazar. Kod tabanı ondan çıkar.,Writes the product. The codebase comes from them.
+HR_ROLE_HINT_TESTER,Ürünü kırmaya çalışır. Bulduğu her hata müşteriye gitmeyen hatadır.,Tries to break the product. Every bug they find is one the customer never sees.
+HR_ROLE_HINT_SALES_REP,"Aday müşteri bulur, anlaşmayı kapatır.",Finds prospects and closes them.
+HR_ROLE_HINT_CUSTOMER_REP,Mevcut müşterileri elde tutar. Müşteriden gelen her şey önce ona uğrar.,Keeps existing customers. Everything from a customer reaches them first.
+HR_ROLE_HINT_MARKETING,Ürünü duyurur ve talebi büyütür.,Gets the product heard and grows demand.
+HR_ROLE_HINT_HR_INHOUSE,İşe alımı ve ekibin iç işlerini şirket içinden yürütür.,Runs hiring and the team's internal affairs from inside the company.
 HR_AGENCY_NAME,ATLAS RECRUITMENT,ATLAS RECRUITMENT
 HR_RESIGN_VOICE_1,"""Bir süre düşündüm. Burada tükeniyorum, daha fazla taşımak istemiyorum.""","""I have thought about it for a while. I am burning out here and I do not want to carry it any longer."""
 HR_RESIGN_VOICE_2,"""Kimseyle sorunum yok. Sadece her sabah biraz daha zor kalkıyorum. O kadar.""","""I have no problem with anyone. Every morning is just a little harder to get up. That is all."""
@@ -886,19 +897,21 @@ HR_FILES_ON_DESK,{n} aday dosyası masada.,{n} candidate files on your desk.
 HR_OPEN_FILES,DOSYALARI AÇ,OPEN THE FILES
 HR_SEARCHING,{role} aranıyor · {n}. gün,Searching for {role} · day {n}
 HR_SEARCH_CANCEL_TITLE,Arayışı iptal et,Cancel the search
-HR_SEARCH_CANCEL_BODY,Atlas arayışı kapanır. Peşin ödenen {amount} iade edilmez.,The Atlas search closes. The {amount} retainer is not refunded.
+HR_SEARCH_CANCEL_BODY,"Arayış kapanır. Yeniden başlatırsan adaylar {span} sonra gelir.","The search closes. If you start again the candidates arrive in {span}."
 HR_SEARCH_CANCEL_OK,İptal et,Cancel it
 HR_OVERTIME_CHIP,EK MESAİ,OVERTIME
 HR_FIRE_CONFIRM_OK,İşten çıkar,Let go
 HR_ATLAS_STEP_ROLE,Adım 1 · Rol,Step 1 · Role
+HR_ATLAS_STEP_LEVEL,Adım 2 · Seviye,Step 2 · Level
+HR_ATLAS_FREE_NOTE,arama ücretsiz · komisyon işe alımda ödenir,the search is free · commission is paid on the hire
 HR_ATLAS_STEP_BAND,Adım 2 · Bütçe bandı,Step 2 · Budget band
 HR_ATLAS_CANCEL,VAZGEÇ,CANCEL
-HR_ATLAS_START,ARAYIŞ BAŞLAT · {amount},START SEARCH · {amount}
-HR_ATLAS_NEED_SELECTION,Rol ve bütçe bandı seçilmeli.,Pick a role and a budget band.
+HR_ATLAS_START,ARAYIŞ BAŞLAT,START SEARCH
+HR_ATLAS_NEED_SELECTION,Rol ve seviye seçilmeli.,Pick a role and a level.
 HR_ATLAS_FILES_COUNT,Aday dosyaları · {n},Candidate files · {n}
 HR_ATLAS_TAKE_NONE,Hiçbirini alma,Take none
 HR_ATLAS_HIRE,İŞE AL · {amount}/AY,HIRE · {amount}/MO
-HR_ATLAS_CLOSE_BODY,Hiçbirini almazsan arayış kapanır ve peşin ödenen {amount} geri gelmez.,If you take none the search closes and the {amount} retainer does not come back.
+HR_ATLAS_CLOSE_BODY,"Dosyalar kapanır. Yeni bir arayış başlatırsan adaylar {span} sonra gelir.","The files close. If you start a new search the candidates arrive in {span}."
 HR_ATLAS_CLOSE_OK,Dosyaları kapat,Close the files
 HR_OT_TITLE,Ek mesai · {dept},Overtime · {dept}
 HR_OT_EMPTY,Bu departmanda işbaşında kimse yok.,Nobody is on duty in this department.

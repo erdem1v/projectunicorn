@@ -1379,8 +1379,10 @@ func _run_finance_shot(kind: String) -> void:
 			SalesSystem.add_b2b_customer(pr, sign_mrr, 70)   # pozitif işlem satırı + MRR
 			ProspectRegistry.remove(pr.id)
 		if i == 20 and kind != "artida":   # LOC-DATA debug seed / id
-			# Peşin arayış ücreti → negatif işlem satırı ("İşe alım")
-			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, "mid")
+			# Bekleyen bir arayış — ARTIK BİR GİDER SATIRI DEĞİL (§10: arama ücretsiz).
+			# Finans çekiminin negatif satırı bu turdan sonra tek seferlik EĞİTİM ücretinden
+			# geliyor; komisyon ancak işe alım gerçekleşince yazılır.
+			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
 		if i == 30 and kind == "ozet":
 			var pr2: Prospect = PitchSystem.spawn_prospect("small", "find")
 			SalesSystem.add_b2b_customer(pr2, 800, 72)
@@ -1442,26 +1444,26 @@ func _run_hr_shot(kind: String) -> void:
 		"dosyalar":
 			# Files ON THE TABLE: start a search, then run the arrival window's worth of
 			# HR ticks so the generator's real output is what renders.
-			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, "mid")
+			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
 			for _i in HRConstants.SEARCH_ARRIVAL_DAYS:
 				GameState.day += 1
 				HRSearchSystem.daily_tick()
 		"atlas":
-			pass   # temiz modal: rol/bant seçimi
+			pass   # temiz modal: rol + seviye seçimi
 		"mesai":   # LOC-DATA debug seed / id
 			pass   # panel departman başlığından açılır, aşağıda
 		"gider":
-			# §5 doğrulaması: bir arayış başlat (peşin ücret) ve bir mesai bloğu çalıştır,
-			# sonra Finans sekmesine geç — gider dökümünde hem "İşe alım" tek seferlik
-			# satırı hem de "Ek mesai" kalemi görünmeli.
-			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, "mid")
+			# Gider dökümü doğrulaması: bir mesai bloğu çalıştır ve TEK SEFERLİK bir işe alım
+			# gideri işle. ARAYIŞ ARTIK ÜCRETSİZ (§10), yani "İşe alım" satırını üretecek olan
+			# şey komisyondur — burada onu doğrudan bir aylık maaşın %50'si olarak işliyoruz,
+			# çünkü çekim gerçek bir işe alımı oynatmıyor.
 			HROvertimeSystem.start(HRConstants.DEPT_PRODUCT_DEV, 7)
 			HROvertimeSystem.daily_tick()
 			FinanceSystem.daily_tick()
 			# daily_tick ledger'ı temizler (yeni gün), o yüzden tek seferlik gider tick'ten
 			# SONRA yeniden işleniyor — oyunda da böyle olur: harcama gün içinde yapılır.
 			FinanceSystem.apply_one_time_cost(
-				HRConstants.SEARCH_RETAINER, "hire")
+				HRConstants.commission_for(6000), "hire")
 		_:
 			# AŞIRI YÜKÜ GÖRÜNÜR KIL (C3): kadronun ilk kişisini ikinci bir alana da
 			# ata. Rozet artık AD SATIRINDA değil DURUM sütununda çıkmalı.
@@ -1470,7 +1472,7 @@ func _run_hr_shot(kind: String) -> void:
 				CharacterRegistry.assign_area(over[0].id,
 					HRConstants.role_secondary_area(over[0].role))
 			# "ekip": bekleyen bir arayış da görünsün (Kare 3 şeridi).
-			HRSearchSystem.start_search(HRConstants.ROLE_DESIGNER, "senior")
+			HRSearchSystem.start_search(HRConstants.ROLE_DESIGNER, HRConstants.LEVEL_SENIOR)
 			GameState.day += 1
 			HRSearchSystem.daily_tick()
 	_shell = GAME_SHELL.instantiate()
@@ -1494,12 +1496,13 @@ func _run_hr_shot(kind: String) -> void:
 	if kind == "egitim":   # LOC-DATA debug seed / id
 		var roster: Array[Character] = CharacterRegistry.get_employees()
 		if roster.size() >= 3:
-			# Deneyim artık ALAN BAŞINA (rev 2 §8), o yüzden üç durum da rolün ANAHTAR
-			# alanına yazılır — defterin DENEYİM sütununun okuduğu yer orası.
+			# §5.1 TEK BAR. Bu çekim rev 2'de alan başına sayaçlara yazıyordu ve o sayaçları
+			# artık HİÇBİR YÜZEY OKUMUYOR — yani üç durum da ekranda %0 çıkıyordu, çekimin
+			# kanıtlamak için var olduğu şey görünmez oluyordu. Artık barın kendisine yazıyor,
+			# ve eşik kişiye göre değiştiği için oran eşikten türetiliyor.
 			for i in 3:
-				var key_area: String = HRConstants.role_key_area(roster[i].role)
-				var amount: int = HRConstants.EXPERIENCE_MAX - 1 if i < 2 else 42
-				CharacterRegistry.add_area_experience(roster[i].id, key_area, amount)
+				CharacterRegistry.refresh_experience_threshold(roster[i])
+				roster[i].experience_raw = roster[i].experience_threshold if i < 2 					else int(roster[i].experience_threshold * 0.42)
 			CharacterRegistry.begin_training(roster[1].id,
 				HRConstants.role_key_area(roster[1].role))
 

@@ -525,8 +525,10 @@ static func send_to_training(id: String, area_key: String) -> bool:
 	if not CharacterRegistry.can_train(id, area_key):
 		return false
 	var fee: int = CharacterRegistry.training_fee_for(id, area_key)
-	if GameState.cash < fee:
-		return false
+	# §5.4: "PARANIN YETMEMESİ BİR KİLİT DEĞİLDİR; bir bedeldir ve modalde okunur." Kasa
+	# eksiye düşebilir — işe alım komisyonu ve kıdem tazminatıyla aynı kanal, aynı olağan
+	# iflas yolu. Eski kapı sessizce reddediyordu: buton basılıyor, para yetmiyor, hiçbir
+	# şey olmuyor ve oyuncuya sebep söylenmiyordu.
 	# Tek seferlik gider, HR gider hattına — işe alım retainer'ıyla aynı sızdırmazlık.
 	FinanceSystem.apply_one_time_cost(fee, "training")
 	CharacterRegistry.begin_training(id, area_key)

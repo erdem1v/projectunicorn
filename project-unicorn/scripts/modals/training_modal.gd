@@ -9,9 +9,14 @@ extends Control
 # göstermeyi yasaklıyor ve tasarımın Selin'i tam olarak bu üçünü çiziyor. KURUCUNUN
 # ana/ikincil ayrımı yok, o yüzden onda ALTI ALAN + Liderlik listelenir.
 #
-# SÜRE SABİT: "iki hafta" (HRConstants.TRAINING_DAYS). Bir önceki turda "süre yıldıza göre
-# değişsin" diye bir hüküm vardı; REVİZE TASARIM onu geri aldı — 11c'nin üç satırında da
-# aynı süre yazıyor ve bu rev 2 §8'in kendi cümlesiyle birebir örtüşüyor.
+# SÜRE HER SATIRDA AYNI ama METİN TÜRETİLİR (§5.5): "Modal 'iki hafta' ifadesini GÜN
+# SAYISINDAN türetir. Sabit bir metin anahtarına gömülmez; süre değiştiğinde metnin yalan
+# söylemesi mümkün olmamalıdır." Tek ev HRConstants.training_duration_text().
+#
+# BEDEL KADEMELİDİR VE HER SATIRDA OKUNUR (§5.5): "Her alan satırı o alanın kendi eğitim
+# bedelini gösterir; bedeller alanın mevcut seviyesine göre farklıdır ve BU FARK SATIRDA
+# OKUNUR." O yüzden kilitli satırda da ücret yazar — tire koymak farkı görünmez yapardı, ve
+# kilit gerekçesi zaten kendi sütununda duruyor.
 #
 # PanelLayer'da yaşar, ModalLayer'da DEĞİL: HRAtlasModal'ın kalıbı. Sebebi kayıtlı
 # (hr_tab.gd:_open_atlas) — ModalLayer boşluk ve 1-4 hız tuşlarını yutuyor, yani saat bir
@@ -144,16 +149,20 @@ func _rebuild() -> void:
 	footer.add_child(pad)
 	if _selected != "":
 		footer.add_child(UiFactory.make_label(
-			"%s · %s" % [HRConstants.area_label(_selected), tr("HR_TRAINING_DURATION_WEEKS")],
+			"%s · %s" % [HRConstants.area_label(_selected), HRConstants.training_duration_text()],
 			&"RowMeta", UiTokens.INK_DIM))
-	var fee: int = CharacterRegistry.training_fee_for(_character_id, _selected) if _selected != "" else 0
-	var cta: String = tr("HR_TRAINING_CTA").format({"fee": HRUiShared.money(fee)})
+	# ALAN SEÇİLMEDEN BUTONDA RAKAM YOK. Eskiden "· $0" yazıyordu; sıfır hiçbir şeyin bedeli
+	# değil, ve §14 bedeli taahhütten önce OKUTMAYI istiyor — uydurmayı değil.
 	if _selected == "":
-		footer.add_child(HRUiShared.disabled_button(cta, tr("HR_TRAINING_STEP_AREA")))
-	elif GameState.cash < fee:
-		footer.add_child(HRUiShared.disabled_button(cta, tr("HR_WARN_RETAINER_CASH")))
+		footer.add_child(HRUiShared.disabled_button(
+			tr("HR_TRAINING_SEND"), tr("HR_TRAINING_STEP_AREA")))
 	else:
-		footer.add_child(HRUiShared.action_button(cta, _on_send, true))
+		# §5.4: PARA BİR KİLİT DEĞİL. Kasa yetmiyorsa buton yine basılır ve bedel kasayı
+		# eksiye götürebilir — işe alım komisyonuyla aynı kanal. Bedel zaten butonun
+		# üstünde ve satırında okunuyor, ki §5.4'ün istediği tam olarak budur.
+		var fee: int = CharacterRegistry.training_fee_for(_character_id, _selected)
+		footer.add_child(HRUiShared.action_button(
+			tr("HR_TRAINING_CTA").format({"fee": HRUiShared.money(fee)}), _on_send, true))
 	_root_box.add_child(footer)
 
 
@@ -197,13 +206,20 @@ func _skill_row(c: Character, skill_key: String) -> Control:
 	tgt_slot.alignment = BoxContainer.ALIGNMENT_CENTER
 	tgt_slot.add_theme_constant_override("separation", 8)
 	tgt_slot.add_child(UiFactory.make_label("→", &"RowMeta", UiTokens.INK_DIM))
-	tgt_slot.add_child(StarRating.make(mini(current + 1, HRConstants.AREA_TRAIN_CAP), 13, not trainable))
+	# §5.3 TEK TAVAN: "Eğitim beşinci yıldıza kadar çıkabilir. Tavan 5,0 yıldızdır (10/10).
+	# Parayla satın alınamayan bir üst yıldız yoktur." AREA_TRAIN_CAP (8 = dört yıldız) rev
+	# 2'nindi ve hedef sütunu dördüncü yıldızda takılı kalıyordu.
+	tgt_slot.add_child(StarRating.make(mini(current + 1, HRConstants.AREA_MAX), 13, not trainable))
 	row.add_child(tgt_slot)
 
+	# ÜCRET HER SATIRDA YAZAR, kilitli olanda da (§5.5): kademeli bedelin FARKI okunacaksa
+	# satırların hepsi rakam taşımak zorunda.
 	var fee: int = CharacterRegistry.training_fee_for(_character_id, skill_key)
-	row.add_child(_cell(HRUiShared.money(fee) if trainable else "—", 120,
+	row.add_child(_cell(HRUiShared.money(fee), 120,
 		HORIZONTAL_ALIGNMENT_CENTER, UiTokens.INK if trainable else UiTokens.INK_DIM))
-	row.add_child(_cell(tr("HR_TRAINING_DURATION_WEEKS") if trainable else tr("HR_TRAINING_AT_CAP"),
+	# SON SÜTUN: açıkken SÜRE (türetilmiş), kilitliyken §5.4'ün İKİ GEREKÇESİNDEN DOĞRU OLANI.
+	var reason: String = CharacterRegistry.training_block_reason(_character_id, skill_key)
+	row.add_child(_cell(HRConstants.training_duration_text() if trainable else reason,
 		120, HORIZONTAL_ALIGNMENT_CENTER, UiTokens.INK_MUTED if trainable else UiTokens.INK_FAINT))
 
 	if trainable:
@@ -214,7 +230,7 @@ func _skill_row(c: Character, skill_key: String) -> Control:
 				_selected = skill_key
 				_rebuild())
 	else:
-		card.tooltip_text = tr("HR_TRAINING_AT_CAP")
+		card.tooltip_text = reason
 		card.mouse_filter = Control.MOUSE_FILTER_STOP
 	return card
 

@@ -286,7 +286,7 @@ func _founder_footer(founder: Character) -> Control:
 			tr("HR_TRAINING_SEND"), _open_training.bind(founder.id), true))
 	else:
 		row.add_child(HRUiShared.disabled_button(
-			tr("HR_TRAINING_SEND"), tr("HR_TRAINING_AT_CAP")))
+			tr("HR_TRAINING_SEND"), CharacterRegistry.training_block_reason(founder.id)))
 	return row
 
 

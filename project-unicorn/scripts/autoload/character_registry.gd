@@ -158,6 +158,33 @@ func can_train(id: String, area_key: String = "") -> bool:
 	return int(c.role_stats.get(area_key, 0)) < HRConstants.AREA_MAX
 
 
+## §5.4'ÜN İKİ GEREKÇESİ, TEK EVDE. "Eylem her zaman görünür, kilitliyse gerekçesini
+## gösterir. İki ayrı gerekçe vardır ve birbirine karıştırılmaz: deneyim dolu değil →
+## 'henüz hak edilmedi'; alan 5,0 yıldızda → 'bu alanda öğrenecek bir şey kalmadı'."
+##
+## Üç yüzey (eğitim modali, satır menüsü, Kişisel kartı) kendi gerekçesini yazıyordu ve
+## ÜÇÜ DE tavanı söylüyordu — barı dolmamış bir junior'a "bu alan tavanda" diyorlardı.
+## "" = kilit yok. Para BU LİSTEDE DEĞİLDİR: §5.4 onu bir bedel sayıyor, kilit değil.
+func training_block_reason_key(id: String, area_key: String = "") -> String:
+	var c: Character = _characters.get(id, null)
+	if c == null or c.category not in ["employee", "founder"]:
+		return "HR_TRAINING_NOT_EARNED"
+	if c.status != HRConstants.STATUS_ACTIVE:
+		return "HR_TRAINING_NOT_EARNED"
+	if not experience_bar_full(c):
+		return "HR_TRAINING_NOT_EARNED"
+	if area_key != "" and int(c.role_stats.get(area_key, 0)) >= HRConstants.AREA_MAX:
+		return "HR_TRAINING_AT_CAP"
+	if area_key == "" and not can_train(id):
+		return "HR_TRAINING_AT_CAP"
+	return ""
+
+
+func training_block_reason(id: String, area_key: String = "") -> String:
+	var key: String = training_block_reason_key(id, area_key)
+	return "" if key == "" else tr(key)
+
+
 # ====================== §5.1 DENEYİM — tek bar, büyüyen eşik =================
 # Alan başına sayaçlar (`area_experience`) hâlâ bildirilmiş ve Faz 7'de silinecek; artık
 # YAZILMIYORLAR. Bar hep 0–100 çizilir, çizilen oran experience_raw / experience_threshold.
@@ -591,6 +618,12 @@ func add(character: Character) -> void:
 		if character.leave_month <= 0:
 			var hire_month: int = int(GameState.get_date_dict().month)
 			character.leave_month = HRConstants.leave_month_for(hire_month, hire_ordinal)
+		# §11.4 YAZ İZNİ HAFTASI. Bu satır Faz 2c'de EKSİK KALMIŞTI: hafta yalnız kayıt
+		# göçünde atanıyordu, yani RUN İÇİNDE işe alınan hiç kimse -1'de kalıyor ve
+		# HRMoraleSystem.tick_leave_departures onu sonsuza dek atlıyordu. İzin, işe alınan
+		# herkesin hakkı; ay tabanlı eski alan Faz 7'de silinince bu tek stamp kalacak.
+		if character.leave_week < 0:
+			character.leave_week = HRConstants.leave_week_for(hire_ordinal)
 		# Run counter seam (Spec 3 §3): counted HERE, not at the add_character
 		# event modifier, so the future hire flow counts automatically. Founder
 		# (category "founder") is excluded; mentor never passes through add().

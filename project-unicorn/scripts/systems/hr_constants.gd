@@ -591,6 +591,29 @@ static func is_role_hireable(role_id: String) -> bool:
 	return role_lock_reason_key(role_id) == ""
 
 
+## §10.6 · ATLAS'IN İKİ KİLİTLİ-GÖRÜNÜR KARTI. "Kartlar çizilir, sönüktür, tıklanamaz, kilit
+## gerekçesini gösterir. Kilitli kart GİZLENMEZ. Oyuncu tam sürümde ne geleceğini burada
+## görür."
+##
+## EMPLOYEE_ROLES'A GİRMEZLER, kasten: o dizi altı id'de sözleşmeyle sabit ve
+## HRCandidateGenerator.seed_for indeksini ondan türetiyor — araya bir id sokmak oyundaki
+## HER aday havuzunu sessizce yeniden kararırdı. Bunlar rol DEĞİL, vitrin.
+const FUTURE_ROLES := ["marketing", "hr_inhouse"]
+const FUTURE_ROLE_LOCK_KEY := "HR_ROLE_LOCK_FULL_VERSION"
+
+
+static func is_future_role(role_id: String) -> bool:
+	return FUTURE_ROLES.has(role_id)
+
+
+static func future_role_label(role_id: String) -> String:
+	return _derived("HR_ROLE_", role_id)
+
+
+static func future_role_hint(role_id: String) -> String:
+	return _derived("HR_ROLE_HINT_", role_id)
+
+
 # ================================== Traits ===================================
 # Trait'ler skill tekrarı DEĞİL davranış tanımıdır. SEKİZ TRAIT (2026-08-21, onaylı
 # ikon sayfası + Erdem R3): on trait sekize indi, adları ve etkileri sayfadan geldi.
@@ -787,6 +810,21 @@ const LEVELS := [0, 1, 2]
 ## Kıdemli'nin İngilizcesi "Senior".
 const LEVEL_PREFIX_KEYS := {0: "HR_LEVEL_PREFIX_JUNIOR", 1: "", 2: "HR_LEVEL_PREFIX_SENIOR"}
 
+## Seviyenin ADI — ön ekinden AYRI. §3'ün tablosu ikisini ayrı sütunda tutuyor: Orta'nın
+## ön eki YOKTUR ama adı vardır ve Atlas'ın seçim şeridi adı gösterir. Onaylı 16. turun
+## "Uzman / Specialist" etiketi §3'ün karşısındaydı; §3 kazanır.
+const LEVEL_NAME_KEYS := {0: "HR_LEVEL_JUNIOR", 1: "HR_LEVEL_MID", 2: "HR_LEVEL_SENIOR"}
+
+
+static func level_label(level: int) -> String:
+	return TranslationServer.translate(
+		String(LEVEL_NAME_KEYS.get(clampi(level, LEVEL_JUNIOR, LEVEL_SENIOR), "")))
+
+
+## Bir seviye id'sinin geçerliliği — start_search ve üretici aynı kapıdan geçer.
+static func is_level(level: int) -> bool:
+	return LEVELS.has(level)
+
 
 static func level_prefix(level: int) -> String:
 	var key: String = String(LEVEL_PREFIX_KEYS.get(clampi(level, LEVEL_JUNIOR, LEVEL_SENIOR), ""))
@@ -842,8 +880,12 @@ const ARCHETYPES := ["uzman", "dengeli", "pazarlik"]
 ## Pazarlık ana alanda L+2, Dengeli L. Üçlü arasındaki ana alan farkı böylece TAM OLARAK
 ## 1 yıldız (2 ham puan): §10.2'nin tavanı, aşılmadan kullanılıyor. Adaylar
 ## karşılaştırılabilir kalmalı — biri diğerinden iki yıldız iyiyse seçim ortadan kalkar.
+## ANA >= İKİNCİL >= DİĞER, üç arketipte de. Junior Uzman'ın ikincili bir tur boyunca
+## DİĞER ALANLARIN ALTINDAYDI ([5, 0, 1]) — yani rolünün TAŞIDIĞI alanda taşımadığı
+## alanlardan zayıftı. §4.3 ikincili rolün kendi alanı sayıyor (×0,8); orada alakasız bir
+## alanın altına düşmek şeklin anlamını çeliyordu. Sayılar aynı kaldı, sıra düzeldi.
 const ARCHETYPE_SHAPE := {
-	0: {"uzman": [5, 0, 1], "dengeli": [3, 2, 2], "pazarlik": [5, 0, 0]},
+	0: {"uzman": [5, 1, 0], "dengeli": [3, 2, 2], "pazarlik": [5, 0, 0]},
 	1: {"uzman": [7, 2, 2], "dengeli": [5, 4, 3], "pazarlik": [7, 1, 1]},
 	2: {"uzman": [9, 4, 3], "dengeli": [7, 6, 5], "pazarlik": [9, 3, 2]},
 }
@@ -860,6 +902,39 @@ static func archetype_shape(level: int, archetype: String) -> Array:
 ## ve üretici Faz 2c'de çevrilene kadar okunuyor.
 const SALARY_SPREAD_MIN_R11 := 0.20
 const SALARY_SPREAD_MAX_R11 := 0.45
+
+## §10.2 FİYAT SIRASI. Dengeli üçlünün EN PAHALISI, Pazarlık en ucuzu, Uzman "orta–yüksek" —
+## tablonun kendi üç kelimesi. Uzman'ın en ucuz ile en pahalı arasındaki YERİ bir kalibrasyon
+## sayısıdır: 0,6 onu tepeye yakın tutar ("orta–yüksek"), 0,5 ortaya koyardı ve tabloyu
+## yalanlardı. Aradaki iki boşluk da yuvarlama adımından (50) büyük, yani üç dosya ASLA aynı
+## rakama düşmez: en dar hâlde 1500 × 0,20 × 0,6 = 180 ve 1500 × 0,20 × 0,4 = 120.
+const ARCHETYPE_PRICE_UZMAN_SHARE := 0.6
+
+## §10.2 LİDERLİK — arketipin kendi "diğer alanlar" değerinden DEĞİL, SEVİYEDEN okunur.
+## Türetilmiş hâlinde Uzman ile Pazarlık junior'da Liderlik'te berabere kalıyordu ve üçlünün
+## bu ekseni tamamen ölüydü; seviyeden okumak onu üç ayrı değere açar. Dağılım tablonun
+## kendi sıfatlarından: Dengeli en iyi lider ("genellikle güvenli", tepe noktası yok ama
+## hiçbir yeri kırık da değil), Uzman en zayıfı (dar olmak arketipin kendisidir), Pazarlık
+## ortada.
+##
+## HÂKİMİYETİ KIRAN ŞEY BU DEĞİLDİR — ölçüldü. Non-dominance'ı fiyat sırası ve rotasyon
+## bump'ı taşıyor (endgame_smoke._case_hr_candidate_invariants'in falsifikasyon notu). Bu
+## satırın gerekçesi tasarımdır, bir invariant değil.
+const LEVEL_LEAD_BASE := [1, 2, 3]
+const ARCHETYPE_LEAD_OFFSET := {"uzman": -1, "dengeli": 1, "pazarlik": 0}
+
+
+static func archetype_leadership(level: int, archetype: String) -> int:
+	var base: int = int(LEVEL_LEAD_BASE[clampi(level, LEVEL_JUNIOR, LEVEL_SENIOR)])
+	return clampi(base + int(ARCHETYPE_LEAD_OFFSET.get(archetype, 0)), AREA_MIN, AREA_MAX)
+
+
+## §10.2 huy rolleri, tablodan: Pazarlık "genellikle bedelli huy taşır" -> HER ZAMAN taşır,
+## çünkü ayırt edici eksen huydur ve TRIO_COST_TRAIT_MIN'i garantiyle karşılayan tek yol
+## budur. Uzman "nötr ya da HAFİF RİSKLİ" -> seed'e bağlı bir yazı-tura. Dengeli "genellikle
+## güvenli" -> hep bedelsiz: üçlünün karşıtlığını çizen şey buysa, Dengeli'nin de bazen bedel
+## taşıması o karşıtlığı bulandırır.
+const UZMAN_COST_TRAIT_CHANCE := 0.35
 
 ## §10.2 beş yıldızlı aday: NADİR, yalnız Kıdemli bantta, maaş talebi bandın TAVANINDA.
 const FIVE_STAR_CHANCE := 0.08
@@ -1208,19 +1283,37 @@ static func experience_threshold(total_skill_points: int) -> int:
 	return EXPERIENCE_THRESHOLD_BASE + EXPERIENCE_THRESHOLD_PER_POINT * maxi(total_skill_points, 0)
 
 
-## §5.3 KADEMELİ BEDEL: ücret = BASE × GROWTH^floor(mevcut_puan / 2)
-##   → 400 · 680 · 1156 · 1965 · 3341
-## Onaylı 11c ilk üç kademeyi $400 / $700 / $1.200 gösteriyor. Tekrar zammı ve Liderlik
-## çarpanı YOK: §5.3 bedeli YALNIZ hedef alanın mevcut yıldız seviyesine göre kademelendirir.
-## Tavan da tek: eğitim beşinci yıldıza kadar çıkar, AREA_TRAIN_CAP 8 Faz 7'de kalkar.
+## §5.3 KADEMELİ BEDEL: ücret = BASE × GROWTH^(mevcut ham puan). KADEME YARIM YILDIZDIR,
+## tam yıldız DEĞİL — §5.3 kendi örneğini yarım kademelerle veriyor ("0★→0,5★ ucuzdur;
+## 4,5★→5,0★ pahalıdır") ve §5.5 farkın SATIRDA OKUNMASINI istiyor.
+##
+## Bu bir F5 bulgusudur: kademe tam yıldızdayken (floor(puan/2)) eğitim modalinin üç satırı
+## 3,0★ / 3,0★ / 3,5★ iken de AYNI rakamı yazıyordu. Yarım yıldızlık gelişme fiyat ekseninde
+## görünmüyordu, yani §5.5'in "bu fark satırda okunur" cümlesi ekranda yalandı.
+##
+## MERDİVEN: 400 · 528 · 697 · 920 · 1.214 · 1.603 · 2.116 · 2.793 · 3.687 · 4.867
+## Onaylı 11c'nin üç rakamı TAM YILDIZ aralıklarında birebir tutuyor — 0★ $400 · 1★ $697
+## (~700) · 2★ $1.214 (~1.200) — çünkü 1,32² = 1,74 ve 11c'nin adımı da o. Erişilebilir son
+## kademe (4,5★→5,0★) ilkin 12 KATIDIR: §5.3'ün "pahalıdır"ı bir sıfat değil, ölçülen bir
+## sayı. Tekrar zammı ve Liderlik çarpanı YOK: §5.3 bedeli YALNIZ hedef alanın mevcut yıldız
+## seviyesine göre kademelendirir.
 const TRAINING_FEE_BASE := 400
-const TRAINING_FEE_GROWTH := 1.7
+const TRAINING_FEE_GROWTH := 1.32
 
 
 static func training_fee_tiered(current_area_value: int) -> int:
-	var bucket: int = int(floor(float(clampi(current_area_value, AREA_MIN, AREA_MAX)) / float(POINTS_PER_STAR)))
-	return int(round(float(TRAINING_FEE_BASE) * pow(TRAINING_FEE_GROWTH, float(bucket))))
-const TRAINING_DAYS := 14            # rev 2 §8: "Süre iki hafta" (5 idi)
+	var rung: int = clampi(current_area_value, AREA_MIN, AREA_MAX)
+	return int(round(float(TRAINING_FEE_BASE) * pow(TRAINING_FEE_GROWTH, float(rung))))
+const TRAINING_DAYS := 14            # §5.2: "Çalışan İKİ HAFTA eğitimde kalır"
+
+## §5.5: "Süre metni HESAPLANIR, sabit yazılmaz. Modal 'iki hafta' ifadesini GÜN SAYISINDAN
+## türetir. Sabit bir metin anahtarına gömülmez; süre değiştiğinde metnin yalan söylemesi
+## mümkün olmamalıdır (§16)." Tam haftaya bölünüyorsa hafta, bölünmüyorsa gün okunur — çünkü
+## "2,4 hafta" bir insanın söyleyeceği şey değil.
+static func training_duration_text() -> String:
+	if TRAINING_DAYS % 7 == 0:
+		return TranslationServer.translate("HR_DURATION_WEEKS").format({"n": TRAINING_DAYS / 7})
+	return TranslationServer.translate("HR_DURATION_DAYS").format({"n": TRAINING_DAYS})
 const TRAINING_FEE := 500            # WORKING: TABAN ücret; gerçek ücret kademeli, aşağıya bak
 const AREA_TRAIN_CAP := 8            # WORKING: eğitimin alan tavanı (AREA_MAX 10'un altında bilerek)
 ## İKİ KANAL, İKİ TAVAN. Parayla eğitim 8'de, yani DÖRT YILDIZDA durur; BEŞ yıldıza yalnız
