@@ -33,7 +33,7 @@ extends RefCounted
 # NOT: static var reset'i süreç relaunch'una dayanır (TEKRAR DENE = OS restart); in-place reset seam'i ana menü / SaveManager task'ının işi.
 const STARTING_BURN_BREAKDOWN := {
 	"salaries": 0,     # Overwritten daily by pull from CharacterRegistry
-	"overtime": 0,     # Overwritten daily by pull from HROvertimeSystem; 0 when no block runs
+	"overtime": 0,     # Overwritten daily by pull from WorkHoursSystem; 0 when nobody is over 8h
 	"founder": 50,     # WORKING: kurucunun kendi yaşam gideri — day-1 baseline'ın tamamı
 	"marketing": 0,    # TODO hook: player marketing spend mechanic (set_burn_category ile yazar)
 	"office": 0,       # TODO hook: ofis/kira mekaniği curve session'ın işi; 0 iken görünmez
@@ -140,7 +140,11 @@ static func daily_tick() -> void:
 	#     slots ago. Pulling (rather than letting HR push via set_burn_category) is what
 	#     keeps daily_burn from ever publishing fresh overtime against stale salaries,
 	#     and avoids two extra burn_changed/runway signal passes every single day.
-	burn_breakdown["overtime"] = HROvertimeSystem.pay_accrued_today()
+	# §8.2 EK MESAİ ARTIK ÇALIŞMA ARALIĞININ SONUCUDUR, ayrı bir blok mekaniği değil:
+	# "Ek mesai KİŞİ BAŞINA hesaplanır, şirket ayarına göre değil. Ölçüt kişinin §8.1'e göre
+	# devraldığı saattir." Blok sisteminin son EKONOMİK tüketicisi buydu; Faz 7'de sistemin
+	# kendisi siliniyor. Aynı tek yönlü PULL, aynı slot — değişen yalnız kaynağın adı.
+	burn_breakdown["overtime"] = WorkHoursSystem.overtime_pay_accrued_today()
 
 	# 1. Recompute total burn from breakdown (may have shifted via salary pull / marketing)
 	var total_burn: int = compute_total_burn()

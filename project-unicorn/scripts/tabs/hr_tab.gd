@@ -27,6 +27,7 @@ extends Control
 
 const ATLAS_MODAL := "res://scenes/modals/HRAtlasModal.tscn"
 const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
+const WORK_HOURS_MODAL := "res://scenes/modals/WorkHoursModal.tscn"
 
 ## İki görünüm, tek sayfa (9b + 10b). Router YOK demiştik; artık VAR ama en hafif
 ## biçimiyle: aynı kadronun iki çizimi, `visible` ile değil TAM YENİDEN KURULARAK
@@ -397,11 +398,30 @@ func _hours_chip_text() -> String:
 	return window
 
 
+## §8.5 · ÇALIŞMA SAATLERİ MODALİ (onaylı 19a–19d). PanelLayer, ModalLayer DEĞİL —
+## Atlas'ın kalıbı, ve gerekçesi aynı: ModalLayer boşluk ve 1-4 hız tuşlarını yutuyor, yani
+## saat bir kadro kararının üstünde koşuyor ve oyuncunun onu durduracak yolu kalmıyor.
 func _open_hours_modal() -> void:
-	# Faz 6: çalışma saatleri modali (onaylı 19a–19d). Kontrol bugünden doğru metni taşıyor
-	# ve modal onun üstüne oturuyor.
-	if OS.is_debug_build():
-		print("[HRTab] çalışma saatleri modali — Faz 6")
+	var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
+	if layer == null:
+		push_error("[HRTab] GameShell/PanelLayer yok — çalışma saatleri modalı monte edilemiyor")
+		return
+	var scene: PackedScene = load(WORK_HOURS_MODAL) as PackedScene
+	if scene == null:
+		push_error("[HRTab] Çalışma saatleri modal sahnesi yüklenemedi: %s" % WORK_HOURS_MODAL)
+		return
+	var modal: Control = scene.instantiate() as Control
+	layer.add_child(modal)                       # önce add_child (ev konvansiyonu)
+	if modal.has_signal("state_changed"):
+		modal.state_changed.connect(_on_hours_changed)
+	if modal.has_method("populate"):
+		modal.populate()
+
+
+## Modal saatleri anında yazıyor, o yüzden başlıktaki çip ve DURUM sütunundaki saat
+## istisnası her adımda tazelenmeli — ikisi de aynı sayıyı okuyor ve ikisi de bu sayfada.
+func _on_hours_changed() -> void:
+	_rebuild_forced()
 
 
 func _build_training_control() -> Control:

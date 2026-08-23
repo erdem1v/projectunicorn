@@ -581,6 +581,29 @@ HR_ASSIGN_JOB_CAP,En fazla iki iş.,Two jobs is the limit.
 HR_HOURS_WINDOW,{start}–{end},{start}–{end}
 HR_HOURS_CHIP_OVERTIME,{window} · {n} çalışan mesaide,{window} · {n} on overtime
 HR_HOURS_CHIP_OVERRIDES,{window} · {n} istisna,{window} · {n} exceptions
+HR_HOURS_TITLE,Çalışma saatleri,Working hours
+HR_HOURS_CLOSE,Kapat,Close
+HR_HOURS_SCOPE_COMPANY,Şirket,Company
+HR_HOURS_SOURCE_OWN,Kendi,Own
+HR_HOURS_COL_HOURS,SÜRE,HOURS
+HR_HOURS_COL_SOURCE,KAYNAK,SOURCE
+HR_HOURS_COL_STATE,DURUM,STATE
+HR_HOURS_VALUE,{n} saat,{n} h
+HR_HOURS_START,Başlangıç,Start
+HR_HOURS_EQUALISE,Tümünü şirkete eşitle,Match everyone to the company
+HR_HOURS_BACK_TO_COMPANY,şirkete dön,back to company
+HR_HOURS_BACK_TO_GROUP,gruba dön,back to the group
+HR_HOURS_HOVER_5,Kısa gün morali belirgin toparlar,A short day markedly restores morale
+HR_HOURS_HOVER_6,Kısa gün morali toparlar,A short day restores morale
+HR_HOURS_HOVER_7,Kısa gün moral erimesini durdurur,A short day stops morale eroding
+HR_HOURS_HOVER_9,Ek mesai morali normalden hızlı eritir,Overtime erodes morale faster than normal
+HR_HOURS_HOVER_10,Ek mesai morali belirgin hızlı eritir,Overtime erodes morale markedly faster
+HR_HOURS_HOVER_11,Ek mesai morali çok hızlı eritir,Overtime erodes morale very fast
+HR_HOURS_COST_BURN,Günlük burn,Daily burn
+HR_HOURS_FACT_OVER,{n} çalışan mesaide,{n} on overtime
+HR_HOURS_FACT_SHORT,{n} çalışan kısa günde,{n} on a short day
+HR_HOURS_RULE_OVERTIME,Mesai saatleri %50 fazla ücretle ödenir,Overtime hours are paid at 50% above the hourly rate
+HR_HOURS_RULE_SHORT,Kısa gün maaş yükünü düşürmez,A short day does not lower the payroll
 HR_BADGE_FLIGHT_RISK,Ayrılabilir,At risk of leaving
 HR_BADGE_BURNING_OUT,Tükeniyor,Burning out
 HR_BADGE_OVERLOADED,Aşırı yüklü,Overloaded

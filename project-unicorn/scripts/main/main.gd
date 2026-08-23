@@ -1420,7 +1420,7 @@ func _run_finance_shot(kind: String) -> void:
 	get_tree().quit()
 
 
-# Debug: --hr-shot=<ekip|atlas|dosyalar|zam|mesai> (windowed). Seeds a roster across all
+# Debug: --hr-shot=<ekip|atlas|dosyalar|zam|saatler|...> (windowed). Seeds a roster across all
 # three departments (one on leave, one burning out, one fresh hire), mounts GameShell on the
 # HR tab at 1920×1080, drives it to the requested surface, screenshots to user://, and quits.
 # Mirrors the --product-shot harness. Debug builds only.
@@ -1528,6 +1528,15 @@ func _run_hr_shot(kind: String) -> void:
 	match kind:
 		"atlas", "dosyalar":
 			tab._open_atlas()
+		"saatler":   # LOC-DATA debug seed / id
+			# §8.5 doğrulaması. Üç kapsamın üçü de görünsün diye ÖNCE bir triyaj kuruyoruz:
+			# şirket normalde, bir grup mesaide, bir kişi kısa günde. Devralma sütunu ancak
+			# böyle okunur — hepsi aynı sayıdayken hangi satırın karar verdiği belli olmaz.
+			WorkHoursSystem.set_group_hours(HRConstants.GROUP_DEVELOPMENT, 10)
+			var crew: Array[Character] = CharacterRegistry.get_employees()
+			if not crew.is_empty():
+				WorkHoursSystem.set_person_hours(crew[0].id, 6)
+			tab._open_hours_modal()
 		"gorevler":   # LOC-DATA debug seed / id
 			# GÖREVLER matrisi (onaylı tasarım 10b): kurucu bandı + atama kareleri.
 			# Kadroyu ÖNCE bir karıştırıyoruz ki matris üç durumu birden göstersin:

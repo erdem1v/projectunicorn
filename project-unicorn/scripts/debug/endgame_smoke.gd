@@ -4983,11 +4983,24 @@ static func _case_hr_overtime_cost_tiers() -> String:
 		var drop: int = m_before - a.morale
 		if drop != HRConstants.overtime_morale_drop(d):
 			return "day %d morale drop %d, want %d" % [d, drop, HRConstants.overtime_morale_drop(d)]
-	# The pay reaches burn through Finance's PULL, not an HR push. Slot 5 of the last
-	# _sim_day_full() already ran that pull, so calling daily_tick() again here would
-	# re-pull AND re-apply a second day of net cash for one calendar day.
-	if int(FinanceSystem.get_burn_breakdown().get("overtime", -1)) != want_daily:
-		return "overtime pay is not in the burn breakdown (%s)" % str(FinanceSystem.get_burn_breakdown().get("overtime"))
+	# ---- §8.2: BURN'E ULAŞAN ŞEY ARTIK BLOK DEĞİL, DEVRALINAN SAAT ----
+	# Blok sistemi hâlâ kendi rakamını hesaplıyor (yukarıdaki iddialar onu ölçüyor) ama o
+	# rakam artık HİÇBİR YERE gitmiyor: Finans slot 5'te WorkHoursSystem'i çekiyor. Şirket
+	# yedi saatte park edilmişti, yani kimse sekizin üstünde değil ve kalem SIFIR olmalı —
+	# blok koşuyor olmasına rağmen.
+	if int(FinanceSystem.get_burn_breakdown().get("overtime", -1)) != 0:
+		return "a running block still reaches burn (%s) — §8.2 moved the source to the hours model" % str(
+			FinanceSystem.get_burn_breakdown().get("overtime"))
+	# Ve POZİTİF taraf: şirketi on saate çıkar, kimse blok başlatmadan kalem dolmalı.
+	WorkHoursSystem.set_company_hours(10)
+	var want_hours: int = HRConstants.overtime_pay_for_day(9000, 10) \
+		+ HRConstants.overtime_pay_for_day(6000, 10) + HRConstants.overtime_pay_for_day(7000, 10)
+	if want_hours <= 0:
+		return "a ten-hour company accrues nothing — §8.2's per-person pricing is inert"
+	_sim_day_full()
+	if int(FinanceSystem.get_burn_breakdown().get("overtime", -1)) != want_hours:
+		return "the hours model billed %s, want %d (three employees at 10h, founder free)" % [
+			str(FinanceSystem.get_burn_breakdown().get("overtime")), want_hours]
 	return ""
 
 
@@ -5102,8 +5115,12 @@ static func _case_hr_overtime_same_day_stop_bills() -> String:
 	_sim_day_full()
 	if HROvertimeSystem.pay_accrued_today() != daily:
 		return "same-day stop billed %d, want %d" % [HROvertimeSystem.pay_accrued_today(), daily]
-	if int(FinanceSystem.get_burn_breakdown().get("overtime", -1)) != daily:
-		return "the billed day never reached burn (%s)" % str(
+	# §8.2: BLOĞUN RAKAMI BURN'E GİTMEZ. Finans WorkHoursSystem'i çekiyor ve şirket sekiz
+	# saatte — yani blok koşup dursa da kalem sıfırdır. Bu, bloğun kendi muhasebesini
+	# ölçen yukarıdaki iddiaları geçersiz kılmaz; yalnız o rakamın artık nereye GİTMEDİĞİNİ
+	# söyler. Blok sistemi Faz 7'de tamamen siliniyor.
+	if int(FinanceSystem.get_burn_breakdown().get("overtime", -1)) != 0:
+		return "a same-day block still reached burn (%s)" % str(
 			FinanceSystem.get_burn_breakdown().get("overtime"))
 	# …and it is billed ONCE: the day after, nothing lingers.
 	_sim_day_full()
