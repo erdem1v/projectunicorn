@@ -105,8 +105,9 @@ static func cash_after_build(total_cost: int, duration_days: int) -> int:
 		+ duration_days * (GameState.get_daily_revenue() - GameState.daily_burn)
 
 
-## Ürün Detayı Frank şeridi — tam 3 şablon (kuru Register A, tören yok).
-static func frank_line(weakest_axis_id: String, next_version: int, rival_above: String, bugs_heavy: bool) -> String:
+## Ürün Detayı ipucu şeridi — tam 3 şablon (kuru Register A, tören yok).
+## Frank v6, surface 21: the attribution came off; the sentences did not.
+static func product_tip(weakest_axis_id: String, next_version: int, rival_above: String, bugs_heavy: bool) -> String:
 	if bugs_heavy:
 		return TranslationServer.translate("PROD_TIP_BUGS")
 	if rival_above != "":

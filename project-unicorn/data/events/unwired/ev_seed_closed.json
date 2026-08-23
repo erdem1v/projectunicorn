@@ -1,0 +1,28 @@
+{
+  "id": "ev_seed_closed",
+  "tags": [
+    "build_safe"
+  ],
+  "category": "reactive",
+  "title": "Para hesapta",
+  "title_en": "The money's in",
+  "subtitle": "",
+  "subtitle_en": "",
+  "illustration_path": "",
+  "character_id": "char_mentor_frank",
+  "body_text": "Bu turu başarıyla atlattık. Para hesapta.\n\nFrank'ten mesaj.\n\n\"Tamam, bunu cebe koyduk. Bu para dursun diye gelmedi, büyüyeceğiz. Series A masasına oturduğumuzda elimiz daha güçlü olmalı.\"",
+  "body_text_en": "You got through the round. The money is in the account.\n\nA message from Frank.\n\n\"Good, money in the bank. It didn't come in to sit there, we grow with it. By the time we sit down for Series A we need to be in a stronger position.\"",
+  "trigger_conditions": [],
+  "cooldown_days": 0,
+  "one_shot": true,
+  "priority": 10,
+  "choices": [
+    {
+      "label": "Tamam",
+      "label_en": "All right",
+      "modifiers": [],
+      "unlock_condition": {},
+      "unlock_reason_text": ""
+    }
+  ]
+}

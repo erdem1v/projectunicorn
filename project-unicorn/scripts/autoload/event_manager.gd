@@ -387,6 +387,18 @@ func is_condition_met(condition: Dictionary) -> bool:
 			return GameState.get_flag(String(condition.get("key", "")), null) == condition.get("value")
 		"flag_set":
 			return GameState.has_flag(String(condition.get("key", "")))
+		"days_since_flag":
+			# "N days after the day stored in <key>". GENERIC on purpose (director ruling,
+			# Frank v6 pass): the engine stamps several day-flags and the arc keeps asking
+			# the same question of them - the paid-tier card is launch-day plus one, the
+			# hire nudge is cheque-day plus two, the negotiation window is three days, the
+			# answer counter thirty. A per-flag condition type would be four near-copies.
+			# Absent flag is FALSE, never "day 0": a run whose product has not shipped must
+			# not satisfy "one day after it shipped".
+			var since_key: String = String(condition.get("key", ""))
+			if not GameState.has_flag(since_key):
+				return false
+			return GameState.day >= int(GameState.get_flag(since_key, 0)) + int(condition.get("days", 0))
 		"build_state":
 			var b = ProductSystem.get_active_build()
 			if b == null:
@@ -735,7 +747,12 @@ func _apply_modifiers(modifiers: Array) -> void:
 					n = int(round(float(GameState.get_flag("b2c_audience", 0.0)) * float(m.get("pct", 0.0))))  # float base (S3-43)
 				SalesSystem.add_b2c_audience(n)
 			"mentor_advisory":
-				EventBus.mentor_advisory_changed.emit(String(m.get("text", "")))
+				# BILINGUAL BIRTH LAW: the advisory is player-facing prose, so it carries an
+				# `text_en` sibling exactly like body_text_en. Empty `_en` still means
+				# TR-fallback (Localization.pick's contract), which is what the code-built
+				# emitters that pass an already-translated key rely on.
+				EventBus.mentor_advisory_changed.emit(
+					Localization.pick(String(m.get("text", "")), String(m.get("text_en", ""))))
 			# --- Endgame modifiers (ENDGAME_DESIGN.md §2/§4) — precedent: ship_active_build ---
 			"advance_phase":
 				# Frank gate scene confirm. The single played path to a phase change;

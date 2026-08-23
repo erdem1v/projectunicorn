@@ -876,6 +876,18 @@ func _onboard_shot_requested() -> String:
 	return ""
 
 
+## --shot-size=WxH — override a shot harness's window. Used to prove a fixed-size panel
+## still fits at DisplaySettings.MIN_CHROME_VIEWPORT, not just at the authoring resolution.
+func _shot_size_requested(fallback: Vector2i) -> Vector2i:
+	for arg in OS.get_cmdline_args():
+		var s: String = String(arg)
+		if s.begins_with("--shot-size="):
+			var wh: PackedStringArray = s.trim_prefix("--shot-size=").split("x")
+			if wh.size() == 2:
+				return Vector2i(int(wh[0]), int(wh[1]))
+	return fallback
+
+
 func _theme_audit_requested() -> String:
 	for arg in OS.get_cmdline_args():
 		var s: String = String(arg)
@@ -1060,14 +1072,18 @@ func _run_tab_shot(tab_id: String) -> void:
 	get_tree().quit()
 
 
-# Debug: --modal-shot=<confirm|confirm3|settings|month|system|saveload> (windowed).
+# Debug: --modal-shot=<confirm|confirm3|settings|month|system|saveload|mentor> (windowed).
+# `mentor` exists because the opening modal is the ONE surface whose body length is a
+# design constraint: it is the first thing a player ever sees, it carries the longest text
+# in the arc, and it is not allowed a scrollbar. The shot is how "it fits" is verified
+# instead of assumed. Pair it with --shot-size=WxH to check the tightest legal viewport.
 # Modal katmanını kadraja alır.
 # Her biri GERÇEK mount yolundan geçer (EventBus sinyali → main.gd handler'ı), böylece
 # fixture ile canlı davranış ayrışamaz. `confirm` ayrıca ConfirmModal.tscn'in 4 ölü
 # font-rengi override'ına ulaşır (süpürme batch 1'in kanıtı).
 func _run_modal_shot(kind: String) -> void:
 	get_tree().paused = false
-	_shot_window(Vector2i(1920, 1080))
+	_shot_window(_shot_size_requested(Vector2i(1920, 1080)))
 	_seed_theme_surface()
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
@@ -1114,6 +1130,15 @@ func _run_modal_shot(kind: String) -> void:
 			MonthSummarySystem.debug_force_summary(false)
 		"system":
 			EventBus.system_menu_requested.emit()
+		"mentor":
+			# The real mount path, same as _swap_to_shell_and_modal uses.
+			var modal_layer: CanvasLayer = _shell.get_node_or_null("ModalLayer")
+			if modal_layer == null:
+				push_error("[ThemeShot] ModalLayer missing")
+				get_tree().quit(1)
+				return
+			_modal = MENTOR_MODAL.instantiate()
+			modal_layer.add_child(_modal)
 		"saveload":
 			# Önce gerçek bir kayıt yaz, sonra YÜKLE modunda aç — boş liste yerine
 			# gerçek bir slot satırı (meta biçimi + aksiyon butonları) kadraja girsin.
@@ -1322,12 +1347,16 @@ func _audit_color(c: Color) -> String:
 	return "%.3f,%.3f,%.3f,%.2f" % [c.r, c.g, c.b, c.a]
 
 
-# Debug: --finance-shot=<ozet|artida|uyari|signal> (windowed). Finance Tab v1 doğrulaması: gerçek
+# Debug: --finance-shot=<ozet|artida|uyari|kepenk|signal> (windowed). Finance Tab v1 doğrulaması: gerçek
 # seam'lerle ~40 gün oynanmış durum kurar (nakit ring buffer + işlem ledger'ı gerçek
 # akıştan dolar), GameShell'i Finans sekmesinde 1920×1080 açar, screenshot alır, çıkar.
 #   ozet   — negatif net: çatallı projeksiyonlar, son işlemlerde imza + retainer karışık
 #   artida — MRR > burn: yeşil ARTIDA durumu, kırmızı erime projeksiyonu YOK
-#   uyari  — runway < 6 ay: krem mentor kartı + ERTELE görünür
+#   uyari  — runway < 6 ay: mentor kartı BAND 1 (eşik canlı değerden) + ERTELE görünür
+#   kepenk — kasa ekside, sayaç işliyor: AYNI kartın BAND 2 satırı (Frank v6, surface 20).
+#            İki bandın da kadraja girebilmesi şart: şerit uzun süre 6 aydan kepenğe kadar
+#            TEK cümleydi, yani 5,9 aydaki kurucu ile iflasa iki gün kalan kurucu aynı şeyi
+#            okuyordu. Ayrı fixture olmadan ikinci bandın doğrulaması "inanıyorum" olurdu.
 func _run_finance_shot(kind: String) -> void:
 	get_tree().paused = false
 	_shot_window(Vector2i(1920, 1080))
@@ -1336,7 +1365,7 @@ func _run_finance_shot(kind: String) -> void:
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
 	_seed_hr_roster()
-	var start_cash: int = 150000 if kind == "uyari" else 300000
+	var start_cash: int = 150000 if kind in ["uyari", "kepenk"] else 300000
 	GameState.set_cash(start_cash)
 	# Fixture nakdi gün-1 örneğinin üstüne yazılır — tek-yazar kuralının TEK debug istisnası
 	# (initialize_run origin nakdiyle örnekledi; eğri fixture nakdinden başlamalı).
@@ -1357,6 +1386,10 @@ func _run_finance_shot(kind: String) -> void:
 			SalesSystem.add_b2b_customer(pr2, 800, 72)
 			ProspectRegistry.remove(pr2.id)
 		FinanceSystem.daily_tick()
+	if kind == "kepenk":   # LOC-DATA debug seed / id
+		# Kasayı eksiye al ve sayacı başlat — kepenk bandı bu iki gerçeğe bakıyor.
+		GameState.set_cash(-4000)
+		GameState.set_shutter_days_left(EndingsSystem.SHUTTER_DAYS - 3)
 	# Açık pipeline kalsın: iyimser projeksiyon gerçek prospect'lerden beslenir.
 	PitchSystem.spawn_prospect("small", "find")
 	PitchSystem.spawn_prospect("mid", "find")

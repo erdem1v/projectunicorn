@@ -22,7 +22,9 @@ extends RefCounted
 # a queued Frank gate scene dies with the run) and freezes the clock (§7.3).
 
 # Working values — §10 calibration items, numbers last.
-const SHUTTER_DAYS := 7            # §4.3 Kepenk (7 vs 10 vs 14 open)
+const SHUTTER_DAYS := 30           # §4.3 Kepenk. 7 → 30 (director ruling, Frank v6 pass):
+                                   # a month is real recovery room, a week is a formality.
+                                   # The warning copy names no number, so it did not move.
 const BRAND_COLLAPSE_FLOOR := 15   # §4.4
 const BRAND_COLLAPSE_WINDOW := 30  # §4.4 "no recovery for 30 days"
 const CASCADE_TABLES := 3          # §4.5 closed pitch tables
@@ -31,8 +33,11 @@ const PIVOT_MRR_MIN := 2000        # §4.5 "metrics are alive" floor
 # (that was RUN_END_DAY = 180, retired); the catch for a run that reached no goal ending in
 # two years. 24 months is the smallest cap at which annual contracts (Layer B) are SEEN
 # renewing. NOT deferred for a live term sheet: VC_PITCH_DESIGN ledger 16 rules no
-# auto-sign — the D-1 Frank warning (VCPitchSystem) is the telegraph, and an unsigned
-# sheet is named on the paper. Same day as a profitability close → the win wins (scan order).
+# auto-sign, and an unsigned sheet is named on the paper. THE SOFT CAP HAS NO TELEGRAPH:
+# the D-1 Frank warning was retired in the Frank v6 pass (that card became the last-day
+# reminder for a live OFFER, which is a different moment). A "final stretch" surface is
+# open work — docs/writing/FRANK_UNWIRED.md. Same day as a profitability close → the win
+# wins (scan order).
 const SOFT_CAP_DAY := 730
 # PROFITABLE & SELF-SUSTAINING — a CONDITION evaluated daily (Calibration Round A §9), not a
 # crossing read once at a wall. An "Artıda" month = net > 0 AND the treasury never sampled
@@ -173,8 +178,11 @@ static func _check_vc_cascade() -> bool:
 	if GameState.mrr >= PIVOT_MRR_MIN and GameState.cash > 0:
 		# Metrics alive → Frank offers the hidden corridor. Played choice:
 		# accept_pivot / decline_pivot modifiers resolve it (§4.5).
+		# ENTRY POINT CLOSED (Frank v6): ev_pivot_offer and ev_acquisition_offer were merged
+		# into ONE card, _build_buyout_offer_event, whose trigger does not exist yet. The latch
+		# still burns here so the cascade stays deferred exactly as it did while the offer sat
+		# on the table - the run continues to another terminal instead of stalling.
 		GameState.set_flag("pivot_offer_made", true)
-		EventManager.enqueue_front(_build_pivot_offer_event())
 		return false
 	trigger_ending("vc_rejection_cascade")
 	return true
@@ -250,9 +258,10 @@ static func _check_acquisition_offer() -> void:
 		return  # "struggling but not failing" band
 	if GameState.vc_rejections < 1:
 		return
+	# ENTRY POINT CLOSED (Frank v6) - see _build_buyout_offer_event. The "acquisition" ending
+	# is UNTOUCHED and still fires from accept_acquisition; only this door is shut, so the
+	# highlight is withheld too (there is no offer to announce).
 	GameState.set_flag("acquisition_offer_made", true)
-	GameState.submit_month_highlight(TranslationServer.translate("END_HL_ACQ_OFFER"), 90)  # AYIN OLAYI (Spec 3 §4)
-	EventManager.enqueue_front(_build_acquisition_offer_event())
 
 
 # --- Single terminal seam (§3, §7.1-7.3) ---
@@ -309,15 +318,15 @@ static func _build_shutter_warning_event() -> GameEvent:
 	ev.character_id = "char_mentor_frank"
 	# §4.3 Frank line. Loan clause ("ya da birinden borç iste") lands when the
 	# deferred loan mechanic ships.
-	ev.body_text = TranslationServer.translate("END_EV_SHUTTER_BODY").format({"days": SHUTTER_DAYS})
+	ev.body_text = TranslationServer.translate("END_EV_SHUTTER_BODY")  # v6 copy names no day count
 	ev.cooldown_days = 0
 	ev.one_shot = false  # a NEW shutter start after a recovery warns again
 	ev.priority = 10
 	ev.tags = ["build_safe", "endgame"]
 	ev.trigger_conditions = []
 	var ack: EventChoice = EventChoice.new()
-	ack.label = TranslationServer.translate("VC_EV_ACK")
-	ack.modifiers = []
+	ack.label = TranslationServer.translate("END_EV_GO_FINANCE")
+	ack.modifiers = []   # the route itself waits on navigate_to_tab (FRANK_UNWIRED.md)
 	ack.unlock_condition = {}
 	ack.unlock_reason_text = ""
 	var choices: Array[EventChoice] = []
@@ -326,66 +335,60 @@ static func _build_shutter_warning_event() -> GameEvent:
 	return ev
 
 
-static func _build_pivot_offer_event() -> GameEvent:
+## THE BUYOUT CARD (Frank v6, surfaces 17 + 18 merged) - BUILT, LOCALIZED, UNCALLED.
+##
+## Pivot and acquisition were two cards asking one question; the document merged them into a
+## single moment: the Series A round closed with no deal, the investor who led the SEED round
+## brings a ready buyer, Frank says the last word. Sell (terminal) or carry on with your own
+## money (the profitable-bootstrap chase).
+##
+## IT CANNOT FIRE, and that is deliberate rather than lucky: nothing calls this function.
+## `grep -rn "_build_buyout_offer_event"` returns this definition and nothing else, so the id
+## never reaches EventManager - not the pool (it is code-built, never on disk), not the queue,
+## not _history. The smoke case `buyout_card_is_inert` drives both retired trigger conditions
+## for a month and asserts the id never appears.
+##
+## What it waits on, in full: docs/writing/FRANK_UNWIRED.md. In short - the merged trigger,
+## a valuation feeding {valuation} and {offer}, and {investor} resolving to the seed investor.
+## NEITHER ENDING WAS TOUCHED: "acquisition" still fires from accept_acquisition and the
+## profitable-bootstrap path still runs; only their entry point is shut.
+static func _build_buyout_offer_event() -> GameEvent:
 	var ev: GameEvent = GameEvent.new()
-	ev.id = "ev_pivot_offer"
-	ev.category = "reactive"
-	ev.title = TranslationServer.translate("END_EV_PIVOT_TITLE")
-	ev.subtitle = ""
-	ev.illustration_path = ""
-	ev.character_id = "char_mentor_frank"
-	ev.body_text = TranslationServer.translate("END_EV_PIVOT_BODY").format({"months": PROFIT_STREAK_MONTHS})
-	ev.cooldown_days = 0
-	ev.one_shot = false  # one-shot enforced by the pivot_offer_made flag
-	ev.priority = 10
-	ev.tags = ["build_safe", "endgame"]
-	ev.trigger_conditions = []
-	var accept: EventChoice = EventChoice.new()
-	accept.label = TranslationServer.translate("END_EV_PIVOT_ACCEPT")
-	accept.modifiers = [{"type": "accept_pivot"}]
-	accept.unlock_condition = {}
-	accept.unlock_reason_text = ""
-	var decline: EventChoice = EventChoice.new()
-	decline.label = TranslationServer.translate("END_EV_PIVOT_DECLINE")
-	decline.modifiers = [{"type": "decline_pivot"}]
-	decline.unlock_condition = {}
-	decline.unlock_reason_text = ""
-	var choices: Array[EventChoice] = []
-	choices.append(accept)
-	choices.append(decline)
-	ev.choices = choices
-	return ev
-
-
-static func _build_acquisition_offer_event() -> GameEvent:
-	var ev: GameEvent = GameEvent.new()
-	ev.id = "ev_acquisition_offer"
+	ev.id = "ev_buyout_offer"
 	ev.category = "reactive"
 	ev.title = TranslationServer.translate("END_EV_ACQ_TITLE")
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	# §4.2: "you sold, but you didn't quite win" register. The drama is in the
-	# option to refuse — reject costs nothing extra, the run just continues.
+	# {valuation} and {offer} are DECLARED with no feeder - there is no company valuation in
+	# normal play (it exists frozen in the investor table and live only inside the term-sheet
+	# sitting). {investor} must resolve to the seed investor, and there is no seed round yet.
 	ev.body_text = TranslationServer.translate("END_EV_ACQ_BODY")
 	ev.cooldown_days = 0
-	ev.one_shot = false  # one-shot enforced by the acquisition_offer_made flag
+	ev.one_shot = false
 	ev.priority = 10
 	ev.tags = ["build_safe", "endgame"]
 	ev.trigger_conditions = []
-	var accept: EventChoice = EventChoice.new()
-	accept.label = TranslationServer.translate("END_EV_ACQ_ACCEPT")
-	accept.modifiers = [{"type": "accept_acquisition"}]
-	accept.unlock_condition = {}
-	accept.unlock_reason_text = ""
-	var decline: EventChoice = EventChoice.new()
-	decline.label = TranslationServer.translate("END_EV_ACQ_DECLINE")
-	decline.modifiers = [{"type": "set_flag", "key": "acquisition_offer_rejected", "value": true}]
-	decline.unlock_condition = {}
-	decline.unlock_reason_text = ""
+	var sell: EventChoice = EventChoice.new()
+	sell.label = TranslationServer.translate("END_EV_ACQ_ACCEPT")
+	sell.modifiers = [{"type": "accept_acquisition"}]   # TERMINAL - the label must say so
+	sell.unlock_condition = {}
+	sell.unlock_reason_text = ""
+	var carry_on: EventChoice = EventChoice.new()
+	carry_on.label = TranslationServer.translate("END_EV_ACQ_DECLINE")
+	# TWO modifiers, and the second is load-bearing: the document rules that refusing to sell
+	# is remembered and thrown back at the founder in a later VC meeting ("Motorda zaten var,
+	# korunmalı"). That memory is the acquisition_offer_rejected flag, read by the refused-acq
+	# interrogation in vc_pitch_system. Dropping it would quietly delete a beat.
+	carry_on.modifiers = [
+		{"type": "accept_pivot"},
+		{"type": "set_flag", "key": "acquisition_offer_rejected", "value": true},
+	]
+	carry_on.unlock_condition = {}
+	carry_on.unlock_reason_text = ""
 	var choices: Array[EventChoice] = []
-	choices.append(accept)
-	choices.append(decline)
+	choices.append(sell)
+	choices.append(carry_on)
 	ev.choices = choices
 	return ev
 

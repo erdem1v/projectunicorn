@@ -109,7 +109,9 @@ const FLAG_TYPES := {
 	"pivot_offer_made": TYPE_BOOL,
 	"acquisition_offer_made": TYPE_BOOL,
 	"acquisition_offer_rejected": TYPE_BOOL,
-	"vc_soft_cap_warned": TYPE_BOOL,   # was vc_d179_warned (Day-180 wall) — the warning now precedes the soft cap
+	"vc_last_answer_warned": TYPE_BOOL,  # was vc_soft_cap_warned, was vc_d179_warned. The card is no
+                                        # longer a calendar warning at all: it fires on the last day to
+                                        # answer the last live offer (Frank v6, surface 15).
 	# --- angel round (Frank's seed) + the locked hard path ---
 	# The one-shot latch lives HERE and not on the event object: AngelRoundSystem injects
 	# through enqueue_front, which bypasses _is_eligible entirely, so GameEvent.one_shot is
@@ -152,7 +154,7 @@ var ending_id: String = ""             # one of EndingsSystem.ENDINGS keys once 
 var phase_gate_ready: bool = false     # ratchet latch (§2.3) — cleared only by advance_phase()
 var pending_next_phase: int = 0        # 0 = no open gate
 var series_a_closed: bool = false      # future VC pitch system writes; debug-settable now (§7.8)
-var shutter_days_left: int = -1        # -1 inactive; 7..0 = Kepenk counter (§4.3)
+var shutter_days_left: int = -1        # -1 inactive; SHUTTER_DAYS..0 = Kepenk counter (§4.3)
 var vc_rejections: int = 0             # closed pitch tables; future VC pitch increments (§4.5)
 var pivot_used: bool = false           # true → VC path permanently closed (Erdem 2026-07-13)
 var active_scandal: bool = false           # RESERVED — no scandal system yet; debug-settable

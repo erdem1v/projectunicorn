@@ -763,6 +763,12 @@ static func _seed_world(preset: String) -> void:
 
 static func _seed_b2c_world(neglect: bool) -> void:
 	GameState.set_flag("mvp_shipped", true)
+	# LAUNCH DAY, not just "shipped". These presets set the flag directly instead of going
+	# through ship_active_build, which is the only writer of mvp_launch_day - so without
+	# this line the fixture claims a live product with no launch date, and every
+	# days_since_flag trigger reading it stays false forever (the paid-tier card, Frank v6
+	# surface 7). A seeded world is "already live", so day 1 is the honest stamp.
+	GameState.set_flag("mvp_launch_day", GameState.day)
 	GameState.set_flag("mvp_market_type", "b2c")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
 	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
@@ -832,6 +838,12 @@ static func _seed_stability_fixture(preset: String, raw_stability: float, bugs: 
 
 static func _seed_b2b_world(rep_count: int) -> void:
 	GameState.set_flag("mvp_shipped", true)
+	# LAUNCH DAY, not just "shipped". These presets set the flag directly instead of going
+	# through ship_active_build, which is the only writer of mvp_launch_day - so without
+	# this line the fixture claims a live product with no launch date, and every
+	# days_since_flag trigger reading it stays false forever (the paid-tier card, Frank v6
+	# surface 7). A seeded world is "already live", so day 1 is the honest stamp.
+	GameState.set_flag("mvp_launch_day", GameState.day)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
 	GameState.set_flag("mvp_components", ["saas_ops_workflow", "saas_ops_reporting"])

@@ -56,7 +56,7 @@ var _sprint_status: Label = null
 var _league_label: Label = null
 var _league_strip: PanelContainer = null
 var _league_icon: Control = null
-var _frank_line: Label = null
+var _tip_line: Label = null
 
 
 func setup(_args: Dictionary) -> void:
@@ -145,7 +145,7 @@ func _build() -> void:
 	strip_row.add_child(_league_label)
 	_league_strip.add_child(strip_row)
 	root.add_child(_league_strip)
-	root.add_child(_build_frank_strip())
+	root.add_child(_build_tip_strip())
 
 
 func _build_header() -> HBoxContainer:
@@ -322,28 +322,19 @@ func _build_right_column(right: VBoxContainer) -> void:
 		right.add_child(p_card)
 
 
-func _build_frank_strip() -> PanelContainer:
-	var fr := HBoxContainer.new()
-	fr.add_theme_constant_override("separation", 10)
-	var avatar := Panel.new()
-	avatar.theme_type_variation = &"Avatar"
-	avatar.custom_minimum_size = Vector2(28, 28)
-	avatar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var fk := UiFactory.make_label("FK", &"AvatarInitial")
-	fk.set_anchors_preset(Control.PRESET_FULL_RECT)
-	fk.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	fk.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	avatar.add_child(fk)
-	fr.add_child(avatar)
+func _build_tip_strip() -> PanelContainer:
+	# FRANK IS OFF THIS SURFACE (Frank v6, surface 21) - the one place he is removed rather
+	# than rewritten. The three sentences stay; the "FK" avatar and the "FRANK" label are gone.
+	# The measure the document uses is whether he has a stake in the moment: this strip is
+	# derived from bug risk and the weakest axis, repaints on every visit to the page, and
+	# nothing about it is his. It is a system tip and now reads as one.
 	var fv := VBoxContainer.new()
 	fv.add_theme_constant_override("separation", 2)
 	fv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	fv.add_child(UiFactory.make_label("FRANK", &"SectionLabel"))
-	_frank_line = UiFactory.make_label("", &"QuoteSerif")
-	_frank_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	fv.add_child(_frank_line)
-	fr.add_child(fv)
-	return UiFactory.make_card(fr, true)
+	_tip_line = UiFactory.make_label("", &"QuoteSerif")
+	_tip_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	fv.add_child(_tip_line)
+	return UiFactory.make_card(fv, true)
 
 
 func _make_action_card(title: String, status_txt: String, desc: String, attention: bool) -> Dictionary:
@@ -563,7 +554,7 @@ func _repaint_bottom(sub: String, ver: int) -> void:
 	_league_icon.visible = passed
 	_league_icon.add_theme_color_override("font_color", UiTokens.negative())
 	var bugs_heavy: bool = ProductSystem.product_bug_risk() == "yuksek"   # LOC-DATA risk band id
-	_frank_line.text = ProductUiShared.frank_line(_weakest_axis_id(), ver + 1, passer, bugs_heavy)
+	_tip_line.text = ProductUiShared.product_tip(_weakest_axis_id(), ver + 1, passer, bugs_heavy)
 
 
 func _nearest_rival_above(snap: Dictionary) -> Dictionary:

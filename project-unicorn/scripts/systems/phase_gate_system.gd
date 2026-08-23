@@ -40,8 +40,15 @@ const GATES := [
 			{"type": "customer_count_min", "value": 1},    # first real customer (B2C record or B2B account)
 			{"type": "mrr_above", "value": 0},             # MRR > 0
 		],
-		"copy_key": "TRACTION",       # GATE_TRACTION_TITLE / _BODY_0..2 in strings.csv
-		"body_count": 3,
+		"copy_key": "TRACTION",       # GATE_TRACTION_TITLE / _BODY_0 in strings.csv
+		# ONE body, ONE option (Frank v6, surface 9). The card became a NOTIFICATION:
+		# the first payment landed, gear changes. There is nothing to decline, so there is
+		# no decline counter to escalate and no 5-day re-ask - _BODY_1/_2 were deleted with
+		# the option that selected them. The Series A gate below is UNCHANGED and still owns
+		# `gate_declines`, GATE_DECLINE, on_gate_declined and the reminder clock.
+		"body_count": 1,
+		"advance_key": "GATE_TRACTION_ADVANCE",
+		"can_decline": false,
 	},
 	{
 		"from": 2, "to": 3,
@@ -247,18 +254,21 @@ static func _build_gate_event(gate: Dictionary) -> GameEvent:
 	ev.tags = ["build_safe", "phase_gate"]
 	ev.trigger_conditions = []
 	var advance: EventChoice = EventChoice.new()
-	advance.label = TranslationServer.translate("GATE_ADVANCE")
+	# Per-gate label: the Traction card confirms a notification ("Tamam"), the Series A card
+	# accepts a decision ("Hazırız"). One shared key cannot say both.
+	advance.label = TranslationServer.translate(String(gate.get("advance_key", "GATE_ADVANCE")))
 	advance.modifiers = [{"type": "advance_phase"}]  # zero economic delta (§2.1)
 	advance.unlock_condition = {}
 	advance.unlock_reason_text = ""
-	var decline: EventChoice = EventChoice.new()
-	decline.label = TranslationServer.translate("GATE_DECLINE")
-	decline.modifiers = [{"type": "phase_gate_decline"}]
-	decline.unlock_condition = {}
-	decline.unlock_reason_text = ""
 	var choices: Array[EventChoice] = []
 	choices.append(advance)
-	choices.append(decline)
+	if bool(gate.get("can_decline", true)):
+		var decline: EventChoice = EventChoice.new()
+		decline.label = TranslationServer.translate("GATE_DECLINE")
+		decline.modifiers = [{"type": "phase_gate_decline"}]
+		decline.unlock_condition = {}
+		decline.unlock_reason_text = ""
+		choices.append(decline)
 	ev.choices = choices
 	return ev
 

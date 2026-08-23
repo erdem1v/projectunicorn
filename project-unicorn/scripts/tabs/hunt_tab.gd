@@ -19,13 +19,17 @@ const C_SUB := UiTokens.INK_DIM
 
 var _signals: Array = []
 var _frank_line: String = ""   # set in _ready from HUNT_FRANK_LINE (tr() needs the node ready)
+var _advisory_active: bool = false   # a phone note has taken the strip over (see _on_advisory)
 
 
 func _ready() -> void:
 	# The default advisory line is a KEY, resolved here rather than at declaration: tr() is a
 	# node method and the initializer runs before the node exists. A live advisory from
 	# mentor_advisory_changed still overwrites it (see _on_advisory).
-	_frank_line = tr("HUNT_FRANK_LINE")
+	# {n} = tables already closed. The shipped line was a static "dört masa; üçü kapanırsa yol
+	# biter" - four is the roster, three is the rule, and read as one sentence it was neither
+	# true nor moving while vc_rejections went 0 → 1 → 2 → 3 underneath it.
+	_frank_line = tr("HUNT_FRANK_LINE").format({"n": GameState.vc_rejections})
 	_signals = [
 		EventBus.sheet_granted, EventBus.sheet_expired, EventBus.callback_ready,
 		EventBus.meeting_day, EventBus.day_advanced, EventBus.mrr_changed,
@@ -49,11 +53,16 @@ func _on_changed(_a = null, _b = null) -> void:
 	_refresh()
 
 func _on_advisory(text: String) -> void:
+	_advisory_active = true
 	_frank_line = text
 	_refresh()
 
 
 func _refresh() -> void:
+	# An advisory from the phone still overwrites this (see _on_advisory); when it has not,
+	# re-read the strip so the closed count follows the hunt instead of freezing at _ready.
+	if not _advisory_active:
+		_frank_line = tr("HUNT_FRANK_LINE").format({"n": GameState.vc_rejections})
 	_frank.text = _frank_line
 	_refresh_roster()
 	_refresh_offers()

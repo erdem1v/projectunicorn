@@ -60,6 +60,7 @@ var _cap_rows: Label
 var _cap_raised: Label
 var _cap_equity_note: Label         # "%d çalışanın hissesi var" (RightPanel'den taşınan TR satırı)
 var _mentor_card: PanelContainer
+var _mentor_quote: Label            # rewritten per band (Frank v6, surface 20)
 var _appetite_chip_host: HBoxContainer   # "Yatırımcı iştahı" durum çipi (yeniden kurulur; palet duruma bağlı)
 var _appetite_line: Label                # çipin altındaki tek satır
 
@@ -408,10 +409,13 @@ func _build_mentor_card() -> PanelContainer:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	vb.add_child(UiFactory.make_section_header(tr("FIN_MENTOR_WARNING")))
-	var quote := UiFactory.make_label(
-		tr("FIN_MENTOR_QUOTE_WRAPPED").format({"quote": tr("FIN_MENTOR_QUOTE")}), &"QuoteSerif")
-	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vb.add_child(quote)
+	# TWO BANDS (Frank v6, surface 20). The strip used to be one sentence spanning runway 6
+	# months down to bankruptcy, so a founder at 5.9 months and a founder two days from the
+	# shutter read the same words. The label is a FIELD now because the band is decided at
+	# refresh time, not at build time.
+	_mentor_quote = UiFactory.make_label("", &"QuoteSerif")
+	_mentor_quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb.add_child(_mentor_quote)
 	var row := HBoxContainer.new()
 	vb.add_child(row)
 	var spacer := Control.new()
@@ -656,7 +660,19 @@ func _refresh_captable() -> void:
 func _refresh_mentor() -> void:
 	var months: float = GameState.get_runway_months()
 	var snoozed: bool = GameState.day < int(GameState.get_flag(SNOOZE_FLAG, 0))
-	_mentor_card.visible = months != INF and months < RUNWAY_WARN_MONTHS and not snoozed
+	# The shutter band is its own visibility case: once the counter runs there is no runway
+	# left to be "under" the threshold, so the old months < RUNWAY_WARN_MONTHS test alone
+	# would hide the warning exactly when it matters most.
+	var shuttered: bool = GameState.shutter_days_left >= 0
+	_mentor_card.visible = not snoozed and (shuttered or (months != INF and months < RUNWAY_WARN_MONTHS))
+	if not _mentor_card.visible:
+		return
+	# The threshold is NEVER written out. It used to read "Altı aydan az" in words while the
+	# gate read RUNWAY_WARN_MONTHS, so moving the constant made Frank lie silently.
+	var body: String = tr("FIN_MENTOR_QUOTE_SHUTTER")
+	if not shuttered:
+		body = tr("FIN_MENTOR_QUOTE").format({"months": int(RUNWAY_WARN_MONTHS)})
+	_mentor_quote.text = tr("FIN_MENTOR_QUOTE_WRAPPED").format({"quote": body})
 
 
 func _on_snooze_pressed() -> void:

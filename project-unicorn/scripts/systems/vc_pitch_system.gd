@@ -21,7 +21,7 @@ extends RefCounted
 
 const MEETING_PROMPT_ID := "ev_vc_meeting_prompt"
 const SHEET_WARN_ID := "ev_sheet_expiry_warning"
-const SOFT_CAP_WARN_ID := "ev_vc_soft_cap_warning"   # was ev_vc_d179_warning (Day-180 wall)
+const LAST_ANSWER_WARN_ID := "ev_vc_last_answer_day"  # was ev_vc_soft_cap_warning, was ev_vc_d179_warning
 const DEAL_PROMPT_ID := "ev_vc_deal_prompt"          # + "_<vc_id>"; bkz. _build_deal_prompt_event
 
 # --- Meeting-local state (never serialized) ---
@@ -260,7 +260,7 @@ static func _grant_sheet() -> void:
 		GameState.active_sheets.append(_make_sheet(_vc_id, GameState.day))
 		_vc(_vc_id).status = "offered"
 		EventBus.sheet_granted.emit(_vc_id)
-		_offer_deal_prompt(_vc_id)
+		# _offer_deal_prompt is NOT called (Frank v6, surface 24) - see the builder.
 	else:
 		# Ledger 15 — delayed delivery; validity starts when a slot frees.
 		var st: Dictionary = _vc(_vc_id)
@@ -268,6 +268,18 @@ static func _grant_sheet() -> void:
 		st.status = "pending_sheet"
 
 
+## THE OFFER-EMAIL CARD's gateway (Frank v6, surface 24) - UNCALLED.
+##
+## The document replaced this moment wholesale: the investor now leaves the table saying the
+## offer will come by email, the card fires when the email ARRIVES, the player has three days
+## to enter the term-sheet negotiation, and only afterwards does the funding tab show the offer
+## with a 30-day answer counter. None of that flow exists, so the card must not fire against
+## the old "a sheet was granted" edge - that would be an approximate trigger, which ships and
+## lies. Both call sites are commented out above; `grep -rn "_offer_deal_prompt"` returns this
+## definition and those two comments, so no sheet grant can reach it.
+##
+## Finance › Yatırım still routes to the table on its own (hunt_tab.gd), so the player is not
+## stranded. Open work: docs/writing/FRANK_UNWIRED.md.
 static func _offer_deal_prompt(vc_id: String) -> void:
 	# Teklif düştü → Frank arıyor. Eski hâlinde main.gd bunu bir kuyruğa alıyor ve "ekranda
 	# başka bir şey yoksa" diye BEŞ yüzeyi tek tek yokluyordu; olay kuyruğu bu işi zaten
@@ -434,7 +446,7 @@ static func daily_tick() -> void:
 	_tick_prep()
 	_tick_meeting_day()
 	_tick_countdown_chip()
-	_tick_soft_cap_warning()
+	_tick_last_answer_warning()
 
 
 static func _tick_sheets() -> void:
@@ -458,7 +470,7 @@ static func _deliver_pending_sheet() -> void:
 			st.status = "offered"
 			GameState.active_sheets.append(_make_sheet(inv.id, GameState.day))  # validity starts now
 			EventBus.sheet_granted.emit(inv.id)
-			_offer_deal_prompt(inv.id)
+			# _offer_deal_prompt is NOT called (Frank v6, surface 24) - see the builder.
 			return
 
 
@@ -504,13 +516,32 @@ static func _tick_countdown_chip() -> void:
 	EventBus.offer_countdown_changed.emit(min_days if (min_days <= PitchConstants.WARNING_DAYS) else -1)
 
 
-static func _tick_soft_cap_warning() -> void:
-	# Ledger 16: a live sheet on the eve of the soft cap gets ONE Frank line; the cap itself
-	# does not wait for it (no auto-sign).
-	if GameState.day == PitchConstants.SOFT_CAP_WARN_DAY and not GameState.active_sheets.is_empty():
-		if not GameState.get_flag("vc_soft_cap_warned", false):
-			GameState.set_flag("vc_soft_cap_warned", true)
-			EventManager.enqueue_front(_build_soft_cap_warning_event())
+static func _tick_last_answer_warning() -> void:
+	# Frank v6, surface 15. The old trigger was a CALENDAR fact (the eve of the soft cap, and
+	# before that day 179). It was wrong in both directions: a founder who had already seen
+	# every Series A fund never got the warning, and a founder nowhere near the end got it for
+	# a fresh offer. The new trigger is the SITUATION the line describes - today is the last
+	# day to answer, and there is nothing else left to walk to.
+	#
+	# Distinct from surface 14 (the expiry warning), which fires while an offer's clock is
+	# still running and can fire more than once. This one is the last day, with no other table.
+	if GameState.get_flag("vc_last_answer_warned", false):
+		return
+	if GameState.active_sheets.size() != 1:
+		return                                   # "elde başka masa kalmamıştır"
+	var sheet: TermSheet = GameState.active_sheets[0]
+	if sheet == null or sheet.days_left(GameState.day) != 1:
+		return                                   # expires tomorrow ⇒ today is the last day
+	if not GameState.pending_meeting.is_empty():
+		return
+	for inv in InvestorRegistry.get_active():
+		var st: Dictionary = _vc(String(inv.id))
+		if bool(st.get("pending_sheet", false)):
+			return
+		if String(st.get("status", "")) in ["open", "callback"]:
+			return                               # another table is still reachable
+	GameState.set_flag("vc_last_answer_warned", true)
+	EventManager.enqueue_front(_build_last_answer_warning_event())
 
 
 # --- Pivot cleanup hook (called by EndingsSystem.on_pivot_accepted) ---
@@ -810,13 +841,14 @@ static func _build_meeting_prompt_event(vc_id: String) -> GameEvent:
 	var ev := GameEvent.new()
 	ev.id = MEETING_PROMPT_ID
 	ev.category = "reactive"
-	ev.title = _t("VC_EV_MEETING_TITLE").format({"investor": inv.get("display_name", "")})
+	ev.title = _t("VC_EV_MEETING_TITLE")   # v6 title carries no token
 	ev.subtitle = ""
 	ev.illustration_path = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = _t("VC_EV_MEETING_BODY").format({
-		"investor": inv.get("display_name", ""),
-		"line": InvestorRegistry.archetype_line(String(inv.get("id", "")))})
+	# {line} is GONE (Frank v6, surface 13): the card printed Frank's speaker strip and then
+	# quoted the investor inside it, so one card carried two voices. The investor speaks in the
+	# MeetingScene, which is his surface.
+	ev.body_text = _t("VC_EV_MEETING_BODY").format({"investor": inv.get("display_name", "")})
 	ev.cooldown_days = 0
 	ev.one_shot = false
 	ev.priority = 10
@@ -825,12 +857,11 @@ static func _build_meeting_prompt_event(vc_id: String) -> GameEvent:
 	var go := EventChoice.new()
 	go.label = _t("VC_EV_ENTER_MEETING")
 	go.modifiers = [{"type": "start_vc_meeting", "vc_id": vc_id}]
-	var skip := EventChoice.new()
-	skip.label = _t("VC_EV_SKIP_MEETING")
-	skip.modifiers = [{"type": "decline_vc_meeting"}]
+	# "Bugün değil" REMOVED (Frank v6, surface 13): burning a meeting the player booked is not
+	# a choice the game offers. VC_EV_SKIP_MEETING and the decline_vc_meeting modifier are left
+	# unreferenced and reported, not deleted.
 	var choices: Array[EventChoice] = []
 	choices.append(go)
-	choices.append(skip)
 	ev.choices = choices
 	return ev
 
@@ -851,8 +882,8 @@ static func _build_expiry_warning_event(vc_id: String, days: int) -> GameEvent:
 	ev.tags = ["build_safe", "endgame"]
 	ev.trigger_conditions = []
 	var ack := EventChoice.new()
-	ack.label = _t("VC_EV_ACK")
-	ack.modifiers = []
+	ack.label = _t("VC_EV_GO_FUNDING")
+	ack.modifiers = []   # the route itself waits on navigate_to_tab (FRANK_UNWIRED.md)
 	var wchoices: Array[EventChoice] = []
 	wchoices.append(ack)
 	ev.choices = wchoices
@@ -869,41 +900,42 @@ static func _build_deal_prompt_event(vc_id: String) -> GameEvent:
 	# etiketsiz kart zaten doğru okunuyor ve kart bir PİYASA haberi değil, Frank'in araması.
 	# Id VC başına adlandırılıyor (B2B fabrikalarının grameri): iki teklif aynı gün düşerse
 	# sabit id'de ikincisi sessizce dedupe'a takılırdı.
-	var inv: Dictionary = InvestorRegistry.get_investor(vc_id)
-	var sheet: TermSheet = sheet_for(vc_id)
-	var days: int = sheet.days_left(GameState.day) if sheet != null else 0
+	#
+	# Frank v6: the accept option no longer opens the table (the negotiation is now a separate,
+	# unbuilt step), and neither the investor's name nor the validity count reaches the copy any
+	# more - so the two locals this used to read are gone with them.
 	var ev := GameEvent.new()
 	ev.id = "%s_%s" % [DEAL_PROMPT_ID, vc_id]
 	ev.category = "reactive"
-	ev.title = _t("VC_EV_DEAL_TITLE").format({"investor": inv.get("display_name", "")})
+	# NO {investor} TOKEN, in the title or the body (director ruling, and it supersedes the v6
+	# document): Turkish suffixes take vowel harmony and consonant assimilation from the word
+	# before them, so "{investor}'dan" produces the wrong suffix for most of the roster and the
+	# engine cannot inflect. loc_csv_integrity then forces the token out of English too, since
+	# the two columns must carry the same token set.
+	ev.title = _t("VC_EV_DEAL_TITLE")
 	ev.subtitle = ""
 	ev.character_id = "char_mentor_frank"
-	ev.body_text = _t("DEAL_PROMPT_LINE").format(
-		{"investor": inv.get("display_name", ""), "days": days})
+	ev.body_text = _t("DEAL_PROMPT_LINE")
 	ev.cooldown_days = 0
 	ev.one_shot = false
 	ev.priority = 9
 	ev.tags = ["build_safe"]
 	ev.trigger_conditions = []
-	var sit := EventChoice.new()
-	sit.label = _t("DEAL_PROMPT_SIT")
-	sit.description = _t("DEAL_PROMPT_VALIDITY").format({"days": days})
-	sit.modifiers = [{"type": "open_term_table", "vc_id": vc_id}]
-	var later := EventChoice.new()
-	later.label = _t("DEAL_PROMPT_DEFER")
-	# Modifier YOK ve bu bir kaçamak değil: ertelemenin bedeli teklifin saati, o saat
-	# zaten işliyor. Eski FrankPopup'ın "Sonra"sı da tam olarak bunu yapıyordu.
-	later.modifiers = []
+	# ONE option (Frank v6, surface 24). The old "şimdi otur / sonra bak" pair is gone: waiting
+	# is no longer a card choice, it is the answer counter in the funding tab. DEAL_PROMPT_SIT,
+	# DEAL_PROMPT_DEFER and DEAL_PROMPT_VALIDITY are left unreferenced and reported.
+	var go_funding := EventChoice.new()
+	go_funding.label = _t("VC_EV_GO_FUNDING")
+	go_funding.modifiers = []   # the route itself waits on navigate_to_tab (FRANK_UNWIRED.md)
 	var dp_choices: Array[EventChoice] = []
-	dp_choices.append(sit)
-	dp_choices.append(later)
+	dp_choices.append(go_funding)
 	ev.choices = dp_choices
 	return ev
 
 
-static func _build_soft_cap_warning_event() -> GameEvent:
+static func _build_last_answer_warning_event() -> GameEvent:
 	var ev := GameEvent.new()
-	ev.id = SOFT_CAP_WARN_ID
+	ev.id = LAST_ANSWER_WARN_ID
 	ev.category = "reactive"
 	ev.title = _t("VC_EV_LAST_DAY_TITLE")
 	ev.subtitle = ""
@@ -915,8 +947,8 @@ static func _build_soft_cap_warning_event() -> GameEvent:
 	ev.tags = ["build_safe", "endgame"]
 	ev.trigger_conditions = []
 	var ack := EventChoice.new()
-	ack.label = _t("VC_EV_ACK")
-	ack.modifiers = []
+	ack.label = _t("VC_EV_GO_FUNDING")
+	ack.modifiers = []   # the route itself waits on navigate_to_tab (FRANK_UNWIRED.md)
 	var dchoices: Array[EventChoice] = []
 	dchoices.append(ack)
 	ev.choices = dchoices
