@@ -24,7 +24,7 @@ extends RefCounted
 const TAG_BUILD_SAFE := "build_safe"
 
 
-# --- Departure: named, one line, in the person's own voice (design doc §6) ---
+# --- Departure: named, one line, in the person's own voice (§11.3) ---
 
 static func build_resignation(emp: Character) -> GameEvent:
 	# The roll already happened in HRMoraleSystem; this event PRESENTS the outcome. The

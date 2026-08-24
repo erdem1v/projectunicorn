@@ -230,8 +230,8 @@ Total target: ~3-4 minutes from launch to first in-game day.
 
 **2. Skill + trait allocation (~60 sn)**
 
-- **Skill points:** Drag-drop, 4 eksen (Tech / Markets / Charisma / Politics), max 3/eksen. Hover'da eksenin etkisi açıklanır (örn. "Charisma: pitch'lerde, scandal recovery'sinde, brand check'lerinde aktif").
-- **Trait seçimi:** 1 positive + 1 negative zorunlu. Her trait kart formatında, mekanik etkisi tooltip'te.
+- **Skill points:** Drag-drop, **8 eksen** — altı ALAN (Ürün / Tasarım / Yazılım / Test / Satış / Müşteri Başarısı) + Liderlik + Karizma — dağıtımda eksen başına max 3. Hover'da eksenin etkisi açıklanır.
+- **Trait seçimi:** **1 pozitif serbest; 2 pozitif seçilirse tam 1 negatif zorunlu.** Her trait kart formatında, mekanik etkisi tooltip'te.
 
 **3. Subgenre seçimi (~30 sn)**
 
@@ -536,7 +536,9 @@ Her lose state cinematic'in sonunda variant-specific bir ending + retry akışı
 
 ### 4.2 Trait Havuzu
 
-- **Format:** 1 positive + 1 negative trait zorunlu, char creation'da seçilir.
+- **Format:** **1 pozitif serbest.** İki pozitif seçilirse tam **1 negatif** zorunlu olur
+  (`FounderConstants.validate_traits`) — Software Inc.'in denge formülü. Eski "1 pozitif +
+  1 negatif zorunlu" kuralı 2026-08-24'te düzeltildi; motor onu hiç uygulamadı.
 - **Görünürlük:** Tüm trait'ler oyuncuya açık (kendi karakterinde).
 - **Mekanik etki:** Her trait spesifik bir sistem üstünde modifier (skill check, dialogue option, event trigger).
 - **MVP havuzu:** ~12 positive + ~12 negative trait.
@@ -549,19 +551,35 @@ Her lose state cinematic'in sonunda variant-specific bir ending + retry akışı
 
 ### 4.3 Skill Points
 
-- **4 eksen:** Tech / Markets / Charisma / Politics
-- **Allocation:** Drag-drop, max 3/eksen
-- **Origin'e göre toplam puan:**
-  - Self-Made Founder: 6
-  - Heir: 4
-  - Corporate Refugee: 6
+> **Bu bölüm 2026-08-24'te yeniden yazıldı.** Dört eksenli model (Tech / Markets /
+> Charisma / Politics) EMEKLİ: Ekip GDD'si (rev 11 §4) kurucuyu çalışanla AYNI altı ALANA
+> taşıdı, §4.2 Liderlik'i herkese verdi ve §2.4 kurucuyu veri modelinin tam vatandaşı
+> yaptı. Eski metin motorun yaptığı işi anlatmıyordu — `FounderConstants.SKILLS` sekiz
+> anahtar taşıyor ve dördü o listede hiç yok.
 
-**Etki tooltip'leri hover'da:**
+- **8 eksen:** altı ALAN — **Ürün · Tasarım · Yazılım · Test · Satış · Müşteri Başarısı** —
+  artı **Liderlik** ve **Karizma**. Çalışan da aynı altı alanı taşır; kurucudan farkı
+  Karizma'nın onda olmamasıdır (`HRConstants.EMPLOYEE_SKILL_KEYS` 7 anahtar).
+- **Dağıtım:** Drag-drop, toplam `FounderConstants.POINT_POOL` puan, eksen başına en fazla
+  `ONBOARDING_CAP` (3). Doğrulama HAM dağıtım üzerindedir.
+- **Cetvel:** saklanan değer 0–10'dur ve çalışanınkiyle AYNI cetveldir (§4.1: iki puan bir
+  yıldız, tavan beş yıldız). Dağıtım biriminden cetvele çevirim tek noktada yapılır —
+  `FounderConstants.to_ruler`, yazma anında (`GameState._build_founder`). Yani üç puan
+  harcanan bir eksen kurucuya 6/10 olarak yazılır.
+- **Origin'e göre toplam puan:** Self-Made 6 · Heir 4 · Corporate Refugee 6.
+  (Heir ve Corporate Refugee FULL sürüme aittir ve demo/EA'da görünür-kilitlidir.)
 
-- **Tech:** ürün build kalitesi, R&D hızı
-- **Markets:** prospect quality, deal close oranı
-- **Charisma:** pitch, scandal recovery, brand check
-- **Politics:** VC negotiation, network leverage, media management
+**Etki tooltip'leri hover'da** (`FounderConstants.SKILL_DESC_KEYS` — tek ev):
+
+- **Ürün:** özellik kararları ve tasarım turları
+- **Tasarım:** tasarım tavanı ve ürün deneyimi
+- **Yazılım:** geliştirme hızı ve hata oranı
+- **Test:** hata bulma ve canlı ürünün aşınması
+- **Satış:** müşteri adayı kalitesi ve anlaşma kapama
+- **Müşteri Başarısı:** bilet çözümü, memnuniyet ve churn
+- **Liderlik:** ekip morali ve kriz yönetimi
+- **Karizma:** yatırımcı ikna gücü, şartlar ve kriz anları — **EĞİTİLEMEZ** (§5.2), tek
+  kaynağı onboarding dağıtımıdır
 
 ---
 

@@ -5,7 +5,7 @@ extends Control
 # TEK KİŞİ için. Üstte kişi satırı (baş harf + ad + rol + mevcut alan yıldızları), altında
 # ALAN · MEVCUT · HEDEF · ÜCRET · SÜRE tablosu, sonra tek uyarı satırı ve alt bar.
 #
-# SATIRLAR: kişinin ANA + İKİNCİL alanı + LİDERLİK. rev 2 §3 altı alanı düz listede
+# SATIRLAR: kişinin ANA + İKİNCİL alanı + LİDERLİK. §4.4 altı alanı düz listede
 # göstermeyi yasaklıyor ve tasarımın Selin'i tam olarak bu üçünü çiziyor. KURUCUNUN
 # ana/ikincil ayrımı yok, o yüzden onda ALTI ALAN + Liderlik listelenir.
 #

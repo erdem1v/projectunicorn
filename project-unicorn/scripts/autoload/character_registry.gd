@@ -82,13 +82,13 @@ func get_active_employees() -> Array[Character]:
 
 
 # --- DENEYİM / EĞİTİM sızdırmazlıkları (Terminal UI görevi) ---
-# WRITE-THROUGH YASASI: `area_experience`, `trainings_done`, `training_days_left`,
+# WRITE-THROUGH YASASI: `trainings_done`, `training_days_left`,
 # `training_area` ve `assigned_jobs` alanlarını bu dosyanın DIŞINDA kimse yazmaz.
 # Hepsi sinyal atar, çünkü defter satırı bu değerleri çiziyor ve HR sekmesi
 # yapı-anahtarıyla yeniden kuruluyor.
 
 ## Eğitime uygun mu? Edilgen olmayan bir çalışan ya da KURUCU, ve SEÇİLEN yetenek tavanın
-## altındayken. DENEYİM ŞARTI YOK (rev 2 §8): eğitim parayla alınan ayrı bir kanal,
+## altındayken. DENEYİM ŞARTI YOK (§5.2): eğitim parayla alınan ayrı bir kanal,
 ## learn-by-doing'in devamı değil. Tavandaki bir alana eğitim GÖNDERİLEMEZ: ücreti
 ## alıp hiçbir şey vermemek §10'un yasakladığı şeyin aynası olurdu.
 ##
@@ -150,8 +150,8 @@ func training_block_reason(id: String, area_key: String = "") -> String:
 
 
 # ====================== §5.1 DENEYİM — tek bar, büyüyen eşik =================
-# Alan başına sayaçlar (`area_experience`) hâlâ bildirilmiş ve Faz 7'de silinecek; artık
-# YAZILMIYORLAR. Bar hep 0–100 çizilir, çizilen oran experience_raw / experience_threshold.
+# Alan başına sayaçlar (`area_experience`) 2026-08-24'te SİLİNDİ — §5.1 tek bar diyor.
+# Bar hep 0–100 çizilir, çizilen oran experience_raw / experience_threshold.
 
 ## Kişinin toplam gelişmişliği — altı alan + Liderlik ham puanı. Eşiğin girdisi budur.
 func total_skill_points(c: Character) -> int:
@@ -262,7 +262,7 @@ func tick_training(id: String) -> bool:
 	return true
 
 
-# =========================== Alan ataması (rev 2 §4) ========================
+# =========================== Alan ataması (§12) =============================
 # TEK YAZAR. `assigned_jobs` yalnız buradan değişir; WRITE-THROUGH YASASI.
 # (Alanın kendisi değişti, alanın AD I değil: dizinin adı `assigned_jobs` kaldı ki kayıt
 # şemasının alan adı sabit kalsın; içindeki değerler artık HRConstants.AREAS.)
@@ -306,8 +306,6 @@ func unassign_job(id: String, job_id: String) -> void:
 	if c == null or not c.assigned_job_ids.has(job_id):
 		return
 	c.assigned_job_ids.erase(job_id)
-	if c.assigned_job_ids.size() <= 1:
-		c.overload_days = 0
 	_sync_area_mirror(c)
 	EventBus.assignment_changed.emit(id)
 
@@ -319,7 +317,6 @@ func clear_jobs(id: String) -> void:
 	if c == null or c.assigned_job_ids.is_empty():
 		return
 	c.assigned_job_ids.clear()
-	c.overload_days = 0
 	_sync_area_mirror(c)
 	EventBus.assignment_changed.emit(id)
 
@@ -370,13 +367,6 @@ func clear_areas(id: String) -> void:
 	## devir varsayılan değildir", boş kalan alan oyuncuya Görevler ekranında görünür.
 	# ADAPTÖR (Faz 2a) — bkz. assign_area.
 	clear_jobs(id)
-
-
-func set_overload_days(id: String, days: int) -> void:
-	var c: Character = _characters.get(id, null)
-	if c == null:
-		return
-	c.overload_days = maxi(days, 0)
 
 
 func get_customer_reps() -> Array[Character]:
@@ -444,7 +434,7 @@ func count_active_in_groups(group_ids: Array) -> int:
 
 func count_active_developers() -> int:
 	# Kapasite havuzu (ProductSystem.capacity_total): kurucu + çalışan yazılımcı sayısı.
-	# İzindeki yazılımcı kapasiteye SAYILMAZ (izinde kapasite dışıdır — design doc §8).
+	# İzindeki yazılımcı kapasiteye SAYILMAZ (izinde kapasite dışıdır — §8.6/§11.4).
 	var n: int = 0
 	for c in get_active_employees():
 		if c.role == HRConstants.ROLE_DEVELOPER:
@@ -502,7 +492,6 @@ func ensure_mentor() -> void:
 	m.role = HRConstants.ROLE_MENTOR
 	m.category = "mentor"
 	m.monthly_salary = 0
-	m.equity_pct = 0.0
 	m.morale = 50
 	m.portrait_path = MENTOR_PORTRAIT
 	_characters[m.id] = m
@@ -512,7 +501,7 @@ func ensure_mentor() -> void:
 
 func get_total_monthly_salaries() -> int:
 	# Sum payroll across employees only (mentor/NPC excluded).
-	# DELIBERATELY NOT status-filtered: annual leave is PAID leave (design doc §8 /
+	# DELIBERATELY NOT status-filtered: annual leave is PAID leave (§5.6/§11.4 /
 	# HR Core consumer table), so an on-leave employee keeps drawing salary. The cost of
 	# leave is lost capacity, not saved payroll.
 	var total: int = 0
@@ -541,7 +530,7 @@ func add(character: Character) -> void:
 		# GameState.day + 1 immediately after add() returns, because the design says a hire
 		# starts the NEXT day at full performance (no ramp) — do not "fix" that away.
 		character.hire_day = GameState.day
-		# rev 2 §4: an unassigned person stands idle and still draws salary. A HIRE is not
+		# §12.2: an unassigned person stands idle and still draws salary. A HIRE is not
 		# where the player wants to meet that — they just paid a retainer and a commission.
 		# So a fresh hire lands on their OWN KEY AREA (HRConstants.default_area_for_role),
 		# which is also what keeps every downstream formula seeing the roster it saw before
@@ -553,20 +542,14 @@ func add(character: Character) -> void:
 		# Ayna her zaman işlerden türetilir — elle doldurulan bir alan listesi bir sonraki
 		# yazmada zaten üzerine yazılırdı.
 		_sync_area_mirror(character)
-		if character.area_experience.is_empty():
-			for area_key in HRConstants.AREAS:
-				character.area_experience[String(area_key)] = 0
 		# §5.1: eşik gelişmişlikten türer, o yüzden işe alımda bir kez hesaplanır.
 		refresh_experience_threshold(character)
 		if character.salary_floor <= 0:
 			character.salary_floor = character.monthly_salary
-		if character.leave_month <= 0:
-			var hire_month: int = int(GameState.get_date_dict().month)
-			character.leave_month = HRConstants.leave_month_for(hire_month, hire_ordinal)
 		# §11.4 YAZ İZNİ HAFTASI. Bu satır Faz 2c'de EKSİK KALMIŞTI: hafta yalnız kayıt
 		# göçünde atanıyordu, yani RUN İÇİNDE işe alınan hiç kimse -1'de kalıyor ve
 		# HRMoraleSystem.tick_leave_departures onu sonsuza dek atlıyordu. İzin, işe alınan
-		# herkesin hakkı; ay tabanlı eski alan Faz 7'de silinince bu tek stamp kalacak.
+		# herkesin hakkı; ay tabanlı eski alan silindi, geriye bu TEK stamp kaldı.
 		if character.leave_week < 0:
 			character.leave_week = HRConstants.leave_week_for(hire_ordinal)
 		# Run counter seam (Spec 3 §3): counted HERE, not at the add_character
@@ -656,7 +639,7 @@ func remove(id: String) -> void:
 	var c: Character = _characters[id]
 	if c != null and c.category == "employee":
 		GameState.run_departures += 1
-	# rev 2 §9: "Ayrılan kişinin işleri boşalır." The jobs are vacated and NOT handed to
+	# §11.3: "Ayrılan kişinin işleri boşalır." The jobs are vacated and NOT handed to
 	# anyone — "otomatik kurucuya devir varsayılan değildir". Any job lead seat this person
 	# held is cleared too, so the next resolution falls through to the live roster rather
 	# than pointing at a ghost (the same class of bug ProductSystem._lead_coordination
@@ -767,7 +750,6 @@ func _seed_debug_characters() -> void:
 	eng.role_stats = HRConstants.seed_skills(HRConstants.ROLE_DEVELOPER, 4, 3)
 	eng.traits = ["last_one_out"]
 	eng.hire_day = 1
-	eng.leave_month = HRConstants.leave_month_for(1, 0)
 	_characters[eng.id] = eng
 
 	var des := Character.new()
@@ -780,5 +762,4 @@ func _seed_debug_characters() -> void:
 	des.role_stats = HRConstants.seed_skills(HRConstants.ROLE_DESIGNER, 4, 3)
 	des.traits = ["mood_buster"]   # TEK TRAIT (HRConstants.TRAIT_COUNT)
 	des.hire_day = 1
-	des.leave_month = HRConstants.leave_month_for(1, 1)
 	_characters[des.id] = des

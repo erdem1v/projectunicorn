@@ -416,11 +416,9 @@ func _net_worth() -> Control:
 
 	# HİSSE: finance_ozet_view._refresh_captable'ın birebir aritmetiği.
 	var investors: int = GameState.get_investor_equity_pct()
-	var employees: int = 0
-	for emp in CharacterRegistry.get_employees():
-		employees += int(round(emp.equity_pct * 100.0))
-	employees = mini(employees, maxi(0, 100 - investors))
-	var founder_pct: int = maxi(0, 100 - investors - employees)
+	# Çalışan hissesinin motorda kaynağı yok (finance_ozet_view._refresh_captable'daki
+	# aynı not): `Character.equity_pct` silindi, opsiyon havuzu kurulmadı.
+	var founder_pct: int = maxi(0, 100 - investors)
 
 	col.add_child(_kv(tr("PER_EQUITY"), Fmt.percent(founder_pct, 0), true))
 	# DEĞERLEME: normal oyunda yok. run_valuation_m yalnız imzada yazılıyor ve koşu o

@@ -2,7 +2,7 @@ class_name HRPopover
 extends Control
 
 # ============================================================================
-# Bağlı açılır panel (Kare 6'nın zam kutusu, departman başlığının mesai paneli).
+# Bağlı açılır panel (§9.2 · onaylı Kare 6'nın zam kutusu, departman başlığının mesai paneli).
 #
 # Kod tabanında popover / anchored panel / Popup* düğümü YOK — bu dosya o eksik
 # ilkeli kuruyor. İki tuzağı birlikte aşmak zorunda:

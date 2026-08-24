@@ -671,7 +671,7 @@ const _LEGACY_REAL_NEEDS := [
 
 
 ## v3 → v4: the three employee axes and the five founder skills both became the six skill
-## AREAS of GDD v2 ch. 07 rev 2 §2.
+## AREAS of §4 (the migration's target model; rev 2 called the same six §2).
 ##
 ## WHY A MIGRATION IS UNAVOIDABLE HERE, when neither sibling above needed one for characters:
 ## SaveCodec.res_from_dict REPLACES role_stats wholesale (`coerce_like`'s TYPE_DICTIONARY
@@ -793,8 +793,6 @@ func _migrate_assignments_to_areas(state: Dictionary) -> void:
 			if area_id != "" and not out.has(area_id):
 				out.append(area_id)
 		d["assigned_jobs"] = out
-		if out.size() <= 1:
-			d["overload_days"] = 0
 		moved += 1
 	# LİDER KOLTUKLARI YENİDEN KURULMUYOR, SİLİNİYOR. §4.2 lideri YAPIM BAŞINA veriyor
 	# (Ürün'ün seçtiği SORUMLU) ve lidersiz alanı kurucunun Liderlik'ine bağlıyor; alan

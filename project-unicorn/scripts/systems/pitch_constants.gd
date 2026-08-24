@@ -56,7 +56,7 @@ const MASAYI_ZORLA_DIFF := DIFF_ZORLU  # Ilık fork gamble; failure = RET (hard,
 # --- Beat skill routing (SKILL-RENAME 2026-07-16, re-pointed 2026-08-21) ---
 # Erdem: VC persuasion beats read the founder's persuasion number; the traction angle reads
 # Satış. One const per beat so a per-site remap is a one-token change.
-# 2026-08-21: `influence` became `charisma` when GDD v2 ch. 07 rev 2 §2 brought Karizma back
+# 2026-08-21: `influence` became `charisma` when the areas model (§4) brought Karizma back
 # under its own name. Same number, same reads — ch. 02 §4 already defined Karizma as
 # "pitch/fundraising probability and terms", which is exactly this routing.
 const BEAT1_SKILL := "charisma"         # Odayı oku

@@ -1,7 +1,7 @@
 class_name HRSearchSystem
 extends RefCounted
 
-# Atlas Seçme & Yerleştirme — the hiring search (HR design doc §2/§3).
+# Atlas Seçme & Yerleştirme — the hiring search (§10).
 #
 # Dispatch slot: ticked DAILY from HRSystem.daily_tick (slot 3), third of that file's seven HR
 # steps. It runs after the two leave steps (a returning employee must already read `active`
@@ -222,7 +222,6 @@ static func hire(candidate_index: int) -> Character:
 		HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
 	# §9.1 "maaş hiçbir zaman DÜŞÜRÜLMEZ" — tabanı işe alım maaşıdır.
 	emp.salary_floor = salary
-	emp.equity_pct = 0.0               # hires get no equity: employee equity is not in the HR design
 	emp.morale = HRConstants.MORALE_HIRE_START
 	emp.status = HRConstants.STATUS_ACTIVE
 	emp.role_stats = _axes_copy(file.get("axes", {}))
@@ -236,8 +235,8 @@ static func hire(candidate_index: int) -> Character:
 		return null
 	# add() stamps hire_day = today. The design says a hire starts the NEXT day at full
 	# performance (no ramp), so the stamp is corrected AFTER add() returns — before it, add()
-	# would simply overwrite it. Kıdem reads from here too: severance_months floors at
-	# SEVERANCE_MIN_MONTHS, so a same-day dismissal pays one month rather than a negative tenure.
+	# would simply overwrite it. Kıdem reads from here too: §11.1's tiered severance floors
+	# at a third of a month, so a same-day dismissal still pays rather than owing a negative tenure.
 	emp.hire_day = GameState.day + 1
 	# Komisyon: charged ONCE, here, on the hire only — dismissing the files charges nothing.
 	FinanceSystem.apply_one_time_cost(HRConstants.commission_for(salary), "hire")

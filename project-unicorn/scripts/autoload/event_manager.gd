@@ -613,11 +613,8 @@ func _apply_modifiers(modifiers: Array) -> void:
 				new_c.role = String(cdata.get("role", HRConstants.ROLE_DEVELOPER))
 				new_c.category = String(cdata.get("category", "employee"))
 				new_c.monthly_salary = int(cdata.get("monthly_salary", 0))
-				new_c.equity_pct = float(cdata.get("equity_pct", 0.0))
 				new_c.morale = int(cdata.get("morale", 50))
-				new_c.loyalty = int(cdata.get("loyalty", 50))
 				new_c.relationship = String(cdata.get("relationship", "neutral"))
-				new_c.trust_score = int(cdata.get("trust_score", 0))
 				var traits_in: Array = cdata.get("traits", [])
 				var typed_traits: Array[String] = []
 				for tr in traits_in:
@@ -629,7 +626,6 @@ func _apply_modifiers(modifiers: Array) -> void:
 					HRConstants.default_employee_skills() if new_c.category == "employee" else {})
 				if new_c.category == "employee" and new_c.traits.is_empty():
 					new_c.traits = ["picks_it_up_fast"]   # TEK TRAIT (HRConstants.TRAIT_COUNT)
-				new_c.attention_flag = String(cdata.get("attention_flag", ""))
 				CharacterRegistry.add(new_c)
 			# --- HR modifiers (HR Core). Each routes to the owning system's seam so the
 			#     state change still happens on resolve, through the sanctioned path. ---

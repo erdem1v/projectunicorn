@@ -305,7 +305,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"source_tag_speaker_wins":         fail = _case_source_tag_speaker_wins()
 		"ship_tooltip_counts_critical_penalty": fail = _case_ship_tooltip_counts_critical_penalty()
 		"rail_tabs_match_scene_order":     fail = _case_rail_tabs_match_scene_order()
-		# --- Ekip modülü · motor tarafı 2026-08-21 (GDD v2 ch. 07 rev 2). Dördü de ÖNCEKİ
+		# --- Ekip modülü · motor tarafı 2026-08-21 (alan modeli; rev 11 §4/§12). Dördü de ÖNCEKİ
 		#     motora karşı DÜŞER; her biri falsifikasyonla doğrulandı.
 		"job_assignment_and_idle":         fail = _case_job_assignment_and_idle()
 		"overload_costs_output":           fail = _case_overload_costs_output()
@@ -4263,15 +4263,13 @@ static func _case_onboarding_pages_contract() -> String:
 ## itmek artık hiçbir şeyi park etmiyordu ve fixture'ların bir kısmı vaka ortasında izne
 ## çıkıyordu. -1 = haftası yok, ve tick_leave_departures onu açıkça atlıyor.
 static func _park_leave(employees: Array) -> void:
-	var this_month: int = int(GameState.get_date_dict().month)
 	for e in employees:
 		e.leave_week = -1
-		e.leave_month = ((this_month + 5) % 12) + 1
 		e.leave_taken_year = 0
 
 
 static func _case_hr_axis_key_lock() -> String:
-	# GDD v2 ch. 07 rev 2 §2/§3: employee and founder now SHARE the six areas and differ only
+	# §4/§3: employee and founder SHARE the six areas and differ only
 	# in the tail — employee + Liderlik, founder + Liderlik + Karizma. That makes the key lock
 	# MORE important, not less: before the migration the two key sets were disjoint, so a
 	# mix-up was obvious; now they overlap and only the tail tells them apart.
@@ -4826,7 +4824,6 @@ static func _case_hr_leave_cycle() -> String:
 	while int(GameState.get_date_dict().month) != HRConstants.LEAVE_WINDOW_START_MONTH:
 		_sim_day()
 	e.leave_week = 0
-	e.leave_month = 0
 	e.leave_taken_year = 0
 	var cap0: int = ProductSystem.capacity_total()
 	_sim_day()
@@ -4842,12 +4839,12 @@ static func _case_hr_leave_cycle() -> String:
 	if int(FinanceSystem.get_burn_breakdown().get("salaries", 0)) != int(round(6000.0 / float(GameState.DAYS_PER_MONTH))):
 		return "paid leave is broken: salary is not charged while on leave"
 	var morale_on_leave: int = e.morale
-	for i in HRConstants.LEAVE_DAYS_R11 + 3:
+	for i in HRConstants.LEAVE_DAYS + 3:
 		_sim_day()
 		if e.status == HRConstants.STATUS_ACTIVE:
 			break
 	if e.status != HRConstants.STATUS_ACTIVE:
-		return "never returned from leave after %d days" % (HRConstants.LEAVE_DAYS_R11 + 3)
+		return "never returned from leave after %d days" % (HRConstants.LEAVE_DAYS + 3)
 	if e.morale <= morale_on_leave:
 		return "return from leave did not refresh morale (%d -> %d)" % [morale_on_leave, e.morale]
 	if ProductSystem.capacity_total() != cap0:
@@ -5165,9 +5162,12 @@ static func _case_hr_overload_badge() -> String:
 	if HRSystem.badges_for(dev).has(HRConstants.BADGE_OVERLOAD_JOBS):
 		return "AŞIRI YÜK survived losing the second job — a stored badge would do that"
 
-	# SAKLANAN ROZET ALANI YOKTUR (§15.1).
-	if dev.attention_flag != "":
-		return "attention_flag was written; badges must stay derived"
+	# SAKLANAN ROZET ALANI YOKTUR (§15.1) — ve bu artık YAPISAL. `attention_flag` 2026-08-24'te
+	# Character'dan SİLİNDİ; iddia "alan boş kaldı mı" değil "alan geri geldi mi" diye soruyor,
+	# çünkü bir sonraki yazıcı ancak alanı yeniden ekleyerek gelebilir.
+	# FALSİFİKASYON: character.gd'ye `@export var attention_flag: String = ""` geri ekle → FAIL.
+	if "attention_flag" in dev:
+		return "Character grew a stored badge field again; §15.1 keeps badges derived"
 	return ""
 
 static func _case_hr_constants_contract() -> String:
@@ -5320,7 +5320,8 @@ static func _case_hr_constants_contract() -> String:
 	# Eski çift-ücret modeli (peşin $600 + %15) oyuncuyu ARAMADAN ÖNCE cezalandırıyordu.
 	if HRConstants.commission_for(3000) != 1500:
 		return "commission on 3000 is %d, want §10's 1500 (half a month)" % HRConstants.commission_for(3000)
-	if HRConstants.severance_months(364) != 1 or HRConstants.severance_months(730) != 2:
+	if not is_equal_approx(HRConstants.severance_multiple(364), 1.0 / 3.0) \
+			or not is_equal_approx(HRConstants.severance_multiple(730), 2.0):
 		return "the severance year rule drifted"
 	if HRConstants.raise_morale_gain(HRConstants.RAISE_MAX_PCT) <= HRConstants.raise_morale_gain(HRConstants.RAISE_MIN_PCT):
 		return "the raise morale gain does not scale with the percentage"
@@ -5374,18 +5375,20 @@ static func _case_hr_constants_contract() -> String:
 	# TÜKENİYOR bandı §7'de YOK — sabiti, karşılaştırıcısı ve rozeti birlikte gitti. §7'nin
 	# dört bandı 80 / 50 / 35 eşikleriyle ölçülüyor ve onları morale_band_mult pinliyor.
 
-	# --- Leave distribution: spread across months, and NEVER the hire month ---
-	for hire_month in range(1, 13):
-		var seen: Array = []
-		for ordinal in 12 - HRConstants.LEAVE_MONTH_MIN_GAP:
-			var m: int = HRConstants.leave_month_for(hire_month, ordinal)
-			if m < 1 or m > 12:
-				return "leave month out of range: %d" % m
-			if m == hire_month:
-				return "a hire in month %d was given leave in that same month (ordinal %d)" % [hire_month, ordinal]
-			if seen.has(m):
-				return "leave month %d repeats within the allowed span (stride not coprime)" % m
-			seen.append(m)
+	# --- §11.4 IZIN DAGILIMI: YAZ PENCERESI ICINDE, HAFTA HAFTA ---
+	# Buradaki blok AY dagilimini olcuyordu (leave_month_for + LEAVE_MONTH_*); §11.4 izni
+	# yilin herhangi bir ayindan Haziran-Agustos icinde bir HAFTAYA tasidi ve ay modelinin
+	# tamami 2026-08-24'te silindi. Ayni ozellik yeni birimde olculuyor: on uc ardisik ise
+	# alim on uc FARKLI haftaya duser (adim 5, pencere 13, aralarinda asal).
+	var weeks_seen: Array = []
+	for ordinal in HRConstants.LEAVE_WEEK_COUNT:
+		var w: int = HRConstants.leave_week_for(ordinal)
+		if w < 0 or w >= HRConstants.LEAVE_WEEK_COUNT:
+			return "leave week out of the summer window: %d" % w
+		if weeks_seen.has(w):
+			return "leave week %d repeats inside the window (stride not coprime with %d)" % [
+				w, HRConstants.LEAVE_WEEK_COUNT]
+		weeks_seen.append(w)
 	return ""
 
 
@@ -7463,41 +7466,50 @@ static func _case_job_assignment_and_idle() -> String:
 
 
 static func _case_overload_costs_output() -> String:
-	# rev 2 §5: birden fazla iş = aşırı yüklenme. Rozet İLK GÜNDEN çıkar (oyuncu ne
-	# yaptığını görmeli) ama BEDEL toleranstan sonra başlar — "kısa süre tolere edilir,
-	# uzun sürerse moral düşer".
-	# FALSİFİKASYON: HRSystem.output_mult_for'daki overload_bites dalını sil → üçüncü
-	# iddia FAIL (çıktı iki işte de aynı kalır).
+	# §12.1 AŞIRI YÜK = İKİ İŞ, ve bedeli İLK GÜNDEN ödenir. Rozet de bedel de gecikmez.
+	#
+	# LEDGER (2026-08-24): bu vaka rev 2 §5'in TOLERANS modelini ölçüyordu — beş günlük bir
+	# lütuf penceresi, sonra ×0,75 çıktı cezası. §12.1 ikisini de adıyla kaldırdı: "Ayrı bir
+	# tolerans sayacı yoktur. Moral hedefe doğru sürüklendiği için tolerans zaten
+	# emergent'tir." Yerine ODAK KATSAYISI geçti (tek iş 1,00 · iki iş 0,50, her iki işe
+	# ayrı ayrı) ve vaka onu ölçüyor. İDDİA SAYISI AYNI KALDI, ölçtükleri değişti.
+	#
+	# FALSİFİKASYON: HRSystem.output_mult_for_area'daki `focus_mult` çarpanını sil →
+	# ikinci iddia FAIL (iki işte çıktı tek işteki gibi kalır).
 	var dev: Character = _make_employee("char_ov_dev", "OV Dev", HRConstants.ROLE_DEVELOPER)
 	if HRSystem.is_overloaded(dev):
 		return "a single-job employee reads as overloaded"
 	var solo_out: float = HRSystem.output_mult_for_area(dev, HRConstants.AREA_ENGINEERING)
+	var solo_eff: float = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING)
 	CharacterRegistry.assign_area(dev.id, HRConstants.AREA_QA)
 	if not HRSystem.is_overloaded(dev):
 		return "two jobs did not read as overloaded"
-	# TOLERANS: ilk günlerde bedel YOK.
-	if HRSystem.overload_bites(dev):
-		return "the overload cost bit on day 0, before the tolerance window ran out"
-	if not is_equal_approx(HRSystem.output_mult_for_area(dev, HRConstants.AREA_ENGINEERING), solo_out):
-		return "output dropped during the tolerance window"
-	for _i in HRConstants.OVERLOAD_TOLERANCE_DAYS + 1:
-		_sim_day()
-	if not HRSystem.overload_bites(dev):
-		return "after %d days of two jobs the cost still does not bite" % (HRConstants.OVERLOAD_TOLERANCE_DAYS + 1)
-	var tired_out: float = HRSystem.output_mult_for_area(dev, HRConstants.AREA_ENGINEERING)
-	if tired_out >= solo_out:
-		return "sustained overload did not reduce output (%.3f vs %.3f)" % [tired_out, solo_out]
-	# Bir işe dönünce sayaç SIFIRLANIR — ceza kalıcı bir damga değil.
+	# BEDEL İLK GÜNDEN: bir gün bile simüle etmeden yarıya iner.
+	var split_out: float = HRSystem.output_mult_for_area(dev, HRConstants.AREA_ENGINEERING)
+	if not is_equal_approx(split_out, solo_out * HRConstants.FOCUS_MULT_SPLIT):
+		return "the second job did not halve output on day one: %.3f (want %.3f)" % [
+			split_out, solo_out * HRConstants.FOCUS_MULT_SPLIT]
+	# ...ve §4.5'in kanonik formülünde de aynı katsayı, aynı gün.
+	if not is_equal_approx(HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING),
+			solo_eff * HRConstants.FOCUS_MULT_SPLIT):
+		return "effective_skill does not carry the same focus coefficient"
+	# TOPLAM ASLA BÜYÜMEZ (§12.1): "en iyi durumda tam olarak bir kişilik iş çıkar."
+	# İki işin toplamı tek işteki çıktıyı GEÇEMEZ — eski ×0,75 cezası bu toplamı 0,75'e
+	# düşürüyordu, yani bölünme iki kez faturalanıyordu.
+	var both: float = HRSystem.effective_skill(dev, HRConstants.AREA_ENGINEERING) * 2.0
+	if both > solo_eff + 0.001:
+		return "two jobs produced MORE than one (%.3f vs %.3f)" % [both, solo_eff]
+	# Bir işe dönünce katsayı geri gelir — bedel kalıcı bir damga değil, ANLIK bir durum.
 	CharacterRegistry.unassign_area(dev.id, HRConstants.AREA_QA)
-	if dev.overload_days != 0 or HRSystem.overload_bites(dev):
-		return "dropping back to one job did not clear the overload counter"
-	# İKİNCİL ALAN daha yorucu (§5): bir yazılımcı Test'i ikincil alanından çalışır, yani
+	if not is_equal_approx(HRSystem.output_mult_for_area(dev, HRConstants.AREA_ENGINEERING), solo_out):
+		return "dropping back to one job did not restore full focus"
+	# İKİNCİL ALAN daha yorucu (§4.3): bir yazılımcı Test'i ikincil alanından çalışır, yani
 	# aynı gün ona daha pahalıya gelir.
 	var fresh: Character = _make_employee("char_ov_b", "OV B", HRConstants.ROLE_DEVELOPER)
 	CharacterRegistry.unassign_area(fresh.id, HRConstants.AREA_ENGINEERING)
 	CharacterRegistry.assign_area(fresh.id, HRConstants.AREA_QA)
 	if HRSystem.output_mult_for_area(fresh, HRConstants.AREA_QA) >= solo_out:
-		return "working outside the key area costs nothing — rev 2 §5 says it is more tiring"
+		return "working outside the key area costs nothing — §4.3 says the secondary area is more tiring"
 	return ""
 
 
@@ -8209,11 +8221,11 @@ static func _case_save_migration_v4_to_v5() -> String:
 			{"id": "char_v4_dev", "category": "employee", "role": "developer",
 				"role_stats": {"product": 3, "design": 3, "engineering": 7, "qa": 6,
 					"sales": 2, "customer_success": 2, "leadership": 3},
-				"assigned_jobs": ["build"], "overload_days": 0},
+				"assigned_jobs": ["build"]},
 			{"id": "char_v4_cs", "category": "employee", "role": "customer_rep",
 				"role_stats": {"product": 2, "design": 2, "engineering": 2, "qa": 2,
 					"sales": 5, "customer_success": 7, "leadership": 2},
-				"assigned_jobs": ["support", "accounts"], "overload_days": 9},
+				"assigned_jobs": ["support", "accounts"]},
 			{"id": "char_v4_founder", "category": "founder", "role": "founder",
 				"role_stats": {"product": 2, "design": 1, "engineering": 4, "qa": 1,
 					"sales": 1, "customer_success": 1, "leadership": 2, "charisma": 1},
@@ -8231,8 +8243,6 @@ static func _case_save_migration_v4_to_v5() -> String:
 	# kişi aşırı yükten çıkar, çünkü gerçekten tek alanda çalışıyor.
 	if (cs["assigned_jobs"] as Array) != [HRConstants.AREA_CUSTOMER_SUCCESS]:
 		return "support+accounts did not collapse onto one area: %s" % str(cs["assigned_jobs"])
-	if int(cs["overload_days"]) != 0:
-		return "the collapsed assignment left a stale overload counter (%d)" % int(cs["overload_days"])
 	var f: Dictionary = (state["characters"] as Array)[2]
 	if (f["assigned_jobs"] as Array) != [HRConstants.AREA_ENGINEERING]:
 		return "the founder on 'build' landed on %s" % str(f["assigned_jobs"])
@@ -8484,7 +8494,9 @@ static func _case_loc_product_derived_keys() -> String:
 ## everything, and let the engine be the judge.
 ## Matches a whole `class_name Foo` line, kept as a file-level constant so the regex is
 ## compiled once rather than once per script.
-static var RE_CLASS_NAME: RegEx = RegEx.create_from_string("(?m)^class_name[ 	]+[A-Za-z0-9_]+[ 	]*$")
+
+
+static var RE_CLASS_NAME: RegEx = RegEx.create_from_string("(?m)^class_name[ \t]+[A-Za-z0-9_]+[ \t\r]*$")
 
 
 static func _case_all_scripts_load() -> String:
@@ -8493,27 +8505,47 @@ static func _case_all_scripts_load() -> String:
 	_collect_by_ext("res://scenes", "gd", files)
 	if files.size() < 100:
 		return "only %d scripts found — the walk is broken, not the tree" % files.size()
-	# Two dead ends worth recording, because both look like the obvious answer:
-	#   ResourceLoader.load() alone PASSES a script with a parse error — it hands back a
-	#     Resource anyway (measured against a deliberately broken hr_tab.gd).
-	#   reload() on the loaded script CRASHES the engine here: the suite boots main.gd, so
-	#     autoloads and the live scene tree are running on those very script objects.
-	# So compile a DETACHED copy: a fresh GDScript that owns only the source text. Nothing
-	# in the running game points at it, and reload() is then just a compile.
+	# ÜÇ ÖLÜ UÇ, ÜÇÜ DE "besbelli cevap" gibi göründüğü için kayda geçiyor:
+	#   ResourceLoader.load() VARSAYILAN cache modunda parse hatalı bir script'i GEÇİRİR —
+	#     önbellekteki nesneyi geri verir (bilerek bozulmuş bir hr_tab.gd ile ölçüldü).
+	#   reload() YÜKLÜ script üzerinde motoru DÜŞÜRÜR: süit main.gd'yi boot ediyor, yani
+	#     autoload'lar ve canlı sahne ağacı tam o script nesneleri üzerinde koşuyor.
+	#   ResourceLoader.load(path, "Script", CACHE_MODE_IGNORE) MOTORU DÜŞÜRÜR — ölçüldü
+	#     2026-08-24, `signal 11`, "Internal script error! Opcode: 0". Ve düşme yeri bu
+	#     dosyanın KENDİ satırı: süit koşarken kendi script'ini önbelleği atlayarak
+	#     yeniden ayrıştırmak, o script'in üzerinde koşan çerçeveyi ayağının altından
+	#     çekiyor. Belge "önbelleği atla, gerçek yoldan derle" der ve doğrudur; burada
+	#     yasak olan, DERLENEN ŞEYİN ŞU AN KOŞUYOR OLMASI.
+	# Bu yüzden hâlâ AYRIK bir kopya derleniyor: yalnız kaynak metnini taşıyan taze bir
+	# GDScript. Çalışan oyunda ona işaret eden hiçbir şey yok, ve reload() sadece bir derleme.
 	var broken: Array[String] = []
+	var unreadable: Array[String] = []
 	for path in files:
 		var src: String = FileAccess.get_file_as_string(path)
 		if src == "":
-			broken.append(path + " (unreadable)")
+			unreadable.append(path)
 			continue
 		var probe := GDScript.new()
-		# Blank out `class_name X`: the real file legitimately owns that global name, so a
-		# second declaration of it fails to compile and every class_name file in the project
-		# reports as broken (measured: 73 false positives). Replaced with an empty line
-		# rather than deleted, so reported line numbers still match the file on disk.
+		# `class_name X` satırını BOŞALT: gerçek dosya o global adın meşru sahibidir, yani
+		# ikinci bir bildirim derlenmez ve projedeki her class_name dosyası bozuk raporlanır
+		# (ölçüldü: 73 yanlış pozitif). Silinmiyor, boşaltılıyor — raporlanan satır numaraları
+		# diskteki dosyayla eşleşmeye devam etsin.
+		#
+		# `\r` SINIFIN İÇİNDE VE BU VAKANIN KIRMIZISININ KÖK NEDENİ ODUR. Desen satır sonunu
+		# `[ \t]*$` ile bitiriyordu; `\r` ne boşluk ne tab ve `$` yalnız `\n`'in hemen
+		# öncesinde eşleşiyor, yani CRLF ile biten bir `class_name` satırı HİÇ eşleşmiyordu:
+		# sub() no-op oluyor, bildirim probe'a sızıyor, dosya "derlenmedi" diye geliyordu.
+		# Ağaçta 17 CRLF dosyası vardı ve her araç yazımı bir tane daha ekliyordu — yani
+		# kırmızı, düzeltilmedikçe BÜYÜYEN bir kırmızıydı. (Dosyalar aynı turda LF'e
+		# normalize edildi; desen yine de satır-sonu bağımsız kalıyor, çünkü bir sonraki
+		# aracın ne yazacağını bu vaka bilemez.)
 		probe.source_code = RE_CLASS_NAME.sub(src, "", true)
 		if probe.reload() != OK:
 			broken.append(path)
+	# İKİ HATA MODU AYRI RAPORLANIR. Eskiden ikisi de aynı cümleyle geliyordu ve
+	# "okunamadı" ile "derlenemedi" karışınca ilk bakılacak yer yanlış oluyordu.
+	if not unreadable.is_empty():
+		return "%d script(s) unreadable: %s" % [unreadable.size(), ", ".join(unreadable)]
 	if not broken.is_empty():
 		return "%d script(s) failed to compile: %s" % [broken.size(), ", ".join(broken)]
 	return ""
@@ -9671,9 +9703,15 @@ static func _case_creation_draft_survives_navigation() -> String:
 	var tab: Control = (load("res://scenes/tabs/ProductTab.tscn") as PackedScene).instantiate()
 	root.add_child(tab)
 	var view: Node = tab.get("_view_node")
+	# MESAJ SERBEST BIRAKMADAN ÖNCE KURULUR. Burası `tab.free()`'den SONRA `tab.get()`
+	# çağırıyordu: "Cannot call method 'get' on a previously freed instance" atıyor, gövde
+	# yarıda kesiliyor, fonksiyon "" dönüyor ve vaka SMOKE PASS basıyordu — yani gerçek
+	# iddia BAŞARISIZKEN yeşil görünüyordu. (tools/smoke_run.sh stderr kapısı bunu yakaladı;
+	# vakanın kendisi yakalayamazdı.)
 	if tab.get("_view_id") != "creation" or view == null:
+		var seen: String = str(tab.get("_view_id"))
 		tab.free()
-		return "ProductTab did not re-open the creation flow (view %s)" % str(tab.get("_view_id"))
+		return "ProductTab did not re-open the creation flow (view %s)" % seen
 	var restored: Dictionary = view.draft_state()
 	tab.free()
 	if String(restored.get("type", "")) != "saas_ops" or (restored.get("features", []) as Array).size() != 2 \

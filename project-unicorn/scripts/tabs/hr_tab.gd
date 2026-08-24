@@ -1,7 +1,7 @@
 extends Control
 
 # ============================================================================
-# Ekip sayfası — HR sekmesi (Kare 1 anatomisi).
+# Ekip sayfası — HR sekmesi (§13 · onaylı Kare 1 anatomisi).
 #
 # Kod-kurulu düzen, boş .tscn kökü (Product Rev3 idiomu): departman/alt bölüm
 # bölümleri dinamik, bu yüzden .tscn'de iskelet tutmak yarar sağlamıyor.
@@ -269,7 +269,7 @@ func _rebuild() -> void:
 		return
 	_header_slot.visible = true
 
-	# Atlas şeridi (Kare 3 bekleme / dosyalar hazır) en üstte.
+	# Atlas şeridi (§10.1 · onaylı Kare 3: bekleme / dosyalar hazır) en üstte.
 	var strip: Control = _atlas_strip()
 	if strip != null:
 		_list.add_child(strip)
@@ -301,13 +301,13 @@ func _paint_summary() -> void:
 	_summary.visible = true
 
 
-# --- Atlas şeridi (Kare 3) --------------------------------------------------
+# --- Atlas şeridi (§10.1 · onaylı Kare 3) ------------------------------------
 
 func _atlas_strip() -> Control:
 	var state: String = HRSearchSystem.get_state()
 	if state == HRConstants.SEARCH_IDLE:
 		return null
-	# CardCta: şeffaf zemin + amber çerçeve. Mockup Kare 3'ün amber vurgusu bu; CardAttention
+	# CardCta: şeffaf zemin + amber çerçeve. Onaylı Kare 3'ün (§10.1) amber vurgusu bu; CardAttention
 	# (tozlu pembe) kaçma riskine ayrılmış durumda ve arayış şeridi bir UYARI değil.
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"CardCta"
@@ -451,7 +451,7 @@ func _open_training_picker() -> void:
 
 
 ## 11c'yi açar. Eski ConfirmModal yükü (tek satır metin + Onayla) EMEKLİ: alan seçimini
-## OYUNCU yapıyor artık (rev 2 §8), ve bir onay kutusu beş satırlık bir tabloyu taşıyamaz.
+## OYUNCU yapıyor artık (§5.2), ve bir onay kutusu beş satırlık bir tabloyu taşıyamaz.
 func _confirm_training(emp: Character) -> void:
 	var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
 	if layer == null:

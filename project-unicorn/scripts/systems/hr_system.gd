@@ -13,7 +13,7 @@ extends RefCounted
 #
 # THE AUTONOMOUS MORALE DRIFT IS GONE — deleted, not tuned to zero. It used to pull every
 # employee ±1/day toward 50 from here. The design says morale moves only from played
-# causes: ek mesai, aşırı yük, event'ler, oyuncu aksiyonları, izin dönüşü (design doc §6).
+# causes: ek mesai, aşırı yük, event'ler, oyuncu aksiyonları, izin dönüşü (§7).
 # Dead machinery invites a future reader to switch it back on, so there is nothing left to
 # switch on. That is also why this task ships the RECOVERY channel (HRMoraleSystem's
 # placeholder positive events) and not only the costs — morale never self-heals, so a
@@ -45,7 +45,6 @@ static func daily_tick() -> void:
 	#  AŞIRI YÜKLENME sayacı moralden ÖNCE: tick_thresholds ve trait etkileri o günün
 	#  yükünü okur, sayaç sonra artarsa bir gün geriden gelir (deneyim/eğitim sırasında
 	#  ölçülen aynı tuzak).
-	tick_overload()
 	HRSearchSystem.daily_tick()
 	#  §7 TABAN SÜRÜKLENME eşiklerden ÖNCE: bugünün saat ayarı ve aşırı yükü bu tikte
 	#  hedefe yazılır, sonra ease onu morale taşır, sonra eşikler O MORALİ okur. Ters sıra
@@ -78,7 +77,7 @@ static func daily_tick() -> void:
 # --- DENEYİM / EĞİTİM (Terminal UI görevi, 2026-08-08) ---
 # Onaylı defterin [PROPOSAL] DENEYİM sütunu. Tüm sayılar HRConstants'ta ve WORKING.
 
-## Günlük deneyim birikimi — rev 2 §8 "learn-by-doing: ATANDIĞI ALANIN deneyimi yavaş
+## Günlük deneyim birikimi — §5.1 "learn-by-doing: ATANDIĞI ALANIN deneyimi yavaş
 ## yükselir". YALNIZ gerçekten çalışanlar: izindeki ya da eğitimdeki biri edilgendir ve
 ## get_active_employees zaten ikisini de dışarıda bırakır. Kurucu bu listede hiç yok.
 ##
@@ -251,7 +250,7 @@ static func founder_task_state() -> String:
 	return FOUNDER_STATE_IDLE
 
 # ======================= Görev ataması: okuma seam'leri ======================
-# rev 2 §4. CharacterRegistry TEK YAZARDIR; burası okuma tarafı ve dışarıya açılan yüz.
+# §12. CharacterRegistry TEK YAZARDIR; burası okuma tarafı ve dışarıya açılan yüz.
 # Ürün, Satış ve Operasyon "kim meşgul" sorusunu buradan sorar.
 
 static func assigned_to(area_id: String) -> Array[Character]:
@@ -285,12 +284,6 @@ static func is_overloaded(c: Character) -> bool:
 	## developer İKİ iş tutar ama tek alana (Yazılım) yansır, çünkü iki işi de o alan taşıyor.
 	## Alanı saymak onu aşırı yüklü SAYMAZDI ve §12.1'in bedeli hiç uygulanmazdı.
 	return c != null and c.assigned_job_ids.size() > 1
-
-
-static func overload_bites(c: Character) -> bool:
-	## §5: "Aşırı yük kısa süre tolere edilir, uzun sürerse moral düşer." Rozet ilk günden
-	## çıkar (oyuncu ne yaptığını görmeli), bedel toleranstan SONRA başlar.
-	return is_overloaded(c) and c.overload_days > HRConstants.OVERLOAD_TOLERANCE_DAYS
 
 
 static func idle_count() -> int:
@@ -364,17 +357,6 @@ static func area_lead_leadership_for(c: Character) -> int:
 	return best
 
 
-static func tick_overload() -> void:
-	## §5 sayacı. Yalnız aktif çalışanlar sayar: izindeyken aşırı yük birikmez, ama
-	## SIFIRLANMAZ da — dönen kişi bıraktığı yerden devam eder (kaçma-riski sayacının
-	## izinde donması ile aynı gramer, HRMoraleSystem.tick_flight_risk).
-	for c in CharacterRegistry.get_active_employees():
-		if c.assigned_jobs.size() > 1:
-			CharacterRegistry.set_overload_days(c.id, c.overload_days + 1)
-		elif c.overload_days != 0:
-			CharacterRegistry.set_overload_days(c.id, 0)
-
-
 static func output_mult_for_area(c: Character, area_key: String) -> float:
 	## Çıktı çarpanı, ÇALIŞILAN ALAN bilindiğinde. Bir iş birden fazla alanla beslenebilir
 	## (Build'i Ürün · Tasarım · Yazılım besliyor) ve kişi o işin FAZINA göre farklı bir
@@ -384,10 +366,14 @@ static func output_mult_for_area(c: Character, area_key: String) -> float:
 	## ısırmaz. (Ölçüldü: `speed_tracks_team_change` bunu yakaladı.)
 	if c == null:
 		return 0.0
-	var m: float = HRConstants.area_fatigue_mult(c.role, area_key)
-	if overload_bites(c):
-		m *= HRConstants.OVERLOAD_OUTPUT_MULT
-	return m
+	## §12.1 ODAK KATSAYISI, TOLERANS SAYACININ YERİNE. Buraya eskiden rev 2'nin
+	## `overload_bites` dalı giriyordu: beş günlük bir lütuf penceresinden SONRA ×0,75.
+	## §12.1 hem sayacı hem çarpanı kaldırdı ve yerine tek bir kural koydu — iki işteki
+	## kişi HER İKİ İŞE de 0,50 verir, ilk günden. Bu bir zayıflatma değil bir DÜZELTMEDİR:
+	## `effective_skill` odak katsayısını zaten uyguluyordu, yani bu yol iki işi ×0,75 ile
+	## bir KEZ DAHA faturalandırıyor ve §12.1'in "en iyi durumda tam olarak bir kişilik iş
+	## çıkar" cümlesini bozuyordu.
+	return HRConstants.area_fatigue_mult(c.role, area_key) * HRConstants.focus_mult(job_count(c))
 
 
 # ==================== §4.5 · ETKİN ÇIKTI — KANONİK FORMÜL ====================
@@ -507,7 +493,7 @@ static func tick_training() -> void:
 				}))
 
 
-## Oyuncunun kararı: birini eğitime gönder, HANGİ ALANDA olduğunu söyleyerek (rev 2 §8:
+## Oyuncunun kararı: birini eğitime gönder, HANGİ ALANDA olduğunu söyleyerek (§5.2:
 ## "Oyuncu hangi alanın yükseleceğini seçer"). Ücreti HR gider hattından TAHSİL EDER ve
 ## ancak ödeme geçtiyse eğitimi başlatır — §10: bedeli olan, oynanmış bir karar.
 ## Ücret kademelidir ve aynı alandaki tekrarda artar (HRConstants.training_fee), yani
@@ -572,9 +558,8 @@ static func from_dict(d: Dictionary) -> void:
 # --- Read surface for the HR tab (task 3) and the left-rail badge ---
 
 static func badges_for(emp: Character) -> Array[String]:
-	# Badges are DERIVED, never stored: an employee can carry TÜKENİYOR and AŞIRI YÜKLÜ at
-	# the same time and Character.attention_flag is a single String. Same vocabulary as
-	# that field so the model does not end up with two badge concepts.
+	# Rozetler TÜRETİLİR, saklanmaz (§15.1): bir çalışan aynı anda iki rozet taşıyabilir ve
+	# tek bir String alan ikisini tutamaz. Vokabüler HRConstants.BADGE_*'da tek evde durur.
 	return HRMoraleSystem.badges_for(emp)
 
 

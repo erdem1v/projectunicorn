@@ -1,7 +1,9 @@
 class_name HRActions
 extends RefCounted
 
-# The three employee-card actions (design doc §7): ZAM YAP, TATİLE GÖNDER, İŞTEN ÇIKAR.
+# The employee-card actions: ZAM YAP (§9.2), TERFİ ETTİR (§9.3), İŞTEN ÇIKAR (§11.1/§11.2).
+# TATİLE GÖNDER burada ÜÇÜNCÜ eylem olarak sayılıyordu ve 2026-08-22'de kaldırılmıştı —
+# başlık kaldırdığı eylemi hâlâ ilan ediyordu (gerekçe aşağıdaki emeklilik bloğunda).
 # PLAYER-TRIGGERED ONLY — this file has no dispatch slot and is never ticked. HRSystem's daily
 # order does not include it on purpose: an action is a played decision, not a daily rule, and
 # every consequence it has (morale, capacity, burn, severance) is applied by the system that
@@ -249,7 +251,11 @@ static func preview_fire(emp: Character) -> Dictionary:
 	if reason != "":
 		return _refusal(reason)
 	var days_served: int = maxi(GameState.day - emp.hire_day, 0)
-	var months: int = HRConstants.severance_months(days_served)
+	# NOTUN SAYISI PARANIN SAYISIYLA AYNI YERDEN GELİR (§15.2). Burası eskiden emekli
+	# `severance_months`'ı okuyordu ve o fonksiyon §11.1'in basamaklarını TAŞIMIYORDU:
+	# bir yıldan az çalışan biri için "1 ay" yazıyor, kasadan ⅓ maaş çıkıyordu. Not ile
+	# tutar iki farklı kuraldan geliyordu; artık ikisi de `severance_multiple`.
+	var multiple: float = HRConstants.severance_multiple(days_served)
 	var severance: int = HRConstants.severance_amount(emp.monthly_salary, days_served)
 	var payroll_before: int = CharacterRegistry.get_total_monthly_salaries()
 	var payroll_after: int = payroll_before - emp.monthly_salary
@@ -258,7 +264,7 @@ static func preview_fire(emp: Character) -> Dictionary:
 		"ok": true,
 		"reason": "",
 		"days_served": days_served,
-		"severance_months": months,
+		"severance_multiple": multiple,
 		"severance": severance,
 		"cash_before": GameState.cash,
 		"cash_after": GameState.cash - severance,
@@ -270,7 +276,8 @@ static func preview_fire(emp: Character) -> Dictionary:
 			# OLGU — tazminatın bir "önce"si yok, tek bir rakam. Sayfa buna ok ÇİZMİYOR
 			# ve ok çizmemek bir üslup tercihi değil: ok bir GEÇİŞ iddiasıdır.
 			_fact(HRConstants.cost_label_severance(), _money(severance),
-				TranslationServer.translate("HR_ROW_MONTHS_NOTE").format({"months": months})),
+				TranslationServer.translate("HR_ROW_MONTHS_NOTE").format({
+					"months": Fmt.number(multiple, 1)})),
 			# Nakit sıfırı geçebilir; `negative_after` onu UI'ya SÖYLER, UI kendi
 			# karşılaştırmasını yapmaz (biçimlenmiş metinden işaret okumak zorunda kalırdı).
 			_delta(TranslationServer.translate("HR_ROW_CASH"), _money(GameState.cash),

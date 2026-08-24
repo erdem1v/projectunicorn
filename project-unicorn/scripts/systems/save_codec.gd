@@ -11,10 +11,9 @@ extends RefCounted
 # is also the one nobody has a test for yet.
 #
 # THE RESERVED-FIELD DISCIPLINE THIS INHERITS. The models already document it themselves:
-#   character.gd:20-23     "Reserved (declared with defaults so future systems plug in
+#   character.gd           "Reserved (declared with defaults so future systems plug in
 #                           without retrofitting the model and so the save schema is
-#                           forward-compatible): loyalty, relationship, trust_score,
-#                           attention_flag"
+#                           forward-compatible): relationship"
 #   customer.gd:13-16      "Reserved (declared with defaults so future systems plug in
 #                           without retrofitting and so the save schema is forward-compatible)"
 #   feature_build.gd:13-21 "Forward-compat fields (equity_impact, revenue_share, tags,

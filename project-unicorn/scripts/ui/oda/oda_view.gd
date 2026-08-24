@@ -1242,9 +1242,9 @@ func _refresh_league() -> void:
 
 
 func _active_sub_type_id() -> String:
-	# right_panel.gd:209-219 deseninin kopyası (provenance: RightPanel emekli —
-	# ODA rework 2026-08-06; sunum-tarafı çözüm, motor dokunulmadı): aktif build →
-	# yayınlanmış snapshot → kataloğun ilk tipi.
+	# SUNUM-TARAFI ÇÖZÜM, motor dokunulmadı: aktif build → yayınlanmış snapshot →
+	# kataloğun ilk tipi. (Desen ODA rework'ünde emekli edilen RightPanel'den geldi;
+	# o dosya 2026-08-24'te ağaçtan silindi, atıf artık çözümlenemeyeceği için düştü.)
 	var b = ProductSystem.get_active_build()
 	if b != null and b.sub_product_type_id != "":
 		return b.sub_product_type_id
@@ -1256,7 +1256,7 @@ func _active_sub_type_id() -> String:
 
 
 func _player_composite(sub: String) -> float:
-	# right_panel.gd:222-229 deseninin kopyası (aynı provenance).
+	# Aynı provenance — yukarıdaki nota bak.
 	var axes: Array = ProductCatalog.get_quality_axes(sub)
 	var b = ProductSystem.get_active_build()
 	if b != null:

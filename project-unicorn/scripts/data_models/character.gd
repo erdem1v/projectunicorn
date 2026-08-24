@@ -7,10 +7,10 @@ extends Resource
 #
 # Used now:
 #   - Identity: id, character_name, role (typed id — HRConstants.ROLE_*), category
-#   - Compensation: monthly_salary, equity_pct (feeds Finance via pull)
+#   - Compensation: monthly_salary (feeds Finance via CharacterRegistry pull)
 #   - Morale: morale (HR Core moves it from played causes only; range 0..100 clamped
 #     in CharacterRegistry.set_morale)
-#   - HR Core employment state: status, hire_day, leave_*, flight_risk_days, overtime_days
+#   - HR Core employment state: status, hire_day, leave_*, flight_risk_days
 #   - role_stats: employees hold EXACTLY HRConstants.EMPLOYEE_SKILL_KEYS (0-9); the founder holds
 #     EXACTLY FounderConstants.SKILLS. The two key sets never mix — CharacterRegistry.add
 #     key-locks both and push_errors on a mismatch.
@@ -19,7 +19,14 @@ extends Resource
 #
 # Reserved (declared with defaults so future systems plug in without
 # retrofitting the model and so the save schema is forward-compatible):
-#   - loyalty, relationship, trust_score, attention_flag
+#   - relationship (CANLI: event_modal onu bir pill olarak ciziyor)
+#
+# YEDEK ALAN DISIPLINI (2026-08-24). `loyalty`, `trust_score` ve `attention_flag` de bu
+# baslik altinda bekliyordu ve UCU DE SILINDI. "Ileride lazim olur" bir alani ayakta
+# tutmaya yetmiyor: ucunun de tek yazicisi hicbir JSON'un kullanmadigi bir olay
+# modifikatoruydu, ve `attention_flag` §15.1'in TURETILMIS rozet hukmuyle dogrudan
+# celisiyordu — saklanan bir rozet alani, bir gun onu dolduracak birini bekleyen bir
+# tuzakti. Yeni bir sistem gercekten geldiginde alanini kendisi ekler.
 #
 # Naming caution (TECH_SPEC §7): Node reserves `name`, so character names use
 # the distinct field `character_name`. Watch for similar collisions in any
@@ -41,18 +48,17 @@ extends Resource
 
 # --- Compensation (used now — feeds Finance via CharacterRegistry pull) ---
 @export var monthly_salary: int = 0
-@export var equity_pct: float = 0.0       # hires get 0.0: employee equity is not in the HR design
 
 # --- Morale (used now — range 0..100) ---
 # There is NO autonomous drift. Morale moves only from played causes: overtime,
-# overload, events, player actions and leave return (HR design doc §6).
+# overload, events, player actions and leave return (§7).
 @export var morale: int = 50
 
 # --- Skills + traits (used now; see the header note on the key-lock) ---
 @export var traits: Array[String] = []       # HRConstants.TRAITS ids (employees); no hidden traits
-# GDD v2 ch. 07 rev 2 §2: skills are AREAS, and everyone carries all six plus Liderlik.
+# §4: skills are AREAS, and everyone carries all six plus Liderlik.
 # Employee = HRConstants.EMPLOYEE_SKILL_KEYS (7) | founder = FounderConstants.SKILLS (8,
-# the same six areas + Liderlik + Karizma). One ruler, 0-9, both sides.
+# the same six areas + Liderlik + Karizma). One ruler, 0-10, both sides (§4.1 + §2.4).
 @export var role_stats: Dictionary = {}
 
 # --- §3 SEVİYE (rev 11) ---
@@ -73,13 +79,11 @@ extends Resource
 # --- HR Core employment state (used now) ---
 @export var status: String = "active"        # STATUS_ACTIVE | STATUS_ON_LEAVE | STATUS_TRAINING
 @export var hire_day: int = 0                # stamped in CharacterRegistry.add; 0 = never hired
-@export var leave_month: int = 0             # 1-12, assigned at hire; 0 = none
 @export var leave_until_day: int = 0         # on_leave ends when GameState.day reaches this
 @export var leave_taken_year: int = 0        # once-per-year latch (manual vacation consumes it too)
 @export var flight_risk_days: int = 0        # consecutive days under MORALE_FLIGHT_RISK
-@export var overtime_days: int = 0           # days worked in the CURRENT overtime block
 
-# --- GÖREV ATAMASI (GDD v2 ch. 07 rev 2 §4) ---
+# --- GÖREV ATAMASI (§12) ---
 # Kişi bir ya da birden fazla İŞE atanır (alana değil — §4 tablosunun başlığı "İş" ve
 # kurucu maddesi "bir işe atandığında" diyor). Alanlar üç şey yapar: kim uygun, formül
 # hangi sayıyı okur, ve o iş kişinin ana alanı mı (normal) ikincil alanı mı (§5, yorucu).
@@ -87,7 +91,6 @@ extends Resource
 # bayrak değil — HRSystem.is_idle. Kurucu 0 ya da 1 iş taşır (ch. 02 §5, sert kilit);
 # çalışan 1'den fazlasını taşıyabilir ve o AŞIRI YÜKLENMEDİR.
 @export var assigned_jobs: Array[String] = []   # HRConstants.AREAS alt kümesi (türetilmiş ayna)
-@export var overload_days: int = 0              # 2+ işte geçirilen ardışık gün; 1 ya da 0 işte sıfırlanır
 
 # --- §12.0 ATANMIŞ İŞLER (rev 11) ---
 # ATAMA BİRİMİ ARTIK İŞ. Beş iş var (HRConstants.JOBS) ve en fazla İKİSİ tutulabilir
@@ -101,20 +104,18 @@ extends Resource
 @export var assigned_job_ids: Array[String] = []
 
 # --- DENEYİM / EĞİTİM (2026-08-08; alan başına ayrıldı 2026-08-21) ---
-# rev 2 §8: "Learn-by-doing: ATANDIĞI ALANIN deneyimi yavaş yükselir." Tek bir sayaç bunu
+# §5.1: "Learn-by-doing: ATANDIĞI ALANIN deneyimi yavaş yükselir." Tek bir sayaç bunu
 # söyleyemez — iki işte dönüşümlü çalışan biri tek havuz biriktirirdi ve hangi alanda
 # ilerlediği son atamasına kalırdı. Onun için alan başına sayaç: {alan_id: 0..100}.
 # Dolduğunda o alan +1 olur ve sayaç sıfırlanır (ÜCRETSİZ kanal). Ücretli eğitim ayrı
 # kanaldır: oyuncu alanı seçer, ücret kademelidir, deneyim şartı YOKTUR (§8).
 # Kurucu HARİÇ (kurucu gelişimi ayrı, park edilmiş sistem).
-@export var area_experience: Dictionary = {}    # EMEKLİ (§5.1 tek bar) — yalnız göç okur
 @export var trainings_done: Dictionary = {}     # {alan_id: kaç kez eğitildi} — §8 azalan getiri
 @export var training_days_left: int = 0      # >0 iken çalışan EDİLGEN (İzinde gibi); 0 = eğitimde değil
 @export var training_area: String = ""       # eğitim bitince hangi alan +1 olacak; "" = eğitimde değil
 
 # --- §5.1 DENEYİM: TEK BAR (rev 11) ---
-# Alan bazlı DEĞİL. Yukarıdaki area_experience, tüketicileri Faz 2c'de çevrilene kadar
-# duruyor ve Faz 7'de silinir. Bar ekranda hep 0–100 çizilir; çizilen oran
+# Alan bazlı DEĞİL. Bar ekranda hep 0–100 çizilir; çizilen oran
 # experience_raw / experience_threshold'dur. Eşik gelişmişlikle büyür (§5.1), o yüzden
 # saklanır: her yıldız değişiminde yeniden hesaplanır, her çizimde değil.
 @export var experience_raw: int = 0
@@ -127,8 +128,12 @@ extends Resource
 @export var work_hours_override: int = 0
 
 # --- §11.4 yaz izni (rev 11) ---
-# Haziran–Ağustos penceresi içinde 0..12 hafta indeksi; -1 = henüz atanmadı. Yukarıdaki
-# leave_month / leave_taken_year ay tabanlı eski modelin alanları ve Faz 7'de silinir.
+# Haziran–Ağustos penceresi içinde 0..12 hafta indeksi; -1 = henüz atanmadı.
+#
+# `leave_month` (1-12) SİLİNDİ 2026-08-24: §11.4 izni aya değil YAZ HAFTASINA bağladı ve
+# alan yalnız yazılıyordu, hiçbir mekanik onu okumuyordu. `leave_until_day` ve
+# `leave_taken_year` KALDI ve kalmaları gerekiyor — biri iznin bitişini, öteki §11.4'ün
+# "yılda bir" mandalını taşıyor; ikisi de canlı okunuyor.
 @export var leave_week: int = -1
 @export var leave_deferrals: int = 0        # §11.4: bu yıl kaç kez ertelendi, en fazla 2
 
@@ -145,10 +150,9 @@ extends Resource
 @export var employment_history: Array[Dictionary] = []
 
 # --- Reserved for future systems (declared, not used) ---
-@export var loyalty: int = 50                # event-driven; future
 @export var relationship: String = "neutral" # ally | friendly | neutral | wary | hostile
-@export var trust_score: int = 0             # -100..100
-# SUPERSEDED by HRSystem.badges_for(), which DERIVES badges from morale/status/capacity
-# using this same vocabulary. Left unwritten on purpose: an employee can carry two
-# badges at once (TÜKENİYOR + AŞIRI YÜKLÜ) and one String cannot hold both.
-@export var attention_flag: String = ""      # FLIGHT_RISK | BURNING_OUT | OVERLOADED | PROMO | CO_FOUNDER_TRACK
+# ROZET ALANI YOKTUR VE BİR DAHA EKLENMEZ (§15.1). `attention_flag` burada duruyordu ve
+# HRSystem.badges_for onu ÇOKTAN ikame etmişti; alan yalnız bir olay modifikatöründen
+# yazılıyordu. Tek String iki rozeti aynı anda taşıyamaz (TÜKENİYOR + AŞIRI YÜK), ve
+# saklanan bir rozet koşul geçtikten sonra da ekranda kalır. Rozetler moral/durum/atamadan
+# HER ÇİZİMDE türetilir.

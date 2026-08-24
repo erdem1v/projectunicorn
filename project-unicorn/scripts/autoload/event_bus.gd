@@ -105,7 +105,7 @@ signal employee_hired(character_id: String)
 signal employee_departed(character_id: String)
 signal training_started(character_id: String, area_key: String)
 signal training_completed(character_id: String, area_key: String)
-## Görev ataması değiştiğinde (GDD v2 ch. 07 rev 2 §4): atandı, çıkarıldı ya da ayrılma
+## Görev ataması değiştiğinde (§12.0): atandı, çıkarıldı ya da ayrılma
 ## anında işleri boşaldı. TEK argüman kişidir, iş değil — bir atama değişikliği o kişinin
 ## SATIRINI ve etkilediği HER işin doluluk okumasını birden tazeler, o yüzden dinleyen
 ## taraf zaten iki tarafa da bakmak zorunda. CharacterRegistry tek yayıncıdır.

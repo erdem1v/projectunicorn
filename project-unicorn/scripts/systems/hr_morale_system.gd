@@ -1,7 +1,7 @@
 class_name HRMoraleSystem
 extends RefCounted
 
-# The morale machine (design doc §6), yıllık izin (§8) and the departure paths.
+# The morale machine (§7), yıllık izin (§11.4) and the departure paths (§11.3).
 # Ticked DAILY from HRSystem.daily_tick (slot 3), in the order that file fixes and for the
 # reasons it gives:
 #   1. tick_leave_returns    — status flips back FIRST, so everything below reads the
@@ -18,7 +18,7 @@ extends RefCounted
 #
 # THERE IS NO DRIFT. The old ±1/day-toward-50 tick is DELETED, not tuned to zero: on a day
 # with no event, no ek mesai, no aşırı yük and no player action, morale does not move by a
-# single point. Morale moves only from played causes (design doc §6). That is also why a
+# single point. Morale moves only from played causes (§7). That is also why a
 # negative delta which scales below half a point is DROPPED instead of rounded to -1
 # (see scaled_delta) — a rounding rule is exactly how a deleted drift grows back.
 #
@@ -87,7 +87,8 @@ static func tick_leave_returns() -> void:
 		CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ACTIVE)
 		emp.leave_until_day = 0
 		GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, false)
-		# İzin dönüşü moral getirir; manuel TATİLE GÖNDER daha büyük (design doc §7).
+		# İzin dönüşü moral getirir; manuel tatil dönüşü daha büyük (§11.4; manuel eylem emekli,
+		# çeşme sabiti gelecek olay kanalı için duruyor).
 		# The TÜKENİYOR badge clears by itself as soon as morale crosses back over
 		# §7'nin bandları — nothing here touches badges, they are derived.
 		if was_manual:
@@ -99,7 +100,7 @@ static func tick_leave_returns() -> void:
 
 
 static func tick_leave_departures() -> void:
-	# İzin ayı geldiğinde çalışan OTOMATİK izne çıkar, oyuncu onayı istenmez (design doc §8).
+	# İzin HAFTASI geldiğinde çalışan OTOMATİK izne çıkar, oyuncu onayı istenmez (§11.4).
 	# §11.4 YAZ PENCERESİ. İzinler Haziran–Ağustos arasına yerleşir ve her çalışana işe
 	# alındığında pencere içinden bir HAFTA atanır; dağıtıcı adım art arda alınan iki kişinin
 	# iznini yan yana haftalara düşürmez. Amaç bütün ekibin aynı hafta izinde olmasını
@@ -128,7 +129,7 @@ static func tick_leave_departures() -> void:
 		# §15.3: TALEP bu modülden doğar, KART olay motorunun (§17.3). Motor gelene kadar
 		# izin otomatik başlar (R2) ama sinyal bugünden yayınlanır ki motor ona bağlansın.
 		EventBus.leave_requested.emit(emp.id)
-		send_on_leave(emp, HRConstants.LEAVE_DAYS_R11, false)
+		send_on_leave(emp, HRConstants.LEAVE_DAYS, false)
 
 
 
@@ -253,7 +254,7 @@ static func scaled_delta(emp: Character, delta: int) -> int:
 		return 0
 	# LİDERLİK'İN OYUNDAKİ İLK MEKANİK OKUMASI — noted honestly: until this line the skill
 	# existed in onboarding, on the founder card and in the audit only. It stays out of the
-	# sales, bug and negotiation formulas (design doc §4); here it is İKLİM, and KOORDİNASYON
+	# sales, bug and negotiation formulas (§4.2/§4.5); here it is İKLİM, and KOORDİNASYON
 	# is wired later by the HR Coupling task.
 	var leadership: int = GameState.get_founder_skill("leadership")
 	var scaled: int
@@ -319,7 +320,7 @@ static func tick_drift() -> void:
 		if HRSystem.is_overloaded(emp):
 			if raw < 0.0:
 				# Aleyhe modifikatör, düşüşte: hızlandırır (§7.1, ×1,5).
-				raw *= HRConstants.OVERLOAD_MORALE_MULT_R11
+				raw *= HRConstants.OVERLOAD_MORALE_MULT
 			else:
 				# §7.1 AŞIRI YÜK BİR TABAN KOYAR: "Aşırı yüklü bir çalışan kısa günden en
 				# fazla erimesinin durması kadar fayda görür; morali YÜKSELMEZ. İki iş
@@ -365,8 +366,9 @@ static func tick_ease() -> void:
 # ============================================================================
 
 static func badges_for(emp: Character) -> Array[String]:
-	# DERIVED, never stored: one person can wear two at once and Character.attention_flag is a
-	# single String. Worst first, so a UI that only has room for one badge shows the right one.
+	# TÜRETİLİR, SAKLANMAZ (§15.1): bir kişi aynı anda iki rozet taşıyabilir ve tek bir String
+	# alan ikisini tutamaz — Character'daki `attention_flag` tam olarak o yüzden silindi.
+	# En kötüsü önce, ki tek rozetlik yeri olan bir arayüz doğru olanı göstersin.
 	var out: Array[String] = []
 	if emp == null or emp.category != "employee":
 		return out
@@ -449,11 +451,11 @@ static func send_on_leave(emp: Character, days: int, is_manual: bool) -> void:
 	CharacterRegistry.set_status(emp.id, HRConstants.STATUS_ON_LEAVE)
 	emp.leave_until_day = GameState.day + days
 	# Once-per-year latch. The MANUAL vacation stamps it too, because TATİLE GÖNDER consumes
-	# that year's automatic leave (design doc §7) — which is also what keeps a +20 recovery
+	# that year's automatic leave (§11.4) — which is also what keeps a +20 recovery
 	# from becoming a fountain the player re-runs every week.
 	emp.leave_taken_year = int(GameState.get_date_dict().year)
 	GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, is_manual)
-	# Non-interrupting notice: nobody is asked to APPROVE leave (design doc §8), so this is a
+	# Non-interrupting notice: nobody is asked to APPROVE leave (§11.4), so this is a
 	# ticker line and never a modal.
 	if is_manual:
 		EventBus.headline_added.emit(HRConstants.notice_source_hr(), TranslationServer.translate("HR_NEWS_ON_HOLIDAY").format({"name": emp.character_name, "n": days}))
@@ -474,7 +476,7 @@ static func confirm_departure(character_id: String) -> void:
 	if emp.category != "employee":
 		push_error("[HRMoraleSystem] confirm_departure on a non-employee ('%s', category '%s') — the founder and the mentor never leave through this path" % [character_id, emp.category])
 		return
-	# İSTİFADA TAZMİNAT YOKTUR (HRConstants.SEVERANCE_ON_RESIGN == 0, design doc §6). Nothing
+	# İSTİFADA TAZMİNAT YOKTUR (HRConstants.SEVERANCE_ON_RESIGN == 0, §11.1/§11.3). Nothing
 	# is charged here on purpose: the price of neglect was the person, not a payment.
 	#
 	# AMA EKİP BEDEL ÖDER (2026-08-21). İşten çıkarma bunu zaten yapıyordu
@@ -547,7 +549,7 @@ static func from_dict(d: Dictionary) -> void:
 # ============================================================================
 
 static func _maybe_resign(emp: Character) -> void:
-	# KAÇMA RİSKİ ihmal edilirse istifa (design doc §6). The played decision is upstream: the
+	# KAÇMA RİSKİ ihmal edilirse istifa (§11.3). The played decision is upstream: the
 	# badge is visible for the whole window and all three card actions are available the
 	# entire time, so neglect IS the decision.
 	#

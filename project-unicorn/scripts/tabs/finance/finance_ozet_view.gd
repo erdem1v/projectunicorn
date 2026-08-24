@@ -622,15 +622,14 @@ func _refresh_captable() -> void:
 	# GameState türetir — çağrı yerinde ham alanlar toplanmaz, yoksa bir sonraki tur
 	# eklendiğinde bu satır sessizce eksik kalır.
 	var investors: int = GameState.get_investor_equity_pct()
-	var employee_frac: float = 0.0
+	# ÇALIŞAN HİSSESİNİN MOTORDA KAYNAĞI YOK ve bu dürüst sıfır bilerek burada duruyor.
+	# Burası eskiden `Character.equity_pct` üzerinde dönen bir döngüydü; o alan 2026-08-24'te
+	# silindi çünkü hiçbir yol ona sıfırdan başka bir değer yazmıyordu — İK tasarımında
+	# çalışan hissesi YOK (§9 maaş, zam, terfi; hisse yok) ve opsiyon havuzu henüz kurulmadı.
+	# Döngü, "bir gün dolar" diye bekleyen ölü bir okuma noktasıydı. Opsiyon havuzu geldiğinde
+	# bu satır onun seam'ini okur; o güne kadar dilim çizilmez.
+	var employees: int = 0
 	var employees_with_equity: int = 0
-	for emp in CharacterRegistry.get_employees():
-		if emp.equity_pct > 0.0:
-			employees_with_equity += 1
-			employee_frac += emp.equity_pct
-	# equity_pct kurucu sözleşmesiyle aynı 0..1 kesir (get_founder_equity emsali);
-	# emniyet kelepçesi yatırımcı payını asla taşırmaz.
-	var employees: int = mini(int(round(employee_frac * 100.0)), maxi(0, 100 - investors))
 	var founder: int = maxi(0, 100 - investors - employees)
 	_cap_founder_rect.size_flags_stretch_ratio = float(maxi(founder, 0))
 	_cap_investor_rect.size_flags_stretch_ratio = float(maxi(investors, 0))

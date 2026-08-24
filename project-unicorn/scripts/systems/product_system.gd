@@ -297,7 +297,7 @@ static func days_at_factor(days: int, f: float) -> int:
 # yazılımcı okuyordu — yani tasarımcı/test uzmanı/ürün yöneticisi hiçbir şeye katkı vermiyordu.
 # Ürün Yöneticisi tasarım fazına İKİNCİL katkı verir (design doc §5: "Ürün Yöneticisi HIZ'ı
 # ikincil katkı"), bu yüzden ağırlığı ayrı.
-# 2026-08-21 (GDD v2 ch. 07 rev 2): the crew is no longer a ROLE list, it is an AREA list.
+# 2026-08-21 (the areas model, rev 11 §4 + §12): the crew is no longer a ROLE list, it is an AREA list.
 # Same three phases, same intent — "bir tasarımcı GELİŞTİRME fazında kod yazmıyor" — but the
 # question changed from "is this person a designer?" to "which of this phase's areas is this
 # person strongest in?". That is what lets rev 2 §2's one-person-team promise work: a

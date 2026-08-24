@@ -1,7 +1,8 @@
 extends Control
 
 # ============================================================================
-# Atlas Seçme & Yerleştirme modalı — Kare 2 (rol + bütçe bandı) ve Kare 4 (aday
+# Atlas Seçme & Yerleştirme modalı — §10.1 · onaylı Kare 2 (rol + bütçe bandı) ve §10.3 ·
+# onaylı Kare 4 (aday
 # dosyaları). Tek kabuk, iki hal; hangisinin açılacağını arayışın motor durumu
 # söyler (HRSearchSystem.get_state).
 #
@@ -15,7 +16,7 @@ extends Control
 #
 # ARAMA ÜCRETSİZDİR (§10). Adım 2'de para okunmaz, çünkü orada ödenecek bir şey yok: tek ücret
 # komisyondur ve o da işe alım gerçekleştiğinde, aday kartından okunarak ödenir. Runway satırı
-# da orada (Kare 4) — ekonomik bağlam somut maaşın olduğu ana aittir.
+# da orada (§10.3 · onaylı Kare 4) — ekonomik bağlam somut maaşın olduğu ana aittir.
 #
 # Her rakam motordan: preview_search ve preview_hire.
 #

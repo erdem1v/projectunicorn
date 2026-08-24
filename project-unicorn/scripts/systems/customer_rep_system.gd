@@ -16,7 +16,7 @@ extends RefCounted
 #                  this a rep hired early would sit idle until the founder's fifth account,
 #                  and an employee drawing salary for nothing is a dead hire.
 #
-# THE AREA (GDD v2 ch. 07 rev 2 §2, 2026-08-21). This desk reads exactly one number now —
+# THE AREA (§4, 2026-08-21). This desk reads exactly one number now —
 # MÜŞTERİ BAŞARISI — because §2 gives that one area everything this file does: "bilet çözümü,
 # memnuniyet, churn". It drives all four:
 #   capacity     accounts one rep can steward           (B2BConstants.cs_capacity)

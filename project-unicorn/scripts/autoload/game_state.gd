@@ -240,7 +240,7 @@ var b2b_rep_portrait_rotation_index: int = 0   # sequential cursor into the rep-
 var b2b_last_rep_portrait: String = ""         # last face shown — new assignments skip it (no consecutive repeat)
 var run_departures: int = 0            # CharacterRegistry.remove, category "employee"
 
-# --- Alan liderleri (GDD v2 ch. 07 rev 2 §2/§4) ---
+# --- Alan liderleri (§4/§4.2) ---
 # {area_id: character_id}. rev 2 §2: "ekip lideri atanan çalışanın altındaki ekibin
 # verimlilik modifier'ını, moral düşüş hızını ve deneyim kazanım hızını etkiler."
 # Lider ALAN BAŞINADIR — Yazılım'ın lideri ayrı, Müşteri İlişkileri'nin lideri ayrı.
@@ -572,15 +572,6 @@ func _founder_start_area(stats: Dictionary) -> String:
 			best_v = v
 			best = String(area_key)
 	return best
-
-
-func get_founder_equity() -> float:
-	# Derived from CharacterRegistry employee equity_pct values. Matches the
-	# get_runway_months pattern — single source of truth, recompute on demand.
-	var employee_total: float = 0.0
-	for emp in CharacterRegistry.get_employees():
-		employee_total += emp.equity_pct
-	return clamp(1.0 - employee_total, 0.0, 1.0)
 
 
 func get_investor_equity_pct() -> int:
@@ -949,7 +940,6 @@ func _build_founder(payload: Dictionary) -> Character:
 	f.role = HRConstants.ROLE_FOUNDER   # typed id; label "Kurucu" via HRConstants.role_label
 	f.category = "founder"
 	f.monthly_salary = 0
-	f.equity_pct = 100.0
 	f.morale = 50
 	# SKILL-RENAME: canonical key list lives in FounderConstants.SKILLS — the single
 	# mapping. Stale payload keys (pre-rename UI) are flagged loudly, never copied.
@@ -982,6 +972,7 @@ func _build_founder(payload: Dictionary) -> Character:
 	for area_id in HRConstants.areas_for_jobs(f.role, f.category, f.assigned_job_ids):
 		f.assigned_jobs.append(String(area_id))
 	f.traits = traits_arr
-	# loyalty / relationship / trust_score / attention_flag stay at Resource
-	# defaults — forward-compatible per scripts/data_models/character.gd.
+	# `relationship` stays at its Resource default — forward-compatible per
+	# scripts/data_models/character.gd. (loyalty / trust_score / attention_flag were
+	# deleted 2026-08-24; the founder never carried a meaningful value in any of them.)
 	return f

@@ -5,23 +5,23 @@ extends RefCounted
 # origins, portraits, logo styles. EVERY number here is a working placeholder — the
 # calibration pass (last, one session) tunes this file and nothing else.
 #
-# SKILL-RENAME ledger, second entry (2026-08-21, GDD v2 ch. 07 rev 2 §2/§3).
+# SKILL-RENAME ledger, second entry (2026-08-21; the areas model, rev 11 §4/§3).
 #
-# rev 2 §3 gives the founder's absence from the Ekip page this reason: "kurucunun her
+# §3 gives the founder's absence from the Ekip page this reason: "kurucunun her
 # alanda puanı var". So the founder stopped being a different creature — he now carries
-# THE SAME six areas as every employee, plus Liderlik (which rev 2 moved onto everyone),
+# THE SAME six areas as every employee, plus Liderlik (which §4.2 puts on everyone),
 # plus Karizma, which is the one number that stays founder-only.
 #
 #   tech        -> SPLIT across the technical areas by meaning: build speed and the
 #                  iteration ceilings read "engineering" / "product" / "design" / "qa"
 #                  exactly where the role formulas now read them.
 #   sales       -> "sales" (the AREA of the same name; same reads, same value)
-#   influence   -> "charisma" — Karizma comes BACK under its own name. rev 2 §2 names it,
+#   influence   -> "charisma" — Karizma comes BACK under its own name. §4 names it,
 #                  and ch. 02 §4 defines it (pitch/fundraising odds and terms, plus
 #                  scandal/PR outcomes). It therefore LEAVES the retired list below.
-#   negotiation -> RETIRED. rev 2's six areas have no negotiation, so the one formula that
+#   negotiation -> RETIRED. The six areas have no negotiation, so the one formula that
 #                  read it — the term-sheet dilution lever — is bound to Karizma. That is
-#                  the single binding rev 2 does not itself authorize; it is one line in
+#                  the single binding the Ekip GDD does not itself authorize; it is one line in
 #                  PitchConstants.LEVER_SKILL and belongs to ch. 09's turn.
 #   leadership  -> unchanged key, but no longer founder-only.
 #

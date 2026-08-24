@@ -1,7 +1,7 @@
 class_name HRConstants
 extends RefCounted
 
-# THE single tunables block for the HR module (GDD v2 ch. 07 rev 2): roles and
+# THE single tunables block for the HR module (GDD — EKİP MODÜLÜ rev 11): roles and
 # departments, the six skill AREAS, the seven jobs, traits, the Atlas search, morale,
 # annual leave, player actions, department overtime and the HR economy labels.
 # EVERY number here is a WORKING PLACEHOLDER — calibration is a separate last pass
@@ -16,14 +16,14 @@ extends RefCounted
 
 
 # ============================ Skill AREAS (0-9) ==============================
-# GDD v2 ch. 07 rev 2 §2. Skills are AREAS, not roles: everyone carries a number in all
-# six, plus Liderlik. The founder additionally carries Karizma (rev 2 §2, last line).
+# §4. Skills are AREAS, not roles: everyone carries a number in all
+# six, plus Liderlik. The founder additionally carries Karizma (§4, last line).
 #
 # WHY AREAS AND NOT THE OLD THREE AXES: with `expertise`/`pace`/`rapport` the axis keys
 # were identical for every role and only their MEANING changed per role, so a one-person
 # team had holes nothing could fill. Areas close that: a Software Engineer with Test 1 can
 # cover QA badly rather than not at all, and a PM with Tasarım 1 can cover design badly.
-# rev 2 §2 states the bargain in one line — "böylece tek kişilik ekipte boşluk kalmaz" —
+# §4 states the bargain in one line — "böylece tek kişilik ekipte boşluk kalmaz" —
 # and §5 is its price (working outside your key area is more tiring).
 #
 # The three retired axes are listed in RETIRED_SKILL_KEYS below and TRIPWIRED, mirroring
@@ -36,7 +36,7 @@ const AREA_SALES := "sales"                         # Satış — kapanış olas
 const AREA_CUSTOMER_SUCCESS := "customer_success"   # Müşteri Başarısı — bilet, memnuniyet, churn
 const AREAS := ["product", "design", "engineering", "qa", "sales", "customer_success"]
 
-# Liderlik is on EVERYONE (rev 2 §2) — it stopped being founder-only. Karizma stays
+# Liderlik is on EVERYONE (§4.2) — it stopped being founder-only. Karizma stays
 # founder-only and lives in FounderConstants.
 const SKILL_LEADERSHIP := "leadership"
 # The exact key set an employee's role_stats must hold: six areas + Liderlik.
@@ -80,7 +80,7 @@ static func area_label(area_key: String) -> String:
 
 static func default_employee_skills() -> Dictionary:
 	# The exact-key shape every employee must hold. Mid-band middle values, Liderlik low:
-	# leading is the exception, not the default, and rev 2 §2 hangs real team effects on it.
+	# leading is the exception, not the default, and §4.2 hangs real team effects on it.
 	return {"product": 5, "design": 5, "engineering": 5, "qa": 5, "sales": 5,
 		"customer_success": 5, "leadership": 2}
 
@@ -110,9 +110,9 @@ static func has_retired_skill_key(role_stats: Dictionary) -> bool:
 
 
 # ===================== Role → area, and the seven jobs =======================
-# ROLE_AREAS (rev 2 §2/§3): the role is a TITLE; these two areas are what the closed row
+# ROLE_AREAS (§4.4): the role is a TITLE; these two areas are what the closed row
 # shows ("Product Manager: Ürün ★★★ · Tasarım ★") and where the candidate generator puts a
-# file's peak. rev 2 supplies two of the six rows verbatim — product_manager and developer
+# file's peak. The GDD supplies two of the six rows verbatim — product_manager and developer
 # — and Erdem ruled the symmetric completion 2026-08-21.
 const ROLE_AREAS := {
 	"product_manager": {"key": "product", "secondary": "design"},
@@ -126,7 +126,7 @@ const ROLE_AREAS := {
 	"customer_rep": {"key": "customer_success", "secondary": ""},
 }
 
-# ATAMA CETVELİ — rev 2 §4. NOT THE SKILL RULER: `AREAS` above is what a person IS good at,
+# ATAMA CETVELİ — §12. NOT THE SKILL RULER: `AREAS` above is what a person IS good at,
 # this is what they are DOING today. The two lists overlap by six ids and differ by one, and
 # keeping them apart is the whole reason `research` can be assignable without anybody
 # carrying a Araştırma number.
@@ -271,11 +271,19 @@ static func areas_for_jobs(role_id: String, category: String, job_ids: Array) ->
 				out.append(String(area_id))
 	return out
 
-# --- Aşırı yüklenme (rev 2 §5). Every number [WORKING]; §11 lists them as open. ---
-# "Aşırı yük kısa süre tolere edilir, uzun sürerse moral düşer ve kaçma riskine gider."
-const OVERLOAD_TOLERANCE_DAYS := 5      # [WORKING] grace before the cost starts
-const OVERLOAD_OUTPUT_MULT := 0.75      # [WORKING] output while carrying 2+ jobs
-const OVERLOAD_MORALE_MULT := 1.6       # [WORKING] multiplier on NEGATIVE morale deltas
+# --- Aşırı yüklenme: ÜÇ SABİT DE SİLİNDİ (§12.1, 2026-08-24) --------------------
+# Buradaki rev 2 §5 modeli — TOLERANS penceresi, ×0,75 çıktı cezası, ×1,6 moral çarpanı —
+# rev 11 §12.1 tarafından adıyla emekli edildi. Bölümün son cümlesi: "Ayrı bir tolerans
+# sayacı yoktur. Moral hedefe doğru sürüklendiği için tolerans zaten emergent'tir."
+#
+# ÜÇÜ DE AYNI CÜMLEYLE GİTMEDİ, her birinin kendi gerekçesi var:
+#   OVERLOAD_TOLERANCE_DAYS — §12.1 sayacı adıyla kaldırdı; rozet ve bedel ilk gündendir.
+#   OVERLOAD_OUTPUT_MULT    — §12.1'in ARİTMETİĞİYLE ÇELİŞİYORDU: "en iyi durumda tam
+#                             olarak bir kişilik iş çıkar (0,50 + 0,50)". Üstüne ×0,75
+#                             binince iki iş toplamda 0,75 kişilik iş çıkarıyordu, yani
+#                             bölünme İKİ KEZ faturalanıyordu.
+#   OVERLOAD_MORALE_MULT    — 1,6'ydı ve REPO'DA TEK OKUYUCUSU YOKTU; yerine geçen
+#                             §12.1 değeri aşağıda (1,5) ve gerçekten okunuyor.
 ## §4.3 ikincil alan ×0,8 — 0,6 DEĞİL ve gerekçe belgede: kişinin o alandaki zayıflığı
 ## zaten yıldızlarında yazılı, katsayının işi onu ikinci kez kesmek değil rol kimliğini
 ## korumak. (0,7 idi; rev 11 §4.3 sayıyı mühürledi.)
@@ -321,7 +329,7 @@ static func stars_for(points: int) -> float:
 
 
 static func experience_gain_mult(lead_leadership: int) -> float:
-	## rev 2 §2: the team lead's Liderlik moves "deneyim kazanım hızı" as well as output and
+	## §4.2: the team lead's Liderlik moves "deneyim kazanım hızı" as well as output and
 	## morale. Neutral at 0 so a leaderless desk learns at exactly today's rate — the
 	## migration must not quietly speed the game up.
 	var t: float = clampf(float(lead_leadership) / float(AREA_MAX), 0.0, 1.0)
@@ -350,7 +358,7 @@ static func seed_skills(role_id: String, key_value: int, rest_value: int,
 
 
 static func area_fatigue_mult(role_id: String, area_id: String) -> float:
-	## rev 2 §5: "ana alanında çalışmak normal, ikincil alanında çalışmak daha yorucudur."
+	## §4.3: "ana alanında çalışmak normal, ikincil alanında çalışmak daha yorucudur."
 	## No lookup left to do — the assignment IS an area now. The founder has no key/secondary
 	## split, so he is never charged the secondary rate.
 	if role_id == "" or role_id == ROLE_FOUNDER:
@@ -392,7 +400,7 @@ const ROLE_MENTOR := "mentor"
 
 const EMPLOYEE_ROLES := ["product_manager", "designer", "developer", "tester", "sales_rep", "customer_rep"]
 
-# Rol adları tam Türkçe; melez adlar kullanılmaz (design doc §1). The mockups' English
+# Rol adları tam Türkçe; melez adlar kullanılmaz (§16; İngilizce karşılıklar §3.1). The mockups' English
 # DESIGNER/DEVELOPER/TESTER chips are pre-canon.
 # ROLE_LABELS, DEPT_LABELS, SECTION_LABELS, BAND_LABELS and BADGE_LABELS all left this
 # file for strings.csv (Lokalizasyon Faz 2 · B2). The label is now DERIVED from the id the
@@ -702,7 +710,7 @@ static func trait_has(trait_ids: Array, effect_key: String) -> bool:
 
 
 # ============================ Salary bands (Atlas) ===========================
-# Bütçe bandı üç AYRIK seçenektir, slider değil (design doc §2). Rol × tier → aylık
+# Bütçe bandı üç AYRIK seçenektir, slider değil (§10.1). Rol × tier → aylık
 # maaş aralığı; üç aday da bandın içinde ve birbirine yakın maaş ister.
 # ==================== SEVİYELER — §3, §9.1, §10.2 ============================
 # BANT DEĞİL SEVİYE. Yukarıdaki BAND_* bir BÜTÇE seçeneğiydi ve işe alımda ATILIYORDU:
@@ -857,7 +865,10 @@ const TRIO_COST_TRAIT_MIN := 1
 
 
 # ========================= Search (Atlas Seçme & Yerleştirme) ================
-# Çift ücret (design doc §2, KANON): peşin retainer + işe alımda komisyon.
+# TEK ÜCRET (§10): arama BEDAVA, işe alım gerçekleşince bir aylık maaşın %50'si komisyon.
+# Bu başlık "çift ücret (peşin retainer + komisyon), KANON" diyordu; o model §10 tarafından
+# adıyla emekli edildi ve sabitleri çoktan gitmişti — kalan tek şey başlığın kendisiydi,
+# yani ağaçta emekli bir modeli KANON ilan eden bir cümle duruyordu.
 # The agency is a PROPER NOUN and stays itself in both languages, on the same rule that
 # keeps "Ekonomi Postası" untranslated on the ending gazette (glossary §6). It is a CSV
 # row so it is not residue, but the row carries the same value twice.
@@ -878,9 +889,9 @@ const CANDIDATE_COUNT := 3              # her arayış üç dosya getirir
 # kişinin devraldığı süre sekizi aşarsa mesaidir, altına inerse kısa gündür. Getiri saatin
 # kendisidir (§8.4) — ayrı bir hız çarpanı yok, ayrı bir kalite cezası yok.
 #
-# Aşağıdaki "Ek mesai (departman bazlı)" bloğu — bloklar, hız bonusu, bug çarpanı, %40
-# gecelik ücret, emniyet valfi — HÂLÂ DURUYOR ve bilerek duruyor: ürün, satış, CS, finans ve
-# ODA onu okuyor. Tüketiciler Faz 3'te bu modele çevrilir, blok sistemi Faz 7'de silinir.
+# ("Ek mesai (departman bazlı)" blok sistemi — bloklar, hız bonusu, bug çarpanı, %40
+# gecelik ücret, emniyet valfi — buradaydı ve tamamı §8'in saat modeliyle ikame edildi.
+# Aşağıdaki sabitler o modelin kendisidir; blok sisteminden geriye hiçbir sabit kalmadı.)
 const WORK_HOURS_MIN := 5           # §8.1 en kısa gün
 const WORK_HOURS_MAX := 11          # §8.1 en uzun gün — İş Kanunu md.63'ün günlük sınırı
 const WORK_HOURS_DEFAULT := 8       # §8.1 şirket kapsamı varsayılanı; herkes bunu devralır
@@ -909,10 +920,10 @@ const HOUR_MORALE_MULT := {
 }
 
 ## §12.1 aşırı yük çarpanı. Çarpanlar ÇARPILIR, toplanmaz: 11 saat + aşırı yük = ×2,25.
-## (Eski OVERLOAD_MORALE_MULT 1.6 yukarıda duruyor ve REPO'DA TEK OKUYUCUSU YOKTU —
-## kendi bildirimi dışında hiçbir yerde geçmiyordu. Bu sabit onun YERİNE geçen, gerçekten
-## okunan olanı; eskisi Faz 7'de silinir.)
-const OVERLOAD_MORALE_MULT_R11 := 1.5
+## (Adı `OVERLOAD_MORALE_MULT_R11`'di: rev 2'nin aynı adlı 1,6'sıyla yan yana yaşayabilmek
+## için taşıdığı geçici bir ek. O sabit silindiği gün ek de gereksizleşti — bir dosyada iki
+## sürümün yan yana durduğunu söyleyen son işaret.)
+const OVERLOAD_MORALE_MULT := 1.5
 
 ## §8.2 ek mesai ücreti: aşan saatler için saatlik ücretin %50 fazlası. YALNIZ aşan saatler;
 ## ilk sekiz saat normal ücrettir. Dayanak İş Kanunu md.41'in zorunlu %50 zammı.
@@ -998,7 +1009,7 @@ static func commission_for(monthly_salary: int) -> int:
 
 
 # ================================ Morale =====================================
-# Decay YOK (design doc §6): moral yalnız ek mesai, aşırı yük, event'ler, oyuncu
+# Decay YOK (§7): moral yalnız ek mesai, aşırı yük, event'ler, oyuncu
 # aksiyonları ve izin dönüşünden hareket eder. Kendiliğinden toparlanma yoktur;
 # toparlanma kanalları aksiyonlar + izin + pozitif moral event'leridir.
 # Bounds mirror CharacterRegistry.set_morale's clamp. Named here so a PREVIEW can promise
@@ -1065,14 +1076,19 @@ static func morale_band_id(morale: int) -> String:
 const MORALE_FLIGHT_RISK := 35      # §7: altı → Ayrılabilir (25 idi)
 const MORALE_HIRE_START := 75       # WORKING: yeni işe alınanın başlangıç morali
 const MORALE_LEAVE_RETURN := 15     # §11.4 izin dönüşü, tek seferde (10 idi)
-const MORALE_VACATION_RETURN := 20  # manuel TATİLE GÖNDER dönüşü (design doc §7)
+## Manuel tatil dönüşünün moral getirisi. EYLEMİN KENDİSİ EMEKLİ (bkz. hr_actions.gd'nin
+## TATİLE GÖNDER bloğu) ama sabit ve `send_on_leave`'in `is_manual` dalı BİLEREK duruyor:
+## gelecek olay kanalı onları yeniden kullanacak. §15.3'ün "bildirilmiş ama henüz
+## ateşlenmemiş sinyal" kuralıyla aynı kategori — bekleyen, ölü değil.
+const MORALE_VACATION_RETURN := 20
 const MORALE_FIRE_TEAM := 5         # işten çıkarmada kalan ekipteki DÜŞÜŞ büyüklüğü
 const MORALE_RAISE_AT_MIN_PCT := 4  # %3 zamda moral kazancı  (WORKING)
 const MORALE_RAISE_AT_MAX_PCT := 10 # %10 zamda moral kazancı — onaylı 2a: 75 → 85
 
-# Badge ids reuse Character.attention_flag's declared vocabulary so the model does not
-# carry two badge concepts — but badges are DERIVED (HRSystem.badges_for), because an
-# employee can hold two at once and a single String field cannot.
+# Rozet id'leri BURADA yaşar ve TEK vokabülerdir. Character üzerinde bir `attention_flag`
+# alanı da vardı ve aynı kelimeleri taşıyordu; §15.1 rozeti TÜRETİLMİŞ ilan ettiği için o
+# alan 2026-08-24'te silindi — bir çalışan aynı anda iki rozet taşıyabilir ve tek String
+# ikisini tutamaz. Tek okuma yolu HRSystem.badges_for.
 const BADGE_FLIGHT_RISK := "FLIGHT_RISK"
 ## §13.3'ün AŞIRI YÜK rozeti — atanmış iş sayısı 2. Eskiden BADGE_OVERLOADED da vardı ve
 ## FARKLI bir şeydir (şirket çapındaki "mühendise ihtiyaç var" bayrağı); §16 aynı kelimenin
@@ -1098,7 +1114,8 @@ const BADGE_NEW := "NEW"
 ## 14 gün Atlas'ın bir haftalık bekleyişini ve üstüne bir yerleşme süresini taşır.
 const NEW_HIRE_BADGE_DAYS := 14
 
-# Employee status (Character.status) — deliberately NOT attention_flag.
+# Employee status (Character.status) — bir DURUM, bir rozet değil. İkisi ayrı kalır:
+# durum saklanır (izinde/eğitimde motor kararıdır), rozet her çizimde türetilir.
 const STATUS_ACTIVE := "active"
 const STATUS_ON_LEAVE := "on_leave"
 # EĞİTİMDE: çıktı üretmeyen ÜÇÜNCÜ durum. İzinde ile mekanik olarak aynı
@@ -1167,12 +1184,12 @@ static func training_duration_text() -> String:
 	return TranslationServer.translate("HR_DURATION_DAYS").format({"n": TRAINING_DAYS})
 const TRAINING_FEE := 500            # WORKING: TABAN ücret; gerçek ücret kademeli, aşağıya bak
 ## İKİ KANAL, İKİ TAVAN. Parayla eğitim 8'de, yani DÖRT YILDIZDA durur; BEŞ yıldıza yalnız
-## işi yaparak (add_area_experience, tavanı AREA_MAX) ya da üst segment bir adayı işe alarak
+## işi yaparak (deneyim barı, tavanı AREA_MAX) ya da üst segment bir adayı işe alarak
 ## çıkılır. Boşluk bilinçli: para her şeyi satın alamaz.
 ## LİDERLİK daha pahalı — tasarımın eğitim tablosunda aynı seviyede Liderlik satırı alan
 ## satırlarının üstünde fiyatlanıyor. [WORKING]
 const TRAINING_LEADERSHIP_MULT := 1.35
-# rev 2 §8 "Ücret kademeli: düşük yıldızdan yükseltmek ucuz, yüksek yıldızdan yükseltmek
+# §5.3 "Ücret kademeli: düşük yıldızdan yükseltmek ucuz, yüksek yıldızdan yükseltmek
 # pahalı" + "Tekrarında azalan getiri". İkisi de TEK kanaldan ödenir: ücret. Getiri hep +1
 # puandır (tam sayı cetvelde başka türlüsü okunmaz), azalan olan aynı +1'in FİYATIDIR.
 const TRAINING_FEE_PER_POINT := 220  # WORKING: mevcut alan değeri başına ek ücret
@@ -1225,7 +1242,7 @@ static func is_flight_risk(morale: int) -> bool:
 
 
 # ===================== Founder Liderlik: iklim + koordinasyon =================
-# Liderlik iki iş yapar (design doc §4) ve HER İKİSİ de "liderlik" kelimesinin gerçekten
+# Liderlik iki iş yapar (§4.2) ve HER İKİSİ de "liderlik" kelimesinin gerçekten
 # anlattığı şey. Satış, bug ve pazarlık formüllerine GİRMEZ.
 #   1) İKLİM — kötü olaylarda moral düşüşlerini küçültür, toparlanmaları büyütür,
 #      ek mesainin moral bedelini düşürür. Bu task uygular.
@@ -1241,7 +1258,7 @@ const COORD_MAX := 1.20                # güçlü sorumlu (her iki kaynak için 
 const COORD_MAX_WITH_TRAIT := 1.25     # "Doğal lider" tavanı da yükseltir
 const COORD_NATURAL_LEADER_BONUS := 0.05
 # Founder-as-lead is NEUTRAL at Liderlik 0 and only rises: "CEO olarak ekibin başında olmak
-# hız cezası DEĞİL, liderliğine güven meselesidir" (design doc §4). A single two-sided mapping
+# hız cezası DEĞİL, liderliğine güven meselesidir" (§4.2). A single two-sided mapping
 # would have made a Liderlik-0 founder a 15% speed penalty, which both contradicts that
 # sentence and breaks the equivalence anchor that founder tech-3 solo stays 3.0 efor/gün.
 const COORD_FOUNDER_NEUTRAL := 1.0
@@ -1259,7 +1276,7 @@ static func climate_gain_mult(leadership: int) -> float:
 
 # The multiplier is ASYMMETRIC BY SOURCE, which is not a fudge — the two sources answer two
 # different questions. A founder is always in the room whether or not he is any good at leading,
-# so his Liderlik can only ADD; putting the CEO in charge must never be a speed tax (design doc
+# so his Liderlik can only ADD; putting the CEO in charge must never be a speed tax (§4.2
 # §4). A CHOSEN employee lead is a real bet: a low-UYUM one genuinely does coordinate worse, and
 # that downside is what makes "kimi sorumlu yapacağım" a decision rather than a formality.
 # ProductSystem._speed_for_lead picks the right one from the lead's identity.
@@ -1277,7 +1294,7 @@ static func coordination_for_founder(leadership: int, has_natural_leader: bool =
 
 
 static func coordination_for_lead(leadership: int, has_natural_leader: bool = false) -> float:
-	# rev 2 §2 moved Liderlik onto EVERYONE, which collapsed two curves into one: the old
+	# §4.2 puts Liderlik on EVERYONE, which collapsed two curves into one: the old
 	# coordination_for_employee read the lead's UYUM, and UYUM stopped being a number.
 	# Two-sided across the whole ruler on purpose — Liderlik 0 → COORD_MIN (the team waits on
 	# each other), Liderlik 9 → COORD_MAX — so choosing a lead stays a real bet, which is
@@ -1291,13 +1308,13 @@ static func coordination_for_lead(leadership: int, has_natural_leader: bool = fa
 
 
 # ============================ Resignation (istifa) ===========================
-# KAÇMA RİSKİ ihmal edilirse istifa event'i tetiklenir (design doc §6, roll'lu).
+# KAÇMA RİSKİ ihmal edilirse istifa event'i tetiklenir (§11.3, roll'lu).
 # The played decision is upstream: the badge is visible for the whole window and the
 # three card actions are available the entire time — neglect IS the decision.
 const RESIGN_WINDOW_MIN_DAYS := 10      # KAÇMA RİSKİ bu kadar gün sürerse roll başlar
 const RESIGN_WINDOW_MAX_DAYS := 14      # pencerenin üst sınırı (kanon aralık)
 const RESIGN_CHANCE_PER_DAY := 0.25     # WORKING: pencere boyunca ~%76 birikimli
-const SEVERANCE_ON_RESIGN := 0          # istifada tazminat YOKTUR (design doc §6)
+const SEVERANCE_ON_RESIGN := 0          # istifada tazminat YOKTUR (§11.1/§11.3)
 
 
 ## EMNİYET VALFİ PARAMETRESİ EMEKLİ. Valf bir MESAİ BLOĞUNUN olayıydı ("bu kişi tükeniyor,
@@ -1328,23 +1345,18 @@ static func resign_voice(character_id: String) -> String:
 	return resign_voice_line(absi(character_id.hash()))
 
 
-# ========================== Yıllık izin (otomatik) ===========================
-# İzin ayı işe alımda atanır; ay gelince çalışan OTOMATİK izne çıkar, oyuncu onayı
-# istenmez. Ücretli izin: maaş akmaya devam eder, kapasite/hız/CS/mesai katkısı durur.
-const LEAVE_DAYS := 7
-const LEAVE_MONTH_MIN_GAP := 2     # işe alındığı aydan en az bu kadar ay sonra
-# Stride over the ALLOWED SPAN (12 - MIN_GAP = 10 months), not over 12. It must be coprime
-# with that span or consecutive hires collapse onto a couple of months: with a span of 10,
-# a stride of 5 yields only two distinct offsets. 7 is coprime with 10, so ten consecutive
-# hires land on ten different months before any repeat.
-const LEAVE_MONTH_STRIDE := 7
-
 # --------------------- §11.4 yaz izni (hafta tabanlı) ------------------------
 # İzin ÇALIŞANIN KENDİSİNE aittir; "tatile gönder" bir oyuncu fiili DEĞİLDİR.
-# Süre iki hafta (10 iş günü), tek blok, Haziran–Ağustos penceresinde. Yukarıdaki AY tabanlı
-# model (LEAVE_DAYS 7, LEAVE_MONTH_*, leave_month_for) tüketicileri Faz 2c'de çevrilene
-# kadar duruyor ve Faz 7'de silinir.
-const LEAVE_DAYS_R11 := 14              # §11.4 "iki hafta (10 iş günü)"
+# Süre iki hafta (10 iş günü), tek blok, Haziran–Ağustos penceresinde. Ücretli izin: maaş
+# akmaya devam eder, kapasite/hız/CS/mesai katkısı durur.
+#
+# AY TABANLI MODEL SİLİNDİ (2026-08-24). `LEAVE_DAYS` 7 · `LEAVE_MONTH_MIN_GAP` ·
+# `LEAVE_MONTH_STRIDE` · `leave_month_for` · `leave_month_label` · `Character.leave_month`.
+# Gerçek izin çoktan on dört günden koşuyordu; eski yedi gün yalnız smoke fixture'larında ve
+# bir çekim tohumunda yaşıyordu — yani iki farklı izin süresi aynı anda ağaçtaydı ve hangisinin
+# oyunun izni olduğunu yalnız çağrı yerine bakarak anlayabiliyordunuz. Ad da sadeleşti:
+# iki sürüm yan yana durmadığı için `_R11` eki gereksizleşti.
+const LEAVE_DAYS := 14                  # §11.4 "iki hafta (10 iş günü)"
 const LEAVE_WINDOW_START_MONTH := 6     # Haziran
 const LEAVE_WINDOW_END_MONTH := 8       # Ağustos
 ## Yaz penceresi ~13 hafta. Adım 5, 13 ile ARALARINDA ASAL — on üç ardışık işe alım on üç
@@ -1371,8 +1383,12 @@ static func promotion_morale_gain(pct: int) -> int:
 
 ## §11.1 KIDEM TAZMİNATI — basamaklı ve TAVANLI. Tamamlanmış yıl esas alınır, ara aylar
 ## yukarı yuvarlanmaz: bir buçuk yıllık çalışan BİR maaş alır, on yıllık da ÜÇ maaş alır.
-## Eski kural (her tam yıl için bir ay, minimum bir, tavansız) iki uçta da yanlıştı.
-## severance_months yukarıda duruyor — okuyanları Faz 5b'de çevrilir.
+##
+## Eski kural (`severance_months` + `SEVERANCE_MIN_MONTHS`: her tam yıl için bir ay, minimum
+## bir, tavansız) iki uçta da yanlıştı ve 2026-08-24'te silindi. Sildiği gün BİR YALAN da
+## kapandı: para çoktan bu basamaklı tablodan ödeniyordu ama ateş modalinin "(N ay)" notu
+## HÂLÂ eski fonksiyondan okunuyordu — bir yıldan az çalışana "1 ay" yazıp ⅓ maaş
+## ödüyorduk. Not artık aynı tablodan türüyor.
 const SEVERANCE_UNDER_ONE_YEAR := 1.0 / 3.0
 const SEVERANCE_MAX_MONTHS := 3.0
 
@@ -1384,60 +1400,31 @@ static func severance_multiple(days_served: int) -> float:
 	return minf(float(years), SEVERANCE_MAX_MONTHS)
 
 
-static func leave_month_for(hire_month: int, hire_ordinal: int) -> int:
-	# Distribution rule: offset the leave month MIN_GAP..11 months after the hire month, so
-	# a fresh hire never vacations in their first weeks AND never in the hire month itself.
-	# hire_ordinal = how many employees were hired before this one.
-	#
-	# The naive form (stride over all 12 months) wrapped back ONTO the hire month: a January
-	# hire at ordinal 2 got January, and went on annual leave the day after starting. Walking
-	# the allowed span instead makes that structurally impossible.
-	var span: int = 12 - LEAVE_MONTH_MIN_GAP
-	var offset: int = LEAVE_MONTH_MIN_GAP + (LEAVE_MONTH_STRIDE * maxi(hire_ordinal, 0)) % span
-	return ((hire_month - 1 + offset) % 12) + 1
-
-
-static func leave_month_label(month: int) -> String:
-	# Character.leave_month is a bare 1-12 int and preview_vacation passes it through raw, so
-	# every consumer would otherwise print a number where a month belongs. Fmt.month_name is
-	# the single home for month words in either language (it used to read the calendar's
-	# Turkish Title-Case table, which stayed Turkish in the English build).
-	if month < 1 or month > 12:
-		return ""
-	return Fmt.month_name(month)
-
-
 # ======================= Player actions (çalışan kartı) ======================
-const RAISE_MIN_PCT := 3           # zam slider alt sınırı (design doc §7)
+const RAISE_MIN_PCT := 3           # zam slider alt sınırı (§9.2)
 ## §9.2 aralık %3–10. 15'ti ve ağaçta bulunmayan bir belgeye "ONAYLI" damgası veriyordu.
 const RAISE_MAX_PCT := 10
 const RAISE_COOLDOWN_DAYS := 180   # §9.2 "aynı çalışana altı ay geçmeden yeni zam verilemez"
 ## §9.3 terfi: tek seviye atlama, oyuncu %10–25 arası zammı slider'dan seçer, minimum %10.
 const PROMOTION_MIN_PCT := 10
 const PROMOTION_MAX_PCT := 25
-const SEVERANCE_MIN_MONTHS := 1    # her tam çalışılan yıl için 1 ay, minimum 1 ay
-const VACATION_DAYS := 7           # manuel TATİLE GÖNDER süresi
 const DAYS_PER_YEAR := 365         # kıdem hesabı (hire_day → tam yıl)
 
 
 static func raise_morale_gain(pct: int) -> int:
-	# Moral etkisi oranla ölçeklenir (design doc §7): %3 → MIN, %15 → MAX, arası doğrusal.
+	# Moral etkisi oranla ölçeklenir (§9.2): RAISE_MIN_PCT → MIN, RAISE_MAX_PCT → MAX, arası
+	# doğrusal. (Burada "%15 → MAX" yazıyordu ve tavan çoktan %10'a inmişti — yorum
+	# formülün okuduğu sabitten farklı bir sayı söylüyordu. Artık sabitlerin adıyla.)
 	var p: int = clampi(pct, RAISE_MIN_PCT, RAISE_MAX_PCT)
 	var span: int = maxi(1, RAISE_MAX_PCT - RAISE_MIN_PCT)
 	var t: float = float(p - RAISE_MIN_PCT) / float(span)
 	return int(round(lerpf(float(MORALE_RAISE_AT_MIN_PCT), float(MORALE_RAISE_AT_MAX_PCT), t)))
 
 
-static func severance_months(days_served: int) -> int:
-	# Her TAM çalışılan yıl için 1 aylık maaş, en az 1 ay (design doc §7).
-	return maxi(SEVERANCE_MIN_MONTHS, int(floor(float(maxi(days_served, 0)) / float(DAYS_PER_YEAR))))
-
-
 static func severance_amount(monthly_salary: int, days_served: int) -> int:
 	# §11.1 BASAMAKLI VE TAVANLI: 1 yıldan az ⅓ maaş · 1 yıl 1 · 2 yıl 2 · 3 yıl ve üzeri 3.
 	# Tamamlanmış yıl esas alınır ve ara aylar YUKARI YUVARLANMAZ — bir buçuk yıllık çalışan
-	# BİR maaş alır. severance_months yukarıda duruyor (Faz 7) ama artık okunmuyor: eski
-	# kural iki uçta da yanlıştı, bir yıldan az çalışana tam maaş, on yıllığa on maaş.
+	# BİR maaş alır.
 	return int(round(float(monthly_salary) * severance_multiple(days_served)))
 
 
@@ -1448,7 +1435,7 @@ static func severance_amount(monthly_salary: int, days_served: int) -> int:
 # Deterministically indexed by character id (String.hash is stable for a given string),
 # so the same person always says the same line. WORKING TR — the content sprint replaces
 # the copy, not the mechanism. Ayrılış isim ve yüzle, TEK REPLİKLİ event olarak sunulur
-# (design doc §6), so these are one line each and stay in first person.
+# (§11.3), so these are one line each and stay in first person.
 # RESIGN_VOICE left this file for strings.csv: the lines are copy, and an array of copy in
 # code cannot carry a second language. RESIGN_VOICE_COUNT is the pool size; resign_voice_line(i)
 # resolves the row. Index stays the selector, so the deterministic
@@ -1488,7 +1475,7 @@ static func file_notes_line(index: int) -> String:
 
 ## What a role's key / secondary AREA buys the player, as help copy. Derived from the role
 ## id and the area id together (HR_AREA_MEANING_<ROLE>_<AREA>). Only the role's own two
-## areas have a row — rev 2 §3 forbids showing all six in a flat list, so there is nothing
+## areas have a row — §4.4 forbids showing all six in a flat list, so there is nothing
 ## to say about a Satış Temsilcisi's Test number on the closed card.
 static func role_area_meaning(role_id: String, area_key: String) -> String:
 	if not is_employee_role(role_id):

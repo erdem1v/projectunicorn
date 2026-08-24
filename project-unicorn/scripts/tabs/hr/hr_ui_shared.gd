@@ -18,7 +18,7 @@ extends RefCounted
 
 const LOCK_ICON := "res://assets/icons/lock.svg"
 
-# Eksen çipi ölçüleri — mockup Kare 1'in çerçeveli küçük kutuları.
+# Eksen çipi ölçüleri — §13.3 · onaylı Kare 1'in çerçeveli küçük kutuları.
 const CHIP_RADIUS := 3
 const CHIP_PAD_X := 7
 const CHIP_PAD_Y := 3
@@ -37,7 +37,7 @@ static func money(amount: int) -> String:
 # yıldız bir MİKTAR — ve tasarım alanları miktar olarak okutuyor.
 static func area_stars_row(role_id: String, role_stats: Dictionary, glyph_px: int = 14,
 		muted: bool = false) -> HBoxContainer:
-	## Kişinin ANA + İKİNCİL alanı, yıldızla. rev 2 §3 altı alanı düz listede göstermeyi
+	## Kişinin ANA + İKİNCİL alanı, yıldızla. §4.4 altı alanı düz listede göstermeyi
 	## yasaklıyor — rolün iki alanı yeter ve tasarım da tam olarak ikisini çiziyor.
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_XL)
@@ -394,7 +394,7 @@ static func phase_hint_label(role_id: String) -> Label:
 # --- Sayfa kromu ------------------------------------------------------------
 
 static func section_header(text: String, with_rule: bool = true) -> Control:
-	# Küçük mono büyük-harf başlık, sağa doğru uzayan saç teli çizgiyle (Kare 1).
+	# Küçük mono büyük-harf başlık, sağa doğru uzayan saç teli çizgiyle (§13.2 · onaylı Kare 1).
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	row.add_child(UiFactory.make_section_header(text))
