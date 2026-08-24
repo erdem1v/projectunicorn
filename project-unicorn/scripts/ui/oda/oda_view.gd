@@ -1357,8 +1357,25 @@ func _refresh_postit() -> void:
 ## DÜĞÜM KALDI, GÖRÜNMEZ. Silmek `--theme-audit=oda`'nın satır sayısını oynatırdı ve o
 ## kapı bu turda BAYT-AYNI kalmak zorunda; düğümün emekliye ayrılması ODA'nın kendi
 ## tasarım turunun kararıdır ve park edildi.
+## CAMIN İÇİNDEKİ TEK GECE SİNYALİ (Erdem, 2026-08-24). Düğüm ODA rework'ünden beri
+## duruyordu ve gövdesi tek satırlık bir kill switch'ti — yani yerleşimi, rengi ve
+## `RECTS["overtime_chip"]` çapası ağaçta yaşıyor, hiçbir şey söylemiyordu.
+##
+## YENİ DAVRANIŞ, İKİ KOŞUL BİRDEN: şirket penceresi KAPANDIKTAN SONRA (§8.1'in kendi
+## kapanışı, `_past_company_close`) ve mesaide en az bir çalışan varsa çip görünür ve kaç
+## kişinin hâlâ çalıştığını yazar. Gündüz hiçbir şey söylemez — mesai bilgisi gündüz zaten
+## Ekip başlığındaki çipte (19d) duruyor; ODA'nın söyleyebileceği tek yeni şey ODANIN
+## KARANLIK OLMASI ve içeride birinin kalmış olması.
+##
+## SAYIM `WorkHoursSystem.counts()`ten gelir — modalin bedel bloğuyla AYNI sayı. İki ayrı
+## sayım iki ayrı cevap demek olurdu ve ikisi aynı ekranda yan yana görünebiliyor.
 func _refresh_overtime_chip() -> void:
-	_overtime_chip.visible = false
+	var hour: int = int(GameState.get_date_dict().get("hour", 0))
+	var on_overtime: int = int(WorkHoursSystem.counts()["overtime"])
+	var show: bool = _past_company_close(hour) and on_overtime > 0
+	_overtime_chip.visible = show
+	if show:
+		_overtime_label.text = tr("ODA_OVERTIME_TONIGHT").format({"n": on_overtime})
 
 
 # =========================================================================

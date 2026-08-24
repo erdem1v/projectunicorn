@@ -221,6 +221,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"build_percent_single_source":        fail = _case_build_percent_single_source()
 		"build_bar_hosts_agree":              fail = _case_build_bar_hosts_agree()
 		"runway_days_and_negative_cash":      fail = _case_runway_days_and_negative_cash()
+		"role_locks_and_runway_pair":         fail = _case_role_locks_and_runway_pair()
 		"b2b_market_gate_b2c_run":            fail = _case_b2b_market_gate_b2c_run()
 		"sales_autoclose_empty_pain":         fail = _case_sales_autoclose_empty_pain()
 		"event_queue_dedupe_by_id":           fail = _case_event_queue_dedupe_by_id()
@@ -3197,6 +3198,70 @@ static func _case_build_bar_hosts_agree() -> String:
 			shell.queue_free()
 			return "host %s is stale after the tick: %s (want %s)" % [str(n.get_path()), got2, want2]
 	shell.queue_free()
+	return ""
+
+
+static func _case_role_locks_and_runway_pair() -> String:
+	# İKİ KARAR, İKİ İDDİA GRUBU (Erdem, 2026-08-24).
+	#
+	# B1 · MÜŞTERİ TEMSİLCİSİ KİLİDİ KALKTI, SATIŞ UZMANI KİLİDİ KALDI. MT'nin kilidi aynı
+	# B2B kapısını taşıyordu ve GEREKÇESİ YALAN SÖYLÜYORDU: kart "Destek sistemi ile
+	# açılacak" diyordu, kapı ise `has_b2b_product()`'tı — hiç değerlendirilmeyen bir koşulun
+	# adı. §10.6 kilitli-görünür olarak yalnız Pazarlama ve in-house İK'yı sayıyor.
+	#
+	# B2 · ADAY KARTINDAKİ RUNWAY GERÇEĞİ SÖYLESİN. Şerit iki değeri de tam aya yuvarlıyordu,
+	# yani ~0,6 aylık gerçek bir düşüş "5 ay → 5 ay" diye okunuyor ve kutu YİNE DE kırmızı
+	# yanıyordu.
+	#
+	# FALSİFİKASYON: `role_lock_reason_key`e ROLE_CUSTOMER_REP dalını geri koy → ilk iddia
+	# FAIL. `net_runway_pair`in çözünürlük dalını sil → dördüncü iddia FAIL.
+	GameState.set_flag("mvp_shipped", false)
+	if ProductSystem.has_b2b_product():
+		return "fixture: the run already carries a B2B product; the lock cannot be measured"
+
+	# 1 · MT B2C KOŞUSUNDA DA İŞE ALINIR.
+	if not HRConstants.is_role_hireable(HRConstants.ROLE_CUSTOMER_REP):
+		return "Müşteri Temsilcisi is still locked in a B2C run: '%s'" % \
+			HRConstants.role_lock_reason_key(HRConstants.ROLE_CUSTOMER_REP)
+	# 2 · SATIŞÇI KİLİDİ DURUYOR VE GEREKÇESİNİ YAZIYOR.
+	var sales_key: String = HRConstants.role_lock_reason_key(HRConstants.ROLE_SALES_REP)
+	if sales_key != "HR_ROLE_LOCK_SALES":
+		return "the Satış Uzmanı gate is '%s', want HR_ROLE_LOCK_SALES" % sales_key
+	if TranslationServer.translate(sales_key) == sales_key:
+		return "the sales lock reason has no string — a locked card must say WHY (§10.6)"
+	# 3 · ÖLÜ GEREKÇE DİZESİ AĞAÇTAN GİTTİ.
+	if TranslationServer.translate("HR_ROLE_LOCK_CS") != "HR_ROLE_LOCK_CS":
+		return "HR_ROLE_LOCK_CS still resolves; the reason it named was never evaluated"
+
+	# 4 · YUVARLAMA YALANI: AYNI AYA YUVARLANAN iki değer, gerçek bir düşüşle.
+	# SAYILAR ÖNCE ÇARPIŞMAYI KANITLAR. İlk denemede 5,6 → 4,95 seçilmişti ve o çift zaten
+	# "6 ay" / "5 ay" veriyordu, yani iddia hiçbir zaman çarpışmayı ölçmedi — falsifikasyon
+	# koştuğunda çözünürlük dalını silmek vakayı DÜŞÜRMEDİ ve tuzak ortaya çıktı.
+	GameState.set_cash(100000)
+	var a: float = 5.4
+	var b: float = 4.6
+	if UiTokens.net_runway_text(a) != UiTokens.net_runway_text(b):
+		return "fixture: %.1f and %.1f do not collide on the shared formatter (%s vs %s)" % [
+			a, b, UiTokens.net_runway_text(a), UiTokens.net_runway_text(b)]
+	var pair: Dictionary = UiTokens.net_runway_pair(a, b)
+	if not bool(pair["changed"]):
+		return "a 0.8-month drop did not register as a change"
+	if String(pair["before"]) == String(pair["after"]):
+		return "the strip still prints the same text on both sides: '%s'" % String(pair["before"])
+	# 5 · GÜRÜLTÜ DEĞİŞİKLİK DEĞİLDİR — şerit kırmızıya boyanmaz.
+	if bool(UiTokens.net_runway_pair(5.0, 4.99)["changed"]):
+		return "floating-point noise was painted as a runway drop"
+	# 6 · INF→INF kırmızı DEĞİL, ve iki taraf da "Artıda" der.
+	var inf_pair: Dictionary = UiTokens.net_runway_pair(INF, INF)
+	if bool(inf_pair["changed"]):
+		return "a profitable run was painted as losing runway"
+	if String(inf_pair["before"]) != String(inf_pair["after"]):
+		return "INF→INF printed two different words"
+	# 7 · TEK EV KORUNDU: sıradan bir düşüş hâlâ paylaşılan biçimleyicinin cümlesi.
+	var plain: Dictionary = UiTokens.net_runway_pair(6.0, 1.0)
+	if String(plain["before"]) != UiTokens.net_runway_text(6.0) \
+			or String(plain["after"]) != UiTokens.net_runway_text(1.0):
+		return "a plain drop stopped going through net_runway_text: %s" % str(plain)
 	return ""
 
 

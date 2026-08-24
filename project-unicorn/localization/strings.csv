@@ -151,7 +151,6 @@ SALES_STEWARD_CURRENT,zaten sorumlu,already assigned
 SALES_STEWARD_FULL,kapasite dolu,at capacity
 SALES_STEWARD_FOUNDER,Kurucu (kendim tutayım),Founder (keep it myself)
 HR_ROLE_LOCK_SALES,Bu rol için B2B ürün gerekir.,This role needs a B2B product.
-HR_ROLE_LOCK_CS,Destek sistemi ile açılacak.,Opens with the support system.
 HR_ROLE_LOCK_FULL_VERSION,Tam sürümde gelecek.,Coming in the full version.
 HR_ROLE_MARKETING,Pazarlama,Marketing
 HR_ROLE_HR_INHOUSE,İnsan Kaynakları,In-house HR
@@ -176,6 +175,7 @@ ODA_MONITOR_CALM,sistem sakin · uyarı yok,all quiet · no warnings
 ODA_MONITOR_BUGS,sistem ayakta · {n} açık hata,holding up · {n} open bugs
 ODA_MONITOR_WARN,hatalar birikiyor — bakım gerek,bugs piling up — needs care
 ODA_PAPER_TAG_GATE,EŞİK,GATE
+ODA_OVERTIME_TONIGHT,{n} çalışan ek mesaide,{n} still on overtime
 ODA_PAPER_TAG_FUNDING,YATIRIM,FUNDING
 ODA_PAPER_TAG_ATLAS,ATLAS,ATLAS
 ODA_PAPER_GATE_TITLE,Faz kapısı açık — karar bekliyor,Phase gate open — decision pending

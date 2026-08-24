@@ -798,6 +798,44 @@ static func net_runway_text(months: float) -> String:
 	return String(p.value) if String(p.unit) == "" else "%s %s" % [p.value, p.unit]
 
 
+## İKİ RUNWAY DEĞERİ YAN YANA — "önce → sonra" şeritlerinin tek evi.
+##
+## NEDEN AYRI BİR SEAM: `net_runway_text` tam aya yuvarlıyor ve bu TEK BAŞINA doğru — bir
+## sayı gösteren yüzeyde "5 ay" istenen okunuştur. Ama İKİ sayı yan yana konduğunda aynı
+## yuvarlama bir YALAN üretiyor: bir işe alım runway'i 5,6 aydan 4,9 aya indiriyor, şerit
+## "5 ay → 5 ay" yazıyor ve yine de KIRMIZI yanıyor. Oyuncu kırmızı bir kutuda değişmemiş
+## bir sayı görüyor; ikisinden biri yalan söylüyor.
+##
+## PAYLAŞILAN BİÇİMLEYİCİYE DOKUNULMADI. INF, kasa<0 ve ay-altı dallarının hepsi
+## `net_runway_parts`'a delege ediliyor — tek ev orası ve orada kalıyor. Bu fonksiyonun
+## eklediği tek şey: iki metin AYNI çıkarsa ve aradaki fark GERÇEKTEN anlamlıysa, ikisini
+## de GÜN'de yazar. Gün, `net_runway_parts`'ın ay-altı dalında zaten kullandığı kelimedir;
+## yeni bir birim icat edilmiyor.
+##
+## `changed` EPSİLON'LU ve YALNIZ SONLU sayılarda karar verir: INF→INF'te şerit kırmızıya
+## boyanmaz, ve iki farklı süzgeçten geçmiş iki sayının kayan-nokta gürültüsü bir "düşüş"
+## sayılmaz.
+const RUNWAY_PAIR_EPSILON := 0.05
+
+
+static func net_runway_pair(before: float, after: float) -> Dictionary:
+	var before_text: String = net_runway_text(before)
+	var after_text: String = net_runway_text(after)
+	var finite_pair: bool = is_finite(before) and is_finite(after)
+	var worse: bool = finite_pair and (before - after) > RUNWAY_PAIR_EPSILON
+	if worse and before_text == after_text and GameState.cash >= 0:
+		before_text = _runway_days_text(before)
+		after_text = _runway_days_text(after)
+	return {"before": before_text, "after": after_text, "changed": worse}
+
+
+static func _runway_days_text(months: float) -> String:
+	# floor(), round() DEĞİL — `net_runway_parts`'ın ay-altı dalıyla aynı gerekçe: bir geri
+	# sayım kasanın karşılayamadığı bir günü asla vaat etmez.
+	return "%d %s" % [int(floor(maxf(months, 0.0) * GameState.DAYS_PER_MONTH)),
+		TranslationServer.translate("RUNWAY_UNIT_DAYS")]
+
+
 ## Build progress (ProductSystem.build_progress(), 0.0-1.0) as the WHOLE percent every
 ## surface prints — the single home for that rounding, the same way net_runway_parts is
 ## the single home for the months decision. The floating build card lives over the tab

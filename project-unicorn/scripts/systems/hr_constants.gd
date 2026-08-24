@@ -502,10 +502,11 @@ static func role_lock_reason_key(role_id: String) -> String:
 			# consumer run used to mint enterprise prospects and close contracts with no
 			# pitch ever played.
 			return "" if ProductSystem.has_b2b_product() else "HR_ROLE_LOCK_SALES"
-		ROLE_CUSTOMER_REP:
-			# Same gate today, because the request/stewardship channel this role works is
-			# part of the B2B customer engine.
-			return "" if ProductSystem.has_b2b_product() else "HR_ROLE_LOCK_CS"
+	# MÜŞTERİ TEMSİLCİSİ KİLİDİ KALKTI (Erdem, 2026-08-24). Aynı B2B kapısını taşıyordu ve
+	# GEREKÇESİ YALAN SÖYLÜYORDU: kart "Destek sistemi ile açılacak" diyordu ama kapı
+	# `has_b2b_product()`'tı — hiç değerlendirilmeyen bir koşulun adı. §10.6 kilitli-görünür
+	# olarak YALNIZ Pazarlama ve in-house İK'yı sayıyor; MT o listede yok. Rol artık her ürün
+	# tipinde işe alınır ve `HR_ROLE_LOCK_CS` dizesi onunla birlikte silindi.
 	return ""
 
 

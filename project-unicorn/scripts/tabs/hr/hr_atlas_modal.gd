@@ -452,14 +452,18 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	return card
 
 
-## RUNWAY şeridi: "6 ay → 1 ay", sonraki değer KIRMIZI. net_runway_parts kullanılıyor
-## (net_runway_text değil) çünkü değer ve birim ayrı boyanabilmeli. Kırmızı kararı
-## DELTADAN türetiliyor — parts["positive"] yalnız "Artıda" hâli için true, bir sağlık
-## bayrağı değil.
+## RUNWAY şeridi: "6 ay → 1 ay", sonraki değer KIRMIZI.
+##
+## ÇİFT OKUMA TEK SEAM'DEN (UiTokens.net_runway_pair). Burası iki değeri de
+## `net_runway_text`'ten geçiriyordu ve o tam aya yuvarladığı için ~0,6 aylık gerçek bir
+## düşüş "5 ay → 5 ay" diye okunuyor, şerit yine de kırmızı yanıyordu. Kırmızı kararı da
+## artık oradan geliyor ve EPSİLON'lu: iki değer arasında anlamlı bir fark yoksa şerit
+## kırmızıya boyanmaz.
 func _runway_strip(pv: Dictionary) -> Control:
 	var before: float = float(pv.get("runway_before", 0.0))
 	var after: float = float(pv.get("runway_after", 0.0))
-	var worse: bool = after < before
+	var pair: Dictionary = UiTokens.net_runway_pair(before, after)
+	var worse: bool = bool(pair["changed"])
 
 	var strip := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
@@ -478,9 +482,9 @@ func _runway_strip(pv: Dictionary) -> Control:
 	row.add_child(UiFactory.make_label(
 		tr("HR_ATLAS_RUNWAY_LABEL"), &"ColumnHeader", UiTokens.INK_DIM))
 	row.add_child(UiFactory.make_label(
-		UiTokens.net_runway_text(before), &"RowMeta", UiTokens.INK_MUTED))
+		String(pair["before"]), &"RowMeta", UiTokens.INK_MUTED))
 	row.add_child(UiFactory.make_label("→", &"RowMeta", UiTokens.INK_DIM))
-	row.add_child(UiFactory.make_label(UiTokens.net_runway_text(after), &"RowName",
+	row.add_child(UiFactory.make_label(String(pair["after"]), &"RowName",
 		UiTokens.negative() if worse else UiTokens.INK_MUTED))
 	strip.add_child(row)
 	return strip

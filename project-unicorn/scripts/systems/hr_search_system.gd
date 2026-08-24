@@ -297,7 +297,7 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	# Same INF caveat as preview_search: runway_before/runway_after can be INF.
 	var payroll_before: int = CharacterRegistry.get_total_monthly_salaries()
 	var net_before: int = GameState.get_net_daily_flow()
-	var runway_before: float = GameState.get_runway_months()
+	var runway_before: float = _runway_before()
 	var warnings: Array[String] = []
 	var no_traits: Array[String] = []
 	var out: Dictionary = {
@@ -438,3 +438,11 @@ static func _runway_after(cash_value: int, daily_net: int) -> float:
 	# PRESENTATION guard on top of it: an empty account reads 0.0 rather than a negative month
 	# count, the same edge VCPitchSystem._gross_runway_months guards. maxf leaves INF alone.
 	return maxf(0.0, GameState.runway_months_for(cash_value, daily_net))
+
+
+## AYNI SÜZGEÇ, İKİ DEĞERE. "Önce" ham `get_runway_months()`ten, "sonra" yukarıdaki
+## maxf'ten geçiyordu — iki farklı süzgeçten çıkmış iki sayı karşılaştırılıyordu ve
+## negatif bir "önce" ile sıfırlanmış bir "sonra" yan yana konabiliyordu. Şerit farkı
+## okuduğu için ikisi de AYNI kapıdan geçmeli.
+static func _runway_before() -> float:
+	return maxf(0.0, GameState.get_runway_months())
