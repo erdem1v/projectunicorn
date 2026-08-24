@@ -406,14 +406,51 @@ static func section_header(text: String, with_rule: bool = true) -> Control:
 	return row
 
 
-static func hairline() -> Panel:
+## Rengi PARAMETRE: onaylı 19a iki ayrı kural kalınlığı kullanıyor — başlık ve Şirket
+## satırının altında kart kenarı (#232C34), grup/çalışan satırlarının altında kart içi
+## saç teli (#1E262E). Varsayılan eskisi, yani mevcut çağıranların hiçbiri değişmiyor.
+static func hairline(color: Color = UiTokens.DIVIDER_LIGHT) -> Panel:
 	var line := Panel.new()
 	line.custom_minimum_size = Vector2(0, 1)
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = UiTokens.DIVIDER_LIGHT
+	sb.bg_color = color
 	line.add_theme_stylebox_override("panel", sb)
 	return line
+
+
+## Saatin moral YÖNÜ (onaylı 19b). Şevron; yukarı yeşil, aşağı amber, kademesi ÇAĞIRANDA
+## (kaç tane çizildiği kademedir — §8.5 hiçbir yerde katsayı yazılmasını istemiyor).
+static func chevron(px: int = 9, color: Color = UiTokens.ACCENT, up: bool = false) -> TextureRect:
+	return _glyph("res://assets/icons/chevron_up.svg" if up
+		else "res://assets/icons/chevron_down.svg", px, color)
+
+
+## 7 saat: erime DURDU, ama yükselmiyor. Ne aşağı ne yukarı — düz çizgi.
+static func chevron_flat(px: int = 9, color: Color = UiTokens.POSITIVE) -> TextureRect:
+	return _glyph("res://assets/icons/chevron_flat.svg", px, color)
+
+
+## Başlık çipinin saat glifi (onaylı 19d: 13px daire + akrep).
+static func clock_glyph(px: int = 13, color: Color = UiTokens.INK_MUTED) -> TextureRect:
+	return _glyph("res://assets/icons/clock.svg", px, color)
+
+
+## KAYNAK hücresindeki "şirkete dön" çipinin geri-ok'u (onaylı 19b).
+static func revert_arrow_icon() -> Texture2D:
+	return load("res://assets/icons/revert_arrow.svg")
+
+
+static func _glyph(path: String, px: int, color: Color) -> TextureRect:
+	var tex := TextureRect.new()
+	tex.texture = load(path)
+	tex.custom_minimum_size = Vector2(px, px)
+	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tex.modulate = color
+	tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return tex
 
 
 ## Dikkat şeridinin ⚠ işareti. Kilit glifinin yerine kendi ikonu var, çünkü kilit

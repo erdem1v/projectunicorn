@@ -80,7 +80,7 @@ extends RefCounted
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs,
 ## which is the cheap guard against a stale master_theme.tres shipping silently.
-const THEME_STAMP := 6
+const THEME_STAMP := 7
 # ============================================================================
 
 # ============================================================================
@@ -131,6 +131,11 @@ const SURFACE_HOVER := CARD_BG                            # #10161C · hover kee
 const SURFACE_PRESSED := Color(0.118, 0.153, 0.188, 1)   # #1E2730 · pressed / active key
 const SURFACE_DISABLED := Color(0.118, 0.153, 0.188, 1)  # #1E2730 · disabled button fill
 const SURFACE_SUNKEN := Color(0.137, 0.173, 0.204, 1)    # #232C34 · meter track
+## Defterin BAŞ SATIRI — kadro tablosunda tabanı taşıyan satırın zemini (onaylı 19a'nın
+## Şirket satırı). CARD_BG'nin bir tık üstü; VEIL_FAINT ile taklit edilebilirdi ama sonuç
+## #151B21 çıkıyor ve onaylı değer #131A21 — iki nokta fark, ama tabloda o satır tam olarak
+## "üstteki" olduğu için okunuyor. RUNTIME token: build_theme.gd onu OKUMAZ.
+const SURFACE_ROW_TINT := Color(0.075, 0.102, 0.129, 1)  # #131A21 · defterin taban satırı
 const SURFACE_FRAME := Color(0.059, 0.078, 0.102, 1)     # #0F141A · inset / chip plate
 const SHADE_HOVER := Color(1, 1, 1, 0.03)                # faint lift on chrome
 const SHADOW_SOFT := Color(0, 0, 0, 0.50)                # floating-card shadow (popover)
@@ -259,6 +264,10 @@ const BORDER_HOVER := Color(0.165, 0.204, 0.239, 1)      # #2A343D · hover/ghos
 const CARD_ATTENTION_BORDER := Color(1.0, 0.361, 0.286, 0.45)  # attention-strip edge
 const BORDER_DISABLED := Color(0.165, 0.204, 0.239, 1)   # #2A343D · disabled control edge
 const BORDER_DASHED := Color(0.149, 0.188, 0.227, 1)     # #26303A · empty-slot dashed edge
+## KARAR VEREN ama nötr kalan bir kontrolün kenarı (onaylı 19a: Şirket satırının saat kutusu).
+## BORDER_HOVER'dan (#2A343D) bir adım açık; ayrımın işi, aynı satırda DEVRALAN kutunun sönük
+## kenarıyla KARAR VEREN kutunun kenarını ayırmak. RUNTIME token: build_theme.gd onu OKUMAZ.
+const BORDER_STEPPER_OWN := Color(0.231, 0.275, 0.314, 1)  # #3B4650 · karar veren nötr kutu
 const DIVIDER_LIGHT := Color(0.118, 0.149, 0.180, 1)     # #1E262E · in-card hairline
 const SEPARATOR := Color(0.106, 0.137, 0.169, 1)         # #1B232B · chrome hairline
 const TICKER_SEP := Color(0.200, 0.243, 0.282, 1)        # #333E48 · ticker item separator

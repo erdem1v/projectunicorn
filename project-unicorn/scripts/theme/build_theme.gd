@@ -110,6 +110,11 @@ func _initialize() -> void:
 	_lbl(th, &"AvatarInitial", sans_sb, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"MetricValueInk", sans_sb, T.SIZE_TITLE, T.INK)
 	_lbl(th, &"MetricCaptionInk", mono_label, T.SIZE_MICRO, T.INK_DIM)
+	# StepperValue: bir stepper'ın ORTASINDAKİ sayı (onaylı 19a'nın saat kutusu). Mono ve
+	# VURGU AĞIRLIĞINDA, çünkü o kutunun dört giysisinden ikisi (devralan vs karar veren)
+	# ağırlıkla ayrışıyor — rengin tek başına taşıyamadığı ayrım bu. mono_sb'nin ilk
+	# yaşayan tüketicisi; yüz Step 11'den beri hazırdı ve benimseme kararı bekliyordu.
+	_lbl(th, &"StepperValue", mono_sb, T.SIZE_DATA, T.INK)
 
 	# ---- Cinematic dialogue register (Spec 5): text on the DARK charcoal column.
 	# Cream tones per the context rule; the light INK-based QuoteSerif/ChoiceLabel

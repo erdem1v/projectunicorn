@@ -321,6 +321,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_migration_v6_to_v7":        fail = _case_save_migration_v6_to_v7()
 		"save_migration_v6_to_v7_drops":  fail = _case_save_migration_v6_to_v7_drops()
 		"work_hours_three_scopes":        fail = _case_work_hours_three_scopes()
+		"work_hours_draft_commits":       fail = _case_work_hours_draft_commits()
 		"promotion_and_raise_gate":       fail = _case_promotion_and_raise_gate()
 		"effective_skill_formula":        fail = _case_effective_skill_formula()
 		"hr_read_catalogue":              fail = _case_hr_read_catalogue()
@@ -7992,6 +7993,100 @@ static func _case_promotion_and_raise_gate() -> String:
 	if HRConstants.severance_amount(3000, 3650) != 9000:
 		return "ten years paid %d, want the three-salary cap" % HRConstants.severance_amount(3000, 3650)
 	return ""
+
+static func _case_work_hours_draft_commits() -> String:
+	# §8.5 "maliyet TAAHHÜTTEN ÖNCE okunur" — ve bu cümle ancak TAAHHÜT VARSA doğru olur.
+	# Onaylı 19a'nın alt barı iki eylem taşıyor (Vazgeç · Uygula); modal o güne kadar saati
+	# ANINDA yazıyordu, yani okunan maliyet zaten ödenmiş bir maliyetti.
+	#
+	# BU VAKA MODALİ AÇMAZ. Modalin tek yaptığı `WorkHoursSystem.draft_state()` alıp
+	# sözlüğü düzenlemek ve `apply_state` çağırmak; sözleşme motorda, ve burada ölçülen o.
+	#
+	# FALSİFİKASYON: `draft_state()`'i `GameState.group_work_hours_override`'ı KOPYALAMADAN
+	# döndür (duplicate'i sil) → ilk iddia FAIL eder, çünkü taslağı düzenlemek motoru da
+	# değiştirir.
+	# MAAŞ ŞART: mesai tahakkuku saatlik ücretten türüyor, sıfır maaşlı bir fixture
+	# 11 saat çalışsa da sıfır tahakkuk eder ve üçüncü iddia hiçbir şey ölçmez.
+	var dev: Character = _make_employee("wh_draft_dev", "Draft Dev",
+		HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000)
+	WorkHoursSystem.set_company_hours(8)
+	WorkHoursSystem.clear_person_hours(dev.id)
+	var group_id: String = WorkHoursSystem.group_of(dev)
+	WorkHoursSystem.clear_group_hours(group_id)
+
+	# 1 · TASLAK MOTORA DOKUNMAZ. Üç kapsamın üçü de düzenlenir; motor kıpırdamaz.
+	var st: Dictionary = WorkHoursSystem.draft_state()
+	st["company"] = 10
+	st["start"] = 7
+	(st["groups"] as Dictionary)[group_id] = 11
+	(st["people"] as Dictionary)[dev.id] = 6
+	if GameState.company_work_hours != 8:
+		return "editing the draft moved the live company hours to %d" % GameState.company_work_hours
+	if WorkHoursSystem.hours_for(dev) != 8:
+		return "editing the draft moved the live resolution to %d" % WorkHoursSystem.hours_for(dev)
+	if not GameState.group_work_hours_override.is_empty():
+		return "editing the draft wrote a live group override: %s" % str(GameState.group_work_hours_override)
+
+	# 2 · TASLAK AYNI ZİNCİRDEN ÇÖZÜLÜR (§15.2). Kişisel istisna grubunkini yener; kaynak
+	# sözcüğü de taslaktan okunur. İkinci bir çözümleyici olsaydı bu iki satır ayrışırdı.
+	if WorkHoursSystem.hours_in(st, dev) != 6:
+		return "the draft resolved to %d, want the personal exception 6" % WorkHoursSystem.hours_in(st, dev)
+	if WorkHoursSystem.inherited_from_in(st, dev) != "":
+		return "a personal exception still reads as inherited in the draft"
+	(st["people"] as Dictionary).erase(dev.id)
+	if WorkHoursSystem.hours_in(st, dev) != 11:
+		return "with the personal exception gone the draft should fall to the group's 11"
+	if WorkHoursSystem.inherited_from_in(st, dev) != "group":
+		return "the draft's KAYNAK word is not 'group' when the group decides"
+
+	# 3 · BEDEL BLOĞU DA TASLAKTAN OKUR — önizlemenin bütün anlamı bu.
+	var counts: Dictionary = WorkHoursSystem.counts_in(st)
+	if int(counts["overtime"]) < 1:
+		return "the draft's cost block does not see an 11-hour day as overtime"
+	if WorkHoursSystem.daily_overtime_in(st) <= WorkHoursSystem.overtime_pay_accrued_today():
+		return "the draft's overtime accrual is not above today's (nobody is on overtime today)"
+
+	# 4 · UYGULA HEPSİNİ TEK HAMLEDE GEÇİRİR.
+	WorkHoursSystem.apply_state(st)
+	if GameState.company_work_hours != 10:
+		return "apply_state did not commit the company hours (%d)" % GameState.company_work_hours
+	if WorkHoursSystem.start_hour() != 7:
+		return "apply_state did not commit the start hour (%d)" % WorkHoursSystem.start_hour()
+	if WorkHoursSystem.hours_for(dev) != 11:
+		return "apply_state did not commit the group override (%d)" % WorkHoursSystem.hours_for(dev)
+	if dev.work_hours_override != 0:
+		return "apply_state resurrected a personal exception the draft had cleared"
+
+	# 5 · TERSİ DE: taslakta SİLİNEN bir istisna, uygulanınca motordan da SİLİNİR. Bir
+	# "yalnız yazan" apply bunu kaçırırdı ve Vazgeç'i olmayan eski davranışa geri dönerdi.
+	var st2: Dictionary = WorkHoursSystem.draft_state()
+	(st2["groups"] as Dictionary).clear()
+	WorkHoursSystem.apply_state(st2)
+	if WorkHoursSystem.group_has_override(group_id):
+		return "clearing a group exception in the draft did not clear it on apply"
+	if WorkHoursSystem.hours_for(dev) != 10:
+		return "after the group exception was cleared the person should inherit the company 10"
+
+	# 6 · PENCERE TEK EVDEN. Çip ve modal aynı cümleyi çiziyor; iki hesap iki cevap demekti.
+	var win: Dictionary = WorkHoursSystem.company_window()
+	if int(win["start"]) != 7 or int(win["end"]) != 17:
+		return "company_window says %s–%s, want 07–17" % [str(win["start"]), str(win["end"])]
+	if String(win["end_text"]) != "17:00":
+		return "company_window's end text is '%s'" % String(win["end_text"])
+
+	# 7 · BAŞLANGIÇ SAATİ KAPIYI GEÇEMEZ. Rapor edilen "03:00" kusuru burada aranıyor:
+	# hem yazıcı hem taslak kelepçeliyor, yani modalin dışından bile üretilemiyor.
+	WorkHoursSystem.set_company_start_hour(3)
+	if WorkHoursSystem.start_hour() < HRConstants.START_HOUR_MIN:
+		return "a 03:00 start survived the writer's clamp (%d)" % WorkHoursSystem.start_hour()
+	var st3: Dictionary = WorkHoursSystem.draft_state()
+	st3["start"] = 3
+	WorkHoursSystem.apply_state(st3)
+	if WorkHoursSystem.start_hour() != HRConstants.START_HOUR_MIN:
+		return "a 03:00 start survived apply_state (%d)" % WorkHoursSystem.start_hour()
+	CharacterRegistry.remove(dev.id)
+	return ""
+
 
 static func _case_work_hours_three_scopes() -> String:
 	# §8.1 ÜÇ KAPSAM, TEK ÇÖZÜMLEYİCİ:

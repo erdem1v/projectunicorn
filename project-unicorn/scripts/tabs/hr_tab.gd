@@ -200,6 +200,13 @@ func _build_chrome() -> void:
 func _refresh() -> void:
 	if _list == null:
 		return
+	# ÇİP HER TAZELEMEDE YENİDEN YAZILIR — kusur #1'in kök nedeni buydu. Çip sayfa kabuğu
+	# kurulurken BİR KEZ yazılıyordu (`_build_hours_control`) ve `_rebuild` yalnız listeyi
+	# boşaltıyordu, yani modalde saat değişince başlık eski pencereyi göstermeye devam
+	# ediyordu. Metin ARTIK tek seam'den geliyor (`WorkHoursSystem.company_window`), o yüzden
+	# çip ile modal aynı cümleyi çizmek zorunda.
+	if _hours_control != null and _hours_control is Button:
+		_paint_hours_control(_hours_control as Button)
 	# Başlık VE alt şerit her tazelemede: alt şerit ORTALAMA MORAL yazıyor, yani yapı
 	# değişmeden de oynayan bir sayı. Yalnız _rebuild'de boyanınca morale_changed'in
 	# yerinde-güncelleme yolunda bayat kalıyordu.
@@ -378,17 +385,59 @@ func _do_cancel_search() -> void:
 ## BAŞLAT'ın "bir tık sessizi" (§13.2). Şirket penceresini ve varsa istisna sayısını taşır,
 ## ve Kadro ile Görevler sekmelerinin İKİSİNDE de görünür (aynı chrome'da olduğu için bedava).
 func _build_hours_control() -> Control:
-	return HRUiShared.action_button(_hours_chip_text(), _open_hours_modal)
+	# ONAYLI 19d: dolgusuz, 1px kenar, SAAT GLİFİ + pencere. Dört hâl — temel nötr, mesai
+	# amber, istisna amber, hover kenar vurgusu. Glif bugüne dek YOKTU ve çip yalnız nötr
+	# çiziliyordu, yani "mesai var" bilgisi metne gömülüydü ve kenar hiç konuşmuyordu.
+	var btn := Button.new()
+	btn.icon = load("res://assets/icons/clock.svg")
+	btn.add_theme_constant_override("icon_max_width", 13)
+	btn.add_theme_constant_override("h_separation", 8)
+	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	btn.pressed.connect(_open_hours_modal)
+	_paint_hours_control(btn)
+	return btn
+
+
+## §8.5'in çip kuralı RENGE de uygulanır: mesai ya da istisna varsa amber, yoksa nötr.
+## Metin ve renk AYNI koşuldan türer, o yüzden ikisi bir arada yazılıyor — ayrılsalardı
+## biri güncellenip öteki bayat kalırdı (kusur #1'in tam olarak yaptığı şey).
+func _paint_hours_control(btn: Button) -> void:
+	btn.text = _hours_chip_text()
+	var flagged: bool = int(WorkHoursSystem.counts()["overtime"]) > 0 		or WorkHoursSystem.override_count() > 0
+	var ink: Color = UiTokens.ACCENT if flagged else UiTokens.INK_MUTED
+	var edge: Color = UiTokens.ACCENT if flagged else UiTokens.BORDER_HOVER
+	btn.add_theme_color_override("font_color", ink)
+	btn.add_theme_color_override("font_hover_color", UiTokens.INK)
+	btn.add_theme_color_override("font_pressed_color", ink)
+	btn.add_theme_color_override("icon_normal_color", ink)
+	btn.add_theme_color_override("icon_hover_color", UiTokens.INK)
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0, 0, 0, 0)
+		sb.set_border_width_all(1)
+		# Hover KENARDA yaşar, dolguda değil (Terminal'in kilitli reçetesi).
+		sb.border_color = UiTokens.ACCENT_HOVER if state == "hover" else edge
+		sb.set_corner_radius_all(2)
+		sb.content_margin_left = 14
+		sb.content_margin_right = 14
+		sb.content_margin_top = 10
+		sb.content_margin_bottom = 10
+		btn.add_theme_stylebox_override(state, sb)
 
 
 ## 19d'nin tek ek kuralı: temel hâlde ek yok; mesai varsa çalışan sayısı; mesai yoksa ama
 ## kapsamlar şirketten ayrılıyorsa istisna sayısı. İKİSİ BİRDEN doğruysa MESAİ EKİ KAZANIR —
 ## para ve moral maliyeti orada.
 func _hours_chip_text() -> String:
-	var start_h: int = WorkHoursSystem.start_hour()
+	# PENCERE TEK EVDEN OKUNUR (§15.2). Bitiş burada ELDE hesaplanıyordu —
+	# `(start_h + company_work_hours) % 24` — ve o satır `WorkHoursSystem.end_hour_for`'un
+	# varlığından habersizdi. İki hesap iki cevap demektir; modal ile çip aynı pencereyi
+	# çizmek zorunda ve artık aynı yerden alıyorlar.
+	var win: Dictionary = WorkHoursSystem.company_window()
 	var window: String = tr("HR_HOURS_WINDOW").format({
-		"start": "%02d:00" % start_h,
-		"end": "%02d:00" % ((start_h + GameState.company_work_hours) % 24),
+		"start": String(win["start_text"]),
+		"end": String(win["end_text"]),
 	})
 	var counts: Dictionary = WorkHoursSystem.counts()
 	var over: int = int(counts["overtime"])
@@ -420,10 +469,12 @@ func _open_hours_modal() -> void:
 		modal.populate()
 
 
-## Modal saatleri anında yazıyor, o yüzden başlıktaki çip ve DURUM sütunundaki saat
-## istisnası her adımda tazelenmeli — ikisi de aynı sayıyı okuyor ve ikisi de bu sayfada.
+## Modal artık TAAHHÜTLÜ: sinyal `Uygula`'da bir kez gelir. Sayfanın iki yüzeyi birden
+## tazelenir — başlıktaki çip (pencere + ek) ve defterin DURUM sütunundaki saat istisnası.
 func _on_hours_changed() -> void:
 	_rebuild_forced()
+	if _hours_control != null and _hours_control is Button:
+		_paint_hours_control(_hours_control as Button)
 
 
 func _build_training_control() -> Control:

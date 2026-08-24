@@ -30,7 +30,18 @@ extends RefCounted
 #  Çözümleme — §8.1
 # ============================================================================
 
-## Kişinin BUGÜN devraldığı günlük saat. Zincirin tek evi.
+## ZİNCİRİN TEK GÖVDESİ. İki giriş var (canlı motor durumu · taahhüt edilmemiş modal
+## taslağı) ama sıra BURADA, tek yerde yürüyor. §15.2'nin yasakladığı şey tam olarak sıranın
+## ikinci bir kopyasıydı: önizleme ile tahakkuk ayrışır ve modal bir yalan söylerdi.
+static func _resolve(company: int, group_hours: Variant, person_hours: int) -> int:
+	if person_hours > 0:
+		return _clamp_hours(person_hours)
+	if group_hours != null:
+		return _clamp_hours(int(group_hours))
+	return _clamp_hours(company)
+
+
+## Kişinin BUGÜN devraldığı günlük saat — CANLI giriş.
 static func hours_for(c: Character) -> int:
 	if c == null:
 		return GameState.company_work_hours
@@ -39,12 +50,10 @@ static func hours_for(c: Character) -> int:
 	# değişir. Çalışma saatleri modalinde de görünmez (§8.5).
 	if c.category == "founder":
 		return _clamp_hours(GameState.company_work_hours)
-	if c.work_hours_override > 0:
-		return _clamp_hours(c.work_hours_override)
 	var group_id: String = group_of(c)
-	if group_id != "" and GameState.group_work_hours_override.has(group_id):
-		return _clamp_hours(int(GameState.group_work_hours_override[group_id]))
-	return _clamp_hours(GameState.company_work_hours)
+	return _resolve(GameState.company_work_hours,
+		GameState.group_work_hours_override.get(group_id) if group_id != "" else null,
+		c.work_hours_override)
 
 
 ## Bir satırın değeri DEVRALINMIŞ mı yoksa KARAR mı — §8.5'in devir dili buradan okunur:
@@ -84,6 +93,25 @@ static func end_hour_for(c: Character) -> int:
 	return (start_hour() + hours_for(c)) % 24
 
 
+## ŞİRKET PENCERESİ — TEK EV (§15.2). Kadro başlığındaki çip ve modalin Şirket satırı aynı
+## cümleyi çiziyor ve iki ayrı yerde hesaplanıyordu: `hr_tab` bitişi ELDE kuruyordu
+## (`(start_h + company_work_hours) % 24`) ve o satır `end_hour_for`'un varlığından habersizdi.
+## İki hesap = iki cevap; bu bölümün geçmişi tam olarak bunun üzerine kurulu.
+##
+## `hours` verilmezse şirket süresi okunur; verilirse TAAHHÜT EDİLMEMİŞ bir taslak
+## çizilebilsin diye o kullanılır.
+static func company_window(hours: int = -1, start: int = -1) -> Dictionary:
+	var s: int = clampi(start, HRConstants.START_HOUR_MIN, HRConstants.START_HOUR_MAX) \
+		if start >= 0 else start_hour()
+	var h: int = _clamp_hours(hours) if hours >= 0 else _clamp_hours(GameState.company_work_hours)
+	return {
+		"start": s,
+		"end": (s + h) % 24,
+		"start_text": "%02d:00" % s,
+		"end_text": "%02d:00" % ((s + h) % 24),
+	}
+
+
 static func _clamp_hours(hours: int) -> int:
 	return clampi(hours, HRConstants.WORK_HOURS_MIN, HRConstants.WORK_HOURS_MAX)
 
@@ -121,6 +149,109 @@ static func counts() -> Dictionary:
 		elif HRConstants.is_short_day_hours(h):
 			short_day += 1
 	return {"overtime": over, "short_day": short_day}
+
+
+# ============================================================================
+#  TAAHHÜT EDİLMEMİŞ TASLAK — §8.5 "maliyet TAAHHÜTTEN ÖNCE okunur"
+# ============================================================================
+# Modal artık TAAHHÜTLÜ: düzenlemeler yerel bir taslağa yazılır, `Uygula` onları motora
+# geçirir, `Vazgeç` atar. O yüzden her okuma iki kez gerekiyor — bir kez motorun durumundan,
+# bir kez taslaktan. İkinci bir çözümleyici YAZILMADI; aşağıdakiler `_resolve`'un ta
+# kendisini çağırıyor, yalnız girdiyi başka yerden alıyor.
+#
+# Taslak biçimi: {"company": int, "start": int, "groups": {gid: h}, "people": {id: h}}.
+# `people` ve `groups` YALNIZ istisnaları taşır; bir anahtarın YOKLUĞU "devralıyor" demektir.
+
+
+## Motorun bugünkü durumunun taslak biçimi. KOPYA döner — modal onu serbestçe düzenler.
+static func draft_state() -> Dictionary:
+	var people: Dictionary = {}
+	for c in CharacterRegistry.get_employees():
+		if person_has_override(c):
+			people[c.id] = c.work_hours_override
+	return {
+		"company": _clamp_hours(GameState.company_work_hours),
+		"start": start_hour(),
+		"groups": GameState.group_work_hours_override.duplicate(true),
+		"people": people,
+	}
+
+
+static func hours_in(st: Dictionary, c: Character) -> int:
+	var company: int = int(st.get("company", GameState.company_work_hours))
+	if c == null or c.category == "founder":
+		return _clamp_hours(company)
+	var group_id: String = group_of(c)
+	var groups: Dictionary = st.get("groups", {}) as Dictionary
+	var people: Dictionary = st.get("people", {}) as Dictionary
+	return _resolve(company,
+		groups.get(group_id) if group_id != "" else null,
+		int(people.get(c.id, 0)))
+
+
+static func person_has_override_in(st: Dictionary, c: Character) -> bool:
+	return c != null and c.category != "founder" \
+		and int((st.get("people", {}) as Dictionary).get(c.id, 0)) > 0
+
+
+static func group_has_override_in(st: Dictionary, group_id: String) -> bool:
+	return (st.get("groups", {}) as Dictionary).has(group_id)
+
+
+## KAYNAK sütunu, taslaktan. "" = kendi kararı.
+static func inherited_from_in(st: Dictionary, c: Character) -> String:
+	if c == null or person_has_override_in(st, c):
+		return ""
+	var group_id: String = group_of(c)
+	if group_id != "" and group_has_override_in(st, group_id):
+		return "group"
+	return "company"
+
+
+static func override_count_in(st: Dictionary) -> int:
+	return (st.get("groups", {}) as Dictionary).size() \
+		+ (st.get("people", {}) as Dictionary).size()
+
+
+static func counts_in(st: Dictionary) -> Dictionary:
+	var over: int = 0
+	var short_day: int = 0
+	for c in CharacterRegistry.get_active_employees():
+		var h: int = hours_in(st, c)
+		if HRConstants.is_overtime_hours(h):
+			over += 1
+		elif HRConstants.is_short_day_hours(h):
+			short_day += 1
+	return {"overtime": over, "short_day": short_day}
+
+
+## Taslağın günlük mesai tahakkuku. `daily_overtime_at`'in NİHAYET bir okuyucusu var:
+## seam tam olarak bunun için yazılmıştı ve bugüne dek sıfır çağıranla duruyordu.
+static func daily_overtime_in(st: Dictionary) -> int:
+	var by_id: Dictionary = {}
+	for c in CharacterRegistry.get_active_employees():
+		by_id[c.id] = hours_in(st, c)
+	return daily_overtime_at(by_id)
+
+
+## `Uygula`. Taslağı motora TEK hamlede geçirir; yazıcıların hepsi kendi seam'leri
+## (WRITE-THROUGH YASASI), yani sinyaller olması gerektiği gibi çıkar.
+static func apply_state(st: Dictionary) -> void:
+	set_company_start_hour(int(st.get("start", start_hour())))
+	set_company_hours(int(st.get("company", GameState.company_work_hours)))
+	var groups: Dictionary = st.get("groups", {}) as Dictionary
+	for gid in HRConstants.ROSTER_GROUPS:
+		var key: String = String(gid)
+		if groups.has(key):
+			set_group_hours(key, int(groups[key]))
+		else:
+			clear_group_hours(key)
+	var people: Dictionary = st.get("people", {}) as Dictionary
+	for c in CharacterRegistry.get_employees():
+		if people.has(c.id):
+			set_person_hours(c.id, int(people[c.id]))
+		elif c.work_hours_override > 0:
+			clear_person_hours(c.id)
 
 
 # ============================================================================

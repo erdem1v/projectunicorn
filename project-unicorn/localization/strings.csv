@@ -580,6 +580,14 @@ HR_HOURS_START,Başlangıç,Start
 HR_HOURS_EQUALISE,Tümünü şirkete eşitle,Match everyone to the company
 HR_HOURS_BACK_TO_COMPANY,şirkete dön,back to company
 HR_HOURS_BACK_TO_GROUP,gruba dön,back to the group
+HR_HOURS_COL_SCOPE,KAPSAM,SCOPE
+HR_HOURS_COL_START,BAŞLANGIÇ,START
+HR_HOURS_COMPANY_SUB,{n} çalışan,{n} employees
+HR_HOURS_SOURCE_BASE,temel,base
+HR_HOURS_SOURCE_FROM_COMPANY,şirketten,from the company
+HR_HOURS_SOURCE_FROM_GROUP,gruptan,from the group
+HR_HOURS_CANCEL,Vazgeç,Cancel
+HR_HOURS_APPLY,Uygula,Apply
 HR_HOURS_HOVER_5,Kısa gün morali belirgin toparlar,A short day markedly restores morale
 HR_HOURS_HOVER_6,Kısa gün morali toparlar,A short day restores morale
 HR_HOURS_HOVER_7,Kısa gün moral erimesini durdurur,A short day stops morale eroding
