@@ -36,6 +36,7 @@ extends RefCounted
 #   PROBE PROMISE day=<d> id=<pid> status=<s> ...
 #   PROBE TALLY <id> fires=<n> picks=<n>    (one per id, at the end)
 #   PROBE END   day=<d> ...
+#   PROBE HR    hires=<n> emp=<n> payroll=<n> morale_avg=<f|-> below50=<n> min=<n|->
 #
 # DEDUPE-REJECTED fires are NOT visible here — enqueue() returns silently when
 # _queue_has_id() rejects a duplicate. They are counted from the engine's own
@@ -533,6 +534,38 @@ static func _finish() -> void:
 	_log_tally()
 	print("PROBE END day=%d run_active=%s ending=%s" % [
 		GameState.day, str(GameState.run_active), GameState.ending_id])
+	_log_hr()
+
+
+## PROBE HR — üç sayı: kaç işe alım, aylık maaş yükü, kaç kişi §7'nin 50 bandının altında.
+##
+## Bu satır bugüne dek YOKTU. `PROBE STATE` yalnız `emp=<headcount>` taşıyordu; `run_hires`,
+## `get_total_monthly_salaries()` ve `average_morale()` koşu boyunca HİÇ çağrılmıyordu, yani
+## İK'nın koşuda ne yaptığı ölçülmüyordu.
+##
+## SIFIR İŞE ALIM BİR HATA DEĞİL BİR BULGUDUR ve öyle raporlanır: probe'un kendi işe alım
+## yolu (`_hire_after_the_seed`) üç kapılı ve TEK ATIŞLIK, yani koşunun İK'yı hiç egzersiz
+## etmemesi mümkün ve bu ölçümün söylemesi gereken ilk şey odur.
+static func _log_hr() -> void:
+	var staff: Array[Character] = CharacterRegistry.get_employees()
+	var payroll: int = CharacterRegistry.get_total_monthly_salaries()
+	# BOŞ KADRO TUZAĞI: `average_morale()` kimse yokken 0.0 döner ve bu satır o zaman
+	# "moral çöktü" diye okunurdu — koşunun ilk kırk günü tam olarak öyle görünür.
+	# Kadro boşken sayı YAZILMAZ, tire yazılır.
+	var avg: String = "-"
+	var below: int = 0
+	var lowest: int = -1
+	if not staff.is_empty():
+		avg = "%.1f" % HRMoraleSystem.average_morale()
+		lowest = HRConstants.MORALE_MAX
+		for emp in staff:
+			if emp.morale < HRConstants.MORALE_BAND_LOW:
+				below += 1
+			lowest = mini(lowest, emp.morale)
+	print("PROBE HR hires=%d emp=%d payroll=%d morale_avg=%s below%d=%d min=%s" % [
+		GameState.run_hires, staff.size(), payroll, avg,
+		HRConstants.MORALE_BAND_LOW, below,
+		"-" if lowest < 0 else str(lowest)])
 
 
 # ============================================================================
