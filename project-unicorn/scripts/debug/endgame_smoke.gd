@@ -310,6 +310,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"job_assignment_and_idle":         fail = _case_job_assignment_and_idle()
 		"overload_costs_output":           fail = _case_overload_costs_output()
 		"save_migration_v3_to_v4":         fail = _case_save_migration_v3_to_v4()
+		"save_migration_v7_to_v8":  fail = _case_save_migration_v7_to_v8()
 		# --- Ekip arayüzü · onaylı tasarım 2026-08-22. Beşi de ÖNCEKİ motora karşı DÜŞER.
 		"star_ruler_contract":            fail = _case_star_ruler_contract()
 		"single_trait_contract":          fail = _case_single_trait_contract()
@@ -373,10 +374,18 @@ static func _sim_day_full() -> void:
 ## her ürün formülü artık kendi alanını okuyor. Fixture'ların "kurucu şu seviyede teknik"
 ## demesi için TEK yer: dördünü birden yazar, yani hangi formül hangi alanı okursa okusun
 ## sonuç migration öncesiyle aynı çıkar.
+## Kurucunun dört teknik alanını tek hamlede kurar. DEĞERLER CETVELLE BİRLİKTE İKİYE
+## KATLANDI (§2.4): eskiden 3 yazan bir çapa şimdi 6 yazıyor, ve katsayılar yarıya indiği
+## için çapanın ÖLÇTÜĞÜ sayı kıpırdamadı — "kurucu tech-3 solo = 3,0 efor/gün" hâlâ 3,0.
+## Literali 1,5'e çekmek çapanın ANLAMINI değiştirirdi; fixture'ı taşımak taşımaz.
+##
+## Kelepçe cetvelin kendisinden: motorda kurucu için bir aralık doğrulayıcısı yok, o yüzden
+## bir fixture'ın cetvel dışına taşması sessizce mümkündü.
 static func _set_founder_tech(value: int) -> void:
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder == null:
 		return
+	value = clampi(value, HRConstants.AREA_MIN, HRConstants.AREA_MAX)
 	for area_key in [HRConstants.AREA_PRODUCT, HRConstants.AREA_DESIGN,
 			HRConstants.AREA_ENGINEERING, HRConstants.AREA_QA]:
 		founder.role_stats[area_key] = value
@@ -1966,8 +1975,11 @@ static func _case_iter_ceiling_founder_vs_designer() -> String:
 	# ve SON tur (4) solo'nun son kazancından fazla verir — "daha iyi insanlar lazım, daha
 	# çok tur değil" hissinin sayısal kanıtı. (Eski "plato" biçimi 12 tur istiyordu.)
 	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(2)
-	var want0: float = ProductSystem.ITER_CEIL_FOUNDER_COEF * 2.0
+	_set_founder_tech(4)
+	# Kurucu terimi motordan okunur, sabit yazılmaz — burada eski cetvelin fixture değeri
+	# (2.0) duruyordu ve cetvel değişince iddia ölçtüğü şeyden koptu.
+	var want0: float = ProductSystem.ITER_CEIL_FOUNDER_COEF \
+		* float(GameState.get_founder_skill(HRConstants.AREA_PRODUCT))
 	var ceil0: Dictionary = ProductSystem.iteration_axis_ceilings()
 	if absf(float(ceil0["innovation"]) - want0) > 0.001:
 		return "solo innovation ceiling %.2f, want %.2f" % [float(ceil0["innovation"]), want0]
@@ -2031,7 +2043,7 @@ static func _case_iter_diminishing_returns() -> String:
 	# Azalan getiri: tur N+1'in kazancı tur N'inkinden KÜÇÜK (ikisi de > 0).
 	# Tasarımcı baştan masada → tavan yüksek, iki tur boyunca bol headroom.
 	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(2)
+	_set_founder_tech(4)
 	_make_employee("char_iter_dr_designer", "DR Designer", HRConstants.ROLE_DESIGNER,
 		SEED_PACE, 0, 50, 7)
 	GameState.set_cash(200000)
@@ -2059,7 +2071,7 @@ static func _case_iter_ceiling_never_exceeded() -> String:
 	# Güvenlik tavanına (ITER_MAX_ROUNDS) kadar sür: hiçbir eksen kendi tavanını (ya da
 	# tavan üstü commit damgasını) aşamaz; tavanda tur ZİNCİRİ durur (park), çıkış hâlâ oyuncuda.
 	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(1)   # taban tavan 4 → damga tavanın üstünde kalabilir
+	_set_founder_tech(2)   # taban tavan 4 → damga tavanın üstünde kalabilir
 	GameState.set_cash(200000)
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], ""):
 		return "start_build failed"
@@ -2102,8 +2114,11 @@ static func _case_iter_zero_staff_neutrality_and_axis_lock() -> String:
 	# her alan zaten kendi eksenini besliyor. Yerine geçen kapı ATAMADIR: build'de olmayan
 	# kimse build tavanına dokunmaz, ki ch. 03 §8'in istediği gerilim de tam olarak budur.
 	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(3)
-	var base: float = ProductSystem.ITER_CEIL_FOUNDER_COEF * 3.0
+	_set_founder_tech(6)
+	# Kurucu tabanı motordan okunur (aynı gerekçe: sabit yazılı fixture değeri cetvelle
+	# birlikte kayar ve iddiayı sessizce başka bir şeyin ölçüsü hâline getirir).
+	var base: float = ProductSystem.ITER_CEIL_FOUNDER_COEF \
+		* float(GameState.get_founder_skill(HRConstants.AREA_PRODUCT))
 	var c: Dictionary = ProductSystem.iteration_axis_ceilings()
 	for ax in QualityModel.AXES:
 		if absf(float(c[ax]) - base) > 0.001:
@@ -2225,7 +2240,7 @@ static func _case_speed_tracks_team_change() -> String:
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder == null:
 		return "no founder in registry"
-	_set_founder_tech(3)
+	_set_founder_tech(6)
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_tools", "ai_assistant_image"], ""):
 		return "start_build failed"   # efor 8+8=16 — ölçüm pencereleri içinde bitmez
 	var b: FeatureBuild = ProductSystem.get_active_build()
@@ -2250,10 +2265,17 @@ static func _case_speed_tracks_team_change() -> String:
 	if not _run_build_to_phase("development"):
 		return "build never reached the development phase"
 	# LEDGER (Coupling): the expectation SHAPE changed, the NUMBER did not. Founder tech-3 solo
-	# was 1.0 x 3 = 3.0 under the old lead-weight law; now it is FOUNDER_SPEED_COEF x 3 x
+	# was 1.0 x 3 = 3.0 under the old lead-weight law; then it became FOUNDER_SPEED_COEF x 3 x
 	# coordination(Liderlik 0) = 3.0 x 1.0. Held by anchor a2.
+	#
+	# LEDGER 4 (kurucu cetveli 0-10, 2026-08-24): SAYI YINE KIPIRDAMADI ama artik HICBIR
+	# YERDE YAZILI DEGIL. Fixture 3'ten 6'ya, katsayi 1,0'dan 0,5'e gitti; beklenti kurucunun
+	# o fazdaki ALANINI motordan okuyor, cunku sabit yazilmis bir 3.0 bir daha cetvel
+	# degisirse sessizce yanlis capayi savunurdu.
+	var founder_dev_area: float = float(GameState.get_founder_skill(
+		ProductSystem._founder_phase_area("development")))
 	var want_solo: float = maxf(ProductSystem.SPEED_MIN,
-		ProductSystem.FOUNDER_SPEED_COEF * 3.0
+		ProductSystem.FOUNDER_SPEED_COEF * founder_dev_area
 		* HRConstants.coordination_for_founder(GameState.get_founder_skill("leadership")))
 	var s0: float = b.efor_spent
 	for h in 24:
@@ -2266,10 +2288,11 @@ static func _case_speed_tracks_team_change() -> String:
 	if days_after >= days_before:
 		return "~gün did not shrink after hire (%d -> %d)" % [days_before, days_after]
 	# LEDGER (Coupling): old = 3.0 + SPEED_ASSIST_WEIGHT(0.5) x ENGINEER_DEFAULT_TECH_LEGACY(2)
-	# = 4.0. New = (FOUNDER_SPEED_COEF x 3 + EMPLOYEE_SPEED_COEF x pace 4) x coordination = 4.0.
-	# Same number, derived from the new law — anchor b1. No lead/assist split any more.
+	# = 4.0. New = (FOUNDER_SPEED_COEF x kurucunun alani + EMPLOYEE_SPEED_COEF x pace 4)
+	# x coordination = 4.0. Same number, derived from the new law — anchor b1. No lead/assist
+	# split any more, and no hard-coded founder number either (bkz. LEDGER 4).
 	var want_team: float = maxf(ProductSystem.SPEED_MIN,
-		(ProductSystem.FOUNDER_SPEED_COEF * 3.0
+		(ProductSystem.FOUNDER_SPEED_COEF * founder_dev_area
 			+ ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE))
 		* HRConstants.coordination_for_founder(GameState.get_founder_skill("leadership")))
 	s0 = b.efor_spent
@@ -2290,7 +2313,7 @@ static func _case_deterministic_axes_at_ship() -> String:
 	# "tasarım bilmiyorsan tasarımı yükseltemezsin" alan modelinin bütün iddiası — ama bu
 	# case DETERMİNİZMİ ölçüyor, tavanı değil, o yüzden kurucuya dört teknik alanda da
 	# bolca baş açıklığı veriliyor. Tavanın kendisi iter_ceiling_* case'lerinin işi.
-	_set_founder_tech(3)
+	_set_founder_tech(6)
 	GameState.set_cash(200000)
 	var picks := ["ai_assistant_chat", "ai_assistant_memory"]
 	var want: Dictionary = ProductSystem.projected_axes(picks, [], {})
@@ -4036,10 +4059,17 @@ static func _case_founder_5skill_init() -> String:
 	var total: int = 0
 	for skill_key in FounderConstants.SKILLS:
 		total += int(founder.role_stats[skill_key])
-	if total != FounderConstants.POINT_POOL:
-		return "skills sum %d (want %d)" % [total, FounderConstants.POINT_POOL]
-	if GameState.get_founder_skill("sales") != 2:
-		return "sales=%d (debug payload wants 2)" % GameState.get_founder_skill("sales")
+	# TOPLAM DAĞITIM DEĞİL CETVEL BİRİMİNDE. Onboarding hâlâ POINT_POOL kadar puan
+	# dağıtıyor; kaydedilen değer onun cetvel karşılığı (§2.4, FounderConstants.to_ruler).
+	# Bu iddia tam olarak o çevrimin YAPILDIĞINI ölçüyor — çarpan düşerse burada patlar.
+	var want_total: int = FounderConstants.POINT_POOL * FounderConstants.RULER_SCALE
+	if total != want_total:
+		return "skills sum %d (want %d — dağıtım %d × cetvel %d)" % [
+			total, want_total, FounderConstants.POINT_POOL, FounderConstants.RULER_SCALE]
+	var want_sales: int = FounderConstants.to_ruler(2)   # debug payload'ın satış dağıtımı
+	if GameState.get_founder_skill("sales") != want_sales:
+		return "sales=%d (debug payload 2 puan dağıttı, cetvelde %d olmalı)" % [
+			GameState.get_founder_skill("sales"), want_sales]
 	# Legacy read must return 0 (and push_error loudly — the SKILL-RENAME tripwire).
 	if GameState.get_founder_skill("markets") != 0:
 		return "legacy 'markets' read returned nonzero"
@@ -5461,7 +5491,7 @@ static func _case_coupling_speed_law() -> String:
 	# THE hız yasası, both hard anchors in one place, measured through the real formula.
 	GameState.set_cash(200000)
 	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(3)
+	_set_founder_tech(6)
 	var coord: float = HRConstants.coordination_for_founder(GameState.get_founder_skill("leadership"))
 	if not is_equal_approx(coord, 1.0):
 		return "the debug payload no longer gives a neutral coordination multiplier (%.3f) — every anchor below shifts" % coord
@@ -5470,9 +5500,12 @@ static func _case_coupling_speed_law() -> String:
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if not _run_build_to_phase("development"):
 		return "build never reached development"
-	# ANCHOR a2: founder tech-3 solo == 3.0 efor/gün, exactly the pre-Coupling number.
+	# ANCHOR a2: SOLO KURUCU == 3,0 efor/gün, Coupling öncesiyle birebir aynı sayı.
+	# Çapa cetvel değişiminden SAĞ ÇIKTI ve bu kasıtlı: fixture 3'ten 6'ya, katsayı 1,0'dan
+	# 0,5'e gitti (§2.4), çarpım kıpırdamadı. Ölçülen sayının aynı kalması, cetvel
+	# değişiminin kurucunun yapım katkısını sessizce iki katına ÇIKARMADIĞININ kanıtı.
 	if absf(ProductSystem.team_speed(b) - 3.0) > 0.001:
-		return "anchor a2 broken: founder tech-3 solo is %.3f efor/day, want 3.0" % ProductSystem.team_speed(b)
+		return "anchor a2 broken: solo founder is %.3f efor/day, want 3.0" % ProductSystem.team_speed(b)
 	# ANCHOR b1: a seeded developer adds EMPLOYEE_SPEED_COEF × their Yazılım. It was 1.0 (the
 	# pre-Coupling assist engineer) while the seed's build number was HIZ 4; the area
 	# migration made it the KEY AREA, seeded at SEED_EXPERTISE, so the anchor is 1.25.
@@ -5496,7 +5529,12 @@ static func _case_coupling_speed_law() -> String:
 	# ...ve aynası: TASARIM fazında tasarımcı SAYILIR, yazılımcı SAYILMAZ. Toplam kurucu +
 	# tasarımcı(ana alan); yazılımcı terimi YOK, çünkü o fazın alanlarına atanamaz.
 	var iter_speed: float = ProductSystem._speed_for_phase("iteration", "")
-	var want_iter: float = ProductSystem.FOUNDER_SPEED_COEF * 3.0 \
+	# Kurucu terimi SABİT YAZILMIYOR, motordan okunuyor: burada `3.0` duruyordu ve o sayı
+	# kurucunun ESKİ cetveldeki fixture değeriydi. Cetvel değişince iddia ölçtüğü şeyden
+	# koptu — "tasarımcı sayılıyor mu" sorusunu değil "fixture kaç" sorusunu ölçer oldu.
+	var founder_area: float = float(GameState.get_founder_skill(
+		ProductSystem._founder_phase_area("iteration")))
+	var want_iter: float = ProductSystem.FOUNDER_SPEED_COEF * founder_area \
 		+ ProductSystem.EMPLOYEE_SPEED_COEF * float(SEED_EXPERTISE)
 	if absf(iter_speed - want_iter) > 0.001:
 		return "TASARIM speed %.3f, want founder + designer only (%.3f) — the developer must not appear" % [
@@ -5514,7 +5552,7 @@ static func _case_coupling_coordination_sources() -> String:
 	# The multiplier is asymmetric BY SOURCE, and a stale lead resolves loudly to the founder.
 	GameState.set_cash(200000)
 	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(3)
+	_set_founder_tech(6)
 	founder.role_stats["leadership"] = 0
 	# Founder-as-lead is never a penalty: neutral at Liderlik 0, rising after that.
 	if not is_equal_approx(HRConstants.coordination_for_founder(0), 1.0):
@@ -5557,26 +5595,37 @@ static func _case_coupling_coordination_sources() -> String:
 static func _case_coupling_bug_team_average() -> String:
 	# Bug rate reads the team's UZMANLIK WEIGHTED AVERAGE, and the average cuts BOTH ways.
 	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(3)
+	_set_founder_tech(6)
 	# GELİŞTİRME fazının alanı Yazılım; commit anındaki hata tohumu da onu okur (rev 2 §2).
 	var dev_area: String = HRConstants.AREA_ENGINEERING
-	# Founder alone and in charge: the average IS his Teknoloji — byte-equal to the
-	# pre-Coupling founder-only read, which is why the reducer was not rescaled.
-	if absf(ProductSystem._team_area_avg(dev_area, "") - 3.0) > 0.001:
-		return "founder-solo average is %.3f, want his Teknoloji 3.0 exactly" % ProductSystem._team_area_avg(dev_area, "")
+	# Kurucu yalnız ve sorumluyken ortalama TAM OLARAK onun kendi puanıdır: ağırlıklar
+	# sadeleşir ((1,5 × p) / 1,5 = p), o yüzden BUG_TECH_REDUCER hiç yeniden ölçeklenmedi.
+	#
+	# DEĞER MOTORDAN OKUNUR. Burada `3.0` sabit yazılıydı ve o eski cetvelin fixture
+	# değeriydi; §2.4 kurucuyu 0–10'a alınca sayı 6 oldu. VE BU BİR DENGE DEĞİŞİKLİĞİ:
+	# `_team_area_avg` kurucu ile çalışanı NORMALİZE ETMEDEN aynı ortalamada topluyor, yani
+	# tek kurucu hâlinde bug/wear azaltması gerçekten ikiye katlanıyor. Katsayıyı yarıya
+	# indirmek çalışan-ağırlıklı hâli bozardı; doğru olan kurucunun nihayet aynı cetvelde
+	# sayılması. Beyan edilir, gizlenmez.
+	var founder_area_value: float = float(GameState.get_founder_skill(dev_area))
+	if absf(ProductSystem._team_area_avg(dev_area, "") - founder_area_value) > 0.001:
+		return "founder-solo average is %.3f, want his own %.1f exactly" % [
+			ProductSystem._team_area_avg(dev_area, ""), founder_area_value]
 	# A STRONG team lifts the average (fewer bugs)...
 	var strong: Character = _make_employee("char_bug_strong", "Strong Dev", HRConstants.ROLE_DEVELOPER,
 		SEED_PACE, 0, 50, 9, SEED_RAPPORT)
 	var avg_strong: float = ProductSystem._team_area_avg(dev_area, "")
-	if avg_strong <= 3.0:
-		return "an UZMANLIK-9 developer did not lift the average (%.3f)" % avg_strong
+	if avg_strong <= founder_area_value:
+		return "an UZMANLIK-9 developer did not lift the average above the founder's own %.1f (%.3f)" % [
+			founder_area_value, avg_strong]
 	CharacterRegistry.remove(strong.id)
 	# ...and a WEAK team drags it below the founder's own number (more bugs). Two-directional.
 	_make_employee("char_bug_weak", "Weak Dev", HRConstants.ROLE_DEVELOPER,
 		SEED_PACE, 0, 50, 0, SEED_RAPPORT)
 	var avg_weak: float = ProductSystem._team_area_avg(dev_area, "")
-	if avg_weak >= 3.0:
-		return "an UZMANLIK-0 developer did not drag the average down (%.3f)" % avg_weak
+	if avg_weak >= founder_area_value:
+		return "an UZMANLIK-0 developer did not drag the average below the founder's own %.1f (%.3f)" % [
+			founder_area_value, avg_weak]
 	# The SORUMLU carries ×1.5, so who is in charge changes the quality average.
 	var as_member: float = ProductSystem._team_area_avg(dev_area, "")
 	var as_lead: float = ProductSystem._team_area_avg(dev_area, "char_bug_weak")
@@ -5589,7 +5638,7 @@ static func _case_coupling_wear_team_average() -> String:
 	# Post-ship wear follows the SAME grammar as bug — the founder-only read is gone.
 	_seed_live_product()
 	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(3)
+	_set_founder_tech(6)
 	# The audience must be big enough to keep the wear rate OFF WEAR_FLOOR in BOTH arms —
 	# otherwise both clamp to the floor and read identical, which says nothing about the
 	# expertise term. (That is how this case first failed: 0.0480 == 24 x WEAR_FLOOR exactly.)
@@ -5764,7 +5813,7 @@ static func _case_coupling_overtime_applied() -> String:
 	# could only assert the numbers were queryable, so a formula that never read them looked fine.
 	GameState.set_cash(200000)
 	var founder: Character = CharacterRegistry.get_founder()
-	_set_founder_tech(3)
+	_set_founder_tech(6)
 	_make_employee("char_ot_dev", "OT Dev", HRConstants.ROLE_DEVELOPER, SEED_PACE, 6000, 100)
 	# DÖRT özellik, iki değil. Ölçüm iki tam günü efor TAVANINA ÇARPMADAN geçirmek zorunda:
 	# tavana dayanan gün son saatlerde daha az efor yazar ve oran sessizce 1.30'un altına
@@ -7462,6 +7511,13 @@ static func _case_star_ruler_contract() -> String:
 	if not is_equal_approx(HRConstants.stars_for(HRConstants.AREA_MAX), float(HRConstants.STAR_MAX)):
 		return "the top of the ruler is %.1f stars, want a full %d — five can never fill" % [
 			HRConstants.stars_for(HRConstants.AREA_MAX), HRConstants.STAR_MAX]
+	# KURUCU DA BU CETVELDE (§2.4 + §5.3). Bu satır turdan ÖNCE DÜŞERDİ: SKILL_CEILING 5'ti
+	# ve stars_for(5) = 2,5 yıldız verirdi — Kişisel kartı kurucuya asla dolduramayacağı bir
+	# yıldız satırı çiziyordu. Cetvelin gerçekten birleştiğinin tek cümlelik ispatı.
+	if not is_equal_approx(HRConstants.stars_for(FounderConstants.SKILL_CEILING),
+			float(HRConstants.STAR_MAX)):
+		return "the founder ceiling renders %.1f stars, want a full %d — §2.4 puts him on the shared ruler" % [
+			HRConstants.stars_for(FounderConstants.SKILL_CEILING), HRConstants.STAR_MAX]
 	if not is_equal_approx(HRConstants.stars_for(0), 0.0):
 		return "zero points is not zero stars"
 	if not is_equal_approx(HRConstants.stars_for(1), 0.5):
@@ -8191,6 +8247,100 @@ static func _case_save_migration_v4_to_v5() -> String:
 	var gs_v5: Dictionary = state.get("game_state", {}) as Dictionary
 	if gs_v5.has("job_leads") or gs_v5.has("area_leads"):
 		return "a lead seat survived under game_state"
+	return ""
+
+static func _case_save_migration_v7_to_v8() -> String:
+	# §2.4 · KURUCU TEK CETVELE. v7 kayıtları kurucuyu 0–5'te taşıyor; v8 onu çalışanın
+	# 0–10 cetveline alıyor. Kurucu 0–5'te kaldığı sürece Kişisel kartının yıldız satırı
+	# yapısal olarak 5 üzerinden 2,5'te tavanlıydı (§5.3'ün vaat ettiği beşinci yıldız
+	# oyuncuya asla ulaşmıyordu).
+	#
+	# BU VAKA GÖÇÜ DOĞRUDAN ÇAĞIRMAZ — GERÇEK BİR DOSYA YAZIP `read_slot`'tan geçirir.
+	# Sebep, kardeş vakanın gösterdiği tuzak: `_case_save_migration_v3_to_v4` göç
+	# fonksiyonunu elle çağırıyor, yani MERDİVENE bağlı olup olmadığını hiçbir zaman
+	# ölçmüyor. Ladder'a eklemeyi unutmuş bir göç o vakayı yeşil bırakır ve gerçek
+	# kayıtlarda hiç koşmaz — karakter göçleri tam olarak bu şekilde dört şema sürümü
+	# boyunca sessiz no-op kaldı (save_manager.gd:615-622'deki yara kaydı).
+	#
+	# FALSİFİKASYON: read_slot'taki `if version < 8` satırını sil → ilk iddia FAIL.
+	var old_stats: Dictionary = {
+		HRConstants.AREA_PRODUCT: 1, HRConstants.AREA_DESIGN: 0,
+		HRConstants.AREA_ENGINEERING: 3, HRConstants.AREA_QA: 0,
+		HRConstants.AREA_SALES: 2, HRConstants.AREA_CUSTOMER_SUCCESS: 0,
+		HRConstants.SKILL_LEADERSHIP: 1, FounderConstants.SKILL_CHARISMA: 2,
+	}
+	var state: Dictionary = {
+		"registries": {"characters": [
+			{"id": "char_founder", "category": "founder", "role": HRConstants.ROLE_FOUNDER,
+				"role_stats": old_stats.duplicate(), "experience_threshold": 999},
+			{"id": "char_v7_dev", "category": "employee", "role": HRConstants.ROLE_DEVELOPER,
+				"role_stats": HRConstants.seed_skills(HRConstants.ROLE_DEVELOPER, 7, 3),
+				"experience_threshold": 111},
+		]},
+		"game_state": {},
+	}
+	var path: String = "%s%s.json" % [SaveManager.SAVE_DIR, SAVE_SLOT_A]
+	DirAccess.make_dir_recursive_absolute(SaveManager.SAVE_DIR)
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f == null:
+		return "could not write the v7 fixture to %s" % path
+	f.store_string(JSON.stringify({"schema_version": 7, "meta": {}, "state": state}))
+	f.close()
+
+	var res: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	if not bool(res.get("ok", false)):
+		_cleanup_save_slots()
+		return "read_slot refused the v7 fixture: %s" % String(res.get("error_key", ""))
+	var loaded: Dictionary = res["state"] as Dictionary
+	var rows: Array = (loaded["registries"] as Dictionary)["characters"] as Array
+	var founder: Dictionary = rows[0] as Dictionary
+	var dev: Dictionary = rows[1] as Dictionary
+	var fs: Dictionary = founder["role_stats"] as Dictionary
+
+	# 1 · KURUCUNUN HER DEĞERİ İKİYE KATLANDI — Karizma dahil (§3'ün cetveli sekiz
+	# anahtarın hepsini kapsıyor; VC beat'lerinin okuduğu şey Karizma).
+	for skill_key in old_stats.keys():
+		var want: int = int(old_stats[skill_key]) * FounderConstants.RULER_SCALE
+		if int(fs.get(skill_key, -1)) != want:
+			return "founder '%s' migrated to %s, want %d" % [
+				String(skill_key), str(fs.get(skill_key)), want]
+	# 2 · ÇALIŞANA DOKUNULMADI. Çalışanlar zaten 0–10'daydı; onları da katlamak her
+	# kaydı bozardı ve bunu hiçbir şey geri alamazdı.
+	if int((dev["role_stats"] as Dictionary)[HRConstants.AREA_ENGINEERING]) != 7:
+		_cleanup_save_slots()
+		return "the employee row was doubled too — v8 is founder-only"
+	if int(dev.get("experience_threshold", 0)) != 111:
+		_cleanup_save_slots()
+		return "the employee's threshold was recomputed; only the founder's sum moved"
+	# 3 · EŞİK AYNI ADIMDA YENİDEN HESAPLANDI. Puanlar ikiye katlanınca v6→v7'nin yazdığı
+	# eşik bayatlar ve kurucunun deneyim barı yanlış ölçekte kalırdı.
+	var total: int = 0
+	for area_key in HRConstants.AREAS:
+		total += int(fs.get(String(area_key), 0))
+	total += int(fs.get(HRConstants.SKILL_LEADERSHIP, 0))
+	if int(founder["experience_threshold"]) != HRConstants.experience_threshold(total):
+		_cleanup_save_slots()
+		return "the founder kept a stale experience threshold (%s, want %d)" % [
+			str(founder["experience_threshold"]), HRConstants.experience_threshold(total)]
+	# 4 · İDEMPOTANS. Bir İKİYE KATLAMANIN doğal bekçisi yoktur — nöbetçi olmasa ikinci
+	# koşuda kareye çıkardı. Kardeş vaka (v3→v4) bunu :8248'de aynı biçimde kanıtlıyor.
+	SaveManager._migrate_founder_to_ten(loaded)
+	for skill_key2 in old_stats.keys():
+		var want2: int = int(old_stats[skill_key2]) * FounderConstants.RULER_SCALE
+		if int(fs.get(skill_key2, -1)) != want2:
+			_cleanup_save_slots()
+			return "running the migration twice squared '%s' (%s)" % [
+				String(skill_key2), str(fs.get(skill_key2))]
+	# 5 · CETVELİN TAVANI AŞILMAZ: 5'teki bir kurucu 10'da durur, 12'ye çıkmaz.
+	var top: Dictionary = {"registries": {"characters": [
+		{"id": "char_founder", "category": "founder", "role": HRConstants.ROLE_FOUNDER,
+			"role_stats": {HRConstants.AREA_ENGINEERING: HRConstants.AREA_MAX}}]}}
+	SaveManager._migrate_founder_to_ten(top)
+	var capped: Dictionary = ((top["registries"] as Dictionary)["characters"] as Array)[0]
+	if int((capped["role_stats"] as Dictionary)[HRConstants.AREA_ENGINEERING]) != HRConstants.AREA_MAX:
+		_cleanup_save_slots()
+		return "a founder already at the ceiling was pushed past it"
+	_cleanup_save_slots()
 	return ""
 
 

@@ -1,10 +1,18 @@
 class_name SegmentBar
 extends Control
 
-# Dark-register segmented skill bar (onboarding Page 2). Five slots — the true
-# SKILL_CEILING — of which only ONBOARDING_CAP are fillable at creation: the
-# beyond-cap slots render extra-dim, silently documenting the growth arc (4-5
-# reachable later via HR founder training) without building that system.
+# Dark-register segmented skill bar (onboarding Page 2). ON slot — the shared 0-10
+# ruler (SKILL_CEILING == HRConstants.AREA_MAX) — of which only the onboarding cap's
+# RULER equivalent is fillable at creation: the beyond-cap slots render extra-dim,
+# silently documenting the growth arc (the rest reachable later via HR founder
+# training) without building that system.
+#
+# CETVEL BIRIMI, DAGITIM BIRIMI DEGIL (2026-08-24). Cubuk 5 yuvadan 10'a cikti cunku
+# kurucu artik calisanla ayni cetvelde (GDD rev 11 §2.4 + §4.1). Dagitim birimi
+# degismedi: oyuncu hala POINT_POOL kadar puani ONBOARDING_CAP tavaniyla dagitiyor ve
+# yanindaki +/- sayaci o puani sayiyor. Cubuk o dagitimin CETVEL karsiligini cizer
+# (FounderConstants.to_ruler) — yoksa 3 puan harcamis bir oyuncu 10 yuvanin 3'unu dolu
+# gorur ve dogacak kurucunun 6/10 tasidigini hicbir yerde okuyamazdi.
 #
 # Godot concept: a custom-drawn Control. _draw() paints with the CanvasItem draw
 # API; queue_redraw() invalidates after a state change. Cheaper and crisper than
@@ -14,7 +22,7 @@ const SLOT_GAP := 4.0
 const SLOT_HEIGHT := 6.0
 
 var segments: int = FounderConstants.SKILL_CEILING
-var fillable: int = FounderConstants.ONBOARDING_CAP
+var fillable: int = FounderConstants.to_ruler(FounderConstants.ONBOARDING_CAP)
 var filled: int = 0
 
 

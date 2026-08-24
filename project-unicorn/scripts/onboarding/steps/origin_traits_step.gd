@@ -7,7 +7,8 @@ extends OnboardingStep
 #   KARAKTER   — Software-Inc trait formula: 1 positive free; 2 positives force
 #                exactly 1 negative (FounderConstants.validate_traits).
 #   YETENEKLER — POINT_POOL (6) points across 5 skills, per-skill cap 3, SegmentBar shows the
-#                ceiling-5 slots; İleri stays blocked until every point is spent.
+#                shared 0-10 ruler (dagitim x FounderConstants.RULER_SCALE); İleri stays
+#                blocked until every point is spent.
 #
 # Trait EFFECTS are reserved (no system consumes them yet) — this page only
 # stores the chosen ids into the draft.
@@ -372,7 +373,9 @@ func _refresh_skills() -> void:
 	var remaining: int = FounderConstants.alloc_remaining(_alloc)
 	for skill_key in FounderConstants.SKILLS:
 		var v: int = int(_alloc.get(skill_key, 0))
-		(_skill_bars[skill_key] as SegmentBar).set_filled(v)
+		# Sayac DAGITIM puanini gosterir (+/- onu adimliyor), cubuk onun CETVEL
+		# karsiligini cizer — kaydedilen deger de odur (GameState._build_founder).
+		(_skill_bars[skill_key] as SegmentBar).set_filled(FounderConstants.to_ruler(v))
 		(_skill_values[skill_key] as Label).text = str(v)
 		(_skill_minus[skill_key] as Button).disabled = (v <= 0)
 		(_skill_plus[skill_key] as Button).disabled = (v >= FounderConstants.ONBOARDING_CAP or remaining <= 0)

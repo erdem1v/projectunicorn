@@ -45,7 +45,11 @@ extends RefCounted
 # ezer. Bu iki değer eşdeğerlik çıpalarından TÜRETİLDİ, seçilmedi:
 #   kurucu tech-3 solo    → 1.00 × 3 = 3.0 efor/gün   (migration öncesiyle birebir)
 #   pace-4 çalışan katkısı → 0.25 × 4 = 1.0 efor/gün  (eski 0.5 × tech-2 ile birebir)
-const FOUNDER_SPEED_COEF := 1.0     # kurucunun Teknoloji puanı başına efor/gün
+## Kurucunun alan puanı başına efor/gün. 1,0'dı ve kurucu 0–5 cetvelindeydi; cetvel
+## birleşince değer ikiye katlandı, katsayı yarıya indi — "kurucu tech-3 solo = 3,0
+## efor/gün" çapası birebir korunuyor. Çalışan katsayısının (0,25) tam iki katı olması
+## da artık düz okunuyor: aynı cetvelde kurucunun puanı çalışanınkinin iki katı sayılır.
+const FOUNDER_SPEED_COEF := 0.5
 const EMPLOYEE_SPEED_COEF := 0.25   # çalışanın HIZ puanı başına efor/gün
 const SPEED_MIN := 1.0              # HIZ-0 ekip bile günde 1 efor ilerler (sonsuz build imkansız)
 const STRENGTHEN_EFOR := 5          # bir güçlendirme pick'inin eforu (~orta feature)
@@ -69,13 +73,14 @@ const PHASE_DEV_END := 0.80         # Geliştirme ("development"): [0.20, 0.80);
 # ödüllendirmez (kalibrasyon kanunu 2) — tavanda yalnız "Geliştirmeye geç" kalır.
 const ITER_ROUND_DAYS := 4          # WORKING — bir ek turun takvim günü (dafd33c ITERATION_LENGTH_DAYS halefi)
 const ITER_MAX_ROUNDS := 4          # yönetmen kararı 2026-08-19 (12→4): tur sayacı tavanı (tur 1 = tasarım bandının kendisi)
-# Tavan formülü: eksen tavanı = ITER_CEIL_FOUNDER_COEF × kurucu tech (0-5)
+# Tavan formülü: eksen tavanı = ITER_CEIL_FOUNDER_COEF × kurucunun o alandaki puanı
 #              + min(rolün aktif UZMANLIK toplamı × ITER_CEIL_ROLE_COEF, ITER_CEIL_ROLE_CAP)
-# İki katsayının varlığı hız yasasıyla aynı ÖLÇEK meselesi (bkz. :32-36): kurucu 0-3
-# bandında, çalışan UZMANLIK'ı 5-8 bandında yaşar. Çıpalar: tech-2 solo → tavan 8 (v1
+# İki katsayı ARTIK AYNI CETVELİ okuyor. Eskiden farklı olmalarının sebebi ölçekti —
+# kurucu 0-3, çalışan 5-8 bandında yaşıyordu; cetvel birleşince o gerekçe düştü ve
+# kurucu katsayısı yarıya indi (4,0 → 2,0), yani tavan çapaları kıpırdamadı. Çıpalar: tech-2 solo → tavan 8 (v1
 # damgalarının ~5-12 bandının içi — solo kurucu biraz cilalar, elite'e İTEREMEZ);
 # + UZMANLIK-7 Tasarımcı → 8+14 = 22 (bir sürümlük tasarım payı — işe alım fantezisi).
-const ITER_CEIL_FOUNDER_COEF := 4.0   # WORKING — kurucu alan puanı başına taban tavan
+const ITER_CEIL_FOUNDER_COEF := 2.0   # WORKING — kurucu alan puanı başına taban tavan
 const ITER_CEIL_ROLE_COEF := 2.0      # WORKING — alan puanı başına tavan katkısı
 const ITER_CEIL_ROLE_CAP := 18.0      # WORKING — terimin üst sınırı (çoklu işe alım istifi)
 # Hangi ALAN hangi kalite ekseninin tavanını yükseltir (2026-08-21; eskiden rol tablosuydu).

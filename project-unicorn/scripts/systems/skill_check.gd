@@ -7,17 +7,23 @@ extends RefCounted
 # ("kıl payı" / "akıcı") without changing the mechanical outcome.
 #
 # Pure static logic (no scene). chance = BASE + skill*step + bonus*step
-# - difficulty*step, clamped. Founder skills (tech/sales/negotiation/leadership/
-# influence — FounderConstants.SKILLS) are 0-3 at creation, ceiling 5, via
-# GameState.get_founder_skill.
+# - difficulty*step, clamped. Founder skills (FounderConstants.SKILLS — altı alan +
+# Liderlik + Karizma) live on the SHARED 0–10 ruler, read via GameState.get_founder_skill.
 
 const BASE_CHANCE := 0.45
-const SKILL_STEP := 0.15
+## KURUCU DEĞERİ BAŞINA olasılık adımı. 0,15'ti ve kurucu 0–5 cetvelindeydi; cetvel
+## çalışanınkiyle birleşince (0–10) değer ikiye katlandı, adım da yarıya indi — aynı
+## kurucu aynı olasılığı okur. Bu, "hiçbir okuyucu sessizce iki katına çıkmasın"
+## kuralının bu dosyadaki karşılığı.
+const SKILL_STEP := 0.075
 const BONUS_STEP := 0.10
 const DIFFICULTY_STEP := 0.15
 const MIN_CHANCE := 0.05
 const MAX_CHANCE := 0.95
-const SALES_READ_THRESHOLD := 2   # Satış >= this "reads" a prospect (reveals budget/need)
+## Satış >= bu değer ise aday müşteri "okunur" (bütçe/ihtiyaç açılır). 2'ydi; EŞİK bir
+## karşılaştırma olduğu için cetvel ikiye katlanınca o da ikiye katlanır — aynı yıldız
+## sayısı aynı kapıyı açar.
+const SALES_READ_THRESHOLD := 4
 
 
 static func _rng() -> RandomNumberGenerator:

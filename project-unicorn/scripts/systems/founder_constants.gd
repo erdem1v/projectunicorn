@@ -32,7 +32,7 @@ extends RefCounted
 # Old keys must never be read again — GameState.get_founder_skill push_errors on
 # OLD_SKILLS so a stale read screams in every log instead of silently returning 0.
 
-# Six areas (HRConstants.AREAS, same ids, same 0-9 ruler) + Liderlik + Karizma.
+# Six areas (HRConstants.AREAS, same ids, SAME RULER) + Liderlik + Karizma.
 const SKILLS := ["product", "design", "engineering", "qa", "sales", "customer_success",
 	"leadership", "charisma"]
 const SKILL_CHARISMA := "charisma"
@@ -50,10 +50,28 @@ const POINT_POOL := 6        # onboarding skill points; ALL must be spent (İler
                              # drift. But 6 points now spread over EIGHT columns instead of
                              # five, so the founder has more true zeros — [WORKING], and a
                              # real candidate for the calibration pass.
-const ONBOARDING_CAP := 3    # per-skill max at creation
-const SKILL_CEILING := 5     # underlying max — 4-5 reachable only via HR founder
-                             # training (LATER task, not built). At 5 the SkillCheck
-                             # formula clamps at MAX_CHANCE 0.95; safe headroom.
+const ONBOARDING_CAP := 3    # per-skill max at creation (DAĞITIM biriminde, cetvelde değil)
+
+## TEK CETVEL (§2.4 + §4.1 + §5.3): kurucu da çalışan da 0–10'da, iki puan bir yıldız.
+##
+## Eskiden 5'ti ve o rakam ZATEN KURGUYDU: tek okuyucusu onboarding'in segment çubuğuydu.
+## Eğitim ödülü `HRConstants.AREA_MAX`'e (10) kelepçeliyor, `can_train` 10'a bakıyor, ve
+## kurucu için bir değer aralığı doğrulayıcısı hiç olmadı — yani kurucu bugün de yasal
+## olarak 10'a çıkabiliyordu. Değişen cetvel değil; değişen, ONBOARDING'in ve katsayıların
+## motorun zaten kullandığı cetvelle uzlaşması.
+##
+## DAĞITIM BİRİMİ AYRI KALIR. Oyuncu hâlâ POINT_POOL kadar puanı ONBOARDING_CAP tavanıyla
+## dağıtır; ikiye katlama YAZMA ANINDA olur (GameState._build_founder). Yani doğan kurucu
+## en fazla 6/10 taşır — bu bilinçli ve onboarding turunun kalibrasyon konusudur.
+const SKILL_CEILING := HRConstants.AREA_MAX
+
+## Dağıtım biriminden cetvele geçişin TEK evi. Bir yerde daha çarpılırsa kurucu sessizce
+## kareye çıkar; o yüzden çarpan burada adıyla duruyor ve çağıranı tektir.
+const RULER_SCALE := 2
+
+
+static func to_ruler(alloc_points: int) -> int:
+	return clampi(alloc_points * RULER_SCALE, 0, SKILL_CEILING)
 
 # --- Trait rules (Software-Inc formula) ---
 # >=1 positive required; 1 positive -> negative optional; 2 positives -> exactly 1 negative.

@@ -35,7 +35,7 @@ extends Node
 # every point a save can be taken, and there is nothing mid-resolution for a schema to
 # describe. One sitting, one sitting only — it does not survive closing the game.
 
-const SCHEMA_VERSION := 7   # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi · v7: rev 11 — İŞ ataması, seviye, tek deneyim barı, yaz izni
+const SCHEMA_VERSION := 8   # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi · v7: rev 11 — İŞ ataması, seviye, tek deneyim barı, yaz izni · v8: kurucu TEK CETVELE (0–10)
 const SAVE_DIR := "user://saves/"
 ## v3→v4 migration: what a migrated character gets in an area the old model never stored.
 ## Low but never zero — see _migrate_character_areas.
@@ -231,6 +231,8 @@ func read_slot(slot_id: String) -> Dictionary:
 		_migrate_traits_to_eight(data["state"])
 	if version < 7:
 		_migrate_to_rev11(data["state"])
+	if version < 8:
+		_migrate_founder_to_ten(data["state"])
 	return {
 		"ok": true,
 		"error_key": "",
@@ -952,6 +954,53 @@ func _migrate_to_rev11(state: Dictionary) -> void:
 	if OS.is_debug_build():
 		print("[SaveManager] v6→v7: %d karakter iş atamasına taşındı, %d atama DÜŞÜRÜLDÜ %s" % [
 			moved, dropped, str(drop_detail)])
+
+
+## v7 → v8: KURUCU TEK CETVELE. §2.4 kurucuyu HR veri modelinin tam vatandaşı yapıyor,
+## §4.1 cetveli 0–10 diye tanımlıyor ve §5.3 tavanı 5,0 yıldıza koyuyor — kurucu 0–5'te
+## kaldığı sürece Kişisel kartındaki yıldız satırı yapısal olarak 5 üzerinden 2,5'te
+## tavanlıydı ve oyuncuya asla ulaşamayacağı bir tavan vaat ediyordu.
+##
+## YALNIZ KURUCU. Çalışanlar zaten 0–10'da; onlara dokunmak her kaydı bozardı.
+##
+## İDEMPOTANS AÇIK BİR NÖBETÇİYLE. Bu dosyadaki diğer göçler `if not d.has(alan)` ile
+## kendiliğinden yeniden-koşulabilir; bir İKİYE KATLAMANIN böyle doğal bekçisi YOKTUR —
+## ikinci koşuda kareye çıkardı. Nöbetçi ham sözlükte yaşıyor ve Character'a hiç ulaşmıyor
+## (SaveCodec.res_from_dict tanımadığı anahtarı düşürür), yani bir alan eklemiyor; tek işi
+## bu fonksiyonun iki kez çağrılmasını zararsız kılmak.
+const FOUNDER_RULER_TAG := "founder_ruler"
+
+
+func _migrate_founder_to_ten(state: Dictionary) -> void:
+	var moved: int = 0
+	for row in (_rows(state, "characters") as Array):
+		if typeof(row) != TYPE_DICTIONARY:
+			continue
+		var d: Dictionary = row
+		if String(d.get("category", "")) != "founder":
+			continue
+		if int(d.get(FOUNDER_RULER_TAG, 0)) >= HRConstants.AREA_MAX:
+			continue   # zaten taşınmış — ikinci çağrı no-op
+		var stats: Dictionary = d.get("role_stats", {}) as Dictionary
+		if typeof(stats) != TYPE_DICTIONARY:
+			continue
+		for skill_key in stats.keys():
+			stats[String(skill_key)] = clampi(
+				int(stats[skill_key]) * FounderConstants.RULER_SCALE,
+				HRConstants.AREA_MIN, HRConstants.AREA_MAX)
+		d["role_stats"] = stats
+		d[FOUNDER_RULER_TAG] = HRConstants.AREA_MAX
+		# EŞİK AYNI ADIMDA YENİDEN HESAPLANIR. `experience_threshold` toplam gelişmişlikten
+		# türüyor (§5.1) ve onu v6→v7 yazmıştı; puanlar ikiye katlanınca o eşik bayatlar ve
+		# kurucunun deneyim barı yanlış ölçekte kalırdı.
+		var total: int = 0
+		for area_key in HRConstants.AREAS:
+			total += int(stats.get(String(area_key), 0))
+		total += int(stats.get(HRConstants.SKILL_LEADERSHIP, 0))
+		d["experience_threshold"] = HRConstants.experience_threshold(total)
+		moved += 1
+	if OS.is_debug_build():
+		print("[SaveManager] v7→v8: %d kurucu kaydı 0–10 cetveline taşındı" % moved)
 
 
 ## Emekli ALAN id'si → §12.0 İŞ id'si. `research` bilerek "" döner: §12.0 Araştırma'yı

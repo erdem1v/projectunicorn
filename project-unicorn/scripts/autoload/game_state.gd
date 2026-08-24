@@ -953,9 +953,13 @@ func _build_founder(payload: Dictionary) -> Character:
 	f.morale = 50
 	# SKILL-RENAME: canonical key list lives in FounderConstants.SKILLS — the single
 	# mapping. Stale payload keys (pre-rename UI) are flagged loudly, never copied.
+	# DAĞITIM BİRİMİNDEN CETVELE, TEK NOKTADA (§2.4). Onboarding hâlâ 6 puanı 3 tavanıyla
+	# dağıtıyor; kaydedilen değer o dağıtımın CETVEL karşılığıdır. Doğrulama aşağıda HAM
+	# dağıtımı denetlemeye devam ediyor — ikiye katlama bir yazma kararıdır, bir arayüz
+	# kararı değil.
 	var stats: Dictionary = {}
 	for skill_key in FounderConstants.SKILLS:
-		stats[skill_key] = int(skill_alloc.get(skill_key, 0))
+		stats[skill_key] = FounderConstants.to_ruler(int(skill_alloc.get(skill_key, 0)))
 	for k in skill_alloc.keys():
 		if not FounderConstants.SKILLS.has(k):
 			push_error("[GameState] stale skill key in onboarding payload: '%s' (SKILL-RENAME)" % k)
