@@ -428,11 +428,9 @@ static func _pick_choice(ev: GameEvent) -> int:
 # Fraction of the current balance the founder will spend on any single event choice.
 const AFFORDABLE_FRACTION := 0.12
 
-# Mirrors of sales_tab.gd's "Aday bul" button (that file is a scene script with no
-# class_name, so its constants cannot be referenced — a drift here is a real risk and the
-# reason both numbers are named rather than inlined at the call site).
-const FIND_PROSPECTS_COOLDOWN_DAYS := 5
-const FIND_PROSPECTS_COUNT := 2
+# The two "Aday bul" mirrors were here and are RETIRED with the button (Satış rev 6 §19).
+# The drift risk they were named against is gone with them: supply is SalesFaucetSystem's and
+# the probe reads the same faucet the game does, so there is nothing left to mirror.
 
 
 static func _cash_delta_of(choice: EventChoice) -> int:
@@ -612,48 +610,67 @@ static func _open_the_company() -> void:
 
 
 static func _work_the_pipeline() -> void:
-	# The founder's sales day: keep leads coming, and pitch whoever is waiting. Both moves
-	# go through the seams the Sales tab's own buttons call, cooldown flags included — the
-	# probe gets no faster pipeline than a player at the same keyboard.
-	if PitchSystem.is_active():
+	# The founder's sales day, Satış rev 6. Two things changed and both simplify this:
+	# LEADS ARRIVE ON THEIR OWN (§3 — the button and its cooldown are retired, so the probe
+	# no longer mirrors a UI constant it could not address), and the throttle is the DAILY
+	# MEETING RIGHT rather than a two-day cooldown (§5.0). Both gates are asked through the
+	# same seams the tab's own buttons ask, so the probe gets no faster a pipeline than a
+	# player at the same keyboard.
+	if SalesMeetingSystem.is_active() or NegotiationSystem.is_active():
 		return
 	var leads: Array = ProspectRegistry.get_all()
 	if leads.is_empty():
-		if GameState.day >= int(GameState.get_flag("next_find_prospects_day", 0)):
-			# Mirrors sales_tab.gd's "Aday bul" button exactly — cooldown, count and
-			# archetype mix. Copied rather than referenced because sales_tab.gd carries no
-			# class_name (it is a scene script), so its consts are not addressable from here.
-			GameState.set_flag("next_find_prospects_day", GameState.day + FIND_PROSPECTS_COOLDOWN_DAYS)
-			for i in FIND_PROSPECTS_COUNT:
-				PitchSystem.spawn_prospect("mid" if (GameState.day + i) % 3 == 0 else "small", "founder_search")
-			print("PROBE PLAY day=%d find_prospects (+%d)" % [GameState.day, FIND_PROSPECTS_COUNT])
 		return
-	if not PitchSystem.can_pitch():
+	var lead: Prospect = leads[0] as Prospect
+	if SalesMeetingSystem.block_reason(lead.id) != "":
 		return
-	_pitch(leads[0])
+	_meet(lead)
 
 
-static func _pitch(p: Prospect) -> void:
-	# One sitting, played straight: always the first option at every stage. That is a
-	# DELIBERATELY UNSKILLED line — it takes the honest-answer route rather than the
-	# highest-EV one — so the run's revenue curve is a floor on what a player can do here,
-	# never a ceiling flattered by optimal play.
-	if not PitchSystem.begin(p.id):
-		return
+static func _meet(p: Prospect) -> void:
+	# One sitting, played straight: always the FIRST OPEN answer at every probe, then the
+	# stance anchor at the table. That is a DELIBERATELY UNSKILLED line — it takes whatever
+	# is on top rather than the highest-EV route — so the run's revenue curve is a floor on
+	# what a player can do here, never a ceiling flattered by optimal play.
 	var mrr_before: int = GameState.mrr
-	for i in 8:
-		if not PitchSystem.is_active():
+	var vs: Dictionary = SalesMeetingSystem.open(p.id)
+	if vs.is_empty():
+		return
+	for i in SalesConstants.SAFETY_CAP_PROBES + 2:
+		if String(vs.get("outcome", "")) != "":
 			break
-		var out: Dictionary = PitchSystem.choose(0)
-		if bool(out.get("done", false)):
-			var res: Dictionary = out.get("result", {})
-			print("PROBE PLAY day=%d pitch %s -> %s (mrr %d -> %d)" % [
-				GameState.day, p.company_name, String(res.get("outcome", "?")),
-				mrr_before, GameState.mrr])
-			return
-	if PitchSystem.is_active():
-		print("PROBE ERROR day=%d pitch never resolved for %s" % [GameState.day, p.company_name])
-		PitchSystem.reset()
+		var answers: Array = vs.get("answers", []) as Array
+		var picked: String = ""
+		for a in answers:
+			if bool((a as Dictionary).get("open", false)):
+				picked = String((a as Dictionary).get("id", ""))
+				break
+		if picked == "":
+			vs = SalesMeetingSystem.skip_to_offer()
+			break
+		vs = SalesMeetingSystem.choose(picked)
+	var outcome: String = String(vs.get("outcome", "lost"))
+	if outcome == "won":
+		# §5.3 — Perde 2, sessiz. The probe offers at the stance anchor and takes whatever
+		# the customer counters with; a walk would be the skilled move and this line is not.
+		NegotiationSystem.open(NegotiationSystem.TYPE_B2B, {
+			"account": p.company_name, "lead_id": p.id, "star": p.star,
+			"archetype": p.archetype_id, "promised": SalesMeetingSystem.promised_feature(),
+			"is_whale": p.is_whale,
+		})
+		for j in SalesConstants.PATIENCE_MAX + 1:
+			var nvs: Dictionary = NegotiationSystem.offer()
+			if String(nvs.get("state", "")) == "accepted":
+				break
+			if String(nvs.get("state", "")) == "closed":
+				break
+			if int(nvs.get("counter", -1)) >= 0:
+				NegotiationSystem.accept_counter()
+				break
+		SalesFinalizer.apply(NegotiationSystem.result())
+	SalesMeetingSystem.close()
+	print("PROBE PLAY day=%d meeting %s -> %s (mrr %d -> %d)" % [
+		GameState.day, p.company_name, outcome, mrr_before, GameState.mrr])
 
 
 static func _hire_after_the_seed() -> void:
@@ -907,25 +924,27 @@ static func _seed_b2b_world(rep_count: int) -> void:
 	# under, which is the only way the retention → promise → churn chain is reachable
 	# without hand-forcing it.
 	var specs := [
-		{"id": "probe_a", "name": "Kuzey Lojistik", "industry": "logistics", "arch": "small", "mrr": 350, "sat": 72},
-		{"id": "probe_b", "name": "Ege Sağlık", "industry": "health", "arch": "mid", "mrr": 800, "sat": 64},
-		{"id": "probe_c", "name": "Marmara İnşaat", "industry": "construction", "arch": "mid", "mrr": 700, "sat": 52},
-		{"id": "probe_d", "name": "Toros Sigorta", "industry": "insurance", "arch": "small", "mrr": 300, "sat": 68},
-		{"id": "probe_e", "name": "Anadolu Üretim", "industry": "manufacturing", "arch": "enterprise", "mrr": 550, "sat": 57},
+		{"id": "probe_a", "name": "Kuzey Lojistik", "industry": "logistics", "star": 1, "seats": 7, "price": 50, "sat": 72},
+		{"id": "probe_b", "name": "Ege Sağlık", "industry": "health", "star": 2, "seats": 16, "price": 50, "sat": 64},
+		{"id": "probe_c", "name": "Marmara İnşaat", "industry": "construction", "star": 2, "seats": 14, "price": 50, "sat": 52},
+		{"id": "probe_d", "name": "Toros Sigorta", "industry": "insurance", "star": 1, "seats": 6, "price": 50, "sat": 68},
+		{"id": "probe_e", "name": "Anadolu Üretim", "industry": "manufacturing", "star": 3, "seats": 11, "price": 50, "sat": 57},
 	]
 	for s in specs:
 		var p := Prospect.new()
 		p.id = String(s["id"])
 		p.company_name = String(s["name"])
 		p.industry = String(s["industry"])
-		p.archetype = String(s["arch"])
-		# LOAD-BEARING: add_b2b_customer copies prospect.scale straight through
-		# (sales_system.gd:316) and seeds the hidden tolerance from it. Prospect.scale
-		# defaults to 1, so an archetype set without a scale roll signs every account —
-		# enterprise included — at the small-account tolerance floor of 35, and the whole
-		# book becomes unsinkable for reasons that have nothing to do with the engine.
-		p.scale = B2BConstants.roll_scale(p.archetype)
-		SalesSystem.add_b2b_customer(p, int(s["mrr"]), int(s["sat"]))
+		# Satış rev 6 §2 — the STAR is the size, and `add_b2b_customer` copies it into
+		# `Customer.scale`, which is what seeds the hidden tolerance. The old note here
+		# warned that setting an archetype without also rolling a scale signed every
+		# account at the small-account floor; one field cannot fall out of step with the
+		# other any more, because there is only one field.
+		p.star = int(s["star"])
+		# §5.3 — the deal is SEATS x SEAT PRICE. The seat counts are inside each star's band
+		# and the price is the Standard anchor, so the preset's MRR figures are unchanged
+		# (350 / 800 / 700 / 300 / 550) and every measurement taken against them still reads.
+		SalesSystem.add_b2b_customer(p, int(s["seats"]), int(s["price"]), int(s["sat"]))
 
 	for i in rep_count:
 		var c := Character.new()

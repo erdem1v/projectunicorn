@@ -838,7 +838,7 @@ GDD ekstrakte edilirken tespit edilen ve designer tarafından çözülmesi gerek
 
 1. **Corporate Refugee origin detayı eksik (§4.1).** Karakter Orijini panelinde yalnızca skill puanı (6) verilmiş; tagline, + / − modifier'lar, starting state yok. Self-Made ve Heir formatına paralel doldurulması gerekiyor.
 
-2. **Find prospects cooldown tutarsızlığı (§3.2 vs §5.4).** Core Loop tablosu "pitch sonrası 3-4 gün cooldown" diyor; Sales panelinde "Cooldown 1 Week" geçiyor. Tek bir değer kilitlenmeli.
+2. ~~**Find prospects cooldown tutarsızlığı (§3.2 vs §5.4).**~~ **KAPANDI — SATIŞ rev 6 (2026-08-26).** Soru iki cooldown değeri arasında seçim yapmayı istiyordu; §19 **butonu ve her iki cooldown'ı da emekliye ayırdı**. Prospect'ler kendiliğinden akıyor (§3 musluk: taban 3/hafta + atanmış temsilci başına 2/hafta, ilgi ve fazla çarpılıyor) ve kurucunun tek kısıtı §5.0'ın günde-bir toplantı hakkı, mesai başında yenilenen. Cevaplanacak bir tutarsızlık kalmadı çünkü iki taraf da kalmadı.
 
 3. **Audio library mismatch (§8.3).** GDD Howler.js + React hook wrapper diyor; hedef Godot 4. Native AudioStream node'larıyla replace edileceği TECH_SPEC tarafında zaten kesin — designer tarafı için bilgi notu.
 

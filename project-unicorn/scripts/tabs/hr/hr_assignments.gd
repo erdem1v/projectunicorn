@@ -145,6 +145,15 @@ static func _cell(c: Character, job_id: String, on_toggle: Callable) -> Control:
 	# satışçıya "atama başka yerde" demek yalan olurdu — onun için kapı ALAN kapısıdır
 	# (§5.2'nin dört aile alanı). Tavanın önünde olmasının sebebi ters: bu sütun tavan ne
 	# olursa olsun tıklanmıyor, yani asıl gerekçe burasıdır.
+	# SATIŞ SÜTUNU, CANLI B2B ÜRÜN YOKKEN KİLİTLİ-GÖRÜNÜR (Satış rev 6 §3.1). Sütunu gizlemek
+	# oyuncuya "böyle bir şey yok" der; kilitli-görünür olan "henüz yok, sebebi bu" der — ve
+	# denetimin kök-neden (b) bulgusunun cevabı tam olarak o ayrımdır. Aynı kapalı kare, aynı
+	# desen, başka gerekçe.
+	# SIRA: ALAN kapısından SONRA. Satış alanı olmayan birine dünyanın hâlini anlatmak yalan
+	# olurdu — onun kapısı kendi alanıdır ve yukarıda kapandı. Bu satır kurucu içindir, çünkü
+	# kurucu her alanı taşır ve bu sütunu gerçekten tıklayabilecek tek kişidir.
+	if job_id == HRConstants.JOB_SALES and not ProductSystem.has_b2b_product():
+		return _dashed_cell(tr_key("SALES_LOCKED_NO_B2B"))
 	if job_id == HRConstants.JOB_RESEARCH:
 		return _dashed_cell(tr_key("HR_ASSIGN_RESEARCH_ELSEWHERE"))
 	# ÜÇÜNCÜ İŞ KİLİDİ (§12.1): iki işi olan birinin boş üçüncü hücresi tıklanamaz ve

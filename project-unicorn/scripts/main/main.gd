@@ -26,6 +26,8 @@ const ENDING_MODAL := preload("res://scenes/modals/EndingScene.tscn")  # newspap
 const MONTH_SUMMARY_MODAL := preload("res://scenes/modals/MonthSummaryModal.tscn")
 const MEETING_SCENE := preload("res://scenes/modals/MeetingScene.tscn")
 const TERM_TABLE_SCENE := preload("res://scenes/modals/TermSheetTableScene.tscn")
+const SALES_MEETING_SCENE := preload("res://scenes/modals/SalesMeetingScene.tscn")
+const NEGOTIATION_SCENE := preload("res://scenes/modals/NegotiationScene.tscn")
 const SYSTEM_MENU_MODAL := preload("res://scenes/modals/SystemMenuModal.tscn")
 const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
 # Ar-Ge kartları (§5.8 keşif · §6.1 koşunun ilk aylık notu). TEK sahne, iki yük.
@@ -42,6 +44,8 @@ var _ending_modal: Node = null       # Ending summary modal — mounts once, nev
 var _month_modal: Node = null        # Currently-open month summary modal, or null
 var _meeting_scene: Node = null      # Currently-open MeetingScene (Spec 5), or null
 var _term_table: Node = null         # Currently-open TermSheetTableScene (Spec 6), or null
+var _sales_meeting: Node = null      # Currently-open SalesMeetingScene (Satış §5.0), or null
+var _negotiation: Node = null        # Currently-open NegotiationScene (Satış §5.3), or null
 var _pre_dialogue_speed: int = -1    # Speed to restore when a cinematic dialogue closes
 var _pre_month_speed: int = -1       # Speed to restore when the month summary closes
 var _pre_confirm_speed: int = -1     # Speed to restore when the confirm closes
@@ -221,14 +225,23 @@ func _ready() -> void:
 	if OS.is_debug_build():
 		for arg in OS.get_cmdline_args():
 			if String(arg) == "--sales-shot":
-				_run_sales_shot()
-				return
-			if String(arg) == "--pitch-shot":
-				_run_pitch_shot()
+				_run_sales_shot("pipeline")
 				return
 			if String(arg) == "--probe-shot":
 				_run_probe_shot()
 				return
+		var meeting_shot: String = _flag_value("--meeting-shot=")
+		if meeting_shot != "":
+			_run_meeting_shot(meeting_shot)
+			return
+		var negotiation_shot: String = _flag_value("--negotiation-shot=")
+		if negotiation_shot != "":
+			_run_negotiation_shot(negotiation_shot)
+			return
+		var sales_shot: String = _flag_value("--sales-shot=")
+		if sales_shot != "":
+			_run_sales_shot(sales_shot)
+			return
 		var product_shot: String = _product_shot_requested()
 		if product_shot != "":
 			_run_product_shot(product_shot)
@@ -595,9 +608,9 @@ func _run_b2b_shot(kind: String) -> void:
 	p.id = "shot"
 	p.company_name = "Ege Sigorta"
 	p.industry = "insurance"
-	p.archetype = "small"
+	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
-	var c: Customer = SalesSystem.add_b2b_customer(p, 1000, 70)
+	var c: Customer = SalesSystem.add_b2b_customer(p, 20, 50, 70)   # 20 seats x $50 = $1.000
 	var ev: GameEvent
 	if kind == "escalation":
 		var cs := Character.new()
@@ -709,21 +722,37 @@ func _run_event_shot(event_id: String) -> void:
 	get_tree().quit()
 
 
-func _run_sales_shot() -> void:
+## --sales-shot=<pipeline|desk|b2c>. `b2c` is not decoration: §3.1's locked-visible pipeline
+## with its reason line is a checklist item, and a state that cannot be photographed cannot be
+## checked.
+func _run_sales_shot(kind: String = "pipeline") -> void:
 	get_tree().paused = false
 	_shot_window(Vector2i(1920, 1080))
-	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
+	_seed_sales_world()
 	GameState.day = 95
-	GameState.set_flag("mvp_shipped", true)
-	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
-	GameState.set_flag("mvp_innovation", 45.0)
-	GameState.set_flag("mvp_stability", 70.0)
-	GameState.set_flag("mvp_experience", 45.0)
 	GameState.set_flag("mvp_live_bug_count", 12)  # risk reason → "sık kesinti şikayeti"
-	PitchSystem.spawn_prospect("small", "find")
-	PitchSystem.spawn_prospect("mid", "find")
-	PitchSystem.spawn_prospect("small", "find")
+	if kind == "b2c":
+		# The consumer run: the pipeline draws its lock and its reason, and nothing else.
+		GameState.set_flag("mvp_market_type", "b2c")
+	else:
+		SalesFaucetSystem.spawn(1, "faucet")
+		SalesFaucetSystem.spawn(2, "faucet")
+		SalesFaucetSystem.spawn(3, "faucet")
+	if kind == "desk":
+		# A rep on the desk, mid-processing, so the band row and the working line both draw.
+		var rep := Character.new()
+		rep.id = "char_sr_shot"
+		rep.character_name = "Kerem Aydın"   # LOC-DATA debug seed / id
+		rep.role = HRConstants.ROLE_SALES_REP
+		rep.category = "employee"
+		rep.level = HRConstants.LEVEL_MID
+		rep.monthly_salary = 3200
+		rep.morale = 62
+		rep.hire_day = GameState.day - 30
+		rep.role_stats = {HRConstants.AREA_SALES: 5}
+		CharacterRegistry.add(rep)
+		CharacterRegistry.assign_job(rep.id, HRConstants.JOB_SALES)
+		SalesRepSystem.daily_tick()
 	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)   # LOC-DATA debug seed / id
 	_shot_customer("co_palmiye", "Palmiye Holding", "insurance", "active", 1500, 16, 150, true)
 	_shot_customer("co_aras", "Aras Klinik", "health", "onboarding", 700, 6, 10, false)
@@ -743,10 +772,20 @@ func _run_sales_shot() -> void:
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = _shot_path("sales_shot")
+	var path: String = _shot_path("sales_shot_%s" % kind)
 	img.save_png(path)
 	print("[SalesShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
+
+
+## One reader for the `--flag=value` shape. Every shot flag before this one wrote its own
+## copy of the same four lines; the new ones share this instead.
+func _flag_value(prefix: String) -> String:
+	for arg in OS.get_cmdline_args():
+		var a: String = String(arg)
+		if a.begins_with(prefix):
+			return a.trim_prefix(prefix)
+	return ""
 
 
 func _product_shot_requested() -> String:
@@ -1465,8 +1504,11 @@ func _run_finance_shot(kind: String) -> void:
 	for i in range(40):
 		GameState.advance_day()
 		if i == 10 or (kind == "artida" and (i == 12 or i == 14)):   # LOC-DATA debug seed / id
-			var pr: Prospect = PitchSystem.spawn_prospect("mid", "find")
-			SalesSystem.add_b2b_customer(pr, sign_mrr, 70)   # pozitif işlem satırı + MRR
+			var pr: Prospect = PitchSystem.spawn_prospect("mid", "event")
+			# §5.3 — koltuk × koltuk fiyatı. Fikstür MRR'ı korunuyor: 20.000 = 400 × $50,
+			# 1.100 = 22 × $50 (ikisi de 2★ koltuk bandının dışında ama bu bir FİNANS
+			# çekimi; ölçtüğü şey eğri, deal şekli değil).
+			SalesSystem.add_b2b_customer(pr, sign_mrr / 50, 50, 70)   # pozitif işlem satırı + MRR
 			ProspectRegistry.remove(pr.id)
 		if i == 20 and kind != "artida":   # LOC-DATA debug seed / id
 			# Bekleyen bir arayış — ARTIK BİR GİDER SATIRI DEĞİL (§10: arama ücretsiz).
@@ -1474,8 +1516,8 @@ func _run_finance_shot(kind: String) -> void:
 			# geliyor; komisyon ancak işe alım gerçekleşince yazılır.
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
 		if i == 30 and kind == "ozet":
-			var pr2: Prospect = PitchSystem.spawn_prospect("small", "find")
-			SalesSystem.add_b2b_customer(pr2, 800, 72)
+			var pr2: Prospect = PitchSystem.spawn_prospect("small", "event")
+			SalesSystem.add_b2b_customer(pr2, 16, 50, 72)   # 16 × $50 = $800
 			ProspectRegistry.remove(pr2.id)
 		FinanceSystem.daily_tick()
 	if kind == "kepenk":   # LOC-DATA debug seed / id
@@ -1843,9 +1885,9 @@ func _run_ending_shot(key: String) -> void:
 		pr.id = "shot_cust_%d" % ci
 		pr.company_name = ["Ege Sigorta", "Kule Lojistik"][ci]
 		pr.industry = "insurance"
-		pr.archetype = "small"
+		pr.star = 1
 		pr.pain_feature_id = "ai_vec_filter"
-		SalesSystem.add_b2b_customer(pr, 1000, 70)
+		SalesSystem.add_b2b_customer(pr, 20, 50, 70)   # 20 seats x $50 = $1.000
 	GameState.run_customers_signed = 9
 	GameState.mrr = 6400   # re-assert after the seam's MRR bridge reflected the 2 records
 
@@ -2065,9 +2107,9 @@ func _run_product_shot(kind: String) -> void:
 			p.id = "shot_ege"
 			p.company_name = "Ege Sigorta"
 			p.industry = "insurance"
-			p.archetype = "small"
+			p.star = 1
 			p.pain_feature_id = "saas_ops_integration"
-			var c: Customer = SalesSystem.add_b2b_customer(p, 402, 70)
+			var c: Customer = SalesSystem.add_b2b_customer(p, 6, 67, 70)   # 6 seats x $67 = $402
 			PromiseRegistry.create(c.id, "saas_ops_integration", 12)
 			if kind == "portfoy":   # LOC-DATA debug seed / id
 				# Portföy kartının "yapımda" satırı: bir sonraki sürüm iki kademe alıyor,
@@ -2183,32 +2225,164 @@ func _seed_line_state(subtype: String, rows: Array) -> void:
 		ProductState.stamp_step(String(row[2]), float(row[3]))
 
 
-func _run_pitch_shot() -> void:
-	# Mount GameShell, enter a B2B pitch (MeetingScene via B2BPitchMeeting), screenshot the
-	# opening beat: room art + rep portrait + dialogue + choices, NO conviction/stat strip.
-	get_tree().paused = false
-	_shot_window(Vector2i(1920, 1080))
+## The world every Satış shot stands on: a live ERP product with a real line ladder, a
+## provisioned provider, and a founder who can actually sell. One seed, so a meeting shot and
+## a pipeline shot are pictures of the SAME company rather than two unrelated fixtures.
+func _seed_sales_world() -> void:
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	GameState.founder_portrait = "founder_01"
+	GameState.day = 62
+	GameState.set_cash(48000)
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
-	var p := PitchSystem.spawn_prospect("mid", "find")
+	_seed_line_state("erp", [
+		["line_erp_ledger", 2, "line_erp_ledger_k2", 1.06],
+		["line_erp_stock", 1, "line_erp_stock_k1", 1.00],
+		["line_erp_invoicing", 1, "line_erp_invoicing_k1", 0.75],
+	])
+	GameState.set_flag("mvp_launch_day", 40)
+	ProductState.set_infra_provider("cloud")
+	ProductState.set_infra_units(6)
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder != null:
+		founder.role_stats[HRConstants.AREA_SALES] = 6
+		founder.role_stats[FounderConstants.SKILL_CHARISMA] = 4
+
+
+## --meeting-shot=<probe|locked|won|lost> — Perde 1'in dört hâli. `locked` bir sağlayıcı
+## kademesini düşürerek kilitli cevap satırını ve GEREKÇESİNİ zorlar; kabul kapısının
+## "locked rows show their reason line" maddesi tam olarak o kareyle doğrulanır.
+func _run_meeting_shot(kind: String) -> void:
+	get_tree().paused = false
+	_shot_window(Vector2i(1920, 1080))
+	_seed_sales_world()
+	if kind == "locked":
+		# Sağlayıcıyı yerel kademeye indir VE merdiveni K1'e çek: hangi kurcalama gelirse
+		# gelsin "Gücü göster" satırı kapanır ve kilit GEREKÇESİNİ yazar. Kabul kapısının
+		# "locked rows show their reason line" maddesi bu karede doğrulanıyor.
+		ProductState.set_infra_provider("local")
+		_seed_line_state("erp", [
+			["line_erp_ledger", 1, "line_erp_ledger_k1", 0.75],
+		])
+	var star: int = 3 if kind == "won" else 2
+	var p: Prospect = SalesFaucetSystem.spawn(star, "faucet")
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	# The normal flow wires this in _swap_to_shell_and_modal; the shot mounts the shell
-	# manually, so connect the dialogue-mount handler here before entering the pitch.
-	if not EventBus.meeting_scene_requested.is_connected(_on_meeting_scene_requested):
-		EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
-	B2BPitchMeeting.begin_meeting(p.id)
+	_open_sales_meeting(p.id)
 	await get_tree().process_frame
+	if kind == "locked":
+		for i in 4:
+			var lvs: Dictionary = SalesMeetingSystem.view_state()
+			var has_lock: bool = false
+			for a in (lvs.get("answers", []) as Array):
+				if not bool((a as Dictionary).get("open", true)):
+					has_lock = true
+			if has_lock or String(lvs.get("outcome", "")) != "":
+				break
+			var pick: String = ""
+			for a2 in (lvs.get("answers", []) as Array):
+				if bool((a2 as Dictionary).get("open", false)):
+					pick = String((a2 as Dictionary).get("id", ""))
+					break
+			if pick == "":
+				break
+			SalesMeetingSystem.choose(pick)
+		if _sales_meeting != null:
+			_sales_meeting.call("_render", SalesMeetingSystem.view_state())
+	# `won` ve `lost` kapanış karesini ister: masayı oynayıp sonucu bekletiyoruz.
+	if kind == "won" or kind == "lost":
+		for i in 8:
+			var vs: Dictionary = SalesMeetingSystem.view_state()
+			if String(vs.get("outcome", "")) != "":
+				break
+			var picked: String = ""
+			for a in (vs.get("answers", []) as Array):
+				if bool((a as Dictionary).get("open", false)):
+					picked = String((a as Dictionary).get("id", ""))
+					if kind == "lost":
+						continue   # en zayıf açık satırı al: liste sonuna kadar yürü
+					break
+			if picked == "":
+				SalesMeetingSystem.skip_to_offer()
+				break
+			SalesMeetingSystem.choose(picked)
+		if _sales_meeting != null:
+			_sales_meeting.call("_render", SalesMeetingSystem.view_state())
+	_probe_pause_interactivity(_sales_meeting, "meeting/" + kind)
 	await get_tree().create_timer(0.5).timeout
 	var img: Image = get_viewport().get_texture().get_image()
-	var path: String = _shot_path("pitch_shot")
+	var path: String = _shot_path("meeting_shot_%s" % kind)
 	img.save_png(path)
-	print("[PitchShot] saved %s" % ProjectSettings.globalize_path(path))
+	print("[MeetingShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
+
+
+## --negotiation-shot=<open|countered|insult|confirm> — Perde 2'nin dört hâli. DİYALOG YOK
+## (§5.3.1): dördü de cetvel, rakam, sabır kutuları ve buton TONUdur.
+## THE PAUSE PROBE. Speed 0 flips `get_tree().paused` (time_manager.gd:235) and Godot keeps
+## DRAWING a paused Control while refusing to deliver it `gui_input` — a surface that looks
+## perfect and eats every click. The scene file cannot show this and neither can a screenshot,
+## so the shot asks the engine directly: with the tree actually paused, does this node and its
+## deepest button still process? `can_process()` IS that question.
+func _probe_pause_interactivity(root: Node, label: String) -> void:
+	if root == null:
+		return
+	var was: bool = get_tree().paused
+	get_tree().paused = true
+	var buttons: Array = []
+	_collect_buttons(root, buttons)
+	var live: int = 0
+	for b in buttons:
+		if (b as Button).can_process():
+			live += 1
+	print("[PauseProbe] %s root_can_process=%s buttons=%d live_under_pause=%d" % [
+		label, str(root.can_process()), buttons.size(), live])
+	get_tree().paused = was
+
+
+func _collect_buttons(n: Node, out: Array) -> void:
+	if n is Button:
+		out.append(n)
+	for c in n.get_children():
+		_collect_buttons(c, out)
+
+
+func _run_negotiation_shot(kind: String) -> void:
+	get_tree().paused = false
+	_shot_window(Vector2i(1920, 1080))
+	_seed_sales_world()
+	var p: Prospect = SalesFaucetSystem.spawn(2, "faucet")
+	_shell = GAME_SHELL.instantiate()
+	add_child(_shell)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	NegotiationSystem.open(NegotiationSystem.TYPE_B2B, {
+		"account": p.company_name, "lead_id": p.id, "star": p.star,
+		"archetype": p.archetype_id,
+		"promised": "line_erp_ledger_k3" if kind == "confirm" else "",
+		"is_whale": false,
+	})
+	var vs: Dictionary = NegotiationSystem.view_state()
+	match kind:
+		"countered":
+			NegotiationSystem.select_price(int(vs.get("insult_from", 60)) - 4)
+			NegotiationSystem.offer()
+		"insult":
+			NegotiationSystem.select_price(int(vs.get("insult_from", 60)) + 3)
+		"confirm":
+			NegotiationSystem.select_price(SalesConstants.SEAT_PRICE_MIN)
+			NegotiationSystem.offer()
+	_negotiation = NEGOTIATION_SCENE.instantiate()
+	add_child(_negotiation)
+	await get_tree().process_frame
+	_probe_pause_interactivity(_negotiation, "negotiation/" + kind)
+	await get_tree().create_timer(0.4).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = _shot_path("negotiation_shot_%s" % kind)
+	img.save_png(path)
+	print("[NegotiationShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
 
 
@@ -2375,13 +2549,65 @@ func _on_event_resolved(_event_id: String, _choice_idx: int) -> void:
 		EventBus.speed_change_requested.emit(restore)
 
 
-# --- B2B pitch (Sales tab → PostShip §D). The pitch now renders in the shared
-#     MeetingScene via the B2BPitchMeeting view-adapter, which emits
-#     meeting_scene_requested → the generic dialogue mount below handles pause/mount/
-#     teardown. Choice/withdraw routing lives in _on_dialogue_* (B2B branch). ---
+# ============================================================================
+#  THE SALES SITTING (Satış rev 6 §5.0) — a full scene change, done as a subtree swap
+# ============================================================================
+#
+# §5.0 is explicit about what the player must see: "ODA da terminal UI da görünmez; bar notu,
+# pause etiketi, HUD yoktur." That is a statement about the SCREEN, and this is how it is met.
+#
+# WHY NOT `get_tree().change_scene_to_packed()`. It is the literal reading and it would tear
+# down `Main`, which owns modal routing, the news ticker, the event wiring, `_shell_mounted`
+# and every `--*-shot` harness path — all of which would need a rebuild path back. The
+# codebase has ZERO scene changes for exactly this reason. Swapping GameShell for the meeting
+# under Main is the same thing from the player's side and none of it from the engine's.
+#
+# WHY HIDDEN RATHER THAN REMOVED. Removing GameShell fires `_exit_tree` down the whole page
+# tree, and the tab pages disconnect their EventBus signals there (rnd_tab.gd, product_tab.gd,
+# hr_tab.gd all pair connect-in-_ready with disconnect-in-_exit_tree). `_ready` runs once per
+# instance, so re-adding the same node would bring back a page that is wired to nothing.
+# Hiding costs one bool and keeps every one of those pairs intact.
+#
+# THE TREE IS PAUSED while the sitting runs — `TimeManager` flips `get_tree().paused` at speed
+# 0 (time_manager.gd:235), which is what makes "sahne atomiktir: içinde dünya dönmez" true.
+# The scene therefore MUST carry `process_mode = ALWAYS`, or Godot keeps drawing it and stops
+# delivering `gui_input` and every click is silently eaten. It is set in the .tscn AND
+# re-asserted in the scene's `_ready`, and the runtime click test is what proves it.
 
 func _on_pitch_requested(prospect_id: String) -> void:
-	B2BPitchMeeting.begin_meeting(prospect_id)
+	_open_sales_meeting(prospect_id)
+
+
+func _open_sales_meeting(prospect_id: String) -> void:
+	if _sales_meeting != null:
+		return
+	if SalesMeetingSystem.block_reason(prospect_id) != "":
+		return   # the tab draws the reason; reaching here at all is a UI bug, not a state one
+	if SalesMeetingSystem.open(prospect_id).is_empty():
+		return
+	_claim_pre_dialogue_speed()
+	EventBus.speed_change_requested.emit(0)
+	if _shell != null:
+		_shell.visible = false          # ODA and the terminal go with it — one line, one law
+	_sales_meeting = SALES_MEETING_SCENE.instantiate()
+	_sales_meeting.closed.connect(_close_sales_meeting)
+	add_child(_sales_meeting)           # a child of Main, so nothing of the shell is behind it
+
+
+func _close_sales_meeting() -> void:
+	if _sales_meeting == null:
+		return
+	_sales_meeting.queue_free()
+	_sales_meeting = null
+	# §5.0 — the clock jumps two hours HERE, after the scene is gone, so the world the player
+	# comes back to is already the world those two hours produced.
+	SalesMeetingSystem.close()
+	if _shell != null:
+		_shell.visible = true
+	if GameState.run_active and not EventGate.has_pending():
+		var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else TimeManager.last_running_speed
+		EventBus.speed_change_requested.emit(restore)
+	_pre_dialogue_speed = -1
 
 
 # --- Settings modal lifecycle (gear button below the left tabs) ---
@@ -2699,13 +2925,6 @@ func _on_dialogue_choice_selected(id: String) -> void:
 		elif _meeting_scene != null:
 			_meeting_scene.populate(r.get("view_state", {}))
 		return
-	if B2BPitchMeeting.is_active():
-		var rb: Dictionary = B2BPitchMeeting.advance(id)
-		if rb.get("done", false):
-			_close_dialogue_scenes()
-		elif _meeting_scene != null:
-			_meeting_scene.populate(rb.get("view_state", {}))
-		return
 	print("[Debug] choice_selected: %s" % id)
 	_close_dialogue_scenes()
 
@@ -2713,10 +2932,6 @@ func _on_dialogue_choice_selected(id: String) -> void:
 func _on_dialogue_withdrawn() -> void:
 	if VCPitchSystem.is_meeting_active():
 		VCPitchSystem.withdraw()
-		_close_dialogue_scenes()
-		return
-	if B2BPitchMeeting.is_active():
-		B2BPitchMeeting.withdraw()
 		_close_dialogue_scenes()
 		return
 	print("[Debug] withdraw_requested")

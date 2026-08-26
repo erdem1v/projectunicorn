@@ -92,6 +92,21 @@ extends Resource
 # Cleared automatically if the pinned rep leaves or goes inactive, so no dead pins accumulate.
 @export var cs_pinned: bool = false           # true = assigned_to was chosen by the player
 
+# --- SATIŞ rev 6 §5.4 · the price trail -------------------------------------
+# THE ACCOUNT CARRIES ITS OWN SEAT PRICE. Before rev 6 an expansion added seats at a FLAT
+# EXPANSION_PER_SEAT_MRR = 120 for every account in the book, so what a customer had agreed
+# to at signing was forgotten the moment it grew — the 2026-08-06 audit measured +6 seats /
+# +$720 a day for one click. The price is stamped at the signature now and expansion reads
+# it, which is what makes the stance dial (§7.5) a decision with a tail rather than a
+# one-day discount.
+#
+# 0 = an account signed before rev 6 (or seeded by a fixture). `B2BSalesSystem.expand` falls
+# back to the caller's rate in that case, so a v10 save keeps behaving exactly as it did.
+@export var seat_price: int = 0
+# §5.4 — the signing discount is INSIDE seat_price and visible as its own trace. A fraction,
+# not an amount, so it stays readable when the seat count moves.
+@export var signing_discount: float = 0.0
+
 # --- Reserved for future systems (declared, not used this turn) ---
 @export var renewal_day: int = 0              # When the next renewal event fires (churn/renewal — next spec)
 @export var warning_flags: Array[String] = [] # "slow_payer" | "picky" | "kompromat_opportunity"

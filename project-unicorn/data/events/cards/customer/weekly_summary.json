@@ -1,0 +1,52 @@
+{
+  "_doc": "GDD SATIŞ rev 6 §7.3 — HAFTALIK SATIŞ ÖZETİ. YALNIZ KAPANIŞLARI taşır; churn girmez (o Müşteri Temsilcisi yüzeyidir). Bilgi kartı: sınıfı `info`, yani sekme rozeti/rapor yüzeyinde akar ve zamanı DURDURMAZ. KARAR BUTONU YOKTUR — tek seçenek kapatmaktır, çünkü §17.1 seçeneksiz kartı reddediyor ve 'okudum' bir karar değildir.",
+  "id": "sales.weekly_summary",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "request",
+  "class": "info",
+  "tags": [
+    "sales",
+    "report",
+    "build_safe"
+  ],
+  "weight": 1.0,
+  "latch": {
+    "cooldown_days": 6
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "musteri.count",
+        "op": ">",
+        "value": 0
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "read_it",
+      "outcome_id": "read",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "PH: Haftalık satış özeti",
+      "body": "PH: Bu hafta masadan kalkan anlaşmalar. Defterde {seam:musteri.count} hesap var.",
+      "options": {
+        "read_it": "Kapat"
+      }
+    },
+    "en": {
+      "title": "PH: Weekly sales summary",
+      "body": "PH: The deals that came off the table this week. The book holds {seam:musteri.count} accounts.",
+      "options": {
+        "read_it": "Close"
+      }
+    }
+  }
+}

@@ -235,9 +235,39 @@ signal prospect_removed(prospect_id: String)
 # Sales tab "Görüşmeye git" → main.gd routes to B2BPitchMeeting, which renders the
 # pitch in the shared MeetingScene (pause on open, restore on close).
 signal pitch_requested(prospect_id: String)
-# Emitted by B2BPitchMeeting when the pitch flow ends (any outcome) so the Sales/Hunt
-# tabs repaint. Speed restore + scene teardown happen in main.gd's dialogue close path.
+# Emitted when a sales sitting ends (any outcome) so the Sales/Hunt tabs repaint. Speed
+# restore + scene teardown happen in main.gd's dialogue close path. Publisher: the meeting
+# system, which replaced B2BPitchMeeting in SATIŞ rev 6.
 signal pitch_finished()
+
+# --- SATIŞ rev 6 §14 · the module's signal vocabulary ------------------------
+# Eighteen names, ONE publisher each, published whether or not anything listens — the
+# engine's convention (§15.1), and the reason it holds here is that the event package
+# arrives later and must find the vocabulary already spoken rather than invent it.
+#
+# NONE OF THESE CAN TRIGGER A CARD TODAY. `EvSignals.BINDINGS` is an engine allowlist with
+# no sales row, and this module edits no engine file. Sales raises cards the way the tab
+# already did — `EventGate.request(...)` with a `tick: "request"` card — so the binding
+# table is a thing the event package opens when it wires the demand store, not a thing this
+# task needed.
+signal prospect_arrived(prospect_id: String)          # §3 — the faucet produced a lead
+signal lead_expired(prospect_id: String)              # §4 — "Beklemekten vazgeçti."
+signal lead_reserved(prospect_id: String)             # §7.2.1 — "Ayır"
+signal lead_routed(prospect_id: String)               # §7.2.1 — "Temsilciye ver"
+signal meeting_entered(prospect_id: String)           # §5.0 — the founder sat down
+signal meeting_won(prospect_id: String)               # §5.1.1 — the customer cut to Act 2
+signal meeting_lost(account_key: String, reason: String)  # §5.2 — with the NAMED reason
+signal deal_signed(customer_id: String, seats: int, seat_price: int)   # §5.3 — İmzala
+signal deal_walked(account_key: String)               # §5.3 — neutral walk
+signal rep_deal_closed(rep_id: String, customer_id: String)            # §7.6
+signal rep_discount_requested(rep_id: String, prospect_id: String)     # §7.6 — the price-break moment
+signal pitch_promise_made(account_key: String, feature_id: String)     # §6
+signal pitch_promise_kept(account_key: String)        # §6
+signal pitch_promise_broken(account_key: String)      # §6
+signal whale_condition_met(prospect_id: String)       # §8 — the telegraphed item was satisfied
+signal weekly_sales_report_issued(closes: int)        # §7.3
+signal price_stance_changed(stance: String)           # §7.5
+signal rep_band_cap_changed(rep_id: String)           # §7.2.2
 # Frank's advisory line — updated by intro/customer events/traction. Its RightPanel
 # home retired with the ODA rework; the mentor surfaces read it now.
 signal mentor_advisory_changed(text: String)

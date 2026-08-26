@@ -440,8 +440,13 @@ static func _check_save_block() -> void:
 		bool(GameState.get_flag("tech_debt_birikti", false)) and not EvFlags.has("tech_debt_birikti"))
 	GameState.set_flag("tech_debt_birikti", false)
 
-	# The schema moved with the block.
-	_ok("schema is v10", SaveManager.SCHEMA_VERSION == 10)
+	# The schema moved with the block. THE ASSERTION IS "v10 OR LATER", not "exactly v10", and
+	# the difference matters: what this probe owns is that the event_engine block EXISTS in the
+	# schema, which became true at v10 and stays true afterwards. Pinning the exact number made
+	# every later module's legitimate bump fail an engine assertion about something else —
+	# Satış rev 6 (v11) is the first one to hit it. The MIN_LOADABLE pin below stays EXACT,
+	# because that one really is the engine's own ruling: pre-v10 saves are dead, deliberately.
+	_ok("schema carries the event_engine block (v10+)", SaveManager.SCHEMA_VERSION >= 10)
 	_ok("and v9 saves are refused, not half-loaded", SaveManager.MIN_LOADABLE_VERSION == 10)
 
 

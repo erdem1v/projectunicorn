@@ -153,9 +153,19 @@ const JOB_BUILD := "build"          # Build ekibi (aktif yapım)
 const JOB_TEST := "test"            # Test
 const JOB_SUPPORT := "support"      # Destek (canlı ürün)
 const JOB_ACCOUNTS := "accounts"    # Hesap sahipliği
-# JOB_SALES EMEKLİ (2026-08-25): satış bir iş değil, bir toplantıdır. Bkz. JOB_CONTINUOUS.
+# JOB_SALES GERİ GELDİ (Satış rev 6 §3, direktör hükmü 2026-08-26). 2026-08-25'te
+# emekliydi ve o hükmün GEREKÇESİ HÂLÂ DOĞRU — kurucunun pitch'i bir TOPLANTIDIR, slot
+# tüketmez ve hiçbir şeyi duraklatmaz. Değişen şey o cümlenin neyi kapsadığı: rev 6 §7.2
+# temsilcinin masasını tek müşteriyi 6-7 GÜN işleyen SÜREKLİ bir iş olarak tanımlıyor, ve
+# bu bir toplantı değil. İkisi bir arada durur: iş temsilcinin işlemesidir, kurucunun
+# oturması değil (SalesMeetingSystem hiçbir atamaya dokunmaz).
+# İkinci gerekçe ölçülebilir: §3'ün musluğu "ATANMIŞ satış kapasitesi" okuyor ve §3.1 B2C
+# koşuda "Satış işi sütunu Görevler'de kilitli-görünür" istiyor. Satış alanı `accounts`
+# üzerinden taşınırken ikisi de imkânsızdı — hesap masası ile satış masası tek sütuna
+# sıkışıyordu ve iki masanın tek band tavanı oluyordu.
+const JOB_SALES := "sales"          # Satış masası (rev 6 §7.2 — lead işleme, kapanış)
 const JOB_RESEARCH := "research"    # Ar-Ge §5.0 — DIŞLAYICI iş; JOB_EXCLUSIVE'e bakın
-const JOBS := ["build", "test", "support", "accounts", "research"]
+const JOBS := ["build", "test", "support", "accounts", "sales", "research"]
 
 ## ÜÇ KATEGORİ, TEK LİSTE DEĞİL (direktör hükmü, 2026-08-25). İş modeli bir ayrımı
 ## kaçırıyordu ve o ayrım kurulunca tavan sorunu kendiliğinden yok oldu:
@@ -177,7 +187,7 @@ const JOBS := ["build", "test", "support", "accounts", "research"]
 ## gerektiğini kendisi anlar. O baskı işin kendisidir ve bir DURAKLAMAYLA değiştirilemez.
 ## Bu yüzden kurucunun eski "ikinci iş öncekini yerinden eder" istisnası da KALDIRILDI:
 ## kurucu da herkes gibi iki sürekli slot taşır.
-const JOB_CONTINUOUS := ["build", "test", "support", "accounts"]
+const JOB_CONTINUOUS := ["build", "test", "support", "accounts", "sales"]
 
 
 ## Bu iş SLOT tutar mı. Tavan yalnız bunları sayar; araştırma sayılmaz, çünkü slot değil
@@ -196,13 +206,15 @@ const JOB_AREAS := {
 	"test": ["qa"],
 	"support": ["engineering", "customer_success"],
 	"accounts": ["customer_success", "sales"],
-	# "sales" satırı YOK: satış bir iş değil (JOB_CONTINUOUS bloğuna bakın). Satış ALANI
-	# `accounts` işi üzerinden taşınır — hesap sahipliği zaten Satış ve Müşteri İlişkileri
-	# alanlarının ikisini birden tutuyordu.
+	# `sales` işini YALNIZ Satış alanı taşır (§4.4: Satış Temsilcisinin ikincil alanı yok).
+	# `accounts` Satış alanını taşımaya DEVAM EDİYOR — hesap sahipliği iki alanın da işi ve
+	# bu §12.0'ın kendi tablosu; iki iş aynı alanı taşıyabilir, aynı KİŞİ ikisini birden
+	# tutarsa odak katsayısı zaten böler (§12.1).
 	# Ar-Ge §5.2 — dört aile alanı. Bu satır YALNIZ `can_hold_job` kapısıdır: hangi
 	# düğümün hangi alanı okuduğu düğümün kendi `areas` alanındadır ve hız formülü
 	# (§5.4) bu tabloya HİÇ bakmaz. Sonucu: sales_rep ve customer_rep katsayı 0 alır,
 	# yani araştırmaya hiç konamazlar — §5.3'ün filtresi bedavaya gelir.
+	"sales": ["sales"],
 	"research": ["product", "design", "engineering", "qa"],
 }
 
@@ -708,20 +720,46 @@ static func trait_carries_cost(trait_id: String) -> bool:
 	return bool((TRAITS.get(trait_id, {}) as Dictionary).get("carries_cost", false))
 
 
-static func free_trait_ids() -> Array:
+## SATIŞ rev 6 §11.8 — THE TRAP-TRAIT BAN, stated as a general rule and applied to one role:
+## "faydası o rolün işlerinde ateşlenemeyen huy, o rolün aday havuzuna girmez."
+##
+## For Satış that removes two. GERÇEK LİDER fires only for a BUILD lead, and §4.2 gives the
+## sales desk no lead in the demo (§7.4), so on a sales file it is a cost with no upside that
+## can ever arrive. TİTİZ pays a speed penalty to lower the BUG rate of a build; a seller
+## produces no bugs, so it is the pure trap the ruling names. Both stay fully live for every
+## other role — this is a POOL filter, not a change to what a trait does.
+##
+## Three cost traits survive for sales (HAYIR DİYEMEZ · GÖZÜ YÜKSEKTE · TAT KAÇIRAN), which is
+## exactly the worst case a three-file search can need, so a batch can never run the pool dry.
+const ROLE_TRAIT_BAN := {
+	"sales_rep": ["takes_them_under", "double_checker"],
+}
+
+
+static func role_bans_trait(role_id: String, trait_id: String) -> bool:
+	return (ROLE_TRAIT_BAN.get(role_id, []) as Array).has(trait_id)
+
+
+static func free_trait_ids(role_id: String = "") -> Array:
 	var out: Array = []
 	for trait_id in TRAITS.keys():
-		if not bool(TRAITS[trait_id].get("carries_cost", false)):
-			out.append(trait_id)
+		if bool(TRAITS[trait_id].get("carries_cost", false)):
+			continue
+		if role_bans_trait(role_id, String(trait_id)):
+			continue
+		out.append(trait_id)
 	out.sort()   # deterministic order — the generator indexes into this
 	return out
 
 
-static func cost_trait_ids() -> Array:
+static func cost_trait_ids(role_id: String = "") -> Array:
 	var out: Array = []
 	for trait_id in TRAITS.keys():
-		if bool(TRAITS[trait_id].get("carries_cost", false)):
-			out.append(trait_id)
+		if not bool(TRAITS[trait_id].get("carries_cost", false)):
+			continue
+		if role_bans_trait(role_id, String(trait_id)):
+			continue
+		out.append(trait_id)
 	out.sort()
 	return out
 
@@ -869,9 +907,73 @@ const ARCHETYPE_SHAPE := {
 }
 
 
-static func archetype_shape(level: int, archetype: String) -> Array:
-	var per_level: Dictionary = ARCHETYPE_SHAPE.get(clampi(level, LEVEL_JUNIOR, LEVEL_SENIOR), ARCHETYPE_SHAPE[1]) as Dictionary
+## SATIŞ rev 6 §11.7 — THE SALES CURVE, half a step under every other role's.
+##
+## The reason is economic rather than cosmetic: in sales a star IS money (§2 — the star sets
+## the seat band, and the seat band times the seat price IS the deal), and the role carries no
+## secondary area to spend its points on. An unfiltered curve therefore prices the whole B2B
+## economy off a hiring roll. §11.7's own centres: Junior ★1-1,5 · Orta ★2 · Kıdemli ★3, with
+## ★3,5 rare and a DEMO CEILING of ★3,5 (raw 7).
+##
+## Every row below is its ROLE-NEUTRAL sibling minus two on the key area and minus one on the
+## rest, floored at zero — so the SHAPE of each archetype (the Uzman's spike, the Dengeli's
+## flat, the Pazarlık's break) survives the shift instead of being re-authored.
+const ROLE_ARCHETYPE_SHAPE := {
+	"sales_rep": {
+		0: {"uzman": [3, 0, 0], "dengeli": [2, 1, 1], "pazarlik": [3, 0, 0]},
+		1: {"uzman": [5, 1, 1], "dengeli": [4, 3, 2], "pazarlik": [5, 0, 0]},
+		2: {"uzman": [6, 3, 2], "dengeli": [5, 4, 4], "pazarlik": [6, 2, 1]},
+	},
+}
+
+
+static func archetype_shape(level: int, archetype: String, role_id: String = "") -> Array:
+	var lv: int = clampi(level, LEVEL_JUNIOR, LEVEL_SENIOR)
+	var table: Dictionary = ARCHETYPE_SHAPE
+	if role_id != "" and ROLE_ARCHETYPE_SHAPE.has(role_id):
+		table = ROLE_ARCHETYPE_SHAPE[role_id] as Dictionary
+	var per_level: Dictionary = table.get(lv, table.get(1, ARCHETYPE_SHAPE[1])) as Dictionary
 	return ((per_level.get(archetype, per_level["dengeli"])) as Array).duplicate()
+
+
+## §11.7 — the DEMO CANDIDATE CEILING for a role. Sales tops out at ★3,5; everyone else may
+## reach the ruler's end, which is what makes the five-star senior a real alternative to
+## training someone up (§5.3).
+const ROLE_STAR_CAP_RAW := {"sales_rep": 7}
+
+
+static func role_star_cap(role_id: String) -> int:
+	return int(ROLE_STAR_CAP_RAW.get(role_id, AREA_MAX))
+
+
+## §11.7 — WHAT THE TOP FILE ACTUALLY REACHES, which is not always the role's ceiling. The
+## junior sales top file is ★2 (raw 4), NOT the ★3,5 demo ceiling: the ceiling is what a
+## KIDEMLİ search can rarely produce, and handing it to a junior would put a ★1 and a ★3,5 in
+## the same trio. §10.2's own spread rule catches that — "ana alanda üçlü arasındaki fark en
+## fazla 1 yıldız" — and it is the rule that keeps three files comparable enough to be a
+## choice at all. (Measured: hr_candidate_invariants fails at seed 19876 without this split.)
+const SALES_TOP_JUNIOR_RAW := 4   # ★2 on the 0-10 ruler
+
+
+static func role_top_value(role_id: String, level: int) -> int:
+	if role_id == ROLE_SALES_REP and level == LEVEL_JUNIOR:
+		return SALES_TOP_JUNIOR_RAW
+	return role_star_cap(role_id)
+
+
+## §11.7 — the chance that a search carries its TOP file, and on which band. Everyone gets the
+## rare five-star senior (§10.2). Sales additionally gets the ★2 JUNIOR: "★2 aramaların ~%25'inde
+## ve üçlüde TEK ADAYDA" — one file, the Uzman, who then asks in the upper half of the band
+## and/or carries a cost trait, which is exactly what the existing top-file branch already does.
+static func role_top_chance(role_id: String, level: int) -> float:
+	if level == LEVEL_SENIOR:
+		return FIVE_STAR_CHANCE
+	if role_id == ROLE_SALES_REP and level == LEVEL_JUNIOR:
+		return SALES_TOP_JUNIOR_CHANCE
+	return 0.0
+
+
+const SALES_TOP_JUNIOR_CHANCE := 0.25   # [K] §11.7 "aramaların ~%25'inde"
 
 
 ## §10.2 fiyat kuralları. Dengeli üçlünün EN PAHALISI (tepe yok ama hiçbir yeri kırık da

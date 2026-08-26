@@ -333,17 +333,19 @@ static func add_b2c_audience(n: int) -> void:
 # --- Pipeline read seam (Finance Tab v1 optimistic projection) ---
 
 static func pipeline_optimistic_mrr() -> int:
-	# WORKING: Σ over open prospects of the value-band midpoint × PIPELINE_WEIGHT.
-	# Reads the same value_band numbers the Sales tab shows; archetype-band fallback
-	# for prospects spawned without a band. Pitch-odds weighting deliberately NOT
-	# modeled — one flat optimism constant until the curve session.
+	# WORKING: Σ over open leads of (seat band midpoint × the stance's seat price) ×
+	# PIPELINE_WEIGHT. Satış rev 6 §5.3/§7.5 — the projection now reads the SAME two numbers
+	# a real deal is made of, so the green curve moves when the player moves the price dial.
+	# It used to read `value_band_min/max`, a display range derived from the archetype MRR
+	# band that §19 retired; the curve was optimistic about a price nothing charged.
+	# Meeting-odds weighting is deliberately NOT modelled — one flat optimism constant until
+	# the curve session.
+	var price: float = float(SalesLedger.seat_price_anchor())
 	var total: float = 0.0
 	for prospect in ProspectRegistry.get_all():
-		var mid: float = float(prospect.value_band_min + prospect.value_band_max) / 2.0
-		if mid <= 0.0:
-			var band: Dictionary = CustomerArchetypes.mrr_band(prospect.archetype)
-			mid = float(int(band.low) + int(band.high)) / 2.0
-		total += mid * PIPELINE_WEIGHT
+		var band: Dictionary = SalesConstants.seat_band((prospect as Prospect).star)
+		var seats: float = (float(band["low"]) + float(band["high"])) * 0.5
+		total += seats * price * PIPELINE_WEIGHT
 	return int(round(total))
 
 
@@ -369,25 +371,35 @@ static func get_sales_log() -> Array:
 #     private way to mint a customer, it comes through here like every other deal. `source`
 #     defaults to the played-pitch value so every pre-2b caller is byte-identical. ---
 
-static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int,
-		source: String = "founder_pitch") -> Customer:
+static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
+		satisfaction: int, source: String = "founder_pitch", discount: float = 0.0) -> Customer:
+	# SATIŞ rev 6 §5.3/§5.4 — the deal is SEATS x SEAT PRICE, and both are stamped on the
+	# record. The old signature took a finished `mrr` because the price came out of an
+	# archetype band that no longer exists (§19); passing the two factors instead is what
+	# lets expansion charge what this account actually agreed to.
 	var c := Customer.new()
 	c.id = "co_" + prospect.id  # stable, derived from the lead id
 	c.company_name = prospect.company_name
 	c.industry = prospect.industry
-	c.company_size = prospect.archetype
+	# The three-tier size id is DERIVED from the star now. The engine's `b2b_expand` effect
+	# still reads `company_size` (effects.gd), so the field keeps its vocabulary while the
+	# star is the truth behind it.
+	c.company_size = star_to_size(prospect.star)
 	c.market_type = "b2b"
-	c.seats = _seats_for_archetype(prospect.archetype)
-	c.mrr = maxi(mrr, 0)
+	c.seats = maxi(seats, 0)
+	c.seat_price = maxi(seat_price, 0)
+	c.signing_discount = clampf(discount, 0.0, 1.0)
+	c.mrr = c.seats * c.seat_price
 	c.satisfaction = clampi(satisfaction, 0, 100)
-	c.difficulty_stars = prospect.difficulty_stars
-	c.warning_flags = prospect.warning_flags.duplicate()
+	c.difficulty_stars = prospect.star
 	c.acquisition_source = source
 	c.acquired_on_day = GameState.day
 	# B2B lifecycle seed (Stage A): scale + hidden tolerance (scale + sector), fresh
 	# onboarding window. Larger/older/loyal accounts endure low satisfaction longer.
-	c.scale = prospect.scale
-	c.tolerance = B2BConstants.seed_tolerance(prospect.scale, prospect.industry)
+	# §2 — the STAR is the account size now: it seeds tolerance, drives the seat band and
+	# is what every star row draws.
+	c.scale = prospect.star
+	c.tolerance = B2BConstants.seed_tolerance(prospect.star, prospect.industry)
 	c.lifecycle_phase = "onboarding"
 	c.churn_countdown = -1
 	c.risk_streak = 0
@@ -410,6 +422,8 @@ static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int,
 	# the entity is erased on churn, this name is the durable memory).
 	if not GameState.b2b_signed_company_names.has(c.company_name):
 		GameState.b2b_signed_company_names.append(c.company_name)
+	GameState.set_flag("sales_last_signed_star", c.scale)   # §14 sales.last_signed_star()
+	EventBus.deal_signed.emit(c.id, c.seats, c.seat_price)
 	# Deliberately NO transactions-log row here. That ledger sits under the cash curve and
 	# every other row in it is paired with a real set_cash movement; a subscription's monthly
 	# MRR is not collected cash, so a signed "+$1,100" beside a real "−$600" hire would read
@@ -419,8 +433,14 @@ static func add_b2b_customer(prospect: Prospect, mrr: int, satisfaction: int,
 	return c
 
 
-static func _seats_for_archetype(archetype: String) -> int:
-	return CustomerArchetypes.seats(archetype)
+## §2 — star to the retired three-tier id. The map exists because the EVENT CATALOGUE still
+## speaks the old vocabulary (`b2b_expand` reads `company_size`, `add_prospect` writes an
+## archetype id) and this module edits no engine file. One translation, one place.
+static func star_to_size(star: int) -> String:
+	match clampi(star, 1, 3):
+		1: return "small"
+		2: return "mid"
+	return "enterprise"
 
 
 # --- Shared satisfaction tick ---

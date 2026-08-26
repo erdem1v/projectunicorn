@@ -40,6 +40,11 @@ static func daily_tick() -> void:
 	for c in CustomerRegistry.get_by_market("b2b"):
 		_tick_customer(c)
 	CustomerRepSystem.daily_tick()
+	# SATIŞ rev 6 §3/§4 — the faucet and the pipeline clock run BEFORE the sales desk, so a
+	# rep starting work today can pick up a lead that arrived today. It is NOT gated on
+	# staffing: §3's base inbound continues with zero sales staff, which is exactly what the
+	# retired button pretended to model.
+	SalesFaucetSystem.daily_tick()
 	SalesRepSystem.daily_tick()
 
 
@@ -373,8 +378,14 @@ static func expand(customer_id: String, add_seats: int, per_seat_mrr: int) -> vo
 	var c: Customer = CustomerRegistry.get_customer(customer_id)
 	if c == null or add_seats <= 0:
 		return
+	# SATIŞ rev 6 §5.4 — THE ACCOUNT'S OWN PRICE, not the caller's. `per_seat_mrr` is kept in
+	# the signature because the engine's `b2b_expand` effect passes
+	# B2BConstants.EXPANSION_PER_SEAT_MRR and this module edits no engine file; it is now the
+	# FALLBACK for a record with no stamp — a v10 save, or a fixture — so old behaviour is
+	# preserved exactly where the new price does not exist.
+	var rate: int = c.seat_price if c.seat_price > 0 else per_seat_mrr
 	CustomerRegistry.set_seats(c.id, c.seats + add_seats)
-	CustomerRegistry.set_mrr(c.id, c.mrr + add_seats * per_seat_mrr)
+	CustomerRegistry.set_mrr(c.id, c.mrr + add_seats * rate)
 	SalesSystem.reflect_mrr()
 	# (The old `c.support_load += 1` here is gone with the field — see customer.gd. The
 	# "bigger account is heavier to support" pressure is real and survives: the request channel
@@ -448,6 +459,18 @@ static func _recover(c: Customer, sat_bump: int) -> void:
 #     PromiseRegistry; routes every customer/brand write through owning seams). ---
 static func on_promise_resolved(p: Promise) -> void:
 	var c: Customer = CustomerRegistry.get_customer(p.customer_id)
+	# SATIŞ rev 6 §6 — the PITCH promise has its own counter in the same Registry. If the
+	# promise that just resolved is the one open pitch promise, the single-open lock lifts
+	# and the module's own vocabulary speaks. A BROKEN one also locks the row on that account
+	# for the rest of the run (§6), which is what the account memory records.
+	if SalesLedger.open_pitch_promise() == p.customer_id:
+		var account_key: String = c.company_name if c != null else p.customer_id
+		SalesLedger.clear_open_pitch_promise()
+		if p.status == "broken":
+			SalesLedger.record_broken_promise(account_key)
+			EventBus.pitch_promise_broken.emit(account_key)
+		elif p.status == "kept":
+			EventBus.pitch_promise_kept.emit(account_key)
 	match p.status:
 		"kept":
 			# Word kept on time: satisfaction + tolerance jump, loyalty up, credibility

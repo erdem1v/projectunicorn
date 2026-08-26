@@ -397,6 +397,7 @@ static func _phase_areas(phase: String) -> Array:
 #   herkes  · STATUS_ON_LEAVE          — izinde
 #   herkes  · STATUS_TRAINING          — eğitimde
 #   kurucu  · pitch_prep_active        — VC toplantısına hazırlanıyor
+#   kurucu  · sales_meeting_active     — bir satış masasında oturuyor (Satış §5.0)
 # Kurucunun kodda BAŞKA faaliyeti yok: VC toplantısının kendisi ve olay modalları
 # ağacı zaten duraklatıyor, yani ayrı bir meşguliyet değiller.
 
@@ -406,6 +407,12 @@ static func _is_free(c: Character) -> bool:
 	if c == null or c.status != HRConstants.STATUS_ACTIVE:
 		return false
 	if c.category == "founder" and GameState.get_flag("pitch_prep_active", false):
+		return false
+	# Satış rev 6 §5.0 — kurucu bir satış toplantısında; atlanan iki saatte katkısı sıfırdır.
+	# Sonucu Ekip §2.1'in kendi cümlesidir: ekipte boş biri varsa yapım AKAR, kurucu tek
+	# işçiyse DURAKLAR. İkinci bir "yetişme" formülü yazılmadı — ikinci simülasyon yolu bir
+	# sapma fabrikasıdır.
+	if c.category == "founder" and GameState.get_flag("sales_meeting_active", false):
 		return false
 	return true
 

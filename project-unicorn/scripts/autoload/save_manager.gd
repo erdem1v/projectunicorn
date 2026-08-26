@@ -28,14 +28,16 @@ extends Node
 # ============================================================================
 #  WHY THE SITTING-SCOPED SYSTEMS ARE RESET AND NOT SERIALISED
 # ============================================================================
-# VCPitchSystem (11 statics), TermSheetTableSystem (11), PitchSystem (7) and B2BPitchMeeting
-# (4) hold meeting-local state — conviction, beat, intel, patience, the working term copy.
-# None of it is saved. That is not a carve-out, it is the same statement as can_save():
+# VCPitchSystem (11 statics), TermSheetTableSystem (11), SalesMeetingSystem (14) and
+# NegotiationSystem (15) hold sitting-local state — conviction, beat, intel, the persuasion
+# needle and the path played into it, patience, the working term copy, the hidden reserve.
+# None of it is saved. (PitchSystem and B2BPitchMeeting were the two names here before
+# Satış rev 6; the four-beat pitch and its view adapter are retired, §19.) That is not a carve-out, it is the same statement as can_save():
 # saving is REFUSED while any of those four is_active(), so a sitting is provably idle at
 # every point a save can be taken, and there is nothing mid-resolution for a schema to
 # describe. One sitting, one sitting only — it does not survive closing the game.
 
-const SCHEMA_VERSION := 10  # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi · v7: rev 11 — İŞ ataması, seviye, tek deneyim barı, yaz izni · v8: kurucu TEK CETVELE (0–10) · v9: Ürün rev 6.1 — HAT MODELİ (düz özellik listesi öldü) · v10: olay motoru — event_engine bloğu
+const SCHEMA_VERSION := 11  # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi · v7: rev 11 — İŞ ataması, seviye, tek deneyim barı, yaz izni · v8: kurucu TEK CETVELE (0–10) · v9: Ürün rev 6.1 — HAT MODELİ (düz özellik listesi öldü) · v10: olay motoru — event_engine bloğu · v11: Satış rev 6 — yıldız, süre, kadran, koltuk fiyatı
 
 ## GDD ÜRÜN rev 6.1 §22.5 — ÜRÜN VERİSİNİN ŞEKLİ DEĞİŞTİ, ve eski kayıt TAŞINMAZ.
 ## "Eski kayıtlardaki düz özellik listesi hat durumlarına taşınmaz; demo öncesi kayıt
@@ -152,9 +154,9 @@ func can_save() -> bool:
 		return false
 	if TermSheetTableSystem.is_active():
 		return false
-	if PitchSystem.is_active():
+	if SalesMeetingSystem.is_active():
 		return false
-	if B2BPitchMeeting.is_active():
+	if NegotiationSystem.is_active():
 		return false
 	return true
 
@@ -165,7 +167,7 @@ func cannot_save_reason_key() -> String:
 		return "SAVE_ERR_NO_RUN"
 	if EventGate.active_id() != "" \
 			or VCPitchSystem.is_active() or TermSheetTableSystem.is_active() \
-			or PitchSystem.is_active() or B2BPitchMeeting.is_active():
+			or SalesMeetingSystem.is_active() or NegotiationSystem.is_active():
 		return "SAVE_ERR_MODAL_OPEN"
 	return ""
 
@@ -260,6 +262,8 @@ func read_slot(slot_id: String) -> Dictionary:
 		_migrate_to_rev11(data["state"])
 	if version < 8:
 		_migrate_founder_to_ten(data["state"])
+	if version < 11:
+		_migrate_sales_rev6(data["state"])
 	return {
 		"ok": true,
 		"error_key": "",
@@ -408,8 +412,8 @@ func reset_all_owners() -> void:
 	HRSystem.reset()
 
 	# 5. The four sitting-scoped systems — reset, never serialised (see the header).
-	PitchSystem.reset()
-	B2BPitchMeeting.reset()
+	SalesMeetingSystem.reset()
+	NegotiationSystem.reset()
 	VCPitchSystem.reset()
 	TermSheetTableSystem.reset()
 
@@ -684,6 +688,56 @@ func _migrate_sector_ids(state: Dictionary) -> void:
 	if moved > 0 and OS.is_debug_build():
 		print("[SaveManager] v1→v2: remapped %d legacy sector id(s)" % moved)
 
+
+
+## v10 → v11: SATIŞ rev 6. Two records changed shape and neither can be left to its defaults.
+##
+## THE LEAD. `archetype` ("small" | "mid" | "enterprise") and a separate `scale` were two
+## encodings of one ordinal and could disagree; rev 6 §2 makes the STAR the single one. A v10
+## lead also has no expiry, because leads did not age — leaving `expires_on_day` at its 0
+## default would drop every restored lead on the first sweep, which is a silent loss of the
+## player's pipeline rather than a migration.
+##
+## THE ACCOUNT. `seat_price` is new (§5.4) and its 0 default means "no stamp", which
+## `B2BSalesSystem.expand` reads as "use the caller's flat rate" — correct, and exactly the
+## old behaviour. But an account whose MRR and seats are both known HAS a truthful price, and
+## deriving it here is better than making the player's oldest accounts the only ones that
+## still expand at a flat rate.
+##
+## RETIRED TABLES, LOCAL. `_LEGACY_SIZE_TO_STAR` is this migration's own copy on purpose. The
+## live map lives in SalesFaucetSystem and will follow the game; a save written in August must
+## keep being read the way August meant it.
+const _LEGACY_SIZE_TO_STAR := {"small": 1, "mid": 2, "enterprise": 3}
+const _LEGACY_LEAD_LIFE_DAYS := 7
+
+
+func _migrate_sales_rev6(state: Dictionary) -> void:
+	var reg: Dictionary = state.get("registries", {}) as Dictionary
+	var day: int = int((state.get("game_state", {}) as Dictionary).get("day", 1))
+
+	for row in (reg.get("prospects", []) as Array):
+		var p: Dictionary = row as Dictionary
+		if not p.has("star") or int(p.get("star", 0)) <= 0:
+			p["star"] = int(_LEGACY_SIZE_TO_STAR.get(String(p.get("archetype", "small")), 1))
+		if int(p.get("expires_on_day", 0)) <= 0:
+			p["expires_on_day"] = day + _LEGACY_LEAD_LIFE_DAYS
+		if String(p.get("archetype_id", "")) == "":
+			p["archetype_id"] = "ops_cautious"
+		# The retired fields are simply not read by the new model; SaveCodec ignores a key
+		# with no declared property, so they are left in place rather than deleted. A
+		# migration that edits more than it must is a migration that can break more than it
+		# must.
+
+	for crow in (reg.get("customers", []) as Array):
+		var c: Dictionary = crow as Dictionary
+		if String(c.get("market_type", "")) != "b2b":
+			continue
+		if int(c.get("seat_price", 0)) > 0:
+			continue
+		var seats: int = int(c.get("seats", 0))
+		var mrr: int = int(c.get("mrr", 0))
+		if seats > 0 and mrr > 0:
+			c["seat_price"] = int(round(float(mrr) / float(seats)))
 
 ## v2 → v3: prospect need lines were finished Turkish sentences living in @export Strings,
 ## so every save carried prose that no language switch could reach. They are indices now.

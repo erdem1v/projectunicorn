@@ -1,0 +1,85 @@
+{
+  "_doc": "GDD SATIŞ rev 6 §7.6 — FİYAT-KIRMA KARTI. DAVRANIŞI TANIMLI, WIRING OLAY PAKETİNDE (§18). Premium kadranda, fiyata duyarlı arketipte, işlemenin son günlerinde düşer. Kart bugün HİÇBİR ŞEY TARAFINDAN İSTENMİYOR: SalesRepSystem an geldiğinde rep_discount_requested sinyalini yayınlar ve EventGate.request'i ÇAĞIRMAZ. Bu kasıtlı — bağlanmamış bir kart bitmiş bir anlaşmayı askıda bırakamaz, o yüzden anlaşma kendi kadranından kapanır ve kart bekler.",
+  "_wiring_note": "Bağlamak için tek şey gerekir: SalesRepSystem._maybe_price_break içinde EventGate.request(SalesConstants.PRICE_BREAK_CARD_ID, {\"prospect\": lead.id}) çağrısı. Kartın koşulu, kapsamı, iki seçeneği ve süre dolumu burada hazır bekliyor.",
+  "_expiry_note": "§12'nin kendi satırı: 'Fiyat-kırma kartı süresi dolar | on_expire: deal düşer, neden fiyat; boru hattına işler.' Motor §17.7'si de aynı şeyi yapısal olarak istiyor — kağıda düşebilen bir interrupt süresiz olamaz ve §12.4 SESSİZ süre dolumunu yasaklıyor. Cezanın ekonomik deltası YOK (§5.2: kayıp ekonomik delta üretmez); süre dolumu bir GÜN DAMGASI bırakıyor ve anlaşmanın düşmesi wiring indiğinde SalesRepSystem'in işi olacak.",
+  "id": "sales.price_break",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "request",
+  "class": "interrupt",
+  "tags": [
+    "sales",
+    "price"
+  ],
+  "weight": 1.0,
+  "latch": {
+    "cooldown_days": 0
+  },
+  "expires_days": 2,
+  "expire_note": "Fiyat konusu kapandı.",
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "stamp_day",
+        "name": "sales_price_break_expired"
+      }
+    ]
+  },
+  "scope": {
+    "prospect": "any"
+  },
+  "guards": {
+    "market": "b2b"
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "sales.pipeline_count",
+        "op": ">",
+        "value": 0
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "break_the_band",
+      "outcome_id": "band_broken",
+      "effects": [
+        {
+          "verb": "stamp_day",
+          "name": "sales_price_broken"
+        }
+      ]
+    },
+    {
+      "id": "hold_the_price",
+      "outcome_id": "price_held",
+      "effects": [
+        {
+          "verb": "stamp_day",
+          "name": "sales_price_held"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "PH: Fiyat sorusu",
+      "body": "PH: Masadaki rakam Premium bandında duruyor ve karşı taraf kırılmasını bekliyor. Standart fiyattan kapanır, ya da bu anlaşma düşer.",
+      "options": {
+        "break_the_band": "PH: Standart fiyattan kapat",
+        "hold_the_price": "PH: Fiyatta kal"
+      },
+      "expire_note": "Fiyat konusu kapandı."
+    },
+    "en": {
+      "title": "PH: A question of price",
+      "body": "PH: The number on the table sits in the Premium band and they are waiting for it to break. It closes at the Standard price, or this deal drops.",
+      "options": {
+        "break_the_band": "PH: Close at the Standard price",
+        "hold_the_price": "PH: Hold the price"
+      },
+      "expire_note": "The price question closed."
+    }
+  }
+}

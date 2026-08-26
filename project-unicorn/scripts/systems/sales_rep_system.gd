@@ -1,203 +1,344 @@
 class_name SalesRepSystem
 extends RefCounted
 
-# The SATIŞ MASASI — what a hired Satış Uzmanı actually does (Task 2b, HR × Sales coupling).
-# Pure static logic, no scene dependency. Dispatched DAILY from B2BSalesSystem.daily_tick,
-# LAST, after the customer lifecycle sweep. Ordering is load-bearing: an autonomous close
-# creates a Customer, and that account must not be lifecycle-ticked on its own signing day —
-# a founder-pitched account never is, because the pitch resolves mid-day after slot 4.
+# THE SALES DESK (§7) — what an assigned Satış Temsilcisi actually does. Pure static logic,
+# no scene dependency. Dispatched daily from B2BSalesSystem.daily_tick, LAST, after the
+# faucet: a close creates a Customer and a same-day-signed account must not be lifecycle
+# ticked on its own signing day.
 #
-# WHAT THIS FILE IS ALLOWED TO DO (§10 Economic Outcome Principle):
-#   A sales employee GENERATES opportunities and ADVANCES them. That is capacity, exactly what
-#   §10 says hiring buys. A ROUTINE close — an account whose archetype band ceiling is at or
-#   under B2BConstants.AUTONOMOUS_CLOSE_MRR_MAX, and which needs no concession — may resolve
-#   on its own and is REPORTED as a legible line naming the closer, the customer and the MRR.
-#   Everything bigger, and anything needing a promise or a discount, still goes through the
-#   played pitch. This file therefore never calls PromiseRegistry.create and never applies a
-#   discount: those levers exist only inside PitchSystem's close stage and the retention modal,
-#   so "concession deals stay played" is structural here, not a check that could be forgotten.
+# WHAT REV 6 REPLACED (§19). The old desk generated its own leads, warmed every prospect in
+# the pool at once through an invisible `warm_progress` accumulator, and closed anything under
+# an MRR ceiling. All three are gone. Supply is the faucet's (§3). A rep works ONE lead at a
+# time and the pipeline says which one and for how long (§7.2). And the ceiling is not money
+# any more, it is a STAR: a rep sells at or below their own Satış star and cannot reach above
+# it (§7.1), which is a gate the player can see on the card rather than a number they cannot.
 #
-# NO RNG. Not one draw. Two reasons, both learned the hard way elsewhere in this codebase:
-# HRMoraleSystem's header records that a bare randf() displaces the single global stream that
-# event random-triggers and EventManager's per-priority shuffle also consume, and this system
-# would draw EVERY day a rep is employed; and a rep working a lead is WORK, which this game
-# models as an accumulator (efor_spent / total_efor), not a coin flip. It also makes
-# "Kerem dört gündür Ege Sigorta ile çalışıyor" a readable cause instead of a hidden roll.
+# THE CLOSE IS DETERMINISTIC IN-LEAGUE (§7.6). There is no hidden close percentage. A rep
+# assigned to a lead inside their band on Competitive or Standard WILL close it; what varies
+# is how long it takes, and that comes from `hr.effective_skill` — morale, focus, hours and
+# traits all play the same duration rather than a private formula. Premium is the one
+# conditional: it lengthens processing and, on a price-sensitive archetype, produces the
+# price-break moment (§7.6).
 #
-# THE ADDITIVITY INVARIANT: with no active Satış Uzmanı every entry point returns before it
-# touches any state. A run without one is byte-identical to the game before Task 2b.
+# THE PRICE-BREAK CARD IS DEFINED AND INERT. Its behaviour, its trigger window and its
+# HAYIR DİYEMEZ multiplier all live here, and the moment publishes `rep_discount_requested`.
+# What does NOT happen is `EventGate.request` — the wiring is the event package's (§18), and
+# until it lands the deal closes at its own stance. That is a stated fallback, not an
+# accident: an inert card must not be able to strand a deal.
+#
+# NO RNG. Not one draw. A rep working a lead is WORK, which this game models as elapsed days
+# against a duration, not a coin flip — and it is what makes "Kerem dört gündür Ege Sigorta
+# ile görüşüyor" a readable cause instead of a hidden roll.
+#
+# THE ADDITIVITY INVARIANT SURVIVES: with nobody assigned to Satış every entry point returns
+# before it touches state, so a run without a rep behaves exactly as it did.
 
 
-# --- Daily entry (called by B2BSalesSystem.daily_tick, last) ---
+# ============================================================================
+#  Daily entry
+# ============================================================================
+
 static func daily_tick() -> void:
-	# rev 2 §4: the SATIŞ AREA staffs the pipeline, not the job title. Nobody assigned →
-	# the desk is shut, exactly as it was with nobody hired. Today a sales_rep hire lands
-	# on this job automatically, so the additivity invariant below still holds byte-for-byte.
+	_tick_weekly_summary()
 	if HRSystem.assigned_to(HRConstants.AREA_SALES).is_empty():
+		_release_orphans()
 		return
-	# Generate BEFORE advancing, so ProspectRegistry only ever grows within a tick. Fresh
-	# leads start at zero warmth, so they cannot close on the day they appear.
-	_tick_lead_generation()
-	_tick_prospect_progress()
+	_tick_processing()
+	_tick_assignment()
 
 
-# --- The ranked team ---
-
-static func _ranked(axis: String) -> Array:
-	# Everyone ASSIGNED to the sales job and at work, best-on-Satış first. On-leave and
-	# in-training people are excluded by HRSystem.assigned_to: they keep the assignment
-	# (they return to it) but they are not prospecting today.
-	# The founder is included when he is assigned — ch. 02 §5's "sales capacity with no
-	# sales hire = founder only, and only while assigned to selling" lands exactly here.
-	var reps: Array = []
-	for c in HRSystem.assigned_to(HRConstants.AREA_SALES):
-		reps.append(c)
-	reps.sort_custom(func(a: Character, b: Character) -> bool:
-		var av: int = int(a.role_stats.get(axis, 0))
-		var bv: int = int(b.role_stats.get(axis, 0))
-		if av == bv:
-			return a.id < b.id     # deterministic tiebreak; get_active_by_role is already id-sorted
-		return av > bv)
-	return reps
-
-
-static func _diminished_sum(axis: String) -> float:
-	# DIMINISHING RETURNS, stated: rank-0 counts full, rank-1 counts REP_STACK_DECAY, rank-2
-	# that squared, and so on. The falloff is STRUCTURAL — more people working one pipeline
-	# get in each other's way. It is deliberately NOT a leadership reading: rev 2 §4 gives
-	# the sales job a lead like any other, but a lead multiplies a TEAM's output, and this
-	# curve is about the pipeline being one object that several hands crowd.
-	var total: float = 0.0
-	var weight: float = 1.0
-	for c in _ranked(axis):
-		# §5: aşırı yük ve ikincil alan çarpanları burada da geçerli. `no_team_bonus`
-		# EMEKLİ (2026-08-21) — sekiz trait'lik sette "yalnız çalışır" yok; yerine gelen
-		# çarpanlar kişinin KENDİ verimini değiştiriyor, istifini değil.
-		# §4.5: kişinin ne ürettiği TEK EVDE. Bu masanın kendi şekli — istif azalması —
-		# burada kalıyor; §4.5 "bu kişi ne üretiyor"u değiştirir, "bu masa nasıl toplar"ı değil.
-		total += weight * HRSystem.daily_contribution(c, axis)
-		weight *= B2BConstants.REP_STACK_DECAY
-	return total
-
-
-static func _top_expertise() -> int:
-	var reps: Array = _ranked(HRConstants.AREA_SALES)
-	if reps.is_empty():
-		return 0
-	return int(reps[0].role_stats.get(HRConstants.AREA_SALES, 0))
-
-
-# --- BULMA: the pipeline ---
-
-static func lead_rate_per_day() -> float:
-	# Public so the UI and the smoke suite can read the same number the tick uses.
-	# §8.4: AYRI BİR MESAİ ÇARPANI YOK. Saatin getirisi _diminished_sum'ın içinde —
-	# HRSystem.daily_contribution her satışçının katkısını devraldığı saatle ölçüyor.
-	return B2BConstants.LEAD_PER_PACE_POINT * _diminished_sum(HRConstants.AREA_SALES)
-
-
-static func _tick_lead_generation() -> void:
-	var progress: float = float(GameState.get_flag("sales_lead_progress", 0.0)) + lead_rate_per_day()
-	var emitted: int = 0
-	while progress >= 1.0 and emitted < B2BConstants.LEAD_DAILY_MAX:
-		# Anti-snowball (Calibration Law 1) and legible: a full column reads as "you are not
-		# pitching", never as "your reps stopped working".
-		if ProspectRegistry.count() >= B2BConstants.PIPELINE_SOFT_CAP:
-			break
-		# Same archetype mix rule as the founder's own "Aday bul" button (sales_tab.gd), so
-		# the pipeline's COMPOSITION is unchanged in character no matter who filled it.
-		var archetype: String = "mid" if (GameState.day + emitted) % 3 == 0 else "small"
-		var lead: Prospect = PitchSystem.spawn_prospect(archetype, "sales_rep")
-		if lead == null:
-			break   # catalog exhausted (Fix 1 null contract): defer — progress stays banked
-		progress -= 1.0
-		emitted += 1
-	# Never bank more than one lead's worth: a soft-capped pipeline must not release a burst
-	# the moment the player pitches one lead away.
-	GameState.set_flag("sales_lead_progress", minf(progress, 1.0))
-
-
-# --- KAPAMA: warming, and the §10 fork ---
-
-static func is_auto_closable(p: Prospect) -> bool:
-	# THE §10 GATE, in one place so there is exactly one answer to "may a rep close this?".
-	if p == null:
-		return false
-	# (1) Size. Gate on the archetype's band CEILING, not the computed deal value: the line is
-	# tier-based and cannot be gamed by pricing a bigger account low.
-	if int(CustomerArchetypes.mrr_band(p.archetype)["high"]) > B2BConstants.AUTONOMOUS_CLOSE_MRR_MAX:
-		return false
-	# (2) Concession. If the pain this lead voices maps to a feature the product has NOT
-	# shipped, closing it means promising it — and giving the company's word is the founder's
-	# act, not the rep's. Straight off existing data; no new field.
-	#
-	# An UNMAPPABLE pain is the conservative case, not the permissive one. This branch used
-	# to return true — so the gate opened widest exactly where the engine knew least, and
-	# `mvp_components` was never consulted at all. A lead whose need we cannot even name is
-	# the clearest possible "route this to the founder's played pitch".
-	if p.pain_feature_id == "":
-		return false
-	var live: Array = GameState.get_flag("mvp_components", [])
-	return live.has(p.pain_feature_id)
-
-
-static func warm_bonus_for(p: Prospect) -> int:
-	# What the founder INHERITS on a lead the desk warmed but was not allowed to close. Rides
-	# the pitch's existing _accum_bonus channel, so the rep's groundwork shows up in the odds
-	# without SkillCheck ever reading an employee: the founder is the one in the room.
-	if p == null:
-		return 0
-	return clampi(int(floor(p.warm_progress)), 0, B2BConstants.WARM_BONUS_MAX)
-
-
-static func _warm_gain(p: Prospect, expertise_sum: float) -> float:
-	# One rate for the whole pool. difficulty_stars (1/2/4) divides it — that divisor is the
-	# only job the field has outside the pitch close roll, and it is what makes a small account
-	# a few days of work and an enterprise account weeks of it.
-	var stars: float = float(maxi(p.difficulty_stars, 1))
-	return B2BConstants.WARM_PER_EXPERTISE_POINT * expertise_sum / stars
-
-
-static func _tick_prospect_progress() -> void:
-	var expertise_sum: float = _diminished_sum(HRConstants.AREA_SALES)
-	if expertise_sum <= 0.0:
-		return
-	# Snapshot: _try_auto_close removes from the registry, and get_all() already hands back a
-	# fresh array, but iterating a copy keeps that guarantee local and obvious.
-	var pool: Array[Prospect] = ProspectRegistry.get_all()
-	pool.sort_custom(func(a: Prospect, b: Prospect) -> bool:
-		if is_equal_approx(a.warm_progress, b.warm_progress):
-			return a.id < b.id     # deterministic: warmest first, id breaks ties
-		return a.warm_progress > b.warm_progress)
-	for p in pool:
-		p.warm_progress += _warm_gain(p, expertise_sum)
-		if p.warm_progress < B2BConstants.AUTO_CLOSE_PROGRESS:
+## §12 — "Temsilci ayrılır / izne çıkar | işleme düşer; lead bekleme kurallarına döner."
+## Also the whole-desk case: nobody assigned means every open processing drops.
+static func _release_orphans() -> void:
+	for p in ProspectRegistry.get_all():
+		var lead: Prospect = p as Prospect
+		if lead.worked_by == "" :
 			continue
-		if is_auto_closable(p):
-			_close(p)
-		# A warmed-but-too-big lead keeps accumulating: warm_bonus_for clamps the payoff at
-		# WARM_BONUS_MAX, so it stops mattering on its own without a flag to maintain.
+		if _rep_available(lead.worked_by):
+			continue
+		_drop_processing(lead)
 
 
-static func _close(p: Prospect) -> void:
-	var reps: Array = _ranked(HRConstants.AREA_SALES)
-	if reps.is_empty():
+static func _rep_available(rep_id: String) -> bool:
+	for c in HRSystem.assigned_to(HRConstants.AREA_SALES):
+		if (c as Character).id == rep_id:
+			return true
+	return false
+
+
+static func _drop_processing(lead: Prospect) -> void:
+	lead.worked_by = ""
+	lead.work_started_day = -1
+	lead.work_due_day = -1
+	lead.work_stance = ""
+	# The lead returns to the ordinary waiting rules with a full clock — the freeze it enjoyed
+	# while it was being worked was never time it spent waiting.
+	lead.expires_on_day = GameState.day + SalesConstants.LEAD_LIFE_DAYS
+
+
+# ============================================================================
+#  §7.1 · The star gate and §7.2.2's band cap
+# ============================================================================
+
+## The highest star this rep may work. The GATE is their own Satış star (§7.1, hard); the CAP
+## is the player's setting on top of it and can only ever LOWER the ceiling — "tavanı
+## düşürmek temsilciyi alt bandın süpürgesine çevirir" (§7.2.1).
+static func band_ceiling(rep: Character) -> int:
+	var own: int = rep_star(rep)
+	var cap: int = SalesLedger.rep_band_cap(rep.id)
+	if cap == SalesConstants.BAND_CAP_OWN_LEAGUE:
+		return own
+	return mini(cap, own)
+
+
+static func rep_star(rep: Character) -> int:
+	return int(HRConstants.stars_for(HRSystem.skill(rep, HRConstants.AREA_SALES)))
+
+
+## §7.2.2 — the selector's rungs for one rep: every full star step up to their own, plus
+## "Kendi ligi". A 1★ rep has ONE rung, and a one-option selector is a fake choice, so the
+## surface draws a plain information line instead. The rule lives here rather than in the tab
+## so the tab cannot forget it.
+static func band_cap_options(rep: Character) -> Array:
+	var own: int = rep_star(rep)
+	if own <= SalesConstants.STAR_MIN:
+		return []
+	var out: Array = []
+	for star in range(SalesConstants.STAR_MIN, own + 1):
+		out.append(star)
+	out.append(SalesConstants.BAND_CAP_OWN_LEAGUE)
+	return out
+
+
+## §7.2.2 — "Band dışına düşen lead kartı hover'la nedenini söyler." "" when the rep could
+## work this lead; otherwise the CSV key naming why not.
+static func out_of_band_reason(rep: Character, lead: Prospect) -> String:
+	if lead.star > rep_star(rep):
+		return "SALES_BAND_ABOVE_REP"
+	if lead.star > band_ceiling(rep):
+		return "SALES_BAND_ABOVE_CAP"
+	return ""
+
+
+# ============================================================================
+#  §7.2.1 · Selection
+# ============================================================================
+
+## "Seçim kuralı: bandındaki yönlendirilmemiş lead'lerden en yüksek yıldızlı; eşitlikte süresi
+## bitmek üzere olan." Reserved leads are skipped outright — that desk is the founder's.
+static func pick_lead_for(rep: Character) -> Prospect:
+	var ceiling: int = band_ceiling(rep)
+	var best: Prospect = null
+	for p in ProspectRegistry.get_all():
+		var lead: Prospect = p as Prospect
+		if lead.is_being_worked() or lead.star > ceiling:
+			continue
+		if lead.routing == SalesConstants.ROUTE_RESERVED:
+			continue
+		if best == null or _outranks(lead, best):
+			best = lead
+	return best
+
+
+static func _outranks(a: Prospect, b: Prospect) -> bool:
+	# "Temsilciye ver" puts a lead at the FRONT of the band queue (§7.2.1) — ahead of the
+	# star rule, because it is the player saying which desk they want cleared.
+	var a_routed: bool = a.routing == SalesConstants.ROUTE_REP
+	var b_routed: bool = b.routing == SalesConstants.ROUTE_REP
+	if a_routed != b_routed:
+		return a_routed
+	if a.star != b.star:
+		return a.star > b.star
+	if a.expires_on_day != b.expires_on_day:
+		return a.expires_on_day < b.expires_on_day   # least time left first
+	return a.id < b.id                               # deterministic tiebreak
+
+
+static func _tick_assignment() -> void:
+	for c in HRSystem.assigned_to(HRConstants.AREA_SALES):
+		var rep: Character = c as Character
+		if SalesLedger.rep_busy(rep.id) != "":
+			continue
+		var lead: Prospect = pick_lead_for(rep)
+		if lead == null:
+			continue
+		_start_processing(rep, lead)
+
+
+static func _start_processing(rep: Character, lead: Prospect) -> void:
+	lead.worked_by = rep.id
+	lead.work_started_day = GameState.day
+	# §7.5 — the stance is STAMPED at the start: "İşlenmekte olan deal başladığı kadrandan
+	# kapanır." Moving the dial mid-deal cannot retroactively reprice a conversation that is
+	# already happening.
+	lead.work_stance = SalesLedger.price_stance()
+	lead.work_due_day = GameState.day + processing_days(rep, lead, lead.work_stance)
+	# NO `lead_routed` HERE. That signal is the PLAYER's verb ("Temsilciye ver") and its one
+	# publisher is SalesLedger.set_routing; a desk picking work up on its own is a different
+	# event and borrowing the name would give one signal two meanings and two emitters (§14).
+
+
+# ============================================================================
+#  §7.2 · Processing duration
+# ============================================================================
+
+## League difference picks the span (§7.2: own league 6-7 · one below 3-4 · two below 2-3),
+## and the rep's EFFECTIVE OUTPUT places the deal inside it. Reading `hr.effective_skill`
+## rather than a raw star is the whole point: morale, focus, hours and traits already live in
+## that one formula (Ekip §4.5) and this desk does not get a second copy of it.
+static func processing_days(rep: Character, lead: Prospect, stance: String) -> int:
+	var span: Array = SalesConstants.process_span(lead.star - rep_star(rep))
+	var output: float = HRSystem.effective_skill(rep, HRConstants.AREA_SALES)
+	var t: float = clampf(output / SalesConstants.PROCESS_REFERENCE_OUTPUT, 0.0, 1.0)
+	# A better rep lands nearer the FAST end of the span.
+	var days: float = lerpf(float(span[1]), float(span[0]), t)
+	if stance == SalesConstants.STANCE_PREMIUM:
+		days *= (1.0 + SalesConstants.PROCESS_PREMIUM_PENALTY)
+	return maxi(int(round(days)), SalesConstants.PROCESS_MIN_DAYS)
+
+
+static func _tick_processing() -> void:
+	for p in ProspectRegistry.get_all():
+		var lead: Prospect = p as Prospect
+		if not lead.is_being_worked():
+			continue
+		if not _rep_available(lead.worked_by):
+			_drop_processing(lead)
+			continue
+		var rep: Character = CharacterRegistry.get_character(lead.worked_by)
+		if rep == null:
+			_drop_processing(lead)
+			continue
+		# §7.6 — the price-break moment, in the closing days of a Premium deal against a
+		# price-sensitive archetype. It publishes and does NOT raise a card (see the header).
+		_maybe_price_break(rep, lead)
+		if GameState.day >= lead.work_due_day:
+			_close(rep, lead)
+
+
+# ============================================================================
+#  §7.6 · The close, and the price-break moment
+# ============================================================================
+
+## Is this deal in the window where the price-break card would drop? The whole predicate, so
+## the event package can bind to one name when it wires the card.
+static func price_break_due(rep: Character, lead: Prospect) -> bool:
+	if lead.work_stance != SalesConstants.STANCE_PREMIUM:
+		return false
+	if not SalesArchetypes.is_price_sensitive(lead.archetype_id):
+		return false   # "Duyarsız arketip kartı üretmez."
+	var window: int = SalesConstants.PRICE_BREAK_TRIGGER_LAST_DAYS
+	# HAYIR DİYEMEZ widens the window rather than rolling a die — same effect, no RNG.
+	if HRConstants.trait_mult(rep.traits, "promise_chance_mult") > 1.0:
+		window = int(round(float(window) * SalesConstants.PRICE_BREAK_CANT_SAY_NO_MULT))
+	return GameState.day >= lead.work_due_day - window
+
+
+static func _maybe_price_break(rep: Character, lead: Prospect) -> void:
+	if not price_break_due(rep, lead):
 		return
-	var closer: Character = reps[0]
-	var band: Dictionary = CustomerArchetypes.mrr_band(p.archetype)
-	# A better closer places higher in the band — but a small deal can never leave the small
-	# band, so a rep-closed account can never cross AUTONOMOUS_CLOSE_MRR_MAX from below.
-	var frac: float = clampf(B2BConstants.AUTO_CLOSE_MRR_FRAC
-		+ B2BConstants.AUTO_CLOSE_MRR_PER_EXPERTISE * float(_top_expertise()), 0.0, 1.0)
-	var mrr: int = int(round(lerpf(float(band["low"]), float(band["high"]), frac)))
-	# Same signing seam and the SAME satisfaction seed as a played pitch — shared static, so
-	# the two paths cannot drift apart under a later edit.
-	var c: Customer = SalesSystem.add_b2b_customer(p, mrr,
-		PitchSystem.signing_satisfaction_seed(), "sales_rep:%s" % closer.id)
-	ProspectRegistry.remove(p.id)
-	# The legible cause, in both channels: who closed it, which customer, what MRR.
-	SalesSystem.record_sales_event("auto_close", closer.character_name, c.company_name, c.mrr)
+	if GameState.get_flag("sales_price_break_%s" % lead.id, false):
+		return
+	GameState.set_flag("sales_price_break_%s" % lead.id, true)
+	# The SURFACE, published. The CARD (SalesConstants.PRICE_BREAK_CARD_ID) exists as data and
+	# is never requested — §18 puts its wiring in the event package. Until then the deal
+	# closes at its own stance, which is the conservative fallback: an unwired card must not
+	# be able to strand a deal that is otherwise finished.
+	EventBus.rep_discount_requested.emit(rep.id, lead.id)
+
+
+static func _close(rep: Character, lead: Prospect) -> void:
+	# §7.5 — the rep closes at THE DIAL's price. Their star does not touch it: "Temsilci
+	# kadrandan kapatır; yıldızı fiyata dokunmaz."
+	var seat_price: int = SalesLedger.seat_price_anchor(lead.work_stance)
+	var seats: int = _seats_for(lead)
+	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, seat_price,
+		PitchSystem.signing_satisfaction_seed(), "sales_rep:%s" % rep.id)
+	ProspectRegistry.remove(lead.id)
+	GameState.flags.erase("sales_price_break_%s" % lead.id)
+	GameState.set_flag("sales_weekly_closes",
+		int(GameState.get_flag("sales_weekly_closes", 0)) + 1)
+	SalesSystem.record_sales_event("auto_close", rep.character_name, c.company_name, c.mrr)
+	EventBus.rep_deal_closed.emit(rep.id, c.id)
+	_maybe_ticker(c, rep.character_name)
+
+
+# DESIGN-PARKED: §5.3's seat band is settled AT A TABLE, and a rep's deal has no table.
+# The midpoint is the neutral reading. Alternatives seen: scale with the rep's star (§7.5
+# forbids it — "yıldızı fiyata dokunmaz"), or draw it (no RNG on this desk, by §7.6's own
+# argument that a close is work rather than a coin flip).
+# DESIGN-PARKED: §5.3's seat band is settled AT A TABLE, and a rep's deal has no table.
+# The midpoint is the neutral reading. Alternatives seen: scale with the rep's star (§7.5
+# forbids it — "yıldızı fiyata dokunmaz"), or draw it (no RNG on this desk, by §7.6's own
+# argument that a close is work rather than a coin flip).
+## §5.3 — seats come from the star band, never from a negotiation. A rep's deal takes the
+## MIDDLE of the band: the player did not sit at that table, so there is nothing to have
+## played well or badly.
+static func _seats_for(lead: Prospect) -> int:
+	var band: Dictionary = SalesConstants.seat_band(lead.star)
+	return int(round((float(band["low"]) + float(band["high"])) * 0.5))
+
+
+## §7.3 — "Ticker yalnız haber değeri görür. Rutin kapanışlar girmez." Newsworthy is a
+## league-above signing, a whale, or the run's first 3★.
+static func _maybe_ticker(c: Customer, rep_name: String) -> void:
+	var newsworthy: bool = c.scale >= SalesConstants.TICKER_NEWSWORTHY_STAR \
+		or c.scale > SalesFaucetSystem.reach_band()
+	if not newsworthy:
+		return
 	EventBus.headline_added.emit(B2BConstants.notice_source_sales(),
-		TranslationServer.translate("SALES_LOG_REP_CLOSED").format({"rep": closer.character_name, "company": c.company_name}))
-	# Deliberately does NOT touch next_pitch_day: a rep closing an account of their own does
-	# not consume the founder's meeting slot.
+		TranslationServer.translate("SALES_TICKER_SIGNED").format(
+			{"rep": rep_name, "company": c.company_name}))
+
+
+# ============================================================================
+#  §7.3 · The weekly summary
+# ============================================================================
+
+# DESIGN-PARKED: a week with no closes drops NO card. §7.3 says the summary carries closes;
+# a card that reports none is a card that reports nothing. Alternative seen: always drop it
+# with a "no closes this week" line — noise, and the quiet-day floor is the engine's job
+# (§13.6), not this desk's.
+# DESIGN-PARKED: a week with no closes drops NO card. §7.3 says the summary carries closes;
+# a card that reports none is a card that reports nothing. Alternative seen: always drop it
+# with a "no closes this week" line — noise, and the quiet-day floor is the engine's job
+# (§13.6), not this desk's.
+## "Haftalık satış özeti yalnız kapanışları taşır — temsilcinin sesiyle bilgi kartı. Churn
+## girmez. Karar butonu yok." Raised through the one door (EventGate.request), the way the
+## Sales tab already raises retention — the gate still runs G1-G8 over it.
+static func _tick_weekly_summary() -> void:
+	var anchor: int = int(GameState.get_flag("sales_weekly_anchor_day", 0))
+	if anchor <= 0:
+		GameState.set_flag("sales_weekly_anchor_day", GameState.day)
+		return
+	if GameState.day - anchor < SalesConstants.WEEKLY_SUMMARY_INTERVAL_DAYS:
+		return
+	var closes: int = int(GameState.get_flag("sales_weekly_closes", 0))
+	GameState.set_flag("sales_weekly_anchor_day", GameState.day)
+	GameState.set_flag("sales_weekly_closes", 0)
+	if closes <= 0:
+		return   # a quiet week is not a report; §13.6's floor is the engine's job, not ours
+	EventBus.weekly_sales_report_issued.emit(closes)
+	EventGate.request(SalesConstants.WEEKLY_SUMMARY_CARD_ID, {"closes": closes})
+
+
+# ============================================================================
+#  Reads for the pipeline panel
+# ============================================================================
+
+## "Palmiye ile görüşüyor · 3. gün" — the panel's line, as data. Day counting is INCLUSIVE
+## (the first day reads as day 1), which is how a person would say it.
+static func processing_view(rep: Character) -> Dictionary:
+	var lead_id: String = SalesLedger.rep_busy(rep.id)
+	if lead_id == "":
+		return {}
+	var lead: Prospect = ProspectRegistry.get_prospect(lead_id)
+	if lead == null:
+		return {}
+	return {
+		"lead_id": lead.id,
+		"company_name": lead.company_name,
+		"day": GameState.day - lead.work_started_day + 1,
+		"due_day": lead.work_due_day,
+		"stance": lead.work_stance,
+	}

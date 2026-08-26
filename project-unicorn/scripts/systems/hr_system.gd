@@ -165,6 +165,14 @@ static func is_busy(c: Character) -> bool:
 		return true
 	if c.category == "founder" and bool(GameState.get_flag("pitch_prep_active", false)):
 		return true
+	# Satış rev 6 §5.0 — kurucu bir SATIŞ TOPLANTISINDA. Sekizinci bir görev durumu DEĞİL
+	# (§2.3 kapalı bir tablodur ve bu bayrak orada görünmez): toplantı atomiktir, içinde
+	# dünya dönmez, ve kapanışta atlanan iki saat "kurucu katkısı sıfır" sayılarak simüle
+	# edilir. Bu satır o sıfırın kendisidir — `pitch_prep_active`in birebir kardeşi.
+	# ÜÇ KAPI DEĞİL İKİ: yapım yolu ProductSystem._is_free okuyor, araştırma burayı. İkisine
+	# de eklenmezse kurucu inşa etmeye devam ederken araştırmadan donar.
+	if c.category == "founder" and bool(GameState.get_flag("sales_meeting_active", false)):
+		return true
 	return false
 
 

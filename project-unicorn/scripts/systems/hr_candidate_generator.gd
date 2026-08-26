@@ -108,8 +108,12 @@ static func generate(role_id: String, level: int, seed_value: int) -> Array:
 	# §10.2 BEŞ YILDIZLI ADAY, ARAMA BAŞINA çekilir: "bir alanda 5,0 yıldızı olan aday havuzda
 	# NADİRDİR, yalnız KIDEMLİ bantta çıkar, ve maaş talebi bandın TAVANINDADIR." Uzman'a
 	# takılıyor çünkü tepe noktası zaten onun arketipi; Dengeli'ye takmak arketipi çelerdi.
-	var five_star: bool = level == HRConstants.LEVEL_SENIOR and _rolls(seed_value, SALT_FIVE_STAR,
-		HRConstants.FIVE_STAR_CHANCE)
+	# THE TOP FILE, role-aware (§10.2 for everyone, Satış rev 6 §11.7 for sellers). The name
+	# stayed `five_star` through the rest of this function on purpose: it is the same branch,
+	# doing the same thing — one file in the trio reaches its ROLE's ceiling and is priced at
+	# the top of the band — and only the ceiling and the odds now depend on who is being hired.
+	var five_star: bool = _rolls(seed_value, SALT_FIVE_STAR,
+		HRConstants.role_top_chance(role_id, level))
 	# Fiyatlar ÜÇLÜ OLARAK belirlenir, dosya dosya değil: §10.2'nin fiyat kuralı bir SETİN
 	# özelliğidir ("fark en düşük ile en yüksek arasında %20–45"), tek bir adayın değil.
 	var quotes: Dictionary = _salary_trio(role_id, level, seed_value, five_star)
@@ -127,7 +131,7 @@ static func generate(role_id: String, level: int, seed_value: int) -> Array:
 		# çekilir"), o yüzden burada bir çekim yok — sıra tablonun sırasıdır.
 		var archetype: String = String(HRConstants.ARCHETYPES[k % HRConstants.ARCHETYPES.size()])
 		var axes: Dictionary = _skills_for(role_id, level, archetype, k,
-			five_star and archetype == HRConstants.ARCHETYPE_UZMAN)
+			five_star and archetype == HRConstants.ARCHETYPE_UZMAN)   # §11.7: the ONE file
 		if not HRConstants.validate_employee_skills(axes):
 			push_error("[HRCandidateGenerator] generated skills are not the employee shape: %s" % str(axes))
 		var first_name: String = _take_unused(HRConstants.FIRST_NAMES, used_first,
@@ -141,7 +145,8 @@ static func generate(role_id: String, level: int, seed_value: int) -> Array:
 			"archetype": archetype,
 			"axes": axes,
 			"salary": int(quotes.get(archetype, 0)),
-			"traits": _pick_traits(seed_value, k, _wants_cost_trait(seed_value, archetype), used_traits),
+			"traits": _pick_traits(seed_value, k, _wants_cost_trait(seed_value, archetype),
+				used_traits, role_id),
 			# The INDEX is stored, never the sentence. A candidate file is state, and a
 			# stored sentence would freeze one language into it — the same rule that moved
 			# the B2C user-base name out of Customer.company_name.
@@ -207,7 +212,7 @@ static func _skills_for(role_id: String, level: int, archetype: String, rotation
 	#
 	# Built by walking AREAS (not the shape) so the result always holds EXACTLY the ruler keys
 	# and passes the CharacterRegistry key-lock.
-	var shape: Array = HRConstants.archetype_shape(level, archetype)
+	var shape: Array = HRConstants.archetype_shape(level, archetype, role_id)
 	var out: Dictionary = {}
 	var key_area: String = HRConstants.role_key_area(role_id)
 	var secondary: String = HRConstants.role_secondary_area(role_id)
@@ -233,8 +238,10 @@ static func _skills_for(role_id: String, level: int, archetype: String, rotation
 	# yeniyordu). Liderlik'i herkes taşır: iyi lider çıkan aday bir buluştur, bir iş tanımı değil.
 	out[HRConstants.SKILL_LEADERSHIP] = HRConstants.archetype_leadership(level, archetype)
 	if five_star:
-		# §10.2: beş yıldız ANA ALANDA. Rotasyon bump'ından SONRA yazılır ki tavan kesin olsun.
-		out[key_area] = HRConstants.AREA_MAX
+		# §10.2: the top file's peak is in the KEY AREA, written AFTER the rotation bump so the
+		# ceiling is exact. WHAT it reaches is the role's AND the level's (§11.7): ★2 for a
+		# junior seller, ★3,5 for a senior one, the ruler's end for everyone else.
+		out[key_area] = HRConstants.role_top_value(role_id, level)
 	return out
 
 # --- Salary: a narrow window inside the role/band, priced off the profile ---
@@ -260,10 +267,21 @@ static func _salary_trio(role_id: String, level: int, seed_value: int, five_star
 	var low_max: int = _floor_to(float(band_high) / (1.0 + HRConstants.SALARY_SPREAD_MIN_R11), SALARY_ROUND_TO)
 	low_max = maxi(low_max, band_low)
 	var low: int = band_low
-	if not five_star:
-		# BEŞ YILDIZDA ÇAPA TABANA SABİTLENİR: Uzman bandın TAVANINI isteyecek (§10.2) ve
-		# Dengeli'nin onun altında kalması gerekiyor. band_high >= band_low × 1,5 ve en geniş
-		# fark 1,45 olduğu için taban çapası bunu kesin olarak garanti eder.
+	if five_star:
+		# TOP FILE: the Uzman asks the band CEILING (§10.2's named exception). The anchor is
+		# therefore not free — it has to sit high enough that the ceiling is still inside the
+		# %20-45 spread rule, or the trio silently breaks a rule §10.2 states in the same
+		# paragraph as the exception.
+		#
+		# THIS WAS A LATENT BUG, and it stayed hidden because it needs the top file to appear:
+		# at FIVE_STAR_CHANCE 0.08 on seniors only, the seeds the invariant case walks rarely
+		# produced one. Satış rev 6 §11.7 gives the junior sales search a ~25 % top file and it
+		# surfaced immediately (hr_candidate_invariants, sales_rep/lvl0 seed 19876: a
+		# 1500..2250 trio is a 50 % spread). Every role's band has high/low = 1.5 > 1.45, so
+		# the old "pin the anchor to the floor" line could never satisfy the rule for ANY role.
+		low = maxi(_ceil_to(float(band_high) / (1.0 + HRConstants.SALARY_SPREAD_MAX_R11),
+			SALARY_ROUND_TO), band_low)
+	else:
 		var steps_low: int = (low_max - band_low) / SALARY_ROUND_TO
 		low += SALARY_ROUND_TO * (_mix(seed_value, SALT_ANCHOR) % (steps_low + 1))
 
@@ -310,7 +328,8 @@ static func _wants_cost_trait(seed_value: int, archetype: String) -> bool:
 			return _rolls(seed_value, SALT_NEGATIVE_COUNT, HRConstants.UZMAN_COST_TRAIT_CHANCE)
 	return false
 
-static func _pick_traits(seed_value: int, index: int, wants_cost: bool, used: Array) -> Array[String]:
+static func _pick_traits(seed_value: int, index: int, wants_cost: bool, used: Array,
+		role_id: String = "") -> Array[String]:
 	# TEK TRAIT (HRConstants.TRAIT_COUNT). `_wants_cost_trait` bir dosyayı işaretlediyse o
 	# dosyanın TEK trait'i BEDELLİ olanıdır; işaretlemediyse bedelsiz havuzdan biri.
 	#
@@ -321,13 +340,13 @@ static func _pick_traits(seed_value: int, index: int, wants_cost: bool, used: Ar
 	var salt: int = SALT_CANDIDATE_STRIDE * index
 	var traits: Array[String] = []
 	if wants_cost:
-		var cost_pool: Array = HRConstants.cost_trait_ids()
+		var cost_pool: Array = HRConstants.cost_trait_ids(role_id)
 		var cost_id: String = _take_unused(cost_pool, used,
 			_mix(seed_value, SALT_NEGATIVE_PICK + salt) % maxi(cost_pool.size(), 1))
 		if cost_id != "":
 			traits.append(cost_id)
 	else:
-		var free_pool: Array = HRConstants.free_trait_ids()
+		var free_pool: Array = HRConstants.free_trait_ids(role_id)
 		var free_id: String = _take_unused(free_pool, used,
 			_mix(seed_value, SALT_POSITIVE_PICK + salt) % maxi(free_pool.size(), 1))
 		if free_id != "":

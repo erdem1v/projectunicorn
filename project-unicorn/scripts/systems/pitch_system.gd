@@ -1,390 +1,50 @@
 class_name PitchSystem
 extends RefCounted
 
-# Pitch dialogue driver — PostShip spec §D/§E. Pure static logic; the
-# PitchDialogueModal is a thin renderer that calls begin()/get_stage()/choose().
+# WHAT IS LEFT OF THE OLD PITCH — and why anything is left at all.
 #
-# 4-scene medium-depth (Disco-flavored) flow:
-#   intro   → approach sets a small bonus
-#   value   → framing SkillCheck (sales/influence) → bonus ±
-#   pricing → anchor-high / fair / safe sets target MRR + close difficulty
-#   close   → final Satış (sales) SkillCheck → SIGNED / CALLBACK / LOST
-# Satış ≥ reveal threshold (SkillCheck.can_read_prospect) exposes the
-# prospect's hidden budget_band/real_need, informing the pricing choice.
+# SATIŞ rev 6 §19 retires this file's entire machine: the four-beat script (intro / value /
+# pricing / close), the two-day cooldown, CALLBACK's infinite lead, the archetype-band deal
+# MRR, the sector-affinity narrowing and the 65-name catalogue's sole-supply role. All of it
+# is gone. Act 1 is `SalesMeetingSystem`, Act 2 is `NegotiationSystem`, and the supply is
+# `SalesFaucetSystem`.
 #
-# §10: a customer (MRR) is created ONLY on SIGNED, from this played dialogue.
-
-const PITCH_COOLDOWN_DAYS := 2
-const VALUE_BASE_DIFFICULTY := 1
-const CLOSE_BASE_DIFFICULTY := 1
-
-# Target MRR bands per archetype live in CustomerArchetypes (single data home).
-
-# Prospect generation pools (working drafts; Erdem revises). Company names live
-# in CompanyCatalog (single source, Fix 2) — only the need lines remain here.
-# The pools are PITCH_NEED_0..3 and PITCH_REAL_NEED_0..2 in strings.csv. Only the counts
-# live here, because a const is evaluated at load time — before any locale exists.
-const NEEDS_COUNT := 4
-const REAL_NEEDS_COUNT := 3
-
-# --- Per-pitch state ---
-static var _active: bool = false
-static var _prospect: Prospect = null
-static var _stage_idx: int = 0
-static var _accum_bonus: int = 0
-static var _price_mult: float = 0.55
-static var _close_diff_delta: int = 0
-static var _last_band: String = ""
+# TWO FUNCTIONS SURVIVE, AND NEITHER IS A COURTESY:
+#
+# 1. `spawn_prospect(size, source)` is a LIVE REQUIREMENT, not a legacy shim. §3 rules that
+#    the whale role "karışımdan değil, kahraman hesap / olay kanalından gelir" — the faucet
+#    deliberately does not produce whales, the event channel does. The engine's `add_prospect`
+#    effect (scripts/events/core/effects.gd) is that channel and it names this symbol. Two
+#    shipped cards use it today (`customer/frank_intro.json`, `customer/referral.json`) and
+#    both speak the retired three-tier size ids, so the translation to a STAR happens here,
+#    once, rather than in every card.
+#
+# 2. `signing_satisfaction_seed()` is the shared expression that decides what a fresh account
+#    feels on day one. Both signing paths — the played meeting and the rep's own close — read
+#    it, which is what stops the two from drifting apart under a later edit.
+#
+# The class name stays because the engine binds to it by name and this module edits no engine
+# file. That is the whole reason, stated here so the next reader does not "clean it up".
 
 
-# --- Lead generation (Frank intro / Find Prospects / referral events) ---
-
-static func spawn_prospect(archetype: String, source: String) -> Prospect:
-	# NULL CONTRACT (Fix 1): returns null — nothing registered, no counter burned — when
-	# every catalog company in the product's affinity sectors is already excluded. Exclusion
-	# set = every company SIGNED this run (GameState.b2b_signed_company_names; churn does NOT
-	# re-open cold prospecting — win-back is a future dedicated path) ∪ every company live in
-	# ProspectRegistry. A LOST lead's name is freed and may return later; a signed one never.
-	#
-	# The id counter is MONOTONIC (GameState.run_prospects_spawned), not the live pool size:
-	# ProspectRegistry.count() drops when a lead is signed or lost, so a same-day respawn
-	# rebuilt an id that already existed. ProspectRegistry.add then push_warning'd and DROPPED
-	# the lead while this function still returned it — the caller reports success and nothing
-	# is registered. Rare while spawning is pull-based; routine once a sales rep spawns daily.
-	# The content mixer `n` deliberately keeps reading count(): it selects sector/company/pain
-	# and is not required to be unique, and changing it would move every existing fixture.
-	var n: int = (GameState.day * 7 + ProspectRegistry.count() * 13)
-	# E.2: draw the industry from the ACTIVE product's sector affinity (a vector-search
-	# product yields only tech/finance prospects; ops yields only construction/etc.), and
-	# the company name from that sector so the fiction matches. The walk starts at the
-	# mixer's sector and stays INSIDE the affinity pool (smoke asserts industry ∈ pool);
-	# a sector whose companies are all taken defers to the pool's next sector.
-	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
-	var sectors: Array = B2BConstants.sector_pool(sub_id)
-	var excluded: Dictionary = _excluded_names()
-	var chosen_sector: String = ""
-	var eligible: Array = []
-	for off in sectors.size():
-		var s: String = String(sectors[(n + off) % sectors.size()])
-		var cand: Array = _eligible_for_sector(s, excluded)
-		if not cand.is_empty():
-			chosen_sector = s
-			eligible = cand
-			break
-	if chosen_sector == "":
-		return null
-	var p := Prospect.new()
-	GameState.run_prospects_spawned += 1
-	p.id = "lead_%d_%d" % [GameState.day, GameState.run_prospects_spawned]   # LOC-DATA prospect id
-	p.archetype = archetype
-	p.industry = chosen_sector
-	p.company_name = String(eligible[n % eligible.size()])
-	# B.4: tie the surface need to a feature that EXISTS in the active product's pool,
-	# so a later special request maps to something the player can actually build.
-	var pain_fid: String = B2BSalesSystem.pick_pain_feature(sub_id, n)
-	p.pain_feature_id = pain_fid
-	# Indices, not sentences: pain_feature_id already rides along, so the surface need can be
-	# rebuilt at render time from whichever of the two applies.
-	p.need_index = n % NEEDS_COUNT
-	p.real_need_index = n % REAL_NEEDS_COUNT
-	p.difficulty_stars = _difficulty_for(archetype)
-	p.scale = B2BConstants.roll_scale(archetype)   # 1..5 stars; demo-capped to 1-3 (A.4)
-	p.budget_band = _budget_for(archetype)
-	# E.3: value shown as a RANGE band (floor if it goes poorly, ceiling if well).
-	var band: Dictionary = CustomerArchetypes.mrr_band(archetype)
-	var mid: float = (float(band["low"]) + float(band["high"])) * 0.5
-	p.value_band_min = int(round(mid * B2BConstants.VALUE_BAND_LOW_FRAC))
-	p.value_band_max = int(round(mid * B2BConstants.VALUE_BAND_HIGH_FRAC))
-	p.source = source
-	p.spawned_on_day = GameState.day
-	ProspectRegistry.add(p)
-	return p
+## The event channel's entry into the pipeline. `size` is the retired three-tier id the
+## shipped cards still speak; the star is the truth on the other side of this call.
+static func spawn_prospect(size: String, source: String) -> Prospect:
+	var star: int = int(SalesFaucetSystem.LEGACY_SIZE_TO_STAR.get(size, 1))
+	return SalesFaucetSystem.spawn(star, source)
 
 
-static func eligible_company_count() -> int:
-	# UI predicate for the find card's "havuz kuru" state: how many catalog companies
-	# in the active product's affinity sectors could still become a lead right now.
-	# Shares the exclusion arithmetic with spawn_prospect via the two helpers below,
-	# so the predicate and the picker cannot drift apart.
-	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
-	var excluded: Dictionary = _excluded_names()
-	var total: int = 0
-	for s in B2BConstants.sector_pool(sub_id):
-		total += _eligible_for_sector(String(s), excluded).size()
-	return total
-
-
-static func _excluded_names() -> Dictionary:
-	# Set (Dictionary keys) of company names spawn may not offer (Fix 1).
-	var ex: Dictionary = {}
-	for nm in GameState.b2b_signed_company_names:
-		ex[nm] = true
-	for nm in ProspectRegistry.get_company_names():
-		ex[nm] = true
-	return ex
-
-
-static func _eligible_for_sector(sector: String, excluded: Dictionary) -> Array:
-	var out: Array = []
-	for nm in CompanyCatalog.names_for_sector(sector):
-		if not excluded.has(nm):
-			out.append(nm)
-	return out
-
-
-static func _difficulty_for(archetype: String) -> int:
-	return CustomerArchetypes.difficulty_stars(archetype)
-
-
-static func _budget_for(archetype: String) -> String:
-	return CustomerArchetypes.budget_band(archetype)
-
-
-# --- Value-driven pricing range (E) ---
-
-static func _value_premium_position() -> float:
-	# Map product worth ($/user from the value algorithm) to a 0..1 "how premium"
-	# position used to place the recommended price within the archetype's MRR band.
-	var optimal: float = float(SalesSystem.product_value()["optimal"])
-	return clampf((optimal - 4.0) / 24.0, 0.0, 1.0)   # ~$4 → band-low, ~$28 → band-high (working)
-
-
-static func _price_mult_window() -> Dictionary:
-	# Recommended price_mult window (±0.18 around the value position).
-	var v: float = _value_premium_position()
-	return {"lo": clampf(v - 0.18, 0.0, 1.0), "hi": clampf(v + 0.18, 0.0, 1.0), "mid": v}
-
-
-static func _pitch_value_hint() -> String:
-	# Satış-gated value range for the pricing stage (E.1/E.2). Below threshold the
-	# precise range is hidden — the player offers blind (mirrors the budget_band gate).
-	if not SkillCheck.can_read_prospect():
-		return TranslationServer.translate("PITCH_VALUE_BLIND")
-	var win: Dictionary = _price_mult_window()
-	var band: Dictionary = CustomerArchetypes.mrr_band(_prospect.archetype)
-	var lo_mo: int = int(round(lerpf(float(band["low"]), float(band["high"]), win["lo"])))
-	var hi_mo: int = int(round(lerpf(float(band["low"]), float(band["high"]), win["hi"])))
-	var seats: int = SalesSystem._seats_for_archetype(_prospect.archetype)
-	var per_lo: int = int(round(float(lo_mo) / maxf(1.0, float(seats))))
-	var per_hi: int = int(round(float(hi_mo) / maxf(1.0, float(seats))))
-	return TranslationServer.translate("PITCH_VALUE_READ").format({
-		"seats": seats, "per_lo": Fmt.group(per_lo), "per_hi": Fmt.group(per_hi),
-		"lo": Fmt.group(lo_mo), "hi": Fmt.group(hi_mo)})
-
-
-# --- Pitch lifecycle ---
-
-static func is_active() -> bool:
-	return _active
-
-
-static func reset() -> void:
-	# Run-boundary reset (SaveManager.reset_all_owners). MEETING-LOCAL STATE IS RESET, NEVER
-	# SERIALISED — and the save gate is what makes that honest rather than a carve-out:
-	# SaveManager.can_save() refuses while is_active(), so a pitch is provably idle at every
-	# save point and there is nothing mid-sitting for a schema to describe. A pitch is one
-	# sitting; it does not survive closing the game, and it must not survive the company.
-	_active = false
-	_prospect = null
-	_stage_idx = 0
-	_accum_bonus = 0
-	_price_mult = 0.55
-	_close_diff_delta = 0
-	_last_band = ""
-
-
-static func can_pitch() -> bool:
-	return GameState.day >= int(GameState.get_flag("next_pitch_day", 0))
-
-
-static func begin(prospect_id: String) -> bool:
-	var p: Prospect = ProspectRegistry.get_prospect(prospect_id)
-	if p == null:
-		push_warning("[PitchSystem] begin: unknown prospect %s" % prospect_id)
-		return false
-	_active = true
-	_prospect = p
-	_stage_idx = 0
-	_accum_bonus = 0
-	_price_mult = 0.55
-	_close_diff_delta = 0
-	_last_band = ""
-	return true
-
-
-static func get_stage() -> Dictionary:
-	# Returns the renderable current stage (text + choices + dynamic lines).
-	if not _active:
-		return {}
-	match _stage_idx:
-		0:
-			var reveal := ""
-			if SkillCheck.can_read_prospect():
-				reveal = TranslationServer.translate("PITCH_BUDGET_READ").format({
-					"band": budget_band_label(_prospect.budget_band),
-					"need": _prospect.display_real_need()})
-			return {
-				"id": "intro",
-				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
-				"npc": TranslationServer.translate("PITCH_S0_NPC"),
-				"inner": TranslationServer.translate("PITCH_S0_INNER"),
-				"reveal": reveal,
-				"choices": [
-					{"label": TranslationServer.translate("PITCH_S0_C1"), "bonus": 1},
-					{"label": TranslationServer.translate("PITCH_S0_C2"), "bonus": 0},
-					{"label": TranslationServer.translate("PITCH_S0_C3"), "bonus": 1},
-				],
-			}
-		1:
-			return {
-				"id": "value",
-				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
-				"npc": TranslationServer.translate("PITCH_S1_NPC"),
-				"inner": TranslationServer.translate("PITCH_S1_INNER"),
-				"reveal": "",
-				"choices": [
-					{"label": TranslationServer.translate("PITCH_S1_C1"), "skill": "sales", "diff": VALUE_BASE_DIFFICULTY},
-					{"label": TranslationServer.translate("PITCH_S1_C2"), "skill": "charisma", "diff": VALUE_BASE_DIFFICULTY + 1},
-					{"label": TranslationServer.translate("PITCH_S1_C3"), "skill": "sales", "diff": VALUE_BASE_DIFFICULTY - 1},
-				],
-			}
-		2:
-			var hint := _pitch_value_hint()
-			return {
-				"id": "pricing",
-				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
-				"npc": TranslationServer.translate("PITCH_S2_NPC"),
-				"inner": TranslationServer.translate("PITCH_S2_INNER").format({"hint": hint}),
-				"reveal": "",
-				"choices": [
-					{"label": TranslationServer.translate("PITCH_S2_C1"), "price_mult": 1.0, "close_diff": 2},
-					{"label": TranslationServer.translate("PITCH_S2_C2"), "price_mult": 0.55, "close_diff": 0},
-					{"label": TranslationServer.translate("PITCH_S2_C3"), "price_mult": 0.2, "close_diff": -1},
-				],
-			}
-		_:
-			var band_line := _band_flavor(_last_band)
-			return {
-				"id": "close",
-				"speaker": "%s · %s" % [_prospect.company_name, B2BConstants.sector_label(_prospect.industry)],
-				"npc": TranslationServer.translate("PITCH_S3_NPC"),
-				"inner": TranslationServer.translate("PITCH_S3_INNER").format({"flavor": band_line}),
-				"reveal": "",
-				"choices": [
-					{"label": TranslationServer.translate("PITCH_S3_C1"), "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY, "mrr_mult": 1.0},
-					{"label": TranslationServer.translate("PITCH_S3_C2"), "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY - 1, "mrr_mult": 0.9},
-					{"label": TranslationServer.translate("PITCH_S3_C3"), "skill": "sales", "diff": CLOSE_BASE_DIFFICULTY + 1, "mrr_mult": 1.1},
-				],
-			}
-
-
-static func choose(idx: int) -> Dictionary:
-	# Applies the chosen option's mechanics, advances, and returns either
-	# {"done": false, "check": <optional skillcheck result>} or
-	# {"done": true, "result": {...}}.
-	if not _active:
-		return {"done": true, "result": {"outcome": "LOST"}}
-	var stage: Dictionary = get_stage()
-	var choices: Array = stage.get("choices", [])
-	if idx < 0 or idx >= choices.size():
-		return {"done": false}
-	var c: Dictionary = choices[idx]
-	var out: Dictionary = {"done": false}
-
-	match stage.get("id", ""):
-		"intro":
-			_accum_bonus += int(c.get("bonus", 0))
-		"value":
-			var chk: Dictionary = SkillCheck.resolve(String(c.get("skill", "sales")), int(c.get("diff", 1)), _accum_bonus)
-			_last_band = String(chk.get("band", ""))
-			_accum_bonus += 2 if chk.get("passed", false) else -1
-			out["check"] = chk
-		"pricing":
-			_price_mult = float(c.get("price_mult", 0.55))
-			_close_diff_delta = int(c.get("close_diff", 0))
-			# Value-range modifier (E.3): above the value window the prospect balks
-			# (harder close); below is an easy close but low MRR (low MRR already
-			# falls out of the band lerp in _resolve_outcome).
-			var win: Dictionary = _price_mult_window()
-			if _price_mult > win["hi"]:
-				_close_diff_delta += 1
-			elif _price_mult < win["lo"]:
-				_close_diff_delta -= 1
-		"close":
-			var chk2: Dictionary = SkillCheck.resolve("sales",
-				CLOSE_BASE_DIFFICULTY + _close_diff_delta + _prospect.difficulty_stars - 1,
-					_accum_bonus + SalesRepSystem.warm_bonus_for(_prospect))
-				# The sales desk's groundwork rides the EXISTING bonus channel. SkillCheck stays
-				# founder-only and that is correct: the founder is the one in the room, the rep
-				# warmed the lead up to the door.
-			var mrr_mult: float = float(c.get("mrr_mult", 1.0))
-			out = {"done": true, "result": _resolve_outcome(chk2, mrr_mult)}
-			return out
-
-	_stage_idx += 1
-	return out
-
-
+## A signed B2B account's opening satisfaction: Stability + Experience, off effective quality
+## — reliability and ease, which is what a business buyer feels on day one.
 static func signing_satisfaction_seed() -> int:
-	# A signed B2B account's initial satisfaction: Stability + Experience (reliability + ease —
-	# what a business buyer feels on day one), off effective stability. Extracted from
-	# _resolve_outcome so SalesRepSystem's autonomous close seeds an account IDENTICALLY to a
-	# played pitch; two copies of this expression would silently drift apart.
 	var dims: Dictionary = QualityModel.economy_dims_from_flags()
 	return int(round(
 		(QualityModel.axis_score(dims, "stability") + QualityModel.axis_score(dims, "experience")) * 0.5))
 
 
-static func _resolve_outcome(chk: Dictionary, mrr_mult: float) -> Dictionary:
-	var band: String = String(chk.get("band", "fail"))
-	var quality_seed: int = signing_satisfaction_seed()
-	# Cooldown applies regardless of outcome.
-	GameState.set_flag("next_pitch_day", GameState.day + PITCH_COOLDOWN_DAYS)
-
-	var outcome := "LOST"
-	if band == "crit_success" or band == "success":
-		outcome = "SIGNED"
-	elif band == "near_pass":
-		outcome = "SIGNED"
-		mrr_mult *= 0.85  # negotiated down a touch
-	elif band == "near_miss":
-		outcome = "CALLBACK"
-	else:
-		outcome = "LOST"
-
-	var result := {"outcome": outcome, "band": band, "company": _prospect.company_name, "check": chk}
-
-	if outcome == "SIGNED":
-		var bandvals: Dictionary = CustomerArchetypes.mrr_band(_prospect.archetype)
-		var target: float = lerpf(float(bandvals["low"]), float(bandvals["high"]), clampf(_price_mult, 0.0, 1.0))
-		var mrr: int = int(round(target * mrr_mult))
-		var satisfaction: int = clampi(quality_seed + (5 if band == "crit_success" else 0), 0, 100)
-		var cust: Customer = SalesSystem.add_b2b_customer(_prospect, mrr, satisfaction)
-		ProspectRegistry.remove(_prospect.id)
-		result["mrr"] = mrr
-		result["customer_id"] = cust.id
-	elif outcome == "LOST":
-		ProspectRegistry.remove(_prospect.id)
-	# CALLBACK: prospect stays in the pool for a retry after cooldown.
-
-	_active = false
-	_prospect = null
-	return result
-
-
-static func _band_flavor(band: String) -> String:
-	match band:
-		"crit_success": return TranslationServer.translate("PITCH_BAND_CRIT_SUCCESS")
-		"success": return TranslationServer.translate("PITCH_BAND_SUCCESS")
-		"near_pass": return TranslationServer.translate("PITCH_BAND_NEAR_PASS")
-		"near_miss": return TranslationServer.translate("PITCH_BAND_NEAR_MISS")
-		"fail", "crit_fail": return TranslationServer.translate("PITCH_BAND_FAIL")
-		_: return ""
-
-
-## Budget band id -> player-facing label. The id ("low"/"mid"/"high") used to be printed
-## straight into the sales read-out, so the player saw "bütçe: mid".
-static func budget_band_label(band: String) -> String:
-	if band == "":
-		return ""
-	return TranslationServer.translate("PITCH_BUDGET_" + band.to_upper())
+## Kept for SaveManager.reset_all_owners, whose ordered list names this owner. There is no
+## sitting-scoped state left here — the meeting and the negotiation own theirs — so the reset
+## delegates to the two systems that actually hold one.
+static func reset() -> void:
+	SalesMeetingSystem.reset()
+	NegotiationSystem.reset()

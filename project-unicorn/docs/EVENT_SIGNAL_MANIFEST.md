@@ -9,16 +9,16 @@ the same idea is [`SEAM_REGISTRY.md`](SEAM_REGISTRY.md).
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 110 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 128 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **110** |
+| Signals declared | **128** |
 | Declared with **no production emitter** | **3** |
-| Emitted with **no production listener** | **48** |
+| Emitted with **no production listener** | **66** |
 
 The second number is the §15.2 violation set. The third is **not** a defect, and it
 is smaller than it looks: the event engine listens to SIX of them through
@@ -63,7 +63,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar · oda_tour | 23 | 1 | time_manager |
+| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar · oda_tour | 25 | 1 | time_manager |
 | `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · creation_flow · detail_view · left_tabs · research_bar · tab_page_chrome · oda_view | 25 | 5 | game_shell · build_hud_panel · center_viewport · left_tabs · oda_tour |
 | `finance_subpage_requested` | `page_id: String` | effects · oda_view | 2 | 1 | finance_tab |
 
@@ -190,9 +190,27 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `prospect_added` | `prospect_id: String` | prospect_registry | 1 | 0 | — |
 | `prospect_removed` | `prospect_id: String` | prospect_registry | 1 | 0 | — |
 | `pitch_requested` | `prospect_id: String` | sales_tab | 1 | 1 | main |
-| `pitch_finished` | `—` | b2b_pitch_meeting | 2 | 0 | — |
+| `pitch_finished` | `—` | sales_meeting_system | 1 | 0 | — |
+| `prospect_arrived` | `prospect_id: String` | sales_faucet_system | 1 | 0 | — |
+| `lead_expired` | `prospect_id: String` | sales_faucet_system | 1 | 0 | — |
+| `lead_reserved` | `prospect_id: String` | sales_ledger | 1 | 0 | — |
+| `lead_routed` | `prospect_id: String` | sales_ledger | 1 | 0 | — |
+| `meeting_entered` | `prospect_id: String` | sales_meeting_system | 1 | 0 | — |
+| `meeting_won` | `prospect_id: String` | sales_meeting_system | 1 | 0 | — |
+| `meeting_lost` | `account_key: String, reason: String` | sales_ledger | 1 | 0 | — |
+| `deal_signed` | `customer_id: String, seats: int, seat_price: int` | sales_system | 1 | 0 | — |
+| `deal_walked` | `account_key: String` | sales_finalizer | 2 | 0 | — |
+| `rep_deal_closed` | `rep_id: String, customer_id: String` | sales_rep_system | 1 | 0 | — |
+| `rep_discount_requested` | `rep_id: String, prospect_id: String` | sales_rep_system | 1 | 0 | — |
+| `pitch_promise_made` | `account_key: String, feature_id: String` | sales_finalizer | 1 | 0 | — |
+| `pitch_promise_kept` | `account_key: String` | b2b_sales_system | 1 | 0 | — |
+| `pitch_promise_broken` | `account_key: String` | b2b_sales_system | 1 | 0 | — |
+| `whale_condition_met` | `prospect_id: String` | sales_faucet_system | 1 | 0 | — |
+| `weekly_sales_report_issued` | `closes: int` | sales_rep_system | 1 | 0 | — |
+| `price_stance_changed` | `stance: String` | sales_ledger | 1 | 0 | — |
+| `rep_band_cap_changed` | `rep_id: String` | sales_ledger | 1 | 0 | — |
 | `mentor_advisory_changed` | `text: String` | effects · vc_pitch_system | 2 | 2 | hunt_tab · oda_view |
-| `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_rep_system | 8 | 2 | time_manager · news_ticker |
+| `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_finalizer · sales_rep_system | 9 | 2 | time_manager · news_ticker |
 
 ### Endgame signals (ENDGAME_DESIGN.md §2/§3)
 
@@ -207,7 +225,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `meeting_scene_requested` | `view_state: Dictionary` | game_shell · b2b_pitch_meeting · vc_pitch_system | 5 | 2 | main |
+| `meeting_scene_requested` | `view_state: Dictionary` | game_shell · vc_pitch_system | 4 | 1 | main |
 
 ### VC Pitch / Series A Hunt signals (Spec 4 / VC_PITCH_DESIGN.md §7)
 

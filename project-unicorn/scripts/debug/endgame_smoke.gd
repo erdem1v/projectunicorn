@@ -141,7 +141,18 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_retention_routes_seams": fail = _case_b2b_retention_routes_seams()
 		"b2b_ignore_then_churn": fail = _case_b2b_ignore_then_churn()
 		"b2b_pitch_meeting_signs": fail = _case_b2b_pitch_meeting_signs()
-		"b2b_rep_portrait_rotation": fail = _case_b2b_rep_portrait_rotation()
+		"sales_meeting_replays_identically": fail = _case_sales_meeting_replays_identically()
+		"sales_faucet_guard_b2c": fail = _case_sales_faucet_guard_b2c()
+		"sales_lead_expiry_and_return_lock": fail = _case_sales_lead_expiry_and_return_lock()
+		"sales_meeting_time_skip_founder_zero": fail = _case_sales_meeting_time_skip_founder_zero()
+		"sales_check_replays_after_load": fail = _case_sales_check_replays_after_load()
+		"sales_single_open_promise_lock": fail = _case_sales_single_open_promise_lock()
+		"sales_rep_selection_rule": fail = _case_sales_rep_selection_rule()
+		"sales_seat_price_stamp_and_expansion": fail = _case_sales_seat_price_stamp_and_expansion()
+		"sales_save_roundtrip_rev6": fail = _case_sales_save_roundtrip_rev6()
+		"loc_sales_derived_keys": fail = _case_loc_sales_derived_keys()
+		"sales_presentation_rules": fail = _case_sales_presentation_rules()
+		"sales_candidate_curve_and_traits": fail = _case_sales_candidate_curve_and_traits()
 		"b2b_prospect_pain_references_real_feature": fail = _case_b2b_prospect_pain_references_real_feature()
 		"b2b_promise_kept_on_ship": fail = _case_b2b_promise_kept_on_ship()
 		"b2b_promise_broken_on_deadline": fail = _case_b2b_promise_broken_on_deadline()
@@ -407,6 +418,45 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 # GameState.current_hour hiç kımıldamaz. Saatlik yola dokunmayan case'ler için doğru ve
 # hızlı sürücü; saatlik/günlük SINIRINDA doğan bir davranışı ölçemez — onun için
 # _sim_day_full() var.
+
+## SATIŞ rev 6 §5.3 — THE FIXTURE BRIDGE, and the reason it exists rather than 25 hand edits.
+## The signing seam takes SEATS and SEAT PRICE now; every case above seeds a target MRR
+## because the MRR is what it asserts on. This converts once — seats from the star's band
+## midpoint, price from the MRR — and then pins the exact figure through the registry seam,
+## so a rounding remainder cannot silently move a number a case was written against.
+## Fixtures only. Production has exactly one signing path and it is SalesSystem's.
+static func _sign_fixture(p: Prospect, mrr: int, satisfaction: int,
+		source: String = "founder_pitch") -> Customer:
+	var band: Dictionary = SalesConstants.seat_band(p.star)
+	var seats: int = maxi(int(round((float(band["low"]) + float(band["high"])) * 0.5)), 1)
+	var price: int = maxi(int(round(float(mrr) / float(seats))), 1)
+	var c: Customer = SalesSystem.add_b2b_customer(p, seats, price, satisfaction, source)
+	if c != null and c.mrr != mrr:
+		CustomerRegistry.set_mrr(c.id, mrr)
+		SalesSystem.reflect_mrr()
+	return c
+
+## "Teklife geç" opens FROM THE SECOND probe (§5.1.1), so a case that wants the skip has to
+## reach it first. Takes the first OPEN answer each turn until the skip is available, then
+## takes it — which makes the played PATH short, stable and identical across two runs, and
+## that is the property the replay cases measure.
+static func _play_to_skip(vs: Dictionary) -> Dictionary:
+	for i in SalesConstants.SAFETY_CAP_PROBES + 2:
+		if String(vs.get("outcome", "")) != "":
+			return vs
+		if SalesMeetingSystem.can_skip_to_offer():
+			return SalesMeetingSystem.skip_to_offer()
+		var picked: String = ""
+		for a in (vs.get("answers", []) as Array):
+			if bool((a as Dictionary).get("open", false)):
+				picked = String((a as Dictionary).get("id", ""))
+				break
+		if picked == "":
+			return SalesMeetingSystem.skip_to_offer()
+		vs = SalesMeetingSystem.choose(picked)
+	return vs
+
+
 static func _sim_day() -> void:
 	GameState.advance_day()
 	TimeManager._dispatch_daily_tick()
@@ -453,6 +503,16 @@ static func _set_founder_tech(value: int) -> void:
 		founder.role_stats[area_key] = value
 
 
+## One area on the founder, clamped to the ruler. `_set_founder_tech` does the four product
+## areas together because they move together in a fixture; Satış and Müşteri İlişkileri do
+## not, so they get the single-area door rather than a second four-area helper.
+static func _set_founder_area(area_key: String, value: int) -> void:
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return
+	founder.role_stats[area_key] = clampi(value, HRConstants.AREA_MIN, HRConstants.AREA_MAX)
+
+
 static func _make_employee(id: String, display_name: String, role_id: String,
 		pace: int = SEED_PACE, salary: int = 0, morale: int = 50,
 		expertise: int = SEED_EXPERTISE, rapport: int = SEED_RAPPORT) -> Character:
@@ -489,13 +549,24 @@ static func _seed_b2b(mrr: int) -> void:
 	p.id = "lead_smoke"
 	p.company_name = "Smoke Corp"
 	p.industry = "testing"
-	p.archetype = "small"
-	SalesSystem.add_b2b_customer(p, mrr, 70)
+	p.star = 1
+	_sign_fixture(p, mrr, 70)
 
 
 ## "Healthy Series A MRR" for the VC fixtures (Calibration Round A §3): the revenue bar moved
 ## 5,000 → the $40-80K band and VCPitchSystem's conviction seeding reads SEED_MRR_REFERENCE =
 ## the bar, so a fixture hard-pinned at 6,000 would read as a WEAK company. Bar + 1,000.
+## A LIVE, HEALTHY B2B PRODUCT for the sitting cases — line tiers, not the legacy `mvp_*`
+## flags. Ürün rev 6.1 assembles the axis readings from the LINE LADDER (product_state.gd:238),
+## so a fixture that only sets `mvp_stability` leaves every `urun.axis_reading` at zero and the
+## persuasion model reads a product that does not exist. `_seed_b2b` keeps its flags because
+## the economy path still reads them; this is the other half.
+static func _seed_b2b_lines(subtype: String, tier: int = 2) -> void:
+	GameState.set_flag("mvp_sub_product_type_id", subtype)
+	for line_id in ProductLines.line_ids(subtype):
+		ProductState.set_line_tier(String(line_id), tier)
+
+
 static func _seed_b2b_series_a() -> void:
 	_seed_b2b(SalesSystem.TRACTION_MRR_TARGET + 1000)
 
@@ -1332,8 +1403,8 @@ static func _case_month_summary() -> String:
 	p.id = "lead_month_smoke"
 	p.company_name = "Month Corp"
 	p.industry = "testing"
-	p.archetype = "small"
-	SalesSystem.add_b2b_customer(p, 500, 70)  # no mvp_shipped flag → gate 1 stays closed
+	p.star = 1
+	_sign_fixture(p, 500, 70)  # no mvp_shipped flag → gate 1 stays closed
 	if GameState.run_customers_signed != 1:
 		return "run_customers_signed = %d, want 1" % GameState.run_customers_signed
 	# `verb`, and a NAMED account. The old executor's default target was
@@ -1975,8 +2046,8 @@ static func _case_targeted_modifier_hits_named_customer() -> String:
 	p.id = "lead_two"
 	p.company_name = "Second Corp"
 	p.industry = "testing"
-	p.archetype = "mid"
-	SalesSystem.add_b2b_customer(p, 2000, 70)   # co_lead_two, seats 12
+	p.star = 2
+	_sign_fixture(p, 2000, 70)   # co_lead_two, seats 12
 	var c1: Customer = CustomerRegistry.get_customer("co_lead_smoke")
 	var c2: Customer = CustomerRegistry.get_customer("co_lead_two")
 	var s1: int = c1.seats
@@ -2790,8 +2861,8 @@ static func _case_b2b_satisfaction_leaves_b2c_identical() -> String:
 	p.id = "lead_iso"
 	p.company_name = "Iso Corp"
 	p.industry = "testing"
-	p.archetype = "small"
-	SalesSystem.add_b2b_customer(p, 1000, 70)   # coexisting B2B account
+	p.star = 1
+	_sign_fixture(p, 1000, 70)   # coexisting B2B account
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	if ub == null:
 		return "no B2C aggregate record after seed"
@@ -2827,9 +2898,9 @@ static func _add_risk_b2b(pid: String, mrr: int) -> Customer:
 	p.id = pid
 	p.company_name = "R_" + pid
 	p.industry = "insurance"
-	p.archetype = "small"
+	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
-	var c: Customer = SalesSystem.add_b2b_customer(p, mrr, 70)
+	var c: Customer = _sign_fixture(p, mrr, 70)
 	CustomerRegistry.set_tolerance(c.id, 50)
 	CustomerRegistry.set_satisfaction(c.id, 20)
 	CustomerRegistry.set_lifecycle_phase(c.id, "risk")
@@ -2996,68 +3067,145 @@ static func _case_b2b_ignore_then_churn() -> String:
 # --- B2B pitch → MeetingScene migration (view-only, outcome-invariant) ---
 
 static func _case_b2b_pitch_meeting_signs() -> String:
-	# The B2BPitchMeeting view-adapter drives the UNCHANGED PitchSystem to the same SIGNED
-	# outcome the retired modal produced — round-trip parity through advance().
+	# THE WHOLE SITTING, END TO END (§5.0 → §5.1 → §5.3 → §5.4): the founder sits down, the
+	# customer cuts to the numbers, the table agrees a price, and an account exists that
+	# carries THAT price. FALSIFICATION: against the retired four-beat pitch the seat-price
+	# assertion fails — a signed account had no seat price to carry.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
-	_force("pass")  # deterministic skill checks → SIGNED
-	var p: Prospect = PitchSystem.spawn_prospect("small", "find")
+	_seed_b2b_lines("erp", 2)
+	_set_founder_tech(9)
+	_set_founder_area(HRConstants.AREA_SALES, 9)
+	var p: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+	if p == null:
+		return "the faucet produced no lead to meet"
 	var before: int = CustomerRegistry.get_by_market("b2b").size()
-	B2BPitchMeeting.begin_meeting(p.id)
-	if not B2BPitchMeeting.is_active():
-		return "adapter not active after begin_meeting"
-	B2BPitchMeeting.advance("c0")  # intro
-	B2BPitchMeeting.advance("c0")  # value (skill check)
-	B2BPitchMeeting.advance("c1")  # pricing (fair)
-	var rc: Dictionary = B2BPitchMeeting.advance("c0")  # close → result screen
-	if rc.get("done", true):
-		return "close should show a result screen, not close immediately"
-	# Compared against the KEY's resolution, not against Turkish bytes: the label is
-	# localized now, so a byte-pin would assert the developer's current locale rather than
-	# the outcome. (Same fix as the format_share pin in Step 1c.)
-	var want_signed: String = TranslationServer.translate("PITCH_OUTCOME_SIGNED")
-	if String(rc.get("view_state", {}).get("beat_label", "")) != want_signed:
-		return "expected the SIGNED beat label (%s), got %s" % [
-			want_signed, String(rc.get("view_state", {}).get("beat_label", ""))]
-	var rd: Dictionary = B2BPitchMeeting.advance("done")  # Devam → close
-	if not rd.get("done", false):
-		return "Devam did not close the meeting"
-	if B2BPitchMeeting.is_active():
-		return "adapter still active after close"
+	var vs: Dictionary = SalesMeetingSystem.open(p.id)
+	if vs.is_empty() or not SalesMeetingSystem.is_active():
+		return "the meeting did not open"
+	# §5.0 — a sitting is ATOMIC, and the save gate is what makes "never serialised" honest.
+	if SaveManager.can_save():
+		return "a save was allowed mid-sitting — §5.0 says the scene is atomic"
+	vs = _play_meeting_out(vs)
+	if String(vs.get("outcome", "")) != "won":
+		return "a strong founder against a 1-star table did not win: %s (odds %.2f, axes %d/%d/%d)" % [
+			str(vs.get("outcome", "")), float(vs.get("odds", 0.0)),
+			ProductRead.axis_reading("", "innovation"), ProductRead.axis_reading("", "stability"),
+			ProductRead.axis_reading("", "experience")]
+	# §5.3 — Perde 2. Offer at the band floor so the customer accepts on the first move.
+	NegotiationSystem.open(NegotiationSystem.TYPE_B2B, {
+		"account": p.company_name, "lead_id": p.id, "star": p.star,
+		"archetype": p.archetype_id, "promised": SalesMeetingSystem.promised_feature(),
+		"is_whale": p.is_whale,
+	})
+	NegotiationSystem.select_price(SalesConstants.SEAT_PRICE_MIN)
+	var nvs: Dictionary = NegotiationSystem.offer()
+	if String(nvs.get("state", "")) != "accepted":
+		return "an offer at the band floor was not accepted: %s" % str(nvs.get("state", ""))
+	SalesFinalizer.apply(NegotiationSystem.result())
+	SalesMeetingSystem.close()
+	if SalesMeetingSystem.is_active():
+		return "the sitting is still active after close()"
 	if CustomerRegistry.get_by_market("b2b").size() != before + 1:
-		return "SIGNED did not create a customer"
+		return "the signature created no customer"
 	if ProspectRegistry.get_prospect(p.id) != null:
-		return "SIGNED did not remove the prospect"
+		return "the signature did not remove the lead"
+	var c: Customer = CustomerRegistry.get_customer("co_" + p.id)
+	if c == null:
+		return "the customer id is not derived from the lead id"
+	# §5.4 — THE PRICE TRAIL. The account carries what it agreed to, and MRR is the product.
+	if c.seat_price != SalesConstants.SEAT_PRICE_MIN:
+		return "the account did not carry the agreed seat price: $%d" % c.seat_price
+	if c.mrr != c.seats * c.seat_price:
+		return "MRR %d is not seats x seat price (%d x %d)" % [c.mrr, c.seats, c.seat_price]
+	# The gate must be back OFF — but only the sitting's half of it. The two skipped hours
+	# run the real hourly path (§5.0), so an ambient card may legitimately be up when the
+	# player returns, and that refusal belongs to the event engine rather than to Sales.
+	if NegotiationSystem.is_active():
+		return "the negotiation is still active after the signature"
+	if EventGate.active_id() == "" and not SaveManager.can_save():
+		return "saving is still refused after the sitting closed with no card up"
 	return ""
 
 
-static func _case_b2b_rep_portrait_rotation() -> String:
-	# Rep portrait: sequential over the NON-selected founder pool, no consecutive repeat,
-	# player's own excluded, persisted per-prospect (survives a re-meeting).
-	GameState.initialize_run({})
-	GameState.founder_portrait = "founder_03"  # the player's — must be excluded
+## Play a sitting to its outcome by taking the first OPEN answer each turn, then skipping to
+## the offer if the customer is still asking. Shared by the sitting cases below.
+static func _play_meeting_out(vs: Dictionary) -> Dictionary:
+	for i in SalesConstants.SAFETY_CAP_PROBES + 2:
+		if String(vs.get("outcome", "")) != "":
+			return vs
+		var picked: String = ""
+		for a in (vs.get("answers", []) as Array):
+			if bool((a as Dictionary).get("open", false)):
+				picked = String((a as Dictionary).get("id", ""))
+				break
+		if picked == "":
+			return SalesMeetingSystem.skip_to_offer()
+		vs = SalesMeetingSystem.choose(picked)
+	return vs
+
+static func _case_sales_meeting_replays_identically() -> String:
+	# §5.1 + engine §9.3 — THE NO-DICE-FISHING LAW, which the re-pitch design leans on. The
+	# check derives from the run seed, the day, the lead and THE PATH, so replaying the same
+	# answers gives the same verdict and only a DIFFERENT (and costlier) path moves the die.
+	# This case replaces `b2b_rep_portrait_rotation`, whose subject — a portrait rotation on
+	# the retired view adapter — no longer exists in any form.
+	# FALSIFICATION: swap EvDice.check for SkillCheck.roll_against (the RngStreams draw the
+	# old pitch used) and the two verdicts diverge, because a stream draw moves with position.
+	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
-	var assigned: Array = []
-	var prospects: Array = []
-	for i in 6:
-		var p: Prospect = PitchSystem.spawn_prospect("small", "find")
-		prospects.append(p)
-		var rep: String = B2BPitchMeeting._assign_rep(p)
-		if rep == "founder_03":
-			return "assigned the player's own portrait"
-		if not assigned.is_empty() and String(assigned[assigned.size() - 1]) == rep:
-			return "consecutive repeat: %s" % rep
-		if p.rep_portrait_id != rep:
-			return "rep not persisted on the prospect"
-		assigned.append(rep)
-	# Re-meeting the SAME prospect returns the SAME face.
-	var again: String = B2BPitchMeeting._assign_rep(prospects[0])
-	if again != String(assigned[0]):
-		return "re-meeting did not reuse the persisted portrait (%s vs %s)" % [again, str(assigned[0])]
+	GameState.run_seed = 424242
+	var first: String = _replay_once("replay_lead")
+	if first == "":
+		return "the sitting produced no outcome to compare"
+	# A reload restores the seed and the day; nothing else about the path changed.
+	GameState.run_seed = 424242
+	var second: String = _replay_once("replay_lead")
+	if first != second:
+		return "the same path replayed differently: %s then %s" % [first, second]
+	# A DIFFERENT lead id is a genuinely different roll — the die is not a constant.
+	var other: String = _replay_once("replay_other")
+	var differed: bool = other != first
+	# The SITTING is what must not survive the close (§5.0: one sitting, and nothing of it is
+	# serialised). `path_id()` is deliberately never empty — an empty option_id would make two
+	# different tables hash to the same die — so the thing to assert is the state, not a string.
+	if SalesMeetingSystem.is_active():
+		return "the sitting is still active after close()"
+	if SalesMeetingSystem.active_lead_id() != "":
+		return "the sitting still names a lead after close(): %s" % SalesMeetingSystem.active_lead_id()
+	if not differed and first == "won":
+		return "" # a different lead may legitimately land the same way; not a failure
 	return ""
 
+
+## One sitting on a hand-built lead, played by skipping straight to the offer so the PATH is
+## exactly "skip:1" every time and the only variable under test is the derivation.
+static func _replay_once(lead_id: String) -> String:
+	if ProspectRegistry.get_prospect(lead_id) != null:
+		ProspectRegistry.remove(lead_id)
+	var p: Prospect = _add_prospect(lead_id, 2, "ai_vec_filter")
+	GameState.set_flag("sales_meeting_used_day", -1)
+	var vs: Dictionary = SalesMeetingSystem.open(p.id)
+	if vs.is_empty():
+		return ""
+	while String(vs.get("outcome", "")) == "" and not SalesMeetingSystem.can_skip_to_offer():
+		var picked: String = ""
+		for a in (vs.get("answers", []) as Array):
+			if bool((a as Dictionary).get("open", false)):
+				picked = String((a as Dictionary).get("id", ""))
+				break
+		if picked == "":
+			break
+		vs = SalesMeetingSystem.choose(picked)
+	if String(vs.get("outcome", "")) == "":
+		vs = SalesMeetingSystem.skip_to_offer()
+	var outcome: String = String(vs.get("outcome", ""))
+	SalesMeetingSystem.close()
+	if ProspectRegistry.get_prospect(lead_id) != null:
+		ProspectRegistry.remove(lead_id)
+	return outcome
 
 static func _case_b2b_prospect_pain_references_real_feature() -> String:
 	# B.4: a prospect's surface need maps to a feature that EXISTS in the active
@@ -3068,14 +3216,21 @@ static func _case_b2b_prospect_pain_references_real_feature() -> String:
 	var pool_ids: Array = []
 	for f in ProductCatalog.get_feature_pool("ai_vector_search"):
 		pool_ids.append(String(f.get("id", "")))
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
 	for i in 6:
-		var p: Prospect = PitchSystem.spawn_prospect("small", "find")
+		var p: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+		if p == null:
+			return "the faucet dried at draw %d" % i
 		if p.pain_feature_id == "":
-			return "prospect %d has empty pain_feature_id" % i
+			return "lead %d has empty pain_feature_id" % i
 		if not pool_ids.has(p.pain_feature_id):
 			return "pain_feature_id %s not in the product pool" % p.pain_feature_id
-		if p.display_need() == "":
-			return "prospect %d renders no need line" % i
+		# `display_need()` is RETIRED with the read-gated need pools (§19). What a lead
+		# renders instead is its archetype's one line, and the pain is an ID that a promise
+		# and the CS request channel can both point at.
+		if SalesArchetypes.voice_line(p.archetype_id) == "":
+			return "lead %d renders no archetype line" % i
 	return ""
 
 
@@ -3174,9 +3329,9 @@ static func _case_b2b_cs_absorbs_routine() -> String:
 	p.id = "csm"
 	p.company_name = "CS Managed"
 	p.industry = "insurance"
-	p.archetype = "small"
+	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
-	var cs_mgd: Customer = SalesSystem.add_b2b_customer(p, 1000, 70)
+	var cs_mgd: Customer = _sign_fixture(p, 1000, 70)
 	CustomerRegistry.assign_customer(cs_mgd.id, cs.id)
 	if cs_mgd.assigned_to != cs.id:
 		return "assign_customer did not set assigned_to"
@@ -3207,9 +3362,9 @@ static func _case_b2b_cs_escalation_refuse() -> String:
 	p.id = "esc"
 	p.company_name = "Ege Sigorta"
 	p.industry = "insurance"
-	p.archetype = "small"
+	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
-	var c: Customer = SalesSystem.add_b2b_customer(p, 2000, 70)
+	var c: Customer = _sign_fixture(p, 2000, 70)
 	CustomerRegistry.assign_customer(c.id, cs.id)
 	CustomerRegistry.set_satisfaction(c.id, 20)  # below the critical threshold
 	GameState.advance_day()
@@ -3263,12 +3418,21 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	var expanded: Array = []
 	var cb := func(_id: String, n: int) -> void: expanded.append(n)
 	EventBus.customer_expanded.connect(cb)
+	# Satış rev 6 §5.4 — the caller still passes the flat constant, because the ENGINE'S own
+	# `b2b_expand` effect does and this module edits no engine file. What changed is that a
+	# stamped account IGNORES it and charges what it agreed to at signing. The 120 below is
+	# therefore deliberately still here: it is the fallback, and the assertion is that this
+	# account does not use it.
+	var own_price: int = c.seat_price
+	if own_price <= 0:
+		return "the fixture account carries no stamped seat price"
 	B2BSalesSystem.expand(c.id, 5, 120)
 	EventBus.customer_expanded.disconnect(cb)
 	if c.seats != seats0 + 5:
 		return "seats did not grow (%d -> %d)" % [seats0, c.seats]
-	if c.mrr != mrr0 + 5 * 120:
-		return "mrr not priced off added seats (%d -> %d)" % [mrr0, c.mrr]
+	if c.mrr != mrr0 + 5 * own_price:
+		return "expansion charged %d for 5 seats, want 5 x the account's own $%d" % [
+			c.mrr - mrr0, own_price]
 	if GameState.mrr != CustomerRegistry.get_total_mrr():
 		return "expansion did not bridge MRR (%d vs %d)" % [GameState.mrr, CustomerRegistry.get_total_mrr()]
 	if GameState.run_customers_expanded != exp0 + 1:
@@ -3286,8 +3450,8 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	pm.id = "lead_mature"
 	pm.company_name = "Mature A.Ş."
 	pm.industry = "testing"
-	pm.archetype = "small"
-	SalesSystem.add_b2b_customer(pm, 1000, 70)
+	pm.star = 1
+	_sign_fixture(pm, 1000, 70)
 	var m: Customer = CustomerRegistry.get_customer("co_lead_mature")
 	if m == null:
 		return "the mature fixture account was not created"
@@ -4176,8 +4340,8 @@ static func _case_recover_preserves_onboarding() -> String:
 	p2.id = "lead_mature"
 	p2.company_name = "Mature A.Ş."
 	p2.industry = "testing"
-	p2.archetype = "small"
-	SalesSystem.add_b2b_customer(p2, 900, 70)
+	p2.star = 1
+	_sign_fixture(p2, 900, 70)
 	var m: Customer = CustomerRegistry.get_customer("co_lead_mature")
 	m.onboarding_until = GameState.day - 1     # window already closed
 	CustomerRegistry.set_tolerance(m.id, 60)
@@ -4224,8 +4388,8 @@ static func _case_promise_orphan_no_brand_hit() -> String:
 	p2.id = "lead_alive"
 	p2.company_name = "Alive A.Ş."
 	p2.industry = "testing"
-	p2.archetype = "small"
-	SalesSystem.add_b2b_customer(p2, 900, 70)
+	p2.star = 1
+	_sign_fixture(p2, 900, 70)
 	var live_c: Customer = CustomerRegistry.get_customer("co_lead_alive")
 	PromiseRegistry.create(live_c.id, "ai_vec_filter", 1)
 	var brand_before_break: int = GameState.brand
@@ -4320,8 +4484,8 @@ static func _case_b2b_expansion_no_refire() -> String:
 	p.id = "lead_decliner"
 	p.company_name = "Decline A.Ş."
 	p.industry = "testing"
-	p.archetype = "small"
-	SalesSystem.add_b2b_customer(p, 900, 80)
+	p.star = 1
+	_sign_fixture(p, 900, 80)
 	var d: Customer = CustomerRegistry.get_customer("co_lead_decliner")
 	if d == null:
 		return "second account was not created"
@@ -4384,21 +4548,35 @@ static func _case_b2b_market_gate_b2c_run() -> String:
 
 
 static func _case_sales_autoclose_empty_pain() -> String:
-	# S1-7. An UNMAPPABLE pain is the conservative case, not the permissive one. This
-	# branch returned true, so the §10 concession gate opened widest exactly where the
-	# engine knew least — and mvp_components was never consulted at all.
+	# §7.2.1 — "Ayır" MEANS the desk is the founder's: a reserved lead is skipped by the rep
+	# outright, and reserving does NOT stop its clock. This case replaces the old
+	# unmappable-pain gate, which belonged to a concession model §19 retired.
+	# FALSIFICATION: drop the ROUTE_RESERVED branch from pick_lead_for and the second check
+	# fails — the rep takes the founder's table.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
-	GameState.set_flag("mvp_components", ["ai_vec_search_api"])
-	var blank: Prospect = _add_prospect("nopain", "small", "")
-	if SalesRepSystem.is_auto_closable(blank):
-		return "a lead with no mapped pain still reads as auto-closable"
-	# Control: a lead whose pain IS shipped stays routine, so the gate did not just close.
-	var known: Prospect = _add_prospect("known", "small", "ai_vec_search_api")
-	if not SalesRepSystem.is_auto_closable(known):
-		return "a lead whose pain is already shipped should still be auto-closable"
+	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)
+	var mine: Prospect = _add_prospect("reserved", 1, "ai_vec_filter")
+	SalesLedger.set_routing(mine.id, SalesConstants.ROUTE_RESERVED)
+	if SalesLedger.lead_routing(mine.id) != SalesConstants.ROUTE_RESERVED:
+		return "the routing seam did not record the reservation"
+	if SalesRepSystem.pick_lead_for(rep) != null:
+		return "the rep picked a RESERVED lead"
+	# The clock keeps running on a reserved lead (§7.2.1: "Rezerv süreyi durdurmaz").
+	var left0: int = mine.days_left()
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if ProspectRegistry.get_prospect("reserved") != null \
+			and ProspectRegistry.get_prospect("reserved").days_left() >= left0:
+		return "reserving froze the lead's counter"
+	# Control: an unrouted sibling IS picked, so the skip is the reservation and nothing else.
+	var free_lead: Prospect = _add_prospect("free", 1, "ai_vec_filter")
+	var picked: Prospect = SalesRepSystem.pick_lead_for(rep)
+	if picked == null or picked.id != free_lead.id:
+		return "the rep did not pick the unrouted sibling"
 	return ""
-
 
 static func _case_event_queue_dedupe_by_id() -> String:
 	# Array.has() on Array[GameEvent] compares REFERENCES, and every factory mints a fresh
@@ -4426,31 +4604,32 @@ static func _case_event_queue_dedupe_by_id() -> String:
 
 
 static func _case_b2b_scale_and_sector_gating() -> String:
-	# Demo scale gating (1..3 only, 4-5 Tier 2 gated) AND sector affinity: the chosen
-	# product yields only sector-appropriate prospects, each with a value RANGE band.
+	# §2 THE DEMO CEILING (MÜHÜRLÜ): the faucet produces 1-3 stars only. 4-5 is not generated
+	# and not written, and there is no locked 4-star card either — dim stars ARE the scale
+	# telegraph, which is what closes the audit's F10 finding.
+	# §3 SECTOR AFFINITY moved from a product-keyed table to the ARCHETYPE's own sectors, so
+	# the fiction stays clean without a second narrowing.
+	# FALSIFICATION: the old spawner rolled scale from CustomerArchetypes and could hand back
+	# a 5 whenever b2b_high_scale_unlocked was set; nothing set it, which was the bug.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
-	var ops_sectors: Array = B2BConstants.sector_pool("saas_ops")
-	for i in 8:
-		var p: Prospect = PitchSystem.spawn_prospect("small", "find")
-		if p.scale < 1 or p.scale > B2BConstants.SCALE_DEMO_MAX:
-			return "prospect scale out of demo range: %d" % p.scale
-		if not ops_sectors.has(p.industry):
-			return "ops prospect industry %s not in sector affinity" % p.industry
-		if p.value_band_min <= 0 or p.value_band_max <= p.value_band_min:
-			return "prospect value band invalid (%d-%d)" % [p.value_band_min, p.value_band_max]
-	# Switching the product switches the sector pool (vector-search → no construction).
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
-	var vec_sectors: Array = B2BConstants.sector_pool("ai_vector_search")
-	for i in 5:
-		var p2: Prospect = PitchSystem.spawn_prospect("small", "find")
-		if not vec_sectors.has(p2.industry):
-			return "vector-search prospect industry %s off-affinity" % p2.industry
-		if ops_sectors.has(p2.industry) and not vec_sectors.has(p2.industry):
-			return "vector-search yielded an ops-only sector: %s" % p2.industry
+	for i in 12:
+		var p: Prospect = SalesFaucetSystem.spawn(SalesConstants.STAR_MAX + 2, "faucet")
+		if p == null:
+			return "the faucet dried at draw %d" % i
+		if p.star < SalesConstants.STAR_MIN or p.star > SalesConstants.STAR_MAX:
+			return "lead star out of the demo range: %d" % p.star
+		if not SalesArchetypes.has(p.archetype_id):
+			return "lead carries an unknown archetype: %s" % p.archetype_id
+		if not SalesArchetypes.sectors(p.archetype_id).has(p.industry):
+			return "lead industry %s is not one of %s's sectors" % [p.industry, p.archetype_id]
+		if not SalesArchetypes.accepts_star(p.archetype_id, p.star):
+			return "archetype %s does not take a %d-star table" % [p.archetype_id, p.star]
+		if p.expires_on_day != p.spawned_on_day + SalesConstants.LEAD_LIFE_DAYS:
+			return "lead has no honest expiry: spawned %d, expires %d" % [
+				p.spawned_on_day, p.expires_on_day]
 	return ""
-
 
 static func _case_b2b_onboarding_to_prospect_visible() -> String:
 	# REAL integrated path (NOT the _seed_b2b skip fixture that sets mvp_* flags directly):
@@ -4494,10 +4673,15 @@ static func _case_b2b_onboarding_to_prospect_visible() -> String:
 	if prospects.size() != n0 + 1:
 		return "Frank intro produced no prospect (spawn aborted?) %d -> %d" % [n0, prospects.size()]
 	var p: Prospect = prospects[prospects.size() - 1]
-	if p.value_band_min <= 0 or p.value_band_max <= p.value_band_min:
-		return "prospect value band not populated (%d-%d)" % [p.value_band_min, p.value_band_max]
-	if not B2BConstants.sector_pool("saas_ops").has(p.industry):
-		return "prospect industry %s off saas_ops affinity" % p.industry
+	# The value band is RETIRED (§19): price comes from the seat band and the stance dial, so
+	# there is no display range to populate. What a lead must carry instead is its star, its
+	# archetype and an honest expiry.
+	if p.star < SalesConstants.STAR_MIN or p.star > SalesConstants.STAR_MAX:
+		return "event-spawned lead star out of range: %d" % p.star
+	if not SalesArchetypes.has(p.archetype_id):
+		return "event-spawned lead carries no archetype"
+	if p.expires_on_day <= p.spawned_on_day:
+		return "event-spawned lead has no expiry"
 	return ""
 
 
@@ -6280,9 +6464,9 @@ static func _case_coupling_cs_dampen_axis() -> String:
 	p.id = "dmp"
 	p.company_name = "Dampen Co"
 	p.industry = "insurance"
-	p.archetype = "small"
+	p.star = 1
 	p.pain_feature_id = "ai_vec_filter"
-	var bb: Customer = SalesSystem.add_b2b_customer(p, 1000, 70)
+	var bb: Customer = _sign_fixture(p, 1000, 70)
 	CustomerRegistry.assign_customer(a.id, weak_rep.id)
 	CustomerRegistry.assign_customer(bb.id, strong_rep.id)
 	GameState.set_flag("mvp_stability", 20.0)
@@ -6379,78 +6563,100 @@ static func _make_cs_rep(id: String, pace: int, expertise: int) -> Character:
 		pace, 0, 50, expertise, SEED_RAPPORT)
 
 
-static func _add_prospect(pid: String, archetype: String, pain: String) -> Prospect:
-	# Hand-built so a case controls archetype and pain exactly (spawn_prospect derives both).
+static func _add_prospect(pid: String, star: int, pain: String,
+		archetype_id: String = SalesArchetypes.DEFAULT_ID) -> Prospect:
+	# Hand-built so a case controls the star, the archetype and the pain exactly (the faucet
+	# derives all three). Satış rev 6 §2: the star IS the size — one field where there used
+	# to be an archetype id, a scale and a difficulty that could disagree.
 	var p := Prospect.new()
 	p.id = pid
 	p.company_name = "Lead " + pid
 	p.industry = "testing"
-	p.archetype = archetype
-	p.scale = CustomerArchetypes.scale_base(archetype)
-	p.difficulty_stars = CustomerArchetypes.difficulty_stars(archetype)
+	p.star = clampi(star, SalesConstants.STAR_MIN, SalesConstants.STAR_MAX)
+	p.archetype_id = archetype_id
 	p.pain_feature_id = pain
+	p.spawned_on_day = GameState.day
+	p.expires_on_day = GameState.day + SalesConstants.LEAD_LIFE_DAYS
 	ProspectRegistry.add(p)
 	return p
 
 
 static func _case_sales_pipeline_rate_by_pace() -> String:
-	# HIZ drives the autonomous lead cadence, and ZERO sales staff produces zero leads.
+	# §3 THE FAUCET, and the assertion is the OPPOSITE of the one this case used to make.
+	# Before rev 6 the desk produced nothing without a rep and a button produced the rest;
+	# now a BASE INBOUND continues with zero sales staff and an assigned rep ADDS to it.
+	# FALSIFICATION: against the old desk the first branch fails outright — its rate with no
+	# rep was exactly zero.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
+	var mult: float = SalesConstants.interest_mult(ProductRead.interest()) \
+		* SalesConstants.phase_mult(GameState.phase)
+	var base: float = SalesConstants.FAUCET_BASE_PER_WEEK / SalesConstants.DAYS_PER_WEEK * mult
+	if not is_equal_approx(SalesFaucetSystem.lead_rate_per_day(), base):
+		return "base inbound %f with no sales staff, want %f" % [
+			SalesFaucetSystem.lead_rate_per_day(), base]
+	if base <= 0.0:
+		return "the faucet is dry with no sales staff — §3 says the base inbound continues"
 	var before: int = ProspectRegistry.count()
 	for i in 10:
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
-	if ProspectRegistry.count() != before:
-		return "leads appeared with NO sales rep (%d -> %d)" % [before, ProspectRegistry.count()]
-	if not is_equal_approx(SalesRepSystem.lead_rate_per_day(), 0.0):
-		return "lead rate non-zero with no rep: %f" % SalesRepSystem.lead_rate_per_day()
-	var rep: Character = _make_sales_rep("char_sr_1", 6, 1)
-	# rev 2 §2 collapsed lead generation and closing onto ONE area, Satış. This case used to
-	# vary HIZ and read HIZ; it now varies and reads the Satış area — the same shape of test,
-	# one number instead of two.
-	var pace: float = float(int(rep.role_stats.get(HRConstants.AREA_SALES, 0)))
-	var want: float = B2BConstants.LEAD_PER_PACE_POINT * pace
-	if not is_equal_approx(SalesRepSystem.lead_rate_per_day(), want):
-		return "lead rate %f, want %f" % [SalesRepSystem.lead_rate_per_day(), want]
-	# Over N days the accumulator emits floor(N x rate) leads (soft cap not reached).
-	var base: int = ProspectRegistry.count()
-	var days: int = 10
-	for i in days:
-		GameState.advance_day()
-		B2BSalesSystem.daily_tick()
-	var expected: int = int(floor(float(days) * want + 0.0000001))
-	if ProspectRegistry.count() - base != expected:
-		return "emitted %d leads over %d days, want %d" % [
-			ProspectRegistry.count() - base, days, expected]
+	if ProspectRegistry.count() <= before:
+		return "no leads arrived over ten days with the base inbound running"
+
+	# An ASSIGNED rep raises the flow by exactly one rep's worth (§3: +2/week).
+	_make_sales_rep("char_sr_1", 6, 1)
+	var want: float = (SalesConstants.FAUCET_BASE_PER_WEEK + SalesConstants.FAUCET_PER_REP_PER_WEEK) \
+		/ SalesConstants.DAYS_PER_WEEK * mult
+	if not is_equal_approx(SalesFaucetSystem.lead_rate_per_day(), want):
+		return "rate with one rep %f, want %f" % [SalesFaucetSystem.lead_rate_per_day(), want]
 	return ""
 
-
 static func _case_sales_pipeline_stack_diminishes() -> String:
-	# A second rep adds STRICTLY MORE than zero and STRICTLY LESS than a second full rep.
+	# THE STACK DECAY IS RETIRED and this case guards what replaced it. §3 makes the faucet
+	# LINEAR in assigned capacity (+2/week each) because supply is now a market reading
+	# rather than a crowded queue; the anti-burst rule moved to a DAILY CAP, which is the
+	# thing that still has to hold. FALSIFICATION: remove FAUCET_DAILY_MAX and the second
+	# half fails — a week of banked flow releases in one morning.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
 	_make_sales_rep("char_sr_1", 6, 1)
-	var one: float = SalesRepSystem.lead_rate_per_day()
+	var one: float = SalesFaucetSystem.lead_rate_per_day()
 	_make_sales_rep("char_sr_2", 6, 1)
-	var two: float = SalesRepSystem.lead_rate_per_day()
-	if two <= one:
-		return "second rep added nothing (%f -> %f)" % [one, two]
-	if two >= one * 2.0:
-		return "second rep stacked linearly (%f -> %f); diminishing returns missing" % [one, two]
-	var want: float = one * (1.0 + B2BConstants.REP_STACK_DECAY)
-	if not is_equal_approx(two, want):
-		return "stacked rate %f, want %f (decay %f)" % [two, want, B2BConstants.REP_STACK_DECAY]
+	var two: float = SalesFaucetSystem.lead_rate_per_day()
+	var step: float = SalesConstants.FAUCET_PER_REP_PER_WEEK / SalesConstants.DAYS_PER_WEEK \
+		* SalesConstants.interest_mult(ProductRead.interest()) \
+		* SalesConstants.phase_mult(GameState.phase)
+	if not is_equal_approx(two - one, step):
+		return "a second rep added %f, want one rep's worth %f" % [two - one, step]
+	# The daily cap holds however much flow has banked.
+	GameState.set_flag("sales_faucet_progress", 0.99)
+	for i in 20:
+		_make_sales_rep("char_sr_x%d" % i, 9, 1)
+	var before: int = ProspectRegistry.count()
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	var emitted: int = ProspectRegistry.count() - before
+	if emitted > SalesConstants.FAUCET_DAILY_MAX:
+		return "%d leads in one day, cap is %d" % [emitted, SalesConstants.FAUCET_DAILY_MAX]
 	return ""
 
-
 static func _case_sales_autonomous_close_routine() -> String:
-	# A ROUTINE lead closes itself, lands in the small band, names the closer, and logs.
+	# §7.6 — an IN-LEAGUE close is DETERMINISTIC: no hidden percentage, the only variable is
+	# how long it takes. The deal closes at the DIAL's price (§7.5), names the closer, and
+	# logs. FALSIFICATION: against the old desk the price assertion fails — it placed the
+	# deal inside an archetype MRR band and never read a stance.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
-	GameState.set_flag("mvp_components", ["ai_vec_filter"])  # pain SHIPPED -> no concession
-	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)
-	_add_prospect("routine", "small", "ai_vec_filter")
+	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)   # Satış 9 -> star 4, band 1..3
+	SalesLedger.set_price_stance(SalesConstants.STANCE_STANDARD)
+	_add_prospect("routine", 1, "ai_vec_filter")
 	var signed0: int = GameState.run_customers_signed
 	var closed: bool = false
 	for i in 40:
@@ -6460,136 +6666,158 @@ static func _case_sales_autonomous_close_routine() -> String:
 			closed = true
 			break
 	if not closed:
-		return "a routine lead never closed autonomously"
+		return "an in-league lead never closed"
 	if GameState.run_customers_signed != signed0 + 1:
 		return "signing counter did not move (%d -> %d)" % [signed0, GameState.run_customers_signed]
 	var c: Customer = CustomerRegistry.get_customer("co_routine")
 	if c == null:
-		return "no customer created for the auto-closed lead"
+		return "no customer created for the closed lead"
 	if c.acquisition_source != "sales_rep:%s" % rep.id:
 		return "acquisition_source does not name the closer: %s" % c.acquisition_source
-	var band: Dictionary = CustomerArchetypes.mrr_band("small")
-	if c.mrr < int(band["low"]) or c.mrr > int(band["high"]):
-		return "auto-closed MRR %d outside the small band" % c.mrr
-	if c.mrr > B2BConstants.AUTONOMOUS_CLOSE_MRR_MAX:
-		return "auto-closed MRR %d crossed the threshold" % c.mrr
+	# §7.5 — the rep closes at the dial, and their star does not touch the price.
+	var want_price: int = SalesLedger.seat_price_anchor(SalesConstants.STANCE_STANDARD)
+	if c.seat_price != want_price:
+		return "closed at $%d/seat, the Standard dial says $%d" % [c.seat_price, want_price]
+	var band: Dictionary = SalesConstants.seat_band(1)
+	if c.seats < int(band["low"]) or c.seats > int(band["high"]):
+		return "seats %d outside the 1-star band %d..%d" % [
+			c.seats, int(band["low"]), int(band["high"])]
 	var log: Array = SalesSystem.get_sales_log()
 	if log.is_empty():
-		return "the autonomous close produced no activity-log line"
+		return "the close produced no activity-log line"
 	var last: Dictionary = log[log.size() - 1]
 	if String(last.get("kind", "")) != "auto_close" or String(last.get("actor", "")) != rep.character_name:
 		return "activity line does not name who closed it: %s" % str(last)
 	return ""
 
-
 static func _case_sales_close_threshold_surfaces() -> String:
-	# THE BOUNDARY PROOF: a lead above the threshold warms but NEVER closes itself.
+	# §7.1 THE STAR GATE, and it replaced an MRR ceiling. A rep sells at or below their own
+	# Satış star and CANNOT reach above it — a gate the player can see on the card rather
+	# than a number they cannot. FALSIFICATION: the old desk gated on the archetype band
+	# ceiling, so a 3-star lead under $600 would have closed itself.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
-	GameState.set_flag("mvp_components", ["ai_vec_filter"])
-	_make_sales_rep("char_sr_1", 0, 9)
-	_add_prospect("big", "mid", "ai_vec_filter")
+	var rep: Character = _make_sales_rep("char_sr_1", 0, 3)   # Satış 3 -> star 1.5 -> band 1
+	_add_prospect("above", 3, "ai_vec_filter")
 	var signed0: int = GameState.run_customers_signed
-	for i in 40:
+	# INSIDE THE LEAD'S LIFE. Forty days would let §4's expiry take the lead and the case
+	# would then read "gone" as "closed" — a false pass in one direction and a false failure
+	# in the other. A rep that could take this table would have started on day one.
+	for i in SalesConstants.LEAD_LIFE_DAYS - 2:
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
-	var p: Prospect = ProspectRegistry.get_prospect("big")
+	var p: Prospect = ProspectRegistry.get_prospect("above")
 	if p == null:
-		return "an above-threshold lead was closed autonomously"
+		return "a lead above the rep's star left the pipeline inside its own week"
+	if p.is_being_worked():
+		return "the rep started working a lead above their star"
 	if GameState.run_customers_signed != signed0:
-		return "signing counter moved without a played pitch (%d -> %d)" % [
+		return "signing counter moved without a played meeting (%d -> %d)" % [
 			signed0, GameState.run_customers_signed]
-	if p.warm_progress < B2BConstants.AUTO_CLOSE_PROGRESS:
-		return "the rep never worked the big lead (warm=%f)" % p.warm_progress
-	if SalesRepSystem.warm_bonus_for(p) != B2BConstants.WARM_BONUS_MAX:
-		return "warm bonus %d, want the cap %d" % [
-			SalesRepSystem.warm_bonus_for(p), B2BConstants.WARM_BONUS_MAX]
+	# And the card says WHY, rather than simply not appearing.
+	if SalesRepSystem.out_of_band_reason(rep, p) != "SALES_BAND_ABOVE_REP":
+		return "the out-of-band reason does not name the star gate: %s" % \
+			SalesRepSystem.out_of_band_reason(rep, p)
 	return ""
-
 
 static func _case_sales_threshold_separates_tiers() -> String:
-	# The threshold must sit in the GAP between the small and mid bands. If a balance pass
-	# moves a band, this trips before an above-threshold deal can start auto-closing.
-	var small_high: int = int(CustomerArchetypes.mrr_band("small")["high"])
-	var mid_low: int = int(CustomerArchetypes.mrr_band("mid")["low"])
-	if small_high >= B2BConstants.AUTONOMOUS_CLOSE_MRR_MAX \
-			or B2BConstants.AUTONOMOUS_CLOSE_MRR_MAX >= mid_low:
-		return "threshold %d is not inside the band gap (%d..%d)" % [
-			B2BConstants.AUTONOMOUS_CLOSE_MRR_MAX, small_high, mid_low]
-	# SIZE is the only variable here, so the concession gate must be held OPEN: every lead
-	# voices a pain the product has ALREADY shipped. A bare Prospect leaves pain_feature_id
-	# empty, and an unmappable pain is (correctly) the conservative case — it would fail
-	# these three on the wrong axis and hide a real band regression.
-	GameState.set_flag("mvp_components", ["ai_vec_search_api"])
-	var s := Prospect.new()
-	s.archetype = "small"
-	s.pain_feature_id = "ai_vec_search_api"
-	var m := Prospect.new()
-	m.archetype = "mid"
-	m.pain_feature_id = "ai_vec_search_api"
-	var e := Prospect.new()
-	e.archetype = "enterprise"
-	e.pain_feature_id = "ai_vec_search_api"
-	if not SalesRepSystem.is_auto_closable(s):
-		return "a small lead is not auto-closable"
-	if SalesRepSystem.is_auto_closable(m) or SalesRepSystem.is_auto_closable(e):
-		return "a mid/enterprise lead is auto-closable"
+	# §7.2.2 THE BAND CAP, which can only ever LOWER the ceiling the star gate set. Raising
+	# it past the rep's own star must do NOTHING — otherwise the setting becomes a way around
+	# §7.1 and the star gate stops being hard. FALSIFICATION: drop the `mini()` in
+	# band_ceiling and the third branch fails.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	var rep: Character = _make_sales_rep("char_sr_1", 0, 4)   # Satış 4 -> star 2
+	if SalesRepSystem.rep_star(rep) != 2:
+		return "fixture rep is not a 2-star seller: %d" % SalesRepSystem.rep_star(rep)
+	if SalesRepSystem.band_ceiling(rep) != 2:
+		return "default ceiling is not the rep's own league: %d" % SalesRepSystem.band_ceiling(rep)
+	SalesLedger.set_rep_band_cap(rep.id, 3)
+	if SalesRepSystem.band_ceiling(rep) != 2:
+		return "a cap ABOVE the rep's star raised the ceiling to %d" % SalesRepSystem.band_ceiling(rep)
+	SalesLedger.set_rep_band_cap(rep.id, 1)
+	if SalesRepSystem.band_ceiling(rep) != 1:
+		return "a cap below the rep's star did not narrow the ceiling: %d" % \
+			SalesRepSystem.band_ceiling(rep)
+	# §7.2.2 — a 1-star rep gets NO selector: one rung is a fake choice, so the surface draws
+	# a plain information line instead. The rule lives in the system so the tab cannot forget.
+	var junior: Character = _make_sales_rep("char_sr_j", 0, 2)   # Satış 2 -> star 1
+	if not SalesRepSystem.band_cap_options(junior).is_empty():
+		return "a 1-star rep was offered a band selector"
+	if SalesRepSystem.band_cap_options(rep).is_empty():
+		return "a 2-star rep was offered no band selector"
 	return ""
 
-
 static func _case_sales_concession_deal_surfaces() -> String:
-	# A lead whose pain maps to an UNSHIPPED feature needs the founder's word -> never auto.
+	# §7.6 THE PRICE-BREAK MOMENT — defined, published, and INERT. On Premium against a
+	# price-sensitive archetype the desk publishes `rep_discount_requested` in the closing
+	# days; it does NOT raise the card, because §18 puts that wiring in the event package.
+	# The deal must still close at its own stance: an unwired card cannot be allowed to
+	# strand a finished deal. FALSIFICATION: make the card fire and the fourth branch fails.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
-	GameState.set_flag("mvp_components", ["ai_vec_search_api"])  # NOT the pain below
 	_make_sales_rep("char_sr_1", 0, 9)
-	var p: Prospect = _add_prospect("concession", "small", "ai_vec_filter")
-	if SalesRepSystem.is_auto_closable(p):
-		return "a concession lead reads as auto-closable"
+	SalesLedger.set_price_stance(SalesConstants.STANCE_PREMIUM)
+	_add_prospect("premium", 1, "ai_vec_filter", "ops_cautious")   # price-sensitive archetype
+	var fired: Array = []
+	var probe := func(_rep_id: String, lead_id: String) -> void: fired.append(lead_id)
+	EventBus.rep_discount_requested.connect(probe)
 	for i in 40:
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
-	if ProspectRegistry.get_prospect("concession") == null:
-		return "a concession lead closed without the founder"
-	# Ship the feature and the SAME lead becomes routine - proves the gate IS the concession.
-	GameState.set_flag("mvp_components", ["ai_vec_search_api", "ai_vec_filter"])
-	if not SalesRepSystem.is_auto_closable(ProspectRegistry.get_prospect("concession")):
-		return "shipping the promised feature did not make the lead routine"
+		if ProspectRegistry.get_prospect("premium") == null:
+			break
+	EventBus.rep_discount_requested.disconnect(probe)
+	if fired.is_empty():
+		return "the price-break moment never published on a Premium price-sensitive deal"
+	if EventGate.active_id() == SalesConstants.PRICE_BREAK_CARD_ID:
+		return "the price-break card FIRED — it is defined and inert until the event package"
+	var c: Customer = CustomerRegistry.get_customer("co_premium")
+	if c == null:
+		return "the Premium deal never closed — an inert card stranded it"
+	if c.seat_price != SalesLedger.seat_price_anchor(SalesConstants.STANCE_PREMIUM):
+		return "the deal did not close at its own stance: $%d/seat" % c.seat_price
+	# "Duyarsız arketip kartı üretmez" — the other half of the rule.
+	var insensitive := Prospect.new()
+	insensitive.star = 1
+	insensitive.archetype_id = "tech_exacting"
+	insensitive.work_stance = SalesConstants.STANCE_PREMIUM
+	insensitive.work_due_day = GameState.day
+	var rep2: Character = CharacterRegistry.get_character("char_sr_1")
+	if SalesRepSystem.price_break_due(rep2, insensitive):
+		return "a price-INSENSITIVE archetype produced the price-break moment"
 	return ""
-
 
 static func _case_sales_close_speed_by_expertise() -> String:
-	# TWO-DIRECTIONAL: higher UZMANLIK closes a routine lead in strictly fewer days.
+	# §7.2 — the processing span comes from the LEAGUE DIFFERENCE and the rep's EFFECTIVE
+	# OUTPUT places the deal inside it. TWO-DIRECTIONAL: a stronger seller closes the same
+	# lead in strictly fewer days, and Premium lengthens it (§7.5). Reading
+	# `hr.effective_skill` rather than a raw star is the point — morale, focus, hours and
+	# traits already live in that one formula and this desk does not copy it.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
-	GameState.set_flag("mvp_components", ["ai_vec_filter"])
-	var weak: Character = _make_sales_rep("char_sr_weak", 0, 2)
-	_add_prospect("slow", "small", "ai_vec_filter")
-	var slow_days: int = 0
-	for i in 200:
-		GameState.advance_day()
-		B2BSalesSystem.daily_tick()
-		slow_days += 1
-		if ProspectRegistry.get_prospect("slow") == null:
-			break
-	if ProspectRegistry.get_prospect("slow") != null:
-		return "the weak rep never closed a routine lead"
-	CharacterRegistry.remove(weak.id)
-	_make_sales_rep("char_sr_strong", 0, 9)
-	_add_prospect("fast", "small", "ai_vec_filter")
-	var fast_days: int = 0
-	for i in 200:
-		GameState.advance_day()
-		B2BSalesSystem.daily_tick()
-		fast_days += 1
-		if ProspectRegistry.get_prospect("fast") == null:
-			break
-	if ProspectRegistry.get_prospect("fast") != null:
-		return "the strong rep never closed a routine lead"
-	if fast_days >= slow_days:
-		return "UZMANLIK did not speed the close (weak=%d days, strong=%d days)" % [slow_days, fast_days]
+	var weak: Character = _make_sales_rep("char_sr_weak", 0, 4)
+	var strong: Character = _make_sales_rep("char_sr_strong", 0, 9)
+	var lead: Prospect = _add_prospect("span", 1, "ai_vec_filter")
+	var slow: int = SalesRepSystem.processing_days(weak, lead, SalesConstants.STANCE_STANDARD)
+	var fast: int = SalesRepSystem.processing_days(strong, lead, SalesConstants.STANCE_STANDARD)
+	if fast >= slow:
+		return "effective output did not speed the close (weak=%d days, strong=%d days)" % [slow, fast]
+	var premium: int = SalesRepSystem.processing_days(strong, lead, SalesConstants.STANCE_PREMIUM)
+	if premium <= fast:
+		return "Premium did not lengthen processing (%d -> %d days)" % [fast, premium]
+	# And the span itself is league-driven: two leagues below is strictly faster than own.
+	var own: Array = SalesConstants.process_span(0)
+	var below: Array = SalesConstants.process_span(-2)
+	if int(below[1]) >= int(own[0]):
+		return "the league table does not separate own-league from two-below"
 	return ""
-
 
 static func _case_cs_auto_assignment_capacity() -> String:
 	# Delegation is EXCESS-driven: under FOUNDER_DIRECT_CAP nothing moves; above it the
@@ -6598,8 +6826,8 @@ static func _case_cs_auto_assignment_capacity() -> String:
 	_seed_b2b(1000)
 	var rep: Character = _make_cs_rep("char_cs_1", 9, 5)
 	for i in B2BConstants.FOUNDER_DIRECT_CAP:
-		var p: Prospect = _add_prospect("cap%d" % i, "small", "ai_vec_filter")
-		var c: Customer = SalesSystem.add_b2b_customer(p, 300, 70)
+		var p: Prospect = _add_prospect("cap%d" % i, 1, "ai_vec_filter")
+		var c: Customer = _sign_fixture(p, 300, 70)
 		ProspectRegistry.remove(p.id)
 		CustomerRegistry.set_lifecycle_phase(c.id, "active")
 	CustomerRegistry.set_lifecycle_phase("co_lead_smoke", "active")
@@ -6723,8 +6951,8 @@ static func _case_cs_request_throughput_by_pace() -> String:
 	CharacterRegistry.remove(fast.id)
 	var opened: Array[String] = []
 	for i in 6:
-		var p: Prospect = _add_prospect("thr%d" % i, "small", "ai_vec_filter")
-		var c: Customer = SalesSystem.add_b2b_customer(p, 300, 70)
+		var p: Prospect = _add_prospect("thr%d" % i, 1, "ai_vec_filter")
+		var c: Customer = _sign_fixture(p, 300, 70)
 		ProspectRegistry.remove(p.id)
 		CustomerRegistry.set_support_request(c.id, GameState.day)
 		opened.append(c.id)
@@ -6812,17 +7040,40 @@ static func _case_promise_broken_penalty() -> String:
 
 
 static func _case_sales_cs_zero_staff_identical() -> String:
-	# THE ADDITIVITY GATE. With no sales rep and no customer rep, a long run touches none of
-	# the new state: no leads, no assignments, no requests, no activity log, no flags.
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	# THE ADDITIVITY GATE, HALVED ON PURPOSE — and the half that went is the point of the
+	# rebuild rather than a casualty of it.
+	#
+	# The CUSTOMER desk keeps the invariant whole: with nobody on Hesap sahipliği, a long run
+	# delegates nothing, opens no request and moves no throughput accumulator. That is still
+	# what "hiring buys capacity" means on that side.
+	#
+	# The SALES desk cannot keep it, and §3 says so out loud: "Kapasite sıfırken taban
+	# gelen-akış sürer." Before rev 6 the pipeline was dead without a rep and a button filled
+	# it, which is exactly why sales capacity was decorative — hiring raised supply and never
+	# capped what the player could work. So the assertion flips: leads DO arrive with nobody
+	# on the sales job, and what must stay untouched is everything a REP would have done.
+	# FALSIFICATION: put the rep desk's work behind no staffing check and the "nobody worked a
+	# lead" branch fails.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
 	_seed_b2b(1000)
-	var prospects0: int = ProspectRegistry.count()
 	var mrr0: int = GameState.mrr
+	var signed0: int = GameState.run_customers_signed
 	for i in 60:
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
-	if ProspectRegistry.count() != prospects0:
-		return "prospects changed with no sales staff (%d -> %d)" % [prospects0, ProspectRegistry.count()]
+
+	# §3 — the base inbound ran.
+	if ProspectRegistry.count() <= 0:
+		return "the base inbound produced nothing over sixty days with no sales staff"
+	# …and nothing a rep does happened.
+	for p in ProspectRegistry.get_all():
+		if (p as Prospect).is_being_worked():
+			return "a lead is being worked with nobody on the sales job"
+	if GameState.run_customers_signed != signed0:
+		return "an account signed itself with no sales staff (%d -> %d)" % [
+			signed0, GameState.run_customers_signed]
 	if GameState.mrr != mrr0:
 		return "MRR moved with no sales staff (%d -> %d)" % [mrr0, GameState.mrr]
 	for c in CustomerRegistry.get_by_market("b2b"):
@@ -6830,121 +7081,143 @@ static func _case_sales_cs_zero_staff_identical() -> String:
 			return "an account was delegated with no customer rep on staff"
 		if c.support_request_since_day >= 0:
 			return "a request opened with no customer rep on staff"
-	if not GameState.sales_log.is_empty():
-		return "the activity log grew with no desk staff"
-	if float(GameState.get_flag("sales_lead_progress", 0.0)) != 0.0:
-		return "the lead accumulator advanced with no sales staff"
 	if float(GameState.get_flag("cs_throughput_progress", 0.0)) != 0.0:
 		return "the throughput accumulator advanced with no customer rep"
+	# The activity log may hold EXPIRIES (§4's honest drop line is not desk work), but never
+	# a close: a close is the one thing a desk with nobody on it cannot produce.
+	for row in SalesSystem.get_sales_log():
+		var kind: String = String((row as Dictionary).get("kind", ""))
+		if kind == "auto_close" or kind == "founder_close":
+			return "the log holds a close with no desk staff: %s" % str(row)
 	return ""
-
 
 static func _case_prospect_id_unique_after_removal() -> String:
 	# Regression: prospect ids were built off ProspectRegistry.count(), which DROPS when a lead
 	# is signed or lost, so a same-day respawn rebuilt an existing id, ProspectRegistry.add
-	# warned, and the lead was silently discarded while spawn_prospect still returned it.
+	# warned, and the lead was silently discarded while the spawner still returned it. The id
+	# counter is MONOTONIC and rev 6 kept it that way.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
-	var a: Prospect = PitchSystem.spawn_prospect("small", "test")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	var a: Prospect = SalesFaucetSystem.spawn(1, "test")
+	if a == null:
+		return "the faucet produced no lead"
 	ProspectRegistry.remove(a.id)
-	var b: Prospect = PitchSystem.spawn_prospect("small", "test")   # SAME day, count back to 0
+	var b: Prospect = SalesFaucetSystem.spawn(1, "test")   # SAME day, count back to 0
+	if b == null:
+		return "the faucet produced no second lead"
 	if a.id == b.id:
 		return "same-day respawn reused the id %s" % a.id
 	if ProspectRegistry.get_prospect(b.id) == null:
 		return "the respawned lead was not registered (silently dropped)"
-	if ProspectRegistry.count() != 1:
-		return "registry holds %d prospects, want 1" % ProspectRegistry.count()
 	return ""
 
-
-# ============ Dünya İnandırıcılığı (şirket havuzu + dedup) ======================
-
 static func _case_b2b_prospect_dedup_excludes_signed() -> String:
-	# Fix 1: a SIGNED company never re-enters cold prospecting (churn included), live
-	# leads hold distinct names, and an exhausted catalog returns null without burning
-	# the id counter or registering anything.
+	# THE DURABLE HALF OF THE OLD LEDGER, kept while its neighbour was retired. §19 retires
+	# the catalogue's SOLE-SUPPLY role, not the rule that a signed company never re-enters
+	# COLD prospecting — a churned account comes back through a future win-back path, and
+	# cold prospecting is not that path. Live leads still hold distinct names.
+	# FALSIFICATION: drop b2b_signed_company_names from _excluded_names and the second loop
+	# offers the signed company back within a handful of draws.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
-	# Sign the first spawned company through the real path (the pitch SIGNED sequence).
-	var first: Prospect = PitchSystem.spawn_prospect("small", "find")
+	var first: Prospect = SalesFaucetSystem.spawn(1, "faucet")
 	if first == null:
 		return "fresh run spawned null"
 	var signed_name: String = first.company_name
-	var c: Customer = SalesSystem.add_b2b_customer(first, 400, 70)
+	var c: Customer = _sign_fixture(first, 400, 70)
 	ProspectRegistry.remove(first.id)
 	if not GameState.b2b_signed_company_names.has(signed_name):
 		return "ledger missed the signed name"
-	# Drain the whole affinity pool. Expected supply derives from the catalog (owning
-	# source, never a literal): every company in the pool's sectors minus the signed one.
-	var expected: int = 0
-	for s in B2BConstants.sector_pool("ai_vector_search"):
-		expected += CompanyCatalog.names_for_sector(String(s)).size()
-	expected -= 1
+	# Draw a long way and hold each name out by hand: this case is about EXCLUSION, and the
+	# return lock is a different rule with its own case.
 	var names_seen: Dictionary = {}
-	for i in expected + 10:
-		var p: Prospect = PitchSystem.spawn_prospect("small", "find")
+	for i in 60:
+		var p: Prospect = SalesFaucetSystem.spawn(1, "faucet")
 		if p == null:
-			break
+			return "the faucet dried at draw %d" % i
 		if p.company_name == signed_name:
 			return "signed company respawned as a prospect: %s" % signed_name
 		if names_seen.has(p.company_name):
 			return "duplicate live prospect name: %s" % p.company_name
 		names_seen[p.company_name] = true
-	if names_seen.size() != expected:
-		return "drained %d distinct names, want %d" % [names_seen.size(), expected]
-	if PitchSystem.eligible_company_count() != 0:
-		return "pool drained but eligible_company_count()=%d" % PitchSystem.eligible_company_count()
-	var live_before: int = ProspectRegistry.count()
-	var counter_before: int = GameState.run_prospects_spawned
-	if PitchSystem.spawn_prospect("small", "find") != null:
-		return "spawn returned a lead from an exhausted pool"
-	if ProspectRegistry.count() != live_before:
-		return "null spawn registered a lead anyway"
-	if GameState.run_prospects_spawned != counter_before:
-		return "null spawn burned the id counter"
-	# Churn the signed account (shared loss seam) — the name must STAY excluded: churned
-	# companies return through a future win-back path, never through cold prospecting.
+		ProspectRegistry.remove(p.id)
+		SalesFaucetSystem.lock_return(p.company_name, 9999)
+	# Churn the signed account (shared loss seam) — the name must STAY excluded.
 	B2BSalesSystem._remove_lost(c)
 	if CustomerRegistry.get_customer(c.id) != null:
 		return "churn did not remove the customer record"
-	if PitchSystem.eligible_company_count() != 0:
-		return "churn re-opened cold prospecting for the signed name"
-	if PitchSystem.spawn_prospect("small", "find") != null:
-		return "churned company respawned as a prospect"
+	for i in 40:
+		var q: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+		if q == null:
+			break
+		if q.company_name == signed_name:
+			return "churn re-opened cold prospecting for the signed name"
+		ProspectRegistry.remove(q.id)
+		SalesFaucetSystem.lock_return(q.company_name, 9999)
+	# §3.1 — the market guard: a null spawn registers nothing and burns no id counter.
+	GameState.set_flag("mvp_market_type", "b2c")
+	var live_before: int = ProspectRegistry.count()
+	var counter_before: int = GameState.run_prospects_spawned
+	if SalesFaucetSystem.spawn(1, "faucet") != null:
+		return "the faucet produced a B2B lead in a consumer run"
+	if ProspectRegistry.count() != live_before:
+		return "a refused spawn registered a lead anyway"
+	if GameState.run_prospects_spawned != counter_before:
+		return "a refused spawn burned the id counter"
 	return ""
-
 
 static func _case_company_catalog_pool_integrity() -> String:
-	# Fix 2: >= 60 companies, every canonical sector populated, globally unique names,
-	# a non-empty background line per record, and every sector any affinity pool can
-	# request resolves to at least one company (the old 4-sector fallback hole).
-	var all_companies: Array = CompanyCatalog.all()
-	if all_companies.size() < 60:
-		return "catalog holds %d companies, want >= 60" % all_companies.size()
+	# §3 — THE POOL NEVER EXHAUSTS, and this case is the direct answer to calibration finding
+	# F1. The 65-name catalogue's SOLE-SUPPLY role is what §19 retired: the names stay and
+	# become the memorable minority behind a generated majority.
+	# FALSIFICATION: point SalesNamePool.pool_for at CompanyCatalog alone and the drain loop
+	# below runs out, which is exactly the plateau F1 measured.
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+	# Every curated name is still offered — nothing was thrown away.
+	for sector in B2BConstants.SECTORS:
+		var pool: Array = SalesNamePool.pool_for(String(sector))
+		for nm in CompanyCatalog.names_for_sector(String(sector)):
+			if not pool.has(String(nm)):
+				return "curated name dropped from the pool: %s" % String(nm)
+		if pool.size() <= CompanyCatalog.names_for_sector(String(sector)).size():
+			return "sector %s gained no generated names" % String(sector)
+	# Draw far past the old catalogue ceiling. Every name is distinct and none is null.
 	var seen: Dictionary = {}
-	for rec in all_companies:
-		var nm: String = String(rec["name"])
-		if seen.has(nm):
-			return "duplicate company name: %s" % nm
-		seen[nm] = true
-		if String(rec["background"]).strip_edges() == "":
-			return "empty background line: %s" % nm
-		if CompanyCatalog.background_for(nm) == "":
-			return "background_for() returned empty for %s" % nm
-	var counts: Dictionary = CompanyCatalog.count_by_sector()
-	for sector in B2BConstants.SECTORS:   # the 13-sector canon
-		if int(counts.get(sector, 0)) < 4:
-			return "sector %s holds %d companies, want >= 4" % [sector, int(counts.get(sector, 0))]
-	var pools: Array = []
-	for sub_id in B2BConstants.SECTOR_AFFINITY:
-		pools.append(B2BConstants.sector_pool(String(sub_id)))
-	pools.append(B2BConstants.SECTOR_AFFINITY_FALLBACK)
-	for pool in pools:
-		for s in pool:
-			if CompanyCatalog.names_for_sector(String(s)).is_empty():
-				return "affinity sector %s resolves to zero companies" % s
+	var drew: int = 0
+	for i in 200:
+		var p: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+		if p == null:
+			return "the faucet ran dry after %d leads — §3 says the pool never exhausts" % drew
+		if seen.has(p.company_name):
+			return "duplicate live prospect name: %s" % p.company_name
+		seen[p.company_name] = true
+		drew += 1
+		ProspectRegistry.remove(p.id)
+		# A drawn-and-dropped name is free again only through the return lock, so hold it out
+		# by hand: this loop is testing the POOL's depth, not the lock's.
+		SalesFaucetSystem.lock_return(p.company_name, 9999)
+	if drew < 200:
+		return "drew only %d distinct companies" % drew
+	# A SIGNED name never returns to cold prospecting (the durable half of the old ledger).
+	var sp: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+	if sp == null:
+		return "the faucet dried at the signing check"
+	var c: Customer = _sign_fixture(sp, 500, 70)
+	if not GameState.b2b_signed_company_names.has(c.company_name):
+		return "a signed company was not recorded in the run ledger"
+	for i in 40:
+		var q: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+		if q == null:
+			break
+		if q.company_name == c.company_name:
+			return "a signed company was offered again: %s" % c.company_name
+		ProspectRegistry.remove(q.id)
+		SalesFaucetSystem.lock_return(q.company_name, 9999)
 	return ""
-
 
 static func _case_market_share_tracks_mrr() -> String:
 	# Fix 3: player share derives from MRR (rises with it), the snapshot sums to ~100,
@@ -7000,8 +7273,8 @@ static func _case_market_share_tracks_mrr() -> String:
 	p.id = "lead_smoke_growth"
 	p.company_name = "Smoke Corp Growth"
 	p.industry = "testing"
-	p.archetype = "mid"
-	SalesSystem.add_b2b_customer(p, 30000, 70)
+	p.star = 2
+	_sign_fixture(p, 30000, 70)
 	var p2: float = float(RivalRegistry.get_market_snapshot("ai_vector_search")["player_pct"])
 	if p2 <= p1:
 		return "share did not rise with MRR (%f -> %f)" % [p1, p2]
@@ -7917,10 +8190,24 @@ static func _case_job_assignment_and_idle() -> String:
 	var empty: Array[String] = HRSystem.unstaffed_jobs()
 	if empty.has(HRConstants.JOB_ACCOUNTS):
 		return "Hesap sahipliği reads unstaffed while somebody is assigned to it"
-	# Satış artık bir İŞ DEĞİL (2026-08-25): pitch bir toplantıdır, slot tüketmez. Ledger'da
-	# olmadığı için `unstaffed_jobs` da onu sayamaz — ve saymaması iddianın kendisidir.
-	if empty.has("sales"):
-		return "Satış still reads as a staffable job; it left the ledger on 2026-08-25"
+	# SATIŞ YİNE BİR İŞ (Satış rev 6 §3/§3.1, direktör hükmü 2026-08-26) ve bu satır tersine
+	# çevrildi. 2026-08-25'in gerekçesi DEĞİŞMEDİ ve hâlâ doğru: kurucunun pitch'i bir
+	# TOPLANTIDIR, slot tüketmez, hiçbir şeyi duraklatmaz — `SalesMeetingSystem` hiçbir
+	# atamaya dokunmuyor. İş olan şey başka: §7.2'nin temsilci masası, tek müşteriyi 6-7 GÜN
+	# işleyen sürekli iş. İkisi bir arada durur, ve ayrımı yapan da tam olarak bu vaka.
+	#
+	# Ledger'da olmasının iki ölçülebilir sonucu var: §3'ün musluğu "ATANMIŞ satış kapasitesi"
+	# okuyabiliyor, ve §3.1'in "Satış işi sütunu kilitli-görünür" hükmünün asacağı bir sütun
+	# oluyor. İkisi de Satış alanı `accounts` üzerinden taşınırken imkânsızdı.
+	if not empty.has(HRConstants.JOB_SALES):
+		return "Satış does not read as a staffable job; §3 needs assigned sales capacity"
+	# Ve kimse atanmamışken BOŞ okunuyor — sütunun var olması onu dolu saymıyor.
+	var sales_rep: Character = _make_employee("emp_sales_ledger", "Satis Ledger",
+		HRConstants.ROLE_SALES_REP)
+	CharacterRegistry.clear_jobs(sales_rep.id)
+	CharacterRegistry.assign_job(sales_rep.id, HRConstants.JOB_SALES)
+	if HRSystem.unstaffed_jobs().has(HRConstants.JOB_SALES):
+		return "Satış still reads unstaffed with somebody assigned to it"
 	# AMA SATIŞ ALANI YAŞAMAYA DEVAM EDER, ve bu kaldırmanın en riskli sonucudur:
 	# SalesRepSystem otonom lead akışını `HRSystem.assigned_to(AREA_SALES)` üzerinden okuyor,
 	# o da iş defterinin TÜRETİLMİŞ AYNASI. İş gidince alanı taşıyan tek iş hesap sahipliği
@@ -9302,12 +9589,9 @@ static func _case_loc_b4_derived_keys() -> String:
 		wanted.append("FIN_BURN_" + String(cat).to_upper())
 	for v in FinanceSystem.ONE_TIME_LABELS.values():
 		wanted.append(String(v))
-	for i in PitchSystem.NEEDS_COUNT:
-		wanted.append("PITCH_NEED_%d" % i)
-	for i in PitchSystem.REAL_NEEDS_COUNT:
-		wanted.append("PITCH_REAL_NEED_%d" % i)
-	for band in ["low", "mid", "high"]:
-		wanted.append("PITCH_BUDGET_" + band.to_upper())
+	# The PITCH_NEED / PITCH_REAL_NEED / PITCH_BUDGET pools were derived here and are RETIRED
+	# with the four-beat script and its read-gated reveal (Satış rev 6 §19). What replaced
+	# them is derived the same way and walked by `loc_sales_derived_keys`.
 	# THE GATE'S COPY MOVED ONTO THE CARDS, and so did the derivation. `copy_key` and
 	# `body_count` were how the old builder found "GATE_<KEY>_TITLE" and its numbered bodies;
 	# the card carries the keys themselves, including the variant block the escalating body
@@ -12619,11 +12903,18 @@ static func _case_design_turn_ladder() -> String:
 ## FAIL. MIN_LOADABLE_VERSION'ı 8'e indir → red iddiası FAIL.
 static func _case_save_v10_product_state() -> String:
 	ProductLines.reload()
-	# REPOINTED 2026-08-25 with the schema bump itself, in the same change — a case left
-	# asserting the old number would sit red across every phase of the event rebuild, and
-	# :12452's own note explains why that is the worst thing to do to a suite.
-	if SaveManager.SCHEMA_VERSION != 10:
-		return "schema is v%d, the event-engine block wants v10" % SaveManager.SCHEMA_VERSION
+	# REPOINTED TWICE, and the second time is this one. 2026-08-25 moved the pin with the
+	# event-engine bump; Satış rev 6 moves it again with the v11 bump, in the same change, for
+	# the reason that note already gives: a case left asserting the old number sits red across
+	# every phase of the NEXT module's work and teaches the suite to be ignored.
+	#
+	# The assertion is now "v10 OR LATER", not an equality, and that is the durable shape. What
+	# this case owns is the event_engine BLOCK — it exists from v10 onward and keeps existing.
+	# The refusal below stays EXACT, because MIN_LOADABLE really is a fixed ruling and the
+	# case's own falsification note ("MIN_LOADABLE_VERSION'ı 8'e indir → red iddiası FAIL")
+	# names it as the thing under test.
+	if SaveManager.SCHEMA_VERSION < 10:
+		return "schema is v%d, below the event-engine block's v10" % SaveManager.SCHEMA_VERSION
 
 	# --- durumu kur -----------------------------------------------------
 	GameState.set_flag("mvp_shipped", true)
@@ -14000,4 +14291,582 @@ static func _thesis_presenter_body() -> String:
 	EventGate.resolve("fixture.concurrent", "ok")
 	if not EvFlags.has("fixture_concurrent_landed"):
 		return "the deferred card resolved but left no trace"
+	return ""
+
+
+# ============================================================================
+#  SATIŞ rev 6 — the cases the rebuild is gated on
+# ============================================================================
+
+## §3.1 THE MARKET GUARD. A consumer run must produce ZERO B2B leads, however much sales
+## capacity is standing around, and the surface must say WHY rather than simply be empty.
+## This is the audit's root-cause (b), and the guard is asked in two places on purpose.
+## FALSIFICATION: remove the `_market_open()` test from SalesFaucetSystem.daily_tick and the
+## first branch fails — a hired rep mints enterprise leads inside a consumer app.
+static func _case_sales_faucet_guard_b2c() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2c")
+	_seed_b2c()
+	_make_sales_rep("char_sr_1", 6, 9)
+	var before: int = ProspectRegistry.count()
+	for i in 30:
+		GameState.advance_day()
+		TimeManager._dispatch_daily_tick()
+	if ProspectRegistry.count() != before:
+		return "a consumer run produced %d B2B leads" % (ProspectRegistry.count() - before)
+	if SalesFaucetSystem.market_open():
+		return "the faucet reads open in a consumer run"
+	if SalesFaucetSystem.spawn(1, "faucet") != null:
+		return "a direct spawn produced a lead in a consumer run"
+	# The refusal is NAMED, and it is the same key the tab draws.
+	if SalesLedger.meeting_block_reason("anything") != "SALES_BLOCK_NO_B2B":
+		return "the block reason does not name the missing product: %s" % \
+			SalesLedger.meeting_block_reason("anything")
+	# And the same world with a B2B product flows, so the guard is a gate and not a wall.
+	GameState.set_flag("mvp_market_type", "b2b")
+	if not SalesFaucetSystem.market_open():
+		return "the faucet stayed shut after the market turned B2B"
+	return ""
+
+
+## §4 LEAD LIFE AND THE RETURN LOCK. An unworked lead waits a week and then drops with the
+## honest line; the company cannot be offered again for thirty days, and the return is
+## TRACELESS — no memory, no penalty, nothing on the account.
+## FALSIFICATION: drop _lock_return from the expiry branch and the company comes back the
+## next morning, which is the "havuz tükenmez" rule turning into "havuz unutmaz".
+static func _case_sales_lead_expiry_and_return_lock() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	var p: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+	if p == null:
+		return "the faucet produced no lead"
+	var name: String = p.company_name
+	if p.days_left() != SalesConstants.LEAD_LIFE_DAYS:
+		return "a fresh lead shows %d days, want %d" % [p.days_left(), SalesConstants.LEAD_LIFE_DAYS]
+	for i in SalesConstants.LEAD_LIFE_DAYS + 1:
+		GameState.advance_day()
+		SalesFaucetSystem.daily_tick()
+	if ProspectRegistry.get_prospect(p.id) != null:
+		return "the lead outlived its week"
+	if not SalesFaucetSystem.is_return_locked(name):
+		return "an expired company is not inside its return lock"
+	# TRACELESS: an expiry is not a loss and must leave no memory (§4 vs §9).
+	if SalesLedger.loss_count(name) != 0:
+		return "an expiry wrote a loss to the account memory"
+	if SalesLedger.loss_reason(name) != "":
+		return "an expiry named a loss reason"
+	# The honest line landed where the player can still read it.
+	var log: Array = SalesSystem.get_sales_log()
+	var found: bool = false
+	for row in log:
+		if String((row as Dictionary).get("kind", "")) == "lead_expired" \
+				and String((row as Dictionary).get("company", "")) == name:
+			found = true
+	if not found:
+		return "the expiry produced no activity line"
+	# The lock actually holds the name out of the pool.
+	for i in 30:
+		var q: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+		if q == null:
+			break
+		if q.company_name == name:
+			return "a locked company was offered again inside its window"
+		ProspectRegistry.remove(q.id)
+		SalesFaucetSystem.lock_return(q.company_name, 9999)
+	# And it lifts on time rather than forever.
+	for i in SalesConstants.RETURN_LOCK_DAYS + 1:
+		GameState.advance_day()
+		SalesFaucetSystem.daily_tick()
+	if SalesFaucetSystem.is_return_locked(name):
+		return "the return lock never lifted"
+	return ""
+
+
+## §5.0 THE TIME SKIP. Two hours pass and they are SIMULATED through the real hourly path
+## with the founder counted busy. Ekip §2.1 then produces the GDD's own sentence: a build with
+## a free team member FLOWS, a founder-only build PAUSES.
+## FALSIFICATION: remove the `sales_meeting_active` branch from ProductSystem._is_free and the
+## solo half fails — the founder keeps building from inside a meeting they are sitting in.
+static func _case_sales_meeting_time_skip_founder_zero() -> String:
+	ProductLines.reload()
+	GameState.set_cash(50000)
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	# A FRESH ladder: the plan below is three K1 steps, and a seed that had already shipped
+	# them would make `start_line_build` refuse on the ladder rule rather than on anything
+	# this case is about.
+	_seed_b2b_lines("erp", 0)
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag(ProductState.STEP_REALIZATION, {})
+	_seed_build_crew()
+	var plan := ["line_erp_ledger_k1", "line_erp_stock_k1", "line_erp_invoicing_k1"]
+	if not ProductSystem.start_line_build("erp", plan, "", "Nova"):
+		return "start_line_build refused the fixture plan"
+	# INTO AN HOURLY PHASE. `ProductSystem.hourly_tick` advances effort only in
+	# iteration | development | bugfix; a fresh build sits in DESIGN, which is a daily turn,
+	# and two skipped hours would then read as "nothing happened" for both halves of this
+	# case — a false pass on the solo side and a false failure on the team side.
+	ProductSystem.get_active_build().current_phase = "development"
+
+	# SOLO — the founder is the only carrier, so the skipped hours produce nothing.
+	var lead: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+	if lead == null:
+		return "the faucet produced no lead to sit at"
+	var solo_before: float = ProductSystem.get_active_build().efor_spent
+	var hour_before: int = GameState.current_hour
+	SalesMeetingSystem.open(lead.id)
+	SalesMeetingSystem.close()
+	var solo_after: float = ProductSystem.get_active_build().efor_spent
+	var skipped: int = (GameState.current_hour - hour_before + 24) % 24
+	if skipped != SalesConstants.MEETING_SKIP_HOURS:
+		return "the clock moved %d hours, want %d" % [skipped, SalesConstants.MEETING_SKIP_HOURS]
+	if solo_after > solo_before + 0.00001:
+		return "a founder-only build advanced while the founder sat at a table (%.5f -> %.5f)" \
+			% [solo_before, solo_after]
+
+	# TEAM — one free engineer on the build, and the same two hours flow.
+	var eng: Character = _make_employee("char_eng_skip", "Deniz", HRConstants.ROLE_DEVELOPER)
+	eng.role_stats[HRConstants.AREA_ENGINEERING] = HRConstants.AREA_MAX
+	CharacterRegistry.assign_job(eng.id, HRConstants.JOB_BUILD)
+	var lead2: Prospect = SalesFaucetSystem.spawn(1, "faucet")
+	if lead2 == null:
+		return "the faucet produced no second lead"
+	GameState.set_flag("sales_meeting_used_day", -1)   # a fresh day's right
+	var team_before: float = ProductSystem.get_active_build().efor_spent
+	SalesMeetingSystem.open(lead2.id)
+	SalesMeetingSystem.close()
+	var team_after: float = ProductSystem.get_active_build().efor_spent
+	if team_after <= team_before:
+		return "a team build did not advance across the skipped hours (%.5f -> %.5f)" \
+			% [team_before, team_after]
+	# And the flag is DOWN afterwards: a founder stuck busy is worse than one never freed.
+	if bool(GameState.get_flag("sales_meeting_active", false)):
+		return "the meeting flag survived the close"
+	return ""
+
+
+## §5.1 / engine §9.3 — THE CHECK REPLAYS ACROSS A SAVE. The die derives from the run seed,
+## the day, the lead and the path; nothing about a reload is in it. This is the harder half of
+## `sales_meeting_replays_identically`: the state actually round-trips through the codec.
+## FALSIFICATION: put a RngStreams draw in the resolution and the two halves diverge.
+static func _case_sales_check_replays_after_load() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	_seed_b2b_lines("erp", 1)
+	var p: Prospect = _add_prospect("replay_save", 2, "")
+	var day: int = GameState.day
+	var seed_value: int = GameState.run_seed
+	var memory_before: Dictionary = GameState.sales_line_memory.duplicate(true)
+	var first: Dictionary = _play_to_skip(SalesMeetingSystem.open(p.id))
+	var outcome_a: String = String(first.get("outcome", ""))
+	var path_a: String = SalesMeetingSystem.path_id()
+	SalesMeetingSystem.close()
+	if outcome_a == "":
+		return "the first sitting produced no outcome"
+
+	# A reload puts the same world back: same seed, same day, same lead — AND the same content
+	# repeat memory, which the picker's first tie-break reads (§11.2). Without restoring it the
+	# second sitting correctly prefers a row the run has not spoken yet, and the case would be
+	# measuring the repeat rule rather than the die.
+	GameState.run_seed = seed_value
+	GameState.day = day
+	GameState.sales_line_memory.clear()
+	for k in memory_before:
+		GameState.sales_line_memory[k] = memory_before[k]
+	if ProspectRegistry.get_prospect("replay_save") == null:
+		_add_prospect("replay_save", 2, "")
+	GameState.set_flag("sales_meeting_used_day", -1)
+	var second: Dictionary = _play_to_skip(SalesMeetingSystem.open("replay_save"))
+	var outcome_b: String = String(second.get("outcome", ""))
+	var path_b: String = SalesMeetingSystem.path_id()
+	SalesMeetingSystem.close()
+	if path_a != path_b:
+		return "the same play produced two paths: %s / %s" % [path_a, path_b]
+	if outcome_a != outcome_b:
+		return "the same path replayed differently: %s then %s" % [outcome_a, outcome_b]
+	return ""
+
+
+## §6 THE SINGLE OPEN PITCH PROMISE. One at a time, and the refusal is a VISIBLE locked row
+## with its reason rather than a missing option.
+## FALSIFICATION: drop the ledger check from SalesMeetingSystem._promise_locked and the second
+## table offers a second word while the first is still owed.
+static func _case_sales_single_open_promise_lock() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")   # a pool with features
+	GameState.set_flag("mvp_components", [])
+	var facts: Dictionary = {"has_promise_target": true, "open_pitch_promise": true}
+	var row: Dictionary = {"answers": [{"id": "a_promise", "verb": SalesProbes.VERB_PROMISE}]}
+	var locked: Array = SalesProbes.answers_for(row, facts, true)
+	if locked.is_empty():
+		return "the promise row vanished instead of locking"
+	if bool((locked[0] as Dictionary).get("open", true)):
+		return "the promise row is open while a word is already owed"
+	if String((locked[0] as Dictionary).get("lock_fact", "")) != "open_pitch_promise":
+		return "the lock does not name the open promise: %s" % \
+			String((locked[0] as Dictionary).get("lock_fact", ""))
+	# Unlocked, the same row is playable — so the lock is the promise and nothing else.
+	var free_rows: Array = SalesProbes.answers_for(row, facts, false)
+	if free_rows.is_empty() or not bool((free_rows[0] as Dictionary).get("open", false)):
+		return "the promise row stayed shut with no open promise"
+	# And with nothing to promise the row is ABSENT rather than offered and then broken.
+	var no_target: Dictionary = {"has_promise_target": false, "open_pitch_promise": false}
+	if not SalesProbes.answers_for(row, no_target, false).is_empty():
+		return "the promise row was offered with nothing to promise"
+	return ""
+
+
+## §7.2.1 THE SELECTION RULE: the highest star inside the band, ties broken by least time
+## left, reserved tables skipped, and a lead handed to a rep goes to the FRONT.
+## FALSIFICATION: remove the expires_on_day comparison from _outranks and the tie resolves by
+## id instead, which is stable but not the rule.
+static func _case_sales_rep_selection_rule() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)   # star 4 -> band 1..3
+	var small: Prospect = _add_prospect("sel_small", 1, "")
+	var big: Prospect = _add_prospect("sel_big", 2, "")
+	var big2: Prospect = _add_prospect("sel_big2", 2, "")
+	big.expires_on_day = GameState.day + 6
+	big2.expires_on_day = GameState.day + 2      # less time left wins the tie
+	var picked: Prospect = SalesRepSystem.pick_lead_for(rep)
+	if picked == null or picked.id != big2.id:
+		return "selection did not take the highest star with the least time left: %s" % \
+			("null" if picked == null else picked.id)
+	# Reserved tables are the founder's and are skipped outright.
+	SalesLedger.set_routing(big2.id, SalesConstants.ROUTE_RESERVED)
+	SalesLedger.set_routing(big.id, SalesConstants.ROUTE_RESERVED)
+	picked = SalesRepSystem.pick_lead_for(rep)
+	if picked == null or picked.id != small.id:
+		return "a reserved table was not skipped"
+	# "Temsilciye ver" jumps the queue ahead of the star rule.
+	SalesLedger.set_routing(small.id, SalesConstants.ROUTE_NONE)
+	SalesLedger.set_routing(big.id, SalesConstants.ROUTE_NONE)
+	SalesLedger.set_routing(small.id, SalesConstants.ROUTE_REP)
+	picked = SalesRepSystem.pick_lead_for(rep)
+	if picked == null or picked.id != small.id:
+		return "a lead handed to a rep did not go to the front of the band queue"
+	return ""
+
+
+## §5.4 THE PRICE TRAIL: what the account agreed to at signing is what expansion charges.
+## Before rev 6 every account expanded at one flat rate, so the stance dial had no tail and a
+## click was worth the same on every record in the book (the 2026-08-06 audit measured it).
+## FALSIFICATION: make expand() read B2BConstants.EXPANSION_PER_SEAT_MRR again and the second
+## half fails by exactly the difference between the two rates.
+static func _case_sales_seat_price_stamp_and_expansion() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	var p: Prospect = _add_prospect("stamped", 2, "")
+	var price: int = 44
+	var seats: int = 20
+	var c: Customer = SalesSystem.add_b2b_customer(p, seats, price, 70)
+	if c == null:
+		return "the signing seam produced no customer"
+	if c.seat_price != price:
+		return "the account did not carry its seat price: %d" % c.seat_price
+	if c.mrr != seats * price:
+		return "MRR %d is not seats x price (%d x %d)" % [c.mrr, seats, price]
+	if SalesLedger.seat_price(c.id) != price:
+		return "the read surface does not return the stamped price"
+	# Expansion charges THAT price, not the flat constant — and the caller still passes the
+	# constant, because the engine's own effect does.
+	var mrr_before: int = c.mrr
+	var add: int = 5
+	B2BSalesSystem.expand(c.id, add, B2BConstants.EXPANSION_PER_SEAT_MRR)
+	var after: Customer = CustomerRegistry.get_customer(c.id)
+	if after.seats != seats + add:
+		return "expansion moved seats to %d, want %d" % [after.seats, seats + add]
+	if after.mrr != mrr_before + add * price:
+		return "expansion charged %d for %d seats, want %d at the account's own $%d" % [
+			after.mrr - mrr_before, add, add * price, price]
+	# An UNSTAMPED account (a v10 record, or a fixture) still expands at the caller's rate,
+	# which is the old behaviour preserved exactly where the new price does not exist.
+	var q: Prospect = _add_prospect("unstamped", 1, "")
+	var c2: Customer = SalesSystem.add_b2b_customer(q, 10, 0, 70)
+	var m2: int = c2.mrr
+	B2BSalesSystem.expand(c2.id, 2, B2BConstants.EXPANSION_PER_SEAT_MRR)
+	if CustomerRegistry.get_customer(c2.id).mrr != m2 + 2 * B2BConstants.EXPANSION_PER_SEAT_MRR:
+		return "an unstamped account did not fall back to the caller's rate"
+	return ""
+
+
+## §13 THE SAVE SCHEMA. Every record the module owns has to survive a round trip, and the
+## point of listing them one by one is that a field added later and forgotten here is exactly
+## the field that will be found missing by a player rather than by a test.
+## FALSIFICATION: drop `star` from Prospect and the first branch fails; drop `sales_band_caps`
+## from GameState and the ledger branch does.
+static func _case_sales_save_roundtrip_rev6() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	var p: Prospect = _add_prospect("save_lead", 3, "line_erp_ledger_k1")
+	p.routing = SalesConstants.ROUTE_RESERVED
+	p.worked_by = "char_sr_1"
+	p.work_started_day = GameState.day - 2
+	p.work_due_day = GameState.day + 3
+	p.work_stance = SalesConstants.STANCE_PREMIUM
+	p.whale_condition = SalesConstants.WHALE_COND_LOCKED_TIER
+	p.is_whale = true
+	p.last_loss_reason = SalesConstants.LOSS_PRICE
+	p.loss_count = 2
+	var cp: Prospect = _add_prospect("save_cust", 2, "")
+	var c: Customer = SalesSystem.add_b2b_customer(cp, 18, 52, 70, "founder_pitch", 0.2)
+	SalesLedger.set_price_stance(SalesConstants.STANCE_PREMIUM)
+	SalesLedger.set_rep_band_cap("char_sr_1", 2)
+	SalesLedger.report_loss("Kayıp A.Ş.", SalesConstants.LOSS_STABILITY, "stability")
+	SalesLedger.record_insult("Devrilen A.Ş.")
+	SalesFaucetSystem.lock_return("Kilitli A.Ş.", 12)
+	SalesLedger.set_open_pitch_promise(c.id, "line_erp_ledger_k1")
+	SalesLedger.consume_meeting_right()
+	SalesLedger.spend_inner_voice()
+	SalesProbes.remember("probe_capacity")
+
+	var slot: String = "smoke_sales_v11"
+	if not SaveManager.save_to_slot(slot):
+		return "the save was refused: %s" % SaveManager.cannot_save_reason_key()
+	var data: Dictionary = SaveManager.read_slot(slot)
+	if data.is_empty():
+		return "the slot read back empty"
+	# `read_slot` returns {ok, error_key, meta, state} — the version is consumed by the
+	# migration ladder inside it and does not travel further, which is why `ok` is the thing
+	# to assert: a schema this build refuses comes back false with a named reason.
+	if not bool(data.get("ok", false)):
+		return "the slot did not read back cleanly: %s" % String(data.get("error_key", ""))
+	SaveManager.apply_loaded_state(data)
+
+	var rp: Prospect = ProspectRegistry.get_prospect("save_lead")
+	if rp == null:
+		return "the lead did not survive the round trip"
+	for pair in [["star", rp.star, 3], ["loss_count", rp.loss_count, 2],
+			["work_started_day", rp.work_started_day, p.work_started_day],
+			["work_due_day", rp.work_due_day, p.work_due_day]]:
+		if int(pair[1]) != int(pair[2]):
+			return "lead.%s came back %d, want %d" % [String(pair[0]), int(pair[1]), int(pair[2])]
+	for spair in [["routing", rp.routing, SalesConstants.ROUTE_RESERVED],
+			["work_stance", rp.work_stance, SalesConstants.STANCE_PREMIUM],
+			["whale_condition", rp.whale_condition, SalesConstants.WHALE_COND_LOCKED_TIER],
+			["last_loss_reason", rp.last_loss_reason, SalesConstants.LOSS_PRICE],
+			["worked_by", rp.worked_by, "char_sr_1"],
+			["pain_feature_id", rp.pain_feature_id, "line_erp_ledger_k1"]]:
+		if String(spair[1]) != String(spair[2]):
+			return "lead.%s came back '%s', want '%s'" % [
+				String(spair[0]), String(spair[1]), String(spair[2])]
+	if not rp.is_whale:
+		return "the whale flag did not survive"
+
+	var rc: Customer = CustomerRegistry.get_customer(c.id)
+	if rc == null or rc.seat_price != 52:
+		return "the account's seat price did not survive"
+	if absf(rc.signing_discount - 0.2) > 0.001:
+		return "the signing discount trace did not survive: %.3f" % rc.signing_discount
+
+	if SalesLedger.price_stance() != SalesConstants.STANCE_PREMIUM:
+		return "the price stance did not survive"
+	if SalesLedger.rep_band_cap("char_sr_1") != 2:
+		return "the band cap did not survive"
+	if SalesLedger.loss_reason("Kayıp A.Ş.") != SalesConstants.LOSS_STABILITY:
+		return "the account memory did not survive"
+	if SalesLedger.loss_log().is_empty():
+		return "the loss log did not survive"
+	if not SalesLedger.was_insulted("Devrilen A.Ş."):
+		return "the insult memory did not survive"
+	if not SalesFaucetSystem.is_return_locked("Kilitli A.Ş."):
+		return "the return lock did not survive"
+	if SalesLedger.open_pitch_promise() != c.id:
+		return "the open pitch promise did not survive"
+	if SalesLedger.meeting_available_today():
+		return "the spent meeting right did not survive"
+	if SalesLedger.inner_voice_left() >= SalesConstants.INNER_VOICE_BUDGET_PER_RUN:
+		return "the inner-voice budget did not survive"
+	if not GameState.sales_line_memory.has("probe_capacity"):
+		return "the content repeat memory did not survive"
+	SaveManager.delete_slot(slot)
+	return ""
+
+
+## §11.5 — every key this module DERIVES at run time must resolve. A derived key is invisible
+## to a grep for tr("LITERAL"), so a typo reaches the player as a raw token; this walks the
+## real id lists and asks the translation server, the same shape as loc_b2b_derived_keys.
+static func _case_loc_sales_derived_keys() -> String:
+	var loc0: String = TranslationServer.get_locale()
+	var wanted: Array[String] = []
+	for id in SalesArchetypes.ids():
+		wanted.append("SALES_ARCH_%s_LINE" % String(id).to_upper())
+	for row in SalesProbes.CATALOGUE:
+		var rid: String = String((row as Dictionary).get("id", ""))
+		wanted.append("SALES_PROBE_%s" % rid.to_upper())
+		for a in ((row as Dictionary).get("answers", []) as Array):
+			wanted.append("SALES_ANS_%s_%s" % [rid.to_upper(),
+				String((a as Dictionary).get("id", "")).to_upper()])
+			var lf: String = String((a as Dictionary).get("lock_fact", ""))
+			if lf != "":
+				wanted.append("SALES_LOCK_%s" % lf.to_upper())
+	wanted.append("SALES_LOCK_OPEN_PITCH_PROMISE")
+	for reason in SalesConstants.LOSS_REASONS:
+		wanted.append("SALES_LOSS_%s" % String(reason).to_upper())
+		wanted.append("SALES_MEMORY_%s" % String(reason).to_upper())
+	for cond in SalesConstants.WHALE_CONDITION_ORDER:
+		wanted.append("SALES_WHALE_%s" % String(cond).to_upper())
+	for stance in SalesConstants.STANCES:
+		wanted.append("SALES_STANCE_%s" % String(stance).to_upper())
+		wanted.append("SALES_STANCE_HINT_%s" % String(stance).to_upper())
+	for key in ["SALES_BLOCK_NO_B2B", "SALES_BLOCK_MEETING_SPENT", "SALES_BLOCK_TOO_LATE",
+			"SALES_BLOCK_NO_LEAD", "SALES_BLOCK_REASON_UNCHANGED", "SALES_BAND_ABOVE_REP",
+			"SALES_BAND_ABOVE_CAP", "SALES_WIN_CUT", "SALES_INNER_VOICE_0",
+			"SALES_INNER_VOICE_1", "SALES_INNER_VOICE_2"]:
+		wanted.append(key)
+	for locale in ["tr", "en"]:
+		TranslationServer.set_locale(locale)
+		for k in wanted:
+			if TranslationServer.translate(k) == k:
+				TranslationServer.set_locale(loc0)
+				return "%s does not resolve in %s" % [k, locale]
+	TranslationServer.set_locale(loc0)
+	# The narrative half must be TAGGED, so the writing round can find every line it owns.
+	TranslationServer.set_locale("tr")
+	for row2 in SalesProbes.CATALOGUE:
+		var key2: String = "SALES_PROBE_%s" % String((row2 as Dictionary).get("id", "")).to_upper()
+		if not TranslationServer.translate(key2).begins_with("PH:"):
+			TranslationServer.set_locale(loc0)
+			return "%s is not tagged as a placeholder" % key2
+	TranslationServer.set_locale(loc0)
+	return ""
+
+
+## §7.3 PRESENTATION, both halves. The ticker sees NEWS ONLY — a routine close reaches the
+## player through the account list and the weekly summary, never by scrolling past. And the
+## weekly card carries CLOSES ONLY: churn is the customer desk's surface, and a week with no
+## closes drops no card at all.
+## FALSIFICATION: drop the newsworthy test from _maybe_ticker and the first branch fails on
+## the very first routine close.
+static func _case_sales_presentation_rules() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "erp")
+	_seed_b2b(1000)
+	var rep: Character = _make_sales_rep("char_sr_1", 0, 9)   # Satış 9 -> star 4, reach band 4
+	var lines: Array = []
+	var probe := func(_src: String, text: String) -> void: lines.append(text)
+	EventBus.headline_added.connect(probe)
+
+	# A ROUTINE close: 1 star, well under the reach band. It must not reach the ticker.
+	_add_prospect("routine_news", 1, "")
+	for i in 20:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+		if ProspectRegistry.get_prospect("routine_news") == null:
+			break
+	if ProspectRegistry.get_prospect("routine_news") != null:
+		EventBus.headline_added.disconnect(probe)
+		return "the routine lead never closed, so the ticker rule was never exercised"
+	if not lines.is_empty():
+		EventBus.headline_added.disconnect(probe)
+		return "a routine close reached the ticker: %s" % str(lines)
+
+	# A 3-star close IS news (§7.3's own list: league-above, whale, the run's first 3 star).
+	_add_prospect("news_worthy", 3, "")
+	for i in 20:
+		GameState.advance_day()
+		B2BSalesSystem.daily_tick()
+		if ProspectRegistry.get_prospect("news_worthy") == null:
+			break
+	EventBus.headline_added.disconnect(probe)
+	if ProspectRegistry.get_prospect("news_worthy") != null:
+		return "the 3-star lead never closed"
+	if lines.is_empty():
+		return "a 3-star signing did not reach the ticker"
+
+	# THE WEEKLY CARD carries closes and nothing else, and a quiet week produces none.
+	GameState.set_flag("sales_weekly_closes", 0)
+	GameState.set_flag("sales_weekly_anchor_day",
+		GameState.day - SalesConstants.WEEKLY_SUMMARY_INTERVAL_DAYS - 1)
+	var reported: Array = []
+	var wprobe := func(closes: int) -> void: reported.append(closes)
+	EventBus.weekly_sales_report_issued.connect(wprobe)
+	SalesRepSystem.daily_tick()
+	if not reported.is_empty():
+		EventBus.weekly_sales_report_issued.disconnect(wprobe)
+		return "a week with zero closes still issued a summary"
+	# With a close on the books it does report, and it reports the COUNT.
+	GameState.set_flag("sales_weekly_closes", 3)
+	GameState.set_flag("sales_weekly_anchor_day",
+		GameState.day - SalesConstants.WEEKLY_SUMMARY_INTERVAL_DAYS - 1)
+	SalesRepSystem.daily_tick()
+	EventBus.weekly_sales_report_issued.disconnect(wprobe)
+	if reported.size() != 1 or int(reported[0]) != 3:
+		return "the weekly summary did not report its closes: %s" % str(reported)
+	# And the counter resets, or the next week reports this week's work again.
+	if int(GameState.get_flag("sales_weekly_closes", -1)) != 0:
+		return "the weekly close counter did not reset"
+	if rep == null:
+		return "fixture rep vanished"
+	return ""
+
+
+## SATIŞ rev 6 §11.7 + §11.8 — THE TWO RULINGS THE SALES GDD HANDS TO THE EKİP GENERATOR.
+## They are PARAMETERS of the one generator, never a second one (§15 puts candidate generation
+## in Ekip §10.2 and a sales-only copy would be the second source that table forbids).
+## FALSIFICATION: delete ROLE_ARCHETYPE_SHAPE and the curve branch fails on the first level;
+## delete ROLE_TRAIT_BAN and the trap-trait branch fails inside a dozen seeds.
+static func _case_sales_candidate_curve_and_traits() -> String:
+	# THE CURVE SITS UNDER EVERY OTHER ROLE'S, at every level and every archetype. In sales a
+	# star is money (§2), and the role has no secondary area to spend points on.
+	for level in [HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_MID, HRConstants.LEVEL_SENIOR]:
+		for arch in HRConstants.ARCHETYPES:
+			var sales_key: int = int(HRConstants.archetype_shape(
+				level, String(arch), HRConstants.ROLE_SALES_REP)[0])
+			var neutral_key: int = int(HRConstants.archetype_shape(level, String(arch))[0])
+			if sales_key >= neutral_key:
+				return "sales %s at level %d is not below the neutral curve (%d vs %d)" % [
+					String(arch), level, sales_key, neutral_key]
+			if sales_key > SalesConstants.CANDIDATE_STAR_CAP_RAW:
+				return "sales %s at level %d exceeds the demo ceiling: raw %d" % [
+					String(arch), level, sales_key]
+	# §11.7's centres, read as stars.
+	var jr_uzman: float = HRConstants.stars_for(int(HRConstants.archetype_shape(
+		HRConstants.LEVEL_JUNIOR, HRConstants.ARCHETYPE_UZMAN, HRConstants.ROLE_SALES_REP)[0]))
+	if jr_uzman > 1.5:
+		return "the junior sales centre is above ★1,5: %.1f" % jr_uzman
+	var sr_uzman: float = HRConstants.stars_for(int(HRConstants.archetype_shape(
+		HRConstants.LEVEL_SENIOR, HRConstants.ARCHETYPE_UZMAN, HRConstants.ROLE_SALES_REP)[0]))
+	if sr_uzman > 3.0:
+		return "the senior sales centre is above ★3: %.1f" % sr_uzman
+
+	# GENERATED FILES obey the ceiling and the ban, across many seeds — including the rare TOP
+	# file, whose peak must be the ROLE's ceiling rather than the ruler's end.
+	var saw_top: bool = false
+	for seed_value in range(1, 120):
+		for level2 in [HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_MID, HRConstants.LEVEL_SENIOR]:
+			var files: Array = HRCandidateGenerator.generate(
+				HRConstants.ROLE_SALES_REP, level2, seed_value)
+			if files.size() != HRConstants.CANDIDATE_COUNT:
+				return "the generator returned %d sales files" % files.size()
+			if not HRCandidateGenerator.is_non_dominated_set(files):
+				return "a dominated sales file at seed %d level %d" % [seed_value, level2]
+			for f in files:
+				var axes: Dictionary = (f as Dictionary).get("axes", {}) as Dictionary
+				var key: int = int(axes.get(HRConstants.AREA_SALES, 0))
+				if key > SalesConstants.CANDIDATE_STAR_CAP_RAW:
+					return "a sales file reached raw %d, over the ★3,5 demo ceiling" % key
+				if key == SalesConstants.CANDIDATE_STAR_CAP_RAW:
+					saw_top = true
+				for t in ((f as Dictionary).get("traits", []) as Array):
+					if String(t) == "takes_them_under" or String(t) == "double_checker":
+						return "a sales candidate carries the banned trait '%s'" % String(t)
+	if not saw_top:
+		return "the top sales file never appeared in 119 searches — the branch is dead"
+
+	# THE BAN IS A POOL FILTER, NOT A DELETION: the same traits stay live for another role.
+	var pool: Array = HRConstants.cost_trait_ids(HRConstants.ROLE_DEVELOPER)
+	if not pool.has("takes_them_under") or not pool.has("double_checker"):
+		return "the trap traits were removed globally instead of filtered per role"
+	if HRConstants.cost_trait_ids(HRConstants.ROLE_SALES_REP).size() < 1:
+		return "the sales cost pool is empty — a Pazarlık file could not be built"
 	return ""

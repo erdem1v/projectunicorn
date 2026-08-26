@@ -227,6 +227,45 @@ also publishes `musteri.under_tolerance(c)` as a wrapper · `musteri.trust_offse
 `musteri.mrr(c)` `:33` · `musteri.seats(c)` `:34` · `musteri.scale(c)` `:49` ·
 `musteri.assigned_to(c)` `:53` · `sales.b2c_price()` `game_state.gd:124`
 
+### 5.1 · The `sales.` block after SATIŞ rev 6 (`sales_ledger.gd`)
+
+§14 opened the module's own read surface the way Ekip §15.3 did — ahead of any content that
+needs it, and with STABLE names. Every row below is a real function on `SalesLedger` unless
+noted; the engine wraps none of them, because there is nothing left to wrap.
+
+| seam | code | type | status |
+|---|---|---|---|
+| `sales.pipeline_count()` | `sales_ledger.gd:31` | int | VAR |
+| `sales.lead_star(id)` | `:35` | int | VAR |
+| `sales.lead_days_left(id)` | `:40` | int | VAR |
+| `sales.lead_routing(id)` | `:45` | String | VAR |
+| `sales.reach_band()` | `:63` → `SalesFaucetSystem.reach_band` | int | VAR — DERIVED, never stored (§13) |
+| `sales.rep_band_cap(p)` | `:74` | int | VAR — `-1` IS the answer, not a gap |
+| `sales.rep_busy(p)` | `:96` | String | VAR — "" = free |
+| `sales.price_stance()` | `:109` | String | VAR — the SINGLE B2B price source (§7.5, §15) |
+| `sales.open_pitch_promise()` | `:133` | String | VAR |
+| `sales.loss_reason(account)` | `:180` | String | VAR |
+| `sales.loss_log()` | `:196` | Array | VAR — UNPRUNED, on purpose (§5.2 "depo-öncesi") |
+| `sales.deal_count(star)` | `:216` | int | VAR |
+| `sales.last_signed_star()` | `:224` | int | VAR |
+| `sales.whale_condition(account)` | `:228` | String | VAR |
+| `sales.meeting_available_today()` | `:249` | bool | VAR |
+| `sales.signing_discount(account)` | `:233` | float | VAR |
+| `sales.seat_price(account)` | `:238` | int | VAR |
+
+**Two rows retired with their machines.** `sales.can_pitch()` (`pitch_system.gd:196`) went
+with the two-day cooldown; `sales.meeting_available_today()` is the rule that replaced it and
+it answers a different question, so §6.1's "a changed meaning gets a new name" is honoured
+rather than worked around. `sales.pipeline_optimistic_mrr()` still exists and still feeds the
+Finance curve, but it reads seats × the stance price now rather than a retired display band.
+
+**Not registered in `scripts/events/seams/`.** These are the MODULE's catalogue; the engine's
+allowlist binds what content actually asks for, and no card asks yet. Registering them is a
+`seams_sales.gd` edit and therefore the event package's call, not this task's — the names are
+stable so that call is a one-liner when it comes.
+
+---
+
 **Note for content:** `musteri.tolerance` is deliberately hidden from the player. A card may
 *condition* on it; a card may not *name* it. That is a writing rule, not an engine rule, and it
 goes in the vocabulary doc.

@@ -124,11 +124,21 @@ const FLAG_TYPES := {
 	"b2c_price": TYPE_INT,
 	"b2c_paid_tier_open": TYPE_BOOL,
 	# --- sales / customer desks ---
-	"sales_lead_progress": TYPE_FLOAT,
 	"cs_throughput_progress": TYPE_FLOAT,
-	"next_find_prospects_day": TYPE_INT,
-	"next_pitch_day": TYPE_INT,
-	"b2b_high_scale_unlocked": TYPE_BOOL,
+	# SATIŞ rev 6. `sales_lead_progress`, `next_find_prospects_day`, `next_pitch_day` and
+	# `b2b_high_scale_unlocked` were here and are RETIRED (§19): the heating model, the
+	# "Aday bul" button, the two-day meeting cooldown and the enterprise-band unlock that
+	# never had a writer. Their replacements are below and each names its GDD section.
+	"sales_faucet_progress": TYPE_FLOAT,       # §3 — sub-lead inflow accumulator
+	"sales_price_stance": TYPE_STRING,         # §7.5 — the SINGLE B2B price source
+	"sales_meeting_used_day": TYPE_INT,        # §5.0 — the day the daily right was spent
+	"sales_meeting_active": TYPE_BOOL,         # §5.0 — the founder is at a table (busy gate)
+	"sales_inner_voice_used": TYPE_INT,        # §5.1.1 — the run's inner-voice budget
+	"sales_open_pitch_promise": TYPE_STRING,   # §6 — the ONE open pitch promise, by account
+	"sales_open_pitch_feature": TYPE_STRING,   # §6 — and the feature it named
+	"sales_last_signed_star": TYPE_INT,        # §14 — sales.last_signed_star()
+	"sales_weekly_anchor_day": TYPE_INT,       # §7.3 — the weekly summary's window start
+	"sales_weekly_closes": TYPE_INT,           # §7.3 — closes inside that window
 	# --- phase gate / endgame / VC ---
 	# `gate_prompt_day` was here: PhaseGateSystem's hand-rolled five-day re-ask clock, stamped
 	# on open, on decline and on every reminder. `funding.gate_series_a` declares
@@ -266,6 +276,30 @@ var b2b_signed_company_names: Array[String] = []
 # deliberately bypasses both the throughput budget and the absorb ceiling.
 var cs_escalation_days: Array[int] = []
 var run_hires: int = 0                 # CharacterRegistry.add, category "employee"
+
+# --- SATIŞ rev 6 §13 · the run records the module owns ------------------------
+# All five ride SaveCodec's property walker, which is why there is no `_capture_systems`
+# block for Sales: every `var` on GameState is the schema and its default is the migration.
+# The write side is SalesLedger — nothing else touches these five (WRITE-THROUGH LAW).
+#
+# §5.2 — the loss log. DELIBERATELY UNPRUNED: it is a buffer for the demand generator that
+# arrives with the event package, and a trimmed buffer silently answers a question nobody
+# asked. Rows are {day, account, reason, target}.
+var sales_loss_log: Array = []
+# §5.2 / §9 — per-company memory, keyed by COMPANY NAME so it survives the prospect being
+# removed and the customer never being created: {loss_reason, loss_target, loss_count,
+# loss_day, insulted, insult_day, promise_broken}.
+var sales_account_memory: Dictionary = {}
+# §4 — companies held out of the faucet until a day: {company_name: unlock_day}. Three
+# writers (expiry, a walked table, a refused price break), one ledger.
+var sales_return_locks: Dictionary = {}
+# §7.2.2 — the per-rep working band cap: {character_id: star}. An ABSENT key means "Kendi
+# ligi", which is the default, so the empty dictionary is the correct fresh-run state.
+var sales_band_caps: Dictionary = {}
+# §11.2 — the storylet repeat memory: {row_id: times spoken}. What keeps a flavour slot from
+# returning before its pool is spent, and what §11.6's repeat histogram measures.
+var sales_line_memory: Dictionary = {}
+
 # B2B pitch customer-rep portrait rotation (sequential over the non-selected founder
 # portraits; read+written each meeting, so it's real run state, not a write-only counter).
 var b2b_rep_portrait_rotation_index: int = 0   # sequential cursor into the rep-portrait pool
