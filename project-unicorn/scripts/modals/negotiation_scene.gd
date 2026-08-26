@@ -1,5 +1,5 @@
 class_name NegotiationScene
-extends Control
+extends VBoxContainer
 
 # ACT 2's SURFACE (§5.3). A humble view over NegotiationSystem — every number lives there and
 # this paints one view_state through `_render()`.
@@ -20,10 +20,15 @@ extends Control
 # Colours and sizes still come from tokens — `_draw` changes the drawing path, not the
 # palette law (UI/STYLE LAW md.1).
 
+#
+# IT HAS NO GROUND OF ITS OWN (rev 6.1 §5.1.1). `SalesStage` owns the room, the scrim and the
+# dialogue column; this scene is the column's CONTENT for Perde 2 and nothing more. A full-rect
+# background here would paint over all three and turn "masa aynı sahnede Perde 2 moduna döner"
+# into a screen change. Being a `VBoxContainer` rather than a bare `Control` is what lets the
+# host column measure it: a Control reports no minimum size and would collapse to nothing.
+
 signal closed()
 
-const PAGE_MARGIN := 48
-const COLUMN_W := 720
 const RULER_H := 64.0
 const RAIL_H := 3.0
 const HANDLE_W := 12.0
@@ -90,9 +95,11 @@ class _Ruler extends Control:
 
 	func _draw() -> void:
 		var mid: float = size.y * 0.5
-		# The rail.
+		# The rail. SURFACE_SUNKEN, not SEPARATOR: the chrome hairline is a shade off the
+		# dialogue column's own fill and the rail simply did not draw on the restaged stage —
+		# read off the first Act 2 shot. This token is literally the meter-track colour.
 		draw_rect(Rect2(0.0, mid - NegotiationScene.RAIL_H * 0.5, size.x, NegotiationScene.RAIL_H),
-			UiTokens.SEPARATOR)
+			UiTokens.SURFACE_SUNKEN)
 		# DESIGN-PARKED: the insult zone is DRAWN. §5.3 seals that the reserve is never
 		# drawn and says the zone carries "farklı ton"; a tone on the button alone would
 		# let the player cross the line without ever having seen it, and I3 forbids an
@@ -114,9 +121,12 @@ class _Ruler extends Control:
 					UiTokens.INK_FAINT, 1.0)
 				x += step
 		# The stance anchor (§7.5) — where the dial says this conversation starts.
+		# INK_DIM, not ACCENT_DIM: the latter is a FILL token for amber-keyed chrome (#1E2730)
+		# and as a line it vanished into the rail. The tick stays neutral on purpose — the amber
+		# on this ruler belongs to the handle the player is moving.
 		var ax: float = _x_of(anchor)
 		draw_line(Vector2(ax, mid - NegotiationScene.TICK_H), Vector2(ax, mid + NegotiationScene.TICK_H),
-			UiTokens.ACCENT_DIM, 1.0)
+			UiTokens.INK_DIM, 1.0)
 		# The counter trail: every number the customer has written, oldest faintest.
 		for i in counters.size():
 			var cx: float = _x_of(int(counters[i]))
@@ -124,11 +134,14 @@ class _Ruler extends Control:
 			var col: Color = UiTokens.INK_MUTED
 			col.a = fade
 			draw_line(Vector2(cx, mid - 6.0), Vector2(cx, mid + 6.0), col, 1.0)
-		# The handle.
-		var hx: float = _x_of(selected)
+		# The handle. Its LEFT EDGE is clamped, not its centre: at the band's floor the centred
+		# rect hung half off the ruler and drew as a sliver, which reads as a rendering fault
+		# rather than as "the price is at the bottom of the band" (seen on the confirm shot).
+		var hw: float = NegotiationScene.HANDLE_W
+		var hx: float = clampf(_x_of(selected) - hw * 0.5, 0.0, maxf(size.x - hw, 0.0))
 		var hcol: Color = UiTokens.negative_bright() if selected >= insult_from else UiTokens.ACCENT
-		draw_rect(Rect2(hx - NegotiationScene.HANDLE_W * 0.5, mid - NegotiationScene.HANDLE_H * 0.5,
-			NegotiationScene.HANDLE_W, NegotiationScene.HANDLE_H), hcol)
+		draw_rect(Rect2(hx, mid - NegotiationScene.HANDLE_H * 0.5,
+			hw, NegotiationScene.HANDLE_H), hcol)
 
 
 # ============================================================================
@@ -136,38 +149,25 @@ class _Ruler extends Control:
 # ============================================================================
 
 func _build() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
+	mouse_filter = Control.MOUSE_FILTER_PASS
+	add_theme_constant_override("separation", UiTokens.SPACE_L)
 
-	var bg := ColorRect.new()
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.color = UiTokens.DIALOGUE_BG
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	# The ruler takes the column's width, which is what a ruler wants: at 1900px a dollar of
+	# price becomes twenty pixels of travel and the insult edge stops being a place you can
+	# see yourself approaching. The stage's column is already that measure.
+	var col: VBoxContainer = self
 
-	var root := MarginContainer.new()
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		root.add_theme_constant_override("margin_" + side, PAGE_MARGIN)
-	add_child(root)
+	# THE MECHANISM IS CENTRED, exactly as Perde 1's conversation is. Same two-spacer shape, so
+	# the act change moves the CONTENT of the column and nothing else: the eye that was reading
+	# an answer row finds the ruler at the same height. A top-aligned mechanism left 450px of
+	# void under it and made the swap read as a different screen.
+	col.add_child(_flex(1.0))
 
-	# A CENTRED COLUMN. The ruler is the one thing on this screen that wants width, and a
-	# 1900px ruler is not a ruler — a dollar of price becomes twenty pixels of travel and the
-	# insult edge stops being a place you can see yourself approaching.
-	var centre := HBoxContainer.new()
-	centre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.add_child(centre)
-	centre.add_child(_grow())
-
-	var col := VBoxContainer.new()
-	col.custom_minimum_size = Vector2(COLUMN_W, 0)
-	col.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	col.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	centre.add_child(col)
-	centre.add_child(_grow())
-
-	_title_label = UiFactory.make_label("", &"DialogueName")
+	# NOT `DialogueName` — the identity block above already carries that weight, and a second
+	# heading of the same size under it reads as two titles arguing. This is a section label.
+	_title_label = UiFactory.make_label("", &"ZoneLabel")
 	col.add_child(_title_label)
 
 	_ruler = _Ruler.new()
@@ -194,7 +194,12 @@ func _build() -> void:
 	_confirm_box.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
 	col.add_child(_confirm_box)
 
+	# The actions ride the column's bottom edge, where Perde 1's footer button already was.
+	# Same place, same eye — one more thing that does not move across the act change.
+	col.add_child(_flex(1.0))
+
 	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_END
 	actions.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	col.add_child(actions)
 
@@ -209,6 +214,15 @@ func _build() -> void:
 func _grow() -> Control:
 	var c := Control.new()
 	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return c
+
+
+## Vertical twin of `_grow`: eats leftover column height in proportion to `ratio`.
+func _flex(ratio: float) -> Control:
+	var c := Control.new()
+	c.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	c.size_flags_stretch_ratio = ratio
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return c
 

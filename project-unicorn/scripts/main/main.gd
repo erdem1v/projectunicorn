@@ -2249,14 +2249,14 @@ func _seed_sales_world() -> void:
 		founder.role_stats[FounderConstants.SKILL_CHARISMA] = 4
 
 
-## --meeting-shot=<probe|locked|won|lost> — Perde 1'in dört hâli. `locked` bir sağlayıcı
+## --meeting-shot=<probe|locked|won|lost|handoff> — Perde 1'in dört hâli ve perde değişimi. `locked` bir sağlayıcı
 ## kademesini düşürerek kilitli cevap satırını ve GEREKÇESİNİ zorlar; kabul kapısının
 ## "locked rows show their reason line" maddesi tam olarak o kareyle doğrulanır.
 func _run_meeting_shot(kind: String) -> void:
 	get_tree().paused = false
 	_shot_window(Vector2i(1920, 1080))
 	_seed_sales_world()
-	if kind == "locked":
+	if kind == "locked" or kind == "lost":
 		# Sağlayıcıyı yerel kademeye indir VE merdiveni K1'e çek: hangi kurcalama gelirse
 		# gelsin "Gücü göster" satırı kapanır ve kilit GEREKÇESİNİ yazar. Kabul kapısının
 		# "locked rows show their reason line" maddesi bu karede doğrulanıyor.
@@ -2264,7 +2264,18 @@ func _run_meeting_shot(kind: String) -> void:
 		_seed_line_state("erp", [
 			["line_erp_ledger", 1, "line_erp_ledger_k1", 0.75],
 		])
-	var star: int = 3 if kind == "won" else 2
+	if kind == "lost":
+		# KAYIP KARESİ GERÇEKTEN KAYBETMELİ. Eski sürücü "en zayıf açık satırı oyna" diyordu
+		# ve satır zayıf olsa da masa kazanıyordu: §5.1'in alt eşiği 0,12 ve zayıf ürün +
+		# güçlü kurucu hâlâ onun çok üstünde duruyor. Bunun yerine masanın KENDİSİ umutsuz
+		# kuruluyor — kurucunun Satış'ı ve Karizma'sı sıfır, ürün K1'de, sağlayıcı yerel, ve
+		# lead 3★ (iki basamak lig farkı = MISMATCH_PENALTY'nin en sert kademesi). İlk cevapta
+		# iğne alt eşiğin altına düşer ve müşteri masayı kapatır.
+		var founder_lost: Character = CharacterRegistry.get_founder()
+		if founder_lost != null:
+			founder_lost.role_stats[HRConstants.AREA_SALES] = 0
+			founder_lost.role_stats[FounderConstants.SKILL_CHARISMA] = 0
+	var star: int = 3 if kind == "won" or kind == "lost" or kind == "handoff" else 2
 	var p: Prospect = SalesFaucetSystem.spawn(star, "faucet")
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
@@ -2292,7 +2303,7 @@ func _run_meeting_shot(kind: String) -> void:
 		if _sales_meeting != null:
 			_sales_meeting.call("_render", SalesMeetingSystem.view_state())
 	# `won` ve `lost` kapanış karesini ister: masayı oynayıp sonucu bekletiyoruz.
-	if kind == "won" or kind == "lost":
+	if kind == "won" or kind == "lost" or kind == "handoff":
 		for i in 8:
 			var vs: Dictionary = SalesMeetingSystem.view_state()
 			if String(vs.get("outcome", "")) != "":
@@ -2310,6 +2321,16 @@ func _run_meeting_shot(kind: String) -> void:
 			SalesMeetingSystem.choose(picked)
 		if _sales_meeting != null:
 			_sales_meeting.call("_render", SalesMeetingSystem.view_state())
+	# `handoff` PERDE DEĞİŞİMİNİN KENDİSİDİR ve başka hiçbir kare onu vurmuyor: `won` düğmeyi
+	# çizip duruyor, `--negotiation-shot` ise Perde 2'yi sahneye elle kuruyor. Bu kare oyunun
+	# gerçek yolunu koşturuyor — masayı kazan, sonra sahnenin kendi `_on_open_offer`'ını çağır —
+	# ve §5.1.1'in "masa AYNI SAHNEDE Perde 2 moduna döner" hükmünü kanıtlayan tek karedir:
+	# oda, portre ve başlık aynı piksellerde kalmak ZORUNDA.
+	if kind == "handoff" and _sales_meeting != null:
+		if String(SalesMeetingSystem.view_state().get("outcome", "")) != "won":
+			push_warning("[MeetingShot] handoff: masa kazanmadı, Perde 2 açılmıyor")
+		_sales_meeting.call("_on_open_offer")
+		await get_tree().process_frame
 	_probe_pause_interactivity(_sales_meeting, "meeting/" + kind)
 	await get_tree().create_timer(0.5).timeout
 	var img: Image = get_viewport().get_texture().get_image()
@@ -2374,10 +2395,23 @@ func _run_negotiation_shot(kind: String) -> void:
 		"confirm":
 			NegotiationSystem.select_price(SalesConstants.SEAT_PRICE_MIN)
 			NegotiationSystem.offer()
+	# PERDE 2 IS PHOTOGRAPHED ON ITS OWN STAGE (rev 6.1 §5.1.1). The scene carries no ground
+	# of its own any more, so a bare mount would shoot a column of controls floating on the
+	# shell. Building the stage here is not shot decoration: it is the only way the frame
+	# shows what the player actually sees.
+	var stage := SalesStage.new()
+	add_child(stage)
+	stage.set_identity({
+		"portrait_path": "",
+		"name": p.company_name,
+		"star": p.star,
+		"archetype_line": SalesArchetypes.voice_line(p.archetype_id),
+		"whale_condition": p.whale_condition,
+	})
 	_negotiation = NEGOTIATION_SCENE.instantiate()
-	add_child(_negotiation)
+	stage.content_host().add_child(_negotiation)
 	await get_tree().process_frame
-	_probe_pause_interactivity(_negotiation, "negotiation/" + kind)
+	_probe_pause_interactivity(stage, "negotiation/" + kind)
 	await get_tree().create_timer(0.4).timeout
 	var img: Image = get_viewport().get_texture().get_image()
 	var path: String = _shot_path("negotiation_shot_%s" % kind)

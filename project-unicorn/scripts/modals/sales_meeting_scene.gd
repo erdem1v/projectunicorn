@@ -25,20 +25,23 @@ extends Control
 # Dialogue* family the VC surface opened), so `UiTokens.THEME_STAMP` does not move. That is
 # the sanctioned pattern rnd_ui_shared.gd:13-16 states: one-off shapes are built in code, not
 # added to the theme.
+#
+# THE STAGE IS NOT THIS FILE'S (rev 6.1 §5.1.1). The room, the scrim, the dialogue column and
+# the identity block at its head belong to `SalesStage`; this scene owns only what happens
+# INSIDE the column — the needle, the talk, the answers and the footer. That split is what
+# lets Perde 2 take the same column without the background or the header moving.
 
 signal closed()
 
-const PAGE_MARGIN := 48
-const COLUMN_MAX_W := 980
-
+var _stage: SalesStage = null
 var _needle_label: Label = null
 var _needle_box: Control = null
+var _needle_row: HBoxContainer = null
 var _flow: VBoxContainer = null
 var _answers: VBoxContainer = null
 var _footer: HBoxContainer = null
-var _header_right: VBoxContainer = null
-var _header_left: VBoxContainer = null
 var _negotiation: Node = null
+var _identity: Dictionary = {}
 
 
 func _ready() -> void:
@@ -55,67 +58,32 @@ func _build() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
-	var bg := ColorRect.new()
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.color = UiTokens.DIALOGUE_BG
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	# The room, the scrim, the column and the identity header all arrive with the stage. What
+	# follows fills the region under that header, and nothing here knows where the column is.
+	_stage = SalesStage.new()
+	add_child(_stage)
+	var col: Control = _stage.content_host()
 
-	var root := MarginContainer.new()
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.add_theme_constant_override("margin_top", PAGE_MARGIN)
-	root.add_theme_constant_override("margin_bottom", PAGE_MARGIN)
-	root.add_theme_constant_override("margin_left", UiTokens.SPACE_4XL)
-	root.add_theme_constant_override("margin_right", UiTokens.SPACE_4XL)
-	add_child(root)
+	# THE QUIET NEEDLE, in the column's corner (§5.1.1). Right-aligned on its own row so it
+	# sits above the talk rather than beside it — beside the archetype line it would read as
+	# part of the sentence.
+	_needle_row = HBoxContainer.new()
+	_needle_row.alignment = BoxContainer.ALIGNMENT_END
+	col.add_child(_needle_row)
 
-	# A CENTRED COLUMN, NOT THE WHOLE SCREEN. A 1920-wide answer row is unreadable — the eye
-	# has to travel the monitor to finish a sentence — and the acceptance gate's "no panel
-	# larger than its content" is the same observation from the other side. The column is a
-	# measure, and every row inside it inherits that measure rather than declaring its own.
-	var centre := HBoxContainer.new()
-	centre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.add_child(centre)
-	centre.add_child(_grow())
-
-	var col := VBoxContainer.new()
-	col.custom_minimum_size = Vector2(COLUMN_MAX_W, 0)
-	col.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	# CONTENT-SIZED AND VERTICALLY CENTRED, not stretched. A stretched column pushes the
-	# answers to the bottom of a 1080px screen and leaves a hole where the conversation
-	# should be; a table is a few lines of talk, and it should look like a few lines of talk.
-	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	col.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	centre.add_child(col)
-	centre.add_child(_grow())
-
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	col.add_child(header)
-
-	_header_left = VBoxContainer.new()
-	_header_left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_header_left.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
-	header.add_child(_header_left)
-
-	# TOP-aligned, so the needle sits in the corner rather than drifting down beside the
-	# archetype line and reading as part of the sentence.
-	_header_right = VBoxContainer.new()
-	_header_right.alignment = BoxContainer.ALIGNMENT_BEGIN
-	_header_right.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	_header_right.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	header.add_child(_header_right)
-
-	col.add_child(_hairline())
+	# THE CONVERSATION IS ONE BLOCK, CENTRED. Two equal spacers around it and a FIXED gap
+	# inside: a question and the answers to it are one thought, and the leftover height of a
+	# 1080px column belongs outside that thought, not between its halves. Both alternatives
+	# were shot and read: everything top-aligned left 580px of void underneath, and spacing
+	# the answers away from the probe put 260px between a question and its own replies.
+	col.add_child(_flex(1.0))
 
 	_flow = VBoxContainer.new()
 	_flow.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	col.add_child(_flow)
 
-	# The breathing room lives HERE, between what was said and what can be answered — a
-	# measured gap rather than whatever is left over after the layout stretches.
 	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, UiTokens.SPACE_4XL)
+	gap.custom_minimum_size = Vector2(0, UiTokens.SPACE_XL)
 	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(gap)
 
@@ -123,28 +91,25 @@ func _build() -> void:
 	_answers.add_theme_constant_override("separation", UiTokens.SPACE_S)
 	col.add_child(_answers)
 
+	# The footer rides the column's bottom edge, the way the VC scene's beat label does, so
+	# "Teklife geç" never wanders up into the talk.
+	col.add_child(_flex(1.0))
+
 	_footer = HBoxContainer.new()
 	_footer.alignment = BoxContainer.ALIGNMENT_END
 	_footer.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	col.add_child(_footer)
 
 
-func _grow() -> Control:
+## An empty control that eats leftover height in proportion to `ratio`. Godot divides a
+## container's spare space between EXPAND children by `size_flags_stretch_ratio`, which is what
+## makes two of these a layout rather than a guess.
+func _flex(ratio: float) -> Control:
 	var c := Control.new()
-	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	c.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	c.size_flags_stretch_ratio = ratio
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return c
-
-
-func _hairline() -> Control:
-	var line := Panel.new()
-	line.custom_minimum_size = Vector2(0, 1)
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = UiTokens.SEPARATOR
-	line.add_theme_stylebox_override("panel", sb)
-	return line
 
 
 # ============================================================================
@@ -158,30 +123,41 @@ func _render(vs: Dictionary) -> void:
 	_render_footer(vs)
 
 
+## The identity block is the STAGE's; this hands it the same four facts §5.1.1 names and then
+## paints the one thing that belongs to the column's own corner.
+##
+## IT REMEMBERS WHO IS AT THE TABLE, and it has to. `_lose()` calls `ProspectRegistry.remove()`
+## before returning its own view_state (sales_meeting_system.gd), so the closing frame arrives
+## with no company, no star and no archetype — correct for the pipeline, absurd on screen: the
+## customer would evaporate while still saying why they are leaving. The system is right and
+## frozen; the view keeps the last identity it was given. Caught by reading the loss frame.
 func _render_header(vs: Dictionary) -> void:
-	var left: VBoxContainer = _header_left
-	for c in left.get_children():
-		c.queue_free()
-	for c in _header_right.get_children():
-		c.queue_free()
+	var company: String = String(vs.get("company_name", ""))
+	if company != "":
+		_identity = {
+			"portrait_path": _portrait_path_for(vs),
+			"name": company,
+			"star": int(vs.get("star", 0)),
+			"archetype_line": String(vs.get("archetype_line", "")),
+			"whale_condition": String(vs.get("whale_condition", "")),
+		}
+	if not _identity.is_empty():
+		_stage.set_identity(_identity)
+	_render_needle(vs)
 
-	left.add_child(UiFactory.make_label(String(vs.get("company_name", "")), &"DialogueName"))
-	# Ekip §4.1's grammar, and the reason it is the shared component: the row ALWAYS draws
-	# five glyphs, so the header does not shift width when a 1★ table follows a 3★ one.
-	var stars := HBoxContainer.new()
-	stars.add_theme_constant_override("separation", UiTokens.SPACE_S)
-	stars.add_child(StarRating.make_stars(float(vs.get("star", 0)), 15))
-	left.add_child(stars)
-	var arch: String = String(vs.get("archetype_line", ""))
-	if arch != "":
-		left.add_child(UiFactory.make_label(arch, &"DialogueRole", UiTokens.INK_MUTED))
 
-	# §8 — the whale's condition is TELEGRAPHED, and it was already on the card before the
-	# founder sat down. Repeating it here is not noise: it is the thing the meeting is about.
-	var cond: String = String(vs.get("whale_condition", ""))
-	if cond != "":
-		_header_right.add_child(UiFactory.make_badge(
-			tr("SALES_WHALE_" + cond.to_upper()), "attention"))
+## THE PORTRAIT SEAM, and it is deliberately the only one. §5.1.1 allows "portre ya da baş harf
+## avatarı"; today it is always the avatar, because no customer record carries a portrait —
+## `Prospect` has no such field and adding one would be a save-schema change. When customer art
+## lands, it is read HERE and in no other place.
+func _portrait_path_for(_vs: Dictionary) -> String:
+	return ""
+
+
+func _render_needle(vs: Dictionary) -> void:
+	for c in _needle_row.get_children():
+		_needle_row.remove_child(c)
+		c.queue_free()
 
 	# THE QUIET NEEDLE (§5.1.1 + engine §9.6). A different tone says it is hoverable; the
 	# reasons live in the hover and nowhere else, so the surface stays calm.
@@ -199,14 +175,15 @@ func _render_header(vs: Dictionary) -> void:
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	needle_col.add_child(hint)
 
-	_needle_box = PanelContainer.new()
-	_needle_box.theme_type_variation = &"CardPanelTight"
+	# NO PANEL AROUND IT. `CardPanelTight` is terminal-card grammar and §5.1.1 bans that
+	# grammar from this scene outright — "o gramer Satış sekmesinindir". The needle is two
+	# lines of type in the column's corner; the hover is the affordance, not a frame.
 	# PASS, not STOP: a tooltip host that eats clicks is a different bug, and this one sits
 	# over nothing clickable anyway.
+	_needle_box = needle_col
 	_needle_box.mouse_filter = Control.MOUSE_FILTER_PASS
 	_needle_box.tooltip_text = _tooltip_from(vs)
-	_needle_box.add_child(needle_col)
-	_header_right.add_child(_needle_box)
+	_needle_row.add_child(_needle_box)
 
 
 ## engine §9.6 — signed, magnitude-sorted, NO NUMBERS, at most four lines with the remainder
@@ -331,9 +308,9 @@ func _on_close() -> void:
 	closed.emit()
 
 
-## §5.1.1 — "masa AYNI SAHNEDE Perde 2 moduna döner". Act 2 mounts over this scene rather
-## than replacing it: the customer, the star row and the header stay exactly where they were,
-## which is what makes it one sitting rather than two screens.
+## §5.1.1 — "masa AYNI SAHNEDE Perde 2 moduna döner". Only the column's CONTENT changes: the
+## room, the scrim, the portrait and the header are never touched, so there is no blink and no
+## header jump to animate away. One sitting, not two screens, structurally.
 func _on_open_offer() -> void:
 	if _negotiation != null:
 		return
@@ -349,9 +326,18 @@ func _on_open_offer() -> void:
 		"promised": SalesMeetingSystem.promised_feature(),
 		"is_whale": lead.is_whale,
 	})
+	# Perde 1's rows go with the clear; the references would dangle, so they are dropped in
+	# the same breath. Nothing re-renders Act 1 after this point.
+	_stage.clear_content()
+	_needle_row = null
+	_needle_box = null
+	_needle_label = null
+	_flow = null
+	_answers = null
+	_footer = null
 	_negotiation = preload("res://scenes/modals/NegotiationScene.tscn").instantiate()
 	_negotiation.closed.connect(_on_negotiation_closed)
-	add_child(_negotiation)
+	_stage.content_host().add_child(_negotiation)
 
 
 func _on_negotiation_closed() -> void:
