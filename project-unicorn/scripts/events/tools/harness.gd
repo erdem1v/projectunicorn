@@ -108,6 +108,7 @@ static func _one_run(mode: String, seed_value: int, max_days: int) -> void:
 	_result.decisions_by_day.clear()
 	_result.interrupts_by_day.clear()
 	_seen_live.clear()
+	EvEffects.reset_counters()
 
 	var day: int = GameState.day
 	while day < max_days and GameState.run_active:
@@ -126,6 +127,7 @@ static func _one_run(mode: String, seed_value: int, max_days: int) -> void:
 		day += 1
 
 	_result.empty_floor_days += EvEngine.empty_floor_days()
+	_result.untelegraphed += EvEffects.untelegraphed_refusals()
 	_result.run_lengths.append(day)
 	if GameState.ending_id != "":
 		_result.endings[GameState.ending_id] = int(_result.endings.get(GameState.ending_id, 0)) + 1
@@ -357,6 +359,13 @@ static func _report(mode: String) -> bool:
 	print("")
 	print("CRASHES   %d" % r.crashes)
 	print("DANGLING  %d" % r.dangling)
+	# §19.3's third clean-run condition. A refusal here is the executor stopping a card from
+	# ending the run on a telegraph that never fired — so nonzero is CONTENT that would have
+	# shipped a silent loss, not an engine failure, and it is named rather than counted silently.
+	print("UNTELEGRAPHED  %d refusal(s) — a card tried to end a run on a telegraph that "
+		% r.untelegraphed + "never fired")
+	if r.untelegraphed > 0:
+		ok = false
 	if r.crashes > 0 or r.dangling > 0:
 		ok = false
 

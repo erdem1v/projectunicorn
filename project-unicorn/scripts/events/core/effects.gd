@@ -117,6 +117,19 @@ enum Origin { PLAYED, EXPIRE, AMBIENT, CHECK_BRANCH }
 ## calibration value and an unnamed 0.15 in an executor is invisible to the tuning pass.
 const B2C_CHURN_PCT := 0.15
 
+## I3 refusals this run: a card tried to end the run on a telegraph that had never fired and
+## the executor stopped it. The harness reports this — §19.3 asks for "no untelegraphed loss"
+## and the only honest way to say it is a COUNT, not a field nobody writes.
+static var _untelegraphed_refusals: int = 0
+
+
+static func untelegraphed_refusals() -> int:
+	return _untelegraphed_refusals
+
+
+static func reset_counters() -> void:
+	_untelegraphed_refusals = 0
+
 
 static func run_played(effects: Array, ctx: Dictionary) -> Array:
 	return _run(effects, ctx, Origin.PLAYED)
@@ -549,6 +562,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				push_error("[EvEffects] '%s' would end the run on telegraph '%s', which has "
 					% [String(e.get("ending_id", "")), telegraph]
 					+ "never fired — refused (I3)")
+				_untelegraphed_refusals += 1
 				return {"verb": verb, "refused": "untelegraphed"}
 			EndingsSystem.trigger_ending(String(e.get("ending_id", "")), telegraph)
 			return {"verb": verb, "ending": e.get("ending_id", "")}

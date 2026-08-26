@@ -610,6 +610,8 @@ during the task without my touching them, which is evidence that *other work was
 shared tree*; it is not evidence about this case in particular. What is true and checkable:
 **red before I started, cause not diagnosed by me, not caused by this task.**
 
+**DIAGNOSED AND FILED 2026-08-26**, one pass, at the director's instruction that "not ours" is not the same as "someone's": [`docs/audits/DEFECT_b2c_satisfaction_second_writer_2026-08-26.md`](audits/DEFECT_b2c_satisfaction_second_writer_2026-08-26.md). `SalesSystem._tick_satisfaction` is no longer the only daily writer of the B2C aggregate's satisfaction — `SupportSystem.apply_daily_satisfaction_damage()` writes the same record, and its `_bleed` carries a fractional residue that lands a whole point on a LATER day. That is precisely why leg 1 passes and leg 2 fails by exactly one. Owner: Ops / Support. Which of the three damage sources supplies the point is left to the owning module.
+
 The mechanism I claimed — `_post_ship_wear_hourly` rewriting `mvp_live_bug_count` every tick —
 cannot be it: that function runs on the HOURLY path and the case drives `_sim_day()`, which
 dispatches only the daily slots.

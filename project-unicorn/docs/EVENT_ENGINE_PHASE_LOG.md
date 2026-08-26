@@ -432,3 +432,30 @@ Documentation closed: this log; `EVENT_ENGINE_QUESTIONS.md` (Q25–Q38 plus D1's
 `GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md` §27.4–§27.7; `EVENT_MIGRATION_LEDGER.md` (what the swap found,
 seventeen defects in four families); `SEAM_REGISTRY.md` §10–§12; `EVENT_SIGNAL_MANIFEST.md`
 regenerated; `TECH_SPEC.md` §9; `CLAUDE.md`. Final report per task §9.
+## Re-verification after `_step_arc_steps()` — 2026-08-26
+
+A fix to the arc raise path does not inherit a green from before it. Everything re-run.
+
+| | |
+|---|---|
+| full suite | **286/289** — the same three, all out of scope |
+| `event_thesis_through_presenter` | PASS |
+| guided, 20 seeds × 800 days | `arc_final_stretch` **20/20 started, 20/20 completed (100%)**, zero never-visited steps, **HARNESS PASS** |
+| random, **200 seeds × 365 days** (72 800 simulated days) | 0 crashes · 0 dangling references · **0 untelegraphed-loss refusals** · **HARNESS PASS** |
+| empty floor | guided **2660 / 15 980** · random **12 000 / 72 800** |
+
+`untelegraphed` was a fourth declared-and-never-written field, same class as
+`arcs_started` — the header promised "no untelegraphed loss" and nothing measured it.
+`EvEffects` counts its own I3 refusals now and the harness fails on a nonzero, so the claim is
+a number rather than a sentence.
+
+**What the sweeps still do not prove.** The driver's world has no employees, no product and no
+customers, so 41 of 46 cards never become eligible and two of the three quiet cards cannot
+qualify — which is most of the residual empty floor. The §13.7 figures (5–6 decisions per three
+real minutes against a working ceiling of 3) are a calibration input measured in a world we are
+not pacing for. §13.8's stamp holds.
+
+**And a finding that is not the engine's:** median run length is 800 days against the driver's
+cap in guided and 365 in random — **no run in either sweep ends on its own.** The engine
+reaches the soft cap at day 730 and fires its telegraph ladder; nothing downstream converts a
+run that has stopped going anywhere into a run that is over. That belongs to phases/endings.

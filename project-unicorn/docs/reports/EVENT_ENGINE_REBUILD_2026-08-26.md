@@ -146,10 +146,10 @@ Minimal and additive, and this is the complete list.
 | dice stability (A5) | `event_dice_is_stable` | PASS — FNV-1a, known input → known output, option and day both in the hash |
 | chip coverage | `event_chip_coverage` | PASS — every card row renders a chip or is named in `SILENT_VERBS` |
 | **guided sweep — acceptance gate 8** | `--event-harness=guided:seeds=20:days=800` | **`arc_final_stretch` 20/20 started, 20/20 completed (100%), zero never-visited steps. HARNESS PASS** |
-| random sweep | `--event-harness=random:...` | 0 crashes, 0 dangling references |
+| random sweep | `--event-harness=random:seeds=200:days=365` — 72 800 simulated days | **0 crashes · 0 dangling references · 0 untelegraphed-loss refusals** |
 | §13.7 anchor (per speed rung) | same run | 1x **5 decisions / 3 min**, 2x 5, 3x 6, against a working ceiling of 3 · longest silence 348 s / 174 s / 87 s |
 | §13.6 empty floor | same run | **2660 of 15980 days** — down from 3140 before the quiet pool existed; the residue is the bare-world limitation below |
-| run length | same run | median 800, shortest 800, longest 800 (the driver's cap, not an ending) |
+| run length | same run | median 800, shortest 800, longest 800 — **the driver's cap, not an ending.** No run in the sweep ends on its own. That is a phase/endings problem and it belongs to that module: the engine reaches day 730's soft cap and fires its telegraph ladder, and nothing downstream converts a run that has stopped going anywhere into a run that is over |
 | ODA theme seal | `--theme-audit=oda` | **byte-identical** after `@Class@NN` normalisation — 149 lines, unchanged |
 | P6a gate | full suite, both engines alive | **286/289** |
 | P6b gate | full suite, `EventManager` deleted | **286/289 — identical** |
@@ -186,6 +186,14 @@ through the condition vocabulary — `history`, `chose`, `chose_about`, `days_si
 `telegraph_fired` — and the thesis test's payoff condition IS a history read. The facade method
 is the public surface a run-log UI would use, and it is listed here rather than deleted so that
 "nobody calls it" stays a decision someone made rather than a fact someone discovers.
+
+**The thesis is proven by a scaffold, and that is the state this hands over in.** One
+production arc — `arc_final_stretch`, the soft-cap ladder, authored here under defect 8. Two
+fixtures. Two of the three invalidation policies (`close`, `reassign`) are exercised **only**
+by fixtures; only `fade` has a production carrier. The MECHANISM is proven — arcs start,
+advance, survive a save/load, invalidate under all three policies, and land a payoff eighty days
+after the decision that caused it. The CONTENT is one card family deep. The arc vocabulary is
+waiting on the writing round, and this is its first job.
 
 ## 8 · Filed, not built
 
