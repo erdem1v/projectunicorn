@@ -1040,7 +1040,7 @@ func _set_chip_dot(color: Color) -> void:
 # =========================================================================
 
 func _refresh_phone_dot() -> void:
-	_phone_dot.visible = EventManager.get_queue_size() > 0
+	_phone_dot.visible = EventGate.queue_size() > 0
 
 
 func _refresh_phone_notice() -> void:
@@ -1383,12 +1383,36 @@ func _refresh_overtime_chip() -> void:
 # =========================================================================
 
 func _gather_papers() -> Array:
-	# Öncelik sırası (plan §5.3). Kâğıt akış TETİKLEMEZ — yalnız navigasyon.
+	# İKİ CİNS KÂĞIT, TEK MASA.
+	#
+	# Bu fonksiyonun eski başlığı "Kâğıt akış TETİKLEMEZ — yalnız navigasyon" diyordu ve o
+	# hüküm HÂLÂ GEÇERLİ — ama yalnız ikinci cins için. Aşağıdaki hatırlatıcılar (kapı, term
+	# sheet, Atlas, genişleme) canlı sistem durumundan türer ve tıklandığında bir sekmeye
+	# gider; hiçbirinin saati yoktur.
+	#
+	# MOTOR KÂĞITLARI bunun tam tersidir: saati işleyen bir KARAR, tıklandığında kartı açar.
+	# Bu yüzden sıralamanın sahibi motordur ve motor kâğıtları listenin BAŞINA gelir —
+	# EvPapers.ordered() zaten en acili öne almıştır, dolayısıyla son 3 gününe girmiş bir
+	# kâğıt görünür üç yuvanın DIŞINDA kalamaz (onaylı değişiklik A3). Bir hatırlatıcı
+	# yuvasını kaybederse işaret ettiği sekmede durmaya devam eder; bir karar yuvasını
+	# kaybederse saatini kimsenin göremediği bir yerde bitirir. Bu ikisi aynı şey değil.
 	var papers: Array = []
+	for entry in EventGate.desk_papers(PAPER_CAP):
+		var e: Dictionary = entry
+		papers.append({
+			"id": String(e["id"]),
+			"dot": UiTokens.ODA_ACCENT_DEEP if bool(e["urgent"]) else UiTokens.ODA_HEALTH_AMBER,
+			"tag": String(e["tag"]),
+			"title": String(e["title"]),
+			"target": "event:%s" % String(e["id"]),   # kartı açar, sekmeye gitmez
+			"subpage": "",
+			"days_left": int(e["days_left"]),
+			"urgent": bool(e["urgent"]),
+		})
 	if GameState.phase_gate_ready and GameState.pending_next_phase > 0:
 		papers.append({"id": "gate", "dot": UiTokens.ODA_ACCENT_DEEP,
 			"tag": tr("ODA_PAPER_TAG_GATE"), "title": tr("ODA_PAPER_GATE_TITLE"),
-			"target": "finance", "subpage": ""})
+			"target": "finance", "subpage": "", "days_left": -1})
 	var sheet_count: int = GameState.active_sheets.size()
 	if sheet_count > 0:
 		var min_left: int = 999
@@ -1398,12 +1422,12 @@ func _gather_papers() -> Array:
 			else tr("ODA_PAPER_SHEETS_TITLE").format({"n": sheet_count})
 		papers.append({"id": "sheet", "dot": UiTokens.ODA_HEALTH_AMBER,
 			"tag": tr("ODA_PAPER_TAG_FUNDING"), "title": title,
-			"target": "finance", "subpage": "yatirim"})   # LOC-DATA state / route id
+			"target": "finance", "subpage": "yatirim", "days_left": -1})   # LOC-DATA state / route id
 	if HRSearchSystem.has_files_ready():
 		papers.append({"id": "atlas", "dot": UiTokens.ODA_INK_MUTED,
 			"tag": tr("ODA_PAPER_TAG_ATLAS"),
 			"title": tr("ODA_PAPER_ATLAS_TITLE").format({"n": HRSearchSystem.get_files().size()}),
-			"target": "hr", "subpage": ""})
+			"target": "hr", "subpage": "", "days_left": -1})
 	# İKAME: tasarımın istediği "sözleşme yenileme penceresi" motorda yok —
 	# renewal sistemi gelince bu kaynak onunla değiştirilir. Fatura/ödeme vadesi
 	# kaynağı da motorda karşılıksız (v1'de hiç yok). Done mesajında listeli.
@@ -1412,14 +1436,14 @@ func _gather_papers() -> Array:
 			papers.append({"id": "exp_%s" % c.id, "dot": UiTokens.oda_health_green(),
 				"tag": UiTokens.tr_upper(c.company_name),
 				"title": tr("ODA_PAPER_EXPANSION_TITLE"),
-				"target": "sales", "subpage": ""})
+				"target": "sales", "subpage": "", "days_left": -1})
 	if _debug_papers:
 		papers.append({"id": "dbg_gate", "dot": UiTokens.ODA_ACCENT_DEEP,
 			"tag": tr("ODA_PAPER_TAG_GATE"), "title": tr("ODA_PAPER_GATE_TITLE"),
-			"target": "finance", "subpage": ""})
+			"target": "finance", "subpage": "", "days_left": -1})
 		papers.append({"id": "dbg_atlas", "dot": UiTokens.ODA_INK_MUTED,
 			"tag": tr("ODA_PAPER_TAG_ATLAS"), "title": tr("ODA_PAPER_ATLAS_TITLE").format({"n": 3}),
-			"target": "hr", "subpage": ""})
+			"target": "hr", "subpage": "", "days_left": -1})
 	return papers
 
 
@@ -1472,6 +1496,17 @@ func _mk_paper_card(p: Dictionary) -> PanelContainer:
 	title.clip_text = true
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title)
+	# KALAN SÜRE (§11.4). Yalnız saati olan kâğıtta çıkar: hatırlatıcının süresi yoktur ve
+	# olmayan bir sayıyı "—" diye yazmak, saatin ne anlama geldiğini öğrenilemez hâle getirir.
+	# Son üç günde vurgu — ertelenmiş bir kararın aldığı TEK uyarı budur.
+	var days_left: int = int(p.get("days_left", -1))
+	if days_left >= 0:
+		var urgent: bool = bool(p.get("urgent", false))
+		var clock := UiFactory.make_label(
+			tr("ODA_PAPER_DAYS").format({"n": days_left}), &"MicroLabel",
+			UiTokens.ODA_ACCENT_DEEP if urgent else UiTokens.ODA_INK_MUTED)
+		clock.name = "DaysLeft"
+		row.add_child(clock)
 	var overflow := UiFactory.make_label("", &"MicroLabel", UiTokens.ODA_ACCENT_DEEP)
 	overflow.name = "OverflowChip"
 	overflow.visible = false
@@ -1486,8 +1521,21 @@ func _mk_paper_card(p: Dictionary) -> PanelContainer:
 func _update_paper_overflow_chip(card: PanelContainer, show_chip: bool) -> void:
 	var chip: Label = card.get_node("Row/OverflowChip")
 	chip.visible = show_chip
-	if show_chip:
-		chip.text = "+%d" % _paper_overflow
+	if not show_chip:
+		return
+	chip.text = "+%d" % _paper_overflow
+	# A3'ÜN YEDEĞİ. Sıralama zaten şunu garanti eder: son 3 gününe girmiş bir kâğıt görünür
+	# üçün İÇİNDEDİR, çünkü EvPapers.ordered() kalan güne göre sıralar — daha acili önünde,
+	# daha az acili arkasındadır. Sıralamanın kapatamadığı TEK durum, dördü birden son 3 günde
+	# olan hâldir; o zaman dördüncüsü saatini çipin arkasında bitirir. A3 bunun için "çip
+	# aciliyeti taşısın" diyor: taşıyor.
+	var hidden_urgent: bool = false
+	for entry in EventGate.desk_papers(64):
+		var e: Dictionary = entry
+		if bool(e.get("urgent", false)) and not _paper_cards.has(String(e["id"])):
+			hidden_urgent = true
+	chip.add_theme_color_override("font_color",
+		UiTokens.ODA_ACCENT_DEEP if hidden_urgent else UiTokens.ODA_INK_MUTED)
 
 
 func _animate_paper_arrival(card: PanelContainer) -> void:
@@ -1507,12 +1555,20 @@ func _animate_paper_arrival(card: PanelContainer) -> void:
 
 
 func _on_paper_input(event: InputEvent, target: String, subpage: String) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		anchor_clicked.emit("paper:%s" % target)
-		EventBus.tab_changed.emit(target)
-		if subpage != "":
-			# tab_changed mount'u SENKRON — handler bağlandı, deep-link güvenli.
-			EventBus.finance_subpage_requested.emit(subpage)
+	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT
+			and event.pressed):
+		return
+	anchor_clicked.emit("paper:%s" % target)
+	# MOTOR KÂĞIDI KENDİ KARTINI AÇAR, hatırlatıcı sekmeye gider. Ayrım `event:` önekiyle
+	# yapılıyor ki iki cins TEK tıklama yolunu paylaşsın — ikinci bir yol, ikinci bir
+	# davranış demektir ve kâğıtların yarısı sessizce farklı davranmaya başlar.
+	if target.begins_with("event:"):
+		EventGate.open_paper(target.trim_prefix("event:"))
+		return
+	EventBus.tab_changed.emit(target)
+	if subpage != "":
+		# tab_changed mount'u SENKRON — handler bağlandı, deep-link güvenli.
+		EventBus.finance_subpage_requested.emit(subpage)
 
 
 func debug_seed_papers() -> void:
@@ -1663,7 +1719,7 @@ func _on_hotspot_input(event: InputEvent, id: String) -> void:
 		"phone":
 			# D2: bekleyen olay VEYA latch'li Frank satırı varsa Events sayfasına
 			# (tam mesaj document model'de yaşar); ikisi de yoksa bilinçli no-op.
-			if EventManager.get_queue_size() > 0 or _mentor_line != "":
+			if EventGate.queue_size() > 0 or _mentor_line != "":
 				EventBus.tab_changed.emit("events")
 		"board":
 			# v1 tek hedef: Finance (hedef+tarihler finansal; pay derinliği v2 — # WORKING).

@@ -37,6 +37,9 @@ const STARTING_BURN_BREAKDOWN := {
 	"founder": 50,     # WORKING: kurucunun kendi yaşam gideri — day-1 baseline'ın tamamı
 	"marketing": 0,    # TODO hook: player marketing spend mechanic (set_burn_category ile yazar)
 	"office": 0,       # TODO hook: ofis/kira mekaniği curve session'ın işi; 0 iken görünmez
+	# Ürün rev 6.1 §10: sunucu faturası. InfraSystem her gün aylık/30 olarak yazar
+	# (set_burn_category). Ürün yayınlanana kadar 0, yani görünmez.
+	"servers": 0,
 }
 static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
 
@@ -44,7 +47,7 @@ static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
 # would break the Content Law against internal codes on screen. The words now live in
 # strings.csv as FIN_BURN_<ID>, derived by burn_category_label — so this list only has to say
 # which ids are legal, and the "unknown id screams" guarantee is kept.
-const BURN_IDS := ["salaries", "overtime", "founder", "marketing", "office"]
+const BURN_IDS := ["salaries", "overtime", "founder", "marketing", "office", "servers"]
 
 # TODAY's one-time charges, label → summed amount. apply_one_time_cost appends; daily_tick
 # clears at its top, so a charge stays readable for the rest of the day it happened and is gone

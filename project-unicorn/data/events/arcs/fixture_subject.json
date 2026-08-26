@@ -1,0 +1,26 @@
+{
+  "id": "arc_fixture_subject",
+  "type": "assignment",
+  "steps": [
+    {
+      "id": "opening",
+      "event_id": "fixture.subject_open",
+      "optional": false
+    }
+  ],
+  "invalidate_when": [
+    {
+      "not": {
+        "entity_exists": "employee"
+      }
+    }
+  ],
+  "on_invalidate": {
+    "policy": "reassign",
+    "reassign_event": "fixture.subject_reassign",
+    "note_key": "FIXTURE_SUBJECT_FADE",
+    "penalties": [],
+    "close_event": "fixture.subject_close"
+  },
+  "_note": "`reassign` needs a close_event as well: §10.7's 14-day awaiting timeout falls through to `close`, and a close with nothing to fire is a silent death — the exact shape §10.6 exists to forbid."
+}

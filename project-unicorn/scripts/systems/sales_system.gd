@@ -119,6 +119,11 @@ const CONVERSION_MAX := 0.60
 const BUG_CONV_COEF := 0.02              # [WORKING] per live bug; 10 bugs ≈ −20 %
 const BUG_CONV_FLOOR := 0.4              # [WORKING] 30+ bugs cap the penalty at −60 %
 
+# R&D §4.4 `onboarding_flow` — B2C conversion ×1.15. Multiplies CONVERSION_BASE
+# INSIDE the price term, before the FIRST clamp, so the bonus is bounded exactly
+# once and cannot stack past CONVERSION_MAX after the bug factor re-clamps.
+const RND_CONVERSION_MULT := 1.15
+
 # Price-hike audience reaction: fraction of the audience that leaves on a raise.
 const CHURN_MAX := 0.45
 
@@ -302,6 +307,15 @@ static func open_b2c_paid_tier(price: int, _initial_pct: float = 0.0) -> void:
 # Event growth-spike lever (Vitrin / power-user / referral): adds interest to the
 # live audience. MRR follows automatically via the hourly derivation. Replaces the old
 # "convert N audience → seats" chunk path.
+## THE read seam for the live B2C audience. Satış bu sayının sahibidir; Ürün rev 6.1
+## iki yeni tüketici getirdi (§9'un kullanım çarpanı ve §10'un doluluk hesabı) ve
+## ikisi de bayrağı HAM okumak zorunda kalıyordu — event_manager'ın beş yerde zaten
+## yaptığı gibi. Sahibi olan modülde adlı bir okuma varken kimsenin bayrak adını
+## bilmesi gerekmez; float döner, çünkü saatlik erozyon kesirde yaşıyor (S3-43).
+static func b2c_audience() -> float:
+	return maxf(0.0, float(GameState.get_flag("b2c_audience", 0.0)))
+
+
 static func add_b2c_audience(n: int) -> void:
 	# FLOAT, not int (audit S3-43). The hourly tick accumulates this as a float ON PURPOSE —
 	# _tick_b2c_audience's own comment says so: "Accumulate as float so small per-hour deltas
@@ -504,12 +518,33 @@ static func _value_lines(sub: String, feature_count: int, tendency: String) -> A
 
 # --- Pricing relationships (conversion / churn / audience sensitivity) ---
 
+## R&D §4.4 `onboarding_flow` — the live conversion multiplier: 1.15 once the node
+## is done, 1.0 before it. Named so calibration reads two numbers, not one literal.
+static func rnd_conversion_mult() -> float:
+	return RND_CONVERSION_MULT if ResearchSeam.completed("onboarding_flow") else 1.0
+
+
 static func conversion_rate(price: int) -> float:
 	# Standing fraction of the WHOLE audience that pays at this price (MRR derives
 	# from it each hour). Cheaper than optimal → higher; pricier → lower. Live bugs
 	# suppress it (§6: buyers generate the complaints that suppress buying).
+	#
+	# R&D §4.4 `onboarding_flow` multiplies the BASE inside the price term — before
+	# the first clamp, never after the last one. Check the arithmetic, because the
+	# placement is the whole point:
+	#   · at optimal price the rate goes 0.35 → 0.4025, well under CONVERSION_MAX
+	#     0.60, so the node lands in full across the normal pricing band;
+	#   · the ceiling starts clipping the bonus only below optimal × 0.671
+	#     (0.60 / 0.4025), and swallows it whole only below optimal × 0.583
+	#     (0.60 / 0.35) — where an un-researched player is ALREADY capped, so
+	#     nothing is lost that the ceiling was not already taking;
+	#   · applied after the final clamp instead, CONVERSION_MAX would eat it
+	#     outright for anyone already at the ceiling, and the bug factor would then
+	#     be re-clamping a number the player never had.
+	# `pricing_panel.gd` renders this rate as a percentage, so the node is not a
+	# hidden buff — the player watches the number move (Calibration Law 3).
 	var optimal: float = maxf(1.0, float(product_value()["optimal"]))
-	var rate: float = clampf(CONVERSION_BASE * (optimal / maxf(1.0, float(price))), CONVERSION_MIN, CONVERSION_MAX)
+	var rate: float = clampf(CONVERSION_BASE * rnd_conversion_mult() * (optimal / maxf(1.0, float(price))), CONVERSION_MIN, CONVERSION_MAX)
 	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0)))
 	var bug_factor: float = maxf(BUG_CONV_FLOOR, 1.0 - float(bugs) * BUG_CONV_COEF)
 	return clampf(rate * bug_factor, CONVERSION_MIN, CONVERSION_MAX)

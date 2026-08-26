@@ -26,7 +26,7 @@ extends RefCounted
 # which clamps and emits morale_changed; departures ONLY through CharacterRegistry.remove
 # (which increments run_departures and emits character_removed); one-time money ONLY through
 # FinanceSystem.apply_one_time_cost (this file charges nothing — a resignation has no
-# severance); player-facing beats ONLY through EventManager.enqueue (the modal queue) and
+# severance); player-facing beats ONLY through the event engine (EventGate.request) and
 # EventBus.headline_added (the non-interrupting ticker). The employment fields above have no
 # registry seam and this system is their owner, so they are written here and nowhere else.
 # Every HR tunable comes from HRConstants: there is no HR number in this file.
@@ -64,9 +64,10 @@ const NEVER := -1
 # in exchange the HR sequence is now RESUMABLE from a save rather than only from birth.
 # Pending-departure latch. A resignation event sits in the queue until the player acknowledges
 # it; without this the roll would be re-attempted every day in between, and even though
-# EventManager.enqueue dedupes the event, the wasted draws would push the effective odds
+# the queue dedupes by id, the wasted draws would push the effective odds
 # silently above HRConstants.RESIGN_CHANCE_PER_DAY. Held HERE, not on the event: a synthetic
-# event bypasses _is_eligible entirely, so `one_shot` does nothing (HREventFactory's header).
+# event bypassed the gate entirely, so its declared `one_shot` did nothing. The card
+# `team.resignation` declares a per-entity one_shot and the engine enforces it.
 static var _pending: Array[String] = []
 
 
@@ -524,15 +525,16 @@ static func reset_rng() -> void:
 
 
 static func to_dict() -> Dictionary:
-	# _pending is the resignation latch: an employee whose roll already succeeded sits here
-	# until the player acknowledges the event, and without it the roll is re-attempted every
-	# day in between, pushing the effective odds silently above RESIGN_CHANCE_PER_DAY.
+	# _pending: an employee whose roll already succeeded sits here until the player
+	# acknowledges the card. It doubles as the re-roll brake (without it the roll is
+	# re-attempted every day in between, pushing the effective odds silently above
+	# RESIGN_CHANCE_PER_DAY) and as the fact HRActions refuses card actions on.
 	#
-	# It is PROVABLY empty at every save point today (the latch is set in the same breath as
-	# the enqueue, and SaveManager.can_save() refuses while EventManager.has_pending()), so
-	# this could have been justified as an exclusion. It is saved anyway: that invariant
-	# lives in a different file, and a schema that silently depends on another module's gate
-	# staying exactly this strict is a trap for whoever loosens it.
+	# It is PROVABLY empty at every save point today (it is set in the same breath as the
+	# request, and SaveManager.can_save() refuses while a card is unanswered), so this could
+	# have been justified as an exclusion. It is saved anyway: that invariant lives in a
+	# different file, and a schema that silently depends on another module's gate staying
+	# exactly this strict is a trap for whoever loosens it.
 	return {"pending_departures": _pending.duplicate()}
 
 
@@ -575,9 +577,11 @@ static func _maybe_resign(emp: Character) -> void:
 		chance = 1.0
 	if not _roll(chance):
 		return
-	# Latch BEFORE enqueueing, so a re-entrant enqueue path can never double-fire.
+	# _pending STAYS. It is not a latch standing in for a broken one_shot — it is a fact
+	# HRActions reads (`has_pending_departure`, hr_actions.gd:337) to refuse every card action
+	# on someone who is already leaving. Latch before naming the card, as before.
 	_pending.append(emp.id)
-	EventManager.enqueue(HREventFactory.build_resignation(emp))
+	EventGate.request("team.resignation", {"employee": emp.id})
 
 
 static func _roll(chance: float) -> bool:

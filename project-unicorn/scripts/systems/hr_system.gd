@@ -224,10 +224,30 @@ const FOUNDER_STATE_IDLE := "idle"
 
 ## §2.3'ün cümlesi. Durum id'si MOTORUN, cümle EKRANIN — ve §16 gereği ikisi de tek evde
 ## durur, yoksa Kişisel sayfası kendi eşlemesini yazar ve id'ler değiştiğinde sessizce
-## eskir. ARAŞTIRMADA bugün ERİŞİLMEZDİR ve bu bilinçlidir: §12.0 Araştırma sütununu
-## kaldırdı ("Araştırma bir atama hedefi değildir"), yani durumun id'si Ar-Ge modülü gelene
-## kadar yazılmayacak. §2.3 onu yine de listeliyor, o yüzden anahtarı da duruyor.
+## eskir. ARAŞTIRMADA ARTIK ERİŞİLİRDİR: bu satır uzun süre "Ar-Ge modülü gelene kadar
+## yazılmayacak" diyordu ve modül geldi. Araştırma hâlâ Görevler matrisinden atanmıyor
+## (Ar-Ge §5.3: atama Ar-Ge panelindedir) — ama artık gerçek bir iş, gerçek bir işaret
+## bırakıyor ve kurucu onu tutabiliyor.
+## Kişisel sayfasının tek satırı (Ekip §2.5). Normalde §2.3'ün YEDİ durumundan biri.
+##
+## İKİ SÜREKLİ İŞ İÇİN SEKİZİNCİ BİR DURUM İCAT EDİLMEZ. §2.3 kapalı bir tablodur ve
+## "durumların tamamı aşağıdadır / hiçbir kurucu durumu id'siz kalmaz" der. Ama §12.2 aynı
+## durumu ÇALIŞAN tarafı için zaten hükme bağlamış: "İki iş | İki cümle yerine iki kısa
+## etiket, orta nokta ayracıyla — Pulse v1 · Destek", gerekçesi de satırın taşması. Kurucunun
+## satırı o grameri ödünç alır: iki AYRI id'nin kısa etiketi, `·` ile. Böylece iki durum da
+## id'li kalır ve yeni bir vokabüler doğmaz.
+##
+## MEŞGUL DURUMLAR YİNE ÖNCE GELİR: eğitim ve yatırım hazırlığı §2.3'te MEŞGUL'dür ve bir
+## atamanın üstünü örterler, yani onlar varken kompozisyon yapılmaz.
 static func founder_task_label() -> String:
+	var f: Character = CharacterRegistry.get_founder()
+	if f != null and f.assigned_job_ids.size() > 1 \
+			and f.status != HRConstants.STATUS_TRAINING \
+			and not bool(GameState.get_flag("pitch_prep_active", false)):
+		var parts := PackedStringArray()
+		for job in f.assigned_job_ids:
+			parts.append(HRConstants.job_label(String(job)))
+		return " · ".join(parts)
 	return TranslationServer.translate("HR_FOUNDER_STATE_%s" % founder_task_state().to_upper())
 
 
@@ -241,9 +261,16 @@ static func founder_task_state() -> String:
 		return FOUNDER_STATE_TRAINING
 	if bool(GameState.get_flag("pitch_prep_active", false)):
 		return FOUNDER_STATE_PITCH_PREP
+	# ARAŞTIRMA YAPIMDAN ÖNCE OKUNUR (Ar-Ge §5.0). Dışlayıcı bir iş: araştıran kurucu
+	# BAŞKA HİÇBİR ŞEY yapmıyor, yani duraklamış yapımının adını taşımak yalan olurdu.
+	# Sıra kuralı bu fonksiyonun kendi kuralıdır — meşgul durumlar önce.
+	if f.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
+		return FOUNDER_STATE_RESEARCH
 	if f.assigned_job_ids.has(HRConstants.JOB_BUILD):
 		return FOUNDER_STATE_BUILD
-	if f.assigned_job_ids.has(HRConstants.JOB_SALES) or f.assigned_job_ids.has(HRConstants.JOB_ACCOUNTS):
+	# Satış bir İŞ değil (2026-08-25); ticari sürekli iş yalnız hesap sahipliğidir. Kurucunun
+	# pitch'i bir toplantıdır ve yukarıdaki pitch_prep dalından okunur.
+	if f.assigned_job_ids.has(HRConstants.JOB_ACCOUNTS):
 		return FOUNDER_STATE_SALES
 	if f.assigned_job_ids.has(HRConstants.JOB_SUPPORT) or f.assigned_job_ids.has(HRConstants.JOB_TEST):
 		return FOUNDER_STATE_SUPPORT
@@ -287,9 +314,14 @@ static func is_overloaded(c: Character) -> bool:
 
 
 static func idle_count() -> int:
+	## İŞ SAYAR, ALAN DEĞİL — is_idle() ile aynı alanı okur (§12.2 "hiçbir İŞE atanmamış").
+	## KUSUR GERÇEKTİ: burası türetilmiş ALAN aynasını (`assigned_jobs`) okuyordu ve o ayna
+	## araştırmayı bilerek dışarıda bırakıyor (HRConstants.areas_for_jobs'un `continue`'u,
+	## Ar-Ge §5.0). Yani araştıran bir çalışan — modülün en meşgul insanı — bu sayaçta
+	## BOŞTA görünürdü. İki fonksiyonun aynı soruya iki cevap vermesi §15.2'nin yasağı.
 	var n: int = 0
 	for c in CharacterRegistry.get_active_employees():
-		if c.assigned_jobs.is_empty():
+		if c.assigned_job_ids.is_empty():
 			n += 1
 	return n
 

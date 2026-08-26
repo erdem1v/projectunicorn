@@ -1,0 +1,46 @@
+{
+  "_ported_from": "ev_shutter_warning (EndingsSystem._build_shutter_warning_event)",
+  "_port_note": "THE TELEGRAPH BANKRUPTCY DEPENDS ON. EndingsSystem.trigger_ending now names it explicitly, so if this card ever stops firing the ending says so out loud instead of arriving unannounced. Never fired in 2,290 simulated days either — cash never went negative in any preset, including the one that finished day 365 with $42,225 in the bank. Reachability is a fixture problem, not a card problem, which is why §19.4's TEST_BROKE configuration exists.",
+  "_copy_fix": "The old ending line said 'Yedi gün kırmızıda kaldın' while SHUTTER_DAYS has been 30 since the Frank v6 pass. The number now comes from a seam and the sentence cannot go stale again — §8.4's whole purpose.",
+
+  "id": "funding.shutter_warning",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": ["critical", "build_safe", "terminal_warning"],
+  "speaker": "char_mentor_frank",
+
+  "latch": { "one_shot": true },
+
+  "condition": {
+    "all": [
+      { "seam": "finance.cash", "op": "<", "value": 0 },
+      { "seam": "finance.shutter_days_left", "op": ">=", "value": 0 }
+    ]
+  },
+
+  "options": [
+    {
+      "id": "go_to_finance",
+      "outcome_id": "warned",
+      "effects": [
+        { "verb": "stamp_day", "name": "shutter_warned" },
+        { "verb": "goto_tab", "tab_id": "finance" }
+      ]
+    }
+  ],
+
+  "text": {
+    "tr": {
+      "title": "END_EV_SHUTTER_TITLE",
+      "body": "END_EV_SHUTTER_BODY",
+      "options": { "go_to_finance": "END_EV_GO_FINANCE" }
+    },
+    "en": {
+      "title": "END_EV_SHUTTER_TITLE",
+      "body": "END_EV_SHUTTER_BODY",
+      "options": { "go_to_finance": "END_EV_GO_FINANCE" }
+    }
+  }
+}

@@ -165,18 +165,12 @@ static func _tick_cs_escalation(c: Customer) -> void:
 		c.cs_escalated = false
 		return
 	if c.satisfaction < B2BConstants.CS_ESCALATION_SAT:
-		if not c.cs_escalated:
-			c.cs_escalated = true
-			_enqueue_cs_escalation(c)
+		# The flag IS the edge. `customer.cs_escalation` reads it through
+		# `satis.cs_escalated` and the gate decides whether the card fires — this system no
+		# longer decides that, which is what made the old private latch necessary.
+		c.cs_escalated = true
 	else:
 		c.cs_escalated = false
-
-
-static func _enqueue_cs_escalation(c: Customer) -> void:
-	var cs: Character = CharacterRegistry.get_character(c.assigned_to)
-	if cs == null:
-		return
-	EventManager.enqueue(B2BEventFactory.build_cs_escalation(c, cs))
 
 
 static func _tick_at_risk(c: Customer) -> void:
@@ -193,7 +187,9 @@ static func _tick_at_risk(c: Customer) -> void:
 			return
 		CustomerRegistry.set_lifecycle_phase(c.id, "risk")
 		CustomerRegistry.set_churn_countdown(c.id, B2BConstants.CHURN_COUNTDOWN_DAYS)
-		_maybe_enqueue_retention(c)  # founder-managed → present the decision (Stage B)
+		# Entering Risk with the countdown running IS the retention edge. Nothing is pushed
+		# from here any more; `customer.retention` reads `satis.can_offer_retention` — the
+		# same gate the Sales tab's button asks — and the engine decides.
 		return
 	var next_countdown: int = c.churn_countdown - 1
 	CustomerRegistry.set_churn_countdown(c.id, next_countdown)
@@ -201,20 +197,15 @@ static func _tick_at_risk(c: Customer) -> void:
 		_churn(c)
 
 
-# Family selection is STATE-BOUND (never random): a customer that has just crossed into Risk
-# produces the retention decision. The `assigned_to != ""` early-return that used to sit here
-# is gone with the CS bypass — an account sliding toward churn is the founder's call whether
-# or not a rep is stewarding it, and suppressing the decision was the other half of the
-# immunity hole. The rep's own voice is the separate escalation in _tick_cs_escalation.
-static func _maybe_enqueue_retention(c: Customer) -> void:
-	# Through the ONE gate the Sales tab's manual button also asks (§13) — the two paths can
-	# never drift apart again.
-	if can_offer_retention(c):
-		EventManager.enqueue(B2BEventFactory.build_retention(c))
-
-
-# THE RETENTION GATE, in one place (Calibration Round A §13, the K2 pattern). The daily sweep
-# (_tick_at_risk → _maybe_enqueue_retention) and the Sales tab's "İlgilen" button both ask it.
+# THE RETENTION GATE, in one place (Calibration Round A §13, the K2 pattern). It is no longer
+# called from inside this file at all: `customer.retention`'s condition reads it through
+# `satis.can_offer_retention`, and the Sales tab's "İlgilen" button names the same card. Two
+# askers, one predicate, and neither of them can push a card past the engine any more.
+#
+# Family selection stays STATE-BOUND (never random). The `assigned_to != ""` early-return that
+# used to sit upstream is gone with the CS bypass — an account sliding toward churn is the
+# founder's call whether or not a rep is stewarding it, and suppressing the decision was the
+# other half of the immunity hole. The rep's own voice is the separate escalation.
 # The button used to ask only "is a modal up?": after a discount resolved, _recover had already
 # put the account back to active, and the card could be re-opened and re-harvested (+8
 # satisfaction, −15 % MRR) for as long as the player cared to click. The card is offered only
@@ -268,8 +259,9 @@ static func _tick_healthy(c: Customer) -> void:
 	if not can_offer_expansion(c):
 		return
 	# Healthy + mature + never offered before → the positive family: a seat/MRR upsell.
+	# The phase write stays: it is a fact about the account and three other readers use it.
+	# `customer.expansion` fires off `satis.can_offer_expansion`.
 	CustomerRegistry.set_lifecycle_phase(c.id, "expansion")
-	EventManager.enqueue(B2BEventFactory.build_expansion(c))
 
 
 # THE EXPANSION GATE, in one place so the daily sweep and the Sales-tab button cannot

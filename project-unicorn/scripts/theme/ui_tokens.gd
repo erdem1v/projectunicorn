@@ -557,10 +557,22 @@ const TAB_GLYPH_EVENTS := "●"
 # key derived from the id — TAB_ + ID.to_upper() — so LeftTabs.tscn carries the key and
 # center_viewport derives the same one. An English `label` here was the SECOND source of
 # those captions, which is exactly why the rail stayed English-only in Turkish.
-# `locked` = visible-but-unreachable (RELEASE SCOPE: Marketing and R&D are EARLY ACCESS
-# systems). The rail shows them dimmed with a YAKINDA pill and never connects `pressed` —
-# the strongest Coming-Soon telegraph the shell has, and the same recipe the origin cards
-# use. LeftTabs.tscn's button order must match this array position-for-position; the
+# `lock` = NAMED GATE for a visible-but-unreachable tab. The rail shows it dimmed with a
+# YAKINDA pill and never connects `pressed` — the strongest Coming-Soon telegraph the shell
+# has, and the same recipe the origin cards use.
+#   "ea"          — Early Access scope. Never opens inside the demo. THE ONLY GATE THERE IS.
+#
+# AR-GE TAŞIMAZ, VE BU BİR HÜKÜMDÜR (2026-08-25). Bir süre `"lock": "v1_shipped"` taşıdı,
+# yani Pazarlama ile aynı YAKINDA rozetini giyiyordu — ama ikisi FARKLI ŞEYLER söylüyor.
+# Pazarlama bu yapıda GERÇEKTEN YOK. Ar-Ge var, bitti, yalnız henüz açılmadı. Aynı rozeti
+# takınca oyuncuya "bu demoda araştırma diye bir şey yok" diyordu, ki az önce inşa ettiğimiz
+# modül hakkında söylenebilecek en yanlış cümle bu. YAKINDA rozeti artık TEK ŞEY demektir:
+# bu yapıda yok. Başka hiçbir şey onu giymez.
+#
+# Ar-Ge rayda NORMAL bir sekmedir; kapı sayfanın kendisindedir (RnDTab, v1 öncesi tek satır).
+# THE GATE IS A NAME, NOT A BOOLEAN, and it is resolved in LeftTabs._is_locked — deliberately,
+# so UiTokens stays free of game state (this file's own header law). It used to be
+# `"locked": true`, a compile-time constant, which is why Ar-Ge could never open mid-run. LeftTabs.tscn's button order must match this array position-for-position; the
 # `rail_tabs_match_scene_order` smoke case is what guards that.
 const TABS := [
 	{"id": "product", "glyph": TAB_GLYPH_PRODUCT,  "icon": "res://assets/icons/tabs/product.svg"},
@@ -568,8 +580,8 @@ const TABS := [
 	{"id": "hr", "glyph": TAB_GLYPH_HR,       "icon": "res://assets/icons/tabs/hr.svg"},
 	{"id": "finance", "glyph": TAB_GLYPH_FINANCE,  "icon": "res://assets/icons/tabs/finance.svg"},
 	{"id": "personal", "glyph": TAB_GLYPH_PERSONAL, "icon": "res://assets/icons/tabs/personal.svg"},
-	{"id": "marketing", "glyph": TAB_GLYPH_MARKETING, "icon": "res://assets/icons/tabs/marketing.svg", "locked": true},
-	{"id": "rnd", "glyph": TAB_GLYPH_RND,      "icon": "res://assets/icons/tabs/rnd.svg", "locked": true},
+	{"id": "marketing", "glyph": TAB_GLYPH_MARKETING, "icon": "res://assets/icons/tabs/marketing.svg", "lock": "ea"},
+	{"id": "rnd", "glyph": TAB_GLYPH_RND,      "icon": "res://assets/icons/tabs/rnd.svg"},
 	{"id": "events", "glyph": TAB_GLYPH_EVENTS,   "icon": "res://assets/icons/tabs/events.svg"},
 	# Spec 6 — the standalone "Yatırım" rail tab was relocated INTO the Finance tab as a
 	# sub-page (Finance>Yatırım); the 9th rail entry is gone. The `ops` entry left on

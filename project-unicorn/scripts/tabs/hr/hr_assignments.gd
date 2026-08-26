@@ -53,8 +53,12 @@ static func _header() -> Control:
 	row.custom_minimum_size = Vector2(0, 30)
 	row.add_child(_head(tr_key("HR_COL_EMPLOYEE"), W_WHO, HORIZONTAL_ALIGNMENT_LEFT))
 	row.add_child(_head(tr_key("HR_COL_STATE"), W_STATE, HORIZONTAL_ALIGNMENT_LEFT))
-	# §12.0 BEŞ İŞ SÜTUNU. Araştırma sütunu YOK: "Araştırma bir atama hedefi değildir;
-	# bir araştırma başlatılırken o araştırmaya çalışan atanır." (Ar-Ge modülünün akışı.)
+	# §12.0 İŞ SÜTUNLARI — `HRConstants.JOBS` neyse o. Ar-Ge modülü altıncıyı (Araştırma)
+	# getirdi ve matris onu KENDİLİĞİNDEN büyüdü; bu döngünün tek gerçeği o listedir.
+	# Araştırma sütunu VAR ama SALT OKUNUR (Ar-Ge §5.3): atama Ar-Ge panelinde, düğümün
+	# üzerinde yapılır. Sütunu gizlemek de olurdu — gizlemedik, çünkü matris "kim ne
+	# yapıyor"un tek tablosu ve araştıran kişinin burada BOŞ görünmesi §5.0'ın tam tersini
+	# söylerdi. Hücre kilidinin gerekçesi `_cell`'de.
 	var jobs := HBoxContainer.new()
 	jobs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	jobs.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -132,6 +136,17 @@ static func _cell(c: Character, job_id: String, on_toggle: Callable) -> Control:
 
 	if coef <= 0.0:
 		return _dashed_cell(tr_key("HR_ASSIGN_NOT_YOUR_AREA"))
+	# ARAŞTIRMA HÜCRESİ TIKLANMAZ (Ar-Ge §5.3). Atama düğümün üzerinde yapılır — orada
+	# hangi araştırmaya konduğu belli, burada belli değil; tek bir kutu "araştırmaya at"
+	# diyemez, çünkü ARAŞTIRMA diye tek bir iş yok, yirmi düğüm var. Kapalı karenin
+	# gerekçesini yine kendisi söylüyor: üçüncü-iş kilidinin kurduğu desen, aynı kare,
+	# başka gerekçe.
+	# SIRA: alan kapısından SONRA, tavan kapısından ÖNCE. Araştırmaya hiç konamayan bir
+	# satışçıya "atama başka yerde" demek yalan olurdu — onun için kapı ALAN kapısıdır
+	# (§5.2'nin dört aile alanı). Tavanın önünde olmasının sebebi ters: bu sütun tavan ne
+	# olursa olsun tıklanmıyor, yani asıl gerekçe burasıdır.
+	if job_id == HRConstants.JOB_RESEARCH:
+		return _dashed_cell(tr_key("HR_ASSIGN_RESEARCH_ELSEWHERE"))
 	# ÜÇÜNCÜ İŞ KİLİDİ (§12.1): iki işi olan birinin boş üçüncü hücresi tıklanamaz ve
 	# gerekçesini gösterir. Kilit GÖRÜNÜR KALIR, gizlenmez — oyuncu neyin mümkün olmadığını
 	# görmeli, hücrenin yok olduğunu değil.

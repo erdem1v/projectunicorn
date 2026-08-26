@@ -21,7 +21,7 @@ extends Node
 # a restart could previously produce. Every owner missed leaks the old run into the new one
 # and surfaces days later as an impossible bug — a build nobody committed, a churn counter
 # for a company that never signed, one-shot beats already consumed. Hence reset_all_owners()
-# below: seventeen owners, one entry point, ordered.
+# below: eighteen owners, one entry point, ordered.
 #
 # RESET IS THE PRODUCT; SAVE IS THE RECEIPT.
 #
@@ -35,7 +35,26 @@ extends Node
 # every point a save can be taken, and there is nothing mid-resolution for a schema to
 # describe. One sitting, one sitting only — it does not survive closing the game.
 
-const SCHEMA_VERSION := 8   # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi · v7: rev 11 — İŞ ataması, seviye, tek deneyim barı, yaz izni · v8: kurucu TEK CETVELE (0–10)
+const SCHEMA_VERSION := 10  # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi · v7: rev 11 — İŞ ataması, seviye, tek deneyim barı, yaz izni · v8: kurucu TEK CETVELE (0–10) · v9: Ürün rev 6.1 — HAT MODELİ (düz özellik listesi öldü) · v10: olay motoru — event_engine bloğu
+
+## GDD ÜRÜN rev 6.1 §22.5 — ÜRÜN VERİSİNİN ŞEKLİ DEĞİŞTİ, ve eski kayıt TAŞINMAZ.
+## "Eski kayıtlardaki düz özellik listesi hat durumlarına taşınmaz; demo öncesi kayıt
+## uyumluluğu taahhüt edilmez. Yükleyici eski sürümü görürse kullanıcıya AÇIK MESAJ
+## verir, sessizce bozuk state üretmez."
+##
+## Sessiz kısmi yükleme buradaki gerçek tehlikedir: 61 düz özellik kimliği hat
+## durumlarına çevrilemez, çevrilmeye çalışılırsa ürün hatsız ama "shipped" doğar —
+## çalışıyor görünen ve yanlış olan bir koşu. O yüzden kapı sürümdedir, alanda değil.
+const MIN_LOADABLE_VERSION := 10
+# v10 (2026-08-25, olay motoru): A DELIBERATE BREAK, taken knowingly. Every existing v9 save —
+# including dev and test saves — is refused with SAVE_ERR_TOO_OLD. The alternative was a v9→v10
+# migration, and it cannot produce a correct run: the old block is {queue, active_event_id,
+# active_event, history:[{id,day,choice}], ambient_fired_day}, and the new engine has
+# engine-owned latches, arc state with three invalidation policies, named scope slots and a
+# readable history. `history[].id` maps to "one_shot consumed" and NOTHING ELSE maps at all.
+# Arcs would restore as never-started while their opening cards restored as already-played —
+# a run that looks like it works and is wrong, which is exactly what the comment block above
+# calls the real danger. Same precedent, same reasoning, as Ürün rev 6.1 §22.5.
 const SAVE_DIR := "user://saves/"
 ## v3→v4 migration: what a migrated character gets in an area the old model never stored.
 ## Low but never zero — see _migrate_character_areas.
@@ -127,7 +146,7 @@ func can_save() -> bool:
 	# What the rule actually protects is mid-RESOLUTION state: a choice presented and
 	# not yet answered. That is exactly `_active_event_id`. A queued event is data, and
 	# data is what a save is for.
-	if EventManager._active_event_id != "":
+	if EventGate.active_id() != "":
 		return false                          # an event modal is up, awaiting a choice
 	if VCPitchSystem.is_active():
 		return false
@@ -144,7 +163,7 @@ func cannot_save_reason_key() -> String:
 	# "" when can_save(). Localisation keys only — never a hardcoded sentence.
 	if not GameState.run_active:
 		return "SAVE_ERR_NO_RUN"
-	if EventManager._active_event_id != "" \
+	if EventGate.active_id() != "" \
 			or VCPitchSystem.is_active() or TermSheetTableSystem.is_active() \
 			or PitchSystem.is_active() or B2BPitchMeeting.is_active():
 		return "SAVE_ERR_MODAL_OPEN"
@@ -219,6 +238,14 @@ func read_slot(slot_id: String) -> Dictionary:
 		return {"ok": false, "error_key": "SAVE_ERR_NEWER", "meta": data.get("meta", {}), "state": {}}
 	if typeof(data.get("state", null)) != TYPE_DICTIONARY:
 		return {"ok": false, "error_key": "SAVE_ERR_CORRUPT", "meta": data.get("meta", {}), "state": {}}
+	if version < MIN_LOADABLE_VERSION:
+		# §22.5 — LOUDLY, and before any migration runs. The row says why, and the run
+		# the player had is left untouched rather than half-replaced.
+		return {"ok": false, "error_key": "SAVE_ERR_TOO_OLD", "meta": data.get("meta", {}), "state": {}}
+	# MIGRATION LADDER — v1→v8, and UNREACHABLE since the v9 gate above.
+	# Left in place deliberately: these are Ekip / Satış history, not this module's to
+	# delete, and the gate is one constant away from being relaxed if pre-demo saves are
+	# ever promised again. Flagged for the director rather than swept.
 	if version < 2:
 		_migrate_sector_ids(data["state"])
 	if version < 3:
@@ -347,7 +374,7 @@ func apply_loaded_state(payload: Dictionary) -> bool:
 
 
 func reset_all_owners() -> void:
-	# THE seventeen owners, one entry point. Ordered against the autoload order
+	# THE eighteen owners, one entry point. Ordered against the autoload order
 	# (EventBus → GameState → registries → EventManager → TimeManager) with the RefCounted
 	# static systems folded in where their dependencies sit.
 	#
@@ -369,14 +396,16 @@ func reset_all_owners() -> void:
 
 	# 3. Event pipeline. After the registries so nothing queued can reference a record that
 	#    is about to be cleared.
-	EventManager.reset()
+	EventGate.reset()
+	EvSave.reset()
 
 	# 4. Static systems. ProductSystem and FinanceSystem are the two whose own comments
-	#    named this seam as future work; PhaseGateSystem drops its cached Frank scene.
+	#    named this seam as future work. PhaseGateSystem used to be on this list to drop its
+	#    cached Frank scene; it holds no state at all any more.
 	ProductSystem.reset()
+	RnDSystem.reset()               # Ar-Ge §8.5 — ağaç, ilerleme, rapor sayacı
 	FinanceSystem.reset()
-	PhaseGateSystem.reset()
-	HRSystem.reset()               # → HRMoraleSystem (_pending + RNG key)
+	HRSystem.reset()
 
 	# 5. The four sitting-scoped systems — reset, never serialised (see the header).
 	PitchSystem.reset()
@@ -395,8 +424,13 @@ func reset_all_owners() -> void:
 func _capture_systems() -> Dictionary:
 	return {
 		"product": ProductSystem.to_dict(),
+		"rnd": RnDSystem.to_dict(),
 		"finance": FinanceSystem.to_dict(),
-		"events": EventManager.to_dict(),
+		# ONE event block, not two. `"events"` was EventManager's key; when EventGate started
+		# forwarding to the new engine it became a byte-identical second copy of
+		# `event_engine`, written and read twice. A v10 save has never contained the old
+		# engine's block, so nothing is lost by dropping the key rather than migrating it.
+		EvSave.BLOCK_KEY: EvSave.to_dict(),
 		"hr": HRSystem.to_dict(),
 		"time": TimeManager.to_dict(),
 		"rng": RngStreams.to_dict(),
@@ -408,15 +442,18 @@ func _restore_systems(state: Dictionary) -> void:
 	if sys.is_empty():
 		return
 	ProductSystem.from_dict(sys.get("product", {}) as Dictionary)
+	# Ar-Ge §8.5 — ProductSystem SONRASI: gizli hatların yeniden kaydı
+	# ProductState.subtype() okuyor, o da Ürün bloğu oturduktan sonra doğru.
+	RnDSystem.from_dict(sys.get("rnd", {}) as Dictionary)
 	FinanceSystem.from_dict(sys.get("finance", {}) as Dictionary)
-	EventManager.from_dict(sys.get("events", {}) as Dictionary)
+	EvSave.from_dict(sys.get(EvSave.BLOCK_KEY, {}) as Dictionary)
 	HRSystem.from_dict(sys.get("hr", {}) as Dictionary)
 	TimeManager.from_dict(sys.get("time", {}) as Dictionary)
-	# REBUILT, NOT RESTORED. The Frank gate scene is a pure function of the GATES table plus
-	# GameState (phase + the gate_declines flag), both already in the save, so rebuilding
-	# beats storing a copy that goes stale the moment the copy is edited. Skipping it strands
-	# a loaded open gate FOREVER — see PhaseGateSystem.restore_gate_cache for why.
-	PhaseGateSystem.restore_gate_cache()
+	# THE GATE CACHE IS GONE, and with it the load-time rebuild that used to sit here. The
+	# scene stranding this call prevented — a loaded open gate that never prompts again,
+	# because the ratchet stops conditions being re-evaluated and the reminder returned early
+	# on a null cache — cannot happen to a card: `funding.gate_series_a` is re-proposed from
+	# the catalogue every day the ratchet is set, and the catalogue is not part of the save.
 	# RNG last. HRSystem.reset() (inside initialize_run) re-keys the hr_morale stream back to
 	# the START of its sequence, which is right for a fresh run and wrong for a load — so the
 	# saved positions have to be written over it, after everything else has settled.
@@ -1012,7 +1049,13 @@ func _legacy_area_to_job(area_id: String) -> String:
 		"customer_success":
 			return HRConstants.JOB_ACCOUNTS
 		"sales":
-			return HRConstants.JOB_SALES
+			# EMEKLİ ALAN, EMEKLİ İŞ → DÜŞER. Bir süre burada JOB_ACCOUNTS döndürdüm ve bu
+			# YANLIŞTI: bu tablo bilerek DONMUŞTUR (bkz. dosya başı) ve artık var olmayan bir
+			# vokabülerin ŞEKLİDİR — canlı bir sabiti izlemesi tam olarak yasaklanan şeydir.
+			# Görünür sonucu da vardı: emekli Satış alanını taşıyan bir Müşteri Temsilcisi
+			# işi DÜŞÜRMEK yerine hesap sahipliği olarak SAKLIYORDU, ki `save_migration_v6_
+			# to_v7_drops` tam olarak bunun olmamasını ölçüyor.
+			return ""
 		_:
 			return ""
 

@@ -1,0 +1,16 @@
+{
+  "id": "arc_fixture_thesis",
+  "type": "promise",
+  "restartable": true,
+  "steps": [
+    { "id": "opening", "event_id": "fixture.thesis_open", "optional": false },
+    { "id": "payoff", "event_id": "fixture.thesis_payoff", "optional": false }
+  ],
+  "invalidate_when": [],
+  "on_invalidate": {
+    "policy": "close",
+    "close_event": "fixture.thesis_close",
+    "note_key": "FIXTURE_THESIS_FADE",
+    "penalties": [ { "verb": "set_flag", "name": "fixture_thesis_invalidated" } ]
+  }
+}

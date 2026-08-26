@@ -46,11 +46,8 @@ var current_tab_idx: int = -1  # -1 = ODA (oda görünür, hiçbir sekme açık 
 
 
 func _ready() -> void:
-	for i in tab_buttons.size():
-		if _is_locked(i):
-			_lock_button(i)
-			continue
-		tab_buttons[i].pressed.connect(_on_tab_button.bind(i))
+	# Kilit ve `pressed` bağlantısı TEK YERDEN kurulur, ve tersine çevrilebilir (§2).
+	_refresh_locks()
 
 	# Gear button — bottom-pinned, NOT a tab (kept out of tab_buttons so it never
 	# gets active styling or emits tab_changed). Opens the settings panel instead.
@@ -79,11 +76,22 @@ func _ready() -> void:
 	EventBus.customer_churned.connect(_on_customer_left)
 	EventBus.customer_removed.connect(_on_customer_left)
 
+	# Ar-Ge: kilit v1 yayınında kalkar (§2); rozet donmuş araştırma + okunmamış rapor sayar.
+	EventBus.build_phase_changed.connect(_on_build_phase_changed)
+	EventBus.game_loaded.connect(_on_game_loaded)
+	EventBus.research_started.connect(_on_rnd_changed)
+	EventBus.research_completed.connect(_on_rnd_changed)
+	EventBus.research_frozen.connect(_on_rnd_changed)
+	EventBus.research_resumed.connect(_on_rnd_changed)
+	EventBus.product_note_issued.connect(_on_rnd_day_changed)
+	EventBus.product_note_read.connect(_refresh_rnd_badge)
+
 	# Initial badge paint
 	_refresh_hr_badge()
 	_refresh_sales_badge()
 	_refresh_finance_badge()
 	_refresh_events_badge()
+	_refresh_rnd_badge()
 
 
 func _exit_tree() -> void:
@@ -98,6 +106,32 @@ func _exit_tree() -> void:
 	EventBus.customer_health_changed.disconnect(_on_customer_health_changed)
 	EventBus.customer_churned.disconnect(_on_customer_left)
 	EventBus.customer_removed.disconnect(_on_customer_left)
+	EventBus.build_phase_changed.disconnect(_on_build_phase_changed)
+	EventBus.game_loaded.disconnect(_on_game_loaded)
+	EventBus.research_started.disconnect(_on_rnd_changed)
+	EventBus.research_completed.disconnect(_on_rnd_changed)
+	EventBus.research_frozen.disconnect(_on_rnd_changed)
+	EventBus.research_resumed.disconnect(_on_rnd_changed)
+	EventBus.product_note_issued.disconnect(_on_rnd_day_changed)
+	EventBus.product_note_read.disconnect(_refresh_rnd_badge)
+
+
+func _on_build_phase_changed(_phase: String) -> void:
+	# v1 yayını `mvp_shipped` bayrağını set ediyor ve HEMEN ardından bu sinyali atıyor —
+	# Ar-Ge kilidinin kalktığı an tam olarak burasıdır.
+	_refresh_locks()
+
+
+func _on_game_loaded(_slot_id: String) -> void:
+	_refresh_locks()
+
+
+func _on_rnd_changed(_node_id: String) -> void:
+	_refresh_rnd_badge()
+
+
+func _on_rnd_day_changed(_day: int) -> void:
+	_refresh_rnd_badge()
 
 
 func _on_tab_button(idx: int) -> void:
@@ -134,34 +168,90 @@ func _on_tab_changed_external(tab_id: String) -> void:
 			return
 
 
+## UiTokens bir ADLI KAPI taşır, boolean değil — böylece oyun durumundan uzak kalır (kendi
+## başlık yasası). Kapıyı burada çözmek aşağıdaki rozet refresher'larıyla aynı şekildir;
+## onlar da HRSystem / GameState / EventManager okuyor.
+##
+## Bilinmeyen bir kapı KİLİTLİ sayılır: yeni bir kapı adı eklenip burada karşılığı
+## yazılmadığında sekme açık kalsaydı, bitmemiş bir sayfa oyuncuya açılmış olurdu.
 func _is_locked(idx: int) -> bool:
-	return bool(UiTokens.TABS[idx].get("locked", false))
+	match String(UiTokens.TABS[idx].get("lock", "")):
+		"":
+			return false
+		_:
+			return true
 
 
-func _lock_button(idx: int) -> void:
-	# Visible-but-inert recipe, borrowed verbatim from the locked origin cards
-	# (origin_traits_step._build_card). Deliberately NOT Button.disabled: the
-	# ChromeTabButton variation defines no disabled stylebox, so the base Button one would
-	# show through — and closing that gap would be a theme change, which this task must not make.
+## KİLİT DURUMU TERSİNE ÇEVRİLEBİLİR OLMAK ZORUNDA (Ar-Ge §2): Ar-Ge kilidi koşu ORTASINDA,
+## v1 yayınlandığı an kalkar. Eski `_lock_button` tek yönlü bir `_ready` mutasyonuydu — Badge
+## düğümünü temelli gizliyor ve adsız bir pill ekliyordu; ikisi de geri alınamıyordu.
+##
+## Görünür-ama-ölü reçetesi kilitli köken kartlarından birebir alındı. Bilerek
+## Button.disabled DEĞİL: ChromeTabButton varyasyonu disabled stylebox tanımlamıyor, taban
+## Button stylebox'ı sızardı.
+const SOON_PILL_NAME := "SoonPill"
+
+
+func _apply_lock_state(idx: int) -> void:
 	var btn: Button = tab_buttons[idx]
-	btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	btn.focus_mode = Control.FOCUS_NONE
-	btn.modulate = Color(1, 1, 1, 0.45)
-	# The amber Badge panel is the ATTENTION register — the wrong voice for a locked door.
-	# A YAKINDA pill in the chrome-surface locked palette replaces it, and the Badge node
-	# stays hidden for good (no refresher addresses these ids).
-	var badge: Panel = btn.get_node_or_null("Badge")
-	if badge != null:
-		badge.visible = false
-	# Pill AKIŞA girer, çapaya DEĞİL: butonun kendisine anchor'lamak onu 84px'lik rayın
-	# tamamına yayıyor ve etiketin üstüne biniyordu (F5'te ilk denemede tam olarak bu oldu).
-	# Stack zaten ikon+etiketi dikey ortalayan bir VBox; üçüncü çocuk olarak eklenince
-	# yerleşimi o çözüyor. Kilitli sekmede satır aralığı 4→2: üç öğe 64px'e ancak sığıyor.
 	var stack: VBoxContainer = btn.get_node_or_null("Stack")
-	if stack == null:
+	var locked: bool = _is_locked(idx)
+
+	if locked:
+		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.modulate = Color(1, 1, 1, 0.45)
+		if btn.pressed.is_connected(_on_tab_button):
+			btn.pressed.disconnect(_on_tab_button)
+		# Amber Badge paneli DİKKAT register'ıdır — kilitli bir kapı için yanlış ses.
+		var badge: Panel = btn.get_node_or_null("Badge")
+		if badge != null:
+			badge.visible = false
+		if stack == null:
+			return
+		if stack.get_node_or_null(SOON_PILL_NAME) != null:
+			return
+		# Pill AKIŞA girer, çapaya DEĞİL: butona anchor atmak onu 84px rayın tamamına yayıp
+		# etiketin üstüne bindiriyordu. Kilitli sekmede satır aralığı 4 yerine 2.
+		stack.add_theme_constant_override("separation", 2)
+		var pill: Control = UiFactory.make_pill(tr("SYS_SOON"), Color(1, 1, 1, 0.05), UiTokens.CREAM_DIM)
+		pill.name = SOON_PILL_NAME
+		stack.add_child(pill)
 		return
-	stack.add_theme_constant_override("separation", 2)
-	stack.add_child(UiFactory.make_pill(tr("SYS_SOON"), Color(1, 1, 1, 0.05), UiTokens.CREAM_DIM))
+
+	btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	btn.focus_mode = Control.FOCUS_ALL
+	btn.modulate = Color(1, 1, 1, 1)
+	if not btn.pressed.is_connected(_on_tab_button):
+		btn.pressed.connect(_on_tab_button.bind(idx))
+	if stack != null:
+		stack.add_theme_constant_override("separation", 4)
+		var old_pill: Node = stack.get_node_or_null(SOON_PILL_NAME)
+		if old_pill != null:
+			stack.remove_child(old_pill)
+			old_pill.queue_free()
+	_refresh_badge_for(idx)
+
+
+## Her sekmenin kilidini yeniden değerlendirir. v1 yayınında ve kayıt yüklendiğinde çağrılır.
+func _refresh_locks() -> void:
+	for i in tab_buttons.size():
+		_apply_lock_state(i)
+	_apply_visual(current_tab_idx)
+
+
+func _refresh_badge_for(idx: int) -> void:
+	match String(UiTokens.TABS[idx].id):
+		"hr":
+			_refresh_hr_badge()
+		"finance":
+			_refresh_finance_badge()
+		"events":
+			_refresh_events_badge()
+		"sales":
+			_refresh_sales_badge()
+		"rnd":
+			_refresh_rnd_badge()
 
 
 func _apply_visual(active_idx: int) -> void:
@@ -197,7 +287,7 @@ func _refresh_finance_badge() -> void:
 	_set_badge_count("finance", n)
 
 func _refresh_events_badge() -> void:
-	_set_badge_count("events", EventManager.get_queue_size())
+	_set_badge_count("events", EventGate.queue_size())
 
 func _refresh_sales_badge() -> void:
 	# Accounts sitting in the RİSK lifecycle phase. Until now an account could slide into
@@ -205,12 +295,32 @@ func _refresh_sales_badge() -> void:
 	# number from one place: B2BSalesSystem owns the phase, so it owns the count.
 	_set_badge_count("sales", B2BSalesSystem.attention_count())
 
+func _refresh_rnd_badge() -> void:
+	# Ar-Ge §5.6.2 — DONMUŞ bir araştırma, okunmamış raporla BİRLİKTE sayılır ve sayılar
+	# toplanır. Sebep yapısal: yüzen tracker ODA görünürken saklanıyor, cam da ürün barını
+	# gösteriyor; odada oturan bir oyuncu için donmuş araştırmaya ulaşan TEK yüzey bu rozet.
+	# KOŞAN araştırma sayılmaz: süren bir işi dürtmek talep olurdu, ve Ar-Ge talep etmez.
+	# AÇIK KAPI, AÇIK KORUMA: ağaç açılmadan önce Ar-Ge'de sayılacak hiçbir şey YOKTUR —
+	# ne okunmamış rapor, ne donmuş araştırma. Bu bir tesadüf ve bunun üstüne kurmak
+	# istemiyorum: koruma açıkça yazılır, çünkü sekme artık ilk günden tıklanabilir ve
+	# rozet ilk günden çizilebilir hâlde.
+	if not RnDSystem.tree_open():
+		_set_badge_count("rnd", 0)
+		return
+	_set_badge_count("rnd", RnDSystem.attention_count())
+
+
 func _set_badge_count(tab_id: String, count: int) -> void:
 	var tab_idx: int = _index_of(tab_id)
 	if tab_idx < 0:
 		return
 	var badge: Panel = tab_buttons[tab_idx].get_node("Badge")
 	var badge_label: Label = badge.get_node("BadgeLabel")
+	# Kilitli sekme ASLA rozet taşımaz. Rozetler id ile adreslendiği için bu koruma olmadan
+	# bir refresher kilitli bir sekmenin rozetini açabilirdi (Pazarlama temelli kilitli).
+	if _is_locked(tab_idx):
+		badge.visible = false
+		return
 	if count <= 0:
 		badge.visible = false
 	else:

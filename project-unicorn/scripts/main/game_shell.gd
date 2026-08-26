@@ -235,7 +235,7 @@ func _debug_endgame_key(keycode: Key) -> void:
 		KEY_F3:
 			print("[Debug] F3 → series_a_closed + Class A hard win")
 			GameState.series_a_closed = true
-			EndingsSystem.trigger_ending("series_a_close")
+			EndingsSystem.trigger_ending("series_a_close", EndingsSystem.TELEGRAPH_WIN)
 		KEY_F4:
 			print("[Debug] F4 → force acquisition offer preconditions (phase 3, brand 40, 1 ret)")
 			GameState.set_phase(3)

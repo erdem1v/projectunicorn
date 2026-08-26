@@ -87,6 +87,34 @@ const FLAG_TYPES := {
 	"cancelled_build_prefill": TYPE_DICTIONARY,
 	"creation_draft": TYPE_DICTIONARY,   # S2-33 draft guard (Calibration Round A §16): {step, market, type, features, name}
 	"product_path_frank_seen": TYPE_BOOL,
+	# --- Ürün rev 6.1 · HAT MODELİ ve DESTEK (§12, §8, §9, §10) -------------
+	# Kayıt şeması v9'un taşıdığı yeni alanlar (§22.5). mvp_components (düz özellik
+	# listesi) hâlâ burada çünkü Satış ve söz kaydı onu okuyor; hat modeli devraldıktan
+	# SONRA, hayalet süpürmesinde ölür — önce değil.
+	"mvp_line_tiers": TYPE_DICTIONARY,          # {hat kimliği: 0|1|2|3} — §12.1
+	# §11.2 — "Çarpan hat başına değil KADEME başına saklanır; her kademe yayınlandığı
+	# sürümün cilasını taşır." Bu sözlük yeniden yüklemeyi ATLATMAK ZORUNDA: kaybolursa
+	# her geçmiş sürüm sessizce bugünkü tur sayısıyla yeniden okunur.
+	"mvp_step_realization": TYPE_DICTIONARY,    # {kademe kimliği: çarpan}
+	"mvp_hidden_lines": TYPE_ARRAY,             # Ar-Ge'nin açtığı gizli hatlar — §12.1
+	"mvp_design_turns": TYPE_INT,               # son sürümde tamamlanan TASARIM turu — §5
+	# --- DESTEK: iki sayaç, mühürlü adlar (§8.1) ---
+	"mvp_reports_incoming": TYPE_INT,           # GELEN BİLDİRİM
+	"mvp_reports_progress": TYPE_FLOAT,         # kesirli birikim; tam sayıya taşınca sayaç artar
+	"mvp_bugs_confirmed": TYPE_INT,             # DOĞRULANMIŞ HATA
+	"mvp_validation_progress": TYPE_FLOAT,      # §8.2 doğrulama kesri
+	"mvp_fix_run_active": TYPE_BOOL,            # §8.4 düzeltme koşusu
+	"mvp_fix_run_fixed": TYPE_INT,              # koşuda şimdiye dek çözülen
+	"mvp_fix_run_progress": TYPE_FLOAT,
+	# --- §9 canlı akış ---
+	# SÜRÜM yaşı, ürün yaşı DEĞİL (§17): mvp_launch_day ilk yayında bir kez damgalanır,
+	# bu her yayında yeniden yazılır ve ilgi sönümü ile akış modeli bunu okur.
+	"mvp_version_launch_day": TYPE_INT,
+	"mvp_interest": TYPE_FLOAT,                 # her yayında 100'e tazelenir, yarı ömür 30 gün
+	"mvp_new_code_effort": TYPE_FLOAT,          # §9 yeni-kod terimi; τ=21 günde söner
+	# --- §10 altyapı ---
+	"mvp_infra_provider": TYPE_STRING,          # sağlayıcı kimliği
+	"mvp_infra_units": TYPE_INT,                # satın alınan kapasite birimi
 	# --- B2C economy ---
 	# b2c_audience is FLOAT and that is the fix for audit S3-43: sales_system's hourly tick
 	# accumulated it as a float precisely so slow erosion survives instead of rounding to
@@ -102,22 +130,26 @@ const FLAG_TYPES := {
 	"next_pitch_day": TYPE_INT,
 	"b2b_high_scale_unlocked": TYPE_BOOL,
 	# --- phase gate / endgame / VC ---
-	"gate_prompt_day": TYPE_INT,
+	# `gate_prompt_day` was here: PhaseGateSystem's hand-rolled five-day re-ask clock, stamped
+	# on open, on decline and on every reminder. `funding.gate_series_a` declares
+	# `cooldown_days: 5` and the engine owns the latch. `gate_declines` STAYS — it is not a
+	# latch, it is how many times the founder has said not yet, and the card's escalating body
+	# reads it through `phase.gate_declines`.
 	"gate_declines": TYPE_INT,
 	"pitch_prep_active": TYPE_BOOL,
 	"pivot_offer_made": TYPE_BOOL,
 	"acquisition_offer_made": TYPE_BOOL,
 	"acquisition_offer_rejected": TYPE_BOOL,
-	"vc_last_answer_warned": TYPE_BOOL,  # was vc_soft_cap_warned, was vc_d179_warned. The card is no
-                                        # longer a calendar warning at all: it fires on the last day to
-                                        # answer the last live offer (Frank v6, surface 15).
+	# `vc_last_answer_warned` was here — was vc_soft_cap_warned, was vc_d179_warned, and by the
+	# end it was a hand-rolled one_shot for `funding.last_answer`. Three names for a latch is a
+	# sign the latch never belonged to the system holding it.
 	# --- angel round (Frank's seed) + the locked hard path ---
-	# The one-shot latch lives HERE and not on the event object: AngelRoundSystem injects
-	# through enqueue_front, which bypasses _is_eligible entirely, so GameEvent.one_shot is
-	# dead code for every synthetic event (event_manager.gd:198-212).
-	"angel_seed_offered": TYPE_BOOL,
+	# ONE entry survives the event-engine rebuild. `angel_seed_offered` and
+	# `angel_nudge_shown` were hand-rolled one-shot latches that existed because
+	# GameEvent.one_shot was dead code on the injected path; the cards declare `one_shot`
+	# now and the gate enforces it. The day stamp stays because it is a FACT about the run
+	# that three unrelated readers want, not a latch.
 	"angel_seed_accepted_day": TYPE_INT,
-	"angel_nudge_shown": TYPE_BOOL,
 	# RESERVED — NO WRITER EXISTS ANYWHERE. This is the guaranteed-false gate behind
 	# "REDDET · ZOR MOD"; the Frank-less path ships after the demo. Declared so the day a
 	# writer appears, the save schema already knows its type.

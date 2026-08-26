@@ -1,7 +1,7 @@
 # GDD v2 conformance — overview
 
 **Date:** 2026-08-20 · **Baseline:** `main` @ `7687095`, working tree clean apart from one `.docx`. Every citation in this set resolves to that commit.
-**Sources:** the thirteen chapters in `GDDs/`, with two director rulings applied on top — ch. 03 is **rev 4** (free/paid packaging and the beta-user program cut, deneyen renamed, the support-vs-build tension stated), and ch. 08 §1 burn is **maaşlar + araçlar + servis maliyeti**, marketing removed. Also cited throughout: `docs/.md` (Event Pool Design v1) and `docs/audits/calibration_round_A_2026-08-19.md`.
+**Sources:** the thirteen chapters in `GDDs/`, with two director rulings applied on top — ch. 03 is **rev 4** (free/paid packaging and the beta-user program cut, deneyen renamed, the support-vs-build tension stated), and ch. 08 §1 burn is **maaşlar + araçlar + servis maliyeti**, marketing removed. Also cited throughout: `docs/design/EVENT_POOL_DESIGN_v1.md` (Event Pool Design v1) and `docs/audits/calibration_round_A_2026-08-19.md`.
 
 A note on the baseline. Everything that used to live on side branches — Calibration Round A, the Build Bar rework, the ODA 3D art migration — was merged and pushed on 2026-08-20 (`e30fa81`, 36 commits), and the new DELIVERY LAW retires branches and worktrees. So there is exactly one code state, and no exists-on-another-branch caveat anywhere in these reports.
 

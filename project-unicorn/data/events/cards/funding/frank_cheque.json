@@ -1,0 +1,82 @@
+{
+  "_ported_from": "ev_angel_frank_seed (AngelRoundSystem.build_offer_event)",
+  "_port_note": "The one_shot on the old object was INERT — the comment in the factory says so outright ('the real latch is FLAG_OFFERED'), because enqueue bypassed eligibility. Here one_shot is the latch, and the system's flag becomes what it should always have been: a read, not a brake. The decline lock reads `funding.hard_mode`, a SEAM over GameState, not a `flag` leaf. A `flag` leaf asks the engine's own FlagStore, and `hard_mode_unlocked` is a reserved GameState key with no writer anywhere — so the lock would have been true-by-accident-never rather than true-when-hard-mode-ships, and the day someone writes the flag the row would have stayed locked with nothing to explain it. This is §19.5's failure, and the port had walked into it twice.",
+  "id": "funding.frank_cheque",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "urun.is_live",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "funding.angel_threshold_met",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "investor.angel_taken",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "accept",
+      "outcome_id": "took_the_cheque",
+      "effects": [
+        {
+          "verb": "angel_accept"
+        }
+      ]
+    },
+    {
+      "id": "decline",
+      "outcome_id": "refused",
+      "requires": {
+        "seam": "funding.hard_mode",
+        "op": "==",
+        "value": true,
+        "reason": "ANGEL_CHOICE_REFUSE_LOCK"
+      },
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "ANGEL_EVENT_TITLE",
+      "body": "ANGEL_EVENT_BODY",
+      "options": {
+        "accept": "ANGEL_CHOICE_ACCEPT",
+        "decline": "ANGEL_CHOICE_REFUSE"
+      },
+      "locked_reasons": {
+        "decline": "ANGEL_CHOICE_REFUSE_LOCK"
+      }
+    },
+    "en": {
+      "title": "ANGEL_EVENT_TITLE",
+      "body": "ANGEL_EVENT_BODY",
+      "options": {
+        "accept": "ANGEL_CHOICE_ACCEPT",
+        "decline": "ANGEL_CHOICE_REFUSE"
+      },
+      "locked_reasons": {
+        "decline": "ANGEL_CHOICE_REFUSE_LOCK"
+      }
+    }
+  }
+}

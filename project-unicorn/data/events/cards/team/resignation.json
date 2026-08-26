@@ -1,0 +1,53 @@
+{
+  "_ported_from": "ev_hr_resign_<employee_id> (HREventFactory.build_resignation)",
+  "_port_note": "The roll already happened in HRMoraleSystem; this card PRESENTS the outcome. Its one option still carries the removal so the departure runs through CharacterRegistry.remove on resolve, which is what increments run_departures and emits the signal. Ekip §11.3: 'Ayrılma bir sistem tikinin sessiz sonucu değil, oyuncunun gördüğü bir olayın sonucudur.' TICK CORRECTED DURING THE SWAP. The plan said this card triggers on `employee_departed`; that signal is emitted by CharacterRegistry.remove, which is what this card's own option CAUSES. Triggering on it would have meant the card can only fire after the thing it announces has already happened, and on the run where someone was fired instead of resigning it would have fired about the wrong person. HRMoraleSystem names the card the moment the roll succeeds.",
+  "_behaviour_change": "The factory's hand-rolled latch was a static _pending array keyed per employee. It is now the card's own entity latch, so a second resignation for the same person is impossible by construction rather than by the caller remembering to append.",
+  "id": "team.resignation",
+  "version_scope": "demo",
+  "category": "team",
+  "tick": "request",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "scope": {
+    "employee": {
+      "type": "employee",
+      "required": true
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "entity",
+  "options": [
+    {
+      "id": "acknowledge",
+      "outcome_id": "left",
+      "effects": [
+        {
+          "verb": "employee_leaves",
+          "scope": "employee",
+          "reason": "resigned"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "HR_EV_RESIGN_TITLE",
+      "body": "{seam:hr.resign_voice}",
+      "options": {
+        "acknowledge": "HR_EV_RESIGN_ACK"
+      }
+    },
+    "en": {
+      "title": "HR_EV_RESIGN_TITLE",
+      "body": "{seam:hr.resign_voice}",
+      "options": {
+        "acknowledge": "HR_EV_RESIGN_ACK"
+      }
+    }
+  }
+}

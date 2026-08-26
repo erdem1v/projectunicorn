@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://buildhudpaneltscn001"]
+[gd_scene load_steps=4 format=3 uid="uid://buildhudpaneltscn001"]
 
 [ext_resource type="Script" path="res://scripts/ui/components/build_hud_panel.gd" id="1_build_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/components/BuildBar.tscn" id="2_build_bar"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/ResearchBar.tscn" id="3_research_bar"]
 
 [node name="BuildHUDPanel" type="Control"]
 layout_mode = 3
@@ -13,7 +14,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_build_hud")
 
-[node name="Root" type="Control" parent="."]
+[node name="Root" type="VBoxContainer" parent="."]
 layout_mode = 3
 anchors_preset = 1
 anchor_left = 1.0
@@ -21,13 +22,14 @@ anchor_right = 1.0
 offset_left = -380.0
 offset_top = 60.0
 offset_right = -20.0
-offset_bottom = 198.0
+offset_bottom = 60.0
 grow_horizontal = 0
+grow_vertical = 1
+theme_override_constants/separation = 8
 
 [node name="BuildBar" parent="Root" instance=ExtResource("2_build_bar")]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+custom_minimum_size = Vector2(0, 138)
+layout_mode = 2
+
+[node name="ResearchBar" parent="Root" instance=ExtResource("3_research_bar")]
+layout_mode = 2

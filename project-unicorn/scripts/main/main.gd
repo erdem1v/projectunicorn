@@ -28,6 +28,9 @@ const MEETING_SCENE := preload("res://scenes/modals/MeetingScene.tscn")
 const TERM_TABLE_SCENE := preload("res://scenes/modals/TermSheetTableScene.tscn")
 const SYSTEM_MENU_MODAL := preload("res://scenes/modals/SystemMenuModal.tscn")
 const SAVE_LOAD_MODAL := preload("res://scenes/modals/SaveLoadModal.tscn")
+# Ar-Ge kartları (§5.8 keşif · §6.1 koşunun ilk aylık notu). TEK sahne, iki yük.
+# PanelLayer'a monte olur, ModalLayer'a DEĞİL — gerekçe _on_rnd_card_requested'da.
+const RND_CARD_MODAL := preload("res://scenes/modals/RnDCardModal.tscn")
 
 var _flow: Node = null
 var _shell: Node = null
@@ -51,6 +54,11 @@ var _pre_settings_speed: int = -1
 var _system_menu: Node = null        # Currently-open ESC system menu, or null
 var _save_load_modal: Node = null    # Currently-open save/load modal, or null
 var _pre_system_speed: int = -1
+# Ar-Ge kartı: AYNI ANDA EN FAZLA BİR TANE. Bir keşif ile koşunun ilk raporu AYNI
+# GÜNE düşebilir ve iki üst üste scrim karartmayı ikiye katlar. İkincisi bu iki
+# yuvalık kuyrukta bekler, birincinin `tree_exited`'ında açılır.
+var _rnd_card: Node = null
+var _rnd_card_queue: Array[Dictionary] = []
 var _shell_mounted: bool = false
 var _event_signals_wired: bool = false
 # Speed at the moment the first event in a chain pauses the game. When the
@@ -108,6 +116,42 @@ func _ready() -> void:
 			if _smoke_case_on_cmdline():
 				get_tree().quit()
 			return
+
+	# ─────────────────────────────────────────────────────────────────────────────────────
+	# EVENT-ENGINE HARNESSES (debug builds only). Each runs in ONE boot and quits with a
+	# meaningful exit code, so a shell can gate on them.
+	#
+	#   --event-probe            every core assertion of the engine, ~160 of them. The
+	#                            build-time loop that front-runs the smoke suite, which costs a
+	#                            whole Godot boot per case.
+	#   --event-lint             §17's content rules over data/events/. `=baseline` rewrites
+	#                            the ratchet file instead of failing on it.
+	#   --why-fire=<card id>     why that card did not fire: the gate step that refused it, the
+	#                            live seam values behind the refusal, its latch state, and
+	#                            whether the signal it waits on has ever been emitted.
+	#   --event-harness=<spec>   `random:seeds=N:days=M` or `guided:<arc id>`.
+	#   --event-vocab            regenerates docs/content/events_draft/_vocabulary.md.
+	# ─────────────────────────────────────────────────────────────────────────────────────
+	if OS.is_debug_build():
+		for arg in OS.get_cmdline_args():
+			var flag: String = String(arg)
+			if flag == "--event-probe":
+				get_tree().quit(0 if EvProbe.run() else 1)
+				return
+			if flag == "--event-lint" or flag.begins_with("--event-lint="):
+				var write_baseline: bool = flag.ends_with("=baseline")
+				get_tree().quit(0 if EvLint.run(write_baseline) else 1)
+				return
+			if flag.begins_with("--why-fire="):
+				print(EvWhy.report(flag.trim_prefix("--why-fire=")))
+				get_tree().quit(0)
+				return
+			if flag.begins_with("--event-harness="):
+				get_tree().quit(0 if EvHarness.run(flag.trim_prefix("--event-harness=")) else 1)
+				return
+			if flag == "--event-vocab":
+				get_tree().quit(0 if EvVocabGen.run() else 1)
+				return
 
 	# Debug: --tempo-probe=<speed idx> runs the REAL clock headless (no shell, no
 	# modals) and prints one line per day boundary, so seconds-per-day can be
@@ -569,10 +613,17 @@ func _run_b2b_shot(kind: String) -> void:
 		CharacterRegistry.add(cs)
 		CustomerRegistry.assign_customer(c.id, cs.id)
 		CustomerRegistry.set_satisfaction(c.id, 22)
-		ev = B2BEventFactory.build_cs_escalation(c, cs)
+		# The `escalated` selector filters on THIS, not on satisfaction. B2BSalesSystem writes
+		# it on the tick that crosses the threshold; the shot has no tick, so it writes it.
+		c.cs_escalated = true
+		ev = EventGate.render("customer.cs_escalation", EventGate.bind_scope("customer.cs_escalation"))
 	elif kind == "expansion":
-		CustomerRegistry.set_lifecycle_phase(c.id, "expansion")
-		ev = B2BEventFactory.build_expansion(c)
+		# `expansion_ready` asks can_offer_expansion, which wants a MATURE account that has
+		# never been offered one. Setting the phase alone left the slot unfilled.
+		c.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
+		CustomerRegistry.set_lifecycle_phase(c.id, "active")
+		CustomerRegistry.set_satisfaction(c.id, 80)
+		ev = EventGate.render("customer.expansion", EventGate.bind_scope("customer.expansion"))
 	elif kind == "deal":
 		# Temizlik turu 2026-08-20: teklif kartı. FrankPopup emekli olduğu için bu kart
 		# artık sıradan bir olay kartı ve tek karede ÜÇ şeyi birden kanıtlıyor —
@@ -581,14 +632,18 @@ func _run_b2b_shot(kind: String) -> void:
 		# open_term_table çipi (chip'siz bir modifier KÖR gider, headless case göremez).
 		GameState.phase = 3
 		GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
-		ev = VCPitchSystem._build_deal_prompt_event("anchor")
+		# The offer-email card is UNBUILT (Frank v6, surface 24 — docs/writing/FRANK_UNWIRED.md).
+		# Its builder was dead code with two commented-out call sites and went with the swap, so
+		# this fixture renders the card that DOES exist on the same edge: a sheet with a
+		# deadline.
+		ev = EventGate.render("funding.sheet_expiry", EventGate.bind_scope("funding.sheet_expiry"))
 	elif kind == "angel":
 		# Frank's seed card. Not a B2B customer scene, but this is the harness that already
 		# mounts one factory-built GameEvent in a real EventModal, and the seed card has two
 		# things only a rendered frame can check: the KABUL effect chip (a modifier with no
 		# _describe_modifier entry renders BLIND, and no headless case can see that) and the
 		# locked REDDET row's dimmed, chip-less, non-interactive treatment.
-		ev = AngelRoundSystem.build_offer_event()
+		ev = EventGate.render("funding.frank_cheque")
 	else:
 		CustomerRegistry.set_lifecycle_phase(c.id, "risk")
 		CustomerRegistry.set_churn_countdown(c.id, 8)
@@ -596,7 +651,7 @@ func _run_b2b_shot(kind: String) -> void:
 			# Calibration Round A §8: the account has spent both discounts — the row renders
 			# locked-visible with its reason line.
 			CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
-		ev = B2BEventFactory.build_retention(c)
+		ev = EventGate.render("customer.retention", EventGate.bind_scope("customer.retention"))
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	var modal: Control = EVENT_MODAL.instantiate()
@@ -621,16 +676,22 @@ func _event_shot_requested() -> String:
 
 
 func _run_event_shot(event_id: String) -> void:
-	# Mount one reactive-event JSON into the EventModal, render, screenshot.
-	# Mirrors _run_b2b_shot; loads via EventManager.debug_build_event_from_file
-	# so the ev_debug_* fixtures (skipped from the live pool) stay reachable.
+	# Mount one CARD into the EventModal, render, screenshot. Mirrors _run_b2b_shot.
+	#
+	# It used to load a raw JSON path, which is how the ev_debug_* fixtures stayed reachable
+	# while the live pool skipped them by directory. The engine has a first-class answer:
+	# `version_scope: fixture` cards are in the catalogue and refused at G2 in a shipping
+	# build, so the harness can name one by id like anything else.
 	get_tree().paused = false
 	_shot_window(Vector2i(1920, 1080))
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
-	var ev: GameEvent = EventManager.debug_build_event_from_file(
-		"res://data/events/reactive/%s.json" % event_id)
+	if not EventGate.is_catalogued(event_id):
+		push_error("[EventShot] no card with id: %s" % event_id)
+		get_tree().quit()
+		return
+	var ev: GameEvent = EventGate.render(event_id, EventGate.bind_scope(event_id))
 	if ev == null:
-		push_error("[EventShot] could not load event: %s" % event_id)
+		push_error("[EventShot] could not render card: %s" % event_id)
 		get_tree().quit()
 		return
 	var layer := CanvasLayer.new()
@@ -980,13 +1041,15 @@ func _run_oda_shot(kind: String) -> void:
 			if not _event_signals_wired:
 				EventBus.modal_requested.connect(_on_event_modal_requested)
 				_event_signals_wired = true
-			var ev: GameEvent = EventManager.debug_build_event_from_file(
-				"res://data/events/reactive/ev_debug_002_press_inquiry.json")
-			if ev == null:
-				push_error("[OdaShot] debug olayı yüklenemedi")
+			# Was a hand-loaded ev_debug_002 fixture. It aimed at `world.final_stretch_press`
+			# for one revision, which is the right beat and the wrong CLASS: a paper goes to
+			# the desk, so the shot rendered a room with no modal in it. What this surface
+			# proves is the modal reading OVER the ODA, so it needs a card that reliably
+			# mounts in a world the shot has not seeded — no condition, no guards, no scope.
+			if not EventGate.request("product.first_ship"):
+				push_error("[OdaShot] product.first_ship kabul edilmedi")
 				get_tree().quit(1)
 				return
-			EventManager.enqueue(ev)
 			settle = 1.0
 		"tab":
 			EventBus.tab_changed.emit("product")
@@ -1049,9 +1112,9 @@ func _seed_theme_surface() -> void:
 
 
 # Debug: --tab-shot=<product|sales|hr|finance|personal|marketing|rnd|events> (windowed).
-# 8 ray sekmesinin HEPSİ tek seed'li durumdan 1920×1080. Marketing/R&D/Personal/Events'in
+# 8 ray sekmesinin HEPSİ tek seed'li durumdan 1920×1080. Marketing/Personal/Events'in
 # sahnesi yok — kod-boyalı placeholder render ederler (TabPageChrome sarmalayıcısı
-# içinde). Marketing ve R&D rayda KİLİTLİ; harness tab_changed'i doğrudan emit ettiği için
+# içinde). Marketing rayda KİLİTLİ (Ar-Ge ARTIK DEĞİL); harness tab_changed'i doğrudan emit ettiği için
 # yine de kadraja alınabilirler — kilit rayın kendisinde, sayfada değil.
 # NOT (ODA rework, 2026-08-06): sarmalayıcı şeridi + RightPanel emekliliği
 # TÜM tab-shot baseline'larını bilinçli yeniden kurdu; bayt-diff referansı o günün
@@ -1074,7 +1137,8 @@ func _run_tab_shot(tab_id: String) -> void:
 	get_tree().quit()
 
 
-# Debug: --modal-shot=<confirm|confirm3|settings|month|system|saveload|mentor> (windowed).
+# Debug: --modal-shot=<confirm|confirm3|settings|month|system|saveload|mentor|
+#                     rnd-note|rnd-discovery|rnd-discovery-line> (windowed).
 # `mentor` exists because the opening modal is the ONE surface whose body length is a
 # design constraint: it is the first thing a player ever sees, it carries the longest text
 # in the arc, and it is not allowed a scrollbar. The shot is how "it fits" is verified
@@ -1108,6 +1172,10 @@ func _run_modal_shot(kind: String) -> void:
 		EventBus.system_menu_requested.connect(_on_system_menu_requested)
 	if not EventBus.save_load_requested.is_connected(_on_save_load_requested):
 		EventBus.save_load_requested.connect(_on_save_load_requested)
+	if not EventBus.rnd_card_requested.is_connected(_on_rnd_card_requested):
+		EventBus.rnd_card_requested.connect(_on_rnd_card_requested)
+	if not EventBus.product_note_issued.is_connected(_on_product_note_issued):
+		EventBus.product_note_issued.connect(_on_product_note_issued)
 	match kind:
 		"confirm":
 			EventBus.confirm_requested.emit({
@@ -1146,6 +1214,26 @@ func _run_modal_shot(kind: String) -> void:
 			# gerçek bir slot satırı (meta biçimi + aksiyon butonları) kadraja girsin.
 			SaveManager.quicksave()
 			EventBus.save_load_requested.emit("load")
+		"rnd-note":
+			# Not sözlüğü MOTORUN kendi biçiminde kurulur (§6.3'ün alanları), yani
+			# harness ile canlı kart ayrışamaz. `demand_key` boş — §6.4'ün belgeli
+			# bozunmuş hâli (talep üreteci henüz yok), kart RND_NOTE_DEMAND_NONE der.
+			var author: Character = RnDSystem.note_author()
+			if author == null:
+				author = CharacterRegistry.get_founder()
+			# MOTORUN KENDİ BESTECİSİ ÇAĞRILIR, sözlük ELLE KURULMAZ. Eski hâli alanları
+			# kopyalıyordu ve yorumu "harness ile canlı kart ayrışamaz" diyordu — ama
+			# kopya tam olarak ayrışabilir, ve ayrıştı: rakip ile beliren-teknoloji
+			# satırları boş geçiliyordu, yani on altı yazılmış cümle hiçbir karede
+			# görünmüyordu. Tek besteci, tek şekil.
+			EventBus.rnd_card_requested.emit("note", RnDSystem.compose_note(author))
+		"rnd-discovery":
+			# HAT AÇMAYAN düğüm: isteğe bağlı satır KURULU ama gizli. İki kadrenin
+			# tek satır farkla ayrıştığının kanıtı bu ikisinin yan yana konmasıdır.
+			EventBus.rnd_card_requested.emit("discovery", {"node": "data_model"})
+		"rnd-discovery-line":
+			# HAT AÇAN düğüm (§13.5'in mühürlü tek dal-seviyesi istisnası).
+			EventBus.rnd_card_requested.emit("discovery", {"node": "test_automation"})
 		_:
 			push_error("[ThemeShot] unknown --modal-shot kind: %s" % kind)
 			get_tree().quit(1)
@@ -1845,12 +1933,20 @@ func _build_state_arg(fallback: String) -> String:
 ## yazmak yalnız bandın İÇİNDE (yarı doluluk), faz atlamak için değil.
 func _seed_build_state(state: String) -> void:
 	var founder_id: String = CharacterRegistry.get_founder().id
-	ProductSystem.start_build("saas_ops",
-		["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"],
+	# HAT MODELİ (rev 6.1 §12): fikstür artık üç DÜZ ÖZELLİK değil, üç PLANLANMIŞ
+	# KADEME. `erp` mühürlü demo alt-tiplerinden biri (§12.11) ve hat içeriği var —
+	# `saas_ops`un yok, o yüzden eski fikstür kilitli Konsept'i BOŞ çizerdi.
+	# ÜÇÜ DE KAPISIZ K1. Fikstür oyuncunun açılış kadrosuyla koşuyor (tek kurucu,
+	# Tasarım 0) ve §12.7'nin kapıları Konsept ONAYINDA denetleniyor — Fatura K1
+	# "Tasarım ★1" ister ve plan `locked` ile REDDEDİLİRDİ, yani kart hiç doğmazdı.
+	# Kapıyı fikstürde yıldız uydurarak aşmak yanlış olurdu: shot'un işi motorun
+	# gerçekten ürettiği durumu göstermek.
+	ProductSystem.start_line_build("erp",
+		["line_erp_ledger_k1", "line_erp_stock_k1", "line_erp_cashflow_k1"],
 		founder_id, "Nova İki")   # LOC-DATA debug seed / id
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if b == null:
-		push_error("[BuildState] start_build failed")
+		push_error("[BuildState] start_line_build failed")
 		return
 	var design_cap: float = ProductSystem.PHASE_DESIGN_END * b.total_efor
 	match state:
@@ -1866,16 +1962,20 @@ func _seed_build_state(state: String) -> void:
 		"r1":
 			b.efor_spent = design_cap * 0.5
 			ProductSystem.hourly_tick(9)
+		# HAT MODELİNİN TUR SAYACI `design_turns_completed`. `iteration_count` ve
+		# `iteration_decision_pending` DÜZ katalog yolunun alanları ve hat yapımında
+		# hiç kımıldamıyorlar — bu iki fikstür 2160 tik boyunca dönüp round=1'de
+		# duruyordu, yani "3. tur" ve "tavan" kareleri aslında 1. turu çekiyordu.
 		"r3":
-			for i in 24 * 90:
-				if b.iteration_count >= 3:
+			for i in 24 * 200:
+				if b.design_turns_completed >= 3:
 					break
 				ProductSystem.hourly_tick(i % 24)
-			for i in 24 * 2:   # tur 3'ün yarısı (ITER_ROUND_DAYS = 4)
-				ProductSystem.hourly_tick(i % 24)
 		"r4":
-			for i in 24 * 90:
-				if b.iteration_decision_pending:
+			# TAVAN: §5'in dördüncü turu. TASARIM kendi kendine zincirlenir, bekleyen
+			# bir karar YOKTUR — tavan `at_cap` ile telegraf edilir.
+			for i in 24 * 200:
+				if ProductSystem.design_turns_maxed():
 					break
 				ProductSystem.hourly_tick(i % 24)
 		"dev", "devpark", "beta", "beta0":
@@ -1909,13 +2009,24 @@ func _seed_build_state(state: String) -> void:
 					b.bugs_found = b.bugs_fixed
 		_:
 			pass
-	print("[BuildState] %s → phase=%s round=%d/%d efor=%.2f/%.2f bugs=%d" % [state, b.current_phase,
-		b.iteration_count, ProductSystem.ITER_MAX_ROUNDS, b.efor_spent, b.total_efor, b.bug_count])
+	# HAT MODELİNİN ALANLARINI basar. Eskiden `iteration_count`/`efor_spent` yazıyordu ve
+	# ikisi de düz katalog yolunun alanları: hat yapımında hiç kımıldamıyorlar, yani rapor
+	# her durumda "round=1/4 efor=0.00" diyordu — fikstür doğru kurulmuşken bile.
+	print("[BuildState] %s → phase=%s turn=%d/%d design_efor=%.2f efor=%.2f/%.2f bugs=%d" % [
+		state, b.current_phase, b.design_turns_completed, ProductSystem.DESIGN_TURN_MAX,
+		b.design_efor_spent, b.efor_spent, b.total_efor, b.bug_count])
 
 
-# Debug: --product-shot=<portfoy|ozellikler|tracker|detail_b2b|detail_b2c|detail_b2c_buggy> (windowed).
-# Mounts GameShell with seeded state, drives the Product tab router to the requested
-# Rev3 view at 1920×1080, screenshots to user://, and quits.
+# Debug: --product-shot=<portfoy|ozellikler|tracker|beta|detail_b2b|detail_b2c|
+#                        detail_b2c_buggy|publish> (windowed).
+# Mounts GameShell with seeded state, drives the Product tab ROUTER to the requested
+# view at 1920×1080, screenshots to user://, and quits.
+#
+# Every kind now goes through the router — the scaffold kinds (lines|team|capacity) and
+# their hand-mount helper were deleted with the rev 6.1 cutover. They existed only to
+# screenshot the line-model views before a host existed; keeping them would leave a
+# second way to reach those views that the player never takes, and the visual gate
+# would then be verifying a path that does not ship.
 func _run_product_shot(kind: String) -> void:
 	get_tree().paused = false
 	_shot_window(Vector2i(1920, 1080))
@@ -1926,15 +2037,26 @@ func _run_product_shot(kind: String) -> void:
 			GameState.day = 95
 			GameState.set_flag("mvp_shipped", true)
 			GameState.set_flag("mvp_market_type", "b2b")
-			GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
+			GameState.set_flag("mvp_sub_product_type_id", "erp")
 			GameState.set_flag("mvp_product_name", "Nova")
 			GameState.set_flag("mvp_version", 2)
-			GameState.set_flag("mvp_innovation", 9.0)
-			GameState.set_flag("mvp_stability", 14.0)
-			GameState.set_flag("mvp_experience", 6.0)
-			GameState.set_flag("mvp_components",
-				["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"])
+			# HAT DURUMLARI (§12) — düz `mvp_components` listesi değil. Üç hat açık ve
+			# biri K2'de, ki kilitli · tamamlanmış · boş hat durumlarının üçü de aynı
+			# karede görünsün. Eksenler artık BURADAN türetiliyor (ProductState.
+			# axis_readings), o yüzden elle yazılan mvp_innovation/stability/experience
+			# fikstürü DÜŞTÜ: iki gerçek olurdu ve monitörle üçgen ayrışırdı.
+			_seed_line_state("erp", [
+				["line_erp_ledger", 2, "line_erp_ledger_k2", 1.06],
+				["line_erp_stock", 1, "line_erp_stock_k1", 1.00],
+				["line_erp_invoicing", 1, "line_erp_invoicing_k1", 0.75],
+			])
 			GameState.set_flag("mvp_launch_day", 73)
+			# ALTYAPI: yayın akışının ALTYAPI adımında seçilirdi; fikstür o adımı
+			# atladığı için sağlayıcı ve birim burada kurulur — yoksa kapasite bloğu
+			# sağlayıcısız ve 0 birimle "AŞIM" çizer, ki o hiç yayınlanmamış bir
+			# ürünün hâli, canlı bir ürünün değil.
+			ProductState.set_infra_provider("enterprise")
+			ProductState.set_infra_units(3)
 			GameState.set_flag("mvp_live_bug_count", 6)
 			GameState.set_flag("mvp_bug_history", [2, 2, 3, 4, 4, 5, 6])
 			GameState.set_flag("mvp_version_history",
@@ -1948,22 +2070,37 @@ func _run_product_shot(kind: String) -> void:
 			var c: Customer = SalesSystem.add_b2b_customer(p, 402, 70)
 			PromiseRegistry.create(c.id, "saas_ops_integration", 12)
 			if kind == "portfoy":   # LOC-DATA debug seed / id
-				ProductSystem.start_version_build(["saas_ops_scheduling"], founder_id, [])
+				# Portföy kartının "yapımda" satırı: bir sonraki sürüm iki kademe alıyor,
+				# biri açık hattı yükseltiyor (defter K2→K3) biri yeni hat açıyor.
+				# Stok K2 AÇIK bir hattı yükseltiyor (fikstürde K1'de), Sipariş K1 yeni
+				# hat açıyor — portföy kartı iki hareketi birden gösterir. Defter
+				# SEÇİLEMEZ, fikstürde zaten K2'de ve bir sonraki adımı K3; K3'ler
+				# §12.5'e göre bir Ar-Ge düğümüne bağlı ve Ar-Ge gelmeden kapı false
+				# döner. Stok K2'nin kapısı gerçek (Yazılım ★2 · Tasarım ★1) ve
+				# fikstür onu kurucuya gerçek yıldız vererek karşılıyor.
+				_seed_gate_stars(founder_id, {"engineering": 2, "design": 1})
+				ProductSystem.start_line_build("erp",
+					["line_erp_stock_k2", "line_erp_intake_k1"], founder_id, "Nova")
 				var b: FeatureBuild = ProductSystem.get_active_build()
 				if b != null:
 					b.efor_spent = b.total_efor * 0.64
 					ProductSystem.hourly_tick(9)  # faz bandını ilerlemeye oturtur
-		"detail_b2c", "detail_b2c_buggy":   # LOC-DATA debug seed / id
+		# `publish` AYNI FİKSTÜRÜ paylaşır: yayın akışı canlı bir ürünün üstünde yüzer ve
+		# boş bir sayfanın üstünde çekilen kare akışın gerçek bağlamını göstermez.
+		"detail_b2c", "detail_b2c_buggy", "publish":   # LOC-DATA debug seed / id
 			GameState.set_flag("mvp_shipped", true)
 			GameState.set_flag("mvp_market_type", "b2c")
-			GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
+			GameState.set_flag("mvp_sub_product_type_id", "note_tool")
 			GameState.set_flag("mvp_product_name", "Fokus")
 			GameState.set_flag("mvp_version", 1)
-			GameState.set_flag("mvp_innovation", 1.0)
-			GameState.set_flag("mvp_stability", 0.0)
-			GameState.set_flag("mvp_experience", 5.0)
-			GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
+			# v1 fikstürü: iki hat K1'de — genç bir ürün, hat listesi çoğunlukla boş.
+			_seed_line_state("note_tool", [
+				["line_note_tool_capture", 1, "line_note_tool_capture_k1", 1.00],
+				["line_note_tool_sync", 1, "line_note_tool_sync_k1", 0.75],
+			])
 			GameState.set_flag("mvp_launch_day", GameState.day)
+			ProductState.set_infra_provider("cloud")
+			ProductState.set_infra_units(2)
 			# detail_b2c_buggy (Calibration Round A §6): the same fixture with 15 live bugs, so
 			# the pricing ruler's conversion projection is seen moving under the bug penalty.
 			GameState.set_flag("mvp_live_bug_count", 15 if kind == "detail_b2c_buggy" else 5)
@@ -1993,12 +2130,21 @@ func _run_product_shot(kind: String) -> void:
 		return
 	match kind:
 		"ozellikler":
-			tab._navigate("creation", {"step": 3, "prefill": {"type": "saas_ops",
-				"features": ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_integration"]}})
+			# `features` artık PLANLANMIŞ KADEME kimlikleridir (creation_flow'un
+			# `_selected` sözleşmesi rev 6.1'de anlam değiştirdi).
+			tab._navigate("creation", {"step": 3, "prefill": {"type": "note_tool",
+				"features": ["line_note_tool_capture_k1", "line_note_tool_sync_k1",
+					"line_note_tool_search_k1"]}})
 		"tracker", "beta":
 			tab._navigate("tracker", {})
 		"detail_b2b", "detail_b2c", "detail_b2c_buggy":
 			tab._navigate("detail", {})
+		"publish":
+			# Yayın akışı kendi kapısından açılır (PublishFlow.open) — oyuncunun BETA
+			# aksiyonunda gittiği yolun aynısı. Elle mount, oyunda olmayan bir yolu
+			# çekmek olurdu.
+			tab._navigate("detail", {})
+			PublishFlow.open()
 		_:
 			pass  # portfoy: varsayılan iniş görünümü
 	await get_tree().process_frame
@@ -2012,6 +2158,29 @@ func _run_product_shot(kind: String) -> void:
 	img.save_png(path)
 	print("[ProductShot] saved %s" % ProjectSettings.globalize_path(path))
 	get_tree().quit()
+
+
+## Hat durumu fikstürü — çekim tohumları için TEK yol. Her satır
+## [hat kimliği, kademe, damgalanacak kademe kimliği, tur çarpanı]: kademe hattın
+## durumuna, çarpan §11.2'nin kademe-başı damgasına yazılır. İkisi ayrı çünkü
+## okumalar (ProductState.axis_readings) İKİSİNİ de çarpar — yalnız kademeyi
+## kurmak cilasız, yalnız damgayı kurmak hatsız bir ürün üretirdi.
+## Kapı fikstürü: §12.7'nin kapıları ŞİRKET GENELİNDEN okunur ve Konsept onayında
+## denetlenir, yani K2+ taşıyan bir çekim tohumunun kurucuya gerçek yıldız vermesi
+## gerekir. Ham puan yazılır (★N = ham ≥ 2N), çünkü kapı ham puandan okuyor.
+func _seed_gate_stars(character_id: String, areas: Dictionary) -> void:
+	var c: Character = CharacterRegistry.get_character(character_id)
+	if c == null:
+		return
+	for area in areas:
+		c.role_stats[String(area)] = int(areas[area]) * 2
+
+
+func _seed_line_state(subtype: String, rows: Array) -> void:
+	GameState.set_flag("mvp_sub_product_type_id", subtype)
+	for row in rows:
+		ProductState.set_line_tier(String(row[0]), int(row[1]))
+		ProductState.stamp_step(String(row[2]), float(row[3]))
 
 
 func _run_pitch_shot() -> void:
@@ -2131,6 +2300,9 @@ func _mount_shell() -> void:
 		EventBus.save_load_requested.connect(_on_save_load_requested)
 		EventBus.quicksave_requested.connect(_on_quicksave_requested)
 		EventBus.quickload_requested.connect(_on_quickload_requested)
+		# Ar-Ge kartları (W2-F). RnDSystem yayınlar, burası mount eder.
+		EventBus.rnd_card_requested.connect(_on_rnd_card_requested)
+		EventBus.product_note_issued.connect(_on_product_note_issued)
 		_event_signals_wired = true
 
 	# MENTOR INTRO BURADA MOUNT EDİLMEZ — sahibi _swap_to_shell_and_modal.
@@ -2168,6 +2340,17 @@ func _on_event_modal_requested(event: GameEvent) -> void:
 	if modal_layer == null:
 		push_error("[Main] GameShell/ModalLayer missing — event modal can't mount")
 		return
+	# D1 (event-engine rebuild, 2026-08-25). This was the ONE modal opener in this file with no
+	# null guard, and it was safe only because exactly one card can be active at a time. An
+	# orphaned EventModal is not a cosmetic bug: game_shell.gd:151-153 guards ESC and the speed
+	# keys on a ModalLayer child COUNT, and event_modal.gd has no ui_cancel, so a second modal
+	# stacked on the first leaves no keyboard way out — no pause, no menu, no save, no quit.
+	# The guard costs one line; the failure it prevents costs the run.
+	if _event_modal != null:
+		push_error("[Main] an event modal is already mounted (%s) — refusing to stack"
+			% _event_modal.name)
+		_event_modal.queue_free()
+		_event_modal = null
 	_event_modal = EVENT_MODAL.instantiate()
 	modal_layer.add_child(_event_modal)
 	_event_modal.populate(event)
@@ -2186,7 +2369,7 @@ func _on_event_resolved(_event_id: String, _choice_idx: int) -> void:
 	# open_term_table mounts the table — both from _apply_modifiers, which runs BEFORE
 	# event_resolved. Restoring speed here would unpause the clock behind the surface
 	# that just opened; its own close path owns the restore.
-	if not EventManager.has_pending() and _meeting_scene == null and _term_table == null:
+	if not EventGate.has_pending() and _meeting_scene == null and _term_table == null:
 		var restore: int = _pre_event_speed if _pre_event_speed >= 0 else TimeManager.last_running_speed
 		_pre_event_speed = -1
 		EventBus.speed_change_requested.emit(restore)
@@ -2223,7 +2406,7 @@ func _on_settings_dismissed() -> void:
 	_settings_modal = null
 	# Don't stomp an event/pitch that queued while settings were open — if one is
 	# pending it manages its own pause/restore; otherwise return to prior speed.
-	if not EventManager.has_pending():
+	if not EventGate.has_pending():
 		var restore: int = _pre_settings_speed if _pre_settings_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_settings_speed = -1
@@ -2260,7 +2443,7 @@ func _on_confirm_requested(config: Dictionary) -> void:
 func _on_confirm_dismissed() -> void:
 	_confirm_modal = null
 	# Onay sırasında kuyruğa event girdiyse kendi pause/restore'unu yönetir.
-	if not EventManager.has_pending():
+	if not EventGate.has_pending():
 		var restore: int = _pre_confirm_speed if _pre_confirm_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_confirm_speed = -1
@@ -2287,10 +2470,62 @@ func _on_system_menu_requested() -> void:
 
 func _on_system_menu_dismissed() -> void:
 	_system_menu = null
-	if not EventManager.has_pending():
+	if not EventGate.has_pending():
 		var restore: int = _pre_system_speed if _pre_system_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_system_speed = -1
+
+
+# --- Ar-Ge kartları (W2-F) -----------------------------------------------------
+
+## §5.8 keşif kartı · §6.1 aylık ürün notu. İKİSİ DE PanelLayer'a (layer 9) monte
+## edilir, ModalLayer'a (layer 10) DEĞİL — ve bu bir yerleşim tercihi değil bir
+## ÖLÇÜM: ModalLayer Space ve 1-3'ü yutuyor, yani saat oyuncunun DURAKLATAMADIĞI
+## bir kartın üstünde koşmaya devam ederdi. Bedeli Esc'tir (game_shell Guard 3
+## PanelLayer sakinine devrediyor) ve kart onu kendi `_unhandled_input`'unda alıyor.
+##
+## AYNI ANDA TEK KART. Bir keşif ile koşunun ilk raporu AYNI GÜNE düşebilir; üst
+## üste iki scrim karartmayı ikiye katlar ve alttaki kart okunmaz olur.
+func _on_rnd_card_requested(kind: String, data: Dictionary) -> void:
+	if _rnd_card != null and is_instance_valid(_rnd_card):
+		if _rnd_card_queue.size() < 2:
+			_rnd_card_queue.append({"kind": kind, "data": data})
+		return
+	_mount_rnd_card(kind, data)
+
+
+func _mount_rnd_card(kind: String, data: Dictionary) -> void:
+	var layer: Node = _shell.get_node_or_null("PanelLayer") if _shell != null else null
+	if layer == null:
+		push_error("[Main] GameShell/PanelLayer yok — Ar-Ge kartı monte edilemiyor")
+		return
+	var card: Node = RND_CARD_MODAL.instantiate()
+	_rnd_card = card
+	card.tree_exited.connect(_on_rnd_card_closed)
+	layer.add_child(card)                     # önce add_child (ev konvansiyonu)
+	if card.has_method("populate"):
+		card.populate(kind, data)
+
+
+## Kuyruğu boşaltma DEFERRED: `tree_exited` düğüm ağaçtan çıkarılırken atılıyor,
+## yani aynı karede aynı katmana yeni bir çocuk eklemek silme akışının ortasına
+## girer. Bir kare beklemek bunu tamamen kaldırıyor.
+func _on_rnd_card_closed() -> void:
+	_rnd_card = null
+	if _rnd_card_queue.is_empty():
+		return
+	var next: Dictionary = _rnd_card_queue.pop_front()
+	_mount_rnd_card.call_deferred(String(next.get("kind", "")), next.get("data", {}))
+
+
+## §6.1 — koşunun İLK raporu bir kez modal olarak açılır; sonraki her rapor Ar-Ge
+## sekmesinde bekler. MANDAL BURADA DEĞİL MOTORDA: `take_first_note_modal()` koşuda
+## tam bir kez true döner ve kendi latch'ini kendi kurar. İkinci bir bayrak burada
+## yaşasaydı kayıt/yükleme ikisini ayırır ve modal iki kez açılırdı.
+func _on_product_note_issued(_day: int) -> void:
+	if not RnDSystem.take_first_note_modal():
+		return
+	_on_rnd_card_requested("note", RnDSystem.pending_note())
 
 
 # --- Kaydet / Yükle modalı ---
@@ -2347,7 +2582,7 @@ func _load_slot(slot_id: String) -> void:
 	# F9 o kapıdan geçmiyor — tek bir tuş vuruşu, oyuncunun önündeki cevaplanmamış
 	# seçimi sessizce çöpe atardı. Kaydetmeyle AYNI kural (SaveManager.can_save):
 	# yarıda kalan karar taşınmaz.
-	if EventManager._active_event_id != "":
+	if EventGate.active_id() != "":
 		print("[Main] yükleme reddedildi: %s" % "SAVE_ERR_MODAL_OPEN")
 		return
 	var payload: Dictionary = SaveManager.read_slot(slot_id)
@@ -2394,7 +2629,7 @@ func _on_month_dismissed() -> void:
 	_month_modal = null
 	# Restore only if the run is still alive AND no event modal owns the pause
 	# (spec §1: DEVAM ET restore convention).
-	if GameState.run_active and not EventManager.has_pending():
+	if GameState.run_active and not EventGate.has_pending():
 		var restore: int = _pre_month_speed if _pre_month_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_month_speed = -1
@@ -2493,7 +2728,7 @@ func _close_dialogue_scenes() -> void:
 		_meeting_scene.queue_free()
 		_meeting_scene = null
 	# Yield to a pending event chain / a dead run (strict gate from MonthSummary/Ending).
-	if GameState.run_active and not EventManager.has_pending():
+	if GameState.run_active and not EventGate.has_pending():
 		var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_dialogue_speed = -1
@@ -2524,7 +2759,7 @@ func _close_term_table() -> void:
 		_term_table = null
 	# Sign ended the run (run_active false → no restore, the ending owns the freeze); a walk
 	# leaves the run alive → restore to the pre-table speed.
-	if GameState.run_active and not EventManager.has_pending():
+	if GameState.run_active and not EventGate.has_pending():
 		var restore: int = _pre_dialogue_speed if _pre_dialogue_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_dialogue_speed = -1

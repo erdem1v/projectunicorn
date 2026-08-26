@@ -1,0 +1,258 @@
+{
+  "subtype": "video_clip",
+  "_doc": "GDD URUN rev 6 §12.11 — Video Klip Aracı (B2C). Kanca: uzun videodan kısa klip, creator ekonomisi. Solo v1 = yükle → kes → altyazı. K3 yönü: otomatik klip seçimi / altyazı zekâsı (ai_engine).",
+  "_axis_shape": "2 innovation (clipping, captions) · 1 stability (pipeline) · 2 experience (timeline, framing) — §12.2.",
+  "_usage": "§10 — video gerçekten ağır iştir: kodlama ve AI kademeleri 2-3 taşır, kurgu yüzeyi 0-1'de kalır. Beş K1'in toplamı 4; payının dördü kodlama ile altyazıda, yani bir v1 hâlâ karşılanabilir.",
+  "_anchor": "line_video_clip_clipping_k3 is §12.10's solo-reachable K3: research node (ai_engine) + engineering ★2 + axis owner (innovation → product) ★1.",
+  "lines": [
+    {
+      "id": "line_video_clip_clipping",
+      "axis": "innovation",
+      "steps": [
+        {
+          "id": "line_video_clip_clipping_k1",
+          "axis_points": 4,
+          "effort": 6,
+          "usage_weight": 1,
+          "requires": {}
+        },
+        {
+          "id": "line_video_clip_clipping_k2",
+          "axis_points": 9,
+          "effort": 8,
+          "usage_weight": 2,
+          "requires": {
+            "person": [
+              {
+                "area": "engineering",
+                "stars": 2
+              },
+              {
+                "area": "product",
+                "stars": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": "line_video_clip_clipping_k3",
+          "axis_points": 12,
+          "effort": 11,
+          "usage_weight": 3,
+          "ai": true,
+          "requires": {
+            "research": "ai_engine",
+            "person": [
+              {
+                "area": "engineering",
+                "stars": 2
+              },
+              {
+                "area": "product",
+                "stars": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_video_clip_captions",
+      "axis": "innovation",
+      "steps": [
+        {
+          "id": "line_video_clip_captions_k1",
+          "axis_points": 4,
+          "effort": 6,
+          "usage_weight": 1,
+          "requires": {}
+        },
+        {
+          "id": "line_video_clip_captions_k2",
+          "axis_points": 9,
+          "effort": 8,
+          "usage_weight": 2,
+          "requires": {
+            "person": [
+              {
+                "area": "engineering",
+                "stars": 2
+              },
+              {
+                "area": "product",
+                "stars": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": "line_video_clip_captions_k3",
+          "axis_points": 12,
+          "effort": 11,
+          "usage_weight": 3,
+          "ai": true,
+          "license_cost": 1500,
+          "requires": {
+            "research": "ai_engine",
+            "person": [
+              {
+                "area": "product",
+                "stars": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_video_clip_pipeline",
+      "axis": "stability",
+      "steps": [
+        {
+          "id": "line_video_clip_pipeline_k1",
+          "axis_points": 4,
+          "effort": 7,
+          "usage_weight": 2,
+          "requires": {}
+        },
+        {
+          "id": "line_video_clip_pipeline_k2",
+          "axis_points": 9,
+          "effort": 9,
+          "usage_weight": 2,
+          "license_cost": 900,
+          "requires": {
+            "person": [
+              {
+                "area": "engineering",
+                "stars": 2
+              },
+              {
+                "area": "qa",
+                "stars": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": "line_video_clip_pipeline_k3",
+          "axis_points": 12,
+          "effort": 12,
+          "usage_weight": 3,
+          "requires": {
+            "research": "bug_tracker",
+            "total": [
+              {
+                "area": "engineering",
+                "stars": 5
+              }
+            ],
+            "person": [
+              {
+                "area": "qa",
+                "stars": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_video_clip_timeline",
+      "axis": "experience",
+      "steps": [
+        {
+          "id": "line_video_clip_timeline_k1",
+          "axis_points": 4,
+          "effort": 6,
+          "usage_weight": 0,
+          "requires": {}
+        },
+        {
+          "id": "line_video_clip_timeline_k2",
+          "axis_points": 9,
+          "effort": 8,
+          "usage_weight": 1,
+          "requires": {
+            "person": [
+              {
+                "area": "design",
+                "stars": 2
+              }
+            ]
+          }
+        },
+        {
+          "id": "line_video_clip_timeline_k3",
+          "axis_points": 12,
+          "effort": 11,
+          "usage_weight": 2,
+          "requires": {
+            "research": "scalable_backend",
+            "person": [
+              {
+                "area": "engineering",
+                "stars": 2
+              },
+              {
+                "area": "design",
+                "stars": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "line_video_clip_framing",
+      "axis": "experience",
+      "steps": [
+        {
+          "id": "line_video_clip_framing_k1",
+          "axis_points": 4,
+          "effort": 5,
+          "usage_weight": 0,
+          "requires": {
+            "person": [
+              {
+                "area": "design",
+                "stars": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": "line_video_clip_framing_k2",
+          "axis_points": 9,
+          "effort": 7,
+          "usage_weight": 1,
+          "requires": {
+            "person": [
+              {
+                "area": "design",
+                "stars": 2
+              }
+            ]
+          }
+        },
+        {
+          "id": "line_video_clip_framing_k3",
+          "axis_points": 12,
+          "effort": 10,
+          "usage_weight": 2,
+          "requires": {
+            "research": "design_system",
+            "person": [
+              {
+                "area": "design",
+                "stars": 3
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "_numbers": "rev 6.1 sealed centres K1 4 · K2 9 · K3 12 (weighted 4,0 · 7,2 · 14,4).",
+  "_gates": "§12.8: K2/K3 ask for the axis owner (innovation->product · stability->qa · experience->design) so the above-gate bonus is live content."
+}

@@ -1,0 +1,64 @@
+{
+  "_ported_from": "ev_phase_gate_traction (PhaseGateSystem._build_gate_event)",
+  "_port_note": "A one-option NOTIFICATION, not a decision — Bootstrap→Traction cannot be declined. The smoke case traction_gate_one_option pins that, and additionally pins that GATE_TRACTION_BODY_1 has no CSV row, i.e. this card has exactly one body. §7.4’s shutter hold is a CONDITION LEAF now, not an early return in two places. PhaseGateSystem held the scene at _open_gate and again at _tick_reminder, and a third path (on_shutter_cleared) existed to undo the hold; one leaf replaces all three, and the \"why didn’t this fire\" panel can name it. CONDITION IS THE RATCHET, not a second copy of the gate's own thresholds. The card first carried `phase.current` plus the revenue/growth/brand leaves, which read as the same question and is not: PhaseGateSystem latches `phase_gate_ready` and `pending_next_phase` and never re-evaluates after (§2.3), so a card re-asking the thresholds would go quiet the moment the player's MRR dipped — with the door still open and no way to walk through it. Reading the ratchet means the card says exactly what the system decided.",
+  "id": "funding.gate_traction",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.gate_ready",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "funding.gate_pending_phase",
+        "op": "==",
+        "value": 2
+      },
+      {
+        "seam": "finance.shutter_days_left",
+        "op": "<",
+        "value": 0,
+        "reason": "held while the shutter runs (GDD 7.4)"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "advance",
+      "outcome_id": "advanced",
+      "effects": [
+        {
+          "verb": "advance_phase"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "GATE_TRACTION_TITLE",
+      "body": "GATE_TRACTION_BODY_0",
+      "options": {
+        "advance": "GATE_TRACTION_ADVANCE"
+      }
+    },
+    "en": {
+      "title": "GATE_TRACTION_TITLE",
+      "body": "GATE_TRACTION_BODY_0",
+      "options": {
+        "advance": "GATE_TRACTION_ADVANCE"
+      }
+    }
+  }
+}

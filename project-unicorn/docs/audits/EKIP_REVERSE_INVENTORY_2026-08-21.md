@@ -66,7 +66,7 @@ Cited sections run **§1, §2, §3, §4, §5, §6, §7, §7b, §8, §12, §12.3,
 
 They are one document, and this is checkable rather than assumed: **§8 means leave-and-capacity in five separate files** — `hr_morale_system.gd:104` and `:375` (nobody is asked to approve leave), `character_registry.gd:414` (the salary pull is deliberately not status-filtered, because leave is paid), `b2b_sales_system.gd:95` ("capacity/CS contribution stops"), `product_system.gd:239` (capacity). Section numbers that carry consistent meaning across five files are not five authors coining the same label.
 
-**There is no such document under `docs/`.** `docs/.md` — the hidden filename — is the Event Pool Design. Ruling taken (Erdem): treat it as phantom.
+**There is no such document under `docs/`.** `docs/design/EVENT_POOL_DESIGN_v1.md` — the hidden filename — is the Event Pool Design. Ruling taken (Erdem): treat it as phantom.
 
 This is not a documentation complaint. It decides what is designed:
 

@@ -174,3 +174,178 @@ static func shipped_normalized() -> float:
 static func shipped_composite() -> float:
 	var sub := String(GameState.get_flag("mvp_sub_product_type_id", ""))
 	return composite_quality(economy_dims_from_flags(), ProductCatalog.get_quality_axes(sub))
+
+
+# =========================================================================
+#  GDD — ÜRÜN MODÜLÜ rev 6 §11.2 · §11.3 — HAT MODELİNİN OKUMA ZİNCİRİ
+# =========================================================================
+#
+# §18: "Eksen okumaları → §11.2 zinciri; başka hiçbir sistem eksen hesaplamaz."
+# Zincir tek yönlüdür ve tamamı burada:
+#
+#   gizil     = Σ (hattın mevcut kademesinin eksen puanı × Kano katsayısı)
+#   ceza      = eksende hiç hat açılmamışsa ×0,6
+#   gerçekleş = gizil × tur çarpanı × (1 + kapı-üstü bonusu)
+#   okuma     = round(100 × gerçekleşen / çıta_faz), 0-120 arasına sıkıştırılır
+#   Kararlılık okumasından ayrıca −2 × açık DOĞRULANMIŞ hata
+#
+# Eksenler yatırım kolu DEĞİLDİR (§11.1): slider yok, toplam tek skor yok. Bunlar
+# skor tabelasıdır.
+
+## §11.3 — pazar çıtası. Beklenen ham gizil değer, her faz geçişinde +%10.
+## "Yerinde durmak görece gerilemektir."
+const PHASE_BAR := {1: 12.0, 2: 13.2, 3: 14.5}
+
+## PHASE_BAR'ın içindeki gizli çarpan, artık açık: 12,0 tam olarak EKSEN BAŞINA
+## ÜÇ HAT'ın K1'idir (3 × 4 × 1,0). Yayınlanmış her alt-tipte eksen başına tam
+## üç hat var (§12.2, doğrulandı). Gizli bir hat dördüncüyü eklediğinde çıta da
+## büyümek zorunda; büyümezse hattın tek başına K1'i Series A çıtasında ~+27 okuma
+## puanı eder ve bu kalibre edilmemiş bir hediyedir.
+const BASELINE_LINES_PER_AXIS := 3
+
+## §12.4 — Basic yokluğu cezası. Bir eksende üç hat da boşsa o eksenin gizili
+## ×0,6. Pratikte yalnız İKİNCİL puanla beslenen eksende ısırır: kendi hattı
+## açılmamışken başka hattın taşmasıyla puan toplayan eksen tam kredi almaz.
+const EMPTY_AXIS_PENALTY := 0.6
+
+## §11.2 — Kararlılık okumasından her açık doğrulanmış hata için düşülen puan.
+## GELEN BİLDİRİM değil, DOĞRULANMIŞ HATA sayılır (§8.1).
+const CONFIRMED_BUG_READING_COST := 2.0
+
+## §11.3 — gösterimde 0-120 arasına sıkıştırılır; üçgen geometrisi 100'ü TAM KENAR
+## sayar, yani çıtanın üstündeki ürün kenarı taşırır. Bu bir hata değil, okumanın
+## kendisidir.
+const READING_MIN := 0.0
+const READING_MAX := 120.0
+
+
+## The bar for a phase (1 Bootstrap · 2 Traction · 3 Series A). Defaults to the
+## live phase. Stays PUBLIC and un-scaled: this is the market bar itself, which
+## `axis_bar` below scales per axis. Callers that want "what does the market
+## expect of a three-line axis" want this one.
+static func phase_bar(phase: int = -1) -> float:
+	var p: int = phase if phase > 0 else GameState.phase
+	return float(PHASE_BAR.get(p, PHASE_BAR[1]))
+
+
+## The bar for ONE axis: the market bar scaled by the number of lines the product
+## ACTUALLY HAS on that axis — not the number of lines that are OPEN.
+##
+## ÇITA ÜRÜNÜN SAHİP OLDUĞU HATLARI SAYAR. Katalog hatları HER ZAMAN sayılır:
+## onlar pazarın taban beklentisidir, oyuncu o hatta hiç kademe yayınlamamış olsa
+## bile pazar onları bekler. Gizli (runtime) bir hat sayıma ancak İLK KADEMESİ
+## YAYINLANDIĞINDA girer (`line_tiers[line_id] >= 1`).
+##
+## BU KURAL TERSİNE OKUNUYOR VE BİR SONRAKİ OTURUM ONU "DÜZELTMEK" İSTEYECEK,
+## O YÜZDEN GEREKÇE BURADA: AÇIK hatları saymak, çıtayı hat AÇILDIĞI AN
+## yükseltiyordu — oyuncu içine henüz hiçbir şey gönderememişken. Ölçüldü:
+## kararlılık okuması 82,8 → 62,1'e düşüyordu, tam da oyuncunun ağacın en iyi
+## ödülünü bulduğu anda. İyi oynadığı için cezalandırılan bir oyuncu.
+## Düzeltilmiş kuralda o çukur YOK: K1'i yayınlamak tam olarak NÖTR (ötekilerle
+## aynı olgunlukta bir hat eklediniz, yani pazarın beklentisinin tam üstündesiniz),
+## K2 ise +16,5 getirir — ve o hak edilmiştir. Kurgu da böyle daha doğru: pazar,
+## ürününüzün sahip olmadığı bir yeteneği beklemez; onu eklediğiniz gün beklemeye
+## başlar.
+##
+## ÖLÇEĞİ DEĞİŞEN OKUMA'DIR, DEĞER DEĞİL. `realized_dims` bilerek dokunulmadan
+## bırakıldı: ekonominin doyum eğrisi MUTLAK bir sayı istiyor ve gizli hattın
+## gerçek getirisi tam olarak orada yaşıyor. Burada değişen, o değerin pazar
+## karşısında nasıl OKUNDUĞUDUR.
+##
+## `EventBus.phase_bar_raised(phase: int)` BU İŞ İÇİN KULLANILMAZ: yükü bir FAZ'dır,
+## oysa bir hat açmak tek bir EKSENİ yükseltir. İkisi aynı sinyal değildir.
+static func axis_bar(subtype: String, line_tiers: Dictionary, axis: String,
+		phase: int = -1) -> float:
+	var ids: Array = (ProductLines.line_ids_by_axis(subtype).get(axis, []) as Array)
+	var counted: int = 0
+	for line_id in ids:
+		var lid: String = String(line_id)
+		if not bool(ProductLines.line(lid).get("runtime", false)):
+			counted += 1                                  # katalog hattı: her zaman sayılır
+		elif int(line_tiers.get(lid, 0)) >= 1:
+			counted += 1                                  # gizli hat: ilk kademesi çıktıysa
+	if counted <= 0:
+		# Bilinmeyen alt-tip ya da hiç hattı olmayan eksen — ölçülecek bir şey yok.
+		# Sıfıra bölmek yerine çıplak pazar çıtasına düşülür (eski davranış).
+		return phase_bar(phase)
+	return phase_bar(phase) * float(counted) / float(BASELINE_LINES_PER_AXIS)
+
+
+## §5 + §12.8 — the realization multiplier a version stamps onto every step it
+## ships: the design-turn multiplier times the above-gate bonus.
+##
+## STAMPED PER STEP, not applied per read. §2 and §12.3 both rule that a finished
+## version is never damaged retroactively ("Yapım geriye dönük bozulmaz"), so a
+## later one-turn version must not degrade what a four-turn version already built.
+## §11.2 writes the multiplier outside the sum, which reads the other way; the
+## no-retroactive-damage rule appears twice and wins. FLAGGED.
+static func realization_stamp(turn_multiplier: float, above_gate_bonus: float) -> float:
+	return maxf(0.0, turn_multiplier) * (1.0 + maxf(0.0, above_gate_bonus))
+
+
+## §11.2 — realized value of one axis. `line_tiers` maps line_id -> 0..3 and
+## `line_realization` maps line_id -> the stamp that line's current step shipped
+## with (missing = 1.0, which is what an un-stamped test fixture wants).
+static func realized_axis(subtype: String, line_tiers: Dictionary,
+		line_realization: Dictionary, axis: String) -> float:
+	var total: float = 0.0
+	var own_axis_open := false
+	for line_id in ProductLines.line_ids(subtype):
+		var lid: String = String(line_id)
+		var tier: int = int(line_tiers.get(lid, 0))
+		if tier <= 0:
+			continue
+		var step: Dictionary = ProductLines.step_at(lid, tier)
+		if step.is_empty():
+			continue
+		var points: float = 0.0
+		if String(step.get("axis", "")) == axis:
+			points = float(int(step.get("axis_points", 0)))
+			own_axis_open = true
+		else:
+			# §12.12 — a step may name an optional secondary axis.
+			var secondary: Dictionary = step.get("axis_points_secondary", {}) as Dictionary
+			points = float(int(secondary.get(axis, 0)))
+		if points <= 0.0:
+			continue
+		var coef: float = float(ProductLines.KANO_COEF.get(String(step.get("kano", "k1")), 1.0))
+		var stamp: float = float(line_realization.get(lid, 1.0))
+		total += points * coef * stamp
+	if not own_axis_open:
+		total *= EMPTY_AXIS_PENALTY
+	return total
+
+
+## §11.3 — the 0-120 reading. This is what the triangle draws, what
+## `urun.axis_reading` returns and what the floor ladder (§14) compares against.
+static func axis_reading(subtype: String, line_tiers: Dictionary,
+		line_realization: Dictionary, axis: String, confirmed_bugs: int = 0,
+		phase: int = -1) -> int:
+	var realized: float = realized_axis(subtype, line_tiers, line_realization, axis)
+	# Çıta EKSEN BAŞINA ölçeklenir (bkz. `axis_bar`): gizli bir hat ilk kademesini
+	# yayınladığı gün pazarın beklentisi de büyür.
+	var reading: float = 100.0 * realized / maxf(0.01, axis_bar(subtype, line_tiers, axis, phase))
+	if axis == "stability":
+		reading -= CONFIRMED_BUG_READING_COST * float(maxi(confirmed_bugs, 0))
+	return int(round(clampf(reading, READING_MIN, READING_MAX)))
+
+
+## All three readings at once — the triangle's feed.
+static func axis_readings(subtype: String, line_tiers: Dictionary,
+		line_realization: Dictionary, confirmed_bugs: int = 0, phase: int = -1) -> Dictionary:
+	var out: Dictionary = {}
+	for axis in AXES:
+		out[axis] = axis_reading(subtype, line_tiers, line_realization,
+			String(axis), confirmed_bugs, phase)
+	return out
+
+
+## The raw realized values, which are what the economy's saturation curve reads
+## (`normalized_quality`). Kept separate from the reading on purpose: the reading
+## is a comparison against the market bar, the economy wants an absolute.
+static func realized_dims(subtype: String, line_tiers: Dictionary,
+		line_realization: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	for axis in AXES:
+		out[axis] = realized_axis(subtype, line_tiers, line_realization, String(axis))
+	return out

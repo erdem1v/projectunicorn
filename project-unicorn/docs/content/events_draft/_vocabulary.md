@@ -1,257 +1,374 @@
-# Event Authoring · Vocabulary (extracted from the engine, 2026-08-19)
+# Event authoring · vocabulary
 
-**Read this first.** Every node draft under `docs/content/events_draft/` may use only what is listed here. Anything a node wants that is not here is written as `[VOCAB?] <what it wants>` (an effect) or `[COND?] <what it wants>` (a prerequisite). Nothing is invented. Nothing here is wired; this document is an audit of what the engine can execute today, so the director and the rebuild arc can see the distance between the Pool Design (`docs/.md`, EVENT POOL DESIGN v1) and the code.
+**GENERATED from the engine — do not hand-edit outside the marked block.**
+Regenerate: `godot --headless --path . --event-vocab`
 
-Source of truth for each table: `scripts/autoload/event_manager.gd`, `scripts/modals/event_modal.gd`, `scripts/data_models/event.gd`, `scripts/data_models/event_choice.gd`, `scripts/autoload/game_state.gd`, `scripts/autoload/event_bus.gd`, `localization/strings.csv`. Line numbers are as of this date; re-check before wiring.
+Every card may use only what is listed here. Anything a draft wants that is not
+here is written `[VOCAB?] <what it wants>` for an effect or `[COND?] <…>` for a
+prerequisite, and the node is not wired until the item ships. Nothing is invented —
+that rule is GDD v2 ch.11 §3, and §21's DELTA workflow is how an item gets added.
 
-Sections: **a.** effects · **b.** conditions · **c.** slots and targeting · **d.** memory hooks · **e.** trigger-hook map · **f.** legacy-function map · **g.** conventions and known gaps.
+Counts are what the engine actually has, at generation time:
 
----
+| | count |
+|---|---|
+| Seams (read) | **147** |
+| Effect verbs (write) | **59** |
+| Cards in the catalogue | 43 |
+| Arcs | 3 |
 
-## a. Effect vocabulary (43 executable modifier types as extracted this morning; the in-flight Build Bar task removes `advance_iteration` and adds `enter_beta`, so the live count is still 43)
+## a · Effect verbs
 
-Dispatcher: `EventManager._apply_modifiers` (`event_manager.gd:522-761`). Every entry is `{"type": <string>, ...params}`. `delta` is read for every modifier (`:528`) but only the rows that name it use it. Unknown type → `push_warning` and silent no-op (`:760-761`).
+**The grouping IS the rule.** An effect's origin decides what it may do — that is
+invariant I2, and it is enforced by the dispatch table rather than by a lint pass,
+so a verb absent from a group is unreachable from it rather than merely discouraged.
 
-What the player sees: `EventModal._describe_modifier` (`event_modal.gd:452-526`) builds one chip per modifier from `EFFECT_*` keys in `strings.csv:1664-1697`. **A type with no row there renders no chip; the card is blind for that effect.** The audit (2026-07-14) counts a hidden cost as a defect. So: a blind type may carry bookkeeping (memory), never a cost.
+| origin | may use |
+|---|---|
+| an option's `effects` | neutral + economic + terminal |
+| `on_expire.penalties` | neutral + economic **negative only** |
+| `on_invalidate.penalties`, arc auto-steps, signal handlers | neutral only |
+| a `check` branch | neutral + economic, **never terminal** (I6) |
 
-`{v}` = signed value; money is `$1.234` TR / `$1,234` EN via `Fmt`.
+### Neutral — available everywhere
 
-### a.1 Economy
+- `set_flag`
+- `clear_flag`
+- `set_timed_flag`
+- `stamp_day`
+- `schedule_event`
+- `cancel_scheduled`
+- `start_arc`
+- `advance_arc`
+- `set_arc_var`
+- `abort_arc`
+- `end_arc`
+- `change_morale`
+- `morale_all`
+- `assign_to`
+- `send_on_leave`
+- `start_training`
+- `dimension_delta`
+- `bug_delta`
+- `delay_days`
+- `damage_product`
+- `ship_active_build`
+- `enter_development`
+- `enter_beta`
+- `satisfaction_delta`
+- `promise_create`
+- `ticker_push`
+- `goto_tab`
+- `unlock_content`
+- `spend_budget`
+- `notify`
+- `open_negotiation`
+- `start_vc_meeting`
+- `open_term_table`
+- `advance_phase`
+- `phase_gate_decline`
+- `set_game_flag`
+- `mentor_advisory`
+- `b2b_retain_delay`
+- `b2b_retain_ignore`
+- `b2b_expand_decline`
 
-| type | params (default) | changes (seam) | player sees (TR / EN) | notes |
+### Economic — a played decision only
+
+Barred from ambient origins entirely; on expiry, allowed only in the negative.
+
+- `add_cash`
+- `add_mrr`
+- `add_brand`
+- `add_reputation`
+- `add_customer`
+- `churn_customer`
+- `customer_mrr_delta`
+- `seats`
+- `audience_delta`
+- `convert_audience`
+- `open_paid_tier`
+- `change_salary`
+- `fire_employee`
+- `employee_leaves`
+- `add_prospect`
+- `angel_accept`
+- `b2b_expand`
+- `b2b_retain_discount`
+
+### Terminal
+
+Requires `requires_telegraph` naming a card or flag that has already fired (I3).
+
+- `trigger_ending`
+
+## b · Seams — everything a condition may read
+
+A name not on this list is a **build error** (§17.1), not a runtime warning. An
+entity-scoped seam needs a `scope` naming the slot when the card has more than one
+slot of that type (§17.12).
+
+### `arge.`
+
+| seam | scope | type | owner | note |
 |---|---|---|---|---|
-| `cash` | `delta` (0) | `GameState.set_cash(cash+delta)` → `cash_changed`, runway recalculated | `Nakit {v}` / `Cash {v}` | latches `cash_went_negative` if it dips under 0 |
-| `brand` | `delta` (0) | `GameState.set_brand`, **clamps 0..100** | `Marka {v}` / `Brand {v}` | chip prints the nominal delta, clamp happens after |
-| `reputation` | `delta` (0) | `GameState.set_reputation`, **clamps −10..100** | `İtibar {v}` / `Reputation {v}` | same clamp caveat |
-| `mrr` | `delta` | **NO DISPATCHER BRANCH** | `MRR {v}` (chip exists, `event_modal.gd:459`) | **Mismatch #1**: documented as legal in `event_choice.gd:13`, has a chip, does nothing. Treat as `[VOCAB?] mrr` |
+| `arge.active` | global | string | R&D | the running node id, or empty; exactly one at a time |
+| `arge.attention_count` | global | int | R&D | what the rail badge counts |
+| `arge.completed_count` | global | int | R&D | 0-20 |
+| `arge.is_frozen` | global | bool | R&D | research with nobody assigned; progress is preserved, not lost |
+| `arge.note_pending` | global | bool | R&D | an unread monthly product note is waiting |
+| `arge.tree_open` | global | bool | R&D | the tab is reachable |
 
-### a.2 People / morale
+### `destek.`
 
-| type | params (default) | changes | player sees | notes |
+| seam | scope | type | owner | note |
 |---|---|---|---|---|
-| `morale` | `character_id` (""), `delta` | employee → `HRMoraleSystem.apply_delta(c, delta, "event")` (trait × Liderlik scaling); non-employee → `CharacterRegistry.set_morale` | `{Ad} {v}` (first name) / `Moral` if id unknown | **Mismatch #2**: chip prints nominal, engine scales. Unknown id → warn + skip |
-| `morale_all_employees` | `delta` | broadcast to every employee (incl. on leave) | `Ekip {v}` / `Team {v}` | no targeting |
-| `add_character` | `character_data{id (req), character_name, role, category, monthly_salary, equity_pct, morale, loyalty, relationship, trust_score, traits, role_stats, attention_flag}` | `CharacterRegistry.add` | `Yeni ekip üyesi` / `A new teammate` | duplicate id → warn, no-op |
-| `hr_departure` | `character_id` (req) | `HRMoraleSystem.confirm_departure` → registry remove, `run_departures++` | `{Ad} ayrılıyor` / `{Name} is leaving` | |
-| `hr_overtime_stop` | `department` ("") | `HROvertimeSystem.stop(dept)` | `Ek mesai durur` / `Overtime stops` | |
-| `hr_overtime_continue` | `department`, `character_id` | `HROvertimeSystem.note_valve_continued` (per-person, run-lifetime memory; feeds resignation odds) | `Mesai sürer · istifa riski artar` / `Overtime continues · the risk of resignations rises` | |
+| `destek.absorb_ceiling` | global | int | Ops | requests the desk can take before escalating |
+| `destek.desk_staffed` | global | bool | Ops | anyone on support at all |
+| `destek.warmth_band` | global | string | Ops | calm | warm | hot at 20 / 40 unvalidated reports |
 
-### a.3 Flags / narration (blind)
+### `finance.`
 
-| type | params | changes | player sees | notes |
+| seam | scope | type | owner | note |
 |---|---|---|---|---|
-| `set_flag` | `key` (req), `value` (any, may be null) | `GameState.set_flag(key, value)`; no signal | **nothing** | the arc-memory write. Never a cost |
-| `mentor_advisory` | `text` ("") | `EventBus.mentor_advisory_changed.emit(text)` → latched line on the Events page / Hunt page | **nothing on the card**; the line appears elsewhere | `text` is a **raw TR literal with no `_en`** → any new use is `[VOCAB?] mentor_advisory key/text_en` (Bilingual Birth Law) |
+| `finance.brand` | global | int | Finance | WRAPPER; clamped 0-100 |
+| `finance.cash` | global | int | Finance | WRAPPER over GameState.cash; MAY BE NEGATIVE, which is what starts the shutter |
+| `finance.daily_burn` | global | int | Finance | WRAPPER; day 1 is $50 |
+| `finance.daily_net` | global | int | Finance | signed |
+| `finance.growth_streak_months` | global | int | Finance | consecutive closed months of MRR growth |
+| `finance.investor_equity_pct` | global | int | Finance | 0-100 |
+| `finance.months_closed` | global | int | Finance | WRAPPER; capped at 12 by the ledger |
+| `finance.mrr` | global | int | Finance | WRAPPER; the headline revenue number |
+| `finance.peak_mrr` | global | int | Finance | WRAPPER; high-water mark |
+| `finance.profit_streak_months` | global | int | Finance | consecutive closed months in the black with no red days |
+| `finance.reputation` | global | int | Finance | WRAPPER; clamped -10..100 |
+| `finance.runway_days` | global | int | Finance | WRAPPER, filed as YOK; 9999 stands for default-alive |
+| `finance.runway_months` | global | float | Finance | INF when net >= 0 — compare with '<', never '>' |
+| `finance.shutter_days_left` | global | int | Finance | WRAPPER; -1 when not counting, else counts down |
+| `finance.shutter_days_total` | global | int | Finance | the shutter window; card text interpolates this rather than typing it |
+| `finance.total_raised` | global | int | Finance | cash in from all rounds |
 
-### a.4 Product / build
+### `founder.`
 
-| type | params (default) | changes | player sees | notes |
+| seam | scope | type | owner | note |
 |---|---|---|---|---|
-| `dimension_delta` | `axis` ("innovation"), `amount` (0) | `ProductSystem.apply_dimension_delta` (axis validated; invalid → innovation); **no-op if no active build** | `İnovasyon/Kararlılık/Deneyim {v}` via `ProductCatalog.axis_label` | |
-| `bug_delta` | `amount` (0) | `ProductSystem.apply_bug_delta` (floor 0) | `Hata {v}` / `Bugs {v}` (sign inverted for colour) | |
-| `delay_days` | `days` (0), **+ = slower** | `ProductSystem.apply_speed_bonus(days)`; **no-op without an active build** (`product_system.gd:1153`) | `{v} gün` / `{v} days` | **post-ship this chip lies**: it shows a day cost that nothing pays. Not usable as "founder time" outside a build |
-| `speed_bonus` (deprecated) | `days` | same as `delay_days` | `{v} gün` (no neutral at 0) | do not use in new nodes |
-| `quality_bonus` (deprecated) | `amount` | innovation delta | `Kalite +{n}` (**hardcodes "+", always green**) | do not use |
-| `ship_active_build` | | `ProductSystem.ship_active_build()` (narrative-only) | nothing | |
-| `advance_iteration` **(RETIRED)** | | was `ProductSystem.advance_iteration()` | was `Bir tasarım turu · {days} gün` | **retired by the Build Bar task (in flight, 2026-08-19): the dispatcher arm and the `EFFECT_DESIGN_ROUND` chip are gone from the working tree; do not use** |
-| `enter_development` | | `ProductSystem.enter_development()` | `Geliştirme başlar` | |
-| `enter_beta` **(NEW, Build Bar task)** | | `ProductSystem.enter_beta()` | `Beta başlar` / `Beta begins` (`EFFECT_BETA_BEGINS`) | added by the Build Bar task in the same working tree; confirm at wiring time |
+| `founder.charisma` | global | int | HR | 0-10 on the shared ruler; pitch and scandal outcomes read it |
+| `founder.equity_pct` | global | int | HR | WRAPPER: the complement of the investor total |
+| `founder.is_busy` | global | bool | HR | assigned, in training, or preparing a pitch |
+| `founder.leadership` | global | int | HR | 0-10; the morale ceiling and the team output multiplier |
+| `founder.origin` | global | string | HR | self_made | heir | corporate_refugee |
+| `founder.task_state` | global | string | HR | build | sales | support | research | pitch_prep | training | idle |
 
-### a.5 Sales / customers
+### `funding.`
 
-| type | params (default) | changes | player sees | notes |
+| seam | scope | type | owner | note |
 |---|---|---|---|---|
-| `add_prospect` | `archetype` ("small"), `source` ("event") | `PitchSystem.spawn_prospect` → a lead on the sales board | `Yeni aday` / `A new prospect` | **may return null silently** (sector pool exhausted): chip promises, nothing lands. The only "Frank opens a door" effect that exists |
-| `churn_customer` | `customer_id` ("" → lowest-satisfaction in the event's market) | B2C: audience −15 %; B2B: `CustomerRegistry.remove` + `run_customers_lost++` + MRR bridge | `Müşteri kaybı` / `A customer lost` | |
-| `seats` | `customer_id` ("" → first B2B by insertion), `amount`, `per_seat_mrr` (0) | `set_seats` (+ `set_mrr` if per_seat_mrr) | `Koltuk {v}` | **Mismatch #3a**: the MRR half is invisible |
-| `customer_mrr_delta` | `customer_id` ("" → first B2B), `delta` | `CustomerRegistry.set_mrr` (≥0) + bridge | `Müşteri MRR {v}` | |
-| `satisfaction_delta` | `customer_id` ("" → lowest-sat in market), `delta` | `set_satisfaction` (0..100) | `Memnuniyet {v}` | |
-| `audience_delta` | `delta` | `SalesSystem.add_b2c_audience` (≥0, float) | `Kitle {v}` / `Audience {v}` | |
-| `open_paid_tier` | `price` (15), `initial_pct` (dead) | `SalesSystem.open_b2c_paid_tier` | `Ücretli katman açılır` | |
-| `convert_audience` | `pct` (0.0) **or** `count` (0) | audience += round(audience×pct) or count | `Kitleden dönüşüm {pct}` | **Mismatch #3b**: `count` form renders "%0" |
+| `funding.angel_days_since_accept` | global | int | Investment | -1 when the cheque has not landed; the day stamp stays in GameState |
+| `funding.angel_threshold_met` | global | bool | Funding | MRR has crossed the bar Frank's cheque waits on |
+| `funding.gate_pending_phase` | global | int | Funding | WRAPPER; 0 when no gate is open |
+| `funding.hard_mode` | global | bool | Funding | RESERVED — no writer exists; the honest lock on Frank's decline row |
+| `funding.last_answer_moment` | global | bool | Investment | one sheet, one day left, and no other table to walk to |
+| `funding.meeting_day_arrived` | global | bool | Funding | a booked meeting's day has come |
+| `funding.sheet_days_left` | global | int | Funding | 9999 when no sheet is live |
 
-### a.6 B2B retention outcomes (each routes through a `B2BSalesSystem` seam)
+### `hr.`
 
-| type | params (default) | changes | player sees |
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `hr.account_count` | entity | int | HR | how many accounts this person carries |
+| `hr.attention_count` | global | int | HR | what the rail badge counts |
+| `hr.candidates_ready` | global | bool | HR | the Atlas search has delivered |
+| `hr.experience_ratio` | entity | float | HR | 0.0-1.0 toward the next threshold |
+| `hr.flight_risk` | entity | bool | HR | WRAPPER: morale under 35 |
+| `hr.headcount` | global | int | HR | active employees; excludes the founder and the mentor by construction |
+| `hr.idle_count` | global | int | HR | employees with no job |
+| `hr.is_busy` | entity | bool | HR | leave or training, plus pitch prep for the founder |
+| `hr.is_idle` | entity | bool | HR | an employee with no job at all |
+| `hr.is_overloaded` | entity | bool | HR | more than one job |
+| `hr.job_count` | entity | int | HR | 0, 1 or 2 |
+| `hr.level` | entity | int | HR | WRAPPER over Character.level. 0 Junior / 1 Orta / 2 Kıdemli |
+| `hr.morale` | entity | int | HR | 0-100 |
+| `hr.morale_avg` | global | float | HR | 0.0-100.0, and 0.0 when there are no employees at all |
+| `hr.morale_band` | entity | string | HR | high | mid | low, at 80 / 50 / 35 |
+| `hr.overtime_active` | entity | bool | HR | hours above 8 |
+| `hr.payroll_monthly` | global | int | HR | not status-filtered: leave is paid |
+| `hr.raise_cooldown_left` | entity | int | HR | days until a raise is allowed again; 0 means now |
+| `hr.resign_voice` | entity | string | HR | the per-person resignation line |
+| `hr.salary` | entity | int | HR | WRAPPER over Character.monthly_salary, USD/month |
+| `hr.salary_band_position` | entity | float | HR | WRAPPER, filed as YOK: <0 under the band, 0..1 inside it |
+| `hr.short_day_active` | entity | bool | HR | hours below 8 |
+| `hr.status` | entity | string | HR | active | on_leave | training |
+| `hr.tenure_days` | entity | int | HR | days on the payroll; 0 when hire_day was never stamped |
+| `hr.unstaffed_job_count` | global | int | HR | jobs nobody is assigned to |
+| `hr.work_hours` | entity | int | HR | 5-11, the resolved inheritance chain, default 8 |
+| `hr.work_hours_company` | global | int | HR | the company base, 5-11 |
+
+### `investor.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `investor.angel_taken` | global | bool | Funding | WRAPPER; Frank's cheque was accepted |
+| `investor.meeting_pending` | global | bool | Funding | WRAPPER; one at a time by construction |
+| `investor.pivot_used` | global | bool | Funding | WRAPPER; the VC path is permanently closed |
+| `investor.rejections` | global | int | Funding | WRAPPER; three closed tables reach the cascade |
+| `investor.series_a_closed` | global | bool | Funding | WRAPPER |
+| `investor.sheets_live` | global | int | Funding | WRAPPER; term sheets in hand |
+
+### `musteri.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `musteri.at_risk_count` | global | int | Sales | accounts currently in Risk |
+| `musteri.churn_countdown` | entity | int | Sales | WRAPPER; -1 when not counting, else days to churn |
+| `musteri.company_name` | entity | string | Sales | for {customer} in prose |
+| `musteri.complaint_voice` | entity | string | Sales | the per-sector complaint line |
+| `musteri.count` | global | int | Sales | active accounts |
+| `musteri.cs_escalated` | entity | bool | Sales | an escalation is already open on this account |
+| `musteri.discounts_used` | entity | int | Sales | 0-2; the discount row locks at the cap |
+| `musteri.has_open_promise` | entity | bool | Sales | a feature was promised and has not resolved |
+| `musteri.has_pain_feature` | entity | bool | Sales | the account wants a specific feature |
+| `musteri.is_assigned` | entity | bool | Sales | WRAPPER; a CS rep carries it, rather than the founder |
+| `musteri.is_at_risk` | entity | bool | Sales | the account is in a Risk episode |
+| `musteri.is_expansion_ready` | entity | bool | Sales | mature, healthy, and never yet offered expansion |
+| `musteri.lifecycle_phase` | entity | string | Sales | onboarding | active | risk | churning | expansion |
+| `musteri.lost_this_run` | global | int | Sales | WRAPPER; churn counter |
+| `musteri.min_satisfaction` | global | int | Sales | worst account |
+| `musteri.mrr` | entity | int | Sales | WRAPPER |
+| `musteri.pain_feature_label` | entity | string | Sales | the feature the promise row names |
+| `musteri.pain_feature_shipped` | entity | bool | Sales | gates the promise row: promising work already done pays for nothing |
+| `musteri.request_kind` | entity | string | Sales | complaint | feature | renewal — state-scored, no RNG |
+| `musteri.satisfaction` | entity | int | Sales | WRAPPER; 0-100, the number the player can see |
+| `musteri.scale` | entity | int | Sales | WRAPPER; 1-5, demo binds to 1-3 |
+| `musteri.seats` | entity | int | Sales | WRAPPER |
+| `musteri.sector_contact` | entity | string | Sales | the speaker's role line |
+| `musteri.stalls_used` | entity | int | Sales | 0-2; the stall row locks at the cap |
+| `musteri.tenure_days` | entity | int | Sales | WRAPPER; days since signature |
+| `musteri.tolerance` | entity | int | Sales | WRAPPER; HIDDEN from the player. Condition on it, never name it in copy |
+| `musteri.total_mrr` | global | int | Sales |  |
+| `musteri.under_tolerance` | entity | bool | Sales | the comparison that actually drives Risk |
+
+### `phase.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `phase.current` | global | int | Phase | WRAPPER; 1 Bootstrap, 2 Traction, 3 Series A Hunt |
+| `phase.gate_declines` | global | int | Phase | WRAPPER; how many times the player has said not yet |
+| `phase.gate_ready` | global | bool | Phase | WRAPPER; a transition is open and unanswered |
+| `phase.name` | global | string | Phase | for prose |
+| `phase.series_a_signal` | global | string | Phase | closed | warming | open. The number behind it is deliberately not a seam |
+
+### `rival.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `rival.count` | global | int | Rivals |  |
+| `rival.momentum` | entity | float | Rivals | WRAPPER; zero for the giants, who do not accelerate |
+| `rival.player_share_pct` | global | float | Rivals | 0.0-90.0, derived from MRR against a fixed market total |
+| `rival.status` | entity | string | Rivals | WRAPPER; DOMINANT | STEADY | SCALING | QUIET |
+
+### `sales.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `sales.b2c_audience` | global | float | Sales | float: it carries a sub-unit accumulator |
+| `sales.b2c_price` | global | int | Sales | WRAPPER; monthly price |
+| `sales.growth_band` | global | string | Sales |  |
+| `sales.is_b2b` | global | bool | Sales | reads the SHIPPED market, not one being built |
+| `sales.market_share_pct` | global | float | Sales | one global figure; per-segment share does not exist yet |
+| `sales.pipeline_count` | global | int | Sales | live prospects |
+
+### `time.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `time.day` | global | int | Time | WRAPPER; absolute game day, starts at 1. GameState owns it, not TimeManager |
+| `time.hour` | global | int | Time | WRAPPER; 0-23 |
+| `time.is_paused` | global | bool | Time | WRAPPER, filed as YOK: there is no named predicate for this |
+| `time.month` | global | int | Time | 1-12; real month lengths, not 30-day blocks |
+| `time.run_active` | global | bool | Time | WRAPPER; false once a terminal has fired |
+| `time.speed` | global | int | Time | WRAPPER; 0 paused, 1-3. The 4x rung was removed 2026-08-19 |
+| `time.weekday` | global | int | Time | 0-6 from the real calendar; day 1 is a Thursday, 1 Jan 2026 |
+
+### `urun.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `urun.axis_experience` | global | int | Product | 0-120 |
+| `urun.axis_innovation` | global | int | Product | 0-120 |
+| `urun.axis_stability` | global | int | Product | 0-120 |
+| `urun.bugs_confirmed` | global | int | Product | confirmed live bugs |
+| `urun.bugs_unconfirmed` | global | int | Product | incoming, unvalidated reports |
+| `urun.build_active` | global | bool | Product | a version is being built |
+| `urun.build_paused` | global | bool | Product | auto or manual |
+| `urun.build_progress` | global | float | Product | 0.0-1.0 |
+| `urun.capacity_tier` | global | int | Product | provisioned infra units |
+| `urun.days_since_launch` | global | int | Product | -1 when nothing has shipped |
+| `urun.floor_experience` | global | string | Product | '' | warning | crossed |
+| `urun.floor_innovation` | global | string | Product | '' | warning | crossed |
+| `urun.floor_stability` | global | string | Product | '' | warning | crossed |
+| `urun.interest` | global | float | Product | 0-100, refreshed on publish, 30-day half-life |
+| `urun.is_live` | global | bool | Product | something has shipped |
+| `urun.iteration_round` | global | int | Product | design rounds completed on the active build |
+| `urun.lines_open` | global | int | Product | 0-9 feature lines opened |
+| `urun.market_type` | global | string | Product | b2b | b2c; empty until the first ship writes it |
+| `urun.phase` | global | string | Product | concept | design | development | beta | support; empty before anything exists |
+| `urun.steps_shipped` | global | int | Product | feature steps live |
+| `urun.subtype` | global | string | Product | one of the sub-product ids |
+| `urun.support_staffed` | global | bool | Product | the module's central pressure reads from this one boolean |
+| `urun.tech_debt` | global | bool | Product | WRAPPER over a flag; boolean by design in the demo |
+| `urun.usage` | global | float | Product | load multiplier |
+| `urun.version` | global | int | Product | shipped version number |
+| `urun.version_age` | global | int | Product | days since THIS VERSION shipped, not since the product was born |
+
+## c · Condition vocabulary
+
+Nested dictionaries. Combinators: `all` (AND) · `any` (OR) · `none` · `not`.
+An empty `all` is TRUE, an empty `any` is FALSE, an empty `none` is TRUE.
+
+A node may carry `"reason"` — one authored sentence shown when it refuses. An
+`any` that gates an option **must** carry one: when a disjunction fails, every
+branch failed, and naming one of them is arbitrary and usually misleading.
+
+```json
+{"seam": "hr.headcount", "op": ">=", "value": 3}
+{"seam": "phase.current", "op": "in", "value": [2, 3]}
+{"flag": "frank_seed_taken"}
+{"flag_unset": "acquisition_declined"}
+{"days_since_flag": "mvp_launch", "op": ">=", "value": 30}
+{"flag_expires_within": "negotiation_window", "days": 3}
+{"history": "chose", "event": "hr.raise_request", "option": "accept"}
+{"history": "fired", "event": "hr.raise_request"}
+{"history": "days_since", "event": "hr.raise_request", "op": ">=", "value": 30}
+{"history": "resolution", "event": "sales.offer", "value": "expired"}
+{"arc": "active", "id": "arc_promise_mobile"}
+{"arc": "at_step", "id": "arc_promise_mobile", "step": 2}
+{"arc": "ended", "id": "arc_promise_mobile", "outcome": "kept"}
+{"entity_exists": "employee_a"}
+{"entity_count": "employee", "op": ">=", "value": 2}
+{"entity_seam": "hr.morale", "scope": "employee_a", "op": "<", "value": 50}
+```
+
+**A flag is engine memory, not game state.** `flag` and `flag_unset` read the
+engine's own store. Anything a SYSTEM owns — `series_a_closed`, `mvp_shipped` —
+is read through its seam, never as a flag: the engine store has never heard of it,
+so `flag_unset` would silently read true forever.
+
+## d · Arcs in the catalogue
+
+| arc | type | policy | steps |
 |---|---|---|---|
-| `b2b_promise_create` | `customer_id`, `feature_id`, `deadline_days` (14) | `accept_promise` → `PromiseRegistry.create`; kept: sat +15 / broken: sat −20, brand −3 | `Müşteri kalır · söz borcu` / `The customer stays · a promise owed` |
-| `b2b_retain_delay` | `customer_id` | `hold` (stall, max 2, +3 days countdown) | `Kısa vadeli hamle` / `A short-term move` |
-| `b2b_retain_discount` | `customer_id`, `mrr_delta` | `apply_discount` (−15 % MRR, +8 sat) | `Müşteri kalır · MRR {v}` |
-| `b2b_retain_ignore` | `customer_id` | `ignore_risk` | `müdahale yok · sayaç işlemeye devam eder` |
-| `b2b_cs_promise_honor` | `customer_id`, `feature_id`, `deadline_days` (14) | `honor_cs_promise` | `Müşteri kalır · söz borcu doğar · yol haritasına eklenir` |
-| `b2b_cs_promise_refuse` | `customer_id` | `refuse_cs_promise` (brand −3, rep morale −10, account churns) | `Müşteriyi kaybet` / `Lose the customer` |
-| `b2b_expand` | `customer_id`, `add_seats`, `per_seat_mrr` | `expand` | `Koltuk +{seats} · MRR {mrr}` |
-| `b2b_expand_decline` | `customer_id` | `decline_expansion` | `Değişiklik yok` / `No change` |
+| `arc_final_stretch` | world | fade | 2 |
+| `arc_fixture_subject` | assignment | reassign | 1 |
+| `arc_fixture_thesis` | promise | close | 2 |
 
-### a.7 Endgame / investor (mostly blind by design; the option label carries the meaning)
+<!-- HAND-WRITTEN — REGENERATION SKIPS THIS BLOCK -->
 
-| type | params | changes | player sees |
-|---|---|---|---|
-| `advance_phase` | | `GameState.advance_phase()` (refuses without an open gate) | nothing |
-| `phase_gate_decline` | | `PhaseGateSystem.on_gate_declined()` (`gate_declines++`, re-prompt in 5 days) | nothing |
-| `angel_accept` | | `AngelRoundSystem.accept_offer()`: atomic cash + ledger + cap table + latch | `Nakit +$25.000 · Frank'e %4 hisse` / `Cash +$25,000 · 4% to Frank` (values from the system consts, not the modifier) |
-| `accept_acquisition` | | `EndingsSystem.trigger_ending("acquisition")` | nothing |
-| `accept_pivot` / `decline_pivot` | | pivot on / `trigger_ending("vc_rejection_cascade")` | nothing |
-| `start_vc_meeting` | `vc_id` | `VCPitchSystem.begin_meeting` | nothing |
-| `decline_vc_meeting` | | clears `GameState.pending_meeting` (raw write) | nothing |
+## e · Hand-written notes
 
-### a.8 Blind and partial, in one place
-- **No chip (10):** `set_flag`, `mentor_advisory`, `ship_active_build`, `advance_phase`, `phase_gate_decline`, `accept_acquisition`, `accept_pivot`, `decline_pivot`, `start_vc_meeting`, `decline_vc_meeting`.
-- **Chip without effect (1):** `mrr`.
-- **Partial chip (3):** `seats` (MRR half hidden), `convert_audience` (`count` form), `quality_bonus` (hardcoded "+").
-- **Chip that can lie (1):** `delay_days` outside an active build.
+This block survives regeneration. The three sections worth keeping here are the ones
+the old file carried and nobody would reconstruct: the **trigger-hook map** (draft
+hook name → the signal and file:line that fires it today), the **legacy-function map**
+(every retired card id → the arc node that inherited its job), and the list of
+**known gaps** the engine has not closed.
 
-**Rule for drafts:** an option's cost must ride a type from a.1 to a.7 that has a chip and a screen reader (top bar, Finance, Sales board, HR page, Product page). Blind types carry memory only. A node with one option is a *beat* and must say so in its header.
-
----
-
-## b. Condition vocabulary (27 types)
-
-`EventManager.is_condition_met` (`event_manager.gd:367-433`). Public; also used by `EventModal` for `unlock_condition`, and by `PhaseGateSystem` / `AngelRoundSystem` for their own gates. Empty dict `{}` = true (that is how an unlocked option is expressed). Unknown type → warn + **false**.
-
-| type | params (default) | reads | note |
-|---|---|---|---|
-| `day_min` / `day_max` | `value` | `GameState.day` ≥ / ≤ | |
-| `phase` | `value` (int) | `GameState.phase ==` (1 Bootstrap · 2 Traction · 3 Series A Hunt) | standing state, not an edge |
-| `cash_below` / `cash_above` | `value` | `GameState.cash` < / **>** (strict) | |
-| `brand_below` / `brand_above` | `value` | strict | gate 2 uses `brand_above 24` for "≥ 25" |
-| `reputation_below` / `reputation_above` | `value` | strict | |
-| `subgenre` | `value` | `GameState.subgenre` | |
-| `random` | `chance` (0.0) | events RNG stream | on the hourly path the chance is scaled by 1/window-hours |
-| `flag_equals` | `key`, `value` (default **null**) | `GameState.get_flag(key, null) == value` | absent key ≠ false: `null == false` is false. Use `flag_set` for "exists" |
-| `flag_set` | `key` | `GameState.has_flag(key)` | true even if the stored value is false |
-| `build_state` | `value` | `active_build.status` | null build → false |
-| `mvp_shipped` | `value` (true) | flag `mvp_shipped` | |
-| `founder_skill_min` | `skill`, `value` | founder `role_stats[skill]` ≥ | |
-| `build_phase` | `value` | `active_build.current_phase` (design/development/test/beta) | null → false |
-| `bug_count_above` | `value` | `active_build.bug_count` > | null → false |
-| `customer_count_min` / `_max` | `value` | `CustomerRegistry.get_active().size()` | |
-| `mrr_above` / `mrr_below` | `value` | `GameState.mrr` **>** / < (strict; callers pass target−1) | |
-| `market_type` | `value` ("b2b"/"b2c") | flag `mvp_market_type` | also how the engine scopes a node's market |
-| `has_prospects` | `value` (true) | `ProspectRegistry.has_any()` | |
-| `audience_above` | `value` | flag `b2c_audience` (float) > | |
-| `customer_satisfaction_below` | `value`, `market` ("") | `CustomerRegistry.get_min_satisfaction(market)` < | |
-
-**Eligibility pipeline** (`_is_eligible`, `:438-492`), in order: not the active event → active-build gate (needs `build_safe` tag or a matching `build_phase` trigger) → `one_shot` (scans `_history` by id) → `cooldown_days` (scans `_history`) → `allowed_hours` window (manager-side, JSON only) → AND over `trigger_conditions`.
-
-**Not in the vocabulary (each is `[COND?]` in drafts):** any read of `_history` (fired? which choice? days since?), employee count, customers-lost count, days since a flag was set, an audience *drop* edge, market-share delta, rival state, promise state by customer, origin. `unlock_condition` is **one dictionary**, no AND/OR; a lock that needs two facts is `[COND?] compound unlock`.
-
----
-
-## c. Slots and targeting
-
-**There is no slot substitution in authored events.** `EventModal.populate` sets `title`/`body` through `Localization.pick(tr, en)` and a `**bold**`/`*italic*` markdown pass, nothing else (`event_modal.gd:34-49`, `:578-587`). `{account}`, `{employee}`, `{rival}`, `{investor}`, `{company_name}` would render literally. All 16 loaded JSON events carry static text.
-
-Substitution exists **only in the code factories, at build time**, over CSV keys:
-- B2B (`b2b_event_factory.gd`): `{company}` (customer name), `{feature}` (`B2BConstants.feature_label`), `{voice}` (sector complaint line / pain phrase), `{note}` (`CompanyCatalog.background_for`), `{n}` (churn countdown chip).
-- HR (`hr_event_factory.gd`): `{voice}` (per-person valve line), `{dept}`, `{n}` (calm days), `{company}` + `{amount}` (signing), `{version}`; the resignation body is a per-person whole-string lookup.
-- Product/endgame/VC builders: `{version}`, `{inn}`, `{days}`, `{cash}`, `{equity}`, `{investor}` (VC meeting copy).
-- Modal chrome: `{day}` in `KARAR · GÜN {day}`.
-
-**How a target is chosen today** (`_resolve_customer_target`, `event_manager.gd:783-799`):
-- explicit `customer_id` → that customer;
-- `"primary_b2b"` / `"primary_b2c"` → `get_by_market(m)[0]` = **dictionary insertion order, i.e. the oldest surviving account**; not biggest, not most at risk;
-- empty → per-type fallback: `churn_customer` / `satisfaction_delta` use `get_lowest_satisfaction_customer(market)` (deterministic argmin, id tiebreak); `seats` / `customer_mrr_delta` use `get_by_market("b2b")[0]` (`:671`, `:682`).
-- Employees: `morale` / `hr_departure` need a literal `character_id`; the owning system picks the person before it builds the event (resignation roll, overtime valve, CS rep = `reps[0]` at `customer_rep_system.gd:308`). **No `another_employee` concept exists.**
-- Rivals: **unreachable.** No modifier, no condition, no token touches `RivalRegistry`.
-- Investors: only `start_vc_meeting{vc_id}` with an id the VC system supplies.
-
-**Weighted targeting is MISSING** (Pool Design §5.4 requirement 4): the picks at `event_manager.gd:671`, `:682`, `:788-795` and `customer_rep_system.gd:308` are index-0 or argmin, never a weighted draw over arc history. Marked here; not fixed here.
-
-**Draft convention.** Node files still write `slots:` with `{account}`, `{employee}`, `{another_employee}`, `{rival}`, `{investor}` because the Pool Design's arcs need them. Each is a content-side placeholder that the rebuild must fill by weighted pick (`[VOCAB?] slot`); a node whose slot cannot be filled is ineligible (Pool §5.4). Where a fixed name is honest today (one candidate exists), the draft uses the fixed name and says so.
-
----
-
-## d. Memory hooks (what a later node can read)
-
-**`_history`**: `event_manager.gd:36`: `Array of {id, day, choice}`; appended in `resolve_choice` after modifiers apply (`:190`). Read only by the one_shot and cooldown scans and by save/load. **`get_history()` (`:362`) has zero callers.** No condition type reads it. So a node cannot ask "did Y1.1 fire, and which option was taken", not yet. Pool §5.3 (`history_has(arc, node, choice)`) is a rebuild requirement.
-
-**The flag bag**: the only working memory channel: `set_flag{key,value}` → `flag_equals{key,value}` / `flag_set{key}`. `GameState.FLAG_TYPES` (`game_state.gd:58-130`) registers known keys for save typing; `FLAG_TYPE_PREFIXES` (`:134-139`) registers four per-entity families (`b2b_broke_<customer>`, `hr_manual_leave_<char>`, `hr_valve_continued_<char>`, `bug_count_at_bugfix_start_<build>`). **A key absent from both tables is legal** ("content can invent flags", `:56-57`); it round-trips best-effort.
-
-Existing flags a node may read: `mvp_shipped`, `mvp_version`, `mvp_market_type`, `mvp_launch_day`, `critical_bug_unfixed`, `tech_debt_birikti`, `needs_engineer`, `b2c_audience`, `b2c_price`, `b2c_paid_tier_open`, `gate_prompt_day`, `gate_declines`, `pivot_offer_made`, `acquisition_offer_made/_rejected`, `vc_d179_warned`, `angel_seed_offered`, `angel_seed_accepted_day`, `angel_nudge_shown`, `hard_mode_unlocked` (reserved, no writer), `origin_press_sympathy`, `origin_low_capital`.
-
-Per-entity state the factories can *quote* in text (not conditions): `Customer.last_request_kind`, `.risk_streak`, `.churn_countdown`, `.retain_stalls`, `.trust_offset`, `.satisfaction`, `.acquired_on_day`; run counters `GameState.run_customers_signed/_lost/_expanded`, `run_hires`, `run_departures`, `run_peak_mrr`, `run_pitches`, `run_sheets_won`, `vc_rejections`.
-
-**Arc-memory convention for drafts:** `memory write: <arc>.<n>.choice → set_flag key "<arc>.<n>.choice" value "<short id>"` (dotted keys are legal Dictionary/JSON keys; string ids read cleanly in `flag_equals`). Registration is optional; the rebuild may add one prefix family per arc for hygiene. Existing system flags (the angel trio) are reused, not duplicated.
-
----
-
-## e. Trigger-hook map (draft hook name → today's nearest edge)
-
-The engine has **no signal-driven triggers**. Beats poll daily (`daily_tick`, `event_manager.gd:58-75`), ambients poll hourly with `random` (`hourly_tick`, `:80-114`, ≤1/day), and systems inject with `enqueue`/`enqueue_front` (`:199-233`), which **bypass one_shot/cooldown**. Pool §5.1-5.2 (one admission path; `on_action` hooks + weekly pulse) is the rebuild. Drafts write `trigger: event:<hook>`; this table says what the hook corresponds to today.
-
-| draft hook | today's edge | where |
-|---|---|---|
-| `run_start` | onboarding completed → boot modal | `main.gd:1780-1797` (skipped on save load) |
-| `angel_offer` | slot-8a poll `mvp_shipped ∧ mrr_above 2499`, latch `angel_seed_offered` | `angel_round_system.gd:61-70, 112-119` |
-| `angel_nudge` | `day ≥ accepted+2 ∧ employees == 0`, latch `angel_nudge_shown` | `angel_round_system.gd:73-89` |
-| `customer_churned` | `EventBus.customer_churned(customer_id)` from `B2BSalesSystem._remove_lost` | `b2b_sales_system.gd:265-272`; B2C has **no churn edge** |
-| `customer_health_changed` (risk edge) | `EventBus.customer_health_changed(customer_id, phase)`; retention card enqueue | `b2b_sales_system.gd:194-203` |
-| `promise_created / kept / broken` | `EventBus.promise_*` from `PromiseRegistry` | `promise_registry.gd:112-141` |
-| `build_phase_changed("shipped")` (ship moment) | `EventBus.build_phase_changed`; `ProductSystem._trigger_ship_moment` enqueue | `product_system.gd:1265-1267` |
-| `phase_gate_reached(n)` | `EventBus.phase_gate_reached`; gate scene `enqueue_front` | `phase_gate_system.gd:94-122` |
-| `phase_changed(n)` | `EventBus.phase_changed` after the player confirms the gate | `game_state.gd:329-342` |
-| `morale_changed` / flight-risk edge | `EventBus.morale_changed`; resignation roll after 10-14 days under 25 | `hr_morale_system.gd:472-498` |
-| `character_added` (hire) | `EventBus.character_added` | `character_registry.gd` |
-| `rival_status_changed` / share moved | `EventBus.rival_status_changed`, `rival_advanced`; share is stateless (`get_market_snapshot`); **no `rival_shipped`, no share-delta signal** | `rival_registry.gd:164-196` |
-| `sheet_granted / sheet_expired / meeting_day / sheet_walked` | `EventBus.sheet_*` etc. | `vc_pitch_system.gd:435-497` |
-| `run_ended(id)` | `EventBus.run_ended(ending_id, ending_data)`; **queue flushed, no events after** | `endings_system.gd:225-228` |
-| `pulse` | does not exist; nearest = daily poll + `priority` ordering; no `weight` field | `event_manager.gd:119-134` |
-
----
-
-## f. Legacy-function map (16 loaded JSON + factory families → where the function goes)
-
-All legacy **copy** retires. The **function** carries.
-
-| legacy id | function | inheriting node |
-|---|---|---|
-| `ev_mvp_dev_001_integration_broken` | tech-debt seeding (2 a.m. grind vs quick fix) | build-phase family, **unassigned; director** (Pool Design has no build-phase arc; Y7 is post-ship) |
-| `ev_mvp_dev_002_tech_debt_callout` | debt payback loop | same |
-| `ev_mvp_dev_003_solo_dev_fatigue` | founder fatigue beat | same |
-| `ev_mvp_iter_001_scope_creep` | scope-creep decision | same |
-| `ev_mvp_iter_002_competitor_signal` | rival differentiation beat ("Meridyen") | Y3.1 Noticed (post-ship form) |
-| `ev_mvp_iter_003_early_user_feedback` | vision vs feedback | build family, unassigned |
-| `ev_mvp_bugfix_001_critical_bug` | ship-with-known-bug gamble | Y7.1 Bug threshold (post-ship form) / build family |
-| `ev_mvp_bugfix_002_early_launch_pressure` | ship-now pressure | build family, unassigned |
-| `ev_mvp_bugfix_003_final_polish` | polish beat (weak trade, audit #8) | retire; no node |
-| `ev_ps_first_revenue` | **first-revenue beat**, Frank "Artık bir şirketsin." | **unassigned; director** (not one of Y5's six; candidates: Y1 first-customer node (B2B), Y9.2 (B2C), or a Y5 seventh) |
-| `ev_ps_frank_intro_b2b` | Frank opens the first B2B door (`add_prospect{mid, frank_intro}`) | Bootstrap "first-customer node of Y1" (Pool §2), out of Batch 1; Y5 cross-reads it |
-| `ev_ps_b2c_paid_tier` | B2C pricing gate (Frank) | Y9.1/Y9.2 |
-| `ev_ps_bug_complaint` | quality/churn warning (B2C only today) | Y7.2 Named complaint (B2B mirror ruled in the 2026-08-18 research §B6) + Y9 |
-| `ev_ps_power_user_b2c` | organic momentum | Y9.4 Power user |
-| `ev_ps_b2c_producthunt` | launch-day visibility bet ("Vitrin") | Y9.3 Product Hunt decision → outcome node |
-| `ev_ps_referral_b2b` | warm-intro pipeline with roadmap debt | Y1.1 The Ask (referral variant) / Y8 texture |
-| factory: B2B retention / expansion / CS escalation / CS request | account at risk · seats · rep-forced promise · demand channel | Y2.1-2.4 · Y1.1 · Y2.2 (escalate to rep) · Y1.1 |
-| factory: HR resignation / valve / positives | departure · overtime valve · morale recovery | Y4.5-4.6 · Y4.3 · Y4.6 / Y8 |
-| builder: ship moments, iteration intro | THE ship moment · one-more-round | Y9.1 (B2C) / Y3.5 (v2 ships) · unassigned (the iteration intro's `advance_iteration` effect is retired by the Build Bar task) |
-| builder: phase gates ×2 | Bootstrap→Traction, Traction→Series A (Frank) | mandatory beats (exempt from budget); Y5.5 follows gate 2 |
-| builder: angel nudge, seed | Frank seed + hire nudge | **Y5.2, Y5.3** |
-| builder: VC calendar ×3 | meeting day · sheet expiry · D-179 | Y6.3-6.5 |
-| builder: endgame ×3 | shutter warning · pivot · acquisition | Y5.6 (verdicts) + Y6.5; pivot/acquisition = follow-ups |
-| `ev_debug_*` ×3 | never loaded (fixtures for locked choice / mentor endorsement / threshold trigger) | none |
-
----
-
-## g. Conventions and known gaps
-
-**Markers.** `[VOCAB?] <effect>` = the node wants an effect not in §a. `[COND?] <condition>` = a prerequisite not in §b. Both are expected; both are collected per arc in the arc README for the rebuild.
-
-**Header fields** (Pool §7): `id · arc · node · category · market` · `trigger` · `prerequisites` · `slots` · `one_shot / cooldown / variants (weight: pulse only)` · `memory write`. `weight` has no engine counterpart today (only `priority` int); drafts still state it for pulse nodes.
-
-**Beat.** A one-option node (ship moment, first revenue, mentor line) is a sanctioned category (audit 2026-07-14 §"beat, not choice"), not a fake choice. Its header says `beat: 1`; its INTENT names the reader the player sees afterwards.
-
-**Locked-visible.** `unlock_condition` (one dict from §b) + `unlock_reason_text` / `_en`. Rendered at 50 % alpha, unclickable, reason badge in place of chips; default reason `KİLİTLİ` / `LOCKED`. A mentor never endorses a locked path (`event_modal.gd:339`).
-
-**Clock in the subtitle** only with an `allowed_hours` window; day-boundary beats carry no clock.
-
-**Arc-independent gaps already known (rebuild input):**
-1. `mrr` modifier: chip, no branch.
-2. `mentor_advisory` has no `_en` sibling.
-3. No founder-time cost exists (`delay_days` is a build-speed lever, no-op post-ship). Pool nodes that say "costs a day" need `[VOCAB?] founder_days{n}`.
-4. No employee-count condition, no customers-lost condition, no days-since-flag condition, no history condition.
-5. No slots; targeting is index-0/argmin (weighted pick missing).
-6. No `weight`; no pulse; no on_action hooks; `enqueue()` bypasses suppression.
-7. `unlock_condition` is a single dict.
-8. `advance_iteration` is retired by the Build Bar task (same day, in flight: the arm and its chip are already gone from the working tree) and `enter_beta` is added; nodes must not use `advance_iteration`. Line numbers in this document are from the morning extraction; `event_manager.gd` / `event_modal.gd` / `strings.csv` are being edited concurrently, so re-extract before wiring.
-9. Frank's ending lines (`END_META_*_FRANK`) ride `ending_data.frank_line` but the ending newspaper does not render them (`endings_copy.gd:53-65`; the paper bans mentor attribution); a verdict needs a surface.
+<!-- END HAND-WRITTEN -->

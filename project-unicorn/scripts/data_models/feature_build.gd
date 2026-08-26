@@ -73,6 +73,33 @@ extends Resource
 # bir fix bugs_fixed'i artırır VE bug_count'u düşürür.
 @export var bugs_found: int = 0
 @export var bugs_fixed: int = 0
+## GDD ÜRÜN rev 6.1 §7 — BETA keşfi GÜNE göre keskin azalır (6 × 0,85^gün), yani
+## kaçıncı beta gününde olduğumuz artık bir DURUM. Girişte damgalanır; SaveCodec
+## @export'ları jenerik gezdiği için ayrıca codec yazılmaz.
+@export var beta_entered_day: int = 0
+## GDD ÜRÜN rev 6.1 §12 — BU SÜRÜMÜN ALDIĞI KADEMELER (hat modeli). Düz
+## `feature_ids` listesinin yerini alır.
+##
+## KADEME BURADA DURUR, HATTA YAZILMAZ: hat durumları yalnız YAYINDA güncellenir
+## (`_apply_line_plan_at_ship`). Bu, §12.3 kural 4'ü bir özel duruma gerek kalmadan
+## doğru yapar — "Sürüm iptal edilirse o sürümde planlanmış kademeler hiç yapılmamış
+## sayılır; hatlar önceki durumlarında kalır." İptal hiçbir şeyi geri almaz, çünkü
+## ileri de almamıştı.
+@export var planned_step_ids: Array[String] = []
+## §5 — TAMAMLANAN tasarım turu sayısı. Yayında her kademeye damgalanacak cila
+## çarpanını bu belirler (0 tur ×0,75 · 1 ×1,00 · … · 4 ×1,15).
+@export var design_turns_completed: int = 0
+## §5 — TASARIM turlarının yaktığı efor. EforTavanı'nın ÜSTÜNE biner, yani
+## `efor_spent`ten ayrı tutulur: geliştirme barı tavanın %100'üne kadar dolar (§6.0)
+## ve tur maliyeti o barı kısaltmaz, runway'i kısaltır.
+@export var design_efor_spent: float = 0.0
+## §2 — OYUNCUNUN duraklatması. Oto-duraklamadan ayrı tutulur çünkü bar ikisini
+## farklı konuşuyor: oto cümleyle, manuel glifle, ve ikisi bir arada asla görünmez.
+@export var manually_paused: bool = false
+## Olay kaynaklı eksen sapmaları, HAT MODELİ için ayrı defter. Yayında eksenler
+## hat durumlarından yeniden türetildiği için (§11.2) doğrudan b.innovation'a
+## yazılan bir olay etkisi silinirdi; bu sözlük onu ship'in üstüne taşır.
+@export var axis_event_delta: Dictionary = {}
 @export var bug_find_progress: float = 0.0
 @export var bug_fix_progress: float = 0.0
 # DEPRECATED (canlı-yaşam-döngüsü fix'i): sprint artık FeatureBuild taşıyıcısı

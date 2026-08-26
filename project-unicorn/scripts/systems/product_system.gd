@@ -99,6 +99,30 @@ const ITER_CEIL_AXIS_AREA := {
 # kaldıraç (Erdem kararı 2026-08-06: üç eksen de oynar, tasarım ağırlıklı; üç rolün
 # tavanı da ilk günden gerçek olsun diye Kararlılık/Deneyim sıfır DEĞİL).
 const ITER_ROUND_RAW := {"innovation": 3.0, "stability": 1.0, "experience": 1.0}  # WORKING
+
+# =========================================================================
+#  GDD ÜRÜN rev 6.1 §5 · CİLA MERDİVENİ (MÜHÜRLÜ)
+# =========================================================================
+# Tamamlanan TASARIM turu sayısı → sürümün gerçekleşme çarpanı.
+#
+# rev 6.1 bu tabloyu TERS ÇEVİRDİ. Eskisi {1: 0,55 · 2: 0,78 · 3: 0,92 · 4: 1,00}
+# idi ve bir turu TAMAMLAYAN oyuncudan sürümün neredeyse yarısını alıyordu — yani
+# işini yapan cezalandırılıyordu. Software Inc'in grameri doğrusudur: tasarım fazı
+# ulaşılabilir kalitenin TAVANINI belirler; tamamlanmış tasarım ödül vermez, EKSİK
+# tasarım tavanı düşürür. Taban bu yüzden 1 turda ×1,00'dir.
+#
+# Üç ekstra tur eforun %24'ünü yakar (3 × DESIGN_TURN_COST) ve karşılığında %15
+# verir; "hep 4 tur" otomatik doğru cevap değildir.
+const DESIGN_TURN_MULT := {0: 0.75, 1: 1.00, 2: 1.06, 3: 1.11, 4: 1.15}
+const DESIGN_TURN_MAX := 4
+## Her TASARIM turunun yaktığı efor, EforTavanı'nın oranı olarak (§5).
+const DESIGN_TURN_COST := 0.08
+
+
+## §5 — the realization multiplier a version stamps onto every step it ships.
+## Turn counts above the cap read as the cap; below zero read as the rush value.
+static func design_turn_mult(turns_completed: int) -> float:
+	return float(DESIGN_TURN_MULT.get(clampi(turns_completed, 0, DESIGN_TURN_MAX), 1.0))
 # --- Canlı ürün sağlık/trend türetmeleri (Ürün Detayı verisi) ---
 const BUG_HISTORY_DAYS := 7         # mvp_bug_history penceresi (günlük örnek sayısı)
 const TREND_DELTA := 2              # |son - ilk| >= bu → ARTIYOR/AZALIYOR; altı SABİT
@@ -142,6 +166,19 @@ const CRITICAL_BUG_LAUNCH_PENALTY := 5
 # BETA: test gizli bug'ları bulur (find) ve bulunanları çözer (fix: mevcut
 # POLISH_BUG_FIX_PER_DAY hızı). working value — Erdem balance-pass.
 const BETA_BUG_FIND_PER_DAY := 6.0
+## §7 [K] — günlük keşif = 6 × 0,85^(beta_günü). İlk günler çok bulur, sonra tek tük.
+## Ar-Ge `test_automation` düğümü bu sönümü 0,85 → 0,90'a çeker (Ar-Ge §4.3 · §13).
+## SABİT SİLİNMEDİ, İKİZLENDİ: araştırılmamış taban burada durur, araştırılmış değer
+## yanında, ve hangisinin okunacağına `beta_find_decay()` karar verir. Böylece "Ar-Ge
+## gelmeden önceki oyun" bir tek satır bile kaymadan aynı sayıyı okur.
+const BETA_FIND_DECAY := 0.85
+const BETA_FIND_DECAY_RESEARCHED := 0.90
+
+
+## Ar-Ge §13 katsayı kancası. TEK OKUMA YERİ: aşağıdaki beta formülü buraya uzanır,
+## sabite değil — yoksa düğüm tamamlandığında yalnız bazı çağrı yerleri değişirdi.
+static func beta_find_decay() -> float:
+	return BETA_FIND_DECAY_RESEARCHED if ResearchSeam.completed("test_automation") else BETA_FIND_DECAY
 # TEST bölümü (design doc §5): bulma İSABETİ Test Uzmanı UZMANLIK'ından, bulma/çözme TEMPOSU
 # Test Uzmanı + Yazılımcı HIZ karışımından, hata sprinti süresi Test Uzmanı ile kısalır.
 # Üçü de PIVOT'lu: test uzmanı YOKKEN çarpanlar tam 1.0, yani bugünkü beta davranışı aynen
@@ -181,11 +218,12 @@ const ENGINEER_WINDOW_DAYS := 20
 const CAPACITY_BASE := 1
 
 static var active_build: FeatureBuild = null
-# Run'ın ilk iterasyon kararında öğretici modalın BİR KEZ atıldığının bayrağı
-# (Erdem kararı 2026-08-06: kalıcı gramer park + tracker butonları, modal yalnız ilk
-# karşılaşmada). In-place seam ARTIK VAR: reset() / to_dict() / from_dict() aşağıda —
-# eski "süreç relaunch'una dayanır" notu SaveManager task'ıyla kapandı.
-static var _iter_intro_shown := false
+# `_iter_intro_shown` USED TO LIVE HERE — a static bool marking that the run's first
+# iteration-decision beat had been shown once (Erdem kararı 2026-08-06: kalıcı gramer park +
+# tracker butonları, modal yalnız ilk karşılaşmada). It existed because GameEvent.one_shot was
+# inert on the injected path, and because it existed it had to be reset, serialised and
+# restored — a private latch belonging to ONE card had reached the save file.
+# `product.design_round_intro` declares `one_shot` and the engine owns it.
 
 
 # --- Run boundary + save (SaveManager) ---
@@ -194,20 +232,25 @@ static func reset() -> void:
 	# The in-place reset the header note above promised. Without it an in-place restart
 	# (and every load) carried the previous run's BUILD into the new company: capacity_demand
 	# counts it, _is_eligible suppresses every event that does not match its phase, and the
-	# Product tab renders a tracker for a product nobody committed to. _iter_intro_shown
-	# leaking is milder but the same class — the new founder never gets the tutorial beat
-	# because a founder who no longer exists already saw it.
+	# Product tab renders a tracker for a product nobody committed to. (The tutorial latch
+	# that used to be reset on this line had the same leak in a milder form — a new founder
+	# never got the teaching beat because a founder who no longer exists had seen it. It is
+	# the engine's latch now, and EvLatches is cleared by the same run boundary.)
 	active_build = null
-	_iter_intro_shown = false
+	# DESTEK'in kesirli artığı da yeni koşuya taşınmaz: memnuniyet zararı kişi başına
+	# ondalık birikiyor ve o tablo statiktir, yani sıfırlanmazsa önceki şirketin
+	# borcunu yeni şirkete yazardı.
+	SupportSystem.reset()
+	ProductRead.reset()
 
 
 static func to_dict() -> Dictionary:
 	# The live product itself (axes, version, bug counts, shipped set) is NOT here: it lives
 	# in GameState.flags under the mvp_* keys, which the GameState block already carries.
-	# This is only the in-flight BUILD plus the tutorial latch.
+	# This is only the in-flight BUILD. `iter_intro_shown` was here until the event engine
+	# took ownership of the latch; a v10 save does not carry it and a v10 load ignores it.
 	return {
 		"active_build": SaveCodec.res_to_dict(active_build) if active_build != null else null,
-		"iter_intro_shown": _iter_intro_shown,
 	}
 
 
@@ -219,7 +262,6 @@ static func from_dict(d: Dictionary) -> void:
 		active_build = SaveCodec.res_from_dict(raw as Dictionary, FeatureBuild) as FeatureBuild
 	else:
 		active_build = null
-	_iter_intro_shown = bool(d.get("iter_intro_shown", false))
 
 
 # --- Entry point (called by TimeManager._tick_product at slot 1) ---
@@ -248,8 +290,22 @@ static func capacity_total() -> int:
 	# §13.1: departman taksonomisi kalktı, kadro grubu kaldı. AYNI DÖRT ROL — product_dev
 	# tam olarak product_design ∪ development'tı, o yüzden kapasite havuzu bir kişi bile
 	# değişmedi; yalnız kimin kimle olduğunu söyleyen tablo tekleşti.
-	return CAPACITY_BASE + CharacterRegistry.count_active_in_groups(
-		[HRConstants.GROUP_PRODUCT_DESIGN, HRConstants.GROUP_DEVELOPMENT])
+	#
+	# ARAŞTIRAN KİŞİ HAVUZDA DEĞİLDİR (Ar-Ge §5.0). Yönetmen hükmü: §5.0'ın ruhu o kişinin
+	# ÜRÜNÜN ÜZERİNDE OLMAMASIDIR, ve hiçbir katkı vermezken kapasiteyi şişirmek aynı yalanın
+	# başka bir yerde söylenmiş hâlidir — bar "kimse üzerinde değil" derken bölen büyümüş
+	# olurdu. Sayım artık grup sayacına delege edilmiyor; filtre burada, çünkü diğer
+	# `count_active_in_groups` çağıranları (yok, ama olabilir) araştırmayı elemek zorunda
+	# değil. KALİBRASYON NOTU: bu, süre tahminlerini araştırma sürerken uzatır. Beklenmedik
+	# bir yöne oynarsa RAPOR EDİLİR, soğurulmaz — havuzun boyu tek kalibrasyon yüzeyidir.
+	var n: int = 0
+	for c in CharacterRegistry.get_active_employees():
+		if c.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
+			continue
+		var grp: String = String(HRConstants.ROLE_GROUP.get(c.role, ""))
+		if grp == HRConstants.GROUP_PRODUCT_DESIGN or grp == HRConstants.GROUP_DEVELOPMENT:
+			n += 1
+	return CAPACITY_BASE + n
 
 
 static func capacity_demand() -> int:
@@ -261,9 +317,16 @@ static func capacity_demand() -> int:
 	# çalışanlar taşırken kurucunun toplantı hazırlığı onların hızını düşürüyordu.
 	# Artık kurucuyu MEŞGUL sayar (bkz. _is_free); tek taşıyıcı oysa yapım DURUR,
 	# değilse hiçbir şey yavaşlamaz. Ara kademe yok.
-	if false:   # emekli: pitch_prep_active
-		d += 1  # VC meeting prep occupies the founder (Spec 4 §3 — product slows, visible)
-	if active_build != null and active_build.current_phase in ["iteration", "development", "bugfix"]:
+	# BETA BURADAN ÇIKTI (Ürün rev 6.1 §7 · brief'in adlandırdığı ikinci kusur).
+	#
+	# Kapasite bir YAPIM bölenidir ve yapım eforunu Build işi taşır (Ekip §12.0:
+	# Ürün · Tasarım · Yazılım). BETA'yı Test işi taşır ve BETA barı efor İLERLETMEZ —
+	# sayaç tutar (§7). Yani BETA'da duran bir yapım hiçbir yapım kapasitesi tüketmiyor,
+	# ama eskiden tam slot yiyordu: havuz tükenmez olduğu için (§7) BETA'nın doğal bir
+	# sonu da yok, dolayısıyla hiç yayınlamayan oyuncu her hata sprintini KALICI olarak
+	# yarı hıza düşürüyordu. Denetim bunu "neredeyse kesinlikle istenmeyen" diye
+	# işaretlemişti ve koddaki tek yapım→destek cezası buydu.
+	if active_build != null and active_build.current_phase in ["iteration", "development"]:
 		d += 1
 	return d
 
@@ -366,25 +429,158 @@ static func phase_assignees(phase: String) -> Array[Character]:
 ## AKTİF YAPIM DURDU MU. Oyuncu duraklatmadı — bu bir SONUÇ ve raporlanıyor, teklif
 ## edilmiyor. Türetilmiş, saklanmıyor: kart her boyamada soruyor ve cevap her zaman
 ## bugünün gerçeği ("render state, never store it").
-static func build_paused() -> bool:
+## §2 — DURAKLAMA İKİ TÜRDÜR ve bar ikisini AYIRT EDER. Oto-duraklama bir kontrol
+## değil BİLDİRİLEN BİR DURUMDUR ve cümleyle konuşur; manuel duraklama oyuncunun
+## kendi kararıdır ve glifle görünür. İKİSİ BİR ARADA ASLA GÖRÜNMEZ (S6).
+const PAUSE_NONE := ""
+const PAUSE_AUTO := "auto"
+const PAUSE_MANUAL := "manual"
+
+
+static func pause_kind() -> String:
 	if active_build == null:
-		return false
+		return PAUSE_NONE
 	if not PHASE_AREAS.has(active_build.current_phase):
-		return false
+		return PAUSE_NONE
+	# MANUEL ÖNCE: oyuncu duraklattıysa bar onun kararını gösterir, ekibin durumunu
+	# değil. Aksi hâlde kendi bastığı düğmenin yerine "Kimse üzerinde değil." okurdu.
+	if active_build.manually_paused:
+		return PAUSE_MANUAL
+	# §8.4 — "Düzeltme koşusu başlatmak aktif yapımı duraklatır." Aynı eller iki işi
+	# birden yapmaz: koşuyu Destek'e atananların Yazılım çıktısı sürer ve o çıktı
+	# yapımdan çekilir. Bu, modülün merkez baskısının yapım tarafındaki yarısıdır.
+	if SupportSystem.fix_run_pauses_build():
+		return PAUSE_AUTO
 	for c in phase_assignees(active_build.current_phase):
 		if _is_free(c):
-			return false
-	return true
+			return PAUSE_NONE
+	return PAUSE_AUTO
+
+
+static func build_paused() -> bool:
+	return pause_kind() != PAUSE_NONE
+
+
+## §2 — oyuncu her fazda duraklatabilir. "İlerleme korunur, SÜRÜM YAŞI AKMAYA DEVAM
+## EDER" — yani duraklatmak zamanı durdurmaz, yalnız işi durdurur.
+static func set_manual_pause(paused: bool) -> void:
+	if active_build == null:
+		return
+	if active_build.manually_paused == paused:
+		return
+	active_build.manually_paused = paused
+	EventBus.build_progress_changed.emit()
+
+
+static func is_manually_paused() -> bool:
+	return active_build != null and active_build.manually_paused
+
+
+## §3 — "Lider yapım sürerken ayrılırsa/çıkarılırsa: yapım LİDERSİZ sürer (liderlik
+## çarpanı 1,0), bar notu düşer, oyuncu yeni lider atayabilir. Yapım geriye dönük
+## BOZULMAZ." Çarpanın 1,0'a düşmesi build_effort_per_day'de zaten oluyor (lider
+## null → leadership 0); burada eksik olan yalnız BAR NOTUYDU.
+static func lead_missing() -> bool:
+	if active_build == null or active_build.lead_engineer_id == "":
+		return false
+	var lead: Character = CharacterRegistry.get_character(active_build.lead_engineer_id)
+	return lead == null or lead.status != HRConstants.STATUS_ACTIVE
 
 
 ## Duraklamanın TÜRÜ, iki dizgeden hangisinin basılacağını seçer. KİŞİ ADI ASLA
 ## GEÇMEZ: not ekibin durumu hakkında, bir kişinin değil.
 static func pause_note_key() -> String:
-	if not build_paused():
+	# §2 — MANUEL DURAKLAMA CÜMLE TAŞIMAZ, glif taşır. Oyuncu neden durduğunu zaten
+	# biliyor; ona bir sebep cümlesi yazmak, kendi kararını bir arıza gibi gösterirdi.
+	if pause_kind() != PAUSE_AUTO:
 		return ""
+	# Düzeltme koşusu KENDİ cümlesini taşır. "Ekip başka işte." doğru ama belirsiz
+	# olurdu; §2 duraklamanın BİLDİRİLEN BİR DURUM olmasını istiyor, ve oyuncunun
+	# az önce bastığı düğmenin sonucunu adıyla görmesi o kuralın kendisidir.
+	if SupportSystem.fix_run_pauses_build():
+		return "BUILD_BUSY_FIX_RUN"
+	# ARAŞTIRMA DA KENDİ CÜMLESİNİ TAŞIR — düzeltme koşusunun precedent'i simetrik
+	# uygulandı. Duraklamış bar DURUMUNU değil SEBEBİNİ söylemek zorunda (§2): araştırmaya
+	# geçen kurucunun yapımı "Ekip başka işte." okusaydı oyuncu az önce kendi bastığı
+	# düğmenin sonucunu göremezdi. Ar-Ge §5.0 bunu barlarda görmeyi açıkça şart koşuyor.
+	if _paused_by_research():
+		return "BUILD_BUSY_RESEARCH"
 	if phase_assignees(active_build.current_phase).is_empty():
 		return "BUILD_BUSY_NOBODY"
 	return "BUILD_BUSY_ELSEWHERE"
+
+
+## Yapımı durduran şey ARAŞTIRMA mı. İki kapı, çünkü iki farklı hâl aynı cümleyi hak eder:
+## fazı taşıyabilecek birinin araştırmaya geçmesi (ekip hâli) ve kurucunun araştırmaya
+## geçmesi (tek kişilik hâl). İkincisi ayrı sorulmak zorunda: kurucu araştırmaya geçince
+## alan aynası boşalıyor (HRConstants.areas_for_jobs'un `continue`'u) ve `phase_assignees`
+## onu ARTIK GÖRMÜYOR — yani yalnız ilk kapıyla tam olarak asıl vakayı kaçırırdık.
+static func _paused_by_research() -> bool:
+	for c in phase_assignees(active_build.current_phase):
+		if c != null and c.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
+			return true
+	var founder: Character = CharacterRegistry.get_founder()
+	return founder != null and founder.assigned_job_ids.has(HRConstants.JOB_RESEARCH)
+
+
+## §3 — lidersiz yapımın bar notu. Duraklama notundan AYRI bir satır: yapım durmuyor,
+## yalnız liderlik çarpanı düşüyor.
+## Aktif yapımın FAZ ADI anahtarı. Portföy rozeti bunu okuyor; build_bar kendi
+## Model faz sabitlerinden aynı anahtarları çözüyor. Sözcük CSV'de, kod state'te —
+## bu fonksiyon bir CONST OLAMAZ: const dosya yüklenirken değerlenir ve o an henüz
+## bir dil seçilmemiştir.
+static func phase_label_key() -> String:
+	if active_build == null:
+		return "BUILD_PHASE_SUPPORT" if ProductState.is_live() else ""
+	match active_build.current_phase:
+		"iteration": return "BUILD_PHASE_DESIGN"
+		"development": return "BUILD_PHASE_DEVELOPMENT"
+		"bugfix": return "BUILD_PHASE_BETA"
+		_: return ""
+
+
+## YAVAŞLAYAN BAR SEBEBİNİ SÖYLER — duraklamış bir bar gibi (§5.6.1'in grameri, bir adım
+## ötede). `lead_note_key` ile AYNI KANALDA yaşar: ikisi de DURAKLATMAYAN nottur, bar akmaya
+## devam eder ve not neden yavaş olduğunu yazar. Duraklama kanalı (`pause_note_key`) buna
+## karışmaz.
+##
+## Koşul Ekip §12.1'in kendisidir: iki iş taşıyan biri her iki işe de 0,50 verir. Yani
+## "yavaş" burada bir tahmin değil, taşıyıcının defterinden okunan bir olgudur.
+##
+## NOT TEK CÜMLEDİR VE YALNIZ BÖLÜNMEYİ İDDİA EDER. §12.1'in kanonik cümlesi iki bedeli
+## birden sayar ("...ve morali normalden hızlı erir"), ama o cümle KADRO hover'ınındır ve
+## kurucu için YANLIŞTIR: kurucunun moral bandı yoktur (Ekip §4.5), yani iki bedelden yalnız
+## birini öder. Barda moral iddia etmek, §12.1'in "tek bir etki anlatılıp diğeri gizlenmez"
+## yasasını tam da onu onurlandırmaya çalışırken çiğnerdi.
+static func split_note_key() -> String:
+	if active_build == null:
+		return ""
+	if not PHASE_AREAS.has(active_build.current_phase):
+		return ""
+	for c in phase_assignees(active_build.current_phase):
+		if c != null and HRSystem.is_overloaded(c):
+			return "BUILD_SPLIT_FOCUS"
+	return ""
+
+
+static func lead_note_key() -> String:
+	return "BUILD_NO_LEAD" if lead_missing() else ""
+
+
+## §3 — "Lider yapım sürerken ayrılırsa/çıkarılırsa … oyuncu ekip panelinden YENİ LİDER
+## ATAYABİLİR. Yapım geriye dönük bozulmaz." Bu, o cümlenin seam'i: liderlik yalnız
+## BUGÜNKÜ hıza girer (build_effort_per_day her gün yeniden okur), o yüzden lideri
+## değiştirmek dünkü ilerlemeye dokunmaz — geriye-dönük-bozmama yapısaldır.
+##
+## Boş dize meşru bir değerdir: lidersiz yapım, çarpan 1,0.
+static func set_build_lead(lead_id: String) -> void:
+	if active_build == null:
+		return
+	if active_build.lead_engineer_id == lead_id:
+		return
+	active_build.lead_engineer_id = lead_id
+	active_build.assigned_engineer_id = lead_id
+	EventBus.build_progress_changed.emit()
 
 
 # ============================ DESTEK okuma seam'leri (B4) ====================
@@ -414,6 +610,14 @@ static func sprint_progress() -> float:
 static func _reseat_founder(phase: String) -> void:
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder == null:
+		return
+	# ARAŞTIRAN KURUCUYA DOKUNULMAZ (Ar-Ge §5.0). Bu fonksiyon her faz geçişinde
+	# `clear_areas` + `assign_area` koşuyor ve dört yerden çağrılıyor; korumasız bırakılırsa
+	# oyuncu hiçbir şey yapmadan, hiçbir cümle görmeden, bir faz sınırında kurucunun
+	# araştırma ataması SİLİNİRDİ. §5.0 duraklamanın bile bir SONUÇ olarak görünmesini
+	# şart koşuyor; sessizce silinmesi onun tam tersi. Araştırma bitince kurucu bir sonraki
+	# faz geçişinde zaten yerine oturur.
+	if founder.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
 		return
 	if not PHASE_AREAS.has(phase):
 		return   # shipped / cancelled / planning: oturacağı bir faz alanı yok, yerinde kalır
@@ -553,8 +757,17 @@ static func _speed_for_phase(phase: String, lead_id: String) -> float:
 		# terimi kendi katsayısıyla ayrı hesaplandığı için oranı burada alır. Bu satır
 		# olmadan on bir saatlik bir gün ekibin yalnız bir kısmını hızlandırıyor ve §8.4'ün
 		# "orantılı olarak daha fazla" cümlesi ölçüldüğünde tutmuyor (1,118 × yerine 1,375 ×).
+		# ODAK BÖLÜNMESİ KURUCUYA DA İŞLER (Ekip §4.5: "Kurucu için moral bandı uygulanmaz;
+		# DİĞER BÜTÜN ÇARPANLAR AYNEN GEÇERLİDİR"). Çalışan terimi bölünmeyi
+		# daily_contribution → effective_skill içinde zaten taşıyor; kurucu terimi seam'in
+		# dışında hesaplandığı için onu BURADA almak zorunda. Bu satır olmadan DESTEK'teki
+		# bir kurucu yapıma başladığında bu yol TAM HIZDA koşuyordu — yani modülün öğretmek
+		# istediği tek şey, "ikisi de yavaşlar", tam olarak burada yalan oluyordu. Görünür
+		# sonucu da vardı: barın gün tahmini bu yolu çağırıyor (build_bar_model), yani tahmin
+		# tam hız derken canlı hat yapımı yarı hızda akıyordu.
 		speed = FOUNDER_SPEED_COEF * float(GameState.get_founder_skill(_founder_phase_area(phase))) \
-			* HRConstants.hours_output_mult(WorkHoursSystem.hours_for(founder))
+			* HRConstants.hours_output_mult(WorkHoursSystem.hours_for(founder)) \
+			* HRConstants.focus_mult(HRSystem.job_count(founder))
 	speed += EMPLOYEE_SPEED_COEF * _phase_area_sum(phase, lead_id)
 	return maxf(SPEED_MIN, speed * _lead_coordination(lead_id))
 
@@ -562,6 +775,142 @@ static func _speed_for_phase(phase: String, lead_id: String) -> float:
 static func _speed_for_lead(lead_id: String) -> float:
 	# Faz bilmeyen çağıranlar için (commit öncesi projeksiyon): geliştirme fazı varsayılanı.
 	return _speed_for_phase("development", lead_id)
+
+
+# =========================================================================
+#  GDD ÜRÜN rev 6.1 §6.1 · EFOR MODELİ — EKİP SEAM'İ ÜSTÜNDE
+# =========================================================================
+# kişinin günlük katkısı = hr.effective_skill(kişi, taşıyıcı alanı) × saat/8
+# yapım hızı (efor/gün)  = Σ(build ekibindeki taşıyıcılar) × K_EFOR
+#
+# BURADA İKİNCİ BİR HIZ FORMÜLÜ YOK ve olamaz (§18): alan katsayısı, odak, moral
+# bandı, liderlik ve huy çarpanlarının hepsi Ekip §4.5'in içinde. Belge ayrıca
+# "İkinci bir görünmez çarpan (iletişim/Brooks terimi) yoktur" diyor — o yüzden
+# eski `_lead_coordination` eğrisi (COORD_MIN…COORD_MAX) bu yola GİRMEZ; liderlik
+# Ekip'in kendi seam'inden, ALANIN TOPLAMINA uygulanır (Ekip §4.2).
+
+## §6.1 [K] — saat normalizasyonu birleştirildikten sonraki katsayı. Eski yazım
+## `× ham saat × 1/12` idi; rev 6.1 her formülü `saat/8`e çevirdi ve farkı buraya
+## soğurdu. İki yazım HER SAAT DEĞERİNDE cebirsel olarak özdeştir:
+##   skill × (h/8) × (8/12) ≡ skill × h/12
+## yani birleştirme sıfır kalibrasyon sapmasıyla yapıldı (5-11 saat aralığında
+## ölçüldü).
+const K_EFOR := 8.0 / 12.0
+
+## §6.3 [K] — hata/efor birimi = clamp(0,45 − 0,05 × ekibin etkin Yazılım ortalaması).
+## Tavanı Ar-Ge `cicd` düğümü 0,45 → 0,35'e çeker (Ar-Ge §4.3 · §13). BETA_FIND_DECAY ile
+## AYNI DESEN: taban sabiti durur, araştırılmış değer yanına eklenir, seçimi fonksiyon yapar.
+## TABAN ile KATSAYI dokunulmadı — düğüm yalnız tavanı indiriyor, eğrinin eğimini değil.
+const BUG_RATE_CEIL := 0.45
+const BUG_RATE_CEIL_RESEARCHED := 0.35
+const BUG_RATE_FLOOR := 0.10
+const BUG_RATE_SKILL_COEF := 0.05
+
+
+## Ar-Ge §13 katsayı kancası. İKİ ÇAĞRI YERİ VAR ve ikisi de buradan okur: taşıyıcısı
+## olmayan ekibin döndüğü değer, ve clamp'in ÜST SINIRI. Yalnız birini çevirmek düğümü
+## yarım açardı — tavan inerken clamp hâlâ 0,45'e izin verirdi.
+static func bug_rate_ceil() -> float:
+	return BUG_RATE_CEIL_RESEARCHED if ResearchSeam.completed("cicd") else BUG_RATE_CEIL
+
+
+## §6.2 — Build işini Ürün · Tasarım · Yazılım taşır. Bir kişi bu üç alandan
+## HANGİSİNDE en verimliyse oradan katkı verir: bir mühendis Yazılım'dan, bir
+## tasarımcı Tasarım'dan, kurucu en güçlü olduğu alandan. Test build TAŞIMAZ —
+## katkısı BETA'dadır (§7).
+static func build_carrier_area(c: Character) -> String:
+	var best_area := ""
+	var best: float = 0.0
+	for area in HRConstants.JOB_AREAS[HRConstants.JOB_BUILD]:
+		var v: float = HRSystem.effective_skill(c, String(area))
+		if v > best:
+			best = v
+			best_area = String(area)
+	return best_area
+
+
+## The people actually carrying the build today — Build işine ATANMIŞ olanlar.
+## Ünvan hiçbir kapıyı açmaz (Ekip §12.0); atama açar.
+static func build_carriers() -> Array[Character]:
+	return HRSystem.assigned_to_job(HRConstants.JOB_BUILD)
+
+
+## §6.1 — yapım hızı, efor/gün. Kurucu herkes gibi sayılır.
+static func build_effort_per_day(lead_id: String = "") -> float:
+	var total: float = 0.0
+	for c in build_carriers():
+		var area: String = build_carrier_area(c)
+		if area == "":
+			continue
+		# daily_contribution = effective_skill × saat/8 — §6.1'in ilk satırı, birebir.
+		total += HRSystem.daily_contribution(c, area)
+	# Ekip §4.2: liderlik ALANIN TOPLAMINA uygulanır, kişi başına değil.
+	#
+	# §3 — LİDER AYRILIRSA YAPIM LİDERSİZ SÜRER, çarpan 1,0. Buradaki STATUS kontrolü
+	# o cümlenin kendisidir ve gerçek bir kusuru kapatıyor: kayıt kişiyi silmediği için
+	# `get_character` izindeki/ayrılmış lideri hâlâ döndürüyor ve liderlik bonusu
+	# masada olmayan birinden okunmaya devam ediyordu. Kişi taşıyıcı listesinden
+	# (assigned_to_job STATUS_ACTIVE filtreliyor) düşüyor ama bonusu kalıyordu.
+	var lead: Character = CharacterRegistry.get_character(lead_id) if lead_id != "" else null
+	var leadership: int = 0
+	if lead != null and lead.status == HRConstants.STATUS_ACTIVE:
+		leadership = HRSystem.skill(lead, HRConstants.SKILL_LEADERSHIP)
+	return total * HRSystem.leadership_output_mult(leadership) * K_EFOR
+
+
+## §6.3 — hata birikimi. Hatalar GELİŞTİRME'de birikir, BETA'da bulunur.
+## Ekibin etkin YAZILIM ortalaması oranı düşürür ama SIFIRLAMAZ (taban 0,10).
+static func line_bug_rate_per_effort() -> float:
+	var carriers: Array[Character] = build_carriers()
+	var ceil_now: float = bug_rate_ceil()
+	if carriers.is_empty():
+		return ceil_now
+	var sum: float = 0.0
+	for c in carriers:
+		sum += HRSystem.effective_skill(c, HRConstants.AREA_ENGINEERING)
+	var avg: float = sum / float(carriers.size())
+	return clampf(ceil_now - BUG_RATE_SKILL_COEF * avg, BUG_RATE_FLOOR, ceil_now)
+
+
+## §12 + §11.2 — YAYIN ANI. Hat durumları YALNIZ BURADA ilerler ve her kademe
+## yayınlandığı sürümün cilasını damgalar.
+##
+## Damganın kademe başına olması §11.2'nin sözü ("Çarpan hat başına değil kademe
+## başına saklanır") ve aynı zamanda §2/§12.3'ün geriye-dönük-bozma yasağının
+## taşıyıcısı: sonraki bir sürümün tur sayısı önceki sürümün işini değiştiremez.
+static func _apply_line_plan_at_ship(b: FeatureBuild) -> void:
+	if b == null or b.planned_step_ids.is_empty():
+		return
+	var turn_mult: float = design_turn_mult(b.design_turns_completed)
+	for raw_id in b.planned_step_ids:
+		var sid: String = String(raw_id)
+		var step: Dictionary = ProductLines.step(sid)
+		if step.is_empty():
+			push_error("[ProductSystem] shipped an unknown step '%s'" % sid)
+			continue
+		var line_id: String = String(step.get("line_id", ""))
+		var tier: int = int(step.get("tier", 0))
+		# §12.8 kapı-üstü bonusu KADEME BAŞINA ölçülür (kademenin kendi kapısına göre).
+		var stamp: float = QualityModel.realization_stamp(
+			turn_mult, LineGates.above_gate_bonus(sid))
+		ProductState.set_line_tier(line_id, tier)
+		ProductState.stamp_step(sid, stamp)
+		# §19 — üç sinyal, tek emitter. line_completed hattın SON kademesinde,
+		# delighter_shipped ise §12.4'ün "K3 yayınlandığında" tetiği (övgü olayı).
+		EventBus.line_upgraded.emit(line_id, tier)
+		if tier >= ProductLines.TIER_MAX:
+			EventBus.line_completed.emit(line_id)
+			EventBus.delighter_shipped.emit(sid)
+	# §11.2/§11.3 — canlı eksenler hat modelinden YENİDEN türetilir. Ekonominin
+	# okuduğu mvp_* alanları buradan beslenir, yani "önizleme == ship" garantisi
+	# hat modelinde de aynen sürer.
+	var dims: Dictionary = ProductState.realized_dims()
+	# Olay delta'ları hat türevinin ÜSTÜNE biner (apply_dimension_delta'nın defteri).
+	# Böylece "önizleme == ship" garantisi korunur VE olayın vaat ettiği etki hayatta
+	# kalır; ikisi ayrı defterde durmasa biri diğerini siliyordu.
+	for axis in QualityModel.AXES:
+		var extra: float = float(b.axis_event_delta.get(axis, 0.0))
+		GameState.set_flag("mvp_%s" % axis, maxf(0.0, float(dims.get(axis, 0.0)) + extra))
 
 
 # Bug ve wear'in kaynağı: ekibin UZMANLIK AĞIRLIKLI ORTALAMASI (design doc §4) —
@@ -697,8 +1046,92 @@ static func hourly_tick(_hour: int) -> void:
 		EventBus.build_progress_changed.emit()
 
 
+## Hat modeliyle mi koşuyor? Plan doluysa evet. Düz katalog yolu planı boş bırakır.
+static func is_line_build() -> bool:
+	return active_build != null and not active_build.planned_step_ids.is_empty()
+
+
+## §5 — TASARIM turunun maliyeti, efor cinsinden. EforTavanı'nın ÜSTÜNE biner.
+static func design_turn_cost() -> float:
+	return 0.0 if active_build == null else DESIGN_TURN_COST * active_build.total_efor
+
+
+## §5 — koşan turun dolumu 0-1 (bar bunu çizer, "Tur 2/4" metnini de o taşır).
+static func design_turn_progress() -> float:
+	if not is_line_build():
+		return 0.0
+	var cost: float = design_turn_cost()
+	if cost <= 0.0:
+		return 0.0
+	var into: float = active_build.design_efor_spent - float(active_build.design_turns_completed) * cost
+	return clampf(into / cost, 0.0, 1.0)
+
+
+## §5 — "Geliştirmeye geç →" ilk günden basılabilir, ama tur 1 dolmamışsa ONAY ister:
+## "Tasarım turu tamamlanmadı. Bu sürüm potansiyelinin dörtte üçünü taşıyacak."
+static func needs_design_confirm() -> bool:
+	return is_line_build() and active_build.current_phase == "iteration" \
+		and active_build.design_turns_completed < 1
+
+
+## §5 — TASARIM tavanı doldu mu (dört tur). Dolduysa tur akışı parkta.
+static func design_turns_maxed() -> bool:
+	return is_line_build() and active_build.design_turns_completed >= DESIGN_TURN_MAX
+
+
+# =========================================================================
+#  §5 · §6 — HAT MODELİNİN SAATLİK TİKİ
+# =========================================================================
+# Düz katalog yolundan AYRI bir gövde, ve bilerek: bant modeli değişti. Eski yol
+# tek `efor_spent` üzerinde üç bant taşıyordu (TASARIM [0, 0,20) · GELİŞTİRME
+# [0,20, 0,80) · BETA). rev 6.1 §6.0 GELİŞTİRME barını EforTavanı'nın %100'üne
+# kadar doldurur ve §5 TASARIM turlarının maliyetini o tavanın ÜSTÜNE bindirir —
+# yani tasarım artık geliştirme barından çalmıyor, runway'den çalıyor.
+static func _tick_line_build_hourly(f: float) -> void:
+	var b := active_build
+	if build_paused():
+		return   # duraklama efor İŞLETMEZ; süre (burn) yine akar
+	var rate: float = build_effort_per_day(b.lead_engineer_id) * f / float(HOURS_PER_BUILD_DAY)
+	if rate <= 0.0:
+		return
+	match b.current_phase:
+		"iteration":
+			var cost: float = design_turn_cost()
+			var ceiling: float = cost * float(DESIGN_TURN_MAX)
+			if cost <= 0.0 or b.design_efor_spent >= ceiling - 0.0001:
+				return   # dört tur doldu: TASARIM parkta, oyuncu geçmeyi seçecek
+			b.design_efor_spent = minf(ceiling, b.design_efor_spent + rate)
+			var done: int = mini(int(floor(b.design_efor_spent / cost + 0.0001)), DESIGN_TURN_MAX)
+			if done > b.design_turns_completed:
+				b.design_turns_completed = done
+				EventBus.build_progress_changed.emit()
+		"development":
+			if b.efor_spent >= b.total_efor - 0.0001:
+				return   # §6.4 — bar dolu, kapı açık, iş bitti
+			var before: float = b.efor_spent
+			b.efor_spent = minf(b.total_efor, b.efor_spent + rate)
+			# §6.3 — hata/EFOR BİRİMİ. Hatalar harcanan işle doğar, geçen zamanla değil:
+			# yavaş bir ekip aynı işi daha uzun sürede yapar ama daha çok hata üretmez.
+			_accrue_line_bugs(b.efor_spent - before)
+		"bugfix":
+			_tick_beta_hourly(f)
+
+
+static func _accrue_line_bugs(effort_delta: float) -> void:
+	if effort_delta <= 0.0:
+		return
+	var b := active_build
+	b.bug_progress += line_bug_rate_per_effort() * effort_delta
+	while b.bug_progress >= 1.0:
+		b.bug_count += 1
+		b.bug_progress -= 1.0
+
+
 static func _tick_build_hourly(f: float) -> void:
 	var b := active_build
+	if is_line_build():
+		_tick_line_build_hourly(f)
+		return
 	# 1) Efor harcaması (%100'de durur; build Beta'da SÜRESİZ bekleyebilir — auto-ship YOK).
 	#    İTERASYON BEKLEMESİ: ek tur koşarken ya da tavan parkında efor DONUK — tasarım
 	#    bandı dolu, motorun harcayacağı iş yok; süre (burn) yine akar, bekleme bedava değil.
@@ -816,9 +1249,10 @@ static func _end_round(b: FeatureBuild) -> void:
 	# Tavan altındaysa bir sonraki tur HEMEN başlar; tavanda park (yalnız "Geliştirmeye
 	# geç" kalır). Run'ın İLK tur sonunda bir kez öğretici moment (turların kendi
 	# kendine döndüğünü ve "yeter" demenin oyuncuda olduğunu öğretir).
-	if not _iter_intro_shown:
-		_iter_intro_shown = true
-		EventManager.enqueue(_build_iter_decision_intro_event())
+	# The one-shot is the CARD's. `_iter_intro_shown` was a static bool that also had to be
+	# serialised (a private latch for one card had reached the save file), and it existed
+	# only because one_shot was inert on the injected path.
+	EventGate.request("product.design_round_intro")
 	if b.iteration_count < ITER_MAX_ROUNDS:
 		_start_next_round(b)
 	else:
@@ -842,6 +1276,12 @@ static func can_enter_development() -> bool:
 	# UI kapısı: TASARIM'da, tur 1 bittikten sonra (tur 2 başlamış ya da tavan parkı).
 	# Tur ortasında da basılabilir — yarım tur kazançsız terk edilir (Build Bar tooltip'i
 	# bunu söyler: BUILD_HALF_ROUND_TOOLTIP).
+	# §5 (rev 6.1) — HAT MODELİNDE İLK GÜNDEN İTİBAREN BASILABİLİR. Eski kural turun
+	# bitmesini bekliyordu; yeni cila merdiveni bunu gereksiz kılıyor çünkü acele
+	# etmenin bedeli artık bir KİLİT değil bir ÇARPAN (×0,75) ve oyuncu onu onay
+	# diyaloğunda okuyor (needs_design_confirm).
+	if is_line_build():
+		return active_build.current_phase == "iteration"
 	return active_build != null and active_build.current_phase == "iteration" \
 		and (active_build.iteration_count >= 2 or active_build.iteration_decision_pending)
 
@@ -864,15 +1304,19 @@ static func enter_development() -> void:
 
 
 static func can_enter_beta() -> bool:
-	# EŞİK KALKTI (H1, 2026-08-22). Eskiden geliştirme bandının TAM dolmasını istiyordu;
-	# artık karar satırı HER YÜZDEDE canlı ve beta'ya erken geçmek oyuncunun hakkı.
+	# GDD ÜRÜN rev 6.1 §6.4 — %100 KAPISI GERİ GELDİ.
 	#
-	# RAPORLANIYOR, DÜZELTİLMİYOR: erken geçişin BUGÜN BEDELİ YOK. Hatalar YALNIZ
-	# geliştirme fazında birikiyor (`_tick_development`), kalite eksenleri ise
-	# iterasyondan geliyor — yani erken geçmek daha AZ hata + daha KISA yapım demek ve
-	# baskın strateji. Bedeli (eksik geliştirmenin kaliteye yansıması) bir denge
-	# kararı ve bu turun kapsımı dışında; kapı bilerek bedelsiz açıldı.
-	return active_build != null and active_build.current_phase == "development"
+	# H1 (2026-08-22) bu eşiği kaldırmış ve kaldırırken kendi gerekçesinde bedelinin
+	# olmadığını yazmıştı: hatalar yalnız GELİŞTİRME'de birikiyor, yani erken geçmek
+	# daha az hata VE daha kısa yapım demekti — bedelsiz baskın strateji. §6.4 kapıyı
+	# geri koyuyor ve neden borç yerine kapı olduğunu söylüyor: teknoloji borcu demo
+	# dışı (§1), o yüzden eksik geliştirme cezalandırılamaz; cezalandırılamayan şey
+	# yasaklanır. "Erken faz atlama yoktur."
+	#
+	# Kapı KAPALIYKEN gerekçesini gösterir (§6.4, S6'nın çizdiği satır):
+	# "GELİŞTİRME %100 olmadan BETA'ya geçilemez."
+	return active_build != null and active_build.current_phase == "development" \
+		and development_band_complete()
 
 
 static func development_band_complete() -> bool:
@@ -885,6 +1329,13 @@ static func development_band_complete() -> bool:
 	## OKUYUCULARI SÜRÜCÜLER: smoke fixture'ları ve `run_probe` TEMSİLÎ bir oyuncuyu
 	## oynuyor; baskın ama bugün bedelsiz olan erken çıkışı almaları, kalibrasyonla
 	## ilgisi olmayan bir sebeple bütün sayılarını değiştirirdi.
+	# §6.0/§6.4 (rev 6.1) — HAT MODELİNDE BAR EforTavanı'NIN %100'ÜNE KADAR DOLAR.
+	# Eski model üç bandı tek sayaca sığdırdığı için geliştirme %80'de parkediyordu;
+	# yeni modelde TASARIM'ın maliyeti ayrı bir sayaçta (design_efor_spent) durduğu
+	# için geliştirme barı tavanın tamamını kullanabiliyor.
+	if is_line_build():
+		return active_build.current_phase == "development" \
+			and active_build.efor_spent >= active_build.total_efor - 0.0001
 	return active_build != null and active_build.current_phase == "development" \
 		and active_build.efor_spent >= PHASE_DEV_END * active_build.total_efor - 0.0001
 
@@ -905,6 +1356,9 @@ static func enter_beta() -> void:
 	b.bugs_fixed = 0
 	b.bug_find_progress = 0.0
 	b.bug_fix_progress = 0.0
+	# §7 — keşif sönümünün başlangıç noktası. Gün damgası burada alınır, çünkü sönüm
+	# BETA'da geçirilen günü okur, yapımın toplam yaşını değil.
+	b.beta_entered_day = GameState.day
 	# Snapshot bug count at bugfix entry so the tracker can read
 	# "started with M, shipped with N". Keyed by build id. Build Bar'ın BETA çubuğu
 	# bunu payda olarak okur (bug_count / bug_count_at_bugfix_start).
@@ -954,12 +1408,25 @@ static func _tick_beta_hourly(f: float = 1.0) -> void:
 	# tüketiciler değişmeden çalışır. Hızlar working — Erdem balance-pass.
 	var b := active_build
 	var hidden: int = b.bug_count - (b.bugs_found - b.bugs_fixed)
-	if hidden > 0:
-		b.bug_find_progress += BETA_BUG_FIND_PER_DAY * tester_find_mult() * tester_tempo_mult() * f / float(HOURS_PER_BUILD_DAY)
-		while b.bug_find_progress >= 1.0 and hidden > 0:
-			b.bugs_found += 1
-			hidden -= 1
-			b.bug_find_progress -= 1.0
+	# §7 — KEŞİF KESKİN AZALIR ve HAVUZ TÜKENMEZ. İkisi tek karardır: düz bir oranın
+	# tükenebilir bir havuzu, beklemeyi KESİN olarak kazançlı yapıyordu (sıfıra ulaşmak
+	# yalnız takvim günü maliyetindeydi). Azalan oran + tükenmez havuz beklemeyi
+	# kaybedilen bir yarışa çevirir, ve "9 açık hatayla yayınlamak" gerçek bir karar olur.
+	# "Sıfıra asla ulaşılmaz ... Yayınlamak test etmekten hızlı hata bulur."
+	var beta_day: int = maxi(0, GameState.day - b.beta_entered_day)
+	var find_rate: float = BETA_BUG_FIND_PER_DAY * pow(beta_find_decay(), float(beta_day)) \
+		* tester_find_mult() * tester_tempo_mult()
+	b.bug_find_progress += find_rate * f / float(HOURS_PER_BUILD_DAY)
+	while b.bug_find_progress >= 1.0:
+		if hidden <= 0:
+			# Havuz tükenmez: bulunacak bir şey hep vardır. Sayaç sahte bir tamamlanma
+			# imasına düşmesin diye gizli havuz burada beslenir, BETA satırı da bu yüzden
+			# yüzde taşımaz (§7, MÜHÜRLÜ).
+			b.bug_count += 1
+			hidden += 1
+		b.bugs_found += 1
+		hidden -= 1
+		b.bug_find_progress -= 1.0
 	if b.bugs_found - b.bugs_fixed > 0:
 		b.bug_fix_progress += float(POLISH_BUG_FIX_PER_DAY) * tester_tempo_mult() * f / float(HOURS_PER_BUILD_DAY)
 		while b.bug_fix_progress >= 1.0 and b.bugs_found - b.bugs_fixed > 0:
@@ -1260,6 +1727,16 @@ static func launch() -> void:
 	# accrues via post-ship wear (economy reads this one).
 	GameState.set_flag("mvp_live_bug_count", active_build.bug_count)
 	GameState.set_flag("mvp_live_bug_progress", 0.0)
+	# §9 — SÜRÜM YAŞI, İLGİ ve YENİ-KOD TERİMİ yayın anında birlikte tazelenir.
+	# Bu satır olmadan version_age_days() kalıcı olarak 0 okur, yani yeni-kod terimi
+	# hiç sönmez ve ilgi hiç düşmez — akış modelinin iki yarısı da sessizce ölür.
+	# Taşınan hata sayısı DOĞRULANMIŞ'a YAZILMAZ: §9'a göre taşınan hatalar zamanla
+	# YÜZEYE ÇIKAR (GELEN'i besler), doğrulanmış olarak doğmazlar.
+	ProductState.refresh_on_publish(active_build.total_efor)
+	# §12 — hat durumları ve cila damgaları. Eksenleri BU YAZAR (hat modeli varsa),
+	# yani yukarıdaki build-türevli mvp_* damgasının üstüne geçer. Düz katalog yolu
+	# planı boş bırakır ve hiçbir şey değişmez — cutover budur.
+	_apply_line_plan_at_ship(active_build)
 	# Part 2B: v2+ increments the version (title shows "· v2 · canlı"); first launch = 1.
 	if is_ver:
 		GameState.set_flag("mvp_version", int(GameState.get_flag("mvp_version", 1)) + 1)
@@ -1297,6 +1774,148 @@ static func has_b2b_product() -> bool:
 
 static func get_active_build() -> FeatureBuild:
 	return active_build
+
+
+# =========================================================================
+#  GDD ÜRÜN rev 6.1 §12 · HAT MODELİ YOLU — Konsept'ten yapıma
+# =========================================================================
+# Düz katalog yolu (`start_build` / `start_version_build`) hâlâ ağaçta ve hâlâ
+# çalışıyor: cutover disiplini, yeşil bir şey yerine geçene kadar hiçbir şeyin
+# silinmemesini istiyor. Yeni yol PLANI taşır, hat durumlarına YAYINDA dokunur.
+
+## Konsept onayının tek doğrulayıcısı. "" = plan geçerli; aksi hâlde makine sebebi.
+## Merdiven kurallarını ProductLines'a, kapıları LineGates'e sorar — burada üçüncü
+## bir kopya YOK (§18).
+static func validate_line_plan(subtype: String, step_ids: Array) -> String:
+	if step_ids.is_empty():
+		return "empty_plan"
+	if not ProductLines.has_subtype(subtype):
+		return "unknown_subtype"
+	var accepted: Array[String] = []
+	for raw in step_ids:
+		var sid: String = String(raw)
+		var step: Dictionary = ProductLines.step(sid)
+		if step.is_empty():
+			return "unknown_step"
+		if String(step.get("subtype", "")) != subtype:
+			return "step_from_another_subtype"
+		var line_id: String = String(step.get("line_id", ""))
+		# §12.3 — merdiven: atlama yok, sürüm başına hat başına bir kademe, düşürme yok.
+		var refusal: String = ProductLines.ladder_refusal(
+			sid, ProductState.line_tier(line_id), accepted)
+		if refusal != "":
+			return refusal
+		# §12.5/§12.7 — kapı ŞİRKET GENELİNDEN, Konsept ONAYINDA kontrol edilir.
+		if not LineGates.is_unlocked(sid):
+			return "locked"
+		accepted.append(sid)
+	return ""
+
+
+## §6.0 — EforTavanı: sürümde seçilen kademelerin efor toplamı. TASARIM turlarının
+## maliyeti bunun ÜSTÜNE biner (§5), bu yüzden tavana dahil DEĞİL.
+static func effort_ceiling(step_ids: Array) -> int:
+	return ProductLines.sum_effort(step_ids)
+
+
+## §3'ün maliyet dürüstlüğü önizlemesindeki "Süre ~N gün".
+##
+## Düz katalog yolunun `estimate_build_days`'inin hat modelindeki karşılığı, ve
+## şekli DEĞİŞTİ: tavan artık barın tamamı (§6.0) ve TASARIM turunun maliyeti onun
+## ÜSTÜNE biniyor (§5). Önizleme TEK TUR varsayar — taban cila ×1,00 — çünkü tur
+## sayısı TASARIM'da belirlenir ve Konsept onu bilemez; kart altbilgisi de zaten
+## "Fazla tasarım turu cilayı artırır" diyor.
+static func estimate_line_build_days(step_ids: Array, lead_id: String = "") -> int:
+	var ceiling: float = float(effort_ceiling(step_ids))
+	if ceiling <= 0.0:
+		return 0
+	var design: float = DESIGN_TURN_COST * ceiling
+	var rate: float = build_effort_per_day(lead_id) * projected_speed_factor_with_extra_job()
+	return int(ceil((ceiling + design) / maxf(0.01, rate)))
+
+
+## Konsept önizlemesi — §5: net kazanç TABAN seviyede (×1,00) gösterilir, tam
+## tasarımda değil, çünkü tur sayısı TASARIM'da belirlenir ve Konsept onu bilemez.
+static func projected_line_dims(subtype: String, step_ids: Array) -> Dictionary:
+	var tiers: Dictionary = ProductState.line_tiers()
+	var stamps: Dictionary = ProductState.line_realization()
+	for raw in step_ids:
+		var step: Dictionary = ProductLines.step(String(raw))
+		if step.is_empty():
+			continue
+		var line_id: String = String(step.get("line_id", ""))
+		tiers[line_id] = int(step.get("tier", 0))
+		stamps[line_id] = 1.00   # §5 tabanı
+	return QualityModel.realized_dims(subtype, tiers, stamps)
+
+
+## Hat modeliyle bir sürüm başlatır. `step_ids` Konsept'te seçilen kademelerdir;
+## hat durumlarına DOKUNMAZ (yayında dokunulur), o yüzden iptal doğal olarak
+## §12.3 kural 4'ü sağlar.
+static func start_line_build(subtype: String, step_ids: Array, lead_id: String = "",
+		product_name: String = "") -> bool:
+	if active_build != null:
+		push_warning("[ProductSystem] start_line_build called while a build is active")
+		return false
+	var refusal: String = validate_line_plan(subtype, step_ids)
+	if refusal != "":
+		push_warning("[ProductSystem] start_line_build refused: %s" % refusal)
+		return false
+
+	# Taahhüt edilen ürün alt-türü SEÇER (onboarding rework 2026-07-16). start_build
+	# bunu yapıyordu, start_line_build YAPMIYORDU — ve düz akış emekli olduğu an
+	# `GameState.subgenre` bir daha hiç yazılmayacaktı: subgenre olay koşulları,
+	# haber havuzu (news_feed_system "ai"|"saas"|"social" bekler) ve Meridian
+	# boyut tohumlaması sessizce açılış değerinde donardı.
+	var pool_key: String = ProductCatalog.get_pool_of(subtype)
+	if pool_key != "":
+		GameState.set_subgenre(pool_key)
+
+	var typed: Array[String] = []
+	for raw in step_ids:
+		typed.append(String(raw))
+
+	var b := FeatureBuild.new()
+	var next_version: int = int(GameState.get_flag("mvp_version", 0)) + 1
+	b.id = "mvp_build_v%d" % next_version
+	b.is_version_build = ProductState.is_live()
+	b.sub_product_type_id = subtype
+	b.planned_step_ids = typed
+	b.lead_engineer_id = lead_id
+	b.assigned_engineer_id = lead_id
+	b.product_name = product_name.strip_edges() if product_name.strip_edges() != "" \
+		else ProductState.product_name()
+	b.start_day = GameState.day
+	b.is_mvp = not b.is_version_build
+	b.current_phase = "iteration"
+	b.iteration_count = 1
+	b.iteration_decision_pending = false
+	b.iteration_round_days = 0.0
+	b.design_turns_completed = 0
+	b.design_efor_spent = 0.0
+	# §6.0 — bar bu tavanın %100'üne kadar dolar (§6.4).
+	b.total_efor = float(effort_ceiling(typed))
+	b.efor_spent = 0.0
+	# §6.3 — hatalar GELİŞTİRME'de BİRİKİR; commit'te tohumlanmazlar.
+	b.bug_count = 0
+	b.bug_progress = 0.0
+	# Önizleme eksenleri taban cilayla; kesin değer yayında damgalanır.
+	var dims: Dictionary = projected_line_dims(subtype, typed)
+	b.innovation = float(dims.get("innovation", 0.0))
+	b.stability = float(dims.get("stability", 0.0))
+	b.experience = float(dims.get("experience", 0.0))
+
+	# Lisans maliyetleri commit'te BİR KEZ tahsil edilir (§12.4).
+	var cost: int = ProductLines.sum_license_cost(typed)
+	if cost > 0:
+		FinanceSystem.apply_one_time_cost(cost, "build_commit")
+
+	active_build = b
+	GameState.set_flag("mvp_sub_product_type_id", subtype)
+	EventBus.build_started.emit(b.id)   # §19
+	EventBus.build_phase_changed.emit(b.current_phase)
+	EventBus.build_progress_changed.emit()
+	return true
 
 
 static func start_build(
@@ -1499,9 +2118,6 @@ static func apply_speed_bonus(days: int) -> void:
 	b.total_efor = maxf(maxf(1.0, b.efor_spent), b.total_efor + float(days) * team_speed(b))
 
 
-static func apply_quality_bonus(amount: int) -> void:
-	# Legacy event modifier alias → innovation axis (flat add, floor 0).
-	apply_dimension_delta("innovation", amount)
 
 
 static func apply_dimension_delta(axis: String, amount: int) -> void:
@@ -1512,6 +2128,15 @@ static func apply_dimension_delta(axis: String, amount: int) -> void:
 		return
 	if not (axis in QualityModel.AXES):
 		axis = "innovation"
+	# HAT MODELİNDE EVENT DELTA'SI AYRI DEFTERDE TUTULUR ve bu bir düzeltmedir:
+	# yayında eksenler hat durumlarından YENİDEN türetiliyor (§11.2), yani doğrudan
+	# b.innovation'a yazılan bir olay etkisi ship anında SESSİZCE SİLİNİRDİ. Olay
+	# rozeti oyuncuya bir şey vaat edip hiçbir şey yapmazdı — "her olay iddiası
+	# modifier'ıyla eşleşir" yasasının tam ihlali.
+	if is_line_build():
+		var d: Dictionary = active_build.axis_event_delta.duplicate()
+		d[axis] = float(d.get(axis, 0.0)) + float(amount)
+		active_build.axis_event_delta = d
 	match axis:
 		"innovation": active_build.innovation = maxf(0.0, active_build.innovation + float(amount))
 		"stability": active_build.stability = maxf(0.0, active_build.stability + float(amount))
@@ -1563,6 +2188,9 @@ static func ship_active_build() -> void:
 # =========================================================================
 #  Canlı ürün sağlık türetmeleri (Rev3 Ürün Detayı verisi) — id döner, UI TR'ler
 # =========================================================================
+	# §19 — sürüm CANLIYA çıktı. Tek emitter burasıdır: launch() yalnız damgalar,
+	# gerçekten yayına geçiren adım budur.
+	EventBus.version_shipped.emit(int(GameState.get_flag("mvp_version", 1)))
 
 static func _bug_trend_delta() -> int:
 	# Pencere uçları farkı (son - ilk); <2 örnek → 0 (henüz trend yok).
@@ -1603,109 +2231,19 @@ static func product_bug_risk() -> String:
 	return "dusuk"   # LOC-DATA risk band id
 
 
-# --- Synthetic ship-moment event ---
+# --- The ship moment ---
+#
+# Three GameEvent builders lived here — the first ship, the version ship, and the teaching beat
+# at the end of the first design round. All three are cards now, and one of them was carrying a
+# defect the port surfaced: the version-ship card's single option is what CALLS
+# ship_active_build, so classing it as a badge would have left `active_build` uncleared after
+# every version. A card holding an irreversible state transition is not a notification.
 
 static func _trigger_ship_moment(is_version: bool = false) -> void:
-	var ev: GameEvent = _build_version_ship_moment_event() if is_version else _build_ship_moment_event()
-	EventManager.enqueue(ev)
+	# NAMED, not built. Both cards are `tick: request` rather than firing off
+	# `version_shipped`, and that is not a preference: `version_shipped` is emitted at the END
+	# of ship_active_build, which is what this card's own option CALLS. A card triggered by
+	# its own consequence fires one ship late, forever.
+	EventGate.request("product.version_ship" if is_version else "product.first_ship")
 
 
-static func _build_version_ship_moment_event() -> GameEvent:
-	# Lighter, version-aware ship moment (Part 2B). Not one-shot — each v2/v3 fires it.
-	var ev: GameEvent = GameEvent.new()
-	ev.id = "ev_mvp_version_ship_moment"
-	ev.category = "reactive"
-	var ver: int = int(GameState.get_flag("mvp_version", 2))
-	ev.title = TranslationServer.translate("PROD_SHIP_VERSION_TITLE").format({"version": ver})
-	ev.subtitle = ""
-	ev.illustration_path = ""
-	ev.character_id = "char_mentor_frank"
-	ev.body_text = TranslationServer.translate("PROD_EV_VERSION_SHIP_BODY")
-	ev.cooldown_days = 0
-	ev.one_shot = false
-	ev.priority = 10
-	ev.tags = ["build_safe", "ship_moment"]
-	ev.trigger_conditions = []
-	var choice: EventChoice = EventChoice.new()
-	choice.label = TranslationServer.translate("PROD_SHIP_CONTINUE")
-	choice.modifiers = [{"type": "ship_active_build"}]
-	choice.unlock_condition = {}
-	choice.unlock_reason_text = ""
-	var choices: Array[EventChoice] = []
-	choices.append(choice)
-	ev.choices = choices
-	return ev
-
-
-static func _build_ship_moment_event() -> GameEvent:
-	var ev: GameEvent = GameEvent.new()
-	ev.id = "ev_mvp_ship_moment"
-	ev.category = "reactive"
-	ev.title = TranslationServer.translate("PROD_SHIP_FIRST_READY")
-	ev.subtitle = ""
-	ev.illustration_path = ""
-	ev.character_id = "char_mentor_frank"
-	ev.body_text = TranslationServer.translate("PROD_EV_FIRST_SHIP_BODY")
-	ev.cooldown_days = 0
-	ev.one_shot = true
-	ev.priority = 10
-	# build_safe so EventManager._is_eligible() doesn't suppress the ship
-	# cinematic itself during the active build it's meant to close out.
-	ev.tags = ["build_safe", "ship_moment"]
-	ev.trigger_conditions = []
-	var choice: EventChoice = EventChoice.new()
-	choice.label = TranslationServer.translate("PROD_SHIP_PUBLISH")
-	choice.modifiers = [{"type": "ship_active_build"}]
-	choice.unlock_condition = {}
-	choice.unlock_reason_text = ""
-	var choices: Array[EventChoice] = []
-	choices.append(choice)
-	ev.choices = choices
-	return ev
-
-
-static func _build_iter_decision_intro_event() -> GameEvent:
-	# Run'ın İLK tur sonunda bir kez atılan öğretici moment (Erdem kararı 2026-08-06:
-	# modal yalnız ilk karşılaşmada; Build Bar 2026-08-19: turlar kendi kendine döner).
-	# Seçim 1 modifiersız — tur 2 zaten başladı, "sürsün" demek hiçbir şeyi değiştirmez;
-	# seçim 2 tracker butonuyla aynı seam (enter_development). Modal kapatılsa bile
-	# turlar döner ve kart butonu çalışır. WORKING TR (voice pass later).
-	var ev: GameEvent = GameEvent.new()
-	ev.id = "ev_mvp_iter_decision_intro"
-	ev.category = "reactive"
-	ev.title = TranslationServer.translate("PROD_DESIGN_DECISION_TITLE")
-	ev.subtitle = ""
-	ev.illustration_path = ""
-	ev.character_id = "char_mentor_frank"
-	var iter_line: String = ""
-	if active_build != null:
-		var ceilings: Dictionary = iteration_axis_ceilings()
-		# Bu cümle oyuncuya tavanı ÖĞRETEN yer, o yüzden neyin tavanı olduğunu da söylemeli:
-		# tur kazançlarının. Aksi hâlde intro "tavanı ekip belirler" diye öğretirken ekranda
-		# tavanın üstünde bir sayı duruyor (commit damgası / event katkısı) ve ikisi
-		# birbirini yalanlıyor.
-		iter_line = "\n\n" + TranslationServer.translate("PROD_ITER_CEILING_NOTE").format({
-			"inn": int(round(active_build.innovation)),
-			"inn_max": int(round(float(ceilings.get("innovation", 0.0))))})
-	ev.body_text = TranslationServer.translate("PROD_EV_ITER_DECISION_BODY") + iter_line
-	ev.cooldown_days = 0
-	ev.one_shot = true
-	ev.priority = 10
-	# build_safe: bu moment aktif build'in İÇİNDE yaşıyor — ship moment ile aynı muafiyet.
-	ev.tags = ["build_safe", "iter_decision"]
-	ev.trigger_conditions = []
-	var more: EventChoice = EventChoice.new()
-	more.label = TranslationServer.translate("PROD_ITER_KEEP_GOING")
-	more.modifiers = []
-	more.unlock_condition = {}
-	more.unlock_reason_text = ""
-	var dev: EventChoice = EventChoice.new()
-	dev.label = TranslationServer.translate("PROD_TO_DEVELOPMENT_PLAIN")
-	dev.modifiers = [{"type": "enter_development"}]
-	dev.unlock_condition = {}
-	dev.unlock_reason_text = ""
-	var iter_choices: Array[EventChoice] = []
-	iter_choices.append(more)
-	iter_choices.append(dev)
-	ev.choices = iter_choices
-	return ev

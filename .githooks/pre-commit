@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Project Unicorn pre-commit gate.
+#
+# ENABLE IT ONCE, BY HAND (an agent may not run git commands here):
+#
+#     git config core.hooksPath .githooks
+#
+# Skip it for a single commit with `git commit --no-verify`, which is what you want when the
+# tree is mid-surgery and you are committing a checkpoint on purpose.
+#
+# WHAT IT GATES, AND WHY ONLY THESE
+#
+# Two checks, both fast, both catching a class of error that is invisible in a diff:
+#
+#   1. The event-content linter. A card with an unknown seam, a promise arc that can fade, a
+#      real trademark in a body — none of these look wrong when you read the JSON, and all of
+#      them are cheap to catch here and expensive to catch later. GDD §19.1 asks for exactly
+#      this.
+#   2. Localization residue. Turkish literals in scripts/ and scenes/ are the one defect class
+#      this project keeps re-acquiring, and loc_residue.gd exists specifically to find them.
+#
+# NOT gated here: the 278-case smoke suite. It takes hours. It is a boundary gate, run by hand
+# at the three points the rebuild plan names, and putting it in a commit hook would only teach
+# everyone to pass --no-verify.
+#
+# There is no CI. This repo has one folder and one branch by ruling (CLAUDE.md's DELIVERY LAW),
+# and no pull-request flow for a workflow to trigger on — so this hook is the whole mechanical
+# gate, and it is deliberately small enough that nobody wants to skip it.
+
+set -uo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PROJECT="$REPO_ROOT/project-unicorn"
+
+if [ -z "${GODOT:-}" ]; then
+  for c in "$(command -v godot || true)" \
+           "/c/Users/$USER/Desktop/Godot_v4.6.2-stable_win64_console.exe" \
+           "$HOME/Desktop/Godot_v4.6.2-stable_win64_console.exe"; do
+    [ -n "$c" ] && [ -x "$c" ] && GODOT="$c" && break
+  done
+fi
+
+if [ -z "${GODOT:-}" ]; then
+  echo "pre-commit: no Godot binary found; set GODOT=<path>. Skipping gates." >&2
+  exit 0
+fi
+
+fail=0
+
+# Only run the content linter when content or engine code actually changed — a docs commit
+# should not pay for a Godot boot.
+if git diff --cached --name-only | grep -qE '^project-unicorn/(data/events/|scripts/events/)'; then
+  echo "pre-commit: event content linter..."
+  if ! "$GODOT" --headless --path "$PROJECT" --event-lint; then
+    echo "pre-commit: LINT FAILED. Fix it, or add the finding to tools/lint_baseline.json" >&2
+    echo "            with a reason if it is genuinely accepted." >&2
+    fail=1
+  fi
+fi
+
+if git diff --cached --name-only | grep -qE '^project-unicorn/(scripts/|scenes/)'; then
+  echo "pre-commit: localization residue..."
+  if ! "$GODOT" --headless --path "$PROJECT" -s res://scripts/debug/loc_residue.gd; then
+    echo "pre-commit: LOC RESIDUE. A player-visible literal is sitting in a script or scene." >&2
+    fail=1
+  fi
+fi
+
+exit $fail

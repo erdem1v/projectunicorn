@@ -1,0 +1,58 @@
+{
+  "_ported_from": "ev_vc_meeting_prompt (VCPitchSystem._build_meeting_prompt_event)",
+  "_port_note": "Never fired once across eight played runs totalling 2,290 simulated days, because nothing ever books a VC meeting — FRANK_VERIFY's headline. The card is fine; the booking is the gap, and it belongs to the funding module. Ported as-is so it works the day a meeting is booked. The investor slot selects `meeting_pending` — the one in GameState.pending_meeting. The condition alone could not have picked him: it is a global seam, and a bound slot is checked, never searched.",
+  "id": "funding.meeting_day",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "scope": {
+    "investor": {
+      "type": "investor",
+      "required": true,
+      "select": "meeting_pending"
+    }
+  },
+  "latch": {
+    "cooldown_days": 1
+  },
+  "latch_key": "entity",
+  "condition": {
+    "seam": "funding.meeting_day_arrived",
+    "op": "==",
+    "value": true
+  },
+  "options": [
+    {
+      "id": "go",
+      "outcome_id": "attended",
+      "effects": [
+        {
+          "verb": "start_vc_meeting",
+          "scope": "investor"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "VC_EV_MEETING_TITLE",
+      "body": "VC_EV_MEETING_BODY",
+      "options": {
+        "go": "VC_EV_GO_FUNDING"
+      }
+    },
+    "en": {
+      "title": "VC_EV_MEETING_TITLE",
+      "body": "VC_EV_MEETING_BODY",
+      "options": {
+        "go": "VC_EV_GO_FUNDING"
+      }
+    }
+  }
+}

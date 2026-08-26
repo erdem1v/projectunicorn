@@ -1,0 +1,44 @@
+{
+  "_ported_from": "ev_mvp_version_ship_moment (ProductSystem._build_version_ship_moment_event)",
+  "_port_note": "Fires once per version ship and correctly had no latch of its own. Its body carries an em dash in BOTH locales and fired three times in the primary played run — FRANK_VERIFY flagged it as one of the two live dashes that were NOT on the known list. Reported by the linter as inherited copy, filed to the writing round, not rewritten here. tick:request. `version_shipped` fires at the end of ship_active_build — the function this card's own option calls — so triggering on it would fire the card one ship late for the whole run. ProductSystem.launch() names it directly, which is also the only place that knows whether this is the first ship or a version. CLASS CORRECTED: it was ported as `info` and its single option carried no effects, which would have left `active_build` uncleared after every version ship. The original modal's option carried ship_active_build; a card holding an irreversible state transition cannot be a badge. Tagged `critical` for a second reason beyond the sweep: a demotable interrupt must carry the paper expiry trio (R8a), and this card must not be demotable at all — its single option CALLS ship_active_build. A version that goes live because a paper expired unread is not a decision, and one that never goes live because the paper was ignored leaves `active_build` occupied forever.",
+  "id": "product.version_ship",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "latch": {
+    "cooldown_days": 1
+  },
+  "options": [
+    {
+      "id": "carry_on",
+      "outcome_id": "acknowledged",
+      "effects": [
+        {
+          "verb": "ship_active_build"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "PROD_SHIP_VERSION_TITLE",
+      "body": "PROD_EV_VERSION_SHIP_BODY",
+      "options": {
+        "carry_on": "PROD_SHIP_CONTINUE"
+      }
+    },
+    "en": {
+      "title": "PROD_SHIP_VERSION_TITLE",
+      "body": "PROD_EV_VERSION_SHIP_BODY",
+      "options": {
+        "carry_on": "PROD_SHIP_CONTINUE"
+      }
+    }
+  }
+}

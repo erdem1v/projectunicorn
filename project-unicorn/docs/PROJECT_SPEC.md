@@ -770,7 +770,7 @@ Bu üç boyut farklı player choice'larından beslenir ve sonraki sistemlere dif
 GDD mind-map'inde yalnızca başlık seviyesinde verilmiş alt başlıklar:
 
 - **Haber akışı** — TBD
-- **Event Pool** — TBD (TECH_SPEC §9'da teknik şema mevcut: `data/events/reactive/`, `industry/`, `scandals/` klasörleri + event JSON şeması)
+- **Event Pool** — **artık TBD DEĞİL** (güncellendi 2026-08-25). İçerik tasarımı `docs/design/EVENT_POOL_DESIGN_v1.md`'de (dokuz ark + doku havuzu + yazım yasası), motor şartnamesi `GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`'de. Bu satır iki gün boyunca TECH_SPEC §9'a işaret ediyordu; §9 o tarihte klasör yapısını yanlış anlatıyordu (yükleyici yalnız `reactive/`'i tarar) ve §9'un kendisi de düzeltildi.
 - **Skandallar** — TBD (Brand Collapse trigger ile bağlantılı; §3.5)
 - **Competitor AI** — TBD (PromptPilot, InkflowAI gibi örnekler §3.3 Faz 2'de geçiyor; mekanik detayı yok)
 - **Network** — TBD (Origin'le bağlantılı; §4.5 Start State Matrix'te "Starting network: Origin")

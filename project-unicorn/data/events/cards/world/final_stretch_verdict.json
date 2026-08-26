@@ -1,0 +1,45 @@
+{
+  "_worked_example": "ARC STEP. GDD §19.5's third of three, and the arc's closing beat. Frank speaks once, at D-1, which is GDD v2 ch.13's director ruling preserved on top of the press ladder rather than replaced by it. One option, no cost: this is a beat, not a decision, and §17.3's cost law explicitly allows that when the card is explicitly a beat.",
+  "id": "world.final_stretch_verdict",
+  "version_scope": "demo",
+  "category": "founder",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": ["critical", "build_safe", "terminal_warning"],
+  "arc": "arc_final_stretch",
+  "speaker": "char_mentor_frank",
+
+  "latch": { "one_shot": true },
+
+  "condition": {
+    "all": [
+      { "arc": "active", "id": "arc_final_stretch" },
+      { "seam": "time.day", "op": ">=", "value": 729 },
+      { "seam": "investor.series_a_closed", "op": "==", "value": false }
+    ]
+  },
+
+  "options": [
+    {
+      "id": "acknowledge",
+      "outcome_id": "heard",
+      "effects": [
+        { "verb": "stamp_day", "name": "soft_cap_telegraphed" },
+        { "verb": "end_arc", "arc_id": "arc_final_stretch", "outcome": "warned" }
+      ]
+    }
+  ],
+
+  "text": {
+    "tr": {
+      "title": "Frank arıyor",
+      "body": "İki yıl oldu. Şirket ayakta, sen ayaktasın, ve kapı hâlâ açılmadı.\n\nYarın bunu bir daha konuşmayacağız.",
+      "options": { "acknowledge": "Biliyorum" }
+    },
+    "en": {
+      "title": "Frank calls",
+      "body": "Two years. The company is standing, you are standing, and the door never opened.\n\nTomorrow we do not talk about this again.",
+      "options": { "acknowledge": "I know" }
+    }
+  }
+}

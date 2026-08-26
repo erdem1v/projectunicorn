@@ -165,6 +165,60 @@ signal build_iteration_decision_pending(pending: bool)
 # day_advanced fires BEFORE the tick decrements the counter, which made the bar
 # lag a day and read empty on day 1 then jump (Faz 1 bug 1.1).
 signal build_progress_changed()
+# Ürün rev 6.1 §10 — sağlayıcı ya da kapasite değişti. ProductState'in write-through
+# seam'lerinden çıkar (set_infra_provider / set_infra_units), yani kim değiştirirse
+# değiştirsin tek bir yerden haber verilir. Kapasite bloğu, doluluk çubuğu, brüt
+# marj satırı ve fatura kalemi bunu dinler; hiçbiri poll etmez.
+signal infra_changed()
+
+# --- GDD ÜRÜN rev 6.1 §19 · OKUMA YÜZEYİNİN SİNYALLERİ ---
+# "Sinyaller (dinleyicisi olmasa da yayınlanır)". Bugün hiçbirinin abonesi yok ve
+# bu KASITLI: eksik bir ad, içeriğin o ana asla atıfta bulunamaması demektir
+# (§19'un attribution yasası). Adlar KARARLIDIR; iç yapı değişse de korunurlar.
+# Her birinin TEK emitter'ı vardır — iki emitter, olay motoruna aynı anı iki kez
+# gösterir ve sebebini bulmayı imkânsızlaştırır.
+signal version_shipped(version: int)
+signal build_started(build_id: String)
+signal build_paused(reason_key: String)
+signal build_resumed()
+signal fix_run_started(confirmed: int)
+signal fix_run_finished(shipped: int, remaining: int)
+signal bug_confirmed(total_confirmed: int)
+signal unconfirmed_threshold_crossed(band: String)
+signal axis_floor_warning(axis: String)
+signal axis_floor_crossed(axis: String)
+signal line_upgraded(line_id: String, tier: int)
+signal line_completed(line_id: String)
+signal delighter_shipped(step_id: String)
+signal phase_bar_raised(phase: int)
+
+# --- GDD AR-GE MODÜLÜ §10 · OKUMA YÜZEYİNİN SİNYALLERİ ---
+# Aynı yasa yukarıdaki Ürün bloğuyla: dinleyicisi olmasa da yayınlanır, adlar KARARLIDIR,
+# ve her birinin TEK emitter'ı vardır. Emitter RnDSystem'dir.
+signal research_started(node_id: String)
+signal research_completed(node_id: String)
+signal research_frozen(node_id: String)
+signal research_resumed(node_id: String)
+signal node_revealed(node_id: String)
+signal hidden_line_unlocked(line_id: String)
+signal product_note_issued(day: int)
+
+# §10'un listesinde OLMAYAN iki ek, ikisi de yan kapıdaki precedent'le:
+#   research_progress_changed — bar ve tracker'ın gün-sınırı tazeleme kancası. day_advanced'e
+#   bağlanamaz: o GameState.advance_day() İÇİNDE, TimeManager günlük tick'leri dağıtmadan
+#   ÖNCE atılıyor (hr_tab.gd:15-19 aynı tuzağı yazıyor). `build_progress_changed` §19'un
+#   bloğunun DIŞINDA tam olarak bu sebeple duruyor.
+#   product_note_read — rozet bu sinyal olmadan asla temizlenemez.
+signal research_progress_changed()
+signal product_note_read()
+
+# Ar-Ge deep-link (§2): tab_changed("rnd") emit'i SENKRON mount eder, ardışık emit bu yüzden
+# güvenlidir — handler bağlanmış olur (finance_subpage_requested precedent'i, :31-34).
+# open_assign: barın "ata" bağı true, Konsept'in "→ Araştır" bağı false gönderir.
+signal rnd_node_requested(node_id: String, open_assign: bool)
+
+# §5.8 / §6.1 — PanelLayer kartları. RnDSystem yayınlar, main.gd mount eder.
+signal rnd_card_requested(kind: String, data: Dictionary)
 
 # --- Rival signals (Product Lifecycle Part 1) ---
 # Emitted by RivalRegistry. rival_added on seed; rival_status_changed when a
@@ -222,7 +276,7 @@ signal meeting_scene_requested(view_state: Dictionary)
 signal sheet_granted(vc_id: String)             # term sheet delivered into active_sheets
 signal sheet_expired(vc_id: String)             # validity clock hit 0 — NOT a rejection
 signal callback_ready(vc_id: String)            # callback condition met; door reopened
-signal meeting_day(vc_id: String)               # pending meeting's day arrived (prompt enqueued)
+signal meeting_day(vc_id: String)               # a booked meeting's day arrived
 signal meeting_requested(vc_id: String)         # Hunt "TOPLANTI İSTE" → VCPitchSystem schedules
 signal offer_countdown_changed(days_left: int)  # min sheet validity ≤ threshold; -1 = hide chip
 signal term_table_requested(vc_id: String)      # Finance>Yatırım "Masaya otur" / deal-prompt → main mounts the table (Spec 6)

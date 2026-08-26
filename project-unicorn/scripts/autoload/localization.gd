@@ -78,7 +78,7 @@ func is_first_boot() -> bool:
 ## choice to render time, which is what makes a mid-run language switch show the next event
 ## in the new language.
 ##
-## EMPTY en IS A CONTRACT, NOT A GAP: code factories (B2BEventFactory, HREventFactory)
+## EMPTY en IS A CONTRACT, NOT A GAP: the factory-built events this described are cards
 ## already write finished, localized text into the Turkish field and leave the sibling
 ## empty. Falling back returns that text unchanged in both locales — "already localized"
 ## behaviour with no discriminator field to keep in sync.

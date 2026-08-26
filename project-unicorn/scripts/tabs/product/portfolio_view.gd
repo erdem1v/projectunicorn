@@ -161,8 +161,11 @@ func _make_building_card(build: FeatureBuild) -> Control:
 	# durur, iki yüzey aynı build'i aynı karede basar; rozet ile bar da aynı int'ten
 	# türer (ham kesir bara verilirse yanındaki sayıyla tutmaz).
 	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())
-	var badge := UiFactory.make_badge(
-		tr("PROD_IN_DEV_PCT").format({"pct": Fmt.percent(pct, 0)}), &"accent")
+	# ROZET FAZI SÖYLER, "geliştirmede" DEMEZ. Hat modelinde TASARIM gerçek ve uzun
+	# bir faz: sabit "GELİŞTİRMEDE" etiketi tasarım turlarını sürerken de geliştirme
+	# diye okuyordu, yani portföy ile yüzen kart aynı yapım için iki farklı faz
+	# yazıyordu (kart TASARIM %10, satır GELİŞTİRMEDE %64).
+	var badge := UiFactory.make_badge(_phase_pct_text(pct), &"accent")
 	_build_badge_label = badge.get_child(0) as Label
 	hb.add_child(badge)
 	vb.add_child(hb)
@@ -213,9 +216,18 @@ func _update_texts() -> void:
 		_live_numbers.text = _key_numbers_text(String(GameState.get_flag("mvp_market_type", "b2c")))
 	var pct: int = UiTokens.build_percent(ProductSystem.build_progress())   # kurulumla aynı tek ev
 	if _build_badge_label != null and is_instance_valid(_build_badge_label):
-		_build_badge_label.text = tr("PROD_IN_DEV_PCT").format({"pct": Fmt.percent(pct, 0)})
+		_build_badge_label.text = _phase_pct_text(pct)
 	if _build_bar != null and is_instance_valid(_build_bar):
 		_build_bar.value = float(pct)
+
+
+## "TASARIM %10" — faz adı ProductSystem'in tek evinden, yüzde UiTokens.build_percent'ten.
+## Faz çözülemezse eski etiket devrede kalır: rozet boş kalmaktansa kaba olsun.
+func _phase_pct_text(pct: int) -> String:
+	var key: String = ProductSystem.phase_label_key()
+	if key == "":
+		return tr("PROD_IN_DEV_PCT").format({"pct": Fmt.percent(pct, 0)})
+	return "%s %s" % [tr(key), Fmt.percent(pct, 0)]
 
 
 # --- Girdi ------------------------------------------------------------------

@@ -2,9 +2,18 @@ class_name GameEvent
 extends Resource
 
 # GameEvent data model per TECH_SPEC §7.
-# Loaded from JSON in data/events/reactive/*.json at startup by EventManager.
-# Plain data container — eligibility checks and outcome application live in
-# EventManager's dispatchers, not on the event itself.
+#
+# NOT LOADED FROM ANYWHERE ANY MORE, and no longer saved. This used to be a content file's
+# in-memory form: EventManager parsed data/events/reactive/*.json into these at startup and
+# serialised the queue full of them. Both are gone.
+#
+# What it is now is a RENDERABLE VIEW, built by `EvPresenter.build_view` from a card id and a
+# frozen context, handed to EventModal, and thrown away when the modal closes. The queue holds
+# ids; the words are resolved from the catalogue in the live locale every time the card is
+# opened. That is what makes a mid-run language switch safe (§3.2) — and it is why this class
+# was removed from `SaveCodec.script_for_class`: a view has no business in a save file.
+#
+# Plain data container. Eligibility, latching and effects live in the engine, never here.
 #
 # Naming caution (TECH_SPEC §7): class is GameEvent, not Event — Godot
 # reserves the name `Event` at engine level (input events). Field is `title`,

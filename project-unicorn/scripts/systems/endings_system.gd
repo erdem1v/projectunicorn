@@ -86,7 +86,7 @@ static func daily_tick() -> void:
 	# trigger_ending directly at the played moment; this catches a field set
 	# through any other path (e.g. console/debug) no later than the next day.
 	if GameState.series_a_closed:
-		trigger_ending("series_a_close")
+		trigger_ending("series_a_close", TELEGRAPH_WIN)
 		return
 	if _tick_shutter():
 		return
@@ -128,11 +128,15 @@ static func _tick_shutter() -> bool:
 			GameState.set_shutter_days_left(SHUTTER_DAYS)
 			GameState.submit_month_highlight(TranslationServer.translate("END_HL_SHUTTER_STARTED"), 90)  # AYIN OLAYI (Spec 3 §4)
 			PhaseGateSystem.on_shutter_started()
-			EventManager.enqueue_front(_build_shutter_warning_event())
+			# Nothing is pushed. `funding.shutter_warning` reads
+			# `finance.cash < 0 AND finance.shutter_days_left >= 0` — the two facts the two
+			# lines above have just written — and is tagged `critical`, so the daily sweep
+			# admits it on the same day the counter appears.
 		else:
 			GameState.set_shutter_days_left(GameState.shutter_days_left - 1)
 			if GameState.shutter_days_left <= 0:
-				trigger_ending("bankruptcy")
+				# The shutter card is the telegraph: 30 days of visible countdown.
+				trigger_ending("bankruptcy", "funding.shutter_warning")
 				return true
 	elif GameState.shutter_days_left >= 0:
 		# Cash recovered — full reset (§4.3), the held gate scene returns (§7.4).
@@ -154,7 +158,10 @@ static func _check_brand_collapse() -> bool:
 		return false
 	if not GameState.active_scandal:
 		return false
-	trigger_ending("brand_collapse")
+	# No telegraph exists. The ending is debug-only anyway — its gate reads
+	# GameState.active_scandal, which has no writer outside game_shell.gd:251 — and
+	# GDD v2 ch.13 defers brand_collapse to Early Access. Filed, not invented.
+	trigger_ending("brand_collapse", TELEGRAPH_NONE)
 	return true
 
 
@@ -179,12 +186,14 @@ static func _check_vc_cascade() -> bool:
 		# Metrics alive → Frank offers the hidden corridor. Played choice:
 		# accept_pivot / decline_pivot modifiers resolve it (§4.5).
 		# ENTRY POINT CLOSED (Frank v6): ev_pivot_offer and ev_acquisition_offer were merged
-		# into ONE card, _build_buyout_offer_event, whose trigger does not exist yet. The latch
+		# into ONE card, the buyout offer card, which is not built yet. The latch
 		# still burns here so the cascade stays deferred exactly as it did while the offer sat
 		# on the table - the run continues to another terminal instead of stalling.
 		GameState.set_flag("pivot_offer_made", true)
 		return false
-	trigger_ending("vc_rejection_cascade")
+	# HUNT_FRANK_LINE counts the closed tables on screen ("Kapanan masa: 2. Ucunculde
+	# yol biter"), so the player is warned — but by a UI strip History cannot see.
+	trigger_ending("vc_rejection_cascade", TELEGRAPH_UI_ONLY)
 	return true
 
 
@@ -230,7 +239,7 @@ static func _check_profitable_bootstrap() -> bool:
 	# the win wins).
 	if not bool(profitability_signal().get("met", false)):
 		return false
-	trigger_ending("profitable_bootstrap")
+	trigger_ending("profitable_bootstrap", TELEGRAPH_WIN)
 	return true
 
 
@@ -243,7 +252,10 @@ static func _check_soft_cap() -> bool:
 	# the table.
 	if GameState.day < SOFT_CAP_DAY:
 		return false
-	trigger_ending("running_on_fumes")
+	# THE DEFECT §6.8 NAMES. A run can reach day 730 with no prior warning at all. The
+	# soft-cap ladder being built for this rebuild sets this flag; until it lands, this
+	# line logs an untelegraphed loss on every soft-cap ending, which is the point.
+	trigger_ending("running_on_fumes", "soft_cap_telegraphed")
 	return true
 
 
@@ -258,7 +270,7 @@ static func _check_acquisition_offer() -> void:
 		return  # "struggling but not failing" band
 	if GameState.vc_rejections < 1:
 		return
-	# ENTRY POINT CLOSED (Frank v6) - see _build_buyout_offer_event. The "acquisition" ending
+	# ENTRY POINT CLOSED (Frank v6): there is no buyout offer card. The "acquisition" ending
 	# is UNTOUCHED and still fires from accept_acquisition; only this door is shut, so the
 	# highlight is withheld too (there is no offer to announce).
 	GameState.set_flag("acquisition_offer_made", true)
@@ -266,19 +278,59 @@ static func _check_acquisition_offer() -> void:
 
 # --- Single terminal seam (§3, §7.1-7.3) ---
 
-static func trigger_ending(ending_id: String, extra: Dictionary = {}) -> void:
+## Telegraph sentinels. Both are DELIBERATE declarations, not escape hatches: naming one is a
+## statement about the ending, and the linter and the run log can both read it.
+const TELEGRAPH_WIN := "win"              ## a victory needs no warning
+const TELEGRAPH_NONE := "none"            ## no telegraph designed yet — filed, not hidden
+const TELEGRAPH_UI_ONLY := "ui_strip"     ## a telegraph that exists on screen but not in History
+
+
+## THE SINGLE TERMINAL SEAM — and, since 2026-08-25, the place I3 is enforced.
+##
+## `telegraph` HAS NO DEFAULT, on purpose. §0.3's I3 says "no untelegraphed loss", and the
+## event engine can only guard the two call sites that are its own effects — this function has
+## TEN callers and eight of them never touch the engine. Guarding the executor would have
+## covered 2 of 10. Putting the argument here made every call site a compile error until
+## somebody decided what warns the player, which is the decision I3 is actually about.
+##
+## It ASSERTS rather than REFUSES. §0.3 asks for "lint + runtime assert", and §8.4's refusal
+## applies to the engine's own effects (EvEffects._permitted does refuse). Blocking here would
+## strand a player mid-run over a content gap, which is a worse outcome than the gap.
+static func trigger_ending(ending_id: String, telegraph: String,
+		extra: Dictionary = {}) -> void:
 	if not GameState.run_active:
 		return  # idempotent — first terminal wins (§7.1)
 	if not ENDINGS.has(ending_id):
 		push_warning("[EndingsSystem] Unknown ending id: %s" % ending_id)
 		return
+	_assert_telegraph(ending_id, telegraph)
 	GameState.set_run_active(false)
 	GameState.ending_id = ending_id
-	EventManager.flush_queue()  # §7.2 — pending scenes (incl. Frank gate) die
+	EventGate.flush()  # §7.2 — pending scenes (incl. Frank gate) die
 	if OS.is_debug_build():
 		print("[EndingsSystem] RUN ENDED: %s (Day %d)" % [ending_id, GameState.day])
 	EventBus.run_ended.emit(ending_id, _build_ending_data(ending_id, extra))
 	EventBus.speed_change_requested.emit(0)  # §7.3 — freeze clock, pause tree
+
+
+## I3's runtime half. Loud, never blocking — see trigger_ending's note.
+static func _assert_telegraph(ending_id: String, telegraph: String) -> void:
+	var meta: Dictionary = ENDINGS.get(ending_id, {})
+	var is_loss: bool = String(meta.get("tone", "")) in ["loss", "soft_loss"]
+	if not is_loss:
+		return                                  # a win needs no warning
+	match telegraph:
+		TELEGRAPH_WIN:
+			push_error("[EndingsSystem] I3: '%s' is a loss and was declared a win" % ending_id)
+		TELEGRAPH_NONE:
+			push_error("[EndingsSystem] I3: '%s' ended the run with NO TELEGRAPH. "
+				% ending_id + "Filed, not fixed — see docs/EVENT_ENGINE_QUESTIONS.md")
+		TELEGRAPH_UI_ONLY:
+			pass                                # on screen, invisible to History; accepted
+		_:
+			if not EvHistory.telegraph_fired(telegraph):
+				push_error("[EndingsSystem] I3: '%s' fired but its telegraph '%s' never did"
+					% [ending_id, telegraph])
 
 
 static func _build_ending_data(ending_id: String, extra: Dictionary) -> Dictionary:
@@ -307,90 +359,6 @@ static func _build_ending_data(ending_id: String, extra: Dictionary) -> Dictiona
 
 
 # --- Synthetic scenes (ship-moment pattern; EventModal renders them) ---
-
-static func _build_shutter_warning_event() -> GameEvent:
-	var ev: GameEvent = GameEvent.new()
-	ev.id = "ev_shutter_warning"
-	ev.category = "reactive"
-	ev.title = TranslationServer.translate("END_EV_SHUTTER_TITLE")
-	ev.subtitle = ""
-	ev.illustration_path = ""
-	ev.character_id = "char_mentor_frank"
-	# §4.3 Frank line. Loan clause ("ya da birinden borç iste") lands when the
-	# deferred loan mechanic ships.
-	ev.body_text = TranslationServer.translate("END_EV_SHUTTER_BODY")  # v6 copy names no day count
-	ev.cooldown_days = 0
-	ev.one_shot = false  # a NEW shutter start after a recovery warns again
-	ev.priority = 10
-	ev.tags = ["build_safe", "endgame"]
-	ev.trigger_conditions = []
-	var ack: EventChoice = EventChoice.new()
-	ack.label = TranslationServer.translate("END_EV_GO_FINANCE")
-	ack.modifiers = []   # the route itself waits on navigate_to_tab (FRANK_UNWIRED.md)
-	ack.unlock_condition = {}
-	ack.unlock_reason_text = ""
-	var choices: Array[EventChoice] = []
-	choices.append(ack)
-	ev.choices = choices
-	return ev
-
-
-## THE BUYOUT CARD (Frank v6, surfaces 17 + 18 merged) - BUILT, LOCALIZED, UNCALLED.
-##
-## Pivot and acquisition were two cards asking one question; the document merged them into a
-## single moment: the Series A round closed with no deal, the investor who led the SEED round
-## brings a ready buyer, Frank says the last word. Sell (terminal) or carry on with your own
-## money (the profitable-bootstrap chase).
-##
-## IT CANNOT FIRE, and that is deliberate rather than lucky: nothing calls this function.
-## `grep -rn "_build_buyout_offer_event"` returns this definition and nothing else, so the id
-## never reaches EventManager - not the pool (it is code-built, never on disk), not the queue,
-## not _history. The smoke case `buyout_card_is_inert` drives both retired trigger conditions
-## for a month and asserts the id never appears.
-##
-## What it waits on, in full: docs/writing/FRANK_UNWIRED.md. In short - the merged trigger,
-## a valuation feeding {valuation} and {offer}, and {investor} resolving to the seed investor.
-## NEITHER ENDING WAS TOUCHED: "acquisition" still fires from accept_acquisition and the
-## profitable-bootstrap path still runs; only their entry point is shut.
-static func _build_buyout_offer_event() -> GameEvent:
-	var ev: GameEvent = GameEvent.new()
-	ev.id = "ev_buyout_offer"
-	ev.category = "reactive"
-	ev.title = TranslationServer.translate("END_EV_ACQ_TITLE")
-	ev.subtitle = ""
-	ev.illustration_path = ""
-	ev.character_id = "char_mentor_frank"
-	# {valuation} and {offer} are DECLARED with no feeder - there is no company valuation in
-	# normal play (it exists frozen in the investor table and live only inside the term-sheet
-	# sitting). {investor} must resolve to the seed investor, and there is no seed round yet.
-	ev.body_text = TranslationServer.translate("END_EV_ACQ_BODY")
-	ev.cooldown_days = 0
-	ev.one_shot = false
-	ev.priority = 10
-	ev.tags = ["build_safe", "endgame"]
-	ev.trigger_conditions = []
-	var sell: EventChoice = EventChoice.new()
-	sell.label = TranslationServer.translate("END_EV_ACQ_ACCEPT")
-	sell.modifiers = [{"type": "accept_acquisition"}]   # TERMINAL - the label must say so
-	sell.unlock_condition = {}
-	sell.unlock_reason_text = ""
-	var carry_on: EventChoice = EventChoice.new()
-	carry_on.label = TranslationServer.translate("END_EV_ACQ_DECLINE")
-	# TWO modifiers, and the second is load-bearing: the document rules that refusing to sell
-	# is remembered and thrown back at the founder in a later VC meeting ("Motorda zaten var,
-	# korunmalı"). That memory is the acquisition_offer_rejected flag, read by the refused-acq
-	# interrogation in vc_pitch_system. Dropping it would quietly delete a beat.
-	carry_on.modifiers = [
-		{"type": "accept_pivot"},
-		{"type": "set_flag", "key": "acquisition_offer_rejected", "value": true},
-	]
-	carry_on.unlock_condition = {}
-	carry_on.unlock_reason_text = ""
-	var choices: Array[EventChoice] = []
-	choices.append(sell)
-	choices.append(carry_on)
-	ev.choices = choices
-	return ev
 
 
 ## Ending title ("Series A Kapandı" / "Series A Closed"). The table holds tone only.

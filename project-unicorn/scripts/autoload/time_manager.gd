@@ -259,10 +259,9 @@ func _dispatch_daily_tick() -> void:
 	_tick_sales()
 	_tick_rivals()
 	_tick_finance()
+	_tick_phase_check()
 	_tick_events()
 	_tick_industry_events()
-	_tick_angel_round()
-	_tick_phase_check()
 	_tick_pitch()
 	_tick_endings_check()
 	_tick_month_summary()
@@ -304,9 +303,18 @@ func _tick_product() -> void:
 	# (no economic delta) per the narrative-strategy design principle.
 	# See scripts/systems/product_system.gd.
 	ProductSystem.daily_tick()
+	# Ürün rev 6.1: DESTEK (§8) ve ALTYAPI (§10) ürün yaşam döngüsünün parçası ama
+	# ayrı sistemler. Sıra ÖNEMLİ: destek önce, çünkü günlük memnuniyet zararını o
+	# uygular ve altyapı aşımı o zararın tavanına (§8.3'ün −2,0'ı) girer.
+	SupportSystem.daily_tick()
+	InfraSystem.daily_tick()
+	# §19 — okuma yüzeyinin KENAR sinyalleri EN SONDA: duraklama, doğrulama,
+	# ısınma bandı, taban ve çıta hepsi bugünün yerleşmiş durumundan okunur.
+	ProductRead.emit_edges()
 
 func _tick_rnd() -> void:
-	pass  # TODO when RnDSystem comes online: RnDSystem.daily_tick()
+	RnDSystem.daily_tick()
+	EventBus.research_progress_changed.emit()
 
 func _tick_hr() -> void:
 	# Pure-logic system filling slot 3. Iterates employees, applies baseline
@@ -335,8 +343,8 @@ func _tick_finance() -> void:
 func _tick_events() -> void:
 	# Slot 6: reactive event eligibility check + queue management.
 	# Runs after Finance so cash_below/cash_above triggers see the day's
-	# net flow applied. See scripts/autoload/event_manager.gd.
-	EventManager.daily_tick()
+	# net flow applied. See scripts/events/core/engine.gd.
+	EventGate.daily_tick()
 
 func _tick_industry_events() -> void:
 	# Slot 7a: the news feed composes the day's ticker lines (sektör/rakip/biz) —
@@ -345,23 +353,25 @@ func _tick_industry_events() -> void:
 	# the original IndustryEventScheduler reservation) still land here when built.
 	NewsFeedSystem.daily_tick()
 
-func _tick_angel_round() -> void:
-	# Slot 8a: Frank's angel round (one-shot; latch on GameState). Placed AFTER Sales and
-	# Finance so it reads the day's settled MRR — the same number the TopBar shows and the
-	# same one the phase gate reads on the next line.
-	#
-	# AND DELIBERATELY BEFORE _tick_phase_check, because "enqueue_front" does NOT mean
-	# "front": enqueue_front ends in _pump_queue(), which mounts immediately when no modal
-	# is active, so on a day when two systems both inject, the FIRST caller owns the modal
-	# and the second queues behind it. Frank's cheque should land before the "you're ready
-	# for Series A" conversation, not after it. (At the ruled 2,500 bar the two rarely
-	# collide, but the ordering is the mitigation if a run ever crosses both at once.)
-	AngelRoundSystem.daily_tick()
+# SLOT 8a IS GONE. It existed to give Frank's cheque a place in the day's order, and the whole
+# comment that used to live here was about beating PhaseGateSystem to the modal: "on a day when
+# two systems both inject, the FIRST caller owns the modal." Neither system injects any more.
+# Both cheque and gate are cards; the engine admits the day's candidates in slot 6 and assigns
+# their presentation class over the whole set at once, so priority is declared (§11.2) rather
+# than won by call order. That is the same hazard this comment named, deleted rather than
+# mitigated.
 
 
 func _tick_phase_check() -> void:
-	# Slot 8: gate evaluator per docs/ENDGAME_DESIGN.md §2. Opens gates (latch +
-	# Frank scene); the phase itself only changes via GameState.advance_phase().
+	# Gate evaluator per docs/ENDGAME_DESIGN.md §2. Opens gates (the latch only); the phase
+	# itself changes via GameState.advance_phase(), inside the card the player answers.
+	#
+	# IT MOVED IN FRONT OF THE EVENT SLOT, and the move is the whole reason the gate card can
+	# fire on the day the gate opens. `funding.gate_traction` reads `phase.gate_ready` — the
+	# ratchet this line sets. Evaluated after the engine, the ratchet would be one tick behind
+	# every day of the run and the card would arrive the morning after its own condition.
+	# It runs after Finance for the same reason the event slot does: MRR and brand have to be
+	# the day's settled numbers, not yesterday's.
 	PhaseGateSystem.daily_tick()
 
 func _tick_pitch() -> void:
@@ -389,6 +399,10 @@ func _tick_product_hourly(hour: int) -> void:
 	# smooth) + development bugs accumulate hourly. Phase counters stay daily.
 	# See scripts/systems/product_system.gd.
 	ProductSystem.hourly_tick(hour)
+	# §9 bildirim akışı, §8.2 doğrulama ve §8.4 düzeltme koşusu SAATLİK ilerler
+	# (her biri günlük oranın 1/24'ü), çünkü oyuncu gün ortasında masaya birini
+	# atayabilir ve etkisini aynı gün görmelidir.
+	SupportSystem.hourly_tick(hour)
 
 func _tick_sales_hourly(hour: int) -> void:
 	# Economy Model v2: B2C audience flows (bidirectional) and MRR derives every
@@ -401,7 +415,7 @@ func _tick_hourly_events(hour: int) -> void:
 	# 02:17 bug event fires at night, not at the midnight daily tick.
 	# Deterministic beat events stay on the daily path (slot 6, daily_tick).
 	# See scripts/autoload/event_manager.gd (D-A).
-	EventManager.hourly_tick(hour)
+	EventGate.hourly_tick(hour)
 
 func _tick_hourly_schedule(hour: int) -> void:
 	pass  # TODO when CharacterRegistry exposes schedule queries

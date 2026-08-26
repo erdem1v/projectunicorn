@@ -100,7 +100,7 @@ The chapter wants three or four named companies the player comes to know. The ca
 
 **Rakipler depends on:** **Satış** for segments — share per segment is meaningless without them, and this is a hard blocker for §2 and §6. **Ürün** for version age, which §2 names as a share input. **Event** for the six move faces, since §3 requires each move to be an authored card rather than a hidden roll.
 
-**Depends on Rakipler:** **Satış** (the share column, hero-account theft, price pressure), **Ekip** (poaching, ch. 07 §7), **Yatırım** (the closing window, ch. 09 and ch. 10 §4), **Event** (the Y8 rival arc in `docs/.md` is six nodes that assume moves exist).
+**Depends on Rakipler:** **Satış** (the share column, hero-account theft, price pressure), **Ekip** (poaching, ch. 07 §7), **Yatırım** (the closing window, ch. 09 and ch. 10 §4), **Event** (the Y8 rival arc in `docs/design/EVENT_POOL_DESIGN_v1.md` is six nodes that assume moves exist).
 
 **Can it be decided alone?** No — and the chapter says so. It needs its own session, and that session cannot usefully happen before segments are decided.
 

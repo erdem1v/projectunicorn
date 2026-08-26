@@ -32,9 +32,31 @@ var product_name: String = ""
 var fill: float = 0.0           # faz satırının zemin dolumu 0-1
 var percent: int = 0            # aynı ilerlemenin hassas değeri; bakış ve okuma iki iş
 var paused: bool = false        # R2: taşıyabilecek kimse boş değil
-var pause_note_key: String = "" # "" | BUILD_BUSY_NOBODY | BUILD_BUSY_ELSEWHERE
+var pause_note_key: String = "" # "" | BUILD_BUSY_NOBODY | BUILD_BUSY_ELSEWHERE | BUILD_BUSY_FIX_RUN
+## §2 — duraklamanın TÜRÜ. "" · "auto" · "manual". Oto-duraklama CÜMLEYLE konuşur
+## (pause_note_key dolu), manuel duraklama GLİFLE (pause_note_key BOŞ). İkisi bir
+## arada asla görünmez; bar bu alandan hangisini çizeceğini bilir.
+var pause_kind: String = ""
+## §3 — lidersiz yapımın notu ("Lider yok."). Duraklama notundan AYRI satır: yapım
+## durmuyor, yalnız liderlik çarpanı 1,0'a düştü.
+var lead_note_key: String = ""
+## Ekip §12.1 — taşıyıcı iki iş tutuyor, bar YAVAŞ akıyor. `lead_note_key` ile aynı
+## DURAKLATMAYAN kanal; ikisi de "bar duruyor" demez, "bar neden böyle" der.
+var split_note_key: String = ""
+## §7 — BETA satırı YÜZDE TAŞIMAZ (mühürlü): havuz tükenmez olduğu için yüzde sahte
+## bir tamamlanma iması olurdu. Satır sayaçları ve GEÇEN GÜNÜ gösterir.
+var show_percent: bool = true
+var beta_day: int = 0
+## §5 — tamamlanan tasarım turu. "Tur 2/4" metninin ilk sayısı bundan türer.
+var design_turns: int = 0
 var decision_key: String = ""   # "" = karar satırı YOK (koşu sürerken düşer)
 var decision_enabled: bool = false
+## Karar satırının hover metni ve — kilitli kapıda — satır altına düşen gerekçe.
+## GDD ÜRÜN rev 6.1 §6.4: "'Beta'ya geç →' bar doluncaya dek KİLİTLİDİR ve
+## GEREKÇESİNİ GÖSTERİR." §7: yayın eylemi "{n} hata canlıya taşınır" tooltip'i
+## taşır, ve o sayı KRİTİK-HATA CEZASI EKLENDİKTEN SONRAKİ sayıdır.
+## Zaten çözülmüş metin taşır (format uygulanmış), çünkü {n} yalnız burada bilinir.
+var decision_tooltip: String = ""
 
 # TASARIM
 var round_index: int = 1        # 1-tabanlı; RENGİ seçer, EKRANA YAZILMAZ
@@ -75,6 +97,15 @@ func derive() -> bool:
 	m.product_name = _build_title(b)
 	m.paused = ProductSystem.build_paused()
 	m.pause_note_key = ProductSystem.pause_note_key()
+	m.pause_kind = ProductSystem.pause_kind()
+	m.lead_note_key = ProductSystem.lead_note_key()
+	m.split_note_key = ProductSystem.split_note_key()
+	m.show_percent = true
+	# HAT MODELİ YOLU — bant aritmetiği değişti (§5, §6.0): TASARIM turlarının maliyeti
+	# ayrı bir sayaçta durduğu için GELİŞTİRME barı EforTavanı'nın %100'üne kadar dolar.
+	# Eski yol (düz katalog) aşağıda olduğu gibi kalıyor: cutover, silmeden yan yana.
+	if ProductSystem.is_line_build():
+		return _derive_line(b)
 	match b.current_phase:
 		"iteration":
 			m.phase = PHASE_DESIGN
@@ -117,6 +148,10 @@ func derive() -> bool:
 			m.fill = m.phase_progress
 			m.decision_key = "PROD_TO_BETA_PLAIN"
 			m.decision_enabled = m.dev_parked
+			# §6.4 — kilitli kapı gerekçesini SÖYLER. Oyuncu neden basamadığını
+			# tahmin etmez; S6 bu satırı barın altına, hover'da da tooltip'e koyuyor.
+			if not m.decision_enabled:
+				m.decision_tooltip = TranslationServer.translate("BUILD_BETA_GATE_LOCKED")
 		"bugfix":
 			m.phase = PHASE_BETA
 			m.bugs_remaining = maxi(0, b.bug_count)
@@ -132,6 +167,13 @@ func derive() -> bool:
 			m.fill = beta_fill()
 			m.decision_key = "PROD_LAUNCH_PLAIN"
 			m.decision_enabled = true
+			# §7 — DÜRÜST SAYI, ve nihayet ÇİZİLİYOR. projected_launch_bugs() kritik-hata
+			# cezasını ekledikten SONRA hesaplıyor ve doğru cevabı bir süredir veriyordu;
+			# eksik olan tüketiciydi. BuildBar reworkü iki tooltip ev sahibini silince
+			# BUILD_SHIP_TOOLTIP_BUGS öksüz bir anahtar olarak kalmıştı, yani oyuncuya
+			# canlıya kaç hata taşıdığı HİÇ söylenmiyordu. Satır burada geri bağlanıyor.
+			m.decision_tooltip = TranslationServer.translate("BUILD_SHIP_TOOLTIP_BUGS") \
+				.format({"n": ProductSystem.projected_launch_bugs()})
 		_:
 			# planning / cancelled: kart yok. `shipped` buraya DÜŞMEZ — active_build o anda
 			# zaten null'a çekilmiştir (ship_active_build), yani DESTEK yolundan geçer.
@@ -154,16 +196,101 @@ func _derive_support() -> bool:
 	if pname.strip_edges() == "":
 		pname = GameState.company_name
 	product_name = "%s v%d" % [pname, int(GameState.get_flag("mvp_version", 1))]
-	live_bugs = ProductSystem.live_bug_count()
-	sprint_running = ProductSystem.is_sprint_running()
-	fill = ProductSystem.sprint_progress()
+	# DESTEK ARTIK §8/§9'UN MOTORUNU OKUR, eski hata sprintini DEĞİL. Kart ile canlı
+	# ürün sayfası aynı anda ekrandalar: biri "HATA SPRİNTİ / 5 hata" derken diğeri
+	# "DÜZELTME BAŞLAT / DOĞRULANMIŞ 0" diyordu — tek şeyin iki gerçeği. Sayaç da
+	# değişti: yayındaki açık hata artık DOĞRULANMIŞ HATA'dır (§8.1).
+	live_bugs = ProductState.bugs_confirmed()
+	sprint_running = ProductState.fix_run_active()
+	# ÇUBUK: koşunun havuzu ne kadar erittiği. `FIX_RUN_PROGRESS` bunun için DEĞİLDİR —
+	# o, BİR SONRAKİ hataya kalan kesirdir (0..1) ve çubuğa konsaydı her hata
+	# çözüldüğünde sıfıra düşüp baştan dolardı.
+	var pool: int = live_bugs + ProductState.fix_run_fixed()
+	fill = 0.0 if pool <= 0 else float(ProductState.fix_run_fixed()) / float(pool)
 	percent = UiTokens.build_percent(fill)
-	# KOŞU SÜRERKEN KARAR SATIRI DÜŞER (2i): basılabilir tek şey kuralı.
-	decision_key = "" if sprint_running else "PROD_ACTION_HARDEN"
-	decision_enabled = not sprint_running and live_bugs > 0
+	# KOŞU SÜRERKEN KARAR SATIRI DÜŞMEZ, DEĞİŞİR: §8.4'te koşuyu BİTİREN oyuncudur
+	# ("oyuncu koşuyu istediği an bitirir"), yani kartın basılabilir tek şeyi koşu
+	# sırasında "Koşuyu bitir" olur.
+	decision_key = "PROD_FIX_RUN_END" if sprint_running else "PROD_FIX_RUN_START"
+	decision_enabled = sprint_running or SupportSystem.can_start_fix_run()
 	# DESTEK duraklamaz: duraklama AKTİF YAPIMIN hâli, canlı ürünün değil.
 	paused = false
 	pause_note_key = ""
+	# AMA DESTEK YAVAŞLAYABİLİR, ve dersin YARISI tam olarak burada yaşıyor: destekteki
+	# kurucu yapıma başlayınca bildirimler doğrulanmaktan hızlı birikir, memnuniyet erir, ve
+	# oyuncu işe alması gerektiğini kendisi anlar. O yarı bu bar söylemezse görünmez —
+	# `_derive_support` not alanlarının kurulduğu bloktan ÖNCE erken dönüyor, yani bu kart
+	# bugüne kadar HİÇ not taşımadı.
+	for c in SupportSystem.desk_roster():
+		if c != null and HRSystem.is_overloaded(c):
+			split_note_key = "BUILD_SPLIT_FOCUS"
+			break
+	return true
+
+
+## GDD ÜRÜN rev 6.1 — HAT MODELİNİN BAR GRAMERİ.
+##
+## Üç fark eski yoldan: TASARIM turu CİLA merdivenini sayar (tur 1 taban, dördü tavan)
+## ve dolumu kendi maliyet sayacından okur; GELİŞTİRME barı EforTavanı'nın %100'üne
+## kadar dolar (§6.0) ve BETA kapısı orada açılır (§6.4); BETA satırı YÜZDE TAŞIMAZ,
+## sayaç ve GÜN taşır (§7, mühürlü).
+func _derive_line(b: FeatureBuild) -> bool:
+	var m := self
+	match b.current_phase:
+		"iteration":
+			m.phase = PHASE_DESIGN
+			# "Tur 2/4": koşan tur, tamamlananın bir fazlası (tavanda tavanın kendisi).
+			m.design_turns = b.design_turns_completed
+			m.at_cap = ProductSystem.design_turns_maxed()
+			m.round_index = mini(b.design_turns_completed + (0 if m.at_cap else 1),
+				ProductSystem.DESIGN_TURN_MAX)
+			m.round_max = ProductSystem.DESIGN_TURN_MAX
+			m.round_progress = 1.0 if m.at_cap \
+				else float(UiTokens.build_percent(ProductSystem.design_turn_progress())) / 100.0
+			# Eski "bu turun kazancı" önizlemesi hat modelinde YOK: kazanç kademenin
+			# kendi puanıdır ve Konsept'te okunur (§5'in taban-seviye önizlemesi).
+			m.show_gain = false
+			m.fill = m.round_progress
+			m.decision_key = "PROD_TO_DEVELOPMENT_PLAIN"
+			# §5 — ilk günden basılabilir. Tur 1 dolmadan onay diyaloğu çıkar; kapı
+			# KAPALI DEĞİL, o yüzden burada enabled kalıyor.
+			m.decision_enabled = ProductSystem.can_enter_development()
+			if ProductSystem.needs_design_confirm():
+				m.decision_tooltip = TranslationServer.translate("BUILD_DESIGN_RUSH_CONFIRM")
+		"development":
+			m.phase = PHASE_DEVELOPMENT
+			# §6.0 — tavanın %100'ü. Eski (frac − 0,20)/0,60 aritmetiği emekli.
+			m.phase_progress = float(UiTokens.build_percent(
+				clampf(b.efor_spent / maxf(0.001, b.total_efor), 0.0, 1.0))) / 100.0
+			m.dev_parked = ProductSystem.can_enter_beta()
+			var rate: float = ProductSystem.build_effort_per_day(b.lead_engineer_id) \
+				* ProductSystem.capacity_speed_factor()
+			m.dev_days_left = int(ceil(maxf(0.0, b.total_efor - b.efor_spent) / maxf(0.01, rate)))
+			m.half_speed = ProductSystem.capacity_speed_factor() < 1.0
+			m.dev_bugs = maxi(0, b.bug_count)
+			m.fill = m.phase_progress
+			m.decision_key = "PROD_TO_BETA_PLAIN"
+			m.decision_enabled = m.dev_parked
+			if not m.decision_enabled:
+				m.decision_tooltip = TranslationServer.translate("BUILD_BETA_GATE_LOCKED")
+		"bugfix":
+			m.phase = PHASE_BETA
+			m.bugs_remaining = maxi(0, b.bug_count)
+			m.bugs_found = maxi(0, b.bugs_found)
+			m.bugs_fixed = maxi(0, b.bugs_fixed)
+			m.bugs_left = maxi(0, m.bugs_found - m.bugs_fixed)
+			# §7 — YÜZDE YOK. Havuz tükenmez, dolayısıyla "ne kadarı bitti" sorusunun
+			# dürüst bir cevabı yok; satır sayaçları ve kaçıncı beta günü olduğunu yazar.
+			m.show_percent = false
+			m.fill = 0.0
+			m.beta_day = maxi(1, GameState.day - b.beta_entered_day + 1)
+			m.decision_key = "PROD_LAUNCH_PLAIN"
+			m.decision_enabled = true
+			m.decision_tooltip = TranslationServer.translate("BUILD_SHIP_TOOLTIP_BUGS") \
+				.format({"n": ProductSystem.projected_launch_bugs()})
+		_:
+			return false
+	m.percent = UiTokens.build_percent(m.fill) if m.show_percent else 0
 	return true
 
 
@@ -233,8 +360,9 @@ func cap_color() -> Color:
 
 ## Durum parmak izi — smoke (üç ev sahibi aynı mı?) ve harness çıktısı için.
 func fingerprint() -> String:
-	return "%s|%d/%d|%.2f|%d|%d|%d|%d|%.2f|%d|%d|%d|%d/%d|%d|%s|%d|%d|%d" % [
+	return "%s|%d/%d|%.2f|%d|%d|%d|%d|%.2f|%d|%d|%d|%d/%d|%d|%s|%d|%d|%d|%s|%s" % [
 		String(phase), round_index, round_max, round_progress, int(at_cap),
 		int(show_gain), gain, gain_left, phase_progress, dev_days_left, int(dev_parked),
 		int(half_speed), bugs_remaining, bugs_start,
-		int(paused), pause_note_key, live_bugs, int(sprint_running), bugs_left]
+		int(paused), pause_note_key, live_bugs, int(sprint_running), bugs_left,
+		lead_note_key, split_note_key]

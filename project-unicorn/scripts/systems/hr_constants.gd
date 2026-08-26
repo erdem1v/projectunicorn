@@ -153,8 +153,37 @@ const JOB_BUILD := "build"          # Build ekibi (aktif yapım)
 const JOB_TEST := "test"            # Test
 const JOB_SUPPORT := "support"      # Destek (canlı ürün)
 const JOB_ACCOUNTS := "accounts"    # Hesap sahipliği
-const JOB_SALES := "sales"          # Satış
-const JOBS := ["build", "test", "support", "accounts", "sales"]
+# JOB_SALES EMEKLİ (2026-08-25): satış bir iş değil, bir toplantıdır. Bkz. JOB_CONTINUOUS.
+const JOB_RESEARCH := "research"    # Ar-Ge §5.0 — DIŞLAYICI iş; JOB_EXCLUSIVE'e bakın
+const JOBS := ["build", "test", "support", "accounts", "research"]
+
+## ÜÇ KATEGORİ, TEK LİSTE DEĞİL (direktör hükmü, 2026-08-25). İş modeli bir ayrımı
+## kaçırıyordu ve o ayrım kurulunca tavan sorunu kendiliğinden yok oldu:
+##
+##   SÜREKLİ İŞLER — build · test · support · accounts. SLOT tutarlar. Kişi başına iki
+##   tane, ve ikisini birden tutmak odağı 0,50/0,50 böler (§12.1). Günlük çıktı üretirler.
+##
+##   ARAŞTIRMA — DIŞLAYICI. Slot TUTMAZ, kişinin TAMAMINI alır. Sürekli işlerini
+##   duraklatır, araştırma durunca ya da bitince geri dönerler (Ar-Ge §5.0).
+##
+##   SATIŞ — İŞ DEĞİL. Pitch bir TOPLANTIDIR: girersin, sonuçlanır, çıkarsın. Slot
+##   tüketmez, hiçbir şeyi duraklatmaz, hiçbir şey tarafından duraklatılmaz. Bir satış
+##   eylemi kişiyi kısa süre meşgul ediyorsa (pitch hazırlığı) sürekli işleri o pencerede
+##   TAM OLARAK İZİNDEKİ GİBİ 0 üretir — ama hiçbir atamaya dokunulmaz, hiçbir şey
+##   duraklamaz ya da yerinden edilmez. Bu yüzden `sales` iş defterinden TAMAMEN çıktı.
+##
+## Sonucu, ve asıl ders bu: DESTEK'teki kurucu yapıma başlarsa İKİSİ DE koşar ve İKİSİ DE
+## yavaşlar. Bildirimler doğrulanmaktan hızlı birikir, memnuniyet erir, ve oyuncu işe alması
+## gerektiğini kendisi anlar. O baskı işin kendisidir ve bir DURAKLAMAYLA değiştirilemez.
+## Bu yüzden kurucunun eski "ikinci iş öncekini yerinden eder" istisnası da KALDIRILDI:
+## kurucu da herkes gibi iki sürekli slot taşır.
+const JOB_CONTINUOUS := ["build", "test", "support", "accounts"]
+
+
+## Bu iş SLOT tutar mı. Tavan yalnız bunları sayar; araştırma sayılmaz, çünkü slot değil
+## kişinin tamamıdır. Tavanın araştırmayı reddetmesi bu yüzden imkânsızdır.
+static func is_continuous_job(job_id: String) -> bool:
+	return JOB_CONTINUOUS.has(job_id)
 
 ## Hangi ALANLAR her işi taşır (§12.0, bağlayıcı). Bir kişi işin alanlarından en az birini
 ## taşıyorsa o işi tutabilir; NE KADAR İYİ yaptığı §4.5'in formülüdür, bu tablo değil.
@@ -167,8 +196,30 @@ const JOB_AREAS := {
 	"test": ["qa"],
 	"support": ["engineering", "customer_success"],
 	"accounts": ["customer_success", "sales"],
-	"sales": ["sales"],
+	# "sales" satırı YOK: satış bir iş değil (JOB_CONTINUOUS bloğuna bakın). Satış ALANI
+	# `accounts` işi üzerinden taşınır — hesap sahipliği zaten Satış ve Müşteri İlişkileri
+	# alanlarının ikisini birden tutuyordu.
+	# Ar-Ge §5.2 — dört aile alanı. Bu satır YALNIZ `can_hold_job` kapısıdır: hangi
+	# düğümün hangi alanı okuduğu düğümün kendi `areas` alanındadır ve hız formülü
+	# (§5.4) bu tabloya HİÇ bakmaz. Sonucu: sales_rep ve customer_rep katsayı 0 alır,
+	# yani araştırmaya hiç konamazlar — §5.3'ün filtresi bedavaya gelir.
+	"research": ["product", "design", "engineering", "qa"],
 }
+
+## Ar-Ge §5.0 (MÜHÜRLÜ) — kişiyi MEŞGUL EDEN işler. Böyle bir işi tutmak başka hiçbir şey
+## tutmamak demektir: iş atanınca diğerleri DURAKLAR (silinmez), ve kişi kendi etkinliği
+## dışında HİÇBİR alana çıktı vermez.
+##
+## Bu listenin tek satırlık sonucu `areas_for_jobs`'un içindeki `continue`'dur ve o satır
+## modülün en kritik parçasıdır: türetilmiş alan aynası (`Character.assigned_jobs`)
+## ProductSystem.phase_assignees ve HRSystem.assigned_to tarafından okunuyor. Araştırma
+## aynayı beslerse araştıran kişi sessizce build ekibine geri döner ve §5.0'ın tamamı
+## kağıt üstünde kalır.
+const JOB_EXCLUSIVE := ["research"]
+
+
+static func is_exclusive_job(job_id: String) -> bool:
+	return JOB_EXCLUSIVE.has(job_id)
 
 ## §12 "Bir kişiye en fazla iki iş verilebilir. Bu bir tavandır, bir öneri değil."
 ## TEK EV (§15.2): matris kilidi ve yazma tarafı aynı sayıyı okur.
@@ -236,7 +287,7 @@ const AREA_PRIMARY_JOB := {
 	"engineering": "build",
 	"qa": "test",
 	"customer_success": "accounts",
-	"sales": "sales",
+	"sales": "accounts",   # satış işi emekli; alanı hesap sahipliği taşır (2026-08-25)
 }
 
 
@@ -266,6 +317,15 @@ static func areas_for_jobs(role_id: String, category: String, job_ids: Array) ->
 		if sec != "":
 			owned.append(sec)
 	for job_id in job_ids:
+		# Ar-Ge §5.0 — ARAŞTIRAN KİŞİ BAŞKA HİÇBİR ŞEYE ÇIKTI VERMEZ.
+		# Bu `continue` modülün temel kuralını tek satırda üretir. Türetilmiş alan aynası
+		# (`Character.assigned_jobs`) ProductSystem.phase_assignees:401, _phase_crew,
+		# HRSystem.assigned_to:265 ve _founder_on_build tarafından okunuyor; araştırmayı
+		# aynaya sokmak, araştıran kişiyi sessizce build ekibine geri koyardı ve §1'in
+		# "birini masadan kaldırırsın" cümlesi yalan olurdu. Dört çağrı yerinin HİÇBİRİNE
+		# dokunulmuyor — hepsi bu satır sayesinde doğru davranıyor.
+		if is_exclusive_job(String(job_id)):
+			continue
 		for area_id in job_areas(String(job_id)):
 			if owned.has(String(area_id)) and not out.has(String(area_id)):
 				out.append(String(area_id))

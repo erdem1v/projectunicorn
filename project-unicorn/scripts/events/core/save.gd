@@ -1,0 +1,112 @@
+class_name EvSave
+extends RefCounted
+
+# THE ENGINE'S SAVE BLOCK (GDD §16.1). One dictionary, gathered from every store, restored in
+# an order that matters.
+#
+# WHAT IS AND IS NOT IN HERE
+#
+# In: run_seed, queue, history, flags, timed flags, stamps, schedule, arcs, papers, budgets,
+# latches, the tempo window, held ticker lines.
+#
+# Out, deliberately: the CATALOGUE. Cards and arc definitions are disk content, re-read at
+# every boot. Persisting them would freeze a content edit out of every existing save — the old
+# engine's own note (event_manager.gd:282-284) got this right and it is carried forward.
+#
+# SCALARS ONLY, AND IT IS ASSERTED. Nothing here may contain a Resource. `Character` extends
+# Resource, so a bound entity stored as an object rather than an id would be serialised whole
+# by SaveCodec and handed back on load as a private copy of a person who has left the company —
+# which is precisely the resurrection §20 A2 exists to prevent. `verify_no_resources()` walks
+# the block for SaveCodec's "__res" tag and is called by a smoke case, because a rule with no
+# test is a comment.
+#
+# RESTORE ORDER IS NOT ALPHABETICAL. Flags and history come back FIRST, because the arc and
+# queue restores validate against the catalogue and may want to ask what has already happened.
+# Latches come back before the queue for the same reason.
+
+const BLOCK_KEY := "event_engine"
+const BLOCK_VERSION := 1
+
+
+static func to_dict() -> Dictionary:
+	var block: Dictionary = {
+		"version": BLOCK_VERSION,
+		"run_seed": GameState.run_seed,
+	}
+	block.merge(EvFlags.to_dict())
+	block.merge(EvHistory.to_dict())
+	block.merge(EvLatches.to_dict())
+	block.merge(EvSchedule.to_dict())
+	block.merge(EvArcs.to_dict())
+	block.merge(EvQueue.to_dict())
+	block.merge(EvPapers.to_dict())
+	block.merge(EvBudgets.to_dict())
+	block.merge(EvTicker.to_dict())
+	block.merge(EvTempo.to_dict())
+	return block
+
+
+static func from_dict(block: Dictionary) -> void:
+	# §16.4: a corrupt or absent block starts an empty engine, logs, and does NOT crash. The
+	# run continues — a player whose engine state is gone still has a company.
+	if block.is_empty():
+		reset()
+		return
+	if int(block.get("version", 0)) != BLOCK_VERSION:
+		push_error("[EvSave] engine block is version %s, expected %d — starting empty"
+			% [block.get("version", "?"), BLOCK_VERSION])
+		reset()
+		return
+
+	EvFlags.from_dict(block)
+	EvHistory.from_dict(block)
+	EvLatches.from_dict(block)
+	EvSchedule.from_dict(block)
+	EvArcs.from_dict(block)
+	EvQueue.from_dict(block)
+	EvPapers.from_dict(block)
+	EvBudgets.from_dict(block)
+	EvTicker.from_dict(block)
+	EvTempo.from_dict(block)
+
+
+static func reset() -> void:
+	EvFlags.reset()
+	EvHistory.reset()
+	EvLatches.reset()
+	EvSchedule.reset()
+	EvArcs.reset()
+	EvQueue.reset()
+	EvPapers.reset()
+	EvBudgets.reset()
+	EvTicker.reset()
+	EvTempo.reset()
+	EvSeams.reset()
+
+
+## "" when the block is clean, else the first offending path. SaveCodec tags a serialised
+## Resource with "__res" (save_codec.gd:51); finding one here means an entity object reached
+## persistence, and the next load would resurrect it.
+static func verify_no_resources(block: Dictionary = to_dict()) -> String:
+	return _walk_for_res(block, BLOCK_KEY)
+
+
+static func _walk_for_res(value: Variant, path: String) -> String:
+	match typeof(value):
+		TYPE_DICTIONARY:
+			var d: Dictionary = value
+			if d.has(SaveCodec.TYPE_TAG):
+				return path
+			for k in d:
+				var found: String = _walk_for_res(d[k], "%s.%s" % [path, k])
+				if found != "":
+					return found
+		TYPE_ARRAY:
+			var a: Array = value
+			for i in a.size():
+				var found2: String = _walk_for_res(a[i], "%s[%d]" % [path, i])
+				if found2 != "":
+					return found2
+		TYPE_OBJECT:
+			return path
+	return ""

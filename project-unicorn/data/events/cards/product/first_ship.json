@@ -1,0 +1,44 @@
+{
+  "_ported_from": "ev_mvp_ship_moment (ProductSystem._build_ship_moment_event)",
+  "_port_note": "Its one_shot was inert on the injected path; the real brake was the lifecycle edge itself. Now the latch is the card's. The single option publishes the product irreversibly and rendered NO effect chip in the old modal — a run-shaping blind click. ship_active_build is a named verb here, so the chip builds itself. tick:request. `version_shipped` fires at the end of ship_active_build — the function this card's own option calls — so triggering on it would fire the card one ship late for the whole run. ProductSystem.launch() names it directly, which is also the only place that knows whether this is the first ship or a version.",
+  "id": "product.first_ship",
+  "version_scope": "demo",
+  "category": "product",
+  "tick": "request",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "latch": {
+    "one_shot": true
+  },
+  "options": [
+    {
+      "id": "publish",
+      "outcome_id": "shipped",
+      "effects": [
+        {
+          "verb": "ship_active_build"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "PROD_SHIP_FIRST_TITLE",
+      "body": "PROD_EV_FIRST_SHIP_BODY",
+      "options": {
+        "publish": "PROD_SHIP_PUBLISH"
+      }
+    },
+    "en": {
+      "title": "PROD_SHIP_FIRST_TITLE",
+      "body": "PROD_EV_FIRST_SHIP_BODY",
+      "options": {
+        "publish": "PROD_SHIP_PUBLISH"
+      }
+    }
+  }
+}

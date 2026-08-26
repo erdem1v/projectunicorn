@@ -1,0 +1,40 @@
+{
+  "id": "arc_final_stretch",
+  "type": "world",
+  "subject": null,
+  "restartable": false,
+  "steps": [
+    {
+      "id": "asked_for_comment",
+      "event_id": "world.final_stretch_comment",
+      "optional": false
+    },
+    {
+      "id": "the_verdict",
+      "event_id": "world.final_stretch_verdict",
+      "optional": false
+    }
+  ],
+  "invalidate_when": [
+    {
+      "any": [
+        {
+          "seam": "investor.series_a_closed",
+          "op": "==",
+          "value": true
+        },
+        {
+          "seam": "phase.series_a_signal",
+          "op": "==",
+          "value": "open"
+        }
+      ]
+    }
+  ],
+  "on_invalidate": {
+    "policy": "fade",
+    "note_key": "arc_faded",
+    "penalties": []
+  },
+  "_note": "Two steps, not three. The opener is `world.final_stretch_press`, and it is NOT a step: a card cannot be both the thing that starts an arc and a step that arc gates — §10.10 excludes steps from the pool, so such a card can never fire at all."
+}

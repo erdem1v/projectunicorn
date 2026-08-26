@@ -1,0 +1,89 @@
+{
+  "_worked_example": "PAPER. GDD §19.5's second of three. Also the first rung of the soft-cap telegraph (task §6 defect 8): a run could reach day 730 and end with no prior warning at all. Low stakes, 30 days to answer, and answering it costs nothing — the point is that the player hears the clock, not that they act on it.",
+  "id": "world.final_stretch_press",
+  "version_scope": "demo",
+  "category": "rival",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [
+    "critical",
+    "low_stakes",
+    "build_safe",
+    "terminal_warning"
+  ],
+  "latch": {
+    "one_shot": true
+  },
+  "expires_days": 30,
+  "expire_note": "expire_unanswered",
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "advance_arc",
+        "arc_id": "arc_final_stretch"
+      },
+      {
+        "verb": "stamp_day",
+        "name": "soft_cap_telegraphed"
+      },
+      {
+        "verb": "start_arc",
+        "arc_id": "arc_final_stretch"
+      }
+    ]
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "time.day",
+        "op": ">=",
+        "value": 640
+      },
+      {
+        "seam": "investor.series_a_closed",
+        "op": "==",
+        "value": false
+      },
+      {
+        "seam": "phase.series_a_signal",
+        "op": "!=",
+        "value": "open"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "read_it",
+      "outcome_id": "read",
+      "effects": [
+        {
+          "verb": "stamp_day",
+          "name": "soft_cap_telegraphed"
+        },
+        {
+          "verb": "start_arc",
+          "arc_id": "arc_final_stretch"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Sektör Telgrafı · yıllık dosya",
+      "body": "Yıllık dosya çıkmış. Senin turunda kurulan şirketlerin listesi var; çoğunun yanında bir tur, bir satın alma ya da bir kapanış yazıyor. Senin adının yanında hâlâ ilk gün yazdıkları duruyor.\n\nDosyayı hazırlayan kişi kimseye bir şey demiyor. Sadece sıralıyor.",
+      "options": {
+        "read_it": "Dosyayı bir kenara koy"
+      },
+      "expire_unanswered": "Sektör Telgrafı'nın yıllık dosyası masanda kaldı."
+    },
+    "en": {
+      "title": "Sector Telegraph · the annual file",
+      "body": "The annual file is out. It lists the companies founded in your cohort, and most of them have a round, an acquisition or a closure written next to the name. Next to yours is still what they wrote on the first day.\n\nWhoever compiled it passes no judgement. They only list.",
+      "options": {
+        "read_it": "Set the file aside"
+      },
+      "expire_unanswered": "The Sector Telegraph's annual file sat on your desk unread."
+    }
+  },
+  "_port_note": " REMOVED FROM THE ARC'S STEP LIST AND MADE ITS OPENER. It starts the arc on EITHER branch — read, or expired unread — because the sector moving on is not conditional on the founder reading about it. A stray `advance_arc` ran BEFORE `start_arc` on the read option — a no-op against an arc that did not exist yet, and if it had run after, it would have skipped the ladder's first rung. The opener starts the arc and nothing else; the arc raises its own steps."
+}

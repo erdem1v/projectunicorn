@@ -51,6 +51,12 @@ const NAMES := {
 	"saas_billing":      ["Kasadar", "Faturon", "Billwise", "Tahsila", "Subskript", "Oranla", "Ödemely", "Recurro"],   # LOC-DATA product name (proper noun)
 	"saas_dev_tools":    ["Nöbetçi", "Karakol", "Kütükçü", "CIforge", "Sandboxy", "Devkit", "APIgate", "Uçbirim"],   # LOC-DATA product name (proper noun)
 	"saas_ops":          ["FlowSuite", "Prosedo", "Operanda", "Akista", "Otomo", "Süreçly", "Rutin", "Adımla"],   # LOC-DATA product name (proper noun)
+	# §12.11'in üç mühürlü demo alt-tipi. Bunlar OYUNCUNUN seçebildiği tiplerdir, yani
+	# rakip adlarının en çok görüldüğü yer — isimsiz bırakılsalardı board ve pazar payı
+	# merdiveni "note_tool #7" gibi HAM KİMLİK basardı (saas_ops'un düzeltilen kusuru).
+	"note_tool":         ["Kayıt", "Zihin Haritası", "Notably", "Bellek", "Kâğıtsız", "Fihrist", "Karalama", "Mürekkep"],   # LOC-DATA product name (proper noun)
+	"video_clip":        ["Kesit", "Klipsa", "Makas", "ShortForge", "Kadraj Kesit", "Altyazıcı", "Reelo", "Montajcı"],   # LOC-DATA product name (proper noun)
+	"erp":               ["Defterdar", "Kasa & Stok", "Muhasip", "Ledgero", "Envanter", "Sayman", "Faturacı", "Tezgâh"],   # LOC-DATA product name (proper noun)
 }
 # (Dünya İnandırıcılığı onarımı: saas_ops satırı eklendi — canlı üründü ama isimsizdi,
 # board'da "saas_ops #0..7" fallback'i görünüyordu. Yetim ai_multimodal_app satırı

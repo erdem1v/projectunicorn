@@ -232,9 +232,44 @@ The system scripts in `scripts/systems/` are pure logic. They read state from si
 
 ## 9. Event System
 
+> **REBUILD NOTE 2026-08-25.** This section described the placeholder engine and four of its
+> claims were measurably false against the shipped code. They are corrected below rather than
+> deleted, because the corrections are the reason the engine is being rebuilt. The engine's
+> authority is [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md).
+>
+> **THE REBUILD HAS CLOSED (2026-08-26).** All four corrections below are now historical: the
+> loader is recursive over `data/events/cards/<category>/`, `data/events/reactive/` is deleted
+> along with `EventManager`, ported cards carry CSV keys while new content writes prose inline,
+> and there is one admission gate rather than three. The corrections are kept because they are
+> the record of WHY the engine was rebuilt, not because any of them still describes the code.
+>
+> 1. **"split into `reactive/`, `industry/`, and `scandals/` subfolders"** — the loader is a
+>    single non-recursive constant, `EVENTS_DIR := "res://data/events/reactive/"`
+>    (`event_manager.gd:32`). `industry/` and `scandals/` hold only `.gitkeep` and are
+>    unreachable. `unwired/` is unreachable *by design* and documents it.
+> 2. **"localization keys"** — events carry **inline prose plus `*_en` siblings**
+>    (`event.gd:74-77`, `event_choice.gd:36-38`), resolved at render by
+>    `Localization.pick`. This is not a lapse: CLAUDE.md's BILINGUAL BIRTH LAW names the
+>    convention explicitly and `loc_event_en_coverage` gates it with a ratchet pinned at 0.
+>    The rebuild keeps inline text and moves it to nested `text: {tr:, en:}` blocks.
+> 3. **"The UI picks the highest-priority event"** — the **engine** picks
+>    (`_pump_queue`, `event_manager.gd:844-856`) and emits `modal_requested`; `main.gd` only
+>    mounts. The UI has never chosen.
+> 4. **"changes to … MRR … or a trait reveal"** — there is no `mrr` dispatcher arm and no
+>    trait-reveal modifier. `mrr` is worse than absent: it renders a chip
+>    (`event_modal.gd:490`) over an effect the engine cannot apply, so a card promising it
+>    lies to the player. The rebuild deletes the orphan chip.
+>
+> Also stale nearby: §8.2 lists 9 daily tick slots — there are **13** (`time_manager.gd:256-268`).
+> §12's event-id convention (`ev_` + number + slug) does not match live ids, which are
+> `ev_<domain>_<slug>` and, for factories, `ev_b2b_retain_<customer_id>`. §18's "UI strings,
+> event strings, and character strings" is one file, `localization/strings.csv`.
+
 ### 9.1. Event definition
 
-Events are defined as JSON files in `data/events/`, split into `reactive/`, `industry/`, and `scandals/` subfolders. Each event file describes its id, category, localization keys, illustration, optional character context, choices, trigger conditions, cooldown, and one-shot flag.
+Events are defined as JSON files under `data/events/`. Each event file describes its id,
+category, its text (inline, TR with an `_en` sibling per field), illustration, optional
+character context, choices, trigger conditions, cooldown, and one-shot flag.
 
 Keeping events as data rather than code means new events can be written and tuned without touching GDScript.
 

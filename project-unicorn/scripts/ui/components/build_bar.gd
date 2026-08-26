@@ -27,6 +27,12 @@ extends Control
 # editörde görünmez, yalnız çalışma anında ortaya çıkar.
 
 const Model := preload("res://scripts/ui/components/build_bar_model.gd")
+# ÇİZİM İLKELLERİ ORTAK DEFTERDE (bar_kit.gd): ResearchBar aynı Label/glif/kıl/kapak
+# reçetesini kuruyor ve ikinci bir kopya iki kartı sessizce ayırırdı. Bu dosyadaki
+# `_label` / `_glyph` / `_hairline` / `_resolve_font` artık TEK SATIRLIK DEVİRDİR;
+# gövdeleri birebir taşındı, düğüm sayısı ve çözümlenen tema değeri KIPIRDAMADI
+# (ODA kapısı `--theme-audit=oda` öncesi/sonrası bayt-aynı doğrulandı).
+const BarKit := preload("res://scripts/ui/components/bar_kit.gd")
 
 const ICON_DIR := "res://assets/icons/build/"
 
@@ -134,44 +140,15 @@ func _fs(v: int) -> int:
 
 
 func _label(size_px: int, color: Color, bold: bool = false) -> Label:
-	var l := Label.new()
-	l.add_theme_font_override(&"font", _font)
-	l.add_theme_font_size_override(&"font_size", size_px)
-	l.add_theme_color_override(&"font_color", color)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	# clip_text KAPALI ve bu ÖLÇÜLDÜ: açıkken Label'ın asgari GENİŞLİĞİ sıfıra iner,
-	# yani yanındaki esneyen boşluk bütün satırı yutuyor ve her yazı görünmez oluyordu.
-	# Sözleşme de bunu yasaklıyor zaten: "dolgunun kenarı hiçbir yazıyı kesmez" —
-	# kesilebilen bir yazı o sözü zaten veremez.
-	l.clip_text = false
-	l.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	if bold:
-		l.add_theme_constant_override(&"outline_size", 0)
-	return l
+	return BarKit.label(_font, size_px, color, bold)
 
 
 func _glyph(name: String, px: int, color: Color) -> TextureRect:
-	var t := TextureRect.new()
-	t.texture = load(ICON_DIR + name + ".svg")
-	t.custom_minimum_size = Vector2(px, px)
-	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	t.modulate = color
-	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	return t
+	return BarKit.glyph(name, px, color)
 
 
 func _hairline() -> Panel:
-	var p := Panel.new()
-	p.custom_minimum_size = Vector2(0, 1)
-	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = UiTokens.BG_AVATAR   # #1B232B — sayfanın satır kılı
-	sb.anti_aliasing = false
-	p.add_theme_stylebox_override(&"panel", sb)
-	return p
+	return BarKit.hairline()
 
 
 func _build_tree() -> void:
@@ -196,11 +173,9 @@ func _build_tree() -> void:
 	col.add_theme_constant_override(&"separation", 0)
 	shell.add_child(col)
 
-	# --- KAPAK ÇİZGİSİ. Ayrı bir Panel, çünkü StyleBoxFlat tek kenara ayrı RENK
-	# veremez ve kapak çizgisi gövde kenarından FARKLI renktedir (2i: grubun durumu).
-	_cap = Panel.new()
-	_cap.custom_minimum_size = Vector2(0, _px(CAP_H))
-	_cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# --- KAPAK ÇİZGİSİ (BarKit.cap). Ayrı bir Panel, çünkü StyleBoxFlat tek kenara ayrı
+	# RENK veremez ve kapak çizgisi gövde kenarından FARKLI renktedir (2i: grubun durumu).
+	_cap = BarKit.cap(_px(CAP_H))
 	col.add_child(_cap)
 
 	col.add_child(_build_product_row())
@@ -311,14 +286,24 @@ func _repaint() -> void:
 	if not live:
 		return
 	var m = _model
-	var cap_sb := StyleBoxFlat.new()
-	cap_sb.bg_color = m.cap_color()
-	cap_sb.anti_aliasing = false
-	_cap.add_theme_stylebox_override(&"panel", cap_sb)
+	BarKit.paint_cap(_cap, m.cap_color())
 
 	_name_label.text = m.product_name
-	_busy_label.text = tr(m.pause_note_key) if m.pause_note_key != "" else ""
-	_busy_label.visible = m.pause_note_key != ""
+	# NOT ÖNCELİĞİ — TEK ETİKET, ÜÇ KANAL. 360px kartta ikinci bir not etiketi ürün adını
+	# eziyor, o yüzden sıra: DURAKLAMA > BÖLÜNME > LİDER.
+	#   duraklama  bar DURUYOR — en ağır olgu, her zaman önce.
+	#   bölünme    bar AKIYOR ama yarı hızda; oyuncunun hissetmesi gereken şey bu.
+	#   lider      bar akıyor, çarpan 1,0.
+	# ŞUNU BİLEREK YAZIYORUM: `BUILD_NO_LEAD` bugüne dek HİÇ ÇİZİLMEDİ — üretiliyordu,
+	# modele taşınıyordu, ve bu satır yalnız `pause_note_key` okuduğu için hiçbir zaman
+	# ekrana gelmedi. Artık geliyor; "Lider yok." ilk kez görünür hâle geldi.
+	var note_key: String = m.pause_note_key
+	if note_key == "":
+		note_key = m.split_note_key
+	if note_key == "":
+		note_key = m.lead_note_key
+	_busy_label.text = tr(note_key) if note_key != "" else ""
+	_busy_label.visible = note_key != ""
 
 	# DOLGU. Duraklamışta DÜZ donuk zemin; koşarken rampa renginin %13'ü. İki hâlin
 	# de KENARI YOK: sınır renk değişiminin kendisi.
@@ -381,6 +366,10 @@ func _paint_decision(m) -> void:
 	if not shown:
 		return
 	_decision_label.text = UiTokens.tr_upper(tr(m.decision_key))
+	# Tooltip GÖRÜNMEZ satırda da atanır ama satır gizliyken hover doğmaz, o yüzden
+	# koşulsuz yazılıyor: model çözülmüş metni taşıyor (§6.4 kilit gerekçesi ya da
+	# §7'nin "{n} hata canlıya taşınır" sayısı).
+	_decision_row.tooltip_text = m.decision_tooltip
 	var on: bool = m.decision_enabled
 	# İMLEÇ KARARI TAKİP EDER (R5). Kartın kökü artık CURSOR_MOVE taşımıyor — sürükleme
 	# yok, dolayısıyla sürükleme imleci de yok. El YALNIZ satır canlıyken çıkıyor:
@@ -436,20 +425,22 @@ func _on_decision_input(ev: InputEvent) -> void:
 	match _model.phase:
 		Model.PHASE_DESIGN: ProductSystem.enter_development()
 		Model.PHASE_DEVELOPMENT: ProductSystem.enter_beta()
-		Model.PHASE_BETA: ProductSystem.launch()
-		Model.PHASE_SUPPORT: ProductSystem.start_bug_sprint()
+		# BETA'nın aksiyonu tek başına bir yayın DEĞİL, yayın AKIŞIDIR (§10 · S7):
+		# v1'de fiyat + altyapı + onay, v2+'da tek onay. Akış kendi kapısını taşıyor
+		# (PublishFlow.open) ve `launch()`u onay adımı çağırıyor — bar hâlâ hiçbir
+		# alanı kendi yazmıyor, yalnız kararın ekranını açıyor.
+		Model.PHASE_BETA: PublishFlow.open()
+		# §8.4 — DESTEK'in aksiyonu DÜZELTME KOŞUSUDUR ve iki yönlüdür: koşu yoksa
+		# başlatır, sürüyorsa bitirir ("oyuncu koşuyu istediği an bitirir").
+		Model.PHASE_SUPPORT:
+			if ProductState.fix_run_active():
+				SupportSystem.end_fix_run()
+			else:
+				SupportSystem.start_fix_run()
 	refresh()
 
 
 # --- Yazı tipi -----------------------------------------------------------------
 
 func _resolve_font() -> Font:
-	# Proje teması → MicroLabel varyasyonunun mono yüzü (JetBrains Mono).
-	# Theme.get_font varyasyon zincirini YÜRÜMEZ, o yüzden önce has_font.
-	var th: Theme = ThemeDB.get_project_theme()
-	if th != null:
-		if th.has_font(&"font", &"MicroLabel"):
-			return th.get_font(&"font", &"MicroLabel")
-		if th.has_font(&"font", &"Label"):
-			return th.get_font(&"font", &"Label")
-	return get_theme_default_font()
+	return BarKit.resolve_font(self)

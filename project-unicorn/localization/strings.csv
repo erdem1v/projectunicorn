@@ -310,6 +310,7 @@ SAVE_LOADED,Yüklendi.,Loaded.
 SAVE_NEVER_SAVED,Bu oyun hiç kaydedilmedi.,This run has never been saved.
 SAVE_ERR_CORRUPT,Dosya okunamıyor.,This file cannot be read.
 SAVE_ERR_NEWER,Bu kayıt daha yeni bir sürümden; açılamıyor.,This save comes from a newer version and cannot be opened.
+SAVE_ERR_TOO_OLD,Bu kayıt eski bir sürümden; ürün verisi değiştiği için açılamıyor.,This save comes from an older version; the product data changed and it cannot be opened.
 SAVE_ERR_MODAL_OPEN,Bir karar ekranı açıkken kaydedilemez.,Saving is unavailable while a decision screen is open.
 SAVE_ERR_WRITE,Kayıt yazılamadı.,The save could not be written.
 SAVE_ERR_NO_RUN,Kaydedilecek bir oyun yok.,There is no run to save.
@@ -520,15 +521,43 @@ BUILD_ACTION_SHIP,Yayınla →,Ship →
 BUILD_RELEASE,Sürüm,Release
 BUILD_FEATURE,Özellik,Feature
 BUILD_BUG_RISK,hata riski,bug risk
-BUILD_TECH_DEBT,Teknik borç,Tech debt
 BUILD_LIVE_VERSION,CANLI V{n},LIVE V{n}
 BUILD_ROUND_OF,Tur {n},Round {n}
 BUILD_ROUND_LAST,Tur {n} · son,Round {n} · last
 BUILD_GAIN_LINE,bu tur +{gain} · kalan {left},this round +{gain} · {left} left
 BUILD_BETA_BUGS_CHIP,HATA {n},BUGS {n}
 BUILD_SHIP_TOOLTIP_BUGS,Yayınla · {n} hata canlıya taşınır,Ship · {n} bugs go live
+BUILD_BETA_GATE_LOCKED,GELİŞTİRME %100 olmadan BETA'ya geçilemez.,BETA needs DEVELOPMENT at 100%.
+BUILD_DESIGN_RUSH_CONFIRM,Tasarım turu tamamlanmadı. Bu sürüm potansiyelinin dörtte üçünü taşıyacak.,The design turn is unfinished. This version will carry three quarters of its potential.
+BUILD_DESIGN_RUSH_TITLE,Tasarımı yarıda bırak,Cut the design short
+BUILD_BETA_DAY,{n}. gün,Day {n}
 BUILD_BUSY_NOBODY,Kimse üzerinde değil.,Nobody is on it.
 BUILD_BUSY_ELSEWHERE,Ekip başka işte.,The team is on other work.
+BUILD_BUSY_FIX_RUN,Ekip düzeltme koşusunda.,The team is on a fix run.
+BUILD_BUSY_RESEARCH,Ekip araştırmada.,The team is on research.
+BUILD_SPLIT_FOCUS,Ekip iki işte.,The team is on two jobs.
+RND_PAUSED_BUILD,Ekip yapımda.,The team is on a build.
+BUILD_NO_LEAD,Lider yok.,No lead.
+PROD_RND_NODE_DATA_MODEL,Veri Modeli,Data Model
+PROD_RND_NODE_AI_ENGINE,AI Engine,AI Engine
+PROD_RND_NODE_SEMANTIC_INDEX,Semantik İndeks,Semantic Index
+PROD_RND_NODE_EDGE_INFERENCE,Çevrimdışı Zekâ,Edge Inference
+PROD_RND_NODE_KNOWLEDGE_GRAPH,Bilgi Grafiği,Knowledge Graph
+PROD_RND_NODE_SCALABLE_BACKEND,Ölçeklenebilir Arka Uç,Scalable Backend
+PROD_RND_NODE_SECURITY_CERT,Güvenlik Sertifikasyonu,Security Certification
+PROD_RND_NODE_ANALYTICS_ENGINE,Analitik Motoru,Analytics Engine
+PROD_RND_NODE_MODEL_OPTIMIZATION,Model Optimizasyonu,Model Optimization
+PROD_RND_NODE_DATA_WAREHOUSE,Veri Ambarı,Data Warehouse
+PROD_RND_NODE_BUG_TRACKER,Hata Takip Sistemi,Bug Tracker
+PROD_RND_NODE_CICD,Sürekli Entegrasyon,Continuous Integration
+PROD_RND_NODE_TEST_AUTOMATION,Test Otomasyonu,Test Automation
+PROD_RND_NODE_INCIDENT_PLAYBOOK,Olay Kitabı,Incident Playbook
+PROD_RND_NODE_SELF_SERVICE,Yardım Merkezi,Help Center
+PROD_RND_NODE_DESIGN_SYSTEM,Tasarım Sistemi,Design System
+PROD_RND_NODE_USER_RESEARCH,Kullanıcı Araştırması,User Research
+PROD_RND_NODE_ONBOARDING_FLOW,Onboarding Akışı,Onboarding Flow
+PROD_RND_NODE_ACCESSIBILITY,Erişilebilirlik,Accessibility
+PROD_RND_NODE_PERSONALIZATION,Kişiselleştirme,Personalization
 BUILD_PHASE_SUPPORT,DESTEK,SUPPORT
 BUILD_SUPPORT_CONFIRMED,DOĞRULANMIŞ {n},CONFIRMED {n}
 BUILD_DEV_BUGS,{n} hata,{n} bugs
@@ -1104,6 +1133,28 @@ PROD_TYPE_SAAS_OPS_DESC,Sahadan yönetime süreçleri tek yerde toplar.,Gathers 
 PROD_TYPE_SAAS_OPS_TRADEOFF,Sektörde para var ama satış döngüsü uzun.,There is money in the sector but the sales cycle is long.
 PROD_TYPE_SAAS_OPS_BET,"Sahada iş yürüten şirketler kâğıtla boğuluyor. Süreci dijitalleştir, vazgeçemesinler.",Companies running work in the field are drowning in paper. Digitise the process and they cannot go back.
 PROD_TYPE_SAAS_OPS_PITCH,"İnşaattan lojistiğe, süreçleri uçtan uca otomatikleştiren operasyon platformu.","An operations platform that automates processes end to end, from construction to logistics."
+PROD_TYPE_NOTE_TOOL_NAME,Not & Bilgi Aracı,Notes and Knowledge Tool
+PROD_TYPE_NOTE_TOOL_CATEGORY,ÇALIŞMA ALANI,WORKSPACE
+PROD_TYPE_NOTE_TOOL_DESC,Not · bağlantı · arama tek çalışma alanında.,Notes · links · search in one workspace.
+PROD_TYPE_NOTE_TOOL_TRADEOFF,Herkesin bir not uygulaması var; seninkini ayıracak olan aramanın kalitesi.,Everyone already has a notes app; what will set yours apart is the quality of the search.
+PROD_TYPE_NOTE_TOOL_BET,İnsanlar not tutuyor ama bulamıyor. Sen bulmayı çöz; gerisi arkasından gelir.,People take notes and then cannot find them. Solve finding and the rest follows.
+PROD_TYPE_NOTE_TOOL_PITCH,Yazdığın her şeyi hatırlayan çalışma alanı.,The workspace that remembers everything you wrote.
+PROD_TYPE_VIDEO_CLIP_NAME,Video Klip Aracı,Video Clip Tool
+PROD_TYPE_VIDEO_CLIP_CATEGORY,İÇERİK,CONTENT
+PROD_TYPE_VIDEO_CLIP_DESC,Uzun videoyu kısa kliplere böler ve altyazılar.,Cuts long video into short clips and captions them.
+PROD_TYPE_VIDEO_CLIP_TRADEOFF,Pazar hızlı büyüyor ama her ay yeni bir rakip çıkıyor.,The market grows fast but a new rival turns up every month.
+PROD_TYPE_VIDEO_CLIP_BET,Üretici uzun çekiyor ve kısa yayınlıyor. Aradaki işi sen yap.,Creators shoot long and publish short. Do the work in between.
+PROD_TYPE_VIDEO_CLIP_PITCH,Uzun videodan yayına hazır klip çıkaran araç.,The tool that pulls publish-ready clips out of long video.
+PROD_TYPE_ERP_NAME,ERP,ERP
+PROD_TYPE_ERP_CATEGORY,İŞLETME,BUSINESS
+PROD_TYPE_ERP_DESC,Ön muhasebe · stok · fatura tek defterde.,Bookkeeping · stock · invoicing in one ledger.
+PROD_TYPE_ERP_TRADEOFF,Bir kez kurulunca kimse çıkmaz; ama ilk kurulum uzun sürer.,Once it is in nobody leaves; but the first install takes a long time.
+PROD_TYPE_ERP_BET,Defter tutan herkes aynı üç şeyi arıyor. Üçünü de doğru yap; gerisini sürümler getirir.,Everyone keeping books wants the same three things. Get all three right and versions bring the rest.
+PROD_TYPE_ERP_PITCH,Kasadan stoka işletmenin defterini tutan sistem.,The system that keeps a business's books from till to stock.
+PROD_TYPE_EA_TAG,Erken Erişim,Early Access
+PROD_TYPE_LOCKED_REASON,Daha büyük ekip ister.,It wants a bigger team.
+PROD_TYPE_SLOT_NAME,Yeni B2B ürünü,A new B2B product
+PROD_TYPE_SLOT_REASON,Erken Erişim'de açılır.,It opens in Early Access.
 SECTOR_SUBSCRIPTION,Abonelik,Subscription
 SECTOR_AGENCY,Ajans,Agency
 SECTOR_EDUCATION,Eğitim,Education
@@ -1156,6 +1207,11 @@ PROD_TOTALS,Toplam efor {efor} · Süre ~{days} gün,Total effort {efor} · Abou
 PROD_CASH_AFTER,Bittiğinde kasada {amount} kalır,{amount} left in the treasury when it is done
 PROD_CASH_DEDUCT, · {amount} kasadan düşer, · {amount} comes out of the treasury
 PROD_CONFIRM_START,Onayla ve Başlat,Confirm and Start
+PROD_POLISH_NOTE,Tasarım turları cilayı artırır; net kazanç TASARIM'da belirlenir.,Design rounds raise the polish; the net gain is settled in DESIGN.
+PROD_TEAM_REFUSE_JOB_CAP,Bu kişi zaten iki iş taşıyor; önce birini bırakması gerekir.,This person already holds two jobs; one has to be dropped first.
+PROD_TEAM_REFUSE_ROLE,Bu rol yapım işini taşımıyor.,This role does not carry the build job.
+PROD_TEAM_REFUSE_INACTIVE,Bu kişi şu an çalışmıyor.,This person is not working right now.
+PROD_TEAM_REFUSE_OTHER,Bu kişi yapıma atanamadı.,This person could not be assigned to the build.
 PROD_PHASE_LINE,{phase} · {pct} · ~{days} gün,{phase} · {pct} · about {days} days
 PROD_HALF_SPEED, · yarı hız, · half speed
 PROD_BETA_LINE,Beta · bulunan {found} · çözülen {fixed} · açık {open},Beta · found {found} · fixed {fixed} · open {open}
@@ -1208,7 +1264,7 @@ PROD_PORTFOLIO,Portföy,Portfolio
 PROD_PORTFOLIO_COUNT,{n} ürün · tıkla ve yönet,{n} products · click to manage
 PROD_LIVE_VERSION_LC,CANLI v{version},LIVE v{version}
 PROD_ROW_B2B,MRR katkısı {amount}/ay · Açık hata {bugs} · Memnuniyet {sat},MRR {amount}/mo · Open bugs {bugs} · Satisfaction {sat}
-PROD_ROW_B2C,Deneyen {users} · Açık hata {bugs} · {price},Trying it {users} · Open bugs {bugs} · {price}
+PROD_ROW_B2C,Ücretsiz {users} · Açık hata {bugs} · {price},Free {users} · Open bugs {bugs} · {price}
 PROD_IN_DEV_PCT,GELİŞTİRMEDE {pct},IN DEVELOPMENT {pct}
 PROD_NEW_PRODUCT,+ Yeni Ürün,+ New Product
 PROD_HEALTHY,SAĞLIKLI,HEALTHY
@@ -1272,7 +1328,7 @@ PROD_PER_MONTH,{amount} /ay,{amount} /mo
 PROD_PRICE_DRAFT,Fiyat taslak,Price draft
 PROD_PRICE_N,Fiyat {amount},Price {amount}
 PROD_ROUND_PENDING,{phase} · Tur {round} · karar bekliyor,{phase} · Round {round} · awaiting your call
-PROD_TIP_BUGS,Hata riski yüksek. Sprint yap.,Bug risk is high. Run a sprint.
+PROD_TIP_BUGS,Hata riski yüksek. Düzeltme koşusu başlat.,Bug risk is high. Start a fix run.
 PROD_UNKNOWN,belirsiz,unclear
 PROD_ITER_CEILING_NOTE,"İnovasyon {inn} / tur kazancı tavanı {inn_max} · tavanı tur sayısı değil, masadaki ekip belirler.","Innovation {inn} / round gain ceiling {inn_max} · the ceiling comes from the team at the table, not from the number of rounds."
 PROD_EV_VERSION_SHIP_BODY,"Yeni sürümü yayına gönderiyorsun. Frank ekrana bakıyor, başını hafifçe sallıyor.
@@ -1305,7 +1361,21 @@ PROD_LEAD_HEADER,SORUMLU,LEAD
 PROD_PATH_B2B,KONTRAT,CONTRACT
 PROD_PATH_B2C_CON2,Kaprisli,Fickle
 PROD_BUG_RISK_CAP,Hata riski:,Bug risk:
-PROD_TRYING_CAP,DENEYEN,TRYING IT
+PROD_TRYING_CAP,ÜCRETSİZ KULLANICI,FREE USERS
+PROD_SUPPORT,DESTEK,SUPPORT
+PROD_REPORTS_INCOMING,Gelen bildirim,Incoming reports
+PROD_BUGS_CONFIRMED,Doğrulanmış hata,Confirmed bugs
+PROD_DESK_STAFFED,Destek masasında: {names},On the support desk: {names}
+PROD_DESK_EMPTY,Destek masasında kimse yok. Bildirimler birikiyor; hiçbir hata doğrulanmıyor.,Nobody is on the support desk. Reports pile up; nothing gets confirmed.
+PROD_FIX_RUN_START,Düzeltme başlat,Start a fix run
+PROD_FIX_RUN_END,Koşuyu bitir,End the run
+PROD_FIX_RUN_FIXED_N,ÇÖZÜLEN {n},FIXED {n}
+PROD_FIX_REFUSAL_NO_BUGS,Doğrulanmış hata yok.,No confirmed bugs.
+PROD_FIX_REFUSAL_DESK_SHUT,Destek masasında kimse yok.,Nobody is on the support desk.
+PROD_FIX_REFUSAL_RUNNING,Koşu zaten sürüyor.,A run is already going.
+PROD_FIX_REFUSAL_NOT_LIVE,Canlı ürün yok.,No live product.
+PROD_INTEREST_CAP,İLGİ,INTEREST
+PROD_CHURN_CAP,CHURN,CHURN
 PROD_MRR_CONTRIB_CAP,MRR KATKISI,MRR CONTRIBUTION
 PROD_GO_TO_SALES,Satış sekmesine git →,Go to Sales →
 PROD_ACTION_HARDEN,Hata sprinti,Bug sprint
@@ -1537,6 +1607,7 @@ FIN_BURN_OVERTIME,Ek mesai,Overtime
 FIN_BURN_FOUNDER,Kurucu yaşam gideri,Founder living costs
 FIN_BURN_MARKETING,Pazarlama,Marketing
 FIN_BURN_OFFICE,Ofis,Office
+FIN_BURN_SERVERS,Sunucular,Servers
 FIN_ONETIME_BUILD,Özellik maliyeti,Feature cost
 FIN_ONETIME_VERSION,Sürüm özellikleri,Version features
 FIN_MENTOR_WARNING,Mentor uyarısı,Mentor warning
@@ -2049,3 +2120,415 @@ FIN_PROFIT_QUAL_SCALE,ölçek küçük,scale small
 FIN_PROFIT_NOTE,"Artıda ay: net artı ve kasa ay boyunca hiç eksiye düşmedi. Kapanış için {need} ay üst üste artıda, yeterli marj ve yeterli ölçek gerekir.","A month in the black: positive net and the treasury never dipped below zero inside it. The close takes {need} months in a row, enough margin and enough scale."
 END_BS_STREAK,{n} ay üst üste artıda kapattı; defter kendini taşıyor.,It closed {n} months in a row in the black; the books carry themselves.
 SET_RESOLUTION_BORDERLESS,Kenarlıksız mod her zaman ekranın doğal çözünürlüğünde çalışır.,Borderless mode always runs at the display's native resolution.
+PROD_LINE_SHARED_INTEGRATIONS,Entegrasyonlar,Integrations
+PROD_STEP_SHARED_INTEGRATIONS_K1,Tekil Bağlantı,Single Connection
+PROD_STEP_SHARED_INTEGRATIONS_K2,Çoklu Entegrasyon,Multiple Integrations
+PROD_STEP_SHARED_INTEGRATIONS_K3,Açık API & Webhook,Open API and Webhooks
+PROD_LINE_SHARED_SECURITY,Güvenlik & Yetki,Security and Access
+PROD_STEP_SHARED_SECURITY_K1,Hesap & Oturum,Accounts and Sessions
+PROD_STEP_SHARED_SECURITY_K2,Roller ve İzinler,Roles and Permissions
+PROD_STEP_SHARED_SECURITY_K3,Denetim İzi & Şifreleme,Audit Trail and Encryption
+PROD_LINE_SHARED_DURABILITY,Dayanıklılık,Durability
+PROD_STEP_SHARED_DURABILITY_K1,Otomatik Kayıt,Autosave
+PROD_STEP_SHARED_DURABILITY_K2,Sürüm Geçmişi,Version History
+PROD_STEP_SHARED_DURABILITY_K3,Çevrimdışı Çalışma,Offline Work
+PROD_LINE_SHARED_MOBILE,Mobil & Erişim,Mobile and Access
+PROD_STEP_SHARED_MOBILE_K1,Duyarlı Arayüz,Responsive Interface
+PROD_STEP_SHARED_MOBILE_K2,Mobil Uygulama,Mobile App
+PROD_STEP_SHARED_MOBILE_K3,Çevrimdışı Mobil,Offline Mobile
+PROD_LINE_NOTE_TOOL_CAPTURE,Yakalama,Capture
+PROD_LINE_NOTE_TOOL_LINKING,Bağlantı,Linking
+PROD_LINE_NOTE_TOOL_SYNC,Eşitleme,Sync
+PROD_LINE_NOTE_TOOL_EDITOR,Editör,Editor
+PROD_LINE_NOTE_TOOL_SEARCH,Arama,Search
+PROD_STEP_NOTE_TOOL_CAPTURE_K1,Hızlı Not,Quick Note
+PROD_STEP_NOTE_TOOL_CAPTURE_K2,Her Yerden Yakalama,Capture Anywhere
+PROD_STEP_NOTE_TOOL_CAPTURE_K3,Sesli Yakalama,Voice Capture
+PROD_STEP_NOTE_TOOL_LINKING_K1,Not Bağlantısı,Note Links
+PROD_STEP_NOTE_TOOL_LINKING_K2,Bağlantı Haritası,Link Map
+PROD_STEP_NOTE_TOOL_LINKING_K3,Bağlantı Önerisi,Suggested Links
+PROD_STEP_NOTE_TOOL_SYNC_K1,Bulut Eşitleme,Cloud Sync
+PROD_STEP_NOTE_TOOL_SYNC_K2,Çevrimdışı Eşitleme,Offline Sync
+PROD_STEP_NOTE_TOOL_SYNC_K3,Anlık Eşitleme,Live Sync
+PROD_STEP_NOTE_TOOL_EDITOR_K1,Metin Editörü,Text Editor
+PROD_STEP_NOTE_TOOL_EDITOR_K2,Blok Editörü,Block Editor
+PROD_STEP_NOTE_TOOL_EDITOR_K3,Tuval Editörü,Canvas Editor
+PROD_STEP_NOTE_TOOL_SEARCH_K1,Anında Arama,Instant Search
+PROD_STEP_NOTE_TOOL_SEARCH_K2,Filtreli Arama,Filtered Search
+PROD_STEP_NOTE_TOOL_SEARCH_K3,Anlamsal Arama,Semantic Search
+PROD_STEP_NOTE_TOOL_CAPTURE_K1_DESC,Düşünce geldiği anda yazılır. Gecikirse geri gelmez.,"The thought goes down the moment it arrives. Delayed, it does not come back."
+PROD_STEP_NOTE_TOOL_CAPTURE_K2_DESC,"Tarayıcı, telefon, pano. Not artık uygulamanın içinde başlamıyor.","Browser, phone, clipboard. The note no longer begins inside the app."
+PROD_STEP_NOTE_TOOL_CAPTURE_K3_DESC,"Konuşursun, yazıya döner ve yerine gider. Eller doluyken de not tutulur.","You speak, it turns into text and files itself. Notes keep happening with both hands full."
+PROD_STEP_NOTE_TOOL_LINKING_K1_DESC,Notlar birbirine bağlanır; bilgi kaybolmaz.,Notes link to one another; nothing gets lost.
+PROD_STEP_NOTE_TOOL_LINKING_K2_DESC,Bağlar bir harita halinde açılır. İnsan kendi kafasının şeklini ilk kez görür.,The links open out as a map. People see the shape of their own thinking for the first time.
+PROD_STEP_NOTE_TOOL_LINKING_K3_DESC,Kurmadığın bağı bulur. Arşiv bir süre sonra senden çok şey hatırlar.,It finds the link you never made. After a while the archive remembers more than you do.
+PROD_STEP_NOTE_TOOL_SYNC_K1_DESC,"Not bir cihazda yazılır, ötekinde durur. Kopyalamak diye bir iş kalmaz.",A note written on one device is waiting on the other. Copying stops being a task.
+PROD_STEP_NOTE_TOOL_SYNC_K2_DESC,"İnternet gider, notlar kalır. Bağlantı dönünce hepsi kendiliğinden yerine oturur.","The connection drops, the notes stay. When it comes back everything settles into place on its own."
+PROD_STEP_NOTE_TOOL_SYNC_K3_DESC,Bir cihazda yazılan satır ötekinde aynı anda belirir. Beklemek diye bir şey kalmaz.,A line typed on one device appears on the other as it is typed. Nothing is left to wait for.
+PROD_STEP_NOTE_TOOL_EDITOR_K1_DESC,Boş bir sayfa ve imleç. Yazmanın önünde başka hiçbir şey yok.,A blank page and a cursor. Nothing else stands between the person and the writing.
+PROD_STEP_NOTE_TOOL_EDITOR_K2_DESC,"Başlık, liste, tablo, görsel; her parça tek başına tutulup taşınır.","Headings, lists, tables, images; every piece can be picked up and moved on its own."
+PROD_STEP_NOTE_TOOL_EDITOR_K3_DESC,"Sayfa biter, tuval başlar. Notlar sıraya değil, insanın istediği yere dizilir.","The page ends and a canvas begins. Notes sit where the person puts them, not in a queue."
+PROD_STEP_NOTE_TOOL_SEARCH_K1_DESC,Harf yazılırken sonuç gelir. Arşiv büyüdükçe bunun değeri anlaşılır.,Results arrive while the letters are still being typed. The larger the archive the more that matters.
+PROD_STEP_NOTE_TOOL_SEARCH_K2_DESC,"Tarih, etiket, defter. Aradığın şeyin nerede olmadığını da söyleyebilirsin.","Date, tag, notebook. You can also say where the thing is not."
+PROD_STEP_NOTE_TOOL_SEARCH_K3_DESC,"Arşivin cevap verir. Aradığını değil, sorduğunu bulursun.",The archive answers. It finds not what you searched for but what you asked.
+PROD_STEP_SHARED_INTEGRATIONS_K1_NOTE_TOOL_DESC,"Takvim ve dosya servisi bağlanır. Not, insanın günündeki öteki şeylerin yanına oturur.",The calendar and the file service connect. The note sits beside the rest of the day.
+PROD_STEP_SHARED_INTEGRATIONS_K2_NOTE_TOOL_DESC,Bağlantı tek yönlü olmaktan çıkar; dışarıda değişen şey notta da değişir.,The link stops being one way; what changes outside changes in the note too.
+PROD_STEP_SHARED_INTEGRATIONS_K3_NOTE_TOOL_DESC,Kendi bağlantısını yazanlara açık bir kapı. Ürünün etrafında başkalarının işi büyümeye başlar.,An open door for people who write their own connections. Other people's work starts growing around the product.
+PROD_STEP_SHARED_SECURITY_K1_NOTE_TOOL_DESC,Hesap ve oturum kapalı tutulur. Kimse başkasının defterini açamaz.,Accounts and sessions are held shut. Nobody opens another person's notebook.
+PROD_STEP_SHARED_SECURITY_K2_NOTE_TOOL_DESC,Notlar cihazda da yolda da şifreli durur. Kaybolan telefon artık bir kriz değil.,Notes stay encrypted on the device and on the way. A lost phone stops being a crisis.
+PROD_STEP_SHARED_SECURITY_K3_NOTE_TOOL_DESC,Uçtan uca şifreleme. Notların kimsenin değil. Bizim bile.,End to end encryption. The notes belong to nobody. Not even to us.
+PROD_STEP_SHARED_DURABILITY_K1_NOTE_TOOL_DESC,Yazılan şey yazıldığı anda diske düşer. Çöken uygulama yazıyı yanında götürmez.,What is written reaches the disk as it is written. A crash takes nothing with it.
+PROD_STEP_SHARED_DURABILITY_K2_NOTE_TOOL_DESC,Her notun kendi geçmişi tutulur. Silinen paragraf geri gelir.,Every note keeps its own history. A deleted paragraph comes back.
+PROD_STEP_SHARED_DURABILITY_K3_NOTE_TOOL_DESC,Arşiv çoğaltılır ve düzenli olarak sınanır. On yıl sonra da açılacağına dair sessiz bir söz.,The archive is copied and quietly tested. A silent promise that it will still open in ten years.
+PROD_STEP_SHARED_MOBILE_K1_NOTE_TOOL_DESC,"Telefonda okunur, kısa not düşülür. Uzun yazı hâlâ masada yazılır.",On the phone it is read and briefly added to. Long writing still happens at a desk.
+PROD_STEP_SHARED_MOBILE_K2_NOTE_TOOL_DESC,Telefon ikinci sınıf olmaktan çıkar; masadaki her şey cepte de var.,The phone stops being second class; everything from the desk is in the pocket too.
+PROD_STEP_SHARED_MOBILE_K3_NOTE_TOOL_DESC,Uygulama telefonda doğmuş gibi durur. Kilit ekranından not düşülür; defter beklemez.,The app looks as though it was born on the phone. A note goes down from the lock screen; the notebook does not wait.
+PROD_LINE_VIDEO_CLIP_CLIPPING,Klip Çıkarma,Clipping
+PROD_LINE_VIDEO_CLIP_CAPTIONS,Altyazı,Captions
+PROD_LINE_VIDEO_CLIP_PIPELINE,İşleme Hattı,Pipeline
+PROD_LINE_VIDEO_CLIP_TIMELINE,Kurgu,Editing
+PROD_LINE_VIDEO_CLIP_FRAMING,Çerçeve,Framing
+PROD_STEP_VIDEO_CLIP_CLIPPING_K1,Elle Kesme,Manual Cut
+PROD_STEP_VIDEO_CLIP_CLIPPING_K2,Sahne Ayrımı,Scene Breaks
+PROD_STEP_VIDEO_CLIP_CLIPPING_K3,Otomatik Klip Seçimi,Automatic Clip Selection
+PROD_STEP_VIDEO_CLIP_CAPTIONS_K1,Altyazı Şeridi,Caption Track
+PROD_STEP_VIDEO_CLIP_CAPTIONS_K2,Sözcük Hizalı Altyazı,Captions by the Word
+PROD_STEP_VIDEO_CLIP_CAPTIONS_K3,Diller Arası Altyazı,Captions Across Languages
+PROD_STEP_VIDEO_CLIP_PIPELINE_K1,Yükleme ve Kodlama,Upload and Encode
+PROD_STEP_VIDEO_CLIP_PIPELINE_K2,İşleme Kuyruğu,Render Queue
+PROD_STEP_VIDEO_CLIP_PIPELINE_K3,Dağıtık İşleme,Distributed Processing
+PROD_STEP_VIDEO_CLIP_TIMELINE_K1,Zaman Çizelgesi,Timeline
+PROD_STEP_VIDEO_CLIP_TIMELINE_K2,Çok Parçalı Kurgu,Multitrack Editing
+PROD_STEP_VIDEO_CLIP_TIMELINE_K3,Ortak Kurgu,Editing Together
+PROD_STEP_VIDEO_CLIP_FRAMING_K1,Dikey Kırpma,Vertical Crop
+PROD_STEP_VIDEO_CLIP_FRAMING_K2,Marka Şablonu,Brand Template
+PROD_STEP_VIDEO_CLIP_FRAMING_K3,Her Ekrana Ayrı Kadraj,A Frame for Every Screen
+PROD_STEP_VIDEO_CLIP_CLIPPING_K1_DESC,"Giriş ve çıkış işaretlenir, arası ayrı bir dosya olur. Nerede kesileceğini bilen tek şey insandır.","The in point and the out point are marked, and what lies between becomes a file. Only the person watching knows where to cut."
+PROD_STEP_VIDEO_CLIP_CLIPPING_K2_DESC,"Sessizlik ve sahne değişimi kaydı kendiliğinden bölümlere ayırır. İş artık aramak değil, seçmektir.","Silence and a change of scene break the recording into parts on their own. The work is no longer searching, only choosing."
+PROD_STEP_VIDEO_CLIP_CLIPPING_K3_DESC,Ham çekimden paylaşmaya hazır klipler çıkarır; parlak anı kendisi bulur.,It pulls finished clips out of raw footage and finds the bright moment on its own.
+PROD_STEP_VIDEO_CLIP_CAPTIONS_K1_DESC,"Konuşulan söz karenin altına yazılır. Sesi kapalı izleyen çoğunluk, izlediğini anlar.","The spoken word is written beneath the frame. The majority, who watch with the sound off, can follow what they are watching."
+PROD_STEP_VIDEO_CLIP_CAPTIONS_K2_DESC,"Satır artık bütün halinde gelmez; her sözcük söylendiği anda görünür, konuşmacılar birbirinden ayrılır.","The line stops arriving whole. Each word appears as it is spoken, and one speaker is told apart from another."
+PROD_STEP_VIDEO_CLIP_CAPTIONS_K3_DESC,"Terimi tanır, vurguyu görür, altyazıyı başka bir dilde de yazar. Klip kendi dilinin dışına çıkar.","It knows the terms, sees the emphasis, and writes the captions in another language too. The clip leaves the language it was made in."
+PROD_STEP_VIDEO_CLIP_PIPELINE_K1_DESC,Kayıt yüklenir ve oynatılabilir bir biçime çevrilir; hangi kameradan çıktığı sorulmaz.,The recording is uploaded and turned into something that will play. Nobody asks which camera it came out of.
+PROD_STEP_VIDEO_CLIP_PIPELINE_K2_DESC,"İşler sıraya girer, düşen iş kaldığı yerden devam eder. Bağlantı koptu diye bir saatlik kayıt baştan yüklenmez.","Jobs take their place in line, and a job that falls over picks up where it stopped. A dropped connection no longer costs an hour of footage."
+PROD_STEP_VIDEO_CLIP_PIPELINE_K3_DESC,İş parçalara bölünür ve birçok makinede aynı anda işlenir. Kalabalık gün de uzun kayıt da hattı tıkayamaz.,The work is broken up and processed on many machines at once. Neither a long recording nor a crowded day can block the line.
+PROD_STEP_VIDEO_CLIP_TIMELINE_K1_DESC,"Kayıt bir şerit olarak önde durur; kesme noktası göz kararı değil, işaretlenen yerdir.",The recording lies out as a strip. The cut is no longer a guess but a place that has been marked.
+PROD_STEP_VIDEO_CLIP_TIMELINE_K2_DESC,"Görüntü, ses ve üstteki katman ayrı şeritlerde durur. Biri kısalınca diğerleri yerinden oynamaz.","Picture, sound and the layer on top each keep a strip of their own. Shorten one and the others stay where they were."
+PROD_STEP_VIDEO_CLIP_TIMELINE_K3_DESC,Kurgucu ile yayıncı aynı çizelgede aynı anda çalışır; dosya gönderip cevap beklemek ortadan kalkar.,Editor and creator work the same timeline at the same time. Sending a file and waiting for an answer stops being part of the job.
+PROD_STEP_VIDEO_CLIP_FRAMING_K1_DESC,Yatay kare dikeye kırpılır; telefonu eline alan insanın gördüğü biçim budur.,The wide frame is cropped tall. This is the shape seen by someone holding a phone the way phones are held.
+PROD_STEP_VIDEO_CLIP_FRAMING_K2_DESC,"Yazı, renk ve kenar payı tek bir şablonda toplanır; her klip aynı elden çıkmış görünür.","Type, color and margin gather into a single template, and every clip looks like it came from the same hand."
+PROD_STEP_VIDEO_CLIP_FRAMING_K3_DESC,"Tek kurgu dikey, kare ve yatay olarak ayrı ayrı çerçevelenir. Her yüzeye kendi kadrajı gider, başkasının artığı değil.","One edit is framed three times, tall, square and wide. Each surface gets a frame of its own rather than the leftovers of another."
+PROD_STEP_SHARED_INTEGRATIONS_K1_VIDEO_CLIP_DESC,Klipler tek bir yere gider; hangi kanal olduğu kurulumda bir kez seçilir.,"Clips go to one place, and which place that is gets chosen once at setup."
+PROD_STEP_SHARED_INTEGRATIONS_K2_VIDEO_CLIP_DESC,Aynı klip birden çok kanala aynı anda çıkar; her biri için ayrı yükleme yapılmaz.,"The same clip leaves for several channels at once, with no separate upload for each."
+PROD_STEP_SHARED_INTEGRATIONS_K3_VIDEO_CLIP_DESC,Yayın biter bitmez klip hattı kendiliğinden başlar; dışarıdaki yazılım da aynı hattı çağırabilir.,"The clip run starts on its own the moment a stream ends, and outside software can call the same run."
+PROD_STEP_SHARED_SECURITY_K1_VIDEO_CLIP_DESC,Yayınlanmamış çekim hesabın arkasında durur. Kimsenin açamadığı kayıt en azından sızmaz.,Unreleased footage sits behind an account. A recording nobody can open is at least a recording that cannot leak.
+PROD_STEP_SHARED_SECURITY_K2_VIDEO_CLIP_DESC,"Kurgucu ham kayda girer, misafir yalnız önizlemeyi görür; kimin neye dokunduğu ayrılır.",The editor reaches the raw footage while a guest sees only the preview. Who may touch what is finally separated.
+PROD_STEP_SHARED_SECURITY_K3_VIDEO_CLIP_DESC,Ham çekim diskte de şifrelidir ve indiren herkes kayda geçer. Ambargolu materyal böyle teslim edilir.,"Raw footage is encrypted on disk as well, and everyone who downloads it is written down. This is how embargoed material is handed over."
+PROD_STEP_SHARED_DURABILITY_K1_VIDEO_CLIP_DESC,Kurgu her dokunuşta kendiliğinden kaydedilir; iki saatlik seçim tarayıcı kapanınca gitmez.,The edit saves itself at every touch. Two hours of choosing does not disappear because a browser closed.
+PROD_STEP_SHARED_DURABILITY_K2_VIDEO_CLIP_DESC,Her kurgu kendi geçmişini taşır; dünkü kesime dönmek yeniden kesmek değildir.,"Every edit carries its own history, and going back to yesterday's cut is not the same as cutting it again."
+PROD_STEP_SHARED_DURABILITY_K3_VIDEO_CLIP_DESC,"İnternet gider, kurgu kalır; bağlantı döndüğünde kesimler sıraya girip yerini alır.","The connection goes, the edit stays. When it comes back the cuts queue up and take their places."
+PROD_STEP_SHARED_MOBILE_K1_VIDEO_CLIP_DESC,Zaman çizelgesi dar ekranda da açılır; kesmek için masaya oturmak şart değildir.,The timeline opens on a narrow screen too. Cutting no longer means sitting down at a desk.
+PROD_STEP_SHARED_MOBILE_K2_VIDEO_CLIP_DESC,"Çekim telefondan yüklenir, klip telefondan çıkar. Kayıt ile paylaşım arasında bilgisayar durmaz.",Footage goes up from the phone and the clip comes back out of it. No computer stands between the recording and the post.
+PROD_STEP_SHARED_MOBILE_K3_VIDEO_CLIP_DESC,Uçakta kesilen klip inişte kendi kendine yüklenir; sahada çekim ile yayın arasına mesafe girmez.,A clip cut on a plane uploads itself on landing. Out in the field nothing widens the gap between shooting and posting.
+PROD_LINE_ERP_CASHFLOW,Nakit Akışı,Cash Flow
+PROD_LINE_ERP_INTAKE,Veri Girişi,Data Entry
+PROD_LINE_ERP_LEDGER,Defter,Ledger
+PROD_LINE_ERP_STOCK,Stok,Stock
+PROD_LINE_ERP_INVOICING,Fatura,Invoicing
+PROD_STEP_ERP_CASHFLOW_K1,Kasa Hareketleri,Cash Movements
+PROD_STEP_ERP_CASHFLOW_K2,Nakit Akış Tablosu,Cash Flow Statement
+PROD_STEP_ERP_CASHFLOW_K3,Nakit Öngörüsü,Cash Forecast
+PROD_STEP_ERP_INTAKE_K1,Elle Giriş,Manual Entry
+PROD_STEP_ERP_INTAKE_K2,Tablo İçe Aktarma,Spreadsheet Import
+PROD_STEP_ERP_INTAKE_K3,Belge Okuma,Document Reading
+PROD_STEP_ERP_LEDGER_K1,Ön Muhasebe,Basic Bookkeeping
+PROD_STEP_ERP_LEDGER_K2,Hesap Planı,Chart of Accounts
+PROD_STEP_ERP_LEDGER_K3,Otomatik Mutabakat,Automatic Reconciliation
+PROD_STEP_ERP_STOCK_K1,Stok Sayacı,Stock Count
+PROD_STEP_ERP_STOCK_K2,Depo ve Raf,Warehouse and Shelf
+PROD_STEP_ERP_STOCK_K3,El Terminali,Handheld Scanner
+PROD_STEP_ERP_INVOICING_K1,Fatura Kesme,Issuing Invoices
+PROD_STEP_ERP_INVOICING_K2,Toplu Fatura,Batch Invoicing
+PROD_STEP_ERP_INVOICING_K3,Tahsilat Döngüsü,Collection Cycle
+PROD_STEP_ERP_CASHFLOW_K1_DESC,Giren ve çıkan para tarih sırasına dizilir; bakiye günün sonunda bellidir.,"Money in and money out, filed by date; the balance is known when the day closes."
+PROD_STEP_ERP_CASHFLOW_K2_DESC,Alacaklar ve borçlar vadeleriyle tabloya girer; önümüzdeki haftalar bir sütun olur.,Receivables and debts enter the table with their due dates; the coming weeks become a column.
+PROD_STEP_ERP_CASHFLOW_K3_DESC,Geçmiş tahsilat ritmi okunur ve kasanın hangi hafta daralacağı önceden söylenir.,"The rhythm of past collections is read, and the week the treasury tightens is named in advance."
+PROD_STEP_ERP_INTAKE_K1_DESC,Her kalem klavyeden girilir; sistem yalnız girilen kadarını bilir.,Every line arrives by keyboard; the system knows only as much as was typed.
+PROD_STEP_ERP_INTAKE_K2_DESC,Yıllardır tutulan tablolar sütun sütun eşlenir; eski dosya bir akşamda içeri girer.,Years of spreadsheets are matched column by column; the old file comes inside in one evening.
+PROD_STEP_ERP_INTAKE_K3_DESC,"Fatura ve irsaliye taranır, alanlar kendiliğinden yerine oturur; insana yalnız itiraz etmek kalır.",Invoices and delivery notes are scanned and the fields settle on their own; a person is left only to object.
+PROD_STEP_ERP_LEDGER_K1_DESC,Gelir ve gider kaydedilir; ay sonunda rakam en azından bir yerde durur.,Income and expense are written down; at month end the figures at least sit somewhere.
+PROD_STEP_ERP_LEDGER_K2_DESC,Her hareket bir hesaba düşer ve dönem kapanışı defterin kendi içinde tutmasını ister.,"Every movement falls into an account, and the period close asks the books to agree with themselves."
+PROD_STEP_ERP_LEDGER_K3_DESC,Banka ekstresi ile defter gece boyunca karşılaştırılır; sabaha yalnız tutmayanlar kalır.,Statement and ledger are set against each other overnight; by morning only the disagreements are left.
+PROD_STEP_ERP_STOCK_K1_DESC,Adetler tek listede tutulur; depoya inen kişi listeyi kendi eliyle günceller.,"Quantities live in a single list, and whoever goes down to the warehouse updates it by hand."
+PROD_STEP_ERP_STOCK_K2_DESC,"Aynı ürün hangi depoda, hangi rafta, hangi partide ayrı ayrı bilinir.","The same product is known warehouse by warehouse, shelf by shelf, lot by lot."
+PROD_STEP_ERP_STOCK_K3_DESC,Sayım rafın önünde yapılır; barkod okutulur ve stok o anda yerine oturur.,The count happens in front of the shelf; a barcode is read and the stock settles at that moment.
+PROD_STEP_ERP_INVOICING_K1_DESC,"Fatura tek tek düzenlenir, kaydedilir ve müşteriye gönderilir.","An invoice is drawn up one at a time, filed, and sent to the customer."
+PROD_STEP_ERP_INVOICING_K2_DESC,Ayın faturaları tek seferde çıkar; ödenmeyenler ayrı bir listede birikir.,The month's invoices go out in one run; the unpaid ones gather on a list of their own.
+PROD_STEP_ERP_INVOICING_K3_DESC,"Fatura kendi parasını kovalar: hatırlatma gider, ödeme düşer, kayıt kapanır.","The invoice chases its own money: the reminder goes out, the payment lands, the record closes."
+PROD_STEP_SHARED_INTEGRATIONS_K1_ERP_DESC,"Tek bir hat kurulur, çoğu şirkette bankadır; gerisi hâlâ elle taşınır.","One line is opened, in most companies to the bank; the rest is still carried by hand."
+PROD_STEP_SHARED_INTEGRATIONS_K2_ERP_DESC,"Banka, elektronik fatura ve kargo aynı anda bağlanır; muhasebeci ekran değiştirmeyi bırakır.","Bank, electronic invoicing and courier connect at once, and the bookkeeper stops switching screens."
+PROD_STEP_SHARED_INTEGRATIONS_K3_ERP_DESC,Müşterinin kendi bilgi işlemi bağlanır; şirketin yirmi yıllık yazılımları artık haber bekler.,"The customer's own IT plugs in, and the software the company has run for twenty years now waits to be told."
+PROD_STEP_SHARED_SECURITY_K1_ERP_DESC,Herkes kendi hesabıyla girer; ortak şifre yazılı olduğu kâğıttan iner.,"Everyone signs in as themselves, and the shared password comes off the paper it was written on."
+PROD_STEP_SHARED_SECURITY_K2_ERP_DESC,"Depocu maliyeti görmez, muhasebeci fiyatı değiştirmez; yetki işe göre dağıtılır.","The warehouse hand does not see cost, the bookkeeper does not move price; authority follows the job."
+PROD_STEP_SHARED_SECURITY_K3_ERP_DESC,Her kayıt kime ve hangi saate ait olduğunu taşır; denetim geldiğinde tartışılacak bir şey kalmaz.,Every record carries whose it is and at what hour; when the audit arrives there is nothing left to argue about.
+PROD_STEP_SHARED_DURABILITY_K1_ERP_DESC,Yarım kalan fatura kaybolmaz; elektrik kesildiğinde satır yerinde durur.,"A half finished invoice is not lost; when the power cuts, the line stays where it was."
+PROD_STEP_SHARED_DURABILITY_K2_ERP_DESC,Değişen kayıt eski hâlini saklar; yanlış girilen fiyat geri çağrılabilir.,"A changed record keeps its earlier self, and a price entered wrong can be called back."
+PROD_STEP_SHARED_DURABILITY_K3_ERP_DESC,Depoda internet yokken de çalışılır; bağlantı gelince kayıtlar sıraya girer.,"Work goes on in a warehouse with no line, and when the connection returns the records queue up."
+PROD_STEP_SHARED_MOBILE_K1_ERP_DESC,Ekran küçüldüğünde tablolar dağılmaz; patron faturayı telefondan da açar.,"Tables hold together as the screen shrinks, and the owner opens an invoice from a phone."
+PROD_STEP_SHARED_MOBILE_K2_ERP_DESC,Onay bekleyen sipariş cepte görünür; imza yolda atılır.,An order waiting for approval shows up in a pocket; the signature happens on the road.
+PROD_STEP_SHARED_MOBILE_K3_ERP_DESC,Sahadaki satıcı kapsama dışında sipariş yazar; akşam ofise kendi girer.,"The rep in the field writes an order out of coverage, and in the evening it walks into the office on its own."
+PROD_PUB_STEP_CAPTION,{n} · {title},{n} · {title}
+PROD_PUB_STEP_PRICE,FİYAT,PRICE
+PROD_PUB_STEP_INFRA,ALTYAPI,INFRASTRUCTURE
+PROD_PUB_STEP_CONFIRM,ONAY,CONFIRMATION
+PROD_PUB_PRICE_TITLE,Fiyat belirle,Set the price
+PROD_PUB_INFRA_TITLE,Altyapı seç,Choose infrastructure
+PROD_PUB_CONFIRM_TITLE,Yayına hazır,Ready to ship
+PROD_PER_USER_MONTH,/ kullanıcı · ay,/ user · month
+PROD_COST_PER_USER,Kullanıcı başına maliyet ~${amount},Cost per user ~${amount}
+PROD_PUB_AXIS_SUMMARY,İnovasyon {inn} · Kararlılık {stab} · Deneyim {exp} · {n} özellik,Innovation {inn} · Stability {stab} · Experience {exp} · {n} features
+PROD_INFRA_PROVIDER_LOCAL,Yerel Sağlayıcı,Local Provider
+PROD_INFRA_PROVIDER_CLOUD,Bulut Sağlayıcı,Cloud Provider
+PROD_INFRA_PROVIDER_ENTERPRISE,Kurumsal Bulut,Enterprise Cloud
+PROD_INFRA_QUALITY_LOCAL,Ucuz. Yavaşlık şikayetleri artar; kurumsal hesap imzalamaz.,Cheap. Slowness complaints rise; an enterprise account will not sign.
+PROD_INFRA_QUALITY_CLOUD,Dengeli. Kalite farkı yok.,Balanced. No quality difference.
+PROD_INFRA_QUALITY_ENTERPRISE,Pahalı. Büyük hesabın imza öncesi güven koşulunu karşılar.,Expensive. It meets a large account's trust condition before signing.
+PROD_INFRA_PROVIDER_HEAD,KİMDEN ALIYORSUN,WHO YOU BUY FROM
+PROD_INFRA_CAPACITY_HEAD,NE KADAR ALIYORSUN,HOW MUCH YOU BUY
+PROD_INFRA_UNITS_N,{n} birim,{n} units
+PROD_INFRA_UNIT_PRICE,birim {amount}/ay,{amount}/mo per unit
+PROD_INFRA_MONTHLY_BILL,{amount}/ay,{amount}/mo
+PROD_INFRA_HEADROOM_USERS,{n} kullanıcı,{n} users
+PROD_INFRA_HEADROOM_SEATS,{n} koltuk,{n} seats
+PROD_INFRA_START_HINT,Tahmini ilk ay: ~{users},Estimated first month: ~{users}
+PROD_INFRA_CAPACITY_ONLY,Kapasite yalnız kapasitedir.,Capacity is only capacity.
+PROD_INFRA_COMMIT,Altyapıyı seç · {amount},Choose infrastructure · {amount}
+PROD_PUB_ROW_VERSION,Sürüm,Version
+PROD_PUB_ROW_PRICE,Fiyat,Price
+PROD_PUB_ROW_INFRA,Altyapı,Infrastructure
+PROD_PUB_ROW_FEATURES,Özellik,Features
+PROD_VERSION_SHORT,v{version},v{version}
+PROD_PUB_BUGS_CARRIED,{n} hata canlıya taşınır,{n} bugs carried into production
+PROD_PUB_V2_TITLE,{name} yayınlanacak,{name} will ship
+PROD_CAPACITY,KAPASİTE,CAPACITY
+PROD_INFRA_CHANGE,Değiştir,Change
+PROD_CAPACITY_OCCUPANCY,Doluluk,Occupancy
+PROD_CAPACITY_OF,{used} / {cap},{used} / {cap}
+PROD_CAPACITY_LOAD,Yük,Load
+PROD_CAPACITY_LOAD_VALUE,×{n},×{n}
+PROD_CAPACITY_BILL,Aylık fatura,Monthly bill
+PROD_CAPACITY_MARGIN,Brüt marj,Gross margin
+PROD_CAPACITY_OVER_BADGE,AŞIM,OVER
+PROD_CAPACITY_UNSET,Kapasite alınmadı,No capacity bought
+PROD_LINES_HEADER,ÖZELLİKLER,FEATURES
+PROD_LINES_EMPTY,Bu alt-tip için hat tanımlı değil.,No lines are defined for this subtype.
+PROD_LINE_COMPLETE,hat tamamlandı,line complete
+PROD_LINE_CONTRIB,{axis} {value} ({gain}),{axis} {value} ({gain})
+PROD_LOCK_PREFIX,Kilit:,Locked:
+PROD_LOCK_RESEARCH,"Ar-Ge ""{node}"" {mark}","R&D ""{node}"" {mark}"
+PROD_LOCK_PERSON,{area} {stars} {mark},{area} {stars} {mark}
+PROD_LOCK_TOTAL,{area} toplam {stars} (sizde {have}) {mark},{area} total {stars} (you have {have}) {mark}
+PROD_LOCK_ACTION_RESEARCH,→ Araştır,→ Research
+PROD_LOCK_ACTION_PERSON,→ Eğit / İşe al,→ Train / Hire
+PROD_LOCK_ACTION_TOTAL,→ İşe al / Eğit,→ Hire / Train
+PROD_LOCK_RESEARCH_SOON,Ar-Ge yakında.,R&D is coming.
+PROD_TEAM_HEADER,EKİP,TEAM
+PROD_TEAM_HEADER_SUB,çoklu seçim · kurucu dahil,multi-select · founder included
+PROD_TEAM_GROUP_COUNT,({n}),({n})
+PROD_TEAM_GROUP_SELECTED,SEÇİLİ,SELECTED
+PROD_TEAM_LEAD,LİDER,LEAD
+PROD_TEAM_LEAD_NONE,Lider seçilmedi,No lead chosen
+PROD_TEAM_LEAD_PICK,Lider seç,Choose a lead
+PROD_TEAM_AVAIL_LEAVE,İzinde · {n}g sonra katılır,On leave · joins in {n}d
+PROD_TEAM_AVAIL_TRAINING,Eğitimde · {n}g sonra katılır,In training · joins in {n}d
+PROD_TEAM_FILTER_SEARCH,ara…,search…
+PROD_TEAM_FILTER_AREA_ALL,ALAN,AREA
+PROD_TEAM_FILTER_AVAILABLE,MÜSAİT,AVAILABLE
+PROD_TEAM_PINNED_CAPTION,yukarıda,above
+PROD_TEAM_PINNED_HINT,Seçilenler üste sabitlenir.,Selected rows pin to the top.
+PROD_RND_NODE_DATA_MODEL_DESC,Verinin ortak şeması. Her kayıt aynı dilden konuşur.,A common schema for the data. Every record starts speaking the same language.
+PROD_RND_NODE_DATA_MODEL_UNLOCK,Entegrasyonlar hattının son kademesi.,The last tier of the Integrations line.
+PROD_RND_NODE_AI_ENGINE_DESC,Dil modeli altyapısı. Ürününüz artık anlayabilir.,Language model infrastructure. Your product can understand now.
+PROD_RND_NODE_AI_ENGINE_UNLOCK,Not & Bilgi ve Video Klip'in yapay zeka kademeleri.,"The AI tiers in Notes and Knowledge, and the ones in Video Clip."
+PROD_RND_NODE_SEMANTIC_INDEX_DESC,Anlamın kendisi indekslenir. Ürün kelimeyi değil kastedileni arar.,"Meaning itself is indexed. The product looks for what was meant, not for the word."
+PROD_RND_NODE_SEMANTIC_INDEX_UNLOCK,"Not & Bilgi'nin arama kademesi, ERP'nin belge okuma kademesi.","The search tier in Notes and Knowledge, and the document reading tier in ERP."
+PROD_RND_NODE_EDGE_INFERENCE_DESC,Model kullanıcının cihazında koşar. Zekâ için sunucuya gitmek gerekmez.,The model runs on the user's own device. Intelligence stops being a round trip to the server.
+PROD_RND_NODE_EDGE_INFERENCE_UNLOCK,Model artık cihazda çalışıyor; yapay zeka kademeleri sunucuya eskisi kadar yüklenmiyor.,"The model runs on the device now, and the AI tiers lean on the servers less than they did."
+PROD_RND_NODE_KNOWLEDGE_GRAPH_DESC,Kayıtlar arasındaki ilişki de veriye dönüşür. Ürün neyin neye bağlı olduğunu bilir.,The relations between records become data too. The product knows what is tied to what.
+PROD_RND_NODE_KNOWLEDGE_GRAPH_UNLOCK,Otomatik Düzenleme adında yeni bir özellik hattı. İçeriği Erken Erişim'de açılır.,A new feature line called Automatic Organisation. Its content opens in Early Access.
+PROD_RND_NODE_SCALABLE_BACKEND_DESC,Yük birçok makineye dağıtılır. Kalabalık gün artık bir kaza değil.,The load is spread across many machines. A busy day stops being an accident.
+PROD_RND_NODE_SCALABLE_BACKEND_UNLOCK,"Dayanıklılık hattının son kademesi · ERP'de tahsilat, Video Klip'te ortak kurgu. Aynı donanım artık daha çok kullanıcı taşıyor.","The last tier of the Durability line · collection in ERP, shared editing in Video Clip. The same hardware carries more people now."
+PROD_RND_NODE_SECURITY_CERT_DESC,Denetimden geçmiş güvenlik belgesi. Kurumsal alıcının ilk sorusu cevaplanmış olur.,A security certificate that has been through an audit. The corporate buyer's first question is already answered.
+PROD_RND_NODE_SECURITY_CERT_UNLOCK,Güvenlik & Yetki hattının son kademesi.,The last tier of the Security and Access line.
+PROD_RND_NODE_ANALYTICS_ENGINE_DESC,Ham kayıtları okuyan hesap katmanı. Sayıların ne dediği ürünün içinde görünür.,A computing layer that reads the raw records. What the numbers say becomes visible inside the product.
+PROD_RND_NODE_ANALYTICS_ENGINE_UNLOCK,ERP'nin nakit öngörüsü kademesi.,The cash forecast tier in ERP.
+PROD_RND_NODE_MODEL_OPTIMIZATION_DESC,Aynı model daha az işlemciyle koşar. Zekânın faturası küçülür.,The same model runs on less silicon. The bill for the intelligence shrinks.
+PROD_RND_NODE_MODEL_OPTIMIZATION_UNLOCK,Artık aynı modeli daha ucuza koşturuyoruz; kademelerin lisans faturası düşüyor.,"We run the same model for less now, and the licence bill on the tiers comes down with it."
+PROD_RND_NODE_DATA_WAREHOUSE_DESC,"Bütün kayıtlar tek ambarda toplanır. Geçmiş, sorulabilir bir şeye dönüşür.",Every record gathers in one warehouse. The past turns into something you can question.
+PROD_RND_NODE_DATA_WAREHOUSE_UNLOCK,Kurumsal Raporlama adında yeni bir özellik hattı. İçeriği Erken Erişim'de açılır.,A new feature line called Enterprise Reporting. Its content opens in Early Access.
+PROD_RND_NODE_BUG_TRACKER_DESC,Her bildirim numaralanır ve bir sahibi olur. Hiçbir hata kulaktan kulağa kalmaz.,Every report gets a number and an owner. No bug survives on word of mouth.
+PROD_RND_NODE_BUG_TRACKER_UNLOCK,Ürünün kendi kararlılık hattının son kademesi. Masaya düşen bildirimin hepsini artık aynı gün doğruluyoruz.,The last tier of the product's own stability line. Everything that reaches the desk is verified the same day now.
+PROD_RND_NODE_CICD_DESC,Her değişiklik makinede kendi kendine kurulup sınanır. Kırık iş gece boyunca beklemez.,Every change builds and tests itself on a machine. Broken work no longer waits out the night.
+PROD_RND_NODE_CICD_UNLOCK,Yazılan her değişiklik artık makinede kendi kendine sınanıyor; geliştirmeden daha az hata çıkıyor.,"Every change written is tested by the machine on its own now, and less comes out of development broken."
+PROD_RND_NODE_TEST_AUTOMATION_DESC,Sınamalar insan eli olmadan tekrar tekrar koşar. Aynı hata ikinci kez geçip gitmez.,The tests run again and again without a hand on them. The same bug does not slip past twice.
+PROD_RND_NODE_TEST_AUTOMATION_UNLOCK,Kendi Kendine Servis adında yeni bir özellik hattı. Ayrıca Beta'da hata bulma temposu günler geçtikçe eskisi kadar düşmüyor.,A new feature line called Self Service. And Beta keeps finding bugs later into the run than it used to.
+PROD_RND_NODE_INCIDENT_PLAYBOOK_DESC,Kesinti anında kimin ne yapacağı yazılıdır. Panik yerine sıra vardır.,Who does what during an outage is written down. There is an order to follow instead of a panic.
+PROD_RND_NODE_INCIDENT_PLAYBOOK_UNLOCK,Kesinti anında ne yapılacağı artık yazılı; taşan kapasite müşteride eskisi kadar iz bırakmıyor.,"What to do in an outage is written down now, and capacity running over leaves less of a mark on the customer."
+PROD_RND_NODE_SELF_SERVICE_DESC,Sık sorulanın cevabı ürünün içinde durur. Kullanıcı beklemeden çıkışı bulur.,The answer to the common question sits inside the product. The user finds the way out without waiting.
+PROD_RND_NODE_SELF_SERVICE_UNLOCK,Kullanıcı cevabı ürünün içinde buluyor; destek masasına daha az iş düşüyor.,"Users find the answer inside the product, and less work reaches the support desk."
+PROD_RND_NODE_DESIGN_SYSTEM_DESC,Arayüzün parçaları bir kez tanımlanır. Her yeni ekran hazır parçalardan kurulur.,The pieces of the interface are defined once. Every new screen is built from parts that already exist.
+PROD_RND_NODE_DESIGN_SYSTEM_UNLOCK,Mobil & Erişim hattının son kademesi ve ürünün kendi tasarım kademelerinden biri. Deneyim kademelerini artık hazır parçalardan kuruyoruz.,"The last tier of the Mobile and Access line, and one of the product's own design tiers. We build the Experience tiers out of ready parts now."
+PROD_RND_NODE_USER_RESEARCH_DESC,Kullanıcıyla düzenli konuşma alışkanlığı. Ne istediklerini tahmin etmek gerekmez.,The habit of talking to users on a schedule. Guessing what they want stops being necessary.
+PROD_RND_NODE_USER_RESEARCH_UNLOCK,Aylık ürün notu · bir Ürün Yöneticisi ya da Tasarımcı gerektirir. Kadroda öyle biri yoksa rapor gelmez.,The monthly product note · it needs a Product Manager or a Designer. With nobody like that on staff the note never arrives.
+PROD_RND_NODE_ONBOARDING_FLOW_DESC,İlk açılışta yol gösteren kurulu bir akış. Yeni gelen ürünü ilk beş dakikada anlar.,A built flow that guides the first opening. A newcomer understands the product in the first five minutes.
+PROD_RND_NODE_ONBOARDING_FLOW_UNLOCK,İlk beş dakikayı artık biz kuruyoruz; ücretsiz deneyen daha sık ödemeye geçiyor.,"We shape the first five minutes now, and more of the people who try it free stay and pay."
+PROD_RND_NODE_ACCESSIBILITY_DESC,"Ekran okuyucu, kontrast ve klavye yolu. Ürünü kullanabilen insan sayısı büyür.","Screen readers, contrast, a path through the keyboard. More people can use the product than could before."
+PROD_RND_NODE_ACCESSIBILITY_UNLOCK,Bazı kurumsal hesapların aradığı erişim şartı. Karşılığı Erken Erişim'de açılır.,The access condition some enterprise accounts ask for. What it pays out opens in Early Access.
+PROD_RND_NODE_PERSONALIZATION_DESC,Ürün kullanıcının alışkanlığını öğrenir. Aynı ekran herkeste aynı durmaz.,The product learns the user's habits. The same screen does not sit the same way for everyone.
+PROD_RND_NODE_PERSONALIZATION_UNLOCK,Uyarlanabilir Arayüz adında yeni bir özellik hattı. İçeriği Erken Erişim'de açılır.,A new feature line called Adaptive Interface. Its content opens in Early Access.
+PROD_RND_NODE_DATA_MODEL_DISCOVERY,Aynı müşteri üç ayrı tabloda üç ayrı isimle duruyordu. Perşembe akşamı üçü tek satırda birleşti. Ertesi sabah kimse hangi tablodan bakacağını sormadı.,The same customer sat in three tables under three different names. On Thursday evening the three became one row. The next morning nobody asked which table to look in.
+PROD_RND_NODE_SCALABLE_BACKEND_DISCOVERY,"Salı günü herkes aynı saatte girdi ve sayfa açılmadı. Cuma günü aynı kalabalık geldi, kimse fark etmedi. Aynı donanımla artık daha çok kullanıcı taşıyoruz.",On Tuesday everyone came in at the same hour and the page would not open. On Friday the same crowd arrived and nobody noticed. The same hardware carries more people now.
+PROD_RND_NODE_BUG_TRACKER_DISCOVERY,Hatalar sohbet penceresinde konuşuluyordu; ikisi orada kaldı. Şimdi her bildirimin bir numarası ve bir sahibi var. Masaya düşen bildirimin hepsini aynı gün doğruluyoruz.,"Bugs used to be talked over in a chat window, and two of them stayed there. Now every report has a number and an owner. Everything that reaches the desk is verified the same day."
+PROD_RND_NODE_DESIGN_SYSTEM_DISCOVERY,İki ekranda buton iki farklı maviydi ve kimse hangisinin doğru olduğunu bilmiyordu. Tasarımcı bir öğleden sonra hepsini tek dosyaya taşıdı. Deneyim kademelerini artık hazır parçalardan kuruyoruz.,The button was two different blues on two screens and nobody knew which one was right. In one afternoon the designer moved them all into a single file. We build the Experience tiers out of ready parts now.
+PROD_RND_NODE_AI_ENGINE_DISCOVERY,Model üç haftadır saçmalıyordu. Bu sabah ilk defa doğru cevabı verdi. Kimse alkışlamadı; herkes ekrana baktı.,The model had been talking nonsense for three weeks. This morning it gave the right answer for the first time. Nobody clapped; everyone just looked at the screen.
+PROD_RND_NODE_SEMANTIC_INDEX_DISCOVERY,Kelime kelime arama bulmuyordu; kimse aradığı şeyi tam hatırlamıyordu. Bu hafta biri geçen ayki fiyat konuşmasını tarif etti. Doğru kayıt en üstte çıktı.,Searching word by word was finding nothing; nobody remembers the exact words. This week someone described last month's conversation about price. The right record came up first.
+PROD_RND_NODE_SECURITY_CERT_DISCOVERY,Denetçi iki gün ofiste oturdu ve her kalemi ayrı ayrı sordu. Cuma öğleden sonra imza geldi. Satış ekibi belgeyi bir sonraki görüşmede masaya koydu.,The auditor sat in the office for two days and asked about every item separately. On Friday afternoon the signature came. Sales put the certificate on the table in the next meeting.
+PROD_RND_NODE_ANALYTICS_ENGINE_DISCOVERY,Sorular hep aynıydı ve cevabı her seferinde biri elle çıkarıyordu. Bu sabah aynı soru ekranda kendi cevabını taşıyordu. Kimse tabloyu indirmedi.,The questions were always the same and someone worked the answer out by hand every time. This morning the question carried its own answer on the screen. Nobody downloaded a spreadsheet.
+PROD_RND_NODE_CICD_DISCOVERY,Cuma akşamı gönderilen değişiklik pazartesiye kadar kırık kaldı. Bu hafta aynı kırık daha kimse odadan çıkmadan geri döndü. Geliştirmeden artık daha az hata çıkıyor.,A change sent out on Friday evening stayed broken until Monday. This week the same break came back before anyone had left the room. Less comes out of development broken now.
+PROD_RND_NODE_TEST_AUTOMATION_DISCOVERY,Aynı hatayı üçüncü kez elle bulduk ve kimse gülmedi. Sınamalar o geceden beri kendi kendine koşuyor. Beta'da hata bulma temposu günler geçtikçe eskisi kadar düşmüyor.,We found the same bug by hand for the third time and nobody laughed. Since that night the tests have been running on their own. Beta keeps finding bugs later into the run than it used to.
+PROD_RND_NODE_USER_RESEARCH_DISCOVERY,Ürün toplantısında herkes kullanıcının ne istediğini biliyordu ve üçü ayrı şey söyledi. Sonra biri gerçekten arayıp sordu. Odada uzun bir sessizlik oldu.,"In the product meeting everyone knew what the user wanted, and three of them said different things. Then somebody actually called and asked. The room went quiet for a while."
+PROD_RND_NODE_ONBOARDING_FLOW_DISCOVERY,Yeni gelenler ilk ekranda takılıp bir daha dönmüyordu. Bir hafta boyunca ilk beş dakikayı baştan yazdık. Ücretsiz deneyen artık daha sık ödemeye geçiyor.,New arrivals got stuck on the first screen and never came back. For a week we rewrote the first five minutes. More of the people who try it free stay and pay now.
+PROD_LINE_HIDDEN_SELF_SERVE,Kendi Kendine Servis,Self Service
+PROD_STEP_HIDDEN_SELF_SERVE_K1,Sık Sorulanlar,Common Questions
+PROD_STEP_HIDDEN_SELF_SERVE_K2,Bilgi Bankası,Knowledge Base
+PROD_STEP_HIDDEN_SELF_SERVE_K3,Yerinde Çözüm,Resolved in Place
+PROD_STEP_HIDDEN_SELF_SERVE_K1_NOTE_TOOL_DESC,"En sık sorulanlar uygulamanın içinde, elin altında durur. Yardım için başka bir sekme açmak gerekmez.","What people ask most sits inside the app, within reach. Getting help no longer means opening another tab."
+PROD_STEP_HIDDEN_SELF_SERVE_K2_NOTE_TOOL_DESC,Yazılan her cevap aranabilir bir bankada toplanır. Kullanıcı sorusunu kendi kelimeleriyle sorar ve karşılığını bulur.,Every answer ever written gathers into a searchable bank. People ask in their own words and find the answer waiting.
+PROD_STEP_HIDDEN_SELF_SERVE_K3_NOTE_TOOL_DESC,"Sorun ekranın kendisinde çözülür: eksik ayar oradan açılır, kopan eşitleme oradan yenilenir. Destek masasına hiç uğranmaz.","The problem is settled on the screen where it appeared: the missing setting is switched on there, the broken sync is restarted there. The support desk is never reached."
+PROD_STEP_HIDDEN_SELF_SERVE_K1_VIDEO_CLIP_DESC,Yükleme ve kodlama soruları oynatıcının yanında cevaplanır. Üretici yarım kalan işi bırakıp yardım aramaz.,Questions about uploading and encoding are answered beside the player. A creator does not abandon a half finished edit to go looking for help.
+PROD_STEP_HIDDEN_SELF_SERVE_K2_VIDEO_CLIP_DESC,Her biçim ve her hata iletisi aranabilir bir başlık altında toplanır. Kullanıcı gördüğü iletiyi yazar ve karşılığını bulur.,Every format and every error message gathers under a heading that can be searched. People type in the message they were shown and find what it means.
+PROD_STEP_HIDDEN_SELF_SERVE_K3_VIDEO_CLIP_DESC,Reddedilen dosya kendi çözümünü önerir: doğru biçime çevirmeyi teklif eder ve kabul edilince yapar. Kimseye yazılmaz.,A rejected file offers its own way out: it proposes the right format and does the conversion once that is accepted. Nobody has to write in.
+PROD_STEP_HIDDEN_SELF_SERVE_K1_ERP_DESC,Fatura ve stok ekranlarının yanında kısa açıklamalar durur. Muhasebeci en sık takıldığı yerde soruyu kendi çözer.,Short explanations sit beside the invoice and stock screens. The bookkeeper settles the question at the spot where it usually comes up.
+PROD_STEP_HIDDEN_SELF_SERVE_K2_ERP_DESC,Dönem kapanışından vergi kalemine kadar her konu aranabilir bir bankada toplanır. Aranan şey iş yaparken bulunur.,Everything from the period close to a tax line gathers into a bank that can be searched. What is looked for is found without leaving the work.
+PROD_STEP_HIDDEN_SELF_SERVE_K3_ERP_DESC,Tutmayan kayıt hangi adımda kaydığını söyler ve düzeltmeyi kendi önerir. Destek hattı hiç aranmaz.,A record that does not agree says which step it slipped at and proposes the correction itself. The support line is never called.
+RND_NOTE_DEMAND_B2B_0,Üç hesap bu ay aynı yerden şikâyet etti: {line}. İkisi rakipte aynı işin çalıştığını ayrıca söyledi.,Three accounts complained about the same place this month: {line}. Two of them added that it works at a rival.
+RND_NOTE_DEMAND_B2B_1,Yenileme görüşmelerinin ikisinde aynı başlık açıldı: {line}. Fiyat konuşulmadan önce o konuşuldu.,The same heading came up in two renewal calls: {line}. It came up before price did.
+RND_NOTE_DEMAND_B2B_2,"Müşteri temsilcisi aynı cümleyi bu ay dört kez not etmiş: {line}. Kimse bağırmıyor, herkes bekliyor.",The account manager wrote the same sentence down four times this month: {line}. Nobody is shouting; everyone is waiting.
+RND_NOTE_DEMAND_B2B_3,Bir hesabın satın alma ekibi kendi listesini gönderdi ve listenin başında tek başlık var: {line}. Gerisi opsiyonel yazıyor.,"One account's procurement team sent its own list, and a single heading sits at the top of it: {line}. The rest is marked optional."
+RND_NOTE_DEMAND_B2C_0,"Yorumların çoğu aynı şey üzerine: {line}. Kimse yeni özellik istemiyor, bunun düzgün çalışmasını istiyorlar.",Most of the reviews are about one thing: {line}. Nobody is asking for a new feature; they want this one to work.
+RND_NOTE_DEMAND_B2C_1,Mağaza puanı düşmedi ama yorumlarda aynı başlık tekrar ediyor: {line}. Övgüyle şikâyet yan yana yazılmış.,"The store rating has held, but one heading keeps repeating in the reviews: {line}. Praise and complaint written side by side."
+RND_NOTE_DEMAND_B2C_2,"Bu ay gelen mailin yarısı tek bir başlıkta toplanıyor: {line}. Hepsi kibar, hepsi aynı şeyi söylüyor.","Half of this month's mail gathers under a single heading: {line}. All of it polite, all of it saying the same thing."
+RND_NOTE_DEMAND_B2C_3,Kullanıcı forumunda en uzun başlık yine aynı: {line}. Altında insanlar birbirine geçici çözüm tarif ediyor.,The longest thread on the user forum is the same one again: {line}. Underneath it people are describing workarounds to each other.
+RND_NOTE_DEMAND_NONE,Bu ay kimse bir şey istemedi.,Nobody asked for anything this month.
+RND_NOTE_RIVAL_B2B_0,{rival} yeni sürümünde toplu yetkilendirme çıkardı. Bizde yok.,{rival} shipped bulk permissions in its latest release. We do not have it.
+RND_NOTE_RIVAL_B2B_1,Bu ayki görüşmelerde aynı ad geçti: {rival}. Alıcı orada gördüğü raporlamayı bizde arıyor.,The same name came up in this month's meetings: {rival}. The buyer is looking for the reporting they saw there.
+RND_NOTE_RIVAL_B2B_2,{rival} kurumsal müşterilere ayrı bir yönetim paneli açtı. Bizim panel hâlâ tek kullanıcıya göre.,{rival} has opened a separate admin panel for enterprise customers. Ours is still built for a single user.
+RND_NOTE_RIVAL_B2B_3,Satın alma ekipleri karşılaştırma tablosu istiyor ve tabloda hep aynı sütun var: {rival}. Boş bıraktığımız satırlar belli.,"Procurement teams want a comparison table, and the same column is always in it: {rival}. The rows we leave empty are easy to see."
+RND_NOTE_RIVAL_B2C_0,{rival} otomatik etiketleme çıkardı. Bizde yok.,{rival} shipped automatic tagging. We do not have it.
+RND_NOTE_RIVAL_B2C_1,Yan yana karşılaştırma videoları dolaşıyor ve karşı taraf hep aynı: {rival}. Yorumlar da onun altında toplanıyor.,Side by side comparison videos are going around and the other side is always the same: {rival}. The comments gather under them too.
+RND_NOTE_RIVAL_B2C_2,{rival} ücretsiz sürümüne bizde ücretli olan bir şeyi koydu. Forumda ilk yazılan şey bu.,{rival} put something into its free tier that we charge for. It is the first thing anyone writes on the forum.
+RND_NOTE_RIVAL_B2C_3,Mağaza sayfamızın altında önerilen uygulama hep aynı: {rival}. Ekran görüntülerinde daha az düğme var.,The app suggested under our store page is always the same: {rival}. There are fewer buttons in its screenshots.
+RND_NOTE_TECH_B2B_0,"Alıcı toplantılarında aynı başlık dolaşıyor: {node}. Şartnamelerde henüz yok, konuşmalarda var.",The same heading keeps going around in buyer meetings: {node}. It is not in the specifications yet; it is in the conversations.
+RND_NOTE_TECH_B2B_1,Sektör bülteninde bu ay en çok geçen konu: {node}. Yazan da tam olarak ne olduğunu anlatmıyor.,The subject that came up most in this month's sector bulletin: {node}. Even the person writing it does not quite explain what it is.
+RND_NOTE_TECH_B2B_2,Ekipte konuşulan şey model tarafı. Herkes o yöne bakıyor.,What the team is talking about is the model side. Everyone is looking that way.
+RND_NOTE_TECH_B2B_3,Bir müşterinin bilgi işlem müdürü bize kendi denemelerini anlattı. Yarım saat sürdü ve sonunda tek soru gelmedi.,"A customer's IT manager told us about the experiments they are running. It took half an hour, and no question came at the end."
+RND_NOTE_TECH_B2C_0,Kullanıcı forumunda kimse bizden istemiyor ama sürekli aynı şeyi konuşuyorlar: {node}. Başka uygulamalarda denemişler.,"Nobody on the user forum is asking us for it, yet they keep talking about the same thing: {node}. They have tried it in other apps."
+RND_NOTE_TECH_B2C_1,Bu ay en çok paylaşılan video tek bir konuyu anlatıyor: {node}. Altındaki yorumların yarısı şaşkın.,The most shared video this month explains a single subject: {node}. Half the comments beneath it are baffled.
+RND_NOTE_TECH_B2C_2,Stajyer öğle arasında bir demo açtı ve masanın yarısı başına toplandı. Kimse akşama kadar konuyu bırakmadı.,At lunch an intern opened a demo and half the desk gathered round. Nobody let the subject go until evening.
+RND_NOTE_TECH_B2C_3,Rakiplerin iş ilanları değişmiş; aradıkları unvanlar bizim listemizde yok. Bir yöne doğru işe alıyorlar.,"The rivals' job posts have changed, and the titles they are hiring for are not on our list. They are hiring toward something."
+RND_TREE_HINT,Araştırdıkça açılır.,It opens as you research.
+RND_TREE_PROGRESS,Tamamlanan {done} / {total},Completed {done} / {total}
+RND_FAMILY_CAPABILITY,İŞLEV,FUNCTION
+RND_FAMILY_PLATFORM,PLATFORM,PLATFORM
+RND_FAMILY_PRACTICE,SÜREÇ,PROCESS
+RND_FAMILY_DESIGN,TASARIM,DESIGN
+RND_COL_HEADER,{family} · {area} alanı · {done}/{total},{family} · {area} area · {done}/{total}
+RND_COL_HEADER_SHORT,{family} · {done}/{total},{family} · {done}/{total}
+RND_PLACE_ROOT,kök,root
+RND_PLACE_BRANCH,dal,branch
+RND_PLACE_CONT,devam,continuation
+RND_STATE_REVEALED,açığa çıkmış,revealed
+RND_STATE_RUNNING,koşuyor,running
+RND_STATE_FROZEN,donmuş,frozen
+RND_STATE_DONE,tamamlandı,completed
+RND_LOCKED_SLOT,{area},{area}
+RND_UNLOCKS_PREFIX,Açtığı şey:,What it opens:
+RND_REQ_PREFIX,Gereksinim:,Requires:
+RND_START,Başlat,Start
+RND_DAYS,~{days} gün,~{days} days
+RND_DAYS_LEFT,~{days} gün kaldı,~{days} days left
+RND_AREA_OF,{area} alanı,{area} area
+RND_DAYS_TAKEN,{days} gün,{days} days
+RND_REQ_STARS,{area} {stars},{area} {stars}
+RND_WHO,{who},{who}
+RND_FROZEN_KEEPS,ilerleme korunuyor,progress is kept
+RND_COMPLETED_UNLOCKED_TWO,Açtığı iki devam yuvası adlandı.,The two continuation slots it opened now have names.
+RND_NEED_CASH,Kasada {amount} yok.,There is no {amount} in the treasury.
+RND_NEED_PARENT,Önce {node}.,First {node}.
+RND_NEED_AREA,{area} {stars} gerekiyor.,It wants {area} {stars}.
+RND_ASSIGN_EMPTY,Bu alanda kimse yok.,Nobody in this area.
+RND_NEED_CROSS_BLIND,Başka bir ailede bir araştırma ister.,It wants research from another family.
+RND_NEED_CROSS_NAMED,Tamamlanmadı: {node} · {family},Not completed: {node} · {family}
+RND_ALSO_REQUIRES,Ayrıca: {node} · {family},Also: {node} · {family}
+RND_ASSIGN_TITLE,ata,assign
+RND_ASSIGN_HEADER_AREA,{area} yıldızı olanlar · kurucu her zaman,people with {area} stars · the founder always
+RND_ASSIGN_HEADER_TWO,iki alanın ikisi de karşılanmalı,both areas have to be met
+RND_REQ_MET,karşılandı,met
+RND_REQ_UNMET,eksik,missing
+RND_FOOTER_EMPTY_SIDE,{area} tarafı boş,the {area} side is empty
+RND_BAR_TITLE,ARAŞTIRMA,RESEARCH
+RND_BAR_PAUSE,duraklat,pause
+RND_BAR_RESUME,sürdür,resume
+RND_DONE_CARD_DROPPING,tamamlandı · keşif kartı düşüyor,completed · a discovery card is landing
+RND_DISCOVERY_TITLE,KEŞİF,DISCOVERY
+RND_OPENED_PREFIX,Açıldı:,Opened:
+RND_HIDDEN_LINE_OPENED,Yeni özellik hattı açıldı: {line},A new feature line has opened: {line}
+RND_EA_LINE_NOTE,Bu hattın içeriği Erken Erişim'de açılıyor.,The content of this line opens in Early Access.
+RND_OK,Tamam,OK
+RND_NOTE_TITLE,AYLIK ÜRÜN NOTU,MONTHLY PRODUCT NOTE
+RND_NOTE_UNREAD,OKUNMADI,UNREAD
+RND_NOTE_OPEN,Aç,Open
+RND_NOTE_AUTHOR_META,{author} · bu ay,{author} · this month
+RND_NOTE_FIRST_HINT,Bundan sonra bu not her ay Ar-Ge sayfasında bekliyor olacak.,From now on this note will be waiting on the R&D page every month.
+RND_NOTE_NO_WRITER,Kadronda Ürün Yöneticisi ya da Tasarımcı yok; rapor gelmez.,There is no Product Manager or Designer on staff; the note will not come.
+RND_NOTE_GO_PRODUCT,Ürün sayfasına git,Go to the product page
+RND_NOTE_GO_TREE,Ar-Ge'ye git,Go to R&D
+RND_NOTE_CLOSE,Kapat,Close
+RND_LEGEND_INTRA,aile içi bağ,a link inside the family
+RND_LEGEND_CROSS,başka aileden gereksinim,a requirement from another family
+RND_LEGEND_LOCKED,kilitli yuva,a locked slot
+RND_LEGEND_AVAILABLE,araştırılabilir,can be researched
+RND_LEGEND_DONE,tamamlandı,completed
+RND_LEGEND_COUNT,{families} aile × {per} araştırma = {total},{families} families × {per} = {total}
+RND_TAB_LOCKED_REASON,İlk sürüm yayınlanınca açılır.,It opens once the first version ships.
+HR_JOB_RESEARCH,Araştırma,Research
+HR_ASSIGN_RESEARCH_ELSEWHERE,Araştırma ataması Ar-Ge sayfasında yapılır.,Research is assigned on the R&D page.
+RND_ACTION_APPLY,uygula,apply
+RND_ACTION_BACK,geri,back
+RND_ASSIGN_PICK,Kimin çalışacağını seç.,Choose who works on it.
+RND_ASSIGN_ZERO,Seçtiklerinin hiçbiri bu alanda çalışmıyor.,None of the people you picked work in this area.
+RND_COMPLETED_UNLOCKED_ONE,Açtığı devam yuvası adlandı: {node},The continuation slot it opened now has a name: {node}
+RND_CROSS_MARK,⇠ {area},⇠ {area}
+RND_DAYS_EST,~{n} gün,~{n} days
+RND_DAYS_NONE,katkı yok,no contribution
+RND_DAYS_SOLO,~{n} gün (Kurucu),~{n} days (Founder)
+RND_NEED_STARS,{area} alanında {n} yıldız gerekiyor.,It wants {n} stars in {area}.
+RND_NODE_META,{family} · {tier},{family} · {tier}
+RND_REQ_CASH,{money},{money}
+RND_TIER_FROZEN,{tier} · donmuş,{tier} · frozen
+RND_TREE_CLOSED,"Ar-Ge, ilk sürümünü yayınladıktan sonra açılır.",R&D opens once you ship your first version.
+B2B_LOCK_PROMISE_OPEN,Bu hesaba verilmiş bir söz zaten açık.,You already owe this account a word.
+B2B_LOCK_STALL_CAP,İki kez oyaladın. Üçüncüsünü kimse beklemez.,You have stalled twice. Nobody waits for a third.
+B2B_EXPANSION_EXPIRED,{customer} koltuk artırımını kendi bütçesine yazdı.,{customer} put the extra seats in their own budget.
+B2B_EV_REQ_COMPLAINT_EXPIRED,{customer} şikâyetini kapattı. Cevap gelmedi.,{customer} closed the complaint. No answer came.
+B2B_EV_REQ_FEATURE_EXPIRED,{customer} talebini geri çekti.,{customer} withdrew the request.
+B2B_EV_REQ_RENEWAL_EXPIRED,{customer} yenilemeyi eski şartlarla imzaladı.,{customer} renewed on the old terms.
+FIXTURE_CONCURRENT_EXPIRE,Fixture kâğıdı süresi doldu.,The fixture paper expired.
+EV_MODIFIERS_MORE,ve daha fazlası,and more
+TICKER_SRC_INTERNAL,İÇERİDEN,INTERNAL
+EFFECT_PHASE_ADVANCE,Yeni evre başlar,A new phase begins
+EFFECT_PHASE_HOLD,Şimdilik aynı evrede kalırsın,You stay in this phase for now
+EFFECT_SHIP_LIVE,Sürüm yayına çıkar,The version goes live
+EFFECT_MEETING_STARTS,Toplantı başlar,The meeting starts
+EFFECT_TAKES_YOU_THERE,Seni oraya götürür,Takes you there
+ODA_PAPER_DAYS,{n} gün,{n}d

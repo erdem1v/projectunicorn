@@ -1,0 +1,84 @@
+{
+  "_ported_from": "ev_b2b_expand_<customer_id> (B2BEventFactory.build_expansion)",
+  "_port_note": "The K2 card. Its unbounded-MRR bug was already fixed on the Customer model (last_expansion_day, stamped on BOTH answers); here the brake is the card's own entity latch with one_shot, so the fix stops depending on two call sites remembering to stamp. Stays `class: paper`. The old event mounted a modal the moment an account matured, which is an interruption for good news with no deadline behind it. §11.4's desk is exactly the surface for that, and the expiry gives the offer the shape it always implicitly had: take it or it lapses.",
+  "id": "customer.expansion",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "daily",
+  "class": "paper",
+  "tags": [
+    "build_safe"
+  ],
+  "guards": {
+    "market": "b2b"
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "expansion_ready"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "latch_key": "entity",
+  "expires_days": 14,
+  "expire_note": "expire_note",
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "b2b_expand_decline",
+        "scope": "customer"
+      }
+    ]
+  },
+  "condition": {
+    "entity_seam": "musteri.is_expansion_ready",
+    "scope": "customer",
+    "op": "==",
+    "value": true
+  },
+  "options": [
+    {
+      "id": "expand",
+      "outcome_id": "expanded",
+      "effects": [
+        {
+          "verb": "b2b_expand",
+          "scope": "customer"
+        }
+      ]
+    },
+    {
+      "id": "not_yet",
+      "outcome_id": "declined",
+      "effects": [
+        {
+          "verb": "b2b_expand_decline",
+          "scope": "customer"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "B2B_EV_EXPANSION_TITLE",
+      "body": "B2B_EV_EXPANSION_BODY",
+      "options": {
+        "expand": "B2B_CHOICE_EXPAND",
+        "not_yet": "B2B_CHOICE_NOT_YET"
+      },
+      "expire_note": "B2B_EXPANSION_EXPIRED"
+    },
+    "en": {
+      "title": "B2B_EV_EXPANSION_TITLE",
+      "body": "B2B_EV_EXPANSION_BODY",
+      "options": {
+        "expand": "B2B_CHOICE_EXPAND",
+        "not_yet": "B2B_CHOICE_NOT_YET"
+      },
+      "expire_note": "B2B_EXPANSION_EXPIRED"
+    }
+  }
+}

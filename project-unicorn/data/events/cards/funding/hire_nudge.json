@@ -1,0 +1,64 @@
+{
+  "_ported_from": "ev_angel_hire_nudge (AngelRoundSystem.build_nudge_event)",
+  "_port_note": "Advice, not a decision — one option, no economic delta, and the modal shows no chip. §17.3's cost law allows that when a card is explicitly a beat. Its 'İK'ya git' button went nowhere; goto_tab exists now (FRANK_UNWIRED.md §5). The nudge delay reads `funding.angel_days_since_accept`, NOT a days_since_flag on an engine flag. The accept day is written by AngelRoundSystem into GameState and is saved there; a condition asking the engine FlagStore for it would have read an unstamped name and been false for the whole run, which is §19.5’s failure exactly. CLASS AND TAG CORRECTED. It was ported as `class: info` — the badge surface — while its own port note described a modal with a button, which is what the original was. And it was left untagged, which puts a DETERMINISTIC one-shot beat into the weighted pool: the draw may simply never pick it, so Frank's line about being one person would arrive on some runs and not others for no reason the player could see. `critical` in this engine means 'the sweep proposes this, not the pool' — it is the bucket every authored beat belongs in.",
+  "id": "funding.hire_nudge",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "investor.angel_taken",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "funding.angel_days_since_accept",
+        "op": ">=",
+        "value": 2
+      },
+      {
+        "seam": "hr.headcount",
+        "op": "==",
+        "value": 0
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "go_to_hr",
+      "outcome_id": "nudged",
+      "effects": [
+        {
+          "verb": "goto_tab",
+          "tab_id": "hr"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "ANGEL_NUDGE_TITLE",
+      "body": "ANGEL_NUDGE_BODY",
+      "options": {
+        "go_to_hr": "ANGEL_NUDGE_ACK"
+      }
+    },
+    "en": {
+      "title": "ANGEL_NUDGE_TITLE",
+      "body": "ANGEL_NUDGE_BODY",
+      "options": {
+        "go_to_hr": "ANGEL_NUDGE_ACK"
+      }
+    }
+  }
+}

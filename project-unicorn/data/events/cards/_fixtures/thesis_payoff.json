@@ -1,0 +1,30 @@
+{
+  "id": "fixture.thesis_payoff",
+  "version_scope": "fixture",
+  "category": "founder",
+  "tick": "scheduled",
+  "class": "interrupt",
+  "tags": ["critical", "build_safe"],
+  "arc": "arc_fixture_thesis",
+  "latch": { "one_shot": true },
+  "condition": {
+    "all": [
+      { "history": "chose", "event": "fixture.thesis_open", "option": "promise" },
+      { "days_since_flag": "fixture_promise_made", "op": ">=", "value": 80 }
+    ]
+  },
+  "options": [
+    {
+      "id": "acknowledge",
+      "outcome_id": "kept",
+      "effects": [
+        { "verb": "set_flag", "name": "fixture_payoff_landed" },
+        { "verb": "end_arc", "arc_id": "arc_fixture_thesis", "outcome": "kept" }
+      ]
+    }
+  ],
+  "text": {
+    "tr": { "title": "Sözün karşılığı", "body": "Fixture.", "options": { "acknowledge": "Tamam" } },
+    "en": { "title": "The promise comes due", "body": "Fixture.", "options": { "acknowledge": "All right" } }
+  }
+}

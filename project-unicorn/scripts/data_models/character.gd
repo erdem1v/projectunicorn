@@ -103,6 +103,17 @@ extends Resource
 # eski okuyucular tam olarak eskisini görür. Ayna Faz 7'de, son okuyucu çevrildiğinde ölür.
 @export var assigned_job_ids: Array[String] = []
 
+## Ar-Ge §5.0 — YÜKSEK ÖNCELİKLİ BİR ETKİNLİĞİN ASKIYA ALDIĞI işler. Silinmiş değil,
+## DURAKLATILMIŞ: araştırma duraklayınca ya da bitince buradan geri döner.
+## Tavan LEDGER üzerinden okunur: |assigned_job_ids| + |paused_job_ids| <= MAX_JOBS_PER_PERSON.
+##
+## Neden Character'da ve neden RnDSystem'de değil: kurucunun yapım<->satış duraklaması
+## araştırmayla HİÇ ilgili değildir (§5.0 "eski 'kurucu yapım yaparken satış yapamaz'
+## kısıtı kaldırılmıştır"). Duraklatma bir Ekip kavramıdır; araştırma yalnız ilk
+## müşterisi. Ayrıca @export olduğu için SaveCodec onu bedavaya taşır ve eski kayıt
+## [] olarak yükler.
+@export var paused_job_ids: Array[String] = []
+
 # --- DENEYİM / EĞİTİM (2026-08-08; alan başına ayrıldı 2026-08-21) ---
 # §5.1: "Learn-by-doing: ATANDIĞI ALANIN deneyimi yavaş yükselir." Tek bir sayaç bunu
 # söyleyemez — iki işte dönüşümlü çalışan biri tek havuz biriktirirdi ve hangi alanda

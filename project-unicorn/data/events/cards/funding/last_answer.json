@@ -1,0 +1,52 @@
+{
+  "_ported_from": "ev_vc_last_answer_day (VCPitchSystem._build_last_answer_warning_event)",
+  "_port_note": "Repointed by the Frank v6 pass from a calendar warning onto the last day to answer a live offer. Never fired in any played run, for the same reason the rest of the VC arc never fires: no run ever held a sheet. Condition replaced. `sheets_live > 0 AND sheet_days_left <= 1` was a plausible paraphrase and a wrong one: it fires with two sheets live, i.e. exactly when there IS another table, which is the one situation the line must not be said in. The predicate stayed in VCPitchSystem and the card reads it through one seam.",
+  "id": "funding.last_answer",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe",
+    "terminal_warning"
+  ],
+  "speaker": "char_mentor_frank",
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "seam": "funding.last_answer_moment",
+    "op": "==",
+    "value": true
+  },
+  "options": [
+    {
+      "id": "go_to_funding",
+      "outcome_id": "warned",
+      "effects": [
+        {
+          "verb": "goto_tab",
+          "tab_id": "finance",
+          "subpage": "yatirim"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "VC_EV_LAST_DAY_TITLE",
+      "body": "VC_EV_LAST_DAY_BODY",
+      "options": {
+        "go_to_funding": "VC_EV_GO_FUNDING"
+      }
+    },
+    "en": {
+      "title": "VC_EV_LAST_DAY_TITLE",
+      "body": "VC_EV_LAST_DAY_BODY",
+      "options": {
+        "go_to_funding": "VC_EV_GO_FUNDING"
+      }
+    }
+  }
+}

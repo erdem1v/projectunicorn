@@ -39,6 +39,13 @@ extends RefCounted
 
 # --- The ranked desk ---
 
+## The CS desk, best first. Public because the event engine's `support_lead` scope selector
+## needs the same ranking the system itself uses — two rankings of one desk would eventually
+## disagree, and the card would name someone the system does not consider the lead.
+static func ranked_reps() -> Array:
+	return _ranked(HRConstants.AREA_CUSTOMER_SUCCESS)
+
+
 static func _ranked(axis: String) -> Array:
 	# rev 2 §4: HESAP SAHİPLİĞİ işine atanmış herkes — rol değil atama. Bugün bir Müşteri
 	# Temsilcisi işe alındığında bu işe otomatik konuyor, yani yukarıdaki additivity
@@ -172,7 +179,8 @@ static func _open_due_requests() -> void:
 	# Deterministic cadence, phase-offset per account so the whole book does not file on the
 	# same morning. One open request per customer at a time — the latch is
 	# support_request_since_day itself, i.e. state this system owns, never a property of the
-	# event (EventManager.enqueue bypasses one_shot and cooldown entirely).
+	# event (the old enqueue path bypassed one_shot and cooldown entirely; the card
+	# declares its own latch now and the gate enforces it).
 	for c in CustomerRegistry.get_by_market("b2b"):
 		if c.support_request_since_day >= 0:
 			continue
@@ -288,4 +296,15 @@ static func _escalate(c: Customer) -> void:
 	# the choice's own modifiers resolve it and no new modifier type is needed to close it out.
 	CustomerRegistry.set_support_request(c.id, -1)
 	GameState.cs_escalation_days.append(GameState.day)
-	EventManager.enqueue(B2BEventFactory.build_cs_request(c, reps[0]))
+	# NAMES a card; it does not build one. The three request branches used to be one builder
+	# picking between them at construction time, which made the branch invisible to content —
+	# `last_request_kind` had one writer and no reader. They are three `tick: request` cards
+	# now, selected by the same picker read through a seam, and the gate decides.
+	#
+	# The desk's own policy stays here: the aging window above and the weekly ceiling. Those
+	# are facts about the support desk, not tempo rules, and §13.3's category quota is a
+	# different question asked by a different layer.
+	var kind: String = B2BEventFactory.pick_request_kind(c)
+	if kind == "":
+		return
+	EventGate.request("customer.request_" + kind, {"customer": c.id})

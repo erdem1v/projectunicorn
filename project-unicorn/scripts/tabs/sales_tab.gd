@@ -335,13 +335,13 @@ func _card_risk(c: Customer) -> Control:
 	if c.churn_countdown >= 0:
 		col.add_child(UiFactory.make_label(tr("SALES_CHURN_COUNTDOWN").format({"n": c.churn_countdown}), &"RowMeta", UiTokens.negative()))
 	_add_steward_line(col, c)
-	# Action → the existing retention decision modal (backend-built). NOT state-free any more
-	# (Calibration Round A §13): this path bypasses _tick_at_risk entirely, so it asks the SAME
-	# gate the daily sweep asks — can_offer_retention — or the card could be re-opened and the
-	# discount re-harvested after every resolution (the account was already back to active).
+	# Action → the retention decision. A player asking to deal with an account NOW is a real
+	# thing and it keeps working — but it is a PROPOSER, not a second admission path (I1). It
+	# names the card; the gate runs G1-G8 and decides, which is also why the hand-rolled
+	# `active_id() == ""` check is gone: the gate refuses a duplicate on its own, and
+	# can_offer_retention is the card's own condition read through a seam.
 	col.add_child(_action_button(tr("SALES_ACTION_RETAIN") + " →", func() -> void:
-		if EventManager._active_event_id == "" and B2BSalesSystem.can_offer_retention(c):
-			EventManager.enqueue(B2BEventFactory.build_retention(c))))
+		EventGate.request("customer.retention", {"customer": c.id})))
 	return UiFactory.make_card(col, false, true)  # CardAttention (amber)
 
 
@@ -359,12 +359,12 @@ func _card_expansion(c: Customer) -> Control:
 	col.add_child(UiFactory.make_label(_meta_line(c), &"RowMeta", UiTokens.INK_MUTED))
 	col.add_child(UiFactory.make_label(tr("SALES_EXPANSION_FICTION"), &"QuoteSerif"))
 	_add_steward_line(col, c)
-	# Action → the existing expansion event. NOT state-free any more: this path bypasses
-	# _tick_healthy entirely, so it has to ask the same gate the daily sweep asks or the
-	# expansion latch (K2) is only half a latch and the loop stays open through the UI.
+	# Action → the expansion decision, same shape as the retention button above: it names the
+	# card and the gate answers. The K2 latch that used to be half-enforced here (the daily
+	# sweep asked can_offer_expansion, the button asked whether a modal was up) is one
+	# question asked in one place now.
 	col.add_child(_action_button(tr("SALES_ACTION_EXPAND") + " →", func() -> void:
-		if EventManager._active_event_id == "" and B2BSalesSystem.can_offer_expansion(c):
-			EventManager.enqueue(B2BEventFactory.build_expansion(c))))
+		EventGate.request("customer.expansion", {"customer": c.id})))
 	return UiFactory.make_card(col)
 
 

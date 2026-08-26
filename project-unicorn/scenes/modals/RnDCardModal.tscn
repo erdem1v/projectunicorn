@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://crndcardmodal26a"]
+
+[ext_resource type="Script" path="res://scripts/modals/rnd_card_modal.gd" id="1_rndcard"]
+
+[node name="RnDCardModal" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_rndcard")

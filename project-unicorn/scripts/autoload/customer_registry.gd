@@ -333,7 +333,8 @@ func set_last_expansion_day(customer_id: String, day: int) -> void:
 	# HIDDEN expansion latch (K2) — no signal; the phase change that accompanies it is
 	# what the UI repaints on. -1 means the moment has not happened. Like the support
 	# request latch, this lives in state the SYSTEM owns rather than in a property of the
-	# event, because EventManager.enqueue bypasses one_shot and cooldown entirely.
+	# event, because the old enqueue path bypassed one_shot and cooldown entirely. The
+	# engine owns both now; the field stays because it is a fact about the account.
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:
 		return

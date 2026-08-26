@@ -1,0 +1,43 @@
+{
+  "version_scope": "fixture",
+  "category": "team",
+  "tick": "request",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "latch": {
+    "one_shot": true
+  },
+  "id": "fixture.subject_reassign",
+  "_port_note": "Named by `arc_fixture_subject.on_invalidate` and never written — a dangling reference that survived because the probe exercises the POLICY (freeze, thaw, timeout) and never fires the card. Tagged `critical`: an arc's invalidation card must not be demotable. It fires BECAUSE something went wrong with the arc's subject, and pushing it to the desk to expire unread is the silent death the invalidation policy exists to prevent.",
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "done",
+      "effects": [
+        {
+          "verb": "set_flag",
+          "name": "fixture_subject_reassign_landed"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Yeni özne",
+      "body": "Fixture.",
+      "options": {
+        "ok": "Tamam"
+      }
+    },
+    "en": {
+      "title": "New subject",
+      "body": "Fixture.",
+      "options": {
+        "ok": "OK"
+      }
+    }
+  }
+}

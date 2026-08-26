@@ -1,0 +1,61 @@
+{
+  "id": "fixture.thesis_open",
+  "version_scope": "fixture",
+  "category": "founder",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "latch": {
+    "one_shot": true
+  },
+  "options": [
+    {
+      "id": "promise",
+      "outcome_id": "promised",
+      "effects": [
+        {
+          "verb": "start_arc",
+          "arc_id": "arc_fixture_thesis"
+        },
+        {
+          "verb": "stamp_day",
+          "name": "fixture_promise_made"
+        },
+        {
+          "verb": "schedule_event",
+          "event_id": "fixture.thesis_payoff",
+          "delay_days": 80,
+          "arc_id": "arc_fixture_thesis"
+        }
+      ]
+    },
+    {
+      "id": "decline",
+      "outcome_id": "declined",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Söz",
+      "body": "Fixture.",
+      "options": {
+        "promise": "Söz ver",
+        "decline": "Verme"
+      }
+    },
+    "en": {
+      "title": "A promise",
+      "body": "Fixture.",
+      "options": {
+        "promise": "Promise",
+        "decline": "Decline"
+      }
+    }
+  },
+  "arc": "arc_fixture_thesis",
+  "_port_note": " Names its arc back. A step the arc lists but that does not carry `arc` is invisible to every rule keyed on membership — including §10.10's pool exclusion and §13.5's budget exemption."
+}

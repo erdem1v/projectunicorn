@@ -277,6 +277,15 @@ func tick_training(id: String) -> bool:
 ## İŞE atar. §12.1 tavanı BURADA uygulanır — arayüz kilidi ve yazma tarafı aynı sabiti
 ## okur (§15.2), ve arayüze güvenilmez: matris hücreyi kilitli çizse bile kapı burada.
 ## Boş dize = kabul edildi.
+##
+## AR-GE §5.0 (MÜHÜRLÜ) BU FONKSİYONU REDDEDİCİ OLMAKTAN ÇIKARIP YER DEĞİŞTİRİCİ YAPTI:
+## "Genel kural: bir kişi, bir etkinlik. Yeni bir etkinlik başlatmak öncekini otomatik
+## duraklatır. Bu bir ceza değil, bir sonuçtur; oyuncu bunu barlarda görür."
+## Sonucu iki tanedir ve ikisi de burada:
+##   1. `founder_busy` SİLİNDİ. Kurucunun ikinci bir işe geçmesi artık bir arıza değil bir
+##      KARAR — §5.0 eski "kurucu yapım yaparken satış yapamaz" kısıtını adıyla kaldırıyor.
+##   2. Yeni iş, çakıştığı işleri DURAKLATIR (silmez). Duraklamış iş `paused_job_ids`'te
+##      bekler ve dışlayıcı etkinlik bitince `resume_paused_jobs` onu geri koyar.
 func assign_job(id: String, job_id: String) -> String:
 	var c: Character = _characters.get(id, null)
 	if c == null:
@@ -288,17 +297,123 @@ func assign_job(id: String, job_id: String) -> String:
 		return ""
 	if c.status != HRConstants.STATUS_ACTIVE:
 		return "inactive"
-	if c.category == "founder" and not c.assigned_job_ids.is_empty():
-		return "founder_busy"
-	if c.assigned_job_ids.size() >= HRConstants.MAX_JOBS_PER_PERSON:
-		# §12.1 "Üçüncü iş atanamaz." Bir tavan, bir öneri değil.
-		return "job_cap"
 	if not HRConstants.can_hold_job(c.role, job_id, c.category):
 		return "not_your_job"
+
+	# TAVAN YALNIZ SÜREKLİ İŞLERİ SAYAR (direktör hükmü 2026-08-25). Defter aktif + duraklamış
+	# sürekli işlerdir ve sayım YERİNDEN ETMEDEN ÖNCE yapılır — §12.1'in iki-iş tavanı ancak
+	# böyle gerçek bir ret olarak kalır, arkasından gelen duraklatma tarafından eritilmez.
+	#
+	# ARAŞTIRMA HİÇ SAYILMAZ ve hiç kapılanmaz: slot tutmaz, kişinin tamamını alır. Bu yüzden
+	# "build + support taşıyan biri araştırmaya geçemiyor" diye bir yol YOKTUR — araştırma
+	# ikisini birden duraklatır ve reddedilmez. Tavanın araştırmayı reddetmesi imkânsızdır.
+	if HRConstants.is_continuous_job(job_id) and not c.paused_job_ids.has(job_id):
+		var slots: int = 0
+		for held in c.assigned_job_ids:
+			if HRConstants.is_continuous_job(String(held)):
+				slots += 1
+		for parked in c.paused_job_ids:
+			if HRConstants.is_continuous_job(String(parked)):
+				slots += 1
+		if slots >= HRConstants.MAX_JOBS_PER_PERSON:
+			return "job_cap"
+
+	# YERİNDEN ETME, ve artık KURUCU İSTİSNASI YOK. Kurucu da herkes gibi iki sürekli slot
+	# taşır: DESTEK'teki kurucu yapıma başlarsa ikisi de koşar ve ikisi de yavaşlar (odak
+	# 0,50/0,50). O baskı — bildirimler doğrulanmaktan hızlı birikir, memnuniyet erir, oyuncu
+	# işe alması gerektiğini anlar — modülün öğretmek istediği şeydir ve bir duraklamayla
+	# değiştirilemez. Yer değiştiren TEK şey araştırmadır, iki yönde de:
+	#   dışlayıcı iş geliyor → bütün sürekli işler duraklar
+	#   sürekli iş geliyor   → tutulan araştırma biter (düğüm donar, ilerleme korunur)
+	var displaced: Array[String] = []
+	if HRConstants.is_exclusive_job(job_id):
+		displaced = c.assigned_job_ids.duplicate()
+	else:
+		for held2 in c.assigned_job_ids:
+			if HRConstants.is_exclusive_job(String(held2)):
+				displaced.append(String(held2))
+	var ended_exclusive := false
+	for d in displaced:
+		if HRConstants.is_exclusive_job(String(d)):
+			ended_exclusive = true
+		_displace_job(c, String(d))
+
+	# ARAŞTIRMA HANGİ YOLDAN BİTERSE BİTSİN DURAKLAMIŞ İŞLER GERİ DÖNER (Ar-Ge §5.0).
+	# Eskiden `resume_paused_jobs` yalnız `unassign_job`'dan erişilebiliyordu, ve bu gerçek
+	# bir sızıntıydı: build + destek taşıyan biri araştırmaya geçip sonra DOĞRUDAN build'e
+	# döndüğünde destek defterde SONSUZA KADAR park kalıyordu — iş sayısı 1, odak 1,00,
+	# AŞIRI YÜK rozeti yok, ve destek masası oyuncunun sandığından bir kişi eksik.
+	# Sessizdi, çünkü hiçbir yüzey "geri dönmedi" diye bir şey söylemiyor.
+	if ended_exclusive:
+		resume_paused_jobs(id)
+		# resume kendi senkronunu ve sinyalini attı; istenen iş zaten geri geldiyse iş bitti.
+		if c.assigned_job_ids.has(job_id):
+			return ""
+
+	c.paused_job_ids.erase(job_id)   # duraklamış bir işe dönmek YENİ bir iş değildir
 	c.assigned_job_ids.append(job_id)
 	_sync_area_mirror(c)
 	EventBus.assignment_changed.emit(id)
 	return ""
+
+
+## Yerinden edilen iş ne olur. İki yol tamamen farklıdır ve karıştırılmamalıdır.
+func _displace_job(c: Character, job_id: String) -> void:
+	c.assigned_job_ids.erase(job_id)
+	if HRConstants.is_exclusive_job(job_id):
+		# Araştırma deftere PARK EDİLMEZ: KİŞİ düğümden iner, DÜĞÜM ilerlemesi korunarak
+		# donar (Ar-Ge §5.7). Bir slot da tutmadığı için geriye hiçbir borç kalmaz.
+		# Sebebi de söyle: araştırmayı yerinden eden şey SÜREKLİ BİR İŞTİ, yani barın notu
+		# "Kimse üzerinde değil." değil "Ekip yapımda." olmalı.
+		RnDSystem.drop_assignee(c.id, "RND_PAUSED_BUILD")
+		return
+	if not c.paused_job_ids.has(job_id):
+		c.paused_job_ids.append(job_id)
+
+
+## Ar-Ge §5.0 — DURAKLAMIŞ İŞLER GERİ DÖNER. Dışlayıcı iş bittiğinde ya da bırakıldığında
+## kişi bıraktığı yerden devam eder; duraklatma bir CEZA değil, bir SONUÇTUR.
+##
+## Sürekli slot tavanı burada da geçerlidir: iki slot dolduysa geri kalanlar defterde bekler
+## (pratikte olmaz — araştırma en fazla iki sürekli işi duraklatabilir, çünkü kişi zaten en
+## fazla ikisini birden tutabiliyordu). Idempotent, ve TEK sinyal atar.
+func resume_paused_jobs(id: String) -> void:
+	var c: Character = _characters.get(id, null)
+	if c == null or c.paused_job_ids.is_empty():
+		return
+	var slots: int = 0
+	for held in c.assigned_job_ids:
+		if HRConstants.is_continuous_job(String(held)):
+			slots += 1
+	var still_parked: Array[String] = []
+	var resumed := false
+	for parked in c.paused_job_ids:
+		var job_id: String = String(parked)
+		if c.assigned_job_ids.has(job_id):
+			continue
+		if HRConstants.is_continuous_job(job_id):
+			if slots >= HRConstants.MAX_JOBS_PER_PERSON:
+				still_parked.append(job_id)
+				continue
+			slots += 1
+		c.assigned_job_ids.append(job_id)
+		resumed = true
+	c.paused_job_ids = still_parked
+	if not resumed:
+		return
+	_sync_area_mirror(c)
+	EventBus.assignment_changed.emit(id)
+
+
+## Bir işi hiçbir şey atamadan duraklatır — panelin "onu bu işten çek" yolu. Silme DEĞİL:
+## defterde durur ve `resume_paused_jobs` onu geri getirir.
+func pause_job(id: String, job_id: String) -> void:
+	var c: Character = _characters.get(id, null)
+	if c == null or not c.assigned_job_ids.has(job_id):
+		return
+	_displace_job(c, job_id)
+	_sync_area_mirror(c)
+	EventBus.assignment_changed.emit(id)
 
 
 func unassign_job(id: String, job_id: String) -> void:
@@ -308,15 +423,28 @@ func unassign_job(id: String, job_id: String) -> void:
 	c.assigned_job_ids.erase(job_id)
 	_sync_area_mirror(c)
 	EventBus.assignment_changed.emit(id)
+	# Ar-Ge §5.0 — "araştırma duraklayınca ya da BİTİNCE kaldığı yerden devam eder."
+	# Dışlayıcı iş masadan kalktığı an duraklamış işler geri döner. Sıra bilinçli: resume
+	# kendi sinyalini atıyor, yani dinleyiciler son hâli okur.
+	if HRConstants.is_exclusive_job(job_id):
+		resume_paused_jobs(id)
 
 
 func clear_jobs(id: String) -> void:
 	## §11.3 ayrılma anı: kişinin işleri BOŞALIR ve otomatik devir YOKTUR. Boşalan iş
 	## matriste boş görünür ve oyuncu doldurmazsa iş yapılmaz.
+	##
+	## Ar-Ge §5.0 — AYRILAN KİŞİ ARKASINDA DURAKLAMIŞ DEFTER BIRAKMAZ. Duraklamış iş bir
+	## GERİ DÖNÜŞ sözüdür; dönecek kimse kalmadıysa söz de kalmaz. Ve araştırmadan da
+	## düşürülür: düğüm artık üzerinde olmayan bir kişinin adını taşıyamaz.
 	var c: Character = _characters.get(id, null)
-	if c == null or c.assigned_job_ids.is_empty():
+	if c == null:
+		return
+	if c.assigned_job_ids.is_empty() and c.paused_job_ids.is_empty():
 		return
 	c.assigned_job_ids.clear()
+	c.paused_job_ids.clear()
+	RnDSystem.drop_assignee(id)
 	_sync_area_mirror(c)
 	EventBus.assignment_changed.emit(id)
 

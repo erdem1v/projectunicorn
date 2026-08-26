@@ -154,8 +154,17 @@ unfreeze" öngörüyordu; ölçüm gerekmediğini gösterdi. Plakalar ve katmanl
 `REGIONS`/`RECTS`/cam sabitleri yeniden türetildi, `monitor_night` emekli edildi, hover
 rim'i yeniden ayarlandı — ve `--theme-audit=oda` **121 satırda BAYT-AYNI** kaldı. Sebep
 yapısal: bu turun dokunduğu her şey DOKU, KOORDİNAT ya da `ODA_*` register'ıdır; hiçbiri
-tema öğesi değil. Dolayısıyla dosya donmuş kalır ve gömülü damgasının 5 olması —
-`UiTokens.THEME_STAMP` 6'nın BİR GERİSİ — DOĞRUDUR; regen edilmediği için artırılmaz.
+tema öğesi değil. Dolayısıyla dosya donmuş kalır.
+
+**GÖMÜLÜ DAMGA 5'TE DONDURULMUŞTUR VE ARA AÇILMASI BEKLENEN DAVRANIŞTIR.** Bu satır uzun
+süre "`UiTokens.THEME_STAMP` 6'nın BİR GERİSİ" diyordu; o cümle yazıldığı gün (2026-08-17)
+doğruydu ve THEME_STAMP 7'ye çıktığında (2026-08-24, `9a8ecb5`) sessizce YANLIŞ oldu — bugün
+5, 7'nin İKİ gerisinde. Sayı bir ilişki DEĞİL: madde 2b dosyanın asla regen edilmemesini
+söylüyor, o yüzden gömülü damga 5'te KALIR ve her THEME_STAMP artışında ara bir birim daha
+açılır. **Bu arayı KAPATMAYA ÇALIŞMAK madde 2b'nin yasakladığı şeyin ta kendisidir:** damgayı
+elle yükseltmek ya da dosyayı yeniden üretmek, "tutarlılık" adına donmuş artefaktı bozar.
+Ara ne kadar büyürse büyüsün doğrudur; kapatılmaz.
+
 ODA tint token'ları (`ODA_NIGHT_TINT`, `ODA_TINT_EVENING`, `ODA_TINT_DAWN`) yalnız
 `oda_view.gd` tarafından runtime'da okunur; `build_theme.gd` bunlardan HİÇBİRİNİ okumaz
 (yalnız `ODA_ANCHOR_GLOW_SHADOW`), o yüzden değerlerini değiştirmek `master_theme.tres`'i
@@ -233,6 +242,10 @@ kımıldamadı"nın, bbox raporu "yalnız hedef kımıldadı"nın kanıtıdır.
 - **Game design master:** [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md) — vision, pillars, mechanics, content, systems, win/lose conditions, endings
 - **Technical constitution:** [`docs/TECH_SPEC.md`](docs/TECH_SPEC.md) — architecture, conventions, decisions (LOCKED unless Decision Log §20 revised)
 - **Content guide:** `docs/CONTENT_GUIDE.md` — *not yet created.* Will be added during the content phase (event writing voice, character bible).
+- **Event engine:** [`GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md) — the engine's only authority (markdown form of `GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.docx`, which is archival from 2026-08-25). Its §27 carries the build notes.
+  - Read surface: [`docs/SEAM_REGISTRY.md`](docs/SEAM_REGISTRY.md) — every named query content may ask, with VAR / OKUNUYOR / YOK status and the open items filed per module.
+  - Write surface: [`docs/EVENT_SIGNAL_MANIFEST.md`](docs/EVENT_SIGNAL_MANIFEST.md) — **generated**, `python tools/gen_signal_manifest.py`.
+  - Content design (nine arcs, authoring law): [`docs/design/EVENT_POOL_DESIGN_v1.md`](docs/design/EVENT_POOL_DESIGN_v1.md).
 
 ---
 
@@ -283,7 +296,7 @@ that claims them.
 - **Language:** GDScript only (no C#, no visual scripting)
 - **UI:** Control nodes + Scene hybrid (layout in `.tscn`, logic in `.gd` scripts attached to scenes)
 - **State:** Autoload singletons + EventBus signal hub
-  - Planned singletons: `GameState`, `CharacterRegistry`, `EventManager`, `TimeManager`, `SaveManager`, `Settings`, `EventBus`
+  - Planned singletons: `GameState`, `CharacterRegistry`, `TimeManager`, `SaveManager`, `Settings`, `EventBus`. (`EventManager` was here and is gone: the event engine is a set of static classes behind the `EventGate` facade, not an autoload — nothing about it needs a node in the tree.)
 - **Persistence:** JSON via FileAccess, schema-versioned, seeded RNG (deterministic replay)
 - **Steam:** GodotSteam plugin — achievements, Cloud Save, Rich Presence; isolated behind `SaveManager` so dev runs work without Steam
 - **Localization:** Godot CSV-based — TR canonical, EN literary translation
@@ -316,7 +329,7 @@ The agent stays strictly within `PROJECT_SPEC.md`. **It does not invent mechanic
 - `docs/TECH_SPEC.md` ✅
 - `CLAUDE.md` ✅ (this file)
 - `icon.svg` (default Godot icon — replace during Visual Identity phase)
-- The TECH_SPEC §4 skeleton is long since built and live: scenes, scripts (14 autoloads, 33 systems), data,
+- The TECH_SPEC §4 skeleton is long since built and live: scenes, scripts (13 autoloads, 33 systems), data,
   themes, and `localization/` (`strings.csv`, TR+EN, parsed by the `Localization` autoload) all exist —
   see git history for the current build state. (This block's old "nothing exists yet" claims were the
   audit-flagged stale documentation; corrected 2026-08-10 during the localization sweep's Step 0.)
@@ -325,13 +338,41 @@ The agent stays strictly within `PROJECT_SPEC.md`. **It does not invent mechanic
 
 ## Next Step
 
-Skeleton planning: walk the developer through the proposed `scenes/` + `scripts/` + `data/` + `themes/` + `localization/` skeleton (TECH_SPEC §4), the autoload registration list (TECH_SPEC §6.1), and the order of first scenes to build (Onboarding flow per `PROJECT_SPEC.md §3.1` is the natural first target). **No gameplay code until that plan is approved.**
+*(CORRECTED 2026-08-25, event-engine rebuild Aşama 0. This heading and the block under it
+described the pre-skeleton state and were three months stale — the same audit finding the
+2026-08-10 localization sweep fixed one paragraph of and left the rest of.)*
+
+The skeleton is long since built and playable: 13 autoloads, 33 systems, the tab set, ODA,
+onboarding, save/load, and a smoke suite. Current work is module rebuilds against their sealed
+GDDs — Ürün rev 6.1, Ekip rev 11 and the **event engine** have landed; Ar-Ge is in flight.
+
+**The event engine is built** (`scripts/events/`, behind the one `EventGate` facade) and the
+old `EventManager` is deleted. What that means for anyone touching event content or any system
+that used to raise a card:
+
+- **There is exactly one way in.** `EventGate.request(<card id>, <context>)`. A system NAMES a
+  card; it never builds one. `enqueue` and `enqueue_front` do not exist, and a lint rule fails
+  the build if they come back.
+- **A card is a JSON file**, `data/events/cards/<category>/*.json`, with its own trigger,
+  conditions, latch, scope and effects. Content that fires from a system is content the system
+  cannot silently change.
+- **Every read a card makes is a named seam** — `docs/SEAM_REGISTRY.md`, 147 of them. Content
+  never touches a system field directly, which is the WRITE-THROUGH LAW's read half.
+- **Four tools, all `--flags` on a debug build**: `--event-lint` (§17's rules over the
+  content, with a baseline ratchet), `--why-fire=<card id>` (the gate step that refused it, the
+  live seam values, the latch, what it waits on), `--event-harness=random|guided`, and
+  `--event-probe` (159 assertions in one boot).
+- Schema is **v10** and `MIN_LOADABLE_VERSION` is 10: **every pre-existing save is dead.** That
+  was a deliberate break, not an accident — see the rebuild's report.
 
 ---
 
 ## What this project is NOT (yet)
 
-- No scenes, scripts, or resources committed
-- No `CONTENT_GUIDE.md` — content phase not yet started
-- TBD sections in `PROJECT_SPEC.md` are not to be implemented around — block the affected feature and surface the gap
-- No Godot MCP operations performed yet — first MCP work begins after skeleton approval
+- No `CONTENT_GUIDE.md` — the event-writing round has not started. The authoring law it will
+  carry already exists in three places: this file's Content & Language Laws,
+  `docs/design/EVENT_POOL_DESIGN_v1.md` §6, and `GDDs/GDD v2 — 11 · Events & Narrative.docx` §7.
+- TBD sections in `PROJECT_SPEC.md` are not to be implemented around — block the affected
+  feature and surface the gap. (§6's Event Pool row is no longer one of them.)
+- No CI and no git hooks. Every gate is run by hand; the DELIVERY LAW's "gates green before the
+  commit that claims them" is enforced socially, not mechanically.

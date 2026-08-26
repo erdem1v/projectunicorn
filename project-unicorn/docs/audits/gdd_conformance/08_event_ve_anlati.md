@@ -1,6 +1,28 @@
+> **SUPERSEDED 2026-08-25 as a statement about the code — still live as the argument.**
+>
+> This audit measured the engine at `7687095` against the Pool Design. Its *reasoning* is why
+> the rebuild exists and is quoted throughout it. Its *numbers* have drifted and four are now
+> wrong; they are corrected here rather than edited in place, because an audit's value is that
+> it says what was true on its date.
+>
+> - "28 condition types" → **29**. `days_since_flag` landed with the Frank v6 pass
+>   (`event_manager.gd:390-401`).
+> - "43 effects" including `hr_overtime_stop` / `hr_overtime_continue` → **42**. The overtime
+>   system was deleted by the Ekip rev11 pass; `open_term_table` arrived. Chips: **33**.
+> - "`ev_ps_first_revenue`", cited repeatedly → **the file no longer exists**.
+> - "eighteen injection sites" (§6) → **19 production sites in 9 files**, of which 17 hand-roll
+>   a latch. The one without a latch is `vc_pitch_system.gd:460`.
+>
+> Two of its findings were already fixed before this rebuild started and should not be
+> re-reported: id-based queue dedupe (`event_manager.gd:150`) and the K2 expansion latch
+> (`customer.gd:69`). Everything else in §4's scorecard still stands.
+>
+> The engine being built to replace what this audit measured:
+> [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](../../../../../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md).
+
 # Event ve anlatı — GDD v2 conformance (engine side)
 
-**Date:** 2026-08-20 · **Chapters:** 11 · Events & Narrative, plus `docs/.md` — **Event Pool Design v1** (2026-08-19), whose §5 is the engine specification chapter 11 implies
+**Date:** 2026-08-20 · **Chapters:** 11 · Events & Narrative, plus `docs/design/EVENT_POOL_DESIGN_v1.md` — **Event Pool Design v1** (2026-08-19), whose §5 is the engine specification chapter 11 implies
 **Baseline:** `main` @ `7687095`. Every `file:line` resolves to that commit.
 **Scope:** the engine — triggers, the effect vocabulary, memory, wiring. Authoring voice and node content are the director side and are out of scope here.
 
@@ -110,7 +132,7 @@ History reads (fired? which choice? days since?), headcount, days-since-flag, an
 
 ## 4. The Pool Design §5 engine requirements, scored
 
-`docs/.md` §5 is the nine-point specification the rebuild is measured against.
+`docs/design/EVENT_POOL_DESIGN_v1.md` §5 is the nine-point specification the rebuild is measured against.
 
 | § | Requirement | Status |
 |---|---|---|

@@ -19,6 +19,11 @@ extends RefCounted
 # İçerik working-metin — Erdem voice-pass bekliyor (final copy kilitlemeyin).
 const SUB_PRODUCT_TYPES := {
 	"ai": [
+		# §12.11 MÜHÜRLÜ demo alt-tipi. Alt-tür anahtarı PAZAR DEĞİL HABER/OLAY HAVUZUDUR
+		# (GameState.subgenre; news_feed_system "ai" | "saas" | "social" bekler) — bu ürün
+		# B2C'dir ve kimliğini K3 yönünden alır: otomatik klip seçimi / altyazı zekâsı.
+		{"id": "video_clip",
+			"sectors": ["consumer", "social_media", "media"], "market_type": "b2c"},
 		{"id": "ai_assistant",
 			"sectors": ["consumer", "education", "productivity"], "market_type": "b2c"},
 		{"id": "ai_photo_editor",
@@ -29,6 +34,14 @@ const SUB_PRODUCT_TYPES := {
 			"sectors": ["enterprise", "finance", "legal"], "market_type": "b2b", "price_tendency": "premium"},
 	],
 	"saas": [
+		# §12.11 MÜHÜRLÜ demo alt-tipleri. `note_tool` B2C'dir; "saas" burada haber
+		# havuzudur, pazar değil (yukarıdaki nota bak) — bir çalışma alanı ürününün
+		# sektör haberleri SaaS havuzundan gelir.
+		{"id": "note_tool",
+			"sectors": ["consumer", "productivity", "education"], "market_type": "b2c"},
+		{"id": "erp",
+			"sectors": ["manufacturing", "retail", "logistics"], "market_type": "b2b",
+			"price_tendency": "neutral"},
 		{"id": "saas_project_mgmt",
 			"sectors": ["agency", "software", "construction"], "market_type": "b2b"},
 		{"id": "saas_crm",
@@ -44,6 +57,44 @@ const SUB_PRODUCT_TYPES := {
 	],
 	"social": [],
 }
+
+## §12.11 MÜHÜRLÜ — DEMO TİP EKRANI. `playable` üçü hat içeriğine sahip olan
+## alt-tiplerdir ve ProductLines.subtypes() ile BİREBİR eşleşir (kapısı:
+## `line_subtypes_match_type_screen` smoke case'i). Geri kalan her şey KİLİTLİ-GÖRÜNÜR
+## karttır ve §12.11 sayıyı mühürlemiştir: YOL BAŞINA ÜÇ.
+##
+## Kilitli havuz düz katalogdan seçilir — o kayıtlar zaten var ve zaten yazılı; üç
+## kilitli kart için ikinci bir kopya açmak aynı ürünün iki gerçeğini yaratırdı.
+## B2B'nin üçüncüsü bir ürün DEĞİL, §12.11'in AÇIK SLOT'udur: dördüncü B2B alt-tipi
+## ruling bekliyor ve "o gelene kadar B2B tip ekranında kilitli kart olarak durur".
+const TYPE_SCREEN_SLOT := "b2b_open_slot"
+
+const TYPE_SCREEN := {
+	"b2c": {
+		"playable": ["note_tool", "video_clip"],
+		"locked": ["ai_code_copilot", "ai_photo_editor", "ai_assistant"],
+	},
+	"b2b": {
+		"playable": ["erp"],
+		"locked": ["ai_vector_search", "saas_crm", TYPE_SCREEN_SLOT],
+	},
+}
+
+
+## Tip ekranının OYNANABİLİR kartları — hat içeriği olanlar.
+static func playable_types(market: String) -> Array:
+	var out: Array = []
+	for tid in (TYPE_SCREEN.get(market, {}) as Dictionary).get("playable", []):
+		var st: Dictionary = get_sub_product_type_by_id(String(tid))
+		if not st.is_empty():
+			out.append(st)
+	return out
+
+
+## Tip ekranının KİLİTLİ-GÖRÜNÜR kartları. Açık slot bir katalog kaydı DEĞİL, o
+## yüzden ham kimlik döner — kartı çizen taraf onu kendi metniyle ayırır.
+static func locked_type_ids(market: String) -> Array:
+	return ((TYPE_SCREEN.get(market, {}) as Dictionary).get("locked", []) as Array).duplicate()
 
 # Rev3 feature record shape — each feature carries:
 #   complexity (1-5) — bug seeding (_seed_feature_bugs, _accrue_bugs_hourly) + risk band.
@@ -69,85 +120,85 @@ const SUB_PRODUCT_TYPES := {
 # İçerik working-metin — Erdem voice-pass bekliyor (final copy kilitlemeyin).
 const FEATURE_POOLS := {
 	"ai_assistant": [
-		{"id": "ai_assistant_chat", "complexity": 2, "efor": 6, "pull": 4, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "ai_assistant_memory", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_assistant_tools", "complexity": 4, "efor": 8, "pull": 5, "stakes": 5, "dimension_contribution": {"innovation": 6}, "requires_research": false, "tags": []},
-		{"id": "ai_assistant_voice", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "cost": 800, "cost_source": "api", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_assistant_image", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "cost": 1200, "cost_source": "api", "dimension_contribution": {"innovation": 6}, "requires_research": false, "tags": []},
-		{"id": "ai_assistant_streaming", "complexity": 2, "efor": 6, "pull": 3, "stakes": 1, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
+		{"id": "ai_assistant_chat", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}, "requires_research": false},
+		{"id": "ai_assistant_memory", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false},
+		{"id": "ai_assistant_tools", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6}, "requires_research": false},
+		{"id": "ai_assistant_voice", "complexity": 3, "efor": 7, "cost": 800, "cost_source": "api", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false},
+		{"id": "ai_assistant_image", "complexity": 4, "efor": 8, "cost": 1200, "cost_source": "api", "dimension_contribution": {"innovation": 6}, "requires_research": false},
+		{"id": "ai_assistant_streaming", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}, "requires_research": false},
 	],
 	"ai_photo_editor": [
-		{"id": "ai_photo_bg_removal", "complexity": 2, "efor": 6, "pull": 5, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "ai_photo_inpaint", "complexity": 4, "efor": 8, "pull": 5, "stakes": 4, "cost": 1500, "cost_source": "api", "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_photo_upscale", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "cost": 900, "cost_source": "license", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_photo_style_transfer", "complexity": 3, "efor": 7, "pull": 4, "stakes": 2, "cost": 500, "cost_source": "license", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_photo_batch", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_photo_filters", "complexity": 1, "efor": 5, "pull": 3, "stakes": 1, "dimension_contribution": {"experience": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_photo_bg_removal", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}, "requires_research": false},
+		{"id": "ai_photo_inpaint", "complexity": 4, "efor": 8, "cost": 1500, "cost_source": "api", "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false},
+		{"id": "ai_photo_upscale", "complexity": 3, "efor": 7, "cost": 900, "cost_source": "license", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false},
+		{"id": "ai_photo_style_transfer", "complexity": 3, "efor": 7, "cost": 500, "cost_source": "license", "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false},
+		{"id": "ai_photo_batch", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false},
+		{"id": "ai_photo_filters", "complexity": 1, "efor": 5, "dimension_contribution": {"experience": 3}, "requires_research": false},
 	],
 	"ai_code_copilot": [
-		{"id": "ai_code_autocomplete", "complexity": 3, "efor": 7, "pull": 5, "stakes": 4, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "ai_code_chat", "complexity": 2, "efor": 6, "pull": 4, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "ai_code_refactor", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_code_explain", "complexity": 2, "efor": 6, "pull": 3, "stakes": 1, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "ai_code_test_gen", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
-		{"id": "ai_code_multi_file", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "dimension_contribution": {"innovation": 7}, "requires_research": true, "tags": []},
-		{"id": "ai_code_diff_review", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false, "tags": []},
+		{"id": "ai_code_autocomplete", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false},
+		{"id": "ai_code_chat", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}, "requires_research": false},
+		{"id": "ai_code_refactor", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false},
+		{"id": "ai_code_explain", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}, "requires_research": false},
+		{"id": "ai_code_test_gen", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false},
+		{"id": "ai_code_multi_file", "complexity": 5, "efor": 9, "dimension_contribution": {"innovation": 7}, "requires_research": true},
+		{"id": "ai_code_diff_review", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false},
 	],
 	"ai_vector_search": [
-		{"id": "ai_vec_embed_api", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
-		{"id": "ai_vec_search_api", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"stability": 5}, "requires_research": false, "tags": []},
-		{"id": "ai_vec_filter", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "ai_vec_dashboard", "complexity": 2, "efor": 6, "pull": 2, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "ai_vec_scaling", "complexity": 5, "efor": 9, "pull": 3, "stakes": 5, "dimension_contribution": {"stability": 7}, "requires_research": true, "tags": []},
-		{"id": "ai_vec_sdk", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
+		{"id": "ai_vec_embed_api", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false},
+		{"id": "ai_vec_search_api", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5}, "requires_research": false},
+		{"id": "ai_vec_filter", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false},
+		{"id": "ai_vec_dashboard", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}, "requires_research": false},
+		{"id": "ai_vec_scaling", "complexity": 5, "efor": 9, "dimension_contribution": {"stability": 7}, "requires_research": true},
+		{"id": "ai_vec_sdk", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false},
 	],
 	"saas_project_mgmt": [
-		{"id": "saas_pm_tasks", "complexity": 2, "efor": 6, "pull": 4, "stakes": 2, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
-		{"id": "saas_pm_gantt", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_pm_comments", "complexity": 2, "efor": 6, "pull": 3, "stakes": 2, "dimension_contribution": {"experience": 4}, "requires_research": false, "tags": []},
-		{"id": "saas_pm_integrations", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "cost": 700, "cost_source": "api", "dimension_contribution": {"stability": 6, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_pm_automation", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_pm_reporting", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
+		{"id": "saas_pm_tasks", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false},
+		{"id": "saas_pm_gantt", "complexity": 3, "efor": 7, "dimension_contribution": {"experience": 5}, "requires_research": false},
+		{"id": "saas_pm_comments", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}, "requires_research": false},
+		{"id": "saas_pm_integrations", "complexity": 4, "efor": 8, "cost": 700, "cost_source": "api", "dimension_contribution": {"stability": 6, "experience": 3}, "requires_research": false},
+		{"id": "saas_pm_automation", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false},
+		{"id": "saas_pm_reporting", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false},
 	],
 	"saas_crm": [
-		{"id": "saas_crm_contacts", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
-		{"id": "saas_crm_pipeline", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_crm_email", "complexity": 4, "efor": 8, "pull": 4, "stakes": 5, "cost": 600, "cost_source": "api", "dimension_contribution": {"stability": 6, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_crm_forecast", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_crm_mobile", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 3, "experience": 6}, "requires_research": false, "tags": []},
-		{"id": "saas_crm_call_log", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "cost": 800, "cost_source": "api", "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_crm_contacts", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false},
+		{"id": "saas_crm_pipeline", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false},
+		{"id": "saas_crm_email", "complexity": 4, "efor": 8, "cost": 600, "cost_source": "api", "dimension_contribution": {"stability": 6, "experience": 3}, "requires_research": false},
+		{"id": "saas_crm_forecast", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 5, "experience": 3}, "requires_research": false},
+		{"id": "saas_crm_mobile", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 3, "experience": 6}, "requires_research": false},
+		{"id": "saas_crm_call_log", "complexity": 3, "efor": 7, "cost": 800, "cost_source": "api", "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false},
 	],
 	"saas_analytics": [
-		{"id": "saas_an_dashboards", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_an_query", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 6}, "requires_research": false, "tags": []},
-		{"id": "saas_an_alerts", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_an_share", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
-		{"id": "saas_an_etl", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "cost": 1000, "cost_source": "api", "dimension_contribution": {"stability": 7}, "requires_research": true, "tags": []},
-		{"id": "saas_an_embed", "complexity": 4, "efor": 8, "pull": 4, "stakes": 4, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_an_dashboards", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false},
+		{"id": "saas_an_query", "complexity": 4, "efor": 8, "dimension_contribution": {"stability": 3, "experience": 6}, "requires_research": false},
+		{"id": "saas_an_alerts", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 5, "stability": 3}, "requires_research": false},
+		{"id": "saas_an_share", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false},
+		{"id": "saas_an_etl", "complexity": 5, "efor": 9, "cost": 1000, "cost_source": "api", "dimension_contribution": {"stability": 7}, "requires_research": true},
+		{"id": "saas_an_embed", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "stability": 3}, "requires_research": false},
 	],
 	"saas_billing": [
-		{"id": "saas_bill_subscriptions", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_bill_invoice", "complexity": 2, "efor": 6, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 4, "experience": 2}, "requires_research": false, "tags": []},
-		{"id": "saas_bill_tax", "complexity": 5, "efor": 9, "pull": 2, "stakes": 5, "cost": 2000, "cost_source": "license", "dimension_contribution": {"stability": 7}, "requires_research": true, "tags": []},
-		{"id": "saas_bill_dunning", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_bill_webhooks", "complexity": 3, "efor": 7, "pull": 3, "stakes": 4, "dimension_contribution": {"stability": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_bill_proration", "complexity": 4, "efor": 8, "pull": 2, "stakes": 5, "dimension_contribution": {"stability": 6}, "requires_research": false, "tags": []},
+		{"id": "saas_bill_subscriptions", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false},
+		{"id": "saas_bill_invoice", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 4, "experience": 2}, "requires_research": false},
+		{"id": "saas_bill_tax", "complexity": 5, "efor": 9, "cost": 2000, "cost_source": "license", "dimension_contribution": {"stability": 7}, "requires_research": true},
+		{"id": "saas_bill_dunning", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false},
+		{"id": "saas_bill_webhooks", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5}, "requires_research": false},
+		{"id": "saas_bill_proration", "complexity": 4, "efor": 8, "dimension_contribution": {"stability": 6}, "requires_research": false},
 	],
 	"saas_dev_tools": [
-		{"id": "saas_dev_cli", "complexity": 2, "efor": 6, "pull": 3, "stakes": 2, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false, "tags": []},
-		{"id": "saas_dev_api", "complexity": 3, "efor": 7, "pull": 4, "stakes": 5, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_dev_docs", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_dev_ci_plugin", "complexity": 4, "efor": 8, "pull": 3, "stakes": 4, "dimension_contribution": {"innovation": 3, "stability": 6}, "requires_research": false, "tags": []},
-		{"id": "saas_dev_logs", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_dev_sandbox", "complexity": 3, "efor": 7, "pull": 3, "stakes": 3, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false, "tags": []},
+		{"id": "saas_dev_cli", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}, "requires_research": false},
+		{"id": "saas_dev_api", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false},
+		{"id": "saas_dev_docs", "complexity": 3, "efor": 7, "dimension_contribution": {"experience": 5}, "requires_research": false},
+		{"id": "saas_dev_ci_plugin", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 3, "stability": 6}, "requires_research": false},
+		{"id": "saas_dev_logs", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 3, "stability": 5}, "requires_research": false},
+		{"id": "saas_dev_sandbox", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}, "requires_research": false},
 	],
 	"saas_ops": [
-		{"id": "saas_ops_workflow", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false, "tags": []},
-		{"id": "saas_ops_reporting", "complexity": 3, "efor": 7, "pull": 3, "stakes": 2, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_ops_integration", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "cost": 1800, "cost_source": "license", "dimension_contribution": {"stability": 7}, "requires_research": false, "tags": []},
-		{"id": "saas_ops_scheduling", "complexity": 3, "efor": 7, "pull": 4, "stakes": 3, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false, "tags": []},
-		{"id": "saas_ops_field", "complexity": 5, "efor": 9, "pull": 4, "stakes": 5, "dimension_contribution": {"innovation": 4, "stability": 7}, "requires_research": false, "tags": []},   # unlocked 2026-08-19 (Calibration Round A §1): one of only two stability-7 rows — locked, a 3-feature demo v1 capped at raw stability 13
-		{"id": "saas_ops_mobile", "complexity": 4, "efor": 8, "pull": 4, "stakes": 3, "dimension_contribution": {"innovation": 3, "experience": 6}, "requires_research": false, "tags": []},
+		{"id": "saas_ops_workflow", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "experience": 3}, "requires_research": false},
+		{"id": "saas_ops_reporting", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false},
+		{"id": "saas_ops_integration", "complexity": 5, "efor": 9, "cost": 1800, "cost_source": "license", "dimension_contribution": {"stability": 7}, "requires_research": false},
+		{"id": "saas_ops_scheduling", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false},
+		{"id": "saas_ops_field", "complexity": 5, "efor": 9, "dimension_contribution": {"innovation": 4, "stability": 7}, "requires_research": false},   # unlocked 2026-08-19 (Calibration Round A §1): one of only two stability-7 rows — locked, a 3-feature demo v1 capped at raw stability 13
+		{"id": "saas_ops_mobile", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 3, "experience": 6}, "requires_research": false},
 	],
 }
 

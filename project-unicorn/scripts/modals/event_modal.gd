@@ -365,7 +365,11 @@ func _render_choices() -> void:
 		child.queue_free()
 	for idx in _event.choices.size():
 		var choice: EventChoice = _event.choices[idx]
-		var unlocked: bool = EventManager.is_condition_met(choice.unlock_condition)
+		# The card's frozen context comes with the question: an option locked on "this account
+		# has spent both discounts" is asking about the account the card is ABOUT, and without
+		# the binding the leaf has no subject and reads false for everyone.
+		var unlocked: bool = EventGate.condition_met(choice.unlock_condition,
+			EventGate.active_context())
 		# A mentor never endorses a locked path (avoids amber-on-dim conflict).
 		var is_mentor_pick: bool = unlocked and _event.mentor_choice == idx
 		var card: PanelContainer = _build_choice_card(choice, idx, unlocked, is_mentor_pick)
@@ -464,7 +468,7 @@ func _on_choice_input(event: InputEvent, idx: int) -> void:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		_resolved = true
-		EventManager.resolve_choice(_event.id, idx)
+		EventGate.resolve(_event.id, idx)
 
 
 # --- Formatters ---
@@ -480,11 +484,36 @@ static func _initials(full_name: String) -> String:
 
 
 ## Player-facing badge for a modifier, or {} to hide bookkeeping modifiers.
+## Effects a card carries deliberately and SILENTLY: bookkeeping with no player-visible
+## consequence of its own. Naming them is the point — "no entry in the table" now means a bug
+## rather than a judgement call, and `event_chip_coverage` in the smoke suite fails on any verb
+## that is neither labelled here nor listed below.
+const SILENT_VERBS := [
+	"set_flag", "set_game_flag", "stamp_day", "schedule_event", "cancel_scheduled",
+	"start_arc", "advance_arc", "end_arc", "abort_arc", "set_arc_var",
+	"mentor_advisory", "unlock_content", "spend_budget",
+]
+
+## The event engine renamed six verbs on its way out of the old modifier vocabulary. Mapping
+## them here rather than duplicating their rows keeps ONE label per effect — two rows saying
+## the same sentence is how the second one goes stale.
+const VERB_ALIASES := {
+	"add_cash": "cash", "add_brand": "brand", "add_reputation": "reputation",
+	"change_morale": "morale", "promise_create": "b2b_promise_create",
+	"employee_leaves": "hr_departure",
+}
+
+
 func _describe_modifier(m) -> Dictionary:
 	if typeof(m) != TYPE_DICTIONARY:
 		return {}
-	var t: String = m.get("type", "")
-	var d: int = int(m.get("delta", 0))
+	# `verb` FIRST. Cards carry `verb`; the handful of GameEvents still built in code carry
+	# `type`. Reading only `type` was the whole-card blindness the event-engine swap would have
+	# shipped: every chip on every card would have been empty, and the EFFECT-VISIBILITY RULE
+	# would have been violated by 40 cards at once with nothing to catch it.
+	var t: String = String(m.get("verb", m.get("type", "")))
+	t = String(VERB_ALIASES.get(t, t))
+	var d: int = int(m.get("delta", m.get("amount", 0)))
 	match t:
 		"cash": return {"text": tr("EFFECT_CASH").format({"v": _fmt_money_delta(d)}), "kind": _kind(d)}
 		"mrr": return {"text": tr("EFFECT_MRR").format({"v": _fmt_money_delta(d)}), "kind": _kind(d)}  # MRR: ruled accepted TR-tech term
@@ -553,6 +582,13 @@ func _describe_modifier(m) -> Dictionary:
 			var em: int = es * int(m.get("per_seat_mrr", 0))
 			return {"text": tr("EFFECT_EXPAND").format({"seats": es, "mrr": _fmt_money_delta(em)}), "kind": &"positive"}
 		"b2b_expand_decline": return {"text": tr("EFFECT_NO_CHANGE"), "kind": &"neutral"}
+		# --- Effects that MOVE THE PLAYER OR THE RUN. None of these had a label, because none
+		#     of them was reachable from a card before the engine made cards the only surface.
+		"advance_phase": return {"text": tr("EFFECT_PHASE_ADVANCE"), "kind": &"accent"}
+		"phase_gate_decline": return {"text": tr("EFFECT_PHASE_HOLD"), "kind": &"neutral"}
+		"ship_active_build": return {"text": tr("EFFECT_SHIP_LIVE"), "kind": &"accent"}
+		"start_vc_meeting": return {"text": tr("EFFECT_MEETING_STARTS"), "kind": &"accent"}
+		"goto_tab": return {"text": tr("EFFECT_TAKES_YOU_THERE"), "kind": &"neutral"}
 		"angel_accept":
 			# Two facts on one chip (the b2b_expand precedent above). This chip is the
 			# player's only source of truth for what the decision COSTS, and the cost is
@@ -562,7 +598,13 @@ func _describe_modifier(m) -> Dictionary:
 					"cash": _fmt_money_delta(AngelRoundSystem.CASH_AMOUNT),
 					"equity": AngelRoundSystem.EQUITY_PCT}),
 				"kind": &"accent"}
-	return {}  # set_flag / mentor_advisory / ship_active_build / endgame types — bookkeeping or self-describing, no badge
+	# SILENT_VERBS above are deliberate. Anything else reaching this line is a card row the
+	# player cannot read, and the smoke suite says so by name rather than leaving it to be
+	# noticed on a screenshot.
+	if not SILENT_VERBS.has(t) and OS.is_debug_build() and t != "":
+		push_warning("[EventModal] effect '%s' renders no chip — add a label or list it in "
+			% t + "SILENT_VERBS")
+	return {}
 
 
 static func _kind(delta: int) -> StringName:

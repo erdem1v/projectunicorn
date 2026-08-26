@@ -1,3 +1,10 @@
+> **STILL THE MIGRATION INPUT (noted 2026-08-25).** The event-engine rebuild
+> (`GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`) reads this document card by card: its verdicts decide
+> move / rewrite / delete, and its COPY LIE column is the repair list. Nothing here is
+> superseded — it describes cards, not the engine. Two counts have drifted since it was
+> written: the dispatcher has **42** arms (not 44) and the modal renders **33** chips (not 36),
+> because the overtime pair was deleted with the overtime system and `open_term_table` arrived.
+
 # EVENT INVENTORY — every event that is not Frank's
 
 **Date:** 2026-08-21 · **Type:** READ-ONLY inventory (nothing fixed, no balance change, no new events) · **Tree:** working tree at `9908a8b`, audited as it stands · **Sibling report:** `FRANK_VERIFY_2026-08-21.md`

@@ -86,6 +86,8 @@ var _hits: Array[String] = []
 var _csv_keys: Dictionary = {}
 var _re_quoted: RegEx
 var _re_trchar: RegEx
+## `lower_snake.lower_snake` — the shape of a seam id, and of nothing a player reads.
+var _re_seam_id: RegEx
 var _re_word: RegEx
 var _re_scene_prop: RegEx
 var _re_key: RegEx
@@ -102,6 +104,7 @@ func _initialize() -> void:
 	_re_word = _make("(?i)\\b(" + "|".join(TR_ASCII_WORDS) + ")\\b")
 	# Whole-file, multiline: [^"\\] matches newlines too, so a value spanning lines is caught.
 	_re_scene_prop = _make("(?m)^[ \\t]*(text|tooltip_text|placeholder_text)[ \\t]*=[ \\t]*\"((?:[^\"\\\\]|\\\\.)*)\"")
+	_re_seam_id = _make("^[a-z][a-z0-9_]*[.][a-z][a-z0-9_]*$")
 	_re_key = _make("^[A-Z0-9_]+$")
 	_re_filler = _make(SCENE_FILLER_RE)
 	_load_csv_keys()
@@ -239,6 +242,15 @@ func _check_script_line(path: String, line_no: int, line: String) -> void:
 			continue
 		if lit.begins_with("res://") or lit.begins_with("user://"):
 			continue  # asset/save paths are addresses, not player-visible text
+		# A NAMESPACED IDENTIFIER is an address too. The event engine's read surface is named in
+		# the GDD's own vocabulary — `musteri.satisfaction`, `urun.is_live`, `arge.tier` — and
+		# those are Turkish words by design: the registry documents them, content authors type
+		# them, and SEAM_REGISTRY.md is the list. They are not copy and they cannot become copy,
+		# because nothing player-facing looks like `lower_snake.lower_snake`. Exempting the
+		# SHAPE rather than the files keeps this checker looking at the real strings in the same
+		# file — which is the reason its header gives for preferring per-line marks to a SKIP.
+		if _re_seam_id.search(lit) != null:
+			continue
 		if _re_trchar.search(lit) != null:
 			_hits.append("%s:%d [tr-char] \"%s\"" % [path, line_no, lit.left(60)])
 		elif _re_word.search(lit) != null:

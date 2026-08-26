@@ -86,9 +86,9 @@ const SOURCE_MAP := {
 	"ev_mvp_version_ship_moment": "factory:product_system:1266 (version_ship)",
 	"ev_mvp_iter_decision_intro": "factory:product_system:_end_round (iter_intro)",
 	"ev_phase_gate_": "factory:phase_gate_system:130 (gate)",
-	"ev_angel_frank_seed": "factory:angel_round_system (seed offer)",
-	"ev_angel_hire_nudge": "factory:angel_round_system (hire nudge)",
-	"ev_shutter_warning": "factory:endings_system:118 (shutter)",
+	"funding.frank_cheque": "card:funding/frank_cheque.json",
+	"funding.hire_nudge": "card:funding/hire_nudge.json",
+	"funding.shutter_warning": "card:funding/shutter_warning.json",
 	"ev_pivot_offer": "factory:endings_system:169 (pivot)",
 	"ev_acquisition_offer": "factory:endings_system:224 (acquisition)",
 }
@@ -226,7 +226,7 @@ static func _on_fire(event_id: String) -> void:
 
 
 static func _source_of(event_id: String) -> String:
-	if EventManager._all_events.has(event_id):
+	if EventGate.is_catalogued(event_id):
 		return "pool"
 	for prefix in SOURCE_MAP.keys():
 		if event_id.begins_with(prefix):
@@ -329,14 +329,14 @@ static func _drain_modals() -> void:
 	# it ever trips, that IS a finding (an event re-queueing itself inside its own
 	# resolution) and it says so instead of hanging the probe.
 	var guard: int = 0
-	while EventManager._active_event_id != "":
+	while EventGate.active_id() != "":
 		guard += 1
 		if guard > 64:
 			print("PROBE ERROR drain guard tripped at day %d on id=%s — an event is re-queueing inside its own resolution" % [
-				GameState.day, EventManager._active_event_id])
+				GameState.day, EventGate.active_id()])
 			return
-		var id: String = EventManager._active_event_id
-		var ev: GameEvent = EventManager._active_event
+		var id: String = EventGate.active_id()
+		var ev: GameEvent = EventGate.active_card()
 		if ev == null:
 			print("PROBE ERROR active id=%s with null event object" % id)
 			return
@@ -353,7 +353,7 @@ static func _drain_modals() -> void:
 				var cid: String = String(m.get("customer_id", ""))
 				_discount_uses[cid] = int(_discount_uses.get(cid, 0)) + 1
 				print("PROBE DISCOUNT day=%d cust=%s uses=%d" % [GameState.day, cid, int(_discount_uses[cid])])
-		EventManager.resolve_choice(id, idx)
+		EventGate.resolve(id, idx)
 
 
 # Retention preference, BY MODIFIER TYPE rather than by row index or label. Index is wrong
@@ -375,7 +375,7 @@ static func _pick_choice(ev: GameEvent) -> int:
 	# complaint and read as tended.
 	if _preset == "b2c_neglect" and ev.id.begins_with("ev_ps_"):
 		for idx in range(ev.choices.size() - 1, -1, -1):
-			if EventManager.is_condition_met(ev.choices[idx].unlock_condition):
+			if EventGate.condition_met(ev.choices[idx].unlock_condition, EventGate.active_context()):
 				return idx
 	# Runs the modal's OWN gate (EventManager.is_condition_met on unlock_condition —
 	# event_modal.gd:330), not a mirror of it, so the probe can never pick a row a human
@@ -383,7 +383,7 @@ static func _pick_choice(ev: GameEvent) -> int:
 	if ev.id.begins_with("ev_b2b_retain_"):
 		for want_type in RETAIN_PREFERENCE:
 			for idx in ev.choices.size():
-				if not EventManager.is_condition_met(ev.choices[idx].unlock_condition):
+				if not EventGate.condition_met(ev.choices[idx].unlock_condition, EventGate.active_context()):
 					continue
 				for m in ev.choices[idx].modifiers:
 					if String(m.get("type", "")) == want_type:
@@ -397,7 +397,7 @@ static func _pick_choice(ev: GameEvent) -> int:
 	var first_unlocked: int = -1
 	for offset in ev.choices.size():
 		var idx: int = (want + offset) % ev.choices.size()
-		if EventManager.is_condition_met(ev.choices[idx].unlock_condition):
+		if EventGate.condition_met(ev.choices[idx].unlock_condition, EventGate.active_context()):
 			first_unlocked = idx
 			break
 	if first_unlocked < 0:
@@ -416,7 +416,7 @@ static func _pick_choice(ev: GameEvent) -> int:
 	var best: int = first_unlocked
 	var best_cost: int = -_cash_delta_of(ev.choices[first_unlocked])
 	for idx in ev.choices.size():
-		if not EventManager.is_condition_met(ev.choices[idx].unlock_condition):
+		if not EventGate.condition_met(ev.choices[idx].unlock_condition, EventGate.active_context()):
 			continue
 		var cost: int = -_cash_delta_of(ev.choices[idx])
 		if cost < best_cost:

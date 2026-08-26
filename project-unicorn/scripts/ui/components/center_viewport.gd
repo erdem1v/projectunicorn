@@ -18,6 +18,7 @@ const TAB_SCENES := {
 	"sales": preload("res://scenes/tabs/SalesTab.tscn"),
 	"finance": preload("res://scenes/tabs/FinanceTab.tscn"),  # Spec 6 — hosts the Yatırım sub-page
 	"personal": preload("res://scenes/tabs/PersonalTab.tscn"),  # Kişisel (onaylı tasarım 10a)
+	"rnd": preload("res://scenes/tabs/RnDTab.tscn"),
 }
 # preload (global class cache'e bağımlılık yok — yeni class_name + headless tuzağı).
 const PAGE_CHROME := preload("res://scripts/ui/components/tab_page_chrome.gd")

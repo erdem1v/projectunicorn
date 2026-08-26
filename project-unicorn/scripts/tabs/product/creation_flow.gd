@@ -1,30 +1,33 @@
 extends Control
 
 # ============================================================================
-# Kurma akışı (Rev3, plan Step 9 "Creation flow") — üç adım:
-#   01 YOL (B2C/B2B yol kartları) → 02 TİP (tip kart gridi) → 03 ÖZELLİKLER
-#   (feature listesi + TriangleRadar önizleme + ÜRÜN PROFİLİ + commit kartı).
-# Tek Control; adım geçişinde içerik free+rebuild (açık navigasyonda meşru).
-# Seçim değişikliği YALNIZ alt bandı günceller (liste yeniden kurulmaz).
+# KONSEPT — sürüm planının kurulduğu ekran (GDD rev 6.1 §3).
 #
-# v2 modu (setup({step: 3, v2: true})): kimlik mvp_* flag'lerinden, tip sabit,
-# ad Label (LineEdit değil); ship edilmiş feature'lar ön-işaretli, soluk,
-# geri alınamaz. Havuz bittiğinde GÜÇLENDİR moduna düşer: ship edilmiş satırlar
-# STRENGTHEN_MAX_PER_VERSION tavanlı güçlendirme seçimi olur.
+#   v1 : 01 YOL (B2C/B2B) → 02 TİP → 03 KONSEPT
+#   v2+: yol/tip SORULMAZ; akış doğrudan Konsept'te açılır.
+#
+# KONSEPT TEK EKRAN, İKİ SÜTUNDUR (direktör hükmü 2026-08-25). Şeritteki
+# "01 ÖZELLİKLER → 02 EKİP" bir ilerleme değil TELGRAFtır: iki kalem de aynı
+# sayfada durur, çünkü oyuncu kademeyi seçerken kimin taşıyacağını görmelidir.
+#   · sol  : FeatureLinesView — 9 hat × 3 kademe (§12)
+#   · sağ  : ÜRÜN PROFİLİ (üçgen + eksen okumaları) + ProductTeamPanel
+#   · alt  : onay kartı (ad · toplam efor/maliyet/süre · Onayla ve Başlat)
+#
+# HAT MODELİ, DÜZ ÖZELLİK DEĞİL. `_selected` PLANLANMIŞ KADEME kimlikleri tutar.
+# Bu ekran hat durumlarına ASLA yazmaz — plan build'e gider, kademeler yalnız
+# yayında işlenir (ProductSystem._apply_line_plan_at_ship). §12.3'ün "iptal
+# hiçbir şeyi geri almaz" cümlesi bu yüzden bir geri-alma koduna değil, YAPIYA
+# dayanır. GÜÇLENDİR modu emekli: bir hattı yükseltmek zaten güçlendirmedir.
 #
 # KİLİTLİ mod (setup({locked: true}) — router "tracker" id'sini buraya bağlar):
-# eski kalıp geri geldi (Erdem, 2026-07-17): build sürerken AYNI Özellikler
-# ekranı görünür ama kilitli — build'in seçimi işaretli, satırlar inert, seçili
-# olmayanlar soluk; commit kartının yerinde build durum kartı (faz satırı +
-# ilerleme + ~gün + Beta'da "Yayınla →" + iptal). Takip ayrıca yüzen Build
-# Takip Kartı'nda; ikisi de aynı ProductSystem API'larını okur.
+# yapım sürerken AYNI ekran görünür ama plan kilitlidir; hat listesi okunur
+# kalır, tıklanmaz. Onay kartının yerinde yapım durum kartı durur. EKİP paneli
+# kilitli modda da CANLIDIR — §3: "Lider yapım sürerken ayrılırsa … oyuncu ekip
+# panelinden yeni lider atayabilir."
 #
-# Ekonomiye TEK yazma yolu: ProductSystem.start_build / start_version_build
-# (maliyet tahsili start_build İÇİNDE — UI nakde asla dokunmaz, Write-Through).
-#
-# Working karar (done-mesajında bayraklı): feature'larda kategori alanı yok —
-# 03'ün kategori grupları DOMINANT EKSEN üzerinden türetilir (İNOVASYON /
-# KARARLILIK / DENEYİM), başlık "%s · %d/%d".
+# İKİ YAZMA YOLU, İKİSİ DE SEAM: ekonomiye ProductSystem.start_line_build
+# (maliyet tahsili onun içinde — UI nakde asla dokunmaz), kadroya
+# CharacterRegistry.assign_job/unassign_job (panel ikinci bir kadro tutmaz).
 # ============================================================================
 
 signal navigate_requested(view_id: String, args: Dictionary)
@@ -33,52 +36,59 @@ signal navigate_requested(view_id: String, args: Dictionary)
 # ile aynı üçlü. Sabit kopya EMEKLİ: renk körü paleti "stability"yi çalışma
 # zamanında çevirir, const bir kopya ilk okunan renge çakılırdı.
 
-const _PHASE_ORDER := ["iteration", "development", "bugfix"]
 # Build Bar (Software Inc. segment grameri, 2026-08-19): tracker kartının çubuğu yüzen
 # BuildHUD ve ODA monitörüyle AYNI sahne — sahne preload, class_name yok (paylaşılan
 # checkout'ta class-cache tuzağı; center_viewport.gd:21 ihtiyatı).
 const _BUILD_BAR_SCENE := preload("res://scenes/ui/components/BuildBar.tscn")
-## Build fazının ekran adı. Faz id'si state'te yaşar, sözcük CSV'de. Bir CONST olamaz:
-## const dosya yüklenirken değerlenir — o an daha bir dil seçilmemiştir.
-const _PHASE_KEYS := {"iteration": "BUILD_PHASE_DESIGN", "development": "BUILD_PHASE_DEVELOPMENT",
-	"bugfix": "BUILD_PHASE_BETA"}
+
+## S4a'nın iki sütunu. Hat listesi geniş (27 kademe, üç sütunlu kart gövdesi),
+## sağ sütun profil+ekip taşır. Oran YERLEŞİMDİR — tema değil (UI/STYLE LAW md.4).
+const COL_RATIO_LINES := 1.9
+const COL_RATIO_SIDE := 1.0
+const RADAR_H := 190
+## Kilitli tip kartının soluklaştırması. Okunur kalmalı: kartın İŞİ Erken Erişim'in
+## ne getireceğini söylemek, o yüzden silik değil YARI-GERİ çekilmiş.
+const LOCKED_CARD_ALPHA := 0.55
+
+## CharacterRegistry.assign_job'ın makine gerekçeleri → ekran sözcüğü. Kod state'te
+## yaşar, sözcük CSV'de; tablo yalnız ANAHTAR tutar, o yüzden const olabilir.
+const TEAM_REFUSAL_KEYS := {
+	"job_cap": "PROD_TEAM_REFUSE_JOB_CAP",
+	"not_your_job": "PROD_TEAM_REFUSE_ROLE",
+	"inactive": "PROD_TEAM_REFUSE_INACTIVE",
+	"unknown": "PROD_TEAM_REFUSE_OTHER",
+	"unknown_job": "PROD_TEAM_REFUSE_OTHER",
+}
 
 var _step: int = 1
 var _v2_mode: bool = false
 var _locked_mode: bool = false           # build sürüyor — görüntüleme, seçim yok
-var _strengthen_mode: bool = false
 var _market: String = ""                 # "b2c" | "b2b"
 var _type_id: String = ""
-var _selected: Array[String] = []        # yeni feature seçimi
-var _strengthen: Array[String] = []      # GÜÇLENDİR seçimi (v2 havuz-bitti modu)
-var _shipped_ids: Array[String] = []     # v2: canlı üründeki feature'lar
+## HAT MODELİ (rev 6.1 §12): artık düz feature kimlikleri DEĞİL, PLANLANMIŞ KADEME
+## kimlikleri. Anlamı değişti, sahibi değişmedi — bu sürümün almaya niyetlendiği
+## kademeler burada durur ve hat durumlarına YALNIZ YAYINDA yazılır
+## (ProductSystem._apply_line_plan_at_ship). İptal bu yüzden hiçbir şeyi geri almaz.
+var _selected: Array[String] = []
 var _prefill: Dictionary = {}            # iptal edilen build'in {type, features, name}
 var _suggest_i: int = 0
 
 # 03 yerinde-güncelleme referansları
-var _rows: Dictionary = {}               # fid -> {card, check}
-var _group_headers: Array = []           # [{label, title, ids}]
-var _sel_count_label: Label = null
+var _lines_view: FeatureLinesView = null
+var _team_panel: ProductTeamPanel = null
 var _radar: TriangleRadar = null
-var _legend: Dictionary = {}             # axis -> {bar, plus}
-var _risk_label: Label = null
+var _legend: Dictionary = {}             # axis -> {bar, value}
 var _totals_label: Label = null
 var _cash_label: Label = null
 var _commit_btn: Button = null
 var _name_edit: LineEdit = null
-var _sorumlu: OptionButton = null
+## Onay kartının tek not satırı: plan geçersizse REDDİN GEREKÇESİ, geçerliyse §5'in
+## cila hatırlatması. İki ayrı satır tutmak boş bir satır bırakırdı — not YA reddi
+## YA da ipucunu söyler, ikisi aynı anda anlamlı değil.
+var _note_label: Label = null
 
-# Kilitli mod durum kartı referansları
-var _status_phase_labels: Array = []     # 3 Label (TASARIM/GELİŞTİRME/BETA)
+# Kilitli mod durum kartı referansı
 var _status_bar: Control = null          # BuildBar örneği (kendi modelini kendi çeker)
-var _status_line: Label = null
-var _beta_line: Label = null
-var _publish_btn: Button = null
-# Faz geçiş kararı: tavan satırı + faz başına TEK buton (Geliştirmeye geç / Beta'ya geç)
-var _iter_line: Label = null
-var _iter_decision_row: HBoxContainer = null
-var _enter_dev_btn: Button = null
-var _enter_beta_btn: Button = null
 
 
 func setup(args: Dictionary) -> void:
@@ -96,23 +106,17 @@ func setup(args: Dictionary) -> void:
 		_type_id = lb.sub_product_type_id
 		_market = ProductCatalog.get_market_type(_type_id)
 		_v2_mode = lb.is_version_build
-		if _v2_mode:
-			for fid in GameState.get_flag("mvp_components", []):
-				_shipped_ids.append(String(fid))
-		for fid in lb.feature_ids:
-			if not _shipped_ids.has(String(fid)):
-				_selected.append(String(fid))
-		for fid in lb.strengthened_feature_ids:
-			_strengthen.append(String(fid))
+		# Hat modeli: kilitli görünüm build'in PLANINI okur. Ship edilmiş kademeler
+		# ayrıca taşınmaz — onlar zaten hat durumlarında (ProductState.line_tier) ve
+		# hat listesi onları kendi çiziyor (soluk + ✓).
+		for sid in lb.planned_step_ids:
+			_selected.append(String(sid))
 		_rebuild()
 		return
 	if _v2_mode:
 		_step = 3
 		_type_id = String(GameState.get_flag("mvp_sub_product_type_id", ""))
 		_market = String(GameState.get_flag("mvp_market_type", "b2c"))
-		for fid in GameState.get_flag("mvp_components", []):
-			_shipped_ids.append(String(fid))
-		_strengthen_mode = _pool_exhausted()
 	elif not _prefill.is_empty():
 		# İptal edilen build'in seçimi geri gelir (yanlış-tık affı) — ya da sekme değişiminde
 		# saklanan TASLAK (S2-33, Kalibrasyon Turu A §16): aynı şekil, artı yalnız yol seçilmişse
@@ -133,9 +137,17 @@ func setup(args: Dictionary) -> void:
 
 
 func repaint() -> void:
-	# Saatlik/günlük sinyaller: yalnız alt bandın rakamları oynar (kasa, ~gün);
-	# liste ve kartlara dokunulmaz (repaint-fırtınası korkuluğu).
-	if _step == 3 and _radar != null and is_instance_valid(_radar):
+	# Saatlik/günlük sinyaller. Alt bandın rakamları oynar (kasa, ~gün) VE iki alt
+	# görünüm kendi tazelemesini yapar: hat satırlarının kapı durumu ile ekip
+	# satırlarının müsaitliği İK'da değişir (eğitim biter, izin döner) ve o değişimi
+	# bu ekran üretmez — okur. İkisi de yerinde tazeler, ağacı yeniden kurmaz.
+	if _step != 3:
+		return
+	if _lines_view != null and is_instance_valid(_lines_view):
+		_lines_view.repaint()
+	if _team_panel != null and is_instance_valid(_team_panel):
+		_team_panel.repaint()
+	if _radar != null and is_instance_valid(_radar):
 		_update_dynamic()
 
 
@@ -145,26 +157,16 @@ func _rebuild() -> void:
 	for c in get_children():
 		remove_child(c)
 		c.queue_free()
-	_rows.clear()
-	_group_headers.clear()
 	_legend.clear()
-	_sel_count_label = null
+	_lines_view = null
+	_team_panel = null
 	_radar = null
-	_risk_label = null
 	_totals_label = null
 	_cash_label = null
 	_commit_btn = null
 	_name_edit = null
-	_sorumlu = null
-	_status_phase_labels.clear()
+	_note_label = null
 	_status_bar = null
-	_status_line = null
-	_beta_line = null
-	_publish_btn = null
-	_iter_line = null
-	_iter_decision_row = null
-	_enter_dev_btn = null
-	_enter_beta_btn = null
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -193,11 +195,18 @@ func _rebuild() -> void:
 func _make_breadcrumb() -> Control:
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 8)
-	var items := [tr("PROD_STEP_PATH"), tr("PROD_STEP_TYPE"), tr("PROD_STEP_FEATURES")]
+	# §3 — v1: Yol → Tip → Özellikler. v2+: yol/tip SORULMAZ, şerit S4'ün iki adımlı
+	# telgrafına döner (01 ÖZELLİKLER → 02 EKİP). İkisi TEK EKRANDA yan yana duruyor
+	# (direktör hükmü 2026-08-25), yani ikinci kalem bir sonraki sayfa değil, aynı
+	# sayfanın sağ sütunu — şerit ilerleme değil TELGRAF.
+	var items := [tr("PROD_STEP_FEATURES"), tr("PROD_TEAM_HEADER")] if _v2_mode \
+		else [tr("PROD_STEP_PATH"), tr("PROD_STEP_TYPE"), tr("PROD_STEP_FEATURES")]
 	for i in items.size():
 		if i > 0:
 			hb.add_child(UiFactory.make_label("→", &"SectionLabel", UiTokens.INK_DIM))
-		var active: bool = (_step == i + 1)
+		# v2'de şerit iki kalemli ve HER İKİSİ de bu ekranda; ilki "buradasın" diye
+		# yanar, ikincisi sağ sütunu telgraflar (S4a: 02 sönük çizilmiş).
+		var active: bool = (i == 0) if _v2_mode else (_step == i + 1)
 		hb.add_child(UiFactory.make_label(items[i], &"SectionLabel",
 			UiTokens.ACCENT_DEEP if active else UiTokens.INK_DIM))
 	return hb
@@ -240,13 +249,12 @@ func _make_path_card(market: String, kicker: String, big: String, desc: String, 
 	var pills := HFlowContainer.new()
 	pills.add_theme_constant_override("h_separation", 6)
 	pills.add_theme_constant_override("v_separation", 4)
-	var shown: int = 0
-	for st in ProductCatalog.get_all_sub_product_types():
-		if String(st.get("market_type", "")) != market or shown >= 3:
-			continue
+	# "Örnekler" OYNANABİLİR olanlardır. Kilitli havuzdan bir ad göstermek yolu
+	# olmayan bir kapı vaat ederdi: oyuncu B2B'yi o çipe bakarak seçer ve tip
+	# ekranında o ürünü tıklayamaz.
+	for st in ProductCatalog.playable_types(market):
 		pills.add_child(UiFactory.make_pill(ProductCatalog.type_name(String(st.get("id", ""))),
 			UiTokens.NEUTRAL_BADGE_BG, UiTokens.NEUTRAL_BADGE_FG, false))
-		shown += 1
 	vb.add_child(pills)
 	for b in bullets:
 		var bl := UiFactory.make_label("· %s" % b, &"BodySerif", UiTokens.INK_MUTED)
@@ -333,10 +341,13 @@ func _build_step2(body: VBoxContainer) -> void:
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
 	body.add_child(grid)
-	for st in ProductCatalog.get_all_sub_product_types():
-		if String(st.get("market_type", "")) != _market:
-			continue
+	# §12.11 MÜHÜRLÜ: oynanabilir alt-tipler ÖNCE, sonra yol başına ÜÇ kilitli kart.
+	# Katalogdaki her B2C/B2B kaydını dökmek ARTIK YANLIŞ olurdu — o kayıtların
+	# çoğunun hat içeriği yok ve kartı tıklayan oyuncu boş bir Konsept'e düşerdi.
+	for st in ProductCatalog.playable_types(_market):
 		grid.add_child(_make_type_card(st))
+	for tid in ProductCatalog.locked_type_ids(_market):
+		grid.add_child(_make_locked_type_card(String(tid)))
 
 
 func _make_type_card(st: Dictionary) -> Control:
@@ -362,8 +373,47 @@ func _make_type_card(st: Dictionary) -> Control:
 	var pm := UiFactory.make_label(ProductCatalog.type_tradeoff(String(st.get("id", ""))), &"QuoteSerif")
 	pm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(pm)
-	_set_mouse_ignore(vb)
+	HRUiShared.set_mouse_ignore(vb)
 	card.gui_input.connect(_on_type_card_input.bind(String(st.get("id", ""))))
+	return card
+
+
+## §3 tip ekranı telgrafı (MÜHÜRLÜ): "solo-gerçekçi olmayan alt-tipler kilitli-görünür
+## kartlardır; küçük 'Erken Erişim' etiketi + gerekçe satırı 'Daha büyük ekip ister.'
+## taşırlar." Kart TIKLANMAZ ve gri değil SOLUK çizilir — okunabilir kalır, çünkü işi
+## Erken Erişim'in ne getireceğini söylemek.
+##
+## §12.11'in AÇIK SLOT'u ayrı bir gerekçe taşır: o bir ürün değil, henüz verilmemiş
+## bir ruling. Ona ürünün gerekçesini yazmak yalan olurdu.
+func _make_locked_type_card(type_id: String) -> Control:
+	var is_slot: bool = type_id == ProductCatalog.TYPE_SCREEN_SLOT
+	var card := PanelContainer.new()
+	card.theme_type_variation = &"CardPanel"
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.modulate.a = LOCKED_CARD_ALPHA
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 6)
+	card.add_child(vb)
+
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 8)
+	head.add_child(UiFactory.make_label(
+		tr("PROD_TYPE_SLOT_NAME") if is_slot else ProductCatalog.type_name(type_id), &"NameSerif"))
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(spacer)
+	head.add_child(UiFactory.make_badge(tr("PROD_TYPE_EA_TAG"), &"neutral"))
+	vb.add_child(head)
+
+	if not is_slot:
+		vb.add_child(UiFactory.make_label(ProductCatalog.type_category(type_id), &"SectionLabel"))
+	var reason := UiFactory.make_label(
+		tr("PROD_TYPE_SLOT_REASON") if is_slot else tr("PROD_TYPE_LOCKED_REASON"),
+		&"RowMeta", UiTokens.INK_MUTED)
+	reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb.add_child(reason)
+	HRUiShared.set_mouse_ignore(vb)
 	return card
 
 
@@ -414,181 +464,180 @@ func _build_step3(body: VBoxContainer) -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(spacer)
-	_sel_count_label = UiFactory.make_label("", &"SectionLabel", UiTokens.ACCENT_DEEP)
-	head.add_child(_sel_count_label)
 	if _locked_mode:
-		# Kilit telgrafı: seçim sayacı yerine durum rozeti (satırlar inert).
-		_sel_count_label.visible = false
+		# Kilit telgrafı: durum rozeti (hat satırları inert).
 		head.add_child(UiFactory.make_badge(tr("LOCK_BUILD_IN_PROGRESS"), &"accent"))
 	body.add_child(head)
 
-	# Feature listesi — kategori = dominant eksen (working gruplama), her grup
-	# başlık + iki kolonlu grid.
-	var pool: Array = ProductCatalog.get_feature_pool(_type_id)
-	for axis in ProductUiShared.AXIS_KEYS:
-		var group_ids: Array[String] = []
-		var group_feats: Array = []
-		for f in pool:
-			if _dominant_axis(f) == axis:
-				group_ids.append(String(f.get("id", "")))
-				group_feats.append(f)
-		if group_feats.is_empty():
-			continue
-		var header := UiFactory.make_label("", &"SectionLabel")
-		body.add_child(header)
-		_group_headers.append({
-			"label": header,
-			"title": UiTokens.tr_upper(ProductUiShared.axis_label(String(axis))),
-			"ids": group_ids,
-		})
-		var grid := GridContainer.new()
-		grid.columns = 2
-		grid.add_theme_constant_override("h_separation", 10)
-		grid.add_theme_constant_override("v_separation", 8)
-		body.add_child(grid)
-		for f in group_feats:
-			grid.add_child(_make_feature_row(f))
+	# --- TEK EKRAN, İKİ SÜTUN (direktör hükmü 2026-08-25) ---------------------
+	# S4a hat listesini, EKİP panelini ve onay bloğunu TEK artboard'da çiziyor:
+	# oyuncu kademeyi seçerken kimin taşıyacağını görüyor. Şeritteki "02 EKİP"
+	# bir sonraki sayfa değil, sağdaki sütun.
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 14)
+	cols.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(cols)
+
+	var left := VBoxContainer.new()
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.size_flags_stretch_ratio = COL_RATIO_LINES
+	cols.add_child(left)
+	_lines_view = FeatureLinesView.new()
+	_lines_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.add_child(_lines_view)
+	_lines_view.setup(_type_id, _selected)
+	_lines_view.selection_changed.connect(_on_lines_selection_changed)
+	_lines_view.train_or_hire_requested.connect(_on_train_or_hire_requested)
+	# "→ Araştır" canlı bağı. SAVUNMALI BAĞLANIR ve dize üzerinden: sinyal Ar-Ge paketiyle
+	# geliyor, ve tipli bir `_lines_view.research_requested` yazımı sinyal henüz yokken
+	# DERLEME hatası olurdu — bu sayfa da o an hiç açılmazdı.
+	if _lines_view.has_signal("research_requested"):
+		_lines_view.connect("research_requested", _on_research_requested)
+	if _locked_mode:
+		# Yapım sürerken plan DEĞİŞMEZ; liste okunur kalır ama tıklanmaz.
+		HRUiShared.set_mouse_ignore(_lines_view)
+
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.size_flags_stretch_ratio = COL_RATIO_SIDE
+	right.add_theme_constant_override("separation", 12)
+	cols.add_child(right)
+	right.add_child(_make_profile_card())
+	# §3 — ekip çoklu seçim, kurucu dahil, ve LİDER satırı. Kilitli modda da durur:
+	# "Lider yapım sürerken ayrılırsa oyuncu ekip panelinden YENİ LİDER ATAYABİLİR."
+	_team_panel = ProductTeamPanel.new()
+	_team_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_child(_team_panel)
+	var lb2: FeatureBuild = ProductSystem.get_active_build()
+	var seed_lead: String = lb2.lead_engineer_id if (_locked_mode and lb2 != null) else _default_lead_id()
+	_team_panel.setup(_team_seed_ids(lb2), seed_lead)
+	_team_panel.selection_changed.connect(_on_team_selection_changed)
+	_team_panel.lead_changed.connect(_on_lead_changed)
 
 	body.add_child(_make_bottom_band())
-	for fid in _rows.keys():
-		_apply_row_style(String(fid))
 	_update_dynamic()
 
 
-func _dominant_axis(f: Dictionary) -> String:
-	# Feature'ın en çok beslediği eksen (eşitlikte inno→stab→exp — engine kuralıyla aynı).
-	var dc: Dictionary = f.get("dimension_contribution", {})
-	var best: String = "innovation"
-	var best_v: float = -INF
-	for axis in ProductUiShared.AXIS_KEYS:
-		var v: float = float(dc.get(axis, 0))
-		if v > best_v:
-			best_v = v
-			best = String(axis)
-	return best
+## Kurucu her zaman listede ve varsayılan taşıyıcıdır (§3).
+func _default_lead_id() -> String:
+	var f: Character = CharacterRegistry.get_founder()
+	return f.id if f != null else ""
 
 
-func _make_feature_row(f: Dictionary) -> Control:
-	var fid: String = String(f.get("id", ""))
-	var shipped: bool = _shipped_ids.has(fid)
-	var card := PanelContainer.new()
-	card.theme_type_variation = &"CardPanelTight"
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var hb := HBoxContainer.new()
-	hb.add_theme_constant_override("separation", 8)
-	card.add_child(hb)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 3)
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hb.add_child(col)
-	var rich := RichTextLabel.new()
-	rich.theme_type_variation = &"BodyRich"
-	rich.bbcode_enabled = true
-	rich.fit_content = true
-	rich.scroll_active = false
-	rich.text = "[b]%s[/b]  %s" % [ProductCatalog.feature_name(String(f.get("id", ""))),
-		ProductCatalog.feature_voice(String(f.get("id", "")))]
-	col.add_child(rich)
-	var info := UiFactory.make_label(ProductUiShared.feature_info_line(f), &"RowMeta")
-	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(info)
-	var check := UiFactory.make_label("✓", &"NameSerif", UiTokens.ACCENT_DEEP)
-	check.visible = false
-	check.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	hb.add_child(check)
-	_rows[fid] = {"card": card, "check": check}
-
-	var research_locked: bool = bool(f.get("requires_research", false)) and not shipped
-	var frozen_shipped: bool = shipped and not _strengthen_mode  # v2: ön-işaretli, geri alınamaz
-	if research_locked:
-		var badge := UiFactory.make_badge(tr("PROD_RESEARCH_REQUIRED"), &"neutral")
-		badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		hb.add_child(badge)
-		card.modulate = Color(1, 1, 1, 0.5)
-		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.focus_mode = Control.FOCUS_NONE
-	elif _locked_mode:
-		# Kilitli görüntüleme: hiçbir satır etkileşimli değil; işaret/soluma
-		# _apply_row_style'da (build'in seçimi işaretli, kalanlar soluk).
-		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.focus_mode = Control.FOCUS_NONE
-	elif frozen_shipped:
-		check.visible = true
-		check.add_theme_color_override("font_color", UiTokens.INK_DIM)
-		card.modulate = Color(1, 1, 1, 0.55)
-		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.focus_mode = Control.FOCUS_NONE
-	else:
-		_set_mouse_ignore(hb)
-		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		card.gui_input.connect(_on_feature_row_input.bind(fid))
-	return card
+## Kilitli modda build'in kendi ekibi; aksi hâlde Build işine ATANMIŞ olanlar —
+## oyuncu Görevler'de kimi build'e koyduysa Konsept onu seçili açar.
+func _team_seed_ids(_lb: FeatureBuild) -> Array:
+	var out: Array[String] = []
+	for c in ProductSystem.build_carriers():
+		out.append(c.id)
+	if out.is_empty():
+		var f: Character = CharacterRegistry.get_founder()
+		if f != null:
+			out.append(f.id)
+	return out
 
 
-func _on_feature_row_input(ev: InputEvent, fid: String) -> void:
-	if not _is_left_click(ev):
+## §12.0 "atama açar": panelin seçimi HR'ın BUILD işine YAZILIR, panel ikinci bir kadro
+## TUTMAZ. Tutsaydı §6.1'in her gün okuduğu liste (build_carriers) ile ekranın gösterdiği
+## liste ayrışırdı — Write-Through Yasası'nın tam olarak yasakladığı şey. Yazar tek:
+## CharacterRegistry; burası yalnız hangi seam'in çağrılacağına karar veriyor.
+func _on_team_selection_changed(ids: Array) -> void:
+	var want: Dictionary = {}
+	for raw in ids:
+		want[String(raw)] = true
+	for c in ProductSystem.build_carriers():
+		if not want.has(c.id):
+			CharacterRegistry.unassign_job(c.id, HRConstants.JOB_BUILD)
+	var refusal: String = ""
+	for cid in want.keys():
+		var id: String = String(cid)
+		var c2: Character = CharacterRegistry.get_character(id)
+		if c2 == null:
+			continue
+		# AR-GE §5.0'IN TERS YÖNÜ TAM OLARAK BU SATIR. Eskiden burada `clear_jobs` vardı —
+		# "önce bırak, sonra ata" — ve o çağrı bugün araştırmayı da düşürür, duraklamış
+		# defteri de siler: kurucu araştırırken oyuncu bir yapım başlatsa araştırma
+		# GERİ DÖNÜLEMEZ biçimde giderdi. §5.0 bunun yerine duraklamayı emrediyor:
+		# "kurucu araştırma yaparken yeni bir yapım başlatır → araştırma duraklar, yapım
+		# başlar." Çıplak `assign_job` bunu kendisi yapıyor (yer değiştirme tek yazarda),
+		# ve kurucuya özel dal artık gereksiz — kural kurucuya değil KİŞİYE bakıyor.
+		var err: String = CharacterRegistry.assign_job(id, HRConstants.JOB_BUILD)
+		if err != "":
+			refusal = err
+	if refusal != "":
+		# Reddedilen atama ekranda KABUL EDİLMİŞ gibi duramaz: panel HR'dan yeniden kurulur
+		# ve gerekçe not satırına yazılır. Erteleme, paneli kendi sinyalinin altından
+		# çekmemek için (team_panel'in kendi `call_deferred` ihtiyatıyla aynı sebep).
+		_reseed_team.call_deferred(refusal)
 		return
-	if _strengthen_mode:
-		if _strengthen.has(fid):
-			_strengthen.erase(fid)
-		elif _strengthen.size() < ProductSystem.STRENGTHEN_MAX_PER_VERSION:
-			_strengthen.append(fid)
-		else:
-			return  # tavan dolu — sessiz ret
-	else:
-		if _selected.has(fid):
-			_selected.erase(fid)
-		else:
-			_selected.append(fid)
-	_apply_row_style(fid)
 	_update_dynamic()
 
 
-func _apply_row_style(fid: String) -> void:
-	var row: Dictionary = _rows.get(fid, {})
-	if row.is_empty():
+func _reseed_team(refusal_code: String) -> void:
+	if _team_panel == null or not is_instance_valid(_team_panel):
 		return
-	var card: PanelContainer = row.card
-	var check: Label = row.check
-	var shipped: bool = _shipped_ids.has(fid)
-	var picked: bool
+	var lb: FeatureBuild = ProductSystem.get_active_build()
+	var lead: String = lb.lead_engineer_id if (_locked_mode and lb != null) else _team_panel.lead_id()
+	_team_panel.setup(_team_seed_ids(lb), lead)
+	_update_dynamic()
+	if _note_label != null:
+		_note_label.text = tr(TEAM_REFUSAL_KEYS.get(refusal_code, "PROD_TEAM_REFUSE_OTHER"))
+
+
+## Yapımı taşıyan lider. Panel yoksa (kilitli görünüm henüz kurulmadıysa) build'in
+## kendi liderine, o da yoksa kurucuya düşer — §6.1 lidersiz de çalışır (çarpan 1,0).
+func _lead_id() -> String:
+	if _team_panel != null and is_instance_valid(_team_panel):
+		var id: String = _team_panel.lead_id()
+		if id != "":
+			return id
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if b != null and b.lead_engineer_id != "":
+		return b.lead_engineer_id
+	return _default_lead_id()
+
+
+func _on_lines_selection_changed(step_ids: Array) -> void:
+	_selected.clear()
+	for sid in step_ids:
+		_selected.append(String(sid))
+	_update_dynamic()
+
+
+func _on_train_or_hire_requested() -> void:
+	EventBus.tab_changed.emit("hr")   # LOC-DATA tab id — "→ Eğit / İşe al" canlı bağ
+
+
+## Kilitli K3'ün "→ Araştır" bağı: Ar-Ge sekmesini aç ve düğümü göster.
+## İKİ EMİR ARASINDA `self`'E DOKUNULMAZ. `tab_changed` SENKRON monte ediyor, yani ilk
+## emirden döndüğümüzde bu sayfa çoktan `queue_free` edilmiştir; buradan sonra bir alan
+## okumak ya da bir `await` yazmak serbest bırakılmış bir düğüme uzanmak olur.
+## Taslak kaybı YOK: sekme yönlendiricisi sayfayı bırakmadan önce `on_page_closing`
+## çağırıyor ve o an v1 taslağı `creation_draft` bayrağına yazılmış oluyor (S2-33).
+func _on_research_requested(node_id: String) -> void:
+	EventBus.tab_changed.emit("rnd")
+	EventBus.rnd_node_requested.emit(node_id, false)
+
+
+## §3 — lider yapım sürerken değiştirilebilir; yapım geriye dönük BOZULMAZ.
+func _on_lead_changed(id: String) -> void:
 	if _locked_mode:
-		# Görüntüleme: build'in yeni seçimi VE güçlendirme pick'leri işaretli;
-		# havuzun geri kalanı soluk (eski kilitli-kurma-ekranı grameri).
-		picked = _selected.has(fid) or _strengthen.has(fid)
-		if not picked and not shipped:
-			card.modulate = Color(1, 1, 1, 0.55)
-	else:
-		picked = _strengthen.has(fid) if _strengthen_mode else _selected.has(fid)
-	if picked:
-		# Seçili satır: soluk amber zemin + 2px amber çerçeve (onaylı mockup).
-		var sel: StyleBoxFlat = (card.get_theme_stylebox("panel") as StyleBoxFlat).duplicate()
-		sel.bg_color = UiTokens.AMBER_BG
-		sel.border_color = UiTokens.ACCENT
-		sel.set_border_width_all(2)
-		card.add_theme_stylebox_override("panel", sel)
-	else:
-		card.remove_theme_stylebox_override("panel")
-	check.visible = picked or shipped
-	check.add_theme_color_override("font_color",
-		UiTokens.ACCENT_DEEP if picked else UiTokens.INK_DIM)
+		ProductSystem.set_build_lead(id)
+	_update_dynamic()
 
 
 # --- Alt bant: radar + ÜRÜN PROFİLİ + commit ---------------------------------
 
-func _make_bottom_band() -> Control:
-	var band := HBoxContainer.new()
-	band.add_theme_constant_override("separation", 14)
+## S4a'nın sağ sütun başı: ÜRÜN PROFİLİ — üçgen + eksen okumaları.
+## Yüzde ve "+N" YOK: hat modelinde kazanç kademenin kendi satırında yazıyor
+## (§12.9), burada tekrarlanması aynı sayıyı iki yerde tutmak olurdu.
+func _make_profile_card() -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	box.add_child(UiFactory.make_section_header(tr("PROD_PROFILE")))
 	_radar = TriangleRadar.new()
-	_radar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_radar.size_flags_stretch_ratio = 1.0
-	band.add_child(_radar)
-
-	var legend := VBoxContainer.new()
-	legend.add_theme_constant_override("separation", 6)
-	legend.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	legend.size_flags_stretch_ratio = 1.2
-	legend.add_child(UiFactory.make_section_header(tr("PROD_PROFILE")))
+	_radar.custom_minimum_size = Vector2(0, RADAR_H)
+	box.add_child(_radar)
 	for axis in ProductUiShared.AXIS_KEYS:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
@@ -603,18 +652,19 @@ func _make_bottom_band() -> Control:
 		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(bar)
-		var plus := UiFactory.make_label("", &"RowMeta")
-		plus.custom_minimum_size = Vector2(34, 0)
-		plus.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		row.add_child(plus)
-		legend.add_child(row)
-		_legend[axis] = {"bar": bar, "plus": plus}
-	_risk_label = UiFactory.make_label("", &"RowMeta")
-	legend.add_child(_risk_label)
-	band.add_child(legend)
+		var val := UiFactory.make_label("", &"RowMeta")
+		val.custom_minimum_size = Vector2(40, 0)
+		val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		row.add_child(val)
+		box.add_child(row)
+		_legend[axis] = {"bar": bar, "value": val}
+	return UiFactory.make_card(box)
 
-	band.add_child(_make_build_status_card() if _locked_mode else _make_commit_card())
-	return band
+
+## Alt bant: yalnız onay (ya da kilitli modda durum kartı). Profil ve ekip artık
+## sağ sütunda yaşıyor.
+func _make_bottom_band() -> Control:
+	return _make_build_status_card() if _locked_mode else _make_commit_card()
 
 
 func _make_build_status_card() -> Control:
@@ -676,30 +726,19 @@ func _make_commit_card() -> Control:
 		sug.pressed.connect(_on_suggest_pressed)
 		name_row.add_child(sug)
 		vb.add_child(name_row)
-	vb.add_child(UiFactory.make_label(tr("PROD_LEAD_HEADER"), &"SectionLabel"))
-	_sorumlu = OptionButton.new()
-	var founder: Character = CharacterRegistry.get_founder()
-	_sorumlu.add_item(founder.character_name if founder != null else tr("HR_ROLE_FOUNDER"))
-	_sorumlu.set_item_metadata(0, founder.id if founder != null else "")
-	var idx: int = 1
-	# İş başındaki TÜM Ürün Geliştirme çalışanları — izindeki birini sorumlu olarak teklif
-	# etmek hata olur. Yalnız yazılımcı değil: koordinasyon çarpanı sorumlunun UYUM'undan
-	# geliyor, o yüzden bir tasarımcıyı ya da test uzmanını başa koymak gerçek bir seçenek.
-	for c in CharacterRegistry.get_active_employees():
-		if String(HRConstants.ROLE_GROUP.get(c.role, "")) in [
-				HRConstants.GROUP_PRODUCT_DESIGN, HRConstants.GROUP_DEVELOPMENT]:
-			_sorumlu.add_item(c.character_name)
-			_sorumlu.set_item_metadata(idx, c.id)
-			idx += 1
-	_sorumlu.select(0)  # varsayılan: kurucu
-	_sorumlu.item_selected.connect(func(_i: int) -> void: _update_dynamic())
-	vb.add_child(_sorumlu)
+	# SORUMLU DROPDOWN'I GİTTİ (§3, S4a). Yerini sağ sütundaki ProductTeamPanel aldı:
+	# tek lider seçen bir kutu değil, ÇOKLU SEÇİM + ayrı LİDER satırı. Ekip artık bir
+	# dropdown'ın tek satırı değil, ekranın yarısı — çünkü kimin taşıdığı §6.1'in
+	# efor formülünün girdisi ve oyuncu onu kademe seçerken görmeli.
 	_totals_label = UiFactory.make_label("", &"RowMeta")
 	_totals_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(_totals_label)
 	_cash_label = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
 	_cash_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(_cash_label)
+	_note_label = UiFactory.make_label("", &"MicroLabel", UiTokens.INK_MUTED)
+	_note_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb.add_child(_note_label)
 	_commit_btn = Button.new()
 	_commit_btn.theme_type_variation = &"CommitButton"
 	_commit_btn.pressed.connect(_on_commit_pressed)
@@ -718,46 +757,27 @@ func _on_suggest_pressed() -> void:
 func _update_dynamic() -> void:
 	if _radar == null or not is_instance_valid(_radar):
 		return
-	var base: Dictionary = _base_dims()
-	# Kilitli mod: radar CANLI build'i okur — tur kazançları ve event delta'ları
-	# görünsün (azalan getiri hissedilir bir gösterge ister). Yaratım modunda commit
-	# projeksiyonu aynen (önizleme).
-	var live_b: FeatureBuild = ProductSystem.get_active_build() if _locked_mode else null
-	var axes: Dictionary = QualityModel.dims_from_build(live_b) if live_b != null \
-		else ProductSystem.projected_axes(_selected, _strengthen, base)
+	# §11.2/§11.3 — eksen okumaları TEK ZİNCİRDEN gelir. Konsept'te gösterilen,
+	# planın TABAN CİLA (×1,00) projeksiyonudur: tur sayısı TASARIM'da belirlenir ve
+	# bu ekran onu bilemez, o yüzden kart tam tasarımı (×1,15) vaat etmez (§5).
+	var dims: Dictionary = ProductSystem.projected_line_dims(_type_id, _selected)
 	var maxv: float = TriangleRadar.DEFAULT_MAX
 	for axis in ProductUiShared.AXIS_KEYS:
-		maxv = maxf(maxv, float(axes[axis]))
-	_radar.set_axes(axes, maxv)
+		maxv = maxf(maxv, float(dims.get(axis, 0.0)))
+	_radar.set_axes(dims, maxv)
 	for axis in ProductUiShared.AXIS_KEYS:
 		var cell: Dictionary = _legend[axis]
 		var bar: ProgressBar = cell.bar
 		bar.max_value = maxv
-		bar.value = float(axes[axis])
-		var gain: int = int(round(float(axes[axis]) - float(base.get(axis, 0.0))))
-		(cell.plus as Label).text = "+%d" % gain
-	_risk_label.text = tr("PROD_BUG_RISK").format(
-		{"level": ProductUiShared.risk_label(ProductCatalog.selection_risk_band(_selected))})
-	# Sayaç + grup başlıkları ("%s · %d/%d") — işaretli satır sayılır.
-	var picked_total: int = _selected.size() + _strengthen.size()
-	_sel_count_label.text = tr("PROD_SELECTED_COUNT").format({"n": picked_total})
-	for gh in _group_headers:
-		var checked: int = 0
-		for fid in gh.ids:
-			if _selected.has(fid) or _strengthen.has(fid) \
-					or (_v2_mode and not _strengthen_mode and _shipped_ids.has(fid)):
-				checked += 1
-		(gh.label as Label).text = tr("PROD_GROUP_COUNT").format(
-			{"title": gh.title, "checked": checked, "total": (gh.ids as Array).size()})
-	# Kilitli mod: commit kartı yok — durum kartı güncellenir, gerisi atlanır.
+		bar.value = float(dims.get(axis, 0.0))
+		(cell.value as Label).text = Fmt.number(float(dims.get(axis, 0.0)), 1)
+	# Kilitli mod: onay kartı yok, plan da değişmiyor.
 	if _locked_mode:
-		_update_status()
 		return
-	# Toplamlar + kasa projeksiyonu + commit.
-	var efor: int = ProductCatalog.sum_efor(_selected) \
-		+ ProductSystem.STRENGTHEN_EFOR * _strengthen.size()
-	var cost: int = ProductCatalog.sum_cost(_selected)
-	var days: int = ProductSystem.estimate_build_days(_selected, _strengthen, _sorumlu_id())
+	# §3'ün maliyet dürüstlüğü: "Toplam efor · süre · bittiğinde kasada $X kalır".
+	var efor: int = ProductSystem.effort_ceiling(_selected)
+	var cost: int = ProductLines.sum_license_cost(_selected)
+	var days: int = ProductSystem.estimate_line_build_days(_selected, _lead_id())
 	if cost > 0:
 		_totals_label.text = tr("PROD_TOTALS_COST").format(
 			{"efor": efor, "amount": ProductUiShared.money_tr(cost), "days": days})
@@ -765,64 +785,16 @@ func _update_dynamic() -> void:
 		_totals_label.text = tr("PROD_TOTALS").format({"efor": efor, "days": days})
 	_cash_label.text = tr("PROD_CASH_AFTER").format(
 		{"amount": ProductUiShared.money_tr(ProductUiShared.cash_after_build(cost, days))})
-	_commit_btn.disabled = picked_total <= 0
+	# Onay YALNIZ geçerli bir planla açılır; doğrulayıcı TEK (§18) — burada ikinci
+	# bir merdiven/kapı kontrolü YAZILMAZ.
+	var refusal: String = ProductSystem.validate_line_plan(_type_id, _selected)
+	_commit_btn.disabled = refusal != ""
+	# Not satırı: red varsa gerekçe, yoksa §5'in cila hatırlatması.
+	_note_label.text = refusal if refusal != "" else tr("PROD_POLISH_NOTE")
 	var suffix: String = ""
 	if cost > 0:
 		suffix = tr("PROD_CASH_DEDUCT").format({"amount": ProductUiShared.money_tr(cost)})
 	_commit_btn.text = tr("PROD_CONFIRM_START") + suffix
-
-
-func _base_dims() -> Dictionary:
-	if not _v2_mode:
-		return {}  # v1: sıfır taban
-	return {
-		"innovation": float(GameState.get_flag("mvp_innovation", 0.0)),
-		"stability": float(GameState.get_flag("mvp_stability", 0.0)),
-		"experience": float(GameState.get_flag("mvp_experience", 0.0)),
-	}
-
-
-func _sorumlu_id() -> String:
-	if _sorumlu == null or _sorumlu.selected < 0:
-		return ""
-	var md: Variant = _sorumlu.get_item_metadata(_sorumlu.selected)
-	return String(md) if md != null else ""
-
-
-func _pool_exhausted() -> bool:
-	# GÜÇLENDİR modu: havuzda seçilebilir (ship edilmemiş + araştırma kilidi
-	# olmayan) feature kalmadıysa. Araştırma kilitliler sayılmaz — yoksa kilitli
-	# havuz tipleri sonsuza dek güçlendirmeye geçemezdi (v-build asla kilitlenmez).
-	for f in ProductCatalog.get_feature_pool(_type_id):
-		var fid: String = String(f.get("id", ""))
-		if not _shipped_ids.has(fid) and not bool(f.get("requires_research", false)):
-			return false
-	return true
-
-
-func _update_status() -> void:
-	# ARTIK BİR ŞEY BOYAMIYOR (B5.3): durum kartı tek bir BuildBar taşıyor ve o
-	# kendi modelini kendi çekiyor, kendi sinyallerini kendi dinliyor. Fonksiyon
-	# duruyor çünkü çağıranları (_update_dynamic · faz sinyalleri) sayfanın başka
-	# parçalarını da tazeliyor; gövdesi bilerek boş.
-	pass
-
-
-func _on_publish_pressed() -> void:
-	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b == null or b.current_phase != "bugfix":
-		return
-	ProductSystem.launch()   # router "shipped" emit'inde detaya yönlendirir
-
-
-func _on_enter_dev_pressed() -> void:
-	# Guard seam'de (can_enter_development) — çift tık / bayat kart zararsız.
-	ProductSystem.enter_development()
-
-
-func _on_enter_beta_pressed() -> void:
-	# Guard seam'de (can_enter_beta).
-	ProductSystem.enter_beta()
 
 
 func _on_cancel_pressed() -> void:
@@ -835,7 +807,10 @@ func _on_cancel_pressed() -> void:
 	var early: bool = burned_days < ProductSystem.CANCEL_FREE_DAYS
 	var prefill := {
 		"type": b.sub_product_type_id,
-		"features": b.feature_ids.duplicate(),
+		# HAT MODELİ: geri gelen şey PLAN'dır (planned_step_ids), düz özellikler değil.
+		# İptal hat durumlarına zaten dokunmadı — plan hiç yazılmamıştı — o yüzden
+		# prefill'in geri verdiği kademe seti hâlâ birebir geçerli.
+		"features": b.planned_step_ids.duplicate(),
 		"name": b.product_name,
 	}
 	EventBus.confirm_requested.emit({
@@ -859,12 +834,14 @@ func _do_cancel(prefill: Dictionary) -> void:
 # --- Commit ------------------------------------------------------------------
 
 func _on_commit_pressed() -> void:
-	var ok: bool
-	if _v2_mode:
-		ok = ProductSystem.start_version_build(_selected, _sorumlu_id(), _strengthen)
-	else:
-		var pname: String = _name_edit.text if _name_edit != null else ""
-		ok = ProductSystem.start_build(_type_id, _selected, _sorumlu_id(), pname)
+	# TEK GİRİŞ (§6): v1 ve v2 aynı seam'den geçer. start_line_build sürüm numarasını
+	# ve is_version_build'i ProductState.is_live()'dan KENDİ türetir; burada iki ayrı
+	# çağrı tutmak aynı kararı ikinci bir yerde tekrar vermek olurdu.
+	# Ve KADEMELER BURADA YAZILMAZ: plan build'e gider, hat durumlarına yalnız
+	# yayında dokunulur (_apply_line_plan_at_ship) — iptalin hiçbir şeyi geri
+	# almaması bu yüzden yapısaldır, bir geri-alma koduna bağlı değil.
+	var pname: String = _name_edit.text if _name_edit != null else ""
+	var ok: bool = ProductSystem.start_line_build(_type_id, _selected, _lead_id(), pname)
 	if ok:
 		GameState.flags.erase("creation_draft")   # the draft became a build
 		navigate_requested.emit("tracker", {})
@@ -899,17 +876,3 @@ func _is_left_click(ev: InputEvent) -> bool:
 	return ev is InputEventMouseButton and ev.pressed \
 		and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
 
-
-func _set_mouse_ignore(n: Node) -> void:
-	# Kart içi çocuklar tıklamayı yutmasın — gui_input kart kökünde (eski tab deseni).
-	if n is Control:
-		(n as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for c in n.get_children():
-		_set_mouse_ignore(c)
-
-
-## Faz id → ekran adı. _PHASE_KEYS const olabilir (sadece anahtar tutar), sözcük burada
-## çalışma anında çözülür — dil ortada değişirse doğru olanı basar.
-func _phase_display(phase: String) -> String:
-	var key: String = String(_PHASE_KEYS.get(phase, ""))
-	return tr(key) if key != "" else ""

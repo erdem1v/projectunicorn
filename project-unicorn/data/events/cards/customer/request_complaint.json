@@ -1,0 +1,148 @@
+{
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "request",
+  "class": "paper",
+  "tags": [
+    "build_safe"
+  ],
+  "guards": {
+    "market": "b2b"
+  },
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "open_request"
+    },
+    "rep": {
+      "type": "employee",
+      "required": true,
+      "select": "support_lead"
+    }
+  },
+  "latch": {
+    "cooldown_days": 14
+  },
+  "latch_key": "entity",
+  "expires_days": 7,
+  "expire_note": "expire_note",
+  "_ported_from": "ev_b2b_request_<customer_id> — COMPLAINT branch (B2BEventFactory.build_cs_request)",
+  "_port_note": "pick_request_kind chose one of three branches at build time; each branch has a different option set, so each is now its own card selected by its own condition. The branch that fired was invisible to content before — last_request_kind is a field with one writer and no reader outside the picker. tick:request — this card has no sweep and no pool draw. It is reachable only by CustomerRepSystem naming it when a request ages past CS_ESCALATE_AFTER_DAYS and the weekly ceiling has room. The ceiling is a Sales-side policy about the desk, not a tempo rule, so it stays in that system; what it lost is the ability to push. LOCKS ADDED. The old builders withheld these rows by not BUILDING them — the promise row was skipped when a word was already open, the discount row when the cap was spent. A card is data now, so the row exists and must lock instead, which is §17.5's ruling and the better behaviour: a row that disappears teaches the player nothing, a row that is greyed with its reason teaches them the rule. Ported without them, every request card would have minted unlimited promises and uncapped discounts through a channel the retention card had closed. `musteri.is_assigned` REMOVED from the condition. The old builder took the DESK LEAD, not the account's steward — `build_cs_request(c, reps[0])` — so the request channel never depended on the account having a named rep, and requiring one meant the card was refused at G7 for every founder-managed account while CustomerRepSystem's own log said it had escalated. The desk's policy (an aged request, budget left in the week, a staffed desk) stays where it belongs, in the system; what is left on the card is the BRANCH.",
+  "id": "customer.request_complaint",
+  "condition": {
+    "entity_seam": "musteri.request_kind",
+    "scope": "customer",
+    "op": "==",
+    "value": "complaint"
+  },
+  "on_expire": {
+    "penalties": [
+      {
+        "verb": "satisfaction_delta",
+        "scope": "customer",
+        "amount": -5
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "discount_them",
+      "outcome_id": "discounted",
+      "effects": [
+        {
+          "verb": "b2b_retain_discount",
+          "scope": "customer"
+        },
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 8
+        }
+      ],
+      "requires": {
+        "entity_seam": "musteri.discounts_used",
+        "scope": "customer",
+        "op": "<",
+        "value": 2,
+        "reason": "B2B_DISCOUNT_SPENT_DESC"
+      }
+    },
+    {
+      "id": "promise_it",
+      "outcome_id": "promised",
+      "effects": [
+        {
+          "verb": "promise_create",
+          "scope": "customer",
+          "feature_id": "pain",
+          "deadline_days": 14
+        }
+      ],
+      "requires": {
+        "all": [
+          {
+            "entity_seam": "musteri.has_pain_feature",
+            "scope": "customer",
+            "op": "==",
+            "value": true
+          },
+          {
+            "entity_seam": "musteri.pain_feature_shipped",
+            "scope": "customer",
+            "op": "==",
+            "value": false
+          },
+          {
+            "entity_seam": "musteri.has_open_promise",
+            "scope": "customer",
+            "op": "==",
+            "value": false
+          }
+        ],
+        "reason": "B2B_LOCK_PROMISE_OPEN"
+      }
+    },
+    {
+      "id": "explain",
+      "outcome_id": "explained",
+      "effects": [
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "B2B_EV_COMPLAINT_TITLE",
+      "body": "B2B_EV_COMPLAINT_SOFT",
+      "options": {
+        "discount_them": "B2B_CHOICE_DISCOUNT",
+        "promise_it": "B2B_CHOICE_PROMISE_FIX",
+        "explain": "B2B_CHOICE_EXPLAIN_REFUSE"
+      },
+      "expire_note": "B2B_EV_REQ_COMPLAINT_EXPIRED",
+      "locked_reasons": {
+        "discount_them": "B2B_DISCOUNT_SPENT_DESC",
+        "promise_it": "B2B_LOCK_PROMISE_OPEN"
+      }
+    },
+    "en": {
+      "title": "B2B_EV_COMPLAINT_TITLE",
+      "body": "B2B_EV_COMPLAINT_SOFT",
+      "options": {
+        "discount_them": "B2B_CHOICE_DISCOUNT",
+        "promise_it": "B2B_CHOICE_PROMISE_FIX",
+        "explain": "B2B_CHOICE_EXPLAIN_REFUSE"
+      },
+      "expire_note": "B2B_EV_REQ_COMPLAINT_EXPIRED",
+      "locked_reasons": {
+        "discount_them": "B2B_DISCOUNT_SPENT_DESC",
+        "promise_it": "B2B_LOCK_PROMISE_OPEN"
+      }
+    }
+  }
+}

@@ -37,6 +37,13 @@ These fire in a normal run today.
 days", while this pass moved `EndingsSystem.SHUTTER_DAYS` from 7 to 30. It renders nowhere, so
 nothing is on screen today, but it must not be given a surface in this state.
 
+**The 30 is already on the player's screen, which is what makes this sharp.** `FIN_SHUTTER_COUNTDOWN`
+(`strings.csv:502`, rendered by `top_bar.gd:256`) puts `KEPENK: 30 GÜN` in the top bar the moment the
+shutter arms, and counts down truthfully from there. So the contradiction is not two dormant strings
+disagreeing — it is a live counter the player watched run for thirty days against a closing line that
+tells them it was seven. Whoever takes the surface-or-delete ruling above must fix the copy in the same
+pass, never after. (Observed 2026-08-25 during the shutter smoke repair; no copy was changed.)
+
 ---
 
 ## C · Dead CSV twins — no reader anywhere

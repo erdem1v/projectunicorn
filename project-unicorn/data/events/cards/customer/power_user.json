@@ -1,0 +1,103 @@
+{
+  "_ported_from": "ev_ps_power_user_b2c",
+  "id": "customer.power_user",
+  "version_scope": "demo",
+  "category": "customer",
+  "tick": "hourly",
+  "class": "interrupt",
+  "tags": [
+    "build_safe"
+  ],
+  "guards": {
+    "market": "b2c"
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "musteri.count",
+        "op": ">=",
+        "value": 1
+      },
+      {
+        "seam": "sales.b2c_audience",
+        "op": ">",
+        "value": 40
+      }
+    ]
+  },
+  "allowed_hours": [
+    18,
+    22
+  ],
+  "latch": {
+    "cooldown_days": 12
+  },
+  "weight": 0.3,
+  "options": [
+    {
+      "id": "court_them",
+      "outcome_id": "court_them",
+      "effects": [
+        {
+          "verb": "add_brand",
+          "amount": 4
+        },
+        {
+          "verb": "audience_delta",
+          "amount": 25
+        },
+        {
+          "verb": "add_cash",
+          "amount": -600
+        }
+      ]
+    },
+    {
+      "id": "let_it_ride",
+      "outcome_id": "let_it_ride",
+      "effects": [
+        {
+          "verb": "audience_delta",
+          "amount": 5
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "Erken hayran",
+      "subtitle": "Akış · 19:30",
+      "body": "Bir kullanıcı ürünü göklere çıkarmış: *\"Bu araç iş akışımı değiştirdi, herkes denemeli.\"* Altında yorumlar birikiyor.\n\nMomentum küçük ama gerçek. Üstüne gidersen büyür.",
+      "options": {
+        "court_them": "Tanıtım yaz — momentumu kullan",
+        "let_it_ride": "Sessiz kal"
+      },
+      "expire_note": "Kullanıcıya dönülmedi."
+    },
+    "en": {
+      "title": "An early admirer",
+      "subtitle": "The feed · 19:30",
+      "body": "A user has been raving about the product: *\"This tool changed how I work, everybody should try it.\"* The replies are piling up underneath.\n\nThe momentum is small but real. Lean on it and it grows.",
+      "options": {
+        "court_them": "Write a post — use the momentum",
+        "let_it_ride": "Stay quiet"
+      },
+      "expire_note": "Nobody wrote back."
+    }
+  },
+  "_repair_note": "ids only; the audit found this one clean",
+  "_r8a_note": "A non-critical interrupt is demotable (§13.2), and a demoted card lands on the desk with a clock — which is the only reason paper is a safe floor for I4. So it carries the paper trio even though it usually renders as an interrupt.",
+  "expires_days": 7,
+  "on_expire": {
+    "penalties": []
+  },
+  "expire_note": "expire_note",
+  "scope": {
+    "customer": {
+      "type": "customer",
+      "required": true,
+      "select": "lowest_satisfaction"
+    }
+  },
+  "_port_note": " SCOPE ADDED. Every customer-scoped effect on this card resolved to NOTHING: the old executor's default target was `get_lowest_satisfaction_customer(<event's market>)`, computed at apply time, and the port carried the effects across without carrying the default. A required slot says the same thing in the vocabulary that can also refuse the card when there is nobody to be about — which the old default could not do; it silently no-opped and the player watched a decision change nothing."
+}

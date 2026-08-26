@@ -1,0 +1,25 @@
+{
+	"_comment": "Accepted lint findings, by fingerprint. A finding here does NOT suppress its rule: change the card and the fingerprint changes and it comes back. Regenerate with --event-lint-baseline. Every addition should be defensible.",
+	"accepted": [
+		"17.8|res://data/events/cards/customer/referral.json|[tr] body contains a dash",
+		"17.8|res://data/events/cards/customer/referral.json|[en] body contains a dash",
+		"17.8|res://data/events/cards/customer/showcase_feature.json|[tr] body contains a dash",
+		"17.8|res://data/events/cards/customer/showcase_feature.json|[en] body contains a dash",
+		"17.8|res://data/events/cards/product/competitor_signal.json|[tr] body contains a dash",
+		"17.8|res://data/events/cards/product/competitor_signal.json|[en] body contains a dash",
+		"17.8|res://data/events/cards/product/critical_bug.json|[tr] body contains a dash",
+		"17.8|res://data/events/cards/product/critical_bug.json|[en] body contains a dash",
+		"17.8|res://data/events/cards/product/early_user_feedback.json|[tr] body contains a dash",
+		"17.8|res://data/events/cards/product/early_user_feedback.json|[en] body contains a dash",
+		"17.8|res://data/events/cards/product/integration_broken.json|[tr] body contains a dash",
+		"17.8|res://data/events/cards/product/integration_broken.json|[en] body contains a dash",
+		"17.8|res://data/events/cards/product/scope_creep.json|[tr] body contains a dash",
+		"17.8|res://data/events/cards/product/scope_creep.json|[en] body contains a dash",
+		"17.8|res://data/events/cards/product/solo_dev_fatigue.json|[tr] body contains a dash",
+		"17.8|res://data/events/cards/product/solo_dev_fatigue.json|[en] body contains a dash",
+		"17.8|res://data/events/cards/product/tech_debt_callout.json|[tr] body contains a dash",
+		"17.8|res://data/events/cards/product/tech_debt_callout.json|[en] body contains a dash",
+		"17.2|res://data/events/arcs/fixture_subject.json|arc 'arc_fixture_subject' is never started by any card"
+	],
+	"generated_day": "2026-08-26"
+}

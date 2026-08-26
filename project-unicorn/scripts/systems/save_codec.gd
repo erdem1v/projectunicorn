@@ -64,8 +64,11 @@ static func script_for_class(cls: String) -> Script:
 		"Rival":        return Rival
 		"Promise":      return Promise
 		"FeatureBuild": return FeatureBuild
-		"GameEvent":    return GameEvent
-		"EventChoice":  return EventChoice
+		# GameEvent and EventChoice were here. They are still LIVE CLASSES — EvPresenter
+		# builds one per display — but nothing serialises them any more: the queue holds ids
+		# and frozen scalar context, and the view is rebuilt from the catalogue at every open.
+		# That is what makes a mid-run language switch safe, and it is why the two names have
+		# no business in a save codec.
 		"TermSheet":    return TermSheet
 		_:              return null
 

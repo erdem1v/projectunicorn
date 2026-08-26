@@ -21,13 +21,14 @@ extends RefCounted
 # line. The process is left ALIVE deliberately — editor-run output is only
 # readable while the process lives (godot-mcp gotcha); editor-stop ends it.
 
-## Authored event text fields still awaiting an English sibling. A RATCHET: the real count
-## may only fall. Measured 79 when the *_en schema landed (Lokalizasyon Faz 2 · Step 1d);
-## batch B6 authors the values and drives this to 0. Lower it as batches land — never raise it.
-const LOC_EVENT_EN_PENDING := 0
-
-const GATE1_ID := "ev_phase_gate_traction"
-const GATE2_ID := "ev_phase_gate_series_a"
+const GATE1_ID := "funding.gate_traction"
+const GATE2_ID := "funding.gate_series_a"
+const ANGEL_ID := "funding.frank_cheque"
+const NUDGE_ID := "funding.hire_nudge"
+const RETAIN_ID := "customer.retention"
+const EXPANSION_ID := "customer.expansion"
+const MEETING_ID := "funding.meeting_day"
+const SHEET_WARN_ID := "funding.sheet_expiry"
 
 # Fixture skill defaults. The three names are KEPT (fifty-odd call sites pass them
 # positionally) but their MEANING moved with the 2026-08-21 area migration, because the
@@ -74,6 +75,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"gate1_b2b":            fail = _case_gate1_b2b()
 		"gate2":                fail = _case_gate2()
 		"gate_decline_reminder": fail = _case_gate_decline_reminder()
+		"traction_gate_one_option": fail = _case_traction_gate_is_one_option()
 		"bankruptcy":           fail = _case_bankruptcy()
 		"shutter_recovery":     fail = _case_shutter_recovery()
 		"brand_collapse":       fail = _case_brand_collapse()
@@ -174,7 +176,26 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"vacation_action_retired":  fail = _case_vacation_action_retired()
 		"leave_does_not_pause_build": fail = _case_leave_does_not_pause_build()
 		"money_never_double_minus": fail = _case_money_never_double_minus()
-		"beta_gate_open_early":     fail = _case_beta_gate_open_early()
+		# rev 6.1 §6.4 kapıyı geri koydu; case adıyla birlikte ters çevrildi.
+		"beta_gate_requires_full_bar": fail = _case_beta_gate_requires_full_bar()
+		"beta_discovery_decays_pool_never_empties": fail = _case_beta_discovery_decays_pool_never_empties()
+		"beta_park_frees_capacity_slot": fail = _case_beta_park_frees_capacity_slot()
+		"build_decision_tooltip_renders": fail = _case_build_decision_tooltip_renders()
+		# --- DESTEK (§8) ve ALTYAPI (§10) ---
+		"destek_empty_desk_piles_up":    fail = _case_destek_empty_desk_piles_up()
+		"fix_run_ships_subset":          fail = _case_fix_run_ships_subset()
+		"infra_capacity_moves_both_ways": fail = _case_infra_capacity_moves_both_ways()
+		"infra_heavy_step_costs_capacity": fail = _case_infra_heavy_step_costs_capacity()
+		"infra_overage_applies_and_stops": fail = _case_infra_overage_applies_and_stops()
+		"infra_local_provider_tradeoff": fail = _case_infra_local_provider_tradeoff()
+		"line_build_ships_and_stamps":   fail = _case_line_build_ships_and_stamps()
+		"cancel_reverts_planned_steps":  fail = _case_cancel_reverts_planned_steps()
+		"build_effort_from_hr_seams":    fail = _case_build_effort_from_hr_seams()
+		"product_read_catalogue":        fail = _case_product_read_catalogue()
+		"line_design_turns_and_gate":    fail = _case_line_design_turns_and_gate()
+		"pause_kinds_and_lead_note":     fail = _case_pause_kinds_and_lead_note()
+		"build_bar_line_states":         fail = _case_build_bar_line_states()
+		"run_profile_never_exhausts":    fail = _case_run_profile_never_exhausts()
 		"hr_frank_guard":           fail = _case_hr_frank_guard()
 		"hr_active_filters":        fail = _case_hr_active_filters()
 		"hr_overload_badge":        fail = _case_hr_overload_badge()
@@ -262,6 +283,17 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_product_derived_keys":  fail = _case_loc_product_derived_keys()
 		"loc_format_args":           fail = _case_loc_format_args()
 		"all_scripts_load":          fail = _case_all_scripts_load()
+		"event_i1_single_gate":           fail = _case_event_i1_single_gate()
+		"event_i2_economy_played_only":   fail = _case_event_i2_economy_played_only()
+		"event_i3_no_silent_loss":        fail = _case_event_i3_no_silent_loss()
+		"event_i4_demoted_never_dropped": fail = _case_event_i4_demoted_never_dropped()
+		"event_i5_trigger_is_data":       fail = _case_event_i5_trigger_is_data()
+		"event_i6_dice_never_kill":       fail = _case_event_i6_dice_never_kill()
+		"event_i7_modifier_needs_seam":   fail = _case_event_i7_modifier_needs_seam()
+		"event_dice_is_stable":           fail = _case_event_dice_is_stable()
+		"event_thesis_day10_to_day90":    fail = _case_event_thesis_day10_to_day90()
+		"event_thesis_through_presenter": fail = _case_event_thesis_through_presenter()
+		"event_chip_coverage":       fail = _case_event_chip_coverage()
 		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
 		"loc_b5_derived_keys":       fail = _case_loc_b5_derived_keys()
 		"loc_language_switch":       fail = _case_loc_language_switch()
@@ -332,6 +364,34 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"destek_survives_ship":           fail = _case_destek_survives_ship()
 		"trait_migration_real_load":      fail = _case_trait_migration_real_load()
 		"gorevler_has_no_founder":        fail = _case_gorevler_has_no_founder()
+		# --- Ürün modülü · hat modeli 2026-08-24 (GDD ÜRÜN rev 6 §11, §12).
+		#     Altısı da ÖNCEKİ motora karşı DÜŞER: hat modeli, kapı doğrulayıcısı ve
+		#     çıta okuması bu turdan önce YOKTU. Her biri falsifikasyonla doğrulandı.
+		"product_lines_catalog_loads":    fail = _case_product_lines_catalog_loads()
+		"line_ladder_rules":              fail = _case_line_ladder_rules()
+		"line_k3_locked_without_research": fail = _case_line_k3_locked_without_research()
+		"axis_reading_replaces_not_adds": fail = _case_axis_reading_replaces_not_adds()
+		"gate_scope_and_halves":          fail = _case_gate_scope_and_halves()
+		"above_gate_bonus_ladder":        fail = _case_above_gate_bonus_ladder()
+		"loc_product_line_keys_resolve":  fail = _case_loc_product_line_keys_resolve()
+		# --- rev 6.1 · Ar-Ge bağı ve kart aritmetiği (2026-08-25).
+		"research_node_map_binds":        fail = _case_research_node_map_binds()
+		"rnd_tree_loads_and_validates":  fail = _case_rnd_tree_loads_and_validates()
+		"research_occupies_person":       fail = _case_research_occupies_person()
+		"research_and_build_pause_each_other": fail = _case_research_and_build_pause_each_other()
+		"research_freezes_and_resumes":   fail = _case_research_freezes_and_resumes()
+		"research_completion_no_economic_delta": fail = _case_research_completion_no_economic_delta()
+		"paused_job_resumes_on_direct_return": fail = _case_paused_job_resumes_on_direct_return()
+		"founder_split_halves_flat_speed": fail = _case_founder_split_halves_flat_speed()
+		"split_bars_name_their_cause": fail = _case_split_bars_name_their_cause()
+		"rnd_rail_open_with_waiting_page": fail = _case_rnd_rail_open_with_waiting_page()
+		"rnd_note_author_and_lines": fail = _case_rnd_note_author_and_lines()
+		"card_math_matches_gdd_example":  fail = _case_card_math_matches_gdd_example()
+		"design_turn_ladder":             fail = _case_design_turn_ladder()
+		"save_v10_product_state":         fail = _case_save_v10_product_state()
+		# --- rev 6.1 · router devri (2026-08-25). İkisi de ÖNCEKİ ağaca karşı DÜŞER.
+		"type_screen_matches_line_content": fail = _case_type_screen_matches_line_content()
+		"line_build_writes_subgenre":     fail = _case_line_build_writes_subgenre()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -484,23 +544,17 @@ static func _seed_live_product() -> void:
 # Resolve foreign active events (always choice 0) until `event_id` is active.
 static func _drain_to(event_id: String, max_steps: int = 8) -> bool:
 	for i in max_steps:
-		if EventManager._active_event_id == event_id:
+		if EventGate.active_id() == event_id:
 			return true
-		if EventManager._active_event_id == "":
+		if EventGate.active_id() == "":
 			return false
-		EventManager.resolve_choice(EventManager._active_event_id, 0)
-	return EventManager._active_event_id == event_id
+		EventGate.resolve(EventGate.active_id(), 0)
+	return EventGate.active_id() == event_id
 
 
 # Occurrences of a gate scene across queue + active (must never exceed 1).
 static func _instances_of(event_id: String) -> int:
-	var n: int = 0
-	for ev in EventManager._queue:
-		if ev.id == event_id:
-			n += 1
-	if EventManager._active_event_id == event_id:
-		n += 1
-	return n
+	return EventGate.instances_of(event_id)
 
 
 # Rev3: aktif build'i hedef faza gelene dek ProductSystem.hourly_tick ile sürer
@@ -655,7 +709,7 @@ static func _expect_gate1_opens_and_advances() -> String:
 		return "phase changed before the Frank scene (%d)" % GameState.phase
 	if not _drain_to(GATE1_ID):
 		return "gate scene never became active"
-	EventManager.resolve_choice(GATE1_ID, 0)  # "Hazırız — geçelim"
+	EventGate.resolve(GATE1_ID, 0)  # "Hazırız — geçelim"
 	if GameState.phase != 2:
 		return "advance_phase did not run (phase=%d)" % GameState.phase
 	if GameState.phase_gate_ready or GameState.pending_next_phase != 0:
@@ -681,37 +735,209 @@ static func _case_gate2() -> String:
 		return "latched gate should read open"
 	if not _drain_to(GATE2_ID):
 		return "gate 2 scene never became active"
-	EventManager.resolve_choice(GATE2_ID, 0)
+	EventGate.resolve(GATE2_ID, 0)
 	if GameState.phase != 3:
 		return "phase != 3 after confirm (%d)" % GameState.phase
 	return ""
 
 
 static func _case_gate_decline_reminder() -> String:
+	# REPOINTED (Frank v6, surface 9). The Traction card became a one-option NOTIFICATION, so
+	# the decline path, the escalating bodies and the REMIND_INTERVAL_DAYS re-ask live ONLY on
+	# the Series A gate now. Same mechanism, same three things proved — decline works, the body
+	# escalates, the reminder re-asks on the cadence and NOT before — moved to the gate that
+	# still owns them. What the Traction card BECAME is pinned by the case below it.
+	#
+	# THE ESCALATED COPY IS READ THROUGH THE CSV KEY, NOT THROUGH A GATES DICT KEY. The line
+	# this replaces read `PhaseGateSystem.GATES[0].bodies` — a real key until bbfe8b2
+	# (2026-08-19) moved gate copy into strings.csv, and from that day an "Invalid access to
+	# property or key" sitting inside a case nobody had reason to look at. A case that throws
+	# returns "", which this suite scores as PASS; only smoke_run.sh stderr gate catches it.
+	GameState.set_phase(2)   # debug backdoor — gate 1 is already behind us
+	var gate: Dictionary = PhaseGateSystem._gate_for_phase(2)
+	if String(gate.get("card_id", "")) != GATE2_ID:
+		return "phase 2 gate is %s, not %s" % [String(gate.get("card_id", "")), GATE2_ID]
+	# The contract moved onto the card, so it is read off the card. Two options and three body
+	# variants are what the escalation needs; the re-ask interval is the card's own cooldown,
+	# which is also the number the reminder half of this case counts days against.
+	var card: Dictionary = EventGate.catalogue_card(GATE2_ID)
+	if (card.get("options", []) as Array).size() != 2:
+		return "%s carries %d option(s) — the escalation contract has no home left" % [
+			GATE2_ID, (card.get("options", []) as Array).size()]
+	var variants: Dictionary = ((card.get("text", {}) as Dictionary).get("tr", {}) as Dictionary) \
+		.get("body", {}).get("variants", {})
+	if variants.size() < 2:
+		return "%s carries %d body/bodies — nothing can escalate" % [GATE2_ID, variants.size()]
+	var remind_days: int = int((card.get("latch", {}) as Dictionary).get("cooldown_days", 0))
+	var hold_days: int = 2   # strictly inside the window, so the clock cannot tick on its own
+	if remind_days <= hold_days:
+		return "the re-ask cooldown is %d — the hold below no longer fits in the window" % \
+			remind_days
+
+	# Both bodies read from strings.csv BEFORE anything is built, plus the two guards that keep
+	# the comparison from going vacuous: a missing row makes translate() echo the key back, and
+	# production would echo the SAME key back — two raw tokens comparing equal is exactly the
+	# shape of green this file exists to stop.
+	var opening: String = TranslationServer.translate("GATE_SERIES_A_BODY_0")
+	var escalated: String = TranslationServer.translate("GATE_SERIES_A_BODY_1")
+	if opening == "GATE_SERIES_A_BODY_0" or escalated == "GATE_SERIES_A_BODY_1":
+		return "a GATE_SERIES_A_BODY_* row is missing from strings.csv"
+	if opening == escalated:
+		return "BODY_0 and BODY_1 carry the same text — the escalation is unprovable"
+
+	# Open it the way _case_gate2 does: the revenue bar alone only reads warming.
+	_seed_b2b_series_a()
+	_sim_day()
+	_seed_growth_streak(GameState.mrr)
+	_sim_day()
+	if not GameState.phase_gate_ready or GameState.pending_next_phase != 3:
+		return "gate 2 did not open (ready=%s pending=%d)" % [
+			GameState.phase_gate_ready, GameState.pending_next_phase]
+	if not _drain_to(GATE2_ID):
+		return "series A gate scene never became active"
+	var view: GameEvent = EventGate.active_card()
+	if view.body_text != opening:
+		return "gate did not open on BODY_0"
+	if view.choices.size() != 2:
+		return "Series A gate offers %d option(s), want advance + decline" % view.choices.size()
+	var decline_idx: int = _row_with_verb(view, "phase_gate_decline")
+	if decline_idx != 1:
+		return "the phase_gate_decline effect sits on option %d, want 1" % decline_idx
+
+	# HOLD BEFORE DECLINING. Declining on the day the gate opened — what this case used to do —
+	# leaves on_gate_declined re-arm line unfalsifiable: the open and the decline would stamp
+	# gate_prompt_day with the same number, so deleting the line would change nothing.
+	# The reminder clock is EvLatches' last-fire day now, not a hand-stamped flag, and reading
+	# it that way is stricter: the stamp could drift from the fire, the latch cannot.
+	var open_day: int = EvHistory.last_day(GATE2_ID)
+	if open_day >= 0:
+		return "the gate has a resolution in history before it was answered"
+	var fired_day: int = EvLatches.last_day(EvLatches.key_for(GATE2_ID, EvLatches.KEY_RUN, ""))
+	for i in hold_days:
+		_sim_day()
+		if _instances_of(GATE2_ID) != 1:
+			return "the card that is still up went to %d instances" % _instances_of(GATE2_ID)
+	if EvLatches.last_day(EvLatches.key_for(GATE2_ID, EvLatches.KEY_RUN, "")) != fired_day:
+		return "the reminder clock moved while the card was still up"
+
+	EventGate.resolve(GATE2_ID, decline_idx)  # "Henüz değil"
+	if GameState.phase != 2 or not GameState.phase_gate_ready:
+		return "decline broke the latch (phase=%d ready=%s)" % [
+			GameState.phase, GameState.phase_gate_ready]
+	if int(GameState.get_flag("gate_declines", 0)) != 1:
+		return "decline did not advance the escalation counter (%d)" % \
+			int(GameState.get_flag("gate_declines", 0))
+	if EvHistory.last_day(GATE2_ID) != GameState.day:
+		return "the decline did not reach history (last fire day %d, today %d)" % [
+			EvHistory.last_day(GATE2_ID), GameState.day]
+	if _instances_of(GATE2_ID) != 0:
+		return "the declined card stayed in play"
+
+	# No re-prompt before the cooldown elapses — AND THE CLOCK RUNS FROM THE FIRE, not from the
+	# answer. That is a behaviour change and it is the right one: the old engine re-stamped
+	# gate_prompt_day on decline, so a player who sat on the card for four days bought himself
+	# nine days of quiet. §3.1's cooldown is measured from the last time the card was SHOWN.
+	var elapsed: int = GameState.day - fired_day
+	if elapsed >= remind_days:
+		return "the hold consumed the whole cooldown (%d of %d) — the window proves nothing" % [
+			elapsed, remind_days]
+	for i in remind_days - elapsed - 1:
+		_sim_day()
+		if _instances_of(GATE2_ID) > 0:
+			return "reminder re-admitted early (%d days after the fire, cooldown %d)" % [
+				GameState.day - fired_day, remind_days]
+	# …then exactly one re-prompt, on the escalated body.
+	_sim_day()
+	if _instances_of(GATE2_ID) != 1:
+		return "reminder not re-admitted at interval (instances=%d)" % _instances_of(GATE2_ID)
+	# Drain whatever else the day raised: the reminder is ADMITTED, but the modal slot belongs
+	# to whichever card §11.2 ranks first, and on a busy day that is not this one. The old
+	# engine could not produce this situation because the gate pushed to the front of the
+	# queue; the new one orders the whole day's admissions by declared priority, so a case that
+	# reads active_card() without draining is reading someone else's card.
+	if not _drain_to(GATE2_ID):
+		return "the reminder never reached the screen (active=%s)" % EventGate.active_id()
+	if EventGate.active_card().body_text != escalated:
+		return "reminder copy did not escalate (declines=%d)" % 			int(GameState.get_flag("gate_declines", 0))
+	# Never duplicates, even across a further reminder window.
+	for i in remind_days + 1:
+		_sim_day()
+		if _instances_of(GATE2_ID) > 1:
+			return "gate scene duplicated (§7.10 violation)"
+	return ""
+
+
+## The Traction card is a NOTIFICATION now (Frank v6, surface 9): ONE body, ONE option, and
+## therefore no decline counter, no escalating copy and no REMIND_INTERVAL_DAYS re-ask.
+## Everything _case_gate_decline_reminder used to prove about gate 1 died with the second
+## option, so this pins what REPLACED it rather than leaving the surface uncovered.
+##
+## NOT A RATIFICATION. Whether the Traction gate SHOULD be declinable is a phase-transition
+## design question that is still open (2026-08-25). This case pins TODAY, so that changing
+## it is a decision someone makes rather than a drift someone discovers.
+static func _case_traction_gate_is_one_option() -> String:
+	var gate: Dictionary = PhaseGateSystem._gate_for_phase(1)
+	if String(gate.get("card_id", "")) != GATE1_ID:
+		return "phase 1 gate is %s, not %s" % [String(gate.get("card_id", "")), GATE1_ID]
+	var card: Dictionary = EventGate.catalogue_card(GATE1_ID)
+	if (card.get("options", []) as Array).size() != 1:
+		return "%s carries %d options — it is not a notification any more" % [
+			GATE1_ID, (card.get("options", []) as Array).size()]
+	var body_field: Variant = ((card.get("text", {}) as Dictionary).get("tr", {}) as Dictionary) \
+		.get("body", "")
+	if typeof(body_field) != TYPE_STRING:
+		return "%s carries a variant body block — nothing selects between them" % GATE1_ID
+	# The deleted copy is the other half of the ruling: _BODY_1/_2 went with the option.
+	if TranslationServer.translate("GATE_TRACTION_BODY_1") != "GATE_TRACTION_BODY_1":
+		return "GATE_TRACTION_BODY_1 has a row again — escalation copy outlived its option"
+	var body: String = TranslationServer.translate("GATE_TRACTION_BODY_0")
+	if body == "GATE_TRACTION_BODY_0":
+		return "GATE_TRACTION_BODY_0 has no row — the card would show a raw token"
+	var advance_key: String = String(((card.get("text", {}) as Dictionary).get("tr", {}) \
+		as Dictionary).get("options", {}).get("advance", ""))
+	var advance_label: String = TranslationServer.translate(advance_key)
+	if advance_key == "" or advance_label == advance_key:
+		return "the Traction card's advance label has no row (%s)" % advance_key
+	if advance_label == TranslationServer.translate("GATE_ADVANCE"):
+		return "GATE_TRACTION_ADVANCE and GATE_ADVANCE read alike — the label check is vacuous"
+
 	_seed_b2b(500)
 	_sim_day()
+	if not GameState.phase_gate_ready or GameState.pending_next_phase != 2:
+		return "gate 1 did not open (ready=%s pending=%d)" % [
+			GameState.phase_gate_ready, GameState.pending_next_phase]
 	if not _drain_to(GATE1_ID):
-		return "gate scene never became active"
-	EventManager.resolve_choice(GATE1_ID, 1)  # "Henüz değil"
-	if GameState.phase != 1 or not GameState.phase_gate_ready:
-		return "decline broke the latch (phase=%d ready=%s)" % [GameState.phase, GameState.phase_gate_ready]
-	# No re-prompt before REMIND_INTERVAL_DAYS…
-	for i in 4:
+		return "the notification never became active"
+	var ev: GameEvent = EventGate.active_card()
+	if ev.body_text != body:
+		return "the card is not carrying GATE_TRACTION_BODY_0"
+	if ev.choices.size() != 1:
+		return "the notification offers %d options, want exactly 1" % ev.choices.size()
+	if ev.choices[0].label != advance_label:
+		return "the single option is not the per-gate GATE_TRACTION_ADVANCE label"
+	if _row_with_verb(ev, "phase_gate_decline") >= 0:
+		return "a phase_gate_decline effect is still on the Traction card"
+
+	# And the copy cannot escalate even if the counter is forced: a literal body has nothing
+	# to select between. This is the reminder half of the old case, asserted as the
+	# impossibility it now is — and asserted through a RE-RENDER, because a card's text is
+	# resolved at display time and a forced counter is exactly what would move it.
+	GameState.set_flag("gate_declines", 9)
+	if EventGate.render(GATE1_ID, EventGate.active_context()).body_text != body:
+		return "Traction copy escalated off a forced counter"
+	GameState.set_flag("gate_declines", 0)
+
+	# The one option is the advance, not a dead button.
+	EventGate.resolve(GATE1_ID, 0)
+	if GameState.phase != 2:
+		return "the only option did not advance the phase (phase=%d)" % GameState.phase
+	if GameState.phase_gate_ready or GameState.pending_next_phase != 0:
+		return "gate latch not cleared after the notification was confirmed"
+	# And it never comes back: `one_shot` on the card, plus a ratchet that is now closed.
+	for i in 7:
 		_sim_day()
-		if _instances_of(GATE1_ID) > 0:
-			return "reminder re-enqueued early (day %d)" % GameState.day
-	# …then exactly one re-prompt, with escalated copy.
-	_sim_day()
-	if _instances_of(GATE1_ID) != 1:
-		return "reminder not re-enqueued at interval (instances=%d)" % _instances_of(GATE1_ID)
-	var expected_body: String = String((PhaseGateSystem.GATES[0].bodies as Array)[1])
-	if PhaseGateSystem._gate_event.body_text != expected_body:
-		return "reminder copy did not escalate"
-	# Never duplicates, even across further reminder windows.
-	for i in 6:
-		_sim_day()
-		if _instances_of(GATE1_ID) > 1:
-			return "gate scene duplicated (§7.10 violation)"
+		if _instances_of(GATE1_ID) != 0:
+			return "the Traction notification came back on day %d" % GameState.day
 	return ""
 
 
@@ -719,7 +945,10 @@ static func _case_gate_decline_reminder() -> String:
 
 static func _case_bankruptcy() -> String:
 	GameState.set_cash(-1000)
-	for i in 10:
+	# SINIR TÜRETİLDİ: ilk kasa-eksi tik sayacı AZALTMAZ, KURAR — yani iflas
+	# SHUTTER_DAYS + 1'inci tik'te düşer. Bir tik pay bırakılıyor ve döngüyü asıl
+	# durduran aşağıdaki `break`. (Emekli literal 10, eski sabitin 7 + 3'üydü.)
+	for i in EndingsSystem.SHUTTER_DAYS + 2:
 		_sim_day()
 		if not GameState.run_active:
 			break
@@ -727,8 +956,8 @@ static func _case_bankruptcy() -> String:
 		return "endings: %s" % str(_endings)
 	if GameState.run_active:
 		return "run still active"
-	if EventManager.get_queue_size() != 0:
-		return "queue not flushed (%d left)" % EventManager.get_queue_size()
+	if EventGate.queue_size() != 0:
+		return "queue not flushed (%d left)" % EventGate.queue_size()
 	return ""
 
 
@@ -736,8 +965,12 @@ static func _case_shutter_recovery() -> String:
 	GameState.set_cash(-1000)
 	for i in 3:
 		_sim_day()
-	if GameState.shutter_days_left != 5:
-		return "counter wrong after 3 days (%d, want 5)" % GameState.shutter_days_left
+	# TÜRETİLDİ, YAZILMADI: sayaç ilk kasa-eksi tik'inde SET edilir, sonrakilerde azalır —
+	# üç ardışık tik SHUTTER_DAYS - 2 bırakır. Sabit bir sayı yazmak bu vakayı bir kez
+	# zaten düşürdü (7 -> 30, Frank v6 turu): satır 28'lik gerçeğe karşı 5 iddia ediyordu.
+	var want_left: int = EndingsSystem.SHUTTER_DAYS - 2
+	if GameState.shutter_days_left != want_left:
+		return "counter wrong after 3 days (%d, want %d)" % [GameState.shutter_days_left, want_left]
 	GameState.set_cash(5000)
 	_sim_day()
 	if GameState.shutter_days_left != -1:
@@ -778,11 +1011,34 @@ static func _case_pivot_accept() -> String:
 		return "run ended instead of offering pivot: %s" % str(_endings)
 	if not GameState.get_flag("pivot_offer_made", false):
 		return "pivot offer not made"
-	if not _drain_to("ev_pivot_offer"):
-		return "pivot offer never became active"
-	EventManager.resolve_choice("ev_pivot_offer", 0)  # "Pivot — devam ediyoruz"
+	# REPOINTED (Frank v6, 17+18): ev_pivot_offer merged into the buyout card, whose trigger
+	# does not exist yet, so there is no card to drain to. The SEAM the card called is
+	# untouched and is what this case was ever really about - drive it directly.
+	#
+	# POSITIVE CONTROL FIRST. "The retired id never reached the queue" proves nothing about a
+	# queue nothing ever reaches. _seed_b2b + one day always leaves the Traction gate pending
+	# (_expect_gate1_opens_and_advances relies on the same fact), so this asserts the probe
+	# below is looking at a LIVE queue rather than an empty one.
+	if _instances_of(GATE1_ID) == 0:
+		return "queue probe is dead — the inertness check below would be vacuously true"
+	if _instances_of("ev_pivot_offer") != 0 or _instances_of("ev_buyout_offer") != 0:
+		return "a retired offer card reached the queue"
+	if EventGate.is_catalogued("ev_pivot_offer") \
+			or EventGate.is_catalogued("ev_buyout_offer"):
+		return "a retired offer card was authored back onto disk — it is pooled, not inert"
+	EndingsSystem.on_pivot_accepted()
 	if not GameState.pivot_used:
 		return "pivot_used not set"
+	# ISOLATE pivot_used. The cascade is guarded TWICE — pivot_used (endings_system.gd:171)
+	# and the pivot_offer_made latch (:176) — so while both stand, deleting either changes
+	# nothing observable and the loop below proves nothing. Strip the latch; pivot_used must
+	# hold the door alone. The fixture is metrics-ALIVE, so the tell is the latch RE-BURNING,
+	# not the run ending.
+	GameState.set_flag("pivot_offer_made", false)
+	_sim_day()
+	if GameState.get_flag("pivot_offer_made", false):
+		return "the cascade scan walked past pivot_used — the VC path re-opened"
+	GameState.set_flag("pivot_offer_made", true)
 	for i in 5:
 		_sim_day()
 	if not GameState.run_active:
@@ -790,13 +1046,44 @@ static func _case_pivot_accept() -> String:
 	return ""
 
 
+## REPOINTED (Frank v6, surfaces 17+18). FALSIFICATION — each of these PRODUCTION
+## mutations drops this case:
+##   · endings_system.gd:178 — invert or weaken the metrics test: the sub-floor run takes
+##     the ALIVE branch, burns the offer latch and never ends.
+##   · endings_system.gd:187 — delete the trigger_ending call: _endings stays empty.
+##   · endings_system.gd:164 — < to <=: three closed tables stop counting as three.
+##   · sales_system.gd or customer_registry.gd — make the bridge yield 0: the ending STILL
+##     fires (0 is sub-floor too), so only the MRR band assertion catches that this case
+##     had quietly become a second copy of `cascade`, measuring an empty company.
 static func _case_pivot_decline() -> String:
-	_seed_b2b(3000)
-	GameState.vc_rejections = 3
+	# The card that carried "Hayır. Bitti." is retired, but the ENDING it reached is untouched
+	# and still reachable by its own route: three closed tables with the metrics DEAD
+	# (_check_vc_cascade else-branch). That is the path this case drives now, so the terminal
+	# stays covered rather than merely believed — and it stays a PLAYED path, reached by the
+	# engine daily scan, not by calling trigger_ending from the harness.
+	#
+	# The MRR must come from the CUSTOMER RECORD, not from set_mrr: the slot-4 bridge rewrites
+	# GameState.mrr from CustomerRegistry every day and the endings scan is slot 9, so a bare
+	# set_mrr() is long gone by the time _check_vc_cascade reads it.
+	var want_mrr: int = EndingsSystem.PIVOT_MRR_MIN - 500
+	if want_mrr <= 0:
+		return "the floor moved under the fixture (%d): this case needs POSITIVE sub-floor revenue" \
+			% EndingsSystem.PIVOT_MRR_MIN
+	_seed_b2b(want_mrr)                                     # a REAL account, below the floor
+	GameState.vc_rejections = EndingsSystem.CASCADE_TABLES  # derived, not typed
 	_sim_day()
-	if not _drain_to("ev_pivot_offer"):
-		return "pivot offer never became active"
-	EventManager.resolve_choice("ev_pivot_offer", 1)  # "Hayır. Bitti."
+	# WHAT THE SLOT-9 SCAN ACTUALLY SAW. Without these the case goes green on a run whose MRR
+	# was zeroed — proving the dead branch fires, but not that it fired for the reason this
+	# case is named after. `cascade` already covers MRR 0; this one only earns its keep while
+	# the company is genuinely alive and genuinely under the floor.
+	if GameState.mrr <= 0 or GameState.mrr >= EndingsSystem.PIVOT_MRR_MIN:
+		return "scan read MRR %d against floor %d — the customer record did not survive" % [
+			GameState.mrr, EndingsSystem.PIVOT_MRR_MIN]
+	if GameState.cash <= 0:
+		return "cash was %d — the dead branch was reached through CASH, not the MRR floor" \
+			% GameState.cash
+	if GameState.get_flag("pivot_offer_made", false):
+		return "metrics read ALIVE below the floor — the offer latch burned instead of the ending"
 	if _endings != ["vc_rejection_cascade"]:
 		return "endings: %s" % str(_endings)
 	return ""
@@ -1049,7 +1336,11 @@ static func _case_month_summary() -> String:
 	SalesSystem.add_b2b_customer(p, 500, 70)  # no mvp_shipped flag → gate 1 stays closed
 	if GameState.run_customers_signed != 1:
 		return "run_customers_signed = %d, want 1" % GameState.run_customers_signed
-	EventManager._apply_modifiers([{"type": "churn_customer"}])
+	# `verb`, and a NAMED account. The old executor's default target was
+	# `get_lowest_satisfaction_customer(<the event's market>)`, computed at apply time; the new
+	# one takes its subject from the card's bound scope, and a bare effect list has no scope.
+	# Naming the account is what the card does too — it just does it through a slot.
+	EventGate.debug_apply_effects([{"verb": "churn_customer", "entity_id": "co_lead_month_smoke"}])
 	if GameState.run_customers_lost != 1:
 		return "run_customers_lost = %d, want 1" % GameState.run_customers_lost
 	_make_employee("char_month_smoke_emp", "Smoke Hire", HRConstants.ROLE_DEVELOPER)
@@ -1080,13 +1371,15 @@ static func _case_terminal_kills_gate() -> String:
 	if not GameState.phase_gate_ready:
 		return "gate did not open"
 	GameState.set_cash(-1000)
-	for i in 10:
+	# TÜRETİLDİ (_case_bankruptcy'ye bak): kepenk SHUTTER_DAYS + 1'inci tik'te düşer,
+	# `break` düştüğü an çıkar.
+	for i in EndingsSystem.SHUTTER_DAYS + 2:
 		_sim_day()
 		if not GameState.run_active:
 			break
 	if _endings != ["bankruptcy"]:
 		return "endings: %s" % str(_endings)
-	if EventManager.get_queue_size() != 0:
+	if EventGate.queue_size() != 0:
 		return "queue not flushed"
 	# World stopped (§7.3): further ticks are no-ops, nothing re-enqueues.
 	var cash_at_end: int = GameState.cash
@@ -1094,8 +1387,8 @@ static func _case_terminal_kills_gate() -> String:
 		_sim_day()
 	if GameState.cash != cash_at_end:
 		return "cash changed after terminal (%d → %d)" % [cash_at_end, GameState.cash]
-	if EventManager.get_queue_size() != 0:
-		return "gate reminder re-enqueued after terminal"
+	if EventGate.queue_size() != 0:
+		return "gate reminder re-admitted after terminal"
 	return ""
 
 
@@ -1124,11 +1417,11 @@ static func _case_full_loop() -> String:
 		_sim_day()
 		if not GameState.run_active:
 			return "run ended during wait: %s" % str(_endings)
-		if EventManager._active_event_id == VCPitchSystem.MEETING_PROMPT_ID or _instances_of(VCPitchSystem.MEETING_PROMPT_ID) > 0:
+		if EventGate.active_id() == MEETING_ID or _instances_of(MEETING_ID) > 0:
 			break
-	if not _drain_to(VCPitchSystem.MEETING_PROMPT_ID):
-		return "meeting prompt never enqueued"
-	EventManager.resolve_choice(VCPitchSystem.MEETING_PROMPT_ID, 0)  # "Toplantıya gir"
+	if not _drain_to(MEETING_ID):
+		return "meeting prompt never admitted"
+	EventGate.resolve(MEETING_ID, "go")
 	if not VCPitchSystem.is_meeting_active():
 		return "meeting did not start"
 	_run_meeting("anchor", "metrik", "durust", "b4_ack")
@@ -1265,12 +1558,12 @@ static func _case_sheet_expiry_no_rejection() -> String:
 	var warned := false
 	for i in 20:
 		_sim_day()
-		if _instances_of(VCPitchSystem.SHEET_WARN_ID) > 0 or EventManager._active_event_id == VCPitchSystem.SHEET_WARN_ID:
+		if _instances_of(SHEET_WARN_ID) > 0 or EventGate.active_id() == SHEET_WARN_ID:
 			warned = true
 		if GameState.active_sheets.is_empty():
 			break
 	if not warned:
-		return "no expiry warning enqueued at day 3"
+		return "no expiry warning admitted at day 3"
 	if not GameState.active_sheets.is_empty():
 		return "sheet did not expire"
 	if GameState.vc_states.get("anchor", {}).get("status", "") != "expired":
@@ -1639,14 +1932,13 @@ static func _case_seat_upsell_moves_seats() -> String:
 	var seat_signals: Array = []
 	var cb := func(_id: String, n: int) -> void: seat_signals.append(n)
 	EventBus.customer_seats_changed.connect(cb)
-	# Synthetic seats-modifier event (the state-bound expansion family replaced the old
-	# random ev_ps_expansion_b2b JSON; the generic `seats` modifier stays for this path).
-	EventManager.enqueue(_one_choice_event("smoke_seat_upsell",
-		[{"type": "seats", "amount": 4, "per_seat_mrr": 150, "customer_id": cust.id}]))
-	if EventManager._active_event_id != "smoke_seat_upsell":
-		EventBus.customer_seats_changed.disconnect(cb)
-		return "seat upsell event not active (%s)" % EventManager._active_event_id
-	EventManager.resolve_choice("smoke_seat_upsell", 0)   # +4 koltuk @150
+	# REPOINTED AT THE EXECUTOR. The case used to mint a synthetic GameEvent and push it
+	# through the queue, which is the admission bypass the rebuild deleted — there is no way
+	# to hand the engine a card that is not in the catalogue, and that is the point. What the
+	# case is ABOUT is the seats verb: seats move, MRR is priced off them, the signal fires
+	# and the aggregate is bridged. That runs through the same executor a played card uses.
+	EventGate.debug_apply_effects([
+		{"verb": "seats", "amount": 4, "per_seat_mrr": 150, "entity_id": cust.id}])
 	EventBus.customer_seats_changed.disconnect(cb)
 	if cust.seats != seats0 + 4:
 		return "seats did not move: %d -> %d (want +4)" % [seats0, cust.seats]
@@ -1689,8 +1981,8 @@ static func _case_targeted_modifier_hits_named_customer() -> String:
 	var c2: Customer = CustomerRegistry.get_customer("co_lead_two")
 	var s1: int = c1.seats
 	var s2: int = c2.seats
-	EventManager.enqueue(_one_choice_event("smoke_seat_target", [{"type": "seats", "amount": 5, "per_seat_mrr": 100, "customer_id": "co_lead_two"}]))
-	EventManager.resolve_choice("smoke_seat_target", 0)
+	EventGate.debug_apply_effects([
+		{"verb": "seats", "amount": 5, "per_seat_mrr": 100, "entity_id": "co_lead_two"}])
 	if c1.seats != s1:
 		return "untargeted account changed: %d -> %d" % [s1, c1.seats]
 	if c2.seats != s2 + 5:
@@ -1706,7 +1998,12 @@ static func _case_burn_day1_breakdown() -> String:
 		return "starting_daily_burn %d, want 50 (baseline calibration moved)" % FinanceSystem.starting_daily_burn()
 	if GameState.daily_burn != FinanceSystem.starting_daily_burn():
 		return "GameState.daily_burn (%d) does not derive from the breakdown" % GameState.daily_burn
-	var want_keys: Array = ["salaries", "overtime", "founder", "marketing", "office"]
+	# `servers` Ürün rev 6.1 §10 ile geldi: sunucu faturası burn'e GERÇEKTEN işliyor
+	# (InfraSystem her gün aylık/30 olarak yazıyor). Ürün yayınlanana kadar 0 olduğu
+	# için day-1 iddiası KIPIRDAMIYOR — aşağıdaki "sıfır olmayan kalem = kurgu"
+	# kontrolü onu zaten kapsıyor ve tek satırlık render sözleşmesi aynen duruyor.
+	# Bayat olan tek şey kadro listesiydi.
+	var want_keys: Array = ["salaries", "overtime", "founder", "marketing", "office", "servers"]
 	var keys: Array = FinanceSystem.STARTING_BURN_BREAKDOWN.keys()
 	if keys.size() != want_keys.size():
 		return "breakdown holds %d categories, want %d: %s" % [keys.size(), want_keys.size(), str(keys)]
@@ -1916,8 +2213,8 @@ static func _case_phase_bands_20_60_20() -> String:
 		return "park phase wrong: %s" % ProductSystem.get_active_build().current_phase
 	# Beta'da launch → ship moment kuyruğa düşer, ship_active_build dünyayı damgalar.
 	ProductSystem.launch()
-	if _instances_of("ev_mvp_ship_moment") < 1:
-		return "ship moment not enqueued from beta launch"
+	if _instances_of("product.first_ship") < 1:
+		return "ship moment not admitted from beta launch"
 	ProductSystem.ship_active_build()
 	if not GameState.get_flag("mvp_shipped", false):
 		return "ship did not set mvp_shipped"
@@ -1957,8 +2254,9 @@ static func _case_iter_decision_gates_development() -> String:
 		return "design loop violated (phase %s, efor %.3f)" % [b.current_phase, b.efor_spent]
 	if b.iteration_count < 3:
 		return "rounds did not chain over 5 days (count %d)" % b.iteration_count
-	if _instances_of("ev_mvp_iter_decision_intro") != 1:
-		return "iter intro event enqueued %d times, want exactly 1" % _instances_of("ev_mvp_iter_decision_intro")
+	if _instances_of("product.design_round_intro") != 1:
+		return "iter intro admitted %d times, want exactly 1" % \
+			_instances_of("product.design_round_intro")
 	ProductSystem.enter_development()
 	if b.current_phase != "development" or b.iteration_decision_pending:
 		return "enter_development did not flip cleanly"
@@ -2554,16 +2852,23 @@ static func _case_b2b_retention_routes_seams() -> String:
 		return "healthy account unexpectedly churned"
 	if healthy.lifecycle_phase == "risk":
 		return "healthy account fell into Risk (state-match broken)"
-	if _instances_of("ev_b2b_retain_co_lead_smoke") != 0:
+	if _instances_of(RETAIN_ID) != 0:
 		return "retention event fired for a healthy account (never should)"
 
 	# Söz ver → creates a promise, customer recovers, reputation up.
 	var c1: Customer = _add_risk_b2b("ra", 1000)
 	var rep0: int = GameState.reputation
-	EventManager.enqueue(B2BEventFactory.build_retention(c1))
-	if EventManager._active_event_id != "ev_b2b_retain_co_ra":
-		return "retention event not active (%s)" % EventManager._active_event_id
-	EventManager.resolve_choice("ev_b2b_retain_co_ra", 0)
+	# FORCE, NOT REQUEST, and the reason is the tempo brake. This case plays four retention
+	# decisions inside one simulated day; §13's budget is two interrupts, so the third and
+	# fourth are legitimately DEMOTED TO PAPER and never mount. That is the engine working —
+	# `_case_retention_gate_shared` is where admission is under test. What is under test HERE
+	# is where each option's effects land, so §4.5's debug entry is the right door: it skips
+	# G3, G4 and G8 and nothing else.
+	if not EventGate.force_fire(RETAIN_ID, {"customer": c1.id}):
+		return "the retention card was refused for an account in Risk"
+	if EventGate.active_id() != RETAIN_ID:
+		return "retention event not active (%s)" % EventGate.active_id()
+	EventGate.resolve(RETAIN_ID, "promise_it")
 	if PromiseRegistry.get_open_for("co_ra").size() != 1:
 		return "Söz ver did not create a promise"
 	if c1.lifecycle_phase == "risk":
@@ -2575,8 +2880,9 @@ static func _case_b2b_retention_routes_seams() -> String:
 	var c2: Customer = _add_risk_b2b("rb", 1000)
 	var cd0: int = c2.churn_countdown
 	var brand0: int = GameState.brand
-	EventManager.enqueue(B2BEventFactory.build_retention(c2))
-	EventManager.resolve_choice("ev_b2b_retain_co_rb", 1)
+	if not EventGate.force_fire(RETAIN_ID, {"customer": c2.id}):
+		return "the retention card was refused for co_rb"
+	EventGate.resolve(RETAIN_ID, "stall")
 	if c2.churn_countdown != cd0 + B2BConstants.RETAIN_DELAY_DAYS:
 		return "Oyala did not extend the countdown (%d -> %d)" % [cd0, c2.churn_countdown]
 	if c2.retain_stalls != 1:
@@ -2588,8 +2894,9 @@ static func _case_b2b_retention_routes_seams() -> String:
 	var c3: Customer = _add_risk_b2b("rc", 1000)
 	var mrr0: int = c3.mrr
 	var rep0b: int = GameState.reputation
-	EventManager.enqueue(B2BEventFactory.build_retention(c3))
-	EventManager.resolve_choice("ev_b2b_retain_co_rc", 2)
+	if not EventGate.force_fire(RETAIN_ID, {"customer": c3.id}):
+		return "the retention card was refused for co_rc"
+	EventGate.resolve(RETAIN_ID, "discount")
 	var cut: int = int(round(1000.0 * B2BConstants.RETAIN_DISCOUNT_PCT))
 	if c3.mrr != mrr0 - cut:
 		return "İndirim MRR wrong: %d -> %d (want -%d)" % [mrr0, c3.mrr, cut]
@@ -2606,8 +2913,9 @@ static func _case_b2b_retention_routes_seams() -> String:
 	var lost0: int = GameState.run_customers_lost
 	var brand0b: int = GameState.brand
 	var mrr0d: int = c4.mrr
-	EventManager.enqueue(B2BEventFactory.build_retention(c4))
-	EventManager.resolve_choice("ev_b2b_retain_co_rd", 3)
+	if not EventGate.force_fire(RETAIN_ID, {"customer": c4.id}):
+		return "the retention card was refused for co_rd"
+	EventGate.resolve(RETAIN_ID, "leave_alone")
 	if CustomerRegistry.get_customer("co_rd") == null:
 		return "Kendi haline bırak instantly churned the account (should not)"
 	if GameState.run_customers_lost != lost0:
@@ -2632,8 +2940,9 @@ static func _case_b2b_ignore_then_churn() -> String:
 
 	# Ignore path → countdown runs down → natural churn with one brand hit.
 	var c: Customer = _add_risk_b2b("ic", 1000)
-	EventManager.enqueue(B2BEventFactory.build_retention(c))
-	EventManager.resolve_choice("ev_b2b_retain_co_ic", 3)  # "Kendi haline bırak"
+	if not EventGate.request(RETAIN_ID, {"customer": c.id}):
+		return "the retention card was refused for co_ic"
+	EventGate.resolve(RETAIN_ID, "leave_alone")
 	if CustomerRegistry.get_customer("co_ic") == null:
 		return "ignore churned instantly"
 	var cd0: int = c.churn_countdown
@@ -2663,12 +2972,22 @@ static func _case_b2b_ignore_then_churn() -> String:
 	GameState.set_flag("mvp_stability", 90.0)
 	GameState.set_flag("mvp_live_bug_count", 0)
 	var r: Customer = _add_risk_b2b("ir", 1000)
-	EventManager.enqueue(B2BEventFactory.build_retention(r))
-	EventManager.resolve_choice("ev_b2b_retain_co_ir", 3)  # ignore
+	if not EventGate.request(RETAIN_ID, {"customer": r.id}):
+		return "the retention card was refused for co_ir"
+	EventGate.resolve(RETAIN_ID, "leave_alone")
 	if CustomerRegistry.get_customer("co_ir") == null:
 		return "rescue target churned on ignore"
-	EventManager.enqueue(B2BEventFactory.build_retention(r))  # reopen İlgilen
-	EventManager.resolve_choice("ev_b2b_retain_co_ir", 0)     # Söz ver → recover
+	# THE REOPEN NOW COSTS A DAY, and the day is the finding. `customer.retention` carries a
+	# one-day entity cooldown, so the İlgilen button cannot re-open the card the player just
+	# answered — that is an undo, not a decision — but the rescue window itself is untouched:
+	# the account is still in Risk with its countdown running.
+	if EventGate.request(RETAIN_ID, {"customer": r.id}):
+		return "the card re-opened the same day it was answered — the latch is not holding"
+	GameState.advance_day()
+	B2BSalesSystem.daily_tick()
+	if not EventGate.request(RETAIN_ID, {"customer": r.id}):
+		return "İlgilen could not re-open the card a day later"
+	EventGate.resolve(RETAIN_ID, "promise_it")     # Söz ver → recover
 	if r.lifecycle_phase == "risk":
 		return "İlgilen → Söz ver did not rescue after an earlier ignore"
 	return ""
@@ -2870,9 +3189,9 @@ static func _case_b2b_cs_absorbs_routine() -> String:
 		B2BSalesSystem.daily_tick()
 	if cs_mgd.satisfaction <= founder_mgd.satisfaction:
 		return "CS-managed did not erode slower (cs=%d founder=%d)" % [cs_mgd.satisfaction, founder_mgd.satisfaction]
-	if _instances_of("ev_b2b_retain_%s" % cs_mgd.id) != 0:
+	if _instances_of(RETAIN_ID) != 0:
 		return "CS-managed produced a routine retention event"
-	if _instances_of("ev_b2b_escalation_%s" % cs_mgd.id) != 0:
+	if _instances_of("customer.cs_escalation") != 0:
 		return "CS-managed escalated while still above the critical threshold"
 	return ""
 
@@ -2894,14 +3213,15 @@ static func _case_b2b_cs_escalation_refuse() -> String:
 	CustomerRegistry.assign_customer(c.id, cs.id)
 	CustomerRegistry.set_satisfaction(c.id, 20)  # below the critical threshold
 	GameState.advance_day()
-	B2BSalesSystem.daily_tick()  # escalation fires
-	var esc_id: String = "ev_b2b_escalation_%s" % c.id
-	if EventManager._active_event_id != esc_id:
-		return "escalation not active (%s)" % EventManager._active_event_id
+	B2BSalesSystem.daily_tick()      # writes cs_escalated — the EDGE, and nothing else
+	EventGate.daily_tick()           # the sweep reads it and admits the card
+	var esc_id: String = "customer.cs_escalation"
+	if not _drain_to(esc_id):
+		return "escalation not active (%s)" % EventGate.active_id()
 	var brand0: int = GameState.brand
 	var lost0: int = GameState.run_customers_lost
 	var morale0: int = cs.morale
-	EventManager.resolve_choice(esc_id, 1)  # "Hayır, yapmıyoruz"
+	EventGate.resolve(esc_id, "refuse")
 	if CustomerRegistry.get_customer(c.id) != null:
 		return "refuse did not churn the account"
 	if GameState.run_customers_lost != lost0 + 1:
@@ -2976,11 +3296,27 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	CustomerRegistry.set_satisfaction(m.id, 80)  # healthy (>= tolerance)
 	var seats_before: int = m.seats
 	GameState.advance_day()
-	B2BSalesSystem.daily_tick()
-	var eid: String = "ev_b2b_expand_%s" % m.id
-	if EventManager._active_event_id != eid:
-		return "expansion event not auto-enqueued for mature account (%s)" % EventManager._active_event_id
-	EventManager.resolve_choice(eid, 0)  # "Büyüt"
+	B2BSalesSystem.daily_tick()      # marks the account `expansion` — the fact, not the card
+	# THE EXPANSION IS A PAPER NOW, and that is the behaviour change worth pinning. It used to
+	# mount a modal the moment an account matured: an interruption for good news with no
+	# deadline behind it. It lands on the desk, and the desk is where the player picks it up.
+	var eid: String = EXPANSION_ID
+	if not EventGate.request(eid, {"customer": m.id}):
+		return "the expansion card was refused for a mature healthy account"
+	var desk: Array = EventGate.desk_papers(8)
+	var on_desk: bool = false
+	for entry in desk:
+		if String((entry as Dictionary)["id"]) == eid:
+			on_desk = true
+			if int((entry as Dictionary)["days_left"]) <= 0:
+				return "the expansion paper landed with no clock"
+	if not on_desk:
+		return "the expansion card did not reach the desk (desk: %d paper(s))" % desk.size()
+	if EventGate.active_id() == eid:
+		return "a paper mounted itself as a modal"
+	if not EventGate.open_paper(eid):
+		return "the paper would not open"
+	EventGate.resolve(eid, "expand")
 	if m.seats <= seats_before:
 		return "event-driven expansion did not grow seats"
 	return ""
@@ -3322,7 +3658,7 @@ static func _case_angel_fires_at_crossing() -> String:
 	for i in 3:
 		_sim_day_full()
 		_drain_all_modals()
-	if GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
+	if _card_fired(ANGEL_ID):
 		return "the offer opened below the bar (MRR %d)" % GameState.mrr
 
 	# Cross BOTH bars in one day: the 2,500 seed bar and the Series A gate (the revenue bar
@@ -3353,19 +3689,19 @@ static func _case_angel_fires_at_crossing() -> String:
 	GameState.advance_day()
 	TimeManager._dispatch_daily_tick()
 
-	if not GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
+	if not _card_fired(ANGEL_ID):
 		return "the offer never opened at MRR %d" % GameState.mrr
-	if _instances_of(AngelRoundSystem.EVENT_ID) != 1:
-		return "expected exactly one seed scene, found %d" % _instances_of(AngelRoundSystem.EVENT_ID)
+	if _instances_of(ANGEL_ID) != 1:
+		return "expected exactly one seed scene, found %d" % _instances_of(ANGEL_ID)
 
-	# ORDERING GUARD (do not drain before reading this). enqueue_front does NOT simply mean
-	# "front": it ends in _pump_queue, which mounts immediately when nothing is active. So
-	# with an EMPTY queue the FIRST caller owns the screen and later ones stack behind it,
-	# while with a modal already up the LAST caller pushes to the head of the queue. Slot
-	# order therefore only decides the reading order in the empty-queue case — which is the
-	# case this asserts, and the reason AngelRoundSystem sits at slot 8a, one line ahead of
-	# PhaseGateSystem: the money should land before "you're ready for Series A".
-	var seed_at: int = _queue_position_of(AngelRoundSystem.EVENT_ID)
+	# ORDERING GUARD (do not drain before reading this). It used to be a claim about SLOT
+	# ORDER — AngelRoundSystem sat one line ahead of PhaseGateSystem in TimeManager because
+	# "enqueue_front" did not mean front: it mounted immediately when nothing was active, so
+	# with an empty queue the FIRST caller owned the screen. Neither system has a slot any
+	# more. Both cards are admitted in the same tick and the engine orders the day's whole
+	# admission set by §11.2 priority, which is why the assertion still reads the same way and
+	# is now about something declared rather than about which file ran first.
+	var seed_at: int = _queue_position_of(ANGEL_ID)
 	var gate_at: int = _queue_position_of(GATE2_ID)
 	if gate_at < 0:
 		return "fixture: the Series A gate did not open at MRR %d / brand %d" % [GameState.mrr, GameState.brand]
@@ -3378,20 +3714,18 @@ static func _case_angel_fires_at_crossing() -> String:
 # empty-queue state. Bounded: a queue that will not drain is itself the finding.
 static func _drain_all_modals() -> void:
 	for i in 32:
-		if EventManager._active_event_id == "":
+		if EventGate.active_id() == "":
 			return
-		EventManager.resolve_choice(EventManager._active_event_id, 0)
+		EventGate.resolve(EventGate.active_id(), 0)
 
 
 # Where an id sits in the player's reading order: 0 = the modal on screen now, 1.. = the
 # queue behind it, −1 = not pending.
 static func _queue_position_of(event_id: String) -> int:
-	if EventManager._active_event_id == event_id:
+	if EventGate.active_id() == event_id:
 		return 0
-	for i in EventManager._queue.size():
-		if EventManager._queue[i].id == event_id:
-			return i + 1
-	return -1
+	var pos: int = EventGate.queue_position_of(event_id)
+	return pos + 1 if pos >= 0 else -1
 
 
 static func _case_angel_never_pre_ship() -> String:
@@ -3403,9 +3737,9 @@ static func _case_angel_never_pre_ship() -> String:
 	GameState.set_flag("mvp_shipped", false)
 	for i in 3:
 		_sim_day_full()
-	if GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
+	if _card_fired(ANGEL_ID):
 		return "the offer opened with no shipped product"
-	if _instances_of(AngelRoundSystem.EVENT_ID) != 0:
+	if _instances_of(ANGEL_ID) != 0:
 		return "a seed scene queued with no shipped product"
 	if GameState.run_angel_equity_pct != 0:
 		return "equity moved with no shipped product"
@@ -3422,14 +3756,14 @@ static func _case_angel_not_below_threshold() -> String:
 	if GameState.mrr != AngelRoundSystem.MRR_THRESHOLD - 1:
 		return "fixture drifted: MRR is %d" % GameState.mrr
 	_sim_day_full()
-	if GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
+	if _card_fired(ANGEL_ID):
 		return "the offer opened one dollar under the bar (MRR %d)" % GameState.mrr
 	# Over the line, through CustomerRegistry + the MRR bridge (a bare set_mrr would be
 	# clobbered by SalesSystem._mrr_bridge on the next tick).
 	CustomerRegistry.set_mrr(c.id, AngelRoundSystem.MRR_THRESHOLD)
 	SalesSystem.reflect_mrr()
 	_sim_day_full()
-	if not GameState.get_flag(AngelRoundSystem.FLAG_OFFERED, false):
+	if not _card_fired(ANGEL_ID):
 		return "the offer did not open at the bar itself (MRR %d)" % GameState.mrr
 	return ""
 
@@ -3451,7 +3785,7 @@ static func _case_angel_accept_is_atomic() -> String:
 		seen_tx[0] = FinanceSystem.get_transactions().size()
 	EventBus.equity_changed.connect(func(_p: int) -> void: equity_emits[0] += 1)
 	_sim_day_full()
-	if not _drain_to(AngelRoundSystem.EVENT_ID):
+	if not _drain_to(ANGEL_ID):
 		return "the seed scene never became active"
 	# Baselines taken AFTER the day has settled: _sim_day_full runs the finance slot, which
 	# applies the day's net flow, so a pre-tick snapshot would be off by exactly that net
@@ -3459,7 +3793,7 @@ static func _case_angel_accept_is_atomic() -> String:
 	var cash0: int = GameState.cash
 	var tx0: int = FinanceSystem.get_transactions().size()
 	EventBus.cash_changed.connect(probe)
-	EventManager.resolve_choice(AngelRoundSystem.EVENT_ID, 0)   # KABUL
+	EventGate.resolve(ANGEL_ID, "accept")   # KABUL
 	EventBus.cash_changed.disconnect(probe)
 
 	if GameState.cash != cash0 + AngelRoundSystem.CASH_AMOUNT:
@@ -3492,12 +3826,12 @@ static func _case_angel_accept_is_atomic() -> String:
 static func _case_angel_locked_choice_inert() -> String:
 	# REDDET · ZOR MOD is visible and unusable, and the lock is honest: not a fake
 	# threshold that could accidentally come true, but a flag with no writer in the engine.
-	var ev: GameEvent = AngelRoundSystem.build_offer_event()
+	var ev: GameEvent = EventGate.render(ANGEL_ID)
 	if ev.choices.size() != 2:
 		return "the seed scene has %d choices, wanted 2" % ev.choices.size()
 	var refuse: EventChoice = ev.choices[1]
 	# The SAME call the modal makes (event_modal.gd:330), not a mirror of it.
-	if EventManager.is_condition_met(refuse.unlock_condition):
+	if EventGate.condition_met(refuse.unlock_condition):
 		return "the hard-mode choice is unlocked"
 	if refuse.unlock_reason_text == "":
 		return "the locked choice carries no telegraph text"
@@ -3505,10 +3839,10 @@ static func _case_angel_locked_choice_inert() -> String:
 		return "the locked choice carries modifiers — the lock is the only thing stopping them"
 	# FALSIFY THE LOCK: it must be a live predicate over one named key, not a constant.
 	GameState.set_flag(AngelRoundSystem.HARD_MODE_FLAG, true)
-	if not EventManager.is_condition_met(refuse.unlock_condition):
+	if not EventGate.condition_met(refuse.unlock_condition):
 		return "the lock did not open when hard_mode_unlocked was set — it is not a real condition"
 	GameState.set_flag(AngelRoundSystem.HARD_MODE_FLAG, false)
-	if EventManager.is_condition_met(refuse.unlock_condition):
+	if EventGate.condition_met(refuse.unlock_condition):
 		return "flag_equals matched a false value — the gate is flag_set, not flag_equals"
 	return ""
 
@@ -3520,9 +3854,9 @@ static func _case_angel_one_shot_falsified() -> String:
 	if c == null:
 		return "fixture: no customer"
 	_sim_day_full()
-	if not _drain_to(AngelRoundSystem.EVENT_ID):
+	if not _drain_to(ANGEL_ID):
 		return "the seed scene never became active"
-	EventManager.resolve_choice(AngelRoundSystem.EVENT_ID, 0)
+	EventGate.resolve(ANGEL_ID, "accept")
 	# Ten more days INCLUDING a genuine re-crossing: down under the bar, then back over.
 	for i in 10:
 		if i == 3:
@@ -3532,7 +3866,7 @@ static func _case_angel_one_shot_falsified() -> String:
 			CustomerRegistry.set_mrr(c.id, AngelRoundSystem.MRR_THRESHOLD + 2000)
 			SalesSystem.reflect_mrr()
 		_sim_day_full()
-		if _instances_of(AngelRoundSystem.EVENT_ID) != 0:
+		if _instances_of(ANGEL_ID) != 0:
 			return "the seed scene re-opened on day %d" % GameState.day
 	if GameState.run_angel_equity_pct != AngelRoundSystem.EQUITY_PCT:
 		return "equity compounded to %d%%" % GameState.run_angel_equity_pct
@@ -3542,12 +3876,16 @@ static func _case_angel_one_shot_falsified() -> String:
 			paid += 1
 	if paid != 1:
 		return "the treasury took the cheque %d times" % paid
-	# THE FALSIFICATION: clear the latch by hand and the offer MUST come back. Without
-	# this half the case would pass just as happily against an engine where the beat never
-	# fires at all, or where something other than the flag is doing the suppressing.
-	GameState.set_flag(AngelRoundSystem.FLAG_OFFERED, false)
+	# THE FALSIFICATION: clear the latch by hand and the offer MUST come back. Without this
+	# half the case would pass just as happily against an engine where the beat never fires at
+	# all, or where something other than the latch is doing the suppressing. It used to clear
+	# a GameState flag; it clears the ENGINE's latch now, which is the thing that actually
+	# refuses the card — and `investor.angel_taken` has to be cleared with it, because the
+	# card's own condition asks whether the cheque has already been taken.
+	EvLatches.clear_one(EvLatches.key_for(ANGEL_ID, EvLatches.KEY_RUN, ""))
+	GameState.set_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, 0)
 	_sim_day_full()
-	if _instances_of(AngelRoundSystem.EVENT_ID) != 1:
+	if _instances_of(ANGEL_ID) != 1:
 		return "clearing the latch did not re-open the offer — the one-shot is not the latch's doing"
 	return ""
 
@@ -3561,9 +3899,9 @@ static func _case_angel_survives_series_a() -> String:
 	if c == null:
 		return "fixture: no customer"
 	_sim_day_full()
-	if not _drain_to(AngelRoundSystem.EVENT_ID):
+	if not _drain_to(ANGEL_ID):
 		return "the seed scene never became active"
-	EventManager.resolve_choice(AngelRoundSystem.EVENT_ID, 0)
+	EventGate.resolve(ANGEL_ID, "accept")
 	VCPitchSystem._persist_signed_terms({
 		"valuation_m": 22, "dilution_pct": 18, "board_seats": 1, "board_veto": false})
 	if GameState.run_angel_equity_pct != AngelRoundSystem.EQUITY_PCT:
@@ -3593,26 +3931,28 @@ static func _case_angel_hire_nudge() -> String:
 		return "fixture: no customer"
 	var badge0: int = HRSystem.attention_count()
 	_sim_day_full()
-	if not _drain_to(AngelRoundSystem.EVENT_ID):
+	if not _drain_to(ANGEL_ID):
 		return "the seed scene never became active"
-	EventManager.resolve_choice(AngelRoundSystem.EVENT_ID, 0)
+	EventGate.resolve(ANGEL_ID, "accept")
 	if HRSystem.attention_count() != badge0 + 1:
 		return "the HR badge did not light after the seed (%d -> %d)" % [badge0, HRSystem.attention_count()]
 	# Too early: the day after acceptance is inside the delay.
 	_sim_day_full()
-	if _instances_of(AngelRoundSystem.NUDGE_EVENT_ID) != 0:
+	if _instances_of(NUDGE_ID) != 0:
 		return "the nudge fired before its delay elapsed"
-	for i in AngelRoundSystem.NUDGE_DELAY_DAYS:
+	# The delay is the card's own condition — `funding.angel_days_since_accept >= 2` — so the
+	# number is read off the card rather than off a system constant that no longer exists.
+	for i in _nudge_delay_days():
 		_sim_day_full()
-	if not _drain_to(AngelRoundSystem.NUDGE_EVENT_ID):
+	if not _drain_to(NUDGE_ID):
 		return "the hire nudge never arrived"
-	EventManager.resolve_choice(AngelRoundSystem.NUDGE_EVENT_ID, 0)
+	EventGate.resolve(NUDGE_ID, "go_to_hr")
 	# Advisory only: nothing economic may have moved.
 	if GameState.run_angel_equity_pct != AngelRoundSystem.EQUITY_PCT:
 		return "the nudge moved equity"
 	for i in 6:
 		_sim_day_full()
-		if _instances_of(AngelRoundSystem.NUDGE_EVENT_ID) != 0:
+		if _instances_of(NUDGE_ID) != 0:
 			return "the nudge repeated on day %d" % GameState.day
 	# Hiring clears the badge — the signpost is self-retiring, not a standing demand.
 	_make_employee("emp_nudge_hire", "İlk Çalışan", HRConstants.ROLE_DEVELOPER)
@@ -3640,8 +3980,9 @@ static func _case_promise_no_duplicate_word() -> String:
 	var live: Array = GameState.get_flag("mvp_components", [])
 	if live.has(c.pain_feature_id):
 		return "fixture drifted: pain feature is already shipped"
-	var first: GameEvent = B2BEventFactory.build_retention(c)
-	if _promise_row_index(first) < 0:
+	var ctx: Dictionary = _ctx_customer(c)
+	var first: GameEvent = EventGate.render(RETAIN_ID, ctx)
+	if not _row_unlocked(first, _promise_row_index(first), ctx):
 		return "the retention card offered no promise row with nothing outstanding"
 
 	# Give the word once, through the real modifier seam.
@@ -3650,14 +3991,21 @@ static func _case_promise_no_duplicate_word() -> String:
 		return "accept_promise did not open a promise"
 
 	# Now every card that could mint a second debt must withhold it.
-	var again: GameEvent = B2BEventFactory.build_retention(c)
-	if _promise_row_index(again) >= 0:
+	# THE ROW IS NOW SHOWN AND LOCKED, not withheld. §17.5's ruling: a locked option renders
+	# greyed with its reason, because an option that disappears teaches the player nothing.
+	# What must not happen is that it can be TAKEN, and that is what is asserted.
+	var again: GameEvent = EventGate.render(RETAIN_ID, ctx)
+	var again_idx: int = _promise_row_index(again)
+	if again_idx < 0:
+		return "the promise row vanished instead of locking — the player learns nothing"
+	if _row_unlocked(again, again_idx, ctx):
 		return "the retention card offered a SECOND word while one was still open"
-	if again.choices.is_empty():
-		return "withholding the promise row emptied the card — the player would be stuck"
-	var req: GameEvent = B2BEventFactory.build_cs_request(c, _make_employee(
-		"emp_cs_dup", "Dup CS", HRConstants.ROLE_CUSTOMER_REP))
-	if _promise_row_index(req) >= 0:
+	if again.choices[again_idx].unlock_reason_text == "":
+		return "the locked promise row carries no reason line"
+	_make_employee("emp_cs_dup", "Dup CS", HRConstants.ROLE_CUSTOMER_REP)
+	var req: GameEvent = EventGate.render("customer.request_feature", ctx)
+	var req_idx: int = _promise_row_index(req)
+	if req_idx >= 0 and _row_unlocked(req, req_idx, ctx):
 		return "the CS request card offered a SECOND word while one was still open"
 
 	# Control: once the debt is settled, the card offers a word again — the gate is the
@@ -3667,19 +4015,74 @@ static func _case_promise_no_duplicate_word() -> String:
 	if PromiseRegistry.has_open_for(c.id):
 		return "fixture: the promise did not close"
 	c.pain_feature_id = "saas_ops_field"   # a still-unshipped feature
-	if _promise_row_index(B2BEventFactory.build_retention(c)) < 0:
-		return "the promise row never came back after the debt closed"
+	var reopened: GameEvent = EventGate.render(RETAIN_ID, ctx)
+	if not _row_unlocked(reopened, _promise_row_index(reopened), ctx):
+		return "the promise row never unlocked again after the debt closed"
 	return ""
 
 
 # Index of the row that would MINT A NEW PROMISE, found by modifier type rather than by
 # label (labels are player-facing text) or position (the rows are conditional).
 static func _promise_row_index(ev: GameEvent) -> int:
+	return _row_with_verb(ev, "promise_create")
+
+
+## The row carrying `verb`, by VERB rather than by label (labels are player-facing text) or by
+## position (the rows are conditional). Reads `verb`, which is what an effect is keyed on in
+## the card schema; the old modifier `type` key died with the builders.
+static func _row_with_verb(ev: GameEvent, verb: String) -> int:
 	for i in ev.choices.size():
 		for m in ev.choices[i].modifiers:
-			if String(m.get("type", "")) == "b2b_promise_create":
+			if String((m as Dictionary).get("verb", "")) == verb:
 				return i
 	return -1
+
+
+## Did the CS desk escalate a request for this account — any of the three branches? The old
+## engine had one card id per customer (`ev_b2b_request_<id>`) and the branch was chosen at
+## build time; the branch is a condition now, so the family is what a case can name.
+static func _request_cards_up() -> int:
+	var n: int = 0
+	for kind in ["complaint", "feature", "renewal"]:
+		var id: String = "customer.request_" + kind
+		# THE DESK COUNTS. These three are papers, and a paper is deliberately not in the
+		# queue — `_instances_of` reads the queue and the active slot, so counting only there
+		# says "nothing escalated" about a request sitting on the desk with its clock running.
+		n += _instances_of(id)
+		if EvPapers.has(id):
+			n += 1
+	return n
+
+
+## Has this card fired at all this run? Replaces every `get_flag("<something>_shown")` read
+## the old hand-rolled latches made possible — the latch is the engine's now, so the question
+## is asked of the engine.
+static func _card_fired(event_id: String) -> bool:
+	return EvLatches.fires(EvLatches.key_for(event_id, EvLatches.KEY_RUN, "")) > 0
+
+
+## The hire nudge's delay, read off the card's own condition rather than off a constant.
+static func _nudge_delay_days() -> int:
+	for leaf in EventGate.condition_leaves(
+			EventGate.catalogue_card(NUDGE_ID).get("condition", {})):
+		if String((leaf as Dictionary).get("seam", "")) == "funding.angel_days_since_accept":
+			return int((leaf as Dictionary).get("value", 0))
+	return 2
+
+
+## Is row `idx` playable right now, against this card's frozen context? An out-of-range index
+## is "no row", not a crash — several cases ask about a row that may legitimately be absent.
+static func _row_unlocked(ev: GameEvent, idx: int, ctx: Dictionary) -> bool:
+	if ev == null or idx < 0 or idx >= ev.choices.size():
+		return false
+	return EventGate.condition_met(ev.choices[idx].unlock_condition, ctx)
+
+
+## A frozen context binding one customer, the shape EvScope produces. Cards are rendered and
+## conditions are evaluated against this, so a case can ask what a card looks like FOR a named
+## account without going through admission.
+static func _ctx_customer(c: Customer) -> Dictionary:
+	return {"customer": {"type": "customer", "id": c.id, "bound_day": GameState.day}}
 
 
 static func _case_promise_kept_stops_countdown() -> String:
@@ -3893,17 +4296,21 @@ static func _case_b2b_expansion_no_refire() -> String:
 	c.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
 	CustomerRegistry.set_lifecycle_phase(c.id, "active")
 	CustomerRegistry.set_satisfaction(c.id, 80)
-	var eid: String = "ev_b2b_expand_%s" % c.id
+	# A PAPER, not a modal — see _case_b2b_expansion_moves_seats_mrr_counter for the why. The
+	# gate is asked the same question either way; what changed is the surface it lands on.
+	var eid: String = EXPANSION_ID
 	GameState.advance_day()
 	B2BSalesSystem.daily_tick()
-	if EventManager._active_event_id != eid:
-		return "expansion never offered (%s)" % EventManager._active_event_id
-	EventManager.resolve_choice(eid, 0)   # "Büyüt"
+	if not EventGate.request(eid, {"customer": c.id}):
+		return "expansion never offered"
+	if not EventGate.open_paper(eid):
+		return "the expansion paper would not open"
+	EventGate.resolve(eid, "expand")
 	var mrr_after_upsell: int = c.mrr
 	for i in 6:
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
-		if EventManager._active_event_id == eid or _instances_of(eid) > 0:
+		if EventGate.active_id() == eid or _instances_of(eid) > 0 or EvPapers.has(eid):
 			return "expansion re-fired after ACCEPT (day %d)" % GameState.day
 	if c.mrr != mrr_after_upsell:
 		return "MRR kept growing after one upsell (%d -> %d)" % [mrr_after_upsell, c.mrr]
@@ -3921,16 +4328,21 @@ static func _case_b2b_expansion_no_refire() -> String:
 	d.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
 	CustomerRegistry.set_lifecycle_phase(d.id, "active")
 	CustomerRegistry.set_satisfaction(d.id, 80)
-	var did: String = "ev_b2b_expand_%s" % d.id
+	# ONE card id for the whole family, so the second account cannot have its own. The first
+	# account's paper is already answered, which is what leaves the id free — and the entity
+	# latch is what keeps the two accounts' offers from absorbing each other.
+	var did: String = EXPANSION_ID
 	GameState.advance_day()
 	B2BSalesSystem.daily_tick()
-	if not _drain_to(did):
+	if not EventGate.request(did, {"customer": d.id}):
 		return "expansion never offered to the second account"
-	EventManager.resolve_choice(did, 1)   # "Şimdilik gerek yok"
+	if not EventGate.open_paper(did):
+		return "the second account's expansion paper would not open"
+	EventGate.resolve(did, "not_yet")
 	for i in 6:
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
-		if EventManager._active_event_id == did or _instances_of(did) > 0:
+		if EventGate.active_id() == did or _instances_of(did) > 0 or EvPapers.has(did):
 			return "expansion re-fired after DECLINE (day %d)" % GameState.day
 	# The Sales-tab button asks the same gate, so the loop cannot be reopened through the UI.
 	if B2BSalesSystem.can_offer_expansion(d):
@@ -3994,19 +4406,22 @@ static func _case_event_queue_dedupe_by_id() -> String:
 	# FAILS against the pre-fix engine (two instances land).
 	_seed_b2b(500)
 	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
-	# Occupy the modal slot, so the two events under test must QUEUE rather than mount —
-	# the already-active id was guarded even before this fix; the QUEUE was not.
-	EventManager.enqueue(B2BEventFactory.build_retention(c))
-	if EventManager._active_event_id == "":
+	# Occupy the modal slot, so the card under test must QUEUE rather than mount — the
+	# already-active id was guarded even before the fix this case was written for; the QUEUE
+	# was not.
+	var risky: Customer = _add_risk_b2b("dedupe", 800)
+	if not EventGate.request(RETAIN_ID, {"customer": risky.id}):
 		return "could not occupy the active slot"
-	var a: GameEvent = B2BEventFactory.build_expansion(c)
-	var b: GameEvent = B2BEventFactory.build_expansion(c)
-	if a == b:
-		return "the factory returned one instance twice — the case would prove nothing"
-	EventManager.enqueue(a)
-	EventManager.enqueue(b)
-	if _instances_of(a.id) != 1:
-		return "one event id entered the pipeline %d times" % _instances_of(a.id)
+	if EventGate.active_id() == "":
+		return "could not occupy the active slot"
+	# TWO REQUESTS FOR THE SAME CARD, and only one may land. The identity bug this case was
+	# born for cannot be written any more — a caller names an ID, so there is no second
+	# instance to mint — which is exactly why the case was kept rather than deleted: it now
+	# pins that the ENGINE refuses the duplicate instead of the caller checking first.
+	EventGate.request(EXPANSION_ID, {"customer": c.id})
+	EventGate.request(EXPANSION_ID, {"customer": c.id})
+	if _instances_of(EXPANSION_ID) > 1:
+		return "one event id entered the pipeline %d times" % _instances_of(EXPANSION_ID)
 	return ""
 
 
@@ -4054,8 +4469,8 @@ static func _case_b2b_onboarding_to_prospect_visible() -> String:
 	ProductSystem.launch()
 	# Dismiss the ship-moment (its ship_active_build modifier sets mvp_shipped); if no
 	# modal is active, ship directly. Either way the ship-moment must not block the queue.
-	if EventManager._active_event_id != "":
-		EventManager.resolve_choice(EventManager._active_event_id, 0)
+	if EventGate.active_id() != "":
+		EventGate.resolve(EventGate.active_id(), 0)
 	if not GameState.get_flag("mvp_shipped", false):
 		ProductSystem.ship_active_build()
 	if String(GameState.get_flag("mvp_market_type", "")) != "b2b":
@@ -4068,13 +4483,13 @@ static func _case_b2b_onboarding_to_prospect_visible() -> String:
 	var reached: bool = false
 	for i in 4:
 		_sim_day()
-		if _drain_to("ev_ps_frank_intro_b2b"):
+		if _drain_to("customer.frank_intro"):
 			reached = true
 			break
 	if not reached:
 		return "Frank intro never became active post-ship"
 	var n0: int = ProspectRegistry.get_all().size()
-	EventManager.resolve_choice("ev_ps_frank_intro_b2b", 0)   # add_prospect (source frank_intro)
+	EventGate.resolve("customer.frank_intro", "go_to_sales")   # add_prospect
 	var prospects: Array[Prospect] = ProspectRegistry.get_all()
 	if prospects.size() != n0 + 1:
 		return "Frank intro produced no prospect (spawn aborted?) %d -> %d" % [n0, prospects.size()]
@@ -4712,8 +5127,10 @@ static func _case_hr_search_cycle() -> String:
 		return "files arrived on day %d, want %d-%d" % [
 			arrived_on, HRConstants.SEARCH_ARRIVAL_DAYS, HRConstants.SEARCH_ARRIVAL_DAYS]
 	# Arrival is a badge and a ticker line, never an interruption.
-	if EventManager._active_event_id.begins_with("ev_hr_"):
-		return "candidate arrival opened a modal (%s)" % EventManager._active_event_id
+	# The HR family is one card now (`team.resignation`), so the prefix test became a namespace
+	# test: nothing in `team.` may be on screen because files landed on the desk.
+	if EventGate.active_id().begins_with("team."):
+		return "candidate arrival opened a modal (%s)" % EventGate.active_id()
 	var files: Array = HRSearchSystem.get_files()
 	if files.size() != HRConstants.CANDIDATE_COUNT:
 		return "%d files ready, want %d" % [files.size(), HRConstants.CANDIDATE_COUNT]
@@ -4847,7 +5264,11 @@ static func _case_hr_resignation_path() -> String:
 	_park_leave([e])
 	CharacterRegistry.set_morale(e.id, HRConstants.MORALE_FLIGHT_RISK - 5)
 	var dep0: int = GameState.run_departures
-	var resign_id: String = "ev_hr_resign_%s" % e.id
+	# ONE id for the whole family now. The old factory minted `ev_hr_resign_<employee_id>` —
+	# a per-person id, which is how it avoided the queue's dedupe; the card carries
+	# `latch_key: entity` instead, so two people can resign in one run and neither absorbs the
+	# other's card, without the id having to encode the subject.
+	var resign_id: String = "team.resignation"
 	var seen: bool = false
 	for i in HRConstants.RESIGN_WINDOW_MAX_DAYS + 4:
 		_sim_day()
@@ -4865,7 +5286,7 @@ static func _case_hr_resignation_path() -> String:
 	if not _drain_to(resign_id):
 		return "could not bring the resignation event to the front"
 	var cash_before: int = GameState.cash
-	EventManager.resolve_choice(resign_id, 0)
+	EventGate.resolve(resign_id, "acknowledge")
 	if CharacterRegistry.get_character(e.id) != null:
 		return "resignation resolved but the employee is still on the roster"
 	if GameState.run_departures != dep0 + 1:
@@ -6265,7 +6686,7 @@ static func _case_cs_request_absorption_by_expertise() -> String:
 	CustomerRepSystem.daily_tick()
 	if c.support_request_since_day >= 0:
 		return "the strong rep did not clear the request"
-	if _instances_of("ev_b2b_request_%s" % c.id) != 0:
+	if _request_cards_up() != 0:
 		return "the strong rep escalated a request it should have absorbed"
 	CharacterRegistry.remove(strong.id)
 	CharacterRegistry.remove(strong2.id)
@@ -6274,7 +6695,7 @@ static func _case_cs_request_absorption_by_expertise() -> String:
 	_make_cs_rep("char_cs_weak2", 9, strong_expertise - 1)
 	CustomerRegistry.set_support_request(c.id, GameState.day)
 	CustomerRepSystem.daily_tick()
-	if _instances_of("ev_b2b_request_%s" % c.id) == 0:
+	if _request_cards_up() == 0:
 		return "the weaker rep absorbed a request that should have escalated"
 	return ""
 
@@ -6350,7 +6771,7 @@ static func _case_cs_request_channel_gated_on_rep() -> String:
 		B2BSalesSystem.daily_tick()
 		if c.support_request_since_day >= 0:
 			return "a request opened with no customer rep on staff (day %d)" % GameState.day
-	if _instances_of("ev_b2b_request_%s" % c.id) != 0:
+	if _request_cards_up() != 0:
 		return "a request event fired with no customer rep on staff"
 	return ""
 
@@ -6720,21 +7141,21 @@ static func _seed_save_world() -> void:
 	FinanceSystem.burn_breakdown["marketing"] = 777
 	GameState.cs_escalation_days.append(42)         # Array[int] tipli kalmalı (net_history_90 2026-08-19'da emekli)
 
-	# Sentetik event: hiçbir JSON dosyasında yok, id'den geri kurulamaz. Altı
-	# speaker_* alanı bilerek dolu — _build_event_from_dict bunları hiç okumuyordu.
-	var ev := GameEvent.new()
-	ev.id = "ev_smoke_synthetic"
-	ev.title = "Sentetik"
-	ev.speaker_name = "Smoke Corp"
-	ev.speaker_role = "Satin alma"
-	ev.speaker_status = "RISK ALTINDA"
-	ev.speaker_status_kind = "negative"
-	ev.speaker_initial = "SC"
-	ev.speaker_chips = [{"text": "cip", "kind": "neutral"}]
-	var ch := EventChoice.new()
-	ch.label = "Secenek"
-	ev.choices.append(ch)
-	EventManager._queue.append(ev)
+	# SENTETİK EVENT GİTTİ. Fixture bir GameEvent kuruyor ve kuyruğa enjekte ediyordu; amacı
+	# "hiçbir JSON dosyasında olmayan, id'den geri kurulamayan" bir kartın kaydı geçip
+	# geçmediğini ölçmekti — yani tam olarak motorun artık temsil EDEMEDİĞİ şeyi. Kuyruk id
+	# tutuyor, görünüm her açılışta katalogdan yeniden çiziliyor, dolayısıyla kaydedilecek bir
+	# speaker_* alanı yok.
+	#
+	# YERİNE MASADA BİR KÂĞIT BIRAKILIYOR, ve seçim önemli: `can_save()` EKRANDA kart varken
+	# kaydetmeyi REDDEDER (save_manager.gd:148) — koruduğu şey sunulmuş ama yanıtlanmamış bir
+	# karardır. Bir kâğıt tam da bunun karşıtıdır: motor durumudur, EvSave bloğunda gidip
+	# gelir, ve oyuncunun gerçek kayıtları da böyle görünür — masada kâğıt, ekranda modal yok.
+	var aged: Customer = CustomerRegistry.get_by_market("b2b")[0]
+	aged.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
+	CustomerRegistry.set_lifecycle_phase(aged.id, "active")
+	CustomerRegistry.set_satisfaction(aged.id, 80)
+	EventGate.request(EXPANSION_ID, {"customer": aged.id})
 
 
 ## Diske YAZ, geri OKU, normalleştir. Gerçek yolu kullanır (atomik yazım + JSON
@@ -6808,21 +7229,38 @@ static func _case_save_roundtrip_fingerprint() -> String:
 		_cleanup_save_slots()
 		return "run_hires incremented by a load (%d then %d)" % [hires_before, GameState.run_hires]
 
-	# Sentetik event, altı speaker_* alanı ve iç içe EventChoice ile döndü mü?
-	var found: GameEvent = null
-	for e in EventManager._queue:
-		if e.id == "ev_smoke_synthetic":
-			found = e
-	if found == null:
+	# KUYRUK ARTIK KART SERİLEŞTİRMİYOR, bu yüzden bu blok da ölçüsünü değiştirdi.
+	#
+	# Eskiden burada "altı speaker_* alanı ve iç içe EventChoice geri döndü mü" diye
+	# soruluyordu: kuyruk GameEvent NESNELERİ tutuyordu ve kaydın onları bütün hâlde
+	# taşıması gerekiyordu. Motorun kuyruğunda id ile BAĞLAM var; görünüm her açılışta
+	# katalogdan, canlı dilde yeniden çiziliyor. Kaydedilecek bir speaker_name yok —
+	# ve bu, koşu ortasında dil değiştirmenin neden güvenli olduğunun ta kendisi (§3.2).
+	#
+	# Ölçülmesi gereken şey bu yüzden ŞU: kartın kimliği ve ÖZNESİ döndü mü. Bir kaydın
+	# kaybedebileceği tek şey odur, ve kaybederse kart yanlış hesap hakkında konuşur.
+	var desk: Array = EventGate.desk_papers(8)
+	var entry: Dictionary = {}
+	for row in desk:
+		if String((row as Dictionary)["id"]) == EXPANSION_ID:
+			entry = row
+	if entry.is_empty():
 		_cleanup_save_slots()
-		return "synthetic queued event did not survive the round-trip"
-	if found.speaker_name != "Smoke Corp" or found.speaker_status_kind != "negative" \
-			or found.speaker_chips.size() != 1:
+		return "the paper did not survive the round-trip (desk: %d)" % desk.size()
+	if int(entry["days_left"]) <= 0:
 		_cleanup_save_slots()
-		return "synthetic event lost its speaker_* fields"
-	if found.choices.size() != 1 or not (found.choices[0] is EventChoice):
+		return "the paper came back with no clock (%d)" % int(entry["days_left"])
+	# The VIEW is rebuilt from the catalogue, in the live locale, from an id and a frozen
+	# context. Nothing about the card's words was in the save file, and that is the property
+	# under test: a title that resolves proves the rebuild, and a title that is still its own
+	# key proves only that a token round-tripped.
+	var view: GameEvent = EventGate.render(EXPANSION_ID, EventGate.bind_scope(EXPANSION_ID))
+	if view == null or view.choices.size() != 2:
 		_cleanup_save_slots()
-		return "synthetic event lost its nested EventChoice"
+		return "the card did not rebuild its options from the catalogue"
+	if view.title == "" or view.title == "B2B_EV_EXPANSION_TITLE":
+		_cleanup_save_slots()
+		return "the rebuilt view did not resolve its text (%s)" % view.title
 
 	_cleanup_save_slots()
 	return ""
@@ -7338,57 +7776,31 @@ static func _case_loc_format_locale_flip() -> String:
 	return ""
 
 
-## Every authored (non-debug) reactive event must carry an English sibling for each text
-## field it fills. Runs against the JSON on disk rather than the loaded cache, because the
-## cache skips ev_debug_* and the point is to audit what SHIPS. The three ev_debug_*
-## fixtures are exempt by director ruling — they are developer surfaces.
+## Every card carries BOTH locales, and every localization key in either resolves.
+##
+## REPOINTED AT THE CATALOGUE. `data/events/reactive/` went with the old engine, and with it
+## the `*_en` sibling-field convention this case was written for — along with its ratchet,
+## which existed because 79 English values were still unwritten. Cards carry a `text` block per
+## locale and the BILINGUAL BIRTH LAW is absolute for them, so the ratchet has nothing to
+## count down: the question is simply whether both blocks are there and whether every
+## SCREAMING_SNAKE token in them has a CSV row.
 static func _case_loc_event_en_coverage() -> String:
-	var dir := DirAccess.open("res://data/events/reactive")
-	if dir == null:
-		return "cannot open res://data/events/reactive"
+	EvCatalog.reload()
 	var missing: Array[String] = []
-	var checked: int = 0
-	dir.list_dir_begin()
-	var entry: String = dir.get_next()
-	while entry != "":
-		if entry.ends_with(".json") and not entry.begins_with("ev_debug_"):
-			var f := FileAccess.open("res://data/events/reactive/" + entry, FileAccess.READ)
-			if f == null:
-				return "%s unreadable" % entry
-			var parsed: Variant = JSON.parse_string(f.get_as_text())
-			if typeof(parsed) != TYPE_DICTIONARY:
-				return "%s is not a JSON object" % entry
-			var d: Dictionary = parsed
-			checked += 1
-			for field in ["title", "subtitle", "body_text", "mentor_line"]:
-				if String(d.get(field, "")).strip_edges() != "" \
-						and String(d.get(field + "_en", "")).strip_edges() == "":
-					missing.append("%s:%s" % [entry, field])
-			var choices: Array = d.get("choices", []) as Array
-			for i in choices.size():
-				if typeof(choices[i]) != TYPE_DICTIONARY:
-					continue
-				var c: Dictionary = choices[i]
-				for cf in ["label", "description", "unlock_reason_text"]:
-					if String(c.get(cf, "")).strip_edges() != "" \
-							and String(c.get(cf + "_en", "")).strip_edges() == "":
-						missing.append("%s:choices[%d].%s" % [entry, i, cf])
-		entry = dir.get_next()
-	dir.list_dir_end()
-	if checked == 0:
-		return "no authored event files found — the scan is not looking where it thinks"
-	# RATCHET, not a pass/fail line. Step 1d landed the SCHEMA; batch B6 authors the ~79
-	# English values. A case that simply failed until B6 would sit red across six commits
-	# and train everyone to ignore the suite, and one that simply passed would prove
-	# nothing. So it fails only if coverage goes BACKWARDS: the count may fall freely
-	# (that is B6 working), never rise (that is a new event authored TR-only, which the
-	# BILINGUAL BIRTH LAW forbids). Lower the constant as batches land; 0 is B6's done.
-	if missing.size() > LOC_EVENT_EN_PENDING:
-		return "_en coverage REGRESSED: %d missing, ratchet allows %d. New offenders: %s" % [
-			missing.size(), LOC_EVENT_EN_PENDING, ", ".join(missing.slice(0, 6))]
+	for id in EvCatalog.card_ids():
+		var card: Dictionary = EvCatalog.card(String(id))
+		var text: Dictionary = card.get("text", {})
+		for locale in ["tr", "en"]:
+			if not text.has(locale) or (text[locale] as Dictionary).is_empty():
+				missing.append("%s: no %s block" % [id, locale])
+				continue
+			for token in _caps_tokens(text[locale]):
+				if TranslationServer.translate(token) == token:
+					missing.append("%s: %s has no CSV row" % [id, token])
+	if EvCatalog.card_ids().is_empty():
+		return "no cards found — the scan is not looking where it thinks"
 	if not missing.is_empty():
-		print("  [loc_event_en_coverage] %d/%d authored fields still awaiting _en (ratchet %d, target 0 at B6)" % [
-			missing.size(), checked, LOC_EVENT_EN_PENDING])
+		return "locale gaps (%d): %s" % [missing.size(), ", ".join(missing.slice(0, 8))]
 	return ""
 
 
@@ -7505,11 +7917,33 @@ static func _case_job_assignment_and_idle() -> String:
 	var empty: Array[String] = HRSystem.unstaffed_jobs()
 	if empty.has(HRConstants.JOB_ACCOUNTS):
 		return "Hesap sahipliği reads unstaffed while somebody is assigned to it"
-	if not empty.has(HRConstants.JOB_SALES):
-		return "the Satış job has nobody on it and did not read as unstaffed"
-	# KURUCU TEK İŞ (§2.1 "Her şeyi yapabilir, aynı anda yapamaz"). İkincisi sessizce
-	# eklenmez, gerekçeyle reddedilir — ama HANGİ iş olduğu serbest: kurucunun ana/ikincil
-	# ayrımı yok (§2), beşi de onun.
+	# Satış artık bir İŞ DEĞİL (2026-08-25): pitch bir toplantıdır, slot tüketmez. Ledger'da
+	# olmadığı için `unstaffed_jobs` da onu sayamaz — ve saymaması iddianın kendisidir.
+	if empty.has("sales"):
+		return "Satış still reads as a staffable job; it left the ledger on 2026-08-25"
+	# AMA SATIŞ ALANI YAŞAMAYA DEVAM EDER, ve bu kaldırmanın en riskli sonucudur:
+	# SalesRepSystem otonom lead akışını `HRSystem.assigned_to(AREA_SALES)` üzerinden okuyor,
+	# o da iş defterinin TÜRETİLMİŞ AYNASI. İş gidince alanı taşıyan tek iş hesap sahipliği
+	# kaldı (JOB_AREAS["accounts"] zaten Satış ve Mİ'nin ikisini birden tutuyordu).
+	# Bu iddia düşerse otonom satış sessizce susar — ekranda hiçbir hata görünmeden.
+	var srep: Character = _make_employee("char_as_srep", "As SRep", HRConstants.ROLE_SALES_REP)
+	if CharacterRegistry.assign_job(srep.id, HRConstants.JOB_ACCOUNTS) != "":
+		return "a sales rep was refused the accounts job, which now carries the Satış area"
+	if not srep.assigned_jobs.has(HRConstants.AREA_SALES):
+		return "a sales rep on Hesaplar does not mirror into the Satış area: %s" % str(srep.assigned_jobs)
+	var staffed := false
+	for c2 in HRSystem.assigned_to(HRConstants.AREA_SALES):
+		if c2.id == srep.id:
+			staffed = true
+	if not staffed:
+		return "assigned_to(Satış) cannot see a staffed sales rep — autonomous sales would go silent"
+	CharacterRegistry.clear_jobs(srep.id)
+	CharacterRegistry.remove(srep.id)
+	# KURUCU TEK ETKİN İŞ (§2.1 "Her şeyi yapabilir, aynı anda yapamaz") — ama Ar-Ge §5.0
+	# bu kuralın SONUCUNU değiştirdi: ikinci iş artık REDDEDİLMİYOR, öncekini DURAKLATIYOR.
+	# "Eski 'kurucu yapım yaparken satış yapamaz' kısıtı kaldırılmıştır. Kurucu satışa
+	# geçebilir; geçtiğinde yapım duraklar. Aynı gramer." Eskiden burada `founder_busy`
+	# refüzü ölçülüyordu; o kod artık yok, ve ölçülmesi gereken şey duraklamanın kendisi.
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder.assigned_job_ids.size() != 1:
 		return "the founder holds %d jobs at run start, want exactly 1" % founder.assigned_job_ids.size()
@@ -7519,13 +7953,52 @@ static func _case_job_assignment_and_idle() -> String:
 	# orada bulabilsin diye böyle; eski tek-alan koltuğu bunu yapamıyordu.
 	if founder.assigned_jobs.is_empty():
 		return "the founder's area mirror is empty while he holds a job"
-	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SALES) != "founder_busy":
-		return "the founder took a second job — §2.1 locks the others with a reason"
+	var held: String = String(founder.assigned_job_ids[0])
+	# İKİ SÜREKLİ SLOT, KURUCUYA DA. Eski "kurucu tek iş" istisnası 2026-08-25'te kalktı:
+	# DESTEK'teki kurucu yapıma başlarsa İKİSİ DE koşar ve ikisi de yavaşlar (odak 0,50/0,50).
+	# O baskı modülün öğrettiği şeydir — bir duraklamayla değiştirilmez.
+	var second: String = HRConstants.JOB_SUPPORT if held != HRConstants.JOB_SUPPORT \
+		else HRConstants.JOB_BUILD
+	if CharacterRegistry.assign_job(founder.id, second) != "":
+		return "the founder was refused a second CONTINUOUS job; two slots are his too"
+	if founder.assigned_job_ids.size() != 2:
+		return "the founder holds %d jobs after a second continuous one, want 2" \
+			% founder.assigned_job_ids.size()
+	if not founder.paused_job_ids.is_empty():
+		return "a second CONTINUOUS job paused something; only research displaces (%s)" \
+			% str(founder.paused_job_ids)
+	# İki iş = 0,50 odak, ve AŞIRI YÜK. İkisi de baskının kendisidir.
+	if not HRSystem.is_overloaded(founder):
+		return "a founder on two continuous jobs did not read as overloaded"
+	if HRConstants.focus_mult(HRSystem.job_count(founder)) != HRConstants.FOCUS_MULT_SPLIT:
+		return "two continuous jobs did not split focus 0,50/0,50"
+	# ÜÇÜNCÜ sürekli iş reddedilir — tavan hâlâ gerçek bir tavandır.
+	var third: String = HRConstants.JOB_TEST
+	if not founder.assigned_job_ids.has(third):
+		if CharacterRegistry.assign_job(founder.id, third) != "job_cap":
+			return "a third CONTINUOUS job was accepted; §12.1's two-job cap is not a cap"
+	# ARAŞTIRMA TAVANA TAKILMAZ: slot tutmaz, ikisini birden duraklatır.
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_RESEARCH) != "":
+		return "a full continuous ledger REFUSED research; research occupies no slot"
+	if founder.assigned_job_ids != [HRConstants.JOB_RESEARCH]:
+		return "research did not displace both continuous jobs (%s)" \
+			% str(founder.assigned_job_ids)
+	if founder.paused_job_ids.size() != 2:
+		return "research paused %d continuous jobs, want 2" % founder.paused_job_ids.size()
+	# Ve geri dönüş: araştırma bitince ikisi de kaldıkları yerden döner.
+	CharacterRegistry.unassign_job(founder.id, HRConstants.JOB_RESEARCH)
+	if founder.assigned_job_ids.size() != 2:
+		return "ending the research resumed %d of 2 paused jobs" \
+			% founder.assigned_job_ids.size()
+	if not founder.paused_job_ids.is_empty():
+		return "resumed jobs were left in the paused ledger: %s" % str(founder.paused_job_ids)
 	CharacterRegistry.clear_jobs(founder.id)
 	if not founder.assigned_jobs.is_empty():
 		return "clearing the jobs left a stale area mirror: %s" % str(founder.assigned_jobs)
-	# §12.0: Araştırma bir ATAMA HEDEFİ DEĞİLDİR — ve artık bir ID de değil. Alan tamamen
-	# silindi, o yüzden kapı "bilinmeyen alan" kapısıyla AYNI kapı: uydurma bir id reddedilir.
+	# Araştırma bir İŞ'tir (Ar-Ge §5.0, Ekip'in iş listesine eklendi) ama bir ALAN DEĞİLDİR:
+	# HRConstants.AREAS hâlâ altı alan taşır. Yani alan kapısı aynı kapıdır ve uydurma bir
+	# id'yi reddeder. Araştırmaya atama Ar-Ge panelinden geçer (§5.3), Görevler matrisinden
+	# değil — matriste sütun VARDIR ama hücresi salt okunurdur.
 	if CharacterRegistry.assign_area(founder.id, "research") == "":
 		return "Araştırma was still accepted as an assignment — §12.0 removes the column"
 	return ""
@@ -7880,6 +8353,10 @@ static func _case_effective_skill_formula() -> String:
 		SEED_PACE, 4000, 60, 8, 2)
 	_park_leave([dev])
 	dev.role_stats[HRConstants.AREA_ENGINEERING] = 8
+	# DÜZELTİR AMA DOĞRULAMAZ. Tohum her alana 5 veriyor, yani aynı kişi koşu sürerken
+	# GELEN'i de DOĞRULANMIŞ'a çeviriyordu ve havuz aritmetiği ölçülemez oluyordu
+	# (falsifikasyon: "çözülenler havuzdan düşmesin" mutasyonu GEÇİYORDU).
+	dev.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 0
 	dev.role_stats[HRConstants.AREA_QA] = 4
 	dev.traits = ["picks_it_up_fast"]   # hiçbir hız/çıktı çarpanı taşımaz
 
@@ -8831,14 +9308,25 @@ static func _case_loc_b4_derived_keys() -> String:
 		wanted.append("PITCH_REAL_NEED_%d" % i)
 	for band in ["low", "mid", "high"]:
 		wanted.append("PITCH_BUDGET_" + band.to_upper())
+	# THE GATE'S COPY MOVED ONTO THE CARDS, and so did the derivation. `copy_key` and
+	# `body_count` were how the old builder found "GATE_<KEY>_TITLE" and its numbered bodies;
+	# the card carries the keys themselves, including the variant block the escalating body
+	# selects from. Walking the card's text block asks the same question of the place the
+	# answer now lives — and it catches an unwired variant, which the counted form could not.
 	for gate in PhaseGateSystem.GATES:
-		var k: String = String((gate as Dictionary).get("copy_key", ""))
-		if k == "":
+		var card_id: String = String((gate as Dictionary).get("card_id", ""))
+		if card_id == "":
 			TranslationServer.set_locale(loc0)
-			return "a gate row has no copy_key"
-		wanted.append("GATE_%s_TITLE" % k)
-		for i in int((gate as Dictionary).get("body_count", 0)):
-			wanted.append("GATE_%s_BODY_%d" % [k, i])
+			return "a gate row names no card"
+		var card: Dictionary = EventGate.catalogue_card(card_id)
+		if card.is_empty():
+			TranslationServer.set_locale(loc0)
+			return "the gate row names %s, which is not in the catalogue" % card_id
+		var tokens: Array = _caps_tokens(card.get("text", {}))
+		if tokens.is_empty():
+			TranslationServer.set_locale(loc0)
+			return "%s carries no localization keys at all" % card_id
+		wanted.append_array(tokens)
 	if wanted.size() < 25:
 		TranslationServer.set_locale(loc0)
 		return "only %d derived keys collected — the id lists are not being read" % wanted.size()
@@ -9228,9 +9716,16 @@ static func _case_growth_streak_semantics() -> String:
 		if got != int(cs[1]):
 			return "closes %s → streak %d, want %d" % [str(cs[0]), got, int(cs[1])]
 	_seed_month_closes([1000, 1120])   # exactly one qualifying month
-	if not EventManager.is_condition_met({"type": "mrr_growth_streak", "value": 1, "pct": 12}):
+	# THE VOCABULARY MOVED. `{"type": "mrr_growth_streak", "pct": N}` was the old engine's
+	# leaf; the engine's is a seam comparison, and the percentage lives ON the seam because a
+	# seam takes no arguments. That constraint is a feature here: the gate table and this case
+	# can no longer disagree about what "qualifying growth" means, since neither carries the
+	# number any more.
+	if not EventGate.condition_met(
+			{"seam": "finance.growth_streak_months", "op": ">=", "value": 1}):
 		return "condition false at streak 1 (value 1)"
-	if EventManager.is_condition_met({"type": "mrr_growth_streak", "value": 2, "pct": 12}):
+	if EventGate.condition_met(
+			{"seam": "finance.growth_streak_months", "op": ">=", "value": 2}):
 		return "condition true at streak 1 (value 2)"
 	return ""
 
@@ -9419,17 +9914,20 @@ static func _case_audience_pct_modifier() -> String:
 	# unchanged; the badge renders the percentage.
 	_seed_b2c()
 	GameState.set_flag("b2c_audience", 1000.0)
-	EventManager._apply_modifiers([{"type": "audience_delta", "pct": -0.03}])
+	EventGate.debug_apply_effects([{"verb": "audience_delta", "pct": -0.03}])
 	var a: float = float(GameState.get_flag("b2c_audience", 0.0))
 	if absf(a - 970.0) > 0.01:
 		return "pct −0.03 on 1000 left %.2f, want 970" % a
-	EventManager._apply_modifiers([{"type": "audience_delta", "delta": 30}])
+	EventGate.debug_apply_effects([{"verb": "audience_delta", "delta": 30}])
 	if absf(float(GameState.get_flag("b2c_audience", 0.0)) - 1000.0) > 0.01:
 		return "flat delta regressed"
 	# event_modal.gd has no class_name; instantiate the script bare — _describe_modifier only
 	# needs tr() and Fmt, neither of which needs the node in the tree.
 	var modal: Node = (load("res://scripts/modals/event_modal.gd") as GDScript).new()
-	var badge: Dictionary = modal._describe_modifier({"type": "audience_delta", "pct": -0.03})
+	# `verb`, the shape a CARD carries. The chip builder reads `verb` first and falls back to
+	# `type`; asserting on the shape the cards actually use is what makes this case cover the
+	# path a player sees.
+	var badge: Dictionary = modal._describe_modifier({"verb": "audience_delta", "pct": -0.03})
 	modal.free()
 	var txt: String = String(badge.get("text", ""))
 	if txt == "" or txt.find("3") < 0 or txt.find("{") >= 0:
@@ -9442,21 +9940,27 @@ static func _case_audience_pct_modifier() -> String:
 static func _case_bug_complaint_costs_audience_not_cash() -> String:
 	# Every row of the rewritten event leaves cash alone; the two answers move satisfaction
 	# and the audience, the ignore row keeps its churn grammar.
-	var ev: GameEvent = EventManager._all_events.get("ev_ps_bug_complaint", null)
-	if ev == null:
-		return "ev_ps_bug_complaint not in the live pool"
+	if not EventGate.is_catalogued("customer.bug_complaint"):
+		return "customer.bug_complaint not in the catalogue"
+	var ev: GameEvent = EventGate.render("customer.bug_complaint")
 	for ch in ev.choices:
 		for m in ch.modifiers:
-			if String(m.get("type", "")) == "cash":
+			if String((m as Dictionary).get("verb", "")) in ["add_cash", "spend_cash"]:
 				return "a cash row survived in '%s'" % ch.label
 	_seed_b2c()
 	GameState.set_flag("b2c_audience", 1000.0)
 	SalesSystem._ensure_b2c_record()
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	CustomerRegistry.set_satisfaction(ub.id, 40)
+	# THE SUBJECT COMES WITH THE EFFECTS. The old executor had a hidden default —
+	# "the most-at-risk customer in the event's market", computed at apply time — and that
+	# default is what the port replaced with a declared scope slot. So the case has to bind
+	# the slot, which is also the honest reading: these effects are ABOUT the userbase record,
+	# and now they say so.
+	var ctx: Dictionary = _ctx_customer(ub)
 	var cash0: int = GameState.cash
 	var brand0: int = GameState.brand
-	EventManager._apply_modifiers(ev.choices[0].modifiers)
+	EventGate.debug_apply_effects(ev.choices[0].modifiers, ctx)
 	if GameState.cash != cash0:
 		return "answering in the open moved cash (%d → %d)" % [cash0, GameState.cash]
 	if ub.satisfaction != 50:
@@ -9465,13 +9969,13 @@ static func _case_bug_complaint_costs_audience_not_cash() -> String:
 		return "answering in the open did not add brand +2"
 	if absf(float(GameState.get_flag("b2c_audience", 0.0)) - 970.0) > 0.01:
 		return "answering in the open did not cost 3 %% of the audience (%.1f)" % float(GameState.get_flag("b2c_audience", 0.0))
-	EventManager._apply_modifiers(ev.choices[1].modifiers)
+	EventGate.debug_apply_effects(ev.choices[1].modifiers, ctx)
 	if GameState.cash != cash0:
 		return "the private reply moved cash"
 	if ub.satisfaction != 56 or GameState.brand != brand0 + 1:
 		return "the private reply should be sat +6 / brand −1 (sat %d, brand %d)" % [ub.satisfaction, GameState.brand]
 	var aud_before_ignore: float = float(GameState.get_flag("b2c_audience", 0.0))
-	EventManager._apply_modifiers(ev.choices[2].modifiers)
+	EventGate.debug_apply_effects(ev.choices[2].modifiers, ctx)
 	if float(GameState.get_flag("b2c_audience", 0.0)) >= aud_before_ignore:
 		return "ignoring it did not churn audience"
 	if GameState.cash != cash0:
@@ -9523,7 +10027,7 @@ static func _case_risk_reentry_hysteresis() -> String:
 		return "rescue did not leave Risk / stamp the day (phase %s, exit %d)" % [c.lifecycle_phase, c.last_risk_exit_day]
 	var cards: Array = [0]
 	EventBus.event_triggered.connect(func(id: String) -> void:
-		if id.begins_with("ev_b2b_retain_"):
+		if id == RETAIN_ID:
 			cards[0] += 1)
 	for i in B2BConstants.RISK_REENTRY_DAYS - 1:
 		CustomerRegistry.set_satisfaction(c.id, 10)   # hold it far under the bar
@@ -9568,30 +10072,23 @@ static func _case_discount_row_locked_past_cap() -> String:
 	# Past the cap every discount row (retention card AND the CS complaint/renewal cards)
 	# is present, locked by a real condition, and carries the reason on its sub-line.
 	var c: Customer = _seed_risk_account()
-	var ev: GameEvent = B2BEventFactory.build_retention(c)
-	var row: EventChoice = null
-	for ch in ev.choices:
-		for m in ch.modifiers:
-			if String(m.get("type", "")) == "b2b_retain_discount":
-				row = ch
-	if row == null:
+	var ctx: Dictionary = _ctx_customer(c)
+	var ev: GameEvent = EventGate.render(RETAIN_ID, ctx)
+	var idx: int = _row_with_verb(ev, "b2b_retain_discount")
+	if idx < 0:
 		return "no discount row on the retention card"
-	if not EventManager.is_condition_met(row.unlock_condition):
+	if not _row_unlocked(ev, idx, ctx):
 		return "discount row locked before any discount"
 	CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
-	ev = B2BEventFactory.build_retention(c)
-	row = null
-	for ch in ev.choices:
-		for m in ch.modifiers:
-			if String(m.get("type", "")) == "b2b_retain_discount":
-				row = ch
-	if row == null:
+	ev = EventGate.render(RETAIN_ID, ctx)
+	idx = _row_with_verb(ev, "b2b_retain_discount")
+	if idx < 0:
 		return "the capped discount row was withheld — it must stay visible"
-	if EventManager.is_condition_met(row.unlock_condition):
+	if _row_unlocked(ev, idx, ctx):
 		return "capped discount row is still unlocked"
 	var want: String = TranslationServer.translate("B2B_DISCOUNT_SPENT_DESC")
-	if row.description != want or want == "B2B_DISCOUNT_SPENT_DESC":
-		return "capped row lacks the reason line (desc '%s')" % row.description
+	if ev.choices[idx].unlock_reason_text != want or want == "B2B_DISCOUNT_SPENT_DESC":
+		return "capped row lacks the reason line ('%s')" % ev.choices[idx].unlock_reason_text
 	# The CS channel: a complaint card's discount row locks the same way.
 	var cs := Character.new()
 	cs.id = "char_cs_cap"
@@ -9603,15 +10100,15 @@ static func _case_discount_row_locked_past_cap() -> String:
 	CharacterRegistry.add(cs)
 	CustomerRegistry.assign_customer(c.id, cs.id)
 	CustomerRegistry.set_last_request_kind(c.id, "")
-	var req: GameEvent = B2BEventFactory.build_cs_request(c, cs)
-	var locked_found: bool = false
-	for ch in req.choices:
-		for m in ch.modifiers:
-			if String(m.get("type", "")) == "b2b_retain_discount":
-				if EventManager.is_condition_met(ch.unlock_condition):
-					return "the CS card's discount row is unlocked past the cap"
-				locked_found = true
-	# (a feature-kind request has no discount row — that is not a failure)
+	# The three request kinds are three cards now; complaint and renewal are the two that carry
+	# a discount row, and both are checked rather than whichever one the picker happened to
+	# choose. That branch used to be invisible to the case — pick_request_kind decided it at
+	# build time and nothing could ask which way it went.
+	for card_id in ["customer.request_complaint", "customer.request_renewal"]:
+		var req: GameEvent = EventGate.render(String(card_id), ctx)
+		var ridx: int = _row_with_verb(req, "b2b_retain_discount")
+		if ridx >= 0 and _row_unlocked(req, ridx, ctx):
+			return "%s's discount row is unlocked past the cap" % card_id
 	return ""
 
 
@@ -9636,11 +10133,16 @@ static func _case_retention_gate_shared() -> String:
 	c.cs_escalated = false
 	# The sweep's enqueue goes through the same gate: a recovered account raises no card.
 	B2BSalesSystem.apply_discount(c.id, -50)   # leaves Risk
-	var before: int = EventManager._queue.size() + (1 if EventManager._active_event_id != "" else 0)
-	B2BSalesSystem._maybe_enqueue_retention(c)
-	var after: int = EventManager._queue.size() + (1 if EventManager._active_event_id != "" else 0)
+	# THE SWEEP AND THE BUTTON ASK THE SAME QUESTION, and now they ask it in the same place:
+	# `customer.retention`'s own condition. B2BSalesSystem no longer has an enqueue function to
+	# call, so the assertion drives the surviving entry point — a named request through the
+	# gate — and it must be refused for an account that has left Risk.
+	var before: int = EventGate.queued_ids().size() + (1 if EventGate.active_id() != "" else 0)
+	if EventGate.request(RETAIN_ID, {"customer": c.id}):
+		return "the gate admitted a retention card for an account that is not in Risk"
+	var after: int = EventGate.queued_ids().size() + (1 if EventGate.active_id() != "" else 0)
 	if after != before:
-		return "the sweep enqueued a card for an account that is not in Risk"
+		return "a refused request still moved the queue"
 	_drain_all_modals()
 	return ""
 
@@ -9650,14 +10152,14 @@ static func _case_manual_retention_respects_cap() -> String:
 	# row is locked, and forcing the modifier through the seam changes nothing.
 	var c: Customer = _seed_risk_account()
 	CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
-	var ev: GameEvent = B2BEventFactory.build_retention(c)
+	var ctx: Dictionary = _ctx_customer(c)
+	var ev: GameEvent = EventGate.render(RETAIN_ID, ctx)
 	var mrr0: int = c.mrr
-	for ch in ev.choices:
-		for m in ch.modifiers:
-			if String(m.get("type", "")) == "b2b_retain_discount":
-				if EventManager.is_condition_met(ch.unlock_condition):
-					return "manual card offers an unlocked discount past the cap"
-				EventManager._apply_modifiers(ch.modifiers)   # the bypass a UI bug could make
+	var idx: int = _row_with_verb(ev, "b2b_retain_discount")
+	if idx >= 0:
+		if _row_unlocked(ev, idx, ctx):
+			return "manual card offers an unlocked discount past the cap"
+		EventGate.debug_apply_effects(ev.choices[idx].modifiers)   # the bypass a UI bug could make
 	if c.mrr != mrr0 or c.retain_discounts != B2BConstants.RETAIN_DISCOUNT_MAX_USES:
 		return "a forced discount past the cap changed state (mrr %d→%d, uses %d)" % [mrr0, c.mrr, c.retain_discounts]
 	return ""
@@ -9784,17 +10286,17 @@ static func _case_smoke_seed_pinned() -> String:
 static func _case_ambient_hourly_chance_exact() -> String:
 	# 1 − (1 − p_h)^n == p for the authored pool (0.5 over a 10-hour window → 0.0670/h, not
 	# 0.05/h), 24-hour windows, and the edges.
-	var p_h: float = EventManager.hourly_chance(0.5, 10)
+	var p_h: float = EventGate.hourly_chance(0.5, 10)
 	if absf(p_h - 0.066967) > 1e-5:
 		return "hourly_chance(0.5, 10) = %.6f, want 0.066967" % p_h
 	if absf((1.0 - pow(1.0 - p_h, 10)) - 0.5) > 1e-9:
 		return "ten rolls at p_h do not reproduce 0.5"
-	var p24: float = EventManager.hourly_chance(0.3, 24)
+	var p24: float = EventGate.hourly_chance(0.3, 24)
 	if absf((1.0 - pow(1.0 - p24, 24)) - 0.3) > 1e-9:
 		return "24 rolls do not reproduce 0.3"
-	if not is_equal_approx(EventManager.hourly_chance(0.4, 1), 0.4):
+	if not is_equal_approx(EventGate.hourly_chance(0.4, 1), 0.4):
 		return "a one-hour window must roll the daily chance as written"
-	if not is_equal_approx(EventManager.hourly_chance(0.0, 10), 0.0) or not is_equal_approx(EventManager.hourly_chance(1.0, 10), 1.0):
+	if not is_equal_approx(EventGate.hourly_chance(0.0, 10), 0.0) or not is_equal_approx(EventGate.hourly_chance(1.0, 10), 1.0):
 		return "edges (0, 1) must pass through"
 	# The old approximation was p/n — make sure the exact form is what the engine uses.
 	if absf(p_h - 0.05) < 1e-6:
@@ -9804,8 +10306,14 @@ static func _case_ambient_hourly_chance_exact() -> String:
 
 static func _case_ambient_one_per_day_across_hour0() -> String:
 	# Drive 30 full engine days (hour 1..23 → 0 → advance → daily) on a B2C world where the
-	# four ambient cards are all eligible and count ambient (pool, random-trigger) entries per
-	# calendar day: never two on one day, including across the hour-0 rollover.
+	# hourly cards are all eligible, and count them per CALENDAR day — including across the
+	# hour-0 rollover, which is the boundary this case exists for.
+	#
+	# THE CEILING MOVED AND IS NOW DECLARED. The old engine hard-capped the hourly path at one
+	# card a day, in code, with no name. §13's budget is `MAX_INTERRUPTS_PER_DAY` and it
+	# governs every interrupt rather than one path — so the number is read from EvTuning
+	# instead of typed here, and raising it in the calibration pass will not make this case
+	# lie. What the case still pins is the thing that was actually fragile: the rollover.
 	_seed_b2c()
 	GameState.set_cash(500000)
 	GameState.set_flag("mvp_innovation", 15.0)
@@ -9814,9 +10322,13 @@ static func _case_ambient_one_per_day_across_hour0() -> String:
 	GameState.set_flag("b2c_audience", 500.0)
 	SalesSystem.add_b2c_audience(0)
 	var per_day: Dictionary = {}
+	# "Ambient" is a DECLARED tick now, not a derived one. `has_random_trigger()` used to
+	# decide at read time whether a card belonged to the hourly path — the same routing that
+	# made allowed_hours structurally dead on the daily path — so the case asked the card
+	# whether it had a dice roll. It asks which clock the card declares instead.
 	EventBus.event_triggered.connect(func(id: String) -> void:
-		var ev: GameEvent = EventManager._all_events.get(id, null)
-		if ev != null and ev.has_random_trigger():
+		var card: Dictionary = EventGate.catalogue_card(id)
+		if String(card.get("tick", "")) == "hourly":
 			# hour 0 belongs to the NEW calendar day (GameState.day still shows yesterday)
 			var slot: int = GameState.day + (1 if GameState.current_hour == 0 else 0)
 			per_day[slot] = int(per_day.get(slot, 0)) + 1)
@@ -9826,26 +10338,33 @@ static func _case_ambient_one_per_day_across_hour0() -> String:
 		_drain_all_modals()
 	for d in per_day.keys():
 		total += int(per_day[d])
-		if int(per_day[d]) > 1:
-			return "day %d received %d ambient cards (want ≤ 1)" % [d, int(per_day[d])]
+		if int(per_day[d]) > EvTuning.MAX_INTERRUPTS_PER_DAY:
+			return "day %d received %d hourly cards (ceiling %d)" % [
+				d, int(per_day[d]), EvTuning.MAX_INTERRUPTS_PER_DAY]
 	if total == 0:
-		return "fixture: no ambient card fired in 30 days (pool not eligible?)"
+		return "fixture: no hourly card fired in 30 days (pool not eligible?)"
 	return ""
 
 
 # --- §16 · S2-33: a creation draft survives navigation ---
 
 static func _case_creation_draft_survives_navigation() -> String:
-	# A half-built product (path, type, two features, a name) on the creation flow; the router
-	# tells the page it is closing → the draft lands in the typed flag → a fresh ProductTab
-	# mount re-hydrates it at the same step with the same selection. Clean flows stash nothing.
-	var root: Node = Engine.get_main_loop().root
+	# A half-built product (path, type, two PLANNED STEPS, a name) on the creation flow; the
+	# router tells the page it is closing → the draft lands in the typed flag → a fresh
+	# ProductTab mount re-hydrates it at the same step with the same selection. Clean flows
+	# stash nothing.
+	#
+	# The claim is unchanged by the rev 6.1 cutover; only the fixture data moved from flat
+	# feature ids to line step ids, because `_selected` now carries the version plan.
+	var root: Node = _ui_host()
 	var flow_script: GDScript = load("res://scripts/tabs/product/creation_flow.gd")
 	var flow: Control = flow_script.new()
 	root.add_child(flow)
-	flow.setup({"step": 3, "prefill": {"type": "saas_ops", "features": ["saas_ops_integration", "saas_ops_field"], "name": "Sahra"}})
+	flow.setup({"step": 3, "prefill": {"type": "note_tool",
+		"features": ["line_note_tool_capture_k1", "line_note_tool_sync_k1"], "name": "Sahra"}})
 	var d: Dictionary = flow.draft_state()
-	if String(d.get("type", "")) != "saas_ops" or (d.get("features", []) as Array).size() != 2 or String(d.get("name", "")) != "Sahra":
+	if String(d.get("type", "")) != "note_tool" or (d.get("features", []) as Array).size() != 2 \
+			or String(d.get("name", "")) != "Sahra":
 		flow.free()
 		return "fixture: draft_state did not read the prefilled selection (%s)" % str(d)
 	flow.on_page_closing()
@@ -9853,7 +10372,7 @@ static func _case_creation_draft_survives_navigation() -> String:
 	var stashed: Dictionary = GameState.get_flag("creation_draft", {})
 	if stashed.is_empty():
 		return "on_page_closing stashed nothing for a dirty draft"
-	if int(stashed.get("step", 0)) != 3 or String(stashed.get("type", "")) != "saas_ops":
+	if int(stashed.get("step", 0)) != 3 or String(stashed.get("type", "")) != "note_tool":
 		return "stashed draft is wrong: %s" % str(stashed)
 	# The router actually calls it: the seam name must appear in center_viewport's free path.
 	var router_src: String = (load("res://scripts/ui/components/center_viewport.gd") as GDScript).source_code
@@ -9874,7 +10393,7 @@ static func _case_creation_draft_survives_navigation() -> String:
 		return "ProductTab did not re-open the creation flow (view %s)" % seen
 	var restored: Dictionary = view.draft_state()
 	tab.free()
-	if String(restored.get("type", "")) != "saas_ops" or (restored.get("features", []) as Array).size() != 2 \
+	if String(restored.get("type", "")) != "note_tool" or (restored.get("features", []) as Array).size() != 2 \
 			or String(restored.get("name", "")) != "Sahra" or int(restored.get("step", 0)) != 3:
 		return "re-hydrated draft differs: %s" % str(restored)
 	if GameState.has_flag("creation_draft"):
@@ -9887,6 +10406,89 @@ static func _case_creation_draft_survives_navigation() -> String:
 	clean.free()
 	if GameState.has_flag("creation_draft"):
 		return "a clean flow stashed a draft"
+	return ""
+
+
+## §12.11 MÜHÜRLÜ — tip ekranının OYNANABİLİR kartları ile hat içeriği olan alt-tipler
+## AYNI KÜME olmak zorunda. İkisi iki ayrı dosyada yaşıyor (ProductCatalog.TYPE_SCREEN ve
+## data/product/lines/*.json) ve ayrıştıkları an oyuncu tıklanabilir bir karttan BOŞ bir
+## Konsept'e düşer — motoru görünmez kılan tam olarak bu kopukluktu.
+##
+## Kilitli tarafı da ölçer: §12.11 sayıyı mühürledi (yol başına ÜÇ) ve kilitli bir kartın
+## hat içeriği OLMAMALI, yoksa oynanabilir bir ürünü kilitliyor olurduk.
+## SAHNE AĞACINA MONTE EDEN VAKALAR İÇİN EV SAHİBİ. `root` OLMAZ: harness main.gd'nin
+## `_ready`'sinden koşuyor ve o `_ready`, root'un KENDİ `add_child(Main)` çağrısının
+## İÇİNDE çalışıyor — yani root o an "busy setting up children"dır ve ona `add_child`
+## SESSİZCE BAŞARISIZ OLUR. Yalnız bir ERROR satırı basar; düğüm ağaca hiç girmez,
+## `_ready`'si hiç koşmaz ve vaka olmayan bir şeyi ölçmeye çalışır.
+##
+## Ana sahne (Main) o an bir çocuk EKLEMİYOR, yalnız kendi `_ready`'sini koşuyor — bu
+## yüzden meşru ev sahibi odur. Otoload'lar root'a ana sahneden ÖNCE eklenir, o yüzden
+## son çocuk ana sahnedir.
+static func _ui_host() -> Node:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return null
+	if tree.current_scene != null:
+		return tree.current_scene
+	var root: Node = tree.root
+	return root.get_child(root.get_child_count() - 1) if root.get_child_count() > 0 else root
+
+
+static func _case_type_screen_matches_line_content() -> String:
+	var playable: Array[String] = []
+	for market in ["b2c", "b2b"]:
+		var locked: Array = ProductCatalog.locked_type_ids(market)
+		if locked.size() != 3:
+			return "%s draws %d locked cards, §12.11 seals three per path" % [market, locked.size()]
+		for tid in locked:
+			if String(tid) == ProductCatalog.TYPE_SCREEN_SLOT:
+				continue
+			if ProductLines.has_subtype(String(tid)):
+				return "%s is drawn locked but has line content" % String(tid)
+			if ProductCatalog.get_sub_product_type_by_id(String(tid)).is_empty():
+				return "locked card %s has no catalog record" % String(tid)
+		for st in ProductCatalog.playable_types(market):
+			var pid: String = String((st as Dictionary).get("id", ""))
+			if String((st as Dictionary).get("market_type", "")) != market:
+				return "%s is drawn on the %s path but its record says %s" 					% [pid, market, String((st as Dictionary).get("market_type", ""))]
+			if not ProductLines.has_subtype(pid):
+				return "%s is playable on the type screen but has no line content" % pid
+			playable.append(pid)
+	var lines_side: Array[String] = ProductLines.subtypes()
+	playable.sort()
+	lines_side.sort()
+	if playable != lines_side:
+		return "type screen offers %s, line content covers %s" % [str(playable), str(lines_side)]
+	# Alt-tür anahtarı haber havuzunun kimliğidir; bilinmeyen bir anahtar
+	# news_feed_system'in havuzunu sessizce boşaltır.
+	for pid in playable:
+		var pool: String = ProductCatalog.get_pool_of(pid)
+		if not pool in ["ai", "saas", "social"]:
+			return "%s resolves to pool '%s', which news_feed_system does not know" % [pid, pool]
+	return ""
+
+
+## §3'ün "taahhüt edilen ürün alt-türü seçer" hükmü hat yolunda da geçerli. start_build
+## bunu yapıyordu, start_line_build YAPMIYORDU — ve düz akış emekli olunca GameState.subgenre
+## bir daha hiç yazılmayacaktı: subgenre olay koşulları ve haber havuzu açılış değerinde
+## donardı, hiçbir hata vermeden.
+static func _case_line_build_writes_subgenre() -> String:
+	ProductLines.reload()
+	GameState.set_cash(50000)
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag("mvp_shipped", false)
+	ProductSystem.active_build = null
+	GameState.set_subgenre("social")   # kasten yanlış değer: yazma OLMAZSA burada kalır
+	var founder: Character = _seed_build_crew()
+	if not ProductSystem.start_line_build("erp",
+			["line_erp_ledger_k1", "line_erp_stock_k1"], founder.id, "Defter"):
+		return "fixture: start_line_build refused a two-K1 erp plan"
+	var want: String = ProductCatalog.get_pool_of("erp")
+	if want == "":
+		return "fixture: erp has no pool key"
+	if GameState.subgenre != want:
+		return "start_line_build left subgenre at '%s', want '%s'" % [GameState.subgenre, want]
 	return ""
 
 
@@ -9983,6 +10585,11 @@ static func _case_build_resumes_when_one_frees() -> String:
 ## R5: YAYINLAMAK BİR SON DEĞİLDİR. Yayından sonra kart kaybolmaz, DESTEK'e döner
 ## ve ürün yaşadıkça yaşar. DOĞRULANMIŞ gerçek veriyi okur; GELEN ÇİZİLMEZ.
 ## FALSİFİKASYON: `_derive_support`'ı `return false` yap → ikinci iddia FAIL.
+##
+## rev 6.1 (router devri): kart artık ESKİ hata sprintini değil §8/§9'un düzeltme
+## koşusunu okuyor. Sebep ekranda görülüyordu — yüzen kart "HATA SPRİNTİ · 5 hata"
+## derken altındaki canlı ürün sayfası "DÜZELTME BAŞLAT · DOĞRULANMIŞ 0" diyordu:
+## tek şeyin iki gerçeği, iki ayrı motordan.
 static func _case_destek_survives_ship() -> String:
 	const BarModel := preload("res://scripts/ui/components/build_bar_model.gd")
 	var before = BarModel.new()
@@ -9991,25 +10598,34 @@ static func _case_destek_survives_ship() -> String:
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_product_name", "Nova")
 	GameState.set_flag("mvp_version", 2)
-	GameState.set_flag("mvp_live_bug_count", 7)
+	# rev 6.1: DESTEK'in motoru §8/§9'un DÜZELTME KOŞUSU oldu. Kartın İDDİASI aynı
+	# (yayın bir son değil), okuduğu sayaç değişti: `mvp_live_bug_count` değil
+	# DOĞRULANMIŞ HATA. Masa da kurulmalı — kimse atanmamışsa koşu başlatılamaz
+	# (§8: "Destek'e kimse atanmamışsa masa kapalıdır").
+	GameState.set_flag(ProductState.BUGS_CONFIRMED, 7)
+	GameState.set_flag(ProductState.FIX_RUN_ACTIVE, false)
+	GameState.set_flag(ProductState.FIX_RUN_FIXED, 0)
+	var founder: Character = CharacterRegistry.get_founder()
+	CharacterRegistry.clear_jobs(founder.id)
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT)
 	var m = BarModel.new()
 	if not m.derive():
 		return "the card vanished after ship — YAYINLANDI is not a terminal state (R5)"
 	if m.phase != BarModel.PHASE_SUPPORT:
 		return "a shipped product did not land on DESTEK (%s)" % String(m.phase)
 	if m.live_bugs != 7:
-		return "DOĞRULANMIŞ read %d, want the real live bug count 7" % m.live_bugs
-	if m.decision_key != "PROD_ACTION_HARDEN":
-		return "DESTEK's decision row is not the bug sprint (%s)" % m.decision_key
-	# KOŞU SIRASINDA KARAR SATIRI DÜŞER (2i: basılabilir tek şey kuralı).
-	if not ProductSystem.start_bug_sprint():
-		return "start_bug_sprint refused a shipped product with 7 open bugs"
+		return "DOĞRULANMIŞ read %d, want the confirmed-bug count 7" % m.live_bugs
+	if m.decision_key != "PROD_FIX_RUN_START" or not m.decision_enabled:
+		return "DESTEK's decision row is not an armed fix run (%s/%s)" 			% [m.decision_key, str(m.decision_enabled)]
+	# §8.4 — KOŞU SIRASINDA SATIR DÜŞMEZ, DEĞİŞİR: bitirmek de oyuncunun kararı.
+	if not SupportSystem.start_fix_run():
+		return "start_fix_run refused a shipped product with 7 confirmed bugs and a staffed desk"
 	var running = BarModel.new()
 	running.derive()
-	if running.decision_key != "":
-		return "the decision row survived into a running sprint"
+	if running.decision_key != "PROD_FIX_RUN_END":
+		return "a running fix run did not offer the end action (%s)" % running.decision_key
 	if not running.sprint_running:
-		return "the card did not see the running sprint"
+		return "the card did not see the running fix run"
 	# DESTEK DURAKLAMAZ: duraklama aktif YAPIMIN hâli, canlı ürünün değil.
 	if running.paused:
 		return "a live product reported PAUSED"
@@ -10257,10 +10873,21 @@ static func _case_money_never_double_minus() -> String:
 	return ""
 
 
-static func _case_beta_gate_open_early() -> String:
-	# H1/D2: beta kapısı HER YÜZDEDE açık, ama BANDın kendisi duruyor — iki soru
-	# artık iki ayrı fonksiyon (`can_enter_beta` / `development_band_complete`).
-	# D3: beta dolgusu YÜKSELEN çubuk; hata azaldıkça artar.
+## GDD ÜRÜN rev 6.1 §6.4 — %100 KAPISI. Bu case, adının ve gövdesinin TERSİNE
+## ÇEVRİLDİĞİ bir case'tir ve sebebi kayda geçer: eski hâli (`beta_gate_open_early`)
+## H1'in "kapı her yüzdede açık" kararını sabitliyordu. rev 6.1 o kararı geri aldı,
+## çünkü H1 kendi gerekçesinde bedelinin olmadığını yazıyordu — hatalar yalnız
+## GELİŞTİRME'de biriktiği için erken geçmek daha AZ hata ve daha KISA yapım
+## demekti, yani bedelsiz baskın strateji. Teknoloji borcu demo dışı olduğundan
+## (§1) eksik geliştirme cezalandırılamaz; cezalandırılamayan şey yasaklanır.
+##
+## Eski gövdenin ikinci yarısı (beta DOLGU çubuğu, bugs_start paydası) buradan
+## ÇIKARILDI: §7 BETA satırının yüzde taşımasını yasaklıyor ve bugs_start'ı emekli
+## ediyor. O yarının yerini BuildBar sayaç reworkünde sayaç iddiaları alır.
+##
+## FALSİFİKASYON: can_enter_beta'dan development_band_complete() koşulunu kaldır →
+## ilk iddia FAIL.
+static func _case_beta_gate_requires_full_bar() -> String:
 	GameState.set_cash(50000)
 	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
 		return "start_build failed"
@@ -10274,26 +10901,3103 @@ static func _case_beta_gate_open_early() -> String:
 	ProductSystem.enter_development()
 	if b.current_phase != "development":
 		return "enter_development did not flip phase"
-	if not ProductSystem.can_enter_beta():
-		return "the beta gate is still shut at the start of development (H1)"
+
+	# --- KAPI KAPALI, ve bandın kendisi de dolu değil ---
 	if ProductSystem.development_band_complete():
 		return "the development band claims to be complete on its first hour"
-	ProductSystem.hourly_tick(0)
+	if ProductSystem.can_enter_beta():
+		return "BETA opened before the bar was full — §6.4 forbids early phase skipping"
+	# Kapalı kapı BASILAMAZ: enter_beta çağrılsa bile faz kımıldamaz.
+	ProductSystem.enter_beta()
+	if b.current_phase != "development":
+		return "enter_beta crossed anyway while the gate was shut"
+
+	# --- barı doldur, kapı açılsın ---
+	while not ProductSystem.development_band_complete():
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 400:
+			return "the development band never filled"
+	if not ProductSystem.can_enter_beta():
+		return "the gate stayed shut with a full bar"
 	ProductSystem.enter_beta()
 	if b.current_phase != "bugfix":
-		return "enter_beta refused an early crossing (H1)"
-	# D3: dolgu ilerlemedir. Aynı başlangıç, azalan kalan → ARTAN dolgu.
+		return "enter_beta refused a legal crossing"
+	# §7 — sönümün başlangıç günü BETA girişinde damgalanır.
+	if b.beta_entered_day != GameState.day:
+		return "beta entry day was not stamped (%d vs %d)" % [b.beta_entered_day, GameState.day]
+	return ""
+
+
+## §7 — KEŞİF KESKİN AZALIR ve HAVUZ TÜKENMEZ. İkisi tek karardır: düz oran +
+## tükenebilir havuz beklemeyi kesin kazançlı yapıyordu. Bu case ikisini de ölçer,
+## ve "sıfıra asla ulaşılmaz" iddiasını havuzu bilerek boşaltarak sınar.
+##
+## FALSİFİKASYON: pow(BETA_FIND_DECAY, gün) terimini kaldır → sönüm iddiası FAIL.
+## Havuz besleme dalını sil → tükenmezlik iddiası FAIL.
+static func _case_beta_discovery_decays_pool_never_empties() -> String:
+	# Sabitler §7'nin yazdığı sayılar olmalı...
+	if absf(ProductSystem.BETA_BUG_FIND_PER_DAY - 6.0) > 0.001:
+		return "beta discovery base is %.2f, §7 says 6" % ProductSystem.BETA_BUG_FIND_PER_DAY
+	if absf(ProductSystem.BETA_FIND_DECAY - 0.85) > 0.001:
+		return "beta decay is %.3f, §7 says 0,85" % ProductSystem.BETA_FIND_DECAY
+	# ...ama sabiti okumak DAVRANIŞI ölçmez. Sönüm aşağıda MOTORDAN ölçülüyor: bu
+	# case ilk yazıldığında eğriyi kendi içinde hesaplıyordu, ve `pow(...)` terimini
+	# motordan silen bir mutasyon case'i GEÇİYORDU. Falsifikasyon o boşluğu buldu.
+
+	GameState.set_cash(50000)
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var hours: int = 0
+	while not ProductSystem.can_enter_development():
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 120:
+			return "design band never ended"
+	ProductSystem.enter_development()
+	while not ProductSystem.development_band_complete():
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 400:
+			return "the development band never filled"
+	ProductSystem.enter_beta()
+
+	# --- SÖNÜM, MOTORDAN ÖLÇÜLÜYOR ---------------------------------------
+	# Aynı ekip, aynı havuz, tek fark BETA'da geçen gün. İlk gün çok bulur,
+	# ikinci hafta tek tük (§7). Havuz tükenmez olduğu için ölçüm havuz
+	# büyüklüğüne değil YALNIZ eğriye bakar.
+	b.beta_entered_day = GameState.day
+	b.bug_find_progress = 0.0
+	var found_day0: int = b.bugs_found
+	for h0 in 24:
+		ProductSystem.hourly_tick(h0)
+	var early: int = b.bugs_found - found_day0
+
+	b.beta_entered_day = GameState.day - 12       # on ikinci beta günü
+	b.bug_find_progress = 0.0
+	var found_day12: int = b.bugs_found
+	for h12 in 24:
+		ProductSystem.hourly_tick(h12)
+	var late: int = b.bugs_found - found_day12
+
+	if early <= 0:
+		return "beta found nothing on its first day (%d)" % early
+	if late >= early:
+		return "discovery did not decay: day 1 found %d, day 13 found %d" % [early, late]
+	# 6 × 0,85^12 ≈ 0,85/gün — ilk günün altıda birinden az olmalı.
+	if float(late) > float(early) * 0.5:
+		return "decay is far too shallow: %d then %d" % [early, late]
+
+	# HAVUZU BİLEREK BOŞALT: gizli = bug_count - (found - fixed) = 0.
+	b.beta_entered_day = GameState.day
+	b.bug_find_progress = 0.0
+	b.bugs_found = b.bug_count
+	b.bugs_fixed = 0
+	b.bug_find_progress = 0.0
+	var found_before: int = b.bugs_found
+	var count_before: int = b.bug_count
+	# Bir tam gün beta koştur — tükenmiş havuza rağmen keşif SÜRMELİ.
+	for h in 24:
+		ProductSystem.hourly_tick(h)
+	if b.bugs_found <= found_before:
+		return "discovery stopped once the hidden pool emptied — §7 says the pool never empties"
+	if b.bug_count <= count_before:
+		return "new bugs were found without the pool being replenished (invariant broken)"
+	var hidden: int = b.bug_count - (b.bugs_found - b.bugs_fixed)
+	if hidden < 0:
+		return "the hidden-pool invariant went negative (%d)" % hidden
+	return ""
+
+
+## §7 · brief'in ikinci adlandırılmış kusuru — BETA'da park eden yapım KAPASİTE
+## SLOTU YEMEZ. Kapasite bir YAPIM bölenidir; BETA'yı Test işi taşır ve BETA barı
+## efor ilerletmez. Havuz tükenmez olduğu için BETA'nın doğal sonu da yoktur, yani
+## eskiden hiç yayınlamayan oyuncu her hata sprintini KALICI olarak yarıya
+## düşürüyordu.
+##
+## FALSİFİKASYON: capacity_demand'in faz listesine "bugfix"i geri koy → FAIL.
+static func _case_beta_park_frees_capacity_slot() -> String:
+	GameState.set_cash(50000)
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var base: int = ProductSystem.capacity_demand()
+	if base < 1:
+		return "a running build demands no capacity at all (%d)" % base
+
+	var hours: int = 0
+	while not ProductSystem.can_enter_development():
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 120:
+			return "design band never ended"
+	if ProductSystem.capacity_demand() != base:
+		return "TASARIM stopped demanding capacity"
+	ProductSystem.enter_development()
+	if ProductSystem.capacity_demand() != base:
+		return "GELİŞTİRME stopped demanding capacity — it is the phase that spends effort"
+	while not ProductSystem.development_band_complete():
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 400:
+			return "the development band never filled"
+	ProductSystem.enter_beta()
+
+	var parked: int = ProductSystem.capacity_demand()
+	if parked >= base:
+		return "a build parked in BETA still eats a capacity slot (%d, was %d)" % [parked, base]
+	# Ve slot serbest kaldığı için paralel iş tam hızda koşar.
+	if absf(ProductSystem.capacity_speed_factor() - 1.0) > 0.001:
+		return "parking in BETA still halves parallel work (%.2f)" \
+			% ProductSystem.capacity_speed_factor()
+	return ""
+
+
+## §6.4 kilit gerekçesi + §7 yayın tooltip'i — İKİSİ DE GERÇEKTEN ÇİZİLİYOR MU.
+##
+## Bu case'in sebebi tam olarak şudur: `projected_launch_bugs()` DOĞRU cevabı bir
+## süredir veriyordu (cezayı ekledikten sonra hesaplıyor), ama BuildBar reworkü iki
+## tooltip ev sahibini silince ÜRETİM TÜKETİCİSİ KALMADI ve BUILD_SHIP_TOOLTIP_BUGS
+## öksüz bir anahtar oldu. Yani sayı doğruydu ve oyuncu onu HİÇ görmüyordu. Doğru
+## sayıyı test etmek yetmez; ÇİZİLDİĞİNİ test etmek gerekir.
+##
+## FALSİFİKASYON: build_bar_model'den decision_tooltip atamalarını sil → FAIL.
+static func _case_build_decision_tooltip_renders() -> String:
+	GameState.set_cash(50000)
+	if not ProductSystem.start_build("ai_assistant", ["ai_assistant_chat"], ""):
+		return "start_build failed"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var hours: int = 0
+	while not ProductSystem.can_enter_development():
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 120:
+			return "design band never ended"
+	ProductSystem.enter_development()
+
+	# --- §6.4: kapı kilitliyken GEREKÇESİNİ taşır ---
 	var model: RefCounted = load("res://scripts/ui/components/build_bar_model.gd").new()
-	model.bugs_start = 20
-	model.bugs_remaining = 20
-	var at_open: float = model.beta_fill()
-	model.bugs_remaining = 5
-	var near_done: float = model.beta_fill()
-	if at_open > 0.001:
-		return "beta opens at %.2f fill instead of empty (D3)" % at_open
-	if near_done <= at_open:
-		return "the beta bar still drains instead of filling (%.2f -> %.2f)" % [at_open, near_done]
-	model.bugs_remaining = 0
-	if absf(model.beta_fill() - 1.0) > 0.001:
-		return "a cleared backlog does not read as a full bar (%.2f)" % model.beta_fill()
+	if not model.derive():
+		return "the model refused to derive in development"
+	if model.decision_enabled:
+		return "the BETA decision reads enabled on development's first hour"
+	if String(model.decision_tooltip).strip_edges() == "":
+		return "the locked BETA gate shows no reason — §6.4 says it must"
+	if String(model.decision_tooltip) == "BUILD_BETA_GATE_LOCKED":
+		return "the gate reason rendered as its own key"
+
+	# --- §7: yayın satırı TAŞINAN HATA SAYISINI taşır ---
+	while not ProductSystem.development_band_complete():
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+		if hours > 24 * 400:
+			return "the development band never filled"
+	ProductSystem.enter_beta()
+	var clean: RefCounted = load("res://scripts/ui/components/build_bar_model.gd").new()
+	if not clean.derive():
+		return "the model refused to derive in beta"
+	var n: int = ProductSystem.projected_launch_bugs()
+	var tip: String = String(clean.decision_tooltip)
+	if tip.strip_edges() == "":
+		return "the ship action carries no tooltip — the honest number is unrendered again"
+	if not tip.contains(str(n)):
+		return "the ship tooltip '%s' does not carry the projected count %d" % [tip, n]
+
+	# --- ve sayı KRİTİK-HATA CEZASINDAN SONRAKİ sayıdır (off-by-5 nüksü) ---
+	GameState.set_flag("critical_bug_unfixed", true)
+	var penalised: RefCounted = load("res://scripts/ui/components/build_bar_model.gd").new()
+	penalised.derive()
+	var n2: int = ProductSystem.projected_launch_bugs()
+	if n2 != n + ProductSystem.CRITICAL_BUG_LAUNCH_PENALTY:
+		GameState.set_flag("critical_bug_unfixed", false)
+		return "the penalty did not reach the projection (%d -> %d)" % [n, n2]
+	if not String(penalised.decision_tooltip).contains(str(n2)):
+		GameState.set_flag("critical_bug_unfixed", false)
+		return "the tooltip still prints the pre-penalty number"
+	GameState.set_flag("critical_bug_unfixed", false)
+	return ""
+
+
+# =========================================================================
+#  DESTEK (§8) ve ALTYAPI (§10)
+# =========================================================================
+
+## Canlı bir ürünü elle kurar — yapım hattından geçmeden, çünkü bu case'ler
+## DESTEK/ALTYAPI aritmetiğini ölçüyor, yapım borusunu değil.
+static func _seed_support_fixture(market: String = "b2c") -> void:
+	ProductLines.reload()
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
+	GameState.set_flag("mvp_market_type", market)
+	GameState.set_flag("mvp_version", 1)
+	GameState.set_flag("mvp_live_bug_count", 6)
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag(ProductState.STEP_REALIZATION, {})
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
+	GameState.set_flag(ProductState.REPORTS_PROGRESS, 0.0)
+	GameState.set_flag(ProductState.BUGS_CONFIRMED, 0)
+	GameState.set_flag(ProductState.VALIDATION_PROGRESS, 0.0)
+	GameState.set_flag(ProductState.FIX_RUN_ACTIVE, false)
+	GameState.set_flag(ProductState.FIX_RUN_FIXED, 0)
+	GameState.set_flag(ProductState.FIX_RUN_PROGRESS, 0.0)
+	ProductState.refresh_on_publish(20.0)
+	InfraSystem.reset()
+	SupportSystem.reset()
+
+
+## §8.2 — MASA BOŞSA HİÇBİR ŞEY DOĞRULANMAZ. Modülün merkez baskısı budur: bildirimler
+## kendiliğinden gelir, ama hiçbir hata kendiliğinden çözülmez (§8.1). Boş masa bir
+## "az doğrulama" durumu değil, TAM OLARAK SIFIR durumudur.
+##
+## FALSİFİKASYON: validation_per_day'i atanmamış herkesi de sayacak şekilde değiştir →
+## "confirmed stayed flat" iddiası FAIL.
+static func _case_destek_empty_desk_piles_up() -> String:
+	_seed_support_fixture("b2c")
+	GameState.set_flag("b2c_audience", 4000.0)
+	# BORDRODA VAR, MASADA YOK. Bu satır olmadan iddia boşa düşüyordu: kadro bomboşken
+	# "atamayı yoksay" mutasyonu da sıfır üretir, yani case atamayı değil BOŞLUĞU
+	# ölçüyordu. Falsifikasyon bunu yakaladı.
+	var idle: Character = _make_employee("idle_rep", "Idle Rep", HRConstants.ROLE_CUSTOMER_REP)
+	idle.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 8
+
+	if SupportSystem.desk_staffed():
+		return "the desk reads staffed before anyone was assigned"
+	if absf(SupportSystem.validation_per_day()) > 0.0001:
+		return "an empty desk validates %.4f/day — §8.2 says nothing" \
+			% SupportSystem.validation_per_day()
+
+	for h in 24:
+		SupportSystem.hourly_tick(h)
+	var incoming_empty: int = ProductState.reports_incoming()
+	if incoming_empty <= 0:
+		return "no reports arrived at all — §9's flow never reaches zero"
+	if ProductState.bugs_confirmed() != 0:
+		return "%d bugs were confirmed with nobody at the desk" % ProductState.bugs_confirmed()
+	# Ve düzeltme koşusu da açılmaz: doğrulanmamış hata düzeltilemez.
+	if SupportSystem.can_start_fix_run():
+		return "a fix run could start with an empty desk and zero confirmed bugs"
+
+	# --- masaya biri oturunca doğrulama BAŞLAR ---
+	var rep: Character = _make_employee("desk_rep", "Desk Rep", HRConstants.ROLE_CUSTOMER_REP)
+	rep.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 8
+	if CharacterRegistry.assign_job(rep.id, HRConstants.JOB_SUPPORT) != "":
+		return "could not seat anyone at the support desk"
+	if not SupportSystem.desk_staffed():
+		return "the desk still reads empty with someone assigned"
+	if SupportSystem.validation_per_day() <= 0.0:
+		return "a staffed desk still validates nothing"
+	for h2 in 24:
+		SupportSystem.hourly_tick(h2)
+	if ProductState.bugs_confirmed() <= 0:
+		return "a staffed desk confirmed nothing over a full day"
+	if ProductState.reports_incoming() >= incoming_empty + 24:
+		return "validation did not draw anything out of the incoming pool"
+	return ""
+
+
+## §8.4 — koşu oyuncunun istediği an biter ve YALNIZ ÇÖZÜLENLER gider. "35 doğrulanmış,
+## 27 çözüldü, 27'si gider, 8'i havuzda kalır. Sıfır beklenmez."
+##
+## FALSİFİKASYON: _accrue_fix_run'dan BUGS_CONFIRMED yazımını kaldır → kalan havuz
+## iddiası FAIL.
+static func _case_fix_run_ships_subset() -> String:
+	_seed_support_fixture("b2c")
+	var dev: Character = _make_employee("fix_dev", "Fix Dev", HRConstants.ROLE_DEVELOPER)
+	dev.role_stats[HRConstants.AREA_ENGINEERING] = 8
+	if CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT) != "":
+		return "could not seat the developer at the support desk"
+
+	# DOĞRULANMIŞ 0 iken düğme KAPALIDIR (§8.4).
+	if SupportSystem.can_start_fix_run():
+		return "the fix run opened at zero confirmed bugs"
+	if SupportSystem.fix_run_refusal() != SupportSystem.REFUSAL_NO_BUGS:
+		return "the refusal at zero bugs was '%s'" % SupportSystem.fix_run_refusal()
+
+	GameState.set_flag(ProductState.BUGS_CONFIRMED, 35)
+	if not SupportSystem.can_start_fix_run():
+		return "the fix run stayed shut with 35 confirmed bugs"
+	if not SupportSystem.start_fix_run():
+		return "start_fix_run refused"
+	if not ProductState.fix_run_active():
+		return "the run did not read as active"
+	# §2/§8.4 — koşu aktif yapımı duraklatır.
+	if not SupportSystem.fix_run_pauses_build():
+		return "a running fix run does not pause the build"
+
+	# Oyuncu 27 çözülene kadar bekler, sonra BİTİRİR. Sıfır beklenmez.
+	var guard: int = 0
+	while ProductState.fix_run_fixed() < 27 and guard < 24 * 200:
+		SupportSystem.hourly_tick(guard % 24)
+		guard += 1
+	var fixed: int = ProductState.fix_run_fixed()
+	if fixed < 27:
+		return "the run never reached 27 fixes (%d)" % fixed
+	var remaining_before: int = ProductState.bugs_confirmed()
+	var shipped: int = SupportSystem.end_fix_run()
+
+	if shipped != fixed:
+		return "the run shipped %d but had fixed %d" % [shipped, fixed]
+	if ProductState.fix_run_active():
+		return "the run is still active after being ended"
+	# 35 − çözülen = havuzda kalan. Kalanlar SİLİNMEZ.
+	if remaining_before != 35 - fixed:
+		return "pool reads %d after %d fixes of 35 — the remainder did not stay" \
+			% [remaining_before, fixed]
+	if ProductState.bugs_confirmed() != remaining_before:
+		return "ending the run moved the pool (%d -> %d)" \
+			% [remaining_before, ProductState.bugs_confirmed()]
+	if ProductState.fix_run_fixed() != 0:
+		return "the run counter did not clear"
+	return ""
+
+
+## §10 — kapasite HER AN, ±1 birim, CEZASIZ artıp azalır; fatura günlük olarak
+## (aylık/30) burn'e işler ve YENİ FİYAT ERTESİ GÜNDEN itibaren geçerlidir.
+##
+## FALSİFİKASYON: adjust_capacity'ye bir ceza/kilit ekle → simetri iddiası FAIL.
+static func _case_infra_capacity_moves_both_ways() -> String:
+	_seed_support_fixture("b2c")
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(10)
+	if InfraSystem.units() != 10:
+		return "capacity did not take (%d)" % InfraSystem.units()
+	var bill_10: int = InfraSystem.monthly_bill()
+	if bill_10 != 10 * InfraSystem.unit_price(InfraSystem.PROVIDER_CLOUD, "b2c"):
+		return "monthly bill %d is not units x unit price" % bill_10
+
+	# YUKARI ve AŞAĞI, aynı adımla, aynı sonuca dönerek — hiçbir yönde ceza yok.
+	InfraSystem.adjust_capacity(1)
+	if InfraSystem.units() != 11:
+		return "raising by one step gave %d" % InfraSystem.units()
+	InfraSystem.adjust_capacity(-1)
+	if InfraSystem.units() != 10:
+		return "lowering by one step gave %d" % InfraSystem.units()
+	if InfraSystem.monthly_bill() != bill_10:
+		return "a round trip changed the bill (%d -> %d)" % [bill_10, InfraSystem.monthly_bill()]
+	if InfraSystem.set_capacity(-5) != 0:
+		return "capacity went negative"
+
+	# Sağlayıcı göçü BEDELSİZ, ve fiyat FATURA YAYINLANDIĞINDA değişir.
+	InfraSystem.set_capacity(10)
+	var cash_before: int = GameState.cash
+	InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
+	if GameState.cash != cash_before:
+		return "switching provider charged a migration fee (%d -> %d)" % [cash_before, GameState.cash]
+	if InfraSystem.monthly_bill() != 10 * InfraSystem.unit_price(InfraSystem.PROVIDER_ENTERPRISE, "b2c"):
+		return "the new provider's price did not reach the bill"
+	# Günlük fatura aylık/30'dur ve burn'e "servers" kaleminden işler.
+	InfraSystem.daily_tick()
+	var breakdown: Dictionary = FinanceSystem.get_burn_breakdown()
+	if not breakdown.has(InfraSystem.BURN_CATEGORY):
+		return "FinanceSystem has no '%s' burn category — the bill has nowhere to land" \
+			% InfraSystem.BURN_CATEGORY
+	if int(breakdown[InfraSystem.BURN_CATEGORY]) != InfraSystem.daily_bill():
+		return "burn carries %d, the daily bill is %d" \
+			% [int(breakdown[InfraSystem.BURN_CATEGORY]), InfraSystem.daily_bill()]
+	return ""
+
+
+## §10 — "ağır özellik yayınlamak KALICI bir işletme maliyetidir." Yük = 1 + Σağırlık/20,
+## etkin kapasite = satın alınan / yük. Aynı kapasiteyle aynı kullanıcı, ağır kademe
+## yayınlandıktan sonra daha dolu okur.
+##
+## FALSİFİKASYON: load_factor'ü sabit 1.0 yap → doluluk iddiası FAIL.
+static func _case_infra_heavy_step_costs_capacity() -> String:
+	_seed_support_fixture("b2c")
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(3)                       # 3.000 kullanıcı kapasitesi
+	GameState.set_flag("b2c_audience", 2300.0)
+
+	if absf(InfraSystem.load_factor() - 1.0) > 0.0001:
+		return "an empty product already carries load %.3f" % InfraSystem.load_factor()
+	var occ_before: float = InfraSystem.occupancy()
+	var state_before: String = InfraSystem.capacity_state()
+	if state_before != InfraSystem.STATE_NORMAL:
+		return "a 77%% product reads %s before any heavy step" % state_before
+
+	# AĞIR kademe yayınla: note_tool capture K3, kullanım ağırlığı 3.
+	ProductState.set_line_tier("line_note_tool_capture", 3)
+	if ProductState.usage_weight_total() <= 0:
+		return "the shipped step contributed no usage weight"
+	if InfraSystem.load_factor() <= 1.0:
+		return "load stayed at %.3f after shipping a heavy step" % InfraSystem.load_factor()
+	if InfraSystem.effective_capacity() >= float(InfraSystem.purchased_capacity()):
+		return "effective capacity did not fall below what was purchased"
+	if InfraSystem.occupancy() <= occ_before:
+		return "occupancy did not rise (%.3f -> %.3f)" % [occ_before, InfraSystem.occupancy()]
+	if InfraSystem.capacity_state() == InfraSystem.STATE_NORMAL:
+		return "the same users on the same capacity still read normal after a heavy ship"
+	# Kapasite eklemek geri alır — hasar kalıcı değil.
+	InfraSystem.adjust_capacity(2)
+	if InfraSystem.capacity_state() != InfraSystem.STATE_NORMAL:
+		return "adding capacity did not clear the band (%s)" % InfraSystem.capacity_state()
+	return ""
+
+
+## §10 — %100 üstünde ÜÇ etki birden: memnuniyet −0,8/gün · GELEN ×1,5 · B2C edinim
+## ×0,6. Ve "hasar kalıcı değildir: kapasite eklendiği an etki durur."
+##
+## FALSİFİKASYON: is_over_capacity'yi false döndür → üç iddia da FAIL.
+static func _case_infra_overage_applies_and_stops() -> String:
+	_seed_support_fixture("b2c")
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	InfraSystem.set_capacity(2)                       # 2.000
+	GameState.set_flag("b2c_audience", 900.0)         # rahat
+
+	if InfraSystem.is_over_capacity():
+		return "a comfortable product reads over capacity"
+	if absf(InfraSystem.satisfaction_delta_per_day()) > 0.0001:
+		return "a comfortable product bleeds satisfaction"
+	if absf(InfraSystem.report_inflow_multiplier() - 1.0) > 0.0001:
+		return "a comfortable product multiplies inflow"
+	if absf(InfraSystem.acquisition_multiplier() - 1.0) > 0.0001:
+		return "a comfortable product throttles acquisition"
+
+	GameState.set_flag("b2c_audience", 5000.0)        # kapasitenin çok üstünde
+	if not InfraSystem.is_over_capacity():
+		return "5000 users on 2000 capacity did not read as overage"
+	if absf(InfraSystem.satisfaction_delta_per_day() - InfraSystem.OVERAGE_SATISFACTION) > 0.0001:
+		return "overage satisfaction is %.2f, §10 says %.2f" \
+			% [InfraSystem.satisfaction_delta_per_day(), InfraSystem.OVERAGE_SATISFACTION]
+	if absf(InfraSystem.report_inflow_multiplier() - InfraSystem.OVERAGE_INFLOW_MULT) > 0.0001:
+		return "overage inflow multiplier is %.2f, §10 says 1,5" \
+			% InfraSystem.report_inflow_multiplier()
+	if absf(InfraSystem.acquisition_multiplier() - InfraSystem.OVERAGE_ACQUISITION_MULT) > 0.0001:
+		return "overage acquisition multiplier is %.2f, §10 says 0,6" \
+			% InfraSystem.acquisition_multiplier()
+	# §8.3 — aşım zararı DESTEK'in −2,0 TAVANININ İÇİNDE toplanır, ayrı kanal değil.
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 60)
+	GameState.set_flag(ProductState.BUGS_CONFIRMED, 40)
+	if SupportSystem.daily_satisfaction_damage() < SupportSystem.DAMAGE_DAILY_CAP - 0.0001:
+		return "overage pushed daily damage past the −2,0 cap (%.2f)" \
+			% SupportSystem.daily_satisfaction_damage()
+
+	# KAPASİTE EKLE → ÜÇÜ DE ANINDA DURUR.
+	InfraSystem.set_capacity(8)
+	if InfraSystem.is_over_capacity():
+		return "adding capacity did not clear the overage"
+	if absf(InfraSystem.satisfaction_delta_per_day()) > 0.0001 \
+			or absf(InfraSystem.report_inflow_multiplier() - 1.0) > 0.0001 \
+			or absf(InfraSystem.acquisition_multiplier() - 1.0) > 0.0001:
+		return "an overage effect survived the capacity increase — §10 says damage is not permanent"
+	return ""
+
+
+## §10 — ucuz sağlayıcının bedeli DETERMİNİSTİKTİR: GELEN akışı ×1,25 ve kurumsal
+## hesap imzalamaz. Rastgele kesinti YOKTUR (uyarısız kayıp yasağı).
+##
+## FALSİFİKASYON: LOCAL_INFLOW_MULT'u 1.0 yap → akış iddiası FAIL.
+static func _case_infra_local_provider_tradeoff() -> String:
+	_seed_support_fixture("b2c")
+	InfraSystem.set_capacity(20)                      # bol kapasite: aşım karışmasın
+	GameState.set_flag("b2c_audience", 1000.0)
+
+	InfraSystem.set_provider(InfraSystem.PROVIDER_CLOUD)
+	if absf(InfraSystem.report_inflow_multiplier() - 1.0) > 0.0001:
+		return "the neutral provider is not neutral (%.2f)" % InfraSystem.report_inflow_multiplier()
+	var flow_cloud: float = SupportSystem.reports_per_day()
+	if InfraSystem.blocks_enterprise_signature():
+		return "the cloud provider blocks an enterprise signature"
+
+	InfraSystem.set_provider(InfraSystem.PROVIDER_LOCAL)
+	if absf(InfraSystem.report_inflow_multiplier() - 1.25) > 0.0001:
+		return "the local provider's inflow multiplier is %.2f, §10 says 1,25" \
+			% InfraSystem.report_inflow_multiplier()
+	var flow_local: float = SupportSystem.reports_per_day()
+	# LİTERALE karşı, sabitin KENDİSİNE karşı DEĞİL: ilk yazımda karşılaştırma
+	# InfraSystem.LOCAL_INFLOW_MULT ile yapılıyordu, yani sabiti 1,0'a çeken mutasyon
+	# eşitliğin iki yanını da oynatıyor ve case GEÇİYORDU.
+	if flow_local <= flow_cloud:
+		return "the cheap provider cost nothing: %.4f/day vs neutral %.4f/day" % [flow_local, flow_cloud]
+	if absf(flow_local - flow_cloud * 1.25) > 0.0001:
+		return "the multiplier did not reach the actual flow (%.4f vs %.4f)" \
+			% [flow_local, flow_cloud * 1.25]
+	if not InfraSystem.blocks_enterprise_signature():
+		return "the local provider does not block an enterprise signature"
+	if InfraSystem.meets_enterprise_trust():
+		return "the local provider satisfies the enterprise trust condition"
+
+	# Ve ucuzdur: bedelin tamamı deterministik, tek kuruş rastgele değil.
+	if InfraSystem.unit_price(InfraSystem.PROVIDER_LOCAL, "b2c") \
+			>= InfraSystem.unit_price(InfraSystem.PROVIDER_CLOUD, "b2c"):
+		return "the local provider is not the cheap one"
+	InfraSystem.set_provider(InfraSystem.PROVIDER_ENTERPRISE)
+	if not InfraSystem.meets_enterprise_trust():
+		return "the enterprise provider does not satisfy the trust condition"
+	return ""
+
+
+## Kurucuyu her alanda tavana çıkarır ve Build işine oturtur — kapılar ve taşıyıcılar
+## bu case'lerin konusu değilken yoldan çekilsinler diye.
+static func _seed_build_crew() -> Character:
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder != null:
+		for area in HRConstants.AREAS:
+			founder.role_stats[area] = HRConstants.AREA_MAX
+		CharacterRegistry.clear_jobs(founder.id)
+		CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
+	return founder
+
+
+## §12 + §11.2 — YAYIN, hat modelinin tek yazma anı. Kademeler ilerler, her biri
+## SÜRÜMÜNÜN cilasını damgalar, ve canlı eksenler hat modelinden türetilir.
+##
+## FALSİFİKASYON: _apply_line_plan_at_ship'ten stamp_step çağrısını sil → damga
+## iddiası FAIL. set_line_tier'i sil → kademe iddiası FAIL.
+static func _case_line_build_ships_and_stamps() -> String:
+	ProductLines.reload()
+	GameState.set_cash(50000)
+	_seed_build_crew()
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag(ProductState.STEP_REALIZATION, {})
+	GameState.set_flag("mvp_shipped", false)
+	GameState.set_flag("mvp_version", 0)
+
+	var plan := ["line_note_tool_capture_k1", "line_note_tool_sync_k1",
+		"line_note_tool_editor_k1"]
+	if ProductSystem.validate_line_plan("note_tool", plan) != "":
+		return "a legal three-step v1 plan was refused: %s" \
+			% ProductSystem.validate_line_plan("note_tool", plan)
+	# §6.0 — EforTavanı seçilen kademelerin efor toplamıdır.
+	var want_effort: int = ProductLines.sum_effort(plan)
+	if not ProductSystem.start_line_build("note_tool", plan, "", "Sable"):
+		return "start_line_build refused a valid plan"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if absf(b.total_efor - float(want_effort)) > 0.001:
+		return "EforTavanı is %.1f, the plan sums to %d" % [b.total_efor, want_effort]
+	# Kademeler HENÜZ ilerlemedi — plan build'de durur.
+	if ProductState.line_tier("line_note_tool_capture") != 0:
+		return "starting a build already advanced a line tier"
+
+	# Dört tur tamamlanmış gibi damgalayıp yayınla.
+	b.design_turns_completed = 4
+	b.current_phase = "bugfix"
+	b.bug_count = 2
+	ProductSystem.launch()
+	ProductSystem.ship_active_build()
+
+	for pair in [["line_note_tool_capture", 1], ["line_note_tool_sync", 1],
+			["line_note_tool_editor", 1]]:
+		if ProductState.line_tier(String(pair[0])) != int(pair[1]):
+			return "%s came out of the ship at tier %d, want %d" \
+				% [pair[0], ProductState.line_tier(String(pair[0])), int(pair[1])]
+	var stamps: Dictionary = ProductState.step_realization()
+	var want_stamp: float = ProductSystem.design_turn_mult(4)
+	for sid in plan:
+		if not stamps.has(sid):
+			return "%s shipped without a realization stamp" % sid
+		# Kapı-üstü bonusu kurucu tavandayken devreye girebilir; damga TABANDAN AŞAĞI olamaz.
+		if float(stamps[sid]) < want_stamp - 0.0001:
+			return "%s stamped %.3f, below its version's %.3f polish" \
+				% [sid, float(stamps[sid]), want_stamp]
+	# §11.2 — canlı eksenler hat modelinden türetildi.
+	var dims: Dictionary = ProductState.realized_dims()
+	if absf(float(GameState.get_flag("mvp_innovation", -1.0)) - float(dims["innovation"])) > 0.001:
+		return "the live axes did not come from the line model"
+	if float(dims["innovation"]) <= 0.0:
+		return "a shipped innovation step produced no innovation"
+	return ""
+
+
+## §12.3 kural 4 — "Sürüm iptal edilirse o sürümde PLANLANMIŞ kademeler hiç
+## yapılmamış sayılır; hatlar önceki durumlarında kalır." Ve §2: GELİŞTİRME'den
+## sonra iptal TÜM SÜRÜM EFORUNU yakar.
+##
+## Bu yapısal olarak doğrudur çünkü plan build'de durur ve hatlara yalnız YAYINDA
+## dokunulur — geri alınacak bir şey yok, çünkü ileri de alınmamıştı. Case bunu
+## sabitler ki biri "kolaylık olsun" diye commit'te yazmaya kalkmasın.
+##
+## FALSİFİKASYON: start_line_build'e ProductState.set_line_tier çağrısı ekle → FAIL.
+static func _case_cancel_reverts_planned_steps() -> String:
+	ProductLines.reload()
+	GameState.set_cash(50000)
+	_seed_build_crew()
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag(ProductState.STEP_REALIZATION, {})
+	GameState.set_flag("mvp_shipped", false)
+	GameState.set_flag("mvp_version", 0)
+	# Önce bir K1 canlıya çıksın ki "önceki durum" sıfırdan farklı olsun.
+	ProductState.set_line_tier("line_note_tool_search", 1)
+	ProductState.stamp_step("line_note_tool_search_k1", 1.0)
+
+	var plan := ["line_note_tool_search_k2", "line_note_tool_editor_k1"]
+	if ProductSystem.validate_line_plan("note_tool", plan) != "":
+		return "the upgrade plan was refused: %s" \
+			% ProductSystem.validate_line_plan("note_tool", plan)
+	if not ProductSystem.start_line_build("note_tool", plan, "", "Sable"):
+		return "start_line_build refused"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	b.current_phase = "development"
+	b.efor_spent = b.total_efor * 0.6         # yarıdan fazlası harcandı
+	var burned: float = b.efor_spent
+	var cash_before: int = GameState.cash
+
+	ProductSystem.cancel_build()
+
+	if ProductSystem.get_active_build() != null:
+		return "the build survived cancellation"
+	# HATLAR ÖNCEKİ DURUMLARINDA.
+	if ProductState.line_tier("line_note_tool_search") != 1:
+		return "the cancelled version moved a line to %d" \
+			% ProductState.line_tier("line_note_tool_search")
+	if ProductState.line_tier("line_note_tool_editor") != 0:
+		return "a planned step landed despite the cancellation"
+	if ProductState.step_realization().has("line_note_tool_search_k2"):
+		return "a cancelled step left a realization stamp behind"
+	# EFOR YANDI: harcanan iş geri gelmez ve kasaya iade yoktur.
+	if burned <= 0.0:
+		return "the fixture never spent any effort"
+	if GameState.cash != cash_before:
+		return "cancelling refunded %d — §2 says the whole version effort burns" \
+			% (GameState.cash - cash_before)
+	# Ve aynı kademe yeniden planlanabilir: iptal hattı bozmadı.
+	if ProductSystem.validate_line_plan("note_tool", ["line_note_tool_search_k2"]) != "":
+		return "the line could not be re-planned after a cancellation"
+	return ""
+
+
+## §6.1 — yapım hızı YALNIZ Ekip seam'lerinden gelir: Σ(daily_contribution) × K_EFOR.
+## Build işine kimse atanmamışsa efor SIFIRDIR (ünvan hiçbir kapıyı açmaz, Ekip §12.0).
+##
+## FALSİFİKASYON: build_carriers'ı bütün çalışanları döndürecek şekilde değiştir →
+## "unassigned" iddiası FAIL. K_EFOR'u 1.0 yap → katsayı iddiası FAIL.
+static func _case_build_effort_from_hr_seams() -> String:
+	# K_EFOR birleştirmesinin cebirsel özdeşliği: skill × (h/8) × (8/12) ≡ skill × h/12.
+	if absf(ProductSystem.K_EFOR - 8.0 / 12.0) > 0.000001:
+		return "K_EFOR is %.6f, §6.1 says 8/12" % ProductSystem.K_EFOR
+
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder"
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = 0
+	CharacterRegistry.clear_jobs(founder.id)
+
+	var dev: Character = _make_employee("eff_e", "Eff E", HRConstants.ROLE_DEVELOPER)
+	for area_d in HRConstants.AREAS:
+		dev.role_stats[area_d] = 0
+	dev.role_stats[HRConstants.AREA_ENGINEERING] = 8
+	dev.traits = ["picks_it_up_fast"]          # hız/çıktı çarpanı taşımaz
+	# CharacterRegistry.add() taze işe alımı KENDİ ANA İŞİNE oturtuyor (Ekip §12.2:
+	# "işe alım, oyuncunun boşta duran biriyle tanışmak isteyeceği yer değildir"), yani
+	# bir developer doğduğu anda Build'dedir. Atama iddiasını ölçmek için önce
+	# masadan kaldırmak gerekiyor — bu case ilk yazımında tam olarak buna takıldı.
+	CharacterRegistry.clear_jobs(dev.id)
+
+	# BORDRODA VAR, BUILD'DE YOK → sıfır efor.
+	if absf(ProductSystem.build_effort_per_day()) > 0.0001:
+		return "an unassigned developer produced %.3f effort/day" \
+			% ProductSystem.build_effort_per_day()
+
+	if CharacterRegistry.assign_job(dev.id, HRConstants.JOB_BUILD) != "":
+		return "could not assign the developer to the build"
+	# 8 ham × alan 1,0 × odak 1,0 × moral nötr × 8 saat/8 = 8,0 günlük katkı.
+	var contrib: float = HRSystem.daily_contribution(dev, HRConstants.AREA_ENGINEERING)
+	if absf(contrib - 8.0) > 0.001:
+		return "the HR seam returned %.3f, expected 8.0" % contrib
+	var effort: float = ProductSystem.build_effort_per_day()
+	if absf(effort - contrib * ProductSystem.K_EFOR) > 0.001:
+		return "effort/day is %.4f, the seam x K_EFOR is %.4f" \
+			% [effort, contrib * ProductSystem.K_EFOR]
+
+	# §6.2 — TEST build TAŞIMAZ; katkısı BETA'dadır.
+	var qa: Character = _make_employee("eff_q", "Eff Q", HRConstants.ROLE_TESTER)
+	for area_q in HRConstants.AREAS:
+		qa.role_stats[area_q] = 0
+	qa.role_stats[HRConstants.AREA_QA] = 10
+	CharacterRegistry.assign_job(qa.id, HRConstants.JOB_TEST)
+	if absf(ProductSystem.build_effort_per_day() - effort) > 0.001:
+		return "a tester on the Test job changed build effort — §6.2 says Test does not carry it"
+
+	# §6.3 — hata oranı YAZILIM'la düşer ama sıfırlanmaz.
+	var rate_strong: float = ProductSystem.line_bug_rate_per_effort()
+	dev.role_stats[HRConstants.AREA_ENGINEERING] = 1
+	var rate_weak: float = ProductSystem.line_bug_rate_per_effort()
+	if rate_weak <= rate_strong:
+		return "a weaker team did not produce more bugs (%.3f vs %.3f)" % [rate_weak, rate_strong]
+	dev.role_stats[HRConstants.AREA_ENGINEERING] = 10
+	if ProductSystem.line_bug_rate_per_effort() < ProductSystem.BUG_RATE_FLOOR - 0.0001:
+		return "a strong team drove the bug rate below its floor"
+	return ""
+
+
+## §19 — OKUMA YÜZEYİ. "Adlar kararlıdır ve iç yapı değişse bile korunur. Olay motoru
+## geldiğinde işi bunları OKUMAK olacak, keşfetmek değil."
+##
+## Bu case bir SÖZLÜK denetimidir: eksik bir ad, içeriğin o duruma asla atıfta
+## bulunamaması demektir (§19'un attribution yasası). Bugün hiçbirinin abonesi yok
+## ve olmaması da doğru — sinyaller dinleyicisi olmasa da yayınlanır.
+##
+## FALSİFİKASYON: EventBus'tan `line_completed` sinyalini sil → sinyal iddiası FAIL.
+## ProductRead.market_word'ü sil → sorgu iddiası FAIL.
+static func _case_product_read_catalogue() -> String:
+	ProductLines.reload()
+	_seed_support_fixture("b2c")
+	ProductState.set_line_tier("line_note_tool_search", 1)
+	ProductState.stamp_step("line_note_tool_search_k1", 1.0)
+
+	# --- SORGULAR: §19'un listesi, birebir ---
+	var q: Dictionary = {
+		"phase": ProductRead.phase(""),
+		"axis_reading": ProductRead.axis_reading("", "innovation"),
+		"market_word": ProductRead.market_word("", "innovation"),
+		"confirmed_open": ProductRead.confirmed_open(""),
+		"unconfirmed": ProductRead.unconfirmed(""),
+		"version_age": ProductRead.version_age(""),
+		"usage": ProductRead.usage(""),
+		"line_tier": ProductRead.line_tier("", "line_note_tool_search"),
+		"line_next_step": ProductRead.line_next_step("", "line_note_tool_search"),
+		"lines_open": ProductRead.lines_open(""),
+		"steps_shipped": ProductRead.steps_shipped(""),
+		"interest": ProductRead.interest(""),
+		"capacity_tier": ProductRead.capacity_tier(""),
+		"build_active": ProductRead.build_active(),
+		"support_staffed": ProductRead.support_staffed(""),
+		"step_unlockable": ProductRead.step_unlockable("line_note_tool_search_k2"),
+	}
+	if q.size() != 16:
+		return "the query catalogue has %d entries, §19 lists 16" % q.size()
+
+	# Birkaçının GERÇEKTEN okuduğunu kanıtla — imza sınavı yeterli değil.
+	if String(q["phase"]) != ProductRead.PHASE_SUPPORT:
+		return "a live product with no build reads phase '%s', §2 says DESTEK is permanent" \
+			% String(q["phase"])
+	if int(q["line_tier"]) != 1:
+		return "line_tier read %d, the fixture set 1" % int(q["line_tier"])
+	if String(q["line_next_step"]) != "line_note_tool_search_k2":
+		return "line_next_step read '%s'" % String(q["line_next_step"])
+	if int(q["lines_open"]) != 1 or int(q["steps_shipped"]) != 1:
+		return "lines_open/steps_shipped read %d/%d, want 1/1" \
+			% [int(q["lines_open"]), int(q["steps_shipped"])]
+	if not [ProductRead.WORD_AHEAD, ProductRead.WORD_LEVEL, ProductRead.WORD_BEHIND] \
+			.has(String(q["market_word"])):
+		return "market_word returned '%s', outside önde/hizada/geride" % String(q["market_word"])
+	# Tamamlanmış hat sıradaki kademeyi ÖNERMEZ.
+	ProductState.set_line_tier("line_note_tool_search", 3)
+	if ProductRead.line_next_step("", "line_note_tool_search") != "":
+		return "a completed line still offered a next step"
+	ProductState.set_line_tier("line_note_tool_search", 1)
+
+	# --- SİNYALLER: §19'un listesi, birebir ---
+	var signals := ["version_shipped", "build_started", "build_paused", "build_resumed",
+		"fix_run_started", "fix_run_finished", "bug_confirmed",
+		"unconfirmed_threshold_crossed", "axis_floor_warning", "axis_floor_crossed",
+		"line_upgraded", "line_completed", "delighter_shipped", "phase_bar_raised"]
+	var declared: Array[String] = []
+	for d in EventBus.get_signal_list():
+		declared.append(String((d as Dictionary).get("name", "")))
+	for name in signals:
+		if not declared.has(name):
+			return "§19 signal '%s' is not declared on EventBus" % name
+	if signals.size() != 14:
+		return "the signal catalogue has %d entries, §19 lists 14" % signals.size()
+
+	# Kenar sinyalleri: ilk çağrı yalnız TOHUMLAR, yayınlamaz.
+	var seen: Array[String] = []
+	EventBus.bug_confirmed.connect(func(_n: int) -> void: seen.append("bug_confirmed"))
+	EventBus.unconfirmed_threshold_crossed.connect(
+		func(_b: String) -> void: seen.append("threshold"))
+	ProductRead.reset()
+	GameState.set_flag(ProductState.BUGS_CONFIRMED, 5)
+	ProductRead.emit_edges()          # tohumlama — sessiz olmalı
+	if not seen.is_empty():
+		return "the first edge sweep emitted %s instead of seeding" % str(seen)
+	GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
+	ProductRead.emit_edges()
+	if not seen.has("bug_confirmed"):
+		return "a rise in confirmed bugs emitted nothing"
+	# Düşüş (düzeltme) bu sinyali ATMAZ — yalnız doğrulama atar.
+	seen.clear()
+	GameState.set_flag(ProductState.BUGS_CONFIRMED, 2)
+	ProductRead.emit_edges()
+	if seen.has("bug_confirmed"):
+		return "fixing bugs emitted bug_confirmed"
+	return ""
+
+
+## §5 CİLA MERDİVENİ + §6.0/§6.4 — hat modelinin faz aritmetiği, uçtan uca.
+##
+## Üç iddia bir arada, çünkü üçü de aynı yeniden-şekillendirmenin parçası:
+##  · "Geliştirmeye geç" İLK GÜNDEN basılabilir, ama tur 1 dolmadan ONAY ister.
+##  · TASARIM turları eforu EforTavanı'nın ÜSTÜNDEN yakar (0,08/tur), barından değil.
+##  · GELİŞTİRME barı tavanın %100'üne kadar dolar ve BETA kapısı orada açılır.
+##
+## FALSİFİKASYON: design_efor_spent'i efor_spent'e yaz → %100 kapısı iddiası FAIL.
+## needs_design_confirm'ü false döndür → onay iddiası FAIL.
+static func _case_line_design_turns_and_gate() -> String:
+	ProductLines.reload()
+	GameState.set_cash(50000)
+	_seed_build_crew()
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag(ProductState.STEP_REALIZATION, {})
+	GameState.set_flag("mvp_shipped", false)
+	GameState.set_flag("mvp_version", 0)
+
+	var plan := ["line_note_tool_capture_k1", "line_note_tool_editor_k1"]
+	if not ProductSystem.start_line_build("note_tool", plan, "", "Sable"):
+		return "start_line_build refused"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var ceiling: float = b.total_efor
+
+	# --- İLK GÜN: kapı açık, ama onay ister (§5) ---
+	if not ProductSystem.can_enter_development():
+		return "'Geliştirmeye geç' was shut on day one — §5 opens it immediately"
+	if not ProductSystem.needs_design_confirm():
+		return "crossing before turn 1 asked for no confirmation"
+	if ProductSystem.design_turn_mult(b.design_turns_completed) != 0.75:
+		return "a version crossing at zero turns would not carry the 0,75 multiplier"
+
+	# --- TUR 1 dolsun ---
+	var hours: int = 0
+	while b.design_turns_completed < 1 and hours < 24 * 200:
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+	if b.design_turns_completed < 1:
+		return "the first design turn never completed"
+	if ProductSystem.needs_design_confirm():
+		return "the confirm dialog survived the first completed turn"
+	# Turun maliyeti EforTavanı × 0,08, ve GELİŞTİRME barından ÇALMAZ.
+	var want_cost: float = ProductSystem.DESIGN_TURN_COST * ceiling
+	if absf(b.design_efor_spent - want_cost) > want_cost * 0.25:
+		return "one turn burned %.2f, §5 says about %.2f" % [b.design_efor_spent, want_cost]
+	if b.efor_spent > 0.0001:
+		return "design turns ate into the development bar (%.3f)" % b.efor_spent
+	if absf(b.total_efor - ceiling) > 0.001:
+		return "the effort ceiling moved during design"
+
+	# --- DÖRT TURDA PARK ---
+	while not ProductSystem.design_turns_maxed() and hours < 24 * 600:
+		ProductSystem.hourly_tick(hours % 24)
+		hours += 1
+	if b.design_turns_completed != 4:
+		return "design stopped at %d turns, §5 caps at 4" % b.design_turns_completed
+	var parked: float = b.design_efor_spent
+	for h in 48:
+		ProductSystem.hourly_tick(h % 24)
+	if absf(b.design_efor_spent - parked) > 0.001:
+		return "design kept burning past its fourth turn"
+	if absf(ProductSystem.design_turn_mult(4) - 1.15) > 0.0001:
+		return "four turns do not read as the 1,15 ceiling"
+
+	# --- GELİŞTİRME: %100'e kadar, kapı orada açılır (§6.4) ---
+	ProductSystem.enter_development()
+	if b.current_phase != "development":
+		return "enter_development did not flip the phase"
+	if ProductSystem.can_enter_beta():
+		return "BETA opened on development's first hour"
+	var guard: int = 0
+	while not ProductSystem.development_band_complete() and guard < 24 * 800:
+		ProductSystem.hourly_tick(guard % 24)
+		guard += 1
+	if not ProductSystem.development_band_complete():
+		return "the development bar never filled"
+	if absf(b.efor_spent - ceiling) > 0.001:
+		return "the bar stopped at %.2f of a %.2f ceiling — §6.0 wants 100%%" \
+			% [b.efor_spent, ceiling]
+	if not ProductSystem.can_enter_beta():
+		return "the gate stayed shut at a full bar"
+	# §6.3 — hatalar GELİŞTİRME'de birikti.
+	if b.bug_count <= 0:
+		return "a full development phase produced no bugs at all"
+	return ""
+
+
+## §2 DURAKLAMA İKİ TÜRDÜR + §3 LİDERSİZ YAPIM.
+##
+## S6'nın sözü: "Oto-duraklama CÜMLEYLE, manuel duraklama GLİFLE ayrışır — ikisi bir
+## arada ASLA görünmez." Bu case tam olarak o ayrımı ölçer, çünkü ikisi tek bir
+## boolean'a çökerse bar oyuncunun kendi kararını bir arıza gibi gösterir.
+##
+## FALSİFİKASYON: pause_kind'dan manuel dalını çıkar → glif iddiası FAIL.
+## lead_missing'i false döndür → lider notu iddiası FAIL.
+static func _case_pause_kinds_and_lead_note() -> String:
+	ProductLines.reload()
+	GameState.set_cash(50000)
+	var founder: Character = _seed_build_crew()
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag("mvp_shipped", false)
+	GameState.set_flag("mvp_version", 0)
+	var lead: Character = _make_employee("pk_lead", "PK Lead", HRConstants.ROLE_DEVELOPER)
+	lead.role_stats[HRConstants.AREA_ENGINEERING] = 8
+	lead.role_stats[HRConstants.SKILL_LEADERSHIP] = 8
+
+	if not ProductSystem.start_line_build("note_tool",
+			["line_note_tool_capture_k1"], lead.id, "Sable"):
+		return "start_line_build refused"
+
+	# --- ÇALIŞIYOR ---
+	if ProductSystem.build_paused():
+		return "a fully staffed build reads paused"
+	if ProductSystem.pause_kind() != ProductSystem.PAUSE_NONE:
+		return "pause_kind is '%s' on a running build" % ProductSystem.pause_kind()
+
+	# --- MANUEL: glif, CÜMLE YOK ---
+	ProductSystem.set_manual_pause(true)
+	if ProductSystem.pause_kind() != ProductSystem.PAUSE_MANUAL:
+		return "a manual pause reads '%s'" % ProductSystem.pause_kind()
+	if not ProductSystem.build_paused():
+		return "a manual pause did not stop the build"
+	if ProductSystem.pause_note_key() != "":
+		return "the manual pause printed a sentence ('%s') — §2 says glyph only" \
+			% ProductSystem.pause_note_key()
+	# İlerleme KORUNUR: duraklatmak yapılanı silmez.
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var design_before: float = b.design_efor_spent
+	for h in 24:
+		ProductSystem.hourly_tick(h)
+	if absf(b.design_efor_spent - design_before) > 0.0001:
+		return "a paused build kept working"
+	ProductSystem.set_manual_pause(false)
+	if ProductSystem.build_paused():
+		return "unpausing did not resume the build"
+
+	# --- OTO: cümle, GLİF YOK ---
+	CharacterRegistry.clear_jobs(founder.id)
+	CharacterRegistry.clear_jobs(lead.id)
+	if ProductSystem.pause_kind() != ProductSystem.PAUSE_AUTO:
+		return "an unstaffed build reads '%s'" % ProductSystem.pause_kind()
+	var note: String = ProductSystem.pause_note_key()
+	if note != "BUILD_BUSY_NOBODY" and note != "BUILD_BUSY_ELSEWHERE":
+		return "the auto pause printed '%s'" % note
+	if TranslationServer.translate(note) == note:
+		return "the auto-pause sentence has no string"
+
+	# --- İKİSİ BİR ARADA ASLA: oyuncunun kararı kazanır ---
+	ProductSystem.set_manual_pause(true)
+	if ProductSystem.pause_kind() != ProductSystem.PAUSE_MANUAL:
+		return "with both conditions true the bar chose '%s'" % ProductSystem.pause_kind()
+	if ProductSystem.pause_note_key() != "":
+		return "a manual pause over an empty desk still printed a sentence"
+	ProductSystem.set_manual_pause(false)
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
+	CharacterRegistry.assign_job(lead.id, HRConstants.JOB_BUILD)
+
+	# --- §3 LİDERSİZ: yapım SÜRER, çarpan 1,0, bar notu düşer ---
+	if ProductSystem.lead_missing():
+		return "an active lead reads as missing"
+	if ProductSystem.lead_note_key() != "":
+		return "a build with a lead carries the no-lead note"
+	var with_lead: float = ProductSystem.build_effort_per_day(lead.id)
+	lead.status = HRConstants.STATUS_ON_LEAVE     # ayrıldı/çıkarıldı vekili
+	if not ProductSystem.lead_missing():
+		return "a departed lead still reads as present"
+	if ProductSystem.lead_note_key() != "BUILD_NO_LEAD":
+		return "the no-lead note is '%s'" % ProductSystem.lead_note_key()
+	if TranslationServer.translate("BUILD_NO_LEAD") == "BUILD_NO_LEAD":
+		return "BUILD_NO_LEAD has no string"
+	# Liderlik çarpanı 1,0'a döner ve yapım DEVAM eder — geriye dönük bozulma yok.
+	var leaderless: float = ProductSystem.build_effort_per_day(lead.id)
+	if leaderless <= 0.0:
+		return "the build stopped producing effort when the lead left"
+	if leaderless >= with_lead:
+		return "losing the lead did not remove the leadership bonus (%.3f vs %.3f)" \
+			% [leaderless, with_lead]
+	if absf(leaderless - ProductSystem.build_effort_per_day("")) > 0.0001:
+		return "a departed lead is not equivalent to no lead at all"
+	lead.status = HRConstants.STATUS_ACTIVE
+	return ""
+
+
+## S6'nın ALTI DURUMU, hat modeli yolunda. Bar tek renderer, üç ev sahibi — o yüzden
+## durumları MODEL seviyesinde sabitlemek üç yüzeyi birden sabitler.
+##
+## FALSİFİKASYON: _derive_line'da show_percent'i true bırak → BETA iddiası FAIL.
+## GELİŞTİRME dolumunu eski (frac−0,20)/0,60 aritmetiğine döndür → %100 iddiası FAIL.
+static func _case_build_bar_line_states() -> String:
+	ProductLines.reload()
+	GameState.set_cash(50000)
+	var founder: Character = _seed_build_crew()
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag("mvp_shipped", false)
+	GameState.set_flag("mvp_version", 0)
+	if not ProductSystem.start_line_build("note_tool",
+			["line_note_tool_capture_k1", "line_note_tool_editor_k1"], "", "Sable"):
+		return "start_line_build refused"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	var M := load("res://scripts/ui/components/build_bar_model.gd")
+
+	# --- 1 · TASARIM, tur metni ve dolum ---
+	var m: RefCounted = M.new()
+	if not m.derive():
+		return "the model refused to derive in design"
+	if String(m.phase) != "design":
+		return "design phase reads '%s'" % String(m.phase)
+	if m.round_max != ProductSystem.DESIGN_TURN_MAX:
+		return "round_max is %d, §5 caps at 4" % m.round_max
+	if m.round_index != 1:
+		return "the first running turn reads %d" % m.round_index
+	if not m.show_percent:
+		return "TASARIM dropped its percentage — only BETA does that"
+	# Tur 1 dolmadan geçmek onay ister ve bar gerekçeyi taşır (§5).
+	if String(m.decision_tooltip).strip_edges() == "":
+		return "the pre-turn-1 crossing carries no confirmation text"
+
+	# --- 2 · MANUEL DURAKLAMA: glif, cümle yok ---
+	ProductSystem.set_manual_pause(true)
+	var mp: RefCounted = M.new(); mp.derive()
+	if mp.pause_kind != ProductSystem.PAUSE_MANUAL:
+		return "the model read the manual pause as '%s'" % mp.pause_kind
+	if mp.pause_note_key != "":
+		return "the manual pause carried a sentence"
+	ProductSystem.set_manual_pause(false)
+
+	# --- 3 · OTO DURAKLAMA: cümle, glif yok ---
+	CharacterRegistry.clear_jobs(founder.id)
+	var ma: RefCounted = M.new(); ma.derive()
+	if ma.pause_kind != ProductSystem.PAUSE_AUTO:
+		return "an unstaffed build read '%s'" % ma.pause_kind
+	if ma.pause_note_key == "":
+		return "the auto pause carried no sentence"
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
+
+	# --- 4 · GELİŞTİRME: kapı kilitli, gerekçesi yazılı ---
+	ProductSystem.enter_development()
+	var md: RefCounted = M.new(); md.derive()
+	if String(md.phase) != "development":
+		return "development phase reads '%s'" % String(md.phase)
+	if md.decision_enabled:
+		return "the BETA gate reads open on the first hour"
+	if String(md.decision_tooltip).strip_edges() == "":
+		return "the locked gate shows no reason"
+	# §6.0 — dolum TAVANIN TAMAMINA göre.
+	#
+	# İKİ NOKTADAN ölçülüyor ve sebebi falsifikasyon: %50 eski (frac−0,20)/0,60
+	# aritmetiğinin SABİT NOKTASI ((0,5−0,2)/0,6 = 0,5), yani tek başına iki formülü
+	# ayırt edemiyor ve eski bandı geri getiren mutasyon case'i GEÇİYORDU. %80 ayırıyor:
+	# doğru cevap 0,80, eski aritmetik 1,00 derdi.
+	b.efor_spent = b.total_efor * 0.5
+	var mh: RefCounted = M.new(); mh.derive()
+	if absf(mh.phase_progress - 0.5) > 0.02:
+		return "half the ceiling reads %.2f — the bar is not measuring the full 100%%" \
+			% mh.phase_progress
+	b.efor_spent = b.total_efor * 0.8
+	var mq: RefCounted = M.new(); mq.derive()
+	if absf(mq.phase_progress - 0.8) > 0.02:
+		return "80%% of the ceiling reads %.2f — the bar is still on the old 0,20-0,80 band" \
+			% mq.phase_progress
+
+	# --- 5 · GELİŞTİRME DOLU: kapı açık ---
+	b.efor_spent = b.total_efor
+	var mf: RefCounted = M.new(); mf.derive()
+	if not mf.decision_enabled:
+		return "a full bar did not open the gate"
+	if absf(mf.phase_progress - 1.0) > 0.001:
+		return "a full bar reads %.2f" % mf.phase_progress
+
+	# --- 6 · BETA: YÜZDE YOK, sayaç ve gün var (§7 mühürlü) ---
+	ProductSystem.enter_beta()
+	b.bugs_found = 4
+	b.bugs_fixed = 2
+	var mb: RefCounted = M.new(); mb.derive()
+	if String(mb.phase) != "beta":
+		return "beta phase reads '%s'" % String(mb.phase)
+	if mb.show_percent:
+		return "the BETA row carries a percentage — §7 forbids it"
+	if mb.percent != 0:
+		return "BETA published a percent value of %d" % mb.percent
+	if mb.bugs_left != 2:
+		return "KALAN reads %d, want 2 (4 found − 2 fixed)" % mb.bugs_left
+	if mb.beta_day < 1:
+		return "the beta day counter reads %d" % mb.beta_day
+	if String(mb.decision_tooltip).strip_edges() == "":
+		return "the ship action lost its bug tooltip in beta"
+	return ""
+
+
+## §12.10 — KOŞU PROFİLİ. "Bir demo koşusu 3–5 sürüm çıkarır ve 9–14 kademe harcar;
+## katalogda 27 kademe vardır. Yani HİÇBİR KOŞU KATALOGU BİTİREMEZ; her koşu farklı
+## bir ürün şekli üretir. Tekrar oynanabilirlik yapısaldır."
+##
+## Bu, hat modelinin bütün gerekçesidir (§12.1: düz katalog üçüncü sürümde tükeniyordu),
+## ve ölçülmezse inşa edilmemiş demektir. Case dört sürüm oynar ve katalogda hâlâ iş
+## kaldığını kanıtlar.
+##
+## FALSİFİKASYON: alt-tipin hat sayısını 9'dan 3'e indir → tükenmezlik iddiası FAIL.
+static func _case_run_profile_never_exhausts() -> String:
+	ProductLines.reload()
+	GameState.set_cash(500000)
+	_seed_build_crew()
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag(ProductState.STEP_REALIZATION, {})
+	GameState.set_flag("mvp_shipped", false)
+	GameState.set_flag("mvp_version", 0)
+	GameState.set_flag("mvp_market_type", "b2c")
+
+	var subtype := "note_tool"
+	var total_steps: int = 27
+	var counted: int = 0
+	for lid in ProductLines.line_ids(subtype):
+		for tier in [1, 2, 3]:
+			if not ProductLines.step_at(String(lid), tier).is_empty():
+				counted += 1
+	if counted != total_steps:
+		return "the subtype offers %d steps, §12.1 says 27" % counted
+
+	var versions: int = 0
+	var shipped_steps: int = 0
+	var hours: int = 0
+	# Dört sürüm, sürüm başına üç kademe — §12.10'un beklediği profilin ortası.
+	for v in 4:
+		var plan: Array[String] = []
+		for lid2 in ProductLines.line_ids(subtype):
+			if plan.size() >= 3:
+				break
+			var line_id: String = String(lid2)
+			var nxt: int = ProductLines.next_tier(ProductState.line_tier(line_id))
+			if nxt == 0:
+				continue
+			var sid: String = String(ProductLines.step_at(line_id, nxt).get("id", ""))
+			if sid == "" or not LineGates.is_unlocked(sid):
+				continue      # K3'ler Ar-Ge olmadan kilitli — doğru ve beklenen
+			plan.append(sid)
+		if plan.is_empty():
+			return "version %d found no legal step — the catalogue ran dry" % (v + 1)
+		if not ProductSystem.start_line_build(subtype, plan, "", "Sable"):
+			return "version %d refused to start" % (v + 1)
+		var b: FeatureBuild = ProductSystem.get_active_build()
+		# Bir tur tasarım (taban cila), sonra geliştirmeyi doldur, sonra yayınla.
+		while b.design_turns_completed < 1 and hours < 24 * 4000:
+			ProductSystem.hourly_tick(hours % 24)
+			hours += 1
+		ProductSystem.enter_development()
+		while not ProductSystem.development_band_complete() and hours < 24 * 4000:
+			ProductSystem.hourly_tick(hours % 24)
+			hours += 1
+		ProductSystem.enter_beta()
+		ProductSystem.launch()
+		ProductSystem.ship_active_build()
+		versions += 1
+		shipped_steps += plan.size()
+
+	# --- §12.10'un iki sayısı ---
+	if versions < 3 or versions > 5:
+		return "the run shipped %d versions, §12.10 expects 3-5" % versions
+	if shipped_steps < 9 or shipped_steps > 14:
+		return "the run consumed %d steps, §12.10 expects 9-14" % shipped_steps
+	if ProductState.steps_shipped() != shipped_steps:
+		return "the product records %d steps but the run shipped %d" \
+			% [ProductState.steps_shipped(), shipped_steps]
+
+	# --- KATALOG BİTMEDİ: hâlâ alınabilecek kademe var ---
+	var still_open: int = 0
+	for lid3 in ProductLines.line_ids(subtype):
+		if ProductLines.next_tier(ProductState.line_tier(String(lid3))) != 0:
+			still_open += 1
+	if still_open <= 0:
+		return "every line is finished after %d steps — the catalogue was exhausted" % shipped_steps
+	if shipped_steps >= total_steps:
+		return "the run consumed the whole catalogue"
+	# Ve ürün gerçekten olgunlaştı: eksenler sıfırdan yukarı.
+	var readings: Dictionary = ProductState.axis_readings()
+	var any_up: bool = false
+	for axis in readings:
+		if int(readings[axis]) > 0:
+			any_up = true
+	if not any_up:
+		return "four shipped versions produced no axis reading at all"
+	return ""
+
+
+# =========================================================================
+#  ÜRÜN MODÜLÜ · HAT MODELİ (GDD ÜRÜN rev 6 §11 · §12)
+# =========================================================================
+
+## §12.1 · §12.2 — the catalog is data-driven and its SHAPE is law: 9 lines per
+## subtype, 3 per axis, 3 steps per line. A content file that violates any of it
+## must be REFUSED at load, not tolerated.
+##
+## FALSİFİKASYON: shared.json'dan bir hattı sil → "9 lines" iddiası FAIL.
+## Bir kimlik hattının eksenini değiştir → "axis shape" iddiası FAIL.
+static func _case_product_lines_catalog_loads() -> String:
+	ProductLines.reload()
+	var errs: Array = ProductLines.load_errors()
+	if not errs.is_empty():
+		return "catalog refused to load cleanly: %s" % str(errs)
+
+	var subs: Array = ProductLines.subtypes()
+	# §12.11 mühürlü üçlü. Dördüncü B2B slotu ruling bekliyor ve YOKLUĞU doğrudur:
+	# geldiğinde yalnız bir içerik dosyası eklenir, kod değişmez.
+	for want in ["note_tool", "video_clip", "erp"]:
+		if not subs.has(want):
+			return "sealed subtype '%s' missing from the catalog (have %s)" % [want, str(subs)]
+
+	for st in subs:
+		var sub: String = String(st)
+		var ids: Array = ProductLines.line_ids(sub)
+		if ids.size() != ProductLines.LINES_PER_SUBTYPE:
+			return "%s has %d lines, §12.2 wants %d" % [sub, ids.size(), ProductLines.LINES_PER_SUBTYPE]
+		var by_axis: Dictionary = ProductLines.line_ids_by_axis(sub)
+		for axis in QualityModel.AXES:
+			var n: int = (by_axis[axis] as Array).size()
+			if n != 3:
+				return "%s has %d lines on %s, §12.2 wants 3" % [sub, n, axis]
+		# 9 hat × 3 kademe = 27 seçilebilir kalem (§12.1).
+		var steps: int = 0
+		for lid in ids:
+			for tier in [1, 2, 3]:
+				if not ProductLines.step_at(String(lid), tier).is_empty():
+					steps += 1
+		if steps != 27:
+			return "%s resolved %d steps, §12.1 wants 27" % [sub, steps]
+
+	# §12.10 — ERP'nin ekip telegrafı: paylaşılan Güvenlik & Yetki K3'ü ERP'de
+	# YÜKSELİR. Aynı kademe not aracında yükselmez; override alt-tip başınadır.
+	var erp_gate: Dictionary = ProductLines.step("line_shared_security_k3@erp").get("requires", {})
+	var note_gate: Dictionary = ProductLines.step("line_shared_security_k3@note_tool").get("requires", {})
+	var erp_total: Array = erp_gate.get("total", []) as Array
+	if erp_total.is_empty():
+		return "ERP's shared Güvenlik & Yetki K3 carries no total gate — §12.10's telegraph is missing"
+	if int((erp_total[0] as Dictionary).get("stars", 0)) != 5:
+		return "ERP telegraph asks for %d total stars, §12.10 says 5" \
+			% int((erp_total[0] as Dictionary).get("stars", 0))
+	if not (note_gate.get("total", []) as Array).is_empty():
+		return "the override leaked: note_tool's shared K3 picked up ERP's total gate"
+	return ""
+
+
+## §12.3 MÜHÜRLÜ MERDİVEN, dört kuralın dördü de. Tek yerde yaşar (ProductLines);
+## kart çizimi ve Konsept onayı kendi kontrolünü kurmaz, buraya sorar.
+##
+## FALSİFİKASYON: ladder_refusal'dan "skips_tier" dalını sil → ilk iddia FAIL.
+## "line_already_planned" dalını sil → üçüncü iddia FAIL.
+static func _case_line_ladder_rules() -> String:
+	ProductLines.reload()
+	var line := "line_note_tool_search"
+
+	# 1 · ATLAMA YOK: K1 canlıda değilken K2 seçilemez.
+	if ProductLines.ladder_refusal(line + "_k2", 0, []) != "skips_tier":
+		return "a line could skip straight to K2 from empty"
+	if ProductLines.ladder_refusal(line + "_k3", 1, []) != "skips_tier":
+		return "a line could skip from K1 to K3"
+
+	# 2 · Sıradaki kademe serbest.
+	if ProductLines.ladder_refusal(line + "_k1", 0, []) != "":
+		return "K1 was refused on an empty line"
+	if ProductLines.ladder_refusal(line + "_k2", 1, []) != "":
+		return "K2 was refused on a line already at K1"
+
+	# 3 · SÜRÜM BAŞINA HAT BAŞINA BİR KADEME: aynı hat bir sürümde iki kademe zıplayamaz.
+	if ProductLines.ladder_refusal(line + "_k2", 1, [line + "_k1"]) != "line_already_planned":
+		return "the same line took two steps in one version"
+
+	# 4 · DÜŞÜRME YOK ve KADEME 3'TE BİTER.
+	if ProductLines.ladder_refusal(line + "_k1", 2, []) != "already_shipped":
+		return "a line could be downgraded"
+	if ProductLines.next_tier(3) != 0:
+		return "a completed line still offered a next tier — §12.3 ends at 3"
+	if not ProductLines.is_complete(3):
+		return "tier 3 did not read as complete"
+	return ""
+
+
+## §12.5 — K3'ler Ar-Ge düğümü ister ve Ar-Ge sistemi HENÜZ YOK, o yüzden kilitli
+## kalırlar. BU BİR HATA DEĞİL, SIRALAMADIR; geçici bypass yazılmaz. Kilit satırı
+## düğümün ADINI yazmak zorundadır, yoksa oyuncu neyi araştıracağını bilemez.
+##
+## FALSİFİKASYON: ResearchSeam.completed'i true döndür → ilk iddia FAIL.
+static func _case_line_k3_locked_without_research() -> String:
+	ProductLines.reload()
+	# Kurucuyu her alanda tavana çıkar: kilit YALNIZ Ar-Ge'den gelsin.
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder to build the gate roster from"
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = HRConstants.AREA_MAX
+
+	var step_id := "line_note_tool_capture_k3"
+	var ev: Dictionary = LineGates.evaluate(step_id)
+	if bool(ev.get("unlocked", false)):
+		return "a K3 unlocked with no research system present"
+
+	var unmet: Array = LineGates.unmet_parts(step_id)
+	if unmet.size() != 1:
+		return "expected exactly the research part unmet, got %d parts" % unmet.size()
+	var part: Dictionary = unmet[0] as Dictionary
+	if String(part.get("kind", "")) != LineGates.KIND_RESEARCH:
+		return "the unmet part is '%s', not the research node" % String(part.get("kind", ""))
+	var node: String = String(part.get("node", ""))
+	if not ResearchSeam.NODES.has(node):
+		return "the lock names '%s', which is not one of §12.5's six nodes" % node
+	if ResearchSeam.node_name(node).strip_edges() == "":
+		return "the lock line would render an empty research name"
+	if ResearchSeam.completed(node):
+		return "the research seam claims a node is done while the tree does not exist"
+	return ""
+
+
+## §12.4 — "Hattın katkısı YALNIZ mevcut kademesinin puanıdır." Kademe kendinden
+## öncekini DEĞİŞTİRİR, üstüne EKLEMEZ. Bu case tam olarak o farkı ölçer: toplama
+## olsaydı okuma çok daha yükseğe çıkardı.
+##
+## FALSİFİKASYON: realized_axis'i kademeleri toplayacak şekilde değiştir → "replacement"
+## iddiası FAIL (47 yerine 80 okur).
+static func _case_axis_reading_replaces_not_adds() -> String:
+	ProductLines.reload()
+	var st := "note_tool"
+	var line := "line_note_tool_search"          # Deneyim ekseni
+	var tiers := {line: 1}
+	var stamps := {line: 1.0}                    # tur çarpanı 1,00 · kapı-üstü yok
+
+	# K1: 4 puan × Kano 1,0 = 4,0 gizil. Bootstrap çıtası 12,0 → round(100 × 4/12) = 33.
+	var before: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 0, 1)
+	if before != 33:
+		return "K1 experience reading is %d, want 33 (4,0 gizil / çıta 12,0)" % before
+
+	# K2: 9 puan × Kano 0,8 = 7,2 gizil → round(100 × 7,2/12) = 60 (rev 6.1 merkezleri).
+	tiers[line] = 2
+	var after: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 0, 1)
+	if after != 60:
+		return "K2 experience reading is %d, want 60 (7,2 gizil / çıta 12,0)" % after
+	# Toplama olsaydı gizil 4,0 + 7,2 = 11,2 → 93. Aradaki fark iddianın kendisidir.
+	if after >= 93:
+		return "the upgrade ADDED to the line instead of replacing it (%d)" % after
+
+	# §11.2 — Kararlılık okumasından −2 × açık DOĞRULANMIŞ hata.
+	var sline := "line_note_tool_sync"
+	var stiers := {sline: 1}
+	var sstamps := {sline: 1.0}
+	var clean: int = QualityModel.axis_reading(st, stiers, sstamps, "stability", 0, 1)
+	var buggy: int = QualityModel.axis_reading(st, stiers, sstamps, "stability", 5, 1)
+	if clean - buggy != 10:
+		return "5 confirmed bugs moved Kararlılık by %d, want 10 (−2 each)" % (clean - buggy)
+	# İnovasyon'a dokunmaz: hata cezası TEK EKSENE yazılıdır.
+	if QualityModel.axis_reading(st, stiers, sstamps, "innovation", 0, 1) \
+			!= QualityModel.axis_reading(st, stiers, sstamps, "innovation", 5, 1):
+		return "confirmed bugs leaked into the İnovasyon reading"
+
+	# §11.3 — çıta her fazda +%10 yükselir; aynı ürün Traction'da DAHA DÜŞÜK okur.
+	tiers[line] = 1
+	var boot: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 0, 1)
+	var trac: int = QualityModel.axis_reading(st, tiers, stamps, "experience", 0, 2)
+	if trac >= boot:
+		return "the bar did not rise between phases (%d -> %d)" % [boot, trac]
+	return ""
+
+
+## §12.7 kapı KAPSAMI + §12.6 buçuk kuralı. İkisi bir arada ölçülüyor çünkü ikisi de
+## "kim sayılır" sorusunun cevabı ve ikisi de sessizce yanlış olabilir.
+##
+## FALSİFİKASYON: LineGates.roster'ı get_active_employees'e çevir → izin iddiası FAIL.
+## total_stars'ı tam yıldıza yuvarla → buçuk iddiası FAIL.
+static func _case_gate_scope_and_halves() -> String:
+	ProductLines.reload()
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder"
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = 0
+
+	# §12.6 — ★N = ham puan ≥ 2N. 5 ham = 2,5 yıldız, 6 ham = 3 yıldız.
+	var a: Character = _make_employee("gate_a", "Gate A", HRConstants.ROLE_DEVELOPER)
+	var b: Character = _make_employee("gate_b", "Gate B", HRConstants.ROLE_DEVELOPER)
+	for area_a in HRConstants.AREAS:
+		a.role_stats[area_a] = 0
+		b.role_stats[area_a] = 0
+	a.role_stats[HRConstants.AREA_ENGINEERING] = 5   # 2,5 yıldız
+	b.role_stats[HRConstants.AREA_ENGINEERING] = 6   # 3,0 yıldız
+
+	# BUÇUKLAR TOPLAMDA YÜZ DEĞERİNDEN SAYILIR: 2,5 + 3 = 5,5 ≥ ★5 ✓
+	var total: float = LineGates.total_stars(HRConstants.AREA_ENGINEERING)
+	if absf(total - 5.5) > 0.001:
+		return "company Yazılım total is %.2f, want 5.50 (2,5 + 3)" % total
+
+	# ...ama KİŞİ kapısında buçuk kurtarmaz: kimse ★3'ü tek başına aşmıyor.
+	var ev4: Dictionary = LineGates.evaluate("line_shared_mobile_k2@note_tool")
+	var saw_total := false
+	for p in (ev4.get("parts", []) as Array):
+		var part: Dictionary = p as Dictionary
+		if String(part.get("kind", "")) == LineGates.KIND_TOTAL:
+			saw_total = true
+			if not bool(part.get("met", false)):
+				return "total ★4 unmet at 5,5 company stars — halves were dropped"
+	if not saw_total:
+		return "the shared Mobil & Erişim K2 lost its total gate"
+
+	# §12.7 — İZİNDEKİ/EĞİTİMDEKİ kişinin yıldızı SAYILIR (bilgi kaybı yoktur).
+	a.status = HRConstants.STATUS_ON_LEAVE
+	b.status = HRConstants.STATUS_TRAINING
+	var total_away: float = LineGates.total_stars(HRConstants.AREA_ENGINEERING)
+	if absf(total_away - 5.5) > 0.001:
+		return "stars vanished while people were on leave/training (%.2f) — §12.7 counts them" \
+			% total_away
+	a.status = HRConstants.STATUS_ACTIVE
+	b.status = HRConstants.STATUS_ACTIVE
+
+	# Kurucu herkes gibi sayılır (§12.6).
+	founder.role_stats[HRConstants.AREA_ENGINEERING] = 4   # +2 yıldız
+	if absf(LineGates.total_stars(HRConstants.AREA_ENGINEERING) - 7.5) > 0.001:
+		return "the founder's stars did not join the company total"
+	return ""
+
+
+## §12.8 — kapı-üstü bonusu: fazladan İLK yıldız +%8, İKİNCİ +%4, sonrası fark
+## yaratmaz. Erişimin kendisi ikilidir; bu yalnız gerçekleşmeyi oynatır.
+##
+## FALSİFİKASYON: _excess_ladder'ın cap'ini kaldır → "no third star" iddiası FAIL.
+static func _case_above_gate_bonus_ladder() -> String:
+	ProductLines.reload()
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder"
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = 0
+
+	# Deneyim ekseninin sahibi Tasarım (§12.10). Bu kademe Tasarım ★2 istiyor.
+	var step := "line_note_tool_editor_k2"
+	var d: Character = _make_employee("gate_d", "Gate D", HRConstants.ROLE_DESIGNER)
+	for area_d in HRConstants.AREAS:
+		d.role_stats[area_d] = 0
+
+	d.role_stats[HRConstants.AREA_DESIGN] = 4      # ★2 — tam kapıda
+	if absf(LineGates.above_gate_bonus(step) - 0.0) > 0.0001:
+		return "a team exactly at the gate earned a bonus"
+
+	d.role_stats[HRConstants.AREA_DESIGN] = 6      # ★3 — bir fazla
+	if absf(LineGates.above_gate_bonus(step) - LineGates.ABOVE_GATE_FIRST) > 0.0001:
+		return "first extra star paid %.3f, want %.3f" \
+			% [LineGates.above_gate_bonus(step), LineGates.ABOVE_GATE_FIRST]
+
+	d.role_stats[HRConstants.AREA_DESIGN] = 8      # ★4 — iki fazla
+	var two: float = LineGates.ABOVE_GATE_FIRST + LineGates.ABOVE_GATE_SECOND
+	if absf(LineGates.above_gate_bonus(step) - two) > 0.0001:
+		return "second extra star paid %.3f, want %.3f" % [LineGates.above_gate_bonus(step), two]
+
+	d.role_stats[HRConstants.AREA_DESIGN] = 10     # ★5 — üç fazla, FARK YARATMAZ
+	if absf(LineGates.above_gate_bonus(step) - two) > 0.0001:
+		return "a third extra star still paid — §12.8 stops at two"
+
+	# Kapının istemediği alan bonus üretmez: bu "kapı-üstü", "yıldız-üstü" değil.
+	var ungated := "line_note_tool_editor_k1"
+	if absf(LineGates.above_gate_bonus(ungated)) > 0.0001:
+		return "an ungated step paid an above-gate bonus"
+
+	# §11.2 — bonus gerçekleşmeye çarpan olarak giriyor.
+	var plain: float = QualityModel.realization_stamp(1.0, 0.0)
+	var boosted: float = QualityModel.realization_stamp(1.0, two)
+	if absf(boosted - plain * (1.0 + two)) > 0.0001:
+		return "the bonus did not multiply realization"
+	return ""
+
+
+## §12.12 + BILINGUAL BIRTH LAW — hat ve kademe adları/açıklamaları türetilmiş
+## anahtarlardan okunur ve JSON'da metin YOKTUR. O yüzden bir içerik dosyası
+## eklemek, karşılığında CSV satırı olmadan, ekranda ANAHTARIN KENDİSİNİ çizer.
+## Bu case tam olarak onu yakalar, ve İKİ DİLDE birden.
+##
+## Dördüncü B2B alt-tipi geldiğinde bu case onun satırlarını da otomatik ister:
+## döngü katalogdan yürüyor, elle yazılmış bir listeden değil.
+##
+## FALSİFİKASYON: strings.csv'den PROD_STEP_SHARED_MOBILE_K2 satırını sil → FAIL.
+static func _case_loc_product_line_keys_resolve() -> String:
+	ProductLines.reload()
+	var prev_locale: String = TranslationServer.get_locale()
+	var checked: int = 0
+	var missing: Array[String] = []
+
+	for locale in ["tr", "en"]:
+		TranslationServer.set_locale(locale)
+		for st in ProductLines.subtypes():
+			var sub: String = String(st)
+			for lid in ProductLines.line_ids(sub):
+				var line: Dictionary = ProductLines.line(String(lid))
+				var lkey: String = String(line.get("name_key", ""))
+				if TranslationServer.translate(lkey) == lkey:
+					missing.append("%s/%s" % [locale, lkey])
+				checked += 1
+				for tier in [1, 2, 3]:
+					var step: Dictionary = ProductLines.step_at(String(lid), tier)
+					for key_field in ["name_key", "desc_key"]:
+						var k: String = String(step.get(key_field, ""))
+						if k == "":
+							missing.append("%s/%s tier %d has no %s" % [locale, lid, tier, key_field])
+							continue
+						if TranslationServer.translate(k) == k:
+							missing.append("%s/%s" % [locale, k])
+						checked += 1
+	TranslationServer.set_locale(prev_locale)
+
+	if not missing.is_empty():
+		return "%d unresolved key(s), first: %s" % [missing.size(), ", ".join(missing.slice(0, 6))]
+	# 3 alt-tip × (9 ad + 27 kademe adı + 27 açıklama) × 2 dil = 378 okuma.
+	if checked < 300:
+		return "only %d keys were checked — the catalog walk is not covering the tree" % checked
+	return ""
+
+
+## §12.5 (rev 6.1) + Ar-Ge §3.1 — düğüm kimliklerinin tek kaynağı Ar-Ge GDD §4'tür,
+## paylaşılan hatların K3 haritası BAĞLAYICIDIR, ve GÖRÜNÜR hiçbir K3 bir DEVAM
+## düğümüne bağlanamaz ("telegraflanmış hiçbir şey ulaşılmaz olmaz").
+##
+## FALSİFİKASYON: shared.json'da Entegrasyonlar K3'ü scalable_backend'e çevir →
+## harita iddiası FAIL. Bir K3'ü knowledge_graph'a (devam) bağla → §3.1 iddiası FAIL.
+static func _case_research_node_map_binds() -> String:
+	ProductLines.reload()
+	if not ProductLines.load_errors().is_empty():
+		return "catalog refused to load: %s" % str(ProductLines.load_errors())
+
+	# Ar-Ge §4 — yirmi düğüm, dört aile, her ailede kök + iki dal + iki devam.
+	if ResearchSeam.NODES.size() != 20:
+		return "the seam knows %d nodes, Ar-Ge §4 has 20" % ResearchSeam.NODES.size()
+	var by_place: Dictionary = {}
+	for node_id in ResearchSeam.NODES:
+		var p: String = ResearchSeam.placement(String(node_id))
+		by_place[p] = int(by_place.get(p, 0)) + 1
+	if int(by_place.get(ResearchSeam.PLACE_ROOT, 0)) != 4:
+		return "expected 4 root nodes, found %d" % int(by_place.get(ResearchSeam.PLACE_ROOT, 0))
+	if int(by_place.get(ResearchSeam.PLACE_CONT, 0)) != 8:
+		return "expected 8 continuation nodes, found %d" % int(by_place.get(ResearchSeam.PLACE_CONT, 0))
+
+	# §12.5 — paylaşılan harita, ÜÇ ALT-TİPTE DE aynı.
+	for st in ProductLines.subtypes():
+		for base_line in ResearchSeam.SHARED_LINE_NODES:
+			var want: String = String(ResearchSeam.SHARED_LINE_NODES[base_line])
+			var step: Dictionary = ProductLines.step("%s_k3@%s" % [base_line, st])
+			if step.is_empty():
+				return "%s has no %s K3" % [st, base_line]
+			var got: String = String((step.get("requires", {}) as Dictionary).get("research", ""))
+			if got != want:
+				return "%s/%s K3 binds '%s', §12.5's map says '%s'" % [st, base_line, got, want]
+
+	# Ar-Ge §3.1 — hiçbir görünür kademe devam düğümüne bağlanmaz.
+	var visible: int = 0
+	for st2 in ProductLines.subtypes():
+		for lid in ProductLines.line_ids(String(st2)):
+			for tier in [1, 2, 3]:
+				var s: Dictionary = ProductLines.step_at(String(lid), tier)
+				var node: String = String((s.get("requires", {}) as Dictionary).get("research", ""))
+				if node == "":
+					continue
+				visible += 1
+				if not ResearchSeam.is_node(node):
+					return "%s binds unknown node '%s'" % [s.get("id"), node]
+				if not ResearchSeam.may_gate_visible_step(node):
+					return "%s binds '%s', a %s node — Ar-Ge §3.1 forbids it" \
+						% [s.get("id"), node, ResearchSeam.placement(node)]
+	# 3 alt-tip × 9 hat = 27 K3, hepsi düğüm taşır (§12.5).
+	if visible != 27:
+		return "%d steps carry a research node, expected 27 (one K3 per line)" % visible
+
+	# Ar-Ge §4.5.1 (MÜHÜRLÜ) — HER ALT-TİPİN KİMLİK KARARLILIK HATTININ K3'Ü bug_tracker'a
+	# bağlanır. Bu, PRACTICE ailesinin görünür içerik açtığı tek yerdir: dört etkisi de
+	# oyuncunun göremediği sayıları oynatıyordu ve hiçbir K3 bir Practice düğümü istemiyordu,
+	# yani aile "+%5 düğümü olmayacak" yasasını çiğniyordu.
+	#
+	# Hat ADIYLA değil EKSENİYLE bulunuyor: §12.2'nin kimlik dağılımı eksen başına 2/1/2, yani
+	# her alt-tipte paylaşılmayan Kararlılık hattı TEKTİR. İsimle arasaydık üç alt-tip için üç
+	# literal gerekirdi ve dördüncü alt-tip geldiğinde sessizce eksik kalırdı.
+	#
+	# FALSİFİKASYON: üç JSON'dan birinde bu tek token'ı geri al → FAIL, alt-tipi adıyla yazar.
+	var practice_gates: int = 0
+	for st3 in ProductLines.subtypes():
+		var found: String = ""
+		for lid2 in ProductLines.line_ids(String(st3)):
+			var rec: Dictionary = ProductLines.line(String(lid2))
+			if bool(rec.get("shared", false)) or String(rec.get("axis", "")) != "stability":
+				continue
+			found = String(lid2)
+			var k3s: Dictionary = ProductLines.step_at(String(lid2), 3)
+			var bound: String = String((k3s.get("requires", {}) as Dictionary).get("research", ""))
+			if bound != "bug_tracker":
+				return "%s identity stability K3 binds '%s'; §4.5.1 says bug_tracker" % [st3, bound]
+			practice_gates += 1
+		if found == "":
+			return "%s has no identity stability line; §12.2 wants exactly one" % st3
+	if practice_gates != 3:
+		return "%d identity stability lines gate bug_tracker, §4.5.1 wants 3" % practice_gates
+	return ""
+
+
+## §12.9 (rev 6.1) — kartın aritmetiği. Belge kendi çalışılmış örneğini veriyor:
+##
+##   Arama   Anında Arama ✓ → Filtreli Arama    Efor 8 · Deneyim 7,2 (+3,2)
+##                            Kilit: Yazılım ★★ ✓ · Tasarım ★ ✗ → Eğit
+##
+## Bu case o satırı BİREBİR sabitler. Kartta HAM PUAN YAZILMAZ: Kano katsayısı
+## uygulanmış gerçek değer yazılır, "oyuncu ekranda gördüğü sayıyı alır."
+##
+## FALSİFİKASYON: weighted_points'ten Kano katsayısını kaldır → 7,2 iddiası FAIL
+## (9,0 okur). net_gain'i mevcut kademeyi düşmeyecek şekilde boz → +3,2 FAIL.
+static func _case_card_math_matches_gdd_example() -> String:
+	ProductLines.reload()
+	var line := "line_note_tool_search"
+	var k2 := line + "_k2"
+
+	if ProductLines.effort_of(k2) != 8:
+		return "Filtreli Arama effort is %d, §12.9's row says 8" % ProductLines.effort_of(k2)
+	if ProductLines.axis_of(line) != "experience":
+		return "the Arama line is on %s, §12.9's row says Deneyim" % ProductLines.axis_of(line)
+
+	var weighted: float = ProductLines.weighted_points(k2)
+	if absf(weighted - 7.2) > 0.001:
+		return "card contribution is %.2f, §12.9's row says 7,2 (9 ham × Kano 0,8)" % weighted
+	if absf(float(int(ProductLines.step(k2).get("axis_points", 0))) - 9.0) > 0.001:
+		return "raw points are %d, rev 6.1's K2 centre is 9" \
+			% int(ProductLines.step(k2).get("axis_points", 0))
+
+	# Parantezdeki net kazanç: K1 canlıyken K2'ye geçmenin FARKI, toplamı değil.
+	var gain: float = ProductLines.net_gain(line, 1)
+	if absf(gain - 3.2) > 0.001:
+		return "net gain reads %.2f, §12.9's row says +3,2 (7,2 − 4,0)" % gain
+	# Boş hatta K1 almanın kazancı kademenin tamamıdır.
+	if absf(ProductLines.net_gain(line, 0) - 4.0) > 0.001:
+		return "an empty line's K1 gain reads %.2f, want 4,0" % ProductLines.net_gain(line, 0)
+	# Tamamlanmış hat kazanç önermez.
+	if absf(ProductLines.net_gain(line, 3)) > 0.001:
+		return "a completed line still offered a gain"
+
+	# §12.9'un kilit satırı da örnekte yazılı: Yazılım ★★ · Tasarım ★.
+	var req: Dictionary = ProductLines.step(k2).get("requires", {}) as Dictionary
+	var want_gate := {"engineering": 2, "design": 1}
+	for entry in (req.get("person", []) as Array):
+		var d: Dictionary = entry as Dictionary
+		var area: String = String(d.get("area", ""))
+		if not want_gate.has(area) or int(d.get("stars", 0)) != int(want_gate[area]):
+			return "the Arama K2 gate drifted from §12.9's worked example"
+		want_gate.erase(area)
+	if not want_gate.is_empty():
+		return "the Arama K2 gate lost %s" % str(want_gate.keys())
+	return ""
+
+
+## §5 (rev 6.1 MÜHÜRLÜ) — cila merdiveni. Bu tablo TERS ÇEVRİLDİ ve yönü iddianın
+## kendisidir: bir turu TAMAMLAMAK taban (×1,00), turu ATLAMAK ceza (×0,75).
+## Eski tabloda tamamlamak ×0,55 idi, yani işini yapan cezalandırılıyordu.
+##
+## FALSİFİKASYON: DESIGN_TURN_MULT'u eski {1: 0,55 …} tablosuna geri al →
+## "completing a turn is the baseline" iddiası FAIL.
+static func _case_design_turn_ladder() -> String:
+	var m0: float = ProductSystem.design_turn_mult(0)
+	var m1: float = ProductSystem.design_turn_mult(1)
+	var m4: float = ProductSystem.design_turn_mult(4)
+
+	if absf(m0 - 0.75) > 0.0001:
+		return "rushing past turn 1 reads %.3f, §5 says 0,75" % m0
+	if absf(m1 - 1.00) > 0.0001:
+		return "one completed turn reads %.3f, §5 says it is the 1,00 baseline" % m1
+	if absf(ProductSystem.design_turn_mult(2) - 1.06) > 0.0001:
+		return "turn 2 reads %.3f, §5 says 1,06" % ProductSystem.design_turn_mult(2)
+	if absf(ProductSystem.design_turn_mult(3) - 1.11) > 0.0001:
+		return "turn 3 reads %.3f, §5 says 1,11" % ProductSystem.design_turn_mult(3)
+	if absf(m4 - 1.15) > 0.0001:
+		return "turn 4 reads %.3f, §5 says 1,15" % m4
+
+	# YÖN: tamamlamak cezalandırılmaz. Eski tablo tam burada düşer.
+	if m1 <= m0:
+		return "completing a design turn is not better than skipping it (%.2f vs %.2f)" % [m1, m0]
+	# Merdiven monoton artar ve tavanda durur.
+	var prev: float = m0
+	for t in [1, 2, 3, 4]:
+		var v: float = ProductSystem.design_turn_mult(t)
+		if v < prev:
+			return "the ladder dips at turn %d (%.3f after %.3f)" % [t, v, prev]
+		prev = v
+	if absf(ProductSystem.design_turn_mult(9) - m4) > 0.0001:
+		return "turn counts above the cap do not read as the cap"
+
+	# Üç ekstra tur eforun %24'ünü yakar ve karşılığında %15 verir (§5'in kendi cümlesi).
+	var extra_cost: float = 3.0 * ProductSystem.DESIGN_TURN_COST
+	if absf(extra_cost - 0.24) > 0.0001:
+		return "three extra turns cost %.2f of EforTavanı, §5 says 0,24" % extra_cost
+	if absf((m4 / m1) - 1.15) > 0.0001:
+		return "four turns pay %.3f over the baseline, §5 says 1,15" % (m4 / m1)
+
+	# §11.2 — çarpan gerçekleşmeye girer, ve KADEME BAŞINA damgalanır.
+	if absf(QualityModel.realization_stamp(m0, 0.0) - 0.75) > 0.0001:
+		return "the rush multiplier did not reach the realization stamp"
+	return ""
+
+
+## §22.5 — kayıt şeması v9. İki iddia bir arada, çünkü ikisi de aynı sözleşmenin
+## yarısı: YENİ durum tam olarak hayatta kalır, ESKİ kayıt sessizce yüklenmez.
+##
+## Damga sözlüğü bu case'in asıl konusudur: §11.2 çarpanı kademe yayınlanırken
+## damgalıyor, o yüzden damgalar yeniden yüklemeyi atlatmazsa her geçmiş sürüm
+## sessizce BUGÜNKÜ tur sayısıyla yeniden okunur ve eski işin değeri değişir.
+##
+## FALSİFİKASYON: FLAG_TYPES'tan mvp_step_realization satırını sil → damga iddiası
+## FAIL. MIN_LOADABLE_VERSION'ı 8'e indir → red iddiası FAIL.
+static func _case_save_v10_product_state() -> String:
+	ProductLines.reload()
+	# REPOINTED 2026-08-25 with the schema bump itself, in the same change — a case left
+	# asserting the old number would sit red across every phase of the event rebuild, and
+	# :12452's own note explains why that is the worst thing to do to a suite.
+	if SaveManager.SCHEMA_VERSION != 10:
+		return "schema is v%d, the event-engine block wants v10" % SaveManager.SCHEMA_VERSION
+
+	# --- durumu kur -----------------------------------------------------
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
+	GameState.set_flag("mvp_market_type", "b2c")
+	GameState.set_flag("mvp_version", 3)
+	ProductState.set_line_tier("line_note_tool_search", 2)
+	ProductState.set_line_tier("line_note_tool_editor", 1)
+	ProductState.set_line_tier("line_shared_durability@note_tool", 1)
+	# Üç ayrı sürümün cilası, üç ayrı damga — hepsi geri gelmeli.
+	ProductState.stamp_step("line_note_tool_search_k2", 1.15)
+	ProductState.stamp_step("line_note_tool_editor_k1", 0.75)
+	ProductState.stamp_step("line_shared_durability@note_tool_k1", 1.06)
+	ProductState.open_hidden_line("line_hidden_auto_organize")
+	GameState.set_flag(ProductState.REPORTS_INCOMING, 41)
+	GameState.set_flag(ProductState.BUGS_CONFIRMED, 9)
+	GameState.set_flag(ProductState.FIX_RUN_ACTIVE, true)
+	GameState.set_flag(ProductState.FIX_RUN_FIXED, 27)
+	GameState.set_flag(ProductState.VERSION_LAUNCH_DAY, maxi(1, GameState.day - 12))
+	GameState.set_flag(ProductState.INTEREST, 62.5)
+	GameState.set_flag(ProductState.INFRA_PROVIDER, "cloud")
+	GameState.set_flag(ProductState.INFRA_UNITS, 7)
+
+	var age_before: int = ProductState.version_age_days()
+	var readings_before: Dictionary = ProductState.axis_readings()
+	var usage_before: int = ProductState.usage_weight_total()
+
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		_cleanup_save_slots()
+		return "save_to_slot failed"
+	# Durumu boz, sonra geri yükle: yükleme gerçekten yazmalı.
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag(ProductState.STEP_REALIZATION, {})
+	GameState.set_flag(ProductState.BUGS_CONFIRMED, 0)
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
+		_cleanup_save_slots()
+		return "apply_loaded_state returned false"
+
+	# --- her alan hayatta mı --------------------------------------------
+	if ProductState.line_tier("line_note_tool_search") != 2:
+		_cleanup_save_slots()
+		return "line tier did not survive the reload (%d)" % ProductState.line_tier("line_note_tool_search")
+	if ProductState.lines_open() != 3 or ProductState.steps_shipped() != 4:
+		_cleanup_save_slots()
+		return "line totals came back wrong: %d open, %d steps" \
+			% [ProductState.lines_open(), ProductState.steps_shipped()]
+	var stamps: Dictionary = ProductState.step_realization()
+	for pair in [["line_note_tool_search_k2", 1.15], ["line_note_tool_editor_k1", 0.75],
+			["line_shared_durability@note_tool_k1", 1.06]]:
+		var got: float = float(stamps.get(String(pair[0]), -1.0))
+		if absf(got - float(pair[1])) > 0.0001:
+			_cleanup_save_slots()
+			return "stamp for %s came back %.3f, want %.3f" % [pair[0], got, float(pair[1])]
+	if not ProductState.hidden_lines().has("line_hidden_auto_organize"):
+		_cleanup_save_slots()
+		return "an opened hidden line closed itself on reload"
+	if ProductState.reports_incoming() != 41 or ProductState.bugs_confirmed() != 9:
+		_cleanup_save_slots()
+		return "the DESTEK counters did not survive (%d / %d)" \
+			% [ProductState.reports_incoming(), ProductState.bugs_confirmed()]
+	if not ProductState.fix_run_active() or ProductState.fix_run_fixed() != 27:
+		_cleanup_save_slots()
+		return "the fix run did not survive"
+	if ProductState.version_age_days() != age_before:
+		_cleanup_save_slots()
+		return "version age drifted across the reload (%d vs %d)" \
+			% [ProductState.version_age_days(), age_before]
+	if absf(ProductState.interest() - 62.5) > 0.001:
+		_cleanup_save_slots()
+		return "interest came back %.2f" % ProductState.interest()
+	if ProductState.infra_provider() != "cloud" or ProductState.infra_units() != 7:
+		_cleanup_save_slots()
+		return "the infrastructure choice did not survive"
+	if ProductState.usage_weight_total() != usage_before:
+		_cleanup_save_slots()
+		return "usage weight total drifted (%d vs %d)" \
+			% [ProductState.usage_weight_total(), usage_before]
+	# Damgalar yaşadığı için okumalar da birebir aynı.
+	if str(ProductState.axis_readings()) != str(readings_before):
+		_cleanup_save_slots()
+		return "axis readings changed across the reload: %s vs %s" \
+			% [str(ProductState.axis_readings()), str(readings_before)]
+
+	# --- §22.5: ESKİ kayıt AÇIKÇA reddedilir, sessizce yarım yüklenmez ----
+	var path: String = SaveManager.SAVE_DIR + SAVE_SLOT_A + ".json"
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		_cleanup_save_slots()
+		return "could not reopen the slot to age it"
+	var raw: Dictionary = JSON.parse_string(f.get_as_text()) as Dictionary
+	f.close()
+	# Ages the file to v9 rather than v8: the boundary worth testing is the CURRENT one,
+	# and a fixture two versions stale stops proving anything the day the gate moves.
+	raw["schema_version"] = 9
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	w.store_string(JSON.stringify(raw, "\t"))
+	w.close()
+	var refused: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
+	_cleanup_save_slots()
+	if bool(refused.get("ok", false)):
+		return "a v9 save loaded into a v10 build — it must be refused, not half-applied"
+	if String(refused.get("error_key", "")) != "SAVE_ERR_TOO_OLD":
+		return "the refusal used '%s', not SAVE_ERR_TOO_OLD" % String(refused.get("error_key", ""))
+	if (refused.get("state", {}) as Dictionary).size() != 0:
+		return "the refused save still handed back state to apply"
+	if TranslationServer.translate("SAVE_ERR_TOO_OLD") == "SAVE_ERR_TOO_OLD":
+		return "SAVE_ERR_TOO_OLD has no string — the player would see the key"
+	return ""
+
+
+## Ar-Ge §3 · §4 · §13 — AĞAÇ VERİSİ KENDİ ŞEKLİNE UYUYOR MU.
+##
+## data/techtree/rnd_tree.json ile ResearchSeam.NODES iki ayrı dosyada yaşıyor ve BİRBİRİNİ
+## doğruluyor: omurga (id/aile/yer) const, ayarlanabilir yarı (efor/nakit/alan/yıldız) veri.
+## Bölünme kasıtlı — ProductLines._validate_step omurgayı KENDİ yüklenişinde okuyor, ve
+## dosyadan gelen bir omurga hat doğrulayıcısını I/O sırasına bağımlı kılardı.
+##
+## Bu tek vaka on iki bağımsız tel taşıyor; herhangi bir alandaki tek bir düzenleme onu
+## düşürür ve hangi kuralın kırıldığını adıyla yazar.
+##
+## FALSİFİKASYON (her biri ayrı ayrı doğrulandı): rnd_tree.json'da bir düğümün `stars`
+## değerini 1 artır → merdiven FAIL · bir devam düğümünün `areas` dizisini tek alana indir →
+## arity FAIL ve iki-alan sayımı FAIL (aynı mutasyonu iki bağımsız tel yakalar) ·
+## knowledge_graph'ın `cross` hedefini ai_engine yap (dal, 90 efor, $600) → §3.1 tavanı üç
+## ayrı gerekçeyle FAIL · bir nakit değerini değiştir → tablo FAIL.
+static func _case_rnd_tree_loads_and_validates() -> String:
+	ResearchTree.reload()
+	var errs: Array[String] = ResearchTree.load_errors()
+	if not errs.is_empty():
+		return "tree load errors: %s" % ", ".join(errs)
+
+	# --- omurga ile küme eşitliği, İKİ YÖNLÜ ---
+	if ResearchTree.node_ids().size() != ResearchSeam.NODES.size():
+		return "tree has %d nodes, the seam declares %d" \
+			% [ResearchTree.node_ids().size(), ResearchSeam.NODES.size()]
+	for id in ResearchSeam.NODES.keys():
+		if not ResearchTree.has(String(id)):
+			return "tree is missing '%s'" % id
+
+	# --- §3: 4 kök / 8 dal / 8 devam ---
+	var roots := 0
+	var branches := 0
+	var conts := 0
+	var two_area := 0
+	var cross_links := 0
+	var cash_total := 0
+	var cash_nodes := 0
+	for id in ResearchSeam.NODES.keys():
+		var nid := String(id)
+		match ResearchSeam.placement(nid):
+			ResearchSeam.PLACE_ROOT: roots += 1
+			ResearchSeam.PLACE_BRANCH: branches += 1
+			ResearchSeam.PLACE_CONT: conts += 1
+		if ResearchTree.areas_of(nid).size() == 2:
+			two_area += 1
+		if ResearchTree.cross_of(nid) != "":
+			cross_links += 1
+		if ResearchTree.cash_of(nid) > 0:
+			cash_nodes += 1
+			cash_total += ResearchTree.cash_of(nid)
+	if roots != 4 or branches != 8 or conts != 8:
+		return "tree shape is %d/%d/%d, want 4/8/8" % [roots, branches, conts]
+
+	# --- §13: "İki alanlı düğüm sayısı: 8 (tüm devamlar)" ---
+	if two_area != 8:
+		return "%d nodes want two areas, §13 says 8" % two_area
+
+	# --- §13: "Çapraz koşul sayısı: 4 (yalnız devam-B düğümleri)" ---
+	if cross_links != 4:
+		return "%d cross links, §13 says 4" % cross_links
+
+	# --- §13 nakit tablosu: ÜÇ düğüm, toplam $1.900 ---
+	if cash_nodes != 3 or cash_total != 1900:
+		return "%d nodes carry cash totalling $%d, §13 says 3 / $1900" % [cash_nodes, cash_total]
+	if ResearchTree.cash_of("ai_engine") != 600 or ResearchTree.cash_of("security_cert") != 900 \
+			or ResearchTree.cash_of("analytics_engine") != 400:
+		return "the cash table drifted from §13's 600 / 900 / 400"
+
+	# --- direktör hükmü R1: kök ★1 · dal ★2 · devam ★2 ---
+	for id in ResearchSeam.NODES.keys():
+		var nid := String(id)
+		var want: int = 1 if ResearchSeam.placement(nid) == ResearchSeam.PLACE_ROOT else 2
+		if ResearchTree.stars_of(nid) != want:
+			return "%s is a %s and wants ★%d, tree says ★%d" \
+				% [nid, ResearchSeam.placement(nid), want, ResearchTree.stars_of(nid)]
+
+	# --- §3.1 sapma tavanı: çapraz hedef BAŞKA ailede, KÖK, ucuz, nakitsiz ---
+	for id in ResearchSeam.NODES.keys():
+		var nid := String(id)
+		var cross: String = ResearchTree.cross_of(nid)
+		if cross == "":
+			continue
+		if ResearchSeam.placement(nid) != ResearchSeam.PLACE_CONT:
+			return "%s carries a cross condition but is a %s" % [nid, ResearchSeam.placement(nid)]
+		if ResearchSeam.family(cross) == ResearchSeam.family(nid):
+			return "%s cross target '%s' is in its own family" % [nid, cross]
+		if ResearchSeam.placement(cross) != ResearchSeam.PLACE_ROOT:
+			return "%s cross target '%s' is a %s; §3.1 wants a root" \
+				% [nid, cross, ResearchSeam.placement(cross)]
+		if ResearchTree.effort_of(cross) > 50 or ResearchTree.cash_of(cross) > 0:
+			return "%s cross target '%s' costs %d effort / $%d; §3.1 wants a cheap early node" \
+				% [nid, cross, ResearchTree.effort_of(cross), ResearchTree.cash_of(cross)]
+
+	# --- §4.5 gizli hatlar: dört tane, eksen dağılımı 1/2/1, dal seviyesinde TEK istisna ---
+	var opens: Array[String] = []
+	var branch_level: Array[String] = []
+	var tally := {"innovation": 0, "stability": 0, "experience": 0}
+	for id in ResearchSeam.NODES.keys():
+		var nid := String(id)
+		var line_id: String = ResearchTree.opens_line_of(nid)
+		if line_id == "":
+			continue
+		opens.append(line_id)
+		tally[ResearchTree.hidden_line_axis(line_id)] = \
+			int(tally.get(ResearchTree.hidden_line_axis(line_id), 0)) + 1
+		if ResearchSeam.placement(nid) == ResearchSeam.PLACE_BRANCH:
+			branch_level.append(nid)
+	if opens.size() != 4:
+		return "%d nodes open a hidden line, §4.5 says 4" % opens.size()
+	if int(tally["innovation"]) != 1 or int(tally["stability"]) != 2 \
+			or int(tally["experience"]) != 1:
+		return "hidden line axis tally is %s, §4.5 wants 1/2/1" % tally
+	# §13.5'in MÜHÜRLÜ tek istisnası. ADI kontrol ediliyor, sayısı değil: sayı kontrolü
+	# istisnanın sessizce ikiye çıkmasını engellemez.
+	if branch_level.size() != 1:
+		return "%d hidden lines sit at branch level, §13.5 allows exactly one" % branch_level.size()
+	if branch_level[0] != "test_automation":
+		return "the branch-level hidden line hangs off '%s', §13.5 says test_automation" \
+			% branch_level[0]
+
+	# --- §12.1 / R4: yalnız KENDİ KENDİNE SERVİS yazıldı; diğer üçü kasten boş ---
+	var authored := 0
+	for line_id in ResearchTree.hidden_line_ids():
+		if ResearchTree.hidden_line_authored(String(line_id)):
+			authored += 1
+	if authored != 1:
+		return "%d hidden lines are authored, §12.1 writes exactly one for the demo" % authored
+	if not ResearchTree.hidden_line_authored("line_hidden_self_serve"):
+		return "the authored hidden line is not line_hidden_self_serve"
+
+	# --- R7: yazılı hattın kendi K3'ü kök-ya-da-dal bir düğüme bağlanmalı, yoksa
+	#     register_runtime_line kataloğu gürültüyle reddeder ---
+	var raw: Dictionary = ResearchTree.hidden_line_raw("line_hidden_self_serve")
+	var k3: Dictionary = (raw.get("steps", []) as Array)[2] as Dictionary
+	var k3_node: String = String((k3.get("requires", {}) as Dictionary).get("research", ""))
+	if k3_node == "":
+		return "the hidden line's K3 carries no research node; the catalog would refuse it"
+	if not ResearchSeam.may_gate_visible_step(k3_node):
+		return "the hidden line's K3 binds '%s', a %s node — §3.1 forbids it" \
+			% [k3_node, ResearchSeam.placement(k3_node)]
+
+	return ""
+
+
+# ============================================================================
+#  AR-GE §5.0 — ARAŞTIRMA İNSANI MEŞGUL EDER
+#
+#  Modülün TEMELİ ve bütün paketin kabul testi. §1'in tek cümlesi şu: "birini masadan
+#  kaldırıp araştırmaya verirsin, o kişi o süre boyunca ürün yapmaz." Bu kural gerçekten
+#  kurulmazsa araştırma hiçbir şeye mal olmaz ve her araştırma bariz bir evete dönüşür.
+# ============================================================================
+
+## Bir kurucu araştırmaya geçince: (a) araştırma İŞİ üstünde, (b) türetilmiş ALAN AYNASI
+## boşalır — yani build ekibinden düşer, (c) eski işi SİLİNMEZ, duraklar, (d) odak 1,00
+## kalır (araştırma iki-iş bölmesine tabi değil), (e) yapım durur ve efor yakmaz.
+##
+## FALSİFİKASYON: HRConstants.areas_for_jobs'tan `is_exclusive_job` continue'sunu kaldır →
+## (b) FAIL, çünkü araştıran kurucu sessizce build ekibine geri döner ve §5.0 kağıt üstünde
+## kalır. `_displace_job`'u paused_job_ids'e yazmayacak şekilde değiştir → (c) FAIL.
+static func _case_research_occupies_person() -> String:
+	ProductLines.reload()
+	ResearchTree.reload()
+	RnDSystem.reset()
+	GameState.set_cash(50000)
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag("mvp_shipped", true)      # §2 — Ar-Ge v1 yayınından sonra açılır
+	ProductSystem.active_build = null
+	var founder: Character = _seed_build_crew()
+	if founder == null:
+		return "fixture: no founder"
+	if not ProductSystem.start_line_build("note_tool",
+			["line_note_tool_capture_k1"], founder.id, "Sable"):
+		return "fixture: start_line_build refused a one-K1 note_tool plan"
+	if ProductSystem.build_paused():
+		return "fixture: a build with a free founder on it reported PAUSED"
+
+	# efor GELİŞTİRME barında birikir; hat yapımı TASARIM'da başlar (§2, §6).
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	b.design_turns_completed = 4
+	if ProductSystem.can_enter_development():
+		ProductSystem.enter_development()
+	var before: float = b.efor_spent
+	ProductSystem.hourly_tick(9)
+	if b.efor_spent <= before:
+		return "fixture: a running build did not spend effort in GELİŞTİRME"
+
+	# --- ARAŞTIRMAYA GEÇ ---
+	var refusal: String = RnDSystem.start("data_model", [founder.id])
+	if refusal != "":
+		return "could not start research on data_model: '%s'" % refusal
+
+	# (a) araştırma işi üstünde
+	if not founder.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
+		return "the founder started a research but does not hold the research job"
+	# (b) ALAN AYNASI BOŞ — bu satır §5.0'ın tamamını üreten tek koruma
+	for area in [HRConstants.AREA_PRODUCT, HRConstants.AREA_DESIGN, HRConstants.AREA_ENGINEERING]:
+		if founder.assigned_jobs.has(String(area)):
+			return "a researching founder is still mirrored into build area '%s'" % area
+	# (c) eski iş SİLİNMEDİ, duraklatıldı
+	if not founder.paused_job_ids.has(HRConstants.JOB_BUILD):
+		return "the founder's build job was DELETED rather than paused (§5.0)"
+	# (d) odak bölünmedi: araştıran kişi tek iş sayılır
+	if HRSystem.job_count(founder) != 1:
+		return "a researcher counts as %d jobs; §5.0 exempts research from the 0,50 split" \
+			% HRSystem.job_count(founder)
+	if HRSystem.is_overloaded(founder):
+		return "a researcher was badged AŞIRI YÜKLÜ while doing exactly one thing"
+	# (e) yapım durdu ve efor YAKMIYOR
+	if not ProductSystem.build_paused():
+		return "the founder went to research and the build still reports running"
+	var frozen: float = b.efor_spent
+	ProductSystem.hourly_tick(10)
+	if b.efor_spent > frozen + 0.0001:
+		return "a build paused by research kept spending effort (%.4f -> %.4f)" \
+			% [frozen, b.efor_spent]
+	return ""
+
+
+## §5.0 İKİ YÖNLÜ ÇALIŞIR, ve iki yön TEK PROSESTE denenir: tek yönlü bir gerileme
+## ikisini ayrı vakaya bölseydik saklanabilirdi.
+##   yön A · kurucu yapımdayken araştırma başlatır → yapım duraklar
+##   yön B · kurucu araştırırken yapım başlatır    → araştırma DONAR, ilerleme korunur
+##
+## Öğretici yoktur; iki bar yan yana durur ve kendini anlatır (§5.0).
+##
+## FALSİFİKASYON: creation_flow'un/registry'nin displacement'ını yön B için kaldır →
+## ikinci yarı FAIL ve araştırma yapımla birlikte akmaya devam eder.
+static func _case_research_and_build_pause_each_other() -> String:
+	ProductLines.reload()
+	ResearchTree.reload()
+	RnDSystem.reset()
+	GameState.set_cash(50000)
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag("mvp_shipped", true)
+	ProductSystem.active_build = null
+	var founder: Character = _seed_build_crew()
+
+	# --- YÖN A: yapım koşuyor, araştırma başlıyor ---
+	if not ProductSystem.start_line_build("note_tool",
+			["line_note_tool_capture_k1"], founder.id, "Sable"):
+		return "fixture: start_line_build refused"
+	if RnDSystem.start("data_model", [founder.id]) != "":
+		return "fixture: research would not start"
+	if not ProductSystem.build_paused():
+		return "direction A: starting a research did not pause the build"
+	# Bar SEBEBİ yazar, yalnız durumu değil (§5.6.1).
+	var note: String = ProductSystem.pause_note_key()
+	if note != "BUILD_BUSY_RESEARCH" and note != "BUILD_BUSY_NOBODY":
+		return "direction A: the paused build's note was '%s'" % note
+
+	# Araştırma gerçekten akıyor mu.
+	RnDSystem.daily_tick()
+	var moved: float = RnDSystem.progress_effort("data_model")
+	if moved <= 0.0:
+		return "direction A: the research did not accrue while the build was paused"
+
+	# --- YÖN B: araştırma koşarken yapım başlıyor ---
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
+	if founder.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
+		return "direction B: starting a build left the founder on research"
+	if not RnDSystem.is_frozen():
+		return "direction B: the research did not freeze when the founder went to build"
+	# İLERLEME KORUNUR, yanmaz (§5.7).
+	if abs(RnDSystem.progress_effort("data_model") - moved) > 0.0001:
+		return "direction B: freezing BURNED progress (%.4f -> %.4f)" \
+			% [moved, RnDSystem.progress_effort("data_model")]
+	RnDSystem.daily_tick()
+	if abs(RnDSystem.progress_effort("data_model") - moved) > 0.0001:
+		return "direction B: a frozen research kept accruing"
+	return ""
+
+
+## §5.7 — HERKES ÇEKİLİNCE İLERLEME DONAR, YANMAZ. "Yanacak olsa kimse başlamaz."
+## Ve geri dönünce kaldığı yerden akar; sıfırdan değil.
+##
+## FALSİFİKASYON: _accrue'nun freeze dalını ilerlemeyi sıfırlayacak şekilde değiştir →
+## resume iddiası FAIL.
+static func _case_research_freezes_and_resumes() -> String:
+	ProductLines.reload()
+	ResearchTree.reload()
+	RnDSystem.reset()
+	GameState.set_cash(50000)
+	GameState.set_flag("mvp_shipped", true)
+	ProductSystem.active_build = null
+	var founder: Character = CharacterRegistry.get_founder()
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = HRConstants.AREA_MAX
+	CharacterRegistry.clear_jobs(founder.id)
+
+	if RnDSystem.start("data_model", [founder.id]) != "":
+		return "fixture: research would not start"
+	RnDSystem.daily_tick()
+	var p1: float = RnDSystem.progress_effort("data_model")
+	if p1 <= 0.0:
+		return "the research did not accrue on day 1"
+
+	RnDSystem.pause()
+	if not RnDSystem.is_frozen():
+		return "pause() did not freeze the research"
+	for i in 5:
+		RnDSystem.daily_tick()
+	if abs(RnDSystem.progress_effort("data_model") - p1) > 0.0001:
+		return "five frozen days moved progress (%.4f -> %.4f)" \
+			% [p1, RnDSystem.progress_effort("data_model")]
+
+	RnDSystem.set_assignees([founder.id])
+	if RnDSystem.is_frozen():
+		return "re-assigning did not resume the research"
+	RnDSystem.daily_tick()
+	if RnDSystem.progress_effort("data_model") <= p1 + 0.0001:
+		return "a resumed research did not accrue"
+	return ""
+
+
+## §5.8 — TAMAMLANMA EKONOMİK DELTA ÜRETMEZ. "Ne para, ne marka, ne MRR; yalnız kapı açar."
+## CLAUDE.md Governing Principle 2'nin de doğrudan uygulaması. Bu vaka, ileride biri
+## "ödül gibi hissettirelim" diye marka bump'ı eklerse onu yakalamak için var.
+##
+## FALSİFİKASYON: _complete'e GameState.set_brand(GameState.brand + 1) ekle → FAIL, alanı
+## adıyla yazar.
+static func _case_research_completion_no_economic_delta() -> String:
+	ProductLines.reload()
+	ResearchTree.reload()
+	RnDSystem.reset()
+	GameState.set_cash(50000)
+	GameState.set_flag("mvp_shipped", true)
+	ProductSystem.active_build = null
+	var founder: Character = CharacterRegistry.get_founder()
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = HRConstants.AREA_MAX
+	CharacterRegistry.clear_jobs(founder.id)
+
+	# data_model NAKİTSİZ bir kök (§13) — böylece meşru tek delta olan başlangıç
+	# maliyeti bile yok ve ölçüm saf kalır.
+	if ResearchTree.cash_of("data_model") != 0:
+		return "fixture: data_model is supposed to be free, tree says $%d" \
+			% ResearchTree.cash_of("data_model")
+	if RnDSystem.start("data_model", [founder.id]) != "":
+		return "fixture: research would not start"
+
+	var cash0: int = GameState.cash
+	var mrr0: int = GameState.mrr
+	var brand0: int = GameState.brand
+	var rep0: int = GameState.reputation
+
+	var guard: int = 0
+	while not RnDSystem.node_completed("data_model") and guard < 400:
+		RnDSystem.daily_tick()
+		guard += 1
+	if not RnDSystem.node_completed("data_model"):
+		return "data_model never completed in %d ticks" % guard
+
+	if GameState.cash != cash0:
+		return "completion moved cash by %d" % (GameState.cash - cash0)
+	if GameState.mrr != mrr0:
+		return "completion moved MRR by %d" % (GameState.mrr - mrr0)
+	if GameState.brand != brand0:
+		return "completion moved brand by %d" % (GameState.brand - brand0)
+	if GameState.reputation != rep0:
+		return "completion moved reputation by %d" % (GameState.reputation - rep0)
+
+	# §3 — kök tamamlanınca İKİ dal birden açığa çıkar.
+	if not RnDSystem.revealed("ai_engine") or not RnDSystem.revealed("semantic_index"):
+		return "a completed root did not reveal BOTH of its branches"
+	# §7 — aynı düğüm iki kez tamamlanamaz.
+	if RnDSystem.start("data_model", [founder.id]) != RnDSystem.REFUSE_DONE:
+		return "a completed node accepted a second start"
+	return ""
+
+
+## Ar-Ge §5.0 — ARAŞTIRMA HANGİ YOLDAN BİTERSE BİTSİN DURAKLAMIŞ İŞLER GERİ DÖNER.
+##
+## Sızıntı şuydu: `resume_paused_jobs` yalnız `unassign_job`'dan erişilebiliyordu. Build +
+## Destek taşıyan biri araştırmaya geçip sonra araştırmayı BIRAKMADAN doğrudan build'e
+## döndüğünde destek defterde sonsuza kadar park kalıyordu — iş sayısı 1, odak 1,00, AŞIRI
+## YÜK rozeti yok, ve destek masası oyuncunun sandığından bir kişi eksik. Hiçbir yüzey
+## "geri dönmedi" demediği için tamamen sessizdi.
+##
+## FALSİFİKASYON: `assign_job`'daki `if ended_exclusive: resume_paused_jobs(id)` bloğunu sil
+## → destek geri dönmez ve ilk iddia FAIL eder, defterin içeriğini adıyla yazarak.
+static func _case_paused_job_resumes_on_direct_return() -> String:
+	ProductLines.reload()
+	ResearchTree.reload()
+	RnDSystem.reset()
+	GameState.set_flag("mvp_shipped", true)
+	ProductSystem.active_build = null
+	var founder: Character = CharacterRegistry.get_founder()
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = HRConstants.AREA_MAX
+	CharacterRegistry.clear_jobs(founder.id)
+
+	# İki SÜREKLİ iş: ikisi de koşar, ikisi de yavaşlar (§12.1).
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD) != "":
+		return "fixture: build refused"
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) != "":
+		return "fixture: support refused as a second continuous job"
+	if not HRSystem.is_overloaded(founder):
+		return "fixture: two continuous jobs did not read as overloaded"
+
+	# Araştırma DIŞLAYICIDIR: ikisini birden duraklatır ve tavana takılmaz.
+	if RnDSystem.start("data_model", [founder.id]) != "":
+		return "research was refused while two continuous jobs were held"
+	if founder.paused_job_ids.size() != 2:
+		return "research parked %d continuous jobs, want 2" % founder.paused_job_ids.size()
+
+	# ARAŞTIRMAYI BIRAKMADAN doğrudan build'e dön. Sızıntının tam yolu buydu.
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD) != "":
+		return "returning directly to build was refused"
+	if not founder.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
+		return "the parked Destek job never came back: active=%s paused=%s" \
+			% [str(founder.assigned_job_ids), str(founder.paused_job_ids)]
+	if not founder.paused_job_ids.is_empty():
+		return "the paused ledger still holds %s" % str(founder.paused_job_ids)
+	if founder.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
+		return "the research survived a continuous job being assigned"
+	if not HRSystem.is_overloaded(founder):
+		return "back on two jobs but not overloaded — the badge and the 0,50 split are gone"
+	return ""
+
+
+## Ekip §4.5 — "Kurucu için moral bandı uygulanmaz; DİĞER BÜTÜN ÇARPANLAR AYNEN GEÇERLİDİR."
+## Odak bölünmesi o çarpanlardan biridir, ve düz-katalog yolunda kurucu terimi seam'in
+## DIŞINDA hesaplandığı için bölünmeyi ayrıca alması gerekiyor.
+##
+## Bu yolun ölü olmadığına dikkat: barın gün tahmini (build_bar_model) ve
+## estimate_build_days onu çağırıyor, yani bölünme eksikken TAHMİN tam hız derken canlı hat
+## yapımı yarı hızda akıyordu.
+##
+## FALSİFİKASYON: `_speed_for_phase`'deki `* HRConstants.focus_mult(...)` çarpanını sil →
+## iki iş tek işle aynı hızı verir ve iddia FAIL eder, iki sayıyı da yazarak.
+static func _case_founder_split_halves_flat_speed() -> String:
+	ProductLines.reload()
+	RnDSystem.reset()
+	GameState.set_flag("mvp_shipped", false)
+	ProductSystem.active_build = null
+	var founder: Character = CharacterRegistry.get_founder()
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = HRConstants.AREA_MAX
+	CharacterRegistry.clear_jobs(founder.id)
+	# DÜZ KATALOG yolu: planned_step_ids boş kalmalı ki is_line_build() false olsun.
+	if not ProductSystem.start_build("ai_assistant",
+			["ai_assistant_chat", "ai_assistant_streaming"], ""):
+		return "fixture: could not start a flat-catalog build"
+	var b: FeatureBuild = ProductSystem.get_active_build()
+	if ProductSystem.is_line_build():
+		return "fixture: the build took the line path, not the flat one"
+
+	CharacterRegistry.clear_jobs(founder.id)
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD) != "":
+		return "fixture: build refused"
+	var solo: float = ProductSystem.team_speed(b)
+	if solo <= 0.0:
+		return "fixture: a founder alone on the build produced no speed"
+
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) != "":
+		return "fixture: support refused as a second continuous job"
+	var split: float = ProductSystem.team_speed(b)
+
+	# §12.1 — iki iş, her ikisine AYRI AYRI 0,50. Yapım terimi tam olarak yarıya iner.
+	var want: float = solo * HRConstants.FOCUS_MULT_SPLIT
+	if absf(split - want) > 0.0001:
+		return "a split founder builds at %.4f, want %.4f (half of %.4f)" % [split, want, solo]
+	return ""
+
+
+## YAVAŞLAYAN BAR SEBEBİNİ SÖYLER — duraklamış bir bar gibi (§5.6.1'in bir adım ötesi).
+##
+## Kurucu DESTEK'teyken yapıma başlarsa İKİSİ DE koşar ve İKİSİ DE yavaşlar (Ekip §12.1,
+## odak 0,50/0,50). O baskı — bildirimler doğrulanmaktan hızlı birikir, memnuniyet erir,
+## oyuncu işe alması gerektiğini anlar — modülün öğretmek istediği şeydir, ve yavaşlığın
+## SEBEBİ ekranda yazmazsa duran barın sebebi yazmadığında olduğu kadar haksız bir kayıptır.
+##
+## Bu vaka üç şeyi birden ölçüyor, çünkü üçü tek olgunun üç yüzü:
+##   · yapım barı bölünmeyi söylüyor
+##   · DESTEK barı da söylüyor (o kart bugüne dek HİÇ not taşımıyordu)
+##   · kurucunun kendi durum satırı iki kısa etiketi `·` ile birleştiriyor (Ekip §12.2)
+##
+## FALSİFİKASYON: `ProductSystem.split_note_key`'in gövdesini `return ""` yap → yapım barı
+## iddiası FAIL. `_derive_support`'taki döngüyü sil → DESTEK iddiası FAIL.
+## `founder_task_label`'ın kompozisyon dalını sil → satır tek etikete düşer ve FAIL.
+static func _case_split_bars_name_their_cause() -> String:
+	ProductLines.reload()
+	ResearchTree.reload()
+	RnDSystem.reset()
+	GameState.set_cash(50000)
+	GameState.set_flag(ProductState.LINE_TIERS, {})
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("pitch_prep_active", false)
+	ProductSystem.active_build = null
+	var founder: Character = CharacterRegistry.get_founder()
+	for area in HRConstants.AREAS:
+		founder.role_stats[area] = HRConstants.AREA_MAX
+	CharacterRegistry.clear_jobs(founder.id)
+
+	# TEK İŞ: hiçbir bar bölünmeden söz etmez.
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_SUPPORT) != "":
+		return "fixture: support refused"
+	if ProductSystem.split_note_key() != "":
+		return "a single-job founder produced a split note"
+
+	if not ProductSystem.start_line_build("note_tool",
+			["line_note_tool_capture_k1"], founder.id, "Sable"):
+		return "fixture: start_line_build refused"
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD) != "":
+		return "fixture: build refused as a second continuous job"
+
+	# İKİSİ DE KOŞUYOR — duraklama YOK. Duraklama olsaydı ders bir DURAKLAMAYLA
+	# değiştirilmiş olurdu ki hüküm tam olarak bunu yasaklıyor.
+	if ProductSystem.build_paused():
+		return "a second continuous job PAUSED the build; only research displaces"
+	if not HRSystem.is_overloaded(founder):
+		return "two continuous jobs did not read as overloaded"
+
+	# 1 · YAPIM BARI sebebi yazıyor.
+	if ProductSystem.split_note_key() != "BUILD_SPLIT_FOCUS":
+		return "the build bar does not name the split (%s)" % ProductSystem.split_note_key()
+	var bm = load("res://scripts/ui/components/build_bar_model.gd").new()
+	if not bm.derive():
+		return "fixture: the build bar model derived nothing"
+	if String(bm.split_note_key) != "BUILD_SPLIT_FOCUS":
+		return "the build bar MODEL dropped the split note"
+	# Duraklama notu boş kalmalı: bar akıyor.
+	if String(bm.pause_note_key) != "":
+		return "a running split build carried a PAUSE note: %s" % bm.pause_note_key
+
+	# 2 · DESTEK BARI da yazıyor. Bu kart, not alanları kurulmadan önce erken döndüğü için
+	#     bugüne kadar hiçbir not taşımıyordu.
+	ProductSystem.active_build = null
+	var sm = load("res://scripts/ui/components/build_bar_model.gd").new()
+	if not sm.derive():
+		return "fixture: the support bar model derived nothing"
+	if String(sm.phase) != "support":
+		return "fixture: expected the DESTEK bar, got '%s'" % sm.phase
+	if String(sm.split_note_key) != "BUILD_SPLIT_FOCUS":
+		return "the DESTEK bar does not name the split"
+
+	# 3 · KURUCUNUN DURUM SATIRI iki kısa etiketi orta noktayla birleştiriyor (§12.2).
+	var line: String = HRSystem.founder_task_label()
+	if not line.contains(" · "):
+		return "the founder's state line did not compose two labels: '%s'" % line
+	if not line.contains(TranslationServer.translate("HR_JOB_SUPPORT")) \
+			or not line.contains(TranslationServer.translate("HR_JOB_BUILD")):
+		return "the composed line names the wrong jobs: '%s'" % line
+
+	# Tek işe dönünce satır da tek duruma döner — kompozisyon kalıcı bir hâl değil.
+	CharacterRegistry.unassign_job(founder.id, HRConstants.JOB_BUILD)
+	if HRSystem.founder_task_label().contains(" · "):
+		return "the founder's line stayed composed after dropping to one job"
+	return ""
+
+
+## AR-GE RAYDA KİLİTLİ DEĞİLDİR — kapı sayfanın kendisindedir (direktör hükmü 2026-08-25).
+##
+## Pazarlama ile Ar-Ge aynı rozeti giyemez, çünkü FARKLI ŞEYLER söylüyorlar: Pazarlama bu
+## yapıda gerçekten yok; Ar-Ge var, bitti, yalnız henüz açılmadı. YAKINDA rozeti artık tek
+## şey demektir — bu yapıda yok — ve başka hiçbir şey onu giymez.
+##
+## Kapı DEĞİŞMEDİ: `RnDSystem.tree_open()`. Değişen yalnız v1 öncesinin görüntüsü: tek satır,
+## kilitli yuva yok, hayalet ağaç yok.
+##
+## FALSİFİKASYON: `ui_tokens.gd`'nin rnd satırına `"lock": "v1_shipped"` geri koy → rozetsizlik
+## iddiası FAIL. `left_tabs._refresh_rnd_badge`'deki `tree_open()` korumasını sil ve okunmamış
+## raporu zorla → rozet-sıfır iddiası FAIL. `_build_waiting_page`'i `_build_chrome` yap →
+## bekleme satırı iddiası FAIL.
+static func _case_rnd_rail_open_with_waiting_page() -> String:
+	ProductLines.reload()
+	ResearchTree.reload()
+	RnDSystem.reset()
+	GameState.set_flag("mvp_shipped", false)
+
+	# --- VERİ TARAFI: ray tanımı ---
+	var rnd_row := {}
+	var mkt_row := {}
+	for row in UiTokens.TABS:
+		if String(row.get("id", "")) == "rnd":
+			rnd_row = row
+		elif String(row.get("id", "")) == "marketing":
+			mkt_row = row
+	if rnd_row.is_empty() or mkt_row.is_empty():
+		return "fixture: rnd or marketing missing from UiTokens.TABS"
+	if rnd_row.has("lock"):
+		return "the Ar-Ge rail entry still carries a lock ('%s'); the gate is the PAGE now" \
+			% rnd_row["lock"]
+	# Ve hüküm hedeflidir, toptan bir açma değil: Pazarlama rozetini KORUR.
+	if String(mkt_row.get("lock", "")) != "ea":
+		return "Marketing lost its lock; YAKINDA must still mean 'not in this build'"
+
+	# --- SAYFA TARAFI: v1 öncesi bekleme satırı, sonrası ağaç ---
+	var host: Node = EventBus
+	var shell: Node = load("res://scenes/main/GameShell.tscn").instantiate()
+	host.add_child(shell)
+	EventBus.tab_changed.emit("rnd")
+	var cv: Node = shell.find_child("CenterViewport", true, false)
+	if cv == null:
+		shell.queue_free()
+		return "CenterViewport not found in the mounted shell"
+	var page: Node = cv.get_current_page_body()
+	if page == null:
+		shell.queue_free()
+		return "the Ar-Ge tab did not mount — is it still falling to the placeholder?"
+
+	var waiting: String = TranslationServer.translate("RND_TREE_CLOSED")
+	if not _node_tree_has_text(page, waiting):
+		shell.queue_free()
+		return "before v1 the page does not carry the waiting line"
+	# TEK SATIR: ağacın hiçbir parçası çizilmemeli.
+	if _node_tree_has_text(page, TranslationServer.translate("RND_LEGEND_COUNT")):
+		shell.queue_free()
+		return "the waiting page drew the tree legend; it must be ONE line and nothing else"
+
+	# Rozet: ağaç açılmadan Ar-Ge'de sayılacak hiçbir şey yok, ve koruma AÇIKÇA yazılı.
+	var rail: Node = shell.find_child("LeftTabs", true, false)
+	if rail != null and rail.has_method("_refresh_rnd_badge"):
+		rail._refresh_rnd_badge()
+		var idx: int = -1
+		for i in UiTokens.TABS.size():
+			if String(UiTokens.TABS[i].id) == "rnd":
+				idx = i
+		if idx >= 0:
+			var badge: Node = rail.tab_buttons[idx].get_node_or_null("Badge")
+			if badge != null and bool(badge.visible):
+				shell.queue_free()
+				return "the Ar-Ge badge is visible before the tree opens"
+
+	shell.queue_free()
+	return ""
+
+
+## Bir düğüm ağacında görünür bir Label'ın metnini arar. Bekleme sayfası tek satır olduğu
+## için "şu var / bu yok" iddiaları başka türlü ölçülemiyor.
+static func _node_tree_has_text(root: Node, needle: String) -> bool:
+	if needle == "":
+		return false
+	if root is Label and String((root as Label).text).find(needle) >= 0:
+		return true
+	for c in root.get_children():
+		if _node_tree_has_text(c, needle):
+			return true
+	return false
+
+
+## Ar-Ge §6.2 · §6.3 · §6.4 · §14 — AYLIK ÜRÜN NOTU: KİM YAZAR ve NE SÖYLER.
+##
+## §6.2 (MÜHÜRLÜ): yazar bir Ürün Yöneticisi ya da Tasarımcıdır, ve kontrol ROLÜN ALANI
+## TUTUP TUTMADIĞINDAN okunur — ham yıldızdan DEĞİL. Sebep somut: hr_candidate_generator her
+## çalışanın HER alanını sıfırdan büyük dolduruyor, yani ham okuma müşteri temsilcisine ürün
+## raporu yazdırır. Kurucu da hariçtir ve KATEGORİYLE hariç tutulmak zorundadır, çünkü
+## can_hold_area kurucu için her alanda true döner.
+##
+## §14 (MÜHÜRLÜ): rakip satırında SAYISAL İDDİA YASAK. Bu, havuzun tamamı üzerinde
+## makineyle kontrol edilebilen tek şeydir ve başka hiçbir kapı onu yakalamaz.
+##
+## FALSİFİKASYON: note_author'ı ham yıldıza çevir → müşteri temsilcisi yazar olur ve ilk
+## iddia FAIL. _rival_name'in "+1"ini sil → dev seçilir ve o iddia FAIL. Havuzdaki bir
+## cümleye rakam ekle → basamak iddiası FAIL, anahtarı adıyla yazarak.
+static func _case_rnd_note_author_and_lines() -> String:
+	ProductLines.reload()
+	ResearchTree.reload()
+	RnDSystem.reset()
+	GameState.set_flag("mvp_shipped", true)
+	# Rakip satırı KANONİK adları alt-tipten okuyor, o yüzden fikstürün gerçek bir alt-tipi
+	# olmak zorunda — ürünsüz bir şirkette rakip satırı DOĞRU olarak boş kalır ve çizilmez.
+	GameState.set_flag("mvp_sub_product_type_id", "note_tool")
+	GameState.set_flag("mvp_market_type", "b2c")
+
+	# --- §6.2 · YAZAR KAPISI ---
+	var dev: Character = _make_employee("char_note_dev", "Not Dev", HRConstants.ROLE_DEVELOPER)
+	var rep: Character = _make_employee("char_note_rep", "Not Rep", HRConstants.ROLE_CUSTOMER_REP)
+	# Müşteri temsilcisinin ÜRÜN alanında ham puanı VAR — ham okuma onu yazar yapardı.
+	rep.role_stats[HRConstants.AREA_PRODUCT] = HRConstants.AREA_MAX
+	if RnDSystem.note_author() != null:
+		return "a developer + a customer rep produced a note author; §6.2 wants a PM or a designer"
+	var pm: Character = _make_employee("char_note_pm", "Not PM", HRConstants.ROLE_PRODUCT_MANAGER)
+	var author: Character = RnDSystem.note_author()
+	if author == null:
+		return "a Product Manager on staff did not qualify as the note author"
+	if author.id != pm.id:
+		return "the note author is '%s', want the Product Manager" % author.id
+	# Kurucu KATEGORİYLE hariç: can_hold_area onun için her alanda true.
+	if author.category == "founder":
+		return "the founder was picked as the note author; §6.2 excludes him"
+
+	# --- §6.3 · ÜÇ SİNYAL ---
+	var note: Dictionary = RnDSystem.compose_note(author)
+	if String(note.get("demand_key", "x")) != "":
+		return "the demand key is filled; §6.4 says it degrades until the generator ships"
+	var rk: String = String(note.get("rival_key", ""))
+	var tk: String = String(note.get("tech_key", ""))
+	if rk == "" or tk == "":
+		return "the rival/tech lines are empty (%s / %s) — sixteen authored sentences unreachable" \
+			% [rk, tk]
+	for key in [rk, tk]:
+		if TranslationServer.translate(key) == key:
+			return "note key '%s' does not resolve" % key
+
+	# --- §14 · RAKİP GERÇEK, DEV DEĞİL, VE SAYISAL İDDİA YOK ---
+	var sub: String = ProductState.subtype()
+	var names: Array = RivalCatalog.NAMES.get(sub, []) as Array
+	if names.is_empty():
+		return "fixture: subtype '%s' has no canonical rival names" % sub
+	var rival: String = String(note.get("rival", ""))
+	if not names.has(rival):
+		return "the note named '%s', which is not a canonical rival of %s" % [rival, sub]
+	if rival == String(names[0]):
+		return "the note named the GIANT (%s); its momentum is zero, so it is never this month's news" % rival
+	# Beliren teknoloji GERÇEK ve HENÜZ ARAŞTIRILMAMIŞ bir düğüm olmalı.
+	var tech: String = String(note.get("node", ""))
+	if not ResearchSeam.is_node(tech):
+		return "the emerging-technology line names '%s', not a real node" % tech
+	if RnDSystem.node_completed(tech):
+		return "the emerging-technology line named an ALREADY researched node (%s)" % tech
+
+	# Havuzun TAMAMINDA basamak aranır — tek satır değil, on altı cümlenin hepsi.
+	var digits := RegEx.new()
+	digits.compile("[0-9]")
+	for market in ["B2B", "B2C"]:
+		for i in RnDSystem.NOTE_POOL_COUNT:
+			var k: String = "RND_NOTE_RIVAL_%s_%d" % [market, i]
+			for loc in ["tr", "en"]:
+				TranslationServer.set_locale(loc)
+				var line: String = TranslationServer.translate(k)
+				if digits.search(line) != null:
+					TranslationServer.set_locale("tr")
+					return "%s (%s) carries a numeric claim; §14 forbids it: '%s'" % [k, loc, line]
+	TranslationServer.set_locale("tr")
+
+	CharacterRegistry.remove(dev.id)
+	CharacterRegistry.remove(rep.id)
+	CharacterRegistry.remove(pm.id)
+	return ""
+
+
+## Every SCREAMING_SNAKE string anywhere inside a text block — the presenter treats exactly
+## these as localization keys, so exactly these must resolve. Used by the gate-copy check and
+## by the card-locale coverage case; one definition, because two would drift.
+static func _caps_tokens(node: Variant) -> Array:
+	var out: Array = []
+	match typeof(node):
+		TYPE_DICTIONARY:
+			for k in (node as Dictionary):
+				out.append_array(_caps_tokens((node as Dictionary)[k]))
+		TYPE_ARRAY:
+			for v in (node as Array):
+				out.append_array(_caps_tokens(v))
+		TYPE_STRING:
+			var t: String = String(node)
+			if t.length() >= 3 and t == t.to_upper() and not t.contains(" ") \
+					and t[0] >= "A" and t[0] <= "Z":
+				out.append(t)
+	return out
+
+
+## EFFECT-VISIBILITY, made mechanical. CLAUDE.md's rule says a modifier with no label renders a
+## BLIND card; until now that was enforced by whoever remembered. Every verb any card actually
+## uses must either produce a chip or be named in EventModal.SILENT_VERBS.
+##
+## FALSIFICATION: delete one arm from _describe_modifier's match and this case names it.
+static func _case_event_chip_coverage() -> String:
+	EvCatalog.reload()
+	var modal_script: GDScript = load("res://scripts/modals/event_modal.gd")
+	var modal: Control = modal_script.new()
+	var blind: Array = []
+	# GDScript.get() does not see `const`; the constant map is the documented way in.
+	var silent: Array = (modal_script.get_script_constant_map() as Dictionary).get("SILENT_VERBS", [])
+	if silent.is_empty():
+		modal.free()
+		return "EventModal.SILENT_VERBS is missing or empty — the rule has no exemption list"
+	for id in EvCatalog.card_ids():
+		var card: Dictionary = EvCatalog.card(String(id))
+		for o in (card.get("options", []) as Array):
+			var opt: Dictionary = o
+			var lists: Array = [opt.get("effects", [])]
+			var check: Dictionary = opt.get("check", {})
+			lists.append(check.get("on_pass", []))
+			lists.append(check.get("on_fail", []))
+			for lst in lists:
+				for e in (lst as Array):
+					var verb: String = String((e as Dictionary).get("verb", ""))
+					if verb == "" or silent.has(verb):
+						continue
+					if (modal._describe_modifier(e) as Dictionary).is_empty():
+						var row: String = "%s/%s:%s" % [id, opt.get("id", "?"), verb]
+						if not blind.has(row):
+							blind.append(row)
+	modal.free()
+	if not blind.is_empty():
+		return "card rows that render no chip: %s" % ", ".join(blind)
+	return ""
+
+
+## I1 — there is no second way in.
+##
+## FALSIFICATION: add any public function to EvQueue that appends without going through
+## EvGate, and this case cannot see it — which is exactly why the assertion is textual. I1 is
+## structural (the Queue is private to the engine), and what a test CAN prove is that the
+## deleted API stays deleted.
+static func _case_event_i1_single_gate() -> String:
+	var offenders: Array = []
+	# The needle is SPLIT so this file does not contain it, and the linter's own source is
+	# skipped for the same reason. A rule that reports the two places its own definition lives
+	# fails on a clean tree, which is the fastest way to teach a team to ignore it (§17.10).
+	var needle_a: String = "EventManager." + "enqueue"
+	var needle_b: String = "." + "enqueue_front("
+	for path in _walk_gd("res://scripts"):
+		if path.begins_with("res://scripts/events/tools/"):
+			continue
+		var f := FileAccess.open(path, FileAccess.READ)
+		if f == null:
+			continue
+		var n: int = 0
+		while not f.eof_reached():
+			n += 1
+			var line: String = f.get_line()
+			if line.strip_edges().begins_with("#"):
+				continue
+			if line.contains(needle_a) or line.contains(needle_b):
+				offenders.append("%s:%d" % [path, n])
+	if not offenders.is_empty():
+		return "the deleted admission API is back at %s" % ", ".join(offenders)
+	if not EvCatalog.has_card("world.final_stretch_press"):
+		return "the catalogue did not load"
+	return ""
+
+
+## I2 — an economic delta needs a played decision.
+##
+## FALSIFICATION: move "add_cash" into EvEffects.NEUTRAL_VERBS and the first assertion fails.
+static func _case_event_i2_economy_played_only() -> String:
+	GameState.initialize_run({"seed": 424242})
+	var before: int = GameState.cash
+
+	EvEffects.run_ambient([{"verb": "add_cash", "amount": 5000}], {})
+	if GameState.cash != before:
+		return "an ambient origin moved cash by %d" % (GameState.cash - before)
+
+	EvEffects.run_expire([{"verb": "add_cash", "amount": 500}], {})
+	if GameState.cash != before:
+		return "on_expire applied a POSITIVE delta"
+
+	EvEffects.run_expire([{"verb": "add_cash", "amount": -200}], {})
+	if GameState.cash != before - 200:
+		return "on_expire could not apply a NEGATIVE delta, which §8.3 allows"
+
+	EvEffects.run_played([{"verb": "add_cash", "amount": 200}], {})
+	if GameState.cash != before:
+		return "a played decision could not move cash"
+	return ""
+
+
+## I3 — no untelegraphed loss, at BOTH enforcement points.
+##
+## FALSIFICATION: give EndingsSystem.trigger_ending's `telegraph` argument a default, and the
+## second half stops being provable at all.
+static func _case_event_i3_no_silent_loss() -> String:
+	GameState.initialize_run({"seed": 424242})
+	EvSave.reset()
+	GameState.set_run_active(true)
+
+	# The executor refuses the effect.
+	EvEffects.run_played([{"verb": "trigger_ending", "ending_id": "bankruptcy",
+		"requires_telegraph": "never_fired"}], {})
+	if not GameState.run_active:
+		return "an ending fired with a telegraph that never did"
+
+	EvEffects.run_played([{"verb": "trigger_ending", "ending_id": "bankruptcy"}], {})
+	if not GameState.run_active:
+		return "an ending fired with no requires_telegraph at all"
+
+	# And a real telegraph lets it through, so the refusals above were about the telegraph
+	# rather than about something being broken.
+	EvFlags.stamp("shutter_warned", "smoke")
+	EvEffects.run_played([{"verb": "trigger_ending", "ending_id": "bankruptcy",
+		"requires_telegraph": "shutter_warned"}], {})
+	if GameState.run_active:
+		return "a properly telegraphed ending did not fire"
+
+	# The signature is the other half: every one of trigger_ending's ten call sites had to name
+	# a telegraph, and there is no default to fall back on.
+	#
+	# EndingsSystem is a RefCounted with only statics, so `has_method` and `get_script` cannot be
+	# called on the class — the script resource is loaded by path instead, which is also the
+	# only form that can see the method list of a class with no instance.
+	var ends: GDScript = load("res://scripts/systems/endings_system.gd")
+	var found: bool = false
+	for m in ends.get_script_method_list():
+		if String((m as Dictionary).get("name", "")) != "trigger_ending":
+			continue
+		found = true
+		# `extra` is the one argument allowed a default. A second default means `telegraph`
+		# acquired one, and I3's structural half — every call site must NAME its telegraph or
+		# fail to compile — is gone.
+		if ((m as Dictionary).get("default_args", []) as Array).size() > 1:
+			return "trigger_ending's telegraph argument has acquired a default"
+	if not found:
+		return "trigger_ending is gone"
+	return ""
+
+
+## I4 — a card over budget is DEMOTED, never dropped, and never demoted into the ticker.
+##
+## FALSIFICATION: make EvTempo.assign return an empty array for an over-budget card.
+static func _case_event_i4_demoted_never_dropped() -> String:
+	GameState.initialize_run({"seed": 424242})
+	EvSave.reset()
+	EvTempo.reset()
+
+	var pending: Array = []
+	for i in 6:
+		pending.append({"event_id": "product.critical_bug"})
+	var assigned: Array = EvTempo.assign(pending)
+	if assigned.size() != pending.size():
+		return "the governor dropped %d card(s); I4 forbids dropping" % (pending.size() - assigned.size())
+	for a in assigned:
+		var cls: String = String((a as Dictionary)["class"])
+		if cls == "ambient":
+			return "a card was demoted into the ticker, which drops its newest line when full"
+		if cls not in ["interrupt", "paper", "info"]:
+			return "unexpected class '%s'" % cls
+	var demoted: int = 0
+	for a in assigned:
+		if bool((a as Dictionary).get("demoted", false)):
+			demoted += 1
+	if demoted == 0:
+		return "six interrupts in one day and nothing was demoted — the ceiling is %d" \
+			% EvTuning.MAX_INTERRUPTS_PER_DAY
+	return ""
+
+
+## I5 — the card file tells the truth about when it fires.
+##
+## Enforceable form: every card either declares a trigger/condition or is a pool card, and no
+## system names a card id in order to fire it. A trigger that lives in GDScript has no
+## syntactic signature; a system reaching for a specific card does.
+static func _case_event_i5_trigger_is_data() -> String:
+	EvCatalog.reload()
+	var silent: Array = []
+	for id in EvCatalog.card_ids():
+		var card: Dictionary = EvCatalog.card(id)
+		if String(card.get("version_scope", "demo")) == "fixture":
+			continue
+		# A card declares HOW IT FIRES in four legible ways, and `tick` is one of them.
+		# `tick: request` says "no clock sweeps me; a caller names me" and `tick: scheduled`
+		# says "an effect put me on the calendar" — both are as much a declaration as a
+		# trigger block, and both are readable without opening a .gd file, which is what I5
+		# is actually about. What I5 forbids is a card whose firing rule exists ONLY in code
+		# while the card itself claims to be pool content.
+		var declares: bool = card.has("trigger") or card.has("condition") or card.has("arc") \
+			or String(card["tick"]) in ["request", "scheduled"]
+		var poolable: bool = not card.has("arc") and not (card["tags"] as Array).has("critical")
+		if not declares and not poolable:
+			silent.append(String(id))
+	if not silent.is_empty():
+		return "cards with no declared trigger that are not pool cards: %s" % ", ".join(silent)
+	return ""
+
+
+## I6 — dice never kill.
+##
+## FALSIFICATION: add "trigger_ending" to the check-branch table and the first assertion fails.
+static func _case_event_i6_dice_never_kill() -> String:
+	GameState.initialize_run({"seed": 424242})
+	EvSave.reset()
+	GameState.set_run_active(true)
+	EvFlags.stamp("shutter_warned", "smoke")
+
+	EvEffects.run_check_branch([{"verb": "trigger_ending", "ending_id": "bankruptcy",
+		"requires_telegraph": "shutter_warned"}], {})
+	if not GameState.run_active:
+		return "a dice branch ended the run"
+
+	# The same effect from a played decision does end it — so the refusal was about the ORIGIN.
+	EvEffects.run_played([{"verb": "trigger_ending", "ending_id": "bankruptcy",
+		"requires_telegraph": "shutter_warned"}], {})
+	if GameState.run_active:
+		return "the control case did not fire, so the assertion above proves nothing"
+
+	# And no authored check branch carries a terminal.
+	EvCatalog.reload()
+	for id in EvCatalog.card_ids():
+		for o in (EvCatalog.card(id).get("options", []) as Array):
+			var check: Dictionary = (o as Dictionary).get("check", {})
+			for branch in ["on_pass", "on_fail"]:
+				for e in (check.get(branch, []) as Array):
+					if String((e as Dictionary).get("verb", "")) == "trigger_ending":
+						return "%s has a terminal in a check branch" % id
+	return ""
+
+
+## I7 — no modifier line without a named seam, in both directions.
+static func _case_event_i7_modifier_needs_seam() -> String:
+	EvCatalog.reload()
+	EvSeams.ensure_installed()
+	for id in EvCatalog.card_ids():
+		var card: Dictionary = EvCatalog.card(id)
+		var lines: Dictionary = (card.get("text", {}).get("tr", {}) as Dictionary).get("modifier_lines", {})
+		for seam_name in lines:
+			if not EvSeams.has(String(seam_name)):
+				return "%s names modifier seam '%s', which is not registered" % [id, seam_name]
+
+	# The other direction: a contribution with no label does not render, rather than rendering
+	# a machine key at the player.
+	var rendered: Array = EvDice.modifier_lines(
+		[{"seam": "hr.morale", "delta": 0.2}, {"seam": "hr.tenure_days", "delta": -0.1}],
+		{"hr.morale": "morale is good"})
+	if rendered.size() != 1:
+		return "an unlabelled contribution rendered anyway (%d line(s))" % rendered.size()
+	if String((rendered[0] as Dictionary)["sign"]) != "▲":
+		return "the sign was not derived from the contribution"
+	return ""
+
+
+## A5 — the dice hash is stable, by construction and by fixture.
+##
+## FALSIFICATION: swap fnv1a's body for String.hash() and the known-value assertion fails.
+## That is the whole point: these outcomes are save-critical, and a patched build must
+## reproduce a saved run's rolls. String.hash() is not documented-stable across engine
+## versions, so the algorithm is written out in-project and pinned here.
+static func _case_event_dice_is_stable() -> String:
+	var known: int = EvDice.fnv1a("project-unicorn")
+	if EvDice.fnv1a("project-unicorn") != known:
+		return "fnv1a is not deterministic within one process"
+	if EvDice.fnv1a("project-unicorm") == known:
+		return "fnv1a returned the same value for different input"
+
+	GameState.initialize_run({"seed": 424242})
+	GameState.day = 42
+	var a: float = EvDice.unit("check", 42, "ev.x", "opt_a")
+	var b: float = EvDice.unit("check", 42, "ev.x", "opt_a")
+	if not is_equal_approx(a, b):
+		return "the same coordinates gave two different rolls"
+	if a < 0.0 or a >= 1.0:
+		return "unit() returned %f, outside [0,1)" % a
+
+	# §9.3: option_id is IN the hash, so a different option is a genuinely different roll —
+	# which is what makes a reload buy a better and more expensive offer rather than a retry.
+	if is_equal_approx(a, EvDice.unit("check", 42, "ev.x", "opt_b")):
+		return "two options on one card shared a roll; save-scumming is back"
+	if is_equal_approx(a, EvDice.unit("check", 43, "ev.x", "opt_a")):
+		return "the day is not in the hash"
+	return ""
+
+
+## THE THESIS TEST, in the suite as well as the probe.
+##
+## §24 makes this the gate stage 2 may not be skipped past, and §0.2 makes it the reason the
+## engine exists: a decision on day 10 produces a visible consequence on day 90, across a
+## save/load, and the player can trace the link.
+static func _case_event_thesis_day10_to_day90() -> String:
+	var shipped: Array = EvTuning.SHIPPED_SCOPES.duplicate()
+	EvTuning.SHIPPED_SCOPES.append("fixture")
+	GameState.initialize_run({"seed": 424242})
+	EvEngine.reset()
+	EvCatalog.reload()
+
+	GameState.day = 10
+	if not EvEngine.force_fire("fixture.thesis_open"):
+		EvTuning.SHIPPED_SCOPES.assign(shipped)
+		return "the day-10 card would not fire"
+	EvEngine.resolve("fixture.thesis_open", "promise")
+	if not EvArcs.is_active("arc_fixture_thesis"):
+		EvTuning.SHIPPED_SCOPES.assign(shipped)
+		return "the arc did not start"
+
+	# Round-trip, exactly as a real save would.
+	var json: String = JSON.stringify(EvSave.to_dict())
+	EvEngine.reset()
+	EvSave.from_dict(JSON.parse_string(json) as Dictionary)
+	if not EvArcs.is_active("arc_fixture_thesis"):
+		EvTuning.SHIPPED_SCOPES.assign(shipped)
+		return "the arc did not survive a save/load"
+
+	GameState.day = 90
+	var due: Array = EvSchedule.take_due()
+	var found: bool = false
+	for e in due:
+		if String((e as Dictionary)["event_id"]) == "fixture.thesis_payoff":
+			found = true
+	if not found:
+		EvTuning.SHIPPED_SCOPES.assign(shipped)
+		return "the payoff was not due on day 90"
+
+	# The load-bearing assertion: the condition reads a choice made 80 days ago.
+	var cond: Dictionary = EvCatalog.card("fixture.thesis_payoff")["condition"]
+	if not EvCondition.eval(cond):
+		EvTuning.SHIPPED_SCOPES.assign(shipped)
+		return "the payoff's condition could not read the day-10 choice"
+
+	if not EvEngine.force_fire("fixture.thesis_payoff"):
+		EvTuning.SHIPPED_SCOPES.assign(shipped)
+		return "the payoff would not fire on day 90"
+	EvEngine.resolve("fixture.thesis_payoff", "acknowledge")
+	var landed: bool = EvFlags.has("fixture_payoff_landed")
+	EvTuning.SHIPPED_SCOPES.assign(shipped)
+	if not landed:
+		return "the payoff resolved but left no trace"
+	return ""
+
+
+static func _walk_gd(root: String) -> Array:
+	var out: Array = []
+	var dir := DirAccess.open(root)
+	if dir == null:
+		return out
+	dir.list_dir_begin()
+	var name: String = dir.get_next()
+	while name != "":
+		var full: String = root.path_join(name)
+		if dir.current_is_dir():
+			if not name.begins_with("."):
+				out.append_array(_walk_gd(full))
+		elif name.ends_with(".gd"):
+			out.append(full)
+		name = dir.get_next()
+	dir.list_dir_end()
+	return out
+
+
+## A2 — THE THESIS AGAIN, THROUGH THE REAL PRESENTATION PATH.
+##
+## `event_thesis_day10_to_day90` proves the arc, the schedule and the condition. It proves none
+## of paper, desk, expiry clock or the presentation layer, because it drives the engine
+## directly. This one runs the same day-10 → day-90 arc through everything a player touches:
+## the view the modal is handed, the desk a deferred card lands on, and the clock it carries.
+##
+## ON A2'S "FORCED INTO DEMOTION" CLAUSE — an amendment written before §13.5 was implemented,
+## and it turns out to be unsatisfiable AS WRITTEN, which is a finding rather than a dodge.
+## §13.5 makes an arc step BUDGET-EXEMPT: "an arc turning point does not consume the day's
+## interrupt slots", so the tempo governor will not demote a payoff no matter how busy the day
+## is. Demoting it would be the bug. So this case proves the two halves separately and asserts
+## the exemption out loud:
+##
+##   · a NON-exempt card admitted the same day IS demoted, lands on the desk with a clock, and
+##     is still answerable — the consequence deferred, never dropped (I4);
+##   · the payoff is NOT demoted, and the reason is named in the failure message so nobody
+##     "fixes" the exemption later without reading this.
+static func _case_event_thesis_through_presenter() -> String:
+	var shipped: Array = EvTuning.SHIPPED_SCOPES.duplicate()
+	EvTuning.SHIPPED_SCOPES.append("fixture")
+	var fail: String = _thesis_presenter_body()
+	EvTuning.SHIPPED_SCOPES.assign(shipped)
+	return fail
+
+
+static func _thesis_presenter_body() -> String:
+	GameState.initialize_run({"seed": 424242})
+	GameState.set_run_active(true)
+	EvEngine.reset()
+	EvCatalog.reload()
+
+	# THE PRESENTER IS THE THING UNDER TEST, so the case listens where main.gd listens rather
+	# than reading the queue. A card that never reaches this signal never reaches a player.
+	var shown: Array = []
+	var on_modal := func(ev: GameEvent) -> void: shown.append(ev)
+	EventBus.modal_requested.connect(on_modal)
+
+	GameState.day = 10
+	if not EventGate.request("fixture.thesis_open"):
+		EventBus.modal_requested.disconnect(on_modal)
+		return "the day-10 card was refused"
+	if shown.is_empty():
+		EventBus.modal_requested.disconnect(on_modal)
+		return "the card was admitted but never reached modal_requested"
+	var opening: GameEvent = shown[shown.size() - 1]
+	if opening.id != "fixture.thesis_open" or opening.choices.size() != 2:
+		EventBus.modal_requested.disconnect(on_modal)
+		return "the view handed over is wrong (%s, %d choice(s))" % [
+			opening.id, opening.choices.size()]
+
+	EventGate.resolve("fixture.thesis_open", "promise")
+	if not EvArcs.is_active("arc_fixture_thesis"):
+		EventBus.modal_requested.disconnect(on_modal)
+		return "the arc did not start"
+
+	# A paper due the SAME DAY as the payoff, so the desk half is exercised on the day that
+	# matters rather than on a quiet one.
+	EvSchedule.add("fixture.concurrent", 80)
+
+	# Round-trip, exactly as a real save would.
+	var json: String = JSON.stringify(EvSave.to_dict())
+	EvEngine.reset()
+	EvSave.from_dict(JSON.parse_string(json) as Dictionary)
+	GameState.set_run_active(true)
+	if not EvArcs.is_active("arc_fixture_thesis"):
+		EventBus.modal_requested.disconnect(on_modal)
+		return "the arc did not survive a save/load"
+
+	# --- THE DEMOTION HALF, on a card that is not exempt -----------------------------------
+	EvTempo.reset()
+	var crowd: Array = []
+	for i in EvTuning.MAX_INTERRUPTS_PER_DAY + 2:
+		crowd.append({"event_id": "customer.retention"})
+	var assigned: Array = EvTempo.assign(crowd)
+	var demoted: int = 0
+	for a in assigned:
+		if bool((a as Dictionary).get("demoted", false)):
+			demoted += 1
+	if assigned.size() != crowd.size():
+		EventBus.modal_requested.disconnect(on_modal)
+		return "the governor dropped a card; I4 forbids dropping"
+	if demoted == 0:
+		EventBus.modal_requested.disconnect(on_modal)
+		return "%d interrupts in one day and nothing was demoted (ceiling %d)" % [
+			crowd.size(), EvTuning.MAX_INTERRUPTS_PER_DAY]
+	# The payoff, run through the same governor on the same crowded day, must NOT be demoted.
+	EvTempo.reset()
+	crowd.append({"event_id": "fixture.thesis_payoff"})
+	for a in EvTempo.assign(crowd):
+		var entry: Dictionary = a
+		if String(entry["event_id"]) != "fixture.thesis_payoff":
+			continue
+		if bool(entry.get("demoted", false)):
+			EventBus.modal_requested.disconnect(on_modal)
+			return "the arc payoff was demoted — §13.5 exempts arc steps from the day's " \
+				+ "interrupt budget, and a payoff that can be pushed to the desk by a busy " \
+				+ "day is the silent-death class §10.6 exists to prevent"
+	EvTempo.reset()
+
+	# --- DAY 90 -----------------------------------------------------------------------------
+	shown.clear()
+	GameState.day = 90
+	EvEngine.daily_tick()
+	# The day may raise more than one card, and §11.2 decides which owns the modal slot first.
+	# Answering the others is what a player does; what must be true is that the payoff reaches
+	# the screen on THIS day rather than being lost behind them.
+	var mounted: bool = _drain_to("fixture.thesis_payoff")
+	EventBus.modal_requested.disconnect(on_modal)
+
+	var reached: bool = false
+	for ev in shown:
+		if (ev as GameEvent).id == "fixture.thesis_payoff":
+			reached = true
+	if not reached:
+		return "the payoff did not reach the screen on day 90 (shown: %d card(s))" % shown.size()
+	if not mounted or EventGate.active_id() != "fixture.thesis_payoff":
+		return "the payoff is not the active card (%s)" % EventGate.active_id()
+
+	# The concurrent card is a paper: on the desk, with a clock, and NOT a modal.
+	var desk: Array = EventGate.desk_papers(8)
+	var paper: Dictionary = {}
+	for entry in desk:
+		if String((entry as Dictionary)["id"]) == "fixture.concurrent":
+			paper = entry
+	if paper.is_empty():
+		return "the same-day paper did not reach the desk (desk: %d)" % desk.size()
+	if int(paper["days_left"]) <= 0:
+		return "the paper landed with no clock (%d)" % int(paper["days_left"])
+
+	EventGate.resolve("fixture.thesis_payoff", "acknowledge")
+	if not EvFlags.has("fixture_payoff_landed"):
+		return "the payoff resolved but left no trace"
+	if EvArcs.is_active("arc_fixture_thesis"):
+		return "the arc did not close on its payoff"
+
+	# And the deferred one is still answerable — the whole point of demoting rather than
+	# dropping. It opens from the desk and resolves like any other card.
+	#
+	# DRAIN FIRST. §11.3 allows one modal at a time, so `open_paper` refuses while anything is
+	# on screen — and resolving the payoff pumps the queue, which on a busy day mounts the next
+	# card immediately. The player would answer that one and then reach for the desk; the case
+	# does the same.
+	_drain_all_modals()
+	if not EventGate.open_paper("fixture.concurrent"):
+		return "the paper would not open from the desk"
+	EventGate.resolve("fixture.concurrent", "ok")
+	if not EvFlags.has("fixture_concurrent_landed"):
+		return "the deferred card resolved but left no trace"
 	return ""

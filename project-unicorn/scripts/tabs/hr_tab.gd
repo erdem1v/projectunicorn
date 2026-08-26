@@ -673,13 +673,16 @@ func _paint_attention_strip() -> void:
 ## GÖREVLER matrisindeki bir kutu tıklandı. TEK YAZAR CharacterRegistry; burası yalnız
 ## hangi seam'in çağrılacağına karar veriyor.
 ##
-## KURUCU TAŞINIR, REDDEDİLMEZ: tek alan taşıdığı için işaretsiz bir alana tıklamak
-## "önce bırak, sonra ata" demektir — yoksa ilk atamadan sonra her tık `founder_busy`
-## döner ve matris tıklanamaz görünürdü.
+## KURUCU TAŞINIR, REDDEDİLMEZ — ve artık BOŞALTILMAZ da. Buradaki ön-boşaltma dalı
+## (`clear_jobs`) `founder_busy` reddine karşı yazılmış bir çareydi; Ar-Ge §5.0 o reddi
+## kaldırıp yerine DURAKLAMAYI koydu: "Diğer atamaları silinmez, duraklar." `clear_jobs`
+## tam olarak §5.0'ın yasakladığı şeyi yapıyordu — SİLİYORDU, üstelik artık duraklamış
+## defteri de temizlediği için geri dönüşü de imkânsız kılardı. Yer değiştirmeyi
+## `assign_job` kendi içinde, tek yazar olarak yapıyor.
 func _on_assignment_toggled(char_id: String, job_id: String, currently_on: bool) -> void:
-	# §12.0: matrisin birimi artık İŞ. Kurucu matriste zaten yok (§2), ama ön-boşaltma dalı
-	# duruyor — motor tarafı onu ProductSystem._reseat_founder üzerinden hâlâ oturtuyor ve
-	# bu yol savunma hattı olarak kalıyor.
+	# §12.0: matrisin birimi artık İŞ. Kurucu matriste zaten yok (§2); bu yol motor tarafı
+	# (ProductSystem._reseat_founder) ile aynı seam'e bastığı için savunma hattı olarak
+	# duruyor.
 	var c: Character = CharacterRegistry.get_character(char_id)
 	if c == null:
 		return
@@ -687,13 +690,12 @@ func _on_assignment_toggled(char_id: String, job_id: String, currently_on: bool)
 		CharacterRegistry.unassign_job(char_id, job_id)
 		_rebuild_forced()
 		return
-	if c.category == "founder" and not c.assigned_job_ids.is_empty():
-		CharacterRegistry.clear_jobs(char_id)
 	var reason: String = CharacterRegistry.assign_job(char_id, job_id)
 	if reason != "":
 		# SAVUNMA DALI, oyuncuya giden bir yol değil: matris atanamaz kareyi kesikli çiziyor
-		# ve tıklamıyor, kurucunun ikinci alanı da yukarıda önce bırakılıyor. Buraya
-		# düşülüyorsa arayüz ile motor ayrışmış demektir — sessiz kalmak yerine loga bağırır.
+		# ve tıklamıyor, kurucunun ikinci işi de artık reddedilmiyor (Ar-Ge §5.0 — duraklar).
+		# Buraya düşülüyorsa arayüz ile motor ayrışmış demektir — sessiz kalmak yerine
+		# loga bağırır.
 		# Oyuncunun "neden tıklayamıyorum" sorusunun cevabı kesikli karenin TOOLTIP'inde.
 		push_warning("[HRTab] assign_job('%s', '%s') refused: %s" % [char_id, job_id, reason])
 	_rebuild_forced()
