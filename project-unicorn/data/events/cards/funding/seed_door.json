@@ -1,0 +1,60 @@
+{
+  "_worked_example": "The seed door's announcement. NOTHING PUSHES IT: SeedRoundSystem.daily_tick writes the ratchet and this card's own condition reads it through funding.seed_door_open, exactly as the two phase gates read phase.gate_ready. `critical` is what gets it proposed the same day rather than waiting on a weighted draw. It names no figure - the threshold is the appetite grammar's business, and the door is shown, never the number.",
+  "id": "funding.seed_door",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "funding.seed_door_open",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "finance.shutter_days_left",
+        "op": "<",
+        "value": 0,
+        "reason": "held while the shutter runs - the same hold the phase gates take"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "go_to_funding",
+      "outcome_id": "went",
+      "effects": [
+        {
+          "verb": "goto_tab",
+          "tab_id": "finance",
+          "subpage": "yatirim"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "SEED_DOOR_TITLE",
+      "body": "SEED_DOOR_BODY",
+      "options": {
+        "go_to_funding": "SEED_DOOR_GO"
+      }
+    },
+    "en": {
+      "title": "SEED_DOOR_TITLE",
+      "body": "SEED_DOOR_BODY",
+      "options": {
+        "go_to_funding": "SEED_DOOR_GO"
+      }
+    }
+  }
+}

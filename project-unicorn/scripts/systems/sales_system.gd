@@ -42,10 +42,24 @@ const SATISFACTION_BUG_GATE := 5         # bug_count > → satisfaction drifts d
 # value is crossed by month 24, so the bar sits at the band FLOOR and the gap is a Layer-B
 # revenue-curve finding, not a reason to lower the bar (director ruling).
 # NEVER RENDERED AS A FIGURE (director ruling: the signal is shown, the number is not). Readers:
-# PhaseGateSystem.GATES (the gate), PitchConstants.SEED_MRR_REFERENCE (VC conviction seeding —
+# PhaseGateSystem.GATES (the gate), PitchConstants.CONV_MRR_REFERENCE (VC conviction seeding —
 # tracks the bar by design). The old display bar (traction_progress) and its customer-count
 # companion were retired with the figure.
-const TRACTION_MRR_TARGET := 40_000
+# RAISED 40,000 -> 120,000 (director parameters, 2026-08-27): the band is [100,000-150,000]
+# and 120,000 is its anchor. The old value was the band FLOOR of the previous band and was
+# chosen because nothing crossed it; this one is chosen because it is what a Series A is.
+#
+# MEASURED CONSEQUENCE, REPORTED RATHER THAN SOFTENED. --run-log=full_run:730:sim on the
+# tree that raised it peaks at MRR $11,911 and ends running_on_fumes; b2c_keep:730 peaks at
+# $1,800. Neither approaches the OLD bar, let alone this one, so series_a_close is not
+# reachable in a played run today and profitable_bootstrap is the practical terminal. That
+# is a revenue-curve finding, not an argument against the number: the smoke suite cannot
+# see it either, because every case that touches the bar seeds TRACTION_MRR_TARGET + 1000
+# directly and keeps passing. The two honest exits are the band floor (100,000) or landing
+# calibration F1's prospect-pool work; both are the playtest gate's call, not this wave's.
+const TRACTION_MRR_TARGET := 120_000
+# [ÇALIŞMA] the envelope the anchor sits in. Never rendered, like the anchor itself.
+const TRACTION_MRR_BAND := [100_000, 150_000]
 
 # WORKING: optimistic close-rate weight on the open pipeline — feeds only the Finance
 # tab's "satış hedefi tutarsa" projection (FinanceSystem.get_optimistic_daily_net).
@@ -314,6 +328,20 @@ static func open_b2c_paid_tier(price: int, _initial_pct: float = 0.0) -> void:
 ## bilmesi gerekmez; float döner, çünkü saatlik erozyon kesirde yaşıyor (S3-43).
 static func b2c_audience() -> float:
 	return maxf(0.0, float(GameState.get_flag("b2c_audience", 0.0)))
+
+
+## Paying users on a B2C run — seats on the single aggregate userbase record, which is where
+## _derive_b2c_mrr writes them (seats = paying, mrr = paying x price).
+##
+## IT EXISTS BECAUSE THE ENDING PAPER NEEDED A TRUE NUMBER. The run ledger used to carry only
+## customers_active (a REGISTRY COUNT, so 1 on any consumer run — the aggregate record) and
+## customers_signed (written only by the B2B signing path, so 0 forever). Ch. 13 §2 rules that
+## a consumer run reports audience and paying users; this is the second half of that pair, and
+## naming it here keeps the aggregate-record id out of every caller.
+## 0 before the paid tier opens, which is correct rather than merely safe: nobody is paying.
+static func b2c_paying_users() -> int:
+	var ub: Customer = CustomerRegistry.get_customer(B2C_USERBASE_ID)
+	return int(ub.seats) if ub != null else 0
 
 
 static func add_b2c_audience(n: int) -> void:

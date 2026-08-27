@@ -317,7 +317,13 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 
 	for locale in ["tr", "en"]:
 		var block: Dictionary = text[locale]
-		var body: String = String(block.get("body", ""))
+		# A BODY MAY BE A VARIANT SET, and this line used to assume it never was.
+		# `String(dict)` has no constructor in Godot 4, so a {by_seam, variants} body threw
+		# "Nonexistent 'String' constructor" and ABORTED _lint_text — which means the dash
+		# ban and the trademark check silently stopped running for exactly the cards that
+		# carry the most text. funding.gate_series_a has been in that hole since variant
+		# bodies landed. _body_strings flattens both shapes, so every arm is checked.
+		var body: String = " ".join(PackedStringArray(_body_strings(block)))
 		for dash in DASH_CHARS:
 			if body.contains(dash):
 				_add(SEVERITY_ERROR, "17.8", where, "[%s] body contains a dash" % locale)
@@ -553,6 +559,19 @@ static func _trees_of(card: Dictionary) -> Array:
 	if typeof(trigger.get("condition", null)) == TYPE_DICTIONARY:
 		out.append(trigger["condition"])
 	return out
+
+
+## Every body string a locale block can carry: the plain one, or every arm of a variant
+## set. A key is returned as its key — the dash and trademark bans are about AUTHORED
+## prose, and a CSV key is checked by the localization gates instead.
+static func _body_strings(block: Dictionary) -> Array:
+	var body: Variant = block.get("body", "")
+	if typeof(body) == TYPE_DICTIONARY:
+		var out: Array = []
+		for v in (body as Dictionary).get("variants", {}).values():
+			out.append(String(v))
+		return out
+	return [String(body)]
 
 
 static func _text_block(card: Dictionary, locale: String) -> Dictionary:

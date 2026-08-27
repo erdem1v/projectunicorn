@@ -49,6 +49,26 @@ const PROFIT_STREAK_MONTHS := 6    # [WORKING] consecutive Artıda month-closes
 const PROFIT_MIN_MARGIN_PCT := 15  # [WORKING] Σnet/Σincome over the window, percent
 const BOOTSTRAP_WIN_MRR := 20_000  # [WORKING] scale floor at the moment the condition is met
 
+# --- The buyout offer (Frank v6 surfaces 17 + 18; parameters 2026-08-27) ---
+# The only company valuation that exists outside a term-sheet sitting. Written as ARR x a
+# multiple because that is how a small software acquisition is actually priced, and because
+# every input is a figure the player has been watching all run.
+const ACQ_BASE_MULTIPLE := 2.5
+# Growth adjustment, keyed on the rolling 3-month MoM average — the SAME read the seed
+# expectation and the Series A term sheet use. One answer to "is this company growing",
+# three consumers; three separate readings would have drifted apart by the second retune.
+const ACQ_GROWTH_CUTS := [0, 5, 12]              # percent, ascending
+const ACQ_GROWTH_ADJ := [0.7, 1.0, 1.2, 1.5]     # under 0 / 0-5 / 5-12 / over 12
+# Brand adjustment: a buyer pays for a name people already know.
+const ACQ_BRAND_CUTS := [30, 50, 70]
+const ACQ_BRAND_ADJ := [0.9, 1.0, 1.1, 1.2]
+const ACQ_M_MIN := 1.5
+const ACQ_M_MAX := 5.0
+# How long the buyer can still turn up after the road closes. Without an upper bound the
+# card condition stays true for the rest of the run and the phone rings on some unrelated
+# day a year later. [ÇALIŞMA]
+const ACQ_CARD_WINDOW_DAYS := 10
+
 # Ending metadata — 7 endings (§4). Only the TONE lives here now; the title and Frank's
 # closing line are END_META_<ID>_TITLE / _FRANK in strings.csv, read through ending_title()
 # and ending_frank_line(). A const cannot hold them: it is evaluated when the file loads,
@@ -98,7 +118,7 @@ static func daily_tick() -> void:
 		return
 	if _check_soft_cap():
 		return
-	_check_acquisition_offer()  # non-terminal; deliberately NOT shutter-gated (§7.5)
+	_tick_acquisition_window()  # one day stamp; the card decides, not this scan (§7.5)
 
 
 # --- Daily trackers (cheap, serializable) ---
@@ -228,8 +248,15 @@ static func profitability_signal() -> Dictionary:
 		"margin_pct": margin, "margin_ok": margin >= PROFIT_MIN_MARGIN_PCT,
 		"mrr_ok": GameState.mrr >= BOOTSTRAP_WIN_MRR,
 		"scandal_ok": not GameState.unmanaged_major_scandal,
+		# THE FIFTH CLAUSE (ch. 13 §1, 2026-08-27). "Profitability alone is not an ending;
+		# refusing the round and staying profitable is." Without it this predicate could win a
+		# run in BOOTSTRAP, to a player who never opened the funding page — the ending read as
+		# an accident rather than as a refusal. Not a phase check: a player who walks into
+		# Series A Hunt and never opens the page would win the same accident one phase later.
+		"faced_ok": GameState.faced_series_a,
 	}
-	d["met"] = bool(d.streak_ok) and bool(d.margin_ok) and bool(d.mrr_ok) and bool(d.scandal_ok)
+	d["met"] = bool(d.streak_ok) and bool(d.margin_ok) and bool(d.mrr_ok) \
+		and bool(d.scandal_ok) and bool(d.faced_ok)
 	return d
 
 
@@ -259,21 +286,103 @@ static func _check_soft_cap() -> bool:
 	return true
 
 
-# --- Acquisition offer (§4.2 — non-terminal; accept is the Class A win) ---
+# --- The buyout offer (Frank v6 surfaces 17 + 18) ---
+#
+# THE BRAND-BAND GENERATOR IS GONE (2026-08-27). What used to sit here was the last stump of
+# the cut acquisition path: phase 3, brand between 30 and 50, at least one rejection, and
+# then nothing but a latch write, because the card it used to raise was deleted with the
+# event engine. It offered on a BAND OF BRAND — a company was bought for being mediocre —
+# and it had no relationship to whether the player had actually finished with Series A.
+# The trigger is a decision now: the founder declined or walked, and there is nothing left
+# to walk to. `acquisition_offer_made` went with it; `acquisition_offer_rejected` did NOT,
+# because vc_pitch_system._sorgu_narrative still asks about a refused sale.
 
-static func _check_acquisition_offer() -> void:
-	if GameState.get_flag("acquisition_offer_made", false):
+## The multiple a buyer would pay: a base, adjusted for growth and brand, clamped.
+static func acquisition_multiple() -> float:
+	var m: float = ACQ_BASE_MULTIPLE
+	m *= float(ACQ_GROWTH_ADJ[_band_index(
+		GameState.get_mom_growth_avg_pct(PitchConstants.ARR_WINDOW_MONTHS), ACQ_GROWTH_CUTS)])
+	m *= float(ACQ_BRAND_ADJ[_band_index(GameState.brand, ACQ_BRAND_CUTS)])
+	return clampf(m, ACQ_M_MIN, ACQ_M_MAX)
+
+
+## What the buyer values the whole company at: ARR x the multiple.
+static func acquisition_valuation() -> int:
+	return int(round(float(GameState.mrr) * 12.0 * acquisition_multiple()))
+
+
+## What lands in the founder's hands. THE SEALED CARD DECIDES THIS MAPPING, not preference:
+## the shipped line reads "At a {valuation} valuation, your share comes to {offer}", so
+## {valuation} is the company and {offer} is the founder's slice of it. Any other pairing
+## makes a sentence that is already in both locales false.
+static func acquisition_founder_share() -> int:
+	var founder_pct: int = maxi(0, 100 - GameState.get_investor_equity_pct())
+	return int(round(float(acquisition_valuation()) * float(founder_pct) / 100.0))
+
+
+## Index of `value` in an ascending cut list: 0 below the first cut, len(cuts) above the last.
+## GROWTH_AVG_UNKNOWN sorts below every cut, which lands an unreadable history on the
+## pessimistic adjustment — the honest default, since a buyer with no growth to read does
+## not pay for one.
+static func _band_index(value: int, cuts: Array) -> int:
+	var i: int = 0
+	while i < cuts.size() and value >= int(cuts[i]):
+		i += 1
+	return i
+
+
+## True when the player FACED the Series A decision by declining or walking, AND there is
+## nothing left to walk to.
+##
+## THE SECOND HALF IS NOT DECORATION. The card's sealed first sentence is "Series A turu
+## kapandı, ortada anlaşma yok". Fired on the first walk with three funds still open, that
+## sentence is simply false — and its refusal option closes the VC road for good, so one
+## walked table would have resolved a run that still had three doors in it.
+##
+## Deliberately NOT reachable from the cascade or the soft cap: those are their own endings,
+## and the ruling names decline-or-walk specifically.
+static func road_over() -> bool:
+	if not GameState.faced_series_a:
+		return false
+	if not (GameState.faced_series_a_by in ["declined", "walked"]):
+		return false
+	if not GameState.active_sheets.is_empty() or not GameState.pending_meeting.is_empty():
+		return false
+	for inv in InvestorRegistry.get_active():
+		var st: Dictionary = GameState.vc_states.get(String(inv.id), {})
+		if bool(st.get("pending_sheet", false)):
+			return false
+		if String(st.get("status", "open")) in ["open", "callback"]:
+			return false
+	return true
+
+
+## Days since the road closed, or -1 while it has not.
+static func acq_days_open() -> int:
+	if GameState.acq_road_over_day < 0:
+		return -1
+	return GameState.day - GameState.acq_road_over_day
+
+
+## One day stamp, and nothing pushed — the card's own condition reads it, the same grammar
+## the phase gates and the seed door use.
+static func _tick_acquisition_window() -> void:
+	if GameState.acq_road_over_day >= 0 or not road_over():
 		return
-	if GameState.phase != 3:
-		return
-	if GameState.brand < 30 or GameState.brand > 50:
-		return  # "struggling but not failing" band
-	if GameState.vc_rejections < 1:
-		return
-	# ENTRY POINT CLOSED (Frank v6): there is no buyout offer card. The "acquisition" ending
-	# is UNTOUCHED and still fires from accept_acquisition; only this door is shut, so the
-	# highlight is withheld too (there is no offer to announce).
-	GameState.set_flag("acquisition_offer_made", true)
+	GameState.acq_road_over_day = GameState.day
+	if OS.is_debug_build():
+		print("[EndingsSystem] Series A road closed by '%s' (day %d) — buyout window open"
+			% [GameState.faced_series_a_by, GameState.day])
+
+
+## "Kendi paramla devam" — the refusal, and BOTH of its consequences.
+##
+## The second one is the beat FRANK_UNWIRED §3 says must survive the wiring: refusing to
+## sell is remembered, and a later VC meeting asks about it. Dropping it silently deletes a
+## question from the game.
+static func on_buyout_declined() -> void:
+	on_pivot_accepted()                                     # the VC road closes; bootstrap continues
+	GameState.set_flag("acquisition_offer_rejected", true)  # the memory thrown back later
 
 
 # --- Single terminal seam (§3, §7.1-7.3) ---

@@ -11,6 +11,19 @@ extends Resource
 # Naming caution (mirrors Prospect/Customer): no field named `name`.
 
 # --- Identity / clock ---
+## Which rung granted this sheet: PitchConstants.STAGE_SEED or STAGE_SERIES_A.
+##
+## THE STAGE LIVES ON THE SHEET, NOT IN A STATIC, and the reason is the seed offer's own rule:
+## it never expires (SeedConstants.NO_EXPIRY_DAY), so the player can walk away and sit down at
+## the table days later. A static set during the meeting is long gone by then, and a table that
+## guessed wrong would paint a `raise` lever over `valuation_m` terms and read $0.
+##
+## An older save has no such field and takes the declared default, which is the correct
+## migration: every sheet that existed before the seed rung was a Series A sheet.
+@export var stage: String = "series_a"
+## Seed only: which conviction band the meeting produced ("strong" / "standard" / "harsh").
+## Empty on a Series A sheet. Drives the offer card's variant body and the funding page's word.
+@export var band: String = ""
 @export var vc_id: String = ""
 @export var granted_day: int = 0          # day the validity window opened (delivery day for a delayed sheet)
 @export var expires_day: int = 0          # granted_day + PitchConstants.SHEET_VALIDITY_DAYS

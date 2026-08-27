@@ -1,0 +1,55 @@
+{
+  "_ported_from": "data/events/unwired/ev_seed_closed.json (Frank v6 surface 12b)",
+  "_port_note": "SEALED TEXT, PORTED FIELD BY FIELD AND NOT ONE WORD CHANGED. Four things had to move for the old object to become a card: `character_id` -> `speaker`; `one_shot: true` -> `latch.one_shot`; `category: reactive` -> `funding`, because reactive has no EvTuning.CATEGORY_QUOTA_7D row and lint warns on one that does not; and the inline TR/EN strings moved into the CSV as SEED_CLOSED_* so loc_csv_integrity covers them. THE FIFTH IS THE ONE THAT MATTERED: the old file's `trigger_conditions: []` means ALWAYS ELIGIBLE, and it is the reason data/events/unwired/ is structurally excluded from the catalogue rather than merely unconditioned. Ported as-is this card would have fired on day 1, before there was a round to confirm.",
+  "id": "funding.seed_closed",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "funding.seed_taken",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "funding.seed_days_since_close",
+        "op": "<=",
+        "value": 1,
+        "reason": "the confirmation of a round that just closed, not a memory of one"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "acknowledged",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "SEED_CLOSED_TITLE",
+      "body": "SEED_CLOSED_BODY",
+      "options": {
+        "ok": "SEED_CLOSED_OK"
+      }
+    },
+    "en": {
+      "title": "SEED_CLOSED_TITLE",
+      "body": "SEED_CLOSED_BODY",
+      "options": {
+        "ok": "SEED_CLOSED_OK"
+      }
+    }
+  }
+}

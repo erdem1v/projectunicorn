@@ -193,15 +193,23 @@ func _series_a_tooltip() -> String:
 		if int(gate["from"]) != 2:
 			continue
 		for cond in gate["conditions"]:
-			# brand_above kesin ">" — oyuncuya "≥ eşik" olarak çevrilir (PhaseGateSystem.GATES
-			# yorumundaki eşik-1 sözleşmesi). Gelir çıtası RAKAMSIZ adlandırılır (yönetmen kararı).
-			match String(cond.type):
-				"mrr_above":
+			# BU BLOK ÖLÜ BİR SÖZLÜK OKUYORDU (düzeltildi 2026-08-27). Kolları `mrr_above` /
+			# `mrr_growth_streak` / `brand_above` idi — olay motoru öncesinin koşul sözlüğü.
+			# GATES yaprakları artık {seam, op, value} taşıyor, yani `cond.type` bir Dictionary'de
+			# OLMAYAN anahtara erişimdir: Finans sekmesi her kurulduğunda _build_appetite_group bu
+			# tooltip'i çağırır ve satır patlardı. Patlamasaydı bile hiçbir kol eşleşmediği için
+			# gereksinim listesi BOŞ kalırdı — yani çıta yükselirken tooltip sessizce yanlış olurdu.
+			# Gelir çıtası RAKAMSIZ adlandırılır (yönetmen kararı): seam adı eşleşir, değeri değil.
+			match String(cond.get("seam", "")):
+				"finance.mrr":
 					reqs.append(tr("FIN_REQ_MRR_BAR"))
-				"mrr_growth_streak":
-					reqs.append(tr("FIN_REQ_GROWTH").format({"n": int(cond.value)}))
-				"brand_above":
-					reqs.append(tr("FIN_REQ_BRAND").format({"n": int(cond.value) + 1}))
+				"finance.growth_streak_months":
+					reqs.append(tr("FIN_REQ_GROWTH").format({"n": int(cond.get("value", 0))}))
+				"finance.brand":
+					# `+ 1` ARTIK YOK: eski `brand_above 24` yaprağı "> 24" demekti, oyuncuya "≥ 25"
+					# diye çevrilmesi için bir eklemek doğruydu. Canlı yaprak zaten `>= 25`; eklemek
+					# ekranda 26 yazdırırdı.
+					reqs.append(tr("FIN_REQ_BRAND").format({"n": int(cond.get("value", 0))}))
 	return tr("FIN_REQ_OPENS").format({"reqs": " · ".join(reqs)})
 
 
@@ -642,6 +650,11 @@ func _refresh_captable() -> void:
 	# katlıyordu. Dilimler yine tek ColorRect — ayrılan okuma, çizim değil.
 	if GameState.run_angel_equity_pct > 0:
 		parts.append(tr("ANGEL_CAP_ROW").format({"pct": GameState.run_angel_equity_pct}))
+	# Its own row, because it is its own round. get_investor_equity_pct already folds the
+	# seed into the total, so leaving this out would show the founder's share falling by
+	# twelve to eighteen points with nothing on screen accounting for it.
+	if GameState.run_seed_equity_pct > 0:
+		parts.append(tr("SEED_CAP_ROW").format({"pct": GameState.run_seed_equity_pct}))
 	if GameState.run_equity_pct > 0:
 		parts.append(tr("FIN_CAPTABLE_INVESTORS").format(
 			{"pct": Fmt.percent(GameState.run_equity_pct, 0)}))

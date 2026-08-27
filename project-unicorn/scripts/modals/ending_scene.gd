@@ -30,6 +30,8 @@ const LOCK_ICON := "res://assets/icons/lock.svg"
 var _paper_host: MarginContainer      # dark-gutter host for the paper panel
 var _rail_host: Control               # host for the rail panel
 var _paper_panel: PanelContainer      # the cream page (PNG-crop target — rail excluded)
+var _paper_col: VBoxContainer         # the page plus the Frank strip beneath it
+var _frank_strip: Control             # the mentor verdict — OUTSIDE the paper, by design
 var _toast: Label                     # share-confirmation line (hidden until GAZETEYİ PAYLAŞ)
 var _open_folder_btn: Button          # reveals with the toast — opens the save folder
 
@@ -92,6 +94,20 @@ func _build_skeleton() -> void:
 	_paper_host.add_theme_constant_override("margin_bottom", 36)
 	row.add_child(_paper_host)
 
+	# THE STRIP LIVES BESIDE THE PAGE, NOT ON IT, and the arrangement is the ruling.
+	# Ch. 13 §2 puts Frank's closing line on its own strip OUTSIDE the newspaper, because
+	# the paper bans mentor attribution — EndingsCopy's own editorial rules say quotes
+	# are attributed to the crowd and never to one person. Seven translated verdict lines
+	# have shipped invisible since they were written; this is the surface they were
+	# waiting for.
+	#
+	# It is also outside the SHARED IMAGE for free: _export_paper_png crops
+	# _paper_panel.get_global_rect(), and the strip is a sibling of that panel rather
+	# than a child. The player shares a newspaper; the mentor's verdict was for them.
+	_paper_col = VBoxContainer.new()
+	_paper_col.add_theme_constant_override("separation", 14)
+	_paper_host.add_child(_paper_col)
+
 	# Right ~30%: the dark rail fills full height.
 	_rail_host = Control.new()
 	_rail_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -101,12 +117,15 @@ func _build_skeleton() -> void:
 
 
 func _fill(vs: Dictionary) -> void:
-	for c in _paper_host.get_children():
-		c.queue_free()
 	for c in _rail_host.get_children():
 		c.queue_free()
+	for c in _paper_col.get_children():
+		c.queue_free()
 	_paper_panel = _build_paper(vs)
-	_paper_host.add_child(_paper_panel)
+	_paper_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_paper_col.add_child(_paper_panel)
+	_frank_strip = _build_frank_strip()
+	_paper_col.add_child(_frank_strip)
 	var rail := _build_rail(vs)
 	rail.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_rail_host.add_child(rail)
@@ -168,6 +187,32 @@ func _build_paper(vs: Dictionary) -> PanelContainer:
 		col.add_child(_build_prose_columns(vs))
 
 	return panel
+
+
+## Frank's closing line, on the dark gutter under the page.
+##
+## It reads the payload, not the view state: EndingsCopy composes the PAPER and has no
+## business carrying a line the paper is forbidden to print. `frank_line` has been in
+## `ending_data` since the endings system was written (END_META_<ID>_FRANK), read by
+## nothing but two unknown-id fallbacks.
+##
+## UI/STYLE LAW: this scene owns LAYOUT only. QuoteSerifCream is the cream serif quote
+## on a dark ground the cinematic register already uses, and DialogueTag is its
+## attribution — so the strip adds no theme surface, and THEME_STAMP does not move.
+func _build_frank_strip() -> Control:
+	var line: String = String(_data.get("frank_line", ""))
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 4)
+	if line == "":
+		col.visible = false
+		return col
+	var quote := UiFactory.make_label(line, &"QuoteSerifCream")
+	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(quote)
+	var tag := UiFactory.make_label(
+		tr("ENDING_FRANK_TAG").format({"name": tr("MENTOR_NAME")}), &"DialogueTag")
+	col.add_child(tag)
+	return col
 
 
 func _rule(thickness: int) -> Control:
@@ -310,12 +355,18 @@ func _build_rail(vs: Dictionary) -> PanelContainer:
 	var header := UiFactory.make_label(tr("ENDING_NEXT"), &"ZoneLabel")
 	col.add_child(header)
 
+	# THE TWO NAMED MILESTONES (ch. 01 §3 · ch. 13 §2), replacing two generic tier cards.
+	# "TİER 2 · ORTA ÖLÇEK" told the player which BUILD they were waiting for; these tell
+	# them what their own company reaches next, which is the strongest Coming-Soon this
+	# game has. Both are truthful to the RELEASE SCOPE table: Series B is a MILESTONE the
+	# run continues past — never an ending — and IPO opens in the full version.
+	# Telegraph only: _build_tier_card renders a panel, never a button.
 	col.add_child(_build_tier_card(
-		tr("ENDING_CARD_EA_TAG"), tr("ENDING_CARD_EA_TITLE"),
-		tr("ENDING_BADGE_EA"), tr("ENDING_CARD_EA_BODY")))
+		tr("ENDING_CARD_SERIESB_TAG"), tr("ENDING_CARD_SERIESB_TITLE"),
+		tr("ENDING_BADGE_EA"), tr("ENDING_CARD_SERIESB_BODY")))
 	col.add_child(_build_tier_card(
-		tr("ENDING_CARD_FULL_TAG"), tr("ENDING_CARD_FULL_TITLE"),
-		tr("LOCK_FULL"), tr("ENDING_CARD_FULL_BODY")))
+		tr("ENDING_CARD_IPO_TAG"), tr("ENDING_CARD_IPO_TITLE"),
+		tr("LOCK_FULL"), tr("ENDING_CARD_IPO_BODY")))
 
 	# WISHLIST'E EKLE — always visible; inert while the store URL is empty.
 	var wishlist := Button.new()

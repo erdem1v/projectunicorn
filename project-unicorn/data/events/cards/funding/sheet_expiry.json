@@ -52,17 +52,18 @@
   "text": {
     "tr": {
       "title": "VC_EV_OFFER_EXPIRING_TITLE",
-      "body": "VC_EV_OFFER_EXPIRING_BODY",
+      "body": "{investor} teklifi masada.\n\nFrank: \"Yatırımcılar bekletilmeyi sevmez. {seam:funding.sheet_days_left} gün içinde yanıt vermeliyiz.\"",
       "options": {
         "go_to_funding": "VC_EV_GO_FUNDING"
       }
     },
     "en": {
       "title": "VC_EV_OFFER_EXPIRING_TITLE",
-      "body": "VC_EV_OFFER_EXPIRING_BODY",
+      "body": "{investor}'s offer is on the table.\n\nFrank: \"Investors don't like being kept waiting. We need to give them an answer inside {seam:funding.sheet_days_left} days.\"",
       "options": {
         "go_to_funding": "VC_EV_GO_FUNDING"
       }
     }
-  }
+  },
+  "_copy_fix": "THE BODY MOVED OUT OF THE CSV AND THE PROSE DID NOT CHANGE. As the key VC_EV_OFFER_EXPIRING_BODY it carried {investor} and {days}: the first resolves from the bound scope slot, the second resolves from nothing at all, so the player was reading a literal \"{days}\" inside a Frank line. {seam:} cannot live in the CSV - loc_csv_integrity counts braces against [a-z_]+ tokens and rejects it - so the body is inline here in both locales, exactly as customer/request_complaint.json carries its per-sector line. Only the machine token moved. Audited across every card body in data/events/: this was the only unresolvable token in the content set, and the new smoke case card_body_tokens_resolve now fails the build if a second one appears."
 }

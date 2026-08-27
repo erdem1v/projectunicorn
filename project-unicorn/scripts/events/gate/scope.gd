@@ -293,6 +293,14 @@ static func _select_investor(mode: String, used: Dictionary) -> String:
 			var pm: Dictionary = GameState.pending_meeting
 			var vc: String = String(pm.get("vc_id", ""))
 			return "" if vc == "" or used.has(vc) else vc
+		"seed_lead":
+			# The fund on the seed rung. The SHEET first and the recorded lead second, because
+			# the two are true at different times: before signing only the offer knows whose it
+			# is, and after signing the offer is cleared and GameState.seed_lead is the memory.
+			# One selector covers both, so the offer card and the buyout card bind the same slot.
+			var sheet: TermSheet = GameState.seed_sheet
+			var lead: String = String(sheet.vc_id) if sheet != null else String(GameState.seed_lead)
+			return "" if lead == "" or used.has(lead) else lead
 	return _first_free(_investor_ids(), used)
 
 

@@ -37,7 +37,7 @@ extends Node
 # every point a save can be taken, and there is nothing mid-resolution for a schema to
 # describe. One sitting, one sitting only — it does not survive closing the game.
 
-const SCHEMA_VERSION := 11  # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi · v7: rev 11 — İŞ ataması, seviye, tek deneyim barı, yaz izni · v8: kurucu TEK CETVELE (0–10) · v9: Ürün rev 6.1 — HAT MODELİ (düz özellik listesi öldü) · v10: olay motoru — event_engine bloğu · v11: Satış rev 6 — yıldız, süre, kadran, koltuk fiyatı
+const SCHEMA_VERSION := 12  # v2: ASCII sector ids · v3: prospect needs · v4: skill AREAS · v5: ATAMA alana geçti · v6: on trait sekize indi · v7: rev 11 — İŞ ataması, seviye, tek deneyim barı, yaz izni · v8: kurucu TEK CETVELE (0–10) · v9: Ürün rev 6.1 — HAT MODELİ (düz özellik listesi öldü) · v10: olay motoru — event_engine bloğu · v11: Satış rev 6 — yıldız, süre, kadran, koltuk fiyatı · v12: seed turu — seed_sheet/seed_lead/beklenti + Series A kararının YÜZLEŞİLDİ hafızası
 
 ## GDD ÜRÜN rev 6.1 §22.5 — ÜRÜN VERİSİNİN ŞEKLİ DEĞİŞTİ, ve eski kayıt TAŞINMAZ.
 ## "Eski kayıtlardaki düz özellik listesi hat durumlarına taşınmaz; demo öncesi kayıt
@@ -48,6 +48,10 @@ const SCHEMA_VERSION := 11  # v2: ASCII sector ids · v3: prospect needs · v4: 
 ## durumlarına çevrilemez, çevrilmeye çalışılırsa ürün hatsız ama "shipped" doğar —
 ## çalışıyor görünen ve yanlış olan bir koşu. O yüzden kapı sürümdedir, alanda değil.
 const MIN_LOADABLE_VERSION := 10
+# v12 DOES NOT MOVE THIS, and the reason is the codec's own forward-compat contract: the
+# seed block is seven new GameState vars and two new @export fields on TermSheet, every
+# one with a declared default. A v10 or v11 save simply arrives with no seed round, no
+# expectation clock and faced_series_a false — which is the truth about that run.
 # v10 (2026-08-25, olay motoru): A DELIBERATE BREAK, taken knowingly. Every existing v9 save —
 # including dev and test saves — is refused with SAVE_ERR_TOO_OLD. The alternative was a v9→v10
 # migration, and it cannot produce a correct run: the old block is {queue, active_event_id,

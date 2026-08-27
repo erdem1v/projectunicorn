@@ -70,6 +70,7 @@ const ONE_TIME_LABELS := {
 	"build_commit": "FIN_ONETIME_BUILD",
 	"version_build_commit": "FIN_ONETIME_VERSION",
 	"angel_seed": "ANGEL_TX_LABEL",
+	"seed_round": "SEED_TX_LABEL",
 	"hire": "HR_COST_HIRING",
 	"severance": "HR_COST_SEVERANCE",
 	"training": "HR_COST_TRAINING",

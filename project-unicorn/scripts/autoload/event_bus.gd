@@ -312,6 +312,13 @@ signal offer_countdown_changed(days_left: int)  # min sheet validity ≤ thresho
 signal term_table_requested(vc_id: String)      # Finance>Yatırım "Masaya otur" / deal-prompt → main mounts the table (Spec 6)
 signal sheet_walked(vc_id: String)              # a table walk destroyed a sheet — HuntTab repaints (Spec 6)
 
+# --- Seed round (GDD v2 ch. 09 §3) — the middle rung. One publisher each. ---
+# seed_door_opened is what unlocks Finance > Yatırım in Traction: the sub-page lock used to be
+# a bare `phase < 3` and the seed rung opens the page two phases early.
+signal seed_door_opened()                       # SeedRoundSystem.daily_tick latched the ratchet
+signal seed_sheet_granted(vc_id: String)        # VCPitchSystem._grant_seed_sheet — an offer exists
+signal seed_round_closed(vc_id: String)         # SeedRoundSystem.accept — money in, expectation armed
+
 # --- Save / system-menu signals (SaveManager task) ---
 # Emitted at the very END of TimeManager._dispatch_daily_tick, once all twelve daily
 # slots have settled. NOT a duplicate of day_advanced: that one fires inside

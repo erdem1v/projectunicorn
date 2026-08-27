@@ -28,6 +28,7 @@ var _counter_label: Label
 var _sign_btn: Button
 var _walk_btn: Button
 var _investment_label: Label
+var _derived_label: Label            # seed only: the implied post-money under the money row
 
 var _spinning: bool = false
 var _pending_vs: Dictionary = {}
@@ -146,7 +147,13 @@ func _build_left_column() -> Control:
 	vb.add_child(header)
 
 	_lever_rows.clear()
-	for lever_id in TermSheetTableSystem.LEVERS:
+	# levers(), NOT the LEVERS const: the seed table's first row is a RAISE and this loop
+	# binds a lever id into every row's handlers at build time. Left on the const, a seed
+	# sitting would paint three rows whose buttons say "valuation" while the view state says
+	# "raise" — can_push would answer for a lever that is not on the sheet and _apply_push
+	# would write valuation_m into a seed offer. main.gd opens the system before it
+	# instantiates the scene, so the stage is already settled by the time this runs.
+	for lever_id in TermSheetTableSystem.levers():
 		vb.add_child(_build_lever_row(lever_id))
 
 	return panel
@@ -258,12 +265,29 @@ func _build_footer() -> Control:
 	_walk_btn.pressed.connect(_on_walk_pressed)
 	actions.add_child(_walk_btn)
 
+	# The money and its derived caption stack, so the seed table can say "$120.000 yatırım"
+	# with "ima edilen değerleme $800.000" directly beneath it.
+	var money_col := VBoxContainer.new()
+	money_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	money_col.add_theme_constant_override("separation", 2)
+	actions.add_child(money_col)
 	_investment_label = Label.new()
 	_investment_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_investment_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_investment_label.add_theme_font_size_override("font_size", 24)
 	_investment_label.add_theme_color_override("font_color", UiTokens.CREAM)
-	actions.add_child(_investment_label)
+	money_col.add_child(_investment_label)
+
+	# The seed table's derived readout: raise / dilution, under the money it is derived from.
+	# A LABEL AND NOT A ROW, deliberately — ruling 4 says the implied valuation is shown and
+	# never negotiated, and having no lever row for it is what makes that structural rather
+	# than a guard somebody can forget. DialogueTag is the variation the closed-tables
+	# counter already uses, so this adds no theme surface and no THEME_STAMP bump.
+	_derived_label = Label.new()
+	_derived_label.theme_type_variation = &"DialogueTag"
+	_derived_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_derived_label.visible = false
+	money_col.add_child(_derived_label)
 
 	_sign_btn = Button.new()
 	_sign_btn.theme_type_variation = &"CommitButton"
@@ -326,6 +350,15 @@ func _render(vs: Dictionary) -> void:
 		{"amount": UiTokens.format_money(int(vs.get("money_raised", 0)))})
 	_sign_btn.disabled = (not bool(vs.get("sign_enabled", false))) or _spinning
 	_walk_btn.disabled = (not bool(vs.get("walk_enabled", false))) or _spinning
+	# LOCKED-VISIBLE, the Frank-cheque grammar: the row stays on screen at half alpha and its
+	# tooltip names the real shortfall, rather than the button quietly disappearing.
+	var lock: Dictionary = vs.get("walk_lock", {})
+	var locked: bool = bool(lock.get("locked", false))
+	_walk_btn.modulate.a = 0.5 if locked else 1.0
+	_walk_btn.tooltip_text = tr(String(lock.get("reason_key", ""))) if locked else ""
+	var caption: String = String(vs.get("derived_caption", ""))
+	_derived_label.text = caption
+	_derived_label.visible = caption != ""
 
 
 func _render_pips(p: Dictionary) -> void:

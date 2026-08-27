@@ -26,6 +26,9 @@ var slogan: String = ""               # Optional free text — may be empty
 var founder_name: String = ""         # Player's name; "" means the founder Character defaults to "Founder"
 var founder_portrait: String = ""     # Portrait id (e.g. "founder_03"); art via FounderConstants.portrait_path()
 var run_seed: int = 0  # 0 = unseeded; TECH_SPEC §10.4 seeds this when run starts
+# ^ THE RNG SEED. Not the funding round: that is run_seed_amount / run_seed_equity_pct /
+# seed_lead, further down. Two unrelated meanings, one word; a whole-token grep tells them
+# apart and a quick scan does not.
 
 # --- Phase 1 — Bootstrap defaults ---
 var cash: int = FounderConstants.STARTING_CASH
@@ -353,6 +356,45 @@ var prep: Dictionary = {}              # {vc_id, focus, done} — one prep per s
 var run_pitches: int = 0               # run-cumulative: completed meetings (newspaper seam)
 var run_sheets_won: int = 0            # run-cumulative: sheets granted (distinct from run_pushes_*)
 
+# --- Seed round (GDD v2 ch. 09 §3) — DELIBERATELY OUTSIDE the Series A block above.
+# The middle rung of the ladder: savings → Frank's cheque → SEED → Series A. Owner is
+# SeedRoundSystem; nothing else writes these. All reset in initialize_run.
+#
+# THE OFFER IS NOT IN active_sheets, AND THAT IS THE POINT. Eight readers walk that array and
+# four of them would have been silently wrong: TermSheet.is_leverage_active would hand every
+# Series A table a free notch and every Series A meeting +15 conviction; MAX_SHEETS would count
+# it against the two-sheet cap; get_run_ledger's `unsigned_sheets` would let the soft-cap paper
+# claim a Series A offer was left on the table; and EndingsSystem._check_vc_cascade would defer
+# the cascade forever, because this sheet never expires. One field makes all four
+# unrepresentable.
+var seed_door_open_day: int = -1       # ratchet, -1 = the door never opened this run
+var seed_pitch_used: bool = false      # the run's ONE seed meeting has been spent
+var seed_sheet: TermSheet = null       # the unsigned seed offer; no expiry (ruling 6)
+var seed_lead: String = ""             # vc_id that led the round; "" = no seed taken
+var seed_closed_day: int = -1          # signing day — the growth expectation's clock origin
+# The angel-slice pattern, one rung up, and for exactly the same reason spelled out at
+# run_angel_amount: VCPitchSystem._persist_signed_terms writes run_equity_pct and
+# run_investment_amount by PLAIN ASSIGNMENT at Series A signing. Folding the seed into those
+# fields would let one signature erase 12-18% of the cap table and six figures of raised
+# capital. Readers compose the totals through get_investor_equity_pct / get_total_raised —
+# never by summing the raw fields at the call site.
+#
+# NAMING NOTE: `run_seed` (line 28) is the RNG SEED and has nothing to do with these. Three
+# unrelated meanings of "seed" now live in this codebase — the RNG one, conviction seeding
+# (renamed CONV_* in this wave), and the funding round. A whole-token grep separates them; a
+# careless eye does not.
+var run_seed_amount: int = 0           # dollars the seed round put in
+var run_seed_equity_pct: int = 0       # the seed investor's slice, percent
+
+# --- The Series A decision, and whether it was FACED (GDD v2 ch. 13 §1) ---
+# "Profitability alone is not an ending; refusing the round and staying profitable is."
+# EndingsSystem.profitability_signal reads the flag as its fifth clause, and the buyout card
+# reads the REASON, because only a decline or a walk brings a buyer to the phone — sitting on
+# an open door for a month is a different story with a different ending.
+var faced_series_a: bool = false
+var faced_series_a_by: String = ""     # "declined" | "walked" | "door_open"
+var acq_road_over_day: int = -1        # day the Series A road closed; the buyout window's origin
+
 # --- HR Core state (same "fields not systems" rule as the VC block above; all reset in
 # initialize_run). The owning system writes each one; nothing else touches them. ---
 var hr_search: Dictionary = {}          # HRSearchSystem: {state, role, band, seed, started_day, arrival_day, files}
@@ -596,6 +638,35 @@ func get_mrr_growth_streak(min_pct: int) -> int:
 	return streak
 
 
+## Sentinel for get_mom_growth_avg_pct: fewer closed months than the window asks for.
+## Sorts below every calibration cut on purpose, so a caller that forgets to test it lands on
+## the pessimistic branch rather than the flattering one.
+const GROWTH_AVG_UNKNOWN := -9999
+
+
+## Mean month-over-month MRR growth, in percent, over the last `months` closes.
+##
+## AN AVERAGE, NOT A STREAK, and the distinction is the whole reason this exists beside
+## get_mrr_growth_streak. A streak asks "how many months in a row cleared the bar" and breaks
+## on the first flat one; an average asks "how did the quarter go" and forgives it. Three
+## rulings want the second question — the seed round's growth expectation, the Series A term
+## sheet's ARR multiple, and the buyout multiple's growth adjustment — so it is written once.
+##
+## Needs `months` + 1 closes by construction: n deltas need n+1 samples. A zero or negative
+## previous close contributes 0 rather than an infinity.
+func get_mom_growth_avg_pct(months: int) -> int:
+	if months <= 0 or month_history.size() < months + 1:
+		return GROWTH_AVG_UNKNOWN
+	var total: float = 0.0
+	var first: int = month_history.size() - months
+	for i in range(first, month_history.size()):
+		var prev: int = int(month_history[i - 1].get("mrr_close", 0))
+		var cur: int = int(month_history[i].get("mrr_close", 0))
+		if prev > 0:
+			total += float(cur - prev) * 100.0 / float(prev)
+	return int(round(total / float(months)))
+
+
 ## Consecutive "Artıda" closes, newest backwards: net > 0 AND the treasury never sampled
 ## below zero inside the month (red_days == 0).
 func get_profitable_month_streak() -> int:
@@ -641,15 +712,17 @@ func _founder_start_area(stats: Dictionary) -> String:
 
 
 func get_investor_equity_pct() -> int:
-	# THE cap-table denominator: angel + signed Series A. Recompute-on-demand (the
+	# THE cap-table denominator: angel + seed + signed Series A. Recompute-on-demand (the
 	# get_runway_months / get_founder_equity pattern) so a future round is one summand
-	# here and zero edits at the read sites.
-	return run_angel_equity_pct + run_equity_pct
+	# here and zero edits at the read sites. The seed rung collected on that promise in
+	# 2026-08-27: adding it was this one line and the one below, and the Finance cap-table
+	# bar, the two cap rows, FIN_CAPTABLE_RAISED and the ending ledger all moved with them.
+	return run_angel_equity_pct + run_seed_equity_pct + run_equity_pct
 
 
 func get_total_raised() -> int:
 	# Every dollar raised this run, across rounds. Same reasoning as above.
-	return run_angel_amount + run_investment_amount
+	return run_angel_amount + run_seed_amount + run_investment_amount
 
 
 func record_angel_round(equity_pct: int, amount: int) -> void:
@@ -660,6 +733,35 @@ func record_angel_round(equity_pct: int, amount: int) -> void:
 	run_angel_equity_pct = equity_pct
 	run_angel_amount = amount
 	EventBus.equity_changed.emit(get_investor_equity_pct())
+
+
+func record_seed_round(equity_pct: int, amount: int, vc_id: String) -> void:
+	# The single write seam for the seed slice — record_angel_round one rung up, and it
+	# emits for the same reason: the cap-table bar must not depend on a cash movement
+	# happening to accompany the equity change.
+	#
+	# THE LEAD IS RECORDED HERE, WITH THE MONEY, not on the sheet and not in vc_states. It
+	# outlives both: the sheet is cleared on signing, and vc_states carries REACHABILITY
+	# ("open", "rejected") rather than history. Two later surfaces read it — the Series A
+	# warmth bonus and the buyout card, which cannot even name its caller without it.
+	run_seed_equity_pct = equity_pct
+	run_seed_amount = amount
+	seed_lead = vc_id
+	EventBus.equity_changed.emit(get_investor_equity_pct())
+
+
+## Record that the Series A decision was FACED, and by which route (ch. 13 §1).
+##
+## UPGRADE-ONLY. A player can leave the door open for a month (door_open) and later walk a
+## table (walked); the stronger reason must win, because the buyout card reads this field to
+## decide whether a buyer has any reason to call. Overwriting in the other direction would
+## quietly disqualify a player who did the thing the card is about.
+func mark_faced_series_a(reason: String) -> void:
+	const RANK := {"": 0, "door_open": 1, "declined": 2, "walked": 2}
+	if int(RANK.get(reason, 0)) <= int(RANK.get(faced_series_a_by, 0)) and faced_series_a:
+		return
+	faced_series_a = true
+	faced_series_a_by = reason
 
 
 
@@ -728,6 +830,16 @@ func get_run_ledger() -> Dictionary:
 		"peak_mrr": run_peak_mrr,
 		"brand": brand,
 		"reputation": reputation,
+		# WHICH GAME THIS WAS. Every population figure below means something different per
+		# market, and the paper used to print the B2B one on a consumer run: customers_active
+		# counts registry records, and B2C keeps exactly ONE aggregate record, so a successful
+		# consumer run announced "1 MÜŞTERİ". customers_signed is worse — its only writer is the
+		# B2B signing path, so it reads 0 forever and six conditional prose lines silently
+		# vanished from every B2C ending. Ch. 13 §2: a consumer run reports AUDIENCE and PAYING
+		# USERS, never an account count.
+		"market": String(get_flag("mvp_market_type", "b2c")),
+		"audience": int(round(SalesSystem.b2c_audience())),
+		"paying_users": SalesSystem.b2c_paying_users(),
 		# customers (B2B discrete sign/churn; B2C is aggregate)
 		"customers_active": CustomerRegistry.get_active().size(),
 		"customers_signed": run_customers_signed,
@@ -764,6 +876,14 @@ func get_run_ledger() -> Dictionary:
 		# the angel round, and the run-wide totals the cap table actually owes
 		"angel_amount": run_angel_amount,
 		"angel_equity_pct": run_angel_equity_pct,
+		# the seed rung — its own pair, for the same reason the angel has its own pair
+		"seed_lead": seed_lead,
+		"seed_amount": run_seed_amount,
+		"seed_equity_pct": run_seed_equity_pct,
+		"seed_expectation": SeedRoundSystem.expectation_state(),
+		# the Series A decision, and whether the player ever faced it (ch. 13 §1)
+		"faced_series_a": faced_series_a,
+		"faced_series_a_by": faced_series_a_by,
 		"investor_equity_pct": get_investor_equity_pct(),
 		"total_raised": get_total_raised(),
 		# scandals (reserved — read 0 today)
@@ -878,6 +998,18 @@ func initialize_run(payload: Dictionary) -> void:
 	prep.clear()
 	run_pitches = 0
 	run_sheets_won = 0
+
+	# Seed round (ch. 09 §3) + the faced-Series-A memory (ch. 13 §1).
+	seed_door_open_day = -1
+	seed_pitch_used = false
+	seed_sheet = null
+	seed_lead = ""
+	seed_closed_day = -1
+	run_seed_amount = 0
+	run_seed_equity_pct = 0
+	faced_series_a = false
+	faced_series_a_by = ""
+	acq_road_over_day = -1
 
 	# HR Core state. Dicts via .clear() in case a system cached the reference (same
 	# reasoning as the VC block). NOTE: HRSystem.reset() deliberately does NOT run here —

@@ -45,9 +45,19 @@
         "value": false
       },
       {
-        "seam": "phase.series_a_signal",
-        "op": "!=",
-        "value": "open"
+        "any": [
+          {
+            "seam": "phase.series_a_signal",
+            "op": "!=",
+            "value": "open"
+          },
+          {
+            "seam": "phase.current",
+            "op": "==",
+            "value": 2,
+            "reason": "an OPEN but UNENTERED gate still needs the warning"
+          }
+        ]
       }
     ]
   },
@@ -85,5 +95,6 @@
       "expire_unanswered": "The Sector Telegraph's annual file sat on your desk unread."
     }
   },
-  "_port_note": " REMOVED FROM THE ARC'S STEP LIST AND MADE ITS OPENER. It starts the arc on EITHER branch — read, or expired unread — because the sector moving on is not conditional on the founder reading about it. A stray `advance_arc` ran BEFORE `start_arc` on the read option — a no-op against an arc that did not exist yet, and if it had run after, it would have skipped the ladder's first rung. The opener starts the arc and nothing else; the arc raises its own steps."
+  "_port_note": " REMOVED FROM THE ARC'S STEP LIST AND MADE ITS OPENER. It starts the arc on EITHER branch — read, or expired unread — because the sector moving on is not conditional on the founder reading about it. A stray `advance_arc` ran BEFORE `start_arc` on the read option — a no-op against an arc that did not exist yet, and if it had run after, it would have skipped the ladder's first rung. The opener starts the arc and nothing else; the arc raises its own steps.",
+  "_hole_fix": "THE OPEN-GATE HOLE (closed 2026-08-27). This leaf used to be a bare phase.series_a_signal != \"open\", which reads as \"do not nag a company whose door is open\". True for a company that WALKS THROUGH the door - and false for one that leaves it standing open. That run kept phase 2, kept the signal at \"open\", never started the arc, and reached the soft cap with no warning: the precise case running_on_fumes is named for. Phase 3 means the door was entered, so the original silence still holds there."
 }

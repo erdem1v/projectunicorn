@@ -408,3 +408,33 @@ weight and not a defect — they are the vocabulary the writing round inherits, 
 job is to have them ready before anyone needs them. What would be a defect is the reverse: a
 card reading a name nothing registers, and `event_i7_modifier_needs_seam` plus the linter's
 condition walk both check for that in every card, in both directions.
+
+## Yatırım — the seed rung and the buyout offer (added 2026-08-27)
+
+The middle rung of the ladder (GDD v2 ch. 09 §3) and the merged buyout card (Frank v6
+surfaces 17 + 18). Owner: `SeedRoundSystem` / `EndingsSystem`; code form in
+`scripts/events/seams/seams_ported.gd`.
+
+| Seam | Type | Reads | Status |
+|---|---|---|---|
+| `funding.seed_door_open` | BOOL | the Traction door is latched and unspent | **VAR** |
+| `funding.seed_taken` | BOOL | a seed round was signed this run | **VAR** |
+| `funding.seed_offer_live` | BOOL | an unsigned seed offer is on the table (it never expires) | **VAR** |
+| `funding.seed_pitch_used` | BOOL | the run's one seed meeting has been spent | **VAR** |
+| `funding.seed_band` | INT | 0 harsh · 1 standard · 2 strong — an INDEX, for `by_seam` bodies | **VAR** |
+| `funding.seed_expectation` | INT | 0 none · 1 grace · 2 on track · 3 durgun | **VAR** |
+| `funding.seed_days_since_close` | INT | −1 until the round closes | **VAR** |
+| `funding.acq_road_over` | BOOL | faced Series A by a decline or a walk, and no table is left | **VAR** |
+| `funding.acq_days_open` | INT | −1 until the road closes; the buyout window's origin | **VAR** |
+| `funding.acq_valuation` | STRING | the buyer's price for the whole company (ARR × multiple), formatted | **VAR** |
+| `funding.acq_offer` | STRING | the founder's slice of that price | **VAR** |
+
+**Two of these are STRING on purpose.** `funding.acq_valuation` and `funding.acq_offer` are
+read from card prose through `{seam:}`, and `EvPresenter._interpolate` calls `str()` on
+whatever comes back — an INT would put `1440000` inside a sentence about a valuation.
+Formatting at READ time is not "localized text in state": nothing is stored, and `Fmt`
+resolves the money mark per locale.
+
+**Two are INT for the opposite reason.** `funding.seed_band` and `funding.seed_expectation`
+drive `by_seam` variant bodies, and `EvPresenter._resolve_variant` runs the value through
+`int()`. A String id there collapses to 0 and every card renders its lowest arm forever.

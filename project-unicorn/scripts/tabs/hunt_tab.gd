@@ -20,6 +20,11 @@ const C_SUB := UiTokens.INK_DIM
 var _signals: Array = []
 var _frank_line: String = ""   # set in _ready from HUNT_FRANK_LINE (tr() needs the node ready)
 var _advisory_active: bool = false   # a phone note has taken the strip over (see _on_advisory)
+# The seed strip. BUILT IN CODE and inserted above the columns rather than added to
+# HuntTab.tscn: everything else on this page is already programmatic, a scene edit would
+# put player-visible text into a .tscn (which loc_residue then has to whitelist), and the
+# strip is entirely conditional — it is absent for most of a run.
+var _seed_strip: VBoxContainer = null
 
 
 func _ready() -> void:
@@ -34,11 +39,25 @@ func _ready() -> void:
 		EventBus.sheet_granted, EventBus.sheet_expired, EventBus.callback_ready,
 		EventBus.meeting_day, EventBus.day_advanced, EventBus.mrr_changed,
 		EventBus.pitch_finished, EventBus.sheet_walked,
+	EventBus.seed_door_opened, EventBus.seed_sheet_granted, EventBus.seed_round_closed,
+	# phase_changed too: the seed door SHUTS on entering the Series A Hunt, and the
+	# Series A roster stops being telegraphed-locked on the same tick.
+	EventBus.phase_changed,
 	]
 	for sig in _signals:
 		sig.connect(_on_changed)
 	EventBus.mentor_advisory_changed.connect(_on_advisory)
+	_build_seed_strip()
 	_refresh()
+
+
+func _build_seed_strip() -> void:
+	var layout: Node = $Margin/Layout
+	_seed_strip = VBoxContainer.new()
+	_seed_strip.add_theme_constant_override("separation", 4)
+	layout.add_child(_seed_strip)
+	# Directly under the title bar and its rule, above the two columns.
+	layout.move_child(_seed_strip, 2)
 
 
 func _exit_tree() -> void:
@@ -64,10 +83,114 @@ func _refresh() -> void:
 	if not _advisory_active:
 		_frank_line = tr("HUNT_FRANK_LINE").format({"n": GameState.vc_rejections})
 	_frank.text = _frank_line
+	_refresh_seed()
 	_refresh_roster()
 	_refresh_offers()
 	_refresh_pending()
 	_refresh_counter()
+
+
+# --- Seed rung (GDD v2 ch. 09 §3) ---
+
+## Four exclusive arms, newest state first: the round is closed, an offer is waiting, the
+## one meeting is spent, or the door is open. Anything else and the strip is not there.
+func _refresh_seed() -> void:
+	for c in _seed_strip.get_children():
+		c.queue_free()
+	_seed_strip.visible = false
+	if not SeedRoundSystem.page_unlocked():
+		return
+	_seed_strip.visible = true
+	_seed_strip.add_child(_label(tr("SEED_SECTION_TITLE"), C_INK, 14))
+
+	if GameState.seed_lead != "":
+		_seed_strip.add_child(_label(tr("SEED_DONE_LINE").format({
+			"investor": _vc_name(GameState.seed_lead),
+			"amount": Fmt.money_exact(GameState.run_seed_amount),
+			"equity": Fmt.percent(GameState.run_seed_equity_pct, 0)}), C_DIM, 12))
+		_seed_strip.add_child(_label(tr("SEED_EXPECT_LABEL"), C_SUB, 11))
+		_seed_strip.add_child(_seed_expectation_line())
+		return
+
+	if GameState.seed_sheet != null:
+		var sheet: TermSheet = GameState.seed_sheet
+		_seed_strip.add_child(_label(tr("SEED_OFFER_LINE").format(
+			{"investor": _vc_name(String(sheet.vc_id))}), C_INK, 12))
+		_seed_strip.add_child(_label(tr("SEED_OFFER_TERMS").format(
+			{"band": tr("SEED_BAND_" + String(sheet.band).to_upper())}), C_SUB, 11))
+		var sit := Button.new()
+		sit.text = tr("SEED_SIT_DOWN")
+		sit.pressed.connect(_open_table.bind(String(sheet.vc_id)))
+		# NO WALK BUTTON, and not by omission: refusing the round is ZOR MOD, so the row
+		# that refuses it lives at the TABLE where it can be rendered locked with its
+		# reason. A second refusal path here would be an unlocked door beside a locked one.
+		_seed_strip.add_child(sit)
+		return
+
+	if GameState.seed_pitch_used:
+		_seed_strip.add_child(_label(tr("SEED_PITCH_SPENT_LINE").format(
+			{"investor": _vc_name(GameState.seed_lead)}), C_SUB, 11, true))
+		return
+
+	if not SeedRoundSystem.door_open():
+		return
+	_seed_strip.add_child(_label(tr("SEED_DOOR_LINE"), C_DIM, 11, true))
+	_seed_strip.add_child(_label(tr("SEED_DOOR_HINT"), C_SUB, 11, true))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	for inv in InvestorRegistry.get_active():
+		var vc_id: String = String(inv.get("id", ""))
+		var b := Button.new()
+		b.text = String(inv.get("display_name", ""))
+		# The blocked reason, when there is one, on the surface that would otherwise offer a
+		# button that quietly does nothing (no fake choices).
+		var blocked: String = SeedRoundSystem.pitch_blocked_reason(vc_id)
+		b.disabled = blocked != ""
+		b.tooltip_text = tr(blocked) if blocked != "" else tr("SEED_PITCH_BUTTON")
+		# CONFIRMED, because it cannot be taken back: one seed pitch per run, and the
+		# fund chosen here is the fund. Same grammar as walking a table.
+		b.pressed.connect(_confirm_seed_pitch.bind(vc_id))
+		row.add_child(b)
+	_seed_strip.add_child(row)
+
+
+## The growth expectation, in one line (ruling 7). The threshold IS rendered here, unlike
+## the door bar: the door is an appetite the player infers, but 10 % a month is a promise
+## an investor made out loud, and a promise nobody states is not one.
+func _seed_expectation_line() -> Label:
+	var e: Dictionary = SeedRoundSystem.expectation()
+	var state: int = int(e.get("state", 0))
+	var avg: int = int(e.get("avg_pct", 0))
+	var need: String = Fmt.percent(int(e.get("need_pct", 0)), 0)
+	match state:
+		SeedConstants.EXPECT_GRACE:
+			return _label(tr("SEED_EXPECT_GRACE").format(
+				{"days": int(e.get("grace_days_left", 0))}), C_SUB, 11, true)
+		SeedConstants.EXPECT_ON_TRACK:
+			return _label(tr("SEED_EXPECT_ON_TRACK").format(
+				{"avg": Fmt.percent(avg, 0), "need": need}), UiTokens.positive(), 11, true)
+		SeedConstants.EXPECT_STALLED:
+			return _label(tr("SEED_EXPECT_STALLED").format(
+				{"avg": Fmt.percent(avg, 0), "need": need}), UiTokens.negative(), 11, true)
+	return _label(tr("SEED_EXPECT_UNKNOWN"), C_SUB, 11, true)
+
+
+func _confirm_seed_pitch(vc_id: String) -> void:
+	var reason: String = SeedRoundSystem.pitch_blocked_reason(vc_id)
+	if reason != "":
+		return
+	EventBus.confirm_requested.emit({
+		"title": tr("SEED_PITCH_CONFIRM_TITLE"),
+		"body": tr("SEED_PITCH_CONFIRM_BODY").format({"investor": _vc_name(vc_id)}),
+		"confirm_text": tr("SEED_PITCH_CONFIRM_OK"),
+		"cancel_text": tr("UI_DISMISS"),
+		"on_confirm": Callable(self, "_begin_seed_pitch").bind(vc_id),
+	})
+
+
+func _begin_seed_pitch(vc_id: String) -> void:
+	SeedRoundSystem.begin_pitch(vc_id)
+	_refresh()
 
 
 # --- Roster ---
@@ -127,6 +250,11 @@ func _build_roster_card(inv: Dictionary, pivoted: bool) -> Control:
 func _build_roster_actions(vc_id: String) -> Control:
 	var st: Dictionary = GameState.vc_states.get(vc_id, {})
 	var status: String = String(st.get("status", "open"))
+	# TELEGRAPHED, NOT BLANK (ruling 11). Before the seed rung this page was unreachable
+	# below phase 3, so the roster never had to say why it was inert. It is reachable in
+	# Traction now, and a row of four funds with no button and no sentence reads as a bug.
+	if GameState.phase < 3:
+		return _label(tr("FIN_SUBTAB_LOCKED"), C_SUB, 11)
 	if status in ["rejected", "expired", "walked", "signed", "offered", "pending_sheet"]:
 		return null  # closed, or the offer lives in Teklifler — no roster action
 
@@ -166,11 +294,16 @@ func _prep_row(vc_id: String) -> Control:
 		return _label(tr("HUNT_PREP_REASON").format({"reason": reason}), C_SUB, 11)
 	var box := HBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
-	for f in [["rakamlar", "Rakamlar"], ["hikaye", "Hikâye"], ["prova", "Prova"]]:
+	# Üç kimlik, üç kelime — ve kelimeler CSV'den gelir. Buradaki liste bir zamanlar
+	# ["rakamlar", "Rakamlar"] gibi çiftler taşıyordu: kimlik ve GÖMÜLÜ TÜRKÇE etiket yan
+	# yana. Aynı dosyanın altında zaten _focus_label() vardı ve aynı üç kimliği doğru
+	# çeviriyordu; yani İngilizce derlemede bu üç düğme Türkçe yazıyor, iki satır aşağıdaki
+	# "Bekleyen" satırı aynı kimliği İngilizce yazıyordu. Tek kaynak: _focus_label.
+	for focus_id in ["rakamlar", "hikaye", "prova"]:
 		var b := Button.new()
-		b.text = f[1]
+		b.text = _focus_label(focus_id)
 		b.pressed.connect(func() -> void:
-			VCPitchSystem.start_prep(vc_id, f[0])
+			VCPitchSystem.start_prep(vc_id, focus_id)
 			_refresh())
 		box.add_child(b)
 	return box

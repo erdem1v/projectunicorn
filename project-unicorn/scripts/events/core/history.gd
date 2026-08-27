@@ -144,7 +144,18 @@ static func chose_about(event_id: String, slot: String, entity_id: String) -> bo
 static func telegraph_fired(reference: String) -> bool:
 	if reference == "":
 		return false
-	if EvFlags.has(reference) or EvFlags.has_stamp(reference):
+	# THE "flag:" PREFIX IS LINT'S VOCABULARY, AND IT WAS NEVER IMPLEMENTED HERE.
+	# lint.gd §17.4 accepts a telegraph that is either a card id or a name beginning
+	# "flag:", and warns on anything else. A card that obeyed that spelling would then be
+	# REFUSED at runtime, because this function handed the whole string — prefix included
+	# — to EvFlags.has. So the only constructions that worked were the ones lint warns
+	# about. Stripping the prefix makes the documented form the working form.
+	#
+	# Why a card cannot simply cite itself: EvHistory.record runs AFTER the option's
+	# effects (engine.gd), so at the moment a terminal effect is permitted its own fire
+	# count is still zero. A flag set earlier in the same effect list is true by then.
+	var name: String = reference.trim_prefix("flag:")
+	if EvFlags.has(name) or EvFlags.has_stamp(name):
 		return true
 	return fire_count(reference) > 0
 

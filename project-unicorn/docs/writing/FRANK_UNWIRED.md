@@ -40,7 +40,21 @@ applies to whatever key is touched, so they clear when this surface is rewritten
 
 ---
 
-## 2 · Surface 12b · Seed kapandı — text complete, no round to close
+## 2 · Surface 12b · Seed kapandı — **WIRED 2026-08-27**
+
+The round exists. `data/events/unwired/ev_seed_closed.json` was ported field by field into
+`data/events/cards/funding/seed_closed.json` and the unwired copy retired; the four sealed
+strings moved into the CSV as `SEED_CLOSED_TITLE` / `_BODY` / `_OK` and are byte-exact
+(asserted, not asserted-in-a-comment: the applier read them out of the JSON rather than
+retyping them). Five fields had to change shape — `character_id`→`speaker`,
+`one_shot`→`latch.one_shot`, `category: reactive`→`funding`, inline text→CSV keys — and one
+mattered: **`"trigger_conditions": []` means ALWAYS ELIGIBLE**, which is why `unwired/` is
+excluded structurally rather than merely left unconditioned. Ported as written, this card
+would have fired on day 1, before there was a round to confirm. It now waits on
+`funding.seed_taken` and `funding.seed_days_since_close <= 1`.
+
+### The original entry, for the record
+
 
 **Where the text lives.** `data/events/unwired/ev_seed_closed.json` — `title` / `title_en`,
 `body_text` / `body_text_en`, and its single option's `label` / `label_en`. Complete and final.
@@ -62,7 +76,26 @@ cheque. One file moved, one enqueue site.
 
 ---
 
-## 3 · Surfaces 17 + 18 · Satın alma teklifi — one card, no trigger
+## 3 · Surfaces 17 + 18 · Satın alma teklifi — **WIRED 2026-08-27**
+
+All four blockers are answered. **The trigger** is `funding.acq_road_over`: the founder faced
+the Series A decision by a decline or a walk AND nothing is left to walk to — the second half
+is what keeps the sealed first sentence ("Series A turu kapandı, ortada anlaşma yok") true,
+and stops one walked table from resolving a run with three funds still on the board. **The
+valuation** is `EndingsSystem.acquisition_valuation()` — ARR × a multiple adjusted for growth
+and brand, clamped — with the founder's share as `{offer}`, which is the only mapping under
+which the shipped sentence is true. **`{investor}`** resolves through a new `seed_lead` scope
+selector, so the caller is the fund that led the seed; with no seed round the card does not
+fire, because there is nobody to make the call. **"Sat" is labelled**: `trigger_ending` now
+has a `_describe_modifier` row (`EFFECT_RUN_ENDS`), and `decline_buyout` has its own
+(`EFFECT_VC_ROAD_CLOSES`) — the smoke case `event_chip_coverage` fails the build otherwise.
+
+The detail this file said not to lose is kept: **"Kendi paramla devam" carries both**
+`on_pivot_accepted()` and `acquisition_offer_rejected`, behind one atomic verb, and
+`buyout_needs_the_road_over` asserts both after resolving that option.
+
+### The original entry, for the record
+
 
 Pivot and acquisition were two cards asking one question. The document merged them into a single
 moment: the Series A round closes with no deal, the investor who led the **seed** round brings a
@@ -192,7 +225,23 @@ the Funding page moves with it.
 
 ---
 
-## 7 · The soft cap has no telegraph
+## 7 · The soft cap has no telegraph — **CLOSED**
+
+A three-rung ladder was built during the event-engine rebuild and this file predates it:
+`world.final_stretch_press` (day ≥ 640, a paper) → `world.final_stretch_comment` (day ≥ 700)
+→ `world.final_stretch_verdict` (day ≥ 729, Frank, the D-1 beat ch. 13 §1 asks for), tied
+together by `arc_final_stretch` and all three stamping `soft_cap_telegraphed`. It is
+sheet-independent, so it reaches a player with no offer — the case the ending is named for.
+
+**One hole remained, and was closed 2026-08-27.** The opener also required
+`phase.series_a_signal != "open"`, which reads as "do not nag a company whose door is open".
+True of a company that walks THROUGH the door; false of one that leaves it standing open —
+that run kept phase 2, never started the arc, and still reached day 730 in silence. The leaf
+is now an `any` that also admits phase 2. Measured in a played run
+(`--run-log=full_run:730:sim`): press, comment and verdict each fire once.
+
+### The original entry, for the record
+
 
 **What happened.** Surface 15's card used to be a calendar warning on the eve of the soft cap
 (and, before that, on day 179 of the retired 180-day wall). The document moved it onto a

@@ -1405,7 +1405,7 @@ VC_B1_MONO_WHY,Odayı oku: {reasons},Read the room: {reasons}
 VC_B1_CHOICE,Odayı oku — karşındakini tart.,Read the room — take their measure.
 VC_APPROACH_PERCEPTION,Algı,Perception
 VC_BEAT2_LABEL,Anlatı · 2/4,Narrative · 2/4
-VC_B2_LINE,"""Tamam. Anlat bakalım — neden sen, neden şimdi?""","""All right. Tell me — why you, why now?"""
+VC_B2_LINE,"""Rakamları gördüm. Şimdi anlatın: bu gelirin devam etmesini sağlayan ne?""","""I have seen the numbers. Now tell me what keeps this revenue coming."""
 VC_B2_MONO,Açı seç. Yanlış açı beni sıkar.,Pick an angle. The wrong one bores me.
 VC_B2_METRIC,Metrik: rakamlar konuşsun.,Metrics: let the numbers talk.
 VC_B2_VISION,Vizyon: nereye gittiğimizi göster.,Vision: show them where this goes.
@@ -1641,7 +1641,7 @@ FIN_CAPTABLE_RAISED,Toplanan · {amount},Raised · {amount}
 FIN_CAPTABLE_EQUITY_NOTE,{n} çalışanın hissesi var,{n} employees hold equity
 TERM_BOARD_SEAT_ONE,{n} koltuk,{n} seat
 FIN_SUBTAB_SUMMARY,Özet,Summary
-FIN_SUBTAB_INVESTMENT,Yatırım,Investment
+FIN_SUBTAB_INVESTMENT,Yatırım,Funding
 FIN_SUBTAB_LOCKED,Series A Hunt'ta açılır,Opens in the Series A Hunt
 DIALOGUE_YOUR_ANSWER,YANITIN:,YOUR ANSWER:
 DIALOGUE_PICK_ONE,Bir seçenek seç,Pick an option
@@ -2021,7 +2021,7 @@ END_META_SERIES_A_CLOSE_FRANK,İmzaladın. Şimdi asıl iş başlıyor — ama o
 END_META_ACQUISITION_TITLE,Şirket Satıldı,The Company Was Sold
 END_META_ACQUISITION_FRANK,Sattın. Kazanmak değil; kaybetmek de değil. Çoğu kurucu bunu bile göremez.,You sold. Not winning; not losing either. Most founders never even get this far.
 END_META_BANKRUPTCY_TITLE,Kepenk İndi,The Shutters Came Down
-END_META_BANKRUPTCY_FRANK,Yedi gün kırmızıda kaldın. Rakamlar kaba değildir — sadece sabırlıdır.,You stayed in the red for seven days. Numbers are not cruel — only patient.
+END_META_BANKRUPTCY_FRANK,Otuz gün kırmızıda kaldın. Rakamlar kaba değildir — sadece sabırlıdır.,You stayed in the red for thirty days. Numbers are not cruel — only patient.
 END_META_BRAND_COLLAPSE_TITLE,Marka Çöktü,The Brand Collapsed
 END_META_BRAND_COLLAPSE_FRANK,Skandalı sen yönetmedin; o seni yönetti.,You did not manage the scandal; it managed you.
 END_META_VC_REJECTION_CASCADE_TITLE,"Üç Masa, Üç Ret","Three Tables, Three Rejections"
@@ -2668,3 +2668,154 @@ SALES_WEEKLY_TOTAL,Toplam: {n} anlaşma · {mrr}/ay,Total: {n} deals · {mrr}/mo
 HR_FOUNDER_STATE_CARE,PH: Müşterilerle ilgileniyor,PH: Looking after customers
 PROD_DESK_FOUNDER_PASSIVE,Kimse atanmadı; sen ilgileniyorsun.,Nobody is assigned; you are looking after it.
 PROD_DESK_FOUNDER_BUSY,Meşgulsün: {what}. Masaya bakan kimse yok.,You are busy: {what}. Nobody is watching the desk.
+SEED_SECTION_TITLE,Seed turu,Seed round
+SEED_DOOR_LINE,"Gelir bir tura yetecek kadar düzenli. Dört fondan biriyle oturabilirsin; bir tur, bir fon.","Revenue is steady enough to carry a round. You can sit down with one of the four funds: one round, one fund."
+SEED_DOOR_HINT,Masaya oturmadan önce seçtiğin fon değişmez.,"Once you sit down, the fund you chose is the fund you have."
+SEED_PITCH_BUTTON,Bu fonla görüş,Meet this fund
+SEED_PITCH_CONFIRM_TITLE,Turu bu fonla açmak,Opening the round with this fund
+SEED_PITCH_CONFIRM_BODY,{investor} ile oturacaksın. Bu turda ikinci bir görüşme yok; diğer üç fon Series A'ya kalır.,"You will sit down with {investor}. There is no second meeting this round, and the other three funds keep until Series A."
+SEED_PITCH_CONFIRM_OK,Otur,Sit down
+SEED_BLOCK_TAKEN,Tur kapandı; para hesapta.,The round is closed and the money is in.
+SEED_BLOCK_SPENT,Bu turdaki tek görüşmeni kullandın.,You have used this round's one meeting.
+SEED_BLOCK_CLOSED,Gelir henüz bir turu taşımıyor.,Revenue is not carrying a round yet.
+SEED_BLOCK_BUSY,Önce masadaki işi bitir.,Finish what is on the table first.
+SEED_PITCH_SPENT_LINE,{investor} ile görüştün. Bu turun görüşmesi buydu.,You met {investor}. That was this round's meeting.
+SEED_OFFER_LINE,{investor} bir teklif bıraktı.,{investor} left an offer.
+SEED_OFFER_TERMS,{band} koşullar · süresiz,"{band} terms, no deadline"
+SEED_SIT_DOWN,MASAYA OTUR,SIT DOWN
+SEED_BAND_STRONG,Açık,Open-handed
+SEED_BAND_STANDARD,Ölçülü,Measured
+SEED_BAND_HARSH,Sıkı,Tight
+SEED_DONE_LINE,{investor} · {amount} · {equity} hisse,{investor} · {amount} · {equity} of the company
+SEED_EXPECT_LABEL,Büyüme beklentisi,Growth expectation
+SEED_EXPECT_GRACE,İlk aylar sayılmıyor. {days} gün sonra üç aylık ortalamana bakılacak.,The first months do not count. Your three-month average starts being read in {days} days.
+SEED_EXPECT_ON_TRACK,Üç aylık ortalama {avg}; beklenen {need}.,"Three-month average {avg}, against the {need} expected."
+SEED_EXPECT_STALLED,Durgun. Üç aylık ortalama {avg}; beklenen {need}.,"Stalled. Three-month average {avg}, against the {need} expected."
+SEED_EXPECT_UNKNOWN,Ortalama için yeterli kapanmış ay yok.,Not enough closed months to read an average yet.
+SEED_LEVER_RAISE,Yatırım,Investment
+SEED_IMPLIED_POST,ima edilen değerleme {post},implied valuation {post}
+SEED_WALK_LOCK,Turu geri çevirmek zor modda açılır.,Turning the round down unlocks in hard mode.
+SEED_FRANK_OPENING,"""Teklif duruyor, kaçmıyor. Ama pazarlık ettiğin her şeyin bir bedeli var: sabırları.""","""The offer is not going anywhere. But everything you negotiate for costs the same thing: their patience."""
+SEED_FRANK_NEXT_MOVE,"""Bir hamlen daha var.""","""You have another move."""
+SEED_FRANK_LAST_MOVE,"""Son sabırları. Dikkat.""","""That is the last of their patience."""
+SEED_FRANK_WON,"""{lever} bizde.""","""We got {lever}."""
+SEED_FRANK_RESISTED,"""Direniyorlar: {lever}.""","""They are holding on {lever}."""
+SEED_FRANK_FINAL,"""Pazarlık bitti. Masadaki rakam bu, ve bu turu imzalıyoruz.""","""The negotiation is over. That is the number, and we are signing this round."""
+SEED_DOOR_TITLE,Kapı aralandı,The door is open
+SEED_DOOR_BODY,"Frank arıyor.
+
+""Gelirin artık bir turu taşıyor. Dört fon var, hepsini tanıyorum, ve hepsi seni farklı bir şeyle tartar. Birini seç, ben ayarlarım.""
+
+""Bu para büyümek için. Aldığın gün bir söz vermiş olacaksın.""","Frank calls.
+
+""Your revenue carries a round now. There are four funds, I know all of them, and every one of them weighs you on something different. Pick one and I will set it up.""
+
+""This money is for growing. The day you take it, you have made a promise."""
+SEED_DOOR_GO,Yatırım'a git,Go to Funding
+SEED_OFFER_TITLE,Teklif masada,The offer is on the table
+SEED_OFFER_BODY_STRONG,"{investor} teklifi gönderdi ve rakamlar açık.
+
+Frank: ""Odayı kazanmışsın. Bu koşullarla oturursan pazarlık edecek çok şeyin bile olmayabilir.""","{investor} sent the sheet, and the numbers are open-handed.
+
+Frank: ""You won the room. Sit down with terms like these and you may not have much left to argue about."""
+SEED_OFFER_BODY_STANDARD,"{investor} teklifi gönderdi.
+
+Frank: ""Standart bir tur. Ne cömert ne kırıcı. Masada birkaç hamlen var.""","{investor} sent the sheet.
+
+Frank: ""A standard round. Neither generous nor unkind. You have a few moves at the table."""
+SEED_OFFER_BODY_HARSH,"{investor} teklifi gönderdi ve koşullar sıkı.
+
+Frank: ""Oda soğuktu, teklif de öyle. Yine de bu bir teklif. Masada elimizden geleni yaparız.""","{investor} sent the sheet, and the terms are tight.
+
+Frank: ""The room was cold and so is the offer. It is still an offer. We do what we can at the table."""
+SEED_OFFER_SIT,Masaya otur,Sit down at the table
+SEED_OFFER_LATER,Sonra,Later
+SEED_CLOSED_TITLE,Para hesapta,The money's in
+SEED_CLOSED_BODY,"Bu turu başarıyla atlattık. Para hesapta.
+
+Frank'ten mesaj.
+
+""Tamam, bunu cebe koyduk. Bu para dursun diye gelmedi, büyüyeceğiz. Series A masasına oturduğumuzda elimiz daha güçlü olmalı.""","You got through the round. The money is in the account.
+
+A message from Frank.
+
+""Good, money in the bank. It didn't come in to sit there, we grow with it. By the time we sit down for Series A we need to be in a stronger position."""
+SEED_CLOSED_OK,Tamam,All right
+SEED_STALL_TITLE,Çeyrek raporu,The quarterly note
+SEED_STALL_BODY,"{investor} tarafından bir mail: son üç ayın özeti, tek sayfa, yorumsuz.
+
+Büyüme satırının yanına bir şey yazılmamış. Yazılmamış olması da bir şey.","A mail from {investor}: the last three months on one page, without comment.
+
+Nothing is written beside the growth line. That it is blank is itself something."
+SEED_STALL_READ,Kenara koy,Set it aside
+SEED_STALL_EXPIRE,Çeyrek raporu açılmadan kaldı.,The quarterly note stayed unopened.
+SEED_TX_LABEL,Seed turu,Seed round
+SEED_MONTH_HIGHLIGHT,Seed turu kapandı,The seed round closed
+SEED_CAP_ROW,Seed · %{pct},Seed · {pct}%
+VC_WHY_SEED_LEAD,Turu onlar açtı,They led your round
+ENDING_FRANK_TAG,{name} · MENTOR,{name} · MENTOR
+ENDING_CARD_SERIESB_TAG,KİLOMETRE TAŞI · SERIES B,MILESTONE · SERIES B
+ENDING_CARD_SERIESB_TITLE,Series B,Series B
+ENDING_CARD_SERIESB_BODY,"Series A oyunu bitirmez. İkinci tur para, prestij ve daha yüksek bir çıta getirir; koşu devam eder.","Series A does not end the game. The second round brings money, standing and a higher bar, and the run carries on."
+ENDING_CARD_IPO_TAG,KİLOMETRE TAŞI · HALKA ARZ,MILESTONE · IPO
+ENDING_CARD_IPO_TITLE,Halka arz,IPO
+ENDING_CARD_IPO_BODY,"Değerleme eşiği geçildiğinde kapı görünür olur. Ardındaki oyun başka bir oyundur: regülasyon, kamu gözü, devlerle aynı pazar.","Cross the valuation threshold and the door becomes visible. What is behind it is a different game: regulation, public scrutiny, the same market as the giants."
+END_STAT_AUDIENCE,KİTLE,AUDIENCE
+END_STAT_PAYING,ÖDEYEN,PAYING
+END_SA_AUDIENCE,Turun kapandığı gün ürünü {n} kişi ödeyerek kullanıyordu.,"On the day the round closed, {n} people were paying to use the product."
+END_SA_AUDIENCE_ONE,Turun kapandığı gün ürünü {n} kişi ödeyerek kullanıyordu.,"On the day the round closed, {n} person was paying to use the product."
+END_ACQ_AUDIENCE,Devredilen kullanıcı tabanında {n} ödeyen hesap vardı.,The user base that changed hands held {n} paying accounts.
+END_ACQ_AUDIENCE_ONE,Devredilen kullanıcı tabanında {n} ödeyen hesap vardı.,The user base that changed hands held {n} paying account.
+END_BK_AUDIENCE,Kapanış günü ürünü ödeyerek kullanan {n} kişi vardı.,On the closing day {n} people were still paying for the product.
+END_BK_AUDIENCE_ONE,Kapanış günü ürünü ödeyerek kullanan {n} kişi vardı.,On the closing day {n} person was still paying for the product.
+END_VC_AUDIENCE,Ürünü ödeyerek kullanan {n} kişi vardı; yatırımcıya yetmedi.,{n} people were paying for the product. It was not enough for the room.
+END_VC_AUDIENCE_ONE,Ürünü ödeyerek kullanan {n} kişi vardı; yatırımcıya yetmedi.,{n} person was paying for the product. It was not enough for the room.
+END_BS_AUDIENCE,Ödeyen {n} kullanıcıyla defter dengede tutuldu.,The books were held level on {n} paying users.
+END_BS_AUDIENCE_ONE,Ödeyen {n} kullanıcıyla defter dengede tutuldu.,The books were held level on {n} paying user.
+END_RF_AUDIENCE,"Geride ödeyen {n} kullanıcı kaldı; hikâye kapanmadı, gündemden düştü.","It leaves {n} paying users behind. The story did not close, it dropped off the agenda."
+END_RF_AUDIENCE_ONE,"Geride ödeyen {n} kullanıcı kaldı; hikâye kapanmadı, gündemden düştü.","It leaves {n} paying user behind. The story did not close, it dropped off the agenda."
+END_RF_SEED_TAKEN,Bir tur para alınmıştı; büyüme sözü tutuldu ama kapı yine de açılmadı.,"A round had been raised, and the growth promised with it came. The door still did not open."
+END_RF_SEED_STALLED,Bir tur para alınmıştı; ardından gelen aylar sözü tutmadı.,A round had been raised. The months that followed did not keep its promise.
+END_STAT_SALE_PRICE,SATIŞ BEDELİ,SALE PRICE
+END_ACQ_PRICE,Devir {valuation} değerleme üzerinden konuşuldu.,The handover was agreed at a valuation of {valuation}.
+EFFECT_RUN_ENDS,Koşu biter,The run ends
+EFFECT_VC_ROAD_CLOSES,VC yolu kapanır,The VC road closes
+EFFECT_SEED_TABLE,Masaya oturursun,You sit down at the table
+VC_Q_REPEATABLE,"""Bu defterin çoğunu siz kapatmışsınız. Siz odada olmadığınızda da kapanıyor mu?""","""You closed most of this book yourself. Does it close when you are not in the room?"""
+VC_Q_REPEATABLE_MONO,Defteri kimin kapattığını soracak.,They will ask who closed the book.
+SEED_B1_LINE,"""{investor}. Geç oturun, kahve söylemeyeceğim; yarım saatimiz var. Sizi anlatın.""","""{investor}. Sit down, I will not order coffee; we have half an hour. Tell me about you."""
+SEED_B1_MONO,Odayı oku.,Read the room.
+SEED_B1_MONO_WHY,Odayı oku: {reasons},Read the room: {reasons}
+SEED_B2_LINE,"""Neden siz, neden şimdi? Bu iki soruya verdiğiniz cevap turun tamamı.""","""Why you, and why now? Your answer to those two questions is the whole round."""
+SEED_B2_MONO,Açı seç. Bu odada hikâye rakamdan ağır basar.,Pick an angle. In this room the story outweighs the number.
+SEED_B2_METRIC,Metrik: ödeyen ilk kullanıcıları göster.,Metric: show the first users who paid.
+SEED_B2_VISION,Vizyon: bunun nereye kadar gittiğini anlat.,Vision: say how far this goes.
+SEED_B2_TRACTION,Traction: son üç ayın eğrisini koy.,Traction: put the last three months on the table.
+SEED_Q_FIRST_CUSTOMERS,"""İlk ödeyen müşterileriniz sizi nasıl buldu?""","""How did your first paying customers find you?"""
+SEED_Q_FIRST_CUSTOMERS_MONO,"Dağıtımı soracak, rakamı değil.","They will ask about distribution, not the number."
+SEED_Q_TEAM_WINS,"""Bu işi yapmaya çalışan başka ekipler de var. Neden bu ekip kazansın?""","""Other teams are trying to build this. Why does this one win?"""
+SEED_Q_TEAM_WINS_MONO,"Ekibi soracak. Kişi sayısını değil, neden bu kişiler olduğunu.","They will ask about the team: not how many, but why these people."
+SEED_Q_INSIGHT,"""Bu fikir nereden geldi? Bildiğiniz ve başkalarının bilmediği şey ne?""","""Where did this come from? What do you know that the others do not?"""
+SEED_Q_INSIGHT_MONO,İçgörünün kaynağını soracak.,They will ask where the insight comes from.
+SEED_Q_HOW_BIG,"""Diyelim ki her şey yolunda gitti. Bu ne kadar büyür?""","""Say everything goes right. How big does this get?"""
+SEED_Q_HOW_BIG_MONO,Tavanı soracak. Küçük bir cevap turu bitirir.,They will ask about the ceiling. A small answer ends the round.
+SEED_Q_CLEAN,"""Sormak istediğim bir şey kalmadı, ki bu nadirdir. Devam edin.""","""I have nothing left to ask, which is rare. Go on."""
+SEED_Q_CLEAN_MONO,Temiz alan. Nefes al.,Clean ground. Breathe.
+SEED_B4_LINE_STRONG,"""Bu turu ben açacağım. Kâğıdı bugün gönderiyorum ve rakamlar açık olacak.""","""I will lead this round. The sheet goes out today, and the numbers will be open-handed."""
+SEED_B4_MONO_STRONG,Odayı kazandın.,You won the room.
+SEED_B4_LINE_STANDARD,"""Girerim. Rakamlar standart olacak; anlatı beni ikna etti, geri kalanı henüz erken.""","""I am in. The numbers will be standard: the story convinced me, the rest is still early."""
+SEED_B4_MONO_STANDARD,Girdi. Koşullar ortalama.,They are in. The terms are ordinary.
+SEED_B4_LINE_HARSH,"""Girerim, ama ucuza. Bu aşamada aldığım risk fiyata yansır; kâğıtta göreceksiniz.""","""I am in, but cheaply. The risk I am taking at this stage shows up in the price, and you will see it on the sheet."""
+SEED_B4_MONO_HARSH,Girdi. Ama fiyatını söyledi.,They are in. And they named the price.
+SEED_B4_ACK,Kâğıdı bekliyorum.,I will wait for the sheet.
+SEED_RES_STRONG,"""Kâğıt yolda. İyi bir tur olacak.""","""The sheet is on its way. This will be a good round."""
+SEED_RES_STANDARD,"""Kâğıt yolda. Masada konuşuruz.""","""The sheet is on its way. We will talk at the table."""
+SEED_RES_HARSH,"""Kâğıt yolda. Beğenmeyebilirsiniz.""","""The sheet is on its way. You may not like it."""
+VC_WHY_FOUNDER_STRONG,Kurucu ikna ediyor,The founder convinces
+VC_WHY_FOUNDER_WEAK,Kurucu henüz taşımıyor,The founder does not carry it yet
+VC_WHY_SHIPPED,Ortada çalışan bir ürün var,There is a working product
+SEED_STALL_VERDICT,"İki yıl oldu. Bir tur para aldık, büyüyeceğimizi söyledik, büyümedik.
+
+Yarın bunu bir daha konuşmayacağız.","Two years. We took a round, we said we would grow, and we did not.
+
+Tomorrow we do not talk about this again."

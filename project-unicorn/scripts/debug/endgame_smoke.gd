@@ -419,6 +419,30 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		# --- rev 6.1 · router devri (2026-08-25). İkisi de ÖNCEKİ ağaca karşı DÜŞER.
 		"type_screen_matches_line_content": fail = _case_type_screen_matches_line_content()
 		"line_build_writes_subgenre":     fail = _case_line_build_writes_subgenre()
+		# --- Funding ladder + phase/endings wave (2026-08-27) ---
+		"seed_door_traction_only":               fail = _case_seed_door_traction_only()
+		"seed_door_below_bar":                   fail = _case_seed_door_below_bar()
+		"seed_door_number_never_rendered":       fail = _case_seed_door_number_never_rendered()
+		"seed_pitch_never_rejects":              fail = _case_seed_pitch_never_rejects()
+		"seed_bands_map_to_terms":               fail = _case_seed_bands_map_to_terms()
+		"seed_sheet_never_in_active_sheets":     fail = _case_seed_sheet_never_in_active_sheets()
+		"seed_table_walk_is_locked":             fail = _case_seed_table_walk_is_locked()
+		"seed_sign_is_not_terminal":             fail = _case_seed_sign_is_not_terminal()
+		"seed_survives_series_a_sign":           fail = _case_seed_survives_series_a_sign()
+		"seed_expectation_grace_then_stall":     fail = _case_seed_expectation_grace_then_stall()
+		"seed_lead_warmth_at_series_a":          fail = _case_seed_lead_warmth_at_series_a()
+		"seed_stage_does_not_leak":              fail = _case_seed_stage_does_not_leak()
+		"series_a_sheet_derives_from_arr":       fail = _case_series_a_sheet_derives_from_arr()
+		"bootstrap_needs_the_faced_flag":        fail = _case_bootstrap_needs_the_faced_flag()
+		"faced_flag_upgrades_only":              fail = _case_faced_flag_upgrades_only()
+		"buyout_needs_the_road_over":            fail = _case_buyout_needs_the_road_over()
+		"buyout_inert_without_the_flag":         fail = _case_buyout_inert_without_the_flag()
+		"buyout_numbers_make_the_sentence_true": fail = _case_buyout_numbers_make_the_sentence_true()
+		"b2c_ending_reports_audience":           fail = _case_b2c_ending_reports_audience()
+		"frank_line_renders_outside_the_paper":  fail = _case_frank_line_renders_outside_the_paper()
+		"bankruptcy_frank_line_says_thirty":     fail = _case_bankruptcy_frank_line_says_thirty()
+		"card_body_tokens_resolve":              fail = _case_card_body_tokens_resolve()
+		"seed_sheet_round_trips":                fail = _case_seed_sheet_round_trips()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -570,7 +594,7 @@ static func _seed_b2b(mrr: int) -> void:
 
 
 ## "Healthy Series A MRR" for the VC fixtures (Calibration Round A §3): the revenue bar moved
-## 5,000 → the $40-80K band and VCPitchSystem's conviction seeding reads SEED_MRR_REFERENCE =
+## 5,000 → the $40-80K band and VCPitchSystem's conviction seeding reads CONV_MRR_REFERENCE =
 ## the bar, so a fixture hard-pinned at 6,000 would read as a WEAK company. Bar + 1,000.
 ## A LIVE, HEALTHY B2B PRODUCT for the sitting cases — line tiers, not the legacy `mvp_*`
 ## flags. Ürün rev 6.1 assembles the axis readings from the LINE LADDER (product_state.gd:238),
@@ -1590,10 +1614,10 @@ static func _case_callback_contract() -> String:
 		return "callback not met after condition satisfied"
 	if not st.get("reentry_bonus", false):
 		return "reentry_bonus not armed"
-	var seed_with: int = int(VCPitchSystem.seed_conviction("meridian").value)
+	var seed_with: int = int(VCPitchSystem.initial_conviction("meridian").value)
 	st["reentry_bonus"] = false
-	var seed_without: int = int(VCPitchSystem.seed_conviction("meridian").value)
-	if seed_with - seed_without != PitchConstants.SEED_CALLBACK_BONUS:
+	var seed_without: int = int(VCPitchSystem.initial_conviction("meridian").value)
+	if seed_with - seed_without != PitchConstants.CONV_CALLBACK_BONUS:
 		return "re-entry bonus wrong (%d vs %d)" % [seed_with, seed_without]
 	return ""
 
@@ -1726,6 +1750,19 @@ static func _grant(vc: String) -> void:
 	GameState.active_sheets.append(VCPitchSystem._make_sheet(vc, GameState.day))
 
 
+## The opening valuation the LIVE formula produces for a fund, in millions. The three table
+## cases below used to hard-code Anchor's frozen 18; the sheet is priced from ARR now, so
+## the expectation has to come from the same place the game gets it.
+static func _derived_open_val(vc_id: String) -> int:
+	var sheet: TermSheet = VCPitchSystem._make_sheet(vc_id, GameState.day)
+	return int(sheet.opening_terms.get("valuation_m", 0))
+
+
+static func _derived_open_dil(vc_id: String) -> int:
+	var sheet: TermSheet = VCPitchSystem._make_sheet(vc_id, GameState.day)
+	return int(sheet.opening_terms.get("dilution_pct", 0))
+
+
 static func _case_table_sign_closes_series_a() -> String:
 	GameState.set_phase(3)
 	_force("pass")
@@ -1734,20 +1771,22 @@ static func _case_table_sign_closes_series_a() -> String:
 	EventBus.run_ended.connect(func(_id: String, d: Dictionary) -> void: captured.append(d))
 	TermSheetTableSystem.open("anchor")
 	TermSheetTableSystem.select_lever("valuation")
-	TermSheetTableSystem.push()  # valuation 18 → 22
+	var want_val: int = _derived_open_val("anchor") + PitchConstants.VAL_STEP
+	var want_dil: int = _derived_open_dil("anchor")
+	TermSheetTableSystem.push()  # one successful push on the valuation
 	TermSheetTableSystem.sign()
 	if _endings != ["series_a_close"]:
 		return "endings: %s" % str(_endings)
 	if captured.is_empty():
 		return "no ending data captured"
 	var d: Dictionary = captured[0]
-	if int(d.get("valuation_m", 0)) != 22:
-		return "valuation_m=%s (want 22)" % str(d.get("valuation_m"))
-	if int(d.get("dilution_pct", 0)) != 22:
-		return "dilution_pct=%s (want 22)" % str(d.get("dilution_pct"))
+	if int(d.get("valuation_m", 0)) != want_val:
+		return "valuation_m=%s (want %d)" % [str(d.get("valuation_m")), want_val]
+	if int(d.get("dilution_pct", 0)) != want_dil:
+		return "dilution_pct=%s (want %d)" % [str(d.get("dilution_pct")), want_dil]
 	if int(d.get("board_seats", -1)) != 1 or not bool(d.get("board_veto", false)):
 		return "board terms: seats=%s veto=%s" % [str(d.get("board_seats")), str(d.get("board_veto"))]
-	if int(d.get("money_raised", 0)) != int(round(22 * 1_000_000.0 * 22 / 100.0)):
+	if int(d.get("money_raised", 0)) != int(round(want_val * 1_000_000.0 * want_dil / 100.0)):
 		return "money_raised=%s" % str(d.get("money_raised"))
 	return ""
 
@@ -1828,7 +1867,8 @@ static func _case_leverage_bonus_applies_and_shows() -> String:
 	var vs: Dictionary = TermSheetTableSystem.view_state()
 	if not bool(vs.leverage.active):
 		return "leverage not active with 2 sheets"
-	var base_val: int = int(InvestorRegistry.get_investor("anchor").get("opening_terms", {}).get("valuation_m", 0))
+	# The base is what the formula opens at, not what the registry used to freeze.
+	var base_val: int = _derived_open_val("anchor")
 	var cur: String = String(vs.levers[0].current_text)
 	var lev_val: int = int(cur.trim_prefix("$").trim_suffix("M"))
 	if lev_val != base_val + PitchConstants.LEVERAGE_OPEN_NOTCH:
@@ -1851,7 +1891,7 @@ static func _case_no_leverage_no_box() -> String:
 	if String(vs.leverage.box_text) != "":
 		return "leverage box text present with a single sheet"
 	var cur: String = String(vs.levers[0].current_text)
-	if int(cur.trim_prefix("$").trim_suffix("M")) != 18:
+	if int(cur.trim_prefix("$").trim_suffix("M")) != _derived_open_val("anchor"):
 		return "single-sheet opening notched (%s)" % cur
 	return ""
 
@@ -1861,19 +1901,23 @@ static func _case_investment_figure_tracks_terms() -> String:
 	_force("pass")
 	_grant("anchor")
 	TermSheetTableSystem.open("anchor")
+	var v0: int = _derived_open_val("anchor")
+	var d0: int = _derived_open_dil("anchor")
 	var m0: int = TermSheetTableSystem.money_raised()
-	if m0 != int(round(18 * 1_000_000.0 * 22 / 100.0)):
-		return "m0=%d" % m0
+	if m0 != int(round(v0 * 1_000_000.0 * d0 / 100.0)):
+		return "m0=%d (want %d)" % [m0, int(round(v0 * 1_000_000.0 * d0 / 100.0))]
 	TermSheetTableSystem.select_lever("valuation")
-	TermSheetTableSystem.push()  # val 22
+	TermSheetTableSystem.push()
 	var m1: int = TermSheetTableSystem.money_raised()
-	if m1 <= m0 or m1 != int(round(22 * 1_000_000.0 * 22 / 100.0)):
-		return "m1=%d (want > m0 and 22×22%%)" % m1
+	var v1: int = v0 + PitchConstants.VAL_STEP
+	if m1 <= m0 or m1 != int(round(v1 * 1_000_000.0 * d0 / 100.0)):
+		return "m1=%d (want > m0 and %dM at %d%%)" % [m1, v1, d0]
 	TermSheetTableSystem.select_lever("dilution")
-	TermSheetTableSystem.push()  # dil 18
+	TermSheetTableSystem.push()
 	var m2: int = TermSheetTableSystem.money_raised()
-	if m2 >= m1 or m2 != int(round(22 * 1_000_000.0 * 18 / 100.0)):
-		return "m2=%d (want < m1 and 22×18%%)" % m2
+	var d1: int = maxi(d0 - PitchConstants.DIL_STEP, PitchConstants.DIL_FLOOR)
+	if m2 >= m1 or m2 != int(round(v1 * 1_000_000.0 * d1 / 100.0)):
+		return "m2=%d (want < m1 and %dM at %d%%)" % [m2, v1, d1]
 	return ""
 
 
@@ -1982,13 +2026,13 @@ static func _case_meeting_during_kepenk() -> String:
 	GameState.set_cash(100000)  # fat runway → no thin-runway penalty to confound the diff
 	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
 	_sim_day()  # base seed comfortably positive so the [0,100] clamp doesn't hide the penalty
-	var seed_clear: int = int(VCPitchSystem.seed_conviction("anchor").value)
+	var seed_clear: int = int(VCPitchSystem.initial_conviction("anchor").value)
 	GameState.shutter_days_left = 5  # Kepenk active
 	VCPitchSystem.begin_meeting("anchor")
 	if not VCPitchSystem.is_meeting_active():
 		return "meeting blocked during Kepenk (should be allowed — ledger 12)"
-	var seed_shutter: int = int(VCPitchSystem.seed_conviction("anchor").value)
-	if seed_clear - seed_shutter != -PitchConstants.SEED_SHUTTER_PENALTY:
+	var seed_shutter: int = int(VCPitchSystem.initial_conviction("anchor").value)
+	if seed_clear - seed_shutter != -PitchConstants.CONV_SHUTTER_PENALTY:
 		return "shutter seed penalty wrong (clear=%d shutter=%d)" % [seed_clear, seed_shutter]
 	VCPitchSystem.withdraw()
 	return ""
@@ -11075,6 +11119,11 @@ static func _case_profit_condition_fires() -> String:
 	# after; never before the sixth close.
 	GameState.set_cash(100000)
 	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)   # daily revenue ~833 vs burn 50 → an Artıda month
+	# THE FIFTH CLAUSE (ch. 13 §1): profitability alone is not an ending. These two cases
+	# measure the four ECONOMIC clauses, so the investor one is satisfied in the fixture
+	# rather than restated in every assertion. That the clause is REQUIRED — and that
+	# each of its three writers opens it — is bootstrap_needs_the_faced_flag's job.
+	GameState.mark_faced_series_a("walked")
 	_seed_month_closes([20000, 21000, 22000, 23000, 24000], 30000, 24000)   # 5 Artıda closes, margin 20 %
 	var closes0: int = GameState.month_history.size()
 	var fired_day: int = -1
@@ -11109,6 +11158,11 @@ static func _case_profit_predicate_margin_scale_red() -> String:
 	# Each clause alone blocks the win: thin margin, small scale, a red day inside the window.
 	GameState.set_cash(100000)
 	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)
+	# THE FIFTH CLAUSE (ch. 13 §1): profitability alone is not an ending. These two cases
+	# measure the four ECONOMIC clauses, so the investor one is satisfied in the fixture
+	# rather than restated in every assertion. That the clause is REQUIRED — and that
+	# each of its three writers opens it — is bootstrap_needs_the_faced_flag's job.
+	GameState.mark_faced_series_a("walked")
 	_sim_day()   # settle the MRR bridge
 	_seed_month_closes([20000, 21000, 22000, 23000, 24000, 25000], 30000, 27500)   # margin 8 %
 	var sig: Dictionary = EndingsSystem.profitability_signal()
@@ -15500,4 +15554,637 @@ static func _case_sales_candidate_curve_and_traits() -> String:
 		return "the trap traits were removed globally instead of filtered per role"
 	if HRConstants.cost_trait_ids(HRConstants.ROLE_SALES_REP).size() < 1:
 		return "the sales cost pool is empty — a Pazarlık file could not be built"
+	return ""
+
+
+# ============================================================================
+# FUNDING LADDER + PHASE/ENDINGS WAVE (2026-08-27)
+# The seed rung, the derived Series A sheet, the fifth bootstrap clause, and the
+# buyout card. Each case FALSIFIES rather than merely asserting: a case that can
+# only pass proves nothing.
+# ============================================================================
+
+const SEED_DOOR_ID := "funding.seed_door"
+const SEED_OFFER_ID := "funding.seed_offer"
+const SEED_CLOSED_ID := "funding.seed_closed"
+const BUYOUT_ID := "funding.acquisition_offer"
+
+
+## A Traction company sitting exactly on the seed bar, with a live B2B book.
+static func _seed_seed_world(mrr: int = SeedConstants.DOOR_MRR) -> void:
+	GameState.set_cash(40000)
+	GameState.set_phase(2)
+	_seed_b2b(mrr)
+	_seed_b2b_lines("saas_ops")
+
+
+## Run the seed meeting end to end with a given set of beat choices.
+static func _play_seed_meeting(vc_id: String, choices: Array) -> bool:
+	if not SeedRoundSystem.begin_pitch(vc_id):
+		return false
+	for c in choices:
+		VCPitchSystem.advance(String(c))
+	return true
+
+
+static func _case_seed_door_traction_only() -> String:
+	# THREE PHASES AND A RATCHET. Bootstrap must not open it; Traction must; and a dip below
+	# the bar afterwards must NOT close it, because the announcement card is one_shot and a
+	# door that re-locks can never tell the player about itself again.
+	_seed_seed_world()
+	GameState.set_phase(1)
+	_sim_day_full()
+	if SeedRoundSystem.door_open():
+		return "the door opened in Bootstrap"
+	GameState.set_phase(2)
+	_sim_day_full()
+	if not SeedRoundSystem.door_open():
+		return "the door did not open in Traction at the bar (mrr %d)" % GameState.mrr
+	var latched: int = GameState.seed_door_open_day
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, 1)
+	_sim_day_full()
+	if not SeedRoundSystem.door_open():
+		return "an MRR dip re-locked the door — the ratchet is a live predicate"
+	if GameState.seed_door_open_day != latched:
+		return "the latch day moved %d -> %d" % [latched, GameState.seed_door_open_day]
+	GameState.set_phase(3)
+	if SeedRoundSystem.door_open():
+		return "the door stayed open into the Series A Hunt"
+	return ""
+
+
+static func _case_seed_door_below_bar() -> String:
+	_seed_seed_world(SeedConstants.DOOR_MRR / 2)
+	for i in 5:
+		_sim_day_full()
+	if GameState.seed_door_open_day >= 0:
+		return "the door latched at mrr %d, under the %d bar" % [GameState.mrr, SeedConstants.DOOR_MRR]
+	if EvHistory.fire_count(SEED_DOOR_ID) > 0:
+		return "the door card fired below the bar"
+	return ""
+
+
+static func _case_seed_door_number_never_rendered() -> String:
+	# The appetite grammar: the door is shown, the figure is not. Every string this rung puts
+	# on screen is checked, in both locales, for the bar in any shape it could be written.
+	var loc0: String = TranslationServer.get_locale()
+	var bar: int = SeedConstants.DOOR_MRR
+	var forms: Array[String] = [str(bar), Fmt.money(bar), Fmt.money_exact(bar), Fmt.group(bar)]
+	var keys: Array[String] = ["SEED_DOOR_TITLE", "SEED_DOOR_BODY", "SEED_DOOR_GO",
+		"SEED_SECTION_TITLE", "SEED_DOOR_LINE", "SEED_DOOR_HINT", "SEED_BLOCK_CLOSED"]
+	for loc in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		for k in keys:
+			var line: String = TranslationServer.translate(k)
+			for f in forms:
+				if line.contains(f):
+					TranslationServer.set_locale(loc0)
+					return "%s (%s) renders the door figure '%s'" % [k, loc, f]
+	TranslationServer.set_locale(loc0)
+	return ""
+
+
+static func _case_seed_pitch_never_rejects() -> String:
+	# The rung is GUARANTEED once entered (ruling 3). Drive the worst room available — the
+	# hardest angle, then the posture that caps the room — and assert an offer still lands with
+	# the cascade counter untouched and the fund still approachable at Series A.
+	_seed_seed_world()
+	_sim_day_full()
+	var rejections0: int = GameState.vc_rejections
+	if not _play_seed_meeting("anchor", ["b1_read", "b2_metrik", "b3_gecistir", "b4_ack"]):
+		return "begin_pitch refused at an open door"
+	if GameState.seed_sheet == null:
+		return "a floored seed room produced no offer — the rung is not guaranteed"
+	if GameState.vc_rejections != rejections0:
+		return "a seed outcome moved the cascade counter to %d" % GameState.vc_rejections
+	if String(GameState.vc_states.get("anchor", {}).get("status", "open")) in ["rejected", "walked"]:
+		return "the seed sitting closed the fund for Series A"
+	if GameState.series_a_closed or not GameState.run_active:
+		return "the seed sitting ended the run"
+	if GameState.run_sheets_won != 0:
+		return "the seed offer counted as a Series A sheet won"
+	return ""
+
+
+static func _case_seed_bands_map_to_terms() -> String:
+	# Three bands, three openings, each inside its declared envelope, and warmer must be
+	# better in BOTH directions — more money for less of the company.
+	var seen: Dictionary = {}
+	for band in SeedConstants.BAND_IDS:
+		var sheet: TermSheet = SeedRoundSystem.make_seed_sheet("anchor", String(band), 10)
+		var raise_amount: int = int(sheet.opening_terms.get("raise", 0))
+		var dil: int = int(sheet.opening_terms.get("dilution_pct", 0))
+		if raise_amount < SeedConstants.RAISE_MIN or raise_amount > SeedConstants.RAISE_MAX:
+			return "%s raise %d outside the band" % [band, raise_amount]
+		if dil < SeedConstants.DIL_MIN or dil > SeedConstants.DIL_MAX:
+			return "%s dilution %d outside the band" % [band, dil]
+		if sheet.stage != PitchConstants.STAGE_SEED:
+			return "%s sheet carries stage '%s'" % [band, sheet.stage]
+		if sheet.expires_day != SeedConstants.NO_EXPIRY_DAY:
+			return "%s sheet expires on day %d — the seed offer must not lapse" % [band, sheet.expires_day]
+		seen[String(band)] = [raise_amount, dil]
+	var strong: Array = seen[SeedConstants.BAND_STRONG]
+	var harsh: Array = seen[SeedConstants.BAND_HARSH]
+	if strong == harsh:
+		return "strong and harsh produced identical terms %s — the band table is inert" % str(strong)
+	if int(strong[0]) <= int(harsh[0]) or int(strong[1]) >= int(harsh[1]):
+		return "a strong room is not better than a harsh one: %s vs %s" % [str(strong), str(harsh)]
+	return ""
+
+
+static func _case_seed_sheet_never_in_active_sheets() -> String:
+	# FOUR LOAD-BEARING READERS walk active_sheets, and this names them one at a time:
+	# leverage, the sheet cap, the soft-cap paper's unsigned line, and the cascade defer.
+	_seed_seed_world()
+	_sim_day_full()
+	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
+		return "fixture: the seed meeting would not start"
+	if GameState.seed_sheet == null:
+		return "fixture: no seed offer"
+	if not GameState.active_sheets.is_empty():
+		return "the seed sheet landed in active_sheets"
+	if VCPitchSystem.sheet_for("anchor") != null:
+		return "sheet_for() returns the seed sheet — Series A code would negotiate it"
+	if int(GameState.get_run_ledger().get("unsigned_sheets", 0)) != 0:
+		return "the ledger counts the seed offer as an unsigned Series A sheet"
+	if VCPitchSystem.is_last_answer_moment():
+		return "the seed offer triggered the last-answer moment"
+	# And the cascade must still be able to fire with a seed offer on the table.
+	GameState.set_phase(3)
+	GameState.vc_rejections = EndingsSystem.CASCADE_TABLES
+	GameState.set_cash(1)
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, 0)
+	for i in 3:
+		_sim_day_full()
+		if not GameState.run_active:
+			break
+	if GameState.run_active:
+		return "a live seed offer deferred the rejection cascade"
+	if GameState.ending_id != "vc_rejection_cascade":
+		return "ended as '%s'" % GameState.ending_id
+	return ""
+
+
+static func _case_seed_table_walk_is_locked() -> String:
+	# ZOR MOD, the Frank-cheque pattern: visible, disabled, and its reason names the real
+	# shortfall. Falsified the same way the angel row is — by setting the flag.
+	_seed_seed_world()
+	_sim_day_full()
+	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
+		return "fixture: the seed meeting would not start"
+	var vs: Dictionary = TermSheetTableSystem.open("anchor")
+	if vs.is_empty():
+		return "the seed table would not open"
+	if bool(vs.get("walk_enabled", true)):
+		return "the seed table offers a walk"
+	if not bool((vs.get("walk_lock", {}) as Dictionary).get("locked", false)):
+		return "the walk row is disabled without saying why"
+	if String((vs.get("walk_lock", {}) as Dictionary).get("reason_key", "")) == "":
+		return "the walk lock carries no reason key"
+	var rejections0: int = GameState.vc_rejections
+	TermSheetTableSystem.walk()
+	if GameState.seed_sheet == null:
+		return "walk() destroyed the seed offer"
+	if GameState.vc_rejections != rejections0:
+		return "walk() at a seed table moved the cascade counter"
+	# FALSIFY: the lock must be a live read of one named flag, not a constant.
+	GameState.set_flag(AngelRoundSystem.HARD_MODE_FLAG, true)
+	var open_vs: Dictionary = TermSheetTableSystem.view_state()
+	var still_locked: bool = bool((open_vs.get("walk_lock", {}) as Dictionary).get("locked", false))
+	GameState.set_flag(AngelRoundSystem.HARD_MODE_FLAG, false)
+	if still_locked:
+		return "the lock stayed shut with hard_mode_unlocked set — it is not a real condition"
+	return ""
+
+
+static func _case_seed_sign_is_not_terminal() -> String:
+	# The first term sheet the player signs, and the first one that does not end the game.
+	# Also the atomicity probe, sampled from INSIDE cash_changed like the angel case.
+	_seed_seed_world()
+	_sim_day_full()
+	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
+		return "fixture: the seed meeting would not start"
+	TermSheetTableSystem.open("anchor")
+	var terms: Dictionary = GameState.seed_sheet.opening_terms.duplicate()
+	var cash0: int = GameState.cash
+	var tx0: int = FinanceSystem.get_transactions().size()
+	var seen_equity: Array = [-1]
+	var probe := func(_v: int) -> void: seen_equity[0] = GameState.get_investor_equity_pct()
+	EventBus.cash_changed.connect(probe)
+	TermSheetTableSystem.sign()
+	EventBus.cash_changed.disconnect(probe)
+
+	var raise_amount: int = int(terms.get("raise", 0))
+	if GameState.cash != cash0 + raise_amount:
+		return "cash %d -> %d, wanted +%d" % [cash0, GameState.cash, raise_amount]
+	if GameState.run_seed_amount != raise_amount:
+		return "run_seed_amount is %d" % GameState.run_seed_amount
+	if GameState.seed_lead != "anchor":
+		return "seed_lead is '%s'" % GameState.seed_lead
+	if GameState.seed_closed_day != GameState.day:
+		return "the expectation clock did not start"
+	if GameState.seed_sheet != null:
+		return "the offer survived being signed"
+	if FinanceSystem.get_transactions().size() != tx0 + 1:
+		return "no ledger row"
+	if seen_equity[0] != GameState.run_seed_equity_pct:
+		return "cash_changed fired with the cap table at %d%% — the round is not atomic" % seen_equity[0]
+	if not GameState.run_active or GameState.ending_id != "":
+		return "signing the seed ended the run as '%s'" % GameState.ending_id
+	if GameState.series_a_closed:
+		return "signing the seed set series_a_closed"
+	if GameState.run_equity_pct != 0 or GameState.run_investment_amount != 0:
+		return "the seed wrote the Series A term block"
+	return ""
+
+
+static func _case_seed_survives_series_a_sign() -> String:
+	# The sibling of angel_survives_series_a: a Series A signature must not erase the seed
+	# slice, which is the exact collision the separate scalars exist to prevent.
+	GameState.record_seed_round(15, 120000, "anchor")
+	GameState.record_angel_round(4, 25000)
+	VCPitchSystem._persist_signed_terms({"valuation_m": 20, "dilution_pct": 20,
+		"board_seats": 1, "board_veto": false})
+	if GameState.run_seed_equity_pct != 15:
+		return "the seed slice became %d%%" % GameState.run_seed_equity_pct
+	if GameState.get_investor_equity_pct() != 4 + 15 + 20:
+		return "composed investor equity is %d%%, wanted 39" % GameState.get_investor_equity_pct()
+	if GameState.get_total_raised() != 25000 + 120000 + 4_000_000:
+		return "total raised is %d" % GameState.get_total_raised()
+	return ""
+
+
+static func _case_seed_expectation_grace_then_stall() -> String:
+	GameState.seed_lead = "anchor"
+	GameState.seed_closed_day = 100
+	GameState.day = 100 + SeedConstants.EXPECT_GRACE_DAYS - 1
+	_seed_month_closes([10000, 10000, 10000, 10000])       # flat, but inside the grace window
+	if SeedRoundSystem.expectation_state() != SeedConstants.EXPECT_GRACE:
+		return "a flat month inside grace read as %d" % SeedRoundSystem.expectation_state()
+	GameState.day = 100 + SeedConstants.EXPECT_GRACE_DAYS + 1
+	if SeedRoundSystem.expectation_state() != SeedConstants.EXPECT_STALLED:
+		return "a flat quarter past grace read as %d" % SeedRoundSystem.expectation_state()
+	_seed_growth_streak(20000)                              # +15 %/month, above the 10 % bar
+	if SeedRoundSystem.expectation_state() != SeedConstants.EXPECT_ON_TRACK:
+		return "a growing quarter read as %d" % SeedRoundSystem.expectation_state()
+	GameState.seed_lead = ""
+	if SeedRoundSystem.expectation_state() != SeedConstants.EXPECT_NONE:
+		return "an unseeded run carries an expectation"
+	return ""
+
+
+static func _case_seed_lead_warmth_at_series_a() -> String:
+	_seed_b2b_series_a()
+	GameState.set_phase(3)
+	GameState.seed_lead = ""
+	var cold: int = int(VCPitchSystem.initial_conviction("anchor").get("value", 0))
+	var nexus_cold: int = int(VCPitchSystem.initial_conviction("nexus").get("value", 0))
+	GameState.seed_lead = "anchor"
+	var warm: int = int(VCPitchSystem.initial_conviction("anchor").get("value", 0))
+	if warm - cold != SeedConstants.SEED_LEAD_WARMTH_BONUS:
+		return "the seed lead gained %d conviction, wanted %d" % [
+			warm - cold, SeedConstants.SEED_LEAD_WARMTH_BONUS]
+	if int(VCPitchSystem.initial_conviction("nexus").get("value", 0)) != nexus_cold:
+		return "the warmth reached a fund that did not lead the round"
+	return ""
+
+
+static func _case_seed_stage_does_not_leak() -> String:
+	# The sitting-local stage must be cleared on close, or the next Series A table paints a
+	# raise lever over valuation_m terms and reads $0.
+	_seed_seed_world()
+	_sim_day_full()
+	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
+		return "fixture: the seed meeting would not start"
+	TermSheetTableSystem.open("anchor")
+	if String(TermSheetTableSystem.levers()[0]) != "raise":
+		return "the seed table's first lever is '%s'" % String(TermSheetTableSystem.levers()[0])
+	TermSheetTableSystem.sign()
+	GameState.set_phase(3)
+	_grant("nexus")
+	TermSheetTableSystem.open("nexus")
+	if String(TermSheetTableSystem.levers()[0]) != "valuation":
+		return "a seed stage leaked into the Series A table"
+	if TermSheetTableSystem.money_raised() <= 0:
+		return "the Series A table read money_raised as %d" % TermSheetTableSystem.money_raised()
+	return ""
+
+
+static func _case_series_a_sheet_derives_from_arr() -> String:
+	# The sheet is PRICED now, not copied. A faster company must get a better one.
+	_seed_b2b_series_a()
+	GameState.set_phase(3)
+	_seed_month_closes([10000, 10000, 10000, 10000])            # flat: the low multiple band
+	var slow: int = int(VCPitchSystem._make_sheet("anchor", GameState.day).opening_terms.get("valuation_m", 0))
+	_seed_growth_streak(GameState.mrr)                          # +15 %/month: the high band
+	var fast: int = int(VCPitchSystem._make_sheet("anchor", GameState.day).opening_terms.get("valuation_m", 0))
+	if fast <= slow:
+		return "a fast-growing company was valued at %dM against a flat one's %dM" % [fast, slow]
+	var dil: int = int(VCPitchSystem._make_sheet("anchor", GameState.day).opening_terms.get("dilution_pct", 0))
+	if dil < PitchConstants.SERIES_A_DIL_MIN or dil > PitchConstants.SERIES_A_DIL_MAX:
+		return "dilution %d outside [%d, %d]" % [dil, PitchConstants.SERIES_A_DIL_MIN, PitchConstants.SERIES_A_DIL_MAX]
+	# And the funds still differ from each other — the archetypes survived the change.
+	var nexus_val: int = int(VCPitchSystem._make_sheet("nexus", GameState.day).opening_terms.get("valuation_m", 0))
+	if nexus_val == fast:
+		return "every fund priced the same company identically — the archetype nudge is inert"
+	return ""
+
+
+static func _case_bootstrap_needs_the_faced_flag() -> String:
+	# Ch. 13 §1: profitability alone is not an ending. Build a run that satisfies all four
+	# economic clauses and assert it does NOT win until the Series A decision has been faced.
+	GameState.set_cash(100000)
+	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)
+	GameState.set_phase(2)
+	GameState.faced_series_a = false
+	GameState.faced_series_a_by = ""
+	_seed_month_closes([20000, 21000, 22000, 23000, 24000, 25000], 30000, 24000)
+	var sig: Dictionary = EndingsSystem.profitability_signal()
+	if not (bool(sig.streak_ok) and bool(sig.margin_ok) and bool(sig.mrr_ok) and bool(sig.scandal_ok)):
+		return "fixture: the four economic clauses are not met (%s)" % str(sig)
+	if bool(sig.met):
+		return "the bootstrap win fired without the Series A decision being faced"
+	_sim_day_full()
+	if not GameState.run_active:
+		return "the run ended as '%s' with the faced flag unset" % GameState.ending_id
+	# Each of the three writers must open it.
+	for reason in ["declined", "walked", "door_open"]:
+		GameState.faced_series_a = false
+		GameState.faced_series_a_by = ""
+		GameState.mark_faced_series_a(reason)
+		if not bool(EndingsSystem.profitability_signal().get("met", false)):
+			return "the win stayed shut after the '%s' writer" % reason
+	return ""
+
+
+static func _case_faced_flag_upgrades_only() -> String:
+	# door_open must never overwrite a decline or a walk: the buyout card reads the REASON,
+	# and a founder who walked a table has done the thing the card is about.
+	GameState.faced_series_a = false
+	GameState.faced_series_a_by = ""
+	GameState.mark_faced_series_a("door_open")
+	GameState.mark_faced_series_a("walked")
+	if GameState.faced_series_a_by != "walked":
+		return "walked did not upgrade door_open (got '%s')" % GameState.faced_series_a_by
+	GameState.mark_faced_series_a("door_open")
+	if GameState.faced_series_a_by != "walked":
+		return "door_open overwrote walked"
+	return ""
+
+
+static func _case_buyout_needs_the_road_over() -> String:
+	# The guard the sealed first sentence depends on: "Series A turu kapandı, ortada anlaşma
+	# yok". One walked table with three funds still open does NOT close the road.
+	_seed_b2b_series_a()
+	GameState.set_phase(3)
+	GameState.record_seed_round(15, 120000, "anchor")
+	GameState.seed_closed_day = 1
+	_grant("anchor")
+	VCPitchSystem.walk_table("anchor", "walked")
+	if not GameState.faced_series_a:
+		return "walking a table did not set the faced flag"
+	if GameState.faced_series_a_by != "walked":
+		return "the faced flag reads '%s'" % GameState.faced_series_a_by
+	if EndingsSystem.road_over():
+		return "the road read as over with three funds still open"
+	for vc in ["nexus", "bosphorus", "meridian"]:
+		GameState.vc_states[vc] = {"status": "rejected", "callback": {}, "pending_sheet": false}
+	if not EndingsSystem.road_over():
+		return "the road did not close once every fund was closed"
+	# THE MODAL SLOT HAS TO BE DRAINED. One card is active at a time, so an unresolved
+	# foreign card blocks every later one — and a case that does not drain measures the
+	# queue rather than the card it names.
+	var arrived: bool = false
+	for i in EndingsSystem.ACQ_CARD_WINDOW_DAYS + 2:
+		_sim_day_full()
+		if _drain_to(BUYOUT_ID):
+			arrived = true
+			break
+		if not GameState.run_active:
+			break
+	if not arrived:
+		return ("the buyout card never fired inside the window "
+			+ "(road_over=%s days_open=%d lead=%s active=%s)" % [
+				str(EndingsSystem.road_over()), EndingsSystem.acq_days_open(),
+				GameState.seed_lead, EventGate.active_id()])
+	# It names the SEED LEAD, and its two numbers are money rather than raw integers.
+	# THE ACTIVE CONTEXT, not a bare render. render() with no context binds no scope slot,
+	# so {investor} would survive to the assertion and this case would be measuring the
+	# harness rather than the card. active_context() is the frozen binding the real modal
+	# paints from.
+	var ev: GameEvent = EventGate.render(BUYOUT_ID, EventGate.active_context())
+	# FLATTENED: tools/smoke_run.sh extracts the verdict with a line-based grep, so a
+	# failure message carrying a multi-paragraph body would be cut at its first newline
+	# and the useful half would never reach the log.
+	var body: String = Localization.pick(ev.body_text, ev.body_text_en).replace("
+", " / ")
+	var lead_name: String = String(InvestorRegistry.get_investor("anchor").get("display_name", ""))
+	if not body.contains(lead_name):
+		return "the buyout body does not name the seed lead: %s" % body
+	if body.contains("{"):
+		return "the buyout body reached the player with an unresolved token: %s" % body
+	if ev.choices.size() != 2:
+		return "the buyout card offers %d choices" % ev.choices.size()
+	# "Kendi paramla devam" continues the run AND remembers the refusal.
+	EventGate.resolve(BUYOUT_ID, "carry_on")
+	if not GameState.run_active:
+		return "carrying on ended the run as '%s'" % GameState.ending_id
+	if not bool(GameState.get_flag("acquisition_offer_rejected", false)):
+		return "refusing to sell was not remembered — a later VC meeting asks about it"
+	if not GameState.pivot_used:
+		return "carrying on left the VC road open"
+	return ""
+
+
+static func _case_buyout_inert_without_the_flag() -> String:
+	# The exact world that used to open BOTH old cards — phase 3, brand 40, MRR alive, three
+	# closed tables — with the faced flag never set by a decline or a walk. Nothing may fire.
+	_seed_b2b_series_a()
+	GameState.set_phase(3)
+	GameState.set_brand(40)
+	GameState.vc_rejections = 3
+	GameState.record_seed_round(15, 120000, "anchor")
+	GameState.faced_series_a = false
+	GameState.faced_series_a_by = ""
+	for vc in ["anchor", "nexus", "bosphorus", "meridian"]:
+		GameState.vc_states[vc] = {"status": "rejected", "callback": {}, "pending_sheet": false}
+	if EndingsSystem.road_over():
+		return "the road read as over with the faced flag unset"
+	# DRAINED EVERY DAY, or this case passes for the wrong reason: a blocked modal slot
+	# would keep the buyout card off the screen and the assertion below would read as
+	# proof of a guard that was never tested.
+	for i in 30:
+		_sim_day_full()
+		if _drain_to(BUYOUT_ID):
+			return "the buyout card fired without a decline or a walk"
+		if not GameState.run_active:
+			break
+	if EvHistory.fire_count(BUYOUT_ID) > 0:
+		return "the buyout card resolved without a decline or a walk"
+	if GameState.ending_id == "acquisition":
+		return "the acquisition ending fired with no card"
+	return ""
+
+
+static func _case_buyout_numbers_make_the_sentence_true() -> String:
+	# The sealed line reads "At a {valuation} valuation, your share comes to {offer}". So the
+	# offer must be the founder's SLICE of the valuation, never the valuation again.
+	_seed_b2b(10000)
+	GameState.set_brand(40)
+	GameState.record_seed_round(15, 120000, "anchor")
+	var val: int = EndingsSystem.acquisition_valuation()
+	var share: int = EndingsSystem.acquisition_founder_share()
+	if val <= 0:
+		return "valuation is %d" % val
+	if share >= val:
+		return "the founder's share (%d) is not smaller than the valuation (%d)" % [share, val]
+	var m: float = EndingsSystem.acquisition_multiple()
+	if m < EndingsSystem.ACQ_M_MIN or m > EndingsSystem.ACQ_M_MAX:
+		return "multiple %f escaped the clamp" % m
+	# The clamp is real, not decorative.
+	GameState.set_brand(100)
+	_seed_growth_streak(GameState.mrr)
+	if EndingsSystem.acquisition_multiple() > EndingsSystem.ACQ_M_MAX:
+		return "the multiple escaped its clamp on a perfect run"
+	# And the two seams the card reads must render money, not a bare integer.
+	if not String(EvSeams.read("funding.acq_valuation")).contains("$"):
+		return "funding.acq_valuation reads '%s'" % String(EvSeams.read("funding.acq_valuation"))
+	return ""
+
+
+static func _case_b2c_ending_reports_audience() -> String:
+	# Ch. 13 §2: no template may print an account count on a consumer run.
+	_seed_live_product()
+	for i in 3:
+		_sim_day_full()
+	var ledger: Dictionary = GameState.get_run_ledger()
+	if String(ledger.get("market", "")) != "b2c":
+		return "the ledger did not record a consumer run"
+	if int(ledger.get("audience", 0)) <= 0:
+		return "audience is %d on a live consumer run" % int(ledger.get("audience", 0))
+	var paying: int = int(ledger.get("paying_users", 0))
+	if paying <= 0:
+		return "paying_users is %d after the paid tier opened" % paying
+	# The stat row must name PAYING, never MÜŞTERİ, and never the aggregate record count of 1.
+	for eid in ["profitable_bootstrap", "running_on_fumes", "series_a_close"]:
+		var vs: Dictionary = EndingsCopy.build(eid, ledger, {"company_name": "Probe"})
+		var labels: Array = []
+		for cell in (vs.get("stat_cells", []) as Array):
+			labels.append(String((cell as Dictionary).get("label", "")))
+			if String((cell as Dictionary).get("figure", "")) == "1" \
+					and String((cell as Dictionary).get("label", "")) == TranslationServer.translate("END_STAT_CUSTOMERS"):
+				return "%s prints the aggregate record as 1 MÜŞTERİ" % eid
+		if labels.has(TranslationServer.translate("END_STAT_CUSTOMERS")):
+			return "%s prints an account count on a consumer run" % eid
+		if not labels.has(TranslationServer.translate("END_STAT_PAYING")):
+			return "%s never names the paying users" % eid
+	return ""
+
+
+static func _case_frank_line_renders_outside_the_paper() -> String:
+	# Seven translated verdict lines have shipped invisible. They have a surface now — and it
+	# must NOT be the newspaper, which bans mentor attribution.
+	for eid in EndingsSystem.ENDINGS.keys():
+		var line: String = EndingsSystem.ending_frank_line(String(eid))
+		if line == "" or line == "END_META_%s_FRANK" % String(eid).to_upper():
+			return "%s has no Frank line" % eid
+		var vs: Dictionary = EndingsCopy.build(String(eid), GameState.get_run_ledger(),
+			{"company_name": "Probe", "frank_line": line})
+		# The paper must not carry it in any of its own surfaces.
+		for key in ["headline", "subhead", "engraving_caption", "quiet_notice"]:
+			if String(vs.get(key, "")) == line:
+				return "%s puts the mentor verdict on the paper's %s" % [eid, key]
+		for l in (vs.get("ledger_lines", []) as Array):
+			if String(l) == line:
+				return "%s puts the mentor verdict in the paper's ledger box" % eid
+	return ""
+
+
+static func _case_bankruptcy_frank_line_says_thirty() -> String:
+	# The line said seven while the top bar counted thirty for all thirty of those days.
+	var loc0: String = TranslationServer.get_locale()
+	for loc in ["tr", "en"]:
+		TranslationServer.set_locale(loc)
+		var line: String = TranslationServer.translate("END_META_BANKRUPTCY_FRANK")
+		var seven: String = "Yedi" if loc == "tr" else "seven"
+		var thirty: String = "Otuz" if loc == "tr" else "thirty"
+		if line.contains(seven):
+			TranslationServer.set_locale(loc0)
+			return "[%s] the bankruptcy verdict still says seven" % loc
+		if not line.contains(thirty):
+			TranslationServer.set_locale(loc0)
+			return "[%s] the bankruptcy verdict names no span: %s" % [loc, line]
+	TranslationServer.set_locale(loc0)
+	if EndingsSystem.SHUTTER_DAYS != 30:
+		return "SHUTTER_DAYS moved to %d and the copy did not follow" % EndingsSystem.SHUTTER_DAYS
+	return ""
+
+
+static func _case_card_body_tokens_resolve() -> String:
+	# THE GATE THAT WOULD HAVE CAUGHT THE {days} BUG. Every card body token must be either a
+	# declared scope slot or a registered seam; anything else survives EvPresenter._interpolate
+	# and reaches the player as literal braces. funding.sheet_expiry shipped exactly that.
+	EvCatalog.reload()
+	var tok := RegEx.new()
+	tok.compile("[{]([a-z_]+)[}]")
+	var offenders: Array = []
+	for id in EvCatalog.card_ids():
+		var card: Dictionary = EvCatalog.card(String(id))
+		var slots: Array = (card.get("scope", {}) as Dictionary).keys()
+		for locale in ["tr", "en"]:
+			var block: Dictionary = (card.get("text", {}) as Dictionary).get(locale, {})
+			var bodies: Array = []
+			var body: Variant = block.get("body", "")
+			if typeof(body) == TYPE_DICTIONARY:
+				for v in (body as Dictionary).get("variants", {}).values():
+					bodies.append(String(v))
+			else:
+				bodies.append(String(body))
+			for b in bodies:
+				var text: String = b
+				# A CSV key resolves to its value; prose is checked as written.
+				var resolved: String = TranslationServer.translate(text)
+				if resolved != text:
+					text = resolved
+				for m in tok.search_all(text):
+					var name: String = m.get_string(1)
+					if slots.has(name) or EvSeams.has(name):
+						continue
+					var row: String = "%s[%s]:{%s}" % [id, locale, name]
+					if not offenders.has(row):
+						offenders.append(row)
+	if not offenders.is_empty():
+		return "card body tokens that resolve to nothing: %s" % ", ".join(offenders)
+	return ""
+
+
+static func _case_seed_sheet_round_trips() -> String:
+	# The one untested path in the new state: TermSheet = null as a coerce_like template.
+	_seed_seed_world()
+	_sim_day_full()
+	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
+		return "fixture: the seed meeting would not start"
+	var before: TermSheet = GameState.seed_sheet
+	if before == null:
+		return "fixture: no seed offer"
+	GameState.mark_faced_series_a("door_open")
+	var block: Dictionary = SaveCodec.capture_game_state()
+	GameState.seed_sheet = null
+	GameState.seed_lead = ""
+	GameState.faced_series_a = false
+	GameState.faced_series_a_by = ""
+	SaveCodec.apply_game_state(block)
+	var after: TermSheet = GameState.seed_sheet
+	if after == null:
+		return "the seed sheet did not survive a save round trip"
+	if String(after.stage) != PitchConstants.STAGE_SEED:
+		return "stage came back as '%s'" % after.stage
+	if String(after.band) != String(before.band):
+		return "band came back as '%s', was '%s'" % [after.band, before.band]
+	if int(after.opening_terms.get("raise", 0)) != int(before.opening_terms.get("raise", 0)):
+		return "the raise came back as %d" % int(after.opening_terms.get("raise", 0))
+	if String(after.vc_id) != String(before.vc_id):
+		return "vc_id came back as '%s'" % after.vc_id
+	if not GameState.faced_series_a or GameState.faced_series_a_by != "door_open":
+		return "the faced flag did not survive the round trip"
 	return ""

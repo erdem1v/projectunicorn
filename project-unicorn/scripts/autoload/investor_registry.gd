@@ -13,6 +13,14 @@ extends Node
 # Conviction weights map each Beat-2 angle → SkillCheck difficulty (PitchConstants.DIFF_*).
 # The easiest angle is the VC's "favored" one, revealed as a marker on a successful Beat 1.
 # All numbers are working placeholders (calibration pass edits this table + PitchConstants).
+#
+# `interrogation_intensity` LIVED HERE AND IS GONE (2026-08-27). It carried a word per fund
+# (soft / mid / mid / hard) and had ZERO readers anywhere in the codebase: Beat-3 difficulty
+# comes from PitchConstants.DURUST_DIFF / SPIN_DIFF / GECISTIR_DIFF, and which family of
+# question gets asked comes from `domain`. A field that describes a personality nothing
+# consults is worse than an absent one — it reads as implemented. If the archetype should
+# bite harder in the room, the wire to build is a per-fund term in the Beat-3 difficulty,
+# and that is a design decision rather than a restoration.
 
 const INVESTORS := [
 	{
@@ -23,7 +31,6 @@ const INVESTORS := [
 		"domain": "metrics",
 		"domain_chip_key": "INV_CHIP_METRICS",
 		"weights": {"metrik": PitchConstants.DIFF_KOLAY, "vizyon": PitchConstants.DIFF_CETIN, "traction": PitchConstants.DIFF_ORTA},
-		"interrogation_intensity": "mid",
 		"patience_pool": 3,
 		"term_bands": {"valuation": "high", "dilution": "high", "board": "seat_veto"},
 		"opening_terms": {"valuation_m": 18, "dilution_pct": 22, "board_seats": 1, "board_veto": true},
@@ -39,7 +46,6 @@ const INVESTORS := [
 		"domain": "team",
 		"domain_chip_key": "INV_CHIP_TEAM",
 		"weights": {"metrik": PitchConstants.DIFF_ORTA, "vizyon": PitchConstants.DIFF_ORTA, "traction": PitchConstants.DIFF_KOLAY},
-		"interrogation_intensity": "mid",
 		"patience_pool": 4,
 		"term_bands": {"valuation": "low", "dilution": "low", "board": "clean"},
 		"opening_terms": {"valuation_m": 10, "dilution_pct": 15, "board_seats": 0, "board_veto": false},
@@ -55,7 +61,6 @@ const INVESTORS := [
 		"domain": "narrative",
 		"domain_chip_key": "INV_CHIP_NARRATIVE",
 		"weights": {"metrik": PitchConstants.DIFF_CETIN, "vizyon": PitchConstants.DIFF_KOLAY, "traction": PitchConstants.DIFF_ORTA},
-		"interrogation_intensity": "soft",
 		"patience_pool": 2,
 		"term_bands": {"valuation": "mid", "dilution": "mid", "board": "seat_flex"},
 		"opening_terms": {"valuation_m": 14, "dilution_pct": 18, "board_seats": 1, "board_veto": false},
@@ -71,7 +76,6 @@ const INVESTORS := [
 		"domain": "product",
 		"domain_chip_key": "INV_CHIP_PRODUCT",
 		"weights": {"metrik": PitchConstants.DIFF_KOLAY, "vizyon": PitchConstants.DIFF_CETIN, "traction": PitchConstants.DIFF_ORTA},
-		"interrogation_intensity": "hard",
 		"patience_pool": 2,
 		"term_bands": {"valuation": "generous", "dilution": "mid", "board": "observer"},
 		"opening_terms": {"valuation_m": 16, "dilution_pct": 18, "board_seats": 0, "board_veto": false},
@@ -88,7 +92,6 @@ const INVESTORS := [
 		"domain": "",
 		"domain_chip_key": "",
 		"weights": {},
-		"interrogation_intensity": "",
 		"patience_pool": 0,
 		"term_bands": {},
 		"opening_terms": {},

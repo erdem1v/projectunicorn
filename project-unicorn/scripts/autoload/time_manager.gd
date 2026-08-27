@@ -373,6 +373,10 @@ func _tick_phase_check() -> void:
 	# It runs after Finance for the same reason the event slot does: MRR and brand have to be
 	# the day's settled numbers, not yesterday's.
 	PhaseGateSystem.daily_tick()
+	# The seed door latches in the SAME slot and immediately after, for the identical reason
+	# spelled out above: `funding.seed_door` reads the ratchet this line writes, and a card
+	# evaluated before its own condition arrives the morning after the bar is crossed.
+	SeedRoundSystem.daily_tick()
 
 func _tick_pitch() -> void:
 	# Slot 8b (Spec 4): VC sheet clocks, callbacks, delayed delivery, meeting-day

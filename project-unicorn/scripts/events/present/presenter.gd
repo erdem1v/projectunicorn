@@ -115,11 +115,24 @@ static func _display_name(entity_type: String, entity_id: String) -> String:
 			var c: Character = CharacterRegistry.get_character(entity_id)
 			return c.character_name if c != null else entity_id
 		EvScope.TYPE_CUSTOMER:
+			# display_name(), NOT company_name. The B2C userbase is a Customer record whose
+			# company_name is deliberately EMPTY — it carries name_key + name_arg instead, so
+			# that a save does not freeze one language into the aggregate account's name
+			# (sales_system._ensure_b2c_record says so). Reading the raw field rendered a card
+			# about the consumer base with a blank where its name goes.
 			var cu: Customer = CustomerRegistry.get_customer(entity_id)
-			return cu.company_name if cu != null else entity_id
+			return cu.display_name() if cu != null else entity_id
 		EvScope.TYPE_RIVAL:
 			var r: Rival = RivalRegistry.get_rival(entity_id)
 			return r.company_name if r != null else entity_id
+		EvScope.TYPE_INVESTOR:
+			# THERE WAS NO ARM HERE, so every card that binds an investor slot rendered the
+			# raw id: "anchor teklifi masada" instead of "Anchor Capital teklifi masada".
+			# funding.sheet_expiry does that on any run that reaches a term sheet, and
+			# funding.meeting_day on any run that books a meeting. Investor names are proper
+			# nouns and do not localize, so the registry field is the whole answer.
+			var inv: Dictionary = InvestorRegistry.get_investor(entity_id)
+			return String(inv.get("display_name", entity_id)) if not inv.is_empty() else entity_id
 	return entity_id
 
 

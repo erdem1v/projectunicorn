@@ -9,16 +9,16 @@ the same idea is [`SEAM_REGISTRY.md`](SEAM_REGISTRY.md).
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 128 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 131 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **128** |
+| Signals declared | **131** |
 | Declared with **no production emitter** | **3** |
-| Emitted with **no production listener** | **66** |
+| Emitted with **no production listener** | **68** |
 
 The second number is the §15.2 violation set. The third is **not** a defect, and it
 is smaller than it looks: the event engine listens to SIX of them through
@@ -57,7 +57,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `hour_changed` | `hour: int` | game_state | 1 | 2 | top_bar · oda_view |
 | `phase_changed` | `new_phase: int` | game_state | 2 | 3 | finance_tab · top_bar · oda_view |
 | `runway_recalculated` | `months: float` | game_state | 1 | 2 | left_tabs · top_bar |
-| `equity_changed` | `investor_pct: int` | game_state | 1 | 0 | — |
+| `equity_changed` | `investor_pct: int` | game_state | 2 | 0 | — |
 
 ### UI / time signals (§13.2)
 
@@ -72,7 +72,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 2 | main |
-| `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · creation_flow | 16 | 3 | main |
+| `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · creation_flow | 17 | 3 | main |
 | `music_enabled_changed` | `enabled: bool` | audio_manager | 1 | 0 | — |
 | `music_volume_changed` | `volume: float` | audio_manager | 1 | 0 | — |
 | `language_changed` | `locale: String` | localization | 1 | 5 | center_viewport · news_ticker · top_bar · oda_tour · oda_view |
@@ -237,8 +237,16 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `meeting_day` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 | `meeting_requested` | `vc_id: String` | — | 0 | 0 | — |
 | `offer_countdown_changed` | `days_left: int` | vc_pitch_system | 1 | 1 | top_bar |
-| `term_table_requested` | `vc_id: String` | effects · game_shell · hunt_tab | 3 | 1 | main |
+| `term_table_requested` | `vc_id: String` | effects · game_shell · hunt_tab | 4 | 1 | main |
 | `sheet_walked` | `vc_id: String` | vc_pitch_system | 1 | 1 | oda_view |
+
+### Seed round (GDD v2 ch. 09 §3) — the middle rung. One publisher each.
+
+| signal | payload | emitter(s) | E | L | listener(s) |
+|---|---|---|---|---|---|
+| `seed_door_opened` | `—` | seed_round_system | 1 | 1 | finance_tab |
+| `seed_sheet_granted` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
+| `seed_round_closed` | `vc_id: String` | seed_round_system | 1 | 0 | — |
 
 ### Save / system-menu signals (SaveManager task)
 

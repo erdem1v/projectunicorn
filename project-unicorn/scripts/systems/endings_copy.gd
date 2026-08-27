@@ -105,9 +105,9 @@ static func _series_a(ledger: Dictionary, data: Dictionary) -> Dictionary:
 		pool.append(board)
 	pool.append(_t("END_SA_OPENED").format(
 		{"founding": _founding_clause(ledger), "span": _span_phrase(_day(ledger))}))
-	if int(ledger.get("customers_signed", 0)) > 0:
-		pool.append(_n("END_SA_CUSTOMERS", int(ledger.get("customers_signed", 0))).format(
-			{"n": int(ledger.get("customers_signed", 0))}))
+	var people_end_sa_customers: String = _people_line(ledger, "END_SA_CUSTOMERS", "END_SA_AUDIENCE")
+	if people_end_sa_customers != "":
+		pool.append(people_end_sa_customers)
 	if int(ledger.get("employees", 0)) > 0:
 		pool.append(_t("END_SA_TEAM").format({"n": _num(int(ledger.get("employees", 0)))}))
 	if int(ledger.get("pitches", 0)) > 1:
@@ -118,7 +118,7 @@ static func _series_a(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.stat_cells = [
 		_stat(UiTokens.format_money(investment), _t("END_STAT_INVESTMENT")),
 		_stat(UiTokens.format_money(valuation * 1_000_000), _t("END_STAT_VALUATION")),
-		_stat(str(int(ledger.get("employees", 0))), _t("END_STAT_EMPLOYEES")),
+		_people_stat(ledger),
 		_stat(_pct(_founder_share(ledger)), _t("END_STAT_FOUNDER_SHARE")),
 	]
 	return vs
@@ -132,11 +132,18 @@ static func _acquisition(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.engraving_caption = _t("END_ACQ_CAP")
 
 	var pool: Array = []
+	# THE PAPER CAN NAME THE PRICE NOW. It used to say "No sale price exists in the
+	# ledger" and print survival figures instead, because no company valuation existed
+	# outside a term-sheet sitting. The buyout offer computes one, and the world is frozen
+	# by the time this renders, so the number here is the number the player was shown.
+	# Spelled through _investment_tr, which is Rule 4: no "$" in prose.
+	pool.append(_t("END_ACQ_PRICE").format(
+		{"valuation": _investment_tr(EndingsSystem.acquisition_valuation())}))
 	pool.append(_t("END_ACQ_NEW_ROOF").format(
 		{"founding": _founding_clause(ledger), "span": _span_phrase(_day(ledger))}))
-	if int(ledger.get("customers_signed", 0)) > 0:
-		pool.append(_n("END_ACQ_BOOK", int(ledger.get("customers_signed", 0))).format(
-			{"n": int(ledger.get("customers_signed", 0))}))
+	var people_end_acq_book: String = _people_line(ledger, "END_ACQ_BOOK", "END_ACQ_AUDIENCE")
+	if people_end_acq_book != "":
+		pool.append(people_end_acq_book)
 	if int(ledger.get("employees", 0)) > 0:
 		pool.append(_t("END_ACQ_CORE").format({"n": _num(int(ledger.get("employees", 0)))}))
 	if int(ledger.get("product_ships", 0)) > 1:
@@ -147,8 +154,9 @@ static func _acquisition(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	vs.ledger_lines = _assemble(pool, [_t("END_ACQ_CLOSER_1"), _t("END_ACQ_CLOSER_2")])
 	# No sale price exists in the ledger — survival/team figures instead. # WORKING
 	vs.stat_cells = [
-		_stat(_months_figure(_day(ledger)), _t("END_STAT_MONTHS_ALIVE")),
-		_stat(str(int(ledger.get("customers_signed", 0))), _t("END_STAT_CUSTOMERS")),
+		_stat(UiTokens.format_money(EndingsSystem.acquisition_valuation()),
+			_t("END_STAT_SALE_PRICE")),
+		_people_stat(ledger),
 		_stat(str(int(ledger.get("employees", 0))), _t("END_STAT_EMPLOYEES")),
 		_stat(UiTokens.format_money(int(ledger.get("mrr", 0))), _t("END_STAT_MRR")),
 	]
@@ -177,9 +185,9 @@ static func _bankruptcy(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	var pool: Array = []
 	pool.append(_t("END_BK_SHUTTERED").format(
 		{"founding": _founding_clause(ledger), "span": _span_phrase(_day(ledger))}))
-	if int(ledger.get("customers_signed", 0)) > 0:
-		pool.append(_n("END_BK_LEFT_BEHIND", int(ledger.get("customers_signed", 0))).format(
-			{"n": int(ledger.get("customers_signed", 0))}))
+	var people_end_bk_left_behind: String = _people_line(ledger, "END_BK_LEFT_BEHIND", "END_BK_AUDIENCE")
+	if people_end_bk_left_behind != "":
+		pool.append(people_end_bk_left_behind)
 	if int(ledger.get("customers_lost", 0)) > 0:
 		pool.append(_n("END_BK_LOST", int(ledger.get("customers_lost", 0))).format(
 			{"n": int(ledger.get("customers_lost", 0))}))
@@ -196,7 +204,7 @@ static func _bankruptcy(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	# is editorially correct on a bankruptcy paper. # WORKING
 	vs.stat_cells = [
 		_stat(_months_figure(_day(ledger)), _t("END_STAT_MONTHS_ALIVE")),
-		_stat(str(int(ledger.get("customers_signed", 0))), _t("END_STAT_CUSTOMERS")),
+		_people_stat(ledger),
 		_stat(str(int(ledger.get("employees", 0))), _t("END_STAT_EMPLOYEES")),
 		_stat(UiTokens.format_money(int(ledger.get("mrr", 0))), _t("END_STAT_LAST_MRR")),
 	]
@@ -264,9 +272,9 @@ static func _vc_cascade(ledger: Dictionary, data: Dictionary) -> Dictionary:
 		pool.append(_t("END_VC_NO_SIGNATURE"))
 	if int(ledger.get("sheets_won", 0)) > 0:
 		pool.append(_t("END_VC_OFFER_CAME"))
-	if int(ledger.get("customers_signed", 0)) > 0:
-		pool.append(_n("END_VC_CUSTOMERS", int(ledger.get("customers_signed", 0))).format(
-			{"n": int(ledger.get("customers_signed", 0))}))
+	var people_end_vc_customers: String = _people_line(ledger, "END_VC_CUSTOMERS", "END_VC_AUDIENCE")
+	if people_end_vc_customers != "":
+		pool.append(people_end_vc_customers)
 	pool.append(_t("END_VC_NO_MOMENTUM"))
 
 	vs.ledger_lines = _assemble(pool, [_t("END_VC_CLOSER_1"), _t("END_VC_CLOSER_2")])
@@ -290,9 +298,9 @@ static func _bootstrap(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	var pool: Array = []
 	pool.append(_t("END_BS_OWN_FEET").format(
 		{"founding": _founding_clause(ledger), "span": _span_phrase(_day(ledger))}))
-	if int(ledger.get("customers_signed", 0)) > 0:
-		pool.append(_n("END_BS_BALANCED", int(ledger.get("customers_signed", 0))).format(
-			{"n": int(ledger.get("customers_signed", 0))}))
+	var people_end_bs_balanced: String = _people_line(ledger, "END_BS_BALANCED", "END_BS_AUDIENCE")
+	if people_end_bs_balanced != "":
+		pool.append(people_end_bs_balanced)
 	if int(ledger.get("hires", 0)) > 0:
 		pool.append(_t("END_BS_PAYROLL").format({"n": _num(int(ledger.get("employees", 0)))}))
 	if int(ledger.get("product_ships", 0)) > 1:
@@ -307,9 +315,9 @@ static func _bootstrap(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	# _founder_share reads 100 here — no signed terms on a bootstrap run. # WORKING
 	vs.stat_cells = [
 		_stat(UiTokens.format_money(int(ledger.get("mrr", 0))), _t("END_STAT_MRR")),
-		_stat(str(int(ledger.get("customers_active", 0))), _t("END_STAT_CUSTOMERS")),
+		_people_stat(ledger),
 		_stat(str(int(ledger.get("employees", 0))), _t("END_STAT_EMPLOYEES")),
-		_stat(_pct(_founder_share(ledger)), _t("END_STAT_FOUNDER_SHARE")),
+		_audience_stat(ledger) if _is_b2c(ledger) else _stat(_pct(_founder_share(ledger)), _t("END_STAT_FOUNDER_SHARE")),
 	]
 	return vs
 
@@ -336,9 +344,9 @@ static func _fumes(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	# Ledger 16: an unsigned offer left on the table is named, never silently dropped.
 	if int(ledger.get("unsigned_sheets", 0)) > 0:
 		pool.append(_t("END_RF_UNSIGNED_SHEET"))
-	if int(ledger.get("customers_signed", 0)) > 0:
-		pool.append(_n("END_RF_UNFINISHED", int(ledger.get("customers_signed", 0))).format(
-			{"n": int(ledger.get("customers_signed", 0))}))
+	var people_end_rf_unfinished: String = _people_line(ledger, "END_RF_UNFINISHED", "END_RF_AUDIENCE")
+	if people_end_rf_unfinished != "":
+		pool.append(people_end_rf_unfinished)
 	if int(ledger.get("hires", 0)) > 0:
 		pool.append(_t("END_RF_TEAM_STAYED"))
 	# Bu satır KOŞULSUZDU: sıfır gelirli bir run'da bile "Gelir vardı" diyordu — üstelik
@@ -347,20 +355,34 @@ static func _fumes(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	# ekranı burası.
 	# ELSE şart: satırı yalnızca koşullamak havuzu en kötü durumda 1 satır + 2 yedek = 3'e
 	# düşürür ve gazete eksik dizilirdi. Her iki dal da tam bir satır ekler.
-	if int(ledger.get("mrr", 0)) > 0 or int(ledger.get("customers_signed", 0)) > 0:
+	# The consumer arm has to count paying users, or a B2C run with real revenue reads
+	# as one that never earned anything.
+	var had_customers: int = int(ledger.get("paying_users", 0)) if _is_b2c(ledger) \
+		else int(ledger.get("customers_signed", 0))
+	if int(ledger.get("mrr", 0)) > 0 or had_customers > 0:
 		pool.append(_t("END_RF_REVENUE_SOME"))
 	else:
 		pool.append(_t("END_RF_REVENUE_NONE"))
 	if int(ledger.get("product_ships", 0)) > 1:
 		pool.append(_t("END_RF_SHIPS").format({"n": int(ledger.get("product_ships", 0))}))
 
+	# A round was raised against a promise. Whether it was kept is the difference between
+	# a company that ran out of runway and one that ran out of patience.
+	if String(ledger.get("seed_lead", "")) != "":
+		pool.append(_t("END_RF_SEED_STALLED"
+			if int(ledger.get("seed_expectation", 0)) == SeedConstants.EXPECT_STALLED
+			else "END_RF_SEED_TAKEN"))
 	vs.ledger_lines = _assemble(pool, [_t("END_RF_CLOSER_1"), _t("END_RF_CLOSER_2")])
 	# WORKING
 	vs.stat_cells = [
 		_stat(_months_figure(_day(ledger)), _t("END_STAT_MONTHS_ALIVE")),
 		_stat(UiTokens.format_money(int(ledger.get("mrr", 0))), _t("END_STAT_MRR")),
-		_stat(str(int(ledger.get("customers_active", 0))), _t("END_STAT_CUSTOMERS")),
-		_stat(str(int(ledger.get("employees", 0))), _t("END_STAT_EMPLOYEES")),
+		# A CONSUMER RUN SPENDS ITS FOURTH CELL ON THE SECOND POPULATION FIGURE. Ch. 13 §2
+		# asks for audience AND paying users, and the row holds four; headcount is the one
+		# the prose already carries (END_RF_TEAM_STAYED), so it yields.
+		_audience_stat(ledger) if _is_b2c(ledger) else _people_stat(ledger),
+		_people_stat(ledger) if _is_b2c(ledger)
+			else _stat(str(int(ledger.get("employees", 0))), _t("END_STAT_EMPLOYEES")),
 	]
 	return vs
 
@@ -389,6 +411,41 @@ static func _common(ending_id: String, tone: String, ledger: Dictionary, data: D
 		"is_generic_masthead": false,
 		"quiet_notice": "",
 	}
+
+
+## Was this a consumer run? Ch. 13 §2: the paper must not print an account count on one.
+##
+## THE BUG THIS CURES, precisely. B2C keeps ONE aggregate customer record, so
+## `customers_active` reads 1 the moment the paid tier opens — a successful consumer
+## bootstrap announced "1 MÜŞTERİ". And `customers_signed` is written only by the B2B
+## signing path, so it reads 0 for the whole run: six conditional prose lines below are
+## keyed on it, and every one of them silently vanished from every B2C ending, which is
+## why the consumer ledger box fell back to generic filler more often than the B2B one.
+static func _is_b2c(ledger: Dictionary) -> bool:
+	return String(ledger.get("market", "b2c")) != "b2b"
+
+
+## The population line for a template, or "" when there is nothing true to say.
+## Returning "" rather than skipping keeps every call site the same shape it already had.
+static func _people_line(ledger: Dictionary, b2b_key: String, b2c_key: String) -> String:
+	var b2c: bool = _is_b2c(ledger)
+	var n: int = int(ledger.get("paying_users", 0)) if b2c \
+		else int(ledger.get("customers_signed", 0))
+	if n <= 0:
+		return ""
+	return _n(b2c_key if b2c else b2b_key, n).format({"n": n})
+
+
+## The population CELL for the stat row: accounts on a B2B run, paying users on a B2C one.
+static func _people_stat(ledger: Dictionary) -> Dictionary:
+	if _is_b2c(ledger):
+		return _stat(str(int(ledger.get("paying_users", 0))), _t("END_STAT_PAYING"))
+	return _stat(str(int(ledger.get("customers_signed", 0))), _t("END_STAT_CUSTOMERS"))
+
+
+## The audience cell — B2C only. The second half of ch. 13 §2's "audience AND paying".
+static func _audience_stat(ledger: Dictionary) -> Dictionary:
+	return _stat(str(int(ledger.get("audience", 0))), _t("END_STAT_AUDIENCE"))
 
 
 static func _company(data: Dictionary) -> String:
@@ -533,6 +590,12 @@ static func debug_all_view_states() -> Array:
 		"day": 156, "phase": 3, "origin": "self_made", "start_month": 1, "start_year": 2026,
 		"cash": 24000, "mrr": 6400, "peak_mrr": 8200, "brand": 30, "reputation": 10,
 		"customers_active": 6, "customers_signed": 9, "customers_lost": 3, "customers_expanded": 2,
+		# The fixture is a B2B run by default; debug_all_view_states adds consumer twins
+		# below so the audience/paying branch is in the gallery too.
+		"market": "b2b", "audience": 0, "paying_users": 0,
+		"seed_lead": "anchor", "seed_amount": 120000, "seed_equity_pct": 15,
+		"seed_expectation": SeedConstants.EXPECT_ON_TRACK,
+		"faced_series_a": true, "faced_series_a_by": "walked",
 		"employees": 5, "hires": 4, "departures": 0,
 		"product_version": 3, "product_ships": 3,
 		"pitches": 2, "sheets_won": 1, "vc_rejections": 1, "pushes_attempted": 2, "pushes_won": 1,
@@ -551,6 +614,17 @@ static func debug_all_view_states() -> Array:
 	out.append({"label": "brand_collapse", "vs": build("brand_collapse", ledger, data)})
 	out.append({"label": "vc_rejection_cascade", "vs": build("vc_rejection_cascade", ledger, data)})
 	out.append({"label": "profitable_bootstrap", "vs": build("profitable_bootstrap", ledger, data)})
+	# THE CONSUMER TWINS. Ch. 13 §2's rule is about what a B2C paper prints, so the gallery
+	# has to contain one: same ledger, consumer market, a real audience and a real paying
+	# count, and every population line and stat cell should switch.
+	var b2c := ledger.duplicate()
+	b2c.market = "b2c"
+	b2c.audience = 18400
+	b2c.paying_users = 1290
+	b2c.customers_signed = 0
+	b2c.customers_active = 1
+	for eid in ["series_a_close", "profitable_bootstrap", "running_on_fumes"]:
+		out.append({"label": "%s · b2c" % eid, "vs": build(eid, b2c, data)})   # LOC-DATA debug label
 	for p in [1, 2, 3]:
 		var fl := ledger.duplicate(); fl.phase = p
 		out.append({"label": "running_on_fumes · faz %d" % p, "vs": build("running_on_fumes", fl, data)})   # LOC-DATA debug label

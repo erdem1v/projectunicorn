@@ -12,19 +12,33 @@ const ZONE_BOUNDS := [40, 70]          # [ilik_min, kazanildi_min]; passed to Me
 const ILIK_MIN := 40
 const WON_MIN := 70
 
-# --- Seeding (§3 macro moment) — base + run-state weights ---
-const SEED_BASE := 20
-const SEED_MRR_REFERENCE := SalesSystem.TRACTION_MRR_TARGET  # traction threshold reference — single home sales_system.gd
-const SEED_MRR_MAX_BONUS := 20         # full bonus when MRR ≫ reference (scaled)
-const SEED_BRAND_FLOOR := 50           # brand at floor = 0 contribution
-const SEED_BRAND_MAX := 12             # ± cap from brand distance to floor
-const SEED_SHUTTER_PENALTY := -15      # Kepenk active (ledger 12 — thin runway priced in)
-const SEED_THIN_RUNWAY_PENALTY := -8   # runway below comfort but not shuttered
-const SEED_SCANDAL_PENALTY := -12      # unmanaged major scandal
-const SEED_LEVERAGE_BONUS := 15        # a live sheet already in pocket (§6)
-const SEED_WARM_INTRO_BONUS := 12      # Bosphorus via Frank
-const SEED_DIMENSION_MATCH_BONUS := 8  # Meridian ↔ subgenre/product dimension
-const SEED_CALLBACK_BONUS := 10        # re-entry after a met callback (§5)
+# --- Conviction seeding (§3 macro moment) — base + run-state weights ---
+#
+# RENAMED SEED_* → CONV_* (2026-08-27, the seed-rung wave). These twelve numbers have always
+# meant "how the room is SEEDED with conviction", and the run now has an actual SEED ROUND with
+# its own constants file. Two families spelled the same way is a bug waiting for its first
+# careless autocomplete: the very first line of SeedRoundSystem that reached for "the seed MRR
+# reference" would have been handed the SERIES A BAR. It would have compiled and run.
+# The seed room's profile lives in seed_constants.gd; this block is the Series A room's.
+const CONV_BASE := 20
+# DECOUPLED FROM THE SERIES A BAR (2026-08-27), and the decoupling is the decision, not an
+# oversight. This used to be `SalesSystem.TRACTION_MRR_TARGET`, so one calibration number
+# silently answered two different questions: "does the door open" and "is this company's
+# revenue impressive in the room". When the bar moved 40,000 → 120,000 the second answer moved
+# with it — every Series A meeting lost ~10 conviction at once, and _sorgu_metrics' growth_flat
+# branch (which compares MRR to this reference) became the permanent interrogation for every
+# run the economy can actually produce. The room's yardstick is now its own number.
+const CONV_MRR_REFERENCE := 40_000
+const CONV_MRR_MAX_BONUS := 20         # full bonus when MRR ≫ reference (scaled)
+const CONV_BRAND_FLOOR := 50           # brand at floor = 0 contribution
+const CONV_BRAND_MAX := 12             # ± cap from brand distance to floor
+const CONV_SHUTTER_PENALTY := -15      # Kepenk active (ledger 12 — thin runway priced in)
+const CONV_THIN_RUNWAY_PENALTY := -8   # runway below comfort but not shuttered
+const CONV_SCANDAL_PENALTY := -12      # unmanaged major scandal
+const CONV_LEVERAGE_BONUS := 15        # a live sheet already in pocket (§6)
+const CONV_WARM_INTRO_BONUS := 12      # Bosphorus via Frank
+const CONV_DIMENSION_MATCH_BONUS := 8  # Meridian ↔ subgenre/product dimension
+const CONV_CALLBACK_BONUS := 10        # re-entry after a met callback (§5)
 
 # --- Difficulty band → SkillCheck.resolve diff int (visible Disco labels) ---
 const DIFF_KOLAY := 1
@@ -116,6 +130,50 @@ const LEVERAGE_BONUS_UNITS := 1         # SkillCheck bonus units (each = +BONUS_
 const LEVERAGE_OPEN_NOTCH := 4          # opening valuation starts +$4M better when leverage is live
 # Dial spin duration (seconds) — the push roll presentation.
 const DIAL_SPIN_SECS := 0.8
+
+# --- THE TWO RUNGS (seed rung, 2026-08-27) --------------------------------
+# One meeting scene and one table serve both rounds. Which round a sitting IS travels on the
+# data rather than through a parameter chain: the MEETING carries it in a sitting-local static
+# (it has no sheet yet - the sheet is what it produces), and the TABLE reads it off
+# TermSheet.stage (the seed offer never expires, so the table can open days later, by which
+# time any static is long gone).
+const STAGE_SEED := "seed"
+const STAGE_SERIES_A := "series_a"
+
+# The seed table's lever tables. Same three rows, same patience ladder, same dial - what
+# changes is that lever one is the MONEY (a raise in dollars) instead of the valuation, so it
+# needs its own skill routing and its own base difficulty. Karizma across the board: a seed
+# round is negotiated by the founder in a room, not by a sales organisation.
+const SEED_LEVER_SKILL := {"raise": "charisma", "dilution": "charisma", "board": "charisma"}
+const SEED_LEVER_DIFF := {"raise": 1, "dilution": 1, "board": 2}
+
+# --- Series A term sheets, DERIVED FROM THE RUN (ch. 09 §5.4) -------------
+# The opening offer used to be four numbers copied verbatim off the investor row, so the same
+# company got the same sheet whether it arrived at the table with $40K or $400K of revenue.
+# It is priced now: valuation = ARR x a multiple, the multiple set by how fast the company is
+# actually growing, then nudged by the fund's own archetype. The four funds keep their
+# personalities; what they lose is the frozen number.
+#
+# The growth band reads the SAME rolling average the seed expectation and the buyout multiple
+# read (GameState.get_mom_growth_avg_pct) - one answer to "is this company growing", three
+# consumers, rather than three spellings that drift apart.
+const ARR_MULTIPLE := {"low": 8, "mid": 11, "high": 14}
+const ARR_GROWTH_HIGH_PCT := 12   # rolling 3-month MoM average at or above this -> "high"
+const ARR_GROWTH_MID_PCT := 5     # ... at or above this -> "mid"; below -> "low"
+const ARR_WINDOW_MONTHS := 3
+# Where inside the 15-25 % dilution band a fund opens, keyed on its own term_bands.dilution
+# word, and how its term_bands.valuation word moves the valuation (percent).
+const SERIES_A_DIL_MIN := 15
+const SERIES_A_DIL_MAX := 25
+const SERIES_A_DIL_BY_ARCH := {"low": 15, "generous": 16, "mid": 18, "high": 22}
+const SERIES_A_VAL_ARCH_PCT := {"low": -20, "mid": 0, "high": 15, "generous": 25}
+
+# --- What a rejection costs (ch. 09 §4) -----------------------------------
+# "Repeated rejections cost brand and morale." They used to cost a cascade point and nothing
+# else, which made three closed doors a counter rather than a season. Small on purpose: the
+# cascade is the real consequence, this is the weather around it.
+const REJECT_BRAND_COST := 3
+const REJECT_MORALE_COST := 4
 
 ## Difficulty label shown in the odds text, for a diff int.
 static func diff_label(diff: int) -> String:

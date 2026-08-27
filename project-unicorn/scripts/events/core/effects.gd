@@ -78,6 +78,11 @@ const NEUTRAL_VERBS := [
 	# investor flow that moves no money by itself
 	"open_negotiation", "start_vc_meeting", "open_term_table", "advance_phase",
 	"phase_gate_decline",
+	# The seed rung. NEITHER MOVES MONEY, which is why neither is economic: the seed
+	# accept is not a card effect at all — the money moves at the table's İMZALA, a played
+	# moment, exactly as a Series A signature does. "decline_buyout" closes the VC road and
+	# writes one memory flag; the cash it declines is cash that never arrives.
+	"open_seed_table", "decline_buyout",
 	# The two the migration required — see their arms for why each door is this narrow.
 	"set_game_flag", "mentor_advisory",
 	# B2B outcomes that move no money: stalling, refusing, declining. Their two siblings that
@@ -481,6 +486,16 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 		"open_term_table":
 			EventBus.term_table_requested.emit(String(e.get("vc_id", "")))
 			return {"verb": verb, "vc": e.get("vc_id", "")}
+		"open_seed_table":
+			# No vc_id on the effect: the seed offer knows whose it is, and there is only ever
+			# one. A card naming an investor would be a card that has to know the roster.
+			if GameState.seed_sheet == null:
+				return {"verb": verb, "refused": "no seed offer on the table"}
+			EventBus.term_table_requested.emit(String(GameState.seed_sheet.vc_id))
+			return {"verb": verb, "vc": GameState.seed_sheet.vc_id}
+		"decline_buyout":
+			EndingsSystem.on_buyout_declined()
+			return {"verb": verb}
 		"open_negotiation":
 			# §9.4: the engine opens the scene and does not know its insides. The return
 			# contract is stamped TEMPORARY in the GDD and owned by §23 A4.

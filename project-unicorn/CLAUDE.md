@@ -362,8 +362,11 @@ that used to raise a card:
   content, with a baseline ratchet), `--why-fire=<card id>` (the gate step that refused it, the
   live seam values, the latch, what it waits on), `--event-harness=random|guided`, and
   `--event-probe` (159 assertions in one boot).
-- Schema is **v10** and `MIN_LOADABLE_VERSION` is 10: **every pre-existing save is dead.** That
-  was a deliberate break, not an accident — see the rebuild's report.
+- Schema was **v10** at the rebuild and `MIN_LOADABLE_VERSION` is 10: **every save older than
+  that is dead.** That was a deliberate break, not an accident — see the rebuild's report.
+  The version has moved twice since, additively (v11 Satış rev 6, v12 the seed rung), and
+  `MIN_LOADABLE_VERSION` stayed at 10 both times: those fields all carry declared defaults,
+  which is the migration `SaveCodec`'s header describes.
 
 ---
 

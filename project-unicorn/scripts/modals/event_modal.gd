@@ -620,6 +620,13 @@ func _describe_modifier(m) -> Dictionary:
 		# Spec 6 teklif kartı: kabul masayı açar. Kör tip bırakmıyoruz — EFFECT-VISIBILITY
 		# kuralı, seçimin ne yaptığını kartın üstünde söylemeyi şart koşuyor.
 		"open_term_table": return {"text": tr("EFFECT_TERM_TABLE"), "kind": &"accent"}
+		"open_seed_table": return {"text": tr("EFFECT_SEED_TABLE"), "kind": &"accent"}
+		# THE RUN ENDS. `trigger_ending` had no row here because no card had ever used the
+		# verb — the buyout offer is the first, and FRANK_UNWIRED §3 named this exact gap:
+		# "'Sat' ends the run, so the option must be labelled — right now that click would be
+		# blind." The smoke case event_chip_coverage fails any card row that renders no chip.
+		"trigger_ending": return {"text": tr("EFFECT_RUN_ENDS"), "kind": &"accent"}
+		"decline_buyout": return {"text": tr("EFFECT_VC_ROAD_CLOSES"), "kind": &"negative"}
 		# Player-facing effects that previously rendered no badge (choices were blind).
 		"churn_customer": return {"text": tr("EFFECT_CHURN"), "kind": &"negative"}
 		"add_prospect": return {"text": tr("EFFECT_NEW_PROSPECT"), "kind": &"positive"}

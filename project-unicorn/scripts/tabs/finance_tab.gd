@@ -21,18 +21,21 @@ var _current: String = "ozet"
 func _ready() -> void:
 	_build()
 	EventBus.phase_changed.connect(_on_phase_changed)
+	EventBus.seed_door_opened.connect(_on_seed_door_opened)
 	# ODA kâğıt deep-link'i: oda YATIRIM kâğıdı tab_changed("finance") + bu
 	# sinyali ardışık emit eder; tab mount'u senkron olduğu için bu connect
 	# ikinci emit'ten önce hazırdır. _show_page'in faz bekçisi (yatirim, phase<3
 	# → erken dönüş) deep-link'i yapısal olarak güvenli kılar.
 	EventBus.finance_subpage_requested.connect(_show_page)
-	_apply_phase_lock(GameState.phase < 3)
+	_apply_phase_lock(_yatirim_locked())
 	_show_page("ozet")
 
 
 func _exit_tree() -> void:
 	if EventBus.phase_changed.is_connected(_on_phase_changed):
 		EventBus.phase_changed.disconnect(_on_phase_changed)
+	if EventBus.seed_door_opened.is_connected(_on_seed_door_opened):
+		EventBus.seed_door_opened.disconnect(_on_seed_door_opened)
 	if EventBus.finance_subpage_requested.is_connected(_show_page):
 		EventBus.finance_subpage_requested.disconnect(_show_page)
 
@@ -83,7 +86,11 @@ func _make_segment(label: String, id: String) -> Button:
 
 
 func _show_page(id: String) -> void:
-	if id == "yatirim" and GameState.phase < 3:   # LOC-DATA sub-page id
+	if id == "yatirim" and _yatirim_locked():   # LOC-DATA sub-page id
+		# THE PREDICATE, NOT A SECOND COPY OF THE RULE. Left as a literal `phase < 3`,
+		# this line silently swallows the seed door card's own deep link: the card fires
+		# goto_tab finance/yatirim, the segment unlocks, and the player lands on Özet
+		# with no explanation of why the thing Frank just told them about is not there.
 		return  # locked — the disabled button + tooltip already tell the player why
 	_current = id
 	_ozet_view.visible = id == "ozet"
@@ -106,5 +113,20 @@ func _apply_phase_lock(locked: bool) -> void:
 		_yatirim_btn.modulate = Color(1, 1, 1, 0.6)
 
 
-func _on_phase_changed(new_phase: int) -> void:
-	_apply_phase_lock(new_phase < 3)
+## Is the Yatırım sub-page still shut?
+##
+## A RATCHET, not a live read, and that matters: the seed door opens on a revenue bar,
+## and a live predicate would re-lock this page the day after a customer churned. The
+## door card is one_shot, so a page that re-locks can never re-announce itself. Once the
+## door has opened this run the page stays reachable — the cap-table row and the growth
+## expectation live here and outlast the door.
+func _yatirim_locked() -> bool:
+	return GameState.phase < 3 and not SeedRoundSystem.page_unlocked()
+
+
+func _on_seed_door_opened() -> void:
+	_apply_phase_lock(_yatirim_locked())
+
+
+func _on_phase_changed(_new_phase: int) -> void:
+	_apply_phase_lock(_yatirim_locked())

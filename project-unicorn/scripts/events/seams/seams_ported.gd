@@ -138,3 +138,53 @@ static func install() -> void:
 			var pm: Dictionary = GameState.pending_meeting
 			return not pm.is_empty() and int(pm.get("day", 0)) <= GameState.day,
 		"Funding", "a booked meeting's day has come")
+
+	# --- funding. · the seed rung ---------------------------------------
+	EvSeams.register("funding.seed_door_open", G, TYPE_BOOL,
+		func() -> bool: return SeedRoundSystem.door_open(),
+		"Funding", "the Traction-phase door is latched and unspent")
+	EvSeams.register("funding.seed_taken", G, TYPE_BOOL,
+		func() -> bool: return GameState.seed_lead != "",
+		"Funding", "a seed round was signed this run")
+	EvSeams.register("funding.seed_offer_live", G, TYPE_BOOL,
+		func() -> bool: return GameState.seed_sheet != null,
+		"Funding", "an unsigned seed offer is on the table; it never expires")
+	EvSeams.register("funding.seed_pitch_used", G, TYPE_BOOL,
+		func() -> bool: return GameState.seed_pitch_used,
+		"Funding", "the run's one seed meeting has been spent")
+	# INT, NOT THE BAND ID. EvPresenter._resolve_variant runs a by_seam value through int(), so
+	# a String here would collapse to 0 and every variant body would render the harsh arm
+	# forever — the failure would be invisible because a body still appears.
+	EvSeams.register("funding.seed_band", G, TYPE_INT,
+		func() -> int:
+			var s: TermSheet = GameState.seed_sheet
+			return SeedConstants.band_index(String(s.band)) if s != null else 0,
+		"Funding", "0 harsh · 1 standard · 2 strong — an INDEX, for by_seam bodies")
+	EvSeams.register("funding.seed_expectation", G, TYPE_INT,
+		func() -> int: return SeedRoundSystem.expectation_state(),
+		"Funding", "0 none · 1 grace · 2 on track · 3 durgun (SeedConstants.EXPECT_*)")
+	EvSeams.register("funding.seed_days_since_close", G, TYPE_INT,
+		func() -> int:
+			var d: int = GameState.seed_closed_day
+			return -1 if d < 0 else GameState.day - d,
+		"Funding", "-1 until the round closes; mirrors funding.angel_days_since_accept")
+
+	# --- funding. · the buyout offer -------------------------------------
+	EvSeams.register("funding.acq_road_over", G, TYPE_BOOL,
+		func() -> bool: return EndingsSystem.road_over(),
+		"Funding", "faced Series A by a decline or a walk, and no table is left to walk to")
+	EvSeams.register("funding.acq_days_open", G, TYPE_INT,
+		func() -> int: return EndingsSystem.acq_days_open(),
+		"Funding", "-1 until the road closes; the buyout window is measured from that stamp")
+	# THE TWO THAT EXIST BECAUSE OF A SHIPPED BUG. The sealed buyout body carries {valuation}
+	# and {offer}; neither is a scope slot, so as CSV tokens they reached the screen as literal
+	# text (FRANK_VERIFY_2026-08-21.md:166). STRING, and formatted here, because the body reads
+	# them through {seam:} and _interpolate does str() on whatever comes back — an INT would put
+	# "1440000" in a sentence about a valuation. Formatting at READ time is not "localized text
+	# in state": nothing is stored, the money mark is resolved per locale by Fmt.
+	EvSeams.register("funding.acq_valuation", G, TYPE_STRING,
+		func() -> String: return Fmt.money(EndingsSystem.acquisition_valuation()),
+		"Funding", "the buyer's price for the whole company: ARR x multiple")
+	EvSeams.register("funding.acq_offer", G, TYPE_STRING,
+		func() -> String: return Fmt.money(EndingsSystem.acquisition_founder_share()),
+		"Funding", "the founder's slice of that price — what the sealed line calls 'your share'")

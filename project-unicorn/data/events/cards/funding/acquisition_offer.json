@@ -1,0 +1,96 @@
+{
+  "_ported_from": "END_EV_ACQ_* (Frank v6 surfaces 17 + 18, merged pivot + acquisition)",
+  "_port_note": "THE BODY IS INLINE, AND THAT IS THE FIX, NOT A STYLE CHOICE. As a CSV row it carried {investor}, {valuation} and {offer}; the presenter resolves {slot} from the bound scope and {seam:ns.name} from the registry, so the two numeric tokens would have reached the screen as literal text - the defect FRANK_VERIFY_2026-08-21.md:166 recorded. {seam:} cannot live in the CSV (loc_csv_integrity's brace rule), so the body moves inline in both locales, the shape customer/request_complaint.json already uses. THE PROSE IS BYTE-EXACT; only the machine token moved, which is precisely what the v6 landing pass itself did to these two tokens ({degerleme} -> {valuation}). The unread END_EV_ACQ_BODY row is recorded in FRANK_ORPHANS rather than deleted.\n\n'Kendi paramla devam' carries TWO effects. The second one is the memory the document rules must survive: refusing to sell is thrown back at the founder in a later VC meeting (vc_pitch_system._sorgu_narrative). Dropping it silently deletes a beat.",
+  "id": "funding.acquisition_offer",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe",
+    "terminal_warning"
+  ],
+  "speaker": "char_mentor_frank",
+  "scope": {
+    "investor": {
+      "type": "investor",
+      "required": true,
+      "select": "seed_lead"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "funding.acq_road_over",
+        "op": "==",
+        "value": true,
+        "reason": "the Series A road closed by a DECLINE or a WALK, and nothing is left to walk to"
+      },
+      {
+        "seam": "funding.acq_days_open",
+        "op": "<=",
+        "value": 10,
+        "reason": "EndingsSystem.ACQ_CARD_WINDOW_DAYS - a buyer that never showed up does not show up in year two"
+      },
+      {
+        "seam": "funding.seed_taken",
+        "op": "==",
+        "value": true,
+        "reason": "the caller IS the seed lead; with no seed there is nobody to make the call"
+      },
+      {
+        "seam": "finance.shutter_days_left",
+        "op": "<",
+        "value": 0
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "sell",
+      "outcome_id": "sold",
+      "effects": [
+        {
+          "verb": "set_flag",
+          "name": "buyout_offer_seen"
+        },
+        {
+          "verb": "trigger_ending",
+          "ending_id": "acquisition",
+          "requires_telegraph": "flag:buyout_offer_seen"
+        }
+      ]
+    },
+    {
+      "id": "carry_on",
+      "outcome_id": "refused",
+      "effects": [
+        {
+          "verb": "decline_buyout"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "END_EV_ACQ_TITLE",
+      "body": "Series A turu kapandı, ortada anlaşma yok.\n\n{investor} arıyor.\n\n\"Şirketi almak isteyen biri var. {seam:funding.acq_valuation} değerleme ile sana düşen miktar bu: {seam:funding.acq_offer}. Karar senin, ben sadece masaya koyuyorum.\"\n\nSonra Frank'ten kısa bir mesaj.\n\n\"Hangi kararı verirsen ver arkandayım.\"",
+      "options": {
+        "sell": "END_EV_ACQ_ACCEPT",
+        "carry_on": "END_EV_ACQ_DECLINE"
+      }
+    },
+    "en": {
+      "title": "END_EV_ACQ_TITLE",
+      "body": "The Series A round is closed and there's no deal in it.\n\n{investor} calls.\n\n\"There's someone who wants to buy the company. At a {seam:funding.acq_valuation} valuation, your share comes to {seam:funding.acq_offer}. It's your call. I'm just bringing it to you.\"\n\nThen a short message from Frank.\n\n\"Whichever way you go, I'm behind you.\"",
+      "options": {
+        "sell": "END_EV_ACQ_ACCEPT",
+        "carry_on": "END_EV_ACQ_DECLINE"
+      }
+    }
+  }
+}

@@ -32,10 +32,28 @@ These fire in a normal run today.
 |---|---|---|---|
 | `END_META_SERIES_A_CLOSE_FRANK`, `END_META_ACQUISITION_FRANK`, `END_META_BANKRUPTCY_FRANK`, `END_META_BRAND_COLLAPSE_FRANK`, `END_META_VC_REJECTION_CASCADE_FRANK`, `END_META_PROFITABLE_BOOTSTRAP_FRANK`, `END_META_RUNNING_ON_FUMES_FRANK` (7) | **nowhere** | built into `ending_data.frank_line` by `EndingsSystem`, but `EndingsCopy.build` sets every subhead from its own `END_*_SUB*` keys; `frank_line` is read only in an unknown-id fallback | **Authored, localized, never rendered.** The ending newspaper bans mentor attribution by design, so these need a surface (a Frank strip on `EndingScene`, or a pre-terminal beat) before they are text at all. Bölüm 3 lists "oyun sonu hükümleri" among the places Frank is removed, which may mean these should be **deleted** rather than given a surface — that is the ruling this row is waiting for |
 
-**One of these is now factually wrong and was left alone under the do-not-rewrite rule:**
-`END_META_BANKRUPTCY_FRANK` says "Yedi gün kırmızıda kaldın" / "You stayed in the red for seven
-days", while this pass moved `EndingsSystem.SHUTTER_DAYS` from 7 to 30. It renders nowhere, so
-nothing is on screen today, but it must not be given a surface in this state.
+**CLOSED 2026-08-27 (the funding-ladder wave).** Both halves of this row are resolved, and in
+the order the row itself demanded — the number first, then the surface.
+
+*The ruling:* the seven verdict lines are **kept and given a surface**, not deleted. Ch. 13 §2
+is explicit that Frank's line renders on its own strip **outside** the newspaper, which is what
+reconciles it with "oyun sonu hükümleri" appearing on the removal list: what Bölüm 3 removes is
+Frank *from the paper*, and the paper never carried him. `EndingScene._build_frank_strip` paints
+`ending_data.frank_line` on the dark gutter beneath the page, attributed to him by name. It is
+outside `_export_paper_png`'s crop by construction, so the shared image is still a newspaper.
+
+*The number:* `END_META_BANKRUPTCY_FRANK` now says **thirty**, in both columns, and nothing else
+in the line moved — not a word, not the em dashes, which belong to a dash sweep this task did not
+run. The smoke case `bankruptcy_frank_line_says_thirty` pins the copy to
+`EndingsSystem.SHUTTER_DAYS`, so the next retune of that constant cannot silently orphan it
+again. The contradiction this row sharpened — `FIN_SHUTTER_COUNTDOWN` putting `KEPENK: 30 GÜN`
+on the top bar for all thirty days — is gone.
+
+*What was true when this row was written and is now history:*
+`END_META_BANKRUPTCY_FRANK` said "Yedi gün kırmızıda kaldın" / "You stayed in the red for seven
+days" while `EndingsSystem.SHUTTER_DAYS` had been 30 since the v6 pass. It rendered nowhere, so
+nothing was on screen — and the row's own instruction was that it must not be given a surface in
+that state. It was not: the number was fixed in the same commit that built the strip.
 
 **The 30 is already on the player's screen, which is what makes this sharp.** `FIN_SHUTTER_COUNTDOWN`
 (`strings.csv:502`, rendered by `top_bar.gd:256`) puts `KEPENK: 30 GÜN` in the top bar the moment the
@@ -71,7 +89,8 @@ rather than deleted. All four groups are strings and modifier arms with no remai
 | `VC_EV_ACK` ("Anlaşıldı" / "Understood") | the acks on surfaces 14, 15 and 16 | all three cards now carry the document's navigation option instead (`VC_EV_GO_FUNDING`, `END_EV_GO_FINANCE`) |
 | `VC_EV_SKIP_MEETING` ("Bugün değil (randevu yanar)") | surface 13's second option | the document removes it: burning a booked meeting is not a choice the game offers |
 | `DEAL_PROMPT_SIT`, `DEAL_PROMPT_DEFER`, `DEAL_PROMPT_VALIDITY` | surface 24's old two-option pair | replaced by the single navigation option; waiting is now the answer counter, not a card choice |
-| `END_EV_PIVOT_TITLE`, `END_EV_PIVOT_BODY`, `END_EV_PIVOT_ACCEPT`, `END_EV_PIVOT_DECLINE` | `ev_pivot_offer` | that card merged into the buyout card (surfaces 17 + 18), which uses the `END_EV_ACQ_*` keys |
+| `END_EV_PIVOT_TITLE`, `END_EV_PIVOT_BODY`, `END_EV_PIVOT_ACCEPT`, `END_EV_PIVOT_DECLINE` | `ev_pivot_offer` | that card merged into the buyout card (surfaces 17 + 18), which uses the `END_EV_ACQ_*` keys. **The buyout card is WIRED as of 2026-08-27** (`data/events/cards/funding/acquisition_offer.json`), so `END_EV_ACQ_TITLE` / `_ACCEPT` / `_DECLINE` are live — these four pivot keys stay orphaned |
+| `END_EV_ACQ_BODY` | the buyout card, until 2026-08-27 | **NEWLY ORPHANED, deliberately.** The body carried `{investor}`, `{valuation}` and `{offer}`; only the first is a scope slot, so the other two would have reached the screen as literal braces (the defect `FRANK_VERIFY_2026-08-21.md:166` predicted). `{seam:}` cannot live in the CSV — `loc_csv_integrity` counts braces against `[a-z_]+` tokens — so the body moved INLINE into the card in both locales, byte-exact apart from the two machine tokens becoming `{seam:funding.acq_valuation}` / `{seam:funding.acq_offer}`. The v6 landing pass had already moved these same two tokens once (`{değerleme}` → `{valuation}`). Reported rather than deleted, per this file's own rule |
 | modifier `decline_vc_meeting` | surface 13's skip option | no caller left. The dispatcher arm stays: it is engine vocabulary, not content |
 | modifier `decline_pivot` | `ev_pivot_offer`'s option 2 | no caller left. Same reasoning |
 | modifier `open_term_table` + `EFFECT_TERM_TABLE` | surface 24's "Masaya otur" | landed the day before this pass. No **event card** reaches it now; the dispatcher arm, the effect chip, the `game_shell.gd` debug driver and the `main.gd` chip fixture all remain |

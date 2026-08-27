@@ -1,0 +1,85 @@
+{
+  "_worked_example": "interrupt + one_shot, deliberately NOT `paper`. A paper carries expires_days, and an expiring nudge about an offer that never expires (ruling 6) is a card contradicting its own mechanic. The body varies by the conviction band the meeting produced; funding.seed_band is an INT index because EvPresenter._resolve_variant runs the seam through int(), and a String there would render the harsh arm forever.",
+  "id": "funding.seed_offer",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "scope": {
+    "investor": {
+      "type": "investor",
+      "required": true,
+      "select": "seed_lead"
+    }
+  },
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "funding.seed_offer_live",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "funding.seed_taken",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "sit_down",
+      "outcome_id": "sat",
+      "effects": [
+        {
+          "verb": "open_seed_table"
+        }
+      ]
+    },
+    {
+      "id": "later",
+      "outcome_id": "deferred",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "SEED_OFFER_TITLE",
+      "body": {
+        "by_seam": "funding.seed_band",
+        "variants": {
+          "0": "SEED_OFFER_BODY_HARSH",
+          "1": "SEED_OFFER_BODY_STANDARD",
+          "2": "SEED_OFFER_BODY_STRONG"
+        }
+      },
+      "options": {
+        "sit_down": "SEED_OFFER_SIT",
+        "later": "SEED_OFFER_LATER"
+      }
+    },
+    "en": {
+      "title": "SEED_OFFER_TITLE",
+      "body": {
+        "by_seam": "funding.seed_band",
+        "variants": {
+          "0": "SEED_OFFER_BODY_HARSH",
+          "1": "SEED_OFFER_BODY_STANDARD",
+          "2": "SEED_OFFER_BODY_STRONG"
+        }
+      },
+      "options": {
+        "sit_down": "SEED_OFFER_SIT",
+        "later": "SEED_OFFER_LATER"
+      }
+    }
+  }
+}
