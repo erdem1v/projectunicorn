@@ -186,30 +186,33 @@ const PROMISE_BROKEN_TOLERANCE := 5
 
 
 # ======================= Stage D — Customer Success ==========================
-const CS_BASE_CAPACITY := 3
-# The founder hands an account over only once they are carrying more than this many directly —
-# which is exactly what this constant always claimed to mean and, until Task 2b, never did
-# (zero readers). It gates STEWARDSHIP only: the request channel is uncapped and runs from the
-# rep's first day, so a hire is never idle. Deliberately NOT an erosion penalty on the excess —
-# that would change behaviour for runs with no CS staff and break the additive-coupling proof.
-const FOUNDER_DIRECT_CAP := 4           # founder manages at most ~this many directly
+# B4 (direktör hükmü 2026-08-27) — HESAP KAPASİTESİ YILDIZDAN TÜRER, ve tek çift sabitten.
+# Çapa örnekleri direktörün kendi sayıları: 1★ → 6 · 1,5★ → 7 · 2★ → 8. [K]
+#
+# Eski merdiven (0-2 → 3, 3-5 → 4, …) puanı üçe bölüyordu ve yarım yıldızı göremiyordu; bu
+# formül `HRConstants.stars_for` üzerinden okuduğu için yarım yıldız GERÇEKTEN bir slot değeri
+# taşıyor. AREA_MAX'te 14 veriyor — eski 3-6 bandının çok üstünde, ve bu bilinçli bir kalibrasyon
+# yüzeyi olarak raporlanıyor, ayarlanmış bir sayı olarak değil.
+const ACCOUNT_CAP_BASE := 4             # [K] taban: yıldızsız bir sahip bile bu kadar taşır
+const ACCOUNT_CAP_PER_STAR := 2         # [K] her tam yıldız bu kadar slot ekler
 const CS_ESCALATION_SAT := 35           # CS-managed customer crosses this → one escalation
 const CS_DAMPEN_MIN := 0.4              # floor on the erosion slowdown a great CS gives
 const CS_REFUSE_BRAND := 3              # brand DROP magnitude on refusing a CS's promise
 const CS_REFUSE_MORALE := 10            # morale DROP magnitude for that CS employee
 
 
-static func cs_capacity(customer_success: int) -> int:
-	# How many accounts one rep can steward, rising with MÜŞTERİ BAŞARISI. It read HIZ until
-	# 2026-08-21, when rev 2 §2 deleted Hız outright — and the area it moved to is the one
-	# §2 already gave "bilet çözümü, memnuniyet, churn", i.e. everything this desk does.
-	# The LADDER IS UNCHANGED (0-2 → 3, 3-5 → 4, 6-8 → 5, 9 → 6), which also puts it exactly
-	# inside rev 2 §5's [WORKING 3-6] band for the CS account cap.
-	# One consequence worth stating: capacity and quality now read the SAME number, so a
-	# Müşteri Temsilcisi file is no longer a two-axis trade-off. That is rev 2's choice, not
-	# an accident of the migration — the trade-off moved from inside the person to the
-	# assignment layer (who is on Hesap sahipliği at all).
-	return CS_BASE_CAPACITY + int(float(maxi(customer_success, 0)) / float(CS_PACE_PER_SLOT))
+## B4 — KAÇ HESAP TAŞINIR: 4 + 2 × yıldız, ve sahibin KİM olduğu sorulmaz.
+##
+## Aynı çağrı hem temsilci hem kurucu için kullanılır; "kurucu şu kadar taşır" diye ayrı bir
+## sabit YOK (eski `FOUNDER_DIRECT_CAP` bu yüzden emekli). Kurucunun kapasitesi kendi MÜŞTERİ
+## İLİŞKİLERİ yıldızından çıkar, tıpkı herkesinki gibi.
+##
+## Yıldız üzerinden okunuyor, puan üzerinden değil, ve fark gerçek: `stars_for` yarım yıldızları
+## taşıyor (POINTS_PER_STAR 2), yani 1,5★ gerçekten 7 slot demek. Eski merdiven puanı üçe
+## bölüyordu ve yarım yıldızı hiç göremiyordu.
+static func account_capacity(customer_success: int) -> int:
+	var stars: float = HRConstants.stars_for(maxi(customer_success, 0))
+	return ACCOUNT_CAP_BASE + int(round(float(ACCOUNT_CAP_PER_STAR) * stars))
 
 
 # Churn suppression per UZMANLIK point (HR Coupling). DERIVED, not chosen: the old law was
@@ -319,10 +322,9 @@ const AUTO_CLOSE_MRR_FRAC := 0.5
 const AUTO_CLOSE_MRR_PER_EXPERTISE := 0.04
 
 # --- Müşteri masası (CustomerRepSystem) ---
-# Points of Müşteri Başarısı per extra account slot. Named CS_PACE_PER_SLOT while capacity
-# read Hız; the name is kept so the calibration ledger stays greppable, but the input is the
-# Müşteri Başarısı AREA since 2026-08-21 (see cs_capacity for why).
-const CS_PACE_PER_SLOT := 3
+# CS_PACE_PER_SLOT EMEKLİ (B4, 2026-08-27). Kapasite artık puanı bir bölene değil YILDIZA
+# bağlı (`account_capacity`), ve iki sabit yerine tek çift sabit var. Adı kalibrasyon
+# defterinde greplenebilir kalsın diye bu satır bırakıldı; değerin kendisi silindi.
 # The founder onboards every new account personally; delegation begins once it settles.
 const CS_ASSIGNABLE_PHASES := ["active", "risk", "expansion"]
 # Request channel. Fires for the WHOLE customer book, founder-managed accounts included, from

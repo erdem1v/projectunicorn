@@ -52,6 +52,26 @@ func get_active() -> Array[Customer]:
 	return out
 
 
+## HOW MANY ACCOUNTS THE BOOK HOLDS, and the reason it is not `get_active().size()`.
+##
+## The B2C user base lives in this registry as ONE aggregate `Customer` record — an audience
+## wearing a customer's shape, with `seats = 0` and a composed display name. It belongs here
+## (satisfaction, churn and MRR all run through the same machinery) but it is not an account,
+## and counting it as one is how the top bar and the summary came to disagree by exactly one
+## (F5 turu bulgusu F12, 2026-08-27): one surface filtered to b2b and read 5, the other counted
+## every active record and read 6, and both were "right" about different questions.
+##
+## One question, one answer: an ACCOUNT is an active customer that is not the aggregate. In a
+## pure B2B run that is the b2b book; in a B2C run it is zero, which is the truth — a B2C
+## company has an audience, not a client list.
+func account_count() -> int:
+	var n: int = 0
+	for c in _customers.values():
+		if c.status == "active" and c.id != SalesSystem.B2C_USERBASE_ID:
+			n += 1
+	return n
+
+
 # --- Queries (consumed by SalesSystem, the Sales tab and the ODA board) ---
 
 func get_total_mrr() -> int:

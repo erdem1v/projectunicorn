@@ -213,12 +213,16 @@ seam and the copy interpolates it, so the sentence cannot go stale again.
 `musteri.has_open_promise(c)` `:47` · `sales.pipeline_count()` `prospect_registry.gd:28` ·
 `sales.pipeline_optimistic_mrr()` `sales_system.gd:335` · `sales.can_pitch()` `pitch_system.gd:196` ·
 `sales.b2c_audience()` `sales_system.gd:315` · `sales.conversion_rate(price)` `:527` ·
-`sales.growth_band()` `:634` · `sales.is_b2b_market()` `:157` · `sales.market_share()`
+`sales.growth_band()` `:634` · `sales.is_b2b_market()` `:157` ·
+`sales.weekly_closes()` `sales_ledger.gd` — §7.3'ün haftalık özet SATIRLARI (hesap · yıldız ·
+koltuk × fiyat · MRR, artı toplam); metin döner, kart tek adla çağırır · `sales.market_share()`
 `rival_registry.gd:199` · `destek.desk_throughput()` `customer_rep_system.gd:80` ·
 `destek.absorb_ceiling()` `:213` · `destek.desk_staffed()` `support_system.gd:265` ·
 `destek.warmth_band()` `:440` · `destek.daily_satisfaction_damage()` `:324` (cap −2.0/day)
 
-**OKUNUYOR (wrapped):** `musteri.count()` (`get_active().size()`) ·
+**OKUNUYOR (wrapped):** `musteri.count()` (`get_active().size()` — aktif KAYIT sayar, B2C
+toplu kullanıcı tabanı DAHİL; traction kapısı "ilk gerçek müşteri" diye bunu okur ve B2C
+koşusunda o müşteri toplu kayıttır. "Kaç HESAP" ayrı bir addır: `sales.account_count`) ·
 `musteri.satisfaction(c)` `customer.gd:39` · `musteri.tolerance(c)` `:50` — **the hidden
 second layer**; the pair `satisfaction < tolerance` is the whole B2B risk model, so the engine
 also publishes `musteri.under_tolerance(c)` as a wrapper · `musteri.trust_offset(c)` `:75`

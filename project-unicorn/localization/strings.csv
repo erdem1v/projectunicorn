@@ -741,15 +741,13 @@ B2B_EV_RISK_TITLE,Müşteri riski,Account at risk
 B2B_EV_EXPANSION_TITLE,Büyüme fırsatı,Growth opening
 B2B_EV_EXPANSION_BODY,"Ekibimiz büyüyor, sistemi başka birimlere de yaymak istiyoruz. Koltuk ekleyelim.",Our team is growing and we want to roll the system out to other units. Let us add seats.
 B2B_EV_REP_WARN_TITLE,Müşteri temsilcisi uyarısı,Account manager warning
-B2B_EV_REP_WARN_BODY,"Patron, {company} bir süredir '{feature}' istiyor. Oyaladım ama artık tutamıyorum. Gideceklerdi, büyük müşteri, söz vermek zorunda kaldım. En kısa sürede yapalım.","Boss, {company} has been asking for '{feature}' for a while. I stalled them, but I cannot hold it any longer. They were ready to walk — big account — so I had to promise. Let us get it done."
+B2B_EV_REP_WARN_BODY,"Patron, {customer} bir süredir bekliyor. Oyaladım ama artık tutamıyorum. Gideceklerdi, büyük müşteri, söz vermek zorunda kaldım. En kısa sürede yapalım.","Boss, {customer} has been waiting a while. I stalled them, but I cannot hold it any longer. They were ready to walk — big account — so I had to promise. Let us get it done."
 B2B_EV_COMPLAINT_TITLE,Müşteri şikâyeti,Customer complaint
 B2B_EV_COMPLAINT_HARD,"{company} hattı arıyor, ton sert: ""{voice}"" Kendi başıma yatıştıramadım.","{company} is on the line and the tone is hard: ""{voice}"" I could not calm them down on my own."
-B2B_EV_COMPLAINT_SOFT,"{company} hattı arıyor: ""{voice}"" Şimdilik idare ettim ama karar senin.","{company} is on the line: ""{voice}"" I have held it for now, but the call is yours."
-B2B_EV_RENEWAL_BODY,{company} sözleşme yenilemesini sorguluyor. Fiyatı gözden geçiriyorlar; masaya oturmak gerek.,{company} is questioning the renewal. They are reviewing the price; this needs a meeting.
+B2B_EV_RENEWAL_BODY,{customer} sözleşme yenilemesini sorguluyor. Fiyatı gözden geçiriyorlar; masaya oturmak gerek.,{customer} is questioning the renewal. They are reviewing the price; this needs a meeting.
 B2B_EV_REQUEST_TITLE,Müşteri talebi,Customer request
-B2B_EV_REQUEST_BODY_VOICE,"{company} '{feature}' istiyor: ""{voice}"" Kendi başıma kapatamadım, karar senin.","{company} wants '{feature}': ""{voice}"" I could not close it on my own; the call is yours."
 B2B_EV_REQUEST_BODY_PLAIN,"{company} '{feature}' istiyor. Kendi başıma kapatamadım, karar senin.",{company} wants '{feature}'. I could not close it on my own; the call is yours.
-B2B_CHOICE_PROMISE,Söz ver: '{feature}',Promise it: '{feature}'
+B2B_CHOICE_PROMISE,Söz ver,Promise it
 B2B_CHOICE_STALL,Oyala,Stall them
 B2B_CHOICE_DISCOUNT,İndirim ver,Offer a discount
 B2B_CHOICE_LEAVE_ALONE,Kendi haline bırak,Leave it alone
@@ -2659,3 +2657,14 @@ SALES_LOG_FOUNDER_CLOSE,{company} anlaşmasını sen kapattın · {amount}/ay,yo
 NEG_LAST_OFFER,SON RAKAM,THEIR LAST NUMBER
 NEG_LAST_OFFER_REASON,Sabır bitti. Bu rakam ya kabul edilir ya masa kapanır.,Patience is out. Take this number or the table closes.
 SALES_ODDS_HINT,neden?,why?
+B2B_LOCK_NO_PAIN_TARGET,Bu hesabın adı konmuş bir talebi yok. Söz verilecek bir şey de yok.,This account has no named request. There is nothing to promise yet.
+B2B_LOCK_PAIN_SHIPPED,İstedikleri şey zaten yayında.,What they asked for is already live.
+PROD_DESK_ACCOUNTS_ONLY,"{names} hesapları taşıyor ama destek masasına atanmadı. Görevler sayfasında Destek sütununu işaretle.","{names} carries accounts but is not on the support desk. Tick the Support column on the Duties page."
+PROD_DESK_NOBODY_ELIGIBLE,Masayı taşıyabilecek kimse yok. Bir Müşteri Temsilcisi ya da Yazılımcı işe al.,Nobody can staff the desk. Hire a Customer Rep or an Engineer.
+SALES_PROMISE_OPEN,Açık söz: {feature} · {days} gün,Open promise: {feature} · {days} days
+EVENT_READOUT_DAY,ÖZET · GÜN {day},SUMMARY · DAY {day}
+SALES_WEEKLY_ROW,{company}  {stars}  {seats} koltuk x {price} = {mrr}/ay,{company}  {stars}  {seats} seats x {price} = {mrr}/mo
+SALES_WEEKLY_TOTAL,Toplam: {n} anlaşma · {mrr}/ay,Total: {n} deals · {mrr}/mo
+HR_FOUNDER_STATE_CARE,PH: Müşterilerle ilgileniyor,PH: Looking after customers
+PROD_DESK_FOUNDER_PASSIVE,Kimse atanmadı; sen ilgileniyorsun.,Nobody is assigned; you are looking after it.
+PROD_DESK_FOUNDER_BUSY,Meşgulsün: {what}. Masaya bakan kimse yok.,You are busy: {what}. Nobody is watching the desk.

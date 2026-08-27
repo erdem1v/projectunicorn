@@ -172,13 +172,37 @@ func _stance_dial() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	var current: String = SalesLedger.price_stance()
+	# THE SELECTED POSITION HAS TO BE UNMISTAKABLE (F11). `ChromeTabButtonActive` and
+	# `ChromeTabButton` differ by a shade in the terminal palette — enough for a tab rail where
+	# the page underneath tells you where you are, and not nearly enough for a three-position
+	# dial that is the SINGLE source of every B2B price. The player could not read their own
+	# pricing policy off the control that sets it.
+	#
+	# Built as a code-side `StyleBoxFlat` (rnd_ui_shared.gd:13-16's sanctioned hatch) rather
+	# than a new theme item, so `THEME_STAMP` does not move for one dial: the active position
+	# takes the amber-keyed fill AND an accent edge, the others stay flat with a disabled edge.
 	for stance in SalesConstants.STANCES:
 		var id: String = String(stance)
+		var active: bool = id == current
 		var btn := Button.new()
 		btn.text = tr("SALES_STANCE_" + id.to_upper())
-		btn.theme_type_variation = &"ChromeTabButtonActive" if id == current else &"ChromeTabButton"
+		btn.theme_type_variation = &"ChromeTabButtonActive" if active else &"ChromeTabButton"
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.tooltip_text = tr("SALES_STANCE_HINT_" + id.to_upper())
+		btn.add_theme_color_override("font_color",
+			UiTokens.ACCENT if active else UiTokens.INK_DIM)
+		var sb := StyleBoxFlat.new()
+		sb.set_corner_radius_all(UiTokens.RADIUS_S)
+		sb.content_margin_left = UiTokens.SPACE_M
+		sb.content_margin_right = UiTokens.SPACE_M
+		sb.content_margin_top = UiTokens.SPACE_XS
+		sb.content_margin_bottom = UiTokens.SPACE_XS
+		sb.bg_color = UiTokens.AMBER_BG if active else UiTokens.SURFACE_INPUT
+		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+		sb.border_color = UiTokens.ACCENT if active else UiTokens.BORDER_DISABLED
+		btn.add_theme_stylebox_override("normal", sb)
+		btn.add_theme_stylebox_override("hover", sb)
+		btn.add_theme_stylebox_override("pressed", sb)
 		btn.pressed.connect(func() -> void: SalesLedger.set_price_stance(id))
 		row.add_child(btn)
 	col.add_child(row)
@@ -461,7 +485,7 @@ func _refresh_portfolio() -> void:
 	custs.sort_custom(func(a: Customer, b: Customer) -> bool:
 		return _attention_rank(a) > _attention_rank(b))
 	var direct: int = B2BSalesSystem.founder_managed_count()
-	if direct > B2BConstants.FOUNDER_DIRECT_CAP:
+	if direct > CustomerRepSystem.founder_account_capacity():
 		_portfolio_col.add_child(UiFactory.make_label(
 			tr("SALES_FOUNDER_STRETCHED").format({"n": direct}), &"RowMeta", UiTokens.INK_DIM))
 	for c in custs:
@@ -491,6 +515,7 @@ func _card_calm(c: Customer) -> Control:
 		"neutral" if is_new else "positive"))
 	col.add_child(UiFactory.make_label(_meta_line(c), &"RowMeta", UiTokens.INK_MUTED))
 	_add_steward_line(col, c)
+	_add_promise_line(col, c)
 	return UiFactory.make_card(col)
 
 
@@ -505,6 +530,7 @@ func _card_risk(c: Customer) -> Control:
 			tr("SALES_CHURN_COUNTDOWN").format({"n": c.churn_countdown}),
 			&"RowMeta", UiTokens.negative()))
 	_add_steward_line(col, c)
+	_add_promise_line(col, c)
 	# PROPOSER, not a second admission path (I1): the tab NAMES the card and the gate runs
 	# G1-G8 over it. Unchanged from before rev 6 — §19 keeps the retention grammar intact.
 	col.add_child(_action_button(tr("SALES_ACTION_RETAIN") + " →", func() -> void:
@@ -518,6 +544,7 @@ func _card_expansion(c: Customer) -> Control:
 	col.add_child(UiFactory.make_label(_meta_line(c), &"RowMeta", UiTokens.INK_MUTED))
 	col.add_child(UiFactory.make_label(tr("SALES_EXPANSION_FICTION"), &"QuoteSerif"))
 	_add_steward_line(col, c)
+	_add_promise_line(col, c)
 	col.add_child(_action_button(tr("SALES_ACTION_EXPAND") + " →", func() -> void:
 		EventGate.request("customer.expansion", {"customer": c.id})))
 	return UiFactory.make_card(col)
@@ -548,6 +575,26 @@ func _badge_row(text: String, kind: String) -> Control:
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(sp)
 	return row
+
+
+## F3 — AÇIK SÖZ HESABIN KENDİ KARTINDA GÖRÜNÜR. Ürün sayfası bütün açık sözleri bir arada
+## listeliyor, ama hesabın kartı — sözün verildiği yer, ve kırıldığında bedelini ödeyecek yer —
+## hiçbir şey söylemiyordu. Tek satır: ne söz verildi ve kaç gün kaldı.
+##
+## Bugün nadiren çizilir ve bu bir kusur değil, bir ÖLÇÜM: söz hedefleri
+## `B2BSalesSystem.pick_pain_feature`'dan geliyor ve o havuz emekli ürün sözlüğüne bağlı, yani
+## şu an hiçbir hesap adı konmuş bir talep taşımıyor (raporun F2 satırı). Havuz Ürün turunda
+## canlı sözlüğe döndüğünde bu satır kendiliğinden yanar.
+func _add_promise_line(col: VBoxContainer, c: Customer) -> void:
+	var open: Array[Promise] = PromiseRegistry.get_open_for(c.id)
+	if open.is_empty():
+		return
+	var p: Promise = open[0]
+	var days: int = maxi(0, int(p.deadline_day) - GameState.day)
+	col.add_child(UiFactory.make_label(tr("SALES_PROMISE_OPEN").format({
+		"feature": B2BConstants.feature_label(p.feature_id),
+		"days": days,
+	}), &"RowMeta", UiTokens.ACCENT_DEEP))
 
 
 func _add_steward_line(col: VBoxContainer, c: Customer) -> void:
@@ -582,7 +629,7 @@ func _open_steward_picker(c: Customer, anchor: Button) -> void:
 	var body: VBoxContainer = pop.body()
 	body.add_child(UiFactory.make_section_header(tr("SALES_STEWARD_PICK")))
 	for rep in CharacterRegistry.get_active_by_role(HRConstants.ROLE_CUSTOMER_REP):
-		var cap: int = B2BConstants.cs_capacity(
+		var cap: int = B2BConstants.account_capacity(
 			int(rep.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0)))
 		var load: int = CustomerRepSystem.roster_size(rep.id)
 		var label: String = "%s  ·  %d/%d" % [rep.character_name, load, cap]
@@ -596,11 +643,24 @@ func _open_steward_picker(c: Customer, anchor: Button) -> void:
 				CustomerRegistry.assign_customer(c.id, rep_id, true)
 				pop.close(), false))
 	body.add_child(HRUiShared.hairline())
+	# A1/A3 (direktör hükmü 2026-08-27) — KURUCU DA BİR SEÇENEKTİR VE AYNI SATIRI OKUR.
+	#
+	# Bu satır zaten çalışıyordu; eksik olan ÖLÇÜYDÜ. Personel satırları yük/kapasite
+	# gösterirken kurucununki çıplak bir düğmeydi, yani oyuncu tek bir yerde kendi defterinin
+	# ne kadar dolu olduğunu göremiyordu — ve tavana dayandığında hiçbir şey onu durdurmuyordu
+	# (SESSİZ TAŞMA). Aynı formül, aynı biçim, aynı kapı: kapasitesi kendi MÜŞTERİ İLİŞKİLERİ
+	# yıldızından çıkıyor (`founder_account_capacity`), yükü doğrudan taşıdığı hesaplar.
+	var f_cap: int = CustomerRepSystem.founder_account_capacity()
+	var f_load: int = B2BSalesSystem.founder_managed_count()
+	var f_label: String = "%s  ·  %d/%d" % [tr("SALES_STEWARD_FOUNDER"), f_load, f_cap]
 	if c.assigned_to == "":
-		body.add_child(HRUiShared.disabled_button(tr("SALES_STEWARD_FOUNDER"),
-			tr("SALES_STEWARD_CURRENT")))
+		body.add_child(HRUiShared.disabled_button(f_label, tr("SALES_STEWARD_CURRENT")))
+	elif f_load >= f_cap:
+		# Tavanda kurucu da seçilemez, ve GEREKÇESİNİ söyler — personel satırıyla birebir aynı
+		# kapı. "Özel kural yok" hükmünün UI tarafı budur.
+		body.add_child(HRUiShared.disabled_button(f_label, tr("SALES_STEWARD_FULL")))
 	else:
-		body.add_child(HRUiShared.action_button(tr("SALES_STEWARD_FOUNDER"), func() -> void:
+		body.add_child(HRUiShared.action_button(f_label, func() -> void:
 			# pinned=true even for the founder: otherwise _delegate_excess hands it straight
 			# back tomorrow morning and the player's choice silently evaporates.
 			CustomerRegistry.assign_customer(c.id, "", true)

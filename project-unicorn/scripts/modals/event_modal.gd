@@ -25,6 +25,8 @@ var _body_rich: RichTextLabel
 var _speaker_row: HBoxContainer
 var _mentor_row: HBoxContainer
 var _choices_host: VBoxContainer
+var _footer_rule: ColorRect
+var _footer_label: Label
 
 
 func _ready() -> void:
@@ -45,6 +47,9 @@ func populate(event: GameEvent) -> void:
 	_build_speaker_row()
 	_build_mentor_row()
 	_render_choices()
+	var readout: bool = _is_readout()
+	_footer_rule.visible = not readout
+	_footer_label.visible = not readout
 	_play_intro()
 
 
@@ -137,12 +142,33 @@ func _build_skeleton() -> void:
 	_choices_host.add_theme_constant_override("separation", 8)
 	body.add_child(_choices_host)
 
-	body.add_child(_rule())
-
-	var footer := UiFactory.make_label(
+	# A READOUT WEARS NO DECISION CHROME (F4, 2026-08-27). The weekly sales summary is an
+	# `info` card whose single option is "Kapat", and it was rendering inside the full decision
+	# frame: a "KARAR · GÜN N" stamp over a page that decides nothing, and "SEÇİM KALICIDIR"
+	# under a button that commits to nothing. Both sentences were false, and a permanence
+	# warning that fires on a close button teaches the player to stop reading it.
+	#
+	# The test is derived, not declared. `GameEvent` carries no card class — that word lives in
+	# the queue and never reaches the view — so rather than plumb it through or trust a tag
+	# content can forget, the modal asks the card what it IS: one option, and that option
+	# changes nothing. Anything that can change the world keeps its stamp and its warning.
+	# Built always, SHOWN conditionally from `populate`: the skeleton is raised in `_ready()`,
+	# which is before there is an event to ask about.
+	_footer_rule = _rule()
+	body.add_child(_footer_rule)
+	_footer_label = UiFactory.make_label(
 		UiTokens.tr_upper(tr("EVENT_CHOICE_PERMANENT")), &"MicroLabel")
-	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	body.add_child(footer)
+	_footer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.add_child(_footer_label)
+
+
+## True when this card decides nothing: one option, and it carries no modifiers. That is the
+## exact shape §17.1 forces on an information card — a card with zero options is refused, so a
+## readout must offer a single inert "close".
+func _is_readout() -> bool:
+	if _event == null or _event.choices.size() != 1:
+		return false
+	return (_event.choices[0] as EventChoice).modifiers.is_empty()
 
 
 static func _rule(height: int = 1) -> ColorRect:
@@ -160,8 +186,9 @@ func _fill_header() -> void:
 		child.queue_free()
 	var tag: Dictionary = _source_tag(_event)
 	_header_row.add_child(UiFactory.make_badge(String(tag.text), StringName(tag.kind)))
+	var day_key: String = "EVENT_READOUT_DAY" if _is_readout() else "EVENT_DECISION_DAY"
 	var meta := UiFactory.make_label(
-		tr("EVENT_DECISION_DAY").format({"day": GameState.day}), &"SectionLabel")
+		tr(day_key).format({"day": GameState.day}), &"SectionLabel")
 	meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_header_row.add_child(meta)
 	var spacer := Control.new()
@@ -424,10 +451,44 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor
 		root.modulate = Color(1, 1, 1, 0.5)
 		root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		root.focus_mode = Control.FOCUS_NONE
-		var reason_src: String = Localization.pick(choice.unlock_reason_text, choice.unlock_reason_text_en)
+		# THE LIVE REASON WINS OVER THE AUTHORED ONE. `locked_reasons` is one string per OPTION,
+		# so an option gated on three different facts could only ever name one of them — and the
+		# B2B promise row named the wrong one: it said "bu hesaba verilmiş bir söz zaten açık"
+		# in runs where no promise had ever been made, because the clause actually refusing was
+		# "this account has no named request". Asking the condition tree which clause failed
+		# turns that chip from a guess into a reading. The authored line stays as the fallback
+		# for the case the engine deliberately keeps silent about: two clauses failing at once,
+		# which one sentence cannot honestly explain.
+		var live_reason: String = EventGate.condition_reason(choice.unlock_condition,
+			EventGate.active_context())
+		var reason_src: String = tr(live_reason) if live_reason != "" 			else Localization.pick(choice.unlock_reason_text, choice.unlock_reason_text_en)
 		var reason: String = reason_src if reason_src != "" else tr("LOCK_CHIP")
 		chip_col.add_child(UiFactory.make_badge(reason, &"neutral"))
 	return root
+
+
+## The MRR the "İndirim ver" row is about to cost, previewed from the same place the effect
+## takes it from. An authored `mrr_delta` still wins if a card ever supplies one.
+func _retain_discount_delta(m: Dictionary) -> int:
+	var authored: int = int(m.get("mrr_delta", 0))
+	if authored != 0:
+		return authored
+	var c: Customer = _bound_customer()
+	if c == null:
+		return 0
+	return -int(round(float(c.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT))
+
+
+## The account this card is about, from the card's own frozen scope binding. A card with no
+## customer slot returns null and every preview that needs one stays silent rather than
+## guessing at whichever account happens to be first in the book.
+func _bound_customer() -> Customer:
+	var ctx: Dictionary = EventGate.active_context()
+	for slot in ctx:
+		var bound: Dictionary = ctx[slot] as Dictionary
+		if String(bound.get("type", "")) == "customer":
+			return CustomerRegistry.get_customer(String(bound.get("id", "")))
+	return null
 
 
 func _make_effect_chips(modifiers: Array) -> Array[Control]:
@@ -573,7 +634,15 @@ func _describe_modifier(m) -> Dictionary:
 		# --- B2B Sales System retention outcomes (badge + cost-line source of truth) ---
 		"b2b_promise_create": return {"text": tr("EFFECT_PROMISE_CREATE"), "kind": &"accent"}
 		"b2b_retain_delay": return {"text": tr("EFFECT_RETAIN_DELAY"), "kind": &"neutral"}
-		"b2b_retain_discount": return {"text": tr("EFFECT_RETAIN_DISCOUNT").format({"v": _fmt_money_delta(int(m.get("mrr_delta", 0)))}), "kind": &"negative"}
+		# THE PREVIEW COMPUTES THE SAME NUMBER THE EFFECT WILL. It used to read `mrr_delta` off
+		# the effect dict — a field the ported card JSON never carries, because the cut is
+		# derived at resolution time from the account's own MRR (effects.gd's
+		# `b2b_retain_discount` arm). So the chip said "MRR +$0" on every retention card while
+		# the option was about to take 15% of the account's revenue. An option whose only stated
+		# consequence is zero is not a choice the player can weigh.
+		# Same constant, same rounding, same sign as the effect: preview and outcome cannot
+		# drift, because the only way to change one is to change the constant both read.
+		"b2b_retain_discount": return {"text": tr("EFFECT_RETAIN_DISCOUNT").format({"v": _fmt_money_delta(_retain_discount_delta(m))}), "kind": &"negative"}
 		"b2b_retain_ignore": return {"text": tr("EFFECT_RETAIN_IGNORE"), "kind": &"neutral"}
 		"b2b_cs_promise_honor": return {"text": tr("EFFECT_PROMISE_HONOR"), "kind": &"accent"}
 		"b2b_cs_promise_refuse": return {"text": tr("EFFECT_PROMISE_REFUSE"), "kind": &"negative"}

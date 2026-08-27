@@ -36,14 +36,14 @@
   "text": {
     "tr": {
       "title": "PH: Haftalık satış özeti",
-      "body": "PH: Bu hafta masadan kalkan anlaşmalar. Defterde {seam:musteri.count} hesap var.",
+      "body": "PH: Bu hafta masadan kalkan anlaşmalar.\n\n{seam:sales.weekly_closes}\n\nPH: Defterde {seam:sales.account_count} hesap var.",
       "options": {
         "read_it": "Kapat"
       }
     },
     "en": {
       "title": "PH: Weekly sales summary",
-      "body": "PH: The deals that came off the table this week. The book holds {seam:musteri.count} accounts.",
+      "body": "PH: The deals that came off the table this week.\n\n{seam:sales.weekly_closes}\n\nPH: The book holds {seam:sales.account_count} accounts.",
       "options": {
         "read_it": "Close"
       }

@@ -282,15 +282,14 @@ static func _pending_price() -> int:
 #  Deterministic mixer — the house pattern, no stream draw
 # ============================================================================
 
-const MIX_MODULUS := 1000003
-const MIX_MULTIPLIER := 48271
-const MIX_INCREMENT := 12345
-const MIX_SALT_STRIDE := 7919
-const SALT_UNITS := 401
-const SALT_RESERVE := 409
+const SALT_UNITS := SalesConstants.SALT_UNITS
+const SALT_RESERVE := SalesConstants.SALT_RESERVE
 
 
+## The module's mixer, with this table's lead as the identity. The arithmetic moved to
+## `SalesConstants.mix` when the rep desk needed the same determinism (2026-08-27); the
+## constants and the formula are unchanged, so every value this returns is the value it
+## returned before — proved by `sales_meeting_replays_identically`, which pins a whole
+## meeting and its Act 2 band to the run seed.
 static func _mix(salt: int) -> int:
-	var base: int = GameState.run_seed + String(_context.get("lead_id", "")).hash()
-	var n: int = (absi(base) % MIX_MODULUS) + MIX_SALT_STRIDE * (absi(salt) % MIX_MODULUS)
-	return absi((n * MIX_MULTIPLIER + MIX_INCREMENT) % MIX_MODULUS)
+	return SalesConstants.mix(String(_context.get("lead_id", "")), salt)

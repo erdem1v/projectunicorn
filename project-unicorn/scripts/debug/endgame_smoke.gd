@@ -256,6 +256,22 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"role_locks_and_runway_pair":         fail = _case_role_locks_and_runway_pair()
 		"b2b_market_gate_b2c_run":            fail = _case_b2b_market_gate_b2c_run()
 		"sales_autoclose_empty_pain":         fail = _case_sales_autoclose_empty_pain()
+		# --- Satis/Destek Hotfix Turu 1, 2026-08-27. Her biri duzeltme oncesi motorda DUSER.
+		"hotfix_promise_refuses_targetless": fail = _case_hotfix_promise_refuses_targetless()
+		"hotfix_deal_variance_across_leads": fail = _case_hotfix_deal_variance_across_leads()
+		"hotfix_archetype_mix_not_pinned":   fail = _case_hotfix_archetype_mix_not_pinned()
+		"hotfix_ticker_routine_vs_news":     fail = _case_hotfix_ticker_routine_vs_news()
+		"hotfix_account_count_excludes_base": fail = _case_hotfix_account_count_excludes_base()
+		"hotfix_founder_takes_support_desk": fail = _case_hotfix_founder_takes_support_desk()
+		"hotfix_new_account_auto_assigned":  fail = _case_hotfix_new_account_auto_assigned()
+		"hotfix_weekly_summary_rows":       fail = _case_hotfix_weekly_summary_rows()
+		# --- Destek Hattı Reworku (B1-B5), 2026-08-27. B1 kendi vakasini repoint etti.
+		"support_desk_rates_stack":         fail = _case_support_desk_rates_stack()
+		"hires_land_in_own_column":         fail = _case_hires_land_in_own_column()
+		"owned_account_erodes_slower":      fail = _case_owned_account_erodes_slower()
+		"cs_candidate_trait_filter":        fail = _case_cs_candidate_trait_filter()
+		"account_ownership_round_trip":     fail = _case_account_ownership_round_trip()
+		"founder_owns_accounts_manually":   fail = _case_founder_owns_accounts_manually()
 		"event_queue_dedupe_by_id":           fail = _case_event_queue_dedupe_by_id()
 		# --- Playable Run Sprint 2026-08-17. Each one FAILS against the pre-fix engine;
 		#     each was found by a 90-day driver run (--run-log), not by reading.
@@ -4547,6 +4563,562 @@ static func _case_b2b_market_gate_b2c_run() -> String:
 	return ""
 
 
+
+# ============================================================================
+#  Satis / Destek Hotfix Turu 1 (2026-08-27)
+# ============================================================================
+
+## F2 — A PROMISE WITH NO TARGET IS NOT A PROMISE. `pick_pain_feature` returns "" for every
+## shipped product (its pool is keyed by the retired subtype vocabulary), and `promise_create`
+## was minting empty-target promises from it. One of those keeps `has_open_for` true forever:
+## nothing ever ships "", so the deadline sweep cannot resolve it, and every card that asks
+## "is a word already open on this account" locks itself for the rest of the run.
+## FALSIFICATION: drop the empty-target guard from PromiseRegistry.create and check 1 fails.
+static func _case_hotfix_promise_refuses_targetless() -> String:
+	_seed_b2b(1000)
+	var c: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	if c == null:
+		return "the b2b seed did not produce an account"
+	if PromiseRegistry.create(c.id, "", 14) != null:
+		return "the registry minted a promise with no target"
+	if PromiseRegistry.has_open_for(c.id):
+		return "a refused promise still registered as open"
+	# A real one still works — the guard refuses the empty target, not the mechanic.
+	if PromiseRegistry.create(c.id, "saas_ops_scheduling", 14) == null:
+		return "the registry refused a promise that names a real feature"
+	if not PromiseRegistry.has_open_for(c.id):
+		return "a real promise did not register"
+	# And a SAVE that already carries a ghost is swept: `create` refusing new ones does
+	# nothing for the run that already has one.
+	var ghost := Promise.new()
+	ghost.id = "promise_ghost"
+	ghost.customer_id = c.id
+	ghost.feature_id = ""
+	ghost.status = "open"
+	ghost.deadline_day = GameState.day + 5
+	PromiseRegistry.insert_raw(ghost)
+	if PromiseRegistry.drop_targetless() != 1:
+		return "the load sweep did not drop the targetless promise"
+	if PromiseRegistry.get_promise("promise_ghost") != null:
+		return "the ghost survived the sweep"
+	if not PromiseRegistry.has_open_for(c.id):
+		return "the sweep took the real promise with the ghost"
+	return ""
+
+
+## F6 — TWO LEADS OF THE SAME STAR MUST NOT SIGN THE SAME DEAL. The rep desk took the band
+## MIDPOINT, which is a constant, so every account of a given star bought exactly the same
+## number of seats. Placement now comes from run seed + lead id + archetype.
+## FALSIFICATION: restore the midpoint in _seats_for and the variance check fails with 1.
+static func _case_hotfix_deal_variance_across_leads() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	var seen: Dictionary = {}
+	for i in 10:
+		var arche: String = "ops_cautious" if i % 2 == 0 else "tech_exacting"
+		var lead: Prospect = _add_prospect("var_%d" % i, 2, "", arche)
+		seen[SalesRepSystem._seats_for(lead)] = true
+	if seen.size() < 3:
+		return "ten 2-star leads produced only %d distinct seat counts" % seen.size()
+	# Still INSIDE the sealed band, and still replay-stable: the same lead asked twice
+	# answers the same, or a reload would rewrite a deal that already closed.
+	var band: Dictionary = SalesConstants.seat_band(2)
+	for k in seen:
+		if int(k) < int(band["low"]) or int(k) > int(band["high"]):
+			return "seat count %d escaped the 2-star band" % int(k)
+	var again: Prospect = ProspectRegistry.get_prospect("var_3")
+	if SalesRepSystem._seats_for(again) != SalesRepSystem._seats_for(again):
+		return "the seat draw is not stable for one lead"
+	return ""
+
+
+## F13 — THE ARCHETYPE DRAW WAS PINNED, and it looked like stub scarcity. `erp` is the only
+## shipped B2B sub-type, exactly one archetype names it in `subtype_affinity`, and the picker
+## returned the affinity list OUTRIGHT whenever it was non-empty — so the pool was always a
+## list of one and two of the three archetypes could never appear at any star.
+## FALSIFICATION: restore `return preferred if not preferred.is_empty() else fallback` and
+## the distinct check fails with 1.
+static func _case_hotfix_archetype_mix_not_pinned() -> String:
+	var pool: Array = SalesArchetypes.candidates_for(1, "erp")
+	var distinct: Dictionary = {}
+	for id in pool:
+		distinct[String(id)] = true
+	if distinct.size() < 2:
+		return "the 1-star candidate pool offers only %d archetype(s)" % distinct.size()
+	# The affinity still LEANS: the erp-matched archetype holds more slots than any other.
+	var counts: Dictionary = {}
+	for id2 in pool:
+		counts[String(id2)] = int(counts.get(String(id2), 0)) + 1
+	if int(counts.get("ops_cautious", 0)) <= 1:
+		return "the subtype-matched archetype lost its weighting"
+	return ""
+
+
+## F9 — THE TICKER SEES NEWS ONLY. The old gate let EVERY 3-star through for the rest of the
+## run and had no whale term at all.
+## FALSIFICATION: restore `scale >= 3 or scale > reach_band()` and the second 3-star check
+## fails — a routine repeat signing reaches the ticker.
+static func _case_hotfix_ticker_routine_vs_news() -> String:
+	_seed_b2b(1000)
+	# THE LEAGUE HAS TO BE RAISED FIRST, and the first draft of this case did not: at reach
+	# band 1 a 3-star signing IS above-league, so it is news by the sealed rule no matter how
+	# many came before. Putting the founder in the 3-star league is what isolates the term
+	# actually under test — "the FIRST one, once".
+	_set_founder_area(HRConstants.AREA_SALES, HRConstants.AREA_MAX)
+	if SalesFaucetSystem.reach_band() < 3:
+		return "the founder did not reach the 3-star league; the above-league term still dominates"
+	var routine: Customer = CustomerRegistry.get_customer("co_lead_smoke")
+	if routine == null:
+		return "the b2b seed did not produce an account"
+	routine.scale = 1
+	if SalesLedger.is_newsworthy_signing(routine, false):
+		return "a routine 1-star close reached the ticker"
+	# A whale is news whatever its star.
+	if not SalesLedger.is_newsworthy_signing(routine, true):
+		return "a whale signing did not read as news"
+	# The FIRST 3-star is news; the second is not.
+	var first := Prospect.new()
+	first.id = "news_1"
+	first.company_name = "First Big"
+	first.industry = "testing"
+	first.star = 3
+	var c1: Customer = _sign_fixture(first, 900, 70)
+	if c1 == null or not SalesLedger.is_newsworthy_signing(c1, false):
+		return "the run's first 3-star did not read as news"
+	var second := Prospect.new()
+	second.id = "news_2"
+	second.company_name = "Second Big"
+	second.industry = "testing"
+	second.star = 3
+	var c2: Customer = _sign_fixture(second, 900, 70)
+	if c2 == null:
+		return "the second 3-star fixture did not sign"
+	if SalesLedger.is_newsworthy_signing(c2, false):
+		return "the second 3-star still reached the ticker"
+	return ""
+
+
+## F12 — ONE COUNTING RULE. The top bar filtered to b2b and the summary counted every active
+## record, so they disagreed by exactly the B2C aggregate userbase: an audience wearing a
+## customer's shape, with zero seats.
+## FALSIFICATION: point account_count at get_active().size() and the check fails by one.
+static func _case_hotfix_account_count_excludes_base() -> String:
+	_seed_b2b(1000)
+	var before: int = CustomerRegistry.account_count()
+	if before != CustomerRegistry.get_active().size():
+		return "the two counts already disagreed before the userbase existed"
+	var base := Customer.new()
+	base.id = SalesSystem.B2C_USERBASE_ID
+	base.market_type = "b2c"
+	base.industry = "consumer"
+	base.seats = 0
+	CustomerRegistry.add(base)
+	if CustomerRegistry.account_count() != before:
+		return "the aggregate userbase counted as an account"
+	if CustomerRegistry.get_active().size() != before + 1:
+		return "the raw active list did not see the userbase at all"
+	# AND THE OTHER HALF, which is the half that bit. `musteri.count` must KEEP counting the
+	# aggregate: the traction gate asks it for "your first real customer", and on a B2C run that
+	# customer IS the aggregate. Repointing that seam at account_count broke `gate1_b2c` on
+	# every B2C path — two questions, two names, and this pins both so they cannot merge again.
+	if int(EvSeams.read("musteri.count")) != before + 1:
+		return "musteri.count stopped seeing the B2C userbase; the traction gate needs it"
+	if int(EvSeams.read("sales.account_count")) != before:
+		return "sales.account_count did not read the account rule"
+	return ""
+
+
+## B1 — PASSIVE FOUNDER CARE (repointed 2026-08-27 with the ruling that replaced the verb).
+##
+## The Hotfix wave gave the founder a way to SIT DOWN at the support desk. B1 deletes that verb
+## outright: an idle founder is already looking after customers, and the desk reads it rather
+## than being told. What this case is FOR is unchanged and still measured — with no rep, the
+## product keeps a healing lever; engage the founder and it stops; disengage and it resumes.
+##
+## The trap the old version pinned still matters and is still here: `desk_roster()` reads the
+## JOB while `validation_per_day()` sums the AREA contribution, so a founder counted by the
+## roster must actually produce, not merely appear.
+static func _case_hotfix_founder_takes_support_desk() -> String:
+	_seed_b2b(1000)
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder in the run"
+	_set_founder_area(HRConstants.AREA_CUSTOMER_SUCCESS, 6)
+	CharacterRegistry.clear_jobs(founder.id)
+	# IDLE + LIVE PRODUCT = PASSIVE CARE, with nothing assigned anywhere.
+	if not SupportSystem.founder_passive_care():
+		return "an idle founder on a live product is not looking after customers"
+	if not SupportSystem.desk_staffed():
+		return "passive care did not put the founder on the desk roster"
+	var passive_rate: float = SupportSystem.validation_per_day()
+	if passive_rate <= 0.0:
+		return "a passively caring founder validated nothing"
+	if HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_CARE:
+		return "the founder state did not read CARE while caring"
+
+	# ENGAGED → IT STOPS. Any job at all takes him out; a build is the ordinary case.
+	if CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD) != "":
+		return "the founder could not take a build"
+	if SupportSystem.founder_passive_care():
+		return "a founder on a build still read as looking after customers"
+	if SupportSystem.desk_staffed() or SupportSystem.validation_per_day() > 0.0:
+		return "the desk kept producing after the founder started building"
+	if HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_BUILD:
+		return "an engaged founder still read as CARE"
+
+	# DISENGAGED → IT RESUMES BY ITSELF. Nothing is re-assigned; the reading simply changes back.
+	CharacterRegistry.clear_jobs(founder.id)
+	if not SupportSystem.founder_passive_care():
+		return "passive care did not resume when the engagement ended"
+	if not is_equal_approx(SupportSystem.validation_per_day(), passive_rate):
+		return "the resumed rate does not match the rate before the engagement"
+
+	# A MEETING COUNTS AS ENGAGED TOO — `is_busy` is the other half of the predicate, and it is
+	# what keeps a founder at a sales table from also manning the desk.
+	GameState.set_flag("sales_meeting_active", true)
+	if SupportSystem.founder_passive_care():
+		return "a founder in a sales meeting still read as looking after customers"
+	GameState.set_flag("sales_meeting_active", false)
+
+	# NO LIVE PRODUCT, NO CARE: there is nothing to verify, and §2.3's BOŞTA must survive.
+	GameState.set_flag("mvp_shipped", false)
+	if SupportSystem.founder_passive_care():
+		return "care read as active with no live product"
+	if HRSystem.founder_task_state() != HRSystem.FOUNDER_STATE_IDLE:
+		return "an idle founder with no product did not read as Boşta"
+	return ""
+
+
+## F5 — A NEW ACCOUNT LANDS ON A DESK (working rule, direktor onayi). Nothing assigned a
+## freshly signed account to anybody: `_delegate_excess` only hands over what exceeds the
+## founder's direct cap AND skips onboarding accounts, so an early run showed an idle rep at
+## 0/4 next to a full founder. The picker was reading live state; the state really was zero.
+## FALSIFICATION: set AUTO_ASSIGN_ON_SIGN false and the first check fails.
+static func _case_hotfix_new_account_auto_assigned() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	var rep: Character = _make_employee("char_cs_auto", "CS Auto", HRConstants.ROLE_CUSTOMER_REP)
+	rep.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 6
+	var lead := Prospect.new()
+	lead.id = "auto_1"
+	lead.company_name = "Auto Corp"
+	lead.industry = "testing"
+	lead.star = 1
+	var c: Customer = _sign_fixture(lead, 500, 70)
+	if c == null:
+		return "the fixture did not sign"
+	if c.assigned_to != rep.id:
+		return "a newly signed account did not land on the only rep with room"
+	if c.cs_pinned:
+		return "the automatic assignment pinned the account as a player decision"
+	if CustomerRepSystem.roster_size(rep.id) != 1:
+		return "the rep roster did not see the account it now holds"
+	return ""
+
+
+## F4 — A SUMMARY WITH NO ROWS SUMMARISES NOTHING. The weekly card carried one sentence and a
+## book count inside full decision chrome. §7.3 asks for the week's CLOSES; the rows are
+## composed in Sales (`SalesLedger.weekly_close_lines`) and the card names one seam.
+## FALSIFICATION: return "" from weekly_close_lines and every check below fails.
+static func _case_hotfix_weekly_summary_rows() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	if SalesLedger.weekly_close_lines() != "":
+		return "a week with no closes produced rows"
+	var lead := Prospect.new()
+	lead.id = "wk_1"
+	lead.company_name = "Hafta Corp"
+	lead.industry = "testing"
+	lead.star = 2
+	var c: Customer = _sign_fixture(lead, 1200, 70)
+	if c == null:
+		return "the fixture did not sign"
+	SalesSystem.record_sales_event("founder_close", "", c.company_name, c.mrr)
+	var lines: String = SalesLedger.weekly_close_lines()
+	if not lines.contains("Hafta Corp"):
+		return "the week's close did not name its account"
+	if not lines.contains(str(c.seats)):
+		return "the row did not carry the seat count"
+	# ALWAYS FIVE GLYPHS, the same grammar the star row draws: a table whose rows change width
+	# with the star is a ragged edge, not a table.
+	var first: String = lines.split("\n")[0]
+	var glyphs: int = first.count(StarRating.FILLED) + first.count("·")
+	if glyphs != SalesConstants.STAR_MAX:
+		return "the star cell drew %d glyphs, want %d" % [glyphs, SalesConstants.STAR_MAX]
+	# The total is a separate, final line.
+	var rows: PackedStringArray = lines.split("\n")
+	if rows.size() != 2:
+		return "one close plus a total should be 2 lines, got %d" % rows.size()
+	# A close that fell out of the window is not this week's business.
+	GameState.day += SalesLedger.WEEKLY_WINDOW_DAYS + 1
+	if SalesLedger.weekly_close_lines() != "":
+		return "a close older than the window still counted as this week's"
+	return ""
+
+
+# ============================================================================
+#  Destek Hattı Reworku — B2 · B3 · B4 · B5 (2026-08-27)
+# ============================================================================
+
+## B2 — REP + IDLE FOUNDER STACK. `_desk_sum` sums over the roster, so once B1 puts a passively
+## caring founder INTO that roster the two rates add with no separate stacking rule. This case
+## is the proof that they do, and that the sum is exactly the parts.
+## FALSIFICATION: drop the founder out of `desk_roster()` and the combined rate equals the rep's.
+static func _case_support_desk_rates_stack() -> String:
+	_seed_support_fixture("b2b")
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder in the run"
+	_set_founder_area(HRConstants.AREA_CUSTOMER_SUCCESS, 6)
+	# FOUNDER ALONE (idle, live product) — B1's passive care.
+	CharacterRegistry.clear_jobs(founder.id)
+	var founder_only: float = SupportSystem.validation_per_day()
+	if founder_only <= 0.0:
+		return "a passively caring founder validated nothing"
+	# REP ALONE — take the founder out by engaging him.
+	var rep: Character = _make_employee("char_stack_rep", "Stack Rep", HRConstants.ROLE_CUSTOMER_REP)
+	rep.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 8
+	if not rep.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
+		return "B3: a fresh Musteri Temsilcisi did not land on the support desk"
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
+	var rep_only: float = SupportSystem.validation_per_day()
+	if rep_only <= 0.0:
+		return "a rep on the support desk validated nothing"
+	# BOTH — the founder goes idle again and the rates add.
+	CharacterRegistry.clear_jobs(founder.id)
+	var both: float = SupportSystem.validation_per_day()
+	if both <= rep_only:
+		return "rep + idle founder (%.3f) is not faster than the rep alone (%.3f)" % [both, rep_only]
+	if not is_equal_approx(both, rep_only + founder_only):
+		return "the combined rate %.3f is not the sum of %.3f + %.3f" % [both, rep_only, founder_only]
+	return ""
+
+
+## B3 — NOBODY IS BORN INTO A FOREIGN COLUMN. A fresh hire lands on `default_job_for_role`, and
+## that job must be one the role's KEY AREA can actually work. The Sales row shipped broken for
+## two days (`sales` -> `accounts`) and the Musteri Temsilcisi row shipped broken for longer
+## (`customer_success` -> `accounts`), both silently: the person was employed, assigned, and
+## standing in the wrong column.
+## FALSIFICATION: point either AREA_PRIMARY_JOB row back at "accounts" and this fails by name.
+static func _case_hires_land_in_own_column() -> String:
+	for role_id in HRConstants.ROLE_AREAS.keys():
+		var role: String = String(role_id)
+		var key_area: String = HRConstants.role_key_area(role)
+		var job: String = HRConstants.default_job_for_role(role)
+		if job == "":
+			return "role '%s' has no default job at all" % role
+		var areas: Array = HRConstants.JOB_AREAS.get(job, [])
+		if not areas.has(key_area):
+			return "role '%s' (key area %s) is born into '%s', which that area cannot work" % [
+				role, key_area, job]
+	# And the two the director named, by hand, through the real hire path.
+	var srep: Character = _make_employee("char_col_sales", "Col Sales", HRConstants.ROLE_SALES_REP)
+	if not srep.assigned_job_ids.has(HRConstants.JOB_SALES):
+		return "a fresh Satis Temsilcisi is in %s, not the Sales job" % str(srep.assigned_job_ids)
+	var crep: Character = _make_employee("char_col_cs", "Col CS", HRConstants.ROLE_CUSTOMER_REP)
+	if not crep.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
+		return "a fresh Musteri Temsilcisi is in %s, not the support duty" % str(crep.assigned_job_ids)
+	return ""
+
+
+## B4 — AN OWNED ACCOUNT ERODES SLOWER, AND THE DELTA SCALES WITH THE OWNER'S OUTPUT.
+##
+## Two identical accounts, same tolerance, same starting satisfaction, same product health. One
+## is owned by a rep; the other sits on the founder's desk with the founder ENGAGED, so nobody
+## is caring for it. Then the owner's output is raised and the gap must widen.
+## FALSIFICATION: remove the dampen multiplier and both halves fail.
+static func _case_owned_account_erodes_slower() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	# A SICK product, so the drift target is below tolerance and erosion actually runs.
+	GameState.set_flag("mvp_innovation", 5.0)
+	GameState.set_flag("mvp_stability", 5.0)
+	GameState.set_flag("mvp_experience", 5.0)
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder != null:
+		CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)   # engaged: cares for nobody
+	var rep: Character = _make_employee("char_care_rep", "Care Rep", HRConstants.ROLE_CUSTOMER_REP)
+	rep.traits = []                       # HAYIR DIYEMEZ would add a second, separate damper
+	rep.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 4
+
+	var drop_owned: int = _erosion_over_a_day("care_owned", rep)
+	var drop_bare: int = _erosion_over_a_day("care_bare", null)
+	if drop_owned >= 0 or drop_bare >= 0:
+		return "neither account eroded (owned %d, bare %d) — the fixture is not sick" % [
+			drop_owned, drop_bare]
+	if drop_owned <= drop_bare:
+		return "an owned account fell %d, an unowned one %d — ownership bought nothing" % [
+			drop_owned, drop_bare]
+	# AND IT SCALES: a stronger owner protects more.
+	var weak_gap: int = drop_owned - drop_bare
+	rep.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = HRConstants.AREA_MAX
+	var drop_strong: int = _erosion_over_a_day("care_strong", rep)
+	if (drop_strong - drop_bare) <= weak_gap:
+		return "a top owner (gap %d) protected no better than a weak one (gap %d)" % [
+			drop_strong - drop_bare, weak_gap]
+	return ""
+
+
+## One account, one day of drift, returns the satisfaction DELTA (negative = eroded).
+static func _erosion_over_a_day(cid: String, owner: Character) -> int:
+	var p := Prospect.new()
+	p.id = cid
+	p.company_name = "Care " + cid
+	p.industry = "testing"
+	p.star = 2
+	var c: Customer = _sign_fixture(p, 800, 90)
+	if c == null:
+		return 0
+	ProspectRegistry.remove(p.id)
+	# Out of the onboarding amplifier, and owned by exactly who this call says.
+	c.onboarding_until = GameState.day - 1
+	CustomerRegistry.set_lifecycle_phase(c.id, "active")
+	CustomerRegistry.assign_customer(c.id, "" if owner == null else owner.id, true)
+	var before: int = c.satisfaction
+	B2BSalesSystem._tick_satisfaction(c)
+	return c.satisfaction - before
+
+
+## B5 — THE Mİ CANDIDATE POOL LOSES TWO TRAPS AND KEEPS ITS SIGNATURE. Same table, same
+## generator, same pattern as the sales filter.
+## FALSIFICATION: drop the customer_rep row from ROLE_TRAIT_BAN and the first check fails.
+static func _case_cs_candidate_trait_filter() -> String:
+	var banned: Array = ["takes_them_under", "double_checker"]
+	var seen: Dictionary = {}
+	for level in 3:
+		for seed_value in 40:
+			var files: Array = HRCandidateGenerator.generate(
+				HRConstants.ROLE_CUSTOMER_REP, level, 1000 + seed_value * 37)
+			for f in files:
+				for t in (f.get("traits", []) as Array):
+					var tid: String = String(t)
+					if banned.has(tid):
+						return "a Musteri Temsilcisi file carried the banned trait '%s'" % tid
+					seen[tid] = true
+	if seen.is_empty():
+		return "no candidate carried any trait at all — the generator produced nothing"
+	# HAYIR DIYEMEZ stays and is the role's signature trade.
+	if not seen.has("cant_say_no"):
+		return "HAYIR DIYEMEZ never appeared across the sweep — the pool lost its signature"
+	# The sales pool is untouched by this row.
+	if not HRConstants.role_bans_trait(HRConstants.ROLE_SALES_REP, "double_checker"):
+		return "the sales ban row was disturbed"
+	return ""
+
+
+## B4/§13 — OWNERSHIP SURVIVES A REAL SAVE. Capacity is DERIVED and stores nothing, which is the
+## claim this case makes concrete: the file carries who owns what and whether the player pinned
+## it, and the capacity that reads out of it afterwards is computed, not restored.
+static func _case_account_ownership_round_trip() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	var rep: Character = _make_employee("char_own_rep", "Own Rep", HRConstants.ROLE_CUSTOMER_REP)
+	rep.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 5
+	var p := Prospect.new()
+	p.id = "own_lead"
+	p.company_name = "Own Corp"
+	p.industry = "testing"
+	p.star = 2
+	var c: Customer = _sign_fixture(p, 700, 70)
+	if c == null:
+		return "the fixture did not sign"
+	CustomerRegistry.assign_customer(c.id, rep.id, true)
+	var cap_before: int = B2BConstants.account_capacity(5)
+	if not SaveManager.save_to_slot(SAVE_SLOT_A):
+		return "save_to_slot refused"
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(SAVE_SLOT_A)):
+		return "the slot did not load back"
+	var back: Customer = CustomerRegistry.get_customer(c.id)
+	if back == null:
+		return "the account did not survive the round trip"
+	if back.assigned_to != rep.id:
+		return "ownership was lost: assigned_to is '%s'" % back.assigned_to
+	if not back.cs_pinned:
+		return "the player's pin was lost across the save"
+	if B2BConstants.account_capacity(5) != cap_before:
+		return "derived capacity changed across a save — it should be computed, not stored"
+	_cleanup_save_slots()
+	return ""
+
+
+## A1/A2/A3 — THE FOUNDER IS AN OWNER LIKE ANY OTHER, EXCEPT THAT HE IS NEVER GIVEN ONE.
+##
+## Three rules, and the third is the one that keeps the first two honest:
+##   A1  he can be handed an account, and owning it grants the care bonus
+##   A3  his capacity is 4 + 2 x stars like everyone else, and it BLOCKS at the ceiling
+##   A2  auto-assign never routes a signing to him — every account he holds was handed over
+##
+## FALSIFICATION: let `_ranked` return the founder and the A2 half fails; drop the capacity
+## comparison from the picker's founder row and the A3 half is what catches it.
+static func _case_founder_owns_accounts_manually() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	var founder: Character = CharacterRegistry.get_founder()
+	if founder == null:
+		return "no founder in the run"
+	_set_founder_area(HRConstants.AREA_CUSTOMER_SUCCESS, 4)   # 2 stars -> 8 accounts
+
+	# --- A3: the founder's capacity comes from the SAME formula, no special rule ------------
+	var cap: int = CustomerRepSystem.founder_account_capacity()
+	if cap != B2BConstants.account_capacity(4):
+		return "the founder's capacity (%d) is not the shared formula's answer (%d)" % [
+			cap, B2BConstants.account_capacity(4)]
+
+	# --- A2: a fresh signing goes to a REP, never to the founder ---------------------------
+	var rep: Character = _make_employee("char_a2_rep", "A2 Rep", HRConstants.ROLE_CUSTOMER_REP)
+	rep.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 6
+	var signed := Prospect.new()
+	signed.id = "a2_lead"
+	signed.company_name = "Auto A2"
+	signed.industry = "testing"
+	signed.star = 1
+	var auto_c: Customer = _sign_fixture(signed, 400, 70)
+	if auto_c == null:
+		return "the fixture did not sign"
+	if auto_c.assigned_to == "":
+		return "a new signing landed on the founder's desk — A2 says it never does automatically"
+	if auto_c.assigned_to != rep.id:
+		return "the signing went to '%s', not the only rep with room" % auto_c.assigned_to
+	# AUTOMATIC OWNERSHIP IS NEVER PINNED. The pin marks a PLAYER decision (`assign_customer`'s
+	# own contract) and, since B4 made "" mean both unowned and founder-owned, it is the ONLY
+	# thing separating "handed to the founder on purpose" from "nobody took it". A system that
+	# pinned would forge the player's mark and the morning sweep could never correct itself.
+	if auto_c.cs_pinned:
+		return "auto-assign pinned an account — the pin is the player's mark, not the system's"
+	# A2 IS ONLY PARTLY OBSERVABLE, AND THAT IS A FINDING RATHER THAN A GAP IN THIS CASE.
+	# Since B4, `assigned_to == ""` means BOTH "nobody was given it" AND "it is on the founder's
+	# desk" — one value, two meanings, and `_account_owner` reads the second. So "the founder
+	# never receives an account automatically" cannot be measured directly: an account that
+	# finds no rep is already his by construction. What IS measurable, and what the ruling
+	# actually protects, is the two halves below.
+	CharacterRegistry.remove(rep.id)
+	var solo := Prospect.new()
+	solo.id = "a2_solo"
+	solo.company_name = "Solo A2"
+	solo.industry = "testing"
+	solo.star = 1
+	var solo_c: Customer = _sign_fixture(solo, 400, 70)
+	if solo_c == null:
+		return "the solo fixture did not sign"
+	if solo_c.cs_pinned:
+		return "an untouched account came back pinned"
+
+	# --- A1: handing it over WORKS, and the care bonus follows ownership --------------------
+	# `assigned_to == ""` IS founder ownership, so the proof that it counts is the owner seam.
+	CustomerRegistry.assign_customer(solo_c.id, "", true)
+	if B2BSalesSystem._account_owner(solo_c) == null:
+		return "a founder-held account has no owner — the care bonus would not apply"
+	if B2BSalesSystem._account_owner(solo_c).id != founder.id:
+		return "the founder-held account resolved to somebody else"
+	if not solo_c.cs_pinned:
+		return "handing an account to the founder did not pin it (the sweep would take it back)"
+	# Unassigning: the account goes back to unowned, and with the founder ENGAGED nobody cares.
+	CustomerRegistry.assign_customer(solo_c.id, "", false)
+	CharacterRegistry.assign_job(founder.id, HRConstants.JOB_BUILD)
+	if B2BSalesSystem._account_owner(solo_c) == null:
+		return "an engaged founder still owns the book — ownership is not the same as passive care"
+	return ""
+
 static func _case_sales_autoclose_empty_pain() -> String:
 	# §7.2.1 — "Ayır" MEANS the desk is the founder's: a reserved lead is skipped by the rep
 	# outright, and reserving does NOT stop its clock. This case replaces the old
@@ -5751,8 +6323,8 @@ static func _case_hr_active_filters() -> String:
 	_park_leave([dev, rep])
 	var cust: Customer = CustomerRegistry.get_by_market("b2b")[0]
 	CustomerRegistry.assign_customer(cust.id, rep.id)
-	if B2BSalesSystem._cs_expertise_of(cust) <= 0:
-		return "an ACTIVE customer rep gives no churn dampen"
+	if B2BSalesSystem._account_owner(cust) == null:
+		return "an ACTIVE customer rep does not read as the account's owner"
 	var cap_before: int = ProductSystem.capacity_total()
 	var payroll_before: int = CharacterRegistry.get_total_monthly_salaries()
 	var team_before: int = CharacterRegistry.get_employees().size()
@@ -5770,8 +6342,12 @@ static func _case_hr_active_filters() -> String:
 		return "an on-leave employee accrued overtime pay at eleven company hours (%d)" % \
 			WorkHoursSystem.overtime_pay_today(rep)
 	WorkHoursSystem.set_company_hours(HRConstants.WORK_HOURS_DEFAULT)
-	if B2BSalesSystem._cs_expertise_of(cust) != 0:
-		return "an on-leave customer rep still dampens churn (%d)" % B2BSalesSystem._cs_expertise_of(cust)
+	# B4 (2026-08-27): the absent-owner answer is now `null` rather than a zero score, and the
+	# ACCOUNT MUST NOT SILENTLY FALL BACK TO THE FOUNDER while its rep is away — an assigned
+	# account belongs to the person assigned to it, present or not. That is what the second
+	# check pins.
+	if B2BSalesSystem._account_owner(cust) != null:
+		return "an on-leave customer rep still cares for the account"
 	# INCLUDED while away.
 	if CharacterRegistry.get_total_monthly_salaries() != payroll_before:
 		return "paid leave is broken: payroll moved (%d -> %d)" % [
@@ -6820,28 +7396,43 @@ static func _case_sales_close_speed_by_expertise() -> String:
 	return ""
 
 static func _case_cs_auto_assignment_capacity() -> String:
-	# Delegation is EXCESS-driven: under FOUNDER_DIRECT_CAP nothing moves; above it the
+	# Delegation is EXCESS-driven: under the founder's own capacity nothing moves; above it the
 	# overflow goes over, bounded by cs_capacity(HIZ). Leave releases the roster.
+	#
+	# REPOINTED 2026-08-27 WITH THE RULING THAT CHANGED IT, in the same commit. F5 (direktör
+	# onaylı çalışma kuralı) makes a newly signed account land on a rep with room AT THE
+	# SIGNATURE, so the old starting state — every account on the founder's desk until the
+	# morning sweep — no longer exists and the "exactly one hands over" count measured a world
+	# that is gone. What the case is FOR is unchanged and still measured below: the founder's
+	# direct cap, the rep's capacity ceiling, and §11.3's no-automatic-hand-off on leave.
+	# The signing hand-off is disabled for the seeding loop so this case still exercises the
+	# SWEEP, which is the path it owns; `hotfix_new_account_auto_assigned` owns the other one.
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	_seed_b2b(1000)
 	var rep: Character = _make_cs_rep("char_cs_1", 9, 5)
-	for i in B2BConstants.FOUNDER_DIRECT_CAP:
+	# B4: kurucunun tavanı artık KENDİ yıldızından türüyor, sabit değil.
+	var founder_cap: int = CustomerRepSystem.founder_account_capacity()
+	for i in founder_cap:
 		var p: Prospect = _add_prospect("cap%d" % i, 1, "ai_vec_filter")
 		var c: Customer = _sign_fixture(p, 300, 70)
 		ProspectRegistry.remove(p.id)
 		CustomerRegistry.set_lifecycle_phase(c.id, "active")
 	CustomerRegistry.set_lifecycle_phase("co_lead_smoke", "active")
+	# Hand every account back to the founder's desk, which is the state the SWEEP is written
+	# against. Not pinned: pinning would make `_delegate_excess` skip them entirely.
+	for c2 in CustomerRegistry.get_by_market("b2b"):
+		CustomerRegistry.assign_customer(c2.id, "", false)
 	CustomerRepSystem.reconcile_assignments()
-	# co_lead_smoke + FOUNDER_DIRECT_CAP more = cap + 1, so exactly ONE hands over.
+	# co_lead_smoke + the founder cap more = cap + 1, so exactly ONE hands over.
 	var assigned: int = 0
 	for c in CustomerRegistry.get_by_market("b2b"):
 		if c.assigned_to == rep.id:
 			assigned += 1
 	if assigned != 1:
 		return "expected exactly the 1 excess account delegated, got %d" % assigned
-	if B2BSalesSystem.founder_managed_count() != B2BConstants.FOUNDER_DIRECT_CAP:
+	if B2BSalesSystem.founder_managed_count() != founder_cap:
 		return "founder kept %d accounts, want the cap %d" % [
-			B2BSalesSystem.founder_managed_count(), B2BConstants.FOUNDER_DIRECT_CAP]
+			B2BSalesSystem.founder_managed_count(), founder_cap]
 	# §11.3: "AYRILAN KİŞİNİN HESAPLARI KURUCUYA DEVREDİLMEZ." Eski iddia tam tersini
 	# ölçüyordu: temsilci izne çıkınca defterinin BOŞALMASINI bekliyordu, ve o boşaltma
 	# hesapları kurucuya yazan `_release_unheld`'di. §5.7 ayrılmanın bedelini adıyla
@@ -6862,22 +7453,42 @@ static func _case_cs_auto_assignment_capacity() -> String:
 
 
 static func _case_cs_capacity_resolution() -> String:
-	# The dead-symbol sweep, asserted. cs_capacity now reads HIZ and actually spreads; the
-	# retired 0-100-scale divisor is gone; FOUNDER_DIRECT_CAP has a live reader.
-	if B2BConstants.cs_capacity(0) != B2BConstants.CS_BASE_CAPACITY:
-		return "cs_capacity(0) is not the base capacity"
-	if B2BConstants.cs_capacity(HRConstants.AREA_MAX) <= B2BConstants.cs_capacity(0):
-		return "cs_capacity does not rise across the ruler (the old /25 bug)"
-	var want_top: int = B2BConstants.CS_BASE_CAPACITY + int(
-		float(HRConstants.AREA_MAX) / float(B2BConstants.CS_PACE_PER_SLOT))
-	if B2BConstants.cs_capacity(HRConstants.AREA_MAX) != want_top:
-		return "cs_capacity(9) is %d, want %d" % [B2BConstants.cs_capacity(HRConstants.AREA_MAX), want_top]
+	# REPOINTED 2026-08-27 WITH THE RULING THAT REPLACED THE LADDER (B4). Capacity is now
+	# 4 + 2 x stars and reads `HRConstants.stars_for`, so the old divisor assertions measured a
+	# formula that no longer exists. Everything the case was FOR is still measured: the curve
+	# rises, it is monotone, its top is a named number, and the founder book still reports.
+	#
+	# THE DIRECTOR'S OWN ANCHORS ARE THE ASSERTION. 1 star -> 6, 1.5 -> 7, 2 -> 8. The half-star
+	# row is the one that could not exist before: the retired ladder divided POINTS by three and
+	# could not see a half star at all.
+	if B2BConstants.account_capacity(0) != B2BConstants.ACCOUNT_CAP_BASE:
+		return "account_capacity(0) is not the base capacity"
+	var anchors: Dictionary = {2: 6, 3: 7, 4: 8}   # points -> accounts (2 points = 1 star)
+	for pts in anchors:
+		var got: int = B2BConstants.account_capacity(int(pts))
+		if got != int(anchors[pts]):
+			return "account_capacity(%d pts) is %d, the director's anchor says %d" % [
+				int(pts), got, int(anchors[pts])]
+	if B2BConstants.account_capacity(HRConstants.AREA_MAX) <= B2BConstants.account_capacity(0):
+		return "account_capacity does not rise across the ruler"
+	var want_top: int = B2BConstants.ACCOUNT_CAP_BASE + int(round(
+		float(B2BConstants.ACCOUNT_CAP_PER_STAR) * HRConstants.stars_for(HRConstants.AREA_MAX)))
+	if B2BConstants.account_capacity(HRConstants.AREA_MAX) != want_top:
+		return "account_capacity(top) is %d, want %d" % [
+			B2BConstants.account_capacity(HRConstants.AREA_MAX), want_top]
 	for i in HRConstants.AREA_MAX:
-		if B2BConstants.cs_capacity(i + 1) < B2BConstants.cs_capacity(i):
-			return "cs_capacity is not monotone at HIZ %d" % i
+		if B2BConstants.account_capacity(i + 1) < B2BConstants.account_capacity(i):
+			return "account_capacity is not monotone at %d points" % i
 	_seed_b2b(1000)
 	if B2BSalesSystem.founder_managed_count() != 1:
 		return "founder_managed_count does not report the founder book"
+	# THE FOUNDER USES THE SAME FORMULA — no special rule, which is B4's own wording.
+	var f: Character = CharacterRegistry.get_founder()
+	if f == null:
+		return "no founder in the run"
+	_set_founder_area(HRConstants.AREA_CUSTOMER_SUCCESS, 4)
+	if CustomerRepSystem.founder_account_capacity() != B2BConstants.account_capacity(4):
+		return "the founder's capacity does not come from the same formula"
 	return ""
 
 
@@ -8188,8 +8799,15 @@ static func _case_job_assignment_and_idle() -> String:
 	# §15.3 `hr.unstaffed_jobs()` — alan değil İŞ. Alan-anahtarlı ikizleri (covering_heads,
 	# unstaffed_areas) yalnız bu vakadan çağrılıyordu ve §12.0 ile birlikte gitti.
 	var empty: Array[String] = HRSystem.unstaffed_jobs()
-	if empty.has(HRConstants.JOB_ACCOUNTS):
-		return "Hesap sahipliği reads unstaffed while somebody is assigned to it"
+	# REPOINTED 2026-08-27 WITH THE RULING (B3). Bu satır DESTEK'i sorguluyor, HESAPLAR'ı değil,
+	# çünkü Müşteri Temsilcisi artık kendi alanının birincil işine — DESTEK MASASINA — doğuyor.
+	# Eskiden HESAPLAR'a doğuyordu ve masa hiç dolmuyordu; düzeltilen şey tam olarak buydu.
+	# Vakanın ÖLÇTÜĞÜ ŞEY DEĞİŞMEDİ: `unstaffed_jobs` gerçekten atanmış bir işi boş SAYMAMALI.
+	if empty.has(HRConstants.JOB_SUPPORT):
+		return "Destek reads unstaffed while the fresh Müşteri Temsilcisi is assigned to it"
+	# Ve HESAPLAR artık varsayılan sakini olmayan bir sütundur — boş okunması DOĞRUDUR.
+	if not empty.has(HRConstants.JOB_ACCOUNTS):
+		return "Hesap sahipliği reads staffed with nobody assigned to it"
 	# SATIŞ YİNE BİR İŞ (Satış rev 6 §3/§3.1, direktör hükmü 2026-08-26) ve bu satır tersine
 	# çevrildi. 2026-08-25'in gerekçesi DEĞİŞMEDİ ve hâlâ doğru: kurucunun pitch'i bir
 	# TOPLANTIDIR, slot tüketmez, hiçbir şeyi duraklatmaz — `SalesMeetingSystem` hiçbir
@@ -8583,7 +9201,7 @@ static func _case_hr_read_catalogue() -> String:
 	for st in [HRSystem.FOUNDER_STATE_BUILD, HRSystem.FOUNDER_STATE_SALES,
 			HRSystem.FOUNDER_STATE_SUPPORT, HRSystem.FOUNDER_STATE_RESEARCH,
 			HRSystem.FOUNDER_STATE_PITCH_PREP, HRSystem.FOUNDER_STATE_TRAINING,
-			HRSystem.FOUNDER_STATE_IDLE]:
+			HRSystem.FOUNDER_STATE_CARE, HRSystem.FOUNDER_STATE_IDLE]:
 		var lkey: String = "HR_FOUNDER_STATE_%s" % String(st).to_upper()
 		if TranslationServer.translate(lkey) == lkey:
 			return "§2.3 state '%s' has no sentence — the page would print %s" % [String(st), lkey]
@@ -11444,6 +12062,19 @@ static func _case_destek_empty_desk_piles_up() -> String:
 	# ölçüyordu. Falsifikasyon bunu yakaladı.
 	var idle: Character = _make_employee("idle_rep", "Idle Rep", HRConstants.ROLE_CUSTOMER_REP)
 	idle.role_stats[HRConstants.AREA_CUSTOMER_SUCCESS] = 8
+	# VE MASADAN İNDİRİLMEK ZORUNDA (B3, 2026-08-27). Müşteri Temsilcisi artık KENDİ birincil
+	# işine, yani DESTEK MASASINA doğuyor — bu turun düzelttiği şeyin ta kendisi. Bu satır
+	# olmadan "bordroda var, masada yok" fikstürü kendi kendini çürütüyordu: `_make_employee`
+	# onu masaya oturtuyor ve case daha ilk iddiada düşüyordu.
+	CharacterRegistry.clear_jobs(idle.id)
+	# KURUCU MEŞGUL OLMAK ZORUNDA (B1, 2026-08-27). §8.2'nin BOŞ MASASI artık "kimse atanmadı"
+	# değil "kimse atanmadı VE kurucu başka bir şey yapıyor" demektir: işsiz bir kurucu canlı
+	# üründe kendiliğinden müşterilerle ilgilenir ve masayı doldurur. Bu satır olmadan case
+	# kendi kurduğu dünyayı ölçemezdi — düştüğü yer de tam orasıydı. Ölçtüğü şey DEĞİŞMEDİ:
+	# masa gerçekten boşken hiçbir şey doğrulanmaz.
+	var busy_founder: Character = CharacterRegistry.get_founder()
+	if busy_founder != null:
+		CharacterRegistry.assign_job(busy_founder.id, HRConstants.JOB_BUILD)
 
 	if SupportSystem.desk_staffed():
 		return "the desk reads staffed before anyone was assigned"

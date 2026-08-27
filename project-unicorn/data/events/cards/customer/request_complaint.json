@@ -85,22 +85,24 @@
             "entity_seam": "musteri.has_pain_feature",
             "scope": "customer",
             "op": "==",
-            "value": true
+            "value": true,
+            "reason": "B2B_LOCK_NO_PAIN_TARGET"
           },
           {
             "entity_seam": "musteri.pain_feature_shipped",
             "scope": "customer",
             "op": "==",
-            "value": false
+            "value": false,
+            "reason": "B2B_LOCK_PAIN_SHIPPED"
           },
           {
             "entity_seam": "musteri.has_open_promise",
             "scope": "customer",
             "op": "==",
-            "value": false
+            "value": false,
+            "reason": "B2B_LOCK_PROMISE_OPEN"
           }
-        ],
-        "reason": "B2B_LOCK_PROMISE_OPEN"
+        ]
       }
     },
     {
@@ -118,7 +120,7 @@
   "text": {
     "tr": {
       "title": "B2B_EV_COMPLAINT_TITLE",
-      "body": "B2B_EV_COMPLAINT_SOFT",
+      "body": "{customer} hattı arıyor: \"{seam:musteri.complaint_voice}\" Şimdilik idare ettim ama karar senin.",
       "options": {
         "discount_them": "B2B_CHOICE_DISCOUNT",
         "promise_it": "B2B_CHOICE_PROMISE_FIX",
@@ -132,7 +134,7 @@
     },
     "en": {
       "title": "B2B_EV_COMPLAINT_TITLE",
-      "body": "B2B_EV_COMPLAINT_SOFT",
+      "body": "{customer} is on the line: \"{seam:musteri.complaint_voice}\" I have held it for now, but the call is yours.",
       "options": {
         "discount_them": "B2B_CHOICE_DISCOUNT",
         "promise_it": "B2B_CHOICE_PROMISE_FIX",

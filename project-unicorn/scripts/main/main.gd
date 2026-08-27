@@ -657,6 +657,26 @@ func _run_b2b_shot(kind: String) -> void:
 		# _describe_modifier entry renders BLIND, and no headless case can see that) and the
 		# locked REDDET row's dimmed, chip-less, non-interactive treatment.
 		ev = EventGate.render("funding.frank_cheque")
+	elif kind == "weekly":
+		# §7.3'ün HAFTALIK ÖZETİ, ve bu kare iki şeyi birden kanıtlıyor. Biri: bilgi kartı
+		# KARAR GİYSİSİ TAŞIMAZ — "KARAR · GÜN N" damgası ve "SEÇİM KALICIDIR" altlığı yok.
+		# İkincisi: özet SATIR taşıyor. İkisi de yalnız çizilmiş bir karede görünür; headless
+		# bir vaka kartın giysisini göremez.
+		CustomerRegistry.set_lifecycle_phase(c.id, "active")
+		SalesSystem.record_sales_event("founder_close", "", c.company_name, c.mrr)
+		var second := Prospect.new()
+		second.id = "lead_weekly_2"   # LOC-DATA debug seed / id
+		second.company_name = "Kuzey İnşaat"   # LOC-DATA debug seed / id
+		second.industry = "construction"   # LOC-DATA debug seed / id
+		second.star = 3
+		var c2: Customer = SalesSystem.add_b2b_customer(second, 24, 55,
+			70, "sales_rep:shot")
+		if c2 != null:
+			# Temsilcinin adı ÖZEL ADDIR ve lokalize edilmez; yine de bu satır bir kare
+			# fikstürüdür, o yüzden LOC-DATA damgası taşır.
+			SalesSystem.record_sales_event("auto_close",
+				"Burcu Cetin", c2.company_name, c2.mrr)   # LOC-DATA debug seed / id
+		ev = EventGate.render("sales.weekly_summary")
 	else:
 		CustomerRegistry.set_lifecycle_phase(c.id, "risk")
 		CustomerRegistry.set_churn_countdown(c.id, 8)
@@ -2075,7 +2095,7 @@ func _run_product_shot(kind: String) -> void:
 	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
 	var founder_id: String = CharacterRegistry.get_founder().id
 	match kind:
-		"detail_b2b", "portfoy":   # LOC-DATA debug seed / id
+		"detail_b2b", "detail_care", "portfoy":   # LOC-DATA debug seed / id
 			GameState.day = 95
 			GameState.set_flag("mvp_shipped", true)
 			GameState.set_flag("mvp_market_type", "b2b")
@@ -2179,7 +2199,14 @@ func _run_product_shot(kind: String) -> void:
 					"line_note_tool_search_k1"]}})
 		"tracker", "beta":
 			tab._navigate("tracker", {})
-		"detail_b2b", "detail_b2c", "detail_b2c_buggy":
+		"detail_b2b", "detail_b2c", "detail_b2c_buggy", "detail_care":
+			# `detail_care` (B1, 2026-08-27) — DESTEK bandının PASİF hâli. `detail_b2b` ile
+			# aynı dünya, tek farkla: kurucunun hiçbir işi yok, yani müşterilerle
+			# ilgileniyor. Bandın üç hâlinden ikisi ancak iki ayrı karede görülebilir.
+			if kind == "detail_care":
+				var f: Character = CharacterRegistry.get_founder()
+				if f != null:
+					CharacterRegistry.clear_jobs(f.id)
 			tab._navigate("detail", {})
 		"publish":
 			# Yayın akışı kendi kapısından açılır (PublishFlow.open) — oyuncunun BETA

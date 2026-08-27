@@ -224,6 +224,32 @@ static func last_signed_star() -> int:
 	return int(GameState.get_flag("sales_last_signed_star", 0))
 
 
+## §7.3 — "Ticker yalnız haber değeri görür. Rutin kapanışlar girmez." ONE HOME for the rule,
+## because it had two and they had already drifted apart from what §7.3 says.
+##
+## The old gate was `scale >= 3 or scale > reach_band()`, which leaks: it lets EVERY 3★ through
+## for the rest of the run, has no whale term at all, and — since a 3★ founder in a 3★ league
+## is not above their league — was doing all its work through the first clause. §7.3 names
+## three things and this names the same three:
+##   above-league   the signing reached past the company's own band
+##   whale          the account the run was telegraphing
+##   first 3★       the FIRST one, once, because the second is no longer news
+##
+## "First" is read from the book rather than a flag: the customer is already seated when this
+## is asked, so being the only 3★ account in the registry IS being the first. A flag would be a
+## second source of the same truth and would drift the first time an account churned.
+static func is_newsworthy_signing(c: Customer, is_whale: bool) -> bool:
+	if c == null:
+		return false
+	if is_whale:
+		return true
+	if c.scale > SalesFaucetSystem.reach_band():
+		return true
+	if c.scale >= SalesConstants.TICKER_NEWSWORTHY_STAR:
+		return deal_count(c.scale) <= 1
+	return false
+
+
 static func whale_condition(account_key: String) -> String:
 	return String(_memory(account_key).get("whale_condition", ""))
 
@@ -306,3 +332,79 @@ static func inner_voice_left() -> int:
 static func spend_inner_voice() -> void:
 	GameState.set_flag("sales_inner_voice_used",
 		int(GameState.get_flag("sales_inner_voice_used", 0)) + 1)
+
+
+# ============================================================================
+#  §7.3 · The weekly summary's ROWS
+# ============================================================================
+#
+# The card used to carry one sentence and a book count, inside full decision chrome — a
+# "KARAR · GÜN N" stamp and a "SEÇİM KALICIDIR" footer over a page whose only button is
+# "Kapat". §7.3 asks for the week's CLOSES, and a summary with no rows summarises nothing.
+#
+# COMPOSED HERE, NOT IN THE CARD, because the card is data: it names one seam and the
+# arithmetic stays in the module that owns it. `GameState.sales_log` carries the close events
+# (day, kind, company, mrr); the star, the seat count and the seat price come off the account
+# those closes produced, which is the only place they are stamped (§5.4).
+#
+# STATIC → `TranslationServer.translate`, never `tr()`: a static has no node to resolve
+# against, and `loc_residue` fails the build on it ([static-tr]).
+
+const WEEKLY_WINDOW_DAYS := 7
+const CLOSE_KINDS := ["auto_close", "founder_close"]
+
+
+## The week's closes, one line each, plus a total. "" when the week closed nothing — the card
+## itself is not raised on an empty week (§7.3), so this is the belt to that braces.
+static func weekly_close_lines() -> String:
+	var since: int = GameState.day - WEEKLY_WINDOW_DAYS
+	var rows: PackedStringArray = []
+	var total: int = 0
+	for entry in SalesSystem.get_sales_log():
+		var e: Dictionary = entry as Dictionary
+		if int(e.get("day", 0)) <= since or not CLOSE_KINDS.has(String(e.get("kind", ""))):
+			continue
+		var company: String = String(e.get("company", ""))
+		var mrr: int = int(e.get("mrr", 0))
+		total += mrr
+		rows.append(TranslationServer.translate("SALES_WEEKLY_ROW").format({
+			"company": company,
+			"stars": _star_text(_star_of(company)),
+			"seats": _seats_of(company),
+			"price": Fmt.money_exact(_price_of(company)),
+			"mrr": Fmt.money_exact(mrr),
+		}))
+	if rows.is_empty():
+		return ""
+	rows.append(TranslationServer.translate("SALES_WEEKLY_TOTAL").format({
+		"n": rows.size(), "mrr": Fmt.money_exact(total)}))
+	return "\n".join(rows)
+
+
+## Always five glyphs, the same grammar `StarRating` draws — a row that shrinks with the star
+## turns a table into a ragged edge.
+static func _star_text(star: int) -> String:
+	var filled: int = clampi(star, 0, SalesConstants.STAR_MAX)
+	return StarRating.FILLED.repeat(filled) + "·".repeat(SalesConstants.STAR_MAX - filled)
+
+
+static func _account_of(company: String) -> Customer:
+	for c in CustomerRegistry.get_by_market("b2b"):
+		if (c as Customer).company_name == company:
+			return c as Customer
+	return null
+
+
+static func _star_of(company: String) -> int:
+	var c: Customer = _account_of(company)
+	return c.scale if c != null else 0
+
+
+static func _seats_of(company: String) -> int:
+	var c: Customer = _account_of(company)
+	return c.seats if c != null else 0
+
+
+static func _price_of(company: String) -> int:
+	var c: Customer = _account_of(company)
+	return c.seat_price if c != null else 0

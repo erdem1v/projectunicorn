@@ -78,33 +78,51 @@ static func _tick_satisfaction(c: Customer) -> void:
 	if GameState.day < c.onboarding_until:
 		step = int(ceil(float(step) * B2BConstants.ONBOARDING_AMP))
 	var delta: int = clampi(target - c.satisfaction, -step, step)
-	# CS delegation (Stage D): a good CS keeps hands-off customers happier — dampen the
-	# EROSION (downward drift) by the rep's skill. Upward recovery stays full-strength.
-	if delta < 0 and c.assigned_to != "":
-		delta = int(float(delta) * B2BConstants.cs_dampen(_cs_expertise_of(c)))
-		# HAYIR DİYEMEZ: kendi hesaplarında memnuniyet daha yüksek durur. Bir DELTA
-		# ÜRETMİYOR — var olan aşınmayı daha da yumuşatıyor, yani §10'un "oynanmamış
-		# ekonomik sonuç yok" kuralı duruyor: düşüşün sebebi hep ürün sağlığı.
-		# YALNIZ aşağı yönde, yukarı toparlanma tam güçte kalır (üstteki kuralın aynısı).
-		var rep: Character = CharacterRegistry.get_character(c.assigned_to)
-		if rep != null and rep.status == HRConstants.STATUS_ACTIVE:
-			var bonus: float = HRConstants.trait_sum(rep.traits, "satisfaction_bonus")
+	# B4 — İLGİLENİLEN HESAP DAHA YAVAŞ AŞINIR, ve "ilgilenen" artık SAHİPTİR, temsilci değil.
+	#
+	# İki şey değişti (direktör hükümleri 2026-08-27):
+	#   (a) SAHİP KURUCU DA OLABİLİR. `assigned_to == ""` "sahipsiz" demek değil, "kurucunun
+	#       kendi masasında" demek — ve kurucu da bir sahiptir ("aynı formül, özel kural yok").
+	#       Erken koşuların bütün defteri kurucunundur, yani bu gerçek bir ekonomi değişimidir
+	#       ve raporda öyle yazıyor.
+	#   (b) BONUS ETKİN ÇIKTIDAN okunuyor, ham eksenden değil: `HRSystem.effective_skill` alan
+	#       katsayısını, odağı (iki iş = 0,50), moral bandını ve huy çarpanlarını zaten
+	#       uyguluyor. İki işe bölünmüş bir temsilci artık gerçekten daha az koruyor.
+	# YALNIZ AŞAĞI YÖNDE. Yukarı toparlanma tam güçte kalır — bu kural değişmedi.
+	if delta < 0:
+		var owner: Character = _account_owner(c)
+		if owner != null:
+			var output: float = HRSystem.effective_skill(owner, HRConstants.AREA_CUSTOMER_SUCCESS)
+			delta = int(float(delta) * B2BConstants.cs_dampen(int(round(output))))
+			# HAYIR DİYEMEZ: kendi hesaplarında memnuniyet daha yüksek durur. Bir DELTA
+			# ÜRETMİYOR — var olan aşınmayı daha da yumuşatıyor, yani §10'un "oynanmamış
+			# ekonomik sonuç yok" kuralı duruyor: düşüşün sebebi hep ürün sağlığı.
+			var bonus: float = HRConstants.trait_sum(owner.traits, "satisfaction_bonus")
 			if bonus > 0.0:
 				delta = int(float(delta) * maxf(0.0, 1.0 - bonus / 100.0))
 	if delta != 0:
 		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 
 
-static func _cs_expertise_of(c: Customer) -> int:
-	# The assigned rep's UZMANLIK, read straight off the axis — the conversion shim is gone.
-	# An ON-LEAVE rep dampens nothing (design doc §8: capacity/CS contribution stops), so the
-	# account erodes at full strength while they are away.
-	if c.assigned_to == "":
-		return 0
-	var cs: Character = CharacterRegistry.get_character(c.assigned_to)
-	if cs == null or cs.status != HRConstants.STATUS_ACTIVE:
-		return 0
-	return int(cs.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0))
+## B4 — WHO LOOKS AFTER THIS ACCOUNT. A named rep, or the founder when nobody is named.
+##
+## `assigned_to == ""` never meant "nobody"; it means "on the founder's own desk"
+## (`assign_customer`'s own contract says so). Reading it as nobody is what confined the care
+## bonus to delegated accounts and made an early solo run — where the founder owns every
+## account — the one shape that got no care at all.
+##
+## AN ABSENT OWNER CARES FOR NOBODY: an on-leave or in-training rep dampens nothing, and the
+## account erodes at full strength while they are away (design doc §8). `null` is that answer.
+## DESIGN-PARKED: the erosion MULTIPLIER is the working shape for the care bonus. The named
+## alternative is widening the account's tolerance instead — a different feel (the account
+## forgives more rather than souring slower) and a different interaction with §5.2's loss
+## reasons, so it is the director's call rather than this wave's.
+static func _account_owner(c: Customer) -> Character:
+	var owner: Character = CharacterRegistry.get_founder() if c.assigned_to == "" \
+		else CharacterRegistry.get_character(c.assigned_to)
+	if owner == null or owner.status != HRConstants.STATUS_ACTIVE:
+		return null
+	return owner
 
 
 static func _satisfaction_target(c: Customer) -> int:

@@ -253,10 +253,50 @@ static func stamp_new_code_effort(effort: float) -> void:
 #  §8.2 · DOĞRULAMA — Müşteri İlişkileri'nin işi, ATAMAYA duyarlı
 # =========================================================================
 
-## §8.2/§12.0 — DESTEK işine atanmış, bugün çalışabilir herkes. Kurucu da atanabilir ve
-## sayılır (Ekip §2). İzindeki/eğitimdeki kişi HRSystem tarafında zaten eleniyor.
+## §8.2/§12.0 — DESTEK işine atanmış, bugün çalışabilir herkes; ARTI pasif ilgideki kurucu.
+## İzindeki/eğitimdeki kişi HRSystem tarafında zaten eleniyor.
+##
+## KURUCU BURAYA ATANMAZ, OKUNUR (B1, direktör hükmü 2026-08-27). Bir önceki tur kurucuyu
+## masaya oturtan bir FİİL eklemişti — düğme, iş yazımı, bedel satırı, iki ayrı UI dalı. B1 onu
+## siliyor ve yerine tek bir okuma koyuyor: kurucu başka hiçbir şey yapmıyorsa müşterilerle
+## ilgileniyordur. Kendiliğinden başlar, kendiliğinden biter, ve saklanan hiçbir şeyle
+## ayrışamaz — çünkü saklanan hiçbir şey yok.
+##
+## B2 BUNDAN BEDAVA GELİYOR: `_desk_sum` roster üzerinde TOPLUYOR, yani masadaki temsilci ile
+## pasif kurucu zaten toplanır. Ayrı bir "yığma" kuralı yazılmadı; olan şey listeye bir kişi
+## daha girmesi.
 static func desk_roster() -> Array[Character]:
-	return HRSystem.assigned_to_job(HRConstants.JOB_SUPPORT)
+	var roster: Array[Character] = HRSystem.assigned_to_job(HRConstants.JOB_SUPPORT)
+	if founder_passive_care():
+		var f: Character = CharacterRegistry.get_founder()
+		if f != null and not roster.has(f):
+			roster.append(f)
+	return roster
+
+
+## B1 — KURUCU PASİF OLARAK MÜŞTERİLERLE İLGİLENİYOR MU?
+##
+## "Başka hiçbir şey yapmıyor" burada üç şeyin birleşimidir ve üçü de zaten var olan okumalar:
+## hiçbir İŞE atanmamış (`assigned_job_ids` boş — yapım, araştırma, satış, test, hesap, hepsi
+## bunun içinde), MEŞGUL değil (`HRSystem.is_busy` izin · eğitim · yatırım hazırlığı · satış
+## toplantısını kapsıyor), ve durumu AKTİF.
+##
+## `founder_task_state()` ÇAĞRILMAZ ve bu bilinçli: o fonksiyon bu yanıtı okuyup CARE dönüyor,
+## yani buradan onu çağırmak sonsuz özyineleme olurdu. İki fonksiyon aynı olguyu iki yönden
+## anlatıyor; olgunun kendisi burada tanımlı.
+##
+## CANLI ÜRÜN ŞART: doğrulanacak bildirim ancak yayındaki bir üründen gelir, ve ürünü olmayan
+## bir kurucu "müşterilerle ilgileniyor" olamaz. Bu aynı zamanda §2.3'ün BOŞTA durumunu
+## koruyor — oyunun ilk günlerinde kurucu gerçekten boştadır, ilgilenen değil.
+static func founder_passive_care() -> bool:
+	if not ProductState.is_live():
+		return false
+	var f: Character = CharacterRegistry.get_founder()
+	if f == null or f.status != HRConstants.STATUS_ACTIVE:
+		return false
+	if HRSystem.is_busy(f):
+		return false
+	return f.assigned_job_ids.is_empty()
 
 
 ## §8.2 — "Destek'e kimse atanmamışsa masa KAPALIDIR: GELEN birikir, hiçbir şey

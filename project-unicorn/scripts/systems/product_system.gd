@@ -626,6 +626,16 @@ static func _reseat_founder(phase: String) -> void:
 	# faz geçişinde zaten yerine oturur.
 	if founder.assigned_job_ids.has(HRConstants.JOB_RESEARCH):
 		return
+	# DESTEK MASASINDAKİ KURUCUYA DA DOKUNULMAZ, ve gerekçesi araştırmanınkiyle birebir aynı.
+	# Bu fonksiyon her faz geçişinde `clear_areas` + `assign_area` koşuyor; korumasız
+	# bırakılırsa masaya oturmuş kurucunun MÜŞTERİ BAŞARISI alanı bir sonraki faz sınırında
+	# sessizce silinir. Görev (`JOB_SUPPORT`) kalır, yani `desk_staffed()` hâlâ true okur ve
+	# masa DOLU görünür — ama `validation_per_day()` alanı topladığı için üretim sıfıra düşer.
+	# Ekranda hiçbir şey değişmeden çalışan bir masanın durması, §5.0'ın "duraklama bile bir
+	# SONUÇ olarak görünmeli" hükmünün tam tersidir. Kurucu masadan kalkınca bir sonraki faz
+	# geçişinde zaten yerine oturur.
+	if founder.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
+		return
 	if not PHASE_AREAS.has(phase):
 		return   # shipped / cancelled / planning: oturacağı bir faz alanı yok, yerinde kalır
 	var area: String = _founder_phase_area(phase)

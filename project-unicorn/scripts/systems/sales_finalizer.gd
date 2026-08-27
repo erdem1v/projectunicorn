@@ -58,16 +58,23 @@ static func _sign(result: Dictionary, ctx: Dictionary, lead_id: String) -> void:
 	var values: Dictionary = result.get("values", {}) as Dictionary
 	var seats: int = int(values.get("units", 0))
 	var price: int = int(values.get("unit_price", 0))
-	# §5.4 — the signing discount is INSIDE the price and visible as its own trace. It is the
-	# distance the customer talked the anchor down, as a fraction, so it stays readable when
-	# the seat count later moves.
-	var anchor: int = SalesLedger.seat_price_anchor()
-	var discount: float = 0.0
-	if anchor > 0 and price < anchor:
-		discount = clampf(1.0 - float(price) / float(anchor), 0.0, 1.0)
-
+	# DESIGN-PARKED: THE SIGNING DISCOUNT IS NO LONGER WRITTEN, and the field is left at zero.
+	# It used to be "how far under the stance anchor this table closed", which is a real and
+	# readable number — but the surface it feeds is the §12 price-break trace, and the
+	# price-break card is defined-and-inert (§18 puts its wiring in the event package). So the
+	# account page was showing "imza indirimi %12" on every ordinary negotiation, sourced from
+	# a mechanic that has never once fired. A number that names the wrong cause is worse than
+	# no number: the player reads it as evidence of something that did not happen, and every
+	# deal carried the same 12% because both sides of the fraction were constants.
+	#
+	# Placeholder taken: DROP THE WRITE. The alternative is to keep the number and rename the
+	# surface honestly to "pazarlık farkı" — the distance the customer talked you down, which
+	# is a fact worth showing and belongs to Act 2 rather than to the price break. That is a
+	# naming decision with a string behind it, so it goes to the director rather than here.
+	# The `signing_discount` field stays in the schema (dropping it is a schema change) and
+	# simply stays 0 until the price-break channel is wired.
 	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, price,
-		PitchSystem.signing_satisfaction_seed(), "founder_pitch", discount)
+		PitchSystem.signing_satisfaction_seed(), "founder_pitch")
 
 	# §6 — the word given at the table becomes a real debt AT THE SIGNATURE, not before: a
 	# promise made to a company that walked out was never given. One open pitch promise at a
@@ -86,14 +93,13 @@ static func _sign(result: Dictionary, ctx: Dictionary, lead_id: String) -> void:
 	ProspectRegistry.remove(lead.id)
 	if c != null:
 		SalesSystem.record_sales_event("founder_close", "", c.company_name, c.mrr)
-		_maybe_ticker(c)
+		_maybe_ticker(c, bool(ctx.get("is_whale", false)))
 
 
-## §7.3 — the ticker sees NEWS ONLY: a league-above signing, a whale, or a 3★. A routine close
-## reaches the player through the weekly summary and the account list, not the ticker.
-static func _maybe_ticker(c: Customer) -> void:
-	if c.scale < SalesConstants.TICKER_NEWSWORTHY_STAR \
-			and c.scale <= SalesFaucetSystem.reach_band():
+## §7.3 — the rule lives in `SalesLedger.is_newsworthy_signing`; this and the rep desk had two
+## copies of it and both leaked every 3★ for the rest of the run.
+static func _maybe_ticker(c: Customer, is_whale: bool) -> void:
+	if not SalesLedger.is_newsworthy_signing(c, is_whale):
 		return
 	EventBus.headline_added.emit(B2BConstants.notice_source_sales(),
 		TranslationServer.translate("SALES_TICKER_FOUNDER_SIGNED").format(

@@ -245,3 +245,37 @@ static func process_span(league_delta: int) -> Array:
 	if league_delta == -1:
 		return PROCESS_DAYS_ONE_BELOW.duplicate()
 	return PROCESS_DAYS_TWO_BELOW.duplicate()
+
+
+# ============================================================================
+#  The module's ONE deterministic mixer (§7.6 / §11.4)
+# ============================================================================
+#
+# Sales had this arithmetic in one place (NegotiationSystem) and needed it in a second when
+# the rep desk stopped handing every account the same terms. A second private copy is how a
+# codebase ends up with four near-identical mixers that drift; this is the module's single
+# home and `NegotiationSystem` now calls it, so the two cannot disagree.
+#
+# NOT AN RNG STREAM. It hashes run seed + a stable identity + a salt, so replaying the same
+# run produces the same answer no matter what else was drawn in between — the same property
+# `EvDice.check` has and the reason a reload cannot reroll a deal.
+const MIX_MODULUS := 1000003
+const MIX_MULTIPLIER := 48271
+const MIX_INCREMENT := 12345
+const MIX_SALT_STRIDE := 7919
+
+const SALT_UNITS := 401          # negotiation seats / equity points
+const SALT_RESERVE := 409        # negotiation hidden reserve
+const SALT_REP_SEATS := 419      # the rep desk's seat count (§7.6)
+
+
+## Deterministic value in [0, MIX_MODULUS) from the run seed, a stable identity and a salt.
+static func mix(identity: String, salt: int) -> int:
+	var base: int = GameState.run_seed + identity.hash()
+	var n: int = (absi(base) % MIX_MODULUS) + MIX_SALT_STRIDE * (absi(salt) % MIX_MODULUS)
+	return absi((n * MIX_MULTIPLIER + MIX_INCREMENT) % MIX_MODULUS)
+
+
+## The same value as a 0..1 fraction — what every band placement actually wants.
+static func mix_unit(identity: String, salt: int) -> float:
+	return float(mix(identity, salt) % 1000) / 1000.0

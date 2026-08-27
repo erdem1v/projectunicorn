@@ -115,12 +115,80 @@ static func reconcile_assignments() -> void:
 
 
 
+# ============================================================================
+#  F5 · A NEW ACCOUNT LANDS ON A DESK (working rule, direktör onayı 2026-08-27)
+# ============================================================================
+#
+# DESIGN-PARKED, and the parking is the point: this is a stopgap default, not the account
+# model. The full rule — who owns an account, when it moves, what the founder keeps — belongs
+# to the account-management session, and this table is the one place to change while waiting.
+#
+# What it fixes: nothing assigned a freshly signed account to anybody. `_delegate_excess` only
+# hands over what exceeds the founder's direct cap AND skips onboarding accounts on purpose
+# ("the founder onboards every new account personally"), so an early run reached six accounts
+# with a Customer Rep sitting at 0/4 — the picker was reading live state and the state really
+# was zero. The player saw an idle rep and a full founder and no way to read why.
+#
+# THIS OVERRIDES THE ONBOARDING SKIP for the signing moment only. `_delegate_excess` still
+# refuses to reach into onboarding on its daily sweep; what changed is that a new account now
+# arrives already owned, so the sweep has nothing to reach for.
+#
+# NOT PINNED. Pinning marks a PLAYER decision (`assign_customer`'s own contract), and this is
+# not one — the morning reconcile must stay free to move it, and the player's "kendim tutayım"
+# must stay the only thing that pins.
+const AUTO_ASSIGN_ON_SIGN := true
+
+
+## Seats a newly signed account with the least-loaded rep who has room. No room anywhere (or
+## no reps at all) leaves it on the founder's desk, which is what the Sales tab's assign verb
+## is for. Ties break on id so a reload cannot shuffle the book.
+##
+## KURUCUYA OTOMATİK HESAP VERİLMEZ — MÜHÜRLÜ HÜKÜM (A2, 2026-08-27). `_ranked` yalnız
+## `category == "employee"` olanları döndürüyor, yani kurucu bu döngüye zaten hiç girmiyor; bu
+## yorum o dışlamanın KASITLI olduğunu söylüyor, tesadüf olmadığını.
+##
+## Gerekçe: kurucunun PASİF BAKIMI (B1) tek kişilik koşuyu zaten taşıyor — boştaki kurucu
+## bildirimleri doğruluyor VE sahip olduğu hesapların aşınmasını yavaşlatıyor. Üstüne bir de
+## otomatik sahiplik verilseydi erken oyun İKİ KAT yastıklanırdı: hem masa çalışır hem defter
+## korunur, ikisi de oyuncunun hiçbir şey yapmasına gerek kalmadan. Kurucunun taşıdığı her
+## hesap BİLEREK verilmiş olmalı, ve onu veren tek yer Satış sekmesinin seçicisidir.
+static func auto_assign_new(c: Customer) -> void:
+	if not AUTO_ASSIGN_ON_SIGN or c == null or c.assigned_to != "" or c.cs_pinned:
+		return
+	var best: Character = null
+	var best_load: int = 0
+	for rep in _ranked(HRConstants.AREA_CUSTOMER_SUCCESS):
+		var cap: int = B2BConstants.account_capacity(
+			int(rep.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0)))
+		var load: int = roster_size(rep.id)
+		if load >= cap:
+			continue
+		if best == null or load < best_load or (load == best_load and rep.id < best.id):
+			best = rep
+			best_load = load
+	if best == null:
+		return
+	CustomerRegistry.assign_customer(c.id, best.id, false)
+
+
+## B4 — KURUCUNUN HESAP KAPASİTESİ, ve aynı formül. Kendi MÜŞTERİ İLİŞKİLERİ puanından
+## okunuyor; kurucusu olmayan bir koşuda sıfır döner, yani devredilecek bir fazlalık da olmaz.
+static func founder_account_capacity() -> int:
+	var f: Character = CharacterRegistry.get_founder()
+	if f == null:
+		return 0
+	return B2BConstants.account_capacity(int(f.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0)))
+
+
 static func _delegate_excess() -> void:
-	# The founder hands over only what exceeds FOUNDER_DIRECT_CAP — delegation as a response to
+	# The founder hands over only what exceeds HIS OWN CAPACITY — delegation as a response to
 	# load. Deliberately NOT "fill every rep to capacity on hire": that would take accounts the
 	# founder is comfortably holding, and it would silently capture the founder-managed control
 	# account that three existing smoke cases hold on purpose.
-	var excess: int = B2BSalesSystem.founder_managed_count() - B2BConstants.FOUNDER_DIRECT_CAP
+	#
+	# B4 (2026-08-27) — o kapasite artık bir sabit değil, KURUCUNUN KENDİ MÜŞTERİ İLİŞKİLERİ
+	# YILDIZINDAN türüyor, herkesinki gibi. "Kurucu şu kadar taşır" diye ayrı bir kural yok.
+	var excess: int = B2BSalesSystem.founder_managed_count() - founder_account_capacity()
 	if excess <= 0:
 		return
 	# Oldest first: the newest signing is the one the founder still has a relationship with.
@@ -140,7 +208,7 @@ static func _delegate_excess() -> void:
 
 	var free_slots: Array = []   # [rep, remaining]
 	for rep in _ranked(HRConstants.AREA_CUSTOMER_SUCCESS):
-		var cap: int = B2BConstants.cs_capacity(int(rep.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0)))
+		var cap: int = B2BConstants.account_capacity(int(rep.role_stats.get(HRConstants.AREA_CUSTOMER_SUCCESS, 0)))
 		var remaining: int = cap - roster_size(rep.id)
 		if remaining > 0:
 			free_slots.append([rep, remaining])

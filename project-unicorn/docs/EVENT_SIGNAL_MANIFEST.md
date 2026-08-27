@@ -1,7 +1,7 @@
 # EVENT SIGNAL MANIFEST
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
-Source: `scripts/autoload/event_bus.gd` plus every `.gd` under `scripts/`. Last generated 2026-08-26.
+Source: `scripts/autoload/event_bus.gd` plus every `.gd` under `scripts/`. Last generated 2026-08-27.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md) §15. The read side of
 the same idea is [`SEAM_REGISTRY.md`](SEAM_REGISTRY.md).

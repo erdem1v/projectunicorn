@@ -142,8 +142,23 @@ static func condition_leaves(condition: Dictionary) -> Array:
 
 ## The blame tree behind a refusal: which leaves failed, and what the seams behind them read at
 ## the moment they did. §5.4, and the substance of the "why didn't this fire" panel.
-static func condition_report(condition: Dictionary) -> Dictionary:
-	return EvCondition.explain(condition)
+##
+## `context` is OPTIONAL AND ADDITIVE (Satış hotfix 2026-08-27, one line, declared). Every
+## existing caller passes nothing and gets exactly what it got before. It exists because an
+## `entity_seam` leaf has no subject without the card's bound scope: asked contextless, "does
+## this account already have an open promise" reads false for everyone, so the blame tree named
+## the wrong clause and the modal drew a lock reason that was not the one refusing. The
+## explaining path already threads a ctx (`EvCondition.explain(node, ctx)`); only the facade
+## was dropping it.
+static func condition_report(condition: Dictionary, context: Dictionary = {}) -> Dictionary:
+	return EvCondition.explain(condition, context)
+
+
+## The player-facing sentence for a refusal, or "" when the content authored none for the
+## clause that actually failed. `EvCondition.reason_of` deliberately stays silent when two
+## clauses fail at once — one refusal cannot honestly be explained by two sentences.
+static func condition_reason(condition: Dictionary, context: Dictionary = {}) -> String:
+	return EvCondition.reason_of(EvCondition.explain(condition, context))
 
 
 # --- Queue surgery ---------------------------------------------------------

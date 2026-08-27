@@ -210,6 +210,21 @@ static func conditions(archetype_id: String) -> Array:
 
 ## Which archetypes can fill a given star band for the active sub-product. Deterministic
 ## order, so the faucet's pick is reproducible from the seed alone.
+## AFFINITY BIASES THE DRAW, IT DOES NOT WIN IT (F13, ölçüldü 2026-08-27).
+##
+## This used to return `preferred` outright whenever it was non-empty, which reads fine until
+## you count the rows: `erp` is the only B2B sub-type that ships, exactly one archetype names
+## it, so `preferred` was always a list of ONE and the other two archetypes could never be
+## drawn at any star. Every company in the pipeline spoke the same voice line, and it looked
+## like stub scarcity because there are only three stubs — it was not. Three archetypes existed
+## and the draw could reach one.
+##
+## An affinity is a leaning: this kind of buyer is MORE likely to want this kind of product,
+## not the only kind who ever appears. Expressed as slot multiplicity so the mixer stays a
+## plain index pick and nothing here needs a weights table or a second random draw.
+const AFFINITY_WEIGHT := 2      # [ÇALIŞMA] a subtype-matched archetype gets this many slots
+
+
 static func candidates_for(star: int, sub_product_id: String) -> Array:
 	var preferred: Array = []
 	var fallback: Array = []
@@ -221,4 +236,11 @@ static func candidates_for(star: int, sub_product_id: String) -> Array:
 			preferred.append(id)
 		else:
 			fallback.append(id)
-	return preferred if not preferred.is_empty() else fallback
+	if preferred.is_empty():
+		return fallback
+	if fallback.is_empty():
+		return preferred
+	var pool: Array = fallback.duplicate()
+	for _i in AFFINITY_WEIGHT:
+		pool.append_array(preferred)
+	return pool

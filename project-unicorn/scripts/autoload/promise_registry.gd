@@ -55,6 +55,22 @@ func has_open_for(customer_id: String) -> bool:
 
 func create(customer_id: String, feature_id: String, deadline_days: int) -> Promise:
 	# The single creation seam. Emits promise_created. Deadline is relative to today.
+	#
+	# A PROMISE WITH NO TARGET IS REFUSED, and this is the fix for the ghost lock the F5 pass
+	# found. `B2BSalesSystem.pick_pain_feature` returns "" for every shipped product — its pool
+	# is keyed by the RETIRED subtype vocabulary — so `promise_create` was minting promises
+	# whose feature_id was the empty string. They can never be kept (nothing ever ships ""), the
+	# deadline sweep never reaches them because `has_open_for` keeps reporting true, and every
+	# card that asks "is a word already open on this account" locked itself forever. One account
+	# answering one retention card closed the promise lever for the rest of the run.
+	#
+	# Refusing at the seam is the only place that holds: three call sites create promises and a
+	# fourth is a save restore. Returning null is already the shape callers handle (they check
+	# the registry, not the return), and the warning names the caller so a real regression is
+	# not silent.
+	if feature_id.strip_edges() == "":
+		push_warning("[PromiseRegistry] refused a promise with no target for '%s'" % customer_id)
+		return null
 	var p := Promise.new()
 	p.id = "promise_%s_%s_%d" % [customer_id, feature_id, GameState.day]
 	p.customer_id = customer_id
@@ -72,6 +88,25 @@ func create(customer_id: String, feature_id: String, deadline_days: int) -> Prom
 
 func reset() -> void:
 	_promises.clear()
+
+
+## Drops every OPEN promise that names no feature. Called once on load, because `create()`
+## refusing them from today on does nothing for a save that already carries one — and a save
+## that carries one carries a lever that is off for the rest of that run.
+##
+## Closed ones are left alone on purpose: kept/partial/broken are history, and rewriting history
+## to tidy a bug is how a save stops matching what the player remembers doing. Returns the count.
+func drop_targetless() -> int:
+	var doomed: Array = []
+	for pid in _promises:
+		var p: Promise = _promises[pid]
+		if p.status == "open" and String(p.feature_id).strip_edges() == "":
+			doomed.append(pid)
+	for pid in doomed:
+		_promises.erase(pid)
+	if not doomed.is_empty():
+		print("[PromiseRegistry] dropped %d targetless promise(s) on load" % doomed.size())
+	return doomed.size()
 
 
 func insert_raw(promise: Promise) -> void:

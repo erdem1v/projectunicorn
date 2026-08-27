@@ -417,6 +417,10 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 			String(GameState.get_flag("mvp_sub_product_type_id", "")), c.scale)
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
+	# F5 (working rule, direktör onayı 2026-08-27) — the account arrives already owned when a
+	# rep has room. Through the stewardship system's own seam: who holds an account is CS's
+	# rule, not Sales', and Sales only says "one more exists now".
+	CustomerRepSystem.auto_assign_new(c)
 	GameState.run_customers_signed += 1  # run counter seam (Spec 3 §3) — sole B2B signing path
 	# Fix 1 ledger: a signed company never re-enters cold prospecting (churn included —
 	# the entity is erased on churn, this name is the durable memory).

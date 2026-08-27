@@ -582,13 +582,67 @@ func _desk_names() -> String:
 func _desk_line(roster: String) -> Control:
 	# §8.2 — masada kim var. Boş masa küçük bir sızıntı değil TAM SIFIR üretir, o yüzden
 	# cümle nötr değil olumsuz renkte: bu bir bilgi satırı değil, duran bir motordur.
+	#
+	# BOŞ MASANIN İKİ AYRI HÂLİ VAR ve tek cümle ikisini de aynı gösteriyordu — F5 turunun
+	# asıl kusuru budur. Oyuncunun bir Müşteri Temsilcisi vardı, dört hesap taşıyordu, ve
+	# ekran "destek masasında kimse yok" diyordu. İkisi de doğruydu: HESAP SAHİPLİĞİ ile
+	# DESTEK MASASI iki ayrı görevdir (`JOB_ACCOUNTS` / `JOB_SUPPORT`) ve temsilci varsayılan
+	# olarak birincisine doğar (hr_constants.gd'nin rol→varsayılan iş tablosu, Ekip rev 11).
+	# Sistem haklıydı, ekran eksikti: hangi görevin boş olduğunu ve onu kimin doldurabileceğini
+	# söylemiyordu.
+	#
+	# ÜÇ HÂL (B1, 2026-08-27), ve üçü de AYRI cümle: temsilci görevde · kurucu pasif olarak
+	# ilgileniyor · kimse yok. Ortadaki hâl bu turda doğdu ve bir atamayı değil bir ATAMA
+	# YOKLUĞUNU anlatıyor, o yüzden nötr renkte: kaybedilmiş bir şey yok, aksine masa çalışıyor.
+	# `desk_roster()` pasif kurucuyu zaten içerdiği için "kim var" cümlesi onu kendiliğinden
+	# adlandırır; ayıran şey masada BAŞKA kimsenin olup olmadığıdır.
 	var staffed: bool = SupportSystem.desk_staffed()
-	var line: String = tr("PROD_DESK_STAFFED").format({"names": roster}) if staffed \
-		else tr("PROD_DESK_EMPTY")
-	var lbl := UiFactory.make_label(line, &"RowMeta",
-		UiTokens.INK_MUTED if staffed else UiTokens.negative())
-	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	return lbl
+	if staffed:
+		var passive_only: bool = SupportSystem.founder_passive_care() \
+			and HRSystem.assigned_to_job(HRConstants.JOB_SUPPORT).is_empty()
+		var lbl := UiFactory.make_label(
+			tr("PROD_DESK_FOUNDER_PASSIVE") if passive_only \
+				else tr("PROD_DESK_STAFFED").format({"names": roster}),
+			&"RowMeta", UiTokens.INK_MUTED)
+		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		return lbl
+
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
+	var lead := UiFactory.make_label(tr("PROD_DESK_EMPTY"), &"RowMeta", UiTokens.negative())
+	lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(lead)
+	# GEREKÇE, ve B1'den sonra iki farklı gerekçe var. Masa boşsa temsilci de yok DEMEK
+	# DEĞİLDİR — kurucu meşgul de olabilir, ve o zaman söylenecek şey NEYLE meşgul olduğudur
+	# (`founder_task_label` §2.3'ün kendi cümlesini veriyor, burada yeniden yazılmıyor).
+	# Kimse atanamıyorsa gerekçe atama değil İŞE ALIMDIR.
+	var eligible: String = _desk_eligible_names()
+	var reason: String = ""
+	if eligible != "":
+		reason = tr("PROD_DESK_ACCOUNTS_ONLY").format({"names": eligible})
+	elif ProductState.is_live():
+		reason = tr("PROD_DESK_FOUNDER_BUSY").format({"what": HRSystem.founder_task_label()})
+	else:
+		reason = tr("PROD_DESK_NOBODY_ELIGIBLE")
+	var hint := UiFactory.make_label(reason, &"RowMeta", UiTokens.INK_DIM)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(hint)
+	return col
+
+
+## Masayı taşıyabilecek ama şu an başka bir görevde olan herkes. Kurucu SAYILMAZ ve artık
+## sayılamaz: B1'den beri onun masadaki yeri bir ATAMA değil, işsiz olmasının kendisidir —
+## atanacak bir fiil yok, o yüzden burada bir ipucu da yok.
+func _desk_eligible_names() -> String:
+	var names: Array[String] = []
+	for c in CharacterRegistry.get_employees():
+		if c.status != HRConstants.STATUS_ACTIVE:
+			continue
+		if c.assigned_job_ids.has(HRConstants.JOB_SUPPORT):
+			continue
+		if HRConstants.can_hold_job(c.role, HRConstants.JOB_SUPPORT, c.category):
+			names.append(c.character_name)   # özel ad — lokalize edilmez
+	return ", ".join(names)
 
 
 func _fix_run_row(running: bool) -> Control:

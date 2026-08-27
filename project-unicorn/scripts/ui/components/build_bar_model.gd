@@ -211,6 +211,9 @@ func _derive_support() -> bool:
 	# KOŞU SÜRERKEN KARAR SATIRI DÜŞMEZ, DEĞİŞİR: §8.4'te koşuyu BİTİREN oyuncudur
 	# ("oyuncu koşuyu istediği an bitirir"), yani kartın basılabilir tek şeyi koşu
 	# sırasında "Koşuyu bitir" olur.
+	# B1 (2026-08-27) — BURADA ARTIK KURUCU DALI YOK. Bir önceki tur "kurucu masaya otursun"
+	# diye bir fiil eklemişti; B1 o fiili siliyor: kurucu başka hiçbir şey yapmıyorsa zaten
+	# masada sayılır ve kararın basılacak bir şeyi kalmaz. Karar satırı yine iki hâlli.
 	decision_key = "PROD_FIX_RUN_END" if sprint_running else "PROD_FIX_RUN_START"
 	decision_enabled = sprint_running or SupportSystem.can_start_fix_run()
 	# DESTEK duraklamaz: duraklama AKTİF YAPIMIN hâli, canlı ürünün değil.

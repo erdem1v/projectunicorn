@@ -227,6 +227,10 @@ const FOUNDER_STATE_SUPPORT := "support"
 const FOUNDER_STATE_RESEARCH := "research"
 const FOUNDER_STATE_PITCH_PREP := "pitch_prep"
 const FOUNDER_STATE_TRAINING := "training"
+## B1 — PASİF MÜŞTERİ İLGİSİ. Bir ATAMA DEĞİL, bir OKUMA: kurucu başka hiçbir şey
+## yapmıyorken destek masası onu kendiliğinden sayar. Bu yüzden BOŞTA'nın önünde
+## okunur — ikisi de "bir işi yok" der, ama biri kaybedilmiş zamandır ve öteki değil.
+const FOUNDER_STATE_CARE := "care"
 const FOUNDER_STATE_IDLE := "idle"
 
 
@@ -278,10 +282,23 @@ static func founder_task_state() -> String:
 		return FOUNDER_STATE_BUILD
 	# Satış bir İŞ değil (2026-08-25); ticari sürekli iş yalnız hesap sahipliğidir. Kurucunun
 	# pitch'i bir toplantıdır ve yukarıdaki pitch_prep dalından okunur.
-	if f.assigned_job_ids.has(HRConstants.JOB_ACCOUNTS):
+	# BAYAT DAL, DÜZELTİLDİ 2026-08-27. Yorum "Satış bir İŞ değil" diyordu ve
+	# 2026-08-25'te doğruydu; Satış rev 6 `JOB_SALES`'i geri getirdi ve burası
+	# güncellenmedi, yani SATIŞ işindeki bir kurucu bu makineden BOŞTA diye çıkıyordu.
+	# B1 altında bu sessiz bir hata olmaktan çıkıp yalana dönüşürdü: boşta okunan kurucu
+	# "müşterilerle ilgileniyor" sayılır ve satış yaparken destek üretirdi.
+	if f.assigned_job_ids.has(HRConstants.JOB_SALES) \
+			or f.assigned_job_ids.has(HRConstants.JOB_ACCOUNTS):
 		return FOUNDER_STATE_SALES
 	if f.assigned_job_ids.has(HRConstants.JOB_SUPPORT) or f.assigned_job_ids.has(HRConstants.JOB_TEST):
 		return FOUNDER_STATE_SUPPORT
+	# B1 — PASİF MÜŞTERİ İLGİSİ, BOŞTA'NIN HEMEN ÖNÜNDE. İkisi de "atanmış bir işi yok" der;
+	# ayrımı ne yaptığı yapar. Canlı bir ürün varken işsiz kurucu müşterilerle ilgileniyordur
+	# ve destek masası onu sayar (`SupportSystem.desk_roster`); ürün yokken gerçekten boştadır.
+	# Bu dal bir ATAMA OKUMUYOR — okuduğu şey atama YOKLUĞU, o yüzden hiçbir şey saklanmıyor ve
+	# durum kendiliğinden başlayıp kendiliğinden bitiyor.
+	if SupportSystem.founder_passive_care():
+		return FOUNDER_STATE_CARE
 	return FOUNDER_STATE_IDLE
 
 # ======================= Görev ataması: okuma seam'leri ======================

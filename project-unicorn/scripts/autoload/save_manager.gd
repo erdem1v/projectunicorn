@@ -367,6 +367,14 @@ func apply_loaded_state(payload: Dictionary) -> bool:
 	SaveCodec.restore_registries(state)
 	_restore_systems(state)
 
+	# A SAVE CAN CARRY A GHOST, and `create()` refusing new ones does nothing about it. Until
+	# 2026-08-27 a `promise_create` effect could mint a promise whose feature_id was the empty
+	# string, and one of those keeps `has_open_promise` true forever — the promise lever stays
+	# locked for the rest of that run with a lock line naming a word nobody gave. This runs
+	# after the registries are seated because it reads what they just restored. It is not a
+	# migration: no schema field changed, and a save with no ghost is untouched.
+	PromiseRegistry.drop_targetless()
+
 	TimeManager.set_suspended(false)
 	_dirty = false
 	_autosave_pending = false

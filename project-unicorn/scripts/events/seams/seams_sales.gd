@@ -79,8 +79,18 @@ static func install() -> void:
 		"Sales", "WRAPPER; a CS rep carries it, rather than the founder")
 
 	# --- Book-wide ----------------------------------------------------------
+	# THIS COUNTS RECORDS, NOT ACCOUNTS, AND THE DIFFERENCE IS LOAD-BEARING. It was briefly
+	# repointed at `account_count()` during the 2026-08-27 hotfix round — which excludes the
+	# single B2C aggregate userbase — and that broke the TRACTION GATE on every B2C run: the
+	# gate asks `musteri.count >= 1` for "your first real customer", and on a B2C path that
+	# customer IS the aggregate. Caught by `gate1_b2c` on the first minute of the suite.
+	#
+	# So the two questions get two names. "Is there anybody at all" is this seam and it keeps
+	# its meaning; "how many ACCOUNTS does the book hold" is `sales.account_count` below, and
+	# that is what the sales surfaces read.
 	EvSeams.register("musteri.count", G, TYPE_INT,
-		func() -> int: return CustomerRegistry.get_active().size(), "Sales", "active accounts")
+		func() -> int: return CustomerRegistry.get_active().size(),
+		"Sales", "active customer RECORDS — includes the B2C aggregate; see sales.account_count")
 	EvSeams.register("musteri.total_mrr", G, TYPE_INT,
 		func() -> int: return CustomerRegistry.get_total_mrr(), "Sales", "")
 	EvSeams.register("musteri.min_satisfaction", G, TYPE_INT,
@@ -110,6 +120,18 @@ static func install() -> void:
 		"Sales", "WRAPPER; monthly price")
 	EvSeams.register("sales.growth_band", G, TYPE_STRING,
 		func() -> String: return SalesSystem.growth_band(), "Sales", "")
+	# §7.3'ün haftalık özeti SATIR ister, cümle değil. Aritmetik ve biçim Satış'ta durur
+	# (`SalesLedger.weekly_close_lines`); burada yalnız adı var — seam kaydı içeriğin motora
+	# soru sorma yoludur, motoru değiştirme yolu değil.
+	EvSeams.register("sales.weekly_closes", G, TYPE_STRING,
+		func() -> String: return SalesLedger.weekly_close_lines(),
+		"Sales", "this week's closes, one line each, with a total")
+	# KAÇ HESAP — `musteri.count`'tan farkı B2C toplu kullanıcı tabanı kaydıdır: o bir KİTLE,
+	# hesap değil, sıfır koltukludur ve "defterde N hesap var" cümlesinde sayılmaz. İki sayacın
+	# 5'e karşı 6 ayrışması tam olarak buydu (F12).
+	EvSeams.register("sales.account_count", G, TYPE_INT,
+		func() -> int: return CustomerRegistry.account_count(),
+		"Sales", "accounts in the book; excludes the B2C aggregate userbase")
 	EvSeams.register("sales.market_share_pct", G, TYPE_FLOAT,
 		func() -> float: return RivalRegistry.get_player_share_pct(),
 		"Sales", "one global figure; per-segment share does not exist yet")

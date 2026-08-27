@@ -298,8 +298,20 @@ const AREA_PRIMARY_JOB := {
 	"design": "build",
 	"engineering": "build",
 	"qa": "test",
-	"customer_success": "accounts",
-	"sales": "accounts",   # satış işi emekli; alanı hesap sahipliği taşır (2026-08-25)
+	# B3 (direktör hükmü 2026-08-27) — MÜŞTERİ İLİŞKİLERİ alanının birincil işi DESTEK
+	# MASASIDIR. "accounts" idi ve sonucu sessizdi: Müşteri Temsilcisi kendi alanının
+	# birincil işine doğuyor, o iş de hesap sahipliğiydi, yani masa hiç dolmuyordu ve
+	# oyuncunun bir temsilcisi varken ekran "destek masasında kimse yok" diyordu.
+	# HESAP SAHİPLİĞİ BUNDAN ETKİLENMEZ: o `Customer.assigned_to` ile taşınır, bir işle
+	# değil (JOB_ACCOUNTS'un üretimde neredeyse hiç okuyucusu yok).
+	"customer_success": "support",
+	# STALE ROW, DÜZELTİLDİ 2026-08-27. Yorum "satış işi emekli" diyordu ve 2026-08-25'te
+	# doğruydu; Satış rev 6 (§3/§3.1, `4bdc1fb`) `JOB_SALES`'i geri getirdi ve BU TABLOYU
+	# GÜNCELLEMEDİ. Sonucu sessizdi ve gerçekti: Satış alanına atanan herkes HESAPLAR işine
+	# oturuyordu, yani §3'ün musluğunun okuduğu "atanmış satış kapasitesi" hiçbir zaman
+	# dolmuyordu ve yeni bir Satış Temsilcisi kendi işine doğmuyordu. Bir işi geri getiren
+	# her tur bu tabloya bakmalı.
+	"sales": "sales",
 }
 
 
@@ -733,6 +745,15 @@ static func trait_carries_cost(trait_id: String) -> bool:
 ## exactly the worst case a three-file search can need, so a batch can never run the pool dry.
 const ROLE_TRAIT_BAN := {
 	"sales_rep": ["takes_them_under", "double_checker"],
+	# B5 — MÜŞTERİ TEMSİLCİSİ aynı iki tuzağı taşımaz. TİTİZ'in faydası yalnız
+	# GELİŞTİRMEDE ateşleniyor (`bug_rate_mult`), yani bu rolde saf hız cezasıdır;
+	# GERÇEK LİDER demo için kapalı, çünkü masanın liderlik kanalı yok. HAYIR DİYEMEZ
+	# KALIR ve rolün imza takasıdır: kendi hesaplarında memnuniyet daha yüksek durur
+	# (`satisfaction_bonus`, _tick_satisfaction okuyor), karşılığında söz baskısı artar.
+	#
+	# HAVUZ SAYIMI: iki yasak da BEDELLİ havuzdadır (beş taneydi, üçe iner) ve aday
+	# sayısı üçtür — tam yeter. Satış satırı aynı aritmetiği zaten geçiyor.
+	"customer_rep": ["takes_them_under", "double_checker"],
 }
 
 

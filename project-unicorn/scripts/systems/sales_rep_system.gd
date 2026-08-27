@@ -252,6 +252,9 @@ static func _close(rep: Character, lead: Prospect) -> void:
 	# kadrandan kapatır; yıldızı fiyata dokunmaz."
 	var seat_price: int = SalesLedger.seat_price_anchor(lead.work_stance)
 	var seats: int = _seats_for(lead)
+	# Read BEFORE the prospect leaves the registry: the whale mark rides the lead, and §7.3's
+	# ticker rule needs it after the account has already replaced the lead.
+	var was_whale: bool = lead.is_whale
 	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, seat_price,
 		PitchSystem.signing_satisfaction_seed(), "sales_rep:%s" % rep.id)
 	ProspectRegistry.remove(lead.id)
@@ -260,31 +263,34 @@ static func _close(rep: Character, lead: Prospect) -> void:
 		int(GameState.get_flag("sales_weekly_closes", 0)) + 1)
 	SalesSystem.record_sales_event("auto_close", rep.character_name, c.company_name, c.mrr)
 	EventBus.rep_deal_closed.emit(rep.id, c.id)
-	_maybe_ticker(c, rep.character_name)
+	_maybe_ticker(c, rep.character_name, was_whale)
 
 
-# DESIGN-PARKED: §5.3's seat band is settled AT A TABLE, and a rep's deal has no table.
-# The midpoint is the neutral reading. Alternatives seen: scale with the rep's star (§7.5
-# forbids it — "yıldızı fiyata dokunmaz"), or draw it (no RNG on this desk, by §7.6's own
-# argument that a close is work rather than a coin flip).
-# DESIGN-PARKED: §5.3's seat band is settled AT A TABLE, and a rep's deal has no table.
-# The midpoint is the neutral reading. Alternatives seen: scale with the rep's star (§7.5
-# forbids it — "yıldızı fiyata dokunmaz"), or draw it (no RNG on this desk, by §7.6's own
-# argument that a close is work rather than a coin flip).
-## §5.3 — seats come from the star band, never from a negotiation. A rep's deal takes the
-## MIDDLE of the band: the player did not sit at that table, so there is nothing to have
-## played well or badly.
+## §5.3 — seats come from the star band, never from a negotiation.
+##
+## THE MIDPOINT WAS THE BUG (direktör bulgusu F6, 2026-08-27). It was my own parked call: the
+## player did not sit at that table, so nothing had been played well or badly and the middle
+## read as the neutral answer. What it actually produced was three accounts signed on three
+## different days by two different reps with byte-identical terms — 28 koltuk, every time,
+## because the midpoint of a star band is a constant. A world where every mid-market company
+## buys exactly the same number of seats is not neutral, it is obviously fake.
+##
+## The band placement now comes from the ACCOUNT, not from the desk: run seed + lead id +
+## archetype through the module's own mixer. §7.5 is untouched — the REP's star still does not
+## reach the price or the seats — and the value is replay-stable, so a reload cannot reroll a
+## deal that already closed.
 static func _seats_for(lead: Prospect) -> int:
 	var band: Dictionary = SalesConstants.seat_band(lead.star)
-	return int(round((float(band["low"]) + float(band["high"])) * 0.5))
+	var t: float = SalesConstants.mix_unit(
+		lead.id + "|" + lead.archetype_id, SalesConstants.SALT_REP_SEATS)
+	return int(round(lerpf(float(band["low"]), float(band["high"]), t)))
 
 
-## §7.3 — "Ticker yalnız haber değeri görür. Rutin kapanışlar girmez." Newsworthy is a
-## league-above signing, a whale, or the run's first 3★.
-static func _maybe_ticker(c: Customer, rep_name: String) -> void:
-	var newsworthy: bool = c.scale >= SalesConstants.TICKER_NEWSWORTHY_STAR \
-		or c.scale > SalesFaucetSystem.reach_band()
-	if not newsworthy:
+## §7.3 — the rule itself lives in `SalesLedger.is_newsworthy_signing`, because it had two
+## copies here and in `SalesFinalizer` and both had drifted off what §7.3 says: no whale term,
+## and every 3★ leaking rather than the first.
+static func _maybe_ticker(c: Customer, rep_name: String, is_whale: bool) -> void:
+	if not SalesLedger.is_newsworthy_signing(c, is_whale):
 		return
 	EventBus.headline_added.emit(B2BConstants.notice_source_sales(),
 		TranslationServer.translate("SALES_TICKER_SIGNED").format(
