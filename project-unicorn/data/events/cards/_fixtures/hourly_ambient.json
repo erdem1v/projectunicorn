@@ -1,0 +1,24 @@
+{
+  "id": "fixture.hourly_ambient",
+  "version_scope": "fixture",
+  "category": "product",
+  "tick": "hourly",
+  "class": "interrupt",
+  "tags": ["build_safe"],
+  "weight": 0.5,
+  "allowed_hours": [0, 0],
+  "min_gap_days": 1,
+  "condition": { "seam": "time.day", "op": ">=", "value": 1 },
+  "latch": { "cooldown_days": 0 },
+  "expires_days": 3,
+  "expire_note": "Fixture.",
+  "on_expire": { "penalties": [] },
+  "options": [
+    { "id": "ok", "outcome_id": "seen", "effects": [ { "verb": "set_flag", "name": "fixture_hourly_seen" } ] }
+  ],
+  "text": {
+    "tr": { "title": "Saatlik", "body": "Fixture.", "options": { "ok": "Tamam" } },
+    "en": { "title": "Hourly", "body": "Fixture.", "options": { "ok": "All right" } }
+  },
+  "_note": "The hourly clock's only test subject. Every AUTHORED hourly card was deleted in the event-deck delete (2026-08-31) as legacy flavour, and the deck that replaces them is not written yet; `ambient_one_per_day_across_hour0` pins the hour-0 rollover, which is an ENGINE claim and must not wait on content. version_scope fixture keeps it out of every shipping pool (G2), exactly like the other six. allowed_hours [0,0] is deliberate: hour 0 is the LAST hourly dispatch of a day and belongs to the NEXT calendar day, so pinning the card there makes every fire a rollover fire. The three B2C cards this replaced sat in windows of 9-18, 18-22 and 20-23, so the branch the case exists for was never actually reached."
+}

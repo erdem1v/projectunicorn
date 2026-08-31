@@ -344,7 +344,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2c_growth_multiplier_floor":     fail = _case_b2c_growth_multiplier_floor()
 		"conversion_bug_penalty":          fail = _case_conversion_bug_penalty()
 		"audience_pct_modifier":           fail = _case_audience_pct_modifier()
-		"bug_complaint_costs_audience_not_cash": fail = _case_bug_complaint_costs_audience_not_cash()
+		"complaint_never_charges_cash":    fail = _case_complaint_never_charges_cash()
 		"discount_cap_two_uses":           fail = _case_discount_cap_two_uses()
 		"risk_reentry_hysteresis":         fail = _case_risk_reentry_hysteresis()
 		"risk_exit_stamps_day":            fail = _case_risk_exit_stamps_day()
@@ -10883,16 +10883,28 @@ static func _case_audience_pct_modifier() -> String:
 	return ""
 
 
-static func _case_bug_complaint_costs_audience_not_cash() -> String:
-	# Every row of the rewritten event leaves cash alone; the two answers move satisfaction
-	# and the audience, the ignore row keeps its churn grammar.
-	if not EventGate.is_catalogued("customer.bug_complaint"):
-		return "customer.bug_complaint not in the catalogue"
-	var ev: GameEvent = EventGate.render("customer.bug_complaint")
+static func _case_complaint_never_charges_cash() -> String:
+	# REPOINTED by the event-deck delete (2026-08-31). Calibration Round A §7 ruled that a
+	# complaint costs AUDIENCE and SATISFACTION and never cash. The card that carried the
+	# ruling, `customer.bug_complaint`, was legacy B2C flavour and is gone; the ruling is not,
+	# so it is asserted in the two places that survived it.
+	#
+	# HALF ONE - the live card. `customer.request_complaint` is the complaint the player
+	# actually meets now, and no row of it may charge cash.
+	if not EventGate.is_catalogued("customer.request_complaint"):
+		return "customer.request_complaint not in the catalogue"
+	var ev: GameEvent = EventGate.render("customer.request_complaint")
+	if ev.choices.is_empty():
+		return "the live complaint card rendered no choices"
 	for ch in ev.choices:
 		for m in ch.modifiers:
 			if String((m as Dictionary).get("verb", "")) in ["add_cash", "spend_cash"]:
 				return "a cash row survived in '%s'" % ch.label
+
+	# HALF TWO - the executor. The three rows the deleted card handed it, written out here so
+	# the arithmetic they pinned still has a case while the new deck is unwritten: satisfaction
+	# on the userbase record, brand, a PERCENTAGE of the audience, and churn. Every one of them
+	# has to leave cash exactly where it found it.
 	_seed_b2c()
 	GameState.set_flag("b2c_audience", 1000.0)
 	SalesSystem._ensure_b2c_record()
@@ -10906,7 +10918,10 @@ static func _case_bug_complaint_costs_audience_not_cash() -> String:
 	var ctx: Dictionary = _ctx_customer(ub)
 	var cash0: int = GameState.cash
 	var brand0: int = GameState.brand
-	EventGate.debug_apply_effects(ev.choices[0].modifiers, ctx)
+	EventGate.debug_apply_effects([
+		{"verb": "satisfaction_delta", "amount": 10},
+		{"verb": "add_brand", "amount": 2},
+		{"verb": "audience_delta", "pct": -0.03}], ctx)
 	if GameState.cash != cash0:
 		return "answering in the open moved cash (%d → %d)" % [cash0, GameState.cash]
 	if ub.satisfaction != 50:
@@ -10915,13 +10930,18 @@ static func _case_bug_complaint_costs_audience_not_cash() -> String:
 		return "answering in the open did not add brand +2"
 	if absf(float(GameState.get_flag("b2c_audience", 0.0)) - 970.0) > 0.01:
 		return "answering in the open did not cost 3 %% of the audience (%.1f)" % float(GameState.get_flag("b2c_audience", 0.0))
-	EventGate.debug_apply_effects(ev.choices[1].modifiers, ctx)
+	EventGate.debug_apply_effects([
+		{"verb": "satisfaction_delta", "amount": 6},
+		{"verb": "add_brand", "amount": -1},
+		{"verb": "audience_delta", "pct": -0.01}], ctx)
 	if GameState.cash != cash0:
 		return "the private reply moved cash"
 	if ub.satisfaction != 56 or GameState.brand != brand0 + 1:
 		return "the private reply should be sat +6 / brand −1 (sat %d, brand %d)" % [ub.satisfaction, GameState.brand]
 	var aud_before_ignore: float = float(GameState.get_flag("b2c_audience", 0.0))
-	EventGate.debug_apply_effects(ev.choices[2].modifiers, ctx)
+	EventGate.debug_apply_effects([
+		{"verb": "churn_customer"},
+		{"verb": "add_brand", "amount": -2}], ctx)
 	if float(GameState.get_flag("b2c_audience", 0.0)) >= aud_before_ignore:
 		return "ignoring it did not churn audience"
 	if GameState.cash != cash0:
@@ -11261,15 +11281,30 @@ static func _case_ambient_hourly_chance_exact() -> String:
 
 
 static func _case_ambient_one_per_day_across_hour0() -> String:
-	# Drive 30 full engine days (hour 1..23 → 0 → advance → daily) on a B2C world where the
-	# hourly cards are all eligible, and count them per CALENDAR day — including across the
-	# hour-0 rollover, which is the boundary this case exists for.
+	# Drive 30 full engine days (hour 1..23 → 0 → advance → daily) and count the hourly cards
+	# per CALENDAR day — including across the hour-0 rollover, which is the boundary this case
+	# exists for.
 	#
 	# THE CEILING MOVED AND IS NOW DECLARED. The old engine hard-capped the hourly path at one
 	# card a day, in code, with no name. §13's budget is `MAX_INTERRUPTS_PER_DAY` and it
 	# governs every interrupt rather than one path — so the number is read from EvTuning
 	# instead of typed here, and raising it in the calibration pass will not make this case
 	# lie. What the case still pins is the thing that was actually fragile: the rollover.
+	#
+	# REPOINTED by the event-deck delete (2026-08-31), and STRONGER for it. The subject used to
+	# be the three authored B2C hourly cards; all three were legacy flavour and are gone, and
+	# the deck that replaces them is not written. The claim is about the ENGINE's clock, not
+	# about content, so it must not wait on content: the subject is `fixture.hourly_ambient`,
+	# admitted the way the thesis case admits its own fixtures — by widening SHIPPED_SCOPES for
+	# the length of the run and narrowing it again.
+	#
+	# The fixture sits in allowed_hours [0, 0] ON PURPOSE. The three cards it replaced sat in
+	# windows of 9-18, 18-22 and 20-23, so not one of them could ever fire at hour 0 and the
+	# rollover branch named in the comment above was never actually reached. Now every fire is
+	# a rollover fire.
+	var shipped: Array = EvTuning.SHIPPED_SCOPES.duplicate()
+	EvTuning.SHIPPED_SCOPES.append("fixture")
+	EvCatalog.reload()
 	_seed_b2c()
 	GameState.set_cash(500000)
 	GameState.set_flag("mvp_innovation", 15.0)
@@ -11289,9 +11324,15 @@ static func _case_ambient_one_per_day_across_hour0() -> String:
 			var slot: int = GameState.day + (1 if GameState.current_hour == 0 else 0)
 			per_day[slot] = int(per_day.get(slot, 0)) + 1)
 	var total: int = 0
+	var at_hour_zero: int = 0
 	for i in 30:
+		var before: int = per_day.get(GameState.day + 1, 0)
 		_sim_day_full()
+		if int(per_day.get(GameState.day, 0)) > before:
+			at_hour_zero += 1
 		_drain_all_modals()
+	EvTuning.SHIPPED_SCOPES.assign(shipped)
+	EvCatalog.reload()
 	for d in per_day.keys():
 		total += int(per_day[d])
 		if int(per_day[d]) > EvTuning.MAX_INTERRUPTS_PER_DAY:
@@ -11299,6 +11340,8 @@ static func _case_ambient_one_per_day_across_hour0() -> String:
 				d, int(per_day[d]), EvTuning.MAX_INTERRUPTS_PER_DAY]
 	if total == 0:
 		return "fixture: no hourly card fired in 30 days (pool not eligible?)"
+	if at_hour_zero == 0:
+		return "no fire was attributed across the hour-0 rollover, which is the boundary this case is for"
 	return ""
 
 
@@ -14618,7 +14661,10 @@ static func _case_event_i4_demoted_never_dropped() -> String:
 
 	var pending: Array = []
 	for i in 6:
-		pending.append({"event_id": "product.critical_bug"})
+		# A LIVE demotable interrupt: not `critical`, not `terminal_warning`, no arc, so
+		# §13.5 does not exempt it from the budget. It replaced `product.critical_bug`,
+		# which the event-deck delete removed as legacy flavour (2026-08-31).
+		pending.append({"event_id": "customer.retention"})
 	var assigned: Array = EvTempo.assign(pending)
 	if assigned.size() != pending.size():
 		return "the governor dropped %d card(s); I4 forbids dropping" % (pending.size() - assigned.size())

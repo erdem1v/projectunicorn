@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **147** |
-| Effect verbs (write) | **59** |
-| Cards in the catalogue | 43 |
+| Seams (read) | **162** |
+| Effect verbs (write) | **61** |
+| Cards in the catalogue | 38 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -67,6 +67,8 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `open_term_table`
 - `advance_phase`
 - `phase_gate_decline`
+- `open_seed_table`
+- `decline_buyout`
 - `set_game_flag`
 - `mentor_advisory`
 - `b2b_retain_delay`
@@ -157,18 +159,30 @@ slot of that type (§17.12).
 | `founder.is_busy` | global | bool | HR | assigned, in training, or preparing a pitch |
 | `founder.leadership` | global | int | HR | 0-10; the morale ceiling and the team output multiplier |
 | `founder.origin` | global | string | HR | self_made | heir | corporate_refugee |
+| `founder.skill` | global | int | Founder | the skill a check leaned on; the specific seam wins when one exists |
 | `founder.task_state` | global | string | HR | build | sales | support | research | pitch_prep | training | idle |
 
 ### `funding.`
 
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
+| `funding.acq_days_open` | global | int | Funding | -1 until the road closes; the buyout window is measured from that stamp |
+| `funding.acq_offer` | global | string | Funding | the founder's slice of that price — what the sealed line calls 'your share' |
+| `funding.acq_road_over` | global | bool | Funding | faced Series A by a decline or a walk, and no table is left to walk to |
+| `funding.acq_valuation` | global | string | Funding | the buyer's price for the whole company: ARR x multiple |
 | `funding.angel_days_since_accept` | global | int | Investment | -1 when the cheque has not landed; the day stamp stays in GameState |
 | `funding.angel_threshold_met` | global | bool | Funding | MRR has crossed the bar Frank's cheque waits on |
 | `funding.gate_pending_phase` | global | int | Funding | WRAPPER; 0 when no gate is open |
 | `funding.hard_mode` | global | bool | Funding | RESERVED — no writer exists; the honest lock on Frank's decline row |
 | `funding.last_answer_moment` | global | bool | Investment | one sheet, one day left, and no other table to walk to |
 | `funding.meeting_day_arrived` | global | bool | Funding | a booked meeting's day has come |
+| `funding.seed_band` | global | int | Funding | 0 harsh · 1 standard · 2 strong — an INDEX, for by_seam bodies |
+| `funding.seed_days_since_close` | global | int | Funding | -1 until the round closes; mirrors funding.angel_days_since_accept |
+| `funding.seed_door_open` | global | bool | Funding | the Traction-phase door is latched and unspent |
+| `funding.seed_expectation` | global | int | Funding | 0 none · 1 grace · 2 on track · 3 durgun (SeedConstants.EXPECT_*) |
+| `funding.seed_offer_live` | global | bool | Funding | an unsigned seed offer is on the table; it never expires |
+| `funding.seed_pitch_used` | global | bool | Funding | the run's one seed meeting has been spent |
+| `funding.seed_taken` | global | bool | Funding | a seed round was signed this run |
 | `funding.sheet_days_left` | global | int | Funding | 9999 when no sheet is live |
 
 ### `hr.`
@@ -186,7 +200,7 @@ slot of that type (§17.12).
 | `hr.is_idle` | entity | bool | HR | an employee with no job at all |
 | `hr.is_overloaded` | entity | bool | HR | more than one job |
 | `hr.job_count` | entity | int | HR | 0, 1 or 2 |
-| `hr.level` | entity | int | HR | WRAPPER over Character.level. 0 Junior / 1 Orta / 2 Kıdemli |
+| `hr.level` | entity | int | HR | WRAPPER over Character.level. 0 = junior, 1 = mid, 2 = senior |
 | `hr.morale` | entity | int | HR | 0-100 |
 | `hr.morale_avg` | global | float | HR | 0.0-100.0, and 0.0 when there are no employees at all |
 | `hr.morale_band` | entity | string | HR | high | mid | low, at 80 / 50 / 35 |
@@ -208,6 +222,7 @@ slot of that type (§17.12).
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
 | `investor.angel_taken` | global | bool | Funding | WRAPPER; Frank's cheque was accepted |
+| `investor.leverage` | global | int | Investment | the table-side bonus a check adds; 0 outside a sitting |
 | `investor.meeting_pending` | global | bool | Funding | WRAPPER; one at a time by construction |
 | `investor.pivot_used` | global | bool | Funding | WRAPPER; the VC path is permanently closed |
 | `investor.rejections` | global | int | Funding | WRAPPER; three closed tables reach the cascade |
@@ -222,7 +237,7 @@ slot of that type (§17.12).
 | `musteri.churn_countdown` | entity | int | Sales | WRAPPER; -1 when not counting, else days to churn |
 | `musteri.company_name` | entity | string | Sales | for {customer} in prose |
 | `musteri.complaint_voice` | entity | string | Sales | the per-sector complaint line |
-| `musteri.count` | global | int | Sales | active accounts |
+| `musteri.count` | global | int | Sales | active customer RECORDS — includes the B2C aggregate; see sales.account_count |
 | `musteri.cs_escalated` | entity | bool | Sales | an escalation is already open on this account |
 | `musteri.discounts_used` | entity | int | Sales | 0-2; the discount row locks at the cap |
 | `musteri.has_open_promise` | entity | bool | Sales | a feature was promised and has not resolved |
@@ -270,12 +285,14 @@ slot of that type (§17.12).
 
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
+| `sales.account_count` | global | int | Sales | accounts in the book; excludes the B2C aggregate userbase |
 | `sales.b2c_audience` | global | float | Sales | float: it carries a sub-unit accumulator |
 | `sales.b2c_price` | global | int | Sales | WRAPPER; monthly price |
 | `sales.growth_band` | global | string | Sales |  |
 | `sales.is_b2b` | global | bool | Sales | reads the SHIPPED market, not one being built |
 | `sales.market_share_pct` | global | float | Sales | one global figure; per-segment share does not exist yet |
 | `sales.pipeline_count` | global | int | Sales | live prospects |
+| `sales.weekly_closes` | global | string | Sales | this week's closes, one line each, with a total |
 
 ### `time.`
 
@@ -362,7 +379,6 @@ so `flag_unset` would silently read true forever.
 | `arc_fixture_thesis` | promise | close | 2 |
 
 <!-- HAND-WRITTEN — REGENERATION SKIPS THIS BLOCK -->
-
 ## e · Hand-written notes
 
 This block survives regeneration. The three sections worth keeping here are the ones
@@ -370,5 +386,4 @@ the old file carried and nobody would reconstruct: the **trigger-hook map** (dra
 hook name → the signal and file:line that fires it today), the **legacy-function map**
 (every retired card id → the arc node that inherited its job), and the list of
 **known gaps** the engine has not closed.
-
 <!-- END HAND-WRITTEN -->
