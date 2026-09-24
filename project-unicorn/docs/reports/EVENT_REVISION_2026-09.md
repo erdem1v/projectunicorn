@@ -30,7 +30,9 @@ bekletildi). Metinler önce İngilizce yazıldı, Türkçesi ayrı lokalizasyon 
 hatası düzeltildi. Ölçüm botu baştan kuruldu. 730. gün uyarısındaki iki delik kapandı. B2C kusur
 testi düzeltildi. CLAUDE.md, GDD'leri referans alacak şekilde sadeleştirildi.
 
-{{RESULTS_HEADLINE}}
+**Sonuç (5 tohum × 3 politika, aynı yetkin bot):** eski kodla Series A kapısı **15 koşunun hiçbirinde
+açılmadı**, marka 39–66. günlerde çöktü. Yeni kodla **15 koşunun 12'sinde açıldı** (her politikada 4/5, 238.–640. günler),
+mantıklı politikada 161 sözün yalnız 1'i bozuldu. Tablolar §5'te.
 
 ---
 
@@ -131,8 +133,6 @@ Bu imza ticker'a düşüyordu ama markaya dokunmuyordu.
 Kapı art arda 3 ay, aylık en az %12 büyüme istiyor. Satış doğrusal büyüdüğü için MRR arttıkça
 aylık yüzde düşüyor. Seri çoğu zaman erken dönemde bir kez tutuyor, sonra bir daha tutmuyor.
 
-{{CHAIN_NUMBERS}}
-
 ---
 
 ## 3. Kart kart revizyon
@@ -200,13 +200,87 @@ Kartların tam metni (EN önce, TR lokalizasyon, seçenek etkileri ve kilitleri)
 
 ## 5. Sonuçlar
 
-{{RESULTS_TABLE}}
+### 5.1 Baseline (değişiklikten önceki kod + eski bot, tek tohum)
+
+| Ölçü | Değer |
+|---|---|
+| Toplantı kazanma | 12/291 (%4) |
+| Tepe MRR (730 gün) | 11.864$ |
+| `customer.retention` ateşleme | **181** |
+| Verilen / bozulan söz | 181 / **173** |
+| Marka | 181. günde 0 |
+| Series A Hunt'a giriş | yok |
+
+### 5.2 Kontrollü deney: aynı yetkin bot, eski kod ve yeni kod (730 gün, 5 tohum)
+
+Tohumlar: 424242, 11, 22, 33, 44. MRR, retention ve churn değerleri medyan; "marka <25" her tohum için gün.
+
+| Kod · politika | Series A Hunt'a giriş | Giriş günleri | MRR 365. gün | Tepe MRR | Markanın 25 altına düştüğü gün | Bozuk / toplam söz | Retention ateşleme | Churn |
+|---|---|---|---|---|---|---|---|---|
+| Eski kod · mantıklı | **0/5** | — | 116.951 | 390.692 | 46, 43, 50, 39, 48 | 0/0 | 185 | 40 |
+| Eski kod · naif | **0/5** | — | 117.163 | 393.404 | 46, 43, 50, 39, 48 | 0/0 | 185 | 40 |
+| Eski kod · hep indirim | **0/5** | — | 178.232 | 496.214 | 65, 60, 66, 58, 65 | 0/0 | 102 | 27 |
+| **Yeni kod · mantıklı** | **4/5** | 276, 238, 336, 640 | 179.767 | 419.716 | 88, 89, 92, —, 82 | 1/161 | 123 | 65 |
+| Yeni kod · naif | **4/5** | 276, 238, 336, 640 | 179.767 | 419.716 | 88, 89, 92, —, 82 | 1/161 | 123 | 65 |
+| Yeni kod · hep indirim | **4/5** | 398, 301, 349, 305 | 160.755 | 381.376 | 89, 98, 98, 95, 101 | 9/111 | 127 | 66 |
+
+### 5.3 Ne söylüyor
+
+- **Eski kodda kapı 15 koşunun hiçbirinde açılmıyor**, MRR 300–590K$'a çıksa bile. Sebep tek: marka
+  39–66. günlerde 25'in altına düşüyor ve 0'da kalıyor. Bu, event katmanı (oyala, sahte seçenekler,
+  çalışmayan söz sistemi) ile kaynaksız markanın birleşik sonucu. **Senin hipotezin ölçümle doğrulanıyor.**
+- **Yeni kodda kapı 15 koşunun 12'sinde açılıyor** (her politikada 4/5). Mantıklı politikada
+  161 sözün 1'i bozuk.
+- Eski kodda söz sistemi `erp` için hiç çalışmıyordu (0 söz). Yenide sözler tutuluyor ve hesap kurtarmanın
+  indirimsiz yolu oluyor.
+- Naif politika mantıklıyla aynı sonucu veriyor, çünkü ilk açık seçenek zaten söz. İndirimci politika
+  daha az MRR ile ve daha geç (301–398. gün) açıyor. İndirim artık tek kurtarış değil.
+- **Bir tohum (424242) kapıya hâlâ ulaşamıyor:** erken bir churn dalgası (178 churn) markayı 88. günde
+  25'in altına çekiyor ve marka toparlanamıyor. Kalan yapısal risk bu (§6.1).
+- **Bot Series A görüşmesini oynamıyor.** VC sahnesi ve term sheet masası elle oynanan sahneler; bot kapıdan
+  girip Hunt fazına geçiyor, orada duruyor. Bu yüzden bütün koşular "running_on_fumes" ile bitiyor.
+  "Kapıya ulaşmak" burada Series A Hunt fazına girmek demek; görüşmenin kalibrasyonu ayrı bir iş.
+- **Ekip dağılması hâlâ yüksek:** bot moral bakımı yapsa bile koşu başına 30–50 istifa var. İK
+  ekonomisine ayrıca bakılmalı (§6.4).
+
+### 5.4 Event harness (20 tohum × 730 gün, rastgele politika)
+
+- 0 çökme, 0 sallanan ark, **0 uyarısız kayıp**. HARNESS PASS.
+- En uzun sessizlik 639 gün; sessiz taban 2.860 günde kart bulamadı. Sessiz kart havuzu boş (§9).
+
 
 ---
 
 ## 6. Series A için senin kararın gereken konular
 
-{{DECISIONS}}
+### 6.1 Marka kapısı (en önemli karar)
+Kapı marka ≥ 25 istiyor ve markanın düzenli bir kaynağı yok. GDD'ler de bu konuda çelişkili:
+ch01 §2 kapıya markayı koyuyor, ch08 §5 "yalnız MRR" diyor. İki yol görüyorum:
+- **A (önerim):** Pazarlama modülü gelene kadar kapıdaki marka tabanı ch08'e göre kaldırılır ya da
+  düşürülür (ör. 25 → 10). Marka satış görüşmesi inancını ve VC puanını zaten etkiliyor; orada yaşamaya
+  devam eder.
+- **B:** Marka kapıda kalır ama bir kaynak eklenir (ör. tutulan söz +1, sürüm yayını +1). Bu GDD'de
+  yazılı değil, senin onayını ister.
+
+### 6.2 Büyüme serisi (%12 × 3 ay)
+Kapı ilk kez açıldığında MRR 120K$ bandında ve seri tutuyor. Ama kapı bir kez kapanırsa yüksek MRR'da
+%12 çok zor. Öneri: seriyi mutlak MRR artışı olarak tanımlamak ya da yüzdeyi MRR bandıyla düşürmek.
+ch09 ile birlikte karar verilmeli.
+
+### 6.3 Seed kapısı ve Series A takvimi
+Yeni kodla MRR 120K$'a 237–491. günlerde ulaşıyor; 20K$'lık seed kapısı 50–60. günlerde açılıyor.
+Vizyon belgesindeki "Perde 1 = 45–60 dk" hedefi için seed biraz erken; ayrı bir kalibrasyon oturumunda
+bakılmalı. Series A eşiğini (120K$) bu turda değiştirmedim.
+
+### 6.4 Ekip dağılması
+Bot moral bakımı yapsa bile koşu başına 30–50 istifa var (ortalama moral ~40). Moral her gün 0,25
+eriyor; toparlayan tek araçlar zam, yılda bir tatil ve kısa mesai. Bu İK ekonomisinin kalibrasyon
+konusu, event'lerle ilgili değil.
+
+### 6.5 `sales.price_break`
+Satış GDD §7.6 kartı. Bağlanması için Satış tarafında "Standart fiyattan kapat" etkisinin (imza
+indirimi) bir seam'e ihtiyacı var. Bu turda bekletildi.
+
 
 ---
 
@@ -267,10 +341,278 @@ yazım turunun ilk adayları:
 
 ## 10. Doğrulama
 
-{{VERIFICATION}}
+| Kapı | Sonuç |
+|---|---|
+| `--event-lint` | PASS · 0 hata · 0 uyarı · 38 kart · 3 ark |
+| `--event-probe` | PASS · 159/159 |
+| Smoke (`tools/smoke_run.sh --all`) | 336/338 geçti. Kalan 2 kırmızı baseline'da da vardı: `save_migration_v7_to_v8` ve `trait_migration_real_load` (v5/v7 kayıtları bilinçli olarak ölü, `MIN_LOADABLE_VERSION` 10). Baseline 334/337'ydi; `b2c_satisfaction_gate_experience` yeşile döndü, yeni `soft_cap_warns_open_hunt` yeşil |
+| `loc_residue.gd` | CLEAN · 0 bulgu |
+| `loc_csv_integrity` | PASS |
+| Event harness | PASS · 0 uyarısız kayıp |
+| `--run-log` matrisi | 30 koşu, 0 script hatası |
+
 
 ---
 
 ## Ek A — Kartların tam metni
 
-{{APPENDIX}}
+### `customer.retention`
+- Tetik: `signal` · sınıf: `interrupt` · kategori: `customer` · mandal: `{"cooldown_days": 1}` · süre: 7 gün
+
+**EN (önce yazıldı)**
+> **Account at risk**
+>
+> {customer} on the line.
+> 
+> "{seam:musteri.risk_voice}"
+
+- *Promise it* → söz (istenen adım, 14 gün); itibar +1 · kilit: B2B_LOCK_NO_PAIN_TARGET, B2B_LOCK_PAIN_SHIPPED, B2B_LOCK_PAIN_GATED, B2B_LOCK_PROMISE_OPEN
+- *Stall them* → churn sayacı +3 gün; itibar -1 · kilit: B2B_LOCK_STALL_CAP
+- *Offer a discount* → MRR −%15 (hesap kalır); itibar -1 · kilit: B2B_DISCOUNT_SPENT_DESC
+- *Let it go* → müdahale yok
+
+**TR (lokalizasyon)**
+> **Müşteri riski**
+>
+> {customer} hatta.
+> 
+> "{seam:musteri.risk_voice}"
+
+- *Söz ver*
+- *Oyala*
+- *İndirim ver*
+- *Kendi haline bırak*
+
+### `customer.cs_escalation`
+- Tetik: `daily` · sınıf: `interrupt` · kategori: `customer` · mandal: `{"cooldown_days": 21}` · süre: 7 gün
+
+**EN (önce yazıldı)**
+> **Account manager warning**
+>
+> Boss, {customer} has been waiting a while. I've kept them on the line as long as I can.
+> 
+> They want to hear from you that it's getting fixed.
+
+- *Give them your word* → söz (istenen adım, 14 gün) · kilit: B2B_LOCK_NO_PAIN_TARGET, B2B_LOCK_PAIN_SHIPPED, B2B_LOCK_PAIN_GATED, B2B_LOCK_PROMISE_OPEN
+- *Ask them to be patient* → memnuniyet -3; temsilci morali -5
+- *Tell them no* → hesap anında gider; marka -3; temsilci morali -10
+
+**TR (lokalizasyon)**
+> **Müşteri temsilcisi uyarısı**
+>
+> Patron, {customer} bir süredir bekliyor. Tutabildiğim kadar tuttum.
+> 
+> Düzeleceğini senden duymak istiyorlar.
+
+- *Söz ver*
+- *Sabır iste*
+- *Hayır de*
+
+### `customer.request_complaint`
+- Tetik: `request` · sınıf: `paper` · kategori: `customer` · mandal: `{"cooldown_days": 14}` · süre: 7 gün
+
+**EN (önce yazıldı)**
+> **Customer complaint**
+>
+> {customer} called the support line.
+> 
+> "{seam:musteri.complaint_voice}"
+> 
+> I've kept them talking. What do I tell them?
+
+- *Promise a fix* → söz (istenen adım, 14 gün) · kilit: B2B_LOCK_NO_PAIN_TARGET, B2B_LOCK_PAIN_SHIPPED, B2B_LOCK_PAIN_GATED, B2B_LOCK_PROMISE_OPEN
+- *Tell them the truth* → memnuniyet +3
+
+**TR (lokalizasyon)**
+> **Müşteri şikâyeti**
+>
+> {customer} destek hattını aradı.
+> 
+> "{seam:musteri.complaint_voice}"
+> 
+> Şimdilik oyaladım. Onlara ne diyeyim?
+
+- *Düzeltme sözü ver*
+- *Durumu açıkça anlat*
+
+### `customer.request_feature`
+- Tetik: `request` · sınıf: `paper` · kategori: `customer` · mandal: `{"cooldown_days": 14}` · süre: 7 gün
+
+**EN (önce yazıldı)**
+> **Customer request**
+>
+> {customer} wants something the product doesn't do yet: {seam:musteri.pain_feature_label}.
+> 
+> They asked when. I said I'd find out.
+
+- *Give them a date* → söz (istenen adım, 14 gün) · kilit: B2B_LOCK_NO_PAIN_TARGET, B2B_LOCK_PAIN_SHIPPED, B2B_LOCK_PAIN_GATED, B2B_LOCK_PROMISE_OPEN
+- *Say it's on the list* → memnuniyet +3
+- *Say not now* → memnuniyet -4
+
+**TR (lokalizasyon)**
+> **Müşteri talebi**
+>
+> {customer} ürünün henüz yapmadığı bir şey istiyor: {seam:musteri.pain_feature_label}.
+> 
+> Ne zaman diye sordular. Öğrenip döneceğimi söyledim.
+
+- *Tarih ver*
+- *Listede olduğunu söyle*
+- *Şimdilik olmaz de*
+
+### `customer.request_renewal`
+- Tetik: `request` · sınıf: `paper` · kategori: `customer` · mandal: `{"cooldown_days": 14}` · süre: 7 gün
+
+**EN (önce yazıldı)**
+> **Renewal signal**
+>
+> Renewal is coming up for {customer}, and they're reading the invoice line by line.
+> 
+> They want someone from our side at the table.
+
+- *Sit down with them* → memnuniyet +4
+- *Renew at a lower rate* → MRR −%15 (hesap kalır) · kilit: B2B_DISCOUNT_SPENT_DESC
+- *Let it wait* → memnuniyet -2
+
+**TR (lokalizasyon)**
+> **Yenileme sinyali**
+>
+> Yenileme dönemi yaklaşıyor. {customer} faturayı satır satır okuyor.
+> 
+> Karşılarında bizden birini görmek istiyorlar.
+
+- *Masaya otur*
+- *Daha düşük fiyatla yenile*
+- *Beklet*
+
+### `customer.expansion`
+- Tetik: `daily` · sınıf: `paper` · kategori: `customer` · mandal: `{"one_shot": true}` · süre: 14 gün
+
+**EN (önce yazıldı)**
+> **Growth opening**
+>
+> {customer} wants to roll the system out to another team.
+> 
+> They're asking for more seats at the same price.
+
+- *Add the seats* → koltuk + MRR (hesabın kendi fiyatıyla)
+- *Not now* → değişiklik yok
+
+**TR (lokalizasyon)**
+> **Büyüme fırsatı**
+>
+> {customer} sistemi bir ekibe daha açmak istiyor.
+> 
+> Aynı fiyattan koltuk istiyorlar.
+
+- *Koltukları ekle*
+- *Şimdi değil*
+
+### `sales.weekly_summary`
+- Tetik: `request` · sınıf: `info` · kategori: `customer` · mandal: `{"cooldown_days": 6}`
+
+**EN (önce yazıldı)**
+> **The week in sales**
+>
+> Closed this week:
+> 
+> {seam:sales.weekly_closes}
+> 
+> Accounts on the books: {seam:sales.account_count}
+
+- *Close* → —
+
+**TR (lokalizasyon)**
+> **Haftanın satışları**
+>
+> Bu hafta kapananlar:
+> 
+> {seam:sales.weekly_closes}
+> 
+> Defterdeki hesap: {seam:sales.account_count}
+
+- *Kapat*
+
+### `funding.seed_stalled`
+- Tetik: `daily` · sınıf: `paper` · kategori: `funding` · mandal: `{"cooldown_days": 90}` · süre: 14 gün
+
+**EN (önce yazıldı)**
+> **The quarterly note**
+>
+> A mail from {investor}: the last three months on a single page. No comment.
+> 
+> The growth line has nothing written next to it. That's the comment.
+
+- *Set it aside* → —
+
+**TR (lokalizasyon)**
+> **Çeyrek notu**
+>
+> {investor} bir mail göndermiş: son üç ay, tek sayfa, yorumsuz.
+> 
+> Büyüme satırının yanı boş. Yorum da bu.
+
+- *Kenara koy*
+
+### `team.resignation`
+- Tetik: `request` · sınıf: `interrupt` · kategori: `team` · mandal: `{"one_shot": true}`
+
+**EN (önce yazıldı)**
+> **A departure**
+>
+> {seam:hr.resign_voice}
+
+- *Understood* → çalışan ayrılır
+
+**TR (lokalizasyon)**
+> **Ayrılık**
+>
+> {seam:hr.resign_voice}
+
+- *Anlaşıldı*
+
+### `world.final_stretch_press`
+- Tetik: `daily` · sınıf: `paper` · kategori: `world` · mandal: `{"one_shot": true}` · süre: 30 gün
+
+**EN (önce yazıldı)**
+> **Sector Telegraph · the annual file**
+>
+> The annual file is out. It lists every company founded the same year as yours. Most have a round, a sale or a closure next to the name.
+> 
+> Next to yours is the line they wrote on day one. The file doesn't comment. It only lists.
+
+- *Set the file aside* → —
+
+**TR (lokalizasyon)**
+> **Sektör Telgrafı · yıllık dosya**
+>
+> Yıllık dosya çıkmış. Seninle aynı yıl kurulan şirketlerin listesi. Çoğunun yanında bir tur, bir satış ya da bir kapanış yazıyor.
+> 
+> Seninkinin yanında ilk gün yazdıkları satır duruyor. Dosya yorum yapmıyor. Sadece sıralıyor.
+
+- *Dosyayı kenara koy*
+
+### `world.final_stretch_comment`
+- Tetik: `daily` · sınıf: `interrupt` · kategori: `world` · mandal: `{"one_shot": true}`
+
+**EN (önce yazıldı)**
+> **They want a comment**
+>
+> The reporter is polite. They want a few lines for the year-end round-up. You're one of the few companies still standing from that year, and to them that's a story.
+> 
+> Give them a number and you're in the piece. Say nothing and you're in it anyway, under a different sentence.
+
+- *Give them the number* → marka +2; itibar -1
+- *No comment* → itibar +1; marka -1
+
+**TR (lokalizasyon)**
+> **Yorum istiyorlar**
+>
+> Muhabir kibar. Yıl sonu derlemesi için birkaç satır istiyor. O yıl kurulanlardan ayakta kalan birkaç şirketten birisin ve onun için bu bir hikâye.
+> 
+> Bir rakam verirsen yazıya girersin. Susarsan da girersin, sadece başka bir cümleyle.
+
+- *Rakamı ver*
+- *Yorum yok*
+
+
