@@ -196,7 +196,9 @@ func _ready() -> void:
 			# "sim" is synchronous and has already finished by the time run() returns;
 			# the real-clock modes have only ARMED their signal handlers and must be left
 			# alive to tick. Same split as the smoke harness's CLI-vs-MCP quit rule.
-			if run_log.ends_with(":sim") or not run_log.contains(":"):
+			# `<preset>:<days>:sim[:<seed>]` — the optional seed rides after the mode.
+			var rl_parts: PackedStringArray = run_log.split(":")
+			if not run_log.contains(":") or (rl_parts.size() > 2 and rl_parts[2] == "sim"):
 				get_tree().quit()
 			return
 

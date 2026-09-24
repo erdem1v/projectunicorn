@@ -43,7 +43,15 @@ extends RefCounted
 # "[EventManager] Dedupe-rejected: <id>" debug line, which is why that print exists.
 
 const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_risk_keep",
-	"b2b_slip", "b2b_slip_keep", "b2c", "b2c_keep", "b2c_neglect", "full_run", "full_run_weak"]
+	"b2b_slip", "b2b_slip_keep", "b2c", "b2c_keep", "b2c_neglect", "full_run", "full_run_weak",
+	"full_run_naive", "full_run_discount"]
+# Event revision 2026-09 added two policy variants of the played run. The WORLD is the
+# same as full_run; only the answer policy differs, which makes the three a controlled
+# experiment on what the event cards do to the revenue curve:
+#   full_run          — "sensible": a promise when one is open, then a stall, and a
+#                       discount only when nothing else is left.
+#   full_run_naive    — always the first unlocked row, the probe's historical line.
+#   full_run_discount — the discount first, every time it is offered.
 # Calibration Round A (2026-08-19) added three presets:
 #   full_run_weak — the played run with the ORIGINAL v1 set (workflow+reporting+scheduling,
 #                   raw stability 6) and an immediate launch: the "bad v1" the tolerance
@@ -62,12 +70,9 @@ const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_risk_keep",
 # point of Step 0b. When it is absent the same index lands on the next row, which the
 # PICK line records by label so the log never has to be guessed at.
 const CHOICE_POLICY := {
-	"ev_b2b_retain_": 0,
-	"ev_b2b_request_": 0,
-	"ev_b2b_escalation_": 0,
-	"ev_b2b_expand_": 0,
-	"ev_phase_gate_": 0,
-	"ev_mvp_": 0,
+	"customer.": 0,
+	"funding.": 0,
+	"product.": 0,
 }
 
 # id → the injector that built it. Everything not in _all_events is code-built, and
@@ -107,6 +112,11 @@ static var _beta_since_day: int = -1       # first day the build was seen parked
 static var _hire_started: bool = false
 static var _last_appetite: String = ""     # PROBE SIGNAL on change (Calibration Round A §3)
 static var _discount_uses: Dictionary = {}  # customer id -> discounts taken (Calibration Round A §8)
+static var _policy: String = "sensible"     # full_run answer policy: sensible | naive | discount
+static var _last_ship_day: int = 0          # the played run ships a version at a steady cadence
+static var _run_seed: int = 424242
+static var _fix_run_day: int = -1           # day the running fix pass started
+static var _fixer_id: String = ""           # the developer lent to the support desk for it
 static var _retain_days: Dictionary = {}    # customer id -> Array of fire days (retention cards)
 static var _fires_by_day: Dictionary = {}   # day -> {family: count} for PROBE WEEK
 
@@ -124,6 +134,8 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_preset = String(parts[0])
 	_stop_day = int(parts[1])
 	_mode = String(parts[2]) if parts.size() > 2 else "sim"
+	# Optional 4th part: the run seed, so one preset can be sampled across seeds.
+	_run_seed = int(parts[3]) if parts.size() > 3 else 424242
 	if not PRESETS.has(_preset):
 		print("PROBE ERROR unknown preset '%s' (have %s)" % [_preset, ", ".join(PRESETS)])
 		return
@@ -137,7 +149,7 @@ static func run(spec: String, payload: Dictionary) -> void:
 	# Pin the seed so two probe runs of the same preset are comparable line for line —
 	# the same reason --tempo-probe pins it (main.gd:327-331). initialize_run seeds from
 	# Time.get_ticks_msec(), which would make every fire table a one-off.
-	GameState.run_seed = 424242
+	GameState.run_seed = _run_seed
 	seed(GameState.run_seed)
 	RngStreams.reseed(GameState.run_seed)   # the named streams, not just the global generator
 	_wire_log()
@@ -349,8 +361,8 @@ static func _drain_modals() -> void:
 		_picks[id] = int(_picks.get(id, 0)) + 1
 		# §8: count discounts BY MODIFIER TYPE (labels are player-facing text).
 		for m in ev.choices[idx].modifiers:
-			if String(m.get("type", "")) == "b2b_retain_discount":
-				var cid: String = String(m.get("customer_id", ""))
+			if String(m.get("verb", m.get("type", ""))) == "b2b_retain_discount":
+				var cid: String = str(EventGate.active_context().get("customer", m.get("customer_id", "")))
 				_discount_uses[cid] = int(_discount_uses.get(cid, 0)) + 1
 				print("PROBE DISCOUNT day=%d cust=%s uses=%d" % [GameState.day, cid, int(_discount_uses[cid])])
 		EventGate.resolve(id, idx)
@@ -365,7 +377,8 @@ static func _drain_modals() -> void:
 # This is the probe PLAYING COMPETENTLY, and it matters for what the log proves: picking
 # index 0 blindly had it answer "Oyala" on every post-delivery risk card, so the run
 # measured a bad player rather than the engine.
-const RETAIN_PREFERENCE := ["b2b_promise_create", "b2b_retain_discount", "b2b_retain_delay", "b2b_retain_ignore"]
+const RETAIN_PREFERENCE := ["promise_create", "b2b_retain_delay", "b2b_retain_discount", "b2b_retain_ignore"]
+const DISCOUNT_PREFERENCE := ["b2b_retain_discount", "promise_create", "b2b_retain_delay", "b2b_retain_ignore"]
 
 
 static func _pick_choice(ev: GameEvent) -> int:
@@ -380,13 +393,17 @@ static func _pick_choice(ev: GameEvent) -> int:
 	# Runs the modal's OWN gate (EventManager.is_condition_met on unlock_condition —
 	# event_modal.gd:330), not a mirror of it, so the probe can never pick a row a human
 	# is forbidden to click.
-	if ev.id.begins_with("ev_b2b_retain_"):
-		for want_type in RETAIN_PREFERENCE:
+	# Account cards (retention, the three requests, the CS warning): the policy picks by
+	# EFFECT VERB, never by row index or label — rows are conditional and labels are
+	# player-facing text. `naive` skips this and takes the first unlocked row below.
+	if _policy != "naive" and ev.id.begins_with("customer.") and ev.id != "customer.expansion":
+		var order: Array = DISCOUNT_PREFERENCE if _policy == "discount" else RETAIN_PREFERENCE
+		for want_verb in order:
 			for idx in ev.choices.size():
 				if not EventGate.condition_met(ev.choices[idx].unlock_condition, EventGate.active_context()):
 					continue
 				for m in ev.choices[idx].modifiers:
-					if String(m.get("type", "")) == want_type:
+					if String(m.get("verb", m.get("type", ""))) == want_verb:
 						return idx
 	# Policy index first, then the first unlocked row after it.
 	var want: int = 0
@@ -436,7 +453,9 @@ const AFFORDABLE_FRACTION := 0.12
 static func _cash_delta_of(choice: EventChoice) -> int:
 	var total: int = 0
 	for m in choice.modifiers:
-		if String(m.get("type", "")) == "cash":
+		if String(m.get("verb", "")) == "add_cash":
+			total += int(m.get("amount", 0))
+		elif String(m.get("type", "")) == "cash":
 			total += int(m.get("delta", 0))
 	return total
 
@@ -576,6 +595,8 @@ static func _play_the_founder() -> void:
 	if _full_run:
 		_open_the_company()
 		_hire_after_the_seed()
+		if not _weak_v1:
+			_run_the_company()
 	if not _build_promises:
 		return
 	_keep_the_word()
@@ -600,11 +621,19 @@ static func _open_the_company() -> void:
 		# (workflow+reporting+scheduling, raw stability 6, complexity 9) is what the played
 		# run measured its retention hell with; it stays reachable as full_run_weak — the
 		# "bad v1" the tolerance band is seated against.
-		var features: Array = ["saas_ops_integration", "saas_ops_field", "saas_ops_scheduling"]
+		# Event revision 2026-09: the played run builds the LINE product a player can
+		# actually pick (erp is the only playable B2B subtype). The old flat `saas_ops`
+		# build has no line data, so the rebuilt sales meeting read its axes as 0 and the
+		# founder lost ~96% of meetings — the $11.9K "ceiling" was that, not the economy.
+		# full_run_weak keeps the retired flat product as the historical comparison.
 		if _weak_v1:
-			features = ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_scheduling"]
-		if ProductSystem.start_build("saas_ops", features, "", "Sahra"):
-			print("PROBE PLAY day=%d start_build v1 Sahra (b2b) set=%s" % [GameState.day, "weak" if _weak_v1 else "competent"])
+			var features: Array = ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_scheduling"]
+			if ProductSystem.start_build("saas_ops", features, "", "Sahra"):
+				print("PROBE PLAY day=%d start_build v1 Sahra (b2b) set=weak" % GameState.day)
+			return
+		var v1: Array = ["line_erp_ledger_k1", "line_erp_stock_k1", "line_erp_cashflow_k1"]
+		if ProductSystem.start_line_build("erp", v1, CharacterRegistry.get_founder().id, "Sahra"):
+			print("PROBE PLAY day=%d start_line_build v1 Sahra (erp) steps=%s" % [GameState.day, str(v1)])
 		return
 	_work_the_pipeline()
 
@@ -618,13 +647,13 @@ static func _work_the_pipeline() -> void:
 	# player at the same keyboard.
 	if SalesMeetingSystem.is_active() or NegotiationSystem.is_active():
 		return
-	var leads: Array = ProspectRegistry.get_all()
-	if leads.is_empty():
-		return
-	var lead: Prospect = leads[0] as Prospect
-	if SalesMeetingSystem.block_reason(lead.id) != "":
-		return
-	_meet(lead)
+	# The first lead the founder is allowed to sit with, not only the head of the queue:
+	# a blocked returning company at leads[0] used to idle the day's meeting for a week.
+	for raw in ProspectRegistry.get_all():
+		var lead: Prospect = raw as Prospect
+		if lead != null and SalesMeetingSystem.block_reason(lead.id) == "":
+			_meet(lead)
+			return
 
 
 static func _meet(p: Prospect) -> void:
@@ -673,14 +702,60 @@ static func _meet(p: Prospect) -> void:
 		GameState.day, p.company_name, outcome, mrr_before, GameState.mrr])
 
 
+## The played run's staffing ladder (Event revision 2026-09): a founder who is growing
+## hires the desk the growth needs — a developer on Frank's money, a support rep once a
+## few accounts are live, sales reps as MRR climbs. Each rung only when the payroll it
+## adds leaves six months of runway. The weak run keeps the historical single hire.
+const STAFF_LADDER := [
+	{"role": "developer", "min_customers": 0, "min_mrr": 0},
+	{"role": "customer_rep", "min_customers": 3, "min_mrr": 0},
+	# QA early: the stability lines' K2/K3 gate on QA stars, and B2B satisfaction drifts
+	# toward the stability reading. A run without a tester cannot hold its accounts.
+	{"role": "tester", "min_customers": 0, "min_mrr": 3000},
+	{"role": "sales_rep", "min_customers": 0, "min_mrr": 4000},
+	{"role": "sales_rep", "min_customers": 0, "min_mrr": 12000},
+	{"role": "developer", "min_customers": 0, "min_mrr": 15000},
+	{"role": "customer_rep", "min_customers": 12, "min_mrr": 0},
+	{"role": "sales_rep", "min_customers": 0, "min_mrr": 30000},
+	{"role": "product_manager", "min_customers": 0, "min_mrr": 30000},
+	{"role": "sales_rep", "min_customers": 0, "min_mrr": 50000},
+	{"role": "developer", "min_customers": 0, "min_mrr": 60000},
+	{"role": "customer_rep", "min_customers": 25, "min_mrr": 0},
+	{"role": "sales_rep", "min_customers": 0, "min_mrr": 80000},
+]
+
+
 static func _hire_after_the_seed() -> void:
 	# Frank's money buys the first employee — the beat Step 3 signposts. Driven through
 	# HRSearchSystem exactly as the HR tab does it: start a search, wait for the files to
 	# arrive, hire the cheapest one.
-	if not CharacterRegistry.get_employees().is_empty():
-		return
 	if int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, 0)) <= 0:
 		return   # no seed money yet — hiring on the opening cash is a different run
+	if HRSearchSystem.has_files_ready():
+		var hired: Character = HRSearchSystem.hire(0)
+		if hired != null:
+			_hire_started = false
+			print("PROBE PLAY day=%d hire %s salary=%d burn=%d" % [
+				GameState.day, hired.role, hired.monthly_salary, GameState.daily_burn])
+		return
+	if _hire_started or not HRSearchSystem.can_start():
+		return
+	if not _weak_v1:
+		var rung: int = CharacterRegistry.get_employees().size()
+		if rung >= STAFF_LADDER.size():
+			return
+		var want: Dictionary = STAFF_LADDER[rung]
+		if CustomerRegistry.account_count() < int(want["min_customers"]) or GameState.mrr < int(want["min_mrr"]):
+			return
+		var monthly_out: int = GameState.daily_burn * 30 + 6000 - GameState.mrr
+		if monthly_out > 0 and GameState.cash < monthly_out * 6:
+			return
+		if HRSearchSystem.start_search(String(want["role"]), HRConstants.LEVEL_JUNIOR):
+			_hire_started = true
+			print("PROBE PLAY day=%d start_search %s/junior" % [GameState.day, want["role"]])
+		return
+	if not CharacterRegistry.get_employees().is_empty():
+		return
 	if HRSearchSystem.has_files_ready():
 		var emp: Character = HRSearchSystem.hire(0)
 		if emp != null:
@@ -692,6 +767,121 @@ static func _hire_after_the_seed() -> void:
 	if HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_JUNIOR):
 		_hire_started = true
 		print("PROBE PLAY day=%d start_search developer/junior" % GameState.day)
+
+
+## The played run's operations (Event revision 2026-09) — the things any player does and
+## the old probe never did: buy server capacity so the product is not over capacity from
+## the first seat, run a fix pass when confirmed bugs pile up, and ship a version on a
+## steady cadence instead of only when a promise demands one.
+static func _run_the_company() -> void:
+	if not ProductState.is_live():
+		return
+	if InfraSystem.provider() == "":
+		InfraSystem.set_provider("cloud")
+		InfraSystem.set_capacity(InfraSystem.suggested_start_units())
+		print("PROBE PLAY day=%d infra provider=cloud units=%d" % [GameState.day, InfraSystem.units()])
+	if InfraSystem.occupancy() > 0.85:
+		InfraSystem.adjust_capacity(1)
+		print("PROBE PLAY day=%d infra +1 unit -> %d" % [GameState.day, InfraSystem.units()])
+	# A fix pass pauses the build (§8.4), so a player closes it after a few days and ships
+	# what was fixed; waiting for zero confirmed bugs never ends, because reports keep coming.
+	if ProductState.fix_run_active():
+		if ProductState.bugs_confirmed() <= 1 or GameState.day - _fix_run_day >= 4:
+			print("PROBE PLAY day=%d fix_run end shipped=%d" % [GameState.day, SupportSystem.end_fix_run()])
+			if _fixer_id != "":
+				CharacterRegistry.unassign_job(_fixer_id, HRConstants.JOB_SUPPORT)
+				_fixer_id = ""
+	elif ProductState.bugs_confirmed() >= 6 and SupportSystem.can_start_fix_run():
+		# §8.4: fixes are ENGINEERING on the support desk. The CS reps who staff it have no
+		# engineering, so a player lends a developer to the desk for the pass.
+		for dev in CharacterRegistry.get_employees():
+			if dev.role == HRConstants.ROLE_DEVELOPER and not dev.assigned_job_ids.has(HRConstants.JOB_RESEARCH) \
+					and CharacterRegistry.assign_job(dev.id, HRConstants.JOB_SUPPORT) == "":
+				_fixer_id = dev.id
+				break
+		SupportSystem.start_fix_run()
+		_fix_run_day = GameState.day
+		print("PROBE PLAY day=%d fix_run start bugs=%d fixer=%s fix_per_day=%.2f" % [GameState.day,
+			ProductState.bugs_confirmed(), _fixer_id, SupportSystem.fix_per_day()])
+	_run_research()
+	_keep_the_team()
+
+
+## A player watching the roster does something before a person walks: a raise first, the
+## year's holiday if a raise is not on the table. Nothing fancier; the probe's job is to
+## stop measuring "nobody ever looked at morale" (27 of 30 hires resigned without it).
+static func _keep_the_team() -> void:
+	for emp in CharacterRegistry.get_employees():
+		if emp.category != "employee" or emp.status != HRConstants.STATUS_ACTIVE:
+			continue
+		if emp.morale >= 40:
+			continue
+		if HRActions.can_raise(emp, 10) and HRActions.apply_raise(emp, 10):
+			print("PROBE PLAY day=%d raise %s morale=%d" % [GameState.day, emp.role, emp.morale])
+		elif emp.leave_taken_year != int(GameState.get_date_dict().year):
+			HRMoraleSystem.send_on_leave(emp, 10, true)
+			print("PROBE PLAY day=%d holiday %s morale=%d" % [GameState.day, emp.role, emp.morale])
+
+
+## Research the next gated step needs (or any open node): a player who wants K2/K3 does
+## Ar-Ge. Never the founder, whose seat is the build and the sales desk.
+static func _run_research() -> void:
+	if not RnDSystem.tree_open() or RnDSystem.active() != "":
+		return
+	var wanted: Array = []
+	for tier in range(1, ProductLines.TIER_MAX + 1):
+		for raw_line in ProductLines.line_ids("erp"):
+			var line_id: String = String(raw_line)
+			if ProductState.line_tier(line_id) + 1 != tier:
+				continue
+			var st: Dictionary = ProductLines.step_at(line_id, tier)
+			var node: String = String((st.get("requires", {}) as Dictionary).get("research", ""))
+			if node != "" and not RnDSystem.node_completed(node) and not wanted.has(node):
+				wanted.append(node)
+	for id in ResearchSeam.NODES.keys():
+		if not wanted.has(String(id)):
+			wanted.append(String(id))
+	var founder_id: String = CharacterRegistry.get_founder().id
+	# Research takes the whole person (Ar-Ge §5.0). Keep one developer on the build and
+	# never take the one lent to the fix pass: a company with a single developer does
+	# not research, it ships.
+	var devs: int = 0
+	for e in CharacterRegistry.get_employees():
+		if e.role == HRConstants.ROLE_DEVELOPER:
+			devs += 1
+	for node in wanted:
+		if not RnDSystem.available(String(node)):
+			continue
+		for c in RnDSystem.eligible_assignees(String(node)):
+			if c.id == founder_id or c.id == _fixer_id:
+				continue
+			if c.role == HRConstants.ROLE_DEVELOPER and devs < 2:
+				continue
+			if RnDSystem.start(String(node), [c.id]) == "":
+				print("PROBE PLAY day=%d research %s by %s" % [GameState.day, node, c.role])
+				return
+
+
+## Next steps a version could carry: the lowest open tier on each line, STABILITY first.
+## B2B satisfaction drifts toward the product's stability reading (b2b_sales_system
+## _satisfaction_target), so a player keeping accounts builds that axis before the others.
+static func _next_open_steps(limit: int) -> Array:
+	var out: Array = []
+	var lines: Array = ProductLines.line_ids("erp")
+	lines.sort_custom(func(a, b) -> bool:
+		return int(ProductLines.axis_of(String(a)) == "stability") > int(ProductLines.axis_of(String(b)) == "stability"))
+	for tier in range(1, ProductLines.TIER_MAX + 1):
+		for raw_line in lines:
+			var line_id: String = String(raw_line)
+			if ProductState.line_tier(line_id) + 1 != tier:
+				continue
+			var st: Dictionary = ProductLines.step_at(line_id, tier)
+			var sid: String = String(st.get("id", ""))
+			if sid != "" and LineGates.is_unlocked(sid):
+				out.append(sid)
+				if out.size() >= limit:
+					return out
+	return out
 
 
 static func _keep_the_word() -> void:
@@ -742,14 +932,28 @@ static func _keep_the_word() -> void:
 		return
 
 	# No build running: if a word is outstanding and the feature is not live, go build it.
-	var live: Array = GameState.get_flag("mvp_components", [])
+	var line_product: bool = ProductLines.has_subtype(ProductState.subtype())
 	for p in PromiseRegistry.get_all():
-		if p.status != "open" or live.has(p.feature_id):
+		if p.status != "open" or ProductState.is_feature_live(p.feature_id):
 			continue
-		if ProductSystem.start_version_build([p.feature_id], "founder"):
+		var started: bool = false
+		if line_product:
+			if LineGates.is_unlocked(p.feature_id):
+				started = ProductSystem.start_line_build(ProductState.subtype(), [p.feature_id],
+					CharacterRegistry.get_founder().id)
+		else:
+			started = ProductSystem.start_version_build([p.feature_id], "founder")
+		if started:
 			print("PROBE PLAY day=%d start_version_build feature=%s (promise %s deadline=%d)" % [
 				GameState.day, p.feature_id, p.id, p.deadline_day])
-		return
+			return
+	# Nothing promised: a growing product still ships. A version every three weeks, two steps.
+	if line_product and _full_run and not _weak_v1 and GameState.day - _last_ship_day >= 21:
+		var steps: Array = _next_open_steps(2)
+		if not steps.is_empty() and ProductSystem.start_line_build(ProductState.subtype(), steps,
+				CharacterRegistry.get_founder().id):
+			_last_ship_day = GameState.day
+			print("PROBE PLAY day=%d start_version_build steps=%s (cadence)" % [GameState.day, str(steps)])
 
 
 # ============================================================================
@@ -762,7 +966,7 @@ static func _seed_world(preset: String) -> void:
 	# world and differ ONLY in whether the promise is delivered, which makes the pair a
 	# controlled experiment rather than two anecdotes.
 	_build_promises = preset.ends_with("_keep")
-	if preset == "full_run" or preset == "full_run_weak":
+	if preset.begins_with("full_run"):
 		# THE PLAYED RUN. Nothing is seeded: no product, no customers, no money beyond the
 		# origin's opening cash. Day 1 is day 1. Everything the log shows after this line
 		# was earned by _play_the_founder through the same seams the tabs call.
@@ -770,6 +974,8 @@ static func _seed_world(preset: String) -> void:
 		_build_promises = true
 		_weak_v1 = preset == "full_run_weak"
 		_beta_wait = not _weak_v1
+		_policy = "naive" if preset == "full_run_naive" else ("discount" if preset == "full_run_discount" else "sensible")
+		_last_ship_day = 0
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log
 	match preset.trim_suffix("_keep"):
