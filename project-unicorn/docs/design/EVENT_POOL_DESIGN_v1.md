@@ -1,3 +1,5 @@
+> **SUPERSEDED (director ruling 2026-09).** This document is historical. The design authority is GDD v2 ch11 (Events & Narrative) and the event engine GDD rev 2. It is kept because audits and reports link to it; do not design from it, and where it disagrees with a GDD the GDD wins.
+
 <!-- RENAMED 2026-08-25 (event-engine rebuild, Aşama 0). This file lived at `docs/.md`
      for six days — a filename that is only an extension, which no grep and no reader finds.
      Six documents referenced it and now point here. -->

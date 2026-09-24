@@ -401,6 +401,17 @@ the reason §8.4's `{seam:…}` interpolation exists for strings as well as figu
 carrying `{seam:musteri.complaint_voice}` replaces fifteen near-identical cards each with one
 sector's sentence baked in.
 
+### 11a · Event revision 2026-09 — two more
+
+**`musteri.pain_buildable`** (bool) — the account's wish is buildable TODAY: a line step whose
+`LineGates` gate is open, or any flat feature. Every promise row reads it; without it a promise
+could name a step that needs research or stars nobody had, and 241 of the 730-day probe's broken
+promises were exactly that.
+
+**`musteri.risk_voice`** (prose) — what an account in Risk says, chosen by the CAUSE of the Risk:
+a broken word, a visibly failing product (the sector `complaint_voice`), or a product that has
+stopped being enough. `customer.retention` used to speak the outage line whatever the cause.
+
 ## 12 · Coverage, measured
 
 147 seams registered; **36 read by the 43 cards that exist today**. The other 111 are not dead

@@ -1,3 +1,5 @@
+> **SUPERSEDED (director ruling 2026-09).** This document is historical. The design authority is GDD v2 ch13 (Endings & Progression) and ch09 (Funding & Investors). It is kept because audits and reports link to it; do not design from it, and where it disagrees with a GDD the GDD wins.
+
 # ENDGAME_DESIGN.md — Phase Transition Engine, Endings & Term Sheet Negotiation
 
 **Status:** Canonical design (Hat-1 approved, 2026-07-13)

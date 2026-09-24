@@ -1,3 +1,5 @@
+> **SUPERSEDED (director ruling 2026-09).** This document is historical. The design authority is GDD v2 chapters 01–14 (`GDDs/`) and the module GDDs. It is kept because audits and reports link to it; do not design from it, and where it disagrees with a GDD the GDD wins.
+
 # Project Unicorn — Project Spec (Game Design Master)
 
 Game design master document. Captures vision, mechanics, content, and systems extracted from the GDD. The agent reads this at the start of every session, alongside `TECH_SPEC.md`.

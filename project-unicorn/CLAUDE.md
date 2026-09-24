@@ -2,7 +2,27 @@
 
 ## Project Summary
 
-Project Unicorn is a narrative-strategy startup simulator built in Godot 4 + GDScript. The player founds a tech startup and navigates ~150 in-game days (≈60-90 min real time) across three phases — Bootstrap → Traction → Series A Hunt — managing Product, HR, Finance, and Sales while responding to reactive events and cinematic moments (scandals, VC pitches, term sheet negotiations). Endings include Series A close (Founder-Friendly / Aggressive variants), acqui-hire, profitable bootstrap, bankruptcy, brand collapse, VC rejection cascade, and time-out. Tone and depth comparable to CK3 / Frostpunk / Disco Elysium, transposed to a 2020s tech setting. Target platform Steam (Windows primary, Mac / Linux secondary), TR + EN at launch.
+Project Unicorn is a narrative-strategy startup simulator built in Godot 4 + GDScript. The player
+founds a tech startup and plays it from a solo founder's room toward a Series A — managing
+Product, Team, R&D, Sales, Finance and Funding while answering reactive events and cinematic
+moments (sales meetings, VC pitches, term-sheet tables). The run is goal-terminated with a
+730-day soft cap. Tone and depth comparable to CK3 / Frostpunk / Disco Elysium, transposed to a
+2020s tech setting. Target platform Steam, TR + EN.
+
+## Design authority (2026-09 — director ruling)
+
+**The GDDs in `GDDs/` are the reference for every design question.** Where this file, an older
+spec or an audit disagrees with a GDD, the GDD wins. The chapter set:
+
+- `GDDs/GDD v2 — 01 … 14` (.docx) — the run, founder & people, product lifecycle, operations,
+  finance, funding, rivals & world, events & narrative (ch11), UI & ODA, endings, scope (ch14).
+- Module GDDs (.docx, rebuilt modules): Ekip (rev 11), Ürün (rev 6.1), Ar-Ge, Satış (rev 6).
+- `GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md` — the event engine's only authority.
+
+`docs/PROJECT_SPEC.md`, `docs/ENDGAME_DESIGN.md`, `docs/VC_PITCH_DESIGN.md` and
+`docs/design/EVENT_POOL_DESIGN_v1.md` are **historical**: each carries a "superseded" header and is
+kept because audits link to it. Do not design from them. When two GDD chapters disagree with
+each other, stop and ask — do not pick one silently.
 
 ---
 
@@ -14,7 +34,7 @@ Before reading the rest of this document or any spec, internalize these principl
 
 2. **Every economic outcome comes from a played decision moment.** No auto-revenue, no auto-progress, no system-event-as-economic-delta. If a change would touch cash, MRR, brand, reputation, customer count, or any other economic field, ask: "what specific player decision earned this?" If no decision moment exists upstream of the delta, no delta. Flag the question rather than introducing auto-progress silently.
 
-   *Revision note (Economy Model v2): B2C revenue is now **derived auto-flow** — MRR updates continuously (hourly) from the player-managed **audience + price** levers, not tycoon spontaneous income, and the audience is **bidirectional** so bad management still erodes it (MRR can fall; runway stays a threat). The principle's intent holds — every delta traces to a played lever — but the literal "no auto-revenue" is relaxed to "no auto-revenue **untethered from player levers**." B2B stays pitch-driven. See [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md) §10 Revision.*
+   *Revision note (Economy Model v2): B2C revenue is now **derived auto-flow** — MRR updates continuously (hourly) from the player-managed **audience + price** levers, not tycoon spontaneous income, and the audience is **bidirectional** so bad management still erodes it (MRR can fall; runway stays a threat). The principle's intent holds — every delta traces to a played lever — but the literal "no auto-revenue" is relaxed to "no auto-revenue **untethered from player levers**." B2B stays pitch-driven. See GDD v2 ch08 (Finance & Economy).*
 
 3. **Micro-to-macro player evolution is the killer differentiator.** Same player, evolving interaction grammar as the company scales across the three release tiers. Tier 1 = micromanage. Tier 2 = delegate, set policy, intervene on exceptions. Tier 3 = macro decisions only. Plan all Tier 1 systems with Tier 2/3 in mind even when shipping Tier 1 alone — data shapes, save schemas, and event vocabularies should anticipate the trillion-dollar version.
 
@@ -25,47 +45,36 @@ Before reading the rest of this document or any spec, internalize these principl
 These principles are non-negotiable for design decisions. Implementation can flex; design DNA cannot.
 
 ---
+## CALIBRATION LAWS (genre research July 2026 — design principles, not numbers)
 
-## RELEASE SCOPE (LOCKED — July 2026, supersedes any older tier/scope notes)
+Genre research across Game Dev Tycoon, Software Inc and Suzerain (90%+) against Startup Company,
+The Meter is Running and This Is the President (68-80%) produced five laws. They bind design
+decisions; the numbers behind them live in the GDDs and in single tuning surfaces in code.
 
-The game ships in three stages. Each stage has a different NATURE, not just more content. Never build a feature that contradicts the stage it ships in. (Where this reframes Governing Design Principle 3's "Tier 1/2/3 release tiers" — DEMO = Tier 1, EARLY ACCESS = Tier 2, FULL = Tier 3 — this table is authoritative on what each stage IS and what ships when.)
+1. **Money must never stop mattering.** Every phase re-tightens the runway, and the rising bar is
+   legible — never an opaque hidden score.
+2. **Match run length to content depth; kill dead time.** No stretch of play runs >60-90 seconds
+   without a meaningful decision. The speed ladder is 1×/2×/3× (`TimeManager.SECONDS_PER_DAY`).
+3. **Choices must visibly change game state.** Every major outcome is traceable to visible state.
+4. **Systems must be load-bearing.** A subsystem the player can ignore and still win is either
+   integrated (its neglect cascades) or cut.
+5. **Replayability is structural, not padding.**
 
-| | DEMO | EARLY ACCESS | FULL |
-|---|---|---|---|
-| Nature | Campaign (an authored arc) | Living-company sandbox | Sandbox + new grammar |
-| Arc | Bootstrap → Traction → Series A close = clean VICTORY ending | Series A close OPENS endless flow; Series B = milestone-NOT-ending | → IPO → macro phase |
-| Ends? | Yes — Series A close is a real victory screen | NO — play continues until bankruptcy or the player stops; new runs give varied experiences | No — adds the IPO gate and macro grammar |
-| Tabs | Core set | ALL core tabs open (Product, HR incl. founder training, Finance/Yatırım, Sales, Marketing system, R&D first layer, Ops) | + macro systems (regulation, politics, mega-corp) |
-| Duration | 60-90 min, kolay-orta difficulty (challenge felt, always fair) | 6-8+ hours, open-ended | 10-12+ hours |
-| In-game time | ~part of year 1 | ~1-2 years (curve redesign pending) | ~2+ years |
-
-Hard rules that follow from this table:
-- **Series B is a MILESTONE, never an ending.** It grants money + prestige + RAISED expectations (bigger burn, investor pressure) and play continues. Never wire Series B to trigger_ending.
-- **IPO is OUT of Early Access** — it ships in FULL because it changes the play grammar (macro). In EA, IPO appears as a VISIBLE-LOCKED gate that opens when valuation crosses a threshold: "IPO yolu açıldı — tam sürümde." This is the strongest Coming-Soon telegraph in the game: the player's own company reaches a door it cannot enter yet.
-- **The endless flow must stay alive** (see Calibration Law 1): post-Series-A play is kept under pressure by rival evolution, product aging/bug accrual, the raised post-Series-B bar, and the valuation league. If you build any of these systems, they are load-bearing for EA — not decoration.
-- **SaveManager is MANDATORY** (EA cannot ship without it; the demo needs it too). A resolution/optimization polish pass (1080p / 1440p / 4K) is required scope, not nice-to-have.
-- **EA v0.1 may ship with the endless CORE** (post-Series-A flow, HR hiring wave, valuation + league, Series B milestone, Save) and land Marketing / R&D / multi-product via early updates. When cutting for v0.1, cut depth, never the endless flow itself.
-- Extra origins (Varis, Kurumsal Mülteci) remain FULL-only; they stay visible-locked in demo/EA.
-
----
-
-## CALIBRATION LAWS (LOCKED — genre research July 2026, the 90%+ vs 75-80% divide)
-
-Genre research across Game Dev Tycoon (94%), Software Inc (94%), Suzerain (93%) vs Startup Company (80%), The Meter is Running (76%), This Is the President (68%) established five laws. They bind DESIGN decisions now, and the numeric calibration pass later.
-
-1. **Money must NEVER stop mattering.** The genre's #1 score-killer is the economy collapsing into number-growing once the player is rich. Every phase must RE-TIGHTEN the runway: bigger team = bigger payroll, rising investor expectations, rival pressure. Build anti-snowball mechanics and make them LEGIBLE — the player must SEE the rising bar (never an opaque hidden score). If a feature would let the player permanently "solve" money, redesign it.
-2. **Match run length to content depth; kill dead time.** Never pad in-game days with repeated content. No stretch of play should run >60-90 seconds without a meaningful decision (outside deliberate breathers). A fast top rung that compresses dead days + auto-slow when a decision arrives is the target grammar. (The ladder is **1×/2×/3×** — the 4x rung was removed 2026-08-19, Calibration Round A §10; `TimeManager.SECONDS_PER_DAY` is its single home.)
-3. **Choices must visibly change game state.** Every major outcome (pitch result, Series A close, retention outcome) must be traceable by the player to visible state — runway, traction, satisfaction, sentiment — never delivered by a hidden aggregate that can contradict the player's narrative. (§10 already forbids un-played economic outcomes; this law adds: the CAUSE must be readable.)
-4. **Systems must be load-bearing.** If a player can win while ignoring an entire subsystem, that subsystem must be integrated (its neglect must cascade) or cut. Interconnection is the measured difference between the 94% and 80% games in our genre.
-5. **Replayability is structural, not padding.** Runs diverge through varied event-deck order, hire pools, rival/investor mixes, and product-type starts — and off-meta strategies must be viable. Never manufacture replay value by repeating the same content.
-
-Playtest tripwires (when the calibration pass runs): a naive policy winning >60-70% of runs, or players reporting the last third as "autopilot," means the economy has collapsed — retune before adding content. In-game duration is being extended from 180 days to ~1-2 years (tier-dependent) with the MRR/traction curve reshaped against realistic startup timelines; until that curve redesign lands, treat all pacing/threshold numbers as provisional and keep them in single tuning surfaces.
+Measurement: `--run-log=<preset>:<days>:sim[:<seed>]` drives a whole run headless. The
+`full_run` presets (`full_run`, `full_run_naive`, `full_run_discount`) play the line-model erp
+product with a staffing ladder, capacity, fix passes, research and morale care — see
+`docs/reports/EVENT_REVISION_2026-09.md` for what they measure and why the old probe could not.
 
 ---
 
 ## Content & Language Laws (LOCKED — Editorial Package 4, 2026-07-14 · Bilingual Birth 2026-08-08)
 
 These govern all player-facing text and event authoring. They are enforcement rules, not suggestions.
+
+**AUTHORING ORDER FOR AGENTS (director ruling 2026-09).** Agents write player-facing copy in
+**English first**, then write the Turkish as a separate **localisation** of the same scene — not a
+translation of the English sentence. Erdem edits the Turkish. The two locales still ship in the same
+commit (Bilingual Birth below). Frank's corpus is Erdem's own and is not touched by agents.
 
 **LANGUAGE INTEGRITY LAW.** Turkish is canonical; English is a literary translation delivered via the localization layer (`localization/strings.csv`, parsed at runtime by the `Localization` autoload into Godot's `TranslationServer`; language toggle in Settings — Package 5). **No MIXED TR/EN inside a single player-facing string** (that original intent stands) — full-language EN via the locale switch is correct. Within the Turkish canonical text, English tech terms appear only where they are genuine Turkish-tech loanwords founders actually say — the ruled accepted set is: `pitch, startup, demo, momentum, MRR, runway, churn, burn` (`burn` added by gate ruling 2026-08-08; plus proper nouns and the established loanwords `laptop, mail, VC`). Everything else translates to its clean Turkish form (e.g. bug→hata, feature→özellik, feedback→geri bildirim, roadmap→yol haritası, deadline→son tarih, build→geliştirme, push→gönder/yayınla, launch→çıkış/lansman). English lives only in code and specs, never on screen.
 
@@ -78,8 +87,8 @@ are banned from player-visible strings, an interpolated value never takes a suff
 (restructure the sentence: `Sözleşme: {company}`, never `{company}'nin sözleşmesi`), and no literal braces in
 CSV values. Proper nouns do not localize. Localized text is never written into state — store ids, render at
 display time. A task that adds a player-visible string without both locales is **incomplete — reviewers reject
-it**; agent done-messages list every key they added. Event JSON carries `*_en` sibling fields; empty `_en`
-means TR-fallback by design (factory events), absent `_en` on authored content means the task is not done.
+it**; agent done-messages list every key they added. Event cards carry a `text.tr` and a `text.en` block with identical id sets (engine GDD §3.2,
+lint §17.8); each value is a CSV key or inline prose. A card without both blocks is not done.
 **Proof is a command, not a claim:** `loc_residue.gd` exits zero, `loc_csv_integrity` passes, and both stay
 green in every commit that touches strings.
 
@@ -236,24 +245,22 @@ değişikliği iddiası bu yüzeylerin before/after'ıyla kanıtlanır — hash 
 kımıldamadı"nın, bbox raporu "yalnız hedef kımıldadı"nın kanıtıdır.
 
 ---
-
 ## Document References
 
-- **Game design master:** [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md) — vision, pillars, mechanics, content, systems, win/lose conditions, endings
-- **Technical constitution:** [`docs/TECH_SPEC.md`](docs/TECH_SPEC.md) — architecture, conventions, decisions (LOCKED unless Decision Log §20 revised)
-- **Content guide:** `docs/CONTENT_GUIDE.md` — *not yet created.* Will be added during the content phase (event writing voice, character bible).
-- **Event engine:** [`GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md) — the engine's only authority (markdown form of `GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.docx`, which is archival from 2026-08-25). Its §27 carries the build notes.
-  - Read surface: [`docs/SEAM_REGISTRY.md`](docs/SEAM_REGISTRY.md) — every named query content may ask, with VAR / OKUNUYOR / YOK status and the open items filed per module.
+- **Design:** `GDDs/` (see Design authority above).
+- **Technical constitution:** [`docs/TECH_SPEC.md`](docs/TECH_SPEC.md) — architecture, conventions, decisions.
+- **Event engine:** [`GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md) — its §27 carries the build notes.
+  - Read surface: [`docs/SEAM_REGISTRY.md`](docs/SEAM_REGISTRY.md) — every named query content may ask.
   - Write surface: [`docs/EVENT_SIGNAL_MANIFEST.md`](docs/EVENT_SIGNAL_MANIFEST.md) — **generated**, `python tools/gen_signal_manifest.py`.
-  - Content design (nine arcs, authoring law): [`docs/design/EVENT_POOL_DESIGN_v1.md`](docs/design/EVENT_POOL_DESIGN_v1.md).
+  - Content design: GDD v2 ch11 (Events & Narrative) — arcs, cost law, voice.
+- **Latest event/economy pass:** [`docs/reports/EVENT_REVISION_2026-09.md`](docs/reports/EVENT_REVISION_2026-09.md).
 
 ---
+## Agentic Workflow Rule
 
-## Agentic Workflow Rule (CRITICAL — TECH_SPEC §19)
-
-**At the start of every session, read this file + `docs/PROJECT_SPEC.md` + `docs/TECH_SPEC.md` before doing anything else. Do not write gameplay code until both specs are understood and locked.**
-
-If a spec is missing, contradictory, or ambiguous, **stop and ask** — never guess. Spec-driven development is non-negotiable.
+At the start of every session, read this file, `docs/TECH_SPEC.md`, and the GDD chapter(s) the task
+touches before writing gameplay code. If a GDD is missing, contradictory, or ambiguous on the point
+at hand, **stop and ask** — never guess.
 
 ---
 
@@ -313,69 +320,22 @@ The developer is learning Godot. The agent owns Godot-side work fully but operat
 4. If there was a meaningful choice, what **alternatives** were considered and why this one won
 
 ---
+## Scope Discipline
 
-## Scope Discipline (TECH_SPEC §19.6)
-
-The agent stays strictly within `PROJECT_SPEC.md`. **It does not invent mechanics, content, or architecture.** If something is underspecified, flag it; do not fill it independently.
-
-`PROJECT_SPEC.md §8` lists current Open Questions & Inconsistencies (Corporate Refugee origin, Find prospects cooldown, World & Drama mechanics, Term Sheet negotiation, Operations / Dashboard systems, Visual Identity, UI wireframes). These are blockers for the affected features — do not implement around them.
+The agent stays within the GDDs. **It does not invent mechanics, content, or architecture.** If
+something is underspecified, flag it; do not fill it independently. A [ÇALIŞMA]/[K] number in a
+GDD is a working value that lives in one tuning constant and may be retuned by measurement.
 
 ---
-
 ## Current Project State
 
-- `project.godot` config/name = `"Project Unicorn"`, Godot 4.6 Forward Plus
-- `docs/PROJECT_SPEC.md` ✅
-- `docs/TECH_SPEC.md` ✅
-- `CLAUDE.md` ✅ (this file)
-- `icon.svg` (default Godot icon — replace during Visual Identity phase)
-- The TECH_SPEC §4 skeleton is long since built and live: scenes, scripts (13 autoloads, 33 systems), data,
-  themes, and `localization/` (`strings.csv`, TR+EN, parsed by the `Localization` autoload) all exist —
-  see git history for the current build state. (This block's old "nothing exists yet" claims were the
-  audit-flagged stale documentation; corrected 2026-08-10 during the localization sweep's Step 0.)
+Built and playable: 13 game autoloads, the tab set, ODA, onboarding, save/load (schema v12,
+`MIN_LOADABLE_VERSION` 10), the event engine behind `EventGate`, and a smoke suite
+(`tools/smoke_run.sh --all`). Rebuilt against sealed GDDs: Ürün rev 6.1, Ekip rev 11, Satış rev 6,
+the event engine, Ar-Ge, and the funding ladder (savings → Frank → seed → Series A).
 
----
-
-## Next Step
-
-*(CORRECTED 2026-08-25, event-engine rebuild Aşama 0. This heading and the block under it
-described the pre-skeleton state and were three months stale — the same audit finding the
-2026-08-10 localization sweep fixed one paragraph of and left the rest of.)*
-
-The skeleton is long since built and playable: 13 autoloads, 33 systems, the tab set, ODA,
-onboarding, save/load, and a smoke suite. Current work is module rebuilds against their sealed
-GDDs — Ürün rev 6.1, Ekip rev 11 and the **event engine** have landed; Ar-Ge is in flight.
-
-**The event engine is built** (`scripts/events/`, behind the one `EventGate` facade) and the
-old `EventManager` is deleted. What that means for anyone touching event content or any system
-that used to raise a card:
-
-- **There is exactly one way in.** `EventGate.request(<card id>, <context>)`. A system NAMES a
-  card; it never builds one. `enqueue` and `enqueue_front` do not exist, and a lint rule fails
-  the build if they come back.
-- **A card is a JSON file**, `data/events/cards/<category>/*.json`, with its own trigger,
-  conditions, latch, scope and effects. Content that fires from a system is content the system
-  cannot silently change.
-- **Every read a card makes is a named seam** — `docs/SEAM_REGISTRY.md`, 147 of them. Content
-  never touches a system field directly, which is the WRITE-THROUGH LAW's read half.
-- **Four tools, all `--flags` on a debug build**: `--event-lint` (§17's rules over the
-  content, with a baseline ratchet), `--why-fire=<card id>` (the gate step that refused it, the
-  live seam values, the latch, what it waits on), `--event-harness=random|guided`, and
-  `--event-probe` (159 assertions in one boot).
-- Schema was **v10** at the rebuild and `MIN_LOADABLE_VERSION` is 10: **every save older than
-  that is dead.** That was a deliberate break, not an accident — see the rebuild's report.
-  The version has moved twice since, additively (v11 Satış rev 6, v12 the seed rung), and
-  `MIN_LOADABLE_VERSION` stayed at 10 both times: those fields all carry declared defaults,
-  which is the migration `SaveCodec`'s header describes.
-
----
-
-## What this project is NOT (yet)
-
-- No `CONTENT_GUIDE.md` — the event-writing round has not started. The authoring law it will
-  carry already exists in three places: this file's Content & Language Laws,
-  `docs/design/EVENT_POOL_DESIGN_v1.md` §6, and `GDDs/GDD v2 — 11 · Events & Narrative.docx` §7.
-- TBD sections in `PROJECT_SPEC.md` are not to be implemented around — block the affected
-  feature and surface the gap. (§6's Event Pool row is no longer one of them.)
-- No CI and no git hooks. Every gate is run by hand; the DELIVERY LAW's "gates green before the
-  commit that claims them" is enforced socially, not mechanically.
+The event engine in one paragraph: **one way in** (`EventGate.request(<card id>, <context>)`; a
+system names a card, never builds one); **a card is a JSON file** (`data/events/cards/<category>/`);
+**every read is a named seam** (`docs/SEAM_REGISTRY.md`); tools are `--event-lint`,
+`--why-fire=<id>`, `--event-harness=random|guided`, `--event-probe`. No CI: every gate is run by
+hand and must be green before the commit that claims it.

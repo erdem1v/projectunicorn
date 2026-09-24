@@ -1,3 +1,5 @@
+> **SUPERSEDED (director ruling 2026-09).** This document is historical. The design authority is GDD v2 ch09 (Funding & Investors) and the Satış GDD rev 6 meeting scene. It is kept because audits and reports link to it; do not design from it, and where it disagrees with a GDD the GDD wins.
+
 # VC_PITCH_DESIGN.md — Series A Hunt: Pitch Meetings, Conviction & the Sheet Economy
 
 **Status:** Hat-1 design for Erdem's approval (2026-07-14). On approval → canon, amends ENDGAME_DESIGN.md §5.
