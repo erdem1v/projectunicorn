@@ -47,28 +47,6 @@
   },
   "options": [
     {
-      "id": "discount_them",
-      "outcome_id": "discounted",
-      "effects": [
-        {
-          "verb": "b2b_retain_discount",
-          "scope": "customer"
-        },
-        {
-          "verb": "satisfaction_delta",
-          "scope": "customer",
-          "amount": 8
-        }
-      ],
-      "requires": {
-        "entity_seam": "musteri.discounts_used",
-        "scope": "customer",
-        "op": "<",
-        "value": 2,
-        "reason": "B2B_DISCOUNT_SPENT_DESC"
-      }
-    },
-    {
       "id": "promise_it",
       "outcome_id": "promised",
       "effects": [
@@ -96,6 +74,13 @@
             "reason": "B2B_LOCK_PAIN_SHIPPED"
           },
           {
+            "entity_seam": "musteri.pain_buildable",
+            "scope": "customer",
+            "op": "==",
+            "value": true,
+            "reason": "B2B_LOCK_PAIN_GATED"
+          },
+          {
             "entity_seam": "musteri.has_open_promise",
             "scope": "customer",
             "op": "==",
@@ -120,31 +105,28 @@
   "text": {
     "tr": {
       "title": "B2B_EV_COMPLAINT_TITLE",
-      "body": "{customer} hattı arıyor: \"{seam:musteri.complaint_voice}\" Şimdilik idare ettim ama karar senin.",
+      "body": "{customer} destek hattını aradı.\n\n\"{seam:musteri.complaint_voice}\"\n\nŞimdilik oyaladım. Onlara ne diyeyim?",
       "options": {
-        "discount_them": "B2B_CHOICE_DISCOUNT",
         "promise_it": "B2B_CHOICE_PROMISE_FIX",
-        "explain": "B2B_CHOICE_EXPLAIN_REFUSE"
+        "explain": "B2B_CHOICE_TELL_TRUTH"
       },
       "expire_note": "B2B_EV_REQ_COMPLAINT_EXPIRED",
       "locked_reasons": {
-        "discount_them": "B2B_DISCOUNT_SPENT_DESC",
         "promise_it": "B2B_LOCK_PROMISE_OPEN"
       }
     },
     "en": {
       "title": "B2B_EV_COMPLAINT_TITLE",
-      "body": "{customer} is on the line: \"{seam:musteri.complaint_voice}\" I have held it for now, but the call is yours.",
+      "body": "{customer} called the support line.\n\n\"{seam:musteri.complaint_voice}\"\n\nI've kept them talking. What do I tell them?",
       "options": {
-        "discount_them": "B2B_CHOICE_DISCOUNT",
         "promise_it": "B2B_CHOICE_PROMISE_FIX",
-        "explain": "B2B_CHOICE_EXPLAIN_REFUSE"
+        "explain": "B2B_CHOICE_TELL_TRUTH"
       },
       "expire_note": "B2B_EV_REQ_COMPLAINT_EXPIRED",
       "locked_reasons": {
-        "discount_them": "B2B_DISCOUNT_SPENT_DESC",
         "promise_it": "B2B_LOCK_PROMISE_OPEN"
       }
     }
-  }
+  },
+  "_revision_2026_09": "Discount row removed (a complaint is answered with the product or with honesty; the price is the renewal card's lever). Body moved to a CSV key; the rep asks instead of announcing."
 }

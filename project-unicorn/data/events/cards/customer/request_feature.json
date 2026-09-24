@@ -74,6 +74,13 @@
             "reason": "B2B_LOCK_PAIN_SHIPPED"
           },
           {
+            "entity_seam": "musteri.pain_buildable",
+            "scope": "customer",
+            "op": "==",
+            "value": true,
+            "reason": "B2B_LOCK_PAIN_GATED"
+          },
+          {
             "entity_seam": "musteri.has_open_promise",
             "scope": "customer",
             "op": "==",
@@ -90,7 +97,7 @@
         {
           "verb": "satisfaction_delta",
           "scope": "customer",
-          "amount": 5
+          "amount": 3
         }
       ]
     },
@@ -109,11 +116,11 @@
   "text": {
     "tr": {
       "title": "B2B_EV_REQUEST_TITLE",
-      "body": "{customer} arıyor: \"{seam:musteri.complaint_voice}\" Kendi başıma kapatamadım, karar senin.",
+      "body": "{customer} ürünün henüz yapmadığı bir şey istiyor: {seam:musteri.pain_feature_label}.\n\nNe zaman diye sordular. Öğrenip döneceğimi söyledim.",
       "options": {
-        "promise_it": "B2B_CHOICE_PROMISE",
-        "prioritise": "B2B_CHOICE_PRIORITIZE",
-        "decline": "B2B_CHOICE_NOT_NOW"
+        "promise_it": "B2B_CHOICE_GIVE_DATE",
+        "prioritise": "B2B_CHOICE_ON_THE_LIST",
+        "decline": "B2B_CHOICE_NOT_NOW_SAY"
       },
       "expire_note": "B2B_EV_REQ_FEATURE_EXPIRED",
       "locked_reasons": {
@@ -122,16 +129,17 @@
     },
     "en": {
       "title": "B2B_EV_REQUEST_TITLE",
-      "body": "{customer} is calling: \"{seam:musteri.complaint_voice}\" I could not close it on my own; the call is yours.",
+      "body": "{customer} wants something the product doesn't do yet: {seam:musteri.pain_feature_label}.\n\nThey asked when. I said I'd find out.",
       "options": {
-        "promise_it": "B2B_CHOICE_PROMISE",
-        "prioritise": "B2B_CHOICE_PRIORITIZE",
-        "decline": "B2B_CHOICE_NOT_NOW"
+        "promise_it": "B2B_CHOICE_GIVE_DATE",
+        "prioritise": "B2B_CHOICE_ON_THE_LIST",
+        "decline": "B2B_CHOICE_NOT_NOW_SAY"
       },
       "expire_note": "B2B_EV_REQ_FEATURE_EXPIRED",
       "locked_reasons": {
         "promise_it": "B2B_LOCK_PROMISE_OPEN"
       }
     }
-  }
+  },
+  "_revision_2026_09": "Body names the step the account actually wants (musteri.pain_feature_label) instead of the sector outage line, which contradicted the card's own title. 'On the list' dropped from +5 to +3: a soft yes without a date must weigh less than a promise."
 }

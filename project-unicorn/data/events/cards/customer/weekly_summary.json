@@ -35,18 +35,19 @@
   ],
   "text": {
     "tr": {
-      "title": "PH: Haftalık satış özeti",
-      "body": "PH: Bu hafta masadan kalkan anlaşmalar.\n\n{seam:sales.weekly_closes}\n\nPH: Defterde {seam:sales.account_count} hesap var.",
+      "title": "SALES_WEEKLY_TITLE",
+      "body": "Bu hafta kapananlar:\n\n{seam:sales.weekly_closes}\n\nDefterdeki hesap: {seam:sales.account_count}",
       "options": {
-        "read_it": "Kapat"
+        "read_it": "SALES_WEEKLY_CLOSE"
       }
     },
     "en": {
-      "title": "PH: Weekly sales summary",
-      "body": "PH: The deals that came off the table this week.\n\n{seam:sales.weekly_closes}\n\nPH: The book holds {seam:sales.account_count} accounts.",
+      "title": "SALES_WEEKLY_TITLE",
+      "body": "Closed this week:\n\n{seam:sales.weekly_closes}\n\nAccounts on the books: {seam:sales.account_count}",
       "options": {
-        "read_it": "Close"
+        "read_it": "SALES_WEEKLY_CLOSE"
       }
     }
-  }
+  },
+  "_revision_2026_09": "Placeholder 'PH:' text was live on screen; replaced with keyed copy."
 }

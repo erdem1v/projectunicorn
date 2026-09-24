@@ -37,8 +37,21 @@ static func install() -> void:
 			var c: Customer = CustomerRegistry.get_customer(id)
 			if c == null or c.pain_feature_id == "":
 				return false
-			return (GameState.get_flag("mvp_components", []) as Array).has(c.pain_feature_id),
+			return ProductState.is_feature_live(c.pain_feature_id),
 		"Sales", "gates the promise row: promising work already done pays for nothing")
+	EvSeams.register("musteri.pain_buildable", E, TYPE_BOOL,
+		func(id: String) -> bool:
+			var c: Customer = CustomerRegistry.get_customer(id)
+			if c == null or c.pain_feature_id == "":
+				return false
+			# A line step is buildable when its gate is open today (LineGates is the one
+			# validator). A flat feature has no gate. Event revision 2026-09: without this
+			# leaf a promise could name a step that needs research nobody had done, and 241
+			# of the probe's broken promises were exactly that.
+			if ProductLines.step(c.pain_feature_id).is_empty():
+				return true
+			return LineGates.is_unlocked(c.pain_feature_id),
+		"Sales", "gates the promise row: nobody can promise what the company cannot build yet")
 	EvSeams.register("musteri.discounts_used", E, TYPE_INT,
 		func(id: String) -> int:
 			var c: Customer = CustomerRegistry.get_customer(id)
@@ -72,6 +85,10 @@ static func install() -> void:
 			var c: Customer = CustomerRegistry.get_customer(id)
 			return B2BConstants.complaint_voice(c.industry) if c != null else "",
 		"Sales", "the per-sector complaint line")
+	EvSeams.register("musteri.risk_voice", E, TYPE_STRING,
+		func(id: String) -> String:
+			return B2BSalesSystem.risk_voice(CustomerRegistry.get_customer(id)),
+		"Sales", "what an account in Risk says, by the cause of the Risk")
 	EvSeams.register("musteri.sector_contact", E, TYPE_STRING,
 		func(id: String) -> String:
 			var c: Customer = CustomerRegistry.get_customer(id)

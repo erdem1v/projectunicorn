@@ -707,21 +707,26 @@ FEATURE_LABEL_SAAS_OPS_SCHEDULING,randevu planlama,scheduling
 FEATURE_LABEL_SAAS_OPS_FIELD,saha bağlantısı,field connectivity
 FEATURE_LABEL_SAAS_OPS_MOBILE,mobil uygulama,mobile app
 FEATURE_LABEL_FALLBACK,yeni özellik,a new feature
-B2B_COMPLAINT_CONSTRUCTION,"Sahadaki ekip sisteme bağlanamıyor, bağlantı sürekli kopuyor. Böyle iş yürümez.",The site crew cannot stay connected — it drops constantly. This is no way to work.
-B2B_COMPLAINT_HEALTH,"Ekranlar sürekli çöküyor, hasta kapıda beklerken sistemi açamıyoruz.",The screens keep crashing and we cannot bring the system up with a patient waiting at the door.
-B2B_COMPLAINT_LOGISTICS,"Sevkiyat saatinde sistem donuyor, operasyon aksıyor.",The system freezes right at dispatch and the whole operation stalls.
-B2B_COMPLAINT_INSURANCE,"Sisteminiz son haftalarda sürekli düşüyor, ekibim poliçe işlerini yürütemiyor.",Your system has been going down for weeks and my team cannot process policies.
-B2B_COMPLAINT_MANUFACTURING,"Hat başında sistem takılıyor, üretim raporu tutmuyor.",It hangs at the line and the production report never adds up.
-B2B_COMPLAINT_RETAIL,"Yoğun saatte sistem kilitleniyor, kasa akmıyor.",It locks up at peak hour and the tills stop moving.
-B2B_COMPLAINT_REAL_ESTATE,"Sistem sık sık kopuyor, ekip müşteriye dönemiyor.",The system drops out constantly and the team cannot get back to clients.
-B2B_COMPLAINT_TEXTILE,"Sipariş ekranı sürekli hata veriyor, üretim planı kayıyor.",The order screen throws errors all day and the production plan slips.
-B2B_COMPLAINT_LEGAL,"Dosyalara erişemiyoruz, sistem gün içinde defalarca düşüyor.",We cannot reach our files — it goes down several times a day.
-B2B_COMPLAINT_TECHNOLOGY,"Sisteminiz sürekli hata veriyor, ekibimiz üretime dönemiyor.",Your system keeps erroring out and our team cannot get back to shipping.
-B2B_COMPLAINT_ECOMMERCE,"Kampanya saatinde sistem çöküyor, siparişleri kaybediyoruz.",It crashes the moment a campaign goes live and we lose orders.
-B2B_COMPLAINT_MEDIA,"Yayın anında sistem donuyor, akış kesiliyor.",It freezes mid-broadcast and the stream cuts out.
-B2B_COMPLAINT_FINANCE,"Sistem gün içinde düşüyor, işlemler askıda kalıyor.",It goes down during the day and transactions hang.
-B2B_COMPLAINT_TESTING,"Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor.",Your system has been failing often lately and my team cannot do their job.
-B2B_COMPLAINT_FALLBACK,"Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor.",Your system has been failing often lately and my team cannot do their job.
+B2B_COMPLAINT_CONSTRUCTION,"Sahadaki ekip sisteme bağlanamıyor, bağlantı sürekli kopuyor. Böyle iş yürümez.",The site crew can't stay connected. It keeps dropping. We can't work like this.
+B2B_COMPLAINT_HEALTH,"Ekranlar sürekli çöküyor, hasta kapıda beklerken sistemi açamıyoruz.","The screens keep crashing, and we can't bring the system up with a patient waiting at the desk."
+B2B_COMPLAINT_LOGISTICS,"Sevkiyat saatinde sistem donuyor, operasyon aksıyor.","It freezes right at dispatch, and the whole operation stalls."
+B2B_COMPLAINT_INSURANCE,"Sisteminiz son haftalarda sürekli düşüyor, ekibim poliçe işlerini yürütemiyor.",Your system has been going down for weeks. My team can't process policies.
+B2B_COMPLAINT_MANUFACTURING,"Hat başında sistem takılıyor, üretim raporu tutmuyor.","It hangs on the line, and the production report never adds up."
+B2B_COMPLAINT_RETAIL,"Yoğun saatte sistem kilitleniyor, kasa akmıyor.","It locks up at peak hour, and the tills stop."
+B2B_COMPLAINT_REAL_ESTATE,"Sistem sık sık kopuyor, ekip müşteriye dönemiyor.","It drops out all day, and the team can't get back to clients."
+B2B_COMPLAINT_TEXTILE,"Sipariş ekranı sürekli hata veriyor, üretim planı kayıyor.","The order screen throws errors all day, and the production plan slips."
+B2B_COMPLAINT_LEGAL,"Dosyalara erişemiyoruz, sistem gün içinde defalarca düşüyor.",We can't get to our files. It goes down several times a day.
+B2B_COMPLAINT_TECHNOLOGY,"Sisteminiz sürekli hata veriyor, ekibimiz üretime dönemiyor.","Your system keeps erroring out, and my team can't get back to shipping."
+B2B_COMPLAINT_ECOMMERCE,"Kampanya saatinde sistem çöküyor, siparişleri kaybediyoruz.","It crashes the moment a campaign goes live, and we lose orders."
+B2B_COMPLAINT_MEDIA,"Yayın anında sistem donuyor, akış kesiliyor.","It freezes mid-broadcast, and the stream cuts out."
+B2B_COMPLAINT_FINANCE,"Sistem gün içinde düşüyor, işlemler askıda kalıyor.","It goes down during the day, and transactions hang."
+B2B_COMPLAINT_TESTING,"Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor.",Your system has been failing a lot lately. My team can't do their job.
+B2B_COMPLAINT_FALLBACK,"Sisteminiz son zamanlarda sık sık aksıyor, ekibim işini yapamıyor.",Your system has been failing a lot lately. My team can't do their job.
+B2B_RISK_VOICE_BROKEN,"Olacak dediniz, olmadı. Başka seçeneklere bakmaya başladık.",You said it would be there. It isn't. We've started looking at other options.
+B2B_RISK_VOICE_SHORT_1,İlk gün ne yapıyorsa bugün de onu yapıyor. Şimdiye kadar daha fazlasını bekliyorduk.,It does what it did on day one. We needed it to do more by now.
+B2B_RISK_VOICE_SHORT_2,Ekibim sistemin içinde çalışmaktan çok etrafından dolanıyor. Bu böyle sürmez.,My team works around it more than they work in it. That has to stop.
+B2B_RISK_VOICE_SHORT_3,Yönetim bunun için neden hâlâ para ödediğimizi sordu. İyi bir cevabım yoktu.,Management asked why we're still paying for this. I didn't have a good answer.
+B2B_EV_RISK_EXPIRED,{customer} bir daha aramadı.,{customer} didn't call again.
 B2B_PAIN_AI_VEC_EMBED_API,"Verimizi anlamlandıracak bir altyapı arıyoruz, kelime eşleşmesi yetmiyor.",We need something that understands our data — keyword matching is not enough.
 B2B_PAIN_AI_VEC_SEARCH_API,"Aradığımızı tarif edebilmek istiyoruz, birebir kelime değil.",We want to describe what we are looking for rather than guess the exact word.
 B2B_PAIN_AI_VEC_FILTER,"Aramayı tarihe ve etikete göre daraltamıyoruz, ekip boğuluyor.",We cannot narrow a search by date or tag and the team is drowning.
@@ -739,20 +744,43 @@ SECTOR_CONSUMER,Tüketici,Consumer
 SALES_B2C_USERBASE,{product} kullanıcıları,{product} users
 B2B_EV_RISK_TITLE,Müşteri riski,Account at risk
 B2B_EV_EXPANSION_TITLE,Büyüme fırsatı,Growth opening
-B2B_EV_EXPANSION_BODY,"Ekibimiz büyüyor, sistemi başka birimlere de yaymak istiyoruz. Koltuk ekleyelim.",Our team is growing and we want to roll the system out to other units. Let us add seats.
+B2B_EV_EXPANSION_BODY,"{customer} sistemi bir ekibe daha açmak istiyor.
+
+Aynı fiyattan koltuk istiyorlar.","{customer} wants to roll the system out to another team.
+
+They're asking for more seats at the same price."
 B2B_EV_REP_WARN_TITLE,Müşteri temsilcisi uyarısı,Account manager warning
-B2B_EV_REP_WARN_BODY,"Patron, {customer} bir süredir bekliyor. Oyaladım ama artık tutamıyorum. Gideceklerdi, büyük müşteri, söz vermek zorunda kaldım. En kısa sürede yapalım.","Boss, {customer} has been waiting a while. I stalled them, but I cannot hold it any longer. They were ready to walk — big account — so I had to promise. Let us get it done."
+B2B_EV_REP_WARN_BODY,"Patron, {customer} bir süredir bekliyor. Tutabildiğim kadar tuttum.
+
+Düzeleceğini senden duymak istiyorlar.","Boss, {customer} has been waiting a while. I've kept them on the line as long as I can.
+
+They want to hear from you that it's getting fixed."
+B2B_CHOICE_GIVE_WORD,Söz ver,Give them your word
+B2B_CHOICE_ASK_PATIENCE,Sabır iste,Ask them to be patient
+B2B_CHOICE_TELL_NO,Hayır de,Tell them no
+B2B_EV_REP_WARN_EXPIRED,Talep temsilcinin masasında kaldı.,The request stayed on the rep's desk.
 B2B_EV_COMPLAINT_TITLE,Müşteri şikâyeti,Customer complaint
+B2B_CHOICE_TELL_TRUTH,Durumu açıkça anlat,Tell them the truth
 B2B_EV_COMPLAINT_HARD,"{company} hattı arıyor, ton sert: ""{voice}"" Kendi başıma yatıştıramadım.","{company} is on the line and the tone is hard: ""{voice}"" I could not calm them down on my own."
-B2B_EV_RENEWAL_BODY,{customer} sözleşme yenilemesini sorguluyor. Fiyatı gözden geçiriyorlar; masaya oturmak gerek.,{customer} is questioning the renewal. They are reviewing the price; this needs a meeting.
+B2B_EV_RENEWAL_BODY,"Yenileme dönemi yaklaşıyor. {customer} faturayı satır satır okuyor.
+
+Karşılarında bizden birini görmek istiyorlar.","Renewal is coming up for {customer}, and they're reading the invoice line by line.
+
+They want someone from our side at the table."
+B2B_CHOICE_SIT_DOWN,Masaya otur,Sit down with them
+B2B_CHOICE_RENEW_LOWER,Daha düşük fiyatla yenile,Renew at a lower rate
+B2B_CHOICE_LET_IT_WAIT,Beklet,Let it wait
 B2B_EV_REQUEST_TITLE,Müşteri talebi,Customer request
+B2B_CHOICE_GIVE_DATE,Tarih ver,Give them a date
+B2B_CHOICE_ON_THE_LIST,Listede olduğunu söyle,Say it's on the list
+B2B_CHOICE_NOT_NOW_SAY,Şimdilik olmaz de,Say not now
 B2B_EV_REQUEST_BODY_PLAIN,"{company} '{feature}' istiyor. Kendi başıma kapatamadım, karar senin.",{company} wants '{feature}'. I could not close it on my own; the call is yours.
 B2B_CHOICE_PROMISE,Söz ver,Promise it
 B2B_CHOICE_STALL,Oyala,Stall them
 B2B_CHOICE_DISCOUNT,İndirim ver,Offer a discount
-B2B_CHOICE_LEAVE_ALONE,Kendi haline bırak,Leave it alone
-B2B_CHOICE_EXPAND,Büyüt,Expand
-B2B_CHOICE_NOT_YET,Şimdilik gerek yok,Not needed yet
+B2B_CHOICE_LEAVE_ALONE,Kendi haline bırak,Let it go
+B2B_CHOICE_EXPAND,Koltukları ekle,Add the seats
+B2B_CHOICE_NOT_YET,Şimdi değil,Not now
 B2B_CHOICE_KEEP_PROMISE,"Tamam, sözü tut","All right, keep the promise"
 B2B_CHOICE_REFUSE,"Hayır, yapmıyoruz","No, we are not doing it"
 B2B_CHOICE_PROMISE_FIX,Düzeltme sözü ver,Promise a fix
@@ -877,10 +905,10 @@ HR_ROLE_HINT_CUSTOMER_REP,Mevcut müşterileri elde tutar. Müşteriden gelen he
 HR_ROLE_HINT_MARKETING,Ürünü duyurur ve talebi büyütür.,Gets the product heard and grows demand.
 HR_ROLE_HINT_HR_INHOUSE,İşe alımı ve ekibin iç işlerini şirket içinden yürütür.,Runs hiring and the team's internal affairs from inside the company.
 HR_AGENCY_NAME,ATLAS RECRUITMENT,ATLAS RECRUITMENT
-HR_RESIGN_VOICE_1,"""Bir süre düşündüm. Burada tükeniyorum, daha fazla taşımak istemiyorum.""","""I have thought about it for a while. I am burning out here and I do not want to carry it any longer."""
-HR_RESIGN_VOICE_2,"""Kimseyle sorunum yok. Sadece her sabah biraz daha zor kalkıyorum. O kadar.""","""I have no problem with anyone. Every morning is just a little harder to get up. That is all."""
-HR_RESIGN_VOICE_3,"""Bana kötü davranıldı demeyeceğim. Ama fark edilmedim.""","""I will not say I was treated badly. But I was not noticed."""
-HR_RESIGN_VOICE_4,"""Başka bir yerden teklif geldi. Doğrusunu istersen, aramayı ben yaptım.""","""An offer came from somewhere else. If you want the truth, I made the call."""
+HR_RESIGN_VOICE_1,"""Bir süre düşündüm. Burada tükeniyorum, daha fazla taşımak istemiyorum.""","""I've thought about it for a while. I'm burning out here, and I don't want to carry it anymore."""
+HR_RESIGN_VOICE_2,"""Kimseyle sorunum yok. Sadece her sabah biraz daha zor kalkıyorum. O kadar.""","""I don't have a problem with anyone. It's just harder to get up every morning. That's all."""
+HR_RESIGN_VOICE_3,"""Bana kötü davranıldı demeyeceğim. Ama fark edilmedim.""","""I won't say I was treated badly. But nobody noticed me."""
+HR_RESIGN_VOICE_4,"""Başka bir yerden teklif geldi. Doğrusunu istersen, aramayı ben yaptım.""","""I got an offer from somewhere else. Honestly, I made the call myself."""
 HR_FILE_NOTE_1,Sorulardan çok cevapları seviyor.,Likes answers more than questions.
 HR_FILE_NOTE_2,"CV'si kısa, referansları uzun.","Short CV, long list of references."
 HR_FILE_NOTE_3,"İki startup batırmış, üçüncüye hazır.","Sank two startups, ready for a third."
@@ -2111,7 +2139,7 @@ FIN_REQ_MRR_BAR,gelir çıtası,the revenue bar
 FIN_REQ_GROWTH,{n} ay üst üste büyüme,{n} months of growth in a row
 ODA_GOAL_SIGNAL,{state} · büyüme {streak}/{need} ay,{state} · growth {streak}/{need} mo
 EFFECT_AUDIENCE_PCT,Kitle {pct},Audience {pct}
-B2B_DISCOUNT_SPENT_DESC,İki kez indirim verdin. Bu hesabı fiyat değil ürün tutar.,You have discounted twice. Price will not keep this account; the product will.
+B2B_DISCOUNT_SPENT_DESC,Fiyatlarını zaten iki kez indirdin.,You've already cut their price twice.
 FIN_PROFIT_PROGRESS,Artıda · {streak}/{need} ay,Default Alive · {streak}/{need} mo
 FIN_PROFIT_QUAL_MARGIN,marj ince,margin thin
 FIN_PROFIT_QUAL_SCALE,ölçek küçük,scale small
@@ -2515,12 +2543,12 @@ RND_NODE_META,{family} · {tier},{family} · {tier}
 RND_REQ_CASH,{money},{money}
 RND_TIER_FROZEN,{tier} · donmuş,{tier} · frozen
 RND_TREE_CLOSED,"Ar-Ge, ilk sürümünü yayınladıktan sonra açılır.",R&D opens once you ship your first version.
-B2B_LOCK_PROMISE_OPEN,Bu hesaba verilmiş bir söz zaten açık.,You already owe this account a word.
-B2B_LOCK_STALL_CAP,İki kez oyaladın. Üçüncüsünü kimse beklemez.,You have stalled twice. Nobody waits for a third.
-B2B_EXPANSION_EXPIRED,{customer} koltuk artırımını kendi bütçesine yazdı.,{customer} put the extra seats in their own budget.
-B2B_EV_REQ_COMPLAINT_EXPIRED,{customer} şikâyetini kapattı. Cevap gelmedi.,{customer} closed the complaint. No answer came.
-B2B_EV_REQ_FEATURE_EXPIRED,{customer} talebini geri çekti.,{customer} withdrew the request.
-B2B_EV_REQ_RENEWAL_EXPIRED,{customer} yenilemeyi eski şartlarla imzaladı.,{customer} renewed on the old terms.
+B2B_LOCK_PROMISE_OPEN,"Bu hesaba verilmiş, henüz tutulmamış bir söz var.",You already owe this account a word.
+B2B_LOCK_STALL_CAP,İki kez oyaladın. Üçüncüsünü kimse beklemez.,You've stalled them twice. Nobody waits for a third.
+B2B_EXPANSION_EXPIRED,{customer} o bütçeyi başka bir şeye harcadı.,{customer} spent that budget on something else.
+B2B_EV_REQ_COMPLAINT_EXPIRED,{customer} kaydı kapattı. Cevap veren olmadı.,{customer} closed the ticket. Nobody answered.
+B2B_EV_REQ_FEATURE_EXPIRED,{customer} sormayı bıraktı.,{customer} stopped asking.
+B2B_EV_REQ_RENEWAL_EXPIRED,{customer} yeniledi. Bizden arayan olmadı.,{customer} renewed. Nobody from our side called.
 FIXTURE_CONCURRENT_EXPIRE,Fixture kâğıdı süresi doldu.,The fixture paper expired.
 EV_MODIFIERS_MORE,ve daha fazlası,and more
 TICKER_SRC_INTERNAL,İÇERİDEN,INTERNAL
@@ -2657,8 +2685,9 @@ SALES_LOG_FOUNDER_CLOSE,{company} anlaşmasını sen kapattın · {amount}/ay,yo
 NEG_LAST_OFFER,SON RAKAM,THEIR LAST NUMBER
 NEG_LAST_OFFER_REASON,Sabır bitti. Bu rakam ya kabul edilir ya masa kapanır.,Patience is out. Take this number or the table closes.
 SALES_ODDS_HINT,neden?,why?
-B2B_LOCK_NO_PAIN_TARGET,Bu hesabın adı konmuş bir talebi yok. Söz verilecek bir şey de yok.,This account has no named request. There is nothing to promise yet.
+B2B_LOCK_NO_PAIN_TARGET,Ne istediklerini söylemediler. Söz verilecek bir şey yok.,They haven't named what they want. There's nothing to promise yet.
 B2B_LOCK_PAIN_SHIPPED,İstedikleri şey zaten yayında.,What they asked for is already live.
+B2B_LOCK_PAIN_GATED,Bunu yapabilecek kimse yok henüz. Ne ekip var ne araştırma.,Nobody here can build that yet. Not the people and not the research.
 PROD_DESK_ACCOUNTS_ONLY,"{names} hesapları taşıyor ama destek masasına atanmadı. Görevler sayfasında Destek sütununu işaretle.","{names} carries accounts but is not on the support desk. Tick the Support column on the Duties page."
 PROD_DESK_NOBODY_ELIGIBLE,Masayı taşıyabilecek kimse yok. Bir Müşteri Temsilcisi ya da Yazılımcı işe al.,Nobody can staff the desk. Hire a Customer Rep or an Engineer.
 SALES_PROMISE_OPEN,Açık söz: {feature} · {days} gün,Open promise: {feature} · {days} days
@@ -2741,14 +2770,14 @@ A message from Frank.
 
 ""Good, money in the bank. It didn't come in to sit there, we grow with it. By the time we sit down for Series A we need to be in a stronger position."""
 SEED_CLOSED_OK,Tamam,All right
-SEED_STALL_TITLE,Çeyrek raporu,The quarterly note
-SEED_STALL_BODY,"{investor} tarafından bir mail: son üç ayın özeti, tek sayfa, yorumsuz.
+SEED_STALL_TITLE,Çeyrek notu,The quarterly note
+SEED_STALL_BODY,"{investor} bir mail göndermiş: son üç ay, tek sayfa, yorumsuz.
 
-Büyüme satırının yanına bir şey yazılmamış. Yazılmamış olması da bir şey.","A mail from {investor}: the last three months on one page, without comment.
+Büyüme satırının yanı boş. Yorum da bu.","A mail from {investor}: the last three months on a single page. No comment.
 
-Nothing is written beside the growth line. That it is blank is itself something."
+The growth line has nothing written next to it. That's the comment."
 SEED_STALL_READ,Kenara koy,Set it aside
-SEED_STALL_EXPIRE,Çeyrek raporu açılmadan kaldı.,The quarterly note stayed unopened.
+SEED_STALL_EXPIRE,Çeyrek notu okunmadan kaldı.,The quarterly note went unread.
 SEED_TX_LABEL,Seed turu,Seed round
 SEED_MONTH_HIGHLIGHT,Seed turu kapandı,The seed round closed
 SEED_CAP_ROW,Seed · %{pct},Seed · {pct}%
@@ -2819,3 +2848,5 @@ SEED_STALL_VERDICT,"İki yıl oldu. Bir tur para aldık, büyüyeceğimizi söyl
 Yarın bunu bir daha konuşmayacağız.","Two years. We took a round, we said we would grow, and we did not.
 
 Tomorrow we do not talk about this again."
+SALES_WEEKLY_TITLE,Haftanın satışları,The week in sales
+SALES_WEEKLY_CLOSE,Kapat,Close

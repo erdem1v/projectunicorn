@@ -250,6 +250,14 @@ static func is_newsworthy_signing(c: Customer, is_whale: bool) -> bool:
 	return false
 
 
+## §7.3 — the brand half of a newsworthy signing. ONE home, called by both signing paths
+## (the founder's table and the rep desk), right where each announces the signing.
+static func credit_prestige(c: Customer, is_whale: bool) -> void:
+	if not is_newsworthy_signing(c, is_whale):
+		return
+	GameState.set_brand(GameState.brand + SalesConstants.PRESTIGE_SIGNING_BRAND)
+
+
 static func whale_condition(account_key: String) -> String:
 	return String(_memory(account_key).get("whale_condition", ""))
 

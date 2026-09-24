@@ -104,3 +104,4 @@ static func _maybe_ticker(c: Customer, is_whale: bool) -> void:
 	EventBus.headline_added.emit(B2BConstants.notice_source_sales(),
 		TranslationServer.translate("SALES_TICKER_FOUNDER_SIGNED").format(
 			{"company": c.company_name}))
+	SalesLedger.credit_prestige(c, is_whale)

@@ -276,10 +276,8 @@ static func request_difficulty(c: Customer) -> int:
 	# the player can already see or reason about: an unbuilt feature is a promise the desk
 	# cannot make, an unhappy account argues, a bigger account expects more.
 	var d: int = 1
-	if c.pain_feature_id != "":
-		var live: Array = GameState.get_flag("mvp_components", [])
-		if not live.has(c.pain_feature_id):
-			d += 2
+	if c.pain_feature_id != "" and not ProductState.is_feature_live(c.pain_feature_id):
+		d += 2
 	if c.satisfaction < c.tolerance:
 		d += 2
 	d += maxi(c.scale - 1, 0)
@@ -375,4 +373,8 @@ static func _escalate(c: Customer) -> void:
 	var kind: String = B2BEventFactory.pick_request_kind(c)
 	if kind == "":
 		return
-	EventGate.request("customer.request_" + kind, {"customer": c.id})
+	# The picker skips `last_request_kind`, and until 2026-09 nothing ever WROTE it, so the
+	# same kind could arrive from one account twice running. Stamped only when the gate
+	# actually admits the card: a refused request did not happen.
+	if EventGate.request("customer.request_" + kind, {"customer": c.id}):
+		CustomerRegistry.set_last_request_kind(c.id, kind)

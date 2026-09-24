@@ -84,7 +84,10 @@ const RETAIN_DISCOUNT_PCT := 0.15       # "İndirim ver" MRR cut fraction
 const RETAIN_SAT_BUMP := 8              # satisfaction relief from a discount
 # Retention brand/reputation deltas (every option touches brand/reputation, B.3).
 const RETAIN_PROMISE_REP := 1
-const RETAIN_DELAY_BRAND := -1
+# Event revision 2026-09: the stall's cost moved from BRAND to REPUTATION (a private
+# credibility cost, like the discount's). The card carries `add_reputation -1`; this is the
+# number the smoke guard reads.
+const RETAIN_DELAY_REP := -1
 const RETAIN_DISCOUNT_REP := -1
 const CHURN_BRAND := -2                 # brand hit at the ACTUAL churn moment (countdown expiry)
 
@@ -137,6 +140,10 @@ static func complaint_voice(industry: String) -> String:
 
 
 static func feature_label(feature_id: String) -> String:
+	# A line step names itself (PROD_STEP_* rows, the same name the product screen shows).
+	var step: Dictionary = ProductLines.step(feature_id)
+	if not step.is_empty():
+		return TranslationServer.translate(String(step.get("name_key", "FEATURE_LABEL_FALLBACK")))
 	return _derived("FEATURE_LABEL_", feature_id, "FEATURE_LABEL_FALLBACK")
 
 
@@ -183,6 +190,11 @@ const PROMISE_PARTIAL_SAT := -5         # soft penalty for a late (post-deadline
 # session and left alone here.
 const PROMISE_KEPT_TOLERANCE := -5
 const PROMISE_BROKEN_TOLERANCE := 5
+# Event revision 2026-09: the ratchet above had no ceiling. Measured in the 730-day probe,
+# accounts with a few broken words sat at tolerance 57-100 against a best-case target of 47:
+# satisfiable by no product, back in Risk every 21 days, forever. A broken word makes an
+# account pickier, never impossible — tolerance stops this far above where it was seeded.
+const PROMISE_TOLERANCE_CEILING := 10
 
 
 # ======================= Stage D — Customer Success ==========================

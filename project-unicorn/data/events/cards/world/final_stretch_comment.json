@@ -2,60 +2,103 @@
   "_worked_example": "INTERRUPT. GDD §19.5's first of three. Second rung of the soft-cap telegraph. It interrupts because a reporter on the phone is a person waiting, and because by this point the clock is close enough that the player should hear it stop being ambient. Both options cost something real and neither is the wise one.",
   "id": "world.final_stretch_comment",
   "version_scope": "demo",
-  "category": "rival",
+  "category": "world",
   "tick": "daily",
   "class": "interrupt",
-  "tags": ["critical", "build_safe", "terminal_warning"],
+  "tags": [
+    "critical",
+    "build_safe",
+    "terminal_warning"
+  ],
   "arc": "arc_final_stretch",
-
-  "latch": { "one_shot": true },
-
+  "latch": {
+    "one_shot": true
+  },
   "condition": {
     "all": [
-      { "arc": "active", "id": "arc_final_stretch" },
-      { "seam": "time.day", "op": ">=", "value": 700 },
-      { "seam": "investor.series_a_closed", "op": "==", "value": false },
-      { "history": "fired", "event": "world.final_stretch_press" }
+      {
+        "arc": "active",
+        "id": "arc_final_stretch"
+      },
+      {
+        "seam": "time.day",
+        "op": ">=",
+        "value": 700
+      },
+      {
+        "seam": "investor.series_a_closed",
+        "op": "==",
+        "value": false
+      },
+      {
+        "history": "fired",
+        "event": "world.final_stretch_press"
+      }
     ]
   },
-
   "options": [
     {
       "id": "give_a_number",
       "outcome_id": "spoke",
       "effects": [
-        { "verb": "add_brand", "amount": 2 },
-        { "verb": "stamp_day", "name": "soft_cap_telegraphed" },
-        { "verb": "advance_arc", "arc_id": "arc_final_stretch" }
+        {
+          "verb": "add_brand",
+          "amount": 2
+        },
+        {
+          "verb": "add_reputation",
+          "amount": -1
+        },
+        {
+          "verb": "stamp_day",
+          "name": "soft_cap_telegraphed"
+        },
+        {
+          "verb": "advance_arc",
+          "arc_id": "arc_final_stretch"
+        }
       ]
     },
     {
       "id": "decline_comment",
       "outcome_id": "silent",
       "effects": [
-        { "verb": "add_reputation", "amount": 1 },
-        { "verb": "stamp_day", "name": "soft_cap_telegraphed" },
-        { "verb": "advance_arc", "arc_id": "arc_final_stretch" }
+        {
+          "verb": "add_reputation",
+          "amount": 1
+        },
+        {
+          "verb": "add_brand",
+          "amount": -1
+        },
+        {
+          "verb": "stamp_day",
+          "name": "soft_cap_telegraphed"
+        },
+        {
+          "verb": "advance_arc",
+          "arc_id": "arc_final_stretch"
+        }
       ]
     }
   ],
-
   "text": {
     "tr": {
       "title": "Yorum istiyorlar",
-      "body": "Telefondaki kişi kibar. Yıl sonu derlemesi için birkaç satır istiyor; senin turundan kalan birkaç şirketten biri sensin ve bu onun için bir hikâye.\n\nBir rakam versen dosyaya girersin. Vermezsen de girersin, sadece başka bir cümleyle.",
+      "body": "Muhabir kibar. Yıl sonu derlemesi için birkaç satır istiyor. O yıl kurulanlardan ayakta kalan birkaç şirketten birisin ve onun için bu bir hikâye.\n\nBir rakam verirsen yazıya girersin. Susarsan da girersin, sadece başka bir cümleyle.",
       "options": {
         "give_a_number": "Rakamı ver",
-        "decline_comment": "Yorum yok de"
+        "decline_comment": "Yorum yok"
       }
     },
     "en": {
       "title": "They want a comment",
-      "body": "The person on the phone is polite. They want a few lines for the year-end round-up; you are one of the few companies left from your cohort, and to them that is a story.\n\nGive them a number and you are in the piece. Refuse and you are in it anyway, under a different sentence.",
+      "body": "The reporter is polite. They want a few lines for the year-end round-up. You're one of the few companies still standing from that year, and to them that's a story.\n\nGive them a number and you're in the piece. Say nothing and you're in it anyway, under a different sentence.",
       "options": {
         "give_a_number": "Give them the number",
         "decline_comment": "No comment"
       }
     }
-  }
+  },
+  "_revision_2026_09": "Both rows were pure gains while the note said both cost something. A number buys brand and costs reputation (a small number, in print); silence buys reputation and costs brand."
 }

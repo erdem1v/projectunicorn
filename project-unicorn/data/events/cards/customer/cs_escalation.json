@@ -74,6 +74,13 @@
             "reason": "B2B_LOCK_PAIN_SHIPPED"
           },
           {
+            "entity_seam": "musteri.pain_buildable",
+            "scope": "customer",
+            "op": "==",
+            "value": true,
+            "reason": "B2B_LOCK_PAIN_GATED"
+          },
+          {
             "entity_seam": "musteri.has_open_promise",
             "scope": "customer",
             "op": "==",
@@ -82,6 +89,22 @@
           }
         ]
       }
+    },
+    {
+      "id": "ask_patience",
+      "outcome_id": "waited",
+      "effects": [
+        {
+          "verb": "satisfaction_delta",
+          "scope": "customer",
+          "amount": -3
+        },
+        {
+          "verb": "change_morale",
+          "scope": "rep",
+          "amount": -5
+        }
+      ]
     },
     {
       "id": "refuse",
@@ -108,10 +131,11 @@
       "title": "B2B_EV_REP_WARN_TITLE",
       "body": "B2B_EV_REP_WARN_BODY",
       "options": {
-        "honour_it": "B2B_CHOICE_PROMISE_FIX",
-        "refuse": "B2B_CHOICE_REFUSE"
+        "honour_it": "B2B_CHOICE_GIVE_WORD",
+        "ask_patience": "B2B_CHOICE_ASK_PATIENCE",
+        "refuse": "B2B_CHOICE_TELL_NO"
       },
-      "expire_note": "Talep temsilcinin masasında kaldı.",
+      "expire_note": "B2B_EV_REP_WARN_EXPIRED",
       "locked_reasons": {
         "honour_it": "B2B_LOCK_PROMISE_OPEN"
       }
@@ -120,10 +144,11 @@
       "title": "B2B_EV_REP_WARN_TITLE",
       "body": "B2B_EV_REP_WARN_BODY",
       "options": {
-        "honour_it": "B2B_CHOICE_PROMISE_FIX",
-        "refuse": "B2B_CHOICE_REFUSE"
+        "honour_it": "B2B_CHOICE_GIVE_WORD",
+        "ask_patience": "B2B_CHOICE_ASK_PATIENCE",
+        "refuse": "B2B_CHOICE_TELL_NO"
       },
-      "expire_note": "The request stayed on the rep's desk.",
+      "expire_note": "B2B_EV_REP_WARN_EXPIRED",
       "locked_reasons": {
         "honour_it": "B2B_LOCK_PROMISE_OPEN"
       }
@@ -144,5 +169,6 @@
       }
     ]
   },
-  "expire_note": "expire_note"
+  "expire_note": "expire_note",
+  "_revision_2026_09": "Third row 'Ask them to be patient' (satisfaction −3, the rep carries it: morale −5). Before it, a locked promise left 'No' as the only open row, and 'No' churns the account. The body no longer claims the rep already promised, nor calls every account 'big'."
 }

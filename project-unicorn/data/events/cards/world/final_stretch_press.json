@@ -2,7 +2,7 @@
   "_worked_example": "PAPER. GDD §19.5's second of three. Also the first rung of the soft-cap telegraph (task §6 defect 8): a run could reach day 730 and end with no prior warning at all. Low stakes, 30 days to answer, and answering it costs nothing — the point is that the player hears the clock, not that they act on it.",
   "id": "world.final_stretch_press",
   "version_scope": "demo",
-  "category": "rival",
+  "category": "world",
   "tick": "daily",
   "class": "paper",
   "tags": [
@@ -18,10 +18,6 @@
   "expire_note": "expire_unanswered",
   "on_expire": {
     "penalties": [
-      {
-        "verb": "advance_arc",
-        "arc_id": "arc_final_stretch"
-      },
       {
         "verb": "stamp_day",
         "name": "soft_cap_telegraphed"
@@ -43,21 +39,6 @@
         "seam": "investor.series_a_closed",
         "op": "==",
         "value": false
-      },
-      {
-        "any": [
-          {
-            "seam": "phase.series_a_signal",
-            "op": "!=",
-            "value": "open"
-          },
-          {
-            "seam": "phase.current",
-            "op": "==",
-            "value": 2,
-            "reason": "an OPEN but UNENTERED gate still needs the warning"
-          }
-        ]
       }
     ]
   },
@@ -80,21 +61,22 @@
   "text": {
     "tr": {
       "title": "Sektör Telgrafı · yıllık dosya",
-      "body": "Yıllık dosya çıkmış. Senin turunda kurulan şirketlerin listesi var; çoğunun yanında bir tur, bir satın alma ya da bir kapanış yazıyor. Senin adının yanında hâlâ ilk gün yazdıkları duruyor.\n\nDosyayı hazırlayan kişi kimseye bir şey demiyor. Sadece sıralıyor.",
+      "body": "Yıllık dosya çıkmış. Seninle aynı yıl kurulan şirketlerin listesi. Çoğunun yanında bir tur, bir satış ya da bir kapanış yazıyor.\n\nSeninkinin yanında ilk gün yazdıkları satır duruyor. Dosya yorum yapmıyor. Sadece sıralıyor.",
       "options": {
-        "read_it": "Dosyayı bir kenara koy"
+        "read_it": "Dosyayı kenara koy"
       },
-      "expire_unanswered": "Sektör Telgrafı'nın yıllık dosyası masanda kaldı."
+      "expire_unanswered": "Yıllık dosya masanda okunmadan kaldı."
     },
     "en": {
       "title": "Sector Telegraph · the annual file",
-      "body": "The annual file is out. It lists the companies founded in your cohort, and most of them have a round, an acquisition or a closure written next to the name. Next to yours is still what they wrote on the first day.\n\nWhoever compiled it passes no judgement. They only list.",
+      "body": "The annual file is out. It lists every company founded the same year as yours. Most have a round, a sale or a closure next to the name.\n\nNext to yours is the line they wrote on day one. The file doesn't comment. It only lists.",
       "options": {
         "read_it": "Set the file aside"
       },
-      "expire_unanswered": "The Sector Telegraph's annual file sat on your desk unread."
+      "expire_unanswered": "The annual file sat on your desk unread."
     }
   },
   "_port_note": " REMOVED FROM THE ARC'S STEP LIST AND MADE ITS OPENER. It starts the arc on EITHER branch — read, or expired unread — because the sector moving on is not conditional on the founder reading about it. A stray `advance_arc` ran BEFORE `start_arc` on the read option — a no-op against an arc that did not exist yet, and if it had run after, it would have skipped the ladder's first rung. The opener starts the arc and nothing else; the arc raises its own steps.",
-  "_hole_fix": "THE OPEN-GATE HOLE (closed 2026-08-27). This leaf used to be a bare phase.series_a_signal != \"open\", which reads as \"do not nag a company whose door is open\". True for a company that WALKS THROUGH the door - and false for one that leaves it standing open. That run kept phase 2, kept the signal at \"open\", never started the arc, and reached the soft cap with no warning: the precise case running_on_fumes is named for. Phase 3 means the door was entered, so the original silence still holds there."
+  "_hole_fix": "THE OPEN-GATE HOLE (closed 2026-08-27). This leaf used to be a bare phase.series_a_signal != \"open\", which reads as \"do not nag a company whose door is open\". True for a company that WALKS THROUGH the door - and false for one that leaves it standing open. That run kept phase 2, kept the signal at \"open\", never started the arc, and reached the soft cap with no warning: the precise case running_on_fumes is named for. Phase 3 means the door was entered, so the original silence still holds there.",
+  "_revision_2026_09": "Category rival -> world (it is the press, and the rival quota was the wrong brake). 'Senin turunda' read as 'your funding round'; it is now 'the same year as yours'. on_expire ordering fixed. Condition reduced to day >= 640 and no signed Series A: the soft cap warns everyone it can end (I3). The old any(signal != open, phase == 2) left a phase-3 Hunt with no live offer unwarned."
 }

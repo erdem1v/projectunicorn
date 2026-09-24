@@ -335,6 +335,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"no_calendar_stop_before_cap":     fail = _case_no_calendar_stop_before_cap()
 		"soft_cap_no_defer_for_sheet":     fail = _case_soft_cap_no_defer_for_sheet()
 		"soft_cap_paper_names_unsigned_sheet": fail = _case_soft_cap_paper_names_unsigned_sheet()
+		"soft_cap_warns_open_hunt":        fail = _case_soft_cap_warns_open_hunt()
 		"month_history_close_and_cap":     fail = _case_month_history_close_and_cap()
 		"growth_streak_semantics":         fail = _case_growth_streak_semantics()
 		"series_a_gate_needs_streak":      fail = _case_series_a_gate_needs_streak()
@@ -3007,10 +3008,12 @@ static func _case_b2b_retention_routes_seams() -> String:
 	if GameState.reputation != rep0 + B2BConstants.RETAIN_PROMISE_REP:
 		return "Söz ver reputation delta wrong"
 
-	# Oyala → extends the countdown once, counts a stall, brand down.
+	# Oyala → extends the countdown once, counts a stall, reputation down (Event revision
+	# 2026-09: the stall's cost moved from brand to reputation; brand stays untouched).
 	var c2: Customer = _add_risk_b2b("rb", 1000)
 	var cd0: int = c2.churn_countdown
 	var brand0: int = GameState.brand
+	var rep1: int = GameState.reputation
 	if not EventGate.force_fire(RETAIN_ID, {"customer": c2.id}):
 		return "the retention card was refused for co_rb"
 	EventGate.resolve(RETAIN_ID, "stall")
@@ -3018,8 +3021,10 @@ static func _case_b2b_retention_routes_seams() -> String:
 		return "Oyala did not extend the countdown (%d -> %d)" % [cd0, c2.churn_countdown]
 	if c2.retain_stalls != 1:
 		return "Oyala did not count a stall"
-	if GameState.brand != brand0 + B2BConstants.RETAIN_DELAY_BRAND:
-		return "Oyala brand delta wrong"
+	if GameState.reputation != rep1 + B2BConstants.RETAIN_DELAY_REP:
+		return "Oyala reputation delta wrong"
+	if GameState.brand != brand0:
+		return "Oyala still moved brand (%d)" % (GameState.brand - brand0)
 
 	# İndirim ver → MRR drops (bridged), customer recovers, reputation down.
 	var c3: Customer = _add_risk_b2b("rc", 1000)
@@ -10478,17 +10483,28 @@ static func _case_b2c_satisfaction_gate_experience() -> String:
 	GameState.set_flag("mvp_innovation", 0.0)
 	GameState.set_flag("mvp_experience", 25.0)
 	GameState.set_flag("mvp_live_bug_count", 0)
+	# SUPPORT-QUIET WORLD (DEFECT_b2c_satisfaction_second_writer_2026-08-26, fix 1). The support
+	# desk's two-tier damage (Ops §8.3) legitimately writes the same B2C record every day; this
+	# case isolates the QUALITY GATE, so each leg starts with no reports, no confirmed bugs and
+	# no carried damage residue.
+	var quiet := func() -> void:
+		GameState.set_flag(ProductState.REPORTS_INCOMING, 0)
+		GameState.set_flag(ProductState.BUGS_CONFIRMED, 0)
+		SupportSystem.reset()
+	quiet.call()
 	CustomerRegistry.set_satisfaction(ub.id, 50)
 	_sim_day()
 	if ub.satisfaction != 51:
 		return "experience 25 (axis 50) did not lift satisfaction (+%d)" % (ub.satisfaction - 50)
 	GameState.set_flag("mvp_experience", 10.0)
+	quiet.call()
 	CustomerRegistry.set_satisfaction(ub.id, 50)
 	_sim_day()
 	if ub.satisfaction != 50:
 		return "experience 10 (axis 28.6) moved satisfaction (%d)" % ub.satisfaction
 	GameState.set_flag("mvp_experience", 25.0)
 	GameState.set_flag("mvp_live_bug_count", SalesSystem.SATISFACTION_BUG_GATE + 1)
+	quiet.call()
 	CustomerRegistry.set_satisfaction(ub.id, 50)
 	_sim_day()
 	if ub.satisfaction != 50:
@@ -10587,6 +10603,32 @@ static func _case_soft_cap_no_defer_for_sheet() -> String:
 # The working tree's replacement cases (last_answer_warning, last_answer_warning_suppressed)
 # were destroyed before they were committed — see docs/audits/SMOKE_LOSS_2026-08-23.md.
 # This stub keeps the suite compiling; the two cases still need re-authoring by their author.
+## Event revision 2026-09 — the two warning holes FRANK_UNWIRED §7 left open. A run with the
+## Series A signal OPEN but no signed round (phase 2 with the door standing open, or a phase-3
+## Hunt with no live offer) must still get the final-stretch warning, and the arc it starts
+## must not fade on an open signal. Only a SIGNED round ends the warning.
+##
+## FALSIFICATION: restore the `phase.series_a_signal == "open"` leaf in the arc's
+## invalidate_when, or the any(signal != open, phase == 2) block on the press card.
+static func _case_soft_cap_warns_open_hunt() -> String:
+	GameState.initialize_run({"seed": 424242})
+	GameState.day = 650
+	GameState.set_phase(3)
+	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "open":
+		return "fixture: phase 3 did not read the Series A signal as open"
+	var press: Dictionary = EventGate.catalogue_card("world.final_stretch_press")
+	if press.is_empty():
+		return "world.final_stretch_press is not in the catalogue"
+	if not EventGate.condition_met(press.get("condition", {}), {}):
+		return "a phase-3 Hunt at day 650 with no signed round gets no final-stretch warning"
+	var f := FileAccess.open("res://data/events/arcs/soft_cap_stretch.json", FileAccess.READ)
+	var arc: Dictionary = JSON.parse_string(f.get_as_text()) as Dictionary
+	for leaf in arc.get("invalidate_when", []):
+		if EventGate.condition_met(leaf as Dictionary, {}):
+			return "arc_final_stretch fades on an open signal with no signed round"
+	return ""
+
+
 static func _case_soft_cap_paper_names_unsigned_sheet() -> String:
 	# The rewritten paper: an unsigned offer on the table is a ledger line; none → no line.
 	var with_sheet: Dictionary = {

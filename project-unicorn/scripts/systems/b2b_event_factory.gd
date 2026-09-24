@@ -63,8 +63,7 @@ static func pick_request_kind(c: Customer) -> String:
 	# Özellik: taban istek + karşılanmamış acı özelliği + sağlıklı ilişkinin cesareti;
 	# açık bir söz dururken ikinci özellik istemek doğal değildir.
 	var feature: int = 20
-	var live: Array = GameState.get_flag("mvp_components", [])
-	if c.pain_feature_id != "" and not live.has(c.pain_feature_id):
+	if c.pain_feature_id != "" and not ProductState.is_feature_live(c.pain_feature_id):
 		feature += 25
 	if c.satisfaction >= c.tolerance:
 		feature += 10

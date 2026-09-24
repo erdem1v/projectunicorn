@@ -295,6 +295,7 @@ static func _maybe_ticker(c: Customer, rep_name: String, is_whale: bool) -> void
 	EventBus.headline_added.emit(B2BConstants.notice_source_sales(),
 		TranslationServer.translate("SALES_TICKER_SIGNED").format(
 			{"rep": rep_name, "company": c.company_name}))
+	SalesLedger.credit_prestige(c, is_whale)
 
 
 # ============================================================================

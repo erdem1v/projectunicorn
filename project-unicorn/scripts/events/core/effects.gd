@@ -110,6 +110,10 @@ const ECONOMIC_VERBS := [
 ## ambient tick.
 const TERMINAL_VERBS := ["trigger_ending"]
 
+## `promise_create` with this feature id promises "what this account wants": the
+## customer's own pain feature, resolved at the moment the option is taken.
+const PAIN_SENTINEL := "pain"
+
 
 enum Origin { PLAYED, EXPIRE, AMBIENT, CHECK_BRANCH }
 
@@ -402,9 +406,19 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			return {"verb": verb, "customer": scid, "amount": _amount(e)}
 		"promise_create":
 			var pcid: String = _entity(e, ctx, EvScope.TYPE_CUSTOMER)
-			B2BSalesSystem.accept_promise(pcid, String(e.get("feature_id", "")),
-				int(e.get("deadline_days", 14)))
-			return {"verb": verb, "customer": pcid, "feature": e.get("feature_id", "")}
+			# `feature_id: "pain"` is a SENTINEL meaning "what this account wants". It used
+			# to be passed through verbatim, so every card promise targeted a feature
+			# literally named "pain" that no build can ship: 173 of 181 promises in the
+			# 730-day probe broke, each costing brand, satisfaction and tolerance, and the
+			# account came straight back into Risk (Event revision 2026-09, finding 1).
+			var pfid: String = String(e.get("feature_id", ""))
+			if pfid == PAIN_SENTINEL:
+				var pc: Customer = CustomerRegistry.get_customer(pcid)
+				pfid = pc.pain_feature_id if pc != null else ""
+			if pfid == "":
+				return _no_target(verb, pcid)
+			B2BSalesSystem.accept_promise(pcid, pfid, int(e.get("deadline_days", 14)))
+			return {"verb": verb, "customer": pcid, "feature": pfid}
 
 		# --- product ----------------------------------------------------------
 		"dimension_delta":

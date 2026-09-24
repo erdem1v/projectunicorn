@@ -80,5 +80,6 @@
       },
       "expire_note": "B2B_EXPANSION_EXPIRED"
     }
-  }
+  },
+  "_revision_2026_09": "Effect chip showed 'Seats +0 · MRR +$0' on every card (event_modal read fields the card never carries); it now previews what b2b_expand will add. Text rewritten; the expiry says plainly that the money went elsewhere."
 }

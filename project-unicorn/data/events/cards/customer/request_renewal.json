@@ -64,11 +64,6 @@
         {
           "verb": "b2b_retain_discount",
           "scope": "customer"
-        },
-        {
-          "verb": "satisfaction_delta",
-          "scope": "customer",
-          "amount": 8
         }
       ],
       "requires": {
@@ -96,9 +91,9 @@
       "title": "B2B_EV_RENEWAL_TITLE",
       "body": "B2B_EV_RENEWAL_BODY",
       "options": {
-        "talk_it_through": "B2B_CHOICE_NEGOTIATE_RENEWAL",
-        "discount_them": "B2B_CHOICE_BIND_DISCOUNT",
-        "stall": "B2B_CHOICE_HOLD"
+        "talk_it_through": "B2B_CHOICE_SIT_DOWN",
+        "discount_them": "B2B_CHOICE_RENEW_LOWER",
+        "stall": "B2B_CHOICE_LET_IT_WAIT"
       },
       "expire_note": "B2B_EV_REQ_RENEWAL_EXPIRED",
       "locked_reasons": {
@@ -109,14 +104,15 @@
       "title": "B2B_EV_RENEWAL_TITLE",
       "body": "B2B_EV_RENEWAL_BODY",
       "options": {
-        "talk_it_through": "B2B_CHOICE_NEGOTIATE_RENEWAL",
-        "discount_them": "B2B_CHOICE_BIND_DISCOUNT",
-        "stall": "B2B_CHOICE_HOLD"
+        "talk_it_through": "B2B_CHOICE_SIT_DOWN",
+        "discount_them": "B2B_CHOICE_RENEW_LOWER",
+        "stall": "B2B_CHOICE_LET_IT_WAIT"
       },
       "expire_note": "B2B_EV_REQ_RENEWAL_EXPIRED",
       "locked_reasons": {
         "discount_them": "B2B_DISCOUNT_SPENT_DESC"
       }
     }
-  }
+  },
+  "_revision_2026_09": "The one card where a price cut is the honest lever. Hidden double satisfaction removed; the expiry text now matches its −5 (they renewed, and noticed nobody called)."
 }

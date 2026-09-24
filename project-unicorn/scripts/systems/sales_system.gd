@@ -223,7 +223,8 @@ static func _audience_delta_per_hour() -> float:
 		+ quality_term * HOURLY_AUD_QUALITY_COEF \
 		+ GameState.brand * HOURLY_AUD_BRAND_COEF \
 		+ GameState.reputation * HOURLY_AUD_REPUTATION_COEF) \
-		* audience_growth_multiplier(int(GameState.get_flag("b2c_price", 0)))
+		* audience_growth_multiplier(int(GameState.get_flag("b2c_price", 0))) \
+		* InfraSystem.acquisition_multiplier()   # Ops §10: over capacity, acquisition ×0,6
 	var audience: float = float(GameState.get_flag("b2c_audience", 0))
 	# Calibration Round A §5 — word of mouth, both directions (see WOM_* above). `sat` is
 	# the aggregate B2C record's satisfaction; before the record exists (no paid tier yet)

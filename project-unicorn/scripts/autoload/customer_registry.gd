@@ -329,6 +329,15 @@ func set_last_request_kind(customer_id: String, kind: String) -> void:
 	c.last_request_kind = kind
 
 
+func set_pain_feature(customer_id: String, feature_id: String) -> void:
+	# The thing this account wants next (a line step or a flat feature id). No signal: the
+	# promise rows and the request channel read it through seams at the moment they render.
+	var c: Customer = _customers.get(customer_id, null)
+	if c == null:
+		return
+	c.pain_feature_id = feature_id
+
+
 func set_retain_discounts(customer_id: String, n: int) -> void:
 	# HIDDEN discount counter (Calibration Round A §8) — no signal; the locked row the
 	# factory renders past the cap is what the player sees. Counts BOTH discount channels

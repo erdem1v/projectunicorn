@@ -16,7 +16,7 @@
     }
   },
   "latch": {
-    "cooldown_days": 30
+    "cooldown_days": 90
   },
   "expires_days": 14,
   "expire_note": "expire_unanswered",
@@ -62,5 +62,6 @@
       },
       "expire_unanswered": "SEED_STALL_EXPIRE"
     }
-  }
+  },
+  "_revision_2026_09": "A QUARTERLY note on a 30-day cooldown arrived monthly. Cooldown is now 90."
 }

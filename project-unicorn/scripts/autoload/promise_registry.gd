@@ -149,14 +149,14 @@ func _on_build_phase_changed(phase: String) -> void:
 	# open promise (or partially redeems a broken one if it lands late).
 	if phase != "shipped":
 		return
-	var live: Array = GameState.get_flag("mvp_components", [])
 	for p in _promises.values():
-		if not live.has(p.feature_id):
+		if not ProductState.is_feature_live(p.feature_id):
 			continue
 		if p.status == "open":
 			_resolve(p, "kept" if GameState.day <= p.deadline_day else "partial")
 		elif p.status == "broken":
 			_resolve(p, "partial")  # late redemption of an already-broken promise
+	B2BSalesSystem.refresh_pains_after_ship()
 
 
 func tick_deadlines(day: int) -> void:

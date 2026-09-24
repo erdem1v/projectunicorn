@@ -52,6 +52,13 @@
             "reason": "B2B_LOCK_PAIN_SHIPPED"
           },
           {
+            "entity_seam": "musteri.pain_buildable",
+            "scope": "customer",
+            "op": "==",
+            "value": true,
+            "reason": "B2B_LOCK_PAIN_GATED"
+          },
+          {
             "entity_seam": "musteri.has_open_promise",
             "scope": "customer",
             "op": "==",
@@ -89,7 +96,7 @@
           "scope": "customer"
         },
         {
-          "verb": "add_brand",
+          "verb": "add_reputation",
           "amount": -1
         }
       ]
@@ -129,7 +136,7 @@
   "text": {
     "tr": {
       "title": "B2B_EV_RISK_TITLE",
-      "body": "{seam:musteri.complaint_voice}",
+      "body": "{customer} hatta.\n\n\"{seam:musteri.risk_voice}\"",
       "options": {
         "promise_it": "B2B_CHOICE_PROMISE",
         "stall": "B2B_CHOICE_STALL",
@@ -141,11 +148,11 @@
         "stall": "B2B_LOCK_STALL_CAP",
         "discount": "B2B_DISCOUNT_SPENT_DESC"
       },
-      "expire_note": "{customer} bir daha aramadı."
+      "expire_note": "B2B_EV_RISK_EXPIRED"
     },
     "en": {
       "title": "B2B_EV_RISK_TITLE",
-      "body": "{seam:musteri.complaint_voice}",
+      "body": "{customer} on the line.\n\n\"{seam:musteri.risk_voice}\"",
       "options": {
         "promise_it": "B2B_CHOICE_PROMISE",
         "stall": "B2B_CHOICE_STALL",
@@ -157,7 +164,7 @@
         "stall": "B2B_LOCK_STALL_CAP",
         "discount": "B2B_DISCOUNT_SPENT_DESC"
       },
-      "expire_note": "{customer} did not call again."
+      "expire_note": "B2B_EV_RISK_EXPIRED"
     }
   },
   "_r8a_note": "A non-critical interrupt is demotable (§13.2), and a demoted card lands on the desk with a clock — which is the only reason paper is a safe floor for I4. So it carries the paper trio even though it usually renders as an interrupt.",
@@ -173,5 +180,6 @@
   "expire_note": "expire_note",
   "trigger": {
     "signal": "customer_health_changed"
-  }
+  },
+  "_revision_2026_09": "Body speaks the CAUSE of the Risk (musteri.risk_voice) instead of the sector outage line on every account. The promise row gained the pain_buildable lock: a word about a step nobody can build yet was 241 of the probe's broken promises. The feature id sentinel 'pain' is now resolved by the effect. Stall's cost moved from brand to reputation: stalling one account is a private credibility cost, like the discount's, not a market-facing one. At −1 brand per stall it was the second largest brand drain in the probe (21 stalls in 40 days), and brand has no faucet outside prestige signings."
 }

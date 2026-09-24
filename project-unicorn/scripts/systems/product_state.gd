@@ -59,6 +59,23 @@ static func product_name() -> String:
 	return String(GameState.get_flag("mvp_product_name", ""))
 
 
+## Is this feature live in the product? The ONE answer for both catalogues: a flat
+## feature id (the retired saas_* pools, still used by fixtures) is live when it sits
+## in `mvp_components`; a LINE STEP id is live when its line has reached the step's
+## tier. Before this existed every reader asked `mvp_components` only — and a line
+## product never writes step ids there, so no promise about a line step could ever be
+## kept (Event revision 2026-09, finding 1).
+static func is_feature_live(feature_id: String) -> bool:
+	if feature_id == "":
+		return false
+	if (GameState.get_flag("mvp_components", []) as Array).has(feature_id):
+		return true
+	var s: Dictionary = ProductLines.step(feature_id)
+	if s.is_empty():
+		return false
+	return line_tier(String(s.get("line_id", ""))) >= int(s.get("tier", ProductLines.TIER_MAX + 1))
+
+
 # ------------------------------------------------------- §12 line tiers
 
 ## {line_id: 0|1|2|3}. A line absent from the dictionary is empty.

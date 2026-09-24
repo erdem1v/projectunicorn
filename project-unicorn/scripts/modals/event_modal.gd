@@ -479,6 +479,21 @@ func _retain_discount_delta(m: Dictionary) -> int:
 	return -int(round(float(c.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT))
 
 
+## Seats and MRR the expansion will add, computed the way `b2b_expand` computes them
+## (effects.gd → B2BSalesSystem.expand). The card JSON carries neither number, so reading
+## `add_seats`/`per_seat_mrr` off the effect showed "+0 · +$0" on every expansion card
+## (Event revision 2026-09) — the discount chip's bug, on the positive side.
+func _expand_preview(m: Dictionary) -> Vector2i:
+	var seats: int = int(m.get("add_seats", 0))
+	var c: Customer = _bound_customer()
+	if seats <= 0 and c != null:
+		seats = B2BConstants.expansion_seats(c.company_size)
+	var rate: int = int(m.get("per_seat_mrr", 0))
+	if rate <= 0:
+		rate = c.seat_price if c != null and c.seat_price > 0 else B2BConstants.EXPANSION_PER_SEAT_MRR
+	return Vector2i(seats, seats * rate)
+
+
 ## The account this card is about, from the card's own frozen scope binding. A card with no
 ## customer slot returns null and every preview that needs one stays silent rather than
 ## guessing at whichever account happens to be first in the book.
@@ -654,9 +669,8 @@ func _describe_modifier(m) -> Dictionary:
 		"b2b_cs_promise_honor": return {"text": tr("EFFECT_PROMISE_HONOR"), "kind": &"accent"}
 		"b2b_cs_promise_refuse": return {"text": tr("EFFECT_PROMISE_REFUSE"), "kind": &"negative"}
 		"b2b_expand":
-			var es: int = int(m.get("add_seats", 0))
-			var em: int = es * int(m.get("per_seat_mrr", 0))
-			return {"text": tr("EFFECT_EXPAND").format({"seats": es, "mrr": _fmt_money_delta(em)}), "kind": &"positive"}
+			var ev: Vector2i = _expand_preview(m)
+			return {"text": tr("EFFECT_EXPAND").format({"seats": ev.x, "mrr": _fmt_money_delta(ev.y)}), "kind": &"positive"}
 		"b2b_expand_decline": return {"text": tr("EFFECT_NO_CHANGE"), "kind": &"neutral"}
 		# --- Effects that MOVE THE PLAYER OR THE RUN. None of these had a label, because none
 		#     of them was reachable from a card before the engine made cards the only surface.

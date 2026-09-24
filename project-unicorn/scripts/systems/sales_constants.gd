@@ -173,6 +173,11 @@ const PRICE_BREAK_SIGNING_DISCOUNT := 0.15 # [K] the permanent trace a broken ba
 const WEEKLY_SUMMARY_INTERVAL_DAYS := 7    # [ÇALIŞMA]
 const WEEKLY_SUMMARY_CARD_ID := "sales.weekly_summary"
 const TICKER_NEWSWORTHY_STAR := 3          # [ÇALIŞMA] a 3★ signing is news
+# §7.3 "Prestij: haber değeri VE MARKA ETKİSİ". A newsworthy signing (whale, above the
+# company's league, or the run's first 3★) reached the ticker but never the brand, which left
+# brand with no faucet at all outside a handful of cards while churn, broken words and VC
+# rejections all drain it — and brand ≥ 25 is part of the Series A door (Event revision 2026-09).
+const PRESTIGE_SIGNING_BRAND := 3           # [ÇALIŞMA]
 
 
 # ============================ §8 · Whale ====================================

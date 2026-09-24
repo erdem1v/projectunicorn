@@ -521,7 +521,8 @@ static func on_promise_resolved(p: Promise) -> void:
 			# brand takes a hit, and a future "Söz ver" is less credible with them.
 			if c != null:
 				CustomerRegistry.set_satisfaction(c.id, c.satisfaction + B2BConstants.PROMISE_BROKEN_SAT)
-				CustomerRegistry.set_tolerance(c.id, c.tolerance + B2BConstants.PROMISE_BROKEN_TOLERANCE)
+				CustomerRegistry.set_tolerance(c.id, mini(c.tolerance + B2BConstants.PROMISE_BROKEN_TOLERANCE,
+					B2BConstants.seed_tolerance(c.scale, c.industry) + B2BConstants.PROMISE_TOLERANCE_CEILING))
 				# THE DURABLE HALF. Without this the -20 above is walked back by SAT_DRIFT_STEP
 				# within a week and a broken word leaves no trace at all.
 				CustomerRegistry.set_trust_offset(c.id, c.trust_offset + B2BConstants.PROMISE_BROKEN_OFFSET)
@@ -540,6 +541,11 @@ static func on_promise_resolved(p: Promise) -> void:
 static func pick_pain_feature(sub_id: String, index: int) -> String:
 	if sub_id == "":
 		return ""
+	# LINE MODEL (Ürün rev 6.1 §12). The playable B2B subtype (erp) has no flat pool, so
+	# before this branch every erp account was born with NO pain: the promise row was
+	# locked on every card, and the only thing that ever saved an account was a discount.
+	if ProductLines.has_subtype(sub_id):
+		return _pick_line_pain(sub_id, index)
 	var pool: Array = ProductCatalog.get_feature_pool(sub_id)
 	if pool.is_empty():
 		return ""
@@ -556,3 +562,66 @@ static func pick_pain_feature(sub_id: String, index: int) -> String:
 	# Every feature in the pool is already live: this account has nothing left to want.
 	# "" is the honest answer and the existing no-pain contract everywhere downstream.
 	return ""
+
+
+## An account on a line product wants THE NEXT STEP of one of the product's lines: the
+## thing a real customer asks for is "the bit after what you have". Steps the company can
+## already build (LineGates open) are preferred, so a promise is a schedule question and
+## not a trap; a gated step is only chosen when nothing open is left. Deterministic by
+## `index`, like the flat picker, so two accounts signed the same day differ.
+static func _pick_line_pain(sub_id: String, index: int) -> String:
+	# Wants CLUSTER, the way real requests do: first the next step on a line the product
+	# already has, lowest tier first; only then the opening step of a line it lacks. One
+	# version that ships the common ask therefore keeps several accounts' words at once.
+	var best_rank: int = 999
+	var open_steps: Array[String] = []
+	var gated_steps: Array[String] = []
+	for raw_line in ProductLines.line_ids(sub_id):
+		var line_id: String = String(raw_line)
+		var have: int = ProductState.line_tier(line_id)
+		var nxt: Dictionary = ProductLines.step_at(line_id, have + 1)
+		if nxt.is_empty():
+			continue
+		var sid: String = String(nxt.get("id", ""))
+		if not LineGates.is_unlocked(sid):
+			gated_steps.append(sid)
+			continue
+		# rank: existing lines by the tier they would reach, unopened lines after them all
+		var rank: int = int(nxt.get("tier", 1)) if have > 0 else 10
+		if rank < best_rank:
+			best_rank = rank
+			open_steps.clear()
+		if rank == best_rank:
+			open_steps.append(sid)
+	var pick_from: Array[String] = open_steps if not open_steps.is_empty() else gated_steps
+	if pick_from.is_empty():
+		return ""
+	return pick_from[absi(index) % pick_from.size()]
+
+
+## What an account in Risk actually says, chosen by WHY it is in Risk (Event revision
+## 2026-09). The retention card used to speak the sector's outage line whatever the cause,
+## so an account soured by a broken promise complained about crashes that were not
+## happening. Three causes, in the order a customer would lead with them: a word you
+## broke, a product that is visibly failing, a product that has stopped being enough.
+const RISK_VOICE_SHORT_KEYS := ["B2B_RISK_VOICE_SHORT_1", "B2B_RISK_VOICE_SHORT_2", "B2B_RISK_VOICE_SHORT_3"]
+
+static func risk_voice(c: Customer) -> String:
+	if c == null:
+		return ""
+	if GameState.get_flag("b2b_broke_%s" % c.id, false):
+		return TranslationServer.translate("B2B_RISK_VOICE_BROKEN")
+	if ProductState.bugs_confirmed() > B2BConstants.COMPLAINT_BUG_GATE or InfraSystem.is_over_capacity():
+		return B2BConstants.complaint_voice(c.industry)
+	return TranslationServer.translate(RISK_VOICE_SHORT_KEYS[absi(c.id.hash()) % RISK_VOICE_SHORT_KEYS.size()])
+
+
+## After a ship, an account whose wish just went live wants the next thing. Called by
+## PromiseRegistry AFTER it has resolved the promises the ship kept, so the kept promise
+## is credited against the old wish before the account forms a new one.
+static func refresh_pains_after_ship() -> void:
+	var sub_id: String = ProductState.subtype()
+	for c in CustomerRegistry.get_all():
+		if c.pain_feature_id == "" or not ProductState.is_feature_live(c.pain_feature_id):
+			continue
+		CustomerRegistry.set_pain_feature(c.id, pick_pain_feature(sub_id, c.scale + GameState.day))
