@@ -2,7 +2,7 @@
 
 **Tarih:** 2026-09-25
 **Hazırlayan:** cloud session `session_0146DLacrL6e3fwgmsioUrss`
-**Sahip:** Erdem
+**Sahip:** Erdem · **Lokal tur (2026-09-25):** yapılanlar, ölçümler ve onay bekleyenler `RAPOR_LOKAL_2026-09-25.md`'de; §D tasarım notu `docs/design/SONLAR_GAZETE_MODLAR.md`.
 
 Bu belge tek başına yeterli olacak şekilde yazıldı. Başlamadan önce `CLAUDE.md`'yi okumalısın, çünkü bu devirle birlikte iki kalıcı kural değişti (bkz. §F). Aynı klasördeki diğer dosyalar:
 
@@ -40,7 +40,7 @@ Bu belge tek başına yeterli olacak şekilde yazıldı. Başlamadan önce `CLAU
   - `save_migration_v7_to_v8`: v7 fixture'ı `SAVE_ERR_TOO_OLD` ile reddediliyor.
   - `trait_migration_real_load`: v5 fixture'ı `SAVE_ERR_TOO_OLD` ile reddediliyor.
 - İkisinin de sebebi aynı: fixture'lar `MIN_LOADABLE_VERSION` 10'un altında kalıyor. Bu task'tan önce de kırmızıydılar; test eskimiş.
-- `fc58e7c` tam smoke'la koşulmadı. Yalnız 8 hedefli vaka geçti: `loc_csv_integrity`, `seed_table_levers_and_final_offer`, `patience_zero_locks_pushes`, `leverage_bonus_applies_and_shows`, `hunt_offer_lifecycle`, `table_walk_not_a_rejection`, `seed_table_walk_is_locked`, `table_sign_closes_series_a`.
+- **Lokal (2026-09-25): `fc58e7c` tam smoke 340/342, cloud'la aynı (bkz. `RAPOR_LOKAL_2026-09-25.md`).** Cloud'da `fc58e7c` tam smoke'la koşulmamıştı. Yalnız 8 hedefli vaka geçmişti: `loc_csv_integrity`, `seed_table_levers_and_final_offer`, `patience_zero_locks_pushes`, `leverage_bonus_applies_and_shows`, `hunt_offer_lifecycle`, `table_walk_not_a_rejection`, `seed_table_walk_is_locked`, `table_sign_closes_series_a`.
 - `--event-lint` PASS (43 kart), `loc_residue` temiz.
 
 ### 10 maddelik kontrolün özeti
@@ -74,10 +74,10 @@ Ayrıntısı ve kanıtları `PUSH_ONCESI_KONTROL.md`'de.
 | # | Madde | Durum | Yapılacak |
 |---|---|---|---|
 | 1 | Seed masasında board itilemez; satır kilitli görünür | ✅ `fc58e7c` (`_lever_locked`, `SEED_BOARD_LOCKED`; smoke vakası genişletildi) | Yok. Görsel kontrol: seed masasında board satırı sebebini yazıyor mu? |
-| 2 | Series A yolu kapanınca Av sekmesinde düz bir bilgi satırı | ✅ `fc58e7c` (`VCPitchSystem.series_a_road_closed()`, `HUNT_ROAD_CLOSED`) | **Smoke vakası yok, bir tane ekle:** dört fonu kapat ve canlı teklif bırakma; fonksiyon true dönmeli. Görsel kontrol. |
-| 3 | `TERM_INV_*` 15 satır: önce TR yazılır (çeviri değil); EN ondan bağımsız İngilizce yazılır | ⚠️ Yarım. TR `fc58e7c`'de yeniden yazıldı; **EN eski (TR'den önce yazılmış) hâliyle duruyor.** | 15 satırın EN'sini, yeni TR'nin sahnesinden bağımsız, doğal İngilizce olarak yeniden yaz. TR'yi sahibin onayı olmadan değiştirme. Commit mesajına "TR/EN onay bekliyor" yaz. Anahtarlar: `TERM_INV_RELAXED_1/2`, `TERM_INV_TENSE_1/2`, `TERM_INV_OUT_ANCHOR/NEXUS/BOSPHORUS/MERIDIAN/GENERIC`, `TERM_INV_FINAL`, `TERM_INV_WALKOUT`, `TERM_INV_OTHER_MATCH/CONDITION/HOLD/WALK`. |
+| 2 | Series A yolu kapanınca Av sekmesinde düz bir bilgi satırı | ✅ `fc58e7c` (`VCPitchSystem.series_a_road_closed()`, `HUNT_ROAD_CLOSED`) | **Lokal: ✅ `1695cf9` (`series_a_road_closed_when_all_funds_close`); görsel kontrol bekliyor.** Eski not: smoke vakası yok, bir tane ekle: dört fonu kapat ve canlı teklif bırakma; fonksiyon true dönmeli. Görsel kontrol. |
+| 3 | `TERM_INV_*` 15 satır: önce TR yazılır (çeviri değil); EN ondan bağımsız İngilizce yazılır | ⚠️ Yarım. TR `fc58e7c`'de yeniden yazıldı; **EN eski (TR'den önce yazılmış) hâliyle duruyor.** | **Lokal: ✅ EN `8457ce3`; TR/EN onay bekliyor.** Eski not: 15 satırın EN'sini, yeni TR'nin sahnesinden bağımsız, doğal İngilizce olarak yeniden yaz. TR'yi sahibin onayı olmadan değiştirme. Commit mesajına "TR/EN onay bekliyor" yaz. Anahtarlar: `TERM_INV_RELAXED_1/2`, `TERM_INV_TENSE_1/2`, `TERM_INV_OUT_ANCHOR/NEXUS/BOSPHORUS/MERIDIAN/GENERIC`, `TERM_INV_FINAL`, `TERM_INV_WALKOUT`, `TERM_INV_OTHER_MATCH/CONDITION/HOLD/WALK`. |
 | 4 | K7 sonrası yanlış Frank satırı engellensin (yeni satır yazılmaz) | ✅ `fc58e7c` (`_frank_line` içinde `OTHER_SHOWN` dalı) | Yok. |
-| 5 | Anchor'ın E uyumunu büyümeye çevirmek | ❌ **REDDEDİLDİ ama `fc58e7c`'de uygulanmış.** | **Geri al.** Bu konu D9'da ele alınacak. `term_sheet_table_system.gd`: `E_FIT_METRICS_GROWTH` sabitini ve `_domain_fit` içindeki `"metrics"` dalının ilk satırlarını `de6ab7f` hâline döndür (aşağıdaki kod). Sabitin açıklama yorumu da eski hâline döner. |
+| 5 | Anchor'ın E uyumunu büyümeye çevirmek | ❌ **REDDEDİLDİ ama `fc58e7c`'de uygulanmış.** | **Lokal: ✅ geri alındı, `86e33eb`.** Eski not: geri al. Bu konu D9'da ele alınacak. `term_sheet_table_system.gd`: `E_FIT_METRICS_GROWTH` sabitini ve `_domain_fit` içindeki `"metrics"` dalının ilk satırlarını `de6ab7f` hâline döndür (aşağıdaki kod). Sabitin açıklama yorumu da eski hâline döner. |
 | 6 | `presenter.gd:246` ve `tuning.gd:14`'teki "yedi gün" yorumları | ✅ `fc58e7c` | Yok. |
 
 Madde 5 için döndürülecek kod (`de6ab7f` hâli):
@@ -95,7 +95,7 @@ const E_FIT_METRICS_MRR := 6        # Anchor: MRR at/above the room's MRR refere
 
 ### EK
 
-**E1. Eski v12 save smoke vakası.**
+**E1. Eski v12 save smoke vakası.** **Lokal: ✅ `1695cf9` (`legacy_v12_save_opens_live_table`).**
 - Yeni bir smoke vakası ekle: yeni alanları taşımayan bir v12 save yüklensin. Bu alanlar: `TermSheet.conviction`, `vc_states[*].sheet_conviction`, `vc_states[*].move_penalty`, `vc_meeting_cancel_day`, `vc_last_meeting_rejected`, `vc_frank_cold_shown`.
 - Save'de canlı bir Series A teklifi olsun; masa açılsın.
 - Beklenenler:
@@ -104,7 +104,7 @@ const E_FIT_METRICS_MRR := 6        # Anchor: MRR at/above the room's MRR refere
   - teklifin `expires_day`'i (eski 14 takvim günü) iş günü sayacıyla okunmalı ve negatif çıkmamalı.
 - Fixture'ı elle yazmak yerine: kaydet, JSON'dan bu anahtarları sil, yükle.
 
-**E2. İki eskimiş fixture testi.**
+**E2. İki eskimiş fixture testi.** **Lokal: öneri `RAPOR_LOKAL_2026-09-25.md`'de (emekliye ayır), karar bekliyor.**
 - Önce öneri yaz, **uygulamadan önce sahibe sor.**
 - Cloud önerisi: emekliye ayır. v5 ve v7 save'leri bilinçli olarak ölü (`MIN_LOADABLE_VERSION` 10, bilinçli bir karar). Yerine tek bir vaka: "`MIN_LOADABLE` altı bir save `SAVE_ERR_TOO_OLD` ile reddedilir ve yarım yüklenmez." Bu davranış zaten `engine_probe.gd:450` civarında sabitli; yenisi oraya ya da smoke'a gider.
 - Alternatif: fixture'ları v10+ olarak yeniden üretmek. Ama o zaman test, adındaki göçü (v7→v8) artık test etmez.

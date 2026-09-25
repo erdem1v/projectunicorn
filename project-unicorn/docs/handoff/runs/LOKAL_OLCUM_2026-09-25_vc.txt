@@ -1,0 +1,531 @@
+## seed=1 policy=naive
+PROBE VC_BOOK day=306 fund=anchor meet_day=309 meetings=1 rejections=0 mrr=121065 brand=0
+PROBE VC_MEET day=309 fund=anchor n=1 conv0=28 path=b1_read:28>28,b2_metrik:28>23,b3_durust:23>15,b4_leave:15>end result=rejected sheet_conv=-1 rejections=1 brand=0
+PROBE VC_BOOK day=310 fund=nexus meet_day=313 meetings=1 rejections=1 mrr=123657 brand=0
+PROBE VC_MEET day=313 fund=nexus n=1 conv0=28 path=b1_read:28>28,b2_traction:28>23,b3_durust:23>15,b4_leave:15>end result=rejected sheet_conv=-1 rejections=2 brand=0
+PROBE VC_BOOK day=314 fund=bosphorus meet_day=317 meetings=1 rejections=2 mrr=125445 brand=0
+PROBE VC_MEET day=317 fund=bosphorus n=1 conv0=40 path=b1_read:40>40,b2_traction:40>63,b3_durust:63>83,b4_ack:83>end result=offered sheet_conv=83 rejections=2 brand=0
+PROBE VC_TABLE_OPEN day=317 fund=bosphorus conv=83 fit=-2 e0=81 patience=2 thr=55 band=relaxed val_m=21 dil=18 board=1 veto=false
+PROBE VC_PUSH day=317 fund=bosphorus n=1 lever=board success=false e=68 patience=1 band=tense state=5
+PROBE VC_PUSH day=317 fund=bosphorus n=2 lever=dilution success=false e=58 patience=0 band=tense state=6
+PROBE VC_TABLE_END day=317 fund=bosphorus policy=naive outcome=SIGNED_FINAL e0=81 e_end=58 thr=55 pushes=2 wins=0 levers=bd patience_left=0 val_m=21 dil=18 board=1 veto=false money=3780000 rejections=2
+PROBE END day=317 run_active=false ending=series_a_close
+## seed=1 policy=cautious
+PROBE VC_BOOK day=306 fund=anchor meet_day=309 meetings=1 rejections=0 mrr=121065 brand=0
+PROBE VC_MEET day=309 fund=anchor n=1 conv0=28 path=b1_read:28>28,b2_metrik:28>23,b3_durust:23>15,b4_leave:15>end result=rejected sheet_conv=-1 rejections=1 brand=0
+PROBE VC_BOOK day=310 fund=nexus meet_day=313 meetings=1 rejections=1 mrr=123657 brand=0
+PROBE VC_MEET day=313 fund=nexus n=1 conv0=28 path=b1_read:28>28,b2_traction:28>23,b3_durust:23>15,b4_leave:15>end result=rejected sheet_conv=-1 rejections=2 brand=0
+PROBE VC_BOOK day=314 fund=bosphorus meet_day=317 meetings=1 rejections=2 mrr=125445 brand=0
+PROBE VC_MEET day=317 fund=bosphorus n=1 conv0=40 path=b1_read:40>40,b2_traction:40>63,b3_durust:63>83,b4_ack:83>end result=offered sheet_conv=83 rejections=2 brand=0
+PROBE VC_TABLE_OPEN day=317 fund=bosphorus conv=83 fit=-2 e0=81 patience=2 thr=55 band=relaxed val_m=21 dil=18 board=1 veto=false
+PROBE VC_TABLE_END day=317 fund=bosphorus policy=cautious outcome=SIGNED_NO_FINAL e0=81 e_end=81 thr=55 pushes=0 wins=0 levers= patience_left=2 val_m=21 dil=18 board=1 veto=false money=3780000 rejections=2
+PROBE END day=317 run_active=false ending=series_a_close
+## seed=2 policy=naive
+PROBE VC_BOOK day=358 fund=anchor meet_day=361 meetings=1 rejections=0 mrr=121655 brand=21
+PROBE VC_MEET day=361 fund=anchor n=1 conv0=28 path=b1_read:28>28,b2_metrik:28>23,b3_durust:23>15,b4_leave:15>end result=rejected sheet_conv=-1 rejections=1 brand=18
+PROBE VC_BOOK day=362 fund=nexus meet_day=365 meetings=1 rejections=1 mrr=122929 brand=18
+PROBE VC_MEET day=365 fund=nexus n=1 conv0=28 path=b1_read:28>28,b2_traction:28>53,b3_durust:53>45,b4_zorla:45>45,b4_close:45>end result=rejected sheet_conv=-1 rejections=2 brand=15
+PROBE VC_BOOK day=366 fund=bosphorus meet_day=369 meetings=1 rejections=2 mrr=126137 brand=15
+PROBE VC_MEET day=369 fund=bosphorus n=1 conv0=40 path=b1_read:40>40,b2_traction:40>35,b3_durust:35>27,b4_leave:27>end result=rejected sheet_conv=-1 rejections=3 brand=12
+PROBE VC_BOOK day=370 fund=meridian meet_day=373 meetings=1 rejections=3 mrr=126437 brand=12
+PROBE VC_MEET day=373 fund=meridian n=1 conv0=36 path=b1_read:36>36,b2_metrik:36>61,b3_durust:61>81,b4_ack:81>end result=offered sheet_conv=81 rejections=3 brand=15
+PROBE VC_TABLE_OPEN day=373 fund=meridian conv=81 fit=-2 e0=79 patience=2 thr=55 band=relaxed val_m=27 dil=18 board=0 veto=false
+PROBE VC_PUSH day=373 fund=meridian n=1 lever=dilution success=false e=69 patience=1 band=tense state=5
+PROBE VC_PUSH day=373 fund=meridian n=2 lever=dilution success=false e=59 patience=0 band=tense state=6
+PROBE VC_TABLE_END day=373 fund=meridian policy=naive outcome=SIGNED_FINAL e0=79 e_end=59 thr=55 pushes=2 wins=0 levers=dd patience_left=0 val_m=27 dil=18 board=0 veto=false money=4860000 rejections=3
+PROBE END day=373 run_active=false ending=series_a_close
+## seed=2 policy=cautious
+PROBE VC_BOOK day=358 fund=anchor meet_day=361 meetings=1 rejections=0 mrr=121655 brand=21
+PROBE VC_MEET day=361 fund=anchor n=1 conv0=28 path=b1_read:28>28,b2_metrik:28>23,b3_durust:23>15,b4_leave:15>end result=rejected sheet_conv=-1 rejections=1 brand=18
+PROBE VC_BOOK day=362 fund=nexus meet_day=365 meetings=1 rejections=1 mrr=122929 brand=18
+PROBE VC_MEET day=365 fund=nexus n=1 conv0=28 path=b1_read:28>28,b2_traction:28>53,b3_durust:53>45,b4_zorla:45>45,b4_close:45>end result=rejected sheet_conv=-1 rejections=2 brand=15
+PROBE VC_BOOK day=366 fund=bosphorus meet_day=369 meetings=1 rejections=2 mrr=126137 brand=15
+PROBE VC_MEET day=369 fund=bosphorus n=1 conv0=40 path=b1_read:40>40,b2_traction:40>35,b3_durust:35>27,b4_leave:27>end result=rejected sheet_conv=-1 rejections=3 brand=12
+PROBE VC_BOOK day=370 fund=meridian meet_day=373 meetings=1 rejections=3 mrr=126437 brand=12
+PROBE VC_MEET day=373 fund=meridian n=1 conv0=36 path=b1_read:36>36,b2_metrik:36>61,b3_durust:61>81,b4_ack:81>end result=offered sheet_conv=81 rejections=3 brand=15
+PROBE VC_TABLE_OPEN day=373 fund=meridian conv=81 fit=-2 e0=79 patience=2 thr=55 band=relaxed val_m=27 dil=18 board=0 veto=false
+PROBE VC_TABLE_END day=373 fund=meridian policy=cautious outcome=SIGNED_NO_FINAL e0=79 e_end=79 thr=55 pushes=0 wins=0 levers= patience_left=2 val_m=27 dil=18 board=0 veto=false money=4860000 rejections=3
+PROBE END day=373 run_active=false ending=series_a_close
+## seed=3 policy=naive
+PROBE VC_BOOK day=288 fund=anchor meet_day=291 meetings=1 rejections=0 mrr=121733 brand=19
+PROBE VC_MEET day=291 fund=anchor n=1 conv0=29 path=b1_read:29>29,b2_metrik:29>24,b3_durust:24>16,b4_leave:16>end result=rejected sheet_conv=-1 rejections=1 brand=19
+PROBE VC_BOOK day=292 fund=nexus meet_day=295 meetings=1 rejections=1 mrr=128886 brand=19
+PROBE VC_MEET day=295 fund=nexus n=1 conv0=28 path=b1_read:28>28,b2_traction:28>23,b3_durust:23>15,b4_leave:15>end result=rejected sheet_conv=-1 rejections=2 brand=16
+PROBE VC_BOOK day=296 fund=bosphorus meet_day=299 meetings=1 rejections=2 mrr=129186 brand=16
+PROBE VC_MEET day=299 fund=bosphorus n=1 conv0=40 path=b1_read:40>40,b2_traction:40>35,b3_durust:35>27,b4_leave:27>end result=rejected sheet_conv=-1 rejections=3 brand=13
+PROBE VC_BOOK day=300 fund=meridian meet_day=303 meetings=1 rejections=3 mrr=131310 brand=13
+PROBE VC_MEET day=303 fund=meridian n=1 conv0=36 path=b1_read:36>36,b2_metrik:36>31,b3_durust:31>23,b4_leave:23>end result=rejected sheet_conv=-1 rejections=4 brand=10
+PROBE VC_TABLE_END day=304 fund=- policy=naive outcome=NO_TABLE reason=road_closed pushes=0 rejections=4
+PROBE END day=700 run_active=true ending=
+## seed=3 policy=cautious
+PROBE VC_BOOK day=288 fund=anchor meet_day=291 meetings=1 rejections=0 mrr=121733 brand=19
+PROBE VC_MEET day=291 fund=anchor n=1 conv0=29 path=b1_read:29>29,b2_metrik:29>24,b3_durust:24>16,b4_leave:16>end result=rejected sheet_conv=-1 rejections=1 brand=19
+PROBE VC_BOOK day=292 fund=nexus meet_day=295 meetings=1 rejections=1 mrr=128886 brand=19
+PROBE VC_MEET day=295 fund=nexus n=1 conv0=28 path=b1_read:28>28,b2_traction:28>23,b3_durust:23>15,b4_leave:15>end result=rejected sheet_conv=-1 rejections=2 brand=16
+PROBE VC_BOOK day=296 fund=bosphorus meet_day=299 meetings=1 rejections=2 mrr=129186 brand=16
+PROBE VC_MEET day=299 fund=bosphorus n=1 conv0=40 path=b1_read:40>40,b2_traction:40>35,b3_durust:35>27,b4_leave:27>end result=rejected sheet_conv=-1 rejections=3 brand=13
+PROBE VC_BOOK day=300 fund=meridian meet_day=303 meetings=1 rejections=3 mrr=131310 brand=13
+PROBE VC_MEET day=303 fund=meridian n=1 conv0=36 path=b1_read:36>36,b2_metrik:36>31,b3_durust:31>23,b4_leave:23>end result=rejected sheet_conv=-1 rejections=4 brand=10
+PROBE VC_TABLE_END day=304 fund=- policy=cautious outcome=NO_TABLE reason=road_closed pushes=0 rejections=4
+PROBE END day=700 run_active=true ending=
+## seed=4 policy=naive
+PROBE VC_BOOK day=443 fund=anchor meet_day=446 meetings=1 rejections=0 mrr=123064 brand=13
+PROBE VC_MEET day=446 fund=anchor n=1 conv0=28 path=b1_read:28>28,b2_metrik:28>53,b3_durust:53>45,b4_zorla:45>45,b4_close:45>end result=offered sheet_conv=45 rejections=0 brand=13
+PROBE VC_TABLE_OPEN day=446 fund=anchor conv=45 fit=0 e0=45 patience=3 thr=45 band=tense val_m=24 dil=22 board=1 veto=true
+PROBE VC_PUSH day=446 fund=anchor n=1 lever=dilution success=true e=42 patience=3 band=running_out state=4
+PROBE VC_PUSH day=446 fund=anchor n=2 lever=valuation success=false e=29 patience=2 band=running_out state=5
+PROBE VC_PUSH day=446 fund=anchor n=3 lever=dilution success=true e=26 patience=2 band=running_out state=4
+PROBE VC_PUSH day=446 fund=anchor n=4 lever=valuation success=true e=20 patience=2 band=running_out state=4
+PROBE VC_PUSH day=446 fund=anchor n=5 lever=board success=false e=10 patience=1 band=running_out state=5
+PROBE VC_PUSH day=446 fund=anchor n=6 lever=valuation success=false e=0 patience=0 band=running_out state=8
+PROBE VC_TABLE_END day=446 fund=anchor policy=naive outcome=FUND_WALKED e0=45 e_end=0 thr=45 pushes=6 wins=3 levers=dvdvbv patience_left=0 val_m=28 dil=14 board=1 veto=true money=- rejections=1
+PROBE END day=447 run_active=false ending=profitable_bootstrap
+## seed=4 policy=cautious
+PROBE VC_BOOK day=443 fund=anchor meet_day=446 meetings=1 rejections=0 mrr=123064 brand=13
+PROBE VC_MEET day=446 fund=anchor n=1 conv0=28 path=b1_read:28>28,b2_metrik:28>53,b3_durust:53>45,b4_zorla:45>45,b4_close:45>end result=offered sheet_conv=45 rejections=0 brand=13
+PROBE VC_TABLE_OPEN day=446 fund=anchor conv=45 fit=0 e0=45 patience=3 thr=45 band=tense val_m=24 dil=22 board=1 veto=true
+PROBE VC_TABLE_END day=446 fund=anchor policy=cautious outcome=SIGNED_NO_FINAL e0=45 e_end=45 thr=45 pushes=0 wins=0 levers= patience_left=3 val_m=24 dil=22 board=1 veto=true money=5280000 rejections=0
+PROBE END day=446 run_active=false ending=series_a_close
+## seed=5 policy=naive
+PROBE VC_BOOK day=262 fund=anchor meet_day=265 meetings=1 rejections=0 mrr=122075 brand=43
+PROBE VC_MEET day=265 fund=anchor n=1 conv0=38 path=b1_read:38>38,b2_metrik:38>33,b3_durust:33>53,b4_zorla:53>53,b4_close:53>end result=rejected sheet_conv=-1 rejections=1 brand=43
+PROBE VC_BOOK day=266 fund=nexus meet_day=269 meetings=1 rejections=1 mrr=126575 brand=43
+PROBE VC_MEET day=269 fund=nexus n=1 conv0=37 path=b1_read:37>37,b2_traction:37>54,b3_durust:54>74,b4_ack:74>end result=offered sheet_conv=74 rejections=1 brand=43
+PROBE VC_TABLE_OPEN day=269 fund=nexus conv=74 fit=10 e0=84 patience=4 thr=35 band=relaxed val_m=17 dil=15 board=0 veto=false
+PROBE VC_PUSH day=269 fund=nexus n=1 lever=valuation success=false e=74 patience=3 band=relaxed state=5
+PROBE VC_PUSH day=269 fund=nexus n=2 lever=dilution success=true e=68 patience=3 band=relaxed state=4
+PROBE VC_PUSH day=269 fund=nexus n=3 lever=dilution success=false e=51 patience=2 band=tense state=5
+PROBE VC_PUSH day=269 fund=nexus n=4 lever=valuation success=false e=41 patience=1 band=tense state=5
+PROBE VC_PUSH day=269 fund=nexus n=5 lever=dilution success=false e=24 patience=0 band=running_out state=8
+PROBE VC_TABLE_END day=269 fund=nexus policy=naive outcome=FUND_WALKED e0=84 e_end=24 thr=35 pushes=5 wins=1 levers=vddvd patience_left=0 val_m=17 dil=11 board=0 veto=false money=- rejections=2
+PROBE END day=270 run_active=false ending=profitable_bootstrap
+## seed=5 policy=cautious
+PROBE VC_BOOK day=262 fund=anchor meet_day=265 meetings=1 rejections=0 mrr=122075 brand=43
+PROBE VC_MEET day=265 fund=anchor n=1 conv0=38 path=b1_read:38>38,b2_metrik:38>33,b3_durust:33>53,b4_zorla:53>53,b4_close:53>end result=rejected sheet_conv=-1 rejections=1 brand=43
+PROBE VC_BOOK day=266 fund=nexus meet_day=269 meetings=1 rejections=1 mrr=126575 brand=43
+PROBE VC_MEET day=269 fund=nexus n=1 conv0=37 path=b1_read:37>37,b2_traction:37>54,b3_durust:54>74,b4_ack:74>end result=offered sheet_conv=74 rejections=1 brand=43
+PROBE VC_TABLE_OPEN day=269 fund=nexus conv=74 fit=10 e0=84 patience=4 thr=35 band=relaxed val_m=17 dil=15 board=0 veto=false
+PROBE VC_TABLE_END day=269 fund=nexus policy=cautious outcome=SIGNED_NO_FINAL e0=84 e_end=84 thr=35 pushes=0 wins=0 levers= patience_left=4 val_m=17 dil=15 board=0 veto=false money=2550000 rejections=1
+PROBE END day=269 run_active=false ending=series_a_close
+## replay sums (per seed, per fund)
+seed=1 PROBE VC_REPLAY_SUM day=317 fund=anchor n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=70 fit=0 thr=45
+seed=1 PROBE VC_REPLAY_SUM day=317 fund=nexus n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=35
+seed=1 PROBE VC_REPLAY_SUM day=317 fund=bosphorus n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=55
+seed=1 PROBE VC_REPLAY_SUM day=317 fund=meridian n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=55
+seed=2 PROBE VC_REPLAY_SUM day=373 fund=anchor n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=70 fit=0 thr=45
+seed=2 PROBE VC_REPLAY_SUM day=373 fund=nexus n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=80 fit=10 thr=35
+seed=2 PROBE VC_REPLAY_SUM day=373 fund=bosphorus n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=55
+seed=2 PROBE VC_REPLAY_SUM day=373 fund=meridian n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=55
+seed=3 PROBE VC_REPLAY_SUM day=304 fund=anchor n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=70 fit=0 thr=45
+seed=3 PROBE VC_REPLAY_SUM day=304 fund=nexus n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=80 fit=10 thr=35
+seed=3 PROBE VC_REPLAY_SUM day=304 fund=bosphorus n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=55
+seed=3 PROBE VC_REPLAY_SUM day=304 fund=meridian n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=55
+seed=4 PROBE VC_REPLAY_SUM day=446 fund=anchor n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=70 fit=0 thr=45
+seed=4 PROBE VC_REPLAY_SUM day=446 fund=nexus n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=80 fit=10 thr=35
+seed=4 PROBE VC_REPLAY_SUM day=446 fund=bosphorus n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=55
+seed=4 PROBE VC_REPLAY_SUM day=446 fund=meridian n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=55
+seed=5 PROBE VC_REPLAY_SUM day=269 fund=anchor n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=70 fit=0 thr=45
+seed=5 PROBE VC_REPLAY_SUM day=269 fund=nexus n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=80 fit=10 thr=35
+seed=5 PROBE VC_REPLAY_SUM day=269 fund=bosphorus n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=55
+seed=5 PROBE VC_REPLAY_SUM day=269 fund=meridian n=20 final=0 walked=20 exhausted=0 walk_pct=100.0 e0=68 fit=-2 thr=55
+## replays (every table)
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=0 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=dbbb e_end=29
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=1 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=dbvvvb e_end=18
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=2 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=dbbddv e_end=20
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=3 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=bvbb e_end=26
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=4 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=dvbbvb e_end=21
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=5 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=3 wins=0 levers=bbb e_end=40
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=6 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=bdddd e_end=22
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=7 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=ddbvd e_end=27
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=8 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=dvdvvb e_end=22
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=9 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=bbdd e_end=33
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=10 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=3 wins=0 levers=bdv e_end=37
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=11 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=7 wins=4 levers=vdvvdvv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=12 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=vdbdd e_end=27
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=13 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=dddv e_end=26
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=14 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=dddvv e_end=16
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=15 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=3 wins=0 levers=dbb e_end=40
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=16 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=dbbd e_end=33
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=17 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=dddb e_end=37
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=18 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=3 wins=0 levers=bdb e_end=40
+seed=1 PROBE VC_REPLAY day=317 fund=anchor i=19 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=vbdvd e_end=24
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=10 wins=6 levers=ddvddvvvvv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=8 wins=4 levers=vdvvvddd e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=6 wins=2 levers=dvvdvd e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=9 wins=5 levers=ddvvvvvdd e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=9 wins=5 levers=vdvvdvdvv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=6 wins=2 levers=vvdddv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=5 wins=1 levers=ddddd e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=6 wins=2 levers=dddvvd e_end=10
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=10 wins=6 levers=vddvvvvvvv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=7 wins=3 levers=vvvvddv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=9 wins=5 levers=ddvvvvvvv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=6 wins=2 levers=vvdddd e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=6 wins=2 levers=ddddvd e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=7 wins=3 levers=dddvvvd e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=6 wins=2 levers=dvvddd e_end=10
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=9 wins=5 levers=dddvvvvvv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=4 wins=0 levers=dddd e_end=16
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=5 wins=1 levers=ddvdd e_end=13
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=7 wins=3 levers=vvvdvdd e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=nexus i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=35 pushes=9 wins=5 levers=vvddvvvvd e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vvvb e_end=31
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bd e_end=45
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bb e_end=42
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=9 wins=7 levers=vdvbddvvv e_end=8
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=vb e_end=45
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=bdv e_end=42
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=bvdv e_end=35
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=dvbvvd e_end=21
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=dvbvd e_end=32
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=bddv e_end=39
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=vd e_end=48
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=dvvbb e_end=33
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vbvd e_end=35
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=dbd e_end=42
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddb e_end=42
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=bvvd e_end=35
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=bvvvv e_end=20
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bv e_end=45
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vbvv e_end=31
+seed=1 PROBE VC_REPLAY day=317 fund=bosphorus i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bd e_end=45
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vvd e_end=35
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=7 wins=5 levers=ddvvvvv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=dvd e_end=42
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=7 wins=5 levers=vddvvvv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=7 wins=5 levers=vdvvdvd e_end=17
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=vvvddd e_end=19
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vvdvv e_end=15
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=vd e_end=45
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=dvvvv e_end=15
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=vdvdvd e_end=19
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vddvd e_end=25
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=7 wins=5 levers=vvvddvv e_end=0
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=dvvv e_end=25
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddd e_end=37
+seed=1 PROBE VC_REPLAY day=317 fund=meridian i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vdd e_end=42
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=0 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=11 wins=8 levers=bdvbvvvdvvd e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=1 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=bddv e_end=30
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=2 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=bdvb e_end=34
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=3 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=vdddb e_end=27
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=4 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=bbvb e_end=30
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=5 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=ddbb e_end=33
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=6 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=dbvddd e_end=20
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=7 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=7 wins=4 levers=vvbdvdv e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=8 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=7 wins=4 levers=ddddvbd e_end=9
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=9 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=vvdbvb e_end=18
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=10 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=dvdb e_end=34
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=11 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=dvdbd e_end=27
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=12 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=bvdb e_end=34
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=13 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=dvbvb e_end=28
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=14 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=9 wins=6 levers=bvvbdbbvd e_end=5
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=15 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=7 wins=4 levers=dvdvddb e_end=10
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=16 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=bvvdbd e_end=21
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=17 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=9 wins=6 levers=dddbdvvbb e_end=4
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=18 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=9 wins=6 levers=ddvbvdvvv e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=anchor i=19 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=vvvddd e_end=6
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=0 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=vdvvdv e_end=12
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=1 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=vdvvdvd e_end=2
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=2 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=10 wins=6 levers=vvddvvvvvv e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=3 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=vvdddvv e_end=6
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=4 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=vvddd e_end=24
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=5 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=vvdvdd e_end=9
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=6 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=vddvvvd e_end=2
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=7 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=dvddvvv e_end=6
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=8 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=dvddvvd e_end=19
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=9 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=vdvvdvvv e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=10 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=ddddd e_end=6
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=11 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=9 wins=5 levers=vdvdddvvv e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=12 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=dvvvdd e_end=25
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=13 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=4 wins=0 levers=vdvd e_end=34
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=14 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=vvvvvdvd e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=15 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=dvvvddd e_end=3
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=16 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=4 wins=0 levers=dddv e_end=31
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=17 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=dvddvdvv e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=18 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=9 wins=5 levers=ddvvvvvvv e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=nexus i=19 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=vdddvdd e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=db e_end=45
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vbdd e_end=35
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bd e_end=45
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dv e_end=48
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vdbdd e_end=28
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=bvvdvv e_end=21
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vdvdb e_end=36
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=dvd e_end=45
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vdvv e_end=34
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=dbvd e_end=35
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=8 wins=6 levers=vdvbvvvv e_end=3
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vbb e_end=39
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=dvvvvv e_end=20
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=9 wins=7 levers=ddvbvvbvv e_end=5
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vddvv e_end=27
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=vbvddv e_end=25
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vvdvb e_end=36
+seed=2 PROBE VC_REPLAY day=373 fund=bosphorus i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=bvd e_end=42
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=ddvdvv e_end=19
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vddd e_end=35
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=vd e_end=45
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=dvvvv e_end=11
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vdvd e_end=28
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=dddvv e_end=29
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vdvv e_end=25
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=7 wins=5 levers=vdvdvvv e_end=0
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dv e_end=45
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=vd e_end=45
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=dvdvvv e_end=12
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=dvvd e_end=32
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vvvv e_end=14
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vdvd e_end=36
+seed=2 PROBE VC_REPLAY day=373 fund=meridian i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=0 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=ddvbb e_end=27
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=1 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=bbdb e_end=33
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=2 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=7 wins=4 levers=dvbdvvb e_end=15
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=3 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=dvvvv e_end=14
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=4 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=bbdb e_end=29
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=5 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=dvdbbd e_end=20
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=6 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=8 wins=5 levers=bbbddvvd e_end=7
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=7 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=3 wins=0 levers=bdb e_end=40
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=8 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=8 wins=5 levers=bvbdvvdb e_end=16
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=9 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=vvvbd e_end=17
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=10 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=dvdvbb e_end=25
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=11 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=bbbbdd e_end=27
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=12 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=9 wins=6 levers=vddbvvvdv e_end=0
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=13 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=vvbdb e_end=28
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=14 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=vdbd e_end=30
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=15 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=bvbd e_end=34
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=16 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=vbbbb e_end=19
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=17 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=bbbvb e_end=19
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=18 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=bbdvd e_end=27
+seed=3 PROBE VC_REPLAY day=304 fund=anchor i=19 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=bvdvvd e_end=14
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=0 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=ddvvdv e_end=17
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=1 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=dvdvdv e_end=9
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=2 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=vvdvvvvd e_end=0
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=3 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=dvddvvd e_end=11
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=4 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=ddddvvv e_end=7
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=5 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=dvvvvv e_end=15
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=6 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=ddvdd e_end=25
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=7 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=dvvddv e_end=9
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=8 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=vdddd e_end=25
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=9 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=ddvvvd e_end=13
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=10 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=9 wins=5 levers=vddvdvdvv e_end=0
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=11 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=ddvvd e_end=28
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=12 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=dvdvdvvd e_end=0
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=13 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=ddddd e_end=6
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=14 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=10 wins=6 levers=ddvvvvvvvv e_end=0
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=15 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=dvvvv e_end=22
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=16 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=dvvdvvvv e_end=0
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=17 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=4 wins=0 levers=dddd e_end=28
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=18 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=vdvdd e_end=24
+seed=3 PROBE VC_REPLAY day=304 fund=nexus i=19 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=dvdvddv e_end=3
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=vb e_end=45
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vvb e_end=38
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vbv e_end=38
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=bvdvd e_end=36
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bv e_end=45
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vbbv e_end=32
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vvdv e_end=34
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vbvdd e_end=36
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=dvvd e_end=34
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vvd e_end=41
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bb e_end=42
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=7 wins=5 levers=vbddvvv e_end=18
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddd e_end=37
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=8 wins=6 levers=bvvdvvdv e_end=3
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vbdb e_end=36
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vbvb e_end=36
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=bdd e_end=38
+seed=3 PROBE VC_REPLAY day=304 fund=bosphorus i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=ddvb e_end=35
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vvvd e_end=29
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=vvdvdd e_end=23
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vdv e_end=35
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vvd e_end=35
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=dvd e_end=42
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=dvd e_end=42
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vvd e_end=35
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=dvv e_end=35
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddv e_end=42
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=dvvdd e_end=25
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=vv e_end=42
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vvvvv e_end=4
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vdv e_end=39
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=dvvdd e_end=25
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vvv e_end=28
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=dvdd e_end=31
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=ddvd e_end=31
+seed=3 PROBE VC_REPLAY day=304 fund=meridian i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=0 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=3 wins=0 levers=vvd e_end=34
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=1 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=8 wins=5 levers=bbddvddd e_end=6
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=2 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=vddv e_end=31
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=3 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=vbbb e_end=34
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=4 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=vbbd e_end=34
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=5 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=vdvvd e_end=21
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=6 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=dbvvv e_end=21
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=7 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=3 wins=0 levers=vbd e_end=37
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=8 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=7 wins=4 levers=dvvvbvv e_end=0
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=9 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=3 wins=0 levers=bbb e_end=40
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=10 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=8 wins=5 levers=vbvbdvdd e_end=8
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=11 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=vvbdvv e_end=3
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=12 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=vbdd e_end=34
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=13 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=bdbdb e_end=22
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=14 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=dvbd e_end=34
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=15 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=vddvdb e_end=17
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=16 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=3 wins=0 levers=dbd e_end=40
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=17 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=vbbd e_end=34
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=18 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=7 wins=4 levers=vdddvvv e_end=0
+seed=4 PROBE VC_REPLAY day=446 fund=anchor i=19 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=dbbvb e_end=31
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=0 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=vdvvdd e_end=17
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=1 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=vvvdd e_end=27
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=2 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=10 wins=6 levers=vddvdvvvvv e_end=0
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=3 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=dvvvdvvv e_end=0
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=4 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=vdvvvdd e_end=10
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=5 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=vdvdvv e_end=16
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=6 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=vdvvv e_end=34
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=7 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=4 wins=0 levers=vdvd e_end=34
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=8 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=ddvvd e_end=24
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=9 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=10 wins=6 levers=vvvddvdvvv e_end=0
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=10 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=vdvdvddd e_end=0
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=11 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=ddvdd e_end=17
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=12 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=vddvvv e_end=12
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=13 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=vvvvddv e_end=5
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=14 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=ddvdvdv e_end=3
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=15 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=4 wins=0 levers=dddd e_end=28
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=16 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=vvvddvvv e_end=0
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=17 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=4 wins=0 levers=dddd e_end=28
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=18 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=9 wins=5 levers=vvvvdddvv e_end=0
+seed=4 PROBE VC_REPLAY day=446 fund=nexus i=19 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=dvdvvdvv e_end=0
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vvdb e_end=39
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddd e_end=41
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=vdvvdd e_end=32
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=vb e_end=45
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=dvbv e_end=35
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=bdvdd e_end=32
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=dvd e_end=45
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=bvd e_end=42
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vbdb e_end=36
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bd e_end=45
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=dvb e_end=42
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=bvd e_end=42
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vbd e_end=42
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=bvvd e_end=39
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=7 wins=5 levers=vdbvdvd e_end=26
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=bbd e_end=39
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vvv e_end=41
+seed=4 PROBE VC_REPLAY day=446 fund=bosphorus i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=db e_end=45
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dv e_end=45
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=dvvdv e_end=22
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vdv e_end=39
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=8 wins=6 levers=ddvvvvvv e_end=0
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=7 wins=5 levers=dvdvdvv e_end=5
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddv e_end=42
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=dvvvd e_end=30
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vdvdd e_end=25
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vdvdd e_end=29
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddd e_end=41
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=dvddvv e_end=15
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=dvd e_end=42
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=dvvv e_end=25
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=dvdd e_end=35
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=vvddvv e_end=8
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vvdv e_end=25
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vvd e_end=35
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dv e_end=45
+seed=4 PROBE VC_REPLAY day=446 fund=meridian i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vdvdv e_end=22
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=0 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=ddbvvv e_end=10
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=1 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=bdbvvv e_end=14
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=2 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=vbddvb e_end=21
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=3 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=dvdv e_end=27
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=4 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=7 wins=4 levers=vvvddvv e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=5 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=bdbbb e_end=26
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=6 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=vvbbvb e_end=10
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=7 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=8 wins=5 levers=bvddvbvv e_end=1
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=8 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=vvbvbd e_end=22
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=9 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=5 wins=2 levers=vvbvb e_end=13
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=10 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=11 wins=8 levers=dbbvdvvvdvd e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=11 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=vdvb e_end=27
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=12 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=8 wins=5 levers=vvbddvbv e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=13 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=dddvbb e_end=16
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=14 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=dddv e_end=26
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=15 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=vbvv e_end=28
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=16 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=3 wins=0 levers=bbd e_end=40
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=17 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=bbbb e_end=29
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=18 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=6 wins=3 levers=bvdbvb e_end=25
+seed=5 PROBE VC_REPLAY day=269 fund=anchor i=19 outcome=FUND_WALKED e0=70 fit=0 thr=45 pushes=4 wins=1 levers=dbbd e_end=37
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=0 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=dvvdvvv e_end=9
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=1 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=vvdddvdv e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=2 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=10 wins=6 levers=ddvvvvvvvv e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=3 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=dvvvddd e_end=7
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=4 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=10 wins=6 levers=vdvvdvvvdv e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=5 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=vvvvdvv e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=6 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=4 wins=0 levers=vdvd e_end=34
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=7 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=vvdvdvvd e_end=7
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=8 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=5 wins=1 levers=vvddv e_end=23
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=9 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=vvdddv e_end=17
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=10 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=vvdvddv e_end=2
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=11 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=dvvdvddv e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=12 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=10 wins=6 levers=ddvdvvvvvv e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=13 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=dvdddd e_end=7
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=14 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=vvdvvdvv e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=15 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=dddvvdv e_end=11
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=16 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=6 wins=2 levers=ddvddd e_end=3
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=17 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=8 wins=4 levers=vdvddvdd e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=18 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=10 wins=6 levers=vvvddvvdvd e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=nexus i=19 outcome=FUND_WALKED e0=80 fit=10 thr=35 pushes=7 wins=3 levers=vvvdvdd e_end=10
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=bvvv e_end=31
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vvvbv e_end=24
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bd e_end=45
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=bdddv e_end=36
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=7 wins=5 levers=vvvvbvv e_end=0
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=bvvddd e_end=25
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=bvv e_end=38
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=bvvvvv e_end=9
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=bdb e_end=39
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=bvdvvv e_end=17
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=9 wins=7 levers=dbvdvvvvv e_end=4
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vbb e_end=39
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=dbbd e_end=32
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bb e_end=42
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=bv e_end=45
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=bdbvvv e_end=22
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=bvv e_end=42
+seed=5 PROBE VC_REPLAY day=269 fund=bosphorus i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vddv e_end=42
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=0 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vvvd e_end=33
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=1 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddd e_end=41
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=2 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vvd e_end=39
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=3 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vdd e_end=42
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=4 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddd e_end=37
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=5 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=6 wins=4 levers=vvvvdd e_end=24
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=6 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vdvvv e_end=11
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=7 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vdvdd e_end=25
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=8 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddd e_end=41
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=9 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=10 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=ddd e_end=41
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=11 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=3 wins=1 levers=vdv e_end=35
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=12 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=vdvd e_end=28
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=13 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dv e_end=45
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=14 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=4 wins=2 levers=dvdv e_end=32
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=15 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=vd e_end=45
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=16 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=17 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=vv e_end=42
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=18 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=2 wins=0 levers=dd e_end=48
+seed=5 PROBE VC_REPLAY day=269 fund=meridian i=19 outcome=FUND_WALKED e0=68 fit=-2 thr=55 pushes=5 wins=3 levers=vdvdv e_end=18
