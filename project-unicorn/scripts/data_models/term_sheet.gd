@@ -26,7 +26,7 @@ extends Resource
 @export var band: String = ""
 @export var vc_id: String = ""
 @export var granted_day: int = 0          # day the validity window opened (delivery day for a delayed sheet)
-@export var expires_day: int = 0          # granted_day + PitchConstants.SHEET_VALIDITY_DAYS
+@export var expires_day: int = 0          # the day the last of PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS falls on
 
 # --- Opening terms (bands snapshot from InvestorRegistry at grant time; Spec 6 refines) ---
 @export var term_bands: Dictionary = {}   # {valuation, dilution, board} — working bands
@@ -45,6 +45,19 @@ extends Resource
 
 func days_left(current_day: int) -> int:
 	return expires_day - current_day
+
+
+## K5: weekdays left before the window closes (0 on the closing day, and after it). This is
+## the number every player-facing Series A countdown shows; days_left() stays the calendar
+## distance for readers that place the date on a calendar.
+func business_days_left(current_day: int) -> int:
+	return maxi(0, GameState.business_days_between(current_day, expires_day))
+
+
+## K10: the window has closed and the fund is waiting for a yes or a no. The sheet stays in
+## active_sheets until the player answers (funding.sheet_decision); nothing closes it silently.
+func is_decision_due(current_day: int) -> bool:
+	return stage != PitchConstants.STAGE_SEED and current_day >= expires_day
 
 
 ## Derived — true when another live sheet exists (leverage at the table). Never stored:

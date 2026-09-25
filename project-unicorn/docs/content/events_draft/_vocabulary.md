@@ -69,6 +69,7 @@ so a verb absent from a group is unreachable from it rather than merely discoura
 - `phase_gate_decline`
 - `open_seed_table`
 - `decline_buyout`
+- `decline_offer`
 - `set_game_flag`
 - `mentor_advisory`
 - `b2b_retain_delay`

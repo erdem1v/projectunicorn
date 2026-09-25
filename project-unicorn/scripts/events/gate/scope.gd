@@ -282,13 +282,19 @@ static func _select_investor(mode: String, used: Dictionary) -> String:
 			var least: int = 9999
 			for sheet in GameState.active_sheets:
 				var vc_id: String = String(sheet.vc_id)
-				if used.has(vc_id):
+				if used.has(vc_id) or (sheet as TermSheet).is_decision_due(GameState.day):
 					continue
-				var days: int = int(sheet.days_left(GameState.day))
+				# Business days, the same count funding.sheet_days_left returns (K5).
+				var days: int = (sheet as TermSheet).business_days_left(GameState.day)
 				if days < least or (days == least and vc_id < best):
 					least = days
 					best = vc_id
 			return best
+		"decision_sheet":
+			# K10: the sheet whose window has closed and waits for sit-or-decline. The same
+			# helper the condition seam reads, so the card names the fund it is about.
+			var due: TermSheet = VCPitchSystem.decision_due_sheet(used)
+			return "" if due == null else String(due.vc_id)
 		"meeting_pending":
 			var pm: Dictionary = GameState.pending_meeting
 			var vc: String = String(pm.get("vc_id", ""))

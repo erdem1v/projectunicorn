@@ -1,0 +1,69 @@
+{
+  "_design": "K10 (2026-09): a Series A sheet whose ten business days have run out no longer closes silently. The sheet stays in active_sheets, due (TermSheet.is_decision_due), and this card asks for the answer: sit down now, or decline and the fund is closed for good. Two options and no third - no 'later' row, and an interrupt, so it cannot be dismissed or deferred. Decline is the PLAYER'S answer, so decline_offer closes the fund without counting a rejection. HOURLY and critical so that two sheets closing on the same day arrive one after the other on that day: the queue holds one instance of a card id, the first answer frees it, and the next hourly sweep binds the other fund through the decision_sheet selector. cooldown_days 1 per entity: if a sitting somehow ends with the sheet still due, the card comes back the next day rather than never. No speaker - this is the plain fact of the offer, not Frank's voice (his lines for this surface are open decision K32).",
+  "id": "funding.sheet_decision",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "hourly",
+  "allowed_hours": [0, 23],
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "scope": {
+    "investor": {
+      "type": "investor",
+      "required": true,
+      "select": "decision_sheet"
+    }
+  },
+  "latch": {
+    "cooldown_days": 1
+  },
+  "latch_key": "entity",
+  "condition": {
+    "seam": "funding.sheet_decision_due",
+    "op": "==",
+    "value": true
+  },
+  "options": [
+    {
+      "id": "sit_down",
+      "outcome_id": "sat",
+      "effects": [
+        {
+          "verb": "open_term_table",
+          "scope": "investor"
+        }
+      ]
+    },
+    {
+      "id": "decline",
+      "outcome_id": "declined",
+      "effects": [
+        {
+          "verb": "decline_offer",
+          "scope": "investor"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "VC_EV_DECISION_TITLE",
+      "body": "{investor} teklifinin süresi doldu. Fon şimdi bir cevap bekliyor.\n\nTahmini şartlar: değerleme {seam:investor.est_valuation} · pay {seam:investor.est_dilution}.\n\nMasaya oturursan şartlar netleşir. Reddedersen bu fon kalıcı olarak kapanır.",
+      "options": {
+        "sit_down": "VC_EV_DECISION_SIT",
+        "decline": "VC_EV_DECISION_DECLINE"
+      }
+    },
+    "en": {
+      "title": "VC_EV_DECISION_TITLE",
+      "body": "The offer from {investor} has run its time. The fund wants an answer now.\n\nEstimated terms: valuation {seam:investor.est_valuation} · equity {seam:investor.est_dilution}.\n\nSit down and the terms become exact. Decline and this fund is closed for good.",
+      "options": {
+        "sit_down": "VC_EV_DECISION_SIT",
+        "decline": "VC_EV_DECISION_DECLINE"
+      }
+    }
+  }
+}

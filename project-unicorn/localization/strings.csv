@@ -823,12 +823,16 @@ HUNT_PREP_RUNNING,Hazırlık sürüyor.,Prep in progress.
 HUNT_PREP_REASON,Hazırlık: {reason},Prep: {reason}
 HUNT_NO_OFFERS,Henüz teklif yok.,No offers yet.
 HUNT_EMPTY_SLOT,— boş slot —,— empty slot —
-HUNT_TERMS,Değerleme: {valuation} · Hisse: {equity} · Board: {board},Valuation: {valuation} · Equity: {equity} · Board: {board}
-HUNT_VALIDITY,Geçerlilik: {n} gün,Valid for {n} days
+HUNT_TERMS,Tahmini: değerleme {valuation} · pay {equity},Estimated: valuation {valuation} · equity {equity}
+HUNT_VALIDITY,Teklif süresi: {n} iş günü,Business days left on the offer: {n}
+HUNT_EST_VALUATION,~${lo}–{hi}M,~${lo}–{hi}M
+HUNT_EST_DILUTION,~%{lo}–{hi},~{lo}–{hi}%
+HUNT_DECISION_DUE,Süre doldu. Fon bir cevap bekliyor.,Time is up. The fund wants an answer.
+HUNT_QUEUED_OFFER,{investor} · sırada. Bir teklif kapanınca masaya gelir; süresi o gün başlar ({n} iş günü).,"{investor} · queued. It arrives when an offer slot frees up, with a fresh {n} business days."
 HUNT_SIT_DOWN,Masaya otur,Sit down
 HUNT_WALK_AWAY,Masadan kalk,Walk away
 HUNT_WALK_CONFIRM_TITLE,Masadan kalkılsın mı?,Walk away from the table?
-HUNT_WALK_CONFIRM_BODY,Bu teklif yanar ve bir kapanan masa daha sayılır (+1 ret). Diğer teklifler durur.,This offer burns and counts as one more closed table (+1 rejection). The other offers pause.
+HUNT_WALK_CONFIRM_BODY,Bu teklif yanar ve fon kapanır. Ret sayılmaz. Diğer teklifler açık kalır.,This offer burns and the fund closes. It does not count as a rejection. Your other offers stay open.
 HUNT_WALK_CONFIRM_OK,Kalk,Walk
 HUNT_MEETING_PENDING,Toplantı — {vc} · {n} gün,Meeting — {vc} · {n} days
 HUNT_PREP_PENDING,Hazırlık — {focus} · {when},Prep — {focus} · {when}
@@ -858,6 +862,11 @@ HUNT_FRANK_LINE,Av açık. Kapanan masa: {n}. Üçüncüde yol biter.,The hunt i
 HUNT_REQUEST_AGAIN,Tekrar iste (~{n} gün),Ask again (~{n} days)
 HUNT_REQUEST_MEETING,Toplantı iste (~{n} gün),Request a meeting (~{n} days)
 HUNT_MEETING_BUSY,Başka bir toplantı bekliyor,Another meeting is already pending
+HUNT_MEETING_CANCEL,İptal et,Cancel
+HUNT_MEETING_RESCHEDULE,Ertele (~{n} gün),Reschedule (~{n} days)
+HUNT_CANCEL_TIP,Bu fonun bir sonraki toplantısında ikna −{n}. Bugün yeni toplantı ayarlanamaz.,Conviction −{n} at this fund's next meeting. No new meeting can be booked today.
+HUNT_RESCHEDULE_TIP,Bu fonun bir sonraki toplantısında ikna −{n}.,Conviction −{n} at this fund's next meeting.
+HUNT_MEETING_CANCELLED_TODAY,Bugün bir toplantı iptal edildi. Yenisi yarın ayarlanabilir.,A meeting was cancelled today. The next one can be booked tomorrow.
 PRICE_TIP_AXIS,{axis} {score} → {verdict},{axis} {score} → {verdict}
 PRICE_VERDICT_STRONG,güçlü,strong
 PRICE_VERDICT_MID,orta,fair
@@ -1418,6 +1427,7 @@ VC_WHY_LEVERAGE,Cebinde teklif,An offer in your pocket
 VC_WHY_WARM_INTRO,Frank'in tanıştırması,Frank's introduction
 VC_WHY_DOMAIN_MATCH,Sektör eşleşmesi,Sector match
 VC_WHY_CALLBACK,Kapı yeniden açık,The door reopened
+VC_WHY_MOVED,Randevuyu kaydırdın,You moved the meeting
 VC_PREP_BUSY,Zaten bir hazırlık sürüyor,A prep is already running
 VC_PREP_NEED_MEETING,Önce bu VC'yle toplantı iste,Ask this VC for a meeting first
 VC_PREP_TOO_SOON,Toplantıya {days} günden az kaldı,Fewer than {days} days left before the meeting
@@ -1496,6 +1506,13 @@ VC_RES_CALLBACK,"""Koşulu biliyorsun. Tuttur, kapı açık.""","""You know the 
 VC_RES_PUSH_WIN,"""Cesaretin varmış. Teklif yolda.""","""You had nerve. The offer is on its way."""
 VC_RES_PUSH_LOSS,"""Zorladın ve tutmadı. Kapı kapandı.""","""You pushed and it did not hold. The door is closed."""
 VC_RES_DEFAULT,"""Bugün olmadı.""","""Not today."""
+VC_FRANK_COLD_EXIT,"Frank: ""{line}""","Frank: ""{line}"""
+VC_FRANK_COLD_ANCHOR,"Onlar bir rakam istedi, sende yoktu. Git bul.",They wanted a number you didn't have. Go get it.
+VC_FRANK_COLD_NEXUS,Ürünü değil seni aldılar ya da almadılar. Bunu düşün.,They weren't buying the product. They were buying you. Think about that.
+VC_FRANK_COLD_BOSPHORUS,Bunu bana sorarlar. Ben hallederim.,I'll hear about this one. Let me handle it.
+VC_FRANK_COLD_MERIDIAN,"Ürünü açtılar, kapattılar. Toplantı bu.",They opened the product and closed it. That's the whole meeting.
+VC_FRANK_COLD_GENERAL_1,Bir hayır. Sonuncusu olmayacak. Sonraki odaya taşıma.,One no. Not the last one. Don't carry it into the next room.
+VC_FRANK_COLD_GENERAL_2,Üst üste iki. Sıradaki çok şey belirler. Acele etme.,Two in a row. The next one decides a lot. Take your time.
 VC_EV_MEETING_TITLE,Büyük gün,The big day
 VC_EV_MEETING_BODY,"Bugün {investor} ile toplantın var.
 
@@ -1516,6 +1533,9 @@ Frank: ""Yatırımcılar bekletilmeyi sevmez. {days} gün içinde yanıt vermeli
 Frank: ""Investors don't like being kept waiting. We need to give them an answer inside {days} days."""
 VC_EV_ACK,Anlaşıldı,Understood
 VC_EV_GO_FUNDING,Yatırım'a git,Go to Funding
+VC_EV_DECISION_TITLE,Teklifin süresi doldu,The offer window has closed
+VC_EV_DECISION_SIT,Masaya otur,Sit at the table
+VC_EV_DECISION_DECLINE,Reddet,Decline
 VC_EV_LAST_DAY_TITLE,Süre doldu,Time's up
 VC_EV_LAST_DAY_BODY,"Yatırımcılara dönüş yapmak için bugün son gün.
 
@@ -1626,7 +1646,7 @@ TERM_SIGN_Q,İmzala?,Sign?
 TERM_SIGN_BODY,{amount} yatırım · {terms} ile imzala? Bu turu kapatır.,Sign for {amount} on {terms}? That closes this round.
 TERM_SIGN_OK,İMZALA,SIGN
 TERM_WALK_Q,Masadan kalk?,Walk away?
-TERM_WALK_BODY,Masadan kalkarsan bu teklif gider. Bu bir kapanan masa sayılır.,Walk away and this offer is gone. It counts as a closed table.
+TERM_WALK_BODY,"Masadan kalkarsan bu teklif gider, fon da kapanır. Ret sayılmaz.","Walk away and this offer is gone, and so is the fund. It does not count as a rejection."
 TERM_WALK_OK,MASADAN KALK,WALK AWAY
 TERM_SHOW_OTHER,DİĞER TEKLİFİ GÖSTER,SHOW THE OTHER OFFER
 TERM_SHOW_OTHER_USED,Diğer teklifi zaten gösterdin.,You have already shown them the other offer.
@@ -1819,7 +1839,7 @@ NEWS_RIVAL_DOWN_1,{name} müşterilerinin yenileme pazarlığı sertleşti; pay�
 NEWS_RIVAL_DOWN_2,{name} kilit bir hesabını kaybetti; pazar payı {share} bandına indi.,{name} lost a key account; its market share has dropped into the {share} band.
 TOPBAR_CLOCK,{date} · {hour}:00,{date} · {hour}:00
 TOPBAR_CLOCK_COMPACT,{day} {mon} · {hour}:00,{mon} {day} · {hour}:00
-FIN_OFFER_COUNTDOWN,TEKLİF: {n} GÜN,OFFER: {n} DAYS
+FIN_OFFER_COUNTDOWN,TEKLİF · İŞ GÜNÜ: {n},OFFER · BUSINESS DAYS: {n}
 RIVAL_RANK_TEXT,startup sınıfında {rank}/{total},{rank}/{total} in the startup class
 MONTH_TITLE,{month} {year},{month} {year}
 MONTH_DAY_RANGE,Gün {from}–{to},Days {from}–{to}
@@ -2837,6 +2857,7 @@ END_ACQ_PRICE,Devir {valuation} değerleme üzerinden konuşuldu.,The handover w
 EFFECT_RUN_ENDS,Koşu biter,The run ends
 EFFECT_VC_ROAD_CLOSES,VC yolu kapanır,The VC road closes
 EFFECT_SEED_TABLE,Masaya oturursun,You sit down at the table
+EFFECT_FUND_CLOSES,Bu fon kalıcı olarak kapanır,This fund closes for good
 VC_Q_REPEATABLE,"""Bu defterin çoğunu siz kapatmışsınız. Siz odada olmadığınızda da kapanıyor mu?""","""You closed most of this book yourself. Does it close when you are not in the room?"""
 VC_Q_REPEATABLE_MONO,Defteri kimin kapattığını soracak.,They will ask who closed the book.
 SEED_B1_LINE,"""{investor}. Geç oturun, kahve söylemeyeceğim; yarım saatimiz var. Sizi anlatın.""","""{investor}. Sit down, I will not order coffee; we have half an hour. Tell me about you."""

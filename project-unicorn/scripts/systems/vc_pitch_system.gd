@@ -27,6 +27,8 @@ const MEETING_CARD := "funding.meeting_day"
 ## rejection is counted, but the player did not refuse the round, so the Series A road-over
 ## reading (EndingsSystem.road_over, open decision K16) is left exactly as it was.
 const WALK_REASON_FUND := "fund_walked"
+## The funds that have their own cold-exit Frank line (§6.2); VC_FRANK_COLD_<ID> in the CSV.
+const COLD_EXIT_FUNDS := ["anchor", "nexus", "bosphorus", "meridian"]
 
 # --- Meeting-local state (never serialized) ---
 static var _active: bool = false
@@ -41,6 +43,7 @@ static var _reentry: bool = false    # this meeting is a callback re-entry
 static var _sorgu: Dictionary = {}   # {key, vc_line, mono} chosen weak point (or clean)
 static var _meeting_day_mrr: int = 0 # snapshot for callback "MRR +20%"
 static var _pending_outcome: String = ""  # set at Beat-4 resolve, applied on result close
+static var _cold_exit_key: String = ""    # §6.2: the Frank line this sitting's rejection shows (picked once)
 # WHICH RUNG THIS SITTING IS (seed rung, 2026-08-27). Meeting-local like everything else in
 # this block, and for the same reason: at begin_meeting there is no sheet to read it off —
 # the sheet is what the meeting PRODUCES. The TABLE reads its stage off TermSheet.stage
@@ -89,8 +92,15 @@ static func begin_meeting(vc_id: String, stage: String = PitchConstants.STAGE_SE
 	# pending_meeting to consume and no prep to spend, which also keeps pending_meeting a
 	# Series-A-only field and leaves funding.meeting_day and every seam that reads a booked
 	# meeting untouched by this rung.
+	# ONE CALLBACK PER VC. The re-entry flag used to be `reentry_bonus`, which is only armed
+	# once the condition is met - so a fund re-booked BEFORE its condition was met sat down as
+	# a first meeting and could hand out a second callback, overwriting the first condition.
+	# request_meeting now refuses that booking; this reads the status as well, so any sitting
+	# with a fund that already gave a callback is the re-entry, and a second lukewarm room
+	# ends in a rejection.
 	var was_reentry: bool = _stage == PitchConstants.STAGE_SERIES_A \
-		and bool(_vc(vc_id).get("reentry_bonus", false))
+		and (bool(_vc(vc_id).get("reentry_bonus", false)) \
+			or String(_vc(vc_id).get("status", "")) == "callback")
 	if _stage == PitchConstants.STAGE_SERIES_A:
 		GameState.pending_meeting.clear()
 	_active = true
@@ -105,6 +115,9 @@ static func begin_meeting(vc_id: String, stage: String = PitchConstants.STAGE_SE
 	_meeting_day_mrr = GameState.mrr
 	var seed_data: Dictionary = initial_conviction(vc_id)
 	_conviction = int(seed_data.get("value", PitchConstants.CONV_BASE))
+	# K4: a cancelled or moved meeting costs this fund's NEXT meeting, and this is it.
+	if _stage == PitchConstants.STAGE_SERIES_A:
+		_vc(vc_id).erase("move_penalty")
 	EventBus.meeting_scene_requested.emit(_beat1_view_state(seed_data.get("why", [])))
 
 
@@ -190,6 +203,12 @@ static func _conviction_series_a(vc_id: String) -> Dictionary:
 	if GameState.seed_lead != "" and GameState.seed_lead == vc_id:
 		v += SeedConstants.SEED_LEAD_WARMTH_BONUS
 		why.append({"d": SeedConstants.SEED_LEAD_WARMTH_BONUS, "l": _t("VC_WHY_SEED_LEAD")})
+	# K4: the founder moved or cancelled a meeting with this fund. Small, and it has its own
+	# reason line so the player can see where the points went.
+	var moved: int = int(_vc(vc_id).get("move_penalty", 0))
+	if moved > 0:
+		v -= moved
+		why.append({"d": -moved, "l": _t("VC_WHY_MOVED")})
 
 	return _finish_conviction(v, why)
 
@@ -292,12 +311,7 @@ static func _resolve_beat2(choice_id: String) -> Dictionary:
 static func _resolve_beat3(choice_id: String) -> Dictionary:
 	# Sorgu — posture check. Geçiştir caps the room at 65.
 	var posture: String = choice_id.trim_prefix("b3_")
-	var clean: bool = _sorgu.get("key", "") == "clean"
-	var diff: int = _posture_diff(posture)
-	if clean:
-		diff = PitchConstants.DIFF_KOLAY
-	var bonus: int = PitchConstants.PREP_BONUS if (_prep_focus == "prova" and posture == "durust") else 0
-	var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT3_SKILL, diff, bonus)
+	var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT3_SKILL, _beat3_diff(posture), _beat3_bonus(posture))
 	var s: int = 0
 	var f: int = 0
 	match posture:
@@ -379,6 +393,7 @@ static func _grant_seed_sheet(band: String) -> void:
 
 static func _grant_sheet() -> void:
 	GameState.run_sheets_won += 1
+	GameState.vc_last_meeting_rejected = false
 	# Stamped on the fund's state rather than handed to _make_sheet, because a delayed sheet
 	# (ledger 15) is built days later by _deliver_pending_sheet, long after the room closed.
 	_vc(_vc_id).sheet_conviction = mini(_conviction, _cap)
@@ -399,7 +414,8 @@ static func _make_sheet(vc_id: String, granted_day: int) -> TermSheet:
 	var sheet := TermSheet.new()
 	sheet.vc_id = vc_id
 	sheet.granted_day = granted_day
-	sheet.expires_day = granted_day + PitchConstants.SHEET_VALIDITY_DAYS
+	# K5: ten WEEKDAYS on the real calendar, not fourteen calendar days.
+	sheet.expires_day = GameState.add_business_days(granted_day, PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS)
 	sheet.term_bands = inv.get("term_bands", {}).duplicate()
 	sheet.patience_pool = int(inv.get("patience_pool", 0))
 	# The meeting's closing conviction, if one was stamped (-1 = none; the table falls back).
@@ -450,6 +466,7 @@ static func _derive_series_a_terms(inv: Dictionary) -> Dictionary:
 
 
 static func _set_callback() -> void:
+	GameState.vc_last_meeting_rejected = false
 	var st: Dictionary = _vc(_vc_id)
 	st.status = "callback"
 	st.callback = _make_callback(_vc_id)
@@ -473,6 +490,10 @@ static func _reject() -> void:
 	if _stage == PitchConstants.STAGE_SEED:
 		push_error("[VCPitchSystem] _reject() at a seed sitting — the seed rung cannot reject")
 		return
+	# §6.2: Frank's cold-exit line is chosen BEFORE this rejection is written into the streak,
+	# because "was the previous meeting a rejection too" is a question about the one before.
+	_pick_cold_exit()
+	GameState.vc_last_meeting_rejected = true
 	GameState.vc_rejections += 1
 	_vc(_vc_id).status = "rejected"
 	# "Repeated rejections cost brand and morale" (ch. 09 section 4). They used to cost a
@@ -538,7 +559,9 @@ static func _sign_extra(vc_id: String, terms: Dictionary) -> Dictionary:
 
 
 static func walk_table(vc_id: String, reason: String = "declined") -> void:
-	# Sheet destroyed, +1 rejection, VC closed. Any OTHER active sheet survives (§5).
+	# Sheet destroyed, VC closed. Any OTHER active sheet survives (§5). A rejection is counted
+	# only when the FUND walked (K12 patience-zero walk-out, K7): the player's own walk closes
+	# the fund for the run but is not a rejection (K11), so it never feeds the cascade.
 	#
 	# THE REASON IS NOT COSMETIC. Both callers land here — the funding page's decline of a
 	# granted sheet ("declined") and the table's own walk ("walked") — and ch. 13 §1 needs
@@ -551,11 +574,95 @@ static func walk_table(vc_id: String, reason: String = "declined") -> void:
 	for sheet in GameState.active_sheets.duplicate():
 		if sheet.vc_id == vc_id:
 			GameState.active_sheets.erase(sheet)
-	GameState.vc_rejections += 1
+	if reason == WALK_REASON_FUND:
+		GameState.vc_rejections += 1
 	# A fund that walked out on the player reads as a refusal on the Hunt tab ("Declined"),
 	# not as the player's own walk; both are closed for the run.
 	_vc(vc_id).status = "rejected" if reason == WALK_REASON_FUND else "walked"
 	EventBus.sheet_walked.emit(vc_id)  # Spec 6 — HuntTab repaints after a table walk
+
+
+## K10 "Decline": the window closed and the player said no. The fund closes for the run, and
+## because it was the PLAYER'S answer it is not a rejection - no cascade point, no brand or
+## morale cost. Nor does it mark the Series A decision as faced: whether a declined-at-expiry
+## offer counts for the buyout road is open decision K16, so the reading stays as it was when
+## an expiry closed silently. Only a sheet whose window has actually closed can be declined
+## this way; a live sheet is refused through walk_table.
+static func decline_expired_sheet(vc_id: String) -> bool:
+	var sheet: TermSheet = sheet_for(vc_id)
+	if sheet == null or not sheet.is_decision_due(GameState.day):
+		push_warning("[VCPitchSystem] decline_expired_sheet(%s): no sheet awaiting a decision" % vc_id)
+		return false
+	GameState.active_sheets.erase(sheet)
+	_vc(vc_id).status = "expired"          # NOT a rejection (§5)
+	EventBus.sheet_expired.emit(vc_id)
+	_tick_countdown_chip()
+	return true
+
+
+## The Series A sheet whose window has closed and is waiting for an answer, or null. Lowest
+## fund id first, so two sheets closing on the same day reach the player in a stable order.
+static func decision_due_sheet(skip: Dictionary = {}) -> TermSheet:
+	var best: TermSheet = null
+	for sheet in GameState.active_sheets:
+		var ts: TermSheet = sheet
+		if ts == null or skip.has(String(ts.vc_id)) or not ts.is_decision_due(GameState.day):
+			continue
+		if best == null or String(ts.vc_id) < String(best.vc_id):
+			best = ts
+	return best
+
+
+## K6: the estimated range the offer row shows before the table. {val_lo, val_hi, dil_lo,
+## dil_hi}; empty for a missing sheet. Contains the true opening term, never centred on it,
+## and seeded by fund id + grant day so it never rerolls between looks.
+static func estimate_ranges(sheet: TermSheet) -> Dictionary:
+	if sheet == null:
+		return {}
+	var val: int = int(sheet.opening_terms.get("valuation_m", 0))
+	var dil: int = int(sheet.opening_terms.get("dilution_pct", 0))
+	var h: int = absi(("%s:%d" % [String(sheet.vc_id), sheet.granted_day]).hash())
+	var val_w: int = maxi(PitchConstants.EST_VAL_MIN_WIDTH_M,
+		int(round(val * PitchConstants.EST_VAL_WIDTH_PCT / 100.0)))
+	var dil_w: int = maxi(PitchConstants.EST_DIL_MIN_WIDTH,
+		int(round(dil * PitchConstants.EST_DIL_WIDTH_PCT / 100.0)))
+	var v: Array = _range_around(val, val_w, h % 1000, (h >> 10) & 1, 1)
+	var d: Array = _range_around(dil, dil_w, (h >> 12) % 1000, (h >> 22) & 1, 1)
+	return {"val_lo": v[0], "val_hi": v[1], "dil_lo": d[0], "dil_hi": d[1]}
+
+
+## [lo, hi] around true_v: the true value sits EST_POS_MIN..MAX of the width in from the low
+## edge (or, with `mirror`, from the high edge). Never exactly centred after rounding.
+static func _range_around(true_v: int, width: int, roll: int, mirror: int, floor_v: int) -> Array:
+	var pos: float = lerpf(PitchConstants.EST_POS_MIN, PitchConstants.EST_POS_MAX, float(roll) / 999.0)
+	if mirror == 1:
+		pos = 1.0 - pos
+	var lo: int = floori(true_v - pos * width)
+	var hi: int = ceili(true_v + (1.0 - pos) * width)
+	if lo < floor_v:
+		hi += floor_v - lo
+		lo = floor_v
+	if lo + hi == 2 * true_v:
+		if pos < 0.5 or lo - 1 < floor_v:
+			hi += 1
+		else:
+			lo -= 1
+	return [lo, hi]
+
+
+## The two range strings the Hunt offer row and the K10 card print ("~$16–20M", "~18–24%").
+static func estimate_valuation_text(vc_id: String) -> String:
+	var r: Dictionary = estimate_ranges(sheet_for(vc_id))
+	if r.is_empty():
+		return ""
+	return _t("HUNT_EST_VALUATION").format({"lo": r.val_lo, "hi": r.val_hi})
+
+
+static func estimate_dilution_text(vc_id: String) -> String:
+	var r: Dictionary = estimate_ranges(sheet_for(vc_id))
+	if r.is_empty():
+		return ""
+	return _t("HUNT_EST_DILUTION").format({"lo": r.dil_lo, "hi": r.dil_hi})
 
 
 ## The SEED offer for a VC, or null. Separate from sheet_for on purpose: that one scans
@@ -577,17 +684,70 @@ static func sheet_for(vc_id: String) -> TermSheet:
 # Scheduling + prep
 # ============================================================================
 
-static func request_meeting(vc_id: String) -> bool:
-	if not GameState.pending_meeting.is_empty():
-		return false                       # ledger 24 — one at a time
+## Why a meeting with this fund cannot be booked right now, as an id the Hunt tab renders:
+## "" (bookable) · "busy" · "cancelled_today" · "callback_unmet" · "closed" · "locked".
+static func meeting_blocked_reason(vc_id: String) -> String:
 	if InvestorRegistry.is_locked(vc_id):
+		return "locked"
+	var st: Dictionary = GameState.vc_states.get(vc_id, {})
+	var status: String = String(st.get("status", "open"))
+	if status in ["rejected", "expired", "walked", "signed", "offered", "pending_sheet"]:
+		return "closed"
+	# ONE CALLBACK PER VC: the door stays shut until the condition the fund named is met.
+	if status == "callback" and not bool((st.get("callback", {}) as Dictionary).get("met", false)):
+		return "callback_unmet"
+	if not GameState.pending_meeting.is_empty():
+		return "busy"                          # ledger 24 — one at a time
+	if GameState.vc_meeting_cancel_day == GameState.day:
+		return "cancelled_today"               # K4
+	return ""
+
+
+static func request_meeting(vc_id: String) -> bool:
+	if meeting_blocked_reason(vc_id) != "":
 		return false
-	var status: String = _vc(vc_id).get("status", "open")
-	if status in ["rejected", "expired", "walked"]:
-		return false                       # closed VC
 	GameState.pending_meeting = {"vc_id": vc_id, "day": GameState.day + PitchConstants.MEETING_LEAD_DAYS}
 	_vc(vc_id).meeting_count = int(_vc(vc_id).get("meeting_count", 0)) + 1
 	return true
+
+
+## K4: can the booked meeting still be moved? Only before its day - on the day itself the
+## meeting card is already the decision.
+static func can_move_meeting() -> bool:
+	var pm: Dictionary = GameState.pending_meeting
+	return not pm.is_empty() and int(pm.get("day", 0)) > GameState.day
+
+
+## K4 "Cancel": the booking goes, a prep aimed at it goes with it, the fund remembers
+## (MEETING_CANCEL_PENALTY off its next meeting), and no new meeting is booked today.
+static func cancel_meeting() -> bool:
+	if not can_move_meeting():
+		return false
+	var vc_id: String = String(GameState.pending_meeting.get("vc_id", ""))
+	GameState.pending_meeting.clear()
+	if String(GameState.prep.get("vc_id", "")) == vc_id:
+		GameState.prep.clear()
+		GameState.set_flag("pitch_prep_active", false)
+	_add_move_penalty(vc_id, PitchConstants.MEETING_CANCEL_PENALTY)
+	GameState.vc_meeting_cancel_day = GameState.day
+	EventGate.remove_queued(MEETING_CARD)
+	return true
+
+
+## K4 "Reschedule": the same lead time again, from today. The prep (if any) stays aimed at
+## the same fund; the fund remembers (MEETING_RESCHEDULE_PENALTY off its next meeting).
+static func reschedule_meeting() -> bool:
+	if not can_move_meeting():
+		return false
+	var vc_id: String = String(GameState.pending_meeting.get("vc_id", ""))
+	GameState.pending_meeting["day"] = GameState.day + PitchConstants.MEETING_LEAD_DAYS
+	_add_move_penalty(vc_id, PitchConstants.MEETING_RESCHEDULE_PENALTY)
+	return true
+
+
+static func _add_move_penalty(vc_id: String, points: int) -> void:
+	var st: Dictionary = _vc(vc_id)
+	st["move_penalty"] = int(st.get("move_penalty", 0)) + points
 
 
 static func prep_blocked_reason(vc_id: String) -> String:
@@ -627,7 +787,6 @@ static func _consume_prep(vc_id: String) -> String:
 static func daily_tick() -> void:
 	if not GameState.run_active:
 		return
-	_tick_sheets()
 	_deliver_pending_sheet()
 	_tick_callbacks()
 	_tick_prep()
@@ -635,18 +794,11 @@ static func daily_tick() -> void:
 	_tick_countdown_chip()
 
 
-static func _tick_sheets() -> void:
-	for sheet in GameState.active_sheets.duplicate():
-		var days: int = sheet.days_left(GameState.day)
-		if days <= 0:
-			GameState.active_sheets.erase(sheet)
-			_vc(sheet.vc_id).status = "expired"          # NOT a rejection (§5)
-			EventBus.sheet_expired.emit(sheet.vc_id)
-		# The WARNING_DAYS branch that used to push a card from here is gone, and with it the
-		# worst latch bug in the injection set: `_build_expiry_warning_event` wrote a CONSTANT
-		# id, so with two live sheets the second warning was silently absorbed by the queue's
-		# dedupe and the surviving card named the wrong investor's deadline.
-		# `funding.sheet_expiry` binds an investor slot and latches `one_shot` PER ENTITY.
+# _tick_sheets is GONE (K10, 2026-09). It used to erase a sheet the day its clock hit zero and
+# close the fund silently. A closed window now leaves the sheet in active_sheets, due
+# (TermSheet.is_decision_due), and funding.sheet_decision asks the player to sit down or
+# decline; decline_expired_sheet / the table close it. The warning cards
+# (funding.sheet_expiry, funding.last_answer) read business days through their seams.
 
 
 static func _deliver_pending_sheet() -> void:
@@ -701,9 +853,13 @@ static func _tick_meeting_day() -> void:
 
 
 static func _tick_countdown_chip() -> void:
+	# K5: BUSINESS days. A sheet whose window has closed is the decision card's business, not
+	# the chip's, so it is left out.
 	var min_days := 9999
 	for sheet in GameState.active_sheets:
-		min_days = mini(min_days, sheet.days_left(GameState.day))
+		if (sheet as TermSheet).is_decision_due(GameState.day):
+			continue
+		min_days = mini(min_days, (sheet as TermSheet).business_days_left(GameState.day))
 	EventBus.offer_countdown_changed.emit(min_days if (min_days <= PitchConstants.WARNING_DAYS) else -1)
 
 
@@ -726,8 +882,8 @@ static func is_last_answer_moment() -> bool:
 	if GameState.active_sheets.size() != 1:
 		return false                             # "elde başka masa kalmamıştır"
 	var sheet: TermSheet = GameState.active_sheets[0]
-	if sheet == null or sheet.days_left(GameState.day) != 1:
-		return false                             # expires tomorrow ⇒ today is the last day
+	if sheet == null or sheet.business_days_left(GameState.day) != 1:
+		return false                             # one weekday left ⇒ today is the last day to answer
 	if not GameState.pending_meeting.is_empty():
 		return false
 	for inv in InvestorRegistry.get_active():
@@ -815,10 +971,13 @@ static func _beat3_view_state(prev: Dictionary) -> Dictionary:
 	vs["monologue_text"] = String(_sorgu.get("mono", ""))
 	vs["beat_label"] = _t("VC_BEAT3_LABEL")
 	var prova: bool = _prep_focus == "prova"
+	# THE SAME HELPERS THE RESOLVER USES (_resolve_beat3). The view used to print the posture's
+	# own difficulty while a clean question was rolled at Kolay - one percentage shown, another
+	# rolled.
 	vs["choices"] = [
-		{"id": "b3_durust", "text": _t("VC_B3_HONEST"), "odds_text": _odds(_t("VC_APPROACH_HONEST"), PitchConstants.BEAT3_SKILL, PitchConstants.DURUST_DIFF, PitchConstants.PREP_BONUS if prova else 0), "caption": _t("VC_B3_HONEST_CAP"), "marked": prova, "marked_text": _t("VC_REHEARSED")},
-		{"id": "b3_spin", "text": _t("VC_B3_SPIN"), "odds_text": _odds(_t("VC_APPROACH_SPIN"), PitchConstants.BEAT3_SKILL, PitchConstants.SPIN_DIFF, 0), "caption": _t("VC_B3_SPIN_CAP")},
-		{"id": "b3_gecistir", "text": _t("VC_B3_DEFLECT"), "odds_text": _odds(_t("VC_APPROACH_DEFLECT"), PitchConstants.BEAT3_SKILL, PitchConstants.GECISTIR_DIFF, 0), "caption": _t("VC_B3_DEFLECT_CAP").format({"cap": PitchConstants.GECISTIR_CAP}), "caption_danger": true},
+		{"id": "b3_durust", "text": _t("VC_B3_HONEST"), "odds_text": _odds(_t("VC_APPROACH_HONEST"), PitchConstants.BEAT3_SKILL, _beat3_diff("durust"), _beat3_bonus("durust")), "caption": _t("VC_B3_HONEST_CAP"), "marked": prova, "marked_text": _t("VC_REHEARSED")},
+		{"id": "b3_spin", "text": _t("VC_B3_SPIN"), "odds_text": _odds(_t("VC_APPROACH_SPIN"), PitchConstants.BEAT3_SKILL, _beat3_diff("spin"), _beat3_bonus("spin")), "caption": _t("VC_B3_SPIN_CAP")},
+		{"id": "b3_gecistir", "text": _t("VC_B3_DEFLECT"), "odds_text": _odds(_t("VC_APPROACH_DEFLECT"), PitchConstants.BEAT3_SKILL, _beat3_diff("gecistir"), _beat3_bonus("gecistir")), "caption": _t("VC_B3_DEFLECT_CAP").format({"cap": PitchConstants.GECISTIR_CAP}), "caption_danger": true},
 	]
 	return vs
 
@@ -845,7 +1004,9 @@ static func _beat4_view_state() -> Dictionary:
 		vs["choices"] = [{"id": "b4_ack", "text": _t("VC_B4_WIN_CHOICE")}]
 	elif zone_val < PitchConstants.ILIK_MIN:
 		vs["active_line"] = {"text": _t("VC_B4_LOSS_LINE"), "speaker_tag": tag, "is_monologue": false}
-		vs["monologue_text"] = _t("VC_B4_LOSS_MONO")
+		# The Soğuk band is decided here - _resolve_beat4 rejects whatever is clicked - so the
+		# exit view already carries Frank's line (§6.2).
+		vs["monologue_text"] = _t("VC_B4_LOSS_MONO") + "\n\n" + _cold_exit_text()
 		vs["choices"] = [{"id": "b4_leave", "text": _t("VC_B4_LOSS_CHOICE")}]
 	else:
 		vs["active_line"] = {"text": _t("VC_B4_WARM_LINE"), "speaker_tag": tag, "is_monologue": false}
@@ -876,9 +1037,38 @@ static func _result_view_state(kind: String) -> Dictionary:
 		"seed_harsh": line = _t("SEED_RES_HARSH")
 		_: line = _t("VC_RES_DEFAULT")
 	vs["active_line"] = {"text": line, "speaker_tag": tag, "is_monologue": false}
+	if kind in ["zorla_ret", "ret"]:
+		vs["monologue_text"] = _cold_exit_text()     # §6.2 — the rejection's exit view
 	vs["beat_label"] = _t("VC_BEAT4_LABEL")
 	vs["choices"] = [{"id": "b4_close", "text": _t("VC_B4_CLOSE")}]
 	return vs
+
+
+## §6.2 — Frank on the way out of a Series A rejection. Picked ONCE per sitting (the view may
+## be built before _reject writes the streak), and the pick is written the moment it is made:
+##   the previous finished Series A meeting was a rejection too  → the "two in a row" line;
+##   else this fund's own line, if it has not been shown this run  → that line (remembered);
+##   else                                                          → the general line.
+static func _pick_cold_exit() -> String:
+	if _stage != PitchConstants.STAGE_SERIES_A:
+		return ""
+	if _cold_exit_key != "":
+		return _cold_exit_key
+	if GameState.vc_last_meeting_rejected:
+		_cold_exit_key = "VC_FRANK_COLD_GENERAL_2"
+	elif _vc_id in COLD_EXIT_FUNDS and not GameState.vc_frank_cold_shown.has(_vc_id):
+		_cold_exit_key = "VC_FRANK_COLD_" + _vc_id.to_upper()
+		GameState.vc_frank_cold_shown.append(_vc_id)
+	else:
+		_cold_exit_key = "VC_FRANK_COLD_GENERAL_1"
+	return _cold_exit_key
+
+
+static func _cold_exit_text() -> String:
+	var key: String = _pick_cold_exit()
+	if key == "":
+		return ""
+	return _t("VC_FRANK_COLD_EXIT").format({"line": _t(key)})
 
 
 # ============================================================================
@@ -1029,6 +1219,18 @@ static func _beat2_bonus(angle: String) -> int:
 	return 0
 
 
+## The Beat-3 roll's difficulty: a clean question (nothing to interrogate) is Kolay whatever
+## the posture. ONE function for the resolver and the view, the _angle_diff rule.
+static func _beat3_diff(posture: String) -> int:
+	if String(_sorgu.get("key", "")) == "clean":
+		return PitchConstants.DIFF_KOLAY
+	return _posture_diff(posture)
+
+
+static func _beat3_bonus(posture: String) -> int:
+	return PitchConstants.PREP_BONUS if (_prep_focus == "prova" and posture == "durust") else 0
+
+
 static func _posture_diff(posture: String) -> int:
 	match posture:
 		"durust": return PitchConstants.DURUST_DIFF
@@ -1123,6 +1325,7 @@ static func _reset() -> void:
 	_reentry = false
 	_sorgu = {}
 	_pending_outcome = ""
+	_cold_exit_key = ""
 	_stage = PitchConstants.STAGE_SERIES_A
 
 

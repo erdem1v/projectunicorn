@@ -83,6 +83,8 @@ const NEUTRAL_VERBS := [
 	# moment, exactly as a Series A signature does. "decline_buyout" closes the VC road and
 	# writes one memory flag; the cash it declines is cash that never arrives.
 	"open_seed_table", "decline_buyout",
+	# K10: the closed-window answer "Decline". Closes one fund; no money, not a rejection.
+	"decline_offer",
 	# The two the migration required — see their arms for why each door is this narrow.
 	"set_game_flag", "mentor_advisory",
 	# B2B outcomes that move no money: stalling, refusing, declining. Their two siblings that
@@ -498,8 +500,22 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			VCPitchSystem.begin_meeting(mvc)
 			return {"verb": verb, "vc": mvc}
 		"open_term_table":
-			EventBus.term_table_requested.emit(String(e.get("vc_id", "")))
-			return {"verb": verb, "vc": e.get("vc_id", "")}
+			# A literal vc_id still wins (the old grammar); otherwise the BOUND investor slot,
+			# which is how the K10 decision card names the fund it is about.
+			var tvc: String = String(e.get("vc_id", ""))
+			if tvc == "":
+				tvc = _entity(e, ctx, EvScope.TYPE_INVESTOR)
+			if tvc == "":
+				return _no_target(verb, tvc)
+			EventBus.term_table_requested.emit(tvc)
+			return {"verb": verb, "vc": tvc}
+		"decline_offer":
+			var dvc: String = _entity(e, ctx, EvScope.TYPE_INVESTOR)
+			if dvc == "":
+				return _no_target(verb, dvc)
+			if not VCPitchSystem.decline_expired_sheet(dvc):
+				return {"verb": verb, "refused": "no sheet awaiting a decision"}
+			return {"verb": verb, "vc": dvc}
 		"open_seed_table":
 			# No vc_id on the effect: the seed offer knows whose it is, and there is only ever
 			# one. A card naming an investor would be a card that has to know the roster.

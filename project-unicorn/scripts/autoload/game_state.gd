@@ -355,6 +355,11 @@ var pending_meeting: Dictionary = {}   # {vc_id, day} — one at a time (ledger 
 var prep: Dictionary = {}              # {vc_id, focus, done} — one prep per scheduled meeting; empty = none
 var run_pitches: int = 0               # run-cumulative: completed meetings (newspaper seam)
 var run_sheets_won: int = 0            # run-cumulative: sheets granted (distinct from run_pushes_*)
+# Hunt & offer lifecycle (K4 / §6.2 cold exit, 2026-09). All three are declared with defaults, so
+# an older save loads with "no cancel today, no rejection streak, no Frank line shown yet".
+var vc_meeting_cancel_day: int = -1    # K4: the day a booked meeting was cancelled; no new booking that day
+var vc_last_meeting_rejected: bool = false  # did the last FINISHED Series A meeting end in a rejection?
+var vc_frank_cold_shown: Array = []    # §6.2: fund ids whose own cold-exit Frank line has been shown this run
 
 # --- Seed round (GDD v2 ch. 09 §3) — DELIBERATELY OUTSIDE the Series A block above.
 # The middle rung of the ladder: savings → Frank's cheque → SEED → Series A. Owner is
@@ -790,6 +795,38 @@ func get_date_dict(for_day: int = -1) -> Dictionary:
 	return Time.get_datetime_dict_from_unix_time(anchor_unix + (d - 1) * 86400)
 
 
+## Is run day N a weekday? Godot's weekday is 0 = Sunday … 6 = Saturday, read off the real
+## calendar through get_date_dict, so the answer is the same one the TopBar date shows.
+func is_business_day(for_day: int) -> bool:
+	var wd: int = int(get_date_dict(for_day).weekday)
+	return wd != 0 and wd != 6
+
+
+## Weekdays in the half-open run-day interval (from_day, to_day]. Negative when to_day is
+## earlier. Whole weeks are counted arithmetically, so a far-off day costs at most six probes.
+func business_days_between(from_day: int, to_day: int) -> int:
+	if to_day < from_day:
+		return -business_days_between(to_day, from_day)
+	var span: int = to_day - from_day
+	var weeks: int = int(float(span) / 7.0)
+	var count: int = weeks * 5
+	for d in range(from_day + weeks * 7 + 1, to_day + 1):
+		if is_business_day(d):
+			count += 1
+	return count
+
+
+## The run day on which the n-th weekday after from_day falls (n >= 1).
+func add_business_days(from_day: int, n: int) -> int:
+	var d: int = from_day
+	var left: int = maxi(n, 0)
+	while left > 0:
+		d += 1
+		if is_business_day(d):
+			left -= 1
+	return d
+
+
 ## Day N → the month word in the CURRENT locale ("Ocak" / "January"). Kept as a seam because
 ## callers pass a day, not a month; the words themselves come from Fmt.
 func month_name_for_day(for_day: int = -1) -> String:
@@ -998,6 +1035,9 @@ func initialize_run(payload: Dictionary) -> void:
 	prep.clear()
 	run_pitches = 0
 	run_sheets_won = 0
+	vc_meeting_cancel_day = -1
+	vc_last_meeting_rejected = false
+	vc_frank_cold_shown = []
 
 	# Seed round (ch. 09 §3) + the faced-Series-A memory (ch. 13 §1).
 	seed_door_open_day = -1

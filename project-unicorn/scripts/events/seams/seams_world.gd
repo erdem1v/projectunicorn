@@ -84,6 +84,7 @@ static func _install_rival() -> void:
 
 static func _install_investor() -> void:
 	var G := EvSeams.Kind.GLOBAL
+	var E := EvSeams.Kind.ENTITY
 
 	# I7's landing sites for SkillCheck.breakdown(). `founder.skill` is the fallback when the
 	# check names a skill with no seam of its own — better a registered generic than an
@@ -100,6 +101,14 @@ static func _install_investor() -> void:
 	EvSeams.register("investor.sheets_live", G, TYPE_INT,
 		func() -> int: return GameState.active_sheets.size(),
 		"Funding", "WRAPPER; term sheets in hand")
+	# K6: the estimated ranges the offer row prints before the table - prose, resolved at
+	# display time so a language switch re-renders them. "" when the fund holds no sheet.
+	EvSeams.register("investor.est_valuation", E, TYPE_STRING,
+		func(id: String) -> String: return VCPitchSystem.estimate_valuation_text(id),
+		"Funding", "~$lo-hi M around the sheet's opening valuation; never the number")
+	EvSeams.register("investor.est_dilution", E, TYPE_STRING,
+		func(id: String) -> String: return VCPitchSystem.estimate_dilution_text(id),
+		"Funding", "~lo-hi % around the sheet's opening dilution; never the number")
 	EvSeams.register("investor.meeting_pending", G, TYPE_BOOL,
 		func() -> bool: return not GameState.pending_meeting.is_empty(),
 		"Funding", "WRAPPER; one at a time by construction")

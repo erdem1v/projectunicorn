@@ -29,6 +29,7 @@ const RETAIN_ID := "customer.retention"
 const EXPANSION_ID := "customer.expansion"
 const MEETING_ID := "funding.meeting_day"
 const SHEET_WARN_ID := "funding.sheet_expiry"
+const SHEET_DECISION_ID := "funding.sheet_decision"
 
 # Fixture skill defaults. The three names are KEPT (fifty-odd call sites pass them
 # positionally) but their MEANING moved with the 2026-08-21 area migration, because the
@@ -99,9 +100,9 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"sheet_expiry_no_rejection": fail = _case_sheet_expiry_no_rejection()
 		"third_sheet_delayed":  fail = _case_third_sheet_delayed()
 		"cascade_defer_with_sheet": fail = _case_cascade_defer_with_sheet()
-		"walk_counts_rejection": fail = _case_walk_counts_rejection()
+		"walk_not_a_rejection": fail = _case_walk_not_a_rejection()
 		"table_sign_closes_series_a": fail = _case_table_sign_closes_series_a()
-		"table_walk_counts_rejection": fail = _case_table_walk_counts_rejection()
+		"table_walk_not_a_rejection": fail = _case_table_walk_not_a_rejection()
 		"patience_zero_locks_pushes": fail = _case_patience_zero_locks_pushes()
 		"push_decay_lowers_odds": fail = _case_push_decay_lowers_odds()
 		"leverage_bonus_applies_and_shows": fail = _case_leverage_bonus_applies_and_shows()
@@ -109,6 +110,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"investment_figure_tracks_terms": fail = _case_investment_figure_tracks_terms()
 		"table_board_push_sequence": fail = _case_table_board_push_sequence()
 		"deal_prompt_defer_keeps_clock": fail = _case_deal_prompt_defer_keeps_clock()
+		"hunt_offer_lifecycle": fail = _case_hunt_offer_lifecycle()
 		"prep_bonus_and_capacity": fail = _case_prep_bonus_and_capacity()
 		"meeting_daylock":      fail = _case_meeting_daylock()
 		"pivot_closes_hunt":    fail = _case_pivot_closes_hunt()
@@ -1610,10 +1612,15 @@ static func _case_callback_contract() -> String:
 		return "callback type=%s" % st.get("callback", {}).get("type", "")
 	if st.get("callback", {}).get("met", true):
 		return "callback already met"
+	# ONE CALLBACK PER VC: the fund cannot be re-booked before its condition is met.
+	if VCPitchSystem.request_meeting("meridian"):
+		return "callback fund re-booked before its condition was met"
 	GameState.set_flag("mvp_live_bug_count", 1)   # satisfy: bugs under target
 	_sim_day()
 	if not st.get("callback", {}).get("met", false):
 		return "callback not met after condition satisfied"
+	if VCPitchSystem.meeting_blocked_reason("meridian") != "":
+		return "met callback still locked (%s)" % VCPitchSystem.meeting_blocked_reason("meridian")
 	if not st.get("reentry_bonus", false):
 		return "reentry_bonus not armed"
 	var seed_with: int = int(VCPitchSystem.initial_conviction("meridian").value)
@@ -1666,23 +1673,63 @@ static func _case_pitch_refused_acq() -> String:
 
 
 static func _case_sheet_expiry_no_rejection() -> String:
+	# K5 + K10: two sheets granted the same day. Frank's warning comes at 3 BUSINESS days; at
+	# the close the sheets are NOT dropped - a sit-or-decline card asks, one fund at a time,
+	# on the same day; declining closes the fund and is not a rejection.
 	GameState.set_phase(3)
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
+	GameState.active_sheets.append(VCPitchSystem._make_sheet("nexus", GameState.day))
+	var expires: int = VCPitchSystem.sheet_for("anchor").expires_day
+	if GameState.business_days_between(GameState.day, expires) != PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS:
+		return "validity is not %d business days" % PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS
 	var warned := false
+	var decided: Array = []
+	var decision_days: Array = []
 	for i in 20:
-		_sim_day()
-		if _instances_of(SHEET_WARN_ID) > 0 or EventGate.active_id() == SHEET_WARN_ID:
-			warned = true
-		if GameState.active_sheets.is_empty():
+		_sim_day_full()
+		for guard in 16:
+			var a: String = EventGate.active_id()
+			if a == "":
+				break
+			if a == SHEET_WARN_ID:
+				warned = true
+				if VCPitchSystem.sheet_for("anchor").business_days_left(GameState.day) > PitchConstants.WARNING_DAYS:
+					return "expiry warning early (%d business days left)" % VCPitchSystem.sheet_for("anchor").business_days_left(GameState.day)
+			if a == SHEET_DECISION_ID:
+				var vc: String = str(EventGate.active_context().get("investor", {}).get("id", ""))
+				if GameState.active_sheets.size() != 2 - decided.size():
+					return "a sheet was dropped before its decision (%d live)" % GameState.active_sheets.size()
+				decided.append(vc)
+				decision_days.append(GameState.day)
+				EventGate.resolve(a, "decline")
+				# The next card comes on the hourly sweep, the same day.
+				while decided.size() < 2 and GameState.current_hour < TimeManager.HOURS_PER_DAY - 1 \
+						and EventGate.active_id() == "":
+					GameState.set_current_hour(GameState.current_hour + 1)
+					TimeManager._dispatch_hourly_tick(GameState.current_hour)
+				continue
+			EventGate.resolve(a, 0)
+		if decided.size() >= 2:
 			break
 	if not warned:
-		return "no expiry warning admitted at day 3"
+		return "no expiry warning admitted"
+	if decided.size() != 2:
+		return "decision cards seen for %s (want both funds)" % str(decided)
+	if decided[0] == decided[1]:
+		return "the same fund was asked twice: %s" % str(decided)
+	if decision_days[0] != decision_days[1]:
+		return "the two cards came on different days %s" % str(decision_days)
+	if decision_days[0] < expires:
+		return "decision card before the window closed (day %d < %d)" % [decision_days[0], expires]
 	if not GameState.active_sheets.is_empty():
-		return "sheet did not expire"
-	if GameState.vc_states.get("anchor", {}).get("status", "") != "expired":
-		return "status not expired"
+		return "declined sheets survived"
+	for vc in ["anchor", "nexus"]:
+		if GameState.vc_states.get(vc, {}).get("status", "") != "expired":
+			return "%s status not closed after decline" % vc
+		if VCPitchSystem.request_meeting(vc):
+			return "%s could be re-booked after declining" % vc
 	if GameState.vc_rejections != 0:
-		return "expiry counted as rejection (%d)" % GameState.vc_rejections
+		return "decline counted as rejection (%d)" % GameState.vc_rejections
 	return ""
 
 
@@ -1728,13 +1775,16 @@ static func _case_cascade_defer_with_sheet() -> String:
 	return ""
 
 
-static func _case_walk_counts_rejection() -> String:
+static func _case_walk_not_a_rejection() -> String:
+	# K11: the player's walk closes the fund for the run but is not a rejection.
 	GameState.set_phase(3)
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("nexus", GameState.day))
 	VCPitchSystem.walk_table("anchor")
-	if GameState.vc_rejections != 1:
-		return "walk not counted (%d)" % GameState.vc_rejections
+	if GameState.vc_rejections != 0:
+		return "the player's walk counted as a rejection (%d)" % GameState.vc_rejections
+	if VCPitchSystem.request_meeting("anchor"):
+		return "a walked fund could be re-booked"
 	if GameState.vc_states.get("anchor", {}).get("status", "") != "walked":
 		return "status not walked"
 	if VCPitchSystem.sheet_for("anchor") != null:
@@ -1793,7 +1843,7 @@ static func _case_table_sign_closes_series_a() -> String:
 	return ""
 
 
-static func _case_table_walk_counts_rejection() -> String:
+static func _case_table_walk_not_a_rejection() -> String:
 	GameState.set_phase(3)
 	_grant("anchor")
 	_grant("nexus")
@@ -1801,8 +1851,8 @@ static func _case_table_walk_counts_rejection() -> String:
 	EventBus.sheet_walked.connect(func(vc: String) -> void: walked.append(vc))
 	TermSheetTableSystem.open("anchor")
 	TermSheetTableSystem.walk()
-	if GameState.vc_rejections != 1:
-		return "vc_rejections=%d (want 1)" % GameState.vc_rejections
+	if GameState.vc_rejections != 0:
+		return "vc_rejections=%d (want 0 — K11: the player's walk is not a rejection)" % GameState.vc_rejections
 	if GameState.vc_states.get("anchor", {}).get("status", "") != "walked":
 		return "status not walked"
 	if VCPitchSystem.sheet_for("anchor") != null:
@@ -1996,8 +2046,9 @@ static func _case_deal_prompt_defer_keeps_clock() -> String:
 	var sheet: TermSheet = VCPitchSystem.sheet_for("anchor")
 	if sheet == null:
 		return "sheet not granted"
-	if sheet.days_left(GameState.day) != PitchConstants.SHEET_VALIDITY_DAYS:
-		return "validity clock not at full (%d)" % sheet.days_left(GameState.day)
+	var day0: int = GameState.day
+	if sheet.business_days_left(GameState.day) != PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS:
+		return "validity clock not at full (%d)" % sheet.business_days_left(GameState.day)
 	for i in 3:
 		_sim_day()
 	if VCPitchSystem.sheet_for("anchor") == null:
@@ -2005,8 +2056,84 @@ static func _case_deal_prompt_defer_keeps_clock() -> String:
 	var vs: Dictionary = TermSheetTableSystem.open("anchor")
 	if vs.is_empty() or not TermSheetTableSystem.is_active():
 		return "table not re-enterable after defer"
-	if sheet.days_left(GameState.day) != PitchConstants.SHEET_VALIDITY_DAYS - 3:
-		return "clock did not tick during defer (%d)" % sheet.days_left(GameState.day)
+	var want: int = PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS - GameState.business_days_between(day0, GameState.day)
+	if sheet.business_days_left(GameState.day) != want:
+		return "clock did not tick in business days during defer (%d, want %d)" % [sheet.business_days_left(GameState.day), want]
+	return ""
+
+
+static func _case_hunt_offer_lifecycle() -> String:
+	# K6: the pre-table estimate contains the true opening term and is never centred on it,
+	# and it does not reroll. K4: cancelling costs the fund's next meeting and shuts booking
+	# for the day. §6.2: Frank's cold exit is the fund's own line first, then "two in a row".
+	# Bug 9: a clean Beat-3 question shows the odds it rolls.
+	GameState.set_phase(3)
+	_seed_b2b_series_a()
+	_sim_day()
+	for vc in ["anchor", "nexus", "bosphorus", "meridian"]:
+		var sh: TermSheet = VCPitchSystem._make_sheet(vc, GameState.day)
+		var r: Dictionary = VCPitchSystem.estimate_ranges(sh)
+		var v: int = int(sh.opening_terms.valuation_m)
+		var d: int = int(sh.opening_terms.dilution_pct)
+		if not (int(r.val_lo) <= v and v <= int(r.val_hi)) or int(r.val_lo) + int(r.val_hi) == 2 * v:
+			return "%s valuation range %s bad for %d" % [vc, str(r), v]
+		if not (int(r.dil_lo) <= d and d <= int(r.dil_hi)) or int(r.dil_lo) + int(r.dil_hi) == 2 * d:
+			return "%s dilution range %s bad for %d" % [vc, str(r), d]
+		if VCPitchSystem.estimate_ranges(sh) != r:
+			return "%s estimate rerolled" % vc
+
+	var base: int = int(VCPitchSystem.initial_conviction("nexus").value)
+	if not VCPitchSystem.request_meeting("nexus"):
+		return "request refused"
+	if not VCPitchSystem.cancel_meeting():
+		return "cancel refused"
+	if VCPitchSystem.request_meeting("anchor"):
+		return "a meeting was booked the same day as a cancel"
+	if VCPitchSystem.meeting_blocked_reason("anchor") != "cancelled_today":
+		return "blocked reason '%s'" % VCPitchSystem.meeting_blocked_reason("anchor")
+	var after: int = int(VCPitchSystem.initial_conviction("nexus").value)
+	if base - after != PitchConstants.MEETING_CANCEL_PENALTY:
+		return "cancel penalty %d (want %d)" % [base - after, PitchConstants.MEETING_CANCEL_PENALTY]
+	_sim_day()
+	if not VCPitchSystem.request_meeting("nexus"):
+		return "booking still shut the next day"
+	var day_before: int = int(GameState.pending_meeting.day)
+	_sim_day()
+	if not VCPitchSystem.reschedule_meeting():
+		return "reschedule refused"
+	if int(GameState.pending_meeting.day) != GameState.day + PitchConstants.MEETING_LEAD_DAYS \
+			or int(GameState.pending_meeting.day) == day_before:
+		return "reschedule did not re-apply the lead time from today"
+	if int(GameState.vc_states["nexus"].get("move_penalty", 0)) \
+			!= PitchConstants.MEETING_CANCEL_PENALTY + PitchConstants.MEETING_RESCHEDULE_PENALTY:
+		return "move penalties did not accumulate (%s)" % str(GameState.vc_states["nexus"].get("move_penalty"))
+	GameState.pending_meeting.clear()
+
+	# Cold exit: two rejections in a row.
+	_force("fail")
+	VCPitchSystem.begin_meeting("anchor")
+	VCPitchSystem.advance("b1_read")
+	VCPitchSystem.advance("b2_metrik")
+	# Bug 9: the shown Beat-3 odds use the rolled difficulty (Kolay on a clean question).
+	VCPitchSystem._sorgu = {"key": "clean"}
+	var vs: Dictionary = VCPitchSystem._beat3_view_state({})
+	var want_odds: String = VCPitchSystem._odds(TranslationServer.translate("VC_APPROACH_HONEST"),
+		PitchConstants.BEAT3_SKILL, PitchConstants.DIFF_KOLAY, 0)
+	if String(vs.choices[0].odds_text) != want_odds:
+		return "clean-question odds shown '%s', rolled '%s'" % [vs.choices[0].odds_text, want_odds]
+	VCPitchSystem.advance("b3_spin")
+	VCPitchSystem.advance("b4_leave")
+	if not GameState.vc_frank_cold_shown.has("anchor") or not GameState.vc_last_meeting_rejected:
+		return "first rejection did not show the fund's own line (%s)" % str(GameState.vc_frank_cold_shown)
+	VCPitchSystem.begin_meeting("meridian")
+	VCPitchSystem.advance("b1_read")
+	VCPitchSystem.advance("b2_metrik")
+	VCPitchSystem.advance("b3_spin")
+	if VCPitchSystem._pick_cold_exit() != "VC_FRANK_COLD_GENERAL_2":
+		return "second rejection in a row picked %s" % VCPitchSystem._pick_cold_exit()
+	VCPitchSystem.advance("b4_leave")
+	if GameState.vc_frank_cold_shown.has("meridian"):
+		return "the general line also spent meridian's own line"
 	return ""
 
 

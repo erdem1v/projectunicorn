@@ -558,7 +558,8 @@ static func sign() -> void:
 	VCPitchSystem.sign_table(vc, terms, stage)
 
 
-## Walk the table → VC seam (+1 rejection, sheet destroyed, others survive). Ends the sitting.
+## Walk the table → VC seam (sheet destroyed, fund closed, others survive; K11: the player's
+## walk is not a rejection). Ends the sitting.
 static func walk() -> void:
 	if not _active:
 		return

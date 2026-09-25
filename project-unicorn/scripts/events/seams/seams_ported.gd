@@ -142,11 +142,20 @@ static func install() -> void:
 		func() -> int:
 			# The MINIMUM across live sheets, because the warning is about the one about to
 			# lapse. 9999 with no sheets so a "<= 3" test cannot be satisfied by having none.
+			# BUSINESS days since K5 (2026-09): the validity window is ten weekdays, and this
+			# number is printed in Frank's warning. A sheet whose window has already closed is
+			# funding.sheet_decision's, not the warning's, and is left out.
 			var least: int = 9999
 			for sheet in GameState.active_sheets:
-				least = mini(least, int(sheet.days_left(GameState.day)))
+				var ts: TermSheet = sheet
+				if ts.is_decision_due(GameState.day):
+					continue
+				least = mini(least, ts.business_days_left(GameState.day))
 			return least,
-		"Funding", "9999 when no sheet is live")
+		"Funding", "business days; 9999 when no sheet is live")
+	EvSeams.register("funding.sheet_decision_due", G, TYPE_BOOL,
+		func() -> bool: return VCPitchSystem.decision_due_sheet() != null,
+		"Funding", "K10: a Series A sheet's window has closed and waits for sit-or-decline")
 	EvSeams.register("funding.last_answer_moment", G, TYPE_BOOL,
 		func() -> bool: return VCPitchSystem.is_last_answer_moment(),
 		"Investment", "one sheet, one day left, and no other table to walk to")

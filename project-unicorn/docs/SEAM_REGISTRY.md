@@ -373,9 +373,12 @@ systems. Each is a WRAPPER — no module gained a method for it.
 | `funding.angel_days_since_accept` | INT | `angel_seed_accepted_day` | **-1** when the cheque has not landed. The hire nudge's two-day delay reads this, and the reason matters: it first read `days_since_flag` on an ENGINE flag nothing stamps, which is §19.5's failure — a condition asking the wrong store is false forever and looks like a design decision |
 | `funding.hard_mode` | BOOL | `GameState.get_flag("hard_mode_unlocked")` | RESERVED — no writer exists anywhere. It is the honest lock on Frank's decline row, and it is a seam for the same reason as the row above |
 | `funding.gate_pending_phase` | INT | `GameState.pending_next_phase` | 0 when no gate is open |
-| `funding.sheet_days_left` | INT | the MINIMUM across live sheets | 9999 with no sheet, so a `<= 3` test cannot be satisfied by having none |
-| `funding.last_answer_moment` | BOOL | `VCPitchSystem.is_last_answer_moment()` | one sheet, one day left, no other table to walk to. The predicate stayed in the system; only the QUESTION moved |
+| `funding.sheet_days_left` | INT | the MINIMUM across live sheets, in BUSINESS days (K5, 2026-09) | 9999 with no sheet, so a `<= 3` test cannot be satisfied by having none. A sheet whose window has closed is left out - it belongs to `funding.sheet_decision_due` |
+| `funding.sheet_decision_due` | BOOL | `VCPitchSystem.decision_due_sheet()` | K10: a Series A sheet's window has closed and waits for sit-or-decline. The `decision_sheet` selector binds the same sheet |
+| `funding.last_answer_moment` | BOOL | `VCPitchSystem.is_last_answer_moment()` | one sheet, one business day left, no other table to walk to. The predicate stayed in the system; only the QUESTION moved |
 | `funding.meeting_day_arrived` | BOOL | `GameState.pending_meeting` | a booked meeting's day has come |
+| `investor.est_valuation` | STRING (entity) | `VCPitchSystem.estimate_valuation_text(id)` | K6: "~$lo–hiM" around the sheet's opening valuation, never the number; "" when the fund holds no sheet |
+| `investor.est_dilution` | STRING (entity) | `VCPitchSystem.estimate_dilution_text(id)` | K6: the same for dilution |
 
 **Deleted: `funding.angel_offered`.** It wrapped `angel_seed_offered`, a hand-rolled one-shot
 that went with the old engine. A seam over a flag nothing writes is a seam that answers `false`

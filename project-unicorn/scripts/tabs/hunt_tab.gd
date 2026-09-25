@@ -269,20 +269,60 @@ func _build_roster_actions(vc_id: String) -> Control:
 	var pending_here: bool = GameState.pending_meeting.get("vc_id", "") == vc_id
 	if pending_here:
 		row.add_child(_label(tr("HUNT_MEETING_SET"), C_DIM, 11))
+		var moves: Control = _meeting_move_row()
+		if moves != null:
+			row.add_child(moves)
 		row.add_child(_prep_row(vc_id))
 	else:
 		var btn := Button.new()
 		btn.text = (tr("HUNT_REQUEST_AGAIN") if status == "callback" else tr("HUNT_REQUEST_MEETING")).format(
 			{"n": PitchConstants.MEETING_LEAD_DAYS})
-		var blocked: bool = not GameState.pending_meeting.is_empty()
-		btn.disabled = blocked
-		if blocked:
-			btn.tooltip_text = tr("HUNT_MEETING_BUSY")
+		# The system says why (no fake choices): the callback condition is the lock on a
+		# callback fund, and it is already printed one line up, so the tooltip repeats it.
+		var reason: String = VCPitchSystem.meeting_blocked_reason(vc_id)
+		btn.disabled = reason != ""
+		if reason != "":
+			btn.tooltip_text = _meeting_block_text(reason, st)
 		btn.pressed.connect(func() -> void:
 			VCPitchSystem.request_meeting(vc_id)
 			_refresh())
 		row.add_child(btn)
 	return row
+
+
+## K4: cancel or move the booked meeting. Only before its day; each costs a little of that
+## fund's conviction at its next meeting, and the buttons say how much.
+func _meeting_move_row() -> Control:
+	if not VCPitchSystem.can_move_meeting():
+		return null
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	var move := Button.new()
+	move.text = tr("HUNT_MEETING_RESCHEDULE").format({"n": PitchConstants.MEETING_LEAD_DAYS})
+	move.tooltip_text = tr("HUNT_RESCHEDULE_TIP").format({"n": PitchConstants.MEETING_RESCHEDULE_PENALTY})
+	move.pressed.connect(func() -> void:
+		VCPitchSystem.reschedule_meeting()
+		_refresh())
+	box.add_child(move)
+	var cancel := Button.new()
+	cancel.text = tr("HUNT_MEETING_CANCEL")
+	cancel.tooltip_text = tr("HUNT_CANCEL_TIP").format({"n": PitchConstants.MEETING_CANCEL_PENALTY})
+	cancel.pressed.connect(func() -> void:
+		VCPitchSystem.cancel_meeting()
+		_refresh())
+	box.add_child(cancel)
+	return box
+
+
+func _meeting_block_text(reason: String, st: Dictionary) -> String:
+	match reason:
+		"callback_unmet":
+			return tr("HUNT_CONDITION").format({"condition": _callback_text(st.get("callback", {}))})
+		"cancelled_today":
+			return tr("HUNT_MEETING_CANCELLED_TODAY")
+		"busy":
+			return tr("HUNT_MEETING_BUSY")
+	return ""
 
 
 func _prep_row(vc_id: String) -> Control:
@@ -315,7 +355,11 @@ func _refresh_offers() -> void:
 	for c in _offers.get_children():
 		c.queue_free()
 	var sheets: Array = GameState.active_sheets
-	if sheets.is_empty():
+	var queued: Array = []
+	for inv in InvestorRegistry.get_active():
+		if bool(GameState.vc_states.get(String(inv.id), {}).get("pending_sheet", false)):
+			queued.append(String(inv.id))
+	if sheets.is_empty() and queued.is_empty():
 		_offers.add_child(_label(tr("HUNT_NO_OFFERS"), C_SUB, 11))
 	for sheet in sheets:
 		_offers.add_child(_build_offer_card(sheet))
@@ -324,6 +368,10 @@ func _refresh_offers() -> void:
 		var empty := _label(tr("HUNT_EMPTY_SLOT"), C_SUB, 11)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_offers.add_child(empty)
+	# K8: the third sheet waits for a slot, and the player can see it waiting.
+	for vc_id in queued:
+		_offers.add_child(_label(tr("HUNT_QUEUED_OFFER").format({"investor": _vc_name(vc_id),
+			"n": PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS}), C_SUB, 11, true))
 
 
 func _build_offer_card(sheet) -> Control:
@@ -331,28 +379,44 @@ func _build_offer_card(sheet) -> Control:
 	var card := VBoxContainer.new()
 	card.add_theme_constant_override("separation", 3)
 	card.add_child(_label(String(inv.get("display_name", "")), C_INK, 13))
-	# Terms preview (mono-ish via RowMeta) + validity countdown, amber → red ≤3.
-	var t: Dictionary = sheet.term_bands
+	var vc_id: String = String(sheet.vc_id)
+	# K6: an ESTIMATED range, never the number and never the board term - the table is where
+	# the exact terms open up. The range is seeded per sheet, so it does not reroll.
 	card.add_child(_label(tr("HUNT_TERMS").format({
-		"valuation": InvestorRegistry.term_band_label(String(t.get("valuation", ""))),
-		"equity": InvestorRegistry.term_band_label(String(t.get("dilution", ""))),
-		"board": InvestorRegistry.term_band_label(String(t.get("board", "")))}), C_DIM, 11, true))
-	var days: int = sheet.days_left(GameState.day)
-	var dl := _label(tr("HUNT_VALIDITY").format({"n": days}), UiTokens.ACCENT_DEEP if days > PitchConstants.WARNING_DAYS else UiTokens.negative(), 11)
-	card.add_child(dl)
+		"valuation": VCPitchSystem.estimate_valuation_text(vc_id),
+		"equity": VCPitchSystem.estimate_dilution_text(vc_id)}), C_DIM, 11, true))
+	var due: bool = (sheet as TermSheet).is_decision_due(GameState.day)
+	if due:
+		# K10: the window has closed; the decision card is up (or about to be). The same two
+		# answers live here so the page never shows a sheet with nothing to do about it.
+		card.add_child(_label(tr("HUNT_DECISION_DUE"), UiTokens.negative(), 11, true))
+	else:
+		# K5: plain information in business days, amber → red at the warning threshold.
+		var days: int = (sheet as TermSheet).business_days_left(GameState.day)
+		card.add_child(_label(tr("HUNT_VALIDITY").format({"n": days}),
+			UiTokens.ACCENT_DEEP if days > PitchConstants.WARNING_DAYS else UiTokens.negative(), 11))
 	# Actions.
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 6)
 	var sit := Button.new()
 	sit.text = tr("HUNT_SIT_DOWN")
-	sit.pressed.connect(_open_table.bind(String(sheet.vc_id)))
+	sit.pressed.connect(_open_table.bind(vc_id))
 	actions.add_child(sit)
 	var walk := Button.new()
-	walk.text = tr("HUNT_WALK_AWAY")
-	walk.pressed.connect(_confirm_walk.bind(String(sheet.vc_id)))
+	if due:
+		walk.text = tr("VC_EV_DECISION_DECLINE")
+		walk.pressed.connect(_decline_due.bind(vc_id))
+	else:
+		walk.text = tr("HUNT_WALK_AWAY")
+		walk.pressed.connect(_confirm_walk.bind(vc_id))
 	actions.add_child(walk)
 	card.add_child(actions)
 	return card
+
+
+func _decline_due(vc_id: String) -> void:
+	VCPitchSystem.decline_expired_sheet(vc_id)
+	_refresh()
 
 
 func _open_table(vc_id: String) -> void:

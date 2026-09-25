@@ -83,11 +83,30 @@ const MEETING_LEAD_DAYS := 3           # request → meeting day
 const PREP_DAYS := 2
 const PREP_MIN_DAYS_BEFORE := 2        # prep startable only if ≥ this many full days remain
 const PREP_BONUS := 2                  # SkillCheck bonus units on the focused check (+~20% odds)
+# K4 — moving a booked meeting costs a little of that fund's goodwill, paid at its NEXT meeting
+# (stored per fund in vc_states.move_penalty, consumed when that meeting begins). Cancelling
+# also shuts the booking desk for the rest of the day.
+const MEETING_CANCEL_PENALTY := 3      # conviction points off the fund's next meeting
+const MEETING_RESCHEDULE_PENALTY := 2  # ditto; reschedule = the same lead time again
 
 # --- Sheet economy (§5) ---
-const SHEET_VALIDITY_DAYS := 14
+# K5 (2026-09): a Series A sheet is valid for a fixed number of BUSINESS days - weekdays on the
+# real calendar (GameState.is_business_day). TermSheet.expires_day is the day the last one falls
+# on; business_days_left() counts down to it. A queued sheet gets a fresh window on delivery.
+const SHEET_VALIDITY_BUSINESS_DAYS := 10
 const MAX_SHEETS := 2
-const WARNING_DAYS := 3                 # expiry warning event + TopBar chip threshold (ledger 14)
+const WARNING_DAYS := 3                 # BUSINESS days: expiry warning card + TopBar chip threshold (ledger 14)
+
+# K6 — the offer row before the table shows an ESTIMATED range, never the number. The range
+# always contains the true opening term and never sits centred on it: the true value's position
+# inside the range is a deterministic fraction (seeded by fund id + sheet grant day, so it never
+# rerolls) drawn from [EST_POS_MIN, EST_POS_MAX] or its mirror.
+const EST_VAL_WIDTH_PCT := 25           # valuation range width, % of the true valuation
+const EST_VAL_MIN_WIDTH_M := 2          # ... but never narrower than this ($M)
+const EST_DIL_WIDTH_PCT := 30           # dilution range width, % of the true dilution
+const EST_DIL_MIN_WIDTH := 4            # ... but never narrower than this (percentage points)
+const EST_POS_MIN := 0.15               # true value sits 15-40 % in from one edge (or the mirror)
+const EST_POS_MAX := 0.40
 
 # --- Cascade / callbacks ---
 # (Cascade table count lives at its single home, EndingsSystem.CASCADE_TABLES — UI reads it there.)
