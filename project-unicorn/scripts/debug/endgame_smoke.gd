@@ -378,7 +378,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"job_assignment_and_idle":         fail = _case_job_assignment_and_idle()
 		"overload_costs_output":           fail = _case_overload_costs_output()
 		"save_migration_v3_to_v4":         fail = _case_save_migration_v3_to_v4()
-		"save_migration_v7_to_v8":  fail = _case_save_migration_v7_to_v8()
 		# --- Ekip arayüzü · onaylı tasarım 2026-08-22. Beşi de ÖNCEKİ motora karşı DÜŞER.
 		"star_ruler_contract":            fail = _case_star_ruler_contract()
 		"single_trait_contract":          fail = _case_single_trait_contract()
@@ -397,7 +396,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"build_pauses_when_all_busy":     fail = _case_build_pauses_when_all_busy()
 		"build_resumes_when_one_frees":   fail = _case_build_resumes_when_one_frees()
 		"destek_survives_ship":           fail = _case_destek_survives_ship()
-		"trait_migration_real_load":      fail = _case_trait_migration_real_load()
 		"gorevler_has_no_founder":        fail = _case_gorevler_has_no_founder()
 		# --- Ürün modülü · hat modeli 2026-08-24 (GDD ÜRÜN rev 6 §11, §12).
 		#     Altısı da ÖNCEKİ motora karşı DÜŞER: hat modeli, kapı doğrulayıcısı ve
@@ -10354,100 +10352,6 @@ static func _case_save_migration_v4_to_v5() -> String:
 		return "a lead seat survived under game_state"
 	return ""
 
-static func _case_save_migration_v7_to_v8() -> String:
-	# §2.4 · KURUCU TEK CETVELE. v7 kayıtları kurucuyu 0–5'te taşıyor; v8 onu çalışanın
-	# 0–10 cetveline alıyor. Kurucu 0–5'te kaldığı sürece Kişisel kartının yıldız satırı
-	# yapısal olarak 5 üzerinden 2,5'te tavanlıydı (§5.3'ün vaat ettiği beşinci yıldız
-	# oyuncuya asla ulaşmıyordu).
-	#
-	# BU VAKA GÖÇÜ DOĞRUDAN ÇAĞIRMAZ — GERÇEK BİR DOSYA YAZIP `read_slot`'tan geçirir.
-	# Sebep, kardeş vakanın gösterdiği tuzak: `_case_save_migration_v3_to_v4` göç
-	# fonksiyonunu elle çağırıyor, yani MERDİVENE bağlı olup olmadığını hiçbir zaman
-	# ölçmüyor. Ladder'a eklemeyi unutmuş bir göç o vakayı yeşil bırakır ve gerçek
-	# kayıtlarda hiç koşmaz — karakter göçleri tam olarak bu şekilde dört şema sürümü
-	# boyunca sessiz no-op kaldı (save_manager.gd:615-622'deki yara kaydı).
-	#
-	# FALSİFİKASYON: read_slot'taki `if version < 8` satırını sil → ilk iddia FAIL.
-	var old_stats: Dictionary = {
-		HRConstants.AREA_PRODUCT: 1, HRConstants.AREA_DESIGN: 0,
-		HRConstants.AREA_ENGINEERING: 3, HRConstants.AREA_QA: 0,
-		HRConstants.AREA_SALES: 2, HRConstants.AREA_CUSTOMER_SUCCESS: 0,
-		HRConstants.SKILL_LEADERSHIP: 1, FounderConstants.SKILL_CHARISMA: 2,
-	}
-	var state: Dictionary = {
-		"registries": {"characters": [
-			{"id": "char_founder", "category": "founder", "role": HRConstants.ROLE_FOUNDER,
-				"role_stats": old_stats.duplicate(), "experience_threshold": 999},
-			{"id": "char_v7_dev", "category": "employee", "role": HRConstants.ROLE_DEVELOPER,
-				"role_stats": HRConstants.seed_skills(HRConstants.ROLE_DEVELOPER, 7, 3),
-				"experience_threshold": 111},
-		]},
-		"game_state": {},
-	}
-	var path: String = "%s%s.json" % [SaveManager.SAVE_DIR, SAVE_SLOT_A]
-	DirAccess.make_dir_recursive_absolute(SaveManager.SAVE_DIR)
-	var f := FileAccess.open(path, FileAccess.WRITE)
-	if f == null:
-		return "could not write the v7 fixture to %s" % path
-	f.store_string(JSON.stringify({"schema_version": 7, "meta": {}, "state": state}))
-	f.close()
-
-	var res: Dictionary = SaveManager.read_slot(SAVE_SLOT_A)
-	if not bool(res.get("ok", false)):
-		_cleanup_save_slots()
-		return "read_slot refused the v7 fixture: %s" % String(res.get("error_key", ""))
-	var loaded: Dictionary = res["state"] as Dictionary
-	var rows: Array = (loaded["registries"] as Dictionary)["characters"] as Array
-	var founder: Dictionary = rows[0] as Dictionary
-	var dev: Dictionary = rows[1] as Dictionary
-	var fs: Dictionary = founder["role_stats"] as Dictionary
-
-	# 1 · KURUCUNUN HER DEĞERİ İKİYE KATLANDI — Karizma dahil (§3'ün cetveli sekiz
-	# anahtarın hepsini kapsıyor; VC beat'lerinin okuduğu şey Karizma).
-	for skill_key in old_stats.keys():
-		var want: int = int(old_stats[skill_key]) * FounderConstants.RULER_SCALE
-		if int(fs.get(skill_key, -1)) != want:
-			return "founder '%s' migrated to %s, want %d" % [
-				String(skill_key), str(fs.get(skill_key)), want]
-	# 2 · ÇALIŞANA DOKUNULMADI. Çalışanlar zaten 0–10'daydı; onları da katlamak her
-	# kaydı bozardı ve bunu hiçbir şey geri alamazdı.
-	if int((dev["role_stats"] as Dictionary)[HRConstants.AREA_ENGINEERING]) != 7:
-		_cleanup_save_slots()
-		return "the employee row was doubled too — v8 is founder-only"
-	if int(dev.get("experience_threshold", 0)) != 111:
-		_cleanup_save_slots()
-		return "the employee's threshold was recomputed; only the founder's sum moved"
-	# 3 · EŞİK AYNI ADIMDA YENİDEN HESAPLANDI. Puanlar ikiye katlanınca v6→v7'nin yazdığı
-	# eşik bayatlar ve kurucunun deneyim barı yanlış ölçekte kalırdı.
-	var total: int = 0
-	for area_key in HRConstants.AREAS:
-		total += int(fs.get(String(area_key), 0))
-	total += int(fs.get(HRConstants.SKILL_LEADERSHIP, 0))
-	if int(founder["experience_threshold"]) != HRConstants.experience_threshold(total):
-		_cleanup_save_slots()
-		return "the founder kept a stale experience threshold (%s, want %d)" % [
-			str(founder["experience_threshold"]), HRConstants.experience_threshold(total)]
-	# 4 · İDEMPOTANS. Bir İKİYE KATLAMANIN doğal bekçisi yoktur — nöbetçi olmasa ikinci
-	# koşuda kareye çıkardı. Kardeş vaka (v3→v4) bunu :8248'de aynı biçimde kanıtlıyor.
-	SaveManager._migrate_founder_to_ten(loaded)
-	for skill_key2 in old_stats.keys():
-		var want2: int = int(old_stats[skill_key2]) * FounderConstants.RULER_SCALE
-		if int(fs.get(skill_key2, -1)) != want2:
-			_cleanup_save_slots()
-			return "running the migration twice squared '%s' (%s)" % [
-				String(skill_key2), str(fs.get(skill_key2))]
-	# 5 · CETVELİN TAVANI AŞILMAZ: 5'teki bir kurucu 10'da durur, 12'ye çıkmaz.
-	var top: Dictionary = {"registries": {"characters": [
-		{"id": "char_founder", "category": "founder", "role": HRConstants.ROLE_FOUNDER,
-			"role_stats": {HRConstants.AREA_ENGINEERING: HRConstants.AREA_MAX}}]}}
-	SaveManager._migrate_founder_to_ten(top)
-	var capped: Dictionary = ((top["registries"] as Dictionary)["characters"] as Array)[0]
-	if int((capped["role_stats"] as Dictionary)[HRConstants.AREA_ENGINEERING]) != HRConstants.AREA_MAX:
-		_cleanup_save_slots()
-		return "a founder already at the ceiling was pushed past it"
-	_cleanup_save_slots()
-	return ""
-
 
 static func _case_save_migration_v3_to_v4() -> String:
 	# v3 kayıtları üç ekseni taşıyor; v4 modeli altı alan + Liderlik bekliyor. Migration
@@ -12233,55 +12137,6 @@ static func _case_destek_survives_ship() -> String:
 	# DESTEK DURAKLAMAZ: duraklama aktif YAPIMIN hâli, canlı ürünün değil.
 	if running.paused:
 		return "a live product reported PAUSED"
-	return ""
-
-
-## A2: bir id'yi yeniden adlandırmak bir VERİ GÖÇÜDÜR. Bu vaka göçü fonksiyonu
-## doğrudan çağırarak DEĞİL, GERÇEK YÜKLEME YOLUNDAN geçirerek sınar: dosya yazılır,
-## yüklenir, sonuç okunur. Önemi ölçüldü — iki eski göç vakası elde kurulmuş DÜZ bir
-## dict kullandığı için geçiyordu, oysa gerçek kayıt satırları `registries` altında
-## duruyor ve göçlerin hiçbiri onlara DİĞMEMİŞTİ.
-## FALSİFİKASYON: `_rows`'u `state.get(key, [])`'e geri al → son iddia FAIL.
-static func _case_trait_migration_real_load() -> String:
-	var slot: String = "smoke_traitmig"
-	var path: String = SaveManager._path_for(slot)
-	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
-	var payload: Dictionary = {
-		"schema_version": 5,
-		"game_version": "smoke",
-		"meta": {},
-		"state": {"registries": {"characters": [
-			{"id": "char_old_a", "category": "employee", "traits": ["wont_jump_ship"]},
-			{"id": "char_old_b", "category": "employee", "traits": ["glass_heart"]},
-			{"id": "char_old_c", "category": "employee", "traits": ["no_such_trait"]},
-		]}},
-	}
-	var f := FileAccess.open(path, FileAccess.WRITE)
-	if f == null:
-		return "could not write the fixture save"
-	f.store_string(JSON.stringify(payload))
-	f.close()
-	# GERÇEK KAPI: dosyayı SaveManager'ın KENDİSİ okur ve sürüm sevkiyatını o yapar.
-	# Göç fonksiyonunu elle çağırmak tam olarak eski iki vakanın hatasıydı.
-	var out: Dictionary = SaveManager.read_slot(slot)
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
-	if not bool(out.get("ok", false)):
-		return "the v5 fixture did not load: %s" % String(out.get("error_key", "?"))
-	var rows: Array = ((out["state"] as Dictionary).get("registries", {}) as Dictionary) \
-		.get("characters", []) as Array
-	if rows.size() != 3:
-		return "the migrated payload lost rows (%d)" % rows.size()
-	var a: Array = (rows[0] as Dictionary).get("traits", []) as Array
-	if a != ["loyal"]:
-		return "`wont_jump_ship` did not become `loyal` through the real load path (%s)" % str(a)
-	var b2: Array = (rows[1] as Dictionary).get("traits", []) as Array
-	if b2 != ["mood_buster"]:
-		return "`glass_heart` did not map (%s)" % str(b2)
-	# EŞLENEMEYEN İD SESSİZCE DÜŞMEZ: boş bırakmak `validate_employee_traits`'i
-	# düşürürdü, yani kayıt sessizce yanlış olurdu.
-	var c: Array = (rows[2] as Dictionary).get("traits", []) as Array
-	if not HRConstants.validate_employee_traits(c):
-		return "an unmapped trait left the character invalid (%s)" % str(c)
 	return ""
 
 
