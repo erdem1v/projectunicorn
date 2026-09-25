@@ -1,6 +1,6 @@
 # Event Revizyonu ve Series A Kapısı — Eylül 2026
 
-Hazırlayan: Claude (lead designer rolünde) · Tarih: 24 Eylül 2026 · Dal: `claude/sharp-dirac-lev32p`
+Hazırlayan: Claude (lead designer rolünde) · Tarih: 24 Eylül 2026
 Referans: GDD v2 ch11 (Olaylar), Olay Motoru GDD rev 2, Satış GDD rev 6, Ürün rev 6.1, Ekip rev 11.
 Frank kartlarına dokunulmadı.
 
@@ -315,8 +315,8 @@ Kalanlar ve güncellenenler:
 `docs/design/EVENT_POOL_DESIGN_v1.md` silinmedi, çünkü audit'ler bunlara bağlantı veriyor. Her birinin
 başında hangi GDD'nin onları geçersiz kıldığı yazıyor.
 
-**Not:** Delivery Law "yalnız main" diyor. Bu oturum ortamın gereği olarak
-`claude/sharp-dirac-lev32p` dalında çalıştı. Kurala dokunmadım; birleştirme senin kararın.
+**Not:** Delivery Law "yalnız main" diyor. Bu oturumun işi daha sonra `main`'e fast-forward
+edildi (`6edade6`, 2026-09-25); ayrı bir dal kalmadı.
 
 ---
 

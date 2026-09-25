@@ -20,7 +20,7 @@
 ### Uygulama planı
 
 **Kurallar:**
-- Çalışma dalı `claude/sharp-dirac-lev32p`; her küme ayrı bir commit olur. `main`'e push yalnız "push et" denirse yapılır.
+- Çalışma yalnız `main`'de (DELIVERY LAW); her küme ayrı bir commit olur. `main`'e push yalnız "push et" denirse yapılır.
 - Worktree açılmaz.
 - Kümeler sırayla işlenir, çünkü hepsi `strings.csv` ve `vc_pitch_system.gd`'yi paylaşıyor.
 

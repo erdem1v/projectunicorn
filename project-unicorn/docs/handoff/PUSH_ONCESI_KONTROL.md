@@ -8,7 +8,7 @@
 # Push öncesi kontrol: 10 madde (kod okunarak cevaplandı)
 
 **Durum:**
-- Dört commit (`2cbbcd8`, `28d5edc`, `8e49dbd`, `de6ab7f`) yalnız `claude/sharp-dirac-lev32p` dalında.
+- Dört commit (`2cbbcd8`, `28d5edc`, `8e49dbd`, `de6ab7f`) henüz `origin/main`'de değil.
 - `origin/main` hâlâ `fa46a24`'te.
 - **`main`'e push'u durdurdum.** Sebep: aşağıda 4 madde "okay" değil (4, 6, 8c, 2). Önce kısa bir düzeltme turu öneriyorum; plan en altta.
 
@@ -208,5 +208,5 @@ Kayıt otomatik çalışıyor:
 **Doğrulama:**
 - lint, loc ve ilgili smoke vakaları (haiku).
 - Bir yeni smoke vakası: seed'de board itilemez.
-- Sonra `git push origin claude/sharp-dirac-lev32p:main`. Önce `origin/main`'in ata olduğu doğrulanır; fast-forward olur.
+- Sonra `main` push edilir (yalnız "push et" ile). Önce `origin/main`'in ata olduğu doğrulanır; fast-forward olur.
 

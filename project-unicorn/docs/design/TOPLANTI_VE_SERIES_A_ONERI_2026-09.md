@@ -3,7 +3,7 @@
 ## Bağlam
 
 Erdem'in istedikleri:
-1. `claude/sharp-dirac-lev32p` dalı `main`'e push edilsin.
+1. O güne kadarki iş `main`'e push edilsin.
 2. Büyüme serisi Series A kapı şartı olmaktan çıksın; kapı MRR'a bağlansın.
 3. Satış, seed ve VC sahnelerindeki diyalog tekrarının araştırılması ve nasıl değiştirileceğine dair ayrıntılı bir hazırlık.
 4. Series A kapanışıyla ilgili değişiklik önerileri.
@@ -13,7 +13,7 @@ Kod değişikliği ya da test yok; bu tur yalnız öneri.
 Statü: ÖNERİ. Kod değişikliği içermez; kararlar Erdem'in.
 
 **Bu belgeyle birlikte yapılanlar:**
-- (a) `git push origin claude/sharp-dirac-lev32p:main`. Önce `origin/main`'in dalın atası olduğu doğrulanır; öyleyse fast-forward olur, merge commit oluşmaz. Değilse push yapılmaz ve sorulur.
+- (a) `main` push edilir. Önce `origin/main`'in ata olduğu doğrulanır; öyleyse fast-forward olur, merge commit oluşmaz. Değilse push yapılmaz ve sorulur.
 - (b) Bu belgenin `docs/design/TOPLANTI_VE_SERIES_A_ONERI_2026-09.md` olarak repoya eklenip push edilmesi. Yalnız belge; kod değişmez.
 
 ---
