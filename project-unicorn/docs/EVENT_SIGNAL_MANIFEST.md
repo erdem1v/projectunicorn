@@ -64,8 +64,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar · oda_tour | 27 | 1 | time_manager |
-| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · creation_flow · detail_view · left_tabs · research_bar · tab_page_chrome · oda_view | 25 | 5 | game_shell · build_hud_panel · center_viewport · left_tabs · oda_tour |
-| `finance_subpage_requested` | `page_id: String` | effects · oda_view | 2 | 1 | finance_tab |
+| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · creation_flow · detail_view · left_tabs · research_bar · tab_page_chrome · oda_view | 26 | 5 | game_shell · build_hud_panel · center_viewport · left_tabs · oda_tour |
+| `finance_subpage_requested` | `page_id: String` | effects · main · oda_view | 3 | 1 | finance_tab |
 
 ### Settings / audio signals
 

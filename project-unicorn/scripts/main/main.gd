@@ -239,6 +239,10 @@ func _ready() -> void:
 		if meeting_shot != "":
 			_run_meeting_shot(meeting_shot)
 			return
+		var vc_shot: String = _flag_value("--vc-shot=")
+		if vc_shot != "":
+			_run_vc_shot(vc_shot)
+			return
 		var negotiation_shot: String = _flag_value("--negotiation-shot=")
 		if negotiation_shot != "":
 			_run_negotiation_shot(negotiation_shot)
@@ -2289,6 +2293,106 @@ func _seed_sales_world() -> void:
 	if founder != null:
 		founder.role_stats[HRConstants.AREA_SALES] = 6
 		founder.role_stats[FounderConstants.SKILL_CHARISMA] = 4
+
+
+## --vc-shot=<hunt|hunt_closed|table|table_final|table_walk|table_other|seed_table|k10> (windowed;
+## --lang=en for the English frame). The Series A
+## surfaces HANDOFF_series_a.md §B asks to be LOOKED at: the Hunt page (estimate ranges,
+## business days, the waiting queue, the road-closed line), the term-sheet table in its states
+## (investor line after a push, final offer, walk-out, "show the other offer", the seed table's
+## locked board row) and the K10 decision card. Fixture state is written straight onto
+## GameState, as every other shot harness does; pushes go through the real table system with
+## the SkillCheck debug force so the frame is deterministic.
+func _run_vc_shot(kind: String) -> void:
+	get_tree().paused = false
+	_shot_window(Vector2i(1920, 1080))
+	_seed_run_reproducible()   # initialize_run + pinned seed (see the helper's note)
+	GameState.company_name = "PromptPilot"
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_cash(330000)
+	GameState.mrr = 125000
+	GameState.set_phase(3)
+	var shot_kind: String = kind
+	match kind:
+		"hunt":
+			# Two live offers, one queued behind them (K8), one fund that said no.
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day - 2))
+			VCPitchSystem._vc("anchor")["status"] = "offered"
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("meridian", GameState.day))
+			VCPitchSystem._vc("meridian")["status"] = "offered"
+			VCPitchSystem._vc("bosphorus")["status"] = "pending_sheet"
+			VCPitchSystem._vc("bosphorus")["pending_sheet"] = true
+			VCPitchSystem._vc("nexus")["status"] = "rejected"
+		"hunt_closed":
+			for pair in [["anchor", "rejected"], ["nexus", "walked"], ["bosphorus", "expired"], ["meridian", "rejected"]]:
+				VCPitchSystem._vc(String(pair[0]))["status"] = String(pair[1])
+		"table", "table_final", "table_walk":
+			var conv: int = 45 if kind == "table_walk" else (100 if kind == "table_final" else 83)
+			VCPitchSystem._vc("bosphorus")["sheet_conviction"] = conv
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("bosphorus", GameState.day))
+			TermSheetTableSystem.open("bosphorus")
+			GameState.set_flag("debug_skill_force", "fail")
+			# Bosphorus sits with a patience of two: one failed push is the investor's line,
+			# the second spends the patience and the fund answers (final counter or walk-out).
+			TermSheetTableSystem.select_lever("valuation")
+			TermSheetTableSystem.push()
+			if kind != "table":
+				TermSheetTableSystem.select_lever("dilution")
+				TermSheetTableSystem.push()
+			print("[VcShot] table state=%s line=%s" % [
+				TermSheetTableSystem._state, TermSheetTableSystem._line_key])
+		"table_other":
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
+			GameState.active_sheets.append(VCPitchSystem._make_sheet("meridian", GameState.day))
+			TermSheetTableSystem.open("anchor")
+			TermSheetTableSystem.show_other_offer()
+		"seed_table":
+			GameState.set_phase(2)
+			GameState.mrr = 22000
+			GameState.seed_sheet = SeedRoundSystem.make_seed_sheet("anchor", "standard", GameState.day)
+			TermSheetTableSystem.open("anchor")
+		"k10":
+			# A sheet whose ten business days ran out today: the decision card's moment.
+			var due: TermSheet = VCPitchSystem._make_sheet("meridian", GameState.day - 14)
+			due.expires_day = GameState.day
+			GameState.active_sheets.append(due)
+			VCPitchSystem._vc("meridian")["status"] = "offered"
+		_:
+			push_error("[VcShot] unknown --vc-shot kind: %s" % kind)
+			get_tree().quit(1)
+			return
+	if kind in ["hunt", "hunt_closed"]:
+		_shell = GAME_SHELL.instantiate()
+		add_child(_shell)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		EventBus.tab_changed.emit("finance")
+		await get_tree().process_frame
+		EventBus.finance_subpage_requested.emit("yatirim")   # LOC-DATA sub-page id
+	elif kind == "k10":
+		var ev: GameEvent = EventGate.render("funding.sheet_decision", EventGate.bind_scope("funding.sheet_decision"))
+		if ev == null:
+			push_error("[VcShot] funding.sheet_decision did not render (no decision-due sheet bound)")
+			get_tree().quit(1)
+			return
+		var elayer := CanvasLayer.new()
+		add_child(elayer)
+		var modal: Control = EVENT_MODAL.instantiate()
+		elayer.add_child(modal)
+		modal.populate(ev)
+	else:
+		var layer := CanvasLayer.new()
+		add_child(layer)
+		layer.add_child(TERM_TABLE_SCENE.instantiate())
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().create_timer(0.5).timeout
+	var img: Image = get_viewport().get_texture().get_image()
+	var path: String = _shot_path("vc_shot_%s" % shot_kind)
+	img.save_png(path)
+	print("[VcShot] saved %s" % ProjectSettings.globalize_path(path))
+	get_tree().quit()
 
 
 ## --meeting-shot=<probe|locked|won|lost|handoff> — Perde 1'in dört hâli ve perde değişimi. `locked` bir sağlayıcı
