@@ -112,6 +112,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"table_board_push_sequence": fail = _case_table_board_push_sequence()
 		"deal_prompt_defer_keeps_clock": fail = _case_deal_prompt_defer_keeps_clock()
 		"hunt_offer_lifecycle": fail = _case_hunt_offer_lifecycle()
+		"legacy_v12_save_opens_live_table": fail = _case_legacy_v12_save_opens_live_table()
+		"series_a_road_closed_when_all_funds_close": fail = _case_series_a_road_closed_when_all_funds_close()
 		"prep_bonus_and_capacity": fail = _case_prep_bonus_and_capacity()
 		"meeting_daylock":      fail = _case_meeting_daylock()
 		"pivot_closes_hunt":    fail = _case_pivot_closes_hunt()
@@ -2150,6 +2152,289 @@ static func _case_hunt_offer_lifecycle() -> String:
 	VCPitchSystem.advance("b4_leave")
 	if GameState.vc_frank_cold_shown.has("meridian"):
 		return "the general line also spent meridian's own line"
+	return ""
+
+
+## E1 (docs/handoff/HANDOFF_series_a.md §B EK) — A v12 SAVE FROM BEFORE THE K4/K12/§6.2 FIELDS
+## LOADS AND SITS DOWN. Not a hand-written fixture: a real save is taken with every new field at
+## a NON-default value, each key is asserted present in the file (so deleting it cannot be
+## vacuous), deleted, and the file goes back through read_slot + apply_loaded_state. What comes
+## back must be the declared defaults, and the live offer must open the table at
+## E_FALLBACK_CONV_SERIES_A + fit. The fit is read, never hard-coded, so the case does not care
+## how a fund's lens is defined. The offer is granted on a WEEKEND, the only grant day on which
+## the old fourteen-calendar-day expiry differs from the K5 ten-business-day one.
+static func _case_legacy_v12_save_opens_live_table() -> String:
+	const STAMP := 88   # never equal to the fallback, so a surviving stamp cannot pass as it
+	if SaveManager.MIN_LOADABLE_VERSION > 12:
+		return "v12 is below MIN_LOADABLE_VERSION (%d) — this case's premise is retired" \
+			% SaveManager.MIN_LOADABLE_VERSION
+	# Its own slot: the shared manual_9001/9002 pair belongs to the round-trip cases.
+	var slot: String = "smoke_legacy_v12_%d" % OS.get_process_id()
+
+	# --- a live hunt with every new field at a non-default value ---------------
+	GameState.set_phase(3)
+	_seed_b2b_series_a()
+	_sim_day()
+	_drain_all_modals()   # a card on screen refuses the save (can_save); answer it first
+	var walk_guard: int = 0
+	while GameState.is_business_day(GameState.day) and walk_guard < 7:
+		walk_guard += 1
+		_sim_day()
+		_drain_all_modals()
+	if GameState.is_business_day(GameState.day):
+		return "fixture: no weekend reached to grant on"
+	# K4 the real way: book Nexus and cancel, which writes move_penalty on ITS row and today's
+	# cancel day. Not on Anchor: begin_meeting erases the penalty, so a fund holding an offer
+	# and a penalty at once is not a state the game produces.
+	if not VCPitchSystem.request_meeting("nexus") or not VCPitchSystem.cancel_meeting():
+		return "fixture: could not book and cancel a Nexus meeting"
+	# §6.2 memory: an earlier meeting ended cold and spent Meridian's own line.
+	GameState.vc_last_meeting_rejected = true
+	GameState.vc_frank_cold_shown.append("meridian")
+	# The live offer, stamped the way _grant_sheet stamps it: row first, then the grant, so
+	# _make_sheet reads the stamp.
+	var anchor_st: Dictionary = VCPitchSystem._vc("anchor")
+	anchor_st["sheet_conviction"] = STAMP
+	_grant("anchor")
+	anchor_st["status"] = "offered"
+	var sheet: TermSheet = VCPitchSystem.sheet_for("anchor")
+	if sheet == null or sheet.conviction != STAMP:
+		return "fixture: the grant did not carry the row's conviction"
+	sheet.expires_day = sheet.granted_day + 14   # the OLD rule: fourteen calendar days
+	var want_expires: int = sheet.expires_day
+	if want_expires == GameState.add_business_days(sheet.granted_day, PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS):
+		return "fixture: the old and new rules agree on this grant day — nothing old to load"
+	var save_day: int = GameState.day
+
+	# Checked first so a refusal is diagnosed here, not as save_to_slot's warning.
+	if not SaveManager.can_save():
+		return "fixture: save refused (%s, active card '%s')" \
+			% [SaveManager.cannot_save_reason_key(), EventGate.active_id()]
+	if not SaveManager.save_to_slot(slot):
+		SaveManager.delete_slot(slot)
+		return "save_to_slot failed"
+
+	# --- age the file: the keys ARE there, then they are not --------------------
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		SaveManager.delete_slot(slot)
+		return "could not reopen the slot to strip it"
+	var raw: Dictionary = JSON.parse_string(f.get_as_text()) as Dictionary
+	f.close()
+	var gs: Dictionary = (raw.get("state", {}) as Dictionary).get("game_state", {}) as Dictionary
+	var sheets_json: Array = gs.get("active_sheets", []) as Array
+	var rows: Dictionary = gs.get("vc_states", {}) as Dictionary
+	var pre: String = ""
+	if sheets_json.size() != 1 or int((sheets_json[0] as Dictionary).get("conviction", -1)) != STAMP:
+		pre = "the sheet's conviction"
+	elif int((sheets_json[0] as Dictionary).get("expires_day", 0)) != want_expires:
+		pre = "the old-rule expires_day"
+	elif int((rows.get("anchor", {}) as Dictionary).get("sheet_conviction", -1)) != STAMP:
+		pre = "anchor's sheet_conviction"
+	elif int((rows.get("nexus", {}) as Dictionary).get("move_penalty", 0)) != PitchConstants.MEETING_CANCEL_PENALTY:
+		pre = "nexus's move_penalty"
+	elif int(gs.get("vc_meeting_cancel_day", -1)) != save_day:
+		pre = "vc_meeting_cancel_day"
+	elif not bool(gs.get("vc_last_meeting_rejected", false)):
+		pre = "vc_last_meeting_rejected"
+	elif (gs.get("vc_frank_cold_shown", []) as Array).size() != 1:
+		pre = "vc_frank_cold_shown"
+	if pre != "":
+		SaveManager.delete_slot(slot)
+		return "fixture: %s was not in the file — deleting it would prove nothing" % pre
+	for s in sheets_json:
+		(s as Dictionary).erase("conviction")
+	for vc in rows.keys():                       # vc_states[*], every row
+		(rows[vc] as Dictionary).erase("sheet_conviction")
+		(rows[vc] as Dictionary).erase("move_penalty")
+	for k in ["vc_meeting_cancel_day", "vc_last_meeting_rejected", "vc_frank_cold_shown"]:
+		gs.erase(k)
+	raw["schema_version"] = 12   # explicit: a later schema bump must walk its migration ladder
+	var w := FileAccess.open(path, FileAccess.WRITE)
+	if w == null:
+		SaveManager.delete_slot(slot)
+		return "could not rewrite the slot"
+	w.store_string(JSON.stringify(raw, "\t", false, true))
+	w.close()
+
+	var payload: Dictionary = SaveManager.read_slot(slot)
+	SaveManager.delete_slot(slot)   # the payload is in memory; nothing below needs the file
+	if not bool(payload.get("ok", false)):
+		return "the stripped v12 save was refused: %s" % String(payload.get("error_key", ""))
+	if not SaveManager.apply_loaded_state(payload):
+		return "apply_loaded_state returned false"
+	if GameState.day != save_day:
+		return "the load came back on day %d, saved on %d" % [GameState.day, save_day]
+
+	# --- GameState: initialize_run defaults ---------------------------------------
+	if GameState.vc_meeting_cancel_day != -1:
+		return "vc_meeting_cancel_day came back %d, want -1" % GameState.vc_meeting_cancel_day
+	if GameState.vc_last_meeting_rejected:
+		return "vc_last_meeting_rejected came back true"
+	if not GameState.vc_frank_cold_shown.is_empty():
+		return "vc_frank_cold_shown came back %s" % str(GameState.vc_frank_cold_shown)
+	# The cancel day was TODAY in the file; had it survived, booking would read cancelled_today.
+	if VCPitchSystem.meeting_blocked_reason("bosphorus") != "":
+		return "booking locked after the load (%s)" % VCPitchSystem.meeting_blocked_reason("bosphorus")
+
+	# --- the offer (K5) ----------------------------------------------------------
+	var loaded: TermSheet = VCPitchSystem.sheet_for("anchor")
+	if loaded == null:
+		return "the live offer did not survive the load"
+	if loaded.conviction != -1:
+		return "sheet conviction came back %d, want -1 (unstamped)" % loaded.conviction
+	if loaded.expires_day != want_expires:
+		return "expires_day came back %d, want the old-rule %d" % [loaded.expires_day, want_expires]
+	# Two calendar weeks hold exactly ten weekdays wherever they start; a calendar count reads 14.
+	var left: int = loaded.business_days_left(GameState.day)
+	if left != 10:
+		return "the old 14-day window reads %d business days, want 10" % left
+	if loaded.is_decision_due(GameState.day):
+		return "a fresh old-rule offer loaded already decision-due"
+	# The clock read through the business-day counter on every day up to a week past the old
+	# expiry: never negative, always the counter's own number (0 once the window is gone).
+	for d in range(save_day, want_expires + 8):
+		var n: int = loaded.business_days_left(d)
+		if n < 0 or n != maxi(0, GameState.business_days_between(d, want_expires)):
+			return "day %d: the old offer reads %d business days, counter says %d" \
+				% [d, n, GameState.business_days_between(d, want_expires)]
+	if not loaded.is_decision_due(want_expires):
+		return "the old-rule offer is not decision-due on its own expires_day"
+
+	# --- vc_states rows: absent keys read as the reader defaults -----------------
+	var a_row: Dictionary = GameState.vc_states.get("anchor", {})
+	if a_row.is_empty() or a_row.has("sheet_conviction"):
+		return "anchor's row came back wrong: %s" % str(a_row)
+	if VCPitchSystem._make_sheet("anchor", GameState.day).conviction != -1:
+		return "a sheet re-made from the loaded row is stamped (delayed delivery path)"
+	var n_row: Dictionary = GameState.vc_states.get("nexus", {})
+	if n_row.is_empty() or n_row.has("move_penalty"):
+		return "nexus's row came back wrong: %s" % str(n_row)
+	# Same-world control through the reader itself: absent must cost exactly nothing.
+	var conv_free: int = int(VCPitchSystem.initial_conviction("nexus").value)
+	n_row["move_penalty"] = PitchConstants.MEETING_CANCEL_PENALTY
+	var conv_pen: int = int(VCPitchSystem.initial_conviction("nexus").value)
+	n_row.erase("move_penalty")
+	if conv_free - conv_pen != PitchConstants.MEETING_CANCEL_PENALTY:
+		return "an absent move_penalty did not read as 0 (%d without, %d with %d)" \
+			% [conv_free, conv_pen, PitchConstants.MEETING_CANCEL_PENALTY]
+
+	# --- the table (K12) ---------------------------------------------------------
+	var vs: Dictionary = TermSheetTableSystem.open("anchor")
+	if vs.is_empty() or not TermSheetTableSystem.is_active() or not bool(vs.get("sign_enabled", false)):
+		TermSheetTableSystem.reset()
+		return "the table did not open on the loaded offer"
+	var fit: int = TermSheetTableSystem._domain_fit()   # after open: it reads the seated fund
+	var got_open: int = TermSheetTableSystem._opening_conviction(loaded)
+	var got_e: int = TermSheetTableSystem.eagerness()
+	TermSheetTableSystem.reset()
+	if got_open != TermSheetTableSystem.E_FALLBACK_CONV_SERIES_A:
+		return "opening conviction %d, want the fallback %d" % [got_open, TermSheetTableSystem.E_FALLBACK_CONV_SERIES_A]
+	var want_e: int = clampi(TermSheetTableSystem.E_FALLBACK_CONV_SERIES_A + fit, 0, 100)
+	if got_e != want_e:
+		return "E opened at %d, want %d (fallback %d + fit %d)" \
+			% [got_e, want_e, TermSheetTableSystem.E_FALLBACK_CONV_SERIES_A, fit]
+	# Discrimination: the same table WITH a stamp opens elsewhere, so the check above is not
+	# satisfied by a table that ignores conviction altogether.
+	loaded.conviction = STAMP
+	TermSheetTableSystem.open("anchor")
+	var stamped_e: int = TermSheetTableSystem.eagerness()
+	TermSheetTableSystem.reset()
+	if stamped_e != clampi(STAMP + fit, 0, 100):
+		return "a stamped sheet opened at %d, want %d" % [stamped_e, clampi(STAMP + fit, 0, 100)]
+	return ""
+
+
+## §B item 2 (docs/handoff/HANDOFF_series_a.md) — the Hunt tab's "road closed" line reads
+## VCPitchSystem.series_a_road_closed(). Every fund closed in a word the game writes and nothing
+## live → true. Each thing that still leaves a table to reach turns it false ON ITS OWN, and
+## taking it away turns it back.
+static func _case_series_a_road_closed_when_all_funds_close() -> String:
+	# The line resolves in both locales. Read per locale, no switch — nothing to restore.
+	for loc in ["tr", "en"]:
+		var tobj: Translation = TranslationServer.get_translation_object(loc)
+		if tobj == null:
+			return "no %s translation loaded" % loc
+		var line: String = String(tobj.get_message("HUNT_ROAD_CLOSED"))
+		if line == "" or line == "HUNT_ROAD_CLOSED":
+			return "HUNT_ROAD_CLOSED does not resolve in %s" % loc
+
+	var funds: Array[String] = []
+	for inv in InvestorRegistry.get_active():
+		funds.append(String(inv.id))
+	if funds.size() != 4:
+		return "fixture: %d active funds (this case closes four)" % funds.size()
+	# One closed word per fund, each one the game writes: rejected (a meeting refusal or the
+	# fund walking out), walked (the player's walk), expired (the K10 decline).
+	var closed: Dictionary = {"anchor": "rejected", "nexus": "walked", "bosphorus": "expired", "meridian": "rejected"}
+
+	GameState.set_phase(3)
+	if VCPitchSystem.series_a_road_closed():
+		return "a fresh hunt (no fund rows; status defaults to open) read as closed"
+	for id in funds:
+		VCPitchSystem._vc(id)                       # explicit open rows, _vc's own shape
+	if VCPitchSystem.series_a_road_closed():
+		return "four open rows read as closed"
+	for id in ["anchor", "nexus", "bosphorus"]:
+		var st: Dictionary = VCPitchSystem._vc(id)
+		st["status"] = closed[id]
+	if VCPitchSystem.series_a_road_closed():
+		return "read closed with meridian still open"
+	var mer: Dictionary = VCPitchSystem._vc("meridian")
+	mer["status"] = "callback"                                   # _set_callback's shape
+	mer["callback"] = VCPitchSystem._make_callback("meridian")
+	if VCPitchSystem.series_a_road_closed():
+		return "read closed with meridian holding an unmet callback"
+
+	# THE CLAIM.
+	mer["status"] = closed["meridian"]
+	mer["callback"] = {}
+	if not VCPitchSystem.series_a_road_closed():
+		return "all four funds closed, nothing live, and the road still reads open: %s" % str(GameState.vc_states)
+
+	for p in [1, 2]:
+		GameState.set_phase(p)
+		if VCPitchSystem.series_a_road_closed():
+			return "phase %d read the Series A road as closed" % p
+	GameState.set_phase(3)
+	if not VCPitchSystem.series_a_road_closed():
+		return "back in phase 3 the road did not read closed"
+
+	# A booked meeting — request_meeting's shape. Written directly: request_meeting refuses a
+	# closed fund, and a booking with an open status would be caught by the status read instead.
+	GameState.pending_meeting = {"vc_id": "meridian", "day": GameState.day + PitchConstants.MEETING_LEAD_DAYS}
+	if VCPitchSystem.series_a_road_closed():
+		return "a booked meeting still read as road closed"
+	GameState.pending_meeting.clear()
+	if not VCPitchSystem.series_a_road_closed():
+		return "clearing the booking did not close the road again"
+
+	_grant("anchor")                                  # a live sheet, statuses untouched
+	if VCPitchSystem.series_a_road_closed():
+		return "a live offer still read as road closed"
+	GameState.active_sheets.clear()
+	if not VCPitchSystem.series_a_road_closed():
+		return "clearing the sheet did not close the road again"
+
+	mer["pending_sheet"] = true                       # _grant_sheet's queue shape
+	mer["status"] = "pending_sheet"
+	if VCPitchSystem.series_a_road_closed():
+		return "a queued sheet still read as road closed"
+	mer["status"] = closed["meridian"]                # the flag alone
+	if VCPitchSystem.series_a_road_closed():
+		return "the pending_sheet flag alone did not keep the road open"
+	mer["pending_sheet"] = false
+	if not VCPitchSystem.series_a_road_closed():
+		return "clearing the queue did not close the road again"
+
+	# A pivot closes the road even with a fund still open.
+	mer["status"] = "open"
+	if VCPitchSystem.series_a_road_closed():
+		return "meridian reopened and the road still read closed"
+	GameState.pivot_used = true
+	if not VCPitchSystem.series_a_road_closed():
+		return "a pivot did not close the road"
 	return ""
 
 
