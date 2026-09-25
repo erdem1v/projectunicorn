@@ -52,9 +52,7 @@ const E_FALLBACK_CONV_SEED := {"strong": 80, "standard": 55, "harsh": 35}
 
 ## Domain fit — each fund reads its own lens, the sum is clamped to ±E_FIT_MAX.
 const E_FIT_MAX := 12
-const E_FIT_METRICS_GROWTH := 6     # Anchor: rolling MoM growth at/above the "mid" band (+), below (−).
-                                    # Growth, not MRR level: every company at the Series A door is
-                                    # past the room's MRR reference, so a level read was always +.
+const E_FIT_METRICS_MRR := 6        # Anchor: MRR at/above the room's MRR reference (+), below (−)
 const E_FIT_METRICS_CHURN := 6      # Anchor: no customer lost this run (+), any lost (−)
 const E_FIT_TEAM_ENGINEER := 6      # Nexus: at least one developer (+), none (−)
 const E_FIT_TEAM_SIZE := 4          # Nexus: headcount at/above E_FIT_TEAM_SIZE_MIN (+)
@@ -532,12 +530,8 @@ static func _domain_fit() -> int:
 	var fit: int = 0
 	match String(inv.get("domain", "")):
 		"metrics":
-			# The same rolling average the sheet's price multiple reads (PitchConstants.ARR_*),
-			# so "growing" means one thing at the table. Too few closed months reads as not yet.
-			var window: int = SeedConstants.EXPECT_WINDOW_MONTHS if is_seed() else PitchConstants.ARR_WINDOW_MONTHS
-			var growth: int = GameState.get_mom_growth_avg_pct(window)
-			var growing: bool = growth != GameState.GROWTH_AVG_UNKNOWN and growth >= PitchConstants.ARR_GROWTH_MID_PCT
-			fit += E_FIT_METRICS_GROWTH if growing else -E_FIT_METRICS_GROWTH
+			var ref: int = SeedConstants.CONV_MRR_REFERENCE if is_seed() else PitchConstants.CONV_MRR_REFERENCE
+			fit += E_FIT_METRICS_MRR if GameState.mrr >= ref else -E_FIT_METRICS_MRR
 			fit += E_FIT_METRICS_CHURN if GameState.run_customers_lost <= 0 else -E_FIT_METRICS_CHURN
 		"team":
 			fit += E_FIT_TEAM_ENGINEER if CharacterRegistry.count_developers() >= 1 else -E_FIT_TEAM_ENGINEER
