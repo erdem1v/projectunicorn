@@ -10,9 +10,10 @@ extends RefCounted
 #
 # So the rule is architectural, not numerical: NOTHING DEPENDS ON A VALUE IN THIS FILE BEING
 # WHAT IT IS TODAY. No branch keyed to "quota == 2". No comment elsewhere restating a number.
-# No card text naming one — §8.4 makes that a seam read for exactly this reason, and the live
-# bug it exists to prevent is END_META_BANKRUPTCY_FRANK still saying "yedi gün" while
-# SHUTTER_DAYS has been 30 since the Frank v6 pass.
+# No card text naming one — §8.4 makes that a seam read for exactly this reason. The bug it
+# exists to prevent shipped once: END_META_BANKRUPTCY_FRANK said "yedi gün" for months after
+# SHUTTER_DAYS became 30 in the Frank v6 pass. The copy was corrected in 7946ff3 ("Otuz gün"),
+# but it is still a typed number, so the same drift can happen again.
 #
 # The calibration round changes this file and nothing else. If a retune ever requires touching
 # a second file, that is a defect in this one.

@@ -359,7 +359,11 @@ func _refresh_offers() -> void:
 	for inv in InvestorRegistry.get_active():
 		if bool(GameState.vc_states.get(String(inv.id), {}).get("pending_sheet", false)):
 			queued.append(String(inv.id))
-	if sheets.is_empty() and queued.is_empty():
+	if VCPitchSystem.series_a_road_closed():
+		# Every fund is closed and nothing is live: say it once, plainly, rather than an
+		# empty-offers line that implies another meeting could still produce one.
+		_offers.add_child(_label(tr("HUNT_ROAD_CLOSED"), C_DIM, 12, true))
+	elif sheets.is_empty() and queued.is_empty():
 		_offers.add_child(_label(tr("HUNT_NO_OFFERS"), C_SUB, 11))
 	for sheet in sheets:
 		_offers.add_child(_build_offer_card(sheet))

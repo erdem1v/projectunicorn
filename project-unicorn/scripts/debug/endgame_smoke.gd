@@ -16254,6 +16254,13 @@ static func _case_seed_table_levers_and_final_offer() -> String:
 	var raise0: int = int(GameState.seed_sheet.opening_terms.get("raise", 0))
 	if String(vs.levers[0].current_text) != Fmt.money_exact(raise0):
 		return "the raise row reads '%s'" % String(vs.levers[0].current_text)
+	# The board row is on the sheet but locked: seed accept keeps no board term (K21 open), so
+	# a push there would spend patience on nothing.
+	var board_row: Dictionary = vs.levers[2]
+	if bool(board_row.get("push_enabled", true)) or TermSheetTableSystem.can_push("board"):
+		return "the seed board row can be pushed, but signing keeps no board term"
+	if String(board_row.get("odds", {}).get("split_text", "")) != TranslationServer.translate("SEED_BOARD_LOCKED"):
+		return "the locked seed board row does not say why"
 	vs = TermSheetTableSystem.select_lever("raise")
 	if String(vs.selected_lever) != "raise":
 		return "the raise row cannot be selected (selected '%s')" % String(vs.selected_lever)

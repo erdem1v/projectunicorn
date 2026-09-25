@@ -52,7 +52,9 @@ const E_FALLBACK_CONV_SEED := {"strong": 80, "standard": 55, "harsh": 35}
 
 ## Domain fit — each fund reads its own lens, the sum is clamped to ±E_FIT_MAX.
 const E_FIT_MAX := 12
-const E_FIT_METRICS_MRR := 6        # Anchor: MRR at/above the room's MRR reference (+), below (−)
+const E_FIT_METRICS_GROWTH := 6     # Anchor: rolling MoM growth at/above the "mid" band (+), below (−).
+                                    # Growth, not MRR level: every company at the Series A door is
+                                    # past the room's MRR reference, so a level read was always +.
 const E_FIT_METRICS_CHURN := 6      # Anchor: no customer lost this run (+), any lost (−)
 const E_FIT_TEAM_ENGINEER := 6      # Nexus: at least one developer (+), none (−)
 const E_FIT_TEAM_SIZE := 4          # Nexus: headcount at/above E_FIT_TEAM_SIZE_MIN (+)
@@ -246,9 +248,17 @@ static func select_lever(lever: String) -> Dictionary:
 static func can_push(lever: String) -> bool:
 	if not _active or _state == PATIENCE_ZERO or _state == FUND_WALKED or _patience <= 0:
 		return false
-	if not (lever in levers()):
+	if not (lever in levers()) or _lever_locked(lever):
 		return false
 	return not _lever_at_best(lever)
+
+
+## A row that is on the sheet but not open to negotiation. Today that is the seed board term:
+## SeedRoundSystem.accept persists raise and dilution only, so a board push would spend
+## patience and eagerness on a term that vanishes at signing. The row stays visible (the fund
+## still asks for it); whether seed board seats become real is open decision K21.
+static func _lever_locked(lever: String) -> bool:
+	return is_seed() and lever == "board"
 
 
 ## Resolve the selected lever's push. Returns the SETTLED view_state (S4 success / S5 failure,
@@ -522,8 +532,12 @@ static func _domain_fit() -> int:
 	var fit: int = 0
 	match String(inv.get("domain", "")):
 		"metrics":
-			var ref: int = SeedConstants.CONV_MRR_REFERENCE if is_seed() else PitchConstants.CONV_MRR_REFERENCE
-			fit += E_FIT_METRICS_MRR if GameState.mrr >= ref else -E_FIT_METRICS_MRR
+			# The same rolling average the sheet's price multiple reads (PitchConstants.ARR_*),
+			# so "growing" means one thing at the table. Too few closed months reads as not yet.
+			var window: int = SeedConstants.EXPECT_WINDOW_MONTHS if is_seed() else PitchConstants.ARR_WINDOW_MONTHS
+			var growth: int = GameState.get_mom_growth_avg_pct(window)
+			var growing: bool = growth != GameState.GROWTH_AVG_UNKNOWN and growth >= PitchConstants.ARR_GROWTH_MID_PCT
+			fit += E_FIT_METRICS_GROWTH if growing else -E_FIT_METRICS_GROWTH
 			fit += E_FIT_METRICS_CHURN if GameState.run_customers_lost <= 0 else -E_FIT_METRICS_CHURN
 		"team":
 			fit += E_FIT_TEAM_ENGINEER if CharacterRegistry.count_developers() >= 1 else -E_FIT_TEAM_ENGINEER
@@ -723,6 +737,10 @@ static func _lever_views() -> Array:
 	# Series A const painted "Valuation $0M" over a seed offer.
 	for lever in levers():
 		var odds: Dictionary = odds_for(lever)
+		if _lever_locked(lever):
+			# The odds line is where the row explains itself, so a locked row says why
+			# instead of quoting a chance nobody can roll.
+			odds = {"chance": 0.0, "split_text": TranslationServer.translate("SEED_BOARD_LOCKED")}
 		out.append({
 			"id": lever,
 			"name_tr": _lever_name(lever),
@@ -741,7 +759,7 @@ static func _dial_view() -> Dictionary:
 	# chance = the selected lever's current odds (arc). result colours the resting needle after a
 	# push (persists until the next push or a fresh lever selection). The scene animates the spin
 	# only on the push() return, since IT initiates the roll.
-	var chance: float = odds_for(_selected_lever).chance
+	var chance: float = 0.0 if _lever_locked(_selected_lever) else float(odds_for(_selected_lever).chance)
 	var result: String = ""
 	if _last_lever_acted != "":
 		result = "success" if _last_push_passed else "failure"
@@ -814,6 +832,13 @@ static func _frank_line(lev_active: bool, other_name: String) -> String:
 			return TranslationServer.translate("TERM_FRANK_NO_TABLE")
 		IDLE:
 			return TranslationServer.translate("TERM_FRANK_OPENING")
+		OTHER_SHOWN:
+			# K7 is the investor's moment (TERM_INV_OTHER_*); Frank only counts the moves left,
+			# which stays true after the fund answers. A K7-specific Frank line is his corpus
+			# (open decision K32), so none is invented here.
+			if _patience <= 1:
+				return TranslationServer.translate("TERM_FRANK_LAST_MOVE")
+			return TranslationServer.translate("TERM_FRANK_NEXT_MOVE")
 		_:
 			if _patience <= 1:
 				return TranslationServer.translate("TERM_FRANK_LAST_MOVE")

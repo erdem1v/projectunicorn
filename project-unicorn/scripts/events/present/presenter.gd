@@ -243,9 +243,10 @@ static func _resolve_variant(spec: Dictionary, context: Dictionary) -> String:
 ## `{slot}` -> the bound entity's display name. `{seam:name}` -> a seam's value.
 ##
 ## THE SEAM FORM IS §8.4's MECHANISM, and it exists because of a bug that shipped:
-## END_META_BANKRUPTCY_FRANK says "Yedi gün kırmızıda kaldın" while SHUTTER_DAYS has been 30
-## since the Frank v6 pass. A number typed into prose goes stale silently and nothing can
-## catch it. A number read from a seam cannot.
+## END_META_BANKRUPTCY_FRANK said "Yedi gün kırmızıda kaldın" long after SHUTTER_DAYS became
+## 30 in the Frank v6 pass (the copy now reads "Otuz gün", fixed in 7946ff3, and is still a
+## typed number). A number typed into prose goes stale silently and nothing can catch it. A
+## number read from a seam cannot.
 ##
 ## The B2B family needs the same thing for PROSE rather than numbers: the complaint body is
 ## per-sector, so one card carries {seam:musteri.complaint_voice} instead of fifteen near-copies

@@ -703,6 +703,26 @@ static func meeting_blocked_reason(vc_id: String) -> String:
 	return ""
 
 
+## True when the Series A road has nowhere left to go: no fund that can still be met, no live
+## or queued offer, no booked meeting. Read-only (vc_states.get, never _vc, which would create
+## a row). The Hunt tab says so in one plain line instead of leaving the player to infer it;
+## what the run does next is open decisions K14 / K16, not this query.
+static func series_a_road_closed() -> bool:
+	if GameState.phase < 3:
+		return false
+	if GameState.pivot_used:
+		return true
+	if not GameState.active_sheets.is_empty() or not GameState.pending_meeting.is_empty():
+		return false
+	for inv in InvestorRegistry.get_active():
+		var st: Dictionary = GameState.vc_states.get(String(inv.id), {})
+		if bool(st.get("pending_sheet", false)):
+			return false
+		if String(st.get("status", "open")) in ["open", "callback", "offered", "pending_sheet"]:
+			return false
+	return true
+
+
 static func request_meeting(vc_id: String) -> bool:
 	if meeting_blocked_reason(vc_id) != "":
 		return false
