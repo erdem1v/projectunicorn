@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "godot": {
+      "type": "stdio",
+      "command": "C:\\Users\\erdem\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Oven-sh.Bun_Microsoft.Winget.Source_8wekyb3d8bbwe\\bun-windows-x64\\bun.exe",
+      "args": [
+        "C:\\Users\\erdem\\.bun\\install\\global\\node_modules\\gopeak\\build\\cli.js"
+      ],
+      "env": {
+        "GODOT_PATH": "C:\\Users\\erdem\\Desktop\\Godot_v4.6.2-stable_win64.exe",
+        "GOPEAK_TOOL_PROFILE": "compact"
+      }
+    }
+  }
+}

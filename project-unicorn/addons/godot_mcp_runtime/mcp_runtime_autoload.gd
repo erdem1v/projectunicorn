@@ -5,6 +5,8 @@ extends Node
 ## It starts a TCP server that the MCP server can connect to.
 
 const DEFAULT_PORT = 7777
+const DEFAULT_BIND_ADDRESS = "127.0.0.1"
+const BIND_ADDRESS_SETTING = "godot_mcp/runtime/bind_address"
 const PROTOCOL_VERSION = "1.0"
 
 var _server: TCPServer
@@ -19,8 +21,14 @@ signal command_received(command: String, params: Dictionary)
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
 	name = "MCPRuntime"
+	# The TCP control loop runs in _process (accept connections, poll clients, handle
+	# messages). With the default PROCESS_MODE_INHERIT that loop STOPS while the game tree
+	# is paused (get_tree().paused = true) — the runtime silently goes unreachable and the
+	# game can't even be un-paused over the socket. An introspection/debug server must stay
+	# responsive while the game is frozen, so it can inspect / capture / inject / resume a
+	# paused game; PROCESS_MODE_ALWAYS keeps _process running regardless of pause.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_start_server()
 	print("[MCP Runtime] Autoload ready, server starting on port %d" % _port)
 
@@ -62,10 +70,23 @@ func _process(_delta: float) -> void:
 
 
 func _start_server() -> void:
+	# The command set includes call_method, set_property and input injection, none of it
+	# authenticated, so a release export must not serve it.
+	if not OS.is_debug_build():
+		_enabled = false
+		return
+
 	_server = TCPServer.new()
-	var error = _server.listen(_port)
+	# listen() defaults bind_address to "*", which exposes the game to the whole network.
+	var bind_address = str(ProjectSettings.get_setting(BIND_ADDRESS_SETTING, DEFAULT_BIND_ADDRESS))
+	var error = _server.listen(_port, bind_address)
 	if error != OK:
-		push_error("[MCP Runtime] Failed to start server on port %d: %s" % [_port, error])
+		# A warning, not an error. The usual cause is that another instance of this project
+		# already owns the port, which happens every time a tool runs a headless operation
+		# while the game is open. This instance carries on without a runtime server, which
+		# is what it wants anyway, and callers treat any ERROR line on stderr as a failed
+		# operation, so reporting a handled condition as one breaks working tools.
+		push_warning("[MCP Runtime] Port %d is unavailable (%s), running without a server" % [_port, error])
 		_enabled = false
 	else:
 		print("[MCP Runtime] Server listening on port %d" % _port)
@@ -271,7 +292,23 @@ func _cmd_capture_screenshot(params: Dictionary) -> Dictionary:
 	var viewport = get_viewport()
 	if viewport == null:
 		return {"type": "error", "message": "No viewport available"}
+	return _capture_viewport_image(viewport, params)
+
+
+func _cmd_capture_viewport(params: Dictionary) -> Dictionary:
+	var viewport_path = String(params.get("viewportPath", params.get("viewport_path", "")))
+	if viewport_path.is_empty():
+		return _cmd_capture_screenshot(params)
 	
+	var node = get_tree().root.get_node_or_null(viewport_path)
+	if node == null:
+		return {"type": "error", "message": "Viewport not found: " + viewport_path}
+	if not node is Viewport:
+		return {"type": "error", "message": "Node is not a Viewport: " + viewport_path}
+	return _capture_viewport_image(node as Viewport, params)
+
+
+func _capture_viewport_image(viewport: Viewport, params: Dictionary) -> Dictionary:
 	var viewport_texture = viewport.get_texture()
 	if viewport_texture == null:
 		return {"type": "error", "message": "No viewport texture available"}
@@ -285,24 +322,36 @@ func _cmd_capture_screenshot(params: Dictionary) -> Dictionary:
 	if width > 0 and height > 0:
 		image.resize(width, height)
 	
-	var png_bytes = image.save_png_to_buffer()
-	if png_bytes.is_empty():
-		return {"type": "error", "message": "Failed to encode screenshot as PNG"}
-	
-	var base64_str = Marshalls.raw_to_base64(png_bytes)
+	var requested_path = String(params.get("output_path", params.get("outputPath", "")))
+	if requested_path.is_empty():
+		var png_bytes = image.save_png_to_buffer()
+		if png_bytes.is_empty():
+			return {"type": "error", "message": "Failed to encode screenshot as PNG"}
+
+		return {
+			"type": "screenshot",
+			"format": "png",
+			"encoding": "base64",
+			"width": image.get_width(),
+			"height": image.get_height(),
+			"data": Marshalls.raw_to_base64(png_bytes)
+		}
+
+	var screenshot_path = requested_path
+	if screenshot_path.begins_with("user://") or screenshot_path.begins_with("res://"):
+		screenshot_path = ProjectSettings.globalize_path(screenshot_path)
+	var save_error = image.save_png(screenshot_path)
+	if save_error != OK:
+		return {"type": "error", "message": "Failed to save screenshot as PNG: " + str(save_error)}
 	
 	return {
-		"type": "screenshot",
+		"type": "screenshot_file",
 		"format": "png",
-		"encoding": "base64",
+		"encoding": "file",
 		"width": image.get_width(),
 		"height": image.get_height(),
-		"data": base64_str
+		"path": screenshot_path
 	}
-
-
-func _cmd_capture_viewport(params: Dictionary) -> Dictionary:
-	return _cmd_capture_screenshot(params)
 
 
 func _cmd_inject_action(params: Dictionary) -> Dictionary:
@@ -331,13 +380,17 @@ func _cmd_inject_action(params: Dictionary) -> Dictionary:
 
 
 func _cmd_inject_key(params: Dictionary) -> Dictionary:
-	var keycode = int(params.get("keycode", 0))
+	var keycode_raw: Variant = params.get("keycode", 0)
 	var pressed = bool(params.get("pressed", true))
 	var key_label = String(params.get("key_label", ""))
-	
+
+	if keycode_raw is String and not (keycode_raw as String).is_empty() and key_label.is_empty():
+		key_label = keycode_raw as String
+	var keycode: int = 0 if keycode_raw is String else int(keycode_raw)
+
 	var event = InputEventKey.new()
 	event.pressed = pressed
-	
+
 	if not key_label.is_empty():
 		event.keycode = OS.find_keycode_from_string(key_label)
 		if event.keycode == KEY_NONE:
@@ -346,31 +399,50 @@ func _cmd_inject_key(params: Dictionary) -> Dictionary:
 		event.keycode = keycode
 	else:
 		return {"type": "error", "message": "keycode or key_label required"}
-	
+
+	# A key event from a real keyboard carries all three, and InputMap consults whichever one
+	# the bound event declares: keycode first, then physical_keycode, then key_label. An
+	# injected event with only keycode set can therefore never match an action bound by
+	# physical key, which is how a rebinding UI normally stores one, so inject_key silently
+	# did nothing for those actions.
+	event.physical_keycode = event.keycode
+	event.key_label = event.keycode
+
+	event.shift_pressed = bool(params.get("shift", false))
+	event.ctrl_pressed = bool(params.get("ctrl", false))
+	event.alt_pressed = bool(params.get("alt", false))
+
 	Input.parse_input_event(event)
-	
+
 	return {
 		"type": "input_injected",
 		"input_type": "key",
 		"keycode": event.keycode,
+		"physical_keycode": event.physical_keycode,
+		"shift": event.shift_pressed,
+		"ctrl": event.ctrl_pressed,
+		"alt": event.alt_pressed,
 		"pressed": pressed
 	}
 
 
 func _cmd_inject_mouse_click(params: Dictionary) -> Dictionary:
-	var position = params.get("position", Vector2.ZERO)
-	var button = int(params.get("button", MOUSE_BUTTON_LEFT))
-	var pressed = bool(params.get("pressed", true))
-	
-	if position is Array:
-		if position.size() < 2:
-			return {"type": "error", "message": "position array must contain [x, y]"}
-		position = Vector2(float(position[0]), float(position[1]))
-	elif position is Vector2:
-		position = position
+	var position: Vector2
+	if params.has("x") and params.has("y"):
+		position = Vector2(float(params["x"]), float(params["y"]))
 	else:
-		return {"type": "error", "message": "position must be Vector2 or [x, y]"}
-	
+		var pos_raw = params.get("position", Vector2.ZERO)
+		if pos_raw is Array:
+			if pos_raw.size() < 2:
+				return {"type": "error", "message": "position array must contain [x, y]"}
+			position = Vector2(float(pos_raw[0]), float(pos_raw[1]))
+		elif pos_raw is Vector2:
+			position = pos_raw
+		else:
+			return {"type": "error", "message": "position must be Vector2 or [x, y]"}
+	var button: int = _resolve_mouse_button(params.get("button", MOUSE_BUTTON_LEFT))
+	var pressed = bool(params.get("pressed", true))
+
 	var event = InputEventMouseButton.new()
 	event.position = position
 	event.global_position = position
@@ -388,24 +460,29 @@ func _cmd_inject_mouse_click(params: Dictionary) -> Dictionary:
 
 
 func _cmd_inject_mouse_motion(params: Dictionary) -> Dictionary:
-	var position = params.get("position", Vector2.ZERO)
-	var relative = params.get("relative", Vector2.ZERO)
-	
-	if position is Array:
-		if position.size() < 2:
-			return {"type": "error", "message": "position array must contain [x, y]"}
-		position = Vector2(float(position[0]), float(position[1]))
-	elif position is Vector2:
-		position = position
+	var position: Vector2
+	if params.has("x") and params.has("y"):
+		position = Vector2(float(params["x"]), float(params["y"]))
 	else:
-		return {"type": "error", "message": "position must be Vector2 or [x, y]"}
-	
-	if relative is Array:
-		if relative.size() < 2:
+		var pos_raw = params.get("position", Vector2.ZERO)
+		if pos_raw is Array:
+			if pos_raw.size() < 2:
+				return {"type": "error", "message": "position array must contain [x, y]"}
+			position = Vector2(float(pos_raw[0]), float(pos_raw[1]))
+		elif pos_raw is Vector2:
+			position = pos_raw
+		else:
+			return {"type": "error", "message": "position must be Vector2 or [x, y]"}
+	var rel_raw = params.get("relative", Vector2.ZERO)
+	var relative: Vector2
+	if params.has("relativeX") and params.has("relativeY"):
+		relative = Vector2(float(params["relativeX"]), float(params["relativeY"]))
+	elif rel_raw is Array:
+		if rel_raw.size() < 2:
 			return {"type": "error", "message": "relative array must contain [x, y]"}
-		relative = Vector2(float(relative[0]), float(relative[1]))
-	elif relative is Vector2:
-		relative = relative
+		relative = Vector2(float(rel_raw[0]), float(rel_raw[1]))
+	elif rel_raw is Vector2:
+		relative = rel_raw
 	else:
 		return {"type": "error", "message": "relative must be Vector2 or [x, y]"}
 	
@@ -592,6 +669,18 @@ func _deserialize_value(value) -> Variant:
 		return arr
 	else:
 		return value
+
+
+func _resolve_mouse_button(raw: Variant) -> int:
+	if raw is String:
+		match (raw as String).to_lower():
+			"left": return MOUSE_BUTTON_LEFT
+			"right": return MOUSE_BUTTON_RIGHT
+			"middle": return MOUSE_BUTTON_MIDDLE
+			"wheel_up", "wheelup": return MOUSE_BUTTON_WHEEL_UP
+			"wheel_down", "wheeldown": return MOUSE_BUTTON_WHEEL_DOWN
+			_: return MOUSE_BUTTON_LEFT
+	return int(raw)
 
 
 func _send_response(client: StreamPeerTCP, data: Dictionary) -> void:
