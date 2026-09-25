@@ -22,6 +22,10 @@ var _dial: RadialDial
 var _result_caption: Label
 var _leverage_box: PanelContainer
 var _leverage_label: Label
+var _investor_box: PanelContainer    # K12: the fund's own line after every move (reveals E's band)
+var _investor_tag: Label
+var _investor_line: Label
+var _show_other_btn: Button          # K7: show the other live Series A sheet, once per table
 var _frank_label: Label
 var _kasa_label: Label
 var _counter_label: Label
@@ -31,6 +35,7 @@ var _investment_label: Label
 var _derived_label: Label            # seed only: the implied post-money under the money row
 
 var _spinning: bool = false
+var _leave_mode: bool = false        # the fund walked out; the walk row now just leaves
 var _pending_vs: Dictionary = {}
 
 
@@ -219,6 +224,23 @@ func _build_right_column() -> Control:
 	_result_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(_result_caption)
 
+	# The investor speaks in the meeting's spoken-line grammar: amber-edged QuoteBox, speaker
+	# tag above the line. Hidden until the fund has something to say.
+	_investor_box = PanelContainer.new()
+	_investor_box.theme_type_variation = &"QuoteBox"
+	var inv_vb := VBoxContainer.new()
+	inv_vb.add_theme_constant_override("separation", 4)
+	_investor_box.add_child(inv_vb)
+	_investor_tag = Label.new()
+	_investor_tag.theme_type_variation = &"DialogueTag"
+	inv_vb.add_child(_investor_tag)
+	_investor_line = Label.new()
+	_investor_line.theme_type_variation = &"QuoteSerifCream"
+	_investor_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	inv_vb.add_child(_investor_line)
+	_investor_box.visible = false
+	vb.add_child(_investor_box)
+
 	_leverage_box = PanelContainer.new()
 	_leverage_box.theme_type_variation = &"QuoteBox"
 	var lev_vb := VBoxContainer.new()
@@ -228,6 +250,14 @@ func _build_right_column() -> Control:
 	_leverage_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lev_vb.add_child(_leverage_label)
 	vb.add_child(_leverage_box)
+
+	_show_other_btn = Button.new()
+	_show_other_btn.theme_type_variation = &"DialogueGhost"
+	_show_other_btn.focus_mode = Control.FOCUS_NONE
+	_show_other_btn.text = tr("TERM_SHOW_OTHER")
+	_show_other_btn.visible = false
+	_show_other_btn.pressed.connect(_on_show_other_pressed)
+	vb.add_child(_show_other_btn)
 
 	_frank_label = Label.new()
 	_frank_label.theme_type_variation = &"DialogueMonologue"
@@ -343,6 +373,16 @@ func _render(vs: Dictionary) -> void:
 	_leverage_label.text = String(lev.get("box_text", ""))
 	_frank_label.text = String(vs.get("frank_line", ""))
 
+	var inv_line: String = String(vs.get("investor_line", ""))
+	_investor_box.visible = inv_line != ""
+	_investor_line.text = inv_line
+	_investor_tag.text = UiTokens.tr_upper(String(vs.get("display_name", "")))
+
+	var so: Dictionary = vs.get("show_other", {})
+	_show_other_btn.visible = bool(so.get("visible", false))
+	_show_other_btn.disabled = (not bool(so.get("enabled", false))) or _spinning
+	_show_other_btn.tooltip_text = tr("TERM_SHOW_OTHER_USED") if bool(so.get("used", false)) else ""
+
 	var footer: Dictionary = vs.get("footer", {})
 	_kasa_label.text = String(footer.get("kasa_runway_text", ""))
 	_counter_label.text = String(footer.get("counter_text", ""))
@@ -350,6 +390,10 @@ func _render(vs: Dictionary) -> void:
 		{"amount": UiTokens.format_money(int(vs.get("money_raised", 0)))})
 	_sign_btn.disabled = (not bool(vs.get("sign_enabled", false))) or _spinning
 	_walk_btn.disabled = (not bool(vs.get("walk_enabled", false))) or _spinning
+	# After the fund walked out the same row is the only exit, and it only leaves the room:
+	# the closure was written when they stood up.
+	_leave_mode = String(vs.get("walk_mode", "walk")) == "leave"
+	_walk_btn.text = tr("TERM_LEAVE") if _leave_mode else tr("TERM_WALK_OK")
 	# LOCKED-VISIBLE, the Frank-cheque grammar: the row stays on screen at half alpha and its
 	# tooltip names the real shortfall, rather than the button quietly disappearing.
 	var lock: Dictionary = vs.get("walk_lock", {})
@@ -444,6 +488,10 @@ func _do_sign() -> void:
 func _on_walk_pressed() -> void:
 	if _spinning:
 		return
+	if _leave_mode:
+		TermSheetTableSystem.leave()   # nothing to confirm: the fund already closed the door
+		closed.emit()
+		return
 	EventBus.confirm_requested.emit({
 		"title": tr("TERM_WALK_Q"),
 		"body": tr("TERM_WALK_BODY"),
@@ -451,6 +499,12 @@ func _on_walk_pressed() -> void:
 		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": Callable(self, "_do_walk"),
 	})
+
+
+func _on_show_other_pressed() -> void:
+	if _spinning:
+		return
+	_render(TermSheetTableSystem.show_other_offer())
 
 
 func _do_walk() -> void:
@@ -486,6 +540,8 @@ func _input(event: InputEvent) -> void:
 		KEY_1, KEY_KP_1: idx = 0
 		KEY_2, KEY_KP_2: idx = 1
 		KEY_3, KEY_KP_3: idx = 2
-	if idx >= 0 and idx < TermSheetTableSystem.LEVERS.size():
+	# levers(), not the Series A const: at seed key 1 is the raise row.
+	var rows: Array = TermSheetTableSystem.levers()
+	if idx >= 0 and idx < rows.size():
 		get_viewport().set_input_as_handled()
-		_render(TermSheetTableSystem.select_lever(TermSheetTableSystem.LEVERS[idx]))
+		_render(TermSheetTableSystem.select_lever(String(rows[idx])))

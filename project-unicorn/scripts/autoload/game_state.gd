@@ -392,7 +392,7 @@ var run_seed_equity_pct: int = 0       # the seed investor's slice, percent
 # reads the REASON, because only a decline or a walk brings a buyer to the phone — sitting on
 # an open door for a month is a different story with a different ending.
 var faced_series_a: bool = false
-var faced_series_a_by: String = ""     # "declined" | "walked" | "door_open"
+var faced_series_a_by: String = ""     # "declined" | "walked" | "door_open" | "fund_walked"
 var acq_road_over_day: int = -1        # day the Series A road closed; the buyout window's origin
 
 # --- HR Core state (same "fields not systems" rule as the VC block above; all reset in

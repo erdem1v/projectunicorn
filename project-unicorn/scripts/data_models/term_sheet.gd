@@ -33,6 +33,10 @@ extends Resource
 
 # --- Reserved / forward-compat (Spec 6 Term Sheet Table) ---
 @export var patience_pool: int = 0        # copied from the VC at grant; the table consumes it
+## The meeting's closing conviction (0..100), stamped at grant; the table's opening eagerness
+## (K12) starts from it. -1 = not stamped — an older save or a debug grant — and the table
+## falls back to a stage default, so an old sheet loads and plays.
+@export var conviction: int = -1
 @export var opening_terms: Dictionary = {} # {valuation_m, dilution_pct, board_seats, board_veto} — the
                                            # table's NUMERIC opening offer (Spec 6). Snapshot from the
                                            # investor at grant. Pre-close it is shown NOWHERE but the

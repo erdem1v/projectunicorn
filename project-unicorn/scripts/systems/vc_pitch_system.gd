@@ -22,6 +22,11 @@ extends RefCounted
 # The three card ids this file used to build and push. They are catalogue ids now, named here
 # only because on_pivot has to be able to pull a queued meeting prompt.
 const MEETING_CARD := "funding.meeting_day"
+## walk_table's reason when the FUND leaves the table (K12 patience-zero walk-out, K7 walk).
+## Distinct from the player's own "walked"/"declined" on purpose: the fund is closed and a
+## rejection is counted, but the player did not refuse the round, so the Series A road-over
+## reading (EndingsSystem.road_over, open decision K16) is left exactly as it was.
+const WALK_REASON_FUND := "fund_walked"
 
 # --- Meeting-local state (never serialized) ---
 static var _active: bool = false
@@ -364,6 +369,8 @@ static func _finish() -> Dictionary:
 ## status change: the fund that seeds you must still be approachable at Series A, warmer.
 static func _grant_seed_sheet(band: String) -> void:
 	GameState.seed_sheet = SeedRoundSystem.make_seed_sheet(_vc_id, band, GameState.day)
+	# The room's temperature rides on the sheet into the table (K12 opening eagerness).
+	GameState.seed_sheet.conviction = mini(_conviction, _cap)
 	EventBus.seed_sheet_granted.emit(_vc_id)
 	if OS.is_debug_build():
 		print("[VCPitchSystem] seed offer: %s band for %s (conviction %d)" % [
@@ -372,6 +379,9 @@ static func _grant_seed_sheet(band: String) -> void:
 
 static func _grant_sheet() -> void:
 	GameState.run_sheets_won += 1
+	# Stamped on the fund's state rather than handed to _make_sheet, because a delayed sheet
+	# (ledger 15) is built days later by _deliver_pending_sheet, long after the room closed.
+	_vc(_vc_id).sheet_conviction = mini(_conviction, _cap)
 	if GameState.active_sheets.size() < PitchConstants.MAX_SHEETS:
 		GameState.active_sheets.append(_make_sheet(_vc_id, GameState.day))
 		_vc(_vc_id).status = "offered"
@@ -392,6 +402,8 @@ static func _make_sheet(vc_id: String, granted_day: int) -> TermSheet:
 	sheet.expires_day = granted_day + PitchConstants.SHEET_VALIDITY_DAYS
 	sheet.term_bands = inv.get("term_bands", {}).duplicate()
 	sheet.patience_pool = int(inv.get("patience_pool", 0))
+	# The meeting's closing conviction, if one was stamped (-1 = none; the table falls back).
+	sheet.conviction = int(GameState.vc_states.get(vc_id, {}).get("sheet_conviction", -1))
 	# THE NUMBERS ARE PRICED, NOT COPIED (ch. 09 section 5.4, 2026-08-27). This line used to
 	# read `inv.opening_terms.duplicate()`: four numbers frozen on the investor row, so a
 	# company arriving at the table with $400K of revenue was handed the same sheet as one
@@ -540,7 +552,9 @@ static func walk_table(vc_id: String, reason: String = "declined") -> void:
 		if sheet.vc_id == vc_id:
 			GameState.active_sheets.erase(sheet)
 	GameState.vc_rejections += 1
-	_vc(vc_id).status = "walked"
+	# A fund that walked out on the player reads as a refusal on the Hunt tab ("Declined"),
+	# not as the player's own walk; both are closed for the run.
+	_vc(vc_id).status = "rejected" if reason == WALK_REASON_FUND else "walked"
 	EventBus.sheet_walked.emit(vc_id)  # Spec 6 — HuntTab repaints after a table walk
 
 

@@ -19,7 +19,15 @@ extends RefCounted
 
 # --- Seven states (§3). PUSH_RESOLVING is the scene's ~0.8s dial-spin transient; the system
 # never rests in it — push() returns the already-settled SUCCESS/FAILURE/PATIENCE_ZERO. ---
-enum { IDLE = 1, LEVER_SELECTED, PUSH_RESOLVING, PUSH_SUCCESS, PUSH_FAILURE, PATIENCE_ZERO, SIGN_CONFIRM }
+#
+# PATIENCE_ZERO is the fund's FINAL OFFER now (K12): take it or leave it, only Sign and Walk.
+# Two states were added after SIGN_CONFIRM so the existing ints do not move:
+#   FUND_WALKED — the fund left the table (patience ran out below its walk line, or it walked
+#                 on a shown offer). The closure is ALREADY written when this state is entered;
+#                 the only action left is leave().
+#   OTHER_SHOWN — the player showed the other live Series A sheet (K7) and the fund answered.
+enum { IDLE = 1, LEVER_SELECTED, PUSH_RESOLVING, PUSH_SUCCESS, PUSH_FAILURE, PATIENCE_ZERO, SIGN_CONFIRM,
+	FUND_WALKED, OTHER_SHOWN }
 
 const LEVERS := ["valuation", "dilution", "board"]
 ## The seed table's rows. Lever one is the MONEY here, not the valuation: a seed round is
@@ -27,6 +35,93 @@ const LEVERS := ["valuation", "dilution", "board"]
 ## out of those two. At Series A it is the other way round. That inversion is the only
 ## structural difference between the two tables — everything else is the same object.
 const SEED_LEVERS := ["raise", "dilution", "board"]
+
+# ============================================================================
+# EAGERNESS (E) — THE ONE TUNING BLOCK for the table's risk model (K12 + K7, plan §4.2).
+# E is 0..100: how much this fund still wants the deal. It is never shown as a number; the
+# player reads it off the investor's line after every push (relaxed / tense / running out).
+# Every number the model reads lives here and nowhere else.
+# ============================================================================
+
+## Opening E = the meeting's conviction (stamped on the sheet at grant) + the fund's domain fit.
+## A sheet with no stamp (an older save, a debug grant) assumes this conviction instead.
+## Series A: a sheet only exists past the win line, so the win line is the honest floor.
+const E_FALLBACK_CONV_SERIES_A := PitchConstants.WON_MIN          # 70
+## Seed: the band the room produced is all an unstamped seed sheet knows.
+const E_FALLBACK_CONV_SEED := {"strong": 80, "standard": 55, "harsh": 35}
+
+## Domain fit — each fund reads its own lens, the sum is clamped to ±E_FIT_MAX.
+const E_FIT_MAX := 12
+const E_FIT_METRICS_MRR := 6        # Anchor: MRR at/above the room's MRR reference (+), below (−)
+const E_FIT_METRICS_CHURN := 6      # Anchor: no customer lost this run (+), any lost (−)
+const E_FIT_TEAM_ENGINEER := 6      # Nexus: at least one developer (+), none (−)
+const E_FIT_TEAM_SIZE := 4          # Nexus: headcount at/above E_FIT_TEAM_SIZE_MIN (+)
+const E_FIT_TEAM_SIZE_MIN := 4
+const E_FIT_NARRATIVE_BRAND := 6    # Bosphorus: brand at/above the room's brand floor (+), below (−)
+const E_FIT_NARRATIVE_WARM := 4     # Bosphorus: came through a warm intro (+)
+const E_FIT_PRODUCT_SHIPPED := 4    # Meridian: MVP shipped (+), not shipped (−)
+const E_FIT_PRODUCT_BUGS := 6       # Meridian: live bugs (−), none (+)
+const E_FIT_PRODUCT_DIMS := 4       # Meridian: no quality axis under the floor below (+)
+const E_FIT_PRODUCT_DIM_FLOOR := 40.0
+
+## What a push costs in E. A FAILED push also costs 1 patience (unchanged). The ask size is
+## how far this push would drag the lever from the fund's opening offer, in steps
+## (1 on the first ask, 2 once one step has been won, ...): bigger asks sting more.
+const E_PUSH_FAIL_BASE := 6
+const E_PUSH_FAIL_PER_STEP := 4
+const E_PUSH_WIN_COST := 3          # a won push still spends a little goodwill
+const E_CARE_LEVER_EXTRA := 3       # added to either cost when the push is on the fund's own lever
+
+## Walk line: at patience zero, E below this and the fund walks (Series A only). Shorter-
+## patience funds walk more easily: threshold = E_WALK_BASE − E_WALK_PER_PATIENCE × pool
+## → pool 2: 55 · pool 3: 45 · pool 4: 35.
+const E_WALK_BASE := 75
+const E_WALK_PER_PATIENCE := 10
+## Band read by the investor's line: relaxed at/above threshold + margin, tense at/above the
+## threshold, "running out" below it (at Series A: the next patience-zero is a walk-out).
+const E_BAND_RELAXED_MARGIN := 20
+
+## The final counter at patience zero lands between the working terms (where the fund stops)
+## and the player's last ask. share = clamp((E − threshold) / E_FINAL_SPAN, 0, 1); the fund
+## concedes share × E_FINAL_MAX_SHARE of one step on the lever the last push asked for, and
+## drops the asked board term only when share reaches E_FINAL_BOARD_SHARE.
+const E_FINAL_SPAN := 30.0
+const E_FINAL_MAX_SHARE := 0.5
+const E_FINAL_BOARD_SHARE := 0.75
+
+## K7 "show the other offer". Each fund compares on the lever it cares about, and claws back
+## on another when it matches with a condition.
+const CARE_LEVER := {"metrics": "valuation", "team": "dilution", "narrative": "board", "product": "valuation"}
+const CLAWBACK_LEVER := {"metrics": "board", "team": "valuation", "narrative": "dilution", "product": "dilution"}
+## pull = E + SHOW_PATIENCE_WEIGHT × patience left − SHOW_GAP_COST × gap (in push steps).
+const SHOW_PATIENCE_WEIGHT := 5
+const SHOW_GAP_COST := 12
+const SHOW_MATCH_MIN := 70          # pull at/above → MATCH (closes SHOW_MATCH_MIN_SHARE..all of the gap)
+const SHOW_MATCH_MIN_SHARE := 0.5
+const SHOW_MATCH_FULL_SPAN := 20.0  # pull this far above SHOW_MATCH_MIN closes the whole gap
+const SHOW_CONDITION_MIN := 50      # pull at/above → MATCH WITH A CONDITION; below → HOLD
+const SHOW_WALK_GAP := 2.0          # WALK needs a gap this big (steps) AND E under the walk line
+const SHOW_MATCH_E_COST := 4        # matching spends goodwill
+const SHOW_HOLD_E_COST := 10        # holding means the move annoyed them
+const SHOW_BOARD_SEAT_CAP := 2      # a board claw-back never asks past this many seats
+
+## The investor's line bank. Relaxed / tense are generic (two each, rotated so the same line
+## never plays twice in a row); "running out" is the fund's own voice (plan §5.4).
+const LINES_RELAXED := ["TERM_INV_RELAXED_1", "TERM_INV_RELAXED_2"]
+const LINES_TENSE := ["TERM_INV_TENSE_1", "TERM_INV_TENSE_2"]
+const LINES_RUNNING_OUT := {
+	"anchor": "TERM_INV_OUT_ANCHOR", "nexus": "TERM_INV_OUT_NEXUS",
+	"bosphorus": "TERM_INV_OUT_BOSPHORUS", "meridian": "TERM_INV_OUT_MERIDIAN"}
+const LINE_RUNNING_OUT_FALLBACK := "TERM_INV_OUT_GENERIC"
+
+const BAND_RELAXED := "relaxed"
+const BAND_TENSE := "tense"
+const BAND_RUNNING_OUT := "running_out"
+
+const SHOW_MATCH := "match"
+const SHOW_CONDITION := "condition"
+const SHOW_HOLD := "hold"
+const SHOW_WALK := "walk"
 
 # --- Table-local sitting state (never serialized) ---
 static var _active: bool = false
@@ -45,6 +140,18 @@ static var _last_move: String = ""          # "$18M → $22M" for the success ca
 ## on day 240; a static set during the meeting is long gone by then. Cleared in _reset(),
 ## and forgetting that would leak a seed sitting's stage into the next Series A table.
 static var _stage: String = PitchConstants.STAGE_SERIES_A
+# --- K12 / K7 sitting state (never serialized, cleared in _reset like everything above) ---
+static var _e: int = 0                      # eagerness 0..100
+static var _won_counts: Dictionary = {}     # lever → successful pushes (the ask-size driver)
+static var _line_key: String = ""           # the investor's current line ("" = silent)
+static var _line_seq: int = 0               # rotation counter for the generic line pools
+static var _final_move: String = ""         # "$18M → $20M" when the final counter conceded
+static var _fund_walked: bool = false       # the closure is already written; only leave() remains
+static var _other_shown: bool = false       # K7 is once per table
+static var _show_outcome: String = ""       # SHOW_* of the last K7 answer
+static var _show_back: String = ""          # the claw-back move text for SHOW_CONDITION
+static var _other_terms: Dictionary = {}    # the real other sheet, as shown
+static var _other_vc_shown: String = ""
 
 
 ## The rows this sitting has. Every loop that used to walk the LEVERS const walks this, and
@@ -81,7 +188,7 @@ static func is_active() -> bool:
 static func reset() -> void:
 	# Run-boundary reset (SaveManager.reset_all_owners) — the public door onto the private
 	# _reset() the lifecycle already used. Same contract as the other three sitting-scoped
-	# systems: the eleven statics are reset, never serialised, because SaveManager.can_save()
+	# systems: the sitting statics are reset, never serialised, because SaveManager.can_save()
 	# refuses while is_active() and a table is therefore provably closed at every save point.
 	# The SHEET itself is persistent and lives in GameState.active_sheets, which the save
 	# carries; what dies here is the negotiation in progress.
@@ -111,9 +218,12 @@ static func open(vc_id: String) -> Dictionary:
 	_patience = int(sheet.patience_pool)
 	_patience_max = _patience
 	_push_counts = {}
+	_won_counts = {}
 	for lever in levers():
 		_push_counts[lever] = 0
+		_won_counts[lever] = 0
 	_selected_lever = String(levers()[0])
+	_e = clampi(_opening_conviction(sheet) + _domain_fit(), 0, 100)
 	_state = IDLE
 	return view_state()
 
@@ -121,9 +231,11 @@ static func open(vc_id: String) -> Dictionary:
 ## Select a lever — pure presentation (S2). No mutation; dial/caption go neutral for the new
 ## lever. Ignored once pushing is locked (patience zero).
 static func select_lever(lever: String) -> Dictionary:
-	if not _active or _state == PATIENCE_ZERO:
+	if not _active or _state == PATIENCE_ZERO or _state == FUND_WALKED:
 		return view_state()
-	if lever in LEVERS:
+	# levers(), NOT LEVERS: at seed the first row is `raise`, and the const would refuse it
+	# while accepting a `valuation` row that is not on the sheet.
+	if lever in levers():
 		_selected_lever = lever
 		_state = LEVER_SELECTED
 		_last_lever_acted = ""   # fresh intention → dial rests, caption previews
@@ -132,7 +244,9 @@ static func select_lever(lever: String) -> Dictionary:
 
 ## True when the selected lever can still be pushed (patience left, room to improve).
 static func can_push(lever: String) -> bool:
-	if not _active or _state == PATIENCE_ZERO or _patience <= 0:
+	if not _active or _state == PATIENCE_ZERO or _state == FUND_WALKED or _patience <= 0:
+		return false
+	if not (lever in levers()):
 		return false
 	return not _lever_at_best(lever)
 
@@ -149,25 +263,293 @@ static func push() -> Dictionary:
 	_last_lever_acted = lever
 	_last_push_passed = passed
 	GameState.run_pushes_attempted += 1
+	var care: int = E_CARE_LEVER_EXTRA if lever == _care_lever() else 0
 	if passed:
 		var before: String = _current_text(lever)
 		_apply_push(lever)
 		_last_move = "%s → %s" % [before, _current_text(lever)]
+		_won_counts[lever] = int(_won_counts.get(lever, 0)) + 1
 		GameState.run_pushes_won += 1
+		_e = clampi(_e - E_PUSH_WIN_COST - care, 0, 100)
 		_state = PUSH_SUCCESS
+		_line_key = _band_line_key()
 	else:
+		# The ask this push made: one step beyond everything already won on this lever.
+		var ask_steps: int = int(_won_counts.get(lever, 0)) + 1
+		_e = clampi(_e - E_PUSH_FAIL_BASE - E_PUSH_FAIL_PER_STEP * ask_steps - care, 0, 100)
 		_patience -= 1
 		if _patience <= 0:
 			_patience = 0
-			_state = PATIENCE_ZERO
+			_on_patience_zero(lever)
 		else:
 			_state = PUSH_FAILURE
+			_line_key = _band_line_key()
 	return view_state()
+
+
+## K12: patience is gone. Above the walk line the fund puts a final take-it-or-leave-it
+## counter; below it the fund walks. THE SEED FUND NEVER WALKS (the room cannot reject and
+## the refusal row is locked), so a seed table always ends in the final counter.
+static func _on_patience_zero(asked_lever: String) -> void:
+	if not is_seed() and _e < walk_threshold():
+		_fund_walks()
+		return
+	_final_counter(asked_lever)
+	_state = PATIENCE_ZERO
+	_line_key = "SEED_INV_FINAL" if is_seed() else "TERM_INV_FINAL"
+
+
+## The final counter: part of the way from the working terms toward the last ask.
+static func _final_counter(lever: String) -> void:
+	_final_move = ""
+	var share: float = clampf(float(_e - walk_threshold()) / E_FINAL_SPAN, 0.0, 1.0)
+	if share <= 0.0 or _lever_at_best(lever):
+		return
+	var before: String = _current_text(lever)
+	match lever:
+		"valuation":
+			var gain: int = int(round(share * E_FINAL_MAX_SHARE * PitchConstants.VAL_STEP))
+			_terms["valuation_m"] = int(_terms.get("valuation_m", 0)) + gain
+		"raise":
+			var gain_k: int = int(round(share * E_FINAL_MAX_SHARE * SeedConstants.RAISE_STEP / 1000.0))
+			_terms["raise"] = mini(int(_terms.get("raise", 0)) + gain_k * 1000, SeedConstants.RAISE_MAX)
+		"dilution":
+			var drop: int = int(round(share * E_FINAL_MAX_SHARE * _dil_step()))
+			_terms["dilution_pct"] = maxi(int(_terms.get("dilution_pct", 0)) - drop, _dil_floor())
+		"board":
+			if share >= E_FINAL_BOARD_SHARE:
+				_apply_push("board")
+	var after: String = _current_text(lever)
+	if after != before:
+		_final_move = "%s → %s" % [before, after]
+
+
+## The fund leaves. The consequence is written NOW, not when the player clicks away: a sitting
+## that could be abandoned between the walk-out and its write would hand the sheet back.
+## Same closure as a player walk (sheet destroyed, fund closed for the run, other sheets
+## survive) and it counts as a fund rejection (the same vc_rejections counter a failed
+## meeting moves). Series A only; walk_table refuses a seed sitting on its own.
+static func _fund_walks() -> void:
+	_fund_walked = true
+	_state = FUND_WALKED
+	_line_key = "TERM_INV_WALKOUT"
+	VCPitchSystem.walk_table(_vc_id, VCPitchSystem.WALK_REASON_FUND)
+
+
+# ============================================================================
+# K7 — show the other offer (Series A, once per table, real sheet only)
+# ============================================================================
+
+## True when the move is on offer at all: a Series A sitting and another live Series A sheet
+## from a different fund. Whether it is still usable is can_show_other().
+static func show_other_available() -> bool:
+	return _active and not is_seed() and _other_live_vc() != ""
+
+
+static func can_show_other() -> bool:
+	return show_other_available() and not _other_shown \
+		and _state != PATIENCE_ZERO and _state != FUND_WALKED
+
+
+## Put the other sheet on the table. The fund's answer is computed from how much better the
+## other sheet is on the lever THIS fund cares about, its eagerness, and the patience left.
+static func show_other_offer() -> Dictionary:
+	if not can_show_other():
+		return view_state()
+	var other_vc: String = _other_live_vc()
+	var other: TermSheet = VCPitchSystem.sheet_for(other_vc)
+	if other == null:
+		return view_state()
+	_other_shown = true
+	_other_vc_shown = other_vc
+	_other_terms = other.opening_terms.duplicate()
+	_last_lever_acted = ""        # the dial rests; this was not a push
+	_last_move = ""
+	_show_back = ""
+	var care: String = _care_lever()
+	var gap: float = _gap_steps(care, _other_terms)
+	if gap >= SHOW_WALK_GAP and _e < walk_threshold():
+		_show_outcome = SHOW_WALK
+		_fund_walks()
+		_line_key = "TERM_INV_OTHER_WALK"
+		return view_state()
+	var pull: float = float(_e + SHOW_PATIENCE_WEIGHT * _patience) - SHOW_GAP_COST * gap
+	if gap <= 0.0 or pull < SHOW_CONDITION_MIN:
+		_show_outcome = SHOW_HOLD
+		_e = clampi(_e - SHOW_HOLD_E_COST, 0, 100)
+		_line_key = "TERM_INV_OTHER_HOLD"
+	elif pull >= SHOW_MATCH_MIN:
+		_show_outcome = SHOW_MATCH
+		var share: float = clampf(
+			SHOW_MATCH_MIN_SHARE + (pull - SHOW_MATCH_MIN) / SHOW_MATCH_FULL_SPAN * (1.0 - SHOW_MATCH_MIN_SHARE),
+			SHOW_MATCH_MIN_SHARE, 1.0)
+		_close_gap(care, share)
+		_e = clampi(_e - SHOW_MATCH_E_COST, 0, 100)
+		_line_key = "TERM_INV_OTHER_MATCH"
+	else:
+		_show_outcome = SHOW_CONDITION
+		_close_gap(care, 1.0)
+		var back_lever: String = String(CLAWBACK_LEVER.get(_domain(), "dilution"))
+		var before: String = _current_text(back_lever)
+		_claw_back(back_lever)
+		var after: String = _current_text(back_lever)
+		_show_back = "%s → %s" % [before, after] if after != before else ""
+		_e = clampi(_e - SHOW_MATCH_E_COST, 0, 100)
+		_line_key = "TERM_INV_OTHER_CONDITION"
+	_state = OTHER_SHOWN
+	return view_state()
+
+
+## How much better the other sheet is on `lever`, in push steps (> 0 = theirs is better).
+static func _gap_steps(lever: String, other: Dictionary) -> float:
+	match lever:
+		"valuation":
+			return float(int(other.get("valuation_m", 0)) - int(_terms.get("valuation_m", 0))) \
+				/ float(PitchConstants.VAL_STEP)
+		"dilution":
+			return float(int(_terms.get("dilution_pct", 0)) - int(other.get("dilution_pct", 0))) \
+				/ float(PitchConstants.DIL_STEP)
+		"board":
+			return float(_board_weight(_terms) - _board_weight(other))
+	return 0.0
+
+
+## Board terms as push steps: each seat is one step, a veto is one more.
+static func _board_weight(terms: Dictionary) -> int:
+	return int(terms.get("board_seats", 0)) + (1 if bool(terms.get("board_veto", false)) else 0)
+
+
+## Move `lever` `share` of the way to the other sheet (at least one unit when there is a gap).
+static func _close_gap(lever: String, share: float) -> void:
+	var before: String = _current_text(lever)
+	match lever:
+		"valuation":
+			var gap_m: int = int(_other_terms.get("valuation_m", 0)) - int(_terms.get("valuation_m", 0))
+			if gap_m > 0:
+				_terms["valuation_m"] = int(_terms.get("valuation_m", 0)) + maxi(1, int(round(gap_m * share)))
+		"dilution":
+			var gap_pp: int = int(_terms.get("dilution_pct", 0)) - int(_other_terms.get("dilution_pct", 0))
+			if gap_pp > 0:
+				_terms["dilution_pct"] = maxi(
+					int(_terms.get("dilution_pct", 0)) - maxi(1, int(round(gap_pp * share))), _dil_floor())
+		"board":
+			var steps: int = maxi(1, int(round(_gap_steps("board", _other_terms) * share)))
+			for i in steps:
+				if _lever_at_best("board"):
+					break
+				_apply_push("board")
+	var after: String = _current_text(lever)
+	_last_move = "%s → %s" % [before, after] if after != before else ""
+
+
+## The condition: one step back on another lever, the fund's way.
+static func _claw_back(lever: String) -> void:
+	match lever:
+		"valuation":
+			_terms["valuation_m"] = maxi(1, int(_terms.get("valuation_m", 0)) - PitchConstants.VAL_STEP)
+		"dilution":
+			_terms["dilution_pct"] = mini(
+				int(_terms.get("dilution_pct", 0)) + PitchConstants.DIL_STEP, PitchConstants.SERIES_A_DIL_MAX)
+		"board":
+			var seats: int = int(_terms.get("board_seats", 0))
+			if seats < SHOW_BOARD_SEAT_CAP:
+				_terms["board_seats"] = seats + 1
+			elif not bool(_terms.get("board_veto", false)):
+				_terms["board_veto"] = true
+
+
+# ============================================================================
+# Eagerness reads (K12)
+# ============================================================================
+
+static func eagerness() -> int:
+	return _e
+
+
+## This fund's walk line — lower for a patient fund, higher for a short-fused one.
+static func walk_threshold() -> int:
+	return E_WALK_BASE - E_WALK_PER_PATIENCE * _patience_max
+
+
+static func eagerness_band() -> String:
+	if _e < walk_threshold():
+		return BAND_RUNNING_OUT
+	if _e < walk_threshold() + E_BAND_RELAXED_MARGIN:
+		return BAND_TENSE
+	return BAND_RELAXED
+
+
+static func _band_line_key() -> String:
+	var pool: Array
+	match eagerness_band():
+		BAND_RUNNING_OUT:
+			return String(LINES_RUNNING_OUT.get(_vc_id, LINE_RUNNING_OUT_FALLBACK))
+		BAND_TENSE:
+			pool = LINES_TENSE
+		_:
+			pool = LINES_RELAXED
+	var idx: int = _line_seq % pool.size()
+	if String(pool[idx]) == _line_key:
+		idx = (idx + 1) % pool.size()
+	_line_seq += 1
+	return String(pool[idx])
+
+
+static func _domain() -> String:
+	return String(InvestorRegistry.get_investor(_vc_id).get("domain", ""))
+
+
+static func _care_lever() -> String:
+	var lever: String = String(CARE_LEVER.get(_domain(), "valuation"))
+	# The seed sheet has no valuation row: a valuation-minded fund watches the money there.
+	if is_seed() and lever == "valuation":
+		return "raise"
+	return lever
+
+
+## The meeting's conviction, as stamped on the sheet at grant; a fallback when unstamped.
+static func _opening_conviction(sheet: TermSheet) -> int:
+	if int(sheet.conviction) >= 0:
+		return int(sheet.conviction)
+	if is_seed():
+		return int(E_FALLBACK_CONV_SEED.get(String(sheet.band), E_FALLBACK_CONV_SEED["harsh"]))
+	return E_FALLBACK_CONV_SERIES_A
+
+
+## How well the company fits what THIS fund invests on. Read-only seams, one lens per fund.
+static func _domain_fit() -> int:
+	var inv: Dictionary = InvestorRegistry.get_investor(_vc_id)
+	var fit: int = 0
+	match String(inv.get("domain", "")):
+		"metrics":
+			var ref: int = SeedConstants.CONV_MRR_REFERENCE if is_seed() else PitchConstants.CONV_MRR_REFERENCE
+			fit += E_FIT_METRICS_MRR if GameState.mrr >= ref else -E_FIT_METRICS_MRR
+			fit += E_FIT_METRICS_CHURN if GameState.run_customers_lost <= 0 else -E_FIT_METRICS_CHURN
+		"team":
+			fit += E_FIT_TEAM_ENGINEER if CharacterRegistry.count_developers() >= 1 else -E_FIT_TEAM_ENGINEER
+			if CharacterRegistry.get_employees().size() >= E_FIT_TEAM_SIZE_MIN:
+				fit += E_FIT_TEAM_SIZE
+		"narrative":
+			var floor_b: int = SeedConstants.CONV_BRAND_FLOOR if is_seed() else PitchConstants.CONV_BRAND_FLOOR
+			fit += E_FIT_NARRATIVE_BRAND if GameState.brand >= floor_b else -E_FIT_NARRATIVE_BRAND
+			if bool(inv.get("warm_intro", false)):
+				fit += E_FIT_NARRATIVE_WARM
+		"product":
+			fit += E_FIT_PRODUCT_SHIPPED if bool(GameState.get_flag("mvp_shipped", false)) else -E_FIT_PRODUCT_SHIPPED
+			var bugs: int = int(GameState.get_flag("mvp_live_bug_count",
+				GameState.get_flag("mvp_bug_count_at_launch", 0)))
+			fit += -E_FIT_PRODUCT_BUGS if bugs > 0 else E_FIT_PRODUCT_BUGS
+			var weakest: float = minf(float(GameState.get_flag("mvp_innovation", 0.0)), minf(
+				float(GameState.get_flag("mvp_stability", 0.0)),
+				float(GameState.get_flag("mvp_experience", 0.0))))
+			if weakest >= E_FIT_PRODUCT_DIM_FLOOR:
+				fit += E_FIT_PRODUCT_DIMS
+	return clampi(fit, -E_FIT_MAX, E_FIT_MAX)
 
 
 ## Sign the current terms → VC seam (fires the Series A Hard Win ending). Ends the sitting.
 static func sign() -> void:
-	if not _active:
+	if not _active or _fund_walked:
 		return
 	var vc: String = _vc_id
 	var terms: Dictionary = _terms.duplicate()
@@ -180,6 +562,11 @@ static func sign() -> void:
 static func walk() -> void:
 	if not _active:
 		return
+	# The fund already walked and the closure is already written: a second walk would count
+	# a second rejection for one door. Treat it as leaving the room.
+	if _fund_walked:
+		leave()
+		return
 	# THE SECOND SAFETY behind the locked row (ruling 5). The button is rendered visible and
 	# disabled with its reason, exactly as Frank's cheque renders REDDET · ZOR MOD; this is
 	# the belt to that pair of braces, so that even a direct call cannot destroy a round the
@@ -190,6 +577,14 @@ static func walk() -> void:
 	var vc: String = _vc_id
 	_reset()
 	VCPitchSystem.walk_table(vc)
+
+
+## Leave the room after the fund walked out. Nothing is written here — _fund_walks already
+## did it; this only ends the sitting. A no-op on a live table (sign or walk decide those).
+static func leave() -> void:
+	if not _active or not _fund_walked:
+		return
+	_reset()
 
 
 ## THE INVERSION, and it is the whole shape of the seed table. At Series A the money falls
@@ -260,6 +655,14 @@ static func view_state() -> Dictionary:
 	var other_vc: String = _other_live_vc()
 	var lev_active: bool = other_vc != ""
 	var other_name: String = InvestorRegistry.get_investor(other_vc).get("display_name", "") if lev_active else ""
+	var box_text: String = ""
+	if _other_shown and _other_vc_shown != "":
+		# K7 shows the REAL other sheet, never a bluff: its numbers, from its own opening terms.
+		box_text = TranslationServer.translate("TERM_OTHER_SHOWN_BOX").format({
+			"investor": InvestorRegistry.get_investor(_other_vc_shown).get("display_name", ""),
+			"terms": _terms_text(_other_terms)})
+	elif lev_active:
+		box_text = TranslationServer.translate("TERM_LEVERAGE_BOX").format({"investor": other_name})
 	return {
 		"state": _state,
 		"vc_id": _vc_id,
@@ -272,9 +675,21 @@ static func view_state() -> Dictionary:
 		"dial": _dial_view(),
 		"result_caption": _result_caption(),
 		"leverage": {
-			"active": lev_active,
+			"active": lev_active or (_other_shown and _other_vc_shown != ""),
 			"other_vc_name": other_name,
-			"box_text": TranslationServer.translate("TERM_LEVERAGE_BOX").format({"investor": other_name}) if lev_active else "",
+			"box_text": box_text,
+		},
+		# K12: the investor's own line after every move. It is the only window onto E.
+		"investor_line": TranslationServer.translate(_line_key) if _line_key != "" else "",
+		"eagerness_band": eagerness_band(),
+		"final_offer": _state == PATIENCE_ZERO,
+		"fund_walked": _fund_walked,
+		# K7. Visible whenever the move exists at this table; enabled once, before the final.
+		"show_other": {
+			"visible": show_other_available() or _other_shown,
+			"enabled": can_show_other(),
+			"used": _other_shown,
+			"outcome": _show_outcome,
 		},
 		"frank_line": _frank_line(lev_active, other_name),
 		"money_raised": money_raised(),
@@ -285,8 +700,10 @@ static func view_state() -> Dictionary:
 			"counter_text": "" if is_seed() else TranslationServer.translate("TERM_TABLES_CLOSED").format({
 				"closed": GameState.vc_rejections, "total": EndingsSystem.CASCADE_TABLES}),
 		},
-		"sign_enabled": _active,
-		"walk_enabled": _active and not is_seed(),
+		"sign_enabled": _active and not _fund_walked,
+		# After a walk-out the same row becomes "leave the room" (walk_mode) — the only exit.
+		"walk_enabled": _active and (not is_seed() or _fund_walked),
+		"walk_mode": "leave" if _fund_walked else "walk",
 		# LOCKED-VISIBLE, not hidden: the row stays on screen and says why, which is the
 		# grammar every other locked door in this game uses.
 		"walk_lock": {
@@ -301,7 +718,9 @@ static func view_state() -> Dictionary:
 
 static func _lever_views() -> Array:
 	var out: Array = []
-	for lever in LEVERS:
+	# levers(), NOT LEVERS: the seed table's rows are raise / dilution / board. Walking the
+	# Series A const painted "Valuation $0M" over a seed offer.
+	for lever in levers():
 		var odds: Dictionary = odds_for(lever)
 		out.append({
 			"id": lever,
@@ -338,7 +757,25 @@ static func _result_caption() -> String:
 			return TranslationServer.translate("TERM_RESULT_REFUSED").format(
 				{"value": _current_text(_last_lever_acted)})
 		PATIENCE_ZERO:
-			return TranslationServer.translate("TERM_RESULT_FINAL")
+			# The seed row has no walk, so its final caption must not offer one.
+			if _final_move != "":
+				return TranslationServer.translate(
+					"SEED_RESULT_FINAL_MOVE" if is_seed() else "TERM_RESULT_FINAL_MOVE").format({"move": _final_move})
+			return TranslationServer.translate("SEED_RESULT_FINAL" if is_seed() else "TERM_RESULT_FINAL")
+		FUND_WALKED:
+			return TranslationServer.translate("TERM_RESULT_WALKED")
+		OTHER_SHOWN:
+			match _show_outcome:
+				SHOW_MATCH:
+					if _last_move != "":
+						return TranslationServer.translate("TERM_RESULT_OTHER_MOVED").format({"move": _last_move})
+				SHOW_CONDITION:
+					if _last_move != "" and _show_back != "":
+						return TranslationServer.translate("TERM_RESULT_OTHER_TRADED").format(
+							{"move": _last_move, "back": _show_back})
+					if _last_move != "":
+						return TranslationServer.translate("TERM_RESULT_OTHER_MOVED").format({"move": _last_move})
+			return TranslationServer.translate("TERM_RESULT_OTHER_HELD")
 		_:
 			if _lever_at_best(_selected_lever):
 				return TranslationServer.translate("TERM_LEVER_MAXED").format({
@@ -370,7 +807,7 @@ static func _frank_line(lev_active: bool, other_name: String) -> String:
 			# COPY-RESTRUCTURED: was "{lever}'de direniyorlar", which needed a declined name.
 			return TranslationServer.translate("TERM_FRANK_RESISTED").format(
 				{"lever": _lever_name(_last_lever_acted)})
-		PATIENCE_ZERO:
+		PATIENCE_ZERO, FUND_WALKED:
 			if lev_active:
 				return TranslationServer.translate("TERM_FRANK_OTHER_TABLE").format({"investor": other_name})
 			return TranslationServer.translate("TERM_FRANK_NO_TABLE")
@@ -418,18 +855,32 @@ static func _lever_at_best(lever: String) -> bool:
 
 
 static func _current_text(lever: String) -> String:
+	return _text_of(lever, _terms)
+
+
+## One lever's value as the table prints it, for any terms dict (the working terms, or the
+## other sheet K7 puts on the table).
+static func _text_of(lever: String, terms: Dictionary) -> String:
 	match lever:
 		"valuation":
-			return "$%dM" % int(_terms.get("valuation_m", 0))
+			return "$%dM" % int(terms.get("valuation_m", 0))
 		"raise":
 			# EXACT, not abbreviated: the player is moving this in $10K steps and "$0.1M" would
 			# hide the whole negotiation.
-			return Fmt.money_exact(int(_terms.get("raise", 0)))
+			return Fmt.money_exact(int(terms.get("raise", 0)))
 		"dilution":
-			return Fmt.percent(int(_terms.get("dilution_pct", 0)), 0)
+			return Fmt.percent(int(terms.get("dilution_pct", 0)), 0)
 		"board":
-			return _board_text(int(_terms.get("board_seats", 0)), bool(_terms.get("board_veto", false)))
+			return _board_text(int(terms.get("board_seats", 0)), bool(terms.get("board_veto", false)))
 	return ""
+
+
+## A Series A sheet's three terms in one line ("$22M · %18 · temiz").
+static func _terms_text(terms: Dictionary) -> String:
+	var parts: Array = []
+	for lever in LEVERS:
+		parts.append(_text_of(lever, terms))
+	return " · ".join(parts)
 
 
 static func _ghost_text(lever: String) -> String:
@@ -553,3 +1004,14 @@ static func _reset() -> void:
 	_last_lever_acted = ""
 	_last_move = ""
 	_stage = PitchConstants.STAGE_SERIES_A
+	_e = 0
+	_won_counts = {}
+	_line_key = ""
+	_line_seq = 0
+	_final_move = ""
+	_fund_walked = false
+	_other_shown = false
+	_show_outcome = ""
+	_show_back = ""
+	_other_terms = {}
+	_other_vc_shown = ""

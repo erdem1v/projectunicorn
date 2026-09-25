@@ -433,6 +433,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"seed_expectation_grace_then_stall":     fail = _case_seed_expectation_grace_then_stall()
 		"seed_lead_warmth_at_series_a":          fail = _case_seed_lead_warmth_at_series_a()
 		"seed_stage_does_not_leak":              fail = _case_seed_stage_does_not_leak()
+		"seed_table_levers_and_final_offer":     fail = _case_seed_table_levers_and_final_offer()
 		"series_a_sheet_derives_from_arr":       fail = _case_series_a_sheet_derives_from_arr()
 		"bootstrap_needs_the_faced_flag":        fail = _case_bootstrap_needs_the_faced_flag()
 		"faced_flag_upgrades_only":              fail = _case_faced_flag_upgrades_only()
@@ -1814,23 +1815,56 @@ static func _case_table_walk_counts_rejection() -> String:
 
 
 static func _case_patience_zero_locks_pushes() -> String:
+	# K12: patience zero is no longer a free stop. An EAGER fund (high meeting conviction)
+	# puts a final take-it-or-leave-it counter — pushes locked, only Sign and Walk. A COLD
+	# fund walks out: closed for the run, sheet gone, one rejection counted, no signing.
 	GameState.set_phase(3)
 	_force("fail")
 	_grant("bosphorus")  # patience 2
+	VCPitchSystem.sheet_for("bosphorus").conviction = 100
 	TermSheetTableSystem.open("bosphorus")
 	TermSheetTableSystem.select_lever("valuation")
 	TermSheetTableSystem.push()  # fail → patience 1
-	TermSheetTableSystem.push()  # fail → patience 0 → PATIENCE_ZERO
+	if String(TermSheetTableSystem.view_state().investor_line) == "":
+		return "the fund said nothing after a push — E's band is unreadable"
+	TermSheetTableSystem.push()  # fail → patience 0 → final offer
 	var vs: Dictionary = TermSheetTableSystem.view_state()
-	if int(vs.state) != TermSheetTableSystem.PATIENCE_ZERO:
-		return "state=%d (want PATIENCE_ZERO=%d)" % [int(vs.state), TermSheetTableSystem.PATIENCE_ZERO]
-	for lever in TermSheetTableSystem.LEVERS:
+	if int(vs.state) != TermSheetTableSystem.PATIENCE_ZERO or not bool(vs.final_offer):
+		return "eager fund: state=%d (want the final offer, PATIENCE_ZERO=%d)" % [
+			int(vs.state), TermSheetTableSystem.PATIENCE_ZERO]
+	for lever in TermSheetTableSystem.levers():
 		if TermSheetTableSystem.can_push(lever):
 			return "can still push %s at patience zero" % lever
 	if not bool(vs.sign_enabled) or not bool(vs.walk_enabled):
-		return "sign/walk disabled at patience zero"
+		return "sign/walk disabled at the final offer"
 	if int(vs.patience.current) != 0:
 		return "patience.current=%d" % int(vs.patience.current)
+	if bool(TermSheetTableSystem.show_other_available()) and TermSheetTableSystem.can_show_other():
+		return "the other offer can still be shown after the final offer"
+	TermSheetTableSystem._reset()
+
+	# The cold fund: same pushes, no goodwill left → it walks.
+	var rej0: int = GameState.vc_rejections
+	VCPitchSystem.sheet_for("bosphorus").conviction = 0
+	TermSheetTableSystem.open("bosphorus")
+	TermSheetTableSystem.select_lever("valuation")
+	TermSheetTableSystem.push()
+	TermSheetTableSystem.push()
+	vs = TermSheetTableSystem.view_state()
+	if int(vs.state) != TermSheetTableSystem.FUND_WALKED or not bool(vs.fund_walked):
+		return "cold fund: state=%d (want FUND_WALKED=%d)" % [int(vs.state), TermSheetTableSystem.FUND_WALKED]
+	if bool(vs.sign_enabled):
+		return "sign still enabled after the fund walked out"
+	if GameState.vc_rejections != rej0 + 1:
+		return "the walk-out counted %d rejections" % (GameState.vc_rejections - rej0)
+	if VCPitchSystem.sheet_for("bosphorus") != null:
+		return "the walked-out sheet survived"
+	if String(GameState.vc_states.get("bosphorus", {}).get("status", "")) != "rejected":
+		return "the walked-out fund is '%s', not closed as a rejection" % String(
+			GameState.vc_states.get("bosphorus", {}).get("status", ""))
+	TermSheetTableSystem.walk()   # a second exit must not count a second rejection
+	if GameState.vc_rejections != rej0 + 1 or TermSheetTableSystem.is_active():
+		return "leaving after the walk-out moved the counter or kept the table open"
 	return ""
 
 
@@ -1879,6 +1913,14 @@ static func _case_leverage_bonus_applies_and_shows() -> String:
 		return "leverage did not raise odds above baseline"
 	if String(vs.leverage.other_vc_name) != "Nexus Ventures":
 		return "other_vc_name=%s" % String(vs.leverage.other_vc_name)
+	# K7: the other live sheet can be shown, once, and the fund answers in its own voice.
+	if not bool(vs.show_other.visible) or not bool(vs.show_other.enabled):
+		return "show-the-other-offer is not on offer with two live sheets"
+	var shown: Dictionary = TermSheetTableSystem.show_other_offer()
+	if String(shown.show_other.outcome) == "" or String(shown.investor_line) == "":
+		return "the fund did not answer the shown offer"
+	if bool(shown.show_other.enabled):
+		return "the other offer can be shown twice"
 	return ""
 
 
@@ -15955,6 +15997,41 @@ static func _case_seed_stage_does_not_leak() -> String:
 		return "a seed stage leaked into the Series A table"
 	if TermSheetTableSystem.money_raised() <= 0:
 		return "the Series A table read money_raised as %d" % TermSheetTableSystem.money_raised()
+	return ""
+
+
+static func _case_seed_table_levers_and_final_offer() -> String:
+	# The seed table negotiates raise / dilution / board, never the Series A rows (the "$0M
+	# valuation" bug), and at patience zero it always ends in the final counter — the seed
+	# fund cannot walk, however cold the room was.
+	_seed_seed_world()
+	_sim_day_full()
+	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
+		return "fixture: the seed meeting would not start"
+	GameState.seed_sheet.conviction = 0
+	var vs: Dictionary = TermSheetTableSystem.open("anchor")
+	var ids: Array = []
+	for L in vs.get("levers", []):
+		ids.append(String(L.get("id", "")))
+	if ids != ["raise", "dilution", "board"]:
+		return "the seed table's rows are %s" % str(ids)
+	var raise0: int = int(GameState.seed_sheet.opening_terms.get("raise", 0))
+	if String(vs.levers[0].current_text) != Fmt.money_exact(raise0):
+		return "the raise row reads '%s'" % String(vs.levers[0].current_text)
+	vs = TermSheetTableSystem.select_lever("raise")
+	if String(vs.selected_lever) != "raise":
+		return "the raise row cannot be selected (selected '%s')" % String(vs.selected_lever)
+	_force("fail")
+	for i in 8:
+		if TermSheetTableSystem.can_push("raise"):
+			TermSheetTableSystem.push()
+	vs = TermSheetTableSystem.view_state()
+	if int(vs.state) != TermSheetTableSystem.PATIENCE_ZERO:
+		return "a cold seed table ended in state %d, not the final offer" % int(vs.state)
+	if not bool(vs.sign_enabled) or bool(vs.walk_enabled) or bool(vs.fund_walked):
+		return "the seed final offer is not sign-only"
+	if int(vs.money_raised) < raise0:
+		return "the seed final offer shrank the raise"
 	return ""
 
 

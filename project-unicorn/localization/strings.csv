@@ -1628,6 +1628,30 @@ TERM_SIGN_OK,İMZALA,SIGN
 TERM_WALK_Q,Masadan kalk?,Walk away?
 TERM_WALK_BODY,Masadan kalkarsan bu teklif gider. Bu bir kapanan masa sayılır.,Walk away and this offer is gone. It counts as a closed table.
 TERM_WALK_OK,MASADAN KALK,WALK AWAY
+TERM_SHOW_OTHER,DİĞER TEKLİFİ GÖSTER,SHOW THE OTHER OFFER
+TERM_SHOW_OTHER_USED,Diğer teklifi zaten gösterdin.,You have already shown them the other offer.
+TERM_LEAVE,MASADAN AYRIL,LEAVE THE TABLE
+TERM_OTHER_SHOWN_BOX,Diğer teklif · {investor}: {terms},The other offer · {investor}: {terms}
+TERM_RESULT_FINAL_MOVE,Bir kez daha esnediler: {move}. Bu son teklif. İmzala ya da masadan kalk.,"They gave a little more: {move}. This is final. Sign, or walk away from the table."
+TERM_RESULT_WALKED,Masadan kalktılar. Teklif gitti.,They left the table. The offer is gone.
+TERM_RESULT_OTHER_MOVED,Esnediler. {move}.,They moved. {move}.
+TERM_RESULT_OTHER_TRADED,"Esnediler, karşılığında bir şey aldılar. {move} · {back}.","They moved, and took something back. {move} · {back}."
+TERM_RESULT_OTHER_HELD,Kıpırdamadılar. Teklif aynı.,They held. The offer is unchanged.
+TERM_INV_RELAXED_1,"""Peki. Başka?""","""Fine. What else?"""
+TERM_INV_RELAXED_2,"""Devam et. Hâlâ konuşuyoruz.""","""Go on. We're still talking."""
+TERM_INV_TENSE_1,"""Çok şey istiyorsun.""","""That's a lot to ask."""
+TERM_INV_TENSE_2,"""Sınırımıza yaklaşıyoruz.""","""We're getting close to our limit."""
+TERM_INV_OUT_ANCHOR,"""Böyle devam edebiliriz. Devam ettikçe şartlarımız kötüleşir.""","""We can keep doing this. Our terms get worse while we do."""
+TERM_INV_OUT_NEXUS,"""Ben senden yanayım. Ortaklarım sayıyor.""","""I'm on your side. My partners are counting."""
+TERM_INV_OUT_BOSPHORUS,"""İkimiz de son sözü söylemeden Frank'i bir arayayım.""","""Let me call Frank before either of us says something final."""
+TERM_INV_OUT_MERIDIAN,"""Bu hafta başka toplantılarımız da var.""","""We have other meetings this week."""
+TERM_INV_OUT_GENERIC,"""Bunu uzatmayalım.""","""Let's not drag this out."""
+TERM_INV_FINAL,"""Son teklifimiz bu. Al ya da bırak.""","""That's our last offer. Take it or leave it."""
+TERM_INV_WALKOUT,"""Bu kadar. Kolay gelsin.""","""We're done here. Good luck."""
+TERM_INV_OTHER_MATCH,"""Peki. Bu konuda esneriz.""","""Fine. We'll move on that."""
+TERM_INV_OTHER_CONDITION,"""Olur. Ama karşılığında bir şey isteriz.""","""We can do that. But we want something back."""
+TERM_INV_OTHER_HOLD,"""Onlar bilir. Bizim teklifimiz aynı.""","""Good for them. Our offer stands."""
+TERM_INV_OTHER_WALK,"""O zaman onlarla git.""","""Then go with them."""
 FIN_BURN_SALARIES,Maaşlar,Salaries
 FIN_BURN_OVERTIME,Ek mesai,Overtime
 FIN_BURN_FOUNDER,Kurucu yaşam gideri,Founder living costs
@@ -2730,6 +2754,9 @@ SEED_FRANK_LAST_MOVE,"""Son sabırları. Dikkat.""","""That is the last of their
 SEED_FRANK_WON,"""{lever} bizde.""","""We got {lever}."""
 SEED_FRANK_RESISTED,"""Direniyorlar: {lever}.""","""They are holding on {lever}."""
 SEED_FRANK_FINAL,"""Pazarlık bitti. Masadaki rakam bu, ve bu turu imzalıyoruz.""","""The negotiation is over. That is the number, and we are signing this round."""
+SEED_RESULT_FINAL,Son teklifleri bu. İmzala.,This is their final offer. Sign it.
+SEED_RESULT_FINAL_MOVE,Bir kez daha esnediler: {move}. Bu son teklif. İmzala.,They gave a little more: {move}. This is final. Sign it.
+SEED_INV_FINAL,"""Son rakamımız bu. İmzalayalım.""","""That's our final number. Let's sign it."""
 SEED_DOOR_TITLE,Kapı aralandı,The door is open
 SEED_DOOR_BODY,"Frank arıyor.
 
