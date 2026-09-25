@@ -288,7 +288,14 @@ INT 0–4, the count of `APPROACH_PCTS` marks (50/75/90/100 % of the revenue bar
 cleared. Frank's four approach cards (`funding.frank_approach_half/near/close`) condition on
 it with `==`, so each speaks inside its own band and the bar never reaches prose — a STEP,
 never the number. The bar is read off the gate's own `finance.mrr` leaf, so the step cannot
-drift from the door.
+drift from the door. ·
+`phase.bootstrap_milestone()` (`EndingsSystem.bootstrap_milestone_taken()`: the latch
+`GameState.bootstrap_milestone_day >= 0` AND this build treats the bootstrap as a milestone,
+OKUNUYOR, **added 2026-09-25**): BOOL, true once the profitable bootstrap opened the milestone
+paper in an EA / full build (`EndingsSystem.trigger_milestone`). The soft-cap telegraph
+(`world.final_stretch_press/comment/verdict`, `arc_final_stretch`) reads it: a run past its
+milestone has no day-730 clock. A milestone save opened in the demo reads false (the demo keeps
+its cap and its telegraph).
 
 **K1 + K2 (2026-09): the Series A gate is MRR only.** The `finance.growth_streak_months` and
 `finance.brand` leaves were removed from `PhaseGateSystem.GATES`; `series_a_signal()` now

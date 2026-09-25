@@ -20,6 +20,11 @@
       "seam": "investor.series_a_closed",
       "op": "==",
       "value": true
+    },
+    {
+      "seam": "phase.bootstrap_milestone",
+      "op": "==",
+      "value": true
     }
   ],
   "on_invalidate": {

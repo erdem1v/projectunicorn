@@ -113,6 +113,8 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Rakip / Sektör | Rival / Sector | |
 | ZOR MOD / GAZETEYİ PAYLAŞ | HARD MODE / SHARE THE PAPER | Shipped. |
 | İlgi Söndü | Interest Faded | Kalibrasyon Turu A §2 (2026-08-19): yumuşak tavan bitişinin (running_on_fumes) başlığı `[WORKING]`. |
+| KİLOMETRE TAŞI | MILESTONE | 2026-09-25: EA / tam build'de koşuyu bitirmeyen gazetenin ray başlığı (tekil; çoğulu ray etiketindeki "Kilometre Taşları"). |
+| iki yılı aşkın sürede | in over two years | 2026-09-25: yalnız kilometre taşından sonra 730. günü geçen koşunun gazetesi (`END_SPAN_OVER_TWO_YEARS`). |
 
 ## 7. Chrome & ortak UI
 
@@ -121,7 +123,8 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Ürün / İK / Finans / Satış / Operasyon / Ar-Ge / Kişisel / Olaylar *(ray)* | Product / HR / Finance / Sales / Ops / R&D / Personal / Events | S2-34: tek `TAB_*` anahtar seti, iki İngilizce kaynak emekli. |
 | Ayarlar | Settings | Rayın 9. etiketi de `TAB_SETTINGS`e girer. |
 | Tamam / İptal / Vazgeç | OK / Cancel | TR iç kural: akıştan çıkış **Vazgeç**, koşan şeyi öldürme **İptal**. |
-| DEVAM ET | CONTINUE | |
+| DEVAM ET | CONTINUE | Kilometre taşı gazetesi de aynı anahtarı (`UI_CONTINUE`) okur. |
+| ANA MENÜ | MAIN MENU | 2026-09-25: kilometre taşı gazetesinin ikinci butonu. Sistem menüsündeki cümle hâli: "Ana menüye dön" / "Return to main menu". |
 | Geri / İleri | Back / Next | Shipped. |
 | ODAYA DÖN | BACK TO ROOM | Shipped. |
 | Kilometre Taşları / SIRADA NE VAR? / KURUCU | Milestones / WHAT'S NEXT? / FOUNDER | Shipped. |

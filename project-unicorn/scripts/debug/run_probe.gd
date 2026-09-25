@@ -180,6 +180,9 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_vc_done = false
 	_vc_booked = ""
 	_vc_meet_day = -1
+	# The presets measure the demo. A --build=ea in Main Run Args would otherwise turn the
+	# bootstrap win into a non-terminal milestone and a real-clock run would sit on its paper.
+	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
 	GameState.initialize_run(payload)
 	# Pin the seed so two probe runs of the same preset are comparable line for line —
 	# the same reason --tempo-probe pins it (main.gd:327-331). initialize_run seeds from

@@ -285,6 +285,10 @@ signal phase_gate_reached(next_phase: int)
 # Terminal reached (slot 9 scan or Class A instant). ending_data: snapshot dict
 # built by EndingsSystem._build_ending_data (title/tone/frank_line + run stats).
 signal run_ended(ending_id: String, ending_data: Dictionary)
+# A win the company lives through (EA / full builds, EndingsSystem.trigger_milestone): the
+# paper opens in milestone mode and the run CONTINUES. Same payload shape as run_ended,
+# plus "mode": "milestone". main.gd mounts the paper and resumes the clock on "Devam et".
+signal milestone_reached(milestone_id: String, ending_data: Dictionary)
 # Kepenk counter (§4.3). -1 = inactive/cleared; 7..0 = counting. TopBar listens.
 signal shutter_changed(days_left: int)
 # Month-End Summary (Spec 3 / §1.1): emitted by MonthSummarySystem (daily slot

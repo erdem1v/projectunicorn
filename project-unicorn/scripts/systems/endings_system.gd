@@ -264,8 +264,15 @@ static func _check_profitable_bootstrap() -> bool:
 	# A CONDITION evaluated daily, not a crossing. Sits after the cascade (a pivot offer does
 	# not block the win — flush_queue drops the offer) and before the soft cap (same-day tie →
 	# the win wins).
+	# In EA / full builds the win is a MILESTONE: the paper opens once and the run goes on, so
+	# once the latch is written the condition is not read again (it would stay true every day).
+	if bootstrap_milestone_taken():
+		return false
 	if not bool(profitability_signal().get("met", false)):
 		return false
+	if ending_mode("profitable_bootstrap") == MODE_MILESTONE:
+		trigger_milestone("profitable_bootstrap")
+		return true
 	trigger_ending("profitable_bootstrap", TELEGRAPH_WIN)
 	return true
 
@@ -278,6 +285,12 @@ static func _check_soft_cap() -> bool:
 	# player). The ledger carries `unsigned_sheets` so the paper can name what was left on
 	# the table.
 	if GameState.day < SOFT_CAP_DAY:
+		return false
+	# A run that has taken a positive milestone is past "reached no goal inside the window":
+	# the cap does not apply to it (owner ruling 2026-09-25, option a — running_on_fumes says
+	# "you didn't win", and this company did). It still ends on a loss, a signed Series A or a
+	# sale; the player can also leave through ANA MENÜ with the run saved.
+	if bootstrap_milestone_taken():
 		return false
 	# THE DEFECT §6.8 NAMES. A run can reach day 730 with no prior warning at all. The
 	# soft-cap ladder being built for this rebuild sets this flag; until it lands, this
@@ -383,6 +396,93 @@ static func _tick_acquisition_window() -> void:
 static func on_buyout_declined() -> void:
 	on_pivot_accepted()                                     # the VC road closes; bootstrap continues
 	GameState.set_flag("acquisition_offer_rejected", true)  # the memory thrown back later
+
+
+# --- Build scope and ending modes (HANDOFF_series_a.md §D; owner rulings 2026-09-25) ---
+#
+# One newspaper, two modes. In the DEMO every ending ends the run, exactly as it always has.
+# In EA and FULL builds a loss still ends the run, but a win the company lives through is a
+# MILESTONE: the paper opens, "Devam et" closes it and the run goes on. Today that is the
+# profitable bootstrap. A signed Series A stays an ending in every build until Act 3
+# ("Perde 3") is playable — turning it into a milestone also needs sign_table and the daily
+# series_a_closed backstop routed through trigger_milestone, which is deliberately not built
+# yet. A sale (acquisition) ends the run: the company is no longer the player's.
+
+const BUILD_DEMO := "demo"
+const BUILD_EA := "ea"
+const BUILD_FULL := "full"
+const MODE_ENDING := "ending"
+const MODE_MILESTONE := "milestone"
+
+## Tests and debug shots set this to pin a build; "" reads the real one.
+static var build_scope_override: String = ""
+
+
+## Which build this is. An EA or full export names itself with a custom feature tag
+## ("ea" / "full") in its export preset; anything untagged — the demo export, the editor,
+## every headless run — is the demo. A debug build also takes --build=<demo|ea|full>, from
+## the command line or Project Settings → Application → Run → Main Run Args, so the EA flow
+## can be played from the editor. The smoke suite and the run probe pin the demo through
+## build_scope_override, so a --build= left in Main Run Args does not change what they measure.
+static func build_scope() -> String:
+	if build_scope_override != "":
+		return build_scope_override
+	if OS.has_feature(BUILD_FULL):
+		return BUILD_FULL
+	if OS.has_feature(BUILD_EA):
+		return BUILD_EA
+	if OS.is_debug_build():
+		var args: Array = Array(OS.get_cmdline_args())
+		args.append_array(Array(String(ProjectSettings.get_setting("application/run/main_args", "")).split(" ", false)))
+		for a in args:
+			var s: String = String(a)
+			if s.begins_with("--build="):
+				var v: String = s.trim_prefix("--build=")
+				if v in [BUILD_DEMO, BUILD_EA, BUILD_FULL]:
+					return v
+	return BUILD_DEMO
+
+
+## True once this run has taken the bootstrap milestone AND this build treats it as one. The
+## build half matters: a milestone save opened in the demo (a debug relaunch drops --build=,
+## or a save moves between installs) must end on the win and the cap like any demo run,
+## rather than sit latched with no ending left to reach. The daily scan's two short-circuits
+## and the phase.bootstrap_milestone seam all read this one answer.
+static func bootstrap_milestone_taken() -> bool:
+	return GameState.bootstrap_milestone_day >= 0 and ending_mode("profitable_bootstrap") == MODE_MILESTONE
+
+
+## "ending" or "milestone" for this ending in this build (see the block comment above).
+static func ending_mode(ending_id: String) -> String:
+	if build_scope() == BUILD_DEMO:
+		return MODE_ENDING
+	if ending_id == "profitable_bootstrap":
+		return MODE_MILESTONE
+	return MODE_ENDING
+
+
+## THE MILESTONE SEAM — the non-terminal sibling of trigger_ending. The paper opens and the
+## run CONTINUES, so it leaves run_active, ending_id and the event queue alone (the queue is
+## the rest of the run) and only asks for the clock to stop while the paper is up; main.gd
+## holds it until "Devam et". Once per run per milestone: the latch is written here, and the
+## daily scan never re-reads a condition whose latch is set.
+static func trigger_milestone(milestone_id: String, extra: Dictionary = {}) -> void:
+	if not GameState.run_active:
+		return
+	match milestone_id:
+		"profitable_bootstrap":
+			if GameState.bootstrap_milestone_day >= 0:
+				return
+			GameState.bootstrap_milestone_day = GameState.day
+		_:
+			push_warning("[EndingsSystem] Unknown milestone id: %s" % milestone_id)
+			return
+	var data: Dictionary = _build_ending_data(milestone_id, extra)
+	data["mode"] = MODE_MILESTONE
+	if OS.is_debug_build():
+		print("[EndingsSystem] MILESTONE: %s (Day %d) — the run continues" % [milestone_id, GameState.day])
+	EventBus.milestone_reached.emit(milestone_id, data)
+	EventBus.speed_change_requested.emit(0)
 
 
 # --- Single terminal seam (§3, §7.1-7.3) ---

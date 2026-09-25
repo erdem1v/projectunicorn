@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **162** |
-| Effect verbs (write) | **61** |
-| Cards in the catalogue | 38 |
+| Seams (read) | **169** |
+| Effect verbs (write) | **62** |
+| Cards in the catalogue | 43 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -184,7 +184,8 @@ slot of that type (§17.12).
 | `funding.seed_offer_live` | global | bool | Funding | an unsigned seed offer is on the table; it never expires |
 | `funding.seed_pitch_used` | global | bool | Funding | the run's one seed meeting has been spent |
 | `funding.seed_taken` | global | bool | Funding | a seed round was signed this run |
-| `funding.sheet_days_left` | global | int | Funding | 9999 when no sheet is live |
+| `funding.sheet_days_left` | global | int | Funding | business days; 9999 when no sheet is live |
+| `funding.sheet_decision_due` | global | bool | Funding | K10: a Series A sheet's window has closed and waits for sit-or-decline |
 
 ### `hr.`
 
@@ -223,6 +224,8 @@ slot of that type (§17.12).
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
 | `investor.angel_taken` | global | bool | Funding | WRAPPER; Frank's cheque was accepted |
+| `investor.est_dilution` | entity | string | Funding | ~lo-hi % around the sheet's opening dilution; never the number |
+| `investor.est_valuation` | entity | string | Funding | ~$lo-hi M around the sheet's opening valuation; never the number |
 | `investor.leverage` | global | int | Investment | the table-side bonus a check adds; 0 outside a sitting |
 | `investor.meeting_pending` | global | bool | Funding | WRAPPER; one at a time by construction |
 | `investor.pivot_used` | global | bool | Funding | WRAPPER; the VC path is permanently closed |
@@ -250,9 +253,11 @@ slot of that type (§17.12).
 | `musteri.lost_this_run` | global | int | Sales | WRAPPER; churn counter |
 | `musteri.min_satisfaction` | global | int | Sales | worst account |
 | `musteri.mrr` | entity | int | Sales | WRAPPER |
+| `musteri.pain_buildable` | entity | bool | Sales | gates the promise row: nobody can promise what the company cannot build yet |
 | `musteri.pain_feature_label` | entity | string | Sales | the feature the promise row names |
 | `musteri.pain_feature_shipped` | entity | bool | Sales | gates the promise row: promising work already done pays for nothing |
 | `musteri.request_kind` | entity | string | Sales | complaint | feature | renewal — state-scored, no RNG |
+| `musteri.risk_voice` | entity | string | Sales | what an account in Risk says, by the cause of the Risk |
 | `musteri.satisfaction` | entity | int | Sales | WRAPPER; 0-100, the number the player can see |
 | `musteri.scale` | entity | int | Sales | WRAPPER; 1-5, demo binds to 1-3 |
 | `musteri.seats` | entity | int | Sales | WRAPPER |
@@ -267,6 +272,7 @@ slot of that type (§17.12).
 
 | seam | scope | type | owner | note |
 |---|---|---|---|---|
+| `phase.bootstrap_milestone` | global | bool | Phase | WRAPPER; the bootstrap milestone was taken (EA / full), so the soft cap no longer applies |
 | `phase.current` | global | int | Phase | WRAPPER; 1 Bootstrap, 2 Traction, 3 Series A Hunt |
 | `phase.gate_declines` | global | int | Phase | WRAPPER; how many times the player has said not yet |
 | `phase.gate_ready` | global | bool | Phase | WRAPPER; a transition is open and unanswered |

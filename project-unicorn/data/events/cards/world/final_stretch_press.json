@@ -39,6 +39,11 @@
         "seam": "investor.series_a_closed",
         "op": "==",
         "value": false
+      },
+      {
+        "seam": "phase.bootstrap_milestone",
+        "op": "==",
+        "value": false
       }
     ]
   },

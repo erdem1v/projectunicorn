@@ -32,6 +32,7 @@ const MAX_LEDGER_LINES := 6
 const YEAR_DAYS := 350             # >= → "bir yıla yakın" framing
 const OVER_YEAR_DAYS := 380           # "bir yılı aşkın" — a run clearly past its first year
 const TWO_YEAR_DAYS := 700            # "iki yıla yakın" — the soft cap's own span (730)
+const OVER_TWO_YEAR_DAYS := 745       # "iki yılı aşkın" — only a run past its milestone gets here (EA / full: no cap)
 const ISSUE_PERIOD_DAYS := 7       # weekly paper: masthead "SAYI N" = run day / 7  # WORKING
 const ENGRAVING_DIR := "res://assets/endings/"
 
@@ -495,7 +496,11 @@ static func _founder_share(ledger: Dictionary) -> int:
 static func _span_phrase(days: int) -> String:
 	# Rule 2: the paper never prints a raw day count — it frames time in calendar months.
 	# Goal-terminated runs reach two years (soft cap 730): two longer spans were added
-	# 2026-08-19 so a 24-month run is not described as "close to a year".
+	# 2026-08-19 so a 24-month run is not described as "close to a year". The third
+	# (2026-09-25) is for EA / full runs past the bootstrap milestone, which have no cap: a
+	# company that ends on day 1100 did not last "close to two years".
+	if days >= OVER_TWO_YEAR_DAYS:
+		return _t("END_SPAN_OVER_TWO_YEARS")
 	if days >= TWO_YEAR_DAYS:
 		return _t("END_SPAN_NEAR_TWO_YEARS")
 	if days >= OVER_YEAR_DAYS:

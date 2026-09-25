@@ -1,7 +1,7 @@
 # EVENT SIGNAL MANIFEST
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
-Source: `scripts/autoload/event_bus.gd` plus every `.gd` under `scripts/`. Last generated 2026-08-27.
+Source: `scripts/autoload/event_bus.gd` plus every `.gd` under `scripts/`. Last generated 2026-09-25.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md) §15. The read side of
 the same idea is [`SEAM_REGISTRY.md`](SEAM_REGISTRY.md).
@@ -9,14 +9,14 @@ the same idea is [`SEAM_REGISTRY.md`](SEAM_REGISTRY.md).
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 131 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 132 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **131** |
+| Signals declared | **132** |
 | Declared with **no production emitter** | **3** |
 | Emitted with **no production listener** | **68** |
 
@@ -63,7 +63,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar · oda_tour | 25 | 1 | time_manager |
+| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar · oda_tour | 27 | 1 | time_manager |
 | `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · creation_flow · detail_view · left_tabs · research_bar · tab_page_chrome · oda_view | 25 | 5 | game_shell · build_hud_panel · center_viewport · left_tabs · oda_tour |
 | `finance_subpage_requested` | `page_id: String` | effects · oda_view | 2 | 1 | finance_tab |
 
@@ -218,6 +218,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 |---|---|---|---|---|---|
 | `phase_gate_reached` | `next_phase: int` | phase_gate_system | 1 | 0 | — |
 | `run_ended` | `ending_id: String, ending_data: Dictionary` | endings_system | 1 | 1 | main |
+| `milestone_reached` | `milestone_id: String, ending_data: Dictionary` | endings_system | 1 | 1 | main |
 | `shutter_changed` | `days_left: int` | game_state | 1 | 1 | top_bar |
 | `month_ended` | `summary_data: Dictionary` | month_summary_system | 3 | 2 | main |
 

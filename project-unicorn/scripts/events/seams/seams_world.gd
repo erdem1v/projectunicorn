@@ -39,6 +39,11 @@ static func _install_phase() -> void:
 	EvSeams.register("phase.series_a_approach", G, TYPE_INT,
 		func() -> int: return PhaseGateSystem.series_a_approach(),
 		"Phase", "0-4: approach marks cleared toward the Series A revenue bar (50/75/90/100 %). A step, never the number")
+	# EA / full builds: the profitable bootstrap opened the milestone paper and the run went
+	# on. The soft-cap telegraph reads it — a company past its milestone has no day-730 clock.
+	EvSeams.register("phase.bootstrap_milestone", G, TYPE_BOOL,
+		func() -> bool: return EndingsSystem.bootstrap_milestone_taken(),
+		"Phase", "WRAPPER; the bootstrap milestone was taken (EA / full), so the soft cap no longer applies")
 
 
 static func _install_time() -> void:

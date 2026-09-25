@@ -73,6 +73,13 @@ var _last_tick_msec: int = 0
 # it is player-facing state that the restore itself then overwrites.
 var _suspended: bool = false
 
+# CLOCK HOLDS — a surface that must keep the clock stopped until IT closes, whatever else
+# opens and closes on top of it. The milestone paper is the case: an event card, the month
+# summary or a settings panel can close while it is up, and each of those restores the
+# speed it saw before it opened. A hold swallows every speed > 0 request (the same rule a
+# dead run gets below) until the holder releases it and restores the speed itself.
+var _holds: Dictionary = {}                      # reason -> true
+
 
 func _ready() -> void:
 	get_tree().paused = false
@@ -173,6 +180,7 @@ func reset() -> void:
 	last_running_speed = 1
 	_in_game_hours = float(INITIAL_HOUR)
 	_last_tick_msec = 0
+	_holds.clear()
 	get_tree().paused = false
 	# _suspended IS DELIBERATELY NOT TOUCHED. It is a lock held by the CALLER, not a piece of
 	# clock state: SaveManager.apply_loaded_state takes it and then calls reset_all_owners(),
@@ -229,11 +237,28 @@ func _on_speed_change_requested(speed: int) -> void:
 		# and main.gd's post-modal speed restore. Speed-0 requests still pass so
 		# the terminal path can freeze the clock.
 		return
+	if speed > 0 and not _holds.is_empty():
+		return                  # a hold is up (see _holds); its owner restores the speed
 	current_speed = speed
 	if speed > 0:
 		last_running_speed = speed   # remember for Space-toggle resume
 	get_tree().paused = (speed == 0)
 	speed_changed.emit(speed)
+
+
+## Stop the clock and keep it stopped until release_clock(reason). Idempotent per reason.
+func hold_clock(reason: String) -> void:
+	_holds[reason] = true
+	_on_speed_change_requested(0)
+
+
+## Drop one hold. The caller restores the speed it wants; this does not resume anything.
+func release_clock(reason: String) -> void:
+	_holds.erase(reason)
+
+
+func is_clock_held() -> bool:
+	return not _holds.is_empty()
 
 
 func resume_if_paused() -> void:

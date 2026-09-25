@@ -41,6 +41,9 @@ var _event_modal: Node = null        # Currently-open event modal, or null
 var _settings_modal: Node = null     # Currently-open settings modal, or null
 var _confirm_modal: Node = null      # Currently-open confirm modal, or null
 var _ending_modal: Node = null       # Ending summary modal — mounts once, never dismissed back to gameplay
+var _milestone_modal: Node = null    # The same paper in milestone mode (EA / full): DEVAM ET closes it
+var _pre_milestone_speed: int = -1   # Speed to restore when the milestone paper closes
+const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
 var _month_modal: Node = null        # Currently-open month summary modal, or null
 var _meeting_scene: Node = null      # Currently-open MeetingScene (Spec 5), or null
 var _term_table: Node = null         # Currently-open TermSheetTableScene (Spec 6), or null
@@ -1955,10 +1958,19 @@ func _run_ending_shot(key: String) -> void:
 			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day - 5))
 		"acquisition", "vc_rejection_cascade", "brand_collapse", "profitable_bootstrap":
 			GameState.phase = 3
+		"bootstrap_milestone":
+			# The EA / full milestone paper. A milestone only exists outside the demo, so the
+			# shot pins an EA build unless --build= already named one.
+			ending_id = "profitable_bootstrap"
+			GameState.phase = 3
+			if EndingsSystem.build_scope() == EndingsSystem.BUILD_DEMO:
+				EndingsSystem.build_scope_override = EndingsSystem.BUILD_EA
 		_:
 			GameState.phase = 3
 
 	var data: Dictionary = EndingsSystem._build_ending_data(ending_id, {})
+	if key == "bootstrap_milestone":
+		data["mode"] = EndingsSystem.MODE_MILESTONE
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	var scene: Control = ENDING_MODAL.instantiate()
@@ -2530,6 +2542,7 @@ func _mount_shell() -> void:
 		EventBus.settings_requested.connect(_on_settings_requested)
 		EventBus.confirm_requested.connect(_on_confirm_requested)
 		EventBus.run_ended.connect(_on_run_ended)
+		EventBus.milestone_reached.connect(_on_milestone_reached)
 		EventBus.month_ended.connect(_on_month_ended)
 		EventBus.meeting_scene_requested.connect(_on_meeting_scene_requested)
 		EventBus.term_table_requested.connect(_on_term_table_requested)
@@ -2944,6 +2957,71 @@ func _on_run_ended(_ending_id: String, ending_data: Dictionary) -> void:
 	_ending_modal.populate(ending_data)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
 
 
+# --- Milestone paper lifecycle (EA / full builds; HANDOFF_series_a.md §D) ---
+#
+# The ending paper in milestone mode: a win the run lives through. The clock is HELD while
+# it is up (TimeManager.hold_clock), so an event card, the month summary or a settings panel
+# closing on top of it cannot restart time behind it; DEVAM ET releases the hold and
+# restores the speed the player had.
+
+func _on_milestone_reached(_milestone_id: String, data: Dictionary) -> void:
+	if _ending_modal != null or _milestone_modal != null:
+		return
+	var modal_layer: CanvasLayer = _shell.get_node_or_null("ModalLayer") if _shell != null else null
+	if modal_layer == null:
+		push_error("[Main] GameShell/ModalLayer missing — milestone paper can't mount")
+		return
+	_pre_milestone_speed = TimeManager.current_speed
+	TimeManager.hold_clock(MILESTONE_CLOCK_HOLD)
+	_milestone_modal = ENDING_MODAL.instantiate()
+	_milestone_modal.continue_requested.connect(_on_milestone_continue)
+	_milestone_modal.main_menu_requested.connect(_on_milestone_main_menu)
+	modal_layer.add_child(_milestone_modal)
+	# A card admitted earlier the same day is already up. The paper goes UNDER it: the card is
+	# answered first (its speed restore is swallowed by the hold), then the paper is there.
+	# On top, the paper would hide the card and ANA MENÜ would refuse to save for a decision
+	# screen the player cannot see.
+	if _event_modal != null and is_instance_valid(_event_modal) and _event_modal.get_parent() == modal_layer:
+		modal_layer.move_child(_milestone_modal, _event_modal.get_index())
+	_milestone_modal.populate(data)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
+
+
+func _on_milestone_continue() -> void:
+	if _milestone_modal != null:
+		_milestone_modal.queue_free()
+	_milestone_modal = null
+	TimeManager.release_clock(MILESTONE_CLOCK_HOLD)
+	# A card or the month summary still open on top owns the pause and restores it itself.
+	if GameState.run_active and not EventGate.has_pending() and _month_modal == null:
+		var restore: int = _pre_milestone_speed if _pre_milestone_speed > 0 else TimeManager.last_running_speed
+		EventBus.speed_change_requested.emit(restore)
+	_pre_milestone_speed = -1
+
+
+## ANA MENÜ — the main-menu route, built as if the menu were there (owner, 2026-09-25): keep
+## the run in a save slot, then go where a run starts. Today that is the boot flow, reached
+## the way TEKRAR DENE reaches it (a process relaunch); the save loads from the system menu.
+## When the main menu scene exists, only the relaunch lines change.
+##
+## A MANUAL slot, not the rolling autosave: the relaunch lands in company creation, and the
+## new run's third weekly autosave would overwrite the oldest of the three — the kept run.
+func _on_milestone_main_menu() -> void:
+	if _keep_run_for_main_menu() == "":
+		var why: String = SaveManager.cannot_save_reason_key()
+		if _milestone_modal != null:
+			_milestone_modal.show_notice(tr(why if why != "" else "SAVE_ERR_WRITE"))
+		return
+	OS.set_restart_on_exit(true)
+	get_tree().quit()
+
+
+## The save half of ANA MENÜ, apart so the smoke can prove it without quitting the process.
+## Returns the slot written, "" when the save was refused.
+func _keep_run_for_main_menu() -> String:
+	var slot: String = SaveManager.next_manual_slot_id()
+	return slot if SaveManager.save_to_slot(slot) else ""
+
+
 # --- Cinematic dialogue shell lifecycle (Spec 5: MeetingScene) ---
 # For now this mounts from a DEBUG fixture (game_shell Shift+F2). Spec 4's PitchSystem
 # will emit meeting_scene_requested with a real view state and connect its own listener to
@@ -3132,6 +3210,8 @@ func _teardown_run_ui() -> void:
 	_settings_modal = null
 	_confirm_modal = null
 	_ending_modal = null
+	_milestone_modal = null
+	_pre_milestone_speed = -1
 	_month_modal = null
 	_system_menu = null
 	_save_load_modal = null

@@ -399,6 +399,11 @@ var run_seed_equity_pct: int = 0       # the seed investor's slice, percent
 var faced_series_a: bool = false
 var faced_series_a_by: String = ""     # "declined" | "walked" | "door_open" | "fund_walked"
 var acq_road_over_day: int = -1        # day the Series A road closed; the buyout window's origin
+# The bootstrap MILESTONE (EA / full builds, EndingsSystem.ending_mode): the day the profitable
+# & self-sustaining condition opened the milestone paper, -1 before. It is the latch that keeps
+# the daily scan from re-opening the paper every day after, and the reason the day-730 soft
+# cap no longer applies to the run (owner ruling 2026-09-25, option a).
+var bootstrap_milestone_day: int = -1
 
 # --- HR Core state (same "fields not systems" rule as the VC block above; all reset in
 # initialize_run). The owning system writes each one; nothing else touches them. ---
@@ -1050,6 +1055,7 @@ func initialize_run(payload: Dictionary) -> void:
 	faced_series_a = false
 	faced_series_a_by = ""
 	acq_road_over_day = -1
+	bootstrap_milestone_day = -1
 
 	# HR Core state. Dicts via .clear() in case a system cached the reference (same
 	# reasoning as the VC block). NOTE: HRSystem.reset() deliberately does NOT run here —

@@ -66,6 +66,10 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 	if int(pinned.get("seed", 0)) == 0:
 		pinned["seed"] = 424242
 	GameState.initialize_run(pinned)
+	# BUILD PIN (2026-09-25): the endings read EndingsSystem.build_scope(), and a debug build
+	# takes --build= from Project Settings -> Main Run Args, which headless runs load too. The
+	# suite measures the demo unless a case pins EA / full itself.
+	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
 	_gate_signals = []
 	_endings = []
 	EventBus.phase_gate_reached.connect(func(p: int) -> void: _gate_signals.append(p))
@@ -360,6 +364,11 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"retention_gate_shared":           fail = _case_retention_gate_shared()
 		"manual_retention_respects_cap":   fail = _case_manual_retention_respects_cap()
 		"profit_condition_fires":          fail = _case_profit_condition_fires()
+		"ending_modes_by_build":           fail = _case_ending_modes_by_build()
+		"bootstrap_milestone_keeps_the_run": fail = _case_bootstrap_milestone_keeps_the_run()
+		"ending_paper_modes_on_screen":    fail = _case_ending_paper_modes_on_screen()
+		"milestone_clock_hold":            fail = _case_milestone_clock_hold()
+		"milestone_paper_under_card":      fail = _case_milestone_paper_under_card()
 		"profit_predicate_margin_scale_red": fail = _case_profit_predicate_margin_scale_red()
 		"speed_save_clamps_to_ladder":     fail = _case_speed_save_clamps_to_ladder()
 		"topbar_speed_cluster_three_rungs": fail = _case_topbar_speed_cluster_three_rungs()
@@ -11681,6 +11690,279 @@ static func _case_profit_condition_fires() -> String:
 	if not found:
 		return "the bootstrap paper did not name the %d-month streak" % EndingsSystem.PROFIT_STREAK_MONTHS
 	return ""
+
+
+## HANDOFF_series_a.md §D (owner rulings 2026-09-25): one paper, two modes. In the demo every
+## ending ends the run. In EA / full the profitable bootstrap is a milestone; every loss, the
+## signed Series A (until Act 3) and the sale stay endings.
+## FALSIFICATION: make ending_mode() return "milestone" for series_a_close → the EA row fails.
+static func _case_ending_modes_by_build() -> String:
+	# The raw resolver (run_case pins the demo; clear the pin to read what the build says).
+	# Only when nobody configured --build=: then an untagged headless build must be the demo.
+	EndingsSystem.build_scope_override = ""
+	var raw_args: String = " ".join(OS.get_cmdline_args()) + " " \
+		+ String(ProjectSettings.get_setting("application/run/main_args", ""))
+	if not raw_args.contains("--build=") and EndingsSystem.build_scope() != EndingsSystem.BUILD_DEMO:
+		return "an untagged headless build did not read as the demo (%s)" % EndingsSystem.build_scope()
+	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
+	for eid in EndingsSystem.ENDINGS.keys():
+		if EndingsSystem.ending_mode(String(eid)) != EndingsSystem.MODE_ENDING:
+			return "demo: %s is not an ending" % eid
+	for scope in [EndingsSystem.BUILD_EA, EndingsSystem.BUILD_FULL]:
+		EndingsSystem.build_scope_override = String(scope)
+		for eid in EndingsSystem.ENDINGS.keys():
+			var want: String = EndingsSystem.MODE_MILESTONE if String(eid) == "profitable_bootstrap" else EndingsSystem.MODE_ENDING
+			var got: String = EndingsSystem.ending_mode(String(eid))
+			if got != want:
+				EndingsSystem.build_scope_override = ""
+				return "%s: %s is %s, want %s" % [scope, eid, got, want]
+	# A milestone save opened in the DEMO is a demo run: the latch does not count there, so
+	# the win can still end it and the day-730 cap still applies.
+	# FALSIFICATION: read the bare latch in bootstrap_milestone_taken → the demo run is stuck.
+	GameState.bootstrap_milestone_day = 100
+	EndingsSystem.build_scope_override = EndingsSystem.BUILD_EA
+	var ea_taken: bool = EndingsSystem.bootstrap_milestone_taken()
+	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
+	var demo_taken: bool = EndingsSystem.bootstrap_milestone_taken()
+	var fail: String = ""
+	if not ea_taken:
+		fail = "EA: a written latch does not read as taken"
+	elif demo_taken:
+		fail = "demo: a milestone save's latch still reads as taken"
+	else:
+		GameState.day = EndingsSystem.SOFT_CAP_DAY
+		if not EndingsSystem._check_soft_cap() or GameState.ending_id != "running_on_fumes":
+			fail = "demo: the day-730 cap did not end a milestone save's run (ending '%s')" % GameState.ending_id
+	EndingsSystem.build_scope_override = ""
+	return fail
+
+
+## EA: the profitable bootstrap opens the milestone paper ONCE and the run goes on — no
+## run_ended, no ending_id, run_active untouched. The latch keeps the condition shut on the
+## days after, the day-730 soft cap no longer ends the run (option a), and the soft-cap
+## telegraph's seam reads true so its cards stay silent. The demo control is
+## profit_condition_fires: the same fixture, an ending.
+## FALSIFICATION: drop the latch check at the top of _check_profitable_bootstrap → the
+## paper fires again the next day.
+static func _case_bootstrap_milestone_keeps_the_run() -> String:
+	EndingsSystem.build_scope_override = EndingsSystem.BUILD_EA
+	var fired: Array = []
+	EventBus.milestone_reached.connect(func(id: String, d: Dictionary) -> void:
+		fired.append("%s/%s" % [id, String(d.get("mode", ""))]))
+	GameState.set_cash(100000)
+	_seed_b2b(EndingsSystem.BOOTSTRAP_WIN_MRR + 5000)
+	GameState.mark_faced_series_a("walked")   # the fifth clause, as in profit_condition_fires
+	_seed_month_closes([20000, 21000, 22000, 23000, 24000], 30000, 24000)
+	var leaf_taken := {"seam": "phase.bootstrap_milestone", "op": "==", "value": true}
+	if EventGate.condition_met(leaf_taken, {}):
+		EndingsSystem.build_scope_override = ""
+		return "the milestone seam read true before any milestone"
+	var fired_day: int = -1
+	for i in 40:
+		_sim_day()
+		if not fired.is_empty():
+			fired_day = GameState.day
+			break
+	var fail: String = ""
+	if fired != ["profitable_bootstrap/milestone"]:
+		fail = "milestone signals: %s (endings %s)" % [str(fired), str(_endings)]
+	elif not _endings.is_empty():
+		fail = "the milestone also ended the run: %s" % str(_endings)
+	elif not GameState.run_active or GameState.ending_id != "":
+		fail = "run_active %s, ending_id '%s' after a milestone" % [str(GameState.run_active), GameState.ending_id]
+	elif GameState.bootstrap_milestone_day != fired_day:
+		fail = "latch day %d, paper day %d" % [GameState.bootstrap_milestone_day, fired_day]
+	elif not EventGate.condition_met(leaf_taken, {}):
+		fail = "the milestone seam still reads false"
+	if fail == "":
+		for i in 10:
+			_sim_day()
+		if fired.size() != 1:
+			fail = "the paper opened again on a later day (%d signals)" % fired.size()
+		elif not _endings.is_empty():
+			fail = "a later day ended the run: %s" % str(_endings)
+		elif EndingsSystem._check_profitable_bootstrap():
+			# The condition is still TRUE (the company is still profitable). Read again, it
+			# would claim the day's scan every day and the soft cap and the buyout window
+			# after it would never run.
+			fail = "the latched bootstrap check still claims the daily scan"
+	if fail == "":
+		# The soft-cap telegraph opener at day >= 640 is shut by the new seam.
+		GameState.day = 650
+		var press: Dictionary = EvCatalog.card("world.final_stretch_press")
+		if press.is_empty():
+			fail = "world.final_stretch_press is missing from the catalogue"
+		elif EventGate.condition_met(press.get("condition", {}) as Dictionary, {}):
+			fail = "the soft-cap telegraph would still fire after the milestone"
+	if fail == "":
+		GameState.day = EndingsSystem.SOFT_CAP_DAY
+		_sim_day()
+		if not _endings.is_empty() or not GameState.run_active:
+			fail = "day %d ended a run past its milestone: %s" % [GameState.day, str(_endings)]
+	if fail == "":
+		# The run is past day 730 now, so its paper needs a span the cap never allowed.
+		# FALSIFICATION: drop the OVER_TWO_YEAR_DAYS branch → day 1100 reads "close to two years".
+		var over: String = TranslationServer.translate("END_SPAN_OVER_TWO_YEARS")
+		var near: String = TranslationServer.translate("END_SPAN_NEAR_TWO_YEARS")
+		if over == "END_SPAN_OVER_TWO_YEARS" or over == near:
+			fail = "END_SPAN_OVER_TWO_YEARS does not resolve to its own line"
+		elif EndingsCopy._span_phrase(1100) != over:
+			fail = "day 1100 reads '%s'" % EndingsCopy._span_phrase(1100)
+		elif EndingsCopy._span_phrase(EndingsSystem.SOFT_CAP_DAY) != near:
+			fail = "day %d (the cap) no longer reads '%s'" % [EndingsSystem.SOFT_CAP_DAY, near]
+	EndingsSystem.build_scope_override = ""
+	return fail
+
+
+## The paper's modes on screen: only the rail and the strip under the page change.
+##   demo ending      — WISHLIST'E EKLE, TEKRAR DENE and Frank's strip, as always
+##   EA ending        — no store CTA, no Frank strip, TEKRAR DENE stays
+##   EA milestone     — DEVAM ET and ANA MENÜ only: no share, no TEKRAR DENE, no store CTA,
+##                      no Frank strip (the owner's two buttons, HANDOFF_series_a.md §D)
+static func _case_ending_paper_modes_on_screen() -> String:
+	var host: Node = _ui_host()
+	if host == null:
+		return "no UI host to mount the paper under"
+	var scene: PackedScene = load("res://scenes/modals/EndingScene.tscn")
+	if scene == null:
+		return "EndingScene.tscn failed to load"
+	var wish: String = TranslationServer.translate("ENDING_WISHLIST")
+	var retry: String = TranslationServer.translate("ENDING_RETRY")
+	var cont: String = TranslationServer.translate("UI_CONTINUE")
+	var menu: String = TranslationServer.translate("ENDING_MAIN_MENU")
+	var share: String = TranslationServer.translate("ENDING_SHARE")
+	# [scope, mode, ending, wishlist, frank strip, retry, continue + main menu, share]
+	var rows: Array = [
+		[EndingsSystem.BUILD_DEMO, EndingsSystem.MODE_ENDING, "profitable_bootstrap", true, true, true, false, true],
+		[EndingsSystem.BUILD_EA, EndingsSystem.MODE_ENDING, "bankruptcy", false, false, true, false, true],
+		[EndingsSystem.BUILD_EA, EndingsSystem.MODE_MILESTONE, "profitable_bootstrap", false, false, false, true, false],
+	]
+	for r in rows:
+		EndingsSystem.build_scope_override = String(r[0])
+		var data: Dictionary = EndingsSystem._build_ending_data(String(r[2]), {})
+		data["mode"] = String(r[1])
+		var inst: Control = scene.instantiate()
+		host.add_child(inst)
+		inst.populate(data)
+		var texts: Array[String] = []
+		for b in inst.find_children("*", "Button", true, false):
+			texts.append(String((b as Button).text))
+		var frank_shown: bool = false
+		var frank_line: String = String(data.get("frank_line", ""))
+		for l in inst.find_children("*", "Label", true, false):
+			if frank_line != "" and String((l as Label).text) == frank_line:
+				frank_shown = true
+		inst.free()
+		EndingsSystem.build_scope_override = ""
+		var tag: String = "%s/%s/%s" % [r[0], r[1], r[2]]
+		if texts.has(wish) != bool(r[3]):
+			return "%s: WISHLIST'E EKLE shown=%s" % [tag, str(texts.has(wish))]
+		if frank_shown != bool(r[4]):
+			return "%s: Frank's strip shown=%s" % [tag, str(frank_shown)]
+		if texts.has(retry) != bool(r[5]):
+			return "%s: TEKRAR DENE shown=%s" % [tag, str(texts.has(retry))]
+		if texts.has(cont) != bool(r[6]) or texts.has(menu) != bool(r[6]):
+			return "%s: DEVAM ET %s, ANA MENÜ %s" % [tag, str(texts.has(cont)), str(texts.has(menu))]
+		if texts.has(share) != bool(r[7]):
+			return "%s: GAZETEYİ PAYLAŞ shown=%s" % [tag, str(texts.has(share))]
+	return ""
+
+
+## The milestone paper holds the clock: while a hold is up, the speed restores that other
+## surfaces send when THEY close (a card, the month summary, settings) cannot start time
+## behind the paper; after the holder releases, its own restore does.
+static func _case_milestone_clock_hold() -> String:
+	EventBus.speed_change_requested.emit(2)
+	if TimeManager.current_speed != 2:
+		return "fixture: speed 2 did not take (%d)" % TimeManager.current_speed
+	TimeManager.hold_clock("smoke_hold")
+	var fail: String = ""
+	if TimeManager.current_speed != 0:
+		fail = "the hold did not stop the clock"
+	if fail == "":
+		EventBus.speed_change_requested.emit(1)   # what a closing card or the month summary sends
+		if TimeManager.current_speed != 0:
+			fail = "a restore under the hold started the clock"
+	if fail == "":
+		TimeManager.resume_if_paused()
+		if TimeManager.current_speed != 0:
+			fail = "resume_if_paused went around the hold"
+	TimeManager.release_clock("smoke_hold")
+	if fail == "":
+		if TimeManager.is_clock_held():
+			fail = "the hold survived its release"
+		else:
+			EventBus.speed_change_requested.emit(2)
+			if TimeManager.current_speed != 2:
+				fail = "the holder's restore after release did not take (%d)" % TimeManager.current_speed
+	return fail
+
+
+## main.gd's milestone handlers, driven directly with a stand-in ModalLayer (no GameShell):
+##   1. a card already up when the paper opens stays ON TOP of it (the player answers the card
+##      first; on top, the paper would hide it and ANA MENÜ would refuse to save for a
+##      decision screen nobody can see), and the paper holds the clock;
+##   2. DEVAM ET frees the paper and releases the hold;
+##   3. ANA MENÜ keeps the run in a MANUAL slot — the rolling autosave would be overwritten by
+##      the next run's third weekly autosave.
+## FALSIFICATION: drop the move_child → the paper sits above the card. Save through the
+## autosave again → the slot is auto_*.
+static func _case_milestone_paper_under_card() -> String:
+	var host: Node = _ui_host()
+	if host == null or not host.has_method("_on_milestone_reached"):
+		return "no main.gd host to drive the milestone handlers"
+	EndingsSystem.build_scope_override = EndingsSystem.BUILD_EA
+	var shell := Node.new()
+	var layer := CanvasLayer.new()
+	layer.name = "ModalLayer"
+	shell.add_child(layer)
+	host.add_child(shell)
+	var card := Control.new()
+	layer.add_child(card)
+	var prev_shell: Variant = host.get("_shell")
+	var prev_event: Variant = host.get("_event_modal")
+	host.set("_shell", shell)
+	host.set("_event_modal", card)
+	var data: Dictionary = EndingsSystem._build_ending_data("profitable_bootstrap", {})
+	data["mode"] = EndingsSystem.MODE_MILESTONE
+	host.call("_on_milestone_reached", "profitable_bootstrap", data)
+	var paper: Node = host.get("_milestone_modal")
+	var fail: String = ""
+	if paper == null:
+		fail = "the paper did not mount"
+	elif paper.get_index() >= card.get_index():
+		fail = "the paper sits above the open card (paper %d, card %d)" % [paper.get_index(), card.get_index()]
+	elif not TimeManager.is_clock_held():
+		fail = "the paper did not hold the clock"
+	if fail == "":
+		host.set("_event_modal", null)   # the card was answered
+		card.queue_free()
+		host.call("_on_milestone_continue")
+		if host.get("_milestone_modal") != null:
+			fail = "DEVAM ET left the paper up"
+		elif TimeManager.is_clock_held():
+			fail = "DEVAM ET did not release the hold"
+	if fail == "":
+		var slot: String = String(host.call("_keep_run_for_main_menu"))
+		if slot == "":
+			fail = "ANA MENÜ could not keep the save (%s)" % SaveManager.cannot_save_reason_key()
+		else:
+			var listed: bool = false
+			for row in SaveManager.list_slots():
+				if String(row.get("slot_id", "")) == slot:
+					listed = true
+			SaveManager.delete_slot(slot)
+			if not slot.begins_with(SaveManager.MANUAL_SLOT_PREFIX):
+				fail = "ANA MENÜ saved into '%s', a slot that rotates" % slot
+			elif not listed:
+				fail = "ANA MENÜ reported slot '%s' but no such save is listed" % slot
+	host.set("_shell", prev_shell)
+	host.set("_event_modal", prev_event)
+	host.set("_milestone_modal", null)
+	TimeManager.release_clock("milestone_paper")
+	shell.queue_free()
+	EndingsSystem.build_scope_override = ""
+	return fail
 
 
 static func _case_profit_predicate_margin_scale_red() -> String:
