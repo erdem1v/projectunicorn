@@ -20,9 +20,9 @@ Bu belge tek başına yeterli olacak şekilde yazıldı. Başlamadan önce `CLAU
 
 ### Dal ve commit'ler
 
-- Çalışma dalı: `claude/sharp-dirac-lev32p`.
-- `origin/main` ve `origin/claude/sharp-dirac-lev32p`, bu devir commit'inden önce ikisi de `fc58e7c`'deydi.
-- Devir commit'i yalnız dala gider; `main` `fc58e7c`'de kalır.
+- Çalışma yalnız `main`'de (CLAUDE.md DELIVERY LAW). Dal yok.
+- Devir commit'i `6edade6`, sahibin "push et" onayıyla `main`'e fast-forward edildi ve push edildi (2026-09-25). Devir dalı `claude/sharp-dirac-lev32p` silindi.
+- Bundan sonra `main`'e her push ayrıca "push et" bekler.
 
 | Commit | Özet |
 |---|---|
@@ -69,7 +69,7 @@ Ayrıntısı ve kanıtları `PUSH_ONCESI_KONTROL.md`'de.
 
 ## B. PUSH ÖNCESİ TUR (orijinal numaralarla)
 
-> **Dikkat: bu tur büyük ölçüde zaten uygulandı ve `main`'de.** Sahibin "yes go on" onayıyla `fc58e7c`'de yapıldı ve push edildi. Sahip daha sonra madde 5'i reddetti ve madde 3 için yeni bir yazım kuralı koydu. Aşağıdaki "Yapılacak" satırları senin işin; her şey dalda yapılır, `main`'e push yalnız "push et" ile.
+> **Dikkat: bu tur büyük ölçüde zaten uygulandı ve `main`'de.** Sahibin "yes go on" onayıyla `fc58e7c`'de yapıldı ve push edildi. Sahip daha sonra madde 5'i reddetti ve madde 3 için yeni bir yazım kuralı koydu. Aşağıdaki "Yapılacak" satırları senin işin; her şey `main`'de yapılır, `main`'e her push ayrıca "push et" bekler.
 
 | # | Madde | Durum | Yapılacak |
 |---|---|---|---|
@@ -223,7 +223,7 @@ Sahip incelemesinden gelen notlar (dosyaya da yazıldı):
 ## F. KALICI KURALLAR (`CLAUDE.md`'ye de işlendi)
 
 1. **TR canonical.** Her oyuncu metni önce Türkçe yazılır. EN, TR'nin çevirisi değildir; aynı sahnenin İngilizce yazılmış yerelleştirmesidir. Bu, eski "EN önce" kuralının yerini aldı.
-2. **`main`'e push yalnız sahip "push et" dediğinde.** Dala push serbest.
+2. **`main`'e push yalnız sahip "push et" dediğinde.** Çalışma yalnız `main`'de (DELIVERY LAW); dal açılmaz.
 3. **Tasarım sabiti değiştiren her şey** (tuning değerleri, eşikler, E modeli sabitleri, kapı ve görüşme ağırlıkları) raporda **"onay bekliyor"** diye listelenir.
 
 Frank'in korpusu sahibindir. Yeni Frank satırları yalnız taslak olarak önerilir, onaysız ekrana çıkmaz. Bu kural, bu turda sahibin açıkça istediği yaklaşma ve soğuk çıkış satırları dışında hep geçerli.
@@ -232,17 +232,11 @@ Frank'in korpusu sahibindir. Yeni Frank satırları yalnız taslak olarak öneri
 
 ## G. BAŞLA
 
-1. **Dalı çek.**
-   ```
-   git fetch origin claude/sharp-dirac-lev32p
-   git checkout claude/sharp-dirac-lev32p
-   git pull origin claude/sharp-dirac-lev32p
-   ```
-   Not: `CLAUDE.md`'deki DELIVERY LAW normalde "yalnız main" der. Bu devir için sahip dalda çalışmayı ve `main`'e yalnız "push et" ile gitmeyi istedi. Emin değilsen sahibe sor.
+1. **`main`'de çalış.** `git pull origin main` ile güncelle. Dal açılmaz (DELIVERY LAW).
 2. **Smoke baseline'ı lokalde koş.** Sonucu `runs/final_smoke.txt` (340/342) ile karşılaştır.
    - Lokalde: `tools/smoke_run.sh --all`. Paralel koşmak istersen cloud'un sarmalayıcısı `xargs -P 3` ile `smoke_run.sh <case>` çağırıyordu.
    - Fark çıkarsa önce onu açıkla; özellikle `fc58e7c`'nin tam smoke'la koşulmadığını unutma.
-3. **§B'yi uygula ve doğrula:** madde 5'in geri alınması, madde 3'ün EN'si, E1 ve madde 2'nin smoke vakası. E2 için önce öneri yaz ve sor. Dala commit et, dala push et.
+3. **§B'yi uygula ve doğrula:** madde 5'in geri alınması, madde 3'ün EN'si, E1 ve madde 2'nin smoke vakası. E2 için önce öneri yaz ve sor. `main`'e commit et; push için "push et" bekle.
 4. **§C ölçümünü koş ve raporla.** Kalibrasyona dokunma.
 5. **§D (tasarım notu) ve §E (D1–D13) sahibin onayını bekler.** §D için tasarım notunu yazabilirsin; uygulama onaydan sonra.
 

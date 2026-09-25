@@ -79,7 +79,7 @@ scene, written as natural English. Erdem edits both. The two locales still ship 
 drafts, and a draft does not reach the screen without his approval.
 
 **HANDOFF RULES (director ruling 2026-09-25).**
-- `main` is pushed ONLY when Erdem says **"push et"**. Pushing a working branch is fine.
+- `main` is pushed ONLY when Erdem says **"push et"**.
 - Any change to a design constant (tuning values, thresholds, the eagerness model, gate or meeting
   weights) is listed in the agent's report under **"onay bekliyor"** (awaiting approval).
 - Live handoff state for the Series A work: `docs/handoff/HANDOFF_series_a.md`.
