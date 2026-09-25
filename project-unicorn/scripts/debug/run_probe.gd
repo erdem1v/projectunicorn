@@ -37,6 +37,9 @@ extends RefCounted
 #   PROBE TALLY <id> fires=<n> picks=<n>    (one per id, at the end)
 #   PROBE END   day=<d> ...
 #   PROBE HR    hires=<n> emp=<n> payroll=<n> morale_avg=<f|-> below50=<n> min=<n|->
+#   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn categories> ...
+#                                           (full_run*: once, the day the Series A door opens)
+#   PROBE MONTH_BURN day=<d> n=<n> salaries=<n> ... one_time=<n>   (full_run*: beside each PROBE MONTH)
 #
 # DEDUPE-REJECTED fires are NOT visible here — enqueue() returns silently when
 # _queue_has_id() rejects a duplicate. They are counted from the engine's own
@@ -119,6 +122,11 @@ static var _fix_run_day: int = -1           # day the running fix pass started
 static var _fixer_id: String = ""           # the developer lent to the support desk for it
 static var _retain_days: Dictionary = {}    # customer id -> Array of fire days (retention cards)
 static var _fires_by_day: Dictionary = {}   # day -> {family: count} for PROBE WEEK
+static var _gate_day: int = -1              # the day phase_gate_reached(3) fired (PROBE GATE)
+static var _gate_logged: bool = false
+static var _mb_acc: Dictionary = {}         # burn id -> realised sum over the open fiscal month
+static var _mb_days: int = 0                # dispatch days folded into _mb_acc
+static var _mb_folded_day: int = -1         # a close day whose burn month_ended already folded in
 
 
 # ============================================================================
@@ -145,6 +153,11 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_full_run = false
 	_hire_started = false
 	_build_promises = false
+	_gate_day = -1
+	_gate_logged = false
+	_mb_acc = {}
+	_mb_days = 0
+	_mb_folded_day = -1
 	GameState.initialize_run(payload)
 	# Pin the seed so two probe runs of the same preset are comparable line for line —
 	# the same reason --tempo-probe pins it (main.gd:327-331). initialize_run seeds from
@@ -182,6 +195,8 @@ static func _wire_log() -> void:
 	EventBus.promise_broken.connect(func(pid: String) -> void: _log_promise(pid, "resolved"))
 	EventBus.build_phase_changed.connect(_on_build_phase)
 	EventBus.month_ended.connect(_on_month_ended)
+	EventBus.phase_gate_reached.connect(_on_gate_reached)
+	EventBus.day_tick_completed.connect(_on_day_tick_completed)
 
 
 static func _on_month_ended(_data: Dictionary) -> void:
@@ -199,6 +214,8 @@ static func _on_month_ended(_data: Dictionary) -> void:
 		GameState.day, n, int(e.get("mrr_close", 0)), int(e.get("income", 0)), int(e.get("expense", 0)),
 		int(e.get("net", 0)), int(e.get("red_days", 0)), growth,
 		GameState.get_mrr_growth_streak(PhaseGateSystem.GROWTH_MIN_PCT), GameState.get_profitable_month_streak()])
+	if _full_run:
+		_log_month_burn(e, n)
 
 
 static func _on_build_phase(new_phase: String) -> void:
@@ -211,6 +228,110 @@ static func _on_build_phase(new_phase: String) -> void:
 		float(GameState.get_flag("mvp_stability", 0.0)), float(GameState.get_flag("mvp_innovation", 0.0)),
 		float(GameState.get_flag("mvp_experience", 0.0)), int(GameState.get_flag("mvp_live_bug_count", 0)),
 		str(GameState.get_flag("mvp_components", []))])
+
+
+# ============================================================================
+#  B2 measurement: the gate-open day and the realised month (all full_run presets)
+# ============================================================================
+#
+# Read-only lines, added for HANDOFF_series_a.md §C. They draw no randomness and write no
+# state, so every other PROBE line of a full_run is byte-identical with or without them.
+
+static func _on_gate_reached(next_phase: int) -> void:
+	# The Series A door is the gate whose next phase is 3. It fires in the phase-check slot of
+	# the daily dispatch; the snapshot is printed with that day's PROBE STATE (_log_state), so
+	# both lines describe the same moment — after the day's cards and the founder's moves.
+	if next_phase == 3 and _gate_day < 0:
+		_gate_day = GameState.day
+
+
+static func _on_day_tick_completed(day: int) -> void:
+	if not _full_run:
+		return
+	if _mb_folded_day != day:      # a month-close day was already folded in inside month_ended
+		_mb_add_today()
+
+
+## Today's burn, by category. The breakdown is written in the finance slot and nothing but
+## the next day's first slot rewrites it, so after the dispatch it is exactly what accrued.
+static func _mb_add_today() -> void:
+	var bd: Dictionary = FinanceSystem.get_burn_breakdown()
+	for raw in FinanceSystem.BURN_IDS:
+		var k: String = String(raw)
+		_mb_acc[k] = int(_mb_acc.get(k, 0)) + int(bd.get(k, 0))
+	_mb_days += 1
+
+
+## PROBE MONTH_BURN — the closed month's expense split into the burn categories. one_time is
+## what the categories do not explain: the one-off charges (hire commission, severance,
+## training, build commits) that accrue straight into the month's expense.
+static func _log_month_burn(e: Dictionary, n: int) -> void:
+	_mb_add_today()                 # the 1st's own burn accrued BEFORE this close, so it is in it
+	_mb_folded_day = GameState.day
+	var cat: int = 0
+	for raw in FinanceSystem.BURN_IDS:
+		cat += int(_mb_acc.get(String(raw), 0))
+	var s0: int = int(e.get("start_day", 0))
+	var e0: int = int(e.get("end_day", 0))
+	var exp: int = int(e.get("expense", 0))
+	print("PROBE MONTH_BURN day=%d n=%d start=%d end=%d days=%d days_expected=%d salaries=%d overtime=%d founder=%d servers=%d marketing=%d office=%d cat_sum=%d expense=%d one_time=%d income=%d" % [
+		GameState.day, n, s0, e0, _mb_days, e0 - s0,
+		int(_mb_acc.get("salaries", 0)), int(_mb_acc.get("overtime", 0)), int(_mb_acc.get("founder", 0)),
+		int(_mb_acc.get("servers", 0)), int(_mb_acc.get("marketing", 0)), int(_mb_acc.get("office", 0)),
+		cat, exp, exp - cat, int(e.get("income", 0))])
+	_mb_acc = {}
+	_mb_days = 0
+
+
+## PROBE GATE — the company on the day the Series A door opens: who is on the payroll, what
+## a month costs at today's rate, what the last closed month actually cost, and the margins.
+## "office" is printed as the finance system holds it (a TODO hook at 0); nothing is assumed.
+static func _log_gate() -> void:
+	var staff: Array[Character] = CharacterRegistry.get_employees()
+	var by_role: Dictionary = {}          # role -> [total, junior, mid, senior]
+	var on_leave: int = 0
+	for c in staff:
+		var r: String = String(c.role)
+		var row: Array = by_role.get(r, [0, 0, 0, 0])
+		row[0] = int(row[0]) + 1
+		var lv: int = clampi(int(c.level), HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
+		row[1 + lv] = int(row[1 + lv]) + 1
+		by_role[r] = row
+		if String(c.status) == HRConstants.STATUS_ON_LEAVE:
+			on_leave += 1
+	var order: Array = HRConstants.EMPLOYEE_ROLES.duplicate()
+	for r in by_role.keys():
+		if not order.has(r):
+			order.append(r)
+	var parts: Array[String] = []
+	for r in order:
+		var row: Array = by_role.get(r, [0, 0, 0, 0])
+		parts.append("%s:%d/%d-%d-%d" % [String(r), int(row[0]), int(row[1]), int(row[2]), int(row[3])])
+	var bd: Dictionary = FinanceSystem.get_burn_breakdown()
+	var bd_sum: int = 0
+	for raw in FinanceSystem.BURN_IDS:
+		bd_sum += int(bd.get(String(raw), 0))
+	var runrate: int = GameState.daily_burn * 30
+	var rr_margin: String = "n/a"
+	if GameState.mrr > 0:
+		rr_margin = str(int((GameState.mrr - runrate) * 100 / GameState.mrr))
+	var last_n: int = GameState.month_history.size()
+	var last: Dictionary = GameState.month_history[last_n - 1] if last_n > 0 else {}
+	var last_income: int = int(last.get("income", 0))
+	var last_expense: int = int(last.get("expense", 0))
+	var last_net: int = int(last.get("net", 0))
+	var last_margin: String = "n/a"
+	if last_income > 0:
+		last_margin = str(int(last_net * 100 / last_income))
+	print("PROBE GATE day=%d emp=%d on_leave=%d roles=%s payroll_monthly=%d salaries=%d overtime=%d founder=%d servers=%d marketing=%d office=%d bd_sum=%d daily_burn=%d expense_runrate=%d mrr=%d runrate_margin_pct=%s cust=%d accounts=%d cash=%d last_n=%d last_start=%d last_end=%d last_income=%d last_expense=%d last_net=%d last_margin_pct=%s win3_margin_pct=%d win6_margin_pct=%d profit_streak=%d growth_avg_pct=%d" % [
+		GameState.day, staff.size(), on_leave, ",".join(parts), CharacterRegistry.get_total_monthly_salaries(),
+		int(bd.get("salaries", 0)), int(bd.get("overtime", 0)), int(bd.get("founder", 0)),
+		int(bd.get("servers", 0)), int(bd.get("marketing", 0)), int(bd.get("office", 0)), bd_sum,
+		GameState.daily_burn, runrate, GameState.mrr, rr_margin,
+		CustomerRegistry.get_all().size(), CustomerRegistry.account_count(), GameState.cash,
+		last_n, int(last.get("start_day", -1)), int(last.get("end_day", -1)), last_income, last_expense, last_net, last_margin,
+		GameState.get_window_margin_pct(3), GameState.get_window_margin_pct(6),
+		GameState.get_profitable_month_streak(), GameState.get_mom_growth_avg_pct(PitchConstants.ARR_WINDOW_MONTHS)])
 
 
 static func _family_of(event_id: String) -> String:
@@ -299,6 +420,9 @@ static func _log_state() -> void:
 		print("PROBE SIGNAL day=%d appetite=%s->%s mrr=%d approach=%d" % [
 			GameState.day, _last_appetite, appetite, GameState.mrr, int(sig.get("approach", 0))])
 		_last_appetite = appetite
+	if _full_run and _gate_day == GameState.day and not _gate_logged:
+		_gate_logged = true
+		_log_gate()
 
 
 static func _log_customers() -> void:
