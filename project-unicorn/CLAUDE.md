@@ -71,12 +71,20 @@ product with a staffing ladder, capacity, fix passes, research and morale care �
 
 These govern all player-facing text and event authoring. They are enforcement rules, not suggestions.
 
-**AUTHORING ORDER FOR AGENTS (director ruling 2026-09).** Agents write player-facing copy in
-**English first**, then write the Turkish as a separate **localisation** of the same scene — not a
-translation of the English sentence. Erdem edits the Turkish. The two locales still ship in the same
-commit (Bilingual Birth below). Frank's corpus is Erdem's own and is not touched by agents.
+**AUTHORING ORDER FOR AGENTS (director ruling 2026-09-25 — REPLACES the earlier "English first"
+ruling).** Turkish is canonical: agents write every player-facing line in **Turkish first**. The
+English is **not a translation** of the Turkish sentence; it is a separate localisation of the same
+scene, written as natural English. Erdem edits both. The two locales still ship in the same commit
+(Bilingual Birth below). Frank's corpus is Erdem's own: agents may only propose Frank lines as
+drafts, and a draft does not reach the screen without his approval.
 
-**LANGUAGE INTEGRITY LAW.** Turkish is canonical; English is a literary translation delivered via the localization layer (`localization/strings.csv`, parsed at runtime by the `Localization` autoload into Godot's `TranslationServer`; language toggle in Settings — Package 5). **No MIXED TR/EN inside a single player-facing string** (that original intent stands) — full-language EN via the locale switch is correct. Within the Turkish canonical text, English tech terms appear only where they are genuine Turkish-tech loanwords founders actually say — the ruled accepted set is: `pitch, startup, demo, momentum, MRR, runway, churn, burn` (`burn` added by gate ruling 2026-08-08; plus proper nouns and the established loanwords `laptop, mail, VC`). Everything else translates to its clean Turkish form (e.g. bug→hata, feature→özellik, feedback→geri bildirim, roadmap→yol haritası, deadline→son tarih, build→geliştirme, push→gönder/yayınla, launch→çıkış/lansman). English lives only in code and specs, never on screen.
+**HANDOFF RULES (director ruling 2026-09-25).**
+- `main` is pushed ONLY when Erdem says **"push et"**. Pushing a working branch is fine.
+- Any change to a design constant (tuning values, thresholds, the eagerness model, gate or meeting
+  weights) is listed in the agent's report under **"onay bekliyor"** (awaiting approval).
+- Live handoff state for the Series A work: `docs/handoff/HANDOFF_series_a.md`.
+
+**LANGUAGE INTEGRITY LAW.** Turkish is canonical; English is a localisation written in English (not a sentence-by-sentence translation), delivered via the localization layer (`localization/strings.csv`, parsed at runtime by the `Localization` autoload into Godot's `TranslationServer`; language toggle in Settings — Package 5). **No MIXED TR/EN inside a single player-facing string** (that original intent stands) — full-language EN via the locale switch is correct. Within the Turkish canonical text, English tech terms appear only where they are genuine Turkish-tech loanwords founders actually say — the ruled accepted set is: `pitch, startup, demo, momentum, MRR, runway, churn, burn` (`burn` added by gate ruling 2026-08-08; plus proper nouns and the established loanwords `laptop, mail, VC`). Everything else translates to its clean Turkish form (e.g. bug→hata, feature→özellik, feedback→geri bildirim, roadmap→yol haritası, deadline→son tarih, build→geliştirme, push→gönder/yayınla, launch→çıkış/lansman). English lives only in code and specs, never on screen.
 
 **BILINGUAL BIRTH LAW.** Every player-visible string is born as a localization key with **both TR and EN
 filled in the same commit** — TR canonical, EN written natively (never machine-translation register), the
@@ -306,7 +314,7 @@ that claims them.
   - Planned singletons: `GameState`, `CharacterRegistry`, `TimeManager`, `SaveManager`, `Settings`, `EventBus`. (`EventManager` was here and is gone: the event engine is a set of static classes behind the `EventGate` facade, not an autoload — nothing about it needs a node in the tree.)
 - **Persistence:** JSON via FileAccess, schema-versioned, seeded RNG (deterministic replay)
 - **Steam:** GodotSteam plugin — achievements, Cloud Save, Rich Presence; isolated behind `SaveManager` so dev runs work without Steam
-- **Localization:** Godot CSV-based — TR canonical, EN literary translation
+- **Localization:** Godot CSV-based — TR canonical (written first), EN a localisation written in English
 
 ---
 
