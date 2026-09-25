@@ -3,9 +3,9 @@
 **Tarih:** 2026-09-25
 **Hazırlayan:** lokal agent
 **Sahip:** Erdem
-**Durum:** TASLAK. Hiçbir madde uygulanmadı. Uygulama sahibin onayıyla (`docs/handoff/HANDOFF_series_a.md:171`).
-**Kod tabanı:** `main`, bu notun commit'i (oyun kodu `fc58e7c` + `86e33eb`'teki madde 5 geri alması). Satır numaraları bu hâle göre. Bu not için Godot koşulmadı; her bulgu kod okunarak çıkarıldı.
-**Onay bekliyor:** bütün `[ÇALIŞMA]` önerileri ve aşağıdaki "Açık kararlar".
+**Durum:** KISMEN UYGULANDI (`f50d481`, sahip onayı 2026-09-25). Sahibin kararları ve uygulananlar **§U**'da. §1–§4 uygulamadan ÖNCEKİ kodu anlatır; o bölümlerdeki satır numaraları da o hâle göre. K17 (§5), seed ticker (§6) ve D5 (§7) uygulanmadı.
+**Kod tabanı (§1–§7):** notun ilk commit'i `3bf7530` (oyun kodu `fc58e7c` + `86e33eb`'teki madde 5 geri alması). Bu kısım için Godot koşulmadı; her bulgu kod okunarak çıkarıldı. §U'daki kanıtlar koşulmuş smoke vakalarıdır.
+**Onay bekliyor:** §U.4'teki maddeler ve §5–§7'nin `[ÇALIŞMA]` önerileri.
 
 Kurallar:
 - Satır referansları `project-unicorn/` köküne göre.
@@ -30,6 +30,97 @@ Kaynak: `HANDOFF_series_a.md:161-171`.
 - Manşet imzalanan şartları okur (K17 ile birleşir).
 - Seed gazete değil, ticker haberi.
 - Bootstrap kilometre taşından sonra 730. gün kayıp sayılmamalı.
+
+---
+
+## U. Uygulama durumu (2026-09-25, `f50d481`)
+
+Sahibin ikinci mesajı ve cevapları bu notun açık kararlarının bir kısmını kapattı. Uygulama `f50d481` commit'inde. Bu bölüm o hâli anlatır; §1–§4 uygulamadan önceki kodu anlatmaya devam eder.
+
+### U.1 Sahibin kararları ve koddaki karşılıkları
+
+| Karar (sahip, 2026-09-25) | Kodda |
+|---|---|
+| Gazete iki kaleme ayrılır: demo ve normal oyun (EA / tam). Demo olduğu gibi kalır. | `EndingsSystem.ending_mode(id)`. Demo'da her son `ending`; ekran ve ray eskisiyle aynı. |
+| EA / tam: kötü sonlar oyunu bitirir. | `bankruptcy`, `brand_collapse`, `vc_rejection_cascade`, `running_on_fumes`: `ending`. |
+| EA / tam: pozitif durumlar oyunu bitirmez. | `profitable_bootstrap` → `trigger_milestone`. Gazete bir kez açılır; `run_active`, `ending_id` ve olay kuyruğu değişmez. |
+| Series A Perde 3'e kadar son kalır. | `series_a_close` her build'de `ending`. |
+| Frank gazetede konuşmasın: demo'da kalsın, EA / tam'da kalksın. | `ending_scene.gd` Frank şeridini yalnız demo'da kurar. |
+| Mevcut gazete görünümü bozulmaz. | `_build_paper` değişmedi. Farklar yalnız rayda ve gazetenin altındaki şeritte. |
+| 730: (a) sınır kalkar. | `bootstrap_milestone_taken()` true iken `_check_soft_cap` çalışmaz. Telgraf zinciri (`final_stretch_*`, `arc_final_stretch`) `phase.bootstrap_milestone` ile susar. |
+| Ana menü: "sanki varmış gibi ekle". | ANA MENÜ koşuyu **elle kayıt slotuna** yazar (`next_manual_slot_id`), sonra oyunu TEKRAR DENE gibi yeniden başlatır. Ana menü sahnesi gelince yalnız yeniden başlatma satırları değişir. |
+
+**Ray, üç durumda** (smoke `ending_paper_modes_on_screen`):
+
+| Öğe | Demo son | EA / tam son | EA / tam kilometre taşı |
+|---|---|---|---|
+| Frank şeridi | var | yok | yok |
+| "SIRADA NE VAR?" + Series B / Halka arz kartları | var | yok | yok |
+| WISHLIST'E EKLE | var | yok | yok |
+| Koşu satırı "BU RUN: …" | var | var | yok |
+| TEKRAR DENE · ZOR MOD · GAZETEYİ PAYLAŞ | var | var | yok |
+| KİLOMETRE TAŞI başlığı + "Bu bir son değil. Şirket yoluna devam ediyor." | yok | yok | var |
+| DEVAM ET · ANA MENÜ | yok | yok | var (sahibin "iki buton" kararı; paylaş yok) |
+
+**Akış ayrıntıları** (hepsi smoke ile sabit):
+- **Saat kilidi.** `TimeManager.hold_clock / release_clock`. Gazete açıkken başka bir yüzeyin (kart, ay özeti, ayarlar) hız geri yüklemesi saati başlatamaz. DEVAM ET kilidi bırakır ve gazeteden önceki hızı geri açar. Vaka: `milestone_clock_hold`.
+- **Aynı gün açılmış kart.** Gazete kartın **altına** takılır: önce kart cevaplanır. Aksi hâlde gazete kartı örter, ANA MENÜ de görünmeyen bir karar ekranı yüzünden kaydı reddederdi. Vaka: `milestone_paper_under_card`.
+- **Ay özeti.** Sonlardan sonra çalışır (slot 10 > 9), yani gazetenin üstünde açılır. Kapanınca gönderdiği hız isteği kilitte kalır.
+- **Mandal.** `GameState.bootstrap_milestone_day`; kayıtla kendiliğinden taşınır, eski kayıtta −1. Gazete koşu başına bir kez açılır. Vaka: `bootstrap_milestone_keeps_the_run`.
+- **Demo'da açılan kilometre taşı kaydı.** Mandal ancak build de kilometre taşı modundaysa sayılır (`bootstrap_milestone_taken()`). Demo'da o kayıt demo gibi biter: kazanç ve 730 sınırı geçerli. Vaka: `ending_modes_by_build`.
+- **730'u geçen koşunun gazetesi.** Yeni süre ifadesi: `END_SPAN_OVER_TWO_YEARS`, "iki yılı aşkın sürede" / "in over two years" (gün ≥ 745).
+- **Kilometre taşından sonra** Series A imzası da satış da hâlâ bir sondur.
+
+### U.2 Build bayrağı
+
+- `EndingsSystem.build_scope()` şu sırayla okur:
+  1. Testlerin sabitlemesi `build_scope_override`.
+  2. `OS.has_feature("full")`, sonra `OS.has_feature("ea")`. Bunlar dışa aktarma ön ayarındaki özel etiketler.
+  3. Yalnız debug build'de `--build=<demo|ea|full>`: komut satırından ya da Project Settings → Application → Run → Main Run Args'tan.
+  4. Varsayılan `demo`.
+- **Editörde EA akışını oynamak için** Main Run Args'a `--build=ea` eklenir. Smoke ve run probe demo'ya sabitli, bu ayar onları etkilemez.
+- `export_presets.cfg` hâlâ yok. EA export'u kurulurken ön ayara `ea` özel etiketi eklenmeli; yoksa export demo gibi davranır.
+- **Series A anahtarı kurulmadı.** Perde 3 geldiğinde gerekenler:
+  - `ending_mode`'da `series_a_close` için milestone dalı;
+  - `sign_table` (`vc_pitch_system.gd`) ve günlük `series_a_closed` yedeğinin `trigger_milestone`'dan geçmesi;
+  - bootstrap'takine benzer bir mandal;
+  - `investor.series_a_closed` okuyan beş içerik dosyasının yeniden tanımlanması (§3.3).
+
+### U.3 Değişen dosyalar (`f50d481`)
+
+- **Sonlar ve saat:**
+  - `scripts/systems/endings_system.gd`: build ve mod çözücü, `trigger_milestone`, `bootstrap_milestone_taken`, iki kısa devre;
+  - `scripts/autoload/time_manager.gd`: saat kilidi;
+  - `scripts/autoload/game_state.gd`: mandal;
+  - `scripts/autoload/event_bus.gd`: `milestone_reached`.
+- **Ekran:**
+  - `scripts/main/main.gd`: gazeteyi kurma, DEVAM ET, ANA MENÜ;
+  - `scripts/modals/ending_scene.gd`: iki mod;
+  - `scripts/systems/endings_copy.gd`: süre ifadesi.
+- **İçerik ve belgeler:**
+  - `scripts/events/seams/seams_world.gd` ve `docs/SEAM_REGISTRY.md`: `phase.bootstrap_milestone`;
+  - üç `final_stretch_*` kartı ve `soft_cap_stretch` arkı;
+  - `localization/strings.csv`: `ENDING_MILESTONE_HEAD`, `ENDING_MILESTONE_BODY`, `ENDING_MAIN_MENU`, `END_SPAN_OVER_TWO_YEARS`. DEVAM ET için mevcut `UI_CONTINUE`.
+  - `docs/design/localization_glossary.md`;
+  - üretilmiş `docs/EVENT_SIGNAL_MANIFEST.md` ve `docs/content/events_draft/_vocabulary.md`.
+- **Testler:**
+  - `scripts/debug/endgame_smoke.gd`: 5 yeni vaka, demo sabitlemesi;
+  - `scripts/debug/run_probe.gd`: demo sabitlemesi.
+- **Dokunulmayanlar:**
+  - `tuning.gd` (`SHIPPED_SCOPES`), `vc_pitch_system.gd`, `save_manager.gd`, `export_presets.cfg`;
+  - ayrı bir `release_scope.gd` açılmadı; çözücü `endings_system.gd`'de.
+
+### U.4 Açık kalanlar (onay bekliyor)
+
+1. **Satış (`acquisition`) EA / tam'da son.** Sebep: şirket artık oyuncunun değil. Tonu `soft_win` olduğu için "pozitif durum oyunu bitirmez" kuralına istisna sayılır. Kilometre taşından sonra teklif hâlâ gelebilir. Onay bekliyor.
+2. **İki build kaynağı.** `SHIPPED_SCOPES` (kart kapsamı) hâlâ `["demo"]` sabit; build'i okuyan yalnız sonlar. İlk `ea` kapsamlı kart gelmeden bu ikisi tek kaynağa bağlanmalı. Yoksa o kart EA build'de hiç gelmez.
+3. **Gazete dışındaki "yakında" izleri.** EA / tam'da hâlâ görünüyorlar:
+   - Av sekmesindeki kilitli "— · Tier 2'de / Yakında" satırı;
+   - Pazarlama sekmesinin `"lock": "ea"` kilidi.
+4. **ANA MENÜ sonrası.** Oyun şirket kurma ekranıyla açılıyor, orada kayıt yükleme girişi yok. Kayıt, yeni oyunda ESC → Yükle ile açılır. Ana menü sahnesi gelince kapanır.
+5. **Yeniden başlatma argümanları.** TEKRAR DENE gibi argümansız yeniden başlatır. Debug'da komut satırından verilen `--build=ea` yeniden açılışta düşer. Main Run Args'taki ayar kalır. Kayıt demo'da açılırsa demo gibi davranır (U.1).
+6. **Frank ve K17.** K17'nin "Frank'in hüküm satırı" (§5.5) artık yalnız demo gazetesinde görünür. Sahibin "Frank gazetede konuşmasın" yorumuyla birlikte §5.5 yeniden değerlendirilmeli.
+7. **§5–§7** (K17, seed ticker, D5) uygulanmadı.
 
 ---
 
@@ -538,17 +629,17 @@ Bağımlılık:
 
 ## Açık kararlar (sahip)
 
-1. §2.1 mod tablosu. EA / tam'da `acquisition` (`soft_win`) ve `running_on_fumes` (`soft_loss`) son mu? Öneri: ikisi de son `[ÇALIŞMA]`.
-2. Build türünün kaynağı: dışa aktarma ön ayarında özellik etiketi ve geliştirme yedeği `[ÇALIŞMA]`, ya da tek bir sabit.
-3. Series A anahtarının yeri ve "Perde 3 hazır"ın somut tanımı. Perde tanımı bugün yalnız onaysız VIZYON belgesinde.
-4. Seam biçimi: ayrı `trigger_milestone()` `[ÇALIŞMA]` ya da `trigger_ending(..., milestone = true)`.
-5. Kilometre taşı modunda ray: Series B / Halka arz kartları, TEKRAR DENE, ZOR MOD, koşu satırı (§2.3).
-6. EA / tam build'de bir **son** açıldığında (kayıp sonları, `acquisition`, anahtar kapalıyken `series_a_close`) WISHLIST'E EKLE ve "SIRADA NE VAR?" kartları görünür mü? Karar wishlist'i demo build'e bağlıyor (`HANDOFF_series_a.md:163-164`). Av sekmesindeki kilitli "Tier 2'de" kartı da aynı soruya girer (§1.5, §2.3).
-7. "Ana menü": ana menü yokken nereye gider, hangi slota yazar?
-8. 730: (a), (b) ya da (c). Cloud tercihi (a) `[ÇALIŞMA]`. VIZYON'daki karşı görüş §4.3'te.
-9. Bootstrap kilometre taşından sonra satın alma teklifinin gelip gelmeyeceği (§3.3). K16/D4'ün sıra önerisine (`ACIK_KARARLAR_D1-D13.md:94`) ve D1'e bağlı; yalnız bağımlılık notu, D tablosuna dokunmaz.
-10. Bootstrap kilometre taşından sonra Series A imzalanabilir mi? Anahtar kapalıyken bu bir son olur.
-11. Aynı gün ay özeti ve kilometre taşı gazetesi: hangisi önce? Öneri: gazete sonra `[ÇALIŞMA]`.
+1. §2.1 mod tablosu. EA / tam'da `acquisition` (`soft_win`) ve `running_on_fumes` (`soft_loss`) son mu? Öneri: ikisi de son `[ÇALIŞMA]`. **Uygulama (§U.1):** ikisi de son. `running_on_fumes` bir kayıp. `acquisition` onay bekliyor (§U.4).
+2. Build türünün kaynağı: dışa aktarma ön ayarında özellik etiketi ve geliştirme yedeği `[ÇALIŞMA]`, ya da tek bir sabit. **Uygulandı (§U.2):** özellik etiketi + debug `--build=`.
+3. Series A anahtarının yeri ve "Perde 3 hazır"ın somut tanımı. Perde tanımı bugün yalnız onaysız VIZYON belgesinde. **Sahip:** Series A Perde 3'e kadar her build'de son. Anahtar sabiti kurulmadı; ne gerektiği §U.2'de.
+4. Seam biçimi: ayrı `trigger_milestone()` `[ÇALIŞMA]` ya da `trigger_ending(..., milestone = true)`. **Uygulandı:** ayrı `trigger_milestone()`.
+5. Kilometre taşı modunda ray: Series B / Halka arz kartları, TEKRAR DENE, ZOR MOD, koşu satırı (§2.3). **Uygulandı (§U.1):** yalnız başlık, gövde, DEVAM ET ve ANA MENÜ.
+6. EA / tam build'de bir **son** açıldığında (kayıp sonları, `acquisition`, anahtar kapalıyken `series_a_close`) WISHLIST'E EKLE ve "SIRADA NE VAR?" kartları görünür mü? Karar wishlist'i demo build'e bağlıyor (`HANDOFF_series_a.md:163-164`). Av sekmesindeki kilitli "Tier 2'de" kartı da aynı soruya girer (§1.5, §2.3). **Gazete için uygulandı:** EA / tam'da ikisi de gizli. Av sekmesi kartı ve Pazarlama kilidi açık (§U.4).
+7. "Ana menü": ana menü yokken nereye gider, hangi slota yazar? **Sahip: "sanki varmış gibi".** Uygulama: elle kayıt slotu, ardından yeniden başlatma (§U.1).
+8. 730: (a), (b) ya da (c). Cloud tercihi (a) `[ÇALIŞMA]`. VIZYON'daki karşı görüş §4.3'te. **Sahip (a)'yı seçti; uygulandı.**
+9. Bootstrap kilometre taşından sonra satın alma teklifinin gelip gelmeyeceği (§3.3). **Bugünkü kod:** gelebilir, kabulü bir sondur (§U.4). K16/D4'ün sıra önerisine (`ACIK_KARARLAR_D1-D13.md:94`) ve D1'e bağlı; yalnız bağımlılık notu, D tablosuna dokunmaz.
+10. Bootstrap kilometre taşından sonra Series A imzalanabilir mi? Anahtar kapalıyken bu bir son olur. **Bugünkü kod:** imzalanabilir ve bir sondur (sahibin Perde 3 kararı).
+11. Aynı gün ay özeti ve kilometre taşı gazetesi: hangisi önce? Öneri: gazete sonra `[ÇALIŞMA]`. **Uygulama:** gazete önce açılır, ay özeti üstüne gelir; saat kilidi ikisini de taşır (§U.1).
 12. K17 kuralı: seçenek A (iki varyant, pay + kurul) mı, B (iki varyant, yalnız kurul) mı? Eşikler `[ÇALIŞMA]`: pay ≤ 15, kurul ağırlığı 0.
 13. K17: "dengeli" üçüncü varyantı (seçenek C) istenir mi? GDD ch09 §7'yi genişletir. Üçüncü metin takımı ve üçüncü Frank satırı gerekir.
 14. K17: varyant yalnız Series A'dan mı `[ÇALIŞMA]`, bütün pay tablosundan mı? İmzalayan fon koşu defterine girsin mi?
@@ -566,7 +657,7 @@ Bağımlılık:
 
 D5 bu listede yok. Bu karardan sonra ayrıca onaylanır (§7).
 
-## Etkilenecek dosyalar (uygulama onaydan sonra)
+## Etkilenecek dosyalar (öneri hâli; gerçekte değişenler §U.3)
 
 | Dosya | Neden |
 |---|---|

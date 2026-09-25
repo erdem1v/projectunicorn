@@ -12,7 +12,7 @@ Bu belge tek başına yeterli olacak şekilde yazıldı. Başlamadan önce `CLAU
 | `PUSH_ONCESI_KONTROL.md` | Push öncesi 10 maddelik kontrol ve bulgular (kod okunarak). |
 | `ACIK_KARARLAR_D1-D13.md` | Açık kararlar araştırması ve karar tablosu. **Sahibin yorumunu bekliyor; dokunma.** |
 | `runs/RUN_OZET.md` | 5 tohumluk ölçüm özeti: kapı günü, kapıdaki durum, Frank kartları, ay kapanışları. |
-| `runs/final_smoke.txt` | Tam smoke çıktısı, 340/342. |
+| `runs/final_smoke.txt` | Tam smoke çıktısı, 340/342 (cloud). Lokal son durum `runs/lokal_smoke_final2.txt` (§H). |
 
 ---
 
@@ -35,7 +35,7 @@ Bu belge tek başına yeterli olacak şekilde yazıldı. Başlamadan önce `CLAU
 
 ### Smoke baseline
 
-- Tam smoke `de6ab7f` üzerinde: **340/342** (`runs/final_smoke.txt`).
+- Tam smoke `de6ab7f` üzerinde: **340/342** (`runs/final_smoke.txt`). **Lokal son: 347/347; iki eski vaka sahip onayıyla emekliye ayrıldı (§H).**
 - İki kırmızı vaka:
   - `save_migration_v7_to_v8`: v7 fixture'ı `SAVE_ERR_TOO_OLD` ile reddediliyor.
   - `trait_migration_real_load`: v5 fixture'ı `SAVE_ERR_TOO_OLD` ile reddediliyor.
@@ -73,9 +73,9 @@ Ayrıntısı ve kanıtları `PUSH_ONCESI_KONTROL.md`'de.
 
 | # | Madde | Durum | Yapılacak |
 |---|---|---|---|
-| 1 | Seed masasında board itilemez; satır kilitli görünür | ✅ `fc58e7c` (`_lever_locked`, `SEED_BOARD_LOCKED`; smoke vakası genişletildi) | Yok. Görsel kontrol: seed masasında board satırı sebebini yazıyor mu? |
-| 2 | Series A yolu kapanınca Av sekmesinde düz bir bilgi satırı | ✅ `fc58e7c` (`VCPitchSystem.series_a_road_closed()`, `HUNT_ROAD_CLOSED`) | **Lokal: ✅ `1695cf9` (`series_a_road_closed_when_all_funds_close`); görsel kontrol bekliyor.** Eski not: smoke vakası yok, bir tane ekle: dört fonu kapat ve canlı teklif bırakma; fonksiyon true dönmeli. Görsel kontrol. |
-| 3 | `TERM_INV_*` 15 satır: önce TR yazılır (çeviri değil); EN ondan bağımsız İngilizce yazılır | ⚠️ Yarım. TR `fc58e7c`'de yeniden yazıldı; **EN eski (TR'den önce yazılmış) hâliyle duruyor.** | **Lokal: ✅ EN `8457ce3`; TR/EN onay bekliyor.** Eski not: 15 satırın EN'sini, yeni TR'nin sahnesinden bağımsız, doğal İngilizce olarak yeniden yaz. TR'yi sahibin onayı olmadan değiştirme. Commit mesajına "TR/EN onay bekliyor" yaz. Anahtarlar: `TERM_INV_RELAXED_1/2`, `TERM_INV_TENSE_1/2`, `TERM_INV_OUT_ANCHOR/NEXUS/BOSPHORUS/MERIDIAN/GENERIC`, `TERM_INV_FINAL`, `TERM_INV_WALKOUT`, `TERM_INV_OTHER_MATCH/CONDITION/HOLD/WALK`. |
+| 1 | Seed masasında board itilemez; satır kilitli görünür | ✅ `fc58e7c` (`_lever_locked`, `SEED_BOARD_LOCKED`; smoke vakası genişletildi) | Yok. Görsel kontrol: seed masasında board satırı sebebini yazıyor mu? **Lokal: ✅ yazıyor (`--vc-shot=seed_table`, §H).** |
+| 2 | Series A yolu kapanınca Av sekmesinde düz bir bilgi satırı | ✅ `fc58e7c` (`VCPitchSystem.series_a_road_closed()`, `HUNT_ROAD_CLOSED`) | **Lokal: ✅ `1695cf9` (`series_a_road_closed_when_all_funds_close`); görsel kontrol ✅ (`--vc-shot=hunt_closed`, §H).** Eski not: smoke vakası yok, bir tane ekle: dört fonu kapat ve canlı teklif bırakma; fonksiyon true dönmeli. Görsel kontrol. |
+| 3 | `TERM_INV_*` 15 satır: önce TR yazılır (çeviri değil); EN ondan bağımsız İngilizce yazılır | ⚠️ Yarım. TR `fc58e7c`'de yeniden yazıldı; **EN eski (TR'den önce yazılmış) hâliyle duruyor.** | **Lokal: ✅ EN `8457ce3`; TR sahibin isteğiyle yeniden yazıldı `95bc9ea`; TR/EN onay bekliyor.** Eski not: 15 satırın EN'sini, yeni TR'nin sahnesinden bağımsız, doğal İngilizce olarak yeniden yaz. TR'yi sahibin onayı olmadan değiştirme. Commit mesajına "TR/EN onay bekliyor" yaz. Anahtarlar: `TERM_INV_RELAXED_1/2`, `TERM_INV_TENSE_1/2`, `TERM_INV_OUT_ANCHOR/NEXUS/BOSPHORUS/MERIDIAN/GENERIC`, `TERM_INV_FINAL`, `TERM_INV_WALKOUT`, `TERM_INV_OTHER_MATCH/CONDITION/HOLD/WALK`. |
 | 4 | K7 sonrası yanlış Frank satırı engellensin (yeni satır yazılmaz) | ✅ `fc58e7c` (`_frank_line` içinde `OTHER_SHOWN` dalı) | Yok. |
 | 5 | Anchor'ın E uyumunu büyümeye çevirmek | ❌ **REDDEDİLDİ ama `fc58e7c`'de uygulanmış.** | **Lokal: ✅ geri alındı, `86e33eb`.** Eski not: geri al. Bu konu D9'da ele alınacak. `term_sheet_table_system.gd`: `E_FIT_METRICS_GROWTH` sabitini ve `_domain_fit` içindeki `"metrics"` dalının ilk satırlarını `de6ab7f` hâline döndür (aşağıdaki kod). Sabitin açıklama yorumu da eski hâline döner. |
 | 6 | `presenter.gd:246` ve `tuning.gd:14`'teki "yedi gün" yorumları | ✅ `fc58e7c` | Yok. |
@@ -104,7 +104,7 @@ const E_FIT_METRICS_MRR := 6        # Anchor: MRR at/above the room's MRR refere
   - teklifin `expires_day`'i (eski 14 takvim günü) iş günü sayacıyla okunmalı ve negatif çıkmamalı.
 - Fixture'ı elle yazmak yerine: kaydet, JSON'dan bu anahtarları sil, yükle.
 
-**E2. İki eskimiş fixture testi.** **Lokal: öneri `RAPOR_LOKAL_2026-09-25.md`'de (emekliye ayır), karar bekliyor.**
+**E2. İki eskimiş fixture testi.** **Lokal: sahip onayladı; iki vaka `409d9e1` ile emekliye ayrıldı.**
 - Önce öneri yaz, **uygulamadan önce sahibe sor.**
 - Cloud önerisi: emekliye ayır. v5 ve v7 save'leri bilinçli olarak ölü (`MIN_LOADABLE_VERSION` 10, bilinçli bir karar). Yerine tek bir vaka: "`MIN_LOADABLE` altı bir save `SAVE_ERR_TOO_OLD` ile reddedilir ve yarım yüklenmez." Bu davranış zaten `engine_probe.gd:450` civarında sabitli; yenisi oraya ya da smoke'a gider.
 - Alternatif: fixture'ları v10+ olarak yeniden üretmek. Ama o zaman test, adındaki göçü (v7→v8) artık test etmez.
@@ -118,14 +118,14 @@ const E_FIT_METRICS_MRR := 6        # Anchor: MRR at/above the room's MRR refere
    - Series A masası (yatırımcı satırı, "diğer teklifi göster", son teklif ve kalkma);
    - Av sekmesi (tahmini aralık, iş günü, bekleme sırası, iptal ve erteleme, "yol kapandı" satırı);
    - K10 karar kartı.
-   - Cloud'da bunların **hiçbiri görsel olarak kontrol edilmedi.**
+   - Cloud'da bunların **hiçbiri görsel olarak kontrol edilmedi.** **Lokal: dördü de `--vc-shot` ile çekildi ve incelendi (§H).**
 4. Sonra dur. `main`'e push için sahibin **"push et"** demesini bekle.
 
 ---
 
 ## C. İLK ÖLÇÜM (lokalde): B2 sorusu
 
-**Soru:** Kapı açıldığında şirketler aşırı kârlı görünüyor: marj yaklaşık %70–76, kârlı ay serisi 7–11. Sebep ekonomi mi, yoksa botun gerçek bir oyuncu gibi işe almaması mı?
+**Soru:** Kapı açıldığında şirketler aşırı kârlı görünüyor: marj yaklaşık %70–76, kârlı ay serisi 7–11. Sebep ekonomi mi, yoksa botun gerçek bir oyuncu gibi işe almaması mı? **Sahip notu (2026-09-25): kadronun satış ağırlığı bir kalibrasyon adayı, §H.3.**
 
 **Cloud verisi** (`runs/RUN_OZET.md`, `de6ab7f`, `full_run:700`):
 
@@ -165,24 +165,24 @@ const E_FIT_METRICS_MRR := 6        # Anchor: MRR at/above the room's MRR refere
 - Mod, **build bayrağı + son türü** ile belirlenir. İki ayrı ekran yok.
 - Kayıp sonları (iflas, kovulma vb.) her build'de son olarak kalır.
 - **Series A'nın kilometre taşı modu, Perde 3 oynanabilir olana kadar kapalı.** O zamana kadar Series A her build'de bir sondur.
-- Manşet, imzalanan şartları okur. Bu, K17 ile birleşir: şartlara göre manşet ve Frank'in hüküm satırı.
+- Manşet, imzalanan şartları okur. Bu, K17 ile birleşir: şartlara göre manşet ve Frank'in hüküm satırı. (Sahip, 2026-09-25: Frank gazetede konuşmasın; şerit demo'da kalır, EA / tam'da yok. §H.2)
 - **Seed gazete değil, ticker haberidir.**
 - **Bootstrap kilometre taşından sonra devam eden bir koşuda 730. gün sınırı kayıp olarak işlememeli.** Nasıl ele alınacağını öner.
-- **Önce tasarım notu** (`docs/design/SONLAR_GAZETE_MODLAR.md` önerilir). **Uygulama sahibin onayıyla.**
+- **Önce tasarım notu** (`docs/design/SONLAR_GAZETE_MODLAR.md` önerilir). **Uygulama sahibin onayıyla.** **Lokal: sahip onayladı, uygulandı `f50d481` (§H.2).**
 
 **Tasarım notunda bulunması gerekenler:**
 
 1. **Bugünkü yapı:**
    - `EndingsSystem.trigger_ending()` tek terminal seam; `ENDINGS` tablosu yalnız ton tutuyor.
    - Sonun verisi `EventBus.run_ended` ile gidiyor.
-   - Gazete sahnesi ve Frank'in şeridi `7946ff3`'te eklendi.
+   - Gazete sahnesi ve Frank'in şeridi `7946ff3`'te eklendi. (Düzeltme: gazete `3ee3963`, Frank şeridi `7946ff3`; tasarım notu §1.4.)
    - Build kapsamı: `scripts/events/core/tuning.gd` içindeki `SHIPPED_SCOPES` ve kartlardaki `version_scope`. Başka bir build bayrağı var mı, kontrol et.
 2. **Mod seçim tablosu:** son türü × build → mod. Series A kilometre taşı bayrağı "Perde 3 hazır" olana kadar kapalı.
 3. **"Devam et" akışı:**
    - Koşu nasıl sürer? `run_active` son anında false oluyor, saat donuyor ve kuyruk boşaltılıyor.
    - Kilometre taşı için ayrı bir seam gerekebilir: `trigger_milestone()` ya da `trigger_ending(..., milestone=true)`.
 4. **730. gün, kilometre taşından sonra.** Cloud'un taslak önerisi, sahip seçecek:
-   - (a) Bootstrap kilometre taşı alınmış bir koşuda sınır kalkar; koşu yalnız kayıp sonları ya da oyuncunun "Ana menü" seçimiyle biter.
+   - (a) Bootstrap kilometre taşı alınmış bir koşuda sınır kalkar; koşu yalnız kayıp sonları ya da oyuncunun "Ana menü" seçimiyle biter. **Sahip (a)'yı seçti; uygulandı. Kodda Series A imzası ve satış da koşuyu bitirir.**
    - (b) Sınır kalır, ama `running_on_fumes` yerine nötr bir "şirket yaşıyor" kapanışı olur (kayıp değil, kilometre taşı modunda).
    - (c) Sınır kilometre taşından itibaren yeniden başlar (+N ay).
    - Cloud tercihi (a). Sebep: ch13 §5'te `running_on_fumes` "kazanmadın" demek, oysa bootstrap kilometre taşı zaten kazanılmış.
@@ -238,9 +238,81 @@ Frank'in korpusu sahibindir. Yeni Frank satırları yalnız taslak olarak öneri
    - Fark çıkarsa önce onu açıkla; özellikle `fc58e7c`'nin tam smoke'la koşulmadığını unutma.
 3. **§B'yi uygula ve doğrula:** madde 5'in geri alınması, madde 3'ün EN'si, E1 ve madde 2'nin smoke vakası. E2 için önce öneri yaz ve sor. `main`'e commit et; push için "push et" bekle.
 4. **§C ölçümünü koş ve raporla.** Kalibrasyona dokunma.
-5. **§D (tasarım notu) ve §E (D1–D13) sahibin onayını bekler.** §D için tasarım notunu yazabilirsin; uygulama onaydan sonra.
+5. **§D uygulandı (`f50d481`, sahip onayı); K17, seed ticker ve D5 onay bekler. §E (D1–D13) sahibin onayını bekler.**
 
 Rapor biçimi (sahip tercih ediyor):
 - madde madde **durum** (✅ / ⚠️ / ❌) ve **kanıt** (dosya:satır, commit, test adı);
 - tahmin yok;
 - tasarım sabiti değişiklikleri "onay bekliyor" başlığı altında.
+
+---
+
+## H. LOKAL TUR 2 (2026-09-25, sahibin ikinci mesajı)
+
+Ayrıntı ve kanıt: `RAPOR_LOKAL_2026-09-25.md`, "Tur 2".
+
+### H.1 Commit'ler
+
+| Commit | Özet |
+|---|---|
+| `95bc9ea` | `TERM_INV_*` TR yeniden yazıldı: EN beğenildi, TR aynı anlamı taşımıyordu. TR/EN onay bekliyor. |
+| `409d9e1` | E2: iki eski fixture vakası emekliye ayrıldı (sahip onayı). |
+| `b43745a` | Tarihsel belgelerdeki silinmiş dal anmaları temizlendi (sahip onayı). |
+| `78d159d` | Sahibin commit'i: Godot MCP (gopeak 2.4.0) addon'u ve `.mcp.json`. Sahip tutulmasını istedi. |
+| `f50d481` | §D uygulandı: EA / tam build'de pozitif son koşuyu bitirmez. |
+| `8df1d83` | Debug `--vc-shot` harness'ı (görsel kontrol). |
+
+### H.2 Sonlar ve gazete (§D)
+
+Sahibin kararları:
+- Demo olduğu gibi kalır.
+- EA / tam'da kötü sonlar koşuyu bitirir, pozitif durumlar bitirmez.
+- Series A, Perde 3'e kadar son olarak kalır.
+- Frank şeridi demo'da kalır, EA / tam'da kalkar.
+- 730: (a), sınır kalkar.
+- ANA MENÜ: "sanki varmış gibi".
+
+Uygulama ve açık kalanlar: `docs/design/SONLAR_GAZETE_MODLAR.md` §U.
+
+### H.3 Kalibrasyon adayı: kadronun satış ağırlığı (sahip notu)
+
+**Sahibin gözlemi:** Kapıda çalışanların yaklaşık %60–70'i satış tarafında. Oyuncu ürünü çok geliştirmeden Series A alabiliyor mu? İleride kalibre edilmesi gerekir mi?
+
+**Rakamlar** (§C ölçümü, 5 tohum, kapı günü; `runs/LOKAL_OLCUM_2026-09-25.md` §1):
+
+| Tohum | Çalışan | Satış | Müşteri temsilcisi | Satış + müşteri | Geliştirici |
+|---|---|---|---|---|---|
+| 1 | 7 | 6 | 0 | 6 (%86) | 0 |
+| 2 | 12 | 5 | 5 | 10 (%83) | 2 |
+| 3 | 10 | 6 | 2 | 8 (%80) | 1 |
+| 4 | 13 | 4 | 2 | 6 (%46) | 3 |
+| 5 | 12 | 4 | 3 | 7 (%58) | 3 |
+| **Toplam** | **54** | **25 (%46)** | **12 (%22)** | **37 (%68,5)** | **9 (%17)** |
+
+Kalan 8 kişi: 7 ürün yöneticisi, 1 test.
+
+**Neyden geliyor** (olgu, yorum yok):
+- Kadroyu botun merdiveni kuruyor (`run_probe.gd` `STAFF_LADDER`, 13 basamak). Merdivende 5 satış, 3 müşteri temsilcisi, 3 geliştirici, 1 test ve 1 ürün yöneticisi var. Yani tasarımı gereği %62'si satış ve müşteri.
+- Basamak, mevcut çalışan sayısına göre seçiliyor. Biri ayrılınca yerine başka bir basamaktan alım geliyor. Tohum 1'deki sıfır geliştirici bundan kaynaklanıyor.
+- Kapı yalnız MRR okuyor (K1+K2, `8e49dbd`: MRR ≥ 120K). Ürün tarafında bir kapı şartı yok. Görüşmedeki ürün girdisi D9'da açık.
+- Geliştiricisiz bir kadroda ürünün nasıl ilerlediği bu ölçümde ayrıca incelenmedi.
+
+**Açık soru (sahip):** Bu, harness merdiveninin bir etkisi mi, yoksa Series A için ürün tarafında bir şart mı gerekiyor?
+
+Ayırmak için ölçülebilecekler (yapılmadı):
+- geliştirici ağırlıklı bir merdivenle aynı ölçüm: kapı günü ve MRR değişiyor mu?
+- geliştiricisiz bir merdiven: kapıya yine ulaşılıyor mu?
+- `PROBE GATE` satırına kapıdaki ürün durumunun (sürüm, kalite) eklenmesi.
+
+Kalibrasyona dokunulmadı. B2 ve D9 ile birlikte ele alınabilir.
+
+### H.4 Görsel kontrol (sahip maddesi 6)
+
+- Godot MCP araçları bu oturumda yüklü değildi: `.mcp.json` oturum başladıktan sonra geldi. Görsel kontrol debug harness'larıyla yapıldı: `--vc-shot=<tür>` (`8df1d83`) ve `--ending-shot=<tür>`. Kareler `user://` klasöründe (Windows: `%APPDATA%\Godot\app_userdata\Project Unicorn\`).
+- **Series A:** `hunt`, `hunt_closed`, `table`, `table_final`, `table_walk`, `table_other`, `seed_table`, `k10`.
+- **Sonlar:** `bootstrap_milestone` (EA), `bankruptcy` (EA), `series_a_close` (demo).
+- HANDOFF §B'nin dört yüzeyi beklendiği gibi görünüyor. Gözlemler raporda.
+
+### H.5 Smoke
+
+- Tam smoke `8df1d83`'te: **347/347** (`runs/lokal_smoke_final2.txt`).

@@ -2,9 +2,11 @@
 
 **Kaynak:** lokal agent. Görev, `HANDOFF_series_a.md` ve sahibin 2026-09-25 mesajıydı; çelişkide mesaj geçerliydi.
 
-**Durum:**
-- Yerel `main` bu raporun commit'inde. `origin/main` `6edade6`'da.
-- Aradaki 9 commit **push edilmedi**. `main`'e her push ayrıca "push et" bekler.
+**Durum (tur 2 sonu):**
+- İki tur var:
+  - tur 1: devir mesajı, §0–§5;
+  - tur 2: sahibin ikinci mesajı, "Tur 2" bölümü.
+- Sahip, revizeler yapıldıktan sonra push'u onayladı ("söylediğim revizeleri hayata geçirerek push edebilirsin"). Bu raporun commit'iyle birlikte `main` push edildi.
 - Tasarım sabiti değişmedi.
 
 Durum işaretleri: ✅ tamam · ⚠️ tamam ama not var · ❌ yapılmadı.
@@ -22,7 +24,16 @@ Durum işaretleri: ✅ tamam · ⚠️ tamam ama not var · ❌ yapılmadı.
 | C6 | `63800db` | Probe: saf / temkinli Series A politikaları + tekrarlar (E, yalnız harness) | yerel |
 | C7 | `3bf7530` | Tasarım notu `docs/design/SONLAR_GAZETE_MODLAR.md` — onay bekliyor | yerel |
 | C7b | `3e04627` | Probe: yalnız yorum (kaldıraç üreteci) | yerel |
-| C8 | bu commit | Bu rapor, `runs/` çıktıları, HANDOFF'ta durum satırı | yerel |
+| C8 | `2137cfd` | Bu rapor, `runs/` çıktıları, HANDOFF'ta durum satırı | tur 2'de push |
+| — | `78d159d` | Sahibin commit'i: Godot MCP (gopeak 2.4.0) addon'u ve `.mcp.json` | tur 2'de push |
+| C9 | `95bc9ea` | Tur 2: `TERM_INV_*` TR yeniden yazıldı — TR/EN onay bekliyor | tur 2'de push |
+| C10 | `409d9e1` | Tur 2: E2, iki eski fixture vakası emekliye ayrıldı | tur 2'de push |
+| C11 | `b43745a` | Tur 2: tarihsel belgelerdeki dal anmaları temizlendi | tur 2'de push |
+| C12 | `f50d481` | Tur 2: sonlar ve gazete, EA / tam'da kilometre taşı modu | tur 2'de push |
+| C13 | `8df1d83` | Tur 2: debug `--vc-shot` harness'ı (görsel kontrol) | tur 2'de push |
+| C14 | bu commit | Tur 2: rapor, tasarım notu §U, HANDOFF §H, `runs/lokal_smoke_final2.txt` | tur 2'de push |
+
+C1–C8 tur 1'de yereldi; hepsi tur 2'nin push'uyla gitti.
 
 ---
 
@@ -45,7 +56,7 @@ Durum işaretleri: ✅ tamam · ⚠️ tamam ama not var · ❌ yapılmadı.
 - DELIVERY LAW metnine dokunulmadı.
 - `ONERI_v3:23` (başlığı "Uygulama planı … tarihsel" diyen bölümde) ve `PUSH_ONCESI_KONTROL.md:11`, `:211`'deki dal anmaları tarihsel kayıt olarak kaldı.
 
-**Onay bekliyor:** bu tarihsel satırlar da temizlensin mi (madde 5)?
+**Onay bekliyor:** ~~bu tarihsel satırlar da temizlensin mi?~~ Tur 2: sahip onayladı, `b43745a`.
 
 ## §1 Baseline ✅ (fark yok)
 
@@ -147,7 +158,7 @@ Durum işaretleri: ✅ tamam · ⚠️ tamam ama not var · ❌ yapılmadı.
   - `save_v10_product_state` kaydı v9'a yaşlandırıyor ve `SAVE_ERR_TOO_OLD` ile boş state döndüğünü doğruluyor;
   - `engine_probe.gd:449-450` sabiti kontrol ediyor.
 - Yeniden üretme seçeneği, vakaların adındaki göçü artık test etmez.
-- **Onay bekliyor:** E2 kararı (madde 2).
+- **Onay bekliyor:** ~~E2 kararı.~~ Tur 2: sahip onayladı, `409d9e1`.
 - **Ayrı karar:** göç merdiveninde yalnız `_migrate_sales_rev6` ulaşılabilir. Diğer yedi fonksiyon ölü kod, ama yorum onları bilerek sana bırakmış (`save_manager.gd:251-268`). Yorumdaki "v9 gate" ifadesi eskimiş; kapı v10.
 
 ## §3 B2 ölçümü ✅ (rakamlar, yorum yok)
@@ -235,11 +246,11 @@ Durum işaretleri: ✅ tamam · ⚠️ tamam ama not var · ❌ yapılmadı.
   - Sonda 21 açık karar var.
   - Yeni Frank satırı yazılmadı.
 - **§E ✅ dokunulmadı.** `ACIK_KARARLAR_D1-D13.md` değişmedi. Tasarım notu D maddelerine yalnız bağımlılık notu olarak değiniyor.
-- **Görsel kontrol yapılmadı.** HANDOFF §B doğrulamasının 3. adımındaki görsel kontroller (seed masası, Series A masası, Av sekmesi "yol kapandı" satırı, K10 kartı) bu turda yapılmadı; oyunu açıp bakman gerekiyor. `TERM_INV_*` EN satırları da ekranda görülmedi.
+- **Görsel kontrol tur 1'de yapılmadı.** Tur 2'de yapıldı (T2.4).
 
 **Onay bekliyor:** tasarım notunun açık kararları (madde 3).
 
-## Son tam smoke ✅ (342/344)
+## Tur 1 son tam smoke ✅ (342/344)
 
 - Tam smoke `63800db`'de koşuldu: oyun ve harness kodu son hâlinde; sonraki commit'ler yalnız belge ve bir yorum. Düzen `xargs -P 3`, yaklaşık 35 dakika.
 - **342/344.** FAIL yalnız baseline'daki aynı iki vaka: `save_migration_v7_to_v8` ve `trait_migration_real_load`, `SAVE_ERR_TOO_OLD`.
@@ -249,24 +260,189 @@ Durum işaretleri: ✅ tamam · ⚠️ tamam ama not var · ❌ yapılmadı.
   - Claude Code, sistemin belleği azaldığı için arka plan kabuğunu durdurdu. Başlatılmış Godot alt süreçleri çalışmaya devam etti ve 344 vakayı tamamladı. Yeni koşu başlatılmadı.
   - 20:50'de, koşu sürerken, repo içinde üç addon dosyası dışarıdan değişti: `addons/godot_mcp_editor/tool_executor.gd`, `addons/godot_mcp_editor/tools/scene_tools.gd`, `addons/godot_mcp_runtime/mcp_runtime_autoload.gd`. Repo kökünde `.mcp.json` oluştu. Bunları ben yapmadım; Godot MCP eklentisinin güncellemesine benziyor.
   - 20:50'den sonra koşan vakalar değişmiş MCP autoload'uyla koştu.
-  - Bu dosyalar commit edilmedi ve geri alınmadı; çalışma ağacında duruyorlar (madde 8).
+  - Bu dosyalar commit edilmedi ve geri alınmadı. Tur 2: sahibin `78d159d` commit'iyle main'e girdi; sahip tutulmasını istedi.
 
 ---
 
-## Onay bekliyor
+## Tur 2: sahibin ikinci mesajı
 
-1. **`TERM_INV_*` metinleri:** 15 TR (`fc58e7c`) ve 15 EN (`8457ce3`). Anchor'ın eski onaylı EN satırı alternatif olarak yukarıda.
-2. **E2:** iki eskimiş vaka emekliye ayrılsın mı? Önerim evet. Yedi ölü göç fonksiyonu ayrı bir karar.
-3. **§D tasarım notu:** 21 açık karar. Öne çıkanlar:
-   - 730 seçeneği (a/b/c);
-   - K17 kuralı ve eşikleri (iki varyant; "dengeli" ancak GDD genişlerse);
-   - "Devam et" seam biçimi;
-   - EA build'deki sonlarda wishlist.
-4. **Push:** C1–C8 (C7b dahil 9 commit) yerel `main`'de; "push et" bekleniyor.
-5. **Tarihsel dal satırları:** `ONERI_v3:23` ve `PUSH_ONCESI_KONTROL.md:11`, `:211` de temizlensin mi? Tarihsel kayıt diye bıraktım.
-6. **E ölçümündeki görüşme kuralı:** masa tanımın aynen uygulandı. Görüşme kuralı (en yüksek ihtimalli açı, dürüst cevap, ılık çatalda zorla) benim varsayımım.
-7. **Görsel kontroller:** HANDOFF §B doğrulamasının 3. adımı ve yeni EN satırları ekranda.
-8. **Dış değişiklikler:** çalışma ağacında commit edilmemiş üç `addons/godot_mcp_*` dosyası ve `.mcp.json` var. Benden değil. Tutulsun mu, geri alınsın mı?
+| # | Sahibin maddesi | Durum | Kanıt |
+|---|---|---|---|
+| 1 | TR satırları kötü, aynı anlama gelmiyor (EN çok iyi) | ✅ `95bc9ea` | 15 TR yeniden yazıldı, EN değişmedi. İki anadil eleştirmeninden geçti. Aşağıda tablo. |
+| 2 | E2 onaylandı, iki eski test kaldırılsın | ✅ `409d9e1` | 344 → 342 vaka. Reddetme davranışı `save_v10_product_state` ve `engine_probe.gd:449-450` ile sabit. |
+| 3 | Kadronun %60–70'i satış: kalibre edilmeli mi, not et | ✅ not | Aşağıda ve HANDOFF §H.3 |
+| 4 | Sonlar ve gazete değişiklikleri | ✅ `f50d481` | Aşağıda; tasarım notu §U |
+| 5 | Tarihsel belgeleri temizle | ✅ `b43745a` | 4 belge, 8 satır. Satır sayıları korundu, başka belgelerin satır referansları geçerli. |
+| 6 | Görsel kontrol | ✅ harness ile | Godot MCP araçları bu oturumda yüklenmedi. `--vc-shot` (`8df1d83`) ve `--ending-shot` ile 11 yüzey çekildi ve incelendi. |
+| 7 | Godot MCP addon'u kalsın | ✅ | Senin `78d159d` commit'in main'de; dokunulmadı. |
+| 8 | Revizelerden sonra push | ✅ | Bu raporun commit'iyle push edildi. |
+
+### T2.1 `TERM_INV_*` TR (`95bc9ea`)
+
+| Anahtar | TR (yeni) | EN (`8457ce3`, değişmedi) |
+|---|---|---|
+| `TERM_INV_RELAXED_1` | Peki. Listende başka ne var? | All right. What else is on your list? |
+| `TERM_INV_RELAXED_2` | Acele etme. Dinliyoruz. | Take your time. We're listening. |
+| `TERM_INV_TENSE_1` | Artık sabrımızı sınıyorsun. | Now you're testing us. |
+| `TERM_INV_TENSE_2` | Şansını zorlama. | Don't push your luck. |
+| `TERM_INV_OUT_ANCHOR` | Devam et. Sonunda bundan fazlası çıkmaz. | Keep going. There's nothing extra waiting at the end. |
+| `TERM_INV_OUT_NEXUS` | Ortaklarıma karşı seni ben savunuyorum. İşimi zorlaştırma. | I'm fighting for you with my partners. Don't make it harder. |
+| `TERM_INV_OUT_BOSPHORUS` | Bu kapıyı sana Frank açtı. Onu pişman etme. | Frank opened this door for you. Don't make him regret it. |
+| `TERM_INV_OUT_MERIDIAN` | Bu hafta üç ürün gördük. Seninki de ötekilere benzemeye başladı. | We've seen three products this week. Yours is starting to look like the others. |
+| `TERM_INV_OUT_GENERIC` | Bu iş uzadı. | This is running long. |
+| `TERM_INV_FINAL` | Bu kadar. Daha fazla esnemiyoruz. | This is where we land. We're done moving. |
+| `TERM_INV_WALKOUT` | Biz bu işte yokuz. Umarım işlerin yolunda gider. | We're going to pass. I hope it works out for you. |
+| `TERM_INV_OTHER_MATCH` | Haklısın. Tek bir madde yüzünden bu işi kaçırmayız. | Fair. We won't lose this over one term. |
+| `TERM_INV_OTHER_CONDITION` | Aynısını biz de veririz. Ama bedelini başka bir maddede ödersin. | We can match that. It'll cost you somewhere else. |
+| `TERM_INV_OTHER_HOLD` | Biz teklif yarışına girmeyiz. | We don't get into bidding wars. |
+| `TERM_INV_OTHER_WALK` | Anlaşılan seçimini yapmışsın. Git onlarınkini imzala. | Sounds like you've already picked. Go sign theirs. |
+
+İlk turdaki iki yanlış da bu yazımla gitti:
+- "şartlar sertleşir": hiçbir itiş şartı kötüleştirmiyor.
+- "Frank'i arayayım": oyunda olmayan bir eylem.
+
+Dört satır ekranda görüldü (`--vc-shot`): RELAXED_1, FINAL, WALKOUT, OTHER_HOLD.
+
+**Doğrulama:** `loc_residue` 0. Smoke 5/5: `loc_csv_integrity`, `loc_event_en_coverage`, `loc_language_switch`, `locale_switch`, `patience_zero_locks_pushes`.
+
+### T2.2 Kalibrasyon notu: kadronun satış ağırlığı
+
+- Kapı gününde 5 tohumda 54 çalışan vardı:
+  - satış 25 (%46);
+  - müşteri temsilcisi 12 (%22), yani satış ve müşteri birlikte %68,5;
+  - geliştirici 9 (%17).
+- Tohum 1'de 7 kişinin 6'sı satışçı, geliştirici yok.
+- **Kaynağı** (olgu):
+  - Kadroyu botun merdiveni kuruyor. Merdivenin %62'si tasarım gereği satış ve müşteri; ayrılmalar dağılımı daha da kaydırıyor.
+  - Series A kapısı yalnız MRR okuyor (K1+K2).
+- **Açık soru, senin:** harness etkisi mi, yoksa Series A'ya ürün tarafında bir şart mı gerekiyor?
+  - Ayırmak için üç ölçüm önerisi HANDOFF §H.3'te.
+  - Kalibrasyona dokunulmadı.
+
+### T2.3 Sonlar ve gazete (`f50d481`)
+
+**Kararların** (senin cevapların dahil) ve kodda karşılıkları tasarım notunun §U bölümünde. Kısaca:
+
+| | Demo | EA / tam |
+|---|---|---|
+| Kayıp sonları (iflas, marka, ret zinciri, 730) | son, ekran aynı | son; Frank şeridi, wishlist ve Yakında kartları yok |
+| Kârlı bootstrap | son | **kilometre taşı**: gazete bir kez açılır, DEVAM ET ile koşu sürer, 730 sınırı kalkar |
+| Series A imzası | son | son (Perde 3'e kadar) |
+| Satış | son | son (onay bekliyor, madde 3) |
+
+- **Gazete sayfası değişmedi.** Farklar yalnız sağdaki rayda ve sayfanın altındaki Frank şeridinde.
+- **Kilometre taşı rayı:**
+  - "KİLOMETRE TAŞI" / "Bu bir son değil. Şirket yoluna devam ediyor.";
+  - DEVAM ET;
+  - ANA MENÜ.
+  - Kararındaki "iki buton" gereği paylaş yok.
+- **ANA MENÜ:** koşuyu yeni bir elle kayıt slotuna yazar, sonra oyunu TEKRAR DENE gibi yeniden başlatır. Ana menü sahnesi gelince yalnız yeniden başlatma satırları değişir.
+- **Build:**
+  - EA / tam export'unun ön ayarına `ea` / `full` özel etiketi eklenir.
+  - Editörde EA akışını denemek için: Project Settings → Application → Run → Main Run Args'a `--build=ea`.
+  - Smoke ve run probe demo'ya sabitli.
+
+**Yeni smoke vakaları:**
+- `ending_modes_by_build`: mod tablosu; demo'da açılan kilometre taşı kaydı demo gibi biter.
+- `bootstrap_milestone_keeps_the_run`:
+  - gazete bir kez açılır, koşu sürer;
+  - 730'da son yok, telgraf susar;
+  - 1100. günün gazetesinde "iki yılı aşkın".
+- `ending_paper_modes_on_screen`: üç ray; hangi buton ve şerit nerede.
+- `milestone_clock_hold`: gazete açıkken saat başka yüzeylerden başlatılamaz.
+- `milestone_paper_under_card`:
+  - aynı gün açılmış kart gazetenin üstünde kalır;
+  - DEVAM ET kilidi bırakır;
+  - ANA MENÜ'nün kaydı elle kayıt slotunda.
+
+**İnceleme** (üç mercek: kenar durumlar, sadakat, yasalar). Düzeltilenler:
+- ANA MENÜ kaydı dönen otomatik kayıt slotuna yazılıyordu. Yeni oyunun üçüncü haftalık otomatik kaydı onu silebiliyordu. → Elle kayıt slotu.
+- Aynı gün önceden açılmış bir kart gazetenin altında kalıyordu. ANA MENÜ de görünmeyen bir karar ekranı yüzünden kaydı reddediyordu. → Gazete kartın altına takılıyor.
+- 730'u geçen koşunun gazetesi "iki yıla yakın" diyordu. → Yeni ifade "iki yılı aşkın sürede" / "in over two years".
+- Mandal build'e bağlı değildi. Demo'da açılan bir kilometre taşı kaydı hiç bitemezdi. → `bootstrap_milestone_taken()`.
+- Main Run Args'taki `--build=ea` smoke'u da EA'ya çevirirdi. → Smoke ve probe demo'ya sabit.
+- Kilometre taşı rayında paylaş vardı. → Kaldırıldı.
+- Eskimiş yorumlar, sözlük satırı ve üretilmiş `_vocabulary.md` güncellendi.
+
+**Uygulanmayan inceleme önerileri:**
+- "Frank şeridi demo'dan da kalksın" ve "Series A / satış EA'da kilometre taşı olsun": eleştirmenler senin ikinci tur cevaplarını görmemişti.
+- Yeniden başlatmanın komut satırı argümanlarını taşıması: TEKRAR DENE ile tutarlı kalsın diye yapılmadı. Demo'ya düşen kayıt artık güvenli.
+- Kapsam dışı kaldığı için onay bekleyenler (madde 3): `SHIPPED_SCOPES`'un build'e bağlanması, Av sekmesindeki "Tier 2" satırı, Pazarlama kilidi.
+
+**Mutasyon kanıtı** (commit edilmedi, her biri geri alındı): 16 mutasyonun 16'sı ilgili vakayı düşürdü. Örnekler:
+- mandal kaldırıldı;
+- sınır kaldırılmadı;
+- telgraf seam'i sabit false;
+- Series A kilometre taşı;
+- EA'da Frank ya da wishlist;
+- saat kilidi yok;
+- gazete kartın üstünde;
+- otomatik kayıt slotu;
+- mandal build'siz;
+- "iki yılı aşkın" dalı yok;
+- kilometre taşında paylaş.
+
+**Doğrulama:**
+- `--event-lint` PASS (43 kart, 3 arc), `loc_residue` 0.
+- `loc_csv_integrity` ve `loc_event_en_coverage` PASS.
+- Hedefli smoke: 5 yeni vaka; `profit_condition_fires` (demo kontrolü); 5 soft-cap vakası; kayıt ve harness vakaları.
+- Tam smoke: T2.5.
+
+### T2.4 Görsel kontrol
+
+Kareler `%APPDATA%\Godot\app_userdata\Project Unicorn\` klasöründe: `vc_shot_*.png`, `ending_shot_*.png`. Yeniden çekmek için `--vc-shot=<tür>` ya da `--ending-shot=<tür>`; EN için `--lang=en`.
+
+| Yüzey | Görülen | Durum |
+|---|---|---|
+| Av sayfası (`hunt`) | Tahmini aralık ("değerleme ~$11–16M · pay ~%19–27"), iş günü ("Teklif süresi: 8 iş günü"), sıradaki teklif satırı, ret rozeti | ✅ |
+| Yol kapandı (`hunt_closed`) | "Series A için kapısı açık fon kalmadı. Bu yolda oturulacak masa yok." Rozetler: REDDETTİ, MASADAN KALKTIN, SÜRESİ DOLDU | ✅ |
+| Masa, bir başarısız itiş (`table`) | Yatırımcı satırı "Peki. Listende başka ne var?", "Bir hamlen kaldı." | ✅ |
+| Son teklif (`table_final`) | "Bir kez daha esnediler: %18 → %16. Bu son teklif. İmzala ya da masadan kalk." ve "Bu kadar. Daha fazla esnemiyoruz." | ✅ |
+| Fon kalktı (`table_walk`) | "Masadan kalktılar. Teklif gitti." ve "Biz bu işte yokuz. Umarım işlerin yolunda gider." İMZALA kapalı, buton MASADAN AYRIL, sayaç 1/3 | ✅ |
+| Diğer teklif (`table_other`) | Anchor: "Biz teklif yarışına girmeyiz." Diğer teklif satırı görünüyor, buton kullanıldıktan sonra kapalı | ✅ |
+| Seed masası (`seed_table`) | Board satırı "Seed turunda yönetim kurulu pazarlığa açılmıyor.", İTİR kapalı. MASADAN KALK kilitli (yarı saydam). | ✅ |
+| K10 kartı (`k10`) | "Teklifin süresi doldu", tahmini şartlar, iki seçenek, "SEÇİM KALICIDIR · OYUN DURAKLATILDI" | ✅ |
+| Kilometre taşı gazetesi (TR ve EN) | Sayfa aynı; rayda başlık, gövde, DEVAM ET, ANA MENÜ | ✅ |
+| EA iflas gazetesi | Frank şeridi, wishlist ve Yakında kartları yok; koşu satırı ile TEKRAR DENE, ZOR MOD ve PAYLAŞ var | ✅ |
+| Demo Series A gazetesi | Eskisiyle aynı | ✅ |
+
+**Gözlemler** (işlem yapılmadı, senin kararın):
+- **TR ekranda İngilizce kalan üç etiket.** Sözlükte ve dil yasasının kabul listesinde yoklar:
+  - `TERM_LEVER_BOARD` "Board": masadaki satır adı;
+  - `EFFECT_TERM_TABLE` "Term sheet masası açılır": K10 kartının rozeti;
+  - `*TIER2*`: "— · Tier 2'de" (Av listesi), "TİER 2 · ORTA ÖLÇEK" (demo gazetesi kartı).
+- **Masa kadranı:** ibre ortadaki yüzde yazısının üstünden geçiyor. Tablo ve seed karelerinde "%13" ve "%45" okunmuyor.
+- **Seed masasında kilitli board satırı** hâlâ bir hedef gösteriyor: "0 koltuk + veto → temiz".
+- **Av sayfası:**
+  - Sağ üstteki ürün kartı ("PromptPilot v1 · DESTEK …") TEKLİFLER panelinin sağ üst köşesini örtüyor.
+  - BEKLEYEN kutusu görüşme ve hazırlıkları gösteriyor. "Bekleyen yok." yazarken sıradaki teklif TEKLİFLER altında duruyor; iki "bekleme" karışabilir.
+- **EA iflas gazetesinin rayı** neredeyse boş: yalnız üstte koşu satırı, altta üç buton.
+
+### T2.5 Tam smoke
+
+- `8df1d83`'te koşuldu. Oyun ve harness kodu son hâlinde; bu raporun commit'i yalnız belge.
+- Düzen `xargs -P 2`. Bellek için 3'ten 2'ye indi.
+- `milestone_paper_under_card` en sonda tek başına koştu, çünkü kayıt slotu yazıyor.
+- Sonuç: **347/347 PASS.** Çıktı: `runs/lokal_smoke_final2.txt`.
+
+---
+
+## Onay bekliyor (tur 2 sonu)
+
+1. **`TERM_INV_*` metinleri:** 15 TR (`95bc9ea`) ve 15 EN (`8457ce3`), T2.1'de.
+2. **E ölçümündeki görüşme kuralı** (§4): masa tanımın aynen uygulandı. Görüşme kuralı (en yüksek ihtimalli açı, dürüst cevap, ılık çatalda zorla) benim varsayımım.
+3. **Sonlar, açık kalanlar** (tasarım notu §U.4):
+   - satış EA / tam'da son;
+   - `SHIPPED_SCOPES` ile build'in tek kaynağa bağlanması;
+   - Av sekmesindeki "Tier 2" satırı ve Pazarlama kilidi;
+   - ANA MENÜ sonrası kayıt yükleme girişi;
+   - K17'nin Frank satırlarının yeniden değerlendirilmesi.
+4. **Tasarım notunun kalan kararları:** K17 (§5), seed ticker (§6), D5 (§7).
+5. **Kalibrasyon adayı:** kadronun satış ağırlığı (T2.2, HANDOFF §H.3).
+6. **Görsel gözlemler** (T2.4): İngilizce kalan üç TR etiketi, kadran yazısı, seed board satırı, Av sayfasının iki ayrıntısı, EA gazete rayı.
+7. **Ayrı karar** (tur 1'den): yedi ölü göç fonksiyonu (`save_manager.gd:255-268`).
+
+Tur 1'in listesinden kapananlar: E2, tarihsel dal satırları, görsel kontroller, dış addon değişiklikleri, push.
 
 **Tasarım sabiti değişikliği yok.** Madde 5'in geri alınması onaylı eski değere dönüş (`86e33eb`).
 
