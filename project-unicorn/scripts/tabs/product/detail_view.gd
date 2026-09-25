@@ -49,7 +49,6 @@ var _risk_value: Label = null
 var _badges_row: HBoxContainer = null
 # traction
 var _traction_ready_badge: Control = null
-var _traction_bar: ProgressBar = null
 var _traction_meta: Label = null
 var _appetite_chip_host: HBoxContainer = null   # yatırımcı iştahı durum çipi (her boyamada yeniden kurulur)
 # DURUM stat hücreleri (key -> value Label)
@@ -299,8 +298,9 @@ func _build_left_column(left: VBoxContainer) -> void:
 	var tr_body := VBoxContainer.new()
 	tr_body.add_theme_constant_override("separation", 6)
 	var tr_head := HBoxContainer.new()
-	# "Yatırımcı iştahı" (Kalibrasyon Turu A §3): kapının sinyali — durum çipi + çubuk + tek
-	# satır; gelir çıtasının rakamı hiçbir yerde basılmaz (yönetmen kararı).
+	# "Yatırımcı iştahı" (Kalibrasyon Turu A §3): kapının sinyali — durum çipi + tek satır;
+	# gelir çıtasının rakamı hiçbir yerde basılmaz (yönetmen kararı). K3 (2026-09): ilerleme
+	# çubuğu kalktı — yaklaşmayı Frank'in eşik mesajları söyler, çubuk değil.
 	var tr_title := UiFactory.make_label(UiTokens.tr_upper(InvestorAppetiteUi.title_text()), &"SectionLabel")
 	tr_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tr_head.add_child(tr_title)
@@ -310,12 +310,6 @@ func _build_left_column(left: VBoxContainer) -> void:
 	_traction_ready_badge.visible = false
 	tr_head.add_child(_traction_ready_badge)
 	tr_body.add_child(tr_head)
-	_traction_bar = ProgressBar.new()
-	_traction_bar.theme_type_variation = &"BuildProgress"
-	_traction_bar.custom_minimum_size = Vector2(0, 6)
-	_traction_bar.show_percentage = false
-	_traction_bar.max_value = 100.0
-	tr_body.add_child(_traction_bar)
 	_traction_meta = UiFactory.make_label("", &"RowMeta")
 	tr_body.add_child(_traction_meta)
 	left.add_child(UiFactory.make_card(tr_body, true))
@@ -811,7 +805,6 @@ func _repaint_profile(ver: int, bugs: int) -> void:
 func _repaint_traction() -> void:
 	_traction_ready_badge.visible = GameState.phase_gate_ready
 	var sig: Dictionary = PhaseGateSystem.series_a_signal()
-	_traction_bar.value = float(sig.get("progress", 0.0)) * 100.0
 	_traction_meta.text = InvestorAppetiteUi.line(sig)
 	if _appetite_chip_host != null:
 		for c in _appetite_chip_host.get_children():

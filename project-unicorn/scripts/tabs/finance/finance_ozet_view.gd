@@ -167,8 +167,8 @@ func _card(content: VBoxContainer) -> PanelContainer:
 func _build_appetite_group() -> Control:
 	# The three-state machine this row always anticipated (kilitli / ısınıyor / açık), now
 	# driven by the real gate: PhaseGateSystem.series_a_signal() — Terminal recipe, one chip
-	# + one line, no figure anywhere. The tooltip names the gate's CONDITIONS from the table
-	# (a revenue bar, N months of growth, brand ≥ n) — still no dollar figure.
+	# + one line, no figure anywhere, no bar (K3). The tooltip names the gate's CONDITION from
+	# the table (the revenue bar — MRR only since K1 + K2) — still no dollar figure.
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	box.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -188,28 +188,18 @@ func _build_appetite_group() -> Control:
 
 
 func _series_a_tooltip() -> String:
+	# Kapının KOŞULLARINI GATES tablosundan adlandırır — rakamsız (yönetmen kararı: seam adı
+	# eşleşir, değeri değil). K1 + K2 (2026-09): kapı yalnız MRR; büyüme serisi ve marka
+	# tabanı kapıdan kalktı, o yüzden onların kolları da kalktı. Tabloya yeni bir yaprak
+	# eklenirse burada adı yoksa sessizce atlanır — bu bilinçli: bilinmeyen bir koşulu
+	# rakamıyla basmaktansa hiç basmamak.
 	var reqs: Array = []
 	for gate in PhaseGateSystem.GATES:
 		if int(gate["from"]) != 2:
 			continue
 		for cond in gate["conditions"]:
-			# BU BLOK ÖLÜ BİR SÖZLÜK OKUYORDU (düzeltildi 2026-08-27). Kolları `mrr_above` /
-			# `mrr_growth_streak` / `brand_above` idi — olay motoru öncesinin koşul sözlüğü.
-			# GATES yaprakları artık {seam, op, value} taşıyor, yani `cond.type` bir Dictionary'de
-			# OLMAYAN anahtara erişimdir: Finans sekmesi her kurulduğunda _build_appetite_group bu
-			# tooltip'i çağırır ve satır patlardı. Patlamasaydı bile hiçbir kol eşleşmediği için
-			# gereksinim listesi BOŞ kalırdı — yani çıta yükselirken tooltip sessizce yanlış olurdu.
-			# Gelir çıtası RAKAMSIZ adlandırılır (yönetmen kararı): seam adı eşleşir, değeri değil.
-			match String(cond.get("seam", "")):
-				"finance.mrr":
-					reqs.append(tr("FIN_REQ_MRR_BAR"))
-				"finance.growth_streak_months":
-					reqs.append(tr("FIN_REQ_GROWTH").format({"n": int(cond.get("value", 0))}))
-				"finance.brand":
-					# `+ 1` ARTIK YOK: eski `brand_above 24` yaprağı "> 24" demekti, oyuncuya "≥ 25"
-					# diye çevrilmesi için bir eklemek doğruydu. Canlı yaprak zaten `>= 25`; eklemek
-					# ekranda 26 yazdırırdı.
-					reqs.append(tr("FIN_REQ_BRAND").format({"n": int(cond.get("value", 0))}))
+			if String(cond.get("seam", "")) == "finance.mrr":
+				reqs.append(tr("FIN_REQ_MRR_BAR"))
 	return tr("FIN_REQ_OPENS").format({"reqs": " · ".join(reqs)})
 
 

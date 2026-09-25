@@ -33,6 +33,12 @@ static func _install_phase() -> void:
 	EvSeams.register("phase.series_a_signal", G, TYPE_STRING,
 		func() -> String: return String(PhaseGateSystem.series_a_signal().get("state", "closed")),
 		"Phase", "closed | warming | open. The number behind it is deliberately not a seam")
+	# Frank's approach lines (K3, plan §6.1) as a STEP, not a figure: 0 below half the bar,
+	# 1/2/3 at 50/75/90 %, 4 at the bar (PhaseGateSystem.APPROACH_PCTS). A card can condition
+	# on "the second mark" without the bar or MRR ever reaching its prose.
+	EvSeams.register("phase.series_a_approach", G, TYPE_INT,
+		func() -> int: return PhaseGateSystem.series_a_approach(),
+		"Phase", "0-4: approach marks cleared toward the Series A revenue bar (50/75/90/100 %). A step, never the number")
 
 
 static func _install_time() -> void:

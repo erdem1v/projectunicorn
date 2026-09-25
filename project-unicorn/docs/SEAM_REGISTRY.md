@@ -282,7 +282,21 @@ goes in the vocabulary doc.
 `phase.name(p)` `game_state.gd:417` VAR · `phase.gate_ready()` `:180` OKUNUYOR ·
 `phase.series_a_signal()` `phase_gate_system.gd:198` **VAR — and load-bearing**: it is the
 single home the Finance indicator, the product page and the ODA board all paint from ·
-`phase.gate_declines()` OKUNUYOR
+`phase.gate_declines()` OKUNUYOR ·
+`phase.series_a_approach()` `PhaseGateSystem.series_a_approach()` **VAR (added 2026-09, K3)**:
+INT 0–4, the count of `APPROACH_PCTS` marks (50/75/90/100 % of the revenue bar) MRR has
+cleared. Frank's four approach cards (`funding.frank_approach_half/near/close`) condition on
+it with `==`, so each speaks inside its own band and the bar never reaches prose — a STEP,
+never the number. The bar is read off the gate's own `finance.mrr` leaf, so the step cannot
+drift from the door.
+
+**K1 + K2 (2026-09): the Series A gate is MRR only.** The `finance.growth_streak_months` and
+`finance.brand` leaves were removed from `PhaseGateSystem.GATES`; `series_a_signal()` now
+returns `{state, mrr_ok, approach}` — `streak`, `streak_need`, `brand_ok` and `progress` are
+gone with the bar they drew (K3). `finance.growth_streak_months` stays registered as a seam; it
+is no longer a gate condition. `funding.gate_series_a` additionally waits on a history leaf —
+`funding.frank_door_open` answered on an earlier day — so Frank's door-open line always
+precedes the decision card.
 
 ⚠️ **`phase_gate_system.gd:200-215` walks the gate's condition array leaf-by-leaf**, switching
 on each leaf's `type` to build that readout. It is a *consumer of the condition vocabulary's

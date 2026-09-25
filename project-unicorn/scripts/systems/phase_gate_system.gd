@@ -33,13 +33,22 @@ extends RefCounted
 # The five-day re-ask is `funding.gate_series_a`'s declared `cooldown_days`. It used to be a
 # const here PLUS a `gate_prompt_day` stamp PLUS a comparison in _tick_reminder; one number in
 # one place cannot drift from itself.
-# Series A gate — the growth half (Calibration Round A §3, 2026-08-19). The revenue bar is
+# Series A gate — MRR ONLY (director decisions K1 + K2, 2026-09). The revenue bar is
 # SalesSystem.TRACTION_MRR_TARGET (never rendered as a figure — director ruling: the signal is
-# shown, the number is not); the growth half is a STREAK of closed calendar months with
-# month-over-month MRR growth. Both are read through series_a_signal() below, the single
-# home the Finance indicator, the product page and the ODA board all paint from.
-const GROWTH_STREAK_MONTHS := 3   # [WORKING] closed months of MoM growth in a row
+# shown, the number is not). The growth streak and the brand floor that Calibration Round A §3
+# put on this gate are GONE from it: growth still sets the valuation multiple (PitchConstants
+# ARR_GROWTH_* bands) and brand still moves conviction in the meeting, but neither holds the
+# door. What the player reads is series_a_signal() below — a chip, no bar, no "n/3" (K3).
+#
+# GROWTH_MIN_PCT survives only as the `finance.growth_streak_months` seam's definition of a
+# qualifying month; nothing on this gate reads it any more.
 const GROWTH_MIN_PCT := 12        # [WORKING] month-over-month MRR growth, percent
+
+# Frank's approach lines (plan §6.1, K3): the share of the revenue bar at which each of the
+# three approach cards may speak. series_a_approach() turns MRR into a STEP (0 below the
+# first, 1..3 between them, 4 at the bar) so the cards condition on a band and never on a
+# dollar figure — the bar stays in exactly one place, the gate leaf below.
+const APPROACH_PCTS := [50, 75, 90, 100]
 
 # Gate table (§2.2). Conditions are written in the ENGINE's condition vocabulary and are
 # byte-identical to the ones on the two gate cards — that is the point of rewriting them: the
@@ -65,15 +74,14 @@ const GATES := [
 		"card_id": "funding.gate_series_a",
 		"conditions": [
 			# Single source SalesSystem.TRACTION_MRR_TARGET. Never rendered as a figure
-			# (series_a_signal paints a state, not the number).
+			# (series_a_signal paints a state, not the number). THE ONLY LEAF (K1 + K2): the
+			# growth streak and the brand floor were removed from the door, not moved.
 			{"seam": "finance.mrr", "op": ">=", "value": SalesSystem.TRACTION_MRR_TARGET},
-			# Sustained growth: GROWTH_STREAK_MONTHS closed months at ≥ GROWTH_MIN_PCT MoM.
-			# The percentage lives on the seam, which reads GROWTH_MIN_PCT from this file —
-			# a seam takes no arguments, and that constraint moved the number to where it
-			# already belonged instead of letting two call sites carry their own.
-			{"seam": "finance.growth_streak_months", "op": ">=", "value": GROWTH_STREAK_MONTHS},
-			{"seam": "finance.brand", "op": ">=", "value": 25},  # working floor; calibration item
 		],  # runway deliberately NOT a condition (§2.2 — deadlock; low runway feeds pitch odds instead)
+		# THE CARD SPEAKS SECOND. The gate latches here; Frank's `funding.frank_door_open` line
+		# says it first, and `funding.gate_series_a` waits for that line to have been answered on
+		# an EARLIER day (its history leaf) — the door-open message and the decision never
+		# share a day.
 		# The escalating body (three variants by decline count) is the card's
 		# `{by_seam: phase.gate_declines}` block. `gate_declines` itself stays here.
 	},
@@ -124,6 +132,10 @@ static func on_shutter_started() -> void:
 	# out from under them is worse than the tonal clash §7.4 is avoiding.
 	for gate in GATES:
 		EventGate.remove_queued(String((gate as Dictionary).get("card_id", "")))
+	# `funding.frank_door_open` is deliberately NOT pulled. Its latch is spent at admission and
+	# `funding.gate_series_a` waits on its HISTORY row; a removal writes no row, so pulling it
+	# here would lock the Series A door for the rest of the run. It is held out of a running
+	# shutter by its own `finance.shutter_days_left < 0` leaf instead.
 
 
 static func on_shutter_cleared() -> void:
@@ -150,42 +162,52 @@ static func debug_force_gate() -> void:
 
 # --- The Series A signal (single home; Calibration Round A §3) ---
 
-## What the player is shown instead of the revenue bar: a three-state reading of the gate's
-## conditions. "open" = the door is open (gate latched/held, or phase ≥ 3, or every condition
-## met right now); "warming" = phase 2 and either signal is moving (the revenue bar cleared OR
-## at least one month of qualifying growth); "closed" = phase 1 (the question is not asked
-## yet) or phase 2 with neither. `progress` is an equal-weight composite of the two signal
-## ratios — a bar that exposes no dollar figure.
+## What the player is shown instead of the revenue bar: a three-state reading of the gate.
+## "open" = the door is open (gate latched/held, or phase ≥ 3, or the bar is met right now);
+## "warming" = phase 2 and MRR has passed the first of Frank's approach marks
+## (APPROACH_PCTS[0] of the bar) — the chip warms on the same day his first approach line may
+## speak; "closed" = phase 1 (the question is not asked yet) or phase 2 below that mark.
+## K3: no `progress`, no streak. The readout is a chip and a line, and neither carries a ratio.
 static func series_a_signal() -> Dictionary:
 	var gate: Dictionary = _gate_for_phase(2)
-	var s := {"state": "closed", "mrr_ok": false, "streak_ok": false, "brand_ok": false,
-		"streak": 0, "streak_need": GROWTH_STREAK_MONTHS, "mrr_progress": 0.0, "progress": 0.0}
-	# THE LEAVES ARE WALKED, NOT JUST EVALUATED. This readout needs to know WHICH half of the
-	# gate is moving, so it switches on each leaf's seam name and reads the same condition the
-	# gate itself runs. It is the reason EvCondition ships a leaf-enumeration API: nesting the
-	# gate conditions would otherwise have broken this silently, and the failure would have
-	# been a Series A bar that stopped moving rather than an error anyone could see.
+	var s := {"state": "closed", "mrr_ok": false, "approach": 0}
+	# THE LEAVES ARE WALKED, NOT JUST EVALUATED. The readout reads the same leaf the gate runs,
+	# so the chip cannot disagree with the ratchet.
 	for leaf in EventGate.condition_leaves({"all": gate.get("conditions", [])}):
 		var c: Dictionary = leaf
-		match String(c.get("seam", "")):
-			"finance.mrr":
-				s.mrr_ok = EventGate.condition_met(c)
-				s.mrr_progress = clampf(
-					float(GameState.mrr) / float(maxi(1, int(c.get("value", 1)))), 0.0, 1.0)
-			"finance.growth_streak_months":
-				s.streak_need = int(c.get("value", GROWTH_STREAK_MONTHS))
-				s.streak = GameState.get_mrr_growth_streak(GROWTH_MIN_PCT)
-				s.streak_ok = s.streak >= s.streak_need
-			"finance.brand":
-				s.brand_ok = EventGate.condition_met(c)
-	s.progress = 0.5 * s.mrr_progress + 0.5 * clampf(float(s.streak) / float(maxi(1, s.streak_need)), 0.0, 1.0)
+		if String(c.get("seam", "")) == "finance.mrr":
+			s.mrr_ok = EventGate.condition_met(c)
+	s.approach = series_a_approach()
 	var latched: bool = GameState.phase_gate_ready and GameState.pending_next_phase == 3
-	if GameState.phase >= 3 or latched or (GameState.phase == 2 and s.mrr_ok and s.streak_ok and s.brand_ok):
+	if GameState.phase >= 3 or latched or (GameState.phase == 2 and s.mrr_ok):
 		s.state = "open"
-		s.progress = 1.0
-	elif GameState.phase == 2 and (s.mrr_ok or s.streak > 0):
+	elif GameState.phase == 2 and int(s.approach) >= 1:
 		s.state = "warming"
 	return s
+
+
+## How far along the revenue bar MRR is, as a STEP: the count of APPROACH_PCTS marks cleared
+## (0 below 50 %, 1 at 50 %, 2 at 75 %, 3 at 90 %, 4 at the bar). Integer math against the
+## gate's own `finance.mrr` leaf, so the step can never drift from the door. Read by the
+## `phase.series_a_approach` seam; Frank's approach cards condition on it.
+static func series_a_approach() -> int:
+	var bar: int = series_a_bar()
+	var step: int = 0
+	for pct in APPROACH_PCTS:
+		if GameState.mrr * 100 >= bar * int(pct):
+			step += 1
+	return step
+
+
+## The revenue bar as the gate table holds it — the value of the phase-2 gate's
+## `finance.mrr` leaf. Never rendered; the approach step and the signal are its only readers.
+static func series_a_bar() -> int:
+	var gate: Dictionary = _gate_for_phase(2)
+	for leaf in EventGate.condition_leaves({"all": gate.get("conditions", [])}):
+		var c: Dictionary = leaf
+		if String(c.get("seam", "")) == "finance.mrr":
+			return maxi(1, int(c.get("value", 1)))
+	return maxi(1, SalesSystem.TRACTION_MRR_TARGET)
 
 
 # --- Helpers ---

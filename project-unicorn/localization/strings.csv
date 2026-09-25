@@ -186,7 +186,6 @@ ODA_PAPER_EXPANSION_TITLE,Büyüme talebi masada,Expansion request waiting
 ODA_BOARD_GOAL_P1_LABEL,Traction'a:,To Traction:
 ODA_BOARD_GOAL_P1_META,Sürüm + ilk müşteri + ilk gelir,Ship + first customer + first revenue
 ODA_BOARD_GOAL_P2_LABEL,Series A'ya:,To Series A:
-ODA_BOARD_GOAL_P2_BRAND,marka {value} / {target},brand {value} / {target}
 ODA_BOARD_GOAL_P3_LABEL,Series A avı:,Series A hunt:
 ODA_BOARD_GOAL_P3_HUNT,{n} teklif masada,{n} offers on the table
 ODA_BOARD_GOAL_P3_CLOSED,Series A kapandı,Series A closed
@@ -1703,7 +1702,6 @@ FIN_RECENT_TX,Son işlemler,Recent transactions
 FIN_NO_TX,Henüz işlem yok,No transactions yet
 FIN_TX_DATE,{day} {month},{month} {day}
 FIN_PER_DAY,{amount} / gün,{amount} / day
-FIN_REQ_BRAND,Marka ≥ {n},Brand ≥ {n}
 FIN_REQ_OPENS,Series A Hunt'ta açılır: {reqs},Opens in the Series A Hunt: {reqs}
 FIN_CAPTABLE_HEADER,Hisse dağılımı,Cap table
 FIN_CAPTABLE_FOUNDER,Kurucu · {pct},Founder · {pct}
@@ -2173,15 +2171,17 @@ INV_APPETITE_TITLE,Yatırımcı iştahı,Investor appetite
 INV_APPETITE_CLOSED,KAPALI,CLOSED
 INV_APPETITE_WARMING,ISINIYOR,WARMING
 INV_APPETITE_OPEN,AÇIK,OPEN
-INV_APPETITE_LINE,Gelir çıtası {bar} · büyüme {streak}/{need} ay,Revenue bar {bar} · growth {streak}/{need} mo
-INV_BAR_BELOW,altında,below
-INV_BAR_CLEARED,aşıldı,cleared
 INV_APPETITE_TOO_EARLY,Series A henüz masada değil,Series A is not on the table yet
 INV_APPETITE_GATE_OPEN,Kapı açık · Frank'le konuş,The door is open · talk to Frank
 INV_APPETITE_HUNT,Series A avı sürüyor,The Series A hunt is on
+INV_APPETITE_BELOW_BAR,Gelir henüz çıtanın altında,Revenue is still under the bar
 FIN_REQ_MRR_BAR,gelir çıtası,the revenue bar
-FIN_REQ_GROWTH,{n} ay üst üste büyüme,{n} months of growth in a row
-ODA_GOAL_SIGNAL,{state} · büyüme {streak}/{need} ay,{state} · growth {streak}/{need} mo
+FRANK_APPROACH_TITLE,Frank'ten mesaj,A message from Frank
+FRANK_APPROACH_HALF,"""Yolun yarısı. Kapıya bakma daha. Churn'e bak.""","""Halfway there. Don't look at the door yet. Look at the churn."""
+FRANK_APPROACH_NEAR,"""Soran var artık. Arayan yok, ama arayacaklar.""","""People are starting to ask about you. Nobody calls yet. They will."""
+FRANK_APPROACH_CLOSE,"""Yaklaştık. Sorulmasını istemediğin ne varsa şimdi topla.""","""Close now. Clean up whatever you don't want asked about."""
+FRANK_DOOR_OPEN,"""Rakamlar artık bir turu taşır. Hazır olduğunda masaya otururuz.""","""The numbers carry a round now. When you're ready, we sit down."""
+FRANK_APPROACH_OK,Tamam,All right
 EFFECT_AUDIENCE_PCT,Kitle {pct},Audience {pct}
 B2B_DISCOUNT_SPENT_DESC,Fiyatlarını zaten iki kez indirdin.,You've already cut their price twice.
 FIN_PROFIT_PROGRESS,Artıda · {streak}/{need} ay,Default Alive · {streak}/{need} mo

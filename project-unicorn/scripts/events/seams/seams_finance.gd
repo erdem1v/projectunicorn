@@ -64,7 +64,7 @@ static func install() -> void:
 		"Finance", "consecutive closed months in the black with no red days")
 	EvSeams.register("finance.growth_streak_months", G, TYPE_INT,
 		func() -> int: return GameState.get_mrr_growth_streak(PhaseGateSystem.GROWTH_MIN_PCT),
-		"Finance", "consecutive closed months of MRR growth")
+		"Finance", "consecutive closed months of MRR growth; no longer a Series A gate condition (K1)")
 	EvSeams.register("finance.months_closed", G, TYPE_INT,
 		func() -> int: return GameState.month_history.size(),
 		"Finance", "WRAPPER; capped at 12 by the ledger")

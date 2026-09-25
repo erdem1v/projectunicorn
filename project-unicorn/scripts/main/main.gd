@@ -1056,8 +1056,9 @@ func _run_oda_shot(kind: String) -> void:
 	else:
 		_seed_theme_surface()
 	if kind == "signal":   # LOC-DATA debug seed / id
-		# Kalibrasyon Turu A §3: pano hedef kartının FAZ-2 dalı (ODA_GOAL_SIGNAL — rakam yok,
-		# sinyal + büyüme ayı). --finance-shot=signal ile aynı dört kapanış → ISINIYOR · 3/3 ay.
+		# Kalibrasyon Turu A §3: pano hedef kartının FAZ-2 dalı (rakam yok, yalnız sinyal
+		# durumu — K1–K3 2026-09: büyüme ayı, marka ve çubuk kalktı). Ay kapanışları
+		# --finance-shot=signal ile aynı kalır; kapı artık onları okumuyor.
 		GameState.set_phase(2)
 		GameState.month_history.clear()
 		var sig_closes: Array = [12000, 13900, 16000, 18400]

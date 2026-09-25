@@ -23,6 +23,7 @@ extends RefCounted
 
 const GATE1_ID := "funding.gate_traction"
 const GATE2_ID := "funding.gate_series_a"
+const DOOR_OPEN_ID := "funding.frank_door_open"   # Frank speaks first, the gate card a day later (K3)
 const ANGEL_ID := "funding.frank_cheque"
 const NUDGE_ID := "funding.hire_nudge"
 const RETAIN_ID := "customer.retention"
@@ -340,7 +341,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"soft_cap_warns_open_hunt":        fail = _case_soft_cap_warns_open_hunt()
 		"month_history_close_and_cap":     fail = _case_month_history_close_and_cap()
 		"growth_streak_semantics":         fail = _case_growth_streak_semantics()
-		"series_a_gate_needs_streak":      fail = _case_series_a_gate_needs_streak()
+		"series_a_gate_mrr_only":          fail = _case_series_a_gate_mrr_only()
+		"frank_approach_lines_once":       fail = _case_frank_approach_lines_once()
 		"series_a_signal_states":          fail = _case_series_a_signal_states()
 		"month_history_save_typing":       fail = _case_month_history_save_typing()
 		"b2c_wom_needs_satisfaction":      fail = _case_b2c_wom_needs_satisfaction()
@@ -834,25 +836,38 @@ static func _expect_gate1_opens_and_advances() -> String:
 
 static func _case_gate2() -> String:
 	GameState.set_phase(2)  # debug backdoor — gate 1 already passed
-	# Calibration Round A §3: the bar alone does not open the door — the signal reads
-	# "warming"; three closed months of ≥12 % growth on top of it open it.
-	_seed_b2b_series_a()    # MRR over the bar; brand stays at neutral 50 ≥ 25
-	_sim_day()
-	if GameState.phase_gate_ready:
-		return "gate 2 opened on the revenue bar alone (the growth streak is not a condition)"
-	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "warming":
-		return "bar cleared without growth should read warming, got %s" % str(PhaseGateSystem.series_a_signal())
-	_seed_growth_streak(GameState.mrr)
+	# K1 + K2 (2026-09): the revenue bar ALONE opens the door — no growth streak, no brand
+	# floor. K3: Frank's door-open line comes first; the decision card follows on a later day.
+	_seed_b2b_series_a()    # MRR over the bar, no month history at all
+	GameState.month_history.clear()
 	_sim_day()
 	if not GameState.phase_gate_ready or GameState.pending_next_phase != 3:
-		return "gate 2 did not open (ready=%s pending=%d)" % [GameState.phase_gate_ready, GameState.pending_next_phase]
+		return "gate 2 did not open on the bar alone (ready=%s pending=%d)" % [GameState.phase_gate_ready, GameState.pending_next_phase]
 	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "open":
 		return "latched gate should read open"
-	if not _drain_to(GATE2_ID):
-		return "gate 2 scene never became active"
+	var fail: String = _expect_door_open_then_gate()
+	if fail != "":
+		return fail
 	EventGate.resolve(GATE2_ID, 0)
 	if GameState.phase != 3:
 		return "phase != 3 after confirm (%d)" % GameState.phase
+	return ""
+
+
+## The K3 order, shared by every case that walks through the Series A door: the gate has
+## latched today; Frank's door-open line is on screen, the decision card is NOT pending the
+## same day, and it arrives on the next day once the line is answered.
+static func _expect_door_open_then_gate() -> String:
+	if not _drain_to(DOOR_OPEN_ID):
+		return "Frank's door-open line never reached the screen (active=%s)" % EventGate.active_id()
+	if _instances_of(GATE2_ID) != 0:
+		return "the Series A card is pending on the same day as the door-open line"
+	EventGate.resolve(DOOR_OPEN_ID, 0)
+	if _instances_of(GATE2_ID) != 0:
+		return "the Series A card arrived on the door-open day"
+	_sim_day()
+	if not _drain_to(GATE2_ID):
+		return "gate 2 scene never became active the day after the door-open line"
 	return ""
 
 
@@ -900,16 +915,16 @@ static func _case_gate_decline_reminder() -> String:
 	if opening == escalated:
 		return "BODY_0 and BODY_1 carry the same text — the escalation is unprovable"
 
-	# Open it the way _case_gate2 does: the revenue bar alone only reads warming.
+	# Open it the way _case_gate2 does: the revenue bar alone opens it (K1 + K2), and Frank's
+	# door-open line precedes the card by a day (K3).
 	_seed_b2b_series_a()
-	_sim_day()
-	_seed_growth_streak(GameState.mrr)
 	_sim_day()
 	if not GameState.phase_gate_ready or GameState.pending_next_phase != 3:
 		return "gate 2 did not open (ready=%s pending=%d)" % [
 			GameState.phase_gate_ready, GameState.pending_next_phase]
-	if not _drain_to(GATE2_ID):
-		return "series A gate scene never became active"
+	var door_fail: String = _expect_door_open_then_gate()
+	if door_fail != "":
+		return door_fail
 	var view: GameEvent = EventGate.active_card()
 	if view.body_text != opening:
 		return "gate did not open on BODY_0"
@@ -4059,13 +4074,10 @@ static func _case_angel_fires_at_crossing() -> String:
 	if _card_fired(ANGEL_ID):
 		return "the offer opened below the bar (MRR %d)" % GameState.mrr
 
-	# Cross BOTH bars in one day: the 2,500 seed bar and the Series A gate (the revenue bar
-	# plus, since Calibration Round A §3, three closed months of growth — seeded here so the
-	# gate's growth condition is already met). Brand starts at 50, so gate 2's brand condition
-	# is already satisfied.
+	# Cross BOTH bars in one day: the 2,500 seed bar and the Series A gate (MRR only since
+	# K1 + K2 — no growth streak, no brand floor).
 	CustomerRegistry.set_mrr(c.id, SalesSystem.TRACTION_MRR_TARGET + 1000)
 	SalesSystem.reflect_mrr()
-	_seed_growth_streak(GameState.mrr)
 	# The crossing day is driven by hand rather than through _sim_day_full, for one reason:
 	# the assertion below is a claim about two DETERMINISTIC beats, and it is only decidable
 	# when the queue is empty when they fire (see the note at the assertion). The hourly
@@ -4099,8 +4111,12 @@ static func _case_angel_fires_at_crossing() -> String:
 	# more. Both cards are admitted in the same tick and the engine orders the day's whole
 	# admission set by §11.2 priority, which is why the assertion still reads the same way and
 	# is now about something declared rather than about which file ran first.
+	# K3: on the crossing day the Series A door speaks through Frank's door-open line; the
+	# decision card itself waits for a later day, so the line is what the cheque must lead.
 	var seed_at: int = _queue_position_of(ANGEL_ID)
-	var gate_at: int = _queue_position_of(GATE2_ID)
+	var gate_at: int = _queue_position_of(DOOR_OPEN_ID)
+	if _queue_position_of(GATE2_ID) >= 0:
+		return "the Series A card is pending on the crossing day, ahead of Frank's door-open line"
 	if gate_at < 0:
 		return "fixture: the Series A gate did not open at MRR %d / brand %d" % [GameState.mrr, GameState.brand]
 	if seed_at > gate_at:
@@ -10887,54 +10903,113 @@ static func _case_growth_streak_semantics() -> String:
 	return ""
 
 
-static func _case_series_a_gate_needs_streak() -> String:
-	# The falsification guard for §3: remove the streak condition from the gate table and
-	# this fails — MRR over the bar with NO growth history must not open the door.
+static func _case_series_a_gate_mrr_only() -> String:
+	# K1 + K2 (2026-09): the door is MRR ONLY. MRR over the bar with NO growth history and a
+	# brand under the old floor of 25 must open it; one dollar under the bar must not.
+	# FALSIFICATION: put the growth-streak or brand leaf back into PhaseGateSystem.GATES.
 	GameState.set_phase(2)
-	_seed_b2b_series_a()
+	_seed_b2b(SalesSystem.TRACTION_MRR_TARGET - 1)
 	GameState.month_history.clear()
+	GameState.set_brand(5)
 	for i in 3:
 		_sim_day()
 	if GameState.phase_gate_ready:
-		return "the Series A gate opened on MRR alone (no growth streak)"
+		return "the Series A gate opened one dollar under the bar"
+	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, SalesSystem.TRACTION_MRR_TARGET)
+	SalesSystem.reflect_mrr()
+	_sim_day()
+	if not GameState.phase_gate_ready or GameState.pending_next_phase != 3:
+		return "the gate stayed shut at the bar with no growth history and brand %d" % GameState.brand
 	return ""
 
 
 static func _case_series_a_signal_states() -> String:
-	# phase 1 → closed regardless; phase 2 nothing → closed; streak 1 → warming; bar only →
-	# warming; all three → open; phase 3 → open. progress is a ratio, never a figure.
+	# K1–K3: phase 1 → closed regardless; phase 2 under half the bar → closed; at half the bar
+	# → warming (the same day Frank's first approach line may speak); at the bar → open with
+	# no growth history; phase 3 → open. No `progress`, no `streak` — the readout has no ratio.
 	GameState.set_phase(1)
 	_seed_b2b_series_a()
-	_seed_growth_streak(GameState.mrr)
 	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "closed":
 		return "phase 1 should read closed"
 	GameState.set_phase(2)
 	GameState.month_history.clear()
-	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, 500)
+	var cid: String = CustomerRegistry.get_by_market("b2b")[0].id
+	var bar: int = PhaseGateSystem.series_a_bar()
+	CustomerRegistry.set_mrr(cid, 500)
 	SalesSystem.reflect_mrr()
 	var sig: Dictionary = PhaseGateSystem.series_a_signal()
-	if String(sig.get("state", "")) != "closed" or float(sig.get("progress", 1.0)) >= 0.5:
+	if String(sig.get("state", "")) != "closed" or int(sig.get("approach", -1)) != 0:
 		return "phase 2 with nothing should read closed (got %s)" % str(sig)
-	_seed_month_closes([1000, 1200])   # one growth month
-	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, 1200)
+	if sig.has("progress") or sig.has("streak"):
+		return "the signal still carries a ratio (K3): %s" % str(sig)
+	CustomerRegistry.set_mrr(cid, bar / 2)
 	SalesSystem.reflect_mrr()
 	sig = PhaseGateSystem.series_a_signal()
-	if String(sig.get("state", "")) != "warming" or int(sig.get("streak", 0)) != 1:
-		return "one growth month should read warming (got %s)" % str(sig)
-	GameState.month_history.clear()
-	CustomerRegistry.set_mrr(CustomerRegistry.get_by_market("b2b")[0].id, SalesSystem.TRACTION_MRR_TARGET + 1000)
+	if String(sig.get("state", "")) != "warming" or int(sig.get("approach", 0)) != 1:
+		return "half the bar should read warming at approach 1 (got %s)" % str(sig)
+	CustomerRegistry.set_mrr(cid, bar)
 	SalesSystem.reflect_mrr()
 	sig = PhaseGateSystem.series_a_signal()
-	if String(sig.get("state", "")) != "warming" or not bool(sig.get("mrr_ok", false)):
-		return "bar cleared alone should read warming (got %s)" % str(sig)
-	_seed_growth_streak(GameState.mrr)
-	sig = PhaseGateSystem.series_a_signal()
-	if String(sig.get("state", "")) != "open" or not is_equal_approx(float(sig.get("progress", 0.0)), 1.0):
-		return "all conditions met should read open (got %s)" % str(sig)
+	if String(sig.get("state", "")) != "open" or not bool(sig.get("mrr_ok", false)) or int(sig.get("approach", 0)) != 4:
+		return "the bar alone should read open at approach 4 (got %s)" % str(sig)
 	GameState.set_phase(3)
-	GameState.month_history.clear()
 	if String(PhaseGateSystem.series_a_signal().get("state", "")) != "open":
 		return "phase 3 should read open"
+	return ""
+
+
+## K3 (plan §6.1): Frank's approach lines. Each speaks at most ONCE per run — an MRR dip and
+## re-cross never brings a line back — and an earlier line never follows a later one. The
+## lines carry no number in either locale.
+## FALSIFICATION: drop `latch.one_shot` from funding.frank_approach_half, or the `none`
+## history block from funding.frank_approach_near.
+static func _case_frank_approach_lines_once() -> String:
+	const HALF := "funding.frank_approach_half"
+	const NEAR := "funding.frank_approach_near"
+	const CLOSE := "funding.frank_approach_close"
+	for key in ["FRANK_APPROACH_HALF", "FRANK_APPROACH_NEAR", "FRANK_APPROACH_CLOSE", "FRANK_DOOR_OPEN"]:
+		for loc in ["tr", "en"]:
+			var tobj: Translation = TranslationServer.get_translation_object(loc)
+			if tobj == null:
+				return "no %s translation loaded" % loc
+			var line: String = String(tobj.get_message(key))
+			if line == "":
+				return "%s has no %s text" % [key, loc]
+			if RegEx.create_from_string("[0-9]").search(line) != null:
+				return "%s (%s) carries a number: %s" % [key, loc, line]
+	GameState.set_cash(100000)
+	GameState.set_phase(2)
+	_seed_b2b(1000)
+	var cid: String = CustomerRegistry.get_by_market("b2b")[0].id
+	var bar: int = PhaseGateSystem.series_a_bar()
+	var at := func(pct: int) -> void:
+		CustomerRegistry.set_mrr(cid, int(ceil(bar * pct / 100.0)))
+		SalesSystem.reflect_mrr()
+		_sim_day()
+		_drain_all_modals()
+	at.call(40)
+	if _card_fired(HALF):
+		return "the halfway line spoke under half the bar"
+	at.call(55)
+	if not _card_fired(HALF):
+		return "the halfway line never spoke at 55 %% of the bar (approach %d)" % PhaseGateSystem.series_a_approach()
+	at.call(30)
+	at.call(60)
+	at.call(60)
+	if EvLatches.fires(EvLatches.key_for(HALF, EvLatches.KEY_RUN, "")) != 1:
+		return "the halfway line spoke again after a dip and re-cross"
+	# Jump the second mark: the third line speaks, and the skipped second one must stay quiet
+	# even when MRR later falls back into its band.
+	at.call(92)
+	if not _card_fired(CLOSE):
+		return "the close line never spoke at 92 %% of the bar"
+	if _card_fired(NEAR):
+		return "the three-quarters line spoke in the close band"
+	at.call(80)
+	if _card_fired(NEAR):
+		return "an earlier approach line followed a later one"
+	if GameState.phase_gate_ready:
+		return "fixture: the gate opened under the bar"
 	return ""
 
 

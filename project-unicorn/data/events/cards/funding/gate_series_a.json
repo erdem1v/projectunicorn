@@ -32,6 +32,13 @@
         "op": "<",
         "value": 0,
         "reason": "held while the shutter runs (GDD 7.4)"
+      },
+      {
+        "history": "days_since",
+        "event": "funding.frank_door_open",
+        "op": ">=",
+        "value": 1,
+        "reason": "Frank's door-open line comes first, on an earlier day (K3, plan 6.1)"
       }
     ]
   },
@@ -86,5 +93,6 @@
         "not_yet": "GATE_DECLINE"
       }
     }
-  }
+  },
+  "_k3_note": "K3 (2026-09): the last leaf waits for funding.frank_door_open to have been answered on an EARLIER day. The door-open message is Frank's; this card is the decision, and the two never share a day. The revenue threshold itself is still PhaseGateSystem's single finance.mrr leaf (K1 + K2: MRR only)."
 }

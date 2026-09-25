@@ -1,0 +1,74 @@
+{
+  "_note": "Frank's approach lines (plan section 6.1, K3). The progress bar and the growth n/3 readout were removed from every gate display; these four one-shot messages are what replaced them. Each speaks at most once per run (latch.one_shot is spent at admission, so an MRR dip and re-cross never brings it back) and carries no number. The step comes from phase.series_a_approach, which counts PhaseGateSystem.APPROACH_PCTS marks cleared against the gate's own finance.mrr leaf; the bar is never in this file. This one: the second mark (about three quarters).",
+  "id": "funding.frank_approach_near",
+  "version_scope": "demo",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "phase.current",
+        "op": "==",
+        "value": 2
+      },
+      {
+        "seam": "phase.gate_ready",
+        "op": "==",
+        "value": false,
+        "reason": "the door is already open; the door-open line speaks instead"
+      },
+      {
+        "seam": "phase.series_a_approach",
+        "op": "==",
+        "value": 2
+      },
+      {
+        "none": [
+          {
+            "history": "fired",
+            "event": "funding.frank_approach_close"
+          }
+        ],
+        "reason": "a later approach line already spoke; an earlier one never follows it"
+      },
+      {
+        "seam": "finance.shutter_days_left",
+        "op": "<",
+        "value": 0,
+        "reason": "held while the shutter runs (GDD 7.4)"
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "acknowledged",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "FRANK_APPROACH_TITLE",
+      "body": "FRANK_APPROACH_NEAR",
+      "options": {
+        "ok": "FRANK_APPROACH_OK"
+      }
+    },
+    "en": {
+      "title": "FRANK_APPROACH_TITLE",
+      "body": "FRANK_APPROACH_NEAR",
+      "options": {
+        "ok": "FRANK_APPROACH_OK"
+      }
+    }
+  }
+}

@@ -283,17 +283,21 @@ static func _log_state() -> void:
 		q = SalesSystem._rival_relative_quality(QualityModel.shipped_normalized())
 	var sig: Dictionary = PhaseGateSystem.series_a_signal()
 	var appetite: String = String(sig.get("state", "closed"))
-	print("PROBE STATE day=%d cash=%d mrr=%d brand=%d burn=%d runway=%s cust=%d emp=%d promises=%d phase=%d aud=%d sat=%d bugs=%d q=%.1f appetite=%s streak=%d/%d profit_streak=%d" % [
+	# K1–K3 (2026-09): the Series A door is MRR only, so the gate reading is the signal state
+	# plus Frank's approach step (0-4, phase.series_a_approach) — the growth streak is no
+	# longer a gate half. It is still logged on the PROBE MONTH line, where it feeds the
+	# valuation band rather than the door.
+	print("PROBE STATE day=%d cash=%d mrr=%d brand=%d burn=%d runway=%s cust=%d emp=%d promises=%d phase=%d aud=%d sat=%d bugs=%d q=%.1f appetite=%s approach=%d gate_ready=%s profit_streak=%d" % [
 		GameState.day, GameState.cash, GameState.mrr, GameState.brand, GameState.daily_burn,
 		("INF" if is_inf(runway) else "%.2f" % runway),
 		CustomerRegistry.get_all().size(), CharacterRegistry.get_employees().size(),
 		PromiseRegistry.get_all().size(), GameState.phase,
 		int(GameState.get_flag("b2c_audience", 0)), (ub.satisfaction if ub != null else -1),
 		int(GameState.get_flag("mvp_live_bug_count", 0)), q,
-		appetite, int(sig.get("streak", 0)), int(sig.get("streak_need", 0)), GameState.get_profitable_month_streak()])
+		appetite, int(sig.get("approach", 0)), str(GameState.phase_gate_ready), GameState.get_profitable_month_streak()])
 	if appetite != _last_appetite:
-		print("PROBE SIGNAL day=%d appetite=%s->%s mrr=%d streak=%d" % [
-			GameState.day, _last_appetite, appetite, GameState.mrr, int(sig.get("streak", 0))])
+		print("PROBE SIGNAL day=%d appetite=%s->%s mrr=%d approach=%d" % [
+			GameState.day, _last_appetite, appetite, GameState.mrr, int(sig.get("approach", 0))])
 		_last_appetite = appetite
 
 
@@ -1120,8 +1124,8 @@ static func _seed_b2b_world(rep_count: int) -> void:
 	# sole B2B signing path), spread across archetypes so tolerance seeds differ and the
 	# CS request cadence phases apart (cs_request_phase strides by 9 per signing).
 	# Total MRR is deliberately ~2.7K: a young book that is PAST the traction gate
-	# (mvp_shipped + 1 customer + mrr > 0) and well SHORT of Series A (MRR ≥ 5000 +
-	# brand ≥ 25). Seeded higher, the run rockets to phase 3 in two days and the log
+	# (mvp_shipped + 1 customer + mrr > 0) and well SHORT of Series A (MRR at the
+	# SalesSystem.TRACTION_MRR_TARGET bar — MRR only since K1 + K2). Seeded higher, the run rockets to phase 3 in two days and the log
 	# stops describing the early game it is supposed to describe.
 	#
 	# Satisfaction seeds straddle the tolerance seeds on purpose (re-seated bars 2026-08-19:

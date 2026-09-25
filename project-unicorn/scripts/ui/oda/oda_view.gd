@@ -1112,16 +1112,15 @@ func _refresh_goal() -> void:
 			_goal_sub.text = tr("ODA_GOAL_PROGRESS").format({"met": met, "total": 3})
 			_goal_bar.value = met / 3.0 * 100.0
 		2:
-			# Kalibrasyon Turu A §3: gelir çıtasının rakamı basılmaz — kapının SİNYALİ basılır
-			# (PhaseGateSystem.series_a_signal: durum + büyüme ayı; çubuk = sinyal ilerlemesi).
+			# Kalibrasyon Turu A §3: gelir çıtasının rakamı basılmaz — kapının SİNYALİ basılır.
+			# K1–K3 (2026-09): kapı yalnız MRR; pano yalnız durumu okur. Büyüme ayı ("n/3"),
+			# marka satırı ve ilerleme çubuğu kalktı. Çubuk düğümü faz 1 ile ORTAK olduğu için
+			# silinmez, bu dalda gizlenir (faz 3 dalıyla aynı kalıp) — ağaç değişmez.
 			var sig: Dictionary = PhaseGateSystem.series_a_signal()
 			_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P2_LABEL"))
-			_goal_value.text = tr("ODA_GOAL_SIGNAL").format({
-				"state": InvestorAppetiteUi.state_text(String(sig.get("state", "closed"))),
-				"streak": mini(int(sig.get("streak", 0)), int(sig.get("streak_need", 1))),
-				"need": int(sig.get("streak_need", 1))})
-			_goal_sub.text = UiTokens.tr_upper(tr("ODA_BOARD_GOAL_P2_BRAND").format({"value": GameState.brand, "target": _gate2_brand_floor()}))
-			_goal_bar.value = float(sig.get("progress", 0.0)) * 100.0
+			_goal_value.text = InvestorAppetiteUi.state_text(String(sig.get("state", "closed")))
+			_goal_sub.text = ""
+			_goal_bar.visible = false
 		_:
 			if GameState.series_a_closed:
 				_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P3_CLOSED"))
@@ -1133,17 +1132,6 @@ func _refresh_goal() -> void:
 				_goal_value.text = tr("ODA_BOARD_GOAL_P3_HUNT").format({"n": GameState.active_sheets.size()})
 				_goal_sub.text = ""
 				_goal_bar.visible = false
-
-
-func _gate2_brand_floor() -> int:
-	# GATES tablosundan canlı okuma: from==2 kapısının brand_above eşiği + 1
-	# ("eşik-1" sözleşmesi — phase_gate_system.gd yorumuna bak). Kopya yok.
-	for gate in PhaseGateSystem.GATES:
-		if int(gate.get("from", 0)) == 2:
-			for cond in gate.get("conditions", []):
-				if String(cond.get("type", "")) == "brand_above":
-					return int(cond.get("value", 24)) + 1
-	return 25
 
 
 func _refresh_league() -> void:

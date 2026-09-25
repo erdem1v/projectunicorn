@@ -138,7 +138,7 @@ slot of that type (§17.12).
 | `finance.cash` | global | int | Finance | WRAPPER over GameState.cash; MAY BE NEGATIVE, which is what starts the shutter |
 | `finance.daily_burn` | global | int | Finance | WRAPPER; day 1 is $50 |
 | `finance.daily_net` | global | int | Finance | signed |
-| `finance.growth_streak_months` | global | int | Finance | consecutive closed months of MRR growth |
+| `finance.growth_streak_months` | global | int | Finance | consecutive closed months of MRR growth; no longer a Series A gate condition (K1) |
 | `finance.investor_equity_pct` | global | int | Finance | 0-100 |
 | `finance.months_closed` | global | int | Finance | WRAPPER; capped at 12 by the ledger |
 | `finance.mrr` | global | int | Finance | WRAPPER; the headline revenue number |
@@ -271,6 +271,7 @@ slot of that type (§17.12).
 | `phase.gate_declines` | global | int | Phase | WRAPPER; how many times the player has said not yet |
 | `phase.gate_ready` | global | bool | Phase | WRAPPER; a transition is open and unanswered |
 | `phase.name` | global | string | Phase | for prose |
+| `phase.series_a_approach` | global | int | Phase | 0-4: approach marks cleared toward the Series A revenue bar (50/75/90/100 %). A step, never the number |
 | `phase.series_a_signal` | global | string | Phase | closed | warming | open. The number behind it is deliberately not a seam |
 
 ### `rival.`

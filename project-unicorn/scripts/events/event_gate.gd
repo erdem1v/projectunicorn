@@ -134,7 +134,7 @@ static func condition_met(condition: Dictionary, context: Dictionary = {}) -> bo
 ##
 ## Exists because `phase_gate_system.gd:200-215` does not merely EVALUATE the gate condition —
 ## it walks the array switching on each leaf's type to build the player-facing Series A readout
-## (mrr_ok, streak, brand_ok, progress). That code consumes the vocabulary's SHAPE, and nesting
+## (state, mrr_ok; streak, brand_ok and progress until K1–K3). That code consumes the vocabulary's SHAPE, and nesting
 ## would have broken it silently. It shipped in the same phase nesting did, for that reason.
 static func condition_leaves(condition: Dictionary) -> Array:
 	return EvCondition.leaves(condition)
