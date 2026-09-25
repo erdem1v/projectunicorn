@@ -40,6 +40,8 @@ extends RefCounted
 #   PROBE GATE  day=<d> emp=<n> roles=<role:total/j-m-s,...> payroll_monthly=<n> <burn categories> ...
 #                                           (full_run*: once, the day the Series A door opens)
 #   PROBE MONTH_BURN day=<d> n=<n> salaries=<n> ... one_time=<n>   (full_run*: beside each PROBE MONTH)
+#   PROBE VC_*  (full_run_vc_naive / full_run_vc_cautious only): VC_CONFIG, VC_BOOK, VC_MEET,
+#               VC_TABLE_OPEN, VC_PUSH, VC_TABLE_END, VC_REPLAY, VC_REPLAY_SUM
 #
 # DEDUPE-REJECTED fires are NOT visible here — enqueue() returns silently when
 # _queue_has_id() rejects a duplicate. They are counted from the engine's own
@@ -47,7 +49,11 @@ extends RefCounted
 
 const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_risk_keep",
 	"b2b_slip", "b2b_slip_keep", "b2c", "b2c_keep", "b2c_neglect", "full_run", "full_run_weak",
-	"full_run_naive", "full_run_discount"]
+	"full_run_naive", "full_run_discount", "full_run_vc_naive", "full_run_vc_cautious"]
+# HANDOFF_series_a.md §E (2026-09) added two Series A policies on top of full_run. The world
+# and the answer policy are full_run's ("sensible"); only what happens once the door is open
+# differs — see "The Series A hunt" below. Sim mode only. An optional fifth spec part
+# `replay=<K>` sets the naive preset's per-fund table replays (default 20; 0 turns them off).
 # Event revision 2026-09 added two policy variants of the played run. The WORLD is the
 # same as full_run; only the answer policy differs, which makes the three a controlled
 # experiment on what the event cards do to the revenue curve:
@@ -127,6 +133,12 @@ static var _gate_logged: bool = false
 static var _mb_acc: Dictionary = {}         # burn id -> realised sum over the open fiscal month
 static var _mb_days: int = 0                # dispatch days folded into _mb_acc
 static var _mb_folded_day: int = -1         # a close day whose burn month_ended already folded in
+static var _vc_policy: String = ""          # "" | "naive" | "cautious" (full_run_vc_* presets)
+static var _replay_k: int = -1              # naive only: table replays per fund; -1 = not given
+static var _vc_done: bool = false           # the one table this run gets has been played
+static var _vc_booked: String = ""          # the fund the current booking is with
+static var _vc_meet_day: int = -1           # the day the last meeting was played
+const TABLE_PUSH_CAP := 64                  # runaway backstop for a push loop, never reached in play
 
 
 # ============================================================================
@@ -144,6 +156,12 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_mode = String(parts[2]) if parts.size() > 2 else "sim"
 	# Optional 4th part: the run seed, so one preset can be sampled across seeds.
 	_run_seed = int(parts[3]) if parts.size() > 3 else 424242
+	# Optional 5th+ parts: named options. Today only replay=<K> (full_run_vc_naive).
+	_replay_k = -1
+	for idx in range(4, parts.size()):
+		var extra: String = String(parts[idx])
+		if extra.begins_with("replay="):
+			_replay_k = maxi(0, int(extra.trim_prefix("replay=")))
 	if not PRESETS.has(_preset):
 		print("PROBE ERROR unknown preset '%s' (have %s)" % [_preset, ", ".join(PRESETS)])
 		return
@@ -158,6 +176,10 @@ static func run(spec: String, payload: Dictionary) -> void:
 	_mb_acc = {}
 	_mb_days = 0
 	_mb_folded_day = -1
+	_vc_policy = ""
+	_vc_done = false
+	_vc_booked = ""
+	_vc_meet_day = -1
 	GameState.initialize_run(payload)
 	# Pin the seed so two probe runs of the same preset are comparable line for line —
 	# the same reason --tempo-probe pins it (main.gd:327-331). initialize_run seeds from
@@ -167,8 +189,20 @@ static func run(spec: String, payload: Dictionary) -> void:
 	RngStreams.reseed(GameState.run_seed)   # the named streams, not just the global generator
 	_wire_log()
 	_seed_world(_preset)
+	if _vc_policy == "naive":
+		_replay_k = 20 if _replay_k < 0 else _replay_k
+	else:
+		_replay_k = 0
+	if _vc_policy != "" and _mode != "sim":
+		# The real clock plays the founder BEFORE the day's dispatch, so the meeting card and
+		# the table would land a day apart from sim. The policies are defined on sim only.
+		print("PROBE ERROR %s is sim-only" % _preset)
+		Engine.get_main_loop().quit()
+		return
 
 	print("PROBE BEGIN preset=%s days=%d mode=%s seed=%d" % [_preset, _stop_day, _mode, GameState.run_seed])
+	if _vc_policy != "":
+		print("PROBE VC_CONFIG policy=%s replay=%d" % [_vc_policy, _replay_k])
 	_log_state()
 
 	if _mode == "sim":
@@ -675,6 +709,8 @@ static func _log_cadence() -> void:
 
 
 static func _finish() -> void:
+	if _vc_policy != "" and not _vc_done:
+		_vc_end("UNRESOLVED", "phase<3" if GameState.phase < 3 else "run_over")
 	_log_cadence()
 	_log_tally()
 	print("PROBE END day=%d run_active=%s ending=%s" % [
@@ -725,6 +761,10 @@ static func _play_the_founder() -> void:
 		_hire_after_the_seed()
 		if not _weak_v1:
 			_run_the_company()
+		if _vc_policy != "":
+			_play_the_hunt()
+			if not GameState.run_active:
+				return          # a signature ended the run; nothing else happens today
 	if not _build_promises:
 		return
 	_keep_the_word()
@@ -1085,6 +1125,328 @@ static func _keep_the_word() -> void:
 
 
 # ============================================================================
+#  The Series A hunt (full_run_vc_naive / full_run_vc_cautious only)
+# ============================================================================
+#
+# HANDOFF_series_a.md §E asks what share of term-sheet tables end in a signature, a final
+# offer or the fund walking out when a naive founder plays them. The bot never met a VC, so
+# these two policies are the working definitions the owner wrote:
+#   naive    — once the door is open, book the first fund that will meet; at the table push
+#              a random lever until patience runs out; sign a final offer.
+#   cautious — the same meeting; sign the opening terms without a single push (the baseline).
+# The meeting is played identically by both, so the two runs are the same run up to the
+# table. Randomness here is EvDice (a hash of seed/day/ids), never a stream the game draws
+# from, and nothing acts before phase 3 — a VC preset is full_run until the door opens.
+
+static func _play_the_hunt() -> void:
+	if _vc_done or not GameState.run_active or GameState.phase < 3 or TermSheetTableSystem.is_active():
+		return
+	# 1. The drain answered funding.meeting_day with "go", which seated the meeting. Play it.
+	if VCPitchSystem.is_meeting_active():
+		_play_the_meeting()
+		_vc_meet_day = GameState.day
+	# 2. A live Series A sheet: sit down the day it arrives (so the K10 card never comes).
+	if not GameState.active_sheets.is_empty():
+		var ts: TermSheet = GameState.active_sheets[0] as TermSheet
+		_play_the_table(String(ts.vc_id))
+		return
+	# 3. Waiting on a booked meeting or a queued sheet.
+	if not GameState.pending_meeting.is_empty() or EndingsSystem._any_pending_sheet():
+		var pm_day: int = int(GameState.pending_meeting.get("day", -1))
+		if not GameState.pending_meeting.is_empty() and pm_day >= 0 and pm_day < GameState.day - 5:
+			print("PROBE ERROR day=%d booked meeting (day %d) never started" % [GameState.day, pm_day])
+		return
+	if _vc_meet_day == GameState.day:
+		return                          # a refusal today: the next fund is booked tomorrow
+	# 4. Book the first fund that will meet, in the registry's order.
+	for raw in InvestorRegistry.get_active():
+		var vc: String = String((raw as Dictionary).get("id", ""))
+		var st: Dictionary = GameState.vc_states.get(vc, {}) as Dictionary
+		if String(st.get("status", "open")) == "callback":
+			continue
+		if VCPitchSystem.meeting_blocked_reason(vc) != "":
+			continue
+		if VCPitchSystem.request_meeting(vc):
+			_vc_booked = vc
+			print("PROBE VC_BOOK day=%d fund=%s meet_day=%d meetings=%d rejections=%d mrr=%d brand=%d" % [
+				GameState.day, vc, int(GameState.pending_meeting.get("day", 0)),
+				int((GameState.vc_states.get(vc, {}) as Dictionary).get("meeting_count", 0)),
+				GameState.vc_rejections, GameState.mrr, GameState.brand])
+			return
+	# Nothing left to book: no table this run. The replays still sample the four funds.
+	if _vc_policy == "naive" and _replay_k > 0:
+		_run_replays()
+	_vc_end("NO_TABLE", "road_closed" if VCPitchSystem.series_a_road_closed() else "none_bookable")
+
+
+static func _choice_ids(vs: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	for c in (vs.get("choices", []) as Array):
+		out.append(String((c as Dictionary).get("id", "")))
+	return out
+
+
+## The meeting rule, the same for both policies: read the room; take the angle with the best
+## odds the room shows (then the easier one, then list order); answer the question honestly;
+## at a lukewarm fork, press for the sheet.
+static func _meeting_pick(ids: Array[String]) -> String:
+	var best: String = ""
+	var best_c: float = -1.0
+	var best_d: int = 99
+	for id in ids:
+		if not id.begins_with("b2_"):
+			continue
+		var a: String = id.trim_prefix("b2_")
+		var d: int = VCPitchSystem._angle_diff(a)
+		var c: float = SkillCheck.chance_for(VCPitchSystem._angle_skill(a), d, VCPitchSystem._beat2_bonus(a))
+		if c > best_c or (c == best_c and d < best_d):
+			best = id
+			best_c = c
+			best_d = d
+	if best != "":
+		return best
+	for want in ["b1_read", "b3_durust", "b4_zorla"]:
+		if ids.has(want):
+			return String(want)
+	return ids[0]
+
+
+static func _play_the_meeting() -> void:
+	var fund: String = VCPitchSystem._vc_id
+	if fund != _vc_booked:
+		print("PROBE ERROR day=%d meeting fund %s is not the booked %s" % [GameState.day, fund, _vc_booked])
+	var conv0: int = VCPitchSystem._conviction
+	var trace: Array[String] = []
+	var ids: Array[String] = ["b1_read"]   # Beat 1 has one row, and its resolver ignores the id
+	var guard: int = 0
+	while VCPitchSystem.is_meeting_active() and guard < 8:
+		guard += 1
+		var pick: String = _meeting_pick(ids)
+		var before: int = VCPitchSystem._conviction
+		var res: Dictionary = VCPitchSystem.advance(pick)
+		if bool(res.get("done", false)):
+			trace.append("%s:%d>end" % [pick, before])
+			break
+		trace.append("%s:%d>%d" % [pick, before, VCPitchSystem._conviction])
+		ids = _choice_ids(res.get("view_state", {}) as Dictionary)
+		if ids.is_empty():
+			print("PROBE ERROR day=%d meeting view has no choices after %s" % [GameState.day, pick])
+			break
+	if VCPitchSystem.is_meeting_active():
+		print("PROBE ERROR day=%d meeting did not finish" % GameState.day)
+	var st: Dictionary = GameState.vc_states.get(fund, {}) as Dictionary
+	print("PROBE VC_MEET day=%d fund=%s n=%d conv0=%d path=%s result=%s sheet_conv=%d rejections=%d brand=%d" % [
+		GameState.day, fund, int(st.get("meeting_count", 0)), conv0, ",".join(trace),
+		String(st.get("status", "?")), int(st.get("sheet_conviction", -1)), GameState.vc_rejections, GameState.brand])
+
+
+static func _pushable_levers() -> Array[String]:
+	var out: Array[String] = []
+	for l in TermSheetTableSystem.levers():
+		if TermSheetTableSystem.can_push(String(l)):
+			out.append(String(l))
+	return out
+
+
+## Push random levers until patience is gone (final offer or walk-out) or nothing can move.
+## A fresh lever is drawn on EVERY push from a probe-local generator seeded once per table
+## (run seed, kind, day, key) — never a stream the game draws from. Not EvDice per push: its
+## hash keeps the low bits, so keys that differ only in a trailing push index land on nearly
+## the same number and every push would pick the same lever.
+static func _push_until_done(kind: String, key: String, fund: String, log_each: bool) -> Dictionary:
+	var pushes: int = 0
+	var wins: int = 0
+	var state: int = TermSheetTableSystem.IDLE
+	var seq: Array[String] = []
+	var pick := RandomNumberGenerator.new()
+	pick.seed = EvDice.fnv1a("%d|%s|%d|%s" % [GameState.run_seed, kind, GameState.day, key])
+	while pushes < TABLE_PUSH_CAP:
+		var pl: Array[String] = _pushable_levers()
+		if pl.is_empty():
+			break
+		var lever: String = pl[pick.randi_range(0, pl.size() - 1)]
+		seq.append(lever.substr(0, 1))
+		TermSheetTableSystem.select_lever(lever)
+		var pv: Dictionary = TermSheetTableSystem.push()
+		pushes += 1
+		state = int(pv.get("state", 0))
+		var ok: bool = state == TermSheetTableSystem.PUSH_SUCCESS
+		if ok:
+			wins += 1
+		if log_each:
+			print("PROBE VC_PUSH day=%d fund=%s n=%d lever=%s success=%s e=%d patience=%d band=%s state=%d" % [
+				GameState.day, fund, pushes, lever, str(ok), TermSheetTableSystem.eagerness(),
+				int((pv.get("patience", {}) as Dictionary).get("current", -1)), String(pv.get("eagerness_band", "")), state])
+		if state == TermSheetTableSystem.PATIENCE_ZERO or state == TermSheetTableSystem.FUND_WALKED:
+			break
+	if pushes >= TABLE_PUSH_CAP:
+		print("PROBE ERROR day=%d fund=%s push cap reached" % [GameState.day, fund])
+	return {"pushes": pushes, "wins": wins, "state": state, "levers": "".join(seq)}
+
+
+static func _play_the_table(vc: String) -> void:
+	if GameState.seed_sheet != null:
+		print("PROBE ERROR day=%d a seed sheet is present — open() would seat the seed table" % GameState.day)
+	var sheet: TermSheet = VCPitchSystem.sheet_for(vc)
+	if sheet == null:
+		_vc_end("NO_TABLE", "no_sheet")
+		return
+	if _vc_policy == "naive" and _replay_k > 0:
+		_run_replays()                  # the table is still closed: same company, same day
+	var ov: Dictionary = TermSheetTableSystem.open(vc)
+	if ov.is_empty():
+		_vc_end("NO_TABLE", "open_failed")
+		return
+	var e0: int = TermSheetTableSystem.eagerness()
+	var fit: int = TermSheetTableSystem._domain_fit()
+	var thr: int = TermSheetTableSystem.walk_threshold()
+	var t0: Dictionary = TermSheetTableSystem._terms.duplicate()
+	print("PROBE VC_TABLE_OPEN day=%d fund=%s conv=%d fit=%d e0=%d patience=%d thr=%d band=%s val_m=%d dil=%d board=%d veto=%s" % [
+		GameState.day, vc, sheet.conviction, fit, e0, int((ov.get("patience", {}) as Dictionary).get("max", 0)), thr,
+		String(ov.get("eagerness_band", "")), int(t0.get("valuation_m", 0)), int(t0.get("dilution_pct", 0)),
+		int(t0.get("board_seats", 0)), str(bool(t0.get("board_veto", false)))])
+	var r: Dictionary = {"pushes": 0, "wins": 0, "levers": ""}
+	if _vc_policy == "naive":
+		r = _push_until_done("probe_vc_lever", vc, vc, true)
+	# Read BEFORE sign(): signing resets the table's state.
+	var ev: Dictionary = TermSheetTableSystem.view_state()
+	var walked: bool = bool(ev.get("fund_walked", false))
+	var outcome: String = "SIGNED_NO_FINAL"
+	if walked:
+		outcome = "FUND_WALKED"
+	elif int(ev.get("state", 0)) == TermSheetTableSystem.PATIENCE_ZERO:
+		outcome = "SIGNED_FINAL"
+	var t1: Dictionary = TermSheetTableSystem._terms.duplicate()
+	# A walked table raised nothing: its working terms are printed, its money is not.
+	var money: String = "-" if walked else str(TermSheetTableSystem.money_raised())
+	print("PROBE VC_TABLE_END day=%d fund=%s policy=%s outcome=%s e0=%d e_end=%d thr=%d pushes=%d wins=%d levers=%s patience_left=%d val_m=%d dil=%d board=%d veto=%s money=%s rejections=%d" % [
+		GameState.day, vc, _vc_policy, outcome, e0, TermSheetTableSystem.eagerness(), thr, int(r.pushes), int(r.wins),
+		String(r.get("levers", "")), int((ev.get("patience", {}) as Dictionary).get("current", 0)), int(t1.get("valuation_m", 0)),
+		int(t1.get("dilution_pct", 0)), int(t1.get("board_seats", 0)), str(bool(t1.get("board_veto", false))),
+		money, GameState.vc_rejections])
+	_vc_done = true
+	if walked:
+		TermSheetTableSystem.leave()    # the closure is already written by the fund's walk-out
+	else:
+		TermSheetTableSystem.sign()     # → EndingsSystem.trigger_ending("series_a_close")
+
+
+static func _vc_end(outcome: String, reason: String) -> void:
+	print("PROBE VC_TABLE_END day=%d fund=- policy=%s outcome=%s reason=%s pushes=0 rejections=%d" % [
+		GameState.day, _vc_policy, outcome, reason, GameState.vc_rejections])
+	_vc_done = true
+
+
+# --- Replays (naive only) ------------------------------------------------------
+#
+# One run gives at most one table: signing ends the run, and a fund walking out marks the
+# Series A decision faced, which a profitable company at the door turns into the bootstrap
+# ending the next day. So each naive run also replays the table, from the SAME company on
+# the SAME day, K times per fund: a fresh sheet stamped at the win line (70), the fund's real
+# fit, a reseeded skill stream. Nothing is signed. Afterwards every touched field and the
+# skill stream go back exactly, and a fingerprint of everything a save carries (GameState, the
+# registries, every system block incl. the event engine and the RNG streams) plus the event
+# engine's pending signal buffer proves it.
+
+static func _vc_capture() -> Dictionary:
+	return {
+		"sheets": GameState.active_sheets.duplicate(),          # the same TermSheet objects
+		"vc_states": GameState.vc_states.duplicate(true),
+		"rej": GameState.vc_rejections,
+		"faced": GameState.faced_series_a,
+		"faced_by": GameState.faced_series_a_by,
+		"pa": GameState.run_pushes_attempted,
+		"pw": GameState.run_pushes_won,
+	}
+
+
+static func _vc_restore(s: Dictionary) -> void:
+	GameState.active_sheets.clear()
+	GameState.active_sheets.append_array(s["sheets"] as Array)
+	GameState.vc_states.clear()
+	GameState.vc_states.merge((s["vc_states"] as Dictionary).duplicate(true))
+	GameState.vc_rejections = int(s["rej"])
+	GameState.faced_series_a = bool(s["faced"])
+	GameState.faced_series_a_by = String(s["faced_by"])
+	GameState.run_pushes_attempted = int(s["pa"])
+	GameState.run_pushes_won = int(s["pw"])
+
+
+static func _state_fingerprint() -> Dictionary:
+	return {"gs": SaveCodec.capture_game_state(), "reg": SaveCodec.capture_registries(),
+		"sys": SaveManager._capture_systems(), "ev_buf": EvEngine._signal_buffer.size()}
+
+
+static func _run_replays() -> void:
+	if TermSheetTableSystem.is_active() or VCPitchSystem.is_meeting_active() or not GameState.run_active:
+		print("PROBE ERROR day=%d replays need a closed table and a live run" % GameState.day)
+		return
+	var fp0: Dictionary = _state_fingerprint()
+	var snap: Dictionary = _vc_capture()
+	var rng: RandomNumberGenerator = RngStreams.get_stream(RngStreams.STREAM_SKILL)
+	var seed0: int = rng.seed
+	var state0: int = rng.state
+	for raw in InvestorRegistry.get_active():
+		var fund: String = String((raw as Dictionary).get("id", ""))
+		var nf: int = 0
+		var nw: int = 0
+		var nx: int = 0
+		var e0_f: int = -1
+		var fit_f: int = 0
+		var thr_f: int = -1
+		for i in _replay_k:
+			rng.seed = EvDice.fnv1a("%d|probe_vc_replay_rng|%s|%d" % [GameState.run_seed, fund, i])
+			GameState.active_sheets.clear()               # ONE sheet: no leverage from another
+			var sh: TermSheet = VCPitchSystem._make_sheet(fund, GameState.day)
+			sh.conviction = TermSheetTableSystem.E_FALLBACK_CONV_SERIES_A
+			GameState.active_sheets.append(sh)
+			TermSheetTableSystem.open(fund)
+			var e0: int = TermSheetTableSystem.eagerness()
+			var fit: int = TermSheetTableSystem._domain_fit()
+			var thr: int = TermSheetTableSystem.walk_threshold()
+			var r: Dictionary = _push_until_done("probe_vc_replay_lever", "%s#%d" % [fund, i], fund, false)
+			var st: int = int(r.state)
+			var outcome: String = "EXHAUSTED"
+			if st == TermSheetTableSystem.PATIENCE_ZERO:
+				outcome = "FINAL_OFFER"
+				nf += 1
+			elif st == TermSheetTableSystem.FUND_WALKED:
+				outcome = "FUND_WALKED"
+				nw += 1
+			else:
+				nx += 1
+			print("PROBE VC_REPLAY day=%d fund=%s i=%d outcome=%s e0=%d fit=%d thr=%d pushes=%d wins=%d levers=%s e_end=%d" % [
+				GameState.day, fund, i, outcome, e0, fit, thr, int(r.pushes), int(r.wins), String(r.levers), TermSheetTableSystem.eagerness()])
+			e0_f = e0
+			fit_f = fit
+			thr_f = thr
+			TermSheetTableSystem.reset()      # not leave(): leave() only closes a walked-out table
+			_vc_restore(snap)
+		print("PROBE VC_REPLAY_SUM day=%d fund=%s n=%d final=%d walked=%d exhausted=%d walk_pct=%.1f e0=%d fit=%d thr=%d" % [
+			GameState.day, fund, _replay_k, nf, nw, nx, 100.0 * float(nw) / float(maxi(_replay_k, 1)), e0_f, fit_f, thr_f])
+	rng.seed = seed0          # seed first: setting it resets state
+	rng.state = state0
+	var fp1: Dictionary = _state_fingerprint()
+	if fp1 != fp0:
+		var bad: Array[String] = []
+		var g0: Dictionary = fp0["gs"] as Dictionary
+		var g1: Dictionary = fp1["gs"] as Dictionary
+		for k in g0.keys():
+			if g0[k] != g1.get(k):
+				bad.append(String(k))
+		if fp0["reg"] != fp1["reg"]:
+			bad.append("registries")
+		var s0: Dictionary = fp0["sys"] as Dictionary
+		var s1: Dictionary = fp1["sys"] as Dictionary
+		for k in s0.keys():
+			if s0[k] != s1.get(k):
+				bad.append("sys." + String(k))
+		if int(fp0["ev_buf"]) != int(fp1["ev_buf"]):
+			bad.append("ev_signal_buffer")
+		print("PROBE ERROR day=%d replay left a trace: %s" % [GameState.day, ",".join(bad)])
+
+
+# ============================================================================
 #  World presets
 # ============================================================================
 
@@ -1103,6 +1465,7 @@ static func _seed_world(preset: String) -> void:
 		_weak_v1 = preset == "full_run_weak"
 		_beta_wait = not _weak_v1
 		_policy = "naive" if preset == "full_run_naive" else ("discount" if preset == "full_run_discount" else "sensible")
+		_vc_policy = "naive" if preset == "full_run_vc_naive" else ("cautious" if preset == "full_run_vc_cautious" else "")
 		_last_ship_day = 0
 		return
 	GameState.set_cash(60000)   # deep enough that the Kepenk shutter never confounds a 90-day log
