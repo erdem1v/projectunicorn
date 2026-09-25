@@ -37,6 +37,7 @@ static var _answer_contributions: Array = []
 static var _path: Array = []
 static var _promised_feature: String = ""
 static var _inner_voice_shown: bool = false
+static var _inner_voice_key: String = ""   # the line THIS sitting drew; a key, never text
 static var _outcome: String = ""            # "" | "won" | "lost"
 static var _loss_reason: String = ""
 
@@ -67,6 +68,7 @@ static func reset() -> void:
 	_path = []
 	_promised_feature = ""
 	_inner_voice_shown = false
+	_inner_voice_key = ""
 	_outcome = ""
 	_loss_reason = ""
 
@@ -439,7 +441,7 @@ static func view_state() -> Dictionary:
 		"probe_budget": _probe_budget,
 		"can_skip": can_skip_to_offer() and _outcome == "",
 		"memory_line": _memory_line(p),
-		"inner_voice": _take_inner_voice(),
+		"inner_voice": _inner_voice_line(),
 	}
 	if _outcome == "":
 		vs["probe_key"] = "SALES_PROBE_%s" % String(_probe.get("id", "")).to_upper()
@@ -491,10 +493,24 @@ static func _memory_line(p: Prospect) -> String:
 # three lines can pay for, and the writing round may want a different shape entirely.
 ## §5.1.1 — the inner voice is BUDGETED and CONDITIONAL: no compulsory opening slot, at most
 ## once per sitting, and only while the run still has budget.
-static func _take_inner_voice() -> String:
-	if _inner_voice_shown or _probe_index != 1 or SalesLedger.inner_voice_left() <= 0:
+##
+## DRAWN ONCE, SHOWN FOR AS LONG AS ITS PROBE IS ON SCREEN. `view_state()` is not a one-shot:
+## open() returns one and the scene's _ready() asks for another, and the old "take and forget"
+## shape spent the line (and the run's budget) on the first frame, which main.gd discards —
+## the player never saw it. The budget is still spent exactly once; what is cached is the KEY,
+## and the text is rendered at display time so a locale switch mid-sitting reads correctly.
+static func _inner_voice_line() -> String:
+	if _outcome != "" or _probe_index != 1:
 		return ""
+	_take_inner_voice()
+	if _inner_voice_key == "":
+		return ""
+	return TranslationServer.translate(_inner_voice_key)
+
+
+static func _take_inner_voice() -> void:
+	if _inner_voice_shown or _probe_index != 1 or SalesLedger.inner_voice_left() <= 0:
+		return
 	_inner_voice_shown = true
 	SalesLedger.spend_inner_voice()
-	return TranslationServer.translate("SALES_INNER_VOICE_%d"
-		% (SalesLedger.inner_voice_left() % 3))
+	_inner_voice_key = "SALES_INNER_VOICE_%d" % (SalesLedger.inner_voice_left() % 3)

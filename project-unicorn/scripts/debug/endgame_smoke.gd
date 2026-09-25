@@ -145,6 +145,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"b2b_ignore_then_churn": fail = _case_b2b_ignore_then_churn()
 		"b2b_pitch_meeting_signs": fail = _case_b2b_pitch_meeting_signs()
 		"sales_meeting_replays_identically": fail = _case_sales_meeting_replays_identically()
+		"sales_inner_voice_reaches_view": fail = _case_sales_inner_voice_reaches_view()
 		"sales_faucet_guard_b2c": fail = _case_sales_faucet_guard_b2c()
 		"sales_lead_expiry_and_return_lock": fail = _case_sales_lead_expiry_and_return_lock()
 		"sales_meeting_time_skip_founder_zero": fail = _case_sales_meeting_time_skip_founder_zero()
@@ -3455,6 +3456,39 @@ static func _replay_once(lead_id: String) -> String:
 	if ProspectRegistry.get_prospect(lead_id) != null:
 		ProspectRegistry.remove(lead_id)
 	return outcome
+
+## §5.1.1 — THE INNER VOICE REACHES THE SCREEN. main.gd discards open()'s frame and the scene
+## paints its own view_state(); a line spent on the first call was never seen. The line must
+## survive every view of its probe, cost the run's budget once, and leave with the probe.
+## FALSIFICATION: return `_take_inner_voice()`'s text straight from view_state again (the old
+## take-and-forget) and the second frame comes back empty.
+static func _case_sales_inner_voice_reaches_view() -> String:
+	GameState.set_flag("mvp_shipped", true)
+	GameState.set_flag("mvp_market_type", "b2b")
+	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
+	GameState.set_flag("sales_inner_voice_used", 0)
+	GameState.set_flag("sales_meeting_used_day", -1)
+	var p: Prospect = _add_prospect("voice_lead", 3, "ai_vec_filter")
+	var opened: Dictionary = SalesMeetingSystem.open(p.id)
+	if opened.is_empty() or String(opened.get("outcome", "")) != "":
+		SalesMeetingSystem.close()
+		return "the sitting did not open on a probe"
+	var shown: Dictionary = SalesMeetingSystem.view_state()
+	var line: String = String(shown.get("inner_voice", ""))
+	if line == "":
+		SalesMeetingSystem.close()
+		return "the scene's own frame carries no inner voice"
+	if line != String(opened.get("inner_voice", "")):
+		SalesMeetingSystem.close()
+		return "the two frames of one probe disagree on the inner voice"
+	var left: int = SalesLedger.inner_voice_left()
+	if left != SalesConstants.INNER_VOICE_BUDGET_PER_RUN - 1:
+		SalesMeetingSystem.close()
+		return "the budget moved %d for one line, want 1" \
+			% (SalesConstants.INNER_VOICE_BUDGET_PER_RUN - left)
+	SalesMeetingSystem.close()
+	return ""
+
 
 static func _case_b2b_prospect_pain_references_real_feature() -> String:
 	# B.4: a prospect's surface need maps to a feature that EXISTS in the active
