@@ -1135,8 +1135,9 @@ static func _keep_the_word() -> void:
 #              a random lever until patience runs out; sign a final offer.
 #   cautious — the same meeting; sign the opening terms without a single push (the baseline).
 # The meeting is played identically by both, so the two runs are the same run up to the
-# table. Randomness here is EvDice (a hash of seed/day/ids), never a stream the game draws
-# from, and nothing acts before phase 3 — a VC preset is full_run until the door opens.
+# table. The lever draw comes from a probe-local generator seeded per table with an EvDice
+# hash of seed/day/ids — never a stream the game draws from — and nothing acts before
+# phase 3: a VC preset is full_run until the door opens.
 
 static func _play_the_hunt() -> void:
 	if _vc_done or not GameState.run_active or GameState.phase < 3 or TermSheetTableSystem.is_active():
