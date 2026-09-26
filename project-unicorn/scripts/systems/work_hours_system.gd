@@ -7,10 +7,9 @@ extends RefCounted
 #
 #   kişinin çalışma saati = çalışan istisnası ?? grubunun istisnası ?? şirket değeri
 #
-# Bu zincir YALNIZ `hours_for()` içinde yürür. §15.2 bunu bir tek-kaynak kuralı olarak
-# yazıyor: "Hiçbir sistem 'çalışan istisnası ?? grup ?? şirket' sırasını kendisi yürütmez;
-# hr.work_hours(kişi) çağırır." Bir yerde daha yürütülürse iki cevap doğar ve önizleme ile
-# tahakkuk ayrışır — bu modülün geçmişinde tam olarak bu şekilde bir yalan üretilmişti.
+# Bu zincir YALNIZ `_resolve()` içinde yürür. §15.2: "Hiçbir sistem 'çalışan istisnası ??
+# grup ?? şirket' sırasını kendisi yürütmez; hr.work_hours(kişi) çağırır." Bir yerde daha
+# yürütülürse iki cevap doğar ve önizleme ile tahakkuk ayrışır.
 #
 # NEDEN ÜÇ KAPSAM: ek mesai ücreti de moral çarpanı da KİŞİ BAŞINA işler. Tek bir şirket
 # ayarı oyuncuyu bütün ekibi aynı anda yakmaya ya da aynı anda dinlendirmeye zorlardı.
@@ -22,8 +21,7 @@ extends RefCounted
 # değiştirir: ofis tek saatte açılır, değişen kimin ne zaman çıktığıdır.
 #
 # EK MESAİ AYRI BİR MEKANİK DEĞİLDİR (§8.2). Aşan saatler bu modelin bir SONUCUDUR; ayrı
-# bir buton, blok ya da hız bonusu yoktur. Eski departman-bazlı blok sistemi hâlâ ağaçta
-# ve tüketicileri Faz 3'te buraya çevrilecek (planın 2a-bis silme tablosu).
+# bir buton, blok ya da hız bonusu yoktur.
 
 
 # ============================================================================
@@ -31,8 +29,7 @@ extends RefCounted
 # ============================================================================
 
 ## ZİNCİRİN TEK GÖVDESİ. İki giriş var (canlı motor durumu · taahhüt edilmemiş modal
-## taslağı) ama sıra BURADA, tek yerde yürüyor. §15.2'nin yasakladığı şey tam olarak sıranın
-## ikinci bir kopyasıydı: önizleme ile tahakkuk ayrışır ve modal bir yalan söylerdi.
+## taslağı) ama sıra yalnız burada yürür.
 static func _resolve(company: int, group_hours: Variant, person_hours: int) -> int:
 	if person_hours > 0:
 		return _clamp_hours(person_hours)
@@ -46,8 +43,7 @@ static func hours_for(c: Character) -> int:
 	if c == null:
 		return GameState.company_work_hours
 	# §2: kurucu şirket çalışma saatini devralır ve İSTİSNA ALAMAZ. Morali olmadığı için
-	# kişisel bir istisna hiçbir şey ifade etmez; çıktısı zaten şirket saatiyle orantılı
-	# değişir. Çalışma saatleri modalinde de görünmez (§8.5).
+	# kişisel bir istisna hiçbir şey ifade etmez. Çalışma saatleri modalinde de görünmez (§8.5).
 	if c.category == "founder":
 		return _clamp_hours(GameState.company_work_hours)
 	var group_id: String = group_of(c)
@@ -86,30 +82,19 @@ static func start_hour() -> int:
 	return clampi(GameState.company_start_hour, HRConstants.START_HOUR_MIN, HRConstants.START_HOUR_MAX)
 
 
-## Bitiş = başlangıç + kişinin devraldığı süre (§8.1). Gün taşması modulo ile sarılır —
-## 11:00 başlayan 11 saatlik bir gün 22:00'de biter, taşma yok, ama tavan ikisi de 11 olduğu
-## için 24'ü geçmesi mümkün değil; yine de sarma bir sonraki kalibrasyona karşı ucuz sigorta.
+## Bitiş = başlangıç + kişinin devraldığı süre (§8.1). Bugünkü tavanlarla 24'ü geçemez;
+## modulo bir sonraki kalibrasyona karşı sigortadır.
 static func end_hour_for(c: Character) -> int:
 	return (start_hour() + hours_for(c)) % 24
 
 
-## ŞİRKET PENCERESİ — TEK EV (§15.2). Kadro başlığındaki çip ve modalin Şirket satırı aynı
-## cümleyi çiziyor ve iki ayrı yerde hesaplanıyordu: `hr_tab` bitişi ELDE kuruyordu
-## (`(start_h + company_work_hours) % 24`) ve o satır `end_hour_for`'un varlığından habersizdi.
-## İki hesap = iki cevap; bu bölümün geçmişi tam olarak bunun üzerine kurulu.
-##
-## `hours` verilmezse şirket süresi okunur; verilirse TAAHHÜT EDİLMEMİŞ bir taslak
-## çizilebilsin diye o kullanılır.
+## ŞİRKET PENCERESİ — tek ev (§15.2): kadro başlığındaki çip ve modalin Şirket satırı
+## buradan okur. `hours`/`start` verilirse TAAHHÜT EDİLMEMİŞ bir taslak çizilir.
 static func company_window(hours: int = -1, start: int = -1) -> Dictionary:
 	var s: int = clampi(start, HRConstants.START_HOUR_MIN, HRConstants.START_HOUR_MAX) \
 		if start >= 0 else start_hour()
-	var h: int = _clamp_hours(hours) if hours >= 0 else _clamp_hours(GameState.company_work_hours)
-	return {
-		"start": s,
-		"end": (s + h) % 24,
-		"start_text": "%02d:00" % s,
-		"end_text": "%02d:00" % ((s + h) % 24),
-	}
+	var e: int = (s + _clamp_hours(hours if hours >= 0 else GameState.company_work_hours)) % 24
+	return {"start": s, "end": e, "start_text": "%02d:00" % s, "end_text": "%02d:00" % e}
 
 
 static func _clamp_hours(hours: int) -> int:
@@ -130,34 +115,20 @@ static func short_day_active(c: Character) -> bool:
 
 ## §8.5 başlık çipi: şirketten ayrılan KAPSAM sayısı (grup istisnaları + kişi istisnaları).
 static func override_count() -> int:
-	var n: int = GameState.group_work_hours_override.size()
-	for c in CharacterRegistry.get_employees():
-		if person_has_override(c):
-			n += 1
-	return n
+	return override_count_in(draft_state())
 
 
 ## §8.5 bedel listesinin OLGU satırı: kaç çalışan mesaide, kaç çalışan kısa günde.
 ## Kurucu sayılmaz — bordroda değil ve modalde görünmüyor (§2).
 static func counts() -> Dictionary:
-	var over: int = 0
-	var short_day: int = 0
-	for c in CharacterRegistry.get_active_employees():
-		var h: int = hours_for(c)
-		if HRConstants.is_overtime_hours(h):
-			over += 1
-		elif HRConstants.is_short_day_hours(h):
-			short_day += 1
-	return {"overtime": over, "short_day": short_day}
+	return counts_in(draft_state())
 
 
 # ============================================================================
 #  TAAHHÜT EDİLMEMİŞ TASLAK — §8.5 "maliyet TAAHHÜTTEN ÖNCE okunur"
 # ============================================================================
-# Modal artık TAAHHÜTLÜ: düzenlemeler yerel bir taslağa yazılır, `Uygula` onları motora
-# geçirir, `Vazgeç` atar. O yüzden her okuma iki kez gerekiyor — bir kez motorun durumundan,
-# bir kez taslaktan. İkinci bir çözümleyici YAZILMADI; aşağıdakiler `_resolve`'un ta
-# kendisini çağırıyor, yalnız girdiyi başka yerden alıyor.
+# Modal taahhütlüdür: düzenlemeler yerel bir taslağa yazılır, `Uygula` onları motora
+# geçirir, `Vazgeç` atar. Aşağıdakiler `_resolve`'u çağırır, yalnız girdiyi taslaktan alır.
 #
 # Taslak biçimi: {"company": int, "start": int, "groups": {gid: h}, "people": {id: h}}.
 # `people` ve `groups` YALNIZ istisnaları taşır; bir anahtarın YOKLUĞU "devralıyor" demektir.
@@ -225,13 +196,14 @@ static func counts_in(st: Dictionary) -> Dictionary:
 	return {"overtime": over, "short_day": short_day}
 
 
-## Taslağın günlük mesai tahakkuku. `daily_overtime_at`'in NİHAYET bir okuyucusu var:
-## seam tam olarak bunun için yazılmıştı ve bugüne dek sıfır çağıranla duruyordu.
+## §8.5 bedel listesinin DELTA satırı: taslağın günlük mesai tahakkuku. Maaş AYLIKTIR ve
+## kısa gün onu düşürmez (§8.3) — değişen yalnız mesai tahakkuku, ve modal bunu açıkça
+## yazar, yoksa oyuncu tasarruf bekler.
 static func daily_overtime_in(st: Dictionary) -> int:
-	var by_id: Dictionary = {}
+	var total: int = 0
 	for c in CharacterRegistry.get_active_employees():
-		by_id[c.id] = hours_in(st, c)
-	return daily_overtime_at(by_id)
+		total += HRConstants.overtime_pay_for_day(c.monthly_salary, hours_in(st, c))
+	return total
 
 
 ## `Uygula`. Taslağı motora TEK hamlede geçirir; yazıcıların hepsi kendi seam'leri
@@ -268,8 +240,8 @@ static func set_company_start_hour(hour: int) -> void:
 	EventBus.assignment_changed.emit("")
 
 
-## Bir grup istisnası, o gruba SONRADAN KATILAN herkesi de kapsar (§8.1) — bu, istisnanın
-## kişide değil grupta saklanmasının doğrudan sonucu ve bedava gelir.
+## Bir grup istisnası, o gruba SONRADAN KATILAN herkesi de kapsar (§8.1) — istisna kişide
+## değil grupta saklandığı için.
 static func set_group_hours(group_id: String, hours: int) -> void:
 	if not HRConstants.ROSTER_GROUPS.has(group_id):
 		push_error("[WorkHoursSystem] unknown roster group: '%s'" % group_id)
@@ -285,7 +257,7 @@ static func clear_group_hours(group_id: String) -> void:
 
 
 ## Kişisel istisna. §8.1: "Rolü değişen ve grup değiştiren çalışanın kişisel istisnası
-## KENDİSİYLE TAŞINIR" — istisna kişide saklandığı için bu da bedava gelir.
+## KENDİSİYLE TAŞINIR" — istisna kişide saklandığı için.
 static func set_person_hours(id: String, hours: int) -> void:
 	var c: Character = CharacterRegistry.get_character(id)
 	if c == null or c.category == "founder":
@@ -315,12 +287,9 @@ static func equalise_all() -> void:
 # ============================================================================
 
 ## Bir çalışanın BUGÜNKÜ ek mesai tahakkuku. §8.6: izindeki ya da eğitimdeki çalışan
-## üretmez ve ÜCRETLENDİRİLMEZ — "Şirket 11 saatteyken izne çıkan bir çalışan mesai ücreti
-## almaz." Kurucuya da ödenmez: bordroda yer almaz (§9.1).
+## üretmez ve ÜCRETLENDİRİLMEZ. Kurucuya da ödenmez: bordroda yer almaz (§9.1).
 static func overtime_pay_today(c: Character) -> int:
-	if c == null or c.category != "employee":
-		return 0
-	if c.status != HRConstants.STATUS_ACTIVE:
+	if c == null or c.category != "employee" or c.status != HRConstants.STATUS_ACTIVE:
 		return 0
 	return HRConstants.overtime_pay_for_day(c.monthly_salary, hours_for(c))
 
@@ -330,15 +299,4 @@ static func overtime_pay_accrued_today() -> int:
 	var total: int = 0
 	for c in CharacterRegistry.get_active_employees():
 		total += overtime_pay_today(c)
-	return total
-
-
-## §8.5 bedel listesinin DELTA satırı: bugünkü günlük burn ile verilen saat ayarındaki
-## günlük burn. Maaş AYLIKTIR ve kısa gün onu düşürmez (§8.3) — değişen yalnız mesai
-## tahakkuku, ve modal bunu açıkça yazar, yoksa oyuncu tasarruf bekler.
-static func daily_overtime_at(hours_by_id: Dictionary) -> int:
-	var total: int = 0
-	for c in CharacterRegistry.get_active_employees():
-		var h: int = int(hours_by_id.get(c.id, hours_for(c)))
-		total += HRConstants.overtime_pay_for_day(c.monthly_salary, h)
 	return total

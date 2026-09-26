@@ -1,32 +1,25 @@
 extends Control
 
 # ============================================================================
-# KİŞİSEL sekmesi — onaylı tasarım 10a.
+# KİŞİSEL sekmesi (10a). Üç blok, iki kolon: solda KURUCU kartı, sağda NEREDE DURUYORUM
+# ve NET SERVET.
 #
-# Üç blok, iki kolon: solda KURUCU kartı (flex 1.35), sağda 620px sabit kolonda
-# NEREDE DURUYORUM ve NET SERVET.
+# Bu dosya hiçbir sonucu hesaplamaz. Tek istisna biçimleme ve hisse aritmetiği — o da
+# finance_ozet_view._refresh_captable'ın birebir eşi: aynı soruya iki ekran iki cevap
+# vermemeli.
 #
-# Bu dosya hiçbir sonucu HESAPLAMAZ. Tek istisna biçimleme (yüzde, para) ve hisse
-# aritmetiği — o da finance_ozet_view._refresh_captable'ın BİREBİR eşi, çünkü aynı
-# soruya iki farklı cevap veren iki ekran, oyuncunun gözünde oyunun kendisinin
-# tutarsız olması demektir.
-#
-# DEĞERLEME YOK ve UYDURULMUYOR. Normal oyunda canlı bir şirket değerlemesi yok:
-# GameState.run_valuation_m yalnız term sheet imzasında yazılıyor ve koşu o karede
-# bitiyor (endings_system.gd'nin kendi yorumu bunu açıkça söylüyor). ZİRVE DEĞER için
-# hiçbir seam yok. Tasarımın kendisi de üç hücreyi "—" çiziyor ve dürüst bir satırla
-# kapatıyor; ekran onu yapıyor. Değerleme seam'i bölüm 09'un işi.
+# DEĞERLEME UYDURULMUYOR: normal oyunda canlı şirket değerlemesi yok (run_valuation_m
+# yalnız term sheet imzasında yazılıyor ve koşu o karede bitiyor), ZİRVE DEĞER için de
+# seam yok. Üç hücre "—" ve dürüst bir notla kapanıyor.
 # ============================================================================
 
-const RIGHT_COL_WIDTH := 620   # tasarım genişliği (1920'de); artık ORANİ belirler
-const RIGHT_COL_MIN := 430     # merdivenin tepesinde inebileceği taban
+const RIGHT_COL_MIN := 430     # sağ kolonun dar viewport'ta inebileceği taban
 const PORTRAIT_SIZE := Vector2(150, 186)
 ## §2.6'nın nötr huy yuvası — çalışan trait ikonuyla (28×28) aynı ailede, bir tık küçük.
 const TRAIT_SLOT_SIZE := Vector2(26, 26)
 const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
 
 var _signals: Array = []
-var _root: VBoxContainer = null
 
 
 func _ready() -> void:
@@ -61,29 +54,25 @@ func _build() -> void:
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		margin.add_theme_constant_override(side, 16)
 	add_child(margin)
-	_root = VBoxContainer.new()
-	_root.add_theme_constant_override("separation", 16)
-	margin.add_child(_root)
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 16)
+	margin.add_child(root)
 
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder == null:
-		_root.add_child(UiFactory.make_label(tr("ODA_PAGE_PLACEHOLDER"), &"CaptionMuted"))
+		root.add_child(UiFactory.make_label(tr("ODA_PAGE_PLACEHOLDER"), &"CaptionMuted"))
 		return
 
-	_root.add_child(_header(founder))
+	root.add_child(_header())
 
 	var cols := HBoxContainer.new()
 	cols.add_theme_constant_override("separation", 22)
-	# İÇERİĞE GÖRE: kartlar sayfayı doldurmaya çalışmaz. 10a'da sol kartın altında hava
-	# var ve o hava bilinçli — ileride rakip/ilişki bloğu oraya gelecek.
+	# İçeriğe göre: sol kartın altındaki hava bilinçli (10a).
 	cols.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	_root.add_child(cols)
+	root.add_child(cols)
 
-	# İKİ KOLON DA ESNER, ORAN SABİT (2026-08-21). Eskiden sağ kolon `SIZE_FILL` +
-	# 620 asgari genışlikti, yani TEK PİKSEL geri vermiyordu; %110'da mantıksal
-	# viewport 1920'den 1745'e İNER (content_scale_factor büyütmez, KÜÇÜLTÜR) ve
-	# açığın tamamı sol karta binerken sağ kolon ekranın dışına taşıyordu.
-	# 2.0 : 1.0 — 1920'de 1244:622, tasarımın 1246:620'siyle pratikte aynı.
+	# İki kolon da esner, oran sabit (2:1 — 1920'de tasarımın 1246:620'si). Ölçek büyüyünce
+	# mantıksal viewport daralır; sabit genişlikli sağ kolon ekran dışına taşardı.
 	var left := _founder_card(founder)
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.size_flags_stretch_ratio = 2.0
@@ -91,8 +80,6 @@ func _build() -> void:
 
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 22)
-	# Asgari, tasarım genişliği DEĞİL bir TABAN: merdivenin tepesinde daralmasına
-	# izin veriyoruz, ama okunamayacak kadar değil.
 	right.custom_minimum_size = Vector2(RIGHT_COL_MIN, 0)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.size_flags_stretch_ratio = 1.0
@@ -103,7 +90,7 @@ func _build() -> void:
 
 # --- başlık ------------------------------------------------------------------
 
-func _header(founder: Character) -> Control:
+func _header() -> Control:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 14)
 	head.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -111,17 +98,11 @@ func _header(founder: Character) -> Control:
 	head.add_child(UiFactory.make_label(tr("PER_HEADER_META").format({
 		"origin": UiTokens.tr_upper(_origin_label()),
 		"phase": UiTokens.tr_upper(GameState.phase_display_name(GameState.phase)),
-		"n": _tenure_days(founder),
+		"n": _tenure_days(),
 	}), &"TitleRowSummary"))
 	var pad := Control.new()
 	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(pad)
-	# BURADA ESKİDEN "Günlük görev ataması: Ekip → Görevler" YAZIYORDU ve o satır oyuncuyu
-	# kurucunun GÖRÜNMEDİĞİ bir sayfaya yolluyordu (§2: "Kurucu Görevler matrisinde
-	# görünmez") — yapılamayacak bir işin tarifi. §2.5'in sabit içerik listesinde bir
-	# yönlendirme satırı yok. Yerini alan §2.5 satırı (mevcut görev durumu) kartın alt
-	# barında duruyor: başlığın sağ ucu sağ sütunun kartlarıyla çakışıyor, ve orada duran
-	# bir satır ilk çekimde tam olarak öyle kayboldu.
 	return head
 
 
@@ -131,7 +112,7 @@ func _origin_label() -> String:
 
 
 ## Kıdem = koşunun kaçıncı günü. Kurucunun hire_day'i yok (işe alınmadı, kurdu).
-func _tenure_days(_founder: Character) -> int:
+func _tenure_days() -> int:
 	return maxi(GameState.day, 1)
 
 
@@ -160,8 +141,8 @@ func _founder_card(founder: Character) -> Control:
 	# ad + köken · kıdem
 	var name_block := VBoxContainer.new()
 	name_block.add_theme_constant_override("separation", 6)
-	# GameState.founder_name onboarding'de yazılır ve debug koşularında boş olabilir;
-	# Character her zaman bir ad taşıyor, o yüzden kart asla adsız çizilmez.
+	# founder_name onboarding'de yazılır ve debug koşularında boş olabilir; Character her
+	# zaman bir ad taşıyor, kart asla adsız çizilmez.
 	var shown_name: String = GameState.founder_name.strip_edges()
 	if shown_name == "":
 		shown_name = founder.character_name
@@ -172,15 +153,12 @@ func _founder_card(founder: Character) -> Control:
 		UiTokens.tr_upper(_origin_label()), &"RowMeta", UiTokens.CREAM_DIM))
 	meta.add_child(HRUiShared._v_hairline(11))
 	meta.add_child(UiFactory.make_label(
-		tr("PER_TENURE").format({"n": _tenure_days(founder)}), &"RowMeta", UiTokens.CREAM_DIM))
+		tr("PER_TENURE").format({"n": _tenure_days()}), &"RowMeta", UiTokens.CREAM_DIM))
 	name_block.add_child(meta)
 	right.add_child(name_block)
 
 	# altı alan + hairline + Liderlik + Karizma, hepsi tek yıldız gramerinde
 	var skills := HBoxContainer.new()
-	# 24 → 16: sekiz sütunun arasındaki boşluk merdivenin tepesinde geri verilen
-	# ilk şey. İki değer de tasarımdan değil ölçümden geliyor ve %100'de fark
-	# görünmüyor — dar viewport'ta görünüyor.
 	skills.add_theme_constant_override("separation", 16)
 	skills.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for area_key in HRConstants.AREAS:
@@ -194,8 +172,6 @@ func _founder_card(founder: Character) -> Control:
 			int(founder.role_stats.get(String(skill_key), 0)), 15))
 	right.add_child(skills)
 
-	# §2.5 · HUY ALANI: "sekiz kurucu huyu için AYRILMIŞ, şu an NÖTR GLİFTE ve BAĞLANMAMIŞ."
-	# Sekiz yuva, kurucunun taşıdığından bağımsız — "ayrılmış" tam olarak bunu söylüyor.
 	right.add_child(_founder_trait_area())
 
 	col.add_child(HRUiShared.hairline())
@@ -203,28 +179,32 @@ func _founder_card(founder: Character) -> Control:
 	return card
 
 
-## Liderlik ve Karizma için Title Case etiket. FounderConstants.skill_label KÜÇÜK harfli
-## oran parçaları veriyor ("+%15 satış"), HRConstants.area_label ise sütun başlığı registeri
-## — burada ikincisi doğru, ama Karizma bir ALAN değil, o yüzden kendi anahtarından okunur.
+## Karizma bir ALAN değil, kendi anahtarından okunur; FounderConstants.skill_label oran
+## parçası verir ("+%15 satış"), etiket değil.
 func _founder_skill_label(skill_key: String) -> String:
 	if skill_key == FounderConstants.SKILL_CHARISMA:
 		return tr("PER_CHARISMA")
 	return HRConstants.area_label(skill_key)
 
 
-func _portrait() -> Control:
+## Portre çerçevesi ve huy yuvası: hairline kenarlı boş kare.
+func _frame(min_size: Vector2) -> PanelContainer:
 	var frame := PanelContainer.new()
-	frame.custom_minimum_size = PORTRAIT_SIZE
-	frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	frame.custom_minimum_size = min_size
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = UiTokens.SURFACE_FRAME
 	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
 	sb.border_color = UiTokens.SEPARATOR
 	sb.set_corner_radius_all(UiTokens.RADIUS_S)
 	frame.add_theme_stylebox_override("panel", sb)
+	return frame
 
+
+func _portrait() -> Control:
+	var frame := _frame(PORTRAIT_SIZE)
+	frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	# Kurucunun portresi Character.portrait_path'te DEĞİL: onboarding'de seçilen id
-	# GameState.founder_portrait'te duruyor ve dosya yolunu FounderConstants çözüyor.
+	# GameState.founder_portrait'te, dosya yolunu FounderConstants çözüyor.
 	var path: String = FounderConstants.portrait_path(GameState.founder_portrait)
 	if path != "" and ResourceLoader.exists(path):
 		var tex := TextureRect.new()
@@ -237,15 +217,9 @@ func _portrait() -> Control:
 	return frame
 
 
-## §2.6 · KURUCU HUYLARI PARK EDİLDİ. "Sekiz adet, ŞU AN NÖTR GLİFTE, BAĞLANMAMIŞ."
-##
-## Sayfa eskiden her huyu ADIYLA ve TEK SATIR ETKİSİYLE çiziyordu — ve o etkileri hiçbir
-## sistem tüketmiyor (FounderConstants.TRAITS'in kendi başlığı bunu yazıyor). Yani ekran iki
-## dilde birden var olmayan bir mekaniği vaat ediyordu; §0'ın "kaynak dosya yalan söylemez"
-## kuralının ekrandaki karşılığı budur. Ad ve etki, huylar BAĞLANDIĞINDA geri gelir.
-##
-## Yuva sayısı FounderConstants.TRAITS'ten okunur, sabit 8 yazılmaz: katalog tek kaynak
-## (§15.2) ve bir gün dokuzuncusu yazılırsa bu satırın yalan söylemesi mümkün olmamalı.
+## §2.5 / §2.6 · KURUCU HUYLARI: ayrılmış, şu an NÖTR GLİFTE ve BAĞLANMAMIŞ. Huy etkilerini
+## hiçbir sistem tüketmediği için ad ve etki çizilmez. Yuva sayısı katalogdan okunur
+## (§15.2). Nötr glif: ikon yok (hangi huy olduğunu ima ederdi), renk yok (kutup ima ederdi).
 func _founder_trait_area() -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
@@ -253,38 +227,16 @@ func _founder_trait_area() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	for _i in FounderConstants.TRAITS.size():
-		row.add_child(_trait_slot())
+		row.add_child(_frame(TRAIT_SLOT_SIZE))
 	box.add_child(row)
 	return box
-
-
-## Nötr glif: boş bir yuva çerçevesi. İkon YOK (bir ikon hangi huy olduğunu ima ederdi),
-## renk YOK (renk bir kutup ima ederdi — §6.1 onu zaten emekli etti).
-func _trait_slot() -> Control:
-	var slot := PanelContainer.new()
-	slot.custom_minimum_size = TRAIT_SLOT_SIZE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = UiTokens.SURFACE_FRAME
-	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	sb.border_color = UiTokens.SEPARATOR
-	sb.set_corner_radius_all(UiTokens.RADIUS_S)
-	slot.add_theme_stylebox_override("panel", sb)
-	return slot
 
 
 func _founder_footer(founder: Character) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 
-	# §5.1 TEK BAR, ve bar HEP 0–100 görünür; değişen arkasındaki EŞİKTİR. Alan başına
-	# sayaçlar emekli ve artık yazılmıyor — bu blok onları okumaya devam ettiği için kurucunun
-	# çubuğu sonsuza dek %0 gösteriyordu.
-	var value: int = founder.experience_raw
-	var threshold: int = maxi(founder.experience_threshold, 1)
-	var pct: int = int(round(CharacterRegistry.experience_ratio(founder) * 100.0))
-
-	# §2.5 · MEVCUT GÖREV DURUMU — §2.3'ün YEDİ durumundan biri, TEK SATIR. §2.5 onu eğitim
-	# eyleminin yanında sayıyor, ve alt bar zaten o eylemin barı: "ne yapıyor · ne kadar
+	# §2.5 · MEVCUT GÖREV DURUMU eğitim eyleminin yanında: "ne yapıyor · ne kadar
 	# yaklaştı · gönder" tek satırda okunuyor.
 	var task_row := HBoxContainer.new()
 	task_row.add_theme_constant_override("separation", 10)
@@ -301,9 +253,11 @@ func _founder_footer(founder: Character) -> Control:
 	bar.show_percentage = false
 	bar.custom_minimum_size = Vector2(120, 5)
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bar.max_value = threshold
-	bar.value = value
+	# §5.1 tek bar; değişen arkasındaki eşiktir.
+	bar.max_value = maxi(founder.experience_threshold, 1)
+	bar.value = founder.experience_raw
 	exp_row.add_child(bar)
+	var pct: int = int(round(CharacterRegistry.experience_ratio(founder) * 100.0))
 	exp_row.add_child(UiFactory.make_label(Fmt.percent(pct, 0), &"RowMeta", UiTokens.INK_MUTED))
 	row.add_child(exp_row)
 
@@ -320,28 +274,16 @@ func _founder_footer(founder: Character) -> Control:
 	return row
 
 
-func _experience_area(founder: Character) -> String:
-	if not founder.assigned_jobs.is_empty():
-		var assigned: String = String(founder.assigned_jobs[0])
-		if HRConstants.AREAS.has(assigned):
-			return assigned
-	return HRConstants.AREA_PRODUCT
-
-
+## PanelLayer'a monte olur (gerekçe hr_tab._mount_panel_modal).
 func _open_training(character_id: String) -> void:
 	var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
 	if layer == null:
 		push_error("[PersonalTab] PanelLayer bulunamadı — eğitim modalı mount edilemiyor")
 		return
-	var scene: PackedScene = load(TRAINING_MODAL) as PackedScene
-	if scene == null:
-		return
-	var modal: Control = scene.instantiate() as Control
-	layer.add_child(modal)
-	if modal.has_signal("state_changed"):
-		modal.state_changed.connect(_on_state_changed)
-	if modal.has_method("populate"):
-		modal.populate(character_id)
+	var modal: Node = (load(TRAINING_MODAL) as PackedScene).instantiate()
+	layer.add_child(modal)   # önce add_child, sonra populate (ev konvansiyonu)
+	modal.connect("state_changed", _on_state_changed)
+	modal.call("populate", character_id)
 
 
 # --- sağ üst: NEREDE DURUYORUM -----------------------------------------------
@@ -385,23 +327,15 @@ func _where_i_stand() -> Control:
 	var goal_col := VBoxContainer.new()
 	goal_col.add_theme_constant_override("separation", 6)
 	goal_col.add_child(UiFactory.make_label(tr("PER_PHASE_GOAL"), &"ColumnHeader", UiTokens.INK_DIM))
-	goal_col.add_child(UiFactory.make_label(_goal_line(), &"RowName"))
+	var goal_key: String = {2: "PER_GOAL_TRACTION", 3: "PER_GOAL_SERIES_A"}.get(
+		GameState.phase, "PER_GOAL_BOOTSTRAP")
+	goal_col.add_child(UiFactory.make_label(tr(goal_key), &"RowName"))
 	goal.add_child(goal_col)
 	var pad := MarginContainer.new()
 	pad.add_theme_constant_override("margin_top", 12)
 	pad.add_child(goal)
 	col.add_child(pad)
 	return card
-
-
-func _goal_line() -> String:
-	match GameState.phase:
-		2:
-			return tr("PER_GOAL_TRACTION")
-		3:
-			return tr("PER_GOAL_SERIES_A")
-		_:
-			return tr("PER_GOAL_BOOTSTRAP")
 
 
 # --- sağ alt: NET SERVET ------------------------------------------------------
@@ -414,15 +348,12 @@ func _net_worth() -> Control:
 	card.add_child(col)
 	col.add_child(HRUiShared.section_header(tr("PER_NET_WORTH"), true))
 
-	# HİSSE: finance_ozet_view._refresh_captable'ın birebir aritmetiği.
-	var investors: int = GameState.get_investor_equity_pct()
-	# Çalışan hissesinin motorda kaynağı yok (finance_ozet_view._refresh_captable'daki
-	# aynı not): `Character.equity_pct` silindi, opsiyon havuzu kurulmadı.
-	var founder_pct: int = maxi(0, 100 - investors)
+	# finance_ozet_view._refresh_captable'ın birebir aritmetiği. Çalışan hissesinin motorda
+	# kaynağı yok (opsiyon havuzu kurulmadı).
+	var founder_pct: int = maxi(0, 100 - GameState.get_investor_equity_pct())
 
 	col.add_child(_kv(tr("PER_EQUITY"), Fmt.percent(founder_pct, 0), true))
-	# DEĞERLEME: normal oyunda yok. run_valuation_m yalnız imzada yazılıyor ve koşu o
-	# karede bitiyor; ZİRVE DEĞER'in hiçbir seam'i yok. Üçü de dürüstçe tire duruyor.
+	# Değerleme seam'i yok (dosya başı); üçü de dürüstçe tire.
 	col.add_child(_kv(tr("PER_VALUATION"), "—", false))
 	col.add_child(_kv(tr("PER_NET_WORTH"), "—", false))
 	col.add_child(_kv(tr("PER_PEAK_VALUE"), "—", false))

@@ -1,72 +1,32 @@
 class_name FounderConstants
 extends RefCounted
 
-# THE single constants block for founder identity: skills, allocation rules, traits,
-# origins, portraits, logo styles. EVERY number here is a working placeholder — the
-# calibration pass (last, one session) tunes this file and nothing else.
+# Founder identity constants: skills, allocation rules, traits, origins, portraits, logo
+# styles. Every number here is a working placeholder for the calibration pass.
 #
-# SKILL-RENAME ledger, second entry (2026-08-21; the areas model, rev 11 §4/§3).
-#
-# §3 gives the founder's absence from the Ekip page this reason: "kurucunun her
-# alanda puanı var". So the founder stopped being a different creature — he now carries
-# THE SAME six areas as every employee, plus Liderlik (which §4.2 puts on everyone),
-# plus Karizma, which is the one number that stays founder-only.
-#
-#   tech        -> SPLIT across the technical areas by meaning: build speed and the
-#                  iteration ceilings read "engineering" / "product" / "design" / "qa"
-#                  exactly where the role formulas now read them.
-#   sales       -> "sales" (the AREA of the same name; same reads, same value)
-#   influence   -> "charisma" — Karizma comes BACK under its own name. §4 names it,
-#                  and ch. 02 §4 defines it (pitch/fundraising odds and terms, plus
-#                  scandal/PR outcomes). It therefore LEAVES the retired list below.
-#   negotiation -> RETIRED. The six areas have no negotiation, so the one formula that
-#                  read it — the term-sheet dilution lever — is bound to Karizma. That is
-#                  the single binding the Ekip GDD does not itself authorize; it is one line in
-#                  PitchConstants.LEVER_SKILL and belongs to ch. 09's turn.
-#   leadership  -> unchanged key, but no longer founder-only.
-#
-# First entry (2026-07-16) — the 4-skill system became 5 skills:
-#   tech -> tech · markets -> SPLIT into "sales" + "negotiation" ·
-#   charisma -> leadership (identity) · politics -> influence
-#
-# Old keys must never be read again — GameState.get_founder_skill push_errors on
-# OLD_SKILLS so a stale read screams in every log instead of silently returning 0.
+# The founder carries the same six areas as every employee (§3: "kurucunun her alanda puanı
+# var"), plus Liderlik (§4.2, everyone) and Karizma (founder-only; ch. 02 §4).
 
 # Six areas (HRConstants.AREAS, same ids, SAME RULER) + Liderlik + Karizma.
 const SKILLS := ["product", "design", "engineering", "qa", "sales", "customer_success",
 	"leadership", "charisma"]
 const SKILL_CHARISMA := "charisma"
-# "charisma" is NOT here any more — it came back with its own meaning (see the ledger).
+# Retired keys: GameState.get_founder_skill push_errors on these so a stale read screams
+# instead of silently returning 0.
 const OLD_SKILLS := ["markets", "politics", "tech", "negotiation", "influence"]
 
 # --- Onboarding allocation ---
 const POINT_POOL := 6        # onboarding skill points; ALL must be spent (İleri gated).
-                             # Erdem 2026-07-16: 8 over-equipped the early game — 6 forces
-                             # a sharper identity (two strong suits, real gaps).
-                             # HELD AT 6 THROUGH THE AREA MIGRATION ON PURPOSE: with the
-                             # per-skill cap also unchanged at 3, a founder who used to put
-                             # 3 in `tech` now puts 3 in `engineering` and every formula
-                             # that read tech reads the same number. Behaviour does not
-                             # drift. But 6 points now spread over EIGHT columns instead of
-                             # five, so the founder has more true zeros — [WORKING], and a
-                             # real candidate for the calibration pass.
-const ONBOARDING_CAP := 3    # per-skill max at creation (DAĞITIM biriminde, cetvelde değil)
+const ONBOARDING_CAP := 3    # per-skill max at creation (dağıtım biriminde, cetvelde değil)
 
 ## TEK CETVEL (§2.4 + §4.1 + §5.3): kurucu da çalışan da 0–10'da, iki puan bir yıldız.
-##
-## Eskiden 5'ti ve o rakam ZATEN KURGUYDU: tek okuyucusu onboarding'in segment çubuğuydu.
-## Eğitim ödülü `HRConstants.AREA_MAX`'e (10) kelepçeliyor, `can_train` 10'a bakıyor, ve
-## kurucu için bir değer aralığı doğrulayıcısı hiç olmadı — yani kurucu bugün de yasal
-## olarak 10'a çıkabiliyordu. Değişen cetvel değil; değişen, ONBOARDING'in ve katsayıların
-## motorun zaten kullandığı cetvelle uzlaşması.
-##
-## DAĞITIM BİRİMİ AYRI KALIR. Oyuncu hâlâ POINT_POOL kadar puanı ONBOARDING_CAP tavanıyla
-## dağıtır; ikiye katlama YAZMA ANINDA olur (GameState._build_founder). Yani doğan kurucu
-## en fazla 6/10 taşır — bu bilinçli ve onboarding turunun kalibrasyon konusudur.
+## Dağıtım birimi ayrı kalır: oyuncu POINT_POOL puanı ONBOARDING_CAP tavanıyla dağıtır,
+## cetvele çevirme yazma anında olur (GameState._build_founder), yani doğan kurucu en fazla
+## 6/10 taşır.
 const SKILL_CEILING := HRConstants.AREA_MAX
 
-## Dağıtım biriminden cetvele geçişin TEK evi. Bir yerde daha çarpılırsa kurucu sessizce
-## kareye çıkar; o yüzden çarpan burada adıyla duruyor ve çağıranı tektir.
+## Dağıtım biriminden cetvele geçişin tek evi; bir yerde daha çarpılırsa kurucu sessizce
+## kareye çıkar.
 const RULER_SCALE := 2
 
 
@@ -92,8 +52,7 @@ const TRAITS := [
 	{"id": "lone_wolf", "polarity": "negative", "name_key": "TRAIT_LONE_WOLF_NAME", "effect_key": "TRAIT_LONE_WOLF_EFFECT"},
 ]
 
-# Self-Made opening cash — single home; the origin catalog below and GameState's
-# defaults + initialize_run fallback all read it.
+# Self-Made opening cash; the origin catalog and GameState's defaults both read it.
 const STARTING_CASH := 10000
 
 # Origin catalog. starting_cash is a working placeholder. reserved_flags are SET by
@@ -116,8 +75,7 @@ const ORIGINS := [
 		"locked_note_key": "LOCK_SOON"},
 ]
 
-# --- Portraits (onboarding Page 1) — data-driven grid. The mockup shows 12; 11 assets
-# exist today. When founder_12.webp lands in assets/art/founders/, append its id here.
+# --- Portraits (onboarding Page 1) — data-driven grid; one id per asset in PORTRAIT_DIR.
 const PORTRAIT_DIR := "res://assets/art/founders/"
 const PORTRAIT_IDS := [
 	"founder_01", "founder_02", "founder_03", "founder_04", "founder_05", "founder_06",
@@ -132,13 +90,9 @@ const LOGO_STYLES := [
 	{"id": "serious", "name_key": "LOGO_STYLE_SERIOUS", "emblem": "square_fill"},
 ]
 
-# --- Skill display keys (localization/strings.csv; TR canonical + EN literary) ---
-# Lowercase odds fragments ("temel %X · +%Y satış") — the single label home,
-# delegated to by PitchConstants.skill_label so existing callers stay diff-free.
-# LOWERCASE ODDS FRAGMENTS, and that is why this table did NOT collapse into
-# HRConstants.area_label when the founder moved onto the areas. Two different registers:
-# the area's own label is Title Case for a column header ("Satış"), while these are inline
-# sentence fragments ("temel %35 · +%15 satış"). One id, two registers, two rows.
+# --- Skill display keys (localization/strings.csv) ---
+# Lowercase inline odds fragments ("temel %35 · +%15 satış"), a different register from the
+# Title Case area label (HRConstants.area_label), hence a separate table.
 const SKILL_LABEL_KEYS := {
 	"product": "SKILL_LABEL_PRODUCT", "design": "SKILL_LABEL_DESIGN",
 	"engineering": "SKILL_LABEL_ENGINEERING", "qa": "SKILL_LABEL_QA",
@@ -168,16 +122,6 @@ static func skill_label(skill_name: String) -> String:
 	if not SKILL_LABEL_KEYS.has(skill_name):
 		return skill_name
 	return TranslationServer.translate(SKILL_LABEL_KEYS[skill_name])
-
-
-## The exact-key shape a founder's role_stats must hold, all zeros. `_build_founder`
-## overlays the onboarding allocation onto this, so a skill the player left alone is 0
-## rather than missing — which is what keeps the key lock satisfiable.
-static func default_founder_skills() -> Dictionary:
-	var out: Dictionary = {}
-	for skill_key in SKILLS:
-		out[String(skill_key)] = 0
-	return out
 
 
 ## Points left to spend for the KALAN PUAN counter. Only canonical keys count.
@@ -219,13 +163,9 @@ static func validate_traits(trait_ids: Array) -> bool:
 			pos += 1
 		else:
 			neg += 1
-	if pos < 1 or pos > TRAIT_MAX_POSITIVE:
+	if pos < 1 or pos > TRAIT_MAX_POSITIVE or neg > TRAIT_MAX_NEGATIVE:
 		return false
-	if neg > TRAIT_MAX_NEGATIVE:
-		return false
-	if pos == TRAIT_MAX_POSITIVE and neg != 1:
-		return false
-	return true
+	return pos < TRAIT_MAX_POSITIVE or neg == 1
 
 
 static func trait_by_id(trait_id: String) -> Dictionary:

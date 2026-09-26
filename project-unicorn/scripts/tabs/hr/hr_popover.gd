@@ -1,28 +1,14 @@
 class_name HRPopover
 extends Control
 
-# ============================================================================
-# Bağlı açılır panel (§9.2 · onaylı Kare 6'nın zam kutusu, departman başlığının mesai paneli).
+# Bağlı açılır panel (§9.2): zam kutusu, mesai paneli, kişi menüsü.
 #
-# Kod tabanında popover / anchored panel / Popup* düğümü YOK — bu dosya o eksik
-# ilkeli kuruyor. İki tuzağı birlikte aşmak zorunda:
-#   1. CenterViewport.clip_contents = true → sekmenin içine konan panel viewport
-#      kenarında KIRPILIR.
-#   2. Sekme düğümü move_child(...,0) ile en alta itiliyor (BuildHUD üstte kalsın
-#      diye) → sekme içindeki panel sürüklenebilir HUD'ın ALTINDA çizilir.
-# Çözüm: GameShell/ModalLayer'a (CanvasLayer, layer = 10) monte olmak. O katmanın
-# dönüşümü yok, dolayısıyla çapa düğümün global_position/size değerleri birebir
-# aynı koordinat uzayında okunur.
+# GameShell/PanelLayer'a monte olur, sekmenin içine değil: CenterViewport kırpar
+# (clip_contents) ve sekme düğümü BuildHUD'ın altında çizilir. PanelLayer'ın dönüşümü
+# yok, dolayısıyla çapanın global_position/size değerleri aynı uzayda okunur.
 #
-# Kapanma: ESC (proje konvansiyonu ui_cancel) ve dışarı tıklama. Aynı anda tek
-# popover: mount() eskisini kapatır.
-#
-# process_mode = ALWAYS: saat duruyorken de tıklanabilir olmalı (pause-gated UI,
-# bilinen ajan tuzağı). Popover saate DOKUNMAZ — bu kod tabanında sekmeler pause
-# etmez, ve TimeManager.resume_if_paused'ın üretimde hiç çağıranı yok.
-# ============================================================================
-
-signal closed
+# Kapanma: ESC (ui_cancel) ve dışarı tıklama. Aynı anda tek popover: mount() eskisini kapatır.
+# process_mode = ALWAYS: saat duruyorken de tıklanabilir olmalı.
 
 const LIFT := 6.0               # panel çapanın üst kenarından bu kadar yukarı başlar
 const EDGE_MARGIN := 12.0       # ekran kenarına en az bu kadar yaklaşır
@@ -35,13 +21,9 @@ var _anchor_rect: Rect2 = Rect2()
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	# ANCHORS + OFFSETS: yalnız set_anchors_preset çağrıldığında bu kök (bir CanvasLayer'ın
-	# çocuğu) size = (0,0) bildiriyordu ve _place'in kelepçesi her şeyi EDGE_MARGIN'e
-	# çöküyordu (popover sol üst köşede açılıyordu). Offset'ler de kuruluyor, ve ekran
-	# ölçüsü ayrıca get_viewport_rect()'ten okunuyor — kökün kendi size'ına güvenilmiyor.
+	# Offset'ler de kurulmazsa CanvasLayer çocuğu olan kök size = (0,0) bildirir.
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# Kök tüm ekranı kaplar ve tıklamayı YUTAR: dışarı-tıklama kapatması böyle çalışır,
-	# ayrıca arkadaki karta yanlışlıkla tıklanması engellenir.
+	# Kök tüm ekranı kaplar ve tıklamayı yutar: dışarı-tıklama kapatması böyle çalışır.
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_panel = PanelContainer.new()
 	_panel.theme_type_variation = &"CardPanel"
@@ -53,9 +35,8 @@ func _ready() -> void:
 	_panel.add_child(_body)
 
 
+## İçeriği çağıran doldurur, mount'tan SONRA (_ready referansları ancak o zaman dolu).
 func body() -> VBoxContainer:
-	# İçeriği çağıran doldurur — add_child SONRASI (ev konvansiyonu:
-	# populate-after-add_child; _ready referansları ancak o zaman dolu).
 	return _body
 
 
@@ -72,17 +53,12 @@ func open_at(anchor: Control) -> void:
 
 
 func _place() -> void:
-	if _panel == null or not is_instance_valid(_panel):
-		return
 	var screen: Vector2 = get_viewport_rect().size
 	var panel_size: Vector2 = _panel.get_combined_minimum_size()
 	panel_size.x = maxf(panel_size.x, float(MIN_WIDTH))
-	# YATAY — TEK KURAL (R1): panelin SAĞ KENARI çapanın SAĞ KENARIYLA hizalı.
-	# Dal yok, ikinci konum yok. Ölçü ÇAPAYA göre alınıyor, viewport'a göre değil:
-	# ölçek merdiveni de defterin yatay kayması da çapayı taşır, panel onunla gider.
+	# Tek kural: panelin sağ kenarı çapanın sağ kenarıyla hizalı. Kelepçe bir konum
+	# seçimi değil korkuluk: çapa dar viewport'ta taşsa da panel ekranda kalır.
 	var x: float = _anchor_rect.position.x + _anchor_rect.size.x - panel_size.x
-	# Ekran kelepçesi KALIYOR ve tek güvence o: çapa dar bir viewport'ta sola taşarsa
-	# panel yine de ekranda kalır. Kelepçe bir KONUM SEÇİMİ değil, bir korkuluktur.
 	x = clampf(x, EDGE_MARGIN, maxf(EDGE_MARGIN, screen.x - panel_size.x - EDGE_MARGIN))
 	# Dikey: çapanın üstüyle hizalı, ekrana kelepçeli.
 	var y: float = clampf(_anchor_rect.position.y - LIFT,
@@ -90,12 +66,6 @@ func _place() -> void:
 	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_panel.position = Vector2(x, y)
 	_panel.size = panel_size
-
-
-## `_place_notch` / `_draw_notch` EMEKLİ (R1, 2026-08-22). Çentik, çapanın YANINDA
-## duran ve ona geri işaret eden bir panelin işaretiydi. Panel artık çapanın ÜSTÜNE
-## sağ-hizalı oturuyor; işaret edecek bir yer yok. Gizlenmedi, SİLİNDİ — gizli
-## duran ikinci bir konum kodu, tetikleyiciye dokunan bir sonraki elde geri gelir.
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -111,19 +81,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func close() -> void:
-	closed.emit()
 	queue_free()
 
 
 # --- Mount ------------------------------------------------------------------
 
+## Açık popover'ı kapatır, yenisini monte edip döndürür. Sıra: mount → body()'yi doldur →
+## open_at(anchor). ModalLayer değil: orada game_shell Space/1-4'ü yutar ve bir panel
+## açmak saati durdurma yeteneğini elden alırdı. Popover bir panel, karar anı değil.
 static func mount(anchor: Control) -> HRPopover:
-	# PanelLayer'ı bulur, açık olan popover'ı kapatır, yenisini monte edip döndürür.
-	# Çağıran sırası: mount → body()'yi doldur → open_at(anchor).
-	#
-	# ModalLayer DEĞİL (bkz. hr_tab._open_atlas): oradayken game_shell'in 2. bekçisi
-	# Space/1-4'ü yutuyordu, yani bir mesai panelini açmak saati durdurma yeteneğini
-	# sessizce elden alıyordu. Popover bir panel, bir karar anı değil.
 	if anchor == null or not anchor.is_inside_tree():
 		return null
 	var layer: Node = anchor.get_tree().get_root().find_child("PanelLayer", true, false)

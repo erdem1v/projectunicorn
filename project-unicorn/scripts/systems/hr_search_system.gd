@@ -3,71 +3,45 @@ extends RefCounted
 
 # Atlas Seçme & Yerleştirme — the hiring search (§10).
 #
-# Dispatch slot: ticked DAILY from HRSystem.daily_tick (slot 3), third of that file's seven HR
-# steps. It runs after the two leave steps (a returning employee must already read `active`
-# before anything counts the roster) and before the overtime and morale steps, because
-# delivering files can add an employee and everything below iterates that roster.
+# Ticked DAILY from HRSystem.daily_tick, after the two leave steps and before the morale steps,
+# because delivering files can add an employee and everything below iterates that roster.
 #
-# Owns: GameState.hr_search — the whole state machine idle → searching → files_ready →
-# (hire | dismiss) → idle, one search at a time — plus the arrival day, the stored generator
-# seed, the two Atlas fees and the hire itself. Owns no tunable: every number comes from
-# HRConstants, and the mixer consts below are arithmetic, not balance.
+# Owns GameState.hr_search — the state machine idle → searching → files_ready → (hire | dismiss)
+# → idle, one search at a time — plus the stored generator seed and the hire itself. Every
+# number comes from HRConstants.
 #
-# WRITE-THROUGH LAW: cash moves ONLY through FinanceSystem.apply_one_time_cost (the commission,
-# under HRConstants.cost_label_hire()); the employee is created ONLY
-# through CharacterRegistry.add, which stamps hire_day/leave_month, key-locks role/axes/traits
-# and counts run_hires; the arrival reaches the player ONLY as EventBus.headline_added. Payroll
-# never gets pushed anywhere — FinanceSystem PULLS it at slot 5, so a hire changes burn by
-# existing in the registry. GameState.hr_search is this system's own field (game_state.gd:114,
-# "the owning system writes each one"), so it is written here directly and nowhere else.
+# WRITE-THROUGH LAW: cash moves ONLY through FinanceSystem.apply_one_time_cost (the commission);
+# the employee is created ONLY through CharacterRegistry.add, which stamps hire_day/leave_month,
+# key-locks role/axes/traits and counts run_hires; the arrival reaches the player ONLY as
+# EventBus.headline_added. Payroll is never pushed — FinanceSystem PULLS it, so a hire changes
+# burn by existing in the registry.
 #
-# ARRIVAL IS NOT A MODAL. Candidate files are not an interruption: they land as one ticker line
-# and a badge (HRSystem.attention_count reads has_files_ready). Nothing is enqueued, nothing
-# steals the screen — the player walks over when they are ready and the files wait.
+# ARRIVAL IS NOT A MODAL. Candidate files land as one ticker line and a badge
+# (HRSystem.attention_count reads has_files_ready); the files wait for the player.
 #
 # THE SEARCH IS FREE (§10). "Aday araması Atlas Recruitment modalinden yürür ve ücretsizdir.
-# ... Retainer YOKTUR; tek ücret komisyondur." Commissioning, cancelling and dismissing the
-# files all move zero cash; the ONLY charge in this file is the commission, on the hire, at 50%
-# of one month. The old two-fee model charged the player $600 for the privilege of LOOKING.
-#
-# NO AFFORDABILITY GATE on the commission either, deliberately, on the same contract as the
-# build-commit seam: it can push cash negative through the ordinary bankruptcy channel.
-# preview_hire carries the economic warning (runway before → after) instead of a disabled button.
+# ... Retainer YOKTUR; tek ücret komisyondur." Commissioning, cancelling and dismissing move
+# zero cash; the ONLY charge is the commission, on the hire. It has no affordability gate: it
+# can push cash negative through the ordinary bankruptcy channel, and preview_hire carries the
+# warning instead of a disabled button.
 
 
-# GameState.hr_search keys — the shape documented at game_state.gd:114. Named so a typo in a
-# write cannot silently diverge from a read.
+# GameState.hr_search keys. Named so a typo in a write cannot silently diverge from a read.
 const KEY_STATE := "state"
 const KEY_ROLE := "role"
-## §3 SEVİYE. Eski KEY_BAND bir bütçe seçeneğiydi ve işe alımda atılıyordu. Uçuştaki eski bir
-## aramanın kaydı hâlâ o anahtarı taşıyabilir, o yüzden okuma tarafı ikisini de tanır
-## (current_level) — Faz 7'de KEY_BAND ile birlikte o köprü de gider.
+## §3 SEVİYE. Eski kayıtlardaki arama "band" taşıyabilir; current_level ikisini de tanır.
 const KEY_LEVEL := "level"
 const KEY_SEED := "seed"
 const KEY_STARTED_DAY := "started_day"
 const KEY_ARRIVAL_DAY := "arrival_day"
 const KEY_FILES := "files"
 
-# Arrival-day mixer (arithmetic, NOT tunables). The window itself is
-# §10: tek gün, HRConstants.SEARCH_ARRIVAL_DAYS. Eskiden bir aralıktı ve içinden
-# stored seed, because "2-4 gün" has to be unpredictable to the player and identical on reload.
-# Same no-RNG rule as HRCandidateGenerator: the global RNG stream belongs to the event deck and
-# the resignation roll, and commissioning a search must never displace a draw from it.
-const ARRIVAL_MIX_MODULUS := 100003
-const ARRIVAL_MIX_MULTIPLIER := 16807
-const ARRIVAL_MIX_INCREMENT := 4711
-
-
-# --- Daily entry (called by HRSystem.daily_tick, slot 3) ---
 
 static func daily_tick() -> void:
-	# Idle or waiting on the player: nothing ticks, nothing is generated, no state moves. This
-	# early return is why a run that never opens the HR tab is byte-identical to one without
-	# this system at all.
 	if get_state() != HRConstants.SEARCH_SEARCHING:
 		return
-	# `<` rather than `!=` on purpose: if a day ever passes without this tick running, the files
-	# still land on the next one instead of the search hanging forever.
+	# `<` rather than `!=`: if a day ever passes without this tick running, the files still land
+	# on the next one instead of the search hanging forever.
 	if GameState.day < int(GameState.hr_search.get(KEY_ARRIVAL_DAY, 0)):
 		return
 	_deliver_files()
@@ -76,61 +50,45 @@ static func daily_tick() -> void:
 # --- State reads ---
 
 static func get_state() -> String:
-	# An empty dictionary IS idle, which is what makes GameState.initialize_run's
-	# hr_search.clear() a complete reset with no extra bookkeeping here.
+	# An empty dictionary IS idle, which is what makes initialize_run's hr_search.clear() a
+	# complete reset.
 	return String(GameState.hr_search.get(KEY_STATE, HRConstants.SEARCH_IDLE))
 
 
 static func has_files_ready() -> bool:
-	# The left-rail HR badge reads this through HRSystem.attention_count: the design wants the
-	# arrival as a badge the player answers in their own time, never as a forced modal.
 	return get_state() == HRConstants.SEARCH_FILES_READY
 
 
 static func can_start() -> bool:
-	# One search at a time (demo scope). Deliberately NOT an affordability check — see the
-	# header: the money warning lives in preview_search, not in a disabled button.
+	# One search at a time. Deliberately NOT an affordability check (§10 — the search is free).
 	return get_state() == HRConstants.SEARCH_IDLE
 
 
 static func get_files() -> Array:
-	# The live array, not a copy: candidate files are read-only display data and the HR tab
-	# re-reads them on every redraw. Empty while `searching` — the files do not exist until the
-	# arrival tick generates them from the stored seed.
+	# The live array: files are read-only display data. Empty while `searching` — the files do
+	# not exist until the arrival tick generates them from the stored seed.
 	var stored: Variant = GameState.hr_search.get(KEY_FILES, [])
-	if stored is Array:
-		return stored as Array
-	return []
+	return stored as Array if stored is Array else []
 
 
 static func days_waiting() -> int:
-	# How long the CURRENT search has been on the table, counted from the day the player
-	# commissioned it. One meaning in both `searching`
-	# and `files_ready`, so a card can print "3 gündür" without first asking which state it is
-	# in. 0 when idle.
+	# Counted from the day the player commissioned the search, in both `searching` and
+	# `files_ready`. 0 when idle.
 	if get_state() == HRConstants.SEARCH_IDLE:
 		return 0
 	return maxi(0, GameState.day - int(GameState.hr_search.get(KEY_STARTED_DAY, GameState.day)))
 
 
 static func current_role() -> String:
-	# What the in-flight search is looking for. The waiting strip has to name the role and the
-	# band, and without these two the only way to get them was to reach into GameState.hr_search
-	# from the UI — i.e. past the system that owns that dictionary. "" when idle.
 	return String(GameState.hr_search.get(KEY_ROLE, ""))
 
 
 static func current_level() -> int:
-	# Uçuştaki arama hangi SEVİYEYE bakıyor. Bekleme şeridi rolü ve seviyeyi adlandırmak
-	# zorunda; bu iki okuma olmasa tek yol GameState.hr_search'e UI'dan uzanmaktı — yani o
-	# sözlüğün sahibi olan sistemin yanından dolaşmak.
-	#
-	# ESKİ KAYDIN KÖPRÜSÜ: rev 11 öncesi başlatılmış bir arama "band" taşır ve o dizeler
-	# seviye sırasıyla AYNI sırada (junior · mid · senior), o yüzden çeviri indeksten okunur.
-	# Sessizce Junior saymak yanlış adayları getirirdi.
 	if GameState.hr_search.has(KEY_LEVEL):
 		return clampi(int(GameState.hr_search[KEY_LEVEL]),
 			HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
+	# Eski kaydın "band" dizeleri seviye sırasıyla aynı sıradadır (junior · mid · senior).
+	# Sessizce Junior saymak yanlış adayları getirirdi.
 	var legacy: int = ["junior", "mid", "senior"].find(String(GameState.hr_search.get("band", "")))
 	return legacy if legacy >= 0 else HRConstants.LEVEL_MID
 
@@ -142,53 +100,46 @@ static func start_search(role_id: String, level: int) -> bool:
 		push_warning("[HRSearchSystem] start_search while state is '%s' — one search at a time" % get_state())
 		return false
 	if not HRConstants.is_employee_role(role_id):
-		push_warning("[HRSearchSystem] start_search with non-employee role '%s' — see HRConstants.EMPLOYEE_ROLES" % role_id)
+		push_warning("[HRSearchSystem] start_search with non-employee role '%s'" % role_id)
 		return false
-	# Engine-side back-stop for the Atlas's visual lock: the UI must not be the only thing
-	# standing between a consumer run and an enterprise hire.
+	# Engine-side back-stop for the Atlas's visual lock.
 	if not HRConstants.is_role_hireable(role_id):
-		push_warning("[HRSearchSystem] start_search for locked role '%s' — see HRConstants.role_lock_reason_key" % role_id)
+		push_warning("[HRSearchSystem] start_search for locked role '%s'" % role_id)
 		return false
 	if not HRConstants.is_level(level):
-		push_warning("[HRSearchSystem] start_search with unknown level %d — see HRConstants.LEVELS" % level)
+		push_warning("[HRSearchSystem] start_search with unknown level %d" % level)
 		return false
 
 	# The SEED is stored, not the files. seed_for() reads GameState.day, which has moved on by
-	# the time the files land, so deriving it again at arrival would hand back different people
-	# — and a save/load mid-search would reshuffle a table the player was already thinking about.
-	var seed_value: int = HRCandidateGenerator.seed_for(role_id, level)
+	# the time the files land, and a save/load mid-search must not reshuffle the table.
+	# §10: "bir çalışan ayrıldığında ya da bir iş tıkandığında oyuncu boşluğu O GÜN kapatamaz,
+	# arada geçen haftayı yönetmek zorundadır."
 	GameState.hr_search = {
 		KEY_STATE: HRConstants.SEARCH_SEARCHING,
 		KEY_ROLE: role_id,
 		KEY_LEVEL: level,
-		KEY_SEED: seed_value,
+		KEY_SEED: HRCandidateGenerator.seed_for(role_id, level),
 		KEY_STARTED_DAY: GameState.day,
-		KEY_ARRIVAL_DAY: GameState.day + _arrival_delay(seed_value),
+		KEY_ARRIVAL_DAY: GameState.day + HRConstants.SEARCH_ARRIVAL_DAYS,
 		KEY_FILES: [],
 	}
-	# §10: "Aday araması Atlas Recruitment modalinden yürür ve ÜCRETSİZDİR." Peşin retainer
-	# KALKTI — ödenen tek şey işe alım GERÇEKLEŞTİĞİNDE komisyondur, ve o da bir aylık
-	# maaşın %50'sidir. İki ücretli eski model oyuncuyu aramadan önce cezalandırıyordu.
 	return true
 
 
+## İptal: nothing to refund (§10). Only legal while Atlas is still looking; once the files are
+## on the table the way out is dismiss_files().
 static func cancel_search() -> bool:
-	# İptal: nothing is refunded because nothing was charged (§10 — the search is free). The
-	# cost of abandoning a search is the WEEK, not the money. Cancelling is only legal while
-	# Atlas is still looking; once the files are on the table the way out is dismiss_files().
 	if get_state() != HRConstants.SEARCH_SEARCHING:
 		return false
-	_clear()
+	GameState.hr_search.clear()
 	return true
 
 
+## Beğenmedin: no charge. A throwaway search costs the week it took (§10).
 static func dismiss_files() -> bool:
-	# Beğenmedin: no commission, no charge of any kind. What a throwaway search costs is the
-	# week it took (§10: "arada geçen haftayı yönetmek zorundadır") — the modal's confirm body
-	# says exactly that instead of naming a fee nobody paid.
 	if get_state() != HRConstants.SEARCH_FILES_READY:
 		return false
-	_clear()
+	GameState.hr_search.clear()
 	return true
 
 
@@ -207,123 +158,69 @@ static func hire(candidate_index: int) -> Character:
 	var salary: int = int(file.get("salary", 0))
 
 	var emp := Character.new()
-	# Day + ordinal, the same readable id shape PitchSystem.spawn_prospect uses for leads.
-	# run_hires increments inside CharacterRegistry.add for every employee, so no two hires in a
-	# run can collide even on the same day.
+	# run_hires increments inside CharacterRegistry.add, so no two hires collide even on one day.
 	emp.id = "char_emp_%d_%d" % [GameState.day, GameState.run_hires]
 	emp.character_name = String(file.get("name", ""))
 	emp.role = role_id
-	emp.category = "employee"          # THE founder/mentor/staff discriminator; Frank is never this
+	emp.category = "employee"
 	emp.monthly_salary = salary
-	# §3 SEVİYE KİŞİDE SAKLANIR. Dosyanın taşıdığı seviye buraya geçer; unvan ondan TÜRETİLİR
-	# (HRConstants.job_title) ve saklanmaz. rev 2'de bu değer işe alımda düşüyordu — aday
-	# üretilirken okunuyor, çalışana hiç yazılmıyordu, yani oyunda seviye diye bir şey yoktu.
+	# §3 SEVİYE KİŞİDE SAKLANIR; unvan ondan TÜRETİLİR (HRConstants.job_title).
 	emp.level = clampi(int(file.get("level", HRConstants.level_for_salary(role_id, salary))),
 		HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
 	# §9.1 "maaş hiçbir zaman DÜŞÜRÜLMEZ" — tabanı işe alım maaşıdır.
 	emp.salary_floor = salary
 	emp.morale = HRConstants.MORALE_HIRE_START
 	emp.status = HRConstants.STATUS_ACTIVE
-	emp.role_stats = _axes_copy(file.get("axes", {}))
-	emp.traits = _traits_copy(file.get("traits", []))
+	# Copies the Character owns: the file's own containers die with the search.
+	var axes: Dictionary = file.get("axes", {})
+	for skill_key in HRConstants.EMPLOYEE_SKILL_KEYS:
+		emp.role_stats[String(skill_key)] = clampi(
+			int(axes.get(skill_key, HRConstants.AREA_MIN)), HRConstants.AREA_MIN, HRConstants.AREA_MAX)
+	for trait_id in file.get("traits", []):
+		emp.traits.append(String(trait_id))
 
 	CharacterRegistry.add(emp)
 	if CharacterRegistry.get_character(emp.id) == null:
-		# add() refuses an id collision with a warning and returns void, so the insert is
-		# verified before any money moves: a rejected hire must not charge a commission.
+		# add() refuses an id collision and returns void, so the insert is verified before any
+		# money moves: a rejected hire must not charge a commission.
 		push_error("[HRSearchSystem] CharacterRegistry.add rejected '%s' — no charge, no state change" % emp.id)
 		return null
-	# add() stamps hire_day = today. The design says a hire starts the NEXT day at full
-	# performance (no ramp), so the stamp is corrected AFTER add() returns — before it, add()
-	# would simply overwrite it. Kıdem reads from here too: §11.1's tiered severance floors
-	# at a third of a month, so a same-day dismissal still pays rather than owing a negative tenure.
+	# A hire starts the NEXT day at full performance (no ramp). add() stamps hire_day = today,
+	# so the correction must come after it.
 	emp.hire_day = GameState.day + 1
-	# Komisyon: charged ONCE, here, on the hire only — dismissing the files charges nothing.
 	FinanceSystem.apply_one_time_cost(HRConstants.commission_for(salary), "hire")
-	_clear()
-	if OS.is_debug_build():
-		print("[HRSearchSystem] hire: %s (%s) $%d/mo, komisyon $%d" % [
-			emp.character_name, role_id, salary, HRConstants.commission_for(salary),
-		])
+	GameState.hr_search.clear()
 	return emp
 
 
 # --- Previews (what the UI prints BEFORE the player commits) ---
 
 static func preview_search(role_id: String, level: int) -> Dictionary:
-	# Plain values, no formatting: money stays int, both runway numbers stay float. NOTE
-	# GameState.get_runway_months() returns INF on non-negative net flow, so the card must send
-	# these two through UiTokens.net_runway_parts — the single home for the INF-vs-months
-	# decision. A system file does not own that formatting.
-	#
-	# §10 THE SEARCH IS FREE, so there is no cash question here at all: no retainer key, no
-	# affordability flag, no runway delta. Commissioning a search moves nothing. The economic
-	# reading belongs to preview_hire, where a real number is finally on the table.
+	# §10 THE SEARCH IS FREE, so there is no cash question here: the economic reading belongs
+	# to preview_hire.
 	var warnings: Array[String] = []
 	if not can_start():
 		warnings.append(TranslationServer.translate("HR_WARN_SEARCH_OPEN"))
-	var valid: bool = HRConstants.is_employee_role(role_id) and HRConstants.is_level(level)
-	var band: Array = HRConstants.salary_band_for_level(role_id, level) if valid else [0, 0]
-	var band_low: int = 0
-	var band_high: int = 0
-	if band.size() >= 2:
-		band_low = mini(int(band[0]), int(band[1]))
-		band_high = maxi(int(band[0]), int(band[1]))
 	return {
-		"valid": valid,
 		"can_start": can_start(),
-		"role": role_id,
-		# role_label push_errors on an unknown id by design, so it is only called on a known one.
-		"role_label": HRConstants.role_label(role_id) if HRConstants.is_employee_role(role_id) else role_id,
-		"level": level,
-		"level_label": HRConstants.level_label(level),
-		# The TITLE this search is shopping for — §3's derived unvan, so the player reads
-		# "Kıdemli Yazılım Mühendisi" rather than a role and a level they have to combine.
+		# §3's derived unvan, so the player reads "Kıdemli Yazılım Mühendisi" rather than a role
+		# and a level they have to combine. job_title push_errors on an unknown role.
 		"job_title": HRConstants.job_title(role_id, level) if HRConstants.is_employee_role(role_id) else role_id,
-		"candidate_count": HRConstants.CANDIDATE_COUNT,
-		"arrival_days": HRConstants.SEARCH_ARRIVAL_DAYS,
-		"salary_band_low": band_low,
-		"salary_band_high": band_high,
-		# The commission is a share of the accepted salary, so the band edges bracket it.
-		"commission_low": HRConstants.commission_for(band_low),
-		"commission_high": HRConstants.commission_for(band_high),
 		"warnings": warnings,
 	}
 
 
 static func preview_hire(candidate_index: int) -> Dictionary:
-	# The candidate card's economic line. Every key is present even when the index is invalid,
-	# so the UI never has to guard a missing key — the money fields simply read today's truth.
-	# Same INF caveat as preview_search: runway_before/runway_after can be INF.
-	var payroll_before: int = CharacterRegistry.get_total_monthly_salaries()
-	var net_before: int = GameState.get_net_daily_flow()
-	var runway_before: float = _runway_before()
+	# Every key is present even for an invalid index, so the UI never guards a missing key.
+	# runway_before/runway_after can be INF (non-negative net flow). Both go through the same
+	# maxf so the strip never compares a raw "before" with a floored "after".
+	var runway_before: float = maxf(0.0, GameState.get_runway_months())
 	var warnings: Array[String] = []
-	var no_traits: Array[String] = []
 	var out: Dictionary = {
-		"valid": false,
-		"index": candidate_index,
-		"name": "",
-		"role": "",
-		"role_label": "",
-		"level": HRConstants.LEVEL_JUNIOR,
-		"level_label": "",
 		"job_title": "",
-		"axes": {},
-		"traits": no_traits,
-		"note_index": -1,
-		"salary": 0,
 		"commission": 0,
-		"payroll_before": payroll_before,
-		"payroll_after": payroll_before,
-		"daily_burn_before": GameState.daily_burn,
-		"daily_burn_after": GameState.daily_burn,
-		"cash_before": GameState.cash,
-		"cash_after": GameState.cash,
 		"runway_before": runway_before,
 		"runway_after": runway_before,
-		"morale_start": HRConstants.MORALE_HIRE_START,
-		"starts_on_day": GameState.day + 1,
 		"affordable": true,
 		"warnings": warnings,
 	}
@@ -335,44 +232,28 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 	var role_id: String = String(file.get("role", ""))
 	var salary: int = int(file.get("salary", 0))
 	var commission: int = HRConstants.commission_for(salary)
-	var payroll_after: int = payroll_before + salary
-	# FinanceSystem PULLS the whole payroll and converts it in ONE rounding pass
-	# (FinanceSystem.daily_tick), so tomorrow's burn is today's published total with the salary slice
-	# swapped out. NOT today's total plus this salary rounded on its own: that would sit a dollar
-	# off the figure Finance publishes, and it would double-count if the player already hired
-	# today (the registry already holds that salary, the published burn does not yet).
+	# FinanceSystem PULLS the whole payroll and converts it in ONE rounding pass, so tomorrow's
+	# burn is today's published total with the salary slice swapped out. Adding this salary
+	# rounded on its own would sit a dollar off, and would double-count a hire made today (the
+	# registry already holds that salary, the published burn does not yet).
+	var payroll_after: int = CharacterRegistry.get_total_monthly_salaries() + salary
 	var salaries_now: int = int(FinanceSystem.burn_breakdown.get("salaries", 0))
 	var burn_after: int = GameState.daily_burn - salaries_now + FinanceSystem.daily_salary_for(payroll_after)
 	var net_after: int = GameState.get_daily_revenue() - burn_after
 	var cash_after: int = GameState.cash - commission
 	if GameState.cash < commission:
 		warnings.append(TranslationServer.translate("HR_WARN_COMMISSION_CASH"))
-	if net_before >= 0 and net_after < 0:
+	if GameState.get_net_daily_flow() >= 0 and net_after < 0:
 		warnings.append(TranslationServer.translate("HR_WARN_SALARY_CASHFLOW"))
 
-	out["valid"] = true
-	out["name"] = String(file.get("name", ""))
-	out["role"] = role_id
-	out["role_label"] = HRConstants.role_label(role_id) if HRConstants.is_employee_role(role_id) else role_id
 	var level: int = clampi(int(file.get("level", HRConstants.LEVEL_JUNIOR)),
 		HRConstants.LEVEL_JUNIOR, HRConstants.LEVEL_SENIOR)
-	out["level"] = level
-	out["level_label"] = HRConstants.level_label(level)
 	# §10.3 aday kartı "ad, UNVAN, rol açıklaması" istiyor — unvan türetilir (§3).
 	out["job_title"] = HRConstants.job_title(role_id, level) if HRConstants.is_employee_role(role_id) else role_id
-	out["axes"] = _axes_copy(file.get("axes", {}))
-	out["traits"] = _traits_copy(file.get("traits", []))
-	out["note"] = HRConstants.file_notes_line(int(file.get("note_index", 0)))
-	out["salary"] = salary
 	out["commission"] = commission
-	out["payroll_after"] = payroll_after
-	out["daily_burn_after"] = burn_after
-	out["cash_after"] = cash_after
-	out["runway_after"] = _runway_after(cash_after, net_after)
+	# An empty account reads 0.0 rather than a negative month count; maxf leaves INF alone.
+	out["runway_after"] = maxf(0.0, GameState.runway_months_for(cash_after, net_after))
 	out["affordable"] = GameState.cash >= commission
-	# The same array instance is already in `out` (Arrays are references, so the appends above
-	# already landed); re-stated so that is not a subtlety a reader has to spot.
-	out["warnings"] = warnings
 	return out
 
 
@@ -380,69 +261,11 @@ static func preview_hire(candidate_index: int) -> Dictionary:
 
 static func _deliver_files() -> void:
 	var role_id: String = String(GameState.hr_search.get(KEY_ROLE, ""))
-	var level: int = current_level()
-	var seed_value: int = int(GameState.hr_search.get(KEY_SEED, 0))
-	var files: Array = HRCandidateGenerator.generate(role_id, level, seed_value)
+	var files: Array = HRCandidateGenerator.generate(role_id, current_level(),
+		int(GameState.hr_search.get(KEY_SEED, 0)))
 	GameState.hr_search[KEY_FILES] = files
 	GameState.hr_search[KEY_STATE] = HRConstants.SEARCH_FILES_READY
-	# NOT a modal and NOT an enqueued event: one ticker line, then the HR badge carries it until
-	# the player looks. Interrupting the day for a piece of post would be the wrong register for
-	# a beat the player asked for and is already waiting on.
 	EventBus.headline_added.emit(
 		HRConstants.search_agency_name(),
 		TranslationServer.translate("HR_NEWS_FILES_READY").format({"role": HRConstants.role_label(role_id), "n": files.size()})
 	)
-	if OS.is_debug_build():
-		print("[HRSearchSystem] %d aday dosyası hazır (%s / seviye %d, seed %d)" % [files.size(), role_id, level, seed_value])
-
-
-static func _clear() -> void:
-	# Back to idle by emptying the dictionary rather than writing state = idle: get_state() reads
-	# an empty dict as idle, and this is the same idiom GameState.initialize_run uses, so there
-	# is exactly one shape for "no search" instead of two.
-	GameState.hr_search.clear()
-
-
-static func _arrival_delay(_seed_value: int) -> int:
-	# §10: "Arama başlatıldıktan BİR HAFTA sonra aday listesi gelir." Aralık DEĞİL, tek sayı
-	# — o yüzden burada türetilecek bir şey de kalmadı ve `seed_value` kullanılmıyor.
-	#
-	# Gecikme KASTEDİLMİŞTİR: "bir çalışan ayrıldığında ya da bir iş tıkandığında oyuncu
-	# boşluğu O GÜN kapatamaz, arada geçen haftayı yönetmek zorundadır."
-	return HRConstants.SEARCH_ARRIVAL_DAYS
-
-
-static func _axes_copy(source: Dictionary) -> Dictionary:
-	# EXACTLY HRConstants.EMPLOYEE_SKILL_KEYS (six areas + Liderlik), ints, in a dictionary the
-	# Character owns — never the candidate file's own dict, which dies with _clear() and whose
-	# shape CharacterRegistry key-locks.
-	var axes: Dictionary = {}
-	for skill_key in HRConstants.EMPLOYEE_SKILL_KEYS:
-		axes[String(skill_key)] = clampi(
-			int(source.get(skill_key, HRConstants.AREA_MIN)), HRConstants.AREA_MIN, HRConstants.AREA_MAX
-		)
-	return axes
-
-
-static func _traits_copy(source: Array) -> Array[String]:
-	# Character.traits is Array[String]; a value read back out of a Dictionary arrives untyped,
-	# so it is rebuilt typed instead of assigned across.
-	var out: Array[String] = []
-	for trait_id in source:
-		out.append(String(trait_id))
-	return out
-
-
-static func _runway_after(cash_value: int, daily_net: int) -> float:
-	# The arithmetic lives on its owner (GameState.runway_months_for) — this is only the
-	# PRESENTATION guard on top of it: an empty account reads 0.0 rather than a negative month
-	# count, the same edge VCPitchSystem._gross_runway_months guards. maxf leaves INF alone.
-	return maxf(0.0, GameState.runway_months_for(cash_value, daily_net))
-
-
-## AYNI SÜZGEÇ, İKİ DEĞERE. "Önce" ham `get_runway_months()`ten, "sonra" yukarıdaki
-## maxf'ten geçiyordu — iki farklı süzgeçten çıkmış iki sayı karşılaştırılıyordu ve
-## negatif bir "önce" ile sıfırlanmış bir "sonra" yan yana konabiliyordu. Şerit farkı
-## okuduğu için ikisi de AYNI kapıdan geçmeli.
-static func _runway_before() -> float:
-	return maxf(0.0, GameState.get_runway_months())

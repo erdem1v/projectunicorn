@@ -1,50 +1,42 @@
 class_name SkillCheck
 extends RefCounted
 
-# Founder skill-check helper. No skill-check existed before;
-# the codebase only had bare randf() percentage gates. Disco-Elysium-flavored:
-# the result carries a margin BAND so dialogue can comment on *how* it went
-# ("kıl payı" / "akıcı") without changing the mechanical outcome.
+# Founder skill-check. Disco-Elysium-flavored: the result carries a margin BAND so dialogue
+# can comment on *how* it went ("kıl payı" / "akıcı") without changing the mechanical outcome.
 #
-# Pure static logic (no scene). chance = BASE + skill*step + bonus*step
-# - difficulty*step, clamped. Founder skills (FounderConstants.SKILLS — altı alan +
-# Liderlik + Karizma) live on the SHARED 0–10 ruler, read via GameState.get_founder_skill.
+# chance = BASE + skill*step + bonus*step - difficulty*step, clamped. Founder skills
+# (FounderConstants.SKILLS) live on the SHARED 0–10 ruler, read via GameState.get_founder_skill.
 
 const BASE_CHANCE := 0.45
-## KURUCU DEĞERİ BAŞINA olasılık adımı. 0,15'ti ve kurucu 0–5 cetvelindeydi; cetvel
-## çalışanınkiyle birleşince (0–10) değer ikiye katlandı, adım da yarıya indi — aynı
-## kurucu aynı olasılığı okur. Bu, "hiçbir okuyucu sessizce iki katına çıkmasın"
-## kuralının bu dosyadaki karşılığı.
+## Kurucu değeri başına olasılık adımı. Cetvel 0–10 olduğu için 0–5 cetvelindeki adımın
+## yarısıdır: aynı kurucu aynı olasılığı okur.
 const SKILL_STEP := 0.075
 const BONUS_STEP := 0.10
 const DIFFICULTY_STEP := 0.15
 const MIN_CHANCE := 0.05
 const MAX_CHANCE := 0.95
-## Satış >= bu değer ise aday müşteri "okunur" (bütçe/ihtiyaç açılır). 2'ydi; EŞİK bir
-## karşılaştırma olduğu için cetvel ikiye katlanınca o da ikiye katlanır — aynı yıldız
-## sayısı aynı kapıyı açar.
+## Satış >= bu değer ise aday müşteri "okunur" (bütçe/ihtiyaç açılır).
 const SALES_READ_THRESHOLD := 4
 
 
 static func _rng() -> RandomNumberGenerator:
-	# Every founder skill roll draws from the named `skill` stream, not the global one. The
-	# global generator's position cannot be read back (Godot exposes no getter), so a save
-	# could record its seed and still never resume its sequence — which for this file would
-	# mean the pitch you reload is not the pitch you saved. Both roll sites below share this
-	# one accessor so the stream can never fork.
+	# The named `skill` stream, not the global one: the global generator's position cannot be
+	# read back, so a save could never resume it — the pitch you reload would not be the pitch
+	# you saved.
 	return RngStreams.get_stream(RngStreams.STREAM_SKILL)
 
 
+## Debug builds only: flags["debug_skill_force"] = "pass" | "fail" forces every roll, so the
+## smoke suite stays deterministic.
+static func _forced() -> String:
+	return String(GameState.get_flag("debug_skill_force", "")) if OS.is_debug_build() else ""
+
+
 static func chance_for(skill_name: String, difficulty: int, bonus: int = 0) -> float:
-	var skill_val: int = GameState.get_founder_skill(skill_name)
-	return clampf(
-		BASE_CHANCE + skill_val * SKILL_STEP + bonus * BONUS_STEP - difficulty * DIFFICULTY_STEP,
-		MIN_CHANCE, MAX_CHANCE)
+	return float(breakdown(skill_name, difficulty, bonus)["total"])
 
 
-## Additive breakdown of chance_for, for the Term Sheet Table's skill-split display.
-## Exposes the same terms chance_for sums, so the UI can render "temel %X · +%Y <skill>".
-## Invariant: breakdown(...).total == chance_for(...) for all inputs.
+## Additive breakdown of chance_for, for the Term Sheet Table's "temel %X · +%Y <skill>" split.
 static func breakdown(skill_name: String, difficulty: int, bonus: int = 0) -> Dictionary:
 	var skill_val: int = GameState.get_founder_skill(skill_name)
 	var base: float = BASE_CHANCE - difficulty * DIFFICULTY_STEP   # difficulty folded into "temel"
@@ -56,34 +48,31 @@ static func breakdown(skill_name: String, difficulty: int, bonus: int = 0) -> Di
 		"bonus": bon,
 		"skill_name": skill_name,
 		"skill_value": skill_val,
-		"total": clampf(base + skill + bon, MIN_CHANCE, MAX_CHANCE),
+		# Summed in this order on purpose: rolls and seeded margins depend on these exact floats.
+		"total": clampf(BASE_CHANCE + skill + bon - difficulty * DIFFICULTY_STEP, MIN_CHANCE, MAX_CHANCE),
 	}
 
 
-## Roll against an explicitly-composed probability. The Term Sheet Table composes its own odds
-## (base + skill + leverage − decay) OUTSIDE chance_for, so it rolls through here. Honors the
-## debug force flag so the smoke suite stays deterministic — same override as resolve().
+## Roll against an explicitly-composed probability (the Term Sheet Table composes its own odds).
 static func roll_against(chance: float) -> bool:
-	var forced: String = String(GameState.get_flag("debug_skill_force", ""))
-	if OS.is_debug_build() and forced == "pass":
-		return true
-	if OS.is_debug_build() and forced == "fail":
-		return false
+	match _forced():
+		"pass":
+			return true
+		"fail":
+			return false
 	return _rng().randf() < chance
 
 
 static func resolve(skill_name: String, difficulty: int, bonus: int = 0) -> Dictionary:
 	var chance: float = chance_for(skill_name, difficulty, bonus)
-	# Deterministic override for runtime verification (debug builds only):
-	# flags["debug_skill_force"] = "pass" | "fail" forces the roll.
 	var roll: float
-	var forced: String = String(GameState.get_flag("debug_skill_force", ""))
-	if OS.is_debug_build() and forced == "pass":
-		roll = 0.0
-	elif OS.is_debug_build() and forced == "fail":
-		roll = 1.0
-	else:
-		roll = _rng().randf()
+	match _forced():
+		"pass":
+			roll = 0.0
+		"fail":
+			roll = 1.0
+		_:
+			roll = _rng().randf()
 	var passed: bool = roll < chance
 	var margin: float = chance - roll  # >0 comfortable pass; <0 how badly failed
 	return {
@@ -112,5 +101,4 @@ static func _band(passed: bool, margin: float) -> String:
 
 
 static func can_read_prospect() -> bool:
-	# High enough Satış to perceive a prospect's hidden budget/real need.
 	return GameState.get_founder_skill("sales") >= SALES_READ_THRESHOLD

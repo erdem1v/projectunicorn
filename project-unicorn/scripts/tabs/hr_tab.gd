@@ -1,88 +1,66 @@
 extends Control
 
 # ============================================================================
-# Ekip sayfası — HR sekmesi (§13 · onaylı Kare 1 anatomisi).
+# Ekip sayfası — HR sekmesi (§13).
 #
-# Kod-kurulu düzen, boş .tscn kökü (Product Rev3 idiomu): departman/alt bölüm
-# bölümleri dinamik, bu yüzden .tscn'de iskelet tutmak yarar sağlamıyor.
-# Router YOK — sayfa tek görünüm; Atlas bir modal, aksiyonlar birer popover.
+# Kod-kurulu düzen, boş .tscn kökü: grup bölümleri dinamik. Atlas, eğitim ve çalışma
+# saatleri PanelLayer modalları; satır aksiyonları bir popover.
 #
-# TAZELEME MODELİ (portfolio_view'ın yapı-anahtarı deseni): ucuz bir anahtar
-# (kadro id'leri + statüleri + arayış hali + mesai hali + açık kart) yeniden-kurma
-# ile yerinde-güncelleme arasında karar verir. Böylece morale_changed tek bir barı
-# yeniden boyar, bütün kartları serbest bırakmaz.
+# TAZELEME MODELİ: ucuz bir yapı anahtarı (kadro id'leri + statüler + arayış hali + mesai
+# hali) yeniden-kurma ile yerinde-güncelleme arasında karar verir. Böylece morale_changed
+# tek bir barı yeniden boyar, bütün satırları serbest bırakmaz.
 #
 # GÜN SINIRI: day_advanced'e DEĞİL, hr_day_processed'a bağlanır. day_advanced
 # GameState.advance_day() içinde, TimeManager günlük tick'leri dağıtmadan ÖNCE
 # atılıyor — oraya bağlanan bir tazeleme HR durumunu tick'ten ÖNCE okur (Atlas
-# şeridi bir gün geride, gelen dosyalar bir gün görünmez). Bu, build tracker için
-# build_progress_changed'in eklenmesine yol açan tuzağın aynısı.
+# şeridi bir gün geride, gelen dosyalar bir gün görünmez).
 #
 # Bu dosya hiçbir sonucu hesaplamaz: her rakam bir motor çağrısından gelir. Tek istisna
-# BİÇİMLEME: kesir → yüzde ve float → int yuvarlaması (ör. average_morale'in float'ı).
-#
-# # WORKING TR — bu dosyadaki tüm oyuncuya görünen metin çalışma metnidir; ses geçişi
-# (voice pass) sonra. Tasarım dokümanında karşılığı olan ifadeler onun sözcükleriyle.
+# BİÇİMLEME: kesir → yüzde ve float → int yuvarlaması.
 # ============================================================================
 
 const ATLAS_MODAL := "res://scenes/modals/HRAtlasModal.tscn"
 const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
 const WORK_HOURS_MODAL := "res://scenes/modals/WorkHoursModal.tscn"
 
-## İki görünüm, tek sayfa (9b + 10b). Router YOK demiştik; artık VAR ama en hafif
-## biçimiyle: aynı kadronun iki çizimi, `visible` ile değil TAM YENİDEN KURULARAK
-## değişiyor — çünkü iki tablo tamamen farklı sütunlar taşıyor ve ikisini birden
-## bellekte tutmak, bayatlamış bir tabloyu görünmez halde beslemek demekti.
+## Aynı kadronun iki görünümü. Görünüm değişince sayfa TAM yeniden kurulur: iki tablo
+## tamamen farklı sütunlar taşıyor ve görünmez bir tabloyu beslemek bayatlık demek.
 const VIEW_ROSTER := "roster"
 const VIEW_ASSIGNMENTS := "assignments"
 
 var _signals: Array = []
 var _list: VBoxContainer = null
 var _summary: Label = null
-var _hours_control: Control = null
+var _hours_control: Button = null
 var _structure_key: String = ""
 var _view: String = VIEW_ROSTER
 var _seg_roster: Button = null
 var _seg_assign: Button = null
 var _placement_chips: HBoxContainer = null
 var _attention_strip: VBoxContainer = null
-var _roster_header: Control = null
 var _header_slot: VBoxContainer = null   # başlığın evi; içeriği her kurulumda tazelenir
-# Kart başına yerinde-repaint referansları: emp.id → {"bar":…, "value":…}
+# Satır başına yerinde-repaint referansları: emp.id → {"bar":…, "value":…}
 var _morale_refs: Dictionary = {}
 
 
 func _ready() -> void:
-	# ÖLÇEK MERDİVENİ (2026-08-21): defterin sütun genişlikleri mantıksal viewport'a
-	# göre seçiliyor, ve o genişlik OYUN İÇİNDE değişebiliyor — oyuncu Ayarlar'dan
-	# ölçeği değiştirdiğinde content_scale_factor viewport'u yeniden boyutlandırıyor.
-	# Tek seferlik ölçüm bayatlardı: sayfa açıkken ölçek değişirse tablo eski
-	# genişliklerle kalırdı ve MORAL sütunu ekran dışına çıkardı.
+	# Defterin sütun genişlikleri mantıksal viewport'a göre seçiliyor ve oyuncu ölçeği
+	# Ayarlar'dan değiştirince viewport yeniden boyutlanıyor; tek seferlik ölçüm bayatlardı.
 	get_viewport().size_changed.connect(_on_viewport_resized)
 	_build_chrome()
-	# Sinyal listesi tek yerden bağlanır/çözülür (sales_tab deseni). Kadroyu, morali,
-	# arayışı, parayı ve gün sınırını kapsar; mesai ve arayış durumu için sinyal YOK
-	# (motorda yok — done mesajında raporlanıyor), onları hr_day_processed ve aksiyon
+	# Mesai ve arayış durumu için motorda sinyal yok; onları hr_day_processed ve aksiyon
 	# sonrası yerel tazeleme taşıyor.
 	_signals = [
 		EventBus.character_added, EventBus.character_removed, EventBus.morale_changed,
 		EventBus.headline_added, EventBus.cash_changed, EventBus.burn_changed,
 		EventBus.runway_recalculated, EventBus.hr_day_processed,
-		# The MT card shows a live account count, so a stewardship change has to repaint it —
-		# otherwise the number sits stale until some unrelated HR signal happens to fire.
+		# MT satırı canlı hesap sayısı taşıyor.
 		EventBus.customer_assigned,
-		# DENEYİM barı ve EĞİTİMDE çipi satırın parçası — kendi sinyalleri olmadan
-		# yalnız gün sınırında tazelenirdi.
 		EventBus.employee_experience_changed, EventBus.employee_training_changed,
-		# Renk körü takası: durum çipleri ÇALIŞMA ZAMANINDA erişimcilerden kuruluyor,
-		# yani yeniden kurulmadan yeni paleti almazlar.
-		EventBus.palette_changed,
 	]
 	for sig in _signals:
-		if sig == EventBus.palette_changed:
-			sig.connect(_on_palette_changed)
-		else:
-			sig.connect(_on_state_changed)
+		sig.connect(_on_state_changed)
+	EventBus.palette_changed.connect(_on_palette_changed)
 	_refresh()
 
 
@@ -90,8 +68,8 @@ func _exit_tree() -> void:
 	for sig in _signals:
 		if sig.is_connected(_on_state_changed):
 			sig.disconnect(_on_state_changed)
-		if sig.is_connected(_on_palette_changed):
-			sig.disconnect(_on_palette_changed)
+	if EventBus.palette_changed.is_connected(_on_palette_changed):
+		EventBus.palette_changed.disconnect(_on_palette_changed)
 
 
 # Üç opsiyonel parametre: 0/1/2 argümanlı sinyaller aynı işleyiciye bağlanabilsin.
@@ -100,18 +78,14 @@ func _on_state_changed(_a = null, _b = null, _c = null) -> void:
 
 
 func _on_palette_changed(_cb: bool) -> void:
-	# Yapı anahtarı DEĞİŞMEZ (kadro aynı), o yüzden _refresh yalnız morali boyar ve
-	# çipler eski palette kalırdı. Palet takası zorla yeniden kurar.
+	# Yapı anahtarı palette bağlı değil; çipler çalışma zamanında erişimcilerden kurulduğu
+	# için yeni paleti ancak yeniden kurulunca alır.
 	_rebuild_forced()
 
 
 # --- Sayfa kromu ------------------------------------------------------------
 
 func _build_chrome() -> void:
-	# ÖLÇÜ EN BAŞTA (D5). `HRLedger._dense` STATİK ve `false` doğuyor; aşağıdaki
-	# hiçbir genişlik okuyucusu ölçülmemiş bir kademeyi okumamalı. Eskiden ölçü
-	# `_rebuild`'deydi, yani başlık GENİŞ sabitlerle, satırlar DAR sabitlerle kuruluyordu.
-	HRLedger.measure(get_viewport_rect().size.x)
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -121,25 +95,19 @@ func _build_chrome() -> void:
 	outer.add_theme_constant_override("separation", 10)
 	margin.add_child(outer)
 
-	# Başlık satırı: Ekip + özet · sağda EĞİTİM · KİLİTLİ telgrafı + ARAYIŞ BAŞLAT
-	# BAŞLIK SATIRI (kilitli reçete): özet başlığın YANINDA yaşar, kopuk bir alt
-	# şeritte değil. Eski _footer SİLİNDİ — aynı sayılar iki yerde durmuyor.
+	# Başlık satırı: Ekip + özet + yerleşim çipleri · sağda saat kontrolü + İŞE ALIM BAŞLAT.
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 14)
 	head.alignment = BoxContainer.ALIGNMENT_CENTER
 	head.add_child(UiFactory.make_label(tr("HR_PAGE_TITLE"), &"PageTitleSerif"))
 	_summary = UiFactory.make_label("", &"TitleRowSummary")
-	# BAŞLIK ÖZETİ YER VERİR, CTA VERMEZ (ölçek merdiveni). Özet uzun bir cümle
-	# (ÇALIŞAN · ORTALAMA MORAL · AYLIK MAAŞ YÜKÜ) ve asgari boyu sabitti, yani dar
-	# viewport'ta "+ İŞE ALIM BAŞLAT" düğmesini ekranın dışına itiyordu. Bir eylem
-	# düğmesi asla kaybolmamalı; bir özet cümlesi kısalabilir.
+	# Özet yer verir, CTA vermez: dar viewport'ta uzun özet cümlesi kısalır, eylem
+	# düğmesi ekran dışına itilmez.
 	_summary.clip_text = true
 	_summary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_summary.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(_summary)
-	# BOŞTA / AŞIRI YÜK sayaçları başlık satırında (9b): kaç kişinin yeri yanlış, tek
-	# bakışta. Sayılar motorun türettiği okumalar — burada hiçbir şey hesaplanmıyor.
 	_placement_chips = HBoxContainer.new()
 	_placement_chips.add_theme_constant_override("separation", UiTokens.SPACE_S)
 	_placement_chips.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -147,17 +115,13 @@ func _build_chrome() -> void:
 	var head_spacer := Control.new()
 	head_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(head_spacer)
-	# §13.2 EYLEM GRUBU İKİ ÜYELİDİR: çalışma saatleri kontrolü + İŞE ALIM BAŞLAT.
-	# Eski EĞİTİM düğmesi kalktı — §13.2 onu saymıyor, ve zaten kişi seçmeden eligible[0]
-	# ile açıyordu (bir başlık düğmesi oyuncu adına kişi seçiyordu). Eğitim satır
-	# menüsündedir (§13.3), orada kişi zaten seçili.
+	# §13.2 eylem grubu iki üyelidir: çalışma saatleri kontrolü + İŞE ALIM BAŞLAT. Eğitim
+	# satır menüsündedir (§13.3), orada kişi zaten seçili.
 	_hours_control = _build_hours_control()
 	head.add_child(_hours_control)
 	head.add_child(HRUiShared.action_button(tr("HR_SEARCH_START"), _open_atlas, true))
 	outer.add_child(head)
 
-	# KADRO / GÖREVLER — aynı kadronun iki görünümü (9b + 10b). finance_tab'ın segment
-	# çifti kalıbı: kardeş görünümler, `visible` ile değiştirilir, sayfa yeniden kurulmaz.
 	var tabs := HBoxContainer.new()
 	tabs.add_theme_constant_override("separation", 28)
 	_seg_roster = _make_segment(tr("HR_TAB_ROSTER"), VIEW_ROSTER)
@@ -167,18 +131,14 @@ func _build_chrome() -> void:
 	outer.add_child(tabs)
 	outer.add_child(HRUiShared.hairline())
 
-	# DİKKAT ŞERİDİ: kilitli reçetenin "kırmızı şerit, doğrudan sayfa başlığının altında"
-	# kuralı. İçeriği _refresh dolduruyor; boşken görünmez.
+	# Dikkat şeridi doğrudan sayfa başlığının altında; boşken görünmez.
 	_attention_strip = VBoxContainer.new()
 	_attention_strip.add_theme_constant_override("separation", 6)
 	outer.add_child(_attention_strip)
 
-	# Sütun başlıkları tablonun başlığıdır — bir kez, kaydırma alanının DIŞINDA,
-	# yani sayfa kayarken de görünür kalır. GÖREVLER kendi başlığını taşır.
-	# BAŞLIK BİR SLOT'TA YAŞAR, doğrudan `outer`da değil: kademe değiştiğinde
-	# (%100 ↔ %125) satırlar gibi başlık da YENİDEN kurulmalı. Eski hâli bir kez
-	# kurulup yalnız `visible` çevriliyordu ve ScrollContainer'IN DIŞINDA olduğu için
-	# bayat asgari genişliği doğrudan SAYFANIN asgarisi oluyordu.
+	# Sütun başlıkları kaydırma alanının DIŞINDA (sayfa kayarken görünür kalır) ve bir
+	# slot'ta: kademe değiştiğinde satırlar gibi başlık da yeniden kurulmalı, yoksa bayat
+	# asgari genişliği sayfanın asgarisi olur.
 	_header_slot = VBoxContainer.new()
 	_header_slot.add_theme_constant_override("separation", 0)
 	outer.add_child(_header_slot)
@@ -193,46 +153,34 @@ func _build_chrome() -> void:
 	scroll.add_child(_list)
 
 
-
-
 # --- Tazeleme ---------------------------------------------------------------
 
 func _refresh() -> void:
-	if _list == null:
-		return
-	# ÇİP HER TAZELEMEDE YENİDEN YAZILIR — kusur #1'in kök nedeni buydu. Çip sayfa kabuğu
-	# kurulurken BİR KEZ yazılıyordu (`_build_hours_control`) ve `_rebuild` yalnız listeyi
-	# boşaltıyordu, yani modalde saat değişince başlık eski pencereyi göstermeye devam
-	# ediyordu. Metin ARTIK tek seam'den geliyor (`WorkHoursSystem.company_window`), o yüzden
-	# çip ile modal aynı cümleyi çizmek zorunda.
-	if _hours_control != null and _hours_control is Button:
-		_paint_hours_control(_hours_control as Button)
-	# Başlık VE alt şerit her tazelemede: alt şerit ORTALAMA MORAL yazıyor, yani yapı
-	# değişmeden de oynayan bir sayı. Yalnız _rebuild'de boyanınca morale_changed'in
-	# yerinde-güncelleme yolunda bayat kalıyordu.
-	_paint_summary()
+	# Saat çipi ve özet yapı değişmeden de oynuyor (modalde saat, ortalama moral), o yüzden
+	# her tazelemede yeniden yazılır.
+	_paint_hours_control()
+	_summary.text = tr("HR_SUMMARY").format({
+		"count": CharacterRegistry.count_employees(),
+		"morale": int(round(HRMoraleSystem.average_morale())),
+		"payroll": HRUiShared.money(CharacterRegistry.get_total_monthly_salaries()),
+	})
 	if _structure_key != _compute_structure_key():
 		_rebuild()
 		return
-	# Yapı aynı: yalnız moral barları/sayıları tazelenir.
 	for emp in CharacterRegistry.get_employees():
 		if _morale_refs.has(emp.id):
 			HRUiShared.repaint_morale(_morale_refs[emp.id], emp.morale)
 
 
 func _compute_structure_key() -> String:
-	# Kart KÜMESİNİ ve kartların şeklini değiştiren her şey buraya girer; moral
-	# GİRMEZ (yerinde boyanır). Rozet ağırlığı moralle değiştiği için ayrıca yazılıyor,
-	# yoksa TÜKENİYOR eşiği geçildiğinde kartın çerçevesi ve sırası güncellenmez.
+	# Satır KÜMESİNİ ve satırların şeklini değiştiren her şey buraya girer; moral GİRMEZ
+	# (yerinde boyanır). Rozet ağırlığı moralle değiştiği için ayrıca yazılıyor, yoksa eşik
+	# geçildiğinde satırın sırası güncellenmez.
 	var parts := PackedStringArray()
 	parts.append("%s|%d" % [HRSearchSystem.get_state(), HRSearchSystem.days_waiting()])
-	# ÇALIŞMA SAATLERİ kart şeklini değiştirir: DURUM sütunundaki saat istisnası etiketi ve
-	# başlıktaki çip ikisi de bu iki sayıyı okuyor (§8.5, §13.3). Eskiden burada blokların
-	# gün indeksleri vardı; bloklar kalktı.
+	# DURUM sütunundaki saat istisnası etiketi bu iki sayıyı okuyor (§8.5, §13.3).
 	parts.append("wh%d|%d" % [GameState.company_work_hours, WorkHoursSystem.override_count()])
-	# Bir MT'nin taşıdığı hesap sayısı kartın ÜSTÜNDE yazıyor, yani kart şeklinin parçası.
-	# Anahtara girmezse atama değişince satır bayat kalır (moral gibi yerinde boyanan bir
-	# şey değil — kart yeniden kurulmalı).
+	# MT'nin taşıdığı hesap sayısı satırın şeklinin parçası.
 	for rep in CharacterRegistry.get_active_by_role(HRConstants.ROLE_CUSTOMER_REP):
 		parts.append("cs%s%d" % [rep.id, CustomerRepSystem.roster_size(rep.id)])
 	for emp in CharacterRegistry.get_employees():
@@ -241,130 +189,75 @@ func _compute_structure_key() -> String:
 	return "/".join(parts)
 
 
-## Başlığı ÖLÇÜM SONRASI kurar. `column_header()` genişlikleri `HRLedger`'ın
-## statiklerinden okuyor, o yüzden çağırı sırası bir yerleşim ayrıntısı değil
-## SONUCU BELİRLEYEN ŞEY.
-func _rebuild_header() -> void:
-	if _header_slot == null:
-		return
-	for c in _header_slot.get_children():
-		_header_slot.remove_child(c)
-		c.queue_free()
-	_roster_header = HRLedger.column_header()
-	_header_slot.add_child(_roster_header)
-
-
 func _rebuild() -> void:
 	_structure_key = _compute_structure_key()
 	_morale_refs.clear()
-	for c in _list.get_children():
-		_list.remove_child(c)
-		c.queue_free()
+	ProductUiShared.clear(_list)
 
 	_paint_placement_chips()
 	_paint_attention_strip()
 	_paint_segments()
 
-	# ÖLÇÜ ÖNCE (ölçek merdiveni): defterin sütun genişlikleri mantıksal viewport'a
-	# göre seçilir. Başlık ve satırlar AYNI ölçümü okumalı, o yüzden kurulumdan önce.
+	# Başlık ve satırlar AYNI ölçümü okumalı: `column_header()` genişlikleri HRLedger'ın
+	# statiklerinden okuyor, o yüzden ölçüm kurulumdan önce.
 	HRLedger.measure(get_viewport_rect().size.x)
-	_rebuild_header()
+	ProductUiShared.clear(_header_slot)
+	_header_slot.add_child(HRLedger.column_header())
+	_header_slot.visible = _view == VIEW_ROSTER
 	if _view == VIEW_ASSIGNMENTS:
-		# GÖREVLER: kendi başlığını taşıyor, defterin sütun başlığı gizleniyor.
-		_header_slot.visible = false
 		_list.add_child(HRAssignments.build(_on_assignment_toggled, _open_atlas))
 		return
-	_header_slot.visible = true
 
-	# Atlas şeridi (§10.1 · onaylı Kare 3: bekleme / dosyalar hazır) en üstte.
 	var strip: Control = _atlas_strip()
 	if strip != null:
 		_list.add_child(strip)
-
-	# DÖRT DÜZ GRUP (9b): Ürün & Tasarım · Geliştirme Ekibi · Satış · Müşteri İlişkileri.
-	# Departman + alt-bölüm iki seviyeli düzeni emekli; departman yalnız EK MESAİ'nin
-	# birimi olarak yaşamaya devam ediyor (bkz. _add_group).
 	for group_id in HRConstants.ROSTER_GROUPS:
 		_add_group(String(group_id))
 
 
-func _paint_summary() -> void:
-	if _summary == null:
-		return
-	# Yalnız alt şeritte OLMAYAN bilgiler (bilgi-tekrarı kuralı: her bilgi bir kez) —
-	# çalışan sayısı ve maaş yükü alt şeridin işi; buradaki iki sayı dikkat çağrısı.
-	# Dikkat sayısı attention_PEOPLE_count: sol raydaki rozet bekleyen aday dosyasını da
-	# sayar, ama bu cümle EKİP hakkında, ve dosyaların kendi şeridi var — ikisini aynı
-	# sayıda toplamak yalan olurdu.
-	# Alt şeridin taşıdığı üç toplam buraya taşındı (kilitli reçete: özet başlık
-	# satırında). Dikkat/izin sayıları GİTMEDİ — durum çipleri satırın kendisinde
-	# duruyor, yani sayfa hâlâ "kaç kişi dikkat istiyor"u gösteriyor, ama artık
-	# aynı bilgiyi iki ayrı cümlede tekrarlamıyor.
-	_summary.text = tr("HR_SUMMARY").format({
-		"count": CharacterRegistry.count_employees(),
-		"morale": int(round(HRMoraleSystem.average_morale())),
-		"payroll": HRUiShared.money(CharacterRegistry.get_total_monthly_salaries()),
-	})
-	_summary.visible = true
-
-
-# --- Atlas şeridi (§10.1 · onaylı Kare 3) ------------------------------------
+# --- Atlas şeridi (§10.1) ---------------------------------------------------
 
 func _atlas_strip() -> Control:
 	var state: String = HRSearchSystem.get_state()
 	if state == HRConstants.SEARCH_IDLE:
 		return null
-	# CardCta: şeffaf zemin + amber çerçeve. Onaylı Kare 3'ün (§10.1) amber vurgusu bu; CardAttention
-	# (tozlu pembe) kaçma riskine ayrılmış durumda ve arayış şeridi bir UYARI değil.
+	# CardCta (amber çerçeve): CardAttention kaçma riskine ayrılmış, arayış şeridi uyarı değil.
 	var card := PanelContainer.new()
 	card.theme_type_variation = &"CardCta"
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 6)
-	card.add_child(col)
-
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)
 	head.add_child(UiFactory.make_avatar("A", 26))
+	card.add_child(head)
 	var info := VBoxContainer.new()
 	info.add_theme_constant_override("separation", 2)
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.add_child(UiFactory.make_label(
 		UiTokens.tr_upper(HRConstants.search_agency_name()), &"SectionLabel"))
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(info)
 
 	if state == HRConstants.SEARCH_FILES_READY:
 		info.add_child(UiFactory.make_label(
 			tr("HR_FILES_ON_DESK").format({"n": HRSearchSystem.get_files().size()}), &"BodySerif"))
-		head.add_child(info)
 		head.add_child(HRUiShared.action_button(tr("HR_OPEN_FILES"), _open_atlas, true))
-		col.add_child(head)
 		return card
 
-	# Arayış sürüyor: TEK durum satırı (bilgi-tekrarı kuralı) — rol + kaçıncı gün. Bant
-	# oyuncunun verilmiş kararı, burada tekrarlanmaz; "iade edilmez" uyarısı ödeme anında
-	# (modal ücret bloğu) ve kayıp anında (iptal onayı) yaşıyor, bekleme şeridinde değil.
-	# Rol HRSearchSystem accessor'ından; GameState.hr_search sözlüğüne UI'dan uzanmak o
-	# sözlüğün sahibini atlamak olurdu.
+	# Arayış sürüyor: tek durum satırı — rol + kaçıncı gün. "İade edilmez" uyarısı ödeme ve
+	# iptal anında yaşıyor, bekleme şeridinde değil.
 	var role_id: String = HRSearchSystem.current_role()
-	var line: String = tr("HR_SEARCHING").format({
+	info.add_child(UiFactory.make_label(tr("HR_SEARCHING").format({
 		"role": HRConstants.role_label(role_id) if role_id != "" else tr("HR_CANDIDATE_GENERIC"),
 		"n": HRSearchSystem.days_waiting(),
-	})
-	info.add_child(UiFactory.make_label(line, &"BodySerif"))
-	head.add_child(info)
+	}), &"BodySerif"))
 	head.add_child(HRUiShared.action_button(tr("HR_SEARCH_CANCEL"), _on_cancel_search))
-	col.add_child(head)
 	return card
 
 
 func _on_cancel_search() -> void:
-	# Onay hâlâ isteniyor ama gerekçe DEĞİŞTİ: iptal artık para yakmıyor (§10 — arama
-	# ücretsiz), BEKLENMİŞ GÜNLERİ yakıyor. Yeni bir arayış baştan bir hafta sürer, ve §10 o
-	# haftayı kastedilmiş bir bedel olarak tanımlıyor. on_confirm bağlı METOT referansı
-	# (creation_flow'un confirm şekli) — sözlük içine çok satırlı lambda gömülmüyor.
+	# İptal para yakmıyor (§10 — arama ücretsiz), BEKLENMİŞ GÜNLERİ yakıyor: yeni bir arayış
+	# baştan bir hafta sürer. Onay bu yüzden isteniyor.
 	EventBus.confirm_requested.emit({
 		"title": tr("HR_SEARCH_CANCEL_TITLE"),
-		"body": tr("HR_SEARCH_CANCEL_BODY").format({
-			"span": tr("HR_ATLAS_ARRIVAL_SPAN")}),
+		"body": tr("HR_SEARCH_CANCEL_BODY").format({"span": tr("HR_ATLAS_ARRIVAL_SPAN")}),
 		"confirm_text": tr("HR_SEARCH_CANCEL_OK"),
 		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_cancel_search,
@@ -376,18 +269,11 @@ func _do_cancel_search() -> void:
 	_rebuild_forced()
 
 
-# --- EĞİTİM (DENEYİM/EĞİTİM mekaniği) ---------------------------------------
-# Mockup'ta bu yüzey "EĞİTİM · KİLİTLİ" telgrafıydı. Artık CANLI: deneyimi dolan
-# en az bir çalışan varsa düğmeye döner ve uygun adayların listesini açar.
-# Kilitli hâli yalan söylemiyor — gerçekten yapılacak bir şey yokken kilitli.
+# --- Çalışma saatleri kontrolü (§13.2 / §8.5) --------------------------------
 
-## §13.2 / §8.5 · ÇALIŞMA SAATLERİ KONTROLÜ. Kenarlıklı, dolu buton DEĞİL — İŞE ALIM
-## BAŞLAT'ın "bir tık sessizi" (§13.2). Şirket penceresini ve varsa istisna sayısını taşır,
-## ve Kadro ile Görevler sekmelerinin İKİSİNDE de görünür (aynı chrome'da olduğu için bedava).
-func _build_hours_control() -> Control:
-	# ONAYLI 19d: dolgusuz, 1px kenar, SAAT GLİFİ + pencere. Dört hâl — temel nötr, mesai
-	# amber, istisna amber, hover kenar vurgusu. Glif bugüne dek YOKTU ve çip yalnız nötr
-	# çiziliyordu, yani "mesai var" bilgisi metne gömülüydü ve kenar hiç konuşmuyordu.
+## Kenarlıklı, dolgusuz buton: İŞE ALIM BAŞLAT'ın bir tık sessizi (§13.2). Saat glifi +
+## şirket penceresi; Kadro ve Görevler görünümlerinin ikisinde de görünür.
+func _build_hours_control() -> Button:
 	var btn := Button.new()
 	btn.icon = load("res://assets/icons/clock.svg")
 	btn.add_theme_constant_override("icon_max_width", 13)
@@ -395,16 +281,29 @@ func _build_hours_control() -> Control:
 	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	btn.pressed.connect(_open_hours_modal)
-	_paint_hours_control(btn)
 	return btn
 
 
-## §8.5'in çip kuralı RENGE de uygulanır: mesai ya da istisna varsa amber, yoksa nötr.
-## Metin ve renk AYNI koşuldan türer, o yüzden ikisi bir arada yazılıyor — ayrılsalardı
-## biri güncellenip öteki bayat kalırdı (kusur #1'in tam olarak yaptığı şey).
-func _paint_hours_control(btn: Button) -> void:
-	btn.text = _hours_chip_text()
-	var flagged: bool = int(WorkHoursSystem.counts()["overtime"]) > 0 		or WorkHoursSystem.override_count() > 0
+## Metin ve renk AYNI koşuldan türer (§8.5): mesai ya da istisna varsa amber. Mesai varsa
+## çalışan sayısı eklenir; yoksa ama kapsamlar şirketten ayrılıyorsa istisna sayısı. İkisi
+## birden doğruysa mesai eki kazanır — para ve moral maliyeti orada.
+func _paint_hours_control() -> void:
+	var btn: Button = _hours_control
+	# Pencere tek evden okunur (§15.2): modal ile çip aynı cümleyi çizmek zorunda.
+	var win: Dictionary = WorkHoursSystem.company_window()
+	var window: String = tr("HR_HOURS_WINDOW").format({
+		"start": String(win["start_text"]),
+		"end": String(win["end_text"]),
+	})
+	var over: int = int(WorkHoursSystem.counts()["overtime"])
+	var exceptions: int = WorkHoursSystem.override_count()
+	if over > 0:
+		btn.text = tr("HR_HOURS_CHIP_OVERTIME").format({"window": window, "n": over})
+	elif exceptions > 0:
+		btn.text = tr("HR_HOURS_CHIP_OVERRIDES").format({"window": window, "n": exceptions})
+	else:
+		btn.text = window
+	var flagged: bool = over > 0 or exceptions > 0
 	var ink: Color = UiTokens.ACCENT if flagged else UiTokens.INK_MUTED
 	var edge: Color = UiTokens.ACCENT if flagged else UiTokens.BORDER_HOVER
 	btn.add_theme_color_override("font_color", ink)
@@ -416,7 +315,7 @@ func _paint_hours_control(btn: Button) -> void:
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = Color(0, 0, 0, 0)
 		sb.set_border_width_all(1)
-		# Hover KENARDA yaşar, dolguda değil (Terminal'in kilitli reçetesi).
+		# Hover KENARDA yaşar, dolguda değil (Terminal reçetesi).
 		sb.border_color = UiTokens.ACCENT_HOVER if state == "hover" else edge
 		sb.set_corner_radius_all(2)
 		sb.content_margin_left = 14
@@ -426,105 +325,37 @@ func _paint_hours_control(btn: Button) -> void:
 		btn.add_theme_stylebox_override(state, sb)
 
 
-## 19d'nin tek ek kuralı: temel hâlde ek yok; mesai varsa çalışan sayısı; mesai yoksa ama
-## kapsamlar şirketten ayrılıyorsa istisna sayısı. İKİSİ BİRDEN doğruysa MESAİ EKİ KAZANIR —
-## para ve moral maliyeti orada.
-func _hours_chip_text() -> String:
-	# PENCERE TEK EVDEN OKUNUR (§15.2). Bitiş burada ELDE hesaplanıyordu —
-	# `(start_h + company_work_hours) % 24` — ve o satır `WorkHoursSystem.end_hour_for`'un
-	# varlığından habersizdi. İki hesap iki cevap demektir; modal ile çip aynı pencereyi
-	# çizmek zorunda ve artık aynı yerden alıyorlar.
-	var win: Dictionary = WorkHoursSystem.company_window()
-	var window: String = tr("HR_HOURS_WINDOW").format({
-		"start": String(win["start_text"]),
-		"end": String(win["end_text"]),
-	})
-	var counts: Dictionary = WorkHoursSystem.counts()
-	var over: int = int(counts["overtime"])
-	if over > 0:
-		return tr("HR_HOURS_CHIP_OVERTIME").format({"window": window, "n": over})
-	var exceptions: int = WorkHoursSystem.override_count()
-	if exceptions > 0:
-		return tr("HR_HOURS_CHIP_OVERRIDES").format({"window": window, "n": exceptions})
-	return window
+## PanelLayer, ModalLayer DEĞİL: ModalLayer boşluk ve 1-4 hız tuşlarını yutuyor ve dimmer'ı
+## TopBar'ı kaplıyor — saat bir kadro kararının üstünde akarken oyuncunun onu durduracak
+## yolu kalmazdı. Gerçek bir modal (layer 10) hâlâ üstünü örter.
+func _mount_panel_modal(path: String, on_changed: Callable, args: Array = []) -> void:
+	var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
+	if layer == null:
+		push_error("[HRTab] GameShell/PanelLayer yok — modal monte edilemiyor: %s" % path)
+		return
+	var modal: Node = (load(path) as PackedScene).instantiate()
+	layer.add_child(modal)   # önce add_child, sonra populate (ev konvansiyonu)
+	modal.connect("state_changed", on_changed)
+	modal.callv("populate", args)
 
 
-## §8.5 · ÇALIŞMA SAATLERİ MODALİ (onaylı 19a–19d). PanelLayer, ModalLayer DEĞİL —
-## Atlas'ın kalıbı, ve gerekçesi aynı: ModalLayer boşluk ve 1-4 hız tuşlarını yutuyor, yani
-## saat bir kadro kararının üstünde koşuyor ve oyuncunun onu durduracak yolu kalmıyor.
 func _open_hours_modal() -> void:
-	var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
-	if layer == null:
-		push_error("[HRTab] GameShell/PanelLayer yok — çalışma saatleri modalı monte edilemiyor")
-		return
-	var scene: PackedScene = load(WORK_HOURS_MODAL) as PackedScene
-	if scene == null:
-		push_error("[HRTab] Çalışma saatleri modal sahnesi yüklenemedi: %s" % WORK_HOURS_MODAL)
-		return
-	var modal: Control = scene.instantiate() as Control
-	layer.add_child(modal)                       # önce add_child (ev konvansiyonu)
-	if modal.has_signal("state_changed"):
-		modal.state_changed.connect(_on_hours_changed)
-	if modal.has_method("populate"):
-		modal.populate()
+	_mount_panel_modal(WORK_HOURS_MODAL, _rebuild_forced)
 
 
-## Modal artık TAAHHÜTLÜ: sinyal `Uygula`'da bir kez gelir. Sayfanın iki yüzeyi birden
-## tazelenir — başlıktaki çip (pencere + ek) ve defterin DURUM sütunundaki saat istisnası.
-func _on_hours_changed() -> void:
-	_rebuild_forced()
-	if _hours_control != null and _hours_control is Button:
-		_paint_hours_control(_hours_control as Button)
+func _open_atlas() -> void:
+	# Motorun arayış geçişleri için sinyali yok; modal haber veriyor.
+	_mount_panel_modal(ATLAS_MODAL, _refresh)
 
 
-func _build_training_control() -> Control:
-	if _eligible_for_training().is_empty():
-		return HRUiShared.locked_telegraph(tr("HR_TRAINING_LOCKED"))
-	return HRUiShared.action_button(tr("HR_TRAINING"), _open_training_picker)
-
-
-func _eligible_for_training() -> Array[Character]:
-	var out: Array[Character] = []
-	for emp in CharacterRegistry.get_employees():
-		if CharacterRegistry.can_train(emp.id):
-			out.append(emp)
-	return out
-
-
-func _open_training_picker() -> void:
-	# Başlıktaki EĞİTİM düğmesi. Kişi seçme adımı onaylı tasarımda ÇİZİLMEDİ, o yüzden
-	# icat edilmiyor: düğme ilk uygun kişiyle modalı açar, ve asıl kapı satırın ⋯
-	# menüsündeki dördüncü satırdır — orada kişi zaten seçili.
-	var eligible: Array[Character] = _eligible_for_training()
-	if eligible.is_empty():
-		return
-	_confirm_training(eligible[0])
-
-
-## 11c'yi açar. Eski ConfirmModal yükü (tek satır metin + Onayla) EMEKLİ: alan seçimini
-## OYUNCU yapıyor artık (§5.2), ve bir onay kutusu beş satırlık bir tabloyu taşıyamaz.
+## Alan seçimini oyuncu yapıyor (§5.2), o yüzden onay kutusu değil eğitim modalı.
 func _confirm_training(emp: Character) -> void:
-	var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
-	if layer == null:
-		push_error("[HRTab] PanelLayer bulunamadı — eğitim modalı mount edilemiyor")
-		return
-	var scene: PackedScene = load(TRAINING_MODAL) as PackedScene
-	if scene == null:
-		push_error("[HRTab] TrainingModal sahnesi yüklenemedi")
-		return
-	var modal: Control = scene.instantiate() as Control
-	layer.add_child(modal)
-	if modal.has_signal("state_changed"):
-		modal.state_changed.connect(_rebuild_forced)
-	if modal.has_method("populate"):
-		modal.populate(emp.id)
+	_mount_panel_modal(TRAINING_MODAL, _rebuild_forced, [emp.id])
 
 
-# --- Departman bölümleri ---------------------------------------------------
+# --- Kadro grupları ---------------------------------------------------------
 
-## Bir KADRO GRUBU: amber başlık + hairline + satırlar. Onaylı tasarımın dört düz bandı
-## (9b), eski departman + alt-bölüm iki seviyesinin yerine.
-##
+## Bir kadro grubu (9b): amber başlık + hairline + satırlar.
 func _add_group(group_id: String) -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 10)
@@ -534,33 +365,20 @@ func _add_group(group_id: String) -> void:
 	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	header.add_child(rule)
-	# §8.2: AYRI BİR "EK MESAİ" BUTONU YOKTUR. Ek mesai ayrı bir mekanik değil, çalışma
-	# aralığının bir SONUCUDUR (§8.1) — ve tek görünürlük yüzeyi başlıktaki çalışma saatleri
-	# kontrolüdür (§8.5). Departman bazlı blok sistemi motor tarafında Faz 7'de siliniyor;
-	# grup başlığındaki düğme bugün gidiyor.
 	_list.add_child(header)
 
 	# get_employees(), get_active_by_role() DEĞİL: defter izindeki ve eğitimdeki kişiyi de
-	# gösterir — maaşı ödeniyor ve satırı okunuyor, yalnız o günkü kapasiteye girmiyor.
+	# gösterir — maaşı ödeniyor, yalnız o günkü kapasiteye girmiyor.
 	var roster: Array[Character] = []
 	for emp in CharacterRegistry.get_employees():
 		if String(HRConstants.ROLE_GROUP.get(emp.role, "")) == group_id:
 			roster.append(emp)
-	_add_roster(roster, group_id)
-
-
-func _add_roster(roster: Array[Character], dept_id: String) -> void:
 	if roster.is_empty():
-		_list.add_child(_empty_row(dept_id))
+		_list.add_child(HRLedger.empty_row(_open_atlas))
 		return
-	# Dikkat isteyen satırlar üste (sales_tab'ın grameri). Ağırlık motorun registry'sinde;
-	# burada sıralanıyor, karar verilmiyor.
-	# TAM SIRALAMA ŞART: sort_custom kararlı DEĞİL ve çoğu çalışanın ağırlığı 0 — yalnız
-	# ağırlığa bakan bir karşılaştırıcı eşit anahtarları her yeniden kurmada farklı sırada
-	# bırakabilir, yani kartlar her gün sınırında yer değiştirir. hire_day (sonra id) ile
-	# kesin bir tiebreak veriliyor: sıra deterministik, göz sabit.
-	var sorted: Array[Character] = roster.duplicate()
-	sorted.sort_custom(func(a: Character, b: Character) -> bool:
+	# Dikkat isteyen satırlar üste. sort_custom kararlı DEĞİL ve çoğu ağırlık 0, o yüzden
+	# hire_day ve id ile kesin tiebreak: sıra her yeniden kurmada aynı kalır.
+	roster.sort_custom(func(a: Character, b: Character) -> bool:
 		var sa: int = HRUiShared.worst_badge_severity(a)
 		var sb: int = HRUiShared.worst_badge_severity(b)
 		if sa != sb:
@@ -568,14 +386,10 @@ func _add_roster(roster: Array[Character], dept_id: String) -> void:
 		if a.hire_day != b.hire_day:
 			return a.hire_day < b.hire_day
 		return a.id < b.id)
-	for emp in sorted:
+	for emp in roster:
 		var refs: Dictionary = {}
 		_list.add_child(HRLedger.row(emp, _on_card_action, refs))
 		_morale_refs[emp.id] = refs
-
-
-func _empty_row(_dept_id: String) -> Control:
-	return HRLedger.empty_row(_open_atlas)
 
 
 # --- KADRO / GÖREVLER segmentleri ------------------------------------------
@@ -598,13 +412,9 @@ func _show_view(view_id: String) -> void:
 
 
 ## Aktif segment: INK + 2px amber alt kenar; öteki INK_DIM ve kenarsız (9b).
-## Stylebox çalışma zamanında kuruluyor — yeni bir tema öğesi eklemek THEME_STAMP
-## artırmayı gerektirirdi ve bu sayfa hiçbir tema öğesi eklemiyor.
 func _paint_segments() -> void:
 	for pair in [[_seg_roster, VIEW_ROSTER], [_seg_assign, VIEW_ASSIGNMENTS]]:
 		var btn: Button = pair[0]
-		if btn == null:
-			continue
 		var active: bool = String(pair[1]) == _view
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = Color(0, 0, 0, 0)
@@ -616,20 +426,15 @@ func _paint_segments() -> void:
 		sb.content_margin_bottom = 10.0
 		for state in ["normal", "hover", "pressed", "focus"]:
 			btn.add_theme_stylebox_override(state, sb)
-		btn.add_theme_color_override("font_color",
-			UiTokens.INK if active else UiTokens.INK_DIM)
+		btn.add_theme_color_override("font_color", UiTokens.INK if active else UiTokens.INK_DIM)
 		btn.add_theme_color_override("font_hover_color",
 			UiTokens.INK if active else UiTokens.INK_MUTED)
 
 
-## "N BOŞTA" (nötr) + "N AŞIRI YÜK" (amber). Sıfır olan çip ÇİZİLMEZ — sıfırı göstermek
+## "N BOŞTA" (nötr) + "N AŞIRI YÜK" (amber). Sıfır olan çip çizilmez — sıfırı göstermek
 ## bir uyarıyı gürültüye çevirir.
 func _paint_placement_chips() -> void:
-	if _placement_chips == null:
-		return
-	for c in _placement_chips.get_children():
-		_placement_chips.remove_child(c)
-		c.queue_free()
+	ProductUiShared.clear(_placement_chips)
 	var idle: int = HRSystem.idle_count()
 	if idle > 0:
 		_placement_chips.add_child(UiFactory.make_state_chip(
@@ -645,14 +450,10 @@ func _paint_placement_chips() -> void:
 			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT))
 
 
-## Kırmızı dikkat şeridi, sayfa başlığının hemen altında (kilitli reçete). Bir satır per
-## kaçma riski: ad + MORAL n. Eşik motorun (HRConstants.is_flight_risk), burada değil.
+## Kaçma riski başına bir kırmızı şerit: ad + MORAL n. Eşik motorun
+## (HRConstants.is_flight_risk).
 func _paint_attention_strip() -> void:
-	if _attention_strip == null:
-		return
-	for c in _attention_strip.get_children():
-		_attention_strip.remove_child(c)
-		c.queue_free()
+	ProductUiShared.clear(_attention_strip)
 	for emp in CharacterRegistry.get_employees():
 		if not HRConstants.is_flight_risk(emp.morale):
 			continue
@@ -670,67 +471,18 @@ func _paint_attention_strip() -> void:
 	_attention_strip.visible = _attention_strip.get_child_count() > 0
 
 
-## GÖREVLER matrisindeki bir kutu tıklandı. TEK YAZAR CharacterRegistry; burası yalnız
-## hangi seam'in çağrılacağına karar veriyor.
-##
-## KURUCU TAŞINIR, REDDEDİLMEZ — ve artık BOŞALTILMAZ da. Buradaki ön-boşaltma dalı
-## (`clear_jobs`) `founder_busy` reddine karşı yazılmış bir çareydi; Ar-Ge §5.0 o reddi
-## kaldırıp yerine DURAKLAMAYI koydu: "Diğer atamaları silinmez, duraklar." `clear_jobs`
-## tam olarak §5.0'ın yasakladığı şeyi yapıyordu — SİLİYORDU, üstelik artık duraklamış
-## defteri de temizlediği için geri dönüşü de imkânsız kılardı. Yer değiştirmeyi
-## `assign_job` kendi içinde, tek yazar olarak yapıyor.
+## GÖREVLER matrisindeki bir kutu tıklandı. Tek yazar CharacterRegistry; yer değiştirmeyi
+## ve kurucunun duraklamasını (Ar-Ge §5.0) `assign_job` kendi içinde yapıyor.
 func _on_assignment_toggled(char_id: String, job_id: String, currently_on: bool) -> void:
-	# §12.0: matrisin birimi artık İŞ. Kurucu matriste zaten yok (§2); bu yol motor tarafı
-	# (ProductSystem._reseat_founder) ile aynı seam'e bastığı için savunma hattı olarak
-	# duruyor.
-	var c: Character = CharacterRegistry.get_character(char_id)
-	if c == null:
-		return
 	if currently_on:
 		CharacterRegistry.unassign_job(char_id, job_id)
-		_rebuild_forced()
-		return
-	var reason: String = CharacterRegistry.assign_job(char_id, job_id)
-	if reason != "":
-		# SAVUNMA DALI, oyuncuya giden bir yol değil: matris atanamaz kareyi kesikli çiziyor
-		# ve tıklamıyor, kurucunun ikinci işi de artık reddedilmiyor (Ar-Ge §5.0 — duraklar).
-		# Buraya düşülüyorsa arayüz ile motor ayrışmış demektir — sessiz kalmak yerine
-		# loga bağırır.
-		# Oyuncunun "neden tıklayamıyorum" sorusunun cevabı kesikli karenin TOOLTIP'inde.
-		push_warning("[HRTab] assign_job('%s', '%s') refused: %s" % [char_id, job_id, reason])
+	else:
+		var reason: String = CharacterRegistry.assign_job(char_id, job_id)
+		# Matris atanamaz kareyi tıklanamaz çiziyor; buraya düşülüyorsa arayüz ile motor
+		# ayrışmış demektir.
+		if reason != "":
+			push_warning("[HRTab] assign_job('%s', '%s') refused: %s" % [char_id, job_id, reason])
 	_rebuild_forced()
-
-
-# --- Akışlar ---------------------------------------------------------------
-
-func _open_atlas() -> void:
-	# PanelLayer, ModalLayer DEĞİL. Atlas kendi başlığında "saati durdurmaz" diyor ve bu
-	# bir sekme SAYFASI için doğru — ama ModalLayer'ın içindeyken tam tersi oluyordu:
-	# game_shell'in 2. bekçisi ModalLayer boş değilken Space ve 1-4'ü yutuyor, dimmer de
-	# TopBar'ı kaplayıp hız düğmelerini tıklanamaz yapıyordu. Yani saat 4x'te akmaya devam
-	# ederken oyuncunun onu durduracak HİÇBİR yolu kalmıyordu — işe alım kararı boyunca.
-	# Politika sağlamdı, yeri yanlıştı; kendi katmanına taşındı (layer 9, gerçek bir modal
-	# hâlâ üstünü örter).
-	var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
-	if layer == null:
-		push_error("[HRTab] GameShell/PanelLayer yok — Atlas modalı monte edilemiyor")
-		return
-	var scene: PackedScene = load(ATLAS_MODAL) as PackedScene
-	if scene == null:
-		push_error("[HRTab] Atlas modal sahnesi yüklenemedi: %s" % ATLAS_MODAL)
-		return
-	var modal: Control = scene.instantiate() as Control
-	layer.add_child(modal)                       # önce add_child
-	if modal.has_signal("state_changed"):
-		modal.state_changed.connect(_on_atlas_changed)
-	if modal.has_method("populate"):
-		modal.populate()                         # sonra populate (ev konvansiyonu)
-
-
-func _on_atlas_changed() -> void:
-	# Arayış başladı / işe alım oldu / dosyalar iade edildi. Motorun bu geçişler için
-	# sinyali yok (hr_search_state_changed mevcut değil), o yüzden modal haber veriyor.
-	_refresh()
 
 
 func _on_card_action(emp_id: String, action: String, anchor: Control) -> void:
@@ -741,32 +493,25 @@ func _on_card_action(emp_id: String, action: String, anchor: Control) -> void:
 		HRLedger.ACTION_MENU:
 			_open_actions(emp, anchor)
 		HRLedger.ACTION_RAISE:
-			_open_raise(emp, anchor)
+			_open_raise(emp)
 		HRLedger.ACTION_FIRE:
 			_confirm_fire(emp)
 		HRLedger.ACTION_TRAIN:
 			_confirm_training(emp)
 		HRLedger.ACTION_PROMOTE:
-			_open_promotion(emp, anchor)
+			_open_promotion(emp)
 
 
-# --- Satır aksiyon menüsü --------------------------------------------------
+# --- Satır aksiyon menüsü (9e) ---------------------------------------------
 
 func _open_actions(emp: Character, anchor: Control) -> void:
-	# Defter satırına tıklayınca açılan üçlü. Zam kendi popover'ını açar (slider'lı),
-	# diğer ikisi zaten var olan onay modallarını kaldırır — bu fonksiyon hiçbir sonuç
-	# HESAPLAMAZ, yalnız kapıyı açar.
-	#
-	# Kapalı satırın GEREKÇESİ preview_*'tan okunur, can_*'tan DEĞİL: can_* yalnız bool
-	# döner, sebep dizesi yalnız preview_*'ın `reason` anahtarında yaşıyor. (Kartın
-	# kilitli reçetesi buydu; kart öldü, kural kaldı.)
+	# Kapalı satırın gerekçesi preview_*'ın `reason` anahtarından okunur: can_* yalnız bool döner.
 	var pop: HRPopover = HRPopover.mount(self)
 	if pop == null:
 		return
 	var body: VBoxContainer = pop.body()
 	body.add_theme_constant_override("separation", 0)
 
-	# BAŞLIK SATIRI (9e): ad + rol, altında hairline.
 	var head := VBoxContainer.new()
 	head.add_theme_constant_override("separation", 2)
 	head.add_child(UiFactory.make_label(emp.character_name, &"RowName"))
@@ -775,32 +520,27 @@ func _open_actions(emp: Character, anchor: Control) -> void:
 	body.add_child(head)
 	body.add_child(HRUiShared.hairline())
 
-	# DÖRT SATIR. Eğitim 2026-08-22'de buraya girdi: onaylı tasarım satırda EĞİTİME
-	# GÖNDER düğmesi çizmiyor ve eğitim kişi başına bir karar — menü onun evi.
-	# Sağdaki META her satırın SONUCUNU söylüyor (mevcut maaş · süre · kalıcı).
-	var train_ok: bool = CharacterRegistry.can_train(emp.id)
+	# Sağdaki meta her satırın SONUCUNU söylüyor (mevcut maaş · unvan · süre · kalıcı).
 	for spec in [
 			{"key": "HR_CARD_RAISE", "preview": HRActions.preview_raise(emp, HRConstants.RAISE_MIN_PCT),
-				"action": HRLedger.ACTION_RAISE, "icon": "raise",
+				"action": HRLedger.ACTION_RAISE,
 				"meta": HRUiShared.money(emp.monthly_salary)},
-			# §13.3 DÖRDÜNCÜ SATIR. Kilitli hâli GÖRÜNÜR kalır ve gerekçesini gösterir —
-			# Kıdemli için "En üst seviye" (onaylı 2b'nin menü şeridi).
+			# §13.3: kilitli hâli görünür kalır ve gerekçesini gösterir.
 			{"key": "HR_CARD_PROMOTE",
 				"preview": {"ok": HRActions.can_promote(emp),
 					"reason": HRActions.promotion_block_reason(emp)},
-				"action": HRLedger.ACTION_PROMOTE, "icon": "raise",
+				"action": HRLedger.ACTION_PROMOTE,
 				"meta": HRConstants.job_title(emp.role, emp.level)},
+			# §5.4 iki gerekçe: bar dolmadı ya da alan tavanda — metni registry seçer.
 			{"key": "HR_TRAINING_PICK_TITLE",
-				# §5.4 İKİ GEREKÇE: bar dolmadıysa "henüz hak edilmedi", alan tavandaysa
-				# "öğrenecek bir şey kalmadı". Menü ikisini de tavan diye okuyordu.
-				"preview": {"ok": train_ok,
+				"preview": {"ok": CharacterRegistry.can_train(emp.id),
 					"reason": CharacterRegistry.training_block_reason(emp.id)},
-				"action": HRLedger.ACTION_TRAIN, "icon": "train",
+				"action": HRLedger.ACTION_TRAIN,
 				"meta": HRConstants.training_duration_text()},
 			{"key": "HR_CARD_FIRE", "preview": HRActions.preview_fire(emp),
-				"action": HRLedger.ACTION_FIRE, "icon": "fire",
+				"action": HRLedger.ACTION_FIRE,
 				"meta": tr("HR_MENU_PERMANENT")}]:
-		# YIKICI EYLEM AYRI BÖLÜMDE (9e): İşten çıkar'ın önüne hairline.
+		# Yıkıcı eylem ayrı bölümde: İşten çıkar'ın önüne hairline.
 		if String(spec["action"]) == HRLedger.ACTION_FIRE:
 			body.add_child(HRUiShared.hairline())
 		body.add_child(_menu_row(pop, emp, spec, anchor))
@@ -808,8 +548,8 @@ func _open_actions(emp: Character, anchor: Control) -> void:
 	pop.open_at(anchor)
 
 
-## 9e'nin satır grameri: 46px ritim, 16px iç boşluk, solda mono ikon, sağda meta,
-## hover'da 2px amber sol kenar + %5 zemin, devre dışıysa kilit glifi + gerekçe.
+## 46px ritim, 16px iç boşluk, sağda meta, hover'da 2px amber sol kenar + %5 zemin;
+## devre dışıysa kilit glifi + gerekçe.
 func _menu_row(pop: HRPopover, emp: Character, spec: Dictionary, anchor: Control) -> Control:
 	var preview: Dictionary = spec["preview"]
 	var ok: bool = bool(preview.get("ok", false))
@@ -848,11 +588,8 @@ func _menu_row(pop: HRPopover, emp: Character, spec: Dictionary, anchor: Control
 	row.offset_left = 16
 	row.offset_right = -16
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Kilitli satırda ikonun YERİNE kilit glifi: gerekçe ikon hizasında girinti alır (9e).
-	if ok:
-		row.add_child(HRUiShared.lock_glyph(13, Color(0, 0, 0, 0)))
-	else:
-		row.add_child(HRUiShared.lock_glyph(13, UiTokens.INK_FAINT))
+	# Açık satırda glif saydam kalır: etiketler kilitli satırlarla aynı hizada durur.
+	row.add_child(HRUiShared.lock_glyph(13, UiTokens.INK_FAINT if not ok else Color(0, 0, 0, 0)))
 	var label_col := VBoxContainer.new()
 	label_col.add_theme_constant_override("separation", 1)
 	label_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -873,19 +610,14 @@ func _menu_row(pop: HRPopover, emp: Character, spec: Dictionary, anchor: Control
 	return btn
 
 
-# --- Zam (onaylı modal · sayfa 1b) -----------------------------------------
+# --- Zam / terfi / çıkarma (§14 aksiyon kabuğu) -----------------------------
 
-func _open_raise(emp: Character, _anchor: Control) -> void:
-	# `_anchor` ARTIK KULLANILMIYOR: modal ekranın ortasında duruyor, satıra
-	# çapalanmıyor. İmza korunuyor çünkü menü dağıtıcısı üç eylemi TEK biçimde
-	# çağırıyor; tek eylem için o biçimi bozmak dağıtıcıya eylem-başına dal eklerdi.
+func _open_raise(emp: Character) -> void:
 	if not bool(HRActions.preview_raise(emp, HRConstants.RAISE_MIN_PCT).get("ok", false)):
 		return
 	EventBus.confirm_requested.emit({
 		"modal": "hr_action",
-		# BAŞLIKTA YALNIZ EYLEM (H2): personel adı yok. Kimin olduğu satırdan menüye,
-		# menüden buraya kesintisiz taşınıyor zaten; sayfa kazandı.
-		"title": tr("HR_CARD_RAISE"),
+		"title": tr("HR_CARD_RAISE"),   # başlıkta yalnız eylem, ad yok
 		"commit_key": "HR_APPLY_RAISE_PCT",
 		"slider": {"min": HRConstants.RAISE_MIN_PCT, "max": HRConstants.RAISE_MAX_PCT,
 			"start": HRConstants.RAISE_MIN_PCT},
@@ -894,10 +626,9 @@ func _open_raise(emp: Character, _anchor: Control) -> void:
 	})
 
 
-func _open_promotion(emp: Character, _anchor: Control) -> void:
-	# §9.3 · TERFİ. Zam ile aynı kabuk (§14) ve aynı slider grameri; fark, bunun bir SEVİYE
-	# atlaması olması — unvan da bir delta satırı olarak okunuyor (onaylı 2b).
-	# Minimum %10 (§9.3), yani slider hiçbir zaman "terfi ettim ama zam almadım"a inmez.
+## §9.3: zam ile aynı kabuk; fark bir SEVİYE atlaması olması — unvan da bir delta satırı.
+## Minimum %10, yani slider "terfi ettim ama zam almadım"a inmez.
+func _open_promotion(emp: Character) -> void:
 	if not HRActions.can_promote(emp):
 		return
 	EventBus.confirm_requested.emit({
@@ -917,9 +648,7 @@ func _preview_promotion(pct: int, emp: Character) -> Dictionary:
 
 func _do_promotion(pct: int, emp_id: String) -> bool:
 	var emp: Character = CharacterRegistry.get_character(emp_id)
-	if emp == null:
-		return false
-	if not HRActions.apply_promotion(emp, pct):
+	if emp == null or not HRActions.apply_promotion(emp, pct):
 		return false
 	_rebuild_forced()
 	return true
@@ -933,18 +662,8 @@ func _do_raise(pct: int, emp_id: String) -> bool:
 	var emp: Character = CharacterRegistry.get_character(emp_id)
 	if emp == null or not HRActions.apply_raise(emp, pct):
 		return false
-	# set_salary sinyal ATMIYOR (registry'de eksik-sinyal notu duruyor), o yüzden
-	# tazeleme aksiyondan sonra yerel olarak tetikleniyor.
 	_rebuild_forced()
 	return true
-
-
-# --- Tatil / çıkarma onayları ----------------------------------------------
-
-## `_confirm_vacation` / `_do_vacation` EMEKLİ (H5, 2026-08-22): oyuncunun
-## tatile gönderme yolu kaldırıldı. İzin yalnız otomatik yıllık kanaldan geliyor,
-## yani `leave_taken_year`'a dokunan bir oyuncu eylemi ARTIK YOK — R3 bir sayacı
-## düzenleyerek değil, ona dokunan eli kaldırarak karşılandı.
 
 
 func _confirm_fire(emp: Character) -> void:
@@ -953,16 +672,15 @@ func _confirm_fire(emp: Character) -> void:
 		return
 	EventBus.confirm_requested.emit({
 		"modal": "hr_action",
-		"title": tr("HR_CARD_FIRE"),            # H2: yalnız eylem, ad yok
+		"title": tr("HR_CARD_FIRE"),
 		"rows": pv.get("rows", []),
 		"commit_text": tr("HR_FIRE_CONFIRM_OK"),
 		"on_commit": _do_fire.bind(emp.id),
 	})
 
 
+## `_pct`: modal her eyleme tek imzayla döner; çıkarmanın slider'ı yok ve sıfır gönderiliyor.
 func _do_fire(_pct: int, emp_id: String) -> bool:
-	# `_pct` slider'ı olan eylemler için; çıkarmanın slider'ı yok ve modal sıfır
-	# gönderiyor. Tek imza = host'ta tek dal.
 	var emp: Character = CharacterRegistry.get_character(emp_id)
 	if emp == null or not HRActions.fire(emp):
 		return false
@@ -970,10 +688,9 @@ func _do_fire(_pct: int, emp_id: String) -> bool:
 	return true
 
 
+## Yapı anahtarını geçersiz kılıp tam yeniden kurar. set_salary ve set_status sinyal
+## atmadığı için aksiyon sonrası tazeleme buradan tetikleniyor.
 func _rebuild_forced() -> void:
-	# Yapı anahtarını geçersiz kılıp tam yeniden kurar. set_salary ve set_status
-	# sinyal atmadığı için zam/tatil sonrası yapı anahtarı kendiliğinden değişse de
-	# tetikleyici sinyal gelmiyor; çağrı buradan yapılıyor.
 	_structure_key = ""
 	_refresh()
 
@@ -984,4 +701,4 @@ func _on_viewport_resized() -> void:
 	var was_dense: bool = HRLedger._dense
 	HRLedger.measure(get_viewport_rect().size.x)
 	if HRLedger._dense != was_dense:
-		_rebuild_forced()   # yalnız KADEME değiştiyse: her pikselde tabloyu kurmayız
+		_rebuild_forced()   # yalnız kademe değiştiyse: her pikselde tabloyu kurmayız

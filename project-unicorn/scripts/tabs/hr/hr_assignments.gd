@@ -1,34 +1,26 @@
 class_name HRAssignments
 extends RefCounted
 
-# EKİP → GÖREVLER matrisi — onaylı tasarım 10b.
+# EKİP → GÖREVLER matrisi (10b, §12).
 #
-# Sütunlar: ÇALIŞAN 430 · DURUM 210 · sonra YEDİ ATAMA SÜTUNU eşit aralıklı:
-#   Ürün · Tasarım · Yazılım · Test · Satış · Müşteri İlişkileri · Araştırma
-# Build/Destek/Hesap/Maliyet YOK — tasarım onları adıyla emekli etti ve motor
-# 2026-08-22'de atama birimini işten ALANA taşımıştı; rev 11 §12.0 onu İŞE geri aldı.
+# Sütunlar: ÇALIŞAN · DURUM · sonra `HRConstants.JOBS`'un her işi için eşit aralıklı bir sütun.
 #
-# KURUCU BANDI en üstte (10b): yıldızsız satır, yalnız işaretlenebilir kutular, yedi alan
-# da onun. Kurucu KADRO listesinde YOKTUR ve ÇALIŞAN sayısına girmez — o sayı maaş
-# bordrosunun sayısı, kurucu maaş almıyor.
+# KURUCU BURADA YOK: atanabilir bir işçi değil, aktif yapımın fazını motor tarafında
+# kendiliğinden takip eder (ProductSystem._reseat_founder).
 #
-# HÜCRENİN DÖRT DURUMU, tasarımdan birebir:
-#   ana alan + işaretli    → dolu amber, koyu tik
-#   ikincil alan + işaretli→ 1px amber kenar, amber yıkama, amber tik
-#   atanabilir, işaretsiz  → 1px #2A343D kenar, koyu dolgu
-#   alanı yok              → 1px KESİKLİ kenar, saydam, tıklanamaz
-# Hepsi çalışma zamanında kuruluyor (UiFactory.make_state_chip precedent'i): yeni bir
-# theme_type_variation eklemek THEME_STAMP artırmayı gerektirirdi, bu ekran gerektirmiyor.
+# HÜCRE DURUMLARI (§12.3):
+#   ana iş + işaretli      → dolu amber, koyu tik
+#   ikincil iş + işaretli  → 1px amber kenar, amber yıkama, amber tik
+#   atanabilir, işaretsiz  → 1px kenar, koyu dolgu
+#   atanamaz               → 1px KESİKLİ kenar, saydam, tıklanamaz, gerekçe tooltip'te
+# Stylebox'lar çalışma zamanında kuruluyor: yeni bir theme_type_variation THEME_STAMP
+# artırmayı gerektirirdi.
 
 const W_WHO := 430
 const W_STATE := 210
 const CELL := 22
 
-## `on_toggle(character_id, area_id, currently_on)` — TEK yazma kapısı hr_tab'da.
-## KURUCU BURADA YOK (R1, 2026-08-21). Ne satır, ne kutu, ne salt-okunur bant, ne de
-## "nereye gitti" diye açıklayan bir not. Kurucu bir atanabilir işçi DEĞİL: aktif
-## yapımın fazını motor tarafında kendiliğinden takip eder (ProductSystem._reseat_founder)
-## ve oyuncunun onu taşıyacağı bir kapı yok.
+## `on_toggle(character_id, job_id, currently_on)` — tek yazma kapısı hr_tab'da.
 static func build(on_toggle: Callable, on_recruit: Callable = Callable()) -> Control:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 0)
@@ -36,9 +28,7 @@ static func build(on_toggle: Callable, on_recruit: Callable = Callable()) -> Con
 	col.add_child(_header())
 	var roster: Array[Character] = CharacterRegistry.get_employees()
 	if roster.is_empty():
-		# SİZE MATRİS DEĞİL BİR CÜMLE (C2). Kurucu çıktığı için taze bir koşuda bu sayfa
-		# GERÇEKTEN boş; Kadro'nun zaten onaylı olan boş satırı yeniden çizilmiyor,
-		# OLDUĞU GİBİ kullanılıyor — iki sayfada iki farklı boşluk grameri olmasın.
+		# Boş kadroda matris değil, Kadro'nun boş satırı: iki sayfada tek boşluk grameri.
 		col.add_child(HRLedger.empty_row(on_recruit))
 		return col
 	for emp in roster:
@@ -53,12 +43,6 @@ static func _header() -> Control:
 	row.custom_minimum_size = Vector2(0, 30)
 	row.add_child(_head(tr_key("HR_COL_EMPLOYEE"), W_WHO, HORIZONTAL_ALIGNMENT_LEFT))
 	row.add_child(_head(tr_key("HR_COL_STATE"), W_STATE, HORIZONTAL_ALIGNMENT_LEFT))
-	# §12.0 İŞ SÜTUNLARI — `HRConstants.JOBS` neyse o. Ar-Ge modülü altıncıyı (Araştırma)
-	# getirdi ve matris onu KENDİLİĞİNDEN büyüdü; bu döngünün tek gerçeği o listedir.
-	# Araştırma sütunu VAR ama SALT OKUNUR (Ar-Ge §5.3): atama Ar-Ge panelinde, düğümün
-	# üzerinde yapılır. Sütunu gizlemek de olurdu — gizlemedik, çünkü matris "kim ne
-	# yapıyor"un tek tablosu ve araştıran kişinin burada BOŞ görünmesi §5.0'ın tam tersini
-	# söylerdi. Hücre kilidinin gerekçesi `_cell`'de.
 	var jobs := HBoxContainer.new()
 	jobs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	jobs.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -93,99 +77,48 @@ static func _row(emp: Character, on_toggle: Callable) -> Control:
 	meta.add_theme_constant_override("separation", UiTokens.SPACE_S)
 	meta.add_child(UiFactory.make_label(
 		UiTokens.tr_upper(HRConstants.role_label(emp.role)), &"MicroLabel"))
-	# Yıldızlar burada küçük: KADRO sekmesi tam boy gösteriyor, bu satırda amaç
-	# hatırlatmak (10b: "ad sütunu genişledi, alt satırdan yıldız tekrarı çıktı" —
-	# tekrar çıktı, ama rolün iki alanı kaldı ki matris okunurken kimin nesi olduğu bilinsin).
+	# Küçük yıldızlar: amaç matris okunurken kimin nesi olduğunu hatırlatmak.
 	meta.add_child(HRUiShared.area_stars_row(emp.role, emp.role_stats, 11))
 	stack.add_child(meta)
 	who.add_child(stack)
 	row.add_child(who)
 
-	row.add_child(_state_cell(emp))
-	row.add_child(_cells(emp, on_toggle))
-	return card
+	# DURUM, Kadro ile aynı sütun (§13.3). Boşta burada değil: boş bir satır zaten boş okunur.
+	row.add_child(HRUiShared.status_cell(emp, W_STATE))
 
-
-## DURUM: AŞIRI YÜK / BOŞTA / Eğitimde · N gün — hover açıklamalarıyla (9f).
-static func _state_cell(emp: Character) -> Control:
-	# §13.3 TEK EV: Kadro ile aynı sütun. Matris eskiden üç durum çiziyordu (Eğitimde ·
-	# AŞIRI YÜK · BOŞTA) ve aynı kişi iki sayfada iki farklı şey okuyordu.
-	#
-	# BOŞTA BU SÜTUNDA DEĞİL (§13.3): "Boşta bu sütunda değildir; GÖREV sütununda metin
-	# olarak okunur (§12.2)." Matriste GÖREV sütunu yok — boş bir satır zaten boş okunuyor.
-	return HRUiShared.status_cell(emp, W_STATE)
-
-static func _cells(c: Character, on_toggle: Callable) -> Control:
 	var jobs := HBoxContainer.new()
 	jobs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for job_id in HRConstants.JOBS:
 		var slot := CenterContainer.new()
 		slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		slot.add_child(_cell(c, String(job_id), on_toggle))
+		slot.add_child(_cell(emp, String(job_id), on_toggle))
 		jobs.add_child(slot)
-	return jobs
+	row.add_child(jobs)
+	return card
 
 
+## Kapalı kare hep aynı; gerekçesi değişir (§12.1: iş tavanı ayrı bir durum değil, atanamaz
+## karenin bir gerekçesi). Kapıların sırası gerekçenin doğruluğunu belirler.
 static func _cell(c: Character, job_id: String, on_toggle: Callable) -> Control:
-	# §12.3 hücre durumları: ana alan · ikincil alan · alanı yok · atanamaz.
-	# §12.1 üçüncü iş kilidi "atanamaz durumunun BİR GEREKÇESİDİR" — ayrı bir durum değil,
-	# aynı kapalı kare, farklı gerekçe. Efsaneye yeni satır eklenmemesinin sebebi bu.
 	var coef: float = HRConstants.job_coefficient(c.role, job_id, c.category)
 	var checked: bool = c.assigned_job_ids.has(job_id)
-	var primary: bool = coef >= 1.0
 
+	# Önce ALAN: işi hiç yapamayan birine dünyanın hâlini anlatmak yalan olurdu.
 	if coef <= 0.0:
 		return _dashed_cell(tr_key("HR_ASSIGN_NOT_YOUR_AREA"))
-	# ARAŞTIRMA HÜCRESİ TIKLANMAZ (Ar-Ge §5.3). Atama düğümün üzerinde yapılır — orada
-	# hangi araştırmaya konduğu belli, burada belli değil; tek bir kutu "araştırmaya at"
-	# diyemez, çünkü ARAŞTIRMA diye tek bir iş yok, yirmi düğüm var. Kapalı karenin
-	# gerekçesini yine kendisi söylüyor: üçüncü-iş kilidinin kurduğu desen, aynı kare,
-	# başka gerekçe.
-	# SIRA: alan kapısından SONRA, tavan kapısından ÖNCE. Araştırmaya hiç konamayan bir
-	# satışçıya "atama başka yerde" demek yalan olurdu — onun için kapı ALAN kapısıdır
-	# (§5.2'nin dört aile alanı). Tavanın önünde olmasının sebebi ters: bu sütun tavan ne
-	# olursa olsun tıklanmıyor, yani asıl gerekçe burasıdır.
-	# SATIŞ SÜTUNU, CANLI B2B ÜRÜN YOKKEN KİLİTLİ-GÖRÜNÜR (Satış rev 6 §3.1). Sütunu gizlemek
-	# oyuncuya "böyle bir şey yok" der; kilitli-görünür olan "henüz yok, sebebi bu" der — ve
-	# denetimin kök-neden (b) bulgusunun cevabı tam olarak o ayrımdır. Aynı kapalı kare, aynı
-	# desen, başka gerekçe.
-	# SIRA: ALAN kapısından SONRA. Satış alanı olmayan birine dünyanın hâlini anlatmak yalan
-	# olurdu — onun kapısı kendi alanıdır ve yukarıda kapandı. Bu satır kurucu içindir, çünkü
-	# kurucu her alanı taşır ve bu sütunu gerçekten tıklayabilecek tek kişidir.
+	# Satış canlı B2B ürün yokken kilitli-görünür (Satış §3.1): gizlemek "böyle bir şey yok"
+	# der, kilitli kare "henüz yok, sebebi bu".
 	if job_id == HRConstants.JOB_SALES and not ProductSystem.has_b2b_product():
 		return _dashed_cell(tr_key("SALES_LOCKED_NO_B2B"))
+	# Araştırma sütunu salt okunur (Ar-Ge §5.3): atama düğümün üzerinde yapılır, tek bir kutu
+	# yirmi düğümden hangisine diyemez. Tavandan önce: bu sütun tavan ne olursa olsun kapalı.
 	if job_id == HRConstants.JOB_RESEARCH:
 		return _dashed_cell(tr_key("HR_ASSIGN_RESEARCH_ELSEWHERE"))
-	# ÜÇÜNCÜ İŞ KİLİDİ (§12.1): iki işi olan birinin boş üçüncü hücresi tıklanamaz ve
-	# gerekçesini gösterir. Kilit GÖRÜNÜR KALIR, gizlenmez — oyuncu neyin mümkün olmadığını
-	# görmeli, hücrenin yok olduğunu değil.
+	# İş tavanı (§12.1): boş üçüncü hücre kilitli ve görünür kalır.
 	if not checked and c.assigned_job_ids.size() >= HRConstants.MAX_JOBS_PER_PERSON:
 		return _dashed_cell(tr_key("HR_ASSIGN_JOB_CAP"))
 
-	var box := PanelContainer.new()
-	box.custom_minimum_size = Vector2(CELL, CELL)
-	var sb := StyleBoxFlat.new()
-	sb.set_corner_radius_all(UiTokens.RADIUS_S)
-
-	if checked and primary:
-		sb.bg_color = UiTokens.ACCENT
-	elif checked:
-		sb.bg_color = UiTokens.AMBER_WASH
-		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-		sb.border_color = UiTokens.ACCENT
-	else:
-		sb.bg_color = UiTokens.SURFACE_FRAME
-		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-		sb.border_color = UiTokens.BORDER_HOVER
-	box.add_theme_stylebox_override("panel", sb)
-
-	if checked:
-		var tick := UiFactory.make_label("✓", &"BadgeLabel",
-			UiTokens.ON_ACCENT if primary else UiTokens.ACCENT)
-		tick.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		tick.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		box.add_child(tick)
-
+	var box: PanelContainer = _box(checked, coef >= 1.0)
 	var btn := Button.new()
 	btn.flat = true
 	btn.focus_mode = Control.FOCUS_NONE
@@ -199,16 +132,34 @@ static func _cell(c: Character, job_id: String, on_toggle: Callable) -> Control:
 	return box
 
 
-## ALANI YOK · ATANAMAZ — GERÇEKTEN kesikli kare. StyleBoxFlat kesikli kenar çizemiyor ve
-## "biraz daha soluk düz kenar" ölçüldüğünde işe yaramadı: ekranda atanabilir-işaretsiz
-## kareyle ayırt edilemiyordu, yani oyuncu nereye tıklayabileceğini göremiyordu. Dört kenarı
-## elle çiziyoruz — tasarımın kapalı karesi bu, ve tıklamayı da almıyor.
-static func _dashed_cell(reason: String = "") -> Control:
+## Atanabilir kare: işaretliyse ana/ikincil işe göre amber dolgu ya da amber kenar + tik.
+static func _box(checked: bool, primary: bool) -> PanelContainer:
+	var box := PanelContainer.new()
+	box.custom_minimum_size = Vector2(CELL, CELL)
+	var sb := StyleBoxFlat.new()
+	sb.set_corner_radius_all(UiTokens.RADIUS_S)
+	if checked and primary:
+		sb.bg_color = UiTokens.ACCENT
+	else:
+		sb.bg_color = UiTokens.AMBER_WASH if checked else UiTokens.SURFACE_FRAME
+		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
+		sb.border_color = UiTokens.ACCENT if checked else UiTokens.BORDER_HOVER
+	box.add_theme_stylebox_override("panel", sb)
+	if checked:
+		var tick := UiFactory.make_label("✓", &"BadgeLabel",
+			UiTokens.ON_ACCENT if primary else UiTokens.ACCENT)
+		tick.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tick.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		box.add_child(tick)
+	return box
+
+
+## Atanamaz — gerçekten kesikli kare. StyleBoxFlat kesikli kenar çizemiyor ve soluk düz kenar
+## ekranda atanabilir-işaretsiz kareden ayırt edilemiyordu; dört kenar elle çiziliyor.
+static func _dashed_cell(reason: String) -> Control:
 	var box := Control.new()
 	box.custom_minimum_size = Vector2(CELL, CELL)
-	# Gerekçe DIŞARIDAN gelir: aynı kapalı kare iki şey anlatabilir — "bu senin alanın
-	# değil" ve "en fazla iki iş" (§12.1). İkisi de görünür ve ikisi de sebebini söyler.
-	box.tooltip_text = reason if reason != "" else tr_key("HR_ASSIGN_NOT_YOUR_AREA")
+	box.tooltip_text = reason
 	box.mouse_filter = Control.MOUSE_FILTER_STOP
 	box.draw.connect(func() -> void:
 		var c: Color = UiTokens.BORDER_DASHED
@@ -231,49 +182,24 @@ static func _dashed_cell(reason: String = "") -> Control:
 	return box
 
 
-## ANA ALAN · İKİNCİL ALAN · ALANI YOK · ATANAMAZ — matrisin altındaki üç örnek kare.
+## ANA · İKİNCİL · ALANI YOK — matrisin altındaki üç örnek kare.
 static func _legend() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_3XL)
-	row.add_theme_constant_override("margin_top", UiTokens.SPACE_L)
 	for spec in [
-			{"key": "HR_LEGEND_PRIMARY", "state": "primary"},
-			{"key": "HR_LEGEND_SECONDARY", "state": "secondary"},
-			{"key": "HR_LEGEND_NO_AREA", "state": "none"}]:
+			["HR_LEGEND_PRIMARY", _box(true, true)],
+			["HR_LEGEND_SECONDARY", _box(true, false)],
+			["HR_LEGEND_NO_AREA", _dashed_cell(tr_key("HR_ASSIGN_NOT_YOUR_AREA"))]]:
 		var item := HBoxContainer.new()
 		item.add_theme_constant_override("separation", UiTokens.SPACE_M)
-		item.add_child(_legend_swatch(String(spec["state"])))
+		item.add_child(spec[1])
 		item.add_child(UiFactory.make_label(
-			tr_key(String(spec["key"])), &"ColumnHeader", UiTokens.INK_DIM))
+			tr_key(String(spec[0])), &"ColumnHeader", UiTokens.INK_DIM))
 		row.add_child(item)
 	var pad := MarginContainer.new()
 	pad.add_theme_constant_override("margin_top", 14)
 	pad.add_child(row)
 	return pad
-
-
-static func _legend_swatch(state: String) -> Control:
-	var box := PanelContainer.new()
-	box.custom_minimum_size = Vector2(CELL, CELL)
-	var sb := StyleBoxFlat.new()
-	sb.set_corner_radius_all(UiTokens.RADIUS_S)
-	match state:
-		"primary":
-			sb.bg_color = UiTokens.ACCENT
-		"secondary":
-			sb.bg_color = UiTokens.AMBER_WASH
-			sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-			sb.border_color = UiTokens.ACCENT
-		_:
-			return _dashed_cell()
-	box.add_theme_stylebox_override("panel", sb)
-	if state != "none":
-		var tick := UiFactory.make_label("✓", &"BadgeLabel",
-			UiTokens.ON_ACCENT if state == "primary" else UiTokens.ACCENT)
-		tick.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		tick.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		box.add_child(tick)
-	return box
 
 
 static func _head(text: String, width: int, align: int = HORIZONTAL_ALIGNMENT_CENTER) -> Label:
@@ -285,5 +211,6 @@ static func _head(text: String, width: int, align: int = HORIZONTAL_ALIGNMENT_CE
 	return l
 
 
+## `static func` içindeki tr() çalışırken ölür; çeviri TranslationServer'dan.
 static func tr_key(key: String) -> String:
 	return TranslationServer.translate(key)

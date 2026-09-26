@@ -1,39 +1,33 @@
 extends Control
 
 # ============================================================================
-# Atlas Seçme & Yerleştirme modalı — §10.1 · onaylı Kare 2 (rol + bütçe bandı) ve §10.3 ·
-# onaylı Kare 4 (aday
-# dosyaları). Tek kabuk, iki hal; hangisinin açılacağını arayışın motor durumu
-# söyler (HRSearchSystem.get_state).
+# Atlas Seçme & Yerleştirme modalı — §10.1 (rol + seviye) ve §10.3 (aday dosyaları).
+# Tek kabuk, iki hal; hangisinin açılacağını arayışın motor durumu söyler
+# (HRSearchSystem.get_state).
 #
-# Düzen kodda kurulur, .tscn kökü boş (event_modal / ending_scene idiomu).
-# process_mode = ALWAYS: pause-gated UI. Saate DOKUNULMAZ — bu kod tabanında
-# sekmeler ve sekme modalları saati oynatmaz.
+# Düzen kodda kurulur, .tscn kökü boş. process_mode = ALWAYS: pause-gated UI; saate
+# dokunmaz.
 #
-# ADIM 2 ARTIK BÜTÇE BANDI DEĞİL SEVİYE (§3). Bant bir bütçe seçeneğiydi ve işe alımda
-# ATILIYORDU: aday üretilirken okunuyor, çalışana hiç yazılmıyordu — yani oyunda seviye diye
-# bir şey yoktu. Seviye kişide saklanır, unvanı türetir ve terfinin değiştirdiği alandır.
+# ADIM 2 SEVİYEDİR (§3): seviye kişide saklanır, unvanı türetir ve terfinin değiştirdiği
+# alandır.
 #
-# ARAMA ÜCRETSİZDİR (§10). Adım 2'de para okunmaz, çünkü orada ödenecek bir şey yok: tek ücret
-# komisyondur ve o da işe alım gerçekleştiğinde, aday kartından okunarak ödenir. Runway satırı
-# da orada (§10.3 · onaylı Kare 4) — ekonomik bağlam somut maaşın olduğu ana aittir.
+# ARAMA ÜCRETSİZDİR (§10): adım 2'de para okunmaz. Tek ücret komisyondur ve işe alımda,
+# aday kartından okunarak ödenir; runway satırı da orada — ekonomik bağlam somut maaşın
+# olduğu ana aittir.
 #
 # Her rakam motordan: preview_search ve preview_hire.
-#
-# # WORKING TR — oyuncuya görünen tüm metin çalışma metni; ses geçişi sonra.
 # ============================================================================
 
 signal state_changed          # arayış başladı / iptal edildi / işe alım oldu → sekme tazelensin
 
-## 11a 1440px, 11b 1560px — iki adımın genişliği tasarımdan birebir. Dosya adımı daha
-## geniş çünkü üç kart yan yana duruyor.
+## İki adımın genişliği tasarımdan; dosya adımı üç kartı yan yana taşıyor.
 const PANEL_SEARCH := Vector2(1440, 0)
 const PANEL_FILES := Vector2(1560, 0)
 
 var _root_box: VBoxContainer = null
 var _panel: PanelContainer = null
 var _selected_role: String = ""
-## -1 = seçilmedi. Seviye bir INT (§3: 0/1/2), o yüzden "" ile boşluk anlatılamaz.
+## -1 = seçilmedi. Seviye bir INT (§3: 0/1/2).
 var _selected_level: int = -1
 
 
@@ -45,17 +39,16 @@ func _ready() -> void:
 	dimmer.color = UiTokens.SCRIM_MODAL
 	dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(dimmer)
-	var center := PanelContainer.new()
-	center.theme_type_variation = &"ModalPanel"
-	center.set_anchors_preset(Control.PRESET_CENTER)
-	center.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	center.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_panel = center
-	add_child(center)
+	_panel = PanelContainer.new()
+	_panel.theme_type_variation = &"ModalPanel"
+	_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	add_child(_panel)
 	var margin := MarginContainer.new()
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		margin.add_theme_constant_override(side, 22)
-	center.add_child(margin)
+	_panel.add_child(margin)
 	_root_box = VBoxContainer.new()
 	_root_box.add_theme_constant_override("separation", 12)
 	margin.add_child(_root_box)
@@ -72,49 +65,46 @@ func _rebuild() -> void:
 	for c in _root_box.get_children():
 		_root_box.remove_child(c)
 		c.queue_free()
-	_add_masthead()
+	# Kimlik satırı: ATLAS RECRUITMENT.
+	var masthead := HBoxContainer.new()
+	masthead.add_theme_constant_override("separation", 13)
+	masthead.add_child(UiFactory.make_avatar("A", 32))
+	masthead.add_child(UiFactory.make_label(HRConstants.search_agency_name(), &"RowName"))
+	_root_box.add_child(masthead)
 	if HRSearchSystem.get_state() == HRConstants.SEARCH_FILES_READY:
-		if _panel != null:
-			_panel.custom_minimum_size = PANEL_FILES
+		_panel.custom_minimum_size = PANEL_FILES
 		_build_files_step()
 	else:
-		if _panel != null:
-			_panel.custom_minimum_size = PANEL_SEARCH
+		_panel.custom_minimum_size = PANEL_SEARCH
 		_build_search_step()
 
 
-## ATLAS RECRUITMENT — tek satır kimlik (11a/11b). SLOGAN YOK: tasarım Atlas'ın alıntısını
-## kaldırdı, o yüzden HR_ATLAS_QUOTE bu ekrandan düştü.
-func _add_masthead() -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 13)
-	var disc: Panel = UiFactory.make_avatar("A", 32)
-	row.add_child(disc)
-	row.add_child(UiFactory.make_label(
-		HRConstants.search_agency_name(), &"RowName"))
-	_root_box.add_child(row)
-
-
-# --- ADIM 1 · ROL + ADIM 2 · BÜTÇE BANDI (11a) ------------------------------
+# --- ADIM 1 · ROL + ADIM 2 · SEVİYE (11a) -----------------------------------
 
 func _build_search_step() -> void:
 	_root_box.add_child(_step_header(tr("HR_ATLAS_STEP_ROLE")))
 
 	var grid := GridContainer.new()
 	grid.columns = 3
-	# ÜÇ EŞİT SÜTUN (11a): GridContainer artık boşluğu GENİŞLEYEN sütunlara eşit
-	# dağıtıyor — şartı her hücrenin EXPAND_FILL taşıması (aşağıda, _role_card).
+	# Üç eşit sütun: GridContainer boşluğu genişleyen sütunlara eşit dağıtır — şartı her
+	# kartın EXPAND_FILL taşıması (_card).
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
-	for role_id in HRConstants.EMPLOYEE_ROLES:
-		grid.add_child(_role_card(String(role_id)))
-	# §10.6: "Atlas'ta İKİ rol kartı kilitli-görünür durur: Pazarlama ve in-house İK. Kartlar
-	# çizilir, sönüktür, tıklanamaz, kilit gerekçesini gösterir. KİLİTLİ KART GİZLENMEZ —
-	# oyuncu tam sürümde ne geleceğini burada görür." Altı rolün ardına eklenirler, ve
-	# EMPLOYEE_ROLES'a girmezler (gerekçe HRConstants.FUTURE_ROLES).
-	for role_id in HRConstants.FUTURE_ROLES:
-		grid.add_child(_future_role_card(String(role_id)))
+	for role in HRConstants.EMPLOYEE_ROLES:
+		var role_id: String = String(role)
+		var lock_key: String = HRConstants.role_lock_reason_key(role_id)
+		var card := _role_card(HRConstants.role_label(role_id),
+			HRConstants.role_phase_hint(role_id), tr(lock_key) if lock_key != "" else "",
+			_selected_role == role_id)
+		if lock_key == "":
+			_make_selectable(card, func() -> void: _selected_role = role_id)
+		grid.add_child(card)
+	# §10.6: gelecek rollerin kartları kilitli-görünür durur — çizilir, sönüktür, tıklanamaz,
+	# gerekçesini gösterir. EMPLOYEE_ROLES'a girmezler.
+	for role in HRConstants.FUTURE_ROLES:
+		grid.add_child(_role_card(HRConstants.future_role_label(String(role)),
+			HRConstants.future_role_hint(String(role)), tr(HRConstants.FUTURE_ROLE_LOCK_KEY), false))
 	_root_box.add_child(grid)
 
 	_root_box.add_child(_step_header(tr("HR_ATLAS_STEP_LEVEL")))
@@ -124,8 +114,8 @@ func _build_search_step() -> void:
 		levels.add_child(_level_card(int(level)))
 	_root_box.add_child(levels)
 
-	# İKİ SESSİZ SATIR: ne zaman gelecekler, ve ne ödenecek. §10'un iki cümlesi birebir —
-	# "bir hafta sonra aday listesi gelir" ve "ücretsizdir; tek ücret komisyondur".
+	# §10'un iki cümlesi: "bir hafta sonra aday listesi gelir" ve "ücretsizdir; tek ücret
+	# komisyondur".
 	var meta := HBoxContainer.new()
 	meta.add_theme_constant_override("separation", 10)
 	meta.add_child(UiFactory.make_label(tr("HR_ATLAS_ARRIVAL").format(
@@ -134,6 +124,7 @@ func _build_search_step() -> void:
 	meta.add_child(UiFactory.make_label(tr("HR_ATLAS_FREE_NOTE"), &"RowMeta", UiTokens.INK_DIM))
 	_root_box.add_child(meta)
 
+	_root_box.add_child(HRUiShared.hairline())
 	_root_box.add_child(_search_footer())
 
 
@@ -148,149 +139,80 @@ func _step_header(text: String) -> Control:
 	return row
 
 
-## Rol kartı. SEÇİLİ: 1px amber kenar + 2px AMBER SOL KENAR + amber yıkama.
-## KİLİTLİ: %60 opaklık, ad soluk, kilit glifi, gerekçe AMBER satırda — ve tıklama hiç
-## bağlanmıyor (kilitli bir kart "denenip reddedilen" değil, "kapalı" olmalı).
-func _role_card(role_id: String) -> Control:
-	var lock_key: String = HRConstants.role_lock_reason_key(role_id)
-	var locked: bool = lock_key != ""
-	var selected: bool = _selected_role == role_id
-
+## Seçim kartı kabuğu. SEÇİLİ: 1px amber kenar + 2px amber sol kenar + amber yıkama.
+## Kart sütununu doldurur; yoksa kartlar metin uzunluğuna göre farklı genişlikte çıkar.
+func _card(selected: bool, pad_v: float) -> PanelContainer:
 	var card := PanelContainer.new()
-	# Bant kartıyla AYNI kural: kart sütununu doldurur. Taşımadığında altı rol
-	# metin uzunluğuna göre üç farklı genişlikte çıkıyor, panelin sağı boş kalıyordu.
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb := StyleBoxFlat.new()
 	sb.set_corner_radius_all(UiTokens.RADIUS_S)
 	sb.content_margin_left = 16.0
 	sb.content_margin_right = 16.0
-	sb.content_margin_top = 14.0
-	sb.content_margin_bottom = 14.0
+	sb.content_margin_top = pad_v
+	sb.content_margin_bottom = pad_v
+	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
 	if selected:
 		sb.bg_color = UiTokens.AMBER_WASH
-		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
 		sb.border_width_left = UiTokens.BORDER_FOCUS
 		sb.border_color = UiTokens.ACCENT
 	else:
 		sb.bg_color = UiTokens.SURFACE_FRAME
-		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
 		sb.border_color = UiTokens.SEPARATOR
 	card.add_theme_stylebox_override("panel", sb)
+	return card
 
+
+func _make_selectable(card: Control, on_pick: Callable) -> void:
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	card.gui_input.connect(func(ev: InputEvent) -> void:
+		var mb := ev as InputEventMouseButton
+		if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			on_pick.call()
+			_rebuild())
+
+
+## Rol kartı. KİLİTLİ (`lock_text` dolu): %60 opaklık, ad soluk, kilit glifi, gerekçe
+## amber satırda — ve tıklama hiç bağlanmıyor (kilitli kart "reddedilen" değil, "kapalı").
+func _role_card(label: String, hint_text: String, lock_text: String, selected: bool) -> PanelContainer:
+	var locked: bool = lock_text != ""
+	var card := _card(selected, 14.0)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 7)
 	card.add_child(col)
 
 	var title_row := HBoxContainer.new()
 	title_row.add_theme_constant_override("separation", 8)
-	title_row.add_child(UiFactory.make_label(HRConstants.role_label(role_id), &"NameSerif",
+	title_row.add_child(UiFactory.make_label(label, &"NameSerif",
 		UiTokens.CREAM_DIM if locked else UiTokens.INK))
 	if locked:
 		title_row.add_child(HRUiShared.lock_glyph(12, UiTokens.CREAM_DIM))
 	col.add_child(title_row)
 
-	# Rol açıklaması: tasarımın kısa nötr yer tutucusu. Nihai metin sonra gelecek.
-	var hint := UiFactory.make_label(
-		HRConstants.role_phase_hint(role_id), &"RowMeta", UiTokens.CREAM_DIM)
+	var hint := UiFactory.make_label(hint_text, &"RowMeta", UiTokens.CREAM_DIM)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(hint)
 
 	if locked:
-		col.add_child(UiFactory.make_label(tr(lock_key), &"RowMeta", UiTokens.ACCENT))
+		col.add_child(UiFactory.make_label(lock_text, &"RowMeta", UiTokens.ACCENT))
 		card.modulate.a = 0.6
-		return card
-
-	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	card.gui_input.connect(func(ev: InputEvent) -> void:
-		if _is_left_click(ev):
-			_selected_role = role_id
-			_rebuild())
 	return card
 
 
-## §10.6 KİLİTLİ-GÖRÜNÜR KART. Rol kartının kilitli hâliyle AYNI dil — sönük, kilit glifi,
-## gerekçe amber satırda, tıklama hiç bağlanmıyor. Ayrı bir fonksiyon çünkü bunlar rol
-## DEĞİL: EMPLOYEE_ROLES'a girmiyorlar, etiketleri ve açıklamaları kendi anahtarlarından
-## okunuyor, ve hiçbir motor yolu onları tanımıyor.
-func _future_role_card(role_id: String) -> Control:
-	var card := PanelContainer.new()
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var sb := StyleBoxFlat.new()
-	sb.set_corner_radius_all(UiTokens.RADIUS_S)
-	sb.content_margin_left = 16.0
-	sb.content_margin_right = 16.0
-	sb.content_margin_top = 14.0
-	sb.content_margin_bottom = 14.0
-	sb.bg_color = UiTokens.SURFACE_FRAME
-	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	sb.border_color = UiTokens.SEPARATOR
-	card.add_theme_stylebox_override("panel", sb)
-
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 7)
-	card.add_child(col)
-
-	var title_row := HBoxContainer.new()
-	title_row.add_theme_constant_override("separation", 8)
-	title_row.add_child(UiFactory.make_label(
-		HRConstants.future_role_label(role_id), &"NameSerif", UiTokens.CREAM_DIM))
-	title_row.add_child(HRUiShared.lock_glyph(12, UiTokens.CREAM_DIM))
-	col.add_child(title_row)
-
-	var hint := UiFactory.make_label(
-		HRConstants.future_role_hint(role_id), &"RowMeta", UiTokens.CREAM_DIM)
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(hint)
-
-	col.add_child(UiFactory.make_label(
-		tr(HRConstants.FUTURE_ROLE_LOCK_KEY), &"RowMeta", UiTokens.ACCENT))
-	card.modulate.a = 0.6
-	return card
-
-
-## §3 SEVİYE KARTI. AÇIKLAMA SATIRI YOK — tasarım onları kaldırdı ("sonra eklenecek").
-## Etiket §3'ün seviye ADIDIR (Junior · Orta · Kıdemli), ön eki değil: onaylı 16. tur orta
-## seviyeyi "Uzman" diye etiketliyordu ve §3 o adı vermiyor.
+## §3 seviye kartı. Etiket seviye ADIDIR (Junior · Orta · Kıdemli) ve büyük harfe
+## çevrilmez: tr_upper Türkçe büyütür ve "Junior"ı noktalı İ ile JUNİOR yapar.
 func _level_card(level: int) -> Control:
 	var selected: bool = _selected_level == level
-	var card := PanelContainer.new()
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var sb := StyleBoxFlat.new()
-	sb.set_corner_radius_all(UiTokens.RADIUS_S)
-	sb.content_margin_left = 16.0
-	sb.content_margin_right = 16.0
-	sb.content_margin_top = 13.0
-	sb.content_margin_bottom = 13.0
-	if selected:
-		sb.bg_color = UiTokens.AMBER_WASH
-		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-		sb.border_width_left = UiTokens.BORDER_FOCUS
-		sb.border_color = UiTokens.ACCENT
-	else:
-		sb.bg_color = UiTokens.SURFACE_FRAME
-		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-		sb.border_color = UiTokens.SEPARATOR
-	card.add_theme_stylebox_override("panel", sb)
-	# BÜYÜK HARFE ÇEVRİLMİYOR (§3). UiTokens.tr_upper TÜRKÇE büyütür ve "Junior"ı JUNİOR
-	# yapar — noktalı bir İ, yani §3'ün bağlayıcı saydığı İngilizce kelime değil. Bir adım
-	# yukarıdaki rol kartları da büyütmüyor; iki adım artık aynı dili konuşuyor.
+	var card := _card(selected, 13.0)
 	card.add_child(UiFactory.make_label(
 		HRConstants.level_label(level), &"RowName",
 		UiTokens.ACCENT if selected else UiTokens.INK_MUTED))
-	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	card.gui_input.connect(func(ev: InputEvent) -> void:
-		if _is_left_click(ev):
-			_selected_level = level
-			_rebuild())
+	_make_selectable(card, func() -> void: _selected_level = level)
 	return card
 
 
-## Alt bar: VAZGEÇ · boşluk · seçim özeti · ARAYIŞ BAŞLAT.
-##
-## CTA'DA RAKAM YOK (§10): arama ücretsiz. Eski buton "ARAYIŞ BAŞLAT · $600" diyordu ve o $600
-## peşin, iadesiz bir retainer'dı — oyuncu bakmak için ödüyordu.
+## Alt bar: VAZGEÇ · boşluk · seçim özeti · ARAYIŞ BAŞLAT. CTA'da rakam yok (§10: arama
+## ücretsiz).
 func _search_footer() -> Control:
-	_root_box.add_child(HRUiShared.hairline())
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	row.add_child(HRUiShared.action_button(tr("HR_ATLAS_CANCEL"), _close))
@@ -304,17 +226,19 @@ func _search_footer() -> Control:
 		return row
 
 	var pv: Dictionary = HRSearchSystem.preview_search(_selected_role, _selected_level)
-	# Seçim özeti TÜRETİLMİŞ UNVANDIR (§3), rol ve seviyenin yan yana dizilmesi değil:
-	# "Kıdemli Yazılım Mühendisi" oyuncunun aradığı şeyin adıdır, iki etiketin toplamı değil.
+	# Seçim özeti türetilmiş unvandır (§3): "Kıdemli Yazılım Mühendisi".
 	row.add_child(UiFactory.make_label(String(pv.get("job_title", "")),
 		&"RowMeta", UiTokens.INK_DIM))
-	var warnings: Array = pv.get("warnings", []) as Array
-	if not bool(pv.get("can_start", false)):
-		var reason: String = String(warnings[0]) if not warnings.is_empty() else ""
-		row.add_child(HRUiShared.disabled_button(cta, reason))
-	else:
+	if bool(pv.get("can_start", false)):
 		row.add_child(HRUiShared.action_button(cta, _on_start_pressed, true))
+	else:
+		row.add_child(HRUiShared.disabled_button(cta, _first_warning(pv)))
 	return row
+
+
+func _first_warning(pv: Dictionary) -> String:
+	var warnings: Array = pv.get("warnings", []) as Array
+	return String(warnings[0]) if not warnings.is_empty() else ""
 
 
 # --- ADAY DOSYALARI (11b) ---------------------------------------------------
@@ -339,19 +263,15 @@ func _build_files_step() -> void:
 	_root_box.add_child(footer)
 
 
-## Aday kartı (11b). Üstte DOSYA i/n şeridi; sonra baş harf + ad + rol; rol açıklaması;
-## hairline'lar arasında YILDIZ ŞERİDİ (ana alan · ikincil alan · ayraç · Liderlik);
-## TEK trait çipi; esneyen boşluk (kartlar eşit yükseklik); MAAŞ TALEBİ; İŞE AL;
-## KOMİSYON; RUNWAY şeridi.
-##
-## ALINTI ÇİZİLMİYOR: tasarım boş alıntıyı kaldırdı. (Eski kod alıntıyı HAM DOSYA
-## dict'inden okuyordu — `note` yalnız preview_hire'da var — yani ekrana boş bir tırnak
-## çifti basıyordu. Kusur alıntıyla birlikte gitti.)
+## Aday kartı (11b): DOSYA i/n · baş harf + ad + unvan · rol açıklaması · yıldız şeridi
+## (iki alan · Liderlik) · tek trait çipi · esneyen boşluk (kartlar eşit yükseklik) ·
+## MAAŞ TALEBİ · İŞE AL · KOMİSYON · RUNWAY.
 func _file_card(index: int, file: Dictionary) -> Control:
 	var pv: Dictionary = HRSearchSystem.preview_hire(index)
 	var role_id: String = String(file.get("role", ""))
 	var axes: Dictionary = file.get("axes", {}) as Dictionary
 	var salary: int = int(file.get("salary", 0))
+	var cand_name: String = String(file.get("name", ""))
 
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -367,23 +287,18 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	col.add_theme_constant_override("separation", 14)
 	card.add_child(col)
 
-	# DOSYA i/n
-	var file_no := UiFactory.make_label(tr("HR_ATLAS_FILE_N").format(
-		{"i": index + 1, "n": HRConstants.CANDIDATE_COUNT}), &"ColumnHeader", UiTokens.INK_DIM)
-	col.add_child(file_no)
+	col.add_child(UiFactory.make_label(tr("HR_ATLAS_FILE_N").format(
+		{"i": index + 1, "n": HRConstants.CANDIDATE_COUNT}), &"ColumnHeader", UiTokens.INK_DIM))
 	col.add_child(HRUiShared.hairline())
 
-	# baş harf + ad + rol
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 12)
-	head.add_child(UiFactory.make_avatar(
-		UiFactory.initials_of(String(file.get("name", ""))), 34))
+	head.add_child(UiFactory.make_avatar(UiFactory.initials_of(cand_name), 34))
 	var who := VBoxContainer.new()
 	who.add_theme_constant_override("separation", 3)
 	who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	who.add_child(UiFactory.make_label(String(file.get("name", "")), &"NameSerif"))
-	# §10.3: "Ad, UNVAN, rol açıklaması." Unvan TÜRETİLİR (§3) — dosyanın seviyesi + rol adı.
-	# Eskiden burada çıplak rol adı vardı ve kartta seviye hiç okunmuyordu.
+	who.add_child(UiFactory.make_label(cand_name, &"NameSerif"))
+	# §10.3: ad, UNVAN (§3 — seviye + rol adından türer), rol açıklaması.
 	who.add_child(UiFactory.make_label(
 		UiTokens.tr_upper(String(pv.get("job_title", HRConstants.role_label(role_id)))),
 		&"MicroLabel"))
@@ -395,7 +310,6 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(hint)
 
-	# yıldız şeridi: iki alan · ayraç · Liderlik
 	col.add_child(HRUiShared.hairline())
 	var stars := HBoxContainer.new()
 	stars.add_theme_constant_override("separation", 26)
@@ -407,7 +321,7 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	col.add_child(stars)
 	col.add_child(HRUiShared.hairline())
 
-	# TEK trait çipi: ikon + ad, nötr (R4 valansı kaldırdı). Hover ad+etki (B2/B3).
+	# Trait çipi nötr; hover ad + etki.
 	var traits: Array = file.get("traits", []) as Array
 	if not traits.is_empty():
 		col.add_child(HRUiShared.trait_row(traits, true))
@@ -416,7 +330,6 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	stretch.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(stretch)
 
-	# MAAŞ TALEBİ
 	var ask := HBoxContainer.new()
 	var ask_cap := UiFactory.make_label(
 		tr("HR_ATLAS_SALARY_LABEL"), &"RowMeta", UiTokens.INK_DIM)
@@ -426,19 +339,15 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	ask.add_child(UiFactory.make_label(tr("HR_PER_MONTH"), &"RowMeta", UiTokens.INK_DIM))
 	col.add_child(ask)
 
-	# İŞE AL
 	var cta: String = tr("HR_ATLAS_HIRE").format({"amount": HRUiShared.money(salary)})
-	var warnings: Array = pv.get("warnings", []) as Array
 	var hire_btn: Button
 	if bool(pv.get("affordable", false)):
 		hire_btn = HRUiShared.action_button(cta, _on_hire_pressed.bind(index), true)
 	else:
-		hire_btn = HRUiShared.disabled_button(cta,
-			String(warnings[0]) if not warnings.is_empty() else "")
+		hire_btn = HRUiShared.disabled_button(cta, _first_warning(pv))
 	hire_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_child(hire_btn)
 
-	# KOMİSYON
 	var comm := HBoxContainer.new()
 	var comm_cap := UiFactory.make_label(
 		tr("HR_ATLAS_COMMISSION_LABEL"), &"RowMeta", UiTokens.INK_DIM)
@@ -452,17 +361,12 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	return card
 
 
-## RUNWAY şeridi: "6 ay → 1 ay", sonraki değer KIRMIZI.
-##
-## ÇİFT OKUMA TEK SEAM'DEN (UiTokens.net_runway_pair). Burası iki değeri de
-## `net_runway_text`'ten geçiriyordu ve o tam aya yuvarladığı için ~0,6 aylık gerçek bir
-## düşüş "5 ay → 5 ay" diye okunuyor, şerit yine de kırmızı yanıyordu. Kırmızı kararı da
-## artık oradan geliyor ve EPSİLON'lu: iki değer arasında anlamlı bir fark yoksa şerit
-## kırmızıya boyanmaz.
+## RUNWAY şeridi: "6 ay → 1 ay", sonraki değer kırmızı. Çift okuma ve kırmızı kararı tek
+## seam'den (UiTokens.net_runway_pair): tam aya yuvarlanan iki değer aynı okunurken şerit
+## kırmızı yanmasın diye karar epsilon'lu.
 func _runway_strip(pv: Dictionary) -> Control:
-	var before: float = float(pv.get("runway_before", 0.0))
-	var after: float = float(pv.get("runway_after", 0.0))
-	var pair: Dictionary = UiTokens.net_runway_pair(before, after)
+	var pair: Dictionary = UiTokens.net_runway_pair(
+		float(pv.get("runway_before", 0.0)), float(pv.get("runway_after", 0.0)))
 	var worse: bool = bool(pair["changed"])
 
 	var strip := PanelContainer.new()
@@ -503,12 +407,8 @@ func _on_hire_pressed(index: int) -> void:
 
 
 func _on_dismiss_pressed() -> void:
-	# Sessiz kapanış değil — ama artık kayıp PARA DEĞİL ZAMAN. §10: arama ücretsizdir; asıl
-	# bedel, "bir çalışan ayrıldığında oyuncunun boşluğu o gün kapatamaması"dır. Onay metni
-	# artık ödenmemiş bir ücreti değil, yeniden beklenecek haftayı sayıyor.
-	# hr_tab._on_cancel_search ile aynı sözleşme (bağlı METOT referansı, lambda değil);
-	# ConfirmModal ModalLayer'a (layer 10) gider, bu modal PanelLayer'da (layer 9) durur —
-	# yani onay her zaman üstte çizilir, artık ekleme sırasına bağlı olmadan.
+	# Kayıp para değil ZAMAN (§10): onay yeniden beklenecek haftayı sayıyor. ConfirmModal
+	# ModalLayer'a (layer 10) gider, bu modal PanelLayer'da (layer 9) — onay hep üstte.
 	EventBus.confirm_requested.emit({
 		"title": tr("HR_ATLAS_TAKE_NONE"),
 		"body": tr("HR_ATLAS_CLOSE_BODY").format({"span": tr("HR_ATLAS_ARRIVAL_SPAN")}),
@@ -522,25 +422,6 @@ func _do_dismiss() -> void:
 	if HRSearchSystem.dismiss_files():
 		state_changed.emit()
 		_close()
-
-
-# --- Kroki yardımcıları -----------------------------------------------------
-
-func _apply_selected_style(card: PanelContainer) -> void:
-	# Seçili kart: amber çerçeve + amber zemin (creation_flow._apply_row_style reçetesi —
-	# tema stylebox'ının kopyası üzerine yazılır, tema dosyası değişmez).
-	var sb: StyleBox = card.get_theme_stylebox("panel")
-	if sb is StyleBoxFlat:
-		var sel: StyleBoxFlat = (sb as StyleBoxFlat).duplicate()
-		sel.bg_color = UiTokens.AMBER_BG
-		sel.border_color = UiTokens.ACCENT
-		sel.set_border_width_all(2)
-		card.add_theme_stylebox_override("panel", sel)
-
-
-func _is_left_click(ev: InputEvent) -> bool:
-	return ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed \
-		and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
 
 
 func _unhandled_input(event: InputEvent) -> void:
