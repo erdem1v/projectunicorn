@@ -6,10 +6,10 @@ extends RefCounted
 #
 # WHY THE DATA IS SPLIT IN TWO, and this is load-bearing rather than taste:
 #   ResearchSeam.NODES keeps the ID / FAMILY / PLACE spine as a compile-time const,
-#   because ProductLines._validate_step reads it during ITS OWN load (product_lines.gd:296,
-#   :303, :305). Moving that spine into a file would make the line validator depend on
-#   file-I/O ordering between two lazily-loaded statics that nothing sequences. The const
-#   costs nothing and removes the whole class of bug.
+#   because ProductLines._validate_step reads it during ITS OWN load. Moving that spine
+#   into a file would make the line validator depend on file-I/O ordering between two
+#   lazily-loaded statics that nothing sequences. The const costs nothing and removes the
+#   whole class of bug.
 #   Everything a calibration pass touches — effort, cash, areas, stars — plus the four
 #   hidden lines' raw line dicts live HERE, so §13's numbers move without a recompile and
 #   the hidden lines sit in the same shape data/product/lines/*.json already uses.
@@ -30,12 +30,10 @@ const FAMILY_AREA := {
 	"design": "design",
 }
 
-## §5.2 + direktör hükmü R1 (2026-08-25): kök ★1 · dal ★2 · devam ★2 + ★2.
-const STARS_ROOT := 1
-const STARS_BRANCH := 2
-const STARS_CONTINUATION := 2
+## §5.2 — kök ★1 · dal ★2 · devam ★2 + ★2.
+const STARS_BY_PLACE := {"root": 1, "branch": 2, "continuation": 2}
 
-## §13 — efor bantları yere göre. Kökler 40/50, dallar ve devamlar 70-90.
+## §13 — efor bantları yere göre.
 const EFFORT_BANDS := {"root": [40, 50], "branch": [70, 90], "continuation": [70, 90]}
 
 ## §13 — nakit tablosu TAM olarak budur. Bir aralık değil, bir TABLO: aralık olsaydı
@@ -113,8 +111,8 @@ static func _load() -> void:
 	_build_children()
 
 
-## RULE 1 — set equality with the seam, BOTH ways. Not "contains": a typo in either
-## file has to be loud, and a missing row is as wrong as an extra one.
+## Set equality with the seam, BOTH ways. Not "contains": a typo in either file has to be
+## loud, and a missing row is as wrong as an extra one.
 static func _validate_node_set() -> void:
 	for id in ResearchSeam.NODES.keys():
 		if not _nodes.has(id):
@@ -124,7 +122,7 @@ static func _validate_node_set() -> void:
 			_fail("tree declares node '%s', which is not one of Ar-Ge §4's twenty" % id)
 
 
-## RULES 2-5, 7-8 — per row: parent chain, arity, area, stars, effort band, cash table.
+## Per row: parent chain, arity, area, stars, effort band, cash table.
 static func _validate_rows() -> void:
 	var roots := 0
 	var branches := 0
@@ -154,7 +152,7 @@ static func _validate_rows() -> void:
 			_fail("%s parent '%s' is in family '%s', not '%s'"
 				% [id, parent, ResearchSeam.family(parent), family])
 
-		# RULE 5 — arity and the family's own area first (§5.2).
+		# Arity and the family's own area first (§5.2).
 		var areas: Array = row.get("areas", []) as Array
 		var want_n: int = 2 if place == ResearchSeam.PLACE_CONT else 1
 		if areas.size() != want_n:
@@ -166,21 +164,17 @@ static func _validate_rows() -> void:
 			if not HRConstants.AREAS.has(String(a)):
 				_fail("%s names unknown area '%s'" % [id, a])
 
-		# RULE 6 — the star ladder.
+		# The star ladder (§5.2).
 		var stars: int = int(row.get("stars", 0))
-		var want_stars: int = STARS_ROOT
-		if place == ResearchSeam.PLACE_BRANCH:
-			want_stars = STARS_BRANCH
-		elif place == ResearchSeam.PLACE_CONT:
-			want_stars = STARS_CONTINUATION
+		var want_stars: int = STARS_BY_PLACE[place]
 		if stars != want_stars:
 			_fail("%s is a %s and wants ★%d, got ★%d" % [id, place, want_stars, stars])
 		if stars < 1 or stars > HRConstants.STAR_MAX:
 			_fail("%s stars ★%d is outside 1..%d" % [id, stars, HRConstants.STAR_MAX])
 
-		# RULES 7-8 — effort band and the cash table.
+		# Effort band and the cash table (§13).
 		var effort: int = int(row.get("effort", 0))
-		var band: Array = EFFORT_BANDS.get(place, [1, 999]) as Array
+		var band: Array = EFFORT_BANDS[place]
 		if effort < int(band[0]) or effort > int(band[1]):
 			_fail("%s effort %d is outside the %s band %s" % [id, effort, place, band])
 		var cash: int = int(row.get("cash", 0))
@@ -193,7 +187,7 @@ static func _validate_rows() -> void:
 			% [roots, branches, conts])
 
 
-## RULE 3-4 — §3's cross-family rule and §3.1's sapma tavanı.
+## §3's cross-family rule and §3.1's sapma tavanı.
 static func _validate_cross_links() -> void:
 	var found: Array[String] = []
 	for id in _nodes.keys():
@@ -205,8 +199,6 @@ static func _validate_cross_links() -> void:
 		if place != ResearchSeam.PLACE_CONT:
 			_fail("%s carries a cross condition but is a %s; §3 puts them on continuations only"
 				% [id, place])
-		# Continuation-B is the continuation whose PARENT is branch B. The file's parent
-		# edges are the only source — never a naming convention.
 		if not ResearchSeam.NODES.has(cross):
 			_fail("%s cross target '%s' is not one of the twenty" % [id, cross])
 			continue
@@ -223,7 +215,7 @@ static func _validate_cross_links() -> void:
 		_fail("tree has %d cross links; §13 says exactly 4" % found.size())
 
 
-## RULES 10-11 + §4.5 — the four hidden lines, their axes and the single branch-level one.
+## §4.5 — the four hidden lines, their axes and the single branch-level one.
 static func _validate_hidden_lines() -> void:
 	var openers: Dictionary = {}
 	for id in _nodes.keys():
@@ -241,7 +233,7 @@ static func _validate_hidden_lines() -> void:
 		_fail("%d nodes open a hidden line; §4.5 says exactly 4" % openers.size())
 
 	var axis_tally: Dictionary = {}
-	var branch_level: Array[String] = []
+	var branch_openers: Array[String] = []
 	for line_id in _hidden.keys():
 		var hl: Dictionary = _hidden[line_id] as Dictionary
 		var axis: String = String(hl.get("axis", ""))
@@ -252,9 +244,9 @@ static func _validate_hidden_lines() -> void:
 		if String(openers.get(line_id, "")) != by:
 			_fail("hidden line '%s' says opened_by '%s'; the node table disagrees" % [line_id, by])
 		if by != "" and ResearchSeam.placement(by) == ResearchSeam.PLACE_BRANCH:
-			branch_level.append(line_id)
+			branch_openers.append(by)
 		# §12.1 / §13.5 — only the demo line carries content. The other three are declared
-		# and never registered (director ruling R4), so an empty raw is CORRECT, not missing.
+		# and never registered (§4.5.2), so an empty raw is CORRECT, not missing.
 		var authored: bool = bool(hl.get("authored", false))
 		var raw: Dictionary = hl.get("raw", {}) as Dictionary
 		if authored and raw.is_empty():
@@ -272,18 +264,17 @@ static func _validate_hidden_lines() -> void:
 
 	# §13.5's sealed single exception — one hidden line at branch level, and it is
 	# test_automation's. Asserting the NAME stops the exception being silently doubled.
-	if branch_level.size() != 1:
-		_fail("%d hidden lines sit at branch level; §13.5 allows exactly one" % branch_level.size())
-	elif String((_hidden[branch_level[0]] as Dictionary).get("opened_by", "")) != "test_automation":
+	if branch_openers.size() != 1:
+		_fail("%d hidden lines sit at branch level; §13.5 allows exactly one" % branch_openers.size())
+	elif branch_openers[0] != "test_automation":
 		_fail("the branch-level hidden line is opened by '%s'; §13.5's exception is test_automation"
-			% (_hidden[branch_level[0]] as Dictionary).get("opened_by", ""))
+			% branch_openers[0])
 
 
-## The check nobody had. `register_runtime_line` routes through the SAME validator as
-## every catalog line, so a hidden line's own K3 must carry a research node
-## (product_lines.gd:308-310) and that node must be root-or-branch (:303-306). §4.5 never
-## said so. Without this, the failure surfaces as a hard push_error at the moment a player
-## completes the node, hours into a run, in the field.
+## `register_runtime_line` routes through the SAME validator as every catalog line, so a
+## hidden line's own K3 must carry a research node and that node must be root-or-branch
+## (§4.5). Without this, the failure surfaces as a hard push_error at the moment a player
+## completes the node, hours into a run.
 static func _validate_hidden_k3(line_id: String, raw: Dictionary) -> void:
 	var steps: Array = raw.get("steps", []) as Array
 	if steps.size() != 3:
@@ -301,7 +292,7 @@ static func _validate_hidden_k3(line_id: String, raw: Dictionary) -> void:
 			% [line_id, node, ResearchSeam.placement(node)])
 
 
-## RULE 9 — §13's ten coefficients, each present exactly once and owned by a real system.
+## §13's ten coefficients, each present exactly once and owned by a real system.
 static func _validate_effects() -> void:
 	var seen: Dictionary = {}
 	for id in _nodes.keys():
@@ -321,11 +312,8 @@ static func _validate_effects() -> void:
 static func _build_children() -> void:
 	for id in _nodes.keys():
 		var parent: String = String((_nodes[id] as Dictionary).get("parent", ""))
-		if parent == "":
-			continue
-		if not _children.has(parent):
-			_children[parent] = []
-		(_children[parent] as Array).append(String(id))
+		if parent != "":
+			_children.get_or_add(parent, []).append(String(id))
 	for k in _children.keys():
 		(_children[k] as Array).sort()
 
@@ -395,17 +383,6 @@ static func opens_line_of(node_id: String) -> String:
 	return String(_row(node_id).get("opens_line", ""))
 
 
-static func effect_of(node_id: String) -> String:
-	return String(_row(node_id).get("effect", ""))
-
-
-## §12.1 / §13.5 — is this node's discovery card authored for the demo? Roots and
-## branches yes, continuations no. The card still fires; its body falls back to the
-## node's own one-line description rather than printing a raw key.
-static func has_demo_card(node_id: String) -> bool:
-	return bool(_row(node_id).get("demo_card", false))
-
-
 ## §8 — does the node card carry a named cash line ("GPU kirası $600")?
 static func has_cost_label(node_id: String) -> bool:
 	return bool(_row(node_id).get("cost_label", false))
@@ -439,7 +416,7 @@ static func hidden_line_axis(line_id: String) -> String:
 
 
 ## §12.1 — only KENDİ KENDİNE SERVİS is written for the demo. The other three are
-## declared so their ids exist and are NEVER registered (director ruling R4).
+## declared so their ids exist and are NEVER registered (§4.5.2).
 static func hidden_line_authored(line_id: String) -> bool:
 	ensure_loaded()
 	return bool((_hidden.get(line_id, {}) as Dictionary).get("authored", false))

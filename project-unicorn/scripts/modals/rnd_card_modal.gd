@@ -3,15 +3,15 @@ extends Control
 # ============================================================================
 # AR-GE KARTI — TEK RENDERER, İKİ YÜK. `populate("discovery"|"note", data)`.
 #
-#   R5 · KEŞİF KARTI (640): bir düğüm tamamlandı. Başlık · düğüm adı · anın kendi
-#        cümlesi · açtığı şey · (varsa) açılan hat satırı · Tamam.
-#   R7 · AYLIK ÜRÜN NOTU (720): üç sinyal, hüküm yok, üç eşit ağırlıklı çıkış.
+#   §5.8 · KEŞİF KARTI (640): bir düğüm tamamlandı. Başlık · düğüm adı · anın kendi
+#          cümlesi · açtığı şey · (varsa) açılan hat satırı · Tamam.
+#   §6 · AYLIK ÜRÜN NOTU (720): üç sinyal, hüküm yok, üç eşit ağırlıklı çıkış.
 #
 # ————————————————————————————————————————————————————————————————————————————
 #  BU YÜZEYDE ETKİ ROZETİ YOKTUR. DELTA ETİKETİ YOKTUR. PARA / MARKA / MRR
 #  SATIRI YOKTUR. VE HİÇBİR YERİNDE YEŞİL YOKTUR.
 #
-#  Bu bir üslup tercihi değil, §5.8 ile R5'in ortak hükmüdür: BİR ARAŞTIRMANIN
+#  Bu bir üslup tercihi değil, §5.8'in hükmüdür: BİR ARAŞTIRMANIN
 #  TAMAMLANMASI EKONOMİK DELTA ÜRETMEZ. Motor da böyle davranıyor —
 #  `RnDSystem._complete()` nakit, marka ve MRR'a hiç dokunmaz; açtığı KAPI ödülün
 #  kendisidir. Buraya bir "+$" çipi, bir yeşil ok ya da bir "etki" rozeti eklemek,
@@ -22,21 +22,16 @@ extends Control
 #
 # KATMAN SEÇİMİ ÖLÇÜLMÜŞ BİR KARARDIR: PanelLayer (layer 9), ModalLayer (layer 10)
 # DEĞİL. ModalLayer Space ve 1-3'ü YUTUYOR, yani saat, oyuncunun duraklatamadığı
-# bir kararın üstünde koşmaya devam ederdi. Bedeli: game_shell.gd:164-168'in Guard
-# 3'ü Esc'i PanelLayer sakinine HANDLED İŞARETLEMEDEN devrediyor — o yüzden kapanış
-# bu dosyanın kendi `_unhandled_input`'undadır (hr_popover.gd'nin reçetesi).
+# bir kararın üstünde koşmaya devam ederdi. Bedeli: game_shell'in Guard 3'ü Esc'i
+# PanelLayer sakinine HANDLED İŞARETLEMEDEN devrediyor — o yüzden kapanış bu dosyanın
+# kendi `_unhandled_input`'undadır (hr_popover.gd'nin reçetesi).
 #
-# MONTAJ SIRASI: `add_child` ÖNCE, `populate` SONRA (ev konvansiyonu — _ready
-# referansları ancak ağaca girdikten sonra dolu). hr_tab._open_hours_modal'ın
-# birebir kalıbı.
-#
-# process_mode = ALWAYS: saat duruyorken de tıklanabilir olmalı.
+# process_mode = ALWAYS (.tscn kökünde): saat duruyorken de tıklanabilir olmalı.
 # ============================================================================
 
 const KIND_DISCOVERY := "discovery"
 const KIND_NOTE := "note"
 
-## R5 640 · R7 720. İki yükün TEK farkı budur; gövde ikisinde de aynı gramerde.
 const W_DISCOVERY := 640
 const W_NOTE := 720
 
@@ -45,16 +40,11 @@ const PAD_Y := 24
 const GAP := 12
 const SEP := " · "
 
-var _kind: String = ""
 var _panel: PanelContainer = null
 var _body: VBoxContainer = null
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP
-
 	var dim := ColorRect.new()
 	dim.color = UiTokens.SCRIM_MODAL
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -85,11 +75,6 @@ func _ready() -> void:
 
 ## Ev sahibi ÖNCE add_child eder, SONRA burayı çağırır (ev kuralı).
 func populate(kind: String, data: Dictionary) -> void:
-	if not is_node_ready():
-		await ready
-	_kind = kind
-	for c in _body.get_children():
-		c.queue_free()
 	match kind:
 		KIND_DISCOVERY:
 			_panel.custom_minimum_size = Vector2(W_DISCOVERY, 0)
@@ -102,7 +87,7 @@ func populate(kind: String, data: Dictionary) -> void:
 			queue_free()
 
 
-# --- R5 · KEŞİF ----------------------------------------------------------------
+# --- §5.8 · KEŞİF --------------------------------------------------------------
 
 func _build_discovery(data: Dictionary) -> void:
 	var node_id: String = String(data.get("node", ""))
@@ -112,40 +97,31 @@ func _build_discovery(data: Dictionary) -> void:
 	# ANIN KENDİ CÜMLESİ. Sekiz devam düğümü Erken Erişim'e ertelendi ve kartları
 	# YAZILMADI; anahtarı çözülmeyen düğümde gövde SATIRI HİÇ ÇİZİLMEZ. Ekrana ham
 	# anahtar basmak (PROD_RND_NODE_X_DISCOVERY) hiçbir koşulda kabul edilmez.
-	var body: String = _resolved("PROD_RND_NODE_%s_DISCOVERY" % node_id.to_upper())
+	var body: String = RnDUiShared.t_or("PROD_RND_NODE_%s_DISCOVERY" % node_id.to_upper(), "")
 	if body != "":
-		var prose := UiFactory.make_label(body, &"QuoteSerif")
-		prose.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		prose.custom_minimum_size = Vector2(W_DISCOVERY - 2 * PAD_X, 0)
-		_body.add_child(prose)
+		_body.add_child(_wrapped(body, &"QuoteSerif", W_DISCOVERY))
 
 	_body.add_child(_hairline())
 
 	# AÇTIĞI ŞEY. Parçalar " · " ile birleşir; tek parça da aynı yoldan geçer, yani
 	# iki ayrı satır grameri doğmuyor.
 	var opened: Array[String] = []
-	var unlock: String = _resolved("PROD_RND_NODE_%s_UNLOCK" % node_id.to_upper())
+	var unlock: String = RnDUiShared.t_or("PROD_RND_NODE_%s_UNLOCK" % node_id.to_upper(), "")
 	if unlock != "":
 		opened.append(unlock)
 	# Kök ve dal düğümleri iki çocuk açar; o iki yuvanın ADLANDIĞINI söyleyen cümle
 	# kartın kendi cümlesidir, ağacınki değil.
 	if ResearchTree.children_of(node_id).size() == 2:
 		opened.append(tr("RND_COMPLETED_UNLOCKED_TWO"))
-	var opened_row := UiFactory.make_label(
-		"%s %s" % [tr("RND_OPENED_PREFIX"), SEP.join(PackedStringArray(opened))], &"BodySerif")
-	opened_row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	opened_row.custom_minimum_size = Vector2(W_DISCOVERY - 2 * PAD_X, 0)
-	_body.add_child(opened_row)
+	_body.add_child(_wrapped("%s %s" % [tr("RND_OPENED_PREFIX"), SEP.join(PackedStringArray(opened))],
+		&"BodySerif", W_DISCOVERY))
 
-	# TEK İSTEĞE BAĞLI SATIR, HER ZAMAN KURULUR, `visible` İLE AÇILIR/KAPANIR.
-	# İki yerleşim böylece TEK satır farkla ayrışır ve hiçbir şey yeniden akmaz —
-	# satırı koşullu olarak EKLESEYDİM kartın yüksekliği düğüme göre zıplardı.
-	var extra := UiFactory.make_label("", &"BodySerif", UiTokens.INK_MUTED)
-	extra.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	extra.custom_minimum_size = Vector2(W_DISCOVERY - 2 * PAD_X, 0)
+	# TEK İSTEĞE BAĞLI SATIR: açılan gizli hattın adı ya da EA telgrafı (§4.5.2); ikisi de
+	# yoksa gizli kalır.
+	var extra := _wrapped("", &"BodySerif", W_DISCOVERY, UiTokens.INK_MUTED)
 	extra.visible = false
 	_body.add_child(extra)
-	var line_id: String = String(data.get("line", ResearchTree.opens_line_of(node_id)))
+	var line_id: String = ResearchTree.opens_line_of(node_id)
 	if line_id != "":
 		if ResearchTree.hidden_line_authored(line_id):
 			var line_name: String = _line_name(line_id)
@@ -153,7 +129,7 @@ func _build_discovery(data: Dictionary) -> void:
 				extra.text = tr("RND_HIDDEN_LINE_OPENED").format({"line": line_name})
 				extra.visible = true
 		else:
-			# §12.1 / direktör hükmü R4 — hat İLAN EDİLDİ, KAYIT EDİLMEDİ. Kart bunu
+			# §12.1 / §4.5.2 — hat İLAN EDİLDİ, KAYIT EDİLMEDİ. Kart bunu
 			# dürüstçe söyler; sessizce boş bırakmak "duyurulmuş ama ulaşılmaz"ın ta
 			# kendisi olurdu (§3.1).
 			extra.text = tr("RND_EA_LINE_NOTE")
@@ -163,10 +139,10 @@ func _build_discovery(data: Dictionary) -> void:
 	bar.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	bar.alignment = BoxContainer.ALIGNMENT_END
 	_body.add_child(bar)
-	bar.add_child(_button(tr("RND_OK"), _close))
+	bar.add_child(_button(tr("RND_OK"), queue_free))
 
 
-# --- R7 · AYLIK ÜRÜN NOTU --------------------------------------------------------
+# --- §6 · AYLIK ÜRÜN NOTU ------------------------------------------------------
 
 func _build_note(data: Dictionary) -> void:
 	_body.add_child(UiFactory.make_label(tr("RND_NOTE_TITLE"), &"SectionAmber"))
@@ -180,7 +156,7 @@ func _build_note(data: Dictionary) -> void:
 	var role: String = String(data.get("author_role", ""))
 	if role != "":
 		who.add_child(UiFactory.make_label(
-			UiTokens.tr_upper(HRConstants.role_label(role)), &"MicroLabel"))
+			Fmt.upper(HRConstants.role_label(role)), &"MicroLabel"))
 
 	_body.add_child(_hairline())
 
@@ -220,18 +196,12 @@ func _build_note(data: Dictionary) -> void:
 ## boşken satır KURULUR ama gizlenir, ki üç satırın biçimi (ve dolayısıyla kartın
 ## "hüküm yok" iddiası) tek bir yerde kalsın ve ham anahtar ekrana düşmesin.
 func _note_line(key: String, args: Dictionary, fallback_key: String) -> Control:
-	var lbl := UiFactory.make_label("", &"BodySerif")
-	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl.custom_minimum_size = Vector2(W_NOTE - 2 * PAD_X, 0)
-	var text: String = ""
+	var lbl := _wrapped("", &"BodySerif", W_NOTE)
 	if key != "":
-		text = _resolved(key)
-		if text != "":
-			text = text.format(args)
+		lbl.text = RnDUiShared.t_or(key, "").format(args)
 	elif fallback_key != "":
-		text = tr(fallback_key)
-	lbl.text = text
-	lbl.visible = text != ""
+		lbl.text = tr(fallback_key)
+	lbl.visible = lbl.text != ""
 	return lbl
 
 
@@ -244,27 +214,28 @@ func _go(tab_id: String) -> void:
 ## seçerse seçsin oyuncu notu GÖRDÜ, ve rozetin bunu bilmemesi için sebep yok.
 func _read_and_close() -> void:
 	RnDSystem.mark_note_read()
-	_close()
+	queue_free()
 
 
 # --- Ortak ----------------------------------------------------------------------
 
-## Çözülmeyen anahtar "" döner. Ekrana ASLA ham anahtar basılmaz; çağıran satırı
-## ya atlar ya gizler.
-func _resolved(key: String) -> String:
-	var out: String = tr(key)
-	return "" if out == key else out
-
-
-## product_lines.gd:387'nin anahtar sözleşmesi. Kayıtlı hattın kendi `name_key`'i
-## varsa O okunur; EA'ya ertelenmiş (hiç kaydedilmemiş) hat için sözleşme yeniden
-## kurulur — ve çözülmezse "" döner, çünkü ham hat kimliği ekrana yazılmaz.
+## ProductLines._line_name_key'in anahtar sözleşmesi. Kayıtlı hattın kendi `name_key`'i
+## varsa O okunur; hat kayıtlı değilse sözleşme yeniden kurulur — ve çözülmezse ""
+## döner, çünkü ham hat kimliği ekrana yazılmaz.
 func _line_name(line_id: String) -> String:
 	var rec: Dictionary = ProductLines.line("%s@%s" % [line_id, ProductState.subtype()])
 	var key: String = String(rec.get("name_key", ""))
 	if key == "":
 		key = "PROD_LINE_%s" % line_id.trim_prefix("line_").to_upper()
-	return _resolved(key)
+	return RnDUiShared.t_or(key, "")
+
+
+## Kartın gövde satırı: kart genişliğinde sarılan etiket.
+func _wrapped(text: String, variation: StringName, card_w: int, color: Variant = null) -> Label:
+	var lbl := UiFactory.make_label(text, variation, color)
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl.custom_minimum_size = Vector2(card_w - 2 * PAD_X, 0)
+	return lbl
 
 
 func _hairline() -> Control:
@@ -291,8 +262,4 @@ func _unhandled_input(event: InputEvent) -> void:
 	# bekler ve rozeti durur.
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		_close()
-
-
-func _close() -> void:
-	queue_free()
+		queue_free()

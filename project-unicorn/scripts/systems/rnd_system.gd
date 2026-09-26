@@ -2,35 +2,29 @@ class_name RnDSystem
 extends RefCounted
 
 # ============================================================================
-#  AR-GE — the research module's engine. GDD "AR-GE MODÜLÜ" rev 1.4+.
+#  AR-GE — the research module's engine. GDD "AR-GE MODÜLÜ".
 #
-#  Pure statics, no autoload, driven by TimeManager's slot 2 (`_tick_rnd`, reserved and
-#  empty since the Ürün cutover). Matches ProductSystem / SupportSystem / InfraSystem /
-#  HRSystem, which are all class_name + statics; GameState / TimeManager / CharacterRegistry
-#  are autoloads because they own signals-on-write and node lifetime. Ar-Ge owns neither.
+#  Pure statics driven by TimeManager's slot 2 (`_tick_rnd`). Not an autoload: Ar-Ge owns
+#  no node lifetime and no signals-on-write.
 #
-#  WHAT THIS MODULE IS ABOUT (§1, and the acceptance test for the whole package):
-#  research is not a point economy. It is a bet paid in PEOPLE and TIME — you take someone
-#  off the desk and for that time they do not make product. §5.0 is what produces that, and
-#  it does not live here: it lives in HRConstants.JOB_EXCLUSIVE + CharacterRegistry's
-#  displacement, so the build's own pause machine (ProductSystem.pause_kind) reports it with
-#  ZERO changes. This file only starts, accrues, freezes and completes.
+#  Research is a bet paid in PEOPLE and TIME (§1): whoever researches does not make product.
+#  That occupation (§5.0) does not live here — it is HRConstants.JOB_EXCLUSIVE plus
+#  CharacterRegistry's displacement, so the build's own pause machine
+#  (ProductSystem.pause_kind) reports it unchanged. This file only starts, accrues, freezes
+#  and completes.
 #
-#  §9 SINGLE SOURCE, honoured here and worth naming because it is easy to break:
+#  §9 SINGLE SOURCE:
 #    · research speed  → HRSystem.daily_contribution(). Ar-Ge keeps NO copy of the formula.
 #    · node states     → `_states`, this file, one table. Ürün gates, event conditions and
 #                        the screen all read it through ResearchSeam.completed / arge.*.
 #    · coefficients    → applied in the system that OWNS the number (load divisor in
 #                        InfraSystem, bug/effort in ProductSystem). Ar-Ge carries the flag
 #                        and keeps no second arithmetic.
-#    · opened lines    → ProductState.HIDDEN_LINES. Ürün's catalog is their reader, so
-#                        Ürün's state block owns them; this file keeps no copy.
+#    · opened lines    → ProductState.HIDDEN_LINES; Ürün's catalog is their reader.
 #
-#  WRITE-THROUGH LAW: this file never writes c.assigned_job_ids / c.paused_job_ids /
-#  c.assigned_jobs (→ CharacterRegistry seams), never writes GameState.cash
-#  (→ FinanceSystem.apply_one_time_cost), never writes the hidden-line flag
-#  (→ ProductState.open_hidden_line), never writes ProductLines' tables
-#  (→ register_runtime_line).
+#  WRITE-THROUGH: jobs go through CharacterRegistry's seams, cash through
+#  FinanceSystem.apply_one_time_cost, the hidden-line flag through
+#  ProductState.open_hidden_line, catalog tables through ProductLines.register_runtime_line.
 # ============================================================================
 
 const STATE_LOCKED := "locked"
@@ -40,16 +34,16 @@ const STATE_DONE := "done"
 
 const NODE_USER_RESEARCH := "user_research"
 
-## FinanceSystem ledger label. `one_time_today` is summed per label and has NO UI consumer
-## today (checked), so this needs no display string.
+## FinanceSystem ledger label (apply_one_time_cost).
 const COST_LABEL := "rnd"
 
-# --- state (§8.5's save list is exactly these, minus the two derived latches) ---
+# --- state: exactly what to_dict saves (§8.5) ---
 static var _states: Dictionary = {}      # node_id -> STATE_*
 static var _progress: Dictionary = {}    # node_id -> accrued effort (float). KEPT on freeze.
 static var _active: String = ""          # §5.1 — the ONE active node; "" = none
 static var _assignees: Array[String] = []
 static var _paid: Dictionary = {}        # node_id -> cash already charged (no refund, no double charge)
+static var _freeze_cause: String = ""    # "" | RND_PAUSED_BUILD
 static var _note_last_day: int = -1      # -1 = user_research not complete yet
 static var _note_pending: Dictionary = {}
 static var _note_unread := false
@@ -58,7 +52,6 @@ static var _note_modal_shown := false
 # --- derived edge-detector memory. NOT saved, exactly like ProductRead's _prev_*: a load
 #     must not fire research_frozen for a state the player already saw.
 static var _was_frozen := false
-static var _freeze_cause: String = ""   # "" | RND_PAUSED_BUILD
 static var _seeded := false
 
 
@@ -66,8 +59,8 @@ static var _seeded := false
 #  Lifecycle
 # ============================================================================
 
-## §2 — the tab opens after v1 ships. Before that the rail shows YAKINDA and nothing here
-## runs. `ResearchSeam.tree_available()` delegates to this.
+## §2 — the tree opens after v1 ships. Before that the page shows only its waiting line and
+## nothing here runs. `ResearchSeam.tree_available()` delegates to this.
 static func tree_open() -> bool:
 	return ProductState.is_live()
 
@@ -104,14 +97,13 @@ static func _ensure_seeded() -> void:
 ## TimeManager slot 2 — after _tick_product (so it reads today's settled build/support/infra
 ## state) and before _tick_hr.
 ##
-## TWO ONE-DAY LAGS, both consistent with the tree's existing conventions, both written down
-## so nobody diagnoses them twice: a node completing on day N that moves an Infra or Support
-## constant lands on N+1 because slot 1 already ticked; and research speed on day N reads
-## yesterday's settled morale because _tick_hr is slot 3. Do NOT reorder — slot 1's
-## Support-then-Infra ordering carries its own contract.
+## TWO ONE-DAY LAGS, both consistent with the tree's existing conventions: a node completing
+## on day N that moves an Infra or Support constant lands on N+1 because slot 1 already
+## ticked; and research speed on day N reads yesterday's settled morale because _tick_hr is
+## slot 3. Do NOT reorder — slot 1's Support-then-Infra ordering carries its own contract.
 static func daily_tick() -> void:
 	if not tree_open():
-		return
+		return  # §2 ağaç kapalı; §7 canlı ürün yokken rapor da gelmez
 	_ensure_seeded()
 	_prune_assignees()
 	_accrue()
@@ -126,8 +118,9 @@ static func _accrue() -> void:
 	var rate: float = research_per_day(_active, _assignees)
 	if rate <= 0.0:
 		return  # §5.7 FREEZE. "Yanacak olsa kimse başlamaz (kurtarılabilir baskı)."
-	_progress[_active] = float(_progress.get(_active, 0.0)) + rate
-	if float(_progress[_active]) >= float(ResearchTree.effort_of(_active)):
+	var done: float = progress_effort(_active) + rate
+	_progress[_active] = done
+	if done >= float(ResearchTree.effort_of(_active)):
 		_complete(_active)
 
 
@@ -137,8 +130,8 @@ static func _accrue() -> void:
 static func _prune_assignees() -> void:
 	var keep: Array[String] = []
 	for cid in _assignees:
-		if CharacterRegistry.get_character(String(cid)) != null:
-			keep.append(String(cid))
+		if CharacterRegistry.get_character(cid) != null:
+			keep.append(cid)
 	_assignees = keep
 
 
@@ -166,25 +159,20 @@ static func emit_edges() -> void:
 # ============================================================================
 
 ## §5.4 [K] — araştırma/gün = Σ hr.effective_skill(atanan, gereken alan) × saat/8 × K_ARGE.
+## HRSystem.daily_contribution IS `effective_skill × saat/8` (Ekip §4.5); it is CALLED, never
+## re-derived (§9).
 ##
-## HRSystem.daily_contribution IS `effective_skill × saat/8` (Ekip §4.5). It is CALLED, never
-## re-derived — §9 says Ar-Ge keeps no copy of the speed formula.
-##
-## ONE PERSON IS COUNTED ONCE (director ruling R3), through whichever required area is
-## stronger for them. This is not a new invention: ProductSystem._phase_crew:589-608 rules
-## exactly this for the build and says why — "İki faz alanına birden atanmış biri toplama iki
-## kez girseydi aşırı yük bir CEZA değil ÖDÜL olurdu." Ar-Ge inherits it, so a two-area
+## ONE PERSON IS COUNTED ONCE (§5.4, MÜHÜRLÜ), through whichever required area is stronger
+## for them — the rule ProductSystem._phase_crew applies to the build. So a two-area
 ## continuation still structurally wants two PEOPLE (§5.2).
 ##
-## HRSystem.is_busy is the freeness gate and it earns its place: effective_skill checks only
-## `status`, so a founder in pitch_prep_active would otherwise keep researching at full rate.
-static func research_per_day(node_id: String, ids: Array = []) -> float:
-	var who: Array = ids if not ids.is_empty() else _assignees
+## `ids` is exactly the set being asked about; an empty set contributes nothing.
+## HRSystem.is_busy is the freeness gate: effective_skill checks only `status`, so a founder
+## in pitch_prep_active would otherwise keep researching at full rate.
+static func research_per_day(node_id: String, ids: Array) -> float:
 	var areas: Array = ResearchTree.areas_of(node_id)
-	if areas.is_empty() or who.is_empty():
-		return 0.0
 	var total: float = 0.0
-	for cid in who:
+	for cid in ids:
 		var c: Character = CharacterRegistry.get_character(String(cid))
 		if c == null or HRSystem.is_busy(c):
 			continue  # §7 — izin/eğitim: katkı sıfırlanır, ATAMA SİLİNMEZ.
@@ -197,7 +185,7 @@ static func research_per_day(node_id: String, ids: Array = []) -> float:
 
 ## §5.5 — THE number, and the only one on the card. Returns -1.0 for "no contribution" so no
 ## caller ever divides by zero or prints ∞; the caller writes the reason line instead.
-static func days_estimate(node_id: String, ids: Array = []) -> float:
+static func days_estimate(node_id: String, ids: Array) -> float:
 	var rate: float = research_per_day(node_id, ids)
 	if rate <= 0.0:
 		return -1.0
@@ -206,7 +194,7 @@ static func days_estimate(node_id: String, ids: Array = []) -> float:
 
 
 ## §5.5 — the estimate shown before anyone is ticked. Computed against the founder alone,
-## who is the one person always in the pool (§5.3) — which is exactly what the frames'
+## who is the one person always in the pool (§5.3) — which is exactly what §8's card
 ## "~9 gün (Kurucu)" shows.
 static func days_estimate_solo(node_id: String) -> float:
 	var founder: Character = CharacterRegistry.get_founder()
@@ -219,7 +207,7 @@ static func days_estimate_solo(node_id: String) -> float:
 #  §5.3 — starting a research
 # ============================================================================
 
-## Machine reason ids, in refusal order. "" == may start.
+## Machine reason ids for start_refusal. "" == may start.
 const REFUSE_CLOSED := "closed"
 const REFUSE_LOCKED := "locked"
 const REFUSE_CROSS := "cross"
@@ -238,7 +226,7 @@ static func start_refusal(node_id: String, ids: Array) -> String:
 		return REFUSE_CLOSED
 	if not ResearchTree.has(node_id):
 		return REFUSE_LOCKED
-	var st: String = String(_states.get(node_id, STATE_LOCKED))
+	var st: String = state_of(node_id)
 	if st == STATE_DONE:
 		return REFUSE_DONE  # §7 — "Aynı düğüm iki kez tamamlanamaz."
 	if st == STATE_LOCKED:
@@ -277,7 +265,7 @@ static func start(node_id: String, assignee_ids: Array) -> String:
 	_freeze_cause = ""
 	set_assignees(assignee_ids)
 	if _assignees.is_empty():
-		# HR seated nobody (a full two-job ledger on every candidate). Starting a research
+		# HR seated nobody (every pick was refused, e.g. inactive). Starting a research
 		# that is frozen from its first second is the same unwarned loss §5.5's guard
 		# refuses, so roll back rather than open a bar that will never move. Progress and
 		# `_paid` are untouched, and the cash below has not been charged yet.
@@ -306,10 +294,9 @@ static func set_assignees(ids: Array) -> void:
 		if not want.has(cid):
 			CharacterRegistry.unassign_job(cid, HRConstants.JOB_RESEARCH)
 	# THE SEAT LIST IS WHAT HR ACCEPTED, NOT WHAT THE PANEL ASKED FOR. `assign_job` can
-	# refuse — Ekip's two-job ledger cap is a real refusal (§5.0: "üçüncü işi reddeden kural
-	# araştırma için de geçerli") — and taking `want` on faith would leave the node believing
-	# it has a worker HR never seated: a bar that never moves with nobody to blame, which is
-	# exactly the failure §5.5's zero-contribution guard exists to prevent.
+	# refuse (a picked person who is on leave or in training is "inactive"; the job cap never
+	# counts research), and a node believing in a worker HR never seated is a bar that never
+	# moves with nobody to blame — the failure §5.5's zero-contribution guard exists to prevent.
 	var seated: Array[String] = []
 	for cid in want:
 		if _assignees.has(cid):
@@ -336,17 +323,18 @@ static func pause() -> void:
 
 
 ## Called BY CharacterRegistry when a displacement or a departure takes this person off
-## research. Must not call back into assign/unassign — that is the loop.
+## research. Must not call back into assign/unassign — that is the loop. Whatever removes the
+## LAST person is the freeze's cause; a departure passes "" and reads "Kimse üzerinde değil."
 static func drop_assignee(char_id: String, cause: String = "") -> void:
 	if not _assignees.has(char_id):
 		return
 	_assignees.erase(char_id)
-	if _assignees.is_empty() and cause != "":
+	if _assignees.is_empty():
 		_freeze_cause = cause
 	emit_edges()
 
 
-## §5.7 — DONMUŞ BARIN NOTU SEBEBİNİ SÖYLER. İki sebep vardır ve ayrı cümleleri olmalı:
+## §5.6.1 · §5.7 — DONMUŞ BARIN NOTU SEBEBİNİ SÖYLER. İki sebep vardır ve ayrı cümleleri olmalı:
 ## oyuncu insanları çekti (bar "Kimse üzerinde değil." der, yapım barıyla AYNI cümle — ve
 ## aynı olması §5.0'ın öğretici anını taşıyan şeydir), ya da taşıyıcı sürekli bir işe geçti
 ## ve araştırma yerinden edildi ("Ekip yapımda."). İkincisi `BUILD_BUSY_RESEARCH`'ün tam
@@ -359,7 +347,7 @@ static func freeze_note_key() -> String:
 
 static func _release_assignees() -> void:
 	for cid in _assignees.duplicate():
-		CharacterRegistry.unassign_job(String(cid), HRConstants.JOB_RESEARCH)
+		CharacterRegistry.unassign_job(cid, HRConstants.JOB_RESEARCH)
 	_assignees.clear()
 
 
@@ -392,13 +380,12 @@ static func _area_has_star(node_id: String, area: String) -> bool:
 	return false
 
 
-## §5.3 — the assignment panel's pool. Employees whose ROLE can hold one of the node's
-## required areas, plus the founder ALWAYS.
+## §5.3 — the assignment panel's pool. The founder ALWAYS, plus employees whose ROLE can
+## hold one of the node's required areas.
 ##
 ## The filter is can_hold_area, NOT "has stars": hr_candidate_generator fills every area of
 ## every employee with a rest value, so a raw-star filter lists the whole roster and does
-## nothing. The founder passes can_hold_area for every area by construction, which is why he
-## is always on the list.
+## nothing.
 static func eligible_assignees(node_id: String) -> Array[Character]:
 	var out: Array[Character] = []
 	var founder: Character = CharacterRegistry.get_founder()
@@ -406,8 +393,6 @@ static func eligible_assignees(node_id: String) -> Array[Character]:
 		out.append(founder)
 	var areas: Array = ResearchTree.areas_of(node_id)
 	for c in CharacterRegistry.get_employees():
-		if c.category == "founder":
-			continue
 		for area in areas:
 			if HRConstants.can_hold_area(c.role, String(area), c.category):
 				out.append(c)
@@ -423,7 +408,7 @@ static func eligible_assignees(node_id: String) -> Array[Character]:
 ## registration re-enters ResearchSeam.completed() through a ProductLines accessor it reads a
 ## settled table.
 static func _complete(node_id: String) -> void:
-	if String(_states.get(node_id, "")) == STATE_DONE:
+	if node_completed(node_id):
 		return  # §7 — the same node cannot complete twice.
 	_states[node_id] = STATE_DONE
 	_active = ""
@@ -450,7 +435,7 @@ static func _complete(node_id: String) -> void:
 static func _reveal_children(node_id: String) -> void:
 	for child in ResearchTree.children_of(node_id):
 		var cid := String(child)
-		if String(_states.get(cid, STATE_LOCKED)) != STATE_LOCKED:
+		if revealed(cid):
 			continue
 		_states[cid] = STATE_REVEALED
 		EventBus.node_revealed.emit(cid)
@@ -458,7 +443,7 @@ static func _reveal_children(node_id: String) -> void:
 
 ## §4.5 — the line enters the catalog, starts at K1 and obeys the normal ladder.
 ##
-## Director ruling R4: only KENDİ KENDİNE SERVİS is authored for the demo. The other three
+## §4.5.2: only KENDİ KENDİNE SERVİS is authored for the demo. The other three
 ## are recorded into mvp_hidden_lines so a future EA build opens them, and NOTHING is
 ## registered — their unlock line already told the player it is Erken Erişim content, so the
 ## node is honest rather than either blocked (§3.1) or silently empty (unwarned loss).
@@ -496,11 +481,10 @@ static func restore_hidden_lines() -> void:
 #  §6 — the monthly product note
 # ============================================================================
 
+## Only daily_tick calls this, so the product is already live (§7).
 static func _tick_note() -> void:
 	if _note_last_day < 0:
 		return                       # user_research not complete
-	if not ProductState.is_live():
-		return                       # §7 — canlı ürün yokken rapor gelmez
 	if GameState.day - _note_last_day < ResearchTree.report_period_days():
 		return
 	_note_last_day = GameState.day
@@ -518,26 +502,17 @@ static func _tick_note() -> void:
 ## hr_candidate_generator fills EVERY area of EVERY employee, so a sales rep carries nonzero
 ## raw Ürün and a raw-star reading would let a customer rep write the product research note.
 ##
-## THE FOUNDER IS EXCLUDED, and he has to be excluded BY CATEGORY, because
-## HRConstants.can_hold_area returns true for the founder in every area by construction.
+## THE FOUNDER IS EXCLUDED: get_active_employees() lists only category "employee", and that
+## filter is load-bearing because HRConstants.can_hold_area returns true for the founder in
+## every area by construction.
 static func note_author() -> Character:
 	for c in CharacterRegistry.get_active_employees():
-		if c.category == "founder":
-			continue
 		if HRConstants.can_hold_area(c.role, HRConstants.AREA_PRODUCT, c.category) \
 				or HRConstants.can_hold_area(c.role, HRConstants.AREA_DESIGN, c.category):
 			return c
 	return null
 
 
-## §6.2's second layer — the node card's LIVE warning. The gate is written before the
-## research, not discovered after 70 effort.
-static func note_author_available() -> bool:
-	return note_author() != null
-
-
-## §6.3 — three signals, no verdict. §6.4: the demand generator is not built, so the demand
-## slot degrades to a fixed line and fills itself when the generator lands.
 ## §12.1 — her havuz dört varyasyon taşır (RND_NOTE_{RIVAL,TECH}_{B2B,B2C}_0..3).
 const NOTE_POOL_COUNT := 4
 
@@ -577,11 +552,10 @@ static func _emerging_node(day: int) -> String:
 ##
 ## §6.4 ŞERHİ: talep üreteci Ürün paketinde inşa edilmedi, o yüzden `demand_key` BOŞ gelir ve
 ## görünüm belgelenmiş bozunmuş hâline düşer ("Bu ay kimse bir şey istemedi."). Diğer iki
-## satırın havuzları YAZILDI ve buradan seçilir — seçilmeseydi on altı yazılmış cümle hiçbir
-## koşuda görünmezdi.
+## satırın havuzları buradan seçilir.
 ##
 ## TEK BESTECİ: harness de (--modal-shot=rnd-note) bu fonksiyonu çağırır, sözlüğü elle
-## kurmaz. Elle kurulan kopya tam olarak ayrışabilir, ve bir kez ayrıştı.
+## kurmaz; elle kurulan bir kopya ayrışır.
 static func compose_note(author: Character) -> Dictionary:
 	var market: String = ProductState.market_type()
 	var suffix: String = "B2B" if market == "b2b" else "B2C"
@@ -641,12 +615,7 @@ static func take_first_note_modal() -> bool:
 ## A running research does NOT count: a badge that nagged about work already in progress
 ## would be a demand, and Ar-Ge makes none.
 static func attention_count() -> int:
-	var n: int = 0
-	if _note_unread:
-		n += 1
-	if is_frozen():
-		n += 1
-	return n
+	return int(_note_unread) + int(is_frozen())
 
 
 # ============================================================================
@@ -655,15 +624,14 @@ static func attention_count() -> int:
 
 ## research.completed(node_id) — the seam name Ürün rev 6 §12.5 calls. Do not rename.
 static func node_completed(node_id: String) -> bool:
-	_ensure_seeded()
-	return String(_states.get(node_id, STATE_LOCKED)) == STATE_DONE
+	return state_of(node_id) == STATE_DONE
 
 
 static func active() -> String:
 	return _active
 
 
-## 0.0-1.0 fraction, the ProductSystem.sprint_progress grammar. Raw effort stays internal.
+## 0.0-1.0 fraction. Raw effort stays internal.
 static func progress(node_id: String) -> float:
 	var cap: float = float(ResearchTree.effort_of(node_id))
 	if cap <= 0.0:
@@ -679,8 +647,7 @@ static func progress_effort(node_id: String) -> float:
 ## Başlat-time refusals with their own reason lines, and a node the player cannot afford
 ## today is still an available node.
 static func available(node_id: String) -> bool:
-	_ensure_seeded()
-	if String(_states.get(node_id, STATE_LOCKED)) != STATE_REVEALED:
+	if state_of(node_id) != STATE_REVEALED:
 		return false
 	var cross: String = ResearchTree.cross_of(node_id)
 	return cross == "" or node_completed(cross)
@@ -695,8 +662,7 @@ static func family_root_done(family: String) -> bool:
 
 
 static func revealed(node_id: String) -> bool:
-	_ensure_seeded()
-	return String(_states.get(node_id, STATE_LOCKED)) != STATE_LOCKED
+	return state_of(node_id) != STATE_LOCKED
 
 
 static func hidden_line_unlocked(line_id: String) -> bool:
@@ -705,11 +671,7 @@ static func hidden_line_unlocked(line_id: String) -> bool:
 
 static func completed_count() -> int:
 	_ensure_seeded()
-	var n: int = 0
-	for k in _states.keys():
-		if String(_states[k]) == STATE_DONE:
-			n += 1
-	return n
+	return _states.values().count(STATE_DONE)
 
 
 static func assigned(node_id: String) -> Array:
@@ -729,30 +691,25 @@ static func is_frozen() -> bool:
 # ============================================================================
 #  §8.5 — save
 # ============================================================================
-#  Schema stays at 9: everything here is additive and default-safe. _restore_systems reads
-#  sys.get("rnd", {}) and from_dict returns early on {}, so a v9 save without this block
-#  loads with a fresh tree and no migration.
+#  Additive and default-safe: _restore_systems reads sys.get("rnd", {}) and from_dict seeds
+#  a fresh tree on {}, so a save without this block needs no migration.
 #
 #  NOT here, each for a stated reason:
 #    · opened hidden lines → ProductState.HIDDEN_LINES (mvp_hidden_lines). §9: the Ürün
 #      catalog is their reader, so Ürün's state block owns them.
 #    · jobs paused by research → Character.paused_job_ids, walked by SaveCodec with the
 #      rest of the roster. It is per-person data and it belongs next to assigned_job_ids.
-#    · _was_frozen / _seeded → derived edge memory, exactly like ProductRead's _prev_*.
-#      On load the first emit_edges() seeds and emits nothing, which is correct: a load must
-#      not fire research_frozen for a state the player already saw.
+#    · _was_frozen / _seeded → derived edge memory; see their declaration.
 #
 #  SaveCodec hazard, named: _progress is {node_id: float} inside an untyped bag, and
 #  _normalize_number turns an integral float into an int — so {"data_model": 40.0} returns
 #  as 40. Every reader goes through float(), which progress_effort() does.
 
 static func to_dict() -> Dictionary:
-	# YAKALAMA DA TOHUMLAR. `from_dict` boş bir tabloyu gördüğünde `_ensure_seeded` ile yirmi
-	# düğümü dolduruyor; yakalama tarafı tohumlamazsa kaydet → yükle → kaydet ZİNCİRİ
-	# BÜYÜR (ölçüldü: 34.341 → 34.855 bayt, aradaki 514 bayt tam olarak yirmi giriş) ve
-	# `save_roundtrip_fingerprint` düşer. Sebep yapısal: `reset_all_owners` yalnız YÜKLEMEDE
-	# çağrılıyor (save_manager.gd:339), koşu başlangıcında değil — yani v1 yayınlanmadan
-	# alınan bir kayıtta `_states` gerçekten boştur.
+	# YAKALAMA DA TOHUMLAR. `from_dict` boş bir tabloyu `_ensure_seeded` ile yirmi düğüme
+	# dolduruyor; yakalama tarafı tohumlamazsa kaydet → yükle → kaydet zinciri BÜYÜR ve
+	# `save_roundtrip_fingerprint` düşer. Tohumlayan `reset` koşu başlangıcında çağrılmıyor,
+	# yani v1 yayınlanmadan alınan bir kayıtta `_states` boş olabilir.
 	_ensure_seeded()
 	return {
 		"states": _states.duplicate(),

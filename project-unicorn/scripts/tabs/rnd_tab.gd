@@ -1,9 +1,9 @@
 extends Control
 
 # ============================================================================
-# AR-GE SAYFASI (onaylı R1 · R2 · R3 · R8 — GDD "AR-GE MODÜLÜ" §2, §3, §5, §7).
+# AR-GE SAYFASI (GDD "AR-GE MODÜLÜ" §2, §3, §5, §7, §8).
 #
-# Kod-kurulu düzen, boş .tscn kökü (Ürün Rev3 / Ekip idiomu): ağacın yerleşimi
+# Kod-kurulu düzen, boş .tscn kökü (Ürün / Ekip idiomu): ağacın yerleşimi
 # `size.x`ten türetiliyor ve karolar mutlak konumlu, yani .tscn'de tutulacak bir
 # iskelet YOK. Kökte yalnız üç şey var: `process_mode`, tam-ekran çapa, script.
 #
@@ -13,8 +13,8 @@ extends Control
 #
 # GÜN SINIRI: `EventBus.day_advanced`e ASLA bağlanmaz. O sinyal
 # `GameState.advance_day()` İÇİNDE, TimeManager günlük tick'leri dağıtmadan ÖNCE
-# atılıyor; oraya bağlanan bir görünüm DÜNKÜ durumu okur (hr_tab.gd:15-19 aynı
-# tuzağı yazıyor). Ar-Ge'nin gün-sınırı kancası `research_progress_changed`.
+# atılıyor; oraya bağlanan bir görünüm DÜNKÜ durumu okur (hr_tab aynı tuzağı
+# yazıyor). Ar-Ge'nin gün-sınırı kancası `research_progress_changed`.
 #
 # DİL VE PALET: bu sayfa `language_changed`/`palette_changed`e BAĞLANMAZ.
 # Router sayfayı her mount'ta serbest bırakıp yeniden kuruyor (center_viewport
@@ -32,32 +32,30 @@ extends Control
 
 ## Sayfanın kendi kenar boşluğu (Ekip sayfasının ölçüsü).
 const PAGE_MARGIN := 16
-## Koşan araştırmanın tek satırlık şeridi (R1 — sayfanın en üstü).
+## Koşan araştırmanın tek satırlık şeridi (§8 — sayfanın en üstü).
 const BAR_H := 26
 
 var _signals: Array = []
 var _tree: RnDTreeView = null
 var _progress_label: Label = null
 var _bar: Control = null
+var _bar_fill: Panel = null
 var _bar_name: Label = null
 var _bar_days: Label = null
 var _bar_percent: Label = null
-var _bar_refs: Dictionary = {}
-var _legend: HBoxContainer = null
 var _structure_key: String = ""
 var _selected: String = ""
 
 
 func _ready() -> void:
-	# İKİ SAYFA HÂLİ, TEK KAPI: `RnDSystem.tree_open()` (Ar-Ge §2, MÜHÜRLÜ). Kapı DEĞİŞMEDİ;
-	# değişen yalnız v1 öncesinin nasıl göründüğü. `version_shipped` dinlendiği için oyuncu
-	# sekme açıkken v1'i yayınlarsa sayfa ağaca döner.
+	# İKİ SAYFA HÂLİ, TEK KAPI: `RnDSystem.tree_open()` (Ar-Ge §2, MÜHÜRLÜ). `version_shipped`
+	# dinlendiği için oyuncu sekme açıkken v1'i yayınlarsa sayfa ağaca döner.
 	if not RnDSystem.tree_open():
 		_build_waiting_page()
-		EventBus.version_shipped.connect(_on_version_shipped)
+		EventBus.version_shipped.connect(_on_version_shipped, CONNECT_ONE_SHOT)
 		return
 	_build_chrome()
-	# §10'un okuma yüzeyinin sinyalleri + iki ek. `assignment_changed` burada,
+	# §10'un okuma yüzeyinin sinyalleri + üç ek. `assignment_changed` burada,
 	# çünkü bir kişinin işi değişince araştırma DONABİLİR ve koltuk listesi
 	# kartın canlı satırıdır.
 	_signals = [
@@ -70,7 +68,7 @@ func _ready() -> void:
 	]
 	for sig in _signals:
 		sig.connect(_on_state_changed)
-	EventBus.rnd_node_requested.connect(_on_node_requested)
+	EventBus.rnd_node_requested.connect(select_node)
 
 	# TASLAK NÖBETİ (creation_flow'un `creation_draft` emsali): dil ya da
 	# palet değişince router sayfayı yıkıp yeniden kuruyor; bayrak olmasaydı
@@ -79,8 +77,7 @@ func _ready() -> void:
 	var stashed: String = String(GameState.get_flag("rnd_selected", ""))
 	GameState.flags.erase("rnd_selected")
 	_refresh()
-	if stashed != "" and ResearchSeam.is_node(stashed):
-		select_node(stashed, false)
+	select_node(stashed)
 
 
 func _on_version_shipped(_v: int) -> void:
@@ -88,8 +85,6 @@ func _on_version_shipped(_v: int) -> void:
 	# yüzden sayfayı kendimiz yeniden kuruyoruz.
 	for child in get_children():
 		child.queue_free()
-	if EventBus.version_shipped.is_connected(_on_version_shipped):
-		EventBus.version_shipped.disconnect(_on_version_shipped)
 	_ready()
 
 
@@ -99,41 +94,33 @@ func _exit_tree() -> void:
 	for sig in _signals:
 		if sig.is_connected(_on_state_changed):
 			sig.disconnect(_on_state_changed)
-	if EventBus.rnd_node_requested.is_connected(_on_node_requested):
-		EventBus.rnd_node_requested.disconnect(_on_node_requested)
+	if EventBus.rnd_node_requested.is_connected(select_node):
+		EventBus.rnd_node_requested.disconnect(select_node)
 
 
 ## Router sayfayı bırakmadan önce çağırır (propagate_call). Seçili düğüm
 ## saklanır; `_ready` onu tüketip siler.
 func on_page_closing() -> void:
-	if _selected == "":
-		GameState.flags.erase("rnd_selected")
-		return
-	GameState.set_flag("rnd_selected", _selected)
+	if _selected != "":
+		GameState.set_flag("rnd_selected", _selected)
 
 
 # --- Derin bağ ---------------------------------------------------------------
 
-## §2 — `tab_changed("rnd")` emit'i sayfayı SENKRON mount ediyor (`_ready`
-## `add_child` içinde koşar), yani hemen ardından gelen `rnd_node_requested`
-## bağlanmış bir işleyici bulur. Ürün'ün "→ Araştır"ı false, barın "ata"sı true
-## gönderir.
-func _on_node_requested(node_id: String, open_assign: bool) -> void:
-	select_node(node_id, open_assign)
-
-
-## Dışarıya açık seam. AÇILMAMIŞ ama var olan bir düğümü de seçer — panel
-## kendini "Önce {düğüm}." diye açıklayabilsin diye (R2 · §7).
+## Dışarıya açık seam, `rnd_node_requested`in işleyicisi. `tab_changed("rnd")` emit'i
+## sayfayı SENKRON mount ediyor (`_ready` `add_child` içinde koşar), yani hemen ardından
+## gelen `rnd_node_requested` bağlanmış bir işleyici bulur (§2). Ürün'ün "→ Araştır"ı
+## false, barın "ata"sı true gönderir. AÇILMAMIŞ ama var olan bir düğümü de seçer —
+## panel kendini "Önce {düğüm}." diye açıklayabilsin diye (§7).
 func select_node(node_id: String, open_assign: bool = false) -> void:
-	if _tree == null or not ResearchSeam.is_node(node_id):
-		return
-	_tree.select(node_id, open_assign)
+	if ResearchSeam.is_node(node_id):
+		_tree.select(node_id, open_assign)
 
 
 # --- Sayfa kromu -------------------------------------------------------------
 
 ## V1 ÖNCESİ SAYFA: TEK SATIR, BAŞKA HİÇBİR ŞEY. Kilitli yuva yok, hayalet ağaç yok,
-## fragman ızgarası yok. Ray artık kapıyı tutmuyor (bkz. ui_tokens'ın `lock` notu) — kapı
+## fragman ızgarası yok. Kapı rayda değil sayfada (§2; bkz. ui_tokens'ın `lock` notu) — kapı
 ## burada, ve kapının söylediği tek şey neyi beklediği. Kabuk zaten bu grameri kullanıyor:
 ## ortalanmış başlık + tek `CaptionMuted` satır (center_viewport._make_placeholder_body).
 func _build_waiting_page() -> void:
@@ -169,7 +156,7 @@ func _build_chrome() -> void:
 	head.alignment = BoxContainer.ALIGNMENT_CENTER
 	head.add_child(UiFactory.make_label(tr("TAB_RND"), &"PageTitleSerif"))
 	# İTALİK YOK: gövde-mürekkep kaydında italik bir serif YÜZ tanımlı değil ve
-	# bu sayfa yeni bir varyasyon EKLEMEZ (THEME_STAMP 7'de duruyor).
+	# bu sayfa yeni bir varyasyon EKLEMEZ.
 	head.add_child(UiFactory.make_label(tr("RND_TREE_HINT"), &"CaptionMuted"))
 	head.add_child(RnDUiShared.spacer())
 	_progress_label = UiFactory.make_label("", &"TitleRowSummary")
@@ -188,14 +175,10 @@ func _build_chrome() -> void:
 	_tree.selection_changed.connect(_on_selection_changed)
 	outer.add_child(_tree)
 
-	# --- Efsane ---
-	_legend = HBoxContainer.new()
-	_legend.add_theme_constant_override("separation", UiTokens.SPACE_XL)
-	outer.add_child(_legend)
-	_build_legend()
+	outer.add_child(_build_legend())
 
 
-## R1'in üst şeridi: ARAŞTIRMA · ad · kalan gün · yüzde, ve YAZININ ARKASINDA
+## Üst şerit (§8): ARAŞTIRMA · ad · kalan gün · yüzde, ve YAZININ ARKASINDA
 ## yüzde çapalı bir dolgu. Dolgu ayrı bir düğüm çünkü bir `StyleBoxFlat` yüzde
 ## İFADE EDEMEZ (build_bar.gd'nin reçetesi).
 func _build_bar() -> Control:
@@ -216,7 +199,9 @@ func _build_bar() -> Control:
 	plate.add_theme_stylebox_override("panel", psb)
 	bar.add_child(plate)
 
-	bar.add_child(RnDUiShared.fill_host(_bar_refs, "bar"))
+	var refs := {}
+	bar.add_child(RnDUiShared.fill_host(refs, "bar"))
+	_bar_fill = refs["bar"]
 
 	var pad := MarginContainer.new()
 	pad.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -240,20 +225,18 @@ func _build_bar() -> Control:
 	_bar_percent = UiFactory.make_label("", &"RowMeta", UiTokens.INK)
 	_bar_percent.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_bar_percent)
-	HRUiShared.set_mouse_ignore(pad)
 	return bar
 
 
-func _build_legend() -> void:
-	for c in _legend.get_children():
-		_legend.remove_child(c)
-		c.queue_free()
-	_legend.add_child(RnDUiShared.legend_item("intra", tr("RND_LEGEND_INTRA")))
-	_legend.add_child(RnDUiShared.legend_item("cross", tr("RND_LEGEND_CROSS")))
-	_legend.add_child(RnDUiShared.legend_item("locked", tr("RND_LEGEND_LOCKED")))
-	_legend.add_child(RnDUiShared.legend_item("available", tr("RND_LEGEND_AVAILABLE")))
-	_legend.add_child(RnDUiShared.legend_item("done", tr("RND_LEGEND_DONE")))
-	_legend.add_child(RnDUiShared.spacer())
+func _build_legend() -> HBoxContainer:
+	var legend := HBoxContainer.new()
+	legend.add_theme_constant_override("separation", UiTokens.SPACE_XL)
+	legend.add_child(RnDUiShared.legend_item("intra", tr("RND_LEGEND_INTRA")))
+	legend.add_child(RnDUiShared.legend_item("cross", tr("RND_LEGEND_CROSS")))
+	legend.add_child(RnDUiShared.legend_item("locked", tr("RND_LEGEND_LOCKED")))
+	legend.add_child(RnDUiShared.legend_item("available", tr("RND_LEGEND_AVAILABLE")))
+	legend.add_child(RnDUiShared.legend_item("done", tr("RND_LEGEND_DONE")))
+	legend.add_child(RnDUiShared.spacer())
 	# RND_LEGEND_COUNT ağacın ŞEKLİNİ söyler, durumunu değil: dört aile × beş = yirmi.
 	# Üç sayı da ResearchSeam'den TÜRETİLİR, çünkü sabit yazılmış bir "4 aile × 5 = 20"
 	# ağaç şekli değiştiği gün sessizce yalan söylerdi. Ve tam olarak geçilen anahtarlar
@@ -263,12 +246,13 @@ func _build_legend() -> void:
 	for nid in ResearchSeam.NODES.keys():
 		fam_ids[ResearchSeam.family(String(nid))] = true
 	var node_total: int = ResearchSeam.NODES.size()
-	var fam_count: int = maxi(1, fam_ids.size())
-	_legend.add_child(RnDUiShared.legend_item("", tr("RND_LEGEND_COUNT").format({
+	var fam_count: int = fam_ids.size()
+	legend.add_child(RnDUiShared.legend_item("", tr("RND_LEGEND_COUNT").format({
 		"families": fam_count,
 		"per": node_total / fam_count,
 		"total": node_total,
 	})))
+	return legend
 
 
 # --- Tazeleme ----------------------------------------------------------------
@@ -276,8 +260,8 @@ func _build_legend() -> void:
 ## ERTELENMİŞ: bu işleyicilerin çoğu bir düğmenin/`gui_input`ın İÇİNDEN gelen
 ## motor emit'idir (atama panelinin Başlat'ı → `RnDSystem.start` →
 ## `research_started`). Sayfayı orada yeniden kurmak, düğümü kendi sinyalinin
-## altından çekmek olurdu (team_panel.gd:619-622'nin yazdığı tuzak).
-func _on_state_changed(_a = null, _b = null, _c = null) -> void:
+## altından çekmek olurdu (team_panel'in yazdığı tuzak).
+func _on_state_changed(_arg = null) -> void:
 	_refresh.call_deferred()
 
 
@@ -286,8 +270,6 @@ func _on_selection_changed(node_id: String) -> void:
 
 
 func _refresh() -> void:
-	if _tree == null or not is_instance_valid(_tree):
-		return
 	_paint_bar()
 	_paint_progress()
 	var key: String = _compute_structure_key()
@@ -300,7 +282,6 @@ func _refresh() -> void:
 		# kendi açıklaması var.
 		if keep != "":
 			_tree.select(keep)
-		_build_legend()
 	else:
 		_tree.repaint()
 
@@ -318,36 +299,27 @@ func _compute_structure_key() -> String:
 
 
 func _paint_progress() -> void:
-	if _progress_label == null or not is_instance_valid(_progress_label):
-		return
 	_progress_label.text = tr("RND_TREE_PROGRESS").format({
 		"done": RnDSystem.completed_count(), "total": ResearchSeam.NODES.size()})
 
 
 func _paint_bar() -> void:
-	if _bar == null or not is_instance_valid(_bar):
-		return
 	var active: String = RnDSystem.active()
 	_bar.visible = active != ""
 	if active == "":
 		return
+	var p: float = RnDSystem.progress(active)
 	_bar_name.text = ResearchSeam.node_name(active)
-	RnDUiShared.set_fill(_bar_refs.get("bar", null) as Panel, RnDSystem.progress(active))
-	_bar_percent.text = RnDUiShared.percent_text(RnDSystem.progress(active))
+	RnDUiShared.set_fill(_bar_fill, p)
+	_bar_percent.text = RnDUiShared.percent_text(p)
 	# DONMUŞTA GÜN YAZILMAZ. `days_estimate` -1.0 döner ("katkı yok") ve o sayı
-	# asla bölünmez; yerine durumun kendi cümlesi geçer (§5.5 · §5.7).
+	# asla bölünmez; yerine durumun kendi cümlesi geçer (§5.5 · §5.7). Donmuşsa cümle
+	# SEBEBİ söyler ve motordan okunur — tracker'la aynı cümle (§5.6.1).
 	var days: float = RnDSystem.days_estimate(active, RnDSystem.assigned(active))
 	if days > 0.0:
 		_bar_days.text = RnDUiShared.days_text(days)
 		_bar_days.add_theme_color_override("font_color", UiTokens.INK_MUTED)
 	else:
-		_bar_days.text = tr("BUILD_BUSY_NOBODY")
+		var note: String = RnDSystem.freeze_note_key()
+		_bar_days.text = tr(note if note != "" else "BUILD_BUSY_NOBODY")
 		_bar_days.add_theme_color_override("font_color", UiTokens.ACCENT)
-
-
-func _revealed_count() -> int:
-	var n: int = 0
-	for id in ResearchSeam.NODES.keys():
-		if RnDSystem.revealed(String(id)):
-			n += 1
-	return n

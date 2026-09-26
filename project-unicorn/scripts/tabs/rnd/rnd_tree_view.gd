@@ -2,7 +2,7 @@ class_name RnDTreeView
 extends Control
 
 # ============================================================================
-# AR-GE AĞACI — onaylı R1 / R1b / R8'in kafesi.
+# AR-GE AĞACI (§3 · §8).
 #
 # KAFES YÜK TAŞIYAN KARARDIR. Bir aile sütunu ÜST ÜSTE BEŞ KARO DEĞİLDİR; ÜÇ
 # SATIRDA beş yuvadır:
@@ -13,27 +13,25 @@ extends Control
 #     |        |
 # DEVAM A  DEVAM B         (satır 2)
 #
-# Ortada KALICI OLARAK BOŞ bir KORİDOR kalır. Çapa kuralını elle ayarlanmış
-# değil BELİRLENİMCİ yapan şey o koridordur: kılavuz çizgisinin 2. parçası bir
-# satır arasında, 3. parçası koridorda yaşar — ikisi de yapı gereği boş, yani
-# çizgi hiçbir karonun üstünden geçemez.
+# Ortada KALICI OLARAK BOŞ bir KORİDOR kalır. Çapa kuralını BELİRLENİMCİ yapan
+# şey o koridordur: kılavuz çizgisinin 2. parçası bir satır arasında, 3. parçası
+# koridorda yaşar — ikisi de yapı gereği boş, yani çizgi hiçbir karonun üstünden
+# geçemez.
 #
-# MELEZ UYGULAMA, ve nedeni iki onaylı kareden geliyor:
+# UYGULAMA:
 #   · `_slots` (node_id → Rect2) her yeniden yerleşimde BİR KEZ hesaplanır.
 #   · Karolar GERÇEK düğümlerdir (`set_position`/`set_size`), bir GridContainer
-#     DEĞİL: R1b iki dal yuvasının adlarını KIPIRDAMADAN almasını, R8 ise
-#     açılışın ANİMASYONSUZ olmasını istiyor. Bir kap içerik değişince akar.
+#     DEĞİL: dal yuvaları adlarını KIPIRDAMADAN almalı ve açılış animasyonsuz
+#     olmalı; bir kap içerik değişince akar.
 #   · `_draw()` her çizgi için AYNI `_slots` sözlüğünü okur, yani bir çizgi
 #     bayatlamış bir karoyu asla gösteremez. Godot düğümün kendi `_draw()`'unu
 #     çocuklarından ÖNCE işler — çizgiler karoların ALTINA bedavaya düşer.
-#     (`_draw` yarısının emsali: scripts/ui/components/cash_curve.gd.)
 #
-# ÇAPA KURALI (R1): detay paneli ağacın ALTINDAKİ ayrılmış şeride düşer, SABİT
-# yükseklikte, seçili sütunun x'inde ve COL_W genişliğinde. Yani bir karonun
-# üstünü asla örtmez (yapısal olarak ağacın altında), kendi sütununun genişliği
-# dışına taşmaz ve PANELİN İÇERİĞİ NE OLURSA OLSUN DÜZEN KAYMAZ — panelin içi
-# kendi ScrollContainer'ında. Seçim yokken panel gizlidir ve şerit 280px boş
-# durur; o ayrılmış boşluk kuralın bedelidir.
+# ÇAPA KURALI: detay paneli ağacın ALTINDAKİ ayrılmış şeride düşer, SABİT
+# yükseklikte, seçili sütunun x'inde ve `_col_w` genişliğinde. Yani bir karonun
+# üstünü asla örtmez, kendi sütununun genişliği dışına taşmaz ve PANELİN İÇERİĞİ
+# NE OLURSA OLSUN DÜZEN KAYMAZ — panelin içi kendi ScrollContainer'ında. Seçim
+# yokken panel gizlidir ve şerit boş durur; o ayrılmış boşluk kuralın bedelidir.
 # ============================================================================
 
 signal selection_changed(node_id: String)
@@ -47,20 +45,21 @@ const FAMILY_ORDER := [
 ]
 const FAMILY_SIZE := 5          # §3 — her ailede bir kök, iki dal, iki devam
 
-# --- Ölçüler. Hiçbiri bir viewport'a çakılı DEĞİL: COL_W ve TILE_W `size.x`ten
+# --- Ölçüler. Hiçbiri bir viewport'a çakılı DEĞİL: `_col_w` ve `_tile_w` `size.x`ten
 #     türetilir, satır arası ise kalan yükseklikten (aşağıdaki _measure).
 const PAGE_PAD := 28.0          # tuvalin sol/sağ kenar boşluğu
 const COL_GAP := 28.0           # sütunlar arası
 const CORRIDOR_W := 24.0        # sütunun ortasındaki kalıcı boş şerit
 const TILE_H := 84.0
 const TILE_H_MIN := 62.0        # ölçek merdiveninin dar kademeleri için taban
-const ROW_GAP_NOMINAL := 52.0
 const ROW_GAP_MIN := 34.0       # kılavuzun 2. parçasının sığdığı en dar aralık
 const ROW_GAP_MAX := 76.0
 const COL_HEADER_H := 24.0
 const CROSS_LANE_H := 28.0      # ağaç ile şerit arasındaki çapraz koridoru
-const DETAIL_H := 280.0         # R1 — SABİT. Düzenin kaymamasının tek sebebi.
+const DETAIL_H := 280.0         # SABİT — düzenin kaymamasının tek sebebi.
 const ROWS := 3
+const TILE_PAD_X := 10          # karonun iç dolgusu
+const TILE_PAD_Y := 8
 
 const LINE_INTRA := 1.5
 const LINE_GUIDE := 2.0
@@ -80,7 +79,7 @@ var _detail: RnDDetailPanel = null
 
 var _col_w: float = 0.0
 var _tile_w: float = 0.0
-var _row_gap: float = ROW_GAP_NOMINAL
+var _row_gap: float = 0.0
 var _tile_h: float = TILE_H
 var _top: float = 0.0
 var _tree_bottom: float = 0.0
@@ -91,8 +90,10 @@ func _ready() -> void:
 	# Tuvalin kendisi tıklanabilir: boşluğa tıklamak seçimi bırakır. Godot
 	# çocukları ÖNCE sınar, o yüzden STOP karoların tıklamasını yutmaz.
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	resized.connect(_on_resized)
 	rebuild()
+	# Yeniden YERLEŞİM, yeniden KURULUM değil: bir pencere boyu değişikliği açık
+	# atama panelinin seçimini düşürmemeli.
+	resized.connect(_relayout)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -101,25 +102,18 @@ func _gui_input(event: InputEvent) -> void:
 		select("")
 
 
-func _on_resized() -> void:
-	# Yeniden YERLEŞİM, yeniden KURULUM değil: bir pencere boyu değişikliği açık
-	# atama panelinin seçimini düşürmemeli.
-	_relayout()
-
-
 # ---------------------------------------------------------------- ölçü
 
 func _measure() -> void:
 	_col_w = maxf(140.0, (size.x - 2.0 * PAGE_PAD - 3.0 * COL_GAP) / 4.0)
 	_tile_w = maxf(72.0, (_col_w - CORRIDOR_W) * 0.5)
 	_top = COL_HEADER_H + UiTokens.SPACE_M
-	# Satır arası KALAN yükseklikten türetilir ve kelepçelenir. Sabit 52 yazsaydık
-	# kısa bir viewport'ta ağaç şeridin üstüne biner, uzun bir viewport'ta ağacın
-	# altında ölü bir bant kalırdı; kelepçe ikisini de kapatıyor.
+	# Satır arası KALAN yükseklikten türetilir ve kelepçelenir. Sabit bir aralık
+	# kısa bir viewport'ta ağacı şeridin üstüne bindirir, uzun bir viewport'ta ağacın
+	# altında ölü bir bant bırakırdı; kelepçe ikisini de kapatıyor.
 	var avail: float = size.y - DETAIL_H - CROSS_LANE_H - _top
-	# ÖLÇEK MERDİVENİ (hr_tab'ın aynı derdi): mantıksal viewport OYUN İÇİNDE
-	# değişiyor (Ayarlar → ölçek). %125'te üç satır 84px'lik karolarla ayrılmış
-	# şeridin altına taşıyordu, yani panelin son 24px'i ekran dışında kalıyordu.
+	# ÖLÇEK MERDİVENİ: mantıksal viewport OYUN İÇİNDE değişiyor (Ayarlar → ölçek);
+	# karo boyu sabit kalsaydı %125'te üç satır ayrılmış şeridin altına taşardı.
 	# Önce KARO BOYU sıkışır (84 → 62 tabanına), sonra satır arası dağıtılır;
 	# çapa kuralı (sabit DETAIL_H) böylece her kademede korunur.
 	_tile_h = clampf((avail - 2.0 * ROW_GAP_MIN) / float(ROWS), TILE_H_MIN, TILE_H)
@@ -135,13 +129,7 @@ func _row_y(row: int) -> float:
 
 
 func _col_x(family: String) -> float:
-	return float((_cols.get(family, {}) as Dictionary).get("x", PAGE_PAD))
-
-
-## Sütunun koridor merkezi. Kök karonun merkezi ile AYNI x — çapraz çizginin
-## kaynak sütunda yukarı tırmanırken boş bir şeritte kalmasının sebebi bu.
-func _corridor_x(family: String) -> float:
-	return _col_x(family) + _col_w * 0.5
+	return float(_cols[family]["x"])
 
 
 func _compute_slots() -> void:
@@ -157,8 +145,7 @@ func _compute_slots() -> void:
 		# KÖK sütuna ortalı — merkezi koridorun merkezidir.
 		_slots[root] = Rect2(col_x + (_col_w - _tile_w) * 0.5, _row_y(0), _tile_w, _tile_h)
 		# DAL A / DAL B, aralarında koridor. Sıra ResearchTree.children_of'un
-		# sıralı çıktısıdır — bir isimlendirme kuralı DEĞİL, dosyanın ebeveyn
-		# kenarları (research_tree.gd:_build_children sort'lar).
+		# sıralı çıktısıdır — bir isimlendirme kuralı DEĞİL.
 		var branches: Array = ResearchTree.children_of(root)
 		for j in branches.size():
 			var b: String = String(branches[j])
@@ -190,7 +177,6 @@ func rebuild() -> void:
 	_frames.clear()
 	_fills.clear()
 	_headers.clear()
-	_detail = null
 
 	_measure()
 	_compute_slots()
@@ -203,11 +189,11 @@ func rebuild() -> void:
 		_tiles[nid] = tile
 		add_child(tile)
 
-	# Detay paneli EN SON eklenir: çizim sırasında karoların üstünde kalsın
-	# (yapısal olarak zaten altında duruyor, ama kılavuz çizgisi ile aynı
-	# bölgede bir kırpma yarışı olmasın).
+	# Detay paneli EN SON eklenir: çizim sırasında karoların üstünde kalsın.
 	_detail = RnDDetailPanel.new()
-	_detail.assign_visibility_changed.connect(_on_detail_resized)
+	# Atama paneli açılıp kapanınca panelin KUTUSU değişmez, ama kılavuz çizgisi
+	# panelin üst kenarına dayanıyor — tuval tazelenir.
+	_detail.assign_visibility_changed.connect(queue_redraw)
 	add_child(_detail)
 
 	_apply_positions()
@@ -215,25 +201,21 @@ func rebuild() -> void:
 	queue_redraw()
 
 
-## Ucuz tazeleme: koşan karonun dolgusu + çizgiler. Hiçbir düğüm serbest
+## Ucuz tazeleme: koşan karonun dolgusu + başlıklar + kart. Hiçbir düğüm serbest
 ## bırakılmaz — `research_progress_changed` günde bir kez geliyor ve bütün
-## kartları yıkmak için hiçbir sebep yok (hr_tab'ın yapı-anahtarı grameri).
+## karoları yıkmak için hiçbir sebep yok.
 func repaint() -> void:
 	for nid in _fills.keys():
 		RnDUiShared.set_fill(_fills[nid] as Panel, RnDSystem.progress(String(nid)))
 	for family in _headers.keys():
-		var lbl: Label = _headers[family] as Label
-		if lbl != null and is_instance_valid(lbl):
-			lbl.text = RnDUiShared.column_header(String(family),
-				_family_done(String(family)), FAMILY_SIZE)
+		(_headers[family] as Label).text = RnDUiShared.column_header(String(family),
+			_family_done(String(family)), FAMILY_SIZE)
 	if _detail != null and is_instance_valid(_detail):
 		_detail.repaint()
 	queue_redraw()
 
 
 func _relayout() -> void:
-	if _slots.is_empty():
-		return
 	_measure()
 	_compute_slots()
 	_apply_positions()
@@ -241,31 +223,25 @@ func _relayout() -> void:
 
 
 func _apply_positions() -> void:
-	for i in FAMILY_ORDER.size():
-		var family: String = String(FAMILY_ORDER[i])
-		var lbl: Label = _headers.get(family, null) as Label
-		if lbl != null and is_instance_valid(lbl):
-			lbl.set_position(Vector2(_col_x(family), 0.0))
-			lbl.set_size(Vector2(_col_w, COL_HEADER_H))
+	for family in FAMILY_ORDER:
+		var lbl: Label = _headers[family] as Label
+		lbl.set_position(Vector2(_col_x(family), 0.0))
+		lbl.set_size(Vector2(_col_w, COL_HEADER_H))
 	for nid in _tiles.keys():
 		var tile: Control = _tiles[nid] as Control
 		var r: Rect2 = _slots.get(nid, Rect2()) as Rect2
-		if tile != null and is_instance_valid(tile):
-			tile.set_position(r.position)
-			tile.set_size(r.size)
+		tile.set_position(r.position)
+		tile.set_size(r.size)
 	_place_detail()
 
 
-## R1'in çapası: seçili SÜTUNUN x'i, COL_W genişlik, SABİT yükseklik.
+## Çapa: seçili SÜTUNUN x'i, `_col_w` genişlik, SABİT yükseklik.
 func _place_detail() -> void:
-	if _detail == null or not is_instance_valid(_detail):
-		return
-	if _selected == "" or not _slots.has(_selected):
+	if _selected == "":
 		_detail.visible = false
 		return
-	var family: String = ResearchSeam.family(_selected)
 	_detail.visible = true
-	_detail.set_position(Vector2(_col_x(family), _detail_top))
+	_detail.set_position(Vector2(_col_x(ResearchSeam.family(_selected)), _detail_top))
 	_detail.set_size(Vector2(_col_w, DETAIL_H))
 
 
@@ -292,23 +268,23 @@ func _family_done(family: String) -> int:
 
 ## KARO KABUĞU KODDA KURULU, ve iki ayrı sebeple:
 ##   1. Yüzdelik dolgu. Bir `StyleBoxFlat` yüzde İFADE EDEMEZ; dolgu ayrı bir
-##      çocuk Panel'dir (build_bar.gd'nin reçetesi).
+##      çocuk Panel'dir (RnDUiShared.fill_host).
 ##   2. Sol kenar. Godot bir stylebox'ta kenarlara AYRI RENK veremez ve donmuş
 ##      karoda çerçeve ile sol kenar farklı renktedir — sol kenar da ayrı düğüm.
 func _make_tile(node_id: String) -> Control:
 	var state: String = RnDUiShared.tile_state(node_id)
 	var tile := Control.new()
 	tile.name = "Tile_%s" % node_id
-	tile.clip_contents = false
 
 	if state == RnDUiShared.TILE_LOCKED:
 		# KİLİTLİ YUVA: zemini YOK, çerçevesi tuvalin kesikli dikdörtgeni (bkz.
-		# _draw). Tıklanmaz — §3 ağacın ŞEKLİNİ gösterir, ADINI değil; kilitli
-		# bir karoyu tıklatmak o adı sızdırırdı. Derin bağ (select_node) yine de
+		# _draw). Tek yazısı alanın adı (§3 — ağacın ŞEKLİ görünür, ADI değil; §3 ve
+		# §5.5 onu "? Ürün" diye yazar, RND_LOCKED_SLOT "?" taşımıyor). Tıklanmaz:
+		# kilitli bir karoyu tıklatmak adı sızdırırdı. Derin bağ (select) yine de
 		# seçebilir, çünkü orada adı zaten söyleyen bir sebep var.
 		tile.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var cap := UiFactory.make_label(
-			RnDUiShared.locked_caption(ResearchSeam.family(node_id)),
+		var cap := UiFactory.make_label(RnDUiShared.t("RND_LOCKED_SLOT").format({
+			"area": RnDUiShared.area_name(ResearchSeam.family(node_id))}),
 			&"MicroLabel", UiTokens.INK_FAINT)
 		cap.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -318,9 +294,8 @@ func _make_tile(node_id: String) -> Control:
 		return tile
 
 	tile.mouse_filter = Control.MOUSE_FILTER_STOP
-	# TAMAMLANMIŞ KARO İNCELENEBİLİR KALIR (§7'nin "seçilemez"i YENİDEN
-	# BAŞLATILAMAZ demektir, İNCELENEMEZ değil — R2 yalnız seçilerek ulaşılan
-	# tam bir TAMAMLANDI paneli tanımlıyor). İşaretçi ok kalır: tıklama bir
+	# TAMAMLANMIŞ KARO İNCELENEBİLİR KALIR: §7'nin "seçilemez"i YENİDEN
+	# BAŞLATILAMAZ demektir, İNCELENEMEZ değil. İşaretçi ok kalır: tıklama bir
 	# EYLEM değil, bir okuma.
 	tile.mouse_default_cursor_shape = Control.CURSOR_ARROW if state == RnDUiShared.TILE_DONE \
 		else Control.CURSOR_POINTING_HAND
@@ -342,8 +317,7 @@ func _make_tile(node_id: String) -> Control:
 
 	# 2. DOLGU — yalnız koşan karoda; yüzde çapalı, kırpılmış.
 	if state == RnDUiShared.TILE_RUNNING:
-		var host: Control = RnDUiShared.fill_host(_fills, node_id)
-		tile.add_child(host)
+		tile.add_child(RnDUiShared.fill_host(_fills, node_id))
 		RnDUiShared.set_fill(_fills[node_id] as Panel, RnDSystem.progress(node_id))
 
 	# 3. ÇERÇEVE — dolgunun ÜSTÜNDE, yoksa dolgu kenarı yer.
@@ -355,17 +329,14 @@ func _make_tile(node_id: String) -> Control:
 	_frames[node_id] = frame
 
 	# 4. SOL KENAR — 2px, çerçeveden BAŞKA renkte olabildiği için ayrı düğüm.
-	var edge_color: Color = _edge_color(state)
-	if edge_color.a > 0.0:
+	#    Tamamlanmış karoda kenar yok.
+	if state != RnDUiShared.TILE_DONE:
 		var edge := Panel.new()
-		edge.anchor_top = 0.0
 		edge.anchor_bottom = 1.0
-		edge.anchor_left = 0.0
-		edge.anchor_right = 0.0
 		edge.offset_right = SELECT_EDGE_W
 		edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var esb := StyleBoxFlat.new()
-		esb.bg_color = edge_color
+		esb.bg_color = UiTokens.INK_DIM if state == RnDUiShared.TILE_FROZEN else UiTokens.ACCENT
 		esb.anti_aliasing = false
 		edge.add_theme_stylebox_override("panel", esb)
 		tile.add_child(edge)
@@ -379,10 +350,10 @@ func _tile_content(node_id: String, state: String) -> Control:
 	var pad := MarginContainer.new()
 	pad.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pad.add_theme_constant_override("margin_left", RnDUiShared.TILE_PAD_X + SELECT_EDGE_W)
-	pad.add_theme_constant_override("margin_right", RnDUiShared.TILE_PAD_X)
-	pad.add_theme_constant_override("margin_top", RnDUiShared.TILE_PAD_Y)
-	pad.add_theme_constant_override("margin_bottom", RnDUiShared.TILE_PAD_Y)
+	pad.add_theme_constant_override("margin_left", TILE_PAD_X + SELECT_EDGE_W)
+	pad.add_theme_constant_override("margin_right", TILE_PAD_X)
+	pad.add_theme_constant_override("margin_top", TILE_PAD_Y)
+	pad.add_theme_constant_override("margin_bottom", TILE_PAD_Y)
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", UiTokens.SPACE_XS)
@@ -398,7 +369,6 @@ func _tile_content(node_id: String, state: String) -> Control:
 	name_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	head.add_child(name_lbl)
-	# ✓ YALNIZ TAMAMLANMIŞTA. Başka hiçbir durumda görünmez.
 	if state == RnDUiShared.TILE_DONE:
 		head.add_child(UiFactory.make_label(RnDUiShared.MARK_DONE, &"RowName", UiTokens.INK_DIM))
 	col.add_child(head)
@@ -409,21 +379,21 @@ func _tile_content(node_id: String, state: String) -> Control:
 	foot.add_child(UiFactory.make_label(
 		RnDUiShared.tier_caption(node_id, state == RnDUiShared.TILE_FROZEN), &"MicroLabel"))
 	foot.add_child(RnDUiShared.spacer())
-	# ÇAPRAZ İŞARETİ KALICIDIR (R1): çapraz ÇİZGİ yalnız seçiliyken çizilir, ama
-	# köşe işareti hep durur — yoksa oyuncu bir düğümün başka bir aileye bağlı
-	# olduğunu ancak ona tıklayınca öğrenirdi.
+	# ÇAPRAZ İŞARETİ KALICIDIR: çapraz ÇİZGİ yalnız seçiliyken çizilir, ama köşe
+	# işareti ("⇠ Tasarım") hep durur — yoksa oyuncu bir düğümün başka bir aileye
+	# bağlı olduğunu ancak ona tıklayınca öğrenirdi.
 	var cross: String = ResearchTree.cross_of(node_id)
 	if cross != "":
-		foot.add_child(UiFactory.make_label(RnDUiShared.cross_mark(cross), &"MicroLabel"))
+		foot.add_child(UiFactory.make_label(RnDUiShared.t("RND_CROSS_MARK").format({
+			"area": RnDUiShared.area_name(ResearchSeam.family(cross))}), &"MicroLabel"))
 	col.add_child(foot)
 
 	HRUiShared.set_mouse_ignore(pad)
 	return pad
 
 
-## Çerçeve kutusu. Kalınlık ÜÇ DURUMDA DA AYNI, o yüzden hover'da karo bir
-## piksel bile oynamaz (team_panel._row_box'ın kuralı). Hover YALNIZ KENARI
-## açar — dolgu kıpırdamaz.
+## Çerçeve kutusu. Kalınlık her durumda AYNI, o yüzden hover'da karo bir piksel
+## bile oynamaz. Hover YALNIZ KENARI açar — dolgu kıpırdamaz.
 func _frame_box(state: String, hovered: bool) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.draw_center = false
@@ -440,19 +410,9 @@ func _frame_box(state: String, hovered: bool) -> StyleBoxFlat:
 	return sb
 
 
-## Sol kenarın rengi. Tamamlanmış ve kilitli karoda kenar YOKTUR (alfa 0 =
-## düğüm hiç yaratılmaz).
-func _edge_color(state: String) -> Color:
-	match state:
-		RnDUiShared.TILE_AVAILABLE, RnDUiShared.TILE_RUNNING:
-			return UiTokens.ACCENT
-		RnDUiShared.TILE_FROZEN:
-			return UiTokens.INK_DIM
-		_:
-			return Color(0, 0, 0, 0)
-
-
 func _on_tile_hover(node_id: String, entered: bool) -> void:
+	# Yeniden kurulumda karo imlecin altından çekilirken de mouse_exited gelir;
+	# o anda sözlük temizlenmiş olabilir.
 	var frame: Panel = _frames.get(node_id, null) as Panel
 	if frame != null and is_instance_valid(frame):
 		frame.add_theme_stylebox_override("panel",
@@ -465,22 +425,11 @@ func _on_tile_input(event: InputEvent, node_id: String) -> void:
 		select(node_id)
 
 
-func _on_detail_resized() -> void:
-	# Atama paneli açılıp kapanınca panelin İÇİ değişir, KUTUSU değil (R1'in
-	# çapası). Yine de kılavuz çizgisi panelin üst kenarına dayanıyor, o yüzden
-	# tuvali tazeliyoruz.
-	queue_redraw()
-
-
 # ---------------------------------------------------------------- seçim
 
-func selected() -> String:
-	return _selected
-
-
 ## `open_assign` derin bağdan gelir (barın "ata"sı true, Konsept'in
-## "→ Araştır"ı false). Kilitli ama AÇILMAMIŞ bir düğüm de seçilebilir: panel
-## kendini "Önce {düğüm}." diye açıklayabilsin diye (görev şartnamesi, R2).
+## "→ Araştır"ı false). Kilitli ama AÇILMAMIŞ bir düğüm de seçilebilir: kart
+## kendini "Önce {düğüm}." diye açıklayabilsin diye (§7).
 func select(node_id: String, open_assign: bool = false) -> void:
 	if node_id != "" and not _slots.has(node_id):
 		return
@@ -493,10 +442,8 @@ func select(node_id: String, open_assign: bool = false) -> void:
 func _paint_selection(open_assign: bool = false) -> void:
 	if _detail == null or not is_instance_valid(_detail):
 		return
-	if _selected == "":
-		_detail.visible = false
-		return
-	_detail.show_node(_selected, open_assign)
+	if _selected != "":
+		_detail.show_node(_selected, open_assign)
 	_place_detail()
 
 
@@ -509,37 +456,32 @@ func _draw() -> void:
 	#    StyleBoxFlat kesikli kenar taşımaz.
 	for nid in _slots.keys():
 		if not RnDSystem.revealed(String(nid)):
-			var r: Rect2 = _slots[nid] as Rect2
-			RnDUiShared.draw_dashed_rect(self, r.grow(-0.5),
+			RnDUiShared.draw_dashed_rect(self, (_slots[nid] as Rect2).grow(-0.5),
 				UiTokens.BORDER_DASHED, 1.0, DASH_INTRA)
 
-	# 2. AİLE İÇİ BAĞLAR — kalıcı, 1.5px CARD_BORDER. Açılmamış çocuğa giden bağ
-	#    KESİKLİ: §3 "Ağacın şekli baştan görünür" — şekil ilk saniyeden okunur,
-	#    içerik açıldıkça dolar.
+	# 2. AİLE İÇİ BAĞLAR — kalıcı. Açılmamış çocuğa giden bağ KESİKLİ: §3 "Ağacın
+	#    şekli baştan görünür" — şekil ilk saniyeden okunur, içerik açıldıkça dolar.
 	for family in FAMILY_ORDER:
 		_draw_family_lines(String(family))
 
-	# 3. KILAVUZ — seçili karodan detay şeridine, 2px ACCENT, üç parça.
+	# 3. KILAVUZ — seçili karodan detay şeridine, üç parça.
 	_draw_guide()
 
-	# 4. ÇAPRAZ — YALNIZ seçiliyken, 1.5px ACCENT kesikli, ağacın altındaki
-	#    koridordan geçerek.
+	# 4. ÇAPRAZ — YALNIZ seçiliyken, ağacın altındaki koridordan geçerek.
 	_draw_cross()
 
 
 func _draw_family_lines(family: String) -> void:
-	var root: String = String((_cols.get(family, {}) as Dictionary).get("root", ""))
-	if root == "" or not _slots.has(root):
+	var root: String = String(_cols[family]["root"])
+	if root == "":
 		return
 	var rr: Rect2 = _slots[root] as Rect2
-	var root_cx: float = rr.position.x + rr.size.x * 0.5
+	var root_cx: float = rr.get_center().x
 	var mid_y: float = rr.end.y + _row_gap * 0.5
 	for b in ResearchTree.children_of(root):
 		var bid := String(b)
-		if not _slots.has(bid):
-			continue
 		var br: Rect2 = _slots[bid] as Rect2
-		var bcx: float = br.position.x + br.size.x * 0.5
+		var bcx: float = br.get_center().x
 		# Gövde her dal için yeniden çizilir (iki dal aynı ana çizgiyi paylaşır);
 		# çizim ÇOCUĞUN kendi durumunu taşısın diye böyle — kök tamamlandığında
 		# iki dal AYNI ANDA açılır (§3), o yüzden iki geçiş asla çelişmez.
@@ -548,10 +490,7 @@ func _draw_family_lines(family: String) -> void:
 		_line(Vector2(bcx, mid_y), Vector2(bcx, br.position.y), bid)
 		for c in ResearchTree.children_of(bid):
 			var cid := String(c)
-			if not _slots.has(cid):
-				continue
-			var cr: Rect2 = _slots[cid] as Rect2
-			_line(Vector2(bcx, br.end.y), Vector2(bcx, cr.position.y), cid)
+			_line(Vector2(bcx, br.end.y), Vector2(bcx, (_slots[cid] as Rect2).position.y), cid)
 
 
 ## Bir aile-içi bağ. Çocuk açıldıysa DÜZ, açılmadıysa KESİKLİ.
@@ -564,20 +503,19 @@ func _line(a: Vector2, b: Vector2, child_id: String) -> void:
 		draw_dashed_line(a, b, UiTokens.CARD_BORDER, LINE_INTRA, DASH_INTRA)
 
 
-## R1'in kılavuzu. Üç parça, ve hiçbiri bir karonun üstünden GEÇEMEZ:
-##   1. karodan aşağı, satır arasına (ya da satır 2'de çapraz koridoruna),
+## Kılavuz. Üç parça, ve hiçbiri bir karonun üstünden GEÇEMEZ:
+##   1. karodan aşağı, satır arasına (ya da son satırda çapraz koridoruna),
 ##   2. yatay, sütunun KORİDOR merkezine — satır arası yapı gereği boş,
 ##   3. koridordan düz aşağı, şeridin üst kenarına — koridor yapı gereği boş.
+## Koridor merkezi kök karonun merkeziyle AYNI x'tir.
 func _draw_guide() -> void:
-	if _selected == "" or not _slots.has(_selected):
+	if _selected == "":
 		return
 	var r: Rect2 = _slots[_selected] as Rect2
-	var cx: float = r.position.x + r.size.x * 0.5
-	var family: String = ResearchSeam.family(_selected)
-	var corridor: float = _corridor_x(family)
-	var row: int = _row_of(_selected)
+	var cx: float = r.get_center().x
+	var corridor: float = _col_x(ResearchSeam.family(_selected)) + _col_w * 0.5
 	var lane_y: float = r.end.y + _row_gap * 0.5
-	if row == ROWS - 1:
+	if ResearchSeam.placement(_selected) == ResearchSeam.PLACE_CONT:
 		lane_y = _tree_bottom + CROSS_LANE_H * 0.35
 	draw_line(Vector2(cx, r.end.y), Vector2(cx, lane_y), UiTokens.ACCENT, LINE_GUIDE, true)
 	if not is_equal_approx(cx, corridor):
@@ -592,15 +530,15 @@ func _draw_guide() -> void:
 ## merkezidir — yani şeritten köke tırmanan dikey parça o sütunun boş
 ## koridorundan geçer. Kesişme yok, hesap yok.
 func _draw_cross() -> void:
-	if _selected == "" or not _slots.has(_selected):
+	if _selected == "":
 		return
 	var src: String = ResearchTree.cross_of(_selected)
-	if src == "" or not _slots.has(src):
+	if src == "":
 		return
 	var sel: Rect2 = _slots[_selected] as Rect2
 	var target: Rect2 = _slots[src] as Rect2
-	var sel_cx: float = sel.position.x + sel.size.x * 0.5
-	var src_cx: float = target.position.x + target.size.x * 0.5
+	var sel_cx: float = sel.get_center().x
+	var src_cx: float = target.get_center().x
 	var lane_y: float = _tree_bottom + CROSS_LANE_H * 0.72
 	draw_dashed_line(Vector2(sel_cx, sel.end.y), Vector2(sel_cx, lane_y),
 		UiTokens.ACCENT, LINE_CROSS, DASH_CROSS)
@@ -608,10 +546,3 @@ func _draw_cross() -> void:
 		UiTokens.ACCENT, LINE_CROSS, DASH_CROSS)
 	draw_dashed_line(Vector2(src_cx, lane_y), Vector2(src_cx, target.end.y),
 		UiTokens.ACCENT, LINE_CROSS, DASH_CROSS)
-
-
-func _row_of(node_id: String) -> int:
-	match ResearchSeam.placement(node_id):
-		ResearchSeam.PLACE_ROOT: return 0
-		ResearchSeam.PLACE_BRANCH: return 1
-		_: return 2

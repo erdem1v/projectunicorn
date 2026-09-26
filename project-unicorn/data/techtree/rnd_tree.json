@@ -1,6 +1,6 @@
 {
-  "_doc": "Ar-Ge GDD rev 1.4+ §4 — the twenty research nodes. The ID / FAMILY / PLACE spine is NOT here: it lives in ResearchSeam.NODES as a compile-time const, because ProductLines._validate_step reads it at ITS OWN load and a file-loaded spine would make the line validator depend on I/O ordering between two lazily-loaded statics that nothing sequences. This file carries the tunable half (§13 calibration surface) and the hidden lines. ResearchTree validates every row against the seam at load and fails loudly.",
-  "_stars": "§5.2 + director ruling R1 (2026-08-25): the ladder is root 1 star, branch 2 stars, continuation 2+2. §4 tables carried no requirement column; every worked example showed 2, but a 2-star root would cost a third of the founder six onboarding points just to open a family. Star N = raw >= 2N (Ürün §12.6).",
+  "_doc": "Ar-Ge GDD §4 — the tunable half of the twenty research nodes (§13 calibration surface) plus the hidden lines. The ID / FAMILY / PLACE spine lives in ResearchSeam.NODES as a compile-time const (research_tree.gd says why). ResearchTree validates every row against the seam at load and fails loudly.",
+  "_stars": "§5.2: the ladder is root 1 star, branch 2 stars, continuation 2+2. A 2-star root would cost a third of the founder's six onboarding points just to open a family. Star N = raw >= 2N (Ürün §12.6).",
   "_cross": "§3 — exactly four cross-family links, all on the continuation-B node (the continuation whose parent is branch B). Roots and branches NEVER carry one. §3.1 sapma tavanı is enforced as: the target is in another family, is a root, costs <= 50 effort and no cash — so the worst detour is one cheap research.",
   "_areas": "§5.2 — root and branch want the family own area; continuation wants two, its own first. Family to area: capability=product, platform=engineering, practice=qa, design=design.",
 
@@ -8,33 +8,33 @@
   "report_period_days": 30,
 
   "nodes": {
-    "data_model":         {"effort": 40, "cash": 0,   "areas": ["product"],                "stars": 1, "parent": "",                 "demo_card": true},
-    "ai_engine":          {"effort": 90, "cash": 600, "areas": ["product"],                "stars": 2, "parent": "data_model",       "demo_card": true,  "cost_label": true},
-    "semantic_index":     {"effort": 70, "cash": 0,   "areas": ["product"],                "stars": 2, "parent": "data_model",       "demo_card": true},
-    "edge_inference":     {"effort": 70, "cash": 0,   "areas": ["product", "engineering"], "stars": 2, "parent": "ai_engine",        "demo_card": false, "effect": "ai_usage_weight"},
-    "knowledge_graph":    {"effort": 90, "cash": 0,   "areas": ["product", "design"],      "stars": 2, "parent": "semantic_index",   "demo_card": false, "cross": "design_system",    "opens_line": "line_hidden_auto_organize"},
+    "data_model":         {"effort": 40, "cash": 0,   "areas": ["product"],                "stars": 1, "parent": ""},
+    "ai_engine":          {"effort": 90, "cash": 600, "areas": ["product"],                "stars": 2, "parent": "data_model",       "cost_label": true},
+    "semantic_index":     {"effort": 70, "cash": 0,   "areas": ["product"],                "stars": 2, "parent": "data_model"},
+    "edge_inference":     {"effort": 70, "cash": 0,   "areas": ["product", "engineering"], "stars": 2, "parent": "ai_engine",        "effect": "ai_usage_weight"},
+    "knowledge_graph":    {"effort": 90, "cash": 0,   "areas": ["product", "design"],      "stars": 2, "parent": "semantic_index",   "cross": "design_system",    "opens_line": "line_hidden_auto_organize"},
 
-    "scalable_backend":   {"effort": 50, "cash": 0,   "areas": ["engineering"],            "stars": 1, "parent": "",                 "demo_card": true,  "effect": "load_divisor"},
-    "security_cert":      {"effort": 90, "cash": 900, "areas": ["engineering"],            "stars": 2, "parent": "scalable_backend", "demo_card": true,  "cost_label": true, "effect": "enterprise_trust"},
-    "analytics_engine":   {"effort": 80, "cash": 400, "areas": ["engineering"],            "stars": 2, "parent": "scalable_backend", "demo_card": true,  "cost_label": true},
-    "model_optimization": {"effort": 70, "cash": 0,   "areas": ["engineering", "product"], "stars": 2, "parent": "security_cert",    "demo_card": false, "effect": "license_cost"},
-    "data_warehouse":     {"effort": 90, "cash": 0,   "areas": ["engineering", "product"], "stars": 2, "parent": "analytics_engine", "demo_card": false, "cross": "data_model",       "opens_line": "line_hidden_enterprise_reporting"},
+    "scalable_backend":   {"effort": 50, "cash": 0,   "areas": ["engineering"],            "stars": 1, "parent": "",                 "effect": "load_divisor"},
+    "security_cert":      {"effort": 90, "cash": 900, "areas": ["engineering"],            "stars": 2, "parent": "scalable_backend", "cost_label": true, "effect": "enterprise_trust"},
+    "analytics_engine":   {"effort": 80, "cash": 400, "areas": ["engineering"],            "stars": 2, "parent": "scalable_backend", "cost_label": true},
+    "model_optimization": {"effort": 70, "cash": 0,   "areas": ["engineering", "product"], "stars": 2, "parent": "security_cert",    "effect": "license_cost"},
+    "data_warehouse":     {"effort": 90, "cash": 0,   "areas": ["engineering", "product"], "stars": 2, "parent": "analytics_engine", "cross": "data_model",       "opens_line": "line_hidden_enterprise_reporting"},
 
-    "bug_tracker":        {"effort": 40, "cash": 0,   "areas": ["qa"],                     "stars": 1, "parent": "",                 "demo_card": true,  "effect": "validation_throughput"},
-    "cicd":               {"effort": 70, "cash": 0,   "areas": ["qa"],                     "stars": 2, "parent": "bug_tracker",      "demo_card": true,  "effect": "bug_rate_ceil"},
-    "test_automation":    {"effort": 70, "cash": 0,   "areas": ["qa"],                     "stars": 2, "parent": "bug_tracker",      "demo_card": true,  "effect": "beta_decay",      "opens_line": "line_hidden_self_serve"},
-    "incident_playbook":  {"effort": 70, "cash": 0,   "areas": ["qa", "engineering"],      "stars": 2, "parent": "cicd",             "demo_card": false, "effect": "overage_satisfaction"},
-    "self_service":       {"effort": 90, "cash": 0,   "areas": ["qa", "design"],           "stars": 2, "parent": "test_automation",  "demo_card": false, "cross": "design_system",    "effect": "inflow_base"},
+    "bug_tracker":        {"effort": 40, "cash": 0,   "areas": ["qa"],                     "stars": 1, "parent": "",                 "effect": "validation_throughput"},
+    "cicd":               {"effort": 70, "cash": 0,   "areas": ["qa"],                     "stars": 2, "parent": "bug_tracker",      "effect": "bug_rate_ceil"},
+    "test_automation":    {"effort": 70, "cash": 0,   "areas": ["qa"],                     "stars": 2, "parent": "bug_tracker",      "effect": "beta_decay",      "opens_line": "line_hidden_self_serve"},
+    "incident_playbook":  {"effort": 70, "cash": 0,   "areas": ["qa", "engineering"],      "stars": 2, "parent": "cicd",             "effect": "overage_satisfaction"},
+    "self_service":       {"effort": 90, "cash": 0,   "areas": ["qa", "design"],           "stars": 2, "parent": "test_automation",  "cross": "design_system",    "effect": "inflow_base"},
 
-    "design_system":      {"effort": 50, "cash": 0,   "areas": ["design"],                 "stars": 1, "parent": "",                 "demo_card": true,  "effect": "experience_effort"},
-    "user_research":      {"effort": 70, "cash": 0,   "areas": ["design"],                 "stars": 2, "parent": "design_system",    "demo_card": true,  "effect": "product_note"},
-    "onboarding_flow":    {"effort": 70, "cash": 0,   "areas": ["design"],                 "stars": 2, "parent": "design_system",    "demo_card": true,  "effect": "b2c_conversion"},
-    "accessibility":      {"effort": 70, "cash": 0,   "areas": ["design", "product"],      "stars": 2, "parent": "user_research",    "demo_card": false},
-    "personalization":    {"effort": 90, "cash": 0,   "areas": ["design", "engineering"],  "stars": 2, "parent": "onboarding_flow",  "demo_card": false, "cross": "scalable_backend", "opens_line": "line_hidden_adaptive_ui"}
+    "design_system":      {"effort": 50, "cash": 0,   "areas": ["design"],                 "stars": 1, "parent": "",                 "effect": "experience_effort"},
+    "user_research":      {"effort": 70, "cash": 0,   "areas": ["design"],                 "stars": 2, "parent": "design_system",    "effect": "product_note"},
+    "onboarding_flow":    {"effort": 70, "cash": 0,   "areas": ["design"],                 "stars": 2, "parent": "design_system",    "effect": "b2c_conversion"},
+    "accessibility":      {"effort": 70, "cash": 0,   "areas": ["design", "product"],      "stars": 2, "parent": "user_research"},
+    "personalization":    {"effort": 90, "cash": 0,   "areas": ["design", "engineering"],  "stars": 2, "parent": "onboarding_flow",  "cross": "scalable_backend", "opens_line": "line_hidden_adaptive_ui"}
   },
 
-  "_hidden_doc": "§4.5 — four lines the catalog never shows. Only KENDI KENDINE SERVIS is authored for the demo (§12.1, §13.5): it was lowered to the test_automation BRANCH so the new-feature-line moment is lived once. The other three keep an empty raw and are NEVER registered — director ruling R4: the node stays visible and startable, its unlock line pre-announces Erken Erisim icerigi so the player knows before spending the effort, it completes normally and its id is recorded in mvp_hidden_lines for a future EA build, but NOTHING enters the catalog and the discovery card does not claim a line opened. Blocking the node would break §3.1 (nothing telegraphed is unreachable); completing it silently empty would be an unwarned loss.",
-  "_hidden_k3_doc": "The demo line own K3 must carry a research node and that node must be root-or-branch — ProductLines._validate_step 303-310 refuses otherwise, and register_runtime_line routes through the same validator. §4.5 never named one. Director ruling R7: design_system, a ROOT. With semantic_index the top rung would sit four researches deep (root, branch, root, branch), an entire demo run spent on one line.",
+  "_hidden_doc": "§4.5 — four lines the catalog never shows. Only KENDI KENDINE SERVIS is authored for the demo (§12.1, §13.5): it sits on the test_automation BRANCH so the new-feature-line moment is lived once. The other three keep an empty raw and are NEVER registered — §4.5.2: the node stays visible and startable, its unlock line pre-announces Erken Erisim icerigi so the player knows before spending the effort, it completes normally and its id is recorded in mvp_hidden_lines for a future EA build, but NOTHING enters the catalog and the discovery card does not claim a line opened. Blocking the node would break §3.1 (nothing telegraphed is unreachable); completing it silently empty would be an unwarned loss.",
+  "_hidden_k3_doc": "The demo line's own K3 must carry a research node and that node must be root-or-branch — ProductLines._validate_step refuses otherwise, and register_runtime_line routes through the same validator. §4.5 names design_system, a ROOT: with semantic_index the top rung would sit four researches deep (root, branch, root, branch), an entire demo run spent on one line.",
 
   "hidden_lines": {
     "line_hidden_self_serve": {
