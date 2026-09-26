@@ -54,17 +54,14 @@ theme_override_constants/separation = 14
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TitleSerif"
-text = ""
 
 [node name="EmptyLabel" type="Label" parent="CenterPanel/Body"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_type_variation = &"RowMeta"
-text = ""
 
 [node name="Scroll" type="ScrollContainer" parent="CenterPanel/Body"]
-unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
@@ -84,7 +81,6 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 38)
 layout_mode = 2
 theme_type_variation = &"CommitButton"
-text = ""
 
 [node name="FooterSpacer" type="Control" parent="CenterPanel/Body/Footer"]
 layout_mode = 2
@@ -94,4 +90,3 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 38)
 layout_mode = 2
-text = ""
