@@ -2072,7 +2072,7 @@ END_META_SERIES_A_CLOSE_FRANK,İmzaladın. Şimdi asıl iş başlıyor — ama o
 END_META_ACQUISITION_TITLE,Şirket Satıldı,The Company Was Sold
 END_META_ACQUISITION_FRANK,Sattın. Kazanmak değil; kaybetmek de değil. Çoğu kurucu bunu bile göremez.,You sold. Not winning; not losing either. Most founders never even get this far.
 END_META_BANKRUPTCY_TITLE,Kepenk İndi,The Shutters Came Down
-END_META_BANKRUPTCY_FRANK,Otuz gün kırmızıda kaldın. Rakamlar kaba değildir — sadece sabırlıdır.,You stayed in the red for thirty days. Numbers are not cruel — only patient.
+END_META_BANKRUPTCY_FRANK,{days} gün kırmızıda kaldın. Rakamlar kaba değildir — sadece sabırlıdır.,You stayed in the red for {days} days. Numbers are not cruel — only patient.
 END_META_BRAND_COLLAPSE_TITLE,Marka Çöktü,The Brand Collapsed
 END_META_BRAND_COLLAPSE_FRANK,Skandalı sen yönetmedin; o seni yönetti.,You did not manage the scandal; it managed you.
 END_META_VC_REJECTION_CASCADE_TITLE,"Üç Masa, Üç Ret","Three Tables, Three Rejections"

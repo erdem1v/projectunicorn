@@ -522,4 +522,4 @@ static func ending_title(ending_id: String) -> String:
 
 ## Frank's closing line for an ending.
 static func ending_frank_line(ending_id: String) -> String:
-	return TranslationServer.translate("END_META_%s_FRANK" % ending_id.to_upper())
+	return TranslationServer.translate("END_META_%s_FRANK" % ending_id.to_upper()).format({"days": SHUTTER_DAYS})

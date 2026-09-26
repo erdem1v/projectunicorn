@@ -6,7 +6,7 @@ Açık işlerin tek yeri bu klasördür.
 
 ## Test paketi
 - Smoke ve probe paketi yalın bir paketle değiştirilecek (CLAUDE.md "Test"). Bugün `scripts/debug/endgame_smoke.gd`
-  348 vaka taşıyor. Yalnız smoke, probe ya da `main.gd` debug harness'larının eriştiği üretim kodu (temizlik dalgası 1
+  347 vaka taşıyor. Yalnız smoke, probe ya da `main.gd` debug harness'larının eriştiği üretim kodu (temizlik dalgası 1
   raporlarında 119 sembol) bu işle birlikte silinir.
 
 ## Kod temizliği: kalan adımlar
@@ -17,8 +17,6 @@ Açık işlerin tek yeri bu klasördür.
 - CSV süpürmesi: dalganın kullanılmaz bıraktığı anahtarlar (raporlarda 101 aday; `docs/writing/` ve
   `ACIK_KARARLAR.md`'de geçenler kalır, DRAFT-EN maddesindeki PRICE_TIP_PREMIUM ve PRICE_TIP_VOLUME dahil), ardından
   `event_bus.gd` başlıklarındaki atıflar ve `python tools/gen_signal_manifest.py`.
-- `data/events/cards/customer/price_break.json`: `scope` alanı slot tanımı yerine `"prospect": "any"` dizesi taşıyor;
-  kart bağlanırsa (bağlanması `ACIK_KARARLAR.md`'de açık) kapsam çözülmez.
 ## Görsel kabul
 - Temizlik dalgası 1 UI kodunu sadeleştirdi; görünür bir değişiklik amaçlanmadı ama commit'ler görsel kabulden geçmedi
   (kural dalgadan sonra geldi). Dokunulan ekranlar: Finans, Ar-Ge, Onboarding, Yatırım ve toplantı sahneleri, Satış,

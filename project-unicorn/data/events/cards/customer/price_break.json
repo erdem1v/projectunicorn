@@ -26,7 +26,10 @@
     ]
   },
   "scope": {
-    "prospect": "any"
+    "prospect": {
+      "type": "prospect",
+      "required": true
+    }
   },
   "guards": {
     "market": "b2b"

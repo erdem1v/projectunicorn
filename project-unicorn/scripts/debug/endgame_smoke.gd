@@ -457,7 +457,6 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"buyout_numbers_make_the_sentence_true": fail = _case_buyout_numbers_make_the_sentence_true()
 		"b2c_ending_reports_audience":           fail = _case_b2c_ending_reports_audience()
 		"frank_line_renders_outside_the_paper":  fail = _case_frank_line_renders_outside_the_paper()
-		"bankruptcy_frank_line_says_thirty":     fail = _case_bankruptcy_frank_line_says_thirty()
 		"card_body_tokens_resolve":              fail = _case_card_body_tokens_resolve()
 		"seed_sheet_round_trips":                fail = _case_seed_sheet_round_trips()
 		_:                      fail = "unknown case"
@@ -16972,26 +16971,6 @@ static func _case_frank_line_renders_outside_the_paper() -> String:
 		for l in (vs.get("ledger_lines", []) as Array):
 			if String(l) == line:
 				return "%s puts the mentor verdict in the paper's ledger box" % eid
-	return ""
-
-
-static func _case_bankruptcy_frank_line_says_thirty() -> String:
-	# The line said seven while the top bar counted thirty for all thirty of those days.
-	var loc0: String = TranslationServer.get_locale()
-	for loc in ["tr", "en"]:
-		TranslationServer.set_locale(loc)
-		var line: String = TranslationServer.translate("END_META_BANKRUPTCY_FRANK")
-		var seven: String = "Yedi" if loc == "tr" else "seven"
-		var thirty: String = "Otuz" if loc == "tr" else "thirty"
-		if line.contains(seven):
-			TranslationServer.set_locale(loc0)
-			return "[%s] the bankruptcy verdict still says seven" % loc
-		if not line.contains(thirty):
-			TranslationServer.set_locale(loc0)
-			return "[%s] the bankruptcy verdict names no span: %s" % [loc, line]
-	TranslationServer.set_locale(loc0)
-	if EndingsSystem.SHUTTER_DAYS != 30:
-		return "SHUTTER_DAYS moved to %d and the copy did not follow" % EndingsSystem.SHUTTER_DAYS
 	return ""
 
 
