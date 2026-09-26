@@ -1,21 +1,12 @@
 extends Node
 
-# Core run state.
-# Defaults reflect the Phase 1 (Bootstrap) start.
-# All mutations go through setter methods so signal flow stays one-directional.
+# Core run state. Every `var` here is save schema (SaveCodec walks them) and its default is the
+# migration for an older save. Mutations from outside go through the setters/seams below.
 
-const DAYS_PER_MONTH := 30  # Single home for the monthly → daily conversion; FinanceSystem reads it too
+const DAYS_PER_MONTH := 30  # the monthly → daily economy conversion; FinanceSystem reads it too
 
-# Calendar anchor — Day 1 = Thu Jan 1, 2026 (game starts in 2026; year advances
-# with playtime). Godot Time computes the real weekday from the date, so no
-# offset hack. get_date_dict() is the seam; display formatting lives with whoever
-# renders it (top_bar's Turkish weekday/month tables, product_ui_shared's short form).
+# Day 1 = Thu Jan 1, 2026. get_date_dict() is the seam; Godot Time computes the weekday.
 const START_DATE := {"year": 2026, "month": 1, "day": 1}
-# The two Turkish month tables that used to live here (UPPERCASE for headers, Title Case for
-# prose) are RETIRED. Month words are Fmt.month_name / Fmt.month_upper now — one home, both
-# languages, and the dotted-İ problem that forced two literal tables is handled there: the
-# CSV holds each form outright rather than deriving one from the other with a case op that
-# Godot does not localise.
 
 # --- Run identity ---
 var company_name: String = "Unicorn Inc."
@@ -25,39 +16,28 @@ var logo_style: String = "minimalist" # "minimalist" | "tech" | "playful" | "ser
 var slogan: String = ""               # Optional free text — may be empty
 var founder_name: String = ""         # Player's name; "" means the founder Character defaults to "Founder"
 var founder_portrait: String = ""     # Portrait id (e.g. "founder_03"); art via FounderConstants.portrait_path()
-var run_seed: int = 0  # 0 = unseeded; seeded when the run starts
-# ^ THE RNG SEED. Not the funding round: that is run_seed_amount / run_seed_equity_pct /
-# seed_lead, further down. Two unrelated meanings, one word; a whole-token grep tells them
-# apart and a quick scan does not.
+# THE RNG SEED, 0 = unseeded. Not the funding round (run_seed_amount / run_seed_equity_pct).
+var run_seed: int = 0
 
 # --- Phase 1 — Bootstrap defaults ---
 var cash: int = FounderConstants.STARTING_CASH
 var mrr: int = 0
-var daily_burn: int = FinanceSystem.starting_daily_burn()        # ~$1,500/month — pressure-from-day-one baseline (~6.6mo runway at start); FinanceSystem owns categorized breakdown
-var brand: int = 50              # Neutral baseline
-var reputation: int = 0          # Self-Made Founder baseline
+var daily_burn: int = FinanceSystem.starting_daily_burn()   # FinanceSystem owns the categorized breakdown
+var brand: int = 50
+var reputation: int = 0
 var day: int = 1
-var current_hour: int = 9        # 0-23. Day 1 starts at 09:00 (business-day-start)
+var current_hour: int = 9        # 0-23. Day 1 starts at 09:00
 var phase: int = 1               # 1=Bootstrap, 2=Traction, 3=Series A Hunt
 
-# --- World-state flags (sparse, content-defined keys) ---
-# Read at next eligibility eval (no EventBus emission). Default-empty Dictionary
-# means initialize_run does not need an explicit reset line.
+# --- World-state flags (sparse, content-defined keys; no EventBus emission) ---
 var flags: Dictionary = {}
 
-# --- FLAG TYPING (save-schema constraint, not a style preference) ---
-# `flags` is ~51 untyped keys carrying the entire product state, and its readers do NOT
-# agree on typing: EventManager's conditions coerce through bool()/int(), while systems
-# use plain GDScript truthiness. A String-typed flag satisfies one and fails the other, and
-# a JSON round trip re-types every number to float (Godot's parser returns TYPE_FLOAT even
-# for "5"). So the flag bag needs a declared type or a save cannot restore it faithfully.
-#
-# SaveCodec coerces every restored flag through flag_type_for(); set_flag push_warnings in
-# debug builds when a live write disagrees with the declaration, so drift surfaces while it
-# is still one line of code and not a save-shaped mystery.
-#
-# A key absent from BOTH tables is legal (content can invent flags) — it round-trips
-# best-effort and set_flag stays silent about it.
+# --- FLAG TYPING (save-schema constraint) ---
+# Flag readers disagree on typing (bool()/int() coercion vs plain truthiness) and a JSON round
+# trip re-types every number to float, so a flag needs a declared type for a save to restore it
+# faithfully. SaveCodec coerces every restored flag through flag_type_for(); set_flag warns in
+# debug builds when a live write disagrees. A key absent from both tables is legal and
+# round-trips best-effort.
 const FLAG_TYPES := {
 	# --- product lifecycle ---
 	"mvp_shipped": TYPE_BOOL,
@@ -90,14 +70,11 @@ const FLAG_TYPES := {
 	"cancelled_build_prefill": TYPE_DICTIONARY,
 	"creation_draft": TYPE_DICTIONARY,   # draft guard: {step, market, type, features, name}
 	"product_path_frank_seen": TYPE_BOOL,
-	# --- Ürün rev 6.1 · HAT MODELİ ve DESTEK (§12, §8, §9, §10) -------------
-	# Kayıt şeması v9'un taşıdığı yeni alanlar (§22.5). mvp_components (düz özellik
-	# listesi) hâlâ burada çünkü Satış ve söz kaydı onu okuyor; hat modeli devraldıktan
-	# SONRA, hayalet süpürmesinde ölür — önce değil.
+	# --- Ürün rev 6.1 · HAT MODELİ ve DESTEK (§12, §8, §9, §10) ---
+	# mvp_components (düz özellik listesi) Satış ve söz kaydı okuduğu için duruyor.
 	"mvp_line_tiers": TYPE_DICTIONARY,          # {hat kimliği: 0|1|2|3} — §12.1
-	# §11.2 — "Çarpan hat başına değil KADEME başına saklanır; her kademe yayınlandığı
-	# sürümün cilasını taşır." Bu sözlük yeniden yüklemeyi ATLATMAK ZORUNDA: kaybolursa
-	# her geçmiş sürüm sessizce bugünkü tur sayısıyla yeniden okunur.
+	# §11.2: çarpan KADEME başına saklanır, her kademe yayınlandığı sürümün cilasını taşır.
+	# Kaybolursa her geçmiş sürüm bugünkü tur sayısıyla yeniden okunur.
 	"mvp_step_realization": TYPE_DICTIONARY,    # {kademe kimliği: çarpan}
 	"mvp_hidden_lines": TYPE_ARRAY,             # Ar-Ge'nin açtığı gizli hatlar — §12.1
 	"mvp_design_turns": TYPE_INT,               # son sürümde tamamlanan TASARIM turu — §5
@@ -110,8 +87,7 @@ const FLAG_TYPES := {
 	"mvp_fix_run_fixed": TYPE_INT,              # koşuda şimdiye dek çözülen
 	"mvp_fix_run_progress": TYPE_FLOAT,
 	# --- §9 canlı akış ---
-	# SÜRÜM yaşı, ürün yaşı DEĞİL (§17): mvp_launch_day ilk yayında bir kez damgalanır,
-	# bu her yayında yeniden yazılır ve ilgi sönümü ile akış modeli bunu okur.
+	# SÜRÜM yaşı (§17): mvp_launch_day ilk yayında bir kez damgalanır, bu her yayında yeniden.
 	"mvp_version_launch_day": TYPE_INT,
 	"mvp_interest": TYPE_FLOAT,                 # her yayında 100'e tazelenir, yarı ömür 30 gün
 	"mvp_new_code_effort": TYPE_FLOAT,          # §9 yeni-kod terimi; τ=21 günde söner
@@ -119,19 +95,12 @@ const FLAG_TYPES := {
 	"mvp_infra_provider": TYPE_STRING,          # sağlayıcı kimliği
 	"mvp_infra_units": TYPE_INT,                # satın alınan kapasite birimi
 	# --- B2C economy ---
-	# b2c_audience is FLOAT on purpose: sales_system's hourly tick
-	# accumulated it as a float precisely so slow erosion survives instead of rounding to
-	# zero each hour, while add_b2c_audience / apply_b2c_price wrote it back as an int and
-	# threw the sub-unit accumulator away every time an event or a price change touched it.
+	# FLOAT so the hourly tick's slow erosion survives instead of rounding to zero each hour.
 	"b2c_audience": TYPE_FLOAT,
 	"b2c_price": TYPE_INT,
 	"b2c_paid_tier_open": TYPE_BOOL,
 	# --- sales / customer desks ---
 	"cs_throughput_progress": TYPE_FLOAT,
-	# SATIŞ rev 6. `sales_lead_progress`, `next_find_prospects_day`, `next_pitch_day` and
-	# `b2b_high_scale_unlocked` were here and are RETIRED (§19): the heating model, the
-	# "Aday bul" button, the two-day meeting cooldown and the enterprise-band unlock that
-	# never had a writer. Their replacements are below and each names its GDD section.
 	"sales_faucet_progress": TYPE_FLOAT,       # §3 — sub-lead inflow accumulator
 	"sales_price_stance": TYPE_STRING,         # §7.5 — the SINGLE B2B price source
 	"sales_meeting_used_day": TYPE_INT,        # §5.0 — the day the daily right was spent
@@ -143,29 +112,15 @@ const FLAG_TYPES := {
 	"sales_weekly_anchor_day": TYPE_INT,       # §7.3 — the weekly summary's window start
 	"sales_weekly_closes": TYPE_INT,           # §7.3 — closes inside that window
 	# --- phase gate / endgame / VC ---
-	# `gate_prompt_day` was here: PhaseGateSystem's hand-rolled five-day re-ask clock, stamped
-	# on open, on decline and on every reminder. `funding.gate_series_a` declares
-	# `cooldown_days: 5` and the engine owns the latch. `gate_declines` STAYS — it is not a
-	# latch, it is how many times the founder has said not yet, and the card's escalating body
-	# reads it through `phase.gate_declines`.
+	# How many times the founder has said "not yet"; the gate card's escalating body reads it.
 	"gate_declines": TYPE_INT,
 	"pitch_prep_active": TYPE_BOOL,
 	"pivot_offer_made": TYPE_BOOL,
 	"acquisition_offer_made": TYPE_BOOL,
 	"acquisition_offer_rejected": TYPE_BOOL,
-	# `vc_last_answer_warned` was here — was vc_soft_cap_warned, was vc_d179_warned, and by the
-	# end it was a hand-rolled one_shot for `funding.last_answer`. Three names for a latch is a
-	# sign the latch never belonged to the system holding it.
 	# --- angel round (Frank's seed) + the locked hard path ---
-	# ONE entry survives the event-engine rebuild. `angel_seed_offered` and
-	# `angel_nudge_shown` were hand-rolled one-shot latches that existed because
-	# GameEvent.one_shot was dead code on the injected path; the cards declare `one_shot`
-	# now and the gate enforces it. The day stamp stays because it is a FACT about the run
-	# that three unrelated readers want, not a latch.
 	"angel_seed_accepted_day": TYPE_INT,
-	# RESERVED — NO WRITER EXISTS ANYWHERE. This is the guaranteed-false gate behind
-	# "REDDET · ZOR MOD"; the Frank-less path ships after the demo. Declared so the day a
-	# writer appears, the save schema already knows its type.
+	# RESERVED, no writer: the guaranteed-false gate behind "REDDET · ZOR MOD".
 	"hard_mode_unlocked": TYPE_BOOL,
 	# --- origin reserves + UI snooze ---
 	"origin_press_sympathy": TYPE_BOOL,
@@ -176,258 +131,155 @@ const FLAG_TYPES := {
 	"debug_hr_force": TYPE_STRING,
 }
 
-# The four DYNAMIC key families — one flag per entity id, so they cannot be listed above.
-# Longest prefix wins (none of these four overlap, but the rule keeps it decidable).
+# Dynamic key families (one flag per entity id). None of the prefixes overlap.
 const FLAG_TYPE_PREFIXES := {
 	"b2b_broke_": TYPE_BOOL,                    # B2BSalesSystem credibility latch, per customer id
 	"hr_manual_leave_": TYPE_BOOL,              # HRMoraleSystem manual-vacation marker, per character id
 	"bug_count_at_bugfix_start_": TYPE_INT,     # ProductSystem beta-phase baseline, per build id
 }
 
-# GameState script variables the save deliberately does NOT carry. Empty today — every
-# `var` on this node is run state. It exists so that excluding one later is a one-line,
-# reviewable decision instead of an edit inside SaveCodec's walker.
-const SAVE_EXCLUDE_FIELDS: Array[String] = []
-
-# --- Endgame state (serialized set) ---
-# Fields, not systems: slot-9 evaluator reads these; later systems
-# (VC pitch, scandal) write them with zero retrofit. SaveManager plugs in later.
+# --- Endgame state ---
 var run_active: bool = true            # false = terminal reached; tick loop halts
 var ending_id: String = ""             # one of EndingsSystem.ENDINGS keys once run ends
 var phase_gate_ready: bool = false     # ratchet latch — cleared only by advance_phase()
 var pending_next_phase: int = 0        # 0 = no open gate
-var series_a_closed: bool = false      # future VC pitch system writes; debug-settable now
+var series_a_closed: bool = false
 var shutter_days_left: int = -1        # -1 inactive; SHUTTER_DAYS..0 = Kepenk counter
-var vc_rejections: int = 0             # closed pitch tables; future VC pitch increments
-var pivot_used: bool = false           # true → VC path permanently closed (Erdem 2026-07-13)
+var vc_rejections: int = 0             # closed pitch tables
+var pivot_used: bool = false           # true → VC path permanently closed
 var active_scandal: bool = false           # RESERVED — no scandal system yet; debug-settable
-var unmanaged_major_scandal: bool = false  # RESERVED — day-180 fork input
+var unmanaged_major_scandal: bool = false  # RESERVED
 var brand_low_since_day: int = -1      # brand-collapse 30-day window anchor
-# (cash_went_negative and net_history_90 — the Day-180 fork's inputs — were retired with the
-# fork on 2026-08-19. Profitability is a daily-evaluated CONDITION on the calendar-month
-# ledger: a month is "Artıda" only if its net is positive AND the
-# treasury never sampled below zero inside it — the red-day test moved from a run-lifetime
-# latch, which made the win permanently unreachable after one early Kepenk in a 24-month
-# run, to a per-month count.)
 
-# --- Finance surface state (Finance Tab v1 — serialized set; SaveManager plugs in later) ---
-# cash_history: daily {day, cash} samples for the cash curve. Single writer:
-# FinanceSystem.daily_tick via append_cash_sample (slot 5, once per day). Intra-day
-# one-time costs are deliberately NOT re-sampled — the single-writer rule holds;
-# they land in the next day's point and, itemised, in `transactions`.
-const CASH_HISTORY_CAP := 760          # soft cap 730 days + headroom; oldest dropped (was 200 for the 180-day wall)
+# --- Finance surface state ---
+# Daily {day, cash} samples for the cash curve. Single writer: FinanceSystem.daily_tick via
+# append_cash_sample. Intra-day one-time costs land in the next day's point and in `transactions`.
+const CASH_HISTORY_CAP := 760          # soft cap 730 days + headroom; oldest dropped
 var cash_history: Array = []           # [{day: int, cash: int}]
-# transactions: persistent signed money-event log (negative = spend, positive = income).
-# Sole append point: FinanceSystem.record_transaction. Labels stored RAW — display maps
-# through FinanceSystem.one_time_label_display, so registered ids render TR and free-form
-# labels (customer names) pass through unchanged.
-const TRANSACTIONS_CAP := 50           # oldest dropped beyond this
+# Signed money-event log (negative = spend). Sole append point: FinanceSystem.record_transaction.
+# Labels stored RAW; FinanceSystem.one_time_label_display maps registered ids for display.
+const TRANSACTIONS_CAP := 50
 var transactions: Array = []           # [{day: int, label: String, amount: int}]
-# sales_log: what the sales/customer desks did on their own, so the player can reconstruct a
-# cause the ticker has already scrolled past (the CAUSE must be readable).
-# Same ring-buffer shape as `transactions` above. Sole append point:
-# SalesSystem.record_sales_event.
-const SALES_LOG_CAP := 12              # oldest dropped beyond this
+# What the sales/customer desks did on their own, so the player can reconstruct a cause the
+# ticker has scrolled past. Sole append point: SalesSystem.record_sales_event.
+const SALES_LOG_CAP := 12
 var sales_log: Array = []              # [{day, kind, actor, company, mrr}]
 
-# --- Month-End Summary state (an extension of the serialized set) ---
-# MonthLedger: month-start snapshot for the summary's deltas. Shape:
-# {start_day, mrr, cash, employees, brand}. Written only by
-# MonthSummarySystem.snapshot(); "what changed this month?" comes from here,
-# never from the run counters below (two data shapes, two questions).
+# --- Month-End Summary state ---
+# Month-start snapshot {start_day, mrr, cash, employees, brand} plus the OPEN month's accruals
+# (income / expense / red_days). Written only by MonthSummarySystem.snapshot() and the accrue_*
+# seams; "what changed this month?" comes from here, never from the run counters.
 var month_ledger: Dictionary = {}
-# THE CALENDAR-MONTH LEDGER. Closed fiscal months,
-# oldest → newest, cap MONTH_HISTORY_CAP. Sole writer: push_month_close (MonthSummarySystem,
-# slot 10, on the 1st of each calendar month, BEFORE the recap emit). Entry — all INT (JSON
-# re-types numbers to float on load and SaveCodec restores ints; never store a ratio here,
-# compute margins at read time):
-#   {start_day, end_day, mrr_close, income, expense, net, red_days}
-# Readers: the Series A gate's growth-streak condition (PhaseGateSystem / EventManager
-# mrr_growth_streak), the profitability condition (EndingsSystem) and the Finance tab's
-# "Yatırımcı iştahı" + "Artıda · n/6 ay" lines. Accruals for the OPEN month live on
-# month_ledger (income / expense / red_days; reset by snapshot()) through accrue_month_flow /
-# accrue_month_expense — one-time INCOME (the angel cheque) is financing, not operating
-# income, and is deliberately not accrued.
+# Closed calendar months, oldest → newest. Sole writer: push_month_close (MonthSummarySystem,
+# on the 1st, before the recap emit). Entry, ALL INT (SaveCodec restores ints; compute ratios
+# at read time): {start_day, end_day, mrr_close, income, expense, net, red_days}.
+# One-time INCOME (the angel cheque) is financing and is not accrued.
 const MONTH_HISTORY_CAP := 12
 var month_history: Array[Dictionary] = []
-# Month highlight ("AYIN OLAYI") — systems submit via submit_month_highlight();
-# cleared at each month rollover by MonthSummarySystem.snapshot().
+# "AYIN OLAYI": systems submit via submit_month_highlight(); cleared by snapshot().
 var month_highlight_text: String = ""
 var month_highlight_priority: int = -1
 
-# --- Run-cumulative counters (WRITE-ONLY seam for the newspaper
-# ending screen; the month modal never reads these). Increments live at the
-# single existing seams only. B2C has no discrete sign/churn moment (aggregate
-# userbase) → signed/lost count B2B events until the ending-screen spec decides
-# B2C semantics. ---
+# --- Run-cumulative counters (the newspaper ending screen; read via get_run_ledger) ---
 var run_customers_signed: int = 0      # SalesSystem.add_b2b_customer
 var run_customers_lost: int = 0        # churn_customer modifier, B2B branch
-var run_customers_expanded: int = 0    # B2BSalesSystem.expand (genuine seat/MRR upsell)
-# MONOTONIC, never decremented — it exists to make prospect ids unique, not to be read as a
-# statistic. PitchSystem.spawn_prospect used to build ids off ProspectRegistry.count(), which
-# is the LIVE pool size: removing a lead lowers it, so a same-day respawn collided and
-# ProspectRegistry.add silently dropped the new lead while spawn_prospect still returned it.
-var run_prospects_spawned: int = 0     # PitchSystem.spawn_prospect (id uniqueness only)
-# Every company name ever SIGNED this run (writer: SalesSystem.add_b2b_customer, the sole
-# B2B signing path). Superset of "currently a customer": churn erases the Customer entity
-# (all three removal flows), but the name stays here so cold prospecting can never re-offer
-# a former customer (Fix 1). Win-back (future) derives churned = this minus live names.
+var run_customers_expanded: int = 0    # B2BSalesSystem.expand
+# MONOTONIC: makes prospect ids unique (the live pool size shrinks and would collide).
+var run_prospects_spawned: int = 0     # PitchSystem.spawn_prospect
+# Every company name ever SIGNED this run; survives churn so cold prospecting can never
+# re-offer a former customer. Writer: SalesSystem.add_b2b_customer.
 var b2b_signed_company_names: Array[String] = []
-# Day stamps of CS escalations that actually reached the player, newest last. Read as a
-# rolling window (CS_ESCALATION_WINDOW_DAYS) to enforce the company-wide weekly ceiling —
-# without it, per-account pacing alone cannot stop a bad week, because _escalate_stale
-# deliberately bypasses both the throughput budget and the absorb ceiling.
+# Day stamps of CS escalations that reached the player, newest last: a rolling window for the
+# company-wide weekly ceiling (_escalate_stale bypasses the per-account budgets).
 var cs_escalation_days: Array[int] = []
 var run_hires: int = 0                 # CharacterRegistry.add, category "employee"
 
 # --- SATIŞ rev 6 §13 · the run records the module owns ------------------------
-# All five ride SaveCodec's property walker, which is why there is no `_capture_systems`
-# block for Sales: every `var` on GameState is the schema and its default is the migration.
-# The write side is SalesLedger — nothing else touches these five (WRITE-THROUGH LAW).
-#
-# §5.2 — the loss log. DELIBERATELY UNPRUNED: it is a buffer for the demand generator that
-# arrives with the event package, and a trimmed buffer silently answers a question nobody
-# asked. Rows are {day, account, reason, target}.
+# Sole writer: SalesLedger.
+# §5.2 — the loss log. DELIBERATELY UNPRUNED: a buffer for the demand generator; a trimmed
+# buffer silently answers a question nobody asked. Rows are {day, account, reason, target}.
 var sales_loss_log: Array = []
 # §5.2 / §9 — per-company memory, keyed by COMPANY NAME so it survives the prospect being
-# removed and the customer never being created: {loss_reason, loss_target, loss_count,
-# loss_day, insulted, insult_day, promise_broken}.
+# removed: {loss_reason, loss_target, loss_count, loss_day, insulted, insult_day, promise_broken}.
 var sales_account_memory: Dictionary = {}
-# §4 — companies held out of the faucet until a day: {company_name: unlock_day}. Three
-# writers (expiry, a walked table, a refused price break), one ledger.
+# §4 — companies held out of the faucet until a day: {company_name: unlock_day}.
 var sales_return_locks: Dictionary = {}
-# §7.2.2 — the per-rep working band cap: {character_id: star}. An ABSENT key means "Kendi
-# ligi", which is the default, so the empty dictionary is the correct fresh-run state.
+# §7.2.2 — per-rep working band cap {character_id: star}; an absent key means "Kendi ligi".
 var sales_band_caps: Dictionary = {}
-# §11.2 — the storylet repeat memory: {row_id: times spoken}. What keeps a flavour slot from
-# returning before its pool is spent, and what §11.6's repeat histogram measures.
+# §11.2 — storylet repeat memory {row_id: times spoken}.
 var sales_line_memory: Dictionary = {}
 
-# B2B pitch customer-rep portrait rotation (sequential over the non-selected founder
-# portraits; read+written each meeting, so it's real run state, not a write-only counter).
-var b2b_rep_portrait_rotation_index: int = 0   # sequential cursor into the rep-portrait pool
-var b2b_last_rep_portrait: String = ""         # last face shown — new assignments skip it (no consecutive repeat)
+# B2B pitch customer-rep portrait rotation over the non-selected founder portraits.
+var b2b_rep_portrait_rotation_index: int = 0
+var b2b_last_rep_portrait: String = ""         # last face shown — no consecutive repeat
 var run_departures: int = 0            # CharacterRegistry.remove, category "employee"
-
-# --- Alan liderleri (§4/§4.2) ---
-# {area_id: character_id}. rev 2 §2: "ekip lideri atanan çalışanın altındaki ekibin
-# verimlilik modifier'ını, moral düşüş hızını ve deneyim kazanım hızını etkiler."
-# Lider ALAN BAŞINADIR — Yazılım'ın lideri ayrı, Müşteri İlişkileri'nin lideri ayrı.
-# Bu tablo yalnız AÇIK seçimi tutar; boş bırakılan alan için lider TÜRETİLİR (o alandaki en
-# yüksek Liderlik, yoksa kurucu) — HRSystem.area_lead. Saklamamanın sebebi: türetilmiş bir
-# lider işe alım/ayrılmayla kendiliğinden güncellenir, saklanan bir lider bayatlar.
-## SEÇİM SEAM'İ YOK ve bu bilinçli: onaylı tasarımda lider seçme arayüzü çizilmemiş, yani
-## bugün tablo hep boş ve lider hep türetiliyor. Yazan bir seam ancak o ekran gelince doğar.
 var run_scandals_total: int = 0        # RESERVED — no scandal system yet; debug-settable
 var run_scandals_managed: int = 0      # RESERVED
-var run_pushes_attempted: int = 0      # Term Sheet table push() writes (term_sheet_table_system.gd)
-var run_pushes_won: int = 0            # Term Sheet table push() writes (successful pushes)
-# Peak MRR reached this run — latched in set_mrr (newspaper "en yüksek gelir" line).
-var run_peak_mrr: int = 0
-# Signed Series A term sheet snapshot — persisted at VCPitchSystem.sign_table (the single
-# sign seam). 0 unless a term sheet was actually signed (series_a_close). The ending screen
-# reads these off get_run_ledger() rather than the transient run_ended payload extra.
+var run_pushes_attempted: int = 0      # Term Sheet table push()
+var run_pushes_won: int = 0            # successful pushes
+var run_peak_mrr: int = 0              # latched in set_mrr
+# Signed Series A terms, persisted at VCPitchSystem.sign_table. 0 unless a sheet was signed.
 var run_investment_amount: int = 0     # money raised, dollars
 var run_valuation_m: int = 0           # pre-money valuation, millions
 var run_equity_pct: int = 0            # equity given == signed dilution_pct
-var run_board_seats: int = 0           # board seats granted to the investor
-var run_board_veto: bool = false       # investor veto right granted
+var run_board_seats: int = 0
+var run_board_veto: bool = false
 
-# Frank's angel round — DELIBERATELY SEPARATE from the signed-terms block above.
-# VCPitchSystem._persist_signed_terms writes run_equity_pct / run_investment_amount by
-# PLAIN ASSIGNMENT (vc_pitch_system.gd:326,329). Folding the angel slice into those fields
-# would let a Series A signature silently erase 4% of the cap table and $25,000 of raised
-# capital, and would light ODA's "İlk Yatırım" diploma (which reads run_investment_amount
-# raw) on a round it was never meant to describe. Two scalars cost two lines and make that
-# collision unrepresentable. Cap-table and ledger readers compose them via the two derived
-# seams below — never by summing the raw fields at the call site.
-var run_angel_amount: int = 0          # dollars the angel put in
-var run_angel_equity_pct: int = 0      # the angel's slice, percent
+# Frank's angel round, SEPARATE from the Series A terms above: those are written by plain
+# assignment at signing and would erase the angel slice (and light ODA's "İlk Yatırım" diploma,
+# which reads run_investment_amount). Readers compose totals via get_investor_equity_pct /
+# get_total_raised, never by summing raw fields.
+var run_angel_amount: int = 0
+var run_angel_equity_pct: int = 0
 
-# --- VC Pitch / Series A Hunt state (serialized set, same "fields not systems" rule as
-# the endgame block). VCPitchSystem writes;
-# EndingsSystem reads active_sheets/pending_meeting for the cascade defer.
-# All reset in initialize_run. Meeting-LOCAL state (conviction/beat/intel) is NOT here
-# — it lives in VCPitchSystem static vars and is never serialized. ---
+# --- VC Pitch / Series A Hunt state. VCPitchSystem writes; EndingsSystem reads
+# active_sheets/pending_meeting for the cascade defer. Meeting-LOCAL state lives in
+# VCPitchSystem statics and is never saved. ---
 var vc_states: Dictionary = {}         # vc_id -> {status, callback, pending_sheet, meeting_count, ...}
 var active_sheets: Array = []          # live TermSheet resources (max PitchConstants.MAX_SHEETS)
 var pending_meeting: Dictionary = {}   # {vc_id, day} — one at a time; empty = none
-var prep: Dictionary = {}              # {vc_id, focus, done} — one prep per scheduled meeting; empty = none
-var run_pitches: int = 0               # run-cumulative: completed meetings (newspaper seam)
-var run_sheets_won: int = 0            # run-cumulative: sheets granted (distinct from run_pushes_*)
-# Hunt & offer lifecycle (meeting cancel, cold exit). All three are declared with defaults, so
-# an older save loads with "no cancel today, no rejection streak, no Frank line shown yet".
+var prep: Dictionary = {}              # {vc_id, focus, done} — one prep per scheduled meeting
+var run_pitches: int = 0               # completed meetings
+var run_sheets_won: int = 0            # sheets granted
 var vc_meeting_cancel_day: int = -1    # the day a booked meeting was cancelled; no new booking that day
 var vc_last_meeting_rejected: bool = false  # did the last FINISHED Series A meeting end in a rejection?
-var vc_frank_cold_shown: Array = []    # fund ids whose own cold-exit Frank line has been shown this run
+var vc_frank_cold_shown: Array = []    # fund ids whose cold-exit Frank line has been shown
 
-# --- Seed round (GDD v2 ch. 09 §3) — DELIBERATELY OUTSIDE the Series A block above.
-# The middle rung of the ladder: savings → Frank's cheque → SEED → Series A. Owner is
-# SeedRoundSystem; nothing else writes these. All reset in initialize_run.
-#
-# THE OFFER IS NOT IN active_sheets, AND THAT IS THE POINT. Eight readers walk that array and
-# four of them would have been silently wrong: TermSheet.is_leverage_active would hand every
-# Series A table a free notch and every Series A meeting +15 conviction; MAX_SHEETS would count
-# it against the two-sheet cap; get_run_ledger's `unsigned_sheets` would let the soft-cap paper
-# claim a Series A offer was left on the table; and EndingsSystem._check_vc_cascade would defer
-# the cascade forever, because this sheet never expires. One field makes all four
-# unrepresentable.
+# --- Seed round (GDD v2 ch. 09 §3). Sole writer SeedRoundSystem.
+# The offer is NOT in active_sheets on purpose: its readers would count it as a Series A sheet
+# (leverage notch, MAX_SHEETS, unsigned_sheets, the never-expiring cascade defer).
 var seed_door_open_day: int = -1       # ratchet, -1 = the door never opened this run
 var seed_pitch_used: bool = false      # the run's ONE seed meeting has been spent
-var seed_sheet: TermSheet = null       # the unsigned seed offer; no expiry (ruling 6)
+var seed_sheet: TermSheet = null       # the unsigned seed offer; no expiry
 var seed_lead: String = ""             # vc_id that led the round; "" = no seed taken
 var seed_closed_day: int = -1          # signing day — the growth expectation's clock origin
-# The angel-slice pattern, one rung up, and for exactly the same reason spelled out at
-# run_angel_amount: VCPitchSystem._persist_signed_terms writes run_equity_pct and
-# run_investment_amount by PLAIN ASSIGNMENT at Series A signing. Folding the seed into those
-# fields would let one signature erase 12-18% of the cap table and six figures of raised
-# capital. Readers compose the totals through get_investor_equity_pct / get_total_raised —
-# never by summing the raw fields at the call site.
-#
-# NAMING NOTE: `run_seed` (line 28) is the RNG SEED and has nothing to do with these. Three
-# unrelated meanings of "seed" now live in this codebase — the RNG one, conviction seeding
-# (renamed CONV_* in this wave), and the funding round. A whole-token grep separates them; a
-# careless eye does not.
-var run_seed_amount: int = 0           # dollars the seed round put in
-var run_seed_equity_pct: int = 0       # the seed investor's slice, percent
+# Separate from the Series A terms for the same reason as the angel pair.
+var run_seed_amount: int = 0
+var run_seed_equity_pct: int = 0
 
 # --- The Series A decision, and whether it was FACED (GDD v2 ch. 13 §1) ---
-# "Profitability alone is not an ending; refusing the round and staying profitable is."
-# EndingsSystem.profitability_signal reads the flag as its fifth clause, and the buyout card
-# reads the REASON, because only a decline or a walk brings a buyer to the phone — sitting on
-# an open door for a month is a different story with a different ending.
+# EndingsSystem.profitability_signal reads the flag; the buyout card reads the REASON.
 var faced_series_a: bool = false
 var faced_series_a_by: String = ""     # "declined" | "walked" | "door_open" | "fund_walked"
 var acq_road_over_day: int = -1        # day the Series A road closed; the buyout window's origin
-# The bootstrap MILESTONE (EA / full builds, EndingsSystem.ending_mode): the day the profitable
-# & self-sustaining condition opened the milestone paper, -1 before. It is the latch that keeps
-# the daily scan from re-opening the paper every day after, and the reason the day-730 soft
-# cap no longer applies to the run (owner ruling 2026-09-25, option a).
+# The day the bootstrap milestone paper opened, -1 before (EndingsSystem.ending_mode). Keeps the
+# daily scan from re-opening it and lifts the day-730 soft cap.
 var bootstrap_milestone_day: int = -1
 
-# --- HR Core state (same "fields not systems" rule as the VC block above; all reset in
-# initialize_run). The owning system writes each one; nothing else touches them. ---
+# --- HR Core state (the owning system is the sole writer) ---
 var hr_search: Dictionary = {}          # HRSearchSystem: {state, role, band, seed, started_day, arrival_day, files}
 
 # --- §8.1 ÇALIŞMA SAATLERİ: şirket ve grup kapsamları ---
-# Üç kapsam var (şirket → grup → çalışan) ve ikisi burada yaşıyor; üçüncüsü
-# Character.work_hours_override. Devralma zinciri HİÇBİR sistem tarafından elle
-# yürütülmez — tek çözümleyici hr.work_hours(kişi)'dir (§8.1, §15.2).
-#
-# BAŞLANGIÇ SAATİ YALNIZ ŞİRKET KAPSAMINDA. Grup ve çalışan yalnız SÜREYİ değiştirir:
-# ofis tek saatte açılır, değişen kimin ne zaman çıktığıdır. Akşam karanlığı da bu
-# pencereye göre çizilir; istisna taşıyan kişilerin saatleri sahneyi oynatmaz (§8.1).
+# Üçüncü kapsam Character.work_hours_override. Tek çözümleyici hr.work_hours(kişi) (§15.2).
+# BAŞLANGIÇ SAATİ YALNIZ ŞİRKET KAPSAMINDA: ofis tek saatte açılır, grup ve çalışan yalnız SÜREYİ değiştirir.
 var company_start_hour: int = 9         # §8.1 varsayılan 09:00, aralık 06:00-11:00
-var company_work_hours: int = 8         # §8.1 şirket tabanı; herkes bunu devralarak başlar
-# Yalnız İSTİSNASI OLAN grup burada yer alır — boş kayıt tutulmaz (§15). Anahtar
-# HRConstants.ROSTER_GROUPS üyesi, değer 5..11 tam saat.
+var company_work_hours: int = 8         # §8.1 şirket tabanı
+# Yalnız İSTİSNASI OLAN grup (§15). Anahtar HRConstants.ROSTER_GROUPS üyesi, değer 5..11.
 var group_work_hours_override: Dictionary = {}
 
-# --- News feed state (same "fields not systems" rule; owner: NewsFeedSystem, the sole
-# writer). JSON-primitive throughout: {used_sektor, reshuffles, counts, biz_buffer,
-# biz_dropped, recent_rivals, stream}. Reset in initialize_run.
-# `biz_dropped` counts milestone lines the ≤20 % "biz" quota refused, so the quota's real
-# cost is countable rather than silent — calibration data, not a bug counter. ---
+# --- News feed state (sole writer NewsFeedSystem). JSON-primitive: {used_sektor, reshuffles,
+# counts, biz_buffer, biz_dropped, recent_rivals, stream}. `biz_dropped` counts milestone lines
+# the ≤20 % "biz" quota refused (calibration data). ---
 var news_feed: Dictionary = {}
 
 # --- Setters (the only way to mutate from outside) ---
@@ -439,8 +291,7 @@ func set_cash(value: int) -> void:
 
 func set_mrr(value: int) -> void:
 	mrr = value
-	if value > run_peak_mrr:
-		run_peak_mrr = value  # latch peak here (like set_cash's cash_went_negative) — write-only, no separate signal
+	run_peak_mrr = maxi(run_peak_mrr, value)
 	EventBus.mrr_changed.emit(mrr)
 	_emit_runway()
 
@@ -454,7 +305,7 @@ func set_brand(value: int) -> void:
 	EventBus.brand_changed.emit(brand)
 
 func set_reputation(value: int) -> void:
-	# Placeholder clamp range — the bounds are undefined and still await a designer decision.
+	# Placeholder range; the bounds await a design decision.
 	reputation = clampi(value, -10, 100)
 	EventBus.reputation_changed.emit(reputation)
 
@@ -467,23 +318,17 @@ func set_current_hour(value: int) -> void:
 	EventBus.hour_changed.emit(current_hour)
 
 func set_subgenre(value: String) -> void:
-	# Write-through seam: called by ProductSystem.start_build when a product is
-	# committed (onboarding no longer asks — the played product decision owns
-	# this field). No signal: every reader (event conditions, VC seeding,
-	# product pool fallbacks) reads lazily at evaluation time.
+	# Written by ProductSystem.start_build; readers read lazily, so no signal.
 	subgenre = value
 
 func set_phase(value: int) -> void:
-	# Save-restore / debug backdoor ONLY. Gameplay phase changes go through
-	# advance_phase() — the single write seam bound to a played Frank scene.
+	# Save-restore / debug only. Gameplay goes through advance_phase().
 	phase = clampi(value, 1, 3)
 	EventBus.phase_changed.emit(phase)
 
 
 func advance_phase() -> void:
-	# The SINGLE gameplay write seam for phase.
-	# Called from the Frank transition scene's "advance_phase" modifier after the
-	# player confirms. Forward-only ratchet; produces no economic delta.
+	# THE gameplay write seam for phase: the Frank transition card's "advance_phase" modifier.
 	if not phase_gate_ready or pending_next_phase <= phase:
 		push_warning("[GameState] advance_phase without an open gate — ignored")
 		return
@@ -492,25 +337,18 @@ func advance_phase() -> void:
 	pending_next_phase = 0
 	submit_month_highlight(
 		TranslationServer.translate("MONTH_HL_PHASE_ADVANCED").format(
-			{"phase": phase_display_name(phase)}), 80)  # AYIN OLAYI
+			{"phase": phase_display_name(phase)}), 80)
 	EventBus.phase_changed.emit(phase)
 
 
-# THE phase display-name seam. The same ["Bootstrap", "Traction", "Series A"] literal had
-# grown a copy here and a copy in MonthSummarySystem._build_summary_data (PhaseGateSystem
-# keeps a third as a private helper, now delegating). The save meta block needs a fourth
-# reader, so the array moves to its owner instead of being copied again — GameState is
-# where `phase` itself lives. Out-of-range phases clamp rather than crash: this renders a
-# header, never a decision.
+## Phase display name. Proper nouns, identical in both languages. Out-of-range clamps.
 func phase_display_name(p: int) -> String:
-	# "Series A Hunt", "Series A" değil (onaylı tasarım 10a'nın faz listesi). Üçü de
-	# ÖZEL AD, iki dilde aynı — LANGUAGE INTEGRITY LAW'ın proper-noun istisnası.
 	var names := ["Bootstrap", "Traction", "Series A Hunt"]
 	return names[clampi(p - 1, 0, names.size() - 1)]
 
 
 func set_run_active(value: bool) -> void:
-	# No dedicated signal — run_ended carries the news with full ending context.
+	# No signal: run_ended carries the news with full context.
 	run_active = value
 
 
@@ -520,8 +358,7 @@ func set_shutter_days_left(value: int) -> void:
 
 
 func submit_month_highlight(text: String, priority: int) -> void:
-	# AYIN OLAYI registry: higher priority replaces lower;
-	# first-come wins ties. Cleared each month rollover (MonthSummarySystem).
+	# Higher priority replaces lower; first-come wins ties.
 	if priority > month_highlight_priority:
 		month_highlight_text = text
 		month_highlight_priority = priority
@@ -529,16 +366,13 @@ func submit_month_highlight(text: String, priority: int) -> void:
 # --- Flag accessors ---
 
 func set_flag(key: String, value: Variant) -> void:
-	# Flags are read-on-eligibility-eval, never pushed to UI. No EventBus emit.
 	if OS.is_debug_build():
 		_warn_on_flag_type_drift(key, value)
 	flags[key] = value
 
 
+## Declared Variant type of a flag, or TYPE_NIL when unregistered. SaveCodec's single oracle.
 func flag_type_for(key: String) -> int:
-	# Declared Variant type of a flag, or TYPE_NIL when the key is not registered.
-	# SaveCodec's single oracle for the flag bag. Concrete keys first, then the four
-	# dynamic prefix families.
 	if FLAG_TYPES.has(key):
 		return int(FLAG_TYPES[key])
 	for prefix in FLAG_TYPE_PREFIXES:
@@ -548,21 +382,13 @@ func flag_type_for(key: String) -> int:
 
 
 func _warn_on_flag_type_drift(key: String, value: Variant) -> void:
-	# DEBUG-ONLY tripwire. A flag written with a type other than its declaration is a bug
-	# that costs nothing today and costs a broken save later: the save records what the
-	# writer put in, the load coerces to what FLAG_TYPES says, and the two silently differ.
-	# Non-blocking (same grammar as CharacterRegistry._validate_shape) — the write lands,
-	# the log carries the defect.
+	# A write whose type differs from the declaration saves one type and loads another.
+	# int↔float is tolerated: every numeric reader casts.
 	var declared: int = flag_type_for(key)
-	if declared == TYPE_NIL:
-		return  # unregistered content flag — legal, no claim to contradict
 	var actual: int = typeof(value)
-	if actual == declared:
+	if declared == TYPE_NIL or actual == declared:
 		return
-	# int↔float is the ONE tolerated pair: GDScript promotes freely and every reader of a
-	# numeric flag casts, so warning on it would be pure noise (`set_flag(k, 0)` into a
-	# FLOAT slot is idiomatic here). Everything else is a genuine type change.
-	if (actual == TYPE_INT or actual == TYPE_FLOAT) and (declared == TYPE_INT or declared == TYPE_FLOAT):
+	if actual in [TYPE_INT, TYPE_FLOAT] and declared in [TYPE_INT, TYPE_FLOAT]:
 		return
 	push_warning("[GameState] flag '%s' declared %s but written as %s — see FLAG_TYPES"
 		% [key, type_string(declared), type_string(actual)])
@@ -583,27 +409,20 @@ func get_daily_revenue() -> int:
 func get_net_daily_flow() -> int:
 	return get_daily_revenue() - daily_burn
 
+## NET runway (revenue-aware), the player's lens; VC surfaces use GROSS. INF when net flow ≥ 0.
 func get_runway_months() -> float:
-	# NET runway (revenue-aware) — the player's canonical lens; VC surfaces deliberately
-	# use GROSS (VCPitchSystem._gross_runway_months / term-sheet table days).
-	# Returns INF when positive net flow; otherwise months remaining.
-	# Delegates to runway_months_for so the arithmetic has exactly one home.
 	return runway_months_for(cash, get_net_daily_flow())
 
 
+## NET runway for HYPOTHETICAL cash and flow (a hire preview moves both). Pure arithmetic;
+## a caller that wants to floor a negative month count does so itself.
 func runway_months_for(cash_value: int, daily_net: int) -> float:
-	# The same NET runway question asked about HYPOTHETICAL cash and flow, which is what a
-	# preview needs: a hire moves cash and burn at once, so "runway after" cannot be answered
-	# by get_runway_months() (that one only knows today). PURE arithmetic on purpose — it
-	# carries no presentation guard, so get_runway_months() delegates to it byte-identically
-	# and a caller that wants to floor a negative month count does so at its own edge.
 	if daily_net >= 0:
 		return INF
 	return float(cash_value) / float(-daily_net) / float(DAYS_PER_MONTH)
 
 func append_cash_sample(sample_cash: int) -> void:
-	# Finance Tab v1 curve feed. Called EXACTLY once per day by FinanceSystem.daily_tick
-	# (before its set_cash, so the synchronous cash_changed repaint reads a fresh buffer).
+	# Once per day, before FinanceSystem's set_cash, so the cash_changed repaint reads a fresh buffer.
 	cash_history.append({"day": day, "cash": sample_cash})
 	while cash_history.size() > CASH_HISTORY_CAP:
 		cash_history.pop_front()
@@ -632,42 +451,31 @@ func push_month_close(entry: Dictionary) -> void:
 
 ## Consecutive closed months, newest backwards, whose close MRR grew ≥ min_pct over the
 ## previous close. Integer math (cur·100 ≥ prev·(100+pct)); a zero or negative previous close
-## never counts. Needs streak+1 closes by construction (the first close has no predecessor).
+## never counts.
 func get_mrr_growth_streak(min_pct: int) -> int:
-	var i: int = month_history.size() - 1
 	var streak: int = 0
-	while i >= 1:
+	for i in range(month_history.size() - 1, 0, -1):
 		var prev: int = int(month_history[i - 1].get("mrr_close", 0))
 		var cur: int = int(month_history[i].get("mrr_close", 0))
 		if prev <= 0 or cur * 100 < prev * (100 + min_pct):
 			break
 		streak += 1
-		i -= 1
 	return streak
 
 
-## Sentinel for get_mom_growth_avg_pct: fewer closed months than the window asks for.
-## Sorts below every calibration cut on purpose, so a caller that forgets to test it lands on
-## the pessimistic branch rather than the flattering one.
+## Sentinel for get_mom_growth_avg_pct: fewer closed months than the window asks for. Sorts
+## below every calibration cut, so a caller that forgets to test it lands on the pessimistic branch.
 const GROWTH_AVG_UNKNOWN := -9999
 
 
-## Mean month-over-month MRR growth, in percent, over the last `months` closes.
-##
-## AN AVERAGE, NOT A STREAK, and the distinction is the whole reason this exists beside
-## get_mrr_growth_streak. A streak asks "how many months in a row cleared the bar" and breaks
-## on the first flat one; an average asks "how did the quarter go" and forgives it. Three
-## rulings want the second question — the seed round's growth expectation, the Series A term
-## sheet's ARR multiple, and the buyout multiple's growth adjustment — so it is written once.
-##
-## Needs `months` + 1 closes by construction: n deltas need n+1 samples. A zero or negative
-## previous close contributes 0 rather than an infinity.
+## Mean month-over-month MRR growth, in percent, over the last `months` closes. An average, not
+## a streak: one flat month is forgiven. Needs `months` + 1 closes; a zero or negative previous
+## close contributes 0.
 func get_mom_growth_avg_pct(months: int) -> int:
 	if months <= 0 or month_history.size() < months + 1:
 		return GROWTH_AVG_UNKNOWN
 	var total: float = 0.0
-	var first: int = month_history.size() - months
-	for i in range(first, month_history.size()):
+	for i in range(month_history.size() - months, month_history.size()):
 		var prev: int = int(month_history[i - 1].get("mrr_close", 0))
 		var cur: int = int(month_history[i].get("mrr_close", 0))
 		if prev > 0:
@@ -675,8 +483,7 @@ func get_mom_growth_avg_pct(months: int) -> int:
 	return int(round(total / float(months)))
 
 
-## Consecutive "Artıda" closes, newest backwards: net > 0 AND the treasury never sampled
-## below zero inside the month (red_days == 0).
+## Consecutive "Artıda" closes, newest backwards: net > 0 AND red_days == 0.
 func get_profitable_month_streak() -> int:
 	var streak: int = 0
 	for i in range(month_history.size() - 1, -1, -1):
@@ -702,12 +509,11 @@ func get_window_margin_pct(months: int) -> int:
 
 
 func get_cash_history() -> Array:
-	return cash_history.duplicate()  # readonly snapshot (get_burn_breakdown contract)
+	return cash_history.duplicate()
 
 
-## Kurucunun başlangıç alanı: Ürün · Tasarım · Yazılım içinde EN YÜKSEK olanı.
-## Beraberlikte AREAS sırası — deterministik olması şart, çünkü smoke bunun üzerine
-## kurulu kadroları pinli seed'le karşılaştırıyor.
+## Kurucunun başlangıç alanı: Ürün · Tasarım · Yazılım içinde EN YÜKSEK olanı. Beraberlikte
+## liste sırası; deterministik olmalı, smoke pinli seed'le kadro karşılaştırıyor.
 func _founder_start_area(stats: Dictionary) -> String:
 	var best: String = HRConstants.AREA_ENGINEERING
 	var best_v: int = -1
@@ -719,51 +525,36 @@ func _founder_start_area(stats: Dictionary) -> String:
 	return best
 
 
+## THE cap-table total: angel + seed + signed Series A. A future round is one summand here.
 func get_investor_equity_pct() -> int:
-	# THE cap-table denominator: angel + seed + signed Series A. Recompute-on-demand (the
-	# get_runway_months / get_founder_equity pattern) so a future round is one summand
-	# here and zero edits at the read sites. The seed rung collected on that promise in
-	# 2026-08-27: adding it was this one line and the one below, and the Finance cap-table
-	# bar, the two cap rows, FIN_CAPTABLE_RAISED and the ending ledger all moved with them.
 	return run_angel_equity_pct + run_seed_equity_pct + run_equity_pct
 
 
+## Every dollar raised this run, across rounds.
 func get_total_raised() -> int:
-	# Every dollar raised this run, across rounds. Same reasoning as above.
 	return run_angel_amount + run_seed_amount + run_investment_amount
 
 
+## The single write seam for the angel slice.
 func record_angel_round(equity_pct: int, amount: int) -> void:
-	# The single write seam for the angel slice (WRITE-THROUGH LAW). Emits, because the
-	# Finance cap-table bar otherwise repaints only as a SIDE EFFECT of the cash movement
-	# that happens to accompany a round — true for the angel seam by construction, false
-	# for the first equity change that moves no cash.
 	run_angel_equity_pct = equity_pct
 	run_angel_amount = amount
 	EventBus.equity_changed.emit(get_investor_equity_pct())
 
 
+## The single write seam for the seed slice. The lead is recorded here, with the money: it
+## outlives the sheet (cleared on signing) and vc_states (reachability, not history), and the
+## Series A warmth bonus and the buyout card read it.
 func record_seed_round(equity_pct: int, amount: int, vc_id: String) -> void:
-	# The single write seam for the seed slice — record_angel_round one rung up, and it
-	# emits for the same reason: the cap-table bar must not depend on a cash movement
-	# happening to accompany the equity change.
-	#
-	# THE LEAD IS RECORDED HERE, WITH THE MONEY, not on the sheet and not in vc_states. It
-	# outlives both: the sheet is cleared on signing, and vc_states carries REACHABILITY
-	# ("open", "rejected") rather than history. Two later surfaces read it — the Series A
-	# warmth bonus and the buyout card, which cannot even name its caller without it.
 	run_seed_equity_pct = equity_pct
 	run_seed_amount = amount
 	seed_lead = vc_id
 	EventBus.equity_changed.emit(get_investor_equity_pct())
 
 
-## Record that the Series A decision was FACED, and by which route (ch. 13 §1).
-##
-## UPGRADE-ONLY. A player can leave the door open for a month (door_open) and later walk a
-## table (walked); the stronger reason must win, because the buyout card reads this field to
-## decide whether a buyer has any reason to call. Overwriting in the other direction would
-## quietly disqualify a player who did the thing the card is about.
+## Record that the Series A decision was FACED, and by which route (ch. 13 §1). UPGRADE-ONLY:
+## a door left open and a table walked later must read as walked, because the buyout card
+## decides from this whether a buyer has a reason to call.
 func mark_faced_series_a(reason: String) -> void:
 	const RANK := {"": 0, "door_open": 1, "declined": 2, "walked": 2}
 	if int(RANK.get(reason, 0)) <= int(RANK.get(faced_series_a_by, 0)) and faced_series_a:
@@ -772,14 +563,8 @@ func mark_faced_series_a(reason: String) -> void:
 	faced_series_a_by = reason
 
 
-
-
-
+## founder.role_stats[skill_name], 0 when missing. A pre-rename key is a stale caller and errors.
 func get_founder_skill(skill_name: String) -> int:
-	# Reads from founder.role_stats. Populated by _build_founder from the
-	# onboarding skill allocation. Returns 0 if founder or skill missing.
-	# SKILL-RENAME tripwire: a read of a pre-rename key is a stale caller —
-	# scream in every log instead of silently returning 0.
 	if skill_name in FounderConstants.OLD_SKILLS:
 		push_error("[GameState] read of renamed founder skill '%s' — see FounderConstants SKILL-RENAME ledger" % skill_name)
 	var founder: Character = CharacterRegistry.get_founder()
@@ -788,30 +573,27 @@ func get_founder_skill(skill_name: String) -> int:
 	return int(founder.role_stats.get(skill_name, 0))
 
 
+## Run day N → Godot Time datetime dict {year, month, day, weekday, …}. THE day→calendar
+## conversion: month boundaries come from here (real 28/30/31-day months), never from the
+## economy constant DAYS_PER_MONTH. Default: the current day.
 func get_date_dict(for_day: int = -1) -> Dictionary:
-	# Run day N → Godot Time datetime dict {year, month, day, weekday, …} via
-	# the START_DATE anchor. THE single day→calendar conversion — month
-	# boundaries come from here (real 28/30/31-day months), never from the
-	# economy constant DAYS_PER_MONTH. Default: the current day.
 	var d: int = day if for_day < 0 else for_day
 	var anchor_unix: int = int(Time.get_unix_time_from_datetime_dict(START_DATE))
 	return Time.get_datetime_dict_from_unix_time(anchor_unix + (d - 1) * 86400)
 
 
-## Is run day N a weekday? Godot's weekday is 0 = Sunday … 6 = Saturday, read off the real
-## calendar through get_date_dict, so the answer is the same one the TopBar date shows.
+## Is run day N a weekday? (Godot weekday: 0 = Sunday … 6 = Saturday.)
 func is_business_day(for_day: int) -> bool:
 	var wd: int = int(get_date_dict(for_day).weekday)
 	return wd != 0 and wd != 6
 
 
-## Weekdays in the half-open run-day interval (from_day, to_day]. Negative when to_day is
-## earlier. Whole weeks are counted arithmetically, so a far-off day costs at most six probes.
+## Weekdays in the half-open run-day interval (from_day, to_day]; negative when to_day is
+## earlier. Whole weeks are counted arithmetically.
 func business_days_between(from_day: int, to_day: int) -> int:
 	if to_day < from_day:
 		return -business_days_between(to_day, from_day)
-	var span: int = to_day - from_day
-	var weeks: int = int(float(span) / 7.0)
+	var weeks: int = int(float(to_day - from_day) / 7.0)
 	var count: int = weeks * 5
 	for d in range(from_day + weeks * 7 + 1, to_day + 1):
 		if is_business_day(d):
@@ -830,35 +612,12 @@ func add_business_days(from_day: int, n: int) -> int:
 	return d
 
 
-## Day N → the month word in the CURRENT locale ("Ocak" / "January"). Kept as a seam because
-## callers pass a day, not a month; the words themselves come from Fmt.
-func month_name_for_day(for_day: int = -1) -> String:
-	return Fmt.month_name(int(get_date_dict(for_day).month))
-
-
-func months_elapsed_since(start_day: int) -> int:
-	# Whole CALENDAR months between start_day and today (0 on the same month), using
-	# get_date_dict — NOT the economy constant DAYS_PER_MONTH. The two disagree by design
-	# (real 28/30/31-day months vs a flat 30), so a tenure line that prints a month NAME
-	# must count with the same calendar that produced the name or the two contradict.
-	# Negative when start_day is in a later month (a hire whose first day has not arrived).
-	var a: Dictionary = get_date_dict(start_day)
-	var b: Dictionary = get_date_dict()
-	return (int(b.year) * 12 + int(b.month)) - (int(a.year) * 12 + int(a.month))
-
+## The newspaper ending screen's single read seam: the run_* counters plus derived live values.
 func get_run_ledger() -> Dictionary:
-	# The newspaper ending screen's single read seam. Recompute-on-demand (like
-	# get_runway_months / get_founder_equity) — gathers the flat run_* counters +
-	# derived live values into one dict EndingsCopy assembles into prose. READ-ONLY:
-	# nothing here writes state. Signed-terms fields read 0 unless a term sheet was
-	# signed; run_departures reads 0 until a fire/quit flow exists.
-	var start: Dictionary = get_date_dict(1)   # founding calendar (day 1 = Jan 2026)
+	var start: Dictionary = get_date_dict(1)
 	return {
 		# timeline
 		"day": day,
-		# The run's RNG seed. Absent from this ledger until now, which meant the
-		# seed existed but was unobtainable, so a reproducible-looking bug across four live
-		# runs could not actually be reproduced. Read-only here, like every other key.
 		"seed": run_seed,
 		"phase": phase,
 		"origin": origin,
@@ -870,17 +629,12 @@ func get_run_ledger() -> Dictionary:
 		"peak_mrr": run_peak_mrr,
 		"brand": brand,
 		"reputation": reputation,
-		# WHICH GAME THIS WAS. Every population figure below means something different per
-		# market, and the paper used to print the B2B one on a consumer run: customers_active
-		# counts registry records, and B2C keeps exactly ONE aggregate record, so a successful
-		# consumer run announced "1 MÜŞTERİ". customers_signed is worse — its only writer is the
-		# B2B signing path, so it reads 0 forever and six conditional prose lines silently
-		# vanished from every B2C ending. Ch. 13 §2: a consumer run reports AUDIENCE and PAYING
-		# USERS, never an account count.
+		# Population figures mean different things per market: a consumer run reports AUDIENCE
+		# and PAYING USERS, never an account count (ch. 13 §2).
 		"market": String(get_flag("mvp_market_type", "b2c")),
 		"audience": int(round(SalesSystem.b2c_audience())),
 		"paying_users": SalesSystem.b2c_paying_users(),
-		# customers (B2B discrete sign/churn; B2C is aggregate)
+		# customers (B2B discrete sign/churn; B2C is one aggregate record)
 		"customers_active": CustomerRegistry.get_active().size(),
 		"customers_signed": run_customers_signed,
 		"customers_lost": run_customers_lost,
@@ -889,39 +643,33 @@ func get_run_ledger() -> Dictionary:
 		"employees": CharacterRegistry.get_employees().size(),
 		"hires": run_hires,
 		"departures": run_departures,
-		# product (derived — no dedicated counter)
+		# product
 		"product_version": int(get_flag("mvp_version", 0)),
 		"product_ships": (get_flag("mvp_version_history", []) as Array).size(),
 		# fundraising
 		"pitches": run_pitches,
 		"sheets_won": run_sheets_won,
 		"vc_rejections": vc_rejections,
-		# live term sheets at the moment of reading — the soft-cap paper names an unsigned
-		# offer left on the table
+		# live term sheets now: the soft-cap paper names an unsigned offer left on the table
 		"unsigned_sheets": active_sheets.size(),
 		# calendar-month ledger digest
 		"months_closed": month_history.size(),
 		"profit_streak": get_profitable_month_streak(),
 		"pushes_attempted": run_pushes_attempted,
 		"pushes_won": run_pushes_won,
-		# signed term sheet (0 unless series_a_close). These three stay SERIES-A-ONLY on
-		# purpose: the ending newspaper composes them into one sentence ("at valuation X,
-		# raised Y, gave Z%"), and folding the angel round into them would make that
-		# sentence false — the angel money was not raised at that valuation.
+		# Signed Series A terms ONLY: the paper composes them into one sentence ("at valuation X,
+		# raised Y, gave Z%") that the angel and seed money were not raised at.
 		"investment_amount": run_investment_amount,
 		"valuation_m": run_valuation_m,
 		"equity_pct": run_equity_pct,
 		"board_seats": run_board_seats,
 		"board_veto": run_board_veto,
-		# the angel round, and the run-wide totals the cap table actually owes
 		"angel_amount": run_angel_amount,
 		"angel_equity_pct": run_angel_equity_pct,
-		# the seed rung — its own pair, for the same reason the angel has its own pair
 		"seed_lead": seed_lead,
 		"seed_amount": run_seed_amount,
 		"seed_equity_pct": run_seed_equity_pct,
 		"seed_expectation": SeedRoundSystem.expectation_state(),
-		# the Series A decision, and whether the player ever faced it (ch. 13 §1)
 		"faced_series_a": faced_series_a,
 		"faced_series_a_by": faced_series_a_by,
 		"investor_equity_pct": get_investor_equity_pct(),
@@ -936,54 +684,39 @@ func _emit_runway() -> void:
 	EventBus.runway_recalculated.emit(get_runway_months())
 
 
-# --- Run initialization (single seam: onboarding Confirm + F12 debug skip) ---
+# --- Run initialization (onboarding Confirm, debug skip, and every load) ---
 
 func initialize_run(payload: Dictionary) -> void:
-	# Called once when the onboarding flow confirms (or F12 skip fires) — AND on every
-	# load, which is why there is no second init path.
+	# Direct field assignment, not setters: no shell is mounted (on a load main.gd tears it down
+	# first), so signals would land in the void; remounting the shell repaints.
 	#
-	# Direct field assignment — GameShell has not been instanced yet, so no
-	# listeners exist on EventBus and signals would land in the void. Setters
-	# (which emit) are reserved for in-game mutation when listeners are wired.
-	#
-	# THAT ASSUMPTION HOLDS ON THE LOAD PATH TOO, and deliberately: main.gd tears the shell
-	# down BEFORE calling SaveManager.apply_loaded_state, so the restore below runs into the
-	# same empty-listener world onboarding does. Do not "upgrade" the restore to setters —
-	# it would be a 70-signal broadcast storm into nothing, and the one thing it could
-	# achieve (repainting the UI) is what remounting the shell already does.
-	#
-	# TWO OPTIONAL PAYLOAD KEYS:
-	#   "seed"    : int        — the run's RNG seed. A FRESH run generates and records one
-	#                            here (see _generate_seed); a LOAD passes the saved value.
-	#   "restore" : Dictionary — a save's state block, applied OVER the defaults set below.
-	#                            Present ⇒ this is a load: the roster and the month-1 ledger
-	#                            come from the save, so the seeding tail is skipped.
-	var restore_block: Dictionary = _game_state_block(payload.get("restore", {}))
+	# Optional payload keys:
+	#   "seed"    : int        — the RNG seed; a fresh run generates one.
+	#   "restore" : Dictionary — a save's state block ({game_state, registries, systems}),
+	#                            applied OVER the defaults below. Present ⇒ this is a load: the
+	#                            roster and the month-1 ledger come from the save.
+	var restore_block: Dictionary = (payload.get("restore", {}) as Dictionary).get("game_state", {})
 	var is_restore: bool = not restore_block.is_empty()
 
 	# Identity
 	origin = payload.get("origin_id", "self_made")
-	# Onboarding no longer asks the subgenre — it defaults here and the committed
-	# product write-throughs it later (set_subgenre via ProductSystem.start_build).
-	subgenre = payload.get("subgenre_id", "ai")
+	subgenre = payload.get("subgenre_id", "ai")   # the committed product overwrites it later
 	company_name = payload.get("company_name", "Unicorn Inc.")
 	logo_style = payload.get("logo_style", "minimalist")
 	slogan = payload.get("slogan", "")
 	founder_name = payload.get("founder_name", "")
 	founder_portrait = payload.get("portrait_id", "")
 
-	# Start state: origin decides the opening cash (FounderConstants working
-	# placeholder — Self-Made low capital; locked origins carry their own later).
 	cash = int(FounderConstants.origin_by_id(origin).get("starting_cash", FounderConstants.STARTING_CASH))
 	mrr = 0
 	daily_burn = FinanceSystem.starting_daily_burn()
 	brand = 50
 	reputation = 0
 	day = 1
-	current_hour = 9   # business-day-start
-	phase = 1          # 1=Bootstrap
+	current_hour = 9
+	phase = 1
 
-	# Endgame state reset (serialized set)
+	# Endgame state
 	run_active = true
 	ending_id = ""
 	phase_gate_ready = false
@@ -995,16 +728,14 @@ func initialize_run(payload: Dictionary) -> void:
 	active_scandal = false
 	unmanaged_major_scandal = false
 	brand_low_since_day = -1
-	month_history.clear()   # the calendar-month ledger (accruals reset by MonthSummarySystem.snapshot below)
+	month_history.clear()
 
-	# Finance surface state (Finance Tab v1). Day-1 point seeded here so the curve
-	# renders a valid single sample before the first daily tick.
+	# Day-1 point so the curve renders before the first daily tick.
 	cash_history = [{"day": 1, "cash": cash}]
 	transactions = []
 	sales_log = []
 
-	# Month-End Summary + run counters reset (month_ledger snapshot
-	# happens at the END of this function — it needs the roster in place)
+	# Month-End Summary + run counters (month_ledger is snapshotted at the END: it needs the roster)
 	month_highlight_text = ""
 	month_highlight_priority = -1
 	run_customers_signed = 0
@@ -1030,8 +761,7 @@ func initialize_run(payload: Dictionary) -> void:
 	run_board_seats = 0
 	run_board_veto = false
 
-	# VC Pitch / Series A Hunt reset. Dicts via .clear() in case a system
-	# cached the reference; arrays reassigned.
+	# VC Pitch / Series A Hunt. Dicts via .clear() in case a system cached the reference.
 	vc_states.clear()
 	active_sheets = []
 	pending_meeting.clear()
@@ -1042,7 +772,7 @@ func initialize_run(payload: Dictionary) -> void:
 	vc_last_meeting_rejected = false
 	vc_frank_cold_shown = []
 
-	# Seed round (ch. 09 §3) + the faced-Series-A memory (ch. 13 §1).
+	# Seed round + the faced-Series-A memory
 	seed_door_open_day = -1
 	seed_pitch_used = false
 	seed_sheet = null
@@ -1055,140 +785,83 @@ func initialize_run(payload: Dictionary) -> void:
 	acq_road_over_day = -1
 	bootstrap_milestone_day = -1
 
-	# HR Core state. Dicts via .clear() in case a system cached the reference (same
-	# reasoning as the VC block). NOTE: HRSystem.reset() deliberately does NOT run here —
-	# it seeds the HR RNG from run_seed and may set flags, and both of those happen further
-	# down. It is called after the seed block instead.
+	# HR Core state. HRSystem.reset() runs further down: it needs run_seed and may set flags.
 	hr_search.clear()
-	# §8.1 üç kapsam da tabana döner: şirket 09:00 / 8 saat, hiçbir grup istisnası yok.
-	# Kişisel istisnalar Character.work_hours_override'da ve karakterlerle birlikte gider.
 	company_start_hour = HRConstants.START_HOUR_DEFAULT
 	company_work_hours = HRConstants.WORK_HOURS_DEFAULT
 	group_work_hours_override.clear()
 	news_feed.clear()
 
-	# Flags survive nothing: fresh run = fresh world-state (hardening for any
-	# future in-place restart; harmless in a fresh process).
 	flags.clear()
-
-	# Origin flags — set AFTER the clear or they would be wiped. RESERVED:
-	# nothing consumes origin_press_sympathy / origin_low_capital yet; future
-	# press/network systems read them (FounderConstants.ORIGINS reserved_flags).
+	# Origin flags, after the clear. RESERVED: nothing consumes them yet
+	# (FounderConstants.ORIGINS reserved_flags).
 	for origin_flag in FounderConstants.origin_by_id(origin).get("reserved_flags", []):
 		set_flag(String(origin_flag), true)
 
-	# --- RESTORE POINT. Everything above is the fresh-run baseline; a load now writes the
-	# saved values over it, field by field, and anything the save does not carry keeps the
-	# baseline (that is the whole forward-compat story — no migration code, just defaults).
-	# run_seed is part of the block, so the line below reads the SAVED seed on a load and
-	# the payload/generated one on a fresh run.
+	# RESTORE POINT: a load writes the saved values over the baseline; anything the save does
+	# not carry keeps it (the whole forward-compat story).
 	if is_restore:
 		SaveCodec.apply_game_state(restore_block)
 
-	# Seeded RNG. A fresh run GENERATES and RECORDS its seed from birth
-	# (it used to be Time.get_ticks_msec() assigned here and never surfaced anywhere —
-	# four live runs produced a "reproducible" bug that could not be reproduced,
-	# because the seed was unobtainable). It now rides in get_run_ledger() and in every save.
-	# 0 is treated as ABSENT, not as a seed. run_seed's own declaration documents "0 =
-	# unseeded", and a caller that passes the key but reads it out of a save block missing
-	# the field would otherwise hand over a literal 0 and pin every run to one sequence.
+	# 0 is ABSENT, not a seed: a literal 0 would pin every run to one sequence.
 	var seed_in: int = int(payload.get("seed", 0))
 	if seed_in == 0:
 		seed_in = int(restore_block.get("run_seed", 0))
 	if seed_in == 0:
-		seed_in = _generate_seed()
+		# Bounded under 2^52 so the seed survives JSON (doubles) exactly. The one draw the game
+		# still takes from the engine's startup-randomised global stream.
+		seed_in = absi((randi() << 21) ^ (randi() << 3) ^ int(Time.get_ticks_usec())) % (1 << 52)
 	run_seed = seed_in
-	# The GLOBAL generator is now a BACKSTOP, not the game's RNG: the four real draw sites
-	# moved to RngStreams (events / skill / hr_morale), which is what makes a save resumable
-	# — Godot exposes no way to read the global generator's position. Kept seeded so any
-	# future bare randf() is at least deterministic for the run rather than wild.
+	# The global generator is a backstop only (the draw sites use RngStreams); seeded so any
+	# stray randf() is at least deterministic for the run.
 	seed(run_seed)
 	RngStreams.reseed(run_seed)
 
-	# Saat senkronu: current_hour'u doğrudan yazdık — TimeManager'ın accumulator'ı
-	# da aynı saate kilitlenmeli, yoksa ilk gün saatlik tik atmaz ("ilk gün ölü").
-	# On a load current_hour came from the save, so the same rule applies for the same reason.
+	# current_hour was written directly: the clock's accumulator must follow (see TimeManager).
 	TimeManager.sync_to_current_hour()
 
-	# HR sub-system static state (the HR RNG included) — MUST come after run_seed is
-	# assigned and after flags.clear(), or the HR stream would be seeded from the previous
-	# run's value and anything it flags would be wiped a moment later. A fresh process
-	# would not need this, but the debug onboarding re-trigger reuses the process.
+	# After run_seed and flags.clear(): the HR stream must not seed from the previous run, and
+	# anything it flags must not be wiped.
 	HRSystem.reset()
 
 	if is_restore:
-		# The roster, the month-1 ledger and run_hires all come from the save. Seeding a
-		# mentor + a fresh founder here would collide with the restored records (add() would
-		# drop char_founder on an id collision and leave the SAVED founder in place while
-		# still counting a hire), and MonthSummarySystem.snapshot() would overwrite the
-		# restored month_ledger with a day-N baseline — the month modal would then report
-		# deltas against the moment of loading instead of against the start of the month.
+		# Roster, month-1 ledger and run_hires come from the save; seeding a founder or
+		# snapshotting here would collide with the restored records.
 		return
 
-	# Roster: ensure mentor exists, add founder
 	CharacterRegistry.ensure_mentor()
-	var founder := _build_founder(payload)
-	CharacterRegistry.add(founder)
+	CharacterRegistry.add(_build_founder(payload))
 
-	# Month-1 ledger snapshot — AFTER the roster so the team count is real.
-	# (The founder add above must not count as a "hire": category is "founder".)
+	# Month-1 ledger after the roster so the team count is real. The founder is category
+	# "founder", not a hire.
 	MonthSummarySystem.snapshot()
-	run_hires = 0  # belt-and-braces: whatever roster seeding did, hires start at 0
-
-
-func _game_state_block(restore: Variant) -> Dictionary:
-	# Accepts either the whole save state block ({game_state, registries, systems}) or a
-	# bare GameState field dict, so a caller cannot get it subtly wrong in a way that loads
-	# a run with every field silently at its default.
-	if typeof(restore) != TYPE_DICTIONARY:
-		return {}
-	var d: Dictionary = restore as Dictionary
-	if d.has("game_state") and typeof(d["game_state"]) == TYPE_DICTIONARY:
-		return d["game_state"] as Dictionary
-	return d
-
-
-func _generate_seed() -> int:
-	# Wide entropy, bounded to stay EXACT through JSON. Save files are JSON
-	# and JSON numbers are IEEE doubles, so anything past 2^53 would come back
-	# rounded — a save that reproduces a DIFFERENT run than the one it recorded. 2^52 keeps
-	# a comfortable margin and still leaves 4.5 quadrillion distinct runs.
-	# randi() reads the engine's own startup-randomised global stream; this is the one place
-	# the game still draws from it, and it happens exactly once per run.
-	const SEED_CEILING := 1 << 52
-	return absi((randi() << 21) ^ (randi() << 3) ^ int(Time.get_ticks_usec())) % SEED_CEILING
+	run_hires = 0
 
 
 func _build_founder(payload: Dictionary) -> Character:
 	var skill_alloc: Dictionary = payload.get("skill_alloc", {})
-	# Trait ids as one array (polarity derives from the FounderConstants catalog).
-	# RESERVED: no system consumes trait effects yet — stored for the wiring task.
+	# RESERVED: no system consumes trait effects yet.
 	var traits_arr: Array[String] = []
 	for trait_id in payload.get("trait_ids", []):
 		traits_arr.append(String(trait_id))
 	if not FounderConstants.validate_traits(traits_arr):
 		push_error("[GameState] trait_ids failed the trait formula: %s" % str(traits_arr))
 
-	var raw_name: String = payload.get("founder_name", "")
-	var display_name: String = raw_name.strip_edges() if raw_name != "" else ""
+	var display_name: String = String(payload.get("founder_name", "")).strip_edges()
 	if display_name == "":
-		# The default founder name is COPY, not data — it must not be baked into
-		# a persisted field in one language. Rendered from the glossary term instead.
+		# The default name is copy, not data: it must not be persisted in one language.
 		display_name = TranslationServer.translate("HR_ROLE_FOUNDER")
 
 	var f := Character.new()
 	f.id = "char_founder"
 	f.character_name = display_name
-	f.role = HRConstants.ROLE_FOUNDER   # typed id; label "Kurucu" via HRConstants.role_label
+	f.role = HRConstants.ROLE_FOUNDER
 	f.category = "founder"
 	f.monthly_salary = 0
 	f.morale = 50
-	# SKILL-RENAME: canonical key list lives in FounderConstants.SKILLS — the single
-	# mapping. Stale payload keys (pre-rename UI) are flagged loudly, never copied.
-	# DAĞITIM BİRİMİNDEN CETVELE, TEK NOKTADA (§2.4). Onboarding hâlâ 6 puanı 3 tavanıyla
-	# dağıtıyor; kaydedilen değer o dağıtımın CETVEL karşılığıdır. Doğrulama aşağıda HAM
-	# dağıtımı denetlemeye devam ediyor — ikiye katlama bir yazma kararıdır, bir arayüz
-	# kararı değil.
+	# Onboarding allocates in distribution units; the stored value is the RULER equivalent
+	# (§2.4). Validation still checks the RAW allocation. Stale pre-rename keys are flagged,
+	# never copied.
 	var stats: Dictionary = {}
 	for skill_key in FounderConstants.SKILLS:
 		stats[skill_key] = FounderConstants.to_ruler(int(skill_alloc.get(skill_key, 0)))
@@ -1199,22 +872,13 @@ func _build_founder(payload: Dictionary) -> Character:
 		push_error("[GameState] skill_alloc failed validation (pool %d, cap %d): %s"
 			% [FounderConstants.POINT_POOL, FounderConstants.ONBOARDING_CAP, str(skill_alloc)])
 	f.role_stats = stats
-	# ch. 02 §5 / rev 2 §4: the founder holds ONE AREA. He starts in whichever of the three
-	# BUILD areas he allocated the most into — which is exactly where the retired `build`
-	# job used to put him, so day one still has a staffed build and no formula moves.
-	# The PRESSURE arrives when the Görevler tab moves him off it and the build notices.
-	# §12.0: kurucu bir İŞE oturur, alana değil. Alan listesi artık TÜRETİLMİŞ bir aynadır
-	# (CharacterRegistry._sync_area_mirror) ve buradan elle yazılırsa bir sonraki atamada
-	# üzerine yazılır — daha kötüsü, `assigned_job_ids` boş kaldığı için §2.1'in "aynı anda
-	# yapamaz" kilidi hiç devreye girmez.
-	# Tipli diziler düz Array ataması kabul etmez — append ile doldurulur.
+	# The founder sits in ONE JOB (§12.0), the primary job of the build area he allocated most
+	# into. The area list is a mirror derived from the jobs; written by hand it would be
+	# overwritten on the next assignment and §2.1's "cannot do both" lock would never engage.
 	var start_job: String = HRConstants.primary_job_for_area(_founder_start_area(stats))
 	if start_job != "":
 		f.assigned_job_ids.append(start_job)
 	for area_id in HRConstants.areas_for_jobs(f.role, f.category, f.assigned_job_ids):
 		f.assigned_jobs.append(String(area_id))
 	f.traits = traits_arr
-	# `relationship` stays at its Resource default — forward-compatible per
-	# scripts/data_models/character.gd. (loyalty / trust_score / attention_flag were
-	# deleted 2026-08-24; the founder never carried a meaningful value in any of them.)
 	return f
