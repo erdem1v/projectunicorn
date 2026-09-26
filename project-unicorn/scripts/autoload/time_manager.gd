@@ -1,16 +1,16 @@
 extends Node
 
-# Game clock per TECH_SPEC §6.1, §8.1, §8.2.
+# Game clock.
 #
-# Time rule (§8.1, ladder retuned 2026-07-29):
+# Time rule (ladder retuned 2026-07-29):
 #   Tempo is expressed as REAL SECONDS PER IN-GAME DAY, one entry per speed —
 #   1x=12s, 2x=6s, 3x=3s. See SECONDS_PER_DAY below (the single home). The 4x rung
-#   (1.5 s/day) was removed 2026-08-19 (Calibration Round A §10): the ladder is 1×/2×/3×.
+#   (1.5 s/day) was removed 2026-08-19: the ladder is 1×/2×/3×.
 #   A day is ALWAYS HOURS_PER_DAY hourly ticks; only the real-time rate of
 #   delivery changes, so game-time behaviour is identical at every speed.
 #   (The old rule was "1 real second = 1 in-game hour" → 24s/day at 1x.)
 #
-# Initial state (TECH_SPEC §20 Decision Log entry 2026-05-15):
+# Initial state:
 #   Day 1 starts at 09:00 (business-day-start). First day runs 09:00 → 24:00 =
 #   15 in-game hours = 7.5 real seconds at 1x. Subsequent days start at 00:00
 #   and run a full 24 in-game hours per cycle.
@@ -24,7 +24,7 @@ extends Node
 #   GameState owns day and current_hour. TimeManager only calls
 #   GameState.advance_day() / GameState.set_current_hour(h). No local copy.
 #
-# Tick dispatch (§8.2):
+# Tick dispatch:
 #   Hourly tick fires on every hour boundary (light, 2 slots) — rollover'ın
 #   kendisi de saat-0 tiki atar, gün = TAM 24 saatlik tik (eskiden 23'tü —
 #   saat-0 tiki sessizce düşüyordu; build'ler günde 1 saat kaybediyordu).
@@ -40,8 +40,8 @@ extends Node
 # THE tempo home. Real seconds one in-game day takes, by speed index.
 # idx: 0=pause, 1=1x, 2=2x, 3=3x
 # Retuning the pace = editing this array and nothing else. Values are WORKING
-# (calibration §10 "numbers last"); the ladder shape is the locked part.
-# Calibration Round A §10 (2026-08-19): the 4x rung (1.5 s/day) is gone — the canon ladder
+# (numbers are tuned last); the ladder shape is the locked part.
+# The 4x rung (1.5 s/day) is gone — the canon ladder
 # is 1×/2×/3×. A save that stored last_running_speed 4 clamps to 3 on load (from_dict reads
 # the array's size), KEY_4 is inert in game_shell, TopBar lost Speed4Btn.
 const SECONDS_PER_DAY := [0.0, 12.0, 6.0, 3.0]
@@ -107,7 +107,7 @@ func _process(delta: float) -> void:
 	if _suspended:
 		return  # a load is rebuilding the world; see _suspended
 	if not GameState.run_active:
-		# Terminal reached (ENDGAME_DESIGN.md §7.3): world stops. No hours accrue,
+		# Terminal reached: world stops. No hours accrue,
 		# no MRR behind the ending screen.
 		return
 	var multiplier: float = hours_per_real_second(current_speed)
@@ -233,7 +233,7 @@ func _on_speed_change_requested(speed: int) -> void:
 		push_warning("[TimeManager] Invalid speed requested: %d" % speed)
 		return
 	if speed > 0 and not GameState.run_active:
-		# Dead run cannot be unpaused (§7.3) — blocks Space-toggle, TopBar buttons,
+		# Dead run cannot be unpaused — blocks Space-toggle, TopBar buttons,
 		# and main.gd's post-modal speed restore. Speed-0 requests still pass so
 		# the terminal path can freeze the clock.
 		return
@@ -264,12 +264,12 @@ func is_clock_held() -> bool:
 func resume_if_paused() -> void:
 	# Aksiyon butonları (build commit, sprint start): pause'daysa son koşan hıza
 	# döner; koşuyorsa hıza DOKUNMAZ (speed-hijack fix — mevcut 2x/3x korunur).
-	# Ölü run'da _on_speed_change_requested zaten yutar (§7.3).
+	# Ölü run'da _on_speed_change_requested zaten yutar.
 	if current_speed == 0:
 		_on_speed_change_requested(last_running_speed)
 
 
-# --- Daily tick dispatch (TECH_SPEC §8.2) ---
+# --- Daily tick dispatch ---
 
 func _dispatch_daily_tick() -> void:
 	# Order matters: each system reads state set by the previous ones.
@@ -320,7 +320,7 @@ func _dispatch_hourly_tick(hour: int) -> void:
 	_tick_hourly_schedule(hour)
 
 
-# --- Daily tick slots (9, ordered per §8.2) ---
+# --- Daily tick slots (9, ordered) ---
 
 func _tick_product() -> void:
 	# Pure-logic system filling slot 1. Manages the active product build's
@@ -388,7 +388,7 @@ func _tick_industry_events() -> void:
 
 
 func _tick_phase_check() -> void:
-	# Gate evaluator per docs/ENDGAME_DESIGN.md §2. Opens gates (the latch only); the phase
+	# Gate evaluator. Opens gates (the latch only); the phase
 	# itself changes via GameState.advance_phase(), inside the card the player answers.
 	#
 	# IT MOVED IN FRONT OF THE EVENT SLOT, and the move is the whole reason the gate card can
@@ -404,18 +404,18 @@ func _tick_phase_check() -> void:
 	SeedRoundSystem.daily_tick()
 
 func _tick_pitch() -> void:
-	# Slot 8b (Spec 4): VC sheet clocks, callbacks, delayed delivery, meeting-day
+	# Slot 8b: VC sheet clocks, callbacks, delayed delivery, meeting-day
 	# prompt. BEFORE Endings so the cascade-defer inputs (active_sheets/pending_meeting)
-	# are fresh when EndingsSystem._check_vc_cascade reads them (ledger 17).
+	# are fresh when EndingsSystem._check_vc_cascade reads them.
 	VCPitchSystem.daily_tick()
 
 func _tick_endings_check() -> void:
-	# Slot 9: terminal scan per docs/ENDGAME_DESIGN.md §3-4. Can end the run
+	# Slot 9: terminal scan. Can end the run
 	# (run_active = false halts this loop from the next frame on).
 	EndingsSystem.daily_tick()
 
 func _tick_month_summary() -> void:
-	# Slot 10: Month-End Summary (Spec 3 / ENDGAME_DESIGN.md §1.1). AFTER the
+	# Slot 10: Month-End Summary. AFTER the
 	# endings scan on purpose — if a terminal fired today, run_active is false
 	# and the summary is suppressed (the ending wins).
 	MonthSummarySystem.daily_tick()
@@ -434,7 +434,7 @@ func _tick_product_hourly(hour: int) -> void:
 	SupportSystem.hourly_tick(hour)
 
 func _tick_sales_hourly(hour: int) -> void:
-	# Economy Model v2: B2C audience flows (bidirectional) and MRR derives every
+	# B2C audience flows (bidirectional) and MRR derives every
 	# in-game hour, so the economy reads as live. See scripts/systems/sales_system.gd.
 	SalesSystem.hourly_tick(hour)
 

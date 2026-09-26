@@ -1,7 +1,7 @@
 class_name Character
 extends Resource
 
-# Character data model per TECH_SPEC §7.
+# Character data model.
 # Plain data container, no scene dependency. Stored in CharacterRegistry
 # (employees, mentor, NPCs) and operated on by HRSystem and future systems.
 #
@@ -28,13 +28,13 @@ extends Resource
 # celisiyordu — saklanan bir rozet alani, bir gun onu dolduracak birini bekleyen bir
 # tuzakti. Yeni bir sistem gercekten geldiginde alanini kendisi ekler.
 #
-# Naming caution (TECH_SPEC §7): Node reserves `name`, so character names use
+# Naming caution: Node reserves `name`, so character names use
 # the distinct field `character_name`. Watch for similar collisions in any
 # future fields.
 
 # --- Identity (used now) ---
-@export var id: String = ""               # "char_<slug>" per TECH_SPEC §12 prefix
-@export var character_name: String = ""   # NOT `name` — Node reserves it (TECH_SPEC §7)
+@export var id: String = ""               # "char_<slug>" prefix
+@export var character_name: String = ""   # NOT `name` — Node reserves it
 @export var role: String = ""             # typed id (HRConstants.ROLE_*) — never free text
 @export var category: String = "employee" # "founder" | "employee" | "mentor" | "npc"
 # Portre yolu — BOŞ olması normal ve çoğunluk hâlidir. Portre politikası (GDD 14 §7):
@@ -100,7 +100,7 @@ extends Resource
 # doğrudan okuyor, ve anlamını yerinde değiştirmek hepsini DERLENMEYE DEVAM EDERKEN
 # ÇALIŞMAZ hâle getirirdi — mümkün olan en kötü kırılma biçimi. CharacterRegistry onu
 # buradan TÜRETİR (iş → taşıyıcı alanları, kişinin gerçekten taşıdığı alanlara daraltılmış);
-# eski okuyucular tam olarak eskisini görür. Ayna Faz 7'de, son okuyucu çevrildiğinde ölür.
+# eski okuyucular tam olarak eskisini görür. Ayna, son okuyucu çevrildiğinde ölür.
 @export var assigned_job_ids: Array[String] = []
 
 ## Ar-Ge §5.0 — YÜKSEK ÖNCELİKLİ BİR ETKİNLİĞİN ASKIYA ALDIĞI işler. Silinmiş değil,
@@ -152,7 +152,7 @@ extends Resource
 # §7 "hedefe doğru sürüklenir, anında sıçramaz". Olay deltaları HEDEFE yazılır; görünen
 # moral hedefe doğru günde MORALE_EASE_PER_DAY kadar yürür. -1 = tohumlanmadı (ilk tikte
 # morale'den doldurulur). §15'in alan listesinde YOK ve bu bilinçli bir ekleme: §7'nin
-# cümlesi kişi başına ikinci bir sayı olmadan uygulanamıyor (plan §9b Q1).
+# cümlesi kişi başına ikinci bir sayı olmadan uygulanamıyor.
 @export var morale_target: float = -1.0
 
 # --- §15 employment_history: YALNIZ EKLENEN kayıt ---

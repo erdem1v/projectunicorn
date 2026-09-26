@@ -78,13 +78,12 @@ static func _tick_satisfaction(c: Customer) -> void:
 	if GameState.day < c.onboarding_until:
 		step = int(ceil(float(step) * B2BConstants.ONBOARDING_AMP))
 	var delta: int = clampi(target - c.satisfaction, -step, step)
-	# B4 — İLGİLENİLEN HESAP DAHA YAVAŞ AŞINIR, ve "ilgilenen" artık SAHİPTİR, temsilci değil.
+	# İLGİLENİLEN HESAP DAHA YAVAŞ AŞINIR, ve "ilgilenen" artık SAHİPTİR, temsilci değil.
 	#
 	# İki şey değişti (direktör hükümleri 2026-08-27):
 	#   (a) SAHİP KURUCU DA OLABİLİR. `assigned_to == ""` "sahipsiz" demek değil, "kurucunun
 	#       kendi masasında" demek — ve kurucu da bir sahiptir ("aynı formül, özel kural yok").
-	#       Erken koşuların bütün defteri kurucunundur, yani bu gerçek bir ekonomi değişimidir
-	#       ve raporda öyle yazıyor.
+	#       Erken koşuların bütün defteri kurucunundur, yani bu gerçek bir ekonomi değişimidir.
 	#   (b) BONUS ETKİN ÇIKTIDAN okunuyor, ham eksenden değil: `HRSystem.effective_skill` alan
 	#       katsayısını, odağı (iki iş = 0,50), moral bandını ve huy çarpanlarını zaten
 	#       uyguluyor. İki işe bölünmüş bir temsilci artık gerçekten daha az koruyor.
@@ -95,7 +94,7 @@ static func _tick_satisfaction(c: Customer) -> void:
 			var output: float = HRSystem.effective_skill(owner, HRConstants.AREA_CUSTOMER_SUCCESS)
 			delta = int(float(delta) * B2BConstants.cs_dampen(int(round(output))))
 			# HAYIR DİYEMEZ: kendi hesaplarında memnuniyet daha yüksek durur. Bir DELTA
-			# ÜRETMİYOR — var olan aşınmayı daha da yumuşatıyor, yani §10'un "oynanmamış
+			# ÜRETMİYOR — var olan aşınmayı daha da yumuşatıyor, yani "oynanmamış
 			# ekonomik sonuç yok" kuralı duruyor: düşüşün sebebi hep ürün sağlığı.
 			var bonus: float = HRConstants.trait_sum(owner.traits, "satisfaction_bonus")
 			if bonus > 0.0:
@@ -104,7 +103,7 @@ static func _tick_satisfaction(c: Customer) -> void:
 		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 
 
-## B4 — WHO LOOKS AFTER THIS ACCOUNT. A named rep, or the founder when nobody is named.
+## WHO LOOKS AFTER THIS ACCOUNT. A named rep, or the founder when nobody is named.
 ##
 ## `assigned_to == ""` never meant "nobody"; it means "on the founder's own desk"
 ## (`assign_customer`'s own contract says so). Reading it as nobody is what confined the care
@@ -112,7 +111,7 @@ static func _tick_satisfaction(c: Customer) -> void:
 ## account — the one shape that got no care at all.
 ##
 ## AN ABSENT OWNER CARES FOR NOBODY: an on-leave or in-training rep dampens nothing, and the
-## account erodes at full strength while they are away (design doc §8). `null` is that answer.
+## account erodes at full strength while they are away (Ekip §8.6). `null` is that answer.
 ## DESIGN-PARKED: the erosion MULTIPLIER is the working shape for the care bonus. The named
 ## alternative is widening the account's tolerance instead — a different feel (the account
 ## forgives more rather than souring slower) and a different interaction with §5.2's loss
@@ -164,8 +163,8 @@ static func _tick_lifecycle(c: Customer) -> void:
 	# game ever assigned an account, but Task 2b makes delegation automatic, and the branch
 	# would then have meant: one Müşteri Temsilcisi permanently immunises up to cs_capacity
 	# accounts against churn (even while that rep is on LEAVE, where the dampen drops to zero
-	# but the immunity would not). That is Calibration Law 1's named failure — a feature that
-	# lets the player permanently solve money.
+	# but the immunity would not). That is the textbook failure of the rule that money must
+	# never stop mattering — a feature that lets the player permanently solve money.
 	#
 	# What a rep does instead is what the role actually promises: cs_dampen slows the erosion
 	# (see _tick_satisfaction) and the request channel absorbs routine noise. A genuine churn
@@ -203,7 +202,7 @@ static func _tick_at_risk(c: Customer) -> void:
 	if c.lifecycle_phase != "risk":
 		if c.risk_streak < B2BConstants.RISK_TRIGGER_DAYS:
 			return
-		# HYSTERESIS (§8): an account that left Risk inside RISK_REENTRY_DAYS does not re-enter
+		# HYSTERESIS: an account that left Risk inside RISK_REENTRY_DAYS does not re-enter
 		# yet — the streak keeps counting, nothing else starts. The day the window closes it
 		# re-enters immediately if it is still under its bar.
 		if c.last_risk_exit_day >= 0 and GameState.day - c.last_risk_exit_day < B2BConstants.RISK_REENTRY_DAYS:
@@ -220,7 +219,7 @@ static func _tick_at_risk(c: Customer) -> void:
 		_churn(c)
 
 
-# THE RETENTION GATE, in one place (Calibration Round A §13, the K2 pattern). It is no longer
+# THE RETENTION GATE, in one place. It is no longer
 # called from inside this file at all: `customer.retention`'s condition reads it through
 # `satis.can_offer_retention`, and the Sales tab's "İlgilen" button names the same card. Two
 # askers, one predicate, and neither of them can push a card past the engine any more.
@@ -261,7 +260,7 @@ static func _tick_healthy(c: Customer) -> void:
 
 	if phase_at_entry == "risk":
 		CustomerRegistry.set_churn_countdown(c.id, -1)
-		CustomerRegistry.set_last_risk_exit_day(c.id, GameState.day)   # §8 hysteresis stamp
+		CustomerRegistry.set_last_risk_exit_day(c.id, GameState.day)   # hysteresis stamp
 		# Recovering INSIDE the onboarding window returns to onboarding, not active: the
 		# window is a fact about the calendar, not about how the account felt in between,
 		# and the satisfaction model keeps amplifying until it closes. Sending it to
@@ -310,7 +309,7 @@ static func _churn(c: Customer) -> void:
 static func _remove_lost(c: Customer) -> void:
 	# Shared account-loss seam (passive churn + deliberate "Bırak"). Run counter + churn
 	# signal first (so a listener can still read the record), then remove + reflect MRR.
-	GameState.run_customers_lost += 1  # run counter seam (Spec 3 §3), B2B loss path
+	GameState.run_customers_lost += 1  # run counter seam, B2B loss path
 	CustomerRegistry.set_lifecycle_phase(c.id, "churning")
 	EventBus.customer_churned.emit(c.id)
 	CustomerRegistry.remove(c.id)      # emits customer_removed
@@ -349,7 +348,7 @@ static func apply_discount(customer_id: String, mrr_delta: int) -> void:
 	# "İndirim ver": MRR drops by the pre-computed delta, the customer stays (recovers
 	# from Risk). The delta is computed in B2BEventFactory so the modal can show the
 	# figure; the seam just applies it through the MRR seam + bridge.
-	# CAP (§8): RETAIN_DISCOUNT_MAX_USES per account across both channels. The factories lock
+	# CAP: RETAIN_DISCOUNT_MAX_USES per account across both channels. The factories lock
 	# the row past the cap; this guard is the seam's own defense (resolve_choice does not
 	# re-check unlocks).
 	var c: Customer = CustomerRegistry.get_customer(customer_id)
@@ -408,7 +407,7 @@ static func expand(customer_id: String, add_seats: int, per_seat_mrr: int) -> vo
 	# (The old `c.support_load += 1` here is gone with the field — see customer.gd. The
 	# "bigger account is heavier to support" pressure is real and survives: the request channel
 	# reads `scale`, and an expanded account keeps its scale.)
-	GameState.run_customers_expanded += 1  # run counter seam (Spec 3 §3) — genuine upsell only
+	GameState.run_customers_expanded += 1  # run counter seam — genuine upsell only
 	EventBus.customer_expanded.emit(c.id, c.seats)
 	# Back to a settled account after the upsell moment — and STAMP the latch, or the
 	# account lands right back on the condition that promoted it and re-fires tomorrow.
@@ -460,7 +459,7 @@ static func _recover(c: Customer, sat_bump: int) -> void:
 	CustomerRegistry.set_risk_streak(c.id, 0)
 	if c.lifecycle_phase == "risk":
 		CustomerRegistry.set_churn_countdown(c.id, -1)
-		CustomerRegistry.set_last_risk_exit_day(c.id, GameState.day)   # §8 hysteresis stamp
+		CustomerRegistry.set_last_risk_exit_day(c.id, GameState.day)   # hysteresis stamp
 		# Same onboarding-window rule _tick_healthy already follows (see the note at its
 		# "risk" branch): the window is a fact about the CALENDAR, not about how the
 		# account felt in between, and _tick_satisfaction keeps amplifying until it
@@ -599,11 +598,11 @@ static func _pick_line_pain(sub_id: String, index: int) -> String:
 	return pick_from[absi(index) % pick_from.size()]
 
 
-## What an account in Risk actually says, chosen by WHY it is in Risk (Event revision
-## 2026-09). The retention card used to speak the sector's outage line whatever the cause,
-## so an account soured by a broken promise complained about crashes that were not
-## happening. Three causes, in the order a customer would lead with them: a word you
-## broke, a product that is visibly failing, a product that has stopped being enough.
+## What an account in Risk actually says, chosen by WHY it is in Risk. The retention card
+## used to speak the sector's outage line whatever the cause, so an account soured by a
+## broken promise complained about crashes that were not happening. Three causes, in the
+## order a customer would lead with them: a word you broke, a product that is visibly
+## failing, a product that has stopped being enough.
 const RISK_VOICE_SHORT_KEYS := ["B2B_RISK_VOICE_SHORT_1", "B2B_RISK_VOICE_SHORT_2", "B2B_RISK_VOICE_SHORT_3"]
 
 static func risk_voice(c: Customer) -> String:

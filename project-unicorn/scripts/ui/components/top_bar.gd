@@ -1,7 +1,7 @@
 extends Panel
 
-# Persistent stat strip per PROJECT_SPEC §3.3 + TECH_SPEC §11.3.
-# Reads GameState on _ready, then updates via EventBus signals (§13).
+# Persistent stat strip.
+# Reads GameState on _ready, then updates via EventBus signals.
 #
 # Design notes (skill-driven):
 #  - No emoji icons — text labels instead (minimalist-ui directive).
@@ -12,7 +12,7 @@ extends Panel
 #  - Speed buttons: transparent idle / subtle hover / walnut active
 #    (emil-design-eng §buttons must feel responsive).
 
-# Ruled identical in both locales (gate ruling 3, 2026-08-08) — these are the canon terms,
+# Ruled identical in both locales (gate ruling 2026-08-08) — these are the canon terms,
 # not translatable copy. Keys all the same, so nothing in a scene or script holds the words.
 const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SERIES_A"]
 
@@ -50,7 +50,7 @@ const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SER
 # → TimeManager._on_speed_change_requested → TimeManager.speed_changed →
 # _on_time_manager_speed_changed (round-trip). That round-trip is what keeps
 # the indicator honest after event-pause restore, build commits, etc.
-var current_speed: int = 1  # 0=pause, 1=1x, 2=2x, 3=3x (4x removed 2026-08-19, Calibration Round A §10)
+var current_speed: int = 1  # 0=pause, 1=1x, 2=2x, 3=3x (4x removed 2026-08-19)
 # Son teklif geri sayımı. Yalnız kendi sinyali geldiğinde boyanan tek çip bu; renk
 # körü paleti takas edildiğinde yeniden boyayabilmek için değeri hatırlıyoruz
 # (sinyalin kendisi tekrar atmaz). -1 = çip gizli.
@@ -64,7 +64,7 @@ func _ready() -> void:
 	# Initial paint from current GameState
 	_refresh_all()
 
-	# Subscribe to state changes (TECH_SPEC §13.3 — tree-enter)
+	# Subscribe to state changes (tree-enter)
 	EventBus.cash_changed.connect(_on_cash_changed)
 	EventBus.mrr_changed.connect(_on_mrr_changed)
 	EventBus.burn_changed.connect(_on_burn_changed)
@@ -249,14 +249,14 @@ func _update_day_label() -> void:
 			"date": _display_date(), "hour": "%02d" % GameState.current_hour})
 
 func _on_shutter_changed(days_left: int) -> void:
-	# Kepenk counter (ENDGAME_DESIGN.md §4.3): visible red countdown while cash
+	# Kepenk counter: visible red countdown while cash
 	# is under zero. -1 = inactive/cleared → hidden.
 	shutter_label.visible = days_left >= 0
 	if days_left >= 0:
 		shutter_label.text = tr("FIN_SHUTTER_COUNTDOWN").format({"n": days_left})
 
 func _on_offer_countdown_changed(days_left: int) -> void:
-	# Term-sheet validity chip (Spec 4 / ledger 14): shown only when the soonest sheet
+	# Term-sheet validity chip: shown only when the soonest sheet
 	# is ≤ WARNING_DAYS. Amber above 1 day, red on the last day. -1 = hide.
 	_offer_days_left = days_left
 	offer_label.visible = days_left >= 0

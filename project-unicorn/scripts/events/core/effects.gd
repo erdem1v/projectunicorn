@@ -83,7 +83,7 @@ const NEUTRAL_VERBS := [
 	# moment, exactly as a Series A signature does. "decline_buyout" closes the VC road and
 	# writes one memory flag; the cash it declines is cash that never arrives.
 	"open_seed_table", "decline_buyout",
-	# K10: the closed-window answer "Decline". Closes one fund; no money, not a rejection.
+	# The closed-window answer "Decline". Closes one fund; no money, not a rejection.
 	"decline_offer",
 	# The two the migration required — see their arms for why each door is this narrow.
 	"set_game_flag", "mentor_advisory",
@@ -305,7 +305,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				return _no_target(verb, chid)
 			# B2C IS ONE AGGREGATE RECORD, so churn erodes the AUDIENCE and lets derived MRR
 			# follow; deleting the userbase would delete the whole consumer business over one
-			# complaint. B2B removes the account. (Economy Model v2; the old executor carried
+			# complaint. B2B removes the account. (The old executor carried
 			# this branch and the port had flattened it to `remove`.) The audience is read as a
 			# float because it keeps a sub-unit accumulator — int()-ing first rounds the
 			# erosion base down before taking 15% of it.
@@ -412,7 +412,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			# to be passed through verbatim, so every card promise targeted a feature
 			# literally named "pain" that no build can ship: 173 of 181 promises in the
 			# 730-day probe broke, each costing brand, satisfaction and tolerance, and the
-			# account came straight back into Risk (Event revision 2026-09, finding 1).
+			# account came straight back into Risk.
 			var pfid: String = String(e.get("feature_id", ""))
 			if pfid == PAIN_SENTINEL:
 				var pc: Customer = CustomerRegistry.get_customer(pcid)
@@ -452,7 +452,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			# §18: the ticker is atmosphere and confirmation, never the ONLY channel. Anything
 			# meaningful pushed here is also in History, and if it belongs to a promise arc it
 			# also carries a card. The old engine had no way for a card to leave a trace here
-			# at all — 08_event_ve_anlati.md:208 lists it as an absent seam.
+			# at all.
 			EvTicker.push(String(e.get("line_key", "")), String(e.get("priority", "world")), ctx)
 			return {"verb": verb, "line_key": e.get("line_key", "")}
 		"goto_tab":
@@ -501,7 +501,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			return {"verb": verb, "vc": mvc}
 		"open_term_table":
 			# A literal vc_id still wins (the old grammar); otherwise the BOUND investor slot,
-			# which is how the K10 decision card names the fund it is about.
+			# which is how the sheet-decision card names the fund it is about.
 			var tvc: String = String(e.get("vc_id", ""))
 			if tvc == "":
 				tvc = _entity(e, ctx, EvScope.TYPE_INVESTOR)

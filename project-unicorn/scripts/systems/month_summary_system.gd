@@ -1,7 +1,7 @@
 class_name MonthSummarySystem
 extends RefCounted
 
-# Month-End Summary — daily tick slot 10 per ENDGAME_DESIGN.md §1.1 (Spec 3).
+# Month-End Summary — daily tick slot 10.
 #
 # At the end of every CALENDAR month (real 28/30/31-day months via
 # GameState.get_date_dict — never the economy constant DAYS_PER_MONTH), builds
@@ -13,15 +13,15 @@ extends RefCounted
 #
 # Ordering: slot 10 runs AFTER the endings scan (slot 9). If a terminal fired
 # the same day, run_active is already false and the summary is suppressed —
-# the ending wins (§7.1/§7.2 logic). Kepenk active is deliberately NOT a
+# the ending wins. Kepenk active is deliberately NOT a
 # suppressor: the recap is most valuable mid-countdown.
-# The FISCAL CLOSE lands here too (Calibration Round A §3/§9): the month that just ended
+# The FISCAL CLOSE lands here too: the month that just ended
 # is pushed onto GameState.month_history before the recap, so slot 8 (the Series A gate's
 # growth streak) and slot 9 (the profitability condition) read the closed month the NEXT
 # day — a one-day lag, deliberate: the recap is seen before a month-driven gate or ending.
 #
 # Static, stateless (FinanceSystem pattern); all persistent state lives on
-# GameState (§7.9): month_ledger (snapshot keys written by snapshot(); accrual keys by
+# GameState: month_ledger (snapshot keys written by snapshot(); accrual keys by
 # the two accrue_* seams), month_history (the closed-month ring), month_highlight_*.
 
 # Fallback highlight when nothing claimed the month. Not a const — a const is evaluated
@@ -73,7 +73,7 @@ static func snapshot() -> void:
 		# modal ignores these (it shows mrr/cash/team/brand deltas — two data shapes).
 		"customers_signed": GameState.run_customers_signed,
 		"customers_lost": GameState.run_customers_lost,
-		# Accrual keys of the OPEN month (Calibration Round A §3/§9) — written by
+		# Accrual keys of the OPEN month — written by
 		# GameState.accrue_month_flow / accrue_month_expense, read by _close_fiscal_month.
 		"income": 0,
 		"expense": 0,
@@ -115,7 +115,7 @@ static func _team_size() -> int:
 
 static func debug_force_summary(extreme: bool = false) -> void:
 	# F11: emit the summary NOW with live data (layout/flow check without
-	# waiting a month). Shift+F11: extreme-value fixture — the spec §5 layout
+	# waiting a month). Shift+F11: extreme-value fixture — the layout
 	# stress test ("$999.9K → $1.2M", 3-digit team) stays reproducible. Its strings are a
 	# FIXTURE, not shipped copy: the point is a long Turkish headline overflowing the band,
 	# so keying them would defeat the test. Debug build only (F11 is gated on it).
@@ -138,7 +138,7 @@ static func debug_force_summary(extreme: bool = false) -> void:
 
 
 static func _pick_frank_line(data: Dictionary) -> String:
-	# First matching rule, top-down (Spec 3 §7). Working TR copy; content
+	# First matching rule, top-down. Working TR copy; content
 	# phase replaces. NPC register: short, dry, no scene-setting.
 	var mrr_delta: int = int(data.mrr.to) - int(data.mrr.from)
 	var cash_delta: int = int(data.cash.to) - int(data.cash.from)

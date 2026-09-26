@@ -2,7 +2,7 @@ class_name InfraSystem
 extends RefCounted
 
 # GDD — ÜRÜN MODÜLÜ rev 6.1 §10 · ALTYAPI. Pure-logic system, no scene, no instance,
-# no autoload (TECH_SPEC §8.3 — ProductLines / FinanceSystem ile aynı gramer).
+# no autoload (ProductLines / FinanceSystem ile aynı gramer).
 #
 # İKİ AYRI KARAR (MÜHÜRLÜ, §10): "Altyapı iki ayrı karardır: kimden alıyorsun
 # (SAĞLAYICI: birim fiyat + kalite) ve ne kadar alıyorsun (KAPASİTE: talebe göre artıp
@@ -11,7 +11,7 @@ extends RefCounted
 # birbirinin yerine geçemez.
 #
 # KENDİ KENDİNE TİKLEMEZ. `daily_tick()` dışarı açıktır; TimeManager'ın sıralı
-# dispatch'ine bağlanması AYRI bir iştir (bkz. done raporu). Bağlanacağı yer:
+# dispatch'ine bağlanması AYRI bir iştir. Bağlanacağı yer:
 # ProductSystem (slot 1) SONRASI, FinanceSystem (slot 5) ÖNCESİ — sunucu faturası
 # Finans'ın o günkü burn toplamına yetişsin diye.
 #
@@ -133,7 +133,7 @@ const STATE_UNPROVISIONED := "unprovisioned"   # canlı ürün yok ya da hiç ka
 const BURN_CATEGORY := "servers"
 
 ## Oyuncu-yüzü metin bu dosyada YOK (Bilingual Birth Law). Anahtarlar burada durur;
-## satırlarını strings.csv'ye eklemek ayrı bir iştir (bkz. done raporu).
+## satırlarını strings.csv'ye eklemek ayrı bir iştir.
 const KEY_PROVIDER_NAME_PREFIX := "PROD_INFRA_PROVIDER_"    # + LOCAL | CLOUD | ENTERPRISE
 const KEY_PROVIDER_QUALITY_PREFIX := "PROD_INFRA_QUALITY_"  # + LOCAL | CLOUD | ENTERPRISE
 const KEY_WARN_TITLE := "PROD_INFRA_WARN_TITLE"             # "Sunucular yoruluyor."
@@ -158,7 +158,7 @@ static var _burn_seam_warned: bool = false
 
 
 ## Run boundary. FinanceSystem.reset() ile aynı gramer; SaveManager'ın yeni-koşu
-## yolundan çağrılması gerekir (bkz. done raporu — HENÜZ BAĞLI DEĞİL).
+## yolundan çağrılması gerekir (HENÜZ BAĞLI DEĞİL).
 static func reset() -> void:
 	_warning_consumed_version = 0
 	_burn_seam_warned = false
@@ -452,7 +452,7 @@ static func blocks_enterprise_signature() -> bool:
 ## Kart DÜŞMEYE HAZIR mı. Olayı BU DOSYA KUYRUĞA KOYMAZ; koyan taraf kartı gösterdikten
 ## sonra `mark_capacity_warning_shown()` çağırır.
 ##
-## HÜKÜM (tek yargı çağrısı; done raporunda da yazılı): §10 kartı %80–100 BANDINA
+## HÜKÜM (tek yargı çağrısı): §10 kartı %80–100 BANDINA
 ## bağlar. Burada eşik "≥ %80" olarak okunuyor, yani aşım da kartı hak eder. Sebep:
 ## doluluk bir günde %70'ten %120'ye sıçrayabilir ve dar band okunsaydı o sürümde kart
 ## HİÇ düşmezdi — "uyarısız kayıp yasağı"nın (§10) tam tersi. Bandı birebir istersek

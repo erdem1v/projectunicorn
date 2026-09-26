@@ -1,8 +1,8 @@
 extends Node
 
-# Global signal hub per TECH_SPEC §13.
+# Global signal hub.
 # Singletons and systems emit signals here; scenes connect to update themselves.
-# Scenes connect on tree-enter, disconnect on tree-exit (§13.3).
+# Scenes connect on tree-enter, disconnect on tree-exit.
 
 # --- State change signals (§13.2) ---
 signal cash_changed(new_value: int)
@@ -45,7 +45,7 @@ signal confirm_requested(config: Dictionary)
 # without polling. music_volume is linear 0..1.
 signal music_enabled_changed(enabled: bool)
 signal music_volume_changed(volume: float)
-# Localization (Package 5): emitted by the Localization autoload when the language
+# Localization: emitted by the Localization autoload when the language
 # changes so live surfaces re-translate (e.g. TopBar runway). Payload = locale "tr"/"en".
 signal language_changed(locale: String)
 # Accessibility: the colourblind-safe semantic palette was toggled. Semantic colour is
@@ -289,9 +289,9 @@ signal run_ended(ending_id: String, ending_data: Dictionary)
 # paper opens in milestone mode and the run CONTINUES. Same payload shape as run_ended,
 # plus "mode": "milestone". main.gd mounts the paper and resumes the clock on "Devam et".
 signal milestone_reached(milestone_id: String, ending_data: Dictionary)
-# Kepenk counter (§4.3). -1 = inactive/cleared; 7..0 = counting. TopBar listens.
+# Kepenk counter. -1 = inactive/cleared; 7..0 = counting. TopBar listens.
 signal shutter_changed(days_left: int)
-# Month-End Summary (Spec 3 / §1.1): emitted by MonthSummarySystem (daily slot
+# Month-End Summary: emitted by MonthSummarySystem (daily slot
 # 10) when a calendar month closes. summary_data shape is documented on
 # MonthSummarySystem._build_summary_data. main.gd mounts MonthSummaryModal.
 signal month_ended(summary_data: Dictionary)
@@ -313,8 +313,8 @@ signal callback_ready(vc_id: String)            # callback condition met; door r
 signal meeting_day(vc_id: String)               # a booked meeting's day arrived
 signal meeting_requested(vc_id: String)         # Hunt "TOPLANTI İSTE" → VCPitchSystem schedules
 signal offer_countdown_changed(days_left: int)  # min sheet validity ≤ threshold; -1 = hide chip
-signal term_table_requested(vc_id: String)      # Finance>Yatırım "Masaya otur" / deal-prompt → main mounts the table (Spec 6)
-signal sheet_walked(vc_id: String)              # a table walk destroyed a sheet — HuntTab repaints (Spec 6)
+signal term_table_requested(vc_id: String)      # Finance>Yatırım "Masaya otur" / deal-prompt → main mounts the table
+signal sheet_walked(vc_id: String)              # a table walk destroyed a sheet — HuntTab repaints
 
 # --- Seed round (GDD v2 ch. 09 §3) — the middle rung. One publisher each. ---
 # seed_door_opened is what unlocks Finance > Yatırım in Traction: the sub-page lock used to be

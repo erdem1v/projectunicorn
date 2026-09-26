@@ -1,7 +1,7 @@
 extends Control
 
-# Yatırım (Series A Hunt) panel — Spec 4 §4. Nested by FinanceTab as its "Yatırım" sub-page
-# (Spec 6 §7 relocation). Left: investor roster (5 cards incl. locked Tier-2) with per-vc_state badges + the
+# Yatırım (Series A Hunt) panel. Nested by FinanceTab as its "Yatırım" sub-page.
+# Left: investor roster (5 cards incl. locked Tier-2) with per-vc_state badges + the
 # schedule/prep actions. Right: Teklifler (active sheets + validity countdowns + the
 # placeholder table modal), Bekleyen (pending meeting/prep), Frank strip, rejection counter.
 # Humble UI: reads VCPitchSystem / InvestorRegistry / GameState, calls the system for
@@ -202,7 +202,7 @@ func _refresh_roster() -> void:
 	for inv in InvestorRegistry.get_all():
 		var card: Control = _build_roster_card(inv, pivoted)
 		if pivoted:
-			card.modulate = Color(1, 1, 1, 0.4)  # ledger 18 — whole roster greys after pivot
+			card.modulate = Color(1, 1, 1, 0.4)  # whole roster greys after pivot
 		_roster.add_child(card)
 
 
@@ -290,7 +290,7 @@ func _build_roster_actions(vc_id: String) -> Control:
 	return row
 
 
-## K4: cancel or move the booked meeting. Only before its day; each costs a little of that
+## Cancel or move the booked meeting. Only before its day; each costs a little of that
 ## fund's conviction at its next meeting, and the buttons say how much.
 func _meeting_move_row() -> Control:
 	if not VCPitchSystem.can_move_meeting():
@@ -372,7 +372,7 @@ func _refresh_offers() -> void:
 		var empty := _label(tr("HUNT_EMPTY_SLOT"), C_SUB, 11)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_offers.add_child(empty)
-	# K8: the third sheet waits for a slot, and the player can see it waiting.
+	# The third sheet waits for a slot, and the player can see it waiting.
 	for vc_id in queued:
 		_offers.add_child(_label(tr("HUNT_QUEUED_OFFER").format({"investor": _vc_name(vc_id),
 			"n": PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS}), C_SUB, 11, true))
@@ -384,18 +384,18 @@ func _build_offer_card(sheet) -> Control:
 	card.add_theme_constant_override("separation", 3)
 	card.add_child(_label(String(inv.get("display_name", "")), C_INK, 13))
 	var vc_id: String = String(sheet.vc_id)
-	# K6: an ESTIMATED range, never the number and never the board term - the table is where
+	# An ESTIMATED range, never the number and never the board term - the table is where
 	# the exact terms open up. The range is seeded per sheet, so it does not reroll.
 	card.add_child(_label(tr("HUNT_TERMS").format({
 		"valuation": VCPitchSystem.estimate_valuation_text(vc_id),
 		"equity": VCPitchSystem.estimate_dilution_text(vc_id)}), C_DIM, 11, true))
 	var due: bool = (sheet as TermSheet).is_decision_due(GameState.day)
 	if due:
-		# K10: the window has closed; the decision card is up (or about to be). The same two
+		# The window has closed; the decision card is up (or about to be). The same two
 		# answers live here so the page never shows a sheet with nothing to do about it.
 		card.add_child(_label(tr("HUNT_DECISION_DUE"), UiTokens.negative(), 11, true))
 	else:
-		# K5: plain information in business days, amber → red at the warning threshold.
+		# Plain information in business days, amber → red at the warning threshold.
 		var days: int = (sheet as TermSheet).business_days_left(GameState.day)
 		card.add_child(_label(tr("HUNT_VALIDITY").format({"n": days}),
 			UiTokens.ACCENT_DEEP if days > PitchConstants.WARNING_DAYS else UiTokens.negative(), 11))
@@ -424,7 +424,7 @@ func _decline_due(vc_id: String) -> void:
 
 
 func _open_table(vc_id: String) -> void:
-	# Spec 6 — open the real push-your-luck Term Sheet Table. main.gd mounts the scene (which
+	# Open the real push-your-luck Term Sheet Table. main.gd mounts the scene (which
 	# opens TermSheetTableSystem for this VC); İMZALA / MASADAN KALK resolve there.
 	EventBus.term_table_requested.emit(vc_id)
 

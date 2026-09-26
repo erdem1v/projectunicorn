@@ -50,7 +50,6 @@ const MIN_READABLE_FONT_PX := 9     # tip skalasının MICRO adımı = mutlak ok
 # (alphaBounds), boyalı çapalar oda geometrisinin izdüşümünden. Kamera:
 # pos (0.298, 1.35, 1.56) · yaw 0.38° · pitch −1.91° · fov 44 — suluboya odanın
 # yerleşim sözleşmesine (aşağıdaki eski değerler) çözülerek bulundu.
-# Defter: docs/design/oda_art_pipeline.md
 #
 # ── MÜHÜRLÜ SANAT TURU (2026-08-17) ───────────────────────────────────────────
 # Yönetmen gündüz/gece render'larını mühürledi; sahne 2026-08-10'dakinden FARKLI.

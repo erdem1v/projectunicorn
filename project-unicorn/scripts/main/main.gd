@@ -1,7 +1,7 @@
 extends Node
 
 # Main scene root — owns the launch lifecycle:
-#   1. Enforce 1280×720 minimum window (TECH_SPEC §14.1).
+#   1. Enforce 1280×720 minimum window.
 #   2. Pause the clock (TimeManager auto-starts at 1x in its own _ready;
 #      we override it for onboarding so day/hour stay at 1/09:00).
 #   3. Instance OnboardingFlow into self. GameShell is NOT instanced upfront —
@@ -45,8 +45,8 @@ var _milestone_modal: Node = null    # The same paper in milestone mode (EA / fu
 var _pre_milestone_speed: int = -1   # Speed to restore when the milestone paper closes
 const MILESTONE_CLOCK_HOLD := "milestone_paper"   # TimeManager hold reason while the paper is up
 var _month_modal: Node = null        # Currently-open month summary modal, or null
-var _meeting_scene: Node = null      # Currently-open MeetingScene (Spec 5), or null
-var _term_table: Node = null         # Currently-open TermSheetTableScene (Spec 6), or null
+var _meeting_scene: Node = null      # Currently-open MeetingScene, or null
+var _term_table: Node = null         # Currently-open TermSheetTableScene, or null
 var _sales_meeting: Node = null      # Currently-open SalesMeetingScene (Satış §5.0), or null
 var _negotiation: Node = null        # Currently-open NegotiationScene (Satış §5.3), or null
 var _pre_dialogue_speed: int = -1    # Speed to restore when a cinematic dialogue closes
@@ -174,7 +174,7 @@ func _ready() -> void:
 	# window size and prints FRAME COST and TEXTURE/VIDEO MEMORY, then quits. The
 	# screenshot runners prove what a frame LOOKS like and can't price it; the smoke
 	# suite runs headless and has no raster at all. Written for the render-sharpness
-	# pass, whose §5 asks for a frame-time and VRAM delta at 4K — a texture-import
+	# pass, which needs a frame-time and VRAM delta at 4K — a texture-import
 	# change (mipmaps, svg/scale) costs memory and sampling, and "it feels fine" is
 	# not a number.
 	# VSYNC IS FORCED OFF here, deliberately: at 60Hz every frame measures ~16.7ms
@@ -690,7 +690,7 @@ func _run_b2b_shot(kind: String) -> void:
 		CustomerRegistry.set_lifecycle_phase(c.id, "risk")
 		CustomerRegistry.set_churn_countdown(c.id, 8)
 		if kind == "retention_capped":   # LOC-DATA debug seed / id
-			# Calibration Round A §8: the account has spent both discounts — the row renders
+			# The account has spent both discounts — the row renders
 			# locked-visible with its reason line.
 			CustomerRegistry.set_retain_discounts(c.id, B2BConstants.RETAIN_DISCOUNT_MAX_USES)
 		ev = EventGate.render("customer.retention", EventGate.bind_scope("customer.retention"))
@@ -788,7 +788,7 @@ func _run_sales_shot(kind: String = "pipeline") -> void:
 	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 60, false)
 	CustomerRegistry.set_churn_countdown("co_ege", 8)
 	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 180, false)
-	# Monthly strip figures: gained 1 / lost 2 / net -1 (mockup).
+	# Monthly strip figures: gained 1 / lost 2 / net -1.
 	GameState.run_customers_signed = 5
 	GameState.run_customers_lost = 2
 	GameState.month_ledger = {"customers_signed": 4, "customers_lost": 0}
@@ -1063,8 +1063,8 @@ func _run_oda_shot(kind: String) -> void:
 	else:
 		_seed_theme_surface()
 	if kind == "signal":   # LOC-DATA debug seed / id
-		# Kalibrasyon Turu A §3: pano hedef kartının FAZ-2 dalı (rakam yok, yalnız sinyal
-		# durumu — K1–K3 2026-09: büyüme ayı, marka ve çubuk kalktı). Ay kapanışları
+		# Pano hedef kartının FAZ-2 dalı (rakam yok, yalnız sinyal durumu — büyüme ayı,
+		# marka ve çubuk kalktı). Ay kapanışları
 		# --finance-shot=signal ile aynı kalır; kapı artık onları okumuyor.
 		GameState.set_phase(2)
 		GameState.month_history.clear()
@@ -1558,7 +1558,7 @@ func _run_finance_shot(kind: String) -> void:
 	PitchSystem.spawn_prospect("small", "find")
 	PitchSystem.spawn_prospect("mid", "find")
 	if kind == "signal":   # LOC-DATA debug seed / id
-		# Kalibrasyon Turu A §3/§9 yüzeyleri: faz 2, dört ay kapanışı (+%15/ay → üç büyüme
+		# Sinyal yüzeyleri: faz 2, dört ay kapanışı (+%15/ay → üç büyüme
 		# ayı) ve dördü de artıda → "Yatırımcı iştahı · ISINIYOR" (çıta altında) + "Artıda · 4/6 ay".
 		GameState.set_phase(2)
 		GameState.month_history.clear()
@@ -2182,7 +2182,7 @@ func _run_product_shot(kind: String) -> void:
 			GameState.set_flag("mvp_launch_day", GameState.day)
 			ProductState.set_infra_provider("cloud")
 			ProductState.set_infra_units(2)
-			# detail_b2c_buggy (Calibration Round A §6): the same fixture with 15 live bugs, so
+			# detail_b2c_buggy: the same fixture with 15 live bugs, so
 			# the pricing ruler's conversion projection is seen moving under the bug penalty.
 			GameState.set_flag("mvp_live_bug_count", 15 if kind == "detail_b2c_buggy" else 5)
 			GameState.set_flag("mvp_bug_history", [1, 2, 2, 3, 4, 4, 5])
@@ -2219,7 +2219,7 @@ func _run_product_shot(kind: String) -> void:
 		"tracker", "beta":
 			tab._navigate("tracker", {})
 		"detail_b2b", "detail_b2c", "detail_b2c_buggy", "detail_care":
-			# `detail_care` (B1, 2026-08-27) — DESTEK bandının PASİF hâli. `detail_b2b` ile
+			# `detail_care` — DESTEK bandının PASİF hâli. `detail_b2b` ile
 			# aynı dünya, tek farkla: kurucunun hiçbir işi yok, yani müşterilerle
 			# ilgileniyor. Bandın üç hâlinden ikisi ancak iki ayrı karede görülebilir.
 			if kind == "detail_care":
@@ -2297,10 +2297,10 @@ func _seed_sales_world() -> void:
 
 ## --vc-shot=<hunt|hunt_closed|table|table_final|table_walk|table_other|seed_table|k10> (windowed;
 ## --lang=en for the English frame). The Series A
-## surfaces HANDOFF_series_a.md §B asks to be LOOKED at: the Hunt page (estimate ranges,
+## surfaces that have to be LOOKED at: the Hunt page (estimate ranges,
 ## business days, the waiting queue, the road-closed line), the term-sheet table in its states
 ## (investor line after a push, final offer, walk-out, "show the other offer", the seed table's
-## locked board row) and the K10 decision card. Fixture state is written straight onto
+## locked board row) and the expired-offer decision card. Fixture state is written straight onto
 ## GameState, as every other shot harness does; pushes go through the real table system with
 ## the SkillCheck debug force so the frame is deterministic.
 func _run_vc_shot(kind: String) -> void:
@@ -2316,7 +2316,7 @@ func _run_vc_shot(kind: String) -> void:
 	var shot_kind: String = kind
 	match kind:
 		"hunt":
-			# Two live offers, one queued behind them (K8), one fund that said no.
+			# Two live offers, one queued behind them, one fund that said no.
 			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day - 2))
 			VCPitchSystem._vc("anchor")["status"] = "offered"
 			GameState.active_sheets.append(VCPitchSystem._make_sheet("meridian", GameState.day))
@@ -2669,7 +2669,7 @@ func _mount_shell() -> void:
 
 
 func _on_modal_dismissed() -> void:
-	# Stay paused. Per Spec #1, the player's first decision is the build
+	# Stay paused. The player's first decision is the build
 	# commit, which is the action that unpauses (ProductTab calls
 	# TimeManager.resume_if_paused() on successful start_build — pause'dan
 	# çıkarır, koşan hızı ezmez). Manual TopBar unpause also works as an
@@ -2695,7 +2695,7 @@ func _on_event_modal_requested(event: GameEvent) -> void:
 	if modal_layer == null:
 		push_error("[Main] GameShell/ModalLayer missing — event modal can't mount")
 		return
-	# D1 (event-engine rebuild, 2026-08-25). This was the ONE modal opener in this file with no
+	# This was the ONE modal opener in this file with no
 	# null guard, and it was safe only because exactly one card can be active at a time. An
 	# orphaned EventModal is not a cosmetic bug: game_shell.gd:151-153 guards ESC and the speed
 	# keys on a ModalLayer child COUNT, and event_modal.gd has no ui_cancel, so a second modal
@@ -2856,7 +2856,7 @@ func _on_confirm_dismissed() -> void:
 	_pre_confirm_speed = -1
 
 
-# --- ESC sistem menüsü (SaveManager task'ı §4) ---
+# --- ESC sistem menüsü ---
 # game_shell yalnız ModalLayer VE PanelLayer boşken system_menu_requested emit eder,
 # yani buraya geldiğimizde üstte hiçbir şey yok. Zorunlu karar zorunlu kalır: olay
 # modalı açıkken ESC bu menüye hiç ulaşmaz.
@@ -2977,7 +2977,7 @@ func _on_quickload_requested() -> void:
 	_load_slot(SaveManager.QUICK_SLOT_ID)
 
 
-# --- Yükleme sırası: TEK yol (§5.3) ---
+# --- Yükleme sırası: TEK yol ---
 # Sıralama tesadüf değil. initialize_run alanlara setter'lardan DEĞİL doğrudan yazar
 # ve gerekçesini kendi içinde yazıyor: "GameShell henüz instance edilmedi, dinleyici
 # yok." Shell'i ÖNCE yıkarak o varsayımı yükleme yolunda da doğru tutuyoruz — yani
@@ -3010,7 +3010,7 @@ func _load_slot(slot_id: String) -> void:
 	EventBus.game_loaded.emit(slot_id)
 
 
-# --- Month summary modal lifecycle (Spec 3 / ENDGAME_DESIGN.md §1.1) ---
+# --- Month summary modal lifecycle ---
 
 func _on_month_ended(summary_data: Dictionary) -> void:
 	if _month_modal != null:
@@ -3035,18 +3035,18 @@ func _on_month_ended(summary_data: Dictionary) -> void:
 func _on_month_dismissed() -> void:
 	_month_modal = null
 	# Restore only if the run is still alive AND no event modal owns the pause
-	# (spec §1: DEVAM ET restore convention).
+	# (the DEVAM ET restore convention).
 	if GameState.run_active and not EventGate.has_pending():
 		var restore: int = _pre_month_speed if _pre_month_speed >= 0 else TimeManager.last_running_speed
 		EventBus.speed_change_requested.emit(restore)
 	_pre_month_speed = -1
 
 
-# --- Ending modal lifecycle (ENDGAME_DESIGN.md §3/§6) ---
+# --- Ending modal lifecycle ---
 
 func _on_run_ended(_ending_id: String, ending_data: Dictionary) -> void:
 	# Terminal reached — mount the ending summary and never restore speed.
-	# EndingsSystem already flushed the queue and paused the clock (§7.2-7.3);
+	# EndingsSystem already flushed the queue and paused the clock;
 	# TimeManager swallows any later unpause request while run_active is false,
 	# so a still-resolving event modal (Class A acquisition accept) can finish
 	# its dismiss path without racing us.
@@ -3061,7 +3061,7 @@ func _on_run_ended(_ending_id: String, ending_data: Dictionary) -> void:
 	_ending_modal.populate(ending_data)  # add_child SONRASI — @onready ref'ler ancak o zaman dolu
 
 
-# --- Milestone paper lifecycle (EA / full builds; HANDOFF_series_a.md §D) ---
+# --- Milestone paper lifecycle (EA / full builds) ---
 #
 # The ending paper in milestone mode: a win the run lives through. The clock is HELD while
 # it is up (TimeManager.hold_clock), so an event card, the month summary or a settings panel
@@ -3126,8 +3126,8 @@ func _keep_run_for_main_menu() -> String:
 	return slot if SaveManager.save_to_slot(slot) else ""
 
 
-# --- Cinematic dialogue shell lifecycle (Spec 5: MeetingScene) ---
-# For now this mounts from a DEBUG fixture (game_shell Shift+F2). Spec 4's PitchSystem
+# --- Cinematic dialogue shell lifecycle (MeetingScene) ---
+# For now this mounts from a DEBUG fixture (game_shell Shift+F2). The PitchSystem
 # will emit meeting_scene_requested with a real view state and connect its own listener to
 # choice_selected/withdraw_requested; the closer below is a TEMPORARY debug driver that
 # logs the fired id and dismisses. Pause/restore uses the strict gate (run alive AND no
@@ -3162,7 +3162,7 @@ func _on_meeting_scene_requested(view_state: Dictionary) -> void:
 
 # MeetingScene choice relay. A live VC meeting drives the beat machine:
 # advance() writes the outcome and returns the next view_state (re-populate) or done.
-# The Shift+F2 debug fixture (Spec 5) keeps the print-and-close path.
+# The Shift+F2 debug fixture keeps the print-and-close path.
 func _on_dialogue_choice_selected(id: String) -> void:
 	if VCPitchSystem.is_meeting_active():
 		var r: Dictionary = VCPitchSystem.advance(id)
@@ -3195,7 +3195,7 @@ func _close_dialogue_scenes() -> void:
 	_pre_dialogue_speed = -1
 
 
-# --- Term Sheet Table (Spec 6) — table mount ---
+# --- Term Sheet Table — table mount ---
 
 func _on_term_table_requested(vc_id: String) -> void:
 	if _term_table != null:

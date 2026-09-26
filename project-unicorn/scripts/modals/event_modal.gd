@@ -142,7 +142,7 @@ func _build_skeleton() -> void:
 	_choices_host.add_theme_constant_override("separation", 8)
 	body.add_child(_choices_host)
 
-	# A READOUT WEARS NO DECISION CHROME (F4, 2026-08-27). The weekly sales summary is an
+	# A READOUT WEARS NO DECISION CHROME. The weekly sales summary is an
 	# `info` card whose single option is "Kapat", and it was rendering inside the full decision
 	# frame: a "KARAR · GÜN N" stamp over a page that decides nothing, and "SEÇİM KALICIDIR"
 	# under a button that commits to nothing. Both sentences were false, and a permanence
@@ -481,8 +481,8 @@ func _retain_discount_delta(m: Dictionary) -> int:
 
 ## Seats and MRR the expansion will add, computed the way `b2b_expand` computes them
 ## (effects.gd → B2BSalesSystem.expand). The card JSON carries neither number, so reading
-## `add_seats`/`per_seat_mrr` off the effect showed "+0 · +$0" on every expansion card
-## (Event revision 2026-09) — the discount chip's bug, on the positive side.
+## `add_seats`/`per_seat_mrr` off the effect showed "+0 · +$0" on every expansion card —
+## the discount chip's bug, on the positive side.
 func _expand_preview(m: Dictionary) -> Vector2i:
 	var seats: int = int(m.get("add_seats", 0))
 	var c: Customer = _bound_customer()
@@ -604,7 +604,7 @@ func _describe_modifier(m) -> Dictionary:
 			return {"text": tr("EFFECT_SEATS").format({"v": _fmt_signed(sa)}), "kind": _kind(sa)}
 		"audience_delta":
 			if m.has("pct"):
-				# Proportional form (Calibration Round A §7): "Kitle −%3" / "Audience −3%" —
+				# Proportional form: "Kitle −%3" / "Audience −3%" —
 				# Fmt.percent is locale-aware (TR prefix, EN suffix); the sign rides the number.
 				var pct_pts: int = int(round(float(m.get("pct", 0.0)) * 100.0))
 				var pct_txt: String = Fmt.percent(absi(pct_pts), 0)
@@ -632,7 +632,7 @@ func _describe_modifier(m) -> Dictionary:
 		# Faz geçiş kararları: geçiş okunur olsun ("advance_iteration" emekli — Build Bar 2026-08-19).
 		"enter_development": return {"text": tr("EFFECT_DEV_BEGINS"), "kind": &"neutral"}
 		"enter_beta": return {"text": tr("EFFECT_BETA_BEGINS"), "kind": &"neutral"}
-		# Spec 6 teklif kartı: kabul masayı açar. Kör tip bırakmıyoruz — EFFECT-VISIBILITY
+		# Teklif kartı: kabul masayı açar. Kör tip bırakmıyoruz — EFFECT-VISIBILITY
 		# kuralı, seçimin ne yaptığını kartın üstünde söylemeyi şart koşuyor.
 		"open_term_table": return {"text": tr("EFFECT_TERM_TABLE"), "kind": &"accent"}
 		"open_seed_table": return {"text": tr("EFFECT_SEED_TABLE"), "kind": &"accent"}

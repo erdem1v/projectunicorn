@@ -1,15 +1,15 @@
 class_name TermSheetTableScene
 extends Control
 
-# Term Sheet Table view (Spec 6). A humble full-screen dark-register view over
+# Term Sheet Table view. A humble full-screen dark-register view over
 # TermSheetTableSystem: it paints the system's view_state through one _render() and routes
 # clicks back into the system (select lever, push, sign, walk). ALL negotiation math lives in
 # the system — this scene only paints and animates the dial. Built programmatically (like
 # hunt_tab's cards) over a minimal .tscn root so the layout is authored in one pass.
 #
-# process_mode = ALWAYS (.tscn) keeps it live on the paused tree (ledger 6/9). Ledger 11: no
+# process_mode = ALWAYS (.tscn) keeps it live on the paused tree. No
 # default focus (all buttons FOCUS_NONE), number keys 1-3 select a lever, a blind Enter/Space
-# on open does nothing. The seven states (§3) are all just different view_states through _render.
+# on open does nothing. The seven states are all just different view_states through _render.
 
 signal closed()
 
@@ -22,10 +22,10 @@ var _dial: RadialDial
 var _result_caption: Label
 var _leverage_box: PanelContainer
 var _leverage_label: Label
-var _investor_box: PanelContainer    # K12: the fund's own line after every move (reveals E's band)
+var _investor_box: PanelContainer    # the fund's own line after every move (reveals E's band)
 var _investor_tag: Label
 var _investor_line: Label
-var _show_other_btn: Button          # K7: show the other live Series A sheet, once per table
+var _show_other_btn: Button          # show the other live Series A sheet, once per table
 var _frank_label: Label
 var _kasa_label: Label
 var _counter_label: Label
@@ -182,7 +182,7 @@ func _build_lever_row(lever_id: String) -> Control:
 	top.add_child(name_label)
 	var push_btn := Button.new()
 	push_btn.theme_type_variation = &"CommitButton"
-	push_btn.focus_mode = Control.FOCUS_NONE     # ledger 11 — mouse only, no keyboard grab
+	push_btn.focus_mode = Control.FOCUS_NONE     # mouse only, no keyboard grab
 	push_btn.text = tr("TERM_PUSH")
 	push_btn.pressed.connect(_on_push_pressed.bind(lever_id))
 	top.add_child(push_btn)
@@ -530,7 +530,7 @@ func _initials(full_name: String) -> String:
 
 
 func _input(event: InputEvent) -> void:
-	# Ledger 11: number keys 1-3 select a lever; Enter/Space/ESC deliberately unbound (inert).
+	# Number keys 1-3 select a lever; Enter/Space/ESC deliberately unbound (inert).
 	if _spinning:
 		return
 	if not (event is InputEventKey and event.pressed and not (event as InputEventKey).echo):

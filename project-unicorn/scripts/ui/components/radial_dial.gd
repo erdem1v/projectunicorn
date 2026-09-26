@@ -1,7 +1,7 @@
 class_name RadialDial
 extends Control
 
-# Push-roll dial (Spec 6 §1). A top-semicircle gauge: the green arc = success odds, the red arc
+# Push-roll dial. A top-semicircle gauge: the green arc = success odds, the red arc
 # = the rest, and a needle that rests at the odds boundary, then SWEEPS to a landing on a push
 # (green zone = won, red zone = lost). Custom-drawn with draw_arc / draw_line — Godot has no
 # radial gauge widget; the ConvictionTrack custom-draw pattern (draw + queue_redraw from token
@@ -68,7 +68,7 @@ func spin(chance: float, passed: bool) -> void:
 	_tween.finished.connect(func() -> void: spin_finished.emit())
 
 
-## Click-to-finalize the current spin (skippable, §3).
+## Click-to-finalize the current spin (skippable).
 func skip() -> void:
 	if _tween != null and _tween.is_valid() and _tween.is_running():
 		_tween.kill()

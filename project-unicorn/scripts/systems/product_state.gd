@@ -64,7 +64,7 @@ static func product_name() -> String:
 ## in `mvp_components`; a LINE STEP id is live when its line has reached the step's
 ## tier. Before this existed every reader asked `mvp_components` only — and a line
 ## product never writes step ids there, so no promise about a line step could ever be
-## kept (Event revision 2026-09, finding 1).
+## kept.
 static func is_feature_live(feature_id: String) -> bool:
 	if feature_id == "":
 		return false

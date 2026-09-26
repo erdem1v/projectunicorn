@@ -1,8 +1,7 @@
 class_name EvSeamsWorld
 extends RefCounted
 
-# The `phase.`, `rival.`, `investor.` and `time.` namespaces
-# (docs/SEAM_REGISTRY.md §6).
+# The `phase.`, `rival.`, `investor.` and `time.` namespaces.
 
 static func install() -> void:
 	_install_phase()
@@ -33,7 +32,7 @@ static func _install_phase() -> void:
 	EvSeams.register("phase.series_a_signal", G, TYPE_STRING,
 		func() -> String: return String(PhaseGateSystem.series_a_signal().get("state", "closed")),
 		"Phase", "closed | warming | open. The number behind it is deliberately not a seam")
-	# Frank's approach lines (K3, plan §6.1) as a STEP, not a figure: 0 below half the bar,
+	# Frank's approach lines as a STEP, not a figure: 0 below half the bar,
 	# 1/2/3 at 50/75/90 %, 4 at the bar (PhaseGateSystem.APPROACH_PCTS). A card can condition
 	# on "the second mark" without the bar or MRR ever reaching its prose.
 	EvSeams.register("phase.series_a_approach", G, TYPE_INT,
@@ -112,7 +111,7 @@ static func _install_investor() -> void:
 	EvSeams.register("investor.sheets_live", G, TYPE_INT,
 		func() -> int: return GameState.active_sheets.size(),
 		"Funding", "WRAPPER; term sheets in hand")
-	# K6: the estimated ranges the offer row prints before the table - prose, resolved at
+	# The estimated ranges the offer row prints before the table - prose, resolved at
 	# display time so a language switch re-renders them. "" when the fund holds no sheet.
 	EvSeams.register("investor.est_valuation", E, TYPE_STRING,
 		func(id: String) -> String: return VCPitchSystem.estimate_valuation_text(id),

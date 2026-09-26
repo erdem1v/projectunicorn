@@ -197,7 +197,7 @@ static func drop_arc(arc_id: String) -> int:
 	return before - _entries.size()
 
 
-## Terminal reached (§7.2 of ENDGAME_DESIGN): queued cards die with the run. The ACTIVE card is
+## Terminal reached: queued cards die with the run. The ACTIVE card is
 ## deliberately left alone — an open modal resolves normally, and its post-resolve speed
 ## restore is swallowed by the dead-run guard.
 static func flush() -> void:

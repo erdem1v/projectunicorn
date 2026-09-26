@@ -1,10 +1,10 @@
 extends Node
 
-# Settings (TECH_SPEC §6.1) — persisted player preferences: display, audio,
+# Settings — persisted player preferences: display, audio,
 # game, language, accessibility. The store is generic (string key → JSON value)
 # so every preference shares one file; DEFAULTS below is the SCHEMA on top of it.
 #
-# Persistence = JSON via FileAccess (TECH_SPEC §2, LOCKED convention). Settings
+# Persistence = JSON via FileAccess (LOCKED convention). Settings
 # live in user://settings.json, INDEPENDENT of game saves — they persist across
 # runs regardless of which save slot (or none) is loaded.
 #

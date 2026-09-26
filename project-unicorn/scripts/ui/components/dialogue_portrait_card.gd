@@ -1,7 +1,7 @@
 class_name DialoguePortraitCard
 extends PanelContainer
 
-# Shared cinematic-register component (Spec 5) — a 4:5 portrait bust in a thin cream
+# Shared cinematic-register component — a 4:5 portrait bust in a thin cream
 # rounded frame (PortraitFrame variation). Its consumer (MeetingScene) anchors it to
 # overlap the dialogue column's top edge — the signature move of the composition.
 #

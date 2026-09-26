@@ -1,12 +1,12 @@
 class_name DialogueChoiceCard
 extends PanelContainer
 
-# Shared cinematic-register choice card (Spec 5) — the dark-register counterpart to the
+# Shared cinematic-register choice card — the dark-register counterpart to the
 # light event_modal._build_choice_card. Renders a number chip + choice text + optional odds
 # line + optional caption (danger-tinted) + optional "marked" marker; hovers with an amber
 # edge; supports a muted, non-interactive disabled state.
 #
-# Ledger 11: NEVER grabs focus. It reacts only to a left mouse click (or the consumer
+# NEVER grabs focus. It reacts only to a left mouse click (or the consumer
 # routing a number-key press via select()). A disabled row is visible but inert
 # (mouse ignored, focus none) — the no-fake-choices pillar.
 

@@ -1,7 +1,7 @@
 class_name Customer
 extends Resource
 
-# Customer data model per TECH_SPEC §7.
+# Customer data model.
 # Plain data container; stored in CustomerRegistry and aggregated by
 # SalesSystem each daily tick into GameState.mrr.
 #
@@ -19,7 +19,7 @@ extends Resource
 # cross-data-model consistency.
 
 # --- Identity (used now) ---
-@export var id: String = ""                   # "co_<slug>" per TECH_SPEC §12 prefix
+@export var id: String = ""                   # "co_<slug>" prefix
 @export var company_name: String = ""         # Avoid `name` for consistency with Character
 # COMPOSED names are NOT stored here — see display_name(). company_name holds a proper
 # noun ("Nordica Logistics") and proper nouns do not localize.
@@ -31,7 +31,7 @@ extends Resource
 
 # --- Commercial (used now — feeds GameState.mrr via Sales aggregation) ---
 @export var mrr: int = 0                      # Monthly recurring revenue, dollars
-@export var seats: int = 0                    # Per PROJECT_SPEC §5.4 customer-row format
+@export var seats: int = 0
 
 # --- Status (used now) ---
 @export var status: String = "active"         # "active" | "trial" | "churned"
@@ -56,11 +56,11 @@ extends Resource
 @export var onboarding_until: int = 0         # day the onboarding window closes (signed_day + ONBOARDING_DAYS)
 @export var pain_feature_id: String = ""      # the ProductCatalog feature this account wants (drives promises)
 @export var retain_stalls: int = 0            # how many times "Oyala" has been used (works 1-2x, then caught on)
-# Calibration Round A §8 (2026-08-19). Both ride SaveCodec's property walker (every @export
-# is the schema; the default is the migration).
+# Both ride SaveCodec's property walker (every @export is the schema; the default is the
+# migration).
 @export var retain_discounts: int = 0     # how many discounts this account has been given (cap B2BConstants.RETAIN_DISCOUNT_MAX_USES, both channels)
 @export var last_risk_exit_day: int = -1  # HYSTERESIS latch: the day the account last left Risk; -1 = never. No re-entry for RISK_REENTRY_DAYS
-# HIDDEN expansion latch (K2). -1 = this account has never had its expansion moment.
+# HIDDEN expansion latch. -1 = this account has never had its expansion moment.
 # The promotion test in _tick_healthy is MONOTONE (day - acquired_on_day >= MATURE_DAYS)
 # and BOTH resolutions put the account back to "active", so without a record that the
 # moment already happened the same modal re-fired every single morning, forever, and
@@ -95,10 +95,9 @@ extends Resource
 # --- SATIŞ rev 6 §5.4 · the price trail -------------------------------------
 # THE ACCOUNT CARRIES ITS OWN SEAT PRICE. Before rev 6 an expansion added seats at a FLAT
 # EXPANSION_PER_SEAT_MRR = 120 for every account in the book, so what a customer had agreed
-# to at signing was forgotten the moment it grew — the 2026-08-06 audit measured +6 seats /
-# +$720 a day for one click. The price is stamped at the signature now and expansion reads
-# it, which is what makes the stance dial (§7.5) a decision with a tail rather than a
-# one-day discount.
+# to at signing was forgotten the moment it grew — measured at +6 seats / +$720 a day for
+# one click. The price is stamped at the signature now and expansion reads it, which is
+# what makes the stance dial (§7.5) a decision with a tail rather than a one-day discount.
 #
 # 0 = an account signed before rev 6 (or seeded by a fixture). `B2BSalesSystem.expand` falls
 # back to the caller's rate in that case, so a v10 save keeps behaving exactly as it did.

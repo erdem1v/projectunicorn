@@ -2,13 +2,13 @@ class_name B2BConstants
 extends RefCounted
 
 # THE single tunables block for the B2B Sales System (all stages A-E). Every number
-# here is a WORKING PLACEHOLDER — calibration is a separate last pass (PROJECT_SPEC
-# §10: numbers last). Grouped by stage. Pure statics; no state, no scene dependency.
+# here is a WORKING PLACEHOLDER — calibration is a separate last pass (numbers last).
+# Grouped by stage. Pure statics; no state, no scene dependency.
 
 # ============================ Stage A — lifecycle ============================
 const ONBOARDING_DAYS := 30             # first-impressions window after signing
 const RISK_TRIGGER_DAYS := 3            # consecutive days under tolerance → Risk phase
-# HYSTERESIS (Calibration Round A §8, 2026-08-19): after an account LEAVES Risk it cannot
+# HYSTERESIS: after an account LEAVES Risk it cannot
 # re-enter for this many days, however far under its bar it drifts (the streak keeps
 # counting, the countdown and the retention card do not start). Measured before: the same
 # account produced a retention modal every 3 days for 90 days (29 identical decisions,
@@ -23,7 +23,7 @@ const ONBOARDING_AMP := 1.5             # onboarding-window swing amplifier
 const RIVAL_SATISFACTION_HOOK := false  # TODO: rival pressure (−); OFF until a rival system exists
 const SCALE_DEMO_MAX := 3               # demo generates 1..3 star; 4-5 (Tier 2) gated
 
-# TOLERANCE BAND — re-seated 2026-08-19 (Calibration Round A §1, [ÖLÇ]) together with
+# TOLERANCE BAND — re-seated 2026-08-19 together with
 # QualityModel.NORMALIZE_HALF_SAT 50→25 and the saas_ops_field unlock. The bars were
 # (35, 5): small 40 / mid 45 / enterprise 45+sector — authored against the retired grown
 # axes, under which a played v1 (axis 20-27) sat 15-30 points under every account and the
@@ -72,7 +72,7 @@ static func roll_scale(archetype: String) -> int:
 const COMPLAINT_BUG_GATE := 6           # live bugs above this → product-complaint family eligible
 const RIVAL_LURE_ENABLED := false       # TODO: rival-lure family; OFF until a rival system exists
 const RETAIN_DELAY_MAX_USES := 2        # "Oyala" works this many times, then the customer catches on
-# "İndirim ver" use cap (Calibration Round A §8): per account, across BOTH discount channels
+# "İndirim ver" use cap: per account, across BOTH discount channels
 # (retention card + CS complaint/renewal cards — all resolve through apply_discount). Past the
 # cap the row stays VISIBLE but locked, with the reason on its sub-line (B2B_DISCOUNT_SPENT_DESC).
 # Measured before: 628 of 681 retention answers in a played run were the discount, MRR bled
@@ -84,7 +84,7 @@ const RETAIN_DISCOUNT_PCT := 0.15       # "İndirim ver" MRR cut fraction
 const RETAIN_SAT_BUMP := 8              # satisfaction relief from a discount
 # Retention brand/reputation deltas (every option touches brand/reputation, B.3).
 const RETAIN_PROMISE_REP := 1
-# Event revision 2026-09: the stall's cost moved from BRAND to REPUTATION (a private
+# The stall's cost moved from BRAND to REPUTATION (a private
 # credibility cost, like the discount's). The card carries `add_reputation -1`; this is the
 # number the smoke guard reads.
 const RETAIN_DELAY_REP := -1
@@ -190,7 +190,7 @@ const PROMISE_PARTIAL_SAT := -5         # soft penalty for a late (post-deadline
 # session and left alone here.
 const PROMISE_KEPT_TOLERANCE := -5
 const PROMISE_BROKEN_TOLERANCE := 5
-# Event revision 2026-09: the ratchet above had no ceiling. Measured in the 730-day probe,
+# The ratchet above had no ceiling. Measured in the 730-day probe,
 # accounts with a few broken words sat at tolerance 57-100 against a best-case target of 47:
 # satisfiable by no product, back in Risk every 21 days, forever. A broken word makes an
 # account pickier, never impossible — tolerance stops this far above where it was seeded.
@@ -198,7 +198,7 @@ const PROMISE_TOLERANCE_CEILING := 10
 
 
 # ======================= Stage D — Customer Success ==========================
-# B4 (direktör hükmü 2026-08-27) — HESAP KAPASİTESİ YILDIZDAN TÜRER, ve tek çift sabitten.
+# HESAP KAPASİTESİ YILDIZDAN TÜRER, ve tek çift sabitten (direktör hükmü 2026-08-27).
 # Çapa örnekleri direktörün kendi sayıları: 1★ → 6 · 1,5★ → 7 · 2★ → 8. [K]
 #
 # Eski merdiven (0-2 → 3, 3-5 → 4, …) puanı üçe bölüyordu ve yarım yıldızı göremiyordu; bu
@@ -213,7 +213,7 @@ const CS_REFUSE_BRAND := 3              # brand DROP magnitude on refusing a CS'
 const CS_REFUSE_MORALE := 10            # morale DROP magnitude for that CS employee
 
 
-## B4 — KAÇ HESAP TAŞINIR: 4 + 2 × yıldız, ve sahibin KİM olduğu sorulmaz.
+## KAÇ HESAP TAŞINIR: 4 + 2 × yıldız, ve sahibin KİM olduğu sorulmaz.
 ##
 ## Aynı çağrı hem temsilci hem kurucu için kullanılır; "kurucu şu kadar taşır" diye ayrı bir
 ## sabit YOK (eski `FOUNDER_DIRECT_CAP` bu yüzden emekli). Kurucunun kapasitesi kendi MÜŞTERİ
@@ -301,19 +301,18 @@ static func expansion_seats(archetype: String) -> int:
 
 # Shared by both desks: extra people on the SAME queue interfere with each other, so rank-0
 # counts full, rank-1 counts this fraction, rank-2 that fraction squared, and so on. This is
-# role-STRUCTURAL (a queue gets crowded), which is why it is not a UYUM reading — see the
-# rapport verdict in the task plan.
+# role-STRUCTURAL (a queue gets crowded), which is why it is not a UYUM reading.
 const REP_STACK_DECAY := 0.6
 
 # --- Satış masası (SalesRepSystem) ---
-# THE §10 BOUNDARY. An archetype whose MRR band CEILING is at or under this may close
+# THE PLAYED-PITCH BOUNDARY. An archetype whose MRR band CEILING is at or under this may close
 # autonomously; anything above it enters the played pitch. Gating on the band ceiling rather
 # than the computed deal value makes the line TIER-based and un-gameable — a rep can never
 # sneak a "mid" account under it by pricing low. Bands are non-overlapping (small tops out at
 # 500, mid starts at 800), so 600 sits in the gap. The headroom is deliberately asymmetric:
 # if a balance pass raises small.high some small deals stop auto-closing, which is MORE
 # player decisions and harmless; if it lowered mid.low, mid deals would start auto-closing,
-# which is an actual §10 violation. sales_threshold_separates_tiers guards the gap.
+# which is MRR that no played pitch earned. sales_threshold_separates_tiers guards the gap.
 const AUTONOMOUS_CLOSE_MRR_MAX := 600
 # Leads/day per HIZ point of the ranked sales team. ANCHOR: the founder's own "Aday bul"
 # button is 2 leads / 5 days = 0.40/day (sales_tab.gd:13-14). A mid rep (HIZ 6) sits at 0.36
@@ -334,7 +333,7 @@ const AUTO_CLOSE_MRR_FRAC := 0.5
 const AUTO_CLOSE_MRR_PER_EXPERTISE := 0.04
 
 # --- Müşteri masası (CustomerRepSystem) ---
-# CS_PACE_PER_SLOT EMEKLİ (B4, 2026-08-27). Kapasite artık puanı bir bölene değil YILDIZA
+# CS_PACE_PER_SLOT EMEKLİ (2026-08-27). Kapasite artık puanı bir bölene değil YILDIZA
 # bağlı (`account_capacity`), ve iki sabit yerine tek çift sabit var. Adı kalibrasyon
 # defterinde greplenebilir kalsın diye bu satır bırakıldı; değerin kendisi silindi.
 # The founder onboards every new account personally; delegation begins once it settles.
@@ -395,8 +394,8 @@ const TRUST_OFFSET_DECAY_PER_DAY := 0.4   # -12 → 0 in 30 days
 #     HRConstants.NOTICE_SOURCE_HR, kept here because the emitters are sales-domain). ---
 # Localized at EMIT time. The ticker stream is transient, so an item written before a
 # language switch keeps its old attribution until it scrolls off — the same accepted
-# staleness class as an already-open modal. B5 owns the ticker and may move this to a
-# key rendered at display time when it does.
+# staleness class as an already-open modal. The ticker may later move this to a key
+# rendered at display time.
 static func notice_source_sales() -> String:
 	return TranslationServer.translate("NOTICE_SRC_SALES")
 

@@ -1,10 +1,10 @@
 class_name FinanceSystem
 extends RefCounted
 
-# Pure-logic system per TECH_SPEC §8.3 — no scene dependency, no instance.
-# Driven by TimeManager.daily_tick slot 5 (TECH_SPEC §8.2 ordered dispatch).
+# Pure-logic system — no scene dependency, no instance.
+# Driven by TimeManager.daily_tick slot 5 (ordered dispatch).
 #
-# Responsibilities (PROJECT_SPEC §5.3):
+# Responsibilities:
 #   - Compute daily revenue from MRR (mrr / 30)
 #   - Compute daily burn as the sum of named categories
 #   - Apply net flow (revenue − burn) to GameState.cash
@@ -12,7 +12,7 @@ extends RefCounted
 #
 # Mutations flow only through GameState setters → EventBus signals →
 # scenes update themselves. FinanceSystem never touches scenes or signals
-# directly (one-way dataflow, TECH_SPEC §6.2).
+# directly (one-way dataflow).
 #
 # Burn breakdown defaults: $50/day baseline for the pressure-from-day-one start
 # ($10K cash, ~6.6 months runway). The WHOLE baseline is the founder's own cost —
@@ -44,7 +44,7 @@ const STARTING_BURN_BREAKDOWN := {
 static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
 
 # The standing burn categories. The ids above are internal and English; rendering them raw
-# would break the Content Law against internal codes on screen. The words now live in
+# would put internal codes on screen. The words now live in
 # strings.csv as FIN_BURN_<ID>, derived by burn_category_label — so this list only has to say
 # which ids are legal, and the "unknown id screams" guarantee is kept.
 const BURN_IDS := ["salaries", "overtime", "founder", "marketing", "office", "servers"]
@@ -161,7 +161,7 @@ static func daily_tick() -> void:
 	# 3. Net flow applied once — single set_cash call → single signal pass
 	var net: int = daily_revenue - total_burn
 	var new_cash: int = GameState.cash + net
-	# Calendar-month ledger accrual (Calibration Round A §3/§9): the same figures that move
+	# Calendar-month ledger accrual: the same figures that move
 	# the cash, once per day, before the sample so the close reads a settled month.
 	GameState.accrue_month_flow(daily_revenue, total_burn, new_cash)
 	# Curve sample BEFORE set_cash: signals are synchronous, so the cash_changed repaint
@@ -181,7 +181,7 @@ static func daily_tick() -> void:
 # (nakit eksiye düşebilir — mevcut iflas baskısıyla aynı kanal); iptal + yeniden
 # commit YENİDEN tahsil eder (yanan yanmıştır — working call). `label` ARTIK gerçekten
 # kaydediliyor: one_time_today ledger'ına yazılır ve gider dökümünde satır olur
-# (Calibration Law 3 — oyuncu parasının nereye gittiğini okuyabilmeli).
+# (oyuncu parasının nereye gittiğini okuyabilmeli).
 
 static func apply_one_time_cost(amount: int, label: String) -> void:
 	if amount <= 0:
@@ -191,7 +191,7 @@ static func apply_one_time_cost(amount: int, label: String) -> void:
 	# COST_LABEL_HIRE, which collapses one whole search into one line.
 	one_time_today[label] = int(one_time_today.get(label, 0)) + amount
 	record_transaction(label, -amount)
-	GameState.accrue_month_expense(amount)   # an outgoing of the open month (Calibration Round A §9)
+	GameState.accrue_month_expense(amount)   # an outgoing of the open month
 	# set_cash LAST: its cash_changed emit is synchronous, and repaints triggered by it
 	# must read both ledgers already-appended (the old emit-first order served the finance
 	# tab a pre-append one_time_today for one frame).
@@ -238,7 +238,7 @@ static func set_burn_category(category: String, value: int) -> void:
 		push_warning("[FinanceSystem] Unknown burn category: %s" % category)
 		return
 	burn_breakdown[category] = max(value, 0)
-	# Stale-mirror fix (§E-D.2): refresh the cached GameState.daily_burn NOW so runway /
+	# Stale-mirror fix: refresh the cached GameState.daily_burn NOW so runway /
 	# TopBar / VCPitch reflect a marketing-spend change this tick, not only next daily tick.
 	GameState.set_daily_burn(compute_total_burn())
 

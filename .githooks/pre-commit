@@ -19,11 +19,10 @@
 #   2. Localization residue. Turkish literals in scripts/ and scenes/ are the one defect class
 #      this project keeps re-acquiring, and loc_residue.gd exists specifically to find them.
 #
-# NOT gated here: the 278-case smoke suite. It takes hours. It is a boundary gate, run by hand
-# at the three points the rebuild plan names, and putting it in a commit hook would only teach
-# everyone to pass --no-verify.
+# NOT gated here: the 278-case smoke suite. It takes hours. It is a boundary gate, run by hand,
+# and putting it in a commit hook would only teach everyone to pass --no-verify.
 #
-# There is no CI. This repo has one folder and one branch by ruling (CLAUDE.md's DELIVERY LAW),
+# There is no CI. This repo has one folder and one branch by ruling,
 # and no pull-request flow for a workflow to trigger on — so this hook is the whole mechanical
 # gate, and it is deliberately small enough that nobody wants to skip it.
 

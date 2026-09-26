@@ -1,11 +1,11 @@
 extends Node
 
-# AudioManager — the game's audio engine (TECH_SPEC §8.3). Owns the bus graph
+# AudioManager — the game's audio engine. Owns the bus graph
 # (Master → Music, SFX) and the single AudioStreamPlayer for the looping
 # background track.
 #
 # Preference OWNERSHIP is split on purpose: this node is the live audio engine
-# and public API; the persisted values live in the Settings autoload (§6.1) under
+# and public API; the persisted values live in the Settings autoload under
 # the keys declared in Settings.DEFAULTS. On boot we read them from Settings; on
 # every change we apply the audio AND write back through Settings. Autoload order
 # matters — AudioManager is registered AFTER Settings so Settings._ready() has
@@ -138,7 +138,7 @@ func get_music_volume() -> float:
 
 ## Ana ses — bus 0 (Master). No signal: nothing outside the settings panel reflects
 ## it today, and the panel reads the getter. (EventBus.music_* already fire into
-## the void; two more unheard signals would be dead weight — audit S3-5.)
+## the void; two more unheard signals would be dead weight.)
 func set_master_volume(v: float) -> void:
 	_master = clampf(v, 0.0, 1.0)
 	_apply_master()

@@ -176,7 +176,7 @@ const TICKER_NEWSWORTHY_STAR := 3          # [ÇALIŞMA] a 3★ signing is news
 # §7.3 "Prestij: haber değeri VE MARKA ETKİSİ". A newsworthy signing (whale, above the
 # company's league, or the run's first 3★) reached the ticker but never the brand, which left
 # brand with no faucet at all outside a handful of cards while churn, broken words and VC
-# rejections all drain it — and brand ≥ 25 is part of the Series A door (Event revision 2026-09).
+# rejections all drain it — and brand still moves conviction in the Series A meeting.
 const PRESTIGE_SIGNING_BRAND := 3           # [ÇALIŞMA]
 
 

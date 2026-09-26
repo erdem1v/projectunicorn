@@ -1,14 +1,14 @@
 class_name MeetingScene
 extends Control
 
-# Full-screen cinematic dialogue shell (Spec 5). A PURE VIEW: it renders a view_state
+# Full-screen cinematic dialogue shell. A PURE VIEW: it renders a view_state
 # dict and emits choice intents — nothing else. Reads no autoloads except UiTokens; all
-# rules live in the future consumer (Spec 4's PitchSystem for VC pitches, later the B2B
+# rules live in the future consumer (the PitchSystem for VC pitches, later the B2B
 # sales system). The same .tscn serves both because the view encodes no domain
-# assumptions it never received — the reuse contract (§5).
+# assumptions it never received — the reuse contract.
 #
-# process_mode = ALWAYS (.tscn) so it stays interactive on the paused tree (ledger 6).
-# Ledger 11: no default focus; number keys 1-4 and mouse clicks select; a blind
+# process_mode = ALWAYS (.tscn) so it stays interactive on the paused tree.
+# No default focus; number keys 1-4 and mouse clicks select; a blind
 # Enter/Space on open does nothing.
 
 signal choice_selected(id: String)
@@ -41,7 +41,7 @@ func _ready() -> void:
 	# Colors from tokens (never inline in the .tscn) so the grep gate stays clean.
 	_room_fallback.color = UiTokens.DIALOGUE_BG
 	_scrim.color = UiTokens.SCRIM_ROOM
-	_withdraw.focus_mode = Control.FOCUS_NONE          # ledger 11 — no keyboard focus target
+	_withdraw.focus_mode = Control.FOCUS_NONE          # no keyboard focus target
 	_withdraw.pressed.connect(_on_withdraw_pressed)
 	# Simple fade-in on mount (anything richer is a later polish phase).
 	modulate = Color(1, 1, 1, 0)
@@ -141,8 +141,8 @@ func _on_withdraw_pressed() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# Deliberate number-key selection (1-4) — allowed by override §2.3. Enter/Space are
-	# NOT bound, so a blind press does nothing.
+	# Deliberate number-key selection (1-4) is allowed. Enter/Space are NOT bound, so a
+	# blind press does nothing.
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	var idx := -1
@@ -164,7 +164,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 # ============================================================================
-# Debug fixtures (§6) — literal view_state dicts, no autoload reads. game_shell
+# Debug fixtures — literal view_state dicts, no autoload reads. game_shell
 # builds these and emits them through EventBus; main.gd mounts + populates.
 # ============================================================================
 

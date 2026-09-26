@@ -159,7 +159,7 @@ static func _typed_tags(tags: Array) -> Array[String]:
 ## (oda_layout.gd:198). The MODEL is uncapped — §11.4 is right that a desk needs no capacity
 ## limit once every paper has a clock — and this decides which three are shown.
 ##
-## URGENCY WINS A SLOT (approved amendment A3). `EvPapers.ordered()` sorts by days remaining,
+## URGENCY WINS A SLOT. `EvPapers.ordered()` sorts by days remaining,
 ## so a paper inside its last three days is always in the visible set and cannot run its clock
 ## down behind the overflow chip. A consequence that lands off-screen is not a consequence.
 static func desk_papers(visible_slots: int = 3) -> Array:
@@ -194,7 +194,7 @@ static func desk_overflow(visible_slots: int = 3) -> int:
 ## 1. A Dictionary  -> variant text: {by_seam, variants}. The Series A gate already rewrites
 ##    its own body by decline count (phase_gate_system.gd:266-276), so variant text was
 ##    shipping in the game before the schema had a word for it. This is
-##    EVENT_POOL_DESIGN_v1 §5.7 delivered narrowly, for the card that needs it, rather than as
+##    variant text delivered narrowly, for the card that needs it, rather than as
 ##    a general facility nobody has asked for. A missing variant falls back to the lowest key,
 ##    so a seam that grows past the authored range degrades to the first body rather than to
 ##    an empty card.

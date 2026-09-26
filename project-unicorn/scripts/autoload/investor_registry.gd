@@ -1,12 +1,12 @@
 extends Node
 
-# Investor roster — the static truth for Series A Hunt (Spec 4 / VC_PITCH_DESIGN.md §2).
+# Investor roster — the static truth for Series A Hunt.
 # Autoload (CustomerRegistry shell) but the DATA is a const table (PhaseGate GATES style):
 # one registry feeds BOTH systems — archetype weights the meeting's check difficulties AND
-# writes the table's opening offer + patience pool (Spec 6). Consistency is free.
+# writes the table's opening offer + patience pool. Consistency is free.
 #
 # Per-run VC RUNTIME state (open/closed/callback/pending_sheet) lives on GameState.vc_states,
-# NEVER here (§7 / PhaseGate rule: static truth in the system, persistent state on GameState).
+# NEVER here (PhaseGate rule: static truth in the system, persistent state on GameState).
 #
 # Naming caution: get_investor (not get) — Object.get(prop) is reserved.
 #
@@ -83,7 +83,7 @@ const INVESTORS := [
 		"portrait_path": "res://assets/art/investors/portrait_meridian.webp",
 		"room_path": "res://assets/art/rooms/room_meridian.webp",
 	},
-	# Locked Tier-2 teaser (wishlist telegraph, §2) — no meeting, greyed card.
+	# Locked Tier-2 teaser (wishlist telegraph) — no meeting, greyed card.
 	{
 		"id": "locked_tier2",
 		"display_name": "— · Tier 2'de",

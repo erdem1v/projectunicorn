@@ -46,7 +46,7 @@ var _nakit_val: Label
 var _net_val: Label
 var _runway_val: Label
 var _runway_note: Label
-var _profit_progress: Label             # "Artıda · n/6 ay" — the profitability CONDITION's progress (Kalibrasyon Turu A §9)
+var _profit_progress: Label             # "Artıda · n/6 ay" — the profitability CONDITION's progress
 var _curve: CashCurve
 var _range_btns: Dictionary = {}   # id -> Button
 var _legend_current: Control       # "mevcut gidiş" göstergesi — net >= 0 iken gizli
@@ -81,7 +81,7 @@ func _ready() -> void:
 		# bu bir tesadüf. Nakit taşımayan ilk hisse hareketi (opsiyon havuzu, ikincil
 		# satış) barı sessizce bayat bırakırdı ve hiçbir test bunu yakalamazdı.
 		[EventBus.equity_changed, _on_state_changed],
-		# Yatırımcı iştahı (Kalibrasyon Turu A §3): büyüme serisi ay kapanışında değişir, kapı
+		# Yatırımcı iştahı: büyüme serisi ay kapanışında değişir, kapı
 		# ayrıca mandallanır ve faz ilerler — üçü de MRR'siz boya gerektirir.
 		[EventBus.month_ended, _on_state_changed],
 		[EventBus.phase_gate_reached, _on_state_changed],
@@ -118,8 +118,8 @@ func _build() -> void:
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(page)
 
-	# Başlık satırı: sayfa adı + "Yatırımcı iştahı" göstergesi (Kalibrasyon Turu A §3 —
-	# eski kilitli "TUR AÇ · SERIES A" düğmesinin ve dolarlı tooltip'inin yerine; yönetmen
+	# Başlık satırı: sayfa adı + "Yatırımcı iştahı" göstergesi (eski
+	# kilitli "TUR AÇ · SERIES A" düğmesinin ve dolarlı tooltip'inin yerine; yönetmen
 	# kararı: sayı gösterilmez, sinyal gösterilir).
 	var title_row := HBoxContainer.new()
 	page.add_child(title_row)
@@ -263,7 +263,7 @@ func _build_curve_card() -> PanelContainer:
 	_runway_note = UiFactory.make_label("", &"CaptionMuted", UiTokens.INK_MUTED)
 	_runway_note.visible = false
 	vb.add_child(_runway_note)
-	# Kalibrasyon Turu A §9: kârlılık bitişi artık her gün değerlendirilen bir KOŞUL (6 ardışık
+	# Kârlılık bitişi artık her gün değerlendirilen bir KOŞUL (6 ardışık
 	# artıda ay kapanışı + marj + ölçek); ilerlemesi burada okunur — en az bir artıda ay
 	# kapanmışsa görünür, marj/ölçek eksikse nedenini tek kelimeyle söyler.
 	_profit_progress = UiFactory.make_label("", &"CaptionMuted", UiTokens.INK_MUTED)

@@ -1112,8 +1112,8 @@ func _refresh_goal() -> void:
 			_goal_sub.text = tr("ODA_GOAL_PROGRESS").format({"met": met, "total": 3})
 			_goal_bar.value = met / 3.0 * 100.0
 		2:
-			# Kalibrasyon Turu A §3: gelir çıtasının rakamı basılmaz — kapının SİNYALİ basılır.
-			# K1–K3 (2026-09): kapı yalnız MRR; pano yalnız durumu okur. Büyüme ayı ("n/3"),
+			# Gelir çıtasının rakamı basılmaz — kapının SİNYALİ basılır.
+			# Kapı yalnız MRR; pano yalnız durumu okur. Büyüme ayı ("n/3"),
 			# marka satırı ve ilerleme çubuğu kalktı. Çubuk düğümü faz 1 ile ORTAK olduğu için
 			# silinmez, bu dalda gizlenir (faz 3 dalıyla aynı kalıp) — ağaç değişmez.
 			var sig: Dictionary = PhaseGateSystem.series_a_signal()

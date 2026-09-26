@@ -1,7 +1,7 @@
 class_name EvSeamsHR
 extends RefCounted
 
-# The `hr.` and `founder.` namespaces (docs/SEAM_REGISTRY.md §1, §6).
+# The `hr.` and `founder.` namespaces.
 #
 # Most of this file is one line per seam because Ekip rev11 already did the work: §15.3 of that
 # GDD opened a named read catalogue deliberately ahead of this engine ("Katalog Ekip'in

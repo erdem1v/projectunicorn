@@ -1,6 +1,6 @@
 extends Node
 
-# Save / load orchestration and slot management (TECH_SPEC §6.1, §10).
+# Save / load orchestration and slot management.
 #
 # Division of labour: SaveCodec translates state ⇄ JSON and owns no policy; this file owns
 # the policy — when a save is legal, where the bytes go, how a slot is named, what an
@@ -14,8 +14,8 @@ extends Node
 # not FinanceSystem's statics, not PhaseGateSystem's cached gate scene, not the four
 # meeting-local static sets. That was never a bug while "TEKRAR DENE" meant relaunching the
 # process; several of those files SAY SO in their own comments ("static var reset'i süreç
-# relaunch'una dayanır ... in-place seam SaveManager'ın işi"). The 2026-08-06 audit's Group 9
-# calls the whole pattern reset-and-persistence debt.
+# relaunch'una dayanır ... in-place seam SaveManager'ın işi"). The whole pattern is
+# reset-and-persistence debt.
 #
 # Loading turns that debt due, because a load has to put a RUNNING PROCESS into a state only
 # a restart could previously produce. Every owner missed leaks the old run into the new one
@@ -138,8 +138,8 @@ func can_save() -> bool:
 	# would make the feature permanently dead, because the Kaydet button lives inside the ESC
 	# system menu, which is itself a ModalLayer child.
 	#
-	# No scene lookups anywhere in this function (TECH_SPEC §6.2: singletons never reference
-	# scene nodes). Each condition names a real owner of mid-resolution state:
+	# No scene lookups anywhere in this function (singletons never reference scene nodes).
+	# Each condition names a real owner of mid-resolution state:
 	if not GameState.run_active:
 		return false                          # no run, or a terminal already fired
 	# The ACTIVE event only — deliberately NOT has_pending(), which is
@@ -550,7 +550,7 @@ func _is_harness_run() -> bool:
 ## command line. FLAGS ONLY: matching bare arguments would sweep in the project path, and a
 ## player who happens to install the game under a folder called "screenshots" would silently
 ## lose autosave with no message and no way to guess why.
-## `run-log` joined the list 2026-08-19 (Calibration Round A §0): the RunProbe drives whole
+## `run-log` joined the list 2026-08-19: the RunProbe drives whole
 ## 180-730 day runs headless and its daily ticks reach day_tick_completed like any other, so
 ## it was autosaving fixture worlds into the player's slots every 20 real seconds.
 static func _is_harness_arg(arg: String) -> bool:
@@ -905,7 +905,7 @@ func _migrate_assignments_to_areas(state: Dictionary) -> void:
 	# top-level `state`'ten OKUNUYOR ve `area_leads` top-level `state`'e YAZILIYORDU, oysa
 	# GameState değişkenleri `state["game_state"]` altında saklanıyor (save_codec). Yani okuma
 	# hiçbir zaman bir şey bulmadı ve yazma hiçbir zaman geri yüklenmedi. Vakası geçiyordu
-	# çünkü elle DÜZ bir sözlük kuruyordu — tam olarak §10'un "bir göç, YAZANIN yazdığı şekli
+	# çünkü elle DÜZ bir sözlük kuruyordu — tam olarak "bir göç, YAZANIN yazdığı şekli
 	# okumalıdır" dersi.
 	state.erase("job_leads")
 	var gs_v5: Variant = state.get("game_state", null)
@@ -943,7 +943,7 @@ func _legacy_job_to_area(job_id: String, stats: Dictionary) -> String:
 
 ## v6 → v7: rev 11. Beş yeni şey taşınır ve HİÇBİRİ eskisini bozmaz — §12.0'ın İŞ ataması
 ## `assigned_job_ids`e YAZILIR, eski `assigned_jobs` ALAN listesi OLDUĞU GİBİ BIRAKILIR.
-## Sebep R8: sekiz yer o diziyi doğrudan alan olarak okuyor ve anlamını yerinde değiştirmek
+## Sebep: sekiz yer o diziyi doğrudan alan olarak okuyor ve anlamını yerinde değiştirmek
 ## onları derlenmeye devam ederken ÇALIŞMAZ hâle getirirdi. Ayna Faz 2a'da türetilmeye
 ## başlar, eski dizi Faz 7'de silinir.
 ##

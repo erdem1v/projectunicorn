@@ -1,7 +1,7 @@
 class_name EvSeamsFinance
 extends RefCounted
 
-# The `finance.` namespace (docs/SEAM_REGISTRY.md §4).
+# The `finance.` namespace.
 #
 # Unlike HR, Ürün and Ar-Ge, Finance never opened a named read surface — its numbers live as
 # public vars on GameState. So most of this file is WRAPPERS, and they are honest about it:
@@ -51,10 +51,10 @@ static func install() -> void:
 		func() -> int: return GameState.shutter_days_left,
 		"Finance", "WRAPPER; -1 when not counting, else counts down")
 
-	# The seam that kills defect 9. END_META_BANKRUPTCY_FRANK says "yedi gün" while the
+	# The seam that kills a shipped defect: END_META_BANKRUPTCY_FRANK says "yedi gün" while the
 	# constant has been 30 since the Frank v6 pass — a sentence that went stale because a
-	# number was typed into prose. §8.4's rule is that the number lives here and the copy
-	# interpolates it, so the sentence cannot lie again.
+	# number was typed into prose. The engine GDD's §8.4 rule is that the number lives here and
+	# the copy interpolates it, so the sentence cannot lie again.
 	EvSeams.register("finance.shutter_days_total", G, TYPE_INT,
 		func() -> int: return EndingsSystem.SHUTTER_DAYS,
 		"Finance", "the shutter window; card text interpolates this rather than typing it")

@@ -1,7 +1,7 @@
 class_name EventChoice
 extends Resource
 
-# EventChoice data model per TECH_SPEC §7.
+# EventChoice data model.
 # One option on a GameEvent. Plain data; the modifier list and unlock condition
 # are interpreted by EventManager's dispatchers at runtime — no logic lives in
 # the choice itself.

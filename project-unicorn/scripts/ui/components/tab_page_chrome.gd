@@ -36,8 +36,8 @@ func _build(page: Control) -> void:
 	var close_btn := Button.new()
 	close_btn.name = "CloseBtn"
 	close_btn.theme_type_variation = &"ChromeGhost"
-	# Space asla bu butona düşmesin: ui_accept blind-close yasağı (Kepenk vakası,
-	# ENDGAME_DESIGN §7 kuralı) + game_shell Space toggle'ı odak butonda takılmasın.
+	# Space asla bu butona düşmesin: ui_accept blind-close yasağı (Kepenk vakası)
+	# + game_shell Space toggle'ı odak butonda takılmasın.
 	close_btn.focus_mode = Control.FOCUS_NONE
 	close_btn.text = "%s  ✕" % tr("ODA_RETURN")
 	close_btn.pressed.connect(_on_close_pressed)

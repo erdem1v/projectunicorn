@@ -1,13 +1,13 @@
 extends Node
 
-# Customer registry per TECH_SPEC §6.1.
+# Customer registry.
 # Single source of truth for all customers (acquired accounts).
 #
-# Mutations route through registry methods. State changes emit on EventBus
-# (TECH_SPEC §13) so scenes (Sales tab, ODA) update themselves without the registry
-# knowing who is listening.
+# Mutations route through registry methods. State changes emit on EventBus so
+# scenes (Sales tab, ODA) update themselves without the registry knowing who is
+# listening.
 #
-# Tick interaction (TECH_SPEC §8.2):
+# Tick interaction:
 #   - SalesSystem.daily_tick (slot 4) reads get_total_mrr and pushes to
 #     GameState.set_mrr — TopBar listens to EventBus.mrr_changed.
 #   - FinanceSystem.daily_tick (slot 5) reads GameState.mrr (NOT this
@@ -18,9 +18,9 @@ extends Node
 
 # Manual toggle for deliberate registry integration testing. Off in normal runs
 # so a fresh game starts with zero customers and zero MRR. (B2C MRR then derives
-# from the live audience + price each hour — Economy Model v2, PROJECT_SPEC §10
-# revision.) Flip to true to restore the Nordica/Palmiye/Beykoz seed for verifying
-# Sales/Finance pipeline behavior with real data.
+# from the live audience + price each hour.) Flip to true to restore the
+# Nordica/Palmiye/Beykoz seed for verifying Sales/Finance pipeline behavior with
+# real data.
 const DEBUG_SEED := false
 
 var _customers: Dictionary = {}  # id (String) -> Customer
@@ -146,7 +146,7 @@ func get_lowest_satisfaction_customer(market: String = "") -> Customer:
 
 func get_top_customers(limit: int = 5) -> Array[Customer]:
 	# Sort by MRR desc; tiebreak by id (string) for deterministic order
-	# (matters for future seeded-RNG replay per TECH_SPEC §10.4).
+	# (matters for future seeded-RNG replay).
 	var active: Array[Customer] = get_active()
 	active.sort_custom(func(a, b):
 		if a.mrr != b.mrr:
@@ -339,7 +339,7 @@ func set_pain_feature(customer_id: String, feature_id: String) -> void:
 
 
 func set_retain_discounts(customer_id: String, n: int) -> void:
-	# HIDDEN discount counter (Calibration Round A §8) — no signal; the locked row the
+	# HIDDEN discount counter — no signal; the locked row the
 	# factory renders past the cap is what the player sees. Counts BOTH discount channels
 	# (the retention card and the CS complaint/renewal cards), because both resolve through
 	# B2BSalesSystem.apply_discount.
@@ -350,7 +350,7 @@ func set_retain_discounts(customer_id: String, n: int) -> void:
 
 
 func set_last_risk_exit_day(customer_id: String, day: int) -> void:
-	# HIDDEN hysteresis latch (Calibration Round A §8) — no signal; stamped by both risk-exit
+	# HIDDEN hysteresis latch — no signal; stamped by both risk-exit
 	# sites (B2BSalesSystem._recover and _tick_healthy's risk branch). -1 = never left Risk.
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:
@@ -359,7 +359,7 @@ func set_last_risk_exit_day(customer_id: String, day: int) -> void:
 
 
 func set_last_expansion_day(customer_id: String, day: int) -> void:
-	# HIDDEN expansion latch (K2) — no signal; the phase change that accompanies it is
+	# HIDDEN expansion latch — no signal; the phase change that accompanies it is
 	# what the UI repaints on. -1 means the moment has not happened. Like the support
 	# request latch, this lives in state the SYSTEM owns rather than in a property of the
 	# event, because the old enqueue path bypassed one_shot and cooldown entirely. The
@@ -400,7 +400,7 @@ func set_cs_pinned(customer_id: String, pinned: bool) -> void:
 #     phantom customer_added signals fire on startup) ---
 
 func _seed_debug_customers() -> void:
-	# DEBUG SEED — names from RightPanel placeholder turn; not in PROJECT_SPEC.
+	# DEBUG SEED — names from RightPanel placeholder turn.
 	# Remove when prospect/close-deal flow + data/companies/customers.json exist.
 	var nordica := Customer.new()
 	nordica.id = "co_debug_nordica"

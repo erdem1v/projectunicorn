@@ -43,8 +43,7 @@ var mode: String = "day"
 @export var micro_strength: float = 1.0
 ## Multiplier on the hemisphere (sky/ground) ambient energy. three's HemisphereLight is
 ## UNOCCLUDED (every up-facing point gets the full sky); Godot's baked sky is occluded by the real
-## walls, so matching the sealed shadow depth needs a little more sky. Measured, not guessed —
-## see docs/audits/AUDIT_2026-08-19_oda3d_render_spike.md.
+## walls, so matching the sealed shadow depth needs a little more sky. Measured, not guessed.
 @export var ambient_scale: float = 0.7
 ## Exposure = source toneMappingExposure (1.05 day / 1.0 night) × these. Godot's ACES fit runs
 ## brighter than three's ACESFilmic at the same exposure; the factors were set from the region

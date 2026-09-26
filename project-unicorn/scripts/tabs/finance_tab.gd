@@ -1,13 +1,13 @@
 extends Control
 
-# Finance tab host (Spec 6 §7 + Finance Tab v1). A light-register shell with a segmented
+# Finance tab host (Finance Tab v1). A light-register shell with a segmented
 # control switching two sub-pages under one parent (the product_tab _show_state pattern):
 #   * Özet    — FinanceOzetView (Finance Tab v1 dashboard: nakit eğrisi, aylık akış,
 #     gider dağılımı, son işlemler, cap table, mentor uyarısı). The view owns its own
 #     signals and refresh; this host only tells it when it becomes the visible page.
 #   * Yatırım — the Series A Hunt panel (nests HuntTab.tscn). PHASE-GATED: locked before phase 3
 #     with the "Series A Hunt'ta açılır" telegraph, unlocked on phase_changed(3). This relocates
-#     Spec 4's standalone Yatırım rail tab (the lock moved off the rail onto this selector).
+#     the old standalone Yatırım rail tab (the lock moved off the rail onto this selector).
 
 const HUNT_TAB := preload("res://scenes/tabs/HuntTab.tscn")
 

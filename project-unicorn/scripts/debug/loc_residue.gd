@@ -1,4 +1,4 @@
-# LOC RESIDUE CHECKER — the BILINGUAL BIRTH LAW's proof-command (CLAUDE.md, Content & Language Laws).
+# LOC RESIDUE CHECKER — the BILINGUAL BIRTH LAW's proof-command (CLAUDE.md).
 # Headless, read-only, exits NONZERO on any hit:
 #   godot --headless --path . -s res://scripts/debug/loc_residue.gd
 #
@@ -7,7 +7,7 @@
 #      carrying a Turkish-charclass character.
 #   2. Script literals: ASCII-only Turkish — words whose Turkish identity dies under İ/ı folding
 #      (KAZANILDI, MASADAN, DEVAM...) and are invisible to check 1. Wordlist curated from the
-#      2026-08-10 corpus tokenization (docs/audits/localization_phase1_2026-08-07.md §4.9); whole-word,
+#      2026-08-10 corpus tokenization; whole-word,
 #      case-insensitive, tested INSIDE quoted literals only (identifiers never match).
 #   3. Scene text: every non-empty text/tooltip_text/placeholder_text value in scenes/ must be a
 #      localization key THAT ACTUALLY EXISTS in strings.csv, or pure glyph/numeric filler.
@@ -52,7 +52,7 @@ const SKIP_PREFIXES := [
 ]
 
 # ASCII-only Turkish wordlist — folded forms with no Turkish charclass character left.
-# Sources: corpus tokenization fold (high-frequency stems) + the Phase 1 §2.6 curated set.
+# Sources: corpus tokenization fold (high-frequency stems) + a hand-curated set.
 # English-colliding tokens (RISK, TIER, TRACTION, TEST, NET...) deliberately absent.
 const TR_ASCII_WORDS := [
 	"ACIK", "ADIM", "ALIM", "ARAYIS", "ARAYISI", "ARTIDA", "AYLIK", "BASKA", "BASLA", "BASLAT",
@@ -66,13 +66,13 @@ const TR_ASCII_WORDS := [
 	"SUREC", "SUREKLI", "SURUYOR", "TAMAM", "TASARIM", "TEKLIF", "TOPLANTI", "UCRET", "URUN",
 	"VAZGEC", "YAKINDA", "YALNIZ", "YATIRIM", "YATIRIMCI", "YATIRIMCILAR", "YAYINLA", "YAZILIM",
 	"YONETIM", "YUKSEK", "ZAYIF",
-	# EXTENDED 2026-08-19 (B1b). The curated list was measurably incomplete: 15 word kinds
-	# across 29 literal sites were pure-ASCII Turkish the charclass cannot see and the list
-	# did not name — "Oyala" among them, which Phase 1 §2.6 had itself cited as the example
+	# EXTENDED 2026-08-19. The curated list was measurably incomplete: 15 word kinds across
+	# 29 literal sites were pure-ASCII Turkish the charclass cannot see and the list did not
+	# name — "Oyala" among them, which the original curation had itself cited as the example
 	# of this blind spot and then not included. An under-reporting meter is worse than a
-	# loud one, because B7's whole gate is the word "zero": these had to go in BEFORE six
-	# more batches were measured against it. Adding them RAISES the count first, then the
-	# batches pay it down.
+	# loud one, because the localization pass's final gate is the word "zero": these had to
+	# go in BEFORE six more batches were measured against it. Adding them RAISES the count
+	# first, then the batches pay it down.
 	# Still deliberately absent: English-colliding tokens, and "ARA"/"GIDER" which are a
 	# month abbreviation and a shot-kind id respectively, i.e. data rather than copy.
 	"DURDUR", "GELIR", "IMZA", "KABUL", "KAPANDI", "KAPAT", "KARAR", "KASA", "MASAYA",
@@ -245,7 +245,7 @@ func _check_script_line(path: String, line_no: int, line: String) -> void:
 		# A NAMESPACED IDENTIFIER is an address too. The event engine's read surface is named in
 		# the GDD's own vocabulary — `musteri.satisfaction`, `urun.is_live`, `arge.tier` — and
 		# those are Turkish words by design: the registry documents them, content authors type
-		# them, and SEAM_REGISTRY.md is the list. They are not copy and they cannot become copy,
+		# them. They are not copy and they cannot become copy,
 		# because nothing player-facing looks like `lower_snake.lower_snake`. Exempting the
 		# SHAPE rather than the files keeps this checker looking at the real strings in the same
 		# file — which is the reason its header gives for preferring per-line marks to a SKIP.

@@ -3,14 +3,14 @@ extends Control
 # GameShell root. process_mode = ALWAYS (set in GameShell.tscn) so this handler
 # runs even while the tree is paused — that's what lets Space UN-pause the game.
 #
-# B1: Space = pause/resume toggle. We use _input (not _unhandled_input) so a
+# Space = pause/resume toggle. We use _input (not _unhandled_input) so a
 # focused Button can't swallow Space via ui_accept before we see it. Guards keep
 # Space typing a real space inside text fields, and defer to main.gd's pause
 # state machine while a blocking modal is open.
 
-# Spec 5 debug: alternates MeetingScene full ↔ extreme-length fixture across presses.
+# Debug: alternates MeetingScene full ↔ extreme-length fixture across presses.
 var _meeting_fixture_toggle: bool = false
-# Spec 4 debug: cycles the roster across Shift+F5 presses.
+# Debug: cycles the VC roster across Shift+F5 presses.
 var _vc_debug_idx: int = 0
 # ODA rework: tab_changed aynası — "" = oda görünür, sekme yok. Esc yönlendirmesi
 # buradan okur (LeftTabs'a path-coupling yok).
@@ -65,7 +65,7 @@ func _input(event: InputEvent) -> void:
 		else:
 			EventBus.quickload_requested.emit()
 		return
-	# Debug endgame forcing (F1-F11, debug builds only) — ENDGAME_DESIGN.md §7.8:
+	# Debug endgame forcing (F1-F11, debug builds only):
 	# every ending testable from day one, series_a_closed settable pre-VC-system.
 	if OS.is_debug_build() and key.keycode >= KEY_F1 and key.keycode <= KEY_F11:
 		get_viewport().set_input_as_handled()
@@ -87,7 +87,7 @@ func _input(event: InputEvent) -> void:
 			EventBus.debug_onboarding_retrigger_requested.emit()
 			return
 		if key.shift_pressed and key.keycode == KEY_F2:
-			# Shift+F2 = MeetingScene debug fixture (Spec 5). Plain F2 = phase jump and
+			# Shift+F2 = MeetingScene debug fixture. Plain F2 = phase jump and
 			# _debug_endgame_key ignores shift, so intercept here. Guard: don't stack on
 			# an already-open modal. Alternates full ↔ extreme-length across (re)opens.
 			var ml_mtg: Node = get_node_or_null("ModalLayer")
@@ -99,7 +99,7 @@ func _input(event: InputEvent) -> void:
 			EventBus.meeting_scene_requested.emit(vs)
 			return
 		if key.shift_pressed and key.keycode == KEY_F5:
-			# Shift+F5 = begin a REAL VC pitch (Spec 4), cycling the 4 VCs across presses.
+			# Shift+F5 = begin a REAL VC pitch, cycling the 4 VCs across presses.
 			# Plain F5 = cash -1000; _debug_endgame_key ignores shift, so intercept here.
 			var ml_vc: Node = get_node_or_null("ModalLayer")
 			if ml_vc != null and ml_vc.get_child_count() > 0:
@@ -111,7 +111,7 @@ func _input(event: InputEvent) -> void:
 			VCPitchSystem.begin_meeting(String(inv.get("id", "")))
 			return
 		if key.shift_pressed and key.keycode == KEY_F6:
-			# Shift+F6 = open the Term Sheet Table (Spec 6) directly on Anchor (grants Anchor +
+			# Shift+F6 = open the Term Sheet Table directly on Anchor (grants Anchor +
 			# Nexus, the mockup's leverage state). No-stack guard; plain F6 → endgame keys.
 			var ml_tt: Node = get_node_or_null("ModalLayer")
 			if ml_tt != null and ml_tt.get_child_count() > 0:
@@ -120,14 +120,14 @@ func _input(event: InputEvent) -> void:
 			return
 		if key.keycode == KEY_F11:
 			# F11 = force month summary with LIVE data; Shift+F11 = extreme-value
-			# layout fixture (Spec 3 checklist 11 stays reproducible).
+			# layout fixture (keeps the extreme-value layout check reproducible).
 			print("[Debug] F11 → force month summary (extreme=%s)" % key.shift_pressed)
 			MonthSummarySystem.debug_force_summary(key.shift_pressed)
 			return
 		_debug_endgame_key(key.keycode)
 		return
 	# Speed control: Space toggles pause, 1-3 pick a running speed off the ladder (4 does
-	# nothing since the 4x rung was removed — Calibration Round A §10). Both share the two
+	# nothing since the 4x rung was removed). Both share the two
 	# guards below. Note 1-4 are ALSO dialogue-choice keys inside MeetingScene /
 	# TermSheetTable — Guard 2 is what keeps that unambiguous, since those only exist while
 	# a modal is mounted.
@@ -151,7 +151,7 @@ func _input(event: InputEvent) -> void:
 	var modal_layer: Node = get_node_or_null("ModalLayer")
 	if modal_layer != null and modal_layer.get_child_count() > 0:
 		return
-	# Esc: açık tam-sayfa sekmeyi kapat → odaya dön (ODA rework §2; ✕ ve
+	# Esc: açık tam-sayfa sekmeyi kapat → odaya dön (✕ ve
 	# aktif-sekmeye-tekrar-tıklamayla aynı kanal). Odadayken bilinçli no-op ve
 	# event HANDLED İŞARETLENMEZ, ki Esc'i bekleyen başka bir dinleyici varsa
 	# alabilsin. (Gerekçe eskiden OdaView'un _unhandled_input'unu adlandırıyordu;
@@ -196,7 +196,7 @@ func debug_force_month_extreme() -> void:
 
 
 # Argless MeetingScene relays for MCP runtime verification (the bridge can't pass a
-# Dictionary; Shift+F2 covers real keyboards). Spec 5, debug builds only.
+# Dictionary; Shift+F2 covers real keyboards). Debug builds only.
 func debug_force_meeting() -> void:
 	if OS.is_debug_build():
 		EventBus.meeting_scene_requested.emit(MeetingScene.debug_fixture_full())
@@ -207,7 +207,7 @@ func debug_force_meeting_long() -> void:
 		EventBus.meeting_scene_requested.emit(MeetingScene.debug_fixture_long())
 
 
-# Argless VC-meeting relay for MCP runtime verification (Spec 4). Begins a real pitch
+# Argless VC-meeting relay for MCP runtime verification. Begins a real pitch
 # with the given VC (mounts MeetingScene via meeting_scene_requested → main.gd).
 func debug_force_vc_meeting(vc_id: String = "anchor") -> void:
 	if OS.is_debug_build():
@@ -255,7 +255,7 @@ func _debug_endgame_key(keycode: Key) -> void:
 			GameState.vc_rejections = 3
 			GameState.set_mrr(0)
 		KEY_F8:
-			# Kalibrasyon Turu A §9: kârlılık KOŞULU — 6 artıda ay kapanışı (marj %20) + MRR
+			# Kârlılık KOŞULU — 6 artıda ay kapanışı (marj %20) + MRR
 			# tabanı tohumlanır; canlı MRR slot-4 köprüsüyle yazıldığından bir sonraki günlük
 			# tikte bitiş ateşler (eski F8'in de notuydu).
 			print("[Debug] F8 → kârlılık koşulu ön şartları (%d artıda ay, marj %%20, MRR %d)" % [

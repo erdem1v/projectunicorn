@@ -35,13 +35,12 @@ const MODE_ORDER: Array[String] = [MODE_FULLSCREEN, MODE_BORDERLESS, MODE_WINDOW
 const MODE_KEYS: Array[String] = ["SET_WINDOW_FULLSCREEN", "SET_WINDOW_BORDERLESS", "SET_WINDOW_WINDOWED"]
 
 # --- Resolutions ------------------------------------------------------------
-# docs/TECH_SPEC.md §14.1's supported list, in order. 1280×720 is the documented
-# MINIMUM, so it is never filtered away even on a smaller-than-expected screen.
-## §14.1 zaten 16:10 ve 32:9'u DESTEKLENİYOR diye sayıyordu ama listede ikisinden
-## de tek satır yoktu — spec ile kod bu noktada ayrışmıştı. Eklendi. Yine de bu
-## tablo tek başına yeterli DEĞİL: gerçek panel boyutları (dizüstü 2880x1800,
-## 3024x1964 vb.) hiçbir sabit listeye sığmaz, o yüzden available_resolutions()
-## ölçülen native'i listeye AYRICA ekler.
+# The supported list, in order. 1280×720 is the MINIMUM, so it is never filtered
+# away even on a smaller-than-expected screen.
+## 16:10 ve 32:9 zaten DESTEKLENEN oranlardı ama listede ikisinden de tek satır yoktu.
+## Eklendi. Yine de bu tablo tek başına yeterli DEĞİL: gerçek panel boyutları
+## (dizüstü 2880x1800, 3024x1964 vb.) hiçbir sabit listeye sığmaz, o yüzden
+## available_resolutions() ölçülen native'i listeye AYRICA ekler.
 const RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(1280, 720),
 	Vector2i(1366, 768),
@@ -96,8 +95,8 @@ const BASE_VIEWPORT := Vector2(1920.0, 1080.0)
 ## (şirket adı soldan, 3x/4x sağdan düşüyordu). Terminal reskin'iyle TopBar'a
 ## yoğunluk kademesi eklendi (top_bar.gd `_apply_density`, eşik 1600): dar
 ## viewport'ta ad gizlenir, sütun boşlukları 28→18 daralır, tarih kısalır ve HİÇBİR
-## sayı ya da kontrol kaybolmaz. Ölçülen taban 1280×720 — TECH_SPEC §14.1'in
-## belgelenmiş minimum penceresi. Bu yüzden kapı artık ORAYA bakıyor:
+## sayı ya da kontrol kaybolmaz. Ölçülen taban 1280×720 — desteklenen en
+## küçük pencere. Bu yüzden kapı artık ORAYA bakıyor:
 ## 1920 pencere → %125 (1536×864) yasal. (%150 de bu kapıdan GEÇİYORDU — 1280×720
 ## tam sınırda — ama adım merdivenden kaldırıldı: kapı kabuğu ölçüyor, modalleri
 ## değil, ve SettingsModal 720px'e sığmıyordu. Bkz. UI_SCALE_STEPS.)
@@ -262,7 +261,7 @@ static func default_resolution() -> Vector2i:
 const ASPECT_EPSILON := 0.05
 
 
-## The §14.1 list filtered to what this screen can actually show, PLUS the screen's
+## The RESOLUTIONS list filtered to what this screen can actually show, PLUS the screen's
 ## own native mode. The filter used to be subtractive only, so a panel whose native
 ## size was not one of the hardcoded entries (every 16:10, 32:9 and laptop panel)
 ## simply could not be selected. The minimum (1280×720) always survives so the
@@ -407,7 +406,7 @@ static func _is_ladder_step(step: float) -> bool:
 ## content_scale_factor > 1 does not magnify into a bigger window — it SHRINKS the
 ## logical viewport (measured: a 1920×1080 window at 150% reports a 1280×720 viewport
 ## and a 1280-wide TopBar). Everything in this project is authored against the 1920
-## design width, and TECH_SPEC §14.4's compact-mode breakpoints were never built, so a
+## design width, and compact-mode breakpoints were never built, so a
 ## logical viewport under 1920 overflows its chrome: at 150% on a 1080p screen the
 ## TopBar loses the company name off the left edge and the 3x/4x speed buttons off the
 ## right. Speed control disappearing is a functional loss, not a cosmetic one.
@@ -415,7 +414,7 @@ static func _is_ladder_step(step: float) -> bool:
 ## So an enlargement step is legal only where the logical viewport still covers the
 ## design: 1920 window → 100% only; 2560 → up to 125%; 3840 → the whole ladder.
 ## This is a HARDWARE gate, not a permanent ceiling — it lifts on its own the day
-## §14.4 responsive breakpoints land, with no change to this file.
+## responsive breakpoints land, with no change to this file.
 static func _fits_design_width(step: float, win: Vector2i) -> bool:
 	if win.x <= 0 or win.y <= 0:
 		return true   # boyut henüz bilinmiyor (headless/erken boot) — kapıyı kapatma

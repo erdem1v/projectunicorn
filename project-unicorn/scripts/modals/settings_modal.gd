@@ -193,8 +193,8 @@ func _on_vsync_toggled(on: bool) -> void:
 ## değiştirilebilir.") kilidin NE olduğunu söylüyordu, NEDEN'ini değil — kilitli bir
 ## kontrol de bozuk bir kontrol gibi okunuyordu. Kenarlıksız modun kendi gerekçesi var
 ## (pencere ekranın doğal çözünürlüğünü kaplar) ve kendi satırını hak ediyor.
-## `SET_RESOLUTION_BORDERLESS` 2026-08-19'da CSV'ye indi (Kalibrasyon Turu A §12 — keskinlik
-## turunun ertelediği satır). `_resolution_note_key` anahtarı çözülüyorsa seçer; çözülmezse
+## `SET_RESOLUTION_BORDERLESS` 2026-08-19'da CSV'ye indi (keskinlik turunun ertelediği
+## satır). `_resolution_note_key` anahtarı çözülüyorsa seçer; çözülmezse
 ## (eski bir CSV) varsayılan metne düşer — bu fallback mekanizmanın kendisidir, kaldırılmaz.
 const RES_NOTE_DEFAULT := "SET_RESOLUTION_LOCKED"
 const RES_NOTE_BORDERLESS := "SET_RESOLUTION_BORDERLESS"

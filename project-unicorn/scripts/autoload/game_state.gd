@@ -1,8 +1,8 @@
 extends Node
 
-# Core run state per TECH_SPEC §6.1.
-# Defaults reflect PROJECT_SPEC §3.3 Phase 1 — Bootstrap start.
-# All mutations go through setter methods so signal flow stays one-directional (§6.2).
+# Core run state.
+# Defaults reflect the Phase 1 (Bootstrap) start.
+# All mutations go through setter methods so signal flow stays one-directional.
 
 const DAYS_PER_MONTH := 30  # Single home for the monthly → daily conversion; FinanceSystem reads it too
 
@@ -21,11 +21,11 @@ const START_DATE := {"year": 2026, "month": 1, "day": 1}
 var company_name: String = "Unicorn Inc."
 var origin: String = "self_made"      # "self_made" | "heir" | "corporate_refugee" (demo: self_made only)
 var subgenre: String = "ai"           # "ai" | "saas" | "social" (demo: ai|saas only)
-var logo_style: String = "minimalist" # "minimalist" | "tech" | "playful" | "serious" (PROJECT_SPEC §3.1)
+var logo_style: String = "minimalist" # "minimalist" | "tech" | "playful" | "serious"
 var slogan: String = ""               # Optional free text — may be empty
 var founder_name: String = ""         # Player's name; "" means the founder Character defaults to "Founder"
 var founder_portrait: String = ""     # Portrait id (e.g. "founder_03"); art via FounderConstants.portrait_path()
-var run_seed: int = 0  # 0 = unseeded; TECH_SPEC §10.4 seeds this when run starts
+var run_seed: int = 0  # 0 = unseeded; seeded when the run starts
 # ^ THE RNG SEED. Not the funding round: that is run_seed_amount / run_seed_equity_pct /
 # seed_lead, further down. Two unrelated meanings, one word; a whole-token grep tells them
 # apart and a quick scan does not.
@@ -35,9 +35,9 @@ var cash: int = FounderConstants.STARTING_CASH
 var mrr: int = 0
 var daily_burn: int = FinanceSystem.starting_daily_burn()        # ~$1,500/month — pressure-from-day-one baseline (~6.6mo runway at start); FinanceSystem owns categorized breakdown
 var brand: int = 50              # Neutral baseline
-var reputation: int = 0          # Self-Made Founder baseline (§4.5)
+var reputation: int = 0          # Self-Made Founder baseline
 var day: int = 1
-var current_hour: int = 9        # 0-23. Day 1 starts at 09:00 (business-day-start); see TECH_SPEC §20 (2026-05-15)
+var current_hour: int = 9        # 0-23. Day 1 starts at 09:00 (business-day-start)
 var phase: int = 1               # 1=Bootstrap, 2=Traction, 3=Series A Hunt
 
 # --- World-state flags (sparse, content-defined keys) ---
@@ -88,7 +88,7 @@ const FLAG_TYPES := {
 	"critical_bug_unfixed": TYPE_BOOL,
 	"tech_debt_birikti": TYPE_BOOL,
 	"cancelled_build_prefill": TYPE_DICTIONARY,
-	"creation_draft": TYPE_DICTIONARY,   # S2-33 draft guard (Calibration Round A §16): {step, market, type, features, name}
+	"creation_draft": TYPE_DICTIONARY,   # draft guard: {step, market, type, features, name}
 	"product_path_frank_seen": TYPE_BOOL,
 	# --- Ürün rev 6.1 · HAT MODELİ ve DESTEK (§12, §8, §9, §10) -------------
 	# Kayıt şeması v9'un taşıdığı yeni alanlar (§22.5). mvp_components (düz özellik
@@ -119,7 +119,7 @@ const FLAG_TYPES := {
 	"mvp_infra_provider": TYPE_STRING,          # sağlayıcı kimliği
 	"mvp_infra_units": TYPE_INT,                # satın alınan kapasite birimi
 	# --- B2C economy ---
-	# b2c_audience is FLOAT and that is the fix for audit S3-43: sales_system's hourly tick
+	# b2c_audience is FLOAT on purpose: sales_system's hourly tick
 	# accumulated it as a float precisely so slow erosion survives instead of rounding to
 	# zero each hour, while add_b2c_audience / apply_b2c_price wrote it back as an int and
 	# threw the sub-unit accumulator away every time an event or a price change touched it.
@@ -189,23 +189,23 @@ const FLAG_TYPE_PREFIXES := {
 # reviewable decision instead of an edit inside SaveCodec's walker.
 const SAVE_EXCLUDE_FIELDS: Array[String] = []
 
-# --- Endgame state (ENDGAME_DESIGN.md §2/§3/§7 ledger item 7 — serialized set) ---
-# Fields, not systems (§7.9): slot-9 evaluator reads these; later systems
+# --- Endgame state (serialized set) ---
+# Fields, not systems: slot-9 evaluator reads these; later systems
 # (VC pitch, scandal) write them with zero retrofit. SaveManager plugs in later.
 var run_active: bool = true            # false = terminal reached; tick loop halts
 var ending_id: String = ""             # one of EndingsSystem.ENDINGS keys once run ends
-var phase_gate_ready: bool = false     # ratchet latch (§2.3) — cleared only by advance_phase()
+var phase_gate_ready: bool = false     # ratchet latch — cleared only by advance_phase()
 var pending_next_phase: int = 0        # 0 = no open gate
-var series_a_closed: bool = false      # future VC pitch system writes; debug-settable now (§7.8)
-var shutter_days_left: int = -1        # -1 inactive; SHUTTER_DAYS..0 = Kepenk counter (§4.3)
-var vc_rejections: int = 0             # closed pitch tables; future VC pitch increments (§4.5)
+var series_a_closed: bool = false      # future VC pitch system writes; debug-settable now
+var shutter_days_left: int = -1        # -1 inactive; SHUTTER_DAYS..0 = Kepenk counter
+var vc_rejections: int = 0             # closed pitch tables; future VC pitch increments
 var pivot_used: bool = false           # true → VC path permanently closed (Erdem 2026-07-13)
 var active_scandal: bool = false           # RESERVED — no scandal system yet; debug-settable
-var unmanaged_major_scandal: bool = false  # RESERVED — day-180 fork input (§4.6)
-var brand_low_since_day: int = -1      # brand-collapse 30-day window anchor (§4.4)
+var unmanaged_major_scandal: bool = false  # RESERVED — day-180 fork input
+var brand_low_since_day: int = -1      # brand-collapse 30-day window anchor
 # (cash_went_negative and net_history_90 — the Day-180 fork's inputs — were retired with the
-# fork on 2026-08-19, Calibration Round A §2. Profitability is a daily-evaluated CONDITION
-# on the calendar-month ledger, §9: a month is "Artıda" only if its net is positive AND the
+# fork on 2026-08-19. Profitability is a daily-evaluated CONDITION on the calendar-month
+# ledger: a month is "Artıda" only if its net is positive AND the
 # treasury never sampled below zero inside it — the red-day test moved from a run-lifetime
 # latch, which made the win permanently unreachable after one early Kepenk in a 24-month
 # run, to a per-month count.)
@@ -224,26 +224,26 @@ var cash_history: Array = []           # [{day: int, cash: int}]
 const TRANSACTIONS_CAP := 50           # oldest dropped beyond this
 var transactions: Array = []           # [{day: int, label: String, amount: int}]
 # sales_log: what the sales/customer desks did on their own, so the player can reconstruct a
-# cause the ticker has already scrolled past (Calibration Law 3 — the CAUSE must be readable).
+# cause the ticker has already scrolled past (the CAUSE must be readable).
 # Same ring-buffer shape as `transactions` above. Sole append point:
 # SalesSystem.record_sales_event.
 const SALES_LOG_CAP := 12              # oldest dropped beyond this
 var sales_log: Array = []              # [{day, kind, actor, company, mrr}]
 
-# --- Month-End Summary state (Spec 3; serialized-set extension of §7.7) ---
+# --- Month-End Summary state (an extension of the serialized set) ---
 # MonthLedger: month-start snapshot for the summary's deltas. Shape:
 # {start_day, mrr, cash, employees, brand}. Written only by
 # MonthSummarySystem.snapshot(); "what changed this month?" comes from here,
 # never from the run counters below (two data shapes, two questions).
 var month_ledger: Dictionary = {}
-# THE CALENDAR-MONTH LEDGER (Calibration Round A §3/§9, 2026-08-19). Closed fiscal months,
+# THE CALENDAR-MONTH LEDGER. Closed fiscal months,
 # oldest → newest, cap MONTH_HISTORY_CAP. Sole writer: push_month_close (MonthSummarySystem,
 # slot 10, on the 1st of each calendar month, BEFORE the recap emit). Entry — all INT (JSON
 # re-types numbers to float on load and SaveCodec restores ints; never store a ratio here,
 # compute margins at read time):
 #   {start_day, end_day, mrr_close, income, expense, net, red_days}
 # Readers: the Series A gate's growth-streak condition (PhaseGateSystem / EventManager
-# mrr_growth_streak), the profitability condition (EndingsSystem §9) and the Finance tab's
+# mrr_growth_streak), the profitability condition (EndingsSystem) and the Finance tab's
 # "Yatırımcı iştahı" + "Artıda · n/6 ay" lines. Accruals for the OPEN month live on
 # month_ledger (income / expense / red_days; reset by snapshot()) through accrue_month_flow /
 # accrue_month_expense — one-time INCOME (the angel cheque) is financing, not operating
@@ -255,7 +255,7 @@ var month_history: Array[Dictionary] = []
 var month_highlight_text: String = ""
 var month_highlight_priority: int = -1
 
-# --- Run-cumulative counters (Spec 3 §3 — WRITE-ONLY seam for the newspaper
+# --- Run-cumulative counters (WRITE-ONLY seam for the newspaper
 # ending screen; the month modal never reads these). Increments live at the
 # single existing seams only. B2C has no discrete sign/churn moment (aggregate
 # userbase) → signed/lost count B2B events until the ending-screen spec decides
@@ -344,22 +344,22 @@ var run_board_veto: bool = false       # investor veto right granted
 var run_angel_amount: int = 0          # dollars the angel put in
 var run_angel_equity_pct: int = 0      # the angel's slice, percent
 
-# --- VC Pitch / Series A Hunt state (Spec 4 / VC_PITCH_DESIGN.md §7 — serialized
-# set, same "fields not systems" rule as the endgame block). VCPitchSystem writes;
-# EndingsSystem reads active_sheets/pending_meeting for the cascade defer (ledger 17).
+# --- VC Pitch / Series A Hunt state (serialized set, same "fields not systems" rule as
+# the endgame block). VCPitchSystem writes;
+# EndingsSystem reads active_sheets/pending_meeting for the cascade defer.
 # All reset in initialize_run. Meeting-LOCAL state (conviction/beat/intel) is NOT here
-# — it lives in VCPitchSystem static vars and is never serialized (ledger 13). ---
+# — it lives in VCPitchSystem static vars and is never serialized. ---
 var vc_states: Dictionary = {}         # vc_id -> {status, callback, pending_sheet, meeting_count, ...}
 var active_sheets: Array = []          # live TermSheet resources (max PitchConstants.MAX_SHEETS)
-var pending_meeting: Dictionary = {}   # {vc_id, day} — one at a time (ledger 24); empty = none
+var pending_meeting: Dictionary = {}   # {vc_id, day} — one at a time; empty = none
 var prep: Dictionary = {}              # {vc_id, focus, done} — one prep per scheduled meeting; empty = none
 var run_pitches: int = 0               # run-cumulative: completed meetings (newspaper seam)
 var run_sheets_won: int = 0            # run-cumulative: sheets granted (distinct from run_pushes_*)
-# Hunt & offer lifecycle (K4 / §6.2 cold exit, 2026-09). All three are declared with defaults, so
+# Hunt & offer lifecycle (meeting cancel, cold exit). All three are declared with defaults, so
 # an older save loads with "no cancel today, no rejection streak, no Frank line shown yet".
-var vc_meeting_cancel_day: int = -1    # K4: the day a booked meeting was cancelled; no new booking that day
+var vc_meeting_cancel_day: int = -1    # the day a booked meeting was cancelled; no new booking that day
 var vc_last_meeting_rejected: bool = false  # did the last FINISHED Series A meeting end in a rejection?
-var vc_frank_cold_shown: Array = []    # §6.2: fund ids whose own cold-exit Frank line has been shown this run
+var vc_frank_cold_shown: Array = []    # fund ids whose own cold-exit Frank line has been shown this run
 
 # --- Seed round (GDD v2 ch. 09 §3) — DELIBERATELY OUTSIDE the Series A block above.
 # The middle rung of the ladder: savings → Frank's cheque → SEED → Series A. Owner is
@@ -454,8 +454,7 @@ func set_brand(value: int) -> void:
 	EventBus.brand_changed.emit(brand)
 
 func set_reputation(value: int) -> void:
-	# Placeholder clamp range — spec leaves bounds undefined.
-	# See PROJECT_SPEC §9 Open Question #9 for designer decision.
+	# Placeholder clamp range — the bounds are undefined and still await a designer decision.
 	reputation = clampi(value, -10, 100)
 	EventBus.reputation_changed.emit(reputation)
 
@@ -476,14 +475,13 @@ func set_subgenre(value: String) -> void:
 
 func set_phase(value: int) -> void:
 	# Save-restore / debug backdoor ONLY. Gameplay phase changes go through
-	# advance_phase() — the single write seam bound to a played Frank scene
-	# (ENDGAME_DESIGN.md §2.1).
+	# advance_phase() — the single write seam bound to a played Frank scene.
 	phase = clampi(value, 1, 3)
 	EventBus.phase_changed.emit(phase)
 
 
 func advance_phase() -> void:
-	# The SINGLE gameplay write seam for phase (ENDGAME_DESIGN.md §2.1).
+	# The SINGLE gameplay write seam for phase.
 	# Called from the Frank transition scene's "advance_phase" modifier after the
 	# player confirms. Forward-only ratchet; produces no economic delta.
 	if not phase_gate_ready or pending_next_phase <= phase:
@@ -494,7 +492,7 @@ func advance_phase() -> void:
 	pending_next_phase = 0
 	submit_month_highlight(
 		TranslationServer.translate("MONTH_HL_PHASE_ADVANCED").format(
-			{"phase": phase_display_name(phase)}), 80)  # AYIN OLAYI (Spec 3 §4)
+			{"phase": phase_display_name(phase)}), 80)  # AYIN OLAYI
 	EventBus.phase_changed.emit(phase)
 
 
@@ -522,7 +520,7 @@ func set_shutter_days_left(value: int) -> void:
 
 
 func submit_month_highlight(text: String, priority: int) -> void:
-	# AYIN OLAYI registry (Spec 3 §4): higher priority replaces lower;
+	# AYIN OLAYI registry: higher priority replaces lower;
 	# first-come wins ties. Cleared each month rollover (MonthSummarySystem).
 	if priority > month_highlight_priority:
 		month_highlight_text = text
@@ -611,7 +609,7 @@ func append_cash_sample(sample_cash: int) -> void:
 		cash_history.pop_front()
 
 
-# --- Calendar-month ledger seams (Calibration Round A §3/§9) ---
+# --- Calendar-month ledger seams ---
 
 func accrue_month_flow(revenue: int, burn: int, closing_cash: int) -> void:
 	# FinanceSystem.daily_tick, once per day, the SAME figures that moved the cash.
@@ -858,7 +856,7 @@ func get_run_ledger() -> Dictionary:
 	return {
 		# timeline
 		"day": day,
-		# The run's RNG seed. Absent from this ledger until now, which is audit S2-40: the
+		# The run's RNG seed. Absent from this ledger until now, which meant the
 		# seed existed but was unobtainable, so a reproducible-looking bug across four live
 		# runs could not actually be reproduced. Read-only here, like every other key.
 		"seed": run_seed,
@@ -899,9 +897,9 @@ func get_run_ledger() -> Dictionary:
 		"sheets_won": run_sheets_won,
 		"vc_rejections": vc_rejections,
 		# live term sheets at the moment of reading — the soft-cap paper names an unsigned
-		# offer left on the table (Calibration Round A §2; VC_PITCH_DESIGN ledger 16)
+		# offer left on the table
 		"unsigned_sheets": active_sheets.size(),
-		# calendar-month ledger digest (Calibration Round A §3/§9)
+		# calendar-month ledger digest
 		"months_closed": month_history.size(),
 		"profit_streak": get_profitable_month_streak(),
 		"pushes_attempted": run_pushes_attempted,
@@ -982,10 +980,10 @@ func initialize_run(payload: Dictionary) -> void:
 	brand = 50
 	reputation = 0
 	day = 1
-	current_hour = 9   # TECH_SPEC §20 business-day-start
+	current_hour = 9   # business-day-start
 	phase = 1          # 1=Bootstrap
 
-	# Endgame state reset (ENDGAME_DESIGN.md §7.7 serialized set)
+	# Endgame state reset (serialized set)
 	run_active = true
 	ending_id = ""
 	phase_gate_ready = false
@@ -1005,7 +1003,7 @@ func initialize_run(payload: Dictionary) -> void:
 	transactions = []
 	sales_log = []
 
-	# Month-End Summary + run counters reset (Spec 3; month_ledger snapshot
+	# Month-End Summary + run counters reset (month_ledger snapshot
 	# happens at the END of this function — it needs the roster in place)
 	month_highlight_text = ""
 	month_highlight_priority = -1
@@ -1032,7 +1030,7 @@ func initialize_run(payload: Dictionary) -> void:
 	run_board_seats = 0
 	run_board_veto = false
 
-	# VC Pitch / Series A Hunt reset (Spec 4). Dicts via .clear() in case a system
+	# VC Pitch / Series A Hunt reset. Dicts via .clear() in case a system
 	# cached the reference; arrays reassigned.
 	vc_states.clear()
 	active_sheets = []
@@ -1087,9 +1085,9 @@ func initialize_run(payload: Dictionary) -> void:
 	if is_restore:
 		SaveCodec.apply_game_state(restore_block)
 
-	# Seeded RNG per TECH_SPEC §10.4. A fresh run GENERATES and RECORDS its seed from birth
-	# (it used to be Time.get_ticks_msec() assigned here and never surfaced anywhere — audit
-	# S2-40: four live runs produced a "reproducible" bug that could not be reproduced,
+	# Seeded RNG. A fresh run GENERATES and RECORDS its seed from birth
+	# (it used to be Time.get_ticks_msec() assigned here and never surfaced anywhere —
+	# four live runs produced a "reproducible" bug that could not be reproduced,
 	# because the seed was unobtainable). It now rides in get_run_ledger() and in every save.
 	# 0 is treated as ABSENT, not as a seed. run_seed's own declaration documents "0 =
 	# unseeded", and a caller that passes the key but reads it out of a save block missing
@@ -1151,8 +1149,8 @@ func _game_state_block(restore: Variant) -> Dictionary:
 
 
 func _generate_seed() -> int:
-	# Wide entropy, bounded to stay EXACT through JSON. Save files are JSON (TECH_SPEC
-	# §10.1) and JSON numbers are IEEE doubles, so anything past 2^53 would come back
+	# Wide entropy, bounded to stay EXACT through JSON. Save files are JSON
+	# and JSON numbers are IEEE doubles, so anything past 2^53 would come back
 	# rounded — a save that reproduces a DIFFERENT run than the one it recorded. 2^52 keeps
 	# a comfortable margin and still leaves 4.5 quadrillion distinct runs.
 	# randi() reads the engine's own startup-randomised global stream; this is the one place
@@ -1174,7 +1172,7 @@ func _build_founder(payload: Dictionary) -> Character:
 	var raw_name: String = payload.get("founder_name", "")
 	var display_name: String = raw_name.strip_edges() if raw_name != "" else ""
 	if display_name == "":
-		# S2-42: the default founder name is COPY, not data — it must not be baked into
+		# The default founder name is COPY, not data — it must not be baked into
 		# a persisted field in one language. Rendered from the glossary term instead.
 		display_name = TranslationServer.translate("HR_ROLE_FOUNDER")
 

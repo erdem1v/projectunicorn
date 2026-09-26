@@ -19,7 +19,7 @@ extends RefCounted
 # EDITORIAL RULES (all enforced below): newspaper language not stat language; NO raw
 # day count in prose (calendar framing via _span_phrase); NO cash figures / "$" in
 # PROSE (origin-aware founding clause) — the stat_cells row is the ONE sanctioned "$"
-# surface: it is an infographic, not prose (mockup grammar, 2026-07-29); investment
+# surface: it is an infographic, not prose; investment
 # figures in prose stay spelled-out ("milyon dolar"); quote attribution goes to the
 # CROWD never to one person (no "danışman"/"mentor"); no em-dash, no emoji, no English
 # finance terms ("Series A" is a proper noun; stat LABELS may use the ruled loanwords
@@ -115,7 +115,7 @@ static func _series_a(ledger: Dictionary, data: Dictionary) -> Dictionary:
 		pool.append(_t("END_SA_MANY_TABLES"))
 
 	vs.ledger_lines = _assemble(pool, [_t("END_SA_CLOSER_1"), _t("END_SA_CLOSER_2")])
-	# Stat row (mockup: 4 big figures under the photo). Set per template. # WORKING
+	# Stat row (4 big figures under the photo). Set per template. # WORKING
 	vs.stat_cells = [
 		_stat(UiTokens.format_money(investment), _t("END_STAT_INVESTMENT")),
 		_stat(UiTokens.format_money(valuation * 1_000_000), _t("END_STAT_VALUATION")),
@@ -306,7 +306,7 @@ static func _bootstrap(ledger: Dictionary, data: Dictionary) -> Dictionary:
 		pool.append(_t("END_BS_PAYROLL").format({"n": _num(int(ledger.get("employees", 0)))}))
 	if int(ledger.get("product_ships", 0)) > 1:
 		pool.append(_t("END_BS_SHIPS").format({"n": int(ledger.get("product_ships", 0))}))
-	# Calibration Round A §9: the win is a streak of Artıda months now; the paper names it.
+	# The win is a streak of Artıda months now; the paper names it.
 	if int(ledger.get("profit_streak", 0)) > 0:
 		pool.append(_t("END_BS_STREAK").format({"n": _num(int(ledger.get("profit_streak", 0)))}))
 	else:
@@ -324,11 +324,11 @@ static func _bootstrap(ledger: Dictionary, data: Dictionary) -> Dictionary:
 
 
 static func _fumes(ledger: Dictionary, data: Dictionary) -> Dictionary:
-	# THE SOFT CAP's paper (Calibration Round A §2, director ruling via Y5.6: the id stays
+	# THE SOFT CAP's paper. Director ruling: the id stays
 	# running_on_fumes; the register is "yatırımcılar ilgisini kaybetti" — a company that
 	# reached no goal ending inside the window investors give it. Not a failure screen:
 	# the company did not close, it dropped off the agenda. Frank's verdict line is the
-	# Y5.6 text (END_META_RUNNING_ON_FUMES_FRANK).
+	# ruling's own text (END_META_RUNNING_ON_FUMES_FRANK).
 	var vs := _common("running_on_fumes", "soft_loss", ledger, data)
 	var company := _company(data)
 	var phase := int(ledger.get("phase", 1))
@@ -342,7 +342,7 @@ static func _fumes(ledger: Dictionary, data: Dictionary) -> Dictionary:
 	var pool: Array = []
 	pool.append(_t("END_RF_STAYED_STANDING").format(
 		{"founding": _founding_clause(ledger), "span": _span_phrase(_day(ledger))}))
-	# Ledger 16: an unsigned offer left on the table is named, never silently dropped.
+	# An unsigned offer left on the table is named, never silently dropped.
 	if int(ledger.get("unsigned_sheets", 0)) > 0:
 		pool.append(_t("END_RF_UNSIGNED_SHEET"))
 	var people_end_rf_unfinished: String = _people_line(ledger, "END_RF_UNFINISHED", "END_RF_AUDIENCE")
@@ -466,7 +466,7 @@ static func _num(n: int) -> String:
 
 
 static func _stat(figure: String, label: String) -> Dictionary:
-	# One stat-row cell: a big serif FIGURE over a small mono LABEL (mockup grammar).
+	# One stat-row cell: a big serif FIGURE over a small mono LABEL.
 	# Labels arrive pre-uppercased TR literals — tr_upper is only for derived text.
 	return {"figure": figure, "label": label}
 
@@ -547,7 +547,7 @@ static func _valuation_tr(valuation_m: int) -> String:
 
 static func _investment_tr(dollars: int) -> String:
 	# Rule 4: spelled-out currency, no "$", no abbreviations. Round to nearest million
-	# for headline-style figures (mockup: "4 milyon dolar").
+	# for headline-style figures ("4 milyon dolar").
 	var m := int(round(dollars / 1_000_000.0))
 	if m < 1:
 		m = 1

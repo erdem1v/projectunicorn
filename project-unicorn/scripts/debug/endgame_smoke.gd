@@ -1,7 +1,7 @@
 class_name EndgameSmoke
 extends RefCounted
 
-# Headless smoke harness for the endgame engines (ENDGAME_DESIGN.md Spec 1+2).
+# Headless smoke harness for the endgame engines.
 # Debug builds only; invoked by main.gd when the run args contain
 # --endgame-smoke=<case> (set application/run/main_args, run, read output).
 # One case per process — autoload state stays pristine between cases.
@@ -23,7 +23,7 @@ extends RefCounted
 
 const GATE1_ID := "funding.gate_traction"
 const GATE2_ID := "funding.gate_series_a"
-const DOOR_OPEN_ID := "funding.frank_door_open"   # Frank speaks first, the gate card a day later (K3)
+const DOOR_OPEN_ID := "funding.frank_door_open"   # Frank speaks first, the gate card a day later
 const ANGEL_ID := "funding.frank_cheque"
 const NUDGE_ID := "funding.hire_nudge"
 const RETAIN_ID := "customer.retention"
@@ -57,7 +57,7 @@ static var _endings: Array = []        # run_ended ending_ids
 
 
 static func run_case(case_name: String, payload: Dictionary) -> void:
-	# RNG PIN (Calibration Round A §11; research S4 / sprint §5.7): initialize_run seeds from
+	# RNG PIN: initialize_run seeds from
 	# Time.get_ticks_msec() unless the payload carries a seed, so every case that touched the
 	# ambient pool was a fresh coin flip per invocation (angel_fires_at_crossing passed solo
 	# and failed 4 in 12). The suite now runs on the same seed the probes use — 424242 — and
@@ -88,8 +88,8 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"cascade":              fail = _case_cascade()
 		"pivot_accept":         fail = _case_pivot_accept()
 		"pivot_decline":        fail = _case_pivot_decline()
-		# fork_win / fork_loss retired 2026-08-19 with the Day-180 fork (Calibration Round A §2);
-		# the soft cap's guards live in the Calibration Round A block at the end of this match.
+		# fork_win / fork_loss retired 2026-08-19 with the Day-180 fork;
+		# the soft cap's guards live in the calibration block at the end of this match.
 		"terminal_kills_gate":  fail = _case_terminal_kills_gate()
 		"live_during_vbuild":   fail = _case_live_during_vbuild()
 		"sprint_no_freeze":     fail = _case_sprint_no_freeze()
@@ -255,7 +255,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"market_share_tracks_mrr":            fail = _case_market_share_tracks_mrr()
 		"news_feed_weights_and_no_repeat":    fail = _case_news_feed_weights_and_no_repeat()
 		"cs_request_kind_state_driven":       fail = _case_cs_request_kind_state_driven()
-		# --- Bug cleanup 2026-08-07 (AUDIT_2026-08-06): each of these FAILS against the
+		# --- Bug cleanup 2026-08-07: each of these FAILS against the
 		#     pre-fix engine, which is what makes them regression guards rather than décor.
 		"b2b_expansion_no_refire":            fail = _case_b2b_expansion_no_refire()
 		"fumes_zero_revenue_ledger":          fail = _case_fumes_zero_revenue_ledger()
@@ -283,7 +283,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"account_ownership_round_trip":     fail = _case_account_ownership_round_trip()
 		"founder_owns_accounts_manually":   fail = _case_founder_owns_accounts_manually()
 		"event_queue_dedupe_by_id":           fail = _case_event_queue_dedupe_by_id()
-		# --- Playable Run Sprint 2026-08-17. Each one FAILS against the pre-fix engine;
+		# --- Driver-run fixes, 2026-08-17. Each one FAILS against the pre-fix engine;
 		#     each was found by a 90-day driver run (--run-log), not by reading.
 		"promise_no_duplicate_word":          fail = _case_promise_no_duplicate_word()
 		"promise_kept_stops_countdown":       fail = _case_promise_kept_stops_countdown()
@@ -334,7 +334,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"loc_b4_derived_keys":       fail = _case_loc_b4_derived_keys()
 		"loc_b5_derived_keys":       fail = _case_loc_b5_derived_keys()
 		"loc_language_switch":       fail = _case_loc_language_switch()
-		# --- Calibration Round A (2026-08-19) — one commit per section, one guard per number ---
+		# --- Calibration pass (2026-08-19) — one guard per number ---
 		"harness_sniffer_matches_run_log": fail = _case_harness_sniffer_matches_run_log()
 		"quality_half_sat_25":             fail = _case_quality_half_sat_25()
 		"b2b_v1_lands_mid_band":           fail = _case_b2b_v1_lands_mid_band()
@@ -434,7 +434,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		# --- rev 6.1 · router devri (2026-08-25). İkisi de ÖNCEKİ ağaca karşı DÜŞER.
 		"type_screen_matches_line_content": fail = _case_type_screen_matches_line_content()
 		"line_build_writes_subgenre":     fail = _case_line_build_writes_subgenre()
-		# --- Funding ladder + phase/endings wave (2026-08-27) ---
+		# --- Funding ladder + phase/endings (2026-08-27) ---
 		"seed_door_traction_only":               fail = _case_seed_door_traction_only()
 		"seed_door_below_bar":                   fail = _case_seed_door_below_bar()
 		"seed_door_number_never_rendered":       fail = _case_seed_door_number_never_rendered()
@@ -521,8 +521,8 @@ static func _sim_day() -> void:
 # TAM GÜN sürücü: motorun gerçek gün sınırını birebir yansıtır.
 # TimeManager._drain_boundaries sırası: saat 1..23 → saat 0 → advance_day() → günlük
 # slotlar. Günlük tik saat 0 ile saat 1'in ARASINDA durur; maliyeti günlük, faydayı
-# saatlik işleyen her mekanizma tam olarak orada ayrışır (S1-3 ek mesai bedava hızı ve
-# S2-37 bonus/ödeme asimetrisi bu boşlukta yaşıyordu, 135 case boyunca görünmeden).
+# saatlik işleyen her mekanizma tam olarak orada ayrışır (ek mesai bedava hızı ve
+# bonus/ödeme asimetrisi bu boşlukta yaşıyordu, 135 case boyunca görünmeden).
 #
 # set_current_hour ŞART: EventManager._is_eligible `allowed_hours`'ı dispatch'e geçilen
 # argümandan değil GameState.current_hour'dan okur — saat yazılmazsa saatlik pencereli
@@ -609,7 +609,7 @@ static func _seed_b2b(mrr: int) -> void:
 	_sign_fixture(p, mrr, 70)
 
 
-## "Healthy Series A MRR" for the VC fixtures (Calibration Round A §3): the revenue bar moved
+## "Healthy Series A MRR" for the VC fixtures: the revenue bar moved
 ## 5,000 → the $40-80K band and VCPitchSystem's conviction seeding reads CONV_MRR_REFERENCE =
 ## the bar, so a fixture hard-pinned at 6,000 would read as a WEAK company. Bar + 1,000.
 ## A LIVE, HEALTHY B2B PRODUCT for the sitting cases — line tiers, not the legacy `mvp_*`
@@ -627,7 +627,7 @@ static func _seed_b2b_series_a() -> void:
 	_seed_b2b(SalesSystem.TRACTION_MRR_TARGET + 1000)
 
 
-## Closed calendar months on GameState.month_history (Calibration Round A §3/§9): sequential
+## Closed calendar months on GameState.month_history: sequential
 ## 30-day spans, the given MRR closes, one income/expense pair per month.
 static func _seed_month_closes(mrr_closes: Array, income: int = 30000, expense: int = 24000, red_days: int = 0) -> void:
 	GameState.month_history.clear()
@@ -810,7 +810,7 @@ static func _case_run_ledger() -> String:
 	return ""
 
 
-# --- Gate cases (Spec 1) ---
+# --- Gate cases ---
 
 static func _case_gate1_b2c() -> String:
 	_seed_b2c()
@@ -846,8 +846,8 @@ static func _expect_gate1_opens_and_advances() -> String:
 
 static func _case_gate2() -> String:
 	GameState.set_phase(2)  # debug backdoor — gate 1 already passed
-	# K1 + K2 (2026-09): the revenue bar ALONE opens the door — no growth streak, no brand
-	# floor. K3: Frank's door-open line comes first; the decision card follows on a later day.
+	# The revenue bar ALONE opens the door — no growth streak, no brand
+	# floor. Frank's door-open line comes first; the decision card follows on a later day.
 	_seed_b2b_series_a()    # MRR over the bar, no month history at all
 	GameState.month_history.clear()
 	_sim_day()
@@ -864,7 +864,7 @@ static func _case_gate2() -> String:
 	return ""
 
 
-## The K3 order, shared by every case that walks through the Series A door: the gate has
+## The door-open order, shared by every case that walks through the Series A door: the gate has
 ## latched today; Frank's door-open line is on screen, the decision card is NOT pending the
 ## same day, and it arrives on the next day once the line is answered.
 static func _expect_door_open_then_gate() -> String:
@@ -925,8 +925,8 @@ static func _case_gate_decline_reminder() -> String:
 	if opening == escalated:
 		return "BODY_0 and BODY_1 carry the same text — the escalation is unprovable"
 
-	# Open it the way _case_gate2 does: the revenue bar alone opens it (K1 + K2), and Frank's
-	# door-open line precedes the card by a day (K3).
+	# Open it the way _case_gate2 does: the revenue bar alone opens it, and Frank's
+	# door-open line precedes the card by a day.
 	_seed_b2b_series_a()
 	_sim_day()
 	if not GameState.phase_gate_ready or GameState.pending_next_phase != 3:
@@ -1081,7 +1081,7 @@ static func _case_traction_gate_is_one_option() -> String:
 	return ""
 
 
-# --- Ending cases (Spec 2) ---
+# --- Ending cases ---
 
 static func _case_bankruptcy() -> String:
 	GameState.set_cash(-1000)
@@ -1348,7 +1348,7 @@ static func _case_capacity_split() -> String:
 		return "parallel factor not 0.5 (%.2f)" % ProductSystem.capacity_speed_factor()
 	# Build Bar grameri: v-build'in minik tasarım bandı ölçüm penceresinin İÇİNE
 	# düşmesin — tur 1'in sonuna sür, "Geliştirmeye geç" de; iki pencere de development'ta
-	# ölçülür (mid-job developer kıyası da ancak orada anlamlı — design doc §5).
+	# ölçülür (mid-job developer kıyası da ancak orada anlamlı).
 	for ih in 24 * 30:
 		if ProductSystem.can_enter_development():
 			break
@@ -1370,7 +1370,7 @@ static func _case_capacity_split() -> String:
 		return "sprint not half speed (%.3f day/day)" % ds
 	# 3) Mid-job hire → kapasite 2 → faktör 1.0'a DÖNER ve gerçek günlük çıktı BÜYÜR.
 	# The relative claim compares MEASURED rates, not sampled expectations: a developer hired
-	# during the TASARIM fazı contributes nothing to speed yet (design doc §5 rol-faz eşlemesi),
+	# during the TASARIM fazı contributes nothing to speed yet (rol-faz eşlemesi),
 	# so comparing two samples could read equal while real throughput still doubled from the
 	# recovered capacity factor. The measured comparison is the honest one either way.
 	_make_employee("char_smoke_capacity_eng", "Smoke Eng", HRConstants.ROLE_DEVELOPER)
@@ -1412,7 +1412,7 @@ static func _case_speed_preserve() -> String:
 	return ""
 
 
-# --- Month-End Summary (Spec 3) ---
+# --- Month-End Summary ---
 
 static func _case_month_summary() -> String:
 	var months: Array = []  # captured summary_data dicts
@@ -1491,7 +1491,7 @@ static func _case_month_summary() -> String:
 
 	# Terminal suppression: Feb 2026 has 28 days → Feb closes at day 60 (Mar 1).
 	# Force a Class-A ending on exactly that day: slot 9 ends the run before
-	# slot 10 runs → the ending wins, no second summary (ledger 1/2 logic).
+	# slot 10 runs → the ending wins, no second summary.
 	while GameState.day < 59:
 		_sim_day()
 	if months.size() != 1:
@@ -1521,7 +1521,7 @@ static func _case_terminal_kills_gate() -> String:
 		return "endings: %s" % str(_endings)
 	if EventGate.queue_size() != 0:
 		return "queue not flushed"
-	# World stopped (§7.3): further ticks are no-ops, nothing re-enqueues.
+	# World stopped: further ticks are no-ops, nothing re-enqueues.
 	var cash_at_end: int = GameState.cash
 	for i in 2:
 		_sim_day()
@@ -1532,7 +1532,7 @@ static func _case_terminal_kills_gate() -> String:
 	return ""
 
 
-# --- VC Pitch cases (Spec 4) ---
+# --- VC Pitch cases ---
 
 static func _force(mode: String) -> void:
 	GameState.set_flag("debug_skill_force", mode)  # SkillCheck deterministic override
@@ -1549,7 +1549,7 @@ static func _case_full_loop() -> String:
 	# THE vertical slice: phase 3 → request → prompt accept → beats → sheet → sign → ending.
 	GameState.set_phase(3)
 	_force("pass")
-	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
+	_seed_b2b_series_a()   # bar + 1000
 	_sim_day()  # aggregate MRR to 6000 (SalesSystem mrr bridge)
 	if not VCPitchSystem.request_meeting("anchor"):
 		return "request_meeting refused"
@@ -1602,7 +1602,7 @@ static func _case_pitch_ret_counter() -> String:
 static func _case_gecistir_cap() -> String:
 	GameState.set_phase(3)
 	_force("pass")
-	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
+	_seed_b2b_series_a()   # bar + 1000
 	_sim_day()
 	VCPitchSystem.begin_meeting("anchor")
 	VCPitchSystem.advance("b1_read")
@@ -1698,7 +1698,7 @@ static func _case_pitch_refused_acq() -> String:
 
 
 static func _case_sheet_expiry_no_rejection() -> String:
-	# K5 + K10: two sheets granted the same day. Frank's warning comes at 3 BUSINESS days; at
+	# Two sheets granted the same day. Frank's warning comes at 3 BUSINESS days; at
 	# the close the sheets are NOT dropped - a sit-or-decline card asks, one fund at a time,
 	# on the same day; declining closes the fund and is not a rejection.
 	GameState.set_phase(3)
@@ -1761,7 +1761,7 @@ static func _case_sheet_expiry_no_rejection() -> String:
 static func _case_third_sheet_delayed() -> String:
 	GameState.set_phase(3)
 	_force("pass")
-	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
+	_seed_b2b_series_a()   # bar + 1000
 	_sim_day()
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("nexus", GameState.day))
@@ -1801,7 +1801,7 @@ static func _case_cascade_defer_with_sheet() -> String:
 
 
 static func _case_walk_not_a_rejection() -> String:
-	# K11: the player's walk closes the fund for the run but is not a rejection.
+	# The player's walk closes the fund for the run but is not a rejection.
 	GameState.set_phase(3)
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
 	GameState.active_sheets.append(VCPitchSystem._make_sheet("nexus", GameState.day))
@@ -1820,7 +1820,7 @@ static func _case_walk_not_a_rejection() -> String:
 
 
 # ============================================================================
-# Term Sheet Table cases (Spec 6) — drive TermSheetTableSystem engine-directly (no scene).
+# Term Sheet Table cases — drive TermSheetTableSystem engine-directly (no scene).
 # ============================================================================
 
 static func _grant(vc: String) -> void:
@@ -1890,7 +1890,7 @@ static func _case_table_walk_not_a_rejection() -> String:
 
 
 static func _case_patience_zero_locks_pushes() -> String:
-	# K12: patience zero is no longer a free stop. An EAGER fund (high meeting conviction)
+	# Patience zero is no longer a free stop. An EAGER fund (high meeting conviction)
 	# puts a final take-it-or-leave-it counter — pushes locked, only Sign and Walk. A COLD
 	# fund walks out: closed for the run, sheet gone, one rejection counted, no signing.
 	GameState.set_phase(3)
@@ -1988,7 +1988,7 @@ static func _case_leverage_bonus_applies_and_shows() -> String:
 		return "leverage did not raise odds above baseline"
 	if String(vs.leverage.other_vc_name) != "Nexus Ventures":
 		return "other_vc_name=%s" % String(vs.leverage.other_vc_name)
-	# K7: the other live sheet can be shown, once, and the fund answers in its own voice.
+	# The other live sheet can be shown, once, and the fund answers in its own voice.
 	if not bool(vs.show_other.visible) or not bool(vs.show_other.enabled):
 		return "show-the-other-offer is not on offer with two live sheets"
 	var shown: Dictionary = TermSheetTableSystem.show_other_offer()
@@ -2088,10 +2088,10 @@ static func _case_deal_prompt_defer_keeps_clock() -> String:
 
 
 static func _case_hunt_offer_lifecycle() -> String:
-	# K6: the pre-table estimate contains the true opening term and is never centred on it,
-	# and it does not reroll. K4: cancelling costs the fund's next meeting and shuts booking
-	# for the day. §6.2: Frank's cold exit is the fund's own line first, then "two in a row".
-	# Bug 9: a clean Beat-3 question shows the odds it rolls.
+	# The pre-table estimate contains the true opening term and is never centred on it,
+	# and it does not reroll. Cancelling costs the fund's next meeting and shuts booking
+	# for the day. Frank's cold exit is the fund's own line first, then "two in a row".
+	# A clean Beat-3 question shows the odds it rolls.
 	GameState.set_phase(3)
 	_seed_b2b_series_a()
 	_sim_day()
@@ -2139,7 +2139,7 @@ static func _case_hunt_offer_lifecycle() -> String:
 	VCPitchSystem.begin_meeting("anchor")
 	VCPitchSystem.advance("b1_read")
 	VCPitchSystem.advance("b2_metrik")
-	# Bug 9: the shown Beat-3 odds use the rolled difficulty (Kolay on a clean question).
+	# The shown Beat-3 odds use the rolled difficulty (Kolay on a clean question).
 	VCPitchSystem._sorgu = {"key": "clean"}
 	var vs: Dictionary = VCPitchSystem._beat3_view_state({})
 	var want_odds: String = VCPitchSystem._odds(TranslationServer.translate("VC_APPROACH_HONEST"),
@@ -2162,14 +2162,14 @@ static func _case_hunt_offer_lifecycle() -> String:
 	return ""
 
 
-## E1 (docs/handoff/HANDOFF_series_a.md §B EK) — A v12 SAVE FROM BEFORE THE K4/K12/§6.2 FIELDS
+## A v12 SAVE FROM BEFORE THE CANCEL-PENALTY, FINAL-COUNTER AND COLD-EXIT FIELDS
 ## LOADS AND SITS DOWN. Not a hand-written fixture: a real save is taken with every new field at
 ## a NON-default value, each key is asserted present in the file (so deleting it cannot be
 ## vacuous), deleted, and the file goes back through read_slot + apply_loaded_state. What comes
 ## back must be the declared defaults, and the live offer must open the table at
 ## E_FALLBACK_CONV_SERIES_A + fit. The fit is read, never hard-coded, so the case does not care
 ## how a fund's lens is defined. The offer is granted on a WEEKEND, the only grant day on which
-## the old fourteen-calendar-day expiry differs from the K5 ten-business-day one.
+## the old fourteen-calendar-day expiry differs from the current ten-business-day one.
 static func _case_legacy_v12_save_opens_live_table() -> String:
 	const STAMP := 88   # never equal to the fallback, so a surviving stamp cannot pass as it
 	if SaveManager.MIN_LOADABLE_VERSION > 12:
@@ -2190,12 +2190,12 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 		_drain_all_modals()
 	if GameState.is_business_day(GameState.day):
 		return "fixture: no weekend reached to grant on"
-	# K4 the real way: book Nexus and cancel, which writes move_penalty on ITS row and today's
+	# The cancel penalty the real way: book Nexus and cancel, which writes move_penalty on ITS row and today's
 	# cancel day. Not on Anchor: begin_meeting erases the penalty, so a fund holding an offer
 	# and a penalty at once is not a state the game produces.
 	if not VCPitchSystem.request_meeting("nexus") or not VCPitchSystem.cancel_meeting():
 		return "fixture: could not book and cancel a Nexus meeting"
-	# §6.2 memory: an earlier meeting ended cold and spent Meridian's own line.
+	# Cold-exit memory: an earlier meeting ended cold and spent Meridian's own line.
 	GameState.vc_last_meeting_rejected = true
 	GameState.vc_frank_cold_shown.append("meridian")
 	# The live offer, stamped the way _grant_sheet stamps it: row first, then the grant, so
@@ -2285,7 +2285,7 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 	if VCPitchSystem.meeting_blocked_reason("bosphorus") != "":
 		return "booking locked after the load (%s)" % VCPitchSystem.meeting_blocked_reason("bosphorus")
 
-	# --- the offer (K5) ----------------------------------------------------------
+	# --- the offer ---------------------------------------------------------------
 	var loaded: TermSheet = VCPitchSystem.sheet_for("anchor")
 	if loaded == null:
 		return "the live offer did not survive the load"
@@ -2327,7 +2327,7 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 		return "an absent move_penalty did not read as 0 (%d without, %d with %d)" \
 			% [conv_free, conv_pen, PitchConstants.MEETING_CANCEL_PENALTY]
 
-	# --- the table (K12) ---------------------------------------------------------
+	# --- the table ---------------------------------------------------------------
 	var vs: Dictionary = TermSheetTableSystem.open("anchor")
 	if vs.is_empty() or not TermSheetTableSystem.is_active() or not bool(vs.get("sign_enabled", false)):
 		TermSheetTableSystem.reset()
@@ -2353,7 +2353,7 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 	return ""
 
 
-## §B item 2 (docs/handoff/HANDOFF_series_a.md) — the Hunt tab's "road closed" line reads
+## The Hunt tab's "road closed" line reads
 ## VCPitchSystem.series_a_road_closed(). Every fund closed in a word the game writes and nothing
 ## live → true. Each thing that still leaves a table to reach turns it false ON ITS OWN, and
 ## taking it away turns it back.
@@ -2373,7 +2373,7 @@ static func _case_series_a_road_closed_when_all_funds_close() -> String:
 	if funds.size() != 4:
 		return "fixture: %d active funds (this case closes four)" % funds.size()
 	# One closed word per fund, each one the game writes: rejected (a meeting refusal or the
-	# fund walking out), walked (the player's walk), expired (the K10 decline).
+	# fund walking out), walked (the player's walk), expired (the sit-or-decline card's decline).
 	var closed: Dictionary = {"anchor": "rejected", "nexus": "walked", "bosphorus": "expired", "meridian": "rejected"}
 
 	GameState.set_phase(3)
@@ -2502,7 +2502,7 @@ static func _case_pivot_closes_hunt() -> String:
 static func _case_meeting_during_kepenk() -> String:
 	GameState.set_phase(3)
 	GameState.set_cash(100000)  # fat runway → no thin-runway penalty to confound the diff
-	_seed_b2b_series_a()   # bar + 1000 (Calibration Round A §3)
+	_seed_b2b_series_a()   # bar + 1000
 	_sim_day()  # base seed comfortably positive so the [0,100] clamp doesn't hide the penalty
 	var seed_clear: int = int(VCPitchSystem.initial_conviction("anchor").value)
 	GameState.shutter_days_left = 5  # Kepenk active
@@ -2532,7 +2532,7 @@ static func _one_choice_event(id: String, modifiers: Array) -> GameEvent:
 
 
 static func _case_seat_upsell_moves_seats() -> String:
-	# §F-1: the seat-upsell now moves SEATS (and prices MRR off seats) on the named account,
+	# The seat-upsell now moves SEATS (and prices MRR off seats) on the named account,
 	# emits customer_seats_changed, and reflects the aggregate into GameState.mrr.
 	_seed_b2b(2000)
 	var cust: Customer = CustomerRegistry.get_by_market("b2b")[0]
@@ -2561,7 +2561,7 @@ static func _case_seat_upsell_moves_seats() -> String:
 
 
 static func _case_satisfaction_seam_emits() -> String:
-	# §F-8: satisfaction changes route through CustomerRegistry.set_satisfaction and emit.
+	# Satisfaction changes route through CustomerRegistry.set_satisfaction and emit.
 	_seed_b2b(1000)
 	var cust: Customer = CustomerRegistry.get_by_market("b2b")[0]
 	var sat0: int = cust.satisfaction
@@ -2578,7 +2578,7 @@ static func _case_satisfaction_seam_emits() -> String:
 
 
 static func _case_targeted_modifier_hits_named_customer() -> String:
-	# §F-9: a customer_id-targeted modifier hits ONLY the named account, not a bystander.
+	# A customer_id-targeted modifier hits ONLY the named account, not a bystander.
 	_seed_b2b(1000)   # co_lead_smoke, seats 4
 	var p := Prospect.new()
 	p.id = "lead_two"
@@ -2639,7 +2639,7 @@ static func _case_burn_day1_breakdown() -> String:
 
 
 static func _case_burn_refresh_same_tick() -> String:
-	# §F-10/§E-D.2: set_burn_category refreshes GameState.daily_burn immediately (no daily tick).
+	# set_burn_category refreshes GameState.daily_burn immediately (no daily tick).
 	var burn0: int = GameState.daily_burn
 	FinanceSystem.set_burn_category("marketing", 100)
 	var expected: int = FinanceSystem.compute_total_burn()
@@ -2650,7 +2650,7 @@ static func _case_burn_refresh_same_tick() -> String:
 	return ""
 
 
-# --- Package 5: feature bug-seeding cases ---
+# --- Feature bug-seeding cases ---
 
 static func _case_feature_bug_seed_by_complexity() -> String:
 	# A v1 build seeds bugs = Σ feature complexity at commit (COEF 1.0); high > low.
@@ -3269,7 +3269,7 @@ static func _case_deterministic_axes_at_ship() -> String:
 	return ""
 
 
-# --- Package 5: two-runway model + localization cases ---
+# --- Two-runway model + localization cases ---
 
 static func _case_runway_net_status() -> String:
 	# Net runway: profitable → localized status word (no unit); finite → months + "ay".
@@ -3485,8 +3485,8 @@ static func _case_b2b_retention_routes_seams() -> String:
 	if GameState.reputation != rep0 + B2BConstants.RETAIN_PROMISE_REP:
 		return "Söz ver reputation delta wrong"
 
-	# Oyala → extends the countdown once, counts a stall, reputation down (Event revision
-	# 2026-09: the stall's cost moved from brand to reputation; brand stays untouched).
+	# Oyala → extends the countdown once, counts a stall, reputation down (the stall's
+	# cost moved from brand to reputation; brand stays untouched).
 	var c2: Customer = _add_risk_b2b("rb", 1000)
 	var cd0: int = c2.churn_countdown
 	var brand0: int = GameState.brand
@@ -4018,7 +4018,7 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	# the daily tick (state-bound, not calendar-polled) and resolving "Büyüt" upsells it.
 	#
 	# A SECOND, DISTINCT account — not a re-seed of co_lead_smoke. `expand()` above already
-	# spent that account's one expansion moment, and since K2 the engine remembers it. The
+	# spent that account's one expansion moment, and since the expansion-loop fix the engine remembers it. The
 	# re-seed only ever looked like a fresh start because expansion had no memory at all.
 	GameState.set_flag("mvp_sub_product_type_id", "ai_vector_search")
 	var pm := Prospect.new()
@@ -4062,7 +4062,7 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 
 
 static func _case_build_percent_single_source() -> String:
-	# S2-8. The same build printed different percentages in one frame: the portfolio badge
+	# The same build printed different percentages in one frame: the portfolio badge
 	# rounded, the floating HUD floored, the HUD's own bar took the raw float, and the
 	# in-tab tracker floored a second time. The HUD floats OVER any open tab page, so two
 	# of those were visible simultaneously. One formatter, one answer.
@@ -4341,7 +4341,7 @@ static func _case_role_locks_and_runway_pair() -> String:
 
 
 static func _case_runway_days_and_negative_cash() -> String:
-	# S2-9 + S2-10, both of which live in net_runway_parts and only there.
+	# Two display bugs, both of which live in net_runway_parts and only there.
 	# FAILS against the pre-fix engine: sub-month printed "0 ay", and negative cash printed
 	# the green "Artıda" two cells from a running bankruptcy counter.
 	GameState.set_cash(8597)
@@ -4371,7 +4371,7 @@ static func _case_runway_days_and_negative_cash() -> String:
 
 
 # ============================================================================
-#  Frank's angel round (Playable Run Sprint 2026-08-17)
+#  Frank's angel round
 # ============================================================================
 
 # Seed a shipped B2B world at a chosen MRR, through the real signing seam, and hand back
@@ -4400,8 +4400,8 @@ static func _case_angel_fires_at_crossing() -> String:
 	if _card_fired(ANGEL_ID):
 		return "the offer opened below the bar (MRR %d)" % GameState.mrr
 
-	# Cross BOTH bars in one day: the 2,500 seed bar and the Series A gate (MRR only since
-	# K1 + K2 — no growth streak, no brand floor).
+	# Cross BOTH bars in one day: the 2,500 seed bar and the Series A gate (MRR only — no
+	# growth streak, no brand floor).
 	CustomerRegistry.set_mrr(c.id, SalesSystem.TRACTION_MRR_TARGET + 1000)
 	SalesSystem.reflect_mrr()
 	# The crossing day is driven by hand rather than through _sim_day_full, for one reason:
@@ -4437,7 +4437,7 @@ static func _case_angel_fires_at_crossing() -> String:
 	# more. Both cards are admitted in the same tick and the engine orders the day's whole
 	# admission set by §11.2 priority, which is why the assertion still reads the same way and
 	# is now about something declared rather than about which file ran first.
-	# K3: on the crossing day the Series A door speaks through Frank's door-open line; the
+	# On the crossing day the Series A door speaks through Frank's door-open line; the
 	# decision card itself waits for a later day, so the line is what the cheque must lead.
 	var seed_at: int = _queue_position_of(ANGEL_ID)
 	var gate_at: int = _queue_position_of(DOOR_OPEN_ID)
@@ -4702,7 +4702,7 @@ static func _case_angel_hire_nudge() -> String:
 
 
 static func _case_promise_no_duplicate_word() -> String:
-	# Playable Run Sprint. A word already given may not be given again: while a promise to
+	# A word already given may not be given again: while a promise to
 	# an account is OPEN, no retention or CS-request card may offer that account a second
 	# "Söz ver". The rule already existed in the sibling channel (pick_request_kind scores
 	# has_open_for at −25) but no gate enforced it anywhere.
@@ -4826,7 +4826,7 @@ static func _ctx_customer(c: Customer) -> Dictionary:
 
 
 static func _case_promise_kept_stops_countdown() -> String:
-	# Playable Run Sprint. KEEPING the word must stop the churn clock, exactly as GIVING it
+	# KEEPING the word must stop the churn clock, exactly as GIVING it
 	# already did. accept_promise ran _recover (countdown → −1, streak → 0); the "kept"
 	# branch of on_promise_resolved wrote satisfaction and nothing else, so the clock kept
 	# running straight through the delivery. Reproduced in a driver run
@@ -4887,7 +4887,7 @@ static func _case_promise_kept_stops_countdown() -> String:
 
 
 static func _case_recover_preserves_onboarding() -> String:
-	# Playable Run Sprint. _recover stamped "active" unconditionally, while _tick_healthy's
+	# _recover stamped "active" unconditionally, while _tick_healthy's
 	# own risk branch preserves "onboarding" inside the window — the identical bug that
 	# branch carries a comment about, still live on this one. An account rescued in its
 	# first ONBOARDING_DAYS left the window early while _tick_satisfaction kept amplifying
@@ -4931,7 +4931,7 @@ static func _case_recover_preserves_onboarding() -> String:
 
 
 static func _case_promise_orphan_no_brand_hit() -> String:
-	# S1-6. A promise used to outlive the account it was made to: tick_deadlines had no
+	# A promise used to outlive the account it was made to: tick_deadlines had no
 	# liveness check, and in on_promise_resolved the brand write and the credibility flag
 	# sat OUTSIDE the `if c != null` guard that protects every customer-side write beside
 	# them. So the orphan still resolved to "broken" and charged brand a second time — for
@@ -4978,7 +4978,7 @@ static func _case_promise_orphan_no_brand_hit() -> String:
 
 
 static func _case_fumes_zero_revenue_ledger() -> String:
-	# S2-6. "Running on Fumes" is the demo's conversion screen, and its ledger pool carried
+	# "Running on Fumes" is the demo's conversion screen, and its ledger pool carried
 	# ONE unconditioned line — "Gelir vardı, ama…" — while _assemble tops the pool up to
 	# MIN_LEDGER_LINES. On a zero-activity run that false line was therefore GUARANTEED to
 	# print, directly under a stat cell reading MRR $0.
@@ -5023,7 +5023,7 @@ static func _case_fumes_zero_revenue_ledger() -> String:
 
 
 static func _case_b2b_expansion_no_refire() -> String:
-	# K2 / S1-1. The promotion test is MONOTONE (day - acquired_on_day >= MATURE_DAYS) and
+	# The promotion test is MONOTONE (day - acquired_on_day >= MATURE_DAYS) and
 	# BOTH resolutions used to put the account straight back to "active" — the exact state
 	# that predicate passes — so the identical modal re-fired every morning forever and
 	# "Büyüt" was an unbounded free MRR faucet for one click a day.
@@ -5091,7 +5091,7 @@ static func _case_b2b_expansion_no_refire() -> String:
 
 
 static func _case_b2b_market_gate_b2c_run() -> String:
-	# S1-2. daily_tick's only gate was `mvp_shipped`, so the ENTIRE B2B desk ran inside a
+	# daily_tick's only gate was `mvp_shipped`, so the ENTIRE B2B desk ran inside a
 	# consumer game: one Satış Uzmanı hire minted enterprise prospects and, past the §10
 	# line, signed enterprise contracts with no pitch ever played.
 	# FAILS against the pre-fix engine (prospects appear within ~20 days).
@@ -5738,7 +5738,7 @@ static func _case_event_queue_dedupe_by_id() -> String:
 static func _case_b2b_scale_and_sector_gating() -> String:
 	# §2 THE DEMO CEILING (MÜHÜRLÜ): the faucet produces 1-3 stars only. 4-5 is not generated
 	# and not written, and there is no locked 4-star card either — dim stars ARE the scale
-	# telegraph, which is what closes the audit's F10 finding.
+	# telegraph.
 	# §3 SECTOR AFFINITY moved from a product-keyed table to the ARCHETYPE's own sectors, so
 	# the fiction stays clean without a second narrowing.
 	# FALSIFICATION: the old spawner rolled scale from CustomerArchetypes and could hand back
@@ -6573,7 +6573,7 @@ static func _case_hr_fire_path() -> String:
 
 static func _case_hr_resignation_path() -> String:
 	# Morale held under the flight-risk line, the window elapses, the roll fires, the person
-	# is gone, and NO severance was paid (an unplanned loss, design doc §6).
+	# is gone, and NO severance was paid (an unplanned loss).
 	GameState.set_cash(100000)
 	GameState.set_flag("debug_hr_force", "pass")   # deterministic roll
 	var e: Character = _make_employee("char_quit", "Quit Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 7000, 70)
@@ -7206,7 +7206,7 @@ static func _case_hr_constants_contract() -> String:
 # of ticks at every speed (only the real-time rate differs).
 
 static func _case_speed_ladder() -> String:
-	# Calibration Round A §10 (2026-08-19): the 4x rung is gone — pause + 1x/2x/3x.
+	# The 4x rung is gone — pause + 1x/2x/3x.
 	var ladder: Array = TimeManager.SECONDS_PER_DAY
 	if ladder.size() != 4:
 		return "the ladder has %d entries, want 4 (pause + 1x/2x/3x)" % ladder.size()
@@ -8340,11 +8340,11 @@ static func _case_b2b_prospect_dedup_excludes_signed() -> String:
 	return ""
 
 static func _case_company_catalog_pool_integrity() -> String:
-	# §3 — THE POOL NEVER EXHAUSTS, and this case is the direct answer to calibration finding
-	# F1. The 65-name catalogue's SOLE-SUPPLY role is what §19 retired: the names stay and
+	# §3 — THE POOL NEVER EXHAUSTS, and this case is the direct answer to the measured account
+	# plateau. The 65-name catalogue's SOLE-SUPPLY role is what §19 retired: the names stay and
 	# become the memorable minority behind a generated majority.
 	# FALSIFICATION: point SalesNamePool.pool_for at CompanyCatalog alone and the drain loop
-	# below runs out, which is exactly the plateau F1 measured.
+	# below runs out, which is exactly the plateau that was measured.
 	GameState.set_flag("mvp_shipped", true)
 	GameState.set_flag("mvp_market_type", "b2b")
 	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
@@ -8731,7 +8731,7 @@ static func _case_save_continuity_seeded() -> String:
 		_cleanup_save_slots()
 		return "skill stream did not resume: expected %.17f, got %.17f" % [expected, actual]
 
-	# Tohum artık okunabilir durum (audit S2-40: dört canlı koşuda bir kez alınamadı).
+	# Tohum artık okunabilir durum (dört canlı koşuda bir kez alınamadı).
 	var ledger: Dictionary = GameState.get_run_ledger()
 	if not ledger.has("seed"):
 		_cleanup_save_slots()
@@ -8868,7 +8868,7 @@ static func _case_oda_anchors_stay_in_band() -> String:
 
 
 # ============================ DENEYİM / EĞİTİM ===============================
-# Terminal UI görevi §4. Beşi de MEKANİĞİ ölçer, ekranı değil: sayılar
+# Beşi de MEKANİĞİ ölçer, ekranı değil: sayılar
 # HRConstants'ta WORKING ve değişebilir, ama SÖZLEŞME değişmemeli.
 
 static func _case_hr_experience_accrues() -> String:
@@ -10799,13 +10799,13 @@ static func _case_loc_language_switch() -> String:
 	return out
 
 
-# ============================ Calibration Round A (2026-08-19) ============================
+# ============================= Calibration pass (2026-08-19) ==============================
 # Guards for the calibration package. Each case names the number or contract it pins; every
 # one was falsified once (the fix reverted, the case failing with the right diagnosis) before
 # it was trusted. Fixture helpers used across the section live at the top of the block.
 
 static func _case_harness_sniffer_matches_run_log() -> String:
-	# §0 hygiene: RunProbe (--run-log) drives whole runs headless and its ticks reach
+	# Hygiene: RunProbe (--run-log) drives whole runs headless and its ticks reach
 	# day_tick_completed like any other, so before this the probe autosaved fixture worlds into
 	# the player's slots. The sniffer is a substring list; this pins the entry and the FLAGS-ONLY
 	# rule (a bare project path must never match).
@@ -10818,7 +10818,7 @@ static func _case_harness_sniffer_matches_run_log() -> String:
 	return ""
 
 
-# --- §1 · a played product is born INSIDE the tolerance band (three levers together) ---
+# --- A played product is born INSIDE the tolerance band (three levers together) ---
 
 # The two raw stability values --run-log measured at ship (seed 424242, 2026-08-19): the
 # stability-competent v1 (integration+field+scheduling, build events +14, Beta cleared) and
@@ -10889,7 +10889,7 @@ static func _case_field_unlocked_for_saas_ops() -> String:
 
 
 static func _case_b2c_satisfaction_gate_experience() -> String:
-	# §5 precondition (director ruling 2026-08-19): the B2C aggregate's daily +1 reads the
+	# B2C-growth precondition (director ruling 2026-08-19): the B2C aggregate's daily +1 reads the
 	# EXPERIENCE axis at the re-seated gate (40). Raw 25 → 50 ≥ 40 climbs; raw 10 → 28.6
 	# does not; a heavy backlog still erodes either way.
 	_seed_b2c()
@@ -10900,7 +10900,7 @@ static func _case_b2c_satisfaction_gate_experience() -> String:
 	GameState.set_flag("mvp_innovation", 0.0)
 	GameState.set_flag("mvp_experience", 25.0)
 	GameState.set_flag("mvp_live_bug_count", 0)
-	# SUPPORT-QUIET WORLD (DEFECT_b2c_satisfaction_second_writer_2026-08-26, fix 1). The support
+	# SUPPORT-QUIET WORLD. The support
 	# desk's two-tier damage (Ops §8.3) legitimately writes the same B2C record every day; this
 	# case isolates the QUALITY GATE, so each leg starts with no reports, no confirmed bugs and
 	# no carried damage residue.
@@ -10960,7 +10960,7 @@ static func _case_rival_relative_uses_template_half_sat() -> String:
 	return ""
 
 
-# --- §2 · the calendar wall is gone; the soft cap is a catch, not a fork ---
+# --- The calendar wall is gone; the soft cap is a catch, not a fork ---
 
 static func _case_soft_cap_ends_run_at_730() -> String:
 	# A run with no goal ending reaches the soft cap and ends there, as running_on_fumes,
@@ -10995,7 +10995,7 @@ static func _case_no_calendar_stop_before_cap() -> String:
 
 
 static func _case_soft_cap_no_defer_for_sheet() -> String:
-	# VC_PITCH_DESIGN ledger 16: a live term sheet does NOT hold the cap (no auto-sign); the
+	# A live term sheet does NOT hold the cap (no auto-sign); the
 	# ledger names the unsigned offer instead.
 	GameState.set_cash(500000)
 	GameState.phase = 3
@@ -11018,9 +11018,9 @@ static func _case_soft_cap_no_defer_for_sheet() -> String:
 # ._tick_last_answer_warning fires once when the sole live sheet has days_left == 1, and
 # suppresses on a pending meeting or another open/callback sheet (vc_pitch_system.gd:519-544).
 # The working tree's replacement cases (last_answer_warning, last_answer_warning_suppressed)
-# were destroyed before they were committed — see docs/audits/SMOKE_LOSS_2026-08-23.md.
+# were destroyed before they were committed.
 # This stub keeps the suite compiling; the two cases still need re-authoring by their author.
-## Event revision 2026-09 — the two warning holes FRANK_UNWIRED §7 left open. A run with the
+## The two warning holes FRANK_UNWIRED §7 left open. A run with the
 ## Series A signal OPEN but no signed round (phase 2 with the door standing open, or a phase-3
 ## Hunt with no live offer) must still get the final-stretch warning, and the arc it starts
 ## must not fade on an open signal. Only a SIGNED round ends the warning.
@@ -11076,7 +11076,7 @@ static func _case_soft_cap_paper_names_unsigned_sheet() -> String:
 	return ""
 
 
-# --- §3 · the Series A gate: revenue bar (never shown) + a growth streak; the signal is shown ---
+# --- The Series A gate: revenue bar (never shown) + a growth streak; the signal is shown ---
 
 static func _case_month_history_close_and_cap() -> String:
 	# The calendar-month ledger closes on the 1st, carries the open month's accruals
@@ -11136,7 +11136,7 @@ static func _case_growth_streak_semantics() -> String:
 
 
 static func _case_series_a_gate_mrr_only() -> String:
-	# K1 + K2 (2026-09): the door is MRR ONLY. MRR over the bar with NO growth history and a
+	# The door is MRR ONLY. MRR over the bar with NO growth history and a
 	# brand under the old floor of 25 must open it; one dollar under the bar must not.
 	# FALSIFICATION: put the growth-streak or brand leaf back into PhaseGateSystem.GATES.
 	GameState.set_phase(2)
@@ -11156,7 +11156,7 @@ static func _case_series_a_gate_mrr_only() -> String:
 
 
 static func _case_series_a_signal_states() -> String:
-	# K1–K3: phase 1 → closed regardless; phase 2 under half the bar → closed; at half the bar
+	# Phase 1 → closed regardless; phase 2 under half the bar → closed; at half the bar
 	# → warming (the same day Frank's first approach line may speak); at the bar → open with
 	# no growth history; phase 3 → open. No `progress`, no `streak` — the readout has no ratio.
 	GameState.set_phase(1)
@@ -11190,7 +11190,7 @@ static func _case_series_a_signal_states() -> String:
 	return ""
 
 
-## K3 (plan §6.1): Frank's approach lines. Each speaks at most ONCE per run — an MRR dip and
+## Frank's approach lines. Each speaks at most ONCE per run — an MRR dip and
 ## re-cross never brings a line back — and an earlier line never follows a later one. The
 ## lines carry no number in either locale.
 ## FALSIFICATION: drop `latch.one_shot` from funding.frank_approach_half, or the `none`
@@ -11271,7 +11271,7 @@ static func _case_month_history_save_typing() -> String:
 	return ""
 
 
-# --- §5 · B2C growth compounds both ways (word of mouth on the aggregate's satisfaction) ---
+# --- B2C growth compounds both ways (word of mouth on the aggregate's satisfaction) ---
 
 static func _b2c_delta_at_satisfaction(sat: int) -> float:
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
@@ -11335,7 +11335,7 @@ static func _case_b2c_growth_multiplier_floor() -> String:
 	return ""
 
 
-# --- §6 · bugs hit conversion ---
+# --- Bugs hit conversion ---
 
 static func _case_conversion_bug_penalty() -> String:
 	# 10 live bugs ≈ −20 % conversion, floored at ×0.4; the pricing ruler's projection
@@ -11371,7 +11371,7 @@ static func _case_conversion_bug_penalty() -> String:
 	return ""
 
 
-# --- §7 · the bug complaint costs audience and satisfaction, never cash ---
+# --- The bug complaint costs audience and satisfaction, never cash ---
 
 static func _case_audience_pct_modifier() -> String:
 	# audience_delta {pct} erodes (or grows) the live audience proportionally; flat delta is
@@ -11402,7 +11402,7 @@ static func _case_audience_pct_modifier() -> String:
 
 
 static func _case_complaint_never_charges_cash() -> String:
-	# REPOINTED by the event-deck delete (2026-08-31). Calibration Round A §7 ruled that a
+	# REPOINTED. The calibration ruled that a
 	# complaint costs AUDIENCE and SATISFACTION and never cash. The card that carried the
 	# ruling, `customer.bug_complaint`, was legacy B2C flavour and is gone; the ruling is not,
 	# so it is asserted in the two places that survived it.
@@ -11467,7 +11467,7 @@ static func _case_complaint_never_charges_cash() -> String:
 	return ""
 
 
-# --- §8 / §13 · the discount cap, the risk hysteresis, one retention gate ---
+# --- The discount cap, the risk hysteresis, one retention gate ---
 
 static func _seed_risk_account() -> Customer:
 	# One B2B account parked IN Risk with a running countdown and a degrading product.
@@ -11649,7 +11649,7 @@ static func _case_manual_retention_respects_cap() -> String:
 	return ""
 
 
-# --- §9 · profitability is a condition, not a crossing ---
+# --- Profitability is a condition, not a crossing ---
 
 static func _case_profit_condition_fires() -> String:
 	# Five Artıda closes seeded, live MRR over the floor, the sixth month earned by the sim:
@@ -11692,7 +11692,7 @@ static func _case_profit_condition_fires() -> String:
 	return ""
 
 
-## HANDOFF_series_a.md §D (owner rulings 2026-09-25): one paper, two modes. In the demo every
+## Owner rulings (2026-09-25): one paper, two modes. In the demo every
 ## ending ends the run. In EA / full the profitable bootstrap is a milestone; every loss, the
 ## signed Series A (until Act 3) and the sale stay endings.
 ## FALSIFICATION: make ending_mode() return "milestone" for series_a_close → the EA row fails.
@@ -11818,7 +11818,7 @@ static func _case_bootstrap_milestone_keeps_the_run() -> String:
 ##   demo ending      — WISHLIST'E EKLE, TEKRAR DENE and Frank's strip, as always
 ##   EA ending        — no store CTA, no Frank strip, TEKRAR DENE stays
 ##   EA milestone     — DEVAM ET and ANA MENÜ only: no share, no TEKRAR DENE, no store CTA,
-##                      no Frank strip (the owner's two buttons, HANDOFF_series_a.md §D)
+##                      no Frank strip (the owner's two buttons)
 static func _case_ending_paper_modes_on_screen() -> String:
 	var host: Node = _ui_host()
 	if host == null:
@@ -12000,7 +12000,7 @@ static func _case_profit_predicate_margin_scale_red() -> String:
 	return ""
 
 
-# --- §10 · the speed ladder is 1×/2×/3× ---
+# --- The speed ladder is 1×/2×/3× ---
 
 static func _case_speed_save_clamps_to_ladder() -> String:
 	# A save written under the 5-rung ladder carries last_running_speed 4; from_dict clamps it
@@ -12037,18 +12037,18 @@ static func _case_topbar_speed_cluster_three_rungs() -> String:
 	return ""
 
 
-# --- §11 · the suite runs on one seed ---
+# --- The suite runs on one seed ---
 
 static func _case_smoke_seed_pinned() -> String:
 	# run_case pins GameState.run_seed to the probes' seed unless the case asked for its own;
-	# the ledger exposes it (audit S2-40), so this is one read.
+	# the ledger exposes it, so this is one read.
 	var seed_now: int = int(GameState.get_run_ledger().get("seed", 0))
 	if seed_now != 424242:
 		return "smoke seed is %d, want 424242 (run_case no longer pins it)" % seed_now
 	return ""
 
 
-# --- §14 · the ambient rate model reproduces the authored daily chance; ≤1 ambient/day ---
+# --- The ambient rate model reproduces the authored daily chance; ≤1 ambient/day ---
 
 static func _case_ambient_hourly_chance_exact() -> String:
 	# 1 − (1 − p_h)^n == p for the authored pool (0.5 over a 10-hour window → 0.0670/h, not
@@ -12082,7 +12082,7 @@ static func _case_ambient_one_per_day_across_hour0() -> String:
 	# instead of typed here, and raising it in the calibration pass will not make this case
 	# lie. What the case still pins is the thing that was actually fragile: the rollover.
 	#
-	# REPOINTED by the event-deck delete (2026-08-31), and STRONGER for it. The subject used to
+	# REPOINTED, and STRONGER for it. The subject used to
 	# be the three authored B2C hourly cards; all three were legacy flavour and are gone, and
 	# the deck that replaces them is not written. The claim is about the ENGINE's clock, not
 	# about content, so it must not wait on content: the subject is `fixture.hourly_ambient`,
@@ -12136,7 +12136,7 @@ static func _case_ambient_one_per_day_across_hour0() -> String:
 	return ""
 
 
-# --- §16 · S2-33: a creation draft survives navigation ---
+# --- A creation draft survives navigation ---
 
 static func _case_creation_draft_survives_navigation() -> String:
 	# A half-built product (path, type, two PLANNED STEPS, a name) on the creation flow; the
@@ -12282,7 +12282,7 @@ static func _case_line_build_writes_subgenre() -> String:
 	return ""
 
 
-# --- §12 · held-back strings landed ---
+# --- Held-back strings landed ---
 
 static func _case_borderless_note_key_exists() -> String:
 	# The borderless helper line the sharpness task deferred: the settings modal picks it the
@@ -14810,7 +14810,7 @@ static func _case_research_freezes_and_resumes() -> String:
 
 
 ## §5.8 — TAMAMLANMA EKONOMİK DELTA ÜRETMEZ. "Ne para, ne marka, ne MRR; yalnız kapı açar."
-## CLAUDE.md Governing Principle 2'nin de doğrudan uygulaması. Bu vaka, ileride biri
+## "Her ekonomik sonuç oynanmış bir karar anından gelir" ilkesinin de doğrudan uygulaması. Bu vaka, ileride biri
 ## "ödül gibi hissettirelim" diye marka bump'ı eklerse onu yakalamak için var.
 ##
 ## FALSİFİKASYON: _complete'e GameState.set_brand(GameState.brand + 1) ekle → FAIL, alanı
@@ -15405,7 +15405,7 @@ static func _case_event_i4_demoted_never_dropped() -> String:
 	for i in 6:
 		# A LIVE demotable interrupt: not `critical`, not `terminal_warning`, no arc, so
 		# §13.5 does not exempt it from the budget. It replaced `product.critical_bug`,
-		# which the event-deck delete removed as legacy flavour (2026-08-31).
+		# which was removed as legacy flavour.
 		pending.append({"event_id": "customer.retention"})
 	var assigned: Array = EvTempo.assign(pending)
 	if assigned.size() != pending.size():
@@ -15773,7 +15773,7 @@ static func _thesis_presenter_body() -> String:
 
 ## §3.1 THE MARKET GUARD. A consumer run must produce ZERO B2B leads, however much sales
 ## capacity is standing around, and the surface must say WHY rather than simply be empty.
-## This is the audit's root-cause (b), and the guard is asked in two places on purpose.
+## The guard is asked in two places on purpose.
 ## FALSIFICATION: remove the `_market_open()` test from SalesFaucetSystem.daily_tick and the
 ## first branch fails — a hired rep mints enterprise leads inside a consumer app.
 static func _case_sales_faucet_guard_b2c() -> String:
@@ -16029,7 +16029,7 @@ static func _case_sales_rep_selection_rule() -> String:
 
 ## §5.4 THE PRICE TRAIL: what the account agreed to at signing is what expansion charges.
 ## Before rev 6 every account expanded at one flat rate, so the stance dial had no tail and a
-## click was worth the same on every record in the book (the 2026-08-06 audit measured it).
+## click was worth the same on every record in the book.
 ## FALSIFICATION: make expand() read B2BConstants.EXPANSION_PER_SEAT_MRR again and the second
 ## half fails by exactly the difference between the two rates.
 static func _case_sales_seat_price_stamp_and_expansion() -> String:
@@ -16346,7 +16346,7 @@ static func _case_sales_candidate_curve_and_traits() -> String:
 
 
 # ============================================================================
-# FUNDING LADDER + PHASE/ENDINGS WAVE (2026-08-27)
+# FUNDING LADDER + PHASE/ENDINGS (2026-08-27)
 # The seed rung, the derived Series A sheet, the fifth bootstrap clause, and the
 # buyout card. Each case FALSIFIES rather than merely asserting: a case that can
 # only pass proves nothing.
@@ -16676,8 +16676,8 @@ static func _case_seed_table_levers_and_final_offer() -> String:
 	var raise0: int = int(GameState.seed_sheet.opening_terms.get("raise", 0))
 	if String(vs.levers[0].current_text) != Fmt.money_exact(raise0):
 		return "the raise row reads '%s'" % String(vs.levers[0].current_text)
-	# The board row is on the sheet but locked: seed accept keeps no board term (K21 open), so
-	# a push there would spend patience on nothing.
+	# The board row is on the sheet but locked: seed accept keeps no board term (an open
+	# decision, docs/ACIK_KARARLAR.md), so a push there would spend patience on nothing.
 	var board_row: Dictionary = vs.levers[2]
 	if bool(board_row.get("push_enabled", true)) or TermSheetTableSystem.can_push("board"):
 		return "the seed board row can be pushed, but signing keeps no board term"

@@ -1,6 +1,6 @@
 extends Panel
 
-# Center viewport per TECH_SPEC §5.2 — ODA rework'ten (2026-08-06) sonra:
+# Center viewport — ODA rework'ten (2026-08-06) sonra:
 # varsayılan durum ODA'dır (masa POV oda sahnesi), sekmeler odanın ÜSTÜNE
 # tam-sayfa açılır ve TabPageChrome sarmalayıcısında mount edilir (üst koyu
 # şerit + "ODAYA DÖN ✕"). tab_changed("") = "sekme yok, oda görünür"
@@ -16,7 +16,7 @@ const TAB_SCENES := {
 	"product": preload("res://scenes/tabs/ProductTab.tscn"),
 	"hr": preload("res://scenes/tabs/HRTab.tscn"),   # Ekip sayfası (task 3)
 	"sales": preload("res://scenes/tabs/SalesTab.tscn"),
-	"finance": preload("res://scenes/tabs/FinanceTab.tscn"),  # Spec 6 — hosts the Yatırım sub-page
+	"finance": preload("res://scenes/tabs/FinanceTab.tscn"),  # hosts the Yatırım sub-page
 	"personal": preload("res://scenes/tabs/PersonalTab.tscn"),  # Kişisel (onaylı tasarım 10a)
 	"rnd": preload("res://scenes/tabs/RnDTab.tscn"),
 }
@@ -50,8 +50,8 @@ func _exit_tree() -> void:
 ## Renk körü paleti değişti: açık sayfayı YENİDEN KUR. Sayfa gövdeleri semantik
 ## rengi kendi _ready'lerinde okuyup override olarak basıyor, yani yerinde bir
 ## repaint seam'i yok — free-and-rebuild zaten bu router'ın tek kurulum yolu
-## (audit Group 7 bunu "dil yenilemesini kendi kendini iyileştiren şey" diye
-## adlandırıyor; palet için de aynı kanal doğru olanı).
+## (dil yenilemesini kendi kendini iyileştiren şey budur; palet için de aynı
+## kanal doğru olanı).
 ## Oda açıkken hiçbir şey yapmıyoruz: OdaView resident ve palette_changed'e kendisi
 ## bağlı, bir daha kurmak gereksiz iş olurdu.
 func _on_palette_changed(_colorblind: bool) -> void:
@@ -75,7 +75,7 @@ func _on_language_changed(_locale: String) -> void:
 func _on_tab_changed(tab_id: String) -> void:
 	_active_tab_id = tab_id
 	if _current_page != null:
-		# S2-33 (Calibration Round A §16): the free-and-rebuild is what makes the language and
+		# The free-and-rebuild is what makes the language and
 		# palette refresh self-healing, so the guard is NOT "stop freeing pages" — the page is
 		# told it is closing and stashes any in-progress draft (creation_flow.on_page_closing
 		# → GameState flag `creation_draft`), which the product tab re-hydrates on its next
@@ -135,7 +135,7 @@ func _make_placeholder_body(tab_id: String) -> Control:
 	body.add_child(col)
 	# The caption is DERIVED from the id (TAB_ + ID), not looked up in a second table:
 	# UiTokens.TABS no longer carries an English `label`, so the rail and this page title
-	# now read the same localization key and cannot drift apart (S2-34).
+	# now read the same localization key and cannot drift apart.
 	var title := UiFactory.make_label(Fmt.upper(tr("TAB_" + tab_id.to_upper())), &"TitleSerif")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)

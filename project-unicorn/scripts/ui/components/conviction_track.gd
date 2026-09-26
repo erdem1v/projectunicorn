@@ -1,7 +1,7 @@
 class_name ConvictionTrack
 extends VBoxContainer
 
-# İKNA gauge (Spec 5 §3 / override §2.2) — the single conviction track that replaces the
+# İKNA gauge — the single conviction track that replaces the
 # mockup's GÜVEN/BASKI/İLGİ chip cluster. Three labeled zones (SOĞUK / ILIK / KAZANILDI),
 # an amber fill, subtle dividers at the zone bounds, and a mono readout.
 #

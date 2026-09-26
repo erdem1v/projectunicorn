@@ -1,15 +1,15 @@
 extends Control
 
-# Month-End Summary modal ("Ay Sonu Özeti") — Spec 3 §5 / ENDGAME_DESIGN.md §1.1.
+# Month-End Summary modal ("Ay Sonu Özeti").
 # Populated from MonthSummarySystem's summary_data (shape documented there).
 # Scannable in <15s: 4 delta rows + runway, AYIN OLAYI, one Frank line, DEVAM ET.
 #
-# process_mode = ALWAYS in the .tscn (ledger 6) — mounts on a paused tree.
+# process_mode = ALWAYS in the .tscn — mounts on a paused tree.
 # Charcoal header/footer bands are StyleBoxFlat built HERE from UiTokens
 # constants (no .tscn color overrides; no charcoal theme variation exists —
 # event_modal's relationship pill is the precedent for code-built boxes).
 #
-# Mockup overrides honored (spec §5): 5th Runway row without delta chip; all
+# Mockup overrides honored: 5th Runway row without delta chip; all
 # currency via UiTokens.format_money (mockup's "$2.150" TR-thousands rejected);
 # MRR chip = percent (absolute fallback when the month started at $0);
 # phase display names match TopBar.
@@ -30,7 +30,7 @@ signal dismissed
 func _ready() -> void:
 	_apply_band_styles()
 	_continue_btn.pressed.connect(_dismiss)
-	# Ledger item 11 exception: the ONLY button, non-destructive continue —
+	# Focus-rule exception: the ONLY button, non-destructive continue —
 	# it MAY take default focus (decision modals must not; this isn't one).
 	_continue_btn.grab_focus()
 
@@ -119,7 +119,7 @@ func _build_chip(chip: Dictionary) -> PanelContainer:
 	return pill
 
 
-# --- Chip content rules (spec §5 override 3) ---
+# --- Chip content rules ---
 
 func _mrr_chip(from: int, to: int) -> Dictionary:
 	var delta: int = to - from

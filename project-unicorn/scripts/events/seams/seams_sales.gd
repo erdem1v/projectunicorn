@@ -1,7 +1,7 @@
 class_name EvSeamsSales
 extends RefCounted
 
-# The `musteri.`, `sales.` and `destek.` namespaces (docs/SEAM_REGISTRY.md §5).
+# The `musteri.`, `sales.` and `destek.` namespaces.
 #
 # ONE THING HERE IS NOT A MECHANICAL WRAPPER AND IS WORTH READING.
 #

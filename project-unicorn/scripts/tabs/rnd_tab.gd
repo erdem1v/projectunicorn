@@ -72,7 +72,7 @@ func _ready() -> void:
 		sig.connect(_on_state_changed)
 	EventBus.rnd_node_requested.connect(_on_node_requested)
 
-	# TASLAK NÖBETİ (creation_flow'un `creation_draft` emsali, S2-33): dil ya da
+	# TASLAK NÖBETİ (creation_flow'un `creation_draft` emsali): dil ya da
 	# palet değişince router sayfayı yıkıp yeniden kuruyor; bayrak olmasaydı
 	# oyuncu okuduğu düğümden dışarı atılırdı. TÜKETİLİR VE SİLİNİR — bayat bir
 	# seçim bir sonraki turda geri gelmesin.

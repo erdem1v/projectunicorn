@@ -1,7 +1,6 @@
 extends Panel
 
-# Bottom news ticker — ambient UI chrome per PROJECT_SPEC §6 (World & Drama)
-# and TECH_SPEC §5.2 / §11.3.
+# Bottom news ticker — ambient UI chrome.
 #
 # Design notes:
 #  - Hardcoded dummy headline pool. Real news engine (phase-aware,
@@ -16,7 +15,7 @@ extends Panel
 #
 #  - LIVE LINES (HR Core): EventBus.headline_added pushes a real gameplay line, which is
 #    prepended to the ambient pool and the stream is rebuilt. This is the game's only
-#    non-modal notification channel — the HR spec needs candidate arrival to raise a badge
+#    non-modal notification channel — candidate arrival must raise a badge
 #    and a ticker line WITHOUT interrupting the player. Rebuilding resets the scroll
 #    position, so a line landing mid-scroll causes one visible jump; acceptable for a
 #    once-in-a-while beat, and the fix (splice without reset) belongs to the news engine.

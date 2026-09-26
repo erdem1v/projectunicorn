@@ -1,7 +1,7 @@
 class_name EvSeamsPorted
 extends RefCounted
 
-# Seams the MIGRATED cards need (docs/EVENT_MIGRATION_LEDGER.md §B).
+# Seams the MIGRATED cards need.
 #
 # Every one of these is a value a factory already read directly off a model. The factory could
 # do that — it lived inside the system. Content cannot, and should not: `Customer.retain_discounts`
@@ -45,7 +45,7 @@ static func install() -> void:
 			if c == null or c.pain_feature_id == "":
 				return false
 			# A line step is buildable when its gate is open today (LineGates is the one
-			# validator). A flat feature has no gate. Event revision 2026-09: without this
+			# validator). A flat feature has no gate. Without this
 			# leaf a promise could name a step that needs research nobody had done, and 241
 			# of the probe's broken promises were exactly that.
 			if ProductLines.step(c.pain_feature_id).is_empty():
@@ -142,7 +142,7 @@ static func install() -> void:
 		func() -> int:
 			# The MINIMUM across live sheets, because the warning is about the one about to
 			# lapse. 9999 with no sheets so a "<= 3" test cannot be satisfied by having none.
-			# BUSINESS days since K5 (2026-09): the validity window is ten weekdays, and this
+			# BUSINESS days: the validity window is ten weekdays, and this
 			# number is printed in Frank's warning. A sheet whose window has already closed is
 			# funding.sheet_decision's, not the warning's, and is left out.
 			var least: int = 9999
@@ -204,7 +204,7 @@ static func install() -> void:
 		"Funding", "-1 until the road closes; the buyout window is measured from that stamp")
 	# THE TWO THAT EXIST BECAUSE OF A SHIPPED BUG. The sealed buyout body carries {valuation}
 	# and {offer}; neither is a scope slot, so as CSV tokens they reached the screen as literal
-	# text (FRANK_VERIFY_2026-08-21.md:166). STRING, and formatted here, because the body reads
+	# text. STRING, and formatted here, because the body reads
 	# them through {seam:} and _interpolate does str() on whatever comes back — an INT would put
 	# "1440000" in a sentence about a valuation. Formatting at READ time is not "localized text
 	# in state": nothing is stored, the money mark is resolved per locale by Fmt.

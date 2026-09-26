@@ -1,7 +1,7 @@
 class_name RngStreams
 extends RefCounted
 
-# Named RNG streams — the resumable replacement for the one global seed (TECH_SPEC §10.4).
+# Named RNG streams — the resumable replacement for the one global seed.
 #
 # WHY THIS EXISTS. Determinism used to mean "GameState.initialize_run calls seed(run_seed)
 # once and every draw site shares that one stream". That gives replay from BIRTH but it can

@@ -1,18 +1,18 @@
 class_name PitchConstants
 extends RefCounted
 
-# Single calibration surface for VC pitch GLOBAL knobs (Spec 4 / VC_PITCH_DESIGN.md §9).
+# Single calibration surface for VC pitch GLOBAL knobs.
 # Per-VC knobs (term bands, patience, conviction weights) live in InvestorRegistry — the
 # other single location. EVERY number here is a working placeholder; the calibration pass
 # (last, one session) touches this file + the InvestorRegistry table and nothing else. The
-# doc fixes STRUCTURE only.
+# design fixes STRUCTURE only.
 
-# --- Conviction track zones (§3) — Soğuk 0-39 / Ilık 40-69 / Kazanıldı 70-100 ---
+# --- Conviction track zones — Soğuk 0-39 / Ilık 40-69 / Kazanıldı 70-100 ---
 const ZONE_BOUNDS := [40, 70]          # [ilik_min, kazanildi_min]; passed to MeetingScene conviction
 const ILIK_MIN := 40
 const WON_MIN := 70
 
-# --- Conviction seeding (§3 macro moment) — base + run-state weights ---
+# --- Conviction seeding (the macro moment) — base + run-state weights ---
 #
 # RENAMED SEED_* → CONV_* (2026-08-27, the seed-rung wave). These twelve numbers have always
 # meant "how the room is SEEDED with conviction", and the run now has an actual SEED ROUND with
@@ -32,13 +32,13 @@ const CONV_MRR_REFERENCE := 40_000
 const CONV_MRR_MAX_BONUS := 20         # full bonus when MRR ≫ reference (scaled)
 const CONV_BRAND_FLOOR := 50           # brand at floor = 0 contribution
 const CONV_BRAND_MAX := 12             # ± cap from brand distance to floor
-const CONV_SHUTTER_PENALTY := -15      # Kepenk active (ledger 12 — thin runway priced in)
+const CONV_SHUTTER_PENALTY := -15      # Kepenk active (thin runway priced in)
 const CONV_THIN_RUNWAY_PENALTY := -8   # runway below comfort but not shuttered
 const CONV_SCANDAL_PENALTY := -12      # unmanaged major scandal
-const CONV_LEVERAGE_BONUS := 15        # a live sheet already in pocket (§6)
+const CONV_LEVERAGE_BONUS := 15        # a live sheet already in pocket
 const CONV_WARM_INTRO_BONUS := 12      # Bosphorus via Frank
 const CONV_DIMENSION_MATCH_BONUS := 8  # Meridian ↔ subgenre/product dimension
-const CONV_CALLBACK_BONUS := 10        # re-entry after a met callback (§5)
+const CONV_CALLBACK_BONUS := 10        # re-entry after a met callback
 
 # --- Difficulty band → SkillCheck.resolve diff int (visible Disco labels) ---
 const DIFF_KOLAY := 1
@@ -61,11 +61,11 @@ const SPIN_DIFF := DIFF_ZORLU
 const GECISTIR_SUCCESS := 5
 const GECISTIR_FAIL := -5
 const GECISTIR_DIFF := DIFF_KOLAY
-const GECISTIR_CAP := 65               # deflection can never win the room (§4 Beat 3)
+const GECISTIR_CAP := 65               # deflection can never win the room
 
 # --- Beat 1 perception + Beat 4 push ---
 const BEAT1_DIFF := DIFF_ORTA
-const MASAYI_ZORLA_DIFF := DIFF_ZORLU  # Ilık fork gamble; failure = RET (hard, Erdem call C)
+const MASAYI_ZORLA_DIFF := DIFF_ZORLU  # Ilık fork gamble; failure = RET (hard, Erdem's call)
 
 # --- Beat skill routing (SKILL-RENAME 2026-07-16, re-pointed 2026-08-21) ---
 # Erdem: VC persuasion beats read the founder's persuasion number; the traction angle reads
@@ -78,26 +78,26 @@ const BEAT3_SKILL := "charisma"         # Sorgu postures (dürüst / spin / geç
 const BEAT4_PUSH_SKILL := "charisma"    # Masayı zorla
 const ANGLE_SKILL := {"vizyon": "charisma"}   # Beat 2 anlatı; fallback: "sales" (traction)
 
-# --- Prep (§1) ---
+# --- Prep ---
 const MEETING_LEAD_DAYS := 3           # request → meeting day
 const PREP_DAYS := 2
 const PREP_MIN_DAYS_BEFORE := 2        # prep startable only if ≥ this many full days remain
 const PREP_BONUS := 2                  # SkillCheck bonus units on the focused check (+~20% odds)
-# K4 — moving a booked meeting costs a little of that fund's goodwill, paid at its NEXT meeting
+# Moving a booked meeting costs a little of that fund's goodwill, paid at its NEXT meeting
 # (stored per fund in vc_states.move_penalty, consumed when that meeting begins). Cancelling
 # also shuts the booking desk for the rest of the day.
 const MEETING_CANCEL_PENALTY := 3      # conviction points off the fund's next meeting
 const MEETING_RESCHEDULE_PENALTY := 2  # ditto; reschedule = the same lead time again
 
-# --- Sheet economy (§5) ---
-# K5 (2026-09): a Series A sheet is valid for a fixed number of BUSINESS days - weekdays on the
+# --- Sheet economy ---
+# A Series A sheet is valid for a fixed number of BUSINESS days - weekdays on the
 # real calendar (GameState.is_business_day). TermSheet.expires_day is the day the last one falls
 # on; business_days_left() counts down to it. A queued sheet gets a fresh window on delivery.
 const SHEET_VALIDITY_BUSINESS_DAYS := 10
 const MAX_SHEETS := 2
-const WARNING_DAYS := 3                 # BUSINESS days: expiry warning card + TopBar chip threshold (ledger 14)
+const WARNING_DAYS := 3                 # BUSINESS days: expiry warning card + TopBar chip threshold
 
-# K6 — the offer row before the table shows an ESTIMATED range, never the number. The range
+# The offer row before the table shows an ESTIMATED range, never the number. The range
 # always contains the true opening term and never sits centred on it: the true value's position
 # inside the range is a deterministic fraction (seeded by fund id + sheet grant day, so it never
 # rerolls) drawn from [EST_POS_MIN, EST_POS_MAX] or its mirror.
@@ -114,8 +114,8 @@ const CALLBACK_MRR_GROWTH_PCT := 20     # "MRR +20% over meeting-day value"
 const CALLBACK_BUGS_UNDER := 3          # "active bugs under N"
 
 # --- Soft cap eve: RETIRED (Frank v6, surface 15) ---
-# There was a Frank line on the eve of the soft cap ("yarın son gün, cebinde teklif var",
-# ledger 16), inherited from the Day-180 wall before it. The document moved that card onto a
+# There was a Frank line on the eve of the soft cap ("yarın son gün, cebinde teklif var"),
+# inherited from the Day-180 wall before it. The document moved that card onto a
 # different moment - the last day to answer the last live OFFER - so the calendar constant it
 # rode has no reader left and is gone rather than left lying around.
 #
@@ -123,7 +123,7 @@ const CALLBACK_BUGS_UNDER := 3          # "active bugs under N"
 # warning. That is open work with an owner-shaped hole in it (a "final stretch" surface, author
 # and voice undecided) and it is written up in docs/writing/FRANK_UNWIRED.md.
 
-# --- Term Sheet Table (Spec 6 / ENDGAME_DESIGN.md §5) — the push-your-luck negotiation ---
+# --- Term Sheet Table — the push-your-luck negotiation ---
 # Every number is a working placeholder (calibration pass tunes it). Each lever's push reads
 # ONE founder skill (the payoff of the onboarding skill choice) — kept as an editable data
 # table so the mapping never hides inside table logic:
@@ -140,11 +140,11 @@ const LEVER_DIFF := {"valuation": 0, "dilution": 1, "board": 2}
 const VAL_STEP := 4                     # valuation +$4M per push (higher = founder-good)
 const DIL_STEP := 4                     # dilution −4pp per push (lower = founder-good)
 const DIL_FLOOR := 10                   # dilution can't be pushed below this (%)
-# Board has no numeric step — a fixed sequence: drop veto first, then drop the seat (§8).
-# Odds self-damping: each push to a lever lowers its own subsequent odds (decision 9).
+# Board has no numeric step — a fixed sequence: drop veto first, then drop the seat.
+# Odds self-damping: each push to a lever lowers its own subsequent odds.
 const PUSH_DECAY := 0.12                # −12pp per prior push to that lever
-const PUSH_ODDS_FLOOR := 0.05           # a lever never becomes literally impossible (ledger 6)
-# Leverage — a second live sheet (§8): bonus to ALL push odds + a one-notch-better opening.
+const PUSH_ODDS_FLOOR := 0.05           # a lever never becomes literally impossible
+# Leverage — a second live sheet: bonus to ALL push odds + a one-notch-better opening.
 const LEVERAGE_BONUS_UNITS := 1         # SkillCheck bonus units (each = +BONUS_STEP = +10pp)
 const LEVERAGE_OPEN_NOTCH := 4          # opening valuation starts +$4M better when leverage is live
 # Dial spin duration (seconds) — the push roll presentation.
@@ -202,7 +202,7 @@ static func diff_label(diff: int) -> String:
 		_: return TranslationServer.translate("PITCH_DIFF_HARD")
 
 
-## Founder-skill display label for the odds split (§5). Single label home is
+## Founder-skill display label for the odds split. Single label home is
 ## FounderConstants (CSV-backed since SKILL-RENAME); kept here as a delegate so
 ## existing callers (term sheet table, meeting) stay unchanged.
 static func skill_label(skill_name: String) -> String:

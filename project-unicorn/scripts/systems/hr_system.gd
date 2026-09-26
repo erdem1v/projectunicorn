@@ -1,8 +1,8 @@
 class_name HRSystem
 extends RefCounted
 
-# Pure-logic system per TECH_SPEC §8.3 — no scene dependency, no instance.
-# Driven by TimeManager.daily_tick slot 3 (TECH_SPEC §8.2 ordered dispatch).
+# Pure-logic system — no scene dependency, no instance.
+# Driven by TimeManager.daily_tick slot 3 (ordered dispatch).
 #
 # HR Core: this file is the DAILY ORCHESTRATOR only. It owns the order the HR
 # sub-systems run in and nothing else; every rule lives in the system that owns it.
@@ -353,7 +353,7 @@ static func idle_count() -> int:
 
 # ---------------------- §12.0 İŞ TARAFI OKUMA SEAM'LERİ ----------------------
 # Yukarıdaki assigned_to(alan) DURUYOR ve türetilmiş alan aynası üzerinden çalışıyor;
-# tüketiciler tek tek buraya çevrilir ve son çevrilen Faz 7'de o seam'i öldürür.
+# tüketiciler tek tek buraya çevrilir ve son çevrilen o seam'i öldürür.
 
 static func assigned_to_job(job_id: String) -> Array[Character]:
 	## O İŞE atanmış, BUGÜN ÇALIŞABİLİR herkes. İzindeki ve eğitimdeki dışarıda: ataması
@@ -503,7 +503,7 @@ static func area_output(area_key: String, people: Array = []) -> float:
 ## bunun bir tasarım gerekçesi yok. §8.1 ile §8.3 oranı zaten kendileri veriyor — 11 saat
 ## +%37,5, 5 saat %62,5 — ve normalize hâl tam o iki sayıdır.
 ##
-## ÜÇ MASANIN DA OKUDUĞU ŞEY BUDUR (Faz 7). Öncesinde bu fonksiyonun HİÇBİR tüketicisi
+## ÜÇ MASANIN DA OKUDUĞU ŞEY BUDUR. Öncesinde bu fonksiyonun HİÇBİR tüketicisi
 ## yoktu: hepsi effective_skill okuyordu, yani saat kadranı para ve moral harcıyor ama
 ## çıktıya dokunmuyordu. §8.4'ün "getiri saatin kendisidir" cümlesi motorda karşılıksızdı.
 static func daily_contribution(c: Character, area_key: String) -> float:
@@ -552,7 +552,7 @@ static func tick_training() -> void:
 
 ## Oyuncunun kararı: birini eğitime gönder, HANGİ ALANDA olduğunu söyleyerek (§5.2:
 ## "Oyuncu hangi alanın yükseleceğini seçer"). Ücreti HR gider hattından TAHSİL EDER ve
-## ancak ödeme geçtiyse eğitimi başlatır — §10: bedeli olan, oynanmış bir karar.
+## ancak ödeme geçtiyse eğitimi başlatır — bedeli olan, oynanmış bir karar.
 ## Ücret kademelidir ve aynı alandaki tekrarda artar (HRConstants.training_fee), yani
 ## "azalan getiri" fiyat tarafından ödenir: kazanç hep +1, pahalılaşan aynı +1'dir.
 ## `false` döner uygun değilse ya da kasa yetmiyorsa (çağıran düğmeyi kapatır).

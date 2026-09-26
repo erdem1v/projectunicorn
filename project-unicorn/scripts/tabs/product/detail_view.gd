@@ -76,7 +76,7 @@ var _league_label: Label = null
 var _league_strip: PanelContainer = null
 var _league_icon: Control = null
 var _tip_line: Label = null
-# [Signal, Callable] çiftleri — bağlan/çöz simetrik (TECH_SPEC §13.3).
+# [Signal, Callable] çiftleri — bağlan/çöz simetrik.
 var _signals: Array = []
 
 
@@ -194,7 +194,7 @@ func _build() -> void:
 	_build_right_column(right)
 
 	# Alt şerit (tam genişlik): pazar payı satırı + Frank.
-	# DİKKAT ŞERİDİ (mockup 4a — dosyadaki TEK uyarı biçimi ve kilitli reçetenin
+	# DİKKAT ŞERİDİ (tasarımdaki TEK uyarı biçimi ve kilitli reçetenin
 	# uyarı grameri): bir rakip seni geçtiğinde satır çıplak kırmızı metin DEĞİL,
 	# üçgen ikonlu kırmızı şerit olur. Şerit yalnız o durumda görünür; normalde
 	# etiket sade bir bilgi satırıdır ve kutusuz kalır.
@@ -298,8 +298,8 @@ func _build_left_column(left: VBoxContainer) -> void:
 	var tr_body := VBoxContainer.new()
 	tr_body.add_theme_constant_override("separation", 6)
 	var tr_head := HBoxContainer.new()
-	# "Yatırımcı iştahı" (Kalibrasyon Turu A §3): kapının sinyali — durum çipi + tek satır;
-	# gelir çıtasının rakamı hiçbir yerde basılmaz (yönetmen kararı). K3 (2026-09): ilerleme
+	# "Yatırımcı iştahı": kapının sinyali — durum çipi + tek satır;
+	# gelir çıtasının rakamı hiçbir yerde basılmaz (yönetmen kararı). İlerleme
 	# çubuğu kalktı — yaklaşmayı Frank'in eşik mesajları söyler, çubuk değil.
 	var tr_title := UiFactory.make_label(UiTokens.tr_upper(InvestorAppetiteUi.title_text()), &"SectionLabel")
 	tr_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -585,7 +585,7 @@ func _desk_line(roster: String) -> Control:
 	# Sistem haklıydı, ekran eksikti: hangi görevin boş olduğunu ve onu kimin doldurabileceğini
 	# söylemiyordu.
 	#
-	# ÜÇ HÂL (B1, 2026-08-27), ve üçü de AYRI cümle: temsilci görevde · kurucu pasif olarak
+	# ÜÇ HÂL, ve üçü de AYRI cümle: temsilci görevde · kurucu pasif olarak
 	# ilgileniyor · kimse yok. Ortadaki hâl bu turda doğdu ve bir atamayı değil bir ATAMA
 	# YOKLUĞUNU anlatıyor, o yüzden nötr renkte: kaybedilmiş bir şey yok, aksine masa çalışıyor.
 	# `desk_roster()` pasif kurucuyu zaten içerdiği için "kim var" cümlesi onu kendiliğinden
@@ -710,7 +710,7 @@ func _make_action_card(title: String, status_txt: String, desc: String, attentio
 	body.add_child(d)
 	var card := UiFactory.make_card(body, false, false)
 	if attention:
-		_apply_amber_panel(card)   # mockup grameri: vurgu kartı amber, pembe değil
+		_apply_amber_panel(card)   # vurgu kartı amber, pembe değil
 	_set_mouse_ignore(body)   # tıklamalar kartın gui_input'una düşer
 	return {"card": card, "title": t, "status": s, "desc": d}
 
@@ -928,7 +928,7 @@ func _make_promise_row(p) -> PanelContainer:
 	row.add_child(days_lbl)
 	_promise_rows.append({"label": days_lbl, "promise": p})
 	var card := UiFactory.make_card(row, false, false)
-	_apply_amber_panel(card)   # mockup grameri: amber vurgu (CardAttention pembesi değil)
+	_apply_amber_panel(card)   # amber vurgu (CardAttention pembesi değil)
 	return card
 
 

@@ -1,9 +1,8 @@
 # Lokalizasyon Sözlüğü — TR ↔ EN terim kanonu (2026-08-10, kapı kararları işlenmiş)
 
-**BILINGUAL BIRTH LAW'un bağlayıcı eşlik dosyası** (CLAUDE.md, Content & Language Laws). Bir terimi bu
+**BILINGUAL BIRTH LAW'un bağlayıcı eşlik dosyası** (CLAUDE.md). Bir terimi bu
 tablo yönetiyorsa, o terim bir daha ad-hoc çevrilmez — her yüzeyde buradaki karşılık kullanılır.
-Kaynak ve gerekçeler: `docs/audits/localization_phase1_2026-08-07.md` §3; dokuz kapı kararı
-(2026-08-08) işlenmiştir. Yeni terim ekleyen task bu dosyaya satırını da ekler.
+Dokuz kapı kararı (2026-08-08) işlenmiştir. Yeni terim ekleyen task bu dosyaya satırını da ekler.
 
 **Register:** EN, İngilizce yazılmış oyunun kendi sesi — kuru, düşük ateşli, satış-katı/haber-odası
 kayıtları yerinde. Makine-çeviri kokusu ve pazarlama İngilizcesi yasak. ALL-CAPS yüzey EN'de de
@@ -31,7 +30,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Faz kapısı | Phase gate | |
 | KEPENK: {n} GÜN | SHUTTER: {n} DAYS | Kepenk imgesi korunur — fiction'ın kendi metaforu. |
 | Artıda | Default Alive | Örnek çift: EN yerlisi tür terimi. |
-| Brüt Runway | Gross Burn Runway | Kanon (ENDGAME §Package 5). |
+| Brüt Runway | Gross Burn Runway | Kanon. |
 | KASA | CASH | TopBar; TR tarafı yeni. |
 | BURN | BURN | **Kapı kararı 4** — whitelist'te; TR TopBar BURN kalır. |
 | NET / MRR | NET / MRR | Aynı. |
@@ -41,7 +40,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Ay kapanışı | Month close | |
 | Pazar payı | Market share | |
 | Değerleme / Hisse / Koltuk | Valuation / Equity / Seat(s) | Koltuk iki anlamda da (lisans + yönetim kurulu) seat. |
-| Yatırımcı iştahı | Investor appetite | Kalibrasyon Turu A §3 (2026-08-19): Series A kapısının tek oyuncu-yüzü; rakam asla basılmaz. |
+| Yatırımcı iştahı | Investor appetite | Series A kapısının tek oyuncu-yüzü; rakam asla basılmaz. |
 | KAPALI · ISINIYOR · AÇIK *(iştah çipi)* | CLOSED · WARMING · OPEN | Üç durum; çip ALL-CAPS iki dilde. |
 | Gelir çıtası | Revenue bar | Kapının gelir koşulunun RAKAMSIZ adı (`altında` / `aşıldı` ↔ `below` / `cleared`). |
 
@@ -66,7 +65,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Uzmanlık / Hız / Uyum | Expertise / Pace / Rapport | Eksen id'leri zaten `expertise/pace/rapport`. |
 | **Deneyim** | **Experience** | Terminal UI deltası (`HR_COL_EXPERIENCE` shipped) — kanon. |
 | **Eğitim / Eğitim ücreti** | **Training / Training fee** | Terminal UI deltası; `hr_constants COST_LABEL_TRAINING` B2'de anahtarlanır. |
-| Kurucu | Founder | S2-42 çifti. |
+| Kurucu | Founder | |
 | Ürün Yöneticisi / Tasarımcı / Yazılımcı | Product Manager / Designer / Developer | |
 | Test Uzmanı | Tester | Yedi kişilik ekipte "QA Engineer" org-şeması kaçağı olur. |
 | Satış Uzmanı | Sales Rep | |
@@ -82,7 +81,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | Aday dosyası | Candidate file | |
 | İşe alım / Kıdem tazminatı | Hiring / Severance | |
 | ZAMMI UYGULA | APPLY RAISE | |
-| İK | HR | Rayda ve ticker'da: TR İK der, EN HR (S3-30 kapanışı). |
+| İK | HR | Rayda ve ticker'da: TR İK der, EN HR. |
 
 ## 5. Satış, B2B, pitch, VC
 
@@ -102,7 +101,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | KARARLILIK *(pitch radarı)* | RESOLVE | Monitör "kararlılık·stability"den ayrı anahtar. |
 | İlgilen | Check in | **Kapı kararı 2** — shipped "Attend" revize edildi. |
 | Değerlendir / Görüşmeye git | Evaluate / Go to meeting | Shipped. |
-| NÖTR *(ilişki pili)* | NEUTRAL | S3-20 etiket tablosunun ilk satırı; bugün ham enum basılıyor. |
+| NÖTR *(ilişki pili)* | NEUTRAL | Etiket tablosunun ilk satırı; bugün ham enum basılıyor. |
 
 ## 6. Dünya, haber, ending
 
@@ -112,7 +111,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | SAYI {n} | No. {n} | Broadsheet kaydı ("ISSUE" dergi kaydı). |
 | Rakip / Sektör | Rival / Sector | |
 | ZOR MOD / GAZETEYİ PAYLAŞ | HARD MODE / SHARE THE PAPER | Shipped. |
-| İlgi Söndü | Interest Faded | Kalibrasyon Turu A §2 (2026-08-19): yumuşak tavan bitişinin (running_on_fumes) başlığı `[WORKING]`. |
+| İlgi Söndü | Interest Faded | Yumuşak tavan bitişinin (running_on_fumes) başlığı `[WORKING]`. |
 | KİLOMETRE TAŞI | MILESTONE | 2026-09-25: EA / tam build'de koşuyu bitirmeyen gazetenin ray başlığı (tekil; çoğulu ray etiketindeki "Kilometre Taşları"). |
 | iki yılı aşkın sürede | in over two years | 2026-09-25: yalnız kilometre taşından sonra 730. günü geçen koşunun gazetesi (`END_SPAN_OVER_TWO_YEARS`). |
 
@@ -120,7 +119,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 
 | TR | EN | Not |
 |---|---|---|
-| Ürün / İK / Finans / Satış / Operasyon / Ar-Ge / Kişisel / Olaylar *(ray)* | Product / HR / Finance / Sales / Ops / R&D / Personal / Events | S2-34: tek `TAB_*` anahtar seti, iki İngilizce kaynak emekli. |
+| Ürün / İK / Finans / Satış / Operasyon / Ar-Ge / Kişisel / Olaylar *(ray)* | Product / HR / Finance / Sales / Ops / R&D / Personal / Events | Tek `TAB_*` anahtar seti, iki İngilizce kaynak emekli. |
 | Ayarlar | Settings | Rayın 9. etiketi de `TAB_SETTINGS`e girer. |
 | Tamam / İptal / Vazgeç | OK / Cancel | TR iç kural: akıştan çıkış **Vazgeç**, koşan şeyi öldürme **İptal**. |
 | DEVAM ET | CONTINUE | Kilometre taşı gazetesi de aynı anahtarı (`UI_CONTINUE`) okur. |

@@ -1,7 +1,7 @@
 class_name GameEvent
 extends Resource
 
-# GameEvent data model per TECH_SPEC §7.
+# GameEvent data model.
 #
 # NOT LOADED FROM ANYWHERE ANY MORE, and no longer saved. This used to be a content file's
 # in-memory form: EventManager parsed data/events/reactive/*.json into these at startup and
@@ -15,7 +15,7 @@ extends Resource
 #
 # Plain data container. Eligibility, latching and effects live in the engine, never here.
 #
-# Naming caution (TECH_SPEC §7): class is GameEvent, not Event — Godot
+# Naming caution: class is GameEvent, not Event — Godot
 # reserves the name `Event` at engine level (input events). Field is `title`,
 # not `name`, mirroring Character.character_name policy.
 #
@@ -34,7 +34,7 @@ extends Resource
 # their own fields and are checked separately against EventManager._history.
 
 # --- Identity (used now) ---
-@export var id: String = ""                        # "ev_<num>_<slug>" per TECH_SPEC §12
+@export var id: String = ""                        # "ev_<num>_<slug>"
 @export var category: String = "reactive"          # "reactive" | "industry" | "scandal" | "opportunity"
 @export var title: String = ""
 @export var subtitle: String = ""                  # e.g. "Cihangir · 13:42"

@@ -137,7 +137,7 @@ static func step_unlockable(step_id: String) -> bool:
 # =========================================================================
 #  §19 · SİNYALLER — dinleyicisi olmasa da yayınlanır
 # =========================================================================
-# Adlar EventBus'ta yaşıyor (tek sinyal merkezi, TECH_SPEC §6.1). Bu bölüm onları
+# Adlar EventBus'ta yaşıyor (tek sinyal merkezi). Bu bölüm onları
 # YAYINLAYAN tek yerdir: bir sinyalin iki emitter'ı olursa olay motoru aynı olayı
 # iki kez görür ve sebebini bulmak imkânsızlaşır.
 

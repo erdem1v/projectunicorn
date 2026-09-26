@@ -1,25 +1,25 @@
 extends Node
 
-# Character registry per TECH_SPEC §6.1.
+# Character registry.
 # Single source of truth for all characters — employees, mentor, NPCs — and
 # their relationships, traits, morale, and compensation.
 #
 # Mutations route through registry methods. State changes emit on EventBus
-# (TECH_SPEC §13) so scenes (HR tab, ODA) update themselves without the registry
+# so scenes (HR tab, ODA) update themselves without the registry
 # knowing who is listening.
 #
-# Tick interaction (TECH_SPEC §8.2):
+# Tick interaction:
 #   - HRSystem.daily_tick (slot 3) reads employees and writes morale via set_morale
 #   - FinanceSystem.daily_tick (slot 5) pulls get_total_monthly_salaries
 #   The pull pattern keeps systems decoupled — Sales (slot 4) will slot in
 #   between without changing any wiring.
 #
 # Naming caution: get_character (not get) — `Object.get(prop)` is reserved
-# and shadowing it produces subtle bugs (TECH_SPEC §7 naming-collision note).
+# and shadowing it produces subtle bugs.
 
 # Manual toggle for deliberate registry integration testing. Off in normal runs
-# so a fresh game starts with zero employees and zero salary burn (Economic
-# Outcome Principle, PROJECT_SPEC §10). With this off, the mentor is still
+# so a fresh game starts with zero employees and zero salary burn (no economic
+# outcome without a played decision). With this off, the mentor is still
 # provisioned by ensure_mentor() during GameState.initialize_run — no regression
 # to onboarding or to the mentor surfaces. Flip to true to restore the
 # Debug Engineer A / Debug Designer B placeholders for HR/Finance pipeline tests.
@@ -90,7 +90,8 @@ func get_active_employees() -> Array[Character]:
 ## Eğitime uygun mu? Edilgen olmayan bir çalışan ya da KURUCU, ve SEÇİLEN yetenek tavanın
 ## altındayken. DENEYİM ŞARTI YOK (§5.2): eğitim parayla alınan ayrı bir kanal,
 ## learn-by-doing'in devamı değil. Tavandaki bir alana eğitim GÖNDERİLEMEZ: ücreti
-## alıp hiçbir şey vermemek §10'un yasakladığı şeyin aynası olurdu.
+## alıp hiçbir şey vermemek "oynanmamış ekonomik sonuç yok" kuralının yasakladığı şeyin
+## aynası olurdu.
 ##
 ## İKİ KAPI 2026-08-22'de AÇILDI. (1) KURUCU: onaylı tasarımın Kişisel kartında
 ## EĞİTİME GÖNDER düğmesi var. (2) LİDERLİK: eğitim tablosunun üçüncü satırı Liderlik,
@@ -680,7 +681,7 @@ func add(character: Character) -> void:
 		# herkesin hakkı; ay tabanlı eski alan silindi, geriye bu TEK stamp kaldı.
 		if character.leave_week < 0:
 			character.leave_week = HRConstants.leave_week_for(hire_ordinal)
-		# Run counter seam (Spec 3 §3): counted HERE, not at the add_character
+		# Run counter seam: counted HERE, not at the add_character
 		# event modifier, so the future hire flow counts automatically. Founder
 		# (category "founder") is excluded; mentor never passes through add().
 		GameState.run_hires += 1
@@ -819,9 +820,8 @@ func set_status(id: String, value: String) -> void:
 
 
 func set_morale(id: String, value: int) -> void:
-	# Placeholder clamp range — spec leaves bounds undefined; 0..100 mirrors
-	# brand (game_state.gd) and is the natural choice. See PROJECT_SPEC §9
-	# if the designer later locks formal morale bounds.
+	# Placeholder clamp range — 0..100 mirrors brand (game_state.gd) and is
+	# the natural choice.
 	var c: Character = _characters.get(id, null)
 	if c == null:
 		push_warning("[CharacterRegistry] set_morale on unknown id: %s" % id)
@@ -848,7 +848,7 @@ func set_morale(id: String, value: int) -> void:
 
 func _seed_debug_characters() -> void:
 	# DEBUG SEED — Frank Köseoğlu name placeholder originated in the RightPanel
-	# turn. Not in PROJECT_SPEC; canonical mentor identity is a Content Phase
+	# turn. Canonical mentor identity is a Content Phase
 	# decision. Keep marker so future agents know this is unblessed.
 	var mentor := Character.new()
 	mentor.id = "char_mentor_frank"

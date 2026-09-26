@@ -14,7 +14,7 @@ extends Resource
 # Dimensions mirror QualityModel's canonical axes (open-ended floats). `momentum`
 # is the per-day growth rate rivals gain via RivalRegistry.advance_all (0 = static).
 
-@export var id: String = ""                    # "rv_<subtype>_<n>" per TECH_SPEC §12 prefix spirit
+@export var id: String = ""                    # "rv_<subtype>_<n>" — type-prefixed id
 @export var product_name: String = ""
 @export var sub_product_type_id: String = ""
 @export var tier: String = "startup"           # "giant" | "established" | "startup"

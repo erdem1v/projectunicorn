@@ -7,7 +7,7 @@ extends Control
 # process_mode = ALWAYS (.tscn kökünde 3). Çocuklar INHERIT — bir ALWAYS ebeveynin
 # altında INHERIT de ALWAYS'e çözülür, bu yüzden tüm butonlar tree paused iken de
 # tıklanabilir. Bu projenin EN SIK tekrarlanan yaşam-döngüsü hatası pause'a kapalı
-# UI'dır (ENDGAME_DESIGN.md §"Pause-gated UI" bunu ayrıca yasalaştırıyor); doğrulaması
+# UI'dır; doğrulaması
 # 4x hızda menüyü açıp her butona tıklamaktır, göz kararı değil.
 #
 # Menü YALNIZ ModalLayer ve PanelLayer boşken açılır (game_shell._input). Zorunlu

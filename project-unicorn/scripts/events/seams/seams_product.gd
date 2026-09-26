@@ -1,7 +1,7 @@
 class_name EvSeamsProduct
 extends RefCounted
 
-# The `urun.` and `arge.` namespaces (docs/SEAM_REGISTRY.md §2, §3).
+# The `urun.` and `arge.` namespaces.
 #
 # Almost every row here is a one-line binding, and that is Ürün rev 6.1 and Ar-Ge rev 1.4
 # paying forward: both GDDs opened a named read surface before this engine existed, on the

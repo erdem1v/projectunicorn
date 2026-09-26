@@ -5,7 +5,7 @@ extends RefCounted
 # departments, the six skill AREAS, the seven jobs, traits, the Atlas search, morale,
 # annual leave, player actions, department overtime and the HR economy labels.
 # EVERY number here is a WORKING PLACEHOLDER — calibration is a separate last pass
-# (PROJECT_SPEC §10: numbers last). Pure statics; no state, no scene dependency.
+# (numbers last). Pure statics; no state, no scene dependency.
 #
 # NO HR NUMBER LIVES ANYWHERE ELSE. If an HR formula needs a knob it comes from here;
 # the badge threshold that used to be a literal in left_tabs.gd is MORALE_FLIGHT_RISK below.
@@ -471,7 +471,7 @@ static func area_fatigue_mult(role_id: String, area_id: String) -> float:
 
 # ======================= Roles, departments, sections =========================
 # Typed ids — no free-text role comparison survives anywhere. `category` remains the
-# founder/mentor/staff discriminator (audit §3); role is typing + display only.
+# founder/mentor/staff discriminator; role is typing + display only.
 const ROLE_PRODUCT_MANAGER := "product_manager"
 const ROLE_DESIGNER := "designer"
 const ROLE_DEVELOPER := "developer"
@@ -487,7 +487,7 @@ const EMPLOYEE_ROLES := ["product_manager", "designer", "developer", "tester", "
 # Rol adları tam Türkçe; melez adlar kullanılmaz (§16; İngilizce karşılıklar §3.1). The mockups' English
 # DESIGNER/DEVELOPER/TESTER chips are pre-canon.
 # ROLE_LABELS, DEPT_LABELS, SECTION_LABELS, BAND_LABELS and BADGE_LABELS all left this
-# file for strings.csv (Lokalizasyon Faz 2 · B2). The label is now DERIVED from the id the
+# file for strings.csv. The label is now DERIVED from the id the
 # code already carries — HR_ROLE_ + ID, HR_DEPT_ + ID, and so on — so one id yields one row
 # in both languages and a table can no longer drift from the CSV.
 #
@@ -836,7 +836,7 @@ static func trait_has(trait_ids: Array, effect_key: String) -> bool:
 # BANT DEĞİL SEVİYE. Yukarıdaki BAND_* bir BÜTÇE seçeneğiydi ve işe alımda ATILIYORDU:
 # aday üretilirken okunuyor, Character'a hiç yazılmıyordu. §3 onu bir ALAN yapıyor — her rol
 # üç seviyede bulunur, seviye kişide saklanır, terfinin değiştirdiği alan budur (§15).
-# BAND_* Faz 5b'de Atlas çevrilene kadar duruyor (Faz 7 silme listesinde).
+# BAND_* Atlas çevrilene kadar duruyordu, sonra silindi.
 const LEVEL_JUNIOR := 0
 const LEVEL_MID := 1
 const LEVEL_SENIOR := 2
@@ -1205,7 +1205,7 @@ const MORALE_MAX := 100
 ## yıldızlara dokunmaz, çünkü kalite zaten yıldızlarda ve TİTİZ huyunda temsil ediliyor.
 ## §7 DÖRT BAND, ÜÇ ROZET. TÜKENİYOR (40 eşiği) rev 2'nindi ve rev 11 onu saymıyor; sabiti,
 ## karşılaştırıcısı ve rozeti birlikte gitti. Eskiden burada duran not, sabiti okuyan
-## yüzeyler Faz 5a'da çevrilene kadar derlenmeye devam etmeli (Faz 7 silme listesinde).
+## yüzeyler çevrilene kadar derlenmeye devam etmeli diyordu.
 const MORALE_BAND_HIGH := 80        # ve üstü → +%10 hız
 const MORALE_BAND_LOW := 50         # altı → −%15 hız
 const MORALE_BAND_HIGH_MULT := 1.10
@@ -1277,14 +1277,14 @@ const BADGE_FLIGHT_RISK := "FLIGHT_RISK"
 ## §13.3'ün AŞIRI YÜK rozeti — atanmış iş sayısı 2. Eskiden BADGE_OVERLOADED da vardı ve
 ## FARKLI bir şeydir (şirket çapındaki "mühendise ihtiyaç var" bayrağı); §16 aynı kelimenin
 ## iki durumu adlandırmasını yasaklıyor, o yüzden yeni rozet kendi id'sini alıyor ve eskisi
-## Faz 5a'da yüzeyden, Faz 7'de koddan kalkıyor.
+## önce yüzeyden, sonra koddan kalktı.
 const BADGE_OVERLOAD_JOBS := "OVERLOAD_JOBS"
 
 # Worst-first severity, matching the order HRSystem.badges_for returns. Exposed so a card
 # list can sort "needs attention" rows to the top without re-deciding which badge is worse.
 ## §7'nin dört bandının karşılığı ÜÇ rozettir: Ayrılabilir · AŞIRI YÜK · YENİ.
 ## TÜKENİYOR (BURNING_OUT) rev 11'de YOK — 40 eşiği rev 2'nindi ve §7 onu saymıyor.
-## Sabit ve etiketi Faz 7'ye kadar duruyor, ama artık hiçbir rozet listesine girmiyor.
+## Sabit ve etiketi de silindi; artık hiçbir rozet listesine girmiyor.
 const BADGE_SEVERITY := {
 	"FLIGHT_RISK": 3,
 	"OVERLOAD_JOBS": 1,
@@ -1317,8 +1317,7 @@ const EXPERIENCE_LEAD_BONUS_MAX := 1.5  # WORKING: Liderlik 9'daki lider altınd
 
 ## §5.1 DENEYİM — TEK BAR, alan bazlı DEĞİL. Ekranda hep 0–100; değişen arkasındaki eşik.
 ## İşbaşı öğrenme EMEKLİ: deneyim kendiliğinden yıldıza dönüşmez, tek çıkışı eğitimdir.
-## Eski alan-başına deneyim sabitleri (EXPERIENCE_MAX/PER_DAY/PER_BUILD_DAY) silindi;
-## duruyor (Faz 7 silme listesinde).
+## Eski alan-başına deneyim sabitleri (EXPERIENCE_MAX/PER_DAY/PER_BUILD_DAY) silindi.
 const EXPERIENCE_PER_WORKED_DAY := 2   # en az bir işe atanmış ve edilgen olmayan her gün
 const EXPERIENCE_BUILD_BONUS := 1      # bir geliştirme fazı koşarken üstüne (toplam 3)
 

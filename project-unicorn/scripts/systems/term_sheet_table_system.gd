@@ -1,7 +1,7 @@
 class_name TermSheetTableSystem
 extends RefCounted
 
-# Term Sheet Table engine (Spec 6 / ENDGAME_DESIGN.md §5). Static, pure-logic (VCPitchSystem
+# Term Sheet Table engine. Static, pure-logic (VCPitchSystem
 # pattern). The push-your-luck negotiation over a granted TermSheet: the founder pushes three
 # levers (Valuation / Dilution / Board) against a finite patience pool, each push a visible-odds
 # skill check resolved on the dial, until the player SIGNS (Series A Hard Win) or WALKS (+1
@@ -17,15 +17,15 @@ extends RefCounted
 # view_state() dict through one _render(). All push/patience/decay/money math lives HERE, so the
 # headless smoke suite drives the whole negotiation with no scene mounted.
 
-# --- Seven states (§3). PUSH_RESOLVING is the scene's ~0.8s dial-spin transient; the system
+# --- Seven states. PUSH_RESOLVING is the scene's ~0.8s dial-spin transient; the system
 # never rests in it — push() returns the already-settled SUCCESS/FAILURE/PATIENCE_ZERO. ---
 #
-# PATIENCE_ZERO is the fund's FINAL OFFER now (K12): take it or leave it, only Sign and Walk.
+# PATIENCE_ZERO is the fund's FINAL OFFER now: take it or leave it, only Sign and Walk.
 # Two states were added after SIGN_CONFIRM so the existing ints do not move:
 #   FUND_WALKED — the fund left the table (patience ran out below its walk line, or it walked
 #                 on a shown offer). The closure is ALREADY written when this state is entered;
 #                 the only action left is leave().
-#   OTHER_SHOWN — the player showed the other live Series A sheet (K7) and the fund answered.
+#   OTHER_SHOWN — the player showed the other live Series A sheet and the fund answered.
 enum { IDLE = 1, LEVER_SELECTED, PUSH_RESOLVING, PUSH_SUCCESS, PUSH_FAILURE, PATIENCE_ZERO, SIGN_CONFIRM,
 	FUND_WALKED, OTHER_SHOWN }
 
@@ -37,7 +37,7 @@ const LEVERS := ["valuation", "dilution", "board"]
 const SEED_LEVERS := ["raise", "dilution", "board"]
 
 # ============================================================================
-# EAGERNESS (E) — THE ONE TUNING BLOCK for the table's risk model (K12 + K7, plan §4.2).
+# EAGERNESS (E) — THE ONE TUNING BLOCK for the table's risk model.
 # E is 0..100: how much this fund still wants the deal. It is never shown as a number; the
 # player reads it off the investor's line after every push (relaxed / tense / running out).
 # Every number the model reads lives here and nowhere else.
@@ -89,7 +89,7 @@ const E_FINAL_SPAN := 30.0
 const E_FINAL_MAX_SHARE := 0.5
 const E_FINAL_BOARD_SHARE := 0.75
 
-## K7 "show the other offer". Each fund compares on the lever it cares about, and claws back
+## "Show the other offer". Each fund compares on the lever it cares about, and claws back
 ## on another when it matches with a condition.
 const CARE_LEVER := {"metrics": "valuation", "team": "dilution", "narrative": "board", "product": "valuation"}
 const CLAWBACK_LEVER := {"metrics": "board", "team": "valuation", "narrative": "dilution", "product": "dilution"}
@@ -106,7 +106,7 @@ const SHOW_HOLD_E_COST := 10        # holding means the move annoyed them
 const SHOW_BOARD_SEAT_CAP := 2      # a board claw-back never asks past this many seats
 
 ## The investor's line bank. Relaxed / tense are generic (two each, rotated so the same line
-## never plays twice in a row); "running out" is the fund's own voice (plan §5.4).
+## never plays twice in a row); "running out" is the fund's own voice.
 const LINES_RELAXED := ["TERM_INV_RELAXED_1", "TERM_INV_RELAXED_2"]
 const LINES_TENSE := ["TERM_INV_TENSE_1", "TERM_INV_TENSE_2"]
 const LINES_RUNNING_OUT := {
@@ -140,15 +140,15 @@ static var _last_move: String = ""          # "$18M → $22M" for the success ca
 ## on day 240; a static set during the meeting is long gone by then. Cleared in _reset(),
 ## and forgetting that would leak a seed sitting's stage into the next Series A table.
 static var _stage: String = PitchConstants.STAGE_SERIES_A
-# --- K12 / K7 sitting state (never serialized, cleared in _reset like everything above) ---
+# --- Eagerness / shown-offer sitting state (never serialized, cleared in _reset like everything above) ---
 static var _e: int = 0                      # eagerness 0..100
 static var _won_counts: Dictionary = {}     # lever → successful pushes (the ask-size driver)
 static var _line_key: String = ""           # the investor's current line ("" = silent)
 static var _line_seq: int = 0               # rotation counter for the generic line pools
 static var _final_move: String = ""         # "$18M → $20M" when the final counter conceded
 static var _fund_walked: bool = false       # the closure is already written; only leave() remains
-static var _other_shown: bool = false       # K7 is once per table
-static var _show_outcome: String = ""       # SHOW_* of the last K7 answer
+static var _other_shown: bool = false       # showing the other offer is once per table
+static var _show_outcome: String = ""       # SHOW_* of the fund's last answer to a shown offer
 static var _show_back: String = ""          # the claw-back move text for SHOW_CONDITION
 static var _other_terms: Dictionary = {}    # the real other sheet, as shown
 static var _other_vc_shown: String = ""
@@ -211,7 +211,7 @@ static func open(vc_id: String) -> Dictionary:
 	_stage = String(sheet.stage)
 	_terms = sheet.opening_terms.duplicate()
 	if _stage == PitchConstants.STAGE_SERIES_A and _leverage_active():
-		# Leverage improves the OPENING one notch (§8) — a better valuation to start from.
+		# Leverage improves the OPENING one notch — a better valuation to start from.
 		# Series A only, and not because seed leverage is unimplemented: there is exactly one
 		# seed round per run, so a second seed sheet to hold against this one cannot exist.
 		_terms["valuation_m"] = int(_terms.get("valuation_m", 0)) + PitchConstants.LEVERAGE_OPEN_NOTCH
@@ -254,7 +254,7 @@ static func can_push(lever: String) -> bool:
 ## A row that is on the sheet but not open to negotiation. Today that is the seed board term:
 ## SeedRoundSystem.accept persists raise and dilution only, so a board push would spend
 ## patience and eagerness on a term that vanishes at signing. The row stays visible (the fund
-## still asks for it); whether seed board seats become real is open decision K21.
+## still asks for it); whether seed board seats become real is an open decision (docs/ACIK_KARARLAR.md).
 static func _lever_locked(lever: String) -> bool:
 	return is_seed() and lever == "board"
 
@@ -295,7 +295,7 @@ static func push() -> Dictionary:
 	return view_state()
 
 
-## K12: patience is gone. Above the walk line the fund puts a final take-it-or-leave-it
+## Patience is gone. Above the walk line the fund puts a final take-it-or-leave-it
 ## counter; below it the fund walks. THE SEED FUND NEVER WALKS (the room cannot reject and
 ## the refusal row is locked), so a seed table always ends in the final counter.
 static func _on_patience_zero(asked_lever: String) -> void:
@@ -345,7 +345,7 @@ static func _fund_walks() -> void:
 
 
 # ============================================================================
-# K7 — show the other offer (Series A, once per table, real sheet only)
+# Show the other offer (Series A, once per table, real sheet only)
 # ============================================================================
 
 ## True when the move is on offer at all: a Series A sitting and another live Series A sheet
@@ -467,7 +467,7 @@ static func _claw_back(lever: String) -> void:
 
 
 # ============================================================================
-# Eagerness reads (K12)
+# Eagerness reads
 # ============================================================================
 
 static func eagerness() -> int:
@@ -566,7 +566,7 @@ static func sign() -> void:
 	VCPitchSystem.sign_table(vc, terms, stage)
 
 
-## Walk the table → VC seam (sheet destroyed, fund closed, others survive; K11: the player's
+## Walk the table → VC seam (sheet destroyed, fund closed, others survive; the player's
 ## walk is not a rejection). Ends the sitting.
 static func walk() -> void:
 	if not _active:
@@ -618,7 +618,7 @@ static func implied_post_money() -> int:
 
 
 # ============================================================================
-# Odds — skill-split + leverage + per-push decay (§5)
+# Odds — skill-split + leverage + per-push decay
 # ============================================================================
 
 ## Composed odds for a lever: SkillCheck.breakdown (base + skill + leverage) minus this lever's
@@ -656,7 +656,7 @@ static func _split_text(bd: Dictionary, leverage: bool, decay: float) -> String:
 
 
 # ============================================================================
-# View state — the single dict _render() consumes (gap-free, §3)
+# View state — the single dict _render() consumes (gap-free)
 # ============================================================================
 
 static func view_state() -> Dictionary:
@@ -666,7 +666,7 @@ static func view_state() -> Dictionary:
 	var other_name: String = InvestorRegistry.get_investor(other_vc).get("display_name", "") if lev_active else ""
 	var box_text: String = ""
 	if _other_shown and _other_vc_shown != "":
-		# K7 shows the REAL other sheet, never a bluff: its numbers, from its own opening terms.
+		# The shown offer is the REAL other sheet, never a bluff: its numbers, from its own opening terms.
 		box_text = TranslationServer.translate("TERM_OTHER_SHOWN_BOX").format({
 			"investor": InvestorRegistry.get_investor(_other_vc_shown).get("display_name", ""),
 			"terms": _terms_text(_other_terms)})
@@ -688,12 +688,12 @@ static func view_state() -> Dictionary:
 			"other_vc_name": other_name,
 			"box_text": box_text,
 		},
-		# K12: the investor's own line after every move. It is the only window onto E.
+		# The investor's own line after every move. It is the only window onto E.
 		"investor_line": TranslationServer.translate(_line_key) if _line_key != "" else "",
 		"eagerness_band": eagerness_band(),
 		"final_offer": _state == PATIENCE_ZERO,
 		"fund_walked": _fund_walked,
-		# K7. Visible whenever the move exists at this table; enabled once, before the final.
+		# Show the other offer. Visible whenever the move exists at this table; enabled once, before the final.
 		"show_other": {
 			"visible": show_other_available() or _other_shown,
 			"enabled": can_show_other(),
@@ -827,9 +827,9 @@ static func _frank_line(lev_active: bool, other_name: String) -> String:
 		IDLE:
 			return TranslationServer.translate("TERM_FRANK_OPENING")
 		OTHER_SHOWN:
-			# K7 is the investor's moment (TERM_INV_OTHER_*); Frank only counts the moves left,
-			# which stays true after the fund answers. A K7-specific Frank line is his corpus
-			# (open decision K32), so none is invented here.
+			# The shown offer is the investor's moment (TERM_INV_OTHER_*); Frank only counts the
+			# moves left, which stays true after the fund answers. A Frank line for this move is
+			# his corpus (an open decision, docs/ACIK_KARARLAR.md), so none is invented here.
 			if _patience <= 1:
 				return TranslationServer.translate("TERM_FRANK_LAST_MOVE")
 			return TranslationServer.translate("TERM_FRANK_NEXT_MOVE")
@@ -879,7 +879,7 @@ static func _current_text(lever: String) -> String:
 
 
 ## One lever's value as the table prints it, for any terms dict (the working terms, or the
-## other sheet K7 puts on the table).
+## other sheet the player shows at the table).
 static func _text_of(lever: String, terms: Dictionary) -> String:
 	match lever:
 		"valuation":
@@ -986,7 +986,7 @@ static func _kasa_runway_text() -> String:
 
 
 # ============================================================================
-# Leverage helpers (§8)
+# Leverage helpers
 # ============================================================================
 
 static func _leverage_active() -> bool:

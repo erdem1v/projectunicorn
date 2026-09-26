@@ -1,7 +1,7 @@
 class_name EndingScene
 extends Control
 
-# Ending ceremony — "Ekonomi Postası" (ENDGAME_DESIGN.md §6, newspaper layout).
+# Ending ceremony — "Ekonomi Postası" (newspaper layout).
 # A humble full-screen Register-B view: a cream newspaper PAGE on the left (~70%,
 # a LIGHT surface — INK text) and a DARK meta RAIL on the right (~30%, CREAM text).
 # It paints ONE immutable view_state from EndingsCopy.build() through _fill(); it
@@ -13,14 +13,14 @@ extends Control
 # layout over a minimal .tscn root, DIALOGUE_BG backdrop, fade-in tween.
 #
 # process_mode = ALWAYS on the ROOT (children INHERIT → resolve to ALWAYS), so every
-# rail button stays clickable on the permanently-frozen tree (§7.6). In ending mode there is
+# rail button stays clickable on the permanently-frozen tree. In ending mode there is
 # no dismiss-back-to-gameplay path: the run is over. Milestone mode's DEVAM ET is that path.
 #
 # Retry = process relaunch (Erdem 2026-07-13): OS.set_restart_on_exit resets all
 # autoload state cleanly. The in-place initialize_run return is deferred (it needs a
 # complete multi-registry reset seam that does not exist yet).
 #
-# TWO MODES, ONE PAPER (HANDOFF_series_a.md §D; owner rulings 2026-09-25). The paper is the
+# TWO MODES, ONE PAPER (owner rulings 2026-09-25). The paper is the
 # same in both; only the rail and the strip under it change.
 #   ending    — the run is over. In the DEMO build: exactly the screen it always was (the
 #               Coming-Soon cards, WISHLIST'E EKLE, Frank's strip). In EA / full builds the
@@ -203,7 +203,7 @@ func _build_paper(vs: Dictionary) -> PanelContainer:
 		caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		col.add_child(caption)
 		col.add_child(_rule(1))
-		# Mockup body: big-figure stat row, then the editorial prose in two columns.
+		# Body: big-figure stat row, then the editorial prose in two columns.
 		var stats := _build_stat_block(vs)
 		if stats != null:
 			col.add_child(stats)
@@ -273,7 +273,7 @@ func _build_engraving(vs: Dictionary) -> Control:
 
 
 func _build_stat_block(vs: Dictionary) -> Control:
-	# Mockup stat row: the "RAKAMLARLA <ŞİRKET>" title over 4 big serif FIGURES with
+	# Stat row: the "RAKAMLARLA <ŞİRKET>" title over 4 big serif FIGURES with
 	# small mono labels beneath. Returns null when the composer supplied no cells
 	# (quiet closure, defensive fallback) — the caller skips the block entirely.
 	var cells: Array = vs.get("stat_cells", [])
@@ -306,7 +306,7 @@ func _build_stat_block(vs: Dictionary) -> Control:
 
 
 func _build_prose_columns(vs: Dictionary) -> Control:
-	# The editorial ledger sentences flow as TWO balanced newspaper columns (mockup).
+	# The editorial ledger sentences flow as TWO balanced newspaper columns.
 	var lines: Array = []
 	for l in vs.get("ledger_lines", []):
 		if String(l) != "":
@@ -418,7 +418,7 @@ func _build_coming_soon(col: VBoxContainer) -> void:
 	# THE TWO NAMED MILESTONES (ch. 01 §3 · ch. 13 §2), replacing two generic tier cards.
 	# "TİER 2 · ORTA ÖLÇEK" told the player which BUILD they were waiting for; these tell
 	# them what their own company reaches next, which is the strongest Coming-Soon this
-	# game has. Both are truthful to the RELEASE SCOPE table: Series B is a MILESTONE the
+	# game has. Both are truthful to the game's scope: Series B is a MILESTONE the
 	# run continues past — never an ending — and IPO opens in the full version.
 	# Telegraph only: _build_tier_card renders a panel, never a button.
 	col.add_child(_build_tier_card(
@@ -460,7 +460,7 @@ func _add_hard_mode(actions: HBoxContainer) -> void:
 	hard.text = tr("ENDING_HARD_MODE")
 	hard.disabled = true                       # visible-LOCKED telegraph, no mechanic
 	hard.tooltip_text = tr("ENDING_SOON_TOOLTIP")
-	# Kilit ikonu: mockup parite kalemi. Button.icon DENENDİ ve yanlıştı — kaynak SVG 24px
+	# Kilit ikonu: Button.icon DENENDİ ve yanlıştı — kaynak SVG 24px
 	# ve beyaz stroke'lu, expand_icon = true onu butonun tamamına yayıp yazının arkasına
 	# kocaman bir beyaz kutu bastı. Bu dosyanın tier kartlarında kullandığı reçete
 	# (12px TextureRect + CREAM_DIM) butonun YANINDA duruyor: ölçü ve renk kontrolü bizde.
@@ -492,7 +492,7 @@ func _make_share_button() -> Button:
 
 
 ## The milestone rail (EA / full): the run is NOT over. A short line saying so, then the two
-## buttons the owner's ruling names (HANDOFF_series_a.md §D): DEVAM ET as the primary action and
+## buttons the owner's ruling names: DEVAM ET as the primary action and
 ## ANA MENÜ. No share, no Coming-Soon cards, no store CTA, no retry or hard mode, and no
 ## run-meta line — "BU RUN: n GÜN" reads as a total, and the run has no total yet. The notice
 ## line under DEVAM ET is where main.gd says why ANA MENÜ could not keep the save.
@@ -632,7 +632,7 @@ func _export_paper_png() -> String:
 	if region.size.x <= 0 or region.size.y <= 0:
 		return ""
 	var crop: Image = full.get_region(region)
-	crop.resize(region.size.x * 2, region.size.y * 2, Image.INTERPOLATE_LANCZOS)  # soft 2× (spec: 2×)
+	crop.resize(region.size.x * 2, region.size.y * 2, Image.INTERPOLATE_LANCZOS)  # soft 2×
 	var fname := "gazete_%s_%s.png" % [String(_data.get("ending_id", "son")), _date_stamp()]
 	var path := "user://%s" % fname
 	var err := crop.save_png(path)

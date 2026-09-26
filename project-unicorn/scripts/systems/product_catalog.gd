@@ -5,7 +5,7 @@ extends RefCounted
 # Hardcoded for demo; JSON externalization to data/products/ is content-phase
 # work. Voice strings are working drafts — Erdem revises in content pass.
 
-# market_type ("b2c" | "b2b") drives the PostShip sales model (Spec PostShip §A):
+# market_type ("b2c" | "b2b") drives the PostShip sales model:
 # B2C → audience/organic + growth decisions; B2B → prospect + pitch dialogue.
 # First pass is binary; hybrids are future work. Erdem may revise the marking.
 # Product Lifecycle Part 1: `name_human` = jargon-free display name, `bet` =
@@ -108,7 +108,7 @@ static func locked_type_ids(market: String) -> Array:
 #     Rev3 deterministik model: ship edilen eksen değeri = seçili katkıların toplamı
 #     (ProductSystem.projected_axes). Önizleme == ship, yapısal garanti.
 #   requires_research (bool) — Ar-Ge kilidi; 4 cx-5 feature'da true (UI kilitli çizer).
-#     saas_ops_field 2026-08-19'da açıldı (Kalibrasyon Turu A §1): havuzun iki kararlılık-7
+#     saas_ops_field 2026-08-19'da açıldı: havuzun iki kararlılık-7
 #     satırından biri kilitliyken 3 özellikli bir demo v1 ham kararlılıkta 13'te tavan yapıyordu.
 #
 # BALANCE CONSEQUENCE (flag, do NOT retune here): deterministic sums read LOWER into
@@ -197,7 +197,7 @@ const FEATURE_POOLS := {
 		{"id": "saas_ops_reporting", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false},
 		{"id": "saas_ops_integration", "complexity": 5, "efor": 9, "cost": 1800, "cost_source": "license", "dimension_contribution": {"stability": 7}, "requires_research": false},
 		{"id": "saas_ops_scheduling", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}, "requires_research": false},
-		{"id": "saas_ops_field", "complexity": 5, "efor": 9, "dimension_contribution": {"innovation": 4, "stability": 7}, "requires_research": false},   # unlocked 2026-08-19 (Calibration Round A §1): one of only two stability-7 rows — locked, a 3-feature demo v1 capped at raw stability 13
+		{"id": "saas_ops_field", "complexity": 5, "efor": 9, "dimension_contribution": {"innovation": 4, "stability": 7}, "requires_research": false},   # unlocked 2026-08-19: one of only two stability-7 rows — locked, a 3-feature demo v1 capped at raw stability 13
 		{"id": "saas_ops_mobile", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 3, "experience": 6}, "requires_research": false},
 	],
 }

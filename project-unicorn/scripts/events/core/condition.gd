@@ -99,7 +99,7 @@ static func reason_of(report: Dictionary) -> String:
 ##
 ## THIS IS NOT A CONVENIENCE. phase_gate_system.gd:200-215 does not merely evaluate the gate
 ## condition — it walks the array and switches on each leaf's type to build the Series A
-## readout the player actually sees (state, mrr_ok; streak, brand_ok and progress until K1–K3). That code consumes
+## readout the player actually sees (state, mrr_ok; streak, brand_ok and progress until those were dropped). That code consumes
 ## the vocabulary's SHAPE, not its result. Nesting breaks it unless enumeration exists, so
 ## enumeration ships in the same phase nesting does.
 static func leaves(node: Dictionary) -> Array:

@@ -1,6 +1,6 @@
 extends Panel
 
-# Left tab column per PROJECT_SPEC §5 and the UI overhaul mini-spec.
+# Left tab column.
 # 8 vertical tabs, in two groups (GDD v2 ch. 12 §1, re-seated 2026-08-20):
 #   ACTIVE  Ürün · Satış · Ekip · Finans · Kişisel
 #   LOCKED  Pazarlama · Ar-Ge   — visible, dimmed, YAKINDA, unclickable (EARLY ACCESS)
@@ -8,7 +8,7 @@ extends Panel
 # Each tab carries an icon glyph (top), a label (below), and an optional
 # attention badge (top-right corner). Tab definition source: UiTokens.TABS.
 #
-# Badge data sources (UI mini-spec §4):
+# Badge data sources:
 #   - HR: HRSystem.attention_count() — employees carrying any derived badge
 #     (TÜKENİYOR / KAÇMA RİSKİ / AŞIRI YÜKLÜ) plus a waiting candidate file.
 #     Thresholds live in HRConstants; never re-derive them here.
@@ -17,7 +17,7 @@ extends Panel
 #   - Events: EventManager.get_queue_size()
 #   - Other tabs: no badge (their systems do not exist yet)
 #
-# Badges address a tab BY ID, never by index (S2 fix, 2026-08-20). The refreshers used to
+# Badges address a tab BY ID, never by index. The refreshers used to
 # carry hard-coded 1/2/7 literals against a positional node array, so the first reorder
 # would have moved every badge one tab off — silently, since nothing would render wrong,
 # it would just be counting the wrong thing.
@@ -37,7 +37,7 @@ extends Panel
 
 var current_tab_idx: int = -1  # -1 = ODA (oda görünür, hiçbir sekme açık değil) — ODA rework varsayılanı
 
-# (Spec 6: the Yatırım tab was relocated into Finance>Yatırım; its phase-3 lock now lives on
+# (The Yatırım tab was relocated into Finance>Yatırım; its phase-3 lock now lives on
 # the Finance sub-page selector, not on the rail.)
 
 # Active/idle look is driven by theme type variations (ChromeTabButtonActive/
@@ -65,7 +65,7 @@ func _ready() -> void:
 	# kendi butonumuzun emit'i de buraya düşer ama idempotent, re-emit yok.
 	EventBus.tab_changed.connect(_on_tab_changed_external)
 
-	# Subscribe to signals that move badge counts (TECH_SPEC §13.3)
+	# Subscribe to signals that move badge counts
 	EventBus.morale_changed.connect(_on_morale_changed)
 	EventBus.character_added.connect(_on_roster_changed)
 	EventBus.character_removed.connect(_on_roster_changed)
@@ -270,7 +270,7 @@ func _apply_visual(active_idx: int) -> void:
 		name_label.add_theme_color_override("font_color", color)
 
 
-# --- Badge refresh helpers (data sources per UI mini-spec §4) ---
+# --- Badge refresh helpers ---
 
 func _refresh_hr_badge() -> void:
 	# One number from one place: HRSystem.attention_count() counts employees carrying any
@@ -280,7 +280,7 @@ func _refresh_hr_badge() -> void:
 	_set_badge_count("hr", HRSystem.attention_count())
 
 func _refresh_finance_badge() -> void:
-	# Net runway (Package 5): warn only on LOW FINITE months. INF (profitable/"Kârlı")
+	# Net runway: warn only on LOW FINITE months. INF (profitable/"Kârlı")
 	# fails `< 3.0` → no badge, which is correct — profitability is never a warning.
 	var months: float = GameState.get_runway_months()
 	var n: int = 1 if months < 3.0 else 0

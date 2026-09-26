@@ -1,16 +1,16 @@
 class_name EndingsSystem
 extends RefCounted
 
-# Endings Evaluator — daily tick slot 9 per docs/ENDGAME_DESIGN.md §3-4.
+# Endings Evaluator — daily tick slot 9.
 #
-# Scans terminal conditions daily, reading GameState FIELDS only (§7.9:
-# fields, not systems — the future VC pitch / scandal systems just write the
-# fields and plug in with zero retrofit). Scan order = §7.1 priority chain:
+# Scans terminal conditions daily, reading GameState FIELDS only (fields, not
+# systems — the future VC pitch / scandal systems just write the
+# fields and plug in with zero retrofit). Scan order = priority chain:
 # Bankruptcy > Brand Collapse > Cascade > Profitability condition > Soft cap.
 #
-# GOAL-TERMINATED RUN (Calibration Round A §2, 2026-08-19). The Day-180 wall and its
+# GOAL-TERMINATED RUN. The Day-180 wall and its
 # time-out fork are gone: a run ends only on an ending — Series A, profitable and
-# self-sustaining (§9, a CONDITION evaluated daily), bankruptcy — or at the SOFT CAP,
+# self-sustaining (a CONDITION evaluated daily), bankruptcy — or at the SOFT CAP,
 # a narrative non-win for a company that reached no goal inside the window investors
 # give it (running_on_fumes, paper rewritten: "yatırımcılar ilgisini kaybetti").
 #
@@ -18,28 +18,28 @@ extends RefCounted
 #   Class A (instant, played moment): acquisition accept, term sheet signed,
 #   debug F-keys — call it directly, no daily-tick wait.
 #   Class B (scanned): the daily scan calls it.
-# It is idempotent (first terminal wins, §7.1), flushes the event queue (§7.2 —
-# a queued Frank gate scene dies with the run) and freezes the clock (§7.3).
+# It is idempotent (first terminal wins), flushes the event queue (a queued
+# Frank gate scene dies with the run) and freezes the clock.
 
-# Working values — §10 calibration items, numbers last.
-const SHUTTER_DAYS := 30           # §4.3 Kepenk. 7 → 30 (director ruling, Frank v6 pass):
+# Working values — calibration items, numbers last.
+const SHUTTER_DAYS := 30           # Kepenk. 7 → 30 (director ruling, Frank v6 pass):
                                    # a month is real recovery room, a week is a formality.
                                    # The warning copy names no number, so it did not move.
-const BRAND_COLLAPSE_FLOOR := 15   # §4.4
-const BRAND_COLLAPSE_WINDOW := 30  # §4.4 "no recovery for 30 days"
-const CASCADE_TABLES := 3          # §4.5 closed pitch tables
-const PIVOT_MRR_MIN := 2000        # §4.5 "metrics are alive" floor
-# SOFT CAP [WORKING] — Calibration Round A §2. Not a wall the economy is stretched across
+const BRAND_COLLAPSE_FLOOR := 15
+const BRAND_COLLAPSE_WINDOW := 30  # "no recovery for 30 days"
+const CASCADE_TABLES := 3          # closed pitch tables
+const PIVOT_MRR_MIN := 2000        # "metrics are alive" floor
+# SOFT CAP [WORKING]. Not a wall the economy is stretched across
 # (that was RUN_END_DAY = 180, retired); the catch for a run that reached no goal ending in
 # two years. 24 months is the smallest cap at which annual contracts (Layer B) are SEEN
-# renewing. NOT deferred for a live term sheet: VC_PITCH_DESIGN ledger 16 rules no
+# renewing. NOT deferred for a live term sheet: there is no
 # auto-sign, and an unsigned sheet is named on the paper. THE SOFT CAP HAS NO TELEGRAPH:
 # the D-1 Frank warning was retired in the Frank v6 pass (that card became the last-day
 # reminder for a live OFFER, which is a different moment). A "final stretch" surface is
 # open work — docs/writing/FRANK_UNWIRED.md. Same day as a profitability close → the win
 # wins (scan order).
 const SOFT_CAP_DAY := 730
-# PROFITABLE & SELF-SUSTAINING — a CONDITION evaluated daily (Calibration Round A §9), not a
+# PROFITABLE & SELF-SUSTAINING — a CONDITION evaluated daily, not a
 # crossing read once at a wall. An "Artıda" month = net > 0 AND the treasury never sampled
 # below zero inside it (GameState.month_history, closed by MonthSummarySystem). The run-lifetime
 # cash_went_negative latch it replaces made the win permanently unreachable after one early
@@ -69,7 +69,7 @@ const ACQ_M_MAX := 5.0
 # day a year later. [ÇALIŞMA]
 const ACQ_CARD_WINDOW_DAYS := 10
 
-# Ending metadata — 7 endings (§4). Only the TONE lives here now; the title and Frank's
+# Ending metadata — 7 endings. Only the TONE lives here now; the title and Frank's
 # closing line are END_META_<ID>_TITLE / _FRANK in strings.csv, read through ending_title()
 # and ending_frank_line(). A const cannot hold them: it is evaluated when the file loads,
 # before a locale exists.
@@ -118,13 +118,13 @@ static func daily_tick() -> void:
 		return
 	if _check_soft_cap():
 		return
-	_tick_acquisition_window()  # one day stamp; the card decides, not this scan (§7.5)
+	_tick_acquisition_window()  # one day stamp; the card decides, not this scan
 
 
 # --- Daily trackers (cheap, serializable) ---
 
 static func _update_trackers() -> void:
-	# (The 90-day daily-net ring that fed the retired Day-180 fork lived here; the §9
+	# (The 90-day daily-net ring that fed the retired Day-180 fork lived here; the
 	# profitability condition reads GameState.month_history — the calendar-month ledger
 	# MonthSummarySystem closes — instead.)
 	# Brand-collapse window anchor: first day brand dipped under the floor;
@@ -136,17 +136,17 @@ static func _update_trackers() -> void:
 		GameState.brand_low_since_day = -1
 
 
-# --- Bankruptcy + Kepenk (§4.3) ---
+# --- Bankruptcy + Kepenk ---
 
 static func _tick_shutter() -> bool:
 	if GameState.cash < 0:
 		if GameState.shutter_days_left < 0:
 			# Shutter starts: visible counter (TopBar via shutter_changed) +
-			# Frank warning scene. A queued gate scene is held (§7.4).
+			# Frank warning scene. A queued gate scene is held.
 			# Extension socket: a future loan / cash-injection mechanic resets
 			# this by pushing cash ≥ 0 — no extra seam needed (DEFERRED BACKLOG).
 			GameState.set_shutter_days_left(SHUTTER_DAYS)
-			GameState.submit_month_highlight(TranslationServer.translate("END_HL_SHUTTER_STARTED"), 90)  # AYIN OLAYI (Spec 3 §4)
+			GameState.submit_month_highlight(TranslationServer.translate("END_HL_SHUTTER_STARTED"), 90)  # AYIN OLAYI
 			PhaseGateSystem.on_shutter_started()
 			# Nothing is pushed. `funding.shutter_warning` reads
 			# `finance.cash < 0 AND finance.shutter_days_left >= 0` — the two facts the two
@@ -159,13 +159,13 @@ static func _tick_shutter() -> bool:
 				trigger_ending("bankruptcy", "funding.shutter_warning")
 				return true
 	elif GameState.shutter_days_left >= 0:
-		# Cash recovered — full reset (§4.3), the held gate scene returns (§7.4).
+		# Cash recovered — full reset, the held gate scene returns.
 		GameState.set_shutter_days_left(-1)
 		PhaseGateSystem.on_shutter_cleared()
 	return false
 
 
-# --- Brand Collapse (§4.4) ---
+# --- Brand Collapse ---
 
 static func _check_brand_collapse() -> bool:
 	# active_scandal is a RESERVED field (no scandal system yet) — until it
@@ -185,12 +185,12 @@ static func _check_brand_collapse() -> bool:
 	return true
 
 
-# --- VC Rejection Cascade + pivot escape hatch (§4.5) ---
+# --- VC Rejection Cascade + pivot escape hatch ---
 
 static func _check_vc_cascade() -> bool:
 	if GameState.vc_rejections < CASCADE_TABLES:
 		return false
-	# Ledger 17 (Spec 4): a player holding a live/pending sheet or an in-flight
+	# A player holding a live/pending sheet or an in-flight
 	# meeting still holds a win path — cascade DEFERS until it resolves. Without
 	# this, pivot could fire while victory is in hand.
 	if not GameState.active_sheets.is_empty() or _any_pending_sheet() or not GameState.pending_meeting.is_empty():
@@ -204,7 +204,7 @@ static func _check_vc_cascade() -> bool:
 		return false  # offer on the table — the player's choice resolves it
 	if GameState.mrr >= PIVOT_MRR_MIN and GameState.cash > 0:
 		# Metrics alive → Frank offers the hidden corridor. Played choice:
-		# accept_pivot / decline_pivot modifiers resolve it (§4.5).
+		# accept_pivot / decline_pivot modifiers resolve it.
 		# ENTRY POINT CLOSED (Frank v6): ev_pivot_offer and ev_acquisition_offer were merged
 		# into ONE card, the buyout offer card, which is not built yet. The latch
 		# still burns here so the cascade stays deferred exactly as it did while the offer sat
@@ -220,15 +220,15 @@ static func _check_vc_cascade() -> bool:
 static func on_pivot_accepted() -> void:
 	# Called via the "accept_pivot" event modifier.
 	GameState.pivot_used = true
-	# Ledger 18 (Spec 4): pivot closes the Hunt — cancel the pending meeting, kill
+	# Pivot closes the Hunt — cancel the pending meeting, kill
 	# callbacks, remove a queued meeting prompt. Active sheets are impossible here
-	# (ledger 17 defers cascade while any sheet lives), so none to clear.
+	# (cascade defers while any sheet lives), so none to clear.
 	VCPitchSystem.on_pivot()
 	if OS.is_debug_build():
 		print("[EndingsSystem] Pivot accepted — VC path closed; the bootstrap road continues (goal: %d Artıda months)" % PROFIT_STREAK_MONTHS)
 
 
-# Ledger 17 helper: any VC awaiting delayed sheet delivery counts as a live win path.
+# Cascade-deferral helper: any VC awaiting delayed sheet delivery counts as a live win path.
 static func _any_pending_sheet() -> bool:
 	for st in GameState.vc_states.values():
 		if st is Dictionary and st.get("pending_sheet", false):
@@ -236,7 +236,7 @@ static func _any_pending_sheet() -> bool:
 	return false
 
 
-# --- Profitable & self-sustaining (Calibration Round A §9) ---
+# --- Profitable & self-sustaining ---
 
 ## Single home for the condition's reading: the Finance tab's "Artıda · n/6 ay" line and the
 ## daily scan both read this. `met` is the predicate.
@@ -277,22 +277,22 @@ static func _check_profitable_bootstrap() -> bool:
 	return true
 
 
-# --- Soft cap (Calibration Round A §2; replaces the Day-180 time-out fork) ---
+# --- Soft cap (replaces the Day-180 time-out fork) ---
 
 static func _check_soft_cap() -> bool:
 	# The window investors give a company closed without a goal ending. Not deferred for a
-	# live sheet or a pending meeting (ledger 16: no auto-sign; the D-1 warning told the
+	# live sheet or a pending meeting (no auto-sign; the D-1 warning told the
 	# player). The ledger carries `unsigned_sheets` so the paper can name what was left on
 	# the table.
 	if GameState.day < SOFT_CAP_DAY:
 		return false
 	# A run that has taken a positive milestone is past "reached no goal inside the window":
-	# the cap does not apply to it (owner ruling 2026-09-25, option a — running_on_fumes says
+	# the cap does not apply to it (owner ruling 2026-09-25 — running_on_fumes says
 	# "you didn't win", and this company did). It still ends on a loss, a signed Series A or a
 	# sale; the player can also leave through ANA MENÜ with the run saved.
 	if bootstrap_milestone_taken():
 		return false
-	# THE DEFECT §6.8 NAMES. A run can reach day 730 with no prior warning at all. The
+	# A KNOWN DEFECT: a run can reach day 730 with no prior warning at all. The
 	# soft-cap ladder being built for this rebuild sets this flag; until it lands, this
 	# line logs an untelegraphed loss on every soft-cap ending, which is the point.
 	trigger_ending("running_on_fumes", "soft_cap_telegraphed")
@@ -398,7 +398,7 @@ static func on_buyout_declined() -> void:
 	GameState.set_flag("acquisition_offer_rejected", true)  # the memory thrown back later
 
 
-# --- Build scope and ending modes (HANDOFF_series_a.md §D; owner rulings 2026-09-25) ---
+# --- Build scope and ending modes (owner rulings 2026-09-25) ---
 #
 # One newspaper, two modes. In the DEMO every ending ends the run, exactly as it always has.
 # In EA and FULL builds a loss still ends the run, but a win the company lives through is a
@@ -485,7 +485,7 @@ static func trigger_milestone(milestone_id: String, extra: Dictionary = {}) -> v
 	EventBus.speed_change_requested.emit(0)
 
 
-# --- Single terminal seam (§3, §7.1-7.3) ---
+# --- Single terminal seam ---
 
 ## Telegraph sentinels. Both are DELIBERATE declarations, not escape hatches: naming one is a
 ## statement about the ending, and the linter and the run log can both read it.
@@ -508,18 +508,18 @@ const TELEGRAPH_UI_ONLY := "ui_strip"     ## a telegraph that exists on screen b
 static func trigger_ending(ending_id: String, telegraph: String,
 		extra: Dictionary = {}) -> void:
 	if not GameState.run_active:
-		return  # idempotent — first terminal wins (§7.1)
+		return  # idempotent — first terminal wins
 	if not ENDINGS.has(ending_id):
 		push_warning("[EndingsSystem] Unknown ending id: %s" % ending_id)
 		return
 	_assert_telegraph(ending_id, telegraph)
 	GameState.set_run_active(false)
 	GameState.ending_id = ending_id
-	EventGate.flush()  # §7.2 — pending scenes (incl. Frank gate) die
+	EventGate.flush()  # pending scenes (incl. Frank gate) die
 	if OS.is_debug_build():
 		print("[EndingsSystem] RUN ENDED: %s (Day %d)" % [ending_id, GameState.day])
 	EventBus.run_ended.emit(ending_id, _build_ending_data(ending_id, extra))
-	EventBus.speed_change_requested.emit(0)  # §7.3 — freeze clock, pause tree
+	EventBus.speed_change_requested.emit(0)  # freeze clock, pause tree
 
 
 ## I3's runtime half. Loud, never blocking — see trigger_ending's note.
@@ -533,7 +533,7 @@ static func _assert_telegraph(ending_id: String, telegraph: String) -> void:
 			push_error("[EndingsSystem] I3: '%s' is a loss and was declared a win" % ending_id)
 		TELEGRAPH_NONE:
 			push_error("[EndingsSystem] I3: '%s' ended the run with NO TELEGRAPH. "
-				% ending_id + "Filed, not fixed — see docs/EVENT_ENGINE_QUESTIONS.md")
+				% ending_id + "Filed, not fixed.")
 		TELEGRAPH_UI_ONLY:
 			pass                                # on screen, invisible to History; accepted
 		_:
@@ -544,7 +544,7 @@ static func _assert_telegraph(ending_id: String, telegraph: String) -> void:
 
 static func _build_ending_data(ending_id: String, extra: Dictionary) -> Dictionary:
 	# Live snapshot — safe because trigger_ending halts the world in the same
-	# frame (§7.3: no MRR accrues behind the ending screen, so these numbers
+	# frame (no MRR accrues behind the ending screen, so these numbers
 	# cannot contradict the screen).
 	var meta: Dictionary = ENDINGS[ending_id]
 	var data := {

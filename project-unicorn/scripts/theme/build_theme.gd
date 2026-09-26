@@ -44,7 +44,7 @@ func _initialize() -> void:
 	var sans_sb := _mkfont(FONT_SANS_SB, symbols, "sans_sb", 0.0)
 	var mono_reg := _mkfont(FONT_MONO_REG, symbols, "mono_reg", 0.0)
 	var mono_label := _mkfont(FONT_MONO_REG, symbols, "mono_label", 0.6)
-	# mono_sb (Step 11): vurgu ağırlıklı mono — bugün tek kullanıcısı Chrome ailesinin
+	# mono_sb: vurgu ağırlıklı mono — bugün tek kullanıcısı Chrome ailesinin
 	# inert ChromeBadgeLabel'ı; yüz hazır, benimseme kararı ayrı ve gate'li.
 	var mono_sb := _mkfont(FONT_MONO_SB, symbols, "mono_sb", 0.6)
 
@@ -110,13 +110,13 @@ func _initialize() -> void:
 	_lbl(th, &"AvatarInitial", sans_sb, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"MetricValueInk", sans_sb, T.SIZE_TITLE, T.INK)
 	_lbl(th, &"MetricCaptionInk", mono_label, T.SIZE_MICRO, T.INK_DIM)
-	# StepperValue: bir stepper'ın ORTASINDAKİ sayı (onaylı 19a'nın saat kutusu). Mono ve
+	# StepperValue: bir stepper'ın ORTASINDAKİ sayı (onaylı çalışma saatleri tasarımının saat kutusu). Mono ve
 	# VURGU AĞIRLIĞINDA, çünkü o kutunun dört giysisinden ikisi (devralan vs karar veren)
 	# ağırlıkla ayrışıyor — rengin tek başına taşıyamadığı ayrım bu. mono_sb'nin ilk
-	# yaşayan tüketicisi; yüz Step 11'den beri hazırdı ve benimseme kararı bekliyordu.
+	# yaşayan tüketicisi; yüz çoktandır hazırdı ve benimseme kararı bekliyordu.
 	_lbl(th, &"StepperValue", mono_sb, T.SIZE_DATA, T.INK)
 
-	# ---- Cinematic dialogue register (Spec 5): text on the DARK charcoal column.
+	# ---- Cinematic dialogue register: text on the DARK charcoal column.
 	# Cream tones per the context rule; the light INK-based QuoteSerif/ChoiceLabel
 	# are unreadable here, so these are their dark-surface counterparts. ----
 	_lbl(th, &"DialogueName", sans_sb, T.SIZE_LEAD, T.CREAM)  # counterpart name (uppercased in code)
@@ -170,7 +170,7 @@ func _initialize() -> void:
 	_panel(th, &"CardPanel", "PanelContainer", _box(T.CARD_BG, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [1,1,1,1], T.CARD_BORDER, T.PAD_CARD.x, T.PAD_CARD.y))
 	# CardCta: "+ Yeni Ürün" davet kartı (Rev3 Portföy). Şeffaf zemin + 1px amber
 	# çerçeve — mockup'taki kesikli CTA kenarını StyleBoxFlat çizemez, düz amber
-	# en yakın karşılık (plan Step 9 kararı).
+	# en yakın karşılık.
 	_panel(th, &"CardCta", "PanelContainer", _box(Color.TRANSPARENT, T.BORDER_HAIRLINE, T.ACCENT, T.RADIUS_M, [], Color.TRANSPARENT, T.PAD_CARD.x, T.PAD_CARD.y))
 	_panel(th, &"CardPanelTight", "PanelContainer", _box(T.CARD_BG, T.BORDER_HAIRLINE, T.CARD_BORDER, T.RADIUS_M, [1,1,1,1], T.CARD_BORDER, T.PAD_CARD_TIGHT.x, T.PAD_CARD_TIGHT.y))
 	_panel(th, &"CardAttention", "PanelContainer", _box(T.CARD_ATTENTION_BG, T.BORDER_HAIRLINE, T.CARD_ATTENTION_BORDER, T.RADIUS_M, [1,1,1,1], T.CARD_ATTENTION_BORDER, T.PAD_CARD.x, T.PAD_CARD.y))
@@ -207,7 +207,7 @@ func _initialize() -> void:
 	floating_sb.shadow_size = 6
 	_panel(th, &"CardFloating", "PanelContainer", floating_sb)
 
-	# ---- Cinematic dialogue register (Spec 5): DARK panels ----
+	# ---- Cinematic dialogue register: DARK panels ----
 	# Column = floating semi-opaque charcoal (art shows through); Card = solid
 	# charcoal for the Frank popup; QuoteBox carries the amber left-edge bar;
 	# DialogueChoice(+Hover) swap on mouse-over; NumberChip is the choice ring.
@@ -279,7 +279,7 @@ func _initialize() -> void:
 	th.set_color("font_pressed_color", &"DialogueGhost", T.CREAM_DIM)
 
 	# ========================================================================
-	# CHROME AİLESİ (Step 10; ODA rework 2026-08-06'da YÜZEYE BİNDİ) — koyu kabuk
+	# CHROME AİLESİ (ODA rework 2026-08-06'da YÜZEYE BİNDİ) — koyu kabuk
 	# register'ı. Artık tanımlı-VE-yaşayan; yasal yüzey listesi CLAUDE.md Chrome
 	# kuralında (TopBar · MonthSummary · LeftTabs rayı · TabPageChrome şeridi ·
 	# OdaView koyu bilgi yüzeyleri · tooltip kabuğu). Desenler kabuğun elle
@@ -300,7 +300,7 @@ func _initialize() -> void:
 	th.set_color("font_disabled_color", &"ChromeButton", T.CREAM_DIM_DISABLED)
 	# ChromeChip: koyu zemin çipi (açık gövdenin UiFactory çipinin kabuk karşılığı).
 	_panel(th, &"ChromeChip", "PanelContainer", _box(T.VEIL_FAINT, 0, Color.TRANSPARENT, T.RADIUS_S, [], Color.TRANSPARENT, T.PAD_CHIP.x, T.PAD_CHIP.y))
-	# ChromeBadgeLabel: kabuk rozeti — mono_sb'nin ilk bağlandığı rol (Step 11).
+	# ChromeBadgeLabel: kabuk rozeti — mono_sb'nin ilk bağlandığı rol.
 	_lbl(th, &"ChromeBadgeLabel", mono_sb, T.SIZE_MICRO, T.CREAM)
 	# ChromeSeparator: kabuk hairline'ı (base ayraçlar açık gövdenin DIVIDER_LIGHT'ı).
 	var chrome_vrule := StyleBoxLine.new()

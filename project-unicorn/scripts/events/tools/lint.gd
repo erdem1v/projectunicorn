@@ -51,14 +51,14 @@ const FORBIDDEN_TERMS := [
 	"y combinator", "techcrunch", "sequoia", "andreessen", "a16z",
 ]
 
-## §17.8 bans the dash in card bodies. The reason is editorial and it is in CLAUDE.md's
-## Content Laws: the em dash is the tic this project's prose falls into, and banning it forces
-## the sentence to be rewritten rather than hinged.
+## §17.8 bans the dash in card bodies. The reason is editorial: the em dash is the tic this
+## project's prose falls into, and banning it forces the sentence to be rewritten rather than
+## hinged.
 const DASH_CHARS := ["—", "–"]
 
 ## §17.8: a daily-tick card may not assert a clock. Deterministic beats fire at the day
 ## boundary, so "· 13:05" on one of them is a lie the player can check against the TopBar —
-## and FRANK_VERIFY_2026-08-21 found exactly that on the first screen of the game.
+## and exactly that once shipped on the first screen of the game.
 const CLOCK_RE := "[0-2]?[0-9][:.][0-5][0-9]"
 
 static var _findings: Array = []
@@ -121,7 +121,7 @@ static func _lint_card(id: String, card: Dictionary) -> void:
 	var demotable: bool = String(card["class"]) == "interrupt" \
 		and not EvTempo.budget_exempt(card)
 	if is_paper or demotable:
-		# The second half of this is R8a, and the GDD does not cover it. §13.2 demotes
+		# The GDD does not cover the second half of this. §13.2 demotes
 		# interrupt → paper when the day's budget is spent; §3.1 says expires_days is
 		# paper-only; §17.7 makes a paper without one an error. So the demotion path
 		# manufactures a card the linter would have rejected. Any interrupt that CAN be
@@ -135,7 +135,7 @@ static func _lint_card(id: String, card: Dictionary) -> void:
 			_add(SEVERITY_ERROR, "17.7", where,
 				"%s without expire_note — §12.4 forbids a silent expiry" % why)
 
-	# A1 (approved amendment). An arc step that can expire must MOVE its arc, or a payoff
+	# An arc step that can expire must MOVE its arc, or a payoff
 	# demoted to paper and left unanswered stalls the arc for the rest of the run — §10.10's
 	# silent death arriving through a door §10 never closed.
 	if card.has("arc") and card.has("on_expire"):
@@ -160,7 +160,7 @@ static func _lint_card(id: String, card: Dictionary) -> void:
 static func _lint_options(id: String, card: Dictionary, where: String) -> void:
 	var options: Array = card.get("options", [])
 	if options.is_empty():
-		# data/events/unwired/README.md documents what this costs at runtime: a modal that can
+		# What this costs at runtime: a modal that can
 		# never be resolved, which blocks the queue permanently AND disables saving.
 		_add(SEVERITY_ERROR, "17.1", where, "no options — the modal could never be dismissed")
 		return

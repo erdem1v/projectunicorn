@@ -1,7 +1,7 @@
 class_name SaveCodec
 extends RefCounted
 
-# The save/load serialization layer (TECH_SPEC §10). Pure translation: state ⇄ JSON-safe
+# The save/load serialization layer. Pure translation: state ⇄ JSON-safe
 # Variants. It writes nothing to disk and owns no policy — SaveManager does both.
 #
 # ONE GENERIC WALKER, NOT NINE HAND-WRITTEN PAIRS. All nine models in scripts/data_models

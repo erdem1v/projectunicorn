@@ -6,8 +6,8 @@ extends RefCounted
 # WHAT CHANGED AND WHY. Before rev 6 the 65 names in `CompanyCatalog` WERE the supply: a run
 # saw only its sub-type's affinity sectors (20-25 companies), every signature removed a name
 # forever, and when the list ran dry `spawn_prospect` returned null and the tab said the pool
-# was empty. Calibration Round A measured the end of that: ~25 accounts and a plateau from
-# month 7 (finding F1). §19 retires the catalogue's SOLE-SUPPLY role, not the catalogue —
+# was empty. Calibration measured the end of that: ~25 accounts and a plateau from
+# month 7. §19 retires the catalogue's SOLE-SUPPLY role, not the catalogue —
 # "isimler §11.3 havuzuna ve kahraman hesaplara devşirilir". So the 65 curated names stay and
 # become the memorable minority; this file is the majority behind them.
 #

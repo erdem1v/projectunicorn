@@ -1,7 +1,7 @@
 class_name SkillCheck
 extends RefCounted
 
-# Founder skill-check helper — PostShip spec §C. No skill-check existed before;
+# Founder skill-check helper. No skill-check existed before;
 # the codebase only had bare randf() percentage gates. Disco-Elysium-flavored:
 # the result carries a margin BAND so dialogue can comment on *how* it went
 # ("kıl payı" / "akıcı") without changing the mechanical outcome.
@@ -42,7 +42,7 @@ static func chance_for(skill_name: String, difficulty: int, bonus: int = 0) -> f
 		MIN_CHANCE, MAX_CHANCE)
 
 
-## Additive breakdown of chance_for, for the Term Sheet Table's skill-split display (Spec 6 §5).
+## Additive breakdown of chance_for, for the Term Sheet Table's skill-split display.
 ## Exposes the same terms chance_for sums, so the UI can render "temel %X · +%Y <skill>".
 ## Invariant: breakdown(...).total == chance_for(...) for all inputs.
 static func breakdown(skill_name: String, difficulty: int, bonus: int = 0) -> Dictionary:

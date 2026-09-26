@@ -119,7 +119,7 @@ func setup(args: Dictionary) -> void:
 		_market = String(GameState.get_flag("mvp_market_type", "b2c"))
 	elif not _prefill.is_empty():
 		# İptal edilen build'in seçimi geri gelir (yanlış-tık affı) — ya da sekme değişiminde
-		# saklanan TASLAK (S2-33, Kalibrasyon Turu A §16): aynı şekil, artı yalnız yol seçilmişse
+		# saklanan TASLAK: aynı şekil, artı yalnız yol seçilmişse
 		# `market`.
 		_type_id = String(_prefill.get("type", ""))
 		if _type_id != "":
@@ -613,7 +613,7 @@ func _on_train_or_hire_requested() -> void:
 ## emirden döndüğümüzde bu sayfa çoktan `queue_free` edilmiştir; buradan sonra bir alan
 ## okumak ya da bir `await` yazmak serbest bırakılmış bir düğüme uzanmak olur.
 ## Taslak kaybı YOK: sekme yönlendiricisi sayfayı bırakmadan önce `on_page_closing`
-## çağırıyor ve o an v1 taslağı `creation_draft` bayrağına yazılmış oluyor (S2-33).
+## çağırıyor ve o an v1 taslağı `creation_draft` bayrağına yazılmış oluyor.
 func _on_research_requested(node_id: String) -> void:
 	EventBus.tab_changed.emit("rnd")
 	EventBus.rnd_node_requested.emit(node_id, false)
@@ -847,7 +847,7 @@ func _on_commit_pressed() -> void:
 		navigate_requested.emit("tracker", {})
 
 
-## S2-33 draft guard (Calibration Round A §16). The tab router calls this on every page it
+## Draft guard. The tab router calls this on every page it
 ## frees (Esc, ✕, rail, ODA click-through, palette/language rebuild). An in-progress v1 draft
 ## — a chosen path, a type, ticked features, a typed name — is stashed into the typed
 ## `creation_draft` flag; ProductTab re-hydrates it on its next mount through the same

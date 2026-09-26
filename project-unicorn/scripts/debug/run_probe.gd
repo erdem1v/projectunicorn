@@ -1,9 +1,9 @@
 class_name RunProbe
 extends RefCounted
 
-# Headless RUN LOG harness — Playable Run Sprint Step 0a (event fire log), Step 0b
-# (churn-chain autopsy) and Step 4 (the played run). Debug builds only; invoked by
-# main.gd when the run args contain --run-log=<preset>:<days>:<mode>.
+# Headless RUN LOG harness — event fire log, churn-chain autopsy and the played run.
+# Debug builds only; invoked by main.gd when the run args contain
+# --run-log=<preset>:<days>:<mode>.
 #
 # WHAT IT IS: the probe is "the player". It mounts no shell and no modals — it drives
 # the real tick dispatch and answers every decision through the same seam the modal
@@ -13,8 +13,8 @@ extends RefCounted
 # WHY IT IS NOT A SMOKE CASE: the smoke suite asserts one proposition per process and
 # says PASS/FAIL. This says nothing about right or wrong — it EMITS A LEDGER (every
 # event fire with its source, every choice, daily economy state) that a human reads to
-# find out what the game actually does over 60-90 days. Step 0's triage bins and Step 4's
-# fire table are both scraped from this output.
+# find out what the game actually does over 60-90 days. Triage bins and fire tables are
+# both scraped from this output.
 #
 # TWO DRIVE MODES, and the difference is the point:
 #   sim   — drives TimeManager's dispatch directly (hour 1..23 → hour 0 → advance_day →
@@ -24,7 +24,7 @@ extends RefCounted
 #           (TimeManager._drain_boundaries, frame pacing and all). Slower but honest;
 #           this is the only mode that can catch a real-time-only defect such as the
 #           ≤1-ambient-per-day throttle leaking across the hour-0 rollover
-#           (event_manager.gd:98). Step 4's played run used mode 4 (the rung is gone; use 3).
+#           (event_manager.gd:98). The played run once used mode 4 (the rung is gone; use 3).
 #
 # Output contract — one line per record, all prefixed PROBE so a grep separates them
 # from the engine's own [EventManager] chatter:
@@ -50,18 +50,18 @@ extends RefCounted
 const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_risk_keep",
 	"b2b_slip", "b2b_slip_keep", "b2c", "b2c_keep", "b2c_neglect", "full_run", "full_run_weak",
 	"full_run_naive", "full_run_discount", "full_run_vc_naive", "full_run_vc_cautious"]
-# HANDOFF_series_a.md §E (2026-09) added two Series A policies on top of full_run. The world
-# and the answer policy are full_run's ("sensible"); only what happens once the door is open
-# differs — see "The Series A hunt" below. Sim mode only. An optional fifth spec part
-# `replay=<K>` sets the naive preset's per-fund table replays (default 20; 0 turns them off).
-# Event revision 2026-09 added two policy variants of the played run. The WORLD is the
-# same as full_run; only the answer policy differs, which makes the three a controlled
-# experiment on what the event cards do to the revenue curve:
+# Two Series A policies sit on top of full_run. The world and the answer policy are
+# full_run's ("sensible"); only what happens once the door is open differs — see "The
+# Series A hunt" below. Sim mode only. An optional fifth spec part `replay=<K>` sets the
+# naive preset's per-fund table replays (default 20; 0 turns them off).
+# The played run has two policy variants. The WORLD is the same as full_run; only the
+# answer policy differs, which makes the three a controlled experiment on what the event
+# cards do to the revenue curve:
 #   full_run          — "sensible": a promise when one is open, then a stall, and a
 #                       discount only when nothing else is left.
 #   full_run_naive    — always the first unlocked row, the probe's historical line.
 #   full_run_discount — the discount first, every time it is offered.
-# Calibration Round A (2026-08-19) added three presets:
+# Three more presets:
 #   full_run_weak — the played run with the ORIGINAL v1 set (workflow+reporting+scheduling,
 #                   raw stability 6) and an immediate launch: the "bad v1" the tolerance
 #                   band is measured against. full_run itself now builds the stability-
@@ -76,8 +76,8 @@ const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_risk_keep",
 #
 # The retention row is 0 on purpose: "Söz ver" is choice 0 when the customer's pain
 # feature is unshipped (b2b_event_factory.gd:41-47), and driving promises is the whole
-# point of Step 0b. When it is absent the same index lands on the next row, which the
-# PICK line records by label so the log never has to be guessed at.
+# point of the churn-chain autopsy. When it is absent the same index lands on the next
+# row, which the PICK line records by label so the log never has to be guessed at.
 const CHOICE_POLICY := {
 	"customer.": 0,
 	"funding.": 0,
@@ -119,8 +119,8 @@ static var _weak_v1: bool = false          # "full_run_weak": the original weak 
 static var _beta_wait: bool = false        # full_run only: hold the ship in Beta until the backlog is small
 static var _beta_since_day: int = -1       # first day the build was seen parked in Beta (bugfix phase)
 static var _hire_started: bool = false
-static var _last_appetite: String = ""     # PROBE SIGNAL on change (Calibration Round A §3)
-static var _discount_uses: Dictionary = {}  # customer id -> discounts taken (Calibration Round A §8)
+static var _last_appetite: String = ""     # PROBE SIGNAL on change
+static var _discount_uses: Dictionary = {}  # customer id -> discounts taken
 static var _policy: String = "sensible"     # full_run answer policy: sensible | naive | discount
 static var _last_ship_day: int = 0          # the played run ships a version at a steady cadence
 static var _run_seed: int = 424242
@@ -237,7 +237,7 @@ static func _wire_log() -> void:
 
 
 static func _on_month_ended(_data: Dictionary) -> void:
-	# The calendar-month ledger (§3/§9): the entry MonthSummarySystem just pushed.
+	# The calendar-month ledger: the entry MonthSummarySystem just pushed.
 	if GameState.month_history.is_empty():
 		return
 	var e: Dictionary = GameState.month_history[GameState.month_history.size() - 1]
@@ -268,11 +268,11 @@ static func _on_build_phase(new_phase: String) -> void:
 
 
 # ============================================================================
-#  B2 measurement: the gate-open day and the realised month (all full_run presets)
+#  Gate-day measurement: the gate-open day and the realised month (all full_run presets)
 # ============================================================================
 #
-# Read-only lines, added for HANDOFF_series_a.md §C. They draw no randomness and write no
-# state, so every other PROBE line of a full_run is byte-identical with or without them.
+# Read-only lines. They draw no randomness and write no state, so every other PROBE line
+# of a full_run is byte-identical with or without them.
 
 static func _on_gate_reached(next_phase: int) -> void:
 	# The Series A door is the gate whose next phase is 3. It fires in the phase-check slot of
@@ -432,17 +432,17 @@ static func _log_promise(promise_id: String, stage: String) -> void:
 
 static func _log_state() -> void:
 	var runway: float = GameState.get_runway_months()
-	# Calibration Round A: the B2C aggregate (audience, its satisfaction, live bugs) and the
-	# rival-relative quality q that the audience formula actually reads — the four numbers
-	# the §5/§6 verdicts are read from. q is -1 before a ship (nothing to compare).
+	# The B2C aggregate (audience, its satisfaction, live bugs) and the rival-relative
+	# quality q that the audience formula actually reads — the four numbers the B2C growth
+	# and bug-conversion verdicts are read from. q is -1 before a ship (nothing to compare).
 	var ub: Customer = CustomerRegistry.get_customer(SalesSystem.B2C_USERBASE_ID)
 	var q: float = -1.0
 	if GameState.get_flag("mvp_shipped", false):
 		q = SalesSystem._rival_relative_quality(QualityModel.shipped_normalized())
 	var sig: Dictionary = PhaseGateSystem.series_a_signal()
 	var appetite: String = String(sig.get("state", "closed"))
-	# K1–K3 (2026-09): the Series A door is MRR only, so the gate reading is the signal state
-	# plus Frank's approach step (0-4, phase.series_a_approach) — the growth streak is no
+	# The Series A door is MRR only, so the gate reading is the signal state plus
+	# Frank's approach step (0-4, phase.series_a_approach) — the growth streak is no
 	# longer a gate half. It is still logged on the PROBE MONTH line, where it feeds the
 	# valuation band rather than the door.
 	print("PROBE STATE day=%d cash=%d mrr=%d brand=%d burn=%d runway=%s cust=%d emp=%d promises=%d phase=%d aud=%d sat=%d bugs=%d q=%.1f appetite=%s approach=%d gate_ready=%s profit_streak=%d" % [
@@ -479,7 +479,7 @@ static func _log_customers() -> void:
 			clampi(int(round(health + c.trust_offset)), 0, 100), c.trust_offset,
 			c.lifecycle_phase, c.risk_streak, c.churn_countdown, c.mrr,
 			int(GameState.get_flag("mvp_live_bug_count", 0))])
-	# Calibration Round A §1: the fraction of the book at or above its bar — the number the
+	# The fraction of the book at or above its bar — the number the
 	# tolerance re-seat is judged by ("~60-70% of a 5-account book for a good v1, ~20% bad").
 	if not book.is_empty():
 		print("PROBE SAT day=%d satisfied=%d/%d target=%d" % [GameState.day, satisfied, book.size(),
@@ -524,7 +524,7 @@ static func _drain_modals() -> void:
 		var label: String = ev.choices[idx].label
 		print("PROBE PICK day=%d id=%s choice=%d label=%s" % [GameState.day, id, idx, label])
 		_picks[id] = int(_picks.get(id, 0)) + 1
-		# §8: count discounts BY MODIFIER TYPE (labels are player-facing text).
+		# Count discounts BY MODIFIER TYPE (labels are player-facing text).
 		for m in ev.choices[idx].modifiers:
 			if String(m.get("verb", m.get("type", ""))) == "b2b_retain_discount":
 				var cid: String = str(EventGate.active_context().get("customer", m.get("customer_id", "")))
@@ -547,7 +547,7 @@ const DISCOUNT_PREFERENCE := ["b2b_retain_discount", "promise_create", "b2b_reta
 
 
 static func _pick_choice(ev: GameEvent) -> int:
-	# b2c_neglect (Calibration Round A §5): the untended consumer product — every post-ship
+	# b2c_neglect: the untended consumer product — every post-ship
 	# card is answered with its LAST unlocked row (the "ignore it" grammar), never the paid
 	# satisfaction boost. Without this the "neglect" arm still bought +20 satisfaction per
 	# complaint and read as tended.
@@ -678,7 +678,7 @@ static func _run_realtime(speed_idx: int) -> void:
 
 
 static func _log_cadence() -> void:
-	# §8/§13 verdict lines: per-account retention cadence (fires, the densest 30-day window,
+	# Verdict lines: per-account retention cadence (fires, the densest 30-day window,
 	# discounts taken) and fires per week by family.
 	var ids: Array = _retain_days.keys()
 	ids.sort()
@@ -753,7 +753,7 @@ static func _log_hr() -> void:
 
 
 # ============================================================================
-#  The founder's own moves (Step 4; inert for the Step 0 fire-log presets)
+#  The founder's own moves (the played run; inert for the fire-log presets)
 # ============================================================================
 
 static func _play_the_founder() -> void:
@@ -781,18 +781,18 @@ static func _open_the_company() -> void:
 	# the erosion term for a modest v1), so it can never reach the $2,500 seed bar — let
 	# alone the $5,000 Series A gate — inside a run. That is a calibration finding in its
 	# own right; it is also why the played run takes the B2B desk, where a signed account
-	# is worth $200-$2,000 of MRR on the day it closes. It is additionally the market this
-	# sprint's churn work lives in.
+	# is worth $200-$2,000 of MRR on the day it closes. It is additionally the market the
+	# churn work lives in.
 	if not GameState.get_flag("mvp_shipped", false):
 		if ProductSystem.get_active_build() != null:
 			return
-		# Calibration Round A §1: the COMPETENT v1 is the stability-heavy set — integration (7)
-		# + field (7, unlocked from research this round) + scheduling (3): raw stability 17,
+		# The COMPETENT v1 is the stability-heavy set — integration (7)
+		# + field (7, unlocked from research) + scheduling (3): raw stability 17,
 		# complexity 13, an $1,800 licence out of the $10,000 opening cash. The original set
 		# (workflow+reporting+scheduling, raw stability 6, complexity 9) is what the played
 		# run measured its retention hell with; it stays reachable as full_run_weak — the
 		# "bad v1" the tolerance band is seated against.
-		# Event revision 2026-09: the played run builds the LINE product a player can
+		# The played run builds the LINE product a player can
 		# actually pick (erp is the only playable B2B subtype). The old flat `saas_ops`
 		# build has no line data, so the rebuilt sales meeting read its axes as 0 and the
 		# founder lost ~96% of meetings — the $11.9K "ceiling" was that, not the economy.
@@ -873,7 +873,7 @@ static func _meet(p: Prospect) -> void:
 		GameState.day, p.company_name, outcome, mrr_before, GameState.mrr])
 
 
-## The played run's staffing ladder (Event revision 2026-09): a founder who is growing
+## The played run's staffing ladder: a founder who is growing
 ## hires the desk the growth needs — a developer on Frank's money, a support rep once a
 ## few accounts are live, sales reps as MRR climbs. Each rung only when the payroll it
 ## adds leaves six months of runway. The weak run keeps the historical single hire.
@@ -897,7 +897,7 @@ const STAFF_LADDER := [
 
 
 static func _hire_after_the_seed() -> void:
-	# Frank's money buys the first employee — the beat Step 3 signposts. Driven through
+	# Frank's money buys the first employee. Driven through
 	# HRSearchSystem exactly as the HR tab does it: start a search, wait for the files to
 	# arrive, hire the cheapest one.
 	if int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, 0)) <= 0:
@@ -940,7 +940,7 @@ static func _hire_after_the_seed() -> void:
 		print("PROBE PLAY day=%d start_search developer/junior" % GameState.day)
 
 
-## The played run's operations (Event revision 2026-09) — the things any player does and
+## The played run's operations — the things any player does and
 ## the old probe never did: buy server capacity so the product is not over capacity from
 ## the first seat, run a fix pass when confirmed bugs pile up, and ship a version on a
 ## steady cadence instead of only when a promise demands one.
@@ -1131,8 +1131,8 @@ static func _keep_the_word() -> void:
 #  The Series A hunt (full_run_vc_naive / full_run_vc_cautious only)
 # ============================================================================
 #
-# HANDOFF_series_a.md §E asks what share of term-sheet tables end in a signature, a final
-# offer or the fund walking out when a naive founder plays them. The bot never met a VC, so
+# What share of term-sheet tables end in a signature, a final offer or the fund walking
+# out when a naive founder plays them? The bot never met a VC, so
 # these two policies are the working definitions the owner wrote:
 #   naive    — once the door is open, book the first fund that will meet; at the table push
 #              a random lever until patience runs out; sign a final offer.
@@ -1149,7 +1149,7 @@ static func _play_the_hunt() -> void:
 	if VCPitchSystem.is_meeting_active():
 		_play_the_meeting()
 		_vc_meet_day = GameState.day
-	# 2. A live Series A sheet: sit down the day it arrives (so the K10 card never comes).
+	# 2. A live Series A sheet: sit down the day it arrives (so the decision card never comes).
 	if not GameState.active_sheets.is_empty():
 		var ts: TermSheet = GameState.active_sheets[0] as TermSheet
 		_play_the_table(String(ts.vc_id))
@@ -1488,9 +1488,9 @@ static func _seed_world(preset: String) -> void:
 			# satisfaction target IS the product's stability score. Stated plainly as a
 			# CONSTRUCTED pressure state: the healthy fixture (b2b_solo) parks the whole
 			# book at target 49-51 against tolerances of 35-50 and nothing ever slides,
-			# which is itself one of Step 0's findings.
+			# which is itself one of the probe's own findings.
 			_seed_b2b_world(0)
-			# Calibration Round A §1: DERIVED, not authored. Unsalvageable = the zero-bug axis
+			# DERIVED, not authored. Unsalvageable = the zero-bug axis
 			# sits 8 under the SMALL bar; the backlog (14) only makes it worse.
 			_seed_stability_fixture("b2b_risk", _raw_for_axis(_bar_small() - 8.0), 14)
 		"b2b_slip":
@@ -1501,11 +1501,10 @@ static func _seed_world(preset: String) -> void:
 			# the target just UNDER the mid/enterprise bar while the bug backlog is live
 			# and just OVER it once the backlog is cleared — so a founder who answers the
 			# demand AND cleans up actually keeps the account, and one who ignores it does
-			# not. That is the Frostpunk clause in the design principles (recoverable
-			# pressure) and it is the only world in which "retained" is a real outcome
-			# rather than a fixture gift.
+			# not. That is recoverable pressure in the Frostpunk sense, and it is the only
+			# world in which "retained" is a real outcome rather than a fixture gift.
 			_seed_b2b_world(0)
-			# Calibration Round A §1: DERIVED. With the backlog live the axis sits 2 over the
+			# DERIVED. With the backlog live the axis sits 2 over the
 			# MID bar (inside [T_mid, T_mid+5): small accounts safe, sector-picky mids and the
 			# enterprise under); cleared, it must clear T_mid+7 — checked at seed time.
 			_seed_stability_fixture("b2b_slip", _raw_for_axis(_bar_mid() + 2.0) + QualityModel.BUG_STABILITY_COEF * 9.0, 9)
@@ -1525,10 +1524,10 @@ static func _seed_b2c_world(neglect: bool) -> void:
 	GameState.set_flag("mvp_version", 1)
 	GameState.set_flag("mvp_product_name", "Nova")
 	if neglect:
-		# Calibration Round A §5: the UNTENDED consumer product. Experience under the B2C
+		# The UNTENDED consumer product. Experience under the B2C
 		# satisfaction gate (no daily +1), a live backlog over SATISFACTION_BUG_GATE (daily −1),
 		# and nobody sprints — satisfaction erodes, the WOM term never opens, the multiplier
-		# shrinks growth. The "declining" arm of the §5 measurement.
+		# shrinks growth. The "declining" arm of the B2C growth measurement.
 		GameState.set_flag("mvp_innovation", 10.0)
 		GameState.set_flag("mvp_stability", 8.0)
 		GameState.set_flag("mvp_experience", 8.0)
@@ -1545,7 +1544,7 @@ static func _seed_b2c_world(neglect: bool) -> void:
 	SalesSystem.open_b2c_paid_tier(15)
 
 
-# --- Fixture arithmetic (Calibration Round A §1) ---
+# --- Fixture arithmetic ---
 # axis(s) = 100·s/(s+H) (QualityModel.normalized_quality) and its inverse. Fixture
 # stability is DERIVED from the tolerance bars at seed time so each preset's documented
 # intent line survives a tolerance move; _seed_stability_fixture prints the derived value
@@ -1604,7 +1603,7 @@ static func _seed_b2b_world(rep_count: int) -> void:
 	# and sliding accounts instead of being uniformly safe or uniformly doomed. The
 	# satisfaction TARGET is this axis (b2b_sales_system.gd:96-106), so it is the single
 	# most load-bearing fixture value in the whole log — which is why it is DERIVED from
-	# the live bars (Calibration Round A §1) rather than authored as a raw number (it was
+	# the live bars rather than authored as a raw number (it was
 	# 55 on the retired grown scale; under NORMALIZE_HALF_SAT 25 that reads "excellent").
 	GameState.set_flag("mvp_innovation", 20.0)
 	GameState.set_flag("mvp_experience", 22.5)
@@ -1616,7 +1615,7 @@ static func _seed_b2b_world(rep_count: int) -> void:
 	# CS request cadence phases apart (cs_request_phase strides by 9 per signing).
 	# Total MRR is deliberately ~2.7K: a young book that is PAST the traction gate
 	# (mvp_shipped + 1 customer + mrr > 0) and well SHORT of Series A (MRR at the
-	# SalesSystem.TRACTION_MRR_TARGET bar — MRR only since K1 + K2). Seeded higher, the run rockets to phase 3 in two days and the log
+	# SalesSystem.TRACTION_MRR_TARGET bar — MRR only). Seeded higher, the run rockets to phase 3 in two days and the log
 	# stops describing the early game it is supposed to describe.
 	#
 	# Satisfaction seeds straddle the tolerance seeds on purpose (re-seated bars 2026-08-19:

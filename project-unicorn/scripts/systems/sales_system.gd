@@ -1,9 +1,9 @@
 class_name SalesSystem
 extends RefCounted
 
-# Pure-logic system per TECH_SPEC §8.3 — no scene dependency, no instance.
+# Pure-logic system — no scene dependency, no instance.
 #
-# Economy Model v2 (PROJECT_SPEC §10 revision). After mvp_shipped:
+# After mvp_shipped:
 #   - B2C: a live *audience* changes every in-game HOUR (hourly_tick), bidirectional —
 #          quality/brand/reputation grow it; bugs / low reputation / negative events /
 #          price hikes erode it. MRR is DERIVED automatically each hour:
@@ -23,7 +23,7 @@ extends RefCounted
 const B2C_PRICE_DEFAULT := 15            # $/user/month; the pricing ruler sets this
 const B2C_USERBASE_ID := "co_b2c_userbase"
 
-# B2C aggregate satisfaction drift. Calibration Round A §1/§5 (2026-08-19): the gate was
+# B2C aggregate satisfaction drift. The gate was
 # 70 on the retired scale (it needed raw 117 under HALF_SAT 50 — never true for any played
 # product) and it read STABILITY, an axis consumer sub-types barely carry (ai_assistant's
 # pool tops out at raw 3). It now reads the EXPERIENCE axis — the axis the B2C record is
@@ -33,11 +33,11 @@ const B2C_USERBASE_ID := "co_b2c_userbase"
 const SATISFACTION_QUALITY_GATE := 40    # experience axis ≥ → satisfaction drifts up
 const SATISFACTION_BUG_GATE := 5         # bug_count > → satisfaction drifts down
 
-# THE SERIES A REVENUE BAR — Calibration Round A §3 (2026-08-19), 5_000 → the $40-80K band
+# THE SERIES A REVENUE BAR — 5_000 → the $40-80K band
 # [ÖLÇ]. Canon: a deliberate 20-40 % compression of a real Series A; the rule that picks the
 # value inside the band is "the smallest band value the competent policy does not cross before
 # month 12; if it crosses none by month 24, the band floor, and the slope is reported".
-# Measured (seed 424242, --run-log=full_run:730:sim after §1/§2): MRR plateaus at ~$33-34K from
+# Measured (seed 424242, --run-log=full_run:730:sim): MRR plateaus at ~$33-34K from
 # month 7 because the B2B prospect pool is finite (catalog-bound, 25 accounts) — no band
 # value is crossed by month 24, so the bar sits at the band FLOOR and the gap is a Layer-B
 # revenue-curve finding, not a reason to lower the bar (director ruling).
@@ -56,7 +56,7 @@ const SATISFACTION_BUG_GATE := 5         # bug_count > → satisfaction drifts d
 # is a revenue-curve finding, not an argument against the number: the smoke suite cannot
 # see it either, because every case that touches the bar seeds TRACTION_MRR_TARGET + 1000
 # directly and keeps passing. The two honest exits are the band floor (100,000) or landing
-# calibration F1's prospect-pool work; both are the playtest gate's call, not this wave's.
+# the B2B prospect-pool work; both are the playtest gate's call, not this wave's.
 const TRACTION_MRR_TARGET := 120_000
 # [ÇALIŞMA] the envelope the anchor sits in. Never rendered, like the anchor itself.
 const TRACTION_MRR_BAND := [100_000, 150_000]
@@ -65,7 +65,7 @@ const TRACTION_MRR_BAND := [100_000, 150_000]
 # tab's "satış hedefi tutarsa" projection (FinanceSystem.get_optimistic_daily_net).
 const PIPELINE_WEIGHT := 0.5
 
-# --- Hourly audience flow (Economy Model v2 — bidirectional, MRR derives from it) ---
+# --- Hourly audience flow (bidirectional, MRR derives from it) ---
 # Audience is the live B2C user base; it changes every in-game hour. quality/brand/
 # (positive) reputation grow it; bugs / low reputation / price hikes erode it. Per-hour
 # coefficients are ~1/24 of a daily rate. The delta is NOT clamped to ≥0 — it can be
@@ -92,15 +92,14 @@ const RIVAL_RELATIVE := true
 # per-audience-member rate: at the reference (audience 200, gap 18) → 0.0002·18·200 =
 # 0.72, matching the originally-verified flat erosion at that point.
 const CHURN_COEF := 0.0002
-# WORD OF MOUTH — Calibration Round A §5 (2026-08-19). Growth was an ABSOLUTE per-hour trickle
+# WORD OF MOUTH. Growth was an ABSOLUTE per-hour trickle
 # while churn was PROPORTIONAL to the audience, so the consumer economy was a fixed point
 # (A_eq = grow / (CHURN_COEF·(42−q))) that could never compound and shrank as rivals advanced.
 # Two terms on the aggregate's SATISFACTION (the B2C record, 0-100): a loved product compounds
 # — grow += audience · WOM_COEF · max(0, sat − WOM_SAT_GATE)/100 — and a disliked one grows
 # slower — grow *= clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1). WOM_COEF [ÖLÇ]: swept on
 # --run-log=b2c_keep:180 (the maintained fixture) for the smallest value that keeps the 30-day
-# MRR means non-decreasing to day 180 while b2c_neglect still declines; the sweep and the
-# equilibrium arithmetic are in docs/audits/calibration_round_A_2026-08-19.md.
+# MRR means non-decreasing to day 180 while b2c_neglect still declines.
 const WOM_COEF := 0.005            # [ÖLÇ] per hour · per audience member · per satisfaction point/100 over the gate
 const WOM_SAT_GATE := 60.0         # [WORKING] satisfaction above which word of mouth starts
 const WOM_MULT_PIVOT := 50.0       # [WORKING] satisfaction at which base growth runs at full strength
@@ -123,7 +122,7 @@ const TENDENCY_MULT := {"premium": 1.35, "neutral": 1.0, "volume": 0.8}
 const CONVERSION_BASE := 0.35            # at optimal
 const CONVERSION_MIN := 0.02
 const CONVERSION_MAX := 0.60
-# Bugs hit CONVERSION, not only satisfaction — Calibration Round A §6 (2026-08-19). Until now
+# Bugs hit CONVERSION, not only satisfaction. Until now
 # live bugs reached the consumer economy only through effective stability → the composite →
 # audience growth; a buggy product still converted browsers to payers at full rate. Now the
 # standing conversion is scaled by (1 − live_bugs·BUG_CONV_COEF), floored — the raw live count,
@@ -172,7 +171,7 @@ static func is_b2b_market() -> bool:
 	return String(GameState.get_flag("mvp_market_type", "b2c")) == "b2b"
 
 
-# --- Hourly tick (Economy Model v2): bidirectional audience → derived MRR ---
+# --- Hourly tick: bidirectional audience → derived MRR ---
 
 static func hourly_tick(_hour: int) -> void:
 	if GameState.get_flag("mvp_shipped", false):
@@ -226,7 +225,7 @@ static func _audience_delta_per_hour() -> float:
 		* audience_growth_multiplier(int(GameState.get_flag("b2c_price", 0))) \
 		* InfraSystem.acquisition_multiplier()   # Ops §10: over capacity, acquisition ×0,6
 	var audience: float = float(GameState.get_flag("b2c_audience", 0))
-	# Calibration Round A §5 — word of mouth, both directions (see WOM_* above). `sat` is
+	# Word of mouth, both directions (see WOM_* above). `sat` is
 	# the aggregate B2C record's satisfaction; before the record exists (no paid tier yet)
 	# it reads WOM_MULT_PIVOT so the pre-revenue trickle is untouched.
 	var sat: float = _b2c_satisfaction()
@@ -326,7 +325,7 @@ static func open_b2c_paid_tier(price: int, _initial_pct: float = 0.0) -> void:
 ## iki yeni tüketici getirdi (§9'un kullanım çarpanı ve §10'un doluluk hesabı) ve
 ## ikisi de bayrağı HAM okumak zorunda kalıyordu — event_manager'ın beş yerde zaten
 ## yaptığı gibi. Sahibi olan modülde adlı bir okuma varken kimsenin bayrak adını
-## bilmesi gerekmez; float döner, çünkü saatlik erozyon kesirde yaşıyor (S3-43).
+## bilmesi gerekmez; float döner, çünkü saatlik erozyon kesirde yaşıyor.
 static func b2c_audience() -> float:
 	return maxf(0.0, float(GameState.get_flag("b2c_audience", 0.0)))
 
@@ -346,7 +345,7 @@ static func b2c_paying_users() -> int:
 
 
 static func add_b2c_audience(n: int) -> void:
-	# FLOAT, not int (audit S3-43). The hourly tick accumulates this as a float ON PURPOSE —
+	# FLOAT, not int. The hourly tick accumulates this as a float ON PURPOSE —
 	# _tick_b2c_audience's own comment says so: "Accumulate as float so small per-hour deltas
 	# (especially slow erosion) survive instead of rounding to zero each hour". This function
 	# used to read it back with int(), which truncated the accumulator, and then wrote an int
@@ -446,11 +445,11 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 			String(GameState.get_flag("mvp_sub_product_type_id", "")), c.scale)
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
-	# F5 (working rule, direktör onayı 2026-08-27) — the account arrives already owned when a
+	# Working rule (direktör onayı 2026-08-27) — the account arrives already owned when a
 	# rep has room. Through the stewardship system's own seam: who holds an account is CS's
 	# rule, not Sales', and Sales only says "one more exists now".
 	CustomerRepSystem.auto_assign_new(c)
-	GameState.run_customers_signed += 1  # run counter seam (Spec 3 §3) — sole B2B signing path
+	GameState.run_customers_signed += 1  # run counter seam — sole B2B signing path
 	# Fix 1 ledger: a signed company never re-enters cold prospecting (churn included —
 	# the entity is erased on churn, this name is the durable memory).
 	if not GameState.b2b_signed_company_names.has(c.company_name):
@@ -580,7 +579,7 @@ static func rnd_conversion_mult() -> float:
 static func conversion_rate(price: int) -> float:
 	# Standing fraction of the WHOLE audience that pays at this price (MRR derives
 	# from it each hour). Cheaper than optimal → higher; pricier → lower. Live bugs
-	# suppress it (§6: buyers generate the complaints that suppress buying).
+	# suppress it (buyers generate the complaints that suppress buying).
 	#
 	# R&D §4.4 `onboarding_flow` multiplies the BASE inside the price term — before
 	# the first clamp, never after the last one. Check the arithmetic, because the
@@ -595,7 +594,7 @@ static func conversion_rate(price: int) -> float:
 	#     outright for anyone already at the ceiling, and the bug factor would then
 	#     be re-clamping a number the player never had.
 	# `pricing_panel.gd` renders this rate as a percentage, so the node is not a
-	# hidden buff — the player watches the number move (Calibration Law 3).
+	# hidden buff — the player watches the number move.
 	var optimal: float = maxf(1.0, float(product_value()["optimal"]))
 	var rate: float = clampf(CONVERSION_BASE * rnd_conversion_mult() * (optimal / maxf(1.0, float(price))), CONVERSION_MIN, CONVERSION_MAX)
 	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0)))
@@ -646,7 +645,7 @@ static func apply_b2c_price(new_price: int) -> Dictionary:
 	# The player set a price on the ruler. Opens the tier + stores the price; a RAISE
 	# triggers an audience drop (the hike reaction). MRR is DERIVED immediately so the
 	# change is felt now, and re-derives every hour via hourly_tick. This is a played
-	# lever; the auto-flow it shapes is Economy Model v2 (PROJECT_SPEC §10).
+	# lever; the auto-flow it shapes is the hourly B2C derivation.
 	new_price = maxi(new_price, 1)
 	var was_open: bool = GameState.get_flag("b2c_paid_tier_open", false)
 	var old_price: int = int(GameState.get_flag("b2c_price", 0)) if was_open else 0
@@ -659,7 +658,7 @@ static func apply_b2c_price(new_price: int) -> Dictionary:
 	var drop_pct: float = 0.0
 	if was_open and new_price > old_price:
 		drop_pct = churn_fraction(old_price, new_price)
-		# Stored as a float (audit S3-43) — same reasoning as add_b2c_audience: rounding the
+		# Stored as a float — same reasoning as add_b2c_audience: rounding the
 		# hike reaction to a whole person here discarded the sub-unit accumulator that
 		# _tick_b2c_audience maintains. audience_before stays an int for the return dict,
 		# which is display data.

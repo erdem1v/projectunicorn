@@ -46,8 +46,8 @@ extends RefCounted
 # Scenes and scripts own LAYOUT ONLY (anchors, separation, margins, min sizes).
 # They must not carry font sizes, colors, or styleboxes — reach for a
 # theme_type_variation, or add one. Existing literals are GRANDFATHERED and
-# migrate only when the surrounding lines change (the same convention TECH_SPEC's
-# Decision Log set for inline Color() literals).
+# migrate only when the surrounding lines change (the same convention already
+# set for inline Color() literals).
 #
 # FONT IMPORT STANDARD (documented, not re-decided here): all faces share
 # antialiasing=1 (grayscale), hinting=1 (light), subpixel_positioning=4 (auto),
@@ -94,7 +94,7 @@ const THEME_STAMP := 7
 # ============================================================================
 # TERMINAL REGISTER (2026-08-08) — near-black surfaces, amber as the SINGLE
 # accent, green/red reserved for meaning. Values are read from the approved
-# mockups (`Unicorn Skins.dc.html`, 4a + 5a-5o), not eyeballed from renders.
+# mockups, not eyeballed from renders.
 #
 # The names below are UNCHANGED on purpose: their ROLE is the same, only the
 # value moved. That is what lets ~117 theme variations, 383 UiFactory call
@@ -281,13 +281,13 @@ const VEIL_FAINT := Color(1, 1, 1, 0.03)    # at-rest / disabled tint
 const VEIL_SOFT := Color(1, 1, 1, 0.06)     # normal / pressed
 const VEIL_STRONG := Color(1, 1, 1, 0.10)   # hover
 
-# --- Cinematic dialogue register (Spec 5: MeetingScene) ---
+# --- Cinematic dialogue register (MeetingScene) ---
 # A DARK charcoal register distinct from the light editorial modals — the game's
 # cinematic layer. Text on these surfaces uses the CREAM* / *_BRIGHT tones per the
 # context rule above. Amber fill/edge reuse ACCENT; danger captions reuse
 # NEGATIVE_BRIGHT; monologue (interior voice) text uses CREAM_DIM. Working values
 # sampled toward the approved mockups — final hues sealed by Erdem's F5 eye.
-const SCRIM_MODAL := Color(0.020, 0.027, 0.035, 0.62)  # rgba(5,7,9,.62) · modal dimmer (mockup value, all four modals)
+const SCRIM_MODAL := Color(0.020, 0.027, 0.035, 0.62)  # rgba(5,7,9,.62) · modal dimmer (all four modals)
 const SCRIM_ROOM := Color(0, 0, 0, 0.18)              # readability scrim over full-bleed room art
 const STAT_STRIP_BG := Color(0.027, 0.035, 0.043, 0.72)  # translucent stat band over art
 const DIALOGUE_BG := Color(0.063, 0.086, 0.110, 1)   # #10161C · modal / Frank card ground
@@ -393,10 +393,10 @@ const ODA_HEALTH_GREEN_CB := Color(0.184, 0.475, 0.671, 1)  # eski HEALTH_GREEN_
 # dark chrome / cinematic / newsprint), not by size. A scale that also owned the
 # typeface would need 43 steps and would stop being a scale.
 #
-# Sizes measured from docs/design/mockups/ at 1080p; the ratio lands at ~1.19
+# Sizes measured from the mockups at 1080p; the ratio lands at ~1.19
 # (a minor third) throughout. Five of the six already existed in the theme —
 # because those values were themselves derived from these same frames in an
-# earlier pass. See docs/design/mockups/README.md for the per-step trace.
+# earlier pass.
 #
 # "default face" below is the face the plurality of that step's members use; a
 # variation MAY choose another face, but it may NEVER override its step's size.
@@ -439,9 +439,9 @@ const SIZE_DISPLAY := 22
 # may appear ONLY in the newspaper ("Ekonomi Postası") or ceremony registers.
 const SIZE_ED_MODAL := 24       # modal titles (event · Atlas · month summary)
 const SIZE_ED_CEREMONY := 26    # PAGE titles (Ekip / Portföy / Finans / Sales …); onboarding
-const SIZE_ED_HEADLINE := 32    # newspaper headline (mockup 5l); path-card display 30 rounds here
+const SIZE_ED_HEADLINE := 32    # newspaper headline; path-card display 30 rounds here
 const SIZE_ED_FIGURE := 44      # newspaper stat figures "$1.2M"
-const SIZE_ED_MASTHEAD := 52    # "EKONOMİ POSTASI" (mockup 5l)
+const SIZE_ED_MASTHEAD := 52    # "EKONOMİ POSTASI"
 
 # --- Leading (line-height) ---
 # Godot's Label has NO line_height property. The line box is the font's own
@@ -476,7 +476,7 @@ const LEADING_RICH := 0         # RichTextLabel line_separation; == engine defau
 # 4-based; 6 is the one sanctioned half-step (dense data rows). NEW separation /
 # margin / gap values come from here. The ~466 existing literals in scenes and
 # scripts are GRANDFATHERED and migrate only when the surrounding lines change —
-# the same convention TECH_SPEC's Decision Log already set for inline Color()
+# the same convention already set for inline Color()
 # literals. Theme Core deliberately did NOT sweep them: that is layout churn.
 const SPACE_0 := 0
 const SPACE_XXS := 2
@@ -553,7 +553,7 @@ const TAB_GLYPH_PERSONAL := "★"
 const TAB_GLYPH_EVENTS := "●"
 
 # --- Tab definition (id, glyph, icon, locked) — canonical 8-tab list ---
-# NO `label` FIELD, deliberately (S2-34, 2026-08-18). The rail's caption is a localization
+# NO `label` FIELD, deliberately. The rail's caption is a localization
 # key derived from the id — TAB_ + ID.to_upper() — so LeftTabs.tscn carries the key and
 # center_viewport derives the same one. An English `label` here was the SECOND source of
 # those captions, which is exactly why the rail stayed English-only in Turkish.
@@ -583,7 +583,7 @@ const TABS := [
 	{"id": "marketing", "glyph": TAB_GLYPH_MARKETING, "icon": "res://assets/icons/tabs/marketing.svg", "lock": "ea"},
 	{"id": "rnd", "glyph": TAB_GLYPH_RND,      "icon": "res://assets/icons/tabs/rnd.svg"},
 	{"id": "events", "glyph": TAB_GLYPH_EVENTS,   "icon": "res://assets/icons/tabs/events.svg"},
-	# Spec 6 — the standalone "Yatırım" rail tab was relocated INTO the Finance tab as a
+	# The standalone "Yatırım" rail tab was relocated INTO the Finance tab as a
 	# sub-page (Finance>Yatırım); the 9th rail entry is gone. The `ops` entry left on
 	# 2026-08-20: GDD v2 ch. 12 has no Operations tab, nothing in the codebase emitted,
 	# matched or preloaded the id, and Marketing took its slot in the icon set.
@@ -729,7 +729,7 @@ static func bug_severity(bug_count: int) -> Dictionary:
 	return badge_palette(&"negative")
 
 
-## Game-wide money format (Spec 3 §6 — the single convention going forward).
+## Game-wide money format (the single convention going forward).
 ## < $1K → "$800" · ≥ $1K → one-decimal K ("$2.1K", "$10.0K") · ≥ $1M →
 ## one-decimal M ("$4.0M") · ≥ $10M drops a .0 decimal ("$22M"). Negative →
 ## leading "-". TopBar's variants moved here (format_money_chip/exact, 2026-07-21
@@ -772,7 +772,7 @@ static func tr_upper(s: String) -> String:
 	return Fmt.upper(s)
 
 
-## Net-runway display (Package 5): revenue-aware runway. INF (net_burn ≤ 0) → the
+## Net-runway display: revenue-aware runway. INF (net_burn ≤ 0) → the
 ## "default alive" status word ("Artıda"); finite → whole months. Uses TranslationServer
 ## because statics can't call tr(). The single home for the months-vs-status +
 ## localization decision, feeding every net-runway surface (TopBar, Finance tab,

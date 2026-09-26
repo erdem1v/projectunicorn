@@ -1,7 +1,7 @@
 class_name ProductSystem
 extends RefCounted
 
-# Slot 1 daily tick per TECH_SPEC §8.2. Pure logic (TECH_SPEC §8.3).
+# Slot 1 daily tick. Pure logic.
 #
 # Rev3 efor/hız build akışı (Product Tab Rev3, üç faz):
 #   planning → iteration (TASARIM) → development (GELİŞTİRME) → bugfix (BETA) → shipped.
@@ -70,7 +70,7 @@ const PHASE_DEV_END := 0.80         # Geliştirme ("development"): [0.20, 0.80);
 # bir takvim ritüeli, bedeli "N gün" olarak okunmalı; working karar) ve eksenleri
 # tavanlarına doğru büyütür. ITER_MAX_ROUNDS tur sayısı tavanı (güvenlik değil, gramer):
 # Software Inc. tasarımı dört iterasyonda keser; azalan getiri eğrisi de dördün ötesini
-# ödüllendirmez (kalibrasyon kanunu 2) — tavanda yalnız "Geliştirmeye geç" kalır.
+# ödüllendirmez — tavanda yalnız "Geliştirmeye geç" kalır.
 const ITER_ROUND_DAYS := 4          # WORKING — bir ek turun takvim günü (dafd33c ITERATION_LENGTH_DAYS halefi)
 const ITER_MAX_ROUNDS := 4          # yönetmen kararı 2026-08-19 (12→4): tur sayacı tavanı (tur 1 = tasarım bandının kendisi)
 # Tavan formülü: eksen tavanı = ITER_CEIL_FOUNDER_COEF × kurucunun o alandaki puanı
@@ -146,7 +146,7 @@ const BUG_TECH_REDUCER := 0.005
 const BUG_FLOOR := 0.010
 # Tech-debt taken via dev events converts to real bugs at development→bugfix.
 const TECH_DEBT_BUG_PENALTY := 5
-# At-commit bug seed ("Yeni feature = yeni bug", Package 5): each NEW feature entering a
+# At-commit bug seed ("Yeni feature = yeni bug"): each NEW feature entering a
 # build adds bugs ∝ its complexity. Separate channel from the hourly dev-phase accrual
 # above; a hardening build (no new features) seeds nothing. BALANCE-TUNABLE.
 const FEATURE_BUG_SEED_COEF := 1.0
@@ -1480,7 +1480,7 @@ static func _accrue_bugs_hourly(f: float = 1.0) -> void:
 	_sync_legacy_quality(b)
 
 
-# --- At-commit feature bug seed (Package 5) ---
+# --- At-commit feature bug seed ---
 
 static func _seed_feature_bugs(feature_ids: Array) -> int:
 	# "Yeni feature = yeni bug": each feature's complexity seeds bugs at build commit.
@@ -1552,7 +1552,7 @@ static func _shipped_total_complexity() -> int:
 static func sprint_duration_for(bug_count: int) -> int:
 	# Hata sprinti süresi Test Uzmanı ile KISALIR (design doc §5). Süre sprint başlarken bir
 	# kez damgalanan bir flag, o yüzden okuma tick'te değil BURADA olmak zorunda.
-	# Days to clear `bug_count` at the sprint rate, clamped. Shown pre-commit (§10).
+	# Days to clear `bug_count` at the sprint rate, clamped. Shown pre-commit.
 	var rate: float = float(SPRINT_BUG_FIX_PER_DAY) * (1.0
 		+ _area_sum(HRConstants.AREA_QA) * TESTER_SPRINT_PER_EXPERTISE)
 	return clampi(int(ceil(float(bug_count) / maxf(0.01, rate))), MIN_SPRINT_DAYS, MAX_SPRINT_DAYS)
@@ -1696,7 +1696,7 @@ static func projected_launch_bugs() -> int:
 	# yazmadan hemen önce CRITICAL_BUG_LAUNCH_PENALTY ekliyor: yani sayı, riski göze
 	# alıp "Bırak, gönder" diyen oyuncuda — tam da dürüst sayıya en çok ihtiyacı olan
 	# oyuncuda — beş eksik çıkıyordu. Formatter'ı paylaştırma disiplini
-	# UiTokens.build_percent ile aynı (S2-8); launch()'ın kendisi de buradan okur, böylece
+	# UiTokens.build_percent ile aynı; launch()'ın kendisi de buradan okur, böylece
 	# ceza aritmetiği tek yerde kalır.
 	if active_build == null:
 		return 0
@@ -2018,7 +2018,7 @@ static func start_build(
 static func start_version_build(new_feature_ids: Array, assigned_engineer_id: String = "", strengthen_feature_ids: Array = []) -> bool:
 	# v2+ reuses the whole build flow, but SEEDS axes from the live product (not 0) and
 	# unions new features onto the shipped set. KANON: v-build canlı ürünün ekonomisini
-	# DONDURMAZ; §10 bedeli = süre + yeni bug'lar.
+	# DONDURMAZ; bedeli = süre + yeni bug'lar.
 	# Pool-deepening: when the pool is exhausted, pass strengthen_feature_ids (⊆ mvp_components)
 	# instead of new features → the build deepens those axes and never locks.
 	if active_build != null:
@@ -2178,7 +2178,7 @@ static func ship_active_build() -> void:
 		push_warning("[ProductSystem] ship_active_build called with no active build")
 		return
 	GameState.set_flag("mvp_shipped", true)
-	# AYIN OLAYI (Spec 3 §4, working copy) — version-aware ship line.
+	# AYIN OLAYI (working copy) — version-aware ship line.
 	var ship_ver: int = int(GameState.get_flag("mvp_version", 1))
 	GameState.submit_month_highlight(
 		TranslationServer.translate("PROD_SHIP_FIRST_TITLE") if ship_ver <= 1
