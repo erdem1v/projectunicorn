@@ -199,8 +199,7 @@ func set_lifecycle_phase(customer_id: String, phase: String) -> void:
 
 
 func set_churn_countdown(customer_id: String, value: int) -> void:
-	# -1 = inactive; N..0 drives the visible "Churn'e ~N gün" readout. Emits
-	# customer_health_changed (same channel as the phase) so the counter repaints.
+	# -1 = inactive; N..0 drives the visible "Churn'e ~N gün" readout.
 	var c: Customer = _customers.get(customer_id, null)
 	if c == null:
 		push_warning("[CustomerRegistry] set_churn_countdown on unknown id: %s" % customer_id)
@@ -209,7 +208,7 @@ func set_churn_countdown(customer_id: String, value: int) -> void:
 	if c.churn_countdown == clamped:
 		return
 	c.churn_countdown = clamped
-	EventBus.customer_health_changed.emit(customer_id, c.lifecycle_phase)
+	EventBus.customer_churn_countdown_changed.emit(customer_id, clamped)
 
 
 func set_tolerance(customer_id: String, value: int) -> void:

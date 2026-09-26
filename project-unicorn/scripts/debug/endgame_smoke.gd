@@ -3375,12 +3375,18 @@ static func _case_b2b_lifecycle_and_countdown() -> String:
 	var churned: Array = []
 	var cb := func(id: String) -> void: churned.append(id)
 	EventBus.customer_churned.connect(cb)
+	var edges: Array = []
+	var edge_cb := func(_id: String, phase: String) -> void: edges.append(phase)
+	EventBus.customer_health_changed.connect(edge_cb)
 	var lost0: int = GameState.run_customers_lost
 	for i in 60:
 		_sim_day()
 		if CustomerRegistry.get_customer(c.id) == null:
 			break
 	EventBus.customer_churned.disconnect(cb)
+	EventBus.customer_health_changed.disconnect(edge_cb)
+	if edges != ["risk", "churning"]:
+		return "customer_health_changed fired off the phase edges: %s" % str(edges)
 	if CustomerRegistry.get_customer(c.id) != null:
 		return "did not churn after sustained low satisfaction"
 	if churned != [c.id]:
@@ -5743,8 +5749,8 @@ static func _case_event_queue_dedupe_by_id() -> String:
 static func _case_event_instance_per_subject() -> String:
 	_seed_b2b(500)
 	var a: Customer = _add_risk_b2b("inst_a", 800)
-	EvPapers.place(RETAIN_ID, _ctx_customer(a), 7)      # A's card, demoted to the desk earlier
-	CustomerRegistry.set_churn_countdown(a.id, 4)        # the countdown's repaint re-asks A
+	# A's card, demoted to the desk earlier; A's Risk edge is still buffered, so the drain re-asks A.
+	EvPapers.place(RETAIN_ID, _ctx_customer(a), 7)
 	var b: Customer = _add_risk_b2b("inst_b", 900)
 	EventGate.hourly_tick(GameState.current_hour)
 	if _instances_of(RETAIN_ID) != 1:

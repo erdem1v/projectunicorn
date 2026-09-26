@@ -502,6 +502,7 @@ func _bus_links() -> Array:
 		[EventBus.customer_added, _on_ledger_moved],
 		[EventBus.customer_removed, _on_ledger_moved],
 		[EventBus.customer_health_changed, _on_ledger_moved],
+		[EventBus.customer_churn_countdown_changed, _on_ledger_moved],
 		[EventBus.language_changed, _on_look_changed],
 		# Renk körü paleti: ODA'nın semantik renkleri her boyamada token'dan okunur,
 		# o yüzden tam tazeleme yeterli.
@@ -558,7 +559,7 @@ func _on_rival_status_changed(_id: String, _s: String) -> void:
 	_refresh_league()
 
 ## Term sheet ve müşteri sinyalleri (1 ya da 2 argüman).
-func _on_ledger_moved(_id: String, _phase: String = "") -> void:
+func _on_ledger_moved(_id: String, _detail: Variant = null) -> void:
 	_refresh_papers()
 	_refresh_dates()
 

@@ -96,7 +96,10 @@ signal customer_seats_changed(customer_id: String, new_seats: int)
 signal customer_satisfaction_changed(customer_id: String, new_satisfaction: int)
 
 # --- B2B lifecycle / relationship signals (B2B Sales System) ---
+# Phase edges only: `customer.retention` binds to it, so a daily emission would re-ask every Risk account.
 signal customer_health_changed(customer_id: String, phase: String)
+# The "Churn'e ~N gün" readout's repaint; -1 when no countdown runs. Moves daily, so no card binds to it.
+signal customer_churn_countdown_changed(customer_id: String, days: int)
 signal customer_churned(customer_id: String)
 signal customer_expanded(customer_id: String, new_seats: int)
 signal customer_assigned(customer_id: String, employee_id: String)

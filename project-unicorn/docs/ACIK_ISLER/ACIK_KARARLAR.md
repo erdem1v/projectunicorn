@@ -194,6 +194,23 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     kalır. K31 (toplantı diyaloglarının yazım turu) kapsamına alınabilir.
   - Kaynak: ONERI_v3 §2 (şüphe 5); ACIK_KARARLAR Frank belgeleri maddesi (K31 yazım turu).
 
+- **11 · Elde tutma kartı yalnız Risk'e girişte: kurtarma azaldı, churn arttı (kalibrasyon).**
+  - Ne oluyor: `customer.retention` artık yalnız hesap Risk'e girerken açılıyor; kartın kendi notu kararı bu ana
+    veriyor. Önceden churn geri sayımı her gün aynı sinyali yaydığı için Risk'teki her hesap her gün yeni kart
+    alıyordu. full_run tohum 1 (760 gün): retention kartı 438 → 261, CHURN 44 → 101, İNDİRİM 98 → 31, SÖZ 105 → 88;
+    730. gün MRR 409.490 → 278.481, marka 100 → 3; son aynı (running_on_fumes). Hiçbir sabit değişmedi.
+  - Nerede: `scripts/autoload/customer_registry.gd` (`set_churn_countdown`, `customer_churn_countdown_changed`),
+    `data/events/cards/customer/retention.json` (tetik, `cooldown_days`), churn geri sayımı ve seçenek etkileri
+    `scripts/systems/b2b_constants.gd`'de.
+  - Oyuncuya etkisi: Risk'e düşen hesap için karar bir kez sorulur; kaçırılırsa Satış sekmesindeki "İlgilen" kartı
+    yeniden açar. Kurtarma şansı artık her gün yenilenmediği için daha çok hesap kaybediliyor; geri sayım süresi ve
+    Oyala/İndirim etkileri eski günlük soruya göre oturmuş olabilir.
+  - Seçenekler: A) Davranış kalır; churn geri sayımı ve seçenek etkileri tam probe setiyle ölçülerek yeniden kalibre
+    edilir. B) Günlük yeniden soru tasarım sayılır; kartın notu ve Satış §19 buna göre yazılır, eski davranış geri
+    gelir. C) Kalır, kalibrasyon sonraya.
+  - Kaynak: `retention.json` `_port_note`; Satış GDD §19 (retention kartı ve churn geri sayımı korunanlar arasında);
+    bu commit'in probe ölçümü.
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında
