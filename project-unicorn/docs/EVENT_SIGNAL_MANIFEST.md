@@ -235,7 +235,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `callback_ready` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 | `meeting_day` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 | `offer_countdown_changed` | `days_left: int` | vc_pitch_system | 1 | 1 | top_bar |
-| `term_table_requested` | `vc_id: String` | effects · game_shell · hunt_tab | 5 | 1 | main |
+| `term_table_requested` | `vc_id: String, stage: String` | effects · game_shell · hunt_tab | 5 | 1 | main |
 | `sheet_walked` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 
 ### Seed round (GDD v2 ch. 09 §3) — the middle rung. One publisher each.

@@ -43,9 +43,10 @@ static var _meeting_day_mrr: int = 0 # snapshot for callback "MRR +20%"
 static var _cold_exit_key: String = ""    # the Frank line this sitting's rejection shows (picked once)
 # WHICH RUNG THIS SITTING IS. Meeting-local like everything else in this block, and for the
 # same reason: at begin_meeting there is no sheet to read it off — the sheet is what the
-# meeting PRODUCES. The TABLE reads its stage off TermSheet.stage instead, because the seed
-# offer never expires and can be opened days later. reset() must clear it: walk_table reads
-# it between sittings, and a leaked seed stage would make it refuse a Series A walk.
+# meeting PRODUCES. The TABLE is told its stage by open(vc_id, stage) instead, because one
+# fund can hold an unsigned seed offer and a Series A sheet at once. reset() must clear it:
+# walk_table reads it between sittings, and a leaked seed stage would make it refuse a
+# Series A walk.
 static var _stage: String = PitchConstants.STAGE_SERIES_A
 
 

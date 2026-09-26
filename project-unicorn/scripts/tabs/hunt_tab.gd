@@ -107,7 +107,7 @@ func _refresh_seed() -> void:
 		# NO WALK BUTTON, and not by omission: refusing the round is ZOR MOD, so the row
 		# that refuses it lives at the TABLE where it can be rendered locked with its
 		# reason. A second refusal path here would be an unlocked door beside a locked one.
-		_seed_strip.add_child(_button(tr("SEED_SIT_DOWN"), EventBus.term_table_requested.emit.bind(sheet.vc_id)))
+		_seed_strip.add_child(_button(tr("SEED_SIT_DOWN"), EventBus.term_table_requested.emit.bind(sheet.vc_id, PitchConstants.STAGE_SEED)))
 		return
 
 	if GameState.seed_pitch_used:
@@ -308,7 +308,7 @@ func _build_offer_card(sheet: TermSheet) -> Control:
 		card.add_child(_label(tr("HUNT_VALIDITY").format({"n": days}),
 			UiTokens.ACCENT_DEEP if days > PitchConstants.WARNING_DAYS else UiTokens.negative(), 11))
 	var actions := _box(HBoxContainer.new(), 6)
-	actions.add_child(_button(tr("HUNT_SIT_DOWN"), EventBus.term_table_requested.emit.bind(vc_id)))
+	actions.add_child(_button(tr("HUNT_SIT_DOWN"), EventBus.term_table_requested.emit.bind(vc_id, PitchConstants.STAGE_SERIES_A)))
 	if due:
 		actions.add_child(_button(tr("VC_EV_DECISION_DECLINE"),
 			_act.bind(VCPitchSystem.decline_expired_sheet.bind(vc_id))))

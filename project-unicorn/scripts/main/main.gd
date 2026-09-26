@@ -1488,7 +1488,7 @@ func _run_vc_shot(kind: String) -> void:
 			var conv: int = 45 if kind == "table_walk" else (100 if kind == "table_final" else 83)
 			VCPitchSystem._vc("bosphorus")["sheet_conviction"] = conv
 			GameState.active_sheets.append(VCPitchSystem._make_sheet("bosphorus", GameState.day))
-			TermSheetTableSystem.open("bosphorus")
+			TermSheetTableSystem.open("bosphorus", PitchConstants.STAGE_SERIES_A)
 			GameState.set_flag("debug_skill_force", "fail")
 			# Patience of two: one failed push is the investor's line, the second spends the
 			# patience and the fund answers (final counter or walk-out).
@@ -1502,13 +1502,13 @@ func _run_vc_shot(kind: String) -> void:
 		"table_other":
 			GameState.active_sheets.append(VCPitchSystem._make_sheet("anchor", GameState.day))
 			GameState.active_sheets.append(VCPitchSystem._make_sheet("meridian", GameState.day))
-			TermSheetTableSystem.open("anchor")
+			TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 			TermSheetTableSystem.show_other_offer()
 		"seed_table":
 			GameState.set_phase(2)
 			GameState.mrr = 22000
 			GameState.seed_sheet = SeedRoundSystem.make_seed_sheet("anchor", "standard", GameState.day)
-			TermSheetTableSystem.open("anchor")
+			TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SEED)
 		"k10":
 			# A sheet whose ten business days ran out today: the decision card's moment.
 			var due: TermSheet = VCPitchSystem._make_sheet("meridian", GameState.day - 14)
@@ -2122,14 +2122,14 @@ func _close_dialogue_scenes() -> void:
 	_pre_dialogue_speed = -1
 
 
-func _on_term_table_requested(vc_id: String) -> void:
+func _on_term_table_requested(vc_id: String, stage: String) -> void:
 	if _term_table != null:
 		return
 	var modal_layer: CanvasLayer = _modal_layer()
 	if modal_layer == null:
 		return
-	if TermSheetTableSystem.open(vc_id).is_empty():
-		push_warning("[Main] term_table_requested for %s with no live sheet" % vc_id)
+	if TermSheetTableSystem.open(vc_id, stage).is_empty():
+		push_warning("[Main] term_table_requested for %s/%s with no live sheet" % [vc_id, stage])
 		return
 	_claim_pre_dialogue_speed()
 	EventBus.speed_change_requested.emit(0)

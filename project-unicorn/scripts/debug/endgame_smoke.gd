@@ -1846,7 +1846,7 @@ static func _case_table_sign_closes_series_a() -> String:
 	_grant("anchor")
 	var captured: Array = []  # ending_data dicts (Array mutation survives lambda capture)
 	EventBus.run_ended.connect(func(_id: String, d: Dictionary) -> void: captured.append(d))
-	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	TermSheetTableSystem.select_lever("valuation")
 	var want_val: int = _derived_open_val("anchor") + PitchConstants.VAL_STEP
 	var want_dil: int = _derived_open_dil("anchor")
@@ -1874,7 +1874,7 @@ static func _case_table_walk_not_a_rejection() -> String:
 	_grant("nexus")
 	var walked: Array = []
 	EventBus.sheet_walked.connect(func(vc: String) -> void: walked.append(vc))
-	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	TermSheetTableSystem.walk()
 	if GameState.vc_rejections != 0:
 		return "vc_rejections=%d (want 0 — K11: the player's walk is not a rejection)" % GameState.vc_rejections
@@ -1897,7 +1897,7 @@ static func _case_patience_zero_locks_pushes() -> String:
 	_force("fail")
 	_grant("bosphorus")  # patience 2
 	VCPitchSystem.sheet_for("bosphorus").conviction = 100
-	TermSheetTableSystem.open("bosphorus")
+	TermSheetTableSystem.open("bosphorus", PitchConstants.STAGE_SERIES_A)
 	TermSheetTableSystem.select_lever("valuation")
 	TermSheetTableSystem.push()  # fail → patience 1
 	if String(TermSheetTableSystem.view_state().investor_line) == "":
@@ -1921,7 +1921,7 @@ static func _case_patience_zero_locks_pushes() -> String:
 	# The cold fund: same pushes, no goodwill left → it walks.
 	var rej0: int = GameState.vc_rejections
 	VCPitchSystem.sheet_for("bosphorus").conviction = 0
-	TermSheetTableSystem.open("bosphorus")
+	TermSheetTableSystem.open("bosphorus", PitchConstants.STAGE_SERIES_A)
 	TermSheetTableSystem.select_lever("valuation")
 	TermSheetTableSystem.push()
 	TermSheetTableSystem.push()
@@ -1952,7 +1952,7 @@ static func _case_push_decay_lowers_odds() -> String:
 	GameState.set_phase(3)
 	_force("pass")
 	_grant("anchor")
-	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	var odds1: float = TermSheetTableSystem.odds_for("valuation").chance
 	var money0: int = TermSheetTableSystem.money_raised()
 	var pat0: int = int(TermSheetTableSystem.view_state().patience.current)
@@ -1973,7 +1973,7 @@ static func _case_leverage_bonus_applies_and_shows() -> String:
 	GameState.set_phase(3)
 	_grant("anchor")
 	_grant("nexus")
-	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	var vs: Dictionary = TermSheetTableSystem.view_state()
 	if not bool(vs.leverage.active):
 		return "leverage not active with 2 sheets"
@@ -2002,7 +2002,7 @@ static func _case_leverage_bonus_applies_and_shows() -> String:
 static func _case_no_leverage_no_box() -> String:
 	GameState.set_phase(3)
 	_grant("anchor")
-	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	var vs: Dictionary = TermSheetTableSystem.view_state()
 	if bool(vs.leverage.active):
 		return "leverage active with a single sheet"
@@ -2018,7 +2018,7 @@ static func _case_investment_figure_tracks_terms() -> String:
 	GameState.set_phase(3)
 	_force("pass")
 	_grant("anchor")
-	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	var v0: int = _derived_open_val("anchor")
 	var d0: int = _derived_open_dil("anchor")
 	var m0: int = TermSheetTableSystem.money_raised()
@@ -2043,7 +2043,7 @@ static func _case_table_board_push_sequence() -> String:
 	GameState.set_phase(3)
 	_force("pass")
 	_grant("anchor")  # board 1 seat + veto
-	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	TermSheetTableSystem.select_lever("board")
 	TermSheetTableSystem.push()  # drop veto
 	# Locale-independent: asserts the SHAPE, not the Turkish bytes. The old byte-pin passed
@@ -2078,7 +2078,7 @@ static func _case_deal_prompt_defer_keeps_clock() -> String:
 		_sim_day()
 	if VCPitchSystem.sheet_for("anchor") == null:
 		return "sheet expired too early during defer"
-	var vs: Dictionary = TermSheetTableSystem.open("anchor")
+	var vs: Dictionary = TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	if vs.is_empty() or not TermSheetTableSystem.is_active():
 		return "table not re-enterable after defer"
 	var want: int = PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS - GameState.business_days_between(day0, GameState.day)
@@ -2328,7 +2328,7 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 			% [conv_free, conv_pen, PitchConstants.MEETING_CANCEL_PENALTY]
 
 	# --- the table ---------------------------------------------------------------
-	var vs: Dictionary = TermSheetTableSystem.open("anchor")
+	var vs: Dictionary = TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	if vs.is_empty() or not TermSheetTableSystem.is_active() or not bool(vs.get("sign_enabled", false)):
 		TermSheetTableSystem.reset()
 		return "the table did not open on the loaded offer"
@@ -2345,7 +2345,7 @@ static func _case_legacy_v12_save_opens_live_table() -> String:
 	# Discrimination: the same table WITH a stamp opens elsewhere, so the check above is not
 	# satisfied by a table that ignores conviction altogether.
 	loaded.conviction = STAMP
-	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
 	var stamped_e: int = TermSheetTableSystem.eagerness()
 	TermSheetTableSystem.reset()
 	if stamped_e != clampi(STAMP + fit, 0, 100):
@@ -16564,7 +16564,7 @@ static func _case_seed_table_walk_is_locked() -> String:
 	_sim_day_full()
 	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
 		return "fixture: the seed meeting would not start"
-	var vs: Dictionary = TermSheetTableSystem.open("anchor")
+	var vs: Dictionary = TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SEED)
 	if vs.is_empty():
 		return "the seed table would not open"
 	if bool(vs.get("walk_enabled", true)):
@@ -16596,7 +16596,7 @@ static func _case_seed_sign_is_not_terminal() -> String:
 	_sim_day_full()
 	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
 		return "fixture: the seed meeting would not start"
-	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SEED)
 	var terms: Dictionary = GameState.seed_sheet.opening_terms.duplicate()
 	var cash0: int = GameState.cash
 	var tx0: int = FinanceSystem.get_transactions().size()
@@ -16688,13 +16688,28 @@ static func _case_seed_stage_does_not_leak() -> String:
 	_sim_day_full()
 	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
 		return "fixture: the seed meeting would not start"
-	TermSheetTableSystem.open("anchor")
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SEED)
 	if String(TermSheetTableSystem.levers()[0]) != "raise":
 		return "the seed table's first lever is '%s'" % String(TermSheetTableSystem.levers()[0])
+	# The seed offer never expires, so the same fund can also hold a Series A sheet; that seat
+	# must load the Series A sheet, not the older seed offer. Check the loaded TERMS, not the
+	# levers: open() takes its stage from the caller, so levers() would pass either way.
+	_grant("anchor")
+	var series_a: TermSheet = VCPitchSystem.sheet_for("anchor")
+	if series_a == null or VCPitchSystem.seed_sheet_for("anchor") == null:
+		return "fixture: anchor does not hold both a seed offer and a Series A sheet"
+	var want: int = VCPitchSystem.raised_for(int(series_a.opening_terms.get("valuation_m", 0)),
+		int(series_a.opening_terms.get("dilution_pct", 0)))
+	var seat: Dictionary = TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SERIES_A)
+	if seat.is_empty() or want <= 0 or TermSheetTableSystem.money_raised() != want:
+		return "the Series A seat opened anchor's unsigned seed offer (raised %d, sheet %d)" % [
+			TermSheetTableSystem.money_raised(), want]
+	GameState.active_sheets.clear()
+	TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SEED)
 	TermSheetTableSystem.sign()
 	GameState.set_phase(3)
 	_grant("nexus")
-	TermSheetTableSystem.open("nexus")
+	TermSheetTableSystem.open("nexus", PitchConstants.STAGE_SERIES_A)
 	if String(TermSheetTableSystem.levers()[0]) != "valuation":
 		return "a seed stage leaked into the Series A table"
 	if TermSheetTableSystem.money_raised() <= 0:
@@ -16711,7 +16726,7 @@ static func _case_seed_table_levers_and_final_offer() -> String:
 	if not _play_seed_meeting("anchor", ["b1_read", "b2_vizyon", "b3_durust", "b4_ack"]):
 		return "fixture: the seed meeting would not start"
 	GameState.seed_sheet.conviction = 0
-	var vs: Dictionary = TermSheetTableSystem.open("anchor")
+	var vs: Dictionary = TermSheetTableSystem.open("anchor", PitchConstants.STAGE_SEED)
 	var ids: Array = []
 	for L in vs.get("levers", []):
 		ids.append(String(L.get("id", "")))

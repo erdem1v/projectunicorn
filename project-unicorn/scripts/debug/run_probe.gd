@@ -1289,15 +1289,13 @@ static func _push_until_done(kind: String, key: String, fund: String, log_each: 
 
 
 static func _play_the_table(vc: String) -> void:
-	if GameState.seed_sheet != null:
-		print("PROBE ERROR day=%d a seed sheet is present — open() would seat the seed table" % GameState.day)
 	var sheet: TermSheet = VCPitchSystem.sheet_for(vc)
 	if sheet == null:
 		_vc_end("NO_TABLE", "no_sheet")
 		return
 	if _vc_policy == "naive" and _replay_k > 0:
 		_run_replays()                  # the table is still closed: same company, same day
-	var ov: Dictionary = TermSheetTableSystem.open(vc)
+	var ov: Dictionary = TermSheetTableSystem.open(vc, PitchConstants.STAGE_SERIES_A)
 	if ov.is_empty():
 		_vc_end("NO_TABLE", "open_failed")
 		return
@@ -1404,7 +1402,7 @@ static func _run_replays() -> void:
 			var sh: TermSheet = VCPitchSystem._make_sheet(fund, GameState.day)
 			sh.conviction = TermSheetTableSystem.E_FALLBACK_CONV_SERIES_A
 			GameState.active_sheets.append(sh)
-			TermSheetTableSystem.open(fund)
+			TermSheetTableSystem.open(fund, PitchConstants.STAGE_SERIES_A)
 			var e0: int = TermSheetTableSystem.eagerness()
 			var fit: int = TermSheetTableSystem._domain_fit()
 			var thr: int = TermSheetTableSystem.walk_threshold()

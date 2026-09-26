@@ -134,10 +134,8 @@ static var _state: int = IDLE
 static var _last_push_passed: bool = false
 static var _last_lever_acted: String = ""   # the lever the last push touched ("" = none this sitting)
 static var _last_move: String = ""          # "$18M → $22M" for the success caption
-## Which rung this sitting is, read off the SHEET (TermSheet.stage) rather than handed in:
-## the seed offer never expires, so a static set during the meeting is long gone by the time
-## the player sits down. Cleared in _reset(), or a seed sitting's stage leaks into the next
-## Series A table.
+## Which rung this sitting is, named by whoever seated the player (open()). Cleared in
+## _reset(), or a seed sitting's stage leaks into the next Series A table.
 static var _stage: String = PitchConstants.STAGE_SERIES_A
 # --- Eagerness / shown-offer sitting state ---
 static var _e: int = 0                      # eagerness 0..100
@@ -159,14 +157,6 @@ static var _other_vc_shown: String = ""
 ## "Valuation $0M" over the offer and negotiates a term that is not on the sheet.
 static func levers() -> Array:
 	return SEED_LEVERS if is_seed() else LEVERS
-
-
-## The sheet this vc_id is sitting at: the seed offer if there is one, else the Series A
-## sheet. Seed first because a seed offer and a Series A sheet cannot coexist for one fund
-## in a legal run, and if they ever did the earlier rung is the one still unresolved.
-static func _sheet_for(vc_id: String) -> TermSheet:
-	var seed: TermSheet = VCPitchSystem.seed_sheet_for(vc_id)
-	return seed if seed != null else VCPitchSystem.sheet_for(vc_id)
 
 
 static func is_seed() -> bool:
@@ -197,16 +187,19 @@ static func reset() -> void:
 # Lifecycle
 # ============================================================================
 
-## Seat the player at the table for a live sheet. Seeds the working terms from the sheet's
-## opening offer (+ leverage notch), patience from the pool, IDLE state. Returns view_state.
-static func open(vc_id: String) -> Dictionary:
+## Seat the player at the table for vc_id's live sheet at `stage` (PitchConstants.STAGE_*).
+## Seeds the working terms from the sheet's opening offer (+ leverage notch), patience from
+## the pool, IDLE state. Returns view_state.
+static func open(vc_id: String, stage: String) -> Dictionary:
 	_reset()
-	var sheet: TermSheet = _sheet_for(vc_id)
+	# The stage picks the sheet, not the fund: one fund can hold both at once (the seed offer
+	# never expires and a skipped seed still reaches the Hunt).
+	var sheet: TermSheet = VCPitchSystem.seed_sheet_for(vc_id) if stage == PitchConstants.STAGE_SEED else VCPitchSystem.sheet_for(vc_id)
 	if sheet == null:
 		return {}   # no live sheet — caller shouldn't have routed here
 	_active = true
 	_vc_id = vc_id
-	_stage = String(sheet.stage)
+	_stage = stage
 	_terms = sheet.opening_terms.duplicate()
 	if not is_seed() and _leverage_active():
 		# Leverage improves the OPENING one notch. Series A only: there is exactly one seed

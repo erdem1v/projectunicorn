@@ -227,7 +227,7 @@ signal sheet_expired(vc_id: String)             # validity clock hit 0 — NOT a
 signal callback_ready(vc_id: String)            # callback condition met; door reopened
 signal meeting_day(vc_id: String)               # a booked meeting's day arrived
 signal offer_countdown_changed(days_left: int)  # min sheet validity ≤ threshold; -1 = hide chip
-signal term_table_requested(vc_id: String)      # Finance>Yatırım "Masaya otur" / deal-prompt → main mounts the table
+signal term_table_requested(vc_id: String, stage: String)  # Finance>Yatırım "Masaya otur" / deal-prompt → main mounts the table
 signal sheet_walked(vc_id: String)              # a table walk destroyed a sheet — HuntTab repaints
 
 # --- Seed round (GDD v2 ch. 09 §3) — the middle rung. One publisher each. ---

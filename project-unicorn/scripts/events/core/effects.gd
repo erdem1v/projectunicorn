@@ -433,7 +433,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				tvc = _entity(e, ctx, EvScope.TYPE_INVESTOR)
 			if tvc == "":
 				return _no_target(verb, tvc)
-			EventBus.term_table_requested.emit(tvc)
+			EventBus.term_table_requested.emit(tvc, PitchConstants.STAGE_SERIES_A)
 			return {"verb": verb, "vc": tvc}
 		"decline_offer":
 			var dvc: String = _entity(e, ctx, EvScope.TYPE_INVESTOR)
@@ -446,7 +446,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			# The seed offer knows whose it is, and there is only ever one.
 			if GameState.seed_sheet == null:
 				return {"verb": verb, "refused": "no seed offer on the table"}
-			EventBus.term_table_requested.emit(String(GameState.seed_sheet.vc_id))
+			EventBus.term_table_requested.emit(String(GameState.seed_sheet.vc_id), PitchConstants.STAGE_SEED)
 			return {"verb": verb, "vc": GameState.seed_sheet.vc_id}
 		"decline_buyout":
 			EndingsSystem.on_buyout_declined()

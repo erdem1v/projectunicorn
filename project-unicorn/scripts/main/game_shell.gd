@@ -111,7 +111,7 @@ func _debug_open_term_table() -> void:
 	for tt_vc in ["anchor", "nexus"]:
 		if VCPitchSystem.sheet_for(tt_vc) == null and GameState.active_sheets.size() < PitchConstants.MAX_SHEETS:
 			GameState.active_sheets.append(VCPitchSystem._make_sheet(tt_vc, GameState.day))
-	EventBus.term_table_requested.emit("anchor")
+	EventBus.term_table_requested.emit("anchor", PitchConstants.STAGE_SERIES_A)
 
 
 # Argless relays for the MCP runtime bridge (it can't pass typed args). Debug builds only.

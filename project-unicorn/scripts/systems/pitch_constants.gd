@@ -128,11 +128,10 @@ const LEVERAGE_OPEN_NOTCH := 4          # opening valuation starts +$4M better w
 const DIAL_SPIN_SECS := 0.8
 
 # --- THE TWO RUNGS ---------------------------------------------------------
-# One meeting scene and one table serve both rounds. Which round a sitting IS travels on the
-# data rather than through a parameter chain: the MEETING carries it in a sitting-local static
-# (it has no sheet yet - the sheet is what it produces), and the TABLE reads it off
-# TermSheet.stage (the seed offer never expires, so the table can open days later, by which
-# time any static is long gone).
+# One meeting scene and one table serve both rounds. The MEETING keeps which round it is in a
+# sitting-local static (it has no sheet yet - the sheet is what it produces). The TABLE is told
+# its round by whoever seats the player (open(vc_id, stage)), because one fund can hold an
+# unsigned seed offer and a Series A sheet at once.
 const STAGE_SEED := "seed"
 const STAGE_SERIES_A := "series_a"
 

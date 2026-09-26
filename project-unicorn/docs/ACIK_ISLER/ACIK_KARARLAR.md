@@ -417,11 +417,6 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   `uid=` öznitelikleriyle yeniden kaydetti; fark commit edilmemiş duruyor. `oda_frozen_theme` "düzenlenmez" kuralı altında.
   Seçenekler: geri al ya da commit et.
 
-- **VC hata şüpheleri: kalan bir madde.** Dokuz şüphe doğrulandı; altısı düzeltildi (VC_Q_SOLO, 1. vuruş sonrası tepki
-  satırı, Av sayfasının yenilenmemesi, meeting_day etiketi, seed görüşmesinin run_pitches sayması, pre/post-money yorumu),
-  "Algı" etiketi hata değil (Algı yaklaşımın adı; ch02 §4 pitch'i Karizma'ya verir), iç sesin gelecek zamanı 10. madde.
-  Kalan: `_sheet_for` seed teklifini Series A masası yerine açabiliyor; düzeltmesi sıradaki commit'te. Kaynak: ONERI_v3 §2.
-
 - **Seam envanterinin açık YOK satırları.** Olay motoru GDD §6.3 YOK satırlarını sahibi modülün
   açık işi olarak dosyalatır; envanter dosyası silindi (GDD §27.8). Hâlâ açık olanlar:
   - `hr.salary_vs_band(p)` · Ekip. Motor `hr.salary_band_position` ile sarıyor; sarmalayıcı Ekip'in
