@@ -2,6 +2,7 @@
 
 Her sistem için kodun yeri, sahibi, dışarıdan çağrılan giriş noktaları, onu gözleyen smoke vakaları ve probe kayıtları, varsa görsel kontrol ve ölçüm bayrakları. Yollar `project-unicorn/` köküne görelidir, `(git kökü)` bir üst dizindir.
 Smoke önekleri kaba eşleşmedir: bir vaka iki sistemi birden sınayabilir, liste başlangıç noktasıdır, tam seçim değildir.
+Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 
 ## Çekirdek · GDD ch01
 

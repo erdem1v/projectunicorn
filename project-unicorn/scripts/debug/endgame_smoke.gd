@@ -16677,7 +16677,7 @@ static func _case_seed_table_levers_and_final_offer() -> String:
 	if String(vs.levers[0].current_text) != Fmt.money_exact(raise0):
 		return "the raise row reads '%s'" % String(vs.levers[0].current_text)
 	# The board row is on the sheet but locked: seed accept keeps no board term (an open
-	# decision, docs/ACIK_KARARLAR.md), so a push there would spend patience on nothing.
+	# decision, docs/ACIK_ISLER/ACIK_KARARLAR.md), so a push there would spend patience on nothing.
 	var board_row: Dictionary = vs.levers[2]
 	if bool(board_row.get("push_enabled", true)) or TermSheetTableSystem.can_push("board"):
 		return "the seed board row can be pushed, but signing keeps no board term"

@@ -26,6 +26,120 @@ ONERI_v3'ün, D ve B numaraları ACIK_KARARLAR_D1-D13'ün numaralarıdır; ikisi
 | SEAM_REGISTRY | `6e3e190:project-unicorn/docs/SEAM_REGISTRY.md` |
 | eski CLAUDE.md | `6e3e190:project-unicorn/CLAUDE.md` |
 
+## Temizlik dalgası 1'den çıkanlar
+
+Temizlikte bulunan ve kodda doğrulanan maddeler. 5. madde bu dalganın `tempo.gd` düzeltmesinin yan etkisidir; öbürleri
+dalgadan önce de vardı. 7. madde doğrulama sırasında bulundu. Kayıt biçimine dokunan tek seçenek 3A'dır.
+
+- **1 · İŞKOLİK huyu etkisiz.**
+  - Ne oluyor: Huyun tek etkisi olan `overtime_morale_mult` (0,5) anahtarını hiçbir kod okumuyor; huy okumaları
+    `HRConstants.trait_mult` ya da `trait_sum` üzerinden geçiyor, ikisi de bu anahtarla çağrılmıyor.
+  - Nerede: `scripts/systems/hr_constants.gd` (`TRAITS["last_one_out"]`); okuması gereken yer
+    `scripts/systems/hr_morale_system.gd` (`tick_drift` ya da `_scale`).
+  - Oyuncuya etkisi: Bedelsiz üç huydan biri boş. Hover "Mesai morali onda çok daha yavaş erir." diyor, mesaideki
+    İŞKOLİK herkes kadar eriyor.
+  - Seçenekler: A) `tick_drift`: kişi mesaideyken (günde sekiz saatin üstü) taban sürüklenme bu çarpanla çarpılır;
+    yalnız günlük erime değişir ama huy ölçeklemesi `_scale` dışına çıkar. B) `_scale`: kişi mesaideyken her moral
+    düşüşü çarpılır (olay deltaları ve HRActions önizlemeleri dahil); §7.1'in "tek fonksiyon" kuralı korunur, etki
+    daha geniş. İkisinde de karar gereken: çarpan bütün sürüklenmeye mi (11 saatte toplam ×0,75, sekiz saat çalışandan
+    bile yavaş erir) yoksa yalnız sekizin üstündeki paya mı (×1,25) uygulanır.
+  - Kaynak: Ekip GDD §6, §7.1.
+
+- **2 · GERÇEK LİDER'in faydası yok.**
+  - Ne oluyor: `lead_experience_mult` (1,5) okunmuyor; huyun yalnız bedeli işliyor (`HRMoraleSystem._charge_departure`:
+    biri ayrılınca huyu taşıyan −10, öbürleri −5 moral alır). Bağlanacağı yerde ikinci bir sapma var:
+    `HRSystem.tick_experience` herkesin deneyim kazancını kurucunun Liderlik'iyle çarpıyor
+    (`HRConstants.experience_gain_mult`, en çok ×1,5); Ekip §4.2 ise "Ekibin deneyim kazanım hızını liderin kendisi
+    değil, GERÇEK LİDER huyu etkiler" diyor.
+  - Nerede: `scripts/systems/hr_constants.gd` (`TRAITS["takes_them_under"]`), `scripts/systems/hr_system.gd`
+    (`tick_experience`). Lider koltuğu alan başına değil, yapım başına tektir: `FeatureBuild.lead_engineer_id`
+    (`ProductSystem.set_build_lead`).
+  - Oyuncuya etkisi: Bedelli huy saf yük; hover "Sorumlusu olduğu alanda herkes daha hızlı öğrenir; ayrılıkları ağır
+    alır." diyor, öğrenme hızı değişmiyor. Buna karşılık kurucunun Liderlik'i ekibin öğrenmesini hızlandırıyor.
+  - Seçenekler: A) Yapımın aktif lideri bu huyu taşıyorsa yapıma atananların (liderin kendisi hariç) kazancı
+    `lead_experience_mult` ile çarpılır, kurucu Liderlik çarpanı kalkar; GDD'nin harfi. B) A'daki bağlama yapılır,
+    kurucu Liderlik çarpanı da kalır; ikisi çarpılır (×2,25'e kadar), §4.2 cümlesi güncellenir. C) Bağlanmaz; huy metni
+    (`HR_TRAIT_TAKES_THEM_UNDER_EFFECT`) ve Ekip §6 satırı değişir.
+  - Kaynak: Ekip GDD §4.2, §6.
+
+- **3 · "Koşunun ilk 3★'ı" tekrarlanabiliyor.**
+  - Ne oluyor: `SalesLedger.is_newsworthy_signing` ilkliği kalıcı bir kayıttan değil aktif hesaplardan okuyor
+    (`deal_count(c.scale) <= 1`). Churn eden hesap kayıttan silindiği için koşunun tek 3★ hesabı giderse sonraki 3★
+    imza yine "ilk" sayılır.
+  - Nerede: `scripts/systems/sales_ledger.gd` (`is_newsworthy_signing`, `announce_signing`),
+    `scripts/systems/b2b_sales_system.gd` (`_remove_lost`).
+  - Oyuncuya etkisi: Haber bandı satırı ve +3 marka (`SalesConstants.PRESTIGE_SIGNING_BRAND`) yeniden gelir; marka
+    Series A inancını oynatır. Yalnız erişim bandı 3 iken görünür (bant altındayken her 3★ zaten lig üstü haberdir).
+  - Seçenekler: A) Koşu mandalı: yeni bir `GameState.FLAG_TYPES` bayrağı her 3★ imzada yazılır (balina ya da lig üstü
+    olsa da), `is_newsworthy_signing` onu okur. Kayıt dokunuşu: varsayılanı false yeni bayrak; ilk 3★'ını kaybetmiş eski
+    kayıtta bir kez daha haber çıkabilir; Satış §13'ün kayıt listesine girer. B) Kod kalır, §7.3'ün tanımı "defterdeki
+    tek aktif 3★" olur; tek 3★'ını kaybedip yenisini imzalayan haberi ve +3 markayı yeniden alır.
+  - Kaynak: Satış GDD §2, §7.3 [ÇALIŞMA], §13.
+
+- **4 · Balinanın güven şartı `security_cert`'i saymıyor.**
+  - Ne oluyor: Şart yalnız `not InfraSystem.blocks_enterprise_signature()` okuyor: Yerel dışındaki her sağlayıcı şartı
+    karşılıyor, `security_cert` araştırması sayılmıyor. GDD'ye göre sapma iki yönlü: Satış §8 şartı "sağlayıcı ya da
+    security_cert" diye koyar; Ürün §10 güven koşulunu yalnız Kurumsal Bulut'a verir (düz Bulut "nötr"); Ar-Ge §4.2
+    sertifikayı Kurumsal Bulut'a ikinci yol sayar. GDD'ye uyan yüklem zaten var ama üretimde okuyucusu yok (yalnız
+    smoke): `InfraSystem.meets_enterprise_trust()`.
+  - Nerede: `scripts/systems/sales_faucet_system.gd` (`_condition_met`, `WHALE_COND_PROVIDER`),
+    `scripts/systems/infra_system.gd` (`blocks_enterprise_signature`, `meets_enterprise_trust`).
+  - Oyuncuya etkisi: Yerel sağlayıcıda Güvenlik Sertifikasyonu'nu bitiren oyuncuya balina hâlâ "Altyapı güvencesi
+    istiyor." der; düğüm metni ise "Kurumsal alıcının ilk sorusu cevaplanmış olur" diyor. Düz Bulut'a geçmek şartı
+    hemen karşılıyor.
+  - Seçenekler: A) Şart `meets_enterprise_trust()` okur: GDD'nin harfi; düz Bulut'ta balina bugün sormadığı şartı
+    sormaya başlar. B) `not blocks_enterprise_signature() or ResearchSeam.completed("security_cert")`: düz Bulut
+    okuması kalır, sertifika eklenir; Ürün §10 ve Satış §8 güncellenir. C) Sertifika kancası emekliye ayrılır: Ar-Ge
+    §4.2, düğüm metni (`PROD_RND_NODE_SECURITY_CERT_DESC`) ve `meets_enterprise_trust` düzeltilir. Alt soru: satış
+    masası aynı yüklemi üç yerde okuyor (kayıp nedeni `SalesLedger._blocker_cleared` / `LOSS_PROVIDER_TRUST`, oran
+    `provider_ok`, `probe_provider_trust` kilidi); yalnız biri değişirse müşteri döner ve aynı nedenle yine kaybedilir
+    (Satış §9), bu yüzden birlikte değişmeliler. Masa metni `SALES_LOCK_PROVIDER` "kurumsal kademe" diyor ama yüklem
+    düz Bulut'u da kabul ediyor.
+  - Kaynak: Satış GDD §8, §9; Ürün GDD §10; Ar-Ge GDD §4.2 (rev 1.7).
+
+- **5 · Elde tutma ve talep kartları genişleme teklifini 30 gün tutabiliyor (`tempo.gd` düzeltmesinin yan etkisi).**
+  - Ne oluyor: `tempo.gd` düzeltmesiyle olay freninin Katman 2'si (aynı özne; müşteri 30, çalışan 14 gün) ilk kez
+    çalışıyor: `EvTempo._record` artık kabul edilen kartın öznesini yazıyor, önceden hep boş yazıyordu. Fren yalnız
+    havuz çekilişinde sorulur ama tetiklenen ve istenen kartlar da pencereyi damgalar: `customer.retention` ve
+    `customer.request_*`. Bugünkü destede müşteri öznesi taşıyan tek havuz kartı `customer.expansion`; `expansion_ready`
+    seçicisi uygun hesaplardan yalnız en yüksek MRR'lıyı döndürür, o hesap frenliyse sıradakine düşmez.
+  - Nerede: `scripts/events/present/tempo.gd` (`assign`, `_record`, `_subject_of`), `scripts/events/gate/scope.gd`
+    (`_select_customer`, `"expansion_ready"`), `scripts/events/core/engine.gd` (`_step_pool`).
+  - Oyuncuya etkisi: En büyük uygun hesap elde tutma ya da talep kartı aldıktan sonra 30 gün boyunca hiçbir hesaba
+    genişleme kağıdı gelmez; damga tekrarlanırsa daha uzun (hesaplar 22 günde bir talep açar,
+    `CS_REQUEST_INTERVAL_DAYS`). Satış sekmesindeki "Değerlendir" düğmesi istek olarak geçtiği için çalışır.
+  - Seçenekler: A) Özneyi yalnız havuz kabulü damgalar: elde tutmadan birkaç gün sonra aynı hesaba genişleme gelebilir
+    (§13.1'in "aynılık" sorunu); §13.3'e bir cümle. B) Çekiliş sıradakine düşer: frenli hesap dışarıda bırakılıp seçici
+    yeniden çözülür; deterministik kalır, `EvEngine` ve `EvScope` değişir, §14.3'e bir cümle. C) Olduğu gibi kalır;
+    §13.3'e "tetiklenen ve istenen kartlar da pencereyi damgalar" yazılır.
+  - Kaynak: olay motoru GDD §13.1, §13.3, §14.3.
+
+- **6 · Risk'teki hesaba genişleme teklif edilebiliyor.**
+  - Ne oluyor: `B2BSalesSystem.can_offer_expansion` pazara, duruma, `last_expansion_day` mandalına ve olgunluğa (45 gün,
+    `EXPANSION_MATURE_DAYS`) bakıyor, yaşam evresine (`lifecycle_phase`) bakmıyor. Aynı yüklemi `musteri.is_expansion_ready`
+    seam'i (açıklaması "mature, healthy…" ama sağlık okunmuyor) ve `expansion_ready` seçicisi okuyor. Günlük tarama yalnız
+    sağlıklı hesabı `expansion` evresine taşısa da havuz kartı `customer.expansion` Risk'teki hesabı seçebiliyor; masadaki
+    kağıt da hesap Risk'e düşünce geçerli kalıyor. Bu dalgadan önce de böyleydi.
+  - Nerede: `scripts/systems/b2b_sales_system.gd` (`can_offer_expansion`, `expand`), seam `musteri.is_expansion_ready`.
+  - Oyuncuya etkisi: "Churn'e ~N gün" sayan bir hesap için "Büyüme fırsatı" kağıdı gelebilir; kabul koltuk ve MRR ekler,
+    hesap Risk'te kalır ve genişleme hakkı harcanır.
+  - Seçenekler: A) `can_offer_expansion` Risk'i dışlar: tek satır; seam, seçici ve tarama birlikte düzelir. Bedel: Risk'e
+    düşen hesabın masadaki kağıdı açılışta düşer ve `one_shot` mandalı kart kabul edilirken harcandığı için hesap bir daha
+    teklif alamaz; bu yol da çözülmeli. B) Kalır; seam açıklaması düzeltilir.
+  - Kaynak: Satış GDD §19 (genişleme kapısı "Korunanlar" arasında).
+
+- **7 · Moral düşüş ölçeği hep kurucunun Liderlik'i.**
+  - Ne oluyor: `HRMoraleSystem._scale` her çalışanın moral düşüşünü kurucunun Liderlik'iyle ölçüyor. Ekip §7.1: "O alanın
+    liderinin Liderlik yıldızı — lider yoksa kurucunun Liderliği (§4.2)"; §4.2 kurucuyu yalnız lideri olmayan alanlar
+    (Satış, Destek, Hesap masaları) için sayar.
+  - Nerede: `scripts/systems/hr_morale_system.gd` (`_scale`, `_leadership_drop_mult`). Lider koltuğu yapım başına tektir
+    (`FeatureBuild.lead_engineer_id`).
+  - Oyuncuya etkisi: Yapıma yüksek Liderlik'li bir lider atamak ekibin moralini korumuyor; "iyi lider ekibi ayakta
+    tutar" (§4.2) hissi oluşmuyor.
+  - Seçenekler: A) Yapıma atananlar için yapımın aktif liderinin Liderlik'i, öbürleri için kurucununki okunur. B) Kalır;
+    §4.2 ve §7.1 kurucuyu tek kaynak diye güncellenir.
+  - Kaynak: Ekip GDD §4.2, §7.1.
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında

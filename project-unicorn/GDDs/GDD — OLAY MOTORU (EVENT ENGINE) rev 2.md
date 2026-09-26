@@ -1575,4 +1575,4 @@ geçmişindedir (`git show 6e3e190:project-unicorn/docs/SEAM_REGISTRY.md`).
 **Neden.** Elle tutulan dosyayı hiçbir kapı kodla karşılaştırmıyordu; üretilen liste her
 `--event-vocab` koşusunda koddan yeniden yazılır. §6.3, §6.4, §23 ve §24'ün metni değiştirilmedi.
 §b'de VAR / OKUNUYOR / YOK sütunu yoktur: listede yalnız kayıtlı seam'ler durur. Envanterin hâlâ
-açık YOK satırları `docs/ACIK_KARARLAR.md`'dedir.
+açık YOK satırları `docs/ACIK_ISLER/ACIK_KARARLAR.md`'dedir.

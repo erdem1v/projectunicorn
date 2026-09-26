@@ -4,7 +4,7 @@ extends RefCounted
 # "Yatırımcı iştahı" — the ONLY player-facing reading of the Series A gate (GDD v2 ch. 01 §2:
 # the signal is shown, the revenue figure never is). Paints PhaseGateSystem.series_a_signal()
 # as a Terminal state chip + one line — no progress bar and no growth count. Whether the chip
-# stays or gives way to ch. 08 §5's one-line Frank note is open in docs/ACIK_KARARLAR.md.
+# stays or gives way to ch. 08 §5's one-line Frank note is open in docs/ACIK_ISLER/ACIK_KARARLAR.md.
 # Three surfaces read it — the Finance title row, the product page's traction strip and the
 # ODA board's goal card — so the words and the palette live here once.
 #

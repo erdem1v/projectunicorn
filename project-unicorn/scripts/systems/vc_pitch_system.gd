@@ -24,7 +24,7 @@ const MEETING_CARD := "funding.meeting_day"
 ## walk_table's reason when the FUND leaves the table (patience-zero walk-out, or the walk that
 ## answers a shown rival offer). Distinct from the player's own "declined" on purpose: the
 ## fund is closed and a rejection is counted, but the player did not refuse the round, so
-## EndingsSystem.road_over (an open decision in docs/ACIK_KARARLAR.md) does not count it.
+## EndingsSystem.road_over (an open decision in docs/ACIK_ISLER/ACIK_KARARLAR.md) does not count it.
 const WALK_REASON_FUND := "fund_walked"
 ## The funds that have their own cold-exit Frank line; VC_FRANK_COLD_<ID> in the CSV.
 const COLD_EXIT_FUNDS := ["anchor", "nexus", "bosphorus", "meridian"]
@@ -283,7 +283,7 @@ static func _resolve_beat3(choice_id: String) -> Dictionary:
 
 static func _resolve_beat4(choice_id: String) -> Dictionary:
 	var zone_val: int = mini(_conviction, _cap)
-	# THE SEED ROOM CANNOT SAY NO (the guaranteed-rung ruling, docs/ACIK_KARARLAR.md).
+	# THE SEED ROOM CANNOT SAY NO (the guaranteed-rung ruling, docs/ACIK_ISLER/ACIK_KARARLAR.md).
 	# Conviction still decides everything - it decides WHAT THE TERMS ARE rather than whether
 	# there are any, so a floored room still ends with a sheet, just a tight one.
 	# Nothing here reaches _reject(), _set_callback() or the Ilık gamble: no rejection means
@@ -357,7 +357,7 @@ static func _grant_sheet() -> void:
 		_vc(_vc_id).status = "offered"
 		EventBus.sheet_granted.emit(_vc_id)
 		# Frank v6 surface 24 (the offer e-mail card) is deliberately not raised here: open
-		# decision D12 (docs/ACIK_KARARLAR.md).
+		# decision D12 (docs/ACIK_ISLER/ACIK_KARARLAR.md).
 	else:
 		# Delayed delivery; validity starts when a slot frees.
 		var st: Dictionary = _vc(_vc_id)
@@ -537,7 +537,7 @@ static func walk_table(vc_id: String, reason: String = "declined") -> void:
 ## "Decline": the window closed and the player said no. The fund closes for the run, and
 ## because it was the PLAYER'S answer it is not a rejection - no cascade point, no brand or
 ## morale cost. Nor does it mark the Series A decision as faced: whether a declined-at-expiry
-## offer counts for the buyout road is an open decision (docs/ACIK_KARARLAR.md), so the
+## offer counts for the buyout road is an open decision (docs/ACIK_ISLER/ACIK_KARARLAR.md), so the
 ## reading stays as it was when an expiry closed silently. Only a sheet whose window has
 ## actually closed can be declined this way; a live sheet is refused through walk_table.
 static func decline_expired_sheet(vc_id: String) -> bool:
@@ -658,7 +658,7 @@ static func meeting_blocked_reason(vc_id: String) -> String:
 ## True when the Series A road has nowhere left to go: no fund that can still be met, no live
 ## or queued offer, no booked meeting. Read-only (vc_states.get, never _vc, which would create
 ## a row). The Hunt tab says so in one plain line instead of leaving the player to infer it;
-## what the run does next is an open decision (docs/ACIK_KARARLAR.md), not this query.
+## what the run does next is an open decision (docs/ACIK_ISLER/ACIK_KARARLAR.md), not this query.
 static func series_a_road_closed() -> bool:
 	if GameState.phase < 3:
 		return false
@@ -777,7 +777,7 @@ static func _deliver_pending_sheet() -> void:
 			GameState.active_sheets.append(_make_sheet(inv.id, GameState.day))  # validity starts now
 			EventBus.sheet_granted.emit(inv.id)
 			# Frank v6 surface 24 is deliberately not raised here: open decision D12
-			# (docs/ACIK_KARARLAR.md).
+			# (docs/ACIK_ISLER/ACIK_KARARLAR.md).
 			return
 
 

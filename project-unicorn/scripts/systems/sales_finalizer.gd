@@ -52,7 +52,7 @@ static func _sign(result: Dictionary, ctx: Dictionary, lead_id: String) -> void:
 	var seats: int = int(values.get("units", 0))
 	var price: int = int(values.get("unit_price", 0))
 	# DESIGN-PARKED: no signing discount is passed, so the account's `signing_discount` stays 0.
-	# Its only source is the §7.6 price-break card, which is not wired (docs/ACIK_KARARLAR.md,
+	# Its only source is the §7.6 price-break card, which is not wired (docs/ACIK_ISLER/ACIK_KARARLAR.md,
 	# "`sales.price_break` bağlı değil"). Writing the distance under the stance anchor here would
 	# show every ordinary haggle as "imza indirimi" on the account page — a number that names the
 	# wrong cause is worse than none. Alternative seen: show that distance as "pazarlık farkı" —

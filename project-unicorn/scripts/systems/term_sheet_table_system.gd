@@ -242,7 +242,7 @@ static func can_push(lever: String) -> bool:
 ## A row that is on the sheet but not open to negotiation. Today that is the seed board term:
 ## SeedRoundSystem.accept persists raise and dilution only, so a board push would spend
 ## patience and eagerness on a term that vanishes at signing. The row stays visible (the fund
-## still asks for it); whether seed board seats become real is an open decision (docs/ACIK_KARARLAR.md).
+## still asks for it); whether seed board seats become real is an open decision (docs/ACIK_ISLER/ACIK_KARARLAR.md).
 static func _lever_locked(lever: String) -> bool:
 	return is_seed() and lever == "board"
 
@@ -558,7 +558,7 @@ static func walk() -> void:
 		return
 	# THE SECOND SAFETY behind the locked row: the button renders visible and disabled with
 	# its reason, the way Frank's cheque renders REDDET · ZOR MOD, and this refuses even a
-	# direct call. Walking away from the seed round is ZOR MOD (docs/ACIK_KARARLAR.md).
+	# direct call. Walking away from the seed round is ZOR MOD (docs/ACIK_ISLER/ACIK_KARARLAR.md).
 	if is_seed():
 		push_error("[TermSheetTableSystem] walk() at a seed table — the refusal row is ZOR MOD")
 		return
@@ -787,7 +787,7 @@ static func _frank_line(lev_active: bool, other_name: String) -> String:
 			return TranslationServer.translate("TERM_FRANK_OPENING")
 	# OTHER_SHOWN lands here too: the shown offer is the investor's moment (TERM_INV_OTHER_*)
 	# and Frank only counts the moves left. A Frank line for that move is his corpus, an open
-	# decision (docs/ACIK_KARARLAR.md), so none is invented here.
+	# decision (docs/ACIK_ISLER/ACIK_KARARLAR.md), so none is invented here.
 	if _patience <= 1:
 		return TranslationServer.translate("TERM_FRANK_LAST_MOVE")
 	return TranslationServer.translate("TERM_FRANK_NEXT_MOVE")

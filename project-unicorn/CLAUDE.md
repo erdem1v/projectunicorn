@@ -9,7 +9,7 @@ sözleşmeler) ve B2C (kitle, ağızdan ağıza). Fon merdiveni: kurucunun birik
 çeki (tur değil, tek karar) → dört VC'den biriyle term sheet'li seed → aynı dört VC ile Series A. Series A imzası
 zaferdir. Kasa eksiye düşünce 30 günlük [WORKING] kepenk sayacı başlar; sıfıra inerse şirket iflas eder. Yumuşak
 tavan 24 oyun ayıdır ([WORKING] 730 gün). Demo Bootstrap'tan Series A kararının sonuçlanmasına kadar sürer, 60–90
-dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full farkı GDD ile kodda ayrışıyor: `docs/ACIK_KARARLAR.md`.
+dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full farkı GDD ile kodda ayrışıyor: `docs/ACIK_ISLER/ACIK_KARARLAR.md`.
 
 ## 2. Tasarım otoritesi
 - Otorite `GDDs/`'dir: v2 bölümleri (ch01–14), modül GDD'leri (Ürün ch03 dosyasındadır; Ekip, Ar-Ge, Satış) ve
@@ -19,7 +19,7 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
 - GDD sessiz, belirsiz ya da açıkça çözülmemiş biçimde çelişkiliyse **dur ve sor**. Mekanik, içerik, mimari icat edilmez.
 - [ÇALIŞMA] / [WORKING] / [K] işaretli sayı kalibrasyon girdisidir; kodda tek bir ayar sabitinde durur.
 - GDD'de adı ya da kuralı geçen ama henüz bağlı olmayan kod ve içerik, bağlı değil diye silinmez.
-- GDD ile kod ya da sahip kararı arasındaki bilinen ayrılıklar `docs/ACIK_KARARLAR.md`'dedir; burada anlatılmaz.
+- GDD ile kod ya da sahip kararı arasındaki bilinen ayrılıklar `docs/ACIK_ISLER/ACIK_KARARLAR.md`'dedir; burada anlatılmaz.
 
 ## 3. Çalışma kuralları
 - İş doğrudan `main`'e commit'lenir; dal, worktree, rebase yok. Gerekli görünürse dur ve sor. Push yalnız Erdem
@@ -27,7 +27,7 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
 - Tasarım sabiti (ayar değeri, eşik, isteklilik (E) modeli sabitleri, kapı ya da toplantı ağırlığı) değişikliği raporda
   **"onay bekliyor"** altında listelenir. Önce tasarım notu yazılır; uygulama, test emekliye ayırmak dahil, onaydan sonra.
 - Kalibrasyonda ölç ve raporla, sabit değiştirme. Harness ya da bot değişikliği serbesttir, ayrı raporlanır.
-- `docs/ACIK_KARARLAR.md`'deki açık maddelere dokunulmaz; onaylananlar tek tek uygulanır.
+- `docs/ACIK_ISLER/ACIK_KARARLAR.md`'deki açık maddelere dokunulmaz; onaylananlar tek tek uygulanır.
 - TR metni onaysız değişmez; onay bekleyen metin commit mesajında "TR/EN onay bekliyor" diye işaretlenir. Frank'in
   külliyatı Erdem'indir: yeni Frank satırı yalnız taslaktır, onaysız ekrana çıkmaz.
 - Rapor: madde madde ✅ / ⚠️ / ❌ + kanıt (dosya:satır, commit, test adı). Tahmin yazılmaz.
@@ -45,7 +45,7 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
   ödünç kelimelerde kalır: pitch, startup, demo, momentum, MRR, runway, churn, burn, laptop, mail, VC ve özel adlar.
   Tek metinde dil karışmaz. Oyuncuya görünen hiçbir metinde tire (— –) yoktur (ch01 §9).
 - Motorun bilmediği etki ya da koşul taslakta `[VOCAB?]` / `[COND?]` kalır ve kart bağlanmaz (ch11 §3). Oyuncu
-  metnini kimin yazdığı açık karardır (`docs/ACIK_KARARLAR.md`).
+  metnini kimin yazdığı açık karardır (`docs/ACIK_ISLER/ACIK_KARARLAR.md`).
 - Kartlar `text.tr` ve `text.en` bloklarını aynı id kümesiyle taşır. Her seçenek gerçek bir kaynağa mal olur ve
   sonucu arayüzde görünür bir yere düşer; bedelsiz seçenek yalnız açık bir "beat"tir. Metin gözlemler, hüküm vermez;
   hüküm yalnız Frank'in ağzındadır (ch11 §7). Kilitli seçenek gerekçesiyle görünür; gerekçe kendi bilgeliğini söylemez
@@ -97,7 +97,7 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
   `#0D1115`, kabuk `#07090B`, `CREAM == INK`. Açık iki ada: gazete (`PaperPanel`, `PAPER_INK_*`) ve ODA'nın teması.
 - **Chrome kuralı.** `Chrome*` (koyu kabuk ailesi) `master_theme`'de TopBar, MonthSummary, LeftTabs ve
   TabPageChrome'da; ODA'nınki donmuş temadan çözülür. Satış sekmesi ve pazarlık sahnesindeki kullanım
-  `docs/ACIK_KARARLAR.md`'de açık karardır; listeye yeni yüzey eklemek ayrı karardır.
+  `docs/ACIK_ISLER/ACIK_KARARLAR.md`'de açık karardır; listeye yeni yüzey eklemek ayrı karardır.
 - ODA kapısı `--theme-audit=oda`: kanıt satır sayısı değil diff'tir. `@Sınıf@NN` sayaçları normalize edildikten sonra
   değişiklik hedeflenen alt ağaçta kalır, dışı bayt-aynıdır.
 
@@ -151,7 +151,8 @@ Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları te
 
 ## 9. Belgeler
 - `docs/HARITA.md` — dizin → sistem → sahip → giriş noktası → smoke öneki → probe kayıt türü.
-- `docs/ACIK_KARARLAR.md` — sahip onayı bekleyen maddeler, GDD'ye işlenmemiş sahip kararları.
+- `docs/ACIK_ISLER/` — açık işlerin tek yeri: `ACIK_KARARLAR.md` sahip onayı bekleyen maddeler ve GDD'ye işlenmemiş
+  sahip kararları, `ISLER.md` kararlaştırılmış ama yapılmamış işler.
 - `docs/content/` — Frank külliyatı ve üretilmiş `events_draft/_vocabulary.md` (güncel seam ve fiil listesi).
 - `docs/writing/` — Frank yazım çalışma dosyaları. `docs/design/localization_glossary.md` — TR↔EN terim kanonu.
 - `docs/EVENT_SIGNAL_MANIFEST.md` — üretilmiş sinyal manifesti (motor GDD §15.1); elle düzenlenmez.

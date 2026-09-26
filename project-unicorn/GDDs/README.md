@@ -47,4 +47,4 @@ ch14 §4 pazarlama sistemini EA'ya koyar ve bu brief'i o iş için bekletir.
 ## Açık kararlar
 
 GDD'nin kodla ya da başka bir GDD'yle çeliştiği ve sahibin henüz karar vermediği yerler:
-[`../docs/ACIK_KARARLAR.md`](../docs/ACIK_KARARLAR.md).
+[`../docs/ACIK_ISLER/ACIK_KARARLAR.md`](../docs/ACIK_ISLER/ACIK_KARARLAR.md).
