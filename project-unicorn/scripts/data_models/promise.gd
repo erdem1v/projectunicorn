@@ -2,12 +2,12 @@ class_name Promise
 extends Resource
 
 # A commitment the founder (or a CS rep) made to a B2B customer: ship a specific
-# product feature by a deadline (B2B Sales System §C). Lives in PromiseRegistry.
+# product feature by a deadline. Lives in PromiseRegistry.
 #
-# Created by the retention "Söz ver" option and by the CS escalation "sözü tut"
-# choice. Resolved (Stage C) when the promised feature ships (kept), the deadline
-# passes with it unshipped (broken), or it ships late (partial). Plain data
-# container — lifecycle logic lives in PromiseRegistry + B2BSalesSystem.
+# Created through PromiseRegistry.create — by the `promise_create` card effect and by a
+# pitch promise at the signature (SalesFinalizer). Resolved when the promised feature ships
+# (kept), the deadline passes with it unshipped (broken), or it ships late (partial). Plain
+# data container — lifecycle logic lives in PromiseRegistry + B2BSalesSystem.
 
 @export var id: String = ""               # "promise_<customer>_<feature>_<day>"
 @export var customer_id: String = ""      # the account the word was given to

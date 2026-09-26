@@ -1,110 +1,78 @@
 class_name B2BConstants
 extends RefCounted
 
-# THE single tunables block for the B2B Sales System (all stages A-E). Every number
-# here is a WORKING PLACEHOLDER — calibration is a separate last pass (numbers last).
-# Grouped by stage. Pure statics; no state, no scene dependency.
+# THE tunables block for the B2B account machine (lifecycle, retention, promises, Customer
+# Success, expansion) and its HR coupling; the Sales module's meeting/pipeline numbers live in
+# SalesConstants. Every number here is a WORKING PLACEHOLDER — calibration is a separate last
+# pass (numbers last). Pure statics; no state, no scene dependency.
 
-# ============================ Stage A — lifecycle ============================
+# ================================ Lifecycle ==================================
 const ONBOARDING_DAYS := 30             # first-impressions window after signing
 const RISK_TRIGGER_DAYS := 3            # consecutive days under tolerance → Risk phase
-# HYSTERESIS: after an account LEAVES Risk it cannot
-# re-enter for this many days, however far under its bar it drifts (the streak keeps
-# counting, the countdown and the retention card do not start). Measured before: the same
-# account produced a retention modal every 3 days for 90 days (29 identical decisions,
-# b2b_slip); the bump a rescue buys (+8) decays back under the bar in ~3 days, so the
-# cadence was bounded by nothing. Three weeks is the founder's time to move the CAUSE
-# (a sprint, a version) before the account asks again.
+# HYSTERESIS: after an account LEAVES Risk it cannot re-enter for this many days, however far
+# under its bar it drifts (the streak keeps counting; the countdown and the retention card do
+# not start). The bump a rescue buys (+8) decays back under the bar in ~3 days, so without
+# this the retention card would return every few days. Three weeks is the founder's time to
+# move the CAUSE (a sprint, a version) before the account asks again.
 const RISK_REENTRY_DAYS := 21           # [WORKING] days after leaving Risk before it can re-enter
 const CHURN_COUNTDOWN_DAYS := 7         # visible "Churn'e ~N gün" counter length
 const EXPANSION_MATURE_DAYS := 45       # active + this old → eligible for expansion
 const SAT_DRIFT_STEP := 3               # max satisfaction move per day (drift toward target)
 const ONBOARDING_AMP := 1.5             # onboarding-window swing amplifier
-const RIVAL_SATISFACTION_HOOK := false  # TODO: rival pressure (−); OFF until a rival system exists
-const SCALE_DEMO_MAX := 3               # demo generates 1..3 star; 4-5 (Tier 2) gated
 
-# TOLERANCE BAND — re-seated 2026-08-19 together with
-# QualityModel.NORMALIZE_HALF_SAT 50→25 and the saas_ops_field unlock. The bars were
-# (35, 5): small 40 / mid 45 / enterprise 45+sector — authored against the retired grown
-# axes, under which a played v1 (axis 20-27) sat 15-30 points under every account and the
-# retention modal was the default state of play. MEASURED with --run-log (seed 424242):
-# the stability-competent v1 (integration+field+scheduling, catalog 17, build events +14,
-# Beta cleared → raw 31, 0 bugs) reads target T_good = 55; the weak set (catalog 6, events
-# +12, backlog sprinted → raw 18.3) reads T_bad = 42. The director's fractions for the
-# probe's 5-account book (2 small · 2 mid+sector · 1 enterprise) — ~60 % satisfied for a
-# good v1, ~20 % for a bad one — pin T_mid ∈ (50, 55] and T_small ∈ (39, 42]; the SMALLEST
-# per-scale step that satisfies both is 9, and BASE = T_small − PER = 33:
-#   bars: small(scale 2) 42 · small+insurance 45 · mid/enterprise(scale 3) 51 · +health/
-#   construction 56. Good v1 55 → a,d,e ✓ b,c ✗ (60 %); bad v1 42 → a ✓ (20 %).
+# TOLERANCE BAND — the satisfaction bar under which an account starts toward Risk:
+# BASE + PER × (scale − 1) + sector bonus. Pinned against the probe's 5-account book
+# (2 small · 2 mid+sector · 1 enterprise): a good v1 (target ~55) should satisfy ~60 % of it
+# and a weak v1 (~42) ~20 %: bars small(scale 2) 42 · small+insurance 45 ·
+# mid/enterprise(scale 3) 51 · +health/construction 56.
 # Sign note (see PROMISE_* below): higher scale = pickier; unchanged, intended.
 const TOLERANCE_BASE := 33              # scale-1 tolerance floor
 const TOLERANCE_PER_SCALE := 9          # + per star (larger = pickier; Tier-2 scale 5 → 69, re-seat with that unlock)
-# Sector stickiness nudge (some sectors switch vendors less). Working; default 0.
+# Per-sector addition to the bar (same sign as TOLERANCE_PER_SCALE: + = pickier). Working;
+# unlisted sectors add 0.
 const SECTOR_TOLERANCE_BONUS := {
 	"construction": 5, "health": 5, "insurance": 3,
 }
 
 
 static func seed_tolerance(scale: int, industry: String) -> int:
-	# Seeded at signing from scale + sector (A.2). Larger/older/loyal = higher.
+	# Seeded at signing from scale + sector. Higher = pickier (enters Risk sooner).
 	var t: int = TOLERANCE_BASE + (maxi(scale, 1) - 1) * TOLERANCE_PER_SCALE
 	t += int(SECTOR_TOLERANCE_BONUS.get(industry, 0))
 	return clampi(t, 0, 100)
 
 
-# support_load_for() DELETED (Task 2b). It was `clampi(scale, 1, 5)` on a value already
-# clamped to 1..5 — an identity function whose only caller fed a Customer field with zero
-# readers and no registry seam. The CS model that landed counts ACCOUNTS, and where account
-# weight is genuinely needed the request channel reads `scale` directly: a second field
-# holding the same number is a sync hazard, not a feature.
-
-
-static func roll_scale(archetype: String) -> int:
-	# 1..5 star size (A.4). Demo caps at SCALE_DEMO_MAX; 4-5 gated behind an unlock
-	# flag (Tier 2 enterprise), so the engine simply does not generate them in demo.
-	var base: int = CustomerArchetypes.scale_base(archetype)
-	if not GameState.get_flag("b2b_high_scale_unlocked", false):
-		base = mini(base, SCALE_DEMO_MAX)
-	return base
-
-
-# ======================= Stage B — event families / retention ================
+# ======================== Event families / retention =========================
 const COMPLAINT_BUG_GATE := 6           # live bugs above this → product-complaint family eligible
-const RIVAL_LURE_ENABLED := false       # TODO: rival-lure family; OFF until a rival system exists
 const RETAIN_DELAY_MAX_USES := 2        # "Oyala" works this many times, then the customer catches on
-# "İndirim ver" use cap: per account, across BOTH discount channels
-# (retention card + CS complaint/renewal cards — all resolve through apply_discount). Past the
-# cap the row stays VISIBLE but locked, with the reason on its sub-line (B2B_DISCOUNT_SPENT_DESC).
-# Measured before: 628 of 681 retention answers in a played run were the discount, MRR bled
-# from $7,349 to $2,534 and no account ever left — a 15 % cut with no ceiling is a strictly
-# dominant move.
+# "İndirim ver" use cap: per account, across BOTH discount channels (the retention card and
+# the CS renewal card — both resolve through apply_discount). Past the cap the row stays
+# VISIBLE but locked, with the reason on its sub-line (B2B_DISCOUNT_SPENT_DESC). Without a
+# ceiling a 15 % cut is a strictly dominant move.
 const RETAIN_DISCOUNT_MAX_USES := 2     # [WORKING] discounts per account, then the row locks
 const RETAIN_DELAY_DAYS := 3            # days the churn countdown is pushed out by a stall
 const RETAIN_DISCOUNT_PCT := 0.15       # "İndirim ver" MRR cut fraction
 const RETAIN_SAT_BUMP := 8              # satisfaction relief from a discount
-# Retention brand/reputation deltas (every option touches brand/reputation, B.3).
+# Retention brand/reputation deltas (every option touches brand/reputation).
 const RETAIN_PROMISE_REP := 1
-# The stall's cost moved from BRAND to REPUTATION (a private
-# credibility cost, like the discount's). The card carries `add_reputation -1`; this is the
-# number the smoke guard reads.
+# The stall costs REPUTATION, not brand (a private credibility cost, like the discount's).
+# The card carries `add_reputation -1`; this is the number the smoke guard reads.
 const RETAIN_DELAY_REP := -1
 const RETAIN_DISCOUNT_REP := -1
 const CHURN_BRAND := -2                 # brand hit at the ACTUAL churn moment (countdown expiry)
 
 
 # --- Sector identity ----------------------------------------------------------
-# SECTORS ARE IDS, NOT WORDS. They used to be Turkish display names ("İnşaat") doing
-# double duty as dictionary keys AND as the label on screen — and `industry` is a
-# persisted @export on Customer and Prospect, so that Turkish text was being written
-# into save files. That is the exact thing the BILINGUAL BIRTH LAW forbids: store ids,
-# render labels at display time. The id is now ASCII and the label comes from
-# strings.csv via sector_label().
+# SECTORS ARE IDS, NOT WORDS. `industry` is a persisted @export on Customer and Prospect, so
+# it holds the ASCII id; the sector copy on screen is a strings.csv row derived from the id at
+# display time (B2B_CONTACT_<ID>, B2B_COMPLAINT_<ID>) — the BILINGUAL BIRTH LAW's "store ids,
+# render labels".
 const SECTORS := ["construction", "health", "logistics", "insurance", "manufacturing",
 	"retail", "real_estate", "textile", "legal", "technology", "ecommerce", "media",
 	"finance"]
 # A FIXTURE sector, deliberately outside SECTORS: smoke and the run probe need a prospect
 # whose sector is not one of the thirteen the CompanyCatalog stocks. It carries its own
-# copy rows so the derived-key check covers it, but no company pool and no affinity entry.
+# copy rows so the derived-key check covers it, but no company pool.
 const SECTOR_FIXTURE := "testing"
 
 # Saves written before this migration carry the old Turkish name in `industry`.
@@ -120,16 +88,10 @@ const LEGACY_SECTOR_IDS := {
 
 
 # --- Sector / feature copy ------------------------------------------------------
-# The four tables that used to live here (COMPLAINT_VOICE, PAIN_PHRASE, SECTOR_CONTACT,
-# FEATURE_LABEL_TR) are now rows in strings.csv, derived from the id. One id therefore
-# yields one key in both languages and the table cannot drift from the CSV.
-# A derived key is invisible to a grep for tr("LITERAL"), so the smoke case
-# `loc_b2b_derived_keys` walks SECTORS and the feature ids and asserts every derived key
-# resolves — that is what stops a typo rendering a raw token on screen.
-
-static func sector_label(industry: String) -> String:
-	return _derived("SECTOR_", industry, "SECTOR_FALLBACK")
-
+# Copy is derived from the id: one id yields one strings.csv key in both languages, so no
+# table can drift from the CSV. A derived key is invisible to a grep for tr("LITERAL"), so
+# the smoke case `loc_b2b_derived_keys` walks SECTORS and the feature ids and asserts every
+# derived key resolves — that is what stops a typo rendering a raw token on screen.
 
 static func sector_contact(industry: String) -> String:
 	return _derived("B2B_CONTACT_", industry, "B2B_CONTACT_FALLBACK")
@@ -147,13 +109,9 @@ static func feature_label(feature_id: String) -> String:
 	return _derived("FEATURE_LABEL_", feature_id, "FEATURE_LABEL_FALLBACK")
 
 
-static func pain_phrase(feature_id: String) -> String:
-	return _derived("B2B_PAIN_", feature_id, "B2B_PAIN_FALLBACK")
-
-
 # TranslationServer returns the KEY itself when a row is missing, which on screen looks
 # like a raw token. Rather than ship that, an unresolved derived key falls back to the
-# family's fallback row — the same behaviour the old .get(key, FALLBACK) tables had.
+# family's fallback row.
 # TranslationServer (not tr()) because these are statics with no Object to translate through.
 static func _derived(prefix: String, id: String, fallback_key: String) -> String:
 	if id == "":
@@ -162,49 +120,29 @@ static func _derived(prefix: String, id: String, fallback_key: String) -> String
 	var out: String = TranslationServer.translate(key)
 	return out if out != key else TranslationServer.translate(fallback_key)
 
-# Sector-appropriate company names for prospect generation (E.2 keeps fiction clean —
-# a construction prospect reads "Kuzey İnşaat", not a generic label) live in
-# CompanyCatalog — the single company/background source (Fix 2). The old
-# SECTOR_COMPANIES table here covered 9 of 13 sectors at 3 names each and served
-# four sectors one shared fallback list, which is how "Beykoz Tekstil" appeared
-# as an Emlak, Hukuk AND Perakende prospect in one run.
 
-
-# ======================= Stage C — promises ==================================
+# ================================= Promises ==================================
 const PROMISE_DEADLINE_DAYS := 14
 const PROMISE_KEPT_SAT := 15
 const PROMISE_BROKEN_SAT := -20         # doubled drop (returns angrier)
 const PROMISE_BROKEN_BRAND := -3
 const PROMISE_PARTIAL_SAT := -5         # soft penalty for a late (post-deadline) ship
 
-# SIGN CORRECTION (Task 2b). `tolerance` is the satisfaction level BELOW which an account
-# enters Risk (b2b_sales_system.gd:97 `satisfaction < tolerance`), so a HIGHER tolerance means
-# a PICKIER customer, not a more patient one. These two constants were written the other way
-# round: the broken-promise line carried -5 and was commented "returns angrier", but lowering
-# tolerance makes the account calmer — a broken word literally RELIEVED the customer, which is
-# the opposite of what it must do. Signs flipped so the code matches the fiction:
-#   kept   → LOWER tolerance → endures more before Risk → loyalty, as intended
-#   broken → HIGHER tolerance → snaps sooner → the promised "returns angrier"
-# The same inversion exists in TOLERANCE_PER_SCALE and SECTOR_TOLERANCE_BONUS above. Those are
-# balance shape rather than a broken cause-and-effect, so they are REPORTED to the curve
-# session and left alone here.
+# `tolerance` is the satisfaction level BELOW which an account enters Risk, so a HIGHER
+# tolerance is a PICKIER customer:
+#   kept   → LOWER tolerance → endures more before Risk → loyalty
+#   broken → HIGHER tolerance → snaps sooner → "returns angrier"
 const PROMISE_KEPT_TOLERANCE := -5
 const PROMISE_BROKEN_TOLERANCE := 5
-# The ratchet above had no ceiling. Measured in the 730-day probe,
-# accounts with a few broken words sat at tolerance 57-100 against a best-case target of 47:
-# satisfiable by no product, back in Risk every 21 days, forever. A broken word makes an
-# account pickier, never impossible — tolerance stops this far above where it was seeded.
+# Cap on the broken-promise ratchet: a broken word makes an account pickier, never
+# impossible — tolerance stops this far above where it was seeded.
 const PROMISE_TOLERANCE_CEILING := 10
 
 
-# ======================= Stage D — Customer Success ==========================
-# HESAP KAPASİTESİ YILDIZDAN TÜRER, ve tek çift sabitten (direktör hükmü 2026-08-27).
-# Çapa örnekleri direktörün kendi sayıları: 1★ → 6 · 1,5★ → 7 · 2★ → 8. [K]
-#
-# Eski merdiven (0-2 → 3, 3-5 → 4, …) puanı üçe bölüyordu ve yarım yıldızı göremiyordu; bu
-# formül `HRConstants.stars_for` üzerinden okuduğu için yarım yıldız GERÇEKTEN bir slot değeri
-# taşıyor. AREA_MAX'te 14 veriyor — eski 3-6 bandının çok üstünde, ve bu bilinçli bir kalibrasyon
-# yüzeyi olarak raporlanıyor, ayarlanmış bir sayı olarak değil.
+# ============================= Customer Success ==============================
+# HESAP KAPASİTESİ YILDIZDAN TÜRER, tek çift sabitten (direktör hükmü). Çapa örnekleri
+# direktörün kendi sayıları: 1★ → 6 · 1,5★ → 7 · 2★ → 8. AREA_MAX'te 14 veriyor — ayarlanmış
+# bir sayı değil, bilinçli bir kalibrasyon yüzeyi. [K]
 const ACCOUNT_CAP_BASE := 4             # [K] taban: yıldızsız bir sahip bile bu kadar taşır
 const ACCOUNT_CAP_PER_STAR := 2         # [K] her tam yıldız bu kadar slot ekler
 const CS_ESCALATION_SAT := 35           # CS-managed customer crosses this → one escalation
@@ -216,169 +154,89 @@ const CS_REFUSE_MORALE := 10            # morale DROP magnitude for that CS empl
 ## KAÇ HESAP TAŞINIR: 4 + 2 × yıldız, ve sahibin KİM olduğu sorulmaz.
 ##
 ## Aynı çağrı hem temsilci hem kurucu için kullanılır; "kurucu şu kadar taşır" diye ayrı bir
-## sabit YOK (eski `FOUNDER_DIRECT_CAP` bu yüzden emekli). Kurucunun kapasitesi kendi MÜŞTERİ
-## İLİŞKİLERİ yıldızından çıkar, tıpkı herkesinki gibi.
+## sabit YOK. Kurucunun kapasitesi kendi MÜŞTERİ İLİŞKİLERİ yıldızından çıkar, tıpkı
+## herkesinki gibi.
 ##
-## Yıldız üzerinden okunuyor, puan üzerinden değil, ve fark gerçek: `stars_for` yarım yıldızları
-## taşıyor (POINTS_PER_STAR 2), yani 1,5★ gerçekten 7 slot demek. Eski merdiven puanı üçe
-## bölüyordu ve yarım yıldızı hiç göremiyordu.
+## Yıldız üzerinden okunuyor, puan üzerinden değil: `stars_for` yarım yıldızları taşıyor
+## (POINTS_PER_STAR 2), yani 1,5★ gerçekten 7 slot demek.
 static func account_capacity(customer_success: int) -> int:
 	var stars: float = HRConstants.stars_for(maxi(customer_success, 0))
 	return ACCOUNT_CAP_BASE + int(round(float(ACCOUNT_CAP_PER_STAR) * stars))
 
 
-# Churn suppression per UZMANLIK point (HR Coupling). DERIVED, not chosen: the old law was
-# `1 − cs_skill/200` on a 0-100 scale, and the equivalence anchor is that a UZMANLIK-5 rep
-# dampens exactly as the seeded cs_skill-55 rep did → 1 − 5×0.055 = 0.725 = 1 − 55/200, byte-equal.
-# At the top of the ruler this gives 1 − 9×0.055 = 0.505, essentially the old 0.5 at cs_skill 100 —
-# so CS_DAMPEN_MIN stays structurally unreachable, exactly as it was before. That floor is kept
-# rather than deleted because it is the guard if the per-point value is ever raised.
+# Churn suppression per point of the steward's effective MÜŞTERİ İLİŞKİLERİ output. Anchored so
+# an output of 5 dampens to 1 − 5×0.055 = 0.725 (smoke pins it). Effective output can pass the ruler (high-morale band,
+# output_mult trait), and CS_DAMPEN_MIN is the floor there.
 const CS_DAMPEN_PER_POINT := 0.055
 
 
 static func cs_dampen(expertise: int) -> float:
-	# Higher UZMANLIK → slower satisfaction erosion for hands-off customers. Erosion ONLY;
+	# Higher MÜŞTERİ İLİŞKİLERİ output → slower satisfaction erosion for hands-off customers. Erosion ONLY;
 	# upward recovery is full-strength (see B2BSalesSystem._tick_satisfaction).
 	return clampf(1.0 - float(maxi(expertise, 0)) * CS_DAMPEN_PER_POINT, CS_DAMPEN_MIN, 1.0)
 
 
-# ======================= Stage E — 2nd product / affinity / expansion =========
-# Prospect industry pool per B2B product's sector affinity (E.2). The active
-# mvp_sub_product_type_id selects the sector list; a prospect's industry is drawn
-# only from it, so a vector-search product never yields a construction prospect.
-const SECTOR_AFFINITY := {
-	"ai_vector_search": ["technology", "ecommerce", "media", "finance"],
-	"saas_ops": ["construction", "logistics", "health", "insurance", "manufacturing"],
-}
-const SECTOR_AFFINITY_FALLBACK := ["logistics", "real_estate", "textile", "insurance", "retail", "legal", "construction", "health"]
-
-# Prospect value shown as a RANGE, not a fixed number (E.3): the floor if it goes
-# poorly, the ceiling if well. Placeholder half-width fractions around the archetype
-# band midpoint; the signed MRR still lands inside via the pitch price lever.
-const VALUE_BAND_LOW_FRAC := 0.65
-const VALUE_BAND_HIGH_FRAC := 1.15
-
-# Expansion (E.4): a healthy mature account grows seats → MRR. Working amounts.
-# Per-archetype seat steps live in CustomerArchetypes (single data home); the flat
-# per-seat rate stays here (not archetype-keyed).
+# ================================= Expansion =================================
+# A healthy mature account grows seats → MRR. The account's own signed seat_price is the rate
+# (Satış §5.4); this flat per-seat rate is only the fallback for an account with no stamp.
 const EXPANSION_PER_SEAT_MRR := 120
-
-
-static func sector_pool(sub_id: String) -> Array:
-	return SECTOR_AFFINITY.get(sub_id, SECTOR_AFFINITY_FALLBACK)
-
-
-# --- B2B pitch meeting room art (the remap SEAM). Placeholder: every sector maps to
-#     the existing neutral meeting room until the sector-specific art lands (fabrika /
-#     hukuk bürosu / klinik / startup ofisi — planned). When it arrives, each entry is a
-#     one-line remap to res://assets/art/rooms/room_<sector>.webp. ---
-const SECTOR_ROOM_DEFAULT := "res://assets/art/rooms/room_anchor.webp"
-const SECTOR_ROOM := {
-	"construction": SECTOR_ROOM_DEFAULT, "logistics": SECTOR_ROOM_DEFAULT, "health": SECTOR_ROOM_DEFAULT,
-	"insurance": SECTOR_ROOM_DEFAULT, "manufacturing": SECTOR_ROOM_DEFAULT, "technology": SECTOR_ROOM_DEFAULT,
-	"ecommerce": SECTOR_ROOM_DEFAULT, "media": SECTOR_ROOM_DEFAULT, "finance": SECTOR_ROOM_DEFAULT,
-}
-
-
-static func sector_room(industry: String) -> String:
-	return String(SECTOR_ROOM.get(industry, SECTOR_ROOM_DEFAULT))
+# Seats one expansion adds, per archetype (Customer.company_size); anything else counts as small.
+const EXPANSION_SEATS := {"small": 3, "mid": 6, "enterprise": 12}
 
 
 static func expansion_seats(archetype: String) -> int:
-	return CustomerArchetypes.expansion_seats(archetype)
+	return int(EXPANSION_SEATS.get(archetype, EXPANSION_SEATS["small"]))
 
 
-# ============ Stage F — HR coupling (satış masası + müşteri masası, Task 2b) ==========
+# ================= HR coupling (müşteri masası) ==================
 # WORKING PLACEHOLDERS, like every number above. These live HERE and not in HRConstants on
-# purpose: hr_constants.gd:62-76 rules that HRConstants owns the PEOPLE numbers (bands,
-# morale, traits, leave, the Liderlik curves) while a formula's coefficients live next to the
-# arithmetic that uses them — B2BConstants.CS_DAMPEN_PER_POINT is the worked precedent. Every
-# number below is a coefficient on a Sales/Customer formula, so it belongs to this file.
+# purpose: HRConstants' "Formula-coefficient homes" note rules that it owns the PEOPLE numbers
+# (bands, morale, traits, leave, the Liderlik curves) while a formula's coefficients live next
+# to the arithmetic that uses them — B2BConstants.CS_DAMPEN_PER_POINT is the worked precedent.
+# Every number below is a coefficient on a customer-desk formula, so it belongs to this file.
 #
-# THE INVARIANT THAT SHAPES ALL OF IT: with zero Satış Uzmanı and zero Müşteri Temsilcisi,
-# every formula here multiplies out to nothing and the game behaves exactly as it did before
-# Task 2b. Both desks test their headcount before touching any state.
+# THE INVARIANT THAT SHAPES ALL OF IT: with zero Müşteri Temsilcisi every formula here
+# multiplies out to nothing. The desk tests its headcount before touching any state.
 
-# Shared by both desks: extra people on the SAME queue interfere with each other, so rank-0
-# counts full, rank-1 counts this fraction, rank-2 that fraction squared, and so on. This is
+# Extra reps on the SAME request queue interfere with each other, so rank-0 counts full,
+# rank-1 counts this fraction, rank-2 that fraction squared, and so on. This is
 # role-STRUCTURAL (a queue gets crowded), which is why it is not a UYUM reading.
 const REP_STACK_DECAY := 0.6
 
-# --- Satış masası (SalesRepSystem) ---
-# THE PLAYED-PITCH BOUNDARY. An archetype whose MRR band CEILING is at or under this may close
-# autonomously; anything above it enters the played pitch. Gating on the band ceiling rather
-# than the computed deal value makes the line TIER-based and un-gameable — a rep can never
-# sneak a "mid" account under it by pricing low. Bands are non-overlapping (small tops out at
-# 500, mid starts at 800), so 600 sits in the gap. The headroom is deliberately asymmetric:
-# if a balance pass raises small.high some small deals stop auto-closing, which is MORE
-# player decisions and harmless; if it lowered mid.low, mid deals would start auto-closing,
-# which is MRR that no played pitch earned. sales_threshold_separates_tiers guards the gap.
-const AUTONOMOUS_CLOSE_MRR_MAX := 600
-# Leads/day per HIZ point of the ranked sales team. ANCHOR: the founder's own "Aday bul"
-# button is 2 leads / 5 days = 0.40/day (sales_tab.gd:13-14). A mid rep (HIZ 6) sits at 0.36
-# — roughly one founder's-button-worth, so a hire doubles the pipeline without replacing the
-# player's action. That comparison, not the raw number, is what the curve session should argue.
-const LEAD_PER_PACE_POINT := 0.06
-const LEAD_DAILY_MAX := 2               # en fazla bu kadar otonom aday tek günde düşer
-const PIPELINE_SOFT_CAP := 8            # bu kadar açık aday varken satışçı yenisini aramaz
-# Warm/close progress per day per UZMANLIK point of the ranked team, DIVIDED by the lead's
-# difficulty_stars (1/2/4). That divisor is the only job difficulty_stars has outside the
-# pitch close roll, and it is what makes a big account take weeks while a small one takes days.
-const WARM_PER_EXPERTISE_POINT := 0.05
-const AUTO_CLOSE_PROGRESS := 1.0        # bu ilerlemede rutin aday kendi kendine imzalar
-const WARM_BONUS_MAX := 2               # ısıtılmış büyük adayın kurucuya taşıdığı bonus tavanı
-# Where in the archetype's band a rep-closed deal lands. A better closer places higher, but a
-# small deal can never leave the small band, so it can never cross AUTONOMOUS_CLOSE_MRR_MAX.
-const AUTO_CLOSE_MRR_FRAC := 0.5
-const AUTO_CLOSE_MRR_PER_EXPERTISE := 0.04
-
 # --- Müşteri masası (CustomerRepSystem) ---
-# CS_PACE_PER_SLOT EMEKLİ (2026-08-27). Kapasite artık puanı bir bölene değil YILDIZA
-# bağlı (`account_capacity`), ve iki sabit yerine tek çift sabit var. Adı kalibrasyon
-# defterinde greplenebilir kalsın diye bu satır bırakıldı; değerin kendisi silindi.
-# The founder onboards every new account personally; delegation begins once it settles.
+# Phases the morning delegation sweep (_delegate_excess) may hand over; it never reaches into
+# onboarding. A newly signed account can still land on a rep at signing, through
+# CustomerRepSystem.auto_assign_new, when a rep has room.
 const CS_ASSIGNABLE_PHASES := ["active", "risk", "expansion"]
 # Request channel. Fires for the WHOLE customer book, founder-managed accounts included, from
-# the rep's first day — this is what stops a fresh hire from idling until the founder is over
-# FOUNDER_DIRECT_CAP. Stewardship (assigned_to) is the separate, capped job.
-const CS_REQUEST_INTERVAL_DAYS := 22    # WORKING — bir hesap bu aralıkla talep açar (eski 12)
+# the rep's first day. Stewardship (assigned_to) is the separate, capped job.
+const CS_REQUEST_INTERVAL_DAYS := 22    # WORKING — bir hesap bu aralıkla talep açar
 # Faz, hesap imzalanırken bu adımla yürüyen bir sayaçtan atanır (bkz. Customer.cs_request_phase).
 # 9 ile 22 aralarında asal → sayaç tüm yuvaları dolaşır, ardışık düşmez: 0, 9, 18, 5, 14, 1, 10…
-# Eski `id.hash() % INTERVAL` yaklaşımı müşteri id'leri son karakteri dışında aynı olduğu için
-# ARDIŞIK faz üretiyordu. Aynı düşük-uyumsuzluk hilesi HR'da izin ayı için zaten kullanılıyor.
 const CS_PHASE_STRIDE := 9
 # Şirket geneli tavan: bir hesap ne kadar sık talep açarsa açsın, oyuncu 7 günde en fazla bu
 # kadar CS kararıyla kesilir. WORKING. Retention/churn modalleri bu tavana DAHİL DEĞİL — onlar
-# ölen bir hesabın sonucu, rutin trafik değil (Erdem kararı 2026-08-03).
+# ölen bir hesabın sonucu, rutin trafik değil (Erdem kararı).
 const CS_ESCALATION_WEEKLY_CAP := 2
 const CS_ESCALATION_WINDOW_DAYS := 7
-const CS_THROUGHPUT_BASE := 0.5         # HIZ-0 bir temsilcinin bile günlük talep kapasitesi
-const CS_THROUGHPUT_PER_PACE := 0.15    # HIZ puanı başına günlük ek talep kapasitesi
-# Absorb-vs-escalate is the UZMANLIK valve: ceiling = CS_ABSORB_BASE + UZMANLIK, compared
-# against a request's difficulty (see CustomerRepSystem._request_difficulty). At UZMANLIK 5
-# the ceiling is 7, which absorbs an unhappy scale-3 account asking for an unshipped feature;
-# at UZMANLIK 4 that same request reaches the player. Two-directional by construction.
-const CS_ABSORB_BASE := 3               # WORKING (eski 2) — rutin talepler daha çok yutulur
+const CS_THROUGHPUT_BASE := 0.5         # hiç katkısı olmayan bir temsilcinin bile günlük talep kapasitesi
+const CS_THROUGHPUT_PER_PACE := 0.15    # MÜŞTERİ İLİŞKİLERİ katkısının puanı başına günlük ek talep
+# Absorb-vs-escalate is the judgement valve: ceiling = CS_ABSORB_BASE + the top rep's MÜŞTERİ
+# İLİŞKİLERİ points, compared against a request's difficulty (CustomerRepSystem.
+# request_difficulty). At 4 points the ceiling is 7, which absorbs an unhappy scale-3 account
+# asking for an unshipped feature (1+2+2+2); at 3 points that same request reaches the player.
+const CS_ABSORB_BASE := 3               # WORKING — rutin talepler daha çok yutulur
 const CS_ESCALATE_AFTER_DAYS := 3       # bu kadar gün karşılanmayan talep oyuncuya çıkar
-const CS_REQUEST_IGNORE_SAT := -6       # "Şimdilik olmaz" — talep düşer, memnuniyet düşer
 
-# --- Talep türleri (2b fixes) ---
-# Tek şablon dönüyordu ve her talebin varsayılanı "söz ver"di. Üç tür artık kendi gövde
-# metnini ve kendi seçenek setini kurar; söz vermek YALNIZ `feature`'ın varsayılanı.
-# Aynı hesaptan arka arkaya aynı tür gelmez (Customer.last_request_kind).
+# --- Talep türleri ---
+# Üç tür kendi gövde metnini ve kendi seçenek setini kurar; söz vermek YALNIZ `feature`'ın
+# varsayılanı. Aynı hesaptan arka arkaya aynı tür gelmez (Customer.last_request_kind).
 const CS_KIND_FEATURE := "feature"      # özellik isteği
 const CS_KIND_COMPLAINT := "complaint"  # şikâyet
 const CS_KIND_RENEWAL := "renewal"      # yenileme sinyali
 const CS_REQUEST_KINDS := [CS_KIND_FEATURE, CS_KIND_COMPLAINT, CS_KIND_RENEWAL]
-# WORKING — tür başına efekt büyüklükleri (curve oturumunda ayarlanacak)
-const CS_PRIORITIZE_SAT := 4            # "Önceliklendir" — küçük memnuniyet kazancı
-const CS_DISCOUNT_PCT := 15             # "İndirim ver" — MRR yüzde kaç düşer
-const CS_DISCOUNT_SAT := 8              # indirimin memnuniyet karşılığı
-const CS_EXPLAIN_SAT := -3              # "Açıkla ve reddet" — dürüst ret, ucuz ama bedava değil
-const CS_RENEWAL_TALK_SAT := 6          # "Yenilemeyi görüş"
-const CS_RENEWAL_STALL_SAT := -5        # "Beklet" — sinyali görmezden gelmenin bedeli
 
-# --- Söz dayanıklılığı (the _promise_offset fix) ---
+# --- Söz dayanıklılığı (Customer.trust_offset) ---
 # Kept/broken promises shift the account's satisfaction TARGET, not just its current value.
 # Without this the -20 of PROMISE_BROKEN_SAT is erased by SAT_DRIFT_STEP (3/day) inside a
 # week and a broken word leaves no trace. The offset forgives on its own, so one mistake
@@ -391,14 +249,9 @@ const TRUST_OFFSET_MAX := 10.0
 const TRUST_OFFSET_DECAY_PER_DAY := 0.4   # -12 → 0 in 30 days
 
 # --- Ticker attribution (EventBus.headline_added source; sibling of
-#     HRConstants.NOTICE_SOURCE_HR, kept here because the emitters are sales-domain). ---
+#     HRConstants.notice_source_hr(), kept here because the emitters are sales-domain). ---
 # Localized at EMIT time. The ticker stream is transient, so an item written before a
 # language switch keeps its old attribution until it scrolls off — the same accepted
-# staleness class as an already-open modal. The ticker may later move this to a key
-# rendered at display time.
+# staleness class as an already-open modal.
 static func notice_source_sales() -> String:
 	return TranslationServer.translate("NOTICE_SRC_SALES")
-
-
-static func notice_source_customer() -> String:
-	return TranslationServer.translate("NOTICE_SRC_CUSTOMER")

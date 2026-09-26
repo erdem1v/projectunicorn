@@ -6,12 +6,9 @@ extends RefCounted
 # faucet: a close creates a Customer and a same-day-signed account must not be lifecycle
 # ticked on its own signing day.
 #
-# WHAT REV 6 REPLACED (§19). The old desk generated its own leads, warmed every prospect in
-# the pool at once through an invisible `warm_progress` accumulator, and closed anything under
-# an MRR ceiling. All three are gone. Supply is the faucet's (§3). A rep works ONE lead at a
-# time and the pipeline says which one and for how long (§7.2). And the ceiling is not money
-# any more, it is a STAR: a rep sells at or below their own Satış star and cannot reach above
-# it (§7.1), which is a gate the player can see on the card rather than a number they cannot.
+# Supply is the faucet's (§3). A rep works ONE lead at a time and the pipeline says which one
+# and for how long (§7.2). The ceiling is a STAR: a rep sells at or below their own Satış star
+# and cannot reach above it (§7.1), a gate the player can see on the card.
 #
 # THE CLOSE IS DETERMINISTIC IN-LEAGUE (§7.6). There is no hidden close percentage. A rep
 # assigned to a lead inside their band on Competitive or Standard WILL close it; what varies
@@ -30,8 +27,8 @@ extends RefCounted
 # against a duration, not a coin flip — and it is what makes "Kerem dört gündür Ege Sigorta
 # ile görüşüyor" a readable cause instead of a hidden roll.
 #
-# THE ADDITIVITY INVARIANT SURVIVES: with nobody assigned to Satış every entry point returns
-# before it touches state, so a run without a rep behaves exactly as it did.
+# THE ADDITIVITY INVARIANT, desk half: with nobody on Satış nothing is worked — any open
+# processing drops, and no lead is started or closed.
 
 
 # ============================================================================
@@ -40,30 +37,16 @@ extends RefCounted
 
 static func daily_tick() -> void:
 	_tick_weekly_summary()
-	if HRSystem.assigned_to(HRConstants.AREA_SALES).is_empty():
-		_release_orphans()
-		return
 	_tick_processing()
 	_tick_assignment()
 
 
-## §12 — "Temsilci ayrılır / izne çıkar | işleme düşer; lead bekleme kurallarına döner."
-## Also the whole-desk case: nobody assigned means every open processing drops.
-static func _release_orphans() -> void:
-	for p in ProspectRegistry.get_all():
-		var lead: Prospect = p as Prospect
-		if lead.worked_by == "" :
-			continue
-		if _rep_available(lead.worked_by):
-			continue
-		_drop_processing(lead)
-
-
-static func _rep_available(rep_id: String) -> bool:
+## The rep with this id if they are on the Satış job today, else null.
+static func _assigned_rep(rep_id: String) -> Character:
 	for c in HRSystem.assigned_to(HRConstants.AREA_SALES):
 		if (c as Character).id == rep_id:
-			return true
-	return false
+			return c as Character
+	return null
 
 
 static func _drop_processing(lead: Prospect) -> void:
@@ -103,9 +86,7 @@ static func band_cap_options(rep: Character) -> Array:
 	var own: int = rep_star(rep)
 	if own <= SalesConstants.STAR_MIN:
 		return []
-	var out: Array = []
-	for star in range(SalesConstants.STAR_MIN, own + 1):
-		out.append(star)
+	var out: Array = range(SalesConstants.STAR_MIN, own + 1)
 	out.append(SalesConstants.BAND_CAP_OWN_LEAGUE)
 	return out
 
@@ -202,11 +183,9 @@ static func _tick_processing() -> void:
 		var lead: Prospect = p as Prospect
 		if not lead.is_being_worked():
 			continue
-		if not _rep_available(lead.worked_by):
-			_drop_processing(lead)
-			continue
-		var rep: Character = CharacterRegistry.get_character(lead.worked_by)
+		var rep: Character = _assigned_rep(lead.worked_by)
 		if rep == null:
+			# §12 — "Temsilci ayrılır / izne çıkar | işleme düşer; lead bekleme kurallarına döner."
 			_drop_processing(lead)
 			continue
 		# §7.6 — the price-break moment, in the closing days of a Premium deal against a
@@ -240,10 +219,7 @@ static func _maybe_price_break(rep: Character, lead: Prospect) -> void:
 	if GameState.get_flag("sales_price_break_%s" % lead.id, false):
 		return
 	GameState.set_flag("sales_price_break_%s" % lead.id, true)
-	# The SURFACE, published. The CARD (SalesConstants.PRICE_BREAK_CARD_ID) exists as data and
-	# is never requested — §18 puts its wiring in the event package. Until then the deal
-	# closes at its own stance, which is the conservative fallback: an unwired card must not
-	# be able to strand a deal that is otherwise finished.
+	# §18 — the card (SalesConstants.PRICE_BREAK_CARD_ID) is not requested here; see the header.
 	EventBus.rep_discount_requested.emit(rep.id, lead.id)
 
 
@@ -252,9 +228,6 @@ static func _close(rep: Character, lead: Prospect) -> void:
 	# kadrandan kapatır; yıldızı fiyata dokunmaz."
 	var seat_price: int = SalesLedger.seat_price_anchor(lead.work_stance)
 	var seats: int = _seats_for(lead)
-	# Read BEFORE the prospect leaves the registry: the whale mark rides the lead, and §7.3's
-	# ticker rule needs it after the account has already replaced the lead.
-	var was_whale: bool = lead.is_whale
 	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, seat_price,
 		PitchSystem.signing_satisfaction_seed(), "sales_rep:%s" % rep.id)
 	ProspectRegistry.remove(lead.id)
@@ -263,21 +236,15 @@ static func _close(rep: Character, lead: Prospect) -> void:
 		int(GameState.get_flag("sales_weekly_closes", 0)) + 1)
 	SalesSystem.record_sales_event("auto_close", rep.character_name, c.company_name, c.mrr)
 	EventBus.rep_deal_closed.emit(rep.id, c.id)
-	_maybe_ticker(c, rep.character_name, was_whale)
+	SalesLedger.announce_signing(c, lead.is_whale,
+		TranslationServer.translate("SALES_TICKER_SIGNED").format(
+			{"rep": rep.character_name, "company": c.company_name}))
 
 
-## §5.3 — seats come from the star band, never from a negotiation.
-##
-## THE MIDPOINT WAS THE BUG (direktör bulgusu F6, 2026-08-27). It was my own parked call: the
-## player did not sit at that table, so nothing had been played well or badly and the middle
-## read as the neutral answer. What it actually produced was three accounts signed on three
-## different days by two different reps with byte-identical terms — 28 koltuk, every time,
-## because the midpoint of a star band is a constant. A world where every mid-market company
-## buys exactly the same number of seats is not neutral, it is obviously fake.
-##
-## The band placement now comes from the ACCOUNT, not from the desk: run seed + lead id +
-## archetype through the module's own mixer. §7.5 is untouched — the REP's star still does not
-## reach the price or the seats — and the value is replay-stable, so a reload cannot reroll a
+## §5.3 — seats come from the star band, never from a negotiation. The placement inside the
+## band comes from the ACCOUNT (run seed + lead id + archetype through the module's own mixer),
+## so two accounts at one star do not sign identical seat counts. The rep's star does not reach
+## the price or the seats (§7.5), and the value is replay-stable, so a reload cannot reroll a
 ## deal that already closed.
 static func _seats_for(lead: Prospect) -> int:
 	var band: Dictionary = SalesConstants.seat_band(lead.star)
@@ -286,26 +253,10 @@ static func _seats_for(lead: Prospect) -> int:
 	return int(round(lerpf(float(band["low"]), float(band["high"]), t)))
 
 
-## §7.3 — the rule itself lives in `SalesLedger.is_newsworthy_signing`, because it had two
-## copies here and in `SalesFinalizer` and both had drifted off what §7.3 says: no whale term,
-## and every 3★ leaking rather than the first.
-static func _maybe_ticker(c: Customer, rep_name: String, is_whale: bool) -> void:
-	if not SalesLedger.is_newsworthy_signing(c, is_whale):
-		return
-	EventBus.headline_added.emit(B2BConstants.notice_source_sales(),
-		TranslationServer.translate("SALES_TICKER_SIGNED").format(
-			{"rep": rep_name, "company": c.company_name}))
-	SalesLedger.credit_prestige(c, is_whale)
-
-
 # ============================================================================
 #  §7.3 · The weekly summary
 # ============================================================================
 
-# DESIGN-PARKED: a week with no closes drops NO card. §7.3 says the summary carries closes;
-# a card that reports none is a card that reports nothing. Alternative seen: always drop it
-# with a "no closes this week" line — noise, and the quiet-day floor is the engine's job
-# (§13.6), not this desk's.
 # DESIGN-PARKED: a week with no closes drops NO card. §7.3 says the summary carries closes;
 # a card that reports none is a card that reports nothing. Alternative seen: always drop it
 # with a "no closes this week" line — noise, and the quiet-day floor is the engine's job
@@ -324,7 +275,7 @@ static func _tick_weekly_summary() -> void:
 	GameState.set_flag("sales_weekly_anchor_day", GameState.day)
 	GameState.set_flag("sales_weekly_closes", 0)
 	if closes <= 0:
-		return   # a quiet week is not a report; §13.6's floor is the engine's job, not ours
+		return
 	EventBus.weekly_sales_report_issued.emit(closes)
 	EventGate.request(SalesConstants.WEEKLY_SUMMARY_CARD_ID, {"closes": closes})
 
@@ -340,8 +291,6 @@ static func processing_view(rep: Character) -> Dictionary:
 	if lead_id == "":
 		return {}
 	var lead: Prospect = ProspectRegistry.get_prospect(lead_id)
-	if lead == null:
-		return {}
 	return {
 		"lead_id": lead.id,
 		"company_name": lead.company_name,

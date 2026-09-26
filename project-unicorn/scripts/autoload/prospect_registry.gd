@@ -1,11 +1,11 @@
 extends Node
 
-# Prospect (sales lead) registry — PostShip spec §B.
+# Prospect (sales lead) registry.
 # Single source of truth for B2B leads awaiting a pitch. Mirrors
 # CustomerRegistry's pattern: mutations route through methods and emit on
-# EventBus so the Sales tab repaints itself. On a successful pitch the caller
-# converts the Prospect into a Customer (CustomerRegistry.add) and calls
-# remove() here — prospects therefore never contribute to MRR.
+# EventBus so the Sales tab repaints itself. On a signature the lead becomes a
+# Customer (SalesSystem.add_b2b_customer) and is removed here — prospects
+# therefore never contribute to MRR.
 #
 # Naming caution: get_prospect (not get) — Object.get(prop) is reserved.
 
@@ -20,8 +20,7 @@ func get_prospect(prospect_id: String) -> Prospect:
 
 func get_all() -> Array[Prospect]:
 	var out: Array[Prospect] = []
-	for p in _prospects.values():
-		out.append(p)
+	out.assign(_prospects.values())
 	return out
 
 
@@ -29,12 +28,8 @@ func count() -> int:
 	return _prospects.size()
 
 
-func has_any() -> bool:
-	return not _prospects.is_empty()
-
-
 func get_company_names() -> Array:
-	# Company names of every live lead — PitchSystem's spawn-dedup input (Fix 1).
+	# Company names of every live lead — SalesFaucetSystem's spawn-dedup input.
 	var out: Array = []
 	for p in _prospects.values():
 		out.append(p.company_name)
@@ -64,11 +59,8 @@ func insert_raw(prospect: Prospect) -> void:
 
 
 func reset() -> void:
-	# Run-boundary reset (SaveManager.reset_all_owners). Without it an in-place restart
-	# began with the previous company's open leads sitting in the pipeline — and worse,
-	# PitchSystem's spawn dedup reads get_company_names(), so those ghosts also silently
-	# excluded their own companies from the new run's prospect pool.
-	# Direct clear, no prospect_removed emits — same doctrine as CustomerRegistry.reset().
+	# Run-boundary reset (SaveManager.reset_all_owners). Direct clear, no prospect_removed
+	# emits — same doctrine as CustomerRegistry.reset().
 	_prospects.clear()
 
 

@@ -18,8 +18,7 @@ extends VBoxContainer
 # it would mean new theme items and a THEME_STAMP bump for one surface. `ValueSlider` set the
 # precedent for exactly this reason and its geometry is the ancestor of the constants below.
 # Colours and sizes still come from tokens — `_draw` changes the drawing path, not the
-# palette law (UI/STYLE LAW md.1).
-
+# palette law (UI/STYLE LAW 1).
 #
 # IT HAS NO GROUND OF ITS OWN (rev 6.1 §5.1.1). `SalesStage` owns the room, the scrim and the
 # dialogue column; this scene is the column's CONTENT for Perde 2 and nothing more. A full-rect
@@ -72,7 +71,6 @@ class _Ruler extends Control:
 
 	func _init() -> void:
 		custom_minimum_size = Vector2(0, NegotiationScene.RULER_H)
-		mouse_filter = Control.MOUSE_FILTER_STOP
 
 	func _value_at(x: float) -> int:
 		var t: float = clampf(x / maxf(size.x, 1.0), 0.0, 1.0)
@@ -96,16 +94,14 @@ class _Ruler extends Control:
 	func _draw() -> void:
 		var mid: float = size.y * 0.5
 		# The rail. SURFACE_SUNKEN, not SEPARATOR: the chrome hairline is a shade off the
-		# dialogue column's own fill and the rail simply did not draw on the restaged stage —
-		# read off the first Act 2 shot. This token is literally the meter-track colour.
+		# dialogue column's own fill and does not show on the stage. This token is literally
+		# the meter-track colour.
 		draw_rect(Rect2(0.0, mid - NegotiationScene.RAIL_H * 0.5, size.x, NegotiationScene.RAIL_H),
 			UiTokens.SURFACE_SUNKEN)
 		# DESIGN-PARKED: the insult zone is DRAWN. §5.3 seals that the reserve is never
 		# drawn and says the zone carries "farklı ton"; a tone on the button alone would
 		# let the player cross the line without ever having seen it, and I3 forbids an
 		# untelegraphed loss. Alternative seen: button tone only, zone invisible.
-		# §5.3 — the INSULT ZONE at the top end, in a different tone. It is drawn because the
-		# player must be able to see the edge before stepping over it (I3: no untelegraphed loss).
 		if insult_from < band_high:
 			var ix: float = _x_of(insult_from)
 			draw_rect(Rect2(ix, mid - NegotiationScene.RAIL_H * 0.5, size.x - ix,
@@ -113,13 +109,11 @@ class _Ruler extends Control:
 		# §5.3 / §6 — the promise-narrowed LOCKED zone. Hatched rather than tinted so it does
 		# not read as "danger"; it is unavailable, which is a different fact.
 		if locked_from >= 0:
-			var lx: float = _x_of(locked_from)
-			var step: float = 6.0
-			var x: float = lx
+			var x: float = _x_of(locked_from)
 			while x < size.x:
 				draw_line(Vector2(x, mid - 8.0), Vector2(x + 4.0, mid + 8.0),
 					UiTokens.INK_FAINT, 1.0)
-				x += step
+				x += 6.0
 		# The stance anchor (§7.5) — where the dial says this conversation starts.
 		# INK_DIM, not ACCENT_DIM: the latter is a FILL token for amber-keyed chrome (#1E2730)
 		# and as a line it vanished into the rail. The tick stays neutral on purpose — the amber
@@ -131,12 +125,11 @@ class _Ruler extends Control:
 		for i in counters.size():
 			var cx: float = _x_of(int(counters[i]))
 			var fade: float = 0.35 + 0.65 * (float(i + 1) / float(counters.size()))
-			var col: Color = UiTokens.INK_MUTED
-			col.a = fade
-			draw_line(Vector2(cx, mid - 6.0), Vector2(cx, mid + 6.0), col, 1.0)
+			draw_line(Vector2(cx, mid - 6.0), Vector2(cx, mid + 6.0),
+				Color(UiTokens.INK_MUTED, fade), 1.0)
 		# The handle. Its LEFT EDGE is clamped, not its centre: at the band's floor the centred
 		# rect hung half off the ruler and drew as a sliver, which reads as a rendering fault
-		# rather than as "the price is at the bottom of the band" (seen on the confirm shot).
+		# rather than as "the price is at the bottom of the band".
 		var hw: float = NegotiationScene.HANDLE_W
 		var hx: float = clampf(_x_of(selected) - hw * 0.5, 0.0, maxf(size.x - hw, 0.0))
 		var hcol: Color = UiTokens.negative_bright() if selected >= insult_from else UiTokens.ACCENT
@@ -154,35 +147,32 @@ func _build() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	add_theme_constant_override("separation", UiTokens.SPACE_L)
 
-	# The ruler takes the column's width, which is what a ruler wants: at 1900px a dollar of
-	# price becomes twenty pixels of travel and the insult edge stops being a place you can
-	# see yourself approaching. The stage's column is already that measure.
-	var col: VBoxContainer = self
-
 	# THE MECHANISM IS CENTRED, exactly as Perde 1's conversation is. Same two-spacer shape, so
 	# the act change moves the CONTENT of the column and nothing else: the eye that was reading
-	# an answer row finds the ruler at the same height. A top-aligned mechanism left 450px of
-	# void under it and made the swap read as a different screen.
-	col.add_child(_flex(1.0))
+	# an answer row finds the ruler at the same height.
+	add_child(SalesStage.make_flex())
 
 	# NOT `DialogueName` — the identity block above already carries that weight, and a second
 	# heading of the same size under it reads as two titles arguing. This is a section label.
 	_title_label = UiFactory.make_label("", &"ZoneLabel")
-	col.add_child(_title_label)
+	add_child(_title_label)
 
+	# The ruler takes the column's width, which is what a ruler wants: at 1900px a dollar of
+	# price becomes twenty pixels of travel and the insult edge stops being a place you can
+	# see yourself approaching. The stage's column is already that measure.
 	_ruler = _Ruler.new()
 	_ruler.picked.connect(_on_picked)
-	col.add_child(_ruler)
+	add_child(_ruler)
 
 	_scale_row = HBoxContainer.new()
-	col.add_child(_scale_row)
+	add_child(_scale_row)
 
 	# The customer's number and the patience track share a row: both are what the OTHER side
 	# of the table has said so far, and reading them together is how the player infers the
 	# reserve the scene never draws.
 	var state_row := HBoxContainer.new()
 	state_row.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	col.add_child(state_row)
+	add_child(state_row)
 	_patience_row = HBoxContainer.new()
 	_patience_row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	state_row.add_child(_patience_row)
@@ -192,20 +182,20 @@ func _build() -> void:
 
 	_confirm_box = VBoxContainer.new()
 	_confirm_box.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
-	col.add_child(_confirm_box)
+	add_child(_confirm_box)
 
 	# The actions ride the column's bottom edge, where Perde 1's footer button already was.
 	# Same place, same eye — one more thing that does not move across the act change.
-	col.add_child(_flex(1.0))
+	add_child(SalesStage.make_flex())
 
 	var actions := HBoxContainer.new()
 	actions.alignment = BoxContainer.ALIGNMENT_END
 	actions.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	col.add_child(actions)
+	add_child(actions)
 
-	_offer_btn = _button(tr("NEG_OFFER"), _on_offer, &"CommitButton")
-	_accept_btn = _button(tr("NEG_ACCEPT"), _on_accept, &"DialogueChoice")
-	_walk_btn = _button(tr("NEG_WALK"), _on_walk, &"DialogueGhost")
+	_offer_btn = SalesStage.make_button(tr("NEG_OFFER"), _on_offer, &"CommitButton")
+	_accept_btn = SalesStage.make_button(tr("NEG_ACCEPT"), _on_accept, &"DialogueChoice")
+	_walk_btn = SalesStage.make_button(tr("NEG_WALK"), _on_walk, &"DialogueGhost")
 	actions.add_child(_offer_btn)
 	actions.add_child(_accept_btn)
 	actions.add_child(_walk_btn)
@@ -216,24 +206,6 @@ func _grow() -> Control:
 	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return c
-
-
-## Vertical twin of `_grow`: eats leftover column height in proportion to `ratio`.
-func _flex(ratio: float) -> Control:
-	var c := Control.new()
-	c.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	c.size_flags_stretch_ratio = ratio
-	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return c
-
-
-func _button(text: String, cb: Callable, variation: StringName) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.theme_type_variation = variation
-	b.focus_mode = Control.FOCUS_NONE
-	b.pressed.connect(cb)
-	return b
 
 
 # ============================================================================
@@ -267,22 +239,17 @@ func _render(vs: Dictionary) -> void:
 
 
 func _render_scale(vs: Dictionary) -> void:
-	var row: HBoxContainer = _scale_row
-	for c in row.get_children():
+	for c in _scale_row.get_children():
 		c.queue_free()
 	var band: Dictionary = vs.get("band", {}) as Dictionary
-	row.add_child(UiFactory.make_label(Fmt.money_exact(int(band.get("low", 0))),
+	_scale_row.add_child(UiFactory.make_label(Fmt.money_exact(int(band.get("low", 0))),
 		&"MicroLabel", UiTokens.INK_DIM))
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(spacer)
-	row.add_child(UiFactory.make_label(
+	_scale_row.add_child(_grow())
+	_scale_row.add_child(UiFactory.make_label(
 		tr(String(vs.get("price_label_key", ""))) + "  " + Fmt.money_exact(int(vs.get("selected", 0))),
 		&"MetricValueInk"))
-	var spacer2 := Control.new()
-	spacer2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(spacer2)
-	row.add_child(UiFactory.make_label(Fmt.money_exact(int(band.get("high", 0))),
+	_scale_row.add_child(_grow())
+	_scale_row.add_child(UiFactory.make_label(Fmt.money_exact(int(band.get("high", 0))),
 		&"MicroLabel", UiTokens.INK_DIM))
 
 
@@ -301,13 +268,15 @@ func _render_patience(p: Dictionary) -> void:
 		var sb := StyleBoxFlat.new()
 		# LIT = still available. A spent box is hollow and dim; the LAST remaining one is the
 		# §5.3 last-offer telegraph and it is the only box that ever takes the warning colour.
-		var lit: bool = i < current
-		var last_lit: bool = lit and current == 1
-		sb.bg_color = UiTokens.ACCENT_DIM if lit else Color(0, 0, 0, 0)
-		if last_lit:
+		if i >= current:
+			sb.bg_color = Color.TRANSPARENT
+			sb.border_color = UiTokens.BORDER_DISABLED
+		elif current == 1:
 			sb.bg_color = UiTokens.negative_bright()
-		sb.border_color = UiTokens.BORDER_DISABLED if not lit else (
-			UiTokens.negative_bright() if last_lit else UiTokens.ACCENT)
+			sb.border_color = UiTokens.negative_bright()
+		else:
+			sb.bg_color = UiTokens.ACCENT_DIM
+			sb.border_color = UiTokens.ACCENT
 		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
 		box.add_theme_stylebox_override("panel", sb)
 		_patience_row.add_child(box)
@@ -333,8 +302,8 @@ func _render_confirm(vs: Dictionary) -> void:
 
 
 func _render_actions(vs: Dictionary) -> void:
-	var closed_now: bool = String(vs.get("state", "")) == "closed" \
-		or String(vs.get("state", "")) == "accepted"
+	var state: String = String(vs.get("state", ""))
+	var closed_now: bool = state == "closed" or state == "accepted"
 	_accept_btn.visible = bool(vs.get("can_accept", false)) and not closed_now
 	_walk_btn.visible = bool(vs.get("can_walk", false)) and not closed_now
 	_offer_btn.visible = not closed_now
@@ -342,7 +311,7 @@ func _render_actions(vs: Dictionary) -> void:
 		# Accepted → the strip above is the deal; one button signs it. Closed any other way
 		# and the same button simply leaves.
 		_offer_btn.visible = true
-		_offer_btn.text = tr("NEG_SIGN") if String(vs.get("state", "")) == "accepted" else tr("NEG_LEAVE")
+		_offer_btn.text = tr("NEG_SIGN") if state == "accepted" else tr("NEG_LEAVE")
 		_offer_btn.theme_type_variation = &"CommitButton"
 		_offer_btn.tooltip_text = ""
 		return
@@ -396,9 +365,8 @@ func _on_walk() -> void:
 	_finish()
 
 
-## THE SIGNATURE. It is the one place the negotiation's return contract is turned into world
-## state, and it goes through the seams that own each half: SalesSystem for the customer,
-## PromiseRegistry for the word given in Act 1, SalesFaucetSystem for a lock.
+## THE SIGNATURE. The one place the negotiation's return contract becomes world state:
+## SalesFinalizer.apply writes each half through the seam that owns it.
 func _finish() -> void:
 	SalesFinalizer.apply(NegotiationSystem.result())
 	closed.emit()

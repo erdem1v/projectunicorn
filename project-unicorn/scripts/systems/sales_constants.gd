@@ -25,7 +25,6 @@ const DAYS_PER_WEEK := 7.0
 # faucet never dries, it slows.
 const INTEREST_MULT_MIN := 0.8           # [K]
 const INTEREST_MULT_MAX := 1.3           # [K]
-const INTEREST_SCALE := 100.0            # ProductState.INTEREST_MAX, mirrored for the map
 
 # Phase multiplier (§3). Series A shares Traction's figure: the GDD names two phases and
 # the third is the same market.
@@ -36,9 +35,8 @@ const PHASE_MULT_TRACTION := 1.25        # [K]
 # multiplier, expressed per week and applied to the 1★ band alone.
 const ONE_STAR_FLOOR_PER_WEEK := 1.0     # [K]
 
-# A day cannot deliver more than this however the multipliers stack. Kept from the old desk
-# because it is legible: a full column reads as "you are not meeting anyone", never as
-# "the faucet broke".
+# A day cannot deliver more than this however the multipliers stack. Legible on purpose: a
+# full column reads as "you are not meeting anyone", never as "the faucet broke".
 const FAUCET_DAILY_MAX := 2              # [K]
 
 # Star mix per phase, 1★/2★/3★ (§3). The demo ceiling is 3★ and MÜHÜRLÜ (§2): 4-5★ is not
@@ -69,7 +67,6 @@ const ROUTE_REP := "rep"                 # "Temsilciye ver" — first in the ban
 # ============================ §5.0 · Time model ==============================
 const MEETING_SKIP_HOURS := 2            # [K] the clock the sitting costs
 const MEETING_ENTRY_CUTOFF_HOURS := 2    # [ÇALIŞMA] no entry this close to the end of the workday
-const WORKDAY_START_HOUR := 9            # the company window, shared with the ODA light state
 const WORKDAY_END_HOUR := 17
 
 
@@ -174,9 +171,8 @@ const WEEKLY_SUMMARY_INTERVAL_DAYS := 7    # [ÇALIŞMA]
 const WEEKLY_SUMMARY_CARD_ID := "sales.weekly_summary"
 const TICKER_NEWSWORTHY_STAR := 3          # [ÇALIŞMA] a 3★ signing is news
 # §7.3 "Prestij: haber değeri VE MARKA ETKİSİ". A newsworthy signing (whale, above the
-# company's league, or the run's first 3★) reached the ticker but never the brand, which left
-# brand with no faucet at all outside a handful of cards while churn, broken words and VC
-# rejections all drain it — and brand still moves conviction in the Series A meeting.
+# company's league, or the run's first 3★) lifts brand as well as reaching the ticker — one
+# of brand's few faucets, and brand moves conviction in the Series A meeting.
 const PRESTIGE_SIGNING_BRAND := 3           # [ÇALIŞMA]
 
 
@@ -199,7 +195,6 @@ const REPITCH_PENALTY := 0.10            # [ÇALIŞMA] the "−10 sınıfı ▼"
 # Sales stars are money and the role carries no secondary area, so the curve sits half a
 # step under every other role. The demo candidate ceiling is ★3,5 = raw 7 (§11.7).
 const CANDIDATE_STAR_CAP_RAW := 7        # [ÇALIŞMA] ★3,5 on the 0-10 ruler
-const CANDIDATE_TOP_CHANCE := 0.25       # [K] ~%25 of junior searches carry the ★2 file
 
 
 # ============================ Loss reasons (§5.2) ============================
@@ -218,7 +213,7 @@ const LOSS_REASONS := [LOSS_STABILITY, LOSS_MISSING_TIER, LOSS_PROVIDER_TRUST,
 
 ## Interest 0-100 → the §3 multiplier band. Linear, clamped at both ends.
 static func interest_mult(interest: float) -> float:
-	var t: float = clampf(interest / INTEREST_SCALE, 0.0, 1.0)
+	var t: float = clampf(interest / ProductState.INTEREST_MAX, 0.0, 1.0)
 	return lerpf(INTEREST_MULT_MIN, INTEREST_MULT_MAX, t)
 
 
@@ -233,9 +228,9 @@ static func star_mix(phase: int) -> Array:
 	return src.duplicate()
 
 
-## Seat count band for a star tier (§5.3). Falls back to 1★ for anything unexpected.
+## Seat count band for a star tier (§5.3); an out-of-range star clamps to the nearest band.
 static func seat_band(star: int) -> Dictionary:
-	return SEAT_BAND.get(clampi(star, STAR_MIN, STAR_MAX), SEAT_BAND[STAR_MIN])
+	return SEAT_BAND[clampi(star, STAR_MIN, STAR_MAX)]
 
 
 ## Stance id → the §7.5 band placement multiplier.
@@ -253,13 +248,11 @@ static func process_span(league_delta: int) -> Array:
 
 
 # ============================================================================
-#  The module's ONE deterministic mixer (§7.6 / §11.4)
+#  The module's deterministic mixer (§7.6 / §11.4)
 # ============================================================================
 #
-# Sales had this arithmetic in one place (NegotiationSystem) and needed it in a second when
-# the rep desk stopped handing every account the same terms. A second private copy is how a
-# codebase ends up with four near-identical mixers that drift; this is the module's single
-# home and `NegotiationSystem` now calls it, so the two cannot disagree.
+# NegotiationSystem and SalesRepSystem both call it, so their deal numbers come from one
+# formula; the faucet and the name pool call `mix_seed` directly with their own integer seeds.
 #
 # NOT AN RNG STREAM. It hashes run seed + a stable identity + a salt, so replaying the same
 # run produces the same answer no matter what else was drawn in between — the same property
@@ -276,8 +269,12 @@ const SALT_REP_SEATS := 419      # the rep desk's seat count (§7.6)
 
 ## Deterministic value in [0, MIX_MODULUS) from the run seed, a stable identity and a salt.
 static func mix(identity: String, salt: int) -> int:
-	var base: int = GameState.run_seed + identity.hash()
-	var n: int = (absi(base) % MIX_MODULUS) + MIX_SALT_STRIDE * (absi(salt) % MIX_MODULUS)
+	return mix_seed(GameState.run_seed + identity.hash(), salt)
+
+
+## Deterministic value in [0, MIX_MODULUS) from an integer seed and a salt.
+static func mix_seed(seed_value: int, salt: int) -> int:
+	var n: int = (absi(seed_value) % MIX_MODULUS) + MIX_SALT_STRIDE * (absi(salt) % MIX_MODULUS)
 	return absi((n * MIX_MULTIPLIER + MIX_INCREMENT) % MIX_MODULUS)
 
 

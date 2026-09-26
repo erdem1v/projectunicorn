@@ -14,8 +14,7 @@ extends RefCounted
 #
 #   sector          → which name family the pool draws from, and which sub-types it likes
 #                     (SUB-TYPE IDS ARE THE LINE-LADDER ONES — `erp`, `note_tool`,
-#                      `video_clip`. The `ai_*` / `saas_*` ids are the retired feature-pool
-#                      generation and match nothing; Ürün rev 6.1 §20 retired them.)
+#                      `video_clip`; Ürün rev 6.1 §20)
 #   star_range      → which faucet band this archetype can fill
 #   buyer           → which probe families the picker may draw (a technical buyer asks
 #                     different questions from an operational one)
@@ -27,10 +26,9 @@ extends RefCounted
 #                     (the flag is what §7.6 reads to decide a price-break card is possible)
 #   conditions      → the ordered whale condition list (§8); empty = never a whale
 #
-# NO LOCALISED TEXT LIVES HERE. Ids in, sentences at render time — the same law that moved
-# the B2C user-base name out of `Customer.company_name`. Player-facing archetype voice is a
-# CSV key derived from the id (`SALES_ARCH_<ID>_LINE`), and it is a tagged placeholder until
-# the writing round lands.
+# NO LOCALISED TEXT LIVES HERE. Ids in, sentences at render time. Player-facing archetype
+# voice is a CSV key derived from the id (`SALES_ARCH_<ID>_LINE`), and it is a tagged
+# placeholder until the writing round lands.
 
 const DEFAULT_ID := "ops_cautious"
 
@@ -144,12 +142,8 @@ static func sectors(archetype_id: String) -> Array:
 	return (_row(archetype_id).get("sectors", []) as Array).duplicate()
 
 
-static func star_range(archetype_id: String) -> Array:
-	return (_row(archetype_id).get("star_range", [1, 3]) as Array).duplicate()
-
-
 static func accepts_star(archetype_id: String, star: int) -> bool:
-	var r: Array = star_range(archetype_id)
+	var r: Array = _row(archetype_id)["star_range"]
 	return star >= int(r[0]) and star <= int(r[1])
 
 
@@ -164,13 +158,10 @@ static func temperament(archetype_id: String) -> String:
 ## Axis weights, normalised. Read by the persuasion reading's product-fit term — this is the
 ## whole reason "the same product reads differently to two customers".
 static func axis_weights(archetype_id: String) -> Dictionary:
-	var p: Dictionary = _row(archetype_id).get("priorities", {}) as Dictionary
-	var w: Dictionary = (p.get("axis_weights", {}) as Dictionary).duplicate()
+	var w: Dictionary = (_row(archetype_id)["priorities"]["axis_weights"] as Dictionary).duplicate()
 	var total: float = 0.0
 	for k in w.keys():
 		total += float(w[k])
-	if total <= 0.0:
-		return {"innovation": 0.34, "stability": 0.33, "experience": 0.33}
 	for k in w.keys():
 		w[k] = float(w[k]) / total
 	return w
@@ -208,23 +199,16 @@ static func conditions(archetype_id: String) -> Array:
 	return (_row(archetype_id).get("conditions", []) as Array).duplicate()
 
 
-## Which archetypes can fill a given star band for the active sub-product. Deterministic
-## order, so the faucet's pick is reproducible from the seed alone.
-## AFFINITY BIASES THE DRAW, IT DOES NOT WIN IT (F13, ölçüldü 2026-08-27).
-##
-## This used to return `preferred` outright whenever it was non-empty, which reads fine until
-## you count the rows: `erp` is the only B2B sub-type that ships, exactly one archetype names
-## it, so `preferred` was always a list of ONE and the other two archetypes could never be
-## drawn at any star. Every company in the pipeline spoke the same voice line, and it looked
-## like stub scarcity because there are only three stubs — it was not. Three archetypes existed
-## and the draw could reach one.
-##
-## An affinity is a leaning: this kind of buyer is MORE likely to want this kind of product,
-## not the only kind who ever appears. Expressed as slot multiplicity so the mixer stays a
-## plain index pick and nothing here needs a weights table or a second random draw.
 const AFFINITY_WEIGHT := 2      # [ÇALIŞMA] a subtype-matched archetype gets this many slots
 
 
+## Which archetypes can fill a given star band for the active sub-product. Deterministic
+## order, so the faucet's pick is reproducible from the seed alone.
+##
+## AFFINITY BIASES THE DRAW, IT DOES NOT WIN IT: this kind of buyer is MORE likely to want
+## this kind of product, not the only kind who ever appears. Expressed as slot multiplicity
+## (AFFINITY_WEIGHT) so the mixer stays a plain index pick with no weights table and no
+## second draw.
 static func candidates_for(star: int, sub_product_id: String) -> Array:
 	var preferred: Array = []
 	var fallback: Array = []

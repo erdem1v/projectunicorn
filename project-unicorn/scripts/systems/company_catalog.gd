@@ -1,29 +1,18 @@
 class_name CompanyCatalog
 extends RefCounted
 
-# Company catalog — the SINGLE source of prospect/customer company fiction
-# (Dünya İnandırıcılığı Fix 2). Replaces B2BConstants.SECTOR_COMPANIES (9 sectors
-# × 3 names, four sectors sharing one 3-name fallback — the root of the "Beykoz
-# appears everywhere" break). 13 sectors × 5 companies = 65, matching the full
-# SECTOR_CONTACT / COMPLAINT_VOICE sector set so no sector ever falls through to
-# a shared fallback again.
+# Company catalog — the curated head of each sector's name pool (SalesNamePool puts these
+# names first, then its generated ones). 13 sectors × 5 companies.
 #
-# # WORKING TR — background lines are working copy; Erdem voice-passes later.
-#
-# Fiction rules (task-locked):
+# Fiction rules:
 #   - Mix: Turkish firms, Turkish-international hybrids, foreign firms operating
 #     regionally. No joke names, no real trademarks. Names are proper nouns
-#     (LANGUAGE INTEGRITY LAW exempts them); backgrounds are clean Turkish.
-#   - The background line is ONE line of character (sector feel, size feel,
-#     temperament). The event system may QUOTE it to color wording; it must never
-#     DRIVE an event's subject (Fix 5 rule). UI may show it on a customer card.
-#     It lives in strings.csv as COMPANY_BG_<ID>, not here — see background_for.
+#     (LANGUAGE INTEGRITY LAW exempts them).
+#   - A company's character may colour an event's wording; it must never DRIVE an event's
+#     subject. That one line per id sits in strings.csv as COMPANY_BG_<ID>; only the smoke
+#     suite reads those rows today.
 #   - The smoke suite's synthetic "Testing" sector is deliberately absent —
 #     hand-built fixtures stay outside the catalog.
-#
-# Naming note: two legacy pool names were live trademarks of real Turkish
-# companies (Anadolu Sigorta, Anadolu Yatırım) and were replaced (Poyraz
-# Sigorta, Argos Yatırım). Every other legacy name carried over unchanged.
 
 const COMPANIES := {
 	"insurance": [   # LOC-DATA company name (proper noun)
@@ -120,64 +109,18 @@ const COMPANIES := {
 }
 
 
-# Lazy name→record index (record gains a "sector" key on first build).
-static var _by_name: Dictionary = {}
-
-
-static func _index() -> Dictionary:
-	if _by_name.is_empty():
-		for sector in COMPANIES:
-			for rec in COMPANIES[sector]:
-				_by_name[rec["name"]] = {"name": rec["name"], "sector": sector, "id": rec["id"]}
-	return _by_name
-
-
 static func all() -> Array:
-	# Flattened [{name, sector, id, background}] — smoke integrity checks iterate this.
-	# `background` is resolved here rather than stored, so the list reads the same as it
-	# always did while the words themselves live in the CSV.
+	# Flattened [{name, sector, id}] — smoke integrity checks iterate this.
 	var out: Array = []
 	for sector in COMPANIES:
 		for rec in COMPANIES[sector]:
-			out.append({"name": rec["name"], "sector": sector, "id": rec["id"],
-				"background": _background_by_id(String(rec["id"]))})
+			out.append({"name": rec["name"], "sector": sector, "id": rec["id"]})
 	return out
 
 
 static func names_for_sector(sector: String) -> Array:
-	# Name strings only — the spawn picker's per-sector candidate list. Unknown
-	# sector → empty array (no shared fallback: that was the old fiction break).
+	# Name strings only. Unknown sector → empty array (no shared fallback).
 	var out: Array = []
 	for rec in COMPANIES.get(sector, []):
 		out.append(rec["name"])
-	return out
-
-
-static func background_for(company_name: String) -> String:
-	# One-line character color for events/cards. Empty for names outside the
-	# catalog (hand-built fixtures, legacy saves) — callers treat "" as "skip".
-	var rec: Dictionary = _index().get(company_name, {})
-	return _background_by_id(String(rec.get("id", "")))
-
-
-## COMPANY_BG_<ID> → the line, or "" for an unknown id. TranslationServer hands back the
-## key itself when a row is missing, which would put a raw token on a customer card, so an
-## unresolved id is reported as absent instead.
-static func _background_by_id(id: String) -> String:
-	if id == "":
-		return ""
-	var key: String = "COMPANY_BG_" + id
-	var out: String = TranslationServer.translate(key)
-	return "" if out == key else out
-
-
-static func sector_for(company_name: String) -> String:
-	var rec: Dictionary = _index().get(company_name, {})
-	return String(rec.get("sector", ""))
-
-
-static func count_by_sector() -> Dictionary:
-	var out: Dictionary = {}
-	for sector in COMPANIES:
-		out[sector] = COMPANIES[sector].size()
 	return out

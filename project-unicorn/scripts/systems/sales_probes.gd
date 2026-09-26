@@ -40,9 +40,9 @@ const VERB_REFERENCE := "reference"
 #  §11.6 — the fact dictionary. EVERY entry is a named query.
 # ============================================================================
 
-## Flat facts for one table. The attribution linter's whole job is to prove that every
-## criterion key a catalogue row uses appears here — a row keyed on anything else cannot be
-## eligible, and the smoke case says so out loud.
+## Flat facts for one table. A catalogue row keyed on anything not listed here cannot be
+## eligible: `matches` refuses it with a warning. §11.6's attribution linter, which would
+## refuse such a row before a build, is not built.
 static func facts_for(p: Prospect) -> Dictionary:
 	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
 	return {
@@ -65,7 +65,7 @@ static func facts_for(p: Prospect) -> Dictionary:
 		"interest": int(ProductRead.interest()),
 		"lines_open": ProductRead.lines_open(),
 		"steps_shipped": ProductRead.steps_shipped(),
-		"has_locked_next_step": _has_locked_next_step(sub_id),
+		"has_locked_next_step": locked_line() != "",
 		"support_staffed": ProductRead.support_staffed(),
 		# --- infrastructure, through Ürün §10 ---
 		"provider": InfraSystem.provider(),
@@ -84,31 +84,29 @@ static func facts_for(p: Prospect) -> Dictionary:
 		"account_count": CustomerRegistry.get_by_market("b2b").size(),
 		"has_reference": _has_reference(p.star),
 		"open_pitch_promise": SalesLedger.open_pitch_promise() != "",
-		# CAN A PROMISE NAME ANYTHING? `pick_pain_feature` reads the retired FEATURE_POOLS
-		# table, which carries no row for the sub-types that ship, so under a rev 6.1 product
-		# the answer is currently NO. §11.9's law cuts both ways: a verb that would let the
-		# player give a word the engine cannot keep is worse than a missing verb, so the row
-		# is simply absent rather than offered and then silently broken. When Ürün repoints
-		# the demand channel at line steps this fact goes true and the verb returns, with no
-		# change here.
+		# §11.9 — a Söz row is offered only when there is something to promise; with no target
+		# the verb is absent rather than offered and then silently broken.
 		"has_promise_target": B2BSalesSystem.pick_pain_feature(sub_id, 0) != "",
 	}
 
 
-static func _has_locked_next_step(sub_id: String) -> bool:
+## The first line whose next step exists and is NOT unlockable — the "kilitli üst kademe" a
+## whale asks for (§8, Ürün §15) and the target a missing-tier loss names (§5.2). "" when every
+## line's next step is reachable.
+static func locked_line() -> String:
+	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
 	for line_id in ProductLines.line_ids(sub_id):
 		var step_id: String = ProductRead.line_next_step("", String(line_id))
 		if step_id != "" and not ProductRead.step_unlockable(step_id):
-			return true
-	return false
+			return String(line_id)
+	return ""
 
 
 ## §5.1 — a reference is playable when at least one ACTIVE account sits at this table's star
 ## or above. Its absence is never a minus; it is a card the player may or may not hold.
 static func _has_reference(star: int) -> bool:
 	for c in CustomerRegistry.get_by_market("b2b"):
-		var cust: Customer = c as Customer
-		if cust.status == "active" and cust.scale >= star:
+		if (c as Customer).scale >= star:
 			return true
 	return false
 
@@ -236,9 +234,9 @@ const CATALOGUE := [
 #  Selection
 # ============================================================================
 
-## Pick the next probe for this sitting. `used_families` and `used_ids` are the sitting's and
-## the run's memory; both are consulted, the sitting's first — no family repeats inside one
-## meeting, and across the run a fresh row beats one already spoken (§11.2).
+## Pick the next probe for this sitting. `used_families` is the sitting's memory and
+## `GameState.sales_line_memory` the run's; both are consulted, the sitting's first — no family
+## repeats inside one meeting, and across the run a fresh row beats one already spoken (§11.2).
 ##
 ## Returns {} when nothing is eligible, which the meeting reads as "the customer has no more
 ## questions" and closes on the current reading.
@@ -274,8 +272,6 @@ static func pick(facts: Dictionary, used_families: Array, seed_value: int) -> Di
 ## Record that a row was spoken. The run memory is what makes §11.6's repeat histogram
 ## measurable and what keeps a flavour slot from returning before its pool is spent.
 static func remember(row_id: String) -> void:
-	if row_id == "":
-		return
 	GameState.sales_line_memory[row_id] = int(GameState.sales_line_memory.get(row_id, 0)) + 1
 
 
@@ -284,9 +280,8 @@ static func matches(criteria: Dictionary, facts: Dictionary) -> bool:
 	for key in criteria.keys():
 		var k: String = String(key)
 		if not facts.has(k):
-			# A criterion with no fact behind it is a CONTENT ERROR, not a near miss: §11.6's
-			# attribution linter exists to catch it before a build, and refusing the row here
-			# means a typo silently drops a line rather than silently claiming one.
+			# A criterion with no fact behind it is a CONTENT ERROR, not a near miss (§11.6):
+			# refusing the row means a typo drops a line rather than silently claiming one.
 			push_warning("[SalesProbes] criterion '%s' has no fact — see facts_for()" % k)
 			return false
 		if not _matches_one(criteria[key], facts[k]):

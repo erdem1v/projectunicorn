@@ -15,9 +15,9 @@ extends Control
 # THE LAYOUT IS THE VC PITCH SCENE'S, NUMBER FOR NUMBER (meeting_scene.gd + MeetingScene.tscn):
 # room fallback under covered-aspect room art under a readability scrim, then a DialogueColumn
 # panel anchored at 0.605 with a 28px inset, and the portrait card overhanging the column's top
-# edge — the signature move of that composition. The director's ruling (2026-08-27) put the
-# identity block at the COLUMN HEAD rather than out on the room, which is what makes this a
-# restaging of a proven composition instead of a new one.
+# edge — the signature move of that composition. The director's ruling puts the identity
+# block at the COLUMN HEAD rather than out on the room, which is what makes this a restaging
+# of a proven composition instead of a new one.
 #
 # TERMINAL PANEL GRAMMAR IS BANNED HERE. §5.1.1: "o gramer Satış sekmesinindir." Nothing on
 # this stage is a CardPanel; the column is the only frame, and the Dialogue* family dresses it.
@@ -34,24 +34,17 @@ const ROOM_BG := "res://assets/art/rooms/room_bosphorus.webp"
 const PORTRAIT_CARD := preload("res://scenes/ui/components/DialoguePortraitCard.tscn")
 
 const COLUMN_ANCHOR_LEFT := 0.605      # VC parity — the column takes the right ~39.5%
-# THE COLUMN BLEEDS TO THREE EDGES, and this is where the restage leaves VC parity. The VC
-# scene insets the column 28px on top/right/bottom, which works there because the room art is
-# painted with a wide cream mat on its right third and that inset reveals the mat as a frame.
-# `room_bosphorus` carries a NARROWER mat, so the same inset revealed three bright slivers
-# instead of a frame — read off the first shot, not guessed. Bleeding removes them and costs
-# nothing the composition was using.
-const COLUMN_INSET := 0
 const BODY_INSET := 24
 const BODY_BOTTOM := 20
 
 
 # TWO PLATES, ONE SLOT. §5.1.1 says "portre YA DA baş harf avatarı", and today it is always the
-# avatar: no customer record carries a portrait. The first shot showed why that distinction has
-# to be built rather than faked — a `DialoguePortraitCard` with nothing in it is a bright empty
-# photo frame at the top of every meeting, and it reads as missing art rather than as identity.
-# So a portrait gets the 4:5 card (VC composition) and no portrait gets the codebase's own
-# circular initials avatar (`UiFactory.make_avatar`, the employee-avatar pattern), which reads
-# as a deliberate mark. The slot height is fixed across both so the header below never shifts.
+# avatar: no customer record carries a portrait. That distinction has to be built rather than
+# faked — a `DialoguePortraitCard` with nothing in it is a bright empty photo frame at the top
+# of every meeting, and it reads as missing art rather than as identity. So a portrait gets the
+# 4:5 card (VC composition) and no portrait gets a circular initials plate (`_monogram` below —
+# the employee-avatar pattern sized for this surface), which reads as a deliberate mark. The
+# slot height is fixed across both so the header below never shifts.
 const PORTRAIT_SIZE := Vector2(132, 165)
 const AVATAR_D := 112
 const PLATE_H := 168
@@ -60,7 +53,6 @@ const PLATE_GAP := 16                  # plate bottom to body top
 
 const STAR_GLYPH_PX := 15
 
-var _room_art: TextureRect = null
 var _plate_host: CenterContainer = null
 var _name_label: Label = null
 var _star_host: HBoxContainer = null
@@ -79,11 +71,9 @@ func _init() -> void:
 
 func _build() -> void:
 	# ALWAYS, asserted here rather than inherited. The meeting runs at speed 0, which flips
-	# `get_tree().paused` (time_manager.gd:235), and a node left on INHERIT is only interactive
-	# because whoever happens to mount it was. The pause probe caught exactly that: hosted by
-	# `SalesMeetingScene` the stage inherited ALWAYS and passed, mounted straight under Main by
-	# `--negotiation-shot` it inherited the pause and reported `root_can_process=false`. A
-	# contract that depends on the caller is not a contract.
+	# `get_tree().paused`, and a node left on INHERIT is only interactive because whoever
+	# mounts it is: `SalesMeetingScene` is ALWAYS, but `--negotiation-shot` mounts the stage
+	# straight under Main. A contract that depends on the caller is not a contract.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# IGNORE, not STOP: the stage is scenery. Its children still receive their own input, and
@@ -98,13 +88,18 @@ func _build() -> void:
 
 	# EXPAND_IGNORE_SIZE + KEEP_ASPECT_COVERED: fills the frame at any window size without
 	# letterboxing, which is what "full bleed to all four edges" means in practice.
-	_room_art = TextureRect.new()
-	_room_art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_room_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_room_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	_room_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_room_art)
-	_apply_room(ROOM_BG)
+	var room_art := TextureRect.new()
+	room_art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	room_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	room_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	room_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(room_art)
+	# Missing art is not a crash: the charcoal fallback underneath stays visible and the
+	# warning names the file.
+	if ResourceLoader.exists(ROOM_BG):
+		room_art.texture = load(ROOM_BG)
+	if room_art.texture == null:
+		push_warning("[SalesStage] room art missing, flat charcoal fallback: %s" % ROOM_BG)
 
 	var scrim := ColorRect.new()
 	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -112,23 +107,19 @@ func _build() -> void:
 	scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(scrim)
 
+	# THE COLUMN BLEEDS TO THREE EDGES, and this is where the restage leaves VC parity. The VC
+	# scene insets the column 28px, which works there because its room art carries a wide cream
+	# mat that the inset reveals as a frame. `room_bosphorus` carries a NARROWER mat, so the same
+	# inset revealed three bright slivers instead of a frame.
 	var column := Panel.new()
 	column.theme_type_variation = &"DialogueColumn"
 	column.anchor_left = COLUMN_ANCHOR_LEFT
 	column.anchor_right = 1.0
-	column.anchor_top = 0.0
 	column.anchor_bottom = 1.0
-	column.offset_left = 0.0
-	column.offset_top = COLUMN_INSET
-	column.offset_right = -COLUMN_INSET
-	column.offset_bottom = -COLUMN_INSET
 	add_child(column)
 
 	_plate_host = CenterContainer.new()
-	_plate_host.anchor_left = 0.0
 	_plate_host.anchor_right = 1.0
-	_plate_host.anchor_top = 0.0
-	_plate_host.anchor_bottom = 0.0
 	_plate_host.offset_top = PLATE_TOP
 	_plate_host.offset_bottom = PLATE_TOP + PLATE_H
 	_plate_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -167,38 +158,15 @@ func _build() -> void:
 	_badge_host.alignment = BoxContainer.ALIGNMENT_CENTER
 	stack.add_child(_badge_host)
 
-	stack.add_child(_hairline())
+	# CARD_BORDER, not SEPARATOR: the chrome hairline is a shade off the column's own fill and
+	# vanishes into it. The card edge actually draws.
+	stack.add_child(HRUiShared.hairline(UiTokens.CARD_BORDER))
 
 	# --- the content region: Perde 1, then Perde 2, in the same box -------------------
 	_content = VBoxContainer.new()
 	_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_content.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	stack.add_child(_content)
-
-
-func _apply_room(path: String) -> void:
-	# Missing art is not a crash: the charcoal fallback underneath stays visible and the
-	# warning names the file. Same contract as the VC scene's `_apply_room`.
-	if path != "" and ResourceLoader.exists(path):
-		var tex: Texture2D = load(path)
-		if tex is Texture2D:
-			_room_art.texture = tex
-			return
-	_room_art.texture = null
-	if path != "":
-		push_warning("[SalesStage] room art missing, flat charcoal fallback: %s" % path)
-
-
-func _hairline() -> Control:
-	var line := Panel.new()
-	line.custom_minimum_size = Vector2(0, 1)
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	# CARD_BORDER, not SEPARATOR: the chrome hairline is a shade off the column's own fill and
-	# vanished into it on the shot. This one is the card edge and actually draws.
-	sb.bg_color = UiTokens.CARD_BORDER
-	line.add_theme_stylebox_override("panel", sb)
-	return line
 
 
 # ============================================================================
@@ -253,9 +221,8 @@ func _render_plate(portrait_path: String, display_name: String) -> void:
 
 ## THE INITIALS PLATE, built here rather than through `UiFactory.make_avatar`. That helper's
 ## `Avatar` variation is tuned for a 24px chip sitting on a card; blown up to 112px on the
-## dialogue column it dissolved into the panel — measured on the second shot, not guessed. Same
-## idea, sized for this surface, and built as a code-side `StyleBoxFlat` so no theme item is
-## added and `THEME_STAMP` does not move (rnd_ui_shared.gd:13-16's sanctioned escape hatch).
+## dialogue column it dissolves into the panel. Same idea, sized for this surface, and built as
+## a code-side `StyleBoxFlat` so no theme item is added and `THEME_STAMP` does not move.
 func _monogram(initials: String) -> Control:
 	var plate := Panel.new()
 	plate.custom_minimum_size = Vector2(AVATAR_D, AVATAR_D)
@@ -287,3 +254,24 @@ func clear_content() -> void:
 	for c in _content.get_children():
 		_content.remove_child(c)
 		c.queue_free()
+
+
+# ============================================================================
+#  Column content kit — shared by Perde 1 and Perde 2
+# ============================================================================
+
+## An empty control that eats leftover column height; two of them centre what sits between.
+static func make_flex() -> Control:
+	var c := Control.new()
+	c.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return c
+
+
+static func make_button(text: String, cb: Callable, variation: StringName) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.theme_type_variation = variation
+	b.focus_mode = Control.FOCUS_NONE
+	b.pressed.connect(cb)
+	return b

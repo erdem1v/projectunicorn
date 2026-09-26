@@ -3,10 +3,9 @@ extends RefCounted
 
 # THE SALES READ SURFACE (§14) AND THE MODULE'S OWN WRITE SEAMS.
 #
-# Ekip §15.3 opened its catalogue ahead of the event engine and the engine's own §6.4 makes a
-# named read surface a standard clause in every module task. This is the Sales half: every
-# name in §14 resolves here, the names are STABLE, and a changed meaning gets a new name
-# rather than a quiet redefinition.
+# The engine's §6.4 makes a named read surface a standard clause of every module, and this is
+# Sales': every name in §14 resolves here, the names are STABLE, and a changed meaning gets a
+# new name rather than a quiet redefinition.
 #
 # IT IS ALSO THE WRITE SIDE, and that is deliberate. §14's queries read run state that has no
 # other owner — the price stance, the per-rep band cap, the daily meeting right, the loss log,
@@ -109,7 +108,8 @@ static func set_price_stance(stance: String) -> void:
 
 
 ## The seat-price anchor the dial produces: the middle of the band, moved by the stance.
-## Act 2 opens here and the rep desk closes here — one number, two consumers (§15).
+## Act 2 opens here, the rep desk closes here and the pipeline projection prices here — one
+## number (§15).
 static func seat_price_anchor(stance: String = "") -> int:
 	var st: String = stance if stance != "" else price_stance()
 	var mid: float = float(SalesConstants.SEAT_PRICE_MIN + SalesConstants.SEAT_PRICE_MAX) * 0.5
@@ -172,10 +172,6 @@ static func loss_reason(account_key: String) -> String:
 	return String(_memory(account_key).get("loss_reason", ""))
 
 
-static func loss_target(account_key: String) -> String:
-	return String(_memory(account_key).get("loss_target", ""))
-
-
 static func loss_count(account_key: String) -> int:
 	return int(_memory(account_key).get("loss_count", 0))
 
@@ -225,22 +221,14 @@ static func last_signed_star() -> int:
 
 
 ## §7.3 — "Ticker yalnız haber değeri görür. Rutin kapanışlar girmez." ONE HOME for the rule,
-## because it had two and they had already drifted apart from what §7.3 says.
-##
-## The old gate was `scale >= 3 or scale > reach_band()`, which leaks: it lets EVERY 3★ through
-## for the rest of the run, has no whale term at all, and — since a 3★ founder in a 3★ league
-## is not above their league — was doing all its work through the first clause. §7.3 names
-## three things and this names the same three:
-##   above-league   the signing reached past the company's own band
+## read by both signing paths. §7.3 names three things and this names the same three:
+##   above-league   the signing reached past the desk's reach band
 ##   whale          the account the run was telegraphing
 ##   first 3★       the FIRST one, once, because the second is no longer news
 ##
-## "First" is read from the book rather than a flag: the customer is already seated when this
-## is asked, so being the only 3★ account in the registry IS being the first. A flag would be a
-## second source of the same truth and would drift the first time an account churned.
+## "First" is read from the book: the customer is already seated when this is asked, so it is
+## the first while it is the only ACTIVE 3★ account (a churned account leaves the registry).
 static func is_newsworthy_signing(c: Customer, is_whale: bool) -> bool:
-	if c == null:
-		return false
 	if is_whale:
 		return true
 	if c.scale > SalesFaucetSystem.reach_band():
@@ -250,11 +238,12 @@ static func is_newsworthy_signing(c: Customer, is_whale: bool) -> bool:
 	return false
 
 
-## §7.3 — the brand half of a newsworthy signing. ONE home, called by both signing paths
-## (the founder's table and the rep desk), right where each announces the signing.
-static func credit_prestige(c: Customer, is_whale: bool) -> void:
+## §7.3 — a newsworthy signing reaches the ticker and credits the brand. ONE home for both
+## signing paths (the founder's table and the rep desk); each brings its own headline.
+static func announce_signing(c: Customer, is_whale: bool, headline: String) -> void:
 	if not is_newsworthy_signing(c, is_whale):
 		return
+	EventBus.headline_added.emit(B2BConstants.notice_source_sales(), headline)
 	GameState.set_brand(GameState.brand + SalesConstants.PRESTIGE_SIGNING_BRAND)
 
 
@@ -317,8 +306,7 @@ static func _blocker_cleared(p: Prospect) -> bool:
 		SalesConstants.LOSS_STABILITY:
 			return ProductRead.axis_reading("", "stability") >= 55 and ProductRead.confirmed_open() <= 2
 		SalesConstants.LOSS_MISSING_TIER:
-			return not SalesProbes._has_locked_next_step(
-				String(GameState.get_flag("mvp_sub_product_type_id", "")))
+			return SalesProbes.locked_line() == ""
 		SalesConstants.LOSS_PROVIDER_TRUST:
 			return not InfraSystem.blocks_enterprise_signature()
 		SalesConstants.LOSS_PRICE:
@@ -346,9 +334,7 @@ static func spend_inner_voice() -> void:
 #  §7.3 · The weekly summary's ROWS
 # ============================================================================
 #
-# The card used to carry one sentence and a book count, inside full decision chrome — a
-# "KARAR · GÜN N" stamp and a "SEÇİM KALICIDIR" footer over a page whose only button is
-# "Kapat". §7.3 asks for the week's CLOSES, and a summary with no rows summarises nothing.
+# §7.3 asks for the week's CLOSES, and a summary with no rows summarises nothing.
 #
 # COMPOSED HERE, NOT IN THE CARD, because the card is data: it names one seam and the
 # arithmetic stays in the module that owns it. `GameState.sales_log` carries the close events
@@ -374,12 +360,13 @@ static func weekly_close_lines() -> String:
 			continue
 		var company: String = String(e.get("company", ""))
 		var mrr: int = int(e.get("mrr", 0))
+		var acct: Customer = _account_of(company)
 		total += mrr
 		rows.append(TranslationServer.translate("SALES_WEEKLY_ROW").format({
 			"company": company,
-			"stars": _star_text(_star_of(company)),
-			"seats": _seats_of(company),
-			"price": Fmt.money_exact(_price_of(company)),
+			"stars": _star_text(acct.scale if acct != null else 0),
+			"seats": acct.seats if acct != null else 0,
+			"price": Fmt.money_exact(acct.seat_price if acct != null else 0),
 			"mrr": Fmt.money_exact(mrr),
 		}))
 	if rows.is_empty():
@@ -389,8 +376,8 @@ static func weekly_close_lines() -> String:
 	return "\n".join(rows)
 
 
-## Always five glyphs, the same grammar `StarRating` draws — a row that shrinks with the star
-## turns a table into a ragged edge.
+## Always STAR_MAX glyphs, filled then "·" — a row that shrinks with the star turns a table
+## into a ragged edge.
 static func _star_text(star: int) -> String:
 	var filled: int = clampi(star, 0, SalesConstants.STAR_MAX)
 	return StarRating.FILLED.repeat(filled) + "·".repeat(SalesConstants.STAR_MAX - filled)
@@ -401,18 +388,3 @@ static func _account_of(company: String) -> Customer:
 		if (c as Customer).company_name == company:
 			return c as Customer
 	return null
-
-
-static func _star_of(company: String) -> int:
-	var c: Customer = _account_of(company)
-	return c.scale if c != null else 0
-
-
-static func _seats_of(company: String) -> int:
-	var c: Customer = _account_of(company)
-	return c.seats if c != null else 0
-
-
-static func _price_of(company: String) -> int:
-	var c: Customer = _account_of(company)
-	return c.seat_price if c != null else 0

@@ -91,6 +91,7 @@ static func open(negotiation_type: String, context: Dictionary) -> Dictionary:
 	_active = true
 	_type = negotiation_type
 	_context = context.duplicate(true)
+	var lead_id: String = String(context.get("lead_id", ""))
 
 	var star: int = clampi(int(context.get("star", 1)), SalesConstants.STAR_MIN, SalesConstants.STAR_MAX)
 	var archetype: String = String(context.get("archetype", SalesArchetypes.DEFAULT_ID))
@@ -101,7 +102,7 @@ static func open(negotiation_type: String, context: Dictionary) -> Dictionary:
 	_units = int(context.get("units", 0))
 	if _units <= 0:
 		_units = int(lerpf(float(seats["low"]), float(seats["high"]),
-			float(_mix(SALT_UNITS) % 1000) / 1000.0))
+			SalesConstants.mix_unit(lead_id, SalesConstants.SALT_UNITS)))
 
 	# The ruler. The stance dial (§7.5) places the anchor; the band is the calibration span
 	# around it, so moving the dial visibly moves where the whole conversation starts.
@@ -120,7 +121,7 @@ static func open(negotiation_type: String, context: Dictionary) -> Dictionary:
 	# The hidden reserve: band anchor × archetype sensitivity × run seed (§5.3).
 	var sensitivity: float = clampf(float(profile.get("reserve_sensitivity", 1.0)),
 		SalesConstants.RESERVE_SENSITIVITY_MIN, SalesConstants.RESERVE_SENSITIVITY_MAX)
-	var jitter: float = 0.94 + 0.12 * (float(_mix(SALT_RESERVE) % 1000) / 1000.0)
+	var jitter: float = 0.94 + 0.12 * SalesConstants.mix_unit(lead_id, SalesConstants.SALT_RESERVE)
 	_reserve = clampi(int(round(float(anchor) * sensitivity * jitter)), _band_low, _band_high)
 	# §8 — a whale plays hard: its reserve sits lower and its patience is shorter.
 	if bool(context.get("is_whale", false)):
@@ -133,7 +134,6 @@ static func open(negotiation_type: String, context: Dictionary) -> Dictionary:
 	if bool(context.get("is_whale", false)):
 		_patience_max = maxi(_patience_max - 1, SalesConstants.PATIENCE_MIN)
 	_patience = _patience_max
-	_state = STATE_OFFERING
 	return view_state()
 
 
@@ -149,7 +149,7 @@ static func result() -> Dictionary:
 # ============================================================================
 
 static func select_price(value: int) -> Dictionary:
-	if not _active or _state == STATE_CLOSED:
+	if not _active:
 		return view_state()
 	var top: int = _locked_from - 1 if _locked_from >= 0 else _band_high
 	_selected = clampi(value, _band_low, top)
@@ -158,15 +158,14 @@ static func select_price(value: int) -> Dictionary:
 
 ## §5.3 — "hakaret bölgesine bilerek teklif → masa devrilir". The button already showed a
 ## warning tone with the reason on hover; pressing it anyway is a decision, not an accident.
-static func is_insulting(value: int = -1) -> bool:
-	var v: int = value if value >= 0 else _selected
-	return v >= _insult_from
+static func is_insulting() -> bool:
+	return _selected >= _insult_from
 
 
 static func offer() -> Dictionary:
-	if not _active or _state == STATE_CLOSED:
+	if not _active:
 		return view_state()
-	if is_insulting(_selected):
+	if is_insulting():
 		return _close(OUTCOME_INSULTED)
 	if _selected <= _reserve:
 		return _close(OUTCOME_SIGNED, _selected)
@@ -178,11 +177,10 @@ static func offer() -> Dictionary:
 	# A counter. The number walks from the offer toward the reserve by a temperament step, so
 	# each round narrows the visible bracket and the reserve is inferred rather than shown.
 	var step: float = lerpf(SalesConstants.COUNTER_STEP_MIN, SalesConstants.COUNTER_STEP_MAX,
-		float(_patience) / float(maxi(_patience_max, 1)))
-	var proposed: int = maxi(int(round(float(_selected) * (1.0 - step))), _reserve)
-	_counter = proposed
-	_counters.append(proposed)
-	_patience = maxi(_patience - 1, 0)
+		float(_patience) / float(_patience_max))
+	_counter = maxi(int(round(float(_selected) * (1.0 - step))), _reserve)
+	_counters.append(_counter)
+	_patience -= 1
 	_state = STATE_COUNTERED
 	return view_state()
 
@@ -191,7 +189,7 @@ static func offer() -> Dictionary:
 ## live option and never costs a box; that is what stops the patience track from being a
 ## countdown to nothing.
 static func accept_counter() -> Dictionary:
-	if not _active or _counter < 0 or _state == STATE_CLOSED:
+	if not _active or _counter < 0:
 		return view_state()
 	return _close(OUTCOME_SIGNED, _counter)
 
@@ -235,10 +233,7 @@ static func _close(outcome: String, price: int = 0, reason: String = "") -> Dict
 static func view_state() -> Dictionary:
 	var b2b: bool = _type != TYPE_SERIES_A
 	return {
-		"active": _active,
-		"type": _type,
 		"state": _state,
-		"units": _units,
 		# LABEL KEYS, not sentences: a Series A table says "hisse" and "değerleme" over the
 		# same mechanic, and that is the only difference between the two callers.
 		"units_label_key": "NEG_UNITS_SEATS" if b2b else "NEG_UNITS_EQUITY",
@@ -253,9 +248,8 @@ static func view_state() -> Dictionary:
 		"insult_reason_key": "NEG_INSULT_REASON",
 		"counter": _counter,
 		"counters": _counters.duplicate(),
-		"patience": {"current": _patience, "max": _patience_max,
-			"last_box_highlighted": _patience == 1},
-		"can_offer": _active and _state != STATE_CLOSED and not patience_spent(),
+		"patience": {"current": _patience, "max": _patience_max},
+		"can_offer": _active and not patience_spent(),
 		"last_offer": patience_spent() and _counter >= 0,
 		"can_accept": _active and _counter >= 0,
 		"can_walk": _active,
@@ -268,7 +262,6 @@ static func view_state() -> Dictionary:
 			"capacity_used": InfraSystem.served_count() + _units,
 			"capacity_total": int(round(InfraSystem.effective_capacity())),
 		},
-		"result": _result.duplicate(true),
 	}
 
 
@@ -277,19 +270,3 @@ static func _pending_price() -> int:
 		return int((_result.get("values", {}) as Dictionary).get("unit_price", 0))
 	return _counter if _counter >= 0 and _counter < _selected else _selected
 
-
-# ============================================================================
-#  Deterministic mixer — the house pattern, no stream draw
-# ============================================================================
-
-const SALT_UNITS := SalesConstants.SALT_UNITS
-const SALT_RESERVE := SalesConstants.SALT_RESERVE
-
-
-## The module's mixer, with this table's lead as the identity. The arithmetic moved to
-## `SalesConstants.mix` when the rep desk needed the same determinism (2026-08-27); the
-## constants and the formula are unchanged, so every value this returns is the value it
-## returned before — proved by `sales_meeting_replays_identically`, which pins a whole
-## meeting and its Act 2 band to the run seed.
-static func _mix(salt: int) -> int:
-	return SalesConstants.mix(String(_context.get("lead_id", "")), salt)

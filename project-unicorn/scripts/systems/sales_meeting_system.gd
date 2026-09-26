@@ -17,11 +17,12 @@ extends RefCounted
 # a loss, in between the probing continues to a safety cap. There is no fixed round count and
 # the meeting's SHAPE changes with the star, so it cannot be memorised.
 #
-# THE DIE IS THE ENGINE'S (§5.1 → engine §9.2/§9.3). It is rolled in exactly one place: when
-# the sitting reaches the safety cap or the player skips to the offer with the needle between
-# the thresholds. Its key carries the run seed, the day, the lead and THE PATH — so replaying
-# the same answers after a reload gives the same result, and only a different (and costlier)
-# set of answers moves it. That is the no-dice-fishing law the re-pitch design leans on.
+# THE DIE IS THE ENGINE'S (§5.1 → engine §9.2/§9.3). It is rolled in exactly one place,
+# `_resolve_by_check`: at the safety cap, when the catalogue has no further question, or when
+# the player skips to the offer. Its key carries the run seed, the day, the lead and THE
+# PATH — so replaying the same answers after a reload gives the same result, and only a
+# different (and costlier) set of answers moves it. That is the no-dice-fishing law the
+# re-pitch design leans on.
 
 # --- Sitting state. NEVER SERIALISED (see the header) ---
 static var _active: bool = false
@@ -36,7 +37,6 @@ static var _base_contributions: Array = []
 static var _answer_contributions: Array = []
 static var _path: Array = []
 static var _promised_feature: String = ""
-static var _inner_voice_shown: bool = false
 static var _inner_voice_key: String = ""   # the line THIS sitting drew; a key, never text
 static var _outcome: String = ""            # "" | "won" | "lost"
 static var _loss_reason: String = ""
@@ -53,7 +53,7 @@ static func active_lead_id() -> String:
 
 
 ## Run-boundary reset (SaveManager.reset_all_owners), and the same doctrine as the other
-## sitting-scoped systems: eleven statics cleared, nothing serialised.
+## sitting-scoped systems: every sitting static cleared, nothing serialised.
 static func reset() -> void:
 	_active = false
 	_lead_id = ""
@@ -67,7 +67,6 @@ static func reset() -> void:
 	_answer_contributions = []
 	_path = []
 	_promised_feature = ""
-	_inner_voice_shown = false
 	_inner_voice_key = ""
 	_outcome = ""
 	_loss_reason = ""
@@ -116,17 +115,7 @@ static func close() -> void:
 	if not _active:
 		return
 	_active = false
-	_skip_hours(SalesConstants.MEETING_SKIP_HOURS)
-	GameState.set_flag("sales_meeting_active", false)
-	EventBus.pitch_finished.emit()
-	# ONE SITTING, and nothing of it survives. Clearing here rather than on the next open() is
-	# what makes "never serialised" a fact rather than a promise: between two meetings there
-	# is no meeting state at all, so a save taken in between has nothing to leave out.
-	reset()
-
-
-static func _skip_hours(hours: int) -> void:
-	for i in maxi(hours, 0):
+	for i in SalesConstants.MEETING_SKIP_HOURS:
 		var next_hour: int = GameState.current_hour + 1
 		if next_hour >= TimeManager.HOURS_PER_DAY:
 			# Mirrors TimeManager._drain_boundaries' order exactly: hour 0's hourly tick
@@ -141,6 +130,12 @@ static func _skip_hours(hours: int) -> void:
 	# The float accumulator is authoritative over the integer hour; leaving them disagreeing
 	# makes TimeManager.from_dict warn and silently drop back to the integer on the next load.
 	TimeManager.sync_to_current_hour()
+	GameState.set_flag("sales_meeting_active", false)
+	EventBus.pitch_finished.emit()
+	# ONE SITTING, and nothing of it survives. Clearing here rather than on the next open() is
+	# what makes "never serialised" a fact rather than a promise: between two meetings there
+	# is no meeting state at all, so a save taken in between has nothing to leave out.
+	reset()
 
 
 # ============================================================================
@@ -204,16 +199,11 @@ static func _odds_from(contributions: Array) -> float:
 	return clampf(total, SalesConstants.ODDS_FLOOR, SalesConstants.ODDS_CEIL)
 
 
-static func odds() -> float:
-	return _needle
-
-
 ## The §9.6 hover list: signed, sorted by magnitude, NO NUMBERS, at most four lines with the
 ## rest folded into one. Built with the engine's own helper — Sales is its first consumer.
 static func modifier_lines() -> Array:
-	var all: Array = _base_contributions.duplicate()
-	all.append_array(_answer_contributions)
-	return EvDice.modifier_lines(all, _modifier_labels(), SalesConstants.MODIFIER_LINES_MAX)
+	return EvDice.modifier_lines(_base_contributions + _answer_contributions, _modifier_labels(),
+		SalesConstants.MODIFIER_LINES_MAX)
 
 
 static func _modifier_labels() -> Dictionary:
@@ -242,9 +232,6 @@ static func _probes_for_star(star: int) -> int:
 
 
 static func _advance_probe() -> void:
-	var p: Prospect = ProspectRegistry.get_prospect(_lead_id)
-	if p == null:
-		return
 	_probe = SalesProbes.pick(_facts, _used_families,
 		GameState.run_seed + GameState.day * 31 + _probe_index * 17)
 	if _probe.is_empty():
@@ -278,9 +265,12 @@ static func choose(answer_id: String) -> Dictionary:
 			and SalesArchetypes.pays_honesty_premium(p.archetype_id):
 		delta += SalesConstants.HONESTY_BONUS / maxf(SalesConstants.W_ANSWER, 0.001)
 	# §6 — a pitch promise is registered at the SIGNATURE, not here: a promise made to a
-	# company that walks out was never given. What it does now is narrow Act 2's band.
+	# company that walks out was never given. What it does now is narrow Act 2's band. The
+	# account-side picker names the feature, so a promise made at the table points at the same
+	# kind of thing a retention promise does.
 	if verb == SalesProbes.VERB_PROMISE:
-		_promised_feature = _pick_promise_feature()
+		_promised_feature = B2BSalesSystem.pick_pain_feature(
+			String(GameState.get_flag("mvp_sub_product_type_id", "")), _probe_index)
 
 	_answer_contributions.append({"seam": "sales.answer", "delta": SalesConstants.W_ANSWER * delta})
 	_needle = _odds_from(_base_contributions + _answer_contributions)
@@ -303,14 +293,10 @@ static func choose(answer_id: String) -> Dictionary:
 # Act 1, so there is none — sitting down is the decision and the sitting always resolves.
 # Alternatives seen: a neutral "stand up" (makes the two-hour cost dodgeable and weakens
 # "masa kurucunundur"), or an exit that burns the daily meeting right anyway.
-# DESIGN-PARKED: §5.1.1 gives the ENDING to the customer and defines no player exit from
-# Act 1, so there is none — sitting down is the decision and the sitting always resolves.
-# Alternatives seen: a neutral "stand up" (makes the two-hour cost dodgeable and weakens
-# "masa kurucunundur"), or an exit that burns the daily meeting right anyway.
 ## §5.1.1 — "Teklife geç" from the second probe on. The remaining probes are not played and
 ## the reading goes to the close AS IT STANDS. No penalty; the cost is the ▲ never earned.
 static func skip_to_offer() -> Dictionary:
-	if not _active or not can_skip_to_offer():
+	if not can_skip_to_offer():
 		return view_state()
 	_path.append("skip:%d" % _probe_index)
 	return _resolve_by_check()
@@ -320,9 +306,7 @@ static func can_skip_to_offer() -> bool:
 	return _active and _probe_index >= SalesConstants.SKIP_TO_OFFER_FROM_PROBE
 
 
-## THE ONE DIE (§5.1, engine §9.2/§9.3). The key carries the run seed, the day, the lead and
-## the PATH, so the same answers replay identically after a save/load and a different set of
-## answers is a genuinely different roll.
+## THE ONE DIE (§5.1, engine §9.2/§9.3); why its key carries the path is in the header.
 static func _resolve_by_check() -> Dictionary:
 	var passed: bool = EvDice.check(_needle, "%s.%s" % [EVENT_KIND, _lead_id], path_id())
 	return _win() if passed else _lose(_derive_loss_reason())
@@ -360,11 +344,6 @@ static func _lose(reason: String) -> Dictionary:
 # who carries the switch — with price as the falling branch. Alternatives seen: weight by the
 # archetype's own axis priorities; or name whichever modifier is most negative (which turns a
 # number into a sentence and reads against §9.6's no-numbers rule).
-# DESIGN-PARKED: §5.2 gives the taxonomy but not the PRECEDENCE. This order is the one a
-# buyer would actually weigh — can it stay up, do I trust who runs it, does it do the thing,
-# who carries the switch — with price as the falling branch. Alternatives seen: weight by the
-# archetype's own axis priorities; or name whichever modifier is most negative (which turns a
-# number into a sentence and reads against §9.6's no-numbers rule).
 ## §5.2 — the customer names its reason FROM REAL STATE. The order is the order a buyer would
 ## actually weigh them, and every branch is a query the meeting already read.
 static func _derive_loss_reason() -> String:
@@ -384,13 +363,7 @@ static func _derive_loss_reason() -> String:
 static func _loss_target(reason: String) -> String:
 	match reason:
 		SalesConstants.LOSS_STABILITY: return "stability"
-		SalesConstants.LOSS_MISSING_TIER:
-			var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
-			for line_id in ProductLines.line_ids(sub_id):
-				var step_id: String = ProductRead.line_next_step("", String(line_id))
-				if step_id != "" and not ProductRead.step_unlockable(step_id):
-					return String(line_id)
-			return ""
+		SalesConstants.LOSS_MISSING_TIER: return SalesProbes.locked_line()
 		SalesConstants.LOSS_PROVIDER_TRUST: return InfraSystem.provider()
 		SalesConstants.LOSS_SWITCHING_RISK: return HRConstants.AREA_CUSTOMER_SUCCESS
 	return ""
@@ -410,12 +383,6 @@ static func _promise_locked() -> bool:
 static func promised_feature() -> String:
 	return _promised_feature
 
-
-## The feature a pitch promise would carry. Reuses the account-side picker so a promise made
-## at the table points at the same kind of thing a retention promise does.
-static func _pick_promise_feature() -> String:
-	return B2BSalesSystem.pick_pain_feature(
-		String(GameState.get_flag("mvp_sub_product_type_id", "")), _probe_index)
 
 
 # ============================================================================
@@ -487,30 +454,19 @@ static func _memory_line(p: Prospect) -> String:
 # once per sitting, on the second probe, cycling three lines while the run has budget.
 # Alternative seen: a criteria-scored picker like the probes — more content machinery than
 # three lines can pay for, and the writing round may want a different shape entirely.
-# DESIGN-PARKED: §5.1.1 says budgeted and conditional but not WHICH line or WHEN. At most
-# once per sitting, on the second probe, cycling three lines while the run has budget.
-# Alternative seen: a criteria-scored picker like the probes — more content machinery than
-# three lines can pay for, and the writing round may want a different shape entirely.
 ## §5.1.1 — the inner voice is BUDGETED and CONDITIONAL: no compulsory opening slot, at most
 ## once per sitting, and only while the run still has budget.
 ##
-## DRAWN ONCE, SHOWN FOR AS LONG AS ITS PROBE IS ON SCREEN. `view_state()` is not a one-shot:
-## open() returns one and the scene's _ready() asks for another, and the old "take and forget"
-## shape spent the line (and the run's budget) on the first frame, which main.gd discards —
-## the player never saw it. The budget is still spent exactly once; what is cached is the KEY,
-## and the text is rendered at display time so a locale switch mid-sitting reads correctly.
+## DRAWN ONCE, SHOWN FOR AS LONG AS ITS PROBE IS ON SCREEN. `view_state()` is not a one-shot
+## (open() returns one, which main.gd discards, and the scene's _ready() asks for another), so
+## the budget is spent exactly once and the KEY is cached; the text is rendered at display time
+## so a locale switch mid-sitting reads correctly.
 static func _inner_voice_line() -> String:
 	if _outcome != "" or _probe_index != 1:
 		return ""
-	_take_inner_voice()
+	if _inner_voice_key == "" and SalesLedger.inner_voice_left() > 0:
+		SalesLedger.spend_inner_voice()
+		_inner_voice_key = "SALES_INNER_VOICE_%d" % (SalesLedger.inner_voice_left() % 3)
 	if _inner_voice_key == "":
 		return ""
 	return TranslationServer.translate(_inner_voice_key)
-
-
-static func _take_inner_voice() -> void:
-	if _inner_voice_shown or _probe_index != 1 or SalesLedger.inner_voice_left() <= 0:
-		return
-	_inner_voice_shown = true
-	SalesLedger.spend_inner_voice()
-	_inner_voice_key = "SALES_INNER_VOICE_%d" % (SalesLedger.inner_voice_left() % 3)

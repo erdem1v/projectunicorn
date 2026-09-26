@@ -3,13 +3,9 @@ extends RefCounted
 
 # COMPANY NAME POOL (§11.3) — the machinery that makes §3's "havuz tükenmez" true.
 #
-# WHAT CHANGED AND WHY. Before rev 6 the 65 names in `CompanyCatalog` WERE the supply: a run
-# saw only its sub-type's affinity sectors (20-25 companies), every signature removed a name
-# forever, and when the list ran dry `spawn_prospect` returned null and the tab said the pool
-# was empty. Calibration measured the end of that: ~25 accounts and a plateau from
-# month 7. §19 retires the catalogue's SOLE-SUPPLY role, not the catalogue —
-# "isimler §11.3 havuzuna ve kahraman hesaplara devşirilir". So the 65 curated names stay and
-# become the memorable minority; this file is the majority behind them.
+# The 65 curated names in `CompanyCatalog` come first and are the memorable minority (§19:
+# "isimler §11.3 havuzuna ve kahraman hesaplara devşirilir"); the generated names below are the
+# majority behind them, so a signature or a return lock never empties a sector.
 #
 # HOW A NAME IS BUILT. Canonical style, read off the curated set: `<Stem> <SectorWord>`
 # ("Kuzey İnşaat", "Deniz Lojistik"). STEMS below are NEW — none collides with a catalogue
@@ -22,8 +18,8 @@ extends RefCounted
 # archaeology dig. They deliberately do NOT carry the `PH:` prose tag: a lead card reading
 # "PH: Kuzey Lojistik" is unreadable, and a proper noun is not a narrative string.
 #
-# DETERMINISM. No RNG. Every draw is integer arithmetic over the seed, the house pattern from
-# `HRCandidateGenerator._mix`. Two runs with the same seed meet the same companies.
+# DETERMINISM. No RNG. Every draw is integer arithmetic over the seed, on SalesConstants' mixer
+# constants. Two runs with the same seed meet the same companies.
 
 # --- New stems (§11.3 placeholder set) -------------------------------------
 # Geography, weather and mineral words in the curated set's register. Deliberately short —
@@ -58,15 +54,8 @@ const SECTOR_WORDS := {
 	"ecommerce": ["Ticaret", "Pazar", "Online", "Sepet"],                # LOC-DATA company name suffix (proper noun)
 	"media": ["Medya", "Yayın", "Prodüksiyon", "Stüdyo"],                # LOC-DATA company name suffix (proper noun)
 	"finance": ["Finans", "Yatırım", "Portföy", "Kapital"],              # LOC-DATA company name suffix (proper noun)
-	"testing": ["Test"],   # the SECTOR_FIXTURE sector, so harness fixtures draw a name too
 }
 
-# Deterministic mixer, same shape as HRCandidateGenerator._mix (see its header for why an
-# in-project integer mixer rather than a stream draw).
-const MIX_MODULUS := 1000003
-const MIX_MULTIPLIER := 48271
-const MIX_INCREMENT := 12345
-const MIX_SALT_STRIDE := 7919
 const SALT_NAME := 211
 
 # Cached per-sector pools. Built once, never invalidated: both source tables are consts.
@@ -76,9 +65,8 @@ static var _pools: Dictionary = {}
 ## Every company name this sector can ever offer: the curated catalogue first (so the
 ## memorable names come up early in a run), then the generated set. Order is stable.
 static func pool_for(sector: String) -> Array:
-	if _pools.has(sector):
-		return _pools[sector] as Array
-	_pools[sector] = _build_pool(sector)
+	if not _pools.has(sector):
+		_pools[sector] = _build_pool(sector)
 	return _pools[sector] as Array
 
 
@@ -100,41 +88,17 @@ static func _build_pool(sector: String) -> Array:
 	return out
 
 
-## How many names this sector could still offer right now. The honest answer to "can the
-## faucet run", and it is never zero for a real sector — that is the point of §3.
-static func available_count(sector: String, excluded: Dictionary) -> int:
-	var n: int = 0
-	for nm in pool_for(sector):
-		if not excluded.has(nm):
-			n += 1
-	return n
-
-
 ## Draw one unused name. `excluded` is a SET (dictionary keys): live leads, signed companies,
-## and companies still inside their return lock. Returns "" only if a sector has no words at
-## all, which is a content error rather than a play state.
+## and companies still inside their return lock. Returns "" when the sector has no names at all
+## (a content error, warned) or when every name in it is excluded.
 static func take(sector: String, seed_value: int, excluded: Dictionary) -> String:
 	var pool: Array = pool_for(sector)
 	if pool.is_empty():
 		push_warning("[SalesNamePool] no names for sector '%s' — see SECTOR_WORDS" % sector)
 		return ""
-	var start: int = _mix(seed_value, SALT_NAME) % pool.size()
+	var start: int = SalesConstants.mix_seed(seed_value, SALT_NAME) % pool.size()
 	for offset in pool.size():
 		var candidate: String = String(pool[(start + offset) % pool.size()])
 		if not excluded.has(candidate):
 			return candidate
 	return ""
-
-
-## Total addressable names across every sector a sub-product can reach. Read by the smoke
-## case that proves the pool cannot run dry the way the catalogue could.
-static func total_for_sectors(sectors: Array) -> int:
-	var n: int = 0
-	for s in sectors:
-		n += pool_for(String(s)).size()
-	return n
-
-
-static func _mix(seed_value: int, salt: int) -> int:
-	var n: int = (absi(seed_value) % MIX_MODULUS) + MIX_SALT_STRIDE * (absi(salt) % MIX_MODULUS)
-	return absi((n * MIX_MULTIPLIER + MIX_INCREMENT) % MIX_MODULUS)

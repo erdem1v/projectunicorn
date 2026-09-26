@@ -11,90 +11,56 @@ extends RefCounted
 #          Revenue flows between decisions, but only from player-managed levers (price,
 #          quality, reputation, audience-moving events) — NOT tycoon spontaneous income.
 #          Bidirectional → bad management shrinks the base → MRR falls → runway threat.
-#   - B2B: pitch-driven, fixed MRR (seat × negotiated price). No auto-flow.
+#   - B2B: closed at the founder's table or by a rep (add_b2b_customer); fixed MRR
+#          (seats × seat price), no hourly derivation.
 #   - Both: daily customer-satisfaction drift → health band.
 # Canonical MRR bridge (aggregate active customers → GameState.mrr) is the sink.
 #
 # Driven by TimeManager: hourly_tick (B2C audience + derived MRR) + daily_tick slot 4
-# (satisfaction + bridge backstop). The pricing ruler (apply_b2c_price) sets the price
-# and applies the hike reaction; add_b2b_customer is the B2B close path.
+# (B2C satisfaction, the B2B desk on a B2B product, bridge backstop). The pricing ruler
+# (apply_b2c_price) sets the price and applies the hike reaction.
 
-# --- Tunables (PostShip working values; Erdem/playtest revise) ---
+# --- Tunables (working values; playtest revises) ---
 const B2C_PRICE_DEFAULT := 15            # $/user/month; the pricing ruler sets this
 const B2C_USERBASE_ID := "co_b2c_userbase"
 
-# B2C aggregate satisfaction drift. The gate was
-# 70 on the retired scale (it needed raw 117 under HALF_SAT 50 — never true for any played
-# product) and it read STABILITY, an axis consumer sub-types barely carry (ai_assistant's
-# pool tops out at raw 3). It now reads the EXPERIENCE axis — the axis the B2C record is
-# SEEDED from (_ensure_b2c_record), and what a consumer feels day to day — at 40, the
-# axis of a raw-20 v1 carrying the bug gate's worth of bugs: axis(20 − 0.8·5) = 39.0.
-# Bugs still erode (SATISFACTION_BUG_GATE). Director ruling 2026-08-19.
+# B2C aggregate satisfaction drift (director ruling). The gate reads the EXPERIENCE axis — the
+# axis the B2C record is SEEDED from (_ensure_b2c_record), and what a consumer feels day to
+# day. Bugs erode through SATISFACTION_BUG_GATE.
 const SATISFACTION_QUALITY_GATE := 40    # experience axis ≥ → satisfaction drifts up
 const SATISFACTION_BUG_GATE := 5         # bug_count > → satisfaction drifts down
 
-# THE SERIES A REVENUE BAR — 5_000 → the $40-80K band
-# [ÖLÇ]. Canon: a deliberate 20-40 % compression of a real Series A; the rule that picks the
-# value inside the band is "the smallest band value the competent policy does not cross before
-# month 12; if it crosses none by month 24, the band floor, and the slope is reported".
-# Measured (seed 424242, --run-log=full_run:730:sim): MRR plateaus at ~$33-34K from
-# month 7 because the B2B prospect pool is finite (catalog-bound, 25 accounts) — no band
-# value is crossed by month 24, so the bar sits at the band FLOOR and the gap is a Layer-B
-# revenue-curve finding, not a reason to lower the bar (director ruling).
-# NEVER RENDERED AS A FIGURE (director ruling: the signal is shown, the number is not). Readers:
-# PhaseGateSystem.GATES (the gate), PitchConstants.CONV_MRR_REFERENCE (VC conviction seeding —
-# tracks the bar by design). The old display bar (traction_progress) and its customer-count
-# companion were retired with the figure.
-# RAISED 40,000 -> 120,000 (director parameters, 2026-08-27): the band is [100,000-150,000]
-# and 120,000 is its anchor. The old value was the band FLOOR of the previous band and was
-# chosen because nothing crossed it; this one is chosen because it is what a Series A is.
-#
-# MEASURED CONSEQUENCE, REPORTED RATHER THAN SOFTENED. --run-log=full_run:730:sim on the
-# tree that raised it peaks at MRR $11,911 and ends running_on_fumes; b2c_keep:730 peaks at
-# $1,800. Neither approaches the OLD bar, let alone this one, so series_a_close is not
-# reachable in a played run today and profitable_bootstrap is the practical terminal. That
-# is a revenue-curve finding, not an argument against the number: the smoke suite cannot
-# see it either, because every case that touches the bar seeds TRACTION_MRR_TARGET + 1000
-# directly and keeps passing. The two honest exits are the band floor (100,000) or landing
-# the B2B prospect-pool work; both are the playtest gate's call, not this wave's.
+# THE SERIES A REVENUE BAR: the anchor of the director's [100,000-150,000] band. The Series A
+# gate is MRR only; PhaseGateSystem (the gate leaf and series_a_bar) is its only reader.
+# NEVER RENDERED AS A FIGURE (director ruling: the signal is shown, the number is not); the
+# player reads PhaseGateSystem.series_a_signal().
 const TRACTION_MRR_TARGET := 120_000
-# [ÇALIŞMA] the envelope the anchor sits in. Never rendered, like the anchor itself.
-const TRACTION_MRR_BAND := [100_000, 150_000]
 
 # WORKING: optimistic close-rate weight on the open pipeline — feeds only the Finance
 # tab's "satış hedefi tutarsa" projection (FinanceSystem.get_optimistic_daily_net).
 const PIPELINE_WEIGHT := 0.5
 
 # --- Hourly audience flow (bidirectional, MRR derives from it) ---
-# Audience is the live B2C user base; it changes every in-game hour. quality/brand/
-# (positive) reputation grow it; bugs / low reputation / price hikes erode it. Per-hour
-# coefficients are ~1/24 of a daily rate. The delta is NOT clamped to ≥0 — it can be
-# negative (erosion), so bad management (low quality + high bugs + falling reputation)
-# shrinks the base, MRR falls, and runway stays a real threat. Working values; the
-# priority is that the flow can go both ways (balance is the last pass).
+# Per-hour coefficients are ~1/24 of a daily rate. The delta is NOT clamped to ≥ 0: erosion
+# is real (see the header). Working values; the priority is that the flow can go both ways
+# (balance is the last pass).
 const HOURLY_AUD_BASE := 0.08
 const HOURLY_AUD_QUALITY_COEF := 0.006
 const HOURLY_AUD_BRAND_COEF := 0.004
 const HOURLY_AUD_REPUTATION_COEF := 0.01   # raw reputation (-10..100): 0 neutral, + grows, − erodes
 
-# Rival-relative economy (Product Lifecycle Part 2A: turned ON). Audience quality
-# term keys off the player's quality RELATIVE to the same-type STARTUP-league rivals
-# (giants are aspiration, not the churn benchmark — see _rival_relative_quality).
-const RIVAL_RELATIVE := true
-
-# --- Erosion / churn (Product Lifecycle Part 2A) ---
+# --- Erosion / churn ---
 # When the product falls below EROSION_THRESHOLD (bugs cut effective stability, or a
 # rival passes → quality_term drops), churn overcomes the positive base → audience
 # FALLS (not just slows). Kept as a separate additive term so the normalization
-# contract is untouched and R1≡R6 stays automatic. BALANCE-TUNABLE (Erdem tunes feel).
+# contract is untouched. BALANCE-TUNABLE.
 # CHURN is PROPORTIONAL to the current audience (churn = losing existing users, so
 # nothing to lose at audience 0 → a fresh product can grow from 0). CHURN_COEF is a
-# per-audience-member rate: at the reference (audience 200, gap 18) → 0.0002·18·200 =
-# 0.72, matching the originally-verified flat erosion at that point.
+# per-audience-member rate: at audience 200, gap 18 → 0.0002·18·200 = 0.72 users/hour.
 const CHURN_COEF := 0.0002
-# WORD OF MOUTH. Growth was an ABSOLUTE per-hour trickle
-# while churn was PROPORTIONAL to the audience, so the consumer economy was a fixed point
-# (A_eq = grow / (CHURN_COEF·(42−q))) that could never compound and shrank as rivals advanced.
+# WORD OF MOUTH — the proportional growth term. Base growth is an ABSOLUTE per-hour trickle
+# and churn is PROPORTIONAL to the audience; alone they settle at a fixed point
+# (A_eq = grow / (CHURN_COEF·(42−q))) that never compounds and shrinks as rivals advance.
 # Two terms on the aggregate's SATISFACTION (the B2C record, 0-100): a loved product compounds
 # — grow += audience · WOM_COEF · max(0, sat − WOM_SAT_GATE)/100 — and a disliked one grows
 # slower — grow *= clamp(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1). WOM_COEF [ÖLÇ]: swept on
@@ -108,8 +74,9 @@ const EROSION_THRESHOLD := 42.0
 
 # --- Dynamic pricing / value algorithm (working values; balance is the last pass) ---
 # product_value() estimates the product's worth ($/user/mo) from quality + feature
-# count/depth + low bug count + product-type tendency. It feeds the optimal mark,
-# the rationale panel, conversion, the hike reaction, and the B2B range hint. Read-only.
+# count/depth + low bug count + product-type tendency. It feeds the pricing panel's optimal
+# mark and rail, the publish flow's price rail, conversion, the hike reaction and audience
+# price-sensitivity. Read-only.
 const VALUE_BASE := 4.0
 const VALUE_QUALITY_COEF := 0.12         # per quality point (0-100)
 const VALUE_FEATURE_COEF := 1.2          # per shipped feature
@@ -122,13 +89,12 @@ const TENDENCY_MULT := {"premium": 1.35, "neutral": 1.0, "volume": 0.8}
 const CONVERSION_BASE := 0.35            # at optimal
 const CONVERSION_MIN := 0.02
 const CONVERSION_MAX := 0.60
-# Bugs hit CONVERSION, not only satisfaction. Until now
-# live bugs reached the consumer economy only through effective stability → the composite →
-# audience growth; a buggy product still converted browsers to payers at full rate. Now the
-# standing conversion is scaled by (1 − live_bugs·BUG_CONV_COEF), floored — the raw live count,
-# the same grammar as SATISFACTION_BUG_GATE ("10 bugs ≈ −20 %"). Applied AFTER the price
-# clamp so a cheap price cannot hide bugs under CONVERSION_MAX, then re-clamped. The pricing
-# ruler's live projection reads conversion_rate, so it moves too.
+# Bugs hit CONVERSION, not only satisfaction: without this a buggy product still converts
+# browsers to payers at full rate. The standing conversion is scaled by
+# (1 − live_bugs·BUG_CONV_COEF), floored — the raw live count, the same grammar as
+# SATISFACTION_BUG_GATE ("10 bugs ≈ −20 %"). Applied AFTER the price clamp so a cheap price
+# cannot hide bugs under CONVERSION_MAX, then re-clamped. The pricing ruler's live projection
+# reads conversion_rate, so it moves too.
 const BUG_CONV_COEF := 0.02              # [WORKING] per live bug; 10 bugs ≈ −20 %
 const BUG_CONV_FLOOR := 0.4              # [WORKING] 30+ bugs cap the penalty at −60 %
 
@@ -147,21 +113,14 @@ const AUD_PRICE_MULT_MAX := 1.8
 
 
 static func daily_tick() -> void:
-	# Daily: satisfaction drift + a backstop MRR bridge. B2C audience/MRR now flow on
-	# the HOURLY tick (hourly_tick); this is the slot-4 sink + B2B reflection.
-	#
-	# THE MARKET GATE, symmetric with hourly_tick's. It was missing here, and only here:
-	# the daily half entered the whole B2B desk — lifecycle, retention, expansion, the two
-	# autonomous rep systems — on ANY shipped product. One Satış Uzmanı hire inside a
-	# consumer run therefore minted enterprise prospects and closed enterprise contracts,
-	# with no pitch ever played, in a game about a consumer app.
+	# Daily: B2C satisfaction drift + a backstop MRR bridge (audience/MRR flow on hourly_tick).
+	# THE MARKET GATE, symmetric with hourly_tick's (Satış §3.1): the B2B desk — lifecycle,
+	# retention, expansion, faucet, the autonomous rep systems — runs only on a B2B product.
 	if GameState.get_flag("mvp_shipped", false):
-		_tick_satisfaction()          # B2C aggregate only (B2B is routed away — see guard)
+		_tick_satisfaction()
 		if is_b2b_market():
-			B2BSalesSystem.daily_tick()   # B2B per-customer lifecycle (two-layer satisfaction / churn)
-	_mrr_bridge()
-	if OS.is_debug_build():
-		print("[SalesSystem] Daily tick — MRR $%d" % GameState.mrr)
+			B2BSalesSystem.daily_tick()
+	reflect_mrr()
 
 
 # Is the SHIPPED product a B2B one? The one answer to "does the enterprise desk run",
@@ -174,80 +133,64 @@ static func is_b2b_market() -> bool:
 # --- Hourly tick: bidirectional audience → derived MRR ---
 
 static func hourly_tick(_hour: int) -> void:
-	if GameState.get_flag("mvp_shipped", false):
-		var market: String = String(GameState.get_flag("mvp_market_type", "b2c"))
-		if market == "b2c":
-			_tick_b2c_audience()   # bidirectional interest flow
-			_derive_b2c_mrr()      # MRR = paying(audience,price) × price
-	_mrr_bridge()
+	if GameState.get_flag("mvp_shipped", false) and not is_b2b_market():
+		_tick_b2c_audience()
+		_derive_b2c_mrr()      # MRR = paying(audience,price) × price
+	reflect_mrr()
 
 
-# Canonical sink: reflect aggregate active-customer MRR into GameState (emits live).
-static func _mrr_bridge() -> void:
-	var total_mrr: int = CustomerRegistry.get_total_mrr()
-	if GameState.mrr != total_mrr:
-		GameState.set_mrr(total_mrr)  # emits mrr_changed → TopBar live; runway recalc
-
-
-# Public bridge seam (WRITE-THROUGH LAW): cross-domain callers (event modifiers that
-# change a customer's MRR) reflect the aggregate through HERE, never a hand-rolled
+# The canonical MRR sink: aggregate active-customer MRR → GameState (set_mrr emits
+# mrr_changed → TopBar live, runway recalc). WRITE-THROUGH LAW: cross-domain callers that
+# change a customer's MRR reflect it through HERE, never a hand-rolled
 # GameState.set_mrr(get_total_mrr()). One reconciliation rule, one place.
 static func reflect_mrr() -> void:
-	_mrr_bridge()
+	var total_mrr: int = CustomerRegistry.get_total_mrr()
+	if GameState.mrr != total_mrr:
+		GameState.set_mrr(total_mrr)
 
 
-# Bidirectional audience flow. Delta MAY be negative (erosion); audience clamps ≥ 0.
-# Up: quality/brand/(positive)reputation. Down: bugs, low/negative reputation. The
-# price multiplier accelerates a cheap price and slows a premium one.
 static func _tick_b2c_audience() -> void:
-	# TASARIM KANONU: canlı ürünün ekonomisi ASLA donmaz — ne v-build ne sprint
-	# sırasında. Sprint'in bedeli artık kapasite havuzu (ProductSystem
-	# capacity_speed_factor: build'le paralelse ikisi de yavaşlar), freeze değil.
-	var delta: float = _audience_delta_per_hour()
+	# TASARIM KANONU: canlı ürünün ekonomisi ASLA donmaz — ne v-build ne sprint sırasında.
+	# Sprint'in bedeli kapasite havuzudur (ProductSystem.capacity_speed_factor: build'le
+	# paralelse ikisi de yavaşlar).
 	# Accumulate as float so small per-hour deltas (especially slow erosion) survive
-	# instead of rounding to zero each hour; all readers int()-truncate for display.
-	var audience: float = maxf(0.0, float(GameState.get_flag("b2c_audience", 0)) + delta)
-	GameState.set_flag("b2c_audience", audience)
+	# instead of rounding to zero each hour.
+	var delta: float = _audience_delta_per_hour()
+	GameState.set_flag("b2c_audience", maxf(0.0, b2c_audience() + delta))
 
 
-# Shared audience-growth delta (Product Lifecycle Part 1). R1 (_tick_b2c_audience)
-# and R6 (growth_band) BOTH call this → the "büyüyor / eriyor" verdict can never
-# drift from the actual audience motion. Quality is the normalized, type-weighted,
-# effective-stability composite (bugs already baked in via effective_stability, so
-# there is NO separate bug subtractor — one clean channel).
+# Shared audience-growth delta: _tick_b2c_audience and growth_band BOTH call this, so the
+# "büyüyor / eriyor" verdict can never drift from the actual audience motion. Quality is the
+# normalized, type-weighted, effective-stability composite (bugs already baked in via
+# effective_stability, so there is NO separate bug subtractor — one clean channel).
 static func _audience_delta_per_hour() -> float:
-	var nq: float = QualityModel.shipped_normalized()
-	var quality_term: float = _rival_relative_quality(nq) if RIVAL_RELATIVE else nq
+	var quality_term: float = _rival_relative_quality(QualityModel.shipped_normalized())
 	var grow: float = (HOURLY_AUD_BASE \
 		+ quality_term * HOURLY_AUD_QUALITY_COEF \
 		+ GameState.brand * HOURLY_AUD_BRAND_COEF \
 		+ GameState.reputation * HOURLY_AUD_REPUTATION_COEF) \
 		* audience_growth_multiplier(int(GameState.get_flag("b2c_price", 0))) \
-		* InfraSystem.acquisition_multiplier()   # Ops §10: over capacity, acquisition ×0,6
-	var audience: float = float(GameState.get_flag("b2c_audience", 0))
-	# Word of mouth, both directions (see WOM_* above). `sat` is
-	# the aggregate B2C record's satisfaction; before the record exists (no paid tier yet)
-	# it reads WOM_MULT_PIVOT so the pre-revenue trickle is untouched.
-	var sat: float = _b2c_satisfaction()
+		* InfraSystem.acquisition_multiplier()   # Ürün §10: over capacity, B2C acquisition ×0,6
+	var audience: float = b2c_audience()
+	# Word of mouth, both directions (see WOM_* above), on the aggregate B2C record's
+	# satisfaction. Before the record exists (no paid tier yet) it reads WOM_MULT_PIVOT, so the
+	# pre-revenue trickle is untouched.
+	var ub: Customer = CustomerRegistry.get_customer(B2C_USERBASE_ID)
+	var sat: float = float(ub.satisfaction) if ub != null else WOM_MULT_PIVOT
 	grow *= clampf(sat / WOM_MULT_PIVOT, WOM_MULT_MIN, 1.0)
 	grow += audience * WOM_COEF * maxf(0.0, sat - WOM_SAT_GATE) / 100.0
-	# Product Lifecycle Part 2A: a product below the bar bleeds users. quality_term
-	# already folds in both erosion causes (bugs → effective stability; rival passing
-	# → rival-relative drop), so this one term covers both. Churn is PROPORTIONAL to
-	# the current audience (loss of existing users → 0 at audience 0, so a fresh
-	# product still grows from nothing). Price-independent (outside the multiplier).
-	var churn: float = CHURN_COEF * maxf(0.0, EROSION_THRESHOLD - quality_term) * audience
-	return grow - churn
+	# A product below EROSION_THRESHOLD bleeds users (see CHURN_COEF). Price-independent, so
+	# it sits outside the multiplier.
+	return grow - CHURN_COEF * maxf(0.0, EROSION_THRESHOLD - quality_term) * audience
 
 
-# Recenters the quality term around the same-type rival average (Part 2A: ON).
-# Benchmark = the STARTUP LEAGUE only (the player's real competition). Giants /
-# established are aspiration, NOT the churn benchmark — averaging the full field
-# (giants ≈ norm 85) would put a fresh player permanently below it → guaranteed
-# death-spiral. Startup rivals advance daily, so the bar rises → "feed it or fall
-# behind" pressure that stays recoverable.
+# Recenters the quality term around the same-type rival average. Benchmark = the STARTUP
+# LEAGUE only (the player's real competition). Giants / established are aspiration, NOT the
+# churn benchmark — averaging the full field (giants ≈ norm 85) would put a fresh player
+# permanently below it → guaranteed death-spiral. Startup rivals advance daily, so the bar
+# rises → "feed it or fall behind" pressure that stays recoverable.
 static func _rival_relative_quality(player_nq: float) -> float:
-	var sub: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
+	var sub: String = ProductState.subtype()
 	var axes: Array = ProductCatalog.get_quality_axes(sub)
 	var total: float = 0.0
 	var n: int = 0
@@ -257,8 +200,7 @@ static func _rival_relative_quality(player_nq: float) -> float:
 			n += 1
 	if n == 0:
 		return player_nq
-	var avg: float = total / float(n)
-	return clampf(50.0 + (player_nq - avg), 0.0, 100.0)
+	return clampf(50.0 + (player_nq - total / float(n)), 0.0, 100.0)
 
 
 # MRR derives from the live audience + price. Sets the aggregate B2C record absolutely
@@ -267,20 +209,10 @@ static func _derive_b2c_mrr() -> void:
 	if not GameState.get_flag("b2c_paid_tier_open", false):
 		return  # no price yet → no paying users (audience still builds on the tick)
 	var price: int = int(GameState.get_flag("b2c_price", B2C_PRICE_DEFAULT))
-	var audience: int = int(GameState.get_flag("b2c_audience", 0))
-	var paying: int = int(round(audience * conversion_rate(price)))
+	var paying: int = int(round(int(b2c_audience()) * conversion_rate(price)))
 	_ensure_b2c_record()
 	CustomerRegistry.set_seats(B2C_USERBASE_ID, paying)
 	CustomerRegistry.set_mrr(B2C_USERBASE_ID, paying * price)
-
-
-## The aggregate B2C record's satisfaction (0-100), or WOM_MULT_PIVOT when the record does
-## not exist yet (before the paid tier opens) — the word-of-mouth terms read this.
-static func _b2c_satisfaction() -> float:
-	var ub: Customer = CustomerRegistry.get_customer(B2C_USERBASE_ID)
-	if ub == null:
-		return WOM_MULT_PIVOT
-	return float(ub.satisfaction)
 
 
 # Create the single aggregate B2C userbase record if it doesn't exist yet.
@@ -291,16 +223,14 @@ static func _ensure_b2c_record() -> void:
 	var seed_sat: int = int(round(QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")))
 	var base := Customer.new()
 	base.id = B2C_USERBASE_ID
-	# NOT baked: the name is composed copy, so it is stored as a key + argument and
-	# rendered by Customer.display_name(). Baking it froze one language into the save.
-	base.company_name = ""
+	# NOT baked: the name is composed copy, so it is stored as a key + argument (company_name
+	# stays "") and rendered by Customer.display_name(). Baking it would freeze one language
+	# into the save.
 	base.name_key = "SALES_B2C_USERBASE"
 	base.name_arg = _product_name()
 	base.industry = "consumer"
 	base.company_size = "individual"
 	base.market_type = "b2c"
-	base.seats = 0
-	base.mrr = 0
 	base.acquisition_source = "organic"
 	base.acquired_on_day = GameState.day
 	base.satisfaction = clampi(seed_sat, 0, 100)
@@ -308,79 +238,62 @@ static func _ensure_b2c_record() -> void:
 	CustomerRegistry.add(base)
 
 
-# Licenses B2C revenue (opens the tier + stores the price), then derives MRR. The
-# pricing ruler (apply_b2c_price) is the normal entry; kept for any event/flow that
-# opens the tier directly. (No more "convert an initial chunk" — MRR derives.)
-static func open_b2c_paid_tier(price: int, _initial_pct: float = 0.0) -> void:
+# Fixture entry (smoke, probe, main.gd's tempo probe — no game caller): opens the tier +
+# stores the price, then derives MRR. The game's path is the pricing ruler (apply_b2c_price).
+static func open_b2c_paid_tier(price: int) -> void:
 	GameState.set_flag("b2c_paid_tier_open", true)
 	GameState.set_flag("b2c_price", maxi(price, 1))
 	_derive_b2c_mrr()
-	_mrr_bridge()
+	reflect_mrr()
 
 
-# Event growth-spike lever (Vitrin / power-user / referral): adds interest to the
-# live audience. MRR follows automatically via the hourly derivation. Replaces the old
-# "convert N audience → seats" chunk path.
-## THE read seam for the live B2C audience. Satış bu sayının sahibidir; Ürün rev 6.1
-## iki yeni tüketici getirdi (§9'un kullanım çarpanı ve §10'un doluluk hesabı) ve
-## ikisi de bayrağı HAM okumak zorunda kalıyordu — event_manager'ın beş yerde zaten
-## yaptığı gibi. Sahibi olan modülde adlı bir okuma varken kimsenin bayrak adını
-## bilmesi gerekmez; float döner, çünkü saatlik erozyon kesirde yaşıyor.
+## THE read seam for the live B2C audience. Satış bu sayının sahibidir; Ürün §9'un kullanım
+## çarpanı ve §10'un doluluk hesabı buradan okur. Sahibi olan modülde adlı bir okuma varken
+## kimsenin bayrak adını bilmesi gerekmez; float döner, çünkü saatlik erozyon kesirde yaşıyor.
 static func b2c_audience() -> float:
 	return maxf(0.0, float(GameState.get_flag("b2c_audience", 0.0)))
 
 
 ## Paying users on a B2C run — seats on the single aggregate userbase record, which is where
-## _derive_b2c_mrr writes them (seats = paying, mrr = paying x price).
-##
-## IT EXISTS BECAUSE THE ENDING PAPER NEEDED A TRUE NUMBER. The run ledger used to carry only
-## customers_active (a REGISTRY COUNT, so 1 on any consumer run — the aggregate record) and
-## customers_signed (written only by the B2B signing path, so 0 forever). Ch. 13 §2 rules that
-## a consumer run reports audience and paying users; this is the second half of that pair, and
-## naming it here keeps the aggregate-record id out of every caller.
-## 0 before the paid tier opens, which is correct rather than merely safe: nobody is paying.
+## _derive_b2c_mrr writes them (seats = paying, mrr = paying x price). Ch. 13 §2: a consumer
+## run reports audience and paying users; this is the second half of that pair, and naming it
+## here keeps the aggregate-record id out of every caller. 0 before the paid tier opens:
+## nobody is paying.
 static func b2c_paying_users() -> int:
 	var ub: Customer = CustomerRegistry.get_customer(B2C_USERBASE_ID)
 	return int(ub.seats) if ub != null else 0
 
 
+# Event audience lever (`audience_delta`, and `churn_customer` on the B2C aggregate): moves the
+# live audience by n and re-derives MRR at once.
 static func add_b2c_audience(n: int) -> void:
-	# FLOAT, not int. The hourly tick accumulates this as a float ON PURPOSE —
-	# _tick_b2c_audience's own comment says so: "Accumulate as float so small per-hour deltas
-	# (especially slow erosion) survive instead of rounding to zero each hour". This function
-	# used to read it back with int(), which truncated the accumulator, and then wrote an int
-	# — so every event spike and every price change silently threw away the fractional part
-	# the erosion model depends on. The delta `n` stays an int (callers count whole people);
-	# only the STORED value keeps its precision. GameState.FLAG_TYPES pins the type.
-	var audience: float = maxf(0.0, float(GameState.get_flag("b2c_audience", 0.0)) + float(n))
-	GameState.set_flag("b2c_audience", audience)
+	# FLOAT, not int: the stored audience is _tick_b2c_audience's fractional accumulator, and
+	# truncating it here would throw away the erosion it carries. The delta `n` stays an int
+	# (callers count whole people). GameState.FLAG_TYPES pins the type.
+	GameState.set_flag("b2c_audience", maxf(0.0, b2c_audience() + float(n)))
 	_derive_b2c_mrr()
-	_mrr_bridge()
+	reflect_mrr()
 
 
-# --- Pipeline read seam (Finance Tab v1 optimistic projection) ---
+# --- Pipeline read seam (the Finance tab's optimistic projection) ---
 
 static func pipeline_optimistic_mrr() -> int:
 	# WORKING: Σ over open leads of (seat band midpoint × the stance's seat price) ×
-	# PIPELINE_WEIGHT. Satış rev 6 §5.3/§7.5 — the projection now reads the SAME two numbers
-	# a real deal is made of, so the green curve moves when the player moves the price dial.
-	# It used to read `value_band_min/max`, a display range derived from the archetype MRR
-	# band that §19 retired; the curve was optimistic about a price nothing charged.
-	# Meeting-odds weighting is deliberately NOT modelled — one flat optimism constant until
-	# the curve session.
+	# PIPELINE_WEIGHT. Satış rev 6 §5.3/§7.5 — the projection reads the SAME two numbers a real
+	# deal is made of, so the green curve moves when the player moves the price dial.
+	# Meeting-odds weighting is deliberately NOT modelled — one flat optimism constant.
 	var price: float = float(SalesLedger.seat_price_anchor())
 	var total: float = 0.0
 	for prospect in ProspectRegistry.get_all():
-		var band: Dictionary = SalesConstants.seat_band((prospect as Prospect).star)
-		var seats: float = (float(band["low"]) + float(band["high"])) * 0.5
-		total += seats * price * PIPELINE_WEIGHT
+		var band: Dictionary = SalesConstants.seat_band(prospect.star)
+		total += (float(band["low"]) + float(band["high"])) * 0.5 * price * PIPELINE_WEIGHT
 	return int(round(total))
 
 
-# --- Sales desk activity log (Task 2b). The owning system holds the seam, GameState holds
-#     the array + cap — the same split FinanceSystem.record_transaction uses. `kind` is an
-#     internal id ("auto_close" | "cs_absorb"); the Sales tab maps it to a localized line, so
-#     nothing player-facing is stored here. ---
+# --- Sales desk activity log. The owning system holds the seam, GameState holds the array +
+#     cap — the same split FinanceSystem.record_transaction uses. `kind` is an internal id
+#     ("lead_expired" | "auto_close" | "founder_close" | "cs_absorb"); the Sales tab maps it
+#     to a localized line, so nothing player-facing is stored here. ---
 
 static func record_sales_event(kind: String, actor: String, company: String, mrr: int) -> void:
 	GameState.sales_log.append({
@@ -394,25 +307,22 @@ static func get_sales_log() -> Array:
 	return GameState.sales_log.duplicate()  # readonly snapshot (get_burn_breakdown contract)
 
 
-# --- B2B customer creation (called by PitchSystem on SIGNED, and by SalesRepSystem on an
-#     autonomous routine close). STILL the sole B2B signing path: the rep does not get a
-#     private way to mint a customer, it comes through here like every other deal. `source`
-#     defaults to the played-pitch value so every pre-2b caller is byte-identical. ---
+# --- B2B customer creation (SalesFinalizer on a signed negotiation, SalesRepSystem on an
+#     autonomous routine close). The sole B2B signing path: the rep has no private way to
+#     mint a customer. ---
 
 static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 		satisfaction: int, source: String = "founder_pitch", discount: float = 0.0) -> Customer:
 	# SATIŞ rev 6 §5.3/§5.4 — the deal is SEATS x SEAT PRICE, and both are stamped on the
-	# record. The old signature took a finished `mrr` because the price came out of an
-	# archetype band that no longer exists (§19); passing the two factors instead is what
-	# lets expansion charge what this account actually agreed to.
+	# record, so expansion charges what this account actually agreed to.
 	var c := Customer.new()
 	c.id = "co_" + prospect.id  # stable, derived from the lead id
 	c.company_name = prospect.company_name
 	c.industry = prospect.industry
-	# The three-tier size id is DERIVED from the star now. The engine's `b2b_expand` effect
-	# still reads `company_size` (effects.gd), so the field keeps its vocabulary while the
-	# star is the truth behind it.
-	c.company_size = star_to_size(prospect.star)
+	# §2 — the STAR is the account size. `b2b_expand` and the event modal's expansion preview
+	# read the three-tier `company_size` (via B2BConstants.expansion_seats), so the field keeps
+	# that vocabulary; the reverse map, for `add_prospect`, is SalesFaucetSystem.LEGACY_SIZE_TO_STAR.
+	c.company_size = ["small", "mid", "enterprise"][clampi(prospect.star, 1, 3) - 1]
 	c.market_type = "b2b"
 	c.seats = maxi(seats, 0)
 	c.seat_price = maxi(seat_price, 0)
@@ -422,36 +332,31 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	c.difficulty_stars = prospect.star
 	c.acquisition_source = source
 	c.acquired_on_day = GameState.day
-	# B2B lifecycle seed (Stage A): scale + hidden tolerance (scale + sector), fresh
-	# onboarding window. Larger/older/loyal accounts endure low satisfaction longer.
-	# §2 — the STAR is the account size now: it seeds tolerance, drives the seat band and
-	# is what every star row draws.
+	# B2B lifecycle seed: the star seeds the hidden tolerance (with the sector), drives the seat
+	# band and is what every star row draws; larger/older/loyal accounts endure low satisfaction
+	# longer. The model's defaults already read onboarding / no countdown / no risk streak.
 	c.scale = prospect.star
 	c.tolerance = B2BConstants.seed_tolerance(prospect.star, prospect.industry)
-	c.lifecycle_phase = "onboarding"
-	c.churn_countdown = -1
-	c.risk_streak = 0
 	c.onboarding_until = GameState.day + B2BConstants.ONBOARDING_DAYS
 	# Request-channel phase, assigned ONCE here and never moved. A stride walk over a counter
-	# that is coprime with the interval spreads the book by construction — the previous
-	# id.hash() derivation produced consecutive phases because customer ids differ only in
-	# their last character (see Customer.cs_request_phase for the measurement).
+	# coprime with the interval spreads the book by construction; an id.hash() would not —
+	# consecutive customer ids differ only in their trailing character, so their hashes land
+	# on consecutive phases.
 	c.cs_request_phase = (GameState.run_customers_signed * B2BConstants.CS_PHASE_STRIDE) \
 		% B2BConstants.CS_REQUEST_INTERVAL_DAYS
 	# The feature this account wants (drives special requests + the retention promise).
 	c.pain_feature_id = prospect.pain_feature_id
 	if c.pain_feature_id == "":
-		c.pain_feature_id = B2BSalesSystem.pick_pain_feature(
-			String(GameState.get_flag("mvp_sub_product_type_id", "")), c.scale)
+		c.pain_feature_id = B2BSalesSystem.pick_pain_feature(ProductState.subtype(), c.scale)
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
-	# Working rule (direktör onayı 2026-08-27) — the account arrives already owned when a
-	# rep has room. Through the stewardship system's own seam: who holds an account is CS's
-	# rule, not Sales', and Sales only says "one more exists now".
+	# Working rule (direktör onayı) — the account arrives already owned when a rep has room.
+	# Through the stewardship system's own seam: who holds an account is CS's rule, not
+	# Sales', and Sales only says "one more exists now".
 	CustomerRepSystem.auto_assign_new(c)
 	GameState.run_customers_signed += 1  # run counter seam — sole B2B signing path
-	# Fix 1 ledger: a signed company never re-enters cold prospecting (churn included —
-	# the entity is erased on churn, this name is the durable memory).
+	# A signed company never returns to the faucet (Satış §4, "İmzalı müşteri dönmez"), churn
+	# included: the entity is erased on churn, so this name is the durable memory.
 	if not GameState.b2b_signed_company_names.has(c.company_name):
 		GameState.b2b_signed_company_names.append(c.company_name)
 	GameState.set_flag("sales_last_signed_star", c.scale)   # §14 sales.last_signed_star()
@@ -461,111 +366,42 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	# MRR is not collected cash, so a signed "+$1,100" beside a real "−$600" hire would read
 	# as treasury income the player never received. The signing reaches them through the
 	# headline/news channel instead, and the MRR itself lands via the bridge below.
-	_mrr_bridge()  # reflect the signed deal immediately (canonical bridge)
+	reflect_mrr()
 	return c
 
 
-## §2 — star to the retired three-tier id. The map exists because the EVENT CATALOGUE still
-## speaks the old vocabulary (`b2b_expand` reads `company_size`, `add_prospect` writes an
-## archetype id) and this module edits no engine file. One translation, one place.
-static func star_to_size(star: int) -> String:
-	match clampi(star, 1, 3):
-		1: return "small"
-		2: return "mid"
-	return "enterprise"
-
-
-# --- Shared satisfaction tick ---
+# --- B2C satisfaction tick ---
 
 static func _tick_satisfaction() -> void:
 	# B2C satisfaction rises on strong EXPERIENCE (the axis the record was seeded from) and
 	# falls when the open bug count is high (the direct churn driver). See the gate's note.
-	var exp_axis: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience")
-	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0)))
-	for c in CustomerRegistry.get_active():
-		if c.market_type != "b2c":
-			continue  # B2B satisfaction is owned by B2BSalesSystem (two-layer model); leave B2C byte-identical
-		var delta: int = 0
-		if exp_axis >= SATISFACTION_QUALITY_GATE:
-			delta += 1
-		if bugs > SATISFACTION_BUG_GATE:
-			delta -= 1
-		if delta != 0:
-			CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
+	var delta: int = 0
+	if QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "experience") >= SATISFACTION_QUALITY_GATE:
+		delta += 1
+	if ProductSystem.live_bug_count() > SATISFACTION_BUG_GATE:
+		delta -= 1
+	if delta == 0:
+		return
+	# B2B satisfaction is owned by B2BSalesSystem (two-layer model).
+	for c in CustomerRegistry.get_by_market("b2c"):
+		CustomerRegistry.set_satisfaction(c.id, c.satisfaction + delta)
 
 
-# --- Traction north-star ---
-# The GATE lives in PhaseGateSystem (slot 8) — subgenre-agnostic, reads GameState/registry
-# state daily. Its player-facing reading is PhaseGateSystem.series_a_signal() (state +
-# progress); the old display bar that divided MRR by the figure (traction_progress) was
-# retired 2026-08-19 with the figure itself.
-
-
-# --- Value algorithm (product worth → optimal price + lower bound + rationale) ---
+# --- Value algorithm (product worth → optimal price + lower bound) ---
 
 static func product_value() -> Dictionary:
-	# Read-only worth estimate from the launch snapshot. No economic delta.
-	var sub: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
+	# Read-only worth estimate. Pricing power = the type-weighted, effective-stability
+	# NORMALIZED composite, so the premium comes from whatever axis THIS market values
+	# (quality_axes weights) and bugs dampen worth via effective stability, not a separate term.
 	var components: Array = GameState.get_flag("mvp_components", [])
-	var feature_count: int = components.size()
 	var total_complexity: int = 0
 	for fid in components:
-		var f: Dictionary = ProductCatalog.get_feature_by_id(String(fid))
-		total_complexity += int(f.get("complexity", 0))
-	var tendency: String = ProductCatalog.get_price_tendency(sub)
-	var mult: float = float(TENDENCY_MULT.get(tendency, 1.0))
-	# Pricing power = the type-weighted, effective-stability NORMALIZED composite.
-	# Premium therefore comes from whatever axis THIS market values (Innovation for
-	# consumer types, Stability/reliability for B2B infra — encoded in quality_axes
-	# weights), and bugs dampen worth via effective stability, not a separate term.
-	# (Refines the plan's "Innovation drives price" to be type-correct.)
-	var nq: float = QualityModel.shipped_normalized()
-	var raw: float = VALUE_BASE + nq * VALUE_QUALITY_COEF \
-		+ feature_count * VALUE_FEATURE_COEF + total_complexity * VALUE_COMPLEXITY_COEF
-	raw = maxf(1.0, raw) * mult
-	var optimal: int = int(round(raw))
-	var floor_price: int = maxi(1, int(round(optimal * VALUE_FLOOR_RATIO)))
-	return {
-		"optimal": optimal,
-		"floor": floor_price,
-		"lines": _value_lines(sub, feature_count, tendency),
-		"tendency": tendency,
-	}
-
-
-static func _value_lines(sub: String, feature_count: int, tendency: String) -> Array:
-	# One rationale line PER axis, using the type's display_label (so B2B reads
-	# "Veri Güvenliği & Ölçek 63 → orta"). Working TR (Erdem voice-revises).
-	var lines: Array = []
-	var dims: Dictionary = QualityModel.economy_dims_from_flags()
-	var axes: Array = ProductCatalog.get_quality_axes(sub)
-	if axes.is_empty():
-		axes = QualityModel.DEFAULT_AXES
-	for a in axes:
-		var axis: String = String(a.get("axis", ""))
-		var label: String = ProductCatalog.axis_label(axis)
-		# A1 single-source-of-truth: show the RAW axis value (stability = effective,
-		# since dims come from economy_dims_from_flags) so this badge matches the
-		# left "Ürün Durumu" card byte-for-byte. The price formula is unaffected — it
-		# reads QualityModel.shipped_normalized() (composite), never these badges.
-		var s: int = int(round(float(dims.get(axis, 0.0))))
-		# Bands re-tuned for the raw scale (axes born 0, asymptote ~110): a shipped
-		# axis ≥70 reads strong, ≥45 mid. Cosmetic only (chip color/label).
-		var axis_sign: int = 1 if s >= 70 else (0 if s >= 45 else -1)
-		var tail: String = TranslationServer.translate("PRICE_VERDICT_STRONG") if axis_sign > 0 else (
-			TranslationServer.translate("PRICE_VERDICT_MID") if axis_sign == 0 else TranslationServer.translate("PRICE_VERDICT_WEAK"))
-		lines.append({"text": TranslationServer.translate("PRICE_TIP_AXIS").format(
-			{"axis": label, "score": s, "verdict": tail}), "sign": axis_sign})
-	if feature_count >= 3:
-		lines.append({"text": TranslationServer.translate("PRICE_TIP_FULL").format({"n": feature_count}), "sign": 1})
-	else:
-		lines.append({"text": TranslationServer.translate("PRICE_TIP_THIN").format({"n": feature_count}), "sign": 0})
-	match tendency:
-		"premium":
-			lines.append({"text": TranslationServer.translate("PRICE_TIP_PREMIUM"), "sign": 1})
-		"volume":
-			lines.append({"text": TranslationServer.translate("PRICE_TIP_VOLUME"), "sign": -1})
-	return lines
+		total_complexity += int(ProductCatalog.get_feature_by_id(String(fid)).get("complexity", 0))
+	var mult: float = float(TENDENCY_MULT.get(ProductCatalog.get_price_tendency(ProductState.subtype()), 1.0))
+	var raw: float = VALUE_BASE + QualityModel.shipped_normalized() * VALUE_QUALITY_COEF \
+		+ components.size() * VALUE_FEATURE_COEF + total_complexity * VALUE_COMPLEXITY_COEF
+	var optimal: int = int(round(maxf(1.0, raw) * mult))
+	return {"optimal": optimal, "floor": maxi(1, int(round(optimal * VALUE_FLOOR_RATIO)))}
 
 
 # --- Pricing relationships (conversion / churn / audience sensitivity) ---
@@ -581,24 +417,15 @@ static func conversion_rate(price: int) -> float:
 	# from it each hour). Cheaper than optimal → higher; pricier → lower. Live bugs
 	# suppress it (buyers generate the complaints that suppress buying).
 	#
-	# R&D §4.4 `onboarding_flow` multiplies the BASE inside the price term — before
-	# the first clamp, never after the last one. Check the arithmetic, because the
-	# placement is the whole point:
-	#   · at optimal price the rate goes 0.35 → 0.4025, well under CONVERSION_MAX
-	#     0.60, so the node lands in full across the normal pricing band;
-	#   · the ceiling starts clipping the bonus only below optimal × 0.671
-	#     (0.60 / 0.4025), and swallows it whole only below optimal × 0.583
-	#     (0.60 / 0.35) — where an un-researched player is ALREADY capped, so
-	#     nothing is lost that the ceiling was not already taking;
-	#   · applied after the final clamp instead, CONVERSION_MAX would eat it
-	#     outright for anyone already at the ceiling, and the bug factor would then
-	#     be re-clamping a number the player never had.
-	# `pricing_panel.gd` renders this rate as a percentage, so the node is not a
-	# hidden buff — the player watches the number move.
+	# R&D §4.4 `onboarding_flow` multiplies the BASE inside the price term — before the first
+	# clamp, never after the last (see RND_CONVERSION_MULT); after the last, CONVERSION_MAX would
+	# eat it outright for anyone already at the ceiling. At optimal 0.35 → 0.4025, under
+	# CONVERSION_MAX, so the node lands in full across the normal band; the ceiling clips it only
+	# below optimal × 0.671 and swallows it only below optimal × 0.583, where an un-researched
+	# player is already capped. pricing_panel.gd renders this rate, so the buff is visible.
 	var optimal: float = maxf(1.0, float(product_value()["optimal"]))
 	var rate: float = clampf(CONVERSION_BASE * rnd_conversion_mult() * (optimal / maxf(1.0, float(price))), CONVERSION_MIN, CONVERSION_MAX)
-	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0)))
-	var bug_factor: float = maxf(BUG_CONV_FLOOR, 1.0 - float(bugs) * BUG_CONV_COEF)
+	var bug_factor: float = maxf(BUG_CONV_FLOOR, 1.0 - float(ProductSystem.live_bug_count()) * BUG_CONV_COEF)
 	return clampf(rate * bug_factor, CONVERSION_MIN, CONVERSION_MAX)
 
 
@@ -621,71 +448,47 @@ static func audience_growth_multiplier(price: int) -> float:
 	return clampf(optimal / maxf(1.0, float(price)), AUD_PRICE_MULT_MIN, AUD_PRICE_MULT_MAX)
 
 
-# --- The free-price lever (a played decision; the ONLY B2C revenue mover) ---
+# --- The free-price lever (a played decision) ---
 
 static func estimate_price_change(new_price: int) -> Dictionary:
 	# Pure preview for the UI (no mutation): the audience reaction to a hike + the
-	# resulting DERIVED paying users / MRR at the proposed price.
+	# resulting DERIVED paying users / MRR at the proposed price. churn_fraction is already
+	# 0 for anything that is not a raise.
 	new_price = maxi(new_price, 1)
 	var was_open: bool = GameState.get_flag("b2c_paid_tier_open", false)
 	var old_price: int = int(GameState.get_flag("b2c_price", 0)) if was_open else 0
-	var is_raise: bool = was_open and new_price > old_price
-	var audience: int = int(GameState.get_flag("b2c_audience", 0))
-	var drop: float = churn_fraction(old_price, new_price) if is_raise else 0.0
-	var audience_after: int = int(round(audience * (1.0 - drop)))
+	var drop: float = churn_fraction(old_price, new_price)
+	var audience_after: int = int(round(int(b2c_audience()) * (1.0 - drop)))
 	var new_paying: int = int(round(audience_after * conversion_rate(new_price)))
 	return {
-		"old_price": old_price, "new_price": new_price, "is_raise": is_raise,
-		"audience_drop_pct": drop, "audience_after": audience_after,
+		"is_raise": was_open and new_price > old_price, "audience_drop_pct": drop,
 		"new_paying": new_paying, "new_mrr": new_paying * new_price, "old_mrr": GameState.mrr,
 	}
 
 
-static func apply_b2c_price(new_price: int) -> Dictionary:
+static func apply_b2c_price(new_price: int) -> void:
 	# The player set a price on the ruler. Opens the tier + stores the price; a RAISE
 	# triggers an audience drop (the hike reaction). MRR is DERIVED immediately so the
-	# change is felt now, and re-derives every hour via hourly_tick. This is a played
-	# lever; the auto-flow it shapes is the hourly B2C derivation.
+	# change is felt now, and re-derives every hour via hourly_tick.
 	new_price = maxi(new_price, 1)
 	var was_open: bool = GameState.get_flag("b2c_paid_tier_open", false)
 	var old_price: int = int(GameState.get_flag("b2c_price", 0)) if was_open else 0
-	var old_mrr: int = GameState.mrr
-	var audience_before: int = int(GameState.get_flag("b2c_audience", 0))
-
 	GameState.set_flag("b2c_paid_tier_open", true)
 	GameState.set_flag("b2c_price", new_price)
-
-	var drop_pct: float = 0.0
 	if was_open and new_price > old_price:
-		drop_pct = churn_fraction(old_price, new_price)
-		# Stored as a float — same reasoning as add_b2c_audience: rounding the
-		# hike reaction to a whole person here discarded the sub-unit accumulator that
-		# _tick_b2c_audience maintains. audience_before stays an int for the return dict,
-		# which is display data.
-		GameState.set_flag("b2c_audience",
-			maxf(0.0, float(GameState.get_flag("b2c_audience", 0.0)) * (1.0 - drop_pct)))
-
+		# Stored as a float — same reasoning as add_b2c_audience: rounding the hike reaction to
+		# a whole person would discard _tick_b2c_audience's fractional accumulator.
+		var drop: float = churn_fraction(old_price, new_price)
+		GameState.set_flag("b2c_audience", b2c_audience() * (1.0 - drop))
 	_derive_b2c_mrr()
-	_mrr_bridge()
-
-	var audience_after: int = int(GameState.get_flag("b2c_audience", 0))
-	if OS.is_debug_build():
-		print("[SalesSystem] apply_b2c_price $%d→$%d audience %d→%d (drop %d%%) MRR $%d→$%d" \
-			% [old_price, new_price, audience_before, audience_after,
-			int(round(drop_pct * 100.0)), old_mrr, GameState.mrr])
-	return {
-		"old_price": old_price, "new_price": new_price,
-		"is_raise": was_open and new_price > old_price, "audience_drop_pct": drop_pct,
-		"audience_before": audience_before, "audience_after": audience_after,
-		"old_mrr": old_mrr, "new_mrr": GameState.mrr,
-	}
+	reflect_mrr()
 
 
 # --- UI helpers ---
 
 static func growth_band() -> String:
 	# Verbal band for the audience flow DIRECTION. Uses the SAME shared delta as
-	# _tick_b2c_audience (R1) so "büyüyor/eriyor" can never contradict the motion.
+	# _tick_b2c_audience so "büyüyor/eriyor" can never contradict the motion.
 	var delta: float = _audience_delta_per_hour()
 	if delta <= -0.1:
 		return TranslationServer.translate("GROWTH_MELTING")
@@ -697,12 +500,10 @@ static func growth_band() -> String:
 
 
 static func _product_name() -> String:
-	var n: String = String(GameState.get_flag("mvp_product_name", ""))
+	var n: String = ProductState.product_name()
 	if n != "":
 		return n
-	var st: Dictionary = ProductCatalog.get_sub_product_type_by_id(
-		String(GameState.get_flag("mvp_sub_product_type_id", "")))
-	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
+	var sub_id: String = ProductState.subtype()
 	if sub_id == "":
 		return TranslationServer.translate("PRODUCT_FALLBACK_NAME")
 	return ProductCatalog.type_name(sub_id)

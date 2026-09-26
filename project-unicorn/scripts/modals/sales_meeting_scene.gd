@@ -17,14 +17,13 @@ extends Control
 # hover gives the whole list. The main feedback is the customer's own reaction line.
 #
 # process_mode = ALWAYS, in the .tscn AND re-asserted below. Speed 0 flips
-# `get_tree().paused` (time_manager.gd:235); a paused Control still DRAWS but stops receiving
+# `get_tree().paused` (TimeManager); a paused Control still DRAWS but stops receiving
 # `gui_input`, so every button here would render perfectly and swallow every click. It is
 # invisible in the scene file and only a runtime click test finds it.
 #
 # ZERO NEW THEME ITEMS. Every variation used below already exists in build_theme.gd (the
-# Dialogue* family the VC surface opened), so `UiTokens.THEME_STAMP` does not move. That is
-# the sanctioned pattern rnd_ui_shared.gd:13-16 states: one-off shapes are built in code, not
-# added to the theme.
+# Dialogue* family the VC surface opened), so `UiTokens.THEME_STAMP` does not move: one-off
+# shapes are built in code, not added to the theme.
 #
 # THE STAGE IS NOT THIS FILE'S (rev 6.1 §5.1.1). The room, the scrim, the dialogue column and
 # the identity block at its head belong to `SalesStage`; this scene owns only what happens
@@ -34,13 +33,10 @@ extends Control
 signal closed()
 
 var _stage: SalesStage = null
-var _needle_label: Label = null
-var _needle_box: Control = null
 var _needle_row: HBoxContainer = null
 var _flow: VBoxContainer = null
 var _answers: VBoxContainer = null
 var _footer: HBoxContainer = null
-var _negotiation: Node = null
 var _identity: Dictionary = {}
 
 
@@ -73,10 +69,9 @@ func _build() -> void:
 
 	# THE CONVERSATION IS ONE BLOCK, CENTRED. Two equal spacers around it and a FIXED gap
 	# inside: a question and the answers to it are one thought, and the leftover height of a
-	# 1080px column belongs outside that thought, not between its halves. Both alternatives
-	# were shot and read: everything top-aligned left 580px of void underneath, and spacing
-	# the answers away from the probe put 260px between a question and its own replies.
-	col.add_child(_flex(1.0))
+	# 1080px column belongs outside that thought, not between its halves: top-aligned, the
+	# column is a void underneath; spaced apart, a question sits far from its own replies.
+	col.add_child(SalesStage.make_flex())
 
 	_flow = VBoxContainer.new()
 	_flow.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -93,23 +88,12 @@ func _build() -> void:
 
 	# The footer rides the column's bottom edge, the way the VC scene's beat label does, so
 	# "Teklife geç" never wanders up into the talk.
-	col.add_child(_flex(1.0))
+	col.add_child(SalesStage.make_flex())
 
 	_footer = HBoxContainer.new()
 	_footer.alignment = BoxContainer.ALIGNMENT_END
 	_footer.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	col.add_child(_footer)
-
-
-## An empty control that eats leftover height in proportion to `ratio`. Godot divides a
-## container's spare space between EXPAND children by `size_flags_stretch_ratio`, which is what
-## makes two of these a layout rather than a guess.
-func _flex(ratio: float) -> Control:
-	var c := Control.new()
-	c.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	c.size_flags_stretch_ratio = ratio
-	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return c
 
 
 # ============================================================================
@@ -129,8 +113,8 @@ func _render(vs: Dictionary) -> void:
 ## IT REMEMBERS WHO IS AT THE TABLE, and it has to. `_lose()` calls `ProspectRegistry.remove()`
 ## before returning its own view_state (sales_meeting_system.gd), so the closing frame arrives
 ## with no company, no star and no archetype — correct for the pipeline, absurd on screen: the
-## customer would evaporate while still saying why they are leaving. The system is right and
-## frozen; the view keeps the last identity it was given. Caught by reading the loss frame.
+## customer would evaporate while still saying why they are leaving. The system is right; the
+## view keeps the last identity it was given.
 func _render_header(vs: Dictionary) -> void:
 	var company: String = String(vs.get("company_name", ""))
 	if company != "":
@@ -164,11 +148,11 @@ func _render_needle(vs: Dictionary) -> void:
 	var needle_col := VBoxContainer.new()
 	needle_col.alignment = BoxContainer.ALIGNMENT_END
 	needle_col.add_theme_constant_override("separation", 0)
-	_needle_label = UiFactory.make_label(
+	var odds := UiFactory.make_label(
 		tr("SALES_ODDS").format({"n": int(round(float(vs.get("odds", 0.0)) * 100.0))}),
 		&"DialogueOdds", UiTokens.ACCENT)
-	_needle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	needle_col.add_child(_needle_label)
+	odds.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	needle_col.add_child(odds)
 	# The affordance the engine's §9.6 asks for: the reading says, quietly, that there is more
 	# behind it. The caption is what makes the hover discoverable without a badge per turn.
 	var hint := UiFactory.make_label(tr("SALES_ODDS_HINT"), &"MicroLabel", UiTokens.INK_DIM)
@@ -180,21 +164,17 @@ func _render_needle(vs: Dictionary) -> void:
 	# lines of type in the column's corner; the hover is the affordance, not a frame.
 	# PASS, not STOP: a tooltip host that eats clicks is a different bug, and this one sits
 	# over nothing clickable anyway.
-	_needle_box = needle_col
-	_needle_box.mouse_filter = Control.MOUSE_FILTER_PASS
-	_needle_box.tooltip_text = _tooltip_from(vs)
-	_needle_row.add_child(_needle_box)
+	needle_col.mouse_filter = Control.MOUSE_FILTER_PASS
+	needle_col.tooltip_text = _tooltip_from(vs)
+	_needle_row.add_child(needle_col)
 
 
 ## engine §9.6 — signed, magnitude-sorted, NO NUMBERS, at most four lines with the remainder
 ## folded into one. The list arrives already shaped from EvDice.modifier_lines; all this does
 ## is join it.
 func _tooltip_from(vs: Dictionary) -> String:
-	var lines: Array = vs.get("modifier_lines", []) as Array
-	if lines.is_empty():
-		return ""
 	var out: PackedStringArray = []
-	for l in lines:
+	for l in (vs.get("modifier_lines", []) as Array):
 		var d: Dictionary = l as Dictionary
 		out.append("%s %s" % [String(d.get("sign", "")), String(d.get("label", ""))])
 	return "\n".join(out)
@@ -211,12 +191,8 @@ func _render_flow(vs: Dictionary) -> void:
 		mem.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_flow.add_child(mem)
 
-	var body: String = ""
-	if String(vs.get("outcome", "")) == "":
-		body = tr(String(vs.get("probe_key", "")))
-	else:
-		body = tr(String(vs.get("closing_key", "")))
-	var line := UiFactory.make_label(body, &"DialogueMonologue")
+	var body_key: String = "probe_key" if String(vs.get("outcome", "")) == "" else "closing_key"
+	var line := UiFactory.make_label(tr(String(vs.get(body_key, ""))), &"DialogueMonologue")
 	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_flow.add_child(line)
 
@@ -254,7 +230,7 @@ func _answer_row(a: Dictionary) -> Control:
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		btn.custom_minimum_size = Vector2(0, 40)
-		btn.focus_mode = Control.FOCUS_NONE   # no blind Enter/Space on open (ledger 11)
+		btn.focus_mode = Control.FOCUS_NONE   # no blind Enter/Space on open
 		btn.pressed.connect(_on_answer.bind(String(a.get("id", ""))))
 		box.add_child(btn)
 	else:
@@ -275,21 +251,13 @@ func _render_footer(vs: Dictionary) -> void:
 		# §5.1.1 — "Teklife geç" opens from the SECOND probe and costs nothing but the ▲ the
 		# remaining questions would have earned.
 		if bool(vs.get("can_skip", false)):
-			_footer.add_child(_button(tr("SALES_MEETING_SKIP"), _on_skip, &"DialogueGhost"))
+			_footer.add_child(SalesStage.make_button(tr("SALES_MEETING_SKIP"), _on_skip, &"DialogueGhost"))
 		return
 	if outcome == "won":
-		_footer.add_child(_button(tr("SALES_MEETING_OPEN_OFFER"), _on_open_offer, &"CommitButton"))
+		_footer.add_child(SalesStage.make_button(tr("SALES_MEETING_OPEN_OFFER"), _on_open_offer,
+			&"CommitButton"))
 	else:
-		_footer.add_child(_button(tr("SALES_MEETING_CLOSE"), _on_close, &"DialogueGhost"))
-
-
-func _button(text: String, cb: Callable, variation: StringName) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.theme_type_variation = variation
-	b.focus_mode = Control.FOCUS_NONE
-	b.pressed.connect(cb)
-	return b
+		_footer.add_child(SalesStage.make_button(tr("SALES_MEETING_CLOSE"), closed.emit, &"DialogueGhost"))
 
 
 # ============================================================================
@@ -304,16 +272,10 @@ func _on_skip() -> void:
 	_render(SalesMeetingSystem.skip_to_offer())
 
 
-func _on_close() -> void:
-	closed.emit()
-
-
 ## §5.1.1 — "masa AYNI SAHNEDE Perde 2 moduna döner". Only the column's CONTENT changes: the
 ## room, the scrim, the portrait and the header are never touched, so there is no blink and no
 ## header jump to animate away. One sitting, not two screens, structurally.
 func _on_open_offer() -> void:
-	if _negotiation != null:
-		return
 	var lead: Prospect = ProspectRegistry.get_prospect(SalesMeetingSystem.active_lead_id())
 	if lead == null:
 		closed.emit()
@@ -326,22 +288,9 @@ func _on_open_offer() -> void:
 		"promised": SalesMeetingSystem.promised_feature(),
 		"is_whale": lead.is_whale,
 	})
-	# Perde 1's rows go with the clear; the references would dangle, so they are dropped in
-	# the same breath. Nothing re-renders Act 1 after this point.
+	# Perde 1's rows go with the clear; nothing re-renders Act 1 after this point. The
+	# negotiation dies with this scene, so its close is simply this scene's close.
 	_stage.clear_content()
-	_needle_row = null
-	_needle_box = null
-	_needle_label = null
-	_flow = null
-	_answers = null
-	_footer = null
-	_negotiation = preload("res://scenes/modals/NegotiationScene.tscn").instantiate()
-	_negotiation.closed.connect(_on_negotiation_closed)
-	_stage.content_host().add_child(_negotiation)
-
-
-func _on_negotiation_closed() -> void:
-	if _negotiation != null:
-		_negotiation.queue_free()
-		_negotiation = null
-	closed.emit()
+	var negotiation: NegotiationScene = preload("res://scenes/modals/NegotiationScene.tscn").instantiate()
+	negotiation.closed.connect(closed.emit)
+	_stage.content_host().add_child(negotiation)

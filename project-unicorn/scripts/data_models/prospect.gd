@@ -12,21 +12,6 @@ extends Resource
 # entry. That is why the rev 6 fields below carry deliberate, playable defaults rather than
 # sentinels — a v10 lead restored into v11 must be a legal lead, not a broken one.
 #
-# WHAT REV 6 RETIRED FROM THIS RECORD (§19):
-#   `warm_progress`   the heating model — replaced by §7.2 processing, which is time on a
-#                     named rep's desk rather than an invisible accumulator
-#   `need_index` / `real_need_index` / `budget_band`
-#                     the four-beat pitch's read-gated reveal — Act 1 asks about real state
-#                     now, so a second hidden need pool has nothing to say
-#   `value_band_min` / `value_band_max`
-#                     the archetype-band value display — price comes from the stance dial and
-#                     the seat band (§5.3, §7.5)
-#   `rep_portrait_id` the CALLBACK-stable pitch portrait — CALLBACK is gone (§19)
-#   `warning_flags`   declared, copied once at signing, never written by anything
-#   `archetype` as "small|mid|enterprise"
-#                     the three-tier ordinal is now the STAR (§2), and `archetype_id` names a
-#                     §11.1 customer archetype instead
-#
 # Naming caution (mirrors Customer/Character): use company_name, not `name`.
 
 # --- Identity ---
@@ -60,7 +45,7 @@ extends Resource
 
 # --- Whale hook (§8) ---
 ## The ORDERED-first-unmet condition, resolved when the lead is created and telegraphed on
-# the card. "" = an ordinary lead, or a whale whose whole list was already satisfied.
+## the card. "" = an ordinary lead, or a whale whose whole list was already satisfied.
 @export var whale_condition: String = ""
 @export var is_whale: bool = false
 
@@ -70,12 +55,9 @@ extends Resource
 @export var last_loss_reason: String = ""
 @export var loss_count: int = 0
 
-## The ProductCatalog feature this company wants. It SURVIVED rev 6 while the rest of the
-## old read-gated need machinery did not, because it is the one that has real consumers on
-## both sides of the signature: a pitch promise names it (§6), and it carries into
-## `Customer.pain_feature_id`, which drives the retention promise and the CS request channel
-## (§19 "Korunanlar"). The retired `need_index` / `real_need_index` pair were sentences in
-## disguise; this is an id.
+## The ProductCatalog feature this company wants. A pitch promise names it (§6), and it
+## carries into `Customer.pain_feature_id`, which drives the retention promise and the CS
+## request channel (§19 "Korunanlar").
 @export var pain_feature_id: String = ""
 
 # --- Provenance ---
