@@ -49,10 +49,16 @@ static func assign(admissions: Array) -> Array:
 		var declared: String = String(card["class"])
 		var final_class: String = declared
 
+		if EvPapers.has(event_id) and EvQueue.has(event_id):
+			# §13.5: a paper's last-day warning, re-queued as an interrupt. It recognises no
+			# budget, and it is the same paper, so it is not recorded a second time either.
+			out.append({"event_id": event_id, "class": "interrupt", "exempt": true})
+			continue
+
 		if budget_exempt(card):
 			# §13.5: recognises no budget and is not counted against one either.
 			out.append({"event_id": event_id, "class": declared, "exempt": true})
-			_record(event_id, card, declared)
+			_record(event_id, card, declared, "")
 			continue
 
 		if declared == "interrupt":
@@ -65,7 +71,7 @@ static func assign(admissions: Array) -> Array:
 
 		out.append({"event_id": event_id, "class": final_class,
 			"demoted": final_class != declared})
-		_record(event_id, card, final_class)
+		_record(event_id, card, final_class, _subject_of(event_id))
 	return out
 
 
@@ -162,14 +168,23 @@ static func _phase_multiplier() -> float:
 
 # --- The rolling window ----------------------------------------------------
 
-static func _record(event_id: String, card: Dictionary, final_class: String) -> void:
+static func _record(event_id: String, card: Dictionary, final_class: String, subject: String) -> void:
 	_window.append({
 		"day": GameState.day,
 		"event_id": event_id,
 		"category": String(card["category"]),
-		"subject": "",
+		"subject": subject,
 		"class": final_class,
 	})
+
+
+## The admitted card's subject, as the gate saw it: the same first-slot id the engine hands to
+## pool_blocked_reason, read from wherever admission left the card (queue or desk).
+static func _subject_of(event_id: String) -> String:
+	for e in EvQueue.entries():
+		if String((e as Dictionary)["event_id"]) == event_id:
+			return EvGate._subject_of((e as Dictionary)["context"])
+	return EvGate._subject_of(EvPapers.context_of(event_id))
 
 
 static func _prune() -> void:
