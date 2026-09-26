@@ -38,9 +38,10 @@ Hızlı ve doğru çalış. Süreyi uzatan ya da token harcayan gereksiz işlem 
 gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için önce `docs/HARITA.md`.
 
 ## 5. Oyuncuya görünen metin
-- **BILINGUAL BIRTH LAW.** Oyuncuya görünen her metin bir anahtar olarak doğar; TR ve EN aynı commit'te dolar. TR
-  kanoniktir ve önce yazılır; EN çeviri değil, aynı sahnenin İngilizce yazılmış hâlidir. Anahtarlar
+- **BILINGUAL BIRTH LAW.** Oyuncuya görünen her metin bir anahtar olarak doğar. Anahtarlar
   `localization/strings.csv`'de (`keys,tr,en`); `Localization` autoload'u CSV'yi açılışta okur.
+- **Önce İngilizce.** Oyuncu metni önce İngilizce yazılır. Türkçe ayrı bir yerelleştirme adımıdır: çeviri değil,
+  sahneyi Türk okur için yeniden yazmak. Mühürlü Türkçe metinler olduğu gibi kalır.
 - Script ve sahnede oyuncuya görünen literal yazılmaz; sahne metni anahtarın kendisidir. Birleşik metin
   `tr(KEY).format({ad})`: yalnız adlı yer tutucu, `%s`/`%d` yok, araya giren değer ek almaz (`Sözleşme: {company}`
   olur, `{company}'nin sözleşmesi` olmaz), CSV değerinde çıplak süslü parantez yok. Durumda metin değil id saklanır.
@@ -157,6 +158,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 - Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, oda, event, ending, vc, sales,
   negotiation, meeting, product, hr, finance, b2b), `--probe-shot`, `--theme-audit=<id>`, `--shot-size=GxY`,
   `--lang=tr|en` (kayıtlı dili ezer). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner; EN `_en` alır.
+- **Ekran kartı.** Ekranlı Godot koşuları (shot, tema denetimi, görsel kabul) paralel değil sırayla koşar; ekran
+  gerektirmeyen her koşu `--headless`.
 - Git kökündeki `.githooks/pre-commit` lint ve `loc_residue`'yu koşar; etkin değildir, etkinleştirmek sahibin kararıdır.
 
 **Tuzaklar**
