@@ -44,7 +44,7 @@ fit_content = true
 [node name="BareButton" type="Button" parent="Margin/Col"]
 layout_mode = 2
 size_flags_horizontal = 0
-text = "Button · beklenen: açık ikincil, 15"
+text = "Button · beklenen: hayalet kenar, mono 12"
 
 [node name="BareLineEdit" type="LineEdit" parent="Margin/Col"]
 layout_mode = 2

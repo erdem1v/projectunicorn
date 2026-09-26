@@ -1,31 +1,22 @@
 extends RefCounted
 
-# ============================================================================
-# BarKit — yüzen çubukların ÇİZİM İLKELLERİ. Tek bir yeri var: BuildBar bunları
-# kendi içinde taşıyordu, ResearchBar aynılarına ihtiyaç duyunca ikinci bir kopya
-# çıkarmak yerine ortak defter kuruldu.
+# BarKit — yüzen çubukların (BuildBar, ResearchBar) ortak çizim ilkelleri.
 #
-# TEMA-BAĞIMSIZ, BİLEREK — ve bu ilkellerin var olma sebebi tam olarak bu:
-# her yazı boyu/rengi çağıranın verdiği UiTokens değerinden, yazı tipi PROJE
-# temasından (ThemeDB) okunur; `get_theme_font` ya da `theme_type_variation`
-# KULLANILMAZ. Ölçüldü: ODA alt ağacı kendi DONDURULMUŞ temasını çözer, yani
-# varyasyona uzanan bir kart monitörde tracker'dakinden FARKLI düşer (R6 "aynı
-# kart" der). Bu kitin her fonksiyonu o sözleşmeyi taşır.
+# TEMA-BAĞIMSIZ, BİLEREK: yazı boyu/rengi çağıranın verdiği UiTokens değerinden,
+# yazı tipi PROJE temasından (ThemeDB) okunur; `get_theme_font` ya da
+# `theme_type_variation` kullanılmaz. ODA alt ağacı kendi dondurulmuş temasını
+# çözer, yani varyasyona uzanan bir kart monitörde tracker'dakinden farklı düşerdi;
+# iki yerde aynı kart görünmeli.
 #
-# BİLİNÇLİ class_name YOK: iki çubuk da `preload` eder. Paylaşılan checkout'ta
-# yeni bir class_name, öteki oturumların headless koşularını global class-cache
-# yarım kalınca düşürüyor (build_bar_model.gd:13-15 ile aynı ihtiyat).
-#
-# Godot kavramı: static fonksiyonlar + RefCounted — örneklenmeyen bir "modül".
-# Node değil, çünkü ağaca girmez; yalnız düğüm İMAL EDER.
-# ============================================================================
+# class_name yok, iki çubuk da `preload` eder: paylaşılan checkout'ta yeni bir
+# class_name, öteki oturumların headless koşularını global class-cache yarım
+# kalınca düşürüyor.
 
 const ICON_DIR := "res://assets/icons/build/"
 
 
-## Proje teması → MicroLabel varyasyonunun mono yüzü (JetBrains Mono).
-## Theme.get_font varyasyon zincirini YÜRÜMEZ, o yüzden önce has_font.
-## `host` yalnız motor varsayılanına düşerken gerekiyor (Control metodu).
+## Proje teması → MicroLabel varyasyonunun mono yüzü. Theme.get_font varyasyon
+## zincirini yürümez, o yüzden önce has_font.
 static func resolve_font(host: Control) -> Font:
 	var th: Theme = ThemeDB.get_project_theme()
 	if th != null:
@@ -33,24 +24,19 @@ static func resolve_font(host: Control) -> Font:
 			return th.get_font(&"font", &"MicroLabel")
 		if th.has_font(&"font", &"Label"):
 			return th.get_font(&"font", &"Label")
-	return host.get_theme_default_font() if host != null else ThemeDB.fallback_font
+	return host.get_theme_default_font()
 
 
-static func label(font: Font, size_px: int, color: Color, bold: bool = false) -> Label:
+static func label(font: Font, size_px: int, color: Color) -> Label:
 	var l := Label.new()
 	l.add_theme_font_override(&"font", font)
 	l.add_theme_font_size_override(&"font_size", size_px)
 	l.add_theme_color_override(&"font_color", color)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	# clip_text KAPALI ve bu ÖLÇÜLDÜ: açıkken Label'ın asgari GENİŞLİĞİ sıfıra iner,
-	# yani yanındaki esneyen boşluk bütün satırı yutuyor ve her yazı görünmez oluyordu.
-	# Sözleşme de bunu yasaklıyor zaten: "dolgunun kenarı hiçbir yazıyı kesmez" —
-	# kesilebilen bir yazı o sözü zaten veremez.
-	l.clip_text = false
+	# clip_text kapalı kalmalı: açıkken Label'ın asgari genişliği sıfıra iner ve
+	# yanındaki esneyen boşluk bütün satırı yutar. Dolgunun kenarı hiçbir yazıyı kesmez.
 	l.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	if bold:
-		l.add_theme_constant_override(&"outline_size", 0)
 	return l
 
 
@@ -87,8 +73,6 @@ static func cap(height_px: int) -> Panel:
 
 
 static func paint_cap(cap_panel: Panel, color: Color) -> void:
-	if cap_panel == null:
-		return
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = color
 	sb.anti_aliasing = false
@@ -96,12 +80,8 @@ static func paint_cap(cap_panel: Panel, color: Color) -> void:
 
 
 # --- Altıgen -------------------------------------------------------------------
-#
-# Ar-Ge düğümünün şekli ağaçta altıgendir; çubuk aynı şekli taşır ki kart ile ağaç
-# aynı nesneden bahsettiğini söylesin. SVG DEĞİL, ÇİZİM: `assets/icons/` bu paketin
-# sahip olduğu bir yer değil, ve altıgen tek `draw_polyline` çağrısı. Renk `meta`da
-# durur çünkü `draw` sinyali argüman taşımaz — durumu okuyabileceği tek yer düğümün
-# kendisi.
+# Ar-Ge düğümünün ağaçtaki şekli; çubuk aynı şekli taşır ki kart ile ağaç aynı nesneyi
+# göstersin. Renk `meta`da durur çünkü `draw` sinyali argüman taşımaz.
 
 const HEX_META := &"bar_kit_hex_color"
 
@@ -117,8 +97,6 @@ static func hex(px: int, color: Color) -> Control:
 
 
 static func paint_hex(node: Control, color: Color) -> void:
-	if node == null:
-		return
 	node.set_meta(HEX_META, color)
 	node.queue_redraw()
 

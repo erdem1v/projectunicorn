@@ -14,7 +14,6 @@ layout_mode = 2
 visible = false
 layout_mode = 2
 theme_type_variation = &"DialogueName"
-text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
