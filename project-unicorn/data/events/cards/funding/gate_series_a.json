@@ -1,7 +1,5 @@
 {
-  "_ported_from": "ev_phase_gate_series_a (PhaseGateSystem._build_gate_event)",
-  "_port_note": "Unlike the Traction gate this one keeps BOTH options — the player may say not yet, and the reminder re-arms on a five-day clock. The escalating body is the one piece of variant text already shipping in the game (phase_gate_system.gd rewrites its own body by decline count), so the port needed a schema for it rather than a workaround. §7.4’s shutter hold is a CONDITION LEAF now, not an early return in two places. PhaseGateSystem held the scene at _open_gate and again at _tick_reminder, and a third path (on_shutter_cleared) existed to undo the hold; one leaf replaces all three, and the \"why didn’t this fire\" panel can name it. CONDITION IS THE RATCHET, not a second copy of the gate's own thresholds. The card first carried `phase.current` plus the revenue/growth/brand leaves, which read as the same question and is not: PhaseGateSystem latches `phase_gate_ready` and `pending_next_phase` and never re-evaluates after (§2.3), so a card re-asking the thresholds would go quiet the moment the player's MRR dipped — with the door still open and no way to walk through it. Reading the ratchet means the card says exactly what the system decided.",
-  "_schema_addition": "body may be an object: {by_seam, variants}. That is EVENT_POOL_DESIGN_v1 §5.7's variant text, delivered narrowly for the one card that already needs it rather than as a general facility nobody has asked for yet. A missing variant falls back to the lowest key.",
+  "_port_note": "Unlike the Traction gate this one keeps BOTH options — the player may say not yet, and the card re-arms on its five-day cooldown. The condition reads the RATCHET (phase.gate_ready + funding.gate_pending_phase), not a second copy of the gate's thresholds: PhaseGateSystem latches phase_gate_ready and pending_next_phase and never re-evaluates them, so a card re-asking the thresholds would go quiet the moment MRR dipped — with the door still open and no way to walk through it.",
   "id": "funding.gate_series_a",
   "version_scope": "demo",
   "category": "funding",
@@ -93,6 +91,5 @@
         "not_yet": "GATE_DECLINE"
       }
     }
-  },
-  "_k3_note": "K3 (2026-09): the last leaf waits for funding.frank_door_open to have been answered on an EARLIER day. The door-open message is Frank's; this card is the decision, and the two never share a day. The revenue threshold itself is still PhaseGateSystem's single finance.mrr leaf (K1 + K2: MRR only)."
+  }
 }

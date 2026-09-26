@@ -1,5 +1,5 @@
 {
-  "_port_note": "The step `arc_fixture_subject` has always named and never had. The probe schedules it, freezes it with the arc, thaws it and asserts the relative day survived — all of which works on a schedule ENTRY, so a card that does not exist was never noticed. It exists now, because a dangling reference in a fixture is still a dangling reference and the linter is about to say so.",
+  "_port_note": "Scheduled by the event probe, which freezes it with the arc, thaws it and asserts the relative day survived.",
   "id": "fixture.subject_open",
   "version_scope": "fixture",
   "category": "team",

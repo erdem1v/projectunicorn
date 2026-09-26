@@ -1,6 +1,5 @@
 {
-  "_ported_from": "END_EV_ACQ_* (Frank v6 surfaces 17 + 18, merged pivot + acquisition)",
-  "_port_note": "THE BODY IS INLINE, AND THAT IS THE FIX, NOT A STYLE CHOICE. As a CSV row it carried {investor}, {valuation} and {offer}; the presenter resolves {slot} from the bound scope and {seam:ns.name} from the registry, so the two numeric tokens would have reached the screen as literal text - the defect FRANK_VERIFY_2026-08-21.md:166 recorded. {seam:} cannot live in the CSV (loc_csv_integrity's brace rule), so the body moves inline in both locales, the shape customer/request_complaint.json already uses. THE PROSE IS BYTE-EXACT; only the machine token moved, which is precisely what the v6 landing pass itself did to these two tokens ({degerleme} -> {valuation}). The unread END_EV_ACQ_BODY row is recorded in FRANK_ORPHANS rather than deleted.\n\n'Kendi paramla devam' carries TWO effects. The second one is the memory the document rules must survive: refusing to sell is thrown back at the founder in a later VC meeting (vc_pitch_system._sorgu_narrative). Dropping it silently deletes a beat.",
+  "_port_note": "The body is inline, not a CSV key: it carries {seam:funding.acq_valuation} and {seam:funding.acq_offer}, and a {seam:} token cannot live in the CSV (loc_csv_integrity's brace rule).",
   "id": "funding.acquisition_offer",
   "version_scope": "demo",
   "category": "funding",

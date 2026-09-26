@@ -1,5 +1,4 @@
 {
-  "_ported_from": "ev_ps_frank_intro_b2b",
   "id": "customer.frank_intro",
   "version_scope": "demo",
   "category": "customer",
@@ -62,8 +61,6 @@
       "expire_note": "The person Frank introduced spoke to somebody else."
     }
   },
-  "_repair_note": "the option is called \"go to Sales\" and the button only dismissed the card. One of the seven FRANK_UNWIRED.md §5 names",
-  "_r8a_note": "A non-critical interrupt is demotable (§13.2), and a demoted card lands on the desk with a clock — which is the only reason paper is a safe floor for I4. So it carries the paper trio even though it usually renders as an interrupt.",
   "expires_days": 7,
   "on_expire": {
     "penalties": [

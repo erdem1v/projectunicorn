@@ -1,6 +1,5 @@
 {
-  "_ported_from": "ev_b2b_escalation_<customer_id> (B2BEventFactory.build_cs_escalation)",
-  "_port_note": "Reaches the player through the assigned Customer Rep — Ekip §10.4: 'bir müşteri olayı ateşlendiğinde bu olay onun aracılığıyla oyuncuya ulaşır'. Two scope slots of different types, so both are named (§4.3). Selector moved from lowest_satisfaction to `escalated`: the condition is checked against ONE bound subject, so picking the unhappiest account and then asking whether it is escalated silently never fires whenever those are two different customers. Tagged critical because the rep raising the alarm is the edge, and the sweep — not the weighted pool — is what fires on an edge the same day it appears. LOCKS ADDED. The old builders withheld these rows by not BUILDING them — the promise row was skipped when a word was already open, the discount row when the cap was spent. A card is data now, so the row exists and must lock instead, which is §17.5's ruling and the better behaviour: a row that disappears teaches the player nothing, a row that is greyed with its reason teaches them the rule. Ported without them, every request card would have minted unlimited promises and uncapped discounts through a channel the retention card had closed. TWO PORT ERRORS FIXED. (a) The condition re-derived the escalation from a satisfaction threshold — and got the number wrong (30 against B2BConstants.CS_ESCALATION_SAT = 35). B2BSalesSystem already computes this and writes `cs_escalated`; the card reads the FACT through `musteri.cs_escalated` rather than recomputing it, which is also the only reading that cannot drift from the system's own hysteresis. (b) The refuse row had lost its churn entirely and both its magnitudes were wrong (brand -2 for -3, morale -3 for -10). Refusing the rep's word is what ENDS the account; a refuse that costs two brand points and keeps the customer is a different decision with the same label.",
+  "_port_note": "Reaches the player through the assigned Customer Rep — Ekip §10.4: 'bir müşteri olayı ateşlendiğinde bu olay onun aracılığıyla oyuncuya ulaşır'. The condition reads B2BSalesSystem's own `cs_escalated` fact rather than re-deriving it from a satisfaction threshold, so it cannot drift from the system's hysteresis. Tagged critical because the rep raising the alarm is the edge, and the sweep — not the weighted pool — is what fires on an edge the same day it appears. 'Ask them to be patient' exists so a locked promise never leaves 'No' as the only open row: refusing the rep's word is what ENDS the account, so 'No' churns it.",
   "id": "customer.cs_escalation",
   "version_scope": "demo",
   "category": "customer",
@@ -154,7 +153,6 @@
       }
     }
   },
-  "_r8a_note": "A non-critical interrupt is demotable (§13.2), and a demoted card lands on the desk with a clock — which is the only reason paper is a safe floor for I4. So it carries the paper trio even though it usually renders as an interrupt.",
   "expires_days": 7,
   "on_expire": {
     "penalties": [
@@ -169,6 +167,5 @@
       }
     ]
   },
-  "expire_note": "expire_note",
-  "_revision_2026_09": "Third row 'Ask them to be patient' (satisfaction −3, the rep carries it: morale −5). Before it, a locked promise left 'No' as the only open row, and 'No' churns the account. The body no longer claims the rep already promised, nor calls every account 'big'."
+  "expire_note": "expire_note"
 }

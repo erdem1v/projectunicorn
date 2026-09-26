@@ -14,16 +14,13 @@ afterwards, and three smoke cases do the same for the length of one case
 `ambient_one_per_day_across_hour0`). Nothing in production code does, and nothing should:
 the widening is always paired with a restore in the same function.
 
-`hourly_ambient.json` is the newest of these and the one that needs a reason on the page.
-Every AUTHORED `tick: hourly` card was removed as legacy flavour, and the deck that replaces
-them has not been written. `ambient_one_per_day_across_hour0` asserts something about the
-ENGINE's clock rather than about content, so it cannot wait on content: it gets a fixture
-instead. The fixture sits in `allowed_hours: [0, 0]` deliberately,
-because hour 0 is the last hourly dispatch of a day and belongs to the NEXT calendar day, so
-every fire it produces is a rollover fire. The three cards it replaced sat in daytime windows
-and could never reach that branch at all.
+`hourly_ambient.json` is the subject of `ambient_one_per_day_across_hour0`, which asserts
+something about the ENGINE's clock rather than about content, so it gets a fixture instead of
+waiting on authored content. It sits in `allowed_hours: [0, 0]` deliberately: hour 0 is
+the last hourly dispatch of a day and belongs to the NEXT calendar day, so every fire it
+produces is a rollover fire.
 
-**Do not** make a card inert by other means. `data/events/unwired/README.md` lists what happens
-when you try: an empty condition fires on day 1, an empty option list mounts a modal that can
-never be resolved and disables saving, and an invented condition type warns on every tick
-forever.
+**Do not** make a card inert by other means: an empty condition is TRUE (§5.3) and fires on
+day 1, a card with no options mounts a modal that can never be dismissed and so disables
+saving (SaveManager.can_save refuses while an event is active), and an unrecognised condition
+leaf evaluates FALSE with a push_error on every evaluation.

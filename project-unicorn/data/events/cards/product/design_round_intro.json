@@ -1,6 +1,5 @@
 {
-  "_ported_from": "ev_mvp_iter_decision_intro (ProductSystem._build_iter_decision_intro_event)",
-  "_port_note": "Its one_shot was inert; the real latch was a static bool, _iter_intro_shown, which also had to be saved separately. Now it is the card's, and the static goes with the old engine. Its 'Turlar sürsün' option rendered no chip at all — an option that visibly promises nothing and does nothing is not a choice, so it carries the design-round continuation explicitly now. tick:request. `build_iteration_decision_pending` is emitted with false at two sites and with true only at the round cap, so a signal trigger would have fired this teaching beat at the wrong end of the ladder — at the cap instead of after round one. ProductSystem._end_round names it.",
+  "_port_note": "tick:request, not a signal trigger: `build_iteration_decision_pending` is emitted with false at two sites and with true only at the round cap, so a signal trigger would fire this teaching beat at the wrong end of the ladder - at the cap instead of after round one. ProductSystem._end_round names it.",
   "id": "product.design_round_intro",
   "version_scope": "demo",
   "category": "product",

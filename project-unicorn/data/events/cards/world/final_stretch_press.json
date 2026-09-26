@@ -1,5 +1,5 @@
 {
-  "_worked_example": "PAPER. GDD §19.5's second of three. Also the first rung of the soft-cap telegraph (task §6 defect 8): a run could reach day 730 and end with no prior warning at all. Low stakes, 30 days to answer, and answering it costs nothing — the point is that the player hears the clock, not that they act on it.",
+  "_worked_example": "PAPER. GDD §19.5's second of three. Also the first rung of the soft-cap telegraph (I3): a run could reach day 730 and end with no prior warning at all. Low stakes, 30 days to answer, and answering it costs nothing — the point is that the player hears the clock, not that they act on it.",
   "id": "world.final_stretch_press",
   "version_scope": "demo",
   "category": "world",
@@ -81,7 +81,5 @@
       "expire_unanswered": "The annual file sat on your desk unread."
     }
   },
-  "_port_note": " REMOVED FROM THE ARC'S STEP LIST AND MADE ITS OPENER. It starts the arc on EITHER branch — read, or expired unread — because the sector moving on is not conditional on the founder reading about it. A stray `advance_arc` ran BEFORE `start_arc` on the read option — a no-op against an arc that did not exist yet, and if it had run after, it would have skipped the ladder's first rung. The opener starts the arc and nothing else; the arc raises its own steps.",
-  "_hole_fix": "THE OPEN-GATE HOLE (closed 2026-08-27). This leaf used to be a bare phase.series_a_signal != \"open\", which reads as \"do not nag a company whose door is open\". True for a company that WALKS THROUGH the door - and false for one that leaves it standing open. That run kept phase 2, kept the signal at \"open\", never started the arc, and reached the soft cap with no warning: the precise case running_on_fumes is named for. Phase 3 means the door was entered, so the original silence still holds there.",
-  "_revision_2026_09": "Category rival -> world (it is the press, and the rival quota was the wrong brake). 'Senin turunda' read as 'your funding round'; it is now 'the same year as yours'. on_expire ordering fixed. Condition reduced to day >= 640 and no signed Series A: the soft cap warns everyone it can end (I3). The old any(signal != open, phase == 2) left a phase-3 Hunt with no live offer unwarned."
+  "_port_note": "The arc's opener, not one of its steps. It starts the arc on EITHER branch - read, or expired unread - because the sector moving on is not conditional on the founder reading about it. It starts the arc and never advances it; the arc raises its own steps. Beyond the day, only a signed Series A or the bootstrap milestone keeps it silent: an open gate is not a closed round, and the soft cap warns every run it can end (I3)."
 }

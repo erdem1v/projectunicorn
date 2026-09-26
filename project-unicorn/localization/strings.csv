@@ -760,7 +760,6 @@ B2B_CHOICE_TELL_NO,Hayır de,Tell them no
 B2B_EV_REP_WARN_EXPIRED,Talep temsilcinin masasında kaldı.,The request stayed on the rep's desk.
 B2B_EV_COMPLAINT_TITLE,Müşteri şikâyeti,Customer complaint
 B2B_CHOICE_TELL_TRUTH,Durumu açıkça anlat,Tell them the truth
-B2B_EV_COMPLAINT_HARD,"{company} hattı arıyor, ton sert: ""{voice}"" Kendi başıma yatıştıramadım.","{company} is on the line and the tone is hard: ""{voice}"" I could not calm them down on my own."
 B2B_EV_RENEWAL_BODY,"Yenileme dönemi yaklaşıyor. {customer} faturayı satır satır okuyor.
 
 Karşılarında bizden birini görmek istiyorlar.","Renewal is coming up for {customer}, and they're reading the invoice line by line.
@@ -773,23 +772,14 @@ B2B_EV_REQUEST_TITLE,Müşteri talebi,Customer request
 B2B_CHOICE_GIVE_DATE,Tarih ver,Give them a date
 B2B_CHOICE_ON_THE_LIST,Listede olduğunu söyle,Say it's on the list
 B2B_CHOICE_NOT_NOW_SAY,Şimdilik olmaz de,Say not now
-B2B_EV_REQUEST_BODY_PLAIN,"{company} '{feature}' istiyor. Kendi başıma kapatamadım, karar senin.",{company} wants '{feature}'. I could not close it on my own; the call is yours.
 B2B_CHOICE_PROMISE,Söz ver,Promise it
 B2B_CHOICE_STALL,Oyala,Stall them
 B2B_CHOICE_DISCOUNT,İndirim ver,Offer a discount
 B2B_CHOICE_LEAVE_ALONE,Kendi haline bırak,Let it go
 B2B_CHOICE_EXPAND,Koltukları ekle,Add the seats
 B2B_CHOICE_NOT_YET,Şimdi değil,Not now
-B2B_CHOICE_KEEP_PROMISE,"Tamam, sözü tut","All right, keep the promise"
-B2B_CHOICE_REFUSE,"Hayır, yapmıyoruz","No, we are not doing it"
 B2B_CHOICE_PROMISE_FIX,Düzeltme sözü ver,Promise a fix
-B2B_CHOICE_EXPLAIN_REFUSE,Açıkla ve reddet,Explain and decline
-B2B_CHOICE_NEGOTIATE_RENEWAL,Yenilemeyi görüş,Negotiate the renewal
-B2B_CHOICE_BIND_DISCOUNT,İndirimle bağla,Lock them in with a discount
-B2B_CHOICE_PRIORITIZE,Önceliklendir,Prioritize it
-B2B_CHOICE_NOT_NOW,Şimdilik olmaz,Not right now
 B2B_EV_RENEWAL_TITLE,Yenileme sinyali,Renewal signal
-B2B_CHOICE_HOLD,Beklet,Hold it
 B2B_FILE_NOTE,Dosya notu: {note},File note: {note}
 PITCH_BEAT_INTRO,AÇILIŞ,OPENING
 PITCH_BEAT_OBJECTION,İTİRAZ,OBJECTION

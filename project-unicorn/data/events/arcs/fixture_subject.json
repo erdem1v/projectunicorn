@@ -22,5 +22,5 @@
     "penalties": [],
     "close_event": "fixture.subject_close"
   },
-  "_note": "`reassign` needs a close_event as well: §10.7's 14-day awaiting timeout falls through to `close`, and a close with nothing to fire is a silent death — the exact shape §10.6 exists to forbid."
+  "_note": "`reassign` needs a close_event as well: §10.5's 14-day awaiting timeout falls through to `close`, and a close with nothing to fire is a silent death — the exact shape §10.6 exists to forbid."
 }

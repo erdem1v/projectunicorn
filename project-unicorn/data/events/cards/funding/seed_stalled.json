@@ -1,5 +1,5 @@
 {
-  "_worked_example": "class: paper - a beat the player can leave on the desk, which is the register the moment wants: nobody is shouting, a page simply arrived. Being a paper it carries the 17.7 trio, and its on_expire is EMPTY on purpose: not answering a report is not a failure, and the expire_note says only that it went unopened. The 30-day cooldown lets it come back if the stall continues without letting it nag monthly-into-weekly.",
+  "_worked_example": "class: paper - a beat the player can leave on the desk, which is the register the moment wants: nobody is shouting, a page simply arrived. Being a paper it carries the 17.7 trio, and its on_expire is EMPTY on purpose: not answering a report is not a failure, and the expire_note says only that it went unopened. The 90-day cooldown makes it a quarterly note: it comes back if the stall continues, without nagging.",
   "id": "funding.seed_stalled",
   "version_scope": "demo",
   "category": "funding",
@@ -62,6 +62,5 @@
       },
       "expire_unanswered": "SEED_STALL_EXPIRE"
     }
-  },
-  "_revision_2026_09": "A QUARTERLY note on a 30-day cooldown arrived monthly. Cooldown is now 90."
+  }
 }

@@ -32,6 +32,5 @@
     "note_key": "arc_faded",
     "penalties": []
   },
-  "_note": "Two steps, not three. The opener is `world.final_stretch_press`, and it is NOT a step: a card cannot be both the thing that starts an arc and a step that arc gates — §10.10 excludes steps from the pool, so such a card can never fire at all.",
-  "_revision_2026_09": "invalidate_when no longer fades the arc on phase.series_a_signal == open. An OPEN signal is not a closed round: the 08-27 hole fix let the opener fire in phase 2 with the gate open and this arc then faded the same day, so the comment and Frank's verdict never came; in phase 3 the signal is always open and a Hunt without a live offer reached day 730 unwarned. Only a SIGNED Series A ends the warning."
+  "_note": "Two steps, not three. The opener is `world.final_stretch_press`, and it is NOT a step: a card cannot be both the thing that starts an arc and a step that arc gates — §10.10 excludes steps from the pool, so such a card can never fire at all. invalidate_when fades the arc only on a SIGNED Series A (or the bootstrap milestone), never on phase.series_a_signal == open: an open signal is not a closed round, and in phase 3 the signal is always open, so fading on it would end the warning before the comment and Frank's verdict could come."
 }

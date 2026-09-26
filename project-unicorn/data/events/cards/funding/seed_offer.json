@@ -1,5 +1,5 @@
 {
-  "_worked_example": "interrupt + one_shot, deliberately NOT `paper`. A paper carries expires_days, and an expiring nudge about an offer that never expires (ruling 6) is a card contradicting its own mechanic. The body varies by the conviction band the meeting produced; funding.seed_band is an INT index because EvPresenter._resolve_variant runs the seam through int(), and a String there would render the harsh arm forever.",
+  "_worked_example": "interrupt + one_shot, deliberately NOT `paper`. A paper carries expires_days, and an expiring nudge about an offer that never expires is a card contradicting its own mechanic. The body varies by the conviction band the meeting produced; funding.seed_band is an INT index because EvPresenter._resolve_variant runs the seam through int(), and a String there would render the harsh arm forever.",
   "id": "funding.seed_offer",
   "version_scope": "demo",
   "category": "funding",

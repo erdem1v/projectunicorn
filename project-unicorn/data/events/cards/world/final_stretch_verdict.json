@@ -1,5 +1,5 @@
 {
-  "_worked_example": "ARC STEP. GDD §19.5's third of three, and the arc's closing beat. Frank speaks once, at D-1, which is GDD v2 ch.13's director ruling preserved on top of the press ladder rather than replaced by it. One option, no cost: this is a beat, not a decision, and §17.3's cost law explicitly allows that when the card is explicitly a beat.",
+  "_worked_example": "ARC STEP. GDD §19.5's third of three, and the arc's closing beat. Frank speaks once, at D-1, which is GDD v2 ch.13's director ruling preserved on top of the press ladder rather than replaced by it. One option, no cost: this is a beat, not a decision, and GDD v2 ch.11 §4's cost law allows a costless option only when the card is explicitly a beat.",
   "id": "world.final_stretch_verdict",
   "version_scope": "demo",
   "category": "founder",
@@ -83,5 +83,5 @@
       }
     }
   },
-  "_variant_note": "Ruling 7 asks the durgun state to colour this warning. A by_seam body does it without a second card: state 0 (no round taken) keeps the sealed line untouched, state 3 (stalled) gets the version that knows money was raised against a promise. States 1 and 2 fall back to the lowest key, which is the sealed line - correct, because a founder who kept the promise should hear the same thing as one who never made it."
+  "_variant_note": "GDD v2 ch.09 §3: after seed money a stall reads as failure and running_on_fumes becomes live, so the durgun state colours this warning. A by_seam body does it without a second card: state 0 (no round taken) keeps the sealed line untouched, state 3 (stalled) gets the version that knows money was raised against a promise. States 1 and 2 fall back to the lowest key, which is the sealed line - correct, because a founder who kept the promise should hear the same thing as one who never made it."
 }

@@ -27,8 +27,7 @@
   "latch_key": "entity",
   "expires_days": 7,
   "expire_note": "expire_note",
-  "_ported_from": "ev_b2b_request_<customer_id> — FEATURE branch (B2BEventFactory.build_cs_request)",
-  "_port_note": "pick_request_kind chose one of three branches at build time; each branch has a different option set, so each is now its own card selected by its own condition. The branch that fired was invisible to content before — last_request_kind is a field with one writer and no reader outside the picker. tick:request — this card has no sweep and no pool draw. It is reachable only by CustomerRepSystem naming it when a request ages past CS_ESCALATE_AFTER_DAYS and the weekly ceiling has room. The ceiling is a Sales-side policy about the desk, not a tempo rule, so it stays in that system; what it lost is the ability to push. LOCKS ADDED. The old builders withheld these rows by not BUILDING them — the promise row was skipped when a word was already open, the discount row when the cap was spent. A card is data now, so the row exists and must lock instead, which is §17.5's ruling and the better behaviour: a row that disappears teaches the player nothing, a row that is greyed with its reason teaches them the rule. Ported without them, every request card would have minted unlimited promises and uncapped discounts through a channel the retention card had closed. `musteri.is_assigned` REMOVED from the condition. The old builder took the DESK LEAD, not the account's steward — `build_cs_request(c, reps[0])` — so the request channel never depended on the account having a named rep, and requiring one meant the card was refused at G7 for every founder-managed account while CustomerRepSystem's own log said it had escalated. The desk's policy (an aged request, budget left in the week, a staffed desk) stays where it belongs, in the system; what is left on the card is the BRANCH.",
+  "_port_note": "tick: request — no sweep, no pool draw. CustomerRepSystem names this card when a request ages past CS_ESCALATE_AFTER_DAYS and the weekly ceiling has room; the ceiling is a desk policy, not a tempo rule, so it stays in that system. No `musteri.is_assigned` leaf: the rep slot is the desk lead (select support_lead), not the account's steward, so a founder-managed account still gets its request card. 'On the list' is only +3: a soft yes without a date must weigh less than a promise.",
   "id": "customer.request_feature",
   "condition": {
     "entity_seam": "musteri.request_kind",
@@ -140,6 +139,5 @@
         "promise_it": "B2B_LOCK_PROMISE_OPEN"
       }
     }
-  },
-  "_revision_2026_09": "Body names the step the account actually wants (musteri.pain_feature_label) instead of the sector outage line, which contradicted the card's own title. 'On the list' dropped from +5 to +3: a soft yes without a date must weigh less than a promise."
+  }
 }

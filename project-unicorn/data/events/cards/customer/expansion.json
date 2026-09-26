@@ -1,6 +1,5 @@
 {
-  "_ported_from": "ev_b2b_expand_<customer_id> (B2BEventFactory.build_expansion)",
-  "_port_note": "The K2 card. Its unbounded-MRR bug was already fixed on the Customer model (last_expansion_day, stamped on BOTH answers); here the brake is the card's own entity latch with one_shot, so the fix stops depending on two call sites remembering to stamp. Stays `class: paper`. The old event mounted a modal the moment an account matured, which is an interruption for good news with no deadline behind it. §11.4's desk is exactly the surface for that, and the expiry gives the offer the shape it always implicitly had: take it or it lapses.",
+  "_port_note": "The brake is the card's own entity-keyed one_shot latch: one expansion offer per account. class: paper — good news with no deadline behind it belongs on §11.4's desk, not in a modal, and the expiry gives the offer its shape: take it or it lapses.",
   "id": "customer.expansion",
   "version_scope": "demo",
   "category": "customer",
@@ -80,6 +79,5 @@
       },
       "expire_note": "B2B_EXPANSION_EXPIRED"
     }
-  },
-  "_revision_2026_09": "Effect chip showed 'Seats +0 · MRR +$0' on every card (event_modal read fields the card never carries); it now previews what b2b_expand will add. Text rewritten; the expiry says plainly that the money went elsewhere."
+  }
 }

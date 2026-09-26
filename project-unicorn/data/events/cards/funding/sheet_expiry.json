@@ -1,6 +1,5 @@
 {
-  "_ported_from": "ev_sheet_expiry_warning (VCPitchSystem._build_expiry_warning_event)",
-  "_port_note": "THE ONE INJECTION SITE WITH NO LATCH AT ALL, and worse than that: the builder wrote a CONSTANT id while MAX_SHEETS allows more than one live sheet. Two sheets warning on the same day produced ONE card, and the survivor named the wrong investor's deadline. The player was told a true fact about the wrong company. Fixed by construction: the scope slot binds the investor and the latch is entity-keyed, so each sheet gets its own card. The investor slot selects `expiring_sheet`, not the first investor by id. Without a selector the slot would bind whoever sorts first and the card would name the wrong deadline — which is exactly the constant-id bug this port exists to close, rebuilt in the new vocabulary.",
+  "_port_note": "The investor slot selects `expiring_sheet` (the live sheet with the fewest business days left), not the first investor by id: funding.sheet_days_left is a minimum across live sheets, so without the selector the card would name one investor beside another investor's deadline. The latch is entity-keyed, so each sheet gets its own card. The body is inline in both locales rather than a CSV key because {seam:} tokens cannot live in strings.csv: loc_csv_integrity counts braces against [a-z_]+ tokens and rejects them.",
   "id": "funding.sheet_expiry",
   "version_scope": "demo",
   "category": "funding",
@@ -64,6 +63,5 @@
         "go_to_funding": "VC_EV_GO_FUNDING"
       }
     }
-  },
-  "_copy_fix": "THE BODY MOVED OUT OF THE CSV AND THE PROSE DID NOT CHANGE. As the key VC_EV_OFFER_EXPIRING_BODY it carried {investor} and {days}: the first resolves from the bound scope slot, the second resolves from nothing at all, so the player was reading a literal \"{days}\" inside a Frank line. {seam:} cannot live in the CSV - loc_csv_integrity counts braces against [a-z_]+ tokens and rejects it - so the body is inline here in both locales, exactly as customer/request_complaint.json carries its per-sector line. Only the machine token moved. Audited across every card body in data/events/: this was the only unresolvable token in the content set, and the new smoke case card_body_tokens_resolve now fails the build if a second one appears."
+  }
 }
