@@ -17,6 +17,3 @@ project-unicorn/localization/*.translation
 project-unicorn/tools/oda_render_rig/chrome-profile/
 project-unicorn/tools/oda_render_rig/out/
 project-unicorn/tools/oda_render_rig/*.log
-
-# Local backup of an older version — not part of the project
-project-unicorn-OLD-backup/

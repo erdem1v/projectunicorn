@@ -1,9 +1,9 @@
 # ODA render rig
 
-Produces the room plates and per-object transparent layers for ODA's centre view.
+Source scene (geometry, camera, lights, materials) for ODA's centre-view art; the shipped layers are rendered from it by the 3D pipeline in `tools/oda3d/`.
 Not shipped content — a tool. `.gdignore` keeps Godot out of this directory.
 
-Full record of what it produced and why: `docs/design/oda_art_pipeline.md`.
+The 3D pipeline that turns this scene into ODA's shipped layers: `tools/oda3d/README.md`.
 
 ## Run
 

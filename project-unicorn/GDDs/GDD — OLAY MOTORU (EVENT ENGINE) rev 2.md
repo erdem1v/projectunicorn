@@ -2,8 +2,8 @@
   KAYNAK VE YÜRÜRLÜK
   ------------------
   Bu dosya `GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.docx`'in birebir markdown
-  çevirisidir ve motorun YÜRÜRLÜKTEKİ tek kaynağıdır. .docx yazıldığı hâliyle
-  arşivde durur; artık düzenlenmez.
+  çevirisidir ve motorun YÜRÜRLÜKTEKİ tek kaynağıdır. .docx ağaçtan kaldırıldı;
+  yazıldığı hâli git geçmişinde durur (`6e3e190`).
 
   Neden taşındı: motor task'ı §2.2 uyarınca "koddan sapma çıkarsa GDD dosyasının
   KENDİSİ güncellenir" diyor. Ağaçta grep'lenebilen, diff'lenebilen ve inşa
@@ -1556,3 +1556,23 @@ buldu. Linter'ın niye var olduğunun en açık kanıtı budur ve deftere böyle
 Çözüm: gazete kartı adım listesinden ÇIKAR ve arkın AÇICISI olur — okunduğunda da, okunmadan
 süresi dolduğunda da arkı başlatır. Sektörün yoluna devam etmesi, kurucunun bunu okumasına
 bağlı değildir.
+
+---
+
+### §27.8 · Seam envanteri (§6.3) inşada tamamlandı; güncel liste üretiliyor
+
+**Belge ne diyordu.** §6.3, Aşama 1'den önce ajanın ürettiği bir envanter istiyor:
+`docs/SEAM_REGISTRY.md`, her satırda VAR / OKUNUYOR / YOK; YOK satırları sahibi modülün açık işi
+olarak dosyalanır. §6.4'ün sözleşme maddesi, §23'ün A2 satırı ve §24'ün Aşama 0 satırı aynı
+dosyayı anıyor.
+
+**Ne yapıldı.** Envanter inşa sırasında tamamlandı. Seam'ler kodda `scripts/events/seams/`
+altında (`EvSeams`) kayıtlıdır. Güncel seam listesi elle tutulmaz: `--event-vocab` onu bu
+kayıttan üretir ve `docs/content/events_draft/_vocabulary.md` §b'ye ("Seams — everything a
+condition may read") yazar. `docs/SEAM_REGISTRY.md` ağaçtan kaldırıldı; son hâli git
+geçmişindedir (`git show 6e3e190:project-unicorn/docs/SEAM_REGISTRY.md`).
+
+**Neden.** Elle tutulan dosyayı hiçbir kapı kodla karşılaştırmıyordu; üretilen liste her
+`--event-vocab` koşusunda koddan yeniden yazılır. §6.3, §6.4, §23 ve §24'ün metni değiştirilmedi.
+§b'de VAR / OKUNUYOR / YOK sütunu yoktur: listede yalnız kayıtlı seam'ler durur. Envanterin hâlâ
+açık YOK satırları `docs/ACIK_KARARLAR.md`'dedir.

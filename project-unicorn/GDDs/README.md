@@ -1,38 +1,50 @@
-# GDDs — which of these is the authority
+# GDDs — yürürlükteki tasarım belgeleri
 
-These `.docx` files are the director-side design documents. They are the source of truth for
-their modules, with one exception recorded below.
+Her GDD kendi modülünün kaynağıdır; başka bir belgenin bir bölümünü geçersiz kılan yerler tablodaki
+not sütunundadır. Revizyon dosya adından ya da belge başlığından değil, belgenin içindeki durum
+satırından (Status / YÜRÜRLÜK) okunur; bazı dosya adları ve başlıklar içerikle uyuşmaz.
 
-## The one exception: the event engine
+## Olay motoru
 
-`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.docx` was converted to
-[`../docs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md) on **2026-08-25**, and
-**the markdown is now the live authority.** The `.docx` is kept exactly as written and is not
-edited again.
+[`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>)
+motorun yürürlükteki tek kaynağıdır. Kodun belgeden ayrıldığı her yer bu dosyanın §27'sine
+yazılır. Belgenin .docx hâli ağaçtan kaldırıldı; git geçmişinde durur (`6e3e190`).
 
-Why this one moved and the others did not: the engine task's §2.2 requires that when the code
-makes a GDD instruction wrong, **the GDD file itself is updated to match reality**. A document
-that lives in the tree, greps, diffs, and can carry an appended build-notes section is the only
-practical form of that. Ürün rev 6.1 set the same precedent from the other direction — its §24
-"İNŞA NOTLARI (kod tarafından yazıldı)" is a build-notes section appended after implementation.
+`GDD v2 — 11 · Events & Narrative.docx` olay içeriğini yönetir: ark yapısı, hacim, ses ve
+söz dağarcığı yasası (§3). ch14 §2 motorun işini, yazılmış olayları ch11 §3'ün söz dağarcığı
+yasasına göre doğru bağlamak olarak tanımlar.
 
-Nothing was lost in the conversion: 27 sections, all tables, the 63-row edge-case matrix, and
-the schema listings (which were space-aligned plain text in Word and are fenced code blocks in
-the markdown). The converter is `docs/tools/` adjacent scratch work, not a shipped tool — the
-conversion is a one-off, because the `.docx` will not change again.
+## Yürürlükteki belgeler
 
-## Everything else
+| dosya | modül | revizyon (belgenin durum satırından) | not |
+|---|---|---|---|
+| `GDD v2 — 01 · The Run (spine).docx` | koşu omurgası | DIRECTOR-APPROVED 2026-08-20 | §4 → ch09; §5 yaşam maliyeti → Ekip §17.6; §1 demo kesim noktası ve §6 zorluk → ch14 §1–§2 |
+| `GDD v2 — 02 · Founder & People Model.docx` | kurucu ve insan modeli | DIRECTOR-APPROVED 2026-08-20 | §2, §6 ve §10 → Ekip (§0.1, §17.6) |
+| `GDD v2 — 03 · Product Lifecycle.docx` | Ürün | rev 6.1 · İNŞA SÜRÜMÜ · 2026-08-24 | gövde başlığı "GDD — ÜRÜN MODÜLÜ (rev 6 · İNŞA ADAYI)" der, YÜRÜRLÜK rev 6.1; §24 inşa notlarını taşır |
+| `GDD v2 — 06 · Operations.docx` | operasyon | DIRECTOR-APPROVED 2026-08-20 | §1.2 destek kapasite formülü → Ekip §17.6 |
+| `GDD v2 — 08 · Finance & Economy.docx` | finans ve ekonomi | DIRECTOR-APPROVED 2026-08-20 | |
+| `GDD v2 — 09 · Funding & Investors.docx` | fonlama ve yatırımcılar | DIRECTOR-APPROVED 2026-08-20 | |
+| `GDD v2 — 10 · Rivals & World.docx` | rakipler ve dünya | DIRECTOR-APPROVED 2026-08-20 | durum satırı: spec yazılmadan önce daha derin bir tasarım oturumu gerekir |
+| `GDD v2 — 11 · Events & Narrative.docx` | olay içeriği ve anlatı | DIRECTOR-APPROVED 2026-08-20 | yukarıya bakın |
+| `GDD v2 — 12 · UI Surfaces & ODA.docx` | UI yüzeyleri ve ODA | DIRECTOR-APPROVED 2026-08-20 | §1 Ar-Ge sekmesi → Ar-Ge §2; §8'deki enerji → Ekip §17.6 |
+| `GDD v2 — 13 · Endings & Progression.docx` | sonlar ve ilerleme | DIRECTOR-APPROVED 2026-08-20 | |
+| `GDD v2 — 14 · Scope (v1 _ EA _ Full).docx` | kapsam (v1 / EA / Full) | DIRECTOR-APPROVED 2026-08-20 | §3 Ar-Ge kilidi → Ar-Ge §2 |
+| `GDD — EKİP MODÜLÜ vson.docx` | Ekip | rev 11 · İNŞA SÜRÜMÜ · 2026-08-23 | |
+| `GDD — AR-GE MODÜLÜ .docx` | Ar-Ge | rev 1.7 · İNŞA SÜRÜMÜ · 2026-08-25 (YÜRÜRLÜK satırı); §2 ayrıca bir rev 1.8 hükmü taşır | başlık "rev 1 · İNŞA ADAYI" der |
+| `GDD — SATIŞ MODÜLÜ (rev 6 · İNŞA SÜRÜMÜ).docx` | Satış | rev 6.1 · İNŞA SÜRÜMÜ (rev 6: 2026-08-26) | dosya adı rev 6 der; ch04'ün yerine geçer |
+| `GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md` | olay motoru | rev 2 · İNŞA SÜRÜMÜ · 2026-08-25 | yukarıya bakın |
 
-Still authoritative in `.docx` form:
+Not sütunundaki "§n → X": o bölüm için X okunur.
 
-| document | module | note |
-|---|---|---|
-| `GDD v2 — 01 · The Run (spine).docx` … `14 · Scope` | the v2 chapter set | director-approved 2026-08-20 |
-| `GDD — ÜRÜN` (chapter 03) | Ürün rev 6.1 | sealed; carries its own §24 build notes |
-| `GDD — EKİP MODÜLÜ vson.docx` | Ekip rev 11 | sealed |
-| `GDD — AR-GE MODÜLÜ .docx` | Ar-Ge rev 1.4 | sealed |
-| `MARKETING MODULE resarch.docx` | research input, not a GDD | |
+v2 setinde 04, 05 ve 07 numaralı bölüm yoktur. Bir bölüm "chapter 04" (satış) ya da
+"chapter 07" (ekip) diyorsa Satış ve Ekip GDD'leri okunur; bölüm numaraları eşleşmez.
 
-**`GDD v2 — 11 · Events & Narrative.docx` is not superseded.** It governs event *content* —
-volume, voice, arc-to-system binding — where the engine GDD governs the machine. They are
-peers and they agree; neither overrides the other in the other's territory.
+## GDD olmayan belge
+
+`MARKETING MODULE resarch.docx` bir araştırma girdisidir (DESIGN RESEARCH BRIEF #5), GDD değildir.
+ch14 §4 pazarlama sistemini EA'ya koyar ve bu brief'i o iş için bekletir.
+
+## Açık kararlar
+
+GDD'nin kodla ya da başka bir GDD'yle çeliştiği ve sahibin henüz karar vermediği yerler:
+[`../docs/ACIK_KARARLAR.md`](../docs/ACIK_KARARLAR.md).

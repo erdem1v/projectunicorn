@@ -3,8 +3,8 @@ extends Node3D
 ## ODA 3D spike — the reusable room scene (Godot-native rebuild of the sealed ODA render).
 ##
 ## SOURCE OF TRUTH: tools/oda_render_rig/layers.html (+ desk-builders.js). Geometry comes in
-## through art/oda3d/oda3d_room.glb, exported from that scene by docs/tools/oda3d/export_glb.html
-## (a verbatim slice of layers.html — see docs/audits/AUDIT_2026-08-19_oda3d_source.md).
+## through art/oda3d/oda3d_room.glb, exported from that scene by tools/oda3d/export_glb.html
+## (a verbatim slice of layers.html — see tools/oda3d/README.md).
 ## Camera, lights and material values are read from art/oda3d/oda3d_source_scene.json (written by
 ## the same page) so nothing here is retyped by hand; the only authored things are the
 ## Three→Godot unit conversions and the Godot-only quality additions (GI, soft shadows, SSAO/SSIL/

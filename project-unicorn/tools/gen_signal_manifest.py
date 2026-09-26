@@ -96,8 +96,8 @@ def main():
     w('Source: `%s` plus every `.gd` under `%s/`. Last generated %s.'
       % (BUS, ROOT, datetime.date.today().isoformat()))
     w('')
-    w('Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md) §15. The read side of')
-    w('the same idea is [`SEAM_REGISTRY.md`](SEAM_REGISTRY.md).')
+    w('Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of')
+    w('the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.')
     w('')
     w('## Why this is generated')
     w('')

@@ -1,10 +1,10 @@
 # EVENT SIGNAL MANIFEST
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
-Source: `scripts/autoload/event_bus.gd` plus every `.gd` under `scripts/`. Last generated 2026-09-25.
+Source: `scripts/autoload/event_bus.gd` plus every `.gd` under `scripts/`. Last generated 2026-09-26.
 
-Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md) §15. The read side of
-the same idea is [`SEAM_REGISTRY.md`](SEAM_REGISTRY.md).
+Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
+the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
 
 ## Why this is generated
 
