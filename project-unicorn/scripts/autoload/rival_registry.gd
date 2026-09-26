@@ -1,15 +1,15 @@
 extends Node
 
-# Rival registry (Product Lifecycle Part 1) — single source of truth for the
+# Rival registry — single source of truth for the
 # competitive field. Mirrors CustomerRegistry: a Dictionary id→Rival, read-only
-# query API, mutations emit on EventBus so scenes (RightPanel) self-update.
+# query API, mutations emit on EventBus so scenes (ODA board, Product tab) self-update.
 #
 # Seeded from RivalCatalog at _ready. Rivals evolve slowly on the daily tick
 # (advance_all, called by TimeManager) — startups fast, established slow, giants
 # static — so a player who stops feeding their product gets passed.
 #
 # STRUCTURAL CEILING: rival advancement uses QualityModel.grow with per-tier
-# asymptotes. The player's Rev3 axes are bounded by the catalog pool sums (+
+# asymptotes. The player's axes are bounded by the catalog pool sums (+
 # strengthen accretion paid in efor/time), which sit far below the giant band
 # (composite ≈ 285). Enforced by the number bands, not a clamp.
 
@@ -19,10 +19,7 @@ var _rivals: Dictionary = {}   # id -> Rival
 
 
 func _ready() -> void:
-	for r in RivalCatalog.build_all():
-		r.status = _status_for(r)
-		_rivals[r.id] = r
-		EventBus.rival_added.emit(r.id)
+	reset()
 
 
 func reset() -> void:
@@ -31,11 +28,8 @@ func reset() -> void:
 	# single day, so by day 140 the field is nothing like the catalog — but an empty field
 	# is not a valid state either. _rival_relative_quality benchmarks the player's audience
 	# churn against the same-type startup average, and with no rivals it returns the player's
-	# own quality, i.e. the competitive pressure that Calibration Law 1 calls load-bearing
-	# silently switches off. So this RE-SEEDS from the catalog rather than clearing.
-	#
-	# No rival_added emits: the shell is not in the tree at reset time (same doctrine as
-	# CharacterRegistry.reset()), and _ready already covered the one moment listeners exist.
+	# own quality, i.e. the load-bearing competitive pressure silently switches off. So this
+	# RE-SEEDS from the catalog rather than clearing.
 	_rivals.clear()
 	for r in RivalCatalog.build_all():
 		r.status = _status_for(r)
@@ -74,15 +68,7 @@ func get_by_type(sub_type_id: String) -> Array[Rival]:
 	return out
 
 
-func get_by_tier(tier: String) -> Array[Rival]:
-	var out: Array[Rival] = []
-	for r in _rivals.values():
-		if r.tier == tier:
-			out.append(r)
-	return out
-
-
-# Rank the player among same-type STARTUP rivals. Returns {rank, total, text}.
+# Rank the player among same-type STARTUP rivals. Returns {rank, total}.
 # rank is 1-based (1 = ahead of every startup rival). total = startup rivals + the
 # player. `player_composite` should be the player's type-weighted composite.
 func get_player_rank_in_startup_league(sub_type_id: String, player_composite: float) -> Dictionary:
@@ -94,27 +80,20 @@ func get_player_rank_in_startup_league(sub_type_id: String, player_composite: fl
 			league += 1
 			if r.composite(axes) > player_composite:
 				better += 1
-	var total: int = league + 1
-	var rank: int = better + 1
-	# WORKING TR — "lig" vokabüleri emekli (Fix 3): sıralama artık kalite kıyası
-	# olarak okunur, pazar anlatısı get_market_snapshot'ındır.
-	return {"rank": rank, "total": total,
-		"text": TranslationServer.translate("RIVAL_RANK_TEXT").format(
-			{"rank": rank, "total": total})}
+	return {"rank": better + 1, "total": league + 1}
 
 
 # --- Advancement (called daily by TimeManager) ---
 
-func advance_all(days: int = 1) -> void:
+func advance_all() -> void:
 	var any_changed: bool = false
 	for r in _rivals.values():
 		if r.momentum <= 0.0:
 			continue   # giants are static
 		var a: float = float(TIER_ASYMPTOTE.get(r.tier, 100.0))
-		for _i in days:
-			r.innovation = QualityModel.grow(r.innovation, r.momentum, a)
-			r.stability = QualityModel.grow(r.stability, r.momentum, a)
-			r.experience = QualityModel.grow(r.experience, r.momentum, a)
+		r.innovation = QualityModel.grow(r.innovation, r.momentum, a)
+		r.stability = QualityModel.grow(r.stability, r.momentum, a)
+		r.experience = QualityModel.grow(r.experience, r.momentum, a)
 		var new_status: String = _status_for(r)
 		if new_status != r.status:
 			r.status = new_status
@@ -124,9 +103,8 @@ func advance_all(days: int = 1) -> void:
 		EventBus.rival_advanced.emit()
 
 
-# Status is an ID, not copy — it is compared, never printed. The one surface that ever
-# rendered it raw (RightPanel) was retired in the ODA rework and is on loc_residue's skip
-# list; anything that shows it again needs a RIVAL_STATUS_<ID> row first.
+# Status is an ID, not copy — it is compared (advance_all, VCPitchSystem._rival_ahead, the
+# rival.status seam), never printed; anything that shows it needs a RIVAL_STATUS_<ID> row first.
 func _status_for(r: Rival) -> String:
 	if r.tier == "giant":
 		return "DOMINANT"   # LOC-DATA rival status id
@@ -135,17 +113,17 @@ func _status_for(r: Rival) -> String:
 	return "SCALING" if r.momentum >= 0.6 else "QUIET"   # LOC-DATA rival status ids
 
 
-# ======================= Pazar payı (Dünya İnandırıcılığı Fix 3) ================
-# LİG çerçevesinin yerini alan sunum katmanı. STATELESS: get_market_snapshot her
+# ======================= Pazar payı ================
+# Sunum katmanı. STATELESS: get_market_snapshot her
 # çağrıda yalnız (RivalCatalog seed'leri + momentum, GameState.day, GameState.mrr,
 # MARKET_TOTAL_MRR) girdilerinden türetilen SAF fonksiyondur — canlı kalite
 # eksenleri OKUNMAZ (advance_all onları her gün mutasyona uğratır; bugünden
 # "geçen haftanın payı"nı hesaplamak ancak saf bir fonksiyonla doğru kalır).
-# Kalite ligi (composite, rank API, ekonomi bağı) olduğu gibi durur: pay, MRR
+# Kalite ligi (composite, rank API, ekonomi bağı) ayrıdır: pay, MRR
 # anlatısıdır, kalite yarışı değil. RNG yok — doku, hafta-bloklu hash wobble.
 #
-# Tüketiciler (ODA board + ticker feed): get_market_snapshot(sub_id) /
-# get_player_share_pct() / format_share(pct). Repaint sinyali: day_advanced +
+# Tüketiciler: ODA panosu, Ürün detay görünümü ve haber akışı (get_market_snapshot /
+# format_share); olay seam'leri (get_player_share_pct). Repaint sinyali: day_advanced +
 # mrr_changed yeterlidir (snapshot durumsuz olduğundan her okuma günceldir).
 
 const SHARE_GROWTH_PER_DAY := 0.004    # momentum başına günlük göreli büyüme  # WORKING
@@ -158,15 +136,15 @@ const SHARE_WOBBLE_AMP := 0.08         # hafta-bloklu doku genliği (momentum ö
 # Kardeş sabit NewsFeedSystem.RIVAL_BIG_MOVE_PCT aynı taramadan türedi: o, rutin
 # bandın ÜSTÜNDE durup yalnız sıçramayı yakalar. % puan.
 const SHARE_TREND_EPSILON := 0.02      # altı "yatay" sayılır  # WORKING
-const SHARE_MOVED_WINDOW_DAYS := 7     # trend + moved_recently penceresi
+const SHARE_MOVED_WINDOW_DAYS := 7     # trend + moved_recently penceresi; _share_at'ın wobble hafta bloğu da bu
 
 
 func get_market_snapshot(sub_type_id: String) -> Dictionary:
-	# {player_pct, others_pct, market_total_mrr, rivals: [{id, name, tier, share_pct,
-	#  trend(-1|0|+1), moved_recently}] pay-azalan}. Toplam (player + rivals + others)
+	# {player_pct, others_pct, rivals: [{id, name, tier, share_pct,
+	#  trend(-1|0|+1), delta_pct, moved_recently}] pay-azalan}. Toplam (player + rivals + others)
 	# = 100 — "diğerleri" (uzun kuyruk) artıktır, taşmada adlandırılmışlar ölçeklenir.
 	var day: int = GameState.day
-	var player_pct: float = clampf(100.0 * float(GameState.mrr) / float(RivalCatalog.MARKET_TOTAL_MRR), 0.0, 90.0)
+	var player_pct: float = get_player_share_pct()
 	var rows: Array = []
 	var raw_sum: float = 0.0
 	for i in RivalCatalog.TEMPLATE.size():
@@ -191,7 +169,6 @@ func get_market_snapshot(sub_type_id: String) -> Dictionary:
 	return {
 		"player_pct": player_pct,
 		"others_pct": maxf(budget - raw_sum, 0.0),
-		"market_total_mrr": RivalCatalog.MARKET_TOTAL_MRR,
 		"rivals": rows,
 	}
 
@@ -202,7 +179,7 @@ func get_player_share_pct() -> float:
 
 func format_share(pct: float) -> String:
 	# Kıymığın görünmesi tasarımın kalbi: tek ondalık; eşiğin altı "henüz yok denecek
-	# kadar küçük" okunur, görünmez değil. BİÇİM ARTIK YERELDEN geliyor (Fmt): işaretin
+	# kadar küçük" okunur, görünmez değil. Biçim yerelden gelir (Fmt): işaretin
 	# yeri ve ondalık ayracı dile göre değişir (%0,3 ↔ 0.3%), taban metni SHARE_FLOOR
 	# anahtarında. Buradaki KARAR yalnız eşiğin kendisi — 0,1'in altı ayrı bir cümledir.
 	if pct < 0.1:
@@ -234,7 +211,7 @@ func _share_at(rid: String, seed: float, momentum: float, day: int) -> float:
 	# ile aynı fiction. Wobble genliği momentumla ölçeklenir: yerleşikler kıpırdar,
 	# startup'lar oynar.
 	#
-	# ÖLÇÜM NOTU (curve seansının maddesi): wobble PRATİKTE doku üretmiyor. hash()
+	# ÖLÇÜM NOTU: wobble PRATİKTE doku üretmiyor. hash()
 	# djb2'dir ve hafta numarası dizginin SONUNA yazılır — ardışık hafta anahtarları
 	# ardışık tamsayıya düşer, %1000 sonrası w haftada yalnız +0,001 kayar. Tek gerçek
 	# sıçrama haftanın basamak sayısı değişince olur (hafta 9→10, yani gün 70). Sonuç:

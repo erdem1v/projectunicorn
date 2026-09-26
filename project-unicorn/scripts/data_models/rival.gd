@@ -1,12 +1,12 @@
 class_name Rival
 extends Resource
 
-# Rival data model (Product Lifecycle Part 1). A competing product in the same
+# Rival data model. A competing product in the same
 # sub-product-type market. Plain data container held by RivalRegistry, mirrors the
 # Customer/Character model convention (@export fields + forward-compat reserves).
 #
-# Three tiers structure the competitive field (rival_registry.gd enforces that a
-# Phase-1 player can NEVER reach the giant band):
+# Three tiers structure the competitive field (the number bands, not a clamp, keep a
+# Phase-1 player out of the giant band; see RivalRegistry's header):
 #   startup      — the player's league; real, catchable rivals.
 #   established  — ahead; a late-Phase-1 player may brush the bottom.
 #   giant        — aspirational, structurally unreachable in Phase 1.
@@ -22,7 +22,7 @@ extends Resource
 @export var stability: float = 0.0
 @export var experience: float = 0.0
 @export var momentum: float = 0.0              # per-day dim growth rate (0 for giants)
-@export var status: String = "QUIET"           # display band (DOMINANT/STEADY/SCALING/QUIET)
+@export var status: String = "QUIET"           # status id (DOMINANT/STEADY/SCALING/QUIET), compared, never displayed
 
 # --- forward-compat reserves (mirror Customer/Character) ---
 @export var founder_name: String = ""
@@ -30,7 +30,7 @@ extends Resource
 @export var notes: String = ""
 
 
-# Type-weighted composite (same math the player uses) — for ranking + display.
+# Type-weighted composite (same math the player uses) — for ranking and the churn benchmark.
 func composite(quality_axes: Array = []) -> float:
 	return QualityModel.composite_quality(
 		{"innovation": innovation, "stability": stability, "experience": experience}, quality_axes)

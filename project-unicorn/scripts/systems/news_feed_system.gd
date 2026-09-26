@@ -1,8 +1,7 @@
 class_name NewsFeedSystem
 extends RefCounted
 
-# Haber akışı motoru (Dünya İnandırıcılığı Fix 4) — ticker'ın VERİ kaynağı.
-# İngilizce placeholder havuzunun yerine, üç gerçek kaynaktan ağırlıklı akış:
+# Haber akışı motoru — ticker'ın VERİ kaynağı. Üç gerçek kaynaktan ağırlıklı akış:
 #
 #   Sektör (~%50)  — faz + subgenre etiketli küratörlü havuz (aşağıda)
 #   Rakip  (~%30)  — RivalRegistry.get_market_snapshot'taki GERÇEK hareketlerden
@@ -17,15 +16,14 @@ extends RefCounted
 # RNG YASAK (ev kuralı) — tüm seçimler hash tabanlı deterministik aritmetik.
 # Repeat yok: bir sektör satırı havuz tükenene dek tekrar etmez, sonra reshuffle.
 #
-# ODA/ticker tüketici sözleşmesi: get_stream() (en yeni önce) + get_lines_for_day(day)
+# Ticker tüketici sözleşmesi: get_stream() (en yeni önce) + get_lines_for_day(day)
 # + EventBus.news_stream_changed (gün-sonu repaint kancası). Satır şekli:
 #   {day: int, kind: "sektor"|"rakip"|"biz", src: String, txt: String}
 # news_ticker.gd'nin {src, txt} vokabüleriyle bire bir uyumlu.
 #
-# # WORKING TR — bu dosyadaki tüm oyuncuya görünen metin çalışma metnidir; ses
-# geçişi content fazında.
+# # WORKING TR — NEWS_* metinleri (strings.csv) çalışma metnidir; ses geçişi content fazında.
 
-# --- Ayar yüzeyi (tümü WORKING; kalibrasyon seansı) ---------------------------
+# --- Ayar yüzeyi (tümü WORKING) ---------------------------
 const TARGET_SEKTOR := 0.5
 const TARGET_RAKIP := 0.3
 const TARGET_BIZ := 0.2
@@ -36,8 +34,7 @@ const STREAM_CAP := 30
 const BIZ_BUFFER_CAP := 10
 # Aynı rakip bu kadar gün içinde ikinci kez haber OLMAZ. Gün bazlı cooldown,
 # adet bazlı "son N rakip" değil: adet bazlısı, nitelikli rakip sayısı N'in
-# altına düşünce kendini kilitliyordu (yeni emisyon yok → rotasyon yok →
-# sonsuz dışlama; 90 günlük smoke bunu %93 sektörle yakaladı).
+# altına düşünce kendini kilitler (yeni emisyon yok → rotasyon yok → sonsuz dışlama).
 const RIVAL_COOLDOWN_DAYS := 2
 # "Büyük hamle" eşiği, % puan — dev/yerleşik/holding ancak bunu aşarak haber olur.
 # Pay modelinin (rival_registry._share_at) GERÇEK dağılımından türetildi; 10 alt-tür
@@ -50,8 +47,6 @@ const RIVAL_COOLDOWN_DAYS := 2
 # her zaman sayılır. Ölçülen kapı: yerleşik alt-türlerin 8/10'unda + holding her
 # koşuda haber üretir. Bir tık aşağısı (0,05) rutini haber yapar, bir tık yukarısı
 # (0,07) holdingi tamamen susturur — pencere dar ve bilerek dar.
-# Eski değer 0,75'ti: modelin ürettiği EN BÜYÜK hamlenin ~3 katı, yerleşiğin
-# realize maksimumunun ~6 katı — yani dal hiç açılmadı ve "heavy" satır hiç akmadı.
 # DEV İSTİSNASI: TEMPLATE[0].momentum = 0 → pay eğrisi sabit → delta tam 0 → satır
 # daha moved_recently kapısında elenir. Hiçbir eşik devi haber yapamaz; pay momentumu
 # ile KALİTE momentumu aynı alan olduğundan (RivalCatalog.TEMPLATE, advance_all'ın
@@ -65,10 +60,9 @@ const RIVAL_NEAR_BAND_PCT := 3.0    # startup, oyuncunun payına bu kadar yakın
 const OUTLET_KEYS := ["WORLD_OUTLET_EKONOMI", "WORLD_OUTLET_TEKNOGUNDEM",
 	"WORLD_OUTLET_GIRISIM", "WORLD_OUTLET_SEKTOR"]
 
-# --- Sektör havuzu: {id, txt, phases: [1..3], pool: "ai"|"saas"|"any"} --------
+# --- Sektör havuzu: {id, phases: [1..3], pool: "ai"|"saas"|"any"}; metin NEWS_<ID> anahtarında ---
 # Faz 1 Bootstrap = tohum iklimi; Faz 2 Traction = değerleme/kanıt sohbeti;
-# Faz 3 Series A Hunt = regülasyon + geç aşama iklimi. Loanword beyaz listesi
-# (pitch, startup, demo, momentum, MRR, runway, churn + VC) dışında İngilizce yok.
+# Faz 3 Series A Hunt = regülasyon + geç aşama iklimi.
 const SEKTOR_POOL := [
 	# --- Faz 1 — tohum iklimi (any) ---
 	{"id": "s_seed_temkin", "phases": [1], "pool": "any"},
@@ -97,7 +91,7 @@ const SEKTOR_POOL := [
 	{"id": "s_saas_entegre", "phases": [1, 2], "pool": "saas"},
 	{"id": "s_saas_ihale", "phases": [2, 3], "pool": "saas"},
 	{"id": "s_saas_guvenlik", "phases": [2, 3], "pool": "saas"},
-	# --- Faz 2 — değerleme/kanıt (any) ---
+	# --- Faz 2 — değerleme/kanıt ---
 	{"id": "s_val_carpan", "phases": [2], "pool": "any"},
 	{"id": "s_kopru_tur", "phases": [2], "pool": "any"},
 	{"id": "s_tutundurma", "phases": [2], "pool": "any"},
@@ -110,7 +104,7 @@ const SEKTOR_POOL := [
 	{"id": "s_ai_kanit", "phases": [2, 3], "pool": "ai"},
 	{"id": "s_ai_fiyat", "phases": [2], "pool": "ai"},
 	{"id": "s_saas_yenileme", "phases": [2, 3], "pool": "saas"},
-	# --- Faz 3 — regülasyon + geç aşama (any) ---
+	# --- Faz 3 — regülasyon + geç aşama ---
 	{"id": "s_veri_yerel", "phases": [3], "pool": "any"},
 	{"id": "s_seriesa_cita", "phases": [3], "pool": "any"},
 	{"id": "s_gec_asama", "phases": [3], "pool": "any"},
@@ -137,13 +131,10 @@ const RIVAL_DOWN_COUNT := 3
 static func daily_tick() -> void:
 	var nf: Dictionary = _ensure_state()
 	var sub_id: String = String(GameState.get_flag("mvp_sub_product_type_id", ""))
-	var snap: Dictionary = {}
-	var player_pct: float = 0.0
+	var rival_pool: Array = []
 	# Ship öncesi güvenli: ürün yokken rakip kaynağı susar, dünya (sektör) konuşur.
 	if sub_id != "":
-		snap = RivalRegistry.get_market_snapshot(sub_id)
-		player_pct = float(snap["player_pct"])
-	var rival_pool: Array = _rival_candidates(snap, player_pct, nf)
+		rival_pool = _rival_candidates(RivalRegistry.get_market_snapshot(sub_id), nf)
 	var lines_today: int = DAILY_LINES_MIN \
 		+ absi(hash("nf_count|%d" % GameState.day)) % (DAILY_LINES_MAX - DAILY_LINES_MIN + 1)
 	for slot in lines_today:
@@ -173,17 +164,17 @@ static func on_headline_added(source: String, text: String) -> void:
 	var nf: Dictionary = _ensure_state()
 	var buffer: Array = nf["biz_buffer"]
 	if buffer.size() >= BIZ_BUFFER_CAP:
-		# Kayıp sessiz olmasın: sayaç, 90 günlük dökümde "kaç duyuru arşive hiç
-		# giremedi"yi okunur kılar (kotanın gerçek maliyeti kalibrasyon verisidir).
+		# Kayıp sessiz olmasın: biz_dropped "kaç duyuru arşive hiç giremedi"yi sayar
+		# (kotanın gerçek maliyeti kalibrasyon verisidir; bugün onu basan bir döküm yok).
 		nf["biz_dropped"] = int(nf.get("biz_dropped", 0)) + 1
 		return
 	buffer.append({"src": source, "txt": text})
 
 
-# --- Okuma API'si (ODA/ticker sözleşmesi) ------------------------------------
+# --- Okuma API'si (ticker sözleşmesi) ------------------------------------
 
 static func get_stream() -> Array:
-	# En yeni önce, readonly kopya (get_sales_log sözleşmesiyle aynı).
+	# En yeni önce; derin kopya, çağıran akışı değiştiremez.
 	var nf: Dictionary = _ensure_state()
 	var out: Array = (nf["stream"] as Array).duplicate(true)
 	out.reverse()
@@ -232,7 +223,6 @@ static func _pick_source(nf: Dictionary, rival_pool: Array) -> String:
 		var d2: float = TARGET_BIZ - (float(counts["biz"]) / maxf(total, 1.0))
 		if d2 > best_deficit:
 			best = "biz"
-			best_deficit = d2
 	return best
 
 
@@ -248,8 +238,6 @@ static func _emit_sektor(nf: Dictionary, slot: int) -> void:
 	var idx: int = absi(hash("sektor|%d|%d|%d" % [GameState.day, slot, int(nf["reshuffles"])])) % eligible.size()   # LOC-DATA rng seed
 	var rec: Dictionary = eligible[idx]
 	(nf["used_sektor"] as Array).append(String(rec["id"]))
-	var counts: Dictionary = nf["counts"]
-	counts["sektor"] = int(counts["sektor"]) + 1   # LOC-DATA news line kind id
 	_append(nf, "sektor", outlet_name(absi(hash(String(rec["id"])))),   # LOC-DATA news line kind id
 		TranslationServer.translate("NEWS_" + String(rec["id"]).to_upper()))
 
@@ -270,13 +258,12 @@ static func _eligible_sektor(nf: Dictionary) -> Array:
 	return out
 
 
-static func _rival_candidates(snap: Dictionary, player_pct: float, nf: Dictionary) -> Array:
+static func _rival_candidates(snap: Dictionary, nf: Dictionary) -> Array:
 	# İLGİLİLİK KAPISI: yalnız bu hafta gerçekten kımıldayan VE oyuncuyu ilgilendiren
 	# rakipler satır üretir. Dev/yerleşik/holding ancak BÜYÜK hamleyle haber olur
 	# (devin rutin haberi gürültüdür, bastırılır); startup, oyuncunun payına yakınsa
 	# ya da hamlesi büyükse haber olur. Satırlar YALNIZ snapshot'tan türetilir.
-	if snap.is_empty():
-		return []
+	var player_pct: float = float(snap["player_pct"])
 	var recent: Dictionary = nf["recent_rivals"]
 	var out: Array = []
 	for row in snap["rivals"]:
@@ -286,15 +273,12 @@ static func _rival_candidates(snap: Dictionary, player_pct: float, nf: Dictionar
 			continue
 		var big: bool = float(row["delta_pct"]) >= RIVAL_BIG_MOVE_PCT
 		var near: bool = absf(float(row["share_pct"]) - player_pct) <= RIVAL_NEAR_BAND_PCT
-		var heavy: bool = String(row["tier"]) != "startup"
-		if (heavy and big) or (not heavy and (near or big)):
+		if big or (near and String(row["tier"]) == "startup"):
 			out.append(row)
 	return out
 
 
 static func _emit_rakip(nf: Dictionary, rival_pool: Array) -> void:
-	if rival_pool.is_empty():
-		return
 	var row: Dictionary = rival_pool.pop_front()
 	var recent: Dictionary = nf["recent_rivals"]
 	recent[String(row["id"])] = GameState.day
@@ -310,30 +294,24 @@ static func _emit_rakip(nf: Dictionary, rival_pool: Array) -> void:
 		"name": String(row["name"]),
 		"share": RivalRegistry.format_share(float(row["share_pct"])),
 	})
-	var counts: Dictionary = nf["counts"]
-	counts["rakip"] = int(counts["rakip"]) + 1
 	_append(nf, "rakip", outlet_name(absi(hash(String(row["id"]) + str(GameState.day)))), txt)
 
 
 static func _emit_biz(nf: Dictionary) -> void:
-	var buffer: Array = nf["biz_buffer"]
-	if buffer.is_empty():
-		return
-	var item: Dictionary = buffer.pop_front()   # kronolojik: en eski milestone önce
-	var counts: Dictionary = nf["counts"]
-	counts["biz"] = int(counts["biz"]) + 1
+	var item: Dictionary = (nf["biz_buffer"] as Array).pop_front()   # kronolojik: en eski milestone önce
 	_append(nf, "biz", String(item["src"]), String(item["txt"]))
 
 
 static func _append(nf: Dictionary, kind: String, src: String, txt: String) -> void:
+	var counts: Dictionary = nf["counts"]
+	counts[kind] = int(counts[kind]) + 1
 	var stream: Array = nf["stream"]
 	stream.append({"day": GameState.day, "kind": kind, "src": src, "txt": txt})
 	while stream.size() > STREAM_CAP:
 		stream.pop_front()
 
 
-## Source badge for a line, picked deterministically from a hash. Outlet names are proper
-## nouns and read identically in both columns; they go through the CSV anyway so that no
-## player-visible string is a literal in this file.
+## Source badge for a line. `h` is a hash (feed lines) or a plain index (news_ticker
+## fallback, EvTicker); outlet names stay CSV rows so no player-visible string is a literal here.
 static func outlet_name(h: int) -> String:
 	return TranslationServer.translate(OUTLET_KEYS[h % OUTLET_KEYS.size()])

@@ -221,10 +221,9 @@ signal rnd_node_requested(node_id: String, open_assign: bool)
 signal rnd_card_requested(kind: String, data: Dictionary)
 
 # --- Rival signals (Product Lifecycle Part 1) ---
-# Emitted by RivalRegistry. rival_added on seed; rival_status_changed when a
+# Emitted by RivalRegistry. rival_status_changed when a
 # rival's display band flips; rival_advanced once per day after advance_all so
 # the ODA board league repaints (RightPanel retired — ODA rework 2026-08-06).
-signal rival_added(rival_id: String)
 signal rival_status_changed(rival_id: String, status: String)
 signal rival_advanced()
 

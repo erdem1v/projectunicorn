@@ -1,7 +1,7 @@
 class_name RivalCatalog
 extends RefCounted
 
-# Read-only rival seed data (Product Lifecycle Part 1). Mirrors ProductCatalog:
+# Read-only rival seed data. Mirrors ProductCatalog:
 # hardcoded GDScript const now, JSON externalization is content-phase work.
 #
 # Per sub-product-type: 8 rivals = 1 giant + 2 established + 5 startup. Dimension
@@ -33,13 +33,11 @@ const TEMPLATE := [
 # Per-type product names (index 0 = giant, 1-2 = established, 3-7 = startup).
 #
 # TESCİLLİ MARKA YASAĞI (CompanyCatalog'un adlandırma yasası, aynı kural burada da
-# geçerli): gerçek marka yok, şaka ad yok. Bu tablo bir zamanlar oyuncunun ODA
-# panosunda, ticker'da ve Ürün sekmesinde GERÇEK rakiplerin tescilli adlarını
-# gösteriyordu — üstelik trademark sahibiyle AYNI pazarda rakip ENTITY olarak, ki bu
-# bir metin içinde markadan söz etmekten bambaşka bir maruziyet sınıfı. CompanyCatalog
-# temizlenirken (Anadolu Sigorta → Poyraz Sigorta) bu dosya atlanmıştı; 2026-08-07
-# süpürmesinde kapatıldı. İNDEKS SIRASI KİLİTLİ: TEMPLATE tier'ları ve SHARE_SEED
-# payları indeks-hizalı, o yüzden adlar YERİNDE değişir, asla yeniden sıralanmaz.
+# geçerli): gerçek marka yok, şaka ad yok. Bu adlar ODA panosunda, ticker'da ve Ürün
+# sekmesinde rakip ENTITY olarak görünür; bir markayı AYNI pazarda rakip yapmak, metin
+# içinde ondan söz etmekten ağır bir maruziyettir. İNDEKS SIRASI KİLİTLİ: TEMPLATE
+# tier'ları ve SHARE_SEED payları indeks-hizalı, o yüzden adlar YERİNDE değişir, asla
+# yeniden sıralanmaz.
 const NAMES := {
 	"ai_assistant":      ["Refik AI", "Aselia", "Perga AI", "Kestrel", "Pocket Aide", "Söyleç", "Kovan", "Echo Desk"],   # LOC-DATA product name (proper noun)
 	"ai_photo_editor":   ["PixelForge", "Retušo", "Işılt", "Kadraj", "GlowKit", "Frame9", "Poz", "Kolaj"],   # LOC-DATA product name (proper noun)
@@ -51,36 +49,32 @@ const NAMES := {
 	"saas_billing":      ["Kasadar", "Faturon", "Billwise", "Tahsila", "Subskript", "Oranla", "Ödemely", "Recurro"],   # LOC-DATA product name (proper noun)
 	"saas_dev_tools":    ["Nöbetçi", "Karakol", "Kütükçü", "CIforge", "Sandboxy", "Devkit", "APIgate", "Uçbirim"],   # LOC-DATA product name (proper noun)
 	"saas_ops":          ["FlowSuite", "Prosedo", "Operanda", "Akista", "Otomo", "Süreçly", "Rutin", "Adımla"],   # LOC-DATA product name (proper noun)
-	# §12.11'in üç mühürlü demo alt-tipi. Bunlar OYUNCUNUN seçebildiği tiplerdir, yani
+	# Ürün §12.11'in üç mühürlü demo alt-tipi. Bunlar OYUNCUNUN seçebildiği tiplerdir, yani
 	# rakip adlarının en çok görüldüğü yer — isimsiz bırakılsalardı board ve pazar payı
-	# merdiveni "note_tool #7" gibi HAM KİMLİK basardı (saas_ops'un düzeltilen kusuru).
+	# merdiveni "note_tool #7" gibi HAM KİMLİK basardı.
 	"note_tool":         ["Kayıt", "Zihin Haritası", "Notably", "Bellek", "Kâğıtsız", "Fihrist", "Karalama", "Mürekkep"],   # LOC-DATA product name (proper noun)
 	"video_clip":        ["Kesit", "Klipsa", "Makas", "ShortForge", "Kadraj Kesit", "Altyazıcı", "Reelo", "Montajcı"],   # LOC-DATA product name (proper noun)
 	"erp":               ["Defterdar", "Kasa & Stok", "Muhasip", "Ledgero", "Envanter", "Sayman", "Faturacı", "Tezgâh"],   # LOC-DATA product name (proper noun)
 }
-# (Dünya İnandırıcılığı onarımı: saas_ops satırı eklendi — canlı üründü ama isimsizdi,
-# board'da "saas_ops #0..7" fallback'i görünüyordu. Yetim ai_multimodal_app satırı
-# silindi — o alt-tür ProductCatalog'dan kaldırılmıştı.)
 
 
-# ======================= Pazar payı seed'leri (Fix 3) ==========================
-# LİG çerçevesinin yerini alan pazar payı modelinin veri tabanı. TEMPLATE ile
+# ======================= Pazar payı seed'leri ==========================
+# Pazar payı modelinin (RivalRegistry.get_market_snapshot) veri tabanı. TEMPLATE ile
 # indeks-hizalı: SHARE_SEED[i], TEMPLATE[i] rakibinin pazar payı yüzdesi çekirdeği.
 # Bir avuç büyük firma pazarın çoğunu tutar; startup'lar oyuncunun bandına yakın
 # küçük dilimlerde oturur. Payların toplamı 100 olmak zorunda DEĞİL — kalan,
-# snapshot'ta "uzun kuyruk" (diğerleri) dilimi olur. Tümü WORKING (curve seansı).
+# snapshot'ta "uzun kuyruk" (diğerleri) dilimi olur. Tümü WORKING.
 const SHARE_SEED := [34.0, 16.0, 11.0, 2.6, 1.9, 1.4, 0.9, 0.5]
 
 # Yalnız-pay pazar aktörleri: her alt-tür pazarında AYNI adlarla görünen, holding
 # tarzı global oyuncular. Rival ENTITY DEĞİLLER — kalite ligi, ekonomi bağı
 # (_rival_relative_quality), VC sorgusu ve rank API'si onları hiç görmez; yalnız
 # get_market_snapshot dilim üretir. Adlandırılmış rakip sayısını pazar başına
-# 8+3 = 11'e çıkarırlar (görev bandı 8-12). Paylar + momentum WORKING.
-# (Marka süpürmesi 2026-08-07: "Doruk Teknoloji Holding" YAŞAYAN bir Türk markasıydı —
-# CompanyCatalog'da temizlenen Anadolu Sigorta/Anadolu Yatırım ile aynı sınıf, ve bu
-# aktörler ODA panosunda pazar payı satırı olarak GÖRÜNÜYOR. "Silverbirch Software" da
-# gerçek bir yazılım firması. İkisi de aynı anlam alanında kurgusal karşılıklarıyla
-# değişti; id'ler kasten korundu, çünkü kayıtlı durum ve shot fixture'ları onlara bakar.)
+# 8+3 = 11'e çıkarırlar. Paylar + momentum WORKING.
+# Adlar da yukarıdaki TESCİLLİ MARKA YASAĞI'na tabidir: ODA panosunda pazar payı satırı
+# olarak görünürler. id'ler adlarla eşleşmek zorunda değildir ve değiştirilmez: pay
+# eğrisinin wobble hash'i (RivalRegistry._share_at) ve kayıtlı haber cooldown'u
+# (GameState.news_feed.recent_rivals) id'yi okur.
 const MARKET_ACTORS := [
 	{"id": "ma_silverbirch", "name": "Akkavak Yazılım", "share": 6.5, "momentum": 0.06},   # LOC-DATA market actor name (proper noun)
 	{"id": "ma_doruk",       "name": "Yalçın Teknoloji Holding", "share": 5.2, "momentum": 0.10},   # LOC-DATA market actor name (proper noun)
@@ -88,32 +82,27 @@ const MARKET_ACTORS := [
 ]
 
 # Modellenen pazarın toplam aylık geliri (MRR cinsinden). Oyuncunun payı =
-# GameState.mrr / bu sabit. WORKING — kalibrasyon defteri maddesi (2026-08-06):
-# MRR 5.000 (Traction hedefi) → %0,33; erken oyun → %0,1 altı ("kıymık");
-# Series A kapısı bandındaki oyuncu (~40-80K MRR) → ~%2,7-5,3. His meselesi,
-# curve seansında tartışılacak — şimdilik dokunma.
+# GameState.mrr / bu sabit. WORKING: erken oyun → %0,1 altı ("kıymık");
+# MRR 5.000 → %0,33; 120.000 → %8. His meselesi açık, şimdilik dokunma.
 const MARKET_TOTAL_MRR := 1_500_000
 
 
 # Build one Rival per (sub-type, TEMPLATE row). Status is set by RivalRegistry.
 static func build_all() -> Array:
 	var out: Array = []
-	for subgenre in ProductCatalog.SUB_PRODUCT_TYPES:
-		for rec in ProductCatalog.SUB_PRODUCT_TYPES[subgenre]:
-			var sub_id: String = String(rec.get("id", ""))
-			if sub_id == "":
-				continue
-			var names: Array = NAMES.get(sub_id, [])
-			for i in TEMPLATE.size():
-				var t: Dictionary = TEMPLATE[i]
-				var r := Rival.new()
-				r.id = "rv_%s_%d" % [sub_id, i]   # LOC-DATA rival id
-				r.product_name = String(names[i]) if i < names.size() else "%s #%d" % [sub_id, i]
-				r.sub_product_type_id = sub_id
-				r.tier = String(t["tier"])
-				r.innovation = float(t["innovation"])
-				r.stability = float(t["stability"])
-				r.experience = float(t["experience"])
-				r.momentum = float(t["momentum"])
-				out.append(r)
+	for rec in ProductCatalog.get_all_sub_product_types():
+		var sub_id: String = String(rec["id"])
+		var names: Array = NAMES.get(sub_id, [])
+		for i in TEMPLATE.size():
+			var t: Dictionary = TEMPLATE[i]
+			var r := Rival.new()
+			r.id = "rv_%s_%d" % [sub_id, i]   # LOC-DATA rival id
+			r.product_name = String(names[i]) if i < names.size() else "%s #%d" % [sub_id, i]
+			r.sub_product_type_id = sub_id
+			r.tier = String(t["tier"])
+			r.innovation = float(t["innovation"])
+			r.stability = float(t["stability"])
+			r.experience = float(t["experience"])
+			r.momentum = float(t["momentum"])
+			out.append(r)
 	return out

@@ -3,8 +3,6 @@ extends Panel
 # Bottom news ticker — ambient UI chrome.
 #
 # Design notes:
-#  - Hardcoded dummy headline pool. Real news engine (phase-aware,
-#    reactive) is a later task — see TODO below.
 #  - Scrolls leftward at a fixed real-time pace, ignoring game speed
 #    and game pause. The Panel sets process_mode = PROCESS_MODE_ALWAYS
 #    so this _process keeps running even when SceneTree.paused is true.
@@ -13,25 +11,20 @@ extends Panel
 #    label has scrolled past one copy width we add the same amount
 #    back. Visual: zero gap, zero jump.
 #
-#  - LIVE LINES (HR Core): EventBus.headline_added pushes a real gameplay line, which is
-#    prepended to the ambient pool and the stream is rebuilt. This is the game's only
+#  - LIVE LINES: EventBus.headline_added pushes a real gameplay line, which is
+#    prepended to the loop and the stream is rebuilt. This is the game's only
 #    non-modal notification channel — candidate arrival must raise a badge
 #    and a ticker line WITHOUT interrupting the player. Rebuilding resets the scroll
 #    position, so a line landing mid-scroll causes one visible jump; acceptable for a
-#    once-in-a-while beat, and the fix (splice without reset) belongs to the news engine.
+#    once-in-a-while beat (TODO: splice the line in without resetting the scroll).
 #
-# NEWS ENGINE BAĞLAMASI (Dünya İnandırıcılığı, 2026-08-06): ambient içerik artık
-# NewsFeedSystem.get_stream()'den akar (üç kaynaklı gerçek akış: sektör/rakip/biz,
-# 50/30/≤20) ve gün sonunda EventBus.news_stream_changed ile tazelenir. TICKER_01..10
-# anahtarları SOĞUK-BAŞLANGIÇ yedeğidir: akış boşken (gün 1, ilk tick öncesi) ve akış
-# kısayken döngüyü doldurur — ANAHTAR ADLARI SABİT SÖZLEŞMEDİR (ODA task'ı, Erdem
-# onay düzeltmesi #3); içerikleri bu bağlamayla gerçek dünya-sesine yazıldı.
-# Kalan TODO'lar: .scandal_breaking bağlantısı + kritik-haber görsel muamelesi +
-# canlı satırı scroll sıfırlamadan ekleme (splice).
+# Akış içeriği NewsFeedSystem.get_stream()'den gelir (sektör/rakip/biz, 50/30/≤20) ve
+# gün sonunda EventBus.news_stream_changed ile tazelenir. TICKER_01..10 anahtarları
+# SOĞUK-BAŞLANGIÇ yedeğidir: akış boşken (gün 1, ilk tick öncesi) ve akış kısayken
+# döngüyü doldurur. ANAHTAR ADLARI SABİT SÖZLEŞMEDİR.
 
 const SCROLL_SPEED := 50.0  # pixels per second
 const SEPARATOR := "   ·   "
-const SOURCE_COLOR := UiTokens.ACCENT_HEX  # amber source name (single token source)
 
 # Soğuk-başlangıç havuzunun anahtarları (içerik strings.csv'de; kaynak rozetleri
 # NewsFeedSystem.outlet_name()'den döner — kurgusal yayın seti tek evde kalsın).
@@ -56,7 +49,7 @@ func _ready() -> void:
 	EventBus.headline_added.connect(_on_headline_added)
 	# Gün-sonu akış tazelemesi (post-tick sinyal — day_advanced tick'ten ÖNCE atılır,
 	# ona bağlanmak dünkü akışı okurdu; sinyalin kendi yorumuna bak).
-	EventBus.news_stream_changed.connect(_on_stream_changed)
+	EventBus.news_stream_changed.connect(_rebuild)
 	# Ambient yedek tr() anahtarlarından geliyor — dil değişince yeniden kur.
 	EventBus.language_changed.connect(_on_language_changed)
 	await _rebuild()
@@ -65,17 +58,13 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if EventBus.headline_added.is_connected(_on_headline_added):
 		EventBus.headline_added.disconnect(_on_headline_added)
-	if EventBus.news_stream_changed.is_connected(_on_stream_changed):
-		EventBus.news_stream_changed.disconnect(_on_stream_changed)
+	if EventBus.news_stream_changed.is_connected(_rebuild):
+		EventBus.news_stream_changed.disconnect(_rebuild)
 	if EventBus.language_changed.is_connected(_on_language_changed):
 		EventBus.language_changed.disconnect(_on_language_changed)
 
 
 func _on_language_changed(_locale: String) -> void:
-	await _rebuild()
-
-
-func _on_stream_changed() -> void:
 	await _rebuild()
 
 
@@ -98,7 +87,7 @@ func _rebuild() -> void:
 	# a meaningful value. Same for get_content_height (used for y-center).
 	await get_tree().process_frame
 	_half_width = stream.get_content_width() / 2.0
-	_center_vertically()
+	stream.position.y = (size.y - stream.get_content_height()) / 2.0
 
 
 func _build_bbcode() -> String:
@@ -109,7 +98,7 @@ func _build_bbcode() -> String:
 	# kalırsa (ilk günler) soğuk-başlangıç ambient anahtarları tamamlar.
 	var seen_txt: Dictionary = {}
 	for h in _live_lines:
-		parts.append("[color=%s]%s[/color]  %s" % [SOURCE_COLOR, h.src, h.txt])
+		parts.append(_part(h.src, h.txt))
 		seen_txt[String(h.txt)] = true
 	var shown: int = 0
 	for line in NewsFeedSystem.get_stream():
@@ -117,26 +106,26 @@ func _build_bbcode() -> String:
 			break
 		if seen_txt.has(String(line["txt"])):
 			continue
-		parts.append("[color=%s]%s[/color]  %s" % [SOURCE_COLOR, String(line["src"]), String(line["txt"])])
+		parts.append(_part(String(line["src"]), String(line["txt"])))
 		seen_txt[String(line["txt"])] = true
 		shown += 1
 	if parts.size() < LOOP_MIN_PARTS:
-		# Dolgu her seferinde 0'dan başlayıp LOOP_MIN_PARTS'ta kesiliyordu: on anahtarın
-		# son ikisi (TICKER_09/10) hiçbir koşuda akmıyor, soğuk başlangıç da her koşuda
-		# birebir aynı sekiz cümle oluyordu. Başlangıç indeksi artık koşu tohumu +
-		# günden türeyen deterministik bir kaydırma (ev kuralı: RNG yok, hash var) ve
-		# tur AMBIENT_KEYS boyunca dolanıyor — onunun da sırası geliyor, açılış koşudan
-		# koşuya değişiyor. Rozet anahtarla eşleşir (indeksle değil), böylece bir cümle
-		# hangi pencerede çıkarsa çıksın hep aynı yayının altında akar.
+		# Dolgu, koşu tohumu + günden türeyen deterministik bir kaydırmayla başlar (ev
+		# kuralı: RNG yok, hash var) ve AMBIENT_KEYS boyunca dolanır: on anahtarın hepsi
+		# sıra alır, açılış koşudan koşuya değişir. Rozet anahtarla eşleşir (döngü sırasıyla
+		# değil), böylece bir cümle hangi pencerede çıkarsa çıksın hep aynı yayının altında akar.
 		var offset: int = absi(hash("ticker_ambient|%d|%d" % [GameState.run_seed, GameState.day])) \
 			% AMBIENT_KEYS.size()
 		for i in AMBIENT_KEYS.size():
 			if parts.size() >= LOOP_MIN_PARTS:
 				break
 			var k: int = (offset + i) % AMBIENT_KEYS.size()
-			var outlet: String = NewsFeedSystem.outlet_name(k)
-			parts.append("[color=%s]%s[/color]  %s" % [SOURCE_COLOR, outlet, tr(String(AMBIENT_KEYS[k]))])
+			parts.append(_part(NewsFeedSystem.outlet_name(k), tr(String(AMBIENT_KEYS[k]))))
 	return SEPARATOR.join(parts) + SEPARATOR
+
+
+func _part(src: String, txt: String) -> String:
+	return "[color=%s]%s[/color]  %s" % [UiTokens.ACCENT_HEX, src, txt]
 
 
 func _process(delta: float) -> void:
@@ -145,10 +134,3 @@ func _process(delta: float) -> void:
 	stream.position.x -= SCROLL_SPEED * delta
 	if stream.position.x <= -_half_width:
 		stream.position.x += _half_width
-
-
-func _center_vertically() -> void:
-	# Place the stream so its single line sits mid-panel. content_height
-	# is the natural height of one wrap-free line.
-	var content_h: float = stream.get_content_height()
-	stream.position.y = (size.y - content_h) / 2.0

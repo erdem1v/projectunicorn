@@ -9,16 +9,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 132 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 131 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **132** |
+| Signals declared | **131** |
 | Declared with **no production emitter** | **3** |
-| Emitted with **no production listener** | **68** |
+| Emitted with **no production listener** | **67** |
 
 The second number is the §15.2 violation set. The third is **not** a defect, and it
 is smaller than it looks: the event engine listens to SIX of them through
@@ -179,7 +179,6 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `rival_added` | `rival_id: String` | rival_registry | 1 | 0 | — |
 | `rival_status_changed` | `rival_id: String, status: String` | rival_registry | 1 | 1 | oda_view |
 | `rival_advanced` | `—` | rival_registry | 1 | 1 | oda_view |
 

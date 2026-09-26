@@ -656,9 +656,6 @@ WORLD_OUTLET_EKONOMI,Ekonomi Postası,Ekonomi Postası
 WORLD_OUTLET_TEKNOGUNDEM,TeknoGündem,TeknoGündem
 WORLD_OUTLET_GIRISIM,Girişim Bülteni,Girişim Bülteni
 WORLD_OUTLET_SEKTOR,Sektör Telgrafı,Sektör Telgrafı
-WORLD_ISSUE_NO,SAYI {n},No. {n}
-WORLD_RIVAL,Rakip,Rival
-WORLD_SECTOR,Sektör,Sector
 UI_OK,Tamam,OK
 UI_CANCEL,İptal,Cancel
 UI_DISMISS,Vazgeç,Cancel
@@ -1829,7 +1826,6 @@ NEWS_RIVAL_DOWN_2,{name} kilit bir hesabını kaybetti; pazar payı {share} band
 TOPBAR_CLOCK,{date} · {hour}:00,{date} · {hour}:00
 TOPBAR_CLOCK_COMPACT,{day} {mon} · {hour}:00,{mon} {day} · {hour}:00
 FIN_OFFER_COUNTDOWN,TEKLİF · İŞ GÜNÜ: {n},OFFER · BUSINESS DAYS: {n}
-RIVAL_RANK_TEXT,startup sınıfında {rank}/{total},{rank}/{total} in the startup class
 MONTH_TITLE,{month} {year},{month} {year}
 MONTH_DAY_RANGE,Gün {from}–{to},Days {from}–{to}
 MONTH_HIGHLIGHT_FALLBACK,Sakin bir ay. Sakin aylar ucuz değildir.,A quiet month. Quiet months are not cheap.
