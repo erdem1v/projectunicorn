@@ -3,11 +3,7 @@ extends Control
 
 # Auto-emblem for the company logo (onboarding Page 3): renders the company
 # name's initial inside a style-specific shape. Pure _draw — no image assets;
-# the four shapes come from FounderConstants.LOGO_STYLES[].emblem:
-#   circle_outline (Minimalist) · hexagon (Tech) · rounded_fill (Playful) ·
-#   square_fill (Serious).
-#
-# Godot concept: draw_* primitives + draw_string with the theme's default font.
+# the shape comes from FounderConstants.LOGO_STYLES[].emblem.
 # The control is square via custom_minimum_size; parent decides the size.
 
 var style_id: String = ""
@@ -20,17 +16,10 @@ func _init(diameter: float = 48.0) -> void:
 
 func configure(new_style_id: String, company_name: String) -> void:
 	style_id = new_style_id
-	letter = initial_of(company_name)
-	queue_redraw()
-
-
-## Company initial, Turkish dotted-İ correct via the single home UiTokens.tr_upper
-## (raw String.to_upper() is not locale-aware — "i" would become "I").
-static func initial_of(company_name: String) -> String:
 	var stripped: String = company_name.strip_edges()
-	if stripped == "":
-		return "?"
-	return UiTokens.tr_upper(stripped.substr(0, 1))
+	# Fmt.upper, not to_upper(): under Turkish an initial "i" must become "İ".
+	letter = Fmt.upper(stripped.left(1)) if stripped != "" else "?"
+	queue_redraw()
 
 
 func _emblem_kind() -> String:
@@ -68,8 +57,6 @@ func _draw() -> void:
 	var font: Font = get_theme_default_font()
 	var font_size: int = int(r * 1.05)
 	var glyph: Vector2 = font.get_string_size(letter, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
-	var ascent: float = font.get_ascent(font_size)
-	var descent: float = font.get_descent(font_size)
-	var baseline_y: float = c.y + (ascent - descent) * 0.5
+	var baseline_y: float = c.y + (font.get_ascent(font_size) - font.get_descent(font_size)) * 0.5
 	draw_string(font, Vector2(c.x - glyph.x * 0.5, baseline_y), letter,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, letter_color)

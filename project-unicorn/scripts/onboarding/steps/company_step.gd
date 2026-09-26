@@ -5,12 +5,10 @@ extends OnboardingStep
 # (emblem + name + founder portrait + KURUCU · start year). "Kur ve Başla" on
 # the controller commits from here — there is no separate confirm page.
 #
-# Founder name moved to Page 1; this step reads it (and the portrait) from the
-# draft via prefill for the preview only.
+# Founder name and portrait come from Page 1: this step reads them from the
+# draft via prefill, for the preview only.
 
 var _logo_style: String = ""
-var _founder_name: String = ""
-var _portrait_id: String = ""
 
 var _name_input: LineEdit = null
 var _slogan_input: LineEdit = null
@@ -23,11 +21,6 @@ var _preview_portrait: TextureRect = null
 
 
 func _ready() -> void:
-	_build()
-	_refresh_visual()
-
-
-func _build() -> void:
 	var page := VBoxContainer.new()
 	page.set_anchors_preset(Control.PRESET_FULL_RECT)
 	page.add_theme_constant_override("separation", 6)
@@ -171,7 +164,7 @@ func _on_name_changed(_text: String) -> void:
 
 
 func _refresh_visual() -> void:
-	var company: String = _name_input.text.strip_edges() if _name_input != null else ""
+	var company: String = _name_input.text.strip_edges()
 	for style_id in _style_cards:
 		(_style_cards[style_id] as PanelContainer).theme_type_variation = \
 			&"DialogueChoiceHover" if style_id == _logo_style else &"DialogueChoice"
@@ -179,38 +172,24 @@ func _refresh_visual() -> void:
 		emblem.configure(emblem.style_id, company)
 	_preview_emblem.configure(_logo_style, company)
 	_preview_name.text = company if company != "" else tr("ONB_COMPANY_EMPTY")
-	_preview_founder.text = _founder_name if _founder_name != "" else "Founder"
-	var path: String = FounderConstants.portrait_path(_portrait_id) if _portrait_id != "" else ""
-	if path != "" and ResourceLoader.exists(path):
-		_preview_portrait.texture = load(path)
-	else:
-		_preview_portrait.texture = null
-
-
-func _spacer(height: int) -> Control:
-	var s := Control.new()
-	s.custom_minimum_size = Vector2(0, height)
-	return s
 
 
 # --- OnboardingStep contract ---
 
 func prefill(draft: Dictionary) -> void:
-	if not is_node_ready():
-		await ready
 	_name_input.text = draft.get("company_name", "")
 	_slogan_input.text = draft.get("slogan", "")
 	_logo_style = draft.get("logo_style", "")
-	_founder_name = String(draft.get("founder_name", "")).strip_edges()
-	_portrait_id = draft.get("portrait_id", "")
+	var founder: String = String(draft.get("founder_name", "")).strip_edges()
+	_preview_founder.text = founder if founder != "" else "Founder"
+	var portrait_id: String = draft.get("portrait_id", "")
+	var path: String = FounderConstants.portrait_path(portrait_id)
+	_preview_portrait.texture = load(path) if portrait_id != "" and ResourceLoader.exists(path) else null
 	_refresh_visual()
-	validity_changed.emit(is_valid())
 
 
 func is_valid() -> bool:
-	return _name_input != null \
-		and _name_input.text.strip_edges() != "" \
-		and _logo_style != ""
+	return _name_input.text.strip_edges() != "" and _logo_style != ""
 
 
 func collect_payload() -> Dictionary:

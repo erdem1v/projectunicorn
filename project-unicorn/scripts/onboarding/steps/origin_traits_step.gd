@@ -3,11 +3,11 @@ extends OnboardingStep
 # Page 2 — Köken ve Karakter. Three sections on one page, all data-driven from
 # FounderConstants (origins / traits / skills — never inline catalogs):
 #   KÖKEN      — self_made selectable; heir + corporate_refugee visible-locked
-#                (FULL-only per RELEASE SCOPE; disabled-card recipe).
+#                (GDD ch14 §3: other origins are locked-visible in the demo).
 #   KARAKTER   — Software-Inc trait formula: 1 positive free; 2 positives force
 #                exactly 1 negative (FounderConstants.validate_traits).
-#   YETENEKLER — POINT_POOL (6) points across 5 skills, per-skill cap 3, SegmentBar shows the
-#                shared 0-10 ruler (dagitim x FounderConstants.RULER_SCALE); İleri stays
+#   YETENEKLER — POINT_POOL points across FounderConstants.SKILLS, per-skill cap
+#                ONBOARDING_CAP; SegmentBar shows the shared 0-10 ruler; İleri stays
 #                blocked until every point is spent.
 #
 # Trait EFFECTS are reserved (no system consumes them yet) — this page only
@@ -15,10 +15,10 @@ extends OnboardingStep
 
 var _origin_id: String = ""
 var _trait_ids: Array[String] = []
-var _alloc: Dictionary = {}
+var _alloc: Dictionary = {}            # skill -> points; prefill writes every SKILLS key
 
-var _origin_cards: Dictionary = {}     # origin_id -> PanelContainer
-var _trait_rows: Dictionary = {}       # trait_id -> {check: Panel, row: Control}
+var _origin_cards: Dictionary = {}     # selectable origin_id -> PanelContainer
+var _trait_checks: Dictionary = {}     # trait_id -> check Panel
 var _pos_counter: Label = null
 var _neg_counter: Label = null
 var _skill_bars: Dictionary = {}       # skill -> SegmentBar
@@ -32,9 +32,6 @@ var _check_off: StyleBoxFlat = null
 
 
 func _ready() -> void:
-	for skill_key in FounderConstants.SKILLS:
-		if not _alloc.has(skill_key):
-			_alloc[skill_key] = 0
 	_check_on = StyleBoxFlat.new()
 	_check_on.bg_color = UiTokens.ACCENT
 	_check_on.set_corner_radius_all(3)
@@ -43,13 +40,7 @@ func _ready() -> void:
 	_check_off.set_border_width_all(1)
 	_check_off.border_color = UiTokens.CREAM_DIM
 	_check_off.set_corner_radius_all(3)
-	_build()
-	_refresh_all()
 
-
-# --- Layout ---
-
-func _build() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -72,12 +63,10 @@ func _build() -> void:
 
 
 func _section_header(title_key: String, sub_key: String) -> Control:
+	var wrap := VBoxContainer.new()
+	wrap.add_child(_spacer(8))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	var top_pad := Control.new()
-	top_pad.custom_minimum_size = Vector2(0, 8)
-	var wrap := VBoxContainer.new()
-	wrap.add_child(top_pad)
 	wrap.add_child(row)
 	row.add_child(UiFactory.make_label(tr(title_key), &"ZoneLabel", UiTokens.ACCENT))
 	row.add_child(UiFactory.make_label(tr(sub_key), &"SubtitleSerifCream"))
@@ -124,21 +113,17 @@ func _make_origin_card(origin: Dictionary) -> PanelContainer:
 	if origin["locked"]:
 		chips.add_child(UiFactory.make_pill(tr("LOCK_CHIP"),
 			Color(1, 1, 1, 0.05), UiTokens.CREAM_DIM))
-	else:
-		for chip in origin.get("chips", []):
-			var plus: bool = chip["kind"] == "plus"
-			var fg: Color = UiTokens.ACCENT if plus else UiTokens.negative_bright()
-			chips.add_child(UiFactory.make_pill(tr(chip["key"]),
-				Color(fg.r, fg.g, fg.b, 0.12), fg))
-
-	if origin["locked"]:
-		# Disabled-card recipe (origin_step precedent): visible but inert.
+		# Locked origin: visible but inert.
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.focus_mode = Control.FOCUS_NONE
 		card.modulate = Color(1, 1, 1, 0.45)
 	else:
-		card.gui_input.connect(_on_origin_input.bind(String(origin["id"])))
-	_origin_cards[String(origin["id"])] = card
+		for chip in origin.get("chips", []):
+			var fg: Color = UiTokens.ACCENT if chip["kind"] == "plus" else UiTokens.negative_bright()
+			chips.add_child(UiFactory.make_pill(tr(chip["key"]), Color(fg, 0.12), fg))
+		var origin_id := String(origin["id"])
+		card.gui_input.connect(_on_origin_input.bind(origin_id))
+		_origin_cards[origin_id] = card
 	return card
 
 
@@ -151,10 +136,8 @@ func _on_origin_input(event: InputEvent, origin_id: String) -> void:
 
 func _refresh_origins() -> void:
 	for origin_id in _origin_cards:
-		var card: PanelContainer = _origin_cards[origin_id]
-		if card.mouse_filter == Control.MOUSE_FILTER_IGNORE:
-			continue   # locked cards keep their dim state
-		card.theme_type_variation = &"DialogueChoiceHover" if origin_id == _origin_id else &"DialogueChoice"
+		(_origin_cards[origin_id] as PanelContainer).theme_type_variation = \
+			&"DialogueChoiceHover" if origin_id == _origin_id else &"DialogueChoice"
 
 
 # --- KARAKTER (traits) ---
@@ -162,10 +145,8 @@ func _refresh_origins() -> void:
 func _build_traits() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
-	var pos_col := _make_trait_column("ONB_TRAITS_POSITIVE", "positive")
-	var neg_col := _make_trait_column("ONB_TRAITS_NEGATIVE", "negative")
-	row.add_child(pos_col)
-	row.add_child(neg_col)
+	row.add_child(_make_trait_column("ONB_TRAITS_POSITIVE", "positive"))
+	row.add_child(_make_trait_column("ONB_TRAITS_NEGATIVE", "negative"))
 	return row
 
 
@@ -235,7 +216,7 @@ func _make_trait_row(t: Dictionary) -> Control:
 	row.add_child(text_col)
 
 	row.gui_input.connect(_on_trait_input.bind(trait_id))
-	_trait_rows[trait_id] = {"check": check, "row": row}
+	_trait_checks[trait_id] = check
 	return row
 
 
@@ -264,10 +245,9 @@ func _count_polarity(polarity: String) -> int:
 
 
 func _refresh_traits() -> void:
-	for trait_id in _trait_rows:
-		var selected: bool = _trait_ids.has(trait_id)
-		(_trait_rows[trait_id]["check"] as Panel).add_theme_stylebox_override(
-			"panel", _check_on if selected else _check_off)
+	for trait_id in _trait_checks:
+		(_trait_checks[trait_id] as Panel).add_theme_stylebox_override(
+			"panel", _check_on if _trait_ids.has(trait_id) else _check_off)
 	_pos_counter.text = "%d / %d" % [_count_polarity("positive"), FounderConstants.TRAIT_MAX_POSITIVE]
 	_neg_counter.text = "%d / %d" % [_count_polarity("negative"), FounderConstants.TRAIT_MAX_NEGATIVE]
 
@@ -307,13 +287,7 @@ func _make_skill_column(skill_key: String) -> PanelContainer:
 	controls.add_theme_constant_override("separation", 6)
 	col.add_child(controls)
 
-	var minus := Button.new()
-	minus.theme_type_variation = &"DialogueStepper"
-	minus.text = "−"
-	minus.focus_mode = Control.FOCUS_NONE
-	minus.pressed.connect(_on_skill_delta.bind(skill_key, -1))
-	controls.add_child(minus)
-	_skill_minus[skill_key] = minus
+	_skill_minus[skill_key] = _add_stepper(controls, "−", skill_key, -1)
 
 	var value := UiFactory.make_label("0", &"MetricValue", UiTokens.ACCENT)
 	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -322,14 +296,18 @@ func _make_skill_column(skill_key: String) -> PanelContainer:
 	controls.add_child(value)
 	_skill_values[skill_key] = value
 
-	var plus := Button.new()
-	plus.theme_type_variation = &"DialogueStepper"
-	plus.text = "+"
-	plus.focus_mode = Control.FOCUS_NONE
-	plus.pressed.connect(_on_skill_delta.bind(skill_key, 1))
-	controls.add_child(plus)
-	_skill_plus[skill_key] = plus
+	_skill_plus[skill_key] = _add_stepper(controls, "+", skill_key, 1)
 	return panel
+
+
+func _add_stepper(parent: Control, glyph: String, skill_key: String, delta: int) -> Button:
+	var b := Button.new()
+	b.theme_type_variation = &"DialogueStepper"
+	b.text = glyph
+	b.focus_mode = Control.FOCUS_NONE
+	b.pressed.connect(_on_skill_delta.bind(skill_key, delta))
+	parent.add_child(b)
+	return b
 
 
 func _make_points_card() -> PanelContainer:
@@ -357,14 +335,10 @@ func _make_points_card() -> PanelContainer:
 	return panel
 
 
+# The +/- buttons are disabled exactly when a step would leave 0..ONBOARDING_CAP or
+# overspend the pool (_refresh_skills), so a press is always a legal step.
 func _on_skill_delta(skill_key: String, delta: int) -> void:
-	var current: int = int(_alloc.get(skill_key, 0))
-	var next: int = current + delta
-	if next < 0 or next > FounderConstants.ONBOARDING_CAP:
-		return
-	if delta > 0 and FounderConstants.alloc_remaining(_alloc) <= 0:
-		return
-	_alloc[skill_key] = next
+	_alloc[skill_key] = int(_alloc[skill_key]) + delta
 	_refresh_skills()
 	validity_changed.emit(is_valid())
 
@@ -372,29 +346,22 @@ func _on_skill_delta(skill_key: String, delta: int) -> void:
 func _refresh_skills() -> void:
 	var remaining: int = FounderConstants.alloc_remaining(_alloc)
 	for skill_key in FounderConstants.SKILLS:
-		var v: int = int(_alloc.get(skill_key, 0))
-		# Sayac DAGITIM puanini gosterir (+/- onu adimliyor), cubuk onun CETVEL
-		# karsiligini cizer — kaydedilen deger de odur (GameState._build_founder).
+		var v: int = int(_alloc[skill_key])
+		# Sayac DAGITIM puanini gosterir (+/- onu adimlar), cubuk onun CETVEL karsiligini
+		# cizer: kurucu calisanla ayni 0-10 cetvelde (Ekip GDD §2.4 + §4.1) ve kaydedilen
+		# deger de odur (GameState._build_founder). Yoksa 3 puan harcayan oyuncu kurucunun
+		# 6/10 tasidigini hicbir yerde okuyamaz.
 		(_skill_bars[skill_key] as SegmentBar).set_filled(FounderConstants.to_ruler(v))
 		(_skill_values[skill_key] as Label).text = str(v)
-		(_skill_minus[skill_key] as Button).disabled = (v <= 0)
-		(_skill_plus[skill_key] as Button).disabled = (v >= FounderConstants.ONBOARDING_CAP or remaining <= 0)
+		(_skill_minus[skill_key] as Button).disabled = v <= 0
+		(_skill_plus[skill_key] as Button).disabled = v >= FounderConstants.ONBOARDING_CAP or remaining <= 0
 	_points_value.text = str(remaining)
-	var done: bool = (remaining == 0)
-	_points_value.add_theme_color_override("font_color", UiTokens.CREAM if done else UiTokens.ACCENT)
-
-
-func _refresh_all() -> void:
-	_refresh_origins()
-	_refresh_traits()
-	_refresh_skills()
+	_points_value.add_theme_color_override("font_color", UiTokens.CREAM if remaining == 0 else UiTokens.ACCENT)
 
 
 # --- OnboardingStep contract ---
 
 func prefill(draft: Dictionary) -> void:
-	if not is_node_ready():
-		await ready
 	_origin_id = draft.get("origin_id", "")
 	_trait_ids.clear()
 	for trait_id in draft.get("trait_ids", []):
@@ -402,8 +369,9 @@ func prefill(draft: Dictionary) -> void:
 	var alloc: Dictionary = draft.get("skill_alloc", {})
 	for skill_key in FounderConstants.SKILLS:
 		_alloc[skill_key] = int(alloc.get(skill_key, 0))
-	_refresh_all()
-	validity_changed.emit(is_valid())
+	_refresh_origins()
+	_refresh_traits()
+	_refresh_skills()
 
 
 func is_valid() -> bool:

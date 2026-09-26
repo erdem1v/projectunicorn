@@ -6,26 +6,31 @@ extends Control
 # their own UI freely below the contract.
 #
 # Lifecycle (controller-driven):
-#   1. instance(step_scene) -> OnboardingStep
-#   2. prefill(draft) — give the step its slice of prior choices (Back-nav)
-#   3. step refresh_validity() emits when its internal selection changes
+#   1. instantiate the step scene and add it under StepHost
+#   2. prefill(draft) — give the step its slice of prior choices; the step
+#      paints its selection state here, so prefill always follows add_child
+#   3. the step emits validity_changed when its selection changes
 #   4. controller checks .is_valid() to enable / disable Next
-#   5. on Next: payload = step.collect_payload(); controller merges into draft
+#   5. on Next / Back: controller merges step.collect_payload() into draft
 
 signal validity_changed(is_valid: bool)
 
 
 func prefill(_draft: Dictionary) -> void:
-	# Default no-op — steps override to restore prior selections on Back.
 	pass
 
 
 func is_valid() -> bool:
-	# Default no-op — steps override. Returning true here would let Next
-	# fire prematurely; assume invalid until proven otherwise.
+	# Returning true here would let Next fire prematurely; assume invalid
+	# until a step overrides.
 	return false
 
 
 func collect_payload() -> Dictionary:
-	# Default empty — steps override to return their slice of draft.
 	return {}
+
+
+func _spacer(height: int) -> Control:
+	var s := Control.new()
+	s.custom_minimum_size = Vector2(0, height)
+	return s

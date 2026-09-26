@@ -6,7 +6,7 @@ extends OnboardingStep
 # by the portrait; there is no separate field.
 #
 # Thin-skeleton scene: the .tscn holds only the root; the layout is built here
-# from theme variations + UiTokens (term_sheet_table_scene.gd precedent).
+# from theme variations + UiTokens.
 
 const PORTRAIT_CARD := preload("res://scenes/ui/components/DialoguePortraitCard.tscn")
 
@@ -23,11 +23,6 @@ var _name_input: LineEdit = null
 
 
 func _ready() -> void:
-	_build()
-	_refresh_visual()
-
-
-func _build() -> void:
 	var page := VBoxContainer.new()
 	page.set_anchors_preset(Control.PRESET_FULL_RECT)
 	page.add_theme_constant_override("separation", 6)
@@ -65,7 +60,7 @@ func _build() -> void:
 	_name_input.theme_type_variation = &"DialogueInput"
 	_name_input.max_length = 40
 	_name_input.placeholder_text = tr("ONB_NAME_PLACEHOLDER")
-	_name_input.text_changed.connect(_on_name_changed)
+	_name_input.text_changed.connect(_refresh_preview_name.unbind(1))
 	left.add_child(_name_input)
 
 	# --- Right: portrait grid ---
@@ -119,45 +114,31 @@ func _on_cell_input(event: InputEvent, portrait_id: String) -> void:
 		validity_changed.emit(is_valid())
 
 
-func _on_name_changed(_text: String) -> void:
-	_refresh_preview_name()
-
-
 func _refresh_preview_name() -> void:
-	var display: String = _name_input.text.strip_edges() if _name_input != null else ""
+	var display: String = _name_input.text.strip_edges()
 	_preview_name.text = display if display != "" else "Founder"
 
 
 func _refresh_visual() -> void:
 	for portrait_id in _cells:
 		var cell: PanelContainer = _cells[portrait_id]
-		var selected: bool = (portrait_id == _portrait_id)
+		var selected: bool = portrait_id == _portrait_id
 		cell.theme_type_variation = &"PortraitCellSelected" if selected else &"PortraitCell"
 		cell.modulate = Color(1, 1, 1, 1.0 if selected else 0.55)
-	if _portrait_id != "":
-		_preview_card.set_portrait(FounderConstants.portrait_path(_portrait_id), "")
-		_selected_chip.text = tr("ONB_SELECTED_CHIP").format({"id": _portrait_id.get_slice("_", 1)})
+	_preview_card.set_portrait(FounderConstants.portrait_path(_portrait_id))
+	_selected_chip.text = tr("ONB_SELECTED_CHIP").format({"id": _portrait_id.get_slice("_", 1)})
 	_refresh_preview_name()
-
-
-func _spacer(height: int) -> Control:
-	var s := Control.new()
-	s.custom_minimum_size = Vector2(0, height)
-	return s
 
 
 # --- OnboardingStep contract ---
 
 func prefill(draft: Dictionary) -> void:
-	if not is_node_ready():
-		await ready
 	_name_input.text = draft.get("founder_name", "")
 	_portrait_id = draft.get("portrait_id", "")
-	if _portrait_id == "" and not FounderConstants.PORTRAIT_IDS.is_empty():
+	if _portrait_id == "":
 		# Mockup default: first portrait pre-selected — a face from the first frame.
 		_portrait_id = FounderConstants.PORTRAIT_IDS[0]
 	_refresh_visual()
-	validity_changed.emit(is_valid())
 
 
 func is_valid() -> bool:

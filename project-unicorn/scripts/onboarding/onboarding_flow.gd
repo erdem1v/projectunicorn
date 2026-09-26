@@ -1,16 +1,13 @@
 extends Control
 
 # Onboarding flow controller — 3-page dark-register threshold ceremony
-# (KARAKTER → KÖKEN → ŞİRKET), replacing the old 6-step cream flow. Sequences
-# the step scenes, holds the in-progress draft in memory, calls
-# GameState.initialize_run on the final "Kur ve Başla". Nothing is written to
-# GameState or CharacterRegistry before that commit.
+# (KARAKTER → KÖKEN → ŞİRKET). Sequences the step scenes, holds the in-progress
+# draft in memory, calls GameState.initialize_run on the final "Kur ve Başla".
+# Nothing is written to GameState or CharacterRegistry before that commit.
 #
-# Architecture (the pattern repeats for Quarterly Summary, VC Pitch chains,
-# event-chain scenes later):
-#   - One controller scene, one StepHost child container.
-#   - Step scenes loaded lazily (PackedScene.instantiate) and freed when
-#     leaving — only one step in the tree at a time.
+# Architecture:
+#   - Each step scene is instantiated on mount and freed on leave; only one
+#     step is live at a time.
 #   - draft Dictionary is the single source of in-progress truth.
 #   - Steps implement the OnboardingStep contract (step_base.gd) and don't
 #     know about the controller or each other.
@@ -22,21 +19,21 @@ extends Control
 
 signal completed   # main.gd listens; frees this scene and instances GameShell
 
-const STEP_CHARACTER := preload("res://scenes/onboarding/steps/CharacterStep.tscn")
-const STEP_ORIGIN_TRAITS := preload("res://scenes/onboarding/steps/OriginTraitsStep.tscn")
-const STEP_COMPANY := preload("res://scenes/onboarding/steps/CompanyStep.tscn")
+const STEPS: Array[PackedScene] = [
+	preload("res://scenes/onboarding/steps/CharacterStep.tscn"),
+	preload("res://scenes/onboarding/steps/OriginTraitsStep.tscn"),
+	preload("res://scenes/onboarding/steps/CompanyStep.tscn"),
+]
 
 # Named stepper: one CSV key per page (KARAKTER · KÖKEN · ŞİRKET).
 const STEP_NAME_KEYS := ["ONB_STEP_CHARACTER", "ONB_STEP_ORIGIN", "ONB_STEP_COMPANY"]
-
-var _steps: Array[PackedScene] = []
 
 var draft: Dictionary = {
 	"founder_name": "",
 	"portrait_id": "",
 	"origin_id": "",
 	"trait_ids": [],
-	"skill_alloc": {},   # seeded from FounderConstants.SKILLS in _ready — see below
+	"skill_alloc": {},
 	"company_name": "",
 	"logo_style": "",
 	"slogan": "",
@@ -60,27 +57,16 @@ var _step_counter: Label = null
 
 
 func _ready() -> void:
-	# The allocation draft is seeded FROM the canonical skill list, never from a literal:
-	# the 2026-08-21 area migration took the founder from five skills to eight, and a
-	# hand-written seed here would have gone stale silently (validate_alloc counts missing
-	# keys as 0, so the pool would still balance and nothing would scream).
-	draft["skill_alloc"] = FounderConstants.default_founder_skills()
-	_steps = [STEP_CHARACTER, STEP_ORIGIN_TRAITS, STEP_COMPANY]
-	_apply_dark_register()
-	_build_header()
-	loading_overlay.visible = false
-	back_btn.text = tr("ONB_BACK")
-	back_btn.pressed.connect(_on_back_pressed)
-	next_btn.pressed.connect(_on_next_pressed)
-	_mount_step(0)
-
-
-func _apply_dark_register() -> void:
 	# Colors come from tokens in code, never inline in the .tscn (UiTokens law).
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = UiTokens.DIALOGUE_BG
 	background.add_theme_stylebox_override("panel", bg)
 	loading_label.add_theme_color_override("font_color", UiTokens.CREAM)
+	_build_header()
+	back_btn.text = tr("ONB_BACK")
+	back_btn.pressed.connect(_on_back_pressed)
+	next_btn.pressed.connect(_on_next_pressed)
+	_mount_step(0)
 
 
 func _build_header() -> void:
@@ -97,7 +83,7 @@ func _build_header() -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(spacer)
 
-	for i in _steps.size():
+	for i in STEPS.size():
 		if i > 0:
 			var line := Panel.new()
 			line.custom_minimum_size = Vector2(18, 1)
@@ -119,94 +105,58 @@ func _build_header() -> void:
 
 func _refresh_stepper(index: int) -> void:
 	for i in _stepper_labels.size():
-		var active: bool = (i == index)
-		var reached: bool = (i <= index)
+		var reached: bool = i <= index
 		_stepper_labels[i].add_theme_color_override("font_color",
-			UiTokens.ACCENT if active else (UiTokens.CREAM if reached else UiTokens.CREAM_DIM))
-		# make_dot styles via an override stylebox — recolor in place.
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = UiTokens.ACCENT if reached else UiTokens.CREAM_DIM
-		sb.set_corner_radius_all(4)
-		_stepper_dots[i].add_theme_stylebox_override("panel", sb)
-	_step_counter.text = "%d / %d" % [index + 1, _steps.size()]
+			UiTokens.ACCENT if i == index else (UiTokens.CREAM if reached else UiTokens.CREAM_DIM))
+		# make_dot gives every dot its own override stylebox — recolor it in place.
+		(_stepper_dots[i].get_theme_stylebox("panel") as StyleBoxFlat).bg_color = \
+			UiTokens.ACCENT if reached else UiTokens.CREAM_DIM
+	_step_counter.text = "%d / %d" % [index + 1, STEPS.size()]
 
 
 # --- Step lifecycle ---
 
 func _mount_step(index: int) -> void:
-	if index < 0 or index >= _steps.size():
-		return
-
-	# Tear down current
 	if _current_step_node != null:
-		if _current_step_node.validity_changed.is_connected(_on_step_validity_changed):
-			_current_step_node.validity_changed.disconnect(_on_step_validity_changed)
+		_current_step_node.validity_changed.disconnect(_on_step_validity_changed)
 		_current_step_node.queue_free()
-		_current_step_node = null
 
 	_current_step_index = index
-
-	# Instantiate new
-	var instance: Node = _steps[index].instantiate()
-	if not (instance is OnboardingStep):
-		push_error("[OnboardingFlow] Step %d does not extend OnboardingStep" % index)
-		instance.queue_free()
-		return
-	_current_step_node = instance as OnboardingStep
+	_current_step_node = STEPS[index].instantiate()
 	step_host.add_child(_current_step_node)
 	_current_step_node.prefill(draft)
 	_current_step_node.validity_changed.connect(_on_step_validity_changed)
 
-	# Header + footer sync
 	_refresh_stepper(index)
-	footer_step_label.text = tr("ONB_STEP_COUNTER").format({"step": index + 1, "total": _steps.size()})
-	back_btn.disabled = (index == 0)
-	next_btn.text = tr("ONB_START") if index == _steps.size() - 1 else tr("ONB_NEXT")
-	_refresh_next_enabled()
-
-
-func _refresh_next_enabled() -> void:
-	if _current_step_node == null:
-		next_btn.disabled = true
-		return
+	footer_step_label.text = tr("ONB_STEP_COUNTER").format({"step": index + 1, "total": STEPS.size()})
+	back_btn.disabled = index == 0
+	next_btn.text = tr("ONB_START") if index == STEPS.size() - 1 else tr("ONB_NEXT")
 	next_btn.disabled = not _current_step_node.is_valid()
 
 
 # --- Signal handlers ---
 
-func _on_step_validity_changed(_is_valid: bool) -> void:
-	_refresh_next_enabled()
+func _on_step_validity_changed(valid: bool) -> void:
+	next_btn.disabled = not valid
 
 
+# Back is disabled on the first page and during the commit, so it never fires there.
 func _on_back_pressed() -> void:
-	if _committing:
-		return
 	# Capture any partial selections before leaving so they reappear on Forward.
-	if _current_step_node != null:
-		var partial: Dictionary = _current_step_node.collect_payload()
-		_merge_into_draft(partial)
-	if _current_step_index > 0:
-		_mount_step(_current_step_index - 1)
+	draft.merge(_current_step_node.collect_payload(), true)
+	_mount_step(_current_step_index - 1)
 
 
 func _on_next_pressed() -> void:
-	if _committing or _current_step_node == null:
+	# Typing into the last step during the commit beat re-enables Next through
+	# validity_changed, so _committing is checked here and not only via disabled.
+	if _committing or not _current_step_node.is_valid():
 		return
-	if not _current_step_node.is_valid():
-		return
-	var payload: Dictionary = _current_step_node.collect_payload()
-	_merge_into_draft(payload)
-	if _current_step_index < _steps.size() - 1:
+	draft.merge(_current_step_node.collect_payload(), true)
+	if _current_step_index < STEPS.size() - 1:
 		_mount_step(_current_step_index + 1)
 	else:
 		_commit()
-
-
-# --- Draft merge ---
-
-func _merge_into_draft(payload: Dictionary) -> void:
-	for k in payload.keys():
-		draft[k] = payload[k]
 
 
 # --- Commit (final state-write) ---
@@ -218,8 +168,8 @@ func _commit() -> void:
 	loading_overlay.visible = true
 	loading_label.text = tr("ONB_PREPARING")
 
-	# Brief loading visual so the transition feels intentional — not an
-	# artificial delay; it covers the GameShell instantiation jank in main.gd.
+	# A short loading beat so the transition feels intentional; the overlay
+	# stays up while main.gd builds GameShell on completed.
 	await get_tree().create_timer(1.0).timeout
 
 	GameState.initialize_run(draft)

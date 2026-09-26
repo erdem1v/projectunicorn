@@ -1,9 +1,10 @@
 extends Control
 
-# First modal in the project — establishes the pattern.
 # Mounted into GameShell/ModalLayer by main.gd after the shell is in place.
 # Tree is still paused while this is up; root has process_mode = ALWAYS so
 # the Continue button stays responsive.
+# MENTOR_INTRO_BODY (set in the .tscn) is written for Self-Made, the only
+# playable origin in the demo (GDD ch14 §2).
 
 signal dismissed
 
@@ -18,8 +19,6 @@ func _ready() -> void:
 		name_label.text = mentor.character_name
 		# role is a typed id — never print it raw (renders "Operating Partner").
 		role_label.text = HRConstants.role_label(mentor.role)
-	# Body text is keyed to Self-Made (only playable origin this turn).
-	# Future variants will live in a dict keyed by GameState.origin.
 	continue_btn.pressed.connect(_on_continue_pressed)
 	continue_btn.grab_focus()
 
