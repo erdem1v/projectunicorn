@@ -172,7 +172,7 @@ signal prospect_added(prospect_id: String)
 signal prospect_removed(prospect_id: String)
 # Sales tab "Görüşmeye git" → main.gd opens the pitch in the shared MeetingScene.
 signal pitch_requested(prospect_id: String)
-# A sales sitting ended (any outcome); Sales/Hunt tabs repaint.
+# A sales or VC/seed sitting ended (any outcome, withdraw included); Sales/Hunt tabs repaint.
 signal pitch_finished()
 
 # --- SATIŞ rev 6 §14 · the module's signal vocabulary ------------------------

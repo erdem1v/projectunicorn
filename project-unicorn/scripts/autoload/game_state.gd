@@ -220,7 +220,7 @@ var run_pushes_won: int = 0            # successful pushes
 var run_peak_mrr: int = 0              # latched in set_mrr
 # Signed Series A terms, persisted at VCPitchSystem.sign_table. 0 unless a sheet was signed.
 var run_investment_amount: int = 0     # money raised, dollars
-var run_valuation_m: int = 0           # pre-money valuation, millions
+var run_valuation_m: int = 0           # post-money valuation, millions (raised = valuation × equity)
 var run_equity_pct: int = 0            # equity given == signed dilution_pct
 var run_board_seats: int = 0
 var run_board_veto: bool = false
@@ -239,7 +239,7 @@ var vc_states: Dictionary = {}         # vc_id -> {status, callback, pending_she
 var active_sheets: Array = []          # live TermSheet resources (max PitchConstants.MAX_SHEETS)
 var pending_meeting: Dictionary = {}   # {vc_id, day} — one at a time; empty = none
 var prep: Dictionary = {}              # {vc_id, focus, done} — one prep per scheduled meeting
-var run_pitches: int = 0               # completed meetings
+var run_pitches: int = 0               # completed Series A meetings (the seed room is not counted)
 var run_sheets_won: int = 0            # sheets granted
 var vc_meeting_cancel_day: int = -1    # the day a booked meeting was cancelled; no new booking that day
 var vc_last_meeting_rejected: bool = false  # did the last FINISHED Series A meeting end in a rejection?

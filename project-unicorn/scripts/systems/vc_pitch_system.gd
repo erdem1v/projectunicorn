@@ -118,6 +118,7 @@ static func withdraw() -> void:
 		return
 	GameState.pending_meeting.clear()
 	reset()
+	EventBus.pitch_finished.emit()
 
 
 # ============================================================================
@@ -242,11 +243,9 @@ static func _finish_conviction(base: int, why: Array) -> Dictionary:
 
 static func _resolve_beat1(_choice_id: String) -> Dictionary:
 	# Odayı Oku — perception. Success reveals the tell (Beat 2 marks the favored angle).
-	var chk: Dictionary = SkillCheck.resolve(PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0)
-	if chk.passed:
-		_intel = true
+	_intel = SkillCheck.resolve(PitchConstants.BEAT1_SKILL, PitchConstants.BEAT1_DIFF, 0).passed
 	_beat = 2
-	return {"done": false, "view_state": _beat2_view_state(chk)}
+	return {"done": false, "view_state": _beat2_view_state()}
 
 
 static func _resolve_beat2(choice_id: String) -> Dictionary:
@@ -324,8 +323,12 @@ static func _resolve_beat4(choice_id: String) -> Dictionary:
 
 
 static func _finish() -> Dictionary:
-	GameState.run_pitches += 1
+	# Series A only: every reader of run_pitches (the ending papers' "tables were sat at, no
+	# signature came") means a Series A table, the reason _grant_seed_sheet skips run_sheets_won.
+	if _stage == PitchConstants.STAGE_SERIES_A:
+		GameState.run_pitches += 1
 	reset()
+	EventBus.pitch_finished.emit()
 	return {"done": true}
 
 
@@ -900,9 +903,12 @@ static func _beat1_view_state(why: Array) -> Dictionary:
 	return vs
 
 
-static func _beat2_view_state(prev: Dictionary) -> Dictionary:
+static func _beat2_view_state() -> Dictionary:
 	var vs: Dictionary = _base_view_state()
-	vs["active_line"] = _active_line(_react_line(prev) + _t(_k("B2_LINE")))
+	# No reaction prefix here: Beat 1 is the founder silently reading the room, a roll the
+	# investor cannot see and that moves no conviction. What it earned shows below instead
+	# (the marked angle, or the monologue).
+	vs["active_line"] = _active_line(_t(_k("B2_LINE")))
 	vs["monologue_text"] = _t(_k("B2_MONO")) if not _intel else ""
 	vs["beat_label"] = _t("VC_BEAT2_LABEL")
 	var favored: String = InvestorRegistry.favored_angle(_vc_id) if _intel else ""
@@ -1073,12 +1079,14 @@ static func _sorgu_metrics() -> Dictionary:
 static func _sorgu_team() -> Dictionary:
 	if GameState.unmanaged_major_scandal:
 		return {"key": "scandal", "vc_line": _t("VC_Q_SCANDAL"), "mono": _t("VC_Q_SCANDAL_MONO")}
+	# Solo before no-engineers: an empty team also has zero developers, so the narrower
+	# question has to be asked first or it can never come up.
+	if CharacterRegistry.get_employees().is_empty():
+		return {"key": "solo", "vc_line": _t("VC_Q_SOLO"), "mono": _t("VC_Q_SOLO_MONO")}
 	# Headcount lens, not capacity: a company whose only developer is on holiday has
 	# not become an engineer-less company, so this reads the unfiltered count.
 	if CharacterRegistry.count_developers() == 0:
 		return {"key": "no_engineers", "vc_line": _t("VC_Q_NO_ENGINEERS"), "mono": _t("VC_Q_NO_ENGINEERS_MONO")}
-	if CharacterRegistry.get_employees().is_empty():
-		return {"key": "solo", "vc_line": _t("VC_Q_SOLO"), "mono": _t("VC_Q_SOLO_MONO")}
 	return _clean_sorgu()
 
 

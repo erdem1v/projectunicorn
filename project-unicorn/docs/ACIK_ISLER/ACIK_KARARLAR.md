@@ -179,6 +179,21 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Kaynak: Olay motoru GDD §4.3, §20 A6, §27.4 (seçiciler), §27.5 madde 2 (iki canlı teklifte ikinci uyarının
     yutulması); docs/ACIK_ISLER/ACIK_KARARLAR.md 5. madde (aynı seçici düzeneği).
 
+- **10 · VC iç sesi, sorulmuş soruya gelecek zamanla bakıyor (Beat 3 _MONO satırları).**
+  - Ne oluyor: 3. vuruşta VC'nin sorusu (active_line) ile iç ses (monologue_text) aynı ekranda aynı anda çıkıyor. İç
+    ses satırları ise gelecek zamanda yazılmış: "Churn'ü soracak.", "Tek-kurucu riskini soracak.", "Rakibi masaya
+    koyacak.", "En zayıf ekseni bulacak.". Oyuncu soruyu okurken iç ses onun daha sorulacağını söylüyor.
+  - Nerede: `scripts/systems/vc_pitch_system.gd` (`_beat3_view_state`: soru `active_line`, iç ses `monologue_text`),
+    `scripts/modals/meeting_scene.gd` (`_apply_active_line` ikisini aynı anda çizer); anahtarlar `VC_Q_*_MONO` ve
+    `SEED_Q_*_MONO`.
+  - Oyuncuya etkisi: Sahnenin zamanı kayıyor: VC sormuş, iç ses "soracak" diyor. Satır bir önsezi gibi okunuyor ama
+    önsezi için artık çok geç. Hazırlık ipucunun ("Sayıları hazırla") işe yarayacağı an zaten geçmiş.
+  - Seçenekler: A) Metin: iç ses satırları şimdiki zamana ya da tepkiye çevrilir (ör. "Churn'ü soruyor. Sayılar hazır
+    mı?"). TR ve EN sahip yazar, mekanik değişmez. B) Zamanlama: iç ses 2. vuruşta, soru gelmeden önce gösterilir.
+    Bunun 1. vuruş istihbaratına bağlanıp bağlanmayacağı ayrıca seçilir. Bu, vuruş yapısını değiştirir. C) Olduğu gibi
+    kalır. K31 (toplantı diyaloglarının yazım turu) kapsamına alınabilir.
+  - Kaynak: ONERI_v3 §2 (şüphe 5); ACIK_KARARLAR Frank belgeleri maddesi (K31 yazım turu).
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında
@@ -378,7 +393,7 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   "yeniden tasarlanacak" diye metinsiz bırakıyor, metnin sahip onayı belirsiz. FRANK_UNWIRED §1, §5 ve §6 bayat: seed
   kapısının metni var, `goto_tab` fiili yedi kartta çalışıyor, `FIN_SUBTAB_INVESTMENT` EN'i "Funding"; belge güncellenmeli.
   Kodun okumadığı ama karar gelene kadar CSV'de kalan Frank metni: `VC_EV_DEAL_TITLE`, `DEAL_PROMPT_LINE`,
-  `DEAL_PROMPT_SIT`, `DEAL_PROMPT_VALIDITY`, `DEAL_PROMPT_DEFER`, `VC_EV_ENTER_MEETING`, `VC_EV_SKIP_MEETING`, `VC_EV_ACK`,
+  `DEAL_PROMPT_SIT`, `DEAL_PROMPT_VALIDITY`, `DEAL_PROMPT_DEFER`, `VC_EV_SKIP_MEETING`, `VC_EV_ACK`,
   `END_EV_PIVOT_TITLE`, `END_EV_PIVOT_BODY`, `END_EV_PIVOT_ACCEPT`, `END_EV_PIVOT_DECLINE`, `PITCH_S0_NPC`, `PITCH_S0_INNER`,
   `PITCH_INNER_CLOSED`, `PROD_SHIP_VERSION_BODY`, `PROD_SHIP_FIRST_READY`, `PROD_SHIP_FIRST_BODY`,
   `PROD_DESIGN_CEILING_NOTE`, `PROD_DESIGN_DECISION_BODY`, `PROD_ITER_CEILING_NOTE`.
@@ -402,10 +417,10 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   `uid=` öznitelikleriyle yeniden kaydetti; fark commit edilmemiş duruyor. `oda_frozen_theme` "düzenlenmez" kuralı altında.
   Seçenekler: geri al ya da commit et.
 
-- **Doğrulanmamış hata şüpheleri.** Okuyucu ajan bildirdi, kimse doğrulamadı: `VC_Q_SOLO` hiç çıkmıyor; `run_investment_amount`
-  pre-money değeri post-money gibi kullanıyor; 1. vuruş "Algı" etiketli ama zar Karizma ile atılıyor; VC kurucu konuşmadan "Beni
-  ikna etmedi" diyor; iç ses gelecek zamanda; Av görüşmeden sonra yenilenmiyor; `meeting_day` butonunun etiketi yanlış; seed
-  görüşmesi `run_pitches`'i artırıyor; `_sheet_for` seed teklifini seçebiliyor. Kaynak: ONERI_v3 §2 (🔎 listesi).
+- **VC hata şüpheleri: kalan bir madde.** Dokuz şüphe doğrulandı; altısı düzeltildi (VC_Q_SOLO, 1. vuruş sonrası tepki
+  satırı, Av sayfasının yenilenmemesi, meeting_day etiketi, seed görüşmesinin run_pitches sayması, pre/post-money yorumu),
+  "Algı" etiketi hata değil (Algı yaklaşımın adı; ch02 §4 pitch'i Karizma'ya verir), iç sesin gelecek zamanı 10. madde.
+  Kalan: `_sheet_for` seed teklifini Series A masası yerine açabiliyor; düzeltmesi sıradaki commit'te. Kaynak: ONERI_v3 §2.
 
 - **Seam envanterinin açık YOK satırları.** Olay motoru GDD §6.3 YOK satırlarını sahibi modülün
   açık işi olarak dosyalatır; envanter dosyası silindi (GDD §27.8). Hâlâ açık olanlar:

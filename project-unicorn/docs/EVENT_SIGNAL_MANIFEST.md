@@ -1,7 +1,7 @@
 # EVENT SIGNAL MANIFEST
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
-Source: `scripts/autoload/event_bus.gd` plus every `.gd` under `scripts/`. Last generated 2026-09-26.
+Source: `scripts/autoload/event_bus.gd` plus every `.gd` under `scripts/`. Last generated 2026-09-27.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -188,7 +188,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `prospect_added` | `prospect_id: String` | prospect_registry | 1 | 0 | — |
 | `prospect_removed` | `prospect_id: String` | prospect_registry | 1 | 0 | — |
 | `pitch_requested` | `prospect_id: String` | sales_tab | 1 | 1 | main |
-| `pitch_finished` | `—` | sales_meeting_system | 1 | 0 | — |
+| `pitch_finished` | `—` | sales_meeting_system · vc_pitch_system | 3 | 0 | — |
 | `prospect_arrived` | `prospect_id: String` | sales_faucet_system | 1 | 0 | — |
 | `lead_expired` | `prospect_id: String` | sales_faucet_system | 1 | 0 | — |
 | `lead_reserved` | `prospect_id: String` | sales_ledger | 1 | 0 | — |

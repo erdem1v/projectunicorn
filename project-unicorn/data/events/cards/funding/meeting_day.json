@@ -43,14 +43,14 @@
       "title": "VC_EV_MEETING_TITLE",
       "body": "VC_EV_MEETING_BODY",
       "options": {
-        "go": "VC_EV_GO_FUNDING"
+        "go": "VC_EV_ENTER_MEETING"
       }
     },
     "en": {
       "title": "VC_EV_MEETING_TITLE",
       "body": "VC_EV_MEETING_BODY",
       "options": {
-        "go": "VC_EV_GO_FUNDING"
+        "go": "VC_EV_ENTER_MEETING"
       }
     }
   }
