@@ -283,6 +283,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"account_ownership_round_trip":     fail = _case_account_ownership_round_trip()
 		"founder_owns_accounts_manually":   fail = _case_founder_owns_accounts_manually()
 		"event_queue_dedupe_by_id":           fail = _case_event_queue_dedupe_by_id()
+		"event_instance_per_subject":         fail = _case_event_instance_per_subject()
 		# --- Driver-run fixes, 2026-08-17. Each one FAILS against the pre-fix engine;
 		#     each was found by a 90-day driver run (--run-log), not by reading.
 		"promise_no_duplicate_word":          fail = _case_promise_no_duplicate_word()
@@ -4042,10 +4043,11 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 	var eid: String = EXPANSION_ID
 	if not EventGate.request(eid, {"customer": m.id}):
 		return "the expansion card was refused for a mature healthy account"
+	var paper: String = EvLatches.key_of(eid, _ctx_customer(m))
 	var desk: Array = EventGate.desk_papers(8)
 	var on_desk: bool = false
 	for entry in desk:
-		if String((entry as Dictionary)["id"]) == eid:
+		if String((entry as Dictionary)["id"]) == paper:
 			on_desk = true
 			if int((entry as Dictionary)["days_left"]) <= 0:
 				return "the expansion paper landed with no clock"
@@ -4053,7 +4055,7 @@ static func _case_b2b_expansion_moves_seats_mrr_counter() -> String:
 		return "the expansion card did not reach the desk (desk: %d paper(s))" % desk.size()
 	if EventGate.active_id() == eid:
 		return "a paper mounted itself as a modal"
-	if not EventGate.open_paper(eid):
+	if not EventGate.open_paper(paper):
 		return "the paper would not open"
 	EventGate.resolve(eid, "expand")
 	if m.seats <= seats_before:
@@ -4788,9 +4790,7 @@ static func _request_cards_up() -> int:
 		# THE DESK COUNTS. These three are papers, and a paper is deliberately not in the
 		# queue — `_instances_of` reads the queue and the active slot, so counting only there
 		# says "nothing escalated" about a request sitting on the desk with its clock running.
-		n += _instances_of(id)
-		if EvPapers.has(id):
-			n += 1
+		n += _instances_of(id) + EvPapers.keys_of(id).size()
 	return n
 
 
@@ -5043,14 +5043,15 @@ static func _case_b2b_expansion_no_refire() -> String:
 	B2BSalesSystem.daily_tick()
 	if not EventGate.request(eid, {"customer": c.id}):
 		return "expansion never offered"
-	if not EventGate.open_paper(eid):
+	var paper: String = EvLatches.key_of(eid, _ctx_customer(c))
+	if not EventGate.open_paper(paper):
 		return "the expansion paper would not open"
 	EventGate.resolve(eid, "expand")
 	var mrr_after_upsell: int = c.mrr
 	for i in 6:
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
-		if EventGate.active_id() == eid or _instances_of(eid) > 0 or EvPapers.has(eid):
+		if EventGate.active_id() == eid or _instances_of(eid) > 0 or EvPapers.has(paper):
 			return "expansion re-fired after ACCEPT (day %d)" % GameState.day
 	if c.mrr != mrr_after_upsell:
 		return "MRR kept growing after one upsell (%d -> %d)" % [mrr_after_upsell, c.mrr]
@@ -5068,21 +5069,21 @@ static func _case_b2b_expansion_no_refire() -> String:
 	d.acquired_on_day = GameState.day - (B2BConstants.EXPANSION_MATURE_DAYS + 1)
 	CustomerRegistry.set_lifecycle_phase(d.id, "active")
 	CustomerRegistry.set_satisfaction(d.id, 80)
-	# ONE card id for the whole family, so the second account cannot have its own. The first
-	# account's paper is already answered, which is what leaves the id free — and the entity
-	# latch is what keeps the two accounts' offers from absorbing each other.
+	# ONE card id for the whole family; the entity latch makes each account's offer its own
+	# instance, with its own paper on the desk.
 	var did: String = EXPANSION_ID
 	GameState.advance_day()
 	B2BSalesSystem.daily_tick()
 	if not EventGate.request(did, {"customer": d.id}):
 		return "expansion never offered to the second account"
-	if not EventGate.open_paper(did):
+	var d_paper: String = EvLatches.key_of(did, _ctx_customer(d))
+	if not EventGate.open_paper(d_paper):
 		return "the second account's expansion paper would not open"
 	EventGate.resolve(did, "not_yet")
 	for i in 6:
 		GameState.advance_day()
 		B2BSalesSystem.daily_tick()
-		if EventGate.active_id() == did or _instances_of(did) > 0 or EvPapers.has(did):
+		if EventGate.active_id() == did or _instances_of(did) > 0 or EvPapers.has(d_paper):
 			return "expansion re-fired after DECLINE (day %d)" % GameState.day
 	# The Sales-tab button asks the same gate, so the loop cannot be reopened through the UI.
 	if B2BSalesSystem.can_offer_expansion(d):
@@ -5732,6 +5733,50 @@ static func _case_event_queue_dedupe_by_id() -> String:
 	EventGate.request(EXPANSION_ID, {"customer": c.id})
 	if _instances_of(EXPANSION_ID) > 1:
 		return "one event id entered the pipeline %d times" % _instances_of(EXPANSION_ID)
+	return ""
+
+
+## Instances keyed by EvLatches.key_of. A's signal re-ask is not queued beside A's paper, and
+## the Sales tab asking for A opens that paper; B's and C's cards neither absorb each other nor
+## take A's paper off the desk; two papers of one card survive a save, including a save that
+## keyed its desk by card id. FALSIFICATION: key EvQueue by event_id again, drop _admit's desk
+## check, or take request()'s open-paper path out, and the case fails.
+static func _case_event_instance_per_subject() -> String:
+	_seed_b2b(500)
+	var a: Customer = _add_risk_b2b("inst_a", 800)
+	EvPapers.place(RETAIN_ID, _ctx_customer(a), 7)      # A's card, demoted to the desk earlier
+	CustomerRegistry.set_churn_countdown(a.id, 4)        # the countdown's repaint re-asks A
+	var b: Customer = _add_risk_b2b("inst_b", 900)
+	EventGate.hourly_tick(GameState.current_hour)
+	if _instances_of(RETAIN_ID) != 1:
+		return "the signal drain raised %d retention card(s), want B's alone" \
+			% _instances_of(RETAIN_ID)
+	var c: Customer = _add_risk_b2b("inst_c", 700)
+	if not EventGate.request(RETAIN_ID, {"customer": c.id}) or _instances_of(RETAIN_ID) != 2:
+		return "C's card was absorbed by B's (%d instance(s))" % _instances_of(RETAIN_ID)
+	EventGate.resolve(RETAIN_ID, "leave_alone")
+	EventGate.resolve(RETAIN_ID, "leave_alone")
+	if EventGate.desk_papers(8).size() != 1:
+		return "answering B's and C's cards took A's paper off the desk"
+	if not EventGate.request(RETAIN_ID, {"customer": a.id}) or EventGate.active_id() != RETAIN_ID \
+			or EventGate.queue_size() != 0:
+		return "asking for A did not open A's paper"
+	EventGate.resolve(RETAIN_ID, "leave_alone")
+	if not EventGate.desk_papers(8).is_empty():
+		return "answering A's paper left it on the desk"
+	EvPapers.place(RETAIN_ID, _ctx_customer(b), 7)
+	EvPapers.place(RETAIN_ID, _ctx_customer(c), 7)
+	var block: Dictionary = JSON.parse_string(JSON.stringify(EvSave.to_dict()))
+	EvSave.from_dict(block)
+	if EventGate.desk_papers(8).size() != 2:
+		return "a save kept %d of the two papers" % EventGate.desk_papers(8).size()
+	var legacy: Dictionary = (block["papers"] as Dictionary).values()[0]
+	legacy.erase("event_id")
+	block["papers"] = {RETAIN_ID: legacy}
+	EvSave.from_dict(block)
+	if EventGate.desk_papers(8).size() != 1 \
+			or not EventGate.open_paper(String(EventGate.desk_papers(8)[0]["id"])):
+		return "a paper saved under its card id did not load onto the desk"
 	return ""
 
 
@@ -8686,7 +8731,7 @@ static func _case_save_roundtrip_fingerprint() -> String:
 	var desk: Array = EventGate.desk_papers(8)
 	var entry: Dictionary = {}
 	for row in desk:
-		if String((row as Dictionary)["id"]) == EXPANSION_ID:
+		if EvPapers.event_id_of(String((row as Dictionary)["id"])) == EXPANSION_ID:
 			entry = row
 	if entry.is_empty():
 		_cleanup_save_slots()
@@ -15406,7 +15451,7 @@ static func _case_event_i4_demoted_never_dropped() -> String:
 		# A LIVE demotable interrupt: not `critical`, not `terminal_warning`, no arc, so
 		# §13.5 does not exempt it from the budget. It replaced `product.critical_bug`,
 		# which was removed as legacy flavour.
-		pending.append({"event_id": "customer.retention"})
+		pending.append({"event_id": "customer.retention", "context": {}})
 	var assigned: Array = EvTempo.assign(pending)
 	if assigned.size() != pending.size():
 		return "the governor dropped %d card(s); I4 forbids dropping" % (pending.size() - assigned.size())
@@ -15688,7 +15733,7 @@ static func _thesis_presenter_body() -> String:
 	EvTempo.reset()
 	var crowd: Array = []
 	for i in EvTuning.MAX_INTERRUPTS_PER_DAY + 2:
-		crowd.append({"event_id": "customer.retention"})
+		crowd.append({"event_id": "customer.retention", "context": {}})
 	var assigned: Array = EvTempo.assign(crowd)
 	var demoted: int = 0
 	for a in assigned:
@@ -15703,7 +15748,7 @@ static func _thesis_presenter_body() -> String:
 			crowd.size(), EvTuning.MAX_INTERRUPTS_PER_DAY]
 	# The payoff, run through the same governor on the same crowded day, must NOT be demoted.
 	EvTempo.reset()
-	crowd.append({"event_id": "fixture.thesis_payoff"})
+	crowd.append({"event_id": "fixture.thesis_payoff", "context": {}})
 	for a in EvTempo.assign(crowd):
 		var entry: Dictionary = a
 		if String(entry["event_id"]) != "fixture.thesis_payoff":

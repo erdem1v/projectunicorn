@@ -108,21 +108,22 @@ static func _subject_character(context: Dictionary) -> String:
 # --- The desk --------------------------------------------------------------
 
 ## What the ODA desk renders, most urgent first. The model is uncapped (§11.4); `visible_slots`
-## is the art's three positions, and EvPapers.ordered() keeps urgent papers inside them.
+## is the art's three positions, and EvPapers.ordered() keeps urgent papers inside them. `id` is
+## the paper's key, which is what open_paper takes.
 static func desk_papers(visible_slots: int = 3) -> Array:
 	var out: Array = []
-	for event_id in EvPapers.visible(visible_slots):
-		var card: Dictionary = EvCatalog.card(String(event_id))
-		var left: int = EvPapers.days_left(String(event_id))
+	for key in EvPapers.visible(visible_slots):
+		var card: Dictionary = EvCatalog.card(EvPapers.event_id_of(key))
+		var left: int = EvPapers.days_left(key)
 		out.append({
-			"id": event_id,
-			"title": _resolve_text(_text_block(card).get("title", ""), EvPapers.context_of(String(event_id))),
+			"id": key,
+			"title": _resolve_text(_text_block(card).get("title", ""), EvPapers.context_of(key)),
 			"tag": String(card.get("category", "")).to_upper(),
 			"days_left": left,
 			# §11.4: remaining time is on the paper, emphasised in the last days — the only
 			# warning a deferred decision gets.
 			"urgent": left <= EvTuning.EXPIRY_URGENT_DAYS,
-			"target": "event:%s" % event_id,
+			"target": "event:%s" % key,
 		})
 	return out
 

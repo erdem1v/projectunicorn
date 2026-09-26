@@ -6,8 +6,10 @@ extends RefCounted
 #     {event_id, context, admitted_day, class, arc_id}
 #
 # IDS AND SCALARS ONLY — never a card object and never rendered text. Every card is on disk,
-# so a language change mid-run is safe (§3.2) and a content edit reaches queued cards. Dedupe is
-# by id for the same reason.
+# so a language change mid-run is safe (§3.2) and a content edit reaches queued cards.
+#
+# An entry is keyed by EvLatches.key_of, derived from the entry and never stored, so the two
+# cannot disagree.
 #
 # ORDERING IS §11.2's, NOT INSERTION ORDER. Terminal telegraphs first, then a paper about to
 # expire, then critical, then interrupt, paper, info, ambient. Ties break by admitted day and
@@ -26,11 +28,11 @@ static var _absorbed: Dictionary = {}
 
 # --- Admission (only EvGate's caller reaches this) -------------------------
 
-## Returns false when an entry with this id is already queued or showing. The rejection is
-## COUNTED, so a system re-offering the same decision every tick shows up in the run log.
+## Returns false when this instance is already queued or showing. The rejection is COUNTED, so
+## a system re-offering the same decision every tick shows up in the run log.
 static func admit(event_id: String, context: Dictionary, card_class: String,
 		arc_id: String = "") -> bool:
-	if has(event_id) or _active_id == event_id:
+	if holds(EvLatches.key_of(event_id, context)):
 		_absorbed[event_id] = int(_absorbed.get(event_id, 0)) + 1
 		return false
 	_entries.append({
@@ -68,7 +70,7 @@ static func _rank_of(entry: Dictionary) -> int:
 	var tags: Array = card.get("tags", [])
 	if tags.has("terminal_warning"):
 		return 0
-	if EvPapers.is_expiring_soon(String(entry["event_id"])):
+	if EvPapers.is_expiring_soon(EvLatches.key_of_entry(entry)):
 		return 1
 	if tags.has("critical"):
 		return 2
@@ -86,13 +88,9 @@ static func _earlier(a: Dictionary, b: Dictionary) -> bool:
 	return String(a["event_id"]) < String(b["event_id"])
 
 
-static func take(event_id: String) -> Dictionary:
-	for i in _entries.size():
-		if String((_entries[i] as Dictionary)["event_id"]) == event_id:
-			var entry: Dictionary = _entries[i]
-			_entries.remove_at(i)
-			return entry
-	return {}
+static func take(key: String) -> Dictionary:
+	var i: int = _index_of(key)
+	return {} if i < 0 else _entries.pop_at(i)
 
 
 # --- The active card -------------------------------------------------------
@@ -117,11 +115,24 @@ static func active_context() -> Dictionary:
 
 # --- Reading ---------------------------------------------------------------
 
+## Any queued instance of the card.
 static func has(event_id: String) -> bool:
 	for e in _entries:
 		if String((e as Dictionary)["event_id"]) == event_id:
 			return true
 	return false
+
+
+## This instance, queued or on screen.
+static func holds(key: String) -> bool:
+	return _index_of(key) >= 0 or EvLatches.key_of(_active_id, _active_context) == key
+
+
+static func _index_of(key: String) -> int:
+	for i in _entries.size():
+		if EvLatches.key_of_entry(_entries[i]) == key:
+			return i
+	return -1
 
 
 static func size() -> int:
@@ -144,15 +155,15 @@ static func entries() -> Array:
 ## Write back the class the tempo governor assigned. Separate from admit() because the class
 ## is decided over the whole day's admissions at once, not per proposal — the third card to
 ## arrive is not the least important one.
-static func set_class(event_id: String, card_class: String) -> void:
-	for e in _entries:
-		if String((e as Dictionary)["event_id"]) == event_id:
-			(e as Dictionary)["class"] = card_class
-			return
+static func set_class(key: String, card_class: String) -> void:
+	var i: int = _index_of(key)
+	if i >= 0:
+		(_entries[i] as Dictionary)["class"] = card_class
 
 
+## Every queued instance of the card: the caller's reason to show it is gone.
 static func remove(event_id: String) -> void:
-	take(event_id)
+	_entries = _entries.filter(func(e): return String(e["event_id"]) != event_id)
 
 
 static func drop_arc(arc_id: String) -> int:

@@ -29,7 +29,8 @@ static var _window: Array = []
 
 # --- The daily assignment --------------------------------------------------
 
-## Assign a presentation class to each of today's admissions. Returns [{event_id, class}].
+## Assign a presentation class to each of today's admissions ({event_id, context}). Returns
+## [{event_id, key, class}], keyed by EvLatches.key_of.
 ##
 ## `admissions` arrives in arrival order and is re-sorted by §11.2 priority before anything is
 ## charged, so the demotion falls on the least important card rather than the last one.
@@ -45,19 +46,20 @@ static func assign(admissions: Array) -> Array:
 	for a in ranked:
 		var entry: Dictionary = a
 		var event_id: String = String(entry["event_id"])
+		var key: String = EvLatches.key_of_entry(entry)
 		var card: Dictionary = EvCatalog.card(event_id)
 		var declared: String = String(card["class"])
 		var final_class: String = declared
 
-		if EvPapers.has(event_id) and EvQueue.has(event_id):
+		if EvPapers.has(key) and EvQueue.holds(key):
 			# §13.5: a paper's last-day warning, re-queued as an interrupt. It recognises no
 			# budget, and it is the same paper, so it is not recorded a second time either.
-			out.append({"event_id": event_id, "class": "interrupt", "exempt": true})
+			out.append({"event_id": event_id, "key": key, "class": "interrupt", "exempt": true})
 			continue
 
 		if budget_exempt(card):
 			# §13.5: recognises no budget and is not counted against one either.
-			out.append({"event_id": event_id, "class": declared, "exempt": true})
+			out.append({"event_id": event_id, "key": key, "class": declared, "exempt": true})
 			_record(event_id, card, declared, "")
 			continue
 
@@ -69,28 +71,31 @@ static func assign(admissions: Array) -> Array:
 			else:
 				interrupts_today += 1
 
-		out.append({"event_id": event_id, "class": final_class,
+		out.append({"event_id": event_id, "key": key, "class": final_class,
 			"demoted": final_class != declared})
-		_record(event_id, card, final_class, _subject_of(event_id))
+		_record(event_id, card, final_class, EvGate._subject_of(entry["context"]))
 	return out
 
 
 ## §11.2's order, as a comparator. Terminal first, then a paper about to lapse, then critical,
-## then the class ladder. Ties break by id — deterministic and deliberately NOT seeded.
+## then the class ladder. Ties break by id, then by instance — deterministic and deliberately
+## NOT seeded.
 static func _more_important(a: Dictionary, b: Dictionary) -> bool:
-	var ra: int = _rank(String(a["event_id"]))
-	var rb: int = _rank(String(b["event_id"]))
+	var ra: int = _rank(a)
+	var rb: int = _rank(b)
 	if ra != rb:
 		return ra < rb
-	return String(a["event_id"]) < String(b["event_id"])
+	var ia: String = String(a["event_id"])
+	var ib: String = String(b["event_id"])
+	return EvLatches.key_of_entry(a) < EvLatches.key_of_entry(b) if ia == ib else ia < ib
 
 
-static func _rank(event_id: String) -> int:
-	var card: Dictionary = EvCatalog.card(event_id)
+static func _rank(entry: Dictionary) -> int:
+	var card: Dictionary = EvCatalog.card(String(entry["event_id"]))
 	var tags: Array = card.get("tags", [])
 	if tags.has("terminal_warning"):
 		return 0
-	if EvPapers.is_expiring_soon(event_id):
+	if EvPapers.is_expiring_soon(EvLatches.key_of_entry(entry)):
 		return 1
 	if tags.has("critical"):
 		return 2
@@ -176,15 +181,6 @@ static func _record(event_id: String, card: Dictionary, final_class: String, sub
 		"subject": subject,
 		"class": final_class,
 	})
-
-
-## The admitted card's subject, as the gate saw it: the same first-slot id the engine hands to
-## pool_blocked_reason, read from wherever admission left the card (queue or desk).
-static func _subject_of(event_id: String) -> String:
-	for e in EvQueue.entries():
-		if String((e as Dictionary)["event_id"]) == event_id:
-			return EvGate._subject_of((e as Dictionary)["context"])
-	return EvGate._subject_of(EvPapers.context_of(event_id))
 
 
 static func _prune() -> void:

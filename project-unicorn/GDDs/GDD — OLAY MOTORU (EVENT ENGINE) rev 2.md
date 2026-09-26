@@ -1483,6 +1483,19 @@ koşulun soramayacağı soruyu sorar: hangi özne.
 müşterinin temsilcisi" demektir ve bunu söylemenin başka yolu, çağıranın seçimi kendisinin
 yapmasıdır — §4.3'ün durdurmak için var olduğu şey.
 
+**Bir kartın örneği mandal anahtarıyla tanınır.** Belge: §20 E2 "aynı kart taze instance ile iki
+kez sırada → id bazlı dedupe"; A6 "aynı gün iki çalışandan zam talebi → ikisi de geçerli, Katman
+4 ikincisini kağıda düşürür"; §16.1 `papers[] {event_id, …}`. Yapılan: kuyruk, masa, günün
+kabulleri ve `force_fire` işareti kartı `EvLatches.key_of` ile tanır (run anahtarlı kartta
+`event_id`, entity anahtarlı kartta `event_id@özne`); E2'deki "id" bu anahtar olarak okunur ve
+masa anahtar → {event_id, …} olarak saklanır. Kağıdı masada bekleyen örneği sinyal, tarama ya da
+havuz yeniden önerirse reddedilir, çünkü §13.5'in bütçe muafiyeti yalnız kağıdın son gün
+uyarısınındır; `EventGate.request` aynı örneği isterse bekleyen kağıt açılır (§11.4). Neden:
+`event_id` kimliği A6'nın ikinci öznesini yutuyordu; aynı gün Risk'e giren ikinci hesabın elde
+tutma kartı, aynı tikte istifa eden ikinci çalışanın kartı kayboluyordu. §27.5 madde 2'deki kişi
+başı mandal da ancak bu kimlikle tam çalışır: `event_id` kimliğinde, birinci yatırımcının
+uyarısı beklerken önerilen ikincisinin örneği kuyrukta yine yutulurdu.
+
 ---
 
 ### §27.5 · Portun açığa çıkardığı, motora ait OLMAYAN kusurlar

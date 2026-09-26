@@ -103,7 +103,7 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     havuz çekilişinde sorulur ama tetiklenen ve istenen kartlar da pencereyi damgalar: `customer.retention` ve
     `customer.request_*`. Bugünkü destede müşteri öznesi taşıyan tek havuz kartı `customer.expansion`; `expansion_ready`
     seçicisi uygun hesaplardan yalnız en yüksek MRR'lıyı döndürür, o hesap frenliyse sıradakine düşmez.
-  - Nerede: `scripts/events/present/tempo.gd` (`assign`, `_record`, `_subject_of`), `scripts/events/gate/scope.gd`
+  - Nerede: `scripts/events/present/tempo.gd` (`assign`, `_record`), `scripts/events/gate/scope.gd`
     (`_select_customer`, `"expansion_ready"`), `scripts/events/core/engine.gd` (`_step_pool`).
   - Oyuncuya etkisi: En büyük uygun hesap elde tutma ya da talep kartı aldıktan sonra 30 gün boyunca hiçbir hesaba
     genişleme kağıdı gelmez; damga tekrarlanırsa daha uzun (hesaplar 22 günde bir talep açar,
@@ -154,6 +154,30 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     emekliye ayır ve §18.3'ü 'oyuncu-sonucu History'de durur' diye yaz. (c) Haber akışı tamponunda oyuncu-sonucu
     satırına öncelik ver.
   - Kaynak: Olay motoru GDD §18.1, §18.3; motor GDD §18.2 koda göre yeniden yazılırken görüldü.
+
+- **9 · Seçicili tarama kartı tek özneye bağlanıyor; mandalı dolu özne öbür hesapları bekletiyor.**
+  - Ne oluyor: Günlük taramadaki varlık anahtarlı kartlar bağlamsız önerilir ve seçici tek özne döndürür:
+    `customer.cs_escalation` için en düşük memnuniyetli tırmanan hesap (`escalated`), `funding.sheet_expiry` için en
+    az iş günü kalan teklif (`expiring_sheet`). O öznenin mandalı doluysa kart G3'te düşer, aynı taramada başka uygun
+    özne denenmez. `cs_escalated` her gün yeniden hesaplanan bir durumdur (`B2BSalesSystem._tick_customer`) ve kartın
+    hesap başına mandalı 21 gün: en mutsuz tırmanan hesap tırmanık kaldıkça öbür tırmanan hesaplara kart gelmez.
+    `sheet_expiry` fon başına one_shot: iki teklifin son günü aynıysa ikinci fonun uyarısı hiç gelmez, ikisi birlikte
+    karar gününe geçince seçici ikisini de atlar. `funding.sheet_decision` aynı düzenekle fonları bilerek sıraya
+    koyuyor (kart notu), orada sorun yok. Kuyruk ve masa kimliği düzeltmesi bunu çözmez, çünkü ikinci özne hiç
+    önerilmiyor. Kod okumasıyla doğrulandı, koşuda ölçülmedi.
+  - Nerede: `scripts/events/gate/scope.gd` (`_select_customer` "escalated", `_select_investor` "expiring_sheet"),
+    `scripts/events/gate/gate.gd` (`propose`: varlık anahtarlı kartta G5, G3'ten önce),
+    `scripts/events/core/engine.gd` (günlük tarama); kartlar `data/events/cards/customer/cs_escalation.json`,
+    `data/events/cards/funding/sheet_expiry.json`.
+  - Oyuncuya etkisi: İki hesabın temsilcisi aynı dönemde alarm verirse ikinci hesabın tırmanma kartı 21 gün boyunca ya
+    da ilk hesap toparlanana dek gelmeyebilir. Son günü aynı olan iki term sheet'ten ikincisinin "son 3 gün" uyarısı
+    hiç gelmez; karar kartı (`funding.sheet_decision`) yine gelir.
+  - Seçenekler: A) Seçici mandalı dolu özneyi atlayıp sıradakine düşer: deterministik kalır, 5. açık maddenin B
+    seçeneğiyle aynı düzenek (EvScope seçimi mandala bakar). B) Tarama kartı uygun her özne için ayrı önerilir: aynı
+    gün birden çok örnek olur, fazlası Katman 4 ile kağıda düşer (§20 A6'daki gibi). C) Kalır: özneler sırayla
+    işlenir; kart notlarına ve motor md §27'ye yazılır.
+  - Kaynak: Olay motoru GDD §4.3, §20 A6, §27.4 (seçiciler), §27.5 madde 2 (iki canlı teklifte ikinci uyarının
+    yutulması); docs/ACIK_ISLER/ACIK_KARARLAR.md 5. madde (aynı seçici düzeneği).
 
 ## Tasarım ve denge
 

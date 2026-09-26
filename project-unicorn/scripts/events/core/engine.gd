@@ -41,9 +41,10 @@ static var _floor_empty_total: int = 0
 static var _floor_empty_streak: int = 0
 ## Consecutive days with no interrupt and no paper.
 static var _quiet_days: int = 0
-## Admissions made today, awaiting class assignment at step (k).
+## Admissions made today, {event_id, context}, awaiting class assignment at step (k).
 static var _today_admissions: Array = []
-## Ids admitted through force_fire and not yet resolved, so their history row says `forced`.
+## Instance keys admitted through force_fire and not yet resolved, so their history row says
+## `forced`.
 static var _forced: Array = []
 
 
@@ -92,11 +93,10 @@ static func _step_paper_expiry() -> void:
 	# cannot fire the expiry still happens — the consequence is not conditional on the courtesy.
 	_step_last_warnings()
 
-	for expired in EvPapers.take_expired():
-		var event_id: String = String(expired["event_id"])
-		var paper: Dictionary = expired["entry"]
-		var context: Dictionary = paper.get("context", {})
-		var arc_id: String = String(paper.get("arc_id", ""))
+	for paper in EvPapers.take_expired():
+		var event_id: String = String(paper["event_id"])
+		var context: Dictionary = paper["context"]
+		var arc_id: String = String(paper["arc_id"])
 		var card: Dictionary = EvCatalog.card(event_id)
 		var penalties: Array = card.get("on_expire", {}).get("penalties", [])
 
@@ -116,16 +116,16 @@ static func _step_paper_expiry() -> void:
 
 
 static func _step_last_warnings() -> void:
-	for event_id in EvPapers.needing_last_warning():
-		var id: String = String(event_id)
-		if EvQueue.has(id) or EvQueue.active_id() == id:
+	for key in EvPapers.needing_last_warning():
+		if EvQueue.holds(key):
 			continue                      # already in front of the player
-		var context: Dictionary = EvPapers.context_of(id)
+		var event_id: String = EvPapers.event_id_of(key)
+		var context: Dictionary = EvPapers.context_of(key)
 		# A paper whose subject died overnight expires quietly rather than being shouted about.
-		if not EvGate.revalidate(id, context).admitted:
+		if not EvGate.revalidate(event_id, context).admitted:
 			continue
-		EvQueue.admit(id, context, "interrupt", EvPapers.arc_of(id))
-		_today_admissions.append(id)
+		EvQueue.admit(event_id, context, "interrupt", EvPapers.arc_of(key))
+		_today_admissions.append({"event_id": event_id, "context": context})
 
 
 static func _touches_arc(effects: Array) -> bool:
@@ -228,7 +228,7 @@ static func _step_arc_steps() -> void:
 			continue
 		var event_id: String = String((steps[idx] as Dictionary).get("event_id", ""))
 		if event_id == "" or EvQueue.has(event_id) or EvQueue.active_id() == event_id \
-				or EvPapers.has(event_id) or EvSchedule.has(event_id):
+				or not EvPapers.keys_of(event_id).is_empty() or EvSchedule.has(event_id):
 			continue                       # already on its way to the player
 		_propose(event_id, EvGate.Origin.ARC_STEP, EvArcs.subject_of(arc_id), arc_id)
 
@@ -345,21 +345,17 @@ static func _step_floor() -> void:
 static func _step_assign_classes() -> void:
 	if _today_admissions.is_empty():
 		return
-	var pending: Array = _today_admissions.map(func(id): return {"event_id": id})
-	for entry in EvTempo.assign(pending):
-		var event_id: String = String(entry["event_id"])
+	for entry in EvTempo.assign(_today_admissions):
+		var key: String = String(entry["key"])
 		var final_class: String = String(entry["class"])
-		EvQueue.set_class(event_id, final_class)
+		EvQueue.set_class(key, final_class)
 		# I4: a demoted card is not dropped, it lands on the desk with a clock (R8a's lint rule
 		# guarantees a demotable interrupt carries the expiry trio). It must leave the queue, or
 		# the next pump would mount it anyway and the demotion would be invisible.
 		if final_class == "paper" and bool(entry.get("demoted", false)):
-			var queued: Dictionary = EvQueue.take(event_id)
-			# A demoted last warning is already on the desk; re-placing it would restart its clock.
-			if not EvPapers.has(event_id):
-				var card: Dictionary = EvCatalog.card(event_id)
-				EvPapers.place(event_id, queued.get("context", {}), _expiry_days(card),
-					String(card.get("arc", "")))
+			var card: Dictionary = EvCatalog.card(String(entry["event_id"]))
+			EvPapers.place(String(entry["event_id"]), EvQueue.take(key)["context"],
+				_expiry_days(card), String(card.get("arc", "")))
 	_today_admissions.clear()
 
 
@@ -371,27 +367,26 @@ static func _propose(event_id: String, origin: EvGate.Origin, given: Dictionary,
 	return verdict.admitted and _admit(event_id, verdict, arc_id)
 
 
+## An instance whose paper is on the desk is refused: queued beside its own paper it would pass
+## for the paper's last-day warning, the one re-queue §13.5 lets past the budget.
 static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) -> bool:
-	var card: Dictionary = EvCatalog.card(event_id)
-
-	# The latch is spent AT ADMISSION: a card waiting in the queue must not be re-proposed
-	# every tick.
-	EvLatches.spend(EvLatches.key_for(event_id, String(card["latch_key"]),
-		EvGate._subject_of(verdict.context)))
+	var key: String = EvLatches.key_of(event_id, verdict.context)
+	if EvPapers.has(key):
+		return false
 
 	# A PAPER IS NOT QUEUED. `has_pending()` gates the clock and the save, so a queued paper
 	# would hold the game paused for its whole week; and `pump()` would mount it as a modal,
 	# the opposite of §11.4, where a paper waits until the player picks it up.
 	if verdict.card_class == "paper":
-		if EvPapers.has(event_id):
-			return false
-		EvPapers.place(event_id, verdict.context, _expiry_days(card), arc_id)
-		_today_admissions.append(event_id)
-		return true
-	var ok: bool = EvQueue.admit(event_id, verdict.context, verdict.card_class, arc_id)
-	if ok:
-		_today_admissions.append(event_id)
-	return ok
+		EvPapers.place(event_id, verdict.context, _expiry_days(EvCatalog.card(event_id)), arc_id)
+	elif not EvQueue.admit(event_id, verdict.context, verdict.card_class, arc_id):
+		return false
+
+	# The latch is spent AT ADMISSION, so a card waiting in the queue or on the desk is not
+	# re-proposed every tick, and only then, so a refused duplicate costs its subject nothing.
+	EvLatches.spend(key)
+	_today_admissions.append({"event_id": event_id, "context": verdict.context})
+	return true
 
 
 ## §12.2's table, by stakes.
@@ -418,12 +413,13 @@ static func pump() -> bool:
 			return false
 		var event_id: String = String(next["event_id"])
 		var context: Dictionary = next["context"]
-		EvQueue.take(event_id)
+		var key: String = EvLatches.key_of(event_id, context)
+		EvQueue.take(key)
 
 		var verdict: EvGate.Verdict = EvGate.revalidate(event_id, context)
 		if not verdict.admitted:
 			# §4.4: cancelled silently, history says `dropped` — the world moved.
-			EvPapers.remove(event_id)
+			EvPapers.remove(key)
 			EvHistory.record(event_id, EvHistory.RESOLUTION_DROPPED, "", verdict.step,
 				context, [], String(next.get("arc_id", "")))
 			continue
@@ -481,12 +477,13 @@ static func resolve(event_id: String, option_id: String) -> void:
 		deltas = EvEffects.run_played(option.get("effects", []), context)
 
 	var arc_id: String = String(card.get("arc", ""))
-	var forced: bool = _forced.has(event_id)
-	_forced.erase(event_id)
+	var key: String = EvLatches.key_of(event_id, context)
+	var forced: bool = _forced.has(key)
+	_forced.erase(key)
 	EvHistory.record(event_id, EvHistory.RESOLUTION_CHOSEN, option_id, outcome,
 		context, deltas, arc_id, forced)
 
-	EvPapers.remove(event_id)
+	EvPapers.remove(key)
 	EvQueue.clear_active()
 
 	# An arc step resolving advances its arc — unless the option moved the arc itself.
@@ -525,14 +522,21 @@ static func reset() -> void:
 # --- Public entries --------------------------------------------------------
 
 ## Ask for a card by id, from outside the tick — e.g. the Sales tab's "İlgilen →". A second
-## ENTRY POINT, never a second ADMISSION path (I1): the gate applies every step, the latch is
-## spent, and a duplicate is refused by the queue.
+## ENTRY POINT, never a second ADMISSION path (I1): the gate applies every step, and an admitted
+## card spends its latch. When the instance's paper already waits on the desk, the caller is
+## reaching for that paper and it opens (§11.4).
 ##
-## Returns true when the card was admitted.
+## Returns true when the card reached the player, admitted or opened off the desk.
 static func request(event_id: String, context: Dictionary = {}) -> bool:
 	if not GameState.run_active:
 		return false
-	if not _propose(event_id, EvGate.Origin.REQUEST, context):
+	var verdict: EvGate.Verdict = EvGate.propose(event_id, EvGate.Origin.REQUEST, context)
+	if not verdict.admitted:
+		return false
+	var key: String = EvLatches.key_of(event_id, verdict.context)
+	if EvPapers.has(key):
+		return open_paper(key)
+	if not _admit(event_id, verdict, ""):
 		return false
 	_step_assign_classes()
 	pump()
@@ -554,30 +558,31 @@ static func force_fire(event_id: String, context: Dictionary = {}) -> bool:
 		return false
 	EvQueue.admit(event_id, verdict.context, verdict.card_class,
 		String(EvCatalog.card(event_id).get("arc", "")))
-	_forced.append(event_id)
+	_forced.append(EvLatches.key_of(event_id, verdict.context))
 	pump()
 	return true
 
 
-## The player picked a paper off the desk. §11.4: "Kağıt açıldığında modal gibi davranır (zaman
-## durur), kapatıldığında masaya döner."
+## The player picked a paper off the desk, by the key the desk shows (EvPresenter.desk_papers).
+## §11.4: "Kağıt açıldığında modal gibi davranır (zaman durur), kapatıldığında masaya döner."
 ##
 ## Not a full gate pass: the latch is spent and the class decided, and re-charging either would
 ## let a paper die on a rule it already passed (§4.4). G5/G6/G7 are re-checked — the subject may
 ## have resigned while it sat on the desk.
-static func open_paper(event_id: String) -> bool:
-	if not EvPapers.has(event_id) or EvQueue.active_id() != "":
+static func open_paper(key: String) -> bool:
+	if not EvPapers.has(key) or EvQueue.active_id() != "":
 		return false                       # one modal at a time (§11.3)
-	var context: Dictionary = EvPapers.context_of(event_id)
+	var event_id: String = EvPapers.event_id_of(key)
+	var context: Dictionary = EvPapers.context_of(key)
 	var verdict: EvGate.Verdict = EvGate.revalidate(event_id, context)
 	if not verdict.admitted:
 		# History says `dropped` with the refusing step, so the debug panel can explain a paper
 		# that vanished off the desk.
-		EvPapers.remove(event_id)
-		EvQueue.remove(event_id)
+		EvPapers.remove(key)
+		EvQueue.take(key)
 		EvHistory.record(event_id, EvHistory.RESOLUTION_DROPPED, "", verdict.step, context, [])
 		return false
-	EvPapers.mark_opened(event_id)
+	EvPapers.mark_opened(key)
 	EvQueue.set_active(event_id, context)
 	_announce(event_id, context)
 	return true

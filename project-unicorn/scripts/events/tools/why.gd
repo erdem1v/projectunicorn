@@ -53,9 +53,9 @@ static func report(event_id: String) -> String:
 		out.append("IT IS QUEUED and waiting for the modal to free up.")
 		out.append("  ahead of it: %s" % str(EvQueue.ids()))
 		return "\n".join(out)
-	if EvPapers.has(event_id):
-		out.append("IT IS ON THE DESK as a paper, %d day(s) left."
-			% EvPapers.days_left(event_id))
+	var papers: Array = EvPapers.keys_of(event_id)
+	if not papers.is_empty():
+		out.append("IT IS ON THE DESK as a paper, %d day(s) left." % EvPapers.days_left(String(papers[0])))
 		return "\n".join(out)
 	if EvSchedule.has(event_id):
 		for e in EvSchedule.pending():

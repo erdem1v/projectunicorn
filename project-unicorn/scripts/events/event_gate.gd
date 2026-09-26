@@ -10,7 +10,8 @@ extends RefCounted
 
 # --- Admission -------------------------------------------------------------
 
-## Ask for a card by id. Returns true when it was admitted (the Sales tab buttons use it).
+## Ask for a card by id. Returns true when it was admitted, or when this instance's waiting paper was
+## opened instead (the Sales tab buttons use it).
 ## `context` is a hint: the gate still type-checks it (§4.3), since binding a wrong-kind id would
 ## make the card lie about its own subject.
 static func request(event_id: String, context: Dictionary = {}) -> bool:
@@ -96,6 +97,7 @@ static func condition_reason(condition: Dictionary, context: Dictionary = {}) ->
 
 # --- Queue surgery ---------------------------------------------------------
 
+## Drops every queued instance of the card; on the desk only a run-keyed card's paper has this id.
 static func remove_queued(event_id: String) -> void:
 	EvQueue.remove(event_id)
 	EvPapers.remove(event_id)
@@ -109,10 +111,11 @@ static func flush() -> void:
 
 # --- Lifecycle -------------------------------------------------------------
 
-## The player picked a paper off the desk (§11.4). Returns false when the world moved while it
-## sat there — the paper is removed and history says `dropped`.
-static func open_paper(event_id: String) -> bool:
-	return EvEngine.open_paper(event_id)
+## The player picked a paper off the desk (§11.4); `key` is the desk entry's id (desk_papers "id").
+## Returns false when the world moved while it sat there — the paper is removed and history says
+## `dropped`.
+static func open_paper(key: String) -> bool:
+	return EvEngine.open_paper(key)
 
 
 ## The desk, most urgent first, capped at the layout's slot count.

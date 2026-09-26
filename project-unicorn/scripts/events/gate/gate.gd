@@ -93,8 +93,7 @@ static func propose(event_id: String, origin: Origin, given: Dictionary = {}) ->
 
 	# G3 — latch
 	if not forced:
-		var key: String = EvLatches.key_for(event_id, card["latch_key"],
-			_subject_of(scope_result.get("context", {})))
+		var key: String = EvLatches.key_of(event_id, scope_result.get("context", {}))
 		var g3: String = EvLatches.blocked_reason(card["latch"], key)
 		if g3 != "":
 			return Verdict.refuse("G3", g3)
