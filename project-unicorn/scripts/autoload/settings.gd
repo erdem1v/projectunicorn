@@ -1,48 +1,32 @@
 extends Node
 
-# Settings — persisted player preferences: display, audio,
-# game, language, accessibility. The store is generic (string key → JSON value)
-# so every preference shares one file; DEFAULTS below is the SCHEMA on top of it.
+# Settings — persisted player preferences (display, audio, game, language,
+# accessibility) in user://settings.json, independent of game saves.
 #
-# Persistence = JSON via FileAccess (LOCKED convention). Settings
-# live in user://settings.json, INDEPENDENT of game saves — they persist across
-# runs regardless of which save slot (or none) is loaded.
-#
-# OWNERSHIP (the split AudioManager's header already documents, now generalized):
-# Settings PERSISTS, the domain system APPLIES. This node never talks to the
-# AudioServer or the DisplayServer itself — it holds the values, and apply_all()
-# hands each one to its owner (DisplaySettings for the window, AudioManager for
-# the buses, UiTokens for the semantic palette).
+# Settings PERSISTS, the domain system APPLIES: this node never talks to the
+# AudioServer or DisplayServer; apply_all() hands each value to its owner
+# (DisplaySettings, AudioManager, UiTokens).
 
 const SETTINGS_PATH := "user://settings.json"
 const SCHEMA_VERSION := 1
 
-# Global class names are resolved from Godot's script-class cache, which a fresh
-# CLI run may not have rebuilt yet. An AUTOLOAD that fails to resolve an identifier
-# takes the whole game down, so the display helper is reached through preload —
-# always correct, cache or no cache. (display_settings.gd still declares
-# `class_name DisplaySettings` for every non-autoload caller.)
+# Preload, not the DisplaySettings class name: a fresh CLI run may not have rebuilt
+# the script-class cache, and an autoload that fails to resolve an identifier takes
+# the whole game down.
 const DisplaySettingsLib := preload("res://scripts/systems/display_settings.gd")
 
-# ============================================================================
-# DEFAULTS — the settings SCHEMA. Every key the settings screen writes is
-# declared here with its first-run value and (by its literal's type) its type.
-# ============================================================================
-# An old settings.json missing a key needs no migration: get_value() takes a
-# default, and DEFAULTS is where that default comes from. Adding a key here is
-# therefore the whole migration.
+# The settings SCHEMA: every key the settings screen writes, with its first-run value.
+# A missing key reads its default from here, so adding a key is the whole migration.
 #
-# Deliberately NOT here: `language` (Localization owns its own default and the
-# reset copy promises saves+language are untouched) and `oda_intro_seen`
-# (tutorial progress, not a setting). reset_to_defaults() only clears the keys
-# in this table, so both survive a reset — see that function.
+# Deliberately NOT here: `language` (Localization owns its default) and
+# `oda_intro_seen` (tutorial progress). reset_to_defaults() only clears these keys,
+# so both survive a reset.
 const DEFAULTS := {
 	# --- Görüntü (DisplaySettings applies) ---
 	"window_mode": "borderless",        # "fullscreen" | "borderless" | "windowed"
-	# Bu ikisi yalnız HEADLESS/inert yedeğidir. Gerçek varsayılan ÖLÇÜLÜR:
-	# DisplaySettings.default_resolution() monitörün native boyutunu okur ve
-	# görev çubuğunu düşer. Tabloda kalmalarının sebebi reset_to_defaults'un
-	# yalnız buradaki anahtarları silmesi — silinince tespit yeniden koşar.
+	# Bu ikisi yalnız HEADLESS/inert yedeğidir; gerçek varsayılan
+	# DisplaySettings.default_resolution() ile ÖLÇÜLÜR. Tabloda kalmalarının sebebi
+	# reset_to_defaults'un yalnız buradaki anahtarları silmesi — silinince tespit yeniden koşar.
 	"resolution_w": 1920,
 	"resolution_h": 1080,
 	"vsync": true,
@@ -53,16 +37,14 @@ const DEFAULTS := {
 	"music_volume": 0.35,
 	"sfx_volume": 0.7,
 	"mute_unfocused": true,
-	# --- Oyun (SaveManager reads this lazily; this task only persists it) ---
+	# --- Oyun (SaveManager reads this lazily) ---
 	"autosave_frequency": "weekly",     # "off" | "daily" | "weekly" | "monthly"
 	# --- Erişilebilirlik (UiTokens applies) ---
 	"colorblind_palette": false,
 }
 
-# Writing the file on every set_value turns one volume-slider drag into a few
-# hundred disk writes. Mark dirty instead and flush once the value settles; the
-# hard exits (window close, focus loss, tree exit) force-flush so nothing that
-# reached _data can be lost to the debounce window.
+# One volume-slider drag is a few hundred set_value calls: mark dirty and flush once
+# the value settles. The hard exits in _notification force-flush.
 const SAVE_DEBOUNCE_SEC := 0.5
 
 var _data: Dictionary = {}
@@ -71,34 +53,26 @@ var _flush_timer: Timer
 
 
 func _ready() -> void:
-	# The debounce timer must keep counting while the tree is paused — the settings
-	# panel itself runs paused (process_mode = ALWAYS), so a PAUSABLE timer would
-	# never fire for the exact control that needs it most.
+	# The settings panel runs while the tree is paused, so the debounce timer must too.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_flush_timer = Timer.new()
 	_flush_timer.name = "FlushTimer"
 	_flush_timer.one_shot = true
 	_flush_timer.wait_time = SAVE_DEBOUNCE_SEC
-	_flush_timer.process_mode = Node.PROCESS_MODE_ALWAYS
 	_flush_timer.timeout.connect(flush)
 	add_child(_flush_timer)
 	_load()
 	apply_all()
 
 
-# Generic accessors. Value types round-trip through JSON (bool/float/int/String);
-# callers pass a default so a missing/first-run key returns a sane value. Keys in
-# DEFAULTS should pass get_default(key) rather than re-typing the literal.
-func get_value(key: String, default_value: Variant) -> Variant:
-	return _data.get(key, default_value)
+## Stored value, else `default_value`, else the DEFAULTS entry. Values round-trip
+## through JSON (bool/float/int/String).
+func get_value(key: String, default_value: Variant = null) -> Variant:
+	return _data.get(key, DEFAULTS.get(key) if default_value == null else default_value)
 
 
-## "Bu anahtar diske gerçekten YAZILDI mı?" — get_value ile ayırt edilemez, çünkü
-## o, saklanmış bir değerle varsayılanı aynı şekilde döndürür. DisplaySettings buna
-## ihtiyaç duyuyor: çözünürlüğün varsayılanı artık sabit bir literal değil, ÖLÇÜLEN
-## monitör değeri; yani "kullanıcı seçmedi" ile "kullanıcı 1920x1080 seçti" ayrımı
-## gerçek bir ayrım hâline geldi. Sıfırlama sonrası da doğru çalışır: reset_to_defaults
-## anahtarı SİLER, dolayısıyla tespit yeniden koşar.
+## Was this key ever written? get_value cannot tell "stored 1920x1080" from
+## "defaulted"; DisplaySettings needs that line because its resolution default is measured.
 func has_stored(key: String) -> bool:
 	return _data.has(key)
 
@@ -110,22 +84,9 @@ func set_value(key: String, value: Variant) -> void:
 	_mark_dirty()
 
 
-## The DEFAULTS-declared fallback for a key. Callers read
-## `Settings.get_value(KEY, Settings.get_default(KEY))` so the literal lives in
-## exactly one place — this table.
-func get_default(key: String) -> Variant:
-	if not DEFAULTS.has(key):
-		push_warning("[Settings] get_default on undeclared key: %s" % key)
-		return null
-	return DEFAULTS[key]
-
-
-## Reset the settings SCHEMA only. Keys outside DEFAULTS — `oda_intro_seen`,
-## `language`, anything a future system parks here — survive untouched: resetting
-## settings must never replay the tutorial or flip the player's language, and the
-## confirm copy (SET_RESET_CONFIRM_BODY) promises exactly that.
-## Erase rather than overwrite: a key that is absent falls through to the same
-## DEFAULTS value on read, so the file returns to its honest first-run shape.
+## Reset the SCHEMA only; keys outside DEFAULTS survive (the confirm copy
+## SET_RESET_CONFIRM_BODY promises language and tutorial progress are untouched).
+## Erase rather than overwrite, so the file returns to its first-run shape.
 func reset_to_defaults() -> void:
 	for key in DEFAULTS.keys():
 		_data.erase(key)
@@ -134,29 +95,21 @@ func reset_to_defaults() -> void:
 	apply_all()
 
 
-## Push every persisted value at the system that owns its live state. Called after
-## _load() at boot and again after reset_to_defaults().
+## Push every persisted value at the system that owns its live state.
 func apply_all() -> void:
 	DisplaySettingsLib.apply_all()
-	# ui_tokens.gd hard-references the GameState autoload (net_runway_parts), and the
-	# theme generator is loaded with `-s` BEFORE autoloads exist — so in that one run
-	# ui_tokens lands in a failed-compile state and its statics are unreachable
-	# (`Nonexistent function 'set_colorblind' in base 'GDScript'`). The generator paints
-	# nothing, so skip the palette there rather than spam its log. Measured, not assumed:
-	# a normal boot and the headless smoke both compile it fine.
-	if not _is_theme_generator_run():
-		UiTokens.set_colorblind(bool(get_value("colorblind_palette", DEFAULTS["colorblind_palette"])))
-	# AudioManager is registered AFTER Settings, so at boot the node does not exist
-	# yet and applies its own values in its _ready(). On a later reset it IS there,
-	# and this is what makes the sliders snap back. get_node_or_null, not the
-	# `AudioManager` global: that identifier is null during our own _ready().
+	# The theme generator runs with `-s` before autoloads exist, so ui_tokens.gd
+	# (which references GameState) fails to compile there and its statics are
+	# unreachable. The generator paints nothing; skip the palette.
+	if not "res://scripts/theme/build_theme.gd" in OS.get_cmdline_args():
+		UiTokens.set_colorblind(bool(get_value("colorblind_palette")))
+	# AudioManager is registered AFTER Settings: at boot its node may exist but is not
+	# ready yet (no buses, no player) and applies its own values in _ready(); after a
+	# reset this call is what makes the sliders snap back. get_node_or_null, not the
+	# `AudioManager` global, which is null during our own _ready().
 	var audio: Node = get_node_or_null("/root/AudioManager")
-	if audio != null and audio.has_method("apply_from_settings"):
+	if audio != null and audio.is_node_ready():
 		audio.apply_from_settings()
-
-
-func _is_theme_generator_run() -> bool:
-	return "res://scripts/theme/build_theme.gd" in OS.get_cmdline_args()
 
 
 # --- Persistence -------------------------------------------------------------
@@ -178,13 +131,10 @@ func flush() -> void:
 
 
 func _notification(what: int) -> void:
-	# Alt-tabbing away, closing the window, or a get_tree().quit() teardown — every
-	# path that ends the process or hands the machine to another app lands the
-	# pending write first, so nothing is lost to the debounce window.
-	if what == NOTIFICATION_WM_CLOSE_REQUEST \
-			or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT \
-			or what == NOTIFICATION_APPLICATION_FOCUS_OUT \
-			or what == NOTIFICATION_EXIT_TREE:
+	# Every path that ends the process or hands the machine to another app lands the
+	# pending write first.
+	if what in [NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_WM_WINDOW_FOCUS_OUT,
+			NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_EXIT_TREE]:
 		flush()
 
 
@@ -196,10 +146,8 @@ func _load() -> void:
 		push_warning("[Settings] could not open %s for read" % SETTINGS_PATH)
 		return
 	var parsed: Variant = JSON.parse_string(f.get_as_text())
-	if typeof(parsed) == TYPE_DICTIONARY:
-		var values: Variant = (parsed as Dictionary).get("values", {})
-		if typeof(values) == TYPE_DICTIONARY:
-			_data = values
+	if parsed is Dictionary and parsed.get("values") is Dictionary:
+		_data = parsed["values"]
 
 
 func _save() -> void:

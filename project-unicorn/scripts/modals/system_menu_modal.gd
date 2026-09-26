@@ -1,17 +1,16 @@
 extends Control
 
-# ESC sistem menüsü (SaveManager task'ı). ConfirmModal/SettingsModal konvansiyonu:
-# main.gd, EventBus.system_menu_requested üzerine GameShell/ModalLayer'a mount eder;
-# modal kendini `dismissed` ile serbest bırakır, hızı main.gd geri yükler.
+# ESC sistem menüsü. main.gd, EventBus.system_menu_requested üzerine
+# GameShell/ModalLayer'a mount eder; modal kendini `dismissed` ile serbest bırakır,
+# hızı main.gd geri yükler.
 #
-# process_mode = ALWAYS (.tscn kökünde 3). Çocuklar INHERIT — bir ALWAYS ebeveynin
-# altında INHERIT de ALWAYS'e çözülür, bu yüzden tüm butonlar tree paused iken de
-# tıklanabilir. Bu projenin EN SIK tekrarlanan yaşam-döngüsü hatası pause'a kapalı
-# UI'dır; doğrulaması
-# 4x hızda menüyü açıp her butona tıklamaktır, göz kararı değil.
+# Kök process_mode = ALWAYS (.tscn'de 3); INHERIT çocuklar da ALWAYS'e çözülür, bu
+# yüzden tüm butonlar tree paused iken de tıklanabilir. Pause'a kapalı UI bu projenin
+# en sık tekrarlanan yaşam-döngüsü hatasıdır; doğrulaması 4x hızda menüyü açıp her
+# butona tıklamaktır.
 #
-# Menü YALNIZ ModalLayer ve PanelLayer boşken açılır (game_shell._input). Zorunlu
-# karar zorunlu kalır: olay modalı üstündeyken ESC bu menüyü açmaz.
+# Menü YALNIZ ModalLayer ve PanelLayer boşken açılır (game_shell._input): olay modalı
+# üstündeyken ESC bu menüyü açmaz, zorunlu karar zorunlu kalır.
 
 signal dismissed
 
@@ -36,46 +35,32 @@ func _ready() -> void:
 	_soon_badge.text = tr("SYS_SOON")
 	_quit_btn.text = tr("SYS_QUIT")
 
-	# Ana menü DEMO hazırlığında kendi tasarımıyla geliyor; slot şimdiden var ve
-	# kilidi telgraflanıyor (oyunun "yakında" grameri) — sessiz bir ölü buton değil.
-	_main_menu_btn.disabled = true
+	# Ana menü henüz yok; slot (sahnede disabled) kilidini "yakında" rozetiyle telgraflar.
 	_main_menu_btn.tooltip_text = tr("SYS_SOON")
 
-	# Kaydetme, çözülmemiş bir karar ya da süren bir oturum varken kapalı —
-	# gerekçesi SaveManager'ın tek kapısından okunur, burada yeniden icat edilmez.
+	# Kaydetme, çözülmemiş bir karar ya da süren bir oturum varken kapalı; gerekçe
+	# SaveManager'ın tek kapısından okunur.
 	var can_save: bool = SaveManager.can_save()
 	_save_btn.disabled = not can_save
-	_reason.text = "" if can_save else tr(SaveManager.cannot_save_reason_key())
 	_reason.visible = not can_save
+	if not can_save:
+		_reason.text = tr(SaveManager.cannot_save_reason_key())
 
 	_resume_btn.pressed.connect(_close)
-	_save_btn.pressed.connect(_on_save)
-	_load_btn.pressed.connect(_on_load)
-	_settings_btn.pressed.connect(_on_settings)
+	_save_btn.pressed.connect(func() -> void: EventBus.save_load_requested.emit("save"))
+	_load_btn.pressed.connect(func() -> void: EventBus.save_load_requested.emit("load"))
+	_settings_btn.pressed.connect(func() -> void: EventBus.settings_requested.emit())
 	_quit_btn.pressed.connect(_on_quit)
 
 	_resume_btn.grab_focus()   # varsayılan odak GÜVENLİ taraf: yanlış Enter oyuna döner
 
 
-func _on_save() -> void:
-	EventBus.save_load_requested.emit("save")
-
-
-func _on_load() -> void:
-	EventBus.save_load_requested.emit("load")
-
-
-func _on_settings() -> void:
-	EventBus.settings_requested.emit()
-
-
 func _on_quit() -> void:
-	# Kaydedilmemiş ilerleme yoksa doğrudan çık — kullanıcıyı boş bir onayla durdurmayız.
+	# Kaydedilmemiş ilerleme yoksa doğrudan çık — boş bir onayla durdurmayız.
 	if not SaveManager.has_unsaved_progress():
-		get_tree().quit()
+		_quit_now()
 		return
-	# Üç yol: kaydet ve çık / kaydetmeden çık / vazgeç. ConfirmModal'ın isteğe
-	# bağlı üçüncü butonu (alt_text + on_alt) tam olarak bunun için eklendi.
+	# Üç yol: kaydet ve çık / kaydetmeden çık / vazgeç.
 	EventBus.confirm_requested.emit({
 		"title": tr("SYS_QUIT_TITLE"),
 		"body": tr("SYS_QUIT_BODY"),
@@ -88,11 +73,10 @@ func _on_quit() -> void:
 
 
 func _save_and_quit() -> void:
-	# Kaydedilemiyorsa (karar ekranı) çıkışı SESSİZCE yutmayız: gerekçe zaten
-	# menüde yazılı, quit butonu da o durumda buraya gelmiş olur.
+	# Kaydedilemiyorsa (karar ekranı) yine çıkılır; gerekçe menüde zaten yazılı.
 	if SaveManager.can_save():
 		SaveManager.quicksave()
-	get_tree().quit()
+	_quit_now()
 
 
 func _quit_now() -> void:
@@ -100,7 +84,7 @@ func _quit_now() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):   # ESC = en üstteki katmanı kapat (proje konvansiyonu)
+	if event.is_action_pressed("ui_cancel"):   # ESC = en üstteki katmanı kapat
 		get_viewport().set_input_as_handled()
 		_close()
 

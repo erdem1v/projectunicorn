@@ -1,46 +1,26 @@
 class_name DisplaySettings
 extends RefCounted
 
-# ============================================================================
 # DisplaySettings — the live display engine (window mode / resolution / vsync /
-# UI scale). All static; holds no state of its own.
-# ============================================================================
-# OWNERSHIP mirrors the split AudioManager's header documents: **Settings
-# persists, DisplaySettings applies.** Every function here reads the value from
-# the Settings autoload and pushes it at the DisplayServer / the root Window.
-# Nothing here writes a preference except the one place the engine must correct
-# the player (an illegal UI-scale step after a resolution change — see
-# apply_ui_scale), and that correction goes back through Settings.set_value.
+# UI scale). All static; holds no state. Settings persists, DisplaySettings applies:
+# the only write here is the UI-scale correction in apply_ui_scale.
 #
-# THE HARNESS RULE (non-negotiable): the debug screenshot runners and the smoke
-# suite OWN the window. --tab-shot/--modal-shot/--oda-shot/… all set
-# `get_window().size = Vector2i(1920, 1080)` by hand so their frames are
-# comparable, and --endgame-smoke runs headless. If this file resized or
-# fullscreened the window at boot, it would silently invalidate 14 screenshot
-# runners and the whole smoke suite. is_inert() is that guard, and every
-# DisplayServer/Window call in this file sits behind it.
-# ============================================================================
+# THE HARNESS RULE: the debug screenshot runners and the smoke suite OWN the window
+# (the shot runners size it to 1920×1080 by hand so frames are comparable; smoke runs
+# headless). is_inert() is that guard, and every DisplayServer/Window call sits behind it.
 
-# --- Window mode ------------------------------------------------------------
-# Godot's naming is a trap worth spelling out: WINDOW_MODE_FULLSCREEN is the
-# BORDERLESS windowed-fullscreen mode (alt-tab friendly, no mode switch), while
-# WINDOW_MODE_EXCLUSIVE_FULLSCREEN is real exclusive fullscreen. The player-facing
-# TR labels map to the modes the words actually mean, not to the enum spelling.
+# Godot's WINDOW_MODE_FULLSCREEN is BORDERLESS windowed-fullscreen, while
+# WINDOW_MODE_EXCLUSIVE_FULLSCREEN is real fullscreen. The ids map to what the words mean.
 const MODE_FULLSCREEN := "fullscreen"     # Tam ekran   → EXCLUSIVE_FULLSCREEN
 const MODE_BORDERLESS := "borderless"     # Kenarlıksız → FULLSCREEN (borderless windowed)
 const MODE_WINDOWED := "windowed"         # Pencereli   → WINDOWED
 
-# Display order in the dropdown; index ↔ id conversion for the OptionButton.
+# Dropdown order; index ↔ id for the OptionButton.
 const MODE_ORDER: Array[String] = [MODE_FULLSCREEN, MODE_BORDERLESS, MODE_WINDOWED]
 const MODE_KEYS: Array[String] = ["SET_WINDOW_FULLSCREEN", "SET_WINDOW_BORDERLESS", "SET_WINDOW_WINDOWED"]
 
-# --- Resolutions ------------------------------------------------------------
-# The supported list, in order. 1280×720 is the MINIMUM, so it is never filtered
-# away even on a smaller-than-expected screen.
-## 16:10 ve 32:9 zaten DESTEKLENEN oranlardı ama listede ikisinden de tek satır yoktu.
-## Eklendi. Yine de bu tablo tek başına yeterli DEĞİL: gerçek panel boyutları
-## (dizüstü 2880x1800, 3024x1964 vb.) hiçbir sabit listeye sığmaz, o yüzden
-## available_resolutions() ölçülen native'i listeye AYRICA ekler.
+# 1280×720 is the MINIMUM, so it is never filtered away. Real panel sizes (laptop
+# 2880x1800 etc.) fit no fixed list; available_resolutions() adds the measured native.
 const RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(1280, 720),
 	Vector2i(1366, 768),
@@ -58,51 +38,35 @@ const RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(5120, 1440),   # 32:9
 ]
 
-# --- UI scale ---------------------------------------------------------------
-# Applied through the root Window's content_scale_factor, which multiplies the
-# canvas_items stretch the project already runs (project.godot: stretch mode
-# "canvas_items", aspect "expand", base 1920×1080).
-## %150 KALDIRILDI (Erdem 2026-08-18). Gerekçe ölçüldü: content_scale_factor
-## mantıksal viewport'u KÜÇÜLTÜR, yani 1920×1080 pencere %150'de 1280×720 raporlar —
-## SettingsModal'ın SABİT yükseklikli CenterPanel'i oraya sığmıyor ve Footer'daki
-## KAPAT butonu ekranın altında kalıyordu. Panel bu turda 860→820'ye indi, ama
-## adımın kendisi de gitti: merdivenin tavanı artık %125.
-## Bu liste ADIMLARIN TEK KAYNAĞI — is_step_allowed üyelik kapısını buradan okur,
-## yani buraya eklenmeyen bir değer (elle düzenlenmiş settings.json, eski kayıt)
-## uygulanamaz ve clamp_step onu merdivene geri çeker.
+## 16:9 (1.778) ile 16:10 (1.600) arasını ayıracak kadar dar, aynı ailedeki küçük
+## yuvarlama farklarını (1366x768 = 1.779) yutacak kadar geniş.
+const ASPECT_EPSILON := 0.05
+
+# UI scale is applied through the root Window's content_scale_factor, which multiplies
+# the project's canvas_items stretch (aspect "expand", base 1920×1080).
+## Adımların TEK KAYNAĞI: is_step_allowed üyeliği buradan okur, yani listede olmayan
+## bir değer (elle düzenlenmiş settings.json) uygulanamaz ve clamp_step onu merdivene
+## çeker. Tavan %125: content_scale_factor mantıksal viewport'u KÜÇÜLTÜR ve 1080p'de
+## daha büyük bir adımda SettingsModal'ın sabit yükseklikli paneli ekrana sığmaz.
 const UI_SCALE_STEPS: Array[float] = [0.75, 0.90, 1.00, 1.10, 1.25]
 
-## The readability floor, in PHYSICAL pixels. This is a decided design point:
-## a 9px badge that the stretch has already shrunk is 9px on glass no matter what
-## the layout thinks it is, so the check has to happen after BOTH multipliers.
-## UiTokens.SIZE_MICRO is the smallest step in the type scale and is exactly 9,
-## so the floor is "the PLAYER must never shrink the smallest type below its
-## authored size". Consequence, deliberately: at 1920×1080 the 75% and 90% steps
-## are DISABLED; 90% unlocks around 1200px of height, 75% at 1440p.
-## It gates the reduction steps only — see is_step_allowed for why 100%+ is exempt.
+## The readability floor, in PHYSICAL pixels, checked after BOTH multipliers:
+## UiTokens.SIZE_MICRO is exactly 9, so the player must never shrink the smallest
+## type below its authored size. At 1920×1080 the 75% and 90% steps are therefore
+## disabled; 90% unlocks around 1200px of height, 75% at 1440p.
 const MIN_READABLE_FONT_PX := 9
 
-# Float comparison guard. 9 * 0.75 * (1440.0/1080.0) evaluates to 8.999999999999998,
-# i.e. the exact 1440p case the design intends to ALLOW would fail a naive `>=`.
+# 9 * 0.75 * (1440.0/1080.0) evaluates to 8.999999999999998 — the exact 1440p case the
+# design intends to ALLOW would fail a naive `>=`.
 const READABLE_EPSILON := 0.01
 
 const BASE_VIEWPORT := Vector2(1920.0, 1080.0)
 
-## Kabuğun HAYATTA KALDIĞI en küçük mantıksal viewport. Eskiden üst kapı
-## BASE_VIEWPORT'a bakıyordu, yani 1080p'de %100 üstü HİÇBİR adım yasal değildi —
-## Ayarlar açılır listesi tek seçenekten ibaretti ve bu bir arıza gibi okunuyordu.
-## Kapının gerçek gerekçesi "tasarım genişliği" değil, "kabuk kırpılıyor" idi
-## (şirket adı soldan, 3x/4x sağdan düşüyordu). Terminal reskin'iyle TopBar'a
-## yoğunluk kademesi eklendi (top_bar.gd `_apply_density`, eşik 1600): dar
-## viewport'ta ad gizlenir, sütun boşlukları 28→18 daralır, tarih kısalır ve HİÇBİR
-## sayı ya da kontrol kaybolmaz. Ölçülen taban 1280×720 — desteklenen en
-## küçük pencere. Bu yüzden kapı artık ORAYA bakıyor:
-## 1920 pencere → %125 (1536×864) yasal. (%150 de bu kapıdan GEÇİYORDU — 1280×720
-## tam sınırda — ama adım merdivenden kaldırıldı: kapı kabuğu ölçüyor, modalleri
-## değil, ve SettingsModal 720px'e sığmıyordu. Bkz. UI_SCALE_STEPS.)
+## Kabuğun HAYATTA KALDIĞI en küçük mantıksal viewport (TopBar'ın yoğunluk kademesi
+## dar viewport'ta hiçbir sayı ya da kontrol kaybetmez; ölçülen taban 1280×720).
+## 1920 pencere → %125 (1536×864) yasal.
 const MIN_CHROME_VIEWPORT := Vector2(1280.0, 720.0)
 
-# Settings keys this file reads (declared in Settings.DEFAULTS).
 const KEY_WINDOW_MODE := "window_mode"
 const KEY_RES_W := "resolution_w"
 const KEY_RES_H := "resolution_h"
@@ -123,8 +87,7 @@ static func is_inert() -> bool:
 	for arg in OS.get_cmdline_args():
 		if _is_harness_arg(String(arg)):
 			return true
-	# The MCP editor-run path passes --endgame-smoke through run/main_args rather
-	# than the command line (the same dual source main.gd reads).
+	# The MCP editor-run path passes --endgame-smoke through run/main_args.
 	var configured: String = String(ProjectSettings.get_setting("application/run/main_args", ""))
 	return configured.contains("--endgame-smoke")
 
@@ -132,39 +95,25 @@ static func is_inert() -> bool:
 static func _is_harness_arg(s: String) -> bool:
 	if not s.begins_with("--"):
 		return false
-	# Every screenshot runner in main.gd is spelled "--<something>-shot[=kind]"
-	# (--tab-shot, --modal-shot, --onboard-shot, --probe-shot, --oda-shot,
-	# --hr-shot, --finance-shot, --product-shot, --ending-shot, --pitch-shot …),
-	# so match the family rather than a list that will fall behind.
+	# Every screenshot runner is spelled "--<something>-shot[=kind]"; match the family.
 	if s.contains("-shot"):
 		return true
-	return s.begins_with("--endgame-smoke") or s.begins_with("--font-spec") \
-		or s.begins_with("--theme-audit") or s.begins_with("--tempo-probe") \
-		or s.begins_with("--render-probe")
+	for prefix in ["--endgame-smoke", "--font-spec", "--theme-audit", "--tempo-probe", "--render-probe"]:
+		if s.begins_with(prefix):
+			return true
+	return false
 
 
 static func _root() -> Window:
-	var loop: MainLoop = Engine.get_main_loop()
-	var tree := loop as SceneTree
+	var tree := Engine.get_main_loop() as SceneTree
 	return tree.root if tree != null else null
-
-
-## Current window size in physical pixels (the number the readability floor and
-## the stretch factor are both computed from). Falls back to the project's base
-## viewport when there is no window to ask.
-static func window_size() -> Vector2i:
-	var win: Window = _root()
-	if win == null:
-		return Vector2i(int(BASE_VIEWPORT.x), int(BASE_VIEWPORT.y))
-	return win.size
 
 
 # ============================================================================
 # Apply
 # ============================================================================
 
-## Push every persisted display value at the engine. Settings.apply_all() calls
-## this at boot and after a reset.
+## Push every persisted display value at the engine (boot and after a reset).
 static func apply_all() -> void:
 	if is_inert():
 		return
@@ -174,7 +123,7 @@ static func apply_all() -> void:
 
 
 static func get_window_mode() -> String:
-	var mode: String = String(Settings.get_value(KEY_WINDOW_MODE, Settings.get_default(KEY_WINDOW_MODE)))
+	var mode: String = String(Settings.get_value(KEY_WINDOW_MODE))
 	return mode if mode in MODE_ORDER else MODE_BORDERLESS
 
 
@@ -184,8 +133,7 @@ static func set_window_mode(mode: String) -> void:
 		return
 	Settings.set_value(KEY_WINDOW_MODE, mode)
 	apply_window_mode(mode)
-	# Leaving Pencereli (or entering it) changes the window size, which can make
-	# the current UI-scale step illegal. Re-run the gate against the new size.
+	# The window size changes with the mode, which can make the UI-scale step illegal.
 	apply_ui_scale(get_ui_scale())
 
 
@@ -195,50 +143,37 @@ static func apply_window_mode(mode: String) -> void:
 	match mode:
 		MODE_FULLSCREEN:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
-			DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
 		MODE_BORDERLESS:
-			# Godot's "fullscreen" IS borderless-windowed — no exclusive mode switch.
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-			DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
 		MODE_WINDOWED:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-			DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
-			apply_resolution(get_resolution())
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
+	if mode == MODE_WINDOWED:
+		apply_resolution(get_resolution())
 
-
-# --- Resolution -------------------------------------------------------------
 
 # --- Ekran tespiti ----------------------------------------------------------
-# Hepsi is_inert() arkasında: harness'lar pencerenin sahibidir, onlara ekran
-# sorulmaz. `allow_hidpi` Godot 4'te varsayılan olarak açık (ProjectSettings'ten
-# doğrulandı), yani screen_get_size GERÇEK fiziksel pikseli döndürür — Windows'ta
-# %150 ölçeklenmiş bir 4K panel 2560x1440 değil 3840x2160 der.
+# `allow_hidpi` Godot 4'te varsayılan olarak açık, yani screen_get_size GERÇEK fiziksel
+# pikseli döndürür — Windows'ta %150 ölçeklenmiş bir 4K panel 3840x2160 der.
 
-## Bu pencerenin AÇILDIĞI monitörün native boyutu. Çok monitörlü kurulumda
-## window_get_current_screen doğru olanı seçer — birincil ekran değil, oyunun
-## bulunduğu ekran.
+## Pencerenin bulunduğu monitörün native boyutu (birincil ekran değil).
 static func native_resolution() -> Vector2i:
 	if is_inert():
-		return Vector2i(int(BASE_VIEWPORT.x), int(BASE_VIEWPORT.y))
+		return Vector2i(BASE_VIEWPORT)
 	return DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
 
 
-## Görev çubuğu düşülmüş kullanılabilir alan. Pencereli modun gerçek tavanı budur:
-## native boyutta bir PENCERE ekrana sığmaz (başlık çubuğu + görev çubuğu taşırır).
+## Görev çubuğu düşülmüş kullanılabilir alan — pencereli modun gerçek tavanı.
 static func usable_size() -> Vector2i:
 	if is_inert():
 		return native_resolution()
 	return DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen()).size
 
 
-## Pencereli modun ÖLÇÜLEN varsayılanı: kullanılabilir alana sığan en büyük
-## desteklenen boyut. Sabit 1920x1080 literali buydu; 1440p bir monitörde yalan
-## söylüyordu ve oyuncu Pencereli'yi seçer seçmez onu 1080p'ye düşürüyordu.
-## EN-BOY, ALANDAN ÖNCE GELİR. Ham "sığan en büyük alan" kuralı bu makinede
-## 2560x1440 bir panele 2560x1080'i (21:9) seçiyordu: alanı daha büyük, ama şekli
-## monitörün şekli değil — oyuncuya sebepsiz mektup kutusu bir pencere verirdi.
-## Önce panelin oranına uyan adaylar arasından en büyüğü; hiç uymuyorsa sığan en
-## büyüğe düşülür (alışılmadık panellerde liste zaten native'i içeriyor).
+## Pencereli modun ÖLÇÜLEN varsayılanı: kullanılabilir alana sığan en büyük boyut.
+## EN-BOY, ALANDAN ÖNCE GELİR: 2560x1440 bir panele alanı daha büyük diye 2560x1080
+## (21:9) seçmek oyuncuya sebepsiz mektup kutusu bir pencere verirdi. Önce panelin
+## oranına uyan en büyük aday; hiç uymuyorsa sığan en büyüğe düşülür.
 static func default_resolution() -> Vector2i:
 	var fits: Vector2i = usable_size()
 	var native: Vector2i = native_resolution()
@@ -256,16 +191,8 @@ static func default_resolution() -> Vector2i:
 	return best_match if best_match != Vector2i.ZERO else best_any
 
 
-## 16:9 (1.778) ile 16:10 (1.600) arasını ayıracak kadar dar, aynı ailedeki küçük
-## yuvarlama farklarını (1366x768 = 1.779) yutacak kadar geniş.
-const ASPECT_EPSILON := 0.05
-
-
-## The RESOLUTIONS list filtered to what this screen can actually show, PLUS the screen's
-## own native mode. The filter used to be subtractive only, so a panel whose native
-## size was not one of the hardcoded entries (every 16:10, 32:9 and laptop panel)
-## simply could not be selected. The minimum (1280×720) always survives so the
-## dropdown is never empty.
+## RESOLUTIONS filtered to what this screen can show, PLUS the screen's own native
+## mode, sorted by area. The minimum always survives so the dropdown is never empty.
 static func available_resolutions() -> Array[Vector2i]:
 	var screen: Vector2i = native_resolution()
 	var out: Array[Vector2i] = []
@@ -280,15 +207,12 @@ static func available_resolutions() -> Array[Vector2i]:
 	return out
 
 
-## Saklanmış bir değer YOKSA varsayılan ÖLÇÜLÜR (Settings.DEFAULTS'taki literal
-## yalnız headless yedeğidir). İlk açılış ve "varsayılana döndür" sonrası aynı
-## yoldan geçer: reset anahtarı siler, burası yeniden tespit eder.
+## Saklanmış bir değer YOKSA varsayılan ÖLÇÜLÜR (DEFAULTS'taki literal yalnız headless
+## yedeğidir). Sıfırlama anahtarı siler, burası yeniden tespit eder.
 static func get_resolution() -> Vector2i:
 	if not (Settings.has_stored(KEY_RES_W) and Settings.has_stored(KEY_RES_H)):
 		return default_resolution()
-	return Vector2i(
-		int(Settings.get_value(KEY_RES_W, Settings.get_default(KEY_RES_W))),
-		int(Settings.get_value(KEY_RES_H, Settings.get_default(KEY_RES_H))))
+	return Vector2i(int(Settings.get_value(KEY_RES_W)), int(Settings.get_value(KEY_RES_H)))
 
 
 static func set_resolution(res: Vector2i) -> void:
@@ -298,37 +222,33 @@ static func set_resolution(res: Vector2i) -> void:
 	apply_ui_scale(get_ui_scale())   # the new size can invalidate the current step
 
 
-## Resolution is a WINDOWED-mode concept: in either fullscreen mode the window
-## already fills the screen and the canvas_items stretch does the fitting, so the
-## dropdown row is disabled there (SET_RESOLUTION_LOCKED explains why).
+## Resolution is a WINDOWED-mode concept: in either fullscreen mode the window fills
+## the screen and the canvas_items stretch does the fitting.
 static func apply_resolution(res: Vector2i) -> void:
 	if is_inert() or get_window_mode() != MODE_WINDOWED:
 		return
 	DisplayServer.window_set_size(res)
 	# Re-center: a resize anchors at the top-left and can push the title bar off
 	# the top of the screen on the larger steps.
-	var screen: Vector2i = DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
-	var origin: Vector2i = DisplayServer.screen_get_position(DisplayServer.window_get_current_screen())
-	DisplayServer.window_set_position(origin + (screen - res) / 2)
+	var screen_idx: int = DisplayServer.window_get_current_screen()
+	var origin: Vector2i = DisplayServer.screen_get_position(screen_idx)
+	DisplayServer.window_set_position(origin + (DisplayServer.screen_get_size(screen_idx) - res) / 2)
 
 
 static func is_resolution_editable() -> bool:
 	return get_window_mode() == MODE_WINDOWED
 
 
-## Ekranda GERÇEKTEN geçerli olan çözünürlük. İki tam-ekran modunda bu, saklanan
-## pencereli tercih DEĞİL, monitörün native boyutudur — pencere onu kaplar.
-## Ayarlar satırı bunu göstermeli: aksi hâlde oyun 2560x1440'ta koşarken kilitli
-## satır "1920 × 1080" yazar ve panel yine yalan söylemiş olur. Pencereli modda
-## saklanan tercih zaten geçerli olandır.
+## Ekranda GERÇEKTEN geçerli olan çözünürlük: tam-ekran modlarında saklanan pencereli
+## tercih değil, pencerenin kapladığı monitörün native boyutu.
 static func effective_resolution() -> Vector2i:
-	return get_resolution() if get_window_mode() == MODE_WINDOWED else native_resolution()
+	return get_resolution() if is_resolution_editable() else native_resolution()
 
 
 # --- VSync ------------------------------------------------------------------
 
 static func get_vsync() -> bool:
-	return bool(Settings.get_value(KEY_VSYNC, Settings.get_default(KEY_VSYNC)))
+	return bool(Settings.get_value(KEY_VSYNC))
 
 
 static func set_vsync(on: bool) -> void:
@@ -345,55 +265,36 @@ static func apply_vsync(on: bool) -> void:
 
 # --- UI scale ---------------------------------------------------------------
 
-## Physical pixels the SMALLEST type step lands on at `step`, for a window of
-## `win`. Both multipliers are in play: the project's canvas_items stretch
-## (window ÷ 1920×1080, min of the two axes because aspect="expand" letterboxes
-## on the tighter one) and the player's chosen content_scale_factor.
+## Physical pixels the SMALLEST type step lands on at `step` for a window of `win`:
+## the canvas_items stretch (min of the two axes, since aspect="expand" letterboxes
+## on the tighter one) times the player's content_scale_factor.
 static func effective_micro_px(step: float, win: Vector2i) -> float:
 	var stretch: float = minf(float(win.x) / BASE_VIEWPORT.x, float(win.y) / BASE_VIEWPORT.y)
 	return float(UiTokens.SIZE_MICRO) * step * stretch
 
 
-## Readability gate for one dropdown row. `win` defaults to the live window
-## (ZERO is the sentinel — a default argument must not depend on call-time state).
+## Legality of one ladder step. `win` defaults to the live window (ZERO is the sentinel).
 ##
-## 100% IS ALWAYS LEGAL, and that exemption is load-bearing rather than a softening
-## of the floor. The canvas_items stretch below 1080p is the ENGINE's designed answer
-## to a small window, not a preference the player picked; 100% is by definition the
-## authored baseline. Gating it produces an actively worse outcome than the small type
-## it was meant to prevent: at the enforced minimum window (1280×720, main.gd:65) the
-## stretch is 0.667, so a floor applied to 100% would reject the ONE step that is
-## guaranteed renderable there — and it has nowhere safe to go, because every
-## enlargement step shrinks the logical viewport further (%110 → 1163×654, %125 →
-## 1024×576, both under MIN_CHROME_VIEWPORT). The player would be left with a clamp
-## that cannot satisfy its own gate.
-## (This passage used to argue the same point through %150 and "1.5 × 0.667 = 1.0".
-## That step no longer exists — see UI_SCALE_STEPS — so the worked example moved to
-## the steps that do.)
-## So the floor guards only what it was written to guard: the player choosing to
-## shrink the type BELOW the authored design. 75% and 90% stay gated by physical
-## pixels exactly as specified.
+## Membership comes first: the geometric gates alone would accept a stale off-ladder
+## value (e.g. 1.5) from settings.json that the dropdown can no longer show.
 ##
-## ÜYELİK KAPISI ÖNCE GELİR. Merdivende OLMAYAN bir değer yasadışıdır, çünkü aşağıdaki
-## iki test SALT GEOMETRİK: %150 kaldırıldıktan sonra bile `_fits_design_width(1.5,
-## 1920×1080)` 1280×720 hesaplayıp TRUE döner, yani settings.json'da duran eski bir
-## 1.5 uygulanmaya devam ederdi — üstelik açılır listede artık o adım olmadığı için
-## oyuncunun geri dönüş yolu da kalmazdı (Ayarlar'ın KAPAT'ı ekran dışında). Üyelik
-## kapısı bunu kapatır: clamp_step değeri merdivene çeker, apply_ui_scale düzeltmeyi
-## Settings'e geri yazar. Göç kodu YOK — mevcut mekanizma yeterli.
+## 100% IS ALWAYS LEGAL. Below 1080p the stretch is the engine's answer to a small
+## window, not the player's choice, and at the minimum window (1280×720, stretch 0.667)
+## every enlargement step fails the chrome gate — gating 100% too would leave a clamp
+## that cannot satisfy its own gate. The floor guards only the player choosing to
+## shrink type BELOW the authored design.
 static func is_step_allowed(step: float, win: Vector2i = Vector2i.ZERO) -> bool:
 	if not _is_ladder_step(step):
 		return false
-	var w: Vector2i = window_size() if win == Vector2i.ZERO else win
+	var w: Vector2i = _root().size if win == Vector2i.ZERO else win
 	if step > 1.0:
-		return _fits_design_width(step, w)
+		return _fits_chrome(step, w)
 	if step == 1.0:
 		return true
 	return effective_micro_px(step, w) >= float(MIN_READABLE_FONT_PX) - READABLE_EPSILON
 
 
-## Epsilon karşılaştırması, `Array.has` DEĞİL: değer JSON'dan geçip geliyor ve ondalık
-## bir basamak kayması (0.8999999) adımı listede yokmuş gibi gösterirdi.
+## Epsilon karşılaştırması, `Array.has` DEĞİL: değer JSON'dan geçip geliyor.
 static func _is_ladder_step(step: float) -> bool:
 	for s in UI_SCALE_STEPS:
 		if is_equal_approx(s, step):
@@ -401,48 +302,28 @@ static func _is_ladder_step(step: float) -> bool:
 	return false
 
 
-## The UPPER gate, and the mirror image of the readability floor.
-##
-## content_scale_factor > 1 does not magnify into a bigger window — it SHRINKS the
-## logical viewport (measured: a 1920×1080 window at 150% reports a 1280×720 viewport
-## and a 1280-wide TopBar). Everything in this project is authored against the 1920
-## design width, and compact-mode breakpoints were never built, so a
-## logical viewport under 1920 overflows its chrome: at 150% on a 1080p screen the
-## TopBar loses the company name off the left edge and the 3x/4x speed buttons off the
-## right. Speed control disappearing is a functional loss, not a cosmetic one.
-##
-## So an enlargement step is legal only where the logical viewport still covers the
-## design: 1920 window → 100% only; 2560 → up to 125%; 3840 → the whole ladder.
-## This is a HARDWARE gate, not a permanent ceiling — it lifts on its own the day
-## responsive breakpoints land, with no change to this file.
-static func _fits_design_width(step: float, win: Vector2i) -> bool:
+## The UPPER gate: content_scale_factor > 1 SHRINKS the logical viewport, and a
+## viewport under MIN_CHROME_VIEWPORT crops the TopBar (company name, speed buttons).
+static func _fits_chrome(step: float, win: Vector2i) -> bool:
 	if win.x <= 0 or win.y <= 0:
 		return true   # boyut henüz bilinmiyor (headless/erken boot) — kapıyı kapatma
-	var logical := Vector2(float(win.x) / step, float(win.y) / step)
+	var logical := Vector2(win) / step
 	return logical.x >= MIN_CHROME_VIEWPORT.x - 0.5 and logical.y >= MIN_CHROME_VIEWPORT.y - 0.5
 
 
-## The disabled row's explanation, already formatted ("%d%% bu pencere boyutunda…").
-## TranslationServer, not tr(): statics have no Object to translate through — the
-## same reason UiTokens.net_runway_parts reaches for it.
+## The disabled row's explanation. TranslationServer, not tr(): statics have no Object
+## to translate through. The two gates have opposite reasons (readability floor vs
+## chrome width), so each has its own text.
 static func step_blocked_note(step: float) -> String:
-	# İKİ kapı var ve gerekçeleri zıt: küçültme adımı OKUNAKLILIK tabanına,
-	# büyütme adımı KABUK genişliğine takılır. Tek metin ikisini de anlatamaz —
-	# %125'in "okunmuyor" demesi düpedüz yanlış olurdu.
 	var key: String = "SET_UI_SCALE_TOO_LARGE" if step > 1.0 else "SET_UI_SCALE_TOO_SMALL"
 	return TranslationServer.translate(key).format({"pct": int(round(step * 100.0))})
 
 
-## Nearest LEGAL step, moving TOWARD 100%. The direction is not a preference — each
-## gate has only one safe escape:
-##   • a reduction step blocked by the readability floor must grow (shrinking further
-##     is exactly what the floor forbids);
-##   • an enlargement step blocked by the design-width gate must shrink (growing
-##     further crops more chrome).
-## 100% is legal at every window size, so both walks terminate there at worst and the
-## function can never return an illegal value.
+## Nearest LEGAL step, moving TOWARD 100% — each gate has only one safe escape
+## (a blocked reduction must grow, a blocked enlargement must shrink). 100% is legal
+## at every size, so this never returns an illegal value.
 static func clamp_step(step: float, win: Vector2i = Vector2i.ZERO) -> float:
-	var w: Vector2i = window_size() if win == Vector2i.ZERO else win
+	var w: Vector2i = _root().size if win == Vector2i.ZERO else win
 	if is_step_allowed(step, w):
 		return step
 	if step < 1.0:
@@ -458,7 +339,7 @@ static func clamp_step(step: float, win: Vector2i = Vector2i.ZERO) -> float:
 
 
 static func get_ui_scale() -> float:
-	return float(Settings.get_value(KEY_UI_SCALE, Settings.get_default(KEY_UI_SCALE)))
+	return float(Settings.get_value(KEY_UI_SCALE))
 
 
 static func set_ui_scale(step: float) -> void:
@@ -466,19 +347,13 @@ static func set_ui_scale(step: float) -> void:
 	apply_ui_scale(step)
 
 
-## Apply the step, clamping upward first. When the clamp fires it writes the
-## corrected value back through Settings — the dropdown must not keep showing a
-## step the window can no longer render.
+## Apply the step after clamping. A correction is written back through Settings so
+## the dropdown never shows a step the window can no longer render.
 static func apply_ui_scale(step: float) -> void:
 	if is_inert():
 		return
 	var win: Window = _root()
-	if win == null:
-		return
 	var legal: float = clamp_step(step, win.size)
 	if not is_equal_approx(legal, step):
-		print("[DisplaySettings] UI ölçeği %d%% → %d%% (pencere %dx%d, %dpx okunabilirlik tabanı)" % [
-			int(round(step * 100.0)), int(round(legal * 100.0)),
-			win.size.x, win.size.y, MIN_READABLE_FONT_PX])
 		Settings.set_value(KEY_UI_SCALE, legal)
 	win.content_scale_factor = legal
