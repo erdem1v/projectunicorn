@@ -138,15 +138,6 @@ static func on_shutter_started() -> void:
 	# shutter by its own `finance.shutter_days_left < 0` leaf instead.
 
 
-static func on_shutter_cleared() -> void:
-	# Nothing to do, and that is the whole change. The hold was
-	# `finance.shutter_days_left < 0` failing; the day it passes, the daily sweep proposes the
-	# card again. This used to re-stamp gate_prompt_day so the reminder cadence would not
-	# swallow the re-prompt — there is no cadence to outrun now, only the card's own cooldown,
-	# and a shutter long enough to matter outlasts five days.
-	pass
-
-
 # --- Debug (F1) ---
 
 static func debug_force_gate() -> void:

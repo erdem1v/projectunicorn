@@ -3,16 +3,16 @@ extends RefCounted
 
 # Endings Evaluator — daily tick slot 9.
 #
-# Scans terminal conditions daily, reading GameState FIELDS only (fields, not
-# systems — the future VC pitch / scandal systems just write the
-# fields and plug in with zero retrofit). Scan order = priority chain:
-# Bankruptcy > Brand Collapse > Cascade > Profitability condition > Soft cap.
+# Scans terminal conditions daily, reading GameState FIELDS only (fields, not systems: a
+# system plugs in by writing its field with zero retrofit; the reserved active_scandal
+# waits on a scandal system). Scan order = priority chain:
+# Series A backstop > Bankruptcy > Brand Collapse > Cascade > Profitability condition >
+# Soft cap.
 #
-# GOAL-TERMINATED RUN. The Day-180 wall and its
-# time-out fork are gone: a run ends only on an ending — Series A, profitable and
+# GOAL-TERMINATED RUN: a run ends only on an ending — Series A, profitable and
 # self-sustaining (a CONDITION evaluated daily), bankruptcy — or at the SOFT CAP,
 # a narrative non-win for a company that reached no goal inside the window investors
-# give it (running_on_fumes, paper rewritten: "yatırımcılar ilgisini kaybetti").
+# give it (running_on_fumes: "yatırımcılar ilgisini kaybetti").
 #
 # trigger_ending() is the single terminal seam for BOTH classes:
 #   Class A (instant, played moment): acquisition accept, term sheet signed,
@@ -22,34 +22,28 @@ extends RefCounted
 # Frank gate scene dies with the run) and freezes the clock.
 
 # Working values — calibration items, numbers last.
-const SHUTTER_DAYS := 30           # Kepenk. 7 → 30 (director ruling, Frank v6 pass):
-                                   # a month is real recovery room, a week is a formality.
-                                   # The warning copy names no number, so it did not move.
+const SHUTTER_DAYS := 30           # Kepenk (director ruling): a month is real recovery room,
+                                   # a week is a formality. The warning copy names no number.
 const BRAND_COLLAPSE_FLOOR := 15
 const BRAND_COLLAPSE_WINDOW := 30  # "no recovery for 30 days"
 const CASCADE_TABLES := 3          # closed pitch tables
 const PIVOT_MRR_MIN := 2000        # "metrics are alive" floor
-# SOFT CAP [WORKING]. Not a wall the economy is stretched across
-# (that was RUN_END_DAY = 180, retired); the catch for a run that reached no goal ending in
-# two years. 24 months is the smallest cap at which annual contracts (Layer B) are SEEN
-# renewing. NOT deferred for a live term sheet: there is no
-# auto-sign, and an unsigned sheet is named on the paper. THE SOFT CAP HAS NO TELEGRAPH:
-# the D-1 Frank warning was retired in the Frank v6 pass (that card became the last-day
-# reminder for a live OFFER, which is a different moment). A "final stretch" surface is
-# open work — docs/writing/FRANK_UNWIRED.md. Same day as a profitability close → the win
-# wins (scan order).
+# SOFT CAP [WORKING]. Not a wall the economy is stretched across; the catch for a run that
+# reached no goal ending in two years. 24 months is the smallest cap at which annual
+# contracts are SEEN renewing. NOT deferred for a live term sheet: there is no auto-sign,
+# and an unsigned sheet is named on the paper. Its telegraph is the final-stretch ladder
+# (world.final_stretch_* cards, arc_final_stretch, ending on Frank's D-1 verdict), which
+# stamps `soft_cap_telegraphed`. Same day as a profitability close → the win wins (scan order).
 const SOFT_CAP_DAY := 730
-# PROFITABLE & SELF-SUSTAINING — a CONDITION evaluated daily, not a
-# crossing read once at a wall. An "Artıda" month = net > 0 AND the treasury never sampled
-# below zero inside it (GameState.month_history, closed by MonthSummarySystem). The run-lifetime
-# cash_went_negative latch it replaces made the win permanently unreachable after one early
-# Kepenk in a 24-month run. The MRR floor is DECOUPLED from SalesSystem.TRACTION_MRR_TARGET
-# (it used to alias the Series A bar, which is now $40K+).
+# PROFITABLE & SELF-SUSTAINING — a CONDITION evaluated daily. An "Artıda" month = net > 0
+# AND the treasury never sampled below zero inside it (GameState.month_history, closed by
+# MonthSummarySystem), so one early Kepenk does not bar the win for the rest of the run.
+# The MRR floor is its own number, not SalesSystem.TRACTION_MRR_TARGET (the Series A bar).
 const PROFIT_STREAK_MONTHS := 6    # [WORKING] consecutive Artıda month-closes
 const PROFIT_MIN_MARGIN_PCT := 15  # [WORKING] Σnet/Σincome over the window, percent
 const BOOTSTRAP_WIN_MRR := 20_000  # [WORKING] scale floor at the moment the condition is met
 
-# --- The buyout offer (Frank v6 surfaces 17 + 18; parameters 2026-08-27) ---
+# --- The buyout offer (Frank v6 surfaces 17 + 18) ---
 # The only company valuation that exists outside a term-sheet sitting. Written as ARR x a
 # multiple because that is how a small software acquisition is actually priced, and because
 # every input is a figure the player has been watching all run.
@@ -69,32 +63,18 @@ const ACQ_M_MAX := 5.0
 # day a year later. [ÇALIŞMA]
 const ACQ_CARD_WINDOW_DAYS := 10
 
-# Ending metadata — 7 endings. Only the TONE lives here now; the title and Frank's
-# closing line are END_META_<ID>_TITLE / _FRANK in strings.csv, read through ending_title()
-# and ending_frank_line(). A const cannot hold them: it is evaluated when the file loads,
+# The 7 endings, each id mapped to its tone. The title and Frank's closing line are
+# END_META_<ID>_TITLE / _FRANK in strings.csv, read through ending_title() and
+# ending_frank_line(). A const cannot hold them: it is evaluated when the file loads,
 # before a locale exists.
 const ENDINGS := {
-	"series_a_close": {
-				"tone": "win",
-	},
-	"acquisition": {
-				"tone": "soft_win",
-	},
-	"bankruptcy": {
-				"tone": "loss",
-	},
-	"brand_collapse": {
-				"tone": "loss",
-	},
-	"vc_rejection_cascade": {
-				"tone": "loss",
-	},
-	"profitable_bootstrap": {
-				"tone": "win",
-	},
-	"running_on_fumes": {
-				"tone": "soft_loss",
-	},
+	"series_a_close": "win",
+	"acquisition": "soft_win",
+	"bankruptcy": "loss",
+	"brand_collapse": "loss",
+	"vc_rejection_cascade": "loss",
+	"profitable_bootstrap": "win",
+	"running_on_fumes": "soft_loss",
 }
 
 
@@ -102,21 +82,14 @@ static func daily_tick() -> void:
 	if not GameState.run_active:
 		return
 	_update_trackers()
-	# Class A field backstop: the VC pitch flow (later) and debug F3 call
+	# Class A field backstop: VCPitchSystem.sign_table and debug F3 call
 	# trigger_ending directly at the played moment; this catches a field set
 	# through any other path (e.g. console/debug) no later than the next day.
 	if GameState.series_a_closed:
 		trigger_ending("series_a_close", TELEGRAPH_WIN)
 		return
-	if _tick_shutter():
-		return
-	if _check_brand_collapse():
-		return
-	if _check_vc_cascade():
-		return
-	if _check_profitable_bootstrap():
-		return
-	if _check_soft_cap():
+	if _tick_shutter() or _check_brand_collapse() or _check_vc_cascade() \
+			or _check_profitable_bootstrap() or _check_soft_cap():
 		return
 	_tick_acquisition_window()  # one day stamp; the card decides, not this scan
 
@@ -124,9 +97,6 @@ static func daily_tick() -> void:
 # --- Daily trackers (cheap, serializable) ---
 
 static func _update_trackers() -> void:
-	# (The 90-day daily-net ring that fed the retired Day-180 fork lived here; the
-	# profitability condition reads GameState.month_history — the calendar-month ledger
-	# MonthSummarySystem closes — instead.)
 	# Brand-collapse window anchor: first day brand dipped under the floor;
 	# any recovery to/above the floor resets the 30-day clock.
 	if GameState.brand < BRAND_COLLAPSE_FLOOR:
@@ -143,8 +113,6 @@ static func _tick_shutter() -> bool:
 		if GameState.shutter_days_left < 0:
 			# Shutter starts: visible counter (TopBar via shutter_changed) +
 			# Frank warning scene. A queued gate scene is held.
-			# Extension socket: a future loan / cash-injection mechanic resets
-			# this by pushing cash ≥ 0 — no extra seam needed (DEFERRED BACKLOG).
 			GameState.set_shutter_days_left(SHUTTER_DAYS)
 			GameState.submit_month_highlight(TranslationServer.translate("END_HL_SHUTTER_STARTED"), 90)  # AYIN OLAYI
 			PhaseGateSystem.on_shutter_started()
@@ -161,7 +129,6 @@ static func _tick_shutter() -> bool:
 	elif GameState.shutter_days_left >= 0:
 		# Cash recovered — full reset, the held gate scene returns.
 		GameState.set_shutter_days_left(-1)
-		PhaseGateSystem.on_shutter_cleared()
 	return false
 
 
@@ -178,9 +145,8 @@ static func _check_brand_collapse() -> bool:
 		return false
 	if not GameState.active_scandal:
 		return false
-	# No telegraph exists. The ending is debug-only anyway — its gate reads
-	# GameState.active_scandal, which has no writer outside game_shell.gd:251 — and
-	# GDD v2 ch.13 defers brand_collapse to Early Access. Filed, not invented.
+	# No telegraph exists: the ending is debug-only (see above) and GDD v2 ch.13 defers
+	# brand_collapse to Early Access. Filed, not invented.
 	trigger_ending("brand_collapse", TELEGRAPH_NONE)
 	return true
 
@@ -196,33 +162,28 @@ static func _check_vc_cascade() -> bool:
 	if not GameState.active_sheets.is_empty() or _any_pending_sheet() or not GameState.pending_meeting.is_empty():
 		return false
 	if GameState.pivot_used:
-		# Erdem 2026-07-13: pivot closes the VC path permanently; the counter
-		# stays at 3 but the cascade can never fire again. Only route left is
-		# the Day-180 fork.
+		# Owner ruling: pivot closes the VC path permanently; the counter stays at 3 but
+		# the cascade can never fire again.
 		return false
 	if GameState.get_flag("pivot_offer_made", false):
-		return false  # offer on the table — the player's choice resolves it
+		return false  # metrics were alive once; the cascade stays deferred
 	if GameState.mrr >= PIVOT_MRR_MIN and GameState.cash > 0:
-		# Metrics alive → Frank offers the hidden corridor. Played choice:
-		# accept_pivot / decline_pivot modifiers resolve it.
-		# ENTRY POINT CLOSED (Frank v6): ev_pivot_offer and ev_acquisition_offer were merged
-		# into ONE card, the buyout offer card, which is not built yet. The latch
-		# still burns here so the cascade stays deferred exactly as it did while the offer sat
-		# on the table - the run continues to another terminal instead of stalling.
+		# Metrics alive → no cascade. The latch burns so the cascade stays deferred for
+		# the rest of the run, which continues to another terminal instead of stalling.
 		GameState.set_flag("pivot_offer_made", true)
 		return false
-	# HUNT_FRANK_LINE counts the closed tables on screen ("Kapanan masa: 2. Ucunculde
-	# yol biter"), so the player is warned — but by a UI strip History cannot see.
+	# HUNT_FRANK_LINE counts the closed tables on screen ("Kapanan masa: 2. Üçüncüde
+	# yol biter."), so the player is warned — but by a UI strip History cannot see.
 	trigger_ending("vc_rejection_cascade", TELEGRAPH_UI_ONLY)
 	return true
 
 
 static func on_pivot_accepted() -> void:
-	# Called via the "accept_pivot" event modifier.
+	# Called by on_buyout_declined (the buyout card's `decline_buyout` verb).
 	GameState.pivot_used = true
 	# Pivot closes the Hunt — cancel the pending meeting, kill
 	# callbacks, remove a queued meeting prompt. Active sheets are impossible here
-	# (cascade defers while any sheet lives), so none to clear.
+	# (the buyout card is gated on road_over(), which needs no live sheet), so none to clear.
 	VCPitchSystem.on_pivot()
 	if OS.is_debug_build():
 		print("[EndingsSystem] Pivot accepted — VC path closed; the bootstrap road continues (goal: %d Artıda months)" % PROFIT_STREAK_MONTHS)
@@ -248,27 +209,25 @@ static func profitability_signal() -> Dictionary:
 		"margin_pct": margin, "margin_ok": margin >= PROFIT_MIN_MARGIN_PCT,
 		"mrr_ok": GameState.mrr >= BOOTSTRAP_WIN_MRR,
 		"scandal_ok": not GameState.unmanaged_major_scandal,
-		# THE FIFTH CLAUSE (ch. 13 §1, 2026-08-27). "Profitability alone is not an ending;
+		# THE FIFTH CLAUSE (ch. 13 §1). "Profitability alone is not an ending;
 		# refusing the round and staying profitable is." Without it this predicate could win a
 		# run in BOOTSTRAP, to a player who never opened the funding page — the ending read as
 		# an accident rather than as a refusal. Not a phase check: a player who walks into
 		# Series A Hunt and never opens the page would win the same accident one phase later.
 		"faced_ok": GameState.faced_series_a,
 	}
-	d["met"] = bool(d.streak_ok) and bool(d.margin_ok) and bool(d.mrr_ok) \
-		and bool(d.scandal_ok) and bool(d.faced_ok)
+	d["met"] = d.streak_ok and d.margin_ok and d.mrr_ok and d.scandal_ok and d.faced_ok
 	return d
 
 
 static func _check_profitable_bootstrap() -> bool:
-	# A CONDITION evaluated daily, not a crossing. Sits after the cascade (a pivot offer does
-	# not block the win — flush_queue drops the offer) and before the soft cap (same-day tie →
-	# the win wins).
+	# A CONDITION evaluated daily, not a crossing. Sits after the cascade and before the soft
+	# cap (same-day tie → the win wins).
 	# In EA / full builds the win is a MILESTONE: the paper opens once and the run goes on, so
 	# once the latch is written the condition is not read again (it would stay true every day).
 	if bootstrap_milestone_taken():
 		return false
-	if not bool(profitability_signal().get("met", false)):
+	if not profitability_signal().met:
 		return false
 	if ending_mode("profitable_bootstrap") == MODE_MILESTONE:
 		trigger_milestone("profitable_bootstrap")
@@ -277,7 +236,7 @@ static func _check_profitable_bootstrap() -> bool:
 	return true
 
 
-# --- Soft cap (replaces the Day-180 time-out fork) ---
+# --- Soft cap ---
 
 static func _check_soft_cap() -> bool:
 	# The window investors give a company closed without a goal ending. Not deferred for a
@@ -287,28 +246,17 @@ static func _check_soft_cap() -> bool:
 	if GameState.day < SOFT_CAP_DAY:
 		return false
 	# A run that has taken a positive milestone is past "reached no goal inside the window":
-	# the cap does not apply to it (owner ruling 2026-09-25 — running_on_fumes says
+	# the cap does not apply to it (owner ruling — running_on_fumes says
 	# "you didn't win", and this company did). It still ends on a loss, a signed Series A or a
 	# sale; the player can also leave through ANA MENÜ with the run saved.
 	if bootstrap_milestone_taken():
 		return false
-	# A KNOWN DEFECT: a run can reach day 730 with no prior warning at all. The
-	# soft-cap ladder being built for this rebuild sets this flag; until it lands, this
-	# line logs an untelegraphed loss on every soft-cap ending, which is the point.
+	# The final-stretch cards (arc_final_stretch) stamp this telegraph.
 	trigger_ending("running_on_fumes", "soft_cap_telegraphed")
 	return true
 
 
 # --- The buyout offer (Frank v6 surfaces 17 + 18) ---
-#
-# THE BRAND-BAND GENERATOR IS GONE (2026-08-27). What used to sit here was the last stump of
-# the cut acquisition path: phase 3, brand between 30 and 50, at least one rejection, and
-# then nothing but a latch write, because the card it used to raise was deleted with the
-# event engine. It offered on a BAND OF BRAND — a company was bought for being mediocre —
-# and it had no relationship to whether the player had actually finished with Series A.
-# The trigger is a decision now: the founder declined or walked, and there is nothing left
-# to walk to. `acquisition_offer_made` went with it; `acquisition_offer_rejected` did NOT,
-# because vc_pitch_system._sorgu_narrative still asks about a refused sale.
 
 ## The multiple a buyer would pay: a base, adjusted for growth and brand, clamped.
 static func acquisition_multiple() -> float:
@@ -398,9 +346,9 @@ static func on_buyout_declined() -> void:
 	GameState.set_flag("acquisition_offer_rejected", true)  # the memory thrown back later
 
 
-# --- Build scope and ending modes (owner rulings 2026-09-25) ---
+# --- Build scope and ending modes (owner rulings) ---
 #
-# One newspaper, two modes. In the DEMO every ending ends the run, exactly as it always has.
+# One newspaper, two modes. In the DEMO every ending ends the run.
 # In EA and FULL builds a loss still ends the run, but a win the company lives through is a
 # MILESTONE: the paper opens, "Devam et" closes it and the run goes on. Today that is the
 # profitable bootstrap. A signed Series A stays an ending in every build until Act 3
@@ -454,9 +402,7 @@ static func bootstrap_milestone_taken() -> bool:
 
 ## "ending" or "milestone" for this ending in this build (see the block comment above).
 static func ending_mode(ending_id: String) -> String:
-	if build_scope() == BUILD_DEMO:
-		return MODE_ENDING
-	if ending_id == "profitable_bootstrap":
+	if build_scope() != BUILD_DEMO and ending_id == "profitable_bootstrap":
 		return MODE_MILESTONE
 	return MODE_ENDING
 
@@ -466,7 +412,7 @@ static func ending_mode(ending_id: String) -> String:
 ## the rest of the run) and only asks for the clock to stop while the paper is up; main.gd
 ## holds it until "Devam et". Once per run per milestone: the latch is written here, and the
 ## daily scan never re-reads a condition whose latch is set.
-static func trigger_milestone(milestone_id: String, extra: Dictionary = {}) -> void:
+static func trigger_milestone(milestone_id: String) -> void:
 	if not GameState.run_active:
 		return
 	match milestone_id:
@@ -477,7 +423,7 @@ static func trigger_milestone(milestone_id: String, extra: Dictionary = {}) -> v
 		_:
 			push_warning("[EndingsSystem] Unknown milestone id: %s" % milestone_id)
 			return
-	var data: Dictionary = _build_ending_data(milestone_id, extra)
+	var data: Dictionary = _build_ending_data(milestone_id, {})
 	data["mode"] = MODE_MILESTONE
 	if OS.is_debug_build():
 		print("[EndingsSystem] MILESTONE: %s (Day %d) — the run continues" % [milestone_id, GameState.day])
@@ -494,13 +440,12 @@ const TELEGRAPH_NONE := "none"            ## no telegraph designed yet — filed
 const TELEGRAPH_UI_ONLY := "ui_strip"     ## a telegraph that exists on screen but not in History
 
 
-## THE SINGLE TERMINAL SEAM — and, since 2026-08-25, the place I3 is enforced.
+## THE SINGLE TERMINAL SEAM, and the place I3 is enforced.
 ##
 ## `telegraph` HAS NO DEFAULT, on purpose. §0.3's I3 says "no untelegraphed loss", and the
-## event engine can only guard the two call sites that are its own effects — this function has
-## TEN callers and eight of them never touch the engine. Guarding the executor would have
-## covered 2 of 10. Putting the argument here made every call site a compile error until
-## somebody decided what warns the player, which is the decision I3 is actually about.
+## event engine can only guard its own trigger_ending effect; most callers never touch the
+## engine. With no default, every call site has to name what warns the player, which is the
+## decision I3 is actually about.
 ##
 ## It ASSERTS rather than REFUSES. §0.3 asks for "lint + runtime assert", and §8.4's refusal
 ## applies to the engine's own effects (EvEffects._permitted does refuse). Blocking here would
@@ -524,8 +469,7 @@ static func trigger_ending(ending_id: String, telegraph: String,
 
 ## I3's runtime half. Loud, never blocking — see trigger_ending's note.
 static func _assert_telegraph(ending_id: String, telegraph: String) -> void:
-	var meta: Dictionary = ENDINGS.get(ending_id, {})
-	var is_loss: bool = String(meta.get("tone", "")) in ["loss", "soft_loss"]
+	var is_loss: bool = String(ENDINGS.get(ending_id, "")) in ["loss", "soft_loss"]
 	if not is_loss:
 		return                                  # a win needs no warning
 	match telegraph:
@@ -543,31 +487,15 @@ static func _assert_telegraph(ending_id: String, telegraph: String) -> void:
 
 
 static func _build_ending_data(ending_id: String, extra: Dictionary) -> Dictionary:
-	# Live snapshot — safe because trigger_ending halts the world in the same
-	# frame (no MRR accrues behind the ending screen, so these numbers
-	# cannot contradict the screen).
-	var meta: Dictionary = ENDINGS[ending_id]
 	var data := {
 		"ending_id": ending_id,
 		"title": ending_title(ending_id),
-		"tone": meta.tone,
+		"tone": ENDINGS[ending_id],
 		"frank_line": ending_frank_line(ending_id),
-		"day": GameState.day,
-		"cash": GameState.cash,
-		"mrr": GameState.mrr,
-		"brand": GameState.brand,
-		"reputation": GameState.reputation,
-		"phase": GameState.phase,
-		"customers": CustomerRegistry.get_active().size(),
-		"employees": CharacterRegistry.get_employees().size(),
 		"company_name": GameState.company_name,
-		"founder_name": GameState.founder_name,
 	}
 	data.merge(extra, true)
 	return data
-
-
-# --- Synthetic scenes (ship-moment pattern; EventModal renders them) ---
 
 
 ## Ending title ("Series A Kapandı" / "Series A Closed"). The table holds tone only.

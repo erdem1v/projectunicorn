@@ -282,7 +282,8 @@ signal headline_added(source: String, text: String)
 # is played inside the Frank scene; phase_changed fires only after advance_phase().
 signal phase_gate_reached(next_phase: int)
 # Terminal reached (slot 9 scan or Class A instant). ending_data: snapshot dict
-# built by EndingsSystem._build_ending_data (title/tone/frank_line + run stats).
+# built by EndingsSystem._build_ending_data (ending_id/title/tone/frank_line/company_name
+# + the caller's extra).
 signal run_ended(ending_id: String, ending_data: Dictionary)
 # A win the company lives through (EA / full builds, EndingsSystem.trigger_milestone): the
 # paper opens in milestone mode and the run CONTINUES. Same payload shape as run_ended,

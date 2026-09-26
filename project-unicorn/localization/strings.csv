@@ -129,13 +129,7 @@ SALES_EXPANSION_FICTION,Başka departmana yaymak istiyor.,Wants to roll it out t
 SALES_ACTION_RETAIN,İlgilen,Check in
 SALES_ACTION_EXPAND,Değerlendir,Evaluate
 ENDING_NEXT,SIRADA NE VAR?,WHAT'S NEXT?
-ENDING_CARD_EA_TAG,TİER 2 · ORTA ÖLÇEK,TIER 2 · MID-SCALE
-ENDING_CARD_EA_TITLE,Orta Ölçek,Mid-Scale
 ENDING_BADGE_EA,ERKEN ERİŞİM'DE,IN EARLY ACCESS
-ENDING_CARD_EA_BODY,"Oyun Series A'da bitmez. Çok ürün, işe alım dalgası, rakip evrimi, Series B.","The game doesn't end at Series A. Multiple products, a hiring wave, rival evolution, Series B."
-ENDING_CARD_FULL_TAG,TİER 3 · TEKNOLOJİ DEVİ,TIER 3 · TECH GIANT
-ENDING_CARD_FULL_TITLE,Teknoloji Devi,Tech Giant
-ENDING_CARD_FULL_BODY,"Halka arz, regülasyon, devlerle aynı pazar.","IPO, regulation, sharing the market with giants."
 ENDING_WISHLIST,WISHLIST'E EKLE,ADD TO WISHLIST
 ENDING_RUN_META,BU RUN: {days} GÜN · NORMAL MOD,THIS RUN: {days} DAYS · NORMAL MODE
 ENDING_RETRY,TEKRAR DENE,TRY AGAIN
@@ -2088,7 +2082,6 @@ END_META_PROFITABLE_BOOTSTRAP_FRANK,Onlara ihtiyacın yokmuş. Gerçek bir şey 
 END_META_RUNNING_ON_FUMES_TITLE,İlgi Söndü,Interest Faded
 END_META_RUNNING_ON_FUMES_FRANK,"Takvim bitti. Kapı açıktı, kimse girmedi. Kaybetmedin. Sadece kazanmadın.",The calendar ran out before you did. The door was open; nobody walked through it. Nobody took it from you. You just didn't win.
 END_HL_SHUTTER_STARTED,Kepenk sayacı başladı — kasa ekside,The shutter clock has started — the account is in the red
-END_HL_ACQ_OFFER,Satın alma teklifi masada,An acquisition offer is on the table
 END_EV_SHUTTER_TITLE,Hesap kırmızıda,In the red
 END_EV_GO_FINANCE,Finans'a git,Go to Finance
 END_EV_SHUTTER_BODY,"Tırnaklarını kemirmenin sebebi belli: şirketin banka hesabı ekside.

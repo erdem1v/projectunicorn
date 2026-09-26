@@ -12,28 +12,25 @@ extends Control
 # Mirrors term_sheet_table_scene.gd (the sibling Register-B screen): programmatic
 # layout over a minimal .tscn root, DIALOGUE_BG backdrop, fade-in tween.
 #
-# process_mode = ALWAYS on the ROOT (children INHERIT → resolve to ALWAYS), so every
-# rail button stays clickable on the permanently-frozen tree. In ending mode there is
+# process_mode = ALWAYS on the ROOT (set in EndingScene.tscn; children INHERIT → resolve to ALWAYS), so every
+# rail button stays clickable on the paused tree. In ending mode there is
 # no dismiss-back-to-gameplay path: the run is over. Milestone mode's DEVAM ET is that path.
 #
-# Retry = process relaunch (Erdem 2026-07-13): OS.set_restart_on_exit resets all
-# autoload state cleanly. The in-place initialize_run return is deferred (it needs a
-# complete multi-registry reset seam that does not exist yet).
+# Retry = process relaunch (owner ruling): OS.set_restart_on_exit resets all
+# autoload state cleanly.
 #
-# TWO MODES, ONE PAPER (owner rulings 2026-09-25). The paper is the
+# TWO MODES, ONE PAPER (owner rulings). The paper is the
 # same in both; only the rail and the strip under it change.
-#   ending    — the run is over. In the DEMO build: exactly the screen it always was (the
-#               Coming-Soon cards, WISHLIST'E EKLE, Frank's strip). In EA / full builds the
-#               store CTA and the Coming-Soon cards go (the player already owns the game) and
-#               Frank does not speak under the paper.
+#   ending    — the run is over. In the DEMO build: the Coming-Soon cards, WISHLIST'E EKLE
+#               and Frank's strip. In EA / full builds the store CTA and the Coming-Soon
+#               cards go (the player already owns the game) and Frank does not speak under
+#               the paper.
 #   milestone — EA / full only (EndingsSystem.ending_mode): a win the company lives through.
 #               DEVAM ET closes the paper and the run goes on; ANA MENÜ keeps the save and
 #               leaves. main.gd owns both actions — this scene only asks.
 
 # Steam store page — filled when the page goes live. Empty ⇒ WISHLIST'E EKLE stays
-# VISIBLE but pressed is a no-op (Erdem 2026-07-21: the CTA shows on every DEMO ending — EA /
-# full builds hide it since 2026-09-25 — and the link is wired when the store page exists). GodotSteam overlay is a future
-# capability-gated branch; today the only route is OS.shell_open(STEAM_PAGE_URL).
+# VISIBLE on every DEMO ending but pressed is a no-op until the store page exists.
 const STEAM_PAGE_URL := ""
 
 const LOCK_ICON := "res://assets/icons/lock.svg"
@@ -41,11 +38,9 @@ const LOCK_ICON := "res://assets/icons/lock.svg"
 signal continue_requested       # milestone mode: DEVAM ET
 signal main_menu_requested      # milestone mode: ANA MENÜ
 
-var _paper_host: MarginContainer      # dark-gutter host for the paper panel
 var _rail_host: Control               # host for the rail panel
 var _paper_panel: PanelContainer      # the cream page (PNG-crop target — rail excluded)
 var _paper_col: VBoxContainer         # the page plus the Frank strip beneath it
-var _frank_strip: Control             # the mentor verdict — OUTSIDE the paper, by design
 var _toast: Label                     # share-confirmation line (hidden until GAZETEYİ PAYLAŞ)
 var _open_folder_btn: Button          # reveals with the toast — opens the save folder
 
@@ -53,33 +48,21 @@ var _data: Dictionary = {}            # the run_ended / milestone_reached payloa
 var _mode: String = EndingsSystem.MODE_ENDING   # payload "mode"; absent = ending
 var _demo: bool = true                # EndingsSystem.build_scope() == demo, read at populate
 var _ledger: Dictionary = {}          # GameState.get_run_ledger() snapshot
-var _vs: Dictionary = {}              # composed view_state
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_skeleton()
 	modulate = Color(1, 1, 1, 0)
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.22)
 
 
-# main.gd mount contract (identical to the retired EndingModal): called AFTER add_child.
+# main.gd mount contract: called AFTER add_child.
 func populate(ending_data: Dictionary) -> void:
 	_data = ending_data
 	_mode = String(ending_data.get("mode", EndingsSystem.MODE_ENDING))
 	_demo = EndingsSystem.build_scope() == EndingsSystem.BUILD_DEMO
 	_ledger = GameState.get_run_ledger()
-	_vs = _compose(ending_data, _ledger)
-	_fill(_vs)
-
-
-func _compose(ending_data: Dictionary, ledger: Dictionary) -> Dictionary:
-	# The copy system owns all paper prose. Defensive fallback keeps the scene
-	# renderable even if the composer returns nothing (should never happen live).
-	var vs: Dictionary = EndingsCopy.build(String(ending_data.get("ending_id", "")), ledger, ending_data)
-	if vs.is_empty():
-		vs = _fallback_view_state(ending_data, ledger)
-	return vs
+	_fill(EndingsCopy.build(String(ending_data.get("ending_id", "")), _ledger, ending_data))
 
 
 # ============================================================================
@@ -87,12 +70,9 @@ func _compose(ending_data: Dictionary, ledger: Dictionary) -> Dictionary:
 # ============================================================================
 
 func _build_skeleton() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP
-
 	var bg := ColorRect.new()
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.color = UiTokens.DIALOGUE_BG   # from token, never inline (grep gate)
+	bg.color = UiTokens.DIALOGUE_BG
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 
@@ -102,54 +82,44 @@ func _build_skeleton() -> void:
 	add_child(row)
 
 	# Left ~70%: a dark gutter (MarginContainer) around the cream page.
-	_paper_host = MarginContainer.new()
-	_paper_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_paper_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_paper_host.size_flags_stretch_ratio = 2.4
-	_paper_host.add_theme_constant_override("margin_left", 40)
-	_paper_host.add_theme_constant_override("margin_right", 24)
-	_paper_host.add_theme_constant_override("margin_top", 36)
-	_paper_host.add_theme_constant_override("margin_bottom", 36)
-	row.add_child(_paper_host)
+	var paper_host := MarginContainer.new()
+	paper_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	paper_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	paper_host.size_flags_stretch_ratio = 2.4
+	paper_host.add_theme_constant_override("margin_left", 40)
+	paper_host.add_theme_constant_override("margin_right", 24)
+	paper_host.add_theme_constant_override("margin_top", 36)
+	paper_host.add_theme_constant_override("margin_bottom", 36)
+	row.add_child(paper_host)
 
 	# THE STRIP LIVES BESIDE THE PAGE, NOT ON IT, and the arrangement is the ruling.
 	# Ch. 13 §2 puts Frank's closing line on its own strip OUTSIDE the newspaper, because
 	# the paper bans mentor attribution — EndingsCopy's own editorial rules say quotes
-	# are attributed to the crowd and never to one person. Seven translated verdict lines
-	# have shipped invisible since they were written; this is the surface they were
-	# waiting for.
+	# are attributed to the crowd and never to one person.
 	#
 	# It is also outside the SHARED IMAGE for free: _export_paper_png crops
 	# _paper_panel.get_global_rect(), and the strip is a sibling of that panel rather
 	# than a child. The player shares a newspaper; the mentor's verdict was for them.
 	_paper_col = VBoxContainer.new()
 	_paper_col.add_theme_constant_override("separation", 14)
-	_paper_host.add_child(_paper_col)
+	paper_host.add_child(_paper_col)
 
 	# Right ~30%: the dark rail fills full height.
 	_rail_host = Control.new()
 	_rail_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_rail_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_rail_host.size_flags_stretch_ratio = 1.0
 	row.add_child(_rail_host)
 
 
 func _fill(vs: Dictionary) -> void:
-	for c in _rail_host.get_children():
-		c.queue_free()
-	for c in _paper_col.get_children():
-		c.queue_free()
 	_paper_panel = _build_paper(vs)
 	_paper_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_paper_col.add_child(_paper_panel)
-	# Frank's strip is the DEMO's (owner ruling 2026-09-25): in EA / full builds he does not
+	# Frank's strip is the DEMO's (owner ruling): in EA / full builds he does not
 	# speak under the paper, in either mode.
 	if _demo:
-		_frank_strip = _build_frank_strip()
-		_paper_col.add_child(_frank_strip)
-	else:
-		_frank_strip = null
-	var rail := _build_milestone_rail() if _mode == EndingsSystem.MODE_MILESTONE else _build_rail(vs)
+		_paper_col.add_child(_build_frank_strip())
+	var rail := _build_milestone_rail() if _mode == EndingsSystem.MODE_MILESTONE else _build_rail()
 	rail.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_rail_host.add_child(rail)
 
@@ -196,7 +166,7 @@ func _build_paper(vs: Dictionary) -> PanelContainer:
 		col.add_child(_rule(1))
 		col.add_child(_build_quiet_notice(vs))
 	else:
-		# Engraving frame (empty neutral frame until the PNG lands) + caption.
+		# Engraving frame (a "coming soon" placeholder until the PNG lands) + caption.
 		col.add_child(_build_engraving(vs))
 		var caption := UiFactory.make_label(String(vs.get("engraving_caption", "")), &"NewsCaptionSerif")
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -215,20 +185,15 @@ func _build_paper(vs: Dictionary) -> PanelContainer:
 ## Frank's closing line, on the dark gutter under the page.
 ##
 ## It reads the payload, not the view state: EndingsCopy composes the PAPER and has no
-## business carrying a line the paper is forbidden to print. `frank_line` has been in
-## `ending_data` since the endings system was written (END_META_<ID>_FRANK), read by
-## nothing but two unknown-id fallbacks.
+## business carrying a line the paper is forbidden to print.
 ##
 ## UI/STYLE LAW: this scene owns LAYOUT only. QuoteSerifCream is the cream serif quote
 ## on a dark ground the cinematic register already uses, and DialogueTag is its
-## attribution — so the strip adds no theme surface, and THEME_STAMP does not move.
+## attribution — so the strip adds no theme surface.
 func _build_frank_strip() -> Control:
 	var line: String = String(_data.get("frank_line", ""))
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 4)
-	if line == "":
-		col.visible = false
-		return col
 	var quote := UiFactory.make_label(line, &"QuoteSerifCream")
 	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(quote)
@@ -275,7 +240,7 @@ func _build_engraving(vs: Dictionary) -> Control:
 func _build_stat_block(vs: Dictionary) -> Control:
 	# Stat row: the "RAKAMLARLA <ŞİRKET>" title over 4 big serif FIGURES with
 	# small mono labels beneath. Returns null when the composer supplied no cells
-	# (quiet closure, defensive fallback) — the caller skips the block entirely.
+	# (an unknown ending id) — the caller skips the block entirely.
 	var cells: Array = vs.get("stat_cells", [])
 	if cells.is_empty():
 		return null
@@ -307,10 +272,7 @@ func _build_stat_block(vs: Dictionary) -> Control:
 
 func _build_prose_columns(vs: Dictionary) -> Control:
 	# The editorial ledger sentences flow as TWO balanced newspaper columns.
-	var lines: Array = []
-	for l in vs.get("ledger_lines", []):
-		if String(l) != "":
-			lines.append(String(l))
+	var lines: Array = vs.get("ledger_lines", [])
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 28)
@@ -355,7 +317,6 @@ func _build_quiet_notice(vs: Dictionary) -> Control:
 	var notice := UiFactory.make_label(String(vs.get("quiet_notice", "")), &"NewsBodySerif")
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	notice.custom_minimum_size = Vector2(420, 0)
-	notice.size_flags_horizontal = Control.SIZE_FILL
 	wrap.add_child(notice)
 	var pad := Control.new()
 	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -367,7 +328,7 @@ func _build_quiet_notice(vs: Dictionary) -> Control:
 # Right rail (dark surface — CREAM text)
 # ============================================================================
 
-func _build_rail(vs: Dictionary) -> PanelContainer:
+func _build_rail() -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.theme_type_variation = &"RailPanel"
 
@@ -397,15 +358,14 @@ func _build_rail(vs: Dictionary) -> PanelContainer:
 	actions.add_theme_constant_override("separation", 8)
 	col.add_child(actions)
 
-	var retry := Button.new()
-	retry.theme_type_variation = &"DialogueGhost"
-	retry.focus_mode = Control.FOCUS_NONE
-	retry.text = tr("ENDING_RETRY")
+	var retry := _button(&"DialogueGhost", "ENDING_RETRY")
 	retry.pressed.connect(_on_retry)
 	actions.add_child(retry)
 
 	_add_hard_mode(actions)
-	actions.add_child(_make_share_button())
+	var share := _button(&"DialogueGhost", "ENDING_SHARE")
+	share.pressed.connect(_on_share)
+	actions.add_child(share)
 
 	return panel
 
@@ -415,11 +375,10 @@ func _build_coming_soon(col: VBoxContainer) -> void:
 	var header := UiFactory.make_label(tr("ENDING_NEXT"), &"ZoneLabel")
 	col.add_child(header)
 
-	# THE TWO NAMED MILESTONES (ch. 01 §3 · ch. 13 §2), replacing two generic tier cards.
-	# "TİER 2 · ORTA ÖLÇEK" told the player which BUILD they were waiting for; these tell
-	# them what their own company reaches next, which is the strongest Coming-Soon this
-	# game has. Both are truthful to the game's scope: Series B is a MILESTONE the
-	# run continues past — never an ending — and IPO opens in the full version.
+	# THE TWO NAMED MILESTONES (ch. 01 §3 · ch. 13 §2): what the player's own company
+	# reaches next, the strongest Coming-Soon this game has. Both are truthful to the
+	# game's scope: Series B is a MILESTONE the run continues past — never an ending —
+	# and IPO opens in the full version.
 	# Telegraph only: _build_tier_card renders a panel, never a button.
 	col.add_child(_build_tier_card(
 		tr("ENDING_CARD_SERIESB_TAG"), tr("ENDING_CARD_SERIESB_TITLE"),
@@ -429,66 +388,44 @@ func _build_coming_soon(col: VBoxContainer) -> void:
 		tr("LOCK_FULL"), tr("ENDING_CARD_IPO_BODY")))
 
 	# WISHLIST'E EKLE — always visible in the demo; inert while the store URL is empty.
-	var wishlist := Button.new()
-	wishlist.theme_type_variation = &"CommitButton"
-	wishlist.focus_mode = Control.FOCUS_NONE
-	wishlist.text = tr("ENDING_WISHLIST")
+	var wishlist := _button(&"CommitButton", "ENDING_WISHLIST")
 	wishlist.pressed.connect(_on_wishlist)
 	col.add_child(wishlist)
 
 
 ## Share-confirmation toast + open-folder button (hidden until GAZETEYİ PAYLAŞ writes a file).
-## The toast also carries the milestone rail's "could not save" line (show_notice).
 func _build_share_toast(col: VBoxContainer) -> void:
 	_toast = UiFactory.make_label("", &"ZoneLabel")
 	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_toast.visible = false
 	col.add_child(_toast)
-	_open_folder_btn = Button.new()
-	_open_folder_btn.theme_type_variation = &"DialogueGhost"
-	_open_folder_btn.focus_mode = Control.FOCUS_NONE
-	_open_folder_btn.text = tr("ENDING_OPEN_FOLDER")
+	_open_folder_btn = _button(&"DialogueGhost", "ENDING_OPEN_FOLDER")
 	_open_folder_btn.visible = false
 	_open_folder_btn.pressed.connect(_on_open_folder)
 	col.add_child(_open_folder_btn)
 
 
 func _add_hard_mode(actions: HBoxContainer) -> void:
-	var hard := Button.new()
-	hard.theme_type_variation = &"DialogueGhost"
-	hard.focus_mode = Control.FOCUS_NONE
-	hard.text = tr("ENDING_HARD_MODE")
+	var hard := _button(&"DialogueGhost", "ENDING_HARD_MODE")
 	hard.disabled = true                       # visible-LOCKED telegraph, no mechanic
 	hard.tooltip_text = tr("ENDING_SOON_TOOLTIP")
-	# Kilit ikonu: Button.icon DENENDİ ve yanlıştı — kaynak SVG 24px
-	# ve beyaz stroke'lu, expand_icon = true onu butonun tamamına yayıp yazının arkasına
-	# kocaman bir beyaz kutu bastı. Bu dosyanın tier kartlarında kullandığı reçete
-	# (12px TextureRect + CREAM_DIM) butonun YANINDA duruyor: ölçü ve renk kontrolü bizde.
-	if ResourceLoader.exists(LOCK_ICON):
-		var hard_row := HBoxContainer.new()
-		hard_row.add_theme_constant_override("separation", 5)
-		var hard_lock := TextureRect.new()
-		hard_lock.texture = load(LOCK_ICON)
-		hard_lock.custom_minimum_size = Vector2(12, 12)
-		hard_lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		hard_lock.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		hard_lock.modulate = UiTokens.CREAM_DIM
-		hard_lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		hard_lock.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		hard_row.add_child(hard_lock)
-		hard_row.add_child(hard)
-		actions.add_child(hard_row)
-	else:
-		actions.add_child(hard)
+	# Kilit ikonu Button.icon değil: kaynak SVG 24px ve beyaz stroke'lu, expand_icon onu
+	# butonun tamamına yayar. Tier kartlarının reçetesi (12px TextureRect + CREAM_DIM)
+	# butonun YANINDA durur: ölçü ve renk kontrolü bizde.
+	var hard_row := HBoxContainer.new()
+	hard_row.add_theme_constant_override("separation", 5)
+	hard_row.add_child(HRUiShared.lock_glyph(12, UiTokens.CREAM_DIM))
+	hard_row.add_child(hard)
+	actions.add_child(hard_row)
 
 
-func _make_share_button() -> Button:
-	var share := Button.new()
-	share.theme_type_variation = &"DialogueGhost"
-	share.focus_mode = Control.FOCUS_NONE
-	share.text = tr("ENDING_SHARE")
-	share.pressed.connect(_on_share)
-	return share
+## A rail button: themed by its variation, never takes focus, labelled from its key.
+func _button(variation: StringName, key: String) -> Button:
+	var b := Button.new()
+	b.theme_type_variation = variation
+	b.focus_mode = Control.FOCUS_NONE
+	b.text = tr(key)
+	return b
 
 
 ## The milestone rail (EA / full): the run is NOT over. A short line saying so, then the two
@@ -499,7 +436,6 @@ func _make_share_button() -> Button:
 func _build_milestone_rail() -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.theme_type_variation = &"RailPanel"
-	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 16)
@@ -510,11 +446,8 @@ func _build_milestone_rail() -> PanelContainer:
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(body)
 
-	var cont := Button.new()
+	var cont := _button(&"CommitButton", "UI_CONTINUE")
 	cont.name = "ContinueButton"
-	cont.theme_type_variation = &"CommitButton"
-	cont.focus_mode = Control.FOCUS_NONE
-	cont.text = tr("UI_CONTINUE")
 	cont.pressed.connect(func() -> void: continue_requested.emit())
 	col.add_child(cont)
 
@@ -530,11 +463,8 @@ func _build_milestone_rail() -> PanelContainer:
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	col.add_child(actions)
-	var menu := Button.new()
+	var menu := _button(&"DialogueGhost", "ENDING_MAIN_MENU")
 	menu.name = "MainMenuButton"
-	menu.theme_type_variation = &"DialogueGhost"
-	menu.focus_mode = Control.FOCUS_NONE
-	menu.text = tr("ENDING_MAIN_MENU")
 	menu.pressed.connect(func() -> void: main_menu_requested.emit())
 	actions.add_child(menu)
 	return panel
@@ -543,8 +473,6 @@ func _build_milestone_rail() -> PanelContainer:
 ## main.gd's answer when ANA MENÜ could not keep the save (a decision screen is open under
 ## the paper): the paper stays up and says why.
 func show_notice(text: String) -> void:
-	if _toast == null:
-		return
 	_toast.text = text
 	_toast.visible = true
 
@@ -556,24 +484,22 @@ func _build_tier_card(tag: String, title: String, badge_text: String, body: Stri
 	vb.add_theme_constant_override("separation", 6)
 	card.add_child(vb)
 
-	# Tag row: "TİER 2 · ORTA ÖLÇEK" + a small lock icon top-right.
+	# Tag row: "KİLOMETRE TAŞI · SERIES B" + a small lock icon top-right.
 	var tag_row := HBoxContainer.new()
 	var tag_lbl := UiFactory.make_label(tag, &"ZoneLabel")
 	tag_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tag_row.add_child(tag_lbl)
-	if ResourceLoader.exists(LOCK_ICON):
-		var lock := TextureRect.new()
-		lock.texture = load(LOCK_ICON)
-		lock.custom_minimum_size = Vector2(12, 12)
-		# EXPAND_IGNORE_SIZE, tıpkı 12 satır yukarıdaki hard_lock gibi. Eksikti:
-		# KEEP_SIZE (varsayılan) min-size'ı DOKUNUN boyutuna sabitler, yani bu kilit
-		# 12 değil 24px çiziliyordu ve custom_minimum_size sessizce yutuluyordu.
-		# svg/scale 1.0→2.0 ile bu 48px olurdu — kusur görünür hâle gelirdi.
-		lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		lock.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		lock.modulate = UiTokens.CREAM_DIM
-		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		tag_row.add_child(lock)
+	var lock := TextureRect.new()
+	lock.texture = load(LOCK_ICON)
+	lock.custom_minimum_size = Vector2(12, 12)
+	# EXPAND_IGNORE_SIZE şart: KEEP_SIZE (varsayılan) min-size'ı DOKUNUN boyutuna
+	# sabitler ve custom_minimum_size sessizce yutulur; kilit 12 değil 48px
+	# (24px SVG × svg/scale 2.0) çizilir.
+	lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	lock.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	lock.modulate = UiTokens.CREAM_DIM
+	lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tag_row.add_child(lock)
 	vb.add_child(tag_row)
 
 	var title_lbl := UiFactory.make_label(title, &"DialogueName")
@@ -615,12 +541,9 @@ func _on_open_folder() -> void:
 	OS.shell_open(ProjectSettings.globalize_path("user://"))
 
 
-# PNG export (Part 7): crop the PAPER rect out of the live viewport (rail excluded),
-# optional 2× upscale, save under user://. The crop idiom mirrors the --*-shot harness;
-# the true-2× SubViewport render is a documented future upgrade (decision 2).
+# PNG export: crop the PAPER rect out of the live viewport (rail excluded), soft 2×
+# upscale, save under user://. The viewport capture mirrors the --*-shot harness.
 func _export_paper_png() -> String:
-	if _paper_panel == null:
-		return ""
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var full: Image = get_viewport().get_texture().get_image()
@@ -646,26 +569,3 @@ func _export_paper_png() -> String:
 func _date_stamp() -> String:
 	var t: Dictionary = Time.get_datetime_dict_from_system()
 	return "%04d%02d%02d-%02d%02d%02d" % [t.year, t.month, t.day, t.hour, t.minute, t.second]
-
-
-# ============================================================================
-# Fallback view_state — defensive only (EndingsCopy is the real composer).
-# ============================================================================
-
-func _fallback_view_state(ending_data: Dictionary, ledger: Dictionary) -> Dictionary:
-	return {
-		"tone": String(ending_data.get("tone", "loss")),
-		"is_win": false,
-		"masthead": TranslationServer.translate("WORLD_OUTLET_EKONOMI_CAPS"),
-		"date_line": "",
-		"headline": String(ending_data.get("title", "")),
-		"subhead": String(ending_data.get("frank_line", "")),
-		"engraving_path": "",
-		"engraving_caption": "",
-		"ledger_title": "RAKAMLARLA",
-		"ledger_lines": [],
-		"stat_cells": [],
-		"is_quiet_closure": false,
-		"is_generic_masthead": false,
-		"quiet_notice": "",
-	}
