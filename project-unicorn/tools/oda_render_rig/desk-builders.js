@@ -45,8 +45,7 @@ export function buildMonitor(){
   const disp = new THREE.Group(); disp.name = 'display';
   disp.position.set(0, 0.30, 0.01); disp.rotation.x = -0.09;
   disp.add(box('display_body', M.alu, 0.55, 0.37, 0.028));
-  disp.add(box('screen', M.screen.clone(), 0.526, 0.318, 0.0016, 0, 0.019, 0.017));   // 0.0148 -> 0.017: rig FIDELITY duzeltmesi 2026-08-17. Muhurlu kaynak 0.017 diyor;
-  // rig eski bir surumden kopyalanmis. 2.2mm derinlik, MONITOR_GLASS_REL'i kil payi kaydirir.
+  disp.add(box('screen', M.screen.clone(), 0.526, 0.318, 0.0016, 0, 0.019, 0.017));   // z muhurlu kaynakla ayni kalmali: MONITOR_GLASS_REL bu derinlikten olculur
   disp.add(box('chin', M.aluDark, 0.526, 0.001, 0.0012, 0, -0.145, 0.0146));
   g.add(disp);
   return g;
@@ -93,14 +92,7 @@ export function buildLamp(){
   g.add(tube('arm_upper', M.black, elbow, head, 0.007));
   const jm = (name,p)=>{ const j = new THREE.Mesh(new THREE.CylinderGeometry(0.013,0.013,0.026,20), M.black); j.name=name; j.rotation.z=Math.PI/2; j.position.copy(p); return j; };
   g.add(jm('joint_base', j0), jm('joint_elbow', elbow), jm('joint_head', head));
-  // Abajur profili — MÜHÜRLÜ KAYNAĞIN KENDİSİ, on nokta, düz parçalarla.
-  // 2026-08-17'de bunu spline'a çevirip ikiye bölmüş (dış kabuk + krem astar) ve
-  // GERİ ALMIŞIMDIR. Sebep kayda değer: baş "kapüşonlu göz" gibi okuyordu ve ben
-  // kırışıklık + karanlık iç sanıp ikisini de "düzelttim". Gerçek sebep BAŞIN
-  // NİŞANIYDI (layers.html'deki quaternion bloğu) — ağzı kameraya çeviriyordu,
-  // yani aydınlanmayan iç yüzey objenin en büyük yüzeyi oluyordu. Astar lambayı
-  // siyah olmaktan çıkardı; kırışıklar ise nişan yüzünden profil kenardan
-  // göründüğü için fark ediliyordu. Nişan kalkınca ikisi de gereksiz.
+  // Abajur profili — mühürlü kaynağın kendisi, on nokta, düz parçalar.
   // Lamba HER İKİ MODDA DÜZ SİYAHTIR; değişen tek şey ışık, gece ampul yanar.
   const pts = [];
   [[0.004,0.095],[0.024,0.09],[0.05,0.055],[0.06,0.018],[0.061,0.004],[0.058,0.002],[0.05,0.014],[0.04,0.045],[0.02,0.078],[0.004,0.085]]
@@ -112,8 +104,8 @@ export function buildLamp(){
   const headG = new THREE.Group(); headG.name = 'head';
   headG.add(shade, bulb);
   headG.position.copy(head).add(new THREE.Vector3(0, -0.075, 0.04));
-  // SABİT pitch — ağız AŞAĞI/UZAĞA bakar, kamera siyah dış kabuğu görür.
-  // layers.html BUNU ARTIK EZMİYOR (nişan bloğu kaldırıldı, bilinçli override).
+  // SABİT pitch — ağız AŞAĞI/UZAĞA bakar, kamera siyah dış kabuğu görür. Ağzı kameraya
+  // çeviren bir nişan aydınlanmayan iç yüzeyi objenin en büyük yüzeyi yapar.
   headG.rotation.set(-0.6, 0, 0);
   g.add(headG);
   return g;

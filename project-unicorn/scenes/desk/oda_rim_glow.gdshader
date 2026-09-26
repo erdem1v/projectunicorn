@@ -1,22 +1,15 @@
 shader_type canvas_item;
 
-// ODA obje hover rim'i (projenin İLK shader'ı — ODA rework 2026-08-06).
-// Alpha-kenar tespiti: 8 örnekli halkada komşu alfa > kendi alfa ⇒ kenar.
-// Renk KODDA SABİT DEĞİL — UiTokens.ODA_RIM_GLOW uniform'dan gelir (runtime
-// stylebox'larla aynı yasallık sınıfı, sweep ledger §A). glow_strength hover
-// tween'iyle 0..1 sürülür; 0'ken shader kimliksizdir (piksel-eş geçiş).
+// ODA obje hover rim'i. Alpha-kenar tespiti: 8 örnekli halkada komşu alfa > kendi alfa ⇒ kenar.
+// Renk koddan değil UiTokens.ODA_RIM_GLOW uniform'undan gelir. glow_strength hover tween'iyle
+// 0..1 sürülür; 0'ken shader kimliksizdir (piksel-eş geçiş).
 
 uniform vec4 glow_color : source_color = vec4(1.0, 1.0, 1.0, 0.0);
 uniform float glow_strength : hint_range(0.0, 1.0) = 0.0;
-// Rim kalınlığı, KAYNAK texel cinsinden — # WORKING.
-// 2026-08-17 mühürlü sanat turunda 10.0'dan 3.0'a indi. Sebep, shader'ın matematiği:
-// silüetin DIŞINDA tex.a = 0'dır, yani rim = na (komşuların maks alfası). Suluboya
-// kenarı YUMUŞAK olduğu için na kademeli iniyordu ve 10 texel gerçekten "hale" gibi
-// okunuyordu. Render sprite'larının kenarı KESKİN: na, şekle rim_px'ten yakın her
-// pikselde 1'dir, yani aynı uniform artık yumuşak hale değil 10 texel'lik DÜZ BİR
-// ŞERİT basıyor (1836px viewport'ta ~4.8 ekran px'i %55 turuncu blok).
-// 3.0 texel ≈ 1080p'de 1.4 ekran px'i — dolgu değil, KENAR VURGUSU. Doldurma yine
-// imkânsız: rim yalnız tex.a = 0 olan yere eklenir ("DOLGU ASLA PARLAMAZ").
+// Rim kalınlığı, KAYNAK texel cinsinden — # WORKING. Render sprite'larının kenarı keskin: silüetin
+// dışında tex.a = 0, yani rim = na ve na şekle rim_px'ten yakın her pikselde 1'dir. Kalınlık bu
+// yüzden yumuşak bir hale değil düz bir şerit basar; 3.0 texel ≈ 1080p'de 1.4 ekran px'i, dolgu
+// değil kenar vurgusu. Rim yalnız tex.a = 0 olan yere eklenir: dolgu asla parlamaz.
 uniform float rim_px = 3.0;
 
 void fragment() {

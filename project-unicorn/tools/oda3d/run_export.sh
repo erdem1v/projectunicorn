@@ -1,10 +1,8 @@
 #!/bin/bash
-# ODA 3D spike — run the GLB export page in a dedicated FOREGROUND Chrome window.
-#
-# Same discipline as tools/oda_render_rig/run.sh: a background tab is frozen by
-# Chrome (fetch().then() never fires; synchronous code still runs, so the freeze
-# reads like a slow export). Own --user-data-dir (outside the repo) + --app window.
-# Kills only its own Chrome (matched on that profile path), never the user's browser.
+# Run the GLB export page in a dedicated FOREGROUND Chrome window: a background
+# tab is frozen by Chrome (fetch().then() never fires). Own --user-data-dir
+# (outside the repo) + --app window. Kills only its own Chrome (matched on that
+# profile path), never the user's browser.
 #
 # usage: tools/oda3d/run_export.sh [status_dir]
 #   status_dir: where DONE.txt lands (default: $TMP/oda3d_status). Never inside the repo.
@@ -42,4 +40,4 @@ done
 kill_own_chrome
 kill $SERVER_PID 2>/dev/null
 ls -la "$ROOT/art/oda3d/" 2>/dev/null
-cat "$STATUS/serve.log" 2>/dev/null | tail -5
+tail -5 "$STATUS/serve.log" 2>/dev/null

@@ -1,26 +1,19 @@
 extends Control
 
-# ODA ilk-açılış turu (ODA rework §8): altı çapayı sırayla spotlight'lar,
-# adlandırır, tek cümle açıklar. YALNIZ İLK RUN'DA — bayrak user://settings.json
-# (Settings autoload, run'lardan bağımsız). GEÇ / son adımda BAŞLA / Esc — her
-# çıkış yolu bayrağı yazar; tur bir daha asla görünmez.
+# ODA ilk-açılış turu: altı çapayı sırayla spotlight'lar, adlandırır, tek cümle açıklar.
+# YALNIZ İLK RUN'DA — bayrak user://settings.json'da (Settings, run'lardan bağımsız).
+# GEÇ / son adımda BAŞLA / Esc / sekme geçişi — her çıkış yolu bayrağı yazar.
 #
-# Mount: PanelLayer — ModalLayer DEĞİL (oraya girse game_shell Guard 2 Space/1-4'ü
-# öldürür ve gerçek modallarla katman karışır), ama OdaView'un ÇOCUĞU da değil.
-# Çocuğuyken dim rect'leri yalnız CenterViewport'u kaplıyordu: TopBar ve sol ray
-# turun altında CANLI kalıyor, ilk kez oynayan biri kendisine oda tanıtılırken hız
-# düğmesine basıp saati başlatabiliyordu. Artık tam ekran; çapa geometrisi ise hâlâ
-# OdaView'un dikdörtgenine göre hesaplanıyor (bkz. _stage_node) — oda resmi ekranın
-# yalnız orta bölgesinde duruyor, spotlight oraya nişan almak zorunda.
+# Mount: PanelLayer, tam ekran. ModalLayer değil (game_shell Space/1-3 kısayollarını
+# keser ve gerçek modallarla katman karışır); OdaView'un çocuğu da değil (dim yalnız
+# CenterViewport'u kaplar, TopBar ve sol ray tur altında tıklanabilir kalırdı). Çapa
+# geometrisi yine de OdaView'un rect'ine göre ölçülür (_stage_node): oda resmi ekranın
+# yalnız orta bölgesinde durur.
 # Dim = spotlight rect'in etrafını çerçeveleyen DÖRT ColorRect (shader'sız delik deseni).
-# Pause altında çalışır (GameShell PROCESS_MODE_ALWAYS mirası) — ve turu açan taraf
-# saati DURDURUR: tur bir an, oynanış değil.
+# Tur açıkken saat durur; kapanışta turun bulduğu hıza döner.
 
-const OdaLayoutRef := preload("res://scripts/ui/oda/oda_layout.gd")
-# ODA'nın DONDURULMUŞ teması. Tur PanelLayer'a mount olur, yani OdaView'un
-# ALTINDA değildir — proje temasını (Terminal) miras alırdı ve `OdaAnchorGlow` /
-# `OdaTourCard` / `ChromeGhost` / `ChromeButton` oradan Terminal renkleriyle
-# çözülürdü. Temayı burada da elle takmak, turu odanın register'ında tutar.
+# ODA'nın dondurulmuş teması: tur OdaView'un altında olmadığı için proje temasını
+# miras alırdı ve Oda*/Chrome* varyasyonları Terminal renkleriyle çözülürdü.
 const ODA_THEME := preload("res://themes/oda_frozen_theme.tres")
 
 const STEPS := [
@@ -33,11 +26,9 @@ const STEPS := [
 ]
 
 var _step: int = 0
-# Çapa geometrisinin ölçüldüğü dikdörtgen — OdaView'un kendisi. Her adımda yeniden
-# okunuyor ki pencere yeniden boyutlandığında spotlight kaymasın.
+# Çapa geometrisinin ölçüldüğü dikdörtgen (OdaView); her adımda yeniden okunur.
 var _stage_node: Control = null
-# Tur başlamadan önceki hız; kapanışta aynen geri verilir (modallerin disiplini).
-var _pre_tour_speed: int = -1
+var _pre_tour_speed: int = 0
 var _dims: Array[ColorRect] = []
 var _spot: Panel
 var _card: PanelContainer
@@ -51,23 +42,13 @@ func set_stage(node: Control) -> void:
 
 
 func _ready() -> void:
-	theme = ODA_THEME   # PanelLayer'da duruyoruz; oda register'ı miras gelmiyor
+	theme = ODA_THEME
 	mouse_filter = Control.MOUSE_FILTER_STOP  # arkaya tıklama sızmasın
-	# Saat durur. Oyuncuya odası tanıtılırken gün ilerlemesi, para yanması, event
-	# kuyruğunun dolması için bir sebep yok.
 	_pre_tour_speed = TimeManager.current_speed
 	EventBus.speed_change_requested.emit(0)
-	# Sekmeye geçiş turu BİTİRİR. Eskiden tur OdaView'un çocuğuydu ve sekme açılınca
-	# yalnız GİZLENİYORDU: görünmez tur oturum boyunca Space/1-4/Esc yutmaya devam
-	# ediyor (oyuncunun ilk Esc'i "hiçbir şey yapmıyor" gibi görünüyordu — sessizce turu
-	# bitiriyordu), odaya dönülünce de tur run'ın ortasında eski adımından yeniden
-	# beliriyordu. Artık ayrı katmanda olduğu için gizlenme diye bir şey yok; navigasyon
-	# bir çıkış yoludur ve her çıkış yolu bayrağı yazar.
+	# Sekmeye geçiş turu bitirir: tur ayrı katmanda gizlenemez, görünmez hâlde
+	# Space/1-3/Esc yutmaya devam ederdi.
 	EventBus.tab_changed.connect(_on_tab_changed)
-	# Tam-ekran rect'i CanvasLayer altında ilk düzen geçişinden SONRA oturur; dim'ler
-	# `size`'dan ölçüldüğü için ilk yerleşim boyut gelmeden yapılırsa karartma eksik
-	# kalır. Yeniden boyutlanmada da aynı yol.
-	resized.connect(_apply_step)
 	for i in 4:
 		var dim := ColorRect.new()
 		dim.color = UiTokens.ODA_SCRIM
@@ -107,11 +88,10 @@ func _ready() -> void:
 	_next_btn.focus_mode = Control.FOCUS_NONE
 	_next_btn.pressed.connect(_advance)
 	btn_row.add_child(_next_btn)
+	# Tam-ekran rect'i CanvasLayer altında ilk düzen geçişinden SONRA oturur; dim'ler
+	# `size`'dan ölçüldüğü için yerleşim her boyut değişiminde yeniden yapılır.
 	resized.connect(_apply_step)
-	# Dil değişirse açık adımı yeniden boya. Tur kartının metinleri zaten anahtarlı ama
-	# tr() ile ÇÖZÜLMÜŞ hâlde yazılıyor, yani auto-translate onları geri almaz; ve tur
-	# OdaView'un çocuğu değil (PanelLayer'da duruyor), dolayısıyla OdaView._refresh_all
-	# de buraya ulaşmıyor. _apply_step zaten tek boyama yolu.
+	# Metinler tr() ile çözülmüş yazılır; dil değişince açık adım yeniden boyanır.
 	EventBus.language_changed.connect(_apply_step_on_language)
 	_apply_step()
 
@@ -133,22 +113,17 @@ func _on_tab_changed(_tab_id: String) -> void:
 
 
 func _finish() -> void:
-	# HER çıkış yolu bayrağı yazar — tur bir daha görünmez (task §8: asla tekrar).
 	Settings.set_value("oda_intro_seen", true)
 	if EventBus.tab_changed.is_connected(_on_tab_changed):
 		EventBus.tab_changed.disconnect(_on_tab_changed)
 	if EventBus.language_changed.is_connected(_apply_step_on_language):
 		EventBus.language_changed.disconnect(_apply_step_on_language)
-	# Saati turun bulduğu yere bırak. Tur MentorIntro'nun hemen ardından açıldığı için
-	# bu pratikte 0'dır; yine de varsayım değil ölçüm.
-	if _pre_tour_speed >= 0:
-		EventBus.speed_change_requested.emit(_pre_tour_speed)
+	EventBus.speed_change_requested.emit(_pre_tour_speed)
 	queue_free()
 
 
 func _input(event: InputEvent) -> void:
-	# Tur açıkken Esc = GEÇ; Space/1-4 tur boyunca yutulur (oyun zaten MentorIntro
-	# sonrası pauselu — kazara hız değişikliği turu bölmesin).
+	# Esc = GEÇ; Space/1-3 tur boyunca yutulur (kazara hız değişikliği saati başlatmasın).
 	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	var key: InputEventKey = event
@@ -167,13 +142,11 @@ func _apply_step() -> void:
 	if view.x < 2.0 or view.y < 2.0:
 		return
 	var step: Dictionary = STEPS[_step]
-	# Çapalar ODA'nın dikdörtgenine göre ölçülür, turun kendi tam-ekran rect'ine göre
-	# değil: oda resmi ekranın orta bölgesinde duruyor, TopBar ve ray onun dışında.
-	# Ölçüyü tam ekrandan almak spotlight'ı mobilyanın olmadığı yere nişanlardı.
+	# Çapalar turun tam-ekran rect'ine değil ODA'nın rect'ine göre ölçülür.
 	var stage: Rect2 = _stage_node.get_global_rect() if _stage_node != null else Rect2(Vector2.ZERO, view)
 	if stage.size.x < 2.0 or stage.size.y < 2.0:
 		stage = Rect2(Vector2.ZERO, view)
-	var r: Rect2 = OdaLayoutRef.place(OdaLayoutRef.RECTS[String(step["rect"])], stage.size).grow(6.0)
+	var r: Rect2 = OdaLayout.place(OdaLayout.RECTS[String(step["rect"])], stage.size).grow(6.0)
 	r.position += stage.position
 	# Dört dim: üst / alt / sol / sağ — spotlight boş kalır.
 	_dims[0].position = Vector2.ZERO

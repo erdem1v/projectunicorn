@@ -1,55 +1,43 @@
 extends Control
 
-# ============================================================================
-# ODA — merkez görünüm kontrolcüsü (ODA rework 2026-08-06).
-# ============================================================================
-# Varsayılan ekran: kurucunun masasının POV oda sahnesi. İlke: stok kabukta ·
-# akış odada · derinlik sekmede — buradaki her yüzey bir KISAYOLDUR, hiçbir
-# bilgi yalnız burada yaşamaz. Motor DOKUNULMAZ: bu dosya yalnız okur ve
-# EventBus'a abone olur; tek yazdığı şey navigasyon (tab_changed) ve
-# Settings'teki tur bayrağı.
+# ODA — merkez görünüm: kurucunun masasının POV oda sahnesi. İlke: stok kabukta · akış
+# odada · derinlik sekmede — buradaki her yüzey bir KISAYOLDUR, hiçbir bilgi yalnız burada
+# yaşamaz. Bu dosya yalnız okur ve EventBus'a abone olur; tek yazdığı şey navigasyon
+# (tab_changed) ve Settings'teki tur bayrağı.
 #
-# Katmanlar (alttan üste): SceneLayer (gündüz/gece sanat çifti, crossfade) →
-# ObjectLayer (AtlasTexture obje sprite'ları — gece tint'i buraya biner) →
-# FXLayer (lamba halesi additive, telefon kırmızı noktası) → InfoLayer
-# (motor-çizimi bilgi yüzeyleri: monitör ekranı, pano kartları, kâğıtlar,
-# çerçeve içleri, mesai çipi, Frank satırı) → HotspotLayer (görünmez tıklama
-# hedefleri + boyalı-çapa glow çerçeveleri) → (OdaTour / milestone paneli).
+# Katmanlar (alttan üste): SceneLayer (gündüz/gece sanat çifti, crossfade) → ObjectLayer
+# (AtlasTexture obje sprite'ları — gece tint'i buraya biner) → FXLayer (telefon kırmızı
+# noktası) → InfoLayer (motor-çizimi bilgi yüzeyleri: monitör ekranı, pano kartları,
+# kâğıtlar, çerçeve içleri, mesai çipi) → HotspotLayer (görünmez tıklama hedefleri +
+# çerçeve hover halkaları). Tur PanelLayer'a ayrı monte edilir.
 #
-# Yerleşimin TEK kaynağı OdaLayout (scripts/ui/oda/oda_layout.gd) — burada
-# koordinat sabiti YOKTUR. Mikro-hareket task §7 listesiyle SINIRLIDIR; döngülü
-# animasyon ve _process yok, her şey sinyal + tek-seferlik tween.
+# Yerleşimin TEK kaynağı OdaLayout — burada koordinat sabiti yok. Döngülü animasyon ve
+# _process yok: her şey sinyal + tek-seferlik tween.
 #
-# Resident yaşam döngüsü: GameShell.tscn'de CenterViewport çocuğu, hiç
-# free edilmez, sekme açılınca yalnız gizlenir — mentor satırı latch'i,
-# kâğıt geliş-animasyonu hafızası ve gece durumu gezintide yaşar.
+# Resident: GameShell.tscn'de CenterViewport çocuğu, hiç free edilmez, sekme açılınca
+# yalnız gizlenir — mentor satırı latch'i, kâğıt geliş hafızası ve gece durumu gezintide yaşar.
 
-const OdaLayoutRef := preload("res://scripts/ui/oda/oda_layout.gd")
 const OdaTourRef := preload("res://scripts/ui/oda/oda_tour.gd")
 const RIM_SHADER := preload("res://scenes/desk/oda_rim_glow.gdshader")
 const TEX_DAY := preload("res://assets/art/center_view/room_day_3840x2160.png")
 const TEX_NIGHT := preload("res://assets/art/center_view/room_night_3840x2160.png")
 const TEX_MONITOR := preload("res://assets/art/center_view/monitor_3840x2160.png")
-# Build Bar (2026-08-19): monitörün build yüzü BuildHUD/tracker ile AYNI sahneyi kurar —
-# kendi çubuğu yok (eski Track/Fill + tween emekli). Preload, class_name yok.
+# Monitörün build yüzü BuildHUD/tracker ile AYNI sahneyi kurar — paralel bir çubuk yok.
 const BUILD_BAR_SCENE := preload("res://scenes/ui/components/BuildBar.tscn")
 const TEX_KEYBOARD := preload("res://assets/art/center_view/keyboard_3840x2160.png")
 const TEX_PHONE := preload("res://assets/art/center_view/phone_3840x2160.png")
 const TEX_LAMP := preload("res://assets/art/center_view/lamp_3840x2160.png")
 const TEX_MUG := preload("res://assets/art/center_view/mug_3840x2160.png")
-# Gece varyantları: monitörün emissive ekranı + lambanın yanan ampulü. Yalnız bu
-# ikisinin gece hali FARKLI render edilir; mug/telefon/klavye gece tint'iyle
-# yeterince oturuyor, ayrı katman taşımanın bedeli kadar değeri yok.
-# monitor_night EMEKLİ (2026-08-17): mühürlü sahnede ekran gece de karanlık cam,
-# gece monitörü = gündüz katmanı + ObjectLayer modulate. Gerekçe _apply_night_textures'ta.
+# Gece ayrı render edilen tek obje lambadır: yanan ampul bazı kanallarda gündüzün ÜSTÜNE
+# çıkar (gece/gündüz oranı 1.72, 1.37, 0.89) ve bir multiply (modulate) 1'i aşamaz.
+# Diğer objelerin gece hâli ODA_NIGHT_TINT çarpımıyla birebir temsil edilir.
 const TEX_LAMP_NIGHT := preload("res://assets/art/center_view/lamp_night_3840x2160.png")
 
 # --- # WORKING değerleri (Erdem F5 mühürler) --------------------------------
-const FRAMES_CLICKABLE := true      # Erdem onayı 2026-08-06 (task metni kanon; eski kanon "pasif" derdi)
-# Dört-durum ışık makinesi (kalite turu v2 / D6 — saatlik adım ÖLDÜ, titreme yok):
-# GÜNDÜZ 07-17 (nötr) · AKŞAM 18 (ılık tint) · GECE 19-05 (sahne çifti) · ŞAFAK 06
-# (serin tint). Mesai bloğu GECE'yi zorlar. Geçiş yalnız DURUM değişince, tek tween.
-const LIGHT_FADE_S := 1.5           # her durum geçişinin crossfade süresi (D6: 1.5 sn)
+# Dört-durum ışık makinesi: GÜNDÜZ 07-17 (nötr) · AKŞAM 18 (ılık tint) · GECE 19-05 ve
+# şirket penceresi kapandıktan sonra (sahne çifti) · ŞAFAK 06 (serin tint). Geçiş yalnız
+# durum değişince, tek tween — saatlik titreme yapısal olarak imkânsız.
+const LIGHT_FADE_S := 1.5           # her durum geçişinin crossfade süresi
 const HOVER_FADE_S := 0.15          # hover glow aç/kapa
 const BUZZ_S := 0.30                # telefon titreşimi süresi
 const BUZZ_PX := 3.0                # titreşim genliği
@@ -57,23 +45,19 @@ const PAPER_ARRIVE_S := 0.35        # kâğıt geliş animasyonu
 const PAPER_CAP := 3                # masadaki azami kâğıt (fazlası +N çipi)
 const SCREEN_GLOW_NIGHT_A := 0.35   # gece ekran parlaması (additive) alfası
 
-signal anchor_clicked(anchor_id: String)
-
 # Katman / düğüm referansları (kod-kurulu)
 var _day_art: TextureRect
 var _night_art: TextureRect
-var _surround: ColorRect            # 16:9 tavanının iki yanında kalan boşluğun plakası
 var _scene_layer: Control
 var _object_layer: Control
 var _sprites: Dictionary = {}          # id -> TextureRect
 var _sprite_mats: Dictionary = {}      # id -> ShaderMaterial (monitor/phone)
 var _phone_dot: Panel
 var _info_layer: Control
-# D4 sarmalayıcıları: host-türetimli her yüzeyin kırpan dış Control'ü.
+# Host-türetimli her yüzeyin kırpan dış sarmalayıcısı (OdaLayout standardı 2).
 var _monitor_wrap: Control
 var _screen_glow: TextureRect          # gece ekran parlaması (additive — stylebox gölgesi DEĞİL)
 var _board_wraps: Dictionary = {}      # "goal"/"market"/"dates"/"postit" -> Control
-var _monitor_screen: PanelContainer
 var _mon_header: Label
 var _mon_chip: PanelContainer
 var _mon_chip_label: Label
@@ -85,8 +69,8 @@ var _mon_cells: Array = []             # 4 × {cap: Label, val: Label}
 var _mon_footer: Label
 var _mon_slack: Control                # grid gizliyken boşluğu yutan esnek dolgu
 var _mon_progress_block: VBoxContainer
-var _mon_bar: Control                # BuildBar örneği (kendi modelini kendi çeker)
-var _phone_glass: Control              # DÖNMÜŞ kırpan sarmalayıcı (D2: camda yalnız bildirim)
+var _mon_bar: Control                  # BuildBar örneği (kendi modelini kendi çeker)
+var _phone_glass: Control              # DÖNMÜŞ kırpan sarmalayıcı (camda yalnız bildirim)
 var _phone_glass_label: Label
 var _board_goal: PanelContainer
 var _goal_label: Label
@@ -100,14 +84,13 @@ var _league_rows: VBoxContainer
 var _board_dates: PanelContainer
 var _dates_title: Label
 var _dates_rows: VBoxContainer
-var _postit: PanelContainer
 var _postit_line: Label
 var _overtime_chip: PanelContainer
 var _overtime_label: Label
 var _frame_slots: Array[Control] = []
 var _papers_box: Control
 var _hotspots: Dictionary = {}         # id -> Control
-var _frame_outlines: Array[Panel] = [] # çerçeve başına border-only hover halkası (F2)
+var _frame_outlines: Array[Panel] = [] # çerçeve başına border-only hover halkası
 
 # Durum
 var _is_night: bool = false
@@ -115,7 +98,6 @@ var _light_state: StringName = &""     # "" = henüz kurulmadı (ilk _eval_light
 var _mentor_line: String = ""
 var _paper_cards: Dictionary = {}      # paper_id -> PanelContainer
 var _seen_paper_ids: Dictionary = {}   # geliş animasyonu tek-seferlik bekçisi
-var _paper_overflow: int = 0
 var _tour: Control = null
 var _debug_papers: bool = false        # --oda-shot=night fixture'ı
 
@@ -132,7 +114,8 @@ func _ready() -> void:
 	_build_fx_layer()
 	_build_info_layer()
 	_build_hotspot_layer()
-	_connect_signals()
+	for link in _bus_links():
+		(link[0] as Signal).connect(link[1])
 	resized.connect(_relayout)
 	visibility_changed.connect(_on_visibility_changed)
 	# İlk kadraj: boyut _ready'de henüz oturmamış olabilir — bir frame ertele.
@@ -140,7 +123,8 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	_disconnect_signals()
+	for link in _bus_links():
+		(link[0] as Signal).disconnect(link[1])
 
 
 func _first_paint() -> void:
@@ -153,29 +137,39 @@ func _first_paint() -> void:
 # KURULUM — katmanlar
 # =========================================================================
 
-func _mk_layer(layer_name: String) -> Control:
+func _mk_layer(layer_name: String, parent: Control) -> Control:
 	var c := Control.new()
 	c.name = layer_name
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(c)
+	parent.add_child(c)
 	return c
 
 
-func _build_scene_layer() -> void:
-	_scene_layer = _mk_layer("SceneLayer")
-	# Kuşatma plakası: oda 16:9 tavanına oturduğu için ultra-geniş ekranlarda iki
-	# yanda boşluk kalır (OdaLayout.room_rect). Krem ViewportPanel şeritleri koyu
-	# bir odanın yanında hata gibi okunurdu; BG_ART zaten "sanat plakası" için
-	# adlandırılmış token. _scene_layer'ın İÇİNDE, çünkü gece tint'i (modulate
-	# tween'i) kuşatmayı da odayla birlikte karartmalı.
-	_surround = ColorRect.new()
-	_surround.name = "Surround"
-	_surround.color = UiTokens.BG_ART
-	_surround.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_surround.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_scene_layer.add_child(_surround)
+func _hspacer(parent: Control) -> void:
+	var sp := Control.new()
+	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(sp)
 
+
+func _mk_col(parent: Control, separation: int) -> VBoxContainer:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", separation)
+	parent.add_child(col)
+	return col
+
+
+func _build_scene_layer() -> void:
+	_scene_layer = _mk_layer("SceneLayer", self)
+	# Kuşatma plakası: ultra-geniş ekranda odanın iki yanında kalan boşluk
+	# (OdaLayout.room_rect). _scene_layer'ın İÇİNDE, çünkü gece tint'i kuşatmayı da
+	# odayla birlikte karartmalı.
+	var surround := ColorRect.new()
+	surround.name = "Surround"
+	surround.color = UiTokens.BG_ART
+	surround.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	surround.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_scene_layer.add_child(surround)
 	_day_art = _mk_scene_art("DayArt", TEX_DAY)
 	_night_art = _mk_scene_art("NightArt", TEX_NIGHT)
 	_night_art.modulate.a = 0.0
@@ -183,11 +177,9 @@ func _build_scene_layer() -> void:
 
 
 func _mk_scene_art(art_name: String, tex: Texture2D) -> TextureRect:
-	# MeetingScene reçetesi: IGNORE_SIZE + KEEP_ASPECT_COVERED = kaplama +
-	# merkezli kırpma. Mipmap'li filtre: 4K→~1400px küçültmede shimmer olmasın.
-	# FULL_RECT preset'i KALDIRILDI: sanat artık OdaLayout.room_rect'e oturuyor ve
-	# rect'i _relayout sürüyor — çapalarla TEK rect'i paylaşmalı, yoksa boyama ile
-	# tıklanabilir çapalar ultra-geniş ekranda birbirinden ayrışır.
+	# IGNORE_SIZE + KEEP_ASPECT_COVERED = kaplama + merkezli kırpma; mipmap'li filtre
+	# 4K→~1400px küçültmede shimmer'ı önler. Rect'i _relayout room_rect'ten sürer —
+	# çapalarla TEK rect'i paylaşmalı, yoksa ultra-geniş ekranda ayrışırlar.
 	var tr_node := TextureRect.new()
 	tr_node.name = art_name
 	tr_node.texture = tex
@@ -200,23 +192,19 @@ func _mk_scene_art(art_name: String, tex: Texture2D) -> TextureRect:
 
 
 func _build_object_layer() -> void:
-	_object_layer = _mk_layer("ObjectLayer")
-	# Çizim sırası: lamba (arka) → monitör → klavye → mug → telefon (en ön).
-	# Klavye monitörden SONRA: monitör ayağının önünde duruyor.
-	_sprites["lamp"] = _mk_object_sprite("Lamp", TEX_LAMP, "lamp", false)
-	_sprites["monitor"] = _mk_object_sprite("Monitor", TEX_MONITOR, "monitor", true)
-	_sprites["keyboard"] = _mk_object_sprite("Keyboard", TEX_KEYBOARD, "keyboard", false)
-	_sprites["mug"] = _mk_object_sprite("Mug", TEX_MUG, "mug", false)
-	_sprites["phone"] = _mk_object_sprite("Phone", TEX_PHONE, "phone", true)
+	_object_layer = _mk_layer("ObjectLayer", self)
+	# Çizim sırası: lamba (arka) → monitör → klavye (monitör ayağının önünde) → mug → telefon.
+	_mk_object_sprite("Lamp", TEX_LAMP, "lamp", false)
+	_mk_object_sprite("Monitor", TEX_MONITOR, "monitor", true)
+	_mk_object_sprite("Keyboard", TEX_KEYBOARD, "keyboard", false)
+	_mk_object_sprite("Mug", TEX_MUG, "mug", false)
+	_mk_object_sprite("Phone", TEX_PHONE, "phone", true)
 
 
-func _mk_object_sprite(node_name: String, tex: Texture2D, layout_id: String, hoverable: bool) -> TextureRect:
+func _mk_object_sprite(node_name: String, tex: Texture2D, layout_id: String, hoverable: bool) -> void:
 	var atlas := AtlasTexture.new()
 	atlas.atlas = tex
-	# Region 3840-uzayında yazılı; size_limit=2048 importu kaynağı küçültmüş
-	# olabilir — gerçek doku boyutuna ölçekle.
-	var imported_scale: float = tex.get_width() / OdaLayoutRef.ART.x
-	atlas.region = OdaLayoutRef.padded_region(layout_id, imported_scale)
+	atlas.region = OdaLayout.padded_region(layout_id, tex)
 	var tr_node := TextureRect.new()
 	tr_node.name = node_name
 	tr_node.texture = atlas
@@ -232,21 +220,13 @@ func _mk_object_sprite(node_name: String, tex: Texture2D, layout_id: String, hov
 		tr_node.material = mat
 		_sprite_mats[layout_id] = mat
 	_object_layer.add_child(tr_node)
-	return tr_node
+	_sprites[layout_id] = tr_node
 
 
 func _build_fx_layer() -> void:
-	var fx := _mk_layer("FXLayer")
-	# LAMBA HALESİ KALDIRILDI (2026-08-18, Erdem). Burada additive radyal bir
-	# gradyan (LampGlow) vardı ve gece lamba sprite'ının ÜSTÜNE biniyordu. Sorun
-	# şuydu: gövde düz siyah ama hale onun üzerine ekleniyor, dolayısıyla siyah
-	# abajur sütlü/yarı saydam görünüyor — sanki lambanın KENDİSİ parlıyormuş gibi.
-	# Sözleşme bunun tersi: gövde her iki modda düz siyah kalır, gece yalnız AMPUL
-	# yanar. Işığı taşıyan iki şey zaten var ve ikisi de gövdeyi boyamıyor:
-	# `lamp_night` katmanındaki emissive ampul + gece plakasına baked ışık havuzu.
-	# Ölçümle doğrulandı: her iki lamba PNG'sinde soluk-alfa (1..39) pikseli SIFIR,
-	# yani sanatta hiçbir parlama yok — görülen hale %100 bu node'du.
-	# FXLayer KALIYOR: PhoneDot burada yaşıyor (silinirse onun audit yolu değişir).
+	# Lambanın gece ışığını emissive ampul + plakaya baked havuz taşır; buraya hale
+	# eklenmez — additive hale düz siyah gövdeyi sütlü gösterir.
+	var fx := _mk_layer("FXLayer", self)
 	# Telefon kırmızı noktası: bekleyen olay latch'i (animasyon değil, durum).
 	_phone_dot = UiFactory.make_dot(UiTokens.ODA_BADGE_BG, 10)
 	_phone_dot.name = "PhoneDot"
@@ -255,37 +235,44 @@ func _build_fx_layer() -> void:
 
 
 func _build_info_layer() -> void:
-	_info_layer = _mk_layer("InfoLayer")
+	_info_layer = _mk_layer("InfoLayer", self)
 	_build_screen_glow()
 	_build_monitor_screen()
 	_build_phone_glass()
 	_build_board_cards()
-	_build_frames()
+	for i in 3:
+		# Çerçeve belgesi slotu; içeriği _refresh_frames kurar.
+		_frame_slots.append(_mk_surface_wrap("FrameSlot%d" % i))
 	_build_overtime_chip()
-	_papers_box = Control.new()
-	_papers_box.name = "PapersBox"
-	_papers_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_papers_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_info_layer.add_child(_papers_box)
+	_papers_box = _mk_layer("PapersBox", _info_layer)
 
 
-func _mk_surface_wrap(parent: Control, wrap_name: String) -> Control:
-	# D4.2 sarmalayıcı kalıbı: düz Control min-size YAYMAZ → set_size'ın minimuma
-	# yukarı clamp'i taşma üretemez; clip_contents içteki panelin stylebox'ı dahil
-	# her şeyi kırpar. İçerik kısaltma (satır cap + clip_text) birincil mekanizma,
-	# bu sarmalayıcı yapısal emniyettir.
+func _mk_surface_wrap(wrap_name: String) -> Control:
+	# Düz Control min-size YAYMAZ → set_size'ın minimuma yukarı clamp'i taşma üretemez;
+	# clip_contents içteki panelin stylebox'ı dahil her şeyi kırpar. İçerik kısaltma
+	# (satır cap + clip_text) birincil mekanizma, bu sarmalayıcı yapısal emniyettir.
 	var wrap := Control.new()
 	wrap.name = wrap_name
 	wrap.clip_contents = true
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(wrap)
+	_info_layer.add_child(wrap)
 	return wrap
 
 
+## Sarmalayıcı + içinde full-rect temalı panel.
+func _mk_wrapped_panel(wrap_name: String, panel_name: String, variation: StringName) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.name = panel_name
+	panel.theme_type_variation = variation
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_mk_surface_wrap(wrap_name).add_child(panel)
+	return panel
+
+
 func _build_screen_glow() -> void:
-	# Gece ekran parlaması (görev §7) — additive radyal gradyan,
-	# monitör sarmalayıcısının DIŞINDA/arkasında (stylebox gölgesi olsaydı D4
-	# sarmalayıcısı yarım-glow'a kırpardı). Gündüz alfa 0.
+	# Additive radyal gradyan, monitör sarmalayıcısının DIŞINDA/arkasında — stylebox
+	# gölgesi olsaydı sarmalayıcı onu yarım-glow'a kırpardı. Gündüz alfa 0.
 	var grad := Gradient.new()
 	grad.set_color(0, UiTokens.ODA_SCREEN_GLOW)
 	grad.set_color(1, Color(UiTokens.ODA_SCREEN_GLOW, 0.0))
@@ -310,25 +297,15 @@ func _build_screen_glow() -> void:
 
 
 func _build_monitor_screen() -> void:
-	# D4: cam dolu okunur — başlık DISPLAY, 2×2 stat grid'i (TITLE değerler),
-	# mono alt-durum satırı. Ölü siyah alan kalmaz; sığmazsa DUR-RAPOR (taban 9px).
-	_monitor_wrap = _mk_surface_wrap(_info_layer, "MonitorWrap")
-	_monitor_screen = PanelContainer.new()
-	_monitor_screen.name = "MonitorScreen"
-	_monitor_screen.theme_type_variation = &"OdaMonitorScreen"
-	_monitor_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_monitor_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_monitor_wrap.add_child(_monitor_screen)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	_monitor_screen.add_child(col)
+	# Cam dolu okunur — başlık, 2×2 stat grid'i, mono alt-durum satırı. Ölü siyah alan kalmaz.
+	var screen := _mk_wrapped_panel("MonitorWrap", "MonitorScreen", &"OdaMonitorScreen")
+	_monitor_wrap = screen.get_parent()
+	var col := _mk_col(screen, UiTokens.SPACE_M)
 	var head := HBoxContainer.new()
 	col.add_child(head)
 	_mon_header = UiFactory.make_label("", &"OdaScreenCaption")
 	head.add_child(_mon_header)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(spacer)
+	_hspacer(head)
 	_mon_chip = PanelContainer.new()
 	_mon_chip.theme_type_variation = &"ChromeChip"
 	head.add_child(_mon_chip)
@@ -351,7 +328,6 @@ func _build_monitor_screen() -> void:
 	_mon_grid.add_theme_constant_override("h_separation", UiTokens.SPACE_XL)
 	_mon_grid.add_theme_constant_override("v_separation", UiTokens.SPACE_S)
 	col.add_child(_mon_grid)
-	_mon_cells.clear()
 	for i in 4:
 		var cell := VBoxContainer.new()
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -364,21 +340,15 @@ func _build_monitor_screen() -> void:
 		var val := UiFactory.make_label("", &"OdaScreenValue")
 		cell.add_child(val)
 		_mon_cells.append({"cap": cap, "val": val})
-	# Esnek dolgu: grid gizliyken (build/boş yüz) boşluğu bu yutar — içerik üstte
-	# toplanır, ilerleme bloğu cam ALTINA oturur.
+	# Esnek dolgu: grid gizliyken (build/boş yüz) boşluğu bu yutar — içerik üstte toplanır.
 	_mon_slack = Control.new()
 	_mon_slack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_mon_slack.visible = false
 	col.add_child(_mon_slack)
-	# İlerleme bloğu (yalnız build yüzü): etiket + BuildBar (Software Inc. segment
-	# grameri, 2026-08-19). Bar BuildHUD kartı ve tracker kartıyla AYNI sahne — burada
-	# paralel bir çubuk YOK; renkler bar'ın kendi UiTokens okumasından (ACCENT, ODA_ACCENT
-	# değil — üç ev sahibinde piksel piksel aynı olma emri). KOŞULSUZ kurulur (theme-audit
-	# düğüm deltası deterministik olsun: gizli düğüm de gezilir); yüksekliği _relayout
-	# camdan türetir (D4: host-türetimli, 1280×720'de kırpılmasın).
-	_mon_progress_block = VBoxContainer.new()
-	_mon_progress_block.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	col.add_child(_mon_progress_block)
+	# İlerleme bloğu (yalnız build yüzü): BuildHUD ve tracker kartıyla AYNI sahne; renkler
+	# bar'ın kendi token okumasından (üç ev sahibinde piksel piksel aynı). KOŞULSUZ kurulur
+	# ki theme-audit düğüm deltası deterministik olsun; yüksekliği _relayout camdan türetir.
+	_mon_progress_block = _mk_col(col, UiTokens.SPACE_XS)
 	var prog_label := UiFactory.make_label("", &"OdaScreenCaption")
 	prog_label.name = "ProgLabel"
 	_mon_progress_block.add_child(prog_label)
@@ -387,16 +357,14 @@ func _build_monitor_screen() -> void:
 	_mon_bar.custom_minimum_size = Vector2(0, 44)
 	_mon_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_mon_progress_block.add_child(_mon_bar)
-	# Alt durum satırı (canlı yüz): "sistem sakin · uyarı yok" / uyarı hali.
+	# Alt durum satırı (canlı yüz).
 	_mon_footer = UiFactory.make_label("", &"OdaScreenCaption")
 	col.add_child(_mon_footer)
 
 
 func _build_phone_glass() -> void:
-	# D2: camda YALNIZ bildirim — kırmızı nokta + "FRANK" mikro etiket. Replik
-	# camda YOK; tam mesaj tıklamayla document model'e (Events sayfası) gider.
-	# Sarmalayıcı KENDİSİ döner ve kırpar (AABB değil — kırpma yerel/dönmüş
-	# uzayda cama oturur); pivot her boyut atamasından sonra yeniden kurulur.
+	# Camda YALNIZ bildirim — kırmızı nokta + mentor adı; tam mesaj tıklamayla Events
+	# sayfasına gider. Sarmalayıcı KENDİSİ döner ve kırpar (kırpma dönmüş uzayda cama oturur).
 	_phone_glass = Control.new()
 	_phone_glass.name = "PhoneGlass"
 	_phone_glass.clip_contents = true
@@ -417,112 +385,58 @@ func _build_phone_glass() -> void:
 
 
 func _build_board_cards() -> void:
-	# D4: her pano kartı kırpan sarmalayıcıda, rect'i board_inner HOST'undan türer
-	# (BOARD_REL) — mantar yüzeyden taşmak yapısal olarak imkânsız.
-	# Hedef kartı — mockup: italik serif etiket + iri figür + ince bar.
-	_board_goal = PanelContainer.new()
-	_board_goal.name = "BoardGoal"
-	_board_goal.theme_type_variation = &"OdaBoardCard"
-	_board_goal.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_board_goal.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_board_wraps["goal"] = _mk_surface_wrap(_info_layer, "GoalWrap")
-	_board_wraps["goal"].add_child(_board_goal)
-	var gcol := VBoxContainer.new()
-	gcol.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	_board_goal.add_child(gcol)
-	# F5 turu (2026-08-17): hedef kartı panonun REGISTER'ına alındı. Eskiden tek
-	# başına serif-deck etiketi + `MetricValueInk` (18px sans) taşıyordu, yani BİR
-	# CÜMLE büyük-figür yuvasında oturuyordu — o yuva SAYI içindir (P3-kapandı
-	# dalında aynı alan format_money taşıyor, doğru kullanımı o). Kart bu yüzden
-	# bağırıyordu. Artık pazar payı / tarihler kalıbı birebir: başlık HBox'ı
-	# (mono, BÜYÜK HARF, değer SAĞA yaslı) → satır → ince çizgi.
-	# Kullanılan varyasyonların HEPSİ frozen temada zaten var — unfreeze YOK.
+	# Her pano kartı kırpan sarmalayıcıda; rect'i board_inner HOST'undan türer (BOARD_REL).
+	# Hedef kartı: pazar payı / tarihler kalıbı — başlık HBox'ı (mono, BÜYÜK HARF, değer
+	# sağa yaslı) → satır → ince çizgi.
+	_board_goal = _mk_wrapped_panel("GoalWrap", "BoardGoal", &"OdaBoardCard")
+	_board_wraps["goal"] = _board_goal.get_parent()
+	var gcol := _mk_col(_board_goal, UiTokens.SPACE_XS)
 	var ghead := HBoxContainer.new()
 	gcol.add_child(ghead)
 	_goal_label = UiFactory.make_label("", &"NewsMeta")
 	ghead.add_child(_goal_label)
-	var gsp := Control.new()
-	gsp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ghead.add_child(gsp)
+	_hspacer(ghead)
 	_goal_sub = UiFactory.make_label("", &"NewsMeta")
 	ghead.add_child(_goal_sub)
+	# clip_text + expand-fill: uzun değer sarmalayıcıda kesilmek yerine zarifçe kısalır.
 	_goal_value = UiFactory.make_label("", &"RowMeta")
-	# clip_text + expand-fill = satır grameri (lig/tarih satırlarıyla aynı).
-	# Bunun yan faydası gerçek bir kırığı kapatmak: hedef kartının HİÇBİR
-	# etiketinde ne clip_text ne autowrap vardı, yani uzun bir P2/P3 değeri
-	# zarifçe kısalmak yerine sarmalayıcı tarafından SESSİZCE kesiliyordu.
 	_goal_value.clip_text = true
 	_goal_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	gcol.add_child(_goal_value)
 	_goal_bar = ProgressBar.new()
 	_goal_bar.theme_type_variation = &"BuildProgress"
-	# 6 → 3 px: dolu amber şerit bütün panonun en ağır öğesiydi ve başka hiçbir
-	# kartta karşılığı yok. `BuildProgress` stylebox'ları FROZEN temada, o yüzden
-	# renk/radius dokunulmuyor — yükseklik tek serbest değişken, ve 3px'te
-	# radius-3 dolgu şerit değil ÇİZGİ okuyor.
+	# 3px: BuildProgress stylebox'ları donmuş temada; yükseklik tek serbest değişken ve bu
+	# boyda radius-3 dolgu şerit değil ÇİZGİ okur.
 	_goal_bar.custom_minimum_size = Vector2(0, 3)
 	_goal_bar.show_percentage = false
 	_goal_bar.max_value = 100.0
 	gcol.add_child(_goal_bar)
 	# Pazar payı kartı.
-	_board_league = PanelContainer.new()
-	_board_league.name = "BoardLeague"
-	_board_league.theme_type_variation = &"OdaBoardCard"
-	_board_league.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_board_league.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_board_wraps["market"] = _mk_surface_wrap(_info_layer, "MarketWrap")
-	_board_wraps["market"].add_child(_board_league)
-	var lcol := VBoxContainer.new()
-	lcol.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	_board_league.add_child(lcol)
+	_board_league = _mk_wrapped_panel("MarketWrap", "BoardLeague", &"OdaBoardCard")
+	_board_wraps["market"] = _board_league.get_parent()
+	var lcol := _mk_col(_board_league, UiTokens.SPACE_XS)
 	var lhead := HBoxContainer.new()
 	lcol.add_child(lhead)
 	_league_title = UiFactory.make_label("", &"NewsMeta")
 	lhead.add_child(_league_title)
-	var lsp := Control.new()
-	lsp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lhead.add_child(lsp)
+	_hspacer(lhead)
 	_league_rank = UiFactory.make_label("", &"NewsMeta")
 	lhead.add_child(_league_rank)
-	_league_rows = VBoxContainer.new()
-	_league_rows.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
-	lcol.add_child(_league_rows)
+	_league_rows = _mk_col(lcol, UiTokens.SPACE_XXS)
 	# İşaretli tarihler.
-	_board_dates = PanelContainer.new()
-	_board_dates.name = "BoardDates"
-	_board_dates.theme_type_variation = &"OdaBoardCard"
-	_board_dates.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_board_dates.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_board_wraps["dates"] = _mk_surface_wrap(_info_layer, "DatesWrap")
-	_board_wraps["dates"].add_child(_board_dates)
-	var dcol := VBoxContainer.new()
-	dcol.add_theme_constant_override("separation", UiTokens.SPACE_XS)
-	_board_dates.add_child(dcol)
+	_board_dates = _mk_wrapped_panel("DatesWrap", "BoardDates", &"OdaBoardCard")
+	_board_wraps["dates"] = _board_dates.get_parent()
+	var dcol := _mk_col(_board_dates, UiTokens.SPACE_XS)
 	_dates_title = UiFactory.make_label("", &"NewsMeta")
 	dcol.add_child(_dates_title)
-	_dates_rows = VBoxContainer.new()
-	_dates_rows.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
-	dcol.add_child(_dates_rows)
+	_dates_rows = _mk_col(dcol, UiTokens.SPACE_XXS)
 	# İstisna post-it'i (dönüş SARMALAYICIDA — klip yerel/dönmüş uzayda oturur).
-	_postit = PanelContainer.new()
-	_postit.name = "PostIt"
-	_postit.theme_type_variation = &"OdaPostIt"
-	_postit.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_postit.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_board_wraps["postit"] = _mk_surface_wrap(_info_layer, "PostItWrap")
+	var postit := _mk_wrapped_panel("PostItWrap", "PostIt", &"OdaPostIt")
+	_board_wraps["postit"] = postit.get_parent()
 	_board_wraps["postit"].visible = false
-	_board_wraps["postit"].add_child(_postit)
 	_postit_line = UiFactory.make_label("", &"QuoteSerif")
 	_postit_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_postit.add_child(_postit_line)
-
-
-func _build_frames() -> void:
-	# D4+D5: slot = kırpan sarmalayıcı; rect'i boyalı çerçevenin DIŞ kutusundan
-	# FRAME_DOC_INSET ile türetilir (ahşap hep görünür — "yapıştırılmış A4" ölür).
-	for i in 3:
-		var slot := _mk_surface_wrap(_info_layer, "FrameSlot%d" % i)
-		_frame_slots.append(slot)
+	postit.add_child(_postit_line)
 
 
 func _build_overtime_chip() -> void:
@@ -538,10 +452,9 @@ func _build_overtime_chip() -> void:
 
 
 func _build_hotspot_layer() -> void:
-	var hs_layer := _mk_layer("HotspotLayer")
+	var hs_layer := _mk_layer("HotspotLayer", self)
 	hs_layer.mouse_filter = Control.MOUSE_FILTER_PASS
-	# Çerçeve hover halkaları: çerçeve BAŞINA border-only outline (bölge
-	# dikdörtgeni ÖLDÜ — F2; OdaAnchorGlow artık gölgesiz/salt-kenar).
+	# Çerçeve hover halkaları: çerçeve BAŞINA border-only outline.
 	for i in 3:
 		var outline := Panel.new()
 		outline.name = "FrameOutline%d" % i
@@ -550,95 +463,67 @@ func _build_hotspot_layer() -> void:
 		outline.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		hs_layer.add_child(outline)
 		_frame_outlines.append(outline)
-	_mk_hotspot(hs_layer, "monitor")
-	var phone_hs := _mk_hotspot(hs_layer, "phone")
-	phone_hs.add_to_group("oda_phone_anchor")  # event_modal telefon-orijin tween'i buradan bulur
-	_mk_hotspot(hs_layer, "board")
-	if FRAMES_CLICKABLE:
-		_mk_hotspot(hs_layer, "frames")
-	# Pencere BİLEREK hotspot'suz (kanon: tıklanmaz, yalnız zamanı söyler).
-
-
-func _mk_hotspot(parent: Control, id: String) -> Control:
-	var hs := Control.new()
-	hs.name = "Hotspot" + id.capitalize()
-	hs.mouse_filter = Control.MOUSE_FILTER_STOP
-	hs.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	hs.mouse_entered.connect(_on_hotspot_entered.bind(id))
-	hs.mouse_exited.connect(_on_hotspot_exited.bind(id))
-	hs.gui_input.connect(_on_hotspot_input.bind(id))
-	parent.add_child(hs)
-	_hotspots[id] = hs
-	return hs
+	# Pencere BİLEREK hotspot'suz (tıklanmaz, yalnız zamanı söyler).
+	for id in ["monitor", "phone", "board", "frames"]:
+		var hs := Control.new()
+		hs.name = "Hotspot" + id.capitalize()
+		hs.mouse_filter = Control.MOUSE_FILTER_STOP
+		hs.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		hs.mouse_entered.connect(_set_hover.bind(id, true))
+		hs.mouse_exited.connect(_set_hover.bind(id, false))
+		hs.gui_input.connect(_on_hotspot_input.bind(id))
+		hs_layer.add_child(hs)
+		_hotspots[id] = hs
+	_hotspots["phone"].add_to_group("oda_phone_anchor")  # event_modal telefon-orijin tween'i buradan bulur
 
 
 # =========================================================================
 # SİNYALLER
 # =========================================================================
 
-func _connect_signals() -> void:
-	EventBus.hour_changed.connect(_on_hour_changed)
-	EventBus.day_advanced.connect(_on_day_advanced)
-	EventBus.mrr_changed.connect(_on_mrr_changed)
-	EventBus.phase_changed.connect(_on_phase_changed)
-	EventBus.build_phase_changed.connect(_on_build_phase_changed)
-	EventBus.build_progress_changed.connect(_on_build_progress_changed)
-	EventBus.event_triggered.connect(_on_event_triggered)
-	EventBus.event_resolved.connect(_on_event_resolved)
-	EventBus.mentor_advisory_changed.connect(_on_mentor_advisory)
-	EventBus.hr_day_processed.connect(_on_hr_day_processed)
-	EventBus.morale_changed.connect(_on_morale_changed)
-	EventBus.rival_advanced.connect(_on_rivals_changed)
-	EventBus.rival_status_changed.connect(_on_rival_status_changed)
-	EventBus.sheet_granted.connect(_on_sheet_moved)
-	EventBus.sheet_expired.connect(_on_sheet_moved)
-	EventBus.sheet_walked.connect(_on_sheet_moved)
-	EventBus.customer_added.connect(_on_customer_moved)
-	EventBus.customer_removed.connect(_on_customer_moved)
-	EventBus.customer_health_changed.connect(_on_customer_health)
-	EventBus.language_changed.connect(_on_language_changed)
-	EventBus.palette_changed.connect(_on_palette_changed)
-
-
-func _disconnect_signals() -> void:
-	EventBus.hour_changed.disconnect(_on_hour_changed)
-	EventBus.day_advanced.disconnect(_on_day_advanced)
-	EventBus.mrr_changed.disconnect(_on_mrr_changed)
-	EventBus.phase_changed.disconnect(_on_phase_changed)
-	EventBus.build_phase_changed.disconnect(_on_build_phase_changed)
-	EventBus.build_progress_changed.disconnect(_on_build_progress_changed)
-	EventBus.event_triggered.disconnect(_on_event_triggered)
-	EventBus.event_resolved.disconnect(_on_event_resolved)
-	EventBus.mentor_advisory_changed.disconnect(_on_mentor_advisory)
-	EventBus.hr_day_processed.disconnect(_on_hr_day_processed)
-	EventBus.morale_changed.disconnect(_on_morale_changed)
-	EventBus.rival_advanced.disconnect(_on_rivals_changed)
-	EventBus.rival_status_changed.disconnect(_on_rival_status_changed)
-	EventBus.sheet_granted.disconnect(_on_sheet_moved)
-	EventBus.sheet_expired.disconnect(_on_sheet_moved)
-	EventBus.sheet_walked.disconnect(_on_sheet_moved)
-	EventBus.customer_added.disconnect(_on_customer_moved)
-	EventBus.customer_removed.disconnect(_on_customer_moved)
-	EventBus.customer_health_changed.disconnect(_on_customer_health)
-	EventBus.language_changed.disconnect(_on_language_changed)
-	EventBus.palette_changed.disconnect(_on_palette_changed)
+func _bus_links() -> Array:
+	return [
+		[EventBus.hour_changed, _on_hour_changed],
+		[EventBus.day_advanced, _on_day_advanced],
+		[EventBus.mrr_changed, _on_mrr_changed],
+		[EventBus.phase_changed, _on_phase_changed],
+		[EventBus.build_phase_changed, _on_build_phase_changed],
+		[EventBus.build_progress_changed, _refresh_monitor],
+		[EventBus.event_triggered, _on_event_triggered],
+		[EventBus.event_resolved, _on_event_resolved],
+		[EventBus.mentor_advisory_changed, _on_mentor_advisory],
+		[EventBus.hr_day_processed, _on_hr_day_processed],
+		[EventBus.morale_changed, _on_morale_changed],
+		[EventBus.rival_advanced, _refresh_league],
+		[EventBus.rival_status_changed, _on_rival_status_changed],
+		[EventBus.sheet_granted, _on_ledger_moved],
+		[EventBus.sheet_expired, _on_ledger_moved],
+		[EventBus.sheet_walked, _on_ledger_moved],
+		[EventBus.customer_added, _on_ledger_moved],
+		[EventBus.customer_removed, _on_ledger_moved],
+		[EventBus.customer_health_changed, _on_ledger_moved],
+		[EventBus.language_changed, _on_look_changed],
+		# Renk körü paleti: ODA'nın semantik renkleri her boyamada token'dan okunur,
+		# o yüzden tam tazeleme yeterli.
+		[EventBus.palette_changed, _on_look_changed],
+	]
 
 
 func _on_hour_changed(_hour: int) -> void:
 	_eval_light(false)
-	_refresh_overtime_chip()  # mesai sinyali yok — saatlik poll (motor boşluğu)
+	_refresh_overtime_chip()  # mesai sinyali yok — saatlik poll
 
 func _on_day_advanced(_d: int) -> void:
 	_refresh_monitor()
 	_refresh_dates()
 	_refresh_papers()
 	_refresh_frames()
-	_refresh_goal()   # ay kapanışı MRR'siz de sinyali oynatır (büyüme serisi)
+	_refresh_goal()
 
 func _on_mrr_changed(_v: int) -> void:
 	_refresh_monitor()
 	_refresh_goal()
-	_refresh_league()  # pazar payı MRR'dan türer (Fix 3 bağlaması) — kıymık anında oynasın
+	_refresh_league()  # pazar payı MRR'dan türer
 
 func _on_phase_changed(_p: int) -> void:
 	_refresh_goal()
@@ -648,9 +533,6 @@ func _on_phase_changed(_p: int) -> void:
 func _on_build_phase_changed(_p: String) -> void:
 	_refresh_monitor()
 	_refresh_league()  # aktif sub-type build'le değişebilir
-
-func _on_build_progress_changed() -> void:
-	_refresh_monitor()
 
 func _on_event_triggered(_id: String) -> void:
 	_refresh_phone_dot()
@@ -672,32 +554,15 @@ func _on_hr_day_processed() -> void:
 func _on_morale_changed(_id: String, _m: int) -> void:
 	_refresh_postit()
 
-func _on_rivals_changed() -> void:
-	_refresh_league()
-
 func _on_rival_status_changed(_id: String, _s: String) -> void:
 	_refresh_league()
 
-func _on_sheet_moved(_vc: String) -> void:
+## Term sheet ve müşteri sinyalleri (1 ya da 2 argüman).
+func _on_ledger_moved(_id: String, _phase: String = "") -> void:
 	_refresh_papers()
 	_refresh_dates()
 
-func _on_customer_moved(_id: String) -> void:
-	_refresh_papers()
-	_refresh_dates()
-
-func _on_customer_health(_id: String, _phase: String) -> void:
-	_refresh_papers()
-	_refresh_dates()
-
-func _on_language_changed(_locale: String) -> void:
-	_refresh_all()
-
-func _on_palette_changed(_cb: bool) -> void:
-	# Renk körü paleti takas edildi. ODA'nın iki semantik rengi de TÜRETİLMİŞ —
-	# monitör çipinin sağlık noktası _refresh_monitor'da, masa kâğıtlarının
-	# noktaları _refresh_papers'ta her seferinde token'dan okunur — yani tam
-	# tazeleme yeterli; yerinde boyanacak ayrı bir override yok.
+func _on_look_changed(_v: Variant) -> void:
 	_refresh_all()
 
 func _on_visibility_changed() -> void:
@@ -728,74 +593,55 @@ func _relayout() -> void:
 	var view: Vector2 = size
 	if view.x < 2.0 or view.y < 2.0:
 		return
-	# Boyama ve çapalar TEK rect'i paylaşır. 16:9 ve daha dar viewport'ta bu
-	# rect tam viewport'tur (bugünkü davranış), daha geniştekinde ortalanmış
-	# 16:9 bandıdır — cover_transform da aynı rect'ten türediği için sanat ile
-	# çapalar yapısal olarak ayrışamaz.
-	var room: Rect2 = OdaLayoutRef.room_rect(view)
-	for art in [_day_art, _night_art]:
-		art.position = room.position
-		art.size = room.size
-	for id in ["monitor", "keyboard", "phone", "lamp", "mug"]:
-		var r: Rect2 = OdaLayoutRef.place(OdaLayoutRef.padded_target(id), view)
-		var spr: TextureRect = _sprites[id]
-		spr.position = r.position
-		spr.size = r.size
+	# Boyama ve çapalar TEK rect'i paylaşır (room_rect → cover_transform).
+	var room: Rect2 = OdaLayout.room_rect(view)
+	_set_rect(_day_art, room)
+	_set_rect(_night_art, room)
+	for id in _sprites:
+		_set_rect(_sprites[id], OdaLayout.place(OdaLayout.padded_target(id), view))
 	# Telefon noktası: telefon içerik-kutusunun sağ-üst köşesi.
-	var phone_r: Rect2 = OdaLayoutRef.place(OdaLayoutRef.RECTS["phone"], view)
+	var phone_r: Rect2 = OdaLayout.place(OdaLayout.RECTS["phone"], view)
 	_phone_dot.position = phone_r.position + Vector2(phone_r.size.x - 8.0, -4.0)
-	# ── D4: host-türetimli yüzeyler — hepsi rect_in üzerinden, mutlak rect yok ──
 	# Monitör camı: sprite İÇERİK rect'inden (padded_target DEĞİL — pad kaydırır).
-	var mon_rect: Rect2 = OdaLayoutRef.place(OdaLayoutRef.RECTS["monitor"], view)
-	var glass: Rect2 = OdaLayoutRef.rect_in(mon_rect, OdaLayoutRef.MONITOR_GLASS_REL)
+	var mon_rect: Rect2 = OdaLayout.place(OdaLayout.RECTS["monitor"], view)
+	var glass: Rect2 = OdaLayout.rect_in(mon_rect, OdaLayout.MONITOR_GLASS_REL)
 	_set_rect(_monitor_wrap, glass)
 	_set_rect(_screen_glow, glass.grow(12.0))
-	# BuildBar yüksekliği CAMDAN türer (D4 host-türetim): 1080p'de 44 (iki satır +
-	# 10px çubuk), 720p camında (~164px) 28'e iner — bar kendi eşiklerinden (36/48)
-	# yazıyı MICRO'ya çeker ve kazanç satırını düşürür; yazı 9px altına ASLA inmez.
-	if _mon_bar != null:
-		# Kartın doğal boyu 2+44+48+44 = 138. Cam 1080p'de ~269px: sığar ve altı boş
-		# kalır — B5.2'nin beklediği sonuç tam olarak bu. 720p camında (~164px) küçülür:
-		# size_scale ile satır yükseklikleri ve yazı boyu BİRLİKTE iner, kartın grameri
-		# değişmez (yeni bir düzen değil, aynı düzenin küçüğü).
-		var card_h: float = 138.0
-		var fit: float = clampf(glass.size.y * 0.62 / card_h, 0.62, 1.0)
-		if not is_equal_approx(float(_mon_bar.size_scale), fit):
-			_mon_bar.size_scale = fit
-			_mon_bar.rebuild()
-		_mon_bar.custom_minimum_size = Vector2(0.0, card_h * fit)
-	# Telefon camı: dönmüş sarmalayıcı — pivot her boyut atamasından SONRA kurulur
-	# (pivot_offset piksel cinsindendir, resize'da kendi kendine güncellenmez).
-	var pglass_size: Vector2 = phone_r.size * OdaLayoutRef.PHONE_GLASS_SIZE_REL
-	var pglass_center: Vector2 = phone_r.position + phone_r.size * OdaLayoutRef.PHONE_GLASS_CENTER_REL
+	# BuildBar yüksekliği CAMDAN türer. Kartın doğal boyu 2+44+48+44 = 138; 1080p camına
+	# (~269px) sığar, 720p camında (~164px) size_scale ile satır yükseklikleri ve yazı boyu
+	# birlikte iner — bar kendi eşiklerinden yazıyı MICRO'ya çeker, 9px altına inmez.
+	var card_h: float = 138.0
+	var fit: float = clampf(glass.size.y * 0.62 / card_h, 0.62, 1.0)
+	if not is_equal_approx(float(_mon_bar.size_scale), fit):
+		_mon_bar.size_scale = fit
+		_mon_bar.rebuild()
+	_mon_bar.custom_minimum_size = Vector2(0.0, card_h * fit)
+	# Telefon camı: dönmüş sarmalayıcı — pivot_offset piksel cinsindendir, resize'da kendi
+	# kendine güncellenmez; her boyut atamasından SONRA kurulur.
+	var pglass_size: Vector2 = phone_r.size * OdaLayout.PHONE_GLASS_SIZE_REL
+	var pglass_center: Vector2 = phone_r.position + phone_r.size * OdaLayout.PHONE_GLASS_CENTER_REL
 	_phone_glass.size = pglass_size
 	_phone_glass.pivot_offset = pglass_size * 0.5
 	_phone_glass.position = pglass_center - pglass_size * 0.5
-	_phone_glass.rotation = deg_to_rad(OdaLayoutRef.PHONE_GLASS_ANGLE_DEG)
+	_phone_glass.rotation = deg_to_rad(OdaLayout.PHONE_GLASS_ANGLE_DEG)
 	# Pano kartları: board_inner HOST'undan.
-	var board: Rect2 = OdaLayoutRef.place(OdaLayoutRef.RECTS["board_inner"], view)
+	var board: Rect2 = OdaLayout.place(OdaLayout.RECTS["board_inner"], view)
 	for key in _board_wraps:
-		_set_rect(_board_wraps[key], OdaLayoutRef.rect_in(board, OdaLayoutRef.BOARD_REL[key]))
+		_set_rect(_board_wraps[key], OdaLayout.rect_in(board, OdaLayout.BOARD_REL[key]))
 	var postit_wrap: Control = _board_wraps["postit"]
 	postit_wrap.pivot_offset = postit_wrap.size * 0.5
 	postit_wrap.rotation_degrees = -2.0
-	# Çerçeve belgeleri: dış kutu → FRAME_DOC_INSET içerlemesi.
-	for i in 3:
-		var outer: Rect2 = OdaLayoutRef.place(OdaLayoutRef.RECTS["frame_outer_%d" % i], view)
-		_set_rect(_frame_slots[i], OdaLayoutRef.frame_doc_rect(outer))
-	# Host'suz tek yüzey: mesai çipi (place_clamped'in kalan tek kullanıcısı).
-	_place_clamped(_overtime_chip, "overtime_chip")
-	# Hotspot'lar: obje/bölge rect'leri (padsız içerik kutuları).
-	_hotspot_rect("monitor", OdaLayoutRef.RECTS["monitor"], view)
-	_hotspot_rect("phone", OdaLayoutRef.RECTS["phone"], view)
-	_hotspot_rect("board", OdaLayoutRef.RECTS["board_outer"], view)
-	if _hotspots.has("frames"):
-		_hotspot_rect("frames", OdaLayoutRef.RECTS["frames_band"], view)
-	# Çerçeve hover halkaları: boyalı çerçevenin DIŞ kutusuna oturur (piksel
+	# Çerçeve belgeleri (dış kutu → içerleme) ve hover halkaları (dış kutu; piksel
 	# uzayında grow — normalize grow x/y'yi eşitsiz ölçeklerdi).
 	for i in 3:
-		_set_rect(_frame_outlines[i],
-			OdaLayoutRef.place(OdaLayoutRef.RECTS["frame_outer_%d" % i], view).grow(4.0))
+		var outer: Rect2 = OdaLayout.place(OdaLayout.RECTS["frame_outer_%d" % i], view)
+		_set_rect(_frame_slots[i], OdaLayout.frame_doc_rect(outer))
+		_set_rect(_frame_outlines[i], outer.grow(4.0))
+	_set_rect(_overtime_chip, OdaLayout.place_clamped(OdaLayout.RECTS["overtime_chip"], view))
+	# Hotspot'lar: obje/bölge rect'leri (padsız içerik kutuları).
+	for id in _hotspots:
+		var anchor: String = {"board": "board_outer", "frames": "frames_band"}.get(id, id)
+		_set_rect(_hotspots[id], OdaLayout.place(OdaLayout.RECTS[anchor], view))
 	_layout_papers()
 
 
@@ -803,22 +649,14 @@ func _set_rect(node: Control, r: Rect2) -> void:
 	node.position = r.position
 	node.size = r.size
 
-func _place_clamped(node: Control, id: String) -> void:
-	_set_rect(node, OdaLayoutRef.place_clamped(OdaLayoutRef.RECTS[id], size))
-
-func _hotspot_rect(id: String, n: Rect2, view: Vector2) -> void:
-	var r: Rect2 = OdaLayoutRef.place(n, view)
-	var hs: Control = _hotspots[id]
-	hs.position = r.position
-	hs.size = r.size
 
 func _layout_papers() -> void:
 	var idx: int = 0
 	for paper_id in _paper_cards:
-		if idx >= OdaLayoutRef.PAPER_SLOTS.size():
+		if idx >= OdaLayout.PAPER_SLOTS.size():
 			break
-		var slot: Dictionary = OdaLayoutRef.PAPER_SLOTS[idx]
-		var r: Rect2 = OdaLayoutRef.place(slot["rect"], size)
+		var slot: Dictionary = OdaLayout.PAPER_SLOTS[idx]
+		var r: Rect2 = OdaLayout.place(slot["rect"], size)
 		var card: PanelContainer = _paper_cards[paper_id]
 		card.position = r.position
 		card.custom_minimum_size = Vector2(r.size.x, 0)
@@ -828,14 +666,11 @@ func _layout_papers() -> void:
 
 
 # =========================================================================
-# IŞIK DURUM MAKİNESİ (kalite turu v2 / D6) — dört durum, geçiş yalnız durum
-# sınırında (saatlik titreme yapısal olarak imkânsız: aynı durumda tween atılmaz).
+# IŞIK DURUM MAKİNESİ — dört durum, geçiş yalnız durum sınırında.
 # =========================================================================
 
-## §8.1: "MESAİ BİTİMİNDE HAVA KARARIR. Monitör kapanmaz — gece saatlerinde kriz olayı
-## düşebilmelidir. Karanlık ŞİRKET PENCERESİNE göre çizilir; istisna taşıyan kişilerin
-## bireysel saatleri sahneyi OYNATMAZ." Departman blokları gitti; pencerenin kapanışı
-## şirketin başlangıç saati + şirket süresidir, ve bir kişinin istisnası odayı karartmaz.
+## §8.1: mesai bitiminde hava kararır; karanlık ŞİRKET PENCERESİNE göre çizilir
+## (başlangıç saati + şirket süresi). Kişilerin bireysel istisnaları odayı karartmaz.
 func _past_company_close(hour: int) -> bool:
 	var close_h: int = WorkHoursSystem.start_hour() + GameState.company_work_hours
 	if close_h >= 24:
@@ -844,10 +679,7 @@ func _past_company_close(hour: int) -> bool:
 
 
 func _light_state_for_hour(hour: int) -> StringName:
-	# Şirket penceresi kapandıktan sonra GECE (§8.1).
-	if _past_company_close(hour):
-		return &"night"
-	if hour >= 19 or hour <= 5:
+	if _past_company_close(hour) or hour >= 19 or hour <= 5:
 		return &"night"
 	if hour == 18:
 		return &"evening"
@@ -870,12 +702,11 @@ func _eval_light(instant: bool) -> void:
 		&"dawn":
 			scene_tint = UiTokens.ODA_TINT_DAWN
 	var target_a: float = 1.0 if night else 0.0
-	# Objeler sahne tint'ini de yer. Suluboyada objeler kendi ışığıyla boyanmıştı ve
-	# akşam/şafakta tint'siz kalmaları yutulabiliyordu; prosedürel katmanlar plakayla
-	# AYNI ışıktan render edildiği için tint'siz obje turuncu odanın üstünde gündüz
-	# gibi durur. Çarpım: gece ODA_NIGHT_TINT, akşam/şafak sahne tint'i, gündüz beyaz.
+	var glow_a: float = SCREEN_GLOW_NIGHT_A if night else 0.0
+	# Objeler plakayla AYNI ışıktan render edildi; tint'siz obje turuncu odanın üstünde
+	# gündüz gibi durur. Çarpım: gece ODA_NIGHT_TINT, akşam/şafak sahne tint'i, gündüz beyaz.
 	var obj_tint: Color = (UiTokens.ODA_NIGHT_TINT if night else Color.WHITE) * scene_tint
-	_apply_night_textures(night)
+	_apply_lamp_texture(night)
 	if _night_tween != null and _night_tween.is_valid():
 		_night_tween.kill()
 	if instant or not is_visible_in_tree():
@@ -883,82 +714,46 @@ func _eval_light(instant: bool) -> void:
 		_night_art.modulate.a = target_a
 		_object_layer.modulate = obj_tint
 		_scene_layer.modulate = scene_tint
-		_apply_screen_glow(night, true)
+		_screen_glow.modulate.a = glow_a
 		return
 	_night_art.visible = true
 	_night_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_night_tween.tween_property(_night_art, "modulate:a", target_a, LIGHT_FADE_S)
 	_night_tween.tween_property(_object_layer, "modulate", obj_tint, LIGHT_FADE_S)
 	_night_tween.tween_property(_scene_layer, "modulate", scene_tint, LIGHT_FADE_S)
-	_apply_screen_glow(night, false)
-	# Gündüz-quad'ı kapatma fade bitiminde (tek kare değişimi kuyruğunda erir).
+	_night_tween.tween_property(_screen_glow, "modulate:a", glow_a, LIGHT_FADE_S)
+	# Gece quad'ını kapatma fade bitiminde (tek kare değişimi kuyruğunda erir).
 	_night_tween.chain().tween_callback(func() -> void:
 		if not _is_night:
 			_night_art.visible = false
 	)
 
 
-func _apply_night_textures(night: bool) -> void:
-	# YALNIZ LAMBA gece ayrı render edilir. Bunun sebebi ölçüldü, tercih değil:
-	# lambanın gece/gündüz kanal oranı (1.72, 1.37, 0.89) — yani ampul KENDİ ışığıyla
-	# aydınlandığı için bazı kanallarda 1'in ÜSTÜNDE. Bir multiply (modulate) 1'in
-	# üstüne çıkamaz, o yüzden lamba ayrı katman olmak ZORUNDA.
-	# MONİTÖR 2026-08-17'de bu listeden ÇIKTI: mühürlü sahnede ekran her iki modda da
-	# KARANLIK CAM (emissive 0x000000) — içeriği oyun basıyor — dolayısıyla gece
-	# monitörü gündüz katmanının ObjectLayer modulate'i altındaki hâlidir ve
-	# monitor_night_3840x2160.png EMEKLİ EDİLDİ. Ölçülen oran (0.906, 0.783, 0.621),
-	# hepsi < 1, yani multiply ile birebir temsil edilebiliyor → UiTokens.ODA_NIGHT_TINT.
-	# Region aynı kalır, çünkü her iki varyant da aynı kameradan aynı kanvasa çizildi.
-	# imported_scale yeniden hesaplanır: size_limit varyantları farklı ölçekleyebilir.
-	var swap := {
-		"lamp": TEX_LAMP_NIGHT if night else TEX_LAMP,
-	}
-	for id in swap:
-		var spr: TextureRect = _sprites.get(id)
-		if spr == null:
-			continue
-		var atlas := spr.texture as AtlasTexture
-		if atlas == null:
-			continue
-		var tex: Texture2D = swap[id]
-		if atlas.atlas == tex:
-			continue
+func _apply_lamp_texture(night: bool) -> void:
+	# Region aynı kalır (iki varyant aynı kameradan aynı kanvasa çizildi); ölçek her
+	# dokudan yeniden okunur çünkü import size_limit varyantları farklı ölçekleyebilir.
+	var tex: Texture2D = TEX_LAMP_NIGHT if night else TEX_LAMP
+	var atlas: AtlasTexture = _sprites["lamp"].texture
+	if atlas.atlas != tex:
 		atlas.atlas = tex
-		atlas.region = OdaLayoutRef.padded_region(id, tex.get_width() / OdaLayoutRef.ART.x)
-
-
-func _apply_screen_glow(night: bool, instant: bool) -> void:
-	# Gece ekran parlaması — additive node. Stylebox gölgesi
-	# DEĞİL: D4 sarmalayıcısı onu yarım-glow'a kırpardı.
-	if _screen_glow == null:
-		return
-	var target: float = SCREEN_GLOW_NIGHT_A if night else 0.0
-	if instant or not is_visible_in_tree():
-		_screen_glow.modulate.a = target
-		return
-	var tw := create_tween()
-	tw.tween_property(_screen_glow, "modulate:a", target, LIGHT_FADE_S)
+		atlas.region = OdaLayout.padded_region("lamp", tex)
 
 
 # =========================================================================
-# MONİTÖR (çapa 1) — build yüzü / canlı ürün yüzü / boş yüz. Ekran asla boş değil.
+# MONİTÖR — build yüzü / canlı ürün yüzü / boş yüz. Ekran asla boş değil.
 # =========================================================================
 
 func _refresh_monitor() -> void:
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	var prog_label: Label = _mon_progress_block.get_node("ProgLabel")
-	# ORTAK TABAN (2026-08-21): kart yüzü kromaı gizliyor, diğer iki yüz onu geri
-	# istiyor. Her yüzün kendi gizlemesini kendi geri alması yerine hepsi aynı
-	# yerden başlıyor — yoksa bir yüzün gizlemesi öbürüne sızıyor.
+	# Ortak taban: build yüzü kromu gizler, diğer iki yüz geri ister — bir yüzün
+	# gizlemesi öbürüne sızmasın.
 	_mon_header.visible = true
 	_mon_title.visible = true
 	prog_label.visible = true
 	if b != null and not b.is_bug_sprint:
-		# YAPIM YÜZÜ = ONAYLI KART, BAŞKA HİÇBİR ŞEY (R6, 2026-08-21). Monitöre özel
-		# başlık / faz çipi / sorumlu satırı / İLERLEME başlığı, kartın üç satırının
-		# zaten söylediği şeyi ikinci kez söylüyordu. Kart yeniden çizilmedi, yeniden
-		# biçimlenmedi, tek fazı cama doğru büyütülmedi — AYNI kart. Altında kalan boş
-		# cam ŞU AN İÇİN DOĞRU SONUÇ; orayı neyin dolduracağı ayrı bir karar.
+		# YAPIM YÜZÜ = yalnız BuildBar kartı. Kart modelini kendisi çeker (aynı sinyaller);
+		# ek başlık/çip kartın söylediğini ikinci kez söylerdi.
 		_mon_header.visible = false
 		_mon_chip.visible = false
 		_mon_title.visible = false
@@ -968,11 +763,9 @@ func _refresh_monitor() -> void:
 		_mon_slack.visible = true
 		_mon_progress_block.visible = true
 		prog_label.visible = false
-		# Kart modelini KENDİ çeker (aynı sinyaller); monitör ona hiçbir şey itmez —
-		# tracker ile aynı tick'te aynı durum yapısal olarak garantili.
 		return
 	if bool(GameState.get_flag("mvp_shipped", false)):
-		# CANLI ÜRÜN YÜZÜ (D4: cam DOLU — 2×2 stat grid'i + alt durum satırı).
+		# CANLI ÜRÜN YÜZÜ: 2×2 stat grid'i + alt durum satırı.
 		var pname: String = String(GameState.get_flag("mvp_product_name", GameState.company_name))
 		var ver: int = int(GameState.get_flag("mvp_version", 1))
 		_mon_header.text = "%s · V%d" % [UiTokens.tr_upper(pname), ver]
@@ -1003,10 +796,9 @@ func _refresh_monitor() -> void:
 		_mon_grid.visible = true
 		_mon_slack.visible = false
 		_mon_footer.visible = true
-		# Alt satır üç durumu ayırır — "sağlıklı" TEK BAŞINA sessizliği hak etmez:
-		# health_state() bir ORAN testidir (etkin/ham kararlılık), 70 kararlılıkta
-		# onlarca canlı hataya kadar "saglikli" döner. Sayıyı ayrı terim yapmazsak
-		# cam üstündeki HATA hücresi ile hemen altındaki satır birbirini yalanlar.
+		# health_state() bir ORAN testidir: 70 kararlılıkta onlarca canlı hataya kadar
+		# "saglikli" döner. Hata sayısı ayrı terim olmazsa HATA hücresi ile alt satır
+		# birbirini yalanlar.
 		var footer: String = tr("ODA_MONITOR_WARN")
 		if healthy:
 			footer = tr("ODA_MONITOR_CALM") if bugs == 0 else tr("ODA_MONITOR_BUGS").format({"n": bugs})
@@ -1036,7 +828,7 @@ func _set_chip_dot(color: Color) -> void:
 
 
 # =========================================================================
-# TELEFON (çapa 2)
+# TELEFON
 # =========================================================================
 
 func _refresh_phone_dot() -> void:
@@ -1044,8 +836,6 @@ func _refresh_phone_dot() -> void:
 
 
 func _refresh_phone_notice() -> void:
-	# D2: camda YALNIZ bildirim (nokta + mentor adı). Tam mesaj tıklamayla
-	# Events sayfasına (center_viewport, get_mentor_line() üzerinden).
 	if _mentor_line == "":
 		_phone_glass.visible = false
 		return
@@ -1057,9 +847,9 @@ func _refresh_phone_notice() -> void:
 	_phone_glass_label.text = tag
 
 
+## Mentor satırı latch'inin tek evi (motor satırı saklamıyor); Events sayfası tam
+## mesajı buradan okur.
 func get_mentor_line() -> String:
-	# Latch'in tek evi burası (motor satırı saklamıyor — boşluk defterinde);
-	# Events sayfası tam mesajı bu getter'dan okur.
 	return _mentor_line
 
 
@@ -1071,7 +861,7 @@ func _play_phone_buzz() -> void:
 	var mat: ShaderMaterial = _sprite_mats["phone"]
 	if _buzz_tween != null and _buzz_tween.is_valid():
 		_buzz_tween.kill()
-		phone.position.x = OdaLayoutRef.place(OdaLayoutRef.padded_target("phone"), size).position.x
+		phone.position.x = OdaLayout.place(OdaLayout.padded_target("phone"), size).position.x
 	var base_x: float = phone.position.x
 	var seg: float = BUZZ_S / 6.0
 	_buzz_tween = create_tween()
@@ -1085,22 +875,19 @@ func _play_phone_buzz() -> void:
 
 
 # =========================================================================
-# PANO (çapa 4) — hedef / lig / tarihler / post-it
+# PANO — hedef / pazar payı / tarihler / post-it
 # =========================================================================
 
-## Pano başlık register'ı: mono + BÜYÜK HARF, pazar payı / tarihler başlıklarıyla
-## aynı. Sondaki iki nokta serif-deck çağının kalıntısıydı ("Traction'a:" /
-## "To Traction:") ve büyük harfte "TO TRACTION:" diye okunuyordu — diğer iki
-## başlıkta iki nokta YOK. Kesme bilinçli olarak ÇAĞRI YERİNDE: bu sunum kararı,
-## içerik değil, o yüzden strings.csv'ye dokunulmuyor (sahibi Lokalizasyon Faz 2).
+## Pano başlık register'ı: mono + BÜYÜK HARF, sondaki iki nokta kesilir (diğer
+## başlıklarla aynı). Sunum kararı, o yüzden çağrı yerinde.
 static func _goal_head(s: String) -> String:
 	return UiTokens.tr_upper(s.trim_suffix(":"))
 
 
 func _refresh_goal() -> void:
-	# Eşikler HER boyamada konstanttan CANLI okunur (Erdem onay düzeltmesi #1):
-	# curve oturumu değerleri değiştirdiğinde pano kendiliğinden doğru kalır.
-	_goal_bar.visible = true
+	# Eşikler her boyamada canlı okunur — ayar değişirse pano kendiliğinden doğru kalır.
+	_goal_sub.text = ""
+	_goal_bar.visible = false
 	match GameState.phase:
 		1:
 			_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P1_LABEL"))
@@ -1110,47 +897,27 @@ func _refresh_goal() -> void:
 			if CustomerRegistry.get_all().size() > 0: met += 1
 			if GameState.mrr > 0: met += 1
 			_goal_sub.text = tr("ODA_GOAL_PROGRESS").format({"met": met, "total": 3})
+			_goal_bar.visible = true
 			_goal_bar.value = met / 3.0 * 100.0
 		2:
 			# Gelir çıtasının rakamı basılmaz — kapının SİNYALİ basılır.
-			# Kapı yalnız MRR; pano yalnız durumu okur. Büyüme ayı ("n/3"),
-			# marka satırı ve ilerleme çubuğu kalktı. Çubuk düğümü faz 1 ile ORTAK olduğu için
-			# silinmez, bu dalda gizlenir (faz 3 dalıyla aynı kalıp) — ağaç değişmez.
 			var sig: Dictionary = PhaseGateSystem.series_a_signal()
 			_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P2_LABEL"))
 			_goal_value.text = InvestorAppetiteUi.state_text(String(sig.get("state", "closed")))
-			_goal_sub.text = ""
-			_goal_bar.visible = false
 		_:
 			if GameState.series_a_closed:
 				_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P3_CLOSED"))
 				_goal_value.text = UiTokens.format_money(GameState.run_investment_amount)
-				_goal_sub.text = ""
-				_goal_bar.visible = false
 			else:
 				_goal_label.text = _goal_head(tr("ODA_BOARD_GOAL_P3_LABEL"))
 				_goal_value.text = tr("ODA_BOARD_GOAL_P3_HUNT").format({"n": GameState.active_sheets.size()})
-				_goal_sub.text = ""
-				_goal_bar.visible = false
 
 
 func _refresh_league() -> void:
-	# PAZAR PAYI panosu (Dünya İnandırıcılığı Fix 3 bağlaması — lig görünümünün
-	# yerine). Kaynak: RivalRegistry.get_market_snapshot (stateless; MRR + katalog
-	# seed'lerinden türetilir). Merdiven grameri: en üstte pazar lideri, altında
-	# oyuncunun HEMEN üstündeki basamaklar (tırmanılacak sıradaki rakipler), en
-	# altta SEN satırı — kıymık küçükken bile bir sonraki hedef görünür. Satır
-	# numarası GERÇEK pazar sırasıdır (liderle basamak arasındaki sayı atlaması
-	# aradaki mesafeyi kendisi anlatır). Node/fonksiyon adları ve "board_league"
-	# yerleşim anahtarı bilinçli olarak yerinde — yalnız veri kaynağı değişti;
-	# kalite-ligi rank API'si artık yalnız detail_view'un "seni geçti" kapısında.
+	# PAZAR PAYI panosu (RivalRegistry.get_market_snapshot — stateless, MRR + katalog
+	# seed'lerinden türer). Ürün piyasada değilse kart hiç render edilmez.
 	var sub: String = _active_sub_type_id()
-	if sub == "":
-		_board_wraps["market"].visible = false
-		return
-	# D3 DURUM 1 — ürün piyasada değil: pano slotu TAMAMEN boş (kart render
-	# edilmez; "<%0,1" gün-0 kıymığı öldü).
-	if not bool(GameState.get_flag("mvp_shipped", false)):
+	if sub == "" or not bool(GameState.get_flag("mvp_shipped", false)):
 		_board_wraps["market"].visible = false
 		return
 	var snap: Dictionary = RivalRegistry.get_market_snapshot(sub)
@@ -1162,18 +929,15 @@ func _refresh_league() -> void:
 	_league_title.text = UiTokens.tr_upper(tr("ODA_BOARD_MARKET_TITLE"))
 	for child in _league_rows.get_children():
 		child.queue_free()
-	# D3 DURUM 2 — çıktı ama müşteri/MRR yok: tablo yerine TEK yönlendirme satırı
-	# (kopya seçimi a — oyunun kuru register'ı; Erdem delege etti).
+	# Çıktı ama MRR yok: tablo yerine tek yönlendirme satırı.
 	if GameState.mrr <= 0:
 		_league_rank.text = ""
 		var line := UiFactory.make_label(tr("ODA_BOARD_MARKET_EMPTY"), &"QuoteSerif")
 		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_league_rows.add_child(line)
 		return
-	# D3 DURUM 3 — gerçek pay tablosu: top-3 + oyuncunun HEMEN üstündeki rakip
-	# (dedup) + SEN + diğerleri. Satır numarası GERÇEK pazar sırasıdır (merdiven
-	# mirasının iyi fikri): rakip sırası, oyuncunun onun üstünde olup olmamasına
-	# göre +1 kayar; sayı atlaması aradaki mesafeyi kendisi anlatır.
+	# Gerçek pay tablosu: top-3 + oyuncunun HEMEN üstündeki rakip (dedup) + SEN. Satır
+	# numarası GERÇEK pazar sırasıdır — sayı atlaması aradaki mesafeyi kendisi anlatır.
 	var player_pct: float = float(snap["player_pct"])
 	_league_rank.text = RivalRegistry.format_share(player_pct)
 	var player_name: String = String(GameState.get_flag("mvp_product_name", ""))
@@ -1181,19 +945,12 @@ func _refresh_league() -> void:
 		player_name = GameState.company_name
 	var above_count: int = 0
 	var nearest_above: Dictionary = {}
-	for i in range(rivals.size() - 1, -1, -1):   # sondan yürü = oyuncunun hemen üstü
-		if float(rivals[i]["share_pct"]) > player_pct:
-			nearest_above = rivals[i]
-			break
 	for row in rivals:
 		if float(row["share_pct"]) > player_pct:
 			above_count += 1
-	var picked: Dictionary = {}
-	var picks: Array = []
-	for i in mini(3, rivals.size()):
-		picks.append(rivals[i])
-		picked[String(rivals[i]["id"])] = true
-	if not nearest_above.is_empty() and not picked.has(String(nearest_above["id"])):
+			nearest_above = row
+	var picks: Array = rivals.slice(0, 3)
+	if not nearest_above.is_empty() and not picks.has(nearest_above):
 		picks.append(nearest_above)
 	var entries: Array = []
 	for pick in picks:
@@ -1204,20 +961,12 @@ func _refresh_league() -> void:
 		"share": player_pct, "trend": 0, "is_player": true})
 	entries.sort_custom(func(a, b): return float(a["share"]) > float(b["share"]))
 	for e in entries:
-		var glyph: String = ""
-		if int(e["trend"]) > 0:
-			glyph = "▲ "
-		elif int(e["trend"]) < 0:
-			glyph = "▼ "
+		var glyph: String = ["▼ ", "", "▲ "][signi(int(e["trend"])) + 1]
 		_league_rows.add_child(_league_row(int(e["rank"]), String(e["name"]), bool(e["is_player"]),
 			glyph + RivalRegistry.format_share(float(e["share"]))))
-	# "diğerleri" kuyruğu: <%0,1 iken gizli (uzun kuyruk için yanlış okunur).
-	# Bu satır SIRASIZ kalır — merdivene sokulsaydı %12'lik artık oyuncunun kıymığının
-	# ÜSTÜNE basamak olarak girer, sıra atlamasının anlattığı mesafeyi bozardı. Ama
-	# sırasız kalmak "numarasını kaybetmiş rakip" gibi okunmamalı: baştaki "·" tam da
-	# merdivenin "N ·" ayracıydı, o yüzden üç nokta ile değişti — liste burada
-	# BİTMİYOR, listelenmeyenlerin toplamı diye okunur. İşaret dilden bağımsız
-	# (TR/EN aynı satırda karışmasın: sözcük yalnız çeviri anahtarından gelir).
+	# "Diğerleri" kuyruğu SIRASIZ kalır: merdivene girseydi oyuncunun kıymığının üstüne
+	# basamak olur, sıra atlamasının anlattığı mesafeyi bozardı. Baştaki "…" listenin
+	# bitmediğini söyler. <%0,1 iken gizli.
 	var others: float = float(snap["others_pct"])
 	if others >= 0.1:
 		var orow := HBoxContainer.new()
@@ -1230,9 +979,7 @@ func _refresh_league() -> void:
 
 
 func _active_sub_type_id() -> String:
-	# SUNUM-TARAFI ÇÖZÜM, motor dokunulmadı: aktif build → yayınlanmış snapshot →
-	# kataloğun ilk tipi. (Desen ODA rework'ünde emekli edilen RightPanel'den geldi;
-	# o dosya 2026-08-24'te ağaçtan silindi, atıf artık çözümlenemeyeceği için düştü.)
+	# Aktif build → yayınlanmış snapshot → kataloğun ilk tipi.
 	var b = ProductSystem.get_active_build()
 	if b != null and b.sub_product_type_id != "":
 		return b.sub_product_type_id
@@ -1243,18 +990,7 @@ func _active_sub_type_id() -> String:
 	return String(types[0].get("id", "")) if not types.is_empty() else ""
 
 
-func _player_composite(sub: String) -> float:
-	# Aynı provenance — yukarıdaki nota bak.
-	var axes: Array = ProductCatalog.get_quality_axes(sub)
-	var b = ProductSystem.get_active_build()
-	if b != null:
-		return QualityModel.composite_quality(QualityModel.economy_dims_from_build(b), axes)
-	if GameState.get_flag("mvp_shipped", false):
-		return QualityModel.shipped_composite()
-	return 0.0
-
-
-func _league_row(no: int, display: String, is_player: bool, value: String = "") -> HBoxContainer:
+func _league_row(no: int, display: String, is_player: bool, value: String) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	var label := UiFactory.make_label("%d · %s" % [no, UiTokens.tr_upper(display)], &"MicroLabel",
@@ -1264,17 +1000,15 @@ func _league_row(no: int, display: String, is_player: bool, value: String = "") 
 	row.add_child(label)
 	if is_player:
 		row.add_child(UiFactory.make_label(tr("ODA_BOARD_LEAGUE_YOU"), &"MicroLabel", UiTokens.ODA_ACCENT_DEEP))
-	if value != "":
-		# Pay kolonu (pazar payı panosu): SEN satırında vurgulu, rakipte sönük.
-		row.add_child(UiFactory.make_label(value, &"MicroLabel",
-			UiTokens.ODA_ACCENT_DEEP if is_player else UiTokens.ODA_INK_DIM))
+	# Pay kolonu: SEN satırında vurgulu, rakipte sönük.
+	row.add_child(UiFactory.make_label(value, &"MicroLabel",
+		UiTokens.ODA_ACCENT_DEEP if is_player else UiTokens.ODA_INK_DIM))
 	return row
 
 
 func _refresh_dates() -> void:
-	# Sunum-tarafı toplama: motorun aggregator'ı yok (EventManager.get_upcoming
-	# TODO — boşluk defterinde). Kaynaklar: VC görüşme günü, teklif vadeleri,
-	# açık söz teslimleri, churn geri sayımları, ay kapanışı. En yakın 3.
+	# Sunum-tarafı toplama (motorun "yaklaşanlar" toplayıcısı yok): VC görüşme günü, teklif
+	# vadeleri, açık söz teslimleri, churn geri sayımları, ay kapanışı. En yakın 3.
 	_dates_title.text = UiTokens.tr_upper(tr("ODA_BOARD_DATES_TITLE"))
 	for child in _dates_rows.get_children():
 		child.queue_free()
@@ -1291,18 +1025,14 @@ func _refresh_dates() -> void:
 		if c.churn_countdown >= 0:
 			items.append({"day": today + int(c.churn_countdown),
 				"label": tr("ODA_BOARD_DATE_CHURN").format({"company": c.company_name})})
-	var d: int = today + 1
-	while d <= today + 31:
+	for d in range(today + 1, today + 32):
 		if int(GameState.get_date_dict(d)["day"]) == 1:
 			items.append({"day": d, "label": tr("ODA_BOARD_DATE_MONTH")})
 			break
-		d += 1
 	items = items.filter(func(it): return int(it["day"]) >= today)
 	items.sort_custom(func(a, b): return int(a["day"]) < int(b["day"]))
-	var shown: int = 0
+	items = items.slice(0, 3)
 	for it in items:
-		if shown >= 3:
-			break
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 		var lbl := UiFactory.make_label(String(it["label"]), &"RowMeta")
@@ -1311,8 +1041,7 @@ func _refresh_dates() -> void:
 		row.add_child(lbl)
 		row.add_child(UiFactory.make_label(_date_delta_text(int(it["day"]) - today), &"NewsMeta", UiTokens.ODA_INK))
 		_dates_rows.add_child(row)
-		shown += 1
-	_board_wraps["dates"].visible = shown > 0
+	_board_wraps["dates"].visible = not items.is_empty()
 
 
 func _date_delta_text(delta: int) -> String:
@@ -1324,39 +1053,21 @@ func _date_delta_text(delta: int) -> String:
 
 
 func _refresh_postit() -> void:
-	# İstisna post-it'i: dikkat gerektiren İLK çalışan (worst-first sözleşmesi
-	# HRSystem.badges_for'da). Kimse yoksa post-it yok.
+	# Dikkat gerektiren İLK çalışan (worst-first sözleşmesi HRSystem.badges_for'da).
 	var target_name: String = ""
 	for emp in CharacterRegistry.get_employees():
 		if not HRSystem.badges_for(emp).is_empty():
 			target_name = emp.character_name.get_slice(" ", 0)
 			break
-	if target_name == "":
-		_board_wraps["postit"].visible = false
-		return
-	_board_wraps["postit"].visible = true
-	_postit_line.text = tr("ODA_BOARD_POSTIT").format({"name": target_name})
+	_board_wraps["postit"].visible = target_name != ""
+	if target_name != "":
+		_postit_line.text = tr("ODA_BOARD_POSTIT").format({"name": target_name})
 
 
-## ÇİP ARTIK ÇİZİLMİYOR. Taşıdığı sayı bloğun GÜN İNDEKSİYDİ ve blok sistemi kalktı —
-## §8.2'de mesai bir blok değil, kişinin devraldığı saatin sonucu, ve "çalışma saatleri
-## modali aynı zamanda mesainin TEK GÖRÜNÜRLÜK YÜZEYİDİR."
-##
-## DÜĞÜM KALDI, GÖRÜNMEZ. Silmek `--theme-audit=oda`'nın satır sayısını oynatırdı ve o
-## kapı bu turda BAYT-AYNI kalmak zorunda; düğümün emekliye ayrılması ODA'nın kendi
-## tasarım turunun kararıdır ve park edildi.
-## CAMIN İÇİNDEKİ TEK GECE SİNYALİ (Erdem, 2026-08-24). Düğüm ODA rework'ünden beri
-## duruyordu ve gövdesi tek satırlık bir kill switch'ti — yani yerleşimi, rengi ve
-## `RECTS["overtime_chip"]` çapası ağaçta yaşıyor, hiçbir şey söylemiyordu.
-##
-## YENİ DAVRANIŞ, İKİ KOŞUL BİRDEN: şirket penceresi KAPANDIKTAN SONRA (§8.1'in kendi
-## kapanışı, `_past_company_close`) ve mesaide en az bir çalışan varsa çip görünür ve kaç
-## kişinin hâlâ çalıştığını yazar. Gündüz hiçbir şey söylemez — mesai bilgisi gündüz zaten
-## Ekip başlığındaki çipte (19d) duruyor; ODA'nın söyleyebileceği tek yeni şey ODANIN
-## KARANLIK OLMASI ve içeride birinin kalmış olması.
-##
-## SAYIM `WorkHoursSystem.counts()`ten gelir — modalin bedel bloğuyla AYNI sayı. İki ayrı
-## sayım iki ayrı cevap demek olurdu ve ikisi aynı ekranda yan yana görünebiliyor.
+## Camın içindeki tek gece sinyali: şirket penceresi KAPANDIKTAN sonra (§8.1) ve mesaide
+## en az bir çalışan varsa kaç kişinin hâlâ çalıştığını yazar. Gündüz sessizdir — mesai
+## bilgisi gündüz Ekip başlığındaki çipte. Sayım WorkHoursSystem.counts()'tan: çalışma
+## saatleri modalinin bedel bloğuyla AYNI sayı (ikisi aynı ekranda yan yana görünebilir).
 func _refresh_overtime_chip() -> void:
 	var hour: int = int(GameState.get_date_dict().get("hour", 0))
 	var on_overtime: int = int(WorkHoursSystem.counts()["overtime"])
@@ -1367,23 +1078,20 @@ func _refresh_overtime_chip() -> void:
 
 
 # =========================================================================
-# KÂĞITLAR (çapa 3) — ertelenebilir bekleyen kararlar. Temiz masa = işler yolunda.
+# KÂĞITLAR — ertelenebilir bekleyen kararlar. Temiz masa = işler yolunda.
 # =========================================================================
 
+## Hatırlatıcı kâğıt: canlı sistem durumundan türer, tıklanınca sekmeye gider, saati yoktur.
+func _reminder(id: String, dot: Color, tag: String, title: String, target: String, subpage: String = "") -> Dictionary:
+	return {"id": id, "dot": dot, "tag": tag, "title": title, "target": target, "subpage": subpage, "days_left": -1}
+
+
 func _gather_papers() -> Array:
-	# İKİ CİNS KÂĞIT, TEK MASA.
-	#
-	# Bu fonksiyonun eski başlığı "Kâğıt akış TETİKLEMEZ — yalnız navigasyon" diyordu ve o
-	# hüküm HÂLÂ GEÇERLİ — ama yalnız ikinci cins için. Aşağıdaki hatırlatıcılar (kapı, term
-	# sheet, Atlas, genişleme) canlı sistem durumundan türer ve tıklandığında bir sekmeye
-	# gider; hiçbirinin saati yoktur.
-	#
-	# MOTOR KÂĞITLARI bunun tam tersidir: saati işleyen bir KARAR, tıklandığında kartı açar.
-	# Bu yüzden sıralamanın sahibi motordur ve motor kâğıtları listenin BAŞINA gelir —
-	# EvPapers.ordered() zaten en acili öne almıştır, dolayısıyla son 3 gününe girmiş bir
-	# kâğıt görünür üç yuvanın DIŞINDA kalamaz (onaylı değişiklik A3). Bir hatırlatıcı
-	# yuvasını kaybederse işaret ettiği sekmede durmaya devam eder; bir karar yuvasını
-	# kaybederse saatini kimsenin göremediği bir yerde bitirir. Bu ikisi aynı şey değil.
+	# İKİ CİNS KÂĞIT, TEK MASA. Motor kâğıtları saati işleyen KARARLARDIR, tıklanınca kartı
+	# açar; sıralamanın sahibi motordur ve listenin BAŞINA gelir (EvPapers.ordered() en
+	# acili öne alır) — son 3 gününe girmiş bir karar görünür üç yuvanın dışında kalamaz.
+	# Yuvasını kaybeden hatırlatıcı sekmesinde durmaya devam eder; karar ise saatini
+	# kimsenin göremediği yerde bitirirdi.
 	var papers: Array = []
 	for entry in EventGate.desk_papers(PAPER_CAP):
 		var e: Dictionary = entry
@@ -1398,9 +1106,8 @@ func _gather_papers() -> Array:
 			"urgent": bool(e["urgent"]),
 		})
 	if GameState.phase_gate_ready and GameState.pending_next_phase > 0:
-		papers.append({"id": "gate", "dot": UiTokens.ODA_ACCENT_DEEP,
-			"tag": tr("ODA_PAPER_TAG_GATE"), "title": tr("ODA_PAPER_GATE_TITLE"),
-			"target": "finance", "subpage": "", "days_left": -1})
+		papers.append(_reminder("gate", UiTokens.ODA_ACCENT_DEEP,
+			tr("ODA_PAPER_TAG_GATE"), tr("ODA_PAPER_GATE_TITLE"), "finance"))
 	var sheet_count: int = GameState.active_sheets.size()
 	if sheet_count > 0:
 		var min_left: int = 999
@@ -1408,36 +1115,28 @@ func _gather_papers() -> Array:
 			min_left = mini(min_left, sheet.days_left(GameState.day))
 		var title: String = tr("ODA_PAPER_SHEET_TITLE").format({"days": maxi(0, min_left)}) if sheet_count == 1 \
 			else tr("ODA_PAPER_SHEETS_TITLE").format({"n": sheet_count})
-		papers.append({"id": "sheet", "dot": UiTokens.ODA_HEALTH_AMBER,
-			"tag": tr("ODA_PAPER_TAG_FUNDING"), "title": title,
-			"target": "finance", "subpage": "yatirim", "days_left": -1})   # LOC-DATA state / route id
+		papers.append(_reminder("sheet", UiTokens.ODA_HEALTH_AMBER,
+			tr("ODA_PAPER_TAG_FUNDING"), title, "finance", "yatirim"))   # LOC-DATA state / route id
 	if HRSearchSystem.has_files_ready():
-		papers.append({"id": "atlas", "dot": UiTokens.ODA_INK_MUTED,
-			"tag": tr("ODA_PAPER_TAG_ATLAS"),
-			"title": tr("ODA_PAPER_ATLAS_TITLE").format({"n": HRSearchSystem.get_files().size()}),
-			"target": "hr", "subpage": "", "days_left": -1})
-	# İKAME: tasarımın istediği "sözleşme yenileme penceresi" motorda yok —
-	# renewal sistemi gelince bu kaynak onunla değiştirilir. Fatura/ödeme vadesi
-	# kaynağı da motorda karşılıksız (v1'de hiç yok). Done mesajında listeli.
+		papers.append(_reminder("atlas", UiTokens.ODA_INK_MUTED, tr("ODA_PAPER_TAG_ATLAS"),
+			tr("ODA_PAPER_ATLAS_TITLE").format({"n": HRSearchSystem.get_files().size()}), "hr"))
+	# İKAME: tasarımın istediği sözleşme yenileme penceresi ve fatura vadesi motorda yok;
+	# genişleme aşamasındaki B2B hesabı onların yerini tutar.
 	for c in CustomerRegistry.get_by_market("b2b"):
 		if c.lifecycle_phase == "expansion":
-			papers.append({"id": "exp_%s" % c.id, "dot": UiTokens.oda_health_green(),
-				"tag": UiTokens.tr_upper(c.company_name),
-				"title": tr("ODA_PAPER_EXPANSION_TITLE"),
-				"target": "sales", "subpage": "", "days_left": -1})
+			papers.append(_reminder("exp_%s" % c.id, UiTokens.oda_health_green(),
+				UiTokens.tr_upper(c.company_name), tr("ODA_PAPER_EXPANSION_TITLE"), "sales"))
 	if _debug_papers:
-		papers.append({"id": "dbg_gate", "dot": UiTokens.ODA_ACCENT_DEEP,
-			"tag": tr("ODA_PAPER_TAG_GATE"), "title": tr("ODA_PAPER_GATE_TITLE"),
-			"target": "finance", "subpage": "", "days_left": -1})
-		papers.append({"id": "dbg_atlas", "dot": UiTokens.ODA_INK_MUTED,
-			"tag": tr("ODA_PAPER_TAG_ATLAS"), "title": tr("ODA_PAPER_ATLAS_TITLE").format({"n": 3}),
-			"target": "hr", "subpage": "", "days_left": -1})
+		papers.append(_reminder("dbg_gate", UiTokens.ODA_ACCENT_DEEP,
+			tr("ODA_PAPER_TAG_GATE"), tr("ODA_PAPER_GATE_TITLE"), "finance"))
+		papers.append(_reminder("dbg_atlas", UiTokens.ODA_INK_MUTED,
+			tr("ODA_PAPER_TAG_ATLAS"), tr("ODA_PAPER_ATLAS_TITLE").format({"n": 3}), "hr"))
 	return papers
 
 
 func _refresh_papers() -> void:
 	var papers: Array = _gather_papers()
-	_paper_overflow = maxi(0, papers.size() - PAPER_CAP)
+	var overflow: int = maxi(0, papers.size() - PAPER_CAP)
 	var visible_papers: Array = papers.slice(0, PAPER_CAP)
 	var wanted: Dictionary = {}
 	for p in visible_papers:
@@ -1461,9 +1160,11 @@ func _refresh_papers() -> void:
 			if not _seen_paper_ids.has(p["id"]):
 				_seen_paper_ids[p["id"]] = true
 				arrivals.append(card)
-		_update_paper_overflow_chip(card, i == PAPER_CAP - 1 and _paper_overflow > 0)
 		rebuilt[p["id"]] = card
 	_paper_cards = rebuilt
+	for i in visible_papers.size():
+		_update_paper_overflow_chip(_paper_cards[visible_papers[i]["id"]],
+			overflow if i == PAPER_CAP - 1 else 0)
 	_layout_papers()
 	for card in arrivals:
 		_animate_paper_arrival(card)
@@ -1484,15 +1185,13 @@ func _mk_paper_card(p: Dictionary) -> PanelContainer:
 	title.clip_text = true
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title)
-	# KALAN SÜRE (§11.4). Yalnız saati olan kâğıtta çıkar: hatırlatıcının süresi yoktur ve
-	# olmayan bir sayıyı "—" diye yazmak, saatin ne anlama geldiğini öğrenilemez hâle getirir.
-	# Son üç günde vurgu — ertelenmiş bir kararın aldığı TEK uyarı budur.
-	var days_left: int = int(p.get("days_left", -1))
+	# KALAN SÜRE (§11.4) yalnız saati olan kâğıtta; son üç günde vurgu — ertelenmiş bir
+	# kararın aldığı TEK uyarı budur.
+	var days_left: int = int(p["days_left"])
 	if days_left >= 0:
-		var urgent: bool = bool(p.get("urgent", false))
 		var clock := UiFactory.make_label(
 			tr("ODA_PAPER_DAYS").format({"n": days_left}), &"MicroLabel",
-			UiTokens.ODA_ACCENT_DEEP if urgent else UiTokens.ODA_INK_MUTED)
+			UiTokens.ODA_ACCENT_DEEP if bool(p.get("urgent", false)) else UiTokens.ODA_INK_MUTED)
 		clock.name = "DaysLeft"
 		row.add_child(clock)
 	var overflow := UiFactory.make_label("", &"MicroLabel", UiTokens.ODA_ACCENT_DEEP)
@@ -1506,29 +1205,26 @@ func _mk_paper_card(p: Dictionary) -> PanelContainer:
 	return card
 
 
-func _update_paper_overflow_chip(card: PanelContainer, show_chip: bool) -> void:
+func _update_paper_overflow_chip(card: PanelContainer, overflow: int) -> void:
 	var chip: Label = card.get_node("Row/OverflowChip")
-	chip.visible = show_chip
-	if not show_chip:
+	chip.visible = overflow > 0
+	if overflow <= 0:
 		return
-	chip.text = "+%d" % _paper_overflow
-	# A3'ÜN YEDEĞİ. Sıralama zaten şunu garanti eder: son 3 gününe girmiş bir kâğıt görünür
-	# üçün İÇİNDEDİR, çünkü EvPapers.ordered() kalan güne göre sıralar — daha acili önünde,
-	# daha az acili arkasındadır. Sıralamanın kapatamadığı TEK durum, dördü birden son 3 günde
-	# olan hâldir; o zaman dördüncüsü saatini çipin arkasında bitirir. A3 bunun için "çip
-	# aciliyeti taşısın" diyor: taşıyor.
+	chip.text = "+%d" % overflow
+	# Sıralamanın kapatamadığı tek durum: dördü birden son 3 günde. O zaman dördüncüsü
+	# saatini çipin arkasında bitirir — çip bu aciliyeti taşır.
 	var hidden_urgent: bool = false
 	for entry in EventGate.desk_papers(64):
 		var e: Dictionary = entry
 		if bool(e.get("urgent", false)) and not _paper_cards.has(String(e["id"])):
 			hidden_urgent = true
+			break
 	chip.add_theme_color_override("font_color",
 		UiTokens.ODA_ACCENT_DEEP if hidden_urgent else UiTokens.ODA_INK_MUTED)
 
 
 func _animate_paper_arrival(card: PanelContainer) -> void:
-	# Kâğıt başına TEK geliş animasyonu (mikro-hareket listesi) — _seen_paper_ids
-	# bekçisi relayout/tab dönüşünde tekrarını engeller.
+	# Kâğıt başına TEK geliş animasyonu — _seen_paper_ids relayout/tab dönüşünde tekrarı önler.
 	if not is_visible_in_tree():
 		return
 	var target_rot: float = card.rotation_degrees
@@ -1546,10 +1242,8 @@ func _on_paper_input(event: InputEvent, target: String, subpage: String) -> void
 	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT
 			and event.pressed):
 		return
-	anchor_clicked.emit("paper:%s" % target)
-	# MOTOR KÂĞIDI KENDİ KARTINI AÇAR, hatırlatıcı sekmeye gider. Ayrım `event:` önekiyle
-	# yapılıyor ki iki cins TEK tıklama yolunu paylaşsın — ikinci bir yol, ikinci bir
-	# davranış demektir ve kâğıtların yarısı sessizce farklı davranmaya başlar.
+	# Motor kâğıdı kendi kartını açar, hatırlatıcı sekmeye gider — iki cins TEK tıklama
+	# yolunu paylaşır, ayrım `event:` önekiyle.
 	if target.begins_with("event:"):
 		EventGate.open_paper(target.trim_prefix("event:"))
 		return
@@ -1559,48 +1253,39 @@ func _on_paper_input(event: InputEvent, target: String, subpage: String) -> void
 		EventBus.finance_subpage_requested.emit(subpage)
 
 
+## --oda-shot=night fixture'ı: masaya 2 sentetik kâğıt.
 func debug_seed_papers() -> void:
-	# --oda-shot=night fixture'ı (yalnız debug): masaya 2 sentetik kâğıt.
-	if not OS.is_debug_build():
-		return
 	_debug_papers = true
 	_refresh_papers()
 
 
 # =========================================================================
-# ÇERÇEVE DUVARI (çapa 6) — kilometre taşları. Boş çerçeve = henüz kazanılmadı.
+# ÇERÇEVE DUVARI — kilometre taşları. Boş çerçeve = henüz kazanılmadı.
 # =========================================================================
 
+## Milestone sayfası (center_viewport) da buradan okur — türetme tek evde. Motorun
+## milestone defteri yok; üçlü kalıcı izlerden türer. Yatırımın günü kayıtlı değil,
+## yalnız miktar gösterilir.
 func get_milestones() -> Array:
-	# PUBLIC (D5): document-model milestone sayfası (center_viewport) da buradan
-	# okur — türetme mantığı tek evde kalır.
-	# Motorun milestone defteri YOK (boşluk listesinde) — üçlü mevcut kalıcı
-	# izlerden türetilir. Yatırımın GÜNÜ kayıtlı değil → yalnız miktar gösterilir.
-	var founding_date: Dictionary = GameState.get_date_dict(1)
-	var out: Array = [{
-		"name": tr("ODA_FRAME_FOUNDING"), "earned": true,
-		"meta": Fmt.month_name(int(founding_date["month"])) + " " + str(int(founding_date["year"])),
-	}]
 	var launch_day: int = int(GameState.get_flag("mvp_launch_day", 0))
-	if launch_day > 0:
-		var ld: Dictionary = GameState.get_date_dict(launch_day)
-		out.append({"name": tr("ODA_FRAME_FIRST_SHIP"), "earned": true,
-			"meta": Fmt.month_name(int(ld["month"])) + " " + str(int(ld["year"]))})
-	else:
-		out.append({"name": tr("ODA_FRAME_FIRST_SHIP"), "earned": false, "meta": ""})
-	if GameState.run_investment_amount > 0:
-		out.append({"name": tr("ODA_FRAME_FIRST_FUNDING"), "earned": true,
-			"meta": UiTokens.format_money(GameState.run_investment_amount)})
-	else:
-		out.append({"name": tr("ODA_FRAME_FIRST_FUNDING"), "earned": false, "meta": ""})
-	return out
+	var funding: int = GameState.run_investment_amount
+	return [
+		{"name": tr("ODA_FRAME_FOUNDING"), "earned": true, "meta": _month_year(1)},
+		{"name": tr("ODA_FRAME_FIRST_SHIP"), "earned": launch_day > 0,
+			"meta": _month_year(launch_day) if launch_day > 0 else ""},
+		{"name": tr("ODA_FRAME_FIRST_FUNDING"), "earned": funding > 0,
+			"meta": UiTokens.format_money(funding) if funding > 0 else ""},
+	]
+
+
+func _month_year(day: int) -> String:
+	var d: Dictionary = GameState.get_date_dict(day)
+	return Fmt.month_name(int(d["month"])) + " " + str(int(d["year"]))
 
 
 func _refresh_frames() -> void:
-	# D5 DİPLOMA MODELİ: çerçeve içi = mühür + ad — uzun metin YOK (tarih/tutar
-	# document-model milestone sayfasında yaşar). Kazanılmamış çerçeve TAMAMEN
-	# boş ("—" tiresi öldü). Gerçek diploma görseli Claude Design turunda gelecek;
-	# şimdilik token-minimal (Erdem notu).
+	# Diploma modeli: çerçeve içi = mühür + ad (tarih/tutar milestone sayfasında).
+	# Kazanılmamış çerçeve tamamen boş.
 	var data: Array = get_milestones()
 	for i in 3:
 		var slot: Control = _frame_slots[i]
@@ -1630,91 +1315,63 @@ func _refresh_frames() -> void:
 
 # =========================================================================
 # HOTSPOT etkileşimi — hover + tıklama hedefleri.
-# D2/F2 hover kuralı (kalite turu v2): DOLGU ASLA PARLAMAZ. Sprite çapaları =
-# şekle oturan rim shader; pano = kartların kenarı amber'e döner (varyasyon
-# swap, ChoiceCardHover grameri); çerçeveler = çerçeve başına border-only
-# outline (modulate fade). Bölge dikdörtgeni ÖLDÜ.
+# Hover kuralı: DOLGU ASLA PARLAMAZ. Sprite çapaları = şekle oturan rim shader; pano =
+# kart kenarı amber'e döner (varyasyon swap); çerçeveler = çerçeve başına border-only
+# outline (modulate fade).
 # =========================================================================
 
-func _on_hotspot_entered(id: String) -> void:
+func _set_hover(id: String, on: bool) -> void:
 	match id:
 		"monitor", "phone":
-			_tween_rim(id, 1.0)
+			_tween_rim(id, 1.0 if on else 0.0)
 		"board":
-			_set_board_hover(true)
+			# Margin'ler bayt-aynı (metin zıplamaz); post-it kart değil, hariç.
+			var variation: StringName = &"OdaBoardCardHover" if on else &"OdaBoardCard"
+			_board_goal.theme_type_variation = variation
+			_board_league.theme_type_variation = variation
+			_board_dates.theme_type_variation = variation
 		"frames":
-			_set_frame_outlines(0.6)
+			for outline in _frame_outlines:
+				_hover_tween("outline_" + outline.name).tween_property(
+					outline, "modulate:a", 0.6 if on else 0.0, HOVER_FADE_S)
 
 
-func _on_hotspot_exited(id: String) -> void:
-	match id:
-		"monitor", "phone":
-			_tween_rim(id, 0.0)
-		"board":
-			_set_board_hover(false)
-		"frames":
-			_set_frame_outlines(0.0)
+func _hover_tween(key: String) -> Tween:
+	var old: Tween = _hover_tweens.get(key)
+	if old != null and old.is_valid():
+		old.kill()
+	var tw := create_tween()
+	_hover_tweens[key] = tw
+	return tw
 
 
-func _set_board_hover(hovered: bool) -> void:
-	# Kart kenarı hover'ı — margin'ler bayt-aynı (metin zıplamaz); post-it hariç
-	# (post-it kart değil, el yazısı nesne).
-	var variation: StringName = &"OdaBoardCardHover" if hovered else &"OdaBoardCard"
-	_board_goal.theme_type_variation = variation
-	_board_league.theme_type_variation = variation
-	_board_dates.theme_type_variation = variation
-
-
-func _set_frame_outlines(target: float) -> void:
-	for outline in _frame_outlines:
-		var key: String = "outline_" + outline.name
-		if _hover_tweens.has(key) and (_hover_tweens[key] as Tween).is_valid():
-			(_hover_tweens[key] as Tween).kill()
-		var tw := create_tween()
-		tw.tween_property(outline, "modulate:a", target, HOVER_FADE_S)
-		_hover_tweens[key] = tw
-
-
+## --oda-shot=hover fixture'ı: dört hover muamelesi tek karede.
 func debug_hover_anchors() -> void:
-	# --oda-shot=hover fixture'ı (yalnız debug): dört hover muamelesi tek karede —
-	# G2 kapısının kanıtı (dikdörtgen yok, dolgu parlamıyor).
-	if not OS.is_debug_build():
-		return
-	_tween_rim("monitor", 1.0)
-	_tween_rim("phone", 1.0)
-	_set_board_hover(true)
-	_set_frame_outlines(0.6)
+	for id in _hotspots:
+		_set_hover(id, true)
 
 
 func _tween_rim(id: String, target: float) -> void:
 	var mat: ShaderMaterial = _sprite_mats[id]
-	var key: String = "rim_" + id
-	if _hover_tweens.has(key) and (_hover_tweens[key] as Tween).is_valid():
-		(_hover_tweens[key] as Tween).kill()
-	var tw := create_tween()
-	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("glow_strength", v),
+	_hover_tween("rim_" + id).tween_method(
+		func(v: float) -> void: mat.set_shader_parameter("glow_strength", v),
 		float(mat.get_shader_parameter("glow_strength")), target, HOVER_FADE_S)
-	_hover_tweens[key] = tw
 
 
 func _on_hotspot_input(event: InputEvent, id: String) -> void:
 	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed):
 		return
-	anchor_clicked.emit(id)
 	match id:
 		"monitor":
 			EventBus.tab_changed.emit("product")
 		"phone":
-			# D2: bekleyen olay VEYA latch'li Frank satırı varsa Events sayfasına
-			# (tam mesaj document model'de yaşar); ikisi de yoksa bilinçli no-op.
+			# Bekleyen olay VEYA latch'li mentor satırı varsa Events sayfasına; yoksa no-op.
 			if EventGate.queue_size() > 0 or _mentor_line != "":
 				EventBus.tab_changed.emit("events")
 		"board":
-			# v1 tek hedef: Finance (hedef+tarihler finansal; pay derinliği v2 — # WORKING).
-			EventBus.tab_changed.emit("finance")
+			EventBus.tab_changed.emit("finance")   # WORKING: tek hedef
 		"frames":
-			# D5: milestone detayı document model'de (popover öldü) — pseudo-doküman
-			# id'si; center_viewport gövdesini kurar, TabPageChrome ✕/Esc bedava.
+			# Milestone pseudo-dokümanı; center_viewport gövdesini kurar.
 			EventBus.tab_changed.emit("milestones")
 
 
@@ -1722,25 +1379,21 @@ func _on_hotspot_input(event: InputEvent, id: String) -> void:
 # İLK AÇILIŞ TURU
 # =========================================================================
 
+## main.gd MentorIntro kapanışında call_group ile çağırır. Bayrak user://settings.json'da.
 func start_intro_tour_if_unseen() -> void:
-	# main.gd MentorIntro kapanışında call_group ile çağırır. Bayrak
-	# user://settings.json'da (Settings autoload) — run'lar arası kalıcı.
 	if bool(Settings.get_value("oda_intro_seen", false)):
 		return
 	if not visible or _tour != null:
 		return
-	# PanelLayer'a monte edilir, OdaView'un çocuğu olarak DEĞİL: çocukken dim rect'leri
-	# yalnız CenterViewport'u kaplıyordu ve TopBar / sol ray turun altında tıklanabilir
-	# kalıyordu. Çapa geometrisi hâlâ ODA'ya göre ölçülsün diye sahne olarak `self`
-	# veriliyor (tur her adımda global rect'i yeniden okur).
+	# PanelLayer'a tam ekran monte edilir (bkz. oda_tour.gd); çapa geometrisi yine ODA'ya
+	# göre ölçülsün diye sahne olarak `self` verilir.
 	var tour_layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
 	if tour_layer == null:
 		push_error("[OdaView] GameShell/PanelLayer yok — tur monte edilemiyor")
 		return
 	_tour = OdaTourRef.new()
 	_tour.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# Sahne add_child'DAN ÖNCE verilir: _ready add_child sırasında koşar ve ilk adımı
-	# hemen yerleştirir, o anda sahne boşsa spotlight tam ekrana göre ölçülür.
+	# Sahne add_child'DAN ÖNCE verilir: _ready ilk adımı hemen yerleştirir.
 	_tour.set_stage(self)
 	tour_layer.add_child(_tour)
 	_tour.tree_exited.connect(func() -> void: _tour = null)

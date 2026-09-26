@@ -1,9 +1,9 @@
 """Assemble tools/oda3d/export_glb.html from the ODA render rig's own source.
 
-Why a generator and not a hand copy: the spike's Phase 0 ruling is that every
-placement traces to a line of `tools/oda_render_rig/layers.html`. Slicing that file
-by line range makes the copy verbatim BY CONSTRUCTION and re-runnable if the rig
-changes. Only the glue (imports, material names, exporter, JSON) is authored here.
+Every placement must trace to a line of `tools/oda_render_rig/layers.html`, so
+the scene is sliced from that file by line range: verbatim by construction and
+re-runnable when the rig changes. Only the glue (imports, material names,
+exporter, JSON) is authored here.
 
 Run:  python tools/oda3d/make_export_page.py   (from project-unicorn root)
 """
@@ -18,16 +18,16 @@ OUT = os.path.join(ROOT, "tools", "oda3d", "export_glb.html")
 # so a future edit of layers.html that shifts lines fails loudly here instead of
 # silently exporting the wrong block.
 SEGMENTS = [
-    ("log + renderer + scene + camera",     38,  52, "const LOG"),
-    ("room materials + geometry + props",   54, 148, "// ---- room materials"),
-    ("day/night light rigs",               150, 199, "// ---- lighting rigs"),
-    ("setMode",                            201, 219, "// ---- day/night"),
-    ("W/H + renderAt",                     230, 236, "const W = 3840"),
-    ("projectMesh",                        262, 282, "/** Screen-space rect"),
-    ("projectObject",                      430, 456, "/** Projected screen AABB"),
-    ("WC (layout contract copy)",          492, 505, "// OdaLayout.RECTS @ HEAD"),
-    ("anchorsNorm",                        564, 582, "function anchorsNorm"),
-    ("camTarget + applyCam",               620, 637, "// Camera parameters are"),
+    ("log + renderer + scene + camera",     30,  44, "const LOG"),
+    ("room materials + geometry + props",   46, 118, "// ---- room materials"),
+    ("day/night light rigs",               120, 165, "// ---- lighting rigs"),
+    ("setMode",                            167, 181, "// ---- day/night"),
+    ("W/H + renderAt",                     192, 198, "const W = 3840"),
+    ("projectMesh",                        223, 240, "/** Screen-space AABB of a mesh"),
+    ("projectObject",                      303, 317, "/** Projected screen AABB"),
+    ("WC (layout contract copy)",          326, 339, "// OdaLayout.RECTS @ HEAD"),
+    ("anchorsNorm",                        385, 399, "function anchorsNorm"),
+    ("camTarget + applyCam",               431, 448, "// Camera parameters are"),
 ]
 
 HEAD = """<!DOCTYPE html>
@@ -62,10 +62,8 @@ import { box, buildMonitor, buildKeyboard, buildLamp, buildPhone, buildMug, buil
 // ============================================================================
 """
 
-# SPIKE glue inserted right after the room-materials/geometry segment: names on
-# the seven room materials that layers.html leaves unnamed (desk-builders.js
-# names its own). glTF carries material names; Godot maps materials by name.
-# Metadata only — no colour/roughness/transform is touched.
+# Inserted right after the room-materials segment. glTF carries material names
+# and Godot maps materials by name. Metadata only: no colour/roughness/transform.
 NAMES = """
 // SPIKE: material names for glTF (metadata only; the seven room materials are
 // unnamed in layers.html; desk-builders.js names its own).
@@ -76,13 +74,13 @@ skyMat.name = 'sky';
 
 TAIL = r"""
 // ============================================================================
-// SPIKE — export. Pinned camera (README "do not re-solve"), then: GLB of the
+// SPIKE — export. Pinned camera (see the rig README before changing it), then: GLB of the
 // `room` group (geometry + materials, no lights/camera — those go to Godot via
 // the JSON so energies can be converted explicitly), plus a JSON that records
 // everything Godot needs and everything the gate compares against.
 // ============================================================================
 const PINNED_CAM = [0.298, 1.35, 1.56, 0.38, -1.91, 44];
-const deskTop = desk.getObjectByName('desk_top');   // SPIKE: same lookup as layers.html:320
+const deskTop = desk.getObjectByName('desk_top');
 
 async function postBlob(name, blob){
   const r = await fetch('/save/' + name, { method:'POST', body: blob });
@@ -91,12 +89,12 @@ async function postBlob(name, blob){
 async function postText(name, text){ await postBlob(name, new Blob([text], {type:'text/plain'})); }
 
 const hex = c => '#' + c.getHexString();
+const worldPos = o => { const v = new THREE.Vector3(); o.getWorldPosition(v); return [v.x, v.y, v.z]; };
 function lightInfo(l){
-  const p = new THREE.Vector3(); l.getWorldPosition(p);
   const o = { type: l.type, name: l.name || '', color: hex(l.color), intensity: l.intensity,
-              position: [p.x, p.y, p.z], castShadow: !!l.castShadow };
+              position: worldPos(l), castShadow: !!l.castShadow };
   if (l.isHemisphereLight) { o.skyColor = hex(l.color); o.groundColor = hex(l.groundColor); delete o.position; }
-  if (l.target) { const t = new THREE.Vector3(); l.target.getWorldPosition(t); o.target = [t.x, t.y, t.z]; }
+  if (l.target) o.target = worldPos(l.target);
   if (l.isPointLight || l.isSpotLight) { o.distance = l.distance; o.decay = l.decay; }
   if (l.isSpotLight) { o.angle = l.angle; o.penumbra = l.penumbra; }
   if (l.shadow) { o.shadow = { mapSize: [l.shadow.mapSize.x, l.shadow.mapSize.y], bias: l.shadow.bias, normalBias: l.shadow.normalBias }; }
@@ -124,10 +122,9 @@ function meshInventory(){
 
 (async function run(){
   try {
-    setMode('day'); showAllForExport();
+    setMode('day'); room.children.forEach(c => c.visible = true);
     applyCam(PINNED_CAM);
     renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight, false);
-    camera.aspect = W/H; camera.updateProjectionMatrix();
     renderer.render(scene, camera);
     say('camera ' + JSON.stringify(PINNED_CAM));
 
@@ -149,10 +146,10 @@ function meshInventory(){
       meshes: meshInventory(),
       layout_contract_WC: WC,
       anchors_norm_at_pinned_cam: anchorsNorm(),
-      monitor_screen_px: projectMesh(monitor, 'screen'),
+      monitor_screen_px: projectMesh(monScreen),
       desk_top_px: projectObject(deskTop),
-      lamp_bulb_world: (() => { const v = new THREE.Vector3(); lampBulb.getWorldPosition(v); return [v.x, v.y, v.z]; })(),
-      lamp_head_world: (() => { const v = new THREE.Vector3(); lampHead.getWorldPosition(v); return [v.x, v.y, v.z]; })(),
+      lamp_bulb_world: worldPos(lampBulb),
+      lamp_head_world: worldPos(lampHead),
       pool_target: [poolTarget.x, poolTarget.y, poolTarget.z]
     };
     await postText('oda3d_source_scene.json', JSON.stringify(info, null, 2));
@@ -169,8 +166,6 @@ function meshInventory(){
     await postText('DONE.txt', 'ERR ' + (e && e.message ? e.message : e));
   }
 })();
-
-function showAllForExport(){ room.children.forEach(c => c.visible = true); }
 </script>
 </body>
 </html>

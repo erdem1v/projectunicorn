@@ -44,24 +44,6 @@ ssil_intensity = 0.35
 glow_enabled = true
 glow_hdr_threshold = 1.2
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_n7lu6"]
-sky_top_color = Color(0.5411765, 0.44313726, 0.32941177, 1)
-sky_horizon_color = Color(0.5411765, 0.44313726, 0.32941177, 1)
-sky_curve = 1.0
-sky_energy_multiplier = 0.119366206
-ground_bottom_color = Color(0.14117648, 0.10980392, 0.07058824, 1)
-ground_horizon_color = Color(0.14117648, 0.10980392, 0.07058824, 1)
-ground_curve = 1.0
-ground_energy_multiplier = 0.119366206
-sun_angle_max = 0.0
-sun_curve = 0.0
-use_debanding = false
-
-[sub_resource type="Sky" id="Sky_2osom"]
-sky_material = SubResource("ProceduralSkyMaterial_n7lu6")
-process_mode = 1
-radiance_size = 1
-
 [node name="Oda3D" type="Node3D" unique_id=1370376979]
 script = ExtResource("1_oda3d")
 

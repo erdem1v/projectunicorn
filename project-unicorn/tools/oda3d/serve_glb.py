@@ -6,9 +6,8 @@ a common ancestor) and accepts POSTs:
   /save/<name>.glb | .json  -> art/oda3d/<name>          (the deliverables)
   /save/<name>.txt          -> <status dir>/<name>       (DONE.txt / progress; never in the repo)
 
-usage: python tools/oda3d/serve_glb.py [--port 8734] [--status <dir>]
-Mirrors tools/oda_render_rig/serve.py (POST instead of <a download>: Chrome
-throttles download bursts behind a prompt; a blocked export is worse than a slow one).
+usage: python tools/oda3d/serve_glb.py --status <dir> [--port 8734]
+POST instead of <a download>: Chrome holds download bursts behind a prompt.
 """
 import argparse, http.server, os, socketserver, sys
 
@@ -18,7 +17,7 @@ OUT = os.path.join(ROOT, "art", "oda3d")
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--port", type=int, default=8734)
-ap.add_argument("--status", default=os.path.join(HERE, "_status"))
+ap.add_argument("--status", required=True)
 args = ap.parse_args()
 os.makedirs(OUT, exist_ok=True)
 os.makedirs(args.status, exist_ok=True)

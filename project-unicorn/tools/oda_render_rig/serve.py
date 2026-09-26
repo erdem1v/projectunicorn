@@ -29,7 +29,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             f.write(data)
         self.send_response(200)
         self.send_header("Content-Type", "text/plain")
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(b"ok %d" % len(data))
         print("wrote %s (%d bytes)" % (name, len(data)), flush=True)
