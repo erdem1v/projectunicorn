@@ -1,62 +1,30 @@
 extends Control
 
-# GameShell root. process_mode = ALWAYS (set in GameShell.tscn) so this handler
-# runs even while the tree is paused — that's what lets Space UN-pause the game.
-#
-# Space = pause/resume toggle. We use _input (not _unhandled_input) so a
-# focused Button can't swallow Space via ui_accept before we see it. Guards keep
-# Space typing a real space inside text fields, and defer to main.gd's pause
-# state machine while a blocking modal is open.
+# GameShell root. process_mode = ALWAYS (GameShell.tscn) so this handler runs while
+# the tree is paused — that's what lets Space UN-pause the game. _input (not
+# _unhandled_input) so a focused Button can't swallow Space via ui_accept first.
 
-# Debug: alternates MeetingScene full ↔ extreme-length fixture across presses.
-var _meeting_fixture_toggle: bool = false
-# Debug: cycles the VC roster across Shift+F5 presses.
-var _vc_debug_idx: int = 0
-# ODA rework: tab_changed aynası — "" = oda görünür, sekme yok. Esc yönlendirmesi
-# buradan okur (LeftTabs'a path-coupling yok).
+var _meeting_fixture_toggle: bool = false  # Shift+F2: full ↔ extreme-length fixture
+var _vc_debug_idx: int = 0                 # Shift+F5: cycles the VC roster
+# tab_changed aynası — "" = oda görünür. Esc yönlendirmesi buradan okur.
 var _active_tab_id: String = ""
 
 
 func _ready() -> void:
-	EventBus.tab_changed.connect(_on_tab_changed_shell)
+	EventBus.tab_changed.connect(func(tab_id: String) -> void: _active_tab_id = tab_id)
 
 
-func _exit_tree() -> void:
-	if EventBus.tab_changed.is_connected(_on_tab_changed_shell):
-		EventBus.tab_changed.disconnect(_on_tab_changed_shell)
-
-
-func _on_tab_changed_shell(tab_id: String) -> void:
-	_active_tab_id = tab_id
-
-# Grants Anchor + Nexus sheets (the mockup's leverage state) if absent and opens the table on
-# Anchor via the normal entry signal. Sole caller: Shift+F6. (The comment used to also name a
-# `--debug-open-table` flag; no such flag exists anywhere in the codebase — removed rather than
-# left to send the next reader hunting for it.)
-func _debug_open_term_table() -> void:
-	if not OS.is_debug_build():
-		return
-	if GameState.phase < 3:
-		GameState.set_phase(3)
-	for tt_vc in ["anchor", "nexus"]:
-		if VCPitchSystem.sheet_for(tt_vc) == null and GameState.active_sheets.size() < PitchConstants.MAX_SHEETS:
-			GameState.active_sheets.append(VCPitchSystem._make_sheet(tt_vc, GameState.day))
-	print("[Debug] open Term Sheet Table (anchor, +nexus leverage)")
-	EventBus.term_table_requested.emit("anchor")
+func _layer_busy(layer_name: String) -> bool:
+	var layer: Node = get_node_or_null(layer_name)
+	return layer != null and layer.get_child_count() > 0
 
 
 func _input(event: InputEvent) -> void:
-	if not (event is InputEventKey):
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
 		return
-	var key: InputEventKey = event
-	if not key.pressed or key.echo:
-		return
-	# Hızlı kayıt / hızlı yükleme (F5 / F9) — debug bandının ÜSTÜNDE.
-	# Neden burada: aşağıdaki blok F1-F11'i daha dağıtım yapmadan HANDLED işaretliyor,
-	# yani bir _unhandled_input dinleyicisi debug build'de F5'i hiç göremezdi. Bu,
-	# Shift+F2..F6'nın zaten kullandığı yakalama deseninin aynısı.
-	# ÇIPLAK F5/F9 = hızlı kayıt/yükleme (debug VE release'de aynı davranır);
-	# Ctrl+F5 / Ctrl+F9 = eski iki endgame fikstürü; Shift+F5 = VC toplantısı (değişmedi).
+	# Çıplak F5/F9 = hızlı kayıt/yükleme, debug VE release'de aynı. Debug bandının ÜSTÜNDE,
+	# çünkü aşağıdaki blok F1-F11'i HANDLED işaretliyor.
 	if (key.keycode == KEY_F5 or key.keycode == KEY_F9) \
 			and not key.ctrl_pressed and not key.shift_pressed and not key.alt_pressed:
 		get_viewport().set_input_as_handled()
@@ -65,72 +33,12 @@ func _input(event: InputEvent) -> void:
 		else:
 			EventBus.quickload_requested.emit()
 		return
-	# Debug endgame forcing (F1-F11, debug builds only):
-	# every ending testable from day one, series_a_closed settable pre-VC-system.
 	if OS.is_debug_build() and key.keycode >= KEY_F1 and key.keycode <= KEY_F11:
 		get_viewport().set_input_as_handled()
-		if key.shift_pressed and key.keycode == KEY_F4:
-			# Shift+F4 = re-trigger onboarding from a running game (mockup capture).
-			# Intercept BEFORE the endgame dispatch below — _debug_endgame_key ignores
-			# shift, so without this Shift+F4 would fire plain-F4's action. Plain F4
-			# stays the acquisition-preconditions key.
-			# The ModalLayer guard its four siblings already carry, and the one it was
-			# missing. Fired with an event modal up, this frees the shell WITHOUT the
-			# modal ever resolving — so EventManager._active_event_id stays set forever,
-			# _pump_queue early-returns on every later call (no event modal ever mounts
-			# again), has_pending() is permanently true, and every dismiss handler skips
-			# its speed restore. The process ends up paused with a dead event pipeline.
-			var ml_onb: Node = get_node_or_null("ModalLayer")
-			if ml_onb != null and ml_onb.get_child_count() > 0:
-				return
-			print("[Debug] Shift+F4 → onboarding re-triggered")
-			EventBus.debug_onboarding_retrigger_requested.emit()
-			return
-		if key.shift_pressed and key.keycode == KEY_F2:
-			# Shift+F2 = MeetingScene debug fixture. Plain F2 = phase jump and
-			# _debug_endgame_key ignores shift, so intercept here. Guard: don't stack on
-			# an already-open modal. Alternates full ↔ extreme-length across (re)opens.
-			var ml_mtg: Node = get_node_or_null("ModalLayer")
-			if ml_mtg != null and ml_mtg.get_child_count() > 0:
-				return
-			_meeting_fixture_toggle = not _meeting_fixture_toggle
-			var vs: Dictionary = MeetingScene.debug_fixture_full() if _meeting_fixture_toggle else MeetingScene.debug_fixture_long()
-			print("[Debug] Shift+F2 → MeetingScene fixture (%s)" % ("full" if _meeting_fixture_toggle else "long"))
-			EventBus.meeting_scene_requested.emit(vs)
-			return
-		if key.shift_pressed and key.keycode == KEY_F5:
-			# Shift+F5 = begin a REAL VC pitch, cycling the 4 VCs across presses.
-			# Plain F5 = cash -1000; _debug_endgame_key ignores shift, so intercept here.
-			var ml_vc: Node = get_node_or_null("ModalLayer")
-			if ml_vc != null and ml_vc.get_child_count() > 0:
-				return
-			var roster: Array = InvestorRegistry.get_active()
-			var inv: Dictionary = roster[_vc_debug_idx % roster.size()]
-			_vc_debug_idx += 1
-			print("[Debug] Shift+F5 → begin VC meeting (%s)" % inv.get("id", ""))
-			VCPitchSystem.begin_meeting(String(inv.get("id", "")))
-			return
-		if key.shift_pressed and key.keycode == KEY_F6:
-			# Shift+F6 = open the Term Sheet Table directly on Anchor (grants Anchor +
-			# Nexus, the mockup's leverage state). No-stack guard; plain F6 → endgame keys.
-			var ml_tt: Node = get_node_or_null("ModalLayer")
-			if ml_tt != null and ml_tt.get_child_count() > 0:
-				return
-			_debug_open_term_table()
-			return
-		if key.keycode == KEY_F11:
-			# F11 = force month summary with LIVE data; Shift+F11 = extreme-value
-			# layout fixture (keeps the extreme-value layout check reproducible).
-			print("[Debug] F11 → force month summary (extreme=%s)" % key.shift_pressed)
-			MonthSummarySystem.debug_force_summary(key.shift_pressed)
-			return
-		_debug_endgame_key(key.keycode)
+		_debug_fkey(key)
 		return
-	# Speed control: Space toggles pause, 1-3 pick a running speed off the ladder (4 does
-	# nothing since the 4x rung was removed). Both share the two
-	# guards below. Note 1-4 are ALSO dialogue-choice keys inside MeetingScene /
-	# TermSheetTable — Guard 2 is what keeps that unambiguous, since those only exist while
-	# a modal is mounted.
+	# Hız: Space pause/devam, 1-3 hız basamağı. 1-4 MeetingScene / TermSheetTable içinde
+	# diyalog seçimi de; onlar yalnız modal açıkken var, Guard 2 ayrımı sağlar.
 	var speed_idx: int = -1
 	match key.keycode:
 		KEY_1, KEY_KP_1: speed_idx = 1
@@ -138,65 +46,80 @@ func _input(event: InputEvent) -> void:
 		KEY_3, KEY_KP_3: speed_idx = 3
 	if speed_idx < 0 and key.keycode != KEY_SPACE and key.keycode != KEY_ESCAPE:
 		return
-	# Guard 1: a text field is focused → let the key type its character (e.g. product name).
-	# Esc etkileşimi: odaklıyken burada döneriz, Godot'nun LineEdit'i ui_cancel ile
-	# odağı bırakır; BİR SONRAKİ Esc (odaksız) sayfayı kapatır. Doğru katmanlama.
+	# Guard 1: metin alanı odaklı → tuş karakterini yazsın. Esc'te LineEdit odağı
+	# ui_cancel ile bırakır; BİR SONRAKİ Esc sayfayı kapatır.
 	var focus: Control = get_viewport().gui_get_focus_owner()
 	if focus is LineEdit or focus is TextEdit:
 		return
-	# Guard 2: a blocking modal (event/pitch/settings) owns pause via main.gd —
-	# don't desync that _pre_*_speed state machine.
-	# Esc etkileşimi: modal açıkken burada HANDLED işaretlemeden döneriz — event
-	# modalın kendi _unhandled_input ui_cancel'ına akar (modal kapanır, sayfa kalır).
-	var modal_layer: Node = get_node_or_null("ModalLayer")
-	if modal_layer != null and modal_layer.get_child_count() > 0:
+	# Guard 2: bloklayan modal pause'u main.gd üzerinden yönetir (_pre_*_speed durum
+	# makinesi bozulmasın). HANDLED işaretlemeden dön — Esc modalın ui_cancel'ına aksın.
+	if _layer_busy("ModalLayer"):
 		return
-	# Esc: açık tam-sayfa sekmeyi kapat → odaya dön (✕ ve
-	# aktif-sekmeye-tekrar-tıklamayla aynı kanal). Odadayken bilinçli no-op ve
-	# event HANDLED İŞARETLENMEZ, ki Esc'i bekleyen başka bir dinleyici varsa
-	# alabilsin. (Gerekçe eskiden OdaView'un _unhandled_input'unu adlandırıyordu;
-	# o handler ODA rework'ünde silindi — odadaki Esc bugün gerçekten no-op ve bu
-	# doğru davranış.)
 	if key.keycode == KEY_ESCAPE:
-		# Guard 3 (SaveManager task): PanelLayer sakini Esc'in SAHİBİDİR.
-		# HRAtlasModal / HRPopover / OdaTour ModalLayer'a değil PanelLayer'a mount
-		# oluyor (hız kontrolünü öldürmesinler diye) — yani Guard 2 onları görmüyor.
-		# Bu satır olmadan, Atlas açıkken Esc "sekmeyi kapat"a düşüyor: HR SAYFASI
-		# serbest bırakılıyor ama Atlas (sayfanın değil PanelLayer'ın çocuğu) ekranda
-		# öksüz kalıyordu. HANDLED İŞARETLEMEDEN dönüyoruz ki kendi ui_cancel'larına
-		# aksın — Guard 1 ve 2'nin aynı disiplini.
-		var panel_layer: Node = get_node_or_null("PanelLayer")
-		if panel_layer != null and panel_layer.get_child_count() > 0:
+		# Guard 3: PanelLayer sakinleri (HRAtlasModal / HRPopover / OdaTour) Esc'in sahibi;
+		# yoksa Esc sekmeyi kapatır ve PanelLayer çocuğu ekranda öksüz kalır.
+		if _layer_busy("PanelLayer"):
 			return
-		if _active_tab_id != "":
-			get_viewport().set_input_as_handled()
-			EventBus.tab_changed.emit("")
-			return
-		# Odada, açık sayfa/modal/panel yokken Esc artık no-op DEĞİL: sistem menüsü.
-		# Buraya varmış olmak zaten "ModalLayer boş"un kanıtı (Guard 2 yukarıda döndü),
-		# yani zorunlu karar zorunlu kalır — olay modalı üstündeyken bu satır çalışmaz.
 		get_viewport().set_input_as_handled()
-		EventBus.system_menu_requested.emit()
+		if _active_tab_id != "":
+			EventBus.tab_changed.emit("")  # açık sayfayı kapat → odaya dön (✕ ile aynı kanal)
+		else:
+			# Odada, her şey kapalıyken: sistem menüsü. Guard 2 geçildiyse zorunlu karar yok.
+			EventBus.system_menu_requested.emit()
 		return
 	get_viewport().set_input_as_handled()
-	# Routes through the same signal the TopBar buttons use, so the TopBar stays in sync.
-	if speed_idx >= 0:
-		EventBus.speed_change_requested.emit(speed_idx)
+	# TopBar butonlarıyla aynı sinyal, TopBar senkron kalsın.
+	if speed_idx < 0:
+		speed_idx = 0 if TimeManager.current_speed > 0 else TimeManager.last_running_speed
+	EventBus.speed_change_requested.emit(speed_idx)
+
+
+# --- Debug F-tuşları (yalnız debug build) ---
+# Shift varyantları burada; _debug_endgame_key shift'i yok sayar. Modal açıkken
+# Shift varyantları yığılmaz: modal çözülmeden shell'i serbest bırakmak (Shift+F4)
+# EventManager'ın olay hattını kalıcı olarak kilitler.
+func _debug_fkey(key: InputEventKey) -> void:
+	if key.keycode == KEY_F11:
+		# Canlı veriyle ay özeti; Shift = uç-değer yerleşim fikstürü.
+		MonthSummarySystem.debug_force_summary(key.shift_pressed)
 		return
-	# Space toggle: pause if running, else resume the last running speed.
-	var target: int = 0 if TimeManager.current_speed > 0 else TimeManager.last_running_speed
-	EventBus.speed_change_requested.emit(target)
+	if key.shift_pressed and key.keycode in [KEY_F2, KEY_F4, KEY_F5, KEY_F6]:
+		if _layer_busy("ModalLayer"):
+			return
+		match key.keycode:
+			KEY_F2:
+				_meeting_fixture_toggle = not _meeting_fixture_toggle
+				EventBus.meeting_scene_requested.emit(MeetingScene.debug_fixture_full()
+						if _meeting_fixture_toggle else MeetingScene.debug_fixture_long())
+			KEY_F4:
+				EventBus.debug_onboarding_retrigger_requested.emit()
+			KEY_F5:
+				var roster: Array = InvestorRegistry.get_active()
+				var inv: Dictionary = roster[_vc_debug_idx % roster.size()]
+				_vc_debug_idx += 1
+				VCPitchSystem.begin_meeting(String(inv.get("id", "")))
+			KEY_F6:
+				_debug_open_term_table()
+		return
+	_debug_endgame_key(key.keycode)
 
 
-# Argless relay for MCP runtime verification (the runtime bridge can't pass
-# typed args; Shift+F11 covers real keyboards). Debug builds only.
+# Anchor + Nexus sheet'lerini (mockup'ın kaldıraç durumu) yoksa verir, masayı Anchor'da açar.
+func _debug_open_term_table() -> void:
+	if GameState.phase < 3:
+		GameState.set_phase(3)
+	for tt_vc in ["anchor", "nexus"]:
+		if VCPitchSystem.sheet_for(tt_vc) == null and GameState.active_sheets.size() < PitchConstants.MAX_SHEETS:
+			GameState.active_sheets.append(VCPitchSystem._make_sheet(tt_vc, GameState.day))
+	EventBus.term_table_requested.emit("anchor")
+
+
+# Argless relays for the MCP runtime bridge (it can't pass typed args). Debug builds only.
 func debug_force_month_extreme() -> void:
 	if OS.is_debug_build():
 		MonthSummarySystem.debug_force_summary(true)
 
 
-# Argless MeetingScene relays for MCP runtime verification (the bridge can't pass a
-# Dictionary; Shift+F2 covers real keyboards). Debug builds only.
 func debug_force_meeting() -> void:
 	if OS.is_debug_build():
 		EventBus.meeting_scene_requested.emit(MeetingScene.debug_fixture_full())
@@ -207,59 +130,45 @@ func debug_force_meeting_long() -> void:
 		EventBus.meeting_scene_requested.emit(MeetingScene.debug_fixture_long())
 
 
-# Argless VC-meeting relay for MCP runtime verification. Begins a real pitch
-# with the given VC (mounts MeetingScene via meeting_scene_requested → main.gd).
 func debug_force_vc_meeting(vc_id: String = "anchor") -> void:
 	if OS.is_debug_build():
 		VCPitchSystem.begin_meeting(vc_id)
 
 
-# --- Debug endgame keys (F1-F10; OS.is_debug_build only) ---
-# Class B cases set preconditions and let the NEXT daily tick (slot 8/9) fire
-# them — that exercises the real scan path, not a shortcut. F3 is the Class A
-# instant path by design.
-# İKİ İSTİSNA: F5 ve F9 artık CTRL ile çağrılır. Çıplak F5/F9 hızlı kayıt/yükleme
-# oldu ve bu bağlama release'de de yaşadığı için debug'da da aynı tuşu tutmak
-# zorundaydı — yoksa aynı tuş dev'de başka, oyuncuda başka iş yapardı.
-
+# Class B durumları ön şartı kurar, bitişi BİR SONRAKİ günlük tik (slot 8/9) ateşler —
+# gerçek tarama yolu sınanır. F3 bilerek Class A anlık yoldur. F5/F9 Ctrl ile gelir
+# (çıplak hali hızlı kayıt/yükleme).
 func _debug_endgame_key(keycode: Key) -> void:
 	match keycode:
 		KEY_F1:
-			print("[Debug] F1 → force-open current phase gate")
 			PhaseGateSystem.debug_force_gate()
 		KEY_F2:
-			print("[Debug] F2 → instant phase jump (skips Frank scene)")
+			# Anlık faz atlama (Frank sahnesini atlar).
 			GameState.phase_gate_ready = true
 			GameState.pending_next_phase = GameState.phase + 1
 			GameState.advance_phase()
 		KEY_F3:
-			print("[Debug] F3 → series_a_closed + Class A hard win")
 			GameState.series_a_closed = true
 			EndingsSystem.trigger_ending("series_a_close", EndingsSystem.TELEGRAPH_WIN)
 		KEY_F4:
-			print("[Debug] F4 → force acquisition offer preconditions (phase 3, brand 40, 1 ret)")
+			# Satın alma teklifi ön şartları.
 			GameState.set_phase(3)
 			GameState.set_brand(40)
 			GameState.vc_rejections = maxi(GameState.vc_rejections, 1)
 		KEY_F5:
-			# Ctrl+F5 (çıplak F5 hızlı kayda taşındı — bkz. _input üstü).
-			print("[Debug] Ctrl+F5 → cash -1000 (Kepenk starts next daily tick)")
+			# Kepenk bir sonraki günlük tikte başlar.
 			GameState.set_cash(-1000)
 		KEY_F6:
-			print("[Debug] F6 → brand collapse preconditions (brand 10, scandal, 30 gün geride)")
+			# Marka çöküşü ön şartları.
 			GameState.set_brand(10)
 			GameState.active_scandal = true
 			GameState.brand_low_since_day = maxi(1, GameState.day - 30)
 		KEY_F7:
-			print("[Debug] F7 → cascade preconditions (3 ret, ölü metrikler)")
+			# Kaskad ön şartları: 3 ret, ölü metrikler.
 			GameState.vc_rejections = 3
 			GameState.set_mrr(0)
 		KEY_F8:
-			# Kârlılık KOŞULU — 6 artıda ay kapanışı (marj %20) + MRR
-			# tabanı tohumlanır; canlı MRR slot-4 köprüsüyle yazıldığından bir sonraki günlük
-			# tikte bitiş ateşler (eski F8'in de notuydu).
-			print("[Debug] F8 → kârlılık koşulu ön şartları (%d artıda ay, marj %%20, MRR %d)" % [
-				EndingsSystem.PROFIT_STREAK_MONTHS, EndingsSystem.BOOTSTRAP_WIN_MRR])
+			# Kârlılık koşulu: PROFIT_STREAK_MONTHS artıda ay kapanışı (marj %20) + MRR tabanı.
 			GameState.month_history.clear()
 			for i in EndingsSystem.PROFIT_STREAK_MONTHS:
 				GameState.push_month_close({"start_day": 1 + i * 30, "end_day": 30 + i * 30,
@@ -269,11 +178,10 @@ func _debug_endgame_key(keycode: Key) -> void:
 			if GameState.cash < 0:
 				GameState.set_cash(1000)
 		KEY_F9:
-			# Ctrl+F9 (çıplak F9 hızlı yüklemeye taşındı — bkz. _input üstü).
-			print("[Debug] Ctrl+F9 → yumuşak tavan arifesi (gün %d)" % (EndingsSystem.SOFT_CAP_DAY - 1))
+			# Yumuşak tavan arifesi.
 			GameState.day = EndingsSystem.SOFT_CAP_DAY - 1
 		KEY_F10:
-			print("[Debug] F10 → pivot offer preconditions (3 ret, canlı metrikler)")
+			# Pivot teklifi ön şartları: 3 ret, canlı metrikler.
 			GameState.vc_rejections = 3
 			GameState.set_mrr(3000)
 			if GameState.cash <= 0:

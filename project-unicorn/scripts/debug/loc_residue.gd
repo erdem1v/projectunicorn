@@ -98,7 +98,7 @@ var _re_trcall: RegEx
 
 func _initialize() -> void:
 	_re_trcall = _make("\\btr\\(")
-	_re_logcall = _make("\\b(print|prints|printerr|print_rich|push_warning|push_error|assert)\\s*\\(")
+	_re_logcall = _make("\\b(print|prints|printerr|print_rich|push_warning|push_error|assert|_shot_fail)\\s*\\(")
 	_re_quoted = _make("\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"")
 	_re_trchar = _make("[çğıöşüÇĞİÖŞÜ]")
 	_re_word = _make("(?i)\\b(" + "|".join(TR_ASCII_WORDS) + ")\\b")

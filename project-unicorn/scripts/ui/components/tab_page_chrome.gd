@@ -1,15 +1,10 @@
 class_name TabPageChrome
 extends VBoxContainer
 
-# Sekme sayfası kabuğu (ODA rework §2): her tam-sayfa sekmenin üstüne ince koyu
-# şerit (ChromePageStrip) + sağda tek "ODAYA DÖN  ✕" ghost butonu koyar; sekme
-# instance'ı PageHost'ta DEĞİŞMEDEN yaşar (sekme içi sıfır düzenleme — şerit
-# ayrı bant olduğu için HR'ın sağ-üst butonu / Sales'in sağa yaslı metrikleriyle
-# çakışamaz). Kapatma tek kanala düşer: EventBus.tab_changed("") — Esc ve
-# aktif-sekmeye-tekrar-tıklama da aynı sinyale çıkar, router tek yerden dinler.
-#
-# Dışarıdan preload ile erişilir (center_viewport.gd) — global class cache'e
-# bağımlılık bırakmamak için (yeni class_name + headless koşu tuzağı).
+# Sekme sayfası kabuğu: sayfanın üstüne ince koyu şerit (ChromePageStrip) + sağda tek
+# "ODAYA DÖN  ✕" butonu. Sekme instance'ı PageHost'ta DEĞİŞMEDEN yaşar; şerit ayrı bant
+# olduğu için sayfanın sağ-üst öğeleriyle çakışamaz. Kapatma EventBus.tab_changed("")'dir.
+# Dışarıdan preload ile erişilir: global class cache'e bağımlılık yok (headless tuzağı).
 
 
 static func wrap(page: Control) -> TabPageChrome:
@@ -36,8 +31,8 @@ func _build(page: Control) -> void:
 	var close_btn := Button.new()
 	close_btn.name = "CloseBtn"
 	close_btn.theme_type_variation = &"ChromeGhost"
-	# Space asla bu butona düşmesin: ui_accept blind-close yasağı (Kepenk vakası)
-	# + game_shell Space toggle'ı odak butonda takılmasın.
+	# Space asla bu butona düşmesin: ui_accept kör-kapatma yasağı, ve game_shell'in
+	# Space hız toggle'ı odaklı butonda takılmasın.
 	close_btn.focus_mode = Control.FOCUS_NONE
 	close_btn.text = "%s  ✕" % tr("ODA_RETURN")
 	close_btn.pressed.connect(_on_close_pressed)

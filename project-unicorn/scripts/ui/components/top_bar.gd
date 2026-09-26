@@ -1,20 +1,16 @@
 extends Panel
 
-# Persistent stat strip.
-# Reads GameState on _ready, then updates via EventBus signals.
-#
-# Design notes (skill-driven):
-#  - No emoji icons — text labels instead (minimalist-ui directive).
-#  - Typographic hierarchy: Cash + CompanyName at 15px, other stats at 13px,
-#    secondary metrics in dimmer tinted neutral (impeccable §typography).
-#  - Phase indicator: 3-segment dot bar + active phase name label
-#    (replaces the earlier 3-Panel strip that overflowed).
-#  - Speed buttons: transparent idle / subtle hover / walnut active
-#    (emil-design-eng §buttons must feel responsive).
+# Persistent stat strip: paints from GameState on _ready, then follows EventBus signals.
+# Active/idle look comes from theme variations (PhaseDotActive/PhaseDotDim,
+# SpeedButtonActive/SpeedButton).
 
-# Ruled identical in both locales (gate ruling 2026-08-08) — these are the canon terms,
-# not translatable copy. Keys all the same, so nothing in a scene or script holds the words.
+# Canon terms, identical in both locales — keys only so no scene or script holds the words.
 const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SERIES_A"]
+
+# Yoğunluk kademesi: %150 UI ölçeği 1080p'de mantıksal viewport'u 1280×720'ye düşürür ve
+# içerik ~1331px ölçülür; şirket adı soldan, 2x/3x tuşları sağdan taşardı. Şerit bu
+# genişliğin altında KIRPILMAZ, SIKIŞIR. [WORKING] ölçülen taşmanın üstündeki ilk yuvarlak adım.
+const COMPACT_BELOW := 1600
 
 @onready var company_name_label: Label = $Margin/Row/IdentityGroup/CompanyNameLabel
 @onready var logo_square: ColorRect = $Margin/Row/IdentityGroup/LogoSquare
@@ -45,101 +41,55 @@ const PHASE_KEYS := ["FIN_PHASE_BOOTSTRAP", "FIN_PHASE_TRACTION", "FIN_PHASE_SER
 	$Margin/Row/TimeGroup/SpeedControls/Speed3Btn,
 ]
 
-# Local mirror of TimeManager.current_speed kept purely for visual paint.
-# Never set this directly — speed flows through EventBus.speed_change_requested
-# → TimeManager._on_speed_change_requested → TimeManager.speed_changed →
-# _on_time_manager_speed_changed (round-trip). That round-trip is what keeps
-# the indicator honest after event-pause restore, build commits, etc.
-var current_speed: int = 1  # 0=pause, 1=1x, 2=2x, 3=3x (4x removed 2026-08-19)
-# Son teklif geri sayımı. Yalnız kendi sinyali geldiğinde boyanan tek çip bu; renk
-# körü paleti takas edildiğinde yeniden boyayabilmek için değeri hatırlıyoruz
-# (sinyalin kendisi tekrar atmaz). -1 = çip gizli.
+# Teklif geri sayımının sinyali yeniden atmaz; dil ya da palet değişince çipi yeniden
+# boyayabilmek için son değer burada tutulur. -1 = çip gizli.
 var _offer_days_left: int = -1
-
-# Active/idle look is driven by theme type variations (master_theme.tres):
-# PhaseDotActive/PhaseDotDim and SpeedButtonActive/SpeedButton.
 
 
 func _ready() -> void:
-	# Initial paint from current GameState
+	logo_square.color = UiTokens.ACCENT
 	_refresh_all()
 
-	# Subscribe to state changes (tree-enter)
 	EventBus.cash_changed.connect(_on_cash_changed)
 	EventBus.mrr_changed.connect(_on_mrr_changed)
 	EventBus.burn_changed.connect(_on_burn_changed)
 	EventBus.runway_recalculated.connect(_on_runway_changed)
 	EventBus.brand_changed.connect(_on_brand_changed)
 	EventBus.reputation_changed.connect(_on_reputation_changed)
-	EventBus.day_advanced.connect(_on_day_advanced)
-	EventBus.hour_changed.connect(_on_hour_changed)
+	EventBus.day_advanced.connect(_update_day_label.unbind(1))
+	EventBus.hour_changed.connect(_update_day_label.unbind(1))
 	EventBus.phase_changed.connect(_on_phase_changed)
 	EventBus.shutter_changed.connect(_on_shutter_changed)
 	EventBus.offer_countdown_changed.connect(_on_offer_countdown_changed)
-	TimeManager.speed_changed.connect(_on_time_manager_speed_changed)
-	EventBus.language_changed.connect(_on_language_changed)
-	EventBus.palette_changed.connect(_on_palette_changed)
-	# Kepenk counter is danger-red on the dark chrome (bright variant for contrast).
-	shutter_label.add_theme_color_override("font_color", UiTokens.negative_bright())
-	# Initial sync — TimeManager's _ready ran first (autoload order) and the
-	# field is whatever it landed on (default 1, or main.gd may have already
-	# emitted 0 to pause for onboarding before we got here).
-	current_speed = TimeManager.current_speed
-
+	# Kod tarafında bestelenen metin (runway durumu, sayaçlar) ve örnek başına renk
+	# override'ları kendiliğinden dönmez; ikisi de yeniden okunarak yenilenir.
+	EventBus.language_changed.connect(_refresh_all.unbind(1))
+	EventBus.palette_changed.connect(_refresh_all.unbind(1))
+	# Hız yalnız TimeManager üzerinden gidip gelir (speed_change_requested → speed_changed);
+	# gösterge buradan boyanır ki olay-duraklatma dönüşü gibi başka değiştiriciler de görünsün.
+	TimeManager.speed_changed.connect(_apply_speed_visual)
 	for i in speed_btns.size():
 		speed_btns[i].pressed.connect(_on_speed_button.bind(i))
 
-	# Marka karesi token'dan boyanır. Sahnede ham bir amber literali duruyordu ve
-	# Terminal'e geçerken sessizce ESKİ amber'de kalmıştı — renk artık tek yerden.
-	logo_square.color = UiTokens.ACCENT
-	# Yoğunluk kademesi: mantıksal viewport daraldığında şerit KIRPILMAZ, SIKIŞIR.
 	get_viewport().size_changed.connect(_apply_density)
 	_apply_density()
 
 
-# --- Yoğunluk kademesi -------------------------------------------------------
-# Mockup 1920 mantıksal genişliğe çizildi ve o genişlikte birebir uygulanıyor.
-# Ama %150 UI ölçeği 1080p'de mantıksal viewport'u 1280×720'ye DÜŞÜRÜR ve ölçülen
-# içerik ~1331px: şirket adı soldan, 2x/3x tuşları sağdan taşardı. Hız kontrolünü
-# kaybetmek kozmetik değil işlevsel bir kayıp, o yüzden şerit dar viewport'ta
-# kendini toplar. Bu, DisplaySettings'in ölçek kapısını genişletmenin ön koşulu.
-const COMPACT_BELOW := 1600   # WORKING — ölçülen taşma sınırının üstünde ilk yuvarlak adım
+func _is_compact() -> bool:
+	return get_viewport_rect().size.x < float(COMPACT_BELOW)
+
 
 func _apply_density() -> void:
-	if not is_inside_tree():
-		return
-	var logical_w: float = get_viewport_rect().size.x
-	var compact: bool = logical_w < float(COMPACT_BELOW)
+	var compact: bool = _is_compact()
 	company_name_label.visible = not compact
-	# Sayı sütunlarının nefesi: 28 → 18. Sütunların KENDİSİ hiç gitmez — hiçbir
-	# sayı gizlenmez, yalnız aralarındaki boşluk daralır.
+	# Sütunlar hiç gitmez, hiçbir sayı gizlenmez; yalnız aralarındaki boşluk daralır.
 	var gap: int = 18 if compact else 28
 	finance_group.add_theme_constant_override("separation", gap)
 	reputation_group.add_theme_constant_override("separation", gap)
 	time_group.add_theme_constant_override("separation", 10 if compact else 16)
-	# Tarih kısa biçime düşer: "Paz, 4 Oca 2026 · 14:00" → "4 Oca · 14:00".
 	day_label.custom_minimum_size.x = 0.0 if compact else 210.0
 	_update_day_label()
 
-
-func _exit_tree() -> void:
-	EventBus.cash_changed.disconnect(_on_cash_changed)
-	EventBus.mrr_changed.disconnect(_on_mrr_changed)
-	EventBus.burn_changed.disconnect(_on_burn_changed)
-	EventBus.runway_recalculated.disconnect(_on_runway_changed)
-	EventBus.brand_changed.disconnect(_on_brand_changed)
-	EventBus.reputation_changed.disconnect(_on_reputation_changed)
-	EventBus.day_advanced.disconnect(_on_day_advanced)
-	EventBus.hour_changed.disconnect(_on_hour_changed)
-	EventBus.phase_changed.disconnect(_on_phase_changed)
-	EventBus.shutter_changed.disconnect(_on_shutter_changed)
-	EventBus.offer_countdown_changed.disconnect(_on_offer_countdown_changed)
-	TimeManager.speed_changed.disconnect(_on_time_manager_speed_changed)
-	EventBus.language_changed.disconnect(_on_language_changed)
-	EventBus.palette_changed.disconnect(_on_palette_changed)
-
-
-# --- Refresh helpers ---
 
 func _refresh_all() -> void:
 	company_name_label.text = GameState.company_name
@@ -152,137 +102,94 @@ func _refresh_all() -> void:
 	_update_day_label()
 	_on_phase_changed(GameState.phase)
 	_on_shutter_changed(GameState.shutter_days_left)
-	_apply_speed_visual(current_speed)
+	_on_offer_countdown_changed(_offer_days_left)
+	_apply_speed_visual(TimeManager.current_speed)
 
-
-# --- Signal handlers ---
 
 func _on_cash_changed(value: int) -> void:
-	cash_value_label.text = UiTokens.format_money_exact(value)   # full number w/ separators (not abbreviated)
+	cash_value_label.text = UiTokens.format_money_exact(value)
+
 
 func _on_mrr_changed(value: int) -> void:
 	mrr_value_label.text = UiTokens.format_money_chip(value)
-	_refresh_net()  # net = mrr − burn
+	_refresh_net()
+
 
 func _on_burn_changed(value: int) -> void:
-	# Burn is a daily cost; caption + dim "/d" unit convey the rate (value stays cream).
 	burn_value_label.text = UiTokens.format_money_chip(value)
 	_refresh_net()
 
+
 func _refresh_net() -> void:
-	# Net daily flow (mrr − burn), sign-colored on the dark chrome. The "/d" unit
-	# is a static dim suffix in the scene.
+	# Günlük net akış (mrr − burn), işaret renkli; "/d" birimi sahnede sabit.
 	var net: int = GameState.get_net_daily_flow()
 	var sign_str: String = "+" if net > 0 else ("-" if net < 0 else "")
 	net_value_label.text = "%s%s" % [sign_str, UiTokens.format_money_chip(absi(net))]
 	net_value_label.add_theme_color_override("font_color", UiTokens.delta_color_bright(net))
 
+
 func _on_runway_changed(months: float) -> void:
-	# Net runway (Package 5): profitable (net_burn ≤ 0) → status word ("Artıda"), unit hidden;
-	# else whole months. All formatting/localization lives in UiTokens.net_runway_parts.
 	var p: Dictionary = UiTokens.net_runway_parts(months)
 	runway_value_label.text = String(p.value)
 	runway_unit_label.text = String(p.unit)
 	runway_unit_label.visible = String(p.unit) != ""
-	# ARTIDA convention (Finance Tab v1): status green + the why as a hover note.
-	if bool(p.get("positive", false)):
+	# Kârlı: durum kelimesi yeşil, nedeni hover notunda (Label varsayılanı IGNORE, tooltip hover ister).
+	var positive: bool = bool(p.get("positive", false))
+	if positive:
 		runway_value_label.add_theme_color_override("font_color", UiTokens.positive_bright())
-		runway_value_label.tooltip_text = String(p.get("note", ""))
-		runway_value_label.mouse_filter = Control.MOUSE_FILTER_STOP  # Labels default IGNORE; tooltip needs hover
 	else:
 		runway_value_label.remove_theme_color_override("font_color")
-		runway_value_label.tooltip_text = ""
-		runway_value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	runway_value_label.tooltip_text = String(p.get("note", "")) if positive else ""
+	runway_value_label.mouse_filter = Control.MOUSE_FILTER_STOP if positive else Control.MOUSE_FILTER_IGNORE
 
-
-func _on_language_changed(_locale: String) -> void:
-	# Re-translate live surfaces (the runway status word) on a language switch.
-	_refresh_all()
-
-func _on_palette_changed(_cb: bool) -> void:
-	# Colourblind palette swapped. The three semantic tints on the chrome are
-	# per-instance color overrides, so they only move when re-read: the kepenk
-	# counter is set once at tree-enter (re-set here), the runway ARTIDA green and
-	# the offer countdown are both re-derived by _refresh_all.
-	shutter_label.add_theme_color_override("font_color", UiTokens.negative_bright())
-	_on_offer_countdown_changed(_offer_days_left)
-	_refresh_all()
 
 func _on_brand_changed(value: int) -> void:
 	brand_value_label.text = "%d" % value
 
+
 func _on_reputation_changed(value: int) -> void:
 	rep_value_label.text = "%d" % value
 
-func _on_day_advanced(_new_day: int) -> void:
-	# Day + hour formatted together; reads current_hour from GameState (which
-	# was reset to 0 just before advance_day, see TimeManager._drain_boundaries).
-	_update_day_label()
-
-func _on_hour_changed(_hour: int) -> void:
-	_update_day_label()
-
-# The weekday and month words, and the ORDER they go in, are Fmt's — DATE_LINE is
-# "{dow}, {day} {mon} {year}" in Turkish and "{dow}, {mon} {day}, {year}" in English, which
-# is exactly the kind of difference a local table cannot express. This file used to keep its
-# own DOW_ABBR_TR and slice month_name_tr() to three characters, so the shell clock stayed
-# Turkish in the English build long after Fmt existed.
-# Mockup: "Çar, 9 Eyl 2026 · 10:00".
-
-
-func _display_date() -> String:
-	return Fmt.date_line(GameState.get_date_dict())
-
 
 func _update_day_label() -> void:
-	# In-fiction date (TR): "Çar, 9 Eyl 2026 · 10:00". Dar viewport'ta gün adı ve
-	# yıl düşer — "9 Eyl · 10:00". Bilgi kaybı yok: yıl zaten ay sonu özetinde,
-	# gün adı ise hiçbir kararın girdisi değil.
+	# Dar viewport'ta gün adı ve yıl düşer ("9 Eyl · 10:00"): yıl ay sonu özetinde zaten var,
+	# gün adı hiçbir kararın girdisi değil. Kelimeler ve sıraları Fmt'nindir.
 	var d: Dictionary = GameState.get_date_dict()
-	var compact: bool = is_inside_tree() and get_viewport_rect().size.x < float(COMPACT_BELOW)
-	if compact:
+	var hour: String = "%02d" % GameState.current_hour
+	if _is_compact():
 		day_label.text = tr("TOPBAR_CLOCK_COMPACT").format({
-			"day": int(d.day), "mon": Fmt.month_abbr(int(d.month)),
-			"hour": "%02d" % GameState.current_hour})
+			"day": int(d.day), "mon": Fmt.month_abbr(int(d.month)), "hour": hour})
 	else:
-		day_label.text = tr("TOPBAR_CLOCK").format({
-			"date": _display_date(), "hour": "%02d" % GameState.current_hour})
+		day_label.text = tr("TOPBAR_CLOCK").format({"date": Fmt.date_line(d), "hour": hour})
+
 
 func _on_shutter_changed(days_left: int) -> void:
-	# Kepenk counter: visible red countdown while cash
-	# is under zero. -1 = inactive/cleared → hidden.
+	# Kepenk sayacı: kasa eksideyken kırmızı geri sayım; -1 = gizli.
 	shutter_label.visible = days_left >= 0
+	shutter_label.add_theme_color_override("font_color", UiTokens.negative_bright())
 	if days_left >= 0:
 		shutter_label.text = tr("FIN_SHUTTER_COUNTDOWN").format({"n": days_left})
 
+
 func _on_offer_countdown_changed(days_left: int) -> void:
-	# Term-sheet validity chip: shown only when the soonest sheet
-	# is ≤ WARNING_DAYS. Amber above 1 day, red on the last day. -1 = hide.
+	# Term sheet geçerlilik çipi: son günden önce amber, son gün kırmızı; -1 = gizli.
 	_offer_days_left = days_left
 	offer_label.visible = days_left >= 0
 	if days_left >= 0:
 		offer_label.text = tr("FIN_OFFER_COUNTDOWN").format({"n": days_left})
 		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT if days_left > 1 else UiTokens.negative_bright())
 
+
 func _on_phase_changed(new_phase: int) -> void:
 	var idx: int = clampi(new_phase - 1, 0, PHASE_KEYS.size() - 1)
-	# RAW to_upper on purpose: these are the English canon terms in both locales, and
-	# Fmt.upper's Turkish branch would turn "Traction" into "TRACTİON".
+	# Ham to_upper bilerek: İngilizce kanon terim; Fmt.upper'ın Türkçe dalı "TRACTİON" yapardı.
 	phase_name_label.text = tr(PHASE_KEYS[idx]).to_upper()
 	for i in phase_dots.size():
 		phase_dots[i].theme_type_variation = &"PhaseDotActive" if i <= idx else &"PhaseDotDim"
 
 
 func _on_speed_button(idx: int) -> void:
-	# Don't paint here — round-trip through TimeManager and let speed_changed
-	# repaint us. Otherwise post-event restore or other speed changers leave
-	# the indicator stale (the original bug).
 	EventBus.speed_change_requested.emit(idx)
-
-
-func _on_time_manager_speed_changed(new_speed: int) -> void:
-	current_speed = new_speed
-	_apply_speed_visual(new_speed)
 
 
 func _apply_speed_visual(active_idx: int) -> void:
