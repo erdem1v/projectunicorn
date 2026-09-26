@@ -1,4 +1,4 @@
-[gd_resource type="Theme" format=3]
+[gd_resource type="Theme" format=3 uid="uid://c7trkvs4w1y6k"]
 
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/mono_reg.tres" id="1_hvnl2"]
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/serif_sb.tres" id="2_ad55v"]
@@ -8,9 +8,9 @@
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/mono_label.tres" id="6_rlutd"]
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/sans_sb.tres" id="7_1ssso"]
 [ext_resource type="FontVariation" path="res://assets/fonts/variations/mono_sb.tres" id="7_227fx"]
-[ext_resource type="Texture2D" path="res://assets/icons/slider_grabber.svg" id="8_ad55v"]
-[ext_resource type="Texture2D" path="res://assets/icons/switch_on.svg" id="9_1ovwd"]
-[ext_resource type="Texture2D" path="res://assets/icons/switch_off.svg" id="10_227fx"]
+[ext_resource type="Texture2D" uid="uid://du0il0ydwpq6c" path="res://assets/icons/slider_grabber.svg" id="8_ad55v"]
+[ext_resource type="Texture2D" uid="uid://j4rdww3hhtmg" path="res://assets/icons/switch_on.svg" id="9_1ovwd"]
+[ext_resource type="Texture2D" uid="uid://ctqtnan32ec2n" path="res://assets/icons/switch_off.svg" id="10_227fx"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_227fx"]
 bg_color = Color(0.22, 0.188, 0.149, 1)
