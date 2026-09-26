@@ -199,7 +199,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Sahip:** sınıf `EndingsSystem`, `EndingsCopy`, `EndingScene`; autoload yok
 - **Giriş:**
   - `EndingsSystem.daily_tick` terminal koşulları öncelik sırasıyla tarar. Bitiş `trigger_ending`, kilometre taşı `trigger_milestone` ile tetiklenir.
-  - `build_scope()` build kapsamını (`BUILD_DEMO`, `BUILD_EA`, `BUILD_FULL`) export'ta özellik etiketinden (`ea`/`full`), debug build'de `--build=`'den (komut satırı ya da `main_args`) okur; etiketsiz ise demo. Smoke ve probe `build_scope_override` ile demoya sabitler. `ending_mode`, `bootstrap_milestone_taken`, `profitability_signal`, `acquisition_valuation`, `road_over`.
+  - `build_scope()` build kapsamını (`BUILD_DEMO`, `BUILD_EA`, `BUILD_FULL`) export'ta özellik etiketinden (`ea`/`full`), debug build'de `--build=`'den (komut satırı ya da `main_args`) okur; etiketsiz ise demo. Smoke ve probe `build_scope_override` ile demoya sabitler; kart havuzu da aynı sabitlemeyi izler. Projede henüz export ön ayarı yok: `ea` etiketi olmayan bir EA export'u demo gibi davranır. `ending_mode`, `bootstrap_milestone_taken`, `profitability_signal`, `acquisition_valuation`, `road_over`.
   - `EndingsCopy.build` gazete görünümünü üretir; `EndingScene` yalnız onu boyar.
   - UI yolu: `EventBus.run_ended`, `milestone_reached` → `main.gd`.
   - Smoke'a sabit (başlıcası; bkz. Araçlar > Smoke): `trigger_ending` imzası (`event_i3_no_silent_loss`).
@@ -215,7 +215,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
   - Tek giriş `EventGate.request(id, ctx)`. Ayrıca `resolve`, `daily_tick` / `hourly_tick` (TimeManager), `condition_met` / `condition_reason` (kilitli satırlar), `desk_papers` / `open_paper` (ODA), `active_id` / `active_context`, `remove_queued`, `to_dict` / `from_dict`.
   - Sunum: `EvPresenter.build_view` → `EventBus.modal_requested` → `main.gd` → `event_modal.gd` → seçim `EventGate.resolve`.
   - EventBus sinyalleri motora `EvSignals.BINDINGS` ile bağlanır. Okumalar yalnız adlı seam'lerden geçer (`EvSeams.read`); seam adları alan dosyalarında (`seams_*.gd`) kayıtlıdır.
-  - Kapsam: `EvTuning.SHIPPED_SCOPES` hangi `version_scope` değerlerinin havuza girdiğini belirler.
+  - Kapsam: `EvTuning.SHIPPED_SCOPES` hangi `version_scope` değerlerinin havuza girdiğini belirler; değeri `EndingsSystem.shipped_scopes()`'tan (`SHIPPED_SCOPES_BY_BUILD`: demo ⊂ ea ⊂ full) gelir ve `build_scope_override`'ı izler.
   - Efekt rozetlerinin tek kurucusu `event_modal._describe_modifier`. Smoke `SILENT_VERBS` sabitini okur.
 - **Smoke:** `event_*`, `ambient_*`, `harness_sniffer_matches_run_log`, `source_tag_speaker_wins`.
 - **Probe:** `FIRE`, `PICK`, `TALLY_BEGIN` / `TALLY` / `TALLY_END`, `WEEK`, `ERROR` (drain koruması, kilitsiz seçeneği olmayan kart).

@@ -101,10 +101,6 @@ const BUDGETS := {
 	"frank_aphorism": 2,
 }
 
-# --- §18 Ticker ------------------------------------------------------------
-
-const TICKER_CAPACITY := 20
-
 # --- §13.7 The calibration anchor ------------------------------------------
 #
 # NOT a tuning value — a MEASUREMENT TARGET. The harness reports against it; nothing branches
@@ -115,8 +111,7 @@ const ANCHOR_MAX_INTERRUPTS_PER_3_MIN := 3
 
 # --- Build scope -----------------------------------------------------------
 
-## Which version_scope values ship in this build; content marked ea/full stays out of the pool.
-##
-## A `static var` only because the engine probe and smoke widen it to admit `fixture` scope for
-## their own run. Production code reads it and never writes.
-static var SHIPPED_SCOPES: Array = ["demo"]
+## Which version_scope values ship in this build; EndingsSystem.shipped_scopes() owns the answer.
+## A `static var` because the engine probe and smoke widen it to admit `fixture`, and
+## EndingsSystem.build_scope_override re-derives it.
+static var SHIPPED_SCOPES: Array = EndingsSystem.shipped_scopes()

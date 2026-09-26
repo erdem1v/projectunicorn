@@ -26,10 +26,10 @@ ONERI_v3'ün, D ve B numaraları ACIK_KARARLAR_D1-D13'ün numaralarıdır; ikisi
 | SEAM_REGISTRY | `6e3e190:project-unicorn/docs/SEAM_REGISTRY.md` |
 | eski CLAUDE.md | `6e3e190:project-unicorn/CLAUDE.md` |
 
-## Temizlik dalgası 1'den çıkanlar
+## Temizlikten çıkanlar
 
-Temizlikte bulunan ve kodda doğrulanan maddeler. 5. madde bu dalganın `tempo.gd` düzeltmesinin yan etkisidir; öbürleri
-dalgadan önce de vardı. 7. madde doğrulama sırasında bulundu. Kayıt biçimine dokunan tek seçenek 3A'dır.
+Temizlikte bulunan ve kodda doğrulanan maddeler. 5. madde dalga 1'in `tempo.gd` düzeltmesinin yan etkisidir; 7. madde
+doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
 
 - **1 · İŞKOLİK huyu etkisiz.**
   - Ne oluyor: Huyun tek etkisi olan `overtime_morale_mult` (0,5) anahtarını hiçbir kod okumuyor; huy okumaları
@@ -139,6 +139,21 @@ dalgadan önce de vardı. 7. madde doğrulama sırasında bulundu. Kayıt biçim
   - Seçenekler: A) Yapıma atananlar için yapımın aktif liderinin Liderlik'i, öbürleri için kurucununki okunur. B) Kalır;
     §4.2 ve §7.1 kurucuyu tek kaynak diye güncellenir.
   - Kaynak: Ekip GDD §4.2, §7.1.
+
+- **8 · EvTicker'ın tuttuğu oyuncu-sonucu satırlarını kimse okumuyor.**
+  - Ne oluyor: EvTicker.push, PRIORITY_PLAYER satırlarını _held listesine ekliyor ve kayda yazıyor (EvSave, anahtar
+    'held'). Ama projede _held'i okuyan ya da gösteren hiçbir yüzey yok. Motor GDD §18.3 'oyuncu-sonucu satırları asla
+    düşürülmez' diyor; satırlar düşmüyor, ama hiçbir yerde görünmüyor da. Haber akışı tamponu dolunca aynı satır
+    arşive girmiyor.
+  - Nerede: `scripts/events/present/ticker.gd` (`_held`, `push`, `to_dict` / `from_dict`),
+    `scripts/events/core/save.gd` (`held` alanı).
+  - Oyuncuya etkisi: Tampon doluyken gelen bir oyuncu-sonucu satırı (expire_note, karar teyidi) canlı şeritte bir kez
+    kayar, sonra geri bakılacak bir yerde kalmaz. Aynı sonuç History'de varsa (§18.1) kayıp yalnız ticker
+    arşivindedir.
+  - Seçenekler: (a) _held'i bir yüzeye bağla (ör. haber akışı arşivinde öncelikli satır ya da History). (b) _held'i
+    emekliye ayır ve §18.3'ü 'oyuncu-sonucu History'de durur' diye yaz. (c) Haber akışı tamponunda oyuncu-sonucu
+    satırına öncelik ver.
+  - Kaynak: Olay motoru GDD §18.1, §18.3; motor GDD §18.2 koda göre yeniden yazılırken görüldü.
 
 ## Tasarım ve denge
 
@@ -346,18 +361,9 @@ dalgadan önce de vardı. 7. madde doğrulama sırasında bulundu. Kayıt biçim
 
 ## Kod ve test altyapısı
 
-- **İki build kaynağı.** Kart kapsamı `EvTuning.SHIPPED_SCOPES` her build'de `["demo"]`; build'i okuyan yalnız sonlar
-  (`EndingsSystem.build_scope()`). İlk `ea` kapsamlı kart gelmeden ikisi tek kaynağa bağlanmalı, yoksa o kart EA build'de
-  hiç gelmez. Projede export ön ayarı henüz yok; `ea` etiketi olmayan bir EA export'u demo gibi davranır.
-  Kaynak: SONLAR_GAZETE_MODLAR §U.2 ve §U.4 madde 2, RAPOR_LOKAL "Onay bekliyor" madde 3.
-
 - **EA/tam'da kalan "yakında" izleri.** Av'daki kilitli "— · Tier 2'de" fon satırı (`InvestorRegistry` `locked_tier2`)
   ve Pazarlama sekmesinin koşulsuz `"lock": "ea"` kilidi her build'de görünüyor. Seçenekler: build kapsamına bağla ya da
   olduğu gibi bırak. Kaynak: SONLAR_GAZETE_MODLAR §U.4 madde 3.
-
-- **`EvTuning.TICKER_CAPACITY`.** Hiçbir yer okumuyor. Olay motoru GDD §18.2 "kapasite ~20, taşınca en eski düşer" diyor.
-  `NewsFeedSystem`'in "biz" tamponu 10 satır ve taşınca en yeni satır düşüyor. Seçenekler: bağla ya da emekliye ayır
-  (GDD'yi günceller). Kaynak: SONLAR_GAZETE_MODLAR §6.2, SONLAR #19.
 
 - **`Chrome*` liste dışı kullanım.** Eski CLAUDE.md'nin onaylı listesi: TopBar, MonthSummary bandı, LeftTabs,
   TabPageChrome, tooltip kabuğu; ODA kendi donmuş temasından çözer. Liste dışında: Satış sekmesinin fiyat duruşu kadranı

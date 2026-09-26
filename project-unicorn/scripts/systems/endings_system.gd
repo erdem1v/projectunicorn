@@ -362,8 +362,20 @@ const BUILD_FULL := "full"
 const MODE_ENDING := "ending"
 const MODE_MILESTONE := "milestone"
 
-## Tests and debug shots set this to pin a build; "" reads the real one.
-static var build_scope_override: String = ""
+## The card version_scopes each build ships. Every build adds to the one before (ch14 §4–§5,
+## engine GDD §14.2), so an EA build still deals the demo's cards.
+const SHIPPED_SCOPES_BY_BUILD := {
+	BUILD_DEMO: [BUILD_DEMO],
+	BUILD_EA: [BUILD_DEMO, BUILD_EA],
+	BUILD_FULL: [BUILD_DEMO, BUILD_EA, BUILD_FULL],
+}
+
+## Tests and debug shots set this to pin a build; "" reads the real one. The card pool
+## (EvTuning.SHIPPED_SCOPES) follows the pin, so a run pinned to the demo never deals EA cards.
+static var build_scope_override: String = "":
+	set(v):
+		build_scope_override = v
+		EvTuning.SHIPPED_SCOPES = shipped_scopes()
 
 
 ## Which build this is. An EA or full export names itself with a custom feature tag
@@ -389,6 +401,11 @@ static func build_scope() -> String:
 				if v in [BUILD_DEMO, BUILD_EA, BUILD_FULL]:
 					return v
 	return BUILD_DEMO
+
+
+## The version_scopes this build's card pool admits.
+static func shipped_scopes() -> Array:
+	return SHIPPED_SCOPES_BY_BUILD[build_scope()].duplicate()
 
 
 ## True once this run has taken the bootstrap milestone AND this build treats it as one. The

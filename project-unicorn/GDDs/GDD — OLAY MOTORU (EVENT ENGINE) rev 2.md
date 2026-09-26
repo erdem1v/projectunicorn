@@ -461,7 +461,7 @@ BÜTÇE
 TİCKER
 
 ```
-  ticker_push(line_key, priority)   §18
+  EvTicker.push(line_key, priority, context)   §18
 ```
 
 DIŞ SİSTEM
@@ -1004,7 +1004,7 @@ event_engine:
   papers[]           {event_id, context, expires_on, opened_before}
   budgets            {name: kalan}
   tempo_window       son 7/30 günün ateşleme kayıtları
-  ticker_queue       §18
+  held               §18 oyuncu-sonucu satırları
 ```
 
 ### 16.2 Zamanlanmış geri çağrı ASLA fonksiyon değildir
@@ -1123,10 +1123,12 @@ Anlamlı bir sonuç ticker'a düşüyorsa, aynı sonuç **history'ye de yazılm�
 
 ### 18.2 Mekanik
 
-- Kendi **FIFO kuyruğu**, kapasite ~20, taşınca en eski düşer.
-- Motor tek çağrıyla besler: `ticker_push(line_key, context, priority)`.
+- Motor tek çağrıyla besler: `EvTicker.push(line_key, priority, context)`. Satır `EventBus.headline_added` ile yayılır.
+- Motorun **kendi kuyruğu ve kapasitesi yoktur**; kanalı haber akışı taşır. Ekrandaki şerit (`news_ticker.gd`) satırı hemen gösterir ve en yeni 6 canlı satırı tutar (`MAX_LIVE_LINES`).
+- `NewsFeedSystem` aynı satırı "biz" tamponuna alır: 10 satır (`BIZ_BUFFER_CAP`), günlük akışa en eskiden başlayarak ve akışın en çok beşte biri oranında boşaltılır. Tampon doluyken gelen **en yeni** satır tampona girmez (`biz_dropped` sayar); canlı şeritte zaten görünmüştür.
+- Oyuncu-sonucu satırları ayrıca `EvTicker`'da tutulur ve hiç düşmez (§18.3).
 - Motoru **asla bloklamaz**, tempo bütçesi **tüketmez**.
-- Kuyruk save'e yazılır (§16.1).
+- Save'e yazılan: `EvTicker`'ın tuttuğu oyuncu-sonucu satırları (§16.1 `held`) ve haber akışının durumu (`GameState.news_feed`: tampon ve akış).
 
 ### 18.3 Üç öncelik
 
@@ -1136,7 +1138,7 @@ Anlamlı bir sonuç ticker'a düşüyorsa, aynı sonuç **history'ye de yazılm�
 3. atmosfer         genel gürültü
 ```
 
-**Oyuncu-sonucu satırları asla düşürülmez.** Kuyruk doluysa önce atmosfer, sonra dünya satırı feda edilir.
+**Oyuncu-sonucu satırları asla düşürülmez.** Tampon doluyken öncelik ayırt edilmez, en yeni satır arşive girmez (§18.2); oyuncu-sonucu satırı `EvTicker`'da kalır.
 
 ## 19. ARAÇLAR
 
@@ -1285,7 +1287,7 @@ Bunlar de facto şablon olur, ve daha önemlisi **şemanın gerçekten yazılabi
 | F5 | goto_tab hedefi kilitli | No-op + W-lint |
 | F6 | Dil koşu ortasında değişti | Kuyruk metin saklamaz. Masadaki kağıt yeni dilde görünür |
 | F7 | Modifier listesi 4 satırı aştı | En büyük 4 gösterilir, kalanı "ve diğerleri" |
-| F8 | Ticker'a aynı anda çok satır | §18 FIFO + öncelik. Oyuncu-sonucu düşürülmez |
+| F8 | Ticker'a aynı anda çok satır | Haber akışı taşır (§18.2); tampon doluyken en yeni satır arşive girmez, oyuncu-sonucu `EvTicker`'da kalır |
 | F9 | Oyuncu yüzdeyi hover etmiyor | Yüzde zaten görünür. Modifier bilgisi opsiyonel derinliktir |
 | F10 | tutorial_active iken normal kart geçerli oldu | G2 reddeder. Havuz ve taban susar |
 
