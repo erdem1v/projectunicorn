@@ -1,13 +1,11 @@
 extends Control
 
-# Finance tab host (Finance Tab v1). A light-register shell with a segmented
-# control switching two sub-pages under one parent (the product_tab _show_state pattern):
-#   * Özet    — FinanceOzetView (Finance Tab v1 dashboard: nakit eğrisi, aylık akış,
-#     gider dağılımı, son işlemler, cap table, mentor uyarısı). The view owns its own
-#     signals and refresh; this host only tells it when it becomes the visible page.
-#   * Yatırım — the Series A Hunt panel (nests HuntTab.tscn). PHASE-GATED: locked before phase 3
-#     with the "Series A Hunt'ta açılır" telegraph, unlocked on phase_changed(3). This relocates
-#     the old standalone Yatırım rail tab (the lock moved off the rail onto this selector).
+# Finance tab host: a segmented control switching two sub-pages under one parent:
+#   * Özet    — FinanceOzetView (nakit eğrisi, aylık akış, gider dağılımı, son işlemler,
+#     cap table, mentor uyarısı). The view owns its own signals and refresh; this host only
+#     tells it when it becomes the visible page.
+#   * Yatırım — the Series A Hunt panel (nests HuntTab.tscn). Locked, with the
+#     FIN_SUBTAB_LOCKED telegraph as tooltip, until phase 3 or the seed door (_yatirim_locked).
 
 const HUNT_TAB := preload("res://scenes/tabs/HuntTab.tscn")
 
@@ -20,22 +18,21 @@ var _current: String = "ozet"
 
 func _ready() -> void:
 	_build()
-	EventBus.phase_changed.connect(_on_phase_changed)
-	EventBus.seed_door_opened.connect(_on_seed_door_opened)
-	# ODA kâğıt deep-link'i: oda YATIRIM kâğıdı tab_changed("finance") + bu
-	# sinyali ardışık emit eder; tab mount'u senkron olduğu için bu connect
-	# ikinci emit'ten önce hazırdır. _show_page'in faz bekçisi (yatirim, phase<3
-	# → erken dönüş) deep-link'i yapısal olarak güvenli kılar.
+	EventBus.phase_changed.connect(_apply_phase_lock)
+	EventBus.seed_door_opened.connect(_apply_phase_lock)
+	# Deep-link: ODA YATIRIM kâğıdı ve kartların goto_tab etkisi tab_changed("finance") + bu
+	# sinyali ardışık emit eder; tab mount'u senkron olduğu için bu connect ikinci emit'ten önce
+	# hazırdır. _show_page'in kilit bekçisi (_yatirim_locked → erken dönüş) deep-link'i güvenli kılar.
 	EventBus.finance_subpage_requested.connect(_show_page)
-	_apply_phase_lock(_yatirim_locked())
+	_apply_phase_lock()
 	_show_page("ozet")
 
 
 func _exit_tree() -> void:
-	if EventBus.phase_changed.is_connected(_on_phase_changed):
-		EventBus.phase_changed.disconnect(_on_phase_changed)
-	if EventBus.seed_door_opened.is_connected(_on_seed_door_opened):
-		EventBus.seed_door_opened.disconnect(_on_seed_door_opened)
+	if EventBus.phase_changed.is_connected(_apply_phase_lock):
+		EventBus.phase_changed.disconnect(_apply_phase_lock)
+	if EventBus.seed_door_opened.is_connected(_apply_phase_lock):
+		EventBus.seed_door_opened.disconnect(_apply_phase_lock)
 	if EventBus.finance_subpage_requested.is_connected(_show_page):
 		EventBus.finance_subpage_requested.disconnect(_show_page)
 
@@ -62,7 +59,7 @@ func _build() -> void:
 	seg.add_child(_ozet_btn)
 	seg.add_child(_yatirim_btn)
 
-	# Sub-page host — siblings toggled by visibility (product_tab _show_state pattern).
+	# Sub-page host — siblings toggled by visibility.
 	var host := Control.new()
 	host.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -87,10 +84,8 @@ func _make_segment(label: String, id: String) -> Button:
 
 func _show_page(id: String) -> void:
 	if id == "yatirim" and _yatirim_locked():   # LOC-DATA sub-page id
-		# THE PREDICATE, NOT A SECOND COPY OF THE RULE. Left as a literal `phase < 3`,
-		# this line silently swallows the seed door card's own deep link: the card fires
-		# goto_tab finance/yatirim, the segment unlocks, and the player lands on Özet
-		# with no explanation of why the thing Frank just told them about is not there.
+		# The lock predicate, not a literal `phase < 3`: the seed door card's goto_tab
+		# finance/yatirim must reach the page the door just unlocked.
 		return  # locked — the disabled button + tooltip already tell the player why
 	_current = id
 	_ozet_view.visible = id == "ozet"
@@ -102,7 +97,9 @@ func _show_page(id: String) -> void:
 		_ozet_view.refresh()  # görünür olurken taze boya — sinyaller görünmezken erken döner
 
 
-func _apply_phase_lock(locked: bool) -> void:
+# Connected to both phase_changed(int) and seed_door_opened(); the argument is unused.
+func _apply_phase_lock(_signal_arg = null) -> void:
+	var locked: bool = _yatirim_locked()
 	_yatirim_btn.disabled = locked
 	_yatirim_btn.tooltip_text = tr("FIN_SUBTAB_LOCKED") if locked else ""
 	if locked:
@@ -122,11 +119,3 @@ func _apply_phase_lock(locked: bool) -> void:
 ## expectation live here and outlast the door.
 func _yatirim_locked() -> bool:
 	return GameState.phase < 3 and not SeedRoundSystem.page_unlocked()
-
-
-func _on_seed_door_opened() -> void:
-	_apply_phase_lock(_yatirim_locked())
-
-
-func _on_phase_changed(_new_phase: int) -> void:
-	_apply_phase_lock(_yatirim_locked())

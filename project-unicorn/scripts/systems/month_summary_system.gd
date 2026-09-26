@@ -5,22 +5,20 @@ extends RefCounted
 #
 # At the end of every CALENDAR month (real 28/30/31-day months via
 # GameState.get_date_dict — never the economy constant DAYS_PER_MONTH), builds
-# a one-screen recap payload and emits EventBus.month_ended. main.gd mounts
-# MonthSummaryModal on it. Six beats across a run; doubles as the data seam
-# the newspaper ending screen will consume later (run counters live on
-# GameState and are write-only here — this summary shows MonthLedger deltas,
-# never the counters; two data shapes, two questions).
+# a one-screen recap payload and emits EventBus.month_ended; main.gd mounts
+# MonthSummaryModal on it. The recap shows month_ledger deltas, never the run-lifetime
+# counters (GameState.run_*).
 #
 # Ordering: slot 10 runs AFTER the endings scan (slot 9). If a terminal fired
 # the same day, run_active is already false and the summary is suppressed —
 # the ending wins. Kepenk active is deliberately NOT a
 # suppressor: the recap is most valuable mid-countdown.
-# The FISCAL CLOSE lands here too: the month that just ended
-# is pushed onto GameState.month_history before the recap, so slot 8 (the Series A gate's
-# growth streak) and slot 9 (the profitability condition) read the closed month the NEXT
-# day — a one-day lag, deliberate: the recap is seen before a month-driven gate or ending.
+# The FISCAL CLOSE lands here too: the month that just ended is pushed onto
+# GameState.month_history before the recap, so its readers in earlier slots (the event
+# engine's seams, the profitability condition at slot 9) read the closed month the NEXT
+# day — a one-day lag, deliberate: the recap is seen before a month-driven card or ending.
 #
-# Static, stateless (FinanceSystem pattern); all persistent state lives on
+# Static and stateless; all persistent state lives on
 # GameState: month_ledger (snapshot keys written by snapshot(); accrual keys by
 # the two accrue_* seams), month_history (the closed-month ring), month_highlight_*.
 
@@ -93,7 +91,7 @@ static func _build_summary_data() -> Dictionary:
 			{"month": Fmt.month_upper(int(closed.month)), "year": int(closed.year)}),
 		"day_range": TranslationServer.translate("MONTH_DAY_RANGE").format(
 			{"from": int(ledger.get("start_day", 1)), "to": GameState.day - 1}),
-		"phase_name": GameState.phase_display_name(GameState.phase),  # single home (game_state.gd)
+		"phase_name": GameState.phase_display_name(GameState.phase),
 		"mrr": {"from": int(ledger.get("mrr", 0)), "to": GameState.mrr},
 		"cash": {"from": int(ledger.get("cash", 0)), "to": GameState.cash},
 		"team": {"from": int(ledger.get("employees", 1)), "to": _team_size()},
@@ -108,7 +106,7 @@ static func _build_summary_data() -> Dictionary:
 
 static func _team_size() -> int:
 	# "Ekip" = founder + payroll employees; the mentor is an advisor, not team.
-	return 1 + CharacterRegistry.get_employees().size()
+	return 1 + CharacterRegistry.count_employees()
 
 
 # --- Debug (F11 / Shift+F11 in game_shell) ---
@@ -138,8 +136,7 @@ static func debug_force_summary(extreme: bool = false) -> void:
 
 
 static func _pick_frank_line(data: Dictionary) -> String:
-	# First matching rule, top-down. Working TR copy; content
-	# phase replaces. NPC register: short, dry, no scene-setting.
+	# First matching rule, top-down.
 	var mrr_delta: int = int(data.mrr.to) - int(data.mrr.from)
 	var cash_delta: int = int(data.cash.to) - int(data.cash.from)
 	var team_delta: int = int(data.team.to) - int(data.team.from)

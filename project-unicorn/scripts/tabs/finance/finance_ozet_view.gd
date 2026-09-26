@@ -2,7 +2,7 @@ class_name FinanceOzetView
 extends Control
 
 # ============================================================================
-# Finans sekmesi Özet sayfası (Finance Tab v1 — onaylı mockup "Finans · Nakit
+# Finans sekmesi Özet sayfası (onaylı mockup "Finans · Nakit
 # & Runway"). Kod-kurulu düzen, tscn yok (HR sekmesi idiomu). Router yok:
 # tek sayfa; kartlar iki kolonda.
 #
@@ -11,33 +11,27 @@ extends Control
 # get_optimistic_daily_net, GameState.get_cash_history, UiTokens.net_runway_parts).
 # Tek istisna BİÇİMLEME (formatters + tarih etiketi).
 #
-# Mockup'tan bilinçli sapmalar (yönetmen kararı, görev spec'i):
-#   * Mentor kartı KREM tonda (koyu değil); yalnız runway eşiğin altındayken.
-#   * Gider dağılımı GERÇEK kalemlerden (BURN_IDS) — Pazarlama/Ofis icat edilmez.
-#   * "TUR AÇ · SERIES A" yalnız KİLİTLİ durumda; tooltip gerçek kapı
-#     sabitlerinden okunur (PhaseGateSystem.GATES). Üç-durumlu makine sonraki iş.
+# Mockup'tan bilinçli sapmalar (yönetmen kararı):
+#   * Mentor kartı düz CardPanel; runway eşiğin altında ya da kepenk sayacı işlerken görünür.
+#   * Gider dağılımı yalnız GERÇEK kalemlerden — Pazarlama/Ofis rakamı icat edilmez.
+#   * "TUR AÇ · SERIES A" düğmesi yok: rakamsız "Yatırımcı iştahı" göstergesi (series_a_signal).
 #
-# Repaint modeli: cash_changed günlük tikin SON sinyalidir ve ring buffer +
-# transactions ledger'ları ondan ÖNCE yazılır (FinanceSystem.daily_tick /
-# apply_one_time_cost sıralaması) — hr_day_processed benzeri ek sinyal gerekmez.
+# Repaint modeli: FinanceSystem.daily_tick / apply_one_time_cost, ring buffer + transactions
+# ledger'larını cash_changed'den ÖNCE yazar; cash_changed repaint'i taze veri okur.
 # ============================================================================
 
 const RUNWAY_WARN_MONTHS := 6.0   # WORKING: mentor uyarısı eşiği (ay)
 const WARN_SNOOZE_DAYS := 14      # WORKING: ERTELE süresi (oyun günü)
 const SNOOZE_FLAG := "finance_runway_warn_snooze_until_day"
 const TX_SHOWN := 8               # WORKING: Son işlemler'de gösterilen satır sayısı
-# Mentor warning line: FIN_MENTOR_QUOTE in strings.csv. Not a const — a const is evaluated
-# when the file loads, and no locale exists yet. If RUNWAY_WARN_MONTHS moves, the copy has to
-# move with it (the sentence names the threshold in words).
 
-# Aralık düğmeleri: id -> {window: pencere gün sayısı (0 = tümü), horizon: projeksiyon günü}.
+# Aralık düğmeleri (bu sırayla): id -> {window: pencere gün sayısı (0 = tümü), horizon: projeksiyon günü}.
 # WORKING: horizon = pencere/3; TÜMÜ için 60.
 const RANGES := {
 	"6ay": {"label_key": "FIN_RANGE_6M", "window": 180, "horizon": 60},
 	"12ay": {"label_key": "FIN_RANGE_12M", "window": 360, "horizon": 120},
 	"tum": {"label_key": "FIN_RANGE_ALL", "window": 0, "horizon": 60},
 }
-const RANGE_ORDER := ["6ay", "12ay", "tum"]
 
 var _range: String = "6ay"
 
@@ -46,7 +40,7 @@ var _nakit_val: Label
 var _net_val: Label
 var _runway_val: Label
 var _runway_note: Label
-var _profit_progress: Label             # "Artıda · n/6 ay" — the profitability CONDITION's progress
+var _profit_progress: Label             # "Artıda · n/N ay" — the profitability CONDITION's progress
 var _curve: CashCurve
 var _range_btns: Dictionary = {}   # id -> Button
 var _legend_current: Control       # "mevcut gidiş" göstergesi — net >= 0 iken gizli
@@ -55,10 +49,8 @@ var _burn_list: VBoxContainer
 var _tx_list: VBoxContainer
 var _cap_founder_rect: ColorRect
 var _cap_investor_rect: ColorRect
-var _cap_employee_rect: ColorRect   # ODA rework: RightPanel'in çalışan-hisse yarısı buraya taşındı
 var _cap_rows: Label
 var _cap_raised: Label
-var _cap_equity_note: Label         # "%d çalışanın hissesi var" (RightPanel'den taşınan TR satırı)
 var _mentor_card: PanelContainer
 var _mentor_quote: Label            # rewritten per band (Frank v6, surface 20)
 var _appetite_chip_host: HBoxContainer   # "Yatırımcı iştahı" durum çipi (yeniden kurulur; palet duruma bağlı)
@@ -74,12 +66,7 @@ func _ready() -> void:
 		[EventBus.mrr_changed, _on_state_changed],
 		[EventBus.burn_changed, _on_state_changed],
 		[EventBus.language_changed, _on_state_changed],
-		# ODA rework: işe alım/ayrılık çalışan-hisse dilimini oynatabilir.
-		[EventBus.character_added, _on_state_changed],
-		[EventBus.character_removed, _on_state_changed],
-		# Cap table: melek turu nakit de yazdığı için cash_changed BUGÜN yetiyordu — ama
-		# bu bir tesadüf. Nakit taşımayan ilk hisse hareketi (opsiyon havuzu, ikincil
-		# satış) barı sessizce bayat bırakırdı ve hiçbir test bunu yakalamazdı.
+		# Cap table: nakit taşımayan bir hisse hareketi cash_changed yaymaz.
 		[EventBus.equity_changed, _on_state_changed],
 		# Yatırımcı iştahı: büyüme serisi ay kapanışında değişir, kapı
 		# ayrıca mandallanır ve faz ilerler — üçü de MRR'siz boya gerektirir.
@@ -118,9 +105,8 @@ func _build() -> void:
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(page)
 
-	# Başlık satırı: sayfa adı + "Yatırımcı iştahı" göstergesi (eski
-	# kilitli "TUR AÇ · SERIES A" düğmesinin ve dolarlı tooltip'inin yerine; yönetmen
-	# kararı: sayı gösterilmez, sinyal gösterilir).
+	# Başlık satırı: sayfa adı + "Yatırımcı iştahı" göstergesi (yönetmen kararı: sayı
+	# gösterilmez, sinyal gösterilir).
 	var title_row := HBoxContainer.new()
 	page.add_child(title_row)
 	var title := UiFactory.make_label(tr("TAB_FINANCE"), &"TitleSerif")
@@ -157,18 +143,29 @@ func _build() -> void:
 
 
 func _card(content: VBoxContainer) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"CardPanel"
+	var panel := UiFactory.make_card(content)
 	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	panel.add_child(content)
 	return panel
 
 
+func _bar(min_width: float) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.theme_type_variation = &"BuildProgress"
+	bar.show_percentage = false
+	bar.custom_minimum_size = Vector2(min_width, 6)
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return bar
+
+
+func _clear(box: Node) -> void:
+	for c in box.get_children():
+		box.remove_child(c)
+		c.queue_free()
+
+
 func _build_appetite_group() -> Control:
-	# The three-state machine this row always anticipated (kilitli / ısınıyor / açık), now
-	# driven by the real gate: PhaseGateSystem.series_a_signal() — Terminal recipe, one chip
-	# + one line, no figure anywhere, no bar (K3). The tooltip names the gate's CONDITION from
-	# the table (the revenue bar — MRR only since K1 + K2) — still no dollar figure.
+	# Three states (closed / warming / open) from PhaseGateSystem.series_a_signal(): one chip +
+	# one line, no figure, no bar. The tooltip names the gate's condition, never a dollar figure.
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	box.size_flags_horizontal = Control.SIZE_SHRINK_END
@@ -189,10 +186,8 @@ func _build_appetite_group() -> Control:
 
 func _series_a_tooltip() -> String:
 	# Kapının KOŞULLARINI GATES tablosundan adlandırır — rakamsız (yönetmen kararı: seam adı
-	# eşleşir, değeri değil). K1 + K2 (2026-09): kapı yalnız MRR; büyüme serisi ve marka
-	# tabanı kapıdan kalktı, o yüzden onların kolları da kalktı. Tabloya yeni bir yaprak
-	# eklenirse burada adı yoksa sessizce atlanır — bu bilinçli: bilinmeyen bir koşulu
-	# rakamıyla basmaktansa hiç basmamak.
+	# eşleşir, değeri değil). Tabloya yeni bir yaprak eklenirse burada adı yoksa sessizce
+	# atlanır — bu bilinçli: bilinmeyen bir koşulu rakamıyla basmaktansa hiç basmamak.
 	var reqs: Array = []
 	for gate in PhaseGateSystem.GATES:
 		if int(gate["from"]) != 2:
@@ -204,8 +199,6 @@ func _series_a_tooltip() -> String:
 
 
 func _refresh_profit_progress() -> void:
-	if _profit_progress == null:
-		return
 	var sig: Dictionary = EndingsSystem.profitability_signal()
 	var streak: int = int(sig.get("streak", 0))
 	var need: int = int(sig.get("need", 1))
@@ -224,11 +217,8 @@ func _refresh_profit_progress() -> void:
 
 
 func _refresh_appetite() -> void:
-	if _appetite_chip_host == null:
-		return
 	var sig: Dictionary = PhaseGateSystem.series_a_signal()
-	for c in _appetite_chip_host.get_children():
-		c.queue_free()
+	_clear(_appetite_chip_host)
 	_appetite_chip_host.add_child(InvestorAppetiteUi.chip(String(sig.get("state", "closed"))))
 	_appetite_line.text = InvestorAppetiteUi.line(sig)
 
@@ -251,7 +241,7 @@ func _build_curve_card() -> PanelContainer:
 	toggles.add_theme_constant_override("separation", 4)
 	toggles.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	head.add_child(toggles)
-	for id in RANGE_ORDER:
+	for id in RANGES:
 		var b := Button.new()
 		b.text = tr(String(RANGES[id].label_key))
 		b.focus_mode = Control.FOCUS_NONE
@@ -263,7 +253,7 @@ func _build_curve_card() -> PanelContainer:
 	_runway_note = UiFactory.make_label("", &"CaptionMuted", UiTokens.INK_MUTED)
 	_runway_note.visible = false
 	vb.add_child(_runway_note)
-	# Kârlılık bitişi artık her gün değerlendirilen bir KOŞUL (6 ardışık
+	# Kârlılık bitişi her gün değerlendirilen bir KOŞUL (PROFIT_STREAK_MONTHS ardışık
 	# artıda ay kapanışı + marj + ölçek); ilerlemesi burada okunur — en az bir artıda ay
 	# kapanmışsa görünür, marj/ölçek eksikse nedenini tek kelimeyle söyler.
 	_profit_progress = UiFactory.make_label("", &"CaptionMuted", UiTokens.INK_MUTED)
@@ -312,9 +302,8 @@ func _build_flow_card() -> PanelContainer:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	# get_monthly_flow() ay-başından-bugüne DEĞİL, mevcut hızın 30 güne uzatılmış hali —
-	# başlık bunu söylemek zorunda: ayın 5'inde "bu ay" yazıp tam ay göstermek, yanındaki
-	# boş "Son işlemler" listesiyle doğrudan çelişiyordu. "mevcut gidiş" eğrinin
-	# projeksiyon göstergesiyle aynı kelime (bkz. _legend_current).
+	# başlık bunu söylemek zorunda. "mevcut gidiş" eğrinin projeksiyon göstergesiyle aynı
+	# kelime (bkz. _legend_current).
 	vb.add_child(UiFactory.make_section_header(tr("FIN_MONTHLY_FLOW")))
 	for entry in [["income", tr("FIN_INCOME")], ["expense", tr("FIN_EXPENSE")],
 			["net", tr("FIN_NET")]]:
@@ -324,12 +313,8 @@ func _build_flow_card() -> PanelContainer:
 		var l := UiFactory.make_label(String(entry[1]), &"RowMeta", UiTokens.INK_DIM)
 		l.custom_minimum_size = Vector2(44, 0)
 		row.add_child(l)
-		var bar := ProgressBar.new()
-		bar.theme_type_variation = &"BuildProgress"
-		bar.show_percentage = false
-		bar.custom_minimum_size = Vector2(0, 6)
+		var bar := _bar(0)
 		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(bar)
 		var v := UiFactory.make_label("", &"RowMeta", UiTokens.INK)
 		v.custom_minimum_size = Vector2(64, 0)
@@ -370,7 +355,7 @@ func _build_captable_card() -> PanelContainer:
 	_cap_raised = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
 	head.add_child(_cap_raised)
 
-	# Çubuk: iki ColorRect, stretch_ratio doğrudan yüzde tam sayıları — hiçbir yerde
+	# Çubuk: dilim başına bir ColorRect, stretch_ratio doğrudan yüzde tam sayıları — hiçbir yerde
 	# bölme yok (yatırım öncesi 100/0 güvenli). Yatırımcı dilimi 0 iken gizli.
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 0)
@@ -384,33 +369,23 @@ func _build_captable_card() -> PanelContainer:
 	_cap_investor_rect.color = UiTokens.ACCENT
 	_cap_investor_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar.add_child(_cap_investor_rect)
-	# Çalışan dilimi (ODA rework — RightPanel cap-table göçü): BG_AVATAR token
-	# yorumu zaten "avatar disc + cap-table bar" diyor. Hisse 0 iken gizli.
-	_cap_employee_rect = ColorRect.new()
-	_cap_employee_rect.color = UiTokens.BG_AVATAR
-	_cap_employee_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.add_child(_cap_employee_rect)
 
 	_cap_rows = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
 	vb.add_child(_cap_rows)
-	_cap_equity_note = UiFactory.make_label("", &"CaptionMuted")
-	_cap_equity_note.visible = false
-	vb.add_child(_cap_equity_note)
 	# Opsiyon havuzu: motorda alan YOK (gelecek alan adayı: GameState.run_option_pool_pct).
 	# Satır, state gelmeden asla kurulmaz — mockup'taki %10 icat edilmiş bir rakamdı.
 	return _card(vb)
 
 
 func _build_mentor_card() -> PanelContainer:
-	# KREM ton (yönetmen kararı): düz CardPanel — koyu Dialogue register DEĞİL,
-	# CardAttention DEĞİL. Yalnız runway eşiğin altındayken görünür.
+	# Düz CardPanel (yönetmen kararı): Dialogue register DEĞİL, CardAttention DEĞİL.
+	# Runway eşiğin altındayken ya da kepenk sayacı işlerken görünür (_refresh_mentor).
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	vb.add_child(UiFactory.make_section_header(tr("FIN_MENTOR_WARNING")))
-	# TWO BANDS (Frank v6, surface 20). The strip used to be one sentence spanning runway 6
-	# months down to bankruptcy, so a founder at 5.9 months and a founder two days from the
-	# shutter read the same words. The label is a FIELD now because the band is decided at
-	# refresh time, not at build time.
+	# TWO BANDS (Frank v6, surface 20): a founder at 5.9 months and one two days from the
+	# shutter must not read the same words. The band is decided at refresh time, so the
+	# quote label is a field.
 	_mentor_quote = UiFactory.make_label("", &"QuoteSerif")
 	_mentor_quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(_mentor_quote)
@@ -430,8 +405,6 @@ func _build_mentor_card() -> PanelContainer:
 # --- Tazeleme ----------------------------------------------------------------
 
 func refresh() -> void:
-	if _nakit_val == null:
-		return
 	_refresh_header()
 	_refresh_profit_progress()
 	_refresh_appetite()
@@ -463,9 +436,8 @@ func _refresh_header() -> void:
 		_runway_note.visible = _runway_note.text != ""
 	else:
 		_runway_val.text = "%s %s" % [p.value, p.unit]
-		# Negatif kasa da KIRMIZI. `months` bu durumda INF olabiliyor (get_runway_months
-		# yalnız günlük nete bakar, kasanın işaretine bakmaz), o yüzden tek başına eşik
-		# karşılaştırması ödemesi geciken bir şirketi varsayılan mürekkeple basıyordu.
+		# Negatif kasa da KIRMIZI: get_runway_months yalnız günlük nete bakar, kasanın
+		# işaretine bakmaz; `months` burada INF olabilir, eşik karşılaştırması tek başına yetmez.
 		_runway_val.add_theme_color_override("font_color",
 				UiTokens.negative() if (months < RUNWAY_WARN_MONTHS or GameState.cash < 0) else UiTokens.INK)
 		_runway_note.visible = false
@@ -531,46 +503,26 @@ func _refresh_flow() -> void:
 func _set_flow_row(key: String, amount: int, biggest: int, color: Color, sign_str: String) -> void:
 	var refs: Dictionary = _flow_refs[key]
 	var bar: ProgressBar = refs.bar
-	bar.min_value = 0.0
 	bar.max_value = float(biggest)
 	bar.value = float(absi(amount))
-	_override_bar_fill(bar, color)
+	HRUiShared.override_bar_fill(bar, color)
 	var v: Label = refs.val
 	# Gider satırı işareti etikette: motor pozitif büyüklük döndürür, yön burada biçimleme.
 	v.text = "%s%s" % [sign_str, UiTokens.format_money(absi(amount))]
 	v.add_theme_color_override("font_color", color)
 
 
-func _override_bar_fill(bar: ProgressBar, c: Color) -> void:
-	# BuildProgress amber dolgusu → satır rengi (hr_ui_shared.override_bar_fill reçetesi;
-	# varyasyon atandıktan SONRA çağrılmalı).
-	var fill: StyleBox = bar.get_theme_stylebox("fill")
-	if fill is StyleBoxFlat:
-		var f: StyleBoxFlat = (fill as StyleBoxFlat).duplicate()
-		f.bg_color = c
-		bar.add_theme_stylebox_override("fill", f)
-
-
 func _refresh_burn() -> void:
-	for c in _burn_list.get_children():
-		_burn_list.remove_child(c)
-		c.queue_free()
-	var rows: Array = FinanceSystem.get_burn_breakdown_pct()
-	for row_data in rows:
+	_clear(_burn_list)
+	for row_data in FinanceSystem.get_burn_breakdown_pct():
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
 		var l := UiFactory.make_label(String(row_data.label), &"RowMeta", UiTokens.INK_MUTED)
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(l)
-		var bar := ProgressBar.new()
-		bar.theme_type_variation = &"BuildProgress"
-		bar.show_percentage = false
-		bar.custom_minimum_size = Vector2(120, 6)
-		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		bar.min_value = 0.0
-		bar.max_value = 100.0
+		var bar := _bar(120)
 		bar.value = float(row_data.pct)
-		_override_bar_fill(bar, UiTokens.INK)
+		HRUiShared.override_bar_fill(bar, UiTokens.INK)
 		row.add_child(bar)
 		var v := UiFactory.make_label(Fmt.percent(int(row_data.pct), 0), &"RowMeta", UiTokens.INK)
 		v.custom_minimum_size = Vector2(36, 0)
@@ -582,9 +534,7 @@ func _refresh_burn() -> void:
 
 
 func _refresh_transactions() -> void:
-	for c in _tx_list.get_children():
-		_tx_list.remove_child(c)
-		c.queue_free()
+	_clear(_tx_list)
 	var txs: Array = FinanceSystem.get_transactions()
 	if txs.is_empty():
 		_tx_list.add_child(UiFactory.make_label(tr("FIN_NO_TX"), &"CaptionMuted", UiTokens.INK_DIM))
@@ -613,31 +563,19 @@ func _refresh_transactions() -> void:
 
 
 func _refresh_captable() -> void:
-	# Mevcut state'ten: kurucu = 100 − imzalanan dilüsyon − çalışan hisseleri.
-	# (ODA rework 2026-08-06: RightPanel'in çalışan-hisse yarısı buraya taşındı,
-	# iki yarım görünüm birleşti.) Opsiyon havuzu alanı motorda hâlâ yok.
-	# Yatırımcı dilimi TÜM turların toplamıdır (melek + imzalanan Series A) ve toplamı
-	# GameState türetir — çağrı yerinde ham alanlar toplanmaz, yoksa bir sonraki tur
-	# eklendiğinde bu satır sessizce eksik kalır.
+	# Kurucu = 100 − yatırımcı payı. Yatırımcı dilimi TÜM turların toplamıdır (melek + seed +
+	# imzalanan Series A) ve toplamı GameState türetir — çağrı yerinde ham alanlar toplanmaz,
+	# yoksa bir sonraki tur eklendiğinde bu satır sessizce eksik kalır.
+	# Çalışan hissesinin motorda kaynağı yok ve bu bilerek böyle: Ekip GDD §9'da (maaş, zam,
+	# terfi) çalışan hissesi yok, opsiyon havuzu kurulmadı. Havuz gelirse dilimi buraya eklenir.
 	var investors: int = GameState.get_investor_equity_pct()
-	# ÇALIŞAN HİSSESİNİN MOTORDA KAYNAĞI YOK ve bu dürüst sıfır bilerek burada duruyor.
-	# Burası eskiden `Character.equity_pct` üzerinde dönen bir döngüydü; o alan 2026-08-24'te
-	# silindi çünkü hiçbir yol ona sıfırdan başka bir değer yazmıyordu — İK tasarımında
-	# çalışan hissesi YOK (§9 maaş, zam, terfi; hisse yok) ve opsiyon havuzu henüz kurulmadı.
-	# Döngü, "bir gün dolar" diye bekleyen ölü bir okuma noktasıydı. Opsiyon havuzu geldiğinde
-	# bu satır onun seam'ini okur; o güne kadar dilim çizilmez.
-	var employees: int = 0
-	var employees_with_equity: int = 0
-	var founder: int = maxi(0, 100 - investors - employees)
-	_cap_founder_rect.size_flags_stretch_ratio = float(maxi(founder, 0))
-	_cap_investor_rect.size_flags_stretch_ratio = float(maxi(investors, 0))
+	var founder: int = maxi(0, 100 - investors)
+	_cap_founder_rect.size_flags_stretch_ratio = float(founder)
+	_cap_investor_rect.size_flags_stretch_ratio = float(investors)
 	_cap_investor_rect.visible = investors > 0
-	_cap_employee_rect.size_flags_stretch_ratio = float(maxi(employees, 0))
-	_cap_employee_rect.visible = employees > 0
 	var parts: Array = [tr("FIN_CAPTABLE_FOUNDER").format({"pct": Fmt.percent(founder, 0)})]
-	# Melek turu KENDİ satırını alır: tek "Yatırımcılar" kalemi, bir kurucunun cap
-	# table'da ayırt ettiği iki farklı şeyi (melek çeki ve imzalanan tur) tek sayıya
-	# katlıyordu. Dilimler yine tek ColorRect — ayrılan okuma, çizim değil.
+	# Melek turu KENDİ satırını alır: kurucu melek çekini ve imzalanan turu ayrı okur. Çubukta
+	# yine tek yatırımcı ColorRect'i — ayrılan okuma, çizim değil.
 	if GameState.run_angel_equity_pct > 0:
 		parts.append(tr("ANGEL_CAP_ROW").format({"pct": GameState.run_angel_equity_pct}))
 	# Its own row, because it is its own round. get_investor_equity_pct already folds the
@@ -648,38 +586,32 @@ func _refresh_captable() -> void:
 	if GameState.run_equity_pct > 0:
 		parts.append(tr("FIN_CAPTABLE_INVESTORS").format(
 			{"pct": Fmt.percent(GameState.run_equity_pct, 0)}))
-	if employees > 0:
-		parts.append(tr("FIN_CAPTABLE_EMPLOYEES").format({"pct": Fmt.percent(employees, 0)}))
 	_cap_rows.text = " · ".join(parts)
 	var raised: int = GameState.get_total_raised()
 	_cap_raised.text = tr("FIN_CAPTABLE_RAISED").format(
 		{"amount": UiTokens.format_money(raised)}) if raised > 0 else ""
-	_cap_equity_note.visible = employees_with_equity > 0
-	if employees_with_equity > 0:
-		_cap_equity_note.text = tr("FIN_CAPTABLE_EQUITY_NOTE").format({"n": employees_with_equity})
 
 
 func _refresh_mentor() -> void:
 	var months: float = GameState.get_runway_months()
 	var snoozed: bool = GameState.day < int(GameState.get_flag(SNOOZE_FLAG, 0))
 	# The shutter band is its own visibility case: once the counter runs there is no runway
-	# left to be "under" the threshold, so the old months < RUNWAY_WARN_MONTHS test alone
+	# left to be "under" the threshold, so a months < RUNWAY_WARN_MONTHS test alone
 	# would hide the warning exactly when it matters most.
 	var shuttered: bool = GameState.shutter_days_left >= 0
-	_mentor_card.visible = not snoozed and (shuttered or (months != INF and months < RUNWAY_WARN_MONTHS))
+	_mentor_card.visible = not snoozed and (shuttered or months < RUNWAY_WARN_MONTHS)
 	if not _mentor_card.visible:
 		return
-	# The threshold is NEVER written out. It used to read "Altı aydan az" in words while the
-	# gate read RUNWAY_WARN_MONTHS, so moving the constant made Frank lie silently.
-	var body: String = tr("FIN_MENTOR_QUOTE_SHUTTER")
-	if not shuttered:
-		body = tr("FIN_MENTOR_QUOTE").format({"months": int(RUNWAY_WARN_MONTHS)})
+	# The threshold reaches the copy only through {months} (FIN_MENTOR_QUOTE), so moving
+	# RUNWAY_WARN_MONTHS cannot make the line disagree with the gate.
+	var body: String = tr("FIN_MENTOR_QUOTE_SHUTTER") if shuttered \
+			else tr("FIN_MENTOR_QUOTE").format({"months": int(RUNWAY_WARN_MONTHS)})
 	_mentor_quote.text = tr("FIN_MENTOR_QUOTE_WRAPPED").format({"quote": body})
 
 
 func _on_snooze_pressed() -> void:
-	# sales_tab "next_find_prospects_day" deseni: mutlak hedef gün state'e, karşılaştırma
-	# okurken. Süre dolduktan sonra eşik hâlâ aşılıyorsa kart kendiliğinden geri gelir
-	# (günlük cash_changed repaint'i _refresh_mentor'u yeniden değerlendirir).
+	# Mutlak hedef gün state'e yazılır, karşılaştırma okurken yapılır. Süre dolduktan sonra
+	# eşik hâlâ aşılıyorsa kart kendiliğinden geri gelir (günlük cash_changed repaint'i
+	# _refresh_mentor'u yeniden değerlendirir).
 	GameState.set_flag(SNOOZE_FLAG, GameState.day + WARN_SNOOZE_DAYS)
-	refresh()
+	_refresh_mentor()

@@ -6,13 +6,8 @@ extends Control
 #
 # process_mode = ALWAYS in the .tscn — mounts on a paused tree.
 # Charcoal header/footer bands are StyleBoxFlat built HERE from UiTokens
-# constants (no .tscn color overrides; no charcoal theme variation exists —
-# event_modal's relationship pill is the precedent for code-built boxes).
-#
-# Mockup overrides honored: 5th Runway row without delta chip; all
-# currency via UiTokens.format_money (mockup's "$2.150" TR-thousands rejected);
-# MRR chip = percent (absolute fallback when the month started at $0);
-# phase display names match TopBar.
+# constants (no .tscn color overrides; flush-edge radii, see _band_stylebox).
+# All currency via UiTokens.format_money (the mockup's "$2.150" TR-thousands form was rejected).
 
 signal dismissed
 
@@ -36,65 +31,51 @@ func _ready() -> void:
 
 
 func populate(data: Dictionary) -> void:
-	# Idempotent: re-populating replaces the rows (debug repaint / safety).
-	for child in _rows_box.get_children():
-		child.queue_free()
-	_title.text = String(data.get("month_title", ""))
-	_meta.text = "%s · %s" % [String(data.get("day_range", "")), String(data.get("phase_name", ""))]
-	_highlight_text.text = String(data.get("highlight", ""))
-	_frank_line.text = "%s" % String(data.get("frank_line", ""))
+	_title.text = data.month_title
+	_meta.text = "%s · %s" % [data.day_range, data.phase_name]
+	_highlight_text.text = data.highlight
+	_frank_line.text = data.frank_line
 
-	var mrr: Dictionary = data.get("mrr", {"from": 0, "to": 0})
-	var cash: Dictionary = data.get("cash", {"from": 0, "to": 0})
-	var team: Dictionary = data.get("team", {"from": 0, "to": 0})
-	var brand: Dictionary = data.get("brand", {"from": 0, "to": 0})
-
+	var mrr: Dictionary = data.mrr
+	var cash: Dictionary = data.cash
+	var team: Dictionary = data.team
+	var brand: Dictionary = data.brand
 	_add_row(tr("FIN_CAP_MRR"),
 		"%s → %s" % [UiTokens.format_money(int(mrr.from)), UiTokens.format_money(int(mrr.to))],
 		_mrr_chip(int(mrr.from), int(mrr.to)))
-	_add_separator()
 	_add_row(tr("MONTH_ROW_CASH"),
 		"%s → %s" % [UiTokens.format_money(int(cash.from)), UiTokens.format_money(int(cash.to))],
 		_money_chip(int(cash.to) - int(cash.from)))
-	_add_separator()
-	_add_row(tr("MONTH_ROW_TEAM"), "%d → %d" % [int(team.from), int(team.to)],
+	_add_row(tr("MONTH_ROW_TEAM"), "%d → %d" % [team.from, team.to],
 		_int_chip(int(team.to) - int(team.from)))
-	_add_separator()
-	_add_row(tr("MONTH_ROW_BRAND"), "%d → %d" % [int(brand.from), int(brand.to)],
+	_add_row(tr("MONTH_ROW_BRAND"), "%d → %d" % [brand.from, brand.to],
 		_int_chip(int(brand.to) - int(brand.from)))
-	_add_separator()
-	_add_row(tr("FIN_RUNWAY"), String(data.get("runway_text", "")), {})  # net runway (Package 5); no chip
+	_add_row(tr("FIN_RUNWAY"), data.runway_text, {})  # net runway; no chip
 
 
 # --- Row construction (code-built: values are dynamic, layout is uniform) ---
 
 func _add_row(name_text: String, values_text: String, chip: Dictionary) -> void:
+	if _rows_box.get_child_count() > 0:
+		var line := ColorRect.new()
+		line.custom_minimum_size = Vector2(0, 1)
+		line.color = UiTokens.DIVIDER_LIGHT
+		_rows_box.add_child(line)
 	var row := HBoxContainer.new()
 	row.custom_minimum_size = Vector2(0, 46)
 	row.add_theme_constant_override("separation", 12)
-	var name_label := Label.new()
-	name_label.theme_type_variation = &"BodySerif"
+	var name_label := UiFactory.make_label(name_text, &"BodySerif")
 	name_label.custom_minimum_size = Vector2(96, 0)
 	name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	name_label.text = name_text
 	row.add_child(name_label)
-	var values := Label.new()
-	values.theme_type_variation = &"MetricValueInk"
+	var values := UiFactory.make_label(values_text, &"MetricValueInk")
 	values.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	values.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	values.clip_text = true  # extreme values ("$999.9K → $1.2M") never overflow
-	values.text = values_text
 	row.add_child(values)
 	if not chip.is_empty():
 		row.add_child(_build_chip(chip))
 	_rows_box.add_child(row)
-
-
-func _add_separator() -> void:
-	var line := ColorRect.new()
-	line.custom_minimum_size = Vector2(0, 1)
-	line.color = UiTokens.DIVIDER_LIGHT
-	_rows_box.add_child(line)
 
 
 func _build_chip(chip: Dictionary) -> PanelContainer:
@@ -109,11 +90,8 @@ func _build_chip(chip: Dictionary) -> PanelContainer:
 	sb.content_margin_top = 4
 	sb.content_margin_bottom = 4
 	pill.add_theme_stylebox_override("panel", sb)
-	var label := Label.new()
-	label.theme_type_variation = &"BadgeLabel"
-	label.add_theme_color_override("font_color", (chip.palette as Dictionary).fg)
+	var label := UiFactory.make_label(String(chip.text), &"BadgeLabel", (chip.palette as Dictionary).fg)
 	label.add_theme_font_size_override("font_size", 12)
-	label.text = String(chip.text)
 	pill.add_child(label)
 	pill.custom_minimum_size = Vector2(88, 0)  # uniform chip column
 	return pill
@@ -125,30 +103,24 @@ func _mrr_chip(from: int, to: int) -> Dictionary:
 	var delta: int = to - from
 	if from > 0 and delta != 0:
 		var pct: int = int(round(abs(delta) / float(from) * 100.0))
-		return _chip_for(delta, "%s%s %s" % [
-			"+" if delta > 0 else "−", Fmt.percent(pct, 0), _arrow(delta)])
+		return _delta_chip(delta, Fmt.percent(pct, 0))
 	return _money_chip(delta)  # month started at $0 (or flat) → absolute fallback
 
 
 func _money_chip(delta: int) -> Dictionary:
-	if delta == 0:
-		return _chip_for(0, "±0 —")
-	var body: String = UiTokens.format_money(absi(delta))
-	return _chip_for(delta, "%s%s %s" % ["+" if delta > 0 else "−", body, _arrow(delta)])
+	return _delta_chip(delta, UiTokens.format_money(absi(delta)))
 
 
 func _int_chip(delta: int) -> Dictionary:
-	if delta == 0:
-		return _chip_for(0, "±0 —")
-	return _chip_for(delta, "%s%d %s" % ["+" if delta > 0 else "−", absi(delta), _arrow(delta)])
+	return _delta_chip(delta, "%d" % absi(delta))
 
 
-func _chip_for(delta: int, text: String) -> Dictionary:
+func _delta_chip(delta: int, magnitude: String) -> Dictionary:
+	# {text, palette}: U+2212 minus and "±0 —" when flat (not the plain "+N" helpers).
+	var text: String = "±0 —"
+	if delta != 0:
+		text = "%s%s %s" % ["+" if delta > 0 else "−", magnitude, "↑" if delta > 0 else "↓"]
 	return {"text": text, "palette": UiTokens.badge_palette_for_delta(delta)}
-
-
-func _arrow(delta: int) -> String:
-	return "↑" if delta > 0 else "↓"
 
 
 # --- Band styling (charcoal header/footer from UiTokens, code-built) ---
