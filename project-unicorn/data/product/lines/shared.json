@@ -1,8 +1,8 @@
 {
-  "_doc": "GDD URUN rev 6.1 §12.2 — the four shared platform lines. Skeleton and step names are IDENTICAL in every subtype; only the one-line description is written per subtype (see each subtype file's shared_descriptions). Gates here are the defaults; a subtype may override one via shared_gate_overrides (§12.10 telegraphs).",
+  "_doc": "GDD URUN rev 6.1 §12.2 — the four shared platform lines. Skeleton and step names are IDENTICAL in every subtype; only the one-line description is written per subtype (derived strings.csv key). Gates here are the defaults; a subtype may override one via shared_gate_overrides (§12.10 telegraphs).",
   "_axis_shape": "integrations=innovation · security=stability · durability=stability · mobile=experience. With the five identity lines (2 inn · 1 sta · 2 exp) this makes 3 lines per axis (§12.2).",
-  "_numbers": "rev 6.1 sealed axis-point centres: K1 4 · K2 9 · K3 12. Weighted contributions 4,0 · 7,2 · 14,4 — ratios 1,80 and 2,00, satisfying §12.12's >=1,6 rule (which binds on the WEIGHTED value, director ruling 2026-08-25). effort inside §12.4 bands K1 5-7 · K2 7-9 · K3 9-12. usage_weight per §10.",
-  "_nodes": "K3 research nodes are the BINDING map of §12.5, validated at load against ResearchSeam.SHARED_LINE_NODES: Entegrasyonlar -> data_model · Dayanikllik -> scalable_backend · Guvenlik -> security_cert · Mobil -> design_system.",
+  "_numbers": "rev 6.1 sealed axis-point centres K1 4 · K2 9 · K3 12 (weighted 4,0 · 7,2 · 14,4). §12.12's >=1,6 upgrade ratio binds on the WEIGHTED value. usage_weight per §10.",
+  "_nodes": "K3 research nodes are §12.5's BINDING map, checked at load against ResearchSeam.SHARED_LINE_NODES: Entegrasyonlar -> data_model · Dayanıklılık -> scalable_backend · Güvenlik -> security_cert · Mobil -> design_system.",
   "_gates": "§12.8: most K2/K3 steps must ask for the axis owner's stars, otherwise the above-gate bonus is dead content. Axis owners: innovation -> product · stability -> qa · experience -> design.",
   "lines": [
     {
@@ -21,7 +21,9 @@
           "axis_points": 9,
           "effort": 7,
           "usage_weight": 1,
-          "requires": { "person": [{ "area": "product", "stars": 2 }] }
+          "requires": {
+            "person": [{ "area": "product", "stars": 2 }]
+          }
         },
         {
           "id": "line_shared_integrations_k3",
@@ -52,7 +54,9 @@
           "axis_points": 9,
           "effort": 7,
           "usage_weight": 0,
-          "requires": { "person": [{ "area": "qa", "stars": 2 }] }
+          "requires": {
+            "person": [{ "area": "qa", "stars": 2 }]
+          }
         },
         {
           "id": "line_shared_security_k3",
@@ -83,10 +87,7 @@
           "effort": 7,
           "usage_weight": 1,
           "requires": {
-            "person": [
-              { "area": "engineering", "stars": 2 },
-              { "area": "qa", "stars": 1 }
-            ]
+            "person": [{ "area": "engineering", "stars": 2 }, { "area": "qa", "stars": 1 }]
           }
         },
         {
@@ -110,7 +111,9 @@
           "axis_points": 4,
           "effort": 5,
           "usage_weight": 0,
-          "requires": { "person": [{ "area": "design", "stars": 1 }] }
+          "requires": {
+            "person": [{ "area": "design", "stars": 1 }]
+          }
         },
         {
           "id": "line_shared_mobile_k2",

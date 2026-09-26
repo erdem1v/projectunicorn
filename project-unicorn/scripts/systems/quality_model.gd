@@ -1,70 +1,41 @@
 class_name QualityModel
 extends RefCounted
 
-# Product Lifecycle Part 1 — the SINGLE choke point between open-ended,
-# multi-dimensional quality and the ratio-based economy (SalesSystem).
+# The single choke point between open-ended, multi-dimensional quality and the
+# ratio-based economy (SalesSystem). Every consumer calls QualityModel; nobody
+# re-derives quality inline.
 #
-# Three canonical, engine-internal axes (never localized — presentation renames
-# happen via ProductCatalog quality_axes[].display_label):
+# Three engine-internal axes (never localized; display names come from ProductCatalog):
 #   innovation — distinctiveness / tech wow / premium pricing power
 #   stability  — bug-freeness / crash resistance / low churn
-#   experience — ease of use / onboarding / satisfaction (Rev3 renamed third axis)
-#
-# Each axis is OPEN-ENDED (floor 0, NO upper clamp). Player axes are DETERMINISTIC
-# sums of feature contributions since Rev3 (ProductSystem.projected_axes); grow()'s
-# diminishing-returns law still ceilings RIVAL advancement (rival_registry.gd tier
-# asymptotes keep the giant band structurally out of reach).
-#
-# Pure statics (RefCounted, no state) — matches ProductSystem / SalesSystem /
-# ProductCatalog convention. Runs on BOTH quality surfaces:
-#   - live build:  dims_from_build(FeatureBuild)
-#   - post-ship:   dims_from_flags()  (mvp_innovation/stability/experience)
-# Every consumer calls QualityModel.x(); nobody re-derives quality inline, so the
-# 12-consumer rewrite is safe and R1/R6 cannot drift.
-#
-# NOTE (Erdem decision): axes are BORN AT 0 — a v1 product is genuinely raw and
-# climbs into the startup league hour by hour. The old baseline-50 feel is gone.
+#   experience — ease of use / onboarding / satisfaction
+# Each axis is born at 0 and is open-ended (no upper clamp). grow()'s diminishing
+# returns ceilings rival advancement (rival_registry.gd tier asymptotes keep the giant
+# band structurally out of reach).
 
-# --- Canonical axes (engine ids) ---
 const AXES := ["innovation", "stability", "experience"]
 
-# Fallback weights + labels when a sub-type omits quality_axes (equal blend).
+# Equal blend when a sub-type omits quality_axes.
 const DEFAULT_AXES := [
-	# Labels come from ProductCatalog.axis_label(axis) — the words live in strings.csv.
 	{"axis": "innovation", "weight": 1.0},
 	{"axis": "stability",  "weight": 1.0},
 	{"axis": "experience", "weight": 1.0},
 ]
 
-# --- BALANCE-TUNABLE constants (Erdem tunes at the last pass) ---
-# Saturation half-point: the composite value that maps to normalized 50. This is
-# the knob that decides where a shipped v1 lands on the 0-100 market-quality band.
-# CALIBRATION ROUND A §1 (2026-08-19): 50 → 25. The BALANCE FLAG that stood here since
-# Rev3 said it plainly — contribution-sum v1 composites (~7-12) normalized to ~12-20 under
-# 50 where the retired grown axes produced ~25-35, so every quality reader (audience,
-# product_value, satisfaction seed, the B2B satisfaction TARGET) read a played product
-# as worse than any bar authored for it: axis(13) was 20.6 against B2B tolerances of
-# 40-50, and the retention loop was the default state of competent play. At 25 a
-# stability-competent v1 (raw 17-20 from the catalog, before build events) lands at
-# 40-44 — the middle of the re-seated tolerance band (B2BConstants). Moved TOGETHER with
-# the tolerance re-seat, the saas_ops_field research unlock, SalesSystem's B2C
-# satisfaction gate and the rival scale bridge below; the four are one decision.
+# Saturation half-point: the composite that maps to normalized 50, i.e. where a shipped
+# v1 lands on the 0-100 market band. At 25 a stability-competent v1 (raw 17-20) reads
+# 40-44, the middle of the B2B tolerance band (B2BConstants). Tuned together with those
+# tolerances, the saas_ops_field research unlock, SalesSystem's B2C satisfaction gate and
+# RIVAL_TEMPLATE_HALF_SAT: the four are one decision.
 const NORMALIZE_HALF_SAT := 25.0
-# RIVAL SCALE BRIDGE. RivalCatalog.TEMPLATE (startups raw 30-82, asymptote 100) and its
-# momentum were authored on the RETIRED grown scale; they are inputs on the same raw axis,
-# and halving the player's half-point alone would double every rival's lead in normalized
-# space (a played v1's rival-relative q ≈ 22 → churn ~8 %/day, B2C dead by construction).
-# Until the rival table is re-authored for the deterministic scale (the world/rival
-# session's job, Layer B), rivals keep normalizing at the half-point they were tuned for.
-# The ONE reader is SalesSystem._rival_relative_quality. Raw-vs-raw comparisons
-# (RivalRegistry ranking, the "seni geçti" strip) are unaffected either way.
+# Rival scale bridge. RivalCatalog.TEMPLATE and its momentum were authored for a
+# half-point of 50; normalizing rivals at the player's 25 would double every rival's
+# lead in normalized space. Rivals keep 50 until the rival table is re-authored.
+# The one reader is SalesSystem._rival_relative_quality; raw-vs-raw comparisons
+# (RivalRegistry ranking) are unaffected.
 const RIVAL_TEMPLATE_HALF_SAT := 50.0
-# (PHASE1_AXIS_ASYMPTOTE deleted — Rev3 deterministic sums bypass grow() for the
-# player; the ceiling is now the catalog pool sums + strengthen accretion.)
-# How much each open (launch) bug erodes the Stability axis the economy reads.
-# Bugs are the live face of Stability (Erdem decision): features feed it, bugs eat it.
-# Part 2B: softened 1.5→0.8 so a few bugs are tolerable, heavy neglect still bites (global —
-# also softens the in-build/launch bug penalty, intended).
+# How much each open bug erodes the Stability the economy reads: features feed the
+# axis, bugs eat it. Also the in-build/launch bug penalty.
 const BUG_STABILITY_COEF := 0.8
 
 
@@ -75,7 +46,7 @@ const BUG_STABILITY_COEF := 0.8
 # Diminishing-returns accumulator — THE structural-ceiling primitive.
 # Positive raw is scaled by remaining headroom so `current` asymptotes below
 # `asymptote` forever (for any raw < asymptote). Negative raw (a penalty) applies
-# fully, floored at 0. Used by BOTH player growth and rival advancement.
+# fully, floored at 0.
 static func grow(current: float, raw: float, asymptote: float) -> float:
 	if raw <= 0.0:
 		return maxf(0.0, current + raw)
@@ -98,28 +69,29 @@ static func composite_quality(dims: Dictionary, quality_axes: Array = []) -> flo
 # Strictly < 100 for every finite input, so conversion_rate's optimal/price and
 # similar ratios never blow up when dims run open-ended.
 static func normalized_quality(composite: float) -> float:
-	var c := maxf(0.0, composite)
-	return 100.0 * c / (c + NORMALIZE_HALF_SAT)
+	return _saturate(composite, NORMALIZE_HALF_SAT)
 
 
-## A RIVAL's composite on the 0-100 band — same curve, the template's own half-point
-## (see RIVAL_TEMPLATE_HALF_SAT). Never use for the player's product.
+## A RIVAL's composite on the 0-100 band — same curve, the template's own half-point.
+## Never use for the player's product.
 static func normalized_quality_rival(composite: float) -> float:
+	return _saturate(composite, RIVAL_TEMPLATE_HALF_SAT)
+
+
+static func _saturate(composite: float, half_sat: float) -> float:
 	var c := maxf(0.0, composite)
-	return 100.0 * c / (c + RIVAL_TEMPLATE_HALF_SAT)
+	return 100.0 * c / (c + half_sat)
 
 
 static func normalized_from_dims(dims: Dictionary, quality_axes: Array = []) -> float:
 	return normalized_quality(composite_quality(dims, quality_axes))
 
 
-# Single-axis 0-100 score (R2 experience seed, R3 stability gate, R5 per-axis lines,
-# BuildHUD gauges). Pass economy dims when you want bug-eroded stability.
+# Single-axis 0-100 score. Pass economy dims when you want bug-eroded stability.
 static func axis_score(dims: Dictionary, axis: String) -> float:
 	return normalized_quality(float(dims.get(axis, 0.0)))
 
 
-# Bugs are the live face of Stability: the economy reads THIS, not the raw axis.
 static func effective_stability(stability: float, bug_count: int) -> float:
 	return maxf(0.0, stability - BUG_STABILITY_COEF * float(bug_count))
 
@@ -128,7 +100,7 @@ static func effective_stability(stability: float, bug_count: int) -> float:
 #  Surface adapters — the SAME math runs live (build) and post-ship (flags)
 # =========================================================================
 
-# Raw design-time dims (no bug erosion). Use for pure per-axis design display.
+# Raw design-time dims (no bug erosion).
 static func dims_from_build(b: FeatureBuild) -> Dictionary:
 	return {"innovation": b.innovation, "stability": b.stability, "experience": b.experience}
 
@@ -143,31 +115,20 @@ static func economy_dims_from_build(b: FeatureBuild) -> Dictionary:
 	}
 
 
-static func dims_from_flags() -> Dictionary:
-	return {
-		"innovation": float(GameState.get_flag("mvp_innovation", 0.0)),
-		"stability":  float(GameState.get_flag("mvp_stability", 0.0)),
-		"experience": float(GameState.get_flag("mvp_experience", 0.0)),
-	}
-
-
+# Post-ship: the LIVE bug count (it keeps accruing after ship) erodes stability.
 static func economy_dims_from_flags() -> Dictionary:
-	# Product Lifecycle Part 2A: reads the LIVE bug count (accrues post-ship via
-	# wear), not the frozen launch snapshot. Falls back to the snapshot for any
-	# pre-Part-2A shipped state that lacks the live flag.
-	var bugs: int = int(GameState.get_flag("mvp_live_bug_count", GameState.get_flag("mvp_bug_count_at_launch", 0)))
 	return {
 		"innovation": float(GameState.get_flag("mvp_innovation", 0.0)),
-		"stability":  effective_stability(float(GameState.get_flag("mvp_stability", 0.0)), bugs),
+		"stability":  effective_stability(float(GameState.get_flag("mvp_stability", 0.0)),
+			ProductSystem.live_bug_count()),
 		"experience": float(GameState.get_flag("mvp_experience", 0.0)),
 	}
 
 
-# THE market-facing quality number. R1 (_tick_b2c_audience) and R6 (growth_band)
-# BOTH call this → they cannot drift. Post-ship snapshot, effective stability.
+# THE market-facing quality number. Audience and growth band both read this, so they
+# cannot drift.
 static func shipped_normalized() -> float:
-	var sub := String(GameState.get_flag("mvp_sub_product_type_id", ""))
-	return normalized_from_dims(economy_dims_from_flags(), ProductCatalog.get_quality_axes(sub))
+	return normalized_quality(shipped_composite())
 
 
 # Post-ship composite (effective) — for rival ranking after ship.
@@ -196,11 +157,10 @@ static func shipped_composite() -> float:
 ## "Yerinde durmak görece gerilemektir."
 const PHASE_BAR := {1: 12.0, 2: 13.2, 3: 14.5}
 
-## PHASE_BAR'ın içindeki gizli çarpan, artık açık: 12,0 tam olarak EKSEN BAŞINA
-## ÜÇ HAT'ın K1'idir (3 × 4 × 1,0). Yayınlanmış her alt-tipte eksen başına tam
-## üç hat var (§12.2, doğrulandı). Gizli bir hat dördüncüyü eklediğinde çıta da
-## büyümek zorunda; büyümezse hattın tek başına K1'i Series A çıtasında ~+27 okuma
-## puanı eder ve bu kalibre edilmemiş bir hediyedir.
+## 12,0 tam olarak EKSEN BAŞINA ÜÇ HAT'ın K1'idir (3 × 4 × 1,0); yayınlanmış her
+## alt-tipte eksen başına üç hat var (§12.2). Gizli bir hat dördüncüyü eklediğinde
+## çıta da büyümek zorunda, yoksa hattın tek başına K1'i Series A çıtasında ~+27
+## okuma puanı eder.
 const BASELINE_LINES_PER_AXIS := 3
 
 ## §12.4 — Basic yokluğu cezası. Bir eksende üç hat da boşsa o eksenin gizili
@@ -213,79 +173,51 @@ const EMPTY_AXIS_PENALTY := 0.6
 const CONFIRMED_BUG_READING_COST := 2.0
 
 ## §11.3 — gösterimde 0-120 arasına sıkıştırılır; üçgen geometrisi 100'ü TAM KENAR
-## sayar, yani çıtanın üstündeki ürün kenarı taşırır. Bu bir hata değil, okumanın
-## kendisidir.
+## sayar, yani çıtanın üstündeki ürün kenarı taşırır.
 const READING_MIN := 0.0
 const READING_MAX := 120.0
 
 
-## The bar for a phase (1 Bootstrap · 2 Traction · 3 Series A). Defaults to the
-## live phase. Stays PUBLIC and un-scaled: this is the market bar itself, which
-## `axis_bar` below scales per axis. Callers that want "what does the market
-## expect of a three-line axis" want this one.
-static func phase_bar(phase: int = -1) -> float:
-	var p: int = phase if phase > 0 else GameState.phase
-	return float(PHASE_BAR.get(p, PHASE_BAR[1]))
-
-
-## The bar for ONE axis: the market bar scaled by the number of lines the product
-## ACTUALLY HAS on that axis — not the number of lines that are OPEN.
+## The bar for ONE axis: the phase's market bar (live phase by default) scaled by the
+## number of lines the product HAS on that axis — not the number that are OPEN.
 ##
-## ÇITA ÜRÜNÜN SAHİP OLDUĞU HATLARI SAYAR. Katalog hatları HER ZAMAN sayılır:
-## onlar pazarın taban beklentisidir, oyuncu o hatta hiç kademe yayınlamamış olsa
-## bile pazar onları bekler. Gizli (runtime) bir hat sayıma ancak İLK KADEMESİ
-## YAYINLANDIĞINDA girer (`line_tiers[line_id] >= 1`).
+## Katalog hatları HER ZAMAN sayılır: pazarın taban beklentisidir, oyuncu o hatta
+## kademe yayınlamamış olsa bile. Gizli (runtime) bir hat sayıma ancak İLK KADEMESİ
+## YAYINLANDIĞINDA girer. AÇIK hatları saymak çıtayı hat açıldığı an, oyuncu içine
+## hiçbir şey gönderemeden yükseltirdi (kararlılık okuması 82,8 → 62,1): iyi oynadığı
+## için cezalandırılan oyuncu. Bu kuralda K1'i yayınlamak tam NÖTR, K2 +16,5 getirir.
 ##
-## BU KURAL TERSİNE OKUNUYOR VE BİR SONRAKİ OTURUM ONU "DÜZELTMEK" İSTEYECEK,
-## O YÜZDEN GEREKÇE BURADA: AÇIK hatları saymak, çıtayı hat AÇILDIĞI AN
-## yükseltiyordu — oyuncu içine henüz hiçbir şey gönderememişken. Ölçüldü:
-## kararlılık okuması 82,8 → 62,1'e düşüyordu, tam da oyuncunun ağacın en iyi
-## ödülünü bulduğu anda. İyi oynadığı için cezalandırılan bir oyuncu.
-## Düzeltilmiş kuralda o çukur YOK: K1'i yayınlamak tam olarak NÖTR (ötekilerle
-## aynı olgunlukta bir hat eklediniz, yani pazarın beklentisinin tam üstündesiniz),
-## K2 ise +16,5 getirir — ve o hak edilmiştir. Kurgu da böyle daha doğru: pazar,
-## ürününüzün sahip olmadığı bir yeteneği beklemez; onu eklediğiniz gün beklemeye
-## başlar.
-##
-## ÖLÇEĞİ DEĞİŞEN OKUMA'DIR, DEĞER DEĞİL. `realized_dims` bilerek dokunulmadan
-## bırakıldı: ekonominin doyum eğrisi MUTLAK bir sayı istiyor ve gizli hattın
-## gerçek getirisi tam olarak orada yaşıyor. Burada değişen, o değerin pazar
-## karşısında nasıl OKUNDUĞUDUR.
-##
-## `EventBus.phase_bar_raised(phase: int)` BU İŞ İÇİN KULLANILMAZ: yükü bir FAZ'dır,
-## oysa bir hat açmak tek bir EKSENİ yükseltir. İkisi aynı sinyal değildir.
+## Ölçeği değişen OKUMA'dır, değer değil: `realized_dims` bilerek dokunulmadan kalır,
+## çünkü ekonominin doyum eğrisi MUTLAK bir sayı ister. `EventBus.phase_bar_raised`
+## burada kullanılmaz: yükü bir FAZ, oysa bir hat tek bir EKSENİ yükseltir.
 static func axis_bar(subtype: String, line_tiers: Dictionary, axis: String,
 		phase: int = -1) -> float:
-	var ids: Array = (ProductLines.line_ids_by_axis(subtype).get(axis, []) as Array)
+	var market_bar: float = float(PHASE_BAR.get(phase if phase > 0 else GameState.phase, PHASE_BAR[1]))
 	var counted: int = 0
-	for line_id in ids:
+	for line_id in ProductLines.line_ids_by_axis(subtype).get(axis, []):
 		var lid: String = String(line_id)
-		if not bool(ProductLines.line(lid).get("runtime", false)):
-			counted += 1                                  # katalog hattı: her zaman sayılır
-		elif int(line_tiers.get(lid, 0)) >= 1:
-			counted += 1                                  # gizli hat: ilk kademesi çıktıysa
+		if not bool(ProductLines.line(lid).get("runtime", false)) or int(line_tiers.get(lid, 0)) >= 1:
+			counted += 1
 	if counted <= 0:
-		# Bilinmeyen alt-tip ya da hiç hattı olmayan eksen — ölçülecek bir şey yok.
-		# Sıfıra bölmek yerine çıplak pazar çıtasına düşülür (eski davranış).
-		return phase_bar(phase)
-	return phase_bar(phase) * float(counted) / float(BASELINE_LINES_PER_AXIS)
+		# Bilinmeyen alt-tip ya da hattı olmayan eksen: sıfıra bölmek yerine çıplak çıta.
+		return market_bar
+	return market_bar * float(counted) / float(BASELINE_LINES_PER_AXIS)
 
 
 ## §5 + §12.8 — the realization multiplier a version stamps onto every step it
 ## ships: the design-turn multiplier times the above-gate bonus.
 ##
-## STAMPED PER STEP, not applied per read. §2 and §12.3 both rule that a finished
-## version is never damaged retroactively ("Yapım geriye dönük bozulmaz"), so a
-## later one-turn version must not degrade what a four-turn version already built.
-## §11.2 writes the multiplier outside the sum, which reads the other way; the
-## no-retroactive-damage rule appears twice and wins. FLAGGED.
+## STAMPED PER STEP, not applied per read: §2 and §12.3 both rule that a finished
+## version is never damaged retroactively ("Yapım geriye dönük bozulmaz"), so a later
+## one-turn version must not degrade what a four-turn version already built. §11.2
+## writes the multiplier outside the sum; the twice-stated no-retroactive rule wins.
 static func realization_stamp(turn_multiplier: float, above_gate_bonus: float) -> float:
 	return maxf(0.0, turn_multiplier) * (1.0 + maxf(0.0, above_gate_bonus))
 
 
 ## §11.2 — realized value of one axis. `line_tiers` maps line_id -> 0..3 and
 ## `line_realization` maps line_id -> the stamp that line's current step shipped
-## with (missing = 1.0, which is what an un-stamped test fixture wants).
+## with (missing = 1.0).
 static func realized_axis(subtype: String, line_tiers: Dictionary,
 		line_realization: Dictionary, axis: String) -> float:
 	var total: float = 0.0
@@ -309,8 +241,7 @@ static func realized_axis(subtype: String, line_tiers: Dictionary,
 		if points <= 0.0:
 			continue
 		var coef: float = float(ProductLines.KANO_COEF.get(String(step.get("kano", "k1")), 1.0))
-		var stamp: float = float(line_realization.get(lid, 1.0))
-		total += points * coef * stamp
+		total += points * coef * float(line_realization.get(lid, 1.0))
 	if not own_axis_open:
 		total *= EMPTY_AXIS_PENALTY
 	return total
@@ -322,8 +253,6 @@ static func axis_reading(subtype: String, line_tiers: Dictionary,
 		line_realization: Dictionary, axis: String, confirmed_bugs: int = 0,
 		phase: int = -1) -> int:
 	var realized: float = realized_axis(subtype, line_tiers, line_realization, axis)
-	# Çıta EKSEN BAŞINA ölçeklenir (bkz. `axis_bar`): gizli bir hat ilk kademesini
-	# yayınladığı gün pazarın beklentisi de büyür.
 	var reading: float = 100.0 * realized / maxf(0.01, axis_bar(subtype, line_tiers, axis, phase))
 	if axis == "stability":
 		reading -= CONFIRMED_BUG_READING_COST * float(maxi(confirmed_bugs, 0))

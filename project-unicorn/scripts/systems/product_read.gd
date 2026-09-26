@@ -3,19 +3,12 @@ extends RefCounted
 
 # GDD — ÜRÜN MODÜLÜ rev 6.1 §19 · OKUMA YÜZEYİ — olay motoruna açılan katalog.
 #
-# "Sorgular (adlar kararlı)" — belgedeki `urun.X` adlarının kod karşılığı
-# `ProductRead.X`'tir. Önek Türkçe olduğu için sınıf adı İngilizce kaldı (kod
-# tabanı yalnız İngilizcedir, Ekip §16); eşleme birebir ve başka hiçbir yerde
-# yeniden adlandırılmaz.
+# Belgedeki `urun.X` adlarının kod karşılığı `ProductRead.X`'tir; eşleme birebir ve
+# başka hiçbir yerde yeniden adlandırılmaz. §19: "olaylar motorun okumadığı hiçbir
+# şeyi iddia edemez" — eksik bir ad, içeriğin o duruma asla atıfta bulunamaması demektir.
 #
-# NEDEN ŞİMDİ, TÜKETİCİSİ YOKKEN: §19'un kendi gerekçesi. "Attribution yazım yasası
-# (mühürlü): olaylar motorun okumadığı hiçbir şeyi iddia edemez." Bu katalog o
-# yasanın SÖZLÜĞÜDÜR — eksik bir ad, içeriğin o duruma asla atıfta bulunamaması
-# demektir. Olay motoru geldiğinde işi bunları OKUMAK olacak, keşfetmek değil.
-#
-# `product_id` parametreleri belgedeki imzayı korumak için var ve bugün YOK SAYILIR:
-# çoklu ürün Erken Erişim'in konusu (§1), demo'da tek ürün vardır. İmzayı şimdi
-# doğru yazmak, o gün çağrı yerlerini değil yalnız gövdeleri değiştirmek demek.
+# `product_id` parametreleri belgedeki imzayı korur ve YOK SAYILIR: çoklu ürün Erken
+# Erişim'in konusu (§1), demo'da tek ürün vardır.
 
 ## §2 — beş fazdan hangisi. Yapım yoksa canlı ürün DESTEK'tedir; ürün de yoksa "".
 const PHASE_NONE := ""
@@ -25,8 +18,7 @@ const PHASE_DEVELOPMENT := "development"
 const PHASE_BETA := "beta"
 const PHASE_SUPPORT := "support"
 
-## Motorun iç faz dizgelerinden §19'un kararlı adlarına. İç adlar tarihsel
-## ("iteration"/"bugfix"); dışarıya sızmazlar.
+## Yapımın iç faz dizgelerinden §19'un kararlı adlarına; iç adlar dışarı sızmaz.
 const _PHASE_MAP := {
 	"planning": PHASE_CONCEPT,
 	"iteration": PHASE_DESIGN,
@@ -137,19 +129,22 @@ static func step_unlockable(step_id: String) -> bool:
 # =========================================================================
 #  §19 · SİNYALLER — dinleyicisi olmasa da yayınlanır
 # =========================================================================
-# Adlar EventBus'ta yaşıyor (tek sinyal merkezi). Bu bölüm onları
-# YAYINLAYAN tek yerdir: bir sinyalin iki emitter'ı olursa olay motoru aynı olayı
-# iki kez görür ve sebebini bulmak imkânsızlaşır.
+# Adlar EventBus'ta yaşıyor; bu bölüm onları YAYINLAYAN tek yerdir. İki emitter
+# olursa olay motoru aynı olayı iki kez görür.
 
 ## §14 — taban merdiveninin ilk iki basamağı. "Uyarısız kayıp yoktur": önce yumuşak
 ## sinyal, sonra tabanın kendisi. Üçüncü basamak (kriz) olay motorunun işi.
 const FLOOR_WARNING_MARGIN := 1.20
 
+## §14 [K] — B2B İ25 · K40 · D30 · B2C İ35 · K20 · D35. B2B dışındaki her pazar B2C okur.
+const _MARKET_FLOORS := {
+	"b2b": {"innovation": 25, "stability": 40, "experience": 30},
+	"b2c": {"innovation": 35, "stability": 20, "experience": 35},
+}
+
+
 static func market_floors(market: String) -> Dictionary:
-	# §14 [K] — B2B İ25 · K40 · D30 · B2C İ35 · K20 · D35.
-	if market == "b2b":
-		return {"innovation": 25, "stability": 40, "experience": 30}
-	return {"innovation": 35, "stability": 20, "experience": 35}
+	return _MARKET_FLOORS["b2b" if market == "b2b" else "b2c"]
 
 
 ## Her eksen için tabanın durumunu döndürür: "" · "warning" · "crossed".
@@ -157,8 +152,6 @@ static func axis_floor_state(axis: String) -> String:
 	if not ProductState.is_live():
 		return ""
 	var floor_v: float = float(market_floors(ProductState.market_type()).get(axis, 0))
-	if floor_v <= 0.0:
-		return ""
 	var r: float = float(ProductState.axis_reading(axis))
 	if r < floor_v:
 		return "crossed"
@@ -168,11 +161,10 @@ static func axis_floor_state(axis: String) -> String:
 
 
 # ---------------------------------------------------------------- edges
-# Yedi sinyal bir KENARDIR: durum değiştiği anda bir kez atarlar, her gün değil.
-# Kenar tespiti önceki değeri bilmeyi gerektiriyor ve o hafıza BURADA duruyor —
-# tek yerde, çünkü iki yerde tutulsaydı iki farklı "önceki" doğar ve sinyal ya
-# çifter atar ya hiç atmaz. Kayda YAZILMAZ: bir yükleme sonrası ilk gün sessiz
-# geçer, ki bu doğrudur (kaydı açan oyuncuya dünkü kenarı bildirmek yanlış olurdu).
+# Sinyaller bir KENARDIR: durum değiştiği anda bir kez atarlar, her gün değil.
+# Önceki değerin hafızası TEK YERDE, burada durur; iki yerde tutulsaydı sinyal ya
+# çifter atar ya hiç atmazdı. Kayda YAZILMAZ: yüklemeden sonraki ilk gün yalnız
+# tohumlar, çünkü kaydı açan oyuncuya dünkü kenarı bildirmek yanlış olurdu.
 
 static var _prev_paused := false
 static var _prev_confirmed := 0
@@ -182,17 +174,12 @@ static var _prev_phase := 0
 static var _seeded := false
 
 
+## Sonraki emit_edges yalnız tohumlar; öteki alanlar orada üzerine yazılır.
 static func reset() -> void:
-	_prev_paused = false
-	_prev_confirmed = 0
-	_prev_band = ""
-	_prev_floor = {}
-	_prev_phase = 0
 	_seeded = false
 
 
-## Günün sonunda çağrılır (TimeManager, sistemler yerleştikten SONRA). İlk çağrı
-## yalnız hafızayı tohumlar ve hiçbir şey yayınlamaz.
+## Günün sonunda çağrılır (TimeManager, sistemler yerleştikten SONRA).
 static func emit_edges() -> void:
 	var paused: bool = ProductSystem.build_paused()
 	var confirmed: int = ProductState.bugs_confirmed()
@@ -202,40 +189,32 @@ static func emit_edges() -> void:
 	for axis in QualityModel.AXES:
 		floors[axis] = axis_floor_state(String(axis))
 
-	if not _seeded:
-		_seeded = true
-		_prev_paused = paused
-		_prev_confirmed = confirmed
-		_prev_band = band
-		_prev_floor = floors
-		_prev_phase = phase_now
-		return
+	if _seeded:
+		if paused != _prev_paused:
+			if paused:
+				EventBus.build_paused.emit(ProductSystem.pause_note_key())
+			else:
+				EventBus.build_resumed.emit()
+		# §8.1 — bir bildirim DOĞRULANDIĞINDA. Düşüş (düzeltme) bu sinyali atmaz.
+		if confirmed > _prev_confirmed:
+			EventBus.bug_confirmed.emit(confirmed)
+		# §8.5 — ısınma bandı değişti.
+		if band != _prev_band:
+			EventBus.unconfirmed_threshold_crossed.emit(band)
+		# §14 — taban merdiveninin ilk iki basamağı, her eksen için ayrı.
+		for axis in floors:
+			var now: String = floors[axis]
+			if now == _prev_floor.get(axis, ""):
+				continue
+			if now == "warning":
+				EventBus.axis_floor_warning.emit(axis)
+			elif now == "crossed":
+				EventBus.axis_floor_crossed.emit(axis)
+		# §11.3 — çıta her faz geçişinde +%10 yükselir. "Yerinde durmak görece gerilemektir."
+		if phase_now > _prev_phase:
+			EventBus.phase_bar_raised.emit(phase_now)
 
-	if paused != _prev_paused:
-		if paused:
-			EventBus.build_paused.emit(ProductSystem.pause_note_key())
-		else:
-			EventBus.build_resumed.emit()
-	# §8.1 — bir bildirim DOĞRULANDIĞINDA. Düşüş (düzeltme) bu sinyali atmaz.
-	if confirmed > _prev_confirmed:
-		EventBus.bug_confirmed.emit(confirmed)
-	# §8.5 — ısınma bandı değişti (eşikler 20 · 40).
-	if band != _prev_band:
-		EventBus.unconfirmed_threshold_crossed.emit(band)
-	# §14 — taban merdiveninin ilk iki basamağı, her eksen için ayrı.
-	for axis_f in floors:
-		var was: String = String(_prev_floor.get(axis_f, ""))
-		var now: String = String(floors[axis_f])
-		if now == was:
-			continue
-		if now == "warning":
-			EventBus.axis_floor_warning.emit(String(axis_f))
-		elif now == "crossed":
-			EventBus.axis_floor_crossed.emit(String(axis_f))
-	# §11.3 — çıta her faz geçişinde +%10 yükselir. "Yerinde durmak görece gerilemektir."
-	if phase_now > _prev_phase:
-		EventBus.phase_bar_raised.emit(phase_now)
-
+	_seeded = true
 	_prev_paused = paused
 	_prev_confirmed = confirmed
 	_prev_band = band

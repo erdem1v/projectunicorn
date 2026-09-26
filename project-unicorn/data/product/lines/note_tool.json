@@ -1,7 +1,6 @@
 {
   "subtype": "note_tool",
   "_doc": "GDD URUN rev 6 §12.11 — Not & Bilgi Aracı (B2C). Kanca: kişisel çalışma alanı, üretkenlik. Solo v1 = not + senkron. K3 yönü: Notlarına soru sor (ai_engine).",
-  "_axis_shape": "2 innovation (capture, linking) · 1 stability (sync) · 2 experience (editor, search) — §12.2.",
   "_canon": "line_note_tool_search is written verbatim from §12.9's worked example: Arama / Anında Arama -> Filtreli Arama, Efor 8 · Deneyim +7 (+3), Kilit: Yazılım ★★ · Tasarım ★. Anlamsal Arama is §12.9's completed-line example.",
   "_anchor": "line_note_tool_linking_k3 is §12.10's solo-reachable K3: research node + engineering ★2 + axis owner (innovation -> product) ★1.",
   "lines": [
@@ -23,16 +22,7 @@
           "usage_weight": 1,
           "license_cost": 800,
           "requires": {
-            "person": [
-              {
-                "area": "engineering",
-                "stars": 2
-              },
-              {
-                "area": "product",
-                "stars": 1
-              }
-            ]
+            "person": [{ "area": "engineering", "stars": 2 }, { "area": "product", "stars": 1 }]
           }
         },
         {
@@ -43,12 +33,7 @@
           "ai": true,
           "requires": {
             "research": "ai_engine",
-            "person": [
-              {
-                "area": "product",
-                "stars": 2
-              }
-            ]
+            "person": [{ "area": "product", "stars": 2 }]
           }
         }
       ]
@@ -70,12 +55,7 @@
           "effort": 8,
           "usage_weight": 1,
           "requires": {
-            "person": [
-              {
-                "area": "product",
-                "stars": 2
-              }
-            ]
+            "person": [{ "area": "product", "stars": 2 }]
           }
         },
         {
@@ -87,16 +67,7 @@
           "license_cost": 1200,
           "requires": {
             "research": "ai_engine",
-            "person": [
-              {
-                "area": "engineering",
-                "stars": 2
-              },
-              {
-                "area": "product",
-                "stars": 1
-              }
-            ]
+            "person": [{ "area": "engineering", "stars": 2 }, { "area": "product", "stars": 1 }]
           }
         }
       ]
@@ -118,16 +89,7 @@
           "effort": 8,
           "usage_weight": 1,
           "requires": {
-            "person": [
-              {
-                "area": "engineering",
-                "stars": 2
-              },
-              {
-                "area": "qa",
-                "stars": 1
-              }
-            ]
+            "person": [{ "area": "engineering", "stars": 2 }, { "area": "qa", "stars": 1 }]
           }
         },
         {
@@ -137,12 +99,7 @@
           "usage_weight": 3,
           "requires": {
             "research": "bug_tracker",
-            "person": [
-              {
-                "area": "qa",
-                "stars": 2
-              }
-            ]
+            "person": [{ "area": "qa", "stars": 2 }]
           }
         }
       ]
@@ -164,12 +121,7 @@
           "effort": 7,
           "usage_weight": 0,
           "requires": {
-            "person": [
-              {
-                "area": "design",
-                "stars": 2
-              }
-            ]
+            "person": [{ "area": "design", "stars": 2 }]
           }
         },
         {
@@ -179,12 +131,7 @@
           "usage_weight": 1,
           "requires": {
             "research": "design_system",
-            "person": [
-              {
-                "area": "design",
-                "stars": 2
-              }
-            ]
+            "person": [{ "area": "design", "stars": 2 }]
           }
         }
       ]
@@ -206,16 +153,7 @@
           "effort": 8,
           "usage_weight": 1,
           "requires": {
-            "person": [
-              {
-                "area": "engineering",
-                "stars": 2
-              },
-              {
-                "area": "design",
-                "stars": 1
-              }
-            ]
+            "person": [{ "area": "engineering", "stars": 2 }, { "area": "design", "stars": 1 }]
           }
         },
         {
@@ -226,21 +164,10 @@
           "ai": true,
           "requires": {
             "research": "semantic_index",
-            "person": [
-              {
-                "area": "engineering",
-                "stars": 2
-              },
-              {
-                "area": "design",
-                "stars": 1
-              }
-            ]
+            "person": [{ "area": "engineering", "stars": 2 }, { "area": "design", "stars": 1 }]
           }
         }
       ]
     }
-  ],
-  "_numbers": "rev 6.1 sealed centres K1 4 · K2 9 · K3 12 (weighted 4,0 · 7,2 · 14,4).",
-  "_gates": "§12.8: K2/K3 ask for the axis owner (innovation->product · stability->qa · experience->design) so the above-gate bonus is live content."
+  ]
 }

@@ -4,19 +4,13 @@ extends RefCounted
 # GDD — ÜRÜN MODÜLÜ rev 6.1 · CANLI ÜRÜNÜN DURUMU, tek okuma/yazma yüzeyi.
 #
 # Durum GameState'in TİPLİ bayrak tablosunda yaşar (mvp_*), çünkü kayıt yolu zaten
-# oradan geçiyor ve v9 şeması onu taşıyor (§22.5). Bu dosya o bayrakların ADLARININ
-# TEK EVİdir: hiçbir sistem `get_flag("mvp_...")` yazmaz, buraya sorar.
-#
-# Neden bir katman: §18 tek kaynak kuralları. "Hat durumları → tek kaynak; Konsept
-# ekranı, monitör, talep üreteci ve olay koşulları aynı tabloyu okur." Bayrak adını
-# dört yere kopyalamak o kuralı ilk yeniden adlandırmada bozar.
-#
-# WRITE-THROUGH: yazan seam'ler burada; kimse ham bayrağa uzanmaz (CLAUDE.md).
+# oradan geçiyor (§22.5). Bu dosya o bayrakların ADLARININ TEK EVİdir: hiçbir sistem
+# `get_flag("mvp_...")` yazmaz, buraya sorar. §18: "Hat durumları → tek kaynak; Konsept
+# ekranı, monitör, talep üreteci ve olay koşulları aynı tabloyu okur."
 
 const LINE_TIERS := "mvp_line_tiers"
 const STEP_REALIZATION := "mvp_step_realization"
 const HIDDEN_LINES := "mvp_hidden_lines"
-const DESIGN_TURNS := "mvp_design_turns"
 const REPORTS_INCOMING := "mvp_reports_incoming"
 const REPORTS_PROGRESS := "mvp_reports_progress"
 const BUGS_CONFIRMED := "mvp_bugs_confirmed"
@@ -28,9 +22,8 @@ const VERSION_LAUNCH_DAY := "mvp_version_launch_day"
 const INTEREST := "mvp_interest"
 const INFRA_PROVIDER := "mvp_infra_provider"
 const INFRA_UNITS := "mvp_infra_units"
-## §9 — "yeni kod terimi": son sürümün efor büyüklüğü. Sürüm yaşıyla (τ=21 gün)
-## söner, yani YENİ SÜRÜM SIFIRDAN HAVUZ YARATMAZ — yalnız bu terim sıfırlanır ve
-## olgun ürün altta durur. Yayın anında damgalanır.
+## §9 — "yeni kod terimi": son sürümün efor büyüklüğü, yayında damgalanır ve sürüm
+## yaşıyla söner. Yeni sürüm sıfırdan havuz yaratmaz; yalnız bu terim tazelenir.
 const NEW_CODE_EFFORT := "mvp_new_code_effort"
 
 ## §9 — her yayın ilgiyi buraya tazeler.
@@ -59,21 +52,16 @@ static func product_name() -> String:
 	return String(GameState.get_flag("mvp_product_name", ""))
 
 
-## Is this feature live in the product? The ONE answer for both catalogues: a flat
-## feature id (the retired saas_* pools, still used by fixtures) is live when it sits
-## in `mvp_components`; a LINE STEP id is live when its line has reached the step's
-## tier. Before this existed every reader asked `mvp_components` only — and a line
-## product never writes step ids there, so no promise about a line step could ever be
-## kept.
+## Is this feature live in the product? The ONE answer for both id kinds: a flat
+## feature id (only fixtures still write those) is live when it sits in
+## `mvp_components`; a LINE STEP id is live when its line has reached the step's tier.
 static func is_feature_live(feature_id: String) -> bool:
 	if feature_id == "":
 		return false
 	if (GameState.get_flag("mvp_components", []) as Array).has(feature_id):
 		return true
 	var s: Dictionary = ProductLines.step(feature_id)
-	if s.is_empty():
-		return false
-	return line_tier(String(s.get("line_id", ""))) >= int(s.get("tier", ProductLines.TIER_MAX + 1))
+	return not s.is_empty() and line_tier(String(s["line_id"])) >= int(s["tier"])
 
 
 # ------------------------------------------------------- §12 line tiers
@@ -90,7 +78,7 @@ static func line_tier(line_id: String) -> int:
 ## §12.3 — ladder rules are NOT re-checked here; ProductLines.ladder_refusal owns
 ## them and the caller must have asked. This is the write, not the decision.
 static func set_line_tier(line_id: String, tier: int) -> void:
-	var d: Dictionary = (GameState.get_flag(LINE_TIERS, {}) as Dictionary).duplicate()
+	var d: Dictionary = line_tiers()
 	d[line_id] = clampi(tier, 0, ProductLines.TIER_MAX)
 	GameState.set_flag(LINE_TIERS, d)
 
@@ -102,7 +90,7 @@ static func step_realization() -> Dictionary:
 
 
 static func stamp_step(step_id: String, mult: float) -> void:
-	var d: Dictionary = (GameState.get_flag(STEP_REALIZATION, {}) as Dictionary).duplicate()
+	var d: Dictionary = step_realization()
 	d[step_id] = mult
 	GameState.set_flag(STEP_REALIZATION, d)
 
@@ -115,10 +103,9 @@ static func line_realization() -> Dictionary:
 	var out: Dictionary = {}
 	for line_id in tiers:
 		var tier: int = int(tiers[line_id])
-		if tier <= 0:
-			continue
-		var step_id: String = String(ProductLines.step_at(String(line_id), tier).get("id", ""))
-		out[line_id] = float(stamps.get(step_id, 1.0))
+		if tier > 0:
+			var step_id: String = String(ProductLines.step_at(String(line_id), tier).get("id", ""))
+			out[line_id] = float(stamps.get(step_id, 1.0))
 	return out
 
 
@@ -129,7 +116,7 @@ static func hidden_lines() -> Array:
 
 
 static func open_hidden_line(line_id: String) -> void:
-	var a: Array = (GameState.get_flag(HIDDEN_LINES, []) as Array).duplicate()
+	var a: Array = hidden_lines()
 	if not a.has(line_id):
 		a.append(line_id)
 		GameState.set_flag(HIDDEN_LINES, a)
@@ -139,16 +126,15 @@ static func open_hidden_line(line_id: String) -> void:
 ## (3-5 versions, 9-14 steps) is measured against this.
 static func steps_shipped() -> int:
 	var n: int = 0
-	for line_id in line_tiers():
-		n += int(line_tiers()[line_id])
+	for tier in (GameState.get_flag(LINE_TIERS, {}) as Dictionary).values():
+		n += int(tier)
 	return n
 
 
 static func lines_open() -> int:
 	var n: int = 0
-	var tiers: Dictionary = line_tiers()
-	for line_id in tiers:
-		if int(tiers[line_id]) > 0:
+	for tier in (GameState.get_flag(LINE_TIERS, {}) as Dictionary).values():
+		if int(tier) > 0:
 			n += 1
 	return n
 
@@ -157,13 +143,12 @@ static func lines_open() -> int:
 ## kademe yayınlandığında ikisi ayrışırdı.
 static func usage_weight_total() -> int:
 	var total: int = 0
-	var tiers: Dictionary = line_tiers()
+	var tiers: Dictionary = GameState.get_flag(LINE_TIERS, {}) as Dictionary
 	for line_id in tiers:
 		var tier: int = int(tiers[line_id])
-		if tier <= 0:
-			continue
-		total += ProductLines.usage_weight_of(
-			String(ProductLines.step_at(String(line_id), tier).get("id", "")))
+		if tier > 0:
+			total += ProductLines.usage_weight_of(
+				String(ProductLines.step_at(String(line_id), tier).get("id", "")))
 	return total
 
 
@@ -189,10 +174,8 @@ static func fix_run_fixed() -> int:
 
 ## SÜRÜM yaşı, ürün yaşı DEĞİL (§17). Her yayında sıfırlanır.
 static func version_age_days() -> int:
-	if not is_live():
-		return 0
 	var stamped: int = int(GameState.get_flag(VERSION_LAUNCH_DAY, 0))
-	if stamped <= 0:
+	if not is_live() or stamped <= 0:
 		return 0
 	return maxi(0, GameState.day - stamped)
 
@@ -228,7 +211,7 @@ static func infra_units() -> int:
 ## buradan yazılır ve sinyal buradan çıkar: repaint eden yüzeyler (kapasite bloğu,
 ## monitör, fatura satırı) tek bir yerden haber alsın diye.
 static func set_infra_provider(provider_id: String) -> void:
-	if String(GameState.get_flag(INFRA_PROVIDER, "")) == provider_id:
+	if infra_provider() == provider_id:
 		return
 	GameState.set_flag(INFRA_PROVIDER, provider_id)
 	EventBus.infra_changed.emit()
@@ -236,7 +219,7 @@ static func set_infra_provider(provider_id: String) -> void:
 
 static func set_infra_units(units: int) -> void:
 	var clamped: int = maxi(0, units)
-	if int(GameState.get_flag(INFRA_UNITS, 0)) == clamped:
+	if infra_units() == clamped:
 		return
 	GameState.set_flag(INFRA_UNITS, clamped)
 	EventBus.infra_changed.emit()
