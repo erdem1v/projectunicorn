@@ -3,31 +3,23 @@ extends RefCounted
 
 # Single calibration surface for VC pitch GLOBAL knobs.
 # Per-VC knobs (term bands, patience, conviction weights) live in InvestorRegistry — the
-# other single location. EVERY number here is a working placeholder; the calibration pass
-# (last, one session) touches this file + the InvestorRegistry table and nothing else. The
-# design fixes STRUCTURE only.
+# other single location. EVERY number here is a working placeholder the calibration pass
+# tunes; the design fixes STRUCTURE only.
 
 # --- Conviction track zones — Soğuk 0-39 / Ilık 40-69 / Kazanıldı 70-100 ---
-const ZONE_BOUNDS := [40, 70]          # [ilik_min, kazanildi_min]; passed to MeetingScene conviction
 const ILIK_MIN := 40
 const WON_MIN := 70
+const ZONE_BOUNDS := [ILIK_MIN, WON_MIN]   # drawn by ConvictionTrack
 
 # --- Conviction seeding (the macro moment) — base + run-state weights ---
-#
-# RENAMED SEED_* → CONV_* (2026-08-27, the seed-rung wave). These twelve numbers have always
-# meant "how the room is SEEDED with conviction", and the run now has an actual SEED ROUND with
-# its own constants file. Two families spelled the same way is a bug waiting for its first
-# careless autocomplete: the very first line of SeedRoundSystem that reached for "the seed MRR
-# reference" would have been handed the SERIES A BAR. It would have compiled and run.
-# The seed room's profile lives in seed_constants.gd; this block is the Series A room's.
+# CONV_*, never SEED_*: SEED_ names the seed ROUND, and a conviction constant spelled that way
+# is one careless autocomplete from handing the seed room the Series A room's numbers. This
+# block is the Series A room's profile; the seed room's lives in SeedConstants under the same
+# CONV_* names.
 const CONV_BASE := 20
-# DECOUPLED FROM THE SERIES A BAR (2026-08-27), and the decoupling is the decision, not an
-# oversight. This used to be `SalesSystem.TRACTION_MRR_TARGET`, so one calibration number
-# silently answered two different questions: "does the door open" and "is this company's
-# revenue impressive in the room". When the bar moved 40,000 → 120,000 the second answer moved
-# with it — every Series A meeting lost ~10 conviction at once, and _sorgu_metrics' growth_flat
-# branch (which compares MRR to this reference) became the permanent interrogation for every
-# run the economy can actually produce. The room's yardstick is now its own number.
+# The room's own revenue yardstick, deliberately NOT SalesSystem.TRACTION_MRR_TARGET: "does
+# the door open" and "is this revenue impressive in the room" are different questions. It is
+# also the line _sorgu_metrics' growth_flat branch compares MRR against.
 const CONV_MRR_REFERENCE := 40_000
 const CONV_MRR_MAX_BONUS := 20         # full bonus when MRR ≫ reference (scaled)
 const CONV_BRAND_FLOOR := 50           # brand at floor = 0 contribution
@@ -65,18 +57,16 @@ const GECISTIR_CAP := 65               # deflection can never win the room
 
 # --- Beat 1 perception + Beat 4 push ---
 const BEAT1_DIFF := DIFF_ORTA
-const MASAYI_ZORLA_DIFF := DIFF_ZORLU  # Ilık fork gamble; failure = RET (hard, Erdem's call)
+const MASAYI_ZORLA_DIFF := DIFF_ZORLU  # Ilık fork gamble; failure = RET (hard)
 
-# --- Beat skill routing (SKILL-RENAME 2026-07-16, re-pointed 2026-08-21) ---
-# Erdem: VC persuasion beats read the founder's persuasion number; the traction angle reads
-# Satış. One const per beat so a per-site remap is a one-token change.
-# 2026-08-21: `influence` became `charisma` when the areas model (§4) brought Karizma back
-# under its own name. Same number, same reads — ch. 02 §4 already defined Karizma as
-# "pitch/fundraising probability and terms", which is exactly this routing.
+# --- Beat skill routing ---
+# VC persuasion beats read Karizma (ch. 02 §4: "pitch/fundraising probability and terms");
+# the metrik and traction angles read Satış (ANGLE_SKILL's fallback). One const per beat so a
+# per-site remap is a one-token change.
 const BEAT1_SKILL := "charisma"         # Odayı oku
 const BEAT3_SKILL := "charisma"         # Sorgu postures (dürüst / spin / geçiştir)
 const BEAT4_PUSH_SKILL := "charisma"    # Masayı zorla
-const ANGLE_SKILL := {"vizyon": "charisma"}   # Beat 2 anlatı; fallback: "sales" (traction)
+const ANGLE_SKILL := {"vizyon": "charisma"}   # Beat 2 anlatı; fallback: "sales" (metrik, traction)
 
 # --- Prep ---
 const MEETING_LEAD_DAYS := 3           # request → meeting day
@@ -108,29 +98,16 @@ const EST_DIL_MIN_WIDTH := 4            # ... but never narrower than this (perc
 const EST_POS_MIN := 0.15               # true value sits 15-40 % in from one edge (or the mirror)
 const EST_POS_MAX := 0.40
 
-# --- Cascade / callbacks ---
-# (Cascade table count lives at its single home, EndingsSystem.CASCADE_TABLES — UI reads it there.)
+# --- Callbacks ---
 const CALLBACK_MRR_GROWTH_PCT := 20     # "MRR +20% over meeting-day value"
 const CALLBACK_BUGS_UNDER := 3          # "active bugs under N"
-
-# --- Soft cap eve: RETIRED (Frank v6, surface 15) ---
-# There was a Frank line on the eve of the soft cap ("yarın son gün, cebinde teklif var"),
-# inherited from the Day-180 wall before it. The document moved that card onto a
-# different moment - the last day to answer the last live OFFER - so the calendar constant it
-# rode has no reader left and is gone rather than left lying around.
-#
-# THE SOFT CAP NOW HAS NO TELEGRAPH: a run can reach EndingsSystem.SOFT_CAP_DAY with no prior
-# warning. That is open work with an owner-shaped hole in it (a "final stretch" surface, author
-# and voice undecided) and it is written up in docs/writing/FRANK_UNWIRED.md.
 
 # --- Term Sheet Table — the push-your-luck negotiation ---
 # Every number is a working placeholder (calibration pass tunes it). Each lever's push reads
 # ONE founder skill (the payoff of the onboarding skill choice) — kept as an editable data
-# table so the mapping never hides inside table logic:
-# 2026-08-21: `dilution` used to read `negotiation`, which rev 2's six areas RETIRE — there
-# is no negotiation area. Bound to Karizma as the nearest fit (ch. 02 §4 gives Karizma the
-# TERMS of a raise, not just the odds). THIS IS THE ONE BINDING rev 2 DOES NOT AUTHORIZE;
-# it is deliberately one token on one line, and it belongs to ch. 09's turn to rule on.
+# table so the mapping never hides inside table logic. `dilution` reads Karizma as the nearest
+# fit (ch. 02 §4 gives Karizma the TERMS of a raise); the Ekip GDD does not bind it — one
+# token on one line, left for ch. 09 to rule on.
 const LEVER_SKILL := {"valuation": "sales", "dilution": "charisma", "board": "charisma"}
 # Per-lever base difficulty (SkillCheck diff units). Kept 0-2 so "temel" reads legibly —
 # diff 3 would zero the base (BASE_CHANCE − 3·DIFFICULTY_STEP = 0). Board is hardest (control),
@@ -150,7 +127,7 @@ const LEVERAGE_OPEN_NOTCH := 4          # opening valuation starts +$4M better w
 # Dial spin duration (seconds) — the push roll presentation.
 const DIAL_SPIN_SECS := 0.8
 
-# --- THE TWO RUNGS (seed rung, 2026-08-27) --------------------------------
+# --- THE TWO RUNGS ---------------------------------------------------------
 # One meeting scene and one table serve both rounds. Which round a sitting IS travels on the
 # data rather than through a parameter chain: the MEETING carries it in a sitting-local static
 # (it has no sheet yet - the sheet is what it produces), and the TABLE reads it off
@@ -167,11 +144,9 @@ const SEED_LEVER_SKILL := {"raise": "charisma", "dilution": "charisma", "board":
 const SEED_LEVER_DIFF := {"raise": 1, "dilution": 1, "board": 2}
 
 # --- Series A term sheets, DERIVED FROM THE RUN (ch. 09 §5.4) -------------
-# The opening offer used to be four numbers copied verbatim off the investor row, so the same
-# company got the same sheet whether it arrived at the table with $40K or $400K of revenue.
-# It is priced now: valuation = ARR x a multiple, the multiple set by how fast the company is
-# actually growing, then nudged by the fund's own archetype. The four funds keep their
-# personalities; what they lose is the frozen number.
+# valuation = ARR x a multiple, the multiple set by how fast the company is actually growing,
+# then nudged by the fund's own archetype. The four funds keep their personalities; the price
+# comes from the run.
 #
 # The growth band reads the SAME rolling average the seed expectation and the buyout multiple
 # read (GameState.get_mom_growth_avg_pct) - one answer to "is this company growing", three
@@ -188,9 +163,8 @@ const SERIES_A_DIL_BY_ARCH := {"low": 15, "generous": 16, "mid": 18, "high": 22}
 const SERIES_A_VAL_ARCH_PCT := {"low": -20, "mid": 0, "high": 15, "generous": 25}
 
 # --- What a rejection costs (ch. 09 §4) -----------------------------------
-# "Repeated rejections cost brand and morale." They used to cost a cascade point and nothing
-# else, which made three closed doors a counter rather than a season. Small on purpose: the
-# cascade is the real consequence, this is the weather around it.
+# "Repeated rejections cost brand and morale" — on top of the cascade point. Small on purpose:
+# the cascade is the real consequence, this is the weather around it.
 const REJECT_BRAND_COST := 3
 const REJECT_MORALE_COST := 4
 
@@ -202,8 +176,6 @@ static func diff_label(diff: int) -> String:
 		_: return TranslationServer.translate("PITCH_DIFF_HARD")
 
 
-## Founder-skill display label for the odds split. Single label home is
-## FounderConstants (CSV-backed since SKILL-RENAME); kept here as a delegate so
-## existing callers (term sheet table, meeting) stay unchanged.
+## Founder-skill display label for the odds split (home: FounderConstants.skill_label).
 static func skill_label(skill_name: String) -> String:
 	return FounderConstants.skill_label(skill_name)

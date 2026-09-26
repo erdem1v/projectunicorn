@@ -51,14 +51,12 @@ visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"DialogueOdds"
-text = ""
 
 [node name="Caption" type="Label" parent="Row/TextCol"]
 visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"DialogueOdds"
-text = ""
 autowrap_mode = 3
 
 [node name="Marked" type="Label" parent="Row"]

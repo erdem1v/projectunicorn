@@ -1,8 +1,7 @@
 class_name ConvictionTrack
 extends VBoxContainer
 
-# İKNA gauge — the single conviction track that replaces the
-# mockup's GÜVEN/BASKI/İLGİ chip cluster. Three labeled zones (SOĞUK / ILIK / KAZANILDI),
+# İKNA gauge — the single conviction track. Three labeled zones (SOĞUK / ILIK / KAZANILDI),
 # an amber fill, subtle dividers at the zone bounds, and a mono readout.
 #
 # Godot concept: the bar is custom-drawn via the Track control's `draw` signal rather than
@@ -13,17 +12,14 @@ extends VBoxContainer
 @onready var _track: Control = $Track
 
 var _value: int = 0
-var _bounds: Array = PitchConstants.ZONE_BOUNDS
 
 
 func _ready() -> void:
 	_track.draw.connect(_on_track_draw)
-	_track.resized.connect(_track.queue_redraw)
 
 
-func set_value(value: int, zone_bounds: Array = PitchConstants.ZONE_BOUNDS) -> void:
+func set_value(value: int) -> void:
 	_value = clampi(value, 0, 100)
-	_bounds = zone_bounds if zone_bounds.size() == 2 else PitchConstants.ZONE_BOUNDS
 	_value_label.text = str(_value)
 	_track.queue_redraw()
 
@@ -33,7 +29,5 @@ func _on_track_draw() -> void:
 	var h: float = _track.size.y
 	_track.draw_rect(Rect2(0.0, 0.0, w, h), UiTokens.CONVICTION_TRACK_BG)
 	_track.draw_rect(Rect2(0.0, 0.0, w * _value / 100.0, h), UiTokens.ACCENT)
-	var x0: float = w * float(_bounds[0]) / 100.0
-	var x1: float = w * float(_bounds[1]) / 100.0
-	_track.draw_rect(Rect2(x0, 0.0, 1.0, h), UiTokens.SEPARATOR)
-	_track.draw_rect(Rect2(x1, 0.0, 1.0, h), UiTokens.SEPARATOR)
+	for bound in PitchConstants.ZONE_BOUNDS:
+		_track.draw_rect(Rect2(w * float(bound) / 100.0, 0.0, 1.0, h), UiTokens.SEPARATOR)

@@ -1,7 +1,7 @@
 class_name DialogueChoiceCard
 extends PanelContainer
 
-# Shared cinematic-register choice card — the dark-register counterpart to the
+# Cinematic-register choice card — the dark-register counterpart to the
 # light event_modal._build_choice_card. Renders a number chip + choice text + optional odds
 # line + optional caption (danger-tinted) + optional "marked" marker; hovers with an amber
 # edge; supports a muted, non-interactive disabled state.
@@ -22,10 +22,10 @@ var _id: String = ""
 var _disabled: bool = false
 
 
+# A disabled card ignores the mouse (setup), so hover and click below only ever reach an enabled one.
 func _ready() -> void:
-	gui_input.connect(_on_gui_input)
-	mouse_entered.connect(_on_mouse_entered)
-	mouse_exited.connect(_on_mouse_exited)
+	mouse_entered.connect(func() -> void: theme_type_variation = &"DialogueChoiceHover")
+	mouse_exited.connect(func() -> void: theme_type_variation = &"DialogueChoice")
 
 
 func setup(index: int, choice: Dictionary) -> void:
@@ -61,22 +61,6 @@ func select() -> void:
 		selected.emit(_id)
 
 
-func is_disabled() -> bool:
-	return _disabled
-
-
-func _on_gui_input(event: InputEvent) -> void:
-	if _disabled:
-		return
+func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		selected.emit(_id)
-
-
-func _on_mouse_entered() -> void:
-	if not _disabled:
-		theme_type_variation = &"DialogueChoiceHover"
-
-
-func _on_mouse_exited() -> void:
-	if not _disabled:
-		theme_type_variation = &"DialogueChoice"

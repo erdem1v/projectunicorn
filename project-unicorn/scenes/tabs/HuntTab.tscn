@@ -39,7 +39,6 @@ text = "HUNT_PAGE_TITLE"
 [node name="FrankLabel" type="Label" parent="Margin/Layout/TitleBar"]
 layout_mode = 2
 theme_type_variation = &"RowMeta"
-text = ""
 horizontal_alignment = 2
 
 [node name="Sep" type="HSeparator" parent="Margin/Layout"]
@@ -122,5 +121,4 @@ size_flags_vertical = 3
 visible = false
 layout_mode = 2
 theme_type_variation = &"RowMeta"
-text = ""
 horizontal_alignment = 2

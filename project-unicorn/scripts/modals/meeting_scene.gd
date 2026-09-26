@@ -2,10 +2,9 @@ class_name MeetingScene
 extends Control
 
 # Full-screen cinematic dialogue shell. A PURE VIEW: it renders a view_state
-# dict and emits choice intents — nothing else. Reads no autoloads except UiTokens; all
-# rules live in the future consumer (the PitchSystem for VC pitches, later the B2B
-# sales system). The same .tscn serves both because the view encodes no domain
-# assumptions it never received — the reuse contract.
+# dict and emits choice intents — nothing else. Reads no autoloads; all rules live in
+# VCPitchSystem (seed and Series A rooms alike), which main.gd drives through
+# choice_selected / withdraw_requested.
 #
 # process_mode = ALWAYS (.tscn) so it stays interactive on the paused tree.
 # No default focus; number keys 1-4 and mouse clicks select; a blind
@@ -41,9 +40,8 @@ func _ready() -> void:
 	# Colors from tokens (never inline in the .tscn) so the grep gate stays clean.
 	_room_fallback.color = UiTokens.DIALOGUE_BG
 	_scrim.color = UiTokens.SCRIM_ROOM
-	_withdraw.focus_mode = Control.FOCUS_NONE          # no keyboard focus target
-	_withdraw.pressed.connect(_on_withdraw_pressed)
-	# Simple fade-in on mount (anything richer is a later polish phase).
+	_withdraw.focus_mode = Control.FOCUS_NONE
+	_withdraw.pressed.connect(func() -> void: withdraw_requested.emit())
 	modulate = Color(1, 1, 1, 0)
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.18)
 
@@ -52,7 +50,7 @@ func populate(view_state: Dictionary) -> void:
 	_apply_room(String(view_state.get("background_path", "")))
 	_portrait.set_portrait(
 		String(view_state.get("portrait_path", "")),
-		_initials(String(view_state.get("speaker_name", ""))))
+		UiFactory.initials_of(String(view_state.get("speaker_name", ""))))
 	_name.text = UiTokens.tr_upper(String(view_state.get("speaker_name", "")))
 	_role.text = UiTokens.tr_upper(String(view_state.get("speaker_role", "")))
 
@@ -60,7 +58,7 @@ func populate(view_state: Dictionary) -> void:
 	if view_state.has("conviction"):
 		var c: Dictionary = view_state.conviction
 		_conviction.visible = true
-		_conviction.set_value(int(c.get("value", 0)), c.get("zone_bounds", PitchConstants.ZONE_BOUNDS))
+		_conviction.set_value(int(c.get("value", 0)))
 	else:
 		_conviction.visible = false
 
@@ -82,13 +80,9 @@ func populate(view_state: Dictionary) -> void:
 
 func _apply_room(path: String) -> void:
 	# Covered-aspect fills the frame at any size; missing file → flat charcoal fallback.
-	if path != "" and ResourceLoader.exists(path):
-		var tex: Texture2D = load(path)
-		if tex is Texture2D:
-			_room_art.texture = tex
-			return
-	_room_art.texture = null
-	if path != "":
+	var tex: Texture2D = load(path) if path != "" and ResourceLoader.exists(path) else null
+	_room_art.texture = tex
+	if tex == null and path != "":
 		push_warning("[MeetingScene] room art missing, flat charcoal fallback: %s" % path)
 
 
@@ -109,36 +103,17 @@ func _apply_active_line(line: Dictionary, monologue_text: String) -> void:
 
 func _build_choices(choices: Array) -> void:
 	for c in _cards:
-		if is_instance_valid(c):
-			c.queue_free()
+		c.queue_free()
 	_cards.clear()
 	for i in choices.size():
 		var card: DialogueChoiceCard = CHOICE_CARD.instantiate()
 		_choices_box.add_child(card)          # add before setup — @onready refs resolve here
 		card.setup(i, choices[i])
-		card.selected.connect(_on_choice_selected)
+		card.selected.connect(func(id: String) -> void: choice_selected.emit(id))
 		_cards.append(card)
 
 
-func _initials(full_name: String) -> String:
-	var out := ""
-	for p in full_name.strip_edges().split(" ", false):
-		if p.length() > 0:
-			out += p[0]
-		if out.length() >= 2:
-			break
-	return UiTokens.tr_upper(out)
-
-
-# --- input / signals --------------------------------------------------------
-
-func _on_choice_selected(id: String) -> void:
-	choice_selected.emit(id)
-
-
-func _on_withdraw_pressed() -> void:
-	withdraw_requested.emit()
-
+# --- input ------------------------------------------------------------------
 
 func _input(event: InputEvent) -> void:
 	# Deliberate number-key selection (1-4) is allowed. Enter/Space are NOT bound, so a
@@ -164,15 +139,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 # ============================================================================
-# Debug fixtures — literal view_state dicts, no autoload reads. game_shell
-# builds these and emits them through EventBus; main.gd mounts + populates.
+# Debug fixtures — literal view_state dicts for game_shell's Shift+F2 and its
+# debug_force_meeting / _long MCP relays; main.gd mounts + populates. Their strings are a
+# FIXTURE, not shipped copy: the long ones exist to overflow the box, so keying them would
+# defeat them. Each quoted line carries its own loc_residue marker.
 # ============================================================================
 
-# --- DEBUG SHOT FIXTURES ---------------------------------------------------
-# Demo payloads for --pitch-shot and the layout overflow test. Their strings are
-# a FIXTURE, not shipped copy: the long ones exist precisely to overflow the box,
-# so keying them would defeat what they are for. Every quoted value below the
-# marker is # LOC-DATA by this note.
 static func debug_fixture_full() -> Dictionary:
 	return {
 		"background_path": "res://assets/art/rooms/room_anchor.webp",   # LOC-DATA shot fixture
@@ -185,7 +157,7 @@ static func debug_fixture_full() -> Dictionary:
 			"is_monologue": false,   # LOC-DATA shot fixture
 		},
 		"monologue_text": "Gözleri rakamlarda, sende değil — bir kurucu değil, bir tablo görmek istiyor.",   # LOC-DATA shot fixture
-		"conviction": {"value": 52, "zone_bounds": PitchConstants.ZONE_BOUNDS},   # LOC-DATA shot fixture
+		"conviction": {"value": 52},   # LOC-DATA shot fixture
 		"choices": [   # LOC-DATA shot fixture
 			{"id": "retention", "text": "Retention stabil çünkü enterprise tarafa pivot ettik; burn artışı o geçişin yatırımı.", "odds_text": "Zorlu — %58", "marked": true, "marked_text": "PROVA EDİLDİ"},   # LOC-DATA shot fixture
 			{"id": "plan", "text": "Haklısınız. Önümüzdeki 90 günde burn'ü %22 düşürecek planı devreye aldık.", "odds_text": "Güvenli — %81", "caption": "Düşük risk, düşük getiri."},   # LOC-DATA shot fixture
@@ -199,7 +171,7 @@ static func debug_fixture_full() -> Dictionary:
 
 
 static func debug_fixture_long() -> Dictionary:
-	# Extreme-length strings — text-safety proof (verification 6). Nothing may overflow.
+	# Extreme-length strings — the text-safety proof. Nothing may overflow.
 	return {
 		"background_path": "res://assets/art/rooms/room_meridian.webp",   # LOC-DATA shot fixture
 		"portrait_path": "res://assets/art/investors/portrait_meridian.webp",   # LOC-DATA shot fixture
@@ -211,7 +183,7 @@ static func debug_fixture_long() -> Dictionary:
 			"is_monologue": false,   # LOC-DATA shot fixture
 		},
 		"monologue_text": "Bu çok uzun bir iç ses satırı: taşma testi için bilinçli olarak uzatılmış, kutunun dışında, daha soluk ve girintili render edilmeli ve hiçbir koşulda kolonun kenarından taşmamalı.",   # LOC-DATA shot fixture
-		"conviction": {"value": 88, "zone_bounds": PitchConstants.ZONE_BOUNDS},   # LOC-DATA shot fixture
+		"conviction": {"value": 88},   # LOC-DATA shot fixture
 		"choices": [   # LOC-DATA shot fixture
 			{"id": "pipeline", "text": "Qualified pipeline. Outbound'ı otomatikleştirdik, toplantı kapasitesini üçe katladık ve dönüşüm oranını çeyrek boyunca istikrarlı biçimde yukarı taşıdık.", "odds_text": "Zorlu — %61", "caption": "Uzun caption taşma testi: bu satır da bilinçli olarak uzun tutuldu ki kart içinde sarılsın, taşmasın.", "marked": true},   # LOC-DATA shot fixture
 			{"id": "activation", "text": "Aktivasyon. İlk on dakikayı yeniden yazdık — 'aha' anı artık %40 daha erken geliyor.", "odds_text": "Güvenli — %79"},   # LOC-DATA shot fixture

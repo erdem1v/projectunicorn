@@ -1,23 +1,21 @@
 class_name SeedConstants
 extends RefCounted
 
-# THE SEED RUNG'S SINGLE CALIBRATION SURFACE (GDD v2 ch. 09 §3, director parameters
-# 2026-08-27). Every number here is a working value; the playtest gate retunes this file and
-# the two blocks it names in PitchConstants, and nothing else.
+# THE SEED RUNG'S SINGLE CALIBRATION SURFACE (GDD v2 ch. 09 §3). Every number here is a
+# working value; the playtest gate retunes this file and the seed lever tables in
+# PitchConstants (SEED_LEVER_SKILL / SEED_LEVER_DIFF), and nothing else.
 #
 # WHY A SECOND CONSTANTS FILE INSTEAD OF MORE ROWS IN PitchConstants. PitchConstants is the
 # GLOBAL pitch surface — zones, beat deltas, prep, sheet economy, the term-sheet table's lever
 # tables — and both stages read it. This file is read by ONE rung. Keeping them apart is what
 # lets a calibration pass answer "what does the seed cost" by opening one file.
 #
-# NAMING, AND THE COLLISION THIS FILE WAS BORN NEXT TO. `PitchConstants.SEED_*` used to mean
-# CONVICTION SEEDING, not a seed round; the two families were renamed apart (SEED_* → CONV_*)
-# in the step before this file existed. Inside this file `CONV_*` means "the seed room's
-# conviction profile", and the call site always says which room: `SeedConstants.CONV_MRR_REFERENCE`
-# is the seed room, `PitchConstants.CONV_MRR_REFERENCE` is the Series A room.
+# NAMING. Inside this file `CONV_*` means "the seed room's conviction profile"; the call site
+# always says which room: `SeedConstants.CONV_MRR_REFERENCE` is the seed room,
+# `PitchConstants.CONV_MRR_REFERENCE` is the Series A room.
 
 
-# --- The door (ruling 1) ---------------------------------------------------
+# --- The door --------------------------------------------------------------
 # Traction phase only, and the bar is NEVER RENDERED — the appetite grammar (the signal is
 # shown, the number is not) governs this door exactly as it governs the Series A one.
 const DOOR_MRR := 20_000                  # the live bar (band anchor)
@@ -25,24 +23,20 @@ const DOOR_MRR_BAND := [15_000, 25_000]   # [ÇALIŞMA] the envelope the anchor 
 const DOOR_PHASE := 2                     # Traction. The door CLOSES on entering phase 3:
                                           # one seed pitch per run, taken here or not at all.
 
-# --- Conviction → term band (ruling 3) -------------------------------------
+# --- Conviction → term band ------------------------------------------------
 # SEED CANNOT HARD-REJECT. The room still has a temperature; what changes is what the
 # temperature buys. The cut points are deliberately ALIASED to the meeting's own zone bounds so
 # the conviction track the player watched all meeting maps 1:1 onto the band they get —
 # Soğuk → harsh, Ilık → standard, Kazanıldı → strong. A separate pair of cut points would have
 # let the dial say one thing and the sheet say another.
-const BAND_STRONG_MIN := PitchConstants.WON_MIN      # 70
-const BAND_STANDARD_MIN := PitchConstants.ILIK_MIN   # 40
+const BAND_STRONG_MIN := PitchConstants.WON_MIN
+const BAND_STANDARD_MIN := PitchConstants.ILIK_MIN
 const BAND_STRONG := "strong"
 const BAND_STANDARD := "standard"
 const BAND_HARSH := "harsh"
 const BAND_IDS := [BAND_HARSH, BAND_STANDARD, BAND_STRONG]   # index order == severity order
-# Card bodies vary `by_seam` on funding.seed_band, and EvPresenter._resolve_variant runs the
-# seam value through int() — so the seam carries an INDEX into BAND_IDS, never the id string.
-# A String there would collapse to 0 and every variant body would render the harsh arm forever.
-const BAND_INDEX := {BAND_HARSH: 0, BAND_STANDARD: 1, BAND_STRONG: 2}
 
-# --- Raise + dilution bands (ruling 4) -------------------------------------
+# --- Raise + dilution bands ------------------------------------------------
 # Real-world-anchored: $100-150K at 12-18% implies a $555K-$1.25M post, the compressed end of a
 # real pre-seed. The implied post is a DERIVED CAPTION at the table, never a lever — see
 # TermSheetTableSystem.implied_post_money(). It cannot be pushed because it has no row.
@@ -83,7 +77,7 @@ const PATIENCE_BY_BAND := {BAND_STRONG: 4, BAND_STANDARD: 3, BAND_HARSH: 2}
 const ARCH_RAISE_NUDGE := {"generous": 10_000, "high": 5_000, "mid": 0, "low": -5_000}
 const ARCH_DIL_NUDGE := {"generous": -1, "low": -1, "mid": 0, "high": 1}
 
-# --- The seed room's conviction profile (ruling 2) -------------------------
+# --- The seed room's conviction profile ------------------------------------
 # REWEIGHTED TOWARD THE FOUNDER AND THE INSIGHT, AWAY FROM HARD METRICS. That is the whole
 # difference between the two rooms, and it is why one scene can run both: a seed investor is
 # buying a person and a thesis, a Series A investor is auditing a business.
@@ -108,16 +102,15 @@ const CONV_SCANDAL_PENALTY := -12         # UNCHANGED from Series A on purpose: 
 # choices, priced for a different room.
 const CONV_ANGLE_SHIFT := {"vizyon": -1, "traction": 0, "metrik": 1}
 
-# --- Seeded-you warmth at Series A (ruling 10) -----------------------------
+# --- Seeded-you warmth at Series A -----------------------------------------
 # The fund that led the seed walks into the Series A room already believing. Read by
 # VCPitchSystem.initial_conviction, and it is the ONLY piece of ch. 09 §6's relationship model
-# this wave lands — passed / you-walked / you-pushed-hard are still open work.
+# that is built; the other states (passed / you-walked / you-pushed-hard) are not.
 const SEED_LEAD_WARMTH_BONUS := 10
 
-# --- Growth expectation after taking the money (ruling 7) ------------------
-# Taking seed means owing growth (ch. 09 §2). The expectation is a ROLLING AVERAGE, not a
-# streak: one bad month inside a good quarter is not a stall, and get_mrr_growth_streak — the
-# helper sitting right next to the one this reads — would have called it one.
+# --- Growth expectation after taking the money -----------------------------
+# Taking seed means owing growth (ch. 09 §2), judged as a ROLLING AVERAGE, not a streak —
+# SeedRoundSystem.expectation() says why.
 const EXPECT_MOM_PCT := 10            # rolling month-over-month average the run is judged against
 const EXPECT_WINDOW_MONTHS := 3       # the window that average is taken over
 const EXPECT_GRACE_DAYS := 60         # from signing: nothing grows in the first two months
@@ -128,10 +121,10 @@ const EXPECT_STALLED := 3             # "durgun" — the state that colours the 
 
 # --- Bookkeeping -----------------------------------------------------------
 const TX_LABEL := "seed_round"        # raw id; display via FinanceSystem.ONE_TIME_LABELS
-# THE SEED OFFER NEVER LAPSES (ruling 6): the rung is guaranteed once entered, so an expiry
-# would be a way to lose it by doing nothing. TermSheet.days_left() still has to return
-# something, and a sentinel far in the future keeps every generic countdown renderer honest
-# instead of letting it read a negative number and call the offer dead.
+# THE SEED OFFER NEVER LAPSES: the rung is guaranteed once entered, so an expiry would be a
+# way to lose it by doing nothing. The sheet still carries an expires_day, and a sentinel far
+# in the future keeps every generic countdown renderer honest instead of letting it read a
+# negative number and call the offer dead.
 const NO_EXPIRY_DAY := 2_000_000_000
 
 
@@ -148,7 +141,10 @@ static func band_for(conviction: int) -> String:
 	return BAND_HARSH
 
 
-## The band's index, for the `by_seam` card bodies. Unknown ids read as harsh rather than
-## erroring: a body that renders the wrong arm is recoverable, a crash mid-meeting is not.
+## The band's index into BAND_IDS, for the `by_seam` card bodies: EvPresenter._resolve_variant
+## runs the seam value through int(), so the seam carries an INDEX, never the id string (a
+## String would collapse to 0 and every variant body would render the harsh arm forever).
+## Unknown ids read as harsh rather than erroring: a body that renders the wrong arm is
+## recoverable, a crash mid-meeting is not.
 static func band_index(band_id: String) -> int:
-	return int(BAND_INDEX.get(band_id, 0))
+	return maxi(0, BAND_IDS.find(band_id))

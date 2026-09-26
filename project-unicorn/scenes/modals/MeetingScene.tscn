@@ -127,7 +127,6 @@ theme_override_constants/margin_left = 12
 [node name="MonologueLabel" type="Label" parent="Column/Body/Content/MonologueWrap"]
 layout_mode = 2
 theme_type_variation = &"DialogueMonologue"
-text = ""
 autowrap_mode = 3
 
 [node name="QuoteBox" type="PanelContainer" parent="Column/Body/Content"]
@@ -141,13 +140,11 @@ theme_override_constants/separation = 6
 [node name="QuoteLabel" type="Label" parent="Column/Body/Content/QuoteBox/QuoteVBox"]
 layout_mode = 2
 theme_type_variation = &"QuoteSerifCream"
-text = ""
 autowrap_mode = 3
 
 [node name="TagLabel" type="Label" parent="Column/Body/Content/QuoteBox/QuoteVBox"]
 layout_mode = 2
 theme_type_variation = &"DialogueTag"
-text = ""
 
 [node name="ChoicesHeader" type="HBoxContainer" parent="Column/Body/Content"]
 layout_mode = 2

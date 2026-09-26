@@ -3,7 +3,8 @@ extends Node
 # Investor roster — the static truth for Series A Hunt.
 # Autoload (CustomerRegistry shell) but the DATA is a const table (PhaseGate GATES style):
 # one registry feeds BOTH systems — archetype weights the meeting's check difficulties AND
-# writes the table's opening offer + patience pool. Consistency is free.
+# sets the table's patience pool, board position and the archetype words that nudge the
+# priced offer. Consistency is free.
 #
 # Per-run VC RUNTIME state (open/closed/callback/pending_sheet) lives on GameState.vc_states,
 # NEVER here (PhaseGate rule: static truth in the system, persistent state on GameState).
@@ -13,14 +14,6 @@ extends Node
 # Conviction weights map each Beat-2 angle → SkillCheck difficulty (PitchConstants.DIFF_*).
 # The easiest angle is the VC's "favored" one, revealed as a marker on a successful Beat 1.
 # All numbers are working placeholders (calibration pass edits this table + PitchConstants).
-#
-# `interrogation_intensity` LIVED HERE AND IS GONE (2026-08-27). It carried a word per fund
-# (soft / mid / mid / hard) and had ZERO readers anywhere in the codebase: Beat-3 difficulty
-# comes from PitchConstants.DURUST_DIFF / SPIN_DIFF / GECISTIR_DIFF, and which family of
-# question gets asked comes from `domain`. A field that describes a personality nothing
-# consults is worse than an absent one — it reads as implemented. If the archetype should
-# bite harder in the room, the wire to build is a per-fund term in the Beat-3 difficulty,
-# and that is a design decision rather than a restoration.
 
 const INVESTORS := [
 	{
@@ -118,11 +111,7 @@ func get_all() -> Array:
 
 # Pitchable roster (excludes the locked teaser) — the schedulable VCs.
 func get_active() -> Array:
-	var out: Array = []
-	for inv in INVESTORS:
-		if not inv.get("locked", false):
-			out.append(inv)
-	return out
+	return INVESTORS.filter(func(inv: Dictionary) -> bool: return not inv.get("locked", false))
 
 
 func is_locked(vc_id: String) -> bool:
@@ -142,11 +131,8 @@ func favored_angle(vc_id: String) -> String:
 
 
 # ============================================================================
-# COPY ACCESSORS — the words left this table for strings.csv (Faz 2 · B7).
+# COPY ACCESSORS — the table keeps string keys; the words resolve at render time.
 # ============================================================================
-# role_line / archetype_line / domain_chip held finished Turkish, and term_bands held
-# Turkish words that rode along on TermSheet (an @export) into whatever read it. The table
-# keeps ids; the words are resolved at render time.
 
 ## "Kıdemli Ortak" / "Senior Partner". "" for the locked Tier-2 slot.
 func role_line(investor_id: String) -> String:
@@ -166,11 +152,3 @@ func domain_chip(investor_id: String) -> String:
 func _copy(investor_id: String, field: String) -> String:
 	var key: String = String(get_investor(investor_id).get(field, ""))
 	return "" if key == "" else TranslationServer.translate(key)
-
-
-## Term-band id → word ("yüksek" / "high"). The bands are stored as ids on TermSheet, so a
-## sheet written in one language reads correctly in the other.
-func term_band_label(band_id: String) -> String:
-	if band_id == "":
-		return ""
-	return TranslationServer.translate("TERM_BAND_" + band_id.to_upper())

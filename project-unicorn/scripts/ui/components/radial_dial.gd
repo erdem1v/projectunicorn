@@ -30,49 +30,35 @@ func _ready() -> void:
 	_readout.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_readout.theme_type_variation = &"ConvictionValue"
 	add_child(_readout)
-	resized.connect(queue_redraw)
 	_sync_readout()
 
 
-## Rest state — needle at the odds boundary, no landed result (S1/S2).
+## Rest state — needle at the odds boundary, no landed result.
 func set_odds(chance: float) -> void:
-	_kill_tween()
-	_chance = clampf(chance, 0.0, 1.0)
-	_result = ""
+	_set_state(chance, "")
 	_needle_v = _chance
-	_sync_readout()
-	queue_redraw()
 
 
 ## Post-push rest — keep the needle where the spin landed, recolour the arc to the new odds,
-## keep the green/red result tint. Used by the scene's _render after a spin settles (S4/S5/S6).
+## keep the green/red result tint. Used by the scene's _render after a spin settles.
 func show_result_rest(chance: float, passed: bool) -> void:
-	_kill_tween()
-	_chance = clampf(chance, 0.0, 1.0)
-	_result = "success" if passed else "failure"
-	_sync_readout()
-	queue_redraw()
+	_set_state(chance, "success" if passed else "failure")
 
 
 ## Animate a push: sweep the needle from the green end and land it in green (won) or red (lost).
 func spin(chance: float, passed: bool) -> void:
-	_kill_tween()
-	_chance = clampf(chance, 0.0, 1.0)
-	_result = "success" if passed else "failure"
+	_set_state(chance, "success" if passed else "failure")
 	_needle_v = 0.0
-	_sync_readout()
-	queue_redraw()
 	_tween = create_tween()
 	_tween.tween_method(_set_needle, 0.0, _land_v(), PitchConstants.DIAL_SPIN_SECS) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_tween.finished.connect(func() -> void: spin_finished.emit())
+	_tween.finished.connect(spin_finished.emit)
 
 
 ## Click-to-finalize the current spin (skippable).
 func skip() -> void:
 	if _tween != null and _tween.is_valid() and _tween.is_running():
-		_tween.kill()
-		_tween = null
+		_kill_tween()
 		_needle_v = _land_v()
 		queue_redraw()
 		spin_finished.emit()
@@ -88,6 +74,15 @@ func _set_needle(v: float) -> void:
 	queue_redraw()
 
 
+## Kill any spin, take the new odds and result, repaint.
+func _set_state(chance: float, result: String) -> void:
+	_kill_tween()
+	_chance = clampf(chance, 0.0, 1.0)
+	_result = result
+	_sync_readout()
+	queue_redraw()
+
+
 func _kill_tween() -> void:
 	if _tween != null:
 		_tween.kill()
@@ -95,8 +90,6 @@ func _kill_tween() -> void:
 
 
 func _sync_readout() -> void:
-	if _readout == null:
-		return
 	_readout.text = Fmt.percent(int(round(_chance * 100.0)), 0)
 	_readout.add_theme_color_override("font_color", _needle_color())
 

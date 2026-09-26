@@ -7,9 +7,10 @@ extends Control
 # the system — this scene only paints and animates the dial. Built programmatically (like
 # hunt_tab's cards) over a minimal .tscn root so the layout is authored in one pass.
 #
-# process_mode = ALWAYS (.tscn) keeps it live on the paused tree. No
-# default focus (all buttons FOCUS_NONE), number keys 1-3 select a lever, a blind Enter/Space
-# on open does nothing. The seven states are all just different view_states through _render.
+# The .tscn root carries process_mode = ALWAYS (live on the paused tree), the full-rect anchors
+# and the click-eating mouse filter. No default focus (all buttons FOCUS_NONE), number keys 1-3
+# select a lever, a blind Enter/Space on open does nothing. Every table state is just a
+# different view_state through _render.
 
 signal closed()
 
@@ -40,12 +41,11 @@ var _pending_vs: Dictionary = {}
 
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build()
 	_dial.spin_finished.connect(_on_spin_finished)
 	modulate = Color(1, 1, 1, 0)
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.18)
-	# The system was open()ed by main before mount — self-render from it (humble view).
+	# main open()s the system before mounting this scene, so it self-renders from it.
 	_render(TermSheetTableSystem.view_state())
 
 
@@ -54,9 +54,6 @@ func _ready() -> void:
 # ============================================================================
 
 func _build() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_STOP
-
 	var bg := ColorRect.new()
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.color = UiTokens.DIALOGUE_BG              # from token, never inline (grep gate)
@@ -113,20 +110,16 @@ func _build_header() -> Control:
 	idcol.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	idcol.add_theme_constant_override("separation", 2)
 	hb.add_child(idcol)
-	_name_label = Label.new()
-	_name_label.theme_type_variation = &"DialogueName"
+	_name_label = UiFactory.make_label("", &"DialogueName")
 	idcol.add_child(_name_label)
-	_archetype_label = Label.new()
-	_archetype_label.theme_type_variation = &"DialogueRole"
+	_archetype_label = UiFactory.make_label("", &"DialogueRole")
 	idcol.add_child(_archetype_label)
 
 	var patcol := VBoxContainer.new()
 	patcol.alignment = BoxContainer.ALIGNMENT_CENTER
 	patcol.add_theme_constant_override("separation", 6)
 	hb.add_child(patcol)
-	var sabir := Label.new()
-	sabir.theme_type_variation = &"ZoneLabel"
-	sabir.text = tr("TERM_PATIENCE")
+	var sabir := UiFactory.make_label(tr("TERM_PATIENCE"), &"ZoneLabel")
 	sabir.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	patcol.add_child(sabir)
 	_pip_box = HBoxContainer.new()
@@ -146,18 +139,12 @@ func _build_left_column() -> Control:
 	vb.add_theme_constant_override("separation", 12)
 	panel.add_child(vb)
 
-	var header := Label.new()
-	header.theme_type_variation = &"ZoneLabel"
-	header.text = tr("TERM_OFFER_HEADER")
-	vb.add_child(header)
+	vb.add_child(UiFactory.make_label(tr("TERM_OFFER_HEADER"), &"ZoneLabel"))
 
 	_lever_rows.clear()
-	# levers(), NOT the LEVERS const: the seed table's first row is a RAISE and this loop
-	# binds a lever id into every row's handlers at build time. Left on the const, a seed
-	# sitting would paint three rows whose buttons say "valuation" while the view state says
-	# "raise" — can_push would answer for a lever that is not on the sheet and _apply_push
-	# would write valuation_m into a seed offer. main.gd opens the system before it
-	# instantiates the scene, so the stage is already settled by the time this runs.
+	# levers(), NOT the LEVERS const: every row binds its lever id into its handlers here, and
+	# the seed table's first row is a RAISE. main.gd opens the system before it instantiates
+	# the scene, so the stage is already settled by the time this runs.
 	for lever_id in TermSheetTableSystem.levers():
 		vb.add_child(_build_lever_row(lever_id))
 
@@ -176,23 +163,16 @@ func _build_lever_row(lever_id: String) -> Control:
 
 	var top := HBoxContainer.new()
 	vb.add_child(top)
-	var name_label := Label.new()
-	name_label.theme_type_variation = &"ZoneLabel"
+	var name_label := UiFactory.make_label("", &"ZoneLabel")
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
-	var push_btn := Button.new()
-	push_btn.theme_type_variation = &"CommitButton"
-	push_btn.focus_mode = Control.FOCUS_NONE     # mouse only, no keyboard grab
-	push_btn.text = tr("TERM_PUSH")
-	push_btn.pressed.connect(_on_push_pressed.bind(lever_id))
+	var push_btn := _button(tr("TERM_PUSH"), &"CommitButton", _on_push_pressed.bind(lever_id))
 	top.add_child(push_btn)
 
-	var value_label := Label.new()
-	value_label.theme_type_variation = &"DialogueName"
+	var value_label := UiFactory.make_label("", &"DialogueName")
 	vb.add_child(value_label)
 
-	var odds_label := Label.new()
-	odds_label.theme_type_variation = &"DialogueOdds"
+	var odds_label := UiFactory.make_label("", &"DialogueOdds")
 	vb.add_child(odds_label)
 
 	_lever_rows.append({
@@ -210,16 +190,12 @@ func _build_right_column() -> Control:
 	vb.add_theme_constant_override("separation", 14)
 	panel.add_child(vb)
 
-	var header := Label.new()
-	header.theme_type_variation = &"ZoneLabel"
-	header.text = tr("TERM_RESULT_HEADER")
-	vb.add_child(header)
+	vb.add_child(UiFactory.make_label(tr("TERM_RESULT_HEADER"), &"ZoneLabel"))
 
 	_dial = RadialDial.new()
 	vb.add_child(_dial)
 
-	_result_caption = Label.new()
-	_result_caption.theme_type_variation = &"QuoteSerifCream"
+	_result_caption = UiFactory.make_label("", &"QuoteSerifCream")
 	_result_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(_result_caption)
@@ -231,11 +207,9 @@ func _build_right_column() -> Control:
 	var inv_vb := VBoxContainer.new()
 	inv_vb.add_theme_constant_override("separation", 4)
 	_investor_box.add_child(inv_vb)
-	_investor_tag = Label.new()
-	_investor_tag.theme_type_variation = &"DialogueTag"
+	_investor_tag = UiFactory.make_label("", &"DialogueTag")
 	inv_vb.add_child(_investor_tag)
-	_investor_line = Label.new()
-	_investor_line.theme_type_variation = &"QuoteSerifCream"
+	_investor_line = UiFactory.make_label("", &"QuoteSerifCream")
 	_investor_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	inv_vb.add_child(_investor_line)
 	_investor_box.visible = false
@@ -245,22 +219,16 @@ func _build_right_column() -> Control:
 	_leverage_box.theme_type_variation = &"QuoteBox"
 	var lev_vb := VBoxContainer.new()
 	_leverage_box.add_child(lev_vb)
-	_leverage_label = Label.new()
-	_leverage_label.theme_type_variation = &"DialogueMonologue"
+	_leverage_label = UiFactory.make_label("", &"DialogueMonologue")
 	_leverage_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lev_vb.add_child(_leverage_label)
 	vb.add_child(_leverage_box)
 
-	_show_other_btn = Button.new()
-	_show_other_btn.theme_type_variation = &"DialogueGhost"
-	_show_other_btn.focus_mode = Control.FOCUS_NONE
-	_show_other_btn.text = tr("TERM_SHOW_OTHER")
+	_show_other_btn = _button(tr("TERM_SHOW_OTHER"), &"DialogueGhost", _on_show_other_pressed)
 	_show_other_btn.visible = false
-	_show_other_btn.pressed.connect(_on_show_other_pressed)
 	vb.add_child(_show_other_btn)
 
-	_frank_label = Label.new()
-	_frank_label.theme_type_variation = &"DialogueMonologue"
+	_frank_label = UiFactory.make_label("", &"DialogueMonologue")
 	_frank_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_frank_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vb.add_child(_frank_label)
@@ -275,12 +243,10 @@ func _build_footer() -> Control:
 	# Pressure strip: Kasa · Runway (left) — Kapanan masa (right).
 	var strip := HBoxContainer.new()
 	outer.add_child(strip)
-	_kasa_label = Label.new()
-	_kasa_label.theme_type_variation = &"StatStripLabel"
+	_kasa_label = UiFactory.make_label("", &"StatStripLabel")
 	_kasa_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	strip.add_child(_kasa_label)
-	_counter_label = Label.new()
-	_counter_label.theme_type_variation = &"DialogueTag"
+	_counter_label = UiFactory.make_label("", &"DialogueTag")
 	_counter_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	strip.add_child(_counter_label)
 
@@ -288,11 +254,7 @@ func _build_footer() -> Control:
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 16)
 	outer.add_child(actions)
-	_walk_btn = Button.new()
-	_walk_btn.theme_type_variation = &"DialogueGhost"
-	_walk_btn.focus_mode = Control.FOCUS_NONE
-	_walk_btn.text = tr("TERM_WALK_OK")
-	_walk_btn.pressed.connect(_on_walk_pressed)
+	_walk_btn = _button(tr("TERM_WALK_OK"), &"DialogueGhost", _on_walk_pressed)
 	actions.add_child(_walk_btn)
 
 	# The money and its derived caption stack, so the seed table can say "$120.000 yatırım"
@@ -309,34 +271,36 @@ func _build_footer() -> Control:
 	money_col.add_child(_investment_label)
 
 	# The seed table's derived readout: raise / dilution, under the money it is derived from.
-	# A LABEL AND NOT A ROW, deliberately — ruling 4 says the implied valuation is shown and
-	# never negotiated, and having no lever row for it is what makes that structural rather
-	# than a guard somebody can forget. DialogueTag is the variation the closed-tables
-	# counter already uses, so this adds no theme surface and no THEME_STAMP bump.
-	_derived_label = Label.new()
-	_derived_label.theme_type_variation = &"DialogueTag"
+	# A LABEL AND NOT A ROW, deliberately — the implied valuation is shown and never
+	# negotiated, and having no lever row for it makes that structural rather than a guard
+	# somebody can forget. DialogueTag is the closed-tables counter's variation, so the label
+	# adds no theme surface.
+	_derived_label = UiFactory.make_label("", &"DialogueTag")
 	_derived_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_derived_label.visible = false
 	money_col.add_child(_derived_label)
 
-	_sign_btn = Button.new()
-	_sign_btn.theme_type_variation = &"CommitButton"
-	_sign_btn.focus_mode = Control.FOCUS_NONE
-	_sign_btn.text = tr("TERM_SIGN_OK")
+	_sign_btn = _button(tr("TERM_SIGN_OK"), &"CommitButton", _on_sign_pressed)
 	_sign_btn.custom_minimum_size = Vector2(200, 0)
-	_sign_btn.pressed.connect(_on_sign_pressed)
 	actions.add_child(_sign_btn)
 
 	return outer
 
 
+func _button(text: String, variation: StringName, on_pressed: Callable) -> Button:
+	var b := Button.new()
+	b.theme_type_variation = variation
+	b.focus_mode = Control.FOCUS_NONE     # mouse only, no keyboard grab
+	b.text = text
+	b.pressed.connect(on_pressed)
+	return b
+
+
 # ============================================================================
-# Render — the single paint of a view_state (anti-gap discipline)
+# Render — the single paint of a view_state
 # ============================================================================
 
 func _render(vs: Dictionary) -> void:
-	if vs.is_empty():
-		return
 	_name_label.text = UiTokens.tr_upper(String(vs.get("display_name", "")))
 	_archetype_label.text = String(vs.get("archetype_line", ""))
 	var pp: String = String(vs.get("portrait_path", ""))
@@ -345,9 +309,7 @@ func _render(vs: Dictionary) -> void:
 
 	var levers: Array = vs.get("levers", [])
 	var selected: String = String(vs.get("selected_lever", ""))
-	for i in _lever_rows.size():
-		if i >= levers.size():
-			continue
+	for i in mini(_lever_rows.size(), levers.size()):
 		var L: Dictionary = levers[i]
 		var row: Dictionary = _lever_rows[i]
 		var cur: String = String(L.get("current_text", ""))
@@ -376,7 +338,7 @@ func _render(vs: Dictionary) -> void:
 	var inv_line: String = String(vs.get("investor_line", ""))
 	_investor_box.visible = inv_line != ""
 	_investor_line.text = inv_line
-	_investor_tag.text = UiTokens.tr_upper(String(vs.get("display_name", "")))
+	_investor_tag.text = _name_label.text
 
 	var so: Dictionary = vs.get("show_other", {})
 	_show_other_btn.visible = bool(so.get("visible", false))
@@ -425,7 +387,7 @@ func _caption_color(result: String) -> Color:
 
 
 # ============================================================================
-# Interaction — route back into the system (S2 select, S3/S4/S5 push, S7 sign/walk)
+# Interaction — route back into the system (select, push, show other, sign, walk, leave)
 # ============================================================================
 
 func _on_lever_row_input(event: InputEvent, lever_id: String) -> void:
@@ -445,24 +407,16 @@ func _on_push_pressed(lever_id: String) -> void:
 		return
 	var chance: float = float(TermSheetTableSystem.odds_for(lever_id).chance)  # pre-decay odds rolled
 	_spinning = true
-	_set_pushes_enabled(false)                     # S3 — double-fire guard
+	for row in _lever_rows:
+		row.push_btn.disabled = true               # double-fire guard while the dial spins
 	_pending_vs = TermSheetTableSystem.push()      # already-settled result
 	var passed: bool = String(_pending_vs.get("dial", {}).get("result", "")) == "success"
 	_dial.spin(chance, passed)
 
 
 func _on_spin_finished() -> void:
-	if not _spinning:
-		return
 	_spinning = false
-	var vs: Dictionary = _pending_vs if not _pending_vs.is_empty() else TermSheetTableSystem.view_state()
-	_pending_vs = {}
-	_render(vs)
-
-
-func _set_pushes_enabled(on: bool) -> void:
-	for row in _lever_rows:
-		row.push_btn.disabled = not on
+	_render(_pending_vs)
 
 
 func _on_sign_pressed() -> void:
@@ -476,12 +430,12 @@ func _on_sign_pressed() -> void:
 			"terms": _terms_line(vs)}),
 		"confirm_text": tr("TERM_SIGN_OK"),
 		"cancel_text": tr("UI_DISMISS"),
-		"on_confirm": Callable(self, "_do_sign"),
+		"on_confirm": _do_sign,
 	})
 
 
 func _do_sign() -> void:
-	TermSheetTableSystem.sign()   # fires the Series A Hard Win ending
+	TermSheetTableSystem.sign()   # Series A fires the Hard Win ending; seed closes the round (no ending)
 	closed.emit()
 
 
@@ -497,7 +451,7 @@ func _on_walk_pressed() -> void:
 		"body": tr("TERM_WALK_BODY"),
 		"confirm_text": tr("TERM_WALK_OK"),
 		"cancel_text": tr("UI_DISMISS"),
-		"on_confirm": Callable(self, "_do_walk"),
+		"on_confirm": _do_walk,
 	})
 
 
@@ -508,7 +462,7 @@ func _on_show_other_pressed() -> void:
 
 
 func _do_walk() -> void:
-	TermSheetTableSystem.walk()   # +1 rejection, sheet destroyed, others survive
+	TermSheetTableSystem.walk()   # sheet destroyed, fund closed, others survive; the player's walk is not a rejection
 	closed.emit()
 
 
@@ -517,16 +471,6 @@ func _terms_line(vs: Dictionary) -> String:
 	for L in vs.get("levers", []):
 		parts.append(String(L.get("current_text", "")))
 	return " · ".join(parts)
-
-
-func _initials(full_name: String) -> String:
-	var out := ""
-	for p in full_name.strip_edges().split(" ", false):
-		if p.length() > 0:
-			out += p[0]
-		if out.length() >= 2:
-			break
-	return UiTokens.tr_upper(out)
 
 
 func _input(event: InputEvent) -> void:
@@ -540,8 +484,7 @@ func _input(event: InputEvent) -> void:
 		KEY_1, KEY_KP_1: idx = 0
 		KEY_2, KEY_KP_2: idx = 1
 		KEY_3, KEY_KP_3: idx = 2
-	# levers(), not the Series A const: at seed key 1 is the raise row.
-	var rows: Array = TermSheetTableSystem.levers()
-	if idx >= 0 and idx < rows.size():
+	# The rows were built from levers(), so at seed key 1 is the raise row.
+	if idx >= 0 and idx < _lever_rows.size():
 		get_viewport().set_input_as_handled()
-		_render(TermSheetTableSystem.select_lever(String(rows[idx])))
+		_render(TermSheetTableSystem.select_lever(String(_lever_rows[idx].id)))

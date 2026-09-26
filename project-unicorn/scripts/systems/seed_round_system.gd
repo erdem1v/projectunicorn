@@ -1,13 +1,13 @@
 class_name SeedRoundSystem
 extends RefCounted
 
-# The seed rung — the middle step of the ladder (GDD v2 ch. 09 §1-3, director-approved
-# 2026-08-20; parameters 2026-08-27). Savings → Frank's cheque → SEED → Series A.
+# The seed rung — the middle step of the ladder (GDD v2 ch. 09 §1-3). Savings → Frank's
+# cheque → SEED → Series A.
 #
 # WHAT THIS FILE IS. The arithmetic and the ratchet: when the door opens, what a conviction
-# value buys, what accepting moves, and how the growth expectation reads. It is the
-# AngelRoundSystem pattern one rung up — that file's own header says the scene is content and
-# the file is arithmetic, and the same split holds here.
+# value buys, what accepting moves, and how the growth expectation reads. The scenes are
+# content (the funding.seed_* cards); this file is the arithmetic — AngelRoundSystem's
+# split, one rung up.
 #
 # WHAT THIS FILE IS NOT. It does not run a meeting and it does not run a table. The seed
 # REUSES VCPitchSystem and TermSheetTableSystem, and that reuse is a correctness argument, not
@@ -29,7 +29,7 @@ extends RefCounted
 
 
 # ============================================================================
-# The door (ruling 1) — a RATCHET, not a live predicate
+# The door — a RATCHET, not a live predicate
 # ============================================================================
 
 ## Is the seed door open right now? Reads the ratchet, never the bar.
@@ -73,12 +73,10 @@ static func daily_tick() -> void:
 		return
 	GameState.seed_door_open_day = GameState.day
 	EventBus.seed_door_opened.emit()
-	if OS.is_debug_build():
-		print("[SeedRoundSystem] Seed door open (day %d)" % GameState.day)
 
 
 # ============================================================================
-# Entering the room (ruling 2) — one pitch, the player's choice of fund
+# Entering the room — one pitch, the player's choice of fund
 # ============================================================================
 
 ## "" when this fund can be pitched; otherwise the reason key to show. No fake choices — the
@@ -88,9 +86,7 @@ static func pitch_blocked_reason(vc_id: String) -> String:
 		return "SEED_BLOCK_TAKEN"
 	if GameState.seed_pitch_used:
 		return "SEED_BLOCK_SPENT"
-	if not door_open():
-		return "SEED_BLOCK_CLOSED"
-	if InvestorRegistry.is_locked(vc_id) or InvestorRegistry.get_investor(vc_id).is_empty():
+	if not door_open() or InvestorRegistry.is_locked(vc_id) or InvestorRegistry.get_investor(vc_id).is_empty():
 		return "SEED_BLOCK_CLOSED"
 	if VCPitchSystem.is_active() or TermSheetTableSystem.is_active():
 		return "SEED_BLOCK_BUSY"
@@ -101,8 +97,8 @@ static func pitch_blocked_reason(vc_id: String) -> String:
 ## opens, so a mid-meeting quit cannot hand it back.
 ##
 ## NO SCHEDULING CEREMONY, and that is deliberate. The Series A hunt makes you book three days
-## ahead and choose a prep focus; the seed room does not, because ch. 09 §4 casts it as the
-## fast room — a bet on the founder, not a diligence appointment. It also keeps
+## ahead and choose a prep focus; the seed room does not, because it is the fast room — a
+## bet on the founder, not a diligence appointment. It also keeps
 ## GameState.pending_meeting a Series-A-only field, so `funding.meeting_day` and every seam
 ## that reads a booked meeting stay untouched by this rung.
 static func begin_pitch(vc_id: String) -> bool:
@@ -114,14 +110,10 @@ static func begin_pitch(vc_id: String) -> bool:
 
 
 # ============================================================================
-# The offer (rulings 3 + 4) — conviction buys a band, the band buys the terms
+# The offer — conviction buys a band, the band buys the terms
 # ============================================================================
 
 ## Build the seed offer for a fund at a conviction band. Pure — the caller stores it.
-##
-## THE SHEET CARRIES ITS OWN STAGE. TermSheet.stage is what the table reads days later; a
-## static set during the meeting is gone by then, because the offer does not expire and the
-## player may sit down whenever they like.
 static func make_seed_sheet(vc_id: String, band: String, granted_day: int) -> TermSheet:
 	var inv: Dictionary = InvestorRegistry.get_investor(vc_id)
 	var bands: Dictionary = inv.get("term_bands", {})
@@ -141,7 +133,7 @@ static func make_seed_sheet(vc_id: String, band: String, granted_day: int) -> Te
 	sheet.stage = PitchConstants.STAGE_SEED
 	sheet.band = band
 	sheet.granted_day = granted_day
-	sheet.expires_day = SeedConstants.NO_EXPIRY_DAY   # ruling 6 — the rung is guaranteed
+	sheet.expires_day = SeedConstants.NO_EXPIRY_DAY   # the rung is guaranteed
 	sheet.term_bands = bands.duplicate()
 	sheet.patience_pool = int(SeedConstants.PATIENCE_BY_BAND.get(band, 2))
 	# `raise`, not `valuation_m`: at seed the MONEY is the lever and the valuation is derived
@@ -157,7 +149,7 @@ static func make_seed_sheet(vc_id: String, band: String, granted_day: int) -> Te
 
 
 # ============================================================================
-# Accepting (ruling 6) — atomic, and NOT terminal
+# Accepting — atomic, and NOT terminal
 # ============================================================================
 
 ## The whole round: cap table, ledger row, cash, latch. Together or not at all.
@@ -190,13 +182,10 @@ static func accept(vc_id: String, terms: Dictionary) -> void:
 	GameState.submit_month_highlight(
 		TranslationServer.translate("SEED_MONTH_HIGHLIGHT"), 78)  # above the angel's 75, below advance_phase's 80
 	EventBus.seed_round_closed.emit(vc_id)
-	if OS.is_debug_build():
-		print("[SeedRoundSystem] seed closed: +$%d for %d%% with %s (day %d)" % [
-			amount, equity, vc_id, GameState.day])
 
 
 # ============================================================================
-# The growth expectation (ruling 7)
+# The growth expectation
 # ============================================================================
 
 ## The full reading the funding page paints and the fumes paper colours from.
@@ -234,4 +223,4 @@ static func expectation() -> Dictionary:
 
 ## The state alone — the shape the seams and the card conditions want.
 static func expectation_state() -> int:
-	return int(expectation().get("state", SeedConstants.EXPECT_NONE))
+	return int(expectation().state)
