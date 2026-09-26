@@ -33,7 +33,11 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
 - Rapor: madde madde ✅ / ⚠️ / ❌ + kanıt (dosya:satır, commit, test adı). Tahmin yazılmaz.
 - Godot MCP eklentisi ve git kökündeki `.mcp.json` kalır. `addons/` üçüncü taraf koddur, dokunulmaz.
 
-## 4. Oyuncuya görünen metin
+## 4. Verimlilik
+Hızlı ve doğru çalış. Süreyi uzatan ya da token harcayan gereksiz işlem yapma: ihtiyacın olmayan dosyayı okuma,
+gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için önce `docs/HARITA.md`.
+
+## 5. Oyuncuya görünen metin
 - **BILINGUAL BIRTH LAW.** Oyuncuya görünen her metin bir anahtar olarak doğar; TR ve EN aynı commit'te dolar. TR
   kanoniktir ve önce yazılır; EN çeviri değil, aynı sahnenin İngilizce yazılmış hâlidir. Anahtarlar
   `localization/strings.csv`'de (`keys,tr,en`); `Localization` autoload'u CSV'yi açılışta okur.
@@ -54,7 +58,7 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
 - **EFFECT-VISIBILITY RULE.** Modifier oyuncuya okunur etiketle gösterilir, iç kodla değil. Etki çipini kuran tek yer
   `event_modal._describe_modifier`; bilinçli etiketsiz fiiller `SILENT_VERBS`'te, `event_chip_coverage` smoke'u zorlar.
 
-## 5. Mimari
+## 6. Mimari
 - Godot 4.6 (Forward Plus), yalnız GDScript. Ana sahne `scenes/main/Main.tscn`; `main.gd` açılışı, modal montajını
   ve debug bayraklarını taşır. Tasarım tabanı 1920×1080; `DisplaySettings.BASE_VIEWPORT` bunu elle yansıtır.
 - Autoload'lar (`project.godot` sırası): EventBus, GameState, CharacterRegistry, CustomerRegistry, ProspectRegistry,
@@ -80,7 +84,7 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
   varsayılan taşır. Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`).
 
-## 6. UI ve tema — UI/STYLE LAW
+## 7. UI ve tema — UI/STYLE LAW
 1. **Sözlük `UiTokens`'ındır.** Her renk palet tablosunda adlıdır; her boyut merdivendendir (`SIZE_MICRO 9 · META 10
    · SMALL 11 · DATA 12 · BODY 13 · LEAD 15 · TITLE 16 · DISPLAY 22`; editorial `SIZE_ED_* 24 · 26 · 32 · 44 · 52`).
    Ham `Color(...)` ya da ham boyut yazılmaz; duruma bağlı stil helper'dan okunur (`delta_color`, `badge_palette`, …).
@@ -101,28 +105,50 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
 - ODA kapısı `--theme-audit=oda`: kanıt satır sayısı değil diff'tir. `@Sınıf@NN` sayaçları normalize edildikten sonra
   değişiklik hedeflenen alt ağaçta kalır, dışı bayt-aynıdır.
 
-## 7. Kod yazımı
+## 8. Kod yazımı
 Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları tekrarlamaz.
 - Kısa ve doğrudan yaz. Tek yerde kullanılan sarmalayıcı ya da yardımcı, tek gerçeklemeli "genel" yapı, okunurluk
   kazandırmayan ara değişken yazılmaz. Uzun if/elif zinciri yerine `match` ya da sözlük.
 - Aynı işi yapan ikinci fonksiyon yazılmaz: önce var olan evi ara (`Fmt`, `UiFactory`, `HRUiShared`, `UiTokens`,
   `ProductSystem.live_bug_count`, `SalesConstants.mix` …). Kopyala-yapıştır blok yok.
 - İmkânsız durum için savunma kontrolü yazılmaz; null ve sınır kontrolü yalnız gerçekten gelebilen değer içindir.
-- Yerini alan kod eskisini aynı commit'te siler. Ölü fonksiyon, sabit, alan, sinyal, CSV anahtarı, asset bırakılmaz;
-  yoruma alınmış kod ve debug `print` commit'lenmez.
+- Yerini alan kod eskisini aynı commit'te siler. Ölü fonksiyon, sabit, alan, sinyal, CSV anahtarı, asset, smoke vakası
+  bırakılmaz; yoruma alınmış kod ve debug `print` commit'lenmez.
 - Yorum yalnız bugünkü NEDENİ söyler. Tarihçe ("eskiden", "emekli", tarihler), görev ve karar etiketleri, satır
   numarası, ağaçta olmayan belgeye atıf, kodu tekrar eden yorum yazılmaz; tarihçe git'tedir. JSON `_` notları da öyle.
-- Test: yeni smoke vakası yalnız gerçek bir kuralı ya da düzeltilen bir hatayı korur; kısa olur. Kaynak metnini okuyan,
-  aynı şeyi ikinci kez sınayan ya da silinmiş koda bakan vaka yazılmaz. Bir özelliği silen commit vakasını da siler.
-- Doğrulama işle orantılıdır: değişiklik başına derleme + lint + loc_residue + ilgili birkaç smoke vakası; tam smoke
-  yalnız büyük bir işin sonunda. İş bittiğinde rapor, plan ya da ölçüm dosyası repoya konmaz.
+- İş bittiğinde rapor, plan ya da ölçüm dosyası repoya konmaz.
 
-## 8. Kapılar ve araçlar
+## 9. Kod review
+Her commit'ten önce diff, ayrı bir agent tarafından kıdemli bir mühendis gözüyle incelenir; yalnız diff okunur. Soru:
+bu kod en kısa ve en açık doğru hâlinde mi?
+- İki satırda yazılabilecek şey on satırda mı yazılmış?
+- HARITA'daki mevcut bir yardımcı yeniden mi yazılmış?
+- İleride lazım olur diye eklenmiş soyutlama, parametre ya da dal var mı?
+- Olamayacak durumlar için savunma, tarihçe anlatan ya da kodu tekrar eden yorum var mı?
+
+Bulgular düzeltilir, sonra commit. Neden: şişen kod bir sonraki task'ın keşfini yavaşlatır ve pahalılaştırır.
+
+## 10. Test
+Mevcut smoke ve probe paketi eski ve gereğinden büyük; yalın bir paketle değiştirilecek (ayrı bir task). O zamana kadar:
+- Her commit'te yalnız dokunulan sistemin ilgili vakalarını koş; tam paketi yalnız push öncesi.
+- Yeni smoke vakası yalnız çekirdek mantık için (ekonomi, kayıt, olay motoru) ve ancak gerçekten gerekiyorsa. Arayüz
+  doğrulaması smoke'la değil, görsel kabulle yapılır.
+
+## 11. Görsel kabul
+Oyuncunun gördüğü bir şeyi ekleyen ya da değiştiren her task, commit'ten önce oyunda görsel olarak doğrulanır (Godot
+MCP). UI'a dokunmayan mantık değişiklikleri hariç.
+- Task'taki kabul senaryosunu oyna; yoksa değiştirdiğin ekran için kısa bir senaryo yaz ve rapora koy.
+- Ekrana fikstürle gel, oyunu baştan oynama.
+- Kontrol: öğe yerinde mi, metin taşıyor ya da kesiliyor mu, doğru dilde mi, logda hata var mı. Rapora ekran
+  görüntüleriyle koy.
+- En fazla 2 düzeltme turu; sonra sorunu ekran görüntüsüyle raporla, commit etme.
+
+## 12. Kapılar ve araçlar
 `export GODOT=/c/Users/erdem/Desktop/Godot_v4.6.2-stable_win64_console.exe`; komutlar `project-unicorn/`'dan. CI yok.
 - **Sıra:** `"$GODOT" --headless --path . --event-lint` (kabul edilen bulgu gerekçesiyle `tools/lint_baseline.json`'a;
   onu `--event-lint=baseline` yazar, doğrulamada koşulmaz)
   → `"$GODOT" --headless --path . -s res://scripts/debug/loc_residue.gd` → `bash tools/smoke_run.sh loc_csv_integrity`
-  → hedefli smoke (`smoke_run.sh <vaka>`, önekler HARITA'da); tam smoke (`--all`) büyük işin sonunda.
+  → hedefli smoke (`smoke_run.sh <vaka>`, önekler HARITA'da); tam smoke (`--all`) yalnız push öncesi.
 - Motor: `--event-probe`, `--why-fire=<kart id>`, `--event-harness=random:seeds=N:days=M | guided[:seeds=N:days=M]`,
   `--event-vocab` (`_vocabulary.md`'yi üretir, KEEP bloğu kalır); `python tools/gen_signal_manifest.py`.
 - Probe: `--run-log=<preset>:<gün>:sim[:<seed>]`, preset'ler `RunProbe.PRESETS`'te. Karar değil defter basar;
@@ -149,7 +175,7 @@ Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları te
 - Bazı smoke vakaları kaynak metni ve özel adları okur; ad değiştirmeden önce vakayı bul. `event_bus.gd`'deki
   `# --- X ---` başlıkları manifest bölümleri, `# LOC-DATA` işaretleri `loc_residue` istisnalarıdır; silinmez.
 
-## 9. Belgeler
+## 13. Belgeler
 - `docs/HARITA.md` — dizin → sistem → sahip → giriş noktası → smoke öneki → probe kayıt türü.
 - `docs/ACIK_ISLER/` — açık işlerin tek yeri: `ACIK_KARARLAR.md` sahip onayı bekleyen maddeler ve GDD'ye işlenmemiş
   sahip kararları, `ISLER.md` kararlaştırılmış ama yapılmamış işler.

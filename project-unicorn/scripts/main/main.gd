@@ -116,7 +116,7 @@ func _mount_flow() -> void:
 
 
 # ============================================================================
-#  DEBUG LAUNCH FLAGS (debug builds only; the list lives in CLAUDE.md §8)
+#  DEBUG LAUNCH FLAGS (debug builds only; the list lives in CLAUDE.md, "Kapılar ve araçlar")
 # ============================================================================
 
 ## Launch flags come from two sources: the command line (CLI runs) and
