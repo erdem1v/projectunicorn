@@ -101,12 +101,28 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
 - ODA kapısı `--theme-audit=oda`: kanıt satır sayısı değil diff'tir. `@Sınıf@NN` sayaçları normalize edildikten sonra
   değişiklik hedeflenen alt ağaçta kalır, dışı bayt-aynıdır.
 
-## 7. Kapılar ve araçlar
+## 7. Kod yazımı
+Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları tekrarlamaz.
+- Kısa ve doğrudan yaz. Tek yerde kullanılan sarmalayıcı ya da yardımcı, tek gerçeklemeli "genel" yapı, okunurluk
+  kazandırmayan ara değişken yazılmaz. Uzun if/elif zinciri yerine `match` ya da sözlük.
+- Aynı işi yapan ikinci fonksiyon yazılmaz: önce var olan evi ara (`Fmt`, `UiFactory`, `HRUiShared`, `UiTokens`,
+  `ProductSystem.live_bug_count`, `SalesConstants.mix` …). Kopyala-yapıştır blok yok.
+- İmkânsız durum için savunma kontrolü yazılmaz; null ve sınır kontrolü yalnız gerçekten gelebilen değer içindir.
+- Yerini alan kod eskisini aynı commit'te siler. Ölü fonksiyon, sabit, alan, sinyal, CSV anahtarı, asset bırakılmaz;
+  yoruma alınmış kod ve debug `print` commit'lenmez.
+- Yorum yalnız bugünkü NEDENİ söyler. Tarihçe ("eskiden", "emekli", tarihler), görev ve karar etiketleri, satır
+  numarası, ağaçta olmayan belgeye atıf, kodu tekrar eden yorum yazılmaz; tarihçe git'tedir. JSON `_` notları da öyle.
+- Test: yeni smoke vakası yalnız gerçek bir kuralı ya da düzeltilen bir hatayı korur; kısa olur. Kaynak metnini okuyan,
+  aynı şeyi ikinci kez sınayan ya da silinmiş koda bakan vaka yazılmaz. Bir özelliği silen commit vakasını da siler.
+- Doğrulama işle orantılıdır: değişiklik başına derleme + lint + loc_residue + ilgili birkaç smoke vakası; tam smoke
+  yalnız büyük bir işin sonunda. İş bittiğinde rapor, plan ya da ölçüm dosyası repoya konmaz.
+
+## 8. Kapılar ve araçlar
 `export GODOT=/c/Users/erdem/Desktop/Godot_v4.6.2-stable_win64_console.exe`; komutlar `project-unicorn/`'dan. CI yok.
 - **Sıra:** `"$GODOT" --headless --path . --event-lint` (kabul edilen bulgu gerekçesiyle `tools/lint_baseline.json`'a;
   onu `--event-lint=baseline` yazar, doğrulamada koşulmaz)
   → `"$GODOT" --headless --path . -s res://scripts/debug/loc_residue.gd` → `bash tools/smoke_run.sh loc_csv_integrity`
-  → hedefli smoke (`smoke_run.sh <vaka>`, önekler HARITA'da) → tam smoke (`--all` ya da vaka listesi `xargs -P 2`).
+  → hedefli smoke (`smoke_run.sh <vaka>`, önekler HARITA'da); tam smoke (`--all`) büyük işin sonunda.
 - Motor: `--event-probe`, `--why-fire=<kart id>`, `--event-harness=random:seeds=N:days=M | guided[:seeds=N:days=M]`,
   `--event-vocab` (`_vocabulary.md`'yi üretir, KEEP bloğu kalır); `python tools/gen_signal_manifest.py`.
 - Probe: `--run-log=<preset>:<gün>:sim[:<seed>]`, preset'ler `RunProbe.PRESETS`'te. Karar değil defter basar;
@@ -133,7 +149,7 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
 - Bazı smoke vakaları kaynak metni ve özel adları okur; ad değiştirmeden önce vakayı bul. `event_bus.gd`'deki
   `# --- X ---` başlıkları manifest bölümleri, `# LOC-DATA` işaretleri `loc_residue` istisnalarıdır; silinmez.
 
-## 8. Belgeler
+## 9. Belgeler
 - `docs/HARITA.md` — dizin → sistem → sahip → giriş noktası → smoke öneki → probe kayıt türü.
 - `docs/ACIK_KARARLAR.md` — sahip onayı bekleyen maddeler, GDD'ye işlenmemiş sahip kararları.
 - `docs/content/` — Frank külliyatı ve üretilmiş `events_draft/_vocabulary.md` (güncel seam ve fiil listesi).
