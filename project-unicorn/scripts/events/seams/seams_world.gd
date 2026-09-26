@@ -26,20 +26,16 @@ static func _install_phase() -> void:
 		func() -> int: return int(GameState.get_flag("gate_declines", 0)),
 		"Phase", "WRAPPER; how many times the player has said not yet")
 
-	# The Series A door, as a WORD rather than a number. GDD v2 ch.08 §5 is emphatic that the
-	# threshold is never shown — Frank says whether the door is open, and the figure stays out
-	# of the UI. So content gets the state and cannot accidentally print the number.
+	# The Series A door as a WORD, never the threshold (ch.08 §5): content gets the state and
+	# cannot accidentally print the number.
 	EvSeams.register("phase.series_a_signal", G, TYPE_STRING,
 		func() -> String: return String(PhaseGateSystem.series_a_signal().get("state", "closed")),
 		"Phase", "closed | warming | open. The number behind it is deliberately not a seam")
-	# Frank's approach lines as a STEP, not a figure: 0 below half the bar,
-	# 1/2/3 at 50/75/90 %, 4 at the bar (PhaseGateSystem.APPROACH_PCTS). A card can condition
-	# on "the second mark" without the bar or MRR ever reaching its prose.
+	# Frank's approach lines as a STEP, not a figure (PhaseGateSystem.APPROACH_PCTS).
 	EvSeams.register("phase.series_a_approach", G, TYPE_INT,
 		func() -> int: return PhaseGateSystem.series_a_approach(),
 		"Phase", "0-4: approach marks cleared toward the Series A revenue bar (50/75/90/100 %). A step, never the number")
-	# EA / full builds: the profitable bootstrap opened the milestone paper and the run went
-	# on. The soft-cap telegraph reads it — a company past its milestone has no day-730 clock.
+	# The soft-cap telegraph reads it: a company past its milestone has no day-730 clock.
 	EvSeams.register("phase.bootstrap_milestone", G, TYPE_BOOL,
 		func() -> bool: return EndingsSystem.bootstrap_milestone_taken(),
 		"Phase", "WRAPPER; the bootstrap milestone was taken (EA / full), so the soft cap no longer applies")
@@ -61,10 +57,10 @@ static func _install_time() -> void:
 		"Time", "1-12; real month lengths, not 30-day blocks")
 	EvSeams.register("time.speed", G, TYPE_INT,
 		func() -> int: return TimeManager.current_speed,
-		"Time", "WRAPPER; 0 paused, 1-3. The 4x rung was removed 2026-08-19")
+		"Time", "WRAPPER; 0 paused, 1-3")
 	EvSeams.register("time.is_paused", G, TYPE_BOOL,
 		func() -> bool: return TimeManager.current_speed == 0,
-		"Time", "WRAPPER, filed as YOK: there is no named predicate for this")
+		"Time", "WRAPPER; there is no named predicate for this")
 	EvSeams.register("time.run_active", G, TYPE_BOOL,
 		func() -> bool: return GameState.run_active,
 		"Time", "WRAPPER; false once a terminal has fired")
@@ -97,8 +93,7 @@ static func _install_investor() -> void:
 	var E := EvSeams.Kind.ENTITY
 
 	# I7's landing sites for SkillCheck.breakdown(). `founder.skill` is the fallback when the
-	# check names a skill with no seam of its own — better a registered generic than an
-	# unresolvable specific, because I7 is about the line being explicable, not about precision.
+	# check names a skill with no seam of its own: I7 needs the line explicable, not precise.
 	EvSeams.register("founder.skill", G, TYPE_INT,
 		func() -> int: return GameState.get_founder_skill("leadership"),
 		"Founder", "the skill a check leaned on; the specific seam wins when one exists")
@@ -111,8 +106,7 @@ static func _install_investor() -> void:
 	EvSeams.register("investor.sheets_live", G, TYPE_INT,
 		func() -> int: return GameState.active_sheets.size(),
 		"Funding", "WRAPPER; term sheets in hand")
-	# The estimated ranges the offer row prints before the table - prose, resolved at
-	# display time so a language switch re-renders them. "" when the fund holds no sheet.
+	# Prose, resolved at display time so a language switch re-renders it; "" with no sheet.
 	EvSeams.register("investor.est_valuation", E, TYPE_STRING,
 		func(id: String) -> String: return VCPitchSystem.estimate_valuation_text(id),
 		"Funding", "~$lo-hi M around the sheet's opening valuation; never the number")
@@ -125,7 +119,7 @@ static func _install_investor() -> void:
 	EvSeams.register("investor.series_a_closed", G, TYPE_BOOL,
 		func() -> bool: return GameState.series_a_closed, "Funding", "WRAPPER")
 	EvSeams.register("investor.angel_taken", G, TYPE_BOOL,
-		func() -> bool: return int(GameState.get_flag("angel_seed_accepted_day", 0)) > 0,
+		func() -> bool: return int(GameState.get_flag(AngelRoundSystem.FLAG_ACCEPTED_DAY, 0)) > 0,
 		"Funding", "WRAPPER; Frank's cheque was accepted")
 	EvSeams.register("investor.pivot_used", G, TYPE_BOOL,
 		func() -> bool: return GameState.pivot_used,

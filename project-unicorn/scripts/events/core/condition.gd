@@ -1,46 +1,23 @@
 class_name EvCondition
 extends RefCounted
 
-# The condition vocabulary (GDD §5). A condition is a nested Dictionary. There is no parser,
-# no lexer and no Expression — recursive evaluation over plain data, which is what makes a
-# condition serialisable, lintable and printable in the "why didn't this fire" panel.
+# The condition vocabulary (GDD §5). A condition is a nested Dictionary evaluated recursively —
+# no parser, no Expression — which keeps it serialisable, lintable and printable in the "why
+# didn't this fire" panel.
 #
-# THREE THINGS THIS FILE DOES THAT THE OLD ENGINE COULD NOT
+# Two entry points over ONE recursion: `eval` short-circuits (the gate's hot path), `explain`
+# does not (the debug panel and the locked-option reason, §5.4). Two implementations could
+# disagree, and a panel that disagrees with the gate sends you looking in the wrong place.
 #
-# 1. It NESTS. The old vocabulary was 29 flat types joined by a hard AND
-#    (event_manager.gd:506-517), so "either the money or the relationship" was inexpressible
-#    and the trigger went into GDScript instead — the I5 violation the GDD names.
+# Blame is a TREE, not a single leaf: a failing `none` means a child PASSED, which "the failed
+# leaf" cannot say.
 #
-# 2. It EXPLAINS. §5.4 wants a structured refusal, not a bool. But §5.3 also wants
-#    short-circuiting, and those two fight: a report needs every failing leaf, short-circuit
-#    stops at the first. So there are two entry points over ONE recursion —
+# A failing `any` is one requirement written as a disjunction, so its player-facing reason is one
+# authored sentence on the node (lint requires it). The dev panel sees every child's report; the
+# player never does — "you were 2 short on headcount" is a lie when the phase gate was the wall.
 #
-#        eval(node)     short-circuits. The gate's hot path, once per card per tick.
-#        explain(node)  does not. The debug panel and the locked-option reason.
-#
-#    One recursion, not two implementations, because the failure mode of two is that the
-#    panel and the gate disagree — and a panel that disagrees with the gate is worse than no
-#    panel, since it sends you looking in the wrong place.
-#
-# 3. It reports BLAME AS A TREE, not a single leaf. A failing `none: [flag: shutter_active]`
-#    means a child PASSED and that is the problem; "the failed leaf" cannot say that. The
-#    report mirrors the node structure and collapses to the blame path.
-#
-# WHAT `any` REPORTS WHEN IT FAILS. All of its children failed, so naming one is arbitrary and
-# usually misleading. The node itself is the failing unit: an `any` is one requirement the
-# author wrote as a disjunction ("the money or the relationship"), so its player-facing reason
-# is one authored sentence on the node. Lint requires that sentence (§17 addition). The dev
-# panel gets every child's report underneath, ranked by nearest-miss; the player never does,
-# because "you were 2 short on headcount" is a lie when the phase gate was the real wall.
-#
-# TYPE COERCION IS NOT OPTIONAL. Godot's JSON parser returns TYPE_FLOAT for every number —
-# save_codec.gd:27-38 measured it and the whole codec is shaped around it. So a leaf authored
-# as {"seam": "hr.headcount", "op": "in", "value": [1,2,3]} loads as [1.0, 2.0, 3.0] and an
-# `in` test against an int seam silently never matches. Leaves are therefore coerced ONCE at
-# catalogue load against the seam's declared type, and a leaf whose seam is unknown refuses
-# the card there rather than warning forever at runtime.
-
-# --- Node kinds ------------------------------------------------------------
+# Leaf literals are coerced to their seam's declared type once, at catalogue load (JSON numbers
+# all arrive as floats).
 
 const ALL := "all"
 const ANY := "any"
@@ -49,35 +26,24 @@ const NOT := "not"
 
 const COMBINATORS := [ALL, ANY, NONE, NOT]
 
-# Leaf keys, in the order the evaluator probes them.
-const LEAF_KEYS := [
-	"seam", "flag", "flag_unset", "days_since_flag", "flag_expires_within",
-	"history", "arc", "entity_exists", "entity_count", "entity_seam",
-]
-
-
-# --- Public: the hot path --------------------------------------------------
 
 ## True when the tree holds. Short-circuits. Never allocates a report.
 static func eval(node: Dictionary, ctx: Dictionary = {}) -> bool:
 	return _walk(node, ctx, null)
 
 
-# --- Public: the explaining path -------------------------------------------
-
 ## Full report, no short-circuit. Shape:
-##   {node: <the dict>, kind: <String>, passed: <bool>, reason: <String|"">,
-##    blame: [<child reports>], detail: {<leaf-specific live values>}}
-## `blame` holds only the children responsible for the verdict: for a failing `all` that is
-## every failing child; for a failing `none` it is the children that PASSED.
+##   {node, kind, passed, reason, blame: [<child reports>], detail: {<leaf live values>}}
+## `blame` holds only the children responsible for the verdict: for a failing `all` every
+## failing child; for a failing `none` the children that PASSED.
 static func explain(node: Dictionary, ctx: Dictionary = {}) -> Dictionary:
 	var report: Dictionary = {}
 	_walk(node, ctx, report)
 	return report
 
 
-## The player-facing sentence for a refusal, or "" when the content did not author one.
-## Deliberately never derived from a leaf — see the header.
+## The player-facing sentence for a refusal, or "" when the content did not author one. Never
+## derived from a leaf — see the header.
 static func reason_of(report: Dictionary) -> String:
 	if report.is_empty():
 		return ""
@@ -93,44 +59,29 @@ static func reason_of(report: Dictionary) -> String:
 	return String(spoken[0]) if spoken.size() == 1 else ""
 
 
-# --- Public: leaf enumeration ----------------------------------------------
-
 ## Every leaf in the tree, depth-first, in authoring order.
-##
-## THIS IS NOT A CONVENIENCE. phase_gate_system.gd:200-215 does not merely evaluate the gate
-## condition — it walks the array and switches on each leaf's type to build the Series A
-## readout the player actually sees (state, mrr_ok; streak, brand_ok and progress until those were dropped). That code consumes
-## the vocabulary's SHAPE, not its result. Nesting breaks it unless enumeration exists, so
-## enumeration ships in the same phase nesting does.
 static func leaves(node: Dictionary) -> Array:
 	var out: Array = []
 	_collect_leaves(node, out)
 	return out
 
 
-## Leaves whose named key matches, e.g. leaves_named(tree, "seam", "finance.mrr").
-## `value` of "" matches any.
+## Leaves carrying `leaf_key`, e.g. leaves_named(tree, "seam", "finance.mrr"). `value` "" = any.
 static func leaves_named(node: Dictionary, leaf_key: String, value: String = "") -> Array:
 	var out: Array = []
 	for leaf in leaves(node):
-		if not (leaf as Dictionary).has(leaf_key):
-			continue
-		if value != "" and String((leaf as Dictionary)[leaf_key]) != value:
-			continue
-		out.append(leaf)
+		if (leaf as Dictionary).has(leaf_key) and (value == "" or String(leaf[leaf_key]) == value):
+			out.append(leaf)
 	return out
 
 
-## Every seam name the tree reads. Generated, never authored — it is what a dirty-flag
-## optimisation would need, and what the linter uses to prove every named seam is registered.
+## Every seam name the tree reads; the linter uses it to prove each one is registered.
 static func seams_read(node: Dictionary) -> Array:
 	var out: Array = []
 	for leaf in leaves(node):
-		var d: Dictionary = leaf
-		if d.has("seam") and not out.has(String(d["seam"])):
-			out.append(String(d["seam"]))
-		if d.has("entity_seam") and not out.has(String(d["entity_seam"])):
-			out.append(String(d["entity_seam"]))
+		for key in ["seam", "entity_seam"]:
+			if (leaf as Dictionary).has(key) and not out.has(String(leaf[key])):
+				out.append(String(leaf[key]))
 	return out
 
 
@@ -140,13 +91,12 @@ static func _collect_leaves(node: Dictionary, out: Array) -> void:
 	var kind: String = _kind_of(node)
 	if kind == NOT:
 		_collect_leaves(node[NOT] as Dictionary, out)
-		return
-	if kind in [ALL, ANY, NONE]:
+	elif kind == "leaf":
+		out.append(node)
+	else:
 		for child in (node[kind] as Array):
 			if typeof(child) == TYPE_DICTIONARY:
 				_collect_leaves(child as Dictionary, out)
-		return
-	out.append(node)
 
 
 # --- The one recursion -----------------------------------------------------
@@ -159,91 +109,55 @@ static func _kind_of(node: Dictionary) -> String:
 
 
 ## `report` is null on the hot path and a Dictionary to fill on the explaining path. Every
-## early return writes the report first, so the two paths can never disagree about a verdict.
+## return writes the report first, so the two paths can never disagree about a verdict.
 static func _walk(node: Dictionary, ctx: Dictionary, report) -> bool:
 	# §5.3: an empty condition is TRUE — "no gate". Used by every unlocked option.
 	if node.is_empty():
-		_stamp(report, node, "empty", true, [], {})
+		_stamp(report, node, "empty", true)
 		return true
 
 	var kind: String = _kind_of(node)
-	var authored_reason: String = String(node.get("reason", ""))
-
 	match kind:
-		ALL:
-			var kids: Array = node[ALL] as Array
-			var blame: Array = []
-			var ok: bool = true
-			for child in kids:
-				var cd: Dictionary = child as Dictionary
-				if report == null:
-					if not _walk(cd, ctx, null):
-						return false          # §5.3 short-circuit, hot path only
-				else:
-					var sub: Dictionary = {}
-					if not _walk(cd, ctx, sub):
-						ok = false
-						blame.append(sub)
-			_stamp(report, node, ALL, ok, blame, {})
-			return ok
-
-		ANY:
-			var kids_any: Array = node[ANY] as Array
-			# §5.3: an empty `any` is FALSE. Nothing to satisfy it.
-			var blame_any: Array = []
-			var ok_any: bool = false
-			for child in kids_any:
-				var cd2: Dictionary = child as Dictionary
-				if report == null:
-					if _walk(cd2, ctx, null):
-						return true
-				else:
-					var sub2: Dictionary = {}
-					if _walk(cd2, ctx, sub2):
-						ok_any = true
-					else:
-						blame_any.append(sub2)
-			if report == null:
-				return false
-			# Only blame children when the node itself failed; a passing `any` blames nobody.
-			_stamp(report, node, ANY, ok_any, [] if ok_any else blame_any, {})
-			return ok_any
-
-		NONE:
-			var kids_none: Array = node[NONE] as Array
-			# §5.3: an empty `none` is TRUE.
-			var blame_none: Array = []
-			var ok_none: bool = true
-			for child in kids_none:
-				var cd3: Dictionary = child as Dictionary
-				if report == null:
-					if _walk(cd3, ctx, null):
-						return false
-				else:
-					var sub3: Dictionary = {}
-					if _walk(cd3, ctx, sub3):
-						ok_none = false
-						# The child that PASSED is the one to blame — this is the case a
-						# single "failed_leaf" field cannot express.
-						blame_none.append(sub3)
-			_stamp(report, node, NONE, ok_none, blame_none, {})
-			return ok_none
-
 		NOT:
 			var inner: Dictionary = node[NOT] as Dictionary
 			if report == null:
 				return not _walk(inner, ctx, null)
-			var sub4: Dictionary = {}
-			var inner_ok: bool = _walk(inner, ctx, sub4)
-			_stamp(report, node, NOT, not inner_ok, [sub4] if inner_ok else [], {})
+			var sub: Dictionary = {}
+			var inner_ok: bool = _walk(inner, ctx, sub)
+			_stamp(report, node, NOT, not inner_ok, [sub] if inner_ok else [])
 			return not inner_ok
-
+		ALL, ANY, NONE:
+			# A "hit" is a child verdict that decides the node: a failing child for `all`, a
+			# passing one for `any` and `none`. Any hit makes `any` true and the others false;
+			# no hit gives the opposite — so (§5.3) empty `all`/`none` are TRUE, empty `any` FALSE.
+			var hit: bool = kind != ALL
+			var on_hit: bool = kind == ANY
+			var hits: Array = []
+			var misses: Array = []
+			for child in (node[kind] as Array):
+				if report == null:
+					if _walk(child as Dictionary, ctx, null) == hit:
+						return on_hit          # §5.3 short-circuit, hot path only
+					continue
+				var sub: Dictionary = {}
+				if _walk(child as Dictionary, ctx, sub) == hit:
+					hits.append(sub)
+				else:
+					misses.append(sub)
+			if report == null:
+				return not on_hit
+			var ok: bool = on_hit if not hits.is_empty() else not on_hit
+			# `all` blames its failing children, `none` its passing ones; a failing `any` blames
+			# every child and a passing one blames nobody.
+			var blame: Array = hits if kind != ANY else ([] if ok else misses)
+			_stamp(report, node, kind, ok, blame)
+			return ok
 		_:
-			return _leaf(node, ctx, report, authored_reason)
+			return _leaf(node, ctx, report)
 
 
 static func _stamp(report, node: Dictionary, kind: String, passed: bool,
-		blame: Array, detail: Dictionary) -> void:
+		blame: Array = [], detail: Dictionary = {}) -> void:
 	if report == null:
 		return
 	report["node"] = node
@@ -256,10 +170,9 @@ static func _stamp(report, node: Dictionary, kind: String, passed: bool,
 
 # --- Leaves ----------------------------------------------------------------
 
-static func _leaf(node: Dictionary, ctx: Dictionary, report, _authored: String) -> bool:
-	# Dispatch on which key the leaf carries, not on a "type" field: the GDD writes leaves as
-	# {"seam": …} / {"flag": …} / {"history": …}, so the key IS the discriminator and an
-	# author cannot forget to name it.
+static func _leaf(node: Dictionary, ctx: Dictionary, report) -> bool:
+	# The key a leaf carries IS its discriminator ({"seam": …} / {"flag": …}), so an author
+	# cannot forget to name a type.
 	if node.has("seam"):
 		return _leaf_seam(node, report)
 	if node.has("flag"):
@@ -281,12 +194,11 @@ static func _leaf(node: Dictionary, ctx: Dictionary, report, _authored: String) 
 	if node.has("entity_seam"):
 		return _leaf_entity_seam(node, ctx, report)
 
-	# §5.3: an unknown leaf is FALSE plus an error, never a silent true. The linter refuses it
-	# at build time; this branch only fires for content that reached runtime some other way.
+	# §5.3: an unknown leaf is FALSE plus an error, never a silent true. Lint refuses it at build
+	# time; this only fires for content that reached runtime some other way.
 	push_error("[EvCondition] unrecognised leaf: %s" % str(node))
 	_stamp(report, node, "unknown", false, [], {"error": "unrecognised leaf"})
 	return false
-
 
 static func _leaf_seam(node: Dictionary, report) -> bool:
 	var name: String = String(node["seam"])
@@ -308,8 +220,7 @@ static func _leaf_flag(node: Dictionary, report, want_set: bool) -> bool:
 
 static func _leaf_days_since(node: Dictionary, report) -> bool:
 	# "N days after the day stamped in <key>". An ABSENT stamp is FALSE, never day 0 — a run
-	# whose product has not shipped must not satisfy "one day after it shipped". The old
-	# engine documented this at event_manager.gd:396-401 and it is carried forward verbatim.
+	# whose product has not shipped must not satisfy "one day after it shipped".
 	var key: String = String(node["days_since_flag"])
 	if not EvFlags.has_stamp(key):
 		_stamp(report, node, "days_since_flag", false, [], {"stamp": key, "stamped": false})
@@ -337,8 +248,8 @@ static func _leaf_history(node: Dictionary, report) -> bool:
 	var detail: Dictionary = {"form": form, "event": ev}
 	match form:
 		"fired":
-			ok = EvHistory.fire_count(ev) > 0
 			detail["fires"] = EvHistory.fire_count(ev)
+			ok = int(detail["fires"]) > 0
 		"fire_count":
 			var n: int = EvHistory.fire_count(ev)
 			ok = _compare(n, String(node.get("op", ">=")), node.get("value", 1))

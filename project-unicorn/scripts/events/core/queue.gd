@@ -5,31 +5,13 @@ extends RefCounted
 #
 #     {event_id, context, admitted_day, class, arc_id}
 #
-# IDS AND SCALARS ONLY — never a card object and never rendered text.
+# IDS AND SCALARS ONLY — never a card object and never rendered text. Every card is on disk,
+# so a language change mid-run is safe (§3.2) and a content edit reaches queued cards. Dedupe is
+# by id for the same reason.
 #
-# The old engine stored WHOLE SERIALISED CARDS here, and had to: factories minted synthetic
-# events the catalogue had never heard of, so an id-only queue would have restored as a
-# silently shorter one (event_manager.gd:263-268 says so, and it was right at the time). The
-# new engine has no synthetics — every card is on disk — so the queue holds ids, and two
-# properties fall out of that for free:
-#
-#   A LANGUAGE CHANGE MID-RUN IS SAFE (§3.2). Nothing here is text, so there is nothing to be
-#   stale. A paper sitting on the desk when the player switches to English simply renders in
-#   English. The old queue could hold a card whose text had been baked at build time in the
-#   other locale.
-#
-#   A CONTENT EDIT REACHES QUEUED CARDS. Fix a card and every queued instance is fixed.
-#
-# DEDUPE IS BY ID. The old engine's first version compared Array.has() on Array[GameEvent],
-# which compares REFERENCES — so a factory minting a fresh instance per call walked straight
-# past it and the queue could hold N copies of one decision. That was fixed before this
-# rebuild (event_manager.gd:138-154 carries the archaeology); it is preserved here as a
-# property of the design rather than a repair, because ids are all there is to compare.
-#
-# ORDERING IS §11.2's, AND IT IS NOT INSERTION ORDER. Terminal telegraphs first, then a paper
-# about to expire, then critical, then interrupt, paper, info, ambient. Ties break by admitted
-# day and then alphabetically by id — deterministic, and deliberately NOT seeded, so the order
-# two players see in the same state is the same order.
+# ORDERING IS §11.2's, NOT INSERTION ORDER. Terminal telegraphs first, then a paper about to
+# expire, then critical, then interrupt, paper, info, ambient. Ties break by admitted day and
+# then by id — deterministic and deliberately unseeded, so the same state shows the same order.
 
 ## §11.2, most urgent first.
 const PRIORITY := ["terminal", "expiring", "critical", "interrupt", "paper", "info", "ambient"]
@@ -38,18 +20,14 @@ static var _entries: Array = []
 ## The card on screen right now. "" when nothing is.
 static var _active_id: String = ""
 static var _active_context: Dictionary = {}
+## event_id -> times it was offered and absorbed as a duplicate. The run log reads it.
+static var _absorbed: Dictionary = {}
 
 
 # --- Admission (only EvGate's caller reaches this) -------------------------
 
-## Returns false when an entry with this id is already queued or showing.
-##
-## The rejection is REPORTED, not swallowed. In the old engine all three admission paths
-## rejected a duplicate silently, and that is exactly the shape a runaway hides behind: the
-## owning system re-offers the same decision every tick, the queue absorbs it, and nothing
-## anywhere counts the attempts. A debug print was added late (event_manager.gd:243-245) for
-## precisely that reason; here the count is kept, because "fired once" and "tried ninety times"
-## should not look identical in a run log.
+## Returns false when an entry with this id is already queued or showing. The rejection is
+## COUNTED, so a system re-offering the same decision every tick shows up in the run log.
 static func admit(event_id: String, context: Dictionary, card_class: String,
 		arc_id: String = "") -> bool:
 	if has(event_id) or _active_id == event_id:
@@ -65,9 +43,6 @@ static func admit(event_id: String, context: Dictionary, card_class: String,
 	return true
 
 
-static var _absorbed: Dictionary = {}
-
-## How many times an id was offered and absorbed as a duplicate. The run log reads it.
 static func absorbed_count(event_id: String) -> int:
 	return int(_absorbed.get(event_id, 0))
 
@@ -77,8 +52,6 @@ static func absorbed_count(event_id: String) -> int:
 ## The next entry to show, or {}. §11.2's order, applied over the whole queue rather than to
 ## the front — the queue is a set of candidates, not a line.
 static func next() -> Dictionary:
-	if _entries.is_empty():
-		return {}
 	var best: Dictionary = {}
 	var best_rank: int = PRIORITY.size() + 1
 	for e in _entries:
@@ -166,13 +139,6 @@ static func entries() -> Array:
 	return _entries.duplicate(true)
 
 
-static func context_of(event_id: String) -> Dictionary:
-	for e in _entries:
-		if String((e as Dictionary)["event_id"]) == event_id:
-			return (e as Dictionary)["context"]
-	return {}
-
-
 # --- Surgery ---------------------------------------------------------------
 
 ## Write back the class the tempo governor assigned. Separate from admit() because the class
@@ -185,8 +151,8 @@ static func set_class(event_id: String, card_class: String) -> void:
 			return
 
 
-static func remove(event_id: String) -> bool:
-	return not take(event_id).is_empty()
+static func remove(event_id: String) -> void:
+	take(event_id)
 
 
 static func drop_arc(arc_id: String) -> int:

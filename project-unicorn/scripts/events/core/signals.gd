@@ -1,32 +1,19 @@
 class_name EvSignals
 extends RefCounted
 
-# THE ENGINE'S EARS. One place where an EventBus signal becomes a proposal, and an allowlist
-# rather than a convention — the same discipline as the seam registry, for the same reason.
+# THE ENGINE'S EARS. The one place an EventBus signal becomes a proposal, and an allowlist
+# rather than a loop over EventBus:
 #
-# ─────────────────────────────────────────────────────────────────────────────────────────
-# WHY A TABLE AND NOT A LOOP OVER EventBus
-# ─────────────────────────────────────────────────────────────────────────────────────────
+#   A signal carries positional arguments; a card carries NAMED scope slots. Nothing in a
+#   signal's signature says its first argument is a CUSTOMER id, and binding it on a guess is
+#   how a card comes to be about the wrong subject. So each binding names which argument fills
+#   which slot, by hand, once.
 #
-# A signal carries positional arguments; a card carries NAMED scope slots. Nothing in
-# `signal customer_health_changed(customer_id: String, phase: String)` says that the first
-# argument is a CUSTOMER id and not, say, a company name — and binding it into a `customer`
-# slot on a guess is exactly how a card comes to be about the wrong subject. So each binding
-# says which argument fills which slot, by hand, once.
+#   Auto-connecting would make every EventBus signal a potential admission path, including ones
+#   with no production emitter, which would then be silently dead triggers.
 #
-# The second reason is subtractive. `docs/EVENT_SIGNAL_MANIFEST.md` counts 110 signals, 48 of
-# them with no listener at all. Auto-connecting would make the engine a listener for all 110
-# and turn every one of them into a potential admission path — including the three that have
-# no production EMITTER, which would then be silently dead triggers rather than a lint error.
-#
-# ─────────────────────────────────────────────────────────────────────────────────────────
-# WHAT ARRIVES, AND WHEN
-# ─────────────────────────────────────────────────────────────────────────────────────────
-#
-# Nothing here proposes. Handlers call `EvEngine.on_signal`, which BUFFERS: signals fire
-# during TimeManager's slots 1-6, i.e. while Product, HR and Sales are still moving, and a
-# slot-1 edge admitted inline would be judged against a world where Finance has not run.
-# The buffer drains at step (f) of the engine's own tick, in emission order.
+# Nothing here proposes. Handlers call `EvEngine.on_signal`, which BUFFERS until the engine's
+# own tick (see EvEngine's step list).
 
 ## signal name -> {slots: {slot_name: argument_index}}
 ##
@@ -53,9 +40,18 @@ static var _connected: Array = []
 ## catalogue loads — the set of signals worth listening to is a property of the CONTENT, and
 ## reading it off the content is what keeps the two from drifting.
 static func install() -> void:
-	uninstall()
-	for name in _signals_in_catalogue():
-		var signal_name: String = String(name)
+	for entry in _connected:
+		if EventBus.is_connected(entry["signal"], entry["handler"]):
+			EventBus.disconnect(entry["signal"], entry["handler"])
+	_connected.clear()
+
+	var wanted: Array = []
+	for id in EvCatalog.card_ids():
+		var name: String = String(EvCatalog.card(id).get("trigger", {}).get("signal", ""))
+		if name != "" and not wanted.has(name):
+			wanted.append(name)
+
+	for signal_name in wanted:
 		if not BINDINGS.has(signal_name):
 			push_error("[EvSignals] a card triggers on '%s', which has no binding — " % signal_name
 				+ "add one to EvSignals.BINDINGS naming which argument fills which slot")
@@ -64,36 +60,21 @@ static func install() -> void:
 			push_error("[EvSignals] a card triggers on '%s', which EventBus does not declare"
 				% signal_name)
 			continue
-		# One Callable per signal, carrying its own name and binding. `bind` appends, so the
-		# signal's own arguments arrive first and the name last — which is why _relay takes
-		# them as a varargs Array rather than by position.
 		var handler: Callable = _make_handler(signal_name)
 		EventBus.connect(signal_name, handler)
 		_connected.append({"signal": signal_name, "handler": handler})
 
 
-static func uninstall() -> void:
-	for entry in _connected:
-		var e: Dictionary = entry
-		if EventBus.is_connected(String(e["signal"]), e["handler"]):
-			EventBus.disconnect(String(e["signal"]), e["handler"])
-	_connected.clear()
-
-
-static func installed_signals() -> Array:
-	var out: Array = []
-	for e in _connected:
-		out.append(String((e as Dictionary)["signal"]))
-	return out
-
-
 # --- Internals -------------------------------------------------------------
 
-## Godot has no varargs Callable, so one arity per shape. Every signal in BINDINGS today takes
-# 0, 1 or 2 arguments; a third would need a line here, and the push_error below says so rather
-# than letting the connect fail at runtime with a signature mismatch nobody reads.
+## Godot has no varargs Callable, so one lambda per arity. A signal with more arguments needs
+## an arm here; the push_error says so rather than letting connect fail on a signature mismatch.
 static func _make_handler(signal_name: String) -> Callable:
-	var arity: int = _arity_of(signal_name)
+	var arity: int = 0
+	for s in EventBus.get_signal_list():
+		if String(s["name"]) == signal_name:
+			arity = (s["args"] as Array).size()
+			break
 	match arity:
 		0: return func() -> void: _relay(signal_name, [])
 		1: return func(a) -> void: _relay(signal_name, [a])
@@ -103,28 +84,11 @@ static func _make_handler(signal_name: String) -> Callable:
 	return func() -> void: pass
 
 
-static func _arity_of(signal_name: String) -> int:
-	for s in EventBus.get_signal_list():
-		if String((s as Dictionary)["name"]) == signal_name:
-			return ((s as Dictionary)["args"] as Array).size()
-	return 0
-
-
 static func _relay(signal_name: String, args: Array) -> void:
-	var slots: Dictionary = (BINDINGS[signal_name] as Dictionary).get("slots", {})
+	var slots: Dictionary = BINDINGS[signal_name]["slots"]
 	var payload: Dictionary = {}
 	for slot in slots:
-		var idx: int = int(slots[slot])
+		var idx: int = slots[slot]
 		if idx < args.size():
-			payload[String(slot)] = String(args[idx])
+			payload[slot] = String(args[idx])
 	EvEngine.on_signal(signal_name, payload)
-
-
-static func _signals_in_catalogue() -> Array:
-	var out: Array = []
-	for id in EvCatalog.card_ids():
-		var trigger: Dictionary = EvCatalog.card(String(id)).get("trigger", {})
-		var name: String = String(trigger.get("signal", ""))
-		if name != "" and not out.has(name):
-			out.append(name)
-	return out

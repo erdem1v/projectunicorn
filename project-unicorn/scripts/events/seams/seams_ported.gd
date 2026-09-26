@@ -1,16 +1,9 @@
 class_name EvSeamsPorted
 extends RefCounted
 
-# Seams the MIGRATED cards need.
-#
-# Every one of these is a value a factory already read directly off a model. The factory could
-# do that — it lived inside the system. Content cannot, and should not: `Customer.retain_discounts`
-# is a field name, and a field name is not a contract. Naming it is what lets the discount cap
-# move from 2 to 3 without touching a card.
-#
-# Kept in its own file rather than merged into the namespace files because these came from a
-# migration and the distinction is worth being able to see: when the writing round rewrites a
-# ported card, this is the list of things it was leaning on.
+# Seams the ported (code-built) card families lean on. A field name is not a contract, so each
+# value a factory once read off a model gets a name here. Kept apart from the namespace files
+# so the writing round can see what a ported card depends on.
 
 static func install() -> void:
 	var E := EvSeams.Kind.ENTITY
@@ -45,27 +38,20 @@ static func install() -> void:
 			if c == null or c.pain_feature_id == "":
 				return false
 			# A line step is buildable when its gate is open today (LineGates is the one
-			# validator). A flat feature has no gate. Without this
-			# leaf a promise could name a step that needs research nobody had done, and 241
-			# of the probe's broken promises were exactly that.
+			# validator); a flat feature has no gate. Without this a promise could name a step
+			# that needs research nobody has done.
 			if ProductLines.step(c.pain_feature_id).is_empty():
 				return true
 			return LineGates.is_unlocked(c.pain_feature_id),
 		"Sales", "gates the promise row: nobody can promise what the company cannot build yet")
 	EvSeams.register("musteri.discounts_used", E, TYPE_INT,
-		func(id: String) -> int:
-			var c: Customer = CustomerRegistry.get_customer(id)
-			return c.retain_discounts if c != null else 0,
+		EvSeamsSales.customer_field("retain_discounts", 0),
 		"Sales", "0-2; the discount row locks at the cap")
 	EvSeams.register("musteri.stalls_used", E, TYPE_INT,
-		func(id: String) -> int:
-			var c: Customer = CustomerRegistry.get_customer(id)
-			return c.retain_stalls if c != null else 0,
+		EvSeamsSales.customer_field("retain_stalls", 0),
 		"Sales", "0-2; the stall row locks at the cap")
 	EvSeams.register("musteri.cs_escalated", E, TYPE_BOOL,
-		func(id: String) -> bool:
-			var c: Customer = CustomerRegistry.get_customer(id)
-			return c != null and c.cs_escalated,
+		EvSeamsSales.customer_field("cs_escalated", false),
 		"Sales", "an escalation is already open on this account")
 	EvSeams.register("musteri.request_kind", E, TYPE_STRING,
 		func(id: String) -> String:
@@ -73,12 +59,12 @@ static func install() -> void:
 			return B2BEventFactory.pick_request_kind(c) if c != null else "",
 		"Sales", "complaint | feature | renewal — state-scored, no RNG")
 
-	# Prose, not numbers. §8.4's interpolation mechanism reads these, which is how one card
-	# carries fifteen sector voices instead of fifteen near-identical cards carrying one each.
+	# Prose, not numbers: §8.4's interpolation reads these, so one card carries fifteen sector
+	# voices. display_name(), not company_name — the B2C userbase record's company_name is empty.
 	EvSeams.register("musteri.company_name", E, TYPE_STRING,
 		func(id: String) -> String:
 			var c: Customer = CustomerRegistry.get_customer(id)
-			return c.company_name if c != null else "",
+			return c.display_name() if c != null else "",
 		"Sales", "for {customer} in prose")
 	EvSeams.register("musteri.complaint_voice", E, TYPE_STRING,
 		func(id: String) -> String:
@@ -108,11 +94,8 @@ static func install() -> void:
 	# --- urun. -----------------------------------------------------------
 	EvSeams.register("urun.days_since_launch", G, TYPE_INT,
 		func() -> int:
-			# -1 when nothing has launched, NEVER 0. A run whose product has not shipped must
-			# not satisfy "one day after it shipped" — the same trap days_since_flag documents
-			# for absent stamps, and the reason the paid-tier card's port needed a seam rather
-			# than a stamp: mvp_launch_day is written by ProductSystem into GameState, which
-			# the engine's own flag store has never heard of.
+			# -1 when nothing has launched, NEVER 0: an unshipped product must not satisfy
+			# "one day after it shipped".
 			if not GameState.has_flag("mvp_launch_day"):
 				return -1
 			return GameState.day - int(GameState.get_flag("mvp_launch_day", 0)),
@@ -140,11 +123,9 @@ static func install() -> void:
 		"Funding", "WRAPPER; 0 when no gate is open")
 	EvSeams.register("funding.sheet_days_left", G, TYPE_INT,
 		func() -> int:
-			# The MINIMUM across live sheets, because the warning is about the one about to
-			# lapse. 9999 with no sheets so a "<= 3" test cannot be satisfied by having none.
-			# BUSINESS days: the validity window is ten weekdays, and this
-			# number is printed in Frank's warning. A sheet whose window has already closed is
-			# funding.sheet_decision's, not the warning's, and is left out.
+			# The MINIMUM across live sheets, in BUSINESS days (the number Frank's warning
+			# prints). 9999 with none, so "<= 3" cannot be met by having no sheet. A sheet
+			# whose window has closed belongs to funding.sheet_decision_due and is left out.
 			var least: int = 9999
 			for sheet in GameState.active_sheets:
 				var ts: TermSheet = sheet
@@ -155,7 +136,7 @@ static func install() -> void:
 		"Funding", "business days; 9999 when no sheet is live")
 	EvSeams.register("funding.sheet_decision_due", G, TYPE_BOOL,
 		func() -> bool: return VCPitchSystem.decision_due_sheet() != null,
-		"Funding", "K10: a Series A sheet's window has closed and waits for sit-or-decline")
+		"Funding", "a Series A sheet's window has closed and waits for sit-or-decline")
 	EvSeams.register("funding.last_answer_moment", G, TYPE_BOOL,
 		func() -> bool: return VCPitchSystem.is_last_answer_moment(),
 		"Investment", "one sheet, one day left, and no other table to walk to")
@@ -178,9 +159,8 @@ static func install() -> void:
 	EvSeams.register("funding.seed_pitch_used", G, TYPE_BOOL,
 		func() -> bool: return GameState.seed_pitch_used,
 		"Funding", "the run's one seed meeting has been spent")
-	# INT, NOT THE BAND ID. EvPresenter._resolve_variant runs a by_seam value through int(), so
-	# a String here would collapse to 0 and every variant body would render the harsh arm
-	# forever — the failure would be invisible because a body still appears.
+	# INT, NOT THE BAND ID: by_seam variant text runs the value through int(), so a String
+	# would collapse to 0 and silently render the harsh arm forever.
 	EvSeams.register("funding.seed_band", G, TYPE_INT,
 		func() -> int:
 			var s: TermSheet = GameState.seed_sheet
@@ -202,12 +182,8 @@ static func install() -> void:
 	EvSeams.register("funding.acq_days_open", G, TYPE_INT,
 		func() -> int: return EndingsSystem.acq_days_open(),
 		"Funding", "-1 until the road closes; the buyout window is measured from that stamp")
-	# THE TWO THAT EXIST BECAUSE OF A SHIPPED BUG. The sealed buyout body carries {valuation}
-	# and {offer}; neither is a scope slot, so as CSV tokens they reached the screen as literal
-	# text. STRING, and formatted here, because the body reads
-	# them through {seam:} and _interpolate does str() on whatever comes back — an INT would put
-	# "1440000" in a sentence about a valuation. Formatting at READ time is not "localized text
-	# in state": nothing is stored, the money mark is resolved per locale by Fmt.
+	# STRING, formatted at read time: the buyout body reads these through {seam:}, which
+	# str()s the value — an INT would print "1440000" in a sentence. Nothing is stored.
 	EvSeams.register("funding.acq_valuation", G, TYPE_STRING,
 		func() -> String: return Fmt.money(EndingsSystem.acquisition_valuation()),
 		"Funding", "the buyer's price for the whole company: ARR x multiple")

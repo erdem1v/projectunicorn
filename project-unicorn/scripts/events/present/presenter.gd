@@ -1,76 +1,40 @@
 class_name EvPresenter
 extends RefCounted
 
-# THE SURFACE LAYER (GDD §11, §12). Decides where a card appears and turns a card Dictionary
-# into something the existing modal can render.
+# THE SURFACE LAYER (GDD §11, §12). Turns a card Dictionary into something the existing modal
+# can render, and builds the desk rows.
 #
-# ─────────────────────────────────────────────────────────────────────────────────────────
-# THE FOUR CLASSES AND THEIR SURFACES (§11.1)
-# ─────────────────────────────────────────────────────────────────────────────────────────
+#   interrupt  a blocking modal, time stops
+#   paper      the ODA desk, time flows
+#   info       the owning module's badge — no engine queue: the module already counts its own
+#              attention (RnDSystem/HRSystem.attention_count), so an info card fires `notify`
+#   ambient    the news ticker
 #
-#   interrupt  a blocking modal, time stops        crisis, arc turning point, terminal warning
-#   paper      the ODA desk, time flows            a decision that is not urgent
-#   info       the owning module's badge           a report, a notification
-#   ambient    the news ticker                     rival noise, an arc's fade trail
+# `EventModal` takes a `GameEvent` Resource, so the adapter builds a throwaway one at display
+# time. It never reaches persistence — the queue stores ids — and it keeps the modal's locked-
+# option treatment (suppressed effect chips, authored reason badge) intact.
 #
-# `info` DOES NOT GET AN ENGINE QUEUE. The GDD lists it as a class and it is one, but its
-# surface is the badge the owning module already maintains — `RnDSystem.attention_count()`,
-# `HRSystem.attention_count()`. Giving the engine its own badge state would duplicate a
-# counter that already exists and put the engine in charge of another module's rail entry,
-# which is the WRITE-THROUGH LAW inverted. So an `info` card fires a `notify` effect and the
-# module counts it.
-#
-# ─────────────────────────────────────────────────────────────────────────────────────────
-# WHY AN ADAPTER RATHER THAN A NEW MODAL
-# ─────────────────────────────────────────────────────────────────────────────────────────
-#
-# `EventModal` takes a `GameEvent` Resource; cards are Dictionaries. The obvious move is to
-# rewrite the modal. Two reasons not to:
-#
-#   1. UI design is explicitly out of scope for this rebuild. The card's appearance goes
-#      through the mockup pipeline, and a rewrite now would be a redesign nobody approved.
-#   2. `event_modal.gd`'s locked-option treatment is CORRECT and hard-won: 50% alpha,
-#      `gui_input` never connected, effect chips **suppressed** so a locked path cannot leak
-#      its cost, and the authored reason badge in its place (`:412-425`). Rewriting it would
-#      put all of that at risk for no gain this round.
-#
-# So the adapter builds a throwaway `GameEvent` at display time. It is ~40 lines, it never
-# reaches persistence — the queue stores ids — and it dies the day the modal is rebuilt.
-#
-# TEXT IS RESOLVED HERE AND NOWHERE ELSE (§3.2). "Motor hiçbir aşamada metne dokunmaz." The
-# queue holds ids; the locale is read at the moment of display. That is what makes a mid-run
-# language switch safe: a paper on the desk simply renders in the other language, because
-# nothing anywhere stored a rendered string.
+# TEXT IS RESOLVED HERE AND NOWHERE ELSE (§3.2). The queue holds ids; the locale is read at the
+# moment of display, which is what makes a mid-run language switch safe.
 
-const MODAL_SCENE := "res://scenes/modals/EventModal.tscn"
+static var _KEY_RE: RegEx = _compile("^[A-Z][A-Z0-9_]{2,}$")
+static var _SEAM_RE: RegEx = _compile(r"\{seam:([a-z_]+\.[a-z_]+)\}")
 
 
-## Which surface a class wants. `main.gd` reads this to decide what to mount.
-static func surface_for(card_class: String) -> String:
-	match card_class:
-		"interrupt": return "modal"
-		"paper": return "desk"
-		"info": return "badge"
-	return "ticker"
+static func _compile(pattern: String) -> RegEx:
+	var re := RegEx.new()
+	re.compile(pattern)
+	return re
 
 
 # --- The adapter -----------------------------------------------------------
 
 ## Build a renderable `GameEvent` from a card id and its frozen context.
-##
-## Text is resolved at THIS moment, from the live locale. Nothing here is cached and nothing
-## here is stored.
 static func build_view(event_id: String, context: Dictionary) -> GameEvent:
 	var card: Dictionary = EvCatalog.card(event_id)
 	if card.is_empty():
 		return null
-
-	var locale: String = "en" if TranslationServer.get_locale().begins_with("en") else "tr"
-	var text: Dictionary = (card.get("text", {}) as Dictionary).get(locale, {})
-	# A missing block falls back to Turkish, which is canonical. §17.8 makes a missing block a
-	# build error, so this only fires for content that reached runtime some other way.
-	if text.is_empty():
-		text = (card.get("text", {}) as Dictionary).get("tr", {})
+	var text: Dictionary = _text_block(card)
 
 	var ev := GameEvent.new()
 	ev.id = event_id
@@ -78,35 +42,39 @@ static func build_view(event_id: String, context: Dictionary) -> GameEvent:
 	ev.title = _resolve_text(text.get("title", ""), context)
 	ev.subtitle = _resolve_text(text.get("subtitle", ""), context)
 	ev.body_text = _resolve_text(text.get("body", ""), context)
-	ev.tags = _typed_tags(card.get("tags", []))
+	for t in card.get("tags", []):
+		ev.tags.append(String(t))
 
-	# §14 ch.7's uniform grammar: every card shows a small avatar of its source. A speaker is
-	# a character id when the card names one, and the scope's subject otherwise — so a card
-	# about an employee is visibly about that employee without the author restating it.
+	# §14 ch.7: every card shows its source's avatar — the named speaker, else the scope's
+	# person, so a card about an employee is visibly about that employee.
 	var speaker: String = String(card.get("speaker", ""))
-	if speaker == "":
-		speaker = _subject_character(context)
-	ev.character_id = speaker
+	ev.character_id = speaker if speaker != "" else _subject_character(context)
 
-	var options: Array = card.get("options", [])
 	var labels: Dictionary = text.get("options", {})
 	var reasons: Dictionary = text.get("locked_reasons", {})
-	for o in options:
+	for o in card.get("options", []):
 		var opt: Dictionary = o
 		var opt_id: String = String(opt.get("id", ""))
 		var choice := EventChoice.new()
 		choice.label = _resolve_text(labels.get(opt_id, opt_id), context)
-		# The lock is re-evaluated by the modal at render time against this dictionary, which
-		# is how a lock can change between admission and display.
+		# The modal re-evaluates the lock at render time, so a lock can change between
+		# admission and display.
 		choice.unlock_condition = opt.get("requires", {})
 		choice.unlock_reason_text = _resolve_text(reasons.get(opt_id, ""), context)
-		# Effects are carried so the modal's chip builder can describe them. The engine never
-		# applies them from here — resolution goes through EvEngine.resolve, which is the only
-		# path that writes history.
+		# Carried only for the modal's chip builder; EvEngine.resolve is the one path that
+		# applies effects and writes history.
 		choice.modifiers = opt.get("effects", [])
 		ev.choices.append(choice)
-
 	return ev
+
+
+## The card's text block in the live locale. Turkish is canonical: a missing block (a build
+## error under §17.8) falls back to it.
+static func _text_block(card: Dictionary) -> Dictionary:
+	var all_text: Dictionary = card.get("text", {})
+	var locale: String = "en" if TranslationServer.get_locale().begins_with("en") else "tr"
+	var text: Dictionary = all_text.get(locale, {})
+	return text if not text.is_empty() else all_text.get("tr", {})
 
 
 static func _display_name(entity_type: String, entity_id: String) -> String:
@@ -115,24 +83,17 @@ static func _display_name(entity_type: String, entity_id: String) -> String:
 			var c: Character = CharacterRegistry.get_character(entity_id)
 			return c.character_name if c != null else entity_id
 		EvScope.TYPE_CUSTOMER:
-			# display_name(), NOT company_name. The B2C userbase is a Customer record whose
-			# company_name is deliberately EMPTY — it carries name_key + name_arg instead, so
-			# that a save does not freeze one language into the aggregate account's name
-			# (sales_system._ensure_b2c_record says so). Reading the raw field rendered a card
-			# about the consumer base with a blank where its name goes.
+			# display_name(), not company_name: the B2C userbase record has an EMPTY
+			# company_name and carries name_key + name_arg so a save does not freeze a language.
 			var cu: Customer = CustomerRegistry.get_customer(entity_id)
 			return cu.display_name() if cu != null else entity_id
 		EvScope.TYPE_RIVAL:
 			var r: Rival = RivalRegistry.get_rival(entity_id)
 			return r.company_name if r != null else entity_id
 		EvScope.TYPE_INVESTOR:
-			# THERE WAS NO ARM HERE, so every card that binds an investor slot rendered the
-			# raw id: "anchor teklifi masada" instead of "Anchor Capital teklifi masada".
-			# funding.sheet_expiry does that on any run that reaches a term sheet, and
-			# funding.meeting_day on any run that books a meeting. Investor names are proper
-			# nouns and do not localize, so the registry field is the whole answer.
+			# Investor names are proper nouns and do not localize.
 			var inv: Dictionary = InvestorRegistry.get_investor(entity_id)
-			return String(inv.get("display_name", entity_id)) if not inv.is_empty() else entity_id
+			return String(inv.get("display_name", entity_id))
 	return entity_id
 
 
@@ -144,38 +105,22 @@ static func _subject_character(context: Dictionary) -> String:
 	return ""
 
 
-static func _typed_tags(tags: Array) -> Array[String]:
-	var out: Array[String] = []
-	for t in tags:
-		out.append(String(t))
-	return out
-
-
 # --- The desk --------------------------------------------------------------
 
-## What the ODA desk should render, most urgent first.
-##
-## `visible_slots` is three, because the sealed art has three paper positions
-## (oda_layout.gd:198). The MODEL is uncapped — §11.4 is right that a desk needs no capacity
-## limit once every paper has a clock — and this decides which three are shown.
-##
-## URGENCY WINS A SLOT. `EvPapers.ordered()` sorts by days remaining,
-## so a paper inside its last three days is always in the visible set and cannot run its clock
-## down behind the overflow chip. A consequence that lands off-screen is not a consequence.
+## What the ODA desk renders, most urgent first. The model is uncapped (§11.4); `visible_slots`
+## is the art's three positions, and EvPapers.ordered() keeps urgent papers inside them.
 static func desk_papers(visible_slots: int = 3) -> Array:
 	var out: Array = []
 	for event_id in EvPapers.visible(visible_slots):
 		var card: Dictionary = EvCatalog.card(String(event_id))
-		var locale: String = "en" if TranslationServer.get_locale().begins_with("en") else "tr"
-		var text: Dictionary = (card.get("text", {}) as Dictionary).get(locale, {})
 		var left: int = EvPapers.days_left(String(event_id))
 		out.append({
 			"id": event_id,
-			"title": _resolve_text(text.get("title", ""), EvPapers.context_of(String(event_id))),
+			"title": _resolve_text(_text_block(card).get("title", ""), EvPapers.context_of(String(event_id))),
 			"tag": String(card.get("category", "")).to_upper(),
 			"days_left": left,
-			# §11.4: the remaining time is visible on the paper, with emphasis in the last
-			# three days. That emphasis is the only warning a deferred decision gets.
+			# §11.4: remaining time is on the paper, emphasised in the last days — the only
+			# warning a deferred decision gets.
 			"urgent": left <= EvTuning.EXPIRY_URGENT_DAYS,
 			"target": "event:%s" % event_id,
 		})
@@ -187,25 +132,13 @@ static func desk_overflow(visible_slots: int = 3) -> int:
 
 
 # --- Text resolution -------------------------------------------------------
-# a reason that is not "it would be convenient".
 
-## Resolve one text value. THREE SHAPES, and the dispatch between them is deliberate.
+## Resolve one text value. Three shapes:
 ##
-## 1. A Dictionary  -> variant text: {by_seam, variants}. The Series A gate already rewrites
-##    its own body by decline count (phase_gate_system.gd:266-276), so variant text was
-##    shipping in the game before the schema had a word for it. This is
-##    variant text delivered narrowly, for the card that needs it, rather than as
-##    a general facility nobody has asked for. A missing variant falls back to the lowest key,
-##    so a seam that grows past the authored range degrades to the first body rather than to
-##    an empty card.
-##
-## 2. A bare SCREAMING_SNAKE token -> a localization key.
-##    A DEVIATION FROM §3.2, and taken knowingly. The ported code-built families' text is
-##    already in localization/strings.csv — about 60 rows, written, reviewed and gated by
-##    loc_csv_integrity. Copying them inline would give one reviewed string two homes and the
-##    two would drift the first time either moved. New content writes prose inline, which is
-##    the GDD's shape; ported content keeps its key until the writing round rewrites it.
-##
+## 1. A Dictionary -> variant text {by_seam, variants}, picked by a seam's integer value.
+## 2. A bare SCREAMING_SNAKE token -> a localization key. A deliberate deviation from §3.2:
+##    ported content's reviewed text already lives in strings.csv, and copying it inline would
+##    give one string two homes. New content writes prose inline.
 ## 3. Anything else -> literal prose, interpolated.
 static func _resolve_text(value: Variant, context: Dictionary) -> String:
 	if typeof(value) == TYPE_DICTIONARY:
@@ -218,67 +151,52 @@ static func _resolve_text(value: Variant, context: Dictionary) -> String:
 	return _interpolate(text, context)
 
 
-static var _KEY_RE: RegEx = _compile("^[A-Z][A-Z0-9_]{2,}$")
-static var _SEAM_RE: RegEx = _compile(r"\{seam:([a-z_]+\.[a-z_]+)\}")
-
-
-static func _compile(pattern: String) -> RegEx:
-	var re := RegEx.new()
-	re.compile(pattern)
-	return re
-
-
+## The variant with the largest key not above the seam's value; the lowest key when every key
+## is above it. So a counter that grows past the authored range stays on the last variant, and
+## a sparse map ({"0", "3"}) keeps "0" for the values in between.
 static func _resolve_variant(spec: Dictionary, context: Dictionary) -> String:
 	var seam: String = String(spec.get("by_seam", ""))
 	var variants: Dictionary = spec.get("variants", {})
 	if variants.is_empty():
 		return ""
 	var value: int = int(EvSeams.read(seam)) if seam != "" and EvSeams.has(seam) else 0
-	var keys: Array = variants.keys()
+	var keys: Array = variants.keys().map(func(k): return int(k))
 	keys.sort()
-	var chosen: String = String(variants.get(str(value), variants[keys[0]]))
-	return _resolve_text(chosen, context)
+	var chosen: int = keys[0]
+	for k in keys:
+		if k <= value:
+			chosen = k
+	return _resolve_text(variants[str(chosen)], context)
 
 
-## `{slot}` -> the bound entity's display name. `{seam:name}` -> a seam's value.
-##
-## THE SEAM FORM IS §8.4's MECHANISM, and it exists because of a bug that shipped:
-## END_META_BANKRUPTCY_FRANK said "Yedi gün kırmızıda kaldın" long after SHUTTER_DAYS became
-## 30 in the Frank v6 pass (the copy now reads "Otuz gün", fixed in 7946ff3, and is still a
-## typed number). A number typed into prose goes stale silently and nothing can catch it. A
-## number read from a seam cannot.
-##
-## The B2B family needs the same thing for PROSE rather than numbers: the complaint body is
-## per-sector, so one card carries {seam:musteri.complaint_voice} instead of fifteen near-copies
-## each hard-coding one sector's line.
+## `{slot}` / `{slot.name}` -> the bound entity's display name. `{seam:name}` -> a seam's value
+## (§8.4): a number typed into prose goes stale silently, a number read from a seam cannot.
 static func _interpolate(text: String, context: Dictionary) -> String:
 	if not text.contains("{"):
 		return text
 	var out: String = text
 
-	# Seam reads first, so a seam that returns prose containing {customer} still gets its
-	# entity substitution below.
+	# Seams first, so a seam that returns prose containing {customer} still gets its entity
+	# substitution below. The guard stops a seam whose value contains itself.
 	var m: RegExMatch = _SEAM_RE.search(out)
 	var guard: int = 0
 	while m != null and guard < 16:
 		guard += 1
 		var seam_name: String = m.get_string(1)
 		var value: String = ""
-		if EvSeams.has(seam_name):
-			if EvSeams.kind_of(seam_name) == EvSeams.Kind.ENTITY:
-				var entity_id: String = EvScope.id_in(context, "", seam_name)
-				value = str(EvSeams.read_for(seam_name, entity_id)) if entity_id != "" else ""
-			else:
-				value = str(EvSeams.read(seam_name))
-		else:
-			# Lint makes this a build error, so reaching here means content got in another way.
+		if not EvSeams.has(seam_name):
 			push_error("[EvPresenter] card text reads unknown seam '%s'" % seam_name)
+		elif EvSeams.kind_of(seam_name) == EvSeams.Kind.ENTITY:
+			var entity_id: String = EvScope.id_in(context, "", seam_name)
+			if entity_id != "":
+				value = str(EvSeams.read_for(seam_name, entity_id))
+		else:
+			value = str(EvSeams.read(seam_name))
 		out = out.replace(m.get_string(0), value)
 		m = _SEAM_RE.search(out)
 
 	for slot in context:
 		var bound: Dictionary = context[slot]
 		var display: String = _display_name(String(bound.get("type", "")), String(bound.get("id", "")))
-		out = out.replace("{%s}" % slot, display)
-		out = out.replace("{%s.name}" % slot, display)
+		out = out.replace("{%s}" % slot, display).replace("{%s.name}" % slot, display)
 	return out

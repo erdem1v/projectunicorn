@@ -1,18 +1,9 @@
 class_name EvSeamsProduct
 extends RefCounted
 
-# The `urun.` and `arge.` namespaces.
-#
-# Almost every row here is a one-line binding, and that is Ürün rev 6.1 and Ar-Ge rev 1.4
-# paying forward: both GDDs opened a named read surface before this engine existed, on the
-# stated principle that "olay motoru geldiğinde işi bunları okumak olacak, keşfetmek değil".
-# ProductRead's own header says ProductRead.X IS the GDD's urun.X. So this file mostly agrees
-# with two documents rather than inventing anything.
-#
-# ⚠️ Ar-Ge is under active development by another agent as this is written. The bindings are by
-# NAME, and rnd_system.gd:652-654 declares those names stable ("Names are STABLE; each signal
-# has exactly one publisher"), so line drift underneath is harmless. If a NAME moves, that is a
-# broken contract on their side and the linter will say so on the next run.
+# The `urun.` and `arge.` namespaces. Almost every row binds a query the Ürün and Ar-Ge read
+# surfaces already name (ProductRead.X is the GDD's urun.X); a renamed query is a broken
+# contract on their side and lint reports it.
 
 static func install() -> void:
 	_install_product()
@@ -53,9 +44,7 @@ static func _install_product() -> void:
 	EvSeams.register("urun.axis_experience", G, TYPE_INT,
 		func() -> int: return ProductRead.axis_reading("", "experience"), "Product", "0-120")
 
-	# The floor ladder's trigger (§14 of the Ürün GDD): "" / warning at floor+20% / crossed.
-	# This is what the three-step event ladder reads, and it is why that ladder is buildable
-	# here without any new Product code.
+	# The floor ladder's trigger (Ürün §14): "" / warning at floor+20% / crossed.
 	EvSeams.register("urun.floor_innovation", G, TYPE_STRING,
 		func() -> String: return ProductRead.axis_floor_state("innovation"),
 		"Product", "'' | warning | crossed")
@@ -89,9 +78,8 @@ static func _install_product() -> void:
 	EvSeams.register("urun.build_paused", G, TYPE_BOOL,
 		func() -> bool: return ProductSystem.build_paused(), "Product", "auto or manual")
 
-	# WRAPPER, and honestly labelled: tech debt is a BOOLEAN in the demo, not a level. Ürün
-	# rev6.1 §20 lists it among the things deliberately removed for now, so a card may ask
-	# whether it exists and may not ask how much.
+	# Tech debt is a BOOLEAN in the demo, not a level (Ürün §20): a card may ask whether it
+	# exists, not how much.
 	EvSeams.register("urun.tech_debt", G, TYPE_BOOL,
 		func() -> bool: return bool(GameState.get_flag("tech_debt_birikti", false)),
 		"Product", "WRAPPER over a flag; boolean by design in the demo")

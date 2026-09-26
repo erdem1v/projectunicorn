@@ -3,31 +3,16 @@ extends RefCounted
 
 # THE SEAM REGISTRY (GDD §6). Named, read-only queries. Content never reaches into a system;
 # it asks here, by name, and the name is a contract that survives the system's internals
-# changing underneath it.
+# changing (§6.1: a changed meaning gets a NEW name).
 #
-# WHY A REGISTRY AND NOT DIRECT CALLS. Three reasons, in order of how much they cost when
-# skipped:
+# Because every name is enumerable, an unknown name is a BUILD error (§17.1). Because every
+# entry declares its type, a condition literal is coerced ONCE at catalogue load — Godot's JSON
+# parser returns floats for every number, so `"in": [1,2,3]` would otherwise never match an int.
 #
-#   Content rot. A card written in month one that says `hr.morale_avg` still means the same
-#   thing in month six, because §6.1 forbids a name's meaning changing — a changed meaning
-#   gets a NEW name. Direct calls give you no such promise: the function keeps its name and
-#   quietly starts returning something else, and forty cards start lying at once.
-#
-#   Lint. Because every name a card may use is enumerable, an unknown name is a BUILD error
-#   (§17.1) instead of a runtime warning nobody reads. The old engine's unknown-condition
-#   path was `push_warning` on every tick, forever (event_manager.gd:456).
-#
-#   Types. Every entry declares its type, so a condition's literal can be coerced ONCE at
-#   catalogue load. That closes a defect the codebase already measured: Godot's JSON parser
-#   returns TYPE_FLOAT for every number (save_codec.gd:27-38), so `{"op": "in",
-#   "value": [1,2,3]}` loads as floats and silently never matches an int seam.
-#
-# AN ALLOWLIST, NOT A CONVENTION. It is tempting to say "any static function on a read-surface
-# class is a seam". That is false in this codebase and provably so: ProductRead.emit_edges()
-# (product_read.gd:196-243) is a static function on the class the GDD calls Ürün's read
-# catalogue, and it mutates five statics and emits five signals. §5.3 bans side effects during
-# condition evaluation; only an explicit list can enforce that, so every seam is registered by
-# hand and a smoke case proves the whole catalogue is side-effect free.
+# AN ALLOWLIST, NOT A CONVENTION. Not every static function on a read surface is side-effect
+# free (ProductRead.emit_edges() mutates state and emits signals), and §5.3 bans side effects
+# during condition evaluation — so every seam is registered by hand, and a smoke case proves the
+# whole catalogue is side-effect free.
 
 enum Kind {
 	GLOBAL,   ## takes nothing: finance.cash()
@@ -65,40 +50,36 @@ static func ensure_installed() -> void:
 
 # --- Reading ---------------------------------------------------------------
 
-## A global seam's current value. Unknown name returns null and errors — lint should have
-## caught it, so reaching here at runtime is itself the finding.
+## A global seam's current value. An unknown name returns null and errors — lint should have
+## caught it.
 static func read(name: String) -> Variant:
 	ensure_installed()
 	if _mocks.has(name):
 		return _mocks[name]
-	var entry: Variant = _seams.get(name, null)
-	if entry == null:
-		push_error("[EvSeams] unknown seam '%s'" % name)
-		return null
-	var d: Dictionary = entry
-	if d["kind"] != Kind.GLOBAL:
-		push_error("[EvSeams] '%s' is entity-scoped; call read_for()" % name)
-		return null
-	return (d["fn"] as Callable).call()
+	var fn: Callable = _binding(name, Kind.GLOBAL)
+	return fn.call() if fn.is_valid() else null
 
 
-## An entity-scoped seam for one entity id.
+## An entity-scoped seam for one entity id. A per-entity mock wins over a seam-wide one.
 static func read_for(name: String, entity_id: String) -> Variant:
 	ensure_installed()
-	var mock_key: String = "%s@%s" % [name, entity_id]
-	if _mocks.has(mock_key):
-		return _mocks[mock_key]
-	if _mocks.has(name):
-		return _mocks[name]
-	var entry: Variant = _seams.get(name, null)
-	if entry == null:
+	for key in ["%s@%s" % [name, entity_id], name]:
+		if _mocks.has(key):
+			return _mocks[key]
+	var fn: Callable = _binding(name, Kind.ENTITY)
+	return fn.call(entity_id) if fn.is_valid() else null
+
+
+static func _binding(name: String, want: Kind) -> Callable:
+	if not _seams.has(name):
 		push_error("[EvSeams] unknown seam '%s'" % name)
-		return null
-	var d: Dictionary = entry
-	if d["kind"] != Kind.ENTITY:
-		push_error("[EvSeams] '%s' is global; call read()" % name)
-		return null
-	return (d["fn"] as Callable).call(entity_id)
+		return Callable()
+	var d: Dictionary = _seams[name]
+	if d["kind"] != want:
+		push_error("[EvSeams] '%s' has the wrong kind; use %s()"
+			% [name, "read_for" if want == Kind.GLOBAL else "read"])
+		return Callable()
+	return d["fn"]
 
 
 # --- Introspection (lint, the debug panel, the vocabulary generator) --------
@@ -171,4 +152,4 @@ static func clear_mocks() -> void:
 
 
 static func reset() -> void:
-	_mocks.clear()
+	clear_mocks()

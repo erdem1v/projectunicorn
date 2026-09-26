@@ -1,59 +1,29 @@
 class_name EvTempo
 extends RefCounted
 
-# THE FOUR-LAYER BRAKE (GDD §13).
-#
-# §13.1's diagnosis is the thing to keep in mind while reading this: **the problem was never
-# the NUMBER of cards, it was the SAMENESS.** Five cards about five different things is a
-# normal week at a company. Three cards about the same account in one week reads as a bug.
-# Every layer below is aimed at that, not at volume.
+# THE FOUR-LAYER BRAKE (GDD §13). The problem was never the NUMBER of cards, it was the
+# SAMENESS: three cards about one account in a week reads as a bug. Every layer aims at that.
 #
 #   Layer 1  the same CARD          min_gap_days, default 30
 #   Layer 2  the same SUBJECT       employees 14 days, customers 30 — POOL CARDS ONLY
 #   Layer 3  the same CATEGORY      a quota over a rolling 7 days
 #   Layer 4  the daily ceiling      2 interrupts; the third becomes paper
 #
-# ─────────────────────────────────────────────────────────────────────────────────────────
-# I4: NOTHING IS EVER DROPPED
-# ─────────────────────────────────────────────────────────────────────────────────────────
+# I4: NOTHING IS EVER DROPPED (§13.2). A card over budget falls interrupt → paper and stops.
+# Never to ambient: the ticker is lossy, so that would keep the letter of I4 and lose its point.
+# Paper is a safe floor because every paper has an expiry (§12.1), which is why R8a requires
+# the paper trio on any interrupt that CAN be demoted.
 #
-# §13.2. When the budget is spent a card does not disappear — its presentation class falls:
+# THE ORDER OF DEMOTION: §4.1 would demote the third card to ARRIVE, and arrival order is
+# meaningless. The day's admissions are collected and charged top-down by §11.2 priority, so
+# the least important card is the one demoted.
 #
-#     interrupt → paper → and stops there.
+# §13.5: critical tags, terminal telegraphs, arc steps and a paper's last-day warning recognise
+# no budget at all — an arc that could be throttled could miss its own payoff.
 #
-# **It never falls to ambient.** That is not in §13.2 and it needs saying, because the ticker
-# looks like a natural third rung and is not: `NewsFeedSystem.on_headline_added` drops the
-# NEWEST line when its buffer fills (news_feed_system.gd:164-173), by design, because
-# autonomous closes produce lines faster than the feed drains. Demoting into a lossy channel
-# would satisfy the letter of I4 while destroying its point.
-#
-# Paper is a safe floor for one reason only: every paper has an expiry (§12.1), so a demoted
-# card still forces a resolution. Which is also why R8a exists — an interrupt that CAN be
-# demoted must carry the paper trio, or the demotion manufactures a card the linter would
-# have rejected.
-#
-# ─────────────────────────────────────────────────────────────────────────────────────────
-# THE ORDER OF DEMOTION IS THE POINT
-# ─────────────────────────────────────────────────────────────────────────────────────────
-#
-# §4.1 places the budget check inside `propose()`, which would demote the THIRD CARD TO ARRIVE.
-# Arrival order is meaningless — the third proposal of the day might be the arc payoff and the
-# first two might be rival news. So the day's admissions are collected and classes assigned
-# TOP-DOWN by §11.2 priority: the least important thing is demoted, which is what I4 is for.
-#
-# ─────────────────────────────────────────────────────────────────────────────────────────
-# THREE THINGS RECOGNISE NO BUDGET AT ALL (§13.5)
-# ─────────────────────────────────────────────────────────────────────────────────────────
-#
-#   · tag: critical — the spine, arc turning points, phase transitions
-#   · terminal telegraphs
-#   · a paper's last-day warning
-#
-# An arc that could be throttled is an arc that can miss its own payoff, and §0.2 dies with it.
-#
-# EVERY NUMBER HERE IS IN EvTuning AND NONE OF THEM IS MEASURED (§13.8).
+# Every number is in EvTuning and none of them is measured (§13.8).
 
-## Rolling window of admissions: [{day, category, subject_id, card_class}]
+## Rolling window of admissions: [{day, event_id, category, subject, class}]
 static var _window: Array = []
 
 
@@ -79,9 +49,8 @@ static func assign(admissions: Array) -> Array:
 		var declared: String = String(card["class"])
 		var final_class: String = declared
 
-		if _budget_exempt(card):
-			# §13.5. Not "gets priority" — recognises no budget, and is not counted against
-			# one either. An arc turning point does not consume the day's interrupt slots.
+		if budget_exempt(card):
+			# §13.5: recognises no budget and is not counted against one either.
 			out.append({"event_id": event_id, "class": declared, "exempt": true})
 			_record(event_id, card, declared)
 			continue
@@ -101,8 +70,7 @@ static func assign(admissions: Array) -> Array:
 
 
 ## §11.2's order, as a comparator. Terminal first, then a paper about to lapse, then critical,
-## then the class ladder. Ties break by admission day and then alphabetically — deterministic,
-## and deliberately NOT seeded, so two players in the same state see the same order.
+## then the class ladder. Ties break by id — deterministic and deliberately NOT seeded.
 static func _more_important(a: Dictionary, b: Dictionary) -> bool:
 	var ra: int = _rank(String(a["event_id"]))
 	var rb: int = _rank(String(b["event_id"]))
@@ -123,15 +91,9 @@ static func _rank(event_id: String) -> int:
 	return 3 + maxi(0, EvQueue.PRIORITY.find(String(card.get("class", "ambient"))))
 
 
-## §13.5 — what the day's interrupt budget does NOT govern. PUBLIC because the linter has to
-## ask the same question: R8a requires the paper expiry trio on anything that CAN be demoted,
-## and a card that is exempt here can never be. Two answers to one question is how a linter
-## comes to demand a field for a code path that cannot run.
+## §13.5 — what the day's interrupt budget does NOT govern. Public because lint's R8a asks the
+## same question (a card exempt here can never be demoted, so needs no paper trio).
 static func budget_exempt(card: Dictionary) -> bool:
-	return _budget_exempt(card)
-
-
-static func _budget_exempt(card: Dictionary) -> bool:
 	var tags: Array = card.get("tags", [])
 	return tags.has("critical") or tags.has("terminal_warning") or card.has("arc")
 
@@ -143,7 +105,7 @@ static func _budget_exempt(card: Dictionary) -> bool:
 ##
 ## Critical cards and arc steps never reach this — G8 does not run for them (§13.5).
 static func pool_blocked_reason(card: Dictionary, subject_id: String) -> String:
-	if _budget_exempt(card):
+	if budget_exempt(card):
 		return ""
 	_prune()
 
@@ -153,8 +115,8 @@ static func pool_blocked_reason(card: Dictionary, subject_id: String) -> String:
 	if last >= 0 and GameState.day - last < gap:
 		return "layer 1: this card fired %d day(s) ago, min_gap is %d" % [GameState.day - last, gap]
 
-	# Layer 2 — the same subject. THE EXEMPTION IS THE INTERESTING HALF: this applies to pool
-	# cards only, so an arc can fire card after card about one employee. That is what an arc IS.
+	# Layer 2 — the same subject. Pool cards only: an arc may fire card after card about one
+	# employee, because that is what an arc IS — so exempt cards neither check nor record it.
 	if subject_id != "":
 		var subject_gap: int = _subject_gap_for(card)
 		var last_subject: int = _last_day_about(subject_id)
@@ -210,14 +172,6 @@ static func _record(event_id: String, card: Dictionary, final_class: String) -> 
 	})
 
 
-## Note the subject separately: it is known at admission, not at class-assignment time.
-static func note_subject(event_id: String, subject_id: String) -> void:
-	for i in range(_window.size() - 1, -1, -1):
-		if String((_window[i] as Dictionary)["event_id"]) == event_id:
-			(_window[i] as Dictionary)["subject"] = subject_id
-			return
-
-
 static func _prune() -> void:
 	# 30 days rather than 7: layer 2's customer gap needs that much history, and the window is
 	# a few dozen dictionaries at most.
@@ -258,11 +212,7 @@ static func _last_day_about(subject_id: String) -> int:
 	return last
 
 
-# --- Reporting (the harness's anchor, §13.7) -------------------------------
-
-static func window_snapshot() -> Array:
-	return _window.duplicate(true)
-
+# --- Lifecycle -------------------------------------------------------------
 
 static func reset() -> void:
 	_window.clear()

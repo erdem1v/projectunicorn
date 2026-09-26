@@ -1,12 +1,8 @@
 class_name EvSeamsFinance
 extends RefCounted
 
-# The `finance.` namespace.
-#
-# Unlike HR, Ürün and Ar-Ge, Finance never opened a named read surface — its numbers live as
-# public vars on GameState. So most of this file is WRAPPERS, and they are honest about it:
-# each one names the field it stands in front of, and each retires the day Finance names its
-# own query. Content does not have to wait for that day.
+# The `finance.` namespace. Finance has no named read surface — its numbers are public vars on
+# GameState — so most rows are WRAPPERS that name the field they stand in front of.
 
 static func install() -> void:
 	var G := EvSeams.Kind.GLOBAL
@@ -27,34 +23,27 @@ static func install() -> void:
 	EvSeams.register("finance.reputation", G, TYPE_INT,
 		func() -> int: return GameState.reputation, "Finance", "WRAPPER; clamped -10..100")
 
-	# Runway. INF when the company is default-alive, and that is not a rounding artefact — it
-	# is the state the game calls "Artıda". A condition comparing against it must therefore be
-	# written as "runway BELOW x", never "above", or it reads true forever the moment the
-	# company turns profitable.
+	# INF when default-alive ("Artıda"), so a condition must test "runway BELOW x"; "above"
+	# reads true forever once the company turns profitable.
 	EvSeams.register("finance.runway_months", G, TYPE_FLOAT,
 		func() -> float: return GameState.get_runway_months(),
 		"Finance", "INF when net >= 0 — compare with '<', never '>'")
 
-	# finance.runway_days — the day-valued runway the shutter and the soft cap think in.
-	# YOK as data: the only day figure in the codebase lives inside display code
-	# (ui_tokens.gd:785, and its helper is private). Wrapped here, with INF handled rather
-	# than multiplied — 30 * INF is not a number anyone wants in a condition.
+	# The day-valued runway the shutter and the soft cap think in, with INF mapped to 9999
+	# rather than multiplied.
 	EvSeams.register("finance.runway_days", G, TYPE_INT,
 		func() -> int:
 			var months: float = GameState.get_runway_months()
 			if is_inf(months) or months < 0.0:
 				return 9999
 			return int(round(months * 30.0)),
-		"Finance", "WRAPPER, filed as YOK; 9999 stands for default-alive")
+		"Finance", "WRAPPER; 9999 stands for default-alive")
 
 	EvSeams.register("finance.shutter_days_left", G, TYPE_INT,
 		func() -> int: return GameState.shutter_days_left,
 		"Finance", "WRAPPER; -1 when not counting, else counts down")
 
-	# The seam that kills a shipped defect: END_META_BANKRUPTCY_FRANK says "yedi gün" while the
-	# constant has been 30 since the Frank v6 pass — a sentence that went stale because a
-	# number was typed into prose. The engine GDD's §8.4 rule is that the number lives here and
-	# the copy interpolates it, so the sentence cannot lie again.
+	# §8.4: the number lives here and copy interpolates it, so a sentence cannot go stale.
 	EvSeams.register("finance.shutter_days_total", G, TYPE_INT,
 		func() -> int: return EndingsSystem.SHUTTER_DAYS,
 		"Finance", "the shutter window; card text interpolates this rather than typing it")
@@ -64,7 +53,7 @@ static func install() -> void:
 		"Finance", "consecutive closed months in the black with no red days")
 	EvSeams.register("finance.growth_streak_months", G, TYPE_INT,
 		func() -> int: return GameState.get_mrr_growth_streak(PhaseGateSystem.GROWTH_MIN_PCT),
-		"Finance", "consecutive closed months of MRR growth; no longer a Series A gate condition (K1)")
+		"Finance", "consecutive closed months of MRR growth")
 	EvSeams.register("finance.months_closed", G, TYPE_INT,
 		func() -> int: return GameState.month_history.size(),
 		"Finance", "WRAPPER; capped at 12 by the ledger")

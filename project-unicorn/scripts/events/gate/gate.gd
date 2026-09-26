@@ -1,18 +1,9 @@
 class_name EvGate
 extends RefCounted
 
-# THE SINGLE ADMISSION GATE (GDD §4, invariant I1).
-#
-# There is one way a card becomes showable and this is it. Not "one preferred way" — one way.
-# The old engine had three (event_manager.gd:159, :200, :217), and two of them skipped the
-# eligibility pass entirely, which meant one_shot, cooldown_days, allowed_hours, the build-safe
-# gate and every trigger condition were DEAD FIELDS on all 19 injection sites. Nineteen systems
-# each re-implemented the missing brake in their own vocabulary, seventeen of them successfully.
-#
-# I1 is enforced structurally, not by convention: the Queue is private to EventEngine and
-# nothing outside this file can put a card in it. There is no public show(). GDScript has no
-# `private`, so "the only caller is in this file" is the strongest available form — and the
-# linter's §17.9 rule makes the second path unwritable rather than merely discouraged.
+# THE SINGLE ADMISSION GATE (GDD §4, invariant I1). There is one way a card becomes showable
+# and this is it: every origin — tick, signal, arc step, schedule, request — proposes here, and
+# only EvEngine turns a verdict into a queue entry.
 #
 # THE LINE (§4.1)
 #
@@ -25,7 +16,7 @@ extends RefCounted
 #     G3  latch                     (one_shot / max_fires / cooldown)
 #     G4  tick, phase window, allowed_hours, build-safe
 #     G5  scope                     (can the slots fill, with the right types)
-#     G6  guards                    (market, subtype, portfolio, phase)
+#     G6  guards                    (market, subtype, phase, product_live)
 #     G7  condition tree
 #     G8  tempo                     ← NEVER REJECTS. Demotes the class. (P5)
 #           ↓
@@ -33,34 +24,22 @@ extends RefCounted
 #           ↓
 #     at display: G5, G6, G7 again  ← §4.4
 #
-# WHY G5 SOMETIMES RUNS BEFORE G3, which §4.1's list does not say and which is a real
-# deviation recorded in §27: an `entity`-keyed latch is keyed on the SUBJECT, and the subject
-# comes from scope resolution. So for latch_key: entity the order is G5 then G3; for
-# latch_key: run — the default and the majority — G3 stays first, where it is cheap and kills
-# most of the corpus on most days. The intent of the ordering (cheap filters first) is kept;
-# the dependency is honoured.
+# WHY G5 SOMETIMES RUNS BEFORE G3 (§27): an `entity`-keyed latch is keyed on the SUBJECT,
+# which comes from scope resolution. For latch_key: run — the default — G3 stays first, where
+# it is cheap and kills most of the corpus on most days.
 #
-# G3 AND G8 DO NOT RE-RUN AT DISPLAY (§4.4). A card admitted yesterday already spent its
-# cooldown, and its class was decided when it was admitted. Re-charging either would let a
-# queued card die on a rule it has already passed.
+# G3 AND G8 DO NOT RE-RUN AT DISPLAY (§4.4). Re-charging either would let a queued card die on
+# a rule it has already passed.
 
 enum Origin { TICK_DAILY, TICK_HOURLY, SIGNAL, SCHEDULE, ARC_STEP, POOL, FLOOR, FORCE, REQUEST }
-
-const ORIGIN_NAMES := {
-	Origin.TICK_DAILY: "tick_daily", Origin.TICK_HOURLY: "tick_hourly",
-	Origin.SIGNAL: "signal", Origin.SCHEDULE: "schedule", Origin.ARC_STEP: "arc_step",
-	Origin.POOL: "pool", Origin.FLOOR: "floor", Origin.FORCE: "force",
-	Origin.REQUEST: "request",
-}
 
 ## §20 B10: undeclared means daytime. A card that says nothing about its hour is not a card
 ## that fires at 03:00.
 const DEFAULT_ALLOWED_HOURS := [8, 20]
 
 
-## The verdict. `admitted` plus, when it is false, exactly which step said no and why — which
-## is the whole substance of the "why didn't this fire" panel (§19.2). A gate that only
-## returned a bool would force the panel to re-derive the answer and risk disagreeing with it.
+## The verdict. `admitted` plus, when it is false, exactly which step said no and why — the
+## substance of the "why didn't this fire" panel (§19.2).
 class Verdict:
 	var admitted: bool = false
 	var step: String = ""              ## "G4" etc, "" when admitted
@@ -134,24 +113,9 @@ static func propose(event_id: String, origin: Origin, given: Dictionary = {}) ->
 			return Verdict.refuse("G5", "slot '%s' could not be filled" % scope_result["unresolved"])
 	var context: Dictionary = scope_result["context"]
 
-	# G6 — guards
-	var g6: String = _g6_guards(card)
-	if g6 != "":
-		return Verdict.refuse("G6", g6, context)
-
-	# G7 — the condition tree
-	var condition: Dictionary = card.get("condition", {})
-	if not condition.is_empty():
-		var report: Dictionary = EvCondition.explain(condition, context)
-		if not bool(report["passed"]):
-			return Verdict.refuse("G7", "condition not met", context, report)
-
-	# Admitted. G8 assigns the presentation class at pump time, over the whole day's
-	# admissions at once — see EvTempo. Until then the card keeps the class it declared.
-	var v := Verdict.new(true)
-	v.context = context
-	v.card_class = String(card["class"])
-	return v
+	# G6, G7. An admitted card keeps its declared class until G8 assigns the presentation class
+	# over the whole day's admissions at once — see EvTempo.
+	return _world_check(card, context, "condition not met")
 
 
 ## Re-run the display-time subset (§4.4). Days can pass between admission and display: the
@@ -166,6 +130,11 @@ static func revalidate(event_id: String, context: Dictionary) -> Verdict:
 		return Verdict.refuse("G5", "entity gone from slot '%s'"
 			% EvScope.first_dead_slot(context), context)
 
+	return _world_check(card, context, "condition no longer met")
+
+
+## G6 (guards) and G7 (the condition tree), shared by admission and display-time re-validation.
+static func _world_check(card: Dictionary, context: Dictionary, g7_reason: String) -> Verdict:
 	var g6: String = _g6_guards(card)
 	if g6 != "":
 		return Verdict.refuse("G6", g6, context)
@@ -174,7 +143,7 @@ static func revalidate(event_id: String, context: Dictionary) -> Verdict:
 	if not condition.is_empty():
 		var report: Dictionary = EvCondition.explain(condition, context)
 		if not bool(report["passed"]):
-			return Verdict.refuse("G7", "condition no longer met", context, report)
+			return Verdict.refuse("G7", g7_reason, context, report)
 
 	var v := Verdict.new(true)
 	v.context = context
@@ -185,10 +154,6 @@ static func revalidate(event_id: String, context: Dictionary) -> Verdict:
 # --- G2: version scope and tutorial ----------------------------------------
 
 static func _g2_scope(card: Dictionary) -> String:
-	# Release tier. No such concept exists in the codebase yet, so the default is "ships" and
-	# the field is forward-compatible: content marked ea/full stays out of a demo pool without
-	# anyone having to build a tier system first. Same shape as the tutorial hook below —
-	# separating a mode now is free, retrofitting it is not.
 	var scope: String = String(card.get("version_scope", "demo"))
 	if not EvTuning.SHIPPED_SCOPES.has(scope):
 		return "version_scope '%s' does not ship in this build" % scope
@@ -205,10 +170,7 @@ static func _g2_scope(card: Dictionary) -> String:
 static func _g4_window(card: Dictionary, origin: Origin) -> String:
 	var tick: String = String(card["tick"])
 
-	# A card declares which clock it lives on, and the proposer must match it. The old engine
-	# derived this instead: has_random_trigger() silently routed a card to the daily path or
-	# the hourly one, which decided whether it was capped AND whether allowed_hours was
-	# honoured at all. Adding a dice roll to a beat moved it into a different engine, quietly.
+	# A card declares which clock it lives on, and the proposer must match it.
 	match origin:
 		Origin.TICK_DAILY:
 			if tick != "daily":
@@ -224,21 +186,12 @@ static func _g4_window(card: Dictionary, origin: Origin) -> String:
 				return "card is tick:%s, proposed from the schedule" % tick
 		Origin.REQUEST:
 			# DELIBERATELY UNCHECKED. `tick` says which clock SWEEPS a card, not who may name
-			# it. A caller that names a card has already seen the edge — the Sales tab's
-			# player, CustomerRepSystem's aged request, ProductSystem's ship. Refusing them on
-			# the clock would mean every named card also had to be swept, which is the second
-			# admission path this rebuild exists to delete.
-			#
-			# `tick: "request"` is the other half: a card no clock sweeps at all. The sweep and
-			# the pool skip it because its tick matches neither "daily" nor "hourly", so being
-			# named is the only way it can reach the player.
+			# it; a caller that names a card has already seen the edge. A `tick: "request"` card
+			# is swept by no clock, so being named is the only way it reaches the player.
 			pass
 
-	# allowed_hours. THE DEFECT THIS FIXES: in the old engine the daily tick always ran at hour
-	# 0 (time_manager.gd:138-144), and the hour gate read GameState.current_hour — so any
-	# daily card given a window that excluded midnight was PERMANENTLY ineligible and nothing
-	# said so. Now the window only governs cards that live on the hourly clock, where an hour
-	# is a real thing, and a daily card carrying one is a lint error rather than a silent death.
+	# allowed_hours governs hourly cards only: the daily tick runs at a fixed hour, so a window
+	# on a daily card could make it permanently ineligible. Lint rejects that combination.
 	if tick == "hourly":
 		var window: Array = card.get("allowed_hours", DEFAULT_ALLOWED_HOURS)
 		if not _hour_in(GameState.current_hour, window):
@@ -303,9 +256,8 @@ static func _g6_guards(card: Dictionary) -> String:
 
 # --- Helpers ---------------------------------------------------------------
 
-## The card's primary subject, for an entity-keyed latch: the first REQUIRED slot in
-## declaration order. Declaration order is stable because Godot Dictionaries preserve
-## insertion order, and a smoke case pins that so the latch key cannot silently change shape.
+## The card's primary subject, for an entity-keyed latch: the first slot in declaration order.
+## Dictionaries preserve insertion order, and a smoke case pins it so the key cannot change shape.
 static func _subject_of(context: Dictionary) -> String:
 	for slot_name in context:
 		return String((context[slot_name] as Dictionary).get("id", ""))
@@ -313,4 +265,4 @@ static func _subject_of(context: Dictionary) -> String:
 
 
 static func origin_name(origin: Origin) -> String:
-	return String(ORIGIN_NAMES.get(origin, "?"))
+	return String(Origin.keys()[origin]).to_lower()

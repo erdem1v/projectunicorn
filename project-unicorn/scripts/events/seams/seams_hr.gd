@@ -3,26 +3,13 @@ extends RefCounted
 
 # The `hr.` and `founder.` namespaces.
 #
-# Most of this file is one line per seam because Ekip rev11 already did the work: §15.3 of that
-# GDD opened a named read catalogue deliberately ahead of this engine ("Katalog Ekip'in
-# sorumluluğudur ve bu inşayla birlikte açılır — olay motorunu beklemez"), and
-# endgame_smoke.gd:8092 contract-tests that the names exist. Where a row is a one-line binding,
-# that is Ekip's foresight paying off, not this file being thin.
+# BINDING rows name a query Ekip already opened (§15.3 read catalogue): `hr.morale` is
+# HRSystem.morale, and a change in how morale is computed does not move the line.
+# WRAPPER rows stand in front of an unnamed field (`Character.level`) and retire when Ekip
+# names a query for it.
 #
-# TWO KINDS OF ROW, and the difference matters when reading it:
-#
-#   BINDING — the named query already exists. `hr.morale` is HRSystem.morale. If Ekip changes
-#   how morale is computed, this line does not move.
-#
-#   WRAPPER — the value is reachable but unnamed (`Character.level` is a field). The wrapper
-#   lives here so content still gets a stable name today, and it is marked so that when Ekip
-#   next opens its own query the wrapper retires and the binding replaces it. Nothing
-#   content-side changes on that day, which is the whole argument for naming the query rather
-#   than the field.
-#
-# The adapter shape. Every entity seam takes an ID, never an object: an id is what History
-# stores, what a frozen queue context stores, and what survives a save. Handing a Character
-# around instead would put a Resource in places that must hold scalars only.
+# Every entity seam takes an ID, never an object: an id is what History and a frozen context
+# store, and what survives a save.
 
 static func install() -> void:
 	_install_people()
@@ -39,7 +26,7 @@ static func _emp(id: String) -> Character:
 static func _install_people() -> void:
 	var E := EvSeams.Kind.ENTITY
 
-	# BINDINGS — Ekip §15.3, already named and contract-tested.
+	# BINDINGS — Ekip §15.3.
 	EvSeams.register("hr.morale", E, TYPE_INT,
 		func(id: String) -> int: return HRSystem.morale(_emp(id)),
 		"HR", "0-100")
@@ -77,7 +64,7 @@ static func _install_people() -> void:
 		func(id: String) -> int: return HRSystem.accounts_of(_emp(id)).size(),
 		"HR", "how many accounts this person carries")
 
-	# WRAPPERS — reachable, unnamed. Each retires when Ekip names it.
+	# WRAPPERS.
 	EvSeams.register("hr.level", E, TYPE_INT,
 		func(id: String) -> int:
 			var c: Character = _emp(id)
@@ -104,21 +91,10 @@ static func _install_people() -> void:
 			return HRActions.raise_cooldown_left(c) if c != null else 0,
 		"HR", "days until a raise is allowed again; 0 means now")
 
-	# hr.salary_band_position — the seam the GDD's own §9.7 table lists as YOK.
-	#
-	# It is the retention modifier "maaşı bandın altında", and without it that hover line
-	# cannot be written at all (I7: no seam, no modifier). Both halves exist —
-	# HRConstants.salary_band_for_level and Character.monthly_salary — but nothing in
-	# production compares a sitting employee to the band, and hr_actions.gd:140-143 documents
-	# the OPPOSITE rule on purpose: a promotion raises by the chosen percent and does not
-	# reseat the salary into the new band, so promoted staff drift below it by design.
-	#
-	# So the drift is real, intended, and unread. This wrapper reads it. Filed to Ekip as
-	# hr.salary_vs_band; when that lands, this retires.
-	#
-	# Returns the position in the band as 0.0 (at the floor) to 1.0 (at the ceiling), and
-	# BELOW ZERO when the salary has fallen under the band entirely — which is the case the
-	# modifier line is actually about.
+	# The retention modifier "maaşı bandın altında" needs this (I7: no seam, no modifier).
+	# A promotion raises by a percent and does not reseat the salary into the new band, so
+	# promoted staff drift below it by design; this reads that drift. 0.0 at the band floor,
+	# 1.0 at the ceiling, BELOW ZERO under the band — the case the modifier is about.
 	EvSeams.register("hr.salary_band_position", E, TYPE_FLOAT,
 		func(id: String) -> float:
 			var c: Character = _emp(id)
@@ -132,7 +108,7 @@ static func _install_people() -> void:
 			if high <= low:
 				return 0.0
 			return (float(c.monthly_salary) - low) / (high - low),
-		"HR", "WRAPPER, filed as YOK: <0 under the band, 0..1 inside it")
+		"HR", "WRAPPER: <0 under the band, 0..1 inside it")
 
 
 # --- Company-wide -----------------------------------------------------------
@@ -171,11 +147,8 @@ static func _install_company() -> void:
 static func _install_founder() -> void:
 	var G := EvSeams.Kind.GLOBAL
 
-	# The founder is a Character with category == "founder" (game_state.gd:948-1006), not a
-	# separate class — but he is a separate SCOPE TYPE (§4.3), and the data model already
-	# enforces that: CharacterRegistry.get_employees() filters him out, so hr.headcount cannot
-	# count him and the employee selector cannot return him. The rule holds without the engine
-	# doing anything.
+	# The founder is a Character with category "founder" but a separate scope type (§4.3);
+	# CharacterRegistry.get_employees() filters him out, so hr.* company counts exclude him.
 	EvSeams.register("founder.charisma", G, TYPE_INT,
 		func() -> int: return GameState.get_founder_skill(FounderConstants.SKILL_CHARISMA),
 		"HR", "0-10 on the shared ruler; pitch and scandal outcomes read it")

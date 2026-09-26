@@ -1,23 +1,53 @@
 extends Control
 
 # Event modal — mounted into GameShell/ModalLayer by main.gd when EventManager
-# emits modal_requested. Editorial paper card (approved mockup): mono-caps header
-# (source chip + "KARAR · GÜN N" + subtitle slot), serif headline, serif body,
-# compact speaker strip, optional mentor quote row (event.mentor_line), choice
-# cards with right-aligned effect chips, optional MENTOR TAVSİYESİ highlight
-# (event.mentor_choice), mono footer. No countdown: the game pauses while open.
+# emits modal_requested. Editorial paper card: mono-caps header (source chip +
+# "KARAR · GÜN N" + subtitle), serif headline and body, compact speaker strip,
+# optional mentor quote row (event.mentor_line), choice cards with right-aligned
+# effect chips, optional MENTOR TAVSİYESİ highlight (event.mentor_choice), mono
+# footer. No countdown: the game pauses while open.
 #
-# Layout is built in code over a bare .tscn root (ending_scene.gd idiom).
-# Colors come from UiTokens, styleboxes from master_theme.tres variations,
-# widgets from UiFactory.
+# Layout is built in code over a bare .tscn root. Colors come from UiTokens,
+# styleboxes from master_theme.tres variations, widgets from UiFactory.
 #
 # Lifecycle: main.gd instances → populate(event) → player clicks a choice →
-# EventManager.resolve_choice() → event_resolved → main.gd frees this node.
+# EventGate.resolve() → event_resolved → main.gd frees this node.
 # process_mode = ALWAYS (.tscn) so input works while the tree is paused.
+
+## Effects a card carries deliberately and SILENTLY: bookkeeping with no player-visible
+## consequence of its own. `event_chip_coverage` in the smoke suite fails on any card verb
+## that is neither labelled in `_describe_modifier` nor listed here.
+const SILENT_VERBS := [
+	"set_flag", "set_game_flag", "stamp_day", "schedule_event", "cancel_scheduled",
+	"start_arc", "advance_arc", "end_arc", "abort_arc", "set_arc_var",
+	"mentor_advisory", "unlock_content", "spend_budget",
+]
+
+## Verbs whose chip is a fixed sentence: [CSV key, badge kind].
+const FIXED_CHIPS := {
+	"enter_development": ["EFFECT_DEV_BEGINS", &"neutral"],
+	"enter_beta": ["EFFECT_BETA_BEGINS", &"neutral"],
+	"open_term_table": ["EFFECT_TERM_TABLE", &"accent"],
+	"open_seed_table": ["EFFECT_SEED_TABLE", &"accent"],
+	"decline_offer": ["EFFECT_FUND_CLOSES", &"negative"],
+	"trigger_ending": ["EFFECT_RUN_ENDS", &"accent"],
+	"decline_buyout": ["EFFECT_VC_ROAD_CLOSES", &"negative"],
+	"churn_customer": ["EFFECT_CHURN", &"negative"],
+	"add_prospect": ["EFFECT_NEW_PROSPECT", &"positive"],
+	"open_paid_tier": ["EFFECT_PAID_TIER", &"accent"],
+	"promise_create": ["EFFECT_PROMISE_CREATE", &"accent"],
+	"b2b_retain_delay": ["EFFECT_RETAIN_DELAY", &"neutral"],
+	"b2b_retain_ignore": ["EFFECT_RETAIN_IGNORE", &"neutral"],
+	"b2b_expand_decline": ["EFFECT_NO_CHANGE", &"neutral"],
+	"advance_phase": ["EFFECT_PHASE_ADVANCE", &"accent"],
+	"phase_gate_decline": ["EFFECT_PHASE_HOLD", &"neutral"],
+	"ship_active_build": ["EFFECT_SHIP_LIVE", &"accent"],
+	"start_vc_meeting": ["EFFECT_MEETING_STARTS", &"accent"],
+	"goto_tab": ["EFFECT_TAKES_YOU_THERE", &"neutral"],
+}
 
 var _event: GameEvent = null
 var _resolved: bool = false  # one-shot guard against double-click
-var _intro_played: bool = false  # ODA telefon-orijin girişi tek sefer oynar
 
 var _header_row: HBoxContainer
 var _title_label: Label
@@ -38,10 +68,8 @@ func populate(event: GameEvent) -> void:
 	if not is_node_ready():
 		await ready
 	_fill_header()
-	# Every authored string goes through Localization.pick, which returns the English
-	# sibling when one exists and the locale is English, and the Turkish canonical text
-	# otherwise. Resolution happens HERE, at render, not at load: the event cache is built
-	# once at boot, so resolving earlier would freeze the boot locale into it.
+	# Authored text resolves HERE, at render, not at load: the event cache is built once at
+	# boot, so resolving earlier would freeze the boot locale into it.
 	_title_label.text = Localization.pick(event.title, event.title_en)
 	_body_rich.text = _markdown_to_bbcode(Localization.pick(event.body_text, event.body_text_en))
 	_build_speaker_row()
@@ -53,27 +81,21 @@ func populate(event: GameEvent) -> void:
 	_play_intro()
 
 
-# ODA rework §6: oda görünürken olay kartı TELEFONDAN doğar — tek seferlik
-# 0.22 sn scale+translate tween'i. Oda görünmüyorsa (sekme açık / oda dışı
-# mount) hiçbir şey değişmez: varsayılan anlık görünüm. Koordinatlar düz
-# ekran-uzayı (ModalLayer CanvasLayer'ının transformu kimlik). Pause altında
-# çalışır: kök PROCESS_MODE_ALWAYS, create_tween pause-bound onu izler.
+# Oda görünürken olay kartı TELEFONDAN doğar: 0.22 sn scale+translate tween'i. Oda
+# görünmüyorsa (sekme açık / oda dışı mount) varsayılan anlık görünüm kalır. Koordinatlar
+# düz ekran-uzayı (ModalLayer CanvasLayer'ının transformu kimlik). Pause altında çalışır:
+# kök PROCESS_MODE_ALWAYS, create_tween onu izler.
 func _play_intro() -> void:
-	if _intro_played:
-		return
-	_intro_played = true
-	var anchor: Node = get_tree().get_first_node_in_group("oda_phone_anchor")
-	if anchor == null or not (anchor is Control) or not (anchor as Control).is_visible_in_tree():
+	var anchor := get_tree().get_first_node_in_group("oda_phone_anchor") as Control
+	if anchor == null or not anchor.is_visible_in_tree():
 		return
 	var panel: Control = get_node("CenterPanel")
 	var dimmer: Control = get_node("Dimmer")
 	await get_tree().process_frame  # panel boyutu ilk layout'tan sonra geçerli
-	var from_center: Vector2 = (anchor as Control).get_global_rect().get_center()
 	panel.pivot_offset = panel.size * 0.5
-	var delta: Vector2 = from_center - panel.get_global_rect().get_center()
 	var home: Vector2 = panel.position
 	panel.scale = Vector2(0.25, 0.25)
-	panel.position = home + delta
+	panel.position = home + anchor.get_global_rect().get_center() - panel.get_global_rect().get_center()
 	dimmer.modulate.a = 0.0
 	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(panel, "scale", Vector2.ONE, 0.22)
@@ -92,7 +114,7 @@ func _build_skeleton() -> void:
 	add_child(dimmer)
 
 	# Fixed 780 width; height hugs the content (grows symmetrically around the
-	# center anchor when the minimum size rises — mockup card, no fixed void).
+	# center anchor when the minimum size rises).
 	var panel := PanelContainer.new()
 	panel.name = "CenterPanel"
 	panel.theme_type_variation = &"ModalCard"
@@ -117,10 +139,10 @@ func _build_skeleton() -> void:
 
 	body.add_child(_rule())
 
-	_body_rich = RichTextLabel.new()
-	_body_rich.theme_type_variation = &"BodyRich"
 	# fit_content sizes the label to its text (card hugs content); EXPAND_FILL
 	# absorbs the slack when the card sits at its 420px floor instead.
+	_body_rich = RichTextLabel.new()
+	_body_rich.theme_type_variation = &"BodyRich"
 	_body_rich.bbcode_enabled = true
 	_body_rich.fit_content = true
 	_body_rich.scroll_active = false
@@ -142,18 +164,8 @@ func _build_skeleton() -> void:
 	_choices_host.add_theme_constant_override("separation", 8)
 	body.add_child(_choices_host)
 
-	# A READOUT WEARS NO DECISION CHROME. The weekly sales summary is an
-	# `info` card whose single option is "Kapat", and it was rendering inside the full decision
-	# frame: a "KARAR · GÜN N" stamp over a page that decides nothing, and "SEÇİM KALICIDIR"
-	# under a button that commits to nothing. Both sentences were false, and a permanence
-	# warning that fires on a close button teaches the player to stop reading it.
-	#
-	# The test is derived, not declared. `GameEvent` carries no card class — that word lives in
-	# the queue and never reaches the view — so rather than plumb it through or trust a tag
-	# content can forget, the modal asks the card what it IS: one option, and that option
-	# changes nothing. Anything that can change the world keeps its stamp and its warning.
-	# Built always, SHOWN conditionally from `populate`: the skeleton is raised in `_ready()`,
-	# which is before there is an event to ask about.
+	# Built always, SHOWN from `populate`: a readout hides the permanence warning (see
+	# `_is_readout`), and there is no event to ask yet in `_ready()`.
 	_footer_rule = _rule()
 	body.add_child(_footer_rule)
 	_footer_label = UiFactory.make_label(
@@ -162,18 +174,19 @@ func _build_skeleton() -> void:
 	body.add_child(_footer_label)
 
 
-## True when this card decides nothing: one option, and it carries no modifiers. That is the
-## exact shape §17.1 forces on an information card — a card with zero options is refused, so a
-## readout must offer a single inert "close".
+## True when this card decides nothing: one option, and it carries no modifiers (the shape
+## §17.1 forces on an information card, e.g. the weekly sales summary's single "Kapat"). A
+## readout wears no decision chrome: no "KARAR · GÜN N" stamp and no "SEÇİM KALICIDIR"
+## warning, both of which would be false. `GameEvent` carries no card class, so the test is
+## derived from the card's shape rather than declared.
 func _is_readout() -> bool:
-	if _event == null or _event.choices.size() != 1:
-		return false
-	return (_event.choices[0] as EventChoice).modifiers.is_empty()
+	return _event != null and _event.choices.size() == 1 \
+		and (_event.choices[0] as EventChoice).modifiers.is_empty()
 
 
-static func _rule(height: int = 1) -> ColorRect:
+static func _rule() -> ColorRect:
 	var r := ColorRect.new()
-	r.custom_minimum_size = Vector2(0, height)
+	r.custom_minimum_size = Vector2(0, 1)
 	r.color = UiTokens.DIVIDER_LIGHT
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return r
@@ -202,67 +215,50 @@ func _fill_header() -> void:
 		_header_row.add_child(sub)
 
 
-# The " · HH:MM" in an event header used to be a STATIC string baked into the event's JSON,
-# copied verbatim to the screen. The engine has no minute concept at all, and the TopBar
-# renders the live hour in the same frame roughly 40 px away — so a modal could assert
-# 11:14 beside a TopBar reading 09:00, off by as much as the event's whole allowed window.
-#
-# The authoring discipline itself is sound and is preserved: all thirteen windowed stamps
-# sit inside their own `allowed_hours`, and the three clock-free deterministic beats
-# correctly carry no clock. So this rewrites the HOUR from the live clock and keeps the
-# authored minutes, which are the only part with any texture — the subtitle stays within
-# the hour the TopBar is showing.
-#
-# OPT-IN, never unconditional: it fires only when the subtitle actually ends in " · HH:MM".
-# Three debug fixtures carry a clock with no `allowed_hours` at all, and a subtitle that
-# merely contains a colon (a time-less source tag) must be left exactly as written.
+# A subtitle ending in " · HH:MM" gets its HOUR rewritten from the live clock, keeping the
+# authored minutes: the engine has no minute concept and the TopBar shows the live hour a few
+# pixels away, so a baked hour would contradict it. Opt-in by shape only: a subtitle without
+# a trailing stamp (or with a colon elsewhere) stays exactly as written. Anything after the
+# stamp (e.g. a " [DEBUG]" marker) rides along untouched.
 static func _live_subtitle(raw: String) -> String:
 	var sep: int = raw.rfind(" · ")
 	if sep < 0:
 		return raw
 	var tail: String = raw.substr(sep + 3)
-	var colon: int = tail.find(":")
-	if colon != 2 or tail.length() < 5:
+	if tail.length() < 5 or tail.find(":") != 2:
 		return raw
-	var hh: String = tail.substr(0, 2)
 	var mm: String = tail.substr(3, 2)
-	if not (hh.is_valid_int() and mm.is_valid_int()):
+	if not (tail.substr(0, 2).is_valid_int() and mm.is_valid_int()):
 		return raw
-	# Anything after the stamp (e.g. a " [DEBUG]" marker) rides along untouched.
-	var suffix: String = tail.substr(5)
-	return "%s · %02d:%s%s" % [raw.substr(0, sep), GameState.current_hour, mm, suffix]
+	return "%s · %02d:%s%s" % [raw.substr(0, sep), GameState.current_hour, mm, tail.substr(5)]
 
 
+## {text, kind} for the header's source chip. Order matters: families that NAME their source
+## (customer / team / phase gate / ship moment) first, then the speaker, then the generic
+## `endgame` topic, then GÜNDEM. `endgame` is a topic, not a source, so a Frank card tagged
+## `endgame` is still MENTOR; `ship_moment` beats the speaker because it is a product beat
+## even when Frank narrates it. Static (smoke calls it on the script), hence TranslationServer.
 static func _source_tag(ev: GameEvent) -> Dictionary:
-	# The ONE source-tag lookup. Returns {text, kind} for UiFactory.make_badge.
-	#
-	# SIRA ÖNEMLİ, ve bir kez yanlıştı: `endgame` etiketi konuşmacı kontrolünün ÖNÜNDEYDİ,
-	# o yüzden Frank'in ağzından çıkan altı kart — kepenk uyarısı, pivot teklifi, satın alma
-	# teklifi, VC toplantı daveti, teklif süresi uyarısı, son gün uyarısı — "PİYASA" diye
-	# etiketleniyordu. `endgame` bir KONU başlığıdır, bir kaynak değil; kaynağı konuşan
-	# belirler.
-	#
-	# Bugünkü sıra: önce kaynağı ADLANDIRAN özel aileler (müşteri / ekip / faz kapısı /
-	# sürüm anı), sonra konuşmacı, sonra jenerik `endgame`, sonra GÜNDEM. `ship_moment`
-	# bilerek konuşmacının ÖNÜNDE: sürüm anını Frank anlatsa da o bir ÜRÜN beat'idir.
-	var has_endgame: bool = false
-	for t in ev.tags:
-		var s := String(t)
+	var pick: Array = []
+	for s in ev.tags:
 		if s.begins_with("b2b_"):
-			return {"text": TranslationServer.translate("EVENT_TAG_CUSTOMER"), "kind": &"accent"}
-		if s.begins_with("hr_"):
-			return {"text": TranslationServer.translate("EVENT_TAG_TEAM"), "kind": &"neutral"}
-		if s == "phase_gate":
-			return {"text": TranslationServer.translate("EVENT_TAG_MENTOR"), "kind": &"accent"}
-		if s == "ship_moment":
-			return {"text": TranslationServer.translate("EVENT_TAG_PRODUCT"), "kind": &"positive"}
-		if s == "endgame":
-			has_endgame = true
-	if ev.character_id == "char_mentor_frank":
-		return {"text": TranslationServer.translate("EVENT_TAG_MENTOR"), "kind": &"accent"}
-	if has_endgame:
-		return {"text": TranslationServer.translate("EVENT_TAG_MARKET"), "kind": &"attention"}
-	return {"text": TranslationServer.translate("EVENT_TAG_AGENDA"), "kind": &"neutral"}
+			pick = ["EVENT_TAG_CUSTOMER", &"accent"]
+		elif s.begins_with("hr_"):
+			pick = ["EVENT_TAG_TEAM", &"neutral"]
+		elif s == "phase_gate":
+			pick = ["EVENT_TAG_MENTOR", &"accent"]
+		elif s == "ship_moment":
+			pick = ["EVENT_TAG_PRODUCT", &"positive"]
+		if not pick.is_empty():
+			break
+	if pick.is_empty():
+		if ev.character_id == "char_mentor_frank":
+			pick = ["EVENT_TAG_MENTOR", &"accent"]
+		elif ev.tags.has("endgame"):
+			pick = ["EVENT_TAG_MARKET", &"attention"]
+		else:
+			pick = ["EVENT_TAG_AGENDA", &"neutral"]
+	return {"text": TranslationServer.translate(pick[0]), "kind": pick[1]}
 
 
 # --- Speaker strip (compact single line) ---
@@ -283,9 +279,8 @@ func _render_registry_character() -> void:
 		push_warning("[EventModal] event.character_id refers to unknown character: %s" % _event.character_id)
 		return
 	_speaker_row.visible = true
-	_speaker_row.add_child(_make_avatar(_initials(c.character_name), c.portrait_path))
-	# role is a TYPED id — resolve it to a display name so no internal code reaches
-	# the speaker strip ("Frank Köseoğlu · Operating Partner").
+	_speaker_row.add_child(_make_avatar(UiFactory.initials_of(c.character_name), c.portrait_path))
+	# role is a TYPED id — resolve it to a display name so no internal code reaches the strip.
 	_add_speaker_name("%s · %s" % [c.character_name, HRConstants.role_label(c.role)])
 	var pal: Dictionary = UiTokens.relationship_palette(c.relationship)
 	_speaker_row.add_child(UiFactory.make_pill(c.relationship, pal.bg, pal.fg))
@@ -293,18 +288,19 @@ func _render_registry_character() -> void:
 		_speaker_row.add_child(UiFactory.make_badge(_trait_label(String(t)), &"neutral"))
 
 
+# A non-Character speaker (e.g. a B2B customer talking in their own voice), rendered
+# straight from the event's speaker_* fields — no registry lookup.
 func _render_synthetic_speaker() -> void:
-	# A non-Character speaker (e.g. a B2B customer talking in their own voice),
-	# rendered straight from the event's speaker_* fields — no registry lookup.
 	_speaker_row.visible = true
-	var initial: String = _event.speaker_initial if _event.speaker_initial != "" else _initials(_event.speaker_name)
+	var initial: String = _event.speaker_initial if _event.speaker_initial != "" \
+		else UiFactory.initials_of(_event.speaker_name)
 	_speaker_row.add_child(_make_avatar(initial))
 	if _event.speaker_role != "":
 		_add_speaker_name("%s · %s" % [_event.speaker_name, _event.speaker_role])
 	else:
 		_add_speaker_name(_event.speaker_name)
 	if _event.speaker_status != "":
-		var pal: Dictionary = UiTokens.badge_palette(StringName(String(_event.speaker_status_kind)))
+		var pal: Dictionary = UiTokens.badge_palette(StringName(_event.speaker_status_kind))
 		_speaker_row.add_child(UiFactory.make_pill(_event.speaker_status, pal.bg, pal.fg))
 	for chip in _event.speaker_chips:
 		if typeof(chip) == TYPE_DICTIONARY:
@@ -318,45 +314,31 @@ func _add_speaker_name(text: String) -> void:
 	_speaker_row.add_child(lbl)
 
 
+# Kart grameri tek (GDD 14 §7): her olay kartı kaynağının küçük yuvarlak avatarını gösterir —
+# portre taşıyanlar portreleriyle, diğerleri baş harfleriyle. `Avatar` varyasyonu RADIUS_PILL,
+# dolayısıyla clip_contents yuvarlak kırpmayı verir.
 static func _make_avatar(initials_text: String, portrait_path: String = "") -> Panel:
-	# Kart grameri tek (GDD 14 §7): her olay kartı kaynağının küçük yuvarlak avatarını
-	# gösterir — çalışanlar baş harfleriyle, portre taşıyanlar (Frank, adlı karakterler)
-	# portreleriyle. Yol boşsa ya da çözülmüyorsa baş harflere düşer, yani portresi olmayan
-	# herkes bugünkü davranışı korur.
-	# `Avatar` varyasyonu zaten RADIUS_PILL, dolayısıyla clip_contents yuvarlak kırpmayı
-	# bedavaya verir — yeni tema öğesi yok, THEME_STAMP artışı yok.
-	var avatar := Panel.new()
-	avatar.theme_type_variation = &"Avatar"
-	avatar.custom_minimum_size = Vector2(24, 24)
-	avatar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	avatar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var avatar: Panel = UiFactory.make_avatar(initials_text)
+	var tex: Texture2D = null
 	if portrait_path != "" and ResourceLoader.exists(portrait_path):
-		var tex: Texture2D = load(portrait_path) as Texture2D
-		if tex != null:
-			avatar.clip_contents = true
-			var pic := TextureRect.new()
-			pic.texture = tex
-			pic.set_anchors_preset(Control.PRESET_FULL_RECT)
-			pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-			pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			avatar.add_child(pic)
-			return avatar
-	var initial := Label.new()
-	initial.theme_type_variation = &"AvatarInitial"
-	initial.text = initials_text
-	initial.set_anchors_preset(Control.PRESET_FULL_RECT)
-	initial.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	initial.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	initial.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	avatar.add_child(initial)
+		tex = load(portrait_path) as Texture2D
+	if tex != null:
+		avatar.get_child(0).free()  # the initials label
+		avatar.clip_contents = true
+		var pic := TextureRect.new()
+		pic.texture = tex
+		pic.set_anchors_preset(Control.PRESET_FULL_RECT)
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		avatar.add_child(pic)
 	return avatar
 
 
+# Employees and the founder draw from SEPARATE trait catalogs (employee labels live in
+# HRConstants; founder labels are CSV keys). Resolve against both so a chip never renders
+# a raw internal id.
 func _trait_label(trait_id: String) -> String:
-	# Employees and the founder draw from SEPARATE trait catalogs (employee labels are
-	# literal Turkish in HRConstants; founder labels are CSV keys). Resolve against both
-	# so a chip never renders a raw internal id.
 	if HRConstants.TRAITS.has(trait_id):
 		return HRConstants.trait_label(trait_id)
 	for entry in FounderConstants.TRAITS:
@@ -375,9 +357,10 @@ func _build_mentor_row() -> void:
 	if not _mentor_row.visible:
 		return
 	var mentor: Character = CharacterRegistry.get_mentor()
-	var initials_text: String = _initials(mentor.character_name) if mentor != null else ""
-	var mentor_portrait: String = mentor.portrait_path if mentor != null else ""
-	_mentor_row.add_child(_make_avatar(initials_text, mentor_portrait))
+	if mentor != null:
+		_mentor_row.add_child(_make_avatar(UiFactory.initials_of(mentor.character_name), mentor.portrait_path))
+	else:
+		_mentor_row.add_child(_make_avatar(""))
 	var quote := UiFactory.make_label(mentor_text, &"QuoteSerif")
 	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quote.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -390,23 +373,20 @@ func _build_mentor_row() -> void:
 func _render_choices() -> void:
 	for child in _choices_host.get_children():
 		child.queue_free()
+	# The card's frozen context comes with the question: a lock on "this account has spent
+	# both discounts" is about the account the card is ABOUT.
+	var ctx: Dictionary = EventGate.active_context()
 	for idx in _event.choices.size():
 		var choice: EventChoice = _event.choices[idx]
-		# The card's frozen context comes with the question: an option locked on "this account
-		# has spent both discounts" is asking about the account the card is ABOUT, and without
-		# the binding the leaf has no subject and reads false for everyone.
-		var unlocked: bool = EventGate.condition_met(choice.unlock_condition,
-			EventGate.active_context())
+		var unlocked: bool = EventGate.condition_met(choice.unlock_condition, ctx)
 		# A mentor never endorses a locked path (avoids amber-on-dim conflict).
 		var is_mentor_pick: bool = unlocked and _event.mentor_choice == idx
-		var card: PanelContainer = _build_choice_card(choice, idx, unlocked, is_mentor_pick)
-		if is_mentor_pick:
-			_choices_host.add_child(_wrap_with_mentor_tab(card))
-		else:
-			_choices_host.add_child(card)
+		var card: PanelContainer = _build_choice_card(choice, idx, unlocked, is_mentor_pick, ctx)
+		_choices_host.add_child(_wrap_with_mentor_tab(card) if is_mentor_pick else card)
 
 
-func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor_pick: bool) -> PanelContainer:
+func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor_pick: bool,
+		ctx: Dictionary) -> PanelContainer:
 	var root := PanelContainer.new()
 	root.theme_type_variation = &"ChoiceCardMentor" if is_mentor_pick else &"ChoiceCard"
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -441,8 +421,12 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor
 	row.add_child(chip_col)
 
 	if unlocked:
-		for chip in _make_effect_chips(choice.modifiers):
-			chip_col.add_child(chip)
+		for m in choice.modifiers:
+			var d: Dictionary = _describe_modifier(m)
+			if not d.is_empty():
+				var chip := UiFactory.make_badge(d.text, d.kind)
+				chip.size_flags_horizontal = Control.SIZE_SHRINK_END
+				chip_col.add_child(chip)
 		root.gui_input.connect(_on_choice_input.bind(idx))
 		if not is_mentor_pick:
 			root.mouse_entered.connect(func() -> void: root.theme_type_variation = &"ChoiceCardHover")
@@ -451,77 +435,21 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor
 		root.modulate = Color(1, 1, 1, 0.5)
 		root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		root.focus_mode = Control.FOCUS_NONE
-		# THE LIVE REASON WINS OVER THE AUTHORED ONE. `locked_reasons` is one string per OPTION,
-		# so an option gated on three different facts could only ever name one of them — and the
-		# B2B promise row named the wrong one: it said "bu hesaba verilmiş bir söz zaten açık"
-		# in runs where no promise had ever been made, because the clause actually refusing was
-		# "this account has no named request". Asking the condition tree which clause failed
-		# turns that chip from a guess into a reading. The authored line stays as the fallback
-		# for the case the engine deliberately keeps silent about: two clauses failing at once,
-		# which one sentence cannot honestly explain.
-		var live_reason: String = EventGate.condition_reason(choice.unlock_condition,
-			EventGate.active_context())
-		var reason_src: String = tr(live_reason) if live_reason != "" 			else Localization.pick(choice.unlock_reason_text, choice.unlock_reason_text_en)
-		var reason: String = reason_src if reason_src != "" else tr("LOCK_CHIP")
-		chip_col.add_child(UiFactory.make_badge(reason, &"neutral"))
+		# The live reason wins over the authored one: an option gated on several facts can only
+		# author one sentence, while the condition tree knows which clause actually failed. The
+		# authored line is the fallback for when the engine stays silent (two clauses failing
+		# at once, which one sentence cannot honestly explain).
+		var reason: String = EventGate.condition_reason(choice.unlock_condition, ctx)
+		reason = tr(reason) if reason != "" \
+			else Localization.pick(choice.unlock_reason_text, choice.unlock_reason_text_en)
+		chip_col.add_child(UiFactory.make_badge(reason if reason != "" else tr("LOCK_CHIP"), &"neutral"))
 	return root
 
 
-## The MRR the "İndirim ver" row is about to cost, previewed from the same place the effect
-## takes it from. An authored `mrr_delta` still wins if a card ever supplies one.
-func _retain_discount_delta(m: Dictionary) -> int:
-	var authored: int = int(m.get("mrr_delta", 0))
-	if authored != 0:
-		return authored
-	var c: Customer = _bound_customer()
-	if c == null:
-		return 0
-	return -int(round(float(c.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT))
-
-
-## Seats and MRR the expansion will add, computed the way `b2b_expand` computes them
-## (effects.gd → B2BSalesSystem.expand). The card JSON carries neither number, so reading
-## `add_seats`/`per_seat_mrr` off the effect showed "+0 · +$0" on every expansion card —
-## the discount chip's bug, on the positive side.
-func _expand_preview(m: Dictionary) -> Vector2i:
-	var seats: int = int(m.get("add_seats", 0))
-	var c: Customer = _bound_customer()
-	if seats <= 0 and c != null:
-		seats = B2BConstants.expansion_seats(c.company_size)
-	var rate: int = int(m.get("per_seat_mrr", 0))
-	if rate <= 0:
-		rate = c.seat_price if c != null and c.seat_price > 0 else B2BConstants.EXPANSION_PER_SEAT_MRR
-	return Vector2i(seats, seats * rate)
-
-
-## The account this card is about, from the card's own frozen scope binding. A card with no
-## customer slot returns null and every preview that needs one stays silent rather than
-## guessing at whichever account happens to be first in the book.
-func _bound_customer() -> Customer:
-	var ctx: Dictionary = EventGate.active_context()
-	for slot in ctx:
-		var bound: Dictionary = ctx[slot] as Dictionary
-		if String(bound.get("type", "")) == "customer":
-			return CustomerRegistry.get_customer(String(bound.get("id", "")))
-	return null
-
-
-func _make_effect_chips(modifiers: Array) -> Array[Control]:
-	var chips: Array[Control] = []
-	for m in modifiers:
-		var desc: Dictionary = _describe_modifier(m)
-		if desc.is_empty():
-			continue
-		var chip := UiFactory.make_badge(desc.text, desc.kind)
-		chip.size_flags_horizontal = Control.SIZE_SHRINK_END
-		chips.append(chip)
-	return chips
-
-
+# MENTOR TAVSİYESİ tab sitting ON the card's top edge: negative VBox separation pulls the
+# card up under the chip; z_index lifts the chip above the card's border (later siblings
+# draw over earlier ones otherwise).
 func _wrap_with_mentor_tab(card: PanelContainer) -> Control:
-	# MENTOR TAVSİYESİ tab sitting ON the card's top edge: negative VBox separation
-	# pulls the card up under the chip; z_index lifts the chip above the card's
-	# border (later siblings draw over earlier ones otherwise).
 	var wrapper := VBoxContainer.new()
 	wrapper.add_theme_constant_override("separation", -8)
 	wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -547,155 +475,89 @@ func _on_choice_input(event: InputEvent, idx: int) -> void:
 		EventGate.resolve(_event.id, idx)
 
 
-# --- Formatters ---
+# --- Effect chips ---
 
-static func _initials(full_name: String) -> String:
-	var out: String = ""
-	for word in full_name.split(" ", false):
-		if word.length() > 0:
-			out += UiTokens.tr_upper(word.substr(0, 1))
-		if out.length() >= 2:
-			break
-	return out
-
-
-## Player-facing badge for a modifier, or {} to hide bookkeeping modifiers.
-## Effects a card carries deliberately and SILENTLY: bookkeeping with no player-visible
-## consequence of its own. Naming them is the point — "no entry in the table" now means a bug
-## rather than a judgement call, and `event_chip_coverage` in the smoke suite fails on any verb
-## that is neither labelled here nor listed below.
-const SILENT_VERBS := [
-	"set_flag", "set_game_flag", "stamp_day", "schedule_event", "cancel_scheduled",
-	"start_arc", "advance_arc", "end_arc", "abort_arc", "set_arc_var",
-	"mentor_advisory", "unlock_content", "spend_budget",
-]
-
-## The event engine renamed six verbs on its way out of the old modifier vocabulary. Mapping
-## them here rather than duplicating their rows keeps ONE label per effect — two rows saying
-## the same sentence is how the second one goes stale.
-const VERB_ALIASES := {
-	"add_cash": "cash", "add_brand": "brand", "add_reputation": "reputation",
-	"change_morale": "morale", "promise_create": "b2b_promise_create",
-	"employee_leaves": "hr_departure",
-}
-
-
+## Player-facing badge {text, kind} for a card effect, or {} for a SILENT_VERBS row. Every
+## number is computed the way `EvEffects` will apply it (same amount key order, same target
+## resolution, same constants), so the chip cannot drift from the outcome.
 func _describe_modifier(m) -> Dictionary:
 	if typeof(m) != TYPE_DICTIONARY:
 		return {}
-	# `verb` FIRST. Cards carry `verb`; the handful of GameEvents still built in code carry
-	# `type`. Reading only `type` was the whole-card blindness the event-engine swap would have
-	# shipped: every chip on every card would have been empty, and the EFFECT-VISIBILITY RULE
-	# would have been violated by 40 cards at once with nothing to catch it.
-	var t: String = String(m.get("verb", m.get("type", "")))
-	t = String(VERB_ALIASES.get(t, t))
-	var d: int = int(m.get("delta", m.get("amount", 0)))
+	var t: String = String(m.get("verb", ""))
+	if FIXED_CHIPS.has(t):
+		return {"text": tr(FIXED_CHIPS[t][0]), "kind": FIXED_CHIPS[t][1]}
+	var d: int = int(m.get("amount", m.get("delta", m.get("value", 0))))
 	match t:
-		"cash": return {"text": tr("EFFECT_CASH").format({"v": _fmt_money_delta(d)}), "kind": _kind(d)}
-		"mrr": return {"text": tr("EFFECT_MRR").format({"v": _fmt_money_delta(d)}), "kind": _kind(d)}  # MRR: ruled accepted TR-tech term
-		"brand": return {"text": tr("EFFECT_BRAND").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
-		"reputation": return {"text": tr("EFFECT_REPUTATION").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
-		"morale": return {"text": tr("EFFECT_AXIS").format({"axis": _char_first(m.get("character_id", "")), "v": _fmt_signed(d)}), "kind": _kind(d)}
-		"morale_all_employees": return {"text": tr("EFFECT_TEAM").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
-		"customer_mrr_delta": return {"text": tr("EFFECT_CUSTOMER_MRR").format({"v": _fmt_money_delta(d)}), "kind": _kind(d)}
-		"satisfaction_delta": return {"text": tr("EFFECT_SATISFACTION").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
-		"seats":
-			var sa: int = int(m.get("amount", 0))
-			return {"text": tr("EFFECT_SEATS").format({"v": _fmt_signed(sa)}), "kind": _kind(sa)}
-		"audience_delta":
-			if m.has("pct"):
-				# Proportional form: "Kitle −%3" / "Audience −3%" —
-				# Fmt.percent is locale-aware (TR prefix, EN suffix); the sign rides the number.
-				var pct_pts: int = int(round(float(m.get("pct", 0.0)) * 100.0))
-				var pct_txt: String = Fmt.percent(absi(pct_pts), 0)
-				return {"text": tr("EFFECT_AUDIENCE_PCT").format({"pct": ("-" if pct_pts < 0 else "+") + pct_txt}), "kind": _kind(pct_pts)}
-			return {"text": tr("EFFECT_AUDIENCE").format({"v": _fmt_signed(d)}), "kind": _kind(d)}
+		"add_cash": return _chip("EFFECT_CASH", _fmt_money_delta(d), d)
+		"add_brand": return _chip("EFFECT_BRAND", _fmt_signed(d), d)
+		"add_reputation": return _chip("EFFECT_REPUTATION", _fmt_signed(d), d)
+		"customer_mrr_delta": return _chip("EFFECT_CUSTOMER_MRR", _fmt_money_delta(d), d)
+		"satisfaction_delta": return _chip("EFFECT_SATISFACTION", _fmt_signed(d), d)
+		"seats": return _chip("EFFECT_SEATS", _fmt_signed(d), d)
+		"morale_all": return _chip("EFFECT_TEAM", _fmt_signed(d), d)
+		"bug_delta": return _chip("EFFECT_BUGS", _fmt_signed(d), -d)
+		"delay_days":
+			var days: int = int(m.get("days", 0))
+			return _chip("EFFECT_DAYS", _fmt_signed(days), -days)
+		"change_morale":
+			var who: String = _first_name(_target(m, EvScope.TYPE_EMPLOYEE), tr("EFFECT_MORALE"))
+			return {"text": tr("EFFECT_AXIS").format({"axis": who, "v": _fmt_signed(d)}), "kind": _kind(d)}
 		"dimension_delta":
-			var amt: int = int(m.get("amount", 0))
-			# ProductCatalog.axis_label is the single home for these three words; this file
-			# used to keep its own copy of the table.
 			var axis_id: String = String(m.get("axis", "innovation"))
 			var label: String = ProductCatalog.axis_label(axis_id)
 			if label == axis_id:
 				label = tr("EFFECT_QUALITY")
-			return {"text": tr("EFFECT_AXIS").format({"axis": label, "v": _fmt_signed(amt)}), "kind": _kind(amt)}
-		"bug_delta":
-			var bd: int = int(m.get("amount", 0))
-			return {"text": tr("EFFECT_BUGS").format({"v": _fmt_signed(bd)}), "kind": (&"negative" if bd > 0 else (&"positive" if bd < 0 else &"neutral"))}
-		"delay_days":
-			var dd: int = int(m.get("days", 0))
-			return {"text": tr("EFFECT_DAYS").format({"v": _fmt_signed(dd)}), "kind": (&"negative" if dd > 0 else (&"positive" if dd < 0 else &"neutral"))}
-		"quality_bonus": return {"text": tr("EFFECT_QUALITY_BONUS").format({"n": int(m.get("amount", 0))}), "kind": &"positive"}
-		"speed_bonus":
-			var sb: int = int(m.get("days", 0))
-			return {"text": tr("EFFECT_DAYS").format({"v": _fmt_signed(sb)}), "kind": (&"negative" if sb > 0 else &"positive")}
-		# Faz geçiş kararları: geçiş okunur olsun ("advance_iteration" emekli — Build Bar 2026-08-19).
-		"enter_development": return {"text": tr("EFFECT_DEV_BEGINS"), "kind": &"neutral"}
-		"enter_beta": return {"text": tr("EFFECT_BETA_BEGINS"), "kind": &"neutral"}
-		# Teklif kartı: kabul masayı açar. Kör tip bırakmıyoruz — EFFECT-VISIBILITY
-		# kuralı, seçimin ne yaptığını kartın üstünde söylemeyi şart koşuyor.
-		"open_term_table": return {"text": tr("EFFECT_TERM_TABLE"), "kind": &"accent"}
-		"open_seed_table": return {"text": tr("EFFECT_SEED_TABLE"), "kind": &"accent"}
-		"decline_offer": return {"text": tr("EFFECT_FUND_CLOSES"), "kind": &"negative"}
-		# THE RUN ENDS. `trigger_ending` had no row here because no card had ever used the
-		# verb — the buyout offer is the first, and FRANK_UNWIRED §3 named this exact gap:
-		# "'Sat' ends the run, so the option must be labelled — right now that click would be
-		# blind." The smoke case event_chip_coverage fails any card row that renders no chip.
-		"trigger_ending": return {"text": tr("EFFECT_RUN_ENDS"), "kind": &"accent"}
-		"decline_buyout": return {"text": tr("EFFECT_VC_ROAD_CLOSES"), "kind": &"negative"}
-		# Player-facing effects that previously rendered no badge (choices were blind).
-		"churn_customer": return {"text": tr("EFFECT_CHURN"), "kind": &"negative"}
-		"add_prospect": return {"text": tr("EFFECT_NEW_PROSPECT"), "kind": &"positive"}
-		"convert_audience": return {"text": tr("EFFECT_CONVERT_AUDIENCE").format({"pct": Fmt.percent(int(round(float(m.get("pct", 0.0)) * 100.0)), 0)}), "kind": &"positive"}
-		"open_paid_tier": return {"text": tr("EFFECT_PAID_TIER"), "kind": &"accent"}
-		"add_character": return {"text": tr("EFFECT_NEW_TEAMMATE"), "kind": &"positive"}
-		# --- HR Core. A modifier with NO label here renders a blind card, so every new
-		#     type gets one (CLAUDE.md EFFECT-VISIBILITY RULE). ---
-		# Not _char_first here: its unknown-id fallback is the literal "Moral", which would
-		# read as "Moral ayrılıyor". A departure badge needs a person or a generic noun.
-		"hr_departure": return {"text": tr("EFFECT_DEPARTURE").format({"who": _char_name_or(String(m.get("character_id", "")), tr("EFFECT_AN_EMPLOYEE"))}), "kind": &"negative"}
-		# --- B2B Sales System retention outcomes (badge + cost-line source of truth) ---
-		"b2b_promise_create": return {"text": tr("EFFECT_PROMISE_CREATE"), "kind": &"accent"}
-		"b2b_retain_delay": return {"text": tr("EFFECT_RETAIN_DELAY"), "kind": &"neutral"}
-		# THE PREVIEW COMPUTES THE SAME NUMBER THE EFFECT WILL. It used to read `mrr_delta` off
-		# the effect dict — a field the ported card JSON never carries, because the cut is
-		# derived at resolution time from the account's own MRR (effects.gd's
-		# `b2b_retain_discount` arm). So the chip said "MRR +$0" on every retention card while
-		# the option was about to take 15% of the account's revenue. An option whose only stated
-		# consequence is zero is not a choice the player can weigh.
-		# Same constant, same rounding, same sign as the effect: preview and outcome cannot
-		# drift, because the only way to change one is to change the constant both read.
-		"b2b_retain_discount": return {"text": tr("EFFECT_RETAIN_DISCOUNT").format({"v": _fmt_money_delta(_retain_discount_delta(m))}), "kind": &"negative"}
-		"b2b_retain_ignore": return {"text": tr("EFFECT_RETAIN_IGNORE"), "kind": &"neutral"}
-		"b2b_cs_promise_honor": return {"text": tr("EFFECT_PROMISE_HONOR"), "kind": &"accent"}
-		"b2b_cs_promise_refuse": return {"text": tr("EFFECT_PROMISE_REFUSE"), "kind": &"negative"}
+			return {"text": tr("EFFECT_AXIS").format({"axis": label, "v": _fmt_signed(d)}), "kind": _kind(d)}
+		"audience_delta":
+			if m.has("pct"):
+				# Fmt.percent is locale-aware (TR prefix, EN suffix); the sign rides the number.
+				var pts: int = int(round(float(m.get("pct", 0.0)) * 100.0))
+				var pct_txt: String = ("-" if pts < 0 else "+") + Fmt.percent(absi(pts), 0)
+				return {"text": tr("EFFECT_AUDIENCE_PCT").format({"pct": pct_txt}), "kind": _kind(pts)}
+			return _chip("EFFECT_AUDIENCE", _fmt_signed(d), d)
+		"convert_audience":
+			var conv: String = Fmt.percent(int(round(float(m.get("pct", 0.0)) * 100.0)), 0)
+			return {"text": tr("EFFECT_CONVERT_AUDIENCE").format({"pct": conv}), "kind": &"positive"}
+		# A person's name or the generic noun — never EFFECT_MORALE, which would read "Moral ayrılıyor".
+		"employee_leaves":
+			var leaver: String = _first_name(_target(m, EvScope.TYPE_EMPLOYEE), tr("EFFECT_AN_EMPLOYEE"))
+			return {"text": tr("EFFECT_DEPARTURE").format({"who": leaver}), "kind": &"negative"}
+		# The cut is derived at resolution time from the account's own MRR, exactly as the
+		# `b2b_retain_discount` effect derives it.
+		"b2b_retain_discount":
+			var rc: Customer = CustomerRegistry.get_customer(_target(m, EvScope.TYPE_CUSTOMER))
+			var cut: int = -int(round(float(rc.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT)) if rc != null else 0
+			return {"text": tr("EFFECT_RETAIN_DISCOUNT").format({"v": _fmt_money_delta(cut)}), "kind": &"negative"}
+		# Seats and rate as `b2b_expand` → B2BSalesSystem.expand computes them (the account's own
+		# seat price, the constant only as fallback). Satış §5.4.
 		"b2b_expand":
-			var ev: Vector2i = _expand_preview(m)
-			return {"text": tr("EFFECT_EXPAND").format({"seats": ev.x, "mrr": _fmt_money_delta(ev.y)}), "kind": &"positive"}
-		"b2b_expand_decline": return {"text": tr("EFFECT_NO_CHANGE"), "kind": &"neutral"}
-		# --- Effects that MOVE THE PLAYER OR THE RUN. None of these had a label, because none
-		#     of them was reachable from a card before the engine made cards the only surface.
-		"advance_phase": return {"text": tr("EFFECT_PHASE_ADVANCE"), "kind": &"accent"}
-		"phase_gate_decline": return {"text": tr("EFFECT_PHASE_HOLD"), "kind": &"neutral"}
-		"ship_active_build": return {"text": tr("EFFECT_SHIP_LIVE"), "kind": &"accent"}
-		"start_vc_meeting": return {"text": tr("EFFECT_MEETING_STARTS"), "kind": &"accent"}
-		"goto_tab": return {"text": tr("EFFECT_TAKES_YOU_THERE"), "kind": &"neutral"}
+			var ec: Customer = CustomerRegistry.get_customer(_target(m, EvScope.TYPE_CUSTOMER))
+			var seats: int = 0
+			var mrr: int = 0
+			if ec != null:
+				seats = B2BConstants.expansion_seats(ec.company_size)
+				mrr = seats * (ec.seat_price if ec.seat_price > 0 else B2BConstants.EXPANSION_PER_SEAT_MRR)
+			return {"text": tr("EFFECT_EXPAND").format({"seats": seats, "mrr": _fmt_money_delta(mrr)}), "kind": &"positive"}
+		# Two facts on one chip: the cost of the decision is the equity, not the cash, so both
+		# ride and the kind is "accent" (a trade) rather than "positive" (a gift).
 		"angel_accept":
-			# Two facts on one chip (the b2b_expand precedent above). This chip is the
-			# player's only source of truth for what the decision COSTS, and the cost is
-			# the equity, not the cash — so both ride, and the kind is "accent" (a trade)
-			# rather than "positive" (a gift).
 			return {"text": tr("ANGEL_CHIP_ACCEPT").format({
 					"cash": _fmt_money_delta(AngelRoundSystem.CASH_AMOUNT),
 					"equity": AngelRoundSystem.EQUITY_PCT}),
 				"kind": &"accent"}
-	# SILENT_VERBS above are deliberate. Anything else reaching this line is a card row the
-	# player cannot read, and the smoke suite says so by name rather than leaving it to be
-	# noticed on a screenshot.
-	if not SILENT_VERBS.has(t) and OS.is_debug_build() and t != "":
-		push_warning("[EventModal] effect '%s' renders no chip — add a label or list it in "
-			% t + "SILENT_VERBS")
+	if t != "" and not SILENT_VERBS.has(t):
+		push_warning("[EventModal] effect '%s' renders no chip — add a label or list it in SILENT_VERBS" % t)
 	return {}
+
+
+func _chip(key: String, value_text: String, sign_delta: int) -> Dictionary:
+	return {"text": tr(key).format({"v": value_text}), "kind": _kind(sign_delta)}
+
+
+## The entity id an effect will act on, resolved by the executor's own rule against the
+## card's frozen scope binding.
+static func _target(m: Dictionary, want_type: String) -> String:
+	return EvEffects._entity(m, EventGate.active_context(), want_type)
 
 
 static func _kind(delta: int) -> StringName:
@@ -704,56 +566,25 @@ static func _kind(delta: int) -> StringName:
 	return &"neutral"
 
 
-static func _char_name_or(id: String, fallback: String) -> String:
-	# First name when the character is still in the registry, otherwise the caller's noun.
-	# Sibling of _char_first, which is morale-specific and falls back to the word "Moral".
-	if id == "":
-		return fallback
-	var c: Character = CharacterRegistry.get_character(id)
-	if c == null:
-		return fallback
-	return c.character_name.split(" ", false)[0]
-
-
-## First name of the character a morale modifier points at, or the generic noun when it
-## points at nobody. TranslationServer, not tr(): this is a static func and has no Object.
-static func _char_first(id: String) -> String:
-	if id == "":
-		return TranslationServer.translate("EFFECT_MORALE")
-	var c: Character = CharacterRegistry.get_character(id)
-	if c == null:
-		return TranslationServer.translate("EFFECT_MORALE")
-	return c.character_name.split(" ", false)[0]
+## First name of a registry character, or `fallback` when the id resolves to nobody.
+static func _first_name(id: String, fallback: String) -> String:
+	var c: Character = CharacterRegistry.get_character(id) if id != "" else null
+	return c.character_name.split(" ", false)[0] if c != null else fallback
 
 
 static func _fmt_signed(value: int) -> String:
-	if value > 0:
-		return "+%d" % value
-	return "%d" % value
+	return ("+%d" if value > 0 else "%d") % value
 
 
+# This chip is the player's source of truth for what a decision costs, so it uses the
+# locale-aware abbreviated money (Fmt.money_chip) with an explicit sign on both sides.
 static func _fmt_money_delta(value: int) -> String:
-	# Integer division TRUNCATED, so −$1.500 read "NAKİT -$1K" — the chip understated the
-	# cost of a choice by up to a third, and per the EFFECT-VISIBILITY RULE this chip IS
-	# the player's source of truth for what a decision costs. One decimal below $10K keeps
-	# the difference legible without widening the chip; above that the rounding error is
-	# already under a percent and the shorter form reads better.
-	var sign_str: String = "+" if value >= 0 else "-"
-	var abs_v: int = absi(value)
-	if abs_v >= 10000:
-		return "%s$%dK" % [sign_str, int(round(abs_v / 1000.0))]
-	if abs_v >= 1000:
-		return "%s$%sK" % [sign_str, String.num(abs_v / 1000.0, 1)]
-	return "%s$%d" % [sign_str, abs_v]
+	return ("+" if value >= 0 else "-") + Fmt.money_chip(absi(value))
 
 
 static func _markdown_to_bbcode(text: String) -> String:
-	if text == "":
-		return ""
 	var bold := RegEx.new()
 	bold.compile("\\*\\*(.+?)\\*\\*")
 	var italic := RegEx.new()
 	italic.compile("\\*(.+?)\\*")
-	var out: String = bold.sub(text, "[b]$1[/b]", true)
-	out = italic.sub(out, "[i]$1[/i]", true)
-	return out
+	return italic.sub(bold.sub(text, "[b]$1[/b]", true), "[i]$1[/i]", true)

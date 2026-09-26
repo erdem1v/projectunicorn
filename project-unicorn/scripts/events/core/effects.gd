@@ -3,56 +3,26 @@ extends RefCounted
 
 # THE EFFECT EXECUTOR (GDD §8). The one place an effect verb becomes a state change.
 #
-# ─────────────────────────────────────────────────────────────────────────────────────────
-# I2 IS STRUCTURAL HERE, NOT A LINT RULE
-# ─────────────────────────────────────────────────────────────────────────────────────────
+# I2 ("an economic delta arises only from a played decision") is STRUCTURAL here, not only a
+# lint rule: `open_negotiation` (§9.4) returns effects that do not exist at build time, and the
+# on_expire exception is a SIGN rule lint cannot check on a seam-derived amount. So the
+# vocabulary is split by origin:
 #
-# §0.3 lists I2 — "an economic delta arises only from a played decision" — as enforced by lint
-# (§17.3). Lint alone is not enough, for three reasons that are each independently fatal:
-#
-#   1. `open_negotiation` (§9.4) returns an `effects_to_apply` list that DOES NOT EXIST AT
-#      BUILD TIME. No lint pass can ever see it. A negotiation could return `add_cash` from a
-#      context that forbids it and nothing would notice.
-#   2. The `on_expire` exception is a SIGN rule, not a verb rule: expiry may apply a negative
-#      delta and never a positive one. Lint can read a literal `-500`; it cannot read an amount
-#      derived from a seam. Only dispatch-time sign checking closes that.
-#   3. Lint is a thing someone runs. This is a thing that cannot be gone around.
-#
-# So the vocabulary is SPLIT BY ORIGIN and each origin gets its own table:
-#
-#   run_played()        NEUTRAL + ECONOMIC + TERMINAL     a decision the player made
+#   run_played()        NEUTRAL + ECONOMIC + TERMINAL      a decision the player made
 #   run_expire()        NEUTRAL + ECONOMIC, negative only  the cost of not answering
 #   run_ambient()       NEUTRAL                            arc auto-steps, signal handlers,
 #                                                          on_invalidate — no economy at all
-#   run_check_branch()  NEUTRAL + ECONOMIC, no TERMINAL    a dice outcome — and this is also
-#                                                          how I6 stops being lint-only
+#   run_check_branch()  NEUTRAL + ECONOMIC, no TERMINAL    a dice outcome (I6)
 #
-# `add_cash` is not a KEY in the ambient table. An ambient caller cannot reach it — not by
-# authoring new content, not by accident, not by a future refactor that forgets the rule.
-# That is the difference between a rule and a wall.
+# An ambient caller cannot reach `add_cash` by any content or refactor. `on_expire` and
+# `on_invalidate` also read a differently-named field (`penalties`, not `effects`).
 #
-# Reinforced once more at the schema level: `on_expire` and `on_invalidate` read their list
-# from a differently-named field (`penalties`, not `effects`), so writing a positive delta in a
-# non-option place means putting it in a field the loader does not read.
+# Every write goes through the owning system's seam (WRITE-THROUGH LAW). Where no seam exists,
+# the verb does not exist either.
 #
-# ─────────────────────────────────────────────────────────────────────────────────────────
-# EVERY WRITE GOES THROUGH THE OWNING SYSTEM'S SEAM
-# ─────────────────────────────────────────────────────────────────────────────────────────
-#
-# CLAUDE.md's WRITE-THROUGH LAW: no event may mutate another domain's state directly. The old
-# dispatcher was 42 arms and mostly obeyed this, with one live violation
-# (`decline_vc_meeting` cleared `GameState.pending_meeting` with a raw field write). There are
-# no raw writes here. Where a seam does not exist, the verb does not exist either, and it is
-# filed — that is §21's DELTA discipline, and it is why the vocabulary is short rather than
-# convenient.
-#
-# ─────────────────────────────────────────────────────────────────────────────────────────
-# CASCADES DO NOT HAPPEN IN THE SAME TICK (§8.2)
-# ─────────────────────────────────────────────────────────────────────────────────────────
-#
-# An effect that makes another card's condition true does not fire it now; the next tick sees
-# it. That is what closes the infinite loop, and it is also what makes arc invalidation safe to
-# order before the schedule — invalidation always reads state that settled yesterday.
+# Cascades do not happen in the same tick (§8.2): an effect that makes another card's condition
+# true is seen by the next tick. That closes the infinite loop and lets arc invalidation always
+# read state that settled yesterday.
 
 # --- The three vocabularies ------------------------------------------------
 #
@@ -78,24 +48,19 @@ const NEUTRAL_VERBS := [
 	# investor flow that moves no money by itself
 	"open_negotiation", "start_vc_meeting", "open_term_table", "advance_phase",
 	"phase_gate_decline",
-	# The seed rung. NEITHER MOVES MONEY, which is why neither is economic: the seed
-	# accept is not a card effect at all — the money moves at the table's İMZALA, a played
-	# moment, exactly as a Series A signature does. "decline_buyout" closes the VC road and
-	# writes one memory flag; the cash it declines is cash that never arrives.
+	# Seed rung: the money moves at the table's İMZALA, a played moment, not in a card effect;
+	# decline_buyout's declined cash is cash that never arrives.
 	"open_seed_table", "decline_buyout",
-	# The closed-window answer "Decline". Closes one fund; no money, not a rejection.
+	# Closes one fund's expired sheet; no money.
 	"decline_offer",
-	# The two the migration required — see their arms for why each door is this narrow.
 	"set_game_flag", "mentor_advisory",
-	# B2B outcomes that move no money: stalling, refusing, declining. Their two siblings that
-	# DO move money (b2b_retain_discount cuts MRR, b2b_expand raises it) live in the economic
-	# table instead — a verb in both lists would be a vocabulary that lies about itself, even
-	# though the refusal happens to come out right either way.
+	# B2B outcomes that move no money; b2b_retain_discount and b2b_expand move MRR and are
+	# economic.
 	"b2b_retain_delay", "b2b_retain_ignore", "b2b_expand_decline",
 ]
 
-## The only GameState flags content may write, and each is here because a system genuinely
-## reads it. Adding a row is a design decision, not a convenience.
+## The only GameState flags content may write, each because a system genuinely reads it.
+## Adding a row is a design decision, not a convenience.
 const GAME_FLAG_WHITELIST := ["tech_debt_birikti", "critical_bug_unfixed"]
 
 ## Verbs that move money, customers, audience or brand. Barred from ambient origins entirely,
@@ -112,25 +77,17 @@ const ECONOMIC_VERBS := [
 ## ambient tick.
 const TERMINAL_VERBS := ["trigger_ending"]
 
-## `promise_create` with this feature id promises "what this account wants": the
-## customer's own pain feature, resolved at the moment the option is taken.
+## `promise_create` with this feature id promises "what this account wants": the customer's own
+## pain feature, resolved when the option is taken.
 const PAIN_SENTINEL := "pain"
 
+## What a consumer churn event costs when the "customer" is the whole userbase.
+const B2C_CHURN_PCT := 0.15
 
 enum Origin { PLAYED, EXPIRE, AMBIENT, CHECK_BRANCH }
 
-
-# --- Entry points ----------------------------------------------------------
-
-## A decision the player made. The only origin with the full vocabulary.
-## What a consumer churn event costs when the "customer" is the whole userbase. The old
-## executor had this number inline at its one call site; it is named here because it is a
-## calibration value and an unnamed 0.15 in an executor is invisible to the tuning pass.
-const B2C_CHURN_PCT := 0.15
-
-## I3 refusals this run: a card tried to end the run on a telegraph that had never fired and
-## the executor stopped it. The harness reports this — §19.3 asks for "no untelegraphed loss"
-## and the only honest way to say it is a COUNT, not a field nobody writes.
+## I3 refusals this run: a card tried to end the run on a telegraph that never fired. The harness
+## reports the count (§19.3, "no untelegraphed loss").
 static var _untelegraphed_refusals: int = 0
 
 
@@ -142,13 +99,15 @@ static func reset_counters() -> void:
 	_untelegraphed_refusals = 0
 
 
+# --- Entry points ----------------------------------------------------------
+
+## A decision the player made. The only origin with the full vocabulary.
 static func run_played(effects: Array, ctx: Dictionary) -> Array:
 	return _run(effects, ctx, Origin.PLAYED)
 
 
-## The cost of not answering (§8.3's one exception). Economic verbs are allowed but only in the
-## negative direction, checked per effect at dispatch — a seam-derived amount that comes out
-## positive is refused here, where a linter reading a literal could never have seen it.
+## The cost of not answering (§8.3's one exception). Economic verbs only in the negative
+## direction, checked per effect at dispatch, where a seam-derived amount is finally visible.
 static func run_expire(effects: Array, ctx: Dictionary) -> Array:
 	return _run(effects, ctx, Origin.EXPIRE)
 
@@ -158,17 +117,15 @@ static func run_ambient(effects: Array, ctx: Dictionary) -> Array:
 	return _run(effects, ctx, Origin.AMBIENT)
 
 
-## A dice outcome. Full economy, no terminal — I6 ("zar öldürmez") enforced by the table rather
-## than by §17.5's lint rule, which becomes a second line of defence instead of the only one.
+## A dice outcome. Full economy, no terminal — I6 ("zar öldürmez").
 static func run_check_branch(effects: Array, ctx: Dictionary) -> Array:
 	return _run(effects, ctx, Origin.CHECK_BRANCH)
 
 
 # --- The dispatcher --------------------------------------------------------
 
-## Returns the delta log: one entry per applied effect, for History's `deltas` field, the debug
-## panel and the ending screen. A REFUSED effect is logged too — a refusal that leaves no trace
-## is how a rule becomes invisible.
+## Returns the delta log: one entry per applied effect, for History's `deltas`, the debug panel
+## and the ending screen. A refused effect is logged too, so a rule never acts invisibly.
 static func _run(effects: Array, ctx: Dictionary, origin: Origin) -> Array:
 	var log: Array = []
 	for raw in effects:
@@ -180,9 +137,9 @@ static func _run(effects: Array, ctx: Dictionary, origin: Origin) -> Array:
 
 		var refusal: String = _permitted(verb, effect, origin)
 		if refusal != "":
-			# §8.2: refusals are loud in the log and silent to the player. The run continues —
-			# a refused effect is a content bug, not a reason to strand the player mid-card.
-			push_error("[EvEffects] refused '%s' from %s: %s" % [verb, _origin_name(origin), refusal])
+			# §8.2: loud in the log, silent to the player; the run continues.
+			push_error("[EvEffects] refused '%s' from %s: %s"
+				% [verb, String(Origin.find_key(origin)).to_lower(), refusal])
 			log.append({"verb": verb, "refused": refusal})
 			continue
 
@@ -221,16 +178,19 @@ static func _permitted(verb: String, effect: Dictionary, origin: Origin) -> Stri
 			if is_terminal:
 				return "I3: only a played decision may end the run"
 
-	# I3's runtime half (§8.4). A loss the player was never warned about does not happen. The
-	# structural half lives on EndingsSystem.trigger_ending's own signature, which has no
-	# default for its telegraph argument — so all ten of its call sites must name one, not
-	# just the two the engine owns.
+	# I3's runtime half (§8.4): a loss the player was never warned about does not happen. The
+	# system path (EndingsSystem._assert_telegraph) is loud but never blocking, because a
+	# computed bankruptcy is already certain; an authored card is refused here instead.
 	if is_terminal or bool(effect.get("is_loss_risk", false)):
 		var telegraph: String = String(effect.get("requires_telegraph", ""))
+		var refusal: String = ""
 		if telegraph == "":
-			return "I3: no requires_telegraph declared"
-		if not EvHistory.telegraph_fired(telegraph):
-			return "I3: telegraph '%s' never fired" % telegraph
+			refusal = "I3: no requires_telegraph declared"
+		elif not EvHistory.telegraph_fired(telegraph):
+			refusal = "I3: telegraph '%s' never fired" % telegraph
+		if refusal != "" and is_terminal:
+			_untelegraphed_refusals += 1
+		return refusal
 	return ""
 
 
@@ -245,15 +205,6 @@ static func _is_negative(effect: Dictionary) -> bool:
 	return true
 
 
-static func _origin_name(origin: Origin) -> String:
-	match origin:
-		Origin.PLAYED: return "played"
-		Origin.EXPIRE: return "expire"
-		Origin.AMBIENT: return "ambient"
-		Origin.CHECK_BRANCH: return "check_branch"
-	return "?"
-
-
 # --- Application -----------------------------------------------------------
 
 static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
@@ -264,11 +215,8 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			GameState.set_cash(GameState.cash + amount)
 			return {"verb": verb, "amount": amount}
 		"add_mrr":
-			# There is no aggregate-MRR write seam: SalesSystem.reflect_mrr() derives MRR from
-			# the customer book every day, so a raw write is reverted by the next tick. The old
-			# engine shipped an `mrr` CHIP with no dispatcher arm behind it for exactly this
-			# reason — a card promised the player a number the engine could not deliver. The
-			# verb is refused rather than faked.
+			# No aggregate-MRR write seam exists: SalesSystem.reflect_mrr() derives MRR from the
+			# customer book, so a raw write would be reverted. Refused rather than faked.
 			push_error("[EvEffects] add_mrr has no write seam — MRR is derived from the book. "
 				+ "Use customer_mrr_delta on a named account, or seats.")
 			return {"verb": verb, "refused": "no aggregate MRR seam"}
@@ -303,15 +251,10 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			var victim: Customer = CustomerRegistry.get_customer(chid)
 			if victim == null:
 				return _no_target(verb, chid)
-			# B2C IS ONE AGGREGATE RECORD, so churn erodes the AUDIENCE and lets derived MRR
-			# follow; deleting the userbase would delete the whole consumer business over one
-			# complaint. B2B removes the account. (The old executor carried
-			# this branch and the port had flattened it to `remove`.) The audience is read as a
-			# float because it keeps a sub-unit accumulator — int()-ing first rounds the
-			# erosion base down before taking 15% of it.
+			# B2C is one aggregate record, so churn erodes the AUDIENCE and derived MRR follows;
+			# removing it would delete the whole consumer business. B2B removes the account.
 			if victim.market_type == "b2c":
-				var aud: float = float(GameState.get_flag("b2c_audience", 0.0))
-				SalesSystem.add_b2c_audience(-int(round(aud * B2C_CHURN_PCT)))
+				SalesSystem.add_b2c_audience(-int(round(SalesSystem.b2c_audience() * B2C_CHURN_PCT)))
 				return {"verb": verb, "customer": chid, "audience_pct": -B2C_CHURN_PCT}
 			CustomerRegistry.remove(chid)
 			GameState.run_customers_lost += 1
@@ -320,7 +263,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 		"audience_delta":
 			var n: int = _amount(e)
 			if e.has("pct"):
-				n = int(round(float(GameState.get_flag("b2c_audience", 0.0)) * float(e["pct"])))
+				n = int(round(SalesSystem.b2c_audience() * float(e["pct"])))
 			SalesSystem.add_b2c_audience(n)
 			return {"verb": verb, "amount": n}
 		"add_prospect":
@@ -379,9 +322,8 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			var emp: Character = CharacterRegistry.get_character(eid)
 			if emp == null:
 				return _no_target(verb, eid)
-			# Through HRMoraleSystem, not set_morale: apply_delta is where the trait multiplier
-			# and the founder's Liderlik climate coefficient live. A raw write would leave
-			# leadership's gain side dead exactly where the design puts it to work.
+			# Through HRMoraleSystem.apply_delta, where the trait multiplier and the founder's
+			# Liderlik climate coefficient live; a raw write would skip both.
 			if emp.category == "employee":
 				HRMoraleSystem.apply_delta(emp, _amount(e), "event")
 			else:
@@ -408,11 +350,6 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			return {"verb": verb, "customer": scid, "amount": _amount(e)}
 		"promise_create":
 			var pcid: String = _entity(e, ctx, EvScope.TYPE_CUSTOMER)
-			# `feature_id: "pain"` is a SENTINEL meaning "what this account wants". It used
-			# to be passed through verbatim, so every card promise targeted a feature
-			# literally named "pain" that no build can ship: 173 of 181 promises in the
-			# 730-day probe broke, each costing brand, satisfaction and tolerance, and the
-			# account came straight back into Risk.
 			var pfid: String = String(e.get("feature_id", ""))
 			if pfid == PAIN_SENTINEL:
 				var pc: Customer = CustomerRegistry.get_customer(pcid)
@@ -430,9 +367,8 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			ProductSystem.apply_bug_delta(_amount(e))
 			return {"verb": verb, "amount": _amount(e)}
 		"delay_days":
-			# The old chip printed "{v} gün" unconditionally while the seam no-ops with no
-			# active build, so post-ship it showed a cost that never happened. The refusal is
-			# explicit now and it is logged, so a card claiming time it did not take is visible.
+			# The seam no-ops without an active build; logging the refusal keeps a card from
+			# silently claiming time it did not take.
 			if ProductSystem.get_active_build() == null:
 				return {"verb": verb, "refused": "no active build; a day cost cannot apply"}
 			ProductSystem.apply_speed_bonus(int(e.get("days", 0)))
@@ -449,17 +385,11 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 
 		# --- world and surfaces -----------------------------------------------
 		"ticker_push":
-			# §18: the ticker is atmosphere and confirmation, never the ONLY channel. Anything
-			# meaningful pushed here is also in History, and if it belongs to a promise arc it
-			# also carries a card. The old engine had no way for a card to leave a trace here
-			# at all.
+			# §18: the ticker is atmosphere, never the ONLY channel — anything meaningful here is
+			# also in History.
 			EvTicker.push(String(e.get("line_key", "")), String(e.get("priority", "world")), ctx)
 			return {"verb": verb, "line_key": e.get("line_key", "")}
 		"goto_tab":
-			# Seven landed card options say "go to Sales", "go to HR", "go to Funding" and
-			# their buttons went nowhere, because no navigation verb existed
-			# (FRANK_UNWIRED.md §5 calls it the highest-value dev item the Frank pass produced).
-			# Two of them fire in a normal run.
 			var tab_id: String = String(e.get("tab_id", ""))
 			EventBus.tab_changed.emit(tab_id)
 			var subpage: String = String(e.get("subpage", ""))
@@ -467,9 +397,8 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				EventBus.finance_subpage_requested.emit(subpage)
 			return {"verb": verb, "tab": tab_id, "subpage": subpage}
 		"notify":
-			# class: info's surface. The engine does not own badge state — the owning module
-			# already does (RnDSystem.attention_count, HRSystem.attention_count) — so this
-			# nudges the module rather than duplicating its counter.
+			# class: info's surface. Badge state belongs to the owning module, so this nudges it
+			# rather than duplicating its counter.
 			EventBus.headline_added.emit(String(e.get("source", "")), String(e.get("text", "")))
 			return {"verb": verb, "module": e.get("module", "")}
 		"unlock_content":
@@ -491,17 +420,14 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			AngelRoundSystem.accept_offer()
 			return {"verb": verb}
 		"start_vc_meeting":
-			# The investor comes from the BOUND SLOT, the same way every other entity verb
-			# resolves its subject. Reading a literal `vc_id` off the effect meant the card
-			# had to name an investor at authoring time, which no card can know.
+			# The investor comes from the bound slot; no card can name one at authoring time.
 			var mvc: String = _entity(e, ctx, EvScope.TYPE_INVESTOR)
 			if mvc == "":
 				return _no_target(verb, mvc)
 			VCPitchSystem.begin_meeting(mvc)
 			return {"verb": verb, "vc": mvc}
 		"open_term_table":
-			# A literal vc_id still wins (the old grammar); otherwise the BOUND investor slot,
-			# which is how the sheet-decision card names the fund it is about.
+			# A literal vc_id wins; otherwise the bound investor slot.
 			var tvc: String = String(e.get("vc_id", ""))
 			if tvc == "":
 				tvc = _entity(e, ctx, EvScope.TYPE_INVESTOR)
@@ -517,8 +443,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				return {"verb": verb, "refused": "no sheet awaiting a decision"}
 			return {"verb": verb, "vc": dvc}
 		"open_seed_table":
-			# No vc_id on the effect: the seed offer knows whose it is, and there is only ever
-			# one. A card naming an investor would be a card that has to know the roster.
+			# The seed offer knows whose it is, and there is only ever one.
 			if GameState.seed_sheet == null:
 				return {"verb": verb, "refused": "no seed offer on the table"}
 			EventBus.term_table_requested.emit(String(GameState.seed_sheet.vc_id))
@@ -527,28 +452,15 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			EndingsSystem.on_buyout_declined()
 			return {"verb": verb}
 		"open_negotiation":
-			# §9.4: the engine opens the scene and does not know its insides. The return
-			# contract is stamped TEMPORARY in the GDD and owned by §23 A4.
-			#
-			# The effects it hands back are run through run_played with the ORIGIN OF THE
-			# OPTION THAT OPENED IT — they are that decision's consequences arriving late, not
-			# a new unattributed source of money. Without that, §9.4's "the engine does not
-			# validate the structure" would be a hole straight through I2 that no lint pass
-			# could ever see, because the list does not exist until runtime.
+			# §9.4, return contract TEMPORARY in the GDD (§23 A4). Not wired: nothing opens a
+			# scene yet. When it is, the effects it hands back must run with the origin of the
+			# option that opened it, or they would be a hole through I2.
 			return {"verb": verb, "negotiation": e.get("negotiation_type", ""), "deferred": true}
 
-		# --- the two verbs the migration required -------------------------
+		# --- narrow doors ---------------------------------------------------
 		"set_game_flag":
-			# A NARROW, WHITELISTED door into GameState, and the whitelist is the design.
-			#
-			# The old engine's set_flag could write ANY of the ~83 registered GameState keys —
-			# a card reaching past every seam into another domain's state, which the
-			# WRITE-THROUGH LAW forbids in one sentence. It was one dispatcher arm wide, and
-			# two authored cards walked through it. Those two are legitimate:
-			# tech_debt_birikti and critical_bug_unfixed are genuinely read by ProductSystem,
-			# and leaving debt behind is exactly what those cards are about. So the door stays
-			# and admits precisely them. Anything else needs a named verb through its owning
-			# system's seam, which is a decision somebody makes rather than a string they type.
+			# A whitelisted door into GameState (WRITE-THROUGH LAW): anything else needs a named
+			# verb through its owning system's seam.
 			var flag_name: String = String(e.get("name", ""))
 			if not GAME_FLAG_WHITELIST.has(flag_name):
 				push_error("[EvEffects] set_game_flag refused '%s'; only %s may be written "
@@ -558,10 +470,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			return {"verb": verb, "name": flag_name, "value": e.get("value", true)}
 
 		"mentor_advisory":
-			# The latched line on the ODA phone glass. Its old form carried RAW TURKISH PROSE
-			# as a modifier payload with no _en sibling, so an English player read Turkish
-			# there — three live JSON cards did this. It carries a KEY now, resolved at emit
-			# against the live locale like every other player-facing string.
+			# The latched line on the ODA phone glass: a key, resolved at emit in the live locale.
 			EventBus.mentor_advisory_changed.emit(
 				TranslationServer.translate(String(e.get("line_key", ""))))
 			return {"verb": verb, "line_key": e.get("line_key", "")}
@@ -595,21 +504,9 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 
 		# --- terminal -----------------------------------------------------------
 		"trigger_ending":
-			# I3, AT THE EXECUTOR. `EndingsSystem._assert_telegraph` is loud and never blocking,
-			# and that is right for the SYSTEM path: refusing there would strand a run whose
-			# bankruptcy is already arithmetically certain. A CARD is a different case. A card
-			# that ends the run off a telegraph that never fired is content that must not ship,
-			# the linter says so at build time, and refusing here means it cannot ship by
-			# accident either. The two enforcement points differ because the stakes differ:
-			# nothing a system computes is at risk here, only what an author wrote.
-			var telegraph: String = String(e.get("requires_telegraph", ""))
-			if not EvHistory.telegraph_fired(telegraph):
-				push_error("[EvEffects] '%s' would end the run on telegraph '%s', which has "
-					% [String(e.get("ending_id", "")), telegraph]
-					+ "never fired — refused (I3)")
-				_untelegraphed_refusals += 1
-				return {"verb": verb, "refused": "untelegraphed"}
-			EndingsSystem.trigger_ending(String(e.get("ending_id", "")), telegraph)
+			# _permitted already refused an untelegraphed ending.
+			EndingsSystem.trigger_ending(String(e.get("ending_id", "")),
+				String(e.get("requires_telegraph", "")))
 			return {"verb": verb, "ending": e.get("ending_id", "")}
 
 	push_error("[EvEffects] no application for verb '%s'" % verb)
@@ -626,8 +523,8 @@ static func _amount(e: Dictionary) -> int:
 
 
 ## The entity this effect targets: an explicit id, else the named slot, else the first slot of
-## the right type. Resolved FRESH per effect, never once per list — §8.2 makes effect lists
-## non-atomic, so effect one can remove the entity effect three is aiming at.
+## the right type. Resolved fresh per effect — §8.2 lists are non-atomic, so an earlier effect
+## can remove the entity a later one aims at.
 static func _entity(e: Dictionary, ctx: Dictionary, want_type: String) -> String:
 	if e.has("entity_id"):
 		return String(e["entity_id"])
@@ -640,8 +537,7 @@ static func _entity(e: Dictionary, ctx: Dictionary, want_type: String) -> String
 	return ""
 
 
-## §8.2: "hedef yoksa no-op" — but never a SILENT one. A verb that found nothing to act on is
-## either a scope bug or an entity that died mid-list, and both are worth seeing.
+## §8.2: "hedef yoksa no-op" — but never a silent one.
 static func _no_target(verb: String, entity_id: String) -> Dictionary:
 	push_error("[EvEffects] '%s' found no target (id '%s')" % [verb, entity_id])
 	return {"verb": verb, "refused": "no target"}

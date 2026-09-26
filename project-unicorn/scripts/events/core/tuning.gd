@@ -1,22 +1,12 @@
 class_name EvTuning
 extends RefCounted
 
-# THE SINGLE TUNING SURFACE (GDD §13.8).
+# THE SINGLE TUNING SURFACE (GDD §13.8). Every number in §13.3, §13.4 and §13.6 is a WORKING
+# VALUE that has not been measured and will move in playtest.
 #
-# Read that section before changing anything here. Its words, not a paraphrase: every number in
-# §13.3, §13.4 and §13.6 is a WORKING VALUE and NONE OF THEM HAS BEEN MEASURED. The category
-# quotas, the phase multipliers, the five-day floor threshold, the 30/14-day brake windows —
-# all of them will move in playtest.
-#
-# So the rule is architectural, not numerical: NOTHING DEPENDS ON A VALUE IN THIS FILE BEING
-# WHAT IT IS TODAY. No branch keyed to "quota == 2". No comment elsewhere restating a number.
-# No card text naming one — §8.4 makes that a seam read for exactly this reason. The bug it
-# exists to prevent shipped once: END_META_BANKRUPTCY_FRANK said "yedi gün" for months after
-# SHUTTER_DAYS became 30 in the Frank v6 pass. The copy was corrected in 7946ff3 ("Otuz gün"),
-# but it is still a typed number, so the same drift can happen again.
-#
-# The calibration round changes this file and nothing else. If a retune ever requires touching
-# a second file, that is a defect in this one.
+# So NOTHING DEPENDS ON A VALUE IN THIS FILE BEING WHAT IT IS TODAY: no branch keyed to
+# "quota == 2", no comment elsewhere restating a number, no card text naming one (§8.4 makes
+# that a seam read). A retune changes this file and nothing else.
 
 # --- §13.3 Layer 1: the same card ------------------------------------------
 
@@ -98,8 +88,8 @@ const EXPIRY_URGENT_DAYS := 3
 ## An arc waiting for a new subject does not wait forever; after this it closes.
 const ARC_AWAITING_SUBJECT_TIMEOUT_DAYS := 14
 
-## Nesting is capped at 2 by §10.8. Arcs ship FLAT in v1 — parent_arc is reserved and defaults
-## to null — so this is the cap the linter enforces, not a depth the runtime walks.
+## Nesting cap (§10.8). Arcs ship flat, so this is the cap the linter enforces, not a depth the
+## runtime walks.
 const ARC_MAX_NESTING := 2
 
 ## One active arc per subject unless the arc says otherwise (§10.7).
@@ -125,11 +115,8 @@ const ANCHOR_MAX_INTERRUPTS_PER_3_MIN := 3
 
 # --- Build scope -----------------------------------------------------------
 
-## Which version_scope values ship in this build. No release-tier system exists in the
-## codebase, so this is the whole of it: one array, and content marked ea/full stays out of
-## the pool without anyone having to build a tier system first.
+## Which version_scope values ship in this build; content marked ea/full stays out of the pool.
 ##
-## A `static var` rather than a `const` for one reason: the engine probe widens it to admit
-## `fixture` scope for its own run and narrows it again afterwards, and a const Array is
-## read-only. That is the ONLY sanctioned mutation — production code reads it and never writes.
+## A `static var` only because the engine probe and smoke widen it to admit `fixture` scope for
+## their own run. Production code reads it and never writes.
 static var SHIPPED_SCOPES: Array = ["demo"]

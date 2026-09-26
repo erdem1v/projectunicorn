@@ -1,45 +1,27 @@
 class_name EvPapers
 extends RefCounted
 
-# THE DESK (GDD §12). A paper is a decision somebody is waiting on, and every one of them has
-# a clock.
+# THE DESK (GDD §12). A paper is a decision somebody is waiting on, and every one has a clock.
+# "Süresi olmayan şey kağıt değildir" (§12.1) — which is why the model needs no capacity cap:
+# papers leave on their own.
 #
-# §12.1 IS THE WHOLE DESIGN IN ONE LINE: "Süresi olmayan şey kağıt değildir." A paper is
-# something a person is waiting for an answer to. If nobody is waiting, it is not a decision —
-# it is information, and information belongs on a tab or in the ticker. That rule is why the
-# desk needs no capacity cap: papers leave on their own.
+# EXPIRY IS NEVER SILENT (§12.4): on_expire runs, history records `expired`, and expire_note goes
+# to the ticker with player-outcome priority. Lint enforces the trio (§17.7).
 #
-# EXPIRY IS NEVER SILENT (§12.4). on_expire runs, history records `expired`, and expire_note
-# goes to the ticker with player-outcome priority. The lint rules are the teeth: class: paper
-# without expires_days is an error, expires_days without on_expire is an error, on_expire
-# without expire_note is an error (§17.7). A consequence the player cannot see did not happen.
-#
-# TWO THINGS THIS FILE HANDLES THAT THE GDD LEAVES OPEN
-#
-#   The desk has three slots, not infinity. §11.4 says the desk needs no cap, and the MODEL
-#   here has none — but the sealed ODA art has exactly three paper positions
-#   (oda_layout.gd:198) and oda_view.gd already renders a "+N" overflow chip past them. So
-#   papers are uncapped and the VIEW shows three; which three is this file's decision, not the
-#   view's.
-#
-#   Which means an overflow paper could run its clock down where the player cannot see it.
-#   That is a consequence landing off-screen, and it is not acceptable (approved amendment A3).
-#   So urgency wins a slot: any paper inside EXPIRY_URGENT_DAYS is promoted into the visible
-#   three, displacing the least urgent. A paper cannot expire while hidden.
+# The ODA art has three paper positions and the view shows a "+N" chip past them. Which three
+# is decided here: ordered() sorts by urgency, so a paper inside its last EXPIRY_URGENT_DAYS is
+# always visible and cannot run its clock down behind the chip.
 
-## event_id -> {context, expires_on, arc_id, class, opened_before, admitted_day}
+## event_id -> {context, expires_on, arc_id, opened_before, admitted_day}
 static var _papers: Dictionary = {}
 
-
-# --- Placing ---------------------------------------------------------------
 
 static func place(event_id: String, context: Dictionary, expires_days: int,
 		arc_id: String = "") -> void:
 	_papers[event_id] = {
 		"context": context.duplicate(true),
-		# §12.5: stored as an ABSOLUTE day, never as "days remaining". A remaining-day counter
-		# would have to be ticked, and a tick that does not happen — a save, a speed change, a
-		# load on a later day — is a paper that never expires.
+		# §12.5: an ABSOLUTE day, never "days remaining" — a counter that misses a tick (save,
+		# speed change, load on a later day) is a paper that never expires.
 		"expires_on": GameState.day + maxi(1, expires_days),
 		"arc_id": arc_id,
 		"opened_before": false,
@@ -51,16 +33,12 @@ static func remove(event_id: String) -> void:
 	_papers.erase(event_id)
 
 
-static func drop_arc(arc_id: String) -> int:
+static func drop_arc(arc_id: String) -> void:
 	if arc_id == "":
-		return 0
-	var doomed: Array = []
-	for event_id in _papers:
+		return
+	for event_id in _papers.keys():
 		if String((_papers[event_id] as Dictionary)["arc_id"]) == arc_id:
-			doomed.append(event_id)
-	for event_id in doomed:
-		_papers.erase(event_id)
-	return doomed.size()
+			_papers.erase(event_id)
 
 
 static func mark_opened(event_id: String) -> void:
@@ -81,15 +59,14 @@ static func is_expiring_soon(event_id: String) -> bool:
 	return left >= 0 and left <= EvTuning.EXPIRY_URGENT_DAYS
 
 
-## Papers whose day has come. §12.5: on load, a paper whose day passed while the game was shut
-## resolves immediately rather than lingering — the clock ran whether the process did or not.
+## Papers whose day has come. §12.5: a paper whose day passed while the game was shut resolves
+## on load — the clock ran whether the process did or not.
 static func take_expired() -> Array:
 	var expired: Array = []
 	for event_id in _papers.keys():
 		if int((_papers[event_id] as Dictionary)["expires_on"]) <= GameState.day:
 			expired.append({"event_id": event_id, "entry": _papers[event_id]})
-	for e in expired:
-		_papers.erase(String((e as Dictionary)["event_id"]))
+			_papers.erase(event_id)
 	return expired
 
 
@@ -106,12 +83,7 @@ static func needing_last_warning() -> Array:
 
 # --- What the desk shows ---------------------------------------------------
 
-## Ordered for display: most urgent first, ties by admission day then id.
-##
-## The first `visible_slots` of this list are what the desk renders; the rest sit behind the
-## overflow chip. Because the sort is urgency-first, a paper inside its last three days is
-## always in the visible set — which is amendment A3's requirement, enforced by the ordering
-## rather than by a special case that could be forgotten.
+## Most urgent first, ties by admission day then id.
 static func ordered() -> Array:
 	var ids: Array = _papers.keys()
 	ids.sort_custom(func(a, b):
@@ -128,8 +100,7 @@ static func ordered() -> Array:
 
 
 static func visible(slots: int) -> Array:
-	var all_ids: Array = ordered()
-	return all_ids.slice(0, mini(slots, all_ids.size()))
+	return ordered().slice(0, slots)
 
 
 static func overflow_count(slots: int) -> int:
@@ -140,10 +111,6 @@ static func overflow_count(slots: int) -> int:
 
 static func has(event_id: String) -> bool:
 	return _papers.has(event_id)
-
-
-static func size() -> int:
-	return _papers.size()
 
 
 static func ids() -> Array:
@@ -158,13 +125,8 @@ static func arc_of(event_id: String) -> String:
 	return String((_papers.get(event_id, {}) as Dictionary).get("arc_id", ""))
 
 
-static func entry(event_id: String) -> Dictionary:
-	return (_papers.get(event_id, {}) as Dictionary).duplicate(true)
-
-
 ## §13.6: the dead-time floor only fires when the desk is CLEAR. An unanswered paper means the
-## player is deferring, not that the game has gone quiet, and filling a quiet stretch the
-## player created themselves is how an engine starts nagging.
+## player is deferring, and filling a quiet stretch they created is how an engine starts nagging.
 static func is_empty() -> bool:
 	return _papers.is_empty()
 
@@ -181,8 +143,9 @@ static func to_dict() -> Dictionary:
 
 static func from_dict(d: Dictionary) -> void:
 	reset()
-	for event_id in (d.get("papers", {}) as Dictionary):
+	var saved: Dictionary = d.get("papers", {})
+	for event_id in saved:
 		if not EvCatalog.has_card(String(event_id)):
 			push_error("[EvPapers] dropping paper '%s' — no such card" % event_id)
 			continue
-		_papers[event_id] = (d["papers"] as Dictionary)[event_id]
+		_papers[event_id] = saved[event_id]

@@ -1,102 +1,41 @@
 class_name GameEvent
 extends Resource
 
-# GameEvent data model.
+# A card's renderable view: `EvPresenter.build_view` builds it from a card id and a frozen
+# context, EventModal draws it, and it is thrown away when the modal closes. Never saved — the
+# queue holds ids and the words are resolved in the live locale on every open, which is what
+# makes a mid-run language switch safe (§3.2). Eligibility, latching and effects live in the
+# engine, never here.
 #
-# NOT LOADED FROM ANYWHERE ANY MORE, and no longer saved. This used to be a content file's
-# in-memory form: EventManager parsed data/events/reactive/*.json into these at startup and
-# serialised the queue full of them. Both are gone.
-#
-# What it is now is a RENDERABLE VIEW, built by `EvPresenter.build_view` from a card id and a
-# frozen context, handed to EventModal, and thrown away when the modal closes. The queue holds
-# ids; the words are resolved from the catalogue in the live locale every time the card is
-# opened. That is what makes a mid-run language switch safe (§3.2) — and it is why this class
-# was removed from `SaveCodec.script_for_class`: a view has no business in a save file.
-#
-# Plain data container. Eligibility, latching and effects live in the engine, never here.
-#
-# Naming caution: class is GameEvent, not Event — Godot
-# reserves the name `Event` at engine level (input events). Field is `title`,
-# not `name`, mirroring Character.character_name policy.
-#
-# Trigger condition shape (vocabulary lives in EventManager.is_condition_met):
-#   {"type": "day_min", "value": 3}
-#   {"type": "day_max", "value": 90}
-#   {"type": "phase", "value": 1}
-#   {"type": "cash_below", "value": 30000}     (also cash_above)
-#   {"type": "brand_below", "value": 30}        (also brand_above)
-#   {"type": "reputation_below", "value": 0}    (also reputation_above)
-#   {"type": "subgenre", "value": "ai"}
-#   {"type": "random", "chance": 0.30}
-#
-# All trigger_conditions must evaluate true (AND logic) for the event to be
-# eligible. Cooldown and one_shot are NOT trigger conditions — they live as
-# their own fields and are checked separately against EventManager._history.
+# The class is GameEvent, not Event, because Godot reserves `Event`; the field is `title`, not
+# `name`, mirroring Character.character_name.
 
-# --- Identity (used now) ---
-@export var id: String = ""                        # "ev_<num>_<slug>"
-@export var category: String = "reactive"          # "reactive" | "industry" | "scandal" | "opportunity"
+@export var id: String = ""
+@export var category: String = "reactive"
 @export var title: String = ""
 @export var subtitle: String = ""                  # e.g. "Cihangir · 13:42"
 
-# --- Presentation (used now) ---
-@export var illustration_path: String = ""         # Placeholder this turn; future asset path
-@export var character_id: String = ""              # Empty when no character context strip
+@export var character_id: String = ""              # "" = no character context strip
 @export var body_text: String = ""                 # **bold** *italic* via markdown→BBCode in modal
 
-# --- Mentor aside (presentation-only; both optional with safe defaults; the
-#     content phase decides which events carry Frank's opinion) ---
-@export var mentor_line: String = ""               # One italic mentor line above the choices; "" = row absent
-@export var mentor_choice: int = -1                # Index of the MENTOR TAVSİYESİ choice; -1 = none.
-                                                   # Index-addressed: EventChoice carries no id.
+# Mentor aside, presentation-only.
+@export var mentor_line: String = ""               # one italic line above the choices; "" = absent
+@export var mentor_choice: int = -1                # index of the MENTOR TAVSİYESİ choice; -1 = none
 
-# --- Synthetic speaker context (B2B Sales System). When character_id is EMPTY but
-#     speaker_name is set, the modal renders a non-Character speaker strip (a customer
-#     speaking in their own voice) from these fields directly, no CharacterRegistry
-#     lookup. Lets the retention modal show the account avatar + name + status. ---
-@export var speaker_name: String = ""              # display name (e.g. a customer company)
-@export var speaker_role: String = ""              # sub-line after the name (contact role)
-@export var speaker_status: String = ""            # status pill text (e.g. "RİSK ALTINDA")
+# Synthetic speaker: when character_id is empty but speaker_name is set, the modal draws a
+# non-Character speaker strip (a customer in its own voice) from these fields directly.
+@export var speaker_name: String = ""
+@export var speaker_role: String = ""
+@export var speaker_status: String = ""            # status pill text
 @export var speaker_status_kind: String = "neutral" # UiFactory badge kind for the pill
 @export var speaker_chips: Array = []              # extra chips: Array of {text, kind}
 @export var speaker_initial: String = ""           # avatar initials; "" → derived from speaker_name
 
-# --- Behavior (used now) ---
 @export var choices: Array[EventChoice] = []
-@export var trigger_conditions: Array = []         # Array of Dictionaries
-@export var cooldown_days: int = 0                 # 0 = no cooldown
-@export var one_shot: bool = false                 # true = fires at most once per run
-@export var priority: int = 0                      # Higher fires first when multiple eligible same day
-
-# --- Categorization ---
-# Used by EventManager._is_eligible() during active builds: events without a
-# matching build_phase trigger condition are suppressed unless they carry the
-# "build_safe" tag (e.g. the ship-moment cinematic, system narrators).
 @export var tags: Array[String] = []
 
-# --- English siblings (BILINGUAL BIRTH LAW, 2026-08-18) ---
-# See EventChoice for the full rationale. Short version: additive `*_en` fields, resolved
-# at render time through Localization.pick, empty = deliberate TR fallback (code
-# factories), absent on authored content = unfinished. Save/load needs no work — the
-# codec walks properties generically (EventManager.event_to_dict → SaveCodec.res_to_dict),
-# so a field added here is persisted without anyone remembering to come back.
+# English siblings, resolved at render time through Localization.pick; empty = TR fallback.
 @export var title_en: String = ""
 @export var subtitle_en: String = ""
 @export var body_text_en: String = ""
 @export var mentor_line_en: String = ""
-
-
-func has_tag(tag: String) -> bool:
-	return tag in tags
-
-
-func has_random_trigger() -> bool:
-	# True when eligibility includes a random dice roll. Used by EventManager's
-	# per-day rate-limit (Faz 1 bug 1.6): only the ambient random pool is throttled
-	# to ≤1/tick; deterministic state-gated "beat" events (no random roll — e.g.
-	# paid-tier, first-revenue, Frank intro, traction-ready) fire the moment their
-	# condition holds, never delayed in the one-per-day queue.
-	for cond in trigger_conditions:
-		if typeof(cond) == TYPE_DICTIONARY and String(cond.get("type", "")) == "random":
-			return true
-	return false

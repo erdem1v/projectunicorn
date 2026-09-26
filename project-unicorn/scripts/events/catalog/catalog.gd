@@ -3,23 +3,12 @@ extends RefCounted
 
 # THE CARD AND ARC CATALOGUE (GDD §2, §3). Read-only, loaded once at boot, never serialised.
 #
-# CARDS ARE PLAIN DICTIONARIES, NOT RESOURCES. The old engine made GameEvent a Resource and
-# then had to serialise whole cards into the save, because factories minted synthetic ones the
-# catalogue had never heard of (event_manager.gd:263-268 explains why it had no choice). The
-# new engine has no synthetics — every card is on disk — so §16.1 persists IDS, and a card
-# never needs to round-trip at all.
+# Cards are plain Dictionaries, not Resources: every card is on disk, so §16.1 persists IDS and a
+# card never round-trips through the save codec.
 #
-# That is worth more than the simplicity. SaveCodec.script_for_class (save_codec.gd:59-70) is a
-# nine-branch match, and a Resource that is not in it fails to rebuild with a push_warning —
-# which is NOT in smoke_run.sh's error-token list, so an unregistered card class would be
-# silent data loss with a green suite. Dictionaries cannot enter that failure mode. The engine
-# block asserts at load that no "__res" tag appears anywhere inside it.
-#
-# THE LOADER RECURSES, AND ONE DIRECTORY MUST STAY EXCLUDED. data/events/unwired/ holds
-# finished text for mechanics that do not exist yet. Its cards have empty conditions, and an
-# empty condition is TRUE (§5.3) — so the moment a recursive loader sees that directory,
-# ev_seed_closed fires on day 1. Today it is inert only because the old loader is a single
-# non-recursive constant; that accident becomes an explicit rule here, and lint asserts it.
+# The loader recurses, so EXCLUDED_DIRS is a rule, not a convenience: cards for mechanics that
+# do not exist yet carry empty conditions, an empty condition is TRUE (§5.3), and pooling such a
+# directory would fire them on day 1.
 
 const CARDS_DIR := "res://data/events/cards/"
 const ARCS_DIR := "res://data/events/arcs/"
@@ -41,9 +30,8 @@ static var _loaded: bool = false
 # --- Loading ---------------------------------------------------------------
 
 static func ensure_loaded() -> void:
-	if _loaded:
-		return
-	reload()
+	if not _loaded:
+		reload()
 
 
 static func reload() -> void:
@@ -52,18 +40,17 @@ static func reload() -> void:
 	_load_errors.clear()
 	_loaded = true
 	EvSeams.ensure_installed()
-	_walk(CARDS_DIR, _ingest_card)
-	_walk(ARCS_DIR, _ingest_arc)
-	# The set of EventBus signals worth listening to is a property of the CONTENT, so it is
-	# read off the content the moment the content is known — and re-read on every reload, or a
-	# card added at runtime would trigger on a signal nothing is connected to.
+	_walk(CARDS_DIR, _cards, "card")
+	_walk(ARCS_DIR, _arcs, "arc")
+	# The EventBus signals worth listening to are a property of the content, so they are re-read
+	# on every reload — or a card added at runtime would trigger on a signal nothing hears.
 	EvSignals.install()
 	if not _load_errors.is_empty() and OS.is_debug_build():
 		push_warning("[EvCatalog] %d content problem(s) at load; run the linter"
 			% _load_errors.size())
 
 
-static func _walk(dir_path: String, ingest: Callable) -> void:
+static func _walk(dir_path: String, into: Dictionary, what: String) -> void:
 	var dir := DirAccess.open(dir_path)
 	if dir == null:
 		return          # an absent directory is not an error; content arrives in batches
@@ -72,61 +59,36 @@ static func _walk(dir_path: String, ingest: Callable) -> void:
 	while name != "":
 		if dir.current_is_dir():
 			if not EXCLUDED_DIRS.has(name) and not name.begins_with("."):
-				_walk(dir_path.path_join(name) + "/", ingest)
-		elif name.ends_with(".json") and not _excluded_file(name):
-			ingest.call(dir_path.path_join(name))
+				_walk(dir_path.path_join(name) + "/", into, what)
+		elif name.ends_with(".json") and not EXCLUDED_PREFIXES.any(func(p): return name.begins_with(p)):
+			_ingest(dir_path.path_join(name), into, what)
 		name = dir.get_next()
 	dir.list_dir_end()
 
 
-static func _excluded_file(file_name: String) -> bool:
-	for prefix in EXCLUDED_PREFIXES:
-		if file_name.begins_with(prefix):
-			return true
-	return false
-
-
-static func _read_json(path: String) -> Dictionary:
+static func _ingest(path: String, into: Dictionary, what: String) -> void:
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
 		_error(path, "unreadable")
-		return {}
+		return
 	var parsed: Variant = JSON.parse_string(f.get_as_text())
 	if typeof(parsed) != TYPE_DICTIONARY:
 		_error(path, "not a JSON object")
-		return {}
-	return parsed
-
-
-static func _ingest_card(path: String) -> void:
-	var d: Dictionary = _read_json(path)
+		return
+	var d: Dictionary = parsed
 	if d.is_empty():
 		return
 	var id: String = String(d.get("id", ""))
 	if id == "":
-		_error(path, "card has no id")
+		_error(path, "%s has no id" % what)
 		return
-	if _cards.has(id):
-		_error(path, "duplicate card id '%s' (already from %s)" % [id, _cards[id]["_path"]])
-		return
-	d["_path"] = path
-	_normalise_card(d)
-	_cards[id] = d
-
-
-static func _ingest_arc(path: String) -> void:
-	var d: Dictionary = _read_json(path)
-	if d.is_empty():
-		return
-	var id: String = String(d.get("id", ""))
-	if id == "":
-		_error(path, "arc has no id")
-		return
-	if _arcs.has(id):
-		_error(path, "duplicate arc id '%s'" % id)
+	if into.has(id):
+		_error(path, "duplicate %s id '%s' (already from %s)" % [what, id, into[id]["_path"]])
 		return
 	d["_path"] = path
-	_arcs[id] = d
+	if what == "card":
+		_normalise_card(d)
+	into[id] = d
 
 
 static func _error(path: String, message: String) -> void:
@@ -152,43 +114,33 @@ static func _normalise_card(card: Dictionary) -> void:
 	_coerce_conditions(card)
 
 
-## Coerce every condition literal to its seam's declared type, ONCE, here.
+## Coerce every condition literal to its seam's declared type, once, here. Godot's JSON parser
+## returns every number as a float, so `"value": [1,2,3]` would never match an int seam under
+## `in`; coercing at load lets the hot path compare like with like.
 ##
-## Godot's JSON parser returns TYPE_FLOAT for every number — save_codec.gd:27-38 measured it.
-## So {"seam": "hr.headcount", "op": "in", "value": [1,2,3]} arrives as [1.0, 2.0, 3.0] and an
-## `in` test against an int seam silently never matches. Coercing at load means the hot path
-## compares like with like and nobody has to remember.
-##
-## A leaf naming an unknown seam is recorded and left alone; the linter turns that into a build
-## error, which is the right place for it — at runtime, refusing to load the whole card would
-## lose the other nineteen leaves that were fine.
+## A leaf naming an unknown seam is recorded and left alone — the linter makes it a build error,
+## and refusing the whole card at runtime would lose every leaf that was fine.
 static func _coerce_conditions(card: Dictionary) -> void:
-	for tree in _condition_trees(card):
+	var trees: Array = []
+	if typeof(card.get("condition", null)) == TYPE_DICTIONARY:
+		trees.append(card["condition"])
+	var trig: Variant = card.get("trigger", null)
+	if typeof(trig) == TYPE_DICTIONARY and typeof((trig as Dictionary).get("condition", null)) == TYPE_DICTIONARY:
+		trees.append(trig["condition"])
+	for opt in (card["options"] as Array):
+		if typeof(opt) == TYPE_DICTIONARY and typeof((opt as Dictionary).get("requires", null)) == TYPE_DICTIONARY:
+			trees.append(opt["requires"])
+
+	for tree in trees:
 		for leaf in EvCondition.leaves(tree):
 			var d: Dictionary = leaf
 			var seam_name: String = String(d.get("seam", d.get("entity_seam", "")))
 			if seam_name == "":
 				continue
 			if not EvSeams.has(seam_name):
-				_error(String(card.get("_path", "?")), "unknown seam '%s'" % seam_name)
-				continue
-			if d.has("value"):
+				_error(String(card["_path"]), "unknown seam '%s'" % seam_name)
+			elif d.has("value"):
 				d["value"] = EvSeams.coerce(seam_name, d["value"])
-
-
-## Every condition tree a card carries: its own, plus one per option's `requires`.
-static func _condition_trees(card: Dictionary) -> Array:
-	var out: Array = []
-	if typeof(card.get("condition", null)) == TYPE_DICTIONARY:
-		out.append(card["condition"])
-	if typeof(card.get("trigger", null)) == TYPE_DICTIONARY:
-		var trig: Dictionary = card["trigger"]
-		if typeof(trig.get("condition", null)) == TYPE_DICTIONARY:
-			out.append(trig["condition"])
-	for opt in (card.get("options", []) as Array):
-		if typeof(opt) == TYPE_DICTIONARY and typeof((opt as Dictionary).get("requires", null)) == TYPE_DICTIONARY:
-			out.append((opt as Dictionary)["requires"])
-	return out
 
 
 # --- Reading ---------------------------------------------------------------
@@ -227,22 +179,15 @@ static func arc_ids() -> Array:
 	return ids
 
 
-## Cards whose tick matches and which are not arc steps. The pool's raw material — §10.10 keeps
-## arc steps out of it, because a step fired from the pool would burn its own one_shot latch
-## and lock the arc at that step forever. That is a silent death, and silent deaths are the
-## thing the arc object exists to prevent.
+## The pool's raw material: cards on this tick that are neither arc steps nor critical. §10.10
+## keeps arc steps out — a step drawn from the pool would burn its own one_shot latch and lock
+## its arc at that step forever.
 static func pool_candidates(tick: String) -> Array:
-	ensure_loaded()
 	var out: Array = []
 	for id in card_ids():
 		var c: Dictionary = _cards[id]
-		if String(c["tick"]) != tick:
-			continue
-		if c.has("arc"):
-			continue
-		if (c["tags"] as Array).has("critical"):
-			continue
-		out.append(c)
+		if String(c["tick"]) == tick and not c.has("arc") and not (c["tags"] as Array).has("critical"):
+			out.append(c)
 	return out
 
 

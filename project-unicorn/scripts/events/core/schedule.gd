@@ -5,31 +5,15 @@ extends RefCounted
 #
 #     {event_id, fire_on_day, context, arc_id}
 #
-# A FUNCTION POINTER IS NEVER STORED HERE, and §16.2 states the rule without qualification.
-# The reasons are worth keeping next to the code rather than in a document nobody opens:
+# A FUNCTION POINTER IS NEVER STORED HERE (§16.2). A serialised Callable may name an object or
+# method that no longer exists after a load or a patch, and fails as a consequence that silently
+# never arrives; a save that names a method can also ask the game to call something. Behaviour
+# re-resolved from an id also picks up content edits.
 #
-#   A serialised Callable is a dangling pointer waiting to happen. It names an object that may
-#   not exist after a load, and a method that may not exist after a patch. The failure is not
-#   a clean crash — it is a consequence that silently never arrives, which in this engine means
-#   a promise the game made and then quietly forgot. That is the exact trust the arc object is
-#   built to protect.
-#
-#   It is also a code-loading hole: a save file that names a method is a save file that can ask
-#   the game to call something.
-#
-#   And behaviour re-resolved from an ID picks up content edits. Fix a card's effects and every
-#   already-scheduled instance of it fixes too. A serialised closure would keep running the old
-#   version forever, in the saves of the people most affected by the bug.
-#
-# ABSOLUTE DAYS ONLY (§16.3). Never "ticks remaining". Save/load and speed changes cannot then
-# distort the arithmetic, because there is no arithmetic to distort. §20 B1 is the corollary:
-# a due day that has PASSED — an old save, a run at 3x — fires immediately rather than being
-# skipped, because "you missed it" is never the right answer to a consequence the player was
-# promised.
-#
-# The one exception is a frozen arc, and it is an exception that proves the rule: freezing
-# stores RELATIVE days on the arc itself (see EvArcs.pause_for_subject) precisely so that the
-# global schedule can stay purely absolute.
+# ABSOLUTE DAYS ONLY (§16.3), never "ticks remaining", so save/load and speed changes cannot
+# distort the arithmetic. §20 B1: a due day that has PASSED fires immediately, never skipped.
+# The one exception is a frozen arc, which stores RELATIVE days on the arc itself (see
+# EvArcs.pause_for_subject) so the global schedule stays purely absolute.
 
 ## Array of entries, kept sorted by fire_on_day so due() is a prefix scan.
 static var _entries: Array = []
@@ -42,9 +26,8 @@ static func add(event_id: String, delay_days: int, context: Dictionary = {},
 	_entries.append({
 		"event_id": event_id,
 		"fire_on_day": GameState.day + maxi(0, delay_days),
-		# Scalars only. The context that reaches here has already been through EvScope, which
-		# stores {type, id, bound_day} — never an object. A Resource in this dictionary would
-		# be serialised whole and handed back on load as a private copy of a dead entity.
+		# Scalars only: EvScope stores {type, id, bound_day}, never an object. A Resource here
+		# would come back on load as a private copy of a dead entity.
 		"context": context.duplicate(true),
 		"arc_id": arc_id,
 	})
@@ -52,17 +35,17 @@ static func add(event_id: String, delay_days: int, context: Dictionary = {},
 
 
 static func cancel(event_id: String) -> int:
-	var before: int = _entries.size()
-	_entries = _entries.filter(func(e): return String(e["event_id"]) != event_id)
-	return before - _entries.size()
+	return _drop_where("event_id", event_id)
 
 
 ## Everything an arc has pending. Called when the arc ends or aborts (§20 G3).
 static func drop_arc(arc_id: String) -> int:
-	if arc_id == "":
-		return 0
+	return 0 if arc_id == "" else _drop_where("arc_id", arc_id)
+
+
+static func _drop_where(field: String, value: String) -> int:
 	var before: int = _entries.size()
-	_entries = _entries.filter(func(e): return String(e["arc_id"]) != arc_id)
+	_entries = _entries.filter(func(e): return String(e[field]) != value)
 	return before - _entries.size()
 
 
@@ -116,10 +99,6 @@ static func pending() -> Array:
 	return _entries.duplicate(true)
 
 
-static func pending_for(arc_id: String) -> Array:
-	return _entries.filter(func(e): return String(e["arc_id"]) == arc_id)
-
-
 static func has(event_id: String) -> bool:
 	for e in _entries:
 		if String((e as Dictionary)["event_id"]) == event_id:
@@ -129,18 +108,6 @@ static func has(event_id: String) -> bool:
 
 static func size() -> int:
 	return _entries.size()
-
-
-## The next few due dates, for the ODA board's "what is coming" panel. oda_view.gd:1287 marks
-## exactly this as a TODO ("motorun aggregator'ı yok") and hand-rolls five sources instead;
-## this is the aggregator it wanted.
-static func upcoming(limit: int = 5) -> Array:
-	var out: Array = []
-	for e in _entries:
-		if out.size() >= limit:
-			break
-		out.append((e as Dictionary).duplicate(true))
-	return out
 
 
 static func _sort() -> void:
