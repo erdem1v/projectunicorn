@@ -193,7 +193,6 @@ func _run_debug_harness() -> bool:
 		"--ending-shot=": _run_ending_shot,
 		"--hr-shot=": _run_hr_shot,
 		"--finance-shot=": _run_finance_shot,
-		"--font-spec=": _run_font_spec,
 		"--tab-shot=": _run_tab_shot,
 		"--modal-shot=": _run_modal_shot,
 		"--onboard-shot=": func(v: String) -> void: _run_onboard_shot(int(v)),
@@ -232,9 +231,9 @@ func _debug_payload() -> Dictionary:
 # --display-check (windowed) applies every display setting through the REAL DisplaySettings
 # seam and prints what DisplayServer reports back, then quits. The screenshot harnesses own the
 # window, so DisplaySettings.is_inert() switches itself off for them; this flag is deliberately
-# NOT spelled with "-shot"/"audit"/"smoke"/"spec", the substrings the inert guard and
-# SaveManager's harness sniffer match on. Asserting against DisplayServer is the point: "the
-# window is 1600×900", not "we wrote 1600×900 somewhere".
+# spelled to match none of SaveManager._is_harness_arg's substrings, which the inert guard also
+# uses. Asserting against DisplayServer is the point: "the window is 1600×900", not "we wrote
+# 1600×900 somewhere".
 func _run_display_check() -> void:
 	print("DISPLAY_CHECK_BEGIN")
 	print("inert=%s (must be false or nothing below is applied)" % str(DisplaySettings.is_inert()))
@@ -300,7 +299,7 @@ const RENDER_PROBE_FRAMES := 180
 
 # --render-probe[=<tab id>] mounts the real shell and prints FRAME COST and TEXTURE/VIDEO
 # MEMORY, then quits — the number a screenshot cannot give. VSYNC IS FORCED OFF or every
-# frame would measure the monitor's refresh rate; safe because DisplaySettings._is_harness_arg
+# frame would measure the monitor's refresh rate; safe because SaveManager._is_harness_arg
 # knows this flag, so the player's stored vsync is never touched.
 func _run_render_probe(tab_id: String) -> void:
 	_begin_shot()
@@ -601,9 +600,10 @@ func _run_sales_shot(kind: String) -> void:
 		rep.level = HRConstants.LEVEL_MID
 		rep.monthly_salary = 3200
 		rep.morale = 62
-		rep.hire_day = GameState.day - 30
-		rep.role_stats = {HRConstants.AREA_SALES: 5}
+		rep.role_stats = HRConstants.seed_skills(rep.role, 5, 3)
+		rep.traits = ["picks_it_up_fast"]
 		CharacterRegistry.add(rep)
+		rep.hire_day = GameState.day - 30   # add() stamps today
 		CharacterRegistry.assign_job(rep.id, HRConstants.JOB_SALES)
 		SalesRepSystem.daily_tick()
 	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)   # LOC-DATA debug seed / id
@@ -620,19 +620,6 @@ func _run_sales_shot(kind: String) -> void:
 	await _mount_shot_shell()
 	EventBus.tab_changed.emit("sales")
 	await _finish_shot("sales_shot_%s" % kind)
-
-
-# --font-spec=<a|b|c|c-opsz> — the type specimen: identical real-game content in one candidate
-# font set. Seeds no game state. The candidate TTFs live in user://font_spec/ (outside the
-# repo); load() rather than preload() keeps the debug scene off the normal boot path.
-func _run_font_spec(set_id: String) -> void:
-	_begin_shot()
-	var spec: Control = _on_shot_layer(load("res://scenes/debug/FontSpecimen.tscn").instantiate())
-	if not spec.build(set_id):
-		get_tree().quit(1)
-		return
-	await get_tree().process_frame
-	await _finish_shot("font_spec_%s" % set_id, 0.35)
 
 
 # Theme-matrix shots (--tab-shot / --modal-shot / --onboard-shot / --theme-audit) cover the
@@ -1034,8 +1021,8 @@ func _run_hr_shot(kind: String) -> void:
 				GameState.day += 1
 				HRSearchSystem.daily_tick()
 		"gider":
-			# Gider dökümü: on saatlik gün "Ek mesai" kalemini doldurur (§8.2) ve tek seferlik
-			# işe alım komisyonu tick'ten SONRA işlenir (daily_tick günün defterini temizler).
+			# Gider dökümü: on saatlik gün "Ek mesai" kalemini doldurur (§8.2); işe alım
+			# komisyonu tek seferlik gider satırını doldurur.
 			WorkHoursSystem.set_company_hours(10)
 			FinanceSystem.daily_tick()
 			FinanceSystem.apply_one_time_cost(HRConstants.commission_for(6000), "hire")
@@ -1809,7 +1796,7 @@ func _claim_pre_dialogue_speed() -> void:
 func _open_sales_meeting(prospect_id: String) -> void:
 	if _sales_meeting != null:
 		return
-	if SalesMeetingSystem.block_reason(prospect_id) != "":
+	if SalesLedger.meeting_block_reason(prospect_id) != "":
 		return   # the tab draws the reason; reaching here at all is a UI bug, not a state one
 	if SalesMeetingSystem.open(prospect_id).is_empty():
 		return
@@ -1973,9 +1960,8 @@ func _on_quickload_requested() -> void:
 # and validated before anything is touched: "file corrupt" in a half-torn world is the worst case.
 func _load_slot(slot_id: String) -> void:
 	# The same rule as saving: a decision in progress (event card, VC meeting, term table, sales
-	# sitting, negotiation) is not carried over. F9 bypasses the menu gate — and the hidden
-	# shell still hears it during a sales sitting, which is a child of Main and would survive
-	# the teardown.
+	# sitting, negotiation) is not carried over. F9 bypasses the menu gate, and the hidden
+	# shell still hears it during a sales sitting.
 	if SaveManager.cannot_save_reason_key() == "SAVE_ERR_MODAL_OPEN":
 		return
 	var payload: Dictionary = SaveManager.read_slot(slot_id)
@@ -2055,7 +2041,9 @@ func _on_milestone_continue() -> void:
 		_milestone_modal.queue_free()
 	_milestone_modal = null
 	TimeManager.release_clock(MILESTONE_CLOCK_HOLD)
-	# The month summary still open on top owns the pause and restores it itself.
+	# The month summary still open on top owns the pause and restores it itself. `> 0`, not
+	# `>= 0`: DEVAM ET always resumes, so a paper that found the clock paused hands back the
+	# last running speed.
 	if _month_modal == null:
 		_restore_speed(_pre_milestone_speed if _pre_milestone_speed > 0 else -1)
 	_pre_milestone_speed = -1
@@ -2100,7 +2088,7 @@ func _on_meeting_scene_requested(view_state: Dictionary) -> void:
 
 ## advance() writes the outcome and returns the next view_state, or done.
 func _on_dialogue_choice_selected(id: String) -> void:
-	if VCPitchSystem.is_meeting_active():
+	if VCPitchSystem.is_active():
 		var r: Dictionary = VCPitchSystem.advance(id)
 		if not r.get("done", false) and _meeting_scene != null:
 			_meeting_scene.populate(r.get("view_state", {}))
@@ -2109,7 +2097,7 @@ func _on_dialogue_choice_selected(id: String) -> void:
 
 
 func _on_dialogue_withdrawn() -> void:
-	if VCPitchSystem.is_meeting_active():
+	if VCPitchSystem.is_active():
 		VCPitchSystem.withdraw()
 	_close_dialogue_scenes()
 
@@ -2193,6 +2181,10 @@ func _teardown_run_ui() -> void:
 	_save_load_modal = null
 	_meeting_scene = null
 	_term_table = null
+	# The sales sitting is a child of Main, not of the shell, so freeing the shell misses it.
+	if _sales_meeting != null:
+		_sales_meeting.queue_free()
+		_sales_meeting = null
 	_rnd_card_queue.clear()
 	_pre_event_speed = -1
 	_pre_settings_speed = -1

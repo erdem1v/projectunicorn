@@ -263,7 +263,6 @@ async function exportPlate(mode){
 // top swaps to ShadowMaterial so only the shadow is drawn. A contact shadow on a
 // warm-lit desk wants roughly quarter-strength darkening, not a silhouette.
 const shadowMat = new THREE.ShadowMaterial({ opacity: 0.25 });
-window.RIG_SHADOW_OPACITY = v => shadowMat.opacity = v;
 const deskTop = desk.getObjectByName('desk_top');
 
 async function exportShadow(key, mode){
@@ -455,7 +454,7 @@ function scoreCam(p){
   return anchorScore(anchorsNorm(), p);
 }
 
-window.RIG_SOLVE = function(seed){
+function solve(seed){
   let p = seed.slice();
   let best = scoreCam(p), evals = 1;
   const scale = [1, 1, 1, 20, 20, 25];   // angles in degrees, fov in degrees
@@ -502,7 +501,7 @@ window.RIG_SOLVE = function(seed){
     cam: p.map(n=>+n.toFixed(4)),
     anchors: report
   };
-};
+}
 
 /** Full-scene proof render at the current camera, straight to ./out/. */
 async function shot(name, mode){
@@ -588,7 +587,7 @@ say('rig ready');
       applyCam(cam);
       say('camera ' + JSON.stringify(cam));
     }
-    if (q.get('shadow')) RIG_SHADOW_OPACITY(Number(q.get('shadow')));
+    if (q.get('shadow')) shadowMat.opacity = Number(q.get('shadow'));
 
     if (q.get('solve') === '1'){
       // First seed is the design file's own resting pose: near-zero yaw and pitch
@@ -601,7 +600,7 @@ say('rig ready');
         [0.60,  1.50, 2.40, 3,    -5,    32],
         [0.081, 1.602,2.433,0,    -5,    32]   // previous solve
       ];
-      const runs = seeds.map(s => RIG_SOLVE(s)).sort((a,b) => a.score - b.score);
+      const runs = seeds.map(s => solve(s)).sort((a,b) => a.score - b.score);
       const all = runs.map(r => ({score:r.score, cam:r.cam, fov:r.fov,
         yaw:r.yaw_deg, pitch:r.pitch_deg, desk:r.desk_bottom, capped:r.capped}));
       cam = runs[0].cam;

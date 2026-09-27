@@ -132,7 +132,7 @@ func _ready() -> void:
 
 
 func _capture(warmup: int, vsize: Vector2i, gi: String, tm: String, layer: String) -> void:
-	for i in maxi(warmup, 2):
+	for _i in maxi(warmup, 2):
 		await RenderingServer.frame_post_draw
 	var anchors: Dictionary = oda.project_anchors()
 	print("ODA3D_ANCHORS " + JSON.stringify(anchors))

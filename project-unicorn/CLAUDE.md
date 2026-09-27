@@ -164,7 +164,6 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 
 **Tuzaklar**
 - Bayrak `--` ayracının arkasına konmaz: `main.gd` `OS.get_cmdline_args()` okur, `--` sonrası sessizce düşer.
-- Ajanın Git Bash'inde `$USER` boştur; `GODOT` export edilmezse `smoke_run.sh` "unbound variable" ile düşer.
 - Smoke, shot ve probe `user://`'ya yazar; kayıt yuvası paylaşan vakalar paralelde çakışır (liste HARITA'da).
   `APPDATA` başka bir dizine verilirse `user://` oraya taşınır: her koşuya ayrı dizin gerçek kayıtları korur ve
   paralel koşuyu güvenli kılar.

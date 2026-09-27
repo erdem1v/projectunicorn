@@ -1,4 +1,4 @@
-"""Static server + sink for the ODA 3D spike's GLB export page.
+"""Static server + sink for the ODA 3D GLB export page.
 
 Serves the whole project-unicorn tree (the export page imports
 tools/oda_render_rig/desk-builders.js by relative path, so the server root must be
@@ -9,7 +9,7 @@ a common ancestor) and accepts POSTs:
 usage: python tools/oda3d/serve_glb.py --status <dir> [--port 8734]
 POST instead of <a download>: Chrome holds download bursts behind a prompt.
 """
-import argparse, http.server, os, socketserver, sys
+import argparse, http.server, os, socketserver
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))          # project-unicorn

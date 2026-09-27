@@ -85,7 +85,4 @@ CLAUDE.md'dedir.
 kaydını günceller; `oda3d_bake_log.json`'daki o modun pişirme kaydı da bu kayda eklenir. Katman
 geçişleri bu kaydı yazmaz. Bu çıktılar yereldir, commit'e girmez.
 
-Diğer bayraklar (`--oda3d-tonemap`, `--oda3d-gi`, `--oda3d-env`, `--oda3d-exposure`,
-`--oda3d-taa`, `--oda3d-sky`, `--oda3d-micro`, `--oda3d-lights`, `--oda3d-anchors-only`,
-`--oda3d-preview`): `scenes/oda3d/oda3d_capture.gd` içinde `_ready()` ve `_capture()`'daki `args`
-okumaları. Dosya başlığındaki liste eksiktir.
+Bayrakların tam listesi `scenes/oda3d/oda3d_capture.gd` dosya başlığındadır.

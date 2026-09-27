@@ -1562,10 +1562,10 @@ static func _case_full_loop() -> String:
 	if not _drain_to(MEETING_ID):
 		return "meeting prompt never admitted"
 	EventGate.resolve(MEETING_ID, "go")
-	if not VCPitchSystem.is_meeting_active():
+	if not VCPitchSystem.is_active():
 		return "meeting did not start"
 	_run_meeting("anchor", "metrik", "durust", "b4_ack")
-	if VCPitchSystem.is_meeting_active():
+	if VCPitchSystem.is_active():
 		return "meeting did not finish"
 	if GameState.active_sheets.size() != 1:
 		return "no sheet granted (%d)" % GameState.active_sheets.size()
@@ -1587,7 +1587,7 @@ static func _case_pitch_ret_counter() -> String:
 	_seed_b2b(500)
 	_sim_day()
 	VCPitchSystem.begin_meeting("anchor")
-	if not VCPitchSystem.is_meeting_active():
+	if not VCPitchSystem.is_active():
 		return "meeting did not start"
 	_run_meeting("anchor", "metrik", "durust", "b4_leave")
 	if GameState.vc_rejections != 1:
@@ -2507,7 +2507,7 @@ static func _case_meeting_during_kepenk() -> String:
 	var seed_clear: int = int(VCPitchSystem.initial_conviction("anchor").value)
 	GameState.shutter_days_left = 5  # Kepenk active
 	VCPitchSystem.begin_meeting("anchor")
-	if not VCPitchSystem.is_meeting_active():
+	if not VCPitchSystem.is_active():
 		return "meeting blocked during Kepenk (should be allowed — ledger 12)"
 	var seed_shutter: int = int(VCPitchSystem.initial_conviction("anchor").value)
 	if seed_clear - seed_shutter != -PitchConstants.CONV_SHUTTER_PENALTY:
@@ -4573,7 +4573,7 @@ static func _case_angel_locked_choice_inert() -> String:
 	if ev.choices.size() != 2:
 		return "the seed scene has %d choices, wanted 2" % ev.choices.size()
 	var refuse: EventChoice = ev.choices[1]
-	# The SAME call the modal makes (event_modal.gd:330), not a mirror of it.
+	# The SAME call the modal makes (EventGate.condition_met), not a mirror of it.
 	if EventGate.condition_met(refuse.unlock_condition):
 		return "the hard-mode choice is unlocked"
 	if refuse.unlock_reason_text == "":

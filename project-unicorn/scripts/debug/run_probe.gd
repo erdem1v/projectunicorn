@@ -2,32 +2,25 @@ class_name RunProbe
 extends RefCounted
 
 # Headless RUN LOG harness — event fire log, churn-chain autopsy and the played run.
-# Debug builds only; invoked by main.gd when the run args contain
-# --run-log=<preset>:<days>:<mode>.
+# Debug builds only; main.gd runs it for --run-log=<preset>:<days>:<mode>.
 #
-# WHAT IT IS: the probe is "the player". It mounts no shell and no modals — it drives
-# the real tick dispatch and answers every decision through the same seam the modal
-# calls (EventManager.resolve_choice), so the engine cannot tell it apart from a human
-# except by the choice policy, which is deterministic and printed.
+# The probe is "the player". It mounts no shell and no modals: it drives the real tick
+# dispatch and answers every decision through the seam the modal calls (EventGate.resolve),
+# so the engine cannot tell it apart from a human except by the choice policy, which is
+# deterministic and printed.
 #
-# WHY IT IS NOT A SMOKE CASE: the smoke suite asserts one proposition per process and
-# says PASS/FAIL. This says nothing about right or wrong — it EMITS A LEDGER (every
-# event fire with its source, every choice, daily economy state) that a human reads to
-# find out what the game actually does over 60-90 days. Triage bins and fire tables are
-# both scraped from this output.
+# Not a smoke case: it asserts nothing. It EMITS A LEDGER (every event fire with its source,
+# every choice, daily economy state) that a human reads to find out what the game actually
+# does over a run.
 #
-# TWO DRIVE MODES, and the difference is the point:
+# Drive modes:
 #   sim   — drives TimeManager's dispatch directly (hour 1..23 → hour 0 → advance_day →
-#           daily), no wall clock. Deterministic, instant, exact slot attribution. This
-#           is what the fire tables are built from.
-#   1|2|3 — the REAL clock at that speed index, exactly as a player experiences it
-#           (TimeManager._drain_boundaries, frame pacing and all). Slower but honest;
-#           this is the only mode that can catch a real-time-only defect such as the
-#           ≤1-ambient-per-day throttle leaking across the hour-0 rollover
-#           (event_manager.gd:98). The played run once used mode 4 (the rung is gone; use 3).
+#           daily), no wall clock. Deterministic, instant, exact slot attribution.
+#   1|2|3 — the REAL clock at that speed index (TimeManager._drain_boundaries, frame pacing
+#           and all). The only mode that can catch a real-time-only defect.
 #
 # Output contract — one line per record, all prefixed PROBE so a grep separates them
-# from the engine's own [EventManager] chatter:
+# from the engine's own log lines:
 #   PROBE BEGIN preset=<p> days=<n> mode=<m> seed=<s>
 #   PROBE FIRE  day=<d> hour=<h> id=<id> src=<src>
 #   PROBE PICK  day=<d> id=<id> choice=<i> label=<label>
@@ -42,70 +35,25 @@ extends RefCounted
 #   PROBE MONTH_BURN day=<d> n=<n> salaries=<n> ... one_time=<n>   (full_run*: beside each PROBE MONTH)
 #   PROBE VC_*  (full_run_vc_naive / full_run_vc_cautious only): VC_CONFIG, VC_BOOK, VC_MEET,
 #               VC_TABLE_OPEN, VC_PUSH, VC_TABLE_END, VC_REPLAY, VC_REPLAY_SUM
-#
-# DEDUPE-REJECTED fires are NOT visible here — enqueue() returns silently when
-# _queue_has_id() rejects a duplicate. They are counted from the engine's own
-# "[EventManager] Dedupe-rejected: <id>" debug line, which is why that print exists.
 
 const PRESETS := ["b2b_reps", "b2b_solo", "b2b_risk", "b2b_risk_keep",
 	"b2b_slip", "b2b_slip_keep", "b2c", "b2c_keep", "b2c_neglect", "full_run", "full_run_weak",
 	"full_run_naive", "full_run_discount", "full_run_vc_naive", "full_run_vc_cautious"]
-# Two Series A policies sit on top of full_run. The world and the answer policy are
-# full_run's ("sensible"); only what happens once the door is open differs — see "The
-# Series A hunt" below. Sim mode only. An optional fifth spec part `replay=<K>` sets the
-# naive preset's per-fund table replays (default 20; 0 turns them off).
-# The played run has two policy variants. The WORLD is the same as full_run; only the
-# answer policy differs, which makes the three a controlled experiment on what the event
-# cards do to the revenue curve:
+# The played run has three answer policies on one world, a controlled experiment on what
+# the event cards do to the revenue curve:
 #   full_run          — "sensible": a promise when one is open, then a stall, and a
 #                       discount only when nothing else is left.
-#   full_run_naive    — always the first unlocked row, the probe's historical line.
+#   full_run_naive    — always the first unlocked row.
 #   full_run_discount — the discount first, every time it is offered.
-# Three more presets:
-#   full_run_weak — the played run with the ORIGINAL v1 set (workflow+reporting+scheduling,
-#                   raw stability 6) and an immediate launch: the "bad v1" the tolerance
-#                   band is measured against. full_run itself now builds the stability-
-#                   competent set and waits in Beta (see _open_the_company / _keep_the_word).
+# Two Series A policies sit on top of full_run (sim only): the world and the answers are
+# full_run's, only what happens once the door is open differs — see "The Series A hunt".
+# An optional fifth spec part `replay=<K>` sets the naive preset's per-fund table replays
+# (default 20; 0 turns them off).
+#   full_run_weak — the weak v1 set (workflow+reporting+scheduling, raw stability 6) and an
+#                   immediate launch: the "bad v1" the tolerance band is measured against.
 #   b2c_keep      — the b2c fixture PLUS the sprint policy (_keep grammar): bugs are cleared,
 #                   so the aggregate satisfaction can climb — the "maintained" B2C product.
 #   b2c_neglect   — a stability-poor, bug-heavy B2C fixture nobody tends: satisfaction erodes.
-
-# Deterministic answer policy, per id prefix. Absent → choice 0. A locked choice is
-# never picked (the probe re-runs the modal's own gate, see _pick_choice), so a policy
-# index pointing at a locked row falls through to the first unlocked one.
-#
-# The retention row is 0 on purpose: "Söz ver" is choice 0 when the customer's pain
-# feature is unshipped (b2b_event_factory.gd:41-47), and driving promises is the whole
-# point of the churn-chain autopsy. When it is absent the same index lands on the next
-# row, which the PICK line records by label so the log never has to be guessed at.
-const CHOICE_POLICY := {
-	"customer.": 0,
-	"funding.": 0,
-	"product.": 0,
-}
-
-# id → the injector that built it. Everything not in _all_events is code-built, and
-# one of these prefixes owns it. Kept here rather than in the engine because it is a
-# READING aid, not a fact the game needs about itself.
-const SOURCE_MAP := {
-	"ev_b2b_retain_": "factory:b2b_sales_system:203 (retention)",
-	"ev_b2b_expand_": "factory:b2b_sales_system:242 (expansion)",
-	"ev_b2b_escalation_": "factory:b2b_sales_system:170 (cs_escalation)",
-	"ev_b2b_request_": "factory:customer_rep_system:308 (cs_request)",
-	"ev_hr_resign_": "factory:hr_morale_system:498 (resignation)",
-	"ev_hr_calm_stretch": "factory:hr_morale_system:526 (calm)",
-	"ev_hr_big_signing": "factory:hr_morale_system:526 (big_signing)",
-	"ev_hr_ship_glow": "factory:hr_morale_system:526 (ship_glow)",
-	"ev_mvp_ship_moment": "factory:product_system:1266 (ship)",
-	"ev_mvp_version_ship_moment": "factory:product_system:1266 (version_ship)",
-	"ev_mvp_iter_decision_intro": "factory:product_system:_end_round (iter_intro)",
-	"ev_phase_gate_": "factory:phase_gate_system:130 (gate)",
-	"funding.frank_cheque": "card:funding/frank_cheque.json",
-	"funding.hire_nudge": "card:funding/hire_nudge.json",
-	"funding.shutter_warning": "card:funding/shutter_warning.json",
-	"ev_pivot_offer": "factory:endings_system:169 (pivot)",
-	"ev_acquisition_offer": "factory:endings_system:224 (acquisition)",
-}
 
 static var _fires: Dictionary = {}      # id -> fire count
 static var _picks: Dictionary = {}      # id -> resolve count
@@ -126,8 +74,7 @@ static var _last_ship_day: int = 0          # the played run ships a version at 
 static var _run_seed: int = 424242
 static var _fix_run_day: int = -1           # day the running fix pass started
 static var _fixer_id: String = ""           # the developer lent to the support desk for it
-static var _retain_days: Dictionary = {}    # customer id -> Array of fire days (retention cards)
-static var _fires_by_day: Dictionary = {}   # day -> {family: count} for PROBE WEEK
+static var _fires_by_day: Dictionary = {}   # day -> card fires that day, for PROBE WEEK
 static var _gate_day: int = -1              # the day phase_gate_reached(3) fired (PROBE GATE)
 static var _gate_logged: bool = false
 static var _mb_acc: Dictionary = {}         # burn id -> realised sum over the open fiscal month
@@ -146,7 +93,7 @@ const TABLE_PUSH_CAP := 64                  # runaway backstop for a push loop, 
 # ============================================================================
 
 static func run(spec: String, payload: Dictionary) -> void:
-	# spec = "<preset>:<days>:<mode>", e.g. "b2b_solo:90:sim" or "b2c:60:4".
+	# spec = "<preset>:<days>:<mode>", e.g. "b2b_solo:90:sim" or "b2c:60:3".
 	var parts: PackedStringArray = spec.split(":", false)
 	if parts.size() < 2:
 		print("PROBE ERROR bad spec '%s' (want <preset>:<days>[:<mode>])" % spec)
@@ -184,8 +131,8 @@ static func run(spec: String, payload: Dictionary) -> void:
 	# bootstrap win into a non-terminal milestone and a real-clock run would sit on its paper.
 	EndingsSystem.build_scope_override = EndingsSystem.BUILD_DEMO
 	GameState.initialize_run(payload)
-	# Pin the seed so two probe runs of the same preset are comparable line for line —
-	# the same reason --tempo-probe pins it (main.gd:327-331). initialize_run seeds from
+	# Pin the seed so two probe runs of the same preset are comparable line for line, as
+	# main.gd's _seed_run_reproducible does for the shots. initialize_run seeds from
 	# Time.get_ticks_msec(), which would make every fire table a one-off.
 	GameState.run_seed = _run_seed
 	seed(GameState.run_seed)
@@ -222,9 +169,8 @@ static func _wire_log() -> void:
 	if _wired:
 		return
 	_wired = true
-	# event_triggered fires on EVERY queue entry — the JSON pool's _enqueue_eligible AND
-	# all 21 enqueue/enqueue_front injectors. That is why it, and not _history (which
-	# only resolve_choice writes), is the fire log's source.
+	# event_triggered fires once for every card the engine puts up (EvEngine._announce),
+	# resolved or not, so it and not the history is the fire log's source.
 	EventBus.event_triggered.connect(_on_fire)
 	EventBus.customer_churned.connect(_on_churn)
 	EventBus.promise_created.connect(func(pid: String) -> void: _log_promise(pid, "created"))
@@ -371,42 +317,20 @@ static func _log_gate() -> void:
 		GameState.get_profitable_month_streak(), GameState.get_mom_growth_avg_pct(PitchConstants.ARR_WINDOW_MONTHS)])
 
 
-static func _family_of(event_id: String) -> String:
-	if event_id.begins_with("ev_b2b_retain_"): return "retain"
-	if event_id.begins_with("ev_b2b_request_") or event_id.begins_with("ev_b2b_escalation_"): return "cs"
-	if event_id.begins_with("ev_b2b_expand_"): return "expand"
-	if event_id.begins_with("ev_mvp_"): return "build"
-	if event_id.begins_with("ev_ps_"): return "post_ship"
-	return "other"
-
-
 static func _on_fire(event_id: String) -> void:
 	_fires[event_id] = int(_fires.get(event_id, 0)) + 1
-	var by: Dictionary = _fires_by_day.get(GameState.day, {})
-	var fam: String = _family_of(event_id)
-	by[fam] = int(by.get(fam, 0)) + 1
-	_fires_by_day[GameState.day] = by
-	if fam == "retain":
-		var cid: String = event_id.trim_prefix("ev_b2b_retain_")
-		var days: Array = _retain_days.get(cid, [])
-		days.append(GameState.day)
-		_retain_days[cid] = days
+	_fires_by_day[GameState.day] = int(_fires_by_day.get(GameState.day, 0)) + 1
 	print("PROBE FIRE day=%d hour=%d id=%s src=%s" % [
 		GameState.day, GameState.current_hour, event_id, _source_of(event_id)])
 
 
 static func _source_of(event_id: String) -> String:
-	if EventGate.is_catalogued(event_id):
-		return "pool"
-	for prefix in SOURCE_MAP.keys():
-		if event_id.begins_with(prefix):
-			return String(SOURCE_MAP[prefix])
-	return "factory:UNMAPPED"
+	return "pool" if EventGate.is_catalogued(event_id) else "factory:UNMAPPED"
 
 
 static func _on_churn(customer_id: String) -> void:
-	# The autopsy's terminal line. Read BEFORE CustomerRegistry.remove() runs (the signal
-	# is emitted first — b2b_sales_system.gd:269-271), so the record is still readable.
+	# The autopsy's terminal line. B2BSalesSystem emits the signal before
+	# CustomerRegistry.remove(), so the record is still readable.
 	var c: Customer = CustomerRegistry.get_customer(customer_id)
 	if c == null:
 		print("PROBE CHURN day=%d id=%s (record already gone)" % [GameState.day, customer_id])
@@ -464,10 +388,9 @@ static func _log_state() -> void:
 
 static func _log_customers() -> void:
 	# The churn autopsy's raw material. TARGET is the number the whole B2B book drifts
-	# toward — QualityModel.axis_score(economy_dims_from_flags(), "stability") + trust_offset
-	# (b2b_sales_system.gd:96-106) — and it is printed beside satisfaction and tolerance
-	# because "why did nobody slide" and "why did everybody slide" are the same question
-	# asked of these three numbers.
+	# toward (B2BSalesSystem._satisfaction_target: the stability axis + trust_offset), and
+	# it is printed beside satisfaction and tolerance because "why did nobody slide" and
+	# "why did everybody slide" are the same question asked of these three numbers.
 	var health: float = QualityModel.axis_score(QualityModel.economy_dims_from_flags(), "stability")
 	var book: Array = CustomerRegistry.get_by_market("b2b")
 	var satisfied: int = 0
@@ -547,17 +470,8 @@ const DISCOUNT_PREFERENCE := ["b2b_retain_discount", "promise_create", "b2b_reta
 
 
 static func _pick_choice(ev: GameEvent) -> int:
-	# b2c_neglect: the untended consumer product — every post-ship
-	# card is answered with its LAST unlocked row (the "ignore it" grammar), never the paid
-	# satisfaction boost. Without this the "neglect" arm still bought +20 satisfaction per
-	# complaint and read as tended.
-	if _preset == "b2c_neglect" and ev.id.begins_with("ev_ps_"):
-		for idx in range(ev.choices.size() - 1, -1, -1):
-			if EventGate.condition_met(ev.choices[idx].unlock_condition, EventGate.active_context()):
-				return idx
-	# Runs the modal's OWN gate (EventManager.is_condition_met on unlock_condition —
-	# event_modal.gd:330), not a mirror of it, so the probe can never pick a row a human
-	# is forbidden to click.
+	# Runs the modal's OWN gate (EventGate.condition_met on unlock_condition), not a mirror of
+	# it, so the probe can never pick a row a human is forbidden to click.
 	# Account cards (retention, the three requests, the CS warning): the policy picks by
 	# EFFECT VERB, never by row index or label — rows are conditional and labels are
 	# player-facing text. `naive` skips this and takes the first unlocked row below.
@@ -570,15 +484,8 @@ static func _pick_choice(ev: GameEvent) -> int:
 				for m in ev.choices[idx].modifiers:
 					if String(m.get("verb", m.get("type", ""))) == want_verb:
 						return idx
-	# Policy index first, then the first unlocked row after it.
-	var want: int = 0
-	for prefix in CHOICE_POLICY.keys():
-		if ev.id.begins_with(prefix):
-			want = int(CHOICE_POLICY[prefix])
-			break
 	var first_unlocked: int = -1
-	for offset in ev.choices.size():
-		var idx: int = (want + offset) % ev.choices.size()
+	for idx in ev.choices.size():
 		if EventGate.condition_met(ev.choices[idx].unlock_condition, EventGate.active_context()):
 			first_unlocked = idx
 			break
@@ -610,10 +517,6 @@ static func _pick_choice(ev: GameEvent) -> int:
 # Fraction of the current balance the founder will spend on any single event choice.
 const AFFORDABLE_FRACTION := 0.12
 
-# The two "Aday bul" mirrors were here and are RETIRED with the button (Satış rev 6 §19).
-# The drift risk they were named against is gone with them: supply is SalesFaucetSystem's and
-# the probe reads the same faucet the game does, so there is nothing left to mirror.
-
 
 static func _cash_delta_of(choice: EventChoice) -> int:
 	var total: int = 0
@@ -630,10 +533,9 @@ static func _cash_delta_of(choice: EventChoice) -> int:
 # ============================================================================
 
 static func _run_sim() -> void:
-	# Mirrors EndgameSmoke._sim_day_full (endgame_smoke.gd:241) — the engine's real
-	# boundary order — with the player's answer interleaved after EVERY dispatch, because
-	# an unanswered modal blocks _pump_queue and the rest of the day's fires would queue
-	# up invisibly behind it.
+	# Mirrors EndgameSmoke._sim_day_full — the engine's real boundary order — with the
+	# player's answer interleaved after EVERY dispatch, because an unanswered modal blocks
+	# _pump_queue and the rest of the day's fires would queue up invisibly behind it.
 	while GameState.day < _stop_day and GameState.run_active:
 		while GameState.current_hour < TimeManager.HOURS_PER_DAY - 1:
 			var next_hour: int = GameState.current_hour + 1
@@ -677,36 +579,16 @@ static func _run_realtime(speed_idx: int) -> void:
 	EventBus.speed_change_requested.emit(speed_idx)
 
 
-static func _log_cadence() -> void:
-	# Verdict lines: per-account retention cadence (fires, the densest 30-day window,
-	# discounts taken) and fires per week by family.
-	var ids: Array = _retain_days.keys()
-	ids.sort()
-	for cid in ids:
-		var days: Array = _retain_days[cid]
-		var max30: int = 0
-		for i in days.size():
-			var n: int = 0
-			for j in range(i, days.size()):
-				if int(days[j]) - int(days[i]) < 30:
-					n += 1
-			max30 = maxi(max30, n)
-		print("PROBE RETAIN %s fires=%d max30=%d discounts=%d" % [cid, days.size(), max30, int(_discount_uses.get(cid, 0))])
+static func _log_weekly_fires() -> void:
+	# Verdict line: card fires per 7-day week.
 	var last_day: int = GameState.day
 	var week: int = 1
 	var d: int = 1
 	while d <= last_day:
-		var tot: Dictionary = {}
-		for k in range(d, mini(d + 7, last_day + 1)):
-			var by: Dictionary = _fires_by_day.get(k, {})
-			for fam in by.keys():
-				tot[fam] = int(tot.get(fam, 0)) + int(by[fam])
 		var all: int = 0
-		for fam in tot.keys():
-			all += int(tot[fam])
-		print("PROBE WEEK w=%d fires=%d retain=%d cs=%d expand=%d build=%d post_ship=%d other=%d" % [
-			week, all, int(tot.get("retain", 0)), int(tot.get("cs", 0)), int(tot.get("expand", 0)),
-			int(tot.get("build", 0)), int(tot.get("post_ship", 0)), int(tot.get("other", 0))])
+		for k in range(d, mini(d + 7, last_day + 1)):
+			all += int(_fires_by_day.get(k, 0))
+		print("PROBE WEEK w=%d fires=%d" % [week, all])
 		week += 1
 		d += 7
 
@@ -714,7 +596,7 @@ static func _log_cadence() -> void:
 static func _finish() -> void:
 	if _vc_policy != "" and not _vc_done:
 		_vc_end("UNRESOLVED", "phase<3" if GameState.phase < 3 else "run_over")
-	_log_cadence()
+	_log_weekly_fires()
 	_log_tally()
 	print("PROBE END day=%d run_active=%s ending=%s" % [
 		GameState.day, str(GameState.run_active), GameState.ending_id])
@@ -722,20 +604,13 @@ static func _finish() -> void:
 
 
 ## PROBE HR — üç sayı: kaç işe alım, aylık maaş yükü, kaç kişi §7'nin 50 bandının altında.
-##
-## Bu satır bugüne dek YOKTU. `PROBE STATE` yalnız `emp=<headcount>` taşıyordu; `run_hires`,
-## `get_total_monthly_salaries()` ve `average_morale()` koşu boyunca HİÇ çağrılmıyordu, yani
-## İK'nın koşuda ne yaptığı ölçülmüyordu.
-##
-## SIFIR İŞE ALIM BİR HATA DEĞİL BİR BULGUDUR ve öyle raporlanır: probe'un kendi işe alım
-## yolu (`_hire_after_the_seed`) üç kapılı ve TEK ATIŞLIK, yani koşunun İK'yı hiç egzersiz
-## etmemesi mümkün ve bu ölçümün söylemesi gereken ilk şey odur.
+## Sıfır işe alım bir hata değil bulgudur: probe'un işe alım yolu (`_hire_after_the_seed`)
+## kapılıdır ve koşu İK'yı hiç egzersiz etmeyebilir.
 static func _log_hr() -> void:
 	var staff: Array[Character] = CharacterRegistry.get_employees()
 	var payroll: int = CharacterRegistry.get_total_monthly_salaries()
-	# BOŞ KADRO TUZAĞI: `average_morale()` kimse yokken 0.0 döner ve bu satır o zaman
-	# "moral çöktü" diye okunurdu — koşunun ilk kırk günü tam olarak öyle görünür.
-	# Kadro boşken sayı YAZILMAZ, tire yazılır.
+	# `average_morale()` kimse yokken 0.0 döner ve "moral çöktü" diye okunurdu; kadro boşken
+	# tire yazılır.
 	var avg: String = "-"
 	var below: int = 0
 	var lowest: int = -1
@@ -776,27 +651,15 @@ static func _play_the_founder() -> void:
 static func _open_the_company() -> void:
 	# Day 1 of a real run: there is no product. Build one, ship it, then go selling.
 	#
-	# B2B, not B2C, and the choice is measured rather than stylistic: a B2C autopilot run
-	# was played first and topped out at MRR 135 by day 173 (audience growth barely clears
-	# the erosion term for a modest v1), so it can never reach the $2,500 seed bar — let
-	# alone the $5,000 Series A gate — inside a run. That is a calibration finding in its
-	# own right; it is also why the played run takes the B2B desk, where a signed account
-	# is worth $200-$2,000 of MRR on the day it closes. It is additionally the market the
-	# churn work lives in.
+	# B2B, not B2C: a modest B2C v1's audience growth barely clears its erosion term, so an
+	# autopilot B2C run never reaches the seed bar, while a signed B2B account is worth
+	# $200-$2,000 of MRR on the day it closes. It is also the market the churn work lives in.
 	if not GameState.get_flag("mvp_shipped", false):
 		if ProductSystem.get_active_build() != null:
 			return
-		# The COMPETENT v1 is the stability-heavy set — integration (7)
-		# + field (7, unlocked from research) + scheduling (3): raw stability 17,
-		# complexity 13, an $1,800 licence out of the $10,000 opening cash. The original set
-		# (workflow+reporting+scheduling, raw stability 6, complexity 9) is what the played
-		# run measured its retention hell with; it stays reachable as full_run_weak — the
-		# "bad v1" the tolerance band is seated against.
-		# The played run builds the LINE product a player can
-		# actually pick (erp is the only playable B2B subtype). The old flat `saas_ops`
-		# build has no line data, so the rebuilt sales meeting read its axes as 0 and the
-		# founder lost ~96% of meetings — the $11.9K "ceiling" was that, not the economy.
-		# full_run_weak keeps the retired flat product as the historical comparison.
+		# The played run builds the LINE product a player can actually pick (erp is the only
+		# playable B2B subtype). full_run_weak builds the flat `saas_ops` weak set instead:
+		# it has no line data, so the sales meeting reads its axes as 0.
 		if _weak_v1:
 			var features: Array = ["saas_ops_workflow", "saas_ops_reporting", "saas_ops_scheduling"]
 			if ProductSystem.start_build("saas_ops", features, "", "Sahra"):
@@ -810,19 +673,16 @@ static func _open_the_company() -> void:
 
 
 static func _work_the_pipeline() -> void:
-	# The founder's sales day, Satış rev 6. Two things changed and both simplify this:
-	# LEADS ARRIVE ON THEIR OWN (§3 — the button and its cooldown are retired, so the probe
-	# no longer mirrors a UI constant it could not address), and the throttle is the DAILY
-	# MEETING RIGHT rather than a two-day cooldown (§5.0). Both gates are asked through the
-	# same seams the tab's own buttons ask, so the probe gets no faster a pipeline than a
-	# player at the same keyboard.
+	# The founder's sales day (Satış §3, §5.0): leads arrive on their own and the throttle is
+	# the daily meeting right, asked through the same seam the tab asks, so the probe gets no
+	# faster a pipeline than a player at the same keyboard.
 	if SalesMeetingSystem.is_active() or NegotiationSystem.is_active():
 		return
-	# The first lead the founder is allowed to sit with, not only the head of the queue:
-	# a blocked returning company at leads[0] used to idle the day's meeting for a week.
+	# The first lead the founder is allowed to sit with, not only the head of the queue: a
+	# blocked returning company at leads[0] would idle the day's meeting.
 	for raw in ProspectRegistry.get_all():
 		var lead: Prospect = raw as Prospect
-		if lead != null and SalesMeetingSystem.block_reason(lead.id) == "":
+		if lead != null and SalesLedger.meeting_block_reason(lead.id) == "":
 			_meet(lead)
 			return
 
@@ -876,7 +736,7 @@ static func _meet(p: Prospect) -> void:
 ## The played run's staffing ladder: a founder who is growing
 ## hires the desk the growth needs — a developer on Frank's money, a support rep once a
 ## few accounts are live, sales reps as MRR climbs. Each rung only when the payroll it
-## adds leaves six months of runway. The weak run keeps the historical single hire.
+## adds leaves six months of runway. The weak run makes a single developer hire.
 const STAFF_LADDER := [
 	{"role": "developer", "min_customers": 0, "min_mrr": 0},
 	{"role": "customer_rep", "min_customers": 3, "min_mrr": 0},
@@ -940,10 +800,9 @@ static func _hire_after_the_seed() -> void:
 		print("PROBE PLAY day=%d start_search developer/junior" % GameState.day)
 
 
-## The played run's operations — the things any player does and
-## the old probe never did: buy server capacity so the product is not over capacity from
-## the first seat, run a fix pass when confirmed bugs pile up, and ship a version on a
-## steady cadence instead of only when a promise demands one.
+## The played run's operations — the things any player does: buy server capacity so the
+## product is not over capacity from the first seat, run a fix pass when confirmed bugs pile
+## up, and ship a version on a steady cadence instead of only when a promise demands one.
 static func _run_the_company() -> void:
 	if not ProductState.is_live():
 		return
@@ -979,8 +838,8 @@ static func _run_the_company() -> void:
 
 
 ## A player watching the roster does something before a person walks: a raise first, the
-## year's holiday if a raise is not on the table. Nothing fancier; the probe's job is to
-## stop measuring "nobody ever looked at morale" (27 of 30 hires resigned without it).
+## year's holiday if a raise is not on the table. Nothing fancier: without it the run
+## measures a founder who never looks at morale.
 static func _keep_the_team() -> void:
 	for emp in CharacterRegistry.get_employees():
 		if emp.category != "employee" or emp.status != HRConstants.STATUS_ACTIVE:
@@ -1060,9 +919,9 @@ static func _keep_the_word() -> void:
 	# builds it, and we watch what the account does when it lands. Without this the probe
 	# can only ever observe promises BREAKING, which answers half the question.
 	# Bugs first: a founder watching accounts slide clears the backlog, and on the B2B side
-	# it is the ONLY lever that moves the satisfaction TARGET (which is the product's
-	# effective stability — b2b_sales_system.gd:96-106). Shipping features alone cannot
-	# lift an account over its tolerance bar; fixing bugs can.
+	# it is the ONLY lever that moves the satisfaction TARGET (the product's effective
+	# stability, B2BSalesSystem._satisfaction_target). Shipping features alone cannot lift
+	# an account over its tolerance bar; fixing bugs can.
 	if int(GameState.get_flag("mvp_live_bug_count", 0)) >= 6 \
 			and not GameState.get_flag("mvp_bug_sprint_active", false) \
 			and ProductSystem.start_bug_sprint():
@@ -1072,16 +931,14 @@ static func _keep_the_word() -> void:
 
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if b != null:
-		# Build Bar 2026-08-19: design rounds chain by themselves; the two human seats are
-		# "Geliştirmeye geç" (opens when round 1 ends) and "Beta'ya geç" (development parks
-		# at 80%). Taking each seat the moment it opens — ZERO completed extra rounds — is
-		# the smoke harness's own convention (_run_build_to_phase): the build stays honest
-		# without buying free quality (a just-started round 2 is abandoned, no gains).
+		# Design rounds chain by themselves; the two human seats are "Geliştirmeye geç" (opens
+		# when round 1 ends) and "Beta'ya geç". Taking each seat the moment it opens — ZERO
+		# completed extra rounds — keeps the build honest without buying free quality.
 		if ProductSystem.can_enter_development():
 			ProductSystem.enter_development()
 			print("PROBE PLAY day=%d enter_development" % GameState.day)
-		# BANDI BEKLER (D2): kapı artık her yüzdede açık, ama erken çıkış bugün
-		# bedelsiz ve baskın — temsilî koşunun onu alması kalibrasyonu bozardı.
+		# Beta waits for the development band: the gate is open at any percentage, but an
+		# early exit costs nothing and dominates, so taking it would skew the calibration.
 		elif ProductSystem.development_band_complete():
 			ProductSystem.enter_beta()
 			print("PROBE PLAY day=%d enter_beta" % GameState.day)
@@ -1089,7 +946,7 @@ static func _keep_the_word() -> void:
 			# Beta is a PARK with no auto-ship: waiting is free apart from burn and clears the
 			# backlog at POLISH_BUG_FIX_PER_DAY. The competent founder (full_run) waits until the
 			# backlog is small or five Beta days have passed; every other preset (and the weak
-			# v1) ships the day Beta opens, exactly as before.
+			# v1) ships the day Beta opens.
 			if _beta_wait:
 				if _beta_since_day < 0:
 					_beta_since_day = GameState.day
@@ -1146,7 +1003,7 @@ static func _play_the_hunt() -> void:
 	if _vc_done or not GameState.run_active or GameState.phase < 3 or TermSheetTableSystem.is_active():
 		return
 	# 1. The drain answered funding.meeting_day with "go", which seated the meeting. Play it.
-	if VCPitchSystem.is_meeting_active():
+	if VCPitchSystem.is_active():
 		_play_the_meeting()
 		_vc_meet_day = GameState.day
 	# 2. A live Series A sheet: sit down the day it arrives (so the decision card never comes).
@@ -1223,7 +1080,7 @@ static func _play_the_meeting() -> void:
 	var trace: Array[String] = []
 	var ids: Array[String] = ["b1_read"]   # Beat 1 has one row, and its resolver ignores the id
 	var guard: int = 0
-	while VCPitchSystem.is_meeting_active() and guard < 8:
+	while VCPitchSystem.is_active() and guard < 8:
 		guard += 1
 		var pick: String = _meeting_pick(ids)
 		var before: int = VCPitchSystem._conviction
@@ -1236,7 +1093,7 @@ static func _play_the_meeting() -> void:
 		if ids.is_empty():
 			print("PROBE ERROR day=%d meeting view has no choices after %s" % [GameState.day, pick])
 			break
-	if VCPitchSystem.is_meeting_active():
+	if VCPitchSystem.is_active():
 		print("PROBE ERROR day=%d meeting did not finish" % GameState.day)
 	var st: Dictionary = GameState.vc_states.get(fund, {}) as Dictionary
 	print("PROBE VC_MEET day=%d fund=%s n=%d conv0=%d path=%s result=%s sheet_conv=%d rejections=%d brand=%d" % [
@@ -1380,7 +1237,7 @@ static func _state_fingerprint() -> Dictionary:
 
 
 static func _run_replays() -> void:
-	if TermSheetTableSystem.is_active() or VCPitchSystem.is_meeting_active() or not GameState.run_active:
+	if TermSheetTableSystem.is_active() or VCPitchSystem.is_active() or not GameState.run_active:
 		print("PROBE ERROR day=%d replays need a closed table and a live run" % GameState.day)
 		return
 	var fp0: Dictionary = _state_fingerprint()
@@ -1460,8 +1317,8 @@ static func _seed_world(preset: String) -> void:
 	_build_promises = preset.ends_with("_keep")
 	if preset.begins_with("full_run"):
 		# THE PLAYED RUN. Nothing is seeded: no product, no customers, no money beyond the
-		# origin's opening cash. Day 1 is day 1. Everything the log shows after this line
-		# was earned by _play_the_founder through the same seams the tabs call.
+		# origin's opening cash. Everything the log shows was earned by _play_the_founder
+		# through the same seams the tabs call.
 		_full_run = true
 		_build_promises = true
 		_weak_v1 = preset == "full_run_weak"
@@ -1493,14 +1350,11 @@ static func _seed_world(preset: String) -> void:
 			_seed_stability_fixture("b2b_risk", _raw_for_axis(_bar_small() - 8.0), 14)
 		"b2b_slip":
 			# RECOVERABLE pressure, and the distinction from b2b_risk is the whole point.
-			# b2b_risk is UNSALVAGEABLE by construction: raw stability 34 puts the
-			# satisfaction target below every tolerance in the book even at zero bugs, so
-			# the only possible ending is that everyone leaves. This preset instead sits
-			# the target just UNDER the mid/enterprise bar while the bug backlog is live
-			# and just OVER it once the backlog is cleared — so a founder who answers the
-			# demand AND cleans up actually keeps the account, and one who ignores it does
-			# not. That is recoverable pressure in the Frostpunk sense, and it is the only
-			# world in which "retained" is a real outcome rather than a fixture gift.
+			# b2b_risk is UNSALVAGEABLE by construction: the satisfaction target sits below
+			# every tolerance in the book even at zero bugs. This preset sits the target near
+			# the mid/enterprise bar while the bug backlog is live and clearly over it once the
+			# backlog is cleared — so a founder who answers the demand AND cleans up keeps the
+			# account, and one who ignores it does not.
 			_seed_b2b_world(0)
 			# DERIVED. With the backlog live the axis sits 2 over the
 			# MID bar (inside [T_mid, T_mid+5): small accounts safe, sector-picky mids and the
@@ -1508,19 +1362,21 @@ static func _seed_world(preset: String) -> void:
 			_seed_stability_fixture("b2b_slip", _raw_for_axis(_bar_mid() + 2.0) + QualityModel.BUG_STABILITY_COEF * 9.0, 9)
 
 
-static func _seed_b2c_world(neglect: bool) -> void:
+## A product already live on day 1. mvp_launch_day is stamped here because the fixture skips
+## ship_active_build, its only writer, and every days_since_flag trigger reading it would
+## otherwise stay false forever.
+static func _seed_live_product(market: String, subtype: String, components: Array, product_name: String) -> void:
 	GameState.set_flag("mvp_shipped", true)
-	# LAUNCH DAY, not just "shipped". These presets set the flag directly instead of going
-	# through ship_active_build, which is the only writer of mvp_launch_day - so without
-	# this line the fixture claims a live product with no launch date, and every
-	# days_since_flag trigger reading it stays false forever (the paid-tier card, Frank v6
-	# surface 7). A seeded world is "already live", so day 1 is the honest stamp.
 	GameState.set_flag("mvp_launch_day", GameState.day)
-	GameState.set_flag("mvp_market_type", "b2c")
-	GameState.set_flag("mvp_sub_product_type_id", "ai_assistant")
-	GameState.set_flag("mvp_components", ["ai_assistant_chat", "ai_assistant_memory"])
+	GameState.set_flag("mvp_market_type", market)
+	GameState.set_flag("mvp_sub_product_type_id", subtype)
+	GameState.set_flag("mvp_components", components)
 	GameState.set_flag("mvp_version", 1)
-	GameState.set_flag("mvp_product_name", "Nova")
+	GameState.set_flag("mvp_product_name", product_name)
+
+
+static func _seed_b2c_world(neglect: bool) -> void:
+	_seed_live_product("b2c", "ai_assistant", ["ai_assistant_chat", "ai_assistant_memory"], "Nova")
 	if neglect:
 		# The UNTENDED consumer product. Experience under the B2C
 		# satisfaction gate (no daily +1), a live backlog over SATISFACTION_BUG_GATE (daily −1),
@@ -1531,10 +1387,7 @@ static func _seed_b2c_world(neglect: bool) -> void:
 		GameState.set_flag("mvp_experience", 8.0)
 		GameState.set_flag("mvp_live_bug_count", 12)
 	else:
-		# A modest v1. Raw axes were 30/40/35 on the retired grown scale; halved 2026-08-19
-		# with NORMALIZE_HALF_SAT (50 → 25) so the fixture's NORMALIZED meaning — and, with
-		# the rival scale bridge, its rival-relative q ≈ 41 — is byte-for-byte what the
-		# before/after table measured against.
+		# A modest v1: rival-relative q ≈ 41.
 		GameState.set_flag("mvp_innovation", 15.0)
 		GameState.set_flag("mvp_stability", 20.0)
 		GameState.set_flag("mvp_experience", 17.5)
@@ -1557,11 +1410,11 @@ static func _axis_of(raw_stability: float, bugs: int) -> float:
 
 
 static func _bar_small() -> float:
-	return float(B2BConstants.seed_tolerance(2, ""))   # demo small archetype: scale_base 2, no sector
+	return float(B2BConstants.seed_tolerance(2, ""))   # a small account: scale 2, no sector
 
 
 static func _bar_mid() -> float:
-	return float(B2BConstants.seed_tolerance(3, ""))   # demo mid/enterprise: scale 3 (SCALE_DEMO_MAX), no sector
+	return float(B2BConstants.seed_tolerance(3, ""))   # a mid/enterprise account: scale 3, no sector
 
 
 static func _seed_stability_fixture(preset: String, raw_stability: float, bugs: int) -> void:
@@ -1584,25 +1437,12 @@ static func _seed_stability_fixture(preset: String, raw_stability: float, bugs: 
 
 
 static func _seed_b2b_world(rep_count: int) -> void:
-	GameState.set_flag("mvp_shipped", true)
-	# LAUNCH DAY, not just "shipped". These presets set the flag directly instead of going
-	# through ship_active_build, which is the only writer of mvp_launch_day - so without
-	# this line the fixture claims a live product with no launch date, and every
-	# days_since_flag trigger reading it stays false forever (the paid-tier card, Frank v6
-	# surface 7). A seeded world is "already live", so day 1 is the honest stamp.
-	GameState.set_flag("mvp_launch_day", GameState.day)
-	GameState.set_flag("mvp_market_type", "b2b")
-	GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
-	GameState.set_flag("mvp_components", ["saas_ops_workflow", "saas_ops_reporting"])
-	GameState.set_flag("mvp_version", 1)
-	GameState.set_flag("mvp_product_name", "Sahra")
+	_seed_live_product("b2b", "saas_ops", ["saas_ops_workflow", "saas_ops_reporting"], "Sahra")
 	# A MID product on purpose: with its 4 live bugs the stability AXIS sits above a small
 	# account's tolerance bar and below a scaled one's, so the book holds a mix of steady
-	# and sliding accounts instead of being uniformly safe or uniformly doomed. The
-	# satisfaction TARGET is this axis (b2b_sales_system.gd:96-106), so it is the single
-	# most load-bearing fixture value in the whole log — which is why it is DERIVED from
-	# the live bars rather than authored as a raw number (it was
-	# 55 on the retired grown scale; under NORMALIZE_HALF_SAT 25 that reads "excellent").
+	# and sliding accounts. The satisfaction TARGET is this axis, so it is the most
+	# load-bearing fixture value in the log — which is why it is DERIVED from the live bars
+	# rather than authored as a raw number.
 	GameState.set_flag("mvp_innovation", 20.0)
 	GameState.set_flag("mvp_experience", 22.5)
 	_seed_stability_fixture("b2b_solo",
@@ -1613,14 +1453,13 @@ static func _seed_b2b_world(rep_count: int) -> void:
 	# CS request cadence phases apart (cs_request_phase strides by 9 per signing).
 	# Total MRR is deliberately ~2.7K: a young book that is PAST the traction gate
 	# (mvp_shipped + 1 customer + mrr > 0) and well SHORT of Series A (MRR at the
-	# SalesSystem.TRACTION_MRR_TARGET bar — MRR only). Seeded higher, the run rockets to phase 3 in two days and the log
-	# stops describing the early game it is supposed to describe.
+	# SalesSystem.TRACTION_MRR_TARGET bar — MRR only). Seeded higher, the run rockets to
+	# phase 3 in two days and the log stops describing the early game it is supposed to
+	# describe.
 	#
-	# Satisfaction seeds straddle the tolerance seeds on purpose (re-seated bars 2026-08-19:
-	# 42 small / 51 mid and enterprise, before sector bonuses of +3/+5): probe_c and
-	# probe_e start close enough to their bar that ordinary product wear can push them
-	# under, which is the only way the retention → promise → churn chain is reachable
-	# without hand-forcing it.
+	# Satisfaction seeds straddle the tolerance seeds on purpose: probe_c and probe_e start
+	# close enough to their bar that ordinary product wear can push them under, which is the
+	# only way the retention → promise → churn chain is reachable without hand-forcing it.
 	var specs := [
 		{"id": "probe_a", "name": "Kuzey Lojistik", "industry": "logistics", "star": 1, "seats": 7, "price": 50, "sat": 72},
 		{"id": "probe_b", "name": "Ege Sağlık", "industry": "health", "star": 2, "seats": 16, "price": 50, "sat": 64},
@@ -1633,15 +1472,11 @@ static func _seed_b2b_world(rep_count: int) -> void:
 		p.id = String(s["id"])
 		p.company_name = String(s["name"])
 		p.industry = String(s["industry"])
-		# Satış rev 6 §2 — the STAR is the size, and `add_b2b_customer` copies it into
-		# `Customer.scale`, which is what seeds the hidden tolerance. The old note here
-		# warned that setting an archetype without also rolling a scale signed every
-		# account at the small-account floor; one field cannot fall out of step with the
-		# other any more, because there is only one field.
+		# Satış §2 — the STAR is the size; `add_b2b_customer` copies it into `Customer.scale`,
+		# which seeds the hidden tolerance.
 		p.star = int(s["star"])
-		# §5.3 — the deal is SEATS x SEAT PRICE. The seat counts are inside each star's band
-		# and the price is the Standard anchor, so the preset's MRR figures are unchanged
-		# (350 / 800 / 700 / 300 / 550) and every measurement taken against them still reads.
+		# §5.3 — the deal is SEATS x SEAT PRICE: seat counts inside each star's band at the
+		# Standard price anchor (MRR 350 / 800 / 700 / 300 / 550).
 		SalesSystem.add_b2b_customer(p, int(s["seats"]), int(s["price"]), int(s["sat"]))
 
 	for i in rep_count:
@@ -1652,12 +1487,10 @@ static func _seed_b2b_world(rep_count: int) -> void:
 		c.category = "employee"
 		c.monthly_salary = 6000
 		c.morale = 60
-		# UZMANLIK 2, not 5, and the difference decides whether this preset observes
-		# anything at all: the desk absorbs every request whose difficulty is under
-		# CS_ABSORB_BASE (3) + the top rep's UZMANLIK (customer_rep_system.gd:230-234).
-		# An expertise-5 rep gives a ceiling of 8, which swallows the whole request
-		# channel — the run then proves only that a great rep is great. A junior hire
-		# (ceiling 5) is both the realistic first CS hire and the configuration in which
-		# the escalation path is reachable.
-		c.role_stats = {"expertise": 2, "pace": 5, "rapport": 5}
+		# A junior rep, MÜŞTERİ İLİŞKİLERİ 2: the desk absorbs every request up to
+		# CustomerRepSystem.absorb_ceiling(), so a strong rep would swallow the whole request
+		# channel and the escalation path would never be observed. The trait touches only
+		# overtime morale, so it does not move the rep's output or growth.
+		c.role_stats = HRConstants.seed_skills(c.role, 2, 2)
+		c.traits = ["last_one_out"]
 		CharacterRegistry.add(c)

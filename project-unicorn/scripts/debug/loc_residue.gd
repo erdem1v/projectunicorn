@@ -3,35 +3,20 @@
 #   godot --headless --path . -s res://scripts/debug/loc_residue.gd
 #
 # Four checks:
-#   1. Script literals: any double-quoted literal in scripts/ (non-comment lines, debug/ excluded)
-#      carrying a Turkish-charclass character.
+#   1. Script literals: any double-quoted literal in scripts/ (the code part of a line only,
+#      debug/ excluded) carrying a Turkish-charclass character. Comments that quote copy are
+#      documentation, so only the part before a trailing comment is scanned; the cut tracks
+#      quote state (a '#' inside a string is not a comment).
 #   2. Script literals: ASCII-only Turkish — words whose Turkish identity dies under İ/ı folding
-#      (KAZANILDI, MASADAN, DEVAM...) and are invisible to check 1. Wordlist curated from the
-#      2026-08-10 corpus tokenization; whole-word,
+#      (KAZANILDI, MASADAN, DEVAM...) and are invisible to check 1. Whole-word,
 #      case-insensitive, tested INSIDE quoted literals only (identifiers never match).
 #   3. Scene text: every non-empty text/tooltip_text/placeholder_text value in scenes/ must be a
-#      localization key THAT ACTUALLY EXISTS in strings.csv, or pure glyph/numeric filler.
+#      localization key THAT ACTUALLY EXISTS in strings.csv, or pure glyph/numeric filler. The
+#      scan is whole-file so a value spanning lines is caught, and an ALL-CAPS value that is
+#      not in strings.csv fails (a hardcoded caption or a typo'd key renders raw either way).
 #   4. tr() inside a `static func` — it COMPILES and dies at runtime, because a static has no
-#      Object to translate through. Added 2026-08-19 after keying b2b_event_factory (6 statics)
-#      with tr(): two smoke cases failed with "escalation not active", i.e. the event was never
-#      built and nothing named the cause. Six more batches of static system files follow, so
-#      the checker carries the lesson instead of the next session rediscovering it.
-#
-# THREE GAPS CLOSED 2026-08-18 — the instrument was passing things it should have caught:
-#   a. TRAILING comments were scanned. Only FULL-LINE comments were skipped, so an
-#      architectural comment quoting a UI string ("Churn'e ~N gün") counted as residue — 38 of
-#      them. Comments that document copy ARE documentation; rewording them to reach zero would
-#      have damaged the docs to satisfy the meter. Now only the CODE part of a line is scanned,
-#      with the cut found by tracking quote state (a '#' inside a string is not a comment).
-#   b. MULTI-LINE scene values were invisible. The scene regex anchored the closing quote to the
-#      same line, so MentorIntroModal's 4-paragraph baked monologue — the largest single scene
-#      literal in the game — was never reported. Residue could have read "zero" with it still
-#      sitting in the scene. The scan is now whole-file.
-#   c. FAKE KEYS passed as real ones. Any ^[A-Z0-9_]+$ value was accepted as "a key", so 29
-#      hardcoded ALL-CAPS captions (TopBar's CASH/MRR/BURN/NET/RUNWAY/BRAND/REPUTATION,
-#      LeftTabs' HR, HuntTab's BEKLEYEN/YATIRIMCILAR, BuildHUD's BULUNAN/KALAN/TASARIM…) were
-#      indistinguishable from localization keys. A key is legal only if strings.csv HAS it —
-#      which also turns a typo'd key into a failure instead of a raw token rendered on screen.
+#      Object to translate through; the symptom is a card that is never built and nothing
+#      naming the cause.
 #
 # SKIP list = sanctioned exclusions, each with a reason. Additions require the reason inline.
 extends SceneTree
@@ -43,7 +28,7 @@ const MAX_PRINTED := 600
 
 # Sanctioned exclusions (path prefix match):
 const SKIP_PREFIXES := [
-	"res://scripts/debug/",            # developer surfaces: smoke fixtures, font specimen, this file
+	"res://scripts/debug/",            # developer surfaces: smoke fixtures, probes, this file
 	"res://scenes/debug/",             # ThemeProbe etc.
 	# The first-boot language gate names its two options in their OWN languages
 	# ("Türkçe" / "English") ON PURPOSE — an option rendered in a language the player
@@ -52,31 +37,21 @@ const SKIP_PREFIXES := [
 ]
 
 # ASCII-only Turkish wordlist — folded forms with no Turkish charclass character left.
-# Sources: corpus tokenization fold (high-frequency stems) + a hand-curated set.
-# English-colliding tokens (RISK, TIER, TRACTION, TEST, NET...) deliberately absent.
+# Deliberately absent: English-colliding tokens (RISK, TIER, TRACTION, TEST, NET...), and
+# "ARA"/"GIDER", which are a month abbreviation and a shot-kind id, i.e. data rather than copy.
 const TR_ASCII_WORDS := [
-	"ACIK", "ADIM", "ALIM", "ARAYIS", "ARAYISI", "ARTIDA", "AYLIK", "BASKA", "BASLA", "BASLAT",
-	"BASLADI", "BEKLEYEN", "BIRAK", "BULUNAN", "BULUNAMADI", "BUTCE", "BUYUK", "BUYUME", "BUYUYOR",
-	"CALISAN", "CANLI", "COZULEN", "DEGIL", "DENEYIM", "DEVAM", "DONDU", "DONEM", "DURUM", "DUSUK",
-	"DUSUYOR", "EGITIM", "GECERLILIK", "GELISTIR", "GELISTIRME", "GERI", "GIDIS", "GIRISIM",
-	"GORUSME", "GUCLU", "HAZIR", "HENUZ", "HIZLI", "ILIK", "IMZALA", "INDIRIM", "INSAAT", "IPTAL",
-	"KALAN", "KALDI", "KAPI", "KARARLILIK", "KAYIT", "KAZANILDI", "KILITLI", "KISA", "KISI",
-	"KULLANICI", "MASADA", "MASADAKI", "MASADAN", "MESAI", "MUSTERI", "ODEME", "PORTFOY", "SABIR",
-	"SAGLIK", "SAGLIKLI", "SATIN", "SATIS", "SAYI", "SEKTOR", "SIMDILIK", "SIRKET", "SOZLESME",
-	"SUREC", "SUREKLI", "SURUYOR", "TAMAM", "TASARIM", "TEKLIF", "TOPLANTI", "UCRET", "URUN",
-	"VAZGEC", "YAKINDA", "YALNIZ", "YATIRIM", "YATIRIMCI", "YATIRIMCILAR", "YAYINLA", "YAZILIM",
-	"YONETIM", "YUKSEK", "ZAYIF",
-	# EXTENDED 2026-08-19. The curated list was measurably incomplete: 15 word kinds across
-	# 29 literal sites were pure-ASCII Turkish the charclass cannot see and the list did not
-	# name — "Oyala" among them, which the original curation had itself cited as the example
-	# of this blind spot and then not included. An under-reporting meter is worse than a
-	# loud one, because the localization pass's final gate is the word "zero": these had to
-	# go in BEFORE six more batches were measured against it. Adding them RAISES the count
-	# first, then the batches pay it down.
-	# Still deliberately absent: English-colliding tokens, and "ARA"/"GIDER" which are a
-	# month abbreviation and a shot-kind id respectively, i.e. data rather than copy.
-	"DURDUR", "GELIR", "IMZA", "KABUL", "KAPANDI", "KAPAT", "KARAR", "KASA", "MASAYA",
-	"ONAYLA", "OYALA", "REDDET",
+	"ACIK", "ADIM", "ALIM", "ARAYIS", "ARAYISI", "ARTIDA", "AYLIK", "BASKA", "BASLA", "BASLADI",
+	"BASLAT", "BEKLEYEN", "BIRAK", "BULUNAMADI", "BULUNAN", "BUTCE", "BUYUK", "BUYUME", "BUYUYOR",
+	"CALISAN", "CANLI", "COZULEN", "DEGIL", "DENEYIM", "DEVAM", "DONDU", "DONEM", "DURDUR",
+	"DURUM", "DUSUK", "DUSUYOR", "EGITIM", "GECERLILIK", "GELIR", "GELISTIR", "GELISTIRME", "GERI",
+	"GIDIS", "GIRISIM", "GORUSME", "GUCLU", "HAZIR", "HENUZ", "HIZLI", "ILIK", "IMZA", "IMZALA",
+	"INDIRIM", "INSAAT", "IPTAL", "KABUL", "KALAN", "KALDI", "KAPANDI", "KAPAT", "KAPI", "KARAR",
+	"KARARLILIK", "KASA", "KAYIT", "KAZANILDI", "KILITLI", "KISA", "KISI", "KULLANICI", "MASADA",
+	"MASADAKI", "MASADAN", "MASAYA", "MESAI", "MUSTERI", "ODEME", "ONAYLA", "OYALA", "PORTFOY",
+	"REDDET", "SABIR", "SAGLIK", "SAGLIKLI", "SATIN", "SATIS", "SAYI", "SEKTOR", "SIMDILIK",
+	"SIRKET", "SOZLESME", "SUREC", "SUREKLI", "SURUYOR", "TAMAM", "TASARIM", "TEKLIF", "TOPLANTI",
+	"UCRET", "URUN", "VAZGEC", "YAKINDA", "YALNIZ", "YATIRIM", "YATIRIMCI", "YATIRIMCILAR",
+	"YAYINLA", "YAZILIM", "YONETIM", "YUKSEK", "ZAYIF",
 ]
 
 # Scene values that are legal without being keys: empty, glyphs, numeric/mock fillers.
@@ -110,9 +85,8 @@ func _initialize() -> void:
 	_load_csv_keys()
 	_walk(SCRIPT_ROOT, "gd")
 	_walk(SCENE_ROOT, "tscn")
-	# --only=<kind> narrows the printout to one bucket. Without it the 200-line cap is spent
-	# on whichever kind sorts first (script hits, always), and the scene buckets are invisible
-	# exactly when you are trying to clear them. The TALLY below is never filtered.
+	# --only=<kind> narrows the printout to one bucket. Without it the MAX_PRINTED cap is spent
+	# on whichever kind sorts first (script hits, always). The tally below is never filtered.
 	var only: String = ""
 	for arg in OS.get_cmdline_args():
 		if String(arg).begins_with("--only="):
@@ -129,9 +103,8 @@ func _initialize() -> void:
 		print("RESIDUE  " + shown[i])
 	if n > MAX_PRINTED:
 		print("RESIDUE  ... and %d more" % (n - MAX_PRINTED))
-	# Per-kind tally. The sweep runs for nine commits and the ONLY honest progress signal is
-	# each bucket shrinking; a bare total hides a batch that keyed 60 script literals while
-	# quietly adding a scene one. Printed even at zero so a green run states what it checked.
+	# Per-kind tally: a bare total hides one bucket growing while another shrinks. Printed
+	# even at zero so a green run states what it checked.
 	var kinds := {"tr-char": 0, "ascii-tr": 0, "static-tr": 0, "scene": 0, "scene-fakekey": 0, "scene-multiline": 0}
 	for h in _hits:
 		for k in kinds:
@@ -198,7 +171,7 @@ func _check_file(path: String, ext: String) -> void:
 		_hits.append("%s — UNREADABLE" % path)
 		return
 	if ext == "tscn":
-		# Whole-file: a scene value may span lines (gap b), which a per-line scan cannot see.
+		# Whole-file: a scene value may span lines, which a per-line scan cannot see.
 		_check_scene_text(path, f.get_as_text())
 		return
 	var line_no := 0
@@ -206,12 +179,8 @@ func _check_file(path: String, ext: String) -> void:
 	while not f.eof_reached():
 		line_no += 1
 		var line := f.get_line()
-		# Track whether we are inside a `static func`. tr() is a METHOD — a static has no
-		# Object to translate through, so tr() there compiles clean and dies at RUNTIME.
-		# Measured cost of not checking: keying b2b_event_factory (6 statics) with tr()
-		# produced two smoke failures reading "escalation not active", because the event was
-		# never built and nothing named the cause. The substitute is
-		# TranslationServer.translate, which is what UiTokens.net_runway_parts already uses.
+		# Track whether we are inside a `static func` (check 4). The substitute for tr()
+		# there is TranslationServer.translate.
 		var stripped := line.strip_edges()
 		if stripped.begins_with("static func "):
 			in_static = true
@@ -229,11 +198,10 @@ func _check_script_line(path: String, line_no: int, line: String) -> void:
 		return  # full-line comments are documentation, not residue
 	if _re_logcall.search(line) != null:
 		return  # print/push_* console output is developer-facing, not player-visible
-	# `# LOC-DATA <reason>` — a per-LINE opt-out for quoted strings that are DATA, not copy.
-	# The sweep meets this genuinely: a save-migration table has to name the legacy values it
-	# maps FROM, and those were Turkish. Marking the line beats a file-level SKIP (which would
-	# blind the checker to real copy in the same file) and beats obfuscating the data. Every
-	# exception is one grep away — `rg "LOC-DATA"` is the complete list, each with its reason.
+	# `# LOC-DATA <reason>` — a per-LINE opt-out for quoted strings that are DATA, not copy
+	# (a save-migration table naming legacy Turkish values, a debug seed name). Marking the
+	# line beats a file-level SKIP, which would blind the checker to real copy in the same
+	# file. `rg "LOC-DATA"` is the complete list, each with its reason.
 	if line.contains("# LOC-DATA"):
 		return
 	for m in _re_quoted.search_all(_code_part(line)):
@@ -242,13 +210,10 @@ func _check_script_line(path: String, line_no: int, line: String) -> void:
 			continue
 		if lit.begins_with("res://") or lit.begins_with("user://"):
 			continue  # asset/save paths are addresses, not player-visible text
-		# A NAMESPACED IDENTIFIER is an address too. The event engine's read surface is named in
-		# the GDD's own vocabulary — `musteri.satisfaction`, `urun.is_live`, `arge.tier` — and
-		# those are Turkish words by design: the registry documents them, content authors type
-		# them. They are not copy and they cannot become copy,
-		# because nothing player-facing looks like `lower_snake.lower_snake`. Exempting the
-		# SHAPE rather than the files keeps this checker looking at the real strings in the same
-		# file — which is the reason its header gives for preferring per-line marks to a SKIP.
+		# A NAMESPACED IDENTIFIER is an address too. The event engine's seams are named in the
+		# GDD's own vocabulary — `musteri.satisfaction`, `urun.is_live` — Turkish by design, and
+		# nothing player-facing looks like `lower_snake.lower_snake`. Exempting the SHAPE rather
+		# than the files keeps the checker looking at the real strings in the same file.
 		if _re_seam_id.search(lit) != null:
 			continue
 		if _re_trchar.search(lit) != null:
@@ -257,7 +222,7 @@ func _check_script_line(path: String, line_no: int, line: String) -> void:
 			_hits.append("%s:%d [ascii-tr] \"%s\"" % [path, line_no, lit.left(60)])
 
 
-# The part of a line before its trailing comment (gap a). Quote state is tracked because a
+# The part of a line before its trailing comment. Quote state is tracked because a
 # '#' inside a string literal is a character, not a comment — `"#e2a33c"` must survive intact.
 # Backslash escapes are stepped over so a `\"` cannot flip the state and swallow real code.
 func _code_part(line: String) -> String:
@@ -288,18 +253,16 @@ func _check_scene_text(path: String, text: String) -> void:
 			_hits.append("%s:%d [scene-multiline] %s = \"%s…\"" % [
 				path, line_no, prop, val.substr(0, 44).replace("\n", "\\n")])
 			continue
-		# FILLER IS TESTED FIRST, and the order is load-bearing: the key pattern
-		# ^[A-Z0-9_]+$ also matches a bare numeric placeholder ("0", "1", "50" — the badge
-		# and meter mock values), so asking "is it a key?" first reported 15 numerals as
-		# fake keys. Filler can never be a real key (the filler class holds no letters or
-		# underscore), so letting it answer first is safe as well as correct.
+		# FILLER IS TESTED FIRST, and the order is load-bearing: the key pattern ^[A-Z0-9_]+$
+		# also matches a bare numeric placeholder ("0", "50" — badge and meter mock values).
+		# Filler can never be a real key (its class holds no letters or underscore).
 		if _re_filler.search(val) != null:
 			continue  # glyph/numeric mock filler — legal
 		if _re_key.search(val) != null:
 			if _csv_keys.has(val):
 				continue  # a REAL localization key — legal (auto-translate renders it)
 			# Looks like a key, is not one: either a hardcoded ALL-CAPS caption or a typo.
-			# Both render the raw token to the player, so both are residue (gap c).
+			# Both render the raw token to the player, so both are residue.
 			_hits.append("%s:%d [scene-fakekey] %s = \"%s\" — not in strings.csv" % [
 				path, line_no, prop, val])
 			continue

@@ -264,7 +264,6 @@ func _spawn_light(parent: Node3D, l: Dictionary, which: String) -> void:
 			# Godot's spot_angle_attenuation is a power on the rim; ~1 gives a comparable soft rim.
 			s.spot_angle_attenuation = 1.0
 			s.light_size = 0.02
-			s.shadow_bias = 0.03
 			s.shadow_normal_bias = 1.0
 			light = s
 		_:
@@ -273,8 +272,7 @@ func _spawn_light(parent: Node3D, l: Dictionary, which: String) -> void:
 	light.light_energy = inten * THREE_TO_GODOT_ENERGY
 	light.shadow_enabled = casts
 	light.light_bake_mode = Light3D.BAKE_DYNAMIC
-	if not (light is SpotLight3D):
-		light.shadow_bias = 0.02
+	light.shadow_bias = 0.03 if light is SpotLight3D else 0.02
 	var p := _vec(l["position"])
 	if light is OmniLight3D:
 		light.position = p

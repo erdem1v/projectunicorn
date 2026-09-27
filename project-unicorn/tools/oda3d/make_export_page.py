@@ -24,17 +24,17 @@ SEGMENTS = [
     ("setMode",                            167, 181, "// ---- day/night"),
     ("W/H + renderAt",                     192, 198, "const W = 3840"),
     ("projectMesh",                        223, 240, "/** Screen-space AABB of a mesh"),
-    ("projectObject",                      303, 317, "/** Projected screen AABB"),
-    ("WC (layout contract copy)",          326, 339, "// OdaLayout.RECTS @ HEAD"),
-    ("anchorsNorm",                        385, 399, "function anchorsNorm"),
-    ("camTarget + applyCam",               431, 448, "// Camera parameters are"),
+    ("projectObject",                      302, 316, "/** Projected screen AABB"),
+    ("WC (layout contract copy)",          325, 338, "// OdaLayout.RECTS @ HEAD"),
+    ("anchorsNorm",                        384, 398, "function anchorsNorm"),
+    ("camTarget + applyCam",               430, 447, "// Camera parameters are"),
 ]
 
 HEAD = """<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<title>ODA 3D spike — GLB export (generated from layers.html)</title>
+<title>ODA 3D GLB export (generated from layers.html)</title>
 <script type="importmap">
 {
   "imports": {
@@ -55,17 +55,17 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { box, buildMonitor, buildKeyboard, buildLamp, buildPhone, buildMug, buildFrame, buildCorkboard } from '../oda_render_rig/desk-builders.js';
 
 // ============================================================================
-// ODA 3D SPIKE — GLB EXPORT PAGE. GENERATED FILE — do not edit by hand; edit
+// ODA 3D — GLB EXPORT PAGE. GENERATED FILE — do not edit by hand; edit
 // make_export_page.py and re-run it. Every block marked "VERBATIM layers.html:A-B"
 // is sliced from tools/oda_render_rig/layers.html unchanged. Authored glue is
-// marked "SPIKE". The scene is therefore the sealed rig's scene by construction.
+// marked "GLUE". The scene is therefore the rig's scene by construction.
 // ============================================================================
 """
 
 # Inserted right after the room-materials segment. glTF carries material names
 # and Godot maps materials by name. Metadata only: no colour/roughness/transform.
 NAMES = """
-// SPIKE: material names for glTF (metadata only; the seven room materials are
+// GLUE: material names for glTF (metadata only; the seven room materials are
 // unnamed in layers.html; desk-builders.js names its own).
 plaster.name = 'plaster'; plasterR.name = 'plaster_r'; floorMat.name = 'floor';
 deskWood.name = 'desk_wood'; deskWoodD.name = 'desk_wood_dark'; mullion.name = 'mullion';
@@ -74,7 +74,7 @@ skyMat.name = 'sky';
 
 TAIL = r"""
 // ============================================================================
-// SPIKE — export. Pinned camera (see the rig README before changing it), then: GLB of the
+// GLUE — export. Pinned camera (see the rig README before changing it), then: GLB of the
 // `room` group (geometry + materials, no lights/camera — those go to Godot via
 // the JSON so energies can be converted explicitly), plus a JSON that records
 // everything Godot needs and everything the gate compares against.

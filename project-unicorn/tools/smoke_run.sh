@@ -1,21 +1,14 @@
 #!/usr/bin/env bash
 # Smoke gate for the endgame suite.
 #
-# WHY THIS EXISTS: EndgameSmoke.run_case decides PASS/FAIL with `if fail == ""`
-# (endgame_smoke.gd:339). Every case function is declared `-> String`, and a GDScript
-# runtime error inside one either aborts the body (returning "") or prints and continues
-# with a null value — in BOTH shapes the case returns "" and prints SMOKE PASS while
-# proving nothing. The suite documents one instance this happened to and was fixed
-# (endgame_smoke.gd:4381-4387) and warns at :9361-9365 that the pattern recurs.
+# EndgameSmoke.run_case passes a case whose `-> String` body returned "". A GDScript runtime
+# error inside a case either aborts the body (returning "") or continues with a null value,
+# so a throwing case prints SMOKE PASS while proving nothing. GDScript cannot catch this
+# in-process (no try/catch, no error hook), so the gate lives here: a case whose output
+# carries an engine error token FAILS regardless of what it returned.
 #
-# GDScript cannot catch this in-process: there is no try/catch and no error hook exposed to
-# scripts. The only place the evidence exists is the engine's stderr, so the gate has to
-# live in the runner. A case that prints an error token FAILS here regardless of what it
-# returned.
-#
-# INVOCATION NOTE: the flag must NOT sit behind a `--` separator. main.gd reads it from
-# OS.get_cmdline_args() (main.gd:352-361); args after `--` land in get_cmdline_user_args()
-# instead and the case silently never runs — the process just boots the game and hangs.
+# The flag must NOT sit behind a `--` separator: main.gd reads OS.get_cmdline_args(), and
+# args after `--` never reach it — the process boots the game and hangs.
 #
 #   tools/smoke_run.sh <case_id>      run one case
 #   tools/smoke_run.sh --all          run every case in the match table
@@ -32,7 +25,6 @@ ERR_TOKENS='SCRIPT ERROR|Parse Error|Compile Error|Failed to instantiate|Failed 
 
 if [ -z "${GODOT:-}" ]; then
   for c in "$(command -v godot || true)" \
-           "/c/Users/$USER/Desktop/Godot_v4.6.2-stable_win64_console.exe" \
            "$HOME/Desktop/Godot_v4.6.2-stable_win64_console.exe"; do
     [ -n "$c" ] && [ -x "$c" ] && GODOT="$c" && break
   done

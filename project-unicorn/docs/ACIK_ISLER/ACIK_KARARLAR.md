@@ -949,6 +949,26 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     ardından _job_text'teki geri düşüş dalı silinir. B) Bugünkü gibi: etiket yeterli, geri düşüş kalır.
   - Kaynak: Ekip GDD §12.2 (iş metni); Ar-Ge GDD §5.0 (araştırma dışlayıcı iştir)
 
+- **58 · ODA'nın term sheet kağıdı takvim günü sayıyor, diğer Series A geri sayımları iş günü.**
+  - Ne oluyor: ODA masasındaki "sheet" hatırlatma kağıdı başlıktaki gün sayısını `TermSheet.days_left` ile yazar
+    (takvim günü, `expires_day - bugün`, `maxi(0, …)`). Üst bardaki teklif çipi
+    (`VCPitchSystem._tick_countdown_chip`), Yatırım sekmesi (`hunt_tab.gd`) ve olay kapsamı (`scope.gd`,
+    `seams_ported.gd`) ise `TermSheet.business_days_left` (iş günü) okur. `term_sheet.gd` bu ayrımı iki fonksiyonun
+    doc yorumunda kaydeder. Çip karar günü gelmiş teklifi (`is_decision_due`) göstermez, ODA kağıdı gösterir.
+  - Nerede: `scripts/ui/oda/oda_view.gd` (sheet hatırlatması, `ODA_PAPER_SHEET_TITLE`);
+    `scripts/data_models/term_sheet.gd` (`days_left`, `business_days_left`); `scripts/systems/vc_pitch_system.gd`
+    (`_tick_countdown_chip`); `scripts/tabs/hunt_tab.gd`; `localization/strings.csv` (`ODA_PAPER_SHEET_TITLE`,
+    `FIN_OFFER_COUNTDOWN`, `SALES_OFFER_COUNTDOWN`)
+  - Oyuncuya etkisi: Aynı teklif için ODA duvarı 'son 7 gün' derken üst bar ve Yatırım sekmesi 5 iş günü gösterebilir;
+    araya hafta sonu girince iki sayı ayrışır. Metinler de farklı birim söylüyor: ODA kağıdı 'gün', Finans çipi 'İŞ
+    GÜNÜ', satış çipi 'GÜN'.
+  - Seçenekler: A) ODA kağıdı da `business_days_left` okur, tek sayı olur; kağıt 'gün' demeye devam ederse birim
+    belirsizliği sürer. B) ODA takvim günü saymaya devam eder, kağıt metni birimi açıkça söyler (önce EN, sonra TR
+    yerelleştirme). C) Tüm oyuncu geri sayımları iş günü olur ve 'gün' diyen metinler 'iş günü' der (metin onayı
+    gerekir).
+  - Kaynak: GDD ch09 (Funding & Investors) ve ch12 (UI Surfaces & ODA) geri sayım birimini söylemiyor. Kaynak
+    `term_sheet.gd` doc yorumları; cleanup raporu B048.
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında

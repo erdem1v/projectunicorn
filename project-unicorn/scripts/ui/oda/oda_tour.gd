@@ -88,6 +88,8 @@ func _ready() -> void:
 	_next_btn.focus_mode = Control.FOCUS_NONE
 	_next_btn.pressed.connect(_advance)
 	btn_row.add_child(_next_btn)
+	# Kart boyutu metinden sonra oturur; her boyut değişiminde yeniden yerleşir.
+	_card.resized.connect(_place_card)
 	# Tam-ekran rect'i CanvasLayer altında ilk düzen geçişinden SONRA oturur; dim'ler
 	# `size`'dan ölçüldüğü için yerleşim her boyut değişiminde yeniden yapılır.
 	resized.connect(_apply_step)
@@ -162,8 +164,13 @@ func _apply_step() -> void:
 	_name_label.text = tr(String(step["name"]))
 	_desc_label.text = tr(String(step["desc"]))
 	_next_btn.text = tr("ODA_TOUR_DONE") if _step == STEPS.size() - 1 else tr("ODA_TOUR_NEXT")
-	# Kart: spotlight'ın altına, sığmazsa üstüne; yatayda merkezli + kelepçeli.
-	await get_tree().process_frame  # kart boyutu metinden sonra otursun
+	_place_card()
+
+
+## Kart: spotlight'ın altına, sığmazsa üstüne; yatayda merkezli + kelepçeli.
+func _place_card() -> void:
+	var view: Vector2 = size
+	var r: Rect2 = _spot.get_rect()
 	var cw: float = _card.size.x
 	var ch: float = _card.size.y
 	var cx: float = clampf(r.position.x + r.size.x * 0.5 - cw * 0.5, 16.0, view.x - cw - 16.0)

@@ -10,8 +10,7 @@ Açık işlerin tek yeri bu klasördür.
   raporlarında 119 sembol) bu işle birlikte silinir.
 
 ## Kod temizliği: kalan adımlar
-- Araçlar: `scripts/debug/run_probe.gd`, `scripts/events/tools/`, `scripts/debug/loc_residue.gd`, `tools/`;
-  `scripts/debug/fmt_probe.gd` ve `scripts/debug/font_specimen.gd` silinecek.
+- Araçlar: `scripts/events/tools/`.
 - Sistemler arası iş: dalga 1 raporlarında başka sistemin dosyasına düşen 172 değişiklik önerisi ve 151 bildirilmiş
   hata ya da sapma ayıklanacak. Gerçek hata düzeltilir, tasarım sorusu `ACIK_KARARLAR.md`'ye girer.
 - CSV süpürmesi: dalganın kullanılmaz bıraktığı anahtarlar (raporlarda 101 aday; `docs/writing/` ve

@@ -54,7 +54,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 
 ## Tema ve UI kiti · GDD ch12
 
-- **Yer:** `scripts/theme/{ui_tokens,ui_factory,build_theme}.gd`, `themes/master_theme.tres` (üretilmiş), `scripts/ui/components/{bar_kit,star_rating,value_slider,dialogue_portrait_card}.gd`, `scenes/ui/components/DialoguePortraitCard.tscn`, `scenes/debug/{ThemeProbe,FontSpecimen,FmtProbe}.tscn`, `scripts/debug/{font_specimen,fmt_probe}.gd`, `assets/fonts/`, `assets/icons/` kökündeki genel ikonlar
+- **Yer:** `scripts/theme/{ui_tokens,ui_factory,build_theme}.gd`, `themes/master_theme.tres` (üretilmiş), `scripts/ui/components/{bar_kit,star_rating,value_slider,dialogue_portrait_card}.gd`, `scenes/ui/components/DialoguePortraitCard.tscn`, `scenes/debug/ThemeProbe.tscn`, `assets/fonts/`, `assets/icons/` kökündeki genel ikonlar
 - **Sahip:** sınıf `UiTokens`, `UiFactory`, `StarRating`, `ValueSlider`, `DialoguePortraitCard`
 - **Giriş:**
   - `UiTokens`: palet, yazı merdiveni, `THEME_STAMP`; yardımcılar `tr_upper`, `format_money`, `positive`, `negative`, `badge_palette`, `build_percent`.
@@ -63,8 +63,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
   - `bar_kit.gd` Build Bar ile Research Bar'ın ortak çizimidir. `DialoguePortraitCard` fonlama, satış ve onboarding tarafından paylaşılır.
 - **Smoke:** `build_percent_single_source`, `star_ruler_contract`, `rail_tabs_match_scene_order`.
 - **Probe:** yok.
-- **Görsel:** `--theme-audit=<sekme id|oda>`, `--probe-shot` (ThemeProbe), `--font-spec=<a|b|c|c-opsz>` (FontSpecimen; aday fontları `user://font_spec/`'ten yükler), `--tab-shot=`, `--shot-size=`.
-- **Ölçüm:** FmtProbe sahnesi doğrudan koşturulur (`--headless --path . res://scenes/debug/FmtProbe.tscn`) ve para biçimleyicilerinin çıktısını `FMT|` satırlarıyla basar.
+- **Görsel:** `--theme-audit=<sekme id|oda>`, `--probe-shot` (ThemeProbe), `--tab-shot=`, `--shot-size=`.
 
 ## Kabuk (main.gd, GameShell, TopBar, LeftTabs, CenterViewport) · GDD ch12
 
@@ -255,7 +254,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Olay motoru araçları** (`scripts/events/tools/`): `EvProbe` (`--event-probe`), `EvLint` (`--event-lint`; `=baseline` taban dosyasını yeniden yazar), `EvWhy` (`--why-fire=<id>`), `EvHarness` (`--event-harness=random:seeds=N:days=M|guided[:seeds=N:days=M]`), `EvVocabGen` (`--event-vocab` → `_vocabulary.md`).
 - **`tools/`:** `smoke_run.sh`, `gen_signal_manifest.py` (`event_bus.gd` sinyalleri ve `# --- X ---` başlıkları, `scripts/` altındaki emit/connect satırları, `EvSignals.BINDINGS` ve `data/events/cards` kart tetiklerinden `docs/EVENT_SIGNAL_MANIFEST.md` üretir), `lint_baseline.json`.
 - **Görsel ve ölçüm bayrakları** yalnız debug build'de çalışır. Bayraklar `--` ayıracının arkasına konmaz.
-  - `*-shot` bayrakları (`--probe-shot` dahil) ve `--font-spec` pencereli açılır ve kareyi kullanıcı dizinine (`%APPDATA%/Godot/app_userdata/Project Unicorn/`) yazar. `--theme-audit` pencereli açılır, kare yazmaz, denetim satırlarını basar.
+  - `*-shot` bayrakları (`--probe-shot` dahil) pencereli açılır ve kareyi kullanıcı dizinine (`%APPDATA%/Godot/app_userdata/Project Unicorn/`) yazar. `--theme-audit` pencereli açılır, kare yazmaz, denetim satırlarını basar.
   - Ölçüm bayrakları (`--tempo-probe`, `--render-probe`, `--display-check`) kare yazmaz, ölçüm satırlarını basar.
   - Dosya yazanlar: `--event-lint=baseline`, `--oda-shot=tour`, `--modal-shot=saveload`, `--event-vocab`, `--display-check` (`settings.json`'a yazar ve geri yükler).
 
