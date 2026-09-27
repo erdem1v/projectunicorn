@@ -68,9 +68,6 @@ extends Resource
 @export var iteration_round_days: float = 0.0   # koşan ek turun kalan günü; 0 = tur yok
 @export var iteration_decision_pending: bool = false
 
-# Hiçbir yol true yazmaz (sprint durumu ProductSystem'in mvp_sprint_* bayraklarında).
-@export var is_bug_sprint: bool = false
-
 
 func get_total_complexity() -> int:
 	var total: int = 0

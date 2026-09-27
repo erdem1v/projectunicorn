@@ -211,15 +211,12 @@ func _person_row(c: Character, area: String) -> Control:
 	line1.add_child(StarRating.make(int(c.role_stats.get(area, 0)), STAR_PX))
 	col.add_child(line1)
 
-	# --- 2. satır: ROL ................ müsaitlik bayrağı. Kurucunun seviyesi yok,
-	# `job_title` ona ön ek takardı.
+	# --- 2. satır: ROL ................ müsaitlik bayrağı.
 	var line2 := HBoxContainer.new()
 	line2.add_theme_constant_override("separation", UiTokens.SPACE_S)
-	var title: String = HRConstants.role_label(HRConstants.ROLE_FOUNDER) \
-		if c.category == "founder" else HRConstants.job_title(c.role, c.level)
-	line2.add_child(UiFactory.make_label(Fmt.upper(title), &"MicroLabel"))
+	line2.add_child(UiFactory.make_label(Fmt.upper(HRUiShared.roster_title(c)), &"MicroLabel"))
 	line2.add_child(RnDUiShared.spacer())
-	var avail: String = _availability_text(c)
+	var avail: String = HRUiShared.availability_text(c)
 	if avail != "":
 		line2.add_child(UiFactory.make_label(avail, &"MicroLabel", UiTokens.ACCENT))
 	col.add_child(line2)
@@ -274,20 +271,6 @@ func _row_box(picked: bool, hovered: bool) -> StyleBoxFlat:
 	return sb
 
 
-## "Eğitimde · 4g sonra katılır" / "İzinde · 12g sonra katılır". Müsait kişide
-## BOŞ döner. Gün sayıları domain'in kendi seam'lerinden; burada tarih
-## aritmetiği yapılmıyor.
-func _availability_text(c: Character) -> String:
-	if c.training_days_left > 0:
-		return RnDUiShared.t("PROD_TEAM_AVAIL_TRAINING").format({"n": c.training_days_left})
-	if c.status == HRConstants.STATUS_ON_LEAVE:
-		return RnDUiShared.t("PROD_TEAM_AVAIL_LEAVE").format({
-			"n": HRMoraleSystem.days_until_return(c)})
-	if c.category == "founder" and HRSystem.is_busy(c):
-		return RnDUiShared.t("HR_FOUNDER_STATE_PITCH_PREP")
-	return ""
-
-
 # ---------------------------------------------------------------- alt bant
 
 func _refresh_footer() -> void:
@@ -324,7 +307,7 @@ func _refresh_footer() -> void:
 # ---------------------------------------------------------------- etkileşim
 
 func _on_group_input(ev: InputEvent, area: String) -> void:
-	if not RnDUiShared.is_left_click(ev):
+	if not UiFactory.is_left_click(ev):
 		return
 	_open_groups[area] = not bool(_open_groups.get(area, true))
 	_refresh_list.call_deferred()
@@ -335,7 +318,7 @@ func _on_row_hover(card: PanelContainer, picked: bool, entered: bool) -> void:
 
 
 func _on_row_input(ev: InputEvent, character_id: String) -> void:
-	if not RnDUiShared.is_left_click(ev):
+	if not UiFactory.is_left_click(ev):
 		return
 	if _selected.has(character_id):
 		_selected.erase(character_id)

@@ -41,7 +41,7 @@ func _ready() -> void:
 func repaint() -> void:
 	if not is_node_ready():
 		return
-	ProductUiShared.clear(self)
+	UiFactory.clear(self)
 
 	var body := VBoxContainer.new()
 	body.add_theme_constant_override("separation", UiTokens.SPACE_M)

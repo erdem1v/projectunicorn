@@ -54,6 +54,28 @@ static func role_area_cell(emp: Character, width: int, muted: bool = false) -> C
 	return box
 
 
+## Kadro satırının unvanı: çalışanda seviye ön ekiyle, kurucuda yalnız "KURUCU"; kurucunun
+## seviyesi yoktur, `job_title` ona ön ek takardı.
+static func roster_title(c: Character) -> String:
+	if c.category == "founder":
+		return HRConstants.role_label(HRConstants.ROLE_FOUNDER)
+	return HRConstants.job_title(c.role, c.level)
+
+
+## Müsait olan kimsede boş döner. Gün sayıları izin ve eğitim domain'lerinin kendi okuma
+## seam'lerinden gelir; burada tarih aritmetiği yapılmaz.
+static func availability_text(c: Character) -> String:
+	if c.training_days_left > 0:
+		return TranslationServer.translate("PROD_TEAM_AVAIL_TRAINING").format({"n": c.training_days_left})
+	if c.status == HRConstants.STATUS_ON_LEAVE:
+		return TranslationServer.translate("PROD_TEAM_AVAIL_LEAVE").format({
+			"n": HRMoraleSystem.days_until_return(c)})
+	if c.category == "founder" and HRSystem.is_busy(c):
+		# Kurucunun üçüncü meşguliyeti: yatırım hazırlığı.
+		return TranslationServer.translate("HR_FOUNDER_STATE_PITCH_PREP")
+	return ""
+
+
 static func v_hairline(height: int = 26) -> Panel:
 	var line := hairline(UiTokens.SEPARATOR)
 	line.custom_minimum_size = Vector2(1, height)

@@ -60,7 +60,7 @@ func _rebuild_cards() -> void:
 	_live_numbers = null
 	_build_badge_label = null
 	_build_bar = null
-	ProductUiShared.clear(_list)
+	UiFactory.clear(_list)
 	var shipped: bool = ProductState.is_live()
 	var build: FeatureBuild = ProductSystem.get_active_build()
 	_count_label.text = tr("PROD_PORTFOLIO_COUNT").format({"n": int(shipped) + int(build != null)})
@@ -172,6 +172,5 @@ func _phase_pct_text(pct: int) -> String:
 
 
 func _on_card_input(ev: InputEvent, view_id: String, args: Dictionary) -> void:
-	var mb := ev as InputEventMouseButton
-	if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+	if UiFactory.is_left_click(ev):
 		navigate_requested.emit(view_id, args)

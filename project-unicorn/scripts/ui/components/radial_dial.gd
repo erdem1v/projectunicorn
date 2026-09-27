@@ -117,6 +117,5 @@ func _draw() -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed \
-			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+	if UiFactory.is_left_click(event):
 		skip()

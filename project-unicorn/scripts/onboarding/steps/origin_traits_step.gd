@@ -128,7 +128,7 @@ func _make_origin_card(origin: Dictionary) -> PanelContainer:
 
 
 func _on_origin_input(event: InputEvent, origin_id: String) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if UiFactory.is_left_click(event):
 		_origin_id = origin_id
 		_refresh_origins()
 		validity_changed.emit(is_valid())
@@ -221,7 +221,7 @@ func _make_trait_row(t: Dictionary) -> Control:
 
 
 func _on_trait_input(event: InputEvent, trait_id: String) -> void:
-	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
+	if not UiFactory.is_left_click(event):
 		return
 	if _trait_ids.has(trait_id):
 		_trait_ids.erase(trait_id)

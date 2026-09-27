@@ -101,7 +101,7 @@ func _build_discovery(data: Dictionary) -> void:
 	if body != "":
 		_body.add_child(_wrapped(body, &"QuoteSerif", W_DISCOVERY))
 
-	_body.add_child(_hairline())
+	_body.add_child(HRUiShared.hairline())
 
 	# AÇTIĞI ŞEY. Parçalar " · " ile birleşir; tek parça da aynı yoldan geçer, yani
 	# iki ayrı satır grameri doğmuyor.
@@ -124,7 +124,7 @@ func _build_discovery(data: Dictionary) -> void:
 	var line_id: String = ResearchTree.opens_line_of(node_id)
 	if line_id != "":
 		if ResearchTree.hidden_line_authored(line_id):
-			var line_name: String = _line_name(line_id)
+			var line_name: String = RnDUiShared.t_or(ProductLines.line_name_key(line_id), "")
 			if line_name != "":
 				extra.text = tr("RND_HIDDEN_LINE_OPENED").format({"line": line_name})
 				extra.visible = true
@@ -158,7 +158,7 @@ func _build_note(data: Dictionary) -> void:
 		who.add_child(UiFactory.make_label(
 			Fmt.upper(HRConstants.role_label(role)), &"MicroLabel"))
 
-	_body.add_child(_hairline())
+	_body.add_child(HRUiShared.hairline())
 
 	# ÜÇ SATIR, ÜÇÜ DE AYNI BİÇİMDE. Çip yok, vurgu yok, sıra ipucu yok: kart bir
 	# TAVSİYE değil bir İKİLEM. Biri öne çıksaydı oyun kararı kendisi vermiş olurdu.
@@ -174,7 +174,7 @@ func _build_note(data: Dictionary) -> void:
 	# §6.1 — bu modal koşuda YALNIZ BİR KEZ açılır; sonraki her rapor sekmede bekler.
 	# Cümlesi bu yüzden burada, sekmede değil.
 	_body.add_child(UiFactory.make_label(tr("RND_NOTE_FIRST_HINT"), &"MicroLabel"))
-	_body.add_child(_hairline())
+	_body.add_child(HRUiShared.hairline())
 
 	# ÜÇ EŞİT AĞIRLIKLI ÇIKIŞ. CommitButton (amber dolu) BİLEREK kullanılmadı:
 	# doldurulmuş tek buton "doğru cevap bu" derdi ve kartın ikilem olduğu iddiası
@@ -218,31 +218,12 @@ func _read_and_close() -> void:
 
 # --- Ortak ----------------------------------------------------------------------
 
-## ProductLines._line_name_key'in anahtar sözleşmesi. Kayıtlı hattın kendi `name_key`'i
-## varsa O okunur; hat kayıtlı değilse sözleşme yeniden kurulur — ve çözülmezse ""
-## döner, çünkü ham hat kimliği ekrana yazılmaz.
-func _line_name(line_id: String) -> String:
-	var rec: Dictionary = ProductLines.line("%s@%s" % [line_id, ProductState.subtype()])
-	var key: String = String(rec.get("name_key", ""))
-	if key == "":
-		key = "PROD_LINE_%s" % line_id.trim_prefix("line_").to_upper()
-	return RnDUiShared.t_or(key, "")
-
-
 ## Kartın gövde satırı: kart genişliğinde sarılan etiket.
 func _wrapped(text: String, variation: StringName, card_w: int, color: Variant = null) -> Label:
 	var lbl := UiFactory.make_label(text, variation, color)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl.custom_minimum_size = Vector2(card_w - 2 * PAD_X, 0)
 	return lbl
-
-
-func _hairline() -> Control:
-	var r := ColorRect.new()
-	r.color = UiTokens.DIVIDER_LIGHT
-	r.custom_minimum_size = Vector2(0, 1)
-	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return r
 
 
 func _button(text: String, handler: Callable) -> Button:

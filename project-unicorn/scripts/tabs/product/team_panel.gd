@@ -97,7 +97,7 @@ func repaint() -> void:
 # ------------------------------------------------------------------ çizim
 
 func _rebuild() -> void:
-	ProductUiShared.clear(self)
+	UiFactory.clear(self)
 	add_theme_constant_override("separation", 0)
 	_has_filter = CharacterRegistry.count_employees() >= FILTER_MIN_EMPLOYEES
 
@@ -121,7 +121,7 @@ func _rebuild() -> void:
 
 ## Kadro listesi — akordeon grupları ve satırlar.
 func _refresh_list() -> void:
-	ProductUiShared.clear(_list)
+	UiFactory.clear(_list)
 
 	# Kurucu her zaman listede, sonra çalışanlar. Mentor ve npc kadro değildir.
 	var roster: Array[Character] = []
@@ -159,7 +159,7 @@ func _refresh_list() -> void:
 
 ## Lider satırı yuvası. Seçim değiştiğinde tek başına tazelenir.
 func _refresh_lead() -> void:
-	ProductUiShared.clear(_lead_holder)
+	UiFactory.clear(_lead_holder)
 	_lead_holder.add_child(_make_lead_row())
 
 
@@ -225,7 +225,7 @@ func _add_group_header(title: String, key: String, count: int) -> bool:
 	bar.mouse_filter = Control.MOUSE_FILTER_STOP
 	bar.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	bar.gui_input.connect(func(ev: InputEvent) -> void:
-		if _is_left_click(ev):
+		if UiFactory.is_left_click(ev):
 			_open_groups[key] = not bool(_open_groups.get(key, false))
 			_refresh_list.call_deferred())
 
@@ -256,8 +256,8 @@ func _make_person_row(c: Character) -> Control:
 	if c.id == _lead_id:
 		name_row.add_child(UiFactory.make_state_chip(tr("PROD_TEAM_LEAD"),
 			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT))
-	var card: PanelContainer = _row_card(picked, name_row, Fmt.upper(_title_of(c)),
-		_area_cell(c, _primary_area(c)), _availability_text(c), HRSystem.is_busy(c))
+	var card: PanelContainer = _row_card(picked, name_row, Fmt.upper(HRUiShared.roster_title(c)),
+		_area_cell(c, _primary_area(c)), HRUiShared.availability_text(c), HRSystem.is_busy(c))
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	card.mouse_entered.connect(_on_row_hover.bind(card, picked, true))
@@ -336,7 +336,7 @@ func _make_lead_row() -> Control:
 	bar.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	bar.tooltip_text = tr("PROD_TEAM_LEAD_PICK")
 	bar.gui_input.connect(func(ev: InputEvent) -> void:
-		if _is_left_click(ev):
+		if UiFactory.is_left_click(ev):
 			_open_lead_menu(bar))
 	return bar
 
@@ -435,26 +435,6 @@ func _primary_area(c: Character) -> String:
 	return best
 
 
-## Unvan: çalışanda seviye ön ekiyle, kurucuda yalnız "KURUCU" — kurucunun seviyesi yoktur.
-func _title_of(c: Character) -> String:
-	if c.category == "founder":
-		return HRConstants.role_label(HRConstants.ROLE_FOUNDER)
-	return HRConstants.job_title(c.role, c.level)
-
-
-## Müsait olan kimsede boş döner. Gün sayıları izin ve eğitim domain'lerinin kendi okuma
-## seam'lerinden gelir; burada tarih aritmetiği yapılmaz.
-func _availability_text(c: Character) -> String:
-	if c.training_days_left > 0:
-		return tr("PROD_TEAM_AVAIL_TRAINING").format({"n": c.training_days_left})
-	if c.status == HRConstants.STATUS_ON_LEAVE:
-		return tr("PROD_TEAM_AVAIL_LEAVE").format({"n": HRMoraleSystem.days_until_return(c)})
-	if c.category == "founder" and HRSystem.is_busy(c):
-		# Kurucunun üçüncü meşguliyeti: yatırım hazırlığı. Cümlesi İK'nın evinde.
-		return tr("HR_FOUNDER_STATE_PITCH_PREP")
-	return ""
-
-
 func _passes_filter(c: Character) -> bool:
 	if _filter_available_only and HRSystem.is_busy(c):
 		return false
@@ -465,17 +445,12 @@ func _passes_filter(c: Character) -> bool:
 
 # ------------------------------------------------------------------ etkileşim
 
-func _is_left_click(ev: InputEvent) -> bool:
-	var mb := ev as InputEventMouseButton
-	return mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT
-
-
 func _on_row_hover(card: PanelContainer, picked: bool, entered: bool) -> void:
 	card.add_theme_stylebox_override("panel", _row_box(picked, entered))
 
 
 func _on_row_input(ev: InputEvent, character_id: String) -> void:
-	if not _is_left_click(ev):
+	if not UiFactory.is_left_click(ev):
 		return
 	if _selected.has(character_id):
 		_selected.erase(character_id)

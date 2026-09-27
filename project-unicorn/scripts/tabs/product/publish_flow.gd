@@ -113,7 +113,7 @@ func _is_b2b() -> bool:
 # --- yönlendirme ---------------------------------------------------------------
 
 func _render() -> void:
-	ProductUiShared.clear(_column)
+	UiFactory.clear(_column)
 	match _steps[_index]:
 		STEP_PRICE: _build_price_step()
 		STEP_INFRA: _build_infra_step()
@@ -324,8 +324,7 @@ func _provider_row(pid: String) -> Control:
 	HRUiShared.set_mouse_ignore(line)   # tıklama kart kökünde toplanır
 
 	row.gui_input.connect(func(event: InputEvent) -> void:
-		var mb := event as InputEventMouseButton
-		if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+		if UiFactory.is_left_click(event):
 			_draft_provider = pid
 			_render())
 	row.mouse_entered.connect(_paint_provider_row.bind(row, selected, true))

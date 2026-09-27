@@ -226,7 +226,7 @@ static func _build_line(raw: Dictionary, subtype: String, is_shared: bool,
 		"axis": axis,
 		"shared": is_shared,
 		"steps": step_ids,
-		"name_key": _line_name_key(line_id),
+		"name_key": line_name_key(line_id),
 		"runtime": false,
 	}
 	_lines[rec["id"]] = rec
@@ -320,7 +320,7 @@ static func _fail(reason: String) -> void:
 	push_error("[ProductLines] %s" % reason)
 
 
-static func _line_name_key(base_line_id: String) -> String:
+static func line_name_key(base_line_id: String) -> String:
 	return "PROD_LINE_%s" % base_line_id.trim_prefix("line_").to_upper()
 
 

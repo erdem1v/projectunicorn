@@ -126,7 +126,7 @@ func repaint() -> void:
 # --- Kurulum ---------------------------------------------------------------
 
 func _rebuild() -> void:
-	ProductUiShared.clear(self)
+	UiFactory.clear(self)
 	_legend.clear()
 	_lines_view = null
 	_team_panel = null
@@ -363,8 +363,7 @@ func _make_locked_type_card(type_id: String) -> Control:
 
 
 func _on_type_card_input(ev: InputEvent, type_id: String) -> void:
-	var mb := ev as InputEventMouseButton
-	if mb == null or not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT:
+	if not UiFactory.is_left_click(ev):
 		return
 	if _type_id != type_id:
 		_selected.clear()  # tip değişti — eski seçim havuza ait değil
@@ -682,7 +681,7 @@ func _update_dynamic() -> void:
 
 func _on_cancel_pressed() -> void:
 	var b: FeatureBuild = ProductSystem.get_active_build()
-	if b == null or b.is_bug_sprint:
+	if b == null:
 		return
 	var burned_days: int = maxi(0, GameState.day - b.start_day)
 	var burned_cash: int = burned_days * GameState.daily_burn   # working yaklaşım

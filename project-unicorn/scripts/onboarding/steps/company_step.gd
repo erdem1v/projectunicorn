@@ -152,7 +152,7 @@ func _make_style_card(style: Dictionary) -> PanelContainer:
 
 
 func _on_style_input(event: InputEvent, style_id: String) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if UiFactory.is_left_click(event):
 		_logo_style = style_id
 		_refresh_visual()
 		validity_changed.emit(is_valid())

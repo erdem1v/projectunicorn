@@ -192,7 +192,7 @@ func _compute_structure_key() -> String:
 func _rebuild() -> void:
 	_structure_key = _compute_structure_key()
 	_morale_refs.clear()
-	ProductUiShared.clear(_list)
+	UiFactory.clear(_list)
 
 	_paint_placement_chips()
 	_paint_attention_strip()
@@ -201,7 +201,7 @@ func _rebuild() -> void:
 	# Başlık ve satırlar AYNI ölçümü okumalı: `column_header()` genişlikleri HRLedger'ın
 	# statiklerinden okuyor, o yüzden ölçüm kurulumdan önce.
 	HRLedger.measure(get_viewport_rect().size.x)
-	ProductUiShared.clear(_header_slot)
+	UiFactory.clear(_header_slot)
 	_header_slot.add_child(HRLedger.column_header())
 	_header_slot.visible = _view == VIEW_ROSTER
 	if _view == VIEW_ASSIGNMENTS:
@@ -420,7 +420,7 @@ func _paint_segments() -> void:
 ## "N BOŞTA" (nötr) + "N AŞIRI YÜK" (amber). Sıfır olan çip çizilmez — sıfırı göstermek
 ## bir uyarıyı gürültüye çevirir.
 func _paint_placement_chips() -> void:
-	ProductUiShared.clear(_placement_chips)
+	UiFactory.clear(_placement_chips)
 	var idle: int = HRSystem.idle_count()
 	if idle > 0:
 		_placement_chips.add_child(UiFactory.make_state_chip(
@@ -439,7 +439,7 @@ func _paint_placement_chips() -> void:
 ## Kaçma riski başına bir kırmızı şerit: ad + MORAL n. Eşik motorun
 ## (HRConstants.is_flight_risk).
 func _paint_attention_strip() -> void:
-	ProductUiShared.clear(_attention_strip)
+	UiFactory.clear(_attention_strip)
 	for emp in CharacterRegistry.get_employees():
 		if not HRConstants.is_flight_risk(emp.morale):
 			continue

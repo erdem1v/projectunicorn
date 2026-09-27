@@ -43,6 +43,7 @@ const BUZZ_S := 0.30                # telefon titreşimi süresi
 const BUZZ_PX := 3.0                # titreşim genliği
 const PAPER_ARRIVE_S := 0.35        # kâğıt geliş animasyonu
 const PAPER_CAP := 3                # masadaki azami kâğıt (fazlası +N çipi)
+const HOTSPOT_ANCHOR := {"board": "board_outer", "frames": "frames_band"}   # hotspot id → RECTS anahtarı; listede olmayan id kendi adıyla okunur
 const SCREEN_GLOW_NIGHT_A := 0.35   # gece ekran parlaması (additive) alfası
 
 # Katman / düğüm referansları (kod-kurulu)
@@ -641,7 +642,7 @@ func _relayout() -> void:
 	_set_rect(_overtime_chip, OdaLayout.place_clamped(OdaLayout.RECTS["overtime_chip"], view))
 	# Hotspot'lar: obje/bölge rect'leri (padsız içerik kutuları).
 	for id in _hotspots:
-		var anchor: String = {"board": "board_outer", "frames": "frames_band"}.get(id, id)
+		var anchor: String = HOTSPOT_ANCHOR.get(id, id)
 		_set_rect(_hotspots[id], OdaLayout.place(OdaLayout.RECTS[anchor], view))
 	_layout_papers()
 
@@ -752,7 +753,7 @@ func _refresh_monitor() -> void:
 	_mon_header.visible = true
 	_mon_title.visible = true
 	prog_label.visible = true
-	if b != null and not b.is_bug_sprint:
+	if b != null:
 		# YAPIM YÜZÜ = yalnız BuildBar kartı. Kart modelini kendisi çeker (aynı sinyaller);
 		# ek başlık/çip kartın söylediğini ikinci kez söylerdi.
 		_mon_header.visible = false
@@ -1094,7 +1095,7 @@ func _gather_papers() -> Array:
 	# Yuvasını kaybeden hatırlatıcı sekmesinde durmaya devam eder; karar ise saatini
 	# kimsenin göremediği yerde bitirirdi.
 	var papers: Array = []
-	for entry in EventGate.desk_papers(PAPER_CAP):
+	for entry in EventGate.desk_papers(64):   # tüm masa: +N çipi üçüncüden sonrakileri de sayar
 		var e: Dictionary = entry
 		papers.append({
 			"id": String(e["id"]),
@@ -1163,9 +1164,13 @@ func _refresh_papers() -> void:
 				arrivals.append(card)
 		rebuilt[p["id"]] = card
 	_paper_cards = rebuilt
+	# Sıralamanın kapatamadığı tek durum: dördü birden son 3 günde. O zaman dördüncüsü
+	# saatini çipin arkasında bitirir — çip bu aciliyeti taşır.
+	var hidden_urgent: bool = papers.slice(PAPER_CAP).any(
+		func(p: Dictionary) -> bool: return bool(p.get("urgent", false)))
 	for i in visible_papers.size():
 		_update_paper_overflow_chip(_paper_cards[visible_papers[i]["id"]],
-			overflow if i == PAPER_CAP - 1 else 0)
+			overflow if i == PAPER_CAP - 1 else 0, hidden_urgent)
 	_layout_papers()
 	for card in arrivals:
 		_animate_paper_arrival(card)
@@ -1206,20 +1211,12 @@ func _mk_paper_card(p: Dictionary) -> PanelContainer:
 	return card
 
 
-func _update_paper_overflow_chip(card: PanelContainer, overflow: int) -> void:
+func _update_paper_overflow_chip(card: PanelContainer, overflow: int, hidden_urgent: bool) -> void:
 	var chip: Label = card.get_node("Row/OverflowChip")
 	chip.visible = overflow > 0
 	if overflow <= 0:
 		return
 	chip.text = "+%d" % overflow
-	# Sıralamanın kapatamadığı tek durum: dördü birden son 3 günde. O zaman dördüncüsü
-	# saatini çipin arkasında bitirir — çip bu aciliyeti taşır.
-	var hidden_urgent: bool = false
-	for entry in EventGate.desk_papers(64):
-		var e: Dictionary = entry
-		if bool(e.get("urgent", false)) and not _paper_cards.has(String(e["id"])):
-			hidden_urgent = true
-			break
 	chip.add_theme_color_override("font_color",
 		UiTokens.ODA_ACCENT_DEEP if hidden_urgent else UiTokens.ODA_INK_MUTED)
 
@@ -1240,8 +1237,7 @@ func _animate_paper_arrival(card: PanelContainer) -> void:
 
 
 func _on_paper_input(event: InputEvent, target: String, subpage: String) -> void:
-	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT
-			and event.pressed):
+	if not UiFactory.is_left_click(event):
 		return
 	# Motor kâğıdı kendi kartını açar, hatırlatıcı sekmeye gider — iki cins TEK tıklama
 	# yolunu paylaşır, ayrım `event:` önekiyle.
@@ -1360,7 +1356,7 @@ func _tween_rim(id: String, target: float) -> void:
 
 
 func _on_hotspot_input(event: InputEvent, id: String) -> void:
-	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed):
+	if not UiFactory.is_left_click(event):
 		return
 	match id:
 		"monitor":

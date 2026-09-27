@@ -17,8 +17,8 @@ extends Control
 # yazıyor). Ar-Ge'nin gün-sınırı kancası `research_progress_changed`.
 #
 # DİL VE PALET: bu sayfa `language_changed`/`palette_changed`e BAĞLANMAZ.
-# Router sayfayı her mount'ta serbest bırakıp yeniden kuruyor (center_viewport
-# ._on_language_changed) ve dil/palet yenilemesini KENDİ KENDİNİ İYİLEŞTİREN şey
+# Router sayfayı her mount'ta serbest bırakıp yeniden kuruyor
+# (center_viewport._rebuild_open_page) ve dil/palet yenilemesini KENDİ KENDİNİ İYİLEŞTİREN şey
 # tam olarak bu; buradan da bağlansaydık sayfa iki kez kurulurdu.
 #
 # TAZELEME MODELİ (hr_tab'ın yapı-anahtarı deseni): ucuz bir anahtar (açılmış
@@ -57,7 +57,9 @@ func _ready() -> void:
 	# İKİ SAYFA HÂLİ, TEK KAPI: `RnDSystem.tree_open()` (Ar-Ge §2, MÜHÜRLÜ). `version_shipped`
 	# dinlendiği için oyuncu sekme açıkken v1'i yayınlarsa sayfa ağaca döner.
 	if not RnDSystem.tree_open():
-		_build_waiting_page()
+		# V1 öncesi: tek satır. Kapı rayda değil sayfada (§2; bkz. ui_tokens'ın `lock` notu),
+		# ve söylediği tek şey neyi beklediği.
+		add_child(UiFactory.make_placeholder_column(Fmt.upper(tr("TAB_RND")), tr("RND_TREE_CLOSED")))
 		EventBus.version_shipped.connect(_on_version_shipped, CONNECT_ONE_SHOT)
 		return
 	_build_chrome()
@@ -117,26 +119,6 @@ func select_node(node_id: String, open_assign: bool = false) -> void:
 
 
 # --- Sayfa kromu -------------------------------------------------------------
-
-## V1 ÖNCESİ SAYFA: TEK SATIR, BAŞKA HİÇBİR ŞEY. Kilitli yuva yok, hayalet ağaç yok,
-## fragman ızgarası yok. Kapı rayda değil sayfada (§2; bkz. ui_tokens'ın `lock` notu) — kapı
-## burada, ve kapının söylediği tek şey neyi beklediği. Kabuk zaten bu grameri kullanıyor:
-## ortalanmış başlık + tek `CaptionMuted` satır (center_viewport._make_placeholder_body).
-func _build_waiting_page() -> void:
-	var col := VBoxContainer.new()
-	col.set_anchors_preset(Control.PRESET_CENTER)
-	col.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	col.grow_vertical = Control.GROW_DIRECTION_BOTH
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	add_child(col)
-	var title := UiFactory.make_label(Fmt.upper(tr("TAB_RND")), &"TitleSerif")
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(title)
-	var line := UiFactory.make_label(tr("RND_TREE_CLOSED"), &"CaptionMuted")
-	line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(line)
-
 
 func _build_chrome() -> void:
 	var margin := MarginContainer.new()

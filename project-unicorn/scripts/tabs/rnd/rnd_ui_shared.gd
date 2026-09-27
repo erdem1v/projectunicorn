@@ -182,7 +182,7 @@ class Link extends Label:
 	signal clicked
 
 	func _gui_input(event: InputEvent) -> void:
-		if RnDUiShared.is_left_click(event):
+		if UiFactory.is_left_click(event):
 			accept_event()
 			clicked.emit()
 
@@ -315,8 +315,3 @@ static func draw_dashed_rect(ci: CanvasItem, r: Rect2, color: Color,
 	ci.draw_dashed_line(b, r.end, color, width, dash)
 	ci.draw_dashed_line(r.end, d, color, width, dash)
 	ci.draw_dashed_line(d, r.position, color, width, dash)
-
-
-static func is_left_click(ev: InputEvent) -> bool:
-	var mb := ev as InputEventMouseButton
-	return mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT

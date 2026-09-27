@@ -165,8 +165,7 @@ func _card(selected: bool, pad_v: float) -> PanelContainer:
 func _make_selectable(card: Control, on_pick: Callable) -> void:
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	card.gui_input.connect(func(ev: InputEvent) -> void:
-		var mb := ev as InputEventMouseButton
-		if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+		if UiFactory.is_left_click(ev):
 			on_pick.call()
 			_rebuild())
 

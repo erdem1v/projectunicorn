@@ -51,13 +51,6 @@ static func b2c_free_users() -> int:
 	return maxi(0, int(floor(SalesSystem.b2c_audience())) - CustomerRegistry.get_total_users())
 
 
-## Çocukları hemen ağaçtan çıkarır (aynı karede kurulan yenileriyle çakışmasın) ve serbest bırakır.
-static func clear(node: Node) -> void:
-	for ch in node.get_children():
-		node.remove_child(ch)
-		ch.queue_free()
-
-
 ## "Bittiğinde kasada $X kalır" — kasa − maliyet + süre × günlük net akış.
 static func cash_after_build(total_cost: int, duration_days: int) -> int:
 	return GameState.cash - total_cost \

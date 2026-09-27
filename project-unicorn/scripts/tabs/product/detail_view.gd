@@ -434,7 +434,7 @@ func _repaint_support() -> void:
 	if digest == _support_digest:
 		return
 	_support_digest = digest
-	ProductUiShared.clear(_support_host)
+	UiFactory.clear(_support_host)
 	_support_host.add_child(UiFactory.make_label(tr("PROD_SUPPORT"), &"SectionLabel"))
 
 	# §8.1'in iki sayacı. Yön oku YALNIZ koşu sürerken: ok eğilim değil o anki İŞİN yönüdür.
@@ -618,7 +618,7 @@ func _repaint_profile(ver: int, bugs: int, readings: Dictionary, risk: String) -
 	_risk_value.add_theme_color_override("font_color",
 		UiTokens.negative_bright() if risk == "yuksek" else UiTokens.INK)   # LOC-DATA risk band id
 	# İki rozet: palet ve metin birlikte değiştiği için yeniden kurulur.
-	ProductUiShared.clear(_badges_row)
+	UiFactory.clear(_badges_row)
 	var pal: Dictionary = UiTokens.bug_severity(bugs)
 	_badges_row.add_child(UiFactory.make_pill(tr("PROD_BUGS_TREND").format(
 		{"bugs": bugs, "trend": ProductUiShared.trend_label(ProductSystem.bug_trend())}), pal.bg, pal.fg))
@@ -631,7 +631,7 @@ func _repaint_traction() -> void:
 	_traction_ready_badge.visible = GameState.phase_gate_ready
 	var sig: Dictionary = PhaseGateSystem.series_a_signal()
 	_traction_meta.text = InvestorAppetiteUi.line(sig)
-	ProductUiShared.clear(_appetite_chip_host)
+	UiFactory.clear(_appetite_chip_host)
 	_appetite_chip_host.add_child(InvestorAppetiteUi.chip(String(sig.get("state", "closed"))))
 
 
@@ -680,7 +680,7 @@ func _repaint_promises() -> void:
 	var key: String = ",".join(ids)
 	if key != _promise_key:
 		_promise_key = key
-		ProductUiShared.clear(_promise_box)
+		UiFactory.clear(_promise_box)
 		_promise_rows.clear()
 		for p in open:
 			_promise_box.add_child(_make_promise_row(p))
@@ -783,8 +783,6 @@ func _rival_passed_name(sub: String) -> String:
 # --- girişler ------------------------------------------------------------------
 
 func _on_v_card_input(ev: InputEvent) -> void:
-	var mb := ev as InputEventMouseButton
 	# Build sürerken kart zaten sönük; ikinci build yok.
-	if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT \
-			and ProductSystem.get_active_build() == null:
+	if UiFactory.is_left_click(ev) and ProductSystem.get_active_build() == null:
 		navigate_requested.emit("creation", {"step": 3, "v2": true})

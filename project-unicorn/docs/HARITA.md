@@ -58,7 +58,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Sahip:** sınıf `UiTokens`, `UiFactory`, `StarRating`, `ValueSlider`, `DialoguePortraitCard`
 - **Giriş:**
   - `UiTokens`: palet, yazı merdiveni, `THEME_STAMP`; yardımcılar `tr_upper`, `format_money`, `positive`, `negative`, `badge_palette`, `build_percent`.
-  - `UiFactory.make_label`, `make_badge`, `make_card`, `make_pill`, `make_state_chip`, `make_section_header`, `initials_of`.
+  - `UiFactory.make_label`, `make_badge`, `make_card`, `make_pill`, `make_state_chip`, `make_section_header`, `make_centered_column`, `make_placeholder_column`, `initials_of`, `clear`, `is_left_click`.
   - `build_theme.gd` token → tema dönüştürücüsüdür: `godot --headless --path . -s res://scripts/theme/build_theme.gd`. `main.gd` açılışta `master_theme.tres` damgasını `THEME_STAMP` ile karşılaştırır.
   - `bar_kit.gd` Build Bar ile Research Bar'ın ortak çizimidir. `DialoguePortraitCard` fonlama, satış ve onboarding tarafından paylaşılır.
 - **Smoke:** `build_percent_single_source`, `star_ruler_contract`, `rail_tabs_match_scene_order`.

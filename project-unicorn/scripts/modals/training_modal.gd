@@ -167,7 +167,7 @@ func _skill_row(c: Character, skill_key: String) -> Control:
 	if trainable:
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		card.gui_input.connect(func(ev: InputEvent) -> void:
-			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			if UiFactory.is_left_click(ev):
 				_selected = skill_key
 				_rebuild())
 	else:

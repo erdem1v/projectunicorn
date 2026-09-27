@@ -97,7 +97,7 @@ func _ready() -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if RnDUiShared.is_left_click(event):
+	if UiFactory.is_left_click(event):
 		accept_event()
 		select("")
 
@@ -419,7 +419,7 @@ func _on_tile_hover(node_id: String, entered: bool) -> void:
 
 
 func _on_tile_input(event: InputEvent, node_id: String) -> void:
-	if RnDUiShared.is_left_click(event):
+	if UiFactory.is_left_click(event):
 		accept_event()
 		select(node_id)
 

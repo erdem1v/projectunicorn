@@ -137,3 +137,40 @@ static func make_dot(color: Color, diameter: int = 6) -> Panel:
 	sb.set_corner_radius_all(int(diameter / 2.0) + 1)
 	dot.add_theme_stylebox_override("panel", sb)
 	return dot
+
+
+## A column that stays centred in its parent Control whatever its content grows to.
+static func make_centered_column(separation: int) -> VBoxContainer:
+	var col := VBoxContainer.new()
+	col.set_anchors_preset(Control.PRESET_CENTER)
+	col.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	col.grow_vertical = Control.GROW_DIRECTION_BOTH
+	col.add_theme_constant_override("separation", separation)
+	return col
+
+
+## Centred title + one muted line: the page for a tab with nothing to show yet. Callers
+## pass translated text; tr() dies in a static func.
+static func make_placeholder_column(title: String, line: String) -> VBoxContainer:
+	var col := make_centered_column(UiTokens.SPACE_M)
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	var title_lbl := make_label(title, &"TitleSerif")
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title_lbl)
+	var line_lbl := make_label(line, &"CaptionMuted")
+	line_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(line_lbl)
+	return col
+
+
+## Removes every child from the tree at once (so it cannot clash with the replacements
+## built in the same frame) and frees each one.
+static func clear(node: Node) -> void:
+	for ch in node.get_children():
+		node.remove_child(ch)
+		ch.queue_free()
+
+
+static func is_left_click(ev: InputEvent) -> bool:
+	var mb := ev as InputEventMouseButton
+	return mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT

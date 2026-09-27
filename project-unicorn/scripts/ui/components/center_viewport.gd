@@ -79,28 +79,13 @@ func get_current_page_body() -> Control:
 	return host.get_child(0) as Control if host.get_child_count() > 0 else null
 
 
-func _make_centered_column(body: Control, separation: int) -> VBoxContainer:
-	var col := VBoxContainer.new()
-	col.set_anchors_preset(Control.PRESET_CENTER)
-	col.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	col.grow_vertical = Control.GROW_DIRECTION_BOTH
-	col.add_theme_constant_override("separation", separation)
-	body.add_child(col)
-	return col
-
-
 func _make_placeholder_body(tab_id: String) -> Control:
 	# Sahnesi olmayan sekmeler: ortalanmış başlık + tek satır. Başlık id'den türer (TAB_ + ID),
 	# rayla aynı anahtar, ayrışamazlar.
 	var body := Control.new()
-	var col := _make_centered_column(body, UiTokens.SPACE_M)
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	var title := UiFactory.make_label(Fmt.upper(tr("TAB_" + tab_id.to_upper())), &"TitleSerif")
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(title)
-	var sub := UiFactory.make_label(tr("ODA_PAGE_PLACEHOLDER"), &"CaptionMuted")
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(sub)
+	var col := UiFactory.make_placeholder_column(Fmt.upper(tr("TAB_" + tab_id.to_upper())),
+		tr("ODA_PAGE_PLACEHOLDER"))
+	body.add_child(col)
 	# Events sayfası Frank'in TAM mesajını taşır: telefon camında yalnız bildirim var,
 	# latch'in tek evi oda_view.
 	var line: String = oda_view.get_mentor_line() if tab_id == "events" else ""
@@ -122,7 +107,8 @@ func _make_milestones_body() -> Control:
 	# oda_view.get_milestones'tan, kazanılmamışlar sönük satır.
 	var note_keys: Array = ["ODA_MS_FOUNDING_NOTE", "ODA_MS_SHIP_NOTE", "ODA_MS_FUNDING_NOTE"]
 	var body := Control.new()
-	var col := _make_centered_column(body, UiTokens.SPACE_XL)
+	var col := UiFactory.make_centered_column(UiTokens.SPACE_XL)
+	body.add_child(col)
 	col.custom_minimum_size = Vector2(520, 0)
 	var title := UiFactory.make_label(tr("ODA_MILESTONES_TITLE"), &"TitleSerif")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

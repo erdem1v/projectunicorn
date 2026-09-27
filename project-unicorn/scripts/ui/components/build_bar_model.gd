@@ -60,8 +60,7 @@ func derive() -> bool:
 	if b == null:
 		return _derive_support()
 	var pname: String = String(GameState.get_flag("mvp_product_name", ""))
-	product_name = _title(pname if pname != "" else b.product_name,
-		int(GameState.get_flag("mvp_version", 0)) + 1)
+	product_name = _title(pname if pname != "" else b.product_name, ProductSystem.build_version(b))
 	paused = ProductSystem.build_paused()
 	pause_kind = ProductSystem.pause_kind()
 	pause_note_key = ProductSystem.pause_note_key()

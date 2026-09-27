@@ -108,7 +108,7 @@ func _make_cell(portrait_id: String) -> PanelContainer:
 
 
 func _on_cell_input(event: InputEvent, portrait_id: String) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if UiFactory.is_left_click(event):
 		_portrait_id = portrait_id
 		_refresh_visual()
 		validity_changed.emit(is_valid())

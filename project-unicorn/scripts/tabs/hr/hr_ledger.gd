@@ -171,9 +171,7 @@ static func _job_text(job_id: String, short: bool) -> String:
 	if job_id == HRConstants.JOB_BUILD:
 		var build: FeatureBuild = ProductSystem.get_active_build()
 		if build != null:
-			# Yapımdaki sürüm: yayında ProductSystem mvp_version'ı tam olarak buna çeker.
-			var version: int = (int(GameState.get_flag("mvp_version", 0)) + 1) \
-				if build.is_version_build else 1
+			var version: int = ProductSystem.build_version(build)
 			if short:
 				return "%s v%d" % [build.product_name, version]
 			return tr_key("HR_TASK_ON_VERSION").format(
@@ -232,7 +230,7 @@ static func _experience_cell(emp: Character) -> Control:
 ## Satır tıklaması = kişi aksiyonları menüsü. Sözleşme `(emp_id, action, anchor)`: popover
 ## kendini çapaya göre konumlandırır.
 static func _on_row_input(ev: InputEvent, emp_id: String, on_action: Callable, anchor: Control) -> void:
-	if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+	if UiFactory.is_left_click(ev):
 		on_action.call(emp_id, ACTION_MENU, anchor)
 
 

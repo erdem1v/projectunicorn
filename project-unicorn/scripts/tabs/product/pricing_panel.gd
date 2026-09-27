@@ -164,7 +164,7 @@ func repaint() -> void:
 
 	_figure_label.text = ("~" + Fmt.money_exact(_optimal)) if _can_read else tr("PROD_UNKNOWN")
 
-	ProductUiShared.clear(_chips_row)
+	UiFactory.clear(_chips_row)
 	for chip_text in [
 		tr("PROD_AXIS_INNOVATION_N").format({"n": roundi(float(GameState.get_flag("mvp_innovation", 0.0)))}),
 		tr("PROD_AXIS_STABILITY_N").format({"n": roundi(float(GameState.get_flag("mvp_stability", 0.0)))}),
@@ -184,8 +184,8 @@ func repaint() -> void:
 
 func _rebuild_bands(floor_p: int, smax: int) -> void:
 	# Yeşil (hacim) → amber (optimal bölgesi) → kırmızı (premium).
-	ProductUiShared.clear(_band)
-	ProductUiShared.clear(_notches)
+	UiFactory.clear(_band)
+	UiFactory.clear(_notches)
 	var a: float = maxf(1.0, _optimal * ZONE_LOW_RATIO)
 	var b: float = maxf(a + 1.0, _optimal * ZONE_HIGH_RATIO)
 	_add_band(UiTokens.positive(), a - 1.0)
@@ -229,7 +229,7 @@ func _update_projection(price: int) -> void:
 	var new_mrr: int = int(est["new_mrr"])
 	var dpay: int = new_paying - CustomerRegistry.get_total_users()
 	var dmrr: int = new_mrr - int(est["old_mrr"])
-	ProductUiShared.clear(_stat_row)
+	UiFactory.clear(_stat_row)
 	_stat_row.add_child(UiFactory.make_stat(tr("PROD_SELECTED"), Fmt.money_exact(price), 0, "", UiTokens.ACCENT_DEEP))
 	_stat_row.add_child(UiFactory.make_stat(tr("PROD_PAYING"), str(new_paying), dpay,
 		_delta_text(dpay, str(absi(dpay)))))
@@ -239,7 +239,7 @@ func _update_projection(price: int) -> void:
 		Fmt.percent(roundi(SalesSystem.conversion_rate(price) * 100.0), 0)))
 
 	# Bölge etiketi: band'la AYNI const çifti.
-	ProductUiShared.clear(_zone_slot)
+	UiFactory.clear(_zone_slot)
 	if not _can_read:
 		_zone_slot.add_child(UiFactory.make_badge(tr("PROD_GUT_PRICE"), &"neutral"))
 	elif price < _optimal * ZONE_LOW_RATIO:

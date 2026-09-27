@@ -393,8 +393,7 @@ func _caption_color(result: String) -> Color:
 func _on_lever_row_input(event: InputEvent, lever_id: String) -> void:
 	if _spinning:
 		return
-	if event is InputEventMouseButton and event.pressed \
-			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+	if UiFactory.is_left_click(event):
 		_render(TermSheetTableSystem.select_lever(lever_id))
 
 

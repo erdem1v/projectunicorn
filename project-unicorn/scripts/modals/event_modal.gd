@@ -53,7 +53,7 @@ var _title_label: Label
 var _body_rich: RichTextLabel
 var _speaker_row: HBoxContainer
 var _choices_host: VBoxContainer
-var _footer_rule: ColorRect
+var _footer_rule: Panel
 var _footer_label: Label
 
 
@@ -132,7 +132,7 @@ func _build_skeleton() -> void:
 	_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(_title_label)
 
-	body.add_child(_rule())
+	body.add_child(HRUiShared.hairline())
 
 	# fit_content sizes the label to its text (card hugs content); EXPAND_FILL
 	# absorbs the slack when the card sits at its 420px floor instead.
@@ -156,7 +156,7 @@ func _build_skeleton() -> void:
 
 	# Built always, SHOWN from `populate`: a readout hides the permanence warning (see
 	# `_is_readout`), and there is no event to ask yet in `_ready()`.
-	_footer_rule = _rule()
+	_footer_rule = HRUiShared.hairline()
 	body.add_child(_footer_rule)
 	_footer_label = UiFactory.make_label(
 		UiTokens.tr_upper(tr("EVENT_CHOICE_PERMANENT")), &"MicroLabel")
@@ -172,14 +172,6 @@ func _build_skeleton() -> void:
 func _is_readout() -> bool:
 	return _event != null and _event.choices.size() == 1 \
 		and (_event.choices[0] as EventChoice).modifiers.is_empty()
-
-
-static func _rule() -> ColorRect:
-	var r := ColorRect.new()
-	r.custom_minimum_size = Vector2(0, 1)
-	r.color = UiTokens.DIVIDER_LIGHT
-	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return r
 
 
 # --- Header row ---
@@ -377,7 +369,7 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, ctx: Dict
 func _on_choice_input(event: InputEvent, idx: int) -> void:
 	if _resolved:
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if UiFactory.is_left_click(event):
 		_resolved = true
 		EventGate.resolve(_event.id, idx)
 

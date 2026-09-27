@@ -81,9 +81,8 @@ class _Ruler extends Control:
 	func _gui_input(event: InputEvent) -> void:
 		if not interactive:
 			return
-		var press := event as InputEventMouseButton
-		if press != null and press.pressed and press.button_index == MOUSE_BUTTON_LEFT:
-			picked.emit(_value_at(press.position.x))
+		if UiFactory.is_left_click(event):
+			picked.emit(_value_at((event as InputEventMouseButton).position.x))
 			return
 		var drag := event as InputEventMouseMotion
 		if drag != null and (drag.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:

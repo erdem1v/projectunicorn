@@ -313,8 +313,7 @@ func _on_decision_hover(entered: bool) -> void:
 
 
 func _on_decision_input(ev: InputEvent) -> void:
-	var mb := ev as InputEventMouseButton
-	if mb == null or not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT:
+	if not UiFactory.is_left_click(ev):
 		return
 	if _model == null or not _model.decision_enabled:
 		return

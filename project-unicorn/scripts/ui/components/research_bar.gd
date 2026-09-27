@@ -265,7 +265,7 @@ func _status_text(m: Model) -> String:
 # --- Bağlar ---------------------------------------------------------------------
 
 func _on_pause_input(ev: InputEvent) -> void:
-	if _model == null or _model.paused or not RnDUiShared.is_left_click(ev):
+	if _model == null or _model.paused or not UiFactory.is_left_click(ev):
 		return
 	# WRITE-THROUGH: çubuk hiçbir alanı kendi yazmaz, sistemin seam'ini çağırır.
 	RnDSystem.pause()
@@ -273,7 +273,7 @@ func _on_pause_input(ev: InputEvent) -> void:
 
 
 func _on_assign_input(ev: InputEvent) -> void:
-	if _model == null or not RnDUiShared.is_left_click(ev):
+	if _model == null or not UiFactory.is_left_click(ev):
 		return
 	# SIRA ÖNEMLİ: önce sayfa açılır, sonra düğüm kendini açar. Ters sırada
 	# `rnd_node_requested` henüz monte olmamış bir akordeona düşerdi.

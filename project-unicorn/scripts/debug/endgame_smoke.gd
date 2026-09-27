@@ -15101,7 +15101,7 @@ static func _case_split_bars_name_their_cause() -> String:
 ##
 ## FALSİFİKASYON: `ui_tokens.gd`'nin rnd satırına `"lock": "v1_shipped"` geri koy → rozetsizlik
 ## iddiası FAIL. `left_tabs._refresh_rnd_badge`'deki `tree_open()` korumasını sil ve okunmamış
-## raporu zorla → rozet-sıfır iddiası FAIL. `_build_waiting_page`'i `_build_chrome` yap →
+## raporu zorla → rozet-sıfır iddiası FAIL. `_ready`'deki `make_placeholder_column` satırını `_build_chrome()` yap →
 ## bekleme satırı iddiası FAIL.
 static func _case_rnd_rail_open_with_waiting_page() -> String:
 	ProductLines.reload()

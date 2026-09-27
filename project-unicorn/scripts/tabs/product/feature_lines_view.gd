@@ -42,7 +42,7 @@ const W_SHIPPED := 170
 const W_ARROW := 16
 const W_STAT := 236
 
-## "Tamamlandı" satırının soluğu (HRUiShared.locked_telegraph ile aynı sayı).
+## "Tamamlandı" satırının soluğu.
 const DIM_ALPHA := 0.55
 
 var _subtype: String = ""
@@ -67,7 +67,7 @@ func setup(subtype: String, preselected: Array) -> void:
 
 
 func repaint() -> void:
-	ProductUiShared.clear(self)
+	UiFactory.clear(self)
 	_rows.clear()
 	add_child(_make_header())
 	add_child(HRUiShared.hairline())
@@ -316,7 +316,7 @@ func _on_row_hover(line_id: String, entered: bool) -> void:
 ## SEÇİM. Ekleme kararı ProductLines'ın: `ladder_refusal` boş dönmüyorsa satır sessizce
 ## reddedilir (aynı hatta ikinci kademe, atlanan kademe, yayınlanmış kademe).
 func _on_row_input(ev: InputEvent, line_id: String) -> void:
-	if not _is_left_press(ev):
+	if not UiFactory.is_left_click(ev):
 		return
 	var step_id: String = _rows[line_id]["step"]
 	if _selected.has(step_id):
@@ -331,18 +331,13 @@ func _on_row_input(ev: InputEvent, line_id: String) -> void:
 
 
 func _on_action_link_input(ev: InputEvent) -> void:
-	if _is_left_press(ev):
+	if UiFactory.is_left_click(ev):
 		train_or_hire_requested.emit()
 
 
 func _on_research_link_input(ev: InputEvent, node_id: String) -> void:
-	if _is_left_press(ev):
+	if UiFactory.is_left_click(ev):
 		research_requested.emit(node_id)
-
-
-func _is_left_press(ev: InputEvent) -> bool:
-	var mb := ev as InputEventMouseButton
-	return mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT
 
 
 # ------------------------------------------------------------------ boyama
