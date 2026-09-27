@@ -124,7 +124,8 @@ static func initials_of(full_name: String) -> String:
 	return out if out != "" else "?"
 
 
-## Drawn dot (replaces the ● glyph): a Panel with a circular StyleBoxFlat.
+## Drawn dot (replaces the ● glyph): a Panel with a circular StyleBoxFlat. Every dot owns
+## its stylebox override, so a caller may recolor one in place (onboarding stepper).
 static func make_dot(color: Color, diameter: int = 6) -> Panel:
 	var dot := Panel.new()
 	dot.custom_minimum_size = Vector2(diameter, diameter)

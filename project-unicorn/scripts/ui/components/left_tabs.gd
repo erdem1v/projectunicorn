@@ -49,7 +49,7 @@ func _ready() -> void:
 		stack.add_child(UiFactory.make_pill(tr("SYS_SOON"), Color(1, 1, 1, 0.05), UiTokens.CREAM_DIM))
 
 	# The gear is not a tab: no active styling, never emits tab_changed.
-	settings_btn.pressed.connect(func() -> void: EventBus.settings_requested.emit())
+	settings_btn.pressed.connect(EventBus.settings_requested.emit)
 
 	# Rail clicks, the ✕/Esc close and programmatic switches (Tracker Card, product_tab's
 	# sales redirect) all arrive here, so the highlight has a single painter.

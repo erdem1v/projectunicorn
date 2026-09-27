@@ -348,8 +348,9 @@ const PAD_FRAME := Vector2i(4, 4)         # PortraitFrame hairline inset
 const PAD_CELL := Vector2i(3, 3)          # PortraitCell
 
 # --- Rail tabs — canonical 8-tab list ---
-# No `label` field: the rail caption is the key TAB_ + ID.to_upper(), shared by
-# LeftTabs.tscn and center_viewport. LeftTabs.tscn's button order must match this
+# No `label` or `icon` field: the rail caption is the key TAB_ + ID.to_upper(), shared by
+# LeftTabs.tscn and center_viewport, and the icon lives only in LeftTabs.tscn, which
+# draws it. LeftTabs.tscn's button order must match this
 # array position-for-position (smoke `rail_tabs_match_scene_order`).
 # `lock` names a gate for a visible-but-unreachable tab, resolved in
 # LeftTabs._is_locked so UiTokens stays free of game state. The rail shows it
@@ -357,14 +358,14 @@ const PAD_CELL := Vector2i(3, 3)          # PortraitCell
 # YAKINDA means only "not in this build", so Ar-Ge (built, gated on its own page)
 # carries no lock.
 const TABS := [
-	{"id": "product", "icon": "res://assets/icons/tabs/product.svg"},
-	{"id": "sales", "icon": "res://assets/icons/tabs/sales.svg"},
-	{"id": "hr", "icon": "res://assets/icons/tabs/hr.svg"},
-	{"id": "finance", "icon": "res://assets/icons/tabs/finance.svg"},
-	{"id": "personal", "icon": "res://assets/icons/tabs/personal.svg"},
-	{"id": "marketing", "icon": "res://assets/icons/tabs/marketing.svg", "lock": "ea"},
-	{"id": "rnd", "icon": "res://assets/icons/tabs/rnd.svg"},
-	{"id": "events", "icon": "res://assets/icons/tabs/events.svg"},
+	{"id": "product"},
+	{"id": "sales"},
+	{"id": "hr"},
+	{"id": "finance"},
+	{"id": "personal"},
+	{"id": "marketing", "lock": "ea"},
+	{"id": "rnd"},
+	{"id": "events"},
 ]
 
 # ============================================================================

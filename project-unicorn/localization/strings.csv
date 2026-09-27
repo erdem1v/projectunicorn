@@ -25,7 +25,7 @@ ONB_PREPARING,Hazırlanıyor…,Preparing…
 ONB_P1_TITLE,Karakter,Character
 ONB_P1_SUB,"Bu, aynada göreceğin yüz. Bir istatistik değil, bir kimlik.","The face you will see in the mirror. Not a statistic, an identity."
 ONB_NAME_LABEL,ADIN,YOUR NAME
-ONB_NAME_PLACEHOLDER,Boş bırakırsan 'Founder' kullanılır,Leave empty to use 'Founder'
+ONB_NAME_PLACEHOLDER,Boş bırakırsan 'Kurucu' kullanılır,Leave empty to use 'Founder'
 ONB_FOUNDER_TAG,KURUCU,FOUNDER
 ONB_PORTRAIT_HEADER,PORTRE SEÇ · {n} SEÇENEK,CHOOSE A PORTRAIT · {n} OPTIONS
 ONB_SELECTED_CHIP,SEÇİLİ · PORTRE {id},SELECTED · PORTRAIT {id}

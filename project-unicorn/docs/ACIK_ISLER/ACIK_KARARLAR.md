@@ -474,6 +474,36 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Kaynak: Ar-Ge GDD §8 (kart örneği 'GPU kirası $600'), §13 (nakit maliyetler [K]: ai_engine $600, analytics_engine
     $400, security_cert $900), §12.1
 
+- **28 · Kurucu huylarının etkisi yok ama etki metni gösteriliyor.**
+  - Ne oluyor: Onboarding 2. sayfası her kurucu huyunun altında bir etki satırı basıyor (TRAIT_*_EFFECT, ör. 'Ar-Ge
+    sıçramaları daha sık', 'Pivot maliyeti yüksek'). Seçilen huy id'leri kurucunun Character.traits'ine yazılıyor, ama
+    kurucu huylarını hiçbir sistem okumuyor; FounderConstants.TRAITS yorumu bunları RESERVED diye işaretliyor.
+  - Nerede: scripts/systems/founder_constants.gd (TRAITS, effect_key); scripts/onboarding/steps/origin_traits_step.gd
+    (huy kartındaki effect_lbl); scripts/autoload/game_state.gd (initialize_run, kurucunun traits'i);
+    localization/strings.csv (TRAIT_*_EFFECT)
+  - Oyuncuya etkisi: Oyuncu koşunun başında bir etki vaat eden huy seçiyor, ama seçim oyunda hiçbir şeyi
+    değiştirmiyor. 'Pivot maliyeti yüksek' gibi olumsuz huylar bedava.
+  - Seçenekler: A) Etkileri bağla: her huy için sahibin onaylayacağı bir çarpan (ch02 §8: beceri, hız, olasılık,
+    moral) ve onu okuyan sistem; sayılar [WORKING]. B) Etkiler bağlanana kadar kartta yalnız huy adı kalsın, etki
+    satırı gizlensin. C) Etki satırı kalsın, yanına 'yakında' benzeri bir işaret eklensin (yeni metin, TR/EN onayı
+    gerekir).
+  - Kaynak: GDD ch02 §1 (kurucu huyları katalogdan, ikonla), ch02 §8 (huylar yalnız modifier); CLAUDE.md §5 (her
+    seçenek görünür bir sonuca düşer)
+
+- **29 · Mirasyedi kökeninin kilit notu: TAM SÜRÜMDE mi, ÇOK YAKINDA mı.**
+  - Ne oluyor: Kilitli iki kökenden heir (Mirasyedi) 'TAM SÜRÜMDE' (LOCK_FULL), corporate_refugee (Kurumsal Firari)
+    'ÇOK YAKINDA' (LOCK_SOON) notunu taşıyor. ch14 §4 'kalan kökenleri' Early Access'e, §5 'ek kökenleri' tam sürüme
+    koyuyor; §3 demodaki kilitli-görünür kökenleri Heir ve Corporate Refugee diye sayıyor. 58e603e'deki görsel
+    kontrolde heir'in TR 'TAM SÜRÜMDE' rozeti bilerek korunmuştu.
+  - Nerede: scripts/systems/founder_constants.gd (ORIGINS, heir satırının locked_note_key'i);
+    scripts/onboarding/steps/origin_traits_step.gd (kilitli köken kartı rozeti)
+  - Oyuncuya etkisi: Onboarding 2. sayfadaki iki kilitli köken farklı çıkış zamanı vaat ediyor. ch14 §4 okunursa
+    Mirasyedi'nin vaadi yanlış.
+  - Seçenekler: A) heir LOCK_SOON'a geçsin (ch14 §4: kalan kökenler EA'da). B) LOCK_FULL kalsın, ch14 §4 ve §5
+    Mirasyedi'yi tam sürüme koyacak biçimde netleştirilsin. C) İki köken de tek bir nötr kilit notu taşısın (ör.
+    LOCK_CHIP).
+  - Kaynak: GDD ch14 §3, §4, §5; ch01 §8; ch02 §1
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında

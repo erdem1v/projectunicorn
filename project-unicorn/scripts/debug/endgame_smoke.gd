@@ -4190,17 +4190,13 @@ static func _case_rail_tabs_match_scene_order() -> String:
 		var want: String = "TAB_" + String(UiTokens.TABS[i].id).to_upper()
 		if captions[i] != want:
 			return "%d. sekme sahnede '%s', TABS'ta '%s'" % [i, captions[i], want]
-	# İkinci iddia: her id BENZERSİZ ve her ikon dosyası GERÇEKTEN var. Yeni bir sekme
-	# eklerken unutulan --import tam burada yakalanır (ikon sessizce boş çizilirdi).
+	# İkinci iddia: her id BENZERSİZ.
 	var seen := {}
 	for row in UiTokens.TABS:
 		var tid: String = String(row.id)
 		if seen.has(tid):
 			return "TABS'ta yinelenen id: %s" % tid
 		seen[tid] = true
-		var icon: String = String(row.get("icon", ""))
-		if icon == "" or not ResourceLoader.exists(icon):
-			return "%s sekmesinin ikonu yok: %s" % [tid, icon]
 	return ""
 
 

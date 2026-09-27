@@ -15,7 +15,9 @@ extends SceneTree
 # invents a number.
 # ============================================================================
 
-const T = preload("res://scripts/theme/ui_tokens.gd")
+# Loaded in _initialize, not preloaded: ui_tokens.gd names the GameState autoload, which a
+# `-s` script's own compile pass cannot resolve yet.
+var T
 
 const FONT_SERIF_REG := "res://assets/fonts/serif/SourceSerif4-Regular.ttf"
 const FONT_SERIF_SB := "res://assets/fonts/serif/SourceSerif4-Semibold.ttf"
@@ -33,6 +35,7 @@ const OUT_PATH := "res://themes/master_theme.tres"
 const NO_PAD := Vector2i(-1, -1)
 
 func _initialize() -> void:
+	T = load("res://scripts/theme/ui_tokens.gd")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(VAR_DIR))
 
 	var symbols: FontFile = load(FONT_SYMBOLS)

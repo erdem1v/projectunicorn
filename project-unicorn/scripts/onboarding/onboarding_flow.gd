@@ -41,7 +41,6 @@ var draft: Dictionary = {
 
 var _current_step_index: int = 0
 var _current_step_node: OnboardingStep = null
-var _committing: bool = false
 var _stepper_dots: Array[Panel] = []
 var _stepper_labels: Array[Label] = []
 var _step_counter: Label = null
@@ -148,9 +147,7 @@ func _on_back_pressed() -> void:
 
 
 func _on_next_pressed() -> void:
-	# Typing into the last step during the commit beat re-enables Next through
-	# validity_changed, so _committing is checked here and not only via disabled.
-	if _committing or not _current_step_node.is_valid():
+	if not _current_step_node.is_valid():
 		return
 	draft.merge(_current_step_node.collect_payload(), true)
 	if _current_step_index < STEPS.size() - 1:
@@ -162,7 +159,8 @@ func _on_next_pressed() -> void:
 # --- Commit (final state-write) ---
 
 func _commit() -> void:
-	_committing = true
+	# Typing into the still-focused name field during the beat would re-enable Next.
+	_current_step_node.validity_changed.disconnect(_on_step_validity_changed)
 	back_btn.disabled = true
 	next_btn.disabled = true
 	loading_overlay.visible = true

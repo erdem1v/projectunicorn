@@ -113,7 +113,7 @@ func _ready() -> void:
 	founder_col.alignment = BoxContainer.ALIGNMENT_CENTER
 	founder_col.add_theme_constant_override("separation", 1)
 	founder_row.add_child(founder_col)
-	_preview_founder = UiFactory.make_label("Founder", &"DialogueName")
+	_preview_founder = UiFactory.make_label("", &"DialogueName")
 	founder_col.add_child(_preview_founder)
 	founder_col.add_child(UiFactory.make_label(
 		tr("ONB_PREVIEW_FOUNDER_TAG").format({"year": GameState.START_DATE.year}), &"DialogueTag"))
@@ -181,7 +181,7 @@ func prefill(draft: Dictionary) -> void:
 	_slogan_input.text = draft.get("slogan", "")
 	_logo_style = draft.get("logo_style", "")
 	var founder: String = String(draft.get("founder_name", "")).strip_edges()
-	_preview_founder.text = founder if founder != "" else "Founder"
+	_preview_founder.text = founder if founder != "" else tr("HR_ROLE_FOUNDER")
 	var portrait_id: String = draft.get("portrait_id", "")
 	var path: String = FounderConstants.portrait_path(portrait_id)
 	_preview_portrait.texture = load(path) if portrait_id != "" and ResourceLoader.exists(path) else null

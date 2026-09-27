@@ -50,7 +50,7 @@ func _ready() -> void:
 	_preview_card.custom_minimum_size = Vector2(240, 300)
 	left.add_child(_preview_card)
 
-	_preview_name = UiFactory.make_label("Founder", &"DialogueName")
+	_preview_name = UiFactory.make_label("", &"DialogueName")
 	left.add_child(_preview_name)
 	left.add_child(UiFactory.make_label(tr("ONB_FOUNDER_TAG"), &"DialogueTag"))
 
@@ -116,7 +116,7 @@ func _on_cell_input(event: InputEvent, portrait_id: String) -> void:
 
 func _refresh_preview_name() -> void:
 	var display: String = _name_input.text.strip_edges()
-	_preview_name.text = display if display != "" else "Founder"
+	_preview_name.text = display if display != "" else tr("HR_ROLE_FOUNDER")
 
 
 func _refresh_visual() -> void:
