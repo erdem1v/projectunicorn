@@ -6,22 +6,25 @@ Açık işlerin tek yeri bu klasördür.
 
 ## Test paketi
 - Smoke ve probe paketi yalın bir paketle değiştirilecek (CLAUDE.md "Test"). Bugün `scripts/debug/endgame_smoke.gd`
-  347 vaka taşıyor. Yalnız smoke, probe ya da `main.gd` debug harness'larının eriştiği üretim kodu (temizlik dalgası 1
-  raporlarında 119 sembol) bu işle birlikte silinir.
+  348 vaka taşıyor. Yalnız smoke, probe ya da `main.gd` debug harness'larının eriştiği üretim kodu ve CSV'de yalnız
+  smoke'un okuduğu türetilmiş anahtar aileleri bu işle birlikte ele alınır; temizlik raporlarında "yalnız test" diye
+  ayrılan maddeler de buraya girer.
 
-## Kod temizliği: kalan adımlar
-- Araçlar: `scripts/events/tools/`.
-- Sistemler arası iş: dalga 1 raporlarında başka sistemin dosyasına düşen 172 değişiklik önerisi ve 151 bildirilmiş
-  hata ya da sapma ayıklanacak. Gerçek hata düzeltilir, tasarım sorusu `ACIK_KARARLAR.md`'ye girer.
-- CSV süpürmesi: kalan anahtarlar yalnız smoke'un okuduğu türetilmiş aileler; test paketi değişince onunla birlikte
-  ele alınır. `docs/writing/` ve `ACIK_KARARLAR.md`'de geçenler karara kadar kalır.
 ## Olay motoru
 - Lint kuralı: bir arkın `reassign_event` / `close_event` kartı öznenin slotunu bildirirse, özne `entity_exists` ile
   geçersizlendikten sonra G5'i hiç geçemez (§10.6'nın yasakladığı sessiz ölüm). Bugünkü kartlarda yok; kural eklenmeli.
 
-## Görsel kabul
-- Temizlik dalgası 1 UI kodunu sadeleştirdi; görünür bir değişiklik amaçlanmadı ama commit'ler görsel kabulden geçmedi
-  (kural dalgadan sonra geldi). Dokunulan ekranlar: Finans, Ar-Ge, Onboarding, Yatırım ve toplantı sahneleri, Satış,
-  Ürün, Ekip, olay kartı, ODA, kayıt ve ayarlar modalları, üst bar ve sol sekmeler. Bilinen görünür farklar
-  commit mesajlarının hata düzeltmesi ve "TR/EN onay bekliyor" satırlarında; ayrıca Kadro'nun TRAIT ikonu 18px'ten
-  onaylı ölçüye (26×26 kutuda 15px) indi.
+## Arayüz yeniden yapılırken
+Temizlikte görülen ama arayüz yeniden yapılacağı için dokunulmayan noktalar:
+- Ham stil değerleri (UI/STYLE LAW; her biri yeni token ister): `month_summary_modal.gd` font, yarıçap, margin;
+  `finance_tab.gd` ve `finance_ozet_view.gd` modulate'ları; `hunt_tab.gd` `_label` boyutları (11–14; 14 merdivende yok)
+  ve disabled alfaları; `OnboardingFlow.tscn` (LoadingLabel 18, Dimmer 0,72), `origin_traits_step.gd` ve
+  `character_step.gd` modulate'ları; `left_tabs.gd` kilitli sekme ve hap renkleri; `center_viewport.gd` 420/520;
+  `top_bar.gd` `_apply_density` aralıkları; `detail_view.gd` ve `feature_lines_view.gd` ham StyleBoxFlat'leri,
+  `pricing_panel.gd` 24 ve `detail_view.gd` 20 punto; `creation_flow.gd` ham stil değerleri; bir yerde ham 24 punto ve
+  CREAM rengi.
+- Ar-Ge atama panelindeki ayraç `HRUiShared.hairline` ile çiziliyor (eski kopya `anti_aliasing = false` diyordu).
+- BETA satırı geçen günü göstermiyor: `build_bar_model.beta_day` hesaplanıyor, `BUILD_BETA_DAY` var, çizen yok
+  (Ürün §7, mühürlü: sayaçlar ve geçen gün).
+- Fiyat bandı gösterimi: eski `BAND_*` token'ları silindi; bandın ekranda nasıl okunacağı arayüz kararı.
+- Oyuncu metinlerinde tire (— –) kalan CSV satırları var (CLAUDE.md §5); mühürlü metinlerde sahibin kararı gerekir.
