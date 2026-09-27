@@ -50,7 +50,7 @@ Bunlar tasarım tavsiyesi değil, **derleme kuralıdır**. İhlali build'i durdu
 ### 0.4 Kapsam dışı
 
 - **Pazarlık mantığı.** Motor pazarlık sahnesini açar, içini bilmez (§9.4).
-- **Faz geçişi ve son koşulları.** Motor onları taşır, tanımlamaz. Tasarlandıklarında bağlama işi o modülün task'ına yazılır (§23 A1).
+- **Faz geçişi ve son koşulları.** Motor onları taşır, tanımlamaz. Faz kapısını PhaseGateSystem sınar; sonlar tasarlandığında bağlama işi o modülün task'ına yazılır (§23 A1).
 - **Metin kalitesi.** Motor iki dilli metin bloğunu taşır; içeriğin sesi yazım turunun işidir.
 - **Ekonomi formülleri.** Motor seam'lerden okur, formül yazmaz.
 - **Tutorial akışı.** Motor bir suppression kancası taşır (§11.6), akışı tasarlamaz.
@@ -109,10 +109,15 @@ Kart iki bloğa ayrılır. **Motor yalnızca mantık bloğunu görür.**
 id                  zorunlu, benzersiz, namespace'li: kategori.isim
                     örn: hr.rakip_teklifi, funding.seed_kapisi
 category            zorunlu. §13.3 Katman 3'teki kategori listesinden.
-tick                zorunlu: daily | hourly | scheduled | signal
+tick                zorunlu: daily | hourly | scheduled | signal | request
+                    request: hiçbir saat süpürmez; kartı yalnız adını
+                    tek kapıdan veren bir sistem önerir (§4.1)
 class               zorunlu: interrupt | paper | info | ambient
 tags                opsiyonel: [critical, quiet, promise, terminal_warning,
                                 tutorial, ...]
+version_scope       opsiyonel: demo | ea | full   (varsayılan: demo)
+                    G2 süzer (§4.1). fixture yalnız testtir, hiçbir
+                    build'de gönderilmez
 
 trigger             ne zaman aday olur (§5)
 condition           koşul ağacı (§5)
@@ -128,7 +133,8 @@ weight              havuz ağırlığı, varsayılan 1.0
 
 expires_days        yalnızca class:paper için. §12.
 on_expire           süre dolumunda çalışan etkiler. paper ise ZORUNLU.
-expire_note         süre dolumunda ticker'a yazılan satır. ZORUNLU.
+expire_note         süre dolumunda ticker'a yazılan satırın ADI. Satır
+                    metin bloğundadır (§3.2). ZORUNLU.
 
 options[]           seçenek listesi (§3.3)
 arc                 opsiyonel: bu kart hangi arkın adımı
@@ -140,7 +146,7 @@ text:
 
 ```
   tr:
-    title, body
+    title, body     body: düz metin, anahtar ya da { by_seam, variants }
     options:        { <option_id>: label }
     locked_reasons: { <option_id>: metin }
     modifier_lines: { <seam_adı>: metin }        §9.6
@@ -153,6 +159,14 @@ text:
 **Kural:** Motor hiçbir aşamada metne dokunmaz. Metin yalnızca Presenter'da, gösterim anında, `text[aktif_dil][id]` lookup'ı olarak çözülür. Kuyruk **asla render edilmiş metin saklamaz.** Dil koşu ortasında değişebilir; masadaki açık kağıt diğer dilde görünür ve hiçbir şey bozulmaz.
 
 **Dil paritesi:** iki blokta **aynı** option id, outcome id, modifier anahtarı kümesi bulunmak zorundadır. Farklıysa E-lint (§17.8).
+
+**Varyant gövde.** `body` bir sözlük olabilir: `{by_seam, variants}`. Varyant, seam'in tamsayı değerine göre seçilir: değere eşit ya da ondan küçük en büyük anahtar; her anahtar değerden büyükse en küçük anahtar. Yazılan aralığın dışına çıkan seam böylece boş kart vermez. Tamsayı olmayan varyant anahtarı E-lint'tir.
+
+**Anahtar metin.** Çıplak büyük harfli bir değer (`VC_EV_DECISION_TITLE` gibi, `^[A-Z][A-Z0-9_]{2,}$`) `localization/strings.csv`'nin anahtarıdır: Presenter onu canlı dilde `TranslationServer` ile çözer, sonra yer tutucuları doldurur. Kural metnin çözüldüğü her yerde geçerlidir: `title`, `body` (her varyant dahil), `options`, `locked_reasons`, `expire_note` satırı ve ticker'a giden satırlar. Neden: taşınan içeriğin gözden geçirilmiş metni CSV'dedir; blokta kopyalamak bir metne iki ev verirdi.
+
+**Metindeki yer tutucular.** `{slot}` bağlanan varlığın görünen adını, `{seam:ad.soyad}` bir seam'in değerini basar (§8.4'ün mekanizması).
+
+**`expire_note`.** Kartın üst düzeyindeki `expire_note` (§3.1) bu bloktaki satırın adıdır. Süre dolumunda motor satırı canlı dilin bloğundan alır ve kartın slotlarıyla doldurur; blokta o ad yoksa değer satırın kendisi sayılır.
 
 ### 3.3 Seçenek şeması
 
@@ -171,15 +185,15 @@ outcome_id          history'ye ve outcome_lines'a yazılan sonuç anahtarı
 
 ### 4.1 Hat
 
-sinyal / tik / ark adımı / schedule
+sinyal / tik / ark adımı / schedule / havuz / taban / request / force
 
 ```
         ↓
-  Gate.propose(event_id, context)      ← TEK PUBLIC GİRİŞ
+  EvGate.propose(event_id, origin, context)      ← TEK KABUL YOLU
         ↓
   ═══════════ KAPI ═══════════
    G1  içerik geçerli mi (id katalogda var mı)
-   G2  sürüm kapsamı (demo / EA / full) + tutorial suppression (§11.6)
+   G2  sürüm kapsamı (version_scope, §3.1) + tutorial suppression (§11.6)
    G3  latch (one_shot / cooldown / max_fires), anahtar §3.1
    G4  tick uyumu ve pencere (faz, allowed_hours, build-safe)
    G5  kapsam çözümü (slotlar dolabiliyor mu, tipleri doğru mu)
@@ -199,6 +213,12 @@ sinyal / tik / ark adımı / schedule
         ↓
   zar (varsa) → EffectExecutor → History → Ark ilerlet → Sinyal yay
 ```
+
+**Sistemlerin tek public girişi** statik `EventGate.request(event_id: String, context: Dictionary = {})`'tir. Sistem kartın adını verir, kartı kurmaz. `context` §4.3'e göre çözülür: G5 verilen id'yi tip denetiminden geçirir. Verilen id bağlanamazsa (varlık gitmiş, tipi yanlış ya da başka slota bağlı) ne olacağı açık karardır (ACIK_KARARLAR 12). İstek `Origin.REQUEST` kökeniyle kapıya girer. İstenen örneğin kağıdı masada bekliyorsa istek kapıya gitmeden o kağıdı açar (§11.4).
+
+**`Origin.REQUEST` G4'ün tick eşleşmesini atlar;** hourly kartta `allowed_hours` ve build-safe denetimi yine uygulanır. `tick` kartı kimin süpürdüğünü söyler, adını kimin verebileceğini değil. `tick: request` kartını hiçbir saat süpürmez; `tick: daily` bir kartın adını da bir sistem verebilir.
+
+**G2 — sürüm kapsamı.** Kartın `version_scope`'u bu build'in gönderdiği kapsamlar arasında değilse kart reddedilir. Kapsamlar tek, birikimli bir merdivenden okunur: demo → [demo], ea → [demo, ea], full → [demo, ea, full]; her build bir öncekine ekler. Merdivenin tek evi `EndingsSystem.SHIPPED_SCOPES_BY_BUILD`'dir, `EvTuning.SHIPPED_SCOPES` ondan kurulur. Build sabitlenince (smoke, probe) kart havuzu da sabitlenir; `fixture` kapsamını listeye yalnız smoke ve probe ekler.
 
 ### 4.2 enqueue() ve enqueue_front() silinir
 
@@ -229,6 +249,21 @@ Bu kural, iki çalışan arasındaki çatışma gibi çoklu-özne kartlarını b
 - Aynı varlık iki slota atanamaz (`employee_a != employee_b`).
 - Çözülemezse kart **kabul edilmez** (hata değil, sessiz red, log'a yazılır).
 **Asla tahmin edilmez.** Belirsiz kapsam = red. Yanlış varlık silmenin tek sebebi tahmindir.
+
+**Seçiciler.** Slot `select` ile bir seçici adlandırabilir; adlandırmayan slot tipinin varsayılanını alır (kimliğe göre ilk boştaki varlık). Seçici yalnız başka slota bağlanmamış varlıklar arasından seçer; uygun varlık yoksa slot dolmaz.
+
+```
+  employee   lowest_morale · newest_hire
+             account_rep    bağlı `customer` slotundaki hesabın temsilcisi
+             support_lead   destek sıralamasının ilk temsilcisi
+  customer   at_risk · escalated · expansion_ready · open_request
+  investor   expiring_sheet (süresi en az kalan teklif) · decision_sheet (karar
+             günü gelmiş teklif) · meeting_pending · seed_lead
+```
+
+`founder`, `prospect` ve `rival` seçici almaz. Koşul bağlanan tek özneye karşı sınanır; hangi özneye sorulacağını seçici söyler (gerekçe §27.4).
+
+**Seçici önceki slotları görür (`bound`).** Önce zorunlu slotlar, sonra opsiyoneller, her grup bildirim sırasıyla çözülür; her seçici o ana kadar bağlanmış slotları okur. `account_rep` böyle çalışır: temsilciyi kartın zaten bağladığı hesaptan bulur.
 
 **Kurucu ayrı tiptir.** `founder` kendi kapsam tipidir; `employee` seçicisi asla kurucuyu döndürmez. Kurucu bir işgücü birimi değildir (GDD02§5 rulingi).
 
@@ -410,7 +445,11 @@ BAYRAK
   clear_flag(name)
   set_timed_flag(name, days)
   stamp_day(name)               days_since_flag'in kaynağı
+  set_game_flag(name, value = true)
+                                GameState.flags'e tek kapı; beyaz listeli
 ```
+
+İlk dört fiil yalnız motorun kendi hafızasına (`EvFlags`) yazar; `flag`, `flag_unset`, `days_since_flag` ve `flag_expires_within` yaprakları da (§5.2) yalnız onu okur. `GameState.flags` sistem durumudur: içerik ona yalnız `set_game_flag` ile, beyaz listedeki adlara yazar (`tech_debt_birikti`, `critical_bug_unfixed`); `value` verilmezse `true` yazılır, `false` bayrağı indirir. Başka her sistem durumu sahibinin adlı fiiliyle ya da seam'iyle değişir. Beyaz listeye satır eklemek bir tasarım kararıdır.
 
 ZAMANLAMA
 
@@ -468,7 +507,13 @@ DIŞ SİSTEM
 
 ```
   open_negotiation(type, context)   §9.4
+  open_term_table                   bağlı yatırımcının Series A masasını açar
+  open_seed_table                   tek seed teklifinin masasını açar
+  decline_offer                     süresi dolmuş Series A teklifini kapatır;
+                                    fon kalıcı olarak kapanır
 ```
+
+Üçü de para oynatmaz. Seed ve Series A parası masadaki imzada, oynanan anda hareket eder. Masayı açan istek aşamayı taşır (seed ya da Series A).
 
 TERMİNAL
 
@@ -766,6 +811,7 @@ Aynı seviyede: **en eski kabul edilen önce.** Eşitlikte `event_id` alfabetik 
 
 - Masa kağıtları taşır, **kapasite sınırı yoktur** (§12.1 sebebiyle gereksiz).
 - Kağıt açıldığında modal gibi davranır (zaman durur), kapatıldığında masaya döner.
+- Masa kağıtları örnek anahtarıyla tutar (§20 E2). Bir sistem masada bekleyen örneği `EventGate.request` ile isterse o kağıt açılır.
 - Kağıdın kalan süresi kağıdın üzerinde **görünür**. Son 3 günde görsel vurgu.
 - Günlük-tik kartlarında saat gösterilmez (mühürlü kural).
 
@@ -806,7 +852,7 @@ Bu kural masa dağınıklığını kendiliğinden çözer; kapasite tavanına ge
 
 | Yüzey | Gün | Cevapsız kalırsa |
 |---|---|---|
-| VC teklifi | 30 | Otomatik red (mühürlü) |
+| VC teklifi (Series A term sheet) | 10 iş günü | Kendiliğinden kapanmaz: ertelenemez karar kartı sorar (aşağıda) |
 | Satın alma teklifi | 30 | Otomatik red |
 | Rakip teklifi (çalışan) | 7 | Çalışan gider — "bekletildi" |
 | Zam talebi | 7 | Moral düşer, ayrılabilir riski artar |
@@ -814,6 +860,8 @@ Bu kural masa dağınıklığını kendiliğinden çözer; kapasite tavanına ge
 | Frank'in düşük-bahisli kartları | 14 | Sessiz kapanır, ceza yok |
 
 **Varsayılan: 7 gün.** Para masası 30. Düşük bahisli 14.
+
+**Series A term sheet'i bir motor kağıdı değildir.** Süresini yatırım sistemi tutar: teklif 10 iş günü geçerlidir (K5). Süre dolunca teklif kapanmaz, karar günü gelmiş olarak kalır ve `funding.sheet_decision` kartı cevap ister. Kart `interrupt` ve `critical`'dır, ertelenemez; iki seçeneği vardır: masaya otur (Series A masası açılır) ya da reddet (fon kalıcı olarak kapanır) (K10). Süresi birlikte dolan iki teklifin kartları sırayla gelir.
 
 ### 12.3 Yaz izni kağıt değildir
 
@@ -1001,7 +1049,8 @@ event_engine:
   stamps             {name: stamped_day}
   schedule[]         {event_id, fire_on_day, context, arc_id}
   arcs[]             §10.1 tam durum
-  papers[]           {event_id, context, expires_on, opened_before}
+  papers             {örnek_anahtarı: {event_id, context, expires_on,
+                      arc_id, opened_before, admitted_day}}   §20 E2
   budgets            {name: kalan}
   tempo_window       son 7/30 günün ateşleme kayıtları
   held               §18 oyuncu-sonucu satırları
@@ -1017,7 +1066,7 @@ Tüm gün alanları **mutlak oyun günü**dür, "kalan tik" değil. Save/load ve
 
 ### 16.4 Migration
 
-- Motor kendi bloğunu versiyonlar. Şema v9 → v10 geçişinde `event_engine` bloğu eklenir.
+- Motor kendi bloğunu versiyonlar: `event_engine` kayıt şeması v10'da doğdu ve kendi `version`'ını (1) taşır. v10 öncesi kayıt taşınmaz; yükleyici onu açık mesajla reddeder (`SAVE_ERR_TOO_OLD`). Sürümü tutmayan blok boş motorla başlar, error.log'a yazar, crash etmez (C9).
 - Yüklemede katalogda olmayan `event_id` bulunursa: kayıttan temizlenir, error.log'a yazılır, **crash edilmez**.
 - Öznesi olmayan ark yüklemede iptal edilir (`fade`), gösterimde crash etmez.
 - Bilinmeyen bayrak = false (additive namespace).
@@ -1047,7 +1096,7 @@ Build'i durduran (**E**) ve uyaran (**W**) kurallar.
 
 - **E** Ulaşılamaz koşul (`all: [flag X, flag_unset X]`)
 - **W** Hiçbir yerden başlatılmayan ark (öksüz)
-- **W** Hiç ateşlenemeyen kart (hiçbir tetikleyici/ark/sinyal göstermiyor)
+- **W** Hiç ateşlenemeyen kart (hiçbir tetikleyici/ark/sinyal göstermiyor). `tick: request` kartı, kodda bir sistem adını veriyorsa ulaşılabilirdir; adını hiçbir yerin vermediği request kartı ulaşılamazdır
 - **W** Sonuca ulaşmayan ark adımı
 
 ### 17.3 Ekonomi (I2)
@@ -1144,7 +1193,7 @@ Anlamlı bir sonuç ticker'a düşüyorsa, aynı sonuç **history'ye de yazılm�
 
 ### 19.1 Katalog doğrulayıcı
 
-§17'nin tamamını koşar. CI'da ve pre-commit'te. Baseline/suppress desteği (§17.10).
+§17'nin tamamını koşar. CI yoktur: doğrulayıcı (`--event-lint`) elle koşulan kapı sırasının ilk adımıdır. `.githooks/pre-commit` onu koşar ama kanca etkin değildir; etkinleştirmek açık karardır (ACIK_KARARLAR). Baseline/suppress desteği (§17.10): kabul edilen bulgu gerekçesiyle `tools/lint_baseline.json`'a girer; o dosyayı yalnız `--event-lint=baseline` yazar, doğrulamada koşulmaz.
 
 ### 19.2 "Bu kart neden ateşlenmedi" paneli
 
@@ -1241,7 +1290,7 @@ Bunlar de facto şablon olur, ve daha önemlisi **şemanın gerçekten yazılabi
 | C4 | Save'de artık olmayan event_id | Migration temizler, error.log, crash yok |
 | C5 | Zamanlanmış geri çağrı | Asla fonksiyon. Sadece data |
 | C6 | Save scumming | Zar hash(seed, day, event_id, option_id). Aynı seçenek = aynı sonuç. Ironman'de zaten tek slot |
-| C7 | Şema v9 → v10 | event_engine bloğu eklenir, migration zorunlu |
+| C7 | v10 öncesi kayıt | Taşınmaz. Yükleyici açık mesajla reddeder (SAVE_ERR_TOO_OLD) |
 | C8 | Kağıt süresi save sırasında doldu | expires_on mutlak gün. Load'da geçmişse anında çözülür |
 | C9 | Bozuk/eksik motor bloğu | Boş motorla başlar, error.log, crash yok. Koşu devam eder |
 | C10 | Ironman'de modal içinde alt+F4 | Kayıt modal öncesi. Karar tekrar sorulur. Kabul edilmiş davranış |
@@ -1268,7 +1317,7 @@ Bunlar de facto şablon olur, ve daha önemlisi **şemanın gerçekten yazılabi
 | # | Vaka | Cevap |
 |---|---|---|
 | E1 | K2 sınıfı bug (latch unutuldu, sonsuz kazanç) | Latch motorda. Yapısal olarak imkânsız |
-| E2 | Aynı kart taze instance ile iki kez sırada | id bazlı dedupe |
+| E2 | Aynı kart taze instance ile iki kez sırada | Örnek anahtarı bazlı dedupe: run anahtarlı kartta event_id, entity anahtarlı kartta event_id@özne. Aynı kartın iki öznedeki örnekleri yan yana durur (A6), aynı özne için örnek tektir. Kağıdı masada bekleyen örnek yeniden önerilirse reddedilir, mandalı harcanmaz |
 | E3 | Ambient tikten para | I2 + lint |
 | E4 | Gösterimde karşılanabilirdi, tıklamada değil | Çözüm öncesi son kontrol. Seçenek grileşir ve nedenini yazar |
 | E5 | Kilitli seçenek neden kilitli | §5.4 yapısal red gerekçesi → locked_reasons |
@@ -1364,7 +1413,7 @@ Bu GDD'nin **bilinçli boşlukları**. Hiçbiri motorun inşasını bloklamaz.
 
 | # | Madde | Durum | Motorla ilişkisi |
 |---|---|---|---|
-| A1 | Faz geçişleri + Series A kapısı + Sonlar (slot 8/9) | Tasarlanmadı | Motor tag: critical ark iskeletini taşır. Tasarlandığında o modülün task'ına "motora bağla" maddesi konur. Motorda değişiklik gerekmez |
+| A1 | Sonlar (slot 8/9) | Tasarlanmadı | Motor tag: critical ark iskeletini taşır. Tasarlandığında o modülün task'ına "motora bağla" maddesi konur. Motorda değişiklik gerekmez. Faz geçişleri ve Series A kapısı bağlıdır: PhaseGateSystem kapıyı günlük tikte sınar ve mandallar; critical kartlar `funding.gate_traction` ve `funding.gate_series_a` mandalı seam'lerden okur (`phase.gate_ready`, `funding.gate_pending_phase`); geçiş oyuncunun kartta onayıyla `GameState.advance_phase()`'ten olur. Series A kapısının tek şartı `finance.mrr ≥ SalesSystem.TRACTION_MRR_TARGET`'tır (K1–K2) |
 | A2 | Tam seam envanteri | Motor task'ının ilk teslimatı (§6.3) | Ajan docs/SEAM_REGISTRY.md üretir; eksikler modüllere dosyalanır |
 | A3 | Seed round tasarımı | Frank surface 12 metinsiz | Yatırım arkının omurgası; ark iskeleti hazır |
 | A4 | Pazarlık sistemi | Ayrı sistem | open_negotiation sözleşmesi GEÇİCİ damgalı (§9.4). Tasarlandığında motorda değişiklik yok |
@@ -1445,6 +1494,7 @@ Her madde şu üçünü taşır: **belge ne diyordu · ne yapıldı · neden.**
 
 Bunlar GDD'nin §3.1 kart şemasında YOKTU ve inşa sırasında eklendi. Her biri, olmadığında
 motorun ya bir davranışı kaybettiği ya da bir yalanı temsil edebildiği bir yeri kapatıyor.
+Kuralları artık gövdededir (§3.1, §3.2, §4.1, §4.3, §11.4, §16.1, §20 E2); burada gerekçeleri durur.
 
 **`tick: "request"` — hiçbir saatin süpürmediği kart.** Beş kart ailesi, yalnız bir SİSTEMİN
 görebildiği bir kenarda ateşleniyor: destek talebinin yaşlanması, sürümün yayına çıkması,
@@ -1454,7 +1504,7 @@ beat'i ağırlıklı çekilişe bırakmak. `tick: "request"` "beni hiçbir saat 
 bir çağıran tek kapıdır" demektir. Süpürme ve havuz onu zaten dizge eşleşmemesiyle atlıyor, o
 yüzden ek kod gerekmedi; eklenen tek şey `Origin.REQUEST` ve G4'te ONA AİT BOŞ KOL.
 
-**`Origin.REQUEST` G4'ün saat eşleşmesini ATLAR.** `tick`, kartı KİMİN SÜPÜRDÜĞÜNÜ söyler,
+**`Origin.REQUEST` G4'ün tick eşleşmesini ATLAR** (`allowed_hours` ve build-safe yine uygulanır). `tick`, kartı KİMİN SÜPÜRDÜĞÜNÜ söyler,
 kartın adını kimin verebileceğini değil. Satış sekmesinin iki düğmesi `tick: daily` bir kartın
 adını verir ve vermelidir; aksi hâlde adı verilen her kartın ayrıca süpürülmesi gerekirdi, ki
 bu tam olarak yeniden inşanın sildiği İKİNCİ KABUL YOLU'dur.
@@ -1462,8 +1512,8 @@ bu tam olarak yeniden inşanın sildiği İKİNCİ KABUL YOLU'dur.
 **`text.<locale>.body` bir SÖZLÜK olabilir: `{by_seam, variants}`.** Series A kapısı kendi
 gövdesini reddetme sayısına göre yeniden yazıyordu (eski `_refresh_gate_copy`), yani varyant
 metin şema onun için bir kelimeye sahip olmadan ÖNCE oyunda vardı. EVENT_POOL_DESIGN_v1 §5.7'nin
-dar teslimi: genel bir tesis değil, ihtiyacı olan tek kart için. Eksik varyant EN KÜÇÜK anahtara
-düşer, böylece aralığı aşan bir seam boş kart değil ilk gövdeyi verir.
+dar teslimi: genel bir tesis değil, ihtiyacı olan tek kart için. Seçim kuralı §3.2'dedir: aralığı
+aşan seam son gövdede kalır, aralığın altındaki ilk gövdeyi alır; hiçbiri boş kart vermez.
 
 **`{seam:ad.soyad}` metin içinde.** §8.4'ün mekanizması. Sebebi yayınlanmış bir hata:
 `END_META_BANKRUPTCY_FRANK` "Yedi gün kırmızıda kaldın" diyor, `SHUTTER_DAYS` ise Frank v6'dan
@@ -1472,9 +1522,9 @@ Seam'den okunan sayı bayatlayamaz. B2B ailesi aynı şeye DÜZYAZI için ihtiya
 gövdesi sektöre göre değişiyor, o yüzden tek kart `{seam:musteri.complaint_voice}` taşıyor —
 her biri bir sektörün cümlesini gömen on beş neredeyse-aynı kart yerine.
 
-**`scope.<slot>.select` için altı yeni seçici.** `escalated`, `expansion_ready`,
-`open_request` (müşteri); `account_rep`, `support_lead` (çalışan); `expiring_sheet`,
-`meeting_pending` (yatırımcı). Gerekçe yapısal ve §4.3'ün söylemediği bir şey: **koşul, BAĞLANMIŞ
+**`scope.<slot>.select` seçicileri.** §4.3 hiçbir seçici adlandırmıyordu; inşa on iki tane ekledi
+(liste §4.3'te): `lowest_morale` ve `newest_hire` Ekip §17.3'ün adlandırdıklarıdır, öbürleri
+kartların ihtiyacından doğdu (`escalated`, `open_request`, `decision_sheet` …). Gerekçe yapısal: **koşul, BAĞLANMIŞ
 TEK özneye karşı sınanır.** "En mutsuz hesabı seç, sonra tırmandırılmış mı diye sor" — bu iki
 farklı müşteri olduğu her gün sessizce hiç ateşlenmez ve hiçbir yer bunu söylemez. Seçici,
 koşulun soramayacağı soruyu sorar: hangi özne.

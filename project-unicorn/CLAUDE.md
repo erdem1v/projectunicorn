@@ -14,6 +14,7 @@ dakika [WORKING] hedefler. Sonların tam kümesi, koşulları ve demo/EA/full fa
 ## 2. Tasarım otoritesi
 - Otorite `GDDs/`'dir: v2 bölümleri (ch01–14), modül GDD'leri (Ürün ch03 dosyasındadır; Ekip, Ar-Ge, Satış) ve
   olay motoru için `GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`. Hangi dosyanın yürürlükte olduğu `GDDs/README.md`'de.
+- GDD ile `GDDs/GUNCELLEMELER.md` çelişirse ek belge geçerlidir.
 - Motor md'si makineyi, ch11 olay içeriğini yönetir; eşittirler. Kod md'den ayrılırsa ayrılık md'nin §27'sine yazılır.
 - Bir GDD ötekini açıkça geçersiz kılabilir: ch09 → ch01 §4; Ekip → ch02 §2/§6/§10, ch01 §5, ch06 §1.2, ch12 §8.
 - GDD sessiz, belirsiz ya da açıkça çözülmemiş biçimde çelişkiliyse **dur ve sor**. Mekanik, içerik, mimari icat edilmez.

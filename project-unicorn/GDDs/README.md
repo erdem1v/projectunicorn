@@ -4,6 +4,8 @@ Her GDD kendi modülünün kaynağıdır; başka bir belgenin bir bölümünü g
 not sütunundadır. Revizyon dosya adından ya da belge başlığından değil, belgenin içindeki durum
 satırından (Status / YÜRÜRLÜK) okunur; bazı dosya adları ve başlıklar içerikle uyuşmaz.
 
+.docx GDD'lerin kesinleşmiş kararların ya da kodun gerisinde kaldığı yerler [`GUNCELLEMELER.md`](GUNCELLEMELER.md)'dedir; bir .docx ile o dosya ayrışırsa `GUNCELLEMELER.md` geçerlidir.
+
 ## Olay motoru
 
 [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>)
