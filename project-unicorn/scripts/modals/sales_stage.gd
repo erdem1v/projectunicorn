@@ -93,13 +93,8 @@ func _build() -> void:
 	room_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	room_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	room_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	room_art.texture = MeetingScene.room_texture(ROOM_BG)
 	add_child(room_art)
-	# Missing art is not a crash: the charcoal fallback underneath stays visible and the
-	# warning names the file.
-	if ResourceLoader.exists(ROOM_BG):
-		room_art.texture = load(ROOM_BG)
-	if room_art.texture == null:
-		push_warning("[SalesStage] room art missing, flat charcoal fallback: %s" % ROOM_BG)
 
 	var scrim := ColorRect.new()
 	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

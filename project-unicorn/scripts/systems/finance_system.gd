@@ -28,11 +28,6 @@ static var burn_breakdown := STARTING_BURN_BREAKDOWN.duplicate()
 # strings.csv FIN_BURN_<ID>.
 const BURN_IDS := ["salaries", "overtime", "founder", "marketing", "office", "servers"]
 
-# TODAY's one-time charges, label → summed amount: apply_one_time_cost adds, daily_tick clears
-# it at its top, to_dict/from_dict carry it. Nothing reads it for display — the player-facing
-# record of one-time money is GameState.transactions.
-static var one_time_today := {}
-
 # One-time charge id -> localization key. Callers pass ids and one_time_label_display translates
 # at render time, so the transactions list follows the current language.
 const ONE_TIME_LABELS := {
@@ -55,16 +50,12 @@ static func reset() -> void:
 	# would keep charging the new company. duplicate() (not a reference to the const) so a
 	# later set_burn_category cannot edit STARTING_BURN_BREAKDOWN itself.
 	burn_breakdown = STARTING_BURN_BREAKDOWN.duplicate()
-	one_time_today.clear()
 
 
 static func to_dict() -> Dictionary:
 	# The multi-day transactions log is not here: it lives on GameState.transactions and rides
 	# in the GameState block.
-	return {
-		"burn_breakdown": burn_breakdown.duplicate(),
-		"one_time_today": one_time_today.duplicate(),
-	}
+	return {"burn_breakdown": burn_breakdown.duplicate()}
 
 
 static func from_dict(d: Dictionary) -> void:
@@ -79,10 +70,6 @@ static func from_dict(d: Dictionary) -> void:
 		if restored.has(category):
 			restored[String(category)] = int(saved[category])
 	burn_breakdown = restored
-	one_time_today = {}
-	var saved_one_time: Dictionary = d.get("one_time_today", {}) as Dictionary
-	for label in saved_one_time.keys():
-		one_time_today[String(label)] = int(saved_one_time[label])
 
 
 static func starting_daily_burn() -> int:
@@ -96,7 +83,6 @@ static func starting_daily_burn() -> int:
 # --- Entry point (called by TimeManager._tick_finance) ---
 
 static func daily_tick() -> void:
-	one_time_today.clear()   # yesterday's one-time charges stop being "today's"
 	# Salaries and overtime are PULLED: HR ticked at slot 3, so the registry and today's
 	# overtime stamp are settled. Pulling (rather than letting HR push via set_burn_category)
 	# keeps daily_burn from ever publishing fresh overtime against stale salaries, and avoids
@@ -130,7 +116,6 @@ static func daily_tick() -> void:
 static func apply_one_time_cost(amount: int, label: String) -> void:
 	if amount <= 0:
 		return
-	one_time_today[label] = int(one_time_today.get(label, 0)) + amount
 	record_transaction(label, -amount)
 	GameState.accrue_month_expense(amount)   # an outgoing of the open month
 	# set_cash LAST: its cash_changed emit is synchronous, and repaints triggered by it must
@@ -140,8 +125,8 @@ static func apply_one_time_cost(amount: int, label: String) -> void:
 
 static func apply_one_time_income(amount: int, label: String) -> void:
 	# The income sibling of apply_one_time_cost, so no caller has to open-code the ordering.
-	# Deliberately NOT folded into one signed function: a cost also writes one_time_today and
-	# the month's expense accrual, while income only writes the transactions log.
+	# Deliberately NOT folded into one signed function: a cost also writes the month's expense
+	# accrual, while income only writes the transactions log.
 	# SAME LOAD-BEARING ORDER: ledger row FIRST, set_cash LAST.
 	if amount <= 0:
 		return

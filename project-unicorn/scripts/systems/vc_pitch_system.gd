@@ -44,9 +44,7 @@ static var _cold_exit_key: String = ""    # the Frank line this sitting's reject
 # WHICH RUNG THIS SITTING IS. Meeting-local like everything else in this block, and for the
 # same reason: at begin_meeting there is no sheet to read it off — the sheet is what the
 # meeting PRODUCES. The TABLE is told its stage by open(vc_id, stage) instead, because one
-# fund can hold an unsigned seed offer and a Series A sheet at once. reset() must clear it:
-# walk_table reads it between sittings, and a leaked seed stage would make it refuse a
-# Series A walk.
+# fund can hold an unsigned seed offer and a Series A sheet at once.
 static var _stage: String = PitchConstants.STAGE_SERIES_A
 
 
@@ -376,7 +374,6 @@ static func _make_sheet(vc_id: String, granted_day: int) -> TermSheet:
 	sheet.granted_day = granted_day
 	# WEEKDAYS on the real calendar, not calendar days.
 	sheet.expires_day = GameState.add_business_days(granted_day, PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS)
-	sheet.term_bands = inv.get("term_bands", {}).duplicate()
 	sheet.patience_pool = int(inv.get("patience_pool", 0))
 	# The meeting's closing conviction, if one was stamped (-1 = none; the table falls back).
 	sheet.conviction = int(GameState.vc_states.get(vc_id, {}).get("sheet_conviction", -1))
@@ -523,9 +520,6 @@ static func walk_table(vc_id: String, reason: String = "declined") -> void:
 	# WALK_REASON_FUND. ch. 13 §1 needs to know the Series A decision was FACED, while the
 	# buyout card needs to know it was faced THIS WAY rather than by letting a door stand open
 	# for a month.
-	if _stage == PitchConstants.STAGE_SEED:
-		push_error("[VCPitchSystem] walk_table at a seed sitting — the refusal row is locked")
-		return
 	GameState.mark_faced_series_a(reason)
 	for sheet in GameState.active_sheets.duplicate():
 		if sheet.vc_id == vc_id:
@@ -807,7 +801,6 @@ static func _tick_prep() -> void:
 	if GameState.day >= int(GameState.prep.get("done_day", 0)):
 		# Prep finished but the meeting hasn't happened — keep the focus, free capacity.
 		GameState.set_flag("pitch_prep_active", false)
-		GameState.prep["ready"] = true
 
 
 static func _tick_meeting_day() -> void:

@@ -213,9 +213,10 @@ func _build_roster_actions(vc_id: String) -> Control:
 
 	var st: Dictionary = GameState.vc_states.get(vc_id, {})
 	var callback: bool = st.get("status", "open") == "callback"
-	var condition: String = tr("HUNT_CONDITION").format({"condition": _callback_text(st.get("callback", {}))})
+	var condition: String = ""
 	var row := _box(VBoxContainer.new(), 3)
 	if callback:
+		condition = tr("HUNT_CONDITION").format({"condition": _callback_text(st.get("callback", {}))})
 		row.add_child(_label(condition, UiTokens.INK_DIM, 11, true))
 
 	if GameState.pending_meeting.get("vc_id", "") == vc_id:
@@ -270,15 +271,16 @@ func _refresh_offers() -> void:
 	for inv in InvestorRegistry.get_active():
 		if bool(GameState.vc_states.get(String(inv.id), {}).get("pending_sheet", false)):
 			queued.append(String(inv.id))
-	if VCPitchSystem.series_a_road_closed():
-		# Every fund is closed and nothing is live: say it once, plainly, rather than an
-		# empty-offers line that implies another meeting could still produce one.
+	var road_closed: bool = VCPitchSystem.series_a_road_closed()
+	if road_closed:
+		# Every fund is closed and nothing is live: say it once, plainly, with no empty-offers
+		# line or empty slot that implies another meeting could still produce one.
 		_offers.add_child(_label(tr("HUNT_ROAD_CLOSED"), UiTokens.INK_MUTED, 12, true))
 	elif sheets.is_empty() and queued.is_empty():
 		_offers.add_child(_label(tr("HUNT_NO_OFFERS"), UiTokens.INK_DIM, 11))
 	for sheet in sheets:
 		_offers.add_child(_build_offer_card(sheet))
-	if sheets.size() < PitchConstants.MAX_SHEETS:
+	if sheets.size() < PitchConstants.MAX_SHEETS and not road_closed:
 		var empty := _label(tr("HUNT_EMPTY_SLOT"), UiTokens.INK_DIM, 11)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_offers.add_child(empty)

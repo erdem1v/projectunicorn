@@ -134,7 +134,6 @@ static func make_seed_sheet(vc_id: String, band: String, granted_day: int) -> Te
 	sheet.band = band
 	sheet.granted_day = granted_day
 	sheet.expires_day = SeedConstants.NO_EXPIRY_DAY   # the rung is guaranteed
-	sheet.term_bands = bands.duplicate()
 	sheet.patience_pool = int(SeedConstants.PATIENCE_BY_BAND.get(band, 2))
 	# `raise`, not `valuation_m`: at seed the MONEY is the lever and the valuation is derived
 	# (TermSheetTableSystem.implied_post_money). At Series A it is the other way round. That

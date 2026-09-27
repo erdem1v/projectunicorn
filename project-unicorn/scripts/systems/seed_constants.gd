@@ -18,8 +18,7 @@ extends RefCounted
 # --- The door --------------------------------------------------------------
 # Traction phase only, and the bar is NEVER RENDERED — the appetite grammar (the signal is
 # shown, the number is not) governs this door exactly as it governs the Series A one.
-const DOOR_MRR := 20_000                  # the live bar (band anchor)
-const DOOR_MRR_BAND := [15_000, 25_000]   # [ÇALIŞMA] the envelope the anchor sits in
+const DOOR_MRR := 20_000                  # [ÇALIŞMA] the live bar, inside a 15K–25K envelope
 const DOOR_PHASE := 2                     # Traction. The door CLOSES on entering phase 3:
                                           # one seed pitch per run, taken here or not at all.
 

@@ -14,9 +14,9 @@ extends RefCounted
 # the ending wins. Kepenk active is deliberately NOT a
 # suppressor: the recap is most valuable mid-countdown.
 # The FISCAL CLOSE lands here too: the month that just ended is pushed onto
-# GameState.month_history before the recap, so its readers in earlier slots (the event
-# engine's seams, the profitability condition at slot 9) read the closed month the NEXT
-# day — a one-day lag, deliberate: the recap is seen before a month-driven card or ending.
+# GameState.month_history before the recap, so every reader in an earlier slot reads the
+# closed month the NEXT day — a one-day lag, deliberate: the recap is seen before a
+# month-driven card or ending.
 #
 # Static and stateless; all persistent state lives on
 # GameState: month_ledger (snapshot keys written by snapshot(); accrual keys by

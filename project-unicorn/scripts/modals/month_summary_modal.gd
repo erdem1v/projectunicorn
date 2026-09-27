@@ -7,7 +7,6 @@ extends Control
 # process_mode = ALWAYS in the .tscn — mounts on a paused tree.
 # Charcoal header/footer bands are StyleBoxFlat built HERE from UiTokens
 # constants (no .tscn color overrides; flush-edge radii, see _band_stylebox).
-# All currency via UiTokens.format_money (the mockup's "$2.150" TR-thousands form was rejected).
 
 signal dismissed
 
@@ -40,16 +39,19 @@ func populate(data: Dictionary) -> void:
 	var cash: Dictionary = data.cash
 	var team: Dictionary = data.team
 	var brand: Dictionary = data.brand
+	var cash_delta: int = int(cash.to) - int(cash.from)
+	var team_delta: int = int(team.to) - int(team.from)
+	var brand_delta: int = int(brand.to) - int(brand.from)
 	_add_row(tr("FIN_CAP_MRR"),
 		"%s → %s" % [UiTokens.format_money(int(mrr.from)), UiTokens.format_money(int(mrr.to))],
 		_mrr_chip(int(mrr.from), int(mrr.to)))
 	_add_row(tr("MONTH_ROW_CASH"),
 		"%s → %s" % [UiTokens.format_money(int(cash.from)), UiTokens.format_money(int(cash.to))],
-		_money_chip(int(cash.to) - int(cash.from)))
+		_delta_chip(cash_delta, UiTokens.format_money(absi(cash_delta))))
 	_add_row(tr("MONTH_ROW_TEAM"), "%d → %d" % [team.from, team.to],
-		_int_chip(int(team.to) - int(team.from)))
+		_delta_chip(team_delta, str(absi(team_delta))))
 	_add_row(tr("MONTH_ROW_BRAND"), "%d → %d" % [brand.from, brand.to],
-		_int_chip(int(brand.to) - int(brand.from)))
+		_delta_chip(brand_delta, str(absi(brand_delta))))
 	_add_row(tr("FIN_RUNWAY"), data.runway_text, {})  # net runway; no chip
 
 
@@ -104,19 +106,11 @@ func _mrr_chip(from: int, to: int) -> Dictionary:
 	if from > 0 and delta != 0:
 		var pct: int = int(round(abs(delta) / float(from) * 100.0))
 		return _delta_chip(delta, Fmt.percent(pct, 0))
-	return _money_chip(delta)  # month started at $0 (or flat) → absolute fallback
-
-
-func _money_chip(delta: int) -> Dictionary:
-	return _delta_chip(delta, UiTokens.format_money(absi(delta)))
-
-
-func _int_chip(delta: int) -> Dictionary:
-	return _delta_chip(delta, "%d" % absi(delta))
+	return _delta_chip(delta, UiTokens.format_money(absi(delta)))  # month started at $0 (or flat)
 
 
 func _delta_chip(delta: int, magnitude: String) -> Dictionary:
-	# {text, palette}: U+2212 minus and "±0 —" when flat (not the plain "+N" helpers).
+	# {text, palette}: U+2212 minus, and "±0 —" when flat.
 	var text: String = "±0 —"
 	if delta != 0:
 		text = "%s%s %s" % ["+" if delta > 0 else "−", magnitude, "↑" if delta > 0 else "↓"]

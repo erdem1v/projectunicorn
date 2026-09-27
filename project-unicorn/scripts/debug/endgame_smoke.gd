@@ -1916,7 +1916,7 @@ static func _case_patience_zero_locks_pushes() -> String:
 		return "patience.current=%d" % int(vs.patience.current)
 	if bool(TermSheetTableSystem.show_other_available()) and TermSheetTableSystem.can_show_other():
 		return "the other offer can still be shown after the final offer"
-	TermSheetTableSystem._reset()
+	TermSheetTableSystem.reset()
 
 	# The cold fund: same pushes, no goodwill left → it walks.
 	var rej0: int = GameState.vc_rejections

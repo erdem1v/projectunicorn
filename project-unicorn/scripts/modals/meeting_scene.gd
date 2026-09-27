@@ -47,7 +47,7 @@ func _ready() -> void:
 
 
 func populate(view_state: Dictionary) -> void:
-	_apply_room(String(view_state.get("background_path", "")))
+	_room_art.texture = room_texture(String(view_state.get("background_path", "")))
 	_portrait.set_portrait(
 		String(view_state.get("portrait_path", "")),
 		UiFactory.initials_of(String(view_state.get("speaker_name", ""))))
@@ -78,12 +78,15 @@ func populate(view_state: Dictionary) -> void:
 
 # --- rendering helpers ------------------------------------------------------
 
-func _apply_room(path: String) -> void:
-	# Covered-aspect fills the frame at any size; missing file → flat charcoal fallback.
-	var tex: Texture2D = load(path) if path != "" and ResourceLoader.exists(path) else null
-	_room_art.texture = tex
-	if tex == null and path != "":
-		push_warning("[MeetingScene] room art missing, flat charcoal fallback: %s" % path)
+## Room art for a dialogue stage. Missing art is not a crash: the
+## flat charcoal fallback under the art stays visible and the warning names the file.
+static func room_texture(path: String) -> Texture2D:
+	if path == "":
+		return null
+	var tex: Texture2D = load(path) if ResourceLoader.exists(path) else null
+	if tex == null:
+		push_warning("[room art] missing, flat charcoal fallback: %s" % path)
+	return tex
 
 
 func _apply_active_line(line: Dictionary, monologue_text: String) -> void:

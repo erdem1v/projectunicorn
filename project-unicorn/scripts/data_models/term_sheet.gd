@@ -29,9 +29,6 @@ extends Resource
 @export var granted_day: int = 0          # day the validity window opened (delivery day for a delayed sheet)
 @export var expires_day: int = 0          # the day the last of PitchConstants.SHEET_VALIDITY_BUSINESS_DAYS falls on
 
-# --- Archetype bands (InvestorRegistry snapshot at grant) ---
-@export var term_bands: Dictionary = {}   # {valuation, dilution, board} archetype words
-
 # --- Term Sheet Table inputs ---
 @export var patience_pool: int = 0        # set at grant (the fund's pool, or the seed band's); the table consumes it
 ## The meeting's closing conviction (0..100), stamped at grant; the table's opening eagerness

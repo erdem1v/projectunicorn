@@ -348,6 +348,43 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     politikasına geçer ve görünür bir kartla kapanır.
   - Kaynak: Olay motoru GDD §10.5, §18.3; CLAUDE.md §5
 
+- **20 · Ay sonu özeti çipinde tire ve script literali (±0 —).**
+  - Ne oluyor: Ay boyunca değişmeyen satırın (MRR, kasa, ekip, marka) çipinde "±0 —" yazıyor. Bu metin bir anahtar
+    değil, script literali ve uzun tire içeriyor.
+  - Nerede: scripts/modals/month_summary_modal.gd `_delta_chip`
+  - Oyuncuya etkisi: Değişmeyen her satırda iki dilde de aynı "±0 —" çipi görünüyor. Bu, oyuncu metnindeki tire
+    yasağına aykırı.
+  - Seçenekler: A) Yalnız "±0" yazılsın (sembol, anahtar gerekmez). B) Yeni MONTH_CHIP_FLAT anahtarı açılsın (önce EN,
+    sonra TR). C) Olduğu gibi kalsın, sembol çipi istisna sayılsın.
+  - Kaynak: GDD ch01 §9 (no dashes in copy); CLAUDE.md §5
+
+- **21 · Kurucu yaşam gideri hâlâ burn'ün tamamı.**
+  - Ne oluyor: FinanceSystem.STARTING_BURN_BREAKDOWN içinde "founder": 50 $/gün [ÇALIŞMA] var ve 1. günün burn'ünün
+    tamamı bu. Finans'ta FIN_BURN_FOUNDER "Kurucu yaşam gideri / Founder living costs" satırı olarak görünüyor. GDD
+    yaşam giderini kaldırıyor: ch08 §1'e göre burn maaşlar + araçlar + servis + marketing'den oluşuyor ve 'araçlar'
+    kalemi kodda yok.
+  - Nerede: scripts/systems/finance_system.gd `STARTING_BURN_BREAKDOWN`, `BURN_IDS`; localization/strings.csv
+    `FIN_BURN_FOUNDER`
+  - Oyuncuya etkisi: Başlangıç runway'i (10K$ ile ~6,6 ay) bu kaleme dayanıyor ve oyuncu GDD'nin kaldırdığı bir gider
+    satırını görüyor. Kalem silinirse ilk maaşa kadar burn sıfıra iner.
+  - Seçenekler: A) Kalem ch08 §1'in 'araçlar' kalemi olarak yeniden adlandırılsın (aynı 50 $/gün, yeni FIN_BURN_TOOLS
+    metni; denge değişmez). B) Kalem silinsin (0 $, erken oyun baskısı kalkar, yeniden kalibrasyon gerekir). C)
+    Kalsın, ayrılık GDD'ye istisna olarak yazılsın.
+  - Kaynak: GDD ch08 §1; ch02 §1; Ekip GDD §9.1 ('Yaşam maliyeti yoktur')
+
+- **22 · InvestorRegistry'deki donmuş değerleme ve pay rakamları okunmuyor.**
+  - Ne oluyor: Her fonun opening_terms'ündeki valuation_m ve dilution_pct hiçbir yerde okunmuyor. Series A açılış
+    şartları ARR'den türetiliyor; registry'den yalnız board_seats ve board_veto okunuyor.
+  - Nerede: scripts/autoload/investor_registry.gd `INVESTORS[*].opening_terms`; okuyucu
+    scripts/systems/vc_pitch_system.gd `_derive_series_a_terms`
+  - Oyuncuya etkisi: Bugün bir etkisi yok, ölü veri. Ancak satın alma kartı ve finance.valuation() seam'i için
+    değerleme kaynağı eksik ve docs/writing/FRANK_UNWIRED.md bu rakamları o kaynağın adayı olarak anıyor.
+  - Seçenekler: A) valuation_m ve dilution_pct silinsin, opening_terms yalnız yönetim kurulu şartlarını taşısın
+    (FRANK_UNWIRED satırı güncellenir). B) Satın alma teklifi ya da finance.valuation() seam'i için değerleme kaynağı
+    olarak bağlansın. C) Series A türetimine fon başına taban ya da tavan olarak bağlansın.
+  - Kaynak: GDD ch09 §5; ACIK_KARARLAR 'Seam envanterinin açık YOK satırları' (finance.valuation()) ve 'Satın alma
+    sonu'; docs/writing/FRANK_UNWIRED.md
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında
