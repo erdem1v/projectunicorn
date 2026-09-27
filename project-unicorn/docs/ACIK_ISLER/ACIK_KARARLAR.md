@@ -28,8 +28,7 @@ ONERI_v3'ün, D ve B numaraları ACIK_KARARLAR_D1-D13'ün numaralarıdır; ikisi
 
 ## Temizlikten çıkanlar
 
-Temizlikte bulunan ve kodda doğrulanan maddeler. 5. madde dalga 1'in `tempo.gd` düzeltmesinin yan etkisidir; 7. madde
-doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
+Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
 
 - **1 · İŞKOLİK huyu etkisiz.**
   - Ne oluyor: Huyun tek etkisi olan `overtime_morale_mult` (0,5) anahtarını hiçbir kod okumuyor; huy okumaları
@@ -45,22 +44,28 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     bile yavaş erir) yoksa yalnız sekizin üstündeki paya mı (×1,25) uygulanır.
   - Kaynak: Ekip GDD §6, §7.1.
 
-- **2 · GERÇEK LİDER'in faydası yok.**
-  - Ne oluyor: `lead_experience_mult` (1,5) okunmuyor; huyun yalnız bedeli işliyor (`HRMoraleSystem._charge_departure`:
-    biri ayrılınca huyu taşıyan −10, öbürleri −5 moral alır). Bağlanacağı yerde ikinci bir sapma var:
-    `HRSystem.tick_experience` herkesin deneyim kazancını kurucunun Liderlik'iyle çarpıyor
-    (`HRConstants.experience_gain_mult`, en çok ×1,5); Ekip §4.2 ise "Ekibin deneyim kazanım hızını liderin kendisi
-    değil, GERÇEK LİDER huyu etkiler" diyor.
-  - Nerede: `scripts/systems/hr_constants.gd` (`TRAITS["takes_them_under"]`), `scripts/systems/hr_system.gd`
-    (`tick_experience`). Lider koltuğu alan başına değil, yapım başına tektir: `FeatureBuild.lead_engineer_id`
-    (`ProductSystem.set_build_lead`).
+- **2 · Ekip etkileri yapımın liderinden değil kurucunun Liderlik'inden okunuyor; GERÇEK LİDER'in faydası yok.**
+  - Ne oluyor: (1) `lead_experience_mult` (1,5) okunmuyor; huyun yalnız bedeli işliyor
+    (`HRMoraleSystem._charge_departure`: biri ayrılınca huyu taşıyan −10, öbürleri −5). (2) `HRSystem.tick_experience`
+    herkesin deneyim kazancını kurucunun Liderlik'iyle çarpıyor (`HRConstants.experience_gain_mult`, en çok ×1,5);
+    Ekip §4.2: "Ekibin deneyim kazanım hızını liderin kendisi değil, GERÇEK LİDER huyu etkiler". (3)
+    `HRMoraleSystem._scale` her çalışanın moral düşüşünü kurucunun Liderlik'iyle ölçüyor; §7.1 "o alanın liderinin
+    Liderlik yıldızı, lider yoksa kurucunun" der, §4.2 kurucuyu yalnız lideri olmayan alanlar (Satış, Destek, Hesap
+    masaları) için sayar.
+  - Nerede: `scripts/systems/hr_constants.gd` (`TRAITS["takes_them_under"]`, `experience_gain_mult`);
+    `scripts/systems/hr_system.gd` (`tick_experience`); `scripts/systems/hr_morale_system.gd` (`_scale`,
+    `_leadership_drop_mult`, `_charge_departure`). Lider koltuğu alan başına değil yapım başına tektir:
+    `FeatureBuild.lead_engineer_id` (`ProductSystem.set_build_lead`).
   - Oyuncuya etkisi: Bedelli huy saf yük; hover "Sorumlusu olduğu alanda herkes daha hızlı öğrenir; ayrılıkları ağır
-    alır." diyor, öğrenme hızı değişmiyor. Buna karşılık kurucunun Liderlik'i ekibin öğrenmesini hızlandırıyor.
-  - Seçenekler: A) Yapımın aktif lideri bu huyu taşıyorsa yapıma atananların (liderin kendisi hariç) kazancı
-    `lead_experience_mult` ile çarpılır, kurucu Liderlik çarpanı kalkar; GDD'nin harfi. B) A'daki bağlama yapılır,
-    kurucu Liderlik çarpanı da kalır; ikisi çarpılır (×2,25'e kadar), §4.2 cümlesi güncellenir. C) Bağlanmaz; huy metni
-    (`HR_TRAIT_TAKES_THEM_UNDER_EFFECT`) ve Ekip §6 satırı değişir.
-  - Kaynak: Ekip GDD §4.2, §6.
+    alır." diyor, öğrenme hızı değişmiyor. Kurucunun Liderlik'i ise ekibin hem öğrenmesini hızlandırıyor hem moralini
+    koruyor; yapıma yüksek Liderlik'li bir lider atamak ekibi korumuyor.
+  - Seçenekler: A) GDD'nin harfi: yapıma atananlar için moral düşüş ölçeği yapımın aktif liderinin Liderlik'i,
+    öbürleri için kurucununki; yapımın lideri GERÇEK LİDER taşıyorsa atananların (lider hariç) kazancı
+    `lead_experience_mult` ile çarpılır ve kurucu Liderlik deneyim çarpanı kalkar. B) A'daki bağlamalar yapılır,
+    kurucu Liderlik deneyim çarpanı da kalır (×2,25'e kadar); §4.2 cümlesi güncellenir. C) Kurucu tek kaynak kalır:
+    §4.2 ve §7.1 buna göre güncellenir; GERÇEK LİDER ya bağlanır ya da metni (`HR_TRAIT_TAKES_THEM_UNDER_EFFECT`) ve
+    Ekip §6 satırı değişir.
+  - Kaynak: Ekip GDD §4.2, §6, §7.1.
 
 - **4 · Balinanın güven şartı `security_cert`'i saymıyor.**
   - Ne oluyor: Şart yalnız `not InfraSystem.blocks_enterprise_signature()` okuyor: Yerel dışındaki her sağlayıcı şartı
@@ -68,7 +73,7 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     security_cert" diye koyar; Ürün §10 güven koşulunu yalnız Kurumsal Bulut'a verir (düz Bulut "nötr"); Ar-Ge §4.2
     sertifikayı Kurumsal Bulut'a ikinci yol sayar. GDD'ye uyan yüklem zaten var ama üretimde okuyucusu yok (yalnız
     smoke): `InfraSystem.meets_enterprise_trust()`.
-  - Nerede: `scripts/systems/sales_faucet_system.gd` (`_condition_met`, `WHALE_COND_PROVIDER`),
+  - Nerede: `scripts/systems/sales_faucet_system.gd` (`_condition_met`, `WHALE_COND_PROVIDER`);
     `scripts/systems/infra_system.gd` (`blocks_enterprise_signature`, `meets_enterprise_trust`).
   - Oyuncuya etkisi: Yerel sağlayıcıda Güvenlik Sertifikasyonu'nu bitiren oyuncuya balina hâlâ "Altyapı güvencesi
     istiyor." der; düğüm metni ise "Kurumsal alıcının ilk sorusu cevaplanmış olur" diyor. Düz Bulut'a geçmek şartı
@@ -81,95 +86,71 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     `provider_ok`, `probe_provider_trust` kilidi); yalnız biri değişirse müşteri döner ve aynı nedenle yine kaybedilir
     (Satış §9), bu yüzden birlikte değişmeliler. Masa metni `SALES_LOCK_PROVIDER` "kurumsal kademe" diyor ama yüklem
     düz Bulut'u da kabul ediyor.
-  - Kaynak: Satış GDD §8, §9; Ürün GDD §10; Ar-Ge GDD §4.2 (rev 1.7).
+  - Kaynak: Satış GDD §8, §9; Ürün GDD (ch03) §10; Ar-Ge GDD §4.2 (rev 1.7).
 
-- **5 · Elde tutma ve talep kartları genişleme teklifini 30 gün tutabiliyor (`tempo.gd` düzeltmesinin yan etkisi).**
-  - Ne oluyor: `tempo.gd` düzeltmesiyle olay freninin Katman 2'si (aynı özne; müşteri 30, çalışan 14 gün) ilk kez
-    çalışıyor: `EvTempo._record` artık kabul edilen kartın öznesini yazıyor, önceden hep boş yazıyordu. Fren yalnız
-    havuz çekilişinde sorulur ama tetiklenen ve istenen kartlar da pencereyi damgalar: `customer.retention` ve
-    `customer.request_*`. Bugünkü destede müşteri öznesi taşıyan tek havuz kartı `customer.expansion`; `expansion_ready`
-    seçicisi uygun hesaplardan yalnız en yüksek MRR'lıyı döndürür, o hesap frenliyse sıradakine düşmez.
-  - Nerede: `scripts/events/present/tempo.gd` (`assign`, `_record`), `scripts/events/gate/scope.gd`
-    (`_select_customer`, `"expansion_ready"`), `scripts/events/core/engine.gd` (`_step_pool`).
+- **5 · Olay seçicisi tek özne döndürüyor; o özne frenli ya da mandallıysa sıradakine düşülmüyor.**
+  - Ne oluyor: Seçici uygun öznelerden yalnız birini döndürür; o özne frende ya da mandalda takılırsa aynı çekilişte
+    başka özne denenmez. İki yerde görünüyor. (1) `tempo.gd` düzeltmesiyle olay freninin Katman 2'si (aynı özne;
+    müşteri 30, çalışan 14 gün) ilk kez çalışıyor. Fren yalnız havuz çekilişinde sorulur ama tetiklenen ve istenen
+    kartlar da pencereyi damgalar (`customer.retention`, `customer.request_*`). Destede müşteri öznesi taşıyan tek
+    havuz kartı `customer.expansion`; `expansion_ready` seçicisi en yüksek MRR'lı uygun hesabı döndürür. (2) Günlük
+    taramadaki varlık anahtarlı kartlar bağlamsız önerilir: `customer.cs_escalation` en düşük memnuniyetli tırmanan
+    hesaba (`escalated`, hesap başına 21 günlük mandal), `funding.sheet_expiry` en az iş günü kalan teklife
+    (`expiring_sheet`, fon başına one_shot) bağlanır; mandal doluysa kart G3'te düşer. `funding.sheet_decision` aynı
+    düzenekle fonları bilerek sıraya koyuyor (kart notu), orada sorun yok. (2) kod okumasıyla doğrulandı, koşuda
+    ölçülmedi.
+  - Nerede: `scripts/events/gate/scope.gd` (`_select_customer` "expansion_ready" ve "escalated", `_select_investor`
+    "expiring_sheet"); `scripts/events/present/tempo.gd` (`assign`, `_record`, `pool_blocked_reason`);
+    `scripts/events/gate/gate.gd` (`propose`: varlık anahtarlı kartta G5, G3'ten önce);
+    `scripts/events/core/engine.gd` (`_step_pool`, günlük tarama); kartlar
+    `data/events/cards/customer/cs_escalation.json`, `data/events/cards/funding/sheet_expiry.json`.
   - Oyuncuya etkisi: En büyük uygun hesap elde tutma ya da talep kartı aldıktan sonra 30 gün boyunca hiçbir hesaba
-    genişleme kağıdı gelmez; damga tekrarlanırsa daha uzun (hesaplar 22 günde bir talep açar,
-    `CS_REQUEST_INTERVAL_DAYS`). Satış sekmesindeki "Değerlendir" düğmesi istek olarak geçtiği için çalışır.
-  - Seçenekler: A) Özneyi yalnız havuz kabulü damgalar: elde tutmadan birkaç gün sonra aynı hesaba genişleme gelebilir
-    (§13.1'in "aynılık" sorunu); §13.3'e bir cümle. B) Çekiliş sıradakine düşer: frenli hesap dışarıda bırakılıp seçici
-    yeniden çözülür; deterministik kalır, `EvEngine` ve `EvScope` değişir, §14.3'e bir cümle. C) Olduğu gibi kalır;
-    §13.3'e "tetiklenen ve istenen kartlar da pencereyi damgalar" yazılır.
-  - Kaynak: olay motoru GDD §13.1, §13.3, §14.3.
+    genişleme kağıdı gelmez (hesaplar 22 günde bir talep açtığı için daha uzun olabilir); Satış sekmesindeki
+    "Değerlendir" düğmesi istek olarak geçtiği için çalışır. İki hesabın temsilcisi aynı dönemde alarm verirse
+    ikincinin tırmanma kartı 21 gün ya da ilk hesap toparlanana dek gelmeyebilir. Son günü aynı olan iki term
+    sheet'ten ikincisinin "son 3 gün" uyarısı hiç gelmez; karar kartı yine gelir.
+  - Seçenekler: A) Seçici frenli ya da mandalı dolu özneyi atlayıp sıradakine düşer: deterministik kalır, `EvScope` ve
+    `EvEngine` değişir; §4.3 ve §14.3'e birer cümle. B) Tarama kartı uygun her özne için ayrı önerilir; fazlası Katman
+    4 ile kağıda düşer (§20 A6). (1)'i çözmez. C) Özneyi yalnız havuz kabulü damgalar: elde tutmadan birkaç gün sonra
+    aynı hesaba genişleme gelebilir (§13.1'in "aynılık" sorunu); (2)'yi çözmez. D) Kalır; §13.3'e "tetiklenen ve
+    istenen kartlar da pencereyi damgalar", kart notlarına ve §27'ye "özneler sırayla işlenir" yazılır.
+  - Kaynak: Olay motoru GDD §4.3, §13.1, §13.3, §14.3, §20 A6, §27.4 (seçiciler), §27.5 madde 2.
 
 - **6 · Risk'teki hesaba genişleme teklif edilebiliyor.**
-  - Ne oluyor: `B2BSalesSystem.can_offer_expansion` pazara, duruma, `last_expansion_day` mandalına ve olgunluğa (45 gün,
-    `EXPANSION_MATURE_DAYS`) bakıyor, yaşam evresine (`lifecycle_phase`) bakmıyor. Aynı yüklemi `musteri.is_expansion_ready`
-    seam'i (açıklaması "mature, healthy…" ama sağlık okunmuyor) ve `expansion_ready` seçicisi okuyor. Günlük tarama yalnız
-    sağlıklı hesabı `expansion` evresine taşısa da havuz kartı `customer.expansion` Risk'teki hesabı seçebiliyor; masadaki
-    kağıt da hesap Risk'e düşünce geçerli kalıyor. Bu dalgadan önce de böyleydi.
-  - Nerede: `scripts/systems/b2b_sales_system.gd` (`can_offer_expansion`, `expand`), seam `musteri.is_expansion_ready`.
-  - Oyuncuya etkisi: "Churn'e ~N gün" sayan bir hesap için "Büyüme fırsatı" kağıdı gelebilir; kabul koltuk ve MRR ekler,
-    hesap Risk'te kalır ve genişleme hakkı harcanır.
-  - Seçenekler: A) `can_offer_expansion` Risk'i dışlar: tek satır; seam, seçici ve tarama birlikte düzelir. Bedel: Risk'e
-    düşen hesabın masadaki kağıdı açılışta düşer ve `one_shot` mandalı kart kabul edilirken harcandığı için hesap bir daha
-    teklif alamaz; bu yol da çözülmeli. B) Kalır; seam açıklaması düzeltilir.
+  - Ne oluyor: `B2BSalesSystem.can_offer_expansion` pazara, duruma, `last_expansion_day` mandalına ve olgunluğa (45
+    gün, `EXPANSION_MATURE_DAYS`) bakıyor, yaşam evresine (`lifecycle_phase`) bakmıyor. Aynı yüklemi
+    `musteri.is_expansion_ready` seam'i (açıklaması "mature, healthy…" ama sağlık okunmuyor) ve `expansion_ready`
+    seçicisi okuyor. Günlük tarama yalnız sağlıklı hesabı `expansion` evresine taşısa da havuz kartı
+    `customer.expansion` Risk'teki hesabı seçebiliyor; masadaki kağıt da hesap Risk'e düşünce geçerli kalıyor.
+  - Nerede: `scripts/systems/b2b_sales_system.gd` (`can_offer_expansion`, `expand`); seam
+    `musteri.is_expansion_ready`.
+  - Oyuncuya etkisi: "Churn'e ~N gün" sayan bir hesap için "Büyüme fırsatı" kağıdı gelebilir; kabul koltuk ve MRR
+    ekler, hesap Risk'te kalır ve genişleme hakkı harcanır.
+  - Seçenekler: A) `can_offer_expansion` Risk'i dışlar: tek satır; seam, seçici ve tarama birlikte düzelir. Bedel:
+    Risk'e düşen hesabın masadaki kağıdı açılışta düşer ve `one_shot` mandalı kart kabul edilirken harcandığı için
+    hesap bir daha teklif alamaz; bu yol da çözülmeli. B) Kalır; seam açıklaması düzeltilir.
   - Kaynak: Satış GDD §19 (genişleme kapısı "Korunanlar" arasında).
 
-- **7 · Moral düşüş ölçeği hep kurucunun Liderlik'i.**
-  - Ne oluyor: `HRMoraleSystem._scale` her çalışanın moral düşüşünü kurucunun Liderlik'iyle ölçüyor. Ekip §7.1: "O alanın
-    liderinin Liderlik yıldızı — lider yoksa kurucunun Liderliği (§4.2)"; §4.2 kurucuyu yalnız lideri olmayan alanlar
-    (Satış, Destek, Hesap masaları) için sayar.
-  - Nerede: `scripts/systems/hr_morale_system.gd` (`_scale`, `_leadership_drop_mult`). Lider koltuğu yapım başına tektir
-    (`FeatureBuild.lead_engineer_id`).
-  - Oyuncuya etkisi: Yapıma yüksek Liderlik'li bir lider atamak ekibin moralini korumuyor; "iyi lider ekibi ayakta
-    tutar" (§4.2) hissi oluşmuyor.
-  - Seçenekler: A) Yapıma atananlar için yapımın aktif liderinin Liderlik'i, öbürleri için kurucununki okunur. B) Kalır;
-    §4.2 ve §7.1 kurucuyu tek kaynak diye güncellenir.
-  - Kaynak: Ekip GDD §4.2, §7.1.
-
 - **8 · EvTicker'ın tuttuğu oyuncu-sonucu satırlarını kimse okumuyor.**
-  - Ne oluyor: EvTicker.push, PRIORITY_PLAYER satırlarını _held listesine ekliyor ve kayda yazıyor (EvSave, anahtar
-    'held'). Ama projede _held'i okuyan ya da gösteren hiçbir yüzey yok. Motor GDD §18.3 'oyuncu-sonucu satırları asla
-    düşürülmez' diyor; satırlar düşmüyor, ama hiçbir yerde görünmüyor da. Haber akışı tamponu dolunca aynı satır
-    arşive girmiyor.
-  - Nerede: `scripts/events/present/ticker.gd` (`_held`, `push`, `to_dict` / `from_dict`),
+  - Ne oluyor: `EvTicker.push`, `PRIORITY_PLAYER` satırlarını `_held` listesine ekliyor ve kayda yazıyor (`EvSave`,
+    anahtar `held`). Ama projede `_held`'i okuyan ya da gösteren hiçbir yüzey yok. Motor GDD §18.3 "oyuncu-sonucu
+    satırları asla düşürülmez" diyor; satırlar düşmüyor, ama hiçbir yerde görünmüyor da. Haber akışı tamponu dolunca
+    aynı satır arşive girmiyor.
+  - Nerede: `scripts/events/present/ticker.gd` (`_held`, `push`, `to_dict` / `from_dict`);
     `scripts/events/core/save.gd` (`held` alanı).
-  - Oyuncuya etkisi: Tampon doluyken gelen bir oyuncu-sonucu satırı (expire_note, karar teyidi) canlı şeritte bir kez
-    kayar, sonra geri bakılacak bir yerde kalmaz. Aynı sonuç History'de varsa (§18.1) kayıp yalnız ticker
+  - Oyuncuya etkisi: Tampon doluyken gelen bir oyuncu-sonucu satırı (`expire_note`, karar teyidi) canlı şeritte bir
+    kez kayar, sonra geri bakılacak bir yerde kalmaz. Aynı sonuç History'de varsa (§18.1) kayıp yalnız ticker
     arşivindedir.
-  - Seçenekler: (a) _held'i bir yüzeye bağla (ör. haber akışı arşivinde öncelikli satır ya da History). (b) _held'i
-    emekliye ayır ve §18.3'ü 'oyuncu-sonucu History'de durur' diye yaz. (c) Haber akışı tamponunda oyuncu-sonucu
-    satırına öncelik ver.
+  - Seçenekler: A) `_held` bir yüzeye bağlanır (ör. haber akışı arşivinde öncelikli satır ya da History). B) `_held`
+    emekliye ayrılır ve §18.3 "oyuncu-sonucu History'de durur" diye yazılır. C) Haber akışı tamponunda oyuncu-sonucu
+    satırına öncelik verilir.
   - Kaynak: Olay motoru GDD §18.1, §18.3; motor GDD §18.2 koda göre yeniden yazılırken görüldü.
 
-- **9 · Seçicili tarama kartı tek özneye bağlanıyor; mandalı dolu özne öbür hesapları bekletiyor.**
-  - Ne oluyor: Günlük taramadaki varlık anahtarlı kartlar bağlamsız önerilir ve seçici tek özne döndürür:
-    `customer.cs_escalation` için en düşük memnuniyetli tırmanan hesap (`escalated`), `funding.sheet_expiry` için en
-    az iş günü kalan teklif (`expiring_sheet`). O öznenin mandalı doluysa kart G3'te düşer, aynı taramada başka uygun
-    özne denenmez. `cs_escalated` her gün yeniden hesaplanan bir durumdur (`B2BSalesSystem._tick_customer`) ve kartın
-    hesap başına mandalı 21 gün: en mutsuz tırmanan hesap tırmanık kaldıkça öbür tırmanan hesaplara kart gelmez.
-    `sheet_expiry` fon başına one_shot: iki teklifin son günü aynıysa ikinci fonun uyarısı hiç gelmez, ikisi birlikte
-    karar gününe geçince seçici ikisini de atlar. `funding.sheet_decision` aynı düzenekle fonları bilerek sıraya
-    koyuyor (kart notu), orada sorun yok. Kuyruk ve masa kimliği düzeltmesi bunu çözmez, çünkü ikinci özne hiç
-    önerilmiyor. Kod okumasıyla doğrulandı, koşuda ölçülmedi.
-  - Nerede: `scripts/events/gate/scope.gd` (`_select_customer` "escalated", `_select_investor` "expiring_sheet"),
-    `scripts/events/gate/gate.gd` (`propose`: varlık anahtarlı kartta G5, G3'ten önce),
-    `scripts/events/core/engine.gd` (günlük tarama); kartlar `data/events/cards/customer/cs_escalation.json`,
-    `data/events/cards/funding/sheet_expiry.json`.
-  - Oyuncuya etkisi: İki hesabın temsilcisi aynı dönemde alarm verirse ikinci hesabın tırmanma kartı 21 gün boyunca ya
-    da ilk hesap toparlanana dek gelmeyebilir. Son günü aynı olan iki term sheet'ten ikincisinin "son 3 gün" uyarısı
-    hiç gelmez; karar kartı (`funding.sheet_decision`) yine gelir.
-  - Seçenekler: A) Seçici mandalı dolu özneyi atlayıp sıradakine düşer: deterministik kalır, 5. açık maddenin B
-    seçeneğiyle aynı düzenek (EvScope seçimi mandala bakar). B) Tarama kartı uygun her özne için ayrı önerilir: aynı
-    gün birden çok örnek olur, fazlası Katman 4 ile kağıda düşer (§20 A6'daki gibi). C) Kalır: özneler sırayla
-    işlenir; kart notlarına ve motor md §27'ye yazılır.
-  - Kaynak: Olay motoru GDD §4.3, §20 A6, §27.4 (seçiciler), §27.5 madde 2 (iki canlı teklifte ikinci uyarının
-    yutulması); docs/ACIK_ISLER/ACIK_KARARLAR.md 5. madde (aynı seçici düzeneği).
-
-- **10 · VC iç sesi, sorulmuş soruya gelecek zamanla bakıyor (Beat 3 _MONO satırları).**
-  - Ne oluyor: 3. vuruşta VC'nin sorusu (active_line) ile iç ses (monologue_text) aynı ekranda aynı anda çıkıyor. İç
-    ses satırları ise gelecek zamanda yazılmış: "Churn'ü soracak.", "Tek-kurucu riskini soracak.", "Rakibi masaya
+- **10 · VC iç sesi, sorulmuş soruya gelecek zamanla bakıyor (Beat 3 `_MONO` satırları).**
+  - Ne oluyor: 3. vuruşta VC'nin sorusu (`active_line`) ile iç ses (`monologue_text`) aynı ekranda aynı anda çıkıyor.
+    İç ses satırları ise gelecek zamanda yazılmış: "Churn'ü soracak.", "Tek-kurucu riskini soracak.", "Rakibi masaya
     koyacak.", "En zayıf ekseni bulacak.". Oyuncu soruyu okurken iç ses onun daha sorulacağını söylüyor.
-  - Nerede: `scripts/systems/vc_pitch_system.gd` (`_beat3_view_state`: soru `active_line`, iç ses `monologue_text`),
+  - Nerede: `scripts/systems/vc_pitch_system.gd` (`_beat3_view_state`: soru `active_line`, iç ses `monologue_text`);
     `scripts/modals/meeting_scene.gd` (`_apply_active_line` ikisini aynı anda çizer); anahtarlar `VC_Q_*_MONO` ve
     `SEED_Q_*_MONO`.
   - Oyuncuya etkisi: Sahnenin zamanı kayıyor: VC sormuş, iç ses "soracak" diyor. Satır bir önsezi gibi okunuyor ama
@@ -178,350 +159,320 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     mı?"). TR ve EN sahip yazar, mekanik değişmez. B) Zamanlama: iç ses 2. vuruşta, soru gelmeden önce gösterilir.
     Bunun 1. vuruş istihbaratına bağlanıp bağlanmayacağı ayrıca seçilir. Bu, vuruş yapısını değiştirir. C) Olduğu gibi
     kalır. K31 (toplantı diyaloglarının yazım turu) kapsamına alınabilir.
-  - Kaynak: ONERI_v3 §2 (şüphe 5); ACIK_KARARLAR Frank belgeleri maddesi (K31 yazım turu).
+  - Kaynak: ONERI_v3 §2 (şüphe 5); ACIK_KARARLAR K31 maddesi.
 
-- **11 · Elde tutma kartı yalnız Risk'e girişte: kurtarma azaldı, churn arttı (kalibrasyon).**
-  - Ne oluyor: `customer.retention` artık yalnız hesap Risk'e girerken açılıyor; kartın kendi notu kararı bu ana
-    veriyor. Önceden churn geri sayımı her gün aynı sinyali yaydığı için Risk'teki her hesap her gün yeni kart
-    alıyordu. full_run tohum 1 (760 gün): retention kartı 438 → 261, CHURN 44 → 101, İNDİRİM 98 → 31, SÖZ 105 → 88;
-    730. gün MRR 409.490 → 278.481, marka 100 → 3; son aynı (running_on_fumes). Hiçbir sabit değişmedi.
-    Bugünkü taban (36. madde uygulandı: kart, temsilcinin tırmandırdığı hesapta açılmıyor): aynı koşuda retention
-    kartı 314, `customer.cs_escalation` 34, CHURN 143, İNDİRİM 44, SÖZ 82; 730. gün MRR 289.134, müşteri 472; son aynı.
-    `cs_escalated` bir durumdur (atanmış ve memnuniyet < 35); 1★ ve sektör eki olmayan atanmış hesabın toleransı 33
-    olduğu için böyle bir hesap Risk'te hep tırmandırılmıştır ve elde tutma kartını hiç görmez. CHURN'ün tolerans
-    kırılımı: 33 bandı 7 → 15, 42 bandı 17 → 47, geri kalanı 77 → 81.
-  - Nerede: `scripts/autoload/customer_registry.gd` (`set_churn_countdown`, `customer_churn_countdown_changed`),
-    `data/events/cards/customer/retention.json` (tetik, `cooldown_days`), churn geri sayımı ve seçenek etkileri
-    `scripts/systems/b2b_constants.gd`'de.
-  - Oyuncuya etkisi: Risk'e düşen hesap için karar bir kez sorulur; kaçırılırsa Satış sekmesindeki "İlgilen" kartı
-    yeniden açar. Kurtarma şansı artık her gün yenilenmediği için daha çok hesap kaybediliyor; geri sayım süresi ve
-    Oyala/İndirim etkileri eski günlük soruya göre oturmuş olabilir.
-  - Seçenekler: A) Davranış kalır; churn geri sayımı ve seçenek etkileri tam probe setiyle ölçülerek yeniden kalibre
-    edilir. B) Günlük yeniden soru tasarım sayılır; kartın notu ve Satış §19 buna göre yazılır, eski davranış geri
-    gelir. C) Kalır, kalibrasyon sonraya.
-  - Kaynak: `retention.json` `_port_note`; Satış GDD §19 (retention kartı ve churn geri sayımı korunanlar arasında);
-    bu commit'in probe ölçümü.
-
-- **12 · Gitmiş hesabın sinyali elde tutma kartını başka bir hesaba bağlıyor (11. maddeye bağlı).**
-  - Ne oluyor: Kapı, çağıranın verdiği özne id'sini (sinyal yükü, istek) yalnız o varlık hâlâ varsa kullanıyor. Hesap
-    gitmişse, id yanlış türdeyse ya da başka slota bağlıysa seçiciye düşüyor ve kartı başka bir hesaba bağlıyor. GDD
-    §4.3 ise çağıranın bağlamının kullanıldığını ve tahmin yapılmadığını söylüyor. full_run:760:sim:1'de ilk örnek 70.
-    günde: churn eden co_lead_57_35'in sinyaliyle açılan customer.retention, Risk'teki başka bir hesaba bağlanıyor.
-    Verilen id gitmişse kartı G5'te reddeden bir sürüm bu dalgada ölçüldü ve geri alındı. O sürümde elde tutma kartı
-    261'den 217'ye, CHURN 101'den 153'e, İNDİRİM 31'den 0'a iniyor (koşudaki 31 indirimin hepsi yanlış bağlanan
-    kartlardan geliyor), 4. seçenek 18'den 0'a, SÖZ satırı 88'den 84'e düşüyor. 730. gün MRR 278.481'den 210.894'e,
-    kasa 2,44M'den 1,58M'e, müşteri 450'den 346'ya, çalışan 13'ten 7'ye iniyor; marka 3'ten 19'a çıkıyor. Son aynı
-    (running_on_fumes). 11. maddedeki rakamlar bugünkü, yanlış bağlanan davranışla ölçüldü.
-    Bu paragraftaki ölçüm 36. madde öncesi ağaçtandır; bugünkü taban 11. maddede (retention 314, CHURN 143, 730. gün
-    MRR 289.134). `at_risk` seçicisi tırmandırılmış hesabı atlamıyor; kartın koşulu artık `musteri.cs_escalated ==
+- **11 · Elde tutma kartı yalnız Risk'e girişte açılıyor ve gitmiş hesabın sinyali onu başka hesaba bağlıyor
+  (kalibrasyon).**
+  - Ne oluyor: `customer.retention` artık yalnız hesap Risk'e girerken açılıyor (`customer_health_changed`); önceden
+    Risk'teki her hesap her gün kart alıyordu. full_run tohum 1 (760 gün, ab863fa): retention kartı 438 → 261, CHURN
+    44 → 101, İNDİRİM 98 → 31, SÖZ 105 → 88; 730. gün MRR 409.490 → 278.481, marka 100 → 3. Bu rakamlar ikinci bir
+    sapmayla birlikte ölçüldü: `B2BSalesSystem._remove_lost` hesabı silmeden önce `set_lifecycle_phase(id,
+    "churning")` ile aynı sinyali yayıyor; motor tikinde hesap gitmiş olduğu için kapı seçiciye düşüyor ve kartı
+    Risk'teki başka bir hesaba bağlıyor (ilk örnek 70. gün, co_lead_57_35). Motor §4.3 çağıranın bağlamının
+    kullanıldığını ve tahmin yapılmadığını söyler. Verilen id gitmişse kartı G5'te reddeden sürüm ölçülüp geri alındı
+    (369dc57): retention 261 → 217, CHURN 101 → 153, İNDİRİM 31 → 0, 4. seçenek 18 → 0, SÖZ 88 → 84; 730. gün MRR
+    278.481 → 210.894, kasa 2,44M → 1,58M, müşteri 450 → 346, çalışan 13 → 7, marka 3 → 19. Bugünkü taban (f4b3460'tan
+    beri kart, temsilcinin tırmandırdığı hesapta açılmıyor): aynı koşuda retention kartı 314, `customer.cs_escalation`
+    34, CHURN 143, İNDİRİM 44, SÖZ 82; 730. gün MRR 289.134, müşteri 472. `cs_escalated` bir durumdur (atanmış ve
+    memnuniyet < 35); 1★ ve sektör eki olmayan atanmış hesabın toleransı 33 olduğu için böyle bir hesap Risk'te hep
+    tırmandırılmıştır ve elde tutma kartını hiç görmez. CHURN'ün tolerans kırılımı: 33 bandı 7 → 15, 42 bandı 17 → 47,
+    geri kalanı 77 → 81. `at_risk` seçicisi tırmandırılmış hesabı atlamıyor; kartın koşulu `musteri.cs_escalated ==
     false` istediği için, yedek yolda seçicinin bağladığı en düşük memnuniyetli Risk hesabı tırmandırılmışsa kart
-    başka hesaba bağlanmıyor, reddediliyor.
-  - Nerede: scripts/events/gate/scope.gd (resolve, verilen id dalı), scripts/events/gate/gate.gd (propose, G5),
-    scripts/events/core/engine.gd (sinyal adımı, request), scripts/autoload/customer_registry.gd (churn geri sayımı
-    sinyali), data/events/cards/customer/retention.json (koşul)
-  - Oyuncuya etkisi: Giden hesap için açılan elde tutma kartı, oyuncuya Risk'teki başka bir hesabı kurtarma şansı
-    veriyor. O hesap Risk'e girişte zaten sorulmuş olabilir, yani 11. maddedeki "bir kez sorulur" kuralının dışında
-    ikinci kez soruluyor. Koşudaki indirim seçimlerinin tamamı bu yoldan geliyor.
-  - Seçenekler: A) Verilen id gitmişse kart G5'te gerekçesiyle reddedilir (§4.3'ün lafzı). 11. maddenin kalibrasyonu
-    yeni rakamlarla yapılır. B) Seçiciye düşme tasarım sayılır. §4.3'e ve §27'ye "verilen özne gitmişse seçici yeniden
-    bağlar" yazılır. C) A ile 11. madde tek karar olarak ele alınır: churn geri sayımı ve Oyala/İndirim etkileri aynı
-    ölçümle yeniden oturtulur.
-  - Kaynak: Olay motoru GDD §4.3; ACIK_KARARLAR 11. madde; bu dalganın probe ölçümü (HEAD ab863fa, full_run:760:sim:1
-    --lang=tr)
+    başka hesaba bağlanmıyor, reddediliyor. Son her ölçümde aynı (running_on_fumes); hiçbir sabit değişmedi.
+  - Nerede: `data/events/cards/customer/retention.json` (tetik, koşul, `cooldown_days`);
+    `scripts/autoload/customer_registry.gd` (`set_lifecycle_phase`, `customer_health_changed`);
+    `scripts/systems/b2b_sales_system.gd` (`_tick_customer`, `_remove_lost`); `scripts/events/gate/scope.gd`
+    (`resolve`, verilen id dalı); `scripts/events/gate/gate.gd` (`propose`, G5); `scripts/events/core/engine.gd`
+    (sinyal adımı); churn geri sayımı ve seçenek etkileri `scripts/systems/b2b_constants.gd`.
+  - Oyuncuya etkisi: Risk'e düşen hesap için karar bir kez sorulur; kaçırılırsa Satış sekmesindeki "İlgilen" kartı
+    yeniden açar. Giden hesabın kartı ise Risk'teki başka bir hesaba ikinci bir kurtarma şansı veriyor; koşudaki
+    indirim seçimlerinin hepsi bu yoldan geliyor. Geri sayım süresi ve Oyala/İndirim etkileri eski günlük soruya göre
+    oturmuş olabilir.
+  - Seçenekler: A) Verilen id gitmişse kart G5'te gerekçesiyle reddedilir (§4.3'ün lafzı); churn geri sayımı ve
+    Oyala/İndirim etkileri bu davranışla, tam probe setiyle yeniden kalibre edilir. B) Seçiciye düşme tasarım sayılır;
+    §4.3 ve §27'ye "verilen özne gitmişse seçici yeniden bağlar" yazılır; kalibrasyon bugünkü rakamlarla yapılır. C)
+    Günlük yeniden soru tasarım sayılır, eski davranış geri gelir; kartın notu ve Satış §19 buna göre yazılır. D)
+    İkisi de kalır, kalibrasyon sonraya.
+  - Kaynak: Olay motoru GDD §4.3; Satış GDD §19 (retention kartı ve churn geri sayımı korunanlar arasında);
+    `retention.json` `_port_note`; probe ölçümleri (ab863fa, 369dc57 ve f4b3460; full_run:760:sim:1 --lang=tr).
 
 - **13 · Masadaki kağıdın öznesi giderse süre dolumu: ceza, not ve son uyarı birbirini tutmuyor.**
   - Ne oluyor: Kağıt, masaya düştüğünde öznelerini bağlıyor. Bir varlık kağıt masadayken giderse son gün uyarısı
     düşüyor (`EvGate.revalidate` bütün slotlara bakar), oyuncu açmak isterse kağıt kayboluyor. Ama süre dolunca
-    `on_expire` çalışıyor, history `expired` yazıyor ve expire_note ticker'a gidiyor. İki durum var. (1) Ana özne
-    (hesap) gitti: on_expire'ın etkileri hedef bulamıyor ("satisfaction_delta found no target" hatası,
+    `on_expire` çalışıyor, history `expired` yazıyor ve `expire_note` ticker'a gidiyor. İki durum var. (1) Ana özne
+    (hesap) gitti: `on_expire`'ın etkileri hedef bulamıyor ("satisfaction_delta found no target" hatası,
     full_run:760:sim:1'de 3 kez). Not satırı da hesabın adı yerine iç id'sini yazıyor (ör. "co_lead_… bir daha
-    aramadı."); bu dalgaya kadar her süre dolumunda ham "expire_note" yazıyordu. (2) İkincil slot (talep kartının
-    temsilcisi) gitti: ceza hesaba işliyor ve not çıkıyor. Aynı koşuda 8 kağıt bu durumda (günler 327, 341, 563, 682).
-    §12.4 "expire_note zorunludur, sessiz süre dolumu yoktur" diyor. §4.4 ve §20 A1 ise gösterimdeki yeniden
-    doğrulamayı anlatıyor, açılmamış kağıdın süre dolumunu değil.
-  - Nerede: scripts/events/core/engine.gd (_step_paper_expiry, _step_last_warnings, open_paper),
-    scripts/events/gate/gate.gd (revalidate), scripts/events/gate/scope.gd (still_valid),
-    scripts/events/present/presenter.gd (_display_name), data/events/cards/customer/request_*.json ve retention.json
-    (scope, on_expire, expire_note)
+    aramadı."). (2) İkincil slot (talep kartının temsilcisi) gitti: ceza hesaba işliyor ve not çıkıyor. Aynı koşuda 8
+    kağıt bu durumda (günler 327, 341, 563, 682). §12.4 "expire_note zorunludur, sessiz süre dolumu yoktur" diyor.
+    §4.4 ve §20 A1 ise gösterimdeki yeniden doğrulamayı anlatıyor, açılmamış kağıdın süre dolumunu değil.
+  - Nerede: `scripts/events/core/engine.gd` (`_step_paper_expiry`, `_step_last_warnings`, `open_paper`);
+    `scripts/events/gate/gate.gd` (`revalidate`); `scripts/events/gate/scope.gd` (`still_valid`);
+    `scripts/events/present/presenter.gd` (`_display_name`); `data/events/cards/customer/request_*.json` ve
+    `retention.json` (`scope`, `on_expire`, `expire_note`).
   - Oyuncuya etkisi: (1) Haber akışında bir iç kod (hesap id'si) görünüyor; ceza kimseye işlemiyor. (2) Temsilci
     ayrılınca oyuncu son uyarıyı görmüyor ve kağıdı açamıyor, ama cezayı yiyor. Bu uyarısız bir kayıp.
-  - Seçenekler: A) Hangi slottaki varlık giderse gitsin kağıt süre dolumunda düşer: history `dropped` (entity_gone),
-    on_expire ve not çalışmaz. §12.4'e bu istisna yazılır. Seeded koşuda 8 kağıdın cezası kalkar. B) Yalnız ana özne
-    gidince düşer; ikincil slotta uyarı ve açılış da yalnız ana özneye bakar, temsilci gitse de kağıt açılır ve ceza
-    işler. Ana özne kuralı seeded koşuyu değiştirmiyor (bu dalgada ölçüldü). C) Süre dolumu hep çalışır: bağlam
+  - Seçenekler: A) Hangi slottaki varlık giderse gitsin kağıt süre dolumunda düşer: history `dropped` (`entity_gone`),
+    `on_expire` ve not çalışmaz. §12.4'e bu istisna yazılır. Tohumlu koşuda 8 kağıdın cezası kalkar. B) Yalnız ana
+    özne gidince düşer; ikincil slotta uyarı ve açılış da yalnız ana özneye bakar, temsilci gitse de kağıt açılır ve
+    ceza işler. Ana özne kuralı tohumlu koşuyu değiştirmiyor (369dc57'de ölçüldü). C) Süre dolumu hep çalışır: bağlam
     bağlanırken görünen adı da dondurur, not gitmiş varlığı adıyla anar, hedefsiz ceza sessizce atlanır. D) Temsilci
     slotu açılışta yeniden seçilir (reassign benzeri, yeni mekanik).
-  - Kaynak: Olay motoru GDD §4.4, §12.4, §20 A1, §20 B11; bu dalganın probe ölçümü
+  - Kaynak: Olay motoru GDD §4.4, §12.4, §20 A1, §20 B11; probe ölçümü (369dc57, full_run:760:sim:1).
 
 - **14 · Etki sözlüğünde karşılığı olmayan fiiller (uygulanmayan, hep reddedilen, çipsiz).**
-  - Ne oluyor: Tablolarda duran dokuz fiilin `_apply`'da kolu yok: assign_to, send_on_leave, start_training,
-    damage_product, add_customer, convert_audience, open_paid_tier, change_salary, fire_employee. Lint onları kabul
-    ediyor, oyunda "not implemented" diye reddediliyorlar. `add_mrr` motor GDD §8.1 ve §8.3'te gerçek bir fiil; kod
-    onu hep reddediyor (MRR defterden türetiliyor, `engine_probe` bu reddi doğruluyor) ve bu ayrılık §27'de yazılı
-    değil. `notify` metni anahtar ya da çeviri olmadan ham basıyor. Çip tarafında 13 fiil ne `_describe_modifier`'da
-    etiketli ne `SILENT_VERBS`'te: clear_flag, set_timed_flag, ticker_push, notify, open_negotiation, add_mrr,
-    assign_to, send_on_leave, start_training, damage_product, change_salary, fire_employee, add_customer. Tersine
-    `convert_audience` ile `open_paid_tier`'in çipi var ama fiilleri uygulanmıyor. Bugün hiçbir kart bu fiilleri
-    kullanmıyor.
-  - Nerede: scripts/events/core/effects.gd (NEUTRAL_VERBS, ECONOMIC_VERBS, _apply: "add_mrr", "notify"),
-    scripts/modals/event_modal.gd (SILENT_VERBS, FIXED_CHIPS, _describe_modifier), scripts/events/tools/lint.gd
-    (_lint_effects), scripts/events/tools/engine_probe.gd (_check_effects)
+  - Ne oluyor: Tablolarda duran dokuz fiilin `_apply`'da kolu yok: `assign_to`, `send_on_leave`, `start_training`,
+    `damage_product`, `add_customer`, `convert_audience`, `open_paid_tier`, `change_salary`, `fire_employee`. Lint
+    onları kabul ediyor, oyunda "not implemented" diye reddediliyorlar. `add_mrr` motor GDD §8.1 ve §8.3'te gerçek bir
+    fiil; kod onu hep reddediyor (MRR defterden türetiliyor, `engine_probe` bu reddi doğruluyor) ve bu ayrılık §27'de
+    yazılı değil. `notify` metni anahtar ya da çeviri olmadan ham basıyor. Çip tarafında 13 fiil ne
+    `_describe_modifier`'da etiketli ne `SILENT_VERBS`'te: `clear_flag`, `set_timed_flag`, `ticker_push`, `notify`,
+    `open_negotiation`, `add_mrr`, `assign_to`, `send_on_leave`, `start_training`, `damage_product`, `change_salary`,
+    `fire_employee`, `add_customer`. Tersine `convert_audience` ile `open_paid_tier`'in çipi var ama fiilleri
+    uygulanmıyor. Bugün hiçbir kart bu fiilleri kullanmıyor.
+  - Nerede: `scripts/events/core/effects.gd` (`NEUTRAL_VERBS`, `ECONOMIC_VERBS`, `_apply`: "add_mrr", "notify");
+    `scripts/modals/event_modal.gd` (`SILENT_VERBS`, `FIXED_CHIPS`, `_describe_modifier`);
+    `scripts/events/tools/lint.gd` (`_lint_effects`); `scripts/events/tools/engine_probe.gd` (`_check_effects`).
   - Oyuncuya etkisi: Bugün yok. Bir yazar bu fiillerden birini kullanırsa lint geçer ve kart oyunda görünür, ama
-    seçenek söylediğini yapmaz: sessizce reddedilir, bazen çipi de gösterilir. notify ile yazılan satır tek dilde
+    seçenek söylediğini yapmaz: sessizce reddedilir, bazen çipi de gösterilir. `notify` ile yazılan satır tek dilde
     kalır.
-  - Seçenekler: A) GDD'nin adını verdiği fiiller (fire_employee, add_customer, damage_product, assign_to) sahibi
-    modülün seam'iyle bağlanır, geri kalanı tablolardan çıkar. Bağlanan her fiil bir çip ya da SILENT_VERBS kaydıyla
-    gelir. B) Bağlanmayan her fiil tablolardan çıkar ve lint onu bilinmeyen fiil diye reddeder. add_mrr GDD §8.1'den
-    düşer, §27'ye "MRR türetilir, yazılmaz" notu girer. notify ya line_key alır ya da kalkar. C) Olduğu gibi kalır:
-    liste §27'ye yazılır, lint uygulanmayan fiile uyarı verir.
-  - Kaynak: Olay motoru GDD §8.1, §8.3, §11.1 (info sınıfı), §27; CLAUDE.md §5 EFFECT-VISIBILITY RULE
+  - Seçenekler: A) GDD'nin adını verdiği fiiller (`fire_employee`, `add_customer`, `damage_product`, `assign_to`)
+    sahibi modülün seam'iyle bağlanır, geri kalanı tablolardan çıkar. Bağlanan her fiil bir çip ya da `SILENT_VERBS`
+    kaydıyla gelir. B) Bağlanmayan her fiil tablolardan çıkar ve lint onu bilinmeyen fiil diye reddeder. `add_mrr` GDD
+    §8.1'den düşer, §27'ye "MRR türetilir, yazılmaz" notu girer. `notify` ya `line_key` alır ya da kalkar. C) Olduğu
+    gibi kalır: liste §27'ye yazılır, lint uygulanmayan fiile uyarı verir.
+  - Kaynak: Olay motoru GDD §8.1, §8.3, §11.1 (info sınıfı), §27; CLAUDE.md §5 EFFECT-VISIBILITY RULE.
 
-- **15 · Bütçe bitince seçenek kilitlenmiyor (spend_budget, §8.5).**
+- **15 · Bütçe bitince seçenek kilitlenmiyor (`spend_budget`, §8.5).**
   - Ne oluyor: GDD §8.5, bütçe bitince o etkiyi taşıyan seçeneğin kilitlenip gerekçesini göstermesini istiyor. §20 E8
     bu kontrolü `requires`'a koyuyor. Ama `EvBudgets.remaining()`'i okuyan ne bir seam ne bir koşul yaprağı var;
     §5.2'nin listesinde de bütçe yaprağı yok. Bütçe biterse `EvBudgets.spend` yalnız hata basıyor, seçenek açık
     kalıyor. Hiçbir kart `spend_budget` kullanmıyor.
-  - Nerede: scripts/events/core/budgets.gd (remaining, spend), scripts/events/core/effects.gd ("spend_budget"),
-    scripts/events/core/condition.gd (yaprak listesi), scripts/events/seams/
-  - Oyuncuya etkisi: Bugün yok, çünkü frank_aphorism bütçesini harcayan kart yok. İlk kart bağlandığında üçüncü
+  - Nerede: `scripts/events/core/budgets.gd` (`remaining`, `spend`); `scripts/events/core/effects.gd`
+    ("spend_budget"); `scripts/events/core/condition.gd` (yaprak listesi); `scripts/events/seams/`.
+  - Oyuncuya etkisi: Bugün yok, çünkü `frank_aphorism` bütçesini harcayan kart yok. İlk kart bağlandığında üçüncü
     aforizma seçeneği kilitlenmez: oyuncu tıklar ve hiçbir şey olmaz.
   - Seçenekler: A) Her bütçeye bir seam (ör. `frank.aphorisms_left`): yazar seçeneği `requires` ile kilitler, gerekçe
     metnini kart taşır (E8'in dediği). B) §5.2'ye yeni koşul yaprağı `{"budget": ad}`. C) Motor `spend_budget` taşıyan
     seçeneği kendiliğinden kilitler, gerekçe ortak bir anahtardan gelir (§8.5'in lafzı).
-  - Kaynak: Olay motoru GDD §8.5, §5.2, §20 E8
+  - Kaynak: Olay motoru GDD §8.5, §5.2, §20 E8.
 
-- **16 · Ark belleği (arc.vars) yazılıyor ama okunamıyor.**
+- **16 · Ark belleği (`arc.vars`) yazılıyor ama okunamıyor.**
   - Ne oluyor: `set_arc_var` fiili ve `EvArcs.set_var` arkın `vars` alanına yazıyor, alan kayda da giriyor. Ama onu
-    okuyan ne bir koşul yaprağı ne kod var: §5.2'nin ark yaprakları yalnız active, at_step, ended ve awaiting_subject.
-    Hiçbir kart bu fiili kullanmıyor. §20 G4 ise arka özgü durumun arc.vars'ta tutulduğunu söylüyor.
-  - Nerede: scripts/events/core/arcs.gd (set_var), scripts/events/core/effects.gd ("set_arc_var"),
-    scripts/events/core/condition.gd (ark yaprakları), scripts/modals/event_modal.gd (SILENT_VERBS)
+    okuyan ne bir koşul yaprağı ne kod var: §5.2'nin ark yaprakları yalnız `active`, `at_step`, `ended` ve
+    `awaiting_subject`. Hiçbir kart bu fiili kullanmıyor. §20 G4 ise arka özgü durumun `arc.vars`'ta tutulduğunu
+    söylüyor.
+  - Nerede: `scripts/events/core/arcs.gd` (`set_var`); `scripts/events/core/effects.gd` ("set_arc_var");
+    `scripts/events/core/condition.gd` (ark yaprakları); `scripts/modals/event_modal.gd` (`SILENT_VERBS`).
   - Oyuncuya etkisi: Bugün yok. Bir yazar ark belleğine yazabilir ama arkın sonraki adımı o değeri okuyamaz.
   - Seçenekler: A) Yeni yaprak `{"arc": "var", "id", "key", "op", "value"}`, §5.2'ye bir satır. B) `set_arc_var`
     emekliye ayrılır; ark belleği bayraklarla tutulur (G4'ün uyardığı çakışma riskiyle). C) Kalır; §27'ye "vars
     okunmuyor" notu girer.
-  - Kaynak: Olay motoru GDD §5.2, §10.1, §16.1, §20 G4
+  - Kaynak: Olay motoru GDD §5.2, §10.1, §16.1, §20 G4.
 
 - **17 · Özne başına ark limiti: ikinci ark ertelenmiyor, hiç başlamıyor (§10.7).**
   - Ne oluyor: §10.7 ve §20 A4'e göre bir özne ikinci bir ark alırsa o ark `deferred` olur ve birincisi bitince
     yeniden proposal'a girer. `EvArcs.start` ise ikinci arkı reddediyor ve bir yere kaydetmiyor (limit
     `EvTuning.ARC_PER_SUBJECT_DEFAULT`'tan okunuyor). Ark, bir seçeneğin `start_arc` etkisiyle başlıyor. O kartın
-    mandalı harcandığı için kart yeniden önerilmiyor, yani ark hiç başlamıyor. Bugün fixture'lar dışında özneli ark
-    yok (`arc_final_stretch` öznesiz).
-  - Nerede: scripts/events/core/arcs.gd (start), scripts/events/core/effects.gd ("start_arc"),
-    scripts/events/core/tuning.gd (ARC_PER_SUBJECT_DEFAULT)
+    mandalı harcandığı için kart yeniden önerilmiyor, yani ark hiç başlamıyor. Bugün fikstürler dışında özneli ark yok
+    (`arc_final_stretch` öznesiz).
+  - Nerede: `scripts/events/core/arcs.gd` (`start`); `scripts/events/core/effects.gd` ("start_arc");
+    `scripts/events/core/tuning.gd` (`ARC_PER_SUBJECT_DEFAULT`).
   - Oyuncuya etkisi: Bugün yok. Aynı özneye iki ark bağlandığında ikinci arkı açan seçenek sessizce hiçbir şey
     başlatmaz.
-  - Seçenekler: A) Ertelenen başlatma motorda tutulur ({arc_id, subject}); birinci ark bitince ikincisi başlar. Kayda
-    yeni bir alan girer. B) Seçim anında engel: özne doluysa arkı başlatacak seçenek gerekçesiyle kilitlenir. C) Ret
-    kalır; §10.7 ve A4 "ikinci ark başlamaz" diye yeniden yazılır.
-  - Kaynak: Olay motoru GDD §10.7, §10.9, §20 A4, §27
+  - Seçenekler: A) Ertelenen başlatma motorda tutulur (`{arc_id, subject}`); birinci ark bitince ikincisi başlar.
+    Kayda yeni bir alan girer. B) Seçim anında engel: özne doluysa arkı başlatacak seçenek gerekçesiyle kilitlenir. C)
+    Ret kalır; §10.7 ve A4 "ikinci ark başlamaz" diye yeniden yazılır.
+  - Kaynak: Olay motoru GDD §10.7, §10.9, §20 A4, §27.
 
-- **18 · Okunmayan beş EFFECT_* anahtarı: DRAFT-EN kaydı ile CSV süpürmesi çelişiyor.**
-  - Ne oluyor: EFFECT_MRR, EFFECT_QUALITY_BONUS, EFFECT_NEW_TEAMMATE, EFFECT_PROMISE_HONOR ve EFFECT_PROMISE_REFUSE
-    CSV'de duruyor. Ama `event_modal.gd` (FIXED_CHIPS, _describe_modifier) hiçbirini okumuyor, üretim kodunda da
-    okuyanı yok. DRAFT-EN kaydı `EFFECT_*` ailesini "üretim kodunun okudukları" arasında sayıyor ve "referanssız
-    emekli anahtarları CSV süpürmesi siler" diyor. ISLER'deki CSV süpürmesi ise ACIK_KARARLAR'da geçen anahtarları
-    bırakıyor. Bu beş anahtar için iki kural çelişiyor.
-  - Nerede: localization/strings.csv; scripts/modals/event_modal.gd (FIXED_CHIPS, _describe_modifier);
-    docs/ACIK_ISLER/ACIK_KARARLAR.md (DRAFT-EN kaydı); docs/ACIK_ISLER/ISLER.md (CSV süpürmesi)
+- **18 · Okunmayan beş `EFFECT_*` anahtarı: DRAFT-EN kaydı ile CSV süpürmesi çelişiyor.**
+  - Ne oluyor: `EFFECT_MRR`, `EFFECT_QUALITY_BONUS`, `EFFECT_NEW_TEAMMATE`, `EFFECT_PROMISE_HONOR` ve
+    `EFFECT_PROMISE_REFUSE` CSV'de duruyor. Ama `event_modal.gd` (`FIXED_CHIPS`, `_describe_modifier`) hiçbirini
+    okumuyor, üretim kodunda da okuyanı yok. DRAFT-EN kaydı `EFFECT_*` ailesini "üretim kodunun okudukları" arasında
+    sayıyor ve "referanssız emekli anahtarları CSV süpürmesi siler" diyor. ISLER'deki CSV süpürmesi ise
+    ACIK_KARARLAR'da geçen anahtarları bırakıyor. Bu beş anahtar için iki kural çelişiyor.
+  - Nerede: `localization/strings.csv`; `scripts/modals/event_modal.gd` (`FIXED_CHIPS`, `_describe_modifier`);
+    `docs/ACIK_ISLER/ACIK_KARARLAR.md` (DRAFT-EN kaydı); `docs/ACIK_ISLER/ISLER.md` (CSV süpürmesi).
   - Oyuncuya etkisi: Yok. Anahtarlar okunmayan metin.
   - Seçenekler: A) Süpürmeye girer, silinir. B) Kalır; DRAFT-EN kaydında "okunmayan, ileride çip olacak" diye ayrı
-    satır alır. C) Yeniden bağlanır, ör. EFFECT_PROMISE_HONOR/REFUSE vaat kartlarının çipi olur (içerik kararı).
-  - Kaynak: CLAUDE.md §8 (ölü CSV anahtarı); ACIK_KARARLAR DRAFT-EN kaydı; ISLER CSV süpürmesi
+    satır alır. C) Yeniden bağlanır, ör. `EFFECT_PROMISE_HONOR` / `_REFUSE` vaat kartlarının çipi olur (içerik
+    kararı).
+  - Kaynak: CLAUDE.md §8 (ölü CSV anahtarı); ACIK_KARARLAR DRAFT-EN kaydı; ISLER CSV süpürmesi.
 
-- **19 · arc_final_stretch sönünce ticker'a ham "arc_faded" yazılıyor.**
+- **19 · `arc_final_stretch` sönünce ticker'a ham "arc_faded" yazılıyor.**
   - Ne oluyor: `arc_final_stretch` fade politikasında `note_key: "arc_faded"` taşıyor. Bu ne bir CSV anahtarı ne bir
     kart metni; ark tanımının metin bloğu da yok. Ark Series A imzasında ya da bootstrap kilometre taşında
     (`phase.bootstrap_milestone`) söner ve haber akışına ham "arc_faded" satırı düşer.
-  - Nerede: data/events/arcs/soft_cap_stretch.json (on_invalidate.note_key), scripts/events/core/engine.gd
-    (_invalidate, fade kolu), scripts/events/present/ticker.gd (push)
+  - Nerede: `data/events/arcs/soft_cap_stretch.json` (`on_invalidate.note_key`); `scripts/events/core/engine.gd`
+    (`_invalidate`, fade kolu); `scripts/events/present/ticker.gd` (`push`).
   - Oyuncuya etkisi: Ark canlıyken kârlı bootstrap kilometre taşı alınırsa (EA/tam) ticker'da ham bir kod satırı
     görünür. Series A imzasında koşu bittiği için pratikte görünmeyebilir.
-  - Seçenekler: A) Yeni bir oyuncu satırı yazılır, önce EN sonra TR (ör. "The year-end file closed."); note_key o
-    anahtarı taşır. B) note_key kaldırılır; bu ark için §10.5'in "ticker izi" düşer ve §27'ye not girer. C) Ark close
-    politikasına geçer ve görünür bir kartla kapanır.
-  - Kaynak: Olay motoru GDD §10.5, §18.3; CLAUDE.md §5
+  - Seçenekler: A) Yeni bir oyuncu satırı yazılır, önce EN sonra TR (ör. "The year-end file closed."); `note_key` o
+    anahtarı taşır. B) `note_key` kaldırılır; bu ark için §10.5'in "ticker izi" düşer ve §27'ye not girer. C) Ark
+    close politikasına geçer ve görünür bir kartla kapanır.
+  - Kaynak: Olay motoru GDD §10.5, §18.3; CLAUDE.md §5.
 
 - **21 · Kurucu yaşam gideri hâlâ burn'ün tamamı.**
-  - Ne oluyor: FinanceSystem.STARTING_BURN_BREAKDOWN içinde "founder": 50 $/gün [ÇALIŞMA] var ve 1. günün burn'ünün
-    tamamı bu. Finans'ta FIN_BURN_FOUNDER "Kurucu yaşam gideri / Founder living costs" satırı olarak görünüyor. GDD
-    yaşam giderini kaldırıyor: ch08 §1'e göre burn maaşlar + araçlar + servis + marketing'den oluşuyor ve 'araçlar'
-    kalemi kodda yok.
-  - Nerede: scripts/systems/finance_system.gd `STARTING_BURN_BREAKDOWN`, `BURN_IDS`; localization/strings.csv
-    `FIN_BURN_FOUNDER`
+  - Ne oluyor: `FinanceSystem.STARTING_BURN_BREAKDOWN` içinde `"founder": 50` $/gün [ÇALIŞMA] var ve 1. günün
+    burn'ünün tamamı bu. Finans'ta `FIN_BURN_FOUNDER` "Kurucu yaşam gideri / Founder living costs" satırı olarak
+    görünüyor. GDD yaşam giderini kaldırıyor: ch08 §1'e göre burn maaşlar + araçlar + servis + marketing'den oluşuyor
+    ve "araçlar" kalemi kodda yok.
+  - Nerede: `scripts/systems/finance_system.gd` (`STARTING_BURN_BREAKDOWN`, `BURN_IDS`); `localization/strings.csv`
+    (`FIN_BURN_FOUNDER`).
   - Oyuncuya etkisi: Başlangıç runway'i (10K$ ile ~6,6 ay) bu kaleme dayanıyor ve oyuncu GDD'nin kaldırdığı bir gider
     satırını görüyor. Kalem silinirse ilk maaşa kadar burn sıfıra iner.
-  - Seçenekler: A) Kalem ch08 §1'in 'araçlar' kalemi olarak yeniden adlandırılsın (aynı 50 $/gün, yeni FIN_BURN_TOOLS
-    metni; denge değişmez). B) Kalem silinsin (0 $, erken oyun baskısı kalkar, yeniden kalibrasyon gerekir). C)
-    Kalsın, ayrılık GDD'ye istisna olarak yazılsın.
-  - Kaynak: GDD ch08 §1; ch02 §1; Ekip GDD §9.1 ('Yaşam maliyeti yoktur')
-
-- **22 · InvestorRegistry'deki donmuş değerleme ve pay rakamları okunmuyor.**
-  - Ne oluyor: Her fonun opening_terms'ündeki valuation_m ve dilution_pct hiçbir yerde okunmuyor. Series A açılış
-    şartları ARR'den türetiliyor; registry'den yalnız board_seats ve board_veto okunuyor.
-  - Nerede: scripts/autoload/investor_registry.gd `INVESTORS[*].opening_terms`; okuyucu
-    scripts/systems/vc_pitch_system.gd `_derive_series_a_terms`
-  - Oyuncuya etkisi: Bugün bir etkisi yok, ölü veri. Ancak satın alma kartı ve finance.valuation() seam'i için
-    değerleme kaynağı eksik ve docs/writing/FRANK_UNWIRED.md bu rakamları o kaynağın adayı olarak anıyor.
-  - Seçenekler: A) valuation_m ve dilution_pct silinsin, opening_terms yalnız yönetim kurulu şartlarını taşısın
-    (FRANK_UNWIRED satırı güncellenir). B) Satın alma teklifi ya da finance.valuation() seam'i için değerleme kaynağı
-    olarak bağlansın. C) Series A türetimine fon başına taban ya da tavan olarak bağlansın.
-  - Kaynak: GDD ch09 §5; ACIK_KARARLAR 'Seam envanterinin açık YOK satırları' (finance.valuation()) ve 'Satın alma
-    sonu'; docs/writing/FRANK_UNWIRED.md
+  - Seçenekler: A) Kalem ch08 §1'in "araçlar" kalemi olarak yeniden adlandırılır (aynı 50 $/gün, yeni `FIN_BURN_TOOLS`
+    metni; denge değişmez). B) Kalem silinir (0 $, erken oyun baskısı kalkar, yeniden kalibrasyon gerekir). C) Kalır,
+    ayrılık GDD'ye istisna olarak yazılır.
+  - Kaynak: GDD ch08 §1; ch02 §1; Ekip GDD §9.1 ("Yaşam maliyeti yoktur").
 
 - **23 · Aylık ürün notu Ar-Ge sekmesinde okunamıyor; rozet sönmüyor.**
   - Ne oluyor: Koşunun ilk notu bir kez modal açılıyor. Sonraki notların, ya da ilk modal Esc ile kapatıldıysa o
-    notun, okunacağı bir yüzey yok. RnDSystem._note_unread true kalıyor, mark_note_read'i çağıran bir sekme yüzeyi
-    yok, Ar-Ge ray rozeti (attention_count) koşu boyunca yanık kalıyor. RND_NOTE_FIRST_HINT oyuncuya 'bundan sonra bu
-    not her ay Ar-Ge sayfasında' diyor, ama sayfada not yok. RND_NOTE_UNREAD ve RND_NOTE_OPEN bu yüzeyin park edilmiş
-    etiketleri.
-  - Nerede: scripts/systems/rnd_system.gd (note_pending, pending_note, mark_note_read, take_first_note_modal,
-    attention_count); scripts/tabs/rnd_tab.gd (sayfada not yüzeyi yok); scripts/modals/rnd_card_modal.gd (_build_note,
-    _read_and_close); scripts/main/main.gd (product_note_issued → ilk not modalı); localization/strings.csv
-    RND_NOTE_UNREAD, RND_NOTE_OPEN, RND_NOTE_FIRST_HINT
+    notun, okunacağı bir yüzey yok. `RnDSystem._note_unread` true kalıyor, `mark_note_read`'i çağıran bir sekme yüzeyi
+    yok, Ar-Ge ray rozeti (`attention_count`) koşu boyunca yanık kalıyor. `RND_NOTE_FIRST_HINT` oyuncuya "bundan sonra
+    bu not her ay Ar-Ge sayfasında" diyor, ama sayfada not yok. `RND_NOTE_UNREAD` ve `RND_NOTE_OPEN` bu yüzeyin park
+    edilmiş etiketleri.
+  - Nerede: `scripts/systems/rnd_system.gd` (`note_pending`, `pending_note`, `mark_note_read`,
+    `take_first_note_modal`, `attention_count`); `scripts/tabs/rnd_tab.gd` (sayfada not yüzeyi yok);
+    `scripts/modals/rnd_card_modal.gd` (`_build_note`, `_read_and_close`); `scripts/main/main.gd`
+    (`product_note_issued` → ilk not modalı); `localization/strings.csv` (`RND_NOTE_UNREAD`, `RND_NOTE_OPEN`,
+    `RND_NOTE_FIRST_HINT`).
   - Oyuncuya etkisi: İkinci aydan itibaren raporlar görünmez oluyor. Rozet sürekli 1 (donmuş araştırma varsa 2)
     gösteriyor ve gerçek bir donmayı haber verme işlevini yitiriyor. İlk modaldaki ipucu karşılığı olmayan bir söz
     veriyor.
-  - Seçenekler: A) Ar-Ge sayfasına bir not şeridi eklenir: 'OKUNMADI · Aç' → RnDCardModal note (ipucu satırı olmadan)
-    → mark_note_read. GDD §6.1'in tarif ettiği yol budur, yeni UI işidir. B) Ara çözüm: Ar-Ge sekmesi açılınca not
-    okunmuş sayılır ve rozet söner; not yine okunamaz. C) Her rapor modal açar; bu §6.1 MÜHÜRLÜ kuralına aykırı olduğu
-    için GDD değişikliği ister.
-  - Kaynak: Ar-Ge GDD §6.1 (MÜHÜRLÜ teslim biçimi), §5.6.2 (rozet sayımı), §10 (arge.note_pending)
+  - Seçenekler: A) Ar-Ge sayfasına bir not şeridi eklenir: "OKUNMADI · Aç" → `RnDCardModal` note (ipucu satırı
+    olmadan) → `mark_note_read`. GDD §6.1'in tarif ettiği yol budur, yeni UI işidir. B) Ara çözüm: Ar-Ge sekmesi
+    açılınca not okunmuş sayılır ve rozet söner; not yine okunamaz. C) Her rapor modal açar; bu §6.1 MÜHÜRLÜ kuralına
+    aykırı olduğu için GDD değişikliği ister.
+  - Kaynak: Ar-Ge GDD §6.1 (MÜHÜRLÜ teslim biçimi), §5.6.2 (rozet sayımı), §10 (`arge.note_pending`).
 
 - **25 · Atama panelinde izindeki ya da eğitimdeki kişi seçilebiliyor ama koltuğa oturmuyor.**
-  - Ne oluyor: RnDAssignPanel._person_row meşgul (izinde, eğitimde, kurucu pitch hazırlığında) kişiyi soluk ama
-    seçilebilir bırakıyor; gerekçesi 'oyuncu onu yine de seçebilmeli'. CharacterRegistry.assign_job STATUS != ACTIVE
-    olan kişiyi 'inactive' diye reddediyor ve RnDSystem.set_assignees onu yalnız push_warning ile düşürüyor. Seçim
-    kabul edilmiş görünüyor ama kişi atanmıyor. Seçilenlerin hepsi meşgulse Başlat REFUSE_ZERO ile kapanıyor ve
-    RND_ASSIGN_ZERO 'Seçtiklerinin hiçbiri bu alanda çalışmıyor.' diyor; bu cümle gerçek sebebi (izin ya da eğitim)
-    söylemiyor.
-  - Nerede: scripts/tabs/rnd/rnd_assign_panel.gd (_person_row, _on_commit); scripts/systems/rnd_system.gd
-    (set_assignees, start_refusal REFUSE_ZERO, research_per_day); scripts/autoload/character_registry.gd (assign_job
-    'inactive'); localization/strings.csv RND_ASSIGN_ZERO
+  - Ne oluyor: `RnDAssignPanel._person_row` meşgul (izinde, eğitimde, kurucu pitch hazırlığında) kişiyi soluk ama
+    seçilebilir bırakıyor; gerekçesi "oyuncu onu yine de seçebilmeli". `CharacterRegistry.assign_job` `STATUS !=
+    ACTIVE` olan kişiyi `inactive` diye reddediyor ve `RnDSystem.set_assignees` onu yalnız `push_warning` ile
+    düşürüyor. Seçim kabul edilmiş görünüyor ama kişi atanmıyor. Seçilenlerin hepsi meşgulse Başlat `REFUSE_ZERO` ile
+    kapanıyor ve `RND_ASSIGN_ZERO` "Seçtiklerinin hiçbiri bu alanda çalışmıyor." diyor; bu cümle gerçek sebebi (izin
+    ya da eğitim) söylemiyor.
+  - Nerede: `scripts/tabs/rnd/rnd_assign_panel.gd` (`_person_row`, `_on_commit`); `scripts/systems/rnd_system.gd`
+    (`set_assignees`, `start_refusal` `REFUSE_ZERO`, `research_per_day`); `scripts/autoload/character_registry.gd`
+    (`assign_job` `inactive`); `localization/strings.csv` (`RND_ASSIGN_ZERO`).
   - Oyuncuya etkisi: Oyuncu izindeki birini araştırmaya koyduğunu sanıyor; o kişi döndüğünde araştırmada olmuyor. Ret
     cümlesi yanlış sebep gösteriyor.
-  - Seçenekler: A) Meşgul satırlar seçilemez olur (görünür kalır, gerekçesi 'İzinde · 12g sonra katılır' satırı). B)
-    HR, izindeki ya da eğitimdeki kişiyi araştırmaya oturtur (§7'deki 'atama silinmez, dönünce devam' mantığının yeni
+  - Seçenekler: A) Meşgul satırlar seçilemez olur (görünür kalır, gerekçesi "İzinde · 12g sonra katılır" satırı). B)
+    HR, izindeki ya da eğitimdeki kişiyi araştırmaya oturtur (§7'deki "atama silinmez, dönünce devam" mantığının yeni
     atamaya uzatılması; Ekip sahibinin dosyası). C) Seçim kalır, Uygula ya da Başlat oturtulamayan kişiyi adıyla bir
-    satırda bildirir ve REFUSE_ZERO metni izin ya da eğitimi söyler.
-  - Kaynak: Ar-Ge GDD §5.3 (panel havuzu), §5.5 (sıfır katkı koruması), §7 ('Araştırmadaki kişi izne çıkar' satırı;
-    yeni atama için sessiz); Ekip GDD §12.3
+    satırda bildirir ve `REFUSE_ZERO` metni izin ya da eğitimi söyler.
+  - Kaynak: Ar-Ge GDD §5.3 (panel havuzu), §5.5 (sıfır katkı koruması), §7 ("Araştırmadaki kişi izne çıkar" satırı;
+    yeni atama için sessiz); Ekip GDD §12.3.
 
 - **26 · Kilitli yuvada çapraz koşul satırı yok.**
-  - Ne oluyor: Sürpriz duvar yasağı çapraz koşullu devam düğümünün kilitli yuvasında 'Başka bir ailede bir
-    araştırma ister.' yazılmasını istiyor; RND_NEED_CROSS_BLIND CSV'de var ama hiçbir kod onu okumuyor. Karo küçük
-    (MicroLabel, ortalı), bu yüzden bu satırın karoda mı, üzerine gelince mi, yoksa derin bağla seçilince detay
+  - Ne oluyor: Sürpriz duvar yasağı çapraz koşullu devam düğümünün kilitli yuvasında "Başka bir ailede bir araştırma
+    ister." yazılmasını istiyor; `RND_NEED_CROSS_BLIND` CSV'de var ama hiçbir kod onu okumuyor. Karo küçük
+    (`MicroLabel`, ortalı), bu yüzden bu satırın karoda mı, üzerine gelince mi, yoksa derin bağla seçilince detay
     kartında mı görüneceği bir yerleşim kararı.
-  - Nerede: scripts/tabs/rnd/rnd_tree_view.gd (_make_tile, TILE_LOCKED dalı); scripts/tabs/rnd/rnd_detail_panel.gd
-    (_add_blockers, kilitli düğüm); localization/strings.csv RND_NEED_CROSS_BLIND
+  - Nerede: `scripts/tabs/rnd/rnd_tree_view.gd` (`_make_tile`, `TILE_LOCKED` dalı);
+    `scripts/tabs/rnd/rnd_detail_panel.gd` (`_add_blockers`, kilitli düğüm); `localization/strings.csv`
+    (`RND_NEED_CROSS_BLIND`).
   - Oyuncuya etkisi: Çapraz koşul ancak ad açıldıktan sonra görünüyor, yani §3'ün yasakladığı sürpriz duvar oluşuyor.
-  - Seçenekler: A) Çapraz koşullu kilitli karoya ikinci MicroLabel satırı RND_NEED_CROSS_BLIND eklenir. B) Satır
+  - Seçenekler: A) Çapraz koşullu kilitli karoya ikinci `MicroLabel` satırı `RND_NEED_CROSS_BLIND` eklenir. B) Satır
     yalnız karonun üzerine gelince ipucu olarak çıkar. C) Satır derin bağla seçilen kilitli düğümün detay kartında
-    (_add_blockers) yazılır. Her seçenekte TR/EN onay bekler.
-  - Kaynak: Ar-Ge GDD §3 (MÜHÜRLÜ: sürpriz duvar yasağı), §8 ('çapraz koşulu eksik' durumu)
+    (`_add_blockers`) yazılır. Her seçenekte TR/EN onay bekler.
+  - Kaynak: Ar-Ge GDD §3 (MÜHÜRLÜ: sürpriz duvar yasağı), §8 ("çapraz koşulu eksik" durumu).
 
 - **27 · Üç düğümün adlandırılmış maliyet etiketi yazılmamış.**
-  - Ne oluyor: rnd_tree.json'da ai_engine, security_cert ve analytics_engine 'cost_label': true taşıyor. Kart
-    PROD_RND_NODE_<ID>_COST anahtarını arıyor (RnDUiShared.t_or), hiçbiri CSV'de yok, bu yüzden kart GDD'nin 'GPU
-    kirası $600' örneği yerine çıplak '$600' gösteriyor. GDD yalnız ai_engine için etiket veriyor ('GPU kirası');
-    security_cert ($900) ve analytics_engine ($400) için etiket yok.
-  - Nerede: data/techtree/rnd_tree.json (cost_label); scripts/tabs/rnd/rnd_detail_panel.gd (_add_state_body,
-    has_cost_label ve t_or); scripts/systems/research_tree.gd (has_cost_label); localization/strings.csv
-    (PROD_RND_NODE_*_COST yok)
+  - Ne oluyor: `rnd_tree.json`'da `ai_engine`, `security_cert` ve `analytics_engine` `"cost_label": true` taşıyor.
+    Kart `PROD_RND_NODE_<ID>_COST` anahtarını arıyor (`RnDUiShared.t_or`), hiçbiri CSV'de yok, bu yüzden kart GDD'nin
+    "GPU kirası $600" örneği yerine çıplak "$600" gösteriyor. GDD yalnız `ai_engine` için etiket veriyor ("GPU
+    kirası"); `security_cert` ($900) ve `analytics_engine` ($400) için etiket yok.
+  - Nerede: `data/techtree/rnd_tree.json` (`cost_label`); `scripts/tabs/rnd/rnd_detail_panel.gd` (`_add_state_body`,
+    `has_cost_label` ve `t_or`); `scripts/systems/research_tree.gd` (`has_cost_label`); `localization/strings.csv`
+    (`PROD_RND_NODE_*_COST` yok).
   - Oyuncuya etkisi: Nakit maliyetli üç düğümde oyuncu paranın neye gittiğini görmüyor. Kart GDD §8 örneğinden eksik
     kalıyor.
-  - Seçenekler: A) Üç etiket yazılır (EN önce, TR ayrı adım): ai_engine 'GPU kirası {money}', security_cert ve
-    analytics_engine için yeni metin. B) Yalnız ai_engine etiketi yazılır, öteki ikisinden cost_label kaldırılır. C)
-    Etiket kuralı emekliye ayrılır: cost_label ve t_or kolu silinir, tutar çıplak kalır (GDD §8 örneği güncellenir).
-  - Kaynak: Ar-Ge GDD §8 (kart örneği 'GPU kirası $600'), §13 (nakit maliyetler [K]: ai_engine $600, analytics_engine
-    $400, security_cert $900), §12.1
+  - Seçenekler: A) Üç etiket yazılır (EN önce, TR ayrı adım): `ai_engine` "GPU kirası {money}", `security_cert` ve
+    `analytics_engine` için yeni metin. B) Yalnız `ai_engine` etiketi yazılır, öteki ikisinden `cost_label`
+    kaldırılır. C) Etiket kuralı emekliye ayrılır: `cost_label` ve `t_or` kolu silinir, tutar çıplak kalır (GDD §8
+    örneği güncellenir).
+  - Kaynak: Ar-Ge GDD §8 (kart örneği "GPU kirası $600"), §13 (nakit maliyetler [K]: ai_engine $600, analytics_engine
+    $400, security_cert $900), §12.1.
 
 - **28 · Kurucu huylarının etkisi yok ama etki metni gösteriliyor.**
-  - Ne oluyor: Onboarding 2. sayfası her kurucu huyunun altında bir etki satırı basıyor (TRAIT_*_EFFECT, ör. 'Ar-Ge
-    sıçramaları daha sık', 'Pivot maliyeti yüksek'). Seçilen huy id'leri kurucunun Character.traits'ine yazılıyor, ama
-    kurucu huylarını hiçbir sistem okumuyor; FounderConstants.TRAITS yorumu bunları RESERVED diye işaretliyor.
-  - Nerede: scripts/systems/founder_constants.gd (TRAITS, effect_key); scripts/onboarding/steps/origin_traits_step.gd
-    (huy kartındaki effect_lbl); scripts/autoload/game_state.gd (initialize_run, kurucunun traits'i);
-    localization/strings.csv (TRAIT_*_EFFECT)
+  - Ne oluyor: Onboarding 2. sayfası her kurucu huyunun altında bir etki satırı basıyor (`TRAIT_*_EFFECT`, ör. "Ar-Ge
+    sıçramaları daha sık", "Pivot maliyeti yüksek"). Seçilen huy id'leri kurucunun `Character.traits`'ine yazılıyor,
+    ama kurucu huylarını hiçbir sistem okumuyor; `FounderConstants.TRAITS` yorumu bunları RESERVED diye işaretliyor.
+  - Nerede: `scripts/systems/founder_constants.gd` (`TRAITS`, `effect_key`);
+    `scripts/onboarding/steps/origin_traits_step.gd` (huy kartındaki `effect_lbl`); `scripts/autoload/game_state.gd`
+    (`initialize_run`, kurucunun `traits`'i); `localization/strings.csv` (`TRAIT_*_EFFECT`).
   - Oyuncuya etkisi: Oyuncu koşunun başında bir etki vaat eden huy seçiyor, ama seçim oyunda hiçbir şeyi
-    değiştirmiyor. 'Pivot maliyeti yüksek' gibi olumsuz huylar bedava.
-  - Seçenekler: A) Etkileri bağla: her huy için sahibin onaylayacağı bir çarpan (ch02 §8: beceri, hız, olasılık,
-    moral) ve onu okuyan sistem; sayılar [WORKING]. B) Etkiler bağlanana kadar kartta yalnız huy adı kalsın, etki
-    satırı gizlensin. C) Etki satırı kalsın, yanına 'yakında' benzeri bir işaret eklensin (yeni metin, TR/EN onayı
+    değiştirmiyor. "Pivot maliyeti yüksek" gibi olumsuz huylar bedava.
+  - Seçenekler: A) Etkiler bağlanır: her huy için sahibin onaylayacağı bir çarpan (ch02 §8: beceri, hız, olasılık,
+    moral) ve onu okuyan sistem; sayılar [WORKING]. B) Etkiler bağlanana kadar kartta yalnız huy adı kalır, etki
+    satırı gizlenir. C) Etki satırı kalır, yanına "yakında" benzeri bir işaret eklenir (yeni metin, TR/EN onayı
     gerekir).
   - Kaynak: GDD ch02 §1 (kurucu huyları katalogdan, ikonla), ch02 §8 (huylar yalnız modifier); CLAUDE.md §5 (her
-    seçenek görünür bir sonuca düşer)
+    seçenek görünür bir sonuca düşer).
 
 - **29 · Mirasyedi kökeninin kilit notu: TAM SÜRÜMDE mi, ÇOK YAKINDA mı.**
-  - Ne oluyor: Kilitli iki kökenden heir (Mirasyedi) 'TAM SÜRÜMDE' (LOCK_FULL), corporate_refugee (Kurumsal Firari)
-    'ÇOK YAKINDA' (LOCK_SOON) notunu taşıyor. ch14 §4 'kalan kökenleri' Early Access'e, §5 'ek kökenleri' tam sürüme
-    koyuyor; §3 demodaki kilitli-görünür kökenleri Heir ve Corporate Refugee diye sayıyor. 58e603e'deki görsel
-    kontrolde heir'in TR 'TAM SÜRÜMDE' rozeti bilerek korunmuştu.
-  - Nerede: scripts/systems/founder_constants.gd (ORIGINS, heir satırının locked_note_key'i);
-    scripts/onboarding/steps/origin_traits_step.gd (kilitli köken kartı rozeti)
+  - Ne oluyor: Kilitli iki kökenden `heir` (Mirasyedi) "TAM SÜRÜMDE" (`LOCK_FULL`), `corporate_refugee` (Kurumsal
+    Firari) "ÇOK YAKINDA" (`LOCK_SOON`) notunu taşıyor. ch14 §4 "kalan kökenleri" Early Access'e, §5 "ek kökenleri"
+    tam sürüme koyuyor; §3 demodaki kilitli-görünür kökenleri Heir ve Corporate Refugee diye sayıyor. 58e603e'deki
+    görsel kontrolde heir'in TR "TAM SÜRÜMDE" rozeti bilerek korunmuştu.
+  - Nerede: `scripts/systems/founder_constants.gd` (`ORIGINS`, heir satırının `locked_note_key`'i);
+    `scripts/onboarding/steps/origin_traits_step.gd` (kilitli köken kartı rozeti).
   - Oyuncuya etkisi: Onboarding 2. sayfadaki iki kilitli köken farklı çıkış zamanı vaat ediyor. ch14 §4 okunursa
     Mirasyedi'nin vaadi yanlış.
-  - Seçenekler: A) heir LOCK_SOON'a geçsin (ch14 §4: kalan kökenler EA'da). B) LOCK_FULL kalsın, ch14 §4 ve §5
-    Mirasyedi'yi tam sürüme koyacak biçimde netleştirilsin. C) İki köken de tek bir nötr kilit notu taşısın (ör.
-    LOCK_CHIP).
-  - Kaynak: GDD ch14 §3, §4, §5; ch01 §8; ch02 §1
+  - Seçenekler: A) heir `LOCK_SOON`'a geçer (ch14 §4: kalan kökenler EA'da). B) `LOCK_FULL` kalır, ch14 §4 ve §5
+    Mirasyedi'yi tam sürüme koyacak biçimde netleştirilir. C) İki köken de tek bir nötr kilit notu taşır (ör.
+    `LOCK_CHIP`).
+  - Kaynak: GDD ch14 §3, §4, §5; ch01 §8; ch02 §1.
 
 - **31 · Pazarlıkta sabır ve karşı teklif adımı mizaçtan gelmiyor.**
-  - Ne oluyor: NegotiationSystem.open sabrı arketipin pazarlık profilinden okuyor (SalesArchetypes.negotiation →
-    'patience': ops_cautious 3, tech_exacting 2, finance_brisk 2). offer karşı teklif adımını kalan sabırdan
-    türetiyor: COUNTER_STEP_MIN..MAX arasında, sabır doluyken en büyük. SalesArchetypes.temperament yalnız
-    SalesProbes.facts_for'daki olguya gidiyor. Kodu yanlış anlatan 'mizaçtan' yorumları düzeltildi; davranış
-    değişmedi.
-  - Nerede: scripts/systems/negotiation_system.gd (open, offer), scripts/systems/sales_archetypes.gd (TABLE:
-    temperament ve negotiation alanları, temperament()), scripts/systems/sales_constants.gd (PATIENCE_MIN/MAX,
-    COUNTER_STEP_MIN/MAX)
+  - Ne oluyor: `NegotiationSystem.open` sabrı arketipin pazarlık profilinden okuyor (`SalesArchetypes.negotiation` →
+    `patience`: ops_cautious 3, tech_exacting 2, finance_brisk 2). `offer` karşı teklif adımını kalan sabırdan
+    türetiyor: `COUNTER_STEP_MIN..MAX` arasında, sabır doluyken en büyük. `SalesArchetypes.temperament` yalnız
+    `SalesProbes.facts_for`'daki olguya gidiyor.
+  - Nerede: `scripts/systems/negotiation_system.gd` (`open`, `offer`); `scripts/systems/sales_archetypes.gd` (`TABLE`:
+    `temperament` ve `negotiation` alanları, `temperament()`); `scripts/systems/sales_constants.gd`
+    (`PATIENCE_MIN/MAX`, `COUNTER_STEP_MIN/MAX`).
   - Oyuncuya etkisi: Sabır kutuları ve karşı tekliflerin ne kadar hızlı indiği mizaca değil arketip satırına ve tura
     bağlı. Mizaç tek başına masada hiçbir şeyi değiştirmiyor. Bağlanırsa anlaşma fiyatları değişir.
   - Seçenekler: A) Mizaç tablosu kurulur: her mizaç bir sabır kutusu sayısı ve bir adım katsayısı taşır, arketip
-    profili bunları mizacından alır. B) Kod kalır; Satış §5.3 'sabır arketip profilinden, adım kalan sabırdan' diye
+    profili bunları mizacından alır. B) Kod kalır; Satış §5.3 "sabır arketip profilinden, adım kalan sabırdan" diye
     güncellenir, mizaç yalnız olgu olarak kalır. C) Sabır arketipten kalır, adım mizaç katsayısıyla ölçeklenir.
-  - Kaynak: Satış GDD §5.3 ('Sabır: mizaca göre 2–4 kutu [K]'; şekil formülleri: 'karşı-teklif adımı mizaçtan'), §11.1
-    (arketip alanları)
+  - Kaynak: Satış GDD §5.3 ("Sabır: mizaca göre 2–4 kutu [K]"; şekil formülleri: "karşı-teklif adımı mizaçtan"), §11.1
+    (arketip alanları).
 
-- **32 · Balina rolü musluktan da doğuyor.**
-  - Ne oluyor: SalesFaucetSystem.spawn musluk lead'lerini de _seat_whale_condition'dan geçiriyor. Yıldızı
-    reach_band()'ın üstünde olan ve arketipinin şart listesi bulunan her lead balina oluyor. §3 balina rolünün
-    karışımdan değil kahraman hesap ya da olay kanalından geldiğini söylüyor; §10'un 8–15 kahraman hesabı yazılmadı.
-  - Nerede: scripts/systems/sales_faucet_system.gd (spawn, _seat_whale_condition, reach_band),
-    scripts/systems/sales_faucet_system.gd (spawn_prospect, olay kanalı)
+- **32 · Balina rolü musluktan da doğuyor; eşik de "bandın bir üstü" değil "bandın üstü".**
+  - Ne oluyor: `SalesFaucetSystem.spawn` musluk lead'lerini de `_seat_whale_condition`'dan geçiriyor. Yıldızı
+    `reach_band()`'ın üstünde olan ve arketipinin şart listesi bulunan her lead balina oluyor. Satış §3 balina rolünün
+    karışımdan değil kahraman hesap ya da olay kanalından geldiğini söyler; §10'un 8–15 kahraman hesabı yazılmadı.
+    Eşik de GDD'den ayrı: kod bandın her üstünü balina sayıyor (`p.star <= reach_band()` ise çıkar), §8 "erişim
+    bandının bir üstünde" diyor; erişim 1 iken 3★ lead de balina.
+  - Nerede: `scripts/systems/sales_faucet_system.gd` (`spawn`, `_seat_whale_condition`, `reach_band`; olay kanalı
+    `spawn_prospect`); `scripts/systems/sales_ledger.gd` (`announce_signing`).
   - Oyuncuya etkisi: Erişim bandının üstündeki her musluk lead'i balina geliyor: şart rozeti, sert pazarlık (rezerv
-    ×0,9, sabır −1), ticker haberi ve +3 marka (SalesLedger.announce_signing). 'Nadir rol' değil; erişimi düşük koşuda
-    sık görülüyor.
-  - Seçenekler: A) Balina yalnız source != 'faucet' olan lead'lerde (olay kanalı, kahraman hesap); kahraman hesaplar
+    ×0,9, sabır −1), ticker haberi ve +3 marka (`SalesLedger.announce_signing`). Rol nadir değil; erişimi düşük koşuda
+    sık görülüyor. "Bir üstü" okumasında erişim 1'de yalnız 2★ balina olur; 3★ sıradan lig üstü lead kalır ve yine lig
+    üstü haber sayılır (§7.3).
+  - Seçenekler: A) Balina yalnız `source != "faucet"` olan lead'lerde (olay kanalı, kahraman hesap); kahraman hesaplar
     yazılana kadar balina neredeyse hiç gelmez. B) Musluk balinası kahraman hesaplar gelene kadar geçici olarak kalır;
-    §3'e not düşülür. C) Musluk balinası nadir kılınır (ör. aynı anda en çok bir canlı balina ya da [K] bir oran).
-  - Kaynak: Satış GDD §3 (yıldız karışımı: 'Balina rolü karışımdan değil, kahraman hesap / olay kanalından gelir'),
-    §8, §10
-
-- **33 · Balina eşiği 'bandın bir üstü' değil 'bandın üstü'.**
-  - Ne oluyor: _seat_whale_condition p.star > reach_band() okuyor; §8 'erişim bandının bir üstünde' diyor. Erişim 1
-    iken 3★ lead (bandın iki üstü) de balina sayılıyor.
-  - Nerede: scripts/systems/sales_faucet_system.gd (_seat_whale_condition ve spawn'daki §8 yorumu)
-  - Oyuncuya etkisi: Erişimi 1 olan koşuda 2★ ve 3★ lead'lerin hepsi balina. 'Bir üstü' okumasında yalnız 2★ balina
-    olur; 3★ sıradan lig üstü lead kalır ve yine lig üstü haber sayılır (§7.3).
-  - Seçenekler: A) star == reach_band() + 1. B) Kod kalır; §8 'bandın üstünde' diye güncellenir. C) 'Balina rolü
-    musluktan da doğuyor' maddesiyle birlikte karara bağlanır.
-  - Kaynak: Satış GDD §8
+    §3'e not düşülür. C) Musluk balinası nadir kılınır (aynı anda en çok bir canlı balina ya da [K] bir oran). A
+    dışındaki her seçenekte eşik ayrıca seçilir: (i) `star == reach_band() + 1` (§8'in harfi); (ii) kod kalır, §8
+    "bandın üstünde" diye güncellenir.
+  - Kaynak: Satış GDD §3 (yıldız karışımı), §7.3, §8, §10.
 
 - **34 · B2C memnuniyet kapısı 40'ın gerekçesi yok.**
-  - Ne oluyor: SalesSystem.SATISFACTION_QUALITY_GATE = 40: deneyim ekseni bu değere ulaşınca B2C memnuniyeti günde +1
-    kayıyor. Eski türetme (axis(20 − 0,8·5) = 39) hata erozyonunu deneyim eksenine uyguluyordu; yanlıştı ve silindi.
-    Hata erozyonu olmadan QualityModel doygunluğu (NORMALIZE_HALF_SAT 25) axis(20) = 44,4 veriyor, 40 değil. Sabitin
-    bugün yazılı bir gerekçesi yok.
-  - Nerede: scripts/systems/sales_system.gd (SATISFACTION_QUALITY_GATE, _tick_satisfaction),
-    scripts/systems/quality_model.gd (NORMALIZE_HALF_SAT, _saturate)
+  - Ne oluyor: `SalesSystem.SATISFACTION_QUALITY_GATE = 40`: deneyim ekseni bu değere ulaşınca B2C memnuniyeti günde
+    +1 kayıyor. Eski türetme (axis(20 − 0,8·5) = 39) hata erozyonunu deneyim eksenine uyguluyordu; yanlıştı ve
+    silindi. Hata erozyonu olmadan `QualityModel` doygunluğu (`NORMALIZE_HALF_SAT` 25) axis(20) = 44,4 veriyor, 40
+    değil. Sabitin bugün yazılı bir gerekçesi yok.
+  - Nerede: `scripts/systems/sales_system.gd` (`SATISFACTION_QUALITY_GATE`, `_tick_satisfaction`);
+    `scripts/systems/quality_model.gd` (`NORMALIZE_HALF_SAT`, `_saturate`).
   - Oyuncuya etkisi: B2C memnuniyetinin yükselip yükselmeyeceği bu eşiğe bağlı. Memnuniyet de ağızdan ağıza büyümeyi
-    (WOM_*) ve taban büyüme çarpanını oynatıyor, yani B2C MRR'ını.
-  - Seçenekler: A) 40 kalır; gerekçesi 'deneyim ekseni ≈ 40' diye kayda geçer. B) Hatasız axis(20)'ye, 44'e çekilir.
-    C) b2c_keep ve b2c_neglect probe'larıyla ölçülüp yeniden ayarlanır.
-  - Kaynak: GDD sayı vermiyor (Ürün ch03 ve Satış §3.1 B2C memnuniyet kaymasını sayısal tanımlamıyor); değer bir kod
-    sabiti olarak doğdu, türetmesi temizlik dalgası 1'de (e6aad53) silindi
+    (`WOM_*`) ve taban büyüme çarpanını oynatıyor, yani B2C MRR'ını.
+  - Seçenekler: A) 40 kalır; gerekçesi "deneyim ekseni ≈ 40" diye kayda geçer. B) Hatasız axis(20)'ye, 44'e çekilir.
+    C) `b2c_keep` ve `b2c_neglect` probe'larıyla ölçülüp yeniden ayarlanır.
+  - Kaynak: GDD sayı vermiyor (Ürün GDD (ch03) ve Satış §3.1 B2C memnuniyet kaymasını sayısal tanımlamıyor); değer bir
+    kod sabiti olarak doğdu, türetmesi e6aad53'te silindi.
 
 - **35 · Satış kartındaki sorumlu satırı kurucu masasını ve sahipsiz hesabı aynı ham "—" ile gösteriyor.**
   - Ne oluyor: `_add_steward_line` sorumlu adı bulamazsa CSV anahtarı olmayan sabit "—" yazıyor ("Müşteri temsilcisi:
@@ -532,7 +483,8 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     çiğniyor (anahtar yok, tire var).
   - Nerede: `scripts/tabs/sales_tab.gd` (`_add_steward_line`); `scripts/autoload/customer_registry.gd`
     (`assign_customer`); `scripts/systems/b2b_sales_system.gd` (`_account_owner`, `founder_managed_count`);
-    `scripts/systems/customer_rep_system.gd` (`_delegate_excess`); `scripts/autoload/character_registry.gd` (`remove`)
+    `scripts/systems/customer_rep_system.gd` (`_delegate_excess`); `scripts/autoload/character_registry.gd`
+    (`remove`).
   - Oyuncuya etkisi: Oyuncu kendi masasındaki hesabı, temsilcisi gidip bakımsız kalan hesaptan ayıramıyor. Ekip §11.3
     boşalan işin "boş göründüğü için okunur" olmasını istiyor. Ekranda tire var.
   - Seçenekler: A) İki anahtar: kurucu durumu için mevcut `HR_ROLE_FOUNDER` ("Kurucu"/"Founder") ya da yeni bir Satış
@@ -540,173 +492,179 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     durum için tek yeni anahtar ("atanmamış"); kurucu masası ayrıca belirtilmez. C) Ayrılışta hesaplar kurucuya döner
     (`assigned_to = ""`) ve yalnız kurucu etiketi gerekir; Ekip §11.3'ün "otomatik kurucuya devir varsayılan değildir"
     hükmüyle çelişir.
-  - Kaynak: CLAUDE.md §5 (BILINGUAL BIRTH LAW, tire yasağı); Ekip GDD §11.3; ch01 §9
+  - Kaynak: CLAUDE.md §5 (BILINGUAL BIRTH LAW, tire yasağı); Ekip GDD §11.3; ch01 §9.
 
 - **38 · Müşteri masası Destek işindeki temsilciyi de sayıyor.**
-  - Ne oluyor: Masa (`CustomerRepSystem.ranked_reps`) ve iki girişi (`reconcile_assignments`, `daily_tick`) unvanı değil
-    alan atamasını okuyor: `HRSystem.assigned_to(AREA_CUSTOMER_SUCCESS)`, işlerden türeyen alan aynası. Destek işi de
-    Müşteri İlişkileri alanını taşıdığı için (`HRConstants.JOB_AREAS["support"]`) Destek'teki bir Müşteri Temsilcisi
-    masaya sayılıyor. Yeni işe alınan Müşteri Temsilcisi de `HRConstants.AREA_PRIMARY_JOB["customer_success"]` gereği
-    Destek'e oturuyor ve masayı bu yoldan açıyor. Ekip §12.0'ın tablosu ise "müşteri olayları"nı Hesap sahipliğine,
-    "bilet çözümü"nü Destek'e yazıyor.
+  - Ne oluyor: Masa (`CustomerRepSystem.ranked_reps`) ve iki girişi (`reconcile_assignments`, `daily_tick`) unvanı
+    değil alan atamasını okuyor: `HRSystem.assigned_to(AREA_CUSTOMER_SUCCESS)`, işlerden türeyen alan aynası. Destek
+    işi de Müşteri İlişkileri alanını taşıdığı için (`HRConstants.JOB_AREAS["support"]`) Destek'teki bir Müşteri
+    Temsilcisi masaya sayılıyor. Yeni işe alınan Müşteri Temsilcisi de
+    `HRConstants.AREA_PRIMARY_JOB["customer_success"]` gereği Destek'e oturuyor ve masayı bu yoldan açıyor. Ekip
+    §12.0'ın tablosu ise "müşteri olayları"nı Hesap sahipliğine, "bilet çözümü"nü Destek'e yazıyor.
   - Nerede: `scripts/systems/customer_rep_system.gd` (`ranked_reps`); `scripts/systems/hr_system.gd` (`assigned_to`,
-    `assigned_to_job`); `scripts/systems/hr_constants.gd` (`JOB_AREAS`, `AREA_PRIMARY_JOB`); `scripts/tabs/sales_tab.gd`
-    (`_open_steward_picker`)
+    `assigned_to_job`); `scripts/systems/hr_constants.gd` (`JOB_AREAS`, `AREA_PRIMARY_JOB`);
+    `scripts/tabs/sales_tab.gd` (`_open_steward_picker`).
   - Oyuncuya etkisi: Temsilcisini yalnız Destek'te tutan oyuncunun talep kanalı ve hesap sahipliği açık kalıyor; aynı
     kişi hem destek biletlerine hem hesaplara çıktı veriyor.
-  - Seçenekler: A) Kalır; §12.0'ın "o işi taşıyan alanlara atanmış kimse var mı" cümlesi alan aynasıyla okunur. B) Masa,
-    girişler ve seçici `HRSystem.assigned_to_job(JOB_ACCOUNTS)` üzerine kurulur. Yeni işe alınan temsilci Destek'e
-    oturduğu için masa ancak oyuncu onu Hesap sahipliğine koyunca açılır; `AREA_PRIMARY_JOB["customer_success"]`'ın
-    Hesap sahipliği olması ayrı bir alt karardır. Seeded koşu değişir; `_make_cs_rep` kullanan smoke vakaları yeniden
-    yazılır.
-  - Kaynak: Ekip GDD §12.0, §4.4, §10.4
+  - Seçenekler: A) Kalır; §12.0'ın "o işi taşıyan alanlara atanmış kimse var mı" cümlesi alan aynasıyla okunur. B)
+    Masa, girişler ve seçici `HRSystem.assigned_to_job(JOB_ACCOUNTS)` üzerine kurulur. Yeni işe alınan temsilci
+    Destek'e oturduğu için masa ancak oyuncu onu Hesap sahipliğine koyunca açılır;
+    `AREA_PRIMARY_JOB["customer_success"]`'ın Hesap sahipliği olması ayrı bir alt karardır. Tohumlu koşu değişir;
+    `_make_cs_rep` kullanan smoke vakaları yeniden yazılır.
+  - Kaynak: Ekip GDD §12.0, §4.4, §10.4.
 
 - **39 · Satış sekmesinin Risk sebebi ile elde tutma kartındaki müşteri sesi farklı kurala bakıyor.**
   - Ne oluyor: `sales_tab._card_risk`, `ProductSystem.live_bug_count() > B2BConstants.COMPLAINT_BUG_GATE` ise "sık
-    kesinti şikayeti" (SALES_REASON_OUTAGE), değilse "memnuniyet düşüyor" (SALES_REASON_SATISFACTION) yazıyor. Aynı
-    hesabın elde tutma kartındaki sesi `B2BSalesSystem.risk_voice` seçiyor: önce kırılmış söz (`b2b_broke_<id>` →
-    B2B_RISK_VOICE_BROKEN), sonra `ProductState.bugs_confirmed() > COMPLAINT_BUG_GATE` ya da
+    kesinti şikayeti" (`SALES_REASON_OUTAGE`), değilse "memnuniyet düşüyor" (`SALES_REASON_SATISFACTION`) yazıyor.
+    Aynı hesabın elde tutma kartındaki sesi `B2BSalesSystem.risk_voice` seçiyor: önce kırılmış söz (`b2b_broke_<id>` →
+    `B2B_RISK_VOICE_BROKEN`), sonra `ProductState.bugs_confirmed() > COMPLAINT_BUG_GATE` ya da
     `InfraSystem.is_over_capacity()` (sektör şikâyeti), en son kısa ses. İki yol farklı hata sayacı okuyor; kapasite
     aşımı ve kırılmış söz sekmede sebep olarak hiç görünmüyor.
   - Nerede: `scripts/tabs/sales_tab.gd` (`_card_risk`); `scripts/systems/b2b_sales_system.gd` (`risk_voice`);
     `scripts/systems/product_system.gd` (`live_bug_count`); `ProductState.bugs_confirmed`;
-    `InfraSystem.is_over_capacity`
+    `InfraSystem.is_over_capacity`.
   - Oyuncuya etkisi: Sekme "Sebep: memnuniyet düşüyor" derken kart altyapı şikâyeti ya da kırılmış söz sesiyle
     açılabiliyor; tersi de olabiliyor.
   - Seçenekler: A) Sekme `risk_voice`'un sırasını ve yüklemini kullanır; kırılmış söz için yeni bir sebep satırı
     gerekir (yeni metin, onay bekler). B) Yalnız hata yüklemi `risk_voice` ile aynı yapılır (onaylı hata ya da
     kapasite aşımı), iki sebep kalır. C) Kalır.
-  - Kaynak: Satış GDD §19 (retention kartı korunanlar arasında); ch11 §7
+  - Kaynak: Satış GDD §19 (retention kartı korunanlar arasında); ch11 §7.
 
 - **40 · Kayıtlı ama okunmayan `Customer.health` alanı.**
   - Ne oluyor: `Customer.health` her memnuniyet değişiminde `update_health_from_satisfaction` ile yazılıyor ama
-    okuyucusu yok; SaveCodec onu kaydediyor. Yazanlar: `CustomerRegistry.set_satisfaction`,
+    okuyucusu yok; `SaveCodec` onu kaydediyor. Yazanlar: `CustomerRegistry.set_satisfaction`,
     `SalesSystem.add_b2b_customer`, B2C tabanı ve `main.gd`'deki debug fikstürü. `SaveCodec.res_from_dict` yalnız
     bugünkü alanları okuduğu için alanı silmek eski kayıtları bozmaz.
   - Nerede: `scripts/data_models/customer.gd` (`health`, `update_health_from_satisfaction`);
-    `scripts/autoload/customer_registry.gd` (`set_satisfaction`); `scripts/systems/sales_system.gd` (`add_b2b_customer`
-    ve B2C tabanı); `scripts/main/main.gd`
+    `scripts/autoload/customer_registry.gd` (`set_satisfaction`); `scripts/systems/sales_system.gd`
+    (`add_b2b_customer` ve B2C tabanı); `scripts/main/main.gd`.
   - Oyuncuya etkisi: Yok; kayıt dosyasında ve kodda ölü alan kalıyor (CLAUDE.md §8).
-  - Seçenekler: A) Alan, fonksiyon ve dört çağrısı silinir (main.gd dahil). B) Kalır; sağlık bandı bir okuyucuya
+  - Seçenekler: A) Alan, fonksiyon ve dört çağrısı silinir (`main.gd` dahil). B) Kalır; sağlık bandı bir okuyucuya
     bağlanır.
-  - Kaynak: CLAUDE.md §2, §6, §8
+  - Kaynak: CLAUDE.md §2, §6, §8.
 
 - **41 · §12.8 kapı-üstü Yazılım hız bonusu uygulanmıyor.**
-  - Ne oluyor: Ürün GDD §12.8 'fazladan Yazılım yıldızları hızı aynı kademeyle çarpar' diyor.
-    LineGates.speed_bonus_for bu bonusu (+%8 / +%4) hesaplıyor ama hiçbir yer çağırmıyor; hat yapımının hızı
-    (ProductSystem.build_effort_per_day) bonus almıyor. Ölçü de belirsiz: bir sürümde farklı Yazılım kapısı taşıyan
+  - Ne oluyor: Ürün GDD §12.8 "fazladan Yazılım yıldızları hızı aynı kademeyle çarpar" diyor.
+    `LineGates.speed_bonus_for` bu bonusu (+%8 / +%4) hesaplıyor ama hiçbir yer çağırmıyor; hat yapımının hızı
+    (`ProductSystem.build_effort_per_day`) bonus almıyor. Ölçü de belirsiz: bir sürümde farklı Yazılım kapısı taşıyan
     birden çok kademe olabilir. Bugünkü fonksiyon her kademenin kendi kapısına göre en büyük fazlayı okuyor; eski
-    yorum 'en büyük kapıya göre' diyordu. Kişi kapısı ile toplam kapısının hangisinin sayılacağı da yazılı değil.
-  - Nerede: scripts/systems/line_gates.gd (speed_bonus_for, _excess_for, _excess_ladder);
-    scripts/systems/product_system.gd (build_effort_per_day, _tick_line_build_hourly, estimate_line_build_days)
+    yorum "en büyük kapıya göre" diyordu. Kişi kapısı ile toplam kapısının hangisinin sayılacağı da yazılı değil.
+  - Nerede: `scripts/systems/line_gates.gd` (`speed_bonus_for`, `_excess_for`, `_excess_ladder`);
+    `scripts/systems/product_system.gd` (`build_effort_per_day`, `_tick_line_build_hourly`,
+    `estimate_line_build_days`).
   - Oyuncuya etkisi: Kapının üstünde güçlü yazılımcı tutmak yapımı hızlandırmıyor; GDD'nin vaat ettiği ödül yok.
-    Bağlanırsa yapım süreleri ve tohumlu koşular değişir.
-  - Seçenekler: A) Sürümdeki kademelerin kendi Yazılım kapılarına göre en büyük fazla (bugünkü speed_bonus_for) hızı
+    Bağlanırsa yapım süreleri ve tohumlu koşu değişir.
+  - Seçenekler: A) Sürümdeki kademelerin kendi Yazılım kapılarına göre en büyük fazla (bugünkü `speed_bonus_for`) hızı
     ×(1+bonus) çarpar; Konsept'in süre önizlemesi aynı çarpanı okur. B) Fazla, sürümdeki en büyük Yazılım kapısına
-    göre tek referansla ölçülür. C) Bonus kaldırılır: §12.8'in hız cümlesi GDD'den çıkar, speed_bonus_for silinir.
-  - Kaynak: Ürün GDD rev 6.1 §12.8, §6.1, §24 (§12.8 inşa notu)
+    göre tek referansla ölçülür. C) Bonus kaldırılır: §12.8'in hız cümlesi GDD'den çıkar, `speed_bonus_for` silinir.
+  - Kaynak: Ürün GDD (ch03) §12.8, §6.1, §24 (§12.8 inşa notu).
 
 - **42 · §10 kapasite uyarı kartı bağlı değil.**
-  - Ne oluyor: §10 '%80–100 kapasite çubuğu sararır ve sürüm başına bir kez olay kartı düşer ("Sunucular yoruluyor." —
-    kapasite artır / şimdilik bekle)' diyor. Kodda sürüm başına mandal var (InfraSystem.due_capacity_warning,
-    mark_capacity_warning_shown, _warning_consumed_version, to_dict/from_dict/reset) ama çağıran yok. Kart JSON'u ve
-    metni yok. Mandal kayda ve SaveManager.reset_all_owners'a girmiyor.
-  - Nerede: scripts/systems/infra_system.gd (due_capacity_warning, mark_capacity_warning_shown, daily_tick);
-    data/events/cards/product/ (kart yok); scripts/autoload/save_manager.gd (reset_all_owners, _capture_systems)
+  - Ne oluyor: §10 "%80–100 kapasite çubuğu sararır ve sürüm başına bir kez olay kartı düşer" diyor (kart: "Sunucular
+    yoruluyor."; seçenekler kapasite artır ya da şimdilik bekle). Kodda sürüm başına mandal var
+    (`InfraSystem.due_capacity_warning`, `mark_capacity_warning_shown`, `_warning_consumed_version`, `to_dict` /
+    `from_dict` / `reset`) ama çağıran yok. Kart JSON'u ve metni yok. Mandal kayda ve `SaveManager.reset_all_owners`'a
+    girmiyor.
+  - Nerede: `scripts/systems/infra_system.gd` (`due_capacity_warning`, `mark_capacity_warning_shown`, `daily_tick`);
+    `data/events/cards/product/` (kart yok); `scripts/autoload/save_manager.gd` (`reset_all_owners`,
+    `_capture_systems`).
   - Oyuncuya etkisi: Doluluk %80'i geçince çubuk sararıyor ama kart gelmiyor; oyuncu aşım zararına (memnuniyet
     −0,8/gün, GELEN ×1,5, B2C edinim ×0,6) kartla uyarılmadan girebiliyor.
-  - Seçenekler: A) Kart yazılır (önce EN, TR ayrı adım; seçenekler kapasite +1 / bekle). InfraSystem.daily_tick
-    mandalı okuyup EventGate.request eder; mandal kayda ve reset_all_owners'a girer. B) Uyarı yalnız çubuğun sararması
-    olarak kalır; kart cümlesi GDD'den çıkar ve mandal silinir. C) 'Olay içeriği eksik' maddesinin içerik turuna
-    bırakılır.
-  - Kaynak: Ürün GDD rev 6.1 §10, §8.5 (uyarısız kayıp yok); ch11 §3
+  - Seçenekler: A) Kart yazılır (önce EN, TR ayrı adım; seçenekler kapasite +1 / bekle). `InfraSystem.daily_tick`
+    mandalı okuyup `EventGate.request` eder; mandal kayda ve `reset_all_owners`'a girer. B) Uyarı yalnız çubuğun
+    sararması olarak kalır; kart cümlesi GDD'den çıkar ve mandal silinir. C) "Olay içeriği eksik" maddesinin içerik
+    turuna bırakılır.
+  - Kaynak: Ürün GDD (ch03) §10, §8.5 (uyarısız kayıp yok); ch11 §3.
 
 - **43 · Hat ürünlerinde karmaşıklık sıfır: hata riski, aşınma ve özellik sayısı.**
-  - Ne oluyor: Hat modeli FeatureBuild.component_ids/feature_ids alanlarını doldurmuyor; ship_active_build yayında
-    mvp_components'i boş yazıyor. Bu yüzden hat ürünlerinde ProductSystem._shipped_total_complexity() hep 0. Canlı
-    aşınmanın karmaşıklık terimi (WEAR_CPLX_COEF) düşüyor. product_bug_risk() max(1,0)=1'e bölüyor: tek açık hata
-    'orta', iki ve fazlası 'yüksek' okunuyor. Aynı boş liste SalesSystem.product_value'nun karmaşıklığını, fiyat
-    panelindeki özellik sayısını (PROD_FEATURE_COUNT) ve publish_flow'daki sayımı da 0'a çekiyor. Kademelerde
-    karmaşıklık alanı yok.
-  - Nerede: scripts/systems/product_system.gd (_shipped_total_complexity, _post_ship_wear_hourly, product_bug_risk,
-    ship_active_build); scripts/systems/sales_system.gd (product_value); scripts/tabs/product/pricing_panel.gd;
-    scripts/tabs/product/publish_flow.gd; data/product/lines/*.json
-  - Oyuncuya etkisi: Ürün Detayı'ndaki hata riski rozeti tek hatada 'orta'ya fırlıyor; karmaşık ürün daha hızlı
+  - Ne oluyor: Hat modeli `FeatureBuild.component_ids` / `feature_ids` alanlarını doldurmuyor; `ship_active_build`
+    yayında `mvp_components`'i boş yazıyor. Bu yüzden hat ürünlerinde `ProductSystem._shipped_total_complexity()` hep
+    0. Canlı aşınmanın karmaşıklık terimi (`WEAR_CPLX_COEF`) düşüyor. `product_bug_risk()` max(1,0)=1'e bölüyor: tek
+    açık hata "orta", iki ve fazlası "yüksek" okunuyor. Aynı boş liste `SalesSystem.product_value`'nun karmaşıklığını,
+    fiyat panelindeki özellik sayısını (`PROD_FEATURE_COUNT`) ve `publish_flow`'daki sayımı da 0'a çekiyor.
+    Kademelerde karmaşıklık alanı yok.
+  - Nerede: `scripts/systems/product_system.gd` (`_shipped_total_complexity`, `_post_ship_wear_hourly`,
+    `product_bug_risk`, `ship_active_build`); `scripts/systems/sales_system.gd` (`product_value`);
+    `scripts/tabs/product/pricing_panel.gd`; `scripts/tabs/product/publish_flow.gd`; `data/product/lines/*.json`.
+  - Oyuncuya etkisi: Ürün Detayı'ndaki hata riski rozeti tek hatada "orta"ya fırlıyor; karmaşık ürün daha hızlı
     aşınmıyor; özellik sayısı 0 görünüyor; ürün değeri karmaşıklık katkısı almıyor.
   - Seçenekler: A) Payda yayınlanmış kademelerin efor toplamı ya da kullanım ağırlığı toplamı
-    (ProductState.usage_weight_total) olur; aşınma, risk ve product_value aynı sayıyı okur. B) Kademelere complexity
-    alanı eklenir (içerik işi, §12.12 şartnamesi). C) Risk rozeti DOĞRULANMIŞ hata sayısına göre mutlak eşiklerle
-    okunur; karmaşıklık terimi aşınmayla birlikte kalkar (bkz. taşınan hata maddesi).
-  - Kaynak: Ürün GDD rev 6.1 §8, §9, §10 (kullanım ağırlığı), §12.4, §17, §21
+    (`ProductState.usage_weight_total`) olur; aşınma, risk ve `product_value` aynı sayıyı okur. B) Kademelere
+    `complexity` alanı eklenir (içerik işi, §12.12 şartnamesi). C) Risk rozeti DOĞRULANMIŞ hata sayısına göre mutlak
+    eşiklerle okunur; karmaşıklık terimi aşınmayla birlikte kalkar (bkz. 45. madde).
+  - Kaynak: Ürün GDD (ch03) §8, §9, §10 (kullanım ağırlığı), §12.4, §17, §21.
 
 - **44 · Düz özellik kataloğunun emekliliği.**
-  - Ne oluyor: GDD §21 'katalog hat modeline geçer, 61 düz özellik ve ölü alanlar silinir' diyor. Düz yol oyunda
-    yalnız main.gd debug tohumlarından ve smoke/probe'dan erişiliyor; üç oynanabilir alt-tip (note_tool, video_clip,
-    erp) hat alt-tipi. Bu yol ProductCatalog.FEATURE_POOLS, ProductSystem.start_build/start_version_build,
-    _tick_build_hourly, TASARIM tur zinciri, projected_axes, estimate_build_days ve bunların sabitlerinden oluşuyor.
-    Ama havuzlar üretimde hâlâ okunuyor: B2BSalesSystem'in pain feature seçimi, SalesSystem.product_value
-    karmaşıklığı, ProductSystem hata tohumu ve aşınma, ProductState'in feature canlılık sorgusu.
-  - Nerede: scripts/systems/product_catalog.gd (FEATURE_POOLS, get_feature_pool, get_feature_by_id, sum_efor,
-    sum_cost); scripts/systems/product_system.gd (düz katalog bölümü ve sabitleri);
-    scripts/systems/b2b_sales_system.gd; scripts/systems/sales_system.gd (product_value);
-    scripts/systems/product_state.gd; scripts/main/main.gd debug tohumları; localization/strings.csv PROD_FEAT_*
-    satırları
-  - Oyuncuya etkisi: Doğrudan görünmez; ölü yol her ürün işini pahalılaştırıyor, hat ürünlerinde karmaşıklığa dayanan
-    hesaplar 0 okuyor.
-  - Seçenekler: A) Düz yol ve havuzlar tümüyle silinir; tüketiciler hat karşılıklarına bağlanır (karmaşıklık
-    maddesinin kararı önce gelir); smoke/probe fikstürleri test paketi işiyle hat yoluna taşınır. B) Havuzlar yalnız
-    kilitli (hat içeriği olmayan) tiplerin veri kaynağı olarak kalır, yapım yolu silinir. C) Bugünkü hâl kalır, GDD
-    §21'e not düşülür.
-  - Kaynak: Ürün GDD rev 6.1 §12.1, §20, §21, §22.5; docs/ACIK_ISLER/ISLER.md 'Test paketi'
+  - Ne oluyor: GDD §21 "katalog hat modeline geçer, 61 düz özellik ve ölü alanlar silinir" diyor. Düz yol oyunda
+    yalnız `main.gd` debug tohumlarından ve smoke/probe'dan erişiliyor; üç oynanabilir alt-tip (`note_tool`,
+    `video_clip`, `erp`) hat alt-tipi. Bu yol `ProductCatalog.FEATURE_POOLS`, `ProductSystem.start_build` /
+    `start_version_build`, `_tick_build_hourly`, TASARIM tur zinciri, `projected_axes`, `estimate_build_days` ve
+    bunların sabitlerinden oluşuyor. Ama havuzlar üretimde hâlâ okunuyor: `B2BSalesSystem`'in pain feature seçimi,
+    `SalesSystem.product_value` karmaşıklığı, `ProductSystem` hata tohumu ve aşınma, `ProductState`'in feature
+    canlılık sorgusu.
+  - Nerede: `scripts/systems/product_catalog.gd` (`FEATURE_POOLS`, `get_feature_pool`, `get_feature_by_id`,
+    `sum_efor`, `sum_cost`); `scripts/systems/product_system.gd` (düz katalog bölümü ve sabitleri);
+    `scripts/systems/b2b_sales_system.gd`; `scripts/systems/sales_system.gd` (`product_value`);
+    `scripts/systems/product_state.gd`; `scripts/main/main.gd` debug tohumları; `localization/strings.csv`
+    (`PROD_FEAT_*` satırları).
+  - Oyuncuya etkisi: Doğrudan görünmez; ölü yol her ürün işini pahalılaştırıyor (hat ürünlerinde karmaşıklık için bkz.
+    43. madde).
+  - Seçenekler: A) Düz yol ve havuzlar tümüyle silinir; tüketiciler hat karşılıklarına bağlanır (43. maddenin kararı
+    önce gelir); smoke/probe fikstürleri test paketi işiyle hat yoluna taşınır. B) Havuzlar yalnız kilitli (hat
+    içeriği olmayan) tiplerin veri kaynağı olarak kalır, yapım yolu silinir. C) Bugünkü hâl kalır, GDD §21'e not
+    düşülür.
+  - Kaynak: Ürün GDD (ch03) §12.1, §20, §21, §22.5; `docs/ACIK_ISLER/ISLER.md` "Test paketi".
 
 - **45 · Canlı aşınma §9'un taşınan hata terimini büyütüyor.**
-  - Ne oluyor: SupportSystem.reports_per_day'deki §9 taşınan_hata terimi ProductSystem.live_bug_count()
-    (mvp_live_bug_count) okuyor. Sayaç yayında BETA'dan devreden açık hatalarla başlıyor, sonra _post_ship_wear_hourly
-    ile her saat kitle ve karmaşıklıkla büyüyor. Onu düşüren üretim yolu yok: hata sprinti yalnız testten çağrılıyor,
-    düzeltme koşusu DOĞRULANMIŞ'ı eritiyor. GDD rev 6.1 §8-§9'da aşınma yok. Aynı sayaç ekonomi Kararlılığını
-    (QualityModel.economy_dims_from_flags), sağlık rozetini ve VC/term sheet kontrollerini de oynatıyor.
-  - Nerede: scripts/systems/support_system.gd (reports_per_day); scripts/systems/product_system.gd (live_bug_count,
-    _post_ship_wear_hourly, WEAR_*, health_state, product_bug_risk); scripts/systems/quality_model.gd
-    (economy_dims_from_flags); vc_pitch_system.gd ve term_sheet_table_system.gd (live_bug_count okuyucuları)
+  - Ne oluyor: `SupportSystem.reports_per_day`'deki §9 taşınan_hata terimi `ProductSystem.live_bug_count()`
+    (`mvp_live_bug_count`) okuyor. Sayaç yayında BETA'dan devreden açık hatalarla başlıyor, sonra
+    `_post_ship_wear_hourly` ile her saat kitle ve karmaşıklıkla büyüyor. Onu düşüren üretim yolu yok: hata sprinti
+    yalnız testten çağrılıyor, düzeltme koşusu DOĞRULANMIŞ'ı eritiyor. Ürün GDD §8–§9'da aşınma yok. Aynı sayaç
+    ekonomi Kararlılığını (`QualityModel.economy_dims_from_flags`), sağlık rozetini ve VC/term sheet kontrollerini de
+    oynatıyor.
+  - Nerede: `scripts/systems/support_system.gd` (`reports_per_day`); `scripts/systems/product_system.gd`
+    (`live_bug_count`, `_post_ship_wear_hourly`, `WEAR_*`, `health_state`, `product_bug_risk`);
+    `scripts/systems/quality_model.gd` (`economy_dims_from_flags`); `vc_pitch_system.gd` ve
+    `term_sheet_table_system.gd` (`live_bug_count` okuyucuları).
   - Oyuncuya etkisi: Canlı ürünün GELEN akışı zamanla kendiliğinden artıyor; oyuncunun düzeltme koşusu bu terimi hiç
     düşürmüyor ve Kararlılık erimesi geri alınamıyor.
-  - Seçenekler: A) Aşınma kalkar: taşınan_hata yayındaki devir sayısıdır (mvp_bug_count_at_launch) ve her yayında
-    tazelenir. B) Taşınan hatalar GELEN'e dönüştükçe terim azalır; düzeltme koşusunda çözülenler live_bug_count'u da
-    düşürür. C) Taşınan hatalar yayında DOĞRULANMIŞ'a tohumlanır ve akıştaki terim kalkar (§9'un 'zamanla yüzeye
-    çıkar' cümlesiyle çelişir). D) Aşınma kalır ve GDD'ye işlenir.
-  - Kaynak: Ürün GDD rev 6.1 §7, §8.1, §8.4, §9, §11.2, §20
+  - Seçenekler: A) Aşınma kalkar: taşınan_hata yayındaki devir sayısıdır (`mvp_bug_count_at_launch`) ve her yayında
+    tazelenir. B) Taşınan hatalar GELEN'e dönüştükçe terim azalır; düzeltme koşusunda çözülenler `live_bug_count`'u da
+    düşürür. C) Taşınan hatalar yayında DOĞRULANMIŞ'a tohumlanır ve akıştaki terim kalkar (§9'un "zamanla yüzeye
+    çıkar" cümlesiyle çelişir). D) Aşınma kalır ve GDD'ye işlenir.
+  - Kaynak: Ürün GDD (ch03) §7, §8.1, §8.4, §9, §11.2, §20.
 
 - **46 · Boş ürün adı her yüzeyde farklı görünüyor.**
-  - Ne oluyor: Konsept'te ad alanı boş bırakılabiliyor. ProductSystem.start_line_build v1'de adı
-    ProductState.product_name()'e (boş) düşürüyor; FeatureBuild.product_name ve yayında mvp_product_name boş
-    kalabiliyor. Yüzeylerin yedekleri farklı: Konsept özetinde tip adı (creation_flow), destek barında şirket adı,
-    yapım barında yalnız sürüm, Ekip defterinin iş hücresinde yedek yok (' v2'). B2C'de yedek kayda da iniyor:
-    SalesSystem._ensure_b2c_record ad boşsa _product_name()'in çevrilmiş yedeğini
-    (TranslationServer.translate("PRODUCT_FALLBACK_NAME") ya da ProductCatalog.type_name) Customer.name_arg'a yazıyor;
-    kullanıcı kaydının adı o anki dilde kayda donuyor (CLAUDE.md §5: durumda metin değil id).
-  - Nerede: scripts/systems/product_system.gd (start_line_build); scripts/data_models/feature_build.gd (product_name);
-    scripts/tabs/product/creation_flow.gd; scripts/ui/components/build_bar_model.gd; scripts/tabs/hr/hr_ledger.gd
-    (_job_text); scripts/systems/sales_system.gd (_ensure_b2c_record, _product_name); scripts/data_models/customer.gd
-    (display_name)
-  - Oyuncuya etkisi: Adsız ürün farklı ekranlarda farklı adla ya da adsız (' v2') görünüyor.
-  - Seçenekler: A) Konsept onayı ad girilmeden açılmaz. B) Boş ad ProductCatalog.PRODUCT_NAME_POOL'dan bir öneriyle
+  - Ne oluyor: Konsept'te ad alanı boş bırakılabiliyor. `ProductSystem.start_line_build` v1'de adı
+    `ProductState.product_name()`'e (boş) düşürüyor; `FeatureBuild.product_name` ve yayında `mvp_product_name` boş
+    kalabiliyor. Yüzeylerin yedekleri farklı: Konsept özetinde tip adı (`creation_flow`), destek barında şirket adı,
+    yapım barında yalnız sürüm, Ekip defterinin iş hücresinde yedek yok (" v2"). B2C'de yedek kayda da iniyor:
+    `SalesSystem._ensure_b2c_record` ad boşsa `_product_name()`'in çevrilmiş yedeğini
+    (`TranslationServer.translate("PRODUCT_FALLBACK_NAME")` ya da `ProductCatalog.type_name`) `Customer.name_arg`'a
+    yazıyor; kullanıcı kaydının adı o anki dilde kayda donuyor (CLAUDE.md §5: durumda metin değil id).
+  - Nerede: `scripts/systems/product_system.gd` (`start_line_build`); `scripts/data_models/feature_build.gd`
+    (`product_name`); `scripts/tabs/product/creation_flow.gd`; `scripts/ui/components/build_bar_model.gd`;
+    `scripts/tabs/hr/hr_ledger.gd` (`_job_text`); `scripts/systems/sales_system.gd` (`_ensure_b2c_record`,
+    `_product_name`); `scripts/data_models/customer.gd` (`display_name`).
+  - Oyuncuya etkisi: Adsız ürün farklı ekranlarda farklı adla ya da adsız (" v2") görünüyor.
+  - Seçenekler: A) Konsept onayı ad girilmeden açılmaz. B) Boş ad `ProductCatalog.PRODUCT_NAME_POOL`'dan bir öneriyle
     doldurulur (özel ad; çevrilmez, saklanabilir). C) Tek görüntüleme yardımcısı kurulur: ad boşsa anahtardan tip adı
     okunur, durumda saklanmaz; bütün yüzeyler onu okur.
-  - Kaynak: Ürün GDD rev 6.1 §3; CLAUDE.md §5 (durumda metin değil id)
+  - Kaynak: Ürün GDD (ch03) §3; CLAUDE.md §5 (durumda metin değil id).
 
-- **47 · '+N gün' olayı Build'de kimse yokken etkisiz.**
-  - Ne oluyor: delay_days olay fiili ProductSystem.apply_speed_bonus'u çağırıyor. Hat yapımında günler
-    build_effort_per_day ile efora çevriliyor; Build işinde kimse yoksa hız 0 ve toplam efor değişmiyor. Düz yolun
-    team_speed'i SPEED_MIN=1 tabanı taşıdığı için orada olay her zaman etki ediyordu. Kart modalı '+N gün' der, etki
-    olmaz.
-  - Nerede: scripts/systems/product_system.gd (apply_speed_bonus, build_effort_per_day, SPEED_MIN);
-    scripts/events/core/effects.gd (delay_days)
+- **47 · "+N gün" olayı Build'de kimse yokken etkisiz.**
+  - Ne oluyor: `delay_days` olay fiili `ProductSystem.apply_speed_bonus`'u çağırıyor. Hat yapımında günler
+    `build_effort_per_day` ile efora çevriliyor; Build işinde kimse yoksa hız 0 ve toplam efor değişmiyor. Düz yolun
+    `team_speed`'i `SPEED_MIN` = 1 tabanı taşıdığı için orada olay her zaman etki ediyordu. Kart modalı "+N gün" der,
+    etki olmaz.
+  - Nerede: `scripts/systems/product_system.gd` (`apply_speed_bonus`, `build_effort_per_day`, `SPEED_MIN`);
+    `scripts/events/core/effects.gd` (`delay_days`).
   - Oyuncuya etkisi: Build'de kimse yokken düşen gecikme ya da hızlanma kartı söylediğini yapmıyor. Yapım o anda
     oto-duraklı olduğu için etki küçük.
-  - Seçenekler: A) Hat yolunda hız tabanlanır (ör. maxf(SPEED_MIN, build_effort_per_day)); olay toplamı her zaman
-    değiştirir. B) Hız 0 iken fiil reddedilir (effects 'refused' döner, çip çizilmez). C) Kabul edilir ve
-    apply_speed_bonus'un yorumunda söylenir.
-  - Kaynak: Ürün GDD rev 6.1 §6.1; ch11 §3; CLAUDE.md §5 (seçeneğin anlattığını modifier'lar yapar)
+  - Seçenekler: A) Hat yolunda hız tabanlanır (ör. `maxf(SPEED_MIN, build_effort_per_day)`); olay toplamı her zaman
+    değiştirir. B) Hız 0 iken fiil reddedilir (effects `refused` döner, çip çizilmez). C) Kabul edilir ve
+    `apply_speed_bonus`'un yorumunda söylenir.
+  - Kaynak: Ürün GDD (ch03) §6.1; ch11 §3; CLAUDE.md §5 (seçeneğin anlattığını modifier'lar yapar).
 
 - **48 · Ürün Detayı'nda sonraki sürüm kartı hep "~3+ GÜN" yazıyor.**
   - Ne oluyor: Sonraki sürüm kartının durum etiketi `PROD_ETA_DAYS` ("~{n}+ GÜN") `maxi(3,
@@ -724,32 +682,38 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
 
 - **49 · Konsept'te onay düğmesi gerekçesiz kapanıyor (plan ret kimliklerinin metni yok).**
   - Ne oluyor: Konsept'in onay kartı, `ProductSystem.validate_line_plan` boş olmayan bir ret kimliği döndürünce
-    "Onayla ve Başlat"ı kapatıyor ama sebebini yazmıyor. Not satırı yalnız `PROD_POLISH_NOTE`'u taşıyor. Ret
-    kimlikleri makine kimliği ve CSV karşılıkları yok: `empty_plan`, `unknown_subtype`, `unknown_step`,
-    `step_from_another_subtype`, `locked`; `ProductLines.ladder_refusal` için `already_shipped`, `skips_tier`,
-    `line_already_planned`. Oyuncunun pratikte ulaşabildiği hâller `empty_plan` (hiç kademe seçilmemiş) ve `locked`
-    (taslaktan dönen bir kademe arada kilitlenmiş). Merdiven retlerini hat listesi zaten tıklamada sessizce eliyor.
-  - Nerede: `scripts/tabs/product/creation_flow.gd` (`_update_dynamic`, `_commit_btn`, `_note_label`);
-    `scripts/systems/product_system.gd` (`validate_line_plan`); `scripts/systems/product_lines.gd` (`ladder_refusal`);
-    `localization/strings.csv`.
+    "Onayla ve Başlat"ı kapatıyor ama sebebini yazmıyor. Not satırı (`_note_label`) ekip ataması retlerini gösteriyor
+    (`_reseed_team`, `TEAM_REFUSAL_KEYS`: `job_cap`, `not_your_job`, `inactive` → `PROD_TEAM_REFUSE_*`); plan reddi
+    için metin yok ve not satırı o durumda yalnız `PROD_POLISH_NOTE` gösteriyor. Plan ret kimlikleri makine kimliği ve
+    CSV karşılıkları yok: `empty_plan`, `unknown_subtype`, `unknown_step`, `step_from_another_subtype`, `locked`;
+    `ProductLines.ladder_refusal` için `already_shipped`, `skips_tier`, `line_already_planned`. Oyuncunun pratikte
+    ulaşabildiği hâller `empty_plan` (hiç kademe seçilmemiş) ve `locked` (taslaktan dönen bir kademe arada
+    kilitlenmiş). Merdiven retlerini hat listesi zaten tıklamada sessizce eliyor.
+  - Nerede: `scripts/tabs/product/creation_flow.gd` (`_update_dynamic`, `_commit_btn`, `_note_label`,
+    `TEAM_REFUSAL_KEYS`); `scripts/systems/product_system.gd` (`validate_line_plan`);
+    `scripts/systems/product_lines.gd` (`ladder_refusal`); `localization/strings.csv`.
   - Oyuncuya etkisi: Düğme gri kalır ve oyuncu nedenini ekranda göremez. Kilitlenmiş bir taslak kademesi olduğunda
     hangi kademenin engel olduğunu tahmin etmek zorunda kalır.
   - Seçenekler: A) Ulaşılabilir iki ret (`empty_plan`, `locked`) için TR/EN anahtarı yazılır ve not satırına basılır.
-    B) Bütün ret kimliklerine anahtar yazılır, bir kimlik→anahtar tablosu not satırını besler. C) Olduğu gibi kalır;
-    boş plan kendini açıklar, kilitli taslak kademesi `setup`'ta düşürülür.
+    B) Bütün ret kimliklerine anahtar yazılır, bir kimlik→anahtar tablosu not satırını besler (hazır desen:
+    `TEAM_REFUSAL_KEYS`). C) Olduğu gibi kalır; boş plan kendini açıklar, kilitli taslak kademesi `setup`'ta
+    düşürülür.
   - Kaynak: Ürün GDD (ch03) §3, §12.3, §12.9, §18; CLAUDE.md §5 (kilitli seçenek gerekçesiyle görünür).
 
 - **50 · Kademe açıklamaları yazılmış ama hiçbir ekranda görünmüyor.**
-  - Ne oluyor: Hat verisindeki her kademe `desc_key` taşıyor (`PROD_STEP_*_DESC`; paylaşılan hatlarda alt-tip başına
-    ayrı satır). Anahtarlar CSV'de TR ve EN olarak yazılmış ve `loc_product_line_keys_resolve` smoke'u çözüldüklerini
-    denetliyor. Hiçbir arayüz `desc_key` okumuyor: `FeatureLinesView` yalnız `name_key` basıyor.
-  - Nerede: `data/product/lines/*.json` (`desc_key`); `scripts/tabs/product/feature_lines_view.gd` (`_make_line_row`,
-    `_make_lock_row`); `localization/strings.csv` (`PROD_STEP_*_DESC`).
-  - Oyuncuya etkisi: §12.12'nin yazdırdığı tek satırlık açıklamaları (45 kimlik kademesi + 36 paylaşılan satır) oyuncu
+  - Ne oluyor: Her kademe bir `desc_key` taşıyor (`PROD_STEP_*_DESC`; paylaşılan hatlarda alt-tip başına ayrı satır).
+    Anahtar hat verisinde durmuyor, `ProductLines._build_line` onu `name_key`'den türetiyor. Anahtarlar CSV'de TR ve
+    EN olarak yazılmış ve `loc_product_line_keys_resolve` smoke'u çözüldüklerini denetliyor. Hiçbir arayüz `desc_key`
+    okumuyor: `FeatureLinesView` yalnız `name_key` basıyor.
+  - Nerede: `scripts/systems/product_lines.gd` (`_build_line`, `desc_key`);
+    `scripts/tabs/product/feature_lines_view.gd` (`_make_line_row`, `_make_lock_row`); `localization/strings.csv`
+    (`PROD_STEP_*_DESC`).
+  - Oyuncuya etkisi: §12.12'nin yazdırdığı tek satırlık açıklamaları (90 satır, gizli hat dahil: dosyalardaki hatların
+    45 kimlik kademesi ve 36 paylaşılan satırı, Ar-Ge'nin açtığı `line_hidden_self_serve` hattının 9 satırı) oyuncu
     hiç görmez; kademeyi yalnız adından tanır.
   - Seçenekler: A) Açıklama hat satırının hover'ında görünür (kilit satırının tooltip'i gibi); §12.9'un iki satır
     sınırı korunur. B) Seçili ya da üzerine gelinen kademenin açıklaması Konsept'in sağ sütununda tek satır olarak
-    durur. C) Gösterilmez; `desc_key` alanları, CSV anahtarları ve smoke denetimi silinir.
+    durur. C) Gösterilmez; `desc_key` türetmesi, CSV anahtarları ve smoke denetimi silinir.
   - Kaynak: Ürün GDD (ch03) §12.9 (satır anatomisi, satır başına en fazla iki metin satırı), §12.12 (ad + tek satır
     açıklama yazılır).
 
@@ -759,13 +723,13 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     işareti gösteriyor. `team_panel` `_make_pinned_ghost_row` kurucunun yukarı taşındığı grupta ad yerine "—"
     literal'i yazıyor. `capacity_block` bilinmeyen sağlayıcıda "—" basıyor. Aynı işaret ürün dışında da var:
     `scripts/tabs/hr/hr_ui_shared.gd`, `scripts/tabs/personal_tab.gd` (değerleme, net varlık, zirve),
-    `scripts/tabs/sales_tab.gd`, `scripts/ui/components/center_viewport.gd`,
-    `scripts/ui/components/dialogue_choice_card.gd`. `HR_TASK_NONE`'un CSV değeri iki dilde de '—'; İK kadrosunun
+    `scripts/tabs/sales_tab.gd` (sorumlu satırı 35. maddenin konusu), `scripts/ui/components/center_viewport.gd`,
+    `scripts/ui/components/dialogue_choice_card.gd`. `HR_TASK_NONE`'un CSV değeri iki dilde de "—"; İK kadrosunun
     GÖREV hücresinde (`hr_ledger.gd` `_task_cell`) ve `HRUiShared.status_cell`'in boş durumunda görünüyor.
   - Nerede: `scripts/tabs/product/detail_view.gd` (`NO_DATA_MARK`, `_status_card`, `_repaint_stats`);
     `scripts/tabs/product/team_panel.gd` (`_make_pinned_ghost_row`); `scripts/tabs/product/capacity_block.gd`
-    (`_provider_row`); `scripts/tabs/hr/hr_ledger.gd` (`_task_cell`), `scripts/tabs/hr/hr_ui_shared.gd`
-    (`status_cell`), `localization/strings.csv` (`HR_TASK_NONE`); diğer ürün dışı dosyalar yukarıda.
+    (`_provider_row`); `scripts/tabs/hr/hr_ledger.gd` (`_task_cell`); `scripts/tabs/hr/hr_ui_shared.gd`
+    (`status_cell`); `localization/strings.csv` (`HR_TASK_NONE`); diğer ürün dışı dosyalar yukarıda.
   - Oyuncuya etkisi: Oyuncu ekranda uzun tire görür. ch01 §9'un "no dashes in copy" kuralı ve CLAUDE.md §5'in tire
     yasağı çiğneniyor; hayalet satırdaki tire ayrıca script içinde oyuncuya görünen bir literal.
   - Seçenekler: A) "—" metin değil noktalama sayılır ve kurala yazılı istisna olarak eklenir. B) Tek yerde tanımlı
@@ -774,37 +738,29 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Kaynak: ch01 §9 (Non-negotiables: no dashes in copy); Ürün GDD (ch03) §12.12 (gövde metinlerinde tire yok);
     CLAUDE.md §5.
 
-- **52 · Fiyat panelinin eksen çipleri üçgenden farklı sayı gösteriyor.**
-  - Ne oluyor: B2C fiyat panelinin eksen çipleri (`PROD_AXIS_INNOVATION_N` / `_STABILITY_N` / `_EXPERIENCE_N`) ham
-    `mvp_innovation` / `mvp_stability` / `mvp_experience` bayraklarını basıyor; bunlar ekonominin gerçekleşen eksen
-    değerleri, fiyat ve değer hesabının girdileri. Aynı Ürün Detayı sayfasındaki üçgen ve legend ise
-    `ProductState.axis_readings()`'in §11.3 okumasını gösteriyor (çıtaya bölünmüş, 0–120).
-  - Nerede: `scripts/tabs/product/pricing_panel.gd` (`repaint`, `_chips_row`); `scripts/tabs/product/detail_view.gd`
-    (`_repaint_profile`); `scripts/systems/product_state.gd` (`axis_readings`).
-  - Oyuncuya etkisi: Oyuncu aynı eksen için aynı ekranda iki farklı sayı görür (çipte tek haneli ham değer, legend'de
-    0–120 okuma) ve hangisinin ürünü anlattığını bilemez.
-  - Seçenekler: A) Çipler okumayı gösterir (`axis_readings`); üçgenle aynı sayı. B) Çipler kalır ama fiyatın girdisi
-    olduklarını söyleyen yeni bir etiket alır (yeni metin). C) Eksen çipleri kalkar; §17'ye göre eksen okumaları
-    yalnız üçgende yaşar.
-  - Kaynak: Ürün GDD (ch03) §11.1, §11.3, §17 ("Eksen okumaları monitörün üçgeninde yaşar; ayrı panel yoktur").
-
-- **53 · Konsept önizlemesi ile Ürün Detayı üçgeni farklı nicelik ve ölçek çiziyor.**
-  - Ne oluyor: Konsept'in önizleme üçgeni ve legend'i `ProductSystem.projected_line_dims` (taban cila ×1,00 ile
-    gerçekleşen ham eksen değeri) çiziyor. Ölçeği `max(PREVIEW_SCALE_FLOOR = 25, en büyük eksen)`, yani seçim
-    değiştikçe ölçek de kayıyor. Ürün Detayı üçgeni `ProductState.axis_readings()`'in §11.3 okumasını sabit
-    `QualityModel.READING_MAX` (120) üstünde çiziyor. Legend sayıları da farklı birimde ("7,2" ile "83" gibi).
-  - Nerede: `scripts/tabs/product/creation_flow.gd` (`_update_dynamic`, `PREVIEW_SCALE_FLOOR`);
-    `scripts/tabs/product/detail_view.gd` (`_repaint_profile`, legend çubukları);
+- **52 · Eksen sayıları üç yüzeyde iki farklı cetvelle gösteriliyor.**
+  - Ne oluyor: Ürün Detayı üçgeni ve legend'i `ProductState.axis_readings()`'in §11.3 okumasını sabit
+    `QualityModel.READING_MAX` (120) üstünde çiziyor. Aynı sayfadaki B2C fiyat panelinin eksen çipleri
+    (`PROD_AXIS_INNOVATION_N` / `_STABILITY_N` / `_EXPERIENCE_N`) ise ham `mvp_innovation` / `mvp_stability` /
+    `mvp_experience` bayraklarını, yani fiyat ve değer hesabının girdisi olan gerçekleşen eksen değerlerini basıyor.
+    Konsept'in önizleme üçgeni `ProductSystem.projected_line_dims`'in ham değerini (taban cila ×1,00)
+    `max(PREVIEW_SCALE_FLOOR = 25, en büyük eksen)` ölçeğinde çiziyor; ölçek seçimle kayıyor. Legend sayıları farklı
+    birimde ("7,2" ile "83" gibi).
+  - Nerede: `scripts/tabs/product/pricing_panel.gd` (`repaint`, eksen çipleri); `scripts/tabs/product/detail_view.gd`
+    (`_repaint_profile`, legend çubukları); `scripts/tabs/product/creation_flow.gd` (`_update_dynamic`,
+    `PREVIEW_SCALE_FLOOR`); `scripts/systems/product_state.gd` (`axis_readings`);
     `scripts/ui/components/triangle_radar.gd` (`set_axes`).
-  - Oyuncuya etkisi: Oyuncu Konsept'te planladığı şekli yayından sonra Ürün Detayı'nda gördüğüyle karşılaştıramaz.
-    Önizlemede bir eksenin büyümesi öteki eksenleri küçülmüş gibi gösterebilir.
-  - Seçenekler: A) Önizleme de §11.3 okumasını çizer (projeksiyon / o fazın çıtası × 100, READING_MAX üstünde); iki
-    üçgen aynı cetveli paylaşır. B) İkisi ayrı kalır; önizleme net kazanç projeksiyonudur ve bunu söyleyen bir başlık
-    alır. C) Önizleme ham değeri korur ama sabit bir ölçek (ör. o fazın çıtası) kullanır, seçimle kaymaz.
-  - Kaynak: Ürün GDD (ch03) §5 (Konsept önizlemesi taban cila), §11.2, §11.3, §17 ("üçgenin ölçekleme hatası ekran
-    turunda düzeltilir").
+  - Oyuncuya etkisi: Oyuncu aynı eksen için aynı ekranda iki sayı görür ve hangisinin ürünü anlattığını bilemez;
+    Konsept'te planladığı şekli yayından sonra Ürün Detayı'nda gördüğüyle karşılaştıramaz; önizlemede bir eksenin
+    büyümesi öbürlerini küçülmüş gösterebilir.
+  - Seçenekler: A) Tek cetvel: çipler ve Konsept önizlemesi de §11.3 okumasını (projeksiyon / fazın çıtası × 100,
+    READING_MAX üstünde) gösterir. B) Çipler kalkar (§17: eksen okumaları yalnız üçgende yaşar); önizleme A'daki
+    cetvele geçer. C) Yüzeyler ayrı kalır: çip ve önizleme ham değeri korur ama bunu söyleyen yeni birer başlık alır
+    (yeni metin) ve önizleme sabit bir ölçek (o fazın çıtası) kullanır.
+  - Kaynak: Ürün GDD (ch03) §5 (Konsept önizlemesi taban cila), §11.1, §11.2, §11.3, §17 ("Eksen okumaları monitörün
+    üçgeninde yaşar; ayrı panel yoktur", "üçgenin ölçekleme hatası ekran turunda düzeltilir").
 
-- **54 · PROD_DESK_NOBODY_ELIGIBLE okunmuyor: masaya kimse uygun değilken hangi ipucu?.**
+- **54 · `PROD_DESK_NOBODY_ELIGIBLE` okunmuyor: masaya kimse uygun değilken işe alım ipucu yok.**
   - Ne oluyor: DESTEK bloğunun masa cümlesi, masa boşken ve masayı taşıyabilecek çalışan yokken her zaman
     `PROD_DESK_FOUNDER_BUSY` gösteriyor (canlı üründe boş masa, kurucunun başka bir işte olduğu demek).
     `PROD_DESK_NOBODY_ELIGIBLE` ("Masayı taşıyabilecek kimse yok. Bir Müşteri Temsilcisi ya da Yazılımcı işe al.")
@@ -813,65 +769,68 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     (`PROD_DESK_NOBODY_ELIGIBLE`, `PROD_DESK_FOUNDER_BUSY`).
   - Oyuncuya etkisi: Kurucu meşgulken ve masaya uygun çalışan yokken oyuncu yalnız kurucunun meşguliyetini okur.
     Doğrulama akışını yeniden başlatacak işe alım yolu ona söylenmez.
-  - Seçenekler: A) Anahtar silinir (ISLER'deki CSV süpürmesine girer). B) Uygun çalışan yoksa FOUNDER_BUSY yerine
-    NOBODY_ELIGIBLE gösterilir. C) İkisi alt alta: önce kurucunun meşguliyeti, altında işe alım ipucu.
+  - Seçenekler: A) Anahtar silinir (ISLER'deki CSV süpürmesine girer). B) Uygun çalışan yoksa `FOUNDER_BUSY` yerine
+    `NOBODY_ELIGIBLE` gösterilir. C) İkisi alt alta: önce kurucunun meşguliyeti, altında işe alım ipucu.
   - Kaynak: Ürün GDD (ch03) §8.2 (doğrulama Müşteri İlişkileri'nin işi), §17 (destek durumu).
 
 - **57 · Araştırma görevinin GÖREV cümlesi yok.**
-  - Ne oluyor: Kadro defterinin GÖREV hücresi tek işli kişide 'HR_TASK_ON_JOB_<İŞ>' cümlesini basıyor (ör. 'Satışta
-    görev alıyor'). Araştırma için HR_TASK_ON_JOB_RESEARCH satırı yok; kod bilinçli olarak iş etiketine düşüyor
-    ('Araştırma'). Ham anahtar ekrana çıkmıyor ama bu satır öbür işlerle aynı biçimde okunmuyor.
-  - Nerede: scripts/tabs/hr/hr_ledger.gd (_job_text, _task_cell); localization/strings.csv (HR_TASK_ON_JOB_* ailesi)
+  - Ne oluyor: Kadro defterinin GÖREV hücresi tek işli kişide `HR_TASK_ON_JOB_<İŞ>` cümlesini basıyor (ör. "Satışta
+    görev alıyor"). Araştırma için `HR_TASK_ON_JOB_RESEARCH` satırı yok; kod bilinçli olarak iş etiketine düşüyor
+    ("Araştırma"). Ham anahtar ekrana çıkmıyor ama bu satır öbür işlerle aynı biçimde okunmuyor.
+  - Nerede: `scripts/tabs/hr/hr_ledger.gd` (`_job_text`, `_task_cell`); `localization/strings.csv` (`HR_TASK_ON_JOB_*`
+    ailesi).
   - Oyuncuya etkisi: Araştırmadaki kişinin GÖREV hücresinde cümle yerine tek kelime görünüyor; defterin dili tutarsız.
-  - Seçenekler: A) Yeni anahtar yazılır: EN 'Working on research', TR 'Araştırmada görev alıyor' (onay bekler);
-    ardından _job_text'teki geri düşüş dalı silinir. B) Bugünkü gibi: etiket yeterli, geri düşüş kalır.
-  - Kaynak: Ekip GDD §12.2 (iş metni); Ar-Ge GDD §5.0 (araştırma dışlayıcı iştir)
+  - Seçenekler: A) Yeni anahtar yazılır: EN "Working on research", TR "Araştırmada görev alıyor" (onay bekler);
+    ardından `_job_text`'teki geri düşüş dalı silinir. B) Bugünkü gibi: etiket yeterli, geri düşüş kalır.
+  - Kaynak: Ekip GDD §12.2 (iş metni); Ar-Ge GDD §5.0 (araştırma dışlayıcı iştir).
 
 - **58 · ODA'nın term sheet kağıdı takvim günü sayıyor, diğer Series A geri sayımları iş günü.**
   - Ne oluyor: ODA masasındaki "sheet" hatırlatma kağıdı başlıktaki gün sayısını `TermSheet.days_left` ile yazar
     (takvim günü, `expires_day - bugün`, `maxi(0, …)`). Üst bardaki teklif çipi
     (`VCPitchSystem._tick_countdown_chip`), Yatırım sekmesi (`hunt_tab.gd`) ve olay kapsamı (`scope.gd`,
     `seams_ported.gd`) ise `TermSheet.business_days_left` (iş günü) okur. `term_sheet.gd` bu ayrımı iki fonksiyonun
-    doc yorumunda kaydeder. Çip karar günü gelmiş teklifi (`is_decision_due`) göstermez, ODA kağıdı gösterir.
-    `ODA_PAPER_SHEET_TITLE` iki dilde de uzun tire taşıyor (TR 'Yatırım teklifi masada — son {days} gün', EN 'Offer on
-    the table — {days} days left'); ch01 §9 ve CLAUDE.md §5 tireyi yasaklıyor.
+    belge yorumunda kaydeder. Üst bar çipi yalnız `PitchConstants.WARNING_DAYS` (3 iş günü) ve altında görünür; karar
+    günü gelmiş teklifi (`is_decision_due`) göstermez, ODA kağıdı gösterir. `ODA_PAPER_SHEET_TITLE` iki dilde de uzun
+    tire taşıyor (TR "Yatırım teklifi masada — son {days} gün", EN "Offer on the table — {days} days left"); ch01 §9
+    ve CLAUDE.md §5 tireyi yasaklıyor.
   - Nerede: `scripts/ui/oda/oda_view.gd` (sheet hatırlatması, `ODA_PAPER_SHEET_TITLE`);
     `scripts/data_models/term_sheet.gd` (`days_left`, `business_days_left`); `scripts/systems/vc_pitch_system.gd`
-    (`_tick_countdown_chip`); `scripts/tabs/hunt_tab.gd`; `localization/strings.csv` (`ODA_PAPER_SHEET_TITLE`,
-    `FIN_OFFER_COUNTDOWN`, `SALES_OFFER_COUNTDOWN`)
-  - Oyuncuya etkisi: Aynı teklif için ODA duvarı 'son 7 gün' derken üst bar ve Yatırım sekmesi 5 iş günü gösterebilir;
-    araya hafta sonu girince iki sayı ayrışır. Metinler de farklı birim söylüyor: ODA kağıdı 'gün', Finans çipi 'İŞ
-    GÜNÜ', satış çipi 'GÜN'.
-  - Seçenekler: A) ODA kağıdı da `business_days_left` okur, tek sayı olur; kağıt 'gün' demeye devam ederse birim
+    (`_tick_countdown_chip`); `scripts/ui/components/top_bar.gd`; `scripts/tabs/hunt_tab.gd`;
+    `localization/strings.csv` (`ODA_PAPER_SHEET_TITLE`, `FIN_OFFER_COUNTDOWN`, `HUNT_VALIDITY`).
+  - Oyuncuya etkisi: Aynı teklif için ODA duvarı "son 7 gün" derken Yatırım sekmesi 5 iş günü gösterebilir; araya
+    hafta sonu girince iki sayı ayrışır. Metinler de farklı birim söylüyor: ODA kağıdı "gün"
+    (`ODA_PAPER_SHEET_TITLE`), üst bar çipi "İŞ GÜNÜ" (`FIN_OFFER_COUNTDOWN`), Yatırım sekmesi "iş günü"
+    (`HUNT_VALIDITY`).
+  - Seçenekler: A) ODA kağıdı da `business_days_left` okur, tek sayı olur; kağıt "gün" demeye devam ederse birim
     belirsizliği sürer. B) ODA takvim günü saymaya devam eder, kağıt metni birimi açıkça söyler (önce EN, sonra TR
-    yerelleştirme). C) Tüm oyuncu geri sayımları iş günü olur ve 'gün' diyen metinler 'iş günü' der (metin onayı
+    yerelleştirme). C) Tüm oyuncu geri sayımları iş günü olur ve "gün" diyen metinler "iş günü" der (metin onayı
     gerekir). Birimi netleştiren yeniden yazım tireyi de kaldırır (önce EN, sonra TR).
   - Kaynak: GDD ch09 (Funding & Investors) ve ch12 (UI Surfaces & ODA) geri sayım birimini söylemiyor. Tire: ch01 §9,
-    CLAUDE.md §5. Kaynak `term_sheet.gd` doc yorumları; cleanup raporu B048.
+    CLAUDE.md §5. `term_sheet.gd` belge yorumları.
 
 - **59 · VC'nin zayıf boyut tabanı ham eksenle karşılaştırılıyor; ürün uyumu bonusu fiilen hiç verilmiyor.**
   - Ne oluyor: `VCPitchSystem._weakest_dimension` literal `< 40.0` çalışma tabanını,
     `TermSheetTableSystem.E_FIT_PRODUCT_DIM_FLOOR` (40,0) ise ürün alanının uyum puanını yayındaki HAM
-    `mvp_innovation` / `mvp_stability` / `mvp_experience` değerleriyle (`QualityModel.dims_from_flags`) karşılaştırıyor.
-    Hat modelinde bu değerler 52. maddenin kaydettiği gibi tek haneden ~20'lere uzanır. Eksen başına üç hattın K1'i 12
-    eder (`QualityModel.PHASE_BAR[1]`). 40'a ancak bir eksenin üç hattı da K3'teyken (3 × 14,4 = 43,2, tam
-    gerçekleşmede) varılır. `full_run:760:sim` probe'unda (tohum 1, 2, 3) 12–16 sürümde en yüksek ham eksen 31,6 /
-    27,9 / 33,3'te kaldı, deneyim ekseni 3,0–5,7'yi geçmedi.
+    `mvp_innovation` / `mvp_stability` / `mvp_experience` değerleriyle (`QualityModel.dims_from_flags`)
+    karşılaştırıyor. Hat modelinde bu değerler 52. maddenin kaydettiği gibi tek haneden ~20'lere uzanır. Eksen başına
+    üç hattın K1'i 12 eder (`QualityModel.PHASE_BAR[1]`). 40'a ancak bir eksenin üç hattı da K3'teyken (3 × 14,4 =
+    43,2, tam gerçekleşmede) varılır. `full_run:760:sim` probe'unda (tohum 1, 2, 3) 12–16 sürümde en yüksek ham eksen
+    31,6 / 27,9 / 33,3'te kaldı, deneyim ekseni 3,0–5,7'yi geçmedi.
   - Nerede: `scripts/systems/vc_pitch_system.gd` (`_weakest_dimension`; okuyanları `_sorgu_product` ve seed'in ürün
     sorusu); `scripts/systems/term_sheet_table_system.gd` (`E_FIT_PRODUCT_DIM_FLOOR`, `E_FIT_PRODUCT_DIMS`,
-    `_domain_fit` "product" dalı); `scripts/systems/quality_model.gd` (`dims_from_flags`, `axis_readings`)
+    `_domain_fit` "product" dalı); `scripts/systems/quality_model.gd` (`dims_from_flags`, `axis_readings`).
   - Oyuncuya etkisi: VC her koşuda bir zayıf boyut bulur. Canlı hata yokken Series A sorgusu hep `VC_Q_WEAK_DIM`
-    sorar, seed'in ürün sorusu hep `SEED_Q_HOW_BIG` olur, 'temiz' dal (`VC_Q_CLEAN` / `SEED_Q_CLEAN`) ürün alanında
+    sorar, seed'in ürün sorusu hep `SEED_Q_HOW_BIG` olur, "temiz" dal (`VC_Q_CLEAN` / `SEED_Q_CLEAN`) ürün alanında
     hiç gelmez. Meridian masasında `E_FIT_PRODUCT_DIMS` (+4) pratikte hiç verilmez; ürünü ne kadar iyi olursa olsun
     oyuncu bu isteklilik puanını alamaz.
   - Seçenekler: A) İki taban da §11.3 eksen okumasıyla (`ProductState.axis_readings`, 0–120, çıtaya göre)
     karşılaştırılır; 40 okuma çıtanın %40'ı demek olur. B) Tabanlar ham aralığa göre yeniden ölçeklenir [K] (ör. 12 =
     eksen başına K1 dolu). C) Bugünkü davranış kalır ve GDD'ye yazılır: ürün alanında VC hep bir zayıflık bulur, boyut
     bonusu Series A'da ulaşılmaz bir hedeftir. İki sabit de E modeli sabitidir, değişikliği sahip onayı gerektirir
-    (CLAUDE §3).
+    (CLAUDE.md §3).
   - Kaynak: GDD ch09 (Funding & Investors) ve Ürün GDD (ch03) §11.2–§11.3 VC tabanının hangi ölçeğe baktığını
-    söylemiyor. Kaynak `QualityModel` hat modeli ve probe ölçümü (`full_run:760:sim:1-3` PROBE SHIP satırları);
-    cleanup bulgusu F067; 52. madde (ham eksen aralığı).
+    söylemiyor; `QualityModel` hat modeli; probe ölçümü (`full_run:760:sim:1-3` PROBE SHIP satırları); 52. madde (ham
+    eksen aralığı).
 
 ## Tasarım ve denge
 
@@ -1109,8 +1068,15 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     talebini olay motorunun konusu sayar, kenar tanımlamaz; kenarı seçmek tasarım kararıdır.
   - `hr.promotion_edge` · Ekip. `employee_eligible_for_promotion` bildirili, yayınlanmıyor; Ekip §9.3
     seviye tavanı dışında koşul vermez. Envanterin önerisi: `experience_bar_full` kenarı ve `level < 2`.
-  - `finance.valuation()` · Yatırım. Şirket değerlemesi seam'i yok; `GameState.run_valuation_m`
-    yalnız term sheet imzasında yazılıyor.
+  - `finance.valuation()` · Yatırım. Şirket değerlemesi seam'i yok; `GameState.run_valuation_m` yalnız term sheet
+    imzasında yazılıyor. Satın alma kartının kendi fiyatı var (`EndingsSystem.acquisition_valuation()`, seam
+    `funding.acq_valuation`). `InvestorRegistry.INVESTORS[*].opening_terms`'teki donmuş `valuation_m` ve
+    `dilution_pct` hiçbir yerde okunmuyor: Series A açılış şartları ARR'den türetiliyor
+    (`VCPitchSystem._derive_series_a_terms` registry'den yalnız `board_seats` ve `board_veto` okur). Açık: bu iki
+    rakam silinsin mi (`opening_terms` yalnız kurul şartlarını taşır), seam'in kaynağı mı olsun, yoksa Series A
+    türetimine fon başına taban ya da tavan olarak mı bağlansın (ch09 §5). `docs/writing/FRANK_UNWIRED.md`'nin
+    "Waiting on" listesi bu rakamları aday sayıyor ama aynı belge değerlemenin `acquisition_valuation()` ile
+    çözüldüğünü de yazıyor; bayat.
   - `sales.market_share_by_segment()` · Satış / Rakipler. ch10 §2 segment başına pay istiyor; bugün
     tek küresel pay var (`sales.market_share_pct`). ch10 §8 pay formülünü ayrı bir tasarım oturumuna bırakır.
   - `destek.queue_length()` · Operasyon. Açık talep listesi `CustomerRepSystem._open_requests()`
