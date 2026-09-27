@@ -91,7 +91,6 @@ func set_music_enabled(on: bool) -> void:
 	_enabled = on
 	_apply_enabled()
 	Settings.set_value(KEY_ENABLED, on)
-	EventBus.music_enabled_changed.emit(on)
 
 
 func is_music_enabled() -> bool:
@@ -102,7 +101,6 @@ func set_music_volume(v: float) -> void:      # v: linear 0..1
 	_volume = clampf(v, 0.0, 1.0)
 	_apply_bus(_music_bus, _volume)
 	Settings.set_value(KEY_VOLUME, _volume)
-	EventBus.music_volume_changed.emit(_volume)
 
 
 func get_music_volume() -> float:

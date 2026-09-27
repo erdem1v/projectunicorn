@@ -81,9 +81,8 @@ static func res_from_dict(d: Dictionary, fallback: Script = null) -> Resource:
 
 static func _class_of(r: Resource) -> String:
 	var s: Script = r.get_script()
-	if s != null and String(s.get_global_name()) != "":
-		return String(s.get_global_name())
-	return r.get_class()
+	var global_name: String = String(s.get_global_name()) if s != null else ""
+	return global_name if global_name != "" else r.get_class()
 
 
 # ============================================================================

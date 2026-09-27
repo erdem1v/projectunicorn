@@ -1,7 +1,8 @@
 # EVENT SIGNAL MANIFEST
 
 **GENERATED — do not hand-edit.** Regenerate with `python tools/gen_signal_manifest.py`.
-Source: `scripts/autoload/event_bus.gd` plus every `.gd` under `scripts/`. Last generated 2026-09-27.
+Source: `scripts/autoload/event_bus.gd`, every `.gd` under `scripts/`, `EvSignals.BINDINGS` and the card triggers.
+Last generated 2026-09-27.
 
 Authority: [`GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md`](<../GDDs/GDD — OLAY MOTORU (EVENT ENGINE) rev 2.md>) §15. The read side of
 the same idea is the seam list in [`content/events_draft/_vocabulary.md`](content/events_draft/_vocabulary.md) §b.
@@ -9,28 +10,30 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 131 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 129 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **131** |
+| Signals declared | **129** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **72** |
+| Emitted with **no production listener** | **70** |
 
-The second number is the §15.2 violation set. The third is **not** a defect, and it
-is smaller than it looks: the event engine listens to SIX of them through
-`EvSignals.BINDINGS` — `customer_health_changed`, `customer_expanded`,
-`employee_departed`, `employee_hired`, `meeting_day`, `phase_gate_reached` and
-`promise_broken` — connecting each by NAME at runtime, which a static scan for
-`.connect(` cannot see. So this table undercounts the engine and always will.
+The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
+Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
+so the engine finds a vocabulary rather than having to discover one.
 
-The rest are not a defect either: three
-modules deliberately publish their read-surface signals ahead of any consumer so the
-engine finds a vocabulary rather than having to discover one (`event_bus.gd:76-79`,
-`:175-179`, `:196-197`). Those 48 are the engine's ready-made trigger surface.
+The event engine connects signals by NAME at runtime, which a static scan for `.connect(`
+cannot see. `EvSignals.install()` (`scripts/events/core/signals.gd`) connects exactly the `trigger.signal` of the
+cards the catalogue loads from `data/events/cards/`, and this generator reads the same cards. Today that
+is 1 signal(s): `customer_health_changed`. They are listed as `EvSignals (card trigger)` and are not counted
+as unheard.
+
+`EvSignals.BINDINGS` is an allowlist of the 11 signals a card MAY trigger on. A binding
+alone connects nothing, so the others are listed as `EvSignals (bindable)` and still
+count as unheard.
 
 ## §15.2 violations — declared, never emitted
 
@@ -43,7 +46,7 @@ engine finds a vocabulary rather than having to discover one (`event_bus.gd:76-7
 excluded from both counts and shown in the notes column when they are all a signal has.
 
 
-### State change signals (§13.2)
+### State change signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
@@ -58,7 +61,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `runway_recalculated` | `months: float` | game_state | 1 | 2 | left_tabs · top_bar |
 | `equity_changed` | `investor_pct: int` | game_state | 2 | 0 | — |
 
-### UI / time signals (§13.2)
+### UI / time signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
@@ -66,18 +69,16 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · creation_flow · detail_view · left_tabs · research_bar · tab_page_chrome · oda_view | 26 | 5 | game_shell · build_hud_panel · center_viewport · left_tabs · oda_tour |
 | `finance_subpage_requested` | `page_id: String` | effects · main · oda_view | 3 | 1 | finance_tab |
 
-### Settings / audio signals
+### Settings signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 1 | main |
 | `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · creation_flow | 15 | 1 | main |
-| `music_enabled_changed` | `enabled: bool` | audio_manager | 1 | 0 | — |
-| `music_volume_changed` | `volume: float` | audio_manager | 1 | 0 | — |
 | `language_changed` | `locale: String` | localization | 1 | 5 | center_viewport · news_ticker · research_bar · top_bar · oda_tour |
 | `palette_changed` | `colorblind: bool` | settings_modal | 2 | 4 | hr_tab · center_viewport · research_bar · top_bar |
 
-### Character signals (§13.2)
+### Character signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
@@ -92,15 +93,15 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `employee_eligible_for_promotion` | `character_id: String` | — | 0 | 0 | — |
 | `raise_requested` | `character_id: String` | — | 0 | 0 | — |
 | `leave_requested` | `character_id: String` | hr_morale_system | 1 | 0 | — |
-| `employee_hired` | `character_id: String` | character_registry | 1 | 0 | — |
-| `employee_departed` | `character_id: String` | character_registry | 1 | 0 | — |
+| `employee_hired` | `character_id: String` | character_registry | 1 | 0 | EvSignals (bindable) |
+| `employee_departed` | `character_id: String` | character_registry | 1 | 0 | EvSignals (bindable) |
 | `training_started` | `character_id: String, area_key: String` | character_registry | 1 | 0 | — |
 | `training_completed` | `character_id: String, area_key: String` | character_registry | 1 | 0 | — |
 | `assignment_changed` | `character_id: String` | character_registry · work_hours_system | 11 | 1 | research_bar |
 | `hr_day_processed` | `—` | hr_system | 1 | 0 | — |
 | `news_stream_changed` | `—` | news_feed_system | 1 | 1 | news_ticker |
 
-### Customer signals (§13.2)
+### Customer signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
@@ -110,20 +111,20 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `customer_seats_changed` | `customer_id: String, new_seats: int` | customer_registry | 1 | 0 | — |
 | `customer_satisfaction_changed` | `customer_id: String, new_satisfaction: int` | customer_registry | 1 | 0 | — |
 
-### B2B lifecycle / relationship signals (B2B Sales System)
+### B2B lifecycle / relationship signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `customer_health_changed` | `customer_id: String, phase: String` | customer_registry | 1 | 1 | left_tabs |
+| `customer_health_changed` | `customer_id: String, phase: String` | customer_registry | 1 | 1 | left_tabs · EvSignals (card trigger) |
 | `customer_churn_countdown_changed` | `customer_id: String, days: int` | customer_registry | 1 | 0 | — |
-| `customer_churned` | `customer_id: String` | b2b_sales_system | 1 | 1 | left_tabs |
-| `customer_expanded` | `customer_id: String, new_seats: int` | b2b_sales_system | 1 | 0 | — |
+| `customer_churned` | `customer_id: String` | b2b_sales_system | 1 | 1 | left_tabs · EvSignals (bindable) |
+| `customer_expanded` | `customer_id: String, new_seats: int` | b2b_sales_system | 1 | 0 | EvSignals (bindable) |
 | `customer_assigned` | `customer_id: String, employee_id: String` | customer_registry | 1 | 0 | — |
 | `promise_created` | `promise_id: String` | promise_registry | 1 | 0 | — |
 | `promise_kept` | `promise_id: String` | promise_registry | 1 | 0 | — |
-| `promise_broken` | `promise_id: String` | promise_registry | 1 | 0 | — |
+| `promise_broken` | `promise_id: String` | promise_registry | 1 | 0 | EvSignals (bindable) |
 
-### Event signals (§13.2)
+### Event signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
@@ -135,7 +136,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `build_phase_changed` | `new_phase: String` | product_system | 7 | 2 | promise_registry · left_tabs |
+| `build_phase_changed` | `new_phase: String` | product_system | 7 | 2 | promise_registry · left_tabs · EvSignals (bindable) |
 | `build_iteration_decision_pending` | `pending: bool` | product_system | 3 | 0 | — |
 | `build_progress_changed` | `—` | product_system | 6 | 2 | build_bar · build_hud_panel |
 | `infra_changed` | `—` | product_state | 2 | 1 | capacity_block |
@@ -144,7 +145,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `version_shipped` | `version: int` | product_system | 1 | 1 | rnd_tab |
+| `version_shipped` | `version: int` | product_system | 1 | 1 | rnd_tab · EvSignals (bindable) |
 | `build_started` | `build_id: String` | product_system | 1 | 0 | — |
 | `build_paused` | `reason_key: String` | product_read | 1 | 0 | — |
 | `build_resumed` | `—` | product_read | 1 | 0 | — |
@@ -175,14 +176,14 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `rnd_node_requested` | `node_id: String, open_assign: bool` | creation_flow · research_bar | 2 | 1 | rnd_tab |
 | `rnd_card_requested` | `kind: String, data: Dictionary` | main · rnd_system | 4 | 1 | main |
 
-### Rival signals (Product Lifecycle Part 1)
+### Rival signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `rival_status_changed` | `rival_id: String, status: String` | rival_registry | 1 | 0 | — |
 | `rival_advanced` | `—` | rival_registry | 1 | 0 | — |
 
-### PostShip / sales signals
+### Prospect / pitch signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
@@ -190,6 +191,11 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `prospect_removed` | `prospect_id: String` | prospect_registry | 1 | 0 | — |
 | `pitch_requested` | `prospect_id: String` | sales_tab | 1 | 1 | main |
 | `pitch_finished` | `—` | sales_meeting_system · vc_pitch_system | 3 | 0 | — |
+
+### SATIŞ rev 6 §14 · the module's signal vocabulary
+
+| signal | payload | emitter(s) | E | L | listener(s) |
+|---|---|---|---|---|---|
 | `prospect_arrived` | `prospect_id: String` | sales_faucet_system | 1 | 0 | — |
 | `lead_expired` | `prospect_id: String` | sales_faucet_system | 1 | 0 | — |
 | `lead_reserved` | `prospect_id: String` | sales_ledger | 1 | 0 | — |
@@ -208,33 +214,38 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `weekly_sales_report_issued` | `closes: int` | sales_rep_system | 1 | 0 | — |
 | `price_stance_changed` | `stance: String` | sales_ledger | 1 | 0 | — |
 | `rep_band_cap_changed` | `rep_id: String` | sales_ledger | 1 | 0 | — |
-| `mentor_advisory_changed` | `text: String` | effects · vc_pitch_system | 2 | 1 | hunt_tab |
-| `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger | 8 | 2 | time_manager · news_ticker |
 
-### Endgame signals (ENDGAME_DESIGN.md §2/§3)
+### Mentor / ticker signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `phase_gate_reached` | `next_phase: int` | phase_gate_system | 1 | 0 | — |
+| `mentor_advisory_changed` | `text: String` | effects · vc_pitch_system | 2 | 1 | hunt_tab |
+| `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger | 8 | 2 | time_manager · news_ticker |
+
+### Endgame signals
+
+| signal | payload | emitter(s) | E | L | listener(s) |
+|---|---|---|---|---|---|
+| `phase_gate_reached` | `next_phase: int` | phase_gate_system | 1 | 0 | EvSignals (bindable) |
 | `run_ended` | `ending_id: String, ending_data: Dictionary` | endings_system | 1 | 1 | main |
 | `milestone_reached` | `milestone_id: String, ending_data: Dictionary` | endings_system | 1 | 1 | main |
 | `shutter_changed` | `days_left: int` | game_state | 1 | 1 | top_bar |
 | `month_ended` | `summary_data: Dictionary` | month_summary_system | 3 | 1 | main |
 
-### Cinematic dialogue shell (Spec 5) — MeetingScene
+### Cinematic dialogue shell — MeetingScene
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `meeting_scene_requested` | `view_state: Dictionary` | game_shell · vc_pitch_system | 4 | 1 | main |
 
-### VC Pitch / Series A Hunt signals (Spec 4 / VC_PITCH_DESIGN.md §7)
+### VC Pitch / Series A Hunt signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `sheet_granted` | `vc_id: String` | vc_pitch_system | 2 | 0 | — |
-| `sheet_expired` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
+| `sheet_expired` | `vc_id: String` | vc_pitch_system | 1 | 0 | EvSignals (bindable) |
 | `callback_ready` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
-| `meeting_day` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
+| `meeting_day` | `vc_id: String` | vc_pitch_system | 1 | 0 | EvSignals (bindable) |
 | `offer_countdown_changed` | `days_left: int` | vc_pitch_system | 1 | 1 | top_bar |
 | `term_table_requested` | `vc_id: String, stage: String` | effects · game_shell · hunt_tab | 5 | 1 | main |
 | `sheet_walked` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
@@ -247,7 +258,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `seed_sheet_granted` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 | `seed_round_closed` | `vc_id: String` | seed_round_system | 1 | 0 | — |
 
-### Save / system-menu signals (SaveManager task)
+### Save / system-menu signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|

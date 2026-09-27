@@ -107,7 +107,7 @@ static func money(amount: int) -> String:
 		s = "$%.1fK" % (a / 1_000.0)
 	else:
 		s = "$%d" % a
-	return _signed(amount, s)
+	return _localize_signed(amount, s)
 
 
 ## TopBar finance-chip money; stays abbreviated so it cannot widen the chrome group.
@@ -122,7 +122,7 @@ static func money_chip(value: int) -> String:
 		s = "$%.1fK" % (a / 1_000.0)
 	else:
 		s = "$%d" % a
-	return _signed(value, s)
+	return _localize_signed(value, s)
 
 
 ## Cash in full, thousands-grouped: "$12.340"/"$12,340". Cash is shown exactly because money
@@ -132,7 +132,7 @@ static func money_exact(value: int) -> String:
 
 
 ## Swap printf's decimal point for the locale's mark and re-attach the sign.
-static func _signed(value: int, s: String) -> String:
+static func _localize_signed(value: int, s: String) -> String:
 	var sep: String = _t("NUM_DECIMAL_SEP")
 	if sep != ".":
 		s = s.replace(".", sep)

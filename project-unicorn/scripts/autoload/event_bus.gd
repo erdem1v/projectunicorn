@@ -3,7 +3,7 @@ extends Node
 # Global signal hub. Systems emit here; scenes connect on tree-enter, disconnect on tree-exit.
 # `# --- X ---` headers are the sections of docs/EVENT_SIGNAL_MANIFEST.md (gen_signal_manifest.py).
 
-# --- State change signals (§13.2) ---
+# --- State change signals ---
 signal cash_changed(new_value: int)
 signal mrr_changed(new_value: int)
 signal burn_changed(new_value: int)
@@ -17,7 +17,7 @@ signal runway_recalculated(months: float)
 # equity change that moves no cash would otherwise never repaint the Finance cap-table bar.
 signal equity_changed(investor_pct: int)
 
-# --- UI / time signals (§13.2) ---
+# --- UI / time signals ---
 signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=3x
 # "" = sekme yok, oda görünür. Sekme id'leri ray sırasıyla: "product", "sales", "hr",
 # "finance", "personal", "marketing", "rnd", "events". "marketing" ve "rnd" KİLİTLİ:
@@ -27,15 +27,12 @@ signal tab_changed(tab_id: String)
 # SENKRON mount eder, ardışık emit bu yüzden güvenli.
 signal finance_subpage_requested(page_id: String)
 
-# --- Settings / audio signals ---
+# --- Settings signals ---
 # main.gd mounts SettingsModal (pause on open, restore on close).
 signal settings_requested
 # Genel amaçlı onay modalı (main.gd ModalLayer'a ConfirmModal mount eder).
 # config: {title, body, confirm_text, cancel_text, on_confirm: Callable}
 signal confirm_requested(config: Dictionary)
-# AudioManager prefs; music_volume is linear 0..1.
-signal music_enabled_changed(enabled: bool)
-signal music_volume_changed(volume: float)
 # Localization autoload: language changed, live surfaces re-translate. Payload = "tr"/"en".
 signal language_changed(locale: String)
 # The colourblind-safe semantic palette was toggled. Semantic colour is never baked into
@@ -43,7 +40,7 @@ signal language_changed(locale: String)
 # in place, the open tab page rebuilds via a tab_changed re-emit (same as language_changed).
 signal palette_changed(colorblind: bool)
 
-# --- Character signals (§13.2) ---
+# --- Character signals ---
 signal character_added(character_id: String)
 signal character_removed(character_id: String)
 signal morale_changed(character_id: String, new_morale: int)
@@ -54,7 +51,7 @@ signal employee_training_changed(character_id: String, days_left: int)
 ## §9.3 OLAN terfi. employee_eligible_for_promotion ile karıştırılmaz: o UYGUN HÂLE GELMEYİ bildirir.
 signal employee_promoted(character_id: String, new_level: int)
 
-# §15.3 · OLAY MOTORUNA AÇILAN SİNYAL LİSTESİ
+# Ekip GDD §15.3 · OLAY MOTORUNA AÇILAN SİNYAL LİSTESİ
 # Dinleyicisi olmasa da yayınlanır, adları KARARLIDIR: motor bunları okur, keşfetmez (§17.3).
 
 ## §5.1 barın DOLDUĞU AN (kenar, her gün değil).
@@ -88,14 +85,14 @@ signal hr_day_processed()
 # END of NewsFeedSystem.daily_tick; same reason as hr_day_processed. Read NewsFeedSystem.get_stream().
 signal news_stream_changed()
 
-# --- Customer signals (§13.2) ---
+# --- Customer signals ---
 signal customer_added(customer_id: String)
 signal customer_removed(customer_id: String)
 signal customer_mrr_changed(customer_id: String, new_mrr: int)
 signal customer_seats_changed(customer_id: String, new_seats: int)
 signal customer_satisfaction_changed(customer_id: String, new_satisfaction: int)
 
-# --- B2B lifecycle / relationship signals (B2B Sales System) ---
+# --- B2B lifecycle / relationship signals ---
 # Phase edges only: `customer.retention` binds to it, so a daily emission would re-ask every Risk account.
 signal customer_health_changed(customer_id: String, phase: String)
 # The "Churn'e ~N gün" readout's repaint; -1 when no countdown runs. Moves daily, so no card binds to it.
@@ -108,7 +105,7 @@ signal promise_created(promise_id: String)
 signal promise_kept(promise_id: String)
 signal promise_broken(promise_id: String)
 
-# --- Event signals (§13.2) ---
+# --- Event signals ---
 signal event_triggered(event_id: String)
 signal event_resolved(event_id: String, choice_index: int)
 signal modal_requested(event: GameEvent)
@@ -165,12 +162,12 @@ signal rnd_node_requested(node_id: String, open_assign: bool)
 # §5.8 / §6.1 PanelLayer kartları. RnDSystem yayınlar, main.gd mount eder.
 signal rnd_card_requested(kind: String, data: Dictionary)
 
-# --- Rival signals (Product Lifecycle Part 1) ---
+# --- Rival signals ---
 # rival_advanced fires once per day after advance_all so the ODA league repaints.
 signal rival_status_changed(rival_id: String, status: String)
 signal rival_advanced()
 
-# --- PostShip / sales signals ---
+# --- Prospect / pitch signals ---
 signal prospect_added(prospect_id: String)
 signal prospect_removed(prospect_id: String)
 # Sales tab "Görüşmeye git" → main.gd opens the pitch in the shared MeetingScene.
@@ -178,8 +175,8 @@ signal pitch_requested(prospect_id: String)
 # A sales or VC/seed sitting ended (any outcome, withdraw included); Sales/Hunt tabs repaint.
 signal pitch_finished()
 
-# --- SATIŞ rev 6 §14 · the module's signal vocabulary ------------------------
-# One publisher each, published whether or not anything listens (§15.1). None can trigger a
+# --- SATIŞ rev 6 §14 · the module's signal vocabulary ---
+# One publisher each, published whether or not anything listens. None can trigger a
 # card: EvSignals.BINDINGS has no sales row; sales raises cards through EventGate.request.
 signal prospect_arrived(prospect_id: String)          # §3 — the faucet produced a lead
 signal lead_expired(prospect_id: String)              # §4 — "Beklemekten vazgeçti."
@@ -199,6 +196,8 @@ signal whale_condition_met(prospect_id: String)       # §8 — the telegraphed 
 signal weekly_sales_report_issued(closes: int)        # §7.3
 signal price_stance_changed(stance: String)           # §7.5
 signal rep_band_cap_changed(rep_id: String)           # §7.2.2
+
+# --- Mentor / ticker signals ---
 # Frank's advisory line; the mentor surfaces read it.
 signal mentor_advisory_changed(text: String)
 
@@ -206,7 +205,7 @@ signal mentor_advisory_changed(text: String)
 # in accent ("Atlas Seçme & Yerleştirme", "İK"). For beats that must NOT interrupt the player.
 signal headline_added(source: String, text: String)
 
-# --- Endgame signals (ENDGAME_DESIGN.md §2/§3) ---
+# --- Endgame signals ---
 # Gate condition satisfied. Phase has NOT changed yet; phase_changed fires after advance_phase().
 signal phase_gate_reached(next_phase: int)
 # Terminal reached. ending_data: EndingsSystem._build_ending_data snapshot + the caller's extra.
@@ -219,12 +218,12 @@ signal shutter_changed(days_left: int)
 # A calendar month closed; shape on MonthSummarySystem._build_summary_data. main.gd mounts the modal.
 signal month_ended(summary_data: Dictionary)
 
-# --- Cinematic dialogue shell (Spec 5) — MeetingScene ---
+# --- Cinematic dialogue shell — MeetingScene ---
 # view_state is the dict MeetingScene.populate() consumes; main.gd mounts the scene into
 # ModalLayer and relays choice_selected.
 signal meeting_scene_requested(view_state: Dictionary)
 
-# --- VC Pitch / Series A Hunt signals (Spec 4 / VC_PITCH_DESIGN.md §7) ---
+# --- VC Pitch / Series A Hunt signals ---
 signal sheet_granted(vc_id: String)             # term sheet delivered into active_sheets
 signal sheet_expired(vc_id: String)             # validity clock hit 0 — NOT a rejection
 signal callback_ready(vc_id: String)            # callback condition met; door reopened
@@ -239,7 +238,7 @@ signal seed_door_opened()                       # SeedRoundSystem.daily_tick lat
 signal seed_sheet_granted(vc_id: String)        # VCPitchSystem._grant_seed_sheet — an offer exists
 signal seed_round_closed(vc_id: String)         # SeedRoundSystem.accept — money in, expectation armed
 
-# --- Save / system-menu signals (SaveManager task) ---
+# --- Save / system-menu signals ---
 # END of TimeManager._dispatch_daily_tick, once every daily slot has settled: the only correct
 # autosave boundary (day_advanced fires before the slots run).
 signal day_tick_completed(day: int)

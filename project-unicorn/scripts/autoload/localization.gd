@@ -60,7 +60,7 @@ func is_first_boot() -> bool:
 ## An empty `en_text` is a contract: the text in `tr_text` is already localized and is
 ## returned in both locales.
 static func pick(tr_text: String, en_text: String) -> String:
-	if en_text != "" and TranslationServer.get_locale().begins_with("en"):
+	if en_text != "" and Fmt.is_english():
 		return en_text
 	return tr_text
 

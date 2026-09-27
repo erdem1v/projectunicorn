@@ -30,7 +30,6 @@ const MANUAL_SLOT_PREFIX := "manual_"
 
 # Settings key; values "off" | "daily" | "weekly" | "monthly".
 const SETTING_AUTOSAVE_FREQUENCY := "autosave_frequency"
-const AUTOSAVE_FREQUENCY_DEFAULT := "weekly"                       # [WORKING]
 const AUTOSAVE_INTERVAL_DAYS := {"off": 0, "daily": 1, "weekly": 7, "monthly": 30}   # [WORKING]
 
 # Real-time floor between two autosaves. At 3x a day is 3 real seconds, so "daily" would
@@ -115,6 +114,7 @@ func read_slot(slot_id: String) -> Dictionary:
 	# Pure read + schema gate; mutates nothing, so the modal can show a file's error without
 	# having touched the live run.
 	var path: String = _path_for(slot_id)
+	# file_exists first: open() on a missing path logs an engine error.
 	var file := FileAccess.open(path, FileAccess.READ) if FileAccess.file_exists(path) else null
 	if file == null:
 		return _refused("SAVE_ERR_CORRUPT")
@@ -310,8 +310,9 @@ func _on_day_tick_completed(_day: int) -> void:
 	_dirty = true
 	if not _autosave_enabled:
 		return
-	var freq: String = String(Settings.get_value(SETTING_AUTOSAVE_FREQUENCY, AUTOSAVE_FREQUENCY_DEFAULT))
-	var interval: int = int(AUTOSAVE_INTERVAL_DAYS.get(freq, AUTOSAVE_INTERVAL_DAYS[AUTOSAVE_FREQUENCY_DEFAULT]))
+	var freq: String = String(Settings.get_value(SETTING_AUTOSAVE_FREQUENCY))
+	var interval: int = int(AUTOSAVE_INTERVAL_DAYS.get(freq,
+		AUTOSAVE_INTERVAL_DAYS[Settings.DEFAULTS[SETTING_AUTOSAVE_FREQUENCY]]))
 	if interval <= 0:
 		return                                   # "off"
 	if _last_autosave_day < 0:
@@ -345,12 +346,14 @@ func _next_auto_slot_id() -> String:
 	return oldest_id
 
 
-## Flags only, matched by substring so a new harness flag inherits the exclusion. Bare
-## arguments are ignored: matching them would catch an install path such as ".../screenshots/".
+## THE harness-flag test; DisplaySettings.is_inert reads it too. Flags only, matched by
+## substring so a new harness flag inherits the exclusion. Bare arguments are ignored: matching
+## them would catch an install path such as ".../screenshots/". --display-check matches
+## nothing on purpose: it must drive the real window.
 static func _is_harness_arg(arg: String) -> bool:
 	if not arg.begins_with("--"):
 		return false
-	for part in ["smoke", "-shot", "audit", "spec", "run-log"]:
+	for part in ["smoke", "-shot", "audit", "spec", "probe", "run-log"]:
 		if arg.contains(part):
 			return true
 	return false
@@ -669,13 +672,9 @@ func _migrate_to_rev11(state: Dictionary) -> void:
 			var jobs: Array = []
 			for area_id in (d.get("assigned_jobs", []) as Array):
 				var job_id: String = _legacy_area_to_job(String(area_id))
-				if job_id == "" or jobs.has(job_id):
-					continue
-				if not HRConstants.can_hold_job(role_id, job_id, category):
-					continue
-				if jobs.size() >= HRConstants.MAX_JOBS_PER_PERSON:
-					continue
-				jobs.append(job_id)
+				if job_id != "" and not jobs.has(job_id) and jobs.size() < HRConstants.MAX_JOBS_PER_PERSON \
+						and HRConstants.can_hold_job(role_id, job_id, category):
+					jobs.append(job_id)
 			d["assigned_job_ids"] = jobs
 
 	# Şirket kapsamı; boş bir game_state bloğu da tohumlanır (boş sözlük "alan yok" demektir).

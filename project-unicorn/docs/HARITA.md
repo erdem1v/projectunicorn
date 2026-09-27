@@ -42,10 +42,10 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Yer:** `scripts/autoload/{settings,localization,audio_manager}.gd`, `scripts/systems/display_settings.gd`, `scripts/modals/{settings_modal,system_menu_modal}.gd`, `scenes/modals/{SettingsModal,SystemMenuModal}.tscn`, `localization/strings.csv`, `assets/audio/`
 - **Sahip:** autoload `Settings`, `Localization`, `AudioManager`; sınıf `DisplaySettings`
 - **Giriş:**
-  - `Settings.get_value`, `set_value`, `get_default`, `has_stored`, `reset_to_defaults`, `flush`. Dosya `user://settings.json`, kayıtlardan bağımsızdır.
+  - `Settings.get_value`, `set_value`, `has_stored`, `reset_to_defaults`, `flush`. Dosya `user://settings.json`, kayıtlardan bağımsızdır.
   - `Localization` `strings.csv`'yi (`keys,tr,en`) kendisi ayrıştırıp TranslationServer'a yükler. `set_language`, `get_language`, `pick`. `--lang=` bayrağını okur.
   - `AudioManager` ses düzeylerini tutar; yalnız ayarlar modalı kullanır.
-  - `DisplaySettings` çözünürlük, pencere kipi ve vsync'i yönetir. `BASE_VIEWPORT` `project.godot`'taki viewport'u elle yansıtır. Debug bayrakları (`_is_harness_arg`) onu etkisiz kılar; `--display-check` bilerek bu listenin dışındadır.
+  - `DisplaySettings` çözünürlük, pencere kipi ve vsync'i yönetir. `BASE_VIEWPORT` `project.godot`'taki viewport'u elle yansıtır. Debug bayrakları (`SaveManager._is_harness_arg`, autosave'i kapatan listeyle aynı tek liste) onu etkisiz kılar; `--display-check` bilerek bu listenin dışındadır.
   - UI yolu: `EventBus.settings_requested`, `system_menu_requested` → `main.gd`.
 - **Smoke:** `loc_*`, `locale_switch`, `settings_language_toggle`, `ui_scale_ladder_fits_settings`, `borderless_note_key_exists`.
 - **Probe:** adanmış kayıt yok. `PICK` etiketi seçili dilde basıldığı için probe `--lang=tr` ile koşturulur.
@@ -253,7 +253,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Probe:** `scripts/debug/run_probe.gd` (`RunProbe`), `--run-log=<preset>:<gün>:<mod>[:<tohum>]`. `sim` modu belirlenimcidir; yalnız `^PROBE` satırları karşılaştırılır. Preset aileleri: `full_run*` (oynanan koşu), `full_run_vc_*` (Series A masası, yalnız `sim`), `b2b_*` ve `b2c*` (fikstür dünyası). Kayıt türleri: `BEGIN`, `STATE`, `SIGNAL`, `GATE`, `CUST`, `SAT`, `FIRE`, `PICK`, `DISCOUNT`, `CHURN`, `PROMISE`, `SHIP`, `MONTH`, `MONTH_BURN`, `PLAY`, `FIXTURE`, `RETAIN`, `WEEK`, `TALLY*`, `END`, `HR`, `VC_*`, `ERROR`.
 - **Metin kapısı:** `scripts/debug/loc_residue.gd` (`-s` ile). Betiklerde Türkçe literal, CSV'de olmayan sahne metni ve statik fonksiyonda `tr()` arar. Veri olan literal satırı `# LOC-DATA <gerekçe>` ile işaretlenir.
 - **Olay motoru araçları** (`scripts/events/tools/`): `EvProbe` (`--event-probe`), `EvLint` (`--event-lint`; `=baseline` taban dosyasını yeniden yazar), `EvWhy` (`--why-fire=<id>`), `EvHarness` (`--event-harness=random:seeds=N:days=M|guided[:seeds=N:days=M]`), `EvVocabGen` (`--event-vocab` → `_vocabulary.md`).
-- **`tools/`:** `smoke_run.sh`, `gen_signal_manifest.py` (`event_bus.gd` başlıklarından `docs/EVENT_SIGNAL_MANIFEST.md` üretir), `lint_baseline.json`.
+- **`tools/`:** `smoke_run.sh`, `gen_signal_manifest.py` (`event_bus.gd` sinyalleri ve `# --- X ---` başlıkları, `scripts/` altındaki emit/connect satırları, `EvSignals.BINDINGS` ve `data/events/cards` kart tetiklerinden `docs/EVENT_SIGNAL_MANIFEST.md` üretir), `lint_baseline.json`.
 - **Görsel ve ölçüm bayrakları** yalnız debug build'de çalışır. Bayraklar `--` ayıracının arkasına konmaz.
   - `*-shot` bayrakları (`--probe-shot` dahil) ve `--font-spec` pencereli açılır ve kareyi kullanıcı dizinine (`%APPDATA%/Godot/app_userdata/Project Unicorn/`) yazar. `--theme-audit` pencereli açılır, kare yazmaz, denetim satırlarını basar.
   - Ölçüm bayrakları (`--tempo-probe`, `--render-probe`, `--display-check`) kare yazmaz, ölçüm satırlarını basar.

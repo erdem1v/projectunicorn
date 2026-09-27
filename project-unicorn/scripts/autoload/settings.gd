@@ -38,7 +38,7 @@ const DEFAULTS := {
 	"sfx_volume": 0.7,
 	"mute_unfocused": true,
 	# --- Oyun (SaveManager reads this lazily) ---
-	"autosave_frequency": "weekly",     # "off" | "daily" | "weekly" | "monthly"
+	"autosave_frequency": "weekly",     # "off" | "daily" | "weekly" | "monthly"  [WORKING]
 	# --- Erişilebilirlik (UiTokens applies) ---
 	"colorblind_palette": false,
 }
@@ -103,10 +103,8 @@ func apply_all() -> void:
 	# unreachable. The generator paints nothing; skip the palette.
 	if not "res://scripts/theme/build_theme.gd" in OS.get_cmdline_args():
 		UiTokens.set_colorblind(bool(get_value("colorblind_palette")))
-	# AudioManager is registered AFTER Settings: at boot its node may exist but is not
-	# ready yet (no buses, no player) and applies its own values in _ready(); after a
-	# reset this call is what makes the sliders snap back. get_node_or_null, not the
-	# `AudioManager` global, which is null during our own _ready().
+	# AudioManager is registered AFTER Settings and applies its own values in _ready(), so
+	# it is skipped until then; after a reset this call is what makes the sliders snap back.
 	var audio: Node = get_node_or_null("/root/AudioManager")
 	if audio != null and audio.is_node_ready():
 		audio.apply_from_settings()

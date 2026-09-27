@@ -85,28 +85,15 @@ static func is_inert() -> bool:
 	if DisplayServer.get_name() == "headless":
 		return true
 	for arg in OS.get_cmdline_args():
-		if _is_harness_arg(String(arg)):
+		if SaveManager._is_harness_arg(String(arg)):
 			return true
 	# The MCP editor-run path passes --endgame-smoke through run/main_args.
 	var configured: String = String(ProjectSettings.get_setting("application/run/main_args", ""))
 	return configured.contains("--endgame-smoke")
 
 
-static func _is_harness_arg(s: String) -> bool:
-	if not s.begins_with("--"):
-		return false
-	# Every screenshot runner is spelled "--<something>-shot[=kind]"; match the family.
-	if s.contains("-shot"):
-		return true
-	for prefix in ["--endgame-smoke", "--font-spec", "--theme-audit", "--tempo-probe", "--render-probe"]:
-		if s.begins_with(prefix):
-			return true
-	return false
-
-
 static func _root() -> Window:
-	var tree := Engine.get_main_loop() as SceneTree
-	return tree.root if tree != null else null
+	return (Engine.get_main_loop() as SceneTree).root
 
 
 # ============================================================================

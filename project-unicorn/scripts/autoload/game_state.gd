@@ -48,13 +48,9 @@ const FLAG_TYPES := {
 	"mvp_sub_product_type_id": TYPE_STRING,
 	"mvp_market_type": TYPE_STRING,
 	"mvp_launch_day": TYPE_INT,
-	"mvp_quality": TYPE_INT,
 	"mvp_innovation": TYPE_FLOAT,
 	"mvp_stability": TYPE_FLOAT,
 	"mvp_experience": TYPE_FLOAT,
-	"mvp_innovation_prev": TYPE_FLOAT,
-	"mvp_stability_prev": TYPE_FLOAT,
-	"mvp_experience_prev": TYPE_FLOAT,
 	"mvp_bug_count_at_launch": TYPE_INT,
 	"mvp_live_bug_count": TYPE_INT,
 	"mvp_live_bug_progress": TYPE_FLOAT,
@@ -63,8 +59,6 @@ const FLAG_TYPES := {
 	"mvp_sprint_days_total": TYPE_INT,
 	"mvp_sprint_days_elapsed": TYPE_FLOAT,
 	"mvp_sprint_fix_progress": TYPE_FLOAT,
-	"bug_sprint_days": TYPE_ARRAY,
-	"bug_sprint_just_done": TYPE_BOOL,
 	"critical_bug_unfixed": TYPE_BOOL,
 	"tech_debt_birikti": TYPE_BOOL,
 	"cancelled_build_prefill": TYPE_DICTIONARY,
@@ -77,7 +71,6 @@ const FLAG_TYPES := {
 	# Kaybolursa her geçmiş sürüm bugünkü tur sayısıyla yeniden okunur.
 	"mvp_step_realization": TYPE_DICTIONARY,    # {kademe kimliği: çarpan}
 	"mvp_hidden_lines": TYPE_ARRAY,             # Ar-Ge'nin açtığı gizli hatlar — §12.1
-	"mvp_design_turns": TYPE_INT,               # son sürümde tamamlanan TASARIM turu — §5
 	# --- DESTEK: iki sayaç, mühürlü adlar (§8.1) ---
 	"mvp_reports_incoming": TYPE_INT,           # GELEN BİLDİRİM
 	"mvp_reports_progress": TYPE_FLOAT,         # kesirli birikim; tam sayıya taşınca sayaç artar
@@ -688,7 +681,9 @@ func _emit_runway() -> void:
 
 func initialize_run(payload: Dictionary) -> void:
 	# Direct field assignment, not setters: no shell is mounted (on a load main.gd tears it down
-	# first), so signals would land in the void; remounting the shell repaints.
+	# first), so signals would land in the void; remounting the shell repaints. Containers are
+	# cleared in place, never replaced, so a reference a system holds keeps pointing at the run
+	# (the same contract as SaveCodec.apply_game_state).
 	#
 	# Optional payload keys:
 	#   "seed"    : int        — the RNG seed; a fresh run generates one.
@@ -731,9 +726,10 @@ func initialize_run(payload: Dictionary) -> void:
 	month_history.clear()
 
 	# Day-1 point so the curve renders before the first daily tick.
-	cash_history = [{"day": 1, "cash": cash}]
-	transactions = []
-	sales_log = []
+	cash_history.clear()
+	cash_history.append({"day": 1, "cash": cash})
+	transactions.clear()
+	sales_log.clear()
 
 	# Month-End Summary + run counters (month_ledger is snapshotted at the END: it needs the roster)
 	month_highlight_text = ""
@@ -742,7 +738,7 @@ func initialize_run(payload: Dictionary) -> void:
 	run_customers_lost = 0
 	run_customers_expanded = 0
 	run_prospects_spawned = 0
-	b2b_signed_company_names = []
+	b2b_signed_company_names.clear()
 	cs_escalation_days.clear()
 	b2b_rep_portrait_rotation_index = 0
 	b2b_last_rep_portrait = ""
@@ -761,16 +757,16 @@ func initialize_run(payload: Dictionary) -> void:
 	run_board_seats = 0
 	run_board_veto = false
 
-	# VC Pitch / Series A Hunt. Dicts via .clear() in case a system cached the reference.
+	# VC Pitch / Series A Hunt
 	vc_states.clear()
-	active_sheets = []
+	active_sheets.clear()
 	pending_meeting.clear()
 	prep.clear()
 	run_pitches = 0
 	run_sheets_won = 0
 	vc_meeting_cancel_day = -1
 	vc_last_meeting_rejected = false
-	vc_frank_cold_shown = []
+	vc_frank_cold_shown.clear()
 
 	# Seed round + the faced-Series-A memory
 	seed_door_open_day = -1
@@ -832,10 +828,8 @@ func initialize_run(payload: Dictionary) -> void:
 	CharacterRegistry.ensure_mentor()
 	CharacterRegistry.add(_build_founder(payload))
 
-	# Month-1 ledger after the roster so the team count is real. The founder is category
-	# "founder", not a hire.
+	# Month-1 ledger after the roster so the team count is real.
 	MonthSummarySystem.snapshot()
-	run_hires = 0
 
 
 func _build_founder(payload: Dictionary) -> Character:

@@ -21,7 +21,6 @@ const AUTOSAVE_KEYS: Array[String] = [
 	"SET_AUTOSAVE_OFF", "SET_AUTOSAVE_DAILY", "SET_AUTOSAVE_WEEKLY", "SET_AUTOSAVE_MONTHLY"]
 const LANG_KEYS: Array[String] = ["LANG_TR", "LANG_EN"]   # Localization.SUPPORTED sırasıyla
 
-const KEY_AUTOSAVE := "autosave_frequency"
 const KEY_COLORBLIND := "colorblind_palette"
 
 # Bölüm başlıkları CSV'de doğal yazımda durur ve _retranslate'te büyütülür.
@@ -130,7 +129,7 @@ func _build_audio_section() -> void:
 func _build_game_section() -> void:
 	_autosave_option = _dropdown(AUTOSAVE_IDS.size())
 	_autosave_option.item_selected.connect(func(idx: int) -> void:
-		Settings.set_value(KEY_AUTOSAVE, AUTOSAVE_IDS[idx]))
+		Settings.set_value(SaveManager.SETTING_AUTOSAVE_FREQUENCY, AUTOSAVE_IDS[idx]))
 	_add_row(_game_body, "SET_AUTOSAVE", _autosave_option)
 
 
@@ -140,8 +139,7 @@ func _build_language_section() -> void:
 		_lang_option.add_item("", i)
 	_lang_option.item_selected.connect(func(idx: int) -> void:
 		Localization.set_language(Localization.SUPPORTED[idx])
-		_retranslate()
-		_refresh_resolution_row())   # "(doğal)" işareti de çevrilir
+		_retranslate())
 
 
 func _build_accessibility_section() -> void:
@@ -218,7 +216,7 @@ func _sync_from_state() -> void:
 	_music_toggle.set_pressed_no_signal(AudioManager.is_music_enabled())
 	_music_slider.editable = AudioManager.is_music_enabled()
 	_mute_toggle.set_pressed_no_signal(AudioManager.is_mute_unfocused())
-	_autosave_option.select(maxi(0, AUTOSAVE_IDS.find(String(Settings.get_value(KEY_AUTOSAVE)))))
+	_autosave_option.select(maxi(0, AUTOSAVE_IDS.find(String(Settings.get_value(SaveManager.SETTING_AUTOSAVE_FREQUENCY)))))
 	_lang_option.select(Localization.SUPPORTED.find(Localization.get_language()))
 	_cb_toggle.set_pressed_no_signal(UiTokens.is_colorblind())
 	_update_pct_labels()
@@ -291,7 +289,8 @@ func _retranslate() -> void:
 		_scale_option.set_item_text(i, Fmt.percent(int(round(DisplaySettingsLib.UI_SCALE_STEPS[i] * 100.0)), 0))
 	for node in _label_keys:
 		node.text = tr(_label_keys[node])
-	_refresh_scale_options()   # devre dışı adımların ipucu metni de çevrilir
+	_refresh_resolution_row()   # "(doğal)" işareti
+	_refresh_scale_options()   # devre dışı adımların ipucu metni
 	_update_pct_labels()
 
 
