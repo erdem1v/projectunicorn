@@ -83,10 +83,6 @@ static func _saturate(composite: float, half_sat: float) -> float:
 	return 100.0 * c / (c + half_sat)
 
 
-static func normalized_from_dims(dims: Dictionary, quality_axes: Array = []) -> float:
-	return normalized_quality(composite_quality(dims, quality_axes))
-
-
 # Single-axis 0-100 score. Pass economy dims when you want bug-eroded stability.
 static func axis_score(dims: Dictionary, axis: String) -> float:
 	return normalized_quality(float(dims.get(axis, 0.0)))
@@ -115,14 +111,19 @@ static func economy_dims_from_build(b: FeatureBuild) -> Dictionary:
 	}
 
 
+# Raw post-ship dims (no bug erosion), read off the mvp_* flags.
+static func dims_from_flags() -> Dictionary:
+	var out: Dictionary = {}
+	for axis in AXES:
+		out[axis] = float(GameState.get_flag("mvp_%s" % axis, 0.0))
+	return out
+
+
 # Post-ship: the LIVE bug count (it keeps accruing after ship) erodes stability.
 static func economy_dims_from_flags() -> Dictionary:
-	return {
-		"innovation": float(GameState.get_flag("mvp_innovation", 0.0)),
-		"stability":  effective_stability(float(GameState.get_flag("mvp_stability", 0.0)),
-			ProductSystem.live_bug_count()),
-		"experience": float(GameState.get_flag("mvp_experience", 0.0)),
-	}
+	var out: Dictionary = dims_from_flags()
+	out["stability"] = effective_stability(out["stability"], ProductSystem.live_bug_count())
+	return out
 
 
 # THE market-facing quality number. Audience and growth band both read this, so they

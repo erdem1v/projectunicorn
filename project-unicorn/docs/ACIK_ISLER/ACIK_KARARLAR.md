@@ -689,6 +689,119 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Kaynak: CLAUDE.md §2 (GDD'de adı geçen bağlanmamış kod silinmez; bu alanlar GDD'lerde geçmiyor), §6 (kayıt
     şeması), §8
 
+- **41 · §12.8 kapı-üstü Yazılım hız bonusu uygulanmıyor.**
+  - Ne oluyor: Ürün GDD §12.8 'fazladan Yazılım yıldızları hızı aynı kademeyle çarpar' diyor.
+    LineGates.speed_bonus_for bu bonusu (+%8 / +%4) hesaplıyor ama hiçbir yer çağırmıyor; hat yapımının hızı
+    (ProductSystem.build_effort_per_day) bonus almıyor. Ölçü de belirsiz: bir sürümde farklı Yazılım kapısı taşıyan
+    birden çok kademe olabilir. Bugünkü fonksiyon her kademenin kendi kapısına göre en büyük fazlayı okuyor; eski
+    yorum 'en büyük kapıya göre' diyordu. Kişi kapısı ile toplam kapısının hangisinin sayılacağı da yazılı değil.
+  - Nerede: scripts/systems/line_gates.gd (speed_bonus_for, _excess_for, _excess_ladder);
+    scripts/systems/product_system.gd (build_effort_per_day, _tick_line_build_hourly, estimate_line_build_days)
+  - Oyuncuya etkisi: Kapının üstünde güçlü yazılımcı tutmak yapımı hızlandırmıyor; GDD'nin vaat ettiği ödül yok.
+    Bağlanırsa yapım süreleri ve tohumlu koşular değişir.
+  - Seçenekler: A) Sürümdeki kademelerin kendi Yazılım kapılarına göre en büyük fazla (bugünkü speed_bonus_for) hızı
+    ×(1+bonus) çarpar; Konsept'in süre önizlemesi aynı çarpanı okur. B) Fazla, sürümdeki en büyük Yazılım kapısına
+    göre tek referansla ölçülür. C) Bonus kaldırılır: §12.8'in hız cümlesi GDD'den çıkar, speed_bonus_for silinir.
+  - Kaynak: Ürün GDD rev 6.1 §12.8, §6.1, §24 (§12.8 inşa notu)
+
+- **42 · §10 kapasite uyarı kartı bağlı değil.**
+  - Ne oluyor: §10 '%80–100 kapasite çubuğu sararır ve sürüm başına bir kez olay kartı düşer ("Sunucular yoruluyor." —
+    kapasite artır / şimdilik bekle)' diyor. Kodda sürüm başına mandal var (InfraSystem.due_capacity_warning,
+    mark_capacity_warning_shown, _warning_consumed_version, to_dict/from_dict/reset) ama çağıran yok. Kart JSON'u ve
+    metni yok. Mandal kayda ve SaveManager.reset_all_owners'a girmiyor.
+  - Nerede: scripts/systems/infra_system.gd (due_capacity_warning, mark_capacity_warning_shown, daily_tick);
+    data/events/cards/product/ (kart yok); scripts/autoload/save_manager.gd (reset_all_owners, _capture_systems)
+  - Oyuncuya etkisi: Doluluk %80'i geçince çubuk sararıyor ama kart gelmiyor; oyuncu aşım zararına (memnuniyet
+    −0,8/gün, GELEN ×1,5, B2C edinim ×0,6) kartla uyarılmadan girebiliyor.
+  - Seçenekler: A) Kart yazılır (önce EN, TR ayrı adım; seçenekler kapasite +1 / bekle). InfraSystem.daily_tick
+    mandalı okuyup EventGate.request eder; mandal kayda ve reset_all_owners'a girer. B) Uyarı yalnız çubuğun sararması
+    olarak kalır; kart cümlesi GDD'den çıkar ve mandal silinir. C) 'Olay içeriği eksik' maddesinin içerik turuna
+    bırakılır.
+  - Kaynak: Ürün GDD rev 6.1 §10, §8.5 (uyarısız kayıp yok); ch11 §3
+
+- **43 · Hat ürünlerinde karmaşıklık sıfır: hata riski, aşınma ve özellik sayısı.**
+  - Ne oluyor: Hat modeli FeatureBuild.component_ids/feature_ids alanlarını doldurmuyor; ship_active_build yayında
+    mvp_components'i boş yazıyor. Bu yüzden hat ürünlerinde ProductSystem._shipped_total_complexity() hep 0. Canlı
+    aşınmanın karmaşıklık terimi (WEAR_CPLX_COEF) düşüyor. product_bug_risk() max(1,0)=1'e bölüyor: tek açık hata
+    'orta', iki ve fazlası 'yüksek' okunuyor. Aynı boş liste SalesSystem.product_value'nun karmaşıklığını, fiyat
+    panelindeki özellik sayısını (PROD_FEATURE_COUNT) ve publish_flow'daki sayımı da 0'a çekiyor. Kademelerde
+    karmaşıklık alanı yok.
+  - Nerede: scripts/systems/product_system.gd (_shipped_total_complexity, _post_ship_wear_hourly, product_bug_risk,
+    ship_active_build); scripts/systems/sales_system.gd (product_value); scripts/tabs/product/pricing_panel.gd;
+    scripts/tabs/product/publish_flow.gd; data/product/lines/*.json
+  - Oyuncuya etkisi: Ürün Detayı'ndaki hata riski rozeti tek hatada 'orta'ya fırlıyor; karmaşık ürün daha hızlı
+    aşınmıyor; özellik sayısı 0 görünüyor; ürün değeri karmaşıklık katkısı almıyor.
+  - Seçenekler: A) Payda yayınlanmış kademelerin efor toplamı ya da kullanım ağırlığı toplamı
+    (ProductState.usage_weight_total) olur; aşınma, risk ve product_value aynı sayıyı okur. B) Kademelere complexity
+    alanı eklenir (içerik işi, §12.12 şartnamesi). C) Risk rozeti DOĞRULANMIŞ hata sayısına göre mutlak eşiklerle
+    okunur; karmaşıklık terimi aşınmayla birlikte kalkar (bkz. taşınan hata maddesi).
+  - Kaynak: Ürün GDD rev 6.1 §8, §9, §10 (kullanım ağırlığı), §12.4, §17, §21
+
+- **44 · Düz özellik kataloğunun emekliliği.**
+  - Ne oluyor: GDD §21 'katalog hat modeline geçer, 61 düz özellik ve ölü alanlar silinir' diyor. Düz yol oyunda
+    yalnız main.gd debug tohumlarından ve smoke/probe'dan erişiliyor; üç oynanabilir alt-tip (note_tool, video_clip,
+    erp) hat alt-tipi. Bu yol ProductCatalog.FEATURE_POOLS, ProductSystem.start_build/start_version_build,
+    _tick_build_hourly, TASARIM tur zinciri, projected_axes, estimate_build_days ve bunların sabitlerinden oluşuyor.
+    Ama havuzlar üretimde hâlâ okunuyor: B2BSalesSystem'in pain feature seçimi, SalesSystem.product_value
+    karmaşıklığı, ProductSystem hata tohumu ve aşınma, ProductState'in feature canlılık sorgusu.
+  - Nerede: scripts/systems/product_catalog.gd (FEATURE_POOLS, get_feature_pool, get_feature_by_id, sum_efor,
+    sum_cost); scripts/systems/product_system.gd (düz katalog bölümü ve sabitleri);
+    scripts/systems/b2b_sales_system.gd; scripts/systems/sales_system.gd (product_value);
+    scripts/systems/product_state.gd; scripts/main/main.gd debug tohumları; localization/strings.csv PROD_FEAT_*
+    satırları
+  - Oyuncuya etkisi: Doğrudan görünmez; ölü yol her ürün işini pahalılaştırıyor, hat ürünlerinde karmaşıklığa dayanan
+    hesaplar 0 okuyor.
+  - Seçenekler: A) Düz yol ve havuzlar tümüyle silinir; tüketiciler hat karşılıklarına bağlanır (karmaşıklık
+    maddesinin kararı önce gelir); smoke/probe fikstürleri test paketi işiyle hat yoluna taşınır. B) Havuzlar yalnız
+    kilitli (hat içeriği olmayan) tiplerin veri kaynağı olarak kalır, yapım yolu silinir. C) Bugünkü hâl kalır, GDD
+    §21'e not düşülür.
+  - Kaynak: Ürün GDD rev 6.1 §12.1, §20, §21, §22.5; docs/ACIK_ISLER/ISLER.md 'Test paketi'
+
+- **45 · Canlı aşınma §9'un taşınan hata terimini büyütüyor.**
+  - Ne oluyor: SupportSystem.reports_per_day'deki §9 taşınan_hata terimi ProductSystem.live_bug_count()
+    (mvp_live_bug_count) okuyor. Sayaç yayında BETA'dan devreden açık hatalarla başlıyor, sonra _post_ship_wear_hourly
+    ile her saat kitle ve karmaşıklıkla büyüyor. Onu düşüren üretim yolu yok: hata sprinti yalnız testten çağrılıyor,
+    düzeltme koşusu DOĞRULANMIŞ'ı eritiyor. GDD rev 6.1 §8-§9'da aşınma yok. Aynı sayaç ekonomi Kararlılığını
+    (QualityModel.economy_dims_from_flags), sağlık rozetini ve VC/term sheet kontrollerini de oynatıyor.
+  - Nerede: scripts/systems/support_system.gd (reports_per_day); scripts/systems/product_system.gd (live_bug_count,
+    _post_ship_wear_hourly, WEAR_*, health_state, product_bug_risk); scripts/systems/quality_model.gd
+    (economy_dims_from_flags); vc_pitch_system.gd ve term_sheet_table_system.gd (live_bug_count okuyucuları)
+  - Oyuncuya etkisi: Canlı ürünün GELEN akışı zamanla kendiliğinden artıyor; oyuncunun düzeltme koşusu bu terimi hiç
+    düşürmüyor ve Kararlılık erimesi geri alınamıyor.
+  - Seçenekler: A) Aşınma kalkar: taşınan_hata yayındaki devir sayısıdır (mvp_bug_count_at_launch) ve her yayında
+    tazelenir. B) Taşınan hatalar GELEN'e dönüştükçe terim azalır; düzeltme koşusunda çözülenler live_bug_count'u da
+    düşürür. C) Taşınan hatalar yayında DOĞRULANMIŞ'a tohumlanır ve akıştaki terim kalkar (§9'un 'zamanla yüzeye
+    çıkar' cümlesiyle çelişir). D) Aşınma kalır ve GDD'ye işlenir.
+  - Kaynak: Ürün GDD rev 6.1 §7, §8.1, §8.4, §9, §11.2, §20
+
+- **46 · Boş ürün adı her yüzeyde farklı görünüyor.**
+  - Ne oluyor: Konsept'te ad alanı boş bırakılabiliyor. ProductSystem.start_line_build v1'de adı
+    ProductState.product_name()'e (boş) düşürüyor; FeatureBuild.product_name ve yayında mvp_product_name boş
+    kalabiliyor. Yüzeylerin yedekleri farklı: Konsept özetinde tip adı (creation_flow), destek barında şirket adı,
+    yapım barında yalnız sürüm, Ekip defterinin iş hücresinde yedek yok (' v2').
+  - Nerede: scripts/systems/product_system.gd (start_line_build); scripts/data_models/feature_build.gd (product_name);
+    scripts/tabs/product/creation_flow.gd; scripts/ui/components/build_bar_model.gd; scripts/tabs/hr/hr_ledger.gd
+    (_job_text)
+  - Oyuncuya etkisi: Adsız ürün farklı ekranlarda farklı adla ya da adsız (' v2') görünüyor.
+  - Seçenekler: A) Konsept onayı ad girilmeden açılmaz. B) Boş ad ProductCatalog.PRODUCT_NAME_POOL'dan bir öneriyle
+    doldurulur (özel ad; çevrilmez, saklanabilir). C) Tek görüntüleme yardımcısı kurulur: ad boşsa anahtardan tip adı
+    okunur, durumda saklanmaz; bütün yüzeyler onu okur.
+  - Kaynak: Ürün GDD rev 6.1 §3; CLAUDE.md §5 (durumda metin değil id)
+
+- **47 · '+N gün' olayı Build'de kimse yokken etkisiz.**
+  - Ne oluyor: delay_days olay fiili ProductSystem.apply_speed_bonus'u çağırıyor. Hat yapımında günler
+    build_effort_per_day ile efora çevriliyor; Build işinde kimse yoksa hız 0 ve toplam efor değişmiyor. Düz yolun
+    team_speed'i SPEED_MIN=1 tabanı taşıdığı için orada olay her zaman etki ediyordu. Kart modalı '+N gün' der, etki
+    olmaz.
+  - Nerede: scripts/systems/product_system.gd (apply_speed_bonus, build_effort_per_day, SPEED_MIN);
+    scripts/events/core/effects.gd (delay_days)
+  - Oyuncuya etkisi: Build'de kimse yokken düşen gecikme ya da hızlanma kartı söylediğini yapmıyor. Yapım o anda
+    oto-duraklı olduğu için etki küçük.
+  - Seçenekler: A) Hat yolunda hız tabanlanır (ör. maxf(SPEED_MIN, build_effort_per_day)); olay toplamı her zaman
+    değiştirir. B) Hız 0 iken fiil reddedilir (effects 'refused' döner, çip çizilmez). C) Kabul edilir ve
+    apply_speed_bonus'un yorumunda söylenir.
+  - Kaynak: Ürün GDD rev 6.1 §6.1; ch11 §3; CLAUDE.md §5 (seçeneğin anlattığını modifier'lar yapar)
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında

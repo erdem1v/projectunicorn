@@ -95,7 +95,8 @@ const REFUSAL_DESK_SHUT := "desk_shut"
 ## Memnuniyet 0-100 TAM SAYIDIR ve tek yazma seam'i CustomerRegistry.set_satisfaction(id, int).
 ## §8.3'ün zararı kesirlidir: beş hesaba bölünmüş −2,0 hesap başına −0,4 eder ve yuvarlama
 ## onu ya sıfırlar ya ikiye katlar. Kalıntı kişi başına burada birikir; tam birime taşınca
-## seam çağrılır. KAYDA GİRMEZ: yükleme bir günden küçük kalıntıyı unutur (< 1 puan).
+## seam çağrılır. Kayda girer (ProductSystem'in bloğunda): girmeseydi her yükleme hesap başına
+## bir puandan küçük zararı silerdi.
 static var _damage_residue: Dictionary = {}
 
 
@@ -130,9 +131,16 @@ static func daily_tick() -> void:
 	GameState.set_flag(ProductState.INTEREST, interest_now())
 
 
-## Yeni koşu / yeni kayıt. Kalıntı tablosu türetilmiş bir tampon, taşınmaz.
 static func reset() -> void:
 	_damage_residue.clear()
+
+
+static func to_dict() -> Dictionary:
+	return {"damage_residue": _damage_residue.duplicate()}
+
+
+static func from_dict(d: Dictionary) -> void:
+	_damage_residue = (d.get("damage_residue", {}) as Dictionary).duplicate()
 
 
 # =========================================================================
@@ -146,9 +154,8 @@ static func reports_per_day() -> float:
 	var floor_rate: float = INFLOW_BASE_RESEARCHED if ResearchSeam.completed("self_service") else INFLOW_BASE
 	var new_code: float = ProductState.new_code_effort() \
 		* exp(-float(ProductState.version_age_days()) / INFLOW_TAU)
-	# Taşınan hata bugün eski aşınma sayacından (`live_bug_count`) okunur. Rev 6.1'de
-	# DOĞRULANMIŞ (`ProductState.bugs_confirmed`) ile yayındaki devir ayrışır; devrin
-	# yayında tohumlanması ProductSystem'in işidir ve yapılmadı.
+	# Taşınan hata `live_bug_count`'tur: yayında BETA'dan devreden açık hatalarla başlar ve
+	# canlı aşınmayla (ProductSystem._post_ship_wear_hourly) büyür; §9 aşınma terimi yazmaz.
 	var base: float = floor_rate + INFLOW_CARRIED_COEF * float(ProductSystem.live_bug_count()) \
 		+ INFLOW_NEWCODE_COEF * new_code
 	# §10 — altyapı akışı çarpar (ucuz sağlayıcı ×1,25, doluluk %100 üstü ×1,5);

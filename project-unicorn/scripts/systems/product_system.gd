@@ -165,16 +165,18 @@ static func design_turn_mult(turns_completed: int) -> float:
 # --- Koşu sınırı ve kayıt ---
 
 static func reset() -> void:
-	# Yeniden başlatma ve yükleme, önceki koşunun build'ini ve DESTEK'in statik kesir artığını
-	# yeni şirkete taşımasın.
+	# Yeniden başlatma ve yükleme, önceki koşunun build'ini, açtığı gizli hatları ve DESTEK'in
+	# statik kesir artığını yeni şirkete taşımasın. Kayıttaki gizli hatları RnDSystem geri açar.
 	active_build = null
+	ProductLines.reload()
 	SupportSystem.reset()
 	ProductRead.reset()
 
 
 static func to_dict() -> Dictionary:
-	# Canlı ürün GameState.flags'teki mvp_* anahtarlarında; burada yalnız süren build.
-	return {"active_build": SaveCodec.res_to_dict(active_build) if active_build != null else null}
+	# Canlı ürün GameState.flags'teki mvp_* anahtarlarında; burada süren build ve DESTEK artığı.
+	return {"active_build": SaveCodec.res_to_dict(active_build) if active_build != null else null,
+		"support": SupportSystem.to_dict()}
 
 
 static func from_dict(d: Dictionary) -> void:
@@ -183,6 +185,7 @@ static func from_dict(d: Dictionary) -> void:
 	var raw: Variant = d.get("active_build", null)
 	active_build = SaveCodec.res_from_dict(raw as Dictionary, FeatureBuild) as FeatureBuild \
 		if raw is Dictionary else null
+	SupportSystem.from_dict(d.get("support", {}) as Dictionary)
 
 
 static func daily_tick() -> void:
@@ -600,7 +603,7 @@ static func design_turn_progress() -> float:
 	return clampf(into / cost, 0.0, 1.0)
 
 
-## "Geliştirmeye geç" ilk günden basılabilir, ama tur 1 dolmadıysa onay ister.
+## "Geliştirmeye geç" ilk günden basılabilir; tur 1 dolmadıysa düğmenin ipucu ×0,75 bedelini söyler.
 static func needs_design_confirm() -> bool:
 	return is_line_build() and active_build.current_phase == "iteration" \
 		and active_build.design_turns_completed < 1
@@ -743,8 +746,8 @@ static func _apply_iteration_round_gains(b: FeatureBuild) -> void:
 # --- Faz geçişleri (oyuncu kararları) ---
 
 ## TASARIM'dan çıkış. Hat modelinde ilk günden açıktır: acele etmenin bedeli kilit değil cila
-## çarpanıdır (×0,75, §5) ve onay diyaloğunda okunur. Düz yolda tur 1 bitince açılır; koşan yarım tur
-## kazançsız terk edilir.
+## çarpanıdır (×0,75, §5; bkz. needs_design_confirm). Düz yolda tur 1 bitince açılır; koşan yarım
+## tur kazançsız terk edilir.
 static func can_enter_development() -> bool:
 	if active_build == null or active_build.current_phase != "iteration":
 		return false
@@ -1017,8 +1020,7 @@ static func launch() -> void:
 	ProductState.refresh_on_publish(b.total_efor)
 	# §12 — hat modelinde eksenler hat durumlarından türetilir ve yukarıdaki damgayı ezer.
 	_apply_line_plan_at_ship(b)
-	GameState.set_flag("mvp_version",
-		(int(GameState.get_flag("mvp_version", 1)) + 1) if b.is_version_build else 1)
+	GameState.set_flag("mvp_version", build_version(b))
 	GameState.set_flag("mvp_product_name", b.product_name)
 	GameState.set_flag("mvp_sub_product_type_id", b.sub_product_type_id)
 	GameState.set_flag("mvp_market_type", ProductCatalog.get_market_type(b.sub_product_type_id))
@@ -1103,6 +1105,11 @@ static func get_active_build() -> FeatureBuild:
 	return active_build
 
 
+## Yapımdaki sürümün numarası: yayında mvp_version bu değeri alır.
+static func build_version(b: FeatureBuild) -> int:
+	return ProductState.version() + 1 if b.is_version_build else 1
+
+
 # --- Ürün rev 6.1 §12 · hat modeli: Konsept'ten yapıma ---
 
 ## Konsept onayının tek doğrulayıcısı. "" = plan geçerli; aksi hâlde makine sebebi. Merdiven
@@ -1182,8 +1189,8 @@ static func start_line_build(subtype: String, step_ids: Array, lead_id: String =
 	for raw in step_ids:
 		typed.append(String(raw))
 	var b := FeatureBuild.new()
-	b.id = "mvp_build_v%d" % (int(GameState.get_flag("mvp_version", 0)) + 1)
 	b.is_version_build = ProductState.is_live()
+	b.id = "mvp_build_v%d" % build_version(b)
 	b.sub_product_type_id = subtype
 	b.planned_step_ids = typed
 	b.lead_engineer_id = lead_id
@@ -1298,7 +1305,8 @@ static func start_version_build(new_feature_ids: Array, assigned_engineer_id: St
 		push_warning("[ProductSystem] v2 needs >=1 new feature OR >=1 strengthen")
 		return false
 	var b := FeatureBuild.new()
-	b.id = "mvp_build_v%d" % (int(GameState.get_flag("mvp_version", 1)) + 1)
+	b.is_version_build = true
+	b.id = "mvp_build_v%d" % build_version(b)
 	b.sub_product_type_id = sub_id
 	b.feature_ids = union_ids
 	b.component_ids = union_ids
@@ -1306,13 +1314,9 @@ static func start_version_build(new_feature_ids: Array, assigned_engineer_id: St
 	b.lead_engineer_id = assigned_engineer_id
 	b.product_name = String(GameState.get_flag("mvp_product_name", ""))
 	b.start_day = GameState.day
-	var base_dims := {}
-	for ax in QualityModel.AXES:
-		base_dims[ax] = float(GameState.get_flag("mvp_%s" % ax, 0.0))
-	_set_axes(b, projected_axes(typed_new, typed_strengthen, base_dims))
+	_set_axes(b, projected_axes(typed_new, typed_strengthen, QualityModel.dims_from_flags()))
 	# Canlı hatalar devralınır (temiz bir v2 için önce sprint); yalnız YENİ feature'lar tohum atar.
 	b.bug_count = int(GameState.get_flag("mvp_live_bug_count", 0)) + _seed_feature_bugs(typed_new)
-	b.is_version_build = true
 	b.current_phase = "iteration"
 	b.iteration_count = 1
 	# Efor ve maliyet yalnız yeni işten; devralınan ve güçlendirilen feature yeniden ödenmez.

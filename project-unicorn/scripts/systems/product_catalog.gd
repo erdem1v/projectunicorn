@@ -79,11 +79,10 @@ static func locked_type_ids(market: String) -> Array:
 
 
 # Düz özellik havuzu (hat modeli olmayan alt-tipler). Satır alanları:
-#   complexity (1-5) — commit'te bug tohumu ve risk bandı.
+#   complexity (1-5) — commit'te bug tohumu ve canlı aşınma.
 #   efor (5-9)       — iş miktarı; süre = Σefor / ekip hızı. Çalışma kuralı 4 + complexity,
 #                      ama sapabilsin diye her satırda açık yazılır.
-#   cost / cost_source ("api" | "license") — yalnız üçüncü-parti özellikte; commit'te bir
-#                      kez tahsil edilir.
+#   cost — yalnız üçüncü-parti özellikte; commit'te bir kez tahsil edilir.
 #   dimension_contribution — eksenlere tam sayı katkı; ship edilen eksen = seçili katkıların
 #                      toplamı (ProductSystem.projected_axes), yani önizleme == ship.
 const FEATURE_POOLS := {
@@ -91,15 +90,15 @@ const FEATURE_POOLS := {
 		{"id": "ai_assistant_chat", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
 		{"id": "ai_assistant_memory", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 5, "stability": 3}},
 		{"id": "ai_assistant_tools", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6}},
-		{"id": "ai_assistant_voice", "complexity": 3, "efor": 7, "cost": 800, "cost_source": "api", "dimension_contribution": {"innovation": 5, "experience": 3}},
-		{"id": "ai_assistant_image", "complexity": 4, "efor": 8, "cost": 1200, "cost_source": "api", "dimension_contribution": {"innovation": 6}},
+		{"id": "ai_assistant_voice", "complexity": 3, "efor": 7, "cost": 800, "dimension_contribution": {"innovation": 5, "experience": 3}},
+		{"id": "ai_assistant_image", "complexity": 4, "efor": 8, "cost": 1200, "dimension_contribution": {"innovation": 6}},
 		{"id": "ai_assistant_streaming", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
 	],
 	"ai_photo_editor": [
 		{"id": "ai_photo_bg_removal", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
-		{"id": "ai_photo_inpaint", "complexity": 4, "efor": 8, "cost": 1500, "cost_source": "api", "dimension_contribution": {"innovation": 6, "experience": 3}},
-		{"id": "ai_photo_upscale", "complexity": 3, "efor": 7, "cost": 900, "cost_source": "license", "dimension_contribution": {"innovation": 5, "experience": 3}},
-		{"id": "ai_photo_style_transfer", "complexity": 3, "efor": 7, "cost": 500, "cost_source": "license", "dimension_contribution": {"innovation": 5, "experience": 3}},
+		{"id": "ai_photo_inpaint", "complexity": 4, "efor": 8, "cost": 1500, "dimension_contribution": {"innovation": 6, "experience": 3}},
+		{"id": "ai_photo_upscale", "complexity": 3, "efor": 7, "cost": 900, "dimension_contribution": {"innovation": 5, "experience": 3}},
+		{"id": "ai_photo_style_transfer", "complexity": 3, "efor": 7, "cost": 500, "dimension_contribution": {"innovation": 5, "experience": 3}},
 		{"id": "ai_photo_batch", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}},
 		{"id": "ai_photo_filters", "complexity": 1, "efor": 5, "dimension_contribution": {"experience": 3}},
 	],
@@ -124,30 +123,30 @@ const FEATURE_POOLS := {
 		{"id": "saas_pm_tasks", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}},
 		{"id": "saas_pm_gantt", "complexity": 3, "efor": 7, "dimension_contribution": {"experience": 5}},
 		{"id": "saas_pm_comments", "complexity": 2, "efor": 6, "dimension_contribution": {"experience": 4}},
-		{"id": "saas_pm_integrations", "complexity": 4, "efor": 8, "cost": 700, "cost_source": "api", "dimension_contribution": {"stability": 6, "experience": 3}},
+		{"id": "saas_pm_integrations", "complexity": 4, "efor": 8, "cost": 700, "dimension_contribution": {"stability": 6, "experience": 3}},
 		{"id": "saas_pm_automation", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "experience": 3}},
 		{"id": "saas_pm_reporting", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
 	],
 	"saas_crm": [
 		{"id": "saas_crm_contacts", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}},
 		{"id": "saas_crm_pipeline", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
-		{"id": "saas_crm_email", "complexity": 4, "efor": 8, "cost": 600, "cost_source": "api", "dimension_contribution": {"stability": 6, "experience": 3}},
+		{"id": "saas_crm_email", "complexity": 4, "efor": 8, "cost": 600, "dimension_contribution": {"stability": 6, "experience": 3}},
 		{"id": "saas_crm_forecast", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 5, "experience": 3}},
 		{"id": "saas_crm_mobile", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 3, "experience": 6}},
-		{"id": "saas_crm_call_log", "complexity": 3, "efor": 7, "cost": 800, "cost_source": "api", "dimension_contribution": {"innovation": 5, "stability": 3}},
+		{"id": "saas_crm_call_log", "complexity": 3, "efor": 7, "cost": 800, "dimension_contribution": {"innovation": 5, "stability": 3}},
 	],
 	"saas_analytics": [
 		{"id": "saas_an_dashboards", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
 		{"id": "saas_an_query", "complexity": 4, "efor": 8, "dimension_contribution": {"stability": 3, "experience": 6}},
 		{"id": "saas_an_alerts", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 5, "stability": 3}},
 		{"id": "saas_an_share", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 2, "experience": 4}},
-		{"id": "saas_an_etl", "complexity": 5, "efor": 9, "cost": 1000, "cost_source": "api", "dimension_contribution": {"stability": 7}},
+		{"id": "saas_an_etl", "complexity": 5, "efor": 9, "cost": 1000, "dimension_contribution": {"stability": 7}},
 		{"id": "saas_an_embed", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "stability": 3}},
 	],
 	"saas_billing": [
 		{"id": "saas_bill_subscriptions", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5, "experience": 3}},
 		{"id": "saas_bill_invoice", "complexity": 2, "efor": 6, "dimension_contribution": {"stability": 4, "experience": 2}},
-		{"id": "saas_bill_tax", "complexity": 5, "efor": 9, "cost": 2000, "cost_source": "license", "dimension_contribution": {"stability": 7}},
+		{"id": "saas_bill_tax", "complexity": 5, "efor": 9, "cost": 2000, "dimension_contribution": {"stability": 7}},
 		{"id": "saas_bill_dunning", "complexity": 3, "efor": 7, "dimension_contribution": {"innovation": 3, "stability": 5}},
 		{"id": "saas_bill_webhooks", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 5}},
 		{"id": "saas_bill_proration", "complexity": 4, "efor": 8, "dimension_contribution": {"stability": 6}},
@@ -163,7 +162,7 @@ const FEATURE_POOLS := {
 	"saas_ops": [
 		{"id": "saas_ops_workflow", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 6, "experience": 3}},
 		{"id": "saas_ops_reporting", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
-		{"id": "saas_ops_integration", "complexity": 5, "efor": 9, "cost": 1800, "cost_source": "license", "dimension_contribution": {"stability": 7}},
+		{"id": "saas_ops_integration", "complexity": 5, "efor": 9, "cost": 1800, "dimension_contribution": {"stability": 7}},
 		{"id": "saas_ops_scheduling", "complexity": 3, "efor": 7, "dimension_contribution": {"stability": 3, "experience": 5}},
 		{"id": "saas_ops_field", "complexity": 5, "efor": 9, "dimension_contribution": {"innovation": 4, "stability": 7}},
 		{"id": "saas_ops_mobile", "complexity": 4, "efor": 8, "dimension_contribution": {"innovation": 3, "experience": 6}},
@@ -281,11 +280,7 @@ static func get_quality_axes(sub_product_type_id: String) -> Array:
 	return QUALITY_AXES.get(sub_product_type_id, [])
 
 
-# ---------------------------------------------------------------- efor / maliyet / risk
-
-const FEATURE_RISK_LOW_MAX := 2    # complexity <= 2 → "dusuk"
-const FEATURE_RISK_HIGH_MIN := 4   # complexity >= 4 → "yuksek"; arası "orta"
-
+# ---------------------------------------------------------------- efor / maliyet
 
 static func get_feature_efor(feature_id: String) -> int:
 	return int(get_feature_by_id(feature_id).get("efor", 0))
@@ -298,26 +293,11 @@ static func sum_efor(feature_ids: Array) -> int:
 	return total
 
 
-## {"amount": int, "source": "api" | "license" | ""}
-static func get_feature_cost(feature_id: String) -> Dictionary:
-	var f: Dictionary = get_feature_by_id(feature_id)
-	return {"amount": int(f.get("cost", 0)), "source": String(f.get("cost_source", ""))}
-
-
 static func sum_cost(feature_ids: Array) -> int:
 	var total: int = 0
 	for fid in feature_ids:
 		total += int(get_feature_by_id(String(fid)).get("cost", 0))
 	return total
-
-
-## "dusuk" | "orta" | "yuksek" — ProductUiShared.risk_label çevirir.
-static func feature_risk_band(complexity: int) -> String:
-	if complexity <= FEATURE_RISK_LOW_MAX:
-		return "dusuk"   # LOC-DATA risk band id
-	if complexity >= FEATURE_RISK_HIGH_MIN:
-		return "yuksek"   # LOC-DATA risk band id
-	return "orta"   # LOC-DATA risk band id
 
 
 # "Öner" düğmesinin ad havuzu. Özel adlar çevrilmez; seçim sırayla, koşu tekrarlanabilir.

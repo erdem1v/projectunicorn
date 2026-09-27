@@ -11,24 +11,19 @@ extends Resource
 @export var feature_ids: Array[String] = []
 ## Ship'te mvp_components'e yazılan liste (feature_ids ile aynı küme).
 @export var component_ids: Array[String] = []
-@export var assigned_engineer_id: String = ""
 @export var lead_engineer_id: String = ""
 @export var start_day: int = 0
-@export var is_mvp: bool = false
 ## v2+: eksenleri canlı üründen tohumlar ve yayında mvp_version'ı artırır.
 @export var is_version_build: bool = false
 
 ## planning / iteration / development / bugfix / shipped / cancelled.
 @export var current_phase: String = "planning"
-## current_phase'in eski dört değerli aynası (_sync_status_from_phase); kayıtta taşınır.
-@export var status: String = "planning"
 
 # Eksenler commit'te seçili katkılardan damgalanır (ProductSystem.projected_axes) ve yapım
-# boyunca yalnız olay dimension_delta'sı oynatır. `quality` onlardan türetilen tamsayı aynadır.
+# boyunca yalnız olay dimension_delta'sı oynatır.
 @export var innovation: float = 0.0
 @export var stability: float = 0.0
 @export var experience: float = 0.0
-@export var quality: int = 50
 ## Olay kaynaklı eksen sapmaları. Hat modelinde eksenler yayında hat durumlarından yeniden
 ## türetildiği (§11.2) için doğrudan b.innovation'a yazılan etki silinirdi; bu defter onu
 ## ship'in üstüne taşır.
@@ -73,22 +68,8 @@ extends Resource
 @export var iteration_round_days: float = 0.0   # koşan ek turun kalan günü; 0 = tur yok
 @export var iteration_decision_pending: bool = false
 
-# Kayıt biçiminin parçası; bugün hiçbir sistem okumaz. is_bug_sprint hep false'tur (sprint
-# durumu ProductSystem'in mvp_sprint_* bayraklarında).
+# Hiçbir yol true yazmaz (sprint durumu ProductSystem'in mvp_sprint_* bayraklarında).
 @export var is_bug_sprint: bool = false
-@export var total_days: int = 12
-@export var days_remaining: int = 12
-@export var min_estimation_days: int = 0
-@export var equity_impact: float = 0.0
-@export var revenue_share: float = 1.0
-@export var tags: Array[String] = []
-@export var quality_modifiers: Array = []
-@export var iteration_days_in_current: float = 0.0
-@export var development_days_total: int = 0
-@export var development_days_elapsed: float = 0.0
-@export var iteration_duration_days: int = 0
-@export var polish_duration_days: int = 3
-@export var polish_days_remaining: int = 0
 
 
 func get_total_complexity() -> int:
@@ -96,11 +77,3 @@ func get_total_complexity() -> int:
 	for fid in feature_ids:
 		total += int(ProductCatalog.get_feature_by_id(fid).get("complexity", 0))
 	return total
-
-
-func _sync_status_from_phase() -> void:
-	match current_phase:
-		"iteration", "development", "bugfix": status = "in_progress"
-		"shipped": status = "shipped"
-		"cancelled": status = "cancelled"
-		_: status = "planning"
