@@ -76,11 +76,6 @@ static func reset() -> void:
 #  Lifecycle
 # ============================================================================
 
-## "" when the founder may sit down, else the CSV key naming the refusal (§5.0, §9, §3.1).
-static func block_reason(lead_id: String) -> String:
-	return SalesLedger.meeting_block_reason(lead_id)
-
-
 static func open(lead_id: String) -> Dictionary:
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
 	if p == null:

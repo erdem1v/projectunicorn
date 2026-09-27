@@ -90,13 +90,11 @@ func get_total_seats() -> int:
 	return total
 
 
-func get_min_satisfaction(market: String = "") -> int:
+func get_min_satisfaction() -> int:
 	# Lowest satisfaction among active customers; 100 when there are none (nothing at risk).
-	# `market` — "" scans the whole book; "b2c"/"b2b" scopes it, so a consumer-facing gate is
-	# not armed by an unhappy enterprise account in a mixed portfolio.
 	var lowest: int = 100
 	for c in _customers.values():
-		if c.status == "active" and (market == "" or c.market_type == market):
+		if c.status == "active":
 			lowest = mini(lowest, c.satisfaction)
 	return lowest
 

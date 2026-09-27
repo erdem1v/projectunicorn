@@ -71,7 +71,7 @@ static func build_view(event_id: String, context: Dictionary) -> GameEvent:
 ## error under §17.8) falls back to it.
 static func text_block(card: Dictionary) -> Dictionary:
 	var all_text: Dictionary = card.get("text", {})
-	var locale: String = "en" if TranslationServer.get_locale().begins_with("en") else "tr"
+	var locale: String = "en" if Fmt.is_english() else "tr"
 	var text: Dictionary = all_text.get(locale, {})
 	return text if not text.is_empty() else all_text.get("tr", {})
 

@@ -778,10 +778,14 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Ne oluyor: Konsept'te ad alanı boş bırakılabiliyor. ProductSystem.start_line_build v1'de adı
     ProductState.product_name()'e (boş) düşürüyor; FeatureBuild.product_name ve yayında mvp_product_name boş
     kalabiliyor. Yüzeylerin yedekleri farklı: Konsept özetinde tip adı (creation_flow), destek barında şirket adı,
-    yapım barında yalnız sürüm, Ekip defterinin iş hücresinde yedek yok (' v2').
+    yapım barında yalnız sürüm, Ekip defterinin iş hücresinde yedek yok (' v2'). B2C'de yedek kayda da iniyor:
+    SalesSystem._ensure_b2c_record ad boşsa _product_name()'in çevrilmiş yedeğini
+    (TranslationServer.translate("PRODUCT_FALLBACK_NAME") ya da ProductCatalog.type_name) Customer.name_arg'a yazıyor;
+    kullanıcı kaydının adı o anki dilde kayda donuyor (CLAUDE.md §5: durumda metin değil id).
   - Nerede: scripts/systems/product_system.gd (start_line_build); scripts/data_models/feature_build.gd (product_name);
     scripts/tabs/product/creation_flow.gd; scripts/ui/components/build_bar_model.gd; scripts/tabs/hr/hr_ledger.gd
-    (_job_text)
+    (_job_text); scripts/systems/sales_system.gd (_ensure_b2c_record, _product_name); scripts/data_models/customer.gd
+    (display_name)
   - Oyuncuya etkisi: Adsız ürün farklı ekranlarda farklı adla ya da adsız (' v2') görünüyor.
   - Seçenekler: A) Konsept onayı ad girilmeden açılmaz. B) Boş ad ProductCatalog.PRODUCT_NAME_POOL'dan bir öneriyle
     doldurulur (özel ad; çevrilmez, saklanabilir). C) Tek görüntüleme yardımcısı kurulur: ad boşsa anahtardan tip adı
@@ -854,10 +858,12 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     literal'i yazıyor. `capacity_block` bilinmeyen sağlayıcıda "—" basıyor. Aynı işaret ürün dışında da var:
     `scripts/tabs/hr/hr_ui_shared.gd`, `scripts/tabs/personal_tab.gd` (değerleme, net varlık, zirve),
     `scripts/tabs/sales_tab.gd`, `scripts/ui/components/center_viewport.gd`,
-    `scripts/ui/components/dialogue_choice_card.gd`.
+    `scripts/ui/components/dialogue_choice_card.gd`. `HR_TASK_NONE`'un CSV değeri iki dilde de '—'; İK kadrosunun
+    GÖREV hücresinde (`hr_ledger.gd` `_task_cell`) ve `HRUiShared.status_cell`'in boş durumunda görünüyor.
   - Nerede: `scripts/tabs/product/detail_view.gd` (`NO_DATA_MARK`, `_status_card`, `_repaint_stats`);
     `scripts/tabs/product/team_panel.gd` (`_make_pinned_ghost_row`); `scripts/tabs/product/capacity_block.gd`
-    (`_provider_row`); ürün dışı dosyalar yukarıda.
+    (`_provider_row`); `scripts/tabs/hr/hr_ledger.gd` (`_task_cell`), `scripts/tabs/hr/hr_ui_shared.gd`
+    (`status_cell`), `localization/strings.csv` (`HR_TASK_NONE`); diğer ürün dışı dosyalar yukarıda.
   - Oyuncuya etkisi: Oyuncu ekranda uzun tire görür. ch01 §9'un "no dashes in copy" kuralı ve CLAUDE.md §5'in tire
     yasağı çiğneniyor; hayalet satırdaki tire ayrıca script içinde oyuncuya görünen bir literal.
   - Seçenekler: A) "—" metin değil noktalama sayılır ve kurala yazılı istisna olarak eklenir. B) Tek yerde tanımlı
@@ -955,6 +961,8 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     (`VCPitchSystem._tick_countdown_chip`), Yatırım sekmesi (`hunt_tab.gd`) ve olay kapsamı (`scope.gd`,
     `seams_ported.gd`) ise `TermSheet.business_days_left` (iş günü) okur. `term_sheet.gd` bu ayrımı iki fonksiyonun
     doc yorumunda kaydeder. Çip karar günü gelmiş teklifi (`is_decision_due`) göstermez, ODA kağıdı gösterir.
+    `ODA_PAPER_SHEET_TITLE` iki dilde de uzun tire taşıyor (TR 'Yatırım teklifi masada — son {days} gün', EN 'Offer on
+    the table — {days} days left'); ch01 §9 ve CLAUDE.md §5 tireyi yasaklıyor.
   - Nerede: `scripts/ui/oda/oda_view.gd` (sheet hatırlatması, `ODA_PAPER_SHEET_TITLE`);
     `scripts/data_models/term_sheet.gd` (`days_left`, `business_days_left`); `scripts/systems/vc_pitch_system.gd`
     (`_tick_countdown_chip`); `scripts/tabs/hunt_tab.gd`; `localization/strings.csv` (`ODA_PAPER_SHEET_TITLE`,
@@ -965,9 +973,9 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Seçenekler: A) ODA kağıdı da `business_days_left` okur, tek sayı olur; kağıt 'gün' demeye devam ederse birim
     belirsizliği sürer. B) ODA takvim günü saymaya devam eder, kağıt metni birimi açıkça söyler (önce EN, sonra TR
     yerelleştirme). C) Tüm oyuncu geri sayımları iş günü olur ve 'gün' diyen metinler 'iş günü' der (metin onayı
-    gerekir).
-  - Kaynak: GDD ch09 (Funding & Investors) ve ch12 (UI Surfaces & ODA) geri sayım birimini söylemiyor. Kaynak
-    `term_sheet.gd` doc yorumları; cleanup raporu B048.
+    gerekir). Birimi netleştiren yeniden yazım tireyi de kaldırır (önce EN, sonra TR).
+  - Kaynak: GDD ch09 (Funding & Investors) ve ch12 (UI Surfaces & ODA) geri sayım birimini söylemiyor. Tire: ch01 §9,
+    CLAUDE.md §5. Kaynak `term_sheet.gd` doc yorumları; cleanup raporu B048.
 
 - **59 · VC'nin zayıf boyut tabanı ham eksenle karşılaştırılıyor; ürün uyumu bonusu fiilen hiç verilmiyor.**
   - Ne oluyor: `VCPitchSystem._weakest_dimension` literal `< 40.0` çalışma tabanını,
@@ -1191,11 +1199,16 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   `SEED_DOOR_TITLE`, `SEED_DOOR_BODY` ve `SEED_DOOR_GO` metniyle 7946ff3'ten beri canlı; Frank v6 yüzey 12 bu kartı
   "yeniden tasarlanacak" diye metinsiz bırakıyor, metnin sahip onayı belirsiz. FRANK_UNWIRED §1, §5 ve §6 bayat: seed
   kapısının metni var, `goto_tab` fiili yedi kartta çalışıyor, `FIN_SUBTAB_INVESTMENT` EN'i "Funding"; belge güncellenmeli.
-  Kodun okumadığı ama karar gelene kadar CSV'de kalan Frank metni: `VC_EV_DEAL_TITLE`, `DEAL_PROMPT_LINE`,
-  `DEAL_PROMPT_SIT`, `DEAL_PROMPT_VALIDITY`, `DEAL_PROMPT_DEFER`, `VC_EV_SKIP_MEETING`, `VC_EV_ACK`,
-  `END_EV_PIVOT_TITLE`, `END_EV_PIVOT_BODY`, `END_EV_PIVOT_ACCEPT`, `END_EV_PIVOT_DECLINE`, `PITCH_S0_NPC`, `PITCH_S0_INNER`,
-  `PITCH_INNER_CLOSED`, `PROD_SHIP_VERSION_BODY`, `PROD_SHIP_FIRST_READY`, `PROD_SHIP_FIRST_BODY`,
-  `PROD_DESIGN_CEILING_NOTE`, `PROD_DESIGN_DECISION_BODY`, `PROD_ITER_CEILING_NOTE`.
+  `docs/writing/FRANK_VOICE_INVENTORY.md` kodu satır numarasıyla anıyor ve atıflar kaymış: `time_manager.gd:45`
+  INITIAL_HOUR (bugün 25. satır), `time_manager.gd:115-143`, `:245-279` (günlük yuva sırası hâlâ artık olmayan
+  EventManager'ı sayıyor; günlük dağıtıcı `TimeManager._dispatch_daily_tick`), `:344-355` ve `:402-404` (dosya 227
+  satır), `event_manager.gd:804-816` (dosya yok). Belgede yaklaşık 90 dosya:satır atfı var; sahip bu gerçekleri
+  tazeler ya da satır numaralarını sembol adına çevirir. Kodun okumadığı ama karar gelene kadar CSV'de kalan Frank
+  metni: `VC_EV_DEAL_TITLE`, `DEAL_PROMPT_LINE`, `DEAL_PROMPT_SIT`, `DEAL_PROMPT_VALIDITY`, `DEAL_PROMPT_DEFER`,
+  `VC_EV_SKIP_MEETING`, `VC_EV_ACK`, `END_EV_PIVOT_TITLE`, `END_EV_PIVOT_BODY`, `END_EV_PIVOT_ACCEPT`,
+  `END_EV_PIVOT_DECLINE`, `PITCH_S0_NPC`, `PITCH_S0_INNER`, `PITCH_INNER_CLOSED`, `PROD_SHIP_VERSION_BODY`,
+  `PROD_SHIP_FIRST_READY`, `PROD_SHIP_FIRST_BODY`, `PROD_DESIGN_CEILING_NOTE`, `PROD_DESIGN_DECISION_BODY`,
+  `PROD_ITER_CEILING_NOTE`.
 
 ## Kod ve test altyapısı
 

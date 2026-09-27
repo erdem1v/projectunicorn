@@ -62,7 +62,7 @@ static func install() -> void:
 	EvSeams.register("musteri.total_mrr", G, TYPE_INT,
 		func() -> int: return CustomerRegistry.get_total_mrr(), "Sales", "")
 	EvSeams.register("musteri.min_satisfaction", G, TYPE_INT,
-		func() -> int: return CustomerRegistry.get_min_satisfaction(""), "Sales", "worst account")
+		func() -> int: return CustomerRegistry.get_min_satisfaction(), "Sales", "worst account")
 	EvSeams.register("musteri.at_risk_count", G, TYPE_INT,
 		func() -> int: return B2BSalesSystem.attention_count(),
 		"Sales", "accounts currently in Risk")

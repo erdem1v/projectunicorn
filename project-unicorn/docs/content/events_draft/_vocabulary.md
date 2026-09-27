@@ -138,14 +138,14 @@ slot of that type (§17.12).
 | `finance.cash` | global | int | Finance | WRAPPER over GameState.cash; MAY BE NEGATIVE, which is what starts the shutter |
 | `finance.daily_burn` | global | int | Finance | WRAPPER; day 1 is $50 |
 | `finance.daily_net` | global | int | Finance | signed |
-| `finance.growth_streak_months` | global | int | Finance | consecutive closed months of MRR growth; no longer a Series A gate condition (K1) |
+| `finance.growth_streak_months` | global | int | Finance | consecutive closed months of MRR growth |
 | `finance.investor_equity_pct` | global | int | Finance | 0-100 |
 | `finance.months_closed` | global | int | Finance | WRAPPER; capped at 12 by the ledger |
 | `finance.mrr` | global | int | Finance | WRAPPER; the headline revenue number |
 | `finance.peak_mrr` | global | int | Finance | WRAPPER; high-water mark |
 | `finance.profit_streak_months` | global | int | Finance | consecutive closed months in the black with no red days |
 | `finance.reputation` | global | int | Finance | WRAPPER; clamped -10..100 |
-| `finance.runway_days` | global | int | Finance | WRAPPER, filed as YOK; 9999 stands for default-alive |
+| `finance.runway_days` | global | int | Finance | WRAPPER; 9999 stands for default-alive |
 | `finance.runway_months` | global | float | Finance | INF when net >= 0 — compare with '<', never '>' |
 | `finance.shutter_days_left` | global | int | Finance | WRAPPER; -1 when not counting, else counts down |
 | `finance.shutter_days_total` | global | int | Finance | the shutter window; card text interpolates this rather than typing it |
@@ -185,7 +185,7 @@ slot of that type (§17.12).
 | `funding.seed_pitch_used` | global | bool | Funding | the run's one seed meeting has been spent |
 | `funding.seed_taken` | global | bool | Funding | a seed round was signed this run |
 | `funding.sheet_days_left` | global | int | Funding | business days; 9999 when no sheet is live |
-| `funding.sheet_decision_due` | global | bool | Funding | K10: a Series A sheet's window has closed and waits for sit-or-decline |
+| `funding.sheet_decision_due` | global | bool | Funding | a Series A sheet's window has closed and waits for sit-or-decline |
 
 ### `hr.`
 
@@ -211,7 +211,7 @@ slot of that type (§17.12).
 | `hr.raise_cooldown_left` | entity | int | HR | days until a raise is allowed again; 0 means now |
 | `hr.resign_voice` | entity | string | HR | the per-person resignation line |
 | `hr.salary` | entity | int | HR | WRAPPER over Character.monthly_salary, USD/month |
-| `hr.salary_band_position` | entity | float | HR | WRAPPER, filed as YOK: <0 under the band, 0..1 inside it |
+| `hr.salary_band_position` | entity | float | HR | WRAPPER: <0 under the band, 0..1 inside it |
 | `hr.short_day_active` | entity | bool | HR | hours below 8 |
 | `hr.status` | entity | string | HR | active | on_leave | training |
 | `hr.tenure_days` | entity | int | HR | days on the payroll; 0 when hire_day was never stamped |
@@ -308,10 +308,10 @@ slot of that type (§17.12).
 |---|---|---|---|---|
 | `time.day` | global | int | Time | WRAPPER; absolute game day, starts at 1. GameState owns it, not TimeManager |
 | `time.hour` | global | int | Time | WRAPPER; 0-23 |
-| `time.is_paused` | global | bool | Time | WRAPPER, filed as YOK: there is no named predicate for this |
+| `time.is_paused` | global | bool | Time | WRAPPER; there is no named predicate for this |
 | `time.month` | global | int | Time | 1-12; real month lengths, not 30-day blocks |
 | `time.run_active` | global | bool | Time | WRAPPER; false once a terminal has fired |
-| `time.speed` | global | int | Time | WRAPPER; 0 paused, 1-3. The 4x rung was removed 2026-08-19 |
+| `time.speed` | global | int | Time | WRAPPER; 0 paused, 1-3 |
 | `time.weekday` | global | int | Time | 0-6 from the real calendar; day 1 is a Thursday, 1 Jan 2026 |
 
 ### `urun.`
