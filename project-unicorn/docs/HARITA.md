@@ -113,7 +113,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Yer:** `scripts/systems/{rnd_system,research_tree,research_seam}.gd`, `scripts/tabs/rnd_tab.gd`, `scripts/tabs/rnd/`, `scripts/modals/rnd_card_modal.gd`, `scripts/ui/components/{research_bar,research_bar_model}.gd`, `scenes/tabs/RnDTab.tscn`, `scenes/modals/RnDCardModal.tscn`, `scenes/ui/components/ResearchBar.tscn`, `data/techtree/rnd_tree.json`
 - **Sahip:** sınıf `RnDSystem`, `ResearchTree`, `ResearchSeam`; UI `RnDUiShared`, `RnDTreeView`, `RnDDetailPanel`, `RnDAssignPanel`
 - **Giriş:**
-  - `RnDSystem.daily_tick`, `start`, `pause`, `set_assignees`, `tree_open`, `active`, `progress`, `days_estimate`, `node_completed`, `state_of`.
+  - `RnDSystem.daily_tick`, `start`, `pause`, `set_assignees`, `tree_open`, `active`, `progress`, `days_estimate`, `area_has_star`, `missing_star_area`, `node_completed`, `state_of`.
   - `ResearchTree` `rnd_tree.json`'u okur (`children_of`, `cash_of`, `stars_of`).
   - `ResearchSeam.completed`, `placement`, `family`, `node_name` ürün hat kapılarının ve satışın okuduğu Ar-Ge kapısıdır.
   - Kartlar `EventBus.rnd_card_requested` ve ilk not için `product_note_issued` → `main.gd` → `RnDCardModal`.

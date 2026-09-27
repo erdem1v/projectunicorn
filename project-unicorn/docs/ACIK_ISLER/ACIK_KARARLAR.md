@@ -385,6 +385,95 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Kaynak: GDD ch09 §5; ACIK_KARARLAR 'Seam envanterinin açık YOK satırları' (finance.valuation()) ve 'Satın alma
     sonu'; docs/writing/FRANK_UNWIRED.md
 
+- **23 · Aylık ürün notu Ar-Ge sekmesinde okunamıyor; rozet sönmüyor.**
+  - Ne oluyor: Koşunun ilk notu bir kez modal açılıyor. Sonraki notların, ya da ilk modal Esc ile kapatıldıysa o
+    notun, okunacağı bir yüzey yok. RnDSystem._note_unread true kalıyor, mark_note_read'i çağıran bir sekme yüzeyi
+    yok, Ar-Ge ray rozeti (attention_count) koşu boyunca yanık kalıyor. RND_NOTE_FIRST_HINT oyuncuya 'bundan sonra bu
+    not her ay Ar-Ge sayfasında' diyor, ama sayfada not yok. RND_NOTE_UNREAD ve RND_NOTE_OPEN bu yüzeyin park edilmiş
+    etiketleri.
+  - Nerede: scripts/systems/rnd_system.gd (note_pending, pending_note, mark_note_read, take_first_note_modal,
+    attention_count); scripts/tabs/rnd_tab.gd (sayfada not yüzeyi yok); scripts/modals/rnd_card_modal.gd (_build_note,
+    _read_and_close); scripts/main/main.gd (product_note_issued → ilk not modalı); localization/strings.csv
+    RND_NOTE_UNREAD, RND_NOTE_OPEN, RND_NOTE_FIRST_HINT
+  - Oyuncuya etkisi: İkinci aydan itibaren raporlar görünmez oluyor. Rozet sürekli 1 (donmuş araştırma varsa 2)
+    gösteriyor ve gerçek bir donmayı haber verme işlevini yitiriyor. İlk modaldaki ipucu karşılığı olmayan bir söz
+    veriyor.
+  - Seçenekler: A) Ar-Ge sayfasına bir not şeridi eklenir: 'OKUNMADI · Aç' → RnDCardModal note (ipucu satırı olmadan)
+    → mark_note_read. GDD §6.1'in tarif ettiği yol budur, yeni UI işidir. B) Ara çözüm: Ar-Ge sekmesi açılınca not
+    okunmuş sayılır ve rozet söner; not yine okunamaz. C) Her rapor modal açar; bu §6.1 MÜHÜRLÜ kuralına aykırı olduğu
+    için GDD değişikliği ister.
+  - Kaynak: Ar-Ge GDD §6.1 (MÜHÜRLÜ teslim biçimi), §5.6.2 (rozet sayımı), §10 (arge.note_pending)
+
+- **24 · Düğüm kartında gereksinim satırı ham '{area} {stars}' basıyor.**
+  - Ne oluyor: RnDDetailPanel._add_state_body açılmış ya da kilitli düğümde RND_REQ_STARS ('{area} {stars}')
+    anahtarını {"n": yıldız} ile formatlıyor, yer tutucular dolmuyor. Ekranda 'Ürün alanı · {area} {stars} · ~4 gün
+    (Kurucu)' görünüyor. Düzeltme bir metin kararı istiyor: yıldız ★2 mi yazılır, 2★ mı (SALES_BAND_STAR '{n}★'),
+    yoksa sayı mı; RND_AREA_OF ('{area} alanı') parçası kalır mı; iki alanlı düğümde iki gereksinim nasıl dizilir.
+    İlişkili ret metni RND_NEED_STARS ('{area} alanında {n} yıldız gerekiyor.') GDD'nin 'Ürün ★2 gerekiyor.'
+    biçiminden farklı. GDD'nin biçimine uyan RND_NEED_AREA ('{area} {stars} gerekiyor.') kullanılmıyor.
+  - Nerede: scripts/tabs/rnd/rnd_detail_panel.gd (_add_state_body, varsayılan kol); scripts/tabs/rnd/rnd_ui_shared.gd
+    (area_parts, refusal_text REFUSE_STARS); localization/strings.csv RND_REQ_STARS, RND_AREA_OF, RND_NEED_STARS,
+    RND_NEED_AREA
+  - Oyuncuya etkisi: Araştırılabilir her düğümün kartında ham yer tutucu görünüyor. Oyuncu gereken yıldız eşiğini
+    Başlat'tan önce okuyamıyor, oysa §5.5 bunu MÜHÜRLÜ kural olarak istiyor.
+  - Seçenekler: A) §5.5 biçimi: alan parçası yerine her alan için 'Ürün ★2' (RND_REQ_STARS {area}, {stars}='★2'); ret
+    satırı RND_NEED_AREA'ya geçer ve RND_NEED_STARS silinir. B) §8 örneği: 'Ürün alanı · ~9 gün (Kurucu)' kalır,
+    yıldız ayrı parça olarak 'Ürün alanı ★2' biçiminde birleşir. C) Yalnız yer tutucu düzeltilir, 'Ürün alanı · Ürün
+    ★2 · …' tekrarı kabul edilir. Her seçenekte TR/EN onay bekler.
+  - Kaynak: Ar-Ge GDD §5.5 (MÜHÜRLÜ: 'Ürün ★2 · ~9 gün · Kurucu', 'Ürün ★2 gerekiyor.'), §7 ('Yazılım ★2 gerekiyor.'),
+    §8 (kart örneği 'Ürün alanı · ~9 gün (Kurucu) · GPU kirası $600')
+
+- **25 · Atama panelinde izindeki ya da eğitimdeki kişi seçilebiliyor ama koltuğa oturmuyor.**
+  - Ne oluyor: RnDAssignPanel._person_row meşgul (izinde, eğitimde, kurucu pitch hazırlığında) kişiyi soluk ama
+    seçilebilir bırakıyor; gerekçesi 'oyuncu onu yine de seçebilmeli'. CharacterRegistry.assign_job STATUS != ACTIVE
+    olan kişiyi 'inactive' diye reddediyor ve RnDSystem.set_assignees onu yalnız push_warning ile düşürüyor. Seçim
+    kabul edilmiş görünüyor ama kişi atanmıyor. Seçilenlerin hepsi meşgulse Başlat REFUSE_ZERO ile kapanıyor ve
+    RND_ASSIGN_ZERO 'Seçtiklerinin hiçbiri bu alanda çalışmıyor.' diyor; bu cümle gerçek sebebi (izin ya da eğitim)
+    söylemiyor.
+  - Nerede: scripts/tabs/rnd/rnd_assign_panel.gd (_person_row, _on_commit); scripts/systems/rnd_system.gd
+    (set_assignees, start_refusal REFUSE_ZERO, research_per_day); scripts/autoload/character_registry.gd (assign_job
+    'inactive'); localization/strings.csv RND_ASSIGN_ZERO
+  - Oyuncuya etkisi: Oyuncu izindeki birini araştırmaya koyduğunu sanıyor; o kişi döndüğünde araştırmada olmuyor. Ret
+    cümlesi yanlış sebep gösteriyor.
+  - Seçenekler: A) Meşgul satırlar seçilemez olur (görünür kalır, gerekçesi 'İzinde · 12g sonra katılır' satırı). B)
+    HR, izindeki ya da eğitimdeki kişiyi araştırmaya oturtur (§7'deki 'atama silinmez, dönünce devam' mantığının yeni
+    atamaya uzatılması; Ekip sahibinin dosyası). C) Seçim kalır, Uygula ya da Başlat oturtulamayan kişiyi adıyla bir
+    satırda bildirir ve REFUSE_ZERO metni izin ya da eğitimi söyler.
+  - Kaynak: Ar-Ge GDD §5.3 (panel havuzu), §5.5 (sıfır katkı koruması), §7 ('Araştırmadaki kişi izne çıkar' satırı;
+    yeni atama için sessiz); Ekip GDD §12.3
+
+- **26 · Kilitli yuvada '?' ve çapraz koşul satırı yok.**
+  - Ne oluyor: GDD kilitli yuvayı '? Ürün' diye yazıyor; RND_LOCKED_SLOT değeri '{area}', '?' yok. Sürpriz duvar
+    yasağı çapraz koşullu devam düğümünün kilitli yuvasında 'Başka bir ailede bir araştırma ister.' yazılmasını
+    istiyor; RND_NEED_CROSS_BLIND CSV'de var ama hiçbir kod onu okumuyor. Karo küçük (MicroLabel, ortalı), bu yüzden
+    ikinci satırın karoda mı, üzerine gelince mi, yoksa derin bağla seçilince detay kartında mı görüneceği bir
+    yerleşim kararı.
+  - Nerede: scripts/tabs/rnd/rnd_tree_view.gd (_make_tile, TILE_LOCKED dalı); scripts/tabs/rnd/rnd_detail_panel.gd
+    (_add_blockers, kilitli düğüm); localization/strings.csv RND_LOCKED_SLOT, RND_NEED_CROSS_BLIND
+  - Oyuncuya etkisi: Oyuncu kilitli yuvanın bir araştırma olduğunu '?' ile okuyamıyor. Çapraz koşul ancak ad
+    açıldıktan sonra görünüyor, yani §3'ün yasakladığı sürpriz duvar oluşuyor.
+  - Seçenekler: A) RND_LOCKED_SLOT '? {area}' olur; çapraz koşullu kilitli karoya ikinci MicroLabel satırı
+    RND_NEED_CROSS_BLIND eklenir. B) '?' eklenir; çapraz satırı yalnız karonun üzerine gelince ipucu olarak çıkar. C)
+    '?' eklenir; çapraz satırı derin bağla seçilen kilitli düğümün detay kartında (_add_blockers) yazılır. Her
+    seçenekte TR/EN onay bekler.
+  - Kaynak: Ar-Ge GDD §3 (MÜHÜRLÜ: kilitli yuva '? Ürün'; sürpriz duvar yasağı), §5.5, §8 ('kilitli yuva (ad yok, ?)')
+
+- **27 · Üç düğümün adlandırılmış maliyet etiketi yazılmamış.**
+  - Ne oluyor: rnd_tree.json'da ai_engine, security_cert ve analytics_engine 'cost_label': true taşıyor. Kart
+    PROD_RND_NODE_<ID>_COST anahtarını arıyor (RnDUiShared.t_or), hiçbiri CSV'de yok, bu yüzden kart GDD'nin 'GPU
+    kirası $600' örneği yerine çıplak '$600' gösteriyor. GDD yalnız ai_engine için etiket veriyor ('GPU kirası');
+    security_cert ($900) ve analytics_engine ($400) için etiket yok.
+  - Nerede: data/techtree/rnd_tree.json (cost_label); scripts/tabs/rnd/rnd_detail_panel.gd (_add_state_body,
+    has_cost_label ve t_or); scripts/systems/research_tree.gd (has_cost_label); localization/strings.csv
+    (PROD_RND_NODE_*_COST yok)
+  - Oyuncuya etkisi: Nakit maliyetli üç düğümde oyuncu paranın neye gittiğini görmüyor. Kart GDD §8 örneğinden eksik
+    kalıyor.
+  - Seçenekler: A) Üç etiket yazılır (EN önce, TR ayrı adım): ai_engine 'GPU kirası {money}', security_cert ve
+    analytics_engine için yeni metin. B) Yalnız ai_engine etiketi yazılır, öteki ikisinden cost_label kaldırılır. C)
+    Etiket kuralı emekliye ayrılır: cost_label ve t_or kolu silinir, tutar çıplak kalır (GDD §8 örneği güncellenir).
+  - Kaynak: Ar-Ge GDD §8 (kart örneği 'GPU kirası $600'), §13 (nakit maliyetler [K]: ai_engine $600, analytics_engine
+    $400, security_cert $900), §12.1
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında

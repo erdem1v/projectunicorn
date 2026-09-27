@@ -2503,12 +2503,9 @@ RND_STATE_FROZEN,donmuş,frozen
 RND_STATE_DONE,tamamlandı,completed
 RND_LOCKED_SLOT,{area},{area}
 RND_UNLOCKS_PREFIX,Açtığı şey:,What it opens:
-RND_REQ_PREFIX,Gereksinim:,Requires:
 RND_START,Başlat,Start
-RND_DAYS,~{days} gün,~{days} days
 RND_DAYS_LEFT,~{days} gün kaldı,~{days} days left
 RND_AREA_OF,{area} alanı,{area} area
-RND_DAYS_TAKEN,{days} gün,{days} days
 RND_REQ_STARS,{area} {stars},{area} {stars}
 RND_WHO,{who},{who}
 RND_FROZEN_KEEPS,ilerleme korunuyor,progress is kept
@@ -2519,17 +2516,11 @@ RND_NEED_AREA,{area} {stars} gerekiyor.,It wants {area} {stars}.
 RND_ASSIGN_EMPTY,Bu alanda kimse yok.,Nobody in this area.
 RND_NEED_CROSS_BLIND,Başka bir ailede bir araştırma ister.,It wants research from another family.
 RND_NEED_CROSS_NAMED,Tamamlanmadı: {node} · {family},Not completed: {node} · {family}
-RND_ALSO_REQUIRES,Ayrıca: {node} · {family},Also: {node} · {family}
 RND_ASSIGN_TITLE,ata,assign
-RND_ASSIGN_HEADER_AREA,{area} yıldızı olanlar · kurucu her zaman,people with {area} stars · the founder always
-RND_ASSIGN_HEADER_TWO,iki alanın ikisi de karşılanmalı,both areas have to be met
 RND_REQ_MET,karşılandı,met
 RND_REQ_UNMET,eksik,missing
-RND_FOOTER_EMPTY_SIDE,{area} tarafı boş,the {area} side is empty
 RND_BAR_TITLE,ARAŞTIRMA,RESEARCH
 RND_BAR_PAUSE,duraklat,pause
-RND_BAR_RESUME,sürdür,resume
-RND_DONE_CARD_DROPPING,tamamlandı · keşif kartı düşüyor,completed · a discovery card is landing
 RND_DISCOVERY_TITLE,KEŞİF,DISCOVERY
 RND_OPENED_PREFIX,Açıldı:,Opened:
 RND_HIDDEN_LINE_OPENED,Yeni özellik hattı açıldı: {line},A new feature line has opened: {line}
@@ -2550,7 +2541,6 @@ RND_LEGEND_LOCKED,kilitli yuva,a locked slot
 RND_LEGEND_AVAILABLE,araştırılabilir,can be researched
 RND_LEGEND_DONE,tamamlandı,completed
 RND_LEGEND_COUNT,{families} aile × {per} araştırma = {total},{families} families × {per} = {total}
-RND_TAB_LOCKED_REASON,İlk sürüm yayınlanınca açılır.,It opens once the first version ships.
 HR_JOB_RESEARCH,Araştırma,Research
 HR_ASSIGN_RESEARCH_ELSEWHERE,Araştırma ataması Ar-Ge sayfasında yapılır.,Research is assigned on the R&D page.
 RND_ACTION_APPLY,uygula,apply

@@ -162,9 +162,8 @@ func _build_note(data: Dictionary) -> void:
 
 	# ÜÇ SATIR, ÜÇÜ DE AYNI BİÇİMDE. Çip yok, vurgu yok, sıra ipucu yok: kart bir
 	# TAVSİYE değil bir İKİLEM. Biri öne çıksaydı oyun kararı kendisi vermiş olurdu.
-	# `market` (b2b/b2c) satırların ANAHTARINDA yaşıyor — RND_NOTE_*_B2B_* / *_B2C_* —
-	# yani kart onu ayrıca etiketlemez ve burada okumaz. Bir gün kartın üstünde bir
-	# pazar rozeti isterse, o rozet bu paragrafın izniyle gelir, sessizce değil.
+	# Pazar (b2b/b2c) satırların ANAHTARINDA yaşıyor — RND_NOTE_*_B2B_* / *_B2C_* —
+	# yani kart onu ayrıca etiketlemez.
 	_body.add_child(_note_line(String(data.get("demand_key", "")),
 		{"line": String(data.get("line", ""))}, "RND_NOTE_DEMAND_NONE"))
 	_body.add_child(_note_line(String(data.get("rival_key", "")),

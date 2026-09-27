@@ -4,7 +4,7 @@ extends RefCounted
 # ============================================================================
 #  AR-GE — the research module's engine. GDD "AR-GE MODÜLÜ".
 #
-#  Pure statics driven by TimeManager's slot 2 (`_tick_rnd`). Not an autoload: Ar-Ge owns
+#  Pure statics driven by TimeManager._dispatch_daily_tick. Not an autoload: Ar-Ge owns
 #  no node lifetime and no signals-on-write.
 #
 #  Research is a bet paid in PEOPLE and TIME (§1): whoever researches does not make product.
@@ -94,13 +94,13 @@ static func _ensure_seeded() -> void:
 		_seed_states()
 
 
-## TimeManager slot 2 — after _tick_product (so it reads today's settled build/support/infra
-## state) and before _tick_hr.
+## TimeManager._dispatch_daily_tick runs this after the Product/Support/Infra ticks (so it
+## reads today's settled build/support/infra state) and before HRSystem.daily_tick.
 ##
 ## TWO ONE-DAY LAGS, both consistent with the tree's existing conventions: a node completing
-## on day N that moves an Infra or Support constant lands on N+1 because slot 1 already
-## ticked; and research speed on day N reads yesterday's settled morale because _tick_hr is
-## slot 3. Do NOT reorder — slot 1's Support-then-Infra ordering carries its own contract.
+## on day N that moves an Infra or Support constant lands on N+1 because those already
+## ticked; and research speed on day N reads yesterday's settled morale because HR ticks
+## after. Do NOT reorder — the Support-then-Infra ordering carries its own contract.
 static func daily_tick() -> void:
 	if not tree_open():
 		return  # §2 ağaç kapalı; §7 canlı ürün yokken rapor da gelmez
@@ -236,7 +236,7 @@ static func start_refusal(node_id: String, ids: Array) -> String:
 		return REFUSE_CROSS
 	if not _cash_ready(node_id):
 		return REFUSE_CASH
-	if not _stars_met(node_id):
+	if missing_star_area(node_id) != "":
 		return REFUSE_STARS
 	if ids.is_empty():
 		return REFUSE_NOBODY
@@ -268,9 +268,12 @@ static func start(node_id: String, assignee_ids: Array) -> String:
 		# HR seated nobody (every pick was refused, e.g. inactive). Starting a research
 		# that is frozen from its first second is the same unwarned loss §5.5's guard
 		# refuses, so roll back rather than open a bar that will never move. Progress and
-		# `_paid` are untouched, and the cash below has not been charged yet.
+		# `_paid` are untouched, and the cash below has not been charged yet. set_assignees
+		# already published the freeze edge for this node, so close it here: otherwise the
+		# badge and the tracker keep a frozen research that no longer exists.
 		_states[node_id] = STATE_REVEALED
 		_active = ""
+		emit_edges()
 		return REFUSE_NOBODY
 
 	# §5.3 — nakit BAŞLARKEN düşer, ve yalnız gerçekten başlayan bir araştırma için.
@@ -360,19 +363,21 @@ static func _cash_ready(node_id: String) -> bool:
 	return GameState.cash >= cost
 
 
-## §5.2 · §12.6 — is there ANYBODY in each required area at the node's threshold?
-## Company-wide, and deliberately NOT through LineGates: Ürün §12.7 reads raw skill there so
-## an on-leave person still counts, because that gate is about what the COMPANY can build.
-## Ar-Ge's gate is about who can work today, so it reads effective output. Two different
-## questions; they must not share a function.
-static func _stars_met(node_id: String) -> bool:
+## §5.2 · §7 — the first required area with nobody at the node's threshold, "" if every
+## area is covered. The refusal line names this area, so a two-area node says which one.
+static func missing_star_area(node_id: String) -> String:
 	for area in ResearchTree.areas_of(node_id):
-		if not _area_has_star(node_id, String(area)):
-			return false
-	return true
+		if not area_has_star(node_id, String(area)):
+			return String(area)
+	return ""
 
 
-static func _area_has_star(node_id: String, area: String) -> bool:
+## §5.2 · §12.6 — is there ANYBODY in this area at the node's threshold? Company-wide, and
+## deliberately NOT through LineGates: Ürün §12.7 reads raw skill there so an on-leave person
+## still counts, because that gate is about what the COMPANY can build. Ar-Ge's gate is about
+## who can work today, so it reads effective output. Two different questions; they must not
+## share a function. The assignment panel's met/unmet chip reads this same rule.
+static func area_has_star(node_id: String, area: String) -> bool:
 	var want: int = ResearchTree.stars_of(node_id) * HRConstants.POINTS_PER_STAR
 	for c in eligible_assignees(node_id):
 		if int(c.role_stats.get(area, 0)) >= want and HRSystem.effective_skill(c, area) > 0.0:
@@ -557,8 +562,7 @@ static func _emerging_node(day: int) -> String:
 ## TEK BESTECİ: harness de (--modal-shot=rnd-note) bu fonksiyonu çağırır, sözlüğü elle
 ## kurmaz; elle kurulan bir kopya ayrışır.
 static func compose_note(author: Character) -> Dictionary:
-	var market: String = ProductState.market_type()
-	var suffix: String = "B2B" if market == "b2b" else "B2C"
+	var suffix: String = "B2B" if ProductState.market_type() == "b2b" else "B2C"
 	var day: int = GameState.day
 	var rival: String = _rival_name(day)
 	var node: String = _emerging_node(day)
@@ -569,11 +573,8 @@ static func compose_note(author: Character) -> Dictionary:
 	var tech_key: String = "" if node == "" \
 		else "RND_NOTE_TECH_%s_%d" % [suffix, _pick(NOTE_POOL_COUNT, "rnd_note_tech", day)]
 	return {
-		"day": day,
-		"author_id": author.id,
 		"author_name": author.character_name,
 		"author_role": author.role,
-		"market": market,
 		"demand_key": "",   # §6.4 — degraded until the demand generator ships
 		"rival_key": rival_key,
 		"tech_key": tech_key,

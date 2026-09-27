@@ -10,8 +10,8 @@ extends RefCounted
 #                    marka ne kadar parlarsa parlasın akışın beşte birini aşamaz
 #                    (ticker dünyadır, bizim basın ofisimiz değil)
 #
-# Kablolama: TimeManager._tick_industry_events → daily_tick() (slot 7a — sales ve
-# rivals SONRASI); TimeManager._ready → headline_added → on_headline_added.
+# Kablolama: TimeManager._dispatch_daily_tick → daily_tick() (sales ve rivals SONRASI);
+# TimeManager._ready → headline_added → on_headline_added.
 # Kalıcı durum: GameState.news_feed (fields-not-systems; tek yazar bu dosya).
 # RNG YASAK (ev kuralı) — tüm seçimler hash tabanlı deterministik aritmetik.
 # Repeat yok: bir sektör satırı havuz tükenene dek tekrar etmez, sonra reshuffle.

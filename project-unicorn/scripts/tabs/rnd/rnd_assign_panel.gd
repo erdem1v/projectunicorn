@@ -131,7 +131,8 @@ func _group_members(area: String) -> Array[Character]:
 	return out
 
 
-## "▾ Yazılım (3)" + KARŞILANDI/KARŞILANMADI çipi.
+## "▾ Yazılım (3)" + KARŞILANDI/KARŞILANMADI çipi. Çip motorun yıldız kapısını okur, yani
+## Başlat'ın RND_NEED_STARS reddiyle aynı cevabı verir (izindeki yıldız sahibi sayılmaz).
 func _group_header(area: String, members: Array[Character], is_open: bool) -> Control:
 	var bar := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
@@ -164,7 +165,7 @@ func _group_header(area: String, members: Array[Character], is_open: bool) -> Co
 		RnDUiShared.t("PROD_TEAM_GROUP_COUNT").format({"n": members.size()}),
 		&"MicroLabel", UiTokens.INK_FAINT))
 	row.add_child(RnDUiShared.spacer())
-	var met: bool = _area_met(area, members)
+	var met: bool = RnDSystem.area_has_star(_node_id, area)
 	row.add_child(UiFactory.make_state_chip(
 		RnDUiShared.t("RND_REQ_MET" if met else "RND_REQ_UNMET"),
 		UiTokens.ACCENT if met else UiTokens.INK_MUTED,
@@ -173,15 +174,6 @@ func _group_header(area: String, members: Array[Character], is_open: bool) -> Co
 	bar.add_child(row)
 	HRUiShared.set_mouse_ignore(row)
 	return bar
-
-
-## Karşılandı = grupta ham puanı (role_stats) ★eşiğine ULAŞAN biri var (§5.2 · §12.6).
-func _area_met(area: String, members: Array[Character]) -> bool:
-	var want: int = ResearchTree.stars_of(_node_id) * HRConstants.POINTS_PER_STAR
-	for c in members:
-		if int(c.role_stats.get(area, 0)) >= want:
-			return true
-	return false
 
 
 ## İKİ SATIRLIK SATIR: 1. satır ad + alan + yıldızlar, 2. satır ROL + müsaitlik.

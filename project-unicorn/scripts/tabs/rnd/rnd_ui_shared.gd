@@ -129,7 +129,7 @@ static func refusal_text(node_id: String, refusal: String) -> String:
 			return t("RND_ASSIGN_ZERO")
 		RnDSystem.REFUSE_STARS:
 			return t("RND_NEED_STARS").format({"n": ResearchTree.stars_of(node_id),
-				"area": HRConstants.area_label(String(ResearchTree.areas_of(node_id)[0]))})
+				"area": HRConstants.area_label(RnDSystem.missing_star_area(node_id))})
 		RnDSystem.REFUSE_CASH:
 			return t("RND_NEED_CASH").format({"amount": Fmt.money(ResearchTree.cash_of(node_id))})
 		RnDSystem.REFUSE_CROSS:
@@ -282,8 +282,8 @@ static func spacer() -> Control:
 ## YÜZDE ÇAPALI DOLGU (build_bar'ın reçetesi). StyleBoxFlat bir yüzde İFADE EDEMEZ,
 ## o yüzden dolgu ayrı bir düğümdür: sola çapalı Panel, genişliği `anchor_right`.
 ## Kap `clip_contents` ile kırpar, yani kart genişleyince dolgu oranını korur ve
-## elle yeniden boyutlandırma hiç gerekmez.
-static func fill_host(out_refs: Dictionary, key: String) -> Control:
+## elle yeniden boyutlandırma hiç gerekmez. Kabı `parent`a ekler, dolguyu döndürür.
+static func fill_host(parent: Control) -> Panel:
 	var host := Control.new()
 	host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	host.clip_contents = true
@@ -297,8 +297,8 @@ static func fill_host(out_refs: Dictionary, key: String) -> Control:
 	sb.anti_aliasing = false
 	fill.add_theme_stylebox_override("panel", sb)
 	host.add_child(fill)
-	out_refs[key] = fill
-	return host
+	parent.add_child(host)
+	return fill
 
 
 static func set_fill(fill: Panel, fraction: float) -> void:

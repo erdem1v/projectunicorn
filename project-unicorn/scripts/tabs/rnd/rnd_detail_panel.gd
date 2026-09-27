@@ -158,8 +158,8 @@ func _add_state_body(state: String) -> void:
 			if days > 0.0:
 				parts.append(RnDUiShared.days_text(days))
 		RnDUiShared.TILE_DONE:
-			# Süre parçası (`RND_DAYS_TAKEN`) yok: RnDSystem tamamlanma gününü saklamıyor
-			# ve sayı efordan ya da tahminden uydurulmaz.
+			# Süre parçası yok: RnDSystem tamamlanma gününü saklamıyor ve sayı efordan ya
+			# da tahminden uydurulmaz.
 			var opened: Array = ResearchTree.children_of(_node_id)
 			if opened.size() >= 2:
 				parts.append(RnDUiShared.t("RND_COMPLETED_UNLOCKED_TWO"))

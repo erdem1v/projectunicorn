@@ -278,8 +278,7 @@ func _make_tile(node_id: String) -> Control:
 
 	if state == RnDUiShared.TILE_LOCKED:
 		# KİLİTLİ YUVA: zemini YOK, çerçevesi tuvalin kesikli dikdörtgeni (bkz.
-		# _draw). Tek yazısı alanın adı (§3 — ağacın ŞEKLİ görünür, ADI değil; §3 ve
-		# §5.5 onu "? Ürün" diye yazar, RND_LOCKED_SLOT "?" taşımıyor). Tıklanmaz:
+		# _draw). Tek yazısı alanın adı (§3 — ağacın ŞEKLİ görünür, ADI değil). Tıklanmaz:
 		# kilitli bir karoyu tıklatmak adı sızdırırdı. Derin bağ (select) yine de
 		# seçebilir, çünkü orada adı zaten söyleyen bir sebep var.
 		tile.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -317,8 +316,8 @@ func _make_tile(node_id: String) -> Control:
 
 	# 2. DOLGU — yalnız koşan karoda; yüzde çapalı, kırpılmış.
 	if state == RnDUiShared.TILE_RUNNING:
-		tile.add_child(RnDUiShared.fill_host(_fills, node_id))
-		RnDUiShared.set_fill(_fills[node_id] as Panel, RnDSystem.progress(node_id))
+		_fills[node_id] = RnDUiShared.fill_host(tile)
+		RnDUiShared.set_fill(_fills[node_id], RnDSystem.progress(node_id))
 
 	# 3. ÇERÇEVE — dolgunun ÜSTÜNDE, yoksa dolgu kenarı yer.
 	var frame := Panel.new()

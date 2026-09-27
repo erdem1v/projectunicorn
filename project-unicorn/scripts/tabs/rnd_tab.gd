@@ -48,6 +48,12 @@ var _selected: String = ""
 
 
 func _ready() -> void:
+	# TASLAK NÖBETİ (creation_flow'un `creation_draft` emsali): dil ya da
+	# palet değişince router sayfayı yıkıp yeniden kuruyor; bayrak olmasaydı
+	# oyuncu okuduğu düğümden dışarı atılırdı. TÜKETİLİR VE SİLİNİR — bekleme
+	# sayfasında da, bayat bir seçim bir sonraki turda geri gelmesin.
+	var stashed: String = String(GameState.get_flag("rnd_selected", ""))
+	GameState.flags.erase("rnd_selected")
 	# İKİ SAYFA HÂLİ, TEK KAPI: `RnDSystem.tree_open()` (Ar-Ge §2, MÜHÜRLÜ). `version_shipped`
 	# dinlendiği için oyuncu sekme açıkken v1'i yayınlarsa sayfa ağaca döner.
 	if not RnDSystem.tree_open():
@@ -69,13 +75,6 @@ func _ready() -> void:
 	for sig in _signals:
 		sig.connect(_on_state_changed)
 	EventBus.rnd_node_requested.connect(select_node)
-
-	# TASLAK NÖBETİ (creation_flow'un `creation_draft` emsali): dil ya da
-	# palet değişince router sayfayı yıkıp yeniden kuruyor; bayrak olmasaydı
-	# oyuncu okuduğu düğümden dışarı atılırdı. TÜKETİLİR VE SİLİNİR — bayat bir
-	# seçim bir sonraki turda geri gelmesin.
-	var stashed: String = String(GameState.get_flag("rnd_selected", ""))
-	GameState.flags.erase("rnd_selected")
 	_refresh()
 	select_node(stashed)
 
@@ -199,9 +198,7 @@ func _build_bar() -> Control:
 	plate.add_theme_stylebox_override("panel", psb)
 	bar.add_child(plate)
 
-	var refs := {}
-	bar.add_child(RnDUiShared.fill_host(refs, "bar"))
-	_bar_fill = refs["bar"]
+	_bar_fill = RnDUiShared.fill_host(bar)
 
 	var pad := MarginContainer.new()
 	pad.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -312,14 +309,14 @@ func _paint_bar() -> void:
 	_bar_name.text = ResearchSeam.node_name(active)
 	RnDUiShared.set_fill(_bar_fill, p)
 	_bar_percent.text = RnDUiShared.percent_text(p)
-	# DONMUŞTA GÜN YAZILMAZ. `days_estimate` -1.0 döner ("katkı yok") ve o sayı
-	# asla bölünmez; yerine durumun kendi cümlesi geçer (§5.5 · §5.7). Donmuşsa cümle
-	# SEBEBİ söyler ve motordan okunur — tracker'la aynı cümle (§5.6.1).
+	# Tracker'ın kuralı (§5.6.1): donmuşsa cümle SEBEBİ söyler ve motordan okunur; değilse
+	# kalan gün. Atananların hepsi izinde ya da eğitimdeyse `days_estimate` -1.0 döner
+	# ("katkı yok", §5.5) ve satır boş kalır: araştırma donmuş değil, üstünde insan var.
+	var note: String = RnDSystem.freeze_note_key()
 	var days: float = RnDSystem.days_estimate(active, RnDSystem.assigned(active))
-	if days > 0.0:
-		_bar_days.text = RnDUiShared.days_text(days)
-		_bar_days.add_theme_color_override("font_color", UiTokens.INK_MUTED)
-	else:
-		var note: String = RnDSystem.freeze_note_key()
-		_bar_days.text = tr(note if note != "" else "BUILD_BUSY_NOBODY")
+	if note != "":
+		_bar_days.text = tr(note)
 		_bar_days.add_theme_color_override("font_color", UiTokens.ACCENT)
+	else:
+		_bar_days.text = RnDUiShared.days_text(days) if days > 0.0 else ""
+		_bar_days.add_theme_color_override("font_color", UiTokens.INK_MUTED)
