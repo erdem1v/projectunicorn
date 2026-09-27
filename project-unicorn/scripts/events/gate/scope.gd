@@ -31,11 +31,14 @@ const TYPES := [TYPE_EMPLOYEE, TYPE_FOUNDER, TYPE_CUSTOMER, TYPE_PROSPECT, TYPE_
 
 # --- Resolution ------------------------------------------------------------
 
-## Bind every declared slot. Returns {ok: bool, context: Dictionary, unresolved: String}.
+## Bind every declared slot. Returns {ok: bool, context: Dictionary, reason: String}, where
+## `reason` says which slot refused the card and why.
 ##
 ## `given` is what the caller already knows, per slot: a bare id (a signal's payload, a request)
-## or a frozen binding {type, id, ...} (an arc's subject, a scheduled entry's context). §4.3: what
-## the caller supplied wins, then the selector runs.
+## or a frozen binding {type, id, ...} (an arc's subject, a scheduled entry's context). §4.3: a
+## given slot binds that entity or refuses the card; only a slot the caller left out runs its
+## selector. A signal can drain after its entity is gone, and the selector would then put the
+## card on a different entity.
 ##
 ## REQUIRED SLOTS ARE RESOLVED FIRST. With two slots of one type and one candidate, declaration
 ## order could hand the only candidate to an optional slot and then fail the required one.
@@ -47,30 +50,32 @@ static func resolve(slots: Dictionary, given: Dictionary = {}) -> Dictionary:
 		var spec: Dictionary = slots[slot_name]
 		var type_id: String = String(spec.get("type", ""))
 		if not TYPES.has(type_id):
-			push_error("[EvScope] slot '%s' declares unknown type '%s'" % [slot_name, type_id])
-			return {"ok": false, "context": {}, "unresolved": slot_name}
+			var why: String = "slot '%s' declares unknown type '%s'" % [slot_name, type_id]
+			push_error("[EvScope] " + why)
+			return {"ok": false, "context": {}, "reason": why}
 
-		# A given id is still type-checked: binding the wrong kind would make the card lie
-		# about its own subject.
-		var chosen: String = ""
+		var chosen: String
 		if given.has(slot_name):
 			var g: Variant = given[slot_name]
-			var candidate: String = String((g as Dictionary).get("id", "")) \
+			chosen = String((g as Dictionary).get("id", "")) \
 				if typeof(g) == TYPE_DICTIONARY else String(g)
-			if _exists(candidate, type_id) and not used.has(candidate):
-				chosen = candidate
-		if chosen == "":
+			# Type-checked too: binding the wrong kind would make the card lie about its subject.
+			if not _exists(chosen, type_id) or used.has(chosen):
+				return {"ok": false, "context": context,
+					"reason": "slot '%s': the given %s '%s' is not a live %s or is already bound"
+						% [slot_name, type_id, chosen, type_id]}
+		else:
 			chosen = _select(type_id, String(spec.get("select", "")), used, context)
-
-		if chosen == "":
-			if bool(spec.get("required", true)):
-				return {"ok": false, "context": context, "unresolved": slot_name}
-			continue
+			if chosen == "":
+				if bool(spec.get("required", true)):
+					return {"ok": false, "context": context,
+						"reason": "slot '%s' could not be filled" % slot_name}
+				continue
 
 		used[chosen] = slot_name
 		context[slot_name] = {"type": type_id, "id": chosen, "bound_day": GameState.day}
 
-	return {"ok": true, "context": context, "unresolved": ""}
+	return {"ok": true, "context": context, "reason": ""}
 
 
 static func _required_first(slots: Dictionary) -> Array:

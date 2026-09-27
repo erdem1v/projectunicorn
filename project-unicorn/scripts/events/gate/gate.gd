@@ -66,8 +66,7 @@ class Verdict:
 ## Offer a card. Returns a Verdict; the caller does not decide anything.
 ##
 ## `given` is what the proposer already knows — a signal's payload, an arc's remembered
-## subject. It is a HINT: G5 still type-checks it, because a signal carrying the wrong kind of
-## id is a bug in the emitter and binding it anyway would make the card lie about its subject.
+## subject. G5 binds it or refuses the card (EvScope.resolve); it never swaps in another entity.
 static func propose(event_id: String, origin: Origin, given: Dictionary = {}) -> Verdict:
 	var forced: bool = origin == Origin.FORCE
 
@@ -89,7 +88,7 @@ static func propose(event_id: String, origin: Origin, given: Dictionary = {}) ->
 	if entity_keyed:
 		scope_result = EvScope.resolve(card["scope"], given)
 		if not scope_result["ok"]:
-			return Verdict.refuse("G5", "slot '%s' could not be filled" % scope_result["unresolved"])
+			return Verdict.refuse("G5", scope_result["reason"])
 
 	# G3 — latch
 	if not forced:
@@ -109,7 +108,7 @@ static func propose(event_id: String, origin: Origin, given: Dictionary = {}) ->
 		scope_result = EvScope.resolve(card["scope"], given)
 		if not scope_result["ok"]:
 			# §4.3: a silent refusal, logged, never an error and never a guess.
-			return Verdict.refuse("G5", "slot '%s' could not be filled" % scope_result["unresolved"])
+			return Verdict.refuse("G5", scope_result["reason"])
 	var context: Dictionary = scope_result["context"]
 
 	# G6, G7. An admitted card keeps its declared class until G8 assigns the presentation class

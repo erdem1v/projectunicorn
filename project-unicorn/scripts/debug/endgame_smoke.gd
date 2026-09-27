@@ -284,6 +284,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"founder_owns_accounts_manually":   fail = _case_founder_owns_accounts_manually()
 		"event_queue_dedupe_by_id":           fail = _case_event_queue_dedupe_by_id()
 		"event_instance_per_subject":         fail = _case_event_instance_per_subject()
+		"scope_given_subject_gone_refused":   fail = _case_scope_given_subject_gone_refused()
 		# --- Driver-run fixes, 2026-08-17. Each one FAILS against the pre-fix engine;
 		#     each was found by a 90-day driver run (--run-log), not by reading.
 		"promise_no_duplicate_word":          fail = _case_promise_no_duplicate_word()
@@ -5778,6 +5779,22 @@ static func _case_event_instance_per_subject() -> String:
 	if EventGate.desk_papers(8).size() != 1 \
 			or not EventGate.open_paper(String(EventGate.desk_papers(8)[0]["id"])):
 		return "a paper saved under its card id did not load onto the desk"
+	return ""
+
+
+## §4.3: a subject the caller named binds or the card is refused. A lost account's churn edge
+## drains after the account is removed; the `at_risk` selector must not hand its retention card
+## to another account in Risk. FALSIFICATION: let a given slot fall back to its selector.
+static func _case_scope_given_subject_gone_refused() -> String:
+	_seed_b2b(500)
+	var lost: Customer = _add_risk_b2b("lost", 800)
+	_add_risk_b2b("other", 900)
+	B2BSalesSystem._remove_lost(lost)
+	# What the signal drain proposes for that edge.
+	var v: EvGate.Verdict = EvGate.propose(RETAIN_ID, EvGate.Origin.SIGNAL, {"customer": lost.id})
+	if v.admitted or v.step != "G5":
+		return "the lost account's edge was not refused at G5 (step '%s', bound %s)" \
+			% [v.step, str(v.context)]
 	return ""
 
 

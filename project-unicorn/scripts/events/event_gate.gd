@@ -12,8 +12,7 @@ extends RefCounted
 
 ## Ask for a card by id. Returns true when it was admitted, or when this instance's waiting paper was
 ## opened instead (the Sales tab buttons use it).
-## `context` is a hint: the gate still type-checks it (§4.3), since binding a wrong-kind id would
-## make the card lie about its own subject.
+## `context` names the card's subjects: the gate binds them or refuses the card (§4.3).
 static func request(event_id: String, context: Dictionary = {}) -> bool:
 	return EvEngine.request(event_id, context)
 

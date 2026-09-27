@@ -15,6 +15,10 @@ Açık işlerin tek yeri bu klasördür.
   hata ya da sapma ayıklanacak. Gerçek hata düzeltilir, tasarım sorusu `ACIK_KARARLAR.md`'ye girer.
 - CSV süpürmesi: dalganın kullanılmaz bıraktığı anahtarlar (raporlarda 101 aday; `docs/writing/` ve
   `ACIK_KARARLAR.md`'de geçenler kalır, DRAFT-EN maddesindeki PRICE_TIP_PREMIUM ve PRICE_TIP_VOLUME dahil).
+## Olay motoru
+- Lint kuralı: bir arkın `reassign_event` / `close_event` kartı öznenin slotunu bildirirse, özne `entity_exists` ile
+  geçersizlendikten sonra G5'i hiç geçemez (§10.6'nın yasakladığı sessiz ölüm). Bugünkü kartlarda yok; kural eklenmeli.
+
 ## Görsel kabul
 - Temizlik dalgası 1 UI kodunu sadeleştirdi; görünür bir değişiklik amaçlanmadı ama commit'ler görsel kabulden geçmedi
   (kural dalgadan sonra geldi). Dokunulan ekranlar: Finans, Ar-Ge, Onboarding, Yatırım ve toplantı sahneleri, Satış,

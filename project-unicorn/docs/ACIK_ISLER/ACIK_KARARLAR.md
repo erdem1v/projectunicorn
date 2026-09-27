@@ -161,40 +161,32 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     kalır. K31 (toplantı diyaloglarının yazım turu) kapsamına alınabilir.
   - Kaynak: ONERI_v3 §2 (şüphe 5); ACIK_KARARLAR K31 maddesi.
 
-- **11 · Elde tutma kartı yalnız Risk'e girişte açılıyor ve gitmiş hesabın sinyali onu başka hesaba bağlıyor
-  (kalibrasyon).**
+- **11 · Elde tutma kartı yalnız Risk'e girişte açılıyor (kalibrasyon).**
   - Ne oluyor: `customer.retention` artık yalnız hesap Risk'e girerken açılıyor (`customer_health_changed`); önceden
-    Risk'teki her hesap her gün kart alıyordu. full_run tohum 1 (760 gün, ab863fa): retention kartı 438 → 261, CHURN
-    44 → 101, İNDİRİM 98 → 31, SÖZ 105 → 88; 730. gün MRR 409.490 → 278.481, marka 100 → 3. Bu rakamlar ikinci bir
-    sapmayla birlikte ölçüldü: `B2BSalesSystem._remove_lost` hesabı silmeden önce `set_lifecycle_phase(id,
-    "churning")` ile aynı sinyali yayıyor; motor tikinde hesap gitmiş olduğu için kapı seçiciye düşüyor ve kartı
-    Risk'teki başka bir hesaba bağlıyor (ilk örnek 70. gün, co_lead_57_35). Motor §4.3 çağıranın bağlamının
-    kullanıldığını ve tahmin yapılmadığını söyler. Verilen id gitmişse kartı G5'te reddeden sürüm ölçülüp geri alındı
-    (369dc57): retention 261 → 217, CHURN 101 → 153, İNDİRİM 31 → 0, 4. seçenek 18 → 0, SÖZ 88 → 84; 730. gün MRR
-    278.481 → 210.894, kasa 2,44M → 1,58M, müşteri 450 → 346, çalışan 13 → 7, marka 3 → 19. Bugünkü taban (f4b3460'tan
-    beri kart, temsilcinin tırmandırdığı hesapta açılmıyor): aynı koşuda retention kartı 314, `customer.cs_escalation`
-    34, CHURN 143, İNDİRİM 44, SÖZ 82; 730. gün MRR 289.134, müşteri 472. `cs_escalated` bir durumdur (atanmış ve
-    memnuniyet < 35); 1★ ve sektör eki olmayan atanmış hesabın toleransı 33 olduğu için böyle bir hesap Risk'te hep
-    tırmandırılmıştır ve elde tutma kartını hiç görmez. CHURN'ün tolerans kırılımı: 33 bandı 7 → 15, 42 bandı 17 → 47,
-    geri kalanı 77 → 81. `at_risk` seçicisi tırmandırılmış hesabı atlamıyor; kartın koşulu `musteri.cs_escalated ==
-    false` istediği için, yedek yolda seçicinin bağladığı en düşük memnuniyetli Risk hesabı tırmandırılmışsa kart
-    başka hesaba bağlanmıyor, reddediliyor. Son her ölçümde aynı (running_on_fumes); hiçbir sabit değişmedi.
+    Risk'teki her hesap her gün kart alıyordu (kartın kendi notu kararı girişe veriyor). Gitmiş hesabın sinyali
+    (`_remove_lost`'un "churning" kenarı) kartı artık Risk'teki başka bir hesaba bağlamıyor: verilen id gitmişse kart
+    G5'te gerekçesiyle reddediliyor (motor GDD §4.3). Kart, temsilcinin tırmandırdığı hesapta da açılmıyor (kodun
+    kendi `can_offer_retention` kuralı). Bugünkü taban (full_run tohum 1, 760 gün, --lang=tr): retention kartı 180
+    (Söz 30, Oyala 150, İndirim 0, 4. seçenek 0), `customer.cs_escalation` 35, CHURN 135, SÖZ 82; 730. gün MRR
+    213.135, kasa 1,76M, müşteri 313, çalışan 13, marka 6; son running_on_fumes. Temizlik öncesi aynı koşu retention
+    206, CHURN 66 ve 730. gün MRR 464.276 veriyordu. `cs_escalated` bir durumdur (atanmış ve memnuniyet < 35); 1★ ve
+    sektör eki olmayan atanmış hesabın toleransı 33 olduğu için böyle bir hesap Risk'te hep tırmandırılmıştır ve elde
+    tutma kartını hiç görmez, kararı `customer.cs_escalation` taşır. Hiçbir sabit değişmedi.
   - Nerede: `data/events/cards/customer/retention.json` (tetik, koşul, `cooldown_days`);
-    `scripts/autoload/customer_registry.gd` (`set_lifecycle_phase`, `customer_health_changed`);
-    `scripts/systems/b2b_sales_system.gd` (`_tick_customer`, `_remove_lost`); `scripts/events/gate/scope.gd`
-    (`resolve`, verilen id dalı); `scripts/events/gate/gate.gd` (`propose`, G5); `scripts/events/core/engine.gd`
-    (sinyal adımı); churn geri sayımı ve seçenek etkileri `scripts/systems/b2b_constants.gd`.
+    `scripts/autoload/customer_registry.gd` (`set_lifecycle_phase`, `customer_churn_countdown_changed`);
+    `scripts/systems/b2b_sales_system.gd` (`_tick_customer`, `_remove_lost`); churn geri sayımı ve seçenek etkileri
+    `scripts/systems/b2b_constants.gd`; probe botunun tercih sırası `scripts/debug/run_probe.gd`
+    (`RETAIN_PREFERENCE`).
   - Oyuncuya etkisi: Risk'e düşen hesap için karar bir kez sorulur; kaçırılırsa Satış sekmesindeki "İlgilen" kartı
-    yeniden açar. Giden hesabın kartı ise Risk'teki başka bir hesaba ikinci bir kurtarma şansı veriyor; koşudaki
-    indirim seçimlerinin hepsi bu yoldan geliyor. Geri sayım süresi ve Oyala/İndirim etkileri eski günlük soruya göre
-    oturmuş olabilir.
-  - Seçenekler: A) Verilen id gitmişse kart G5'te gerekçesiyle reddedilir (§4.3'ün lafzı); churn geri sayımı ve
-    Oyala/İndirim etkileri bu davranışla, tam probe setiyle yeniden kalibre edilir. B) Seçiciye düşme tasarım sayılır;
-    §4.3 ve §27'ye "verilen özne gitmişse seçici yeniden bağlar" yazılır; kalibrasyon bugünkü rakamlarla yapılır. C)
-    Günlük yeniden soru tasarım sayılır, eski davranış geri gelir; kartın notu ve Satış §19 buna göre yazılır. D)
-    İkisi de kalır, kalibrasyon sonraya.
+    yeniden açar. Kurtarma şansı artık her gün yenilenmediği ve başka hesaplara taşmadığı için daha çok hesap
+    kaybediliyor; geri sayım süresi ve Oyala/İndirim etkileri eski davranışa göre oturmuş olabilir. Tohumlu koşuda
+    İndirim hiç seçilmiyor.
+  - Seçenekler: A) Churn geri sayımı ve Oyala/İndirim etkileri bugünkü davranışla, tam probe setiyle yeniden kalibre
+    edilir. B) Günlük yeniden soru tasarım sayılır, eski davranış geri gelir; kartın notu ve Satış §19 buna göre
+    yazılır. C) Kalibrasyon sonraya.
   - Kaynak: Olay motoru GDD §4.3; Satış GDD §19 (retention kartı ve churn geri sayımı korunanlar arasında);
-    `retention.json` `_port_note`; probe ölçümleri (ab863fa, 369dc57 ve f4b3460; full_run:760:sim:1 --lang=tr).
+    `retention.json` `_port_note`; probe ölçümleri (ab863fa, f4b3460 ve §4.3 düzeltmesi; full_run:760:sim:1
+    --lang=tr).
 
 - **13 · Masadaki kağıdın öznesi giderse süre dolumu: ceza, not ve son uyarı birbirini tutmuyor.**
   - Ne oluyor: Kağıt, masaya düştüğünde öznelerini bağlıyor. Bir varlık kağıt masadayken giderse son gün uyarısı

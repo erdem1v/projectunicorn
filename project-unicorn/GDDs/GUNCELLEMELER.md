@@ -186,7 +186,7 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
 
 - **§10 Open decisions, 3. madde (isimli slot mu sabit ad mı); ilgili §2 cümlesi**
   - Eski metin: Tekrarlanan müşteri olaylarının isimli hesap slotuyla mı sabit isimlerle mi yazılacağı açıktır.
-  - Yürürlükteki kural: Kartlar ihtiyaç duydukları varlıkları isimli kapsam slotlarıyla bildirir (aynı tipten birden çok varlık varsa slot adı zorunlu); müşteri kartları bağlanan hesabı metinde `{customer}` ile anar, sabit isim yoktur. Aynı kart her özne için ayrı bir örnek olarak yaşar (motor GDD §20 A6, E2). Madde §10'dan düşer. Açık: gitmiş özneye verilen bağlam (ACIK_KARARLAR 12), seçicili tarama kartı (9), öznesi giden kağıdın süre dolumu (13).
+  - Yürürlükteki kural: Kartlar ihtiyaç duydukları varlıkları isimli kapsam slotlarıyla bildirir (aynı tipten birden çok varlık varsa slot adı zorunlu); müşteri kartları bağlanan hesabı metinde `{customer}` ile anar, sabit isim yoktur. Aynı kart her özne için ayrı bir örnek olarak yaşar (motor GDD §20 A6, E2). Madde §10'dan düşer. Açık: seçicili tarama kartı (ACIK_KARARLAR 9), öznesi giden kağıdın süre dolumu (13).
   - Kaynak: olay motoru GDD rev 2 §4.3, §17.12, §26 madde 4; 8c914ec.
 
 ## GDD v2 — 12 · UI Surfaces & ODA

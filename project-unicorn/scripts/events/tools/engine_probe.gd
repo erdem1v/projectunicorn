@@ -255,7 +255,7 @@ static func _check_scope() -> void:
 	var res: Dictionary = EvScope.resolve({"employee": {"type": "employee", "required": true}})
 	if employees.is_empty():
 		_ok("a required slot with no candidate REFUSES", not bool(res["ok"]))
-		_ok("and names the slot it could not fill", String(res["unresolved"]) == "employee")
+		_ok("and names the slot it could not fill", String(res["reason"]).contains("'employee'"))
 	else:
 		_ok("a required slot binds", bool(res["ok"]))
 

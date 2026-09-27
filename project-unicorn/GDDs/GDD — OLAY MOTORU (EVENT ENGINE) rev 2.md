@@ -214,7 +214,7 @@ sinyal / tik / ark adımı / schedule / havuz / taban / request / force
   zar (varsa) → EffectExecutor → History → Ark ilerlet → Sinyal yay
 ```
 
-**Sistemlerin tek public girişi** statik `EventGate.request(event_id: String, context: Dictionary = {})`'tir. Sistem kartın adını verir, kartı kurmaz. `context` §4.3'e göre çözülür: G5 verilen id'yi tip denetiminden geçirir. Verilen id bağlanamazsa (varlık gitmiş, tipi yanlış ya da başka slota bağlı) ne olacağı açık karardır (ACIK_KARARLAR 12). İstek `Origin.REQUEST` kökeniyle kapıya girer. İstenen örneğin kağıdı masada bekliyorsa istek kapıya gitmeden o kağıdı açar (§11.4).
+**Sistemlerin tek public girişi** statik `EventGate.request(event_id: String, context: Dictionary = {})`'tir. Sistem kartın adını verir, kartı kurmaz. `context` §4.3'e göre çözülür: G5 verilen id'yi tip denetiminden geçirir. Verilen id bağlanamazsa (varlık gitmiş, tipi yanlış ya da başka slota bağlı) kart G5'te gerekçesiyle reddedilir; seçiciye düşülmez. İstek `Origin.REQUEST` kökeniyle kapıya girer. İstenen örneğin kağıdı masada bekliyorsa istek kapıya gitmeden o kağıdı açar (§11.4).
 
 **`Origin.REQUEST` G4'ün tick eşleşmesini atlar;** hourly kartta `allowed_hours` ve build-safe denetimi yine uygulanır. `tick` kartı kimin süpürdüğünü söyler, adını kimin verebileceğini değil. `tick: request` kartını hiçbir saat süpürmez; `tick: daily` bir kartın adını da bir sistem verebilir.
 
