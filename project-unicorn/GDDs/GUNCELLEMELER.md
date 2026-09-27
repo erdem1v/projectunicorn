@@ -273,3 +273,8 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
   - Eski metin: Türkçe kanoniktir ve önce yazılır; İngilizce sonra, tek pastada yazılır.
   - Yürürlükteki kural: Oyuncu metni önce İngilizce yazılır. Türkçe ayrı bir yerelleştirme adımıdır: çeviri değil, sahneyi Türk okur için yeniden yazmak. Mühürlü Türkçe metinler olduğu gibi kalır. "Tek pastada" şartı kalktı; her metin yine bir anahtar olarak doğar. Çeviri kokusu yasağı sürer: İngilizce sözdizimiyle kurulmuş Türkçe cümle katalogdan geçmez. §11.5'in geri kalanı (PH yer tutucusu, düzyazıyı kimin yazdığı) açık karara bağlıdır ("Oyuncu metnini kim yazar").
   - Kaynak: sahip kararı 2026-09-26, 61f38bc; CLAUDE.md §5.
+
+- **§13 Kayıt, ilk paragraf (kaydedilen alanlar listesi)**
+  - Eski metin: Listede koşunun ilk 3★ hesabına dair bir kayıt yok.
+  - Yürürlükteki kural: Liste "koşunun ilk 3★ hesabı" ile genişler (§7.3 haber değeri; churn hesabı defterden siler, koşudan silmez). Kodda `GameState` bayrağı `sales_first_top_star_id`: ilk 3★ imzada `SalesSystem.add_b2b_customer` yazar, `SalesLedger.is_newsworthy_signing` okur.
+  - Kaynak: f4b3460 (ACIK_KARARLAR 3. madde kapandı; kodun doc yorumu ve §7.3 "koşunun ilk 3★'ı").
