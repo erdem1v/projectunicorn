@@ -624,8 +624,8 @@ say('rig ready');
     await post('DONE.txt', 'ok');
     say('AUTO EXPORT COMPLETE');
   } catch (e){
-    await post('DONE.txt', 'ERR ' + (e && e.message ? e.message : e));
     say('AUTO EXPORT FAILED: ' + e);
+    try { await post('DONE.txt', 'ERR ' + (e && e.message ? e.message : e)); } catch (_) {}
   }
 })();
 </script>

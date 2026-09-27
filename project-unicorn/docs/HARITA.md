@@ -15,7 +15,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
   - `TimeManager` günlük dağıtım sırası: ürün → Ar-Ge → ekip → satış → rakipler → finans → faz kapısı ve seed → olaylar → haber → VC → sonlar → ay özeti. Gün `EventBus.day_tick_completed` ile kapanır (autosave sınırı). Saatlik dağıtım: ürün ve destek, satış, olaylar.
   - Hız: istek `EventBus.speed_change_requested`, sonuç `TimeManager.speed_changed`; merdiven `TimeManager.SECONDS_PER_DAY`; `hold_clock` / `release_clock`.
   - `EventBus` sistemler arası sinyalleri taşır. İstisna: `TimeManager.speed_changed` (TopBar hız düğmelerini buradan boyar). `# --- X ---` bölüm başlıklarını `tools/gen_signal_manifest.py` okur.
-  - `RngStreams.get_stream(id)`, `reseed(run_seed)`; `SkillCheck.resolve`, `chance_for`; `Fmt.money`, `percent`, `number`, `month_name`.
+  - `RngStreams.get_stream(id)`, `reseed(run_seed)`; `SkillCheck.resolve`, `chance_for`; `Fmt.money`, `percent`, `number`, `month_name`, `upper`.
   - Olay seam'leri `time.*` (`seams_world.gd`).
 - **Smoke:** her vaka `GameState.initialize_run`'dan geçer. Adanmış: `speed_*` (`speed_tracks_team_change` hariç), `smoke_seed_pinned`, `run_ledger`, `growth_streak_semantics`, `month_history_*`.
 - **Probe:** `BEGIN`, `STATE`, `WEEK`, `END`, `ERROR`. Gerçek saat modları (`:1|2|3`) probe'da `TimeManager._drain_boundaries`'ı gerçek saatle süren tek moddur.
@@ -57,7 +57,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Yer:** `scripts/theme/{ui_tokens,ui_factory,build_theme}.gd`, `themes/master_theme.tres` (üretilmiş), `scripts/ui/components/{bar_kit,star_rating,value_slider,dialogue_portrait_card}.gd`, `scenes/ui/components/DialoguePortraitCard.tscn`, `scenes/debug/ThemeProbe.tscn`, `assets/fonts/`, `assets/icons/` kökündeki genel ikonlar
 - **Sahip:** sınıf `UiTokens`, `UiFactory`, `StarRating`, `ValueSlider`, `DialoguePortraitCard`
 - **Giriş:**
-  - `UiTokens`: palet, yazı merdiveni, `THEME_STAMP`; yardımcılar `tr_upper`, `format_money`, `positive`, `negative`, `badge_palette`, `build_percent`.
+  - `UiTokens`: palet, yazı merdiveni, `THEME_STAMP`; yardımcılar `format_money`, `positive`, `negative`, `badge_palette`, `build_percent`.
   - `UiFactory.make_label`, `make_badge`, `make_card`, `make_pill`, `make_state_chip`, `make_section_header`, `make_centered_column`, `make_placeholder_column`, `initials_of`, `clear`, `is_left_click`.
   - `build_theme.gd` token → tema dönüştürücüsüdür: `godot --headless --path . -s res://scripts/theme/build_theme.gd`. `main.gd` açılışta `master_theme.tres` damgasını `THEME_STAMP` ile karşılaştırır.
   - `bar_kit.gd` Build Bar ile Research Bar'ın ortak çizimidir. `DialoguePortraitCard` fonlama, satış ve onboarding tarafından paylaşılır.

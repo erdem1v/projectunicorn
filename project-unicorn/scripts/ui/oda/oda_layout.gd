@@ -16,8 +16,8 @@ extends RefCounted
 # 2. Her yüzey = düz Control sarmalayıcı (clip_contents=true, min-size yaymaz — set_size'ın
 #    minimuma yukarı clamp'i taşma üretemez) + içte full-rect temalı panel. Clip
 #    sarmalayıcıdadır (panelin kendi stylebox'ını ancak o kırpar). Monitör dahil.
-# 3. Okunabilirlik tabanı 9px (tip skalasının MICRO adımı): içerik host'a sığmıyorsa metin
-#    küçültülmez — asset büyümeli; karar Erdem'e.
+# 3. Okunabilirlik tabanı DisplaySettings.MIN_READABLE_FONT_PX (tip skalasının MICRO adımı):
+#    içerik host'a sığmıyorsa metin küçültülmez — asset büyümeli; karar Erdem'e.
 #
 # Kadraj notları:
 #   * Masa/duvar birleşimi ~y 0.76. Pano, çerçeve üçlüsü, pencere BOYALI.

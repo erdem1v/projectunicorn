@@ -37,7 +37,7 @@ extends RefCounted
 
 ## Bump in the SAME commit as any token or build_theme.gd edit, then re-run the
 ## generator. main.gd warns at boot (debug builds) when the baked stamp differs.
-const THEME_STAMP := 7
+const THEME_STAMP := 8
 
 # ============================================================================
 # PALETTE — every colour in the game lives here. Format: NAME := value # hex · role
@@ -495,7 +495,7 @@ static func format_money_exact(value: int) -> String:
 	return Fmt.money_exact(value)
 
 
-## Locale-aware uppercase: the Turkish i→İ rule applies only under Turkish.
+## Kept for existing callers; new code calls Fmt.upper.
 static func tr_upper(s: String) -> String:
 	return Fmt.upper(s)
 

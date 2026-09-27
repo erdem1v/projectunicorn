@@ -70,7 +70,6 @@ func _initialize() -> void:
 	_lbl(th, &"MicroLabel", mono_label, T.SIZE_MICRO, T.INK_DIM)   # SectionLabel'in MICRO-adım kardeşi
 	_lbl(th, &"MetricCaption", mono_label, T.SIZE_META, T.INK_FAINT)
 	_lbl(th, &"MetricValue", mono_sb, T.SIZE_LEAD, T.CREAM)
-	_lbl(th, &"MetricDelta", mono_reg, T.SIZE_SMALL, T.CREAM_DIM)
 	_lbl(th, &"MetricUnit", mono_reg, T.SIZE_META, T.INK_FAINT)
 	_lbl(th, &"TabLabel", mono_label, T.SIZE_META, T.INK_DIM)
 	_lbl(th, &"BadgeLabel", mono_reg, T.SIZE_MICRO, T.INK)
@@ -165,10 +164,7 @@ func _initialize() -> void:
 	_panel(th, &"ChipPositive", "PanelContainer", _box(T.POSITIVE_BG, T.RADIUS_S, T.POSITIVE_RULE, T.PAD_CHIP))
 	_panel(th, &"ChipNegative", "PanelContainer", _box(T.NEGATIVE_BG, T.RADIUS_S, T.NEGATIVE_RULE, T.PAD_CHIP))
 	_panel(th, &"ChoiceCard", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_CHOICE))
-	# Event-modal choice states: amber border on hover, and the MENTOR TAVSİYESİ card.
-	# Mentor stays shadow-free: the tab chip must overlap its top edge cleanly.
 	_panel(th, &"ChoiceCardHover", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.ACCENT, T.PAD_CHOICE))
-	_panel(th, &"ChoiceCardMentor", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.ACCENT, T.PAD_CHOICE))
 	_panel(th, &"HeaderBand", "PanelContainer", _sides_box(Color.TRANSPARENT, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.BORDER_DISABLED, T.PAD_STRIP))
 	# CardFloating: gövde üstünde yüzen kart (BuildHUD overlay'i).
 	var floating_sb := _box(T.CARD_FLOATING_BG, T.RADIUS_L, T.CARD_BORDER, T.PAD_CARD_TIGHT)
@@ -366,7 +362,7 @@ func _initialize() -> void:
 		th.set_color(key, &"SettingsDropdown", T.INK)
 	th.set_color("font_disabled_color", &"SettingsDropdown", T.INK_DIM)
 	# modulate_arrow tints the engine's arrow icon with the font colour; without it the
-	# arrow keeps its default tint.
+	# arrow keeps the engine's default tint and does not follow the field's ink.
 	th.set_constant("modulate_arrow", &"SettingsDropdown", 1)
 	th.set_constant("arrow_margin", &"SettingsDropdown", T.SPACE_M)
 	th.set_constant("h_separation", &"SettingsDropdown", T.SPACE_XS)

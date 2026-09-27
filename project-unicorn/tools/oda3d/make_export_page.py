@@ -163,7 +163,7 @@ function meshInventory(){
     await postText('DONE.txt', 'ok');
   } catch (e) {
     say('EXPORT FAILED: ' + e);
-    await postText('DONE.txt', 'ERR ' + (e && e.message ? e.message : e));
+    try { await postText('DONE.txt', 'ERR ' + (e && e.message ? e.message : e)); } catch (_) {}
   }
 })();
 </script>
