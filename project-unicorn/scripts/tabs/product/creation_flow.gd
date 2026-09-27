@@ -9,7 +9,7 @@ extends Control
 # KONSEPT TEK EKRAN, İKİ SÜTUNDUR: oyuncu kademeyi seçerken kimin taşıyacağını
 # görmelidir. Şeritteki "01 ÖZELLİKLER → 02 EKİP" bir ilerleme değil TELGRAFtır.
 #   · sol  : FeatureLinesView — 9 hat × 3 kademe (§12)
-#   · sağ  : ÜRÜN PROFİLİ (üçgen + eksen okumaları) + ProductTeamPanel
+#   · sağ  : ÜRÜN PROFİLİ (üçgen + eksen değerleri) + ProductTeamPanel
 #   · alt  : onay kartı (ad · toplam efor/maliyet/süre · Onayla ve Başlat)
 #
 # `_selected` PLANLANMIŞ KADEME kimlikleri tutar. Bu ekran hat durumlarına ASLA
@@ -39,6 +39,8 @@ const _BUILD_BAR_SCENE := preload("res://scenes/ui/components/BuildBar.tscn")
 const COL_RATIO_LINES := 1.9
 const COL_RATIO_SIDE := 1.0
 const RADAR_H := 190
+## Önizleme üçgeninin ölçek tabanı; en büyük eksen bunu aşınca ölçek onunla büyür.
+const PREVIEW_SCALE_FLOOR := 25.0
 ## Kilitli tip kartının soluklaştırması. Okunur kalmalı: kartın İŞİ Erken Erişim'in
 ## ne getireceğini söylemek, o yüzden silik değil YARI-GERİ çekilmiş.
 const LOCKED_CARD_ALPHA := 0.55
@@ -124,9 +126,7 @@ func repaint() -> void:
 # --- Kurulum ---------------------------------------------------------------
 
 func _rebuild() -> void:
-	for c in get_children():
-		remove_child(c)
-		c.queue_free()
+	ProductUiShared.clear(self)
 	_legend.clear()
 	_lines_view = null
 	_team_panel = null
@@ -376,6 +376,8 @@ func _on_type_card_input(ev: InputEvent, type_id: String) -> void:
 # --- 03 KONSEPT ----------------------------------------------------------------
 
 func _build_step3(body: VBoxContainer) -> void:
+	# Kilitli mod yalnız aktif build varken kurulur (setup) ve build bitince router sayfayı
+	# bırakır; kilitliyken `build` boş olamaz.
 	var build: FeatureBuild = ProductSystem.get_active_build() if _locked_mode else null
 	var type_name: String = ProductCatalog.type_name(_type_id)
 	if _locked_mode:
@@ -541,7 +543,7 @@ func _on_lead_changed(id: String) -> void:
 
 # --- Sağ sütun + alt bant ------------------------------------------------------
 
-## ÜRÜN PROFİLİ — üçgen + eksen okumaları. Yüzde ve "+N" YOK: hat modelinde kazanç
+## ÜRÜN PROFİLİ — üçgen + eksen değerleri. Yüzde ve "+N" YOK: hat modelinde kazanç
 ## kademenin kendi satırında yazıyor (§12.9).
 func _make_profile_card() -> Control:
 	var box := VBoxContainer.new()
@@ -554,7 +556,7 @@ func _make_profile_card() -> Control:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
 		row.add_child(UiFactory.make_dot(ProductUiShared.axis_color(String(axis)), 8))
-		var name_l := UiFactory.make_label(ProductUiShared.axis_label(String(axis)), &"RowName")
+		var name_l := UiFactory.make_label(ProductCatalog.axis_label(String(axis)), &"RowName")
 		name_l.custom_minimum_size = Vector2(76, 0)
 		row.add_child(name_l)
 		var bar := ProgressBar.new()
@@ -643,11 +645,11 @@ func _on_suggest_pressed() -> void:
 func _update_dynamic() -> void:
 	if _radar == null:
 		return
-	# §11.2/§11.3 — eksen okumaları TEK ZİNCİRDEN gelir. Konsept'te gösterilen,
-	# planın TABAN CİLA (×1,00) projeksiyonudur: tur sayısı TASARIM'da belirlenir ve
+	# §11.2 — gerçekleşen eksen değerleri (§11.3'ün çıtaya bölünmüş okuması değil). Konsept'te
+	# gösterilen, planın TABAN CİLA (×1,00) projeksiyonudur: tur sayısı TASARIM'da belirlenir ve
 	# bu ekran onu bilemez, o yüzden kart tam tasarımı (×1,15) vaat etmez (§5).
 	var dims: Dictionary = ProductSystem.projected_line_dims(_type_id, _selected)
-	var maxv: float = TriangleRadar.DEFAULT_MAX
+	var maxv: float = PREVIEW_SCALE_FLOOR
 	for axis in ProductUiShared.AXIS_KEYS:
 		maxv = maxf(maxv, float(dims.get(axis, 0.0)))
 	_radar.set_axes(dims, maxv)
@@ -665,17 +667,17 @@ func _update_dynamic() -> void:
 	var days: int = ProductSystem.estimate_line_build_days(_selected, _lead_id())
 	if cost > 0:
 		_totals_label.text = tr("PROD_TOTALS_COST").format(
-			{"efor": efor, "amount": ProductUiShared.money_tr(cost), "days": days})
+			{"efor": efor, "amount": Fmt.money_exact(cost), "days": days})
 	else:
 		_totals_label.text = tr("PROD_TOTALS").format({"efor": efor, "days": days})
 	_cash_label.text = tr("PROD_CASH_AFTER").format(
-		{"amount": ProductUiShared.money_tr(ProductUiShared.cash_after_build(cost, days))})
+		{"amount": Fmt.money_exact(ProductUiShared.cash_after_build(cost, days))})
 	# Onay YALNIZ geçerli bir planla açılır; doğrulayıcı TEK (§18). Ret kimliği makine
 	# kimliğidir (CSV metni yok), o yüzden ekrana yazılmaz.
 	_commit_btn.disabled = ProductSystem.validate_line_plan(_type_id, _selected) != ""
 	_note_label.text = tr("PROD_POLISH_NOTE")
 	_commit_btn.text = tr("PROD_CONFIRM_START") + (tr("PROD_CASH_DEDUCT").format(
-		{"amount": ProductUiShared.money_tr(cost)}) if cost > 0 else "")
+		{"amount": Fmt.money_exact(cost)}) if cost > 0 else "")
 
 
 func _on_cancel_pressed() -> void:
@@ -695,7 +697,7 @@ func _on_cancel_pressed() -> void:
 		"title": tr("PROD_CANCEL_BUILD_Q"),
 		"body": tr("PROD_CANCEL_BUILD_BODY") if burned_days < ProductSystem.CANCEL_FREE_DAYS
 			else tr("PROD_CANCEL_BUILD_COST").format(
-				{"days": burned_days, "amount": ProductUiShared.money_tr(burned_cash)}),
+				{"days": burned_days, "amount": Fmt.money_exact(burned_cash)}),
 		"confirm_text": tr("HR_SEARCH_CANCEL_OK"),
 		"cancel_text": tr("UI_DISMISS"),
 		"on_confirm": _do_cancel.bind(prefill),

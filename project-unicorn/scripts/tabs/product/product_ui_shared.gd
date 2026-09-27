@@ -24,14 +24,6 @@ static func month_year(day: int) -> String:
 	return Fmt.month_abbr(int(d.month)) + " " + str(int(d.year))
 
 
-static func axis_label(axis_id: String) -> String:
-	match axis_id:
-		"innovation": return TranslationServer.translate("PROD_AXIS_INNOVATION")
-		"stability": return TranslationServer.translate("PROD_AXIS_STABILITY")
-		"experience": return TranslationServer.translate("PROD_AXIS_EXPERIENCE")
-	return axis_id
-
-
 ## ProductSystem.health_state() id'si → rozet metni.
 static func health_label(id: String) -> String:
 	return TranslationServer.translate("PROD_HEALTHY" if id == "saglikli" else "PROD_RISKY")   # LOC-DATA health band id
@@ -51,11 +43,6 @@ static func risk_label(id: String) -> String:
 		"dusuk": return TranslationServer.translate("PROD_RISK_LOW")   # LOC-DATA risk band id
 		"yuksek": return TranslationServer.translate("PROD_RISK_HIGH")   # LOC-DATA risk band id
 	return TranslationServer.translate("PROD_RISK_MID")
-
-
-## "$" + yerel gruplu tam sayı (TR "$1.800", EN "$1,800").
-static func money_tr(amount: int) -> String:
-	return Fmt.money_exact(amount)
 
 
 ## §17 ÜCRETSİZ KULLANICI = kitle − ödeyen. Kitle ödeyeni de kapsar; aynı kişi iki hücrede
@@ -83,5 +70,5 @@ static func product_tip(weakest_axis_id: String, next_version: int, rival_above:
 		return TranslationServer.translate("PROD_TIP_BUGS")
 	if rival_above != "":
 		return TranslationServer.translate("PROD_TIP_WEAK").format({
-			"axis": axis_label(weakest_axis_id), "version": next_version, "rival": rival_above})
-	return TranslationServer.translate("PROD_TIP_GOOD").format({"axis": axis_label(weakest_axis_id)})
+			"axis": ProductCatalog.axis_label(weakest_axis_id), "version": next_version, "rival": rival_above})
+	return TranslationServer.translate("PROD_TIP_GOOD").format({"axis": ProductCatalog.axis_label(weakest_axis_id)})

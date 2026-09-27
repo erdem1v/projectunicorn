@@ -113,9 +113,7 @@ func _is_b2b() -> bool:
 # --- yönlendirme ---------------------------------------------------------------
 
 func _render() -> void:
-	for c in _column.get_children():
-		_column.remove_child(c)
-		c.queue_free()
+	ProductUiShared.clear(_column)
 	match _steps[_index]:
 		STEP_PRICE: _build_price_step()
 		STEP_INFRA: _build_infra_step()
@@ -201,8 +199,8 @@ func _build_price_step() -> void:
 
 	var commit: Button = _commit_button("", _on_price_commit)
 	var paint := func() -> void:
-		figure.text = ProductUiShared.money_tr(_draft_price)
-		commit.text = tr("PROD_PRICE_COMMIT").format({"amount": ProductUiShared.money_tr(_draft_price)})
+		figure.text = Fmt.money_exact(_draft_price)
+		commit.text = tr("PROD_PRICE_COMMIT").format({"amount": Fmt.money_exact(_draft_price)})
 	box.add_child(_price_ruler(smax, func(value: float) -> void:
 		_draft_price = int(value)
 		paint.call()))
@@ -319,7 +317,7 @@ func _provider_row(pid: String) -> Control:
 	line.add_child(text_col)
 	# Birim FİYATI, paket fiyatı değil: kaç birim alındığı ikinci karardır.
 	var price := UiFactory.make_label(tr("PROD_INFRA_UNIT_PRICE").format({"amount":
-		ProductUiShared.money_tr(InfraSystem.unit_price(pid, _market))}), &"RowMeta", UiTokens.INK)
+		Fmt.money_exact(InfraSystem.unit_price(pid, _market))}), &"RowMeta", UiTokens.INK)
 	price.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	line.add_child(price)
 	row.add_child(line)
@@ -429,7 +427,7 @@ func _build_confirm_step() -> void:
 	rows.add_child(_summary_row("PROD_PUB_ROW_VERSION", _version_text()))
 	if not _is_b2b():
 		rows.add_child(_summary_row("PROD_PUB_ROW_PRICE",
-			" ".join([ProductUiShared.money_tr(_draft_price), tr("PROD_PER_USER_MONTH")])))
+			" ".join([Fmt.money_exact(_draft_price), tr("PROD_PER_USER_MONTH")])))
 	rows.add_child(_summary_row("PROD_PUB_ROW_INFRA", " · ".join([
 		tr(InfraSystem.provider_name_key(_draft_provider)), _bill_text()])))
 	rows.add_child(_summary_row("PROD_PUB_ROW_FEATURES", str(_feature_count())))
@@ -489,7 +487,7 @@ func _bug_text() -> String:
 ## §10 — aylık fatura = birim sayısı × birim fiyatı. InfraSystem.monthly_bill() canlı ürün
 ## ister ve v1 akışında ürün henüz canlı değil; aynı iki sayı taslak için burada çarpılır.
 func _bill_text() -> String:
-	return tr("PROD_INFRA_MONTHLY_BILL").format({"amount": ProductUiShared.money_tr(
+	return tr("PROD_INFRA_MONTHLY_BILL").format({"amount": Fmt.money_exact(
 		_draft_units * InfraSystem.unit_price(_draft_provider, _market))})
 
 

@@ -249,12 +249,11 @@ func _build_left_column(left: VBoxContainer) -> void:
 		var lrow := HBoxContainer.new()
 		lrow.add_theme_constant_override("separation", 6)
 		lrow.add_child(UiFactory.make_dot(color, 7))
-		var alabel := UiFactory.make_label(ProductUiShared.axis_label(axis), &"RowMeta", UiTokens.INK)
+		var alabel := UiFactory.make_label(ProductCatalog.axis_label(axis), &"RowMeta", UiTokens.INK)
 		alabel.custom_minimum_size = Vector2(70, 0)
 		alabel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		lrow.add_child(alabel)
 		# ÖLÇEK: 100 pazar ÇITASIDIR, tavan değil; okuma onu aşar ve READING_MAX'ta kesilir.
-		# Cetvel okumanın kendi tavanıdır, her yüzeyde aynı kalır.
 		var abar := ProgressBar.new()
 		abar.theme_type_variation = &"BuildProgress"
 		abar.custom_minimum_size = Vector2(0, 6)
@@ -713,7 +712,8 @@ func _versions_line(current_ver: int) -> String:
 	var segs: Array[String] = []
 	for e in GameState.get_flag("mvp_version_history", []):
 		var v: int = int(e.get("version", 1))
-		var seg: String = "v%d · %s" % [v, ProductUiShared.month_year(int(e.get("day", GameState.day)))]
+		var seg: String = "%s · %s" % [tr("PROD_VERSION_SHORT").format({"version": v}),
+			ProductUiShared.month_year(int(e.get("day", GameState.day)))]
 		if v == current_ver:
 			seg += tr("PROD_LIVE_SUFFIX")
 		segs.append(seg)
@@ -723,7 +723,7 @@ func _versions_line(current_ver: int) -> String:
 			"date": ProductUiShared.month_year(int(GameState.get_flag("mvp_launch_day", GameState.day)))}))
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	var next_state: String = tr("PROD_IN_DEVELOPMENT") if (b != null and b.is_version_build) else tr("PROD_UNPLANNED")
-	segs.append("v%d · %s" % [current_ver + 1, next_state])
+	segs.append("%s · %s" % [tr("PROD_VERSION_SHORT").format({"version": current_ver + 1}), next_state])
 	return tr("PROD_VERSIONS") + " " + " → ".join(segs)
 
 
@@ -765,7 +765,7 @@ func _repaint_bottom(sub: String, ver: int, readings: Dictionary, risk: String) 
 ## anlamlı bir "geride kaldın" sinyali (2/6 bir ürün "geçilmiş" sayılmaz).
 func _rival_passed_name(sub: String) -> String:
 	var axes: Array = ProductCatalog.get_quality_axes(sub)
-	var player: float = QualityModel.composite_quality(QualityModel.economy_dims_from_flags(), axes)
+	var player: float = QualityModel.shipped_composite()
 	var rank: Dictionary = RivalRegistry.get_player_rank_in_startup_league(sub, player)
 	if int(rank["rank"]) <= ceili(int(rank["total"]) / 2.0):
 		return ""

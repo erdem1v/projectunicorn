@@ -140,7 +140,7 @@ func repaint() -> void:
 	var v: Dictionary = SalesSystem.product_value()
 	_optimal = int(v["optimal"])
 	var floor_p: int = int(v["floor"])
-	_can_read = GameState.get_founder_skill("sales") >= SkillCheck.SALES_READ_THRESHOLD
+	_can_read = SkillCheck.can_read_prospect()
 	_is_open = GameState.get_flag("b2c_paid_tier_open", false)
 
 	# Ray: alt 1, üst açık (optimal × 3).

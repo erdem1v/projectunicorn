@@ -802,6 +802,129 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     apply_speed_bonus'un yorumunda söylenir.
   - Kaynak: Ürün GDD rev 6.1 §6.1; ch11 §3; CLAUDE.md §5 (seçeneğin anlattığını modifier'lar yapar)
 
+- **48 · Ürün Detayı'nda sonraki sürüm kartı hep "~3+ GÜN" yazıyor.**
+  - Ne oluyor: Sonraki sürüm kartının durum etiketi `PROD_ETA_DAYS` ("~{n}+ GÜN") `maxi(3,
+    ProductSystem.estimate_build_days([], [], ""))` ile doluyor. Tahmin fonksiyonu boş listelerle hep 0 döndüğü için
+    etiket her ürün, ekip ve fazda "~3+ GÜN" kalıyor. Sonraki sürümün planı bu ekranda henüz yok; gerçek bir süre
+    ancak kademeler seçilince (`ProductSystem.estimate_line_build_days`) bilinir.
+  - Nerede: `scripts/tabs/product/detail_view.gd` (`repaint`, `_v_status`); `scripts/systems/product_system.gd`
+    (`estimate_build_days`, `estimate_line_build_days`).
+  - Oyuncuya etkisi: Oyuncu v2'nin en az 3 gün süreceğini okur. Bu sayı hiçbir durumdan türemiyor; büyük ekiple de tek
+    kişiyle de aynı.
+  - Seçenekler: A) Etiket gerçek bir alt sınır gösterir: seçilebilir en ucuz kademenin süresi, bugünkü lider ve ekiple
+    (`estimate_line_build_days`). B) Süre etiketi kalkar; kart yalnız başlık ve açıklama taşır, süre Konsept'in toplam
+    satırında zaten var. C) "~3+" kalır ama adlı bir ayar sabitine taşınır ve boş tahmin çağrısı silinir.
+  - Kaynak: Ürün GDD (ch03) §3 (maliyet dürüstlüğü: "Toplam efor · süre" Konsept'te), §6.0, §6.1.
+
+- **49 · Konsept'te onay düğmesi gerekçesiz kapanıyor (plan ret kimliklerinin metni yok).**
+  - Ne oluyor: Konsept'in onay kartı, `ProductSystem.validate_line_plan` boş olmayan bir ret kimliği döndürünce
+    "Onayla ve Başlat"ı kapatıyor ama sebebini yazmıyor. Not satırı yalnız `PROD_POLISH_NOTE`'u taşıyor. Ret
+    kimlikleri makine kimliği ve CSV karşılıkları yok: `empty_plan`, `unknown_subtype`, `unknown_step`,
+    `step_from_another_subtype`, `locked`; `ProductLines.ladder_refusal` için `already_shipped`, `skips_tier`,
+    `line_already_planned`. Oyuncunun pratikte ulaşabildiği hâller `empty_plan` (hiç kademe seçilmemiş) ve `locked`
+    (taslaktan dönen bir kademe arada kilitlenmiş). Merdiven retlerini hat listesi zaten tıklamada sessizce eliyor.
+  - Nerede: `scripts/tabs/product/creation_flow.gd` (`_update_dynamic`, `_commit_btn`, `_note_label`);
+    `scripts/systems/product_system.gd` (`validate_line_plan`); `scripts/systems/product_lines.gd` (`ladder_refusal`);
+    `localization/strings.csv`.
+  - Oyuncuya etkisi: Düğme gri kalır ve oyuncu nedenini ekranda göremez. Kilitlenmiş bir taslak kademesi olduğunda
+    hangi kademenin engel olduğunu tahmin etmek zorunda kalır.
+  - Seçenekler: A) Ulaşılabilir iki ret (`empty_plan`, `locked`) için TR/EN anahtarı yazılır ve not satırına basılır.
+    B) Bütün ret kimliklerine anahtar yazılır, bir kimlik→anahtar tablosu not satırını besler. C) Olduğu gibi kalır;
+    boş plan kendini açıklar, kilitli taslak kademesi `setup`'ta düşürülür.
+  - Kaynak: Ürün GDD (ch03) §3, §12.3, §12.9, §18; CLAUDE.md §5 (kilitli seçenek gerekçesiyle görünür).
+
+- **50 · Kademe açıklamaları yazılmış ama hiçbir ekranda görünmüyor.**
+  - Ne oluyor: Hat verisindeki her kademe `desc_key` taşıyor (`PROD_STEP_*_DESC`; paylaşılan hatlarda alt-tip başına
+    ayrı satır). Anahtarlar CSV'de TR ve EN olarak yazılmış ve `loc_product_line_keys_resolve` smoke'u çözüldüklerini
+    denetliyor. Hiçbir arayüz `desc_key` okumuyor: `FeatureLinesView` yalnız `name_key` basıyor.
+  - Nerede: `data/product/lines/*.json` (`desc_key`); `scripts/tabs/product/feature_lines_view.gd` (`_make_line_row`,
+    `_make_lock_row`); `localization/strings.csv` (`PROD_STEP_*_DESC`).
+  - Oyuncuya etkisi: §12.12'nin yazdırdığı tek satırlık açıklamaları (45 kimlik kademesi + 36 paylaşılan satır) oyuncu
+    hiç görmez; kademeyi yalnız adından tanır.
+  - Seçenekler: A) Açıklama hat satırının hover'ında görünür (kilit satırının tooltip'i gibi); §12.9'un iki satır
+    sınırı korunur. B) Seçili ya da üzerine gelinen kademenin açıklaması Konsept'in sağ sütununda tek satır olarak
+    durur. C) Gösterilmez; `desc_key` alanları, CSV anahtarları ve smoke denetimi silinir.
+  - Kaynak: Ürün GDD (ch03) §12.9 (satır anatomisi, satır başına en fazla iki metin satırı), §12.12 (ad + tek satır
+    açıklama yazılır).
+
+- **51 · Veri yok işareti ve hayalet satırda uzun tire (—).**
+  - Ne oluyor: Ürün ekranları eksik değer için uzun tire basıyor. `detail_view` `NO_DATA_MARK` ("—") DURUM
+    hücrelerinin ilk değeri; B2B'de hesap yokken memnuniyet ve churn, B2C'de kullanıcı kaydı yokken memnuniyet bu
+    işareti gösteriyor. `team_panel` `_make_pinned_ghost_row` kurucunun yukarı taşındığı grupta ad yerine "—"
+    literal'i yazıyor. `capacity_block` bilinmeyen sağlayıcıda "—" basıyor. Aynı işaret ürün dışında da var:
+    `scripts/tabs/hr/hr_ui_shared.gd`, `scripts/tabs/personal_tab.gd` (değerleme, net varlık, zirve),
+    `scripts/tabs/sales_tab.gd`, `scripts/ui/components/center_viewport.gd`,
+    `scripts/ui/components/dialogue_choice_card.gd`.
+  - Nerede: `scripts/tabs/product/detail_view.gd` (`NO_DATA_MARK`, `_status_card`, `_repaint_stats`);
+    `scripts/tabs/product/team_panel.gd` (`_make_pinned_ghost_row`); `scripts/tabs/product/capacity_block.gd`
+    (`_provider_row`); ürün dışı dosyalar yukarıda.
+  - Oyuncuya etkisi: Oyuncu ekranda uzun tire görür. ch01 §9'un "no dashes in copy" kuralı ve CLAUDE.md §5'in tire
+    yasağı çiğneniyor; hayalet satırdaki tire ayrıca script içinde oyuncuya görünen bir literal.
+  - Seçenekler: A) "—" metin değil noktalama sayılır ve kurala yazılı istisna olarak eklenir. B) Tek yerde tanımlı
+    başka bir glif (ör. "·" ya da "0") her yüzeyde kullanılır. C) Yerelleştirilmiş bir anahtar ("yok" / "none") eksik
+    değeri, ayrı bir anahtar hayalet satırı taşır.
+  - Kaynak: ch01 §9 (Non-negotiables: no dashes in copy); Ürün GDD (ch03) §12.12 (gövde metinlerinde tire yok);
+    CLAUDE.md §5.
+
+- **52 · Fiyat panelinin eksen çipleri üçgenden farklı sayı gösteriyor.**
+  - Ne oluyor: B2C fiyat panelinin eksen çipleri (`PROD_AXIS_INNOVATION_N` / `_STABILITY_N` / `_EXPERIENCE_N`) ham
+    `mvp_innovation` / `mvp_stability` / `mvp_experience` bayraklarını basıyor; bunlar ekonominin gerçekleşen eksen
+    değerleri, fiyat ve değer hesabının girdileri. Aynı Ürün Detayı sayfasındaki üçgen ve legend ise
+    `ProductState.axis_readings()`'in §11.3 okumasını gösteriyor (çıtaya bölünmüş, 0–120).
+  - Nerede: `scripts/tabs/product/pricing_panel.gd` (`repaint`, `_chips_row`); `scripts/tabs/product/detail_view.gd`
+    (`_repaint_profile`); `scripts/systems/product_state.gd` (`axis_readings`).
+  - Oyuncuya etkisi: Oyuncu aynı eksen için aynı ekranda iki farklı sayı görür (çipte tek haneli ham değer, legend'de
+    0–120 okuma) ve hangisinin ürünü anlattığını bilemez.
+  - Seçenekler: A) Çipler okumayı gösterir (`axis_readings`); üçgenle aynı sayı. B) Çipler kalır ama fiyatın girdisi
+    olduklarını söyleyen yeni bir etiket alır (yeni metin). C) Eksen çipleri kalkar; §17'ye göre eksen okumaları
+    yalnız üçgende yaşar.
+  - Kaynak: Ürün GDD (ch03) §11.1, §11.3, §17 ("Eksen okumaları monitörün üçgeninde yaşar; ayrı panel yoktur").
+
+- **53 · Konsept önizlemesi ile Ürün Detayı üçgeni farklı nicelik ve ölçek çiziyor.**
+  - Ne oluyor: Konsept'in önizleme üçgeni ve legend'i `ProductSystem.projected_line_dims` (taban cila ×1,00 ile
+    gerçekleşen ham eksen değeri) çiziyor. Ölçeği `max(PREVIEW_SCALE_FLOOR = 25, en büyük eksen)`, yani seçim
+    değiştikçe ölçek de kayıyor. Ürün Detayı üçgeni `ProductState.axis_readings()`'in §11.3 okumasını sabit
+    `QualityModel.READING_MAX` (120) üstünde çiziyor. Legend sayıları da farklı birimde ("7,2" ile "83" gibi).
+  - Nerede: `scripts/tabs/product/creation_flow.gd` (`_update_dynamic`, `PREVIEW_SCALE_FLOOR`);
+    `scripts/tabs/product/detail_view.gd` (`_repaint_profile`, legend çubukları);
+    `scripts/ui/components/triangle_radar.gd` (`set_axes`).
+  - Oyuncuya etkisi: Oyuncu Konsept'te planladığı şekli yayından sonra Ürün Detayı'nda gördüğüyle karşılaştıramaz.
+    Önizlemede bir eksenin büyümesi öteki eksenleri küçülmüş gibi gösterebilir.
+  - Seçenekler: A) Önizleme de §11.3 okumasını çizer (projeksiyon / o fazın çıtası × 100, READING_MAX üstünde); iki
+    üçgen aynı cetveli paylaşır. B) İkisi ayrı kalır; önizleme net kazanç projeksiyonudur ve bunu söyleyen bir başlık
+    alır. C) Önizleme ham değeri korur ama sabit bir ölçek (ör. o fazın çıtası) kullanır, seçimle kaymaz.
+  - Kaynak: Ürün GDD (ch03) §5 (Konsept önizlemesi taban cila), §11.2, §11.3, §17 ("üçgenin ölçekleme hatası ekran
+    turunda düzeltilir").
+
+- **54 · PROD_DESK_NOBODY_ELIGIBLE okunmuyor: masaya kimse uygun değilken hangi ipucu?.**
+  - Ne oluyor: DESTEK bloğunun masa cümlesi, masa boşken ve masayı taşıyabilecek çalışan yokken her zaman
+    `PROD_DESK_FOUNDER_BUSY` gösteriyor (canlı üründe boş masa, kurucunun başka bir işte olduğu demek).
+    `PROD_DESK_NOBODY_ELIGIBLE` ("Masayı taşıyabilecek kimse yok. Bir Müşteri Temsilcisi ya da Yazılımcı işe al.")
+    CSV'de duruyor ama okuyan yok; onu okuyan dal hiç ulaşılamaz olduğu için silinmişti.
+  - Nerede: `scripts/tabs/product/detail_view.gd` (`_desk_sentences`); `localization/strings.csv`
+    (`PROD_DESK_NOBODY_ELIGIBLE`, `PROD_DESK_FOUNDER_BUSY`).
+  - Oyuncuya etkisi: Kurucu meşgulken ve masaya uygun çalışan yokken oyuncu yalnız kurucunun meşguliyetini okur.
+    Doğrulama akışını yeniden başlatacak işe alım yolu ona söylenmez.
+  - Seçenekler: A) Anahtar silinir (ISLER'deki CSV süpürmesine girer). B) Uygun çalışan yoksa FOUNDER_BUSY yerine
+    NOBODY_ELIGIBLE gösterilir. C) İkisi alt alta: önce kurucunun meşguliyeti, altında işe alım ipucu.
+  - Kaynak: Ürün GDD (ch03) §8.2 (doğrulama Müşteri İlişkileri'nin işi), §17 (destek durumu).
+
+- **55 · Canlı ürünün ALTYAPI adımı 0 birimi öneriyle (1 birim) dolduruyor.**
+  - Ne oluyor: Yayın akışı açılırken kapasite taslağı `InfraSystem.units()`'ten alınıyor; değer
+    `InfraSystem.CAPACITY_MIN` (0) ya da altındaysa yerine `InfraSystem.suggested_start_units()` (1) yazılıyor. Aynı
+    yol, canlı üründe kapasite bloğundan açılan tek adımlı ALTYAPI'da da çalışıyor. Kapasite bloğu ise 0 birimi meşru
+    bir durum sayıyor (`PROD_CAPACITY_UNSET`). `_start`'taki yorum "durumda varsa odur" diyor.
+  - Nerede: `scripts/tabs/product/publish_flow.gd` (`_start`, `_on_infra_commit`);
+    `scripts/tabs/product/detail_view.gd` (`_on_capacity_change_requested`); `scripts/tabs/product/capacity_block.gd`;
+    `scripts/systems/infra_system.gd` (`CAPACITY_MIN`, `SUGGESTED_START_UNITS`).
+  - Oyuncuya etkisi: 0 birimdeki canlı ürünün sahibi yalnız sağlayıcıyı değiştirmek için adımı açıp onaylarsa kapasite
+    1 birime çıkar ve aylık fatura işlemeye başlar. Stepper'da 1 görünür, yani öneri görünür ama canlı değerin 0
+    olduğu söylenmez.
+  - Seçenekler: A) Tek adım modunda canlı değer (0 dahil) doldurulur; öneri yalnız v1 yayın akışında kalır. B)
+    Davranış kalır, `_start`'taki yorum "0 birimde öneri gelir" diye düzeltilir.
+  - Kaynak: Ürün GDD (ch03) §10 (sağlayıcı canlıda her an değiştirilir; v1 Altyapı adımında öneri satırı; kapasite ±1
+    birim, cezasız).
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında

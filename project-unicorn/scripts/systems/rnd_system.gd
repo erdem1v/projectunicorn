@@ -60,7 +60,7 @@ static var _seeded := false
 # ============================================================================
 
 ## §2 — the tree opens after v1 ships. Before that the page shows only its waiting line and
-## nothing here runs. `ResearchSeam.tree_available()` delegates to this.
+## nothing here runs.
 static func tree_open() -> bool:
 	return ProductState.is_live()
 

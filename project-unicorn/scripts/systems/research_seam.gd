@@ -99,9 +99,3 @@ static func node_name(node_id: String) -> String:
 	var key: String = "PROD_RND_NODE_%s" % node_id.to_upper()
 	var out: String = TranslationServer.translate(key)
 	return node_id if out == key else out
-
-
-## True once the tree is open (RnDSystem.tree_open: v1 shipped). Before that Ürün §12.9's
-## "→ Araştır" link renders but is INERT, and its hover says so.
-static func tree_available() -> bool:
-	return RnDSystem.tree_open()

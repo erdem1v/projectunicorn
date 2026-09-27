@@ -97,9 +97,7 @@ func repaint() -> void:
 # ------------------------------------------------------------------ çizim
 
 func _rebuild() -> void:
-	for child in get_children():
-		remove_child(child)
-		child.queue_free()
+	ProductUiShared.clear(self)
 	add_theme_constant_override("separation", 0)
 	_has_filter = CharacterRegistry.count_employees() >= FILTER_MIN_EMPLOYEES
 
@@ -123,9 +121,7 @@ func _rebuild() -> void:
 
 ## Kadro listesi — akordeon grupları ve satırlar.
 func _refresh_list() -> void:
-	for child in _list.get_children():
-		_list.remove_child(child)
-		child.queue_free()
+	ProductUiShared.clear(_list)
 
 	# Kurucu her zaman listede, sonra çalışanlar. Mentor ve npc kadro değildir.
 	var roster: Array[Character] = []
@@ -163,9 +159,7 @@ func _refresh_list() -> void:
 
 ## Lider satırı yuvası. Seçim değiştiğinde tek başına tazelenir.
 func _refresh_lead() -> void:
-	for child in _lead_holder.get_children():
-		_lead_holder.remove_child(child)
-		child.queue_free()
+	ProductUiShared.clear(_lead_holder)
 	_lead_holder.add_child(_make_lead_row())
 
 

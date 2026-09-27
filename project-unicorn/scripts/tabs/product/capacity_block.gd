@@ -41,9 +41,7 @@ func _ready() -> void:
 func repaint() -> void:
 	if not is_node_ready():
 		return
-	for c in get_children():
-		remove_child(c)
-		c.queue_free()
+	ProductUiShared.clear(self)
 
 	var body := VBoxContainer.new()
 	body.add_theme_constant_override("separation", UiTokens.SPACE_M)
@@ -67,7 +65,7 @@ func repaint() -> void:
 	_add_row(rows, tr("PROD_CAPACITY_BILL"), " · ".join([
 		tr("PROD_INFRA_UNITS_N").format({"n": InfraSystem.units()}),
 		tr("PROD_INFRA_MONTHLY_BILL").format({
-			"amount": ProductUiShared.money_tr(InfraSystem.monthly_bill())})]),
+			"amount": Fmt.money_exact(InfraSystem.monthly_bill())})]),
 		UiTokens.INK, true)
 	# YÜK — §10'un "yük = 1 + Σağırlık / 20" okuması. Ağır kademe yayınlamak kalıcı
 	# bir işletme maliyetidir ve bu satır oyuncuya onu gösteren tek yerdir.
@@ -75,7 +73,7 @@ func repaint() -> void:
 		"n": Fmt.number(InfraSystem.load_factor(), 2)}), UiTokens.INK, true)
 	# BRÜT MARJ — "MRR − sunucu faturası".
 	var margin: int = InfraSystem.gross_margin_monthly()
-	_add_row(rows, tr("PROD_CAPACITY_MARGIN"), ProductUiShared.money_tr(margin),
+	_add_row(rows, tr("PROD_CAPACITY_MARGIN"), Fmt.money_exact(margin),
 		UiTokens.delta_color(margin), false)
 	body.add_child(rows)
 

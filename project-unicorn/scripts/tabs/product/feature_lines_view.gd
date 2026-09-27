@@ -17,7 +17,7 @@ extends VBoxContainer
 # Kademe etiketi (BASIC / PERFORMANS / DELIGHTER) hiçbir yerde görünmez; Kano yalnız
 # katsayıdır.
 #
-# "→ Araştır" iki hâllidir: Ar-Ge ağacı kapalıyken (`ResearchSeam.tree_available()`)
+# "→ Araştır" iki hâllidir: Ar-Ge ağacı kapalıyken (`RnDSystem.tree_open()`)
 # bağ çizilir ama tıklanmaz; açıkken `research_requested` yayar.
 # Sahne yok; ev sahibi `FeatureLinesView.new()` ile kurar.
 # ============================================================================
@@ -106,7 +106,7 @@ func _make_header() -> Control:
 func _make_axis_header(axis: String) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	row.add_child(UiFactory.make_label(Fmt.upper(ProductUiShared.axis_label(axis)), &"SectionAmber"))
+	row.add_child(UiFactory.make_label(Fmt.upper(ProductCatalog.axis_label(axis)), &"SectionAmber"))
 	var rule := HRUiShared.hairline()
 	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -206,7 +206,7 @@ func _make_stat_cell(line_id: String, step_id: String, tier: int) -> Control:
 	var lbl := UiFactory.make_label(PART_SEP.join([
 		tr("PROD_EFFORT_N").format({"n": ProductLines.effort_of(step_id)}),
 		tr("PROD_LINE_CONTRIB").format({
-			"axis": ProductUiShared.axis_label(ProductLines.axis_of(line_id)),
+			"axis": ProductCatalog.axis_label(ProductLines.axis_of(line_id)),
 			"value": Fmt.number(ProductLines.weighted_points(step_id), 1),
 			"gain": ("+" if gain >= 0.0 else "") + Fmt.number(gain, 1),
 		}),
@@ -271,7 +271,7 @@ func _make_action_link(kind: String, node_id: String) -> Control:
 		key = "PROD_LOCK_ACTION_TOTAL"
 	var link := UiFactory.make_label(tr(key), &"RowMeta", UiTokens.ACCENT)
 	link.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	if research and not ResearchSeam.tree_available():
+	if research and not RnDSystem.tree_open():
 		link.add_theme_color_override("font_color", UiTokens.INK_FAINT)
 		link.mouse_filter = Control.MOUSE_FILTER_PASS
 		link.tooltip_text = tr("PROD_LOCK_RESEARCH_SOON")

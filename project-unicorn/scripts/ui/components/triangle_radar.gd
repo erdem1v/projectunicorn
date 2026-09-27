@@ -4,7 +4,6 @@ extends Control
 # Üç eksenli ürün profili radarı: kendi _draw()'u olan, tscn'siz Control.
 # Kullanım: set_axes({"innovation": 8, "stability": 5, "experience": 4}, max).
 
-const DEFAULT_MAX := 25.0        # kurma ekranı önizlemesinin ölçek tabanı
 const LABEL_GAP := 14.0          # köşe → etiket mesafesi (px)
 const NARROW_WIDTH := 260.0      # bu genişliğin altında yarıçap ekstra kısılır
 const NARROW_R_FACTOR := 0.30    # dar genişlikte r üst sınırı = size.x × bu
@@ -38,7 +37,6 @@ func _init() -> void:
 	for axis in CORNER_ANGLES_DEG:
 		var lbl := Label.new()
 		lbl.theme_type_variation = &"SectionLabel"
-		lbl.add_theme_color_override("font_color", UiTokens.INK_DIM)
 		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		# Fmt.upper: Türkçe noktalı İ korunur, İngilizce kazanmaz.
 		lbl.text = Fmt.upper(ProductCatalog.axis_label(axis))

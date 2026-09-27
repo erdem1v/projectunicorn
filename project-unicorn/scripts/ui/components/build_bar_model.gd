@@ -12,8 +12,8 @@ extends RefCounted
 # BİLİNÇLİ class_name YOK: ev sahipleri ve smoke `preload` eder. Paylaşılan checkout'ta yeni
 # bir class_name, öteki oturumların headless koşularını class-cache yarım kalınca düşürüyor.
 #
-# Sözcükler BuildBar'da çözülür; burada sayılar, kimlikler ve anahtar adları var. Tek istisna
-# `decision_tooltip`: içindeki {n} yalnız burada bilindiği için çözülmüş metin taşır.
+# Sözcükler BuildBar'da çözülür; burada sayılar, kimlikler ve anahtar adları var. İstisnalar
+# `decision_tooltip` (içindeki {n} yalnız burada bilinir) ve `product_name` (ad + sürüm).
 
 const PHASE_DESIGN := &"design"          # ProductSystem "iteration"
 const PHASE_DEVELOPMENT := &"development"
@@ -59,7 +59,9 @@ func derive() -> bool:
 	var b: FeatureBuild = ProductSystem.get_active_build()
 	if b == null:
 		return _derive_support()
-	product_name = _build_title(b)
+	var pname: String = String(GameState.get_flag("mvp_product_name", ""))
+	product_name = _title(pname if pname != "" else b.product_name,
+		int(GameState.get_flag("mvp_version", 0)) + 1)
 	paused = ProductSystem.build_paused()
 	pause_kind = ProductSystem.pause_kind()
 	pause_note_key = ProductSystem.pause_note_key()
@@ -146,7 +148,7 @@ func _derive_support() -> bool:
 	var pname: String = String(GameState.get_flag("mvp_product_name", ""))
 	if pname.strip_edges() == "":
 		pname = GameState.company_name
-	product_name = "%s v%d" % [pname, int(GameState.get_flag("mvp_version", 1))]
+	product_name = _title(pname, int(GameState.get_flag("mvp_version", 1)))
 	# §8/§9 — çubuk, düzeltme koşusunun havuzu ne kadar erittiğidir. FIX_RUN_PROGRESS bir
 	# sonraki hataya kalan kesirdir; çubuğa konsa her çözülen hatada sıfıra düşerdi.
 	live_bugs = ProductState.bugs_confirmed()
@@ -167,12 +169,9 @@ func _derive_support() -> bool:
 
 
 ## "Pulse v3" — ürün adı + sürüm. Faz adı burada tekrar edilmez, onu faz satırı söyler.
-func _build_title(b: FeatureBuild) -> String:
-	var pname: String = String(GameState.get_flag("mvp_product_name", ""))
-	if pname == "":
-		pname = b.product_name
-	var version: int = int(GameState.get_flag("mvp_version", 0)) + 1
-	return "v%d" % version if pname == "" else "%s v%d" % [pname, version]
+static func _title(pname: String, version: int) -> String:
+	var v: String = TranslationServer.translate("PROD_VERSION_SHORT").format({"version": version})
+	return v if pname == "" else " ".join([pname, v])
 
 
 ## Dolum, yüzdenin tek evi UiTokens.build_percent'ten geçer: çubuk yanındaki sayıyla çelişmez.
