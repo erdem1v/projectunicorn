@@ -76,8 +76,13 @@ Her madde: **Bölüm ve madde** · Eski metin (özet) · Yürürlükteki kural �
 
 - **§0 YÜRÜRLÜK ("kayıt şeması v9"); §22.5, 1. paragraf; §24'ün §22.5 notu**
   - Eski metin: Kayıt şeması v9'dur; ağaçtaki değer 8, Ürün paketi v9'a çıkarır. v9 altındaki kayıt açıkça reddedilir; v1–v8 göç merdiveni ağaçta durur.
-  - Yürürlükteki kural: `SaveManager.SCHEMA_VERSION` 12, `MIN_LOADABLE_VERSION` 10. v10 altındaki her kayıt (v9 dahil) `SAVE_ERR_TOO_OLD` ile reddedilir ve state teslim edilmez. v10 kayıtlarında yalnız Satış rev 6 göçü çalışır; v1–v8 göç dalları yükleyiciden kaldırılmıştır. §22.5'in geri kalanı (açık mesaj, alan listeleri) yerinde kalır.
-  - Kaynak: cc952e4 (şema v10, eski kayıtlar bilerek öldü); 82bfcbd; CLAUDE.md §6; §24'ün "inşa bittiğinde kod öncüdür" kuralı.
+  - Yürürlükteki kural: `SaveManager.SCHEMA_VERSION` 13, `MIN_LOADABLE_VERSION` 10. v10 altındaki her kayıt (v9 dahil) `SAVE_ERR_TOO_OLD` ile reddedilir ve state teslim edilmez. Yükleyicide iki göç çalışır: v10 kayıtlarında Satış rev 6 göçü, v10–v12 kayıtlarında ofis göçü (Frank'in çekini almış koşu İş hanında, öbürü Ev'de açılır). v1–v8 göç dalları yükleyiciden kaldırılmıştır. §22.5'in geri kalanı (açık mesaj, alan listeleri) yerinde kalır.
+  - Kaynak: cc952e4 (şema v10, eski kayıtlar bilerek öldü); 82bfcbd; Erdem, 2026-09-27 görev kararı (izometrik ofis; şema v13); CLAUDE.md §6; §24'ün "inşa bittiğinde kod öncüdür" kuralı.
+
+- **§2 YAŞAM DÖNGÜSÜ, "Build bar hiç kaybolmaz" cümlesi**
+  - Eski metin: HUD, tracker, ODA monitörü ve Ürün sekmesi aynı renderer'ı çizer.
+  - Yürürlükteki kural: Aynı renderer'ın iki ev sahibi vardır: yüzen BuildHUD ve Ürün sayfasındaki izleyici kartı. ODA monitörü yoktur. BuildHUD bir çubuğu doluyken ofiste de, açık pencerenin üstünde de görünür. Cümlenin geri kalanı (bar hiç kaybolmaz; canlı ürün ve aktif yapım iki bardır) değişmez.
+  - Kaynak: Erdem, 2026-09-27 görev kararı (izometrik ofis); ch12 §3 maddesi.
 
 - **§5 TASARIM, "Ters çevrilme yasağı" son cümlesi; §12.12, 45 kimlik kademesi maddesinin son cümlesi**
   - Eski metin: K(n+1) ≥ K(n) × 1,6 kısıtı kademelerin ham eksen puanına uygulanır.
@@ -191,15 +196,35 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
 
 ## GDD v2 — 12 · UI Surfaces & ODA
 
-- **§1 Tabs (v1), "Events: … arrive as modals from the room (the phone)" cümlesi; §6 ODA, 3. madde ("the phone")**
-  - Eski metin: Her olay oyuncuya ODA'daki telefondan gelen bir modal olarak ulaşır.
-  - Yürürlükteki kural: Olayların dört sunum sınıfı vardır: interrupt engelleyen modaldır (zaman durur, telefondan açılır); paper ODA masasında bir kağıttır, açılınca modal gibi davranır, kalan süresi üzerinde görünür; info bir sekme rozeti ya da rapordur; ambient haber bandına düşer. Acil olmayan karar kartları masada kağıt olarak bekler. §1'in Ar-Ge sekmesi cümlesi ve olay günlüğünün yeri (§9) bu maddenin konusu değildir.
-  - Kaynak: olay motoru GDD rev 2 §11.1, §11.4.
+- **§1 Tabs (v1), "Events: no separate tab; events arrive as modals from the room (the phone)" cümlesi**
+  - Eski metin: Olayların ayrı sekmesi yoktur; her olay oyuncuya ODA'daki telefondan gelen bir modal olarak ulaşır.
+  - Yürürlükteki kural: Olaylar rayda kendi sekmesi olan gerçek bir sayfadır: Frank'in son notu ve masada bekleyen bütün kâğıtlar. Olayların dört sunum sınıfı vardır: interrupt engelleyen modaldır (zaman durur); paper masada bir kâğıttır, ofisin sağ altındaki bildirim yığınında ve Olaylar sayfasında bekler, açılınca modal gibi davranır, kalan süresi üzerinde görünür; info bir sekme rozeti ya da rapordur; ambient haber bandına düşer. Acil olmayan karar kartları masada kâğıt olarak bekler. Telefon yoktur. §1'in Ar-Ge sekmesi cümlesi ve olay günlüğünün yeri (§9) bu maddenin konusu değildir.
+  - Kaynak: olay motoru GDD rev 2 §11.1, §11.4; Erdem, 2026-09-27 görev kararı (izometrik ofis).
+
+- **§2 Centre and frame, "Centre view = ODA" ve "Right panel carries today's items and warnings" cümleleri**
+  - Eski metin: Merkez görünüm ODA'dır; sağ panel günün işlerini ve uyarılarını taşır.
+  - Yürürlükteki kural: Merkez görünüm izometrik 3B ofistir (`OfficeView`). Sekmeler tam sayfa değildir, ofisin üstünde sabit yuvalı pencereler olarak açılır (EU4/CK3 düzeni): aynı anda bir birincil pencere ve ona bağlı bir ayrıntı penceresi (ör. Ekip dosyası); pencereler sürüklenmez, ×, Esc ya da sekmeye tekrar tık kapatır. Ofis pencerelerin arkasında görünür ve etkileşimli kalır. Sağ panel yoktur: masadaki kâğıtlar ofisin sağ altındaki bildirim yığınında ve Olaylar sekmesinde durur. Hedef ve pazar payı kartları Finans Özet'te, kilometre taşları Kişisel'dedir. ODA ve açılış turu emeklidir. §2'nin TopBar ve haber bandı cümleleri yürürlüktedir.
+  - Kaynak: Erdem, 2026-09-27 görev kararı (izometrik ofis).
+
+- **§3 Build bar, "One widget, three hosts (BuildHUD, tracker card, ODA monitor)" cümlesi**
+  - Eski metin: Tek widget, üç ev sahibi: BuildHUD, izleyici kartı, ODA monitörü.
+  - Yürürlükteki kural: Tek widget, iki ev sahibi: BuildHUD ve Ürün sayfasındaki izleyici kartı. BuildHUD bir çubuğu doluyken hep görünür: ofiste de, açık pencerenin üstünde de. §3'ün geri kalanı değişmez.
+  - Kaynak: Erdem, 2026-09-27 görev kararı (izometrik ofis).
+
+- **§6 ODA, bölümün tamamı**
+  - Eski metin: v1 mühürlü 2B plakalarla çıkar; 3B spike'ın plakaları onaylanırsa plaka olarak yerlerini alır, v1'de gerçek zamanlı 3B yoktur. Ana menü ODA'nın gece sahnesidir. ODA monitörü (build bar), telefonu (olaylar buraya gelir) ve odanın gündüzden geceye tonunu taşır.
+  - Yürürlükteki kural: v1'de gerçek zamanlı 3B ofis vardır: Ev, İş hanı, Plaza katı, Depo loft ve ofis seçimi için şehir haritası. Geometri tasarımın kendi kodundan dışa aktarılır; oyun kamerayı, ışığı, kişileri ve haritayı canlı sürer. Işık oyun saatini izler (tasarımın gün boyu renk senaryosu); gündüz ve gece tonunu ofisin ışığı taşır. Kişiler gerçek kadrodur ve gerçek zamanlı ambiyanstır: mesai saatinde masalarında rolünün işini yapar, kısa molalara kalkar; mesai dışında ofiste değildir, kurucu hep oradadır. Kişiye tıklamak Ekip dosyasını açar. Monitörün yerini BuildHUD (§3), telefonun yerini Olaylar sayfası ve bildirim yığını (§1) alır. Ana menünün görüntüsü bu maddenin konusu değildir.
+  - Kaynak: Erdem, 2026-09-27 görev kararı (izometrik ofis).
 
 - **§8 Links, "Kişisel → founder card, energy, net worth, events log"**
   - Eski metin: Kişisel yüzeyi kurucu enerjisini de taşır.
   - Yürürlükteki kural: Kurucu enerji barı yoktur ve olmayacaktır; satırdan "energy" çıkar. Kişisel sayfasında moral de yoktur. Net varlık ve olay günlüğü bu maddenin konusu değildir.
   - Kaynak: Ekip GDD §2, §2.5, §17.6; GDDs/README (ch12 §8 → Ekip §17.6).
+
+- **Bölüm yok: ofis kademesi ve taşınma**
+  - Eski metin: GDD ofis kademesini ve taşınmayı tanımlamaz.
+  - Yürürlükteki kural: Şirket Ev'de başlar; kademe Ev → İş hanı → Plaza katı → Depo loft. İlk taşınmayı Frank'in çekinden sonra Frank'in kartı önerir. Taşınma şehir haritasından oyuncu eliyle yapılır; kapılar tasarımın şartlarıdır (Frank'in çeki, kasa, ekip, marka), taşınma 7 gün sürer (`MOVE_DAYS`), Ev'e dönüş yoktur. Bu turda kira, depozito ve nakliye kasadan düşmez, `FinanceSystem`'in "office" kalemi 0 kalır; harita kartı bu tutarları bilgi olarak gösterir. Bütün sayılar [WORKING] (`OfficeConstants`). Açık: kira ve ekonominin bağlanması (ACIK_KARARLAR 60), Frank'in kart metni (69).
+  - Kaynak: Erdem, 2026-09-27 görev kararı (izometrik ofis).
 
 ## GDD v2 — 14 · Scope (v1 / EA / Full)
 
@@ -230,6 +255,11 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
   - Yürürlükteki kural: B2C'de hesap sahipliği yoktur, bildirimler kitleden gelir. Müşteri İlişkileri'nin B2C rolü Destek işinde GELEN bildirimi doğrulanmış hataya çevirmek ve Ürün §8.3'ün yanıt etkisidir. Destek iki pazarda aynı mekanikle çalışır; doğrulama unvana değil, Destek'e atananların Müşteri İlişkileri etkin çıktısına bağlıdır.
   - Kaynak: Ürün GDD rev 6.1 §8.6 ("Ekip §17.5'in park maddesi burada kapanır") ve YÜRÜRLÜK satırı.
 
+- **§13.3 Satır, "Satırın herhangi bir yerine tıklamak menüyü açar" maddesi**
+  - Eski metin: Satırın herhangi bir yerine tıklamak menüyü açar; rozetler, çipler ve ikonlar dahil satırın hiçbir noktası tıklamayı yutmaz.
+  - Yürürlükteki kural: Kadro satırında ad ve avatar hücresine tıklamak Ekip dosyası penceresini açar: kişinin ayrıntı penceresi (kimlik, şu an ne yaptığı, huy, yetenekler, durum ve satır menüsünün aksiyonları). Satırın geri kalanına tıklamak menüyü açar. Aksiyonlar iki yüzeyde de aynı kapıdan, aynı gerekçe ve sonuç metniyle geçer. Ekip dosyası ofiste bir kişiye tıklanınca da açılır.
+  - Kaynak: Erdem, 2026-09-27 görev kararı (izometrik ofis; Ekip dosyası penceresi).
+
 - **§16 DİL KURALLARI, 1. madde ve 3. maddenin ikinci cümlesi**
   - Eski metin: "Türkçe kanonik dildir. İngilizce edebî yerelleştirmedir." "TR ve EN aynı commit'te dolar."
   - Yürürlükteki kural: Oyuncu metni önce İngilizce yazılır. Türkçe ayrı bir yerelleştirme adımıdır: çeviri değil, sahneyi Türk okur için yeniden yazmak. Mühürlü Türkçe metinler olduğu gibi kalır. "TR ve EN aynı commit'te dolar" kuralı kalktı; tüm ekran metninin anahtarlar üzerinden gitmesi sürer. TR metni onaysız değişmez. §16'nın öbür maddeleri değişmez.
@@ -256,6 +286,11 @@ Bu bölümdeki maddeler yalnız Series A içindir; seed akışı (§3, §4 "not 
   - Eski metin: Ray kilidi bir derleme sabitidir ve v1 yayınında kalkacak biçimde duruma bağlanmalıdır; §0 rev 1.8'i anmaz.
   - Yürürlükteki kural: Madde kapandı. Ray öğesi ilk günden normal bir sekmedir: YAKINDA rozeti yok, sönük değil, tıklaması yutulmaz. Ağacın v1 kapısı sayfadadır: v1 yayınlanmadan önce sayfa yalnız "Ar-Ge, ilk sürümünü yayınladıktan sonra açılır." satırını gösterir, ilk sürüm yayınlanınca ağaç açılır. Derleme sabiti ve ray kilidi yoktur. §0'ın durum satırı rev 1.8'i (§2: kapı sayfada, ray normal sekme) sayar. ch12 §1 ve ch14 §3'ün güncellenmesi açık karardır.
   - Kaynak: aynı belgenin §2'si (rev 1.8, mühürlü); GDDs/README; cc952e4.
+
+- **§5.6.2 ODA odasında donmuş araştırma (MÜHÜRLÜ)**
+  - Eski metin: Oyuncu ODA'dayken yüzen tracker gizlenir ve cam ürün barını gösterir; odadaki oyuncunun donmuş araştırması hiçbir yüzeyde görünmez, ona ulaşan tek yüzey ray rozetidir.
+  - Yürürlükteki kural: ODA yoktur. Yüzen tracker (BuildHUD) bir çubuğu doluyken ofiste de görünür; donmuş araştırma orada kendi çubuğunda durur. Ray rozeti donmuş araştırmayı okunmamış raporla aynı yuvada saymayı sürdürür.
+  - Kaynak: Erdem, 2026-09-27 görev kararı (izometrik ofis; BuildHUD ofiste de görünür); ch12 §3 maddesi.
 
 - **§12.2 Ses ve dil, 1. cümlenin ikinci yarısı ("içerik TR (kanonik) + EN (edebi)")**
   - Eski metin: Ar-Ge'nin oyuncu metninde Türkçe kaynak metindir ve önce yazılır, İngilizce edebi karşılığıdır.

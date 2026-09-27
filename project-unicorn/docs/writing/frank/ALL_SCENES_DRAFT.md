@@ -468,9 +468,9 @@ Runway is under {months} months. Cut costs or find revenue; either one takes a d
 
 ## 22 · mentor-advisory payloads (the phone note)
 
-**Class:** standing strip (ODA phone dot + Events page "Frank'ten not"; one sentence; latched until the next advisory; not persisted today).
+**Class:** standing strip (office notice stack + Events page "Frank'ten not"; one sentence; latched until the next advisory; saved with the run).
 
-**Skeleton.** Set by the `mentor_advisory` modifier on rows 6, 7, 8 and by `VC_CALLBACK_REOPENED` (`vc_pitch_system.gd:463`). Rendered by `center_viewport.gd:139-150` under `ODA_EVENTS_FRANK_HEADER`. Raw TR literals today, no `_en`.
+**Skeleton.** Set by the `mentor_advisory` modifier (`line_key`: `FRANK_ADVISORY_MEETING_SET` on row 6, `FRANK_ADVISORY_PAID_TIER` on row 7) and by `VC_CALLBACK_REOPENED` with `{investor}` (`vc_pitch_system.gd:789`). `EventBus.mentor_advisory_changed` carries a key plus args; `GameState.mentor_line_key` and `mentor_line_args` hold them, and `events_tab.gd` (`_refresh`, under `EVENTS_FRANK_HEADER`) and the office notice stack (`office_notice_stack.gd` `_refresh`) resolve them at render, so the line follows the live language.
 
 **Whitelist used.** Each payload repeats a fact its card already established; nothing new.
 

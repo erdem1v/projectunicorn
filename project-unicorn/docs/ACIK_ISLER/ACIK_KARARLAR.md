@@ -715,9 +715,9 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     işareti gösteriyor. `team_panel` `_make_pinned_ghost_row` kurucunun yukarı taşındığı grupta ad yerine "—"
     literal'i yazıyor. `capacity_block` bilinmeyen sağlayıcıda "—" basıyor. Aynı işaret ürün dışında da var:
     `scripts/tabs/hr/hr_ui_shared.gd`, `scripts/tabs/personal_tab.gd` (değerleme, net varlık, zirve),
-    `scripts/tabs/sales_tab.gd` (sorumlu satırı 35. maddenin konusu), `scripts/ui/components/center_viewport.gd`,
-    `scripts/ui/components/dialogue_choice_card.gd`. `HR_TASK_NONE`'un CSV değeri iki dilde de "—"; İK kadrosunun
-    GÖREV hücresinde (`hr_ledger.gd` `_task_cell`) ve `HRUiShared.status_cell`'in boş durumunda görünüyor.
+    `scripts/tabs/sales_tab.gd` (sorumlu satırı 35. maddenin konusu), `scripts/ui/components/dialogue_choice_card.gd`.
+    `HR_TASK_NONE`'un CSV değeri iki dilde de "—"; İK kadrosunun GÖREV hücresinde (`hr_ledger.gd` `_task_cell`) ve
+    `HRUiShared.status_cell`'in boş durumunda görünüyor.
   - Nerede: `scripts/tabs/product/detail_view.gd` (`NO_DATA_MARK`, `_status_card`, `_repaint_stats`);
     `scripts/tabs/product/team_panel.gd` (`_make_pinned_ghost_row`); `scripts/tabs/product/capacity_block.gd`
     (`_provider_row`); `scripts/tabs/hr/hr_ledger.gd` (`_task_cell`); `scripts/tabs/hr/hr_ui_shared.gd`
@@ -776,25 +776,24 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
     ardından `_job_text`'teki geri düşüş dalı silinir. B) Bugünkü gibi: etiket yeterli, geri düşüş kalır.
   - Kaynak: Ekip GDD §12.2 (iş metni); Ar-Ge GDD §5.0 (araştırma dışlayıcı iştir).
 
-- **58 · ODA'nın term sheet kağıdı takvim günü sayıyor, diğer Series A geri sayımları iş günü.**
-  - Ne oluyor: ODA masasındaki "sheet" hatırlatma kağıdı başlıktaki gün sayısını `TermSheet.days_left` ile yazar
-    (takvim günü, `expires_day - bugün`, `maxi(0, …)`). Üst bardaki teklif çipi
-    (`VCPitchSystem._tick_countdown_chip`), Yatırım sekmesi (`hunt_tab.gd`) ve olay kapsamı (`scope.gd`,
+- **58 · Masadaki term sheet kâğıdı takvim günü sayıyor, diğer Series A geri sayımları iş günü.**
+  - Ne oluyor: Masadaki "sheet" hatırlatma kâğıdı (`DeskPapers`: ofisin not yığını ve Olaylar sayfası) başlıktaki
+    gün sayısını `TermSheet.days_left` ile yazar (takvim günü, `expires_day - bugün`, `maxi(0, …)`). Üst bardaki
+    teklif çipi (`VCPitchSystem._tick_countdown_chip`), Yatırım sekmesi (`hunt_tab.gd`) ve olay kapsamı (`scope.gd`,
     `seams_ported.gd`) ise `TermSheet.business_days_left` (iş günü) okur. `term_sheet.gd` bu ayrımı iki fonksiyonun
     belge yorumunda kaydeder. Üst bar çipi yalnız `PitchConstants.WARNING_DAYS` (3 iş günü) ve altında görünür; karar
-    günü gelmiş teklifi (`is_decision_due`) göstermez, ODA kağıdı gösterir. `ODA_PAPER_SHEET_TITLE` iki dilde de uzun
-    tire taşıyor (TR "Yatırım teklifi masada — son {days} gün", EN "Offer on the table — {days} days left"); ch01 §9
-    ve CLAUDE.md §5 tireyi yasaklıyor.
-  - Nerede: `scripts/ui/oda/oda_view.gd` (sheet hatırlatması, `ODA_PAPER_SHEET_TITLE`);
-    `scripts/data_models/term_sheet.gd` (`days_left`, `business_days_left`); `scripts/systems/vc_pitch_system.gd`
-    (`_tick_countdown_chip`); `scripts/ui/components/top_bar.gd`; `scripts/tabs/hunt_tab.gd`;
-    `localization/strings.csv` (`ODA_PAPER_SHEET_TITLE`, `FIN_OFFER_COUNTDOWN`, `HUNT_VALIDITY`).
-  - Oyuncuya etkisi: Aynı teklif için ODA duvarı "son 7 gün" derken Yatırım sekmesi 5 iş günü gösterebilir; araya
-    hafta sonu girince iki sayı ayrışır. Metinler de farklı birim söylüyor: ODA kağıdı "gün"
-    (`ODA_PAPER_SHEET_TITLE`), üst bar çipi "İŞ GÜNÜ" (`FIN_OFFER_COUNTDOWN`), Yatırım sekmesi "iş günü"
-    (`HUNT_VALIDITY`).
-  - Seçenekler: A) ODA kağıdı da `business_days_left` okur, tek sayı olur; kağıt "gün" demeye devam ederse birim
-    belirsizliği sürer. B) ODA takvim günü saymaya devam eder, kağıt metni birimi açıkça söyler (önce EN, sonra TR
+    günü gelmiş teklifi (`is_decision_due`) göstermez, masadaki kâğıt gösterir. `DESK_PAPER_SHEET_TITLE`'ın TR metni
+    uzun tire taşıyor (TR "Yatırım teklifi masada — son {days} gün"; EN tiresiz yeniden yazıldı, 68. madde); ch01 §9 ve
+    CLAUDE.md §5 tireyi yasaklıyor.
+  - Nerede: `scripts/ui/components/desk_papers.gd` (`gather`, sheet hatırlatması); `scripts/data_models/term_sheet.gd`
+    (`days_left`, `business_days_left`); `scripts/systems/vc_pitch_system.gd` (`_tick_countdown_chip`);
+    `scripts/ui/components/top_bar.gd`; `scripts/tabs/hunt_tab.gd`; `localization/strings.csv`
+    (`DESK_PAPER_SHEET_TITLE`, `FIN_OFFER_COUNTDOWN`, `HUNT_VALIDITY`).
+  - Oyuncuya etkisi: Aynı teklif için masadaki kâğıt "son 7 gün" derken Yatırım sekmesi 5 iş günü gösterebilir; araya
+    hafta sonu girince iki sayı ayrışır. Metinler de farklı birim söylüyor: kâğıt "gün" (`DESK_PAPER_SHEET_TITLE`),
+    üst bar çipi "İŞ GÜNÜ" (`FIN_OFFER_COUNTDOWN`), Yatırım sekmesi "iş günü" (`HUNT_VALIDITY`).
+  - Seçenekler: A) Kâğıt da `business_days_left` okur, tek sayı olur; kâğıt "gün" demeye devam ederse birim
+    belirsizliği sürer. B) Kâğıt takvim günü saymaya devam eder, metni birimi açıkça söyler (önce EN, sonra TR
     yerelleştirme). C) Tüm oyuncu geri sayımları iş günü olur ve "gün" diyen metinler "iş günü" der (metin onayı
     gerekir). Birimi netleştiren yeniden yazım tireyi de kaldırır (önce EN, sonra TR).
   - Kaynak: GDD ch09 (Funding & Investors) ve ch12 (UI Surfaces & ODA) geri sayım birimini söylemiyor. Tire: ch01 §9,
@@ -943,10 +942,12 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   hep aynı. Kaynak: RAPOR_LOKAL T2.4, TOPLANTI_VE_SERIES_A_ONERI §A.
 
 - **Oyun Vizyonu v1'in çalışma kararları.** Erdem'in 31 Ağustos tarihli belgesi repoda yok. Yanıt (54ace8d) onay almadı;
-  dosya sahip kararıyla silindi. Açık kararlar: perde sınırları, 3D sanat yönü ve kapsamı, kişisel runway, 730'un Perde 2
-  saati olması, remote çalışan ve ekip tavanı, ofis kataloğu, İK rolü, run kartı, teknik borç, tükenmişlik sonu. #11 (kurgu
-  etkinlik adları) karar değil, mevcut yasadır (ch14 §6). Birçoğu yürürlükteki GDD'lerle çelişiyor (ch12 gerçek zamanlı 3D,
-  ch14 §7 çalışan yüzü, Ekip GDD ekip tavanı). Kaynak: VIZYON_v1_YANITLAR §2–§3.
+  dosya sahip kararıyla silindi. Açık kararlar: perde sınırları, kişisel runway, 730'un Perde 2 saati olması, remote
+  çalışan ve ekip tavanı, İK rolü, run kartı, teknik borç, tükenmişlik sonu. 3D sanat yönü ve kapsamı ile ofis kataloğu
+  2026-09-27'de karara bağlandı (gerçek zamanlı izometrik 3B ofis; Ev → İş hanı → Plaza katı → Depo loft;
+  `GDDs/GUNCELLEMELER.md` ch12); kalan: kira ve ekonominin bağlanması (60. madde). #11 (kurgu etkinlik adları) karar
+  değil, mevcut yasadır (ch14 §6). Birçoğu yürürlükteki GDD'lerle çelişiyor (ch14 §7 çalışan yüzü, Ekip GDD ekip
+  tavanı). Kaynak: VIZYON_v1_YANITLAR §2–§3.
 
 - **GDD'ler arası iki çelişki.** (1) Zor mod: ch01 §6 "v1 yalnız Normal; Hard, Normal kalibre edilene kadar
   kilitli-görünür", ch14 §2 "Hard demo'da çıkar" diyor; ch14 §8 ayarlı mı kaba mı çıkacağını açık bırakıyor. Kodda zor mod
@@ -954,6 +955,79 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   `GDDs/README.md` ch01 §6 için ch14'ü okutur. Açık: Hard demo'ya girecek mi. (2) Ar-Ge sekmesi: ch12 §1 ve ch14 §3
   "kilitli-görünür" diyor; Ar-Ge GDD §2 (rev 1.8) ray öğesini ilk günden normal sekme sayıyor, kod (`UiTokens.TABS`) buna
   uyuyor. Açık: ch12 §1 ve ch14 §3 güncellensin mi.
+
+- **60 · Ofis kirası, depozitosu ve nakliyesi ekonomiye bağlı değil.**
+  - Ne oluyor: Katalog tasarımın sayılarını taşıyor, hepsi [WORKING]: İş hanı kira 2.500 / depozito 5.000 / nakliye
+    1.500, Plaza 18.000 / 36.000 / 9.000, Depo loft 45.000 / 90.000 / 20.000; şartlar İş hanı'nda Frank'in çeki ve
+    kasa 6.500, Plaza'da ekip 12, kasa 45.000, marka 40, Depo loft'ta ekip 35, kasa 110.000, marka 70. Taşınma kasadan
+    hiçbir tutar düşmüyor; `FinanceSystem`'in "office" gider kalemi 0. Kasa şartı yalnız kapıdır.
+  - Nerede: `scripts/systems/office_constants.gd` (`CATALOG`); `scripts/systems/office_system.gd` (`move_to`);
+    `scripts/systems/finance_system.gd` (`STARTING_BURN_BREAKDOWN` "office"); `scripts/ui/office/office_map_card.gd`.
+  - Oyuncuya etkisi: Harita kartı kirayı ve "Taşın · {depozito + nakliye}" tutarını gösteriyor, kasa değişmiyor; büyük
+    ofisin bedeli yok.
+  - Seçenekler: A) Depozito ve nakliye taşınmada tek seferlik gider (`FinanceSystem.apply_one_time_cost`), kira aylık
+    "office" kalemi olur; sayılar kalibrasyonla. B) Yalnız kira bağlanır. C) Kalır (görsel ilerleme); karttaki bedel
+    satırları kalkar.
+  - Kaynak: Erdem, 2026-09-27 görev kararı (izometrik ofis; bu turda kasa hareketi yok); ch08 §1; "B2 ekonomisi (D13)"
+    maddesi ("Ofis gideri 0").
+
+- **61 · Krem paletin ve ofis kişilerinin onay bekleyen renkleri.**
+  - Ne oluyor: Krem palete geçişte yeni değer alan ve F5 onayı bekleyen renkler: `ACCENT_HOVER` #F6D059,
+    `ACCENT_PRESSED` #D7AC2A, `BUILD_RAMP_2` #C0692A, `BUILD_RAMP_3` #2F8783, `BORDER_STEPPER_OWN` #AF9E7F, `DOT_IDLE`
+    #C4B79F, `BUILD_FILL_PAUSED` #EFE8DA ve renk körü zeminleri (`POSITIVE_BG_CB` #D9E5F0, `NEGATIVE_BG_CB` #F1E4D1).
+    Ofiste Müşteri Temsilcisinin kıyafet rengi `OfficeConstants.ROLE_COLORS["cs"]` #8a63d2; tasarımda bu rol yok.
+  - Nerede: `scripts/theme/ui_tokens.gd` (`# WORKING` işaretleri); `scripts/systems/office_constants.gd` (`ROLE_COLORS`).
+  - Oyuncuya etkisi: CTA'nın hover ve basılı hâli, Build Bar'ın 2. ve 3. tur rengi, stepper kenarı, kazanılmamış
+    kilometre taşı noktası, duran çubuğun dolgusu, renk körü paletinde olumlu ve olumsuz zemin, ofiste müşteri
+    temsilcileri.
+  - Seçenekler: A) Görsel turda olduğu gibi mühürlenir. B) Sahip değerleri değiştirir (token değişikliği `THEME_STAMP`'i
+    artırır, tema yeniden üretilir).
+  - Kaynak: Erdem, 2026-09-27 görev kararı (renkler F5 ile mühürlenir); CLAUDE.md §7.
+
+- **62 · Ofisin ekip şartı izindekileri de sayıyor.**
+  - Ne oluyor: Plaza (12) ve Depo loft (35) ekip şartı `HRSystem.headcount()`'u okuyor, o da
+    `CharacterRegistry.count_employees()`'u: izindeki ve eğitimdeki çalışanlar dahil, kurucu hariç. İşbaşındakiler
+    (`get_active_employees`) ayrı sayıdır; ofiste yalnız onlar görünür.
+  - Nerede: `scripts/systems/office_system.gd` (`requirement_state`, "team"); `scripts/systems/hr_system.gd`
+    (`headcount`); `scripts/autoload/character_registry.gd` (`count_employees`, `get_active_employees`).
+  - Oyuncuya etkisi: İzne çıkan biri kapıyı kapatmaz; kart "şu an 12" derken ofiste 11 çalışan görünebilir.
+  - Seçenekler: A) Kadro sayısı kalır (izin geçicidir). B) Yalnız işbaşındakiler sayılır.
+  - Kaynak: ofis tasarımı (şart "Ekip en az N kişi", `OFFICE_REQ_TEAM`); Erdem, 2026-09-27 görev kararı.
+
+- **63 · Mesai penceresi ofisi hızlandırılmış film gibi gösteriyor.**
+  - Ne oluyor: Çalışanlar yalnız mesai penceresinde ofiste (`WorkHoursSystem.start_hour`, `hours_for`); varsayılan 8
+    saat günün üçte biridir. 1×'te bir oyun günü 12 gerçek saniye olduğu için mesai 4 saniye sürer: kişiler günde bir
+    kez gelir, oturur ve çıkar; ofis günün üçte ikisinde kurucu dışında boştur.
+  - Nerede: `scripts/ui/office/office_people.gd` (`_wanted`, `_steer`, `ARRIVE_MAX_S`);
+    `scripts/autoload/time_manager.gd` (`SECONDS_PER_DAY`); `scripts/systems/hr_constants.gd` (`WORK_HOURS_DEFAULT`).
+  - Oyuncuya etkisi: Ofis çoğu zaman boş ya da giriş çıkış hâlinde görünür.
+  - Seçenekler: A) Kalır: ofis oyunun saatini izler. B) Görünürlük bandı genişler: kişiler mesaiden önce ve sonra bir
+    süre daha ofiste görünür (yalnız görsel; mesai mekaniği değişmez).
+  - Kaynak: Erdem, 2026-09-27 görev kararı (ışık oyun saatini izler, kişiler gerçek zamanlı ambiyans); Ekip GDD §8.1.
+
+- **64 · Plaza ve Depo loft sahnesinde katalogdan fazla masa var.**
+  - Ne oluyor: Sahne (tasarımın `maxN`'i) Plaza'da 37, Depo loft'ta 69 çalışan masası kuruyor (kurucu masası
+    hariç); katalog (`desks`, tasarımın ofis kartından) 36 ve 64 diyor. Harita kartı ve hover satırı katalog sayısını,
+    oturtma sahnenin sayısını okuyor. İş hanında ikisi de 10.
+  - Nerede: `art/office3d/{plaza,loft}.json` (`maxN`, `spots.desk`); `scripts/systems/office_constants.gd`
+    (`CATALOG`); `scripts/ui/office/office_people.gd` (`_seat_everyone`); `scripts/ui/office/office_map_card.gd`,
+    `scripts/ui/office/office_city.gd` (`OFFICE_HOVER_LINE`).
+  - Oyuncuya etkisi: Kart "36 masa" derken ofiste 37. çalışan da masaya oturur.
+  - Seçenekler: A) Katalog sahneye eşitlenir (37 / 69). B) Oturtma katalog sayısıyla sınırlanır, fazla masalar boş
+    kalır. C) Tasarım düzeltilir ve yeniden dışa aktarılır.
+  - Kaynak: ofis tasarımı (Claude Design `65a0b148`: `office-plaza-v2.js`, `office-loft-v2.js` ve ofis kartı).
+
+- **65 · Pencere ölçüleri: Ekip mockup'tan geniş, ürün kurmanın 3. adımı Ürün penceresine sığmıyor.**
+  - Ne oluyor: Ekip penceresi 1200×720 (`WindowLayer.SPECS`); mockup 1000 genişlik veriyor. Kadro defterinin yoğun
+    kademesinde sabit sütunlar 874 px tutuyor (`HRLedger.W_*_DENSE`); ÇALIŞAN sütunu ve kenar boşluklarıyla 1000'e
+    sığmıyor. Ürün kurma akışının 3. adımı 1280 genişliğindeki Ürün penceresini 59 px aşıyor (görsel tur ölçümü).
+  - Nerede: `scripts/ui/components/window_layer.gd` (`SPECS`); `scripts/tabs/hr/hr_ledger.gd` (`W_*_DENSE`,
+    `measure`); `scripts/tabs/product/creation_flow.gd`.
+  - Oyuncuya etkisi: Ekip penceresi arkadaki ofisi mockup'tan çok örtüyor; ürün kurmanın 3. adımında içerik taşıyor.
+  - Seçenekler: Ekip için A) 1200 kalır, B) 1000'e iner ve defter sütunları yeniden ölçülür (ad ve rol kısalır). Ürün
+    için A) pencere en az 59 px genişler, B) 3. adımın sütunları daralır.
+  - Kaynak: ofis tasarımının pencere mockup'ı; Erdem, 2026-09-27 görev kararı (sabit yuvalı pencereler); görsel tur
+    ölçümü (2026-09-27).
 
 ## Metin ve yerelleştirme
 
@@ -1033,24 +1107,55 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   `PROD_SHIP_FIRST_READY`, `PROD_SHIP_FIRST_BODY`, `PROD_DESIGN_CEILING_NOTE`, `PROD_DESIGN_DECISION_BODY`,
   `PROD_ITER_CEILING_NOTE`.
 
+- **66 · `OFFICE_REQ_ANGEL`'ın TR metni onay bekliyor.**
+  - Ne oluyor: İş hanının ilk şartı Frank'in çekidir (`GameState.run_angel_amount > 0`); çek seed değildir, tek çek,
+    tur değil. Harita kartındaki şart satırı `OFFICE_REQ_ANGEL` kapıya uyar: EN "Frank's cheque taken", TR "Frank'in
+    çeki alındı". TR satır sahibin onayından geçmedi.
+  - Nerede: `localization/strings.csv` (`OFFICE_REQ_ANGEL`); `scripts/systems/office_system.gd`
+    (`requirement_state`, "angel"); `scripts/ui/office/office_map_card.gd`.
+  - Oyuncuya etkisi: TR ekranda onaysız bir satır.
+  - Seçenekler: A) TR onaylanır. B) Sahip TR'yi yeniden yazar.
+  - Kaynak: ofis tasarımının şart metni; CLAUDE.md §1, §5.
+
+- **68 · Yeniden adlandırılan üç anahtarın TR metninde oyuncuya görünen tire.**
+  - Ne oluyor: `DESK_PAPER_GATE_TITLE` (TR "Faz kapısı açık — karar bekliyor"), `DESK_PAPER_SHEET_TITLE` (TR "Yatırım
+    teklifi masada — son {days} gün", 58. madde) ve `PERSONAL_MS_SHIP_NOTE` (TR "Ürün raflara çıktı — artık dünya da
+    oynuyor.") metinlerini aynen taşıyor. EN tiresiz yeniden yazıldı ("Phase gate open: decision pending", "Offer on
+    the table, {days} days left", "The product hit the shelves; now the world plays too."); TR sahibin metni, onay
+    bekliyor.
+  - Nerede: `localization/strings.csv`; okuyanlar `scripts/ui/components/desk_papers.gd` ve `scripts/tabs/personal_tab.gd`
+    (`_milestones`).
+  - Oyuncuya etkisi: TR'de not yığını, Olaylar sayfası ve Kişisel'in Kilometre Taşları kartı ekranda tire gösteriyor
+    (ch01 §9).
+  - Seçenekler: A) TR ayrı yerelleştirme adımında yeniden yazılır (onay bekler). B) Tire noktalama sayılır (51.
+    maddenin A seçeneğiyle birlikte).
+  - Kaynak: ch01 §9; CLAUDE.md §5.
+
+- **69 · Frank'in taşınma kartı taslak; onaya kadar demo destesinde değil.**
+  - Ne oluyor: `funding.frank_office_move` Frank'in çekinden sonra, şirket hâlâ Ev'deyken bir kez gelir
+    (`investor.angel_taken`, `office.current == home`); tek seçenekli bir beat. TR ve EN metni ajan taslağıdır; kart
+    onaya kadar `version_scope: ea`'da, demo destesine girmiyor. EA ve tam sürüm onu hâlâ taşıyor.
+  - Nerede: `data/events/cards/funding/frank_office_move.json` (`version_scope`, `text.tr`, `text.en`).
+  - Oyuncuya etkisi: Demoda ilk taşınmayı ofis düğmesinin nabzı tek başına gösteriyor.
+  - Seçenekler: A) Sahip metni onaylar ya da yeniden yazar; kart `demo`'ya döner. B) Kart silinir; nabız yeter.
+  - Kaynak: CLAUDE.md §3 (Frank'in külliyatı Erdem'indir; yeni Frank satırı onaysız ekrana çıkmaz); Erdem, 2026-09-27
+    görev kararı (ilk taşınmayı Frank'in kartı önerir).
+
 ## Kod ve test altyapısı
 
 - **EA/tam'da kalan "yakında" izleri.** Av'daki kilitli "— · Tier 2'de" fon satırı (`InvestorRegistry` `locked_tier2`)
   ve Pazarlama sekmesinin koşulsuz `"lock": "ea"` kilidi her build'de görünüyor. Seçenekler: build kapsamına bağla ya da
   olduğu gibi bırak. Kaynak: SONLAR_GAZETE_MODLAR §U.4 madde 3.
 
-- **`Chrome*` liste dışı kullanım.** Eski CLAUDE.md'nin onaylı listesi: TopBar, MonthSummary bandı, LeftTabs,
-  TabPageChrome, tooltip kabuğu; ODA kendi donmuş temasından çözer. Liste dışında: Satış sekmesinin fiyat duruşu kadranı
-  ve temsilci bant tavanı seçicisi (`ChromeTabButton`/`ChromeTabButtonActive`, `scripts/tabs/sales_tab.gd`), pazarlık
-  sahnesinin teklif butonu (`ChromeAlert`, `scripts/modals/negotiation_scene.gd`). Seçenekler: listeye ekle ya da gövde
-  varyasyonuna taşı. Kaynak: eski CLAUDE.md Chrome kuralı.
+- **`Chrome*` liste dışı kullanım: Satış sekmesi.** CLAUDE.md §7'nin listesi: TopBar, MonthSummary, NewsTicker, Ürün
+  sayfasının Frank şeridi, koyu sahneler (`DialogueChoiceButton`, `ChromeAlertButton`). Liste dışında kalan tek kullanım
+  Satış sekmesinin fiyat duruşu kadranı ve temsilci bant tavanı seçicisi (`ChromeTabButton` / `ChromeTabButtonActive`,
+  `scripts/tabs/sales_tab.gd`). İki varyasyon bugün `TabButton` / `TabButtonActive`'in birebir aynısıdır
+  (`build_theme.gd`). Seçenekler: listeye ekle ya da Satış sekmesi `TabButton`'a geçsin ve `ChromeTabButton*` silinsin.
+  Kaynak: eski CLAUDE.md Chrome kuralı; CLAUDE.md §7.
 
 - **Pre-commit kancası.** Git kökündeki pre-commit kancası (`--event-lint` ve `loc_residue`) hazır, ama `core.hooksPath`
   ayarlı değil. Açmak tek bir `git config` komutu ve sahibe bırakıldı. Kaynak: EVENT_ENGINE_QUESTIONS Q16.
-
-- **Çalışma ağacındaki iki `.tres` farkı.** Godot editörü `themes/master_theme.tres` ve `themes/oda_frozen_theme.tres`'i
-  `uid=` öznitelikleriyle yeniden kaydetti; fark commit edilmemiş duruyor. `oda_frozen_theme` "düzenlenmez" kuralı altında.
-  Seçenekler: geri al ya da commit et.
 
 - **Seam envanterinin açık YOK satırları.** Olay motoru GDD §6.3 YOK satırlarını sahibi modülün
   açık işi olarak dosyalatır; envanter dosyası silindi (GDD §27.8). Hâlâ açık olanlar:
@@ -1085,6 +1190,57 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   istiyor; dosya silindi (§27.8). Önerilen okuma kuralı: seam `scripts/events/seams/` altında
   kayıtlıdır ve `--event-vocab` yeniden koşulmuştur; eksikler bu dosyaya yazılır. Onaylanırsa kural
   §27.8'e eklenir. Kaynak: olay motoru GDD §6.4, §23 A2, §27.8.
+
+- **70 · 3B ofis 1080p'nin üstünde yumuşak çiziliyor.**
+  - Ne oluyor: `OfficeView`'in `SubViewportContainer`'ı `stretch` ile konteynerin mantıksal boyutunda çiziyor (1920×1080
+    tabanında 1836×992). `canvas_items` ölçeklemesinde 1440p ve 4K'da bu görüntü büyütülür; arayüz metni ise fiziksel
+    çözünürlükte çizilir.
+  - Nerede: `scenes/office/OfficeView.tscn` (`Viewport3D`, `stretch`); `project.godot` (`window/stretch/mode`).
+  - Oyuncuya etkisi: Yüksek çözünürlüklü ekranda ofis bulanık, pencereler keskin.
+  - Seçenekler: A) SubViewport fiziksel çözünürlükte çizer (4K'da dört kat piksel, GPU bedeli ölçülür). B) Ayarlara bir
+    kalite seçeneği olarak bağlanır. C) Kalır.
+  - Kaynak: görsel tur (2026-09-27); UiTokens yazı tipi içe aktarma notu (canvas_items metni fiziksel çözünürlükte).
+
+- **71 · Kalabalık Depo loft'un kare ve bellek maliyeti.**
+  - Ne oluyor: Her kişi Xbot mesh'inin kendi kopyasını taşıyor (kıyafet renkleri kopyanın köşe renklerine pişirilir).
+    70 kişilik Depo loft'ta kare başına ~6 ms ve ~178 MB GPU belleği ölçüldü.
+  - Nerede: `scripts/ui/office/office_look.gd` (köşe rengi kopyası); `scripts/ui/office/office_actor.gd`;
+    `scripts/ui/office/office_people.gd`.
+  - Oyuncuya etkisi: Büyük kadroda zayıf makinede kare düşebilir.
+  - Seçenekler: A) Mesh paylaşılır, kıyafet rengi shader'da hesaplanır. B) Uzaktaki kişiler basitleşir. C) Kalır;
+    ölçüm hedef donanımda tekrarlanır.
+  - Kaynak: görsel tur ölçümü (2026-09-27).
+
+- **72 · Ofis kişilerinin rigi Mixamo X Bot: lisans onayı.**
+  - Ne oluyor: Kişiler Adobe Mixamo "X Bot" karakterini kullanıyor; dosya three.js deposunun örneklerinden geldi
+    (`assets/art/office/xbot.glb`). Lisans notu README'de: Mixamo koşulları karakterin oyunlarda telif ücretsiz
+    kullanımına izin verir. Ticari sürüm için sahibin onayı yok.
+  - Nerede: `assets/art/office/xbot.glb`, `assets/art/office/README.md`; okuyan `scripts/ui/office/office_look.gd`.
+  - Oyuncuya etkisi: Yok; dağıtımın hukuki dayanağı.
+  - Seçenekler: A) README notu yeterli sayılır. B) Mixamo koşulları kaynağı ve tarihiyle README'ye yazılır. C) Rig
+    değişir.
+  - Kaynak: `assets/art/office/README.md`; ofis tasarımı (`office-sim-v12.js` `loadXbot`).
+
+- **73 · `ChromeAlertButton` renk körü takasına girmiyor.**
+  - Ne oluyor: Pazarlık sahnesinin teklif butonu hakaret bölgesinde ve son teklifte `ChromeAlertButton`'a dönüyor;
+    varyasyonun yazı rengi temada sabit `NEGATIVE_BRIGHT`. Aynı sahnede cetvelin tutamacı ve son sabır kutusu
+    `UiTokens.negative_bright()`'ı okuyup takası izliyor; TopBar'ın `ChromeAlert` etiketi aynı sorunu `top_bar.gd`'de
+    override ile çözüyor.
+  - Nerede: `scripts/theme/build_theme.gd` (`ChromeAlertButton`); `scripts/modals/negotiation_scene.gd` (`_offer_btn`);
+    `scripts/ui/components/top_bar.gd`.
+  - Oyuncuya etkisi: Renk körü paletinde teklif butonu kırmızı kalır, çevresi turuncuya döner.
+  - Seçenekler: A) Sahne butonun yazı rengini `negative_bright()` ile override eder (TopBar deseni). B) Tema renk körü
+    için ikinci bir varyasyon taşır, sahne seçer. C) Kalır.
+  - Kaynak: CLAUDE.md §7 (duruma bağlı stil helper'dan okunur); Ayarlar > Erişilebilirlik.
+
+- **74 · Harita çipleri ve güncel ofis hapı koyu çiftle çiziliyor.**
+  - Ne oluyor: Şehir haritasının çipleri ve harita kartındaki güncel ofis hapı 3B dioramanın üstünde `BG_TOPBAR` zemin
+    ve `CREAM` yazıyla çiziliyor; tasarımın niyeti bu. CLAUDE.md §7 koyu çifti çerçeveye (TopBar, NewsTicker, MonthSummary
+    bandı) ayırıyor, bu iki yüzey listede yok.
+  - Nerede: `scripts/ui/office/office_city.gd` (harita çipleri); `scripts/ui/office/office_map_card.gd` (güncel ofis hapı).
+  - Oyuncuya etkisi: Yok.
+  - Seçenekler: A) §7'ye "3B ofisin üstündeki çip ve haplar" eklenir. B) Krem çifte dönerler.
+  - Kaynak: ofis tasarımı; CLAUDE.md §7.
 
 ## GDD'ye işlenmemiş sahip kararları
 

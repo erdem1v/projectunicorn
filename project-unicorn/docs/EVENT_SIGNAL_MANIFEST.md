@@ -10,16 +10,16 @@ the same idea is the seam list in [`content/events_draft/_vocabulary.md`](conten
 ## Why this is generated
 
 §15.1 asks for a static manifest of emitter, listeners and payload. Hand-keeping that
-for 129 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
+for 131 signals guarantees drift, and drift here is not cosmetic: §15.2 makes "a declared
 signal with no emit point" a lint error, so the manifest is the lint rule's input.
 
 ## Headline numbers
 
 | | count |
 |---|---|
-| Signals declared | **129** |
+| Signals declared | **131** |
 | Declared with **no production emitter** | **2** |
-| Emitted with **no production listener** | **70** |
+| Emitted with **no production listener** | **69** |
 
 The second number is the §15.2 violation set. The third is **not** a defect: the Ekip,
 Ürün, Ar-Ge and Satış modules publish their read-surface signals ahead of any consumer,
@@ -65,25 +65,25 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar · oda_tour | 18 | 1 | time_manager |
-| `tab_changed` | `tab_id: String` | effects · game_shell · main · rnd_card_modal · creation_flow · detail_view · left_tabs · research_bar · tab_page_chrome · oda_view | 26 | 5 | game_shell · build_hud_panel · center_viewport · left_tabs · oda_tour |
-| `finance_subpage_requested` | `page_id: String` | effects · main · oda_view | 3 | 1 | finance_tab |
+| `speed_change_requested` | `speed: int` | game_shell · main · endings_system · top_bar | 17 | 1 | time_manager |
+| `tab_changed` | `tab_id: String` | effects · main · rnd_card_modal · creation_flow · detail_view · desk_papers · left_tabs · research_bar · window_layer · office_notice_stack | 22 | 2 | left_tabs · window_layer |
+| `finance_subpage_requested` | `page_id: String` | effects · main · desk_papers | 3 | 1 | finance_tab |
 
 ### Settings signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
 | `settings_requested` | `—` | main · system_menu_modal · left_tabs | 3 | 1 | main |
-| `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · creation_flow | 15 | 1 | main |
-| `language_changed` | `locale: String` | localization | 1 | 5 | center_viewport · news_ticker · research_bar · top_bar · oda_tour |
-| `palette_changed` | `colorblind: bool` | settings_modal | 2 | 4 | hr_tab · center_viewport · research_bar · top_bar |
+| `confirm_requested` | `config: Dictionary` | main · save_load_modal · settings_modal · system_menu_modal · term_sheet_table_scene · hr_tab · hunt_tab · hr_atlas_modal · hr_ledger · creation_flow | 15 | 1 | main |
+| `language_changed` | `locale: String` | localization | 1 | 6 | news_ticker · research_bar · top_bar · window_layer · office_city · office_notice_stack |
+| `palette_changed` | `colorblind: bool` | settings_modal | 2 | 6 | hr_tab · research_bar · top_bar · window_layer · office_city · office_notice_stack |
 
 ### Character signals
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `character_added` | `character_id: String` | character_registry | 1 | 1 | left_tabs |
-| `character_removed` | `character_id: String` | character_registry | 1 | 1 | left_tabs |
+| `character_added` | `character_id: String` | character_registry | 1 | 2 | left_tabs · office_people |
+| `character_removed` | `character_id: String` | character_registry | 1 | 3 | hr_dossier · left_tabs · office_people |
 | `morale_changed` | `character_id: String, new_morale: int` | character_registry | 1 | 1 | left_tabs |
 | `employee_experience_changed` | `character_id: String, new_experience: int` | character_registry | 2 | 0 | — |
 | `employee_training_changed` | `character_id: String, days_left: int` | character_registry | 3 | 2 | build_bar · research_bar |
@@ -97,8 +97,8 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `employee_departed` | `character_id: String` | character_registry | 1 | 0 | EvSignals (bindable) |
 | `training_started` | `character_id: String, area_key: String` | character_registry | 1 | 0 | — |
 | `training_completed` | `character_id: String, area_key: String` | character_registry | 1 | 0 | — |
-| `assignment_changed` | `character_id: String` | character_registry · work_hours_system | 11 | 1 | research_bar |
-| `hr_day_processed` | `—` | hr_system | 1 | 0 | — |
+| `assignment_changed` | `character_id: String` | character_registry · work_hours_system | 11 | 2 | research_bar · office_people |
+| `hr_day_processed` | `—` | hr_system | 1 | 1 | hr_dossier |
 | `news_stream_changed` | `—` | news_feed_system | 1 | 1 | news_ticker |
 
 ### Customer signals
@@ -219,7 +219,7 @@ excluded from both counts and shown in the notes column when they are all a sign
 
 | signal | payload | emitter(s) | E | L | listener(s) |
 |---|---|---|---|---|---|
-| `mentor_advisory_changed` | `text: String` | effects · vc_pitch_system | 2 | 1 | hunt_tab |
+| `mentor_advisory_changed` | `key: String, args: Dictionary` | effects · vc_pitch_system | 2 | 2 | game_state · hunt_tab |
 | `headline_added` | `source: String, text: String` | effects · ticker · hr_morale_system · hr_search_system · hr_system · sales_ledger | 8 | 2 | time_manager · news_ticker |
 
 ### Endgame signals
@@ -257,6 +257,13 @@ excluded from both counts and shown in the notes column when they are all a sign
 | `seed_door_opened` | `—` | seed_round_system | 1 | 1 | finance_tab |
 | `seed_sheet_granted` | `vc_id: String` | vc_pitch_system | 1 | 0 | — |
 | `seed_round_closed` | `vc_id: String` | seed_round_system | 1 | 0 | — |
+
+### Office
+
+| signal | payload | emitter(s) | E | L | listener(s) |
+|---|---|---|---|---|---|
+| `office_move_started` | `office_id: String, arrival_day: int` | office_system | 1 | 1 | office_hud |
+| `office_changed` | `office_id: String` | office_system | 1 | 1 | office_view |
 
 ### Save / system-menu signals
 

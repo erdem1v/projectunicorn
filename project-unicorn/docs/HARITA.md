@@ -12,7 +12,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
   - `GameState.initialize_run(payload)` yeni koşuyu kurar; onboarding, smoke ve probe buradan geçer.
   - Yazma yüzeyi: `GameState.set_cash`, `set_mrr`, `set_brand`, `advance_phase`, `advance_day`, `set_current_hour`; tipli bayrak tablosu `set_flag` / `get_flag` (`FLAG_TYPES`). `set_phase` yalnız debug yollarında (shot koşucuları, debug tuşları, smoke) kullanılır.
   - Ay defteri: `accrue_month_flow`, `push_month_close`, `get_runway_months`, `get_run_ledger`.
-  - `TimeManager` günlük dağıtım sırası: ürün → Ar-Ge → ekip → satış → rakipler → finans → faz kapısı ve seed → olaylar → haber → VC → sonlar → ay özeti. Gün `EventBus.day_tick_completed` ile kapanır (autosave sınırı). Saatlik dağıtım: ürün ve destek, satış, olaylar.
+  - `TimeManager` günlük dağıtım sırası: ürün → Ar-Ge → ekip → satış → rakipler → finans → ofis → faz kapısı ve seed → olaylar → haber → VC → sonlar → ay özeti. Gün `EventBus.day_tick_completed` ile kapanır (autosave sınırı). Saatlik dağıtım: ürün ve destek, satış, olaylar.
   - Hız: istek `EventBus.speed_change_requested`, sonuç `TimeManager.speed_changed`; merdiven `TimeManager.SECONDS_PER_DAY`; `hold_clock` / `release_clock`.
   - `EventBus` sistemler arası sinyalleri taşır. İstisna: `TimeManager.speed_changed` (TopBar hız düğmelerini buradan boyar). `# --- X ---` bölüm başlıklarını `tools/gen_signal_manifest.py` okur.
   - `RngStreams.get_stream(id)`, `reseed(run_seed)`; `SkillCheck.resolve`, `chance_for`; `Fmt.money`, `percent`, `number`, `month_name`, `upper`.
@@ -33,7 +33,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
   - `SaveCodec.capture_game_state`, `apply_game_state`, `capture_registries`, `restore_registries`. GameState değişkenlerini ve kayıtlı modellerin `@export` alanlarını kendisi bulur; yeni alan varsayılan değer ister.
   - Sürüm sabitleri `SCHEMA_VERSION` ve `MIN_LOADABLE_VERSION`; göçler `save_manager.gd` içinde `_migrate_*`.
   - UI yolu: `EventBus.save_load_requested`, `quicksave_requested`, `quickload_requested` → `main.gd`.
-- **Smoke:** `save_*`, `legacy_v12_save_opens_live_table`, `sales_save_roundtrip_rev6`, `sales_check_replays_after_load`, `account_ownership_round_trip`, `month_history_save_typing`, `seed_sheet_round_trips`, `loc_save_sector_migration`.
+- **Smoke:** `save_*`, `legacy_v12_save_opens_live_table`, `sales_save_roundtrip_rev6`, `sales_check_replays_after_load`, `account_ownership_round_trip`, `month_history_save_typing`, `seed_sheet_round_trips`, `loc_save_sector_migration`, `office_move_gates_and_save` (12→13 göçü).
 - **Probe:** `VC_REPLAY`, `VC_REPLAY_SUM`. Masa tekrarlarının öncesini ve sonrasını `SaveCodec.capture_*` ve `SaveManager._capture_systems` ile yakalar; tekrar iz bırakırsa `ERROR` basar. Yalnız `full_run_vc_*` preset'lerinde.
 - **Görsel:** `--modal-shot=saveload`. Gerçek bir quicksave yazar.
 
@@ -60,37 +60,40 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
   - `UiTokens`: palet, yazı merdiveni, `THEME_STAMP`; yardımcılar `format_money`, `positive`, `negative`, `badge_palette`, `build_percent`.
   - `UiFactory.make_label`, `make_badge`, `make_card`, `make_pill`, `make_state_chip`, `make_section_header`, `make_centered_column`, `make_placeholder_column`, `initials_of`, `clear`, `is_left_click`.
   - `build_theme.gd` token → tema dönüştürücüsüdür: `godot --headless --path . -s res://scripts/theme/build_theme.gd`. `main.gd` açılışta `master_theme.tres` damgasını `THEME_STAMP` ile karşılaştırır.
+  - Kabuk varyasyonları: pencere `WindowPanel` (krem kart, `RADIUS_WINDOW`, gölge) ve köşesindeki × `WindowClose`; sol ray `SideRailPanel`, `TabButton` / `TabButtonActive`. Koyu sahnelerin butonları `DialogueChoiceButton` ve `ChromeAlertButton`. Koyu çerçeve gövdeyle değişen her rengi `*_CHROME` ikizinden okur (`ACCENT_CHROME`, `INK_*_CHROME`, `VEIL_*_CHROME`); `Chrome*` ailesinin yasal yüzeyleri CLAUDE.md §7'de.
   - `bar_kit.gd` Build Bar ile Research Bar'ın ortak çizimidir. `DialoguePortraitCard` fonlama, satış ve onboarding tarafından paylaşılır.
 - **Smoke:** `build_percent_single_source`, `star_ruler_contract`, `rail_tabs_match_scene_order`.
 - **Probe:** yok.
-- **Görsel:** `--theme-audit=<sekme id|oda>`, `--probe-shot` (ThemeProbe), `--tab-shot=`, `--shot-size=`.
+- **Görsel:** `--theme-audit=<sekme id>`, `--probe-shot` (ThemeProbe), `--tab-shot=`, `--shot-size=`.
 
-## Kabuk (main.gd, GameShell, TopBar, LeftTabs, CenterViewport) · GDD ch12
+## Kabuk (main.gd, GameShell, TopBar, LeftTabs, WindowLayer) · GDD ch12
 
-- **Yer:** `scripts/main/{main,game_shell}.gd`, `scenes/main/{Main,GameShell}.tscn`, `scripts/ui/components/{top_bar,left_tabs,center_viewport,tab_page_chrome}.gd`, `scenes/ui/components/{TopBar,LeftTabs}.tscn`, `scripts/modals/confirm_modal.gd`, `scenes/modals/ConfirmModal.tscn`, `assets/icons/tabs/`
-- **Sahip:** `main.gd` (ana sahne kökü), `game_shell.gd` (`GameShell.tscn`); sınıf `TabPageChrome`
+- **Yer:** `scripts/main/{main,game_shell}.gd`, `scenes/main/{Main,GameShell}.tscn`, `scripts/ui/components/{top_bar,left_tabs,window_layer,window_frame,desk_papers}.gd`, `scenes/ui/components/{TopBar,LeftTabs}.tscn`, `scripts/tabs/events_tab.gd`, `scenes/tabs/EventsTab.tscn`, `scripts/modals/confirm_modal.gd`, `scenes/modals/ConfirmModal.tscn`, `assets/icons/tabs/`
+- **Sahip:** `main.gd` (ana sahne kökü), `game_shell.gd` (`GameShell.tscn`), `window_layer.gd` (`MidRow/CenterViewport`, grup `window_layer`); `window_frame.gd` ve `desk_papers.gd` (yolla preload edilir, sınıf adı yok)
 - **Giriş:**
   - `main.gd` açılışta debug bayraklarını yönlendirir, sonra onboarding'i ya da kabuğu kurar. Oyunda modal ve sahneleri EventBus sinyalleriyle açar: `modal_requested`, `pitch_requested`, `meeting_scene_requested`, `term_table_requested`, `rnd_card_requested`, `confirm_requested` (`hr_action` dahil), `settings_requested`, `system_menu_requested`, `save_load_requested`, `month_ended`, `run_ended`, `milestone_reached`, `product_note_issued` (ilk Ar-Ge notu). Ayrıca `quicksave_requested` / `quickload_requested`'i ve olay modalını kapatan `event_resolved`'u dinler.
-  - `CenterViewport` `EventBus.tab_changed`'i dinler; `TAB_SCENES` sekme sahnelerini, `TabPageChrome.wrap` sayfa çerçevesini verir. `tab_changed("")` ODA'ya döner.
+  - `WindowLayer` (`CenterViewport`'un script'i) `EventBus.tab_changed`'i dinler ve sekmeyi ofisin üstünde sabit yuvalı bir pencerede açar: `TAB_SCENES` sekme sahneleri, `SPECS` 1920×1080 tabanında pencere boyları, `WindowFrame` kabuk (sağ üstte ×). Aynı anda en çok bir birincil ve ona bağlı bir ayrıntı penceresi (`DETAILS`: `hr_dossier`); sürükleme yok. `open_primary(id)`, `open_detail(kind, payload)`, `close_top()` (Esc: önce ayrıntı, sonra birincil; hiçbir pencere yoksa false döner ve `game_shell` sistem menüsünü açar), `get_current_page_body()` (harness). `hr_dossier` açılınca ofiste kişinin halkası yanar (`office_view.select_person`), ayrıntı kapanınca söner (`clear_selection`). `tab_changed("")` pencere yok demektir; ×, Esc ve aktif sekmeye tekrar tık bu sinyale çıkar. Dil ya da palet değişince açık pencereler yeniden kurulur. Çocuk sırası: `OfficeView` ilk, pencereler, `BuildHUD` son (bir çubuğu doluyken ofiste de pencere üstünde de görünür).
+  - `DeskPapers` masadaki kâğıtların tek türetme ve çizim evidir: `gather()` motor kâğıtlarını (`EventGate.desk_papers`) ve durumdan türeyen hatırlatıcıları (faz kapısı, term sheet, Atlas dosyaları, B2B genişlemesi) verir, `make_row()` satırı çizer, `open()` motor kâğıdını `EventGate.open_paper` ile açar, hatırlatıcıyı sekmesine götürür. Kâğıdı değiştiren sinyallere `connect_changes(c)` ile abone olunur. Okuyanlar: Olaylar sayfası (`events_tab.gd`: Frank'in son satırı `GameState.mentor_line_key` + `mentor_line_args`, çizimde `tr(key).format(args)`, ve bütün kâğıtlar) ve ofisin not yığını.
   - `LeftTabs` ray, kilit ve rozetleri; `TopBar` kasa, MRR, runway, tarih ve hız düğmelerini taşır; hız isteğini `EventBus.speed_change_requested` ile gönderir, düğmeleri `TimeManager.speed_changed` ile boyar.
-  - Metni smoke'a sabit yerler (başlıcaları; bkz. Araçlar > Smoke): `center_viewport.gd` içindeki `propagate_call("on_page_closing")`; `TopBar.tscn` ve `top_bar.gd`'de `Speed4Btn` geçmemesi (sahnedeki `PauseBtn`, `Speed1Btn`–`Speed3Btn` adları da sabit); `main.gd` özel adları `_on_milestone_reached`, `_on_milestone_continue`, `_keep_run_for_main_menu`, `_shell`, `_event_modal`, `_milestone_modal`; `left_tabs._refresh_rnd_badge`; `product_tab.gd` `_view_node`, `_view_id`, `_navigate`.
+  - Metni smoke'a sabit yerler (başlıcaları; bkz. Araçlar > Smoke): `window_layer.gd` içindeki `propagate_call("on_page_closing")`; `TopBar.tscn` ve `top_bar.gd`'de `Speed4Btn` geçmemesi (sahnedeki `PauseBtn`, `Speed1Btn`–`Speed3Btn` adları da sabit); `main.gd` özel adları `_on_milestone_reached`, `_on_milestone_continue`, `_keep_run_for_main_menu`, `_shell`, `_event_modal`, `_milestone_modal`; `left_tabs._refresh_rnd_badge`; `product_tab.gd` `_view_node`, `_view_id`, `_navigate`.
 - **Smoke:** `rail_tabs_match_scene_order`, `topbar_speed_cluster_three_rungs`, `creation_draft_survives_navigation`, `milestone_paper_under_card`, `build_bar_hosts_agree`, `rnd_rail_open_with_waiting_page`, `all_scripts_load`.
 - **Probe:** yok (probe kabuk kurmaz).
-- **Görsel:** `--tab-shot=<product|sales|hr|finance|personal|rnd|marketing|events>`, `--modal-shot=confirm|confirm3`, `--shot-size=`, `--skip-onboarding`.
+- **Görsel:** `--tab-shot=<product|sales|hr|finance|personal|rnd|marketing|events>` (pencere ofisin önünde), `--modal-shot=confirm|confirm3`, `--shot-size=`, `--skip-onboarding`.
 - **Ölçüm:** `--render-probe[=<sekme>]` (`--shot-size=` ile) kabuğu tek pencere boyutunda kurar, kare maliyetini ve doku ve video belleğini basar.
 
-## ODA · GDD ch12
+## Ofis (3B) · GDD ch12
 
-- **Yer:** `scripts/ui/oda/{oda_view,oda_layout,oda_tour}.gd`, `scenes/desk/OdaView.tscn`, `scenes/desk/oda_rim_glow.gdshader`, `themes/oda_frozen_theme.tres` (donmuş), `assets/art/center_view/`
-- **Sahip:** sınıf `OdaLayout` (yerleşim defteri); `OdaView` `GameShell.tscn` içinde kalıcı çocuktur (`MidRow/CenterViewport/OdaView`)
+- **Yer:** `scenes/office/OfficeView.tscn`, `scenes/office/shaders/{office_toon,office_ink,office_sky}.gdshader`, `scripts/ui/office/*.gd`, `scripts/systems/{office_system,office_constants}.gd`, `art/office3d/` (ofis başına GLB, yan JSON ve içe aktarıcının çıkardığı dokular), `assets/art/office/` (Xbot rigi, harita kartı küçük resimleri, kafa üstü ikonları)
+- **Sahip:** sınıf `OfficeSystem` (durumun tek yazarı), `OfficeConstants` (katalog, hepsi [WORKING]), `OfficeLayout`, `OfficeMaterials`, `OfficeLighting`, `OfficeCamera`, `OfficePeople`, `OfficeActor`, `OfficeLook`, `OfficeCity`; `OfficeView` `GameShell.tscn` içinde kalıcı çocuktur (`MidRow/CenterViewport/OfficeView`, grup `office_view`)
 - **Giriş:**
-  - Sekme kapalıyken görünür. Durumu sistemlerden okur, EventBus sinyalleriyle tazelenir.
-  - Masadaki kâğıtlar `EventGate.desk_papers` ve `EventGate.open_paper`'dan gelir.
-  - Mentor turu: `main.gd` mentor modalı kapanınca `oda_view` grubunda `start_intro_tour_if_unseen` çağırır; bayrak `Settings` içindeki `oda_intro_seen`.
-  - Plakalar çevrim dışı hattan gelir (Üçüncü taraf ve altyapı).
-- **Smoke:** `oda_anchors_stay_in_band`.
+  - Durum `GameState.office_id`, `office_move_to`, `office_move_day`. `OfficeSystem.current`, `is_moving`, `arrival_day`, `requirement_state`, `can_move_to`, `move_to` (kasa hareketi yok, `FinanceSystem`'in "office" kalemi 0), `daily_tick` (taşınmayı varış gününde indirir). Sinyaller `EventBus.office_move_started`, `office_changed`. Olay seam'i `office.current` (`seams_world.gd`); kart `funding.frank_office_move`.
+  - `OfficeView.load_layout(id)` GLB'yi ve yan JSON'u (`OfficeLayout.load`) yükler, `office_changed`'de ofisi değiştirir; `current_layout`, `camera`, `lighting`, `show_tooltip` / `hide_tooltip`. Kişiye tık `window_layer` grubunda `open_detail("hr_dossier", {character_id})` çağırır.
+  - Işık `TimeManager.day_minute()`'ı okur (`OfficeLighting.apply`, tasarımın gün boyu renk senaryosu). Kişiler `CharacterRegistry` ve `WorkHoursSystem`'i okur: mesai penceresinde masada, dışında ofiste yok, kurucu hep; yürüyüş ve molalar gerçek saniyeyle akar.
+  - Şehir haritası `city` yerleşimidir (`OfficeCity`): ofis kartı `office_map_card.gd`, "Ofisi taşı" düğmesi ve taşınma sayacı `office_hud.gd` (sol alt).
+  - Not yığını `Overlay/NoticeStack` (`office_notice_stack.gd`, sağ alt): Frank'in son satırı (`GameState.mentor_line_key` + args) ve `DeskPapers` kâğıtları; açık pencere yığını örter.
+- **Smoke:** `office_move_gates_and_save`; `build_bar_hosts_agree` (iki ev sahibi: BuildHUD ve ürün izleyicisi).
 - **Probe:** yok.
-- **Görsel:** kapı `--theme-audit=oda`. Piksel karşılaştırması ODA'da geçersizdir. `--oda-shot=<tür>` (ör. `day`, `night`, `event`, `tab`, `market1`, `signal`, `build`); `tour` türü ayar dosyasına yazar.
+- **Görsel:** `--office-shot=<home|ishani|plaza|loft|city>:<saat>[:full|card|<sekme>|hr_dossier]` (ofis her zaman kabuğun içinde; `full` bütün masalar dolu, `card` yalnız `city`'de Plaza'nın kartı açık, `<sekme>` o sekmenin penceresi açık, `hr_dossier` Ekip penceresi ve ilk çalışanın dosyası); kare süresini ve çizim sayılarını da basar. `--tab-shot=` pencereyi ofisin önünde çeker. Dışa aktarım hattı Üçüncü taraf ve altyapı altında.
 
 ## Ürün · GDD ch03, ch06
 
@@ -105,7 +108,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
   - Olay seam'leri `urun.*` (`seams_product.gd`, `seams_ported.gd`).
 - **Smoke:** `iter_*`, `beta_*`, `build_*`, `line_*`, `infra_*`, `destek_*`, `product_*`, `coupling_*` (Ekip ile ortak), `live_during_vbuild`, `sprint_no_freeze`, `capacity_split`, `speed_tracks_team_change`, `feature_bug_seed_by_complexity`, `hardening_seeds_no_bugs`, `single_feature_build_legal`, `commit_cost_charged_once`, `phase_bands_20_60_20`, `deterministic_axes_at_ship`, `fix_run_ships_subset`, `support_desk_rates_stack`, `cancel_reverts_planned_steps`, `pause_kinds_and_lead_note`, `run_profile_never_exhausts`, `quality_half_sat_25`, `b2b_v1_lands_mid_band`, `field_unlocked_for_saas_ops`, `b2c_satisfaction_gate_experience`, `ship_tooltip_counts_critical_penalty`, `axis_reading_replaces_not_adds`, `gate_scope_and_halves`, `above_gate_bonus_ladder`, `design_turn_ladder`, `type_screen_matches_line_content`.
 - **Probe:** `SHIP`, `FIXTURE`, `STATE` içinde `bugs=` ve `q=`, `PLAY` (`_open_the_company`, `_keep_the_word`, `_run_the_company` altyapı ve fix run adımları).
-- **Görsel:** `--product-shot=<tür>` (ör. `portfoy`, `ozellikler`, `tracker`, `beta`, `detail_b2b`, `publish`), `--build-state=<durum>`, `--tab-shot=product`, `--oda-shot=build`.
+- **Görsel:** `--product-shot=<tür>` (ör. `portfoy`, `ozellikler`, `tracker`, `beta`, `detail_b2b`, `publish`), `--build-state=<durum>`, `--tab-shot=product`.
 
 ## Ar-Ge · GDD Ar-Ge modülü
 
@@ -130,6 +133,8 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
   - `HRSystem.daily_tick` alt sistemlerin sırasını yönetir. Okumalar: `is_busy`, `assigned_to`, `skill`, `effective_skill`, `daily_contribution`, `is_overloaded`.
   - `HRSearchSystem.start_search`, `hire`; `HRMoraleSystem.apply_delta`, `send_on_leave`; `HRActions.apply_raise`, `apply_promotion`, `fire`; `WorkHoursSystem.hours_for`, `set_company_hours`.
   - `HRConstants` rol, alan ve yıldız sözlüğüdür (`role_label`, `area_label`, `stars_for`). `FounderConstants` köken, trait ve beceri dağılımını verir. `HRUiShared` sekmeler arası UI yardımcılarının evidir.
+  - Ekip dosyası (`scripts/tabs/hr/hr_dossier.gd`) kişinin ayrıntı penceresidir: `WindowLayer.open_detail("hr_dossier", {character_id})`. Kadro satırında ad ve avatar tıkı (`HRLedger.ACTION_DOSSIER`) ve ofiste kişiye tık açar, satırın gerisi menüyü (`ACTION_MENU`); aksiyonlar satır menüsüyle aynı kapıdan geçer (`HRLedger.action_list`). Kişi ayrılınca pencere kendini kapatır.
+  - Kişisel sayfasının Kilometre Taşları kartı `GameState.milestones()`'u okur.
   - Olay seam'leri `hr.*` (`seams_hr.gd`, `seams_ported.gd`), `founder.*` (`seams_hr.gd`, `seams_world.gd`).
   - Smoke'a sabit adlar (başlıcaları; bkz. Araçlar > Smoke): `hr_popover._place`, `hr_morale_system.send_on_leave` ve `tick_leave_departures`, `hr_ledger.ACTION_MENU`. Emekli adlar `hr_popover`, `hr_actions`, `hr_tab` ve `hr_ledger` içinde geri gelmemeli.
 - **Smoke:** `hr_*`, `founder_*`, `work_hours_*`, `coupling_*` (Ürün ile ortak), `alloc_guard`, `trait_formula`, `single_trait_contract`, `job_assignment_and_idle`, `overload_costs_output`, `leadership_is_trainable`, `promotion_and_raise_gate`, `effective_skill_formula`, `menu_has_one_path`, `vacation_action_retired`, `gorevler_has_no_founder`, `leave_does_not_pause_build`, `money_never_double_minus`, `role_locks_and_runway_pair`, `hires_land_in_own_column`, `cs_candidate_trait_filter`, `sales_candidate_curve_and_traits`.
@@ -159,7 +164,7 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Giriş:**
   - `FinanceSystem.daily_tick` gelir ve gideri uygular, runway'i yeniden hesaplar. `apply_one_time_cost`, `apply_one_time_income`, `get_burn_breakdown`, `set_burn_category`, `get_monthly_flow`.
   - `MonthSummarySystem.daily_tick` ay kapanışını `EventBus.month_ended` ile yayar → `main.gd` → `MonthSummaryModal`.
-  - `finance_tab.gd` Yatırım alt sayfasında `HuntTab`'i barındırır (Fonlama).
+  - `finance_tab.gd` Yatırım alt sayfasında `HuntTab`'i barındırır (Fonlama). `FinanceOzetView` Özet'te faz hedefi kartını (`_refresh_goal`) ve pazar payı merdivenini (`_refresh_league`, `RivalRegistry.get_market_snapshot`) taşır.
   - Olay seam'leri `finance.*` (`seams_finance.gd`).
 - **Smoke:** `month_summary`, `month_history_*`, `burn_*`, `runway_*`, `gross_runway_months`, `run_ledger`, `targeted_modifier_hits_named_customer`.
 - **Probe:** `STATE` (`cash=`, `burn=`, `runway=`), `MONTH`, `MONTH_BURN`, `GATE` içindeki gider kalemleri.
@@ -211,14 +216,14 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Yer:** `scripts/events/event_gate.gd`, `scripts/events/{catalog,core,gate,present,seams}/`, `scripts/data_models/{event,event_choice}.gd`, `scripts/modals/event_modal.gd`, `scenes/modals/EventModal.tscn`
 - **Sahip:** sınıf `EventGate` (statik cephe, autoload değil); `EvCatalog`; `core/` → `EvEngine`, `EvQueue`, `EvHistory`, `EvFlags`, `EvLatches`, `EvSchedule`, `EvArcs`, `EvEffects`, `EvCondition`, `EvDice`, `EvBudgets`, `EvSignals`, `EvSave`, `EvTuning`; `gate/` → `EvGate`, `EvScope`; `present/` → `EvPresenter`, `EvPapers`, `EvTempo`, `EvTicker`; `seams/` → `EvSeams` ve `EvSeams*`; model `GameEvent`, `EventChoice`
 - **Giriş:**
-  - Tek giriş `EventGate.request(id, ctx)`. Ayrıca `resolve`, `daily_tick` / `hourly_tick` (TimeManager), `condition_met` / `condition_reason` (kilitli satırlar), `desk_papers` / `open_paper` (ODA), `active_id` / `active_context`, `remove_queued`, `to_dict` / `from_dict`.
+  - Tek giriş `EventGate.request(id, ctx)`. Ayrıca `resolve`, `daily_tick` / `hourly_tick` (TimeManager), `condition_met` / `condition_reason` (kilitli satırlar), `desk_papers` / `open_paper` (`DeskPapers`), `active_id` / `active_context`, `remove_queued`, `to_dict` / `from_dict`.
   - Sunum: `EvPresenter.build_view` → `EventBus.modal_requested` → `main.gd` → `event_modal.gd` → seçim `EventGate.resolve`.
   - EventBus sinyalleri motora `EvSignals.BINDINGS` ile bağlanır. Okumalar yalnız adlı seam'lerden geçer (`EvSeams.read`); seam adları alan dosyalarında (`seams_*.gd`) kayıtlıdır.
   - Kapsam: `EvTuning.SHIPPED_SCOPES` hangi `version_scope` değerlerinin havuza girdiğini belirler; değeri `EndingsSystem.shipped_scopes()`'tan (`SHIPPED_SCOPES_BY_BUILD`: demo ⊂ ea ⊂ full) gelir ve `build_scope_override`'ı izler.
   - Efekt rozetlerinin tek kurucusu `event_modal._describe_modifier`. Smoke `SILENT_VERBS` sabitini okur.
 - **Smoke:** `event_*`, `ambient_*`, `harness_sniffer_matches_run_log`, `source_tag_speaker_wins`.
 - **Probe:** `FIRE`, `PICK`, `TALLY_BEGIN` / `TALLY` / `TALLY_END`, `WEEK`, `ERROR` (drain koruması, kilitsiz seçeneği olmayan kart).
-- **Görsel:** `--event-shot=<kart id>`, `--b2b-shot=<tür>`, `--oda-shot=event`. Motorun kendi araçları Araçlar altında.
+- **Görsel:** `--event-shot=<kart id>`, `--b2b-shot=<tür>`. Motorun kendi araçları Araçlar altında.
 
 ## Olay içeriği (data/events) · GDD ch11
 
@@ -256,16 +261,15 @@ Açık işler ve sahip kararı bekleyen maddeler: `docs/ACIK_ISLER/`.
 - **Görsel ve ölçüm bayrakları** yalnız debug build'de çalışır. Bayraklar `--` ayıracının arkasına konmaz.
   - `*-shot` bayrakları (`--probe-shot` dahil) pencereli açılır ve kareyi kullanıcı dizinine (`%APPDATA%/Godot/app_userdata/Project Unicorn/`) yazar. `--theme-audit` pencereli açılır, kare yazmaz, denetim satırlarını basar.
   - Ölçüm bayrakları (`--tempo-probe`, `--render-probe`, `--display-check`) kare yazmaz, ölçüm satırlarını basar.
-  - Dosya yazanlar: `--event-lint=baseline`, `--oda-shot=tour`, `--modal-shot=saveload`, `--event-vocab`, `--display-check` (`settings.json`'a yazar ve geri yükler).
+  - Dosya yazanlar: `--event-lint=baseline`, `--modal-shot=saveload`, `--event-vocab`, `--display-check` (`settings.json`'a yazar ve geri yükler).
 
 ## Üçüncü taraf ve altyapı
 
 - **`addons/`:** `auto_reload`, `godot_mcp_editor`, `godot_mcp_runtime`. Üçüncü taraf, dokunulmaz. `godot_mcp_runtime` `MCPRuntime` autoload'unu kaydeder (yalnız debug build, yerel TCP).
 - **`.mcp.json` (git kökü):** Claude Code için Godot MCP sunucusu (gopeak). Kalır.
 - **`.githooks/pre-commit` (git kökü):** isteğe bağlı; `git config core.hooksPath .githooks` ile açılır. İlgili yollar sahnelenince `--event-lint` ve `loc_residue` koşturur. CI yok.
-- **ODA plaka hattı (çevrim dışı, oyun çalışırken yüklenmez):**
-  - `tools/oda_render_rig/`: tarayıcı tabanlı kaynak sahne (geometri, kamera, ışık, malzeme). ODA'nın gönderilen katmanları (`assets/art/center_view/`) bu sahneden `tools/oda3d` 3B hattıyla üretilir. `.gdignore` taşır.
-  - `tools/oda3d/`: aynı sahneden GLB dışa aktarım sayfası ve betikleri; yeniden üretim tarifi `README.md`'de. `.gdignore` taşır.
-  - `scenes/oda3d/`: Godot 3D oda sahnesi, lightmap pişirme sürücüsü (`-e -s` ile) ve plaka yakalama sahnesi. Yalnız `all_scripts_load` derler.
-  - `art/oda3d/`: GLB ve kaynak sahne JSON'u; `plates/` yerel çıktı dizinidir (`.gdignore`).
+- **Ofis 3B dışa aktarım hattı (çevrim dışı; oyun yalnız çıktılarını yükler):**
+  - `tools/office3d/`: tasarımın Three.js kaynağının birebir kopyası (`src/`; kaynak ve deltalar `DESIGN_SOURCE.md`), dışa aktarım sayfası (`export_office.html`, `export_office.js`), `serve.py`, `run_export.sh` ve denetim `check_export.py`. Tarif ve tuzaklar `README.md`'de. `.gdignore` taşır.
+  - Çıktılar: `art/office3d/<id>.glb` ve `<id>.json` (`home`, `ishani`, `plaza`, `loft`, `city`), `assets/art/office/thumb_<id>.jpg`. Koşu Chrome'u ön planda açar ve ağ ister (esm.sh, Xbot). Sonra `--headless --import` ve bir ısınma koşusu (sınıf önbelleği tuzağı); içe aktarıcı GLB'nin gömülü dokularını `art/office3d/<id>_<n>.png` olarak çıkarır.
+- **Üçüncü taraf varlıklar:** ray ikonları (`assets/icons/tabs/`) ve ofisin kafa üstü ikonlarındaki glifler Lucide'dir (ISC, `assets/icons/tabs/LICENSE-lucide.txt`); `assets/art/office/xbot.glb` Mixamo X Bot'tur (kaynak ve not `assets/art/office/README.md`).
 - **Kök dosyalar:** `project.godot` (ana sahne, `main_args`, autoload sırası, viewport), `icon.svg`, `.editorconfig`, `.gitattributes`, `.gitignore`. Git kökündeki `.agents/`, `.claude/skills/` ve `skills-lock.json` projenin parçası değildir.

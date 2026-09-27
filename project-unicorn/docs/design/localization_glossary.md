@@ -79,6 +79,7 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | 3 gün / 1 hafta / 2 hafta | 3 days / 1 week / 2 weeks | Mesai blokları. |
 | ARAYIŞ BAŞLAT / ARAYIŞI İPTAL ET | START SEARCH / CANCEL SEARCH | Üç ayrı yazımın tek anahtar ailesi. |
 | Aday dosyası | Candidate file | |
+| Ekip dosyası | Team dossier | Kişinin ayrıntı penceresi (`hr_dossier`). |
 | İşe alım / Kıdem tazminatı | Hiring / Severance | |
 | ZAMMI UYGULA | APPLY RAISE | |
 | İK | HR | Rayda ve ticker'da: TR İK der, EN HR. |
@@ -125,13 +126,31 @@ dilde aynıdır. `[WORKING]` = yönetmen F5'te revize edebilir.
 | DEVAM ET | CONTINUE | Kilometre taşı gazetesi de aynı anahtarı (`UI_CONTINUE`) okur. |
 | ANA MENÜ | MAIN MENU | 2026-09-25: kilometre taşı gazetesinin ikinci butonu. Sistem menüsündeki cümle hâli: "Ana menüye dön" / "Return to main menu". |
 | Geri / İleri | Back / Next | Shipped. |
-| ODAYA DÖN | BACK TO ROOM | Shipped. |
+| Bildirim yığını | Notice stack | Ofisin sağ altı: Frank'in son notu ve masadaki kâğıtlar. |
 | Kilometre Taşları / SIRADA NE VAR? / KURUCU | Milestones / WHAT'S NEXT? / FOUNDER | Shipped. |
 | Sıfırdan | Self-Made | **Kapı kararı 5 `[WORKING]`** — TR adı lokalize edildi (eski: Self-Made aynı). |
 | Mirasyedi | The Heir | **Kapı kararı 5 `[WORKING]`** (eski TR: Varis). |
 | Kurumsal Firari | Corporate Refugee | **Kapı kararı 5 `[WORKING]`** (eski TR: Kurumsal Mülteci). |
 | Frank'ten not | A note from Frank | Shipped. |
 | FK *(avatar)* | FK | Aynı; dört hardcode tek anahtara iner. |
+
+## 8. Ofis
+
+| TR | EN | Not |
+|---|---|---|
+| Ofis | Office | Merkez görünüm ve kademesi. |
+| Ev *(ofis)* | Home | Kademenin ilki, kurucunun dairesi. |
+| İş hanı | Business block | |
+| Plaza katı | Plaza floor | |
+| Depo loft | Warehouse loft | |
+| Masa | Desk | Kart hücresi MASA / DESKS. |
+| KİRA / AY | RENT / MO | Harita kartı hücresi. |
+| Taşınma | Move | Kart hücresi TAŞINMA / MOVE. |
+| Şartlar | Requirements | Kart başlığı ŞARTLAR / REQUIREMENTS. |
+| Kademe | Tier | Ürün hattının kademesi (K1–K3) de aynı çift. |
+| Taşınabilir | Can move | Kartın durum çipi. |
+| Ofisi taşı | Move the office | Ofisin sol altındaki düğme. |
+| VP odaları | VP offices | `OFFICE_ROOM_VP_OFFICES`. "VP" izinli ödünç kelimelerde yok: TR onay bekliyor. |
 
 ## Shipped blok notları
 

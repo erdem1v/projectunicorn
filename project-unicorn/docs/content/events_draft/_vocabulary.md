@@ -12,9 +12,9 @@ Counts are what the engine actually has, at generation time:
 
 | | count |
 |---|---|
-| Seams (read) | **169** |
+| Seams (read) | **171** |
 | Effect verbs (write) | **62** |
-| Cards in the catalogue | 43 |
+| Cards in the catalogue | 44 |
 | Arcs | 3 |
 
 ## a · Effect verbs
@@ -267,6 +267,13 @@ slot of that type (§17.12).
 | `musteri.tolerance` | entity | int | Sales | WRAPPER; HIDDEN from the player. Condition on it, never name it in copy |
 | `musteri.total_mrr` | global | int | Sales |  |
 | `musteri.under_tolerance` | entity | bool | Sales | the comparison that actually drives Risk |
+
+### `office.`
+
+| seam | scope | type | owner | note |
+|---|---|---|---|---|
+| `office.current` | global | string | Office | WRAPPER; home / ishani / plaza / loft. Where the company works, not where a move is heading |
+| `office.moving` | global | bool | Office | WRAPPER; a move to the next office is under way |
 
 ### `phase.`
 

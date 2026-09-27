@@ -62,7 +62,8 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
 
 ## 6. Mimari
 - Godot 4.6 (Forward Plus), yalnız GDScript. Ana sahne `scenes/main/Main.tscn`; `main.gd` açılışı, modal montajını
-  ve debug bayraklarını taşır. Tasarım tabanı 1920×1080; `DisplaySettings.BASE_VIEWPORT` bunu elle yansıtır.
+  ve debug bayraklarını taşır. Merkez görünüm `scenes/office/OfficeView.tscn`'dir (SubViewport'ta 3B ofis); sekmeler
+  üstünde `WindowLayer` pencereleridir. Tasarım tabanı 1920×1080; `DisplaySettings.BASE_VIEWPORT` bunu elle yansıtır.
 - Autoload'lar (`project.godot` sırası): EventBus, GameState, CharacterRegistry, CustomerRegistry, ProspectRegistry,
   PromiseRegistry, RivalRegistry, InvestorRegistry, TimeManager, SaveManager, Settings, Localization, AudioManager;
   sonra `MCPRuntime` (`addons/godot_mcp_runtime`, MCP köprüsü).
@@ -82,7 +83,7 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
   `data/events/arcs/`'ta. İçerik durumu yalnız `scripts/events/seams/`'ten okur. Invariant'lar: motor GDD §0.3.
 - Gelir: B2B hesabı kurucunun oynadığı satış toplantısı ve pazarlıkla ya da atanmış temsilcinin işlediği lead'le
   kazanılır. B2C'de kitle her oyun saatinde iki yönlü değişir; MRR ödeyen kullanıcı × fiyat olarak saatlik türetilir.
-- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 12, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
+- Kayıt: JSON; `SaveManager.SCHEMA_VERSION` 13, `MIN_LOADABLE_VERSION` 10. `SaveCodec` GameState değişkenlerini ve
   modellerin `@export` alanlarını kendisi bulur; eski kayıtta varsayılan göç yerine geçtiği için yeni alan anlamlı
   varsayılan taşır. Statik durum tutan sistem `SaveManager.reset_all_owners`'a girer. RNG tohumludur (`RngStreams`).
 
@@ -93,19 +94,17 @@ gerekmeyen testi koşma, aynı şeyi iki kez doğrulama. Bir şeyi bulmak için 
 2. **`themes/master_theme.tres` üretilmiştir.** Üretici `"$GODOT" --headless --path . -s
    res://scripts/theme/build_theme.gd` (temiz checkout önce `--import`). Token ya da `build_theme.gd` değişikliği
    aynı commit'te `UiTokens.THEME_STAMP`'i artırır ve temayı yeniden üretir; debug açılışı bayat damgada uyarır.
-   **`themes/oda_frozen_theme.tres` dondurulmuştur:** `OdaView.tscn` ve `oda_tour.gd` takar; kopyalanmaz,
-   düzenlenmez, yeniden üretilmez. Gömülü damgası 5'tir; THEME_STAMP ile arası beklenir, kapatılmaz. ODA'nın
-   doğrudan okuduğu renkler `ODA_*` donmuş register'ındadır; ODA tint'lerini yalnız `oda_view.gd` okur.
 3. **Token'ı tema öğesine çeviren tek dosya `build_theme.gd`'dir.** Skala boyutun, varyasyon yüz ve rengin sahibidir.
 4. **Sahne ve script yalnız yerleşimin sahibidir** (anchor, separation, margin, min-size); boyut, renk, stylebox
    taşımaz, `theme_type_variation`'a uzanır ya da yenisini ekler. Mevcut literal, çevresi değişince taşınır.
-- Görsel dil Terminal'dir: mono yazı, hairline çizgi, amber vurgu; hover dolgu değil kenar parıltısıdır. Sayfa
-  `#0D1115`, kabuk `#07090B`, `CREAM == INK`. Açık iki ada: gazete (`PaperPanel`, `PAPER_INK_*`) ve ODA'nın teması.
-- **Chrome kuralı.** `Chrome*` (koyu kabuk ailesi) `master_theme`'de TopBar, MonthSummary, LeftTabs ve
-  TabPageChrome'da; ODA'nınki donmuş temadan çözülür. Satış sekmesi ve pazarlık sahnesindeki kullanım
-  `docs/ACIK_ISLER/ACIK_KARARLAR.md`'de açık karardır; listeye yeni yüzey eklemek ayrı karardır.
-- ODA kapısı `--theme-audit=oda`: kanıt satır sayısı değil diff'tir. `@Sınıf@NN` sayaçları normalize edildikten sonra
-  değişiklik hedeflenen alt ağaçta kalır, dışı bayt-aynıdır.
+- Görsel dil: mono yazı, hairline çizgi, amber vurgu; hover dolgu değil kenardır (`ACCENT_DEEP`, kartta `BORDER_HOVER`).
+  Gövde krem kâğıttır (sayfa `#F6F1E6`, kart ve pencere `#FBF7EE`, `INK` `#2B2722`); çerçeve koyudur (`#07090B`:
+  TopBar, NewsTicker, MonthSummary bandı) ve `CREAM*`, `*_CHROME`, `*_BRIGHT` okur; sinematik koyu register
+  (`DIALOGUE_*`) de `CREAM*` ve `VEIL_*_CHROME`. Tek ada gazetedir (`PaperPanel`, kendi `PAPER_*` merdiveni). 3B
+  ofisin renkleri UI token'ı değil sahne verisidir: `OfficeConstants`, `scripts/ui/office/`, `scenes/office/shaders/`.
+- **Chrome kuralı.** `Chrome*` (koyu kabuk ailesi) yalnız TopBar, MonthSummary, NewsTicker, Ürün sayfasının Frank
+  şeridi (`ChromeButton`) ve koyu sahnelerde (`DialogueChoiceButton`, `ChromeAlertButton`) kullanılır. Satış
+  sekmesinin `ChromeTabButton`'ı açık karardır (`docs/ACIK_ISLER/ACIK_KARARLAR.md`); yeni yüzey eklemek ayrı karardır.
 
 ## 8. Kod yazımı
 Kod tabanı şiştiği için her iş pahalılaştı; yeni kod aynı hataları tekrarlamaz.
@@ -156,9 +155,10 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 - Probe: `--run-log=<preset>:<gün>:sim[:<seed>]`, preset'ler `RunProbe.PRESETS`'te. Karar değil defter basar;
   `^PROBE` satırları aynı seed, aynı binary ve `--lang=tr` ile bayt-deterministiktir.
 - Smoke ve probe demo yapısına sabitlidir; EA akışı editörde Main Run Args'a `--build=ea` yazılarak oynanır.
-- Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, oda, event, ending, vc, sales,
-  negotiation, meeting, product, hr, finance, b2b), `--probe-shot`, `--theme-audit=<id>`, `--shot-size=GxY`,
+- Görsel kontrol (pencereli): `--<yüzey>-shot=<tür>` ailesi (tab, modal, onboard, office, event, ending, vc, sales,
+  negotiation, meeting, product, hr, finance, b2b), `--probe-shot`, `--theme-audit=<sekme>`, `--shot-size=GxY`,
   `--lang=tr|en` (kayıtlı dili ezer). PNG'ler `%APPDATA%\Godot\app_userdata\Project Unicorn\`'a iner; EN `_en` alır.
+  Ofis: `--office-shot=<home|ishani|plaza|loft|city>:<saat>[:full|card|<sekme>|hr_dossier]`.
 - **Ekran kartı.** Ekranlı Godot koşuları (shot, tema denetimi, görsel kabul) paralel değil sırayla koşar; ekran
   gerektirmeyen her koşu `--headless`.
 - Git kökündeki `.githooks/pre-commit` lint ve `loc_residue`'yu koşar; etkin değildir, etkinleştirmek sahibin kararıdır.
@@ -172,9 +172,8 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
   başarılı koşunun çıktısında tam olarak bir `PROBE END` satırı vardır. `class_name` eklenince, silinince ya da adı
   değişince headless koşulardan önce `--headless --import` çalıştırılır.
 - Editör `.tres` ve `project.godot`'u yeniden kaydeder (uid ekler, yorum siler); fark sahip onaylamadan commit'lenmez.
-- ODA piksel hash'i iki değer arasında gidip gelir; ODA için `--theme-audit=oda` kullanılır.
-- Dosya yazan bayraklar: `--event-lint=baseline` (taban dosyası), `--event-vocab` (`_vocabulary.md`), `--oda-shot=tour`
-  ve `--display-check` (ayarlar), `--modal-shot=saveload` (hızlı kayıt), `--ending-shot` (zaman damgalı gazete PNG'si).
+- Dosya yazan bayraklar: `--event-lint=baseline` (taban dosyası), `--event-vocab` (`_vocabulary.md`), `--display-check`
+  (ayarlar), `--modal-shot=saveload` (hızlı kayıt), `--ending-shot` (zaman damgalı gazete PNG'si).
 - Bazı smoke vakaları kaynak metni ve özel adları okur; ad değiştirmeden önce vakayı bul. `event_bus.gd`'deki
   `# --- X ---` başlıkları manifest bölümleri, `# LOC-DATA` işaretleri `loc_residue` istisnalarıdır; silinmez.
 
@@ -185,5 +184,5 @@ MCP). UI'a dokunmayan mantık değişiklikleri hariç.
 - `docs/content/` — Frank külliyatı ve üretilmiş `events_draft/_vocabulary.md` (güncel seam ve fiil listesi).
 - `docs/writing/` — Frank yazım çalışma dosyaları. `docs/design/localization_glossary.md` — TR↔EN terim kanonu.
 - `docs/EVENT_SIGNAL_MANIFEST.md` — üretilmiş sinyal manifesti (motor GDD §15.1); elle düzenlenmez.
-- `GDDs/README.md` — GDD otorite haritası. `tools/oda3d/README.md` — ODA 3D plaka hattı ve yeniden üretimi.
+- `GDDs/README.md` — GDD otorite haritası. `tools/office3d/README.md` — ofis 3B dışa aktarım hattı ve yeniden üretimi.
 - Kaynak dosya ağaçta olmayan bir belgeye atıf yapmaz (Ekip GDD §17.6).
