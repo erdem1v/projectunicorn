@@ -297,8 +297,8 @@ func _restore_systems(state: Dictionary) -> void:
 	EvSave.from_dict(sys.get(EvSave.BLOCK_KEY, {}) as Dictionary)
 	HRSystem.from_dict(sys.get("hr", {}) as Dictionary)
 	TimeManager.from_dict(sys.get("time", {}) as Dictionary)
-	# RNG last: HRSystem.reset() inside initialize_run re-keys hr_morale to the start of its
-	# sequence, so the saved positions must be written over it after everything else.
+	# Overwrites the keys initialize_run's RngStreams.reseed(run_seed) laid down, so the load
+	# resumes the saved sequences.
 	RngStreams.from_dict(sys.get("rng", {}) as Dictionary)
 
 
@@ -310,6 +310,7 @@ func _on_day_tick_completed(_day: int) -> void:
 	_dirty = true
 	if not _autosave_enabled:
 		return
+	# Read here, never in _ready: Settings is autoloaded after SaveManager.
 	var freq: String = String(Settings.get_value(SETTING_AUTOSAVE_FREQUENCY))
 	var interval: int = int(AUTOSAVE_INTERVAL_DAYS.get(freq,
 		AUTOSAVE_INTERVAL_DAYS[Settings.DEFAULTS[SETTING_AUTOSAVE_FREQUENCY]]))
@@ -353,7 +354,7 @@ func _next_auto_slot_id() -> String:
 static func _is_harness_arg(arg: String) -> bool:
 	if not arg.begins_with("--"):
 		return false
-	for part in ["smoke", "-shot", "audit", "spec", "probe", "run-log"]:
+	for part in ["smoke", "-shot", "audit", "probe", "run-log"]:
 		if arg.contains(part):
 			return true
 	return false

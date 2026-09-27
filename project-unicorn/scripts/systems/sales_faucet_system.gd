@@ -26,6 +26,8 @@ const SALT_STAR := 307
 const SALT_ARCHETYPE := 311
 const SALT_SECTOR := 313
 
+const SIZE_TO_STAR := {"small": 1, "mid": 2, "enterprise": 3}
+
 
 # ============================================================================
 #  Daily entry
@@ -246,6 +248,14 @@ static func spawn(star: int, source: String) -> Prospect:
 	ProspectRegistry.add(p)
 	EventBus.prospect_arrived.emit(p.id)
 	return p
+
+
+## The event channel's door into the pipeline. Satış §3 routes the whale role through "kahraman
+## hesap / olay kanalı", and the engine's `add_prospect` effect is that channel. Its card
+## (`customer/frank_intro.json`) speaks the three-tier size ids, so the translation to a star
+## happens here, once, rather than in every card.
+static func spawn_prospect(size: String, source: String) -> Prospect:
+	return spawn(int(SIZE_TO_STAR.get(size, 1)), source)
 
 
 ## §8 — "karşılanmış şart istenmez": walk the ordered list and take the FIRST UNMET item. If

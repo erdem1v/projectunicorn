@@ -230,7 +230,7 @@ static func _close(rep: Character, lead: Prospect) -> void:
 	var seat_price: int = SalesLedger.seat_price_anchor(lead.work_stance)
 	var seats: int = _seats_for(lead)
 	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, seat_price,
-		PitchSystem.signing_satisfaction_seed(), "sales_rep:%s" % rep.id)
+		SalesSystem.signing_satisfaction_seed(), "sales_rep:%s" % rep.id)
 	ProspectRegistry.remove(lead.id)
 	GameState.set_flag("sales_weekly_closes",
 		int(GameState.get_flag("sales_weekly_closes", 0)) + 1)

@@ -16,7 +16,7 @@ extends RefCounted
 #   - Both: daily customer-satisfaction drift → health band.
 # Canonical MRR bridge (aggregate active customers → GameState.mrr) is the sink.
 #
-# Driven by TimeManager: hourly_tick (B2C audience + derived MRR) + daily_tick slot 4
+# Driven by TimeManager: hourly_tick (B2C audience + derived MRR) + _dispatch_daily_tick slot 4
 # (B2C satisfaction, the B2B desk on a B2B product, bridge backstop). The pricing ruler
 # (apply_b2c_price) sets the price and applies the hike reaction.
 
@@ -321,7 +321,7 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	c.industry = prospect.industry
 	# §2 — the STAR is the account size. `b2b_expand` and the event modal's expansion preview
 	# read the three-tier `company_size` (via B2BConstants.expansion_seats), so the field keeps
-	# that vocabulary; the reverse map, for `add_prospect`, is PitchSystem.SIZE_TO_STAR.
+	# that vocabulary; the reverse map, for `add_prospect`, is SalesFaucetSystem.SIZE_TO_STAR.
 	c.company_size = ["small", "mid", "enterprise"][clampi(prospect.star, 1, 3) - 1]
 	c.market_type = "b2b"
 	c.seats = maxi(seats, 0)
@@ -368,6 +368,15 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	# headline/news channel instead, and the MRR itself lands via the bridge below.
 	reflect_mrr()
 	return c
+
+
+## A signed B2B account's opening satisfaction: Stability + Experience, off effective quality
+## (reliability and ease, which is what a business buyer feels on day one). Both signing paths,
+## the played meeting and the rep's own close, read it, so the two cannot drift apart.
+static func signing_satisfaction_seed() -> int:
+	var dims: Dictionary = QualityModel.economy_dims_from_flags()
+	return int(round(
+		(QualityModel.axis_score(dims, "stability") + QualityModel.axis_score(dims, "experience")) * 0.5))
 
 
 # --- B2C satisfaction tick ---

@@ -56,7 +56,7 @@ static func install() -> void:
 	EvSeams.register("musteri.request_kind", E, TYPE_STRING,
 		func(id: String) -> String:
 			var c: Customer = CustomerRegistry.get_customer(id)
-			return B2BEventFactory.pick_request_kind(c) if c != null else "",
+			return CustomerRepSystem.pick_request_kind(c) if c != null else "",
 		"Sales", "complaint | feature | renewal — state-scored, no RNG")
 
 	# Prose, not numbers: §8.4's interpolation reads these, so one card carries fifteen sector

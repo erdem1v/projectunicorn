@@ -1,7 +1,7 @@
 class_name FinanceSystem
 extends RefCounted
 
-# Pure-logic system driven by TimeManager._tick_finance (daily slot 5): daily revenue from MRR,
+# Pure-logic system driven by TimeManager._dispatch_daily_tick (slot 5): daily revenue from MRR,
 # daily burn as the sum of named categories, net flow applied to GameState.cash. Every mutation
 # goes through a GameState setter, which emits; FinanceSystem never touches scenes or signals.
 
@@ -80,7 +80,7 @@ static func starting_daily_burn() -> int:
 	return total
 
 
-# --- Entry point (called by TimeManager._tick_finance) ---
+# --- Entry point (called by TimeManager._dispatch_daily_tick) ---
 
 static func daily_tick() -> void:
 	# Salaries and overtime are PULLED: HR ticked at slot 3, so the registry and today's

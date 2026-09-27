@@ -57,11 +57,6 @@ static func is_active() -> bool:
 	return _active
 
 
-## The same read, under the name main.gd's meeting relay and the debug harnesses call.
-static func is_meeting_active() -> bool:
-	return _active
-
-
 static func begin_meeting(vc_id: String, stage: String = PitchConstants.STAGE_SERIES_A) -> void:
 	if not GameState.run_active:          # no meeting behind a terminal
 		return
@@ -449,7 +444,7 @@ static func _reject() -> void:
 	# other blow.
 	GameState.set_brand(GameState.brand - PitchConstants.REJECT_BRAND_COST)
 	for worker in CharacterRegistry.get_employees():
-		HRMoraleSystem.apply_delta(worker, -PitchConstants.REJECT_MORALE_COST, "vc_rejection")
+		HRMoraleSystem.apply_delta(worker, -PitchConstants.REJECT_MORALE_COST)
 
 
 # --- Term Sheet Table outcomes (TermSheetTableSystem, the Hunt tab and the sheet-decision
@@ -1195,10 +1190,7 @@ static func _callback_met(cb: Dictionary) -> bool:
 ## An id, never a label (store ids, render at display time): _sorgu_product localizes it
 ## through ProductCatalog.axis_label.
 static func _weakest_dimension() -> String:
-	var dims := {
-		"innovation": float(GameState.get_flag("mvp_innovation", 0.0)),
-		"stability": float(GameState.get_flag("mvp_stability", 0.0)),
-		"experience": float(GameState.get_flag("mvp_experience", 0.0))}
+	var dims := QualityModel.dims_from_flags()
 	var worst := ""
 	var worst_v := 999.0
 	for k in dims:

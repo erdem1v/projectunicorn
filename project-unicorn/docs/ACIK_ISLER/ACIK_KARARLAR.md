@@ -542,7 +542,7 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     reach_band()'ın üstünde olan ve arketipinin şart listesi bulunan her lead balina oluyor. §3 balina rolünün
     karışımdan değil kahraman hesap ya da olay kanalından geldiğini söylüyor; §10'un 8–15 kahraman hesabı yazılmadı.
   - Nerede: scripts/systems/sales_faucet_system.gd (spawn, _seat_whale_condition, reach_band),
-    scripts/systems/pitch_system.gd (spawn_prospect, olay kanalı)
+    scripts/systems/sales_faucet_system.gd (spawn_prospect, olay kanalı)
   - Oyuncuya etkisi: Erişim bandının üstündeki her musluk lead'i balina geliyor: şart rozeti, sert pazarlık (rezerv
     ×0,9, sabır −1), ticker haberi ve +3 marka (SalesLedger.announce_signing). 'Nadir rol' değil; erişimi düşük koşuda
     sık görülüyor.
@@ -968,6 +968,30 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     gerekir).
   - Kaynak: GDD ch09 (Funding & Investors) ve ch12 (UI Surfaces & ODA) geri sayım birimini söylemiyor. Kaynak
     `term_sheet.gd` doc yorumları; cleanup raporu B048.
+
+- **59 · VC'nin zayıf boyut tabanı ham eksenle karşılaştırılıyor; ürün uyumu bonusu fiilen hiç verilmiyor.**
+  - Ne oluyor: `VCPitchSystem._weakest_dimension` literal `< 40.0` çalışma tabanını,
+    `TermSheetTableSystem.E_FIT_PRODUCT_DIM_FLOOR` (40,0) ise ürün alanının uyum puanını yayındaki HAM
+    `mvp_innovation` / `mvp_stability` / `mvp_experience` değerleriyle (`QualityModel.dims_from_flags`) karşılaştırıyor.
+    Hat modelinde bu değerler 52. maddenin kaydettiği gibi tek haneden ~20'lere uzanır. Eksen başına üç hattın K1'i 12
+    eder (`QualityModel.PHASE_BAR[1]`). 40'a ancak bir eksenin üç hattı da K3'teyken (3 × 14,4 = 43,2, tam
+    gerçekleşmede) varılır. `full_run:760:sim` probe'unda (tohum 1, 2, 3) 12–16 sürümde en yüksek ham eksen 31,6 /
+    27,9 / 33,3'te kaldı, deneyim ekseni 3,0–5,7'yi geçmedi.
+  - Nerede: `scripts/systems/vc_pitch_system.gd` (`_weakest_dimension`; okuyanları `_sorgu_product` ve seed'in ürün
+    sorusu); `scripts/systems/term_sheet_table_system.gd` (`E_FIT_PRODUCT_DIM_FLOOR`, `E_FIT_PRODUCT_DIMS`,
+    `_domain_fit` "product" dalı); `scripts/systems/quality_model.gd` (`dims_from_flags`, `axis_readings`)
+  - Oyuncuya etkisi: VC her koşuda bir zayıf boyut bulur. Canlı hata yokken Series A sorgusu hep `VC_Q_WEAK_DIM`
+    sorar, seed'in ürün sorusu hep `SEED_Q_HOW_BIG` olur, 'temiz' dal (`VC_Q_CLEAN` / `SEED_Q_CLEAN`) ürün alanında
+    hiç gelmez. Meridian masasında `E_FIT_PRODUCT_DIMS` (+4) pratikte hiç verilmez; ürünü ne kadar iyi olursa olsun
+    oyuncu bu isteklilik puanını alamaz.
+  - Seçenekler: A) İki taban da §11.3 eksen okumasıyla (`ProductState.axis_readings`, 0–120, çıtaya göre)
+    karşılaştırılır; 40 okuma çıtanın %40'ı demek olur. B) Tabanlar ham aralığa göre yeniden ölçeklenir [K] (ör. 12 =
+    eksen başına K1 dolu). C) Bugünkü davranış kalır ve GDD'ye yazılır: ürün alanında VC hep bir zayıflık bulur, boyut
+    bonusu Series A'da ulaşılmaz bir hedeftir. İki sabit de E modeli sabitidir, değişikliği sahip onayı gerektirir
+    (CLAUDE §3).
+  - Kaynak: GDD ch09 (Funding & Investors) ve Ürün GDD (ch03) §11.2–§11.3 VC tabanının hangi ölçeğe baktığını
+    söylemiyor. Kaynak `QualityModel` hat modeli ve probe ölçümü (`full_run:760:sim:1-3` PROBE SHIP satırları);
+    cleanup bulgusu F067; 52. madde (ham eksen aralığı).
 
 ## Tasarım ve denge
 

@@ -39,9 +39,9 @@ static func tick_leave_returns() -> void:
 		GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + emp.id, false)
 		# İzin dönüşü moral getirir, manuel tatil dönüşü daha büyük (§11.4).
 		if was_manual:
-			apply_delta(emp, HRConstants.MORALE_VACATION_RETURN, HRConstants.REASON_VACATION_RETURN)
+			apply_delta(emp, HRConstants.MORALE_VACATION_RETURN)
 		else:
-			apply_delta(emp, HRConstants.MORALE_LEAVE_RETURN, HRConstants.REASON_LEAVE_RETURN)
+			apply_delta(emp, HRConstants.MORALE_LEAVE_RETURN)
 		var whence: String = TranslationServer.translate("HR_WHENCE_HOLIDAY" if was_manual else "HR_WHENCE_LEAVE")
 		EventBus.headline_added.emit(HRConstants.notice_source_hr(), TranslationServer.translate("HR_NEWS_BACK_FROM").format({"name": emp.character_name, "whence": whence}))
 
@@ -164,7 +164,7 @@ static func tick_ease() -> void:
 ## burada bir kez yapılır. Adı olan delta anında iner (§14 önizlemesi "Moral 75 → 79" yalan
 ## söylemesin) ve saat çarpanından geçmez (§7.1). Kurucu ve Frank moral yönetilmez; sessizce
 ## yok sayılır ki mesai kurucuyu özel durum olarak ele almak zorunda kalmasın.
-static func apply_delta(emp: Character, delta: int, _reason: String) -> void:
+static func apply_delta(emp: Character, delta: int) -> void:
 	var effective: int = scaled_delta(emp, delta)
 	if effective == 0:
 		return
@@ -271,7 +271,7 @@ static func _charge_departure(leaver_id: String) -> void:
 		if other.id == leaver_id:
 			continue
 		var extra: float = HRConstants.trait_sum(other.traits, "departure_morale_extra")
-		apply_delta(other, -(HRConstants.MORALE_FIRE_TEAM + int(round(absf(extra)))), HRConstants.REASON_TEAMMATE_FIRED)
+		apply_delta(other, -(HRConstants.MORALE_FIRE_TEAM + int(round(absf(extra)))))
 
 
 ## Ayrılanın HR tarafı latch'lerini temizler. confirm_departure ve HRActions.fire,

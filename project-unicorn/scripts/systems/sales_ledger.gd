@@ -126,18 +126,12 @@ static func open_pitch_promise() -> String:
 	return String(GameState.get_flag("sales_open_pitch_promise", ""))
 
 
-static func open_pitch_promise_feature() -> String:
-	return String(GameState.get_flag("sales_open_pitch_feature", ""))
-
-
-static func set_open_pitch_promise(account_id: String, feature_id: String) -> void:
+static func set_open_pitch_promise(account_id: String) -> void:
 	GameState.set_flag("sales_open_pitch_promise", account_id)
-	GameState.set_flag("sales_open_pitch_feature", feature_id)
 
 
 static func clear_open_pitch_promise() -> void:
 	GameState.set_flag("sales_open_pitch_promise", "")
-	GameState.set_flag("sales_open_pitch_feature", "")
 
 
 ## §6 — a BROKEN promise locks the row on that account for the rest of the run.

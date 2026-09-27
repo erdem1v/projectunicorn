@@ -79,7 +79,7 @@ static func apply_raise(emp: Character, pct: int) -> bool:
 	emp.employment_history.append({
 		"day": GameState.day, "kind": "raise", "old": before, "new": after,
 	})
-	HRMoraleSystem.apply_delta(emp, HRConstants.raise_morale_gain(p), HRConstants.REASON_RAISE)
+	HRMoraleSystem.apply_delta(emp, HRConstants.raise_morale_gain(p))
 	return true
 
 
@@ -144,7 +144,7 @@ static func apply_promotion(emp: Character, pct: int) -> bool:
 	emp.employment_history.append({
 		"day": GameState.day, "kind": "promotion", "old": before_level, "new": emp.level,
 	})
-	HRMoraleSystem.apply_delta(emp, HRConstants.promotion_morale_gain(p), HRConstants.REASON_RAISE)
+	HRMoraleSystem.apply_delta(emp, HRConstants.promotion_morale_gain(p))
 	EventBus.employee_promoted.emit(emp.id, emp.level)
 	return true
 
@@ -197,7 +197,7 @@ static func fire(emp: Character) -> bool:
 	# get_employees(), not the active list: someone on leave hears about it too.
 	for other in CharacterRegistry.get_employees():
 		if other.id != emp.id:
-			HRMoraleSystem.apply_delta(other, -HRConstants.MORALE_FIRE_TEAM, HRConstants.REASON_TEAMMATE_FIRED)
+			HRMoraleSystem.apply_delta(other, -HRConstants.MORALE_FIRE_TEAM)
 	# Drop the HR-side latches while the id still means something.
 	HRMoraleSystem.forget_employee(emp.id)
 	CharacterRegistry.remove(emp.id)

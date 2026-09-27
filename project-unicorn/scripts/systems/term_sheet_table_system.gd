@@ -135,7 +135,7 @@ static var _last_push_passed: bool = false
 static var _last_lever_acted: String = ""   # the lever the last push touched ("" = none this sitting)
 static var _last_move: String = ""          # "$18M → $22M" for the success caption
 ## Which rung this sitting is, named by whoever seated the player (open()). Cleared in
-## _reset(), or a seed sitting's stage leaks into the next Series A table.
+## reset(), or a seed sitting's stage leaks into the next Series A table.
 static var _stage: String = PitchConstants.STAGE_SERIES_A
 # --- Eagerness / shown-offer sitting state ---
 static var _e: int = 0                      # eagerness 0..100
@@ -180,7 +180,29 @@ static func is_active() -> bool:
 ## save point. The SHEET persists (GameState.active_sheets, or GameState.seed_sheet at seed);
 ## what dies here is the negotiation in progress.
 static func reset() -> void:
-	_reset()
+	_active = false
+	_vc_id = ""
+	_terms = {}
+	_push_counts = {}
+	_patience = 0
+	_patience_max = 0
+	_selected_lever = "valuation"
+	_state = IDLE
+	_last_push_passed = false
+	_last_lever_acted = ""
+	_last_move = ""
+	_stage = PitchConstants.STAGE_SERIES_A
+	_e = 0
+	_won_counts = {}
+	_line_key = ""
+	_line_seq = 0
+	_final_move = ""
+	_fund_walked = false
+	_other_shown = false
+	_show_outcome = ""
+	_show_back = ""
+	_other_terms = {}
+	_other_vc_shown = ""
 
 
 # ============================================================================
@@ -191,7 +213,7 @@ static func reset() -> void:
 ## Seeds the working terms from the sheet's opening offer (+ leverage notch), patience from
 ## the pool, IDLE state. Returns view_state.
 static func open(vc_id: String, stage: String) -> Dictionary:
-	_reset()
+	reset()
 	# The stage picks the sheet, not the fund: one fund can hold both at once (the seed offer
 	# never expires and a skipped seed still reaches the Hunt).
 	var sheet: TermSheet = VCPitchSystem.seed_sheet_for(vc_id) if stage == PitchConstants.STAGE_SEED else VCPitchSystem.sheet_for(vc_id)
@@ -519,9 +541,7 @@ static func _domain_fit() -> int:
 		"product":
 			fit += E_FIT_PRODUCT_SHIPPED if bool(GameState.get_flag("mvp_shipped", false)) else -E_FIT_PRODUCT_SHIPPED
 			fit += -E_FIT_PRODUCT_BUGS if ProductSystem.live_bug_count() > 0 else E_FIT_PRODUCT_BUGS
-			var weakest: float = minf(float(GameState.get_flag("mvp_innovation", 0.0)), minf(
-				float(GameState.get_flag("mvp_stability", 0.0)),
-				float(GameState.get_flag("mvp_experience", 0.0))))
+			var weakest: float = QualityModel.dims_from_flags().values().min()
 			if weakest >= E_FIT_PRODUCT_DIM_FLOOR:
 				fit += E_FIT_PRODUCT_DIMS
 	return clampi(fit, -E_FIT_MAX, E_FIT_MAX)
@@ -535,7 +555,7 @@ static func sign() -> void:
 	var vc: String = _vc_id
 	var terms: Dictionary = _terms.duplicate()
 	var stage: String = _stage
-	_reset()
+	reset()
 	VCPitchSystem.sign_table(vc, terms, stage)
 
 
@@ -556,7 +576,7 @@ static func walk() -> void:
 		push_error("[TermSheetTableSystem] walk() at a seed table — the refusal row is ZOR MOD")
 		return
 	var vc: String = _vc_id
-	_reset()
+	reset()
 	VCPitchSystem.walk_table(vc)
 
 
@@ -565,7 +585,7 @@ static func walk() -> void:
 static func leave() -> void:
 	if not _active or not _fund_walked:
 		return
-	_reset()
+	reset()
 
 
 ## THE INVERSION, and it is the whole shape of the seed table. At Series A the money falls
@@ -939,29 +959,3 @@ static func _other_live_vc() -> String:
 
 static func _pct(f: float) -> int:
 	return int(round(f * 100.0))
-
-
-static func _reset() -> void:
-	_active = false
-	_vc_id = ""
-	_terms = {}
-	_push_counts = {}
-	_patience = 0
-	_patience_max = 0
-	_selected_lever = "valuation"
-	_state = IDLE
-	_last_push_passed = false
-	_last_lever_acted = ""
-	_last_move = ""
-	_stage = PitchConstants.STAGE_SERIES_A
-	_e = 0
-	_won_counts = {}
-	_line_key = ""
-	_line_seq = 0
-	_final_move = ""
-	_fund_walked = false
-	_other_shown = false
-	_show_outcome = ""
-	_show_back = ""
-	_other_terms = {}
-	_other_vc_shown = ""

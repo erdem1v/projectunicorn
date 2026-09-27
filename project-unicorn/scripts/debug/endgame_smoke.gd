@@ -8568,8 +8568,8 @@ static func _case_cs_request_kind_state_driven() -> String:
 	a.acquired_on_day = GameState.day
 	a.pain_feature_id = "ai_vec_search_api"
 	GameState.set_flag("b2b_broke_co_state_a", true)
-	if B2BEventFactory.pick_request_kind(a) != B2BConstants.CS_KIND_COMPLAINT:
-		return "unhappy broken-promise account did not complain (got %s)" % B2BEventFactory.pick_request_kind(a)
+	if CustomerRepSystem.pick_request_kind(a) != B2BConstants.CS_KIND_COMPLAINT:
+		return "unhappy broken-promise account did not complain (got %s)" % CustomerRepSystem.pick_request_kind(a)
 	# B — sağlıklı + karşılanmamış acı özelliği → özellik talebi.
 	var b := Customer.new()
 	b.id = "co_state_b"
@@ -8579,8 +8579,8 @@ static func _case_cs_request_kind_state_driven() -> String:
 	b.tolerance = 40
 	b.acquired_on_day = GameState.day
 	b.pain_feature_id = "ai_vec_filter"
-	if B2BEventFactory.pick_request_kind(b) != B2BConstants.CS_KIND_FEATURE:
-		return "healthy unmet-pain account did not ask for the feature (got %s)" % B2BEventFactory.pick_request_kind(b)
+	if CustomerRepSystem.pick_request_kind(b) != B2BConstants.CS_KIND_FEATURE:
+		return "healthy unmet-pain account did not ask for the feature (got %s)" % CustomerRepSystem.pick_request_kind(b)
 	# C — uzun kıdem + oyalama izi, acısı karşılanmış → yenileme masası.
 	var c := Customer.new()
 	c.id = "co_state_c"
@@ -8591,14 +8591,14 @@ static func _case_cs_request_kind_state_driven() -> String:
 	c.acquired_on_day = GameState.day - 180
 	c.pain_feature_id = "ai_vec_embed_api"   # shipped → unmet-pain bonus yok
 	c.retain_stalls = 1
-	if B2BEventFactory.pick_request_kind(c) != B2BConstants.CS_KIND_RENEWAL:
-		return "long-tenure account did not reach renewal (got %s)" % B2BEventFactory.pick_request_kind(c)
+	if CustomerRepSystem.pick_request_kind(c) != B2BConstants.CS_KIND_RENEWAL:
+		return "long-tenure account did not reach renewal (got %s)" % CustomerRepSystem.pick_request_kind(c)
 	# No-repeat korunuyor: A az önce şikâyet açtıysa bir daha şikâyet açamaz.
 	a.last_request_kind = B2BConstants.CS_KIND_COMPLAINT
-	if B2BEventFactory.pick_request_kind(a) == B2BConstants.CS_KIND_COMPLAINT:
+	if CustomerRepSystem.pick_request_kind(a) == B2BConstants.CS_KIND_COMPLAINT:
 		return "no-repeat rule broken by the state scorer"
 	# Determinizm: aynı durum + aynı gün → aynı sonuç.
-	if B2BEventFactory.pick_request_kind(b) != B2BEventFactory.pick_request_kind(b):
+	if CustomerRepSystem.pick_request_kind(b) != CustomerRepSystem.pick_request_kind(b):
 		return "kind selection is not deterministic"
 	return ""
 
@@ -16140,7 +16140,7 @@ static func _case_sales_save_roundtrip_rev6() -> String:
 	SalesLedger.report_loss("Kayıp A.Ş.", SalesConstants.LOSS_STABILITY, "stability")
 	SalesLedger.record_insult("Devrilen A.Ş.")
 	SalesFaucetSystem.lock_return("Kilitli A.Ş.", 12)
-	SalesLedger.set_open_pitch_promise(c.id, "line_erp_ledger_k1")
+	SalesLedger.set_open_pitch_promise(c.id)
 	SalesLedger.consume_meeting_right()
 	SalesLedger.spend_inner_voice()
 	SalesProbes.remember("probe_capacity")

@@ -100,7 +100,6 @@ const FLAG_TYPES := {
 	"sales_meeting_active": TYPE_BOOL,         # §5.0 — the founder is at a table (busy gate)
 	"sales_inner_voice_used": TYPE_INT,        # §5.1.1 — the run's inner-voice budget
 	"sales_open_pitch_promise": TYPE_STRING,   # §6 — the ONE open pitch promise, by account
-	"sales_open_pitch_feature": TYPE_STRING,   # §6 — and the feature it named
 	"sales_last_signed_star": TYPE_INT,        # §14 — sales.last_signed_star()
 	"sales_weekly_anchor_day": TYPE_INT,       # §7.3 — the weekly summary's window start
 	"sales_weekly_closes": TYPE_INT,           # §7.3 — closes inside that window
@@ -178,7 +177,7 @@ var run_customers_signed: int = 0      # SalesSystem.add_b2b_customer
 var run_customers_lost: int = 0        # churn_customer modifier, B2B branch
 var run_customers_expanded: int = 0    # B2BSalesSystem.expand
 # MONOTONIC: makes prospect ids unique (the live pool size shrinks and would collide).
-var run_prospects_spawned: int = 0     # PitchSystem.spawn_prospect
+var run_prospects_spawned: int = 0     # SalesFaucetSystem.spawn
 # Every company name ever SIGNED this run; survives churn so cold prospecting can never
 # re-offer a former customer. Writer: SalesSystem.add_b2b_customer.
 var b2b_signed_company_names: Array[String] = []
@@ -781,7 +780,7 @@ func initialize_run(payload: Dictionary) -> void:
 	acq_road_over_day = -1
 	bootstrap_milestone_day = -1
 
-	# HR Core state. HRSystem.reset() runs further down: it needs run_seed and may set flags.
+	# HR Core state.
 	hr_search.clear()
 	company_start_hour = HRConstants.START_HOUR_DEFAULT
 	company_work_hours = HRConstants.WORK_HOURS_DEFAULT
@@ -816,8 +815,6 @@ func initialize_run(payload: Dictionary) -> void:
 	# current_hour was written directly: the clock's accumulator must follow (see TimeManager).
 	TimeManager.sync_to_current_hour()
 
-	# After run_seed and flags.clear(): the HR stream must not seed from the previous run, and
-	# anything it flags must not be wiped.
 	HRSystem.reset()
 
 	if is_restore:

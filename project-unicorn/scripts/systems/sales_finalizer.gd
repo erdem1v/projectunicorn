@@ -58,7 +58,7 @@ static func _sign(result: Dictionary, ctx: Dictionary, lead_id: String) -> void:
 	# wrong cause is worse than none. Alternative seen: show that distance as "pazarlık farkı" —
 	# a naming decision with a string behind it. The field stays in the save schema.
 	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, price,
-		PitchSystem.signing_satisfaction_seed(), "founder_pitch")
+		SalesSystem.signing_satisfaction_seed(), "founder_pitch")
 
 	# §6 — the word given at the table becomes a real debt AT THE SIGNATURE, not before: a
 	# promise made to a company that walked out was never given. One open pitch promise at a
@@ -66,7 +66,7 @@ static func _sign(result: Dictionary, ctx: Dictionary, lead_id: String) -> void:
 	var promised: String = String(ctx.get("promised", ""))
 	if promised != "":
 		PromiseRegistry.create(c.id, promised, B2BConstants.PROMISE_DEADLINE_DAYS)
-		SalesLedger.set_open_pitch_promise(c.id, promised)
+		SalesLedger.set_open_pitch_promise(c.id)
 		EventBus.pitch_promise_made.emit(c.company_name, promised)
 
 	# `whale_condition_met` is NOT emitted here: its single publisher is the faucet's daily

@@ -396,7 +396,7 @@ static func future_role_hint(role_id: String) -> String:
 #   bug_rate_mult           ProductSystem._accrue_bugs_hourly
 #   speed_mult              ProductSystem._phase_area_sum — kişinin katkı çarpanı
 #   output_mult             ProductSystem._phase_area_sum — aynı yer, ters yön
-#   promise_chance_mult     B2BEventFactory, SalesRepSystem — söz olaylarının bu kişide ateşlenme oranı
+#   promise_chance_mult     CustomerRepSystem, SalesRepSystem — söz olaylarının bu kişide ateşlenme oranı
 #   satisfaction_bonus      B2BSalesSystem._tick_satisfaction — hesaplarında memnuniyet
 #   dept_morale_decay_mult  HRMoraleSystem — ekibinin moral erime hızı
 #
@@ -774,12 +774,6 @@ static func cost_label_severance() -> String:
 # Ticker kaynağı (EventBus.headline_added); emit anında yerelleştirilir.
 static func notice_source_hr() -> String:
 	return TranslationServer.translate("HR_LABEL_HR")
-
-# apply_delta sebep sözlüğü — oyuncuya görünmez; her çağıran kendi yazımını icat etmesin.
-const REASON_LEAVE_RETURN := "leave_return"
-const REASON_VACATION_RETURN := "vacation_return"
-const REASON_RAISE := "raise"
-const REASON_TEAMMATE_FIRED := "teammate_fired"
 
 # Arama durum makinesi (GameState.hr_search.state).
 const SEARCH_IDLE := "idle"

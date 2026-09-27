@@ -267,7 +267,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			SalesSystem.add_b2c_audience(n)
 			return {"verb": verb, "amount": n}
 		"add_prospect":
-			PitchSystem.spawn_prospect(String(e.get("archetype", "small")),
+			SalesFaucetSystem.spawn_prospect(String(e.get("archetype", "small")),
 				String(e.get("source", "event")))
 			return {"verb": verb, "archetype": e.get("archetype", "small")}
 
@@ -328,13 +328,13 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			# Through HRMoraleSystem.apply_delta, where the trait multiplier and the founder's
 			# Liderlik climate coefficient live; a raw write would skip both.
 			if emp.category == "employee":
-				HRMoraleSystem.apply_delta(emp, _amount(e), "event")
+				HRMoraleSystem.apply_delta(emp, _amount(e))
 			else:
 				CharacterRegistry.set_morale(eid, emp.morale + _amount(e))
 			return {"verb": verb, "employee": eid, "amount": _amount(e)}
 		"morale_all":
 			for worker in CharacterRegistry.get_employees():
-				HRMoraleSystem.apply_delta(worker, _amount(e), "event")
+				HRMoraleSystem.apply_delta(worker, _amount(e))
 			return {"verb": verb, "amount": _amount(e)}
 		"employee_leaves":
 			var lid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)

@@ -114,7 +114,7 @@ Whitelist: `mvp_shipped` already true; `mvp_version` ≥ 1 before this ship, bec
 - `[COND?]` live bug count at ship (readable as `mvp_live_bug_count`, but whether the new version reduced or added bugs is not computed at this seam)
 
 ### 6 · `ev_ps_frank_intro_b2b` — Frank opens the first B2B door
-Whitelist: `mvp_shipped` true; `mvp_market_type == "b2b"`; product name known; hour 00; **customers may be 0 and prospects may be 0** (not gated); MRR typically 0; phase 1. After the choice: one `mid` prospect spawns with `source = frank_intro` (may return null if the sector pool is exhausted, `pitch_system.gd:42-47`). Not provable: the lead's company name at fire time (does not exist yet); employees.
+Whitelist: `mvp_shipped` true; `mvp_market_type == "b2b"`; product name known; hour 00; **customers may be 0 and prospects may be 0** (not gated); MRR typically 0; phase 1. After the choice: one `mid` prospect spawns with `source = frank_intro` (may return null if the sector pool is exhausted, `sales_faucet_system.gd:223-224`). Not provable: the lead's company name at fire time (does not exist yet); employees.
 - `[COND?]` prospects == 0 (if the scene wants "you have no one to call")
 - `[COND?]` the spawned company's name in the text (would need the spawn to happen before the body renders)
 - `[COND?]` `mentor_advisory` `_en` sibling (the advisory it leaves on the phone is TR-only today)

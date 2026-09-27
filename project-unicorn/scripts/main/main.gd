@@ -463,7 +463,7 @@ func _on_shot_layer(node: Node) -> Node:
 ## The file name carries the language: TR keeps the bare name, EN gets `_en`, so both frames
 ## of one screen sit side by side. Read from the locale itself, however it got set.
 func _shot_path(basename: String) -> String:
-	return "user://%s%s.png" % [basename, "_en" if TranslationServer.get_locale().begins_with("en") else ""]
+	return "user://%s%s.png" % [basename, "_en" if Fmt.is_english() else ""]
 
 
 func _save_shot(basename: String) -> void:
@@ -639,8 +639,8 @@ func _seed_theme_surface() -> void:
 	_shot_customer("co_kuzey", "Kuzey İnşaat", "construction", "active", 1000, 12, 90, false)   # LOC-DATA debug seed / id
 	_shot_customer("co_ege", "Ege Sigorta", "insurance", "risk", 1000, 12, 60, false)
 	_shot_customer("co_nordica", "Nordica", "logistics", "expansion", 2000, 20, 180, false)
-	PitchSystem.spawn_prospect("small", "find")
-	PitchSystem.spawn_prospect("mid", "find")
+	SalesFaucetSystem.spawn_prospect("small", "find")
+	SalesFaucetSystem.spawn_prospect("mid", "find")
 	SalesSystem.reflect_mrr()
 
 
@@ -948,7 +948,7 @@ func _run_finance_shot(kind: String) -> void:
 	for i in range(40):
 		GameState.advance_day()
 		if i == 10 or (kind == "artida" and (i == 12 or i == 14)):   # LOC-DATA debug seed / id
-			var pr: Prospect = PitchSystem.spawn_prospect("mid", "event")
+			var pr: Prospect = SalesFaucetSystem.spawn_prospect("mid", "event")
 			# §5.3 koltuk × koltuk fiyatı: 20.000 = 400 × $50, 1.100 = 22 × $50.
 			SalesSystem.add_b2b_customer(pr, sign_mrr / 50, 50, 70)
 			ProspectRegistry.remove(pr.id)
@@ -956,7 +956,7 @@ func _run_finance_shot(kind: String) -> void:
 			# Bekleyen bir arayış; arama ücretsiz (§10), gider satırı eğitimden gelir.
 			HRSearchSystem.start_search(HRConstants.ROLE_DEVELOPER, HRConstants.LEVEL_MID)
 		if i == 30 and kind == "ozet":
-			var pr2: Prospect = PitchSystem.spawn_prospect("small", "event")
+			var pr2: Prospect = SalesFaucetSystem.spawn_prospect("small", "event")
 			SalesSystem.add_b2b_customer(pr2, 16, 50, 72)   # 16 × $50 = $800
 			ProspectRegistry.remove(pr2.id)
 		FinanceSystem.daily_tick()
@@ -964,8 +964,8 @@ func _run_finance_shot(kind: String) -> void:
 		GameState.set_cash(-4000)
 		GameState.set_shutter_days_left(EndingsSystem.SHUTTER_DAYS - 3)
 	# Açık pipeline: iyimser projeksiyon gerçek prospect'lerden beslenir.
-	PitchSystem.spawn_prospect("small", "find")
-	PitchSystem.spawn_prospect("mid", "find")
+	SalesFaucetSystem.spawn_prospect("small", "find")
+	SalesFaucetSystem.spawn_prospect("mid", "find")
 	if kind == "signal":   # LOC-DATA debug seed / id
 		_seed_signal_months()
 	await _mount_shot_shell()
