@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<!-- Glyph: Lucide "pen" (ISC License, assets/icons/tabs/LICENSE-lucide.txt) -->
+<circle cx="64" cy="68" r="52" fill="#000000" fill-opacity="0.28"/>
+<circle cx="64" cy="62" r="52" fill="#f6f3ee"/>
+<circle cx="64" cy="62" r="49" fill="none" stroke="#2f3440" stroke-width="5"/>
+<g transform="translate(35 33) scale(2.4167)" fill="none" stroke="#2f3440" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></g>
+</svg>

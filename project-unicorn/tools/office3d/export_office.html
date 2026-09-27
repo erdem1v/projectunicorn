@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>office3d export</title>
+<style>
+html,body{margin:0;background:#111;color:#ddd;font:12px ui-monospace,monospace}
+#log{white-space:pre;padding:8px;height:120px;overflow:auto}
+#stage{width:960px;height:600px}
+</style>
+<script>
+// Classic script: runs before the module graph, so a failed esm.sh fetch or a throw
+// while evaluating src/*.js still reaches progress.txt / DONE.txt.
+window.office3d = (() => {
+  const lines = [];
+  let chain = Promise.resolve();
+  const post = (name, body) => fetch('/save/' + name, { method: 'POST', body });
+  const say = m => {
+    lines.push(m);
+    const el = document.getElementById('log');
+    if (el) { el.textContent = lines.join('\n'); el.scrollTop = el.scrollHeight; }
+    const text = lines.join('\n');
+    chain = chain.then(() => post('progress.txt', text)).catch(() => {});
+    return chain;
+  };
+  const done = text => chain.then(() => post('DONE.txt', text));
+  return { say, done, post };
+})();
+addEventListener('error', e => office3d.say('ERROR ' + e.message + ' @ ' + (e.filename || '?') + ':' + (e.lineno || '?')));
+addEventListener('unhandledrejection', e => office3d.say('UNHANDLED ' + ((e.reason && e.reason.stack) || e.reason)));
+</script>
+</head>
+<body>
+<div id="log">booting</div>
+<div id="stage"></div>
+<script type="module" src="./export_office.js" onerror="office3d.say('module graph failed to load (esm.sh reachable?)'); office3d.done('ERR module load')"></script>
+</body>
+</html>
