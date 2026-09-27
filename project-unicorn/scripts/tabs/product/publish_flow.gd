@@ -96,12 +96,13 @@ func _start(only_step: String) -> void:
 	else:
 		_steps = [STEP_PRICE, STEP_INFRA, STEP_CONFIRM]
 	# Sağlayıcı: durumda varsa odur, yoksa merdivenin orta basamağı (S7'nin ön-işaretli
-	# seçeneği). Kapasite: durumda varsa odur, yoksa §10'un önerdiği ilk birim.
+	# seçeneği). Kapasite: canlı üründe durumdaki değerdir (0 da meşrudur); ilk sürümde henüz
+	# alınmadıysa §10'un önerdiği ilk birim.
 	_draft_provider = InfraSystem.provider()
 	if not InfraSystem.is_provider(_draft_provider):
 		_draft_provider = String(InfraSystem.PROVIDER_IDS[1])
 	_draft_units = InfraSystem.units()
-	if _draft_units <= InfraSystem.CAPACITY_MIN:
+	if _is_first_version and _draft_units <= InfraSystem.CAPACITY_MIN:
 		_draft_units = InfraSystem.suggested_start_units()
 	_render()
 

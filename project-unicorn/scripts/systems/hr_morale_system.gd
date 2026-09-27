@@ -84,14 +84,16 @@ static func tick_thresholds() -> void:
 
 
 ## §6 TAT KAÇIRAN aynı kadro grubundaki (§13.1) takım arkadaşlarının moral düşüşünü
-## hızlandırır. Taşıyıcı kendi çarpanına girmez; izindeki taşıyıcı odada değildir.
+## hızlandırır. Taşıyıcı kendi çarpanına girmez; izindeki taşıyıcı odada değildir, eğitimdeki
+## odadadır (§8.6: eğitim bir tatil değildir).
 static func _team_decay_mult(emp: Character) -> float:
 	var group_id: String = String(HRConstants.ROLE_GROUP.get(emp.role, ""))
 	if group_id == "":
 		return 1.0
 	var m: float = 1.0
-	for other in CharacterRegistry.get_active_employees():
-		if other.id == emp.id or String(HRConstants.ROLE_GROUP.get(other.role, "")) != group_id:
+	for other in CharacterRegistry.get_employees():
+		if other.id == emp.id or other.status == HRConstants.STATUS_ON_LEAVE \
+				or String(HRConstants.ROLE_GROUP.get(other.role, "")) != group_id:
 			continue
 		m *= HRConstants.trait_mult(other.traits, "dept_morale_decay_mult")
 	return m

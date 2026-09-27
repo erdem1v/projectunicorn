@@ -81,6 +81,15 @@ static func area_parts(node_id: String) -> PackedStringArray:
 	return parts
 
 
+## §5.5 — düğümün okuduğu her alan için "{alan} ★N" parçası: kart eşiği Başlat'tan önce yazar.
+static func req_parts(node_id: String) -> PackedStringArray:
+	var parts := PackedStringArray()
+	for area in ResearchTree.areas_of(node_id):
+		parts.append(t("RND_REQ_STARS").format({"area": HRConstants.area_label(String(area)),
+			"stars": StarRating.FILLED + str(ResearchTree.stars_of(node_id))}))
+	return parts
+
+
 ## Sütun başlığı — "{aile} · {alan} alanı · {bitti}/{toplam}". Tasarım ailesinde aile
 ## adı ile alan adı AYNI sözcüktür ("TASARIM · Tasarım alanı"); o sütun kısa biçime
 ## düşer. Karşılaştırma büyük harfte, çünkü iki metin farklı kaynaklardan geliyor ve
@@ -128,7 +137,7 @@ static func refusal_text(node_id: String, refusal: String) -> String:
 		RnDSystem.REFUSE_ZERO:
 			return t("RND_ASSIGN_ZERO")
 		RnDSystem.REFUSE_STARS:
-			return t("RND_NEED_STARS").format({"n": ResearchTree.stars_of(node_id),
+			return t("RND_NEED_AREA").format({"stars": StarRating.FILLED + str(ResearchTree.stars_of(node_id)),
 				"area": HRConstants.area_label(RnDSystem.missing_star_area(node_id))})
 		RnDSystem.REFUSE_CASH:
 			return t("RND_NEED_CASH").format({"amount": Fmt.money(ResearchTree.cash_of(node_id))})

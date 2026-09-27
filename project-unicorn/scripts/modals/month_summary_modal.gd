@@ -110,8 +110,8 @@ func _mrr_chip(from: int, to: int) -> Dictionary:
 
 
 func _delta_chip(delta: int, magnitude: String) -> Dictionary:
-	# {text, palette}: U+2212 minus, and "±0 —" when flat.
-	var text: String = "±0 —"
+	# {text, palette}: U+2212 minus, and "±0" when flat.
+	var text: String = "±0"
 	if delta != 0:
 		text = "%s%s %s" % ["+" if delta > 0 else "−", magnitude, "↑" if delta > 0 else "↓"]
 	return {"text": text, "palette": UiTokens.badge_palette_for_delta(delta)}

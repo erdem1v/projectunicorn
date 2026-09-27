@@ -139,8 +139,9 @@ func _add_unlocks() -> void:
 	_content.add_child(row)
 
 
-## Durumun gövde satırı: alan parçaları + duruma göre gereksinim, canlı gidiş ya da
-## açtığı kapı. Parçalar "·" ile birleşir (ayraç bir cümle değil, YAPI).
+## Durumun gövde satırı: alan parçaları + canlı gidiş ya da açtığı kapı; başlamamış
+## düğümde alan parçalarının yerini alan ve eşik alır (§5.5). Parçalar "·" ile birleşir
+## (ayraç bir cümle değil, YAPI).
 func _add_state_body(state: String) -> void:
 	var parts: PackedStringArray = RnDUiShared.area_parts(_node_id)
 	match state:
@@ -167,7 +168,7 @@ func _add_state_body(state: String) -> void:
 				parts.append(RnDUiShared.t("RND_COMPLETED_UNLOCKED_ONE").format({
 					"node": ResearchSeam.node_name(String(opened[0]))}))
 		_:
-			parts.append(RnDUiShared.t("RND_REQ_STARS").format({"n": ResearchTree.stars_of(_node_id)}))
+			parts = RnDUiShared.req_parts(_node_id)
 			# -1.0 = "katkı yok" (§5.5): sayı yoksa parça da yok, asla ∞ yazılmaz.
 			var solo: float = RnDSystem.days_estimate_solo(_node_id)
 			if solo > 0.0:

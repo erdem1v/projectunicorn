@@ -343,16 +343,6 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     politikasına geçer ve görünür bir kartla kapanır.
   - Kaynak: Olay motoru GDD §10.5, §18.3; CLAUDE.md §5
 
-- **20 · Ay sonu özeti çipinde tire ve script literali (±0 —).**
-  - Ne oluyor: Ay boyunca değişmeyen satırın (MRR, kasa, ekip, marka) çipinde "±0 —" yazıyor. Bu metin bir anahtar
-    değil, script literali ve uzun tire içeriyor.
-  - Nerede: scripts/modals/month_summary_modal.gd `_delta_chip`
-  - Oyuncuya etkisi: Değişmeyen her satırda iki dilde de aynı "±0 —" çipi görünüyor. Bu, oyuncu metnindeki tire
-    yasağına aykırı.
-  - Seçenekler: A) Yalnız "±0" yazılsın (sembol, anahtar gerekmez). B) Yeni MONTH_CHIP_FLAT anahtarı açılsın (önce EN,
-    sonra TR). C) Olduğu gibi kalsın, sembol çipi istisna sayılsın.
-  - Kaynak: GDD ch01 §9 (no dashes in copy); CLAUDE.md §5
-
 - **21 · Kurucu yaşam gideri hâlâ burn'ün tamamı.**
   - Ne oluyor: FinanceSystem.STARTING_BURN_BREAKDOWN içinde "founder": 50 $/gün [ÇALIŞMA] var ve 1. günün burn'ünün
     tamamı bu. Finans'ta FIN_BURN_FOUNDER "Kurucu yaşam gideri / Founder living costs" satırı olarak görünüyor. GDD
@@ -399,25 +389,6 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     için GDD değişikliği ister.
   - Kaynak: Ar-Ge GDD §6.1 (MÜHÜRLÜ teslim biçimi), §5.6.2 (rozet sayımı), §10 (arge.note_pending)
 
-- **24 · Düğüm kartında gereksinim satırı ham '{area} {stars}' basıyor.**
-  - Ne oluyor: RnDDetailPanel._add_state_body açılmış ya da kilitli düğümde RND_REQ_STARS ('{area} {stars}')
-    anahtarını {"n": yıldız} ile formatlıyor, yer tutucular dolmuyor. Ekranda 'Ürün alanı · {area} {stars} · ~4 gün
-    (Kurucu)' görünüyor. Düzeltme bir metin kararı istiyor: yıldız ★2 mi yazılır, 2★ mı (SALES_BAND_STAR '{n}★'),
-    yoksa sayı mı; RND_AREA_OF ('{area} alanı') parçası kalır mı; iki alanlı düğümde iki gereksinim nasıl dizilir.
-    İlişkili ret metni RND_NEED_STARS ('{area} alanında {n} yıldız gerekiyor.') GDD'nin 'Ürün ★2 gerekiyor.'
-    biçiminden farklı. GDD'nin biçimine uyan RND_NEED_AREA ('{area} {stars} gerekiyor.') kullanılmıyor.
-  - Nerede: scripts/tabs/rnd/rnd_detail_panel.gd (_add_state_body, varsayılan kol); scripts/tabs/rnd/rnd_ui_shared.gd
-    (area_parts, refusal_text REFUSE_STARS); localization/strings.csv RND_REQ_STARS, RND_AREA_OF, RND_NEED_STARS,
-    RND_NEED_AREA
-  - Oyuncuya etkisi: Araştırılabilir her düğümün kartında ham yer tutucu görünüyor. Oyuncu gereken yıldız eşiğini
-    Başlat'tan önce okuyamıyor, oysa §5.5 bunu MÜHÜRLÜ kural olarak istiyor.
-  - Seçenekler: A) §5.5 biçimi: alan parçası yerine her alan için 'Ürün ★2' (RND_REQ_STARS {area}, {stars}='★2'); ret
-    satırı RND_NEED_AREA'ya geçer ve RND_NEED_STARS silinir. B) §8 örneği: 'Ürün alanı · ~9 gün (Kurucu)' kalır,
-    yıldız ayrı parça olarak 'Ürün alanı ★2' biçiminde birleşir. C) Yalnız yer tutucu düzeltilir, 'Ürün alanı · Ürün
-    ★2 · …' tekrarı kabul edilir. Her seçenekte TR/EN onay bekler.
-  - Kaynak: Ar-Ge GDD §5.5 (MÜHÜRLÜ: 'Ürün ★2 · ~9 gün · Kurucu', 'Ürün ★2 gerekiyor.'), §7 ('Yazılım ★2 gerekiyor.'),
-    §8 (kart örneği 'Ürün alanı · ~9 gün (Kurucu) · GPU kirası $600')
-
 - **25 · Atama panelinde izindeki ya da eğitimdeki kişi seçilebiliyor ama koltuğa oturmuyor.**
   - Ne oluyor: RnDAssignPanel._person_row meşgul (izinde, eğitimde, kurucu pitch hazırlığında) kişiyi soluk ama
     seçilebilir bırakıyor; gerekçesi 'oyuncu onu yine de seçebilmeli'. CharacterRegistry.assign_job STATUS != ACTIVE
@@ -437,21 +408,18 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Kaynak: Ar-Ge GDD §5.3 (panel havuzu), §5.5 (sıfır katkı koruması), §7 ('Araştırmadaki kişi izne çıkar' satırı;
     yeni atama için sessiz); Ekip GDD §12.3
 
-- **26 · Kilitli yuvada '?' ve çapraz koşul satırı yok.**
-  - Ne oluyor: GDD kilitli yuvayı '? Ürün' diye yazıyor; RND_LOCKED_SLOT değeri '{area}', '?' yok. Sürpriz duvar
-    yasağı çapraz koşullu devam düğümünün kilitli yuvasında 'Başka bir ailede bir araştırma ister.' yazılmasını
-    istiyor; RND_NEED_CROSS_BLIND CSV'de var ama hiçbir kod onu okumuyor. Karo küçük (MicroLabel, ortalı), bu yüzden
-    ikinci satırın karoda mı, üzerine gelince mi, yoksa derin bağla seçilince detay kartında mı görüneceği bir
-    yerleşim kararı.
+- **26 · Kilitli yuvada çapraz koşul satırı yok.**
+  - Ne oluyor: Sürpriz duvar yasağı çapraz koşullu devam düğümünün kilitli yuvasında 'Başka bir ailede bir
+    araştırma ister.' yazılmasını istiyor; RND_NEED_CROSS_BLIND CSV'de var ama hiçbir kod onu okumuyor. Karo küçük
+    (MicroLabel, ortalı), bu yüzden bu satırın karoda mı, üzerine gelince mi, yoksa derin bağla seçilince detay
+    kartında mı görüneceği bir yerleşim kararı.
   - Nerede: scripts/tabs/rnd/rnd_tree_view.gd (_make_tile, TILE_LOCKED dalı); scripts/tabs/rnd/rnd_detail_panel.gd
-    (_add_blockers, kilitli düğüm); localization/strings.csv RND_LOCKED_SLOT, RND_NEED_CROSS_BLIND
-  - Oyuncuya etkisi: Oyuncu kilitli yuvanın bir araştırma olduğunu '?' ile okuyamıyor. Çapraz koşul ancak ad
-    açıldıktan sonra görünüyor, yani §3'ün yasakladığı sürpriz duvar oluşuyor.
-  - Seçenekler: A) RND_LOCKED_SLOT '? {area}' olur; çapraz koşullu kilitli karoya ikinci MicroLabel satırı
-    RND_NEED_CROSS_BLIND eklenir. B) '?' eklenir; çapraz satırı yalnız karonun üzerine gelince ipucu olarak çıkar. C)
-    '?' eklenir; çapraz satırı derin bağla seçilen kilitli düğümün detay kartında (_add_blockers) yazılır. Her
-    seçenekte TR/EN onay bekler.
-  - Kaynak: Ar-Ge GDD §3 (MÜHÜRLÜ: kilitli yuva '? Ürün'; sürpriz duvar yasağı), §5.5, §8 ('kilitli yuva (ad yok, ?)')
+    (_add_blockers, kilitli düğüm); localization/strings.csv RND_NEED_CROSS_BLIND
+  - Oyuncuya etkisi: Çapraz koşul ancak ad açıldıktan sonra görünüyor, yani §3'ün yasakladığı sürpriz duvar oluşuyor.
+  - Seçenekler: A) Çapraz koşullu kilitli karoya ikinci MicroLabel satırı RND_NEED_CROSS_BLIND eklenir. B) Satır
+    yalnız karonun üzerine gelince ipucu olarak çıkar. C) Satır derin bağla seçilen kilitli düğümün detay kartında
+    (_add_blockers) yazılır. Her seçenekte TR/EN onay bekler.
+  - Kaynak: Ar-Ge GDD §3 (MÜHÜRLÜ: sürpriz duvar yasağı), §8 ('çapraz koşulu eksik' durumu)
 
 - **27 · Üç düğümün adlandırılmış maliyet etiketi yazılmamış.**
   - Ne oluyor: rnd_tree.json'da ai_engine, security_cert ve analytics_engine 'cost_label': true taşıyor. Kart
@@ -848,36 +816,6 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Seçenekler: A) Anahtar silinir (ISLER'deki CSV süpürmesine girer). B) Uygun çalışan yoksa FOUNDER_BUSY yerine
     NOBODY_ELIGIBLE gösterilir. C) İkisi alt alta: önce kurucunun meşguliyeti, altında işe alım ipucu.
   - Kaynak: Ürün GDD (ch03) §8.2 (doğrulama Müşteri İlişkileri'nin işi), §17 (destek durumu).
-
-- **55 · Canlı ürünün ALTYAPI adımı 0 birimi öneriyle (1 birim) dolduruyor.**
-  - Ne oluyor: Yayın akışı açılırken kapasite taslağı `InfraSystem.units()`'ten alınıyor; değer
-    `InfraSystem.CAPACITY_MIN` (0) ya da altındaysa yerine `InfraSystem.suggested_start_units()` (1) yazılıyor. Aynı
-    yol, canlı üründe kapasite bloğundan açılan tek adımlı ALTYAPI'da da çalışıyor. Kapasite bloğu ise 0 birimi meşru
-    bir durum sayıyor (`PROD_CAPACITY_UNSET`). `_start`'taki yorum "durumda varsa odur" diyor.
-  - Nerede: `scripts/tabs/product/publish_flow.gd` (`_start`, `_on_infra_commit`);
-    `scripts/tabs/product/detail_view.gd` (`_on_capacity_change_requested`); `scripts/tabs/product/capacity_block.gd`;
-    `scripts/systems/infra_system.gd` (`CAPACITY_MIN`, `SUGGESTED_START_UNITS`).
-  - Oyuncuya etkisi: 0 birimdeki canlı ürünün sahibi yalnız sağlayıcıyı değiştirmek için adımı açıp onaylarsa kapasite
-    1 birime çıkar ve aylık fatura işlemeye başlar. Stepper'da 1 görünür, yani öneri görünür ama canlı değerin 0
-    olduğu söylenmez.
-  - Seçenekler: A) Tek adım modunda canlı değer (0 dahil) doldurulur; öneri yalnız v1 yayın akışında kalır. B)
-    Davranış kalır, `_start`'taki yorum "0 birimde öneri gelir" diye düzeltilir.
-  - Kaynak: Ürün GDD (ch03) §10 (sağlayıcı canlıda her an değiştirilir; v1 Altyapı adımında öneri satırı; kapasite ±1
-    birim, cezasız).
-
-- **56 · TAT KAÇIRAN taşıyıcısı eğitimdeyken ekibin moralini etkilemiyor.**
-  - Ne oluyor: HRMoraleSystem._team_decay_mult takım arkadaşlarını CharacterRegistry.get_active_employees'ten okuyor.
-    Bu yüzden TAT KAÇIRAN (mood_buster) taşıyıcısı izindeyken de eğitimdeyken de aynı kadro grubunun moral düşüşünü
-    hızlandırmıyor. Koddaki yorum yalnız 'izindeki taşıyıcı odada değildir' diyor; eğitimdekinin de dışarıda kalması
-    belirtilmemiş bir yan sonuç.
-  - Nerede: scripts/systems/hr_morale_system.gd (_team_decay_mult, _scale); scripts/autoload/character_registry.gd
-    (get_active_employees)
-  - Oyuncuya etkisi: Oyuncu TAT KAÇIRAN'ı iki haftalık eğitime göndererek ekibin moral erimesini geçici olarak normale
-    döndürebiliyor. Eğitim, huyun etkisini susturan bir araca dönüşüyor.
-  - Seçenekler: A) Eğitimdeki taşıyıcı sayılır (§8.6 'eğitim bir tatil değildir' ile tutarlı), yalnız izindeki
-    dışarıda kalır. B) Bugünkü gibi: izin de eğitim de taşıyıcıyı odadan çıkarır, GDD'ye bir cümle eklenir. C)
-    Taşıyıcı her durumda sayılır.
-  - Kaynak: Ekip GDD §6 (TAT KAÇIRAN: 'Aynı ekiptekilerin moral düşüş modifikatörünü hafifçe yükseltir'), §7.1, §8.6
 
 - **57 · Araştırma görevinin GÖREV cümlesi yok.**
   - Ne oluyor: Kadro defterinin GÖREV hücresi tek işli kişide 'HR_TASK_ON_JOB_<İŞ>' cümlesini basıyor (ör. 'Satışta

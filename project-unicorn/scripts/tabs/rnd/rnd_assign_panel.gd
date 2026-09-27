@@ -132,7 +132,7 @@ func _group_members(area: String) -> Array[Character]:
 
 
 ## "▾ Yazılım (3)" + KARŞILANDI/KARŞILANMADI çipi. Çip motorun yıldız kapısını okur, yani
-## Başlat'ın RND_NEED_STARS reddiyle aynı cevabı verir (izindeki yıldız sahibi sayılmaz).
+## Başlat'ın RND_NEED_AREA reddiyle aynı cevabı verir (izindeki yıldız sahibi sayılmaz).
 func _group_header(area: String, members: Array[Character], is_open: bool) -> Control:
 	var bar := PanelContainer.new()
 	var sb := StyleBoxFlat.new()

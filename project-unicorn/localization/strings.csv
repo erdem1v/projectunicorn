@@ -2500,7 +2500,7 @@ RND_STATE_REVEALED,açığa çıkmış,revealed
 RND_STATE_RUNNING,koşuyor,running
 RND_STATE_FROZEN,donmuş,frozen
 RND_STATE_DONE,tamamlandı,completed
-RND_LOCKED_SLOT,{area},{area}
+RND_LOCKED_SLOT,? {area},? {area}
 RND_UNLOCKS_PREFIX,Açtığı şey:,What it opens:
 RND_START,Başlat,Start
 RND_DAYS_LEFT,~{days} gün kaldı,~{days} days left
@@ -2551,7 +2551,6 @@ RND_CROSS_MARK,⇠ {area},⇠ {area}
 RND_DAYS_EST,~{n} gün,~{n} days
 RND_DAYS_NONE,katkı yok,no contribution
 RND_DAYS_SOLO,~{n} gün (Kurucu),~{n} days (Founder)
-RND_NEED_STARS,{area} alanında {n} yıldız gerekiyor.,It wants {n} stars in {area}.
 RND_NODE_META,{family} · {tier},{family} · {tier}
 RND_REQ_CASH,{money},{money}
 RND_TIER_FROZEN,{tier} · donmuş,{tier} · frozen
