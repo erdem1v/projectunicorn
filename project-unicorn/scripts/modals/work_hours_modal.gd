@@ -352,7 +352,7 @@ func _source_text(text: String) -> Control:
 
 
 ## MORAL: yön göstergesi + modalin ölçüsünde moral çubuğu ve sayı. `HRUiShared.morale_row`
-## defterin 124–150px çubuğunu taşır ve 110px'lik sütunu aşardı.
+## defterin çubuğunu (MORALE_BAR_WIDTH) taşır ve 110px'lik sütuna sığmazdı.
 func _morale_cell(emp: Character, hours: int) -> Control:
 	var cell := HBoxContainer.new()
 	cell.add_theme_constant_override("separation", 8)
@@ -422,9 +422,9 @@ func _cost_block() -> Control:
 	var delta := HBoxContainer.new()
 	delta.add_theme_constant_override("separation", 10)
 	delta.add_child(UiFactory.make_label(tr("HR_HOURS_COST_BURN"), &"RowMeta", UiTokens.INK_MUTED))
-	delta.add_child(UiFactory.make_label(HRUiShared.money(before), &"RowMeta", UiTokens.CREAM_DIM))
+	delta.add_child(UiFactory.make_label(Fmt.money_exact(before), &"RowMeta", UiTokens.CREAM_DIM))
 	delta.add_child(UiFactory.make_label("→", &"RowMeta", UiTokens.INK_DIM))
-	delta.add_child(UiFactory.make_label(HRUiShared.money(after), &"MetricValueInk",
+	delta.add_child(UiFactory.make_label(Fmt.money_exact(after), &"MetricValueInk",
 		UiTokens.NEGATIVE if after > before else UiTokens.INK))
 	col.add_child(delta)
 

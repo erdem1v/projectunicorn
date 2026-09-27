@@ -11,7 +11,7 @@ extends RefCounted
 # number comes from HRConstants.
 #
 # WRITE-THROUGH LAW: cash moves ONLY through FinanceSystem.apply_one_time_cost (the commission);
-# the employee is created ONLY through CharacterRegistry.add, which stamps hire_day/leave_month,
+# the employee is created ONLY through CharacterRegistry.add, which stamps hire_day/leave_week,
 # key-locks role/axes/traits and counts run_hires; the arrival reaches the player ONLY as
 # EventBus.headline_added. Payroll is never pushed — FinanceSystem PULLS it, so a hire changes
 # burn by existing in the registry.

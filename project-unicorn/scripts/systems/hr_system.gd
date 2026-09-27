@@ -1,7 +1,7 @@
 class_name HRSystem
 extends RefCounted
 
-# Pure-logic system. Driven by TimeManager.daily_tick slot 3 (ordered dispatch).
+# Pure-logic system. TimeManager._dispatch_daily_tick calls daily_tick in slot 3 (HR).
 #
 # This file is the DAILY ORCHESTRATOR of HR plus its read surface; every rule lives in the
 # system that owns it:
@@ -389,7 +389,7 @@ static func area_sum_for(area_id: String) -> float:
 static func reset() -> void:
 	# HRSearchSystem holds no statics: its whole state lives on GameState.hr_search, which
 	# initialize_run clears and the save carries.
-	HRMoraleSystem.reset_rng()
+	HRMoraleSystem.reset()
 
 
 # --- Save routing (SaveManager): the one door the codec knocks on; each sub-system owns

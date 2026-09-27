@@ -162,7 +162,7 @@ func _refresh() -> void:
 	_summary.text = tr("HR_SUMMARY").format({
 		"count": CharacterRegistry.count_employees(),
 		"morale": int(round(HRMoraleSystem.average_morale())),
-		"payroll": HRUiShared.money(CharacterRegistry.get_total_monthly_salaries()),
+		"payroll": Fmt.money_exact(CharacterRegistry.get_total_monthly_salaries()),
 	})
 	if _structure_key != _compute_structure_key():
 		_rebuild()
@@ -325,32 +325,18 @@ func _paint_hours_control() -> void:
 		btn.add_theme_stylebox_override(state, sb)
 
 
-## PanelLayer, ModalLayer DEĞİL: ModalLayer boşluk ve 1-4 hız tuşlarını yutuyor ve dimmer'ı
-## TopBar'ı kaplıyor — saat bir kadro kararının üstünde akarken oyuncunun onu durduracak
-## yolu kalmazdı. Gerçek bir modal (layer 10) hâlâ üstünü örter.
-func _mount_panel_modal(path: String, on_changed: Callable, args: Array = []) -> void:
-	var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
-	if layer == null:
-		push_error("[HRTab] GameShell/PanelLayer yok — modal monte edilemiyor: %s" % path)
-		return
-	var modal: Node = (load(path) as PackedScene).instantiate()
-	layer.add_child(modal)   # önce add_child, sonra populate (ev konvansiyonu)
-	modal.connect("state_changed", on_changed)
-	modal.callv("populate", args)
-
-
 func _open_hours_modal() -> void:
-	_mount_panel_modal(WORK_HOURS_MODAL, _rebuild_forced)
+	HRUiShared.mount_panel_modal(self, WORK_HOURS_MODAL, _rebuild_forced)
 
 
 func _open_atlas() -> void:
 	# Motorun arayış geçişleri için sinyali yok; modal haber veriyor.
-	_mount_panel_modal(ATLAS_MODAL, _refresh)
+	HRUiShared.mount_panel_modal(self, ATLAS_MODAL, _refresh)
 
 
 ## Alan seçimini oyuncu yapıyor (§5.2), o yüzden onay kutusu değil eğitim modalı.
 func _confirm_training(emp: Character) -> void:
-	_mount_panel_modal(TRAINING_MODAL, _rebuild_forced, [emp.id])
+	HRUiShared.mount_panel_modal(self, TRAINING_MODAL, _rebuild_forced, [emp.id])
 
 
 # --- Kadro grupları ---------------------------------------------------------
@@ -524,7 +510,7 @@ func _open_actions(emp: Character, anchor: Control) -> void:
 	for spec in [
 			{"key": "HR_CARD_RAISE", "preview": HRActions.preview_raise(emp, HRConstants.RAISE_MIN_PCT),
 				"action": HRLedger.ACTION_RAISE,
-				"meta": HRUiShared.money(emp.monthly_salary)},
+				"meta": Fmt.money_exact(emp.monthly_salary)},
 			# §13.3: kilitli hâli görünür kalır ve gerekçesini gösterir.
 			{"key": "HR_CARD_PROMOTE",
 				"preview": {"ok": HRActions.can_promote(emp),
@@ -698,7 +684,7 @@ func _rebuild_forced() -> void:
 func _on_viewport_resized() -> void:
 	if not is_inside_tree():
 		return
-	var was_dense: bool = HRLedger._dense
+	var was_dense: bool = HRLedger.dense
 	HRLedger.measure(get_viewport_rect().size.x)
-	if HRLedger._dense != was_dense:
+	if HRLedger.dense != was_dense:
 		_rebuild_forced()   # yalnız kademe değiştiyse: her pikselde tabloyu kurmayız

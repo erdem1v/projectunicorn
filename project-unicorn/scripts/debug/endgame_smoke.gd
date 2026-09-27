@@ -12632,9 +12632,7 @@ static func _case_leave_does_not_pause_build() -> String:
 
 
 static func _case_money_never_double_minus() -> String:
-	# C3: `HRConstants.money_tr` (→ `Fmt.money_exact`) işaretini KENDİ basıyor; İK'nın
-	# yerel `_money` sarmalayıcısı üzerine bir eksi daha ekliyordu → "--$4.878".
-	# İşten çıkarma nakdi eksiye geçirebildiği için bu tasarlanmış-ulaşılabilir bir hâldi.
+	# İşten çıkarma nakdi eksiye geçirebilir; Fmt.money_exact işaretini kendi basar, önizleme satırları çift eksi taşımamalı.
 	var e: Character = _make_employee("char_money", "Money Guy", HRConstants.ROLE_DEVELOPER, SEED_PACE, 12000, 50)
 	e.hire_day = maxi(GameState.day - 400, 0)
 	GameState.set_cash(1000)   # tazminat kasayı EKSİYE geçirsin

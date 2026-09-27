@@ -314,7 +314,7 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	var stars := HBoxContainer.new()
 	stars.add_theme_constant_override("separation", 26)
 	stars.add_child(HRUiShared.area_stars_row(role_id, axes, 14))
-	stars.add_child(HRUiShared._v_hairline(28))
+	stars.add_child(HRUiShared.v_hairline(28))
 	stars.add_child(StarRating.labelled(
 		HRConstants.area_label(HRConstants.SKILL_LEADERSHIP),
 		int(axes.get(HRConstants.SKILL_LEADERSHIP, 0)), 14))
@@ -335,11 +335,11 @@ func _file_card(index: int, file: Dictionary) -> Control:
 		tr("HR_ATLAS_SALARY_LABEL"), &"RowMeta", UiTokens.INK_DIM)
 	ask_cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	ask.add_child(ask_cap)
-	ask.add_child(UiFactory.make_label(HRUiShared.money(salary), &"MetricValueInk"))
+	ask.add_child(UiFactory.make_label(Fmt.money_exact(salary), &"MetricValueInk"))
 	ask.add_child(UiFactory.make_label(tr("HR_PER_MONTH"), &"RowMeta", UiTokens.INK_DIM))
 	col.add_child(ask)
 
-	var cta: String = tr("HR_ATLAS_HIRE").format({"amount": HRUiShared.money(salary)})
+	var cta: String = tr("HR_ATLAS_HIRE").format({"amount": Fmt.money_exact(salary)})
 	var hire_btn: Button
 	if bool(pv.get("affordable", false)):
 		hire_btn = HRUiShared.action_button(cta, _on_hire_pressed.bind(index), true)
@@ -354,7 +354,7 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	comm_cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	comm.add_child(comm_cap)
 	comm.add_child(UiFactory.make_label(
-		"+ %s" % HRUiShared.money(int(pv.get("commission", 0))), &"RowMeta", UiTokens.INK_MUTED))
+		"+ %s" % Fmt.money_exact(int(pv.get("commission", 0))), &"RowMeta", UiTokens.INK_MUTED))
 	col.add_child(comm)
 
 	col.add_child(_runway_strip(pv))

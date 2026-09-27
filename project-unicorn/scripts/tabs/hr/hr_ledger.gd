@@ -28,20 +28,20 @@ const MUTED := Color(1, 1, 1, 0.45)
 
 ## Başlık ile satırların AYNI kademeyi okuması şart; o yüzden statik ve defter kurulmadan
 ## önce ölçülür.
-static var _dense: bool = false
+static var dense: bool = false
 
 
 ## Ev sahibi (hr_tab) defteri kurmadan ÖNCE çağırır.
 static func measure(viewport_width: float) -> void:
-	_dense = viewport_width > 0.0 and viewport_width < float(DENSE_BELOW)
+	dense = viewport_width > 0.0 and viewport_width < float(DENSE_BELOW)
 
 
-static func w_roles() -> int:      return W_ROLES_DENSE if _dense else W_ROLES_WIDE
-static func w_task() -> int:       return W_TASK_DENSE if _dense else W_TASK_WIDE
-static func w_experience() -> int: return W_EXPERIENCE_DENSE if _dense else W_EXPERIENCE_WIDE
-static func w_state() -> int:      return W_STATE_DENSE if _dense else W_STATE_WIDE
-static func w_salary() -> int:     return W_SALARY_DENSE if _dense else W_SALARY_WIDE
-static func w_morale() -> int:     return W_MORALE_DENSE if _dense else W_MORALE_WIDE
+static func w_roles() -> int:      return W_ROLES_DENSE if dense else W_ROLES_WIDE
+static func w_task() -> int:       return W_TASK_DENSE if dense else W_TASK_WIDE
+static func w_experience() -> int: return W_EXPERIENCE_DENSE if dense else W_EXPERIENCE_WIDE
+static func w_state() -> int:      return W_STATE_DENSE if dense else W_STATE_WIDE
+static func w_salary() -> int:     return W_SALARY_DENSE if dense else W_SALARY_WIDE
+static func w_morale() -> int:     return W_MORALE_DENSE if dense else W_MORALE_WIDE
 
 ## Satırın aksiyonları. ACTION_MENU satır tıklamasıdır: kişi aksiyonlarını taşıyan popover'ı açar.
 const ACTION_MENU := "menu"
@@ -106,7 +106,7 @@ static func row(emp: Character, on_action: Callable, refs: Dictionary) -> Contro
 	row.add_child(_experience_cell(emp))
 	row.add_child(HRUiShared.status_cell(emp, w_state()))
 	row.add_child(HRUiShared.trait_cell(emp.traits, W_TRAIT))
-	row.add_child(_num(HRUiShared.money(emp.monthly_salary), w_salary(), muted))
+	row.add_child(_num(Fmt.money_exact(emp.monthly_salary), w_salary(), muted))
 	var morale_cell := HRUiShared.morale_row(emp.morale, refs)
 	morale_cell.custom_minimum_size = Vector2(w_morale(), 0)
 	row.add_child(morale_cell)

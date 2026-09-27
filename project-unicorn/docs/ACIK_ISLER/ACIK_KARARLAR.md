@@ -925,6 +925,30 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Kaynak: Ürün GDD (ch03) §10 (sağlayıcı canlıda her an değiştirilir; v1 Altyapı adımında öneri satırı; kapasite ±1
     birim, cezasız).
 
+- **56 · TAT KAÇIRAN taşıyıcısı eğitimdeyken ekibin moralini etkilemiyor.**
+  - Ne oluyor: HRMoraleSystem._team_decay_mult takım arkadaşlarını CharacterRegistry.get_active_employees'ten okuyor.
+    Bu yüzden TAT KAÇIRAN (mood_buster) taşıyıcısı izindeyken de eğitimdeyken de aynı kadro grubunun moral düşüşünü
+    hızlandırmıyor. Koddaki yorum yalnız 'izindeki taşıyıcı odada değildir' diyor; eğitimdekinin de dışarıda kalması
+    belirtilmemiş bir yan sonuç.
+  - Nerede: scripts/systems/hr_morale_system.gd (_team_decay_mult, _scale); scripts/autoload/character_registry.gd
+    (get_active_employees)
+  - Oyuncuya etkisi: Oyuncu TAT KAÇIRAN'ı iki haftalık eğitime göndererek ekibin moral erimesini geçici olarak normale
+    döndürebiliyor. Eğitim, huyun etkisini susturan bir araca dönüşüyor.
+  - Seçenekler: A) Eğitimdeki taşıyıcı sayılır (§8.6 'eğitim bir tatil değildir' ile tutarlı), yalnız izindeki
+    dışarıda kalır. B) Bugünkü gibi: izin de eğitim de taşıyıcıyı odadan çıkarır, GDD'ye bir cümle eklenir. C)
+    Taşıyıcı her durumda sayılır.
+  - Kaynak: Ekip GDD §6 (TAT KAÇIRAN: 'Aynı ekiptekilerin moral düşüş modifikatörünü hafifçe yükseltir'), §7.1, §8.6
+
+- **57 · Araştırma görevinin GÖREV cümlesi yok.**
+  - Ne oluyor: Kadro defterinin GÖREV hücresi tek işli kişide 'HR_TASK_ON_JOB_<İŞ>' cümlesini basıyor (ör. 'Satışta
+    görev alıyor'). Araştırma için HR_TASK_ON_JOB_RESEARCH satırı yok; kod bilinçli olarak iş etiketine düşüyor
+    ('Araştırma'). Ham anahtar ekrana çıkmıyor ama bu satır öbür işlerle aynı biçimde okunmuyor.
+  - Nerede: scripts/tabs/hr/hr_ledger.gd (_job_text, _task_cell); localization/strings.csv (HR_TASK_ON_JOB_* ailesi)
+  - Oyuncuya etkisi: Araştırmadaki kişinin GÖREV hücresinde cümle yerine tek kelime görünüyor; defterin dili tutarsız.
+  - Seçenekler: A) Yeni anahtar yazılır: EN 'Working on research', TR 'Araştırmada görev alıyor' (onay bekler);
+    ardından _job_text'teki geri düşüş dalı silinir. B) Bugünkü gibi: etiket yeterli, geri düşüş kalır.
+  - Kaynak: Ekip GDD §12.2 (iş metni); Ar-Ge GDD §5.0 (araştırma dışlayıcı iştir)
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında

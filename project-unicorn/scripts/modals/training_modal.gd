@@ -112,7 +112,7 @@ func _rebuild() -> void:
 		# eksiye götürebilir; bedel butonun üstünde ve satırında okunuyor.
 		var fee: int = CharacterRegistry.training_fee_for(_character_id, _selected)
 		footer.add_child(HRUiShared.action_button(
-			tr("HR_TRAINING_CTA").format({"fee": HRUiShared.money(fee)}), _on_send, true))
+			tr("HR_TRAINING_CTA").format({"fee": Fmt.money_exact(fee)}), _on_send, true))
 	_root_box.add_child(footer)
 
 
@@ -157,7 +157,7 @@ func _skill_row(c: Character, skill_key: String) -> Control:
 	row.add_child(tgt_slot)
 
 	var fee: int = CharacterRegistry.training_fee_for(_character_id, skill_key)
-	row.add_child(_cell(HRUiShared.money(fee), 120, HORIZONTAL_ALIGNMENT_CENTER, &"RowMeta", ink))
+	row.add_child(_cell(Fmt.money_exact(fee), 120, HORIZONTAL_ALIGNMENT_CENTER, &"RowMeta", ink))
 	# Son sütun: açıkken SÜRE, kilitliyken §5.4'ün iki gerekçesinden doğru olanı.
 	var reason: String = CharacterRegistry.training_block_reason(_character_id, skill_key)
 	row.add_child(_cell(HRConstants.training_duration_text() if trainable else reason,

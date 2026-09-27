@@ -59,7 +59,7 @@ static func preview_raise(emp: Character, pct: int) -> Dictionary:
 		"rows": [
 			_salary_row(before, after),
 			_delta(TranslationServer.translate("HR_ROW_MORALE"), str(emp.morale), str(emp.morale + gain)),
-			_delta(TranslationServer.translate("HR_ROW_PAYROLL"), _money(payroll), _money(payroll + after - before)),
+			_delta(TranslationServer.translate("HR_ROW_PAYROLL"), Fmt.money_exact(payroll), Fmt.money_exact(payroll + after - before)),
 			_rule(TranslationServer.translate("HR_RAISE_PERMANENT")),
 		],
 	}
@@ -121,7 +121,7 @@ static func preview_promotion(emp: Character, pct: int) -> Dictionary:
 				HRConstants.job_title(emp.role, emp.level + 1)),
 			_salary_row(before, after),
 			_delta(TranslationServer.translate("HR_ROW_MORALE"), str(emp.morale), str(emp.morale + gain)),
-			_delta(TranslationServer.translate("HR_ROW_PAYROLL"), _money(payroll), _money(payroll - before + after)),
+			_delta(TranslationServer.translate("HR_ROW_PAYROLL"), Fmt.money_exact(payroll), Fmt.money_exact(payroll - before + after)),
 			_rule(TranslationServer.translate("HR_PROMOTION_PERMANENT")),
 		],
 	}
@@ -174,13 +174,13 @@ static func preview_fire(emp: Character) -> Dictionary:
 		"cash_after": cash_after,
 		"rows": [
 			# OLGU: tazminatın "önce"si yok; ok bir geçiş iddiası olurdu.
-			_fact(HRConstants.cost_label_severance(), _money(severance),
+			_fact(HRConstants.cost_label_severance(), Fmt.money_exact(severance),
 				TranslationServer.translate("HR_ROW_MONTHS_NOTE").format({
 					"months": Fmt.number(multiple, 1)})),
 			# `negative_after` lets the UI flag a negative balance without parsing formatted text.
-			_delta(TranslationServer.translate("HR_ROW_CASH"), _money(GameState.cash),
-				_money(cash_after), "", cash_after < 0),
-			_delta(TranslationServer.translate("HR_ROW_PAYROLL"), _money(payroll), _money(payroll - emp.monthly_salary)),
+			_delta(TranslationServer.translate("HR_ROW_CASH"), Fmt.money_exact(GameState.cash),
+				Fmt.money_exact(cash_after), "", cash_after < 0),
+			_delta(TranslationServer.translate("HR_ROW_PAYROLL"), Fmt.money_exact(payroll), Fmt.money_exact(payroll - emp.monthly_salary)),
 			_fact(TranslationServer.translate("HR_ROW_TEAM_MORALE"), str(-HRConstants.MORALE_FIRE_TEAM)),
 		],
 	}
@@ -263,14 +263,9 @@ static func _rule(text: String) -> Dictionary:
 
 static func _salary_row(before: int, after: int) -> Dictionary:
 	# `note` is the monthly difference beside the result: "(aylık +$1.470)".
-	return _delta(TranslationServer.translate("HR_ROW_SALARY"), _money(before), _money(after),
+	return _delta(TranslationServer.translate("HR_ROW_SALARY"), Fmt.money_exact(before), Fmt.money_exact(after),
 		TranslationServer.translate("HR_ROW_MONTHLY_NOTE").format({"delta": _signed_money(after - before)}))
 
 
-static func _money(amount: int) -> String:
-	# Fmt.money_exact under money_tr already prints its own minus sign.
-	return HRConstants.money_tr(amount)
-
-
 static func _signed_money(amount: int) -> String:
-	return ("+%s" % _money(amount)) if amount >= 0 else _money(amount)
+	return ("+%s" % Fmt.money_exact(amount)) if amount >= 0 else Fmt.money_exact(amount)

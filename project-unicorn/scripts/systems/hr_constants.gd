@@ -683,7 +683,7 @@ const UZMAN_COST_TRAIT_CHANCE := 0.35
 
 ## §10.2 beş yıldızlı aday: nadir, yalnız Kıdemli bantta, maaş talebi bandın tavanında.
 const FIVE_STAR_CHANCE := 0.08
-## §10.2: üçlüden en az biri bedelli huy taşır — garanti, üretimden sonra kontrol edilir.
+## §10.2: üçlüden en az biri bedelli huy taşır; her üçlüdeki Pazarlık dosyası bunu sağlar.
 const TRIO_COST_TRAIT_MIN := 1
 
 
@@ -840,6 +840,8 @@ static func morale_band_id(morale: int) -> String:
 	if morale < MORALE_BAND_LOW:
 		return "low"
 	return "mid"
+
+
 const MORALE_FLIGHT_RISK := 35      # §7: altı → Ayrılabilir
 const MORALE_HIRE_START := 75       # WORKING: yeni işe alınanın başlangıç morali
 const MORALE_LEAVE_RETURN := 15     # §11.4 izin dönüşü, tek seferde
@@ -966,7 +968,7 @@ static func climate_gain_mult(leadership: int) -> float:
 
 # Çarpan KAYNAĞA göre asimetriktir: kurucu her zaman odadadır, Liderlik'i yalnız EKLER;
 # SEÇİLMİŞ bir çalışan lider gerçek bir bahistir ve zayıfı gerçekten kötü koordine eder.
-# ProductSystem._speed_for_lead lidere göre doğru olanı seçer.
+# ProductSystem._lead_coordination lidere göre doğru olanı seçer.
 
 static func coordination_for_founder(leadership: int, has_natural_leader: bool = false) -> float:
 	var span: float = COORD_MAX - COORD_FOUNDER_NEUTRAL
@@ -1069,11 +1071,6 @@ const RAISE_COOLDOWN_DAYS := 180   # §9.2 "aynı çalışana altı ay geçmeden
 const PROMOTION_MIN_PCT := 10
 const PROMOTION_MAX_PCT := 25
 const DAYS_PER_YEAR := 365         # kıdem hesabı (hire_day → tam yıl)
-
-
-## HR para biçimi; Fmt'ye devreder ki iki dilde doğru gruplansın.
-static func money_tr(amount: int) -> String:
-	return Fmt.money_exact(amount)
 
 
 # ============================ Aday dosyası içeriği ===========================

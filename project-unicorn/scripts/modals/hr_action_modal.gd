@@ -18,7 +18,6 @@ const FONT_MONO_SB := preload("res://assets/fonts/variations/mono_sb.tres")
 const FONT_SANS_IT := preload("res://assets/fonts/variations/sans_it.tres")
 
 const ARROW := "→"
-const PAUSE_GLYPH := "⏸"
 
 @onready var _dimmer: ColorRect = $Dimmer
 @onready var _title: Label = %TitleLabel
@@ -143,17 +142,7 @@ func _value_row(row: Dictionary, cells: Array) -> HBoxContainer:
 	return box
 
 
-func _rule_row(row: Dictionary) -> Control:
-	var box := HBoxContainer.new()
-	box.add_theme_constant_override("separation", 6)
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if bool(row.get("pause", false)):
-		var glyph := Label.new()
-		glyph.text = PAUSE_GLYPH
-		glyph.add_theme_font_size_override("font_size", UiTokens.SIZE_DATA)
-		glyph.add_theme_color_override("font_color", UiTokens.NEGATIVE)
-		glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.add_child(glyph)
+func _rule_row(row: Dictionary) -> Label:
 	var lbl := Label.new()
 	lbl.text = String(row.get("text", ""))
 	# Sayısı olmayan tek kayıt türü, tek eğik yüz.
@@ -161,10 +150,8 @@ func _rule_row(row: Dictionary) -> Control:
 	lbl.add_theme_font_size_override("font_size", UiTokens.SIZE_DATA)
 	lbl.add_theme_color_override("font_color", UiTokens.INK_MUTED)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(lbl)
-	return box
+	return lbl
 
 
 func _on_commit() -> void:

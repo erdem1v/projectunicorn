@@ -54,7 +54,9 @@ static func tick_leave_departures() -> void:
 	var year: int = int(date.year)
 	if month < HRConstants.LEAVE_WINDOW_START_MONTH or month > HRConstants.LEAVE_WINDOW_END_MONTH:
 		return
-	var week_index: int = int(float(GameState.day - _summer_window_start_day(year)) / 7.0)
+	var since_june: int = Time.get_unix_time_from_datetime_dict(date) - Time.get_unix_time_from_datetime_dict(
+		{"year": year, "month": HRConstants.LEAVE_WINDOW_START_MONTH, "day": 1})
+	var week_index: int = int(float(since_june) / (7.0 * 86400.0))
 	for emp in CharacterRegistry.get_employees():
 		if emp.status != HRConstants.STATUS_ACTIVE or emp.leave_week != week_index:
 			continue
@@ -65,18 +67,6 @@ static func tick_leave_departures() -> void:
 		# otomatik başlar ama sinyal yayınlanır.
 		EventBus.leave_requested.emit(emp.id)
 		send_on_leave(emp, HRConstants.LEAVE_DAYS, false)
-
-
-## Yaz penceresinin (1 Haziran) o yıldaki run günü. Takvim dönüşümü yalnız get_date_dict'te
-## yaşadığı için bugünden geriye taranır; pencere en fazla ~92 gün.
-static func _summer_window_start_day(year: int) -> int:
-	var probe: int = GameState.day
-	while probe > 1:
-		var d: Dictionary = GameState.get_date_dict(probe - 1)
-		if int(d.year) != year or int(d.month) < HRConstants.LEAVE_WINDOW_START_MONTH:
-			break
-		probe -= 1
-	return probe
 
 
 static func tick_thresholds() -> void:
@@ -293,10 +283,9 @@ static func forget_employee(character_id: String) -> void:
 	GameState.set_flag(FLAG_MANUAL_LEAVE_PREFIX + character_id, false)
 
 
-## GameState.initialize_run run_seed atandıktan SONRA çağırır. Yüklemede
-## SaveCodec.restore_systems RngStreams.from_dict'i bundan sonra koşar ve kayıtlı konumu geri yükler.
-static func reset_rng() -> void:
-	RngStreams.reseed(GameState.run_seed)
+## Run sınırı: önceki koşunun bekleyen istifası yeni koşuya taşınmaz. İstifa roll'unun akışını
+## RngStreams kendisi run_seed'e bağlar.
+static func reset() -> void:
 	_pending.clear()
 
 

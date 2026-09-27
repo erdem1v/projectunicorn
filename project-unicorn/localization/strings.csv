@@ -418,7 +418,6 @@ HR_EMPTY_ROW,Henüz kimse yok,Nobody here yet
 HR_STATE_ON_LEAVE,İzinde,On leave
 HR_STATE_TRAINING,Eğitimde · {days} gün,In training · {days} d
 HR_TRAINING,EĞİTİM,TRAINING
-HR_TRAINING_LOCKED,EĞİTİM · KİLİTLİ,TRAINING · LOCKED
 HR_TRAINING_SEND,EĞİTİME GÖNDER,SEND TO TRAINING
 HR_TRAINING_PICK_TITLE,Eğitime gönder,Send to training
 HR_TRAINING_NONE_ELIGIBLE,Deneyimi dolan kimse yok.,Nobody has filled their experience bar yet.

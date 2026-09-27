@@ -8,8 +8,8 @@ extends RefCounted
 # onları düğüme çevirir. Motor bir sayıyı vermiyorsa doğru cevap burada hesaplamak
 # değil, motora okuma seam'i eklemektir.
 #
-# Para: HRConstants.money_tr, UiTokens.format_money DEĞİL. HR önizlemelerinin
-# hazır satırları money_tr ile basılıyor; kart başka biçimde basarsa kendi metniyle çelişir.
+# Para: Fmt.money_exact, UiTokens.format_money DEĞİL. HR önizlemelerinin hazır satırları
+# Fmt.money_exact ile basılıyor; kart başka biçimde basarsa kendi metniyle çelişir.
 # ============================================================================
 
 const MORALE_BAR_HEIGHT := 6
@@ -20,10 +20,6 @@ const TRAIT_ICON_DIR := "res://assets/icons/traits/"
 const TRAIT_ICON_DRAWN := ["loyal", "picks_it_up_fast", "takes_them_under",
 	"double_checker", "last_one_out", "cant_say_no", "bag_packed", "mood_buster"]
 const TRAIT_BOX_PX := 26
-
-
-static func money(amount: int) -> String:
-	return HRConstants.money_tr(amount)
 
 
 # --- Alan yıldızları --------------------------------------------------------
@@ -52,13 +48,13 @@ static func role_area_cell(emp: Character, width: int, muted: bool = false) -> C
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(area_stars_row(emp.role, emp.role_stats, 14, muted))
-	box.add_child(_v_hairline())
+	box.add_child(v_hairline())
 	box.add_child(StarRating.labelled(HRConstants.area_label(HRConstants.SKILL_LEADERSHIP),
 		int(emp.role_stats.get(HRConstants.SKILL_LEADERSHIP, 0)), 14, muted))
 	return box
 
 
-static func _v_hairline(height: int = 26) -> Panel:
+static func v_hairline(height: int = 26) -> Panel:
 	var line := hairline(UiTokens.SEPARATOR)
 	line.custom_minimum_size = Vector2(1, height)
 	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -184,7 +180,7 @@ static func morale_row(morale: int, out_refs: Dictionary) -> Control:
 	bar.theme_type_variation = &"BuildProgress"
 	bar.show_percentage = false
 	bar.custom_minimum_size = Vector2(
-		MORALE_BAR_WIDTH_DENSE if HRLedger._dense else MORALE_BAR_WIDTH, MORALE_BAR_HEIGHT)
+		MORALE_BAR_WIDTH_DENSE if HRLedger.dense else MORALE_BAR_WIDTH, MORALE_BAR_HEIGHT)
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.min_value = float(HRConstants.MORALE_MIN)
 	bar.max_value = float(HRConstants.MORALE_MAX)
@@ -329,20 +325,8 @@ static func warning_glyph(px: int = 12, color: Color = UiTokens.NEGATIVE) -> Tex
 	return _glyph("res://assets/icons/warning.svg", px, color)
 
 
-static func lock_glyph(px: int = 11, color: Color = UiTokens.INK_DIM) -> TextureRect:
+static func lock_glyph(px: int, color: Color) -> TextureRect:
 	return _glyph("res://assets/icons/lock.svg", px, color)
-
-
-## Yakında-geliyor telgrafı ("EĞİTİM · KİLİTLİ"). Tıklanamaz, soluk.
-static func locked_telegraph(text: String) -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 5)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.modulate = Color(1, 1, 1, 0.55)
-	row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(lock_glyph())
-	row.add_child(UiFactory.make_section_header(text))
-	return row
 
 
 static func action_button(label: String, on_press: Callable, primary: bool = false) -> Button:
@@ -363,6 +347,20 @@ static func disabled_button(label: String, reason: String) -> Button:
 	btn.disabled = true
 	btn.tooltip_text = reason
 	return btn
+
+
+## Personel modalları PanelLayer'a monte olur, ModalLayer'a değil: ModalLayer boşluk ve 1-4 hız
+## tuşlarını yutuyor ve dimmer'ı TopBar'ı kaplıyor; saat bir kadro kararının üstünde akarken
+## oyuncunun onu durduracak yolu kalmazdı. Gerçek bir modal (layer 10) hâlâ üstünü örter.
+static func mount_panel_modal(host: Node, path: String, on_changed: Callable, args: Array = []) -> void:
+	var layer: Node = host.get_tree().get_root().find_child("PanelLayer", true, false)
+	if layer == null:
+		push_error("[HRUiShared] GameShell/PanelLayer yok — modal monte edilemiyor: %s" % path)
+		return
+	var modal: Node = (load(path) as PackedScene).instantiate()
+	layer.add_child(modal)   # önce add_child, sonra populate (ev konvansiyonu)
+	modal.connect("state_changed", on_changed)
+	modal.callv("populate", args)
 
 
 ## Kart içi çocuklar tıklamayı yutmasın; gui_input kart kökünde.

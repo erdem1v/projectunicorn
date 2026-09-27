@@ -151,7 +151,7 @@ func _founder_card(founder: Character) -> Control:
 	meta.add_theme_constant_override("separation", 12)
 	meta.add_child(UiFactory.make_label(
 		UiTokens.tr_upper(_origin_label()), &"RowMeta", UiTokens.CREAM_DIM))
-	meta.add_child(HRUiShared._v_hairline(11))
+	meta.add_child(HRUiShared.v_hairline(11))
 	meta.add_child(UiFactory.make_label(
 		tr("PER_TENURE").format({"n": _tenure_days()}), &"RowMeta", UiTokens.CREAM_DIM))
 	name_block.add_child(meta)
@@ -166,7 +166,7 @@ func _founder_card(founder: Character) -> Control:
 			int(founder.role_stats.get(String(area_key), 0)), 15, false, true)
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		skills.add_child(cell)
-	skills.add_child(HRUiShared._v_hairline(30))
+	skills.add_child(HRUiShared.v_hairline(30))
 	for skill_key in [HRConstants.SKILL_LEADERSHIP, FounderConstants.SKILL_CHARISMA]:
 		skills.add_child(StarRating.labelled(_founder_skill_label(String(skill_key)),
 			int(founder.role_stats.get(String(skill_key), 0)), 15))
@@ -243,7 +243,7 @@ func _founder_footer(founder: Character) -> Control:
 	task_row.add_child(UiFactory.make_label(tr("PER_TASK_LABEL"), &"RowMeta", UiTokens.INK_DIM))
 	task_row.add_child(UiFactory.make_label(HRSystem.founder_task_label(), &"RowMeta", UiTokens.INK))
 	row.add_child(task_row)
-	row.add_child(HRUiShared._v_hairline(13))
+	row.add_child(HRUiShared.v_hairline(13))
 
 	var exp_row := HBoxContainer.new()
 	exp_row.add_theme_constant_override("separation", 11)
@@ -274,16 +274,8 @@ func _founder_footer(founder: Character) -> Control:
 	return row
 
 
-## PanelLayer'a monte olur (gerekçe hr_tab._mount_panel_modal).
 func _open_training(character_id: String) -> void:
-	var layer: Node = get_tree().get_root().find_child("PanelLayer", true, false)
-	if layer == null:
-		push_error("[PersonalTab] PanelLayer bulunamadı — eğitim modalı mount edilemiyor")
-		return
-	var modal: Node = (load(TRAINING_MODAL) as PackedScene).instantiate()
-	layer.add_child(modal)   # önce add_child, sonra populate (ev konvansiyonu)
-	modal.connect("state_changed", _on_state_changed)
-	modal.call("populate", character_id)
+	HRUiShared.mount_panel_modal(self, TRAINING_MODAL, _on_state_changed, [character_id])
 
 
 # --- sağ üst: NEREDE DURUYORUM -----------------------------------------------
