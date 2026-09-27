@@ -504,6 +504,78 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     LOCK_CHIP).
   - Kaynak: GDD ch14 §3, §4, §5; ch01 §8; ch02 §1
 
+- **30 · Satış toplantısının giriş kapısı sabit 17:00'a bakıyor, oyuncunun mesaisine değil.**
+  - Ne oluyor: SalesLedger.meeting_block_reason, girişi SalesConstants.WORKDAY_END_HOUR (17) −
+    MEETING_ENTRY_CUTOFF_HOURS (2) saatinden sonra kapatıyor. Oysa şirket mesaisi oyuncunun ayarladığı
+    WorkHoursSystem.company_window(). İkisi yalnız varsayılan saatlerde örtüşüyor. Pencere gece yarısını geçebiliyor
+    (end < start), bu yüzden düz bir 'end − 2' karşılaştırması da yetmiyor.
+  - Nerede: scripts/systems/sales_ledger.gd (meeting_block_reason), scripts/systems/sales_constants.gd
+    (WORKDAY_END_HOUR, MEETING_ENTRY_CUTOFF_HOURS), scripts/systems/work_hours_system.gd (company_window,
+    end_hour_for)
+  - Oyuncuya etkisi: Mesaiyi uzatan oyuncu 15:00'ten sonra toplantıya giremiyor ve 'çok geç' nedenini görüyor. Mesaiyi
+    kısaltan oyuncu mesai bittikten sonra da toplantıya girebiliyor.
+  - Seçenekler: A) Kapı company_window().end − 2 okur; gece yarısını geçen pencere ayrıca ele alınır. Mesai başlamadan
+    girişin de kapanıp kapanmayacağı ayrı bir alt karardır. B) Kapı kurucunun kendi mesai bitişini okur
+    (WorkHoursSystem.end_hour_for(kurucu)). C) 17:00 sabit kalır ve Satış §5.0 'mesai bitimi' yerine sabit saat der.
+  - Kaynak: Satış GDD §5.0 (giriş kapısı [ÇALIŞMA]; 'hak her mesai başında yenilenir'), Ekip GDD §15.2 (şirket
+    penceresi)
+
+- **31 · Pazarlıkta sabır ve karşı teklif adımı mizaçtan gelmiyor.**
+  - Ne oluyor: NegotiationSystem.open sabrı arketipin pazarlık profilinden okuyor (SalesArchetypes.negotiation →
+    'patience': ops_cautious 3, tech_exacting 2, finance_brisk 2). offer karşı teklif adımını kalan sabırdan
+    türetiyor: COUNTER_STEP_MIN..MAX arasında, sabır doluyken en büyük. SalesArchetypes.temperament yalnız
+    SalesProbes.facts_for'daki olguya gidiyor. Kodu yanlış anlatan 'mizaçtan' yorumları düzeltildi; davranış
+    değişmedi.
+  - Nerede: scripts/systems/negotiation_system.gd (open, offer), scripts/systems/sales_archetypes.gd (TABLE:
+    temperament ve negotiation alanları, temperament()), scripts/systems/sales_constants.gd (PATIENCE_MIN/MAX,
+    COUNTER_STEP_MIN/MAX)
+  - Oyuncuya etkisi: Sabır kutuları ve karşı tekliflerin ne kadar hızlı indiği mizaca değil arketip satırına ve tura
+    bağlı. Mizaç tek başına masada hiçbir şeyi değiştirmiyor. Bağlanırsa anlaşma fiyatları değişir.
+  - Seçenekler: A) Mizaç tablosu kurulur: her mizaç bir sabır kutusu sayısı ve bir adım katsayısı taşır, arketip
+    profili bunları mizacından alır. B) Kod kalır; Satış §5.3 'sabır arketip profilinden, adım kalan sabırdan' diye
+    güncellenir, mizaç yalnız olgu olarak kalır. C) Sabır arketipten kalır, adım mizaç katsayısıyla ölçeklenir.
+  - Kaynak: Satış GDD §5.3 ('Sabır: mizaca göre 2–4 kutu [K]'; şekil formülleri: 'karşı-teklif adımı mizaçtan'), §11.1
+    (arketip alanları)
+
+- **32 · Balina rolü musluktan da doğuyor.**
+  - Ne oluyor: SalesFaucetSystem.spawn musluk lead'lerini de _seat_whale_condition'dan geçiriyor. Yıldızı
+    reach_band()'ın üstünde olan ve arketipinin şart listesi bulunan her lead balina oluyor. §3 balina rolünün
+    karışımdan değil kahraman hesap ya da olay kanalından geldiğini söylüyor; §10'un 8–15 kahraman hesabı yazılmadı.
+  - Nerede: scripts/systems/sales_faucet_system.gd (spawn, _seat_whale_condition, reach_band),
+    scripts/systems/pitch_system.gd (spawn_prospect, olay kanalı)
+  - Oyuncuya etkisi: Erişim bandının üstündeki her musluk lead'i balina geliyor: şart rozeti, sert pazarlık (rezerv
+    ×0,9, sabır −1), ticker haberi ve +3 marka (SalesLedger.announce_signing). 'Nadir rol' değil; erişimi düşük koşuda
+    sık görülüyor.
+  - Seçenekler: A) Balina yalnız source != 'faucet' olan lead'lerde (olay kanalı, kahraman hesap); kahraman hesaplar
+    yazılana kadar balina neredeyse hiç gelmez. B) Musluk balinası kahraman hesaplar gelene kadar geçici olarak kalır;
+    §3'e not düşülür. C) Musluk balinası nadir kılınır (ör. aynı anda en çok bir canlı balina ya da [K] bir oran).
+  - Kaynak: Satış GDD §3 (yıldız karışımı: 'Balina rolü karışımdan değil, kahraman hesap / olay kanalından gelir'),
+    §8, §10
+
+- **33 · Balina eşiği 'bandın bir üstü' değil 'bandın üstü'.**
+  - Ne oluyor: _seat_whale_condition p.star > reach_band() okuyor; §8 'erişim bandının bir üstünde' diyor. Erişim 1
+    iken 3★ lead (bandın iki üstü) de balina sayılıyor.
+  - Nerede: scripts/systems/sales_faucet_system.gd (_seat_whale_condition ve spawn'daki §8 yorumu)
+  - Oyuncuya etkisi: Erişimi 1 olan koşuda 2★ ve 3★ lead'lerin hepsi balina. 'Bir üstü' okumasında yalnız 2★ balina
+    olur; 3★ sıradan lig üstü lead kalır ve yine lig üstü haber sayılır (§7.3).
+  - Seçenekler: A) star == reach_band() + 1. B) Kod kalır; §8 'bandın üstünde' diye güncellenir. C) 'Balina rolü
+    musluktan da doğuyor' maddesiyle birlikte karara bağlanır.
+  - Kaynak: Satış GDD §8
+
+- **34 · B2C memnuniyet kapısı 40'ın gerekçesi yok.**
+  - Ne oluyor: SalesSystem.SATISFACTION_QUALITY_GATE = 40: deneyim ekseni bu değere ulaşınca B2C memnuniyeti günde +1
+    kayıyor. Eski türetme (axis(20 − 0,8·5) = 39) hata erozyonunu deneyim eksenine uyguluyordu; yanlıştı ve silindi.
+    Hata erozyonu olmadan QualityModel doygunluğu (NORMALIZE_HALF_SAT 25) axis(20) = 44,4 veriyor, 40 değil. Sabitin
+    bugün yazılı bir gerekçesi yok.
+  - Nerede: scripts/systems/sales_system.gd (SATISFACTION_QUALITY_GATE, _tick_satisfaction),
+    scripts/systems/quality_model.gd (NORMALIZE_HALF_SAT, _saturate)
+  - Oyuncuya etkisi: B2C memnuniyetinin yükselip yükselmeyeceği bu eşiğe bağlı. Memnuniyet de ağızdan ağıza büyümeyi
+    (WOM_*) ve taban büyüme çarpanını oynatıyor, yani B2C MRR'ını.
+  - Seçenekler: A) 40 kalır; gerekçesi 'deneyim ekseni ≈ 40' diye kayda geçer. B) Hatasız axis(20)'ye, 44'e çekilir.
+    C) b2c_keep ve b2c_neglect probe'larıyla ölçülüp yeniden ayarlanır.
+  - Kaynak: GDD sayı vermiyor (Ürün ch03 ve Satış §3.1 B2C memnuniyet kaymasını sayısal tanımlamıyor); değer bir kod
+    sabiti olarak doğdu, türetmesi temizlik dalgası 1'de (e6aad53) silindi
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında

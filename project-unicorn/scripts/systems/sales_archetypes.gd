@@ -18,7 +18,7 @@ extends RefCounted
 #   star_range      → which faucet band this archetype can fill
 #   buyer           → which probe families the picker may draw (a technical buyer asks
 #                     different questions from an operational one)
-#   temperament     → Act 2 patience and counter-offer step
+#   temperament     → a storylet fact the probe catalogue can key on (SalesProbes.facts_for)
 #   priorities      → the axis weights the persuasion reading multiplies, plus how many
 #                     BASE and how many DELIGHT steps this buyer counts (the Kano reading
 #                     — the LABEL never reaches the screen, §11.1)
@@ -32,8 +32,7 @@ extends RefCounted
 
 const DEFAULT_ID := "ops_cautious"
 
-# Temperament ids. They are read by the negotiation profile and by the probe picker; they
-# are never printed.
+# Temperament ids: a storylet fact (SalesProbes.facts_for); never printed.
 const TEMPER_CAUTIOUS := "cautious"
 const TEMPER_BRISK := "brisk"
 const TEMPER_EXACTING := "exacting"

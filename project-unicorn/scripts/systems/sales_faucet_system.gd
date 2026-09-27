@@ -26,9 +26,6 @@ const SALT_STAR := 307
 const SALT_ARCHETYPE := 311
 const SALT_SECTOR := 313
 
-# The size ids `add_prospect` cards speak, mapped to a star (PitchSystem.spawn_prospect).
-const LEGACY_SIZE_TO_STAR := {"small": 1, "mid": 2, "enterprise": 3}
-
 
 # ============================================================================
 #  Daily entry

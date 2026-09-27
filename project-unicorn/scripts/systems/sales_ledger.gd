@@ -247,8 +247,13 @@ static func announce_signing(c: Customer, is_whale: bool, headline: String) -> v
 	GameState.set_brand(GameState.brand + SalesConstants.PRESTIGE_SIGNING_BRAND)
 
 
+## §8 — the live lead's unmet whale condition, "" when the company has no lead in the pipeline
+## or its condition is met. The faucet seats and clears it on the Prospect itself.
 static func whale_condition(account_key: String) -> String:
-	return String(_memory(account_key).get("whale_condition", ""))
+	for p in ProspectRegistry.get_all():
+		if (p as Prospect).company_name == account_key:
+			return (p as Prospect).whale_condition
+	return ""
 
 
 ## §5.4 — the signing discount lives INSIDE the seat price and is visible as its own trace.
@@ -376,11 +381,11 @@ static func weekly_close_lines() -> String:
 	return "\n".join(rows)
 
 
-## Always STAR_MAX glyphs, filled then "·" — a row that shrinks with the star turns a table
-## into a ragged edge.
+## Always five glyphs, filled then "·" (§2, Ekip §4.1): the unlit stars are the scale's
+## telegraph, and a row that shrinks with the star turns a table into a ragged edge.
 static func _star_text(star: int) -> String:
-	var filled: int = clampi(star, 0, SalesConstants.STAR_MAX)
-	return StarRating.FILLED.repeat(filled) + "·".repeat(SalesConstants.STAR_MAX - filled)
+	var filled: int = clampi(star, 0, HRConstants.STAR_MAX)
+	return StarRating.FILLED.repeat(filled) + "·".repeat(HRConstants.STAR_MAX - filled)
 
 
 static func _account_of(company: String) -> Customer:

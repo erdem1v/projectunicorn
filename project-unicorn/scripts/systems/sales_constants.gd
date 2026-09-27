@@ -139,7 +139,7 @@ const PATIENCE_MAX := 4                  # [K]
 const RESERVE_SENSITIVITY_MIN := 0.82    # [K] the archetype sensitivity band around the anchor
 const RESERVE_SENSITIVITY_MAX := 1.18    # [K]
 const INSULT_MARGIN := 0.28              # [K] "hakaret eşiği rezervin belirgin üstü"
-const COUNTER_STEP_MIN := 0.06           # [K] the counter-offer step, from temperament
+const COUNTER_STEP_MIN := 0.06           # [K] the counter-offer step, largest at full patience
 const COUNTER_STEP_MAX := 0.16           # [K]
 # A promise narrows the band's TOP end (§5.3, §6): the promised feature is not free.
 const PROMISE_BAND_NARROW := 0.15        # [K] the fraction of the band the locked zone takes

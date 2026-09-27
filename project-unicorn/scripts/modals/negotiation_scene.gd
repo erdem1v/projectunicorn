@@ -14,11 +14,9 @@ extends VBoxContainer
 # that is the whole information game, and a visible line would delete it.
 #
 # THE RULER IS `_draw`, NOT A THEME ITEM. It needs three zones, an anchor tick, a trail of
-# counter marks and a handle; a stylebox cannot express any of that, and adding textures for
-# it would mean new theme items and a THEME_STAMP bump for one surface. `ValueSlider` set the
-# precedent for exactly this reason and its geometry is the ancestor of the constants below.
-# Colours and sizes still come from tokens — `_draw` changes the drawing path, not the
-# palette law (UI/STYLE LAW 1).
+# counter marks and a handle; a stylebox cannot express any of that, and textures would mean
+# new theme items for one surface. Colours still come from tokens — `_draw` changes the
+# drawing path, not the palette law (UI/STYLE LAW 1).
 #
 # IT HAS NO GROUND OF ITS OWN (rev 6.1 §5.1.1). `SalesStage` owns the room, the scrim and the
 # dialogue column; this scene is the column's CONTENT for Perde 2 and nothing more. A full-rect
@@ -220,7 +218,7 @@ func _render(vs: Dictionary) -> void:
 	_ruler.band_low = int(band.get("low", 0))
 	_ruler.band_high = int(band.get("high", 100))
 	_ruler.selected = int(vs.get("selected", 0))
-	_ruler.anchor = int((vs.get("confirm", {}) as Dictionary).get("unit_price", 0))
+	_ruler.anchor = int(vs.get("anchor", 0))
 	_ruler.locked_from = int(vs.get("locked_from", -1))
 	_ruler.insult_from = int(vs.get("insult_from", 999999))
 	_ruler.counters = (vs.get("counters", []) as Array).duplicate()
@@ -306,11 +304,9 @@ func _render_actions(vs: Dictionary) -> void:
 	var closed_now: bool = state == "closed" or state == "accepted"
 	_accept_btn.visible = bool(vs.get("can_accept", false)) and not closed_now
 	_walk_btn.visible = bool(vs.get("can_walk", false)) and not closed_now
-	_offer_btn.visible = not closed_now
 	if closed_now:
 		# Accepted → the strip above is the deal; one button signs it. Closed any other way
 		# and the same button simply leaves.
-		_offer_btn.visible = true
 		_offer_btn.text = tr("NEG_SIGN") if state == "accepted" else tr("NEG_LEAVE")
 		_offer_btn.theme_type_variation = &"CommitButton"
 		_offer_btn.tooltip_text = ""

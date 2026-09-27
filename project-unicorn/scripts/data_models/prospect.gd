@@ -42,6 +42,8 @@ extends Resource
 ## processing STARTS, so moving the dial mid-deal cannot retroactively reprice it.
 @export var work_stance: String = ""
 @export var work_due_day: int = -1            # the day processing completes
+## §7.6 — the price-break moment fired for THIS processing; cleared when the processing drops.
+@export var price_break_raised: bool = false
 
 # --- Whale hook (§8) ---
 ## The ORDERED-first-unmet condition, resolved when the lead is created and telegraphed on
@@ -70,8 +72,8 @@ func days_left() -> int:
 	return maxi(expires_on_day - GameState.day, 0)
 
 
-## §7.2 — a lead being worked has its counter FROZEN (§12 "İşlenen lead | sayacı donar").
-## The sweep skips it rather than pushing the expiry day forward, so nothing accumulates.
+## §7.2 — a lead being worked has its counter FROZEN (§12 "İşlenen lead | sayacı donar"):
+## the expiry sweep pushes its expiry day forward with the work.
 func is_being_worked() -> bool:
 	return worked_by != ""
 

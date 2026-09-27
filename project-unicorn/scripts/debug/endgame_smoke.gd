@@ -5405,8 +5405,8 @@ static func _case_hotfix_weekly_summary_rows() -> String:
 	# with the star is a ragged edge, not a table.
 	var first: String = lines.split("\n")[0]
 	var glyphs: int = first.count(StarRating.FILLED) + first.count("·")
-	if glyphs != SalesConstants.STAR_MAX:
-		return "the star cell drew %d glyphs, want %d" % [glyphs, SalesConstants.STAR_MAX]
+	if glyphs != HRConstants.STAR_MAX:
+		return "the star cell drew %d glyphs, want %d" % [glyphs, HRConstants.STAR_MAX]
 	# The total is a separate, final line.
 	var rows: PackedStringArray = lines.split("\n")
 	if rows.size() != 2:

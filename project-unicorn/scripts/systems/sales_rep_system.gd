@@ -54,6 +54,7 @@ static func _drop_processing(lead: Prospect) -> void:
 	lead.work_started_day = -1
 	lead.work_due_day = -1
 	lead.work_stance = ""
+	lead.price_break_raised = false
 	# The lead returns to the ordinary waiting rules with a full clock — the freeze it enjoyed
 	# while it was being worked was never time it spent waiting.
 	lead.expires_on_day = GameState.day + SalesConstants.LEAD_LIFE_DAYS
@@ -216,9 +217,9 @@ static func price_break_due(rep: Character, lead: Prospect) -> bool:
 static func _maybe_price_break(rep: Character, lead: Prospect) -> void:
 	if not price_break_due(rep, lead):
 		return
-	if GameState.get_flag("sales_price_break_%s" % lead.id, false):
+	if lead.price_break_raised:
 		return
-	GameState.set_flag("sales_price_break_%s" % lead.id, true)
+	lead.price_break_raised = true
 	# §18 — the card (SalesConstants.PRICE_BREAK_CARD_ID) is not requested here; see the header.
 	EventBus.rep_discount_requested.emit(rep.id, lead.id)
 
@@ -231,7 +232,6 @@ static func _close(rep: Character, lead: Prospect) -> void:
 	var c: Customer = SalesSystem.add_b2b_customer(lead, seats, seat_price,
 		PitchSystem.signing_satisfaction_seed(), "sales_rep:%s" % rep.id)
 	ProspectRegistry.remove(lead.id)
-	GameState.flags.erase("sales_price_break_%s" % lead.id)
 	GameState.set_flag("sales_weekly_closes",
 		int(GameState.get_flag("sales_weekly_closes", 0)) + 1)
 	SalesSystem.record_sales_event("auto_close", rep.character_name, c.company_name, c.mrr)

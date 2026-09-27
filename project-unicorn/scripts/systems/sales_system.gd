@@ -24,16 +24,16 @@ extends RefCounted
 const B2C_PRICE_DEFAULT := 15            # $/user/month; the pricing ruler sets this
 const B2C_USERBASE_ID := "co_b2c_userbase"
 
-# B2C aggregate satisfaction drift (director ruling). The gate reads the EXPERIENCE axis — the
+# B2C aggregate satisfaction drift. The gate reads the EXPERIENCE axis — the
 # axis the B2C record is SEEDED from (_ensure_b2c_record), and what a consumer feels day to
 # day. Bugs erode through SATISFACTION_BUG_GATE.
 const SATISFACTION_QUALITY_GATE := 40    # experience axis ≥ → satisfaction drifts up
 const SATISFACTION_BUG_GATE := 5         # bug_count > → satisfaction drifts down
 
-# THE SERIES A REVENUE BAR: the anchor of the director's [100,000-150,000] band. The Series A
-# gate is MRR only; PhaseGateSystem (the gate leaf and series_a_bar) is its only reader.
-# NEVER RENDERED AS A FIGURE (director ruling: the signal is shown, the number is not); the
-# player reads PhaseGateSystem.series_a_signal().
+# THE SERIES A REVENUE BAR, inside the [100,000-150,000] band. The Series A gate is MRR only;
+# PhaseGateSystem (the gate leaf and series_a_bar) is its only reader. NEVER RENDERED AS A
+# FIGURE: the signal is shown, the number is not; the player reads
+# PhaseGateSystem.series_a_signal().
 const TRACTION_MRR_TARGET := 120_000
 
 # WORKING: optimistic close-rate weight on the open pipeline — feeds only the Finance
@@ -321,7 +321,7 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	c.industry = prospect.industry
 	# §2 — the STAR is the account size. `b2b_expand` and the event modal's expansion preview
 	# read the three-tier `company_size` (via B2BConstants.expansion_seats), so the field keeps
-	# that vocabulary; the reverse map, for `add_prospect`, is SalesFaucetSystem.LEGACY_SIZE_TO_STAR.
+	# that vocabulary; the reverse map, for `add_prospect`, is PitchSystem.SIZE_TO_STAR.
 	c.company_size = ["small", "mid", "enterprise"][clampi(prospect.star, 1, 3) - 1]
 	c.market_type = "b2b"
 	c.seats = maxi(seats, 0)
@@ -350,9 +350,9 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 		c.pain_feature_id = B2BSalesSystem.pick_pain_feature(ProductState.subtype(), c.scale)
 	c.update_health_from_satisfaction()
 	CustomerRegistry.add(c)
-	# Working rule (direktör onayı) — the account arrives already owned when a rep has room.
-	# Through the stewardship system's own seam: who holds an account is CS's rule, not
-	# Sales', and Sales only says "one more exists now".
+	# The account arrives already owned when a rep has room, through the stewardship system's
+	# own seam: who holds an account is CS's rule, not Sales', and Sales only says "one more
+	# exists now".
 	CustomerRepSystem.auto_assign_new(c)
 	GameState.run_customers_signed += 1  # run counter seam — sole B2B signing path
 	# A signed company never returns to the faucet (Satış §4, "İmzalı müşteri dönmez"), churn

@@ -39,6 +39,7 @@ static var _context: Dictionary = {}
 static var _units: int = 0                  # seats (b2b) / equity points (series_a)
 static var _band_low: int = 0
 static var _band_high: int = 0
+static var _anchor: int = 0                # the stance dial's opening price, the ruler's anchor tick
 static var _locked_from: int = -1           # promise-narrowed top end; -1 = no locked zone
 static var _reserve: int = 0                # HIDDEN
 static var _insult_from: int = 0
@@ -62,6 +63,7 @@ static func reset() -> void:
 	_units = 0
 	_band_low = 0
 	_band_high = 0
+	_anchor = 0
 	_locked_from = -1
 	_reserve = 0
 	_insult_from = 0
@@ -109,7 +111,8 @@ static func open(negotiation_type: String, context: Dictionary) -> Dictionary:
 	var anchor: int = int(context.get("anchor", SalesLedger.seat_price_anchor()))
 	_band_low = SalesConstants.SEAT_PRICE_MIN
 	_band_high = SalesConstants.SEAT_PRICE_MAX
-	_selected = clampi(anchor, _band_low, _band_high)
+	_anchor = clampi(anchor, _band_low, _band_high)
+	_selected = _anchor
 
 	# §5.3 / §6 — a promise narrows the TOP end and the locked zone carries its reason. What
 	# was given away in Act 1 cannot also be charged for in Act 2.
@@ -174,8 +177,9 @@ static func offer() -> Dictionary:
 	# this the patience track is decoration — the player presses until the reserve falls out.
 	if patience_spent():
 		return _close(OUTCOME_WALKED, 0, SalesConstants.LOSS_PRICE)
-	# A counter. The number walks from the offer toward the reserve by a temperament step, so
-	# each round narrows the visible bracket and the reserve is inferred rather than shown.
+	# A counter. The number walks from the offer toward the reserve by a step that shrinks with
+	# the patience left, so each round narrows the visible bracket and the reserve is inferred
+	# rather than shown.
 	var step: float = lerpf(SalesConstants.COUNTER_STEP_MIN, SalesConstants.COUNTER_STEP_MAX,
 		float(_patience) / float(_patience_max))
 	_counter = maxi(int(round(float(_selected) * (1.0 - step))), _reserve)
@@ -240,6 +244,7 @@ static func view_state() -> Dictionary:
 		"price_label_key": "NEG_PRICE_SEAT" if b2b else "NEG_PRICE_VALUATION",
 		"title_key": "NEG_TITLE_B2B" if b2b else "NEG_TITLE_SERIES_A",
 		"band": {"low": _band_low, "high": _band_high},
+		"anchor": _anchor,
 		"selected": _selected,
 		"locked_from": _locked_from,
 		"locked_reason_key": "NEG_LOCK_PROMISE" if _locked_from >= 0 else "",

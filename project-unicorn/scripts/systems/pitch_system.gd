@@ -12,11 +12,13 @@ extends RefCounted
 # feels on day one. Both signing paths — the played meeting and the rep's own close — read
 # it, which is what stops the two from drifting apart under a later edit.
 
+const SIZE_TO_STAR := {"small": 1, "mid": 2, "enterprise": 3}
+
 
 ## The event channel's entry into the pipeline. `size` is the three-tier id the card speaks;
 ## the star is the truth on the other side of this call.
 static func spawn_prospect(size: String, source: String) -> Prospect:
-	var star: int = int(SalesFaucetSystem.LEGACY_SIZE_TO_STAR.get(size, 1))
+	var star: int = int(SIZE_TO_STAR.get(size, 1))
 	return SalesFaucetSystem.spawn(star, source)
 
 
