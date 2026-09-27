@@ -576,6 +576,119 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Kaynak: GDD sayı vermiyor (Ürün ch03 ve Satış §3.1 B2C memnuniyet kaymasını sayısal tanımlamıyor); değer bir kod
     sabiti olarak doğdu, türetmesi temizlik dalgası 1'de (e6aad53) silindi
 
+- **35 · Satış kartındaki sorumlu satırı kurucu masasını ve sahipsiz hesabı aynı ham "—" ile gösteriyor.**
+  - Ne oluyor: `_add_steward_line` sorumlu adı bulamazsa CSV anahtarı olmayan sabit "—" yazıyor ("Müşteri temsilcisi:
+    —"). Bu tek işaret iki ayrı durumu kapsıyor. (1) `assigned_to == ""`: hesap kurucunun masasında; `assign_customer`
+    sözleşmesi ve `B2BSalesSystem._account_owner` kurucuyu sahip sayar, bakım yavaşlatması işler. (2) Temsilcisi
+    ayrılmış hesap: `CharacterRegistry.remove` karakteri siler, `assigned_to` eski id'de kalır; `_account_owner` null
+    döner ve hesap bakımsız aşınır; `founder_managed_count` ile `_delegate_excess` onu saymaz. Literal CLAUDE.md §5'i
+    çiğniyor (anahtar yok, tire var).
+  - Nerede: `scripts/tabs/sales_tab.gd` (`_add_steward_line`); `scripts/autoload/customer_registry.gd`
+    (`assign_customer`); `scripts/systems/b2b_sales_system.gd` (`_account_owner`, `founder_managed_count`);
+    `scripts/systems/customer_rep_system.gd` (`_delegate_excess`); `scripts/autoload/character_registry.gd` (`remove`)
+  - Oyuncuya etkisi: Oyuncu kendi masasındaki hesabı, temsilcisi gidip bakımsız kalan hesaptan ayıramıyor. Ekip §11.3
+    boşalan işin "boş göründüğü için okunur" olmasını istiyor. Ekranda tire var.
+  - Seçenekler: A) İki anahtar: kurucu durumu için mevcut `HR_ROLE_FOUNDER` ("Kurucu"/"Founder") ya da yeni bir Satış
+    anahtarı, sahipsiz durum için yeni `SALES_STEWARD_NONE` (EN önce, TR yerelleştirme adımı, onay bekler). B) İki
+    durum için tek yeni anahtar ("atanmamış"); kurucu masası ayrıca belirtilmez. C) Ayrılışta hesaplar kurucuya döner
+    (`assigned_to = ""`) ve yalnız kurucu etiketi gerekir; Ekip §11.3'ün "otomatik kurucuya devir varsayılan değildir"
+    hükmüyle çelişir.
+  - Kaynak: CLAUDE.md §5 (BILINGUAL BIRTH LAW, tire yasağı); Ekip GDD §11.3; ch01 §9
+
+- **36 · Elde tutma kartı, temsilcinin tırmandırdığı hesapta da açılıyor.**
+  - Ne oluyor: `customer.retention` koşulu yalnız `musteri.is_at_risk`'e (lifecycle_phase == risk) bakıyor.
+    `B2BSalesSystem.can_offer_retention` ayrıca geri sayımın çalışmasını ve temsilcinin açık bir tırmanması olmamasını
+    (`assigned_to != ""` ve `cs_escalated`) istiyor, ama onu yalnız smoke çağırıyor (`retention_gate_shared`).
+    Temsilcili bir hesap aynı dönemde hem temsilcinin `customer.cs_escalation` kartını hem kurucunun elde tutma
+    kartını alabiliyor; kart hem Risk'e girişte hem Satış sekmesindeki "İlgilen" düğmesinden açılır.
+  - Nerede: `data/events/cards/customer/retention.json` (`condition`); `scripts/systems/b2b_sales_system.gd`
+    (`can_offer_retention`, `_tick_customer`); `data/events/cards/customer/cs_escalation.json`;
+    `scripts/tabs/sales_tab.gd` (`_card_risk`)
+  - Oyuncuya etkisi: Aynı hesap için iki kanaldan karar kartı gelebilir. Ekip §10.4 müşteri olayının temsilci
+    aracılığıyla oyuncuya ulaştığını söylüyor.
+  - Seçenekler: A) retention.json'a `musteri.cs_escalated == false` yaprağı eklenir; davranış değişir, lint ve probe
+    ölçümü gerekir. B) Kural emekliye ayrılır: `can_offer_retention` silinir, smoke'taki doğrudan iddialar düşer, iki
+    kartın birlikte gelebileceği kart notuna yazılır. C) Kart tırmanan hesapta Risk kenarında susar, "İlgilen"
+    düğmesinden yine açılır.
+  - Kaynak: Ekip GDD §10.4; Satış GDD §19 (retention kartı ve CS eskalasyonu korunanlar arasında)
+
+- **37 · Kapının reddettiği temsilci talebi kayboluyor ve haftalık tavandan yer yiyor.**
+  - Ne oluyor: `CustomerRepSystem._escalate` önce talep mandalını temizliyor (`set_support_request(-1)`) ve
+    `GameState.cs_escalation_days`'e damga vuruyor, sonra `EventGate.request("customer.request_<tür>")` çağırıyor.
+    Kapı kartı reddederse (ör. talep kartlarının hesap başına 14 günlük `cooldown_days`'i ya da tempo kotası) talep
+    kaybolur ve haftalık tavandan (`CS_ESCALATION_WEEKLY_CAP`) bir yer yine harcanmış olur. Aynı dosya tavan için
+    "deferred, never dropped", tür damgası için de "a refused request did not happen" diyor.
+  - Nerede: `scripts/systems/customer_rep_system.gd` (`_escalate`, `_escalate_stale`, `_work_the_queue`);
+    `data/events/cards/customer/request_complaint.json`, `request_feature.json`, `request_renewal.json` (`latch`);
+    `scripts/systems/b2b_constants.gd` (`CS_ESCALATION_WEEKLY_CAP`, `CS_ESCALATION_WINDOW_DAYS`)
+  - Oyuncuya etkisi: Oyuncunun karar vermesi gereken bir talep hiç gelmeyebilir; aynı pencerede başka bir hesabın
+    talebi, dolu sanılan tavan yüzünden ertelenebilir. Ölçülmedi: talep aralığı 22 gün, kart cooldown'u 14 gün olduğu
+    için cooldown reddi seyrek.
+  - Seçenekler: A) Önce kapı sorulur; mandal yalnız kart kabul edilirse temizlenir ve damga yalnız o zaman vurulur.
+    Reddedilen talep açık kalır ve ertesi gün yeniden denenir (seeded koşu değişebilir). B) Ret mandalı temizler ama
+    tavan damgası geri alınır. C) Kalır; dosyadaki "never dropped" yorumu, kapı reddini kapsamayacak biçimde
+    düzeltilir.
+  - Kaynak: Olay motoru GDD (kapı, `tick: request` kartları); Satış GDD §19 (CS eskalasyonu korunanlar arasında); Ekip
+    GDD §10.4
+
+- **38 · Müşteri masası unvanla açılıyor, atamayla çalışıyor.**
+  - Ne oluyor: `CustomerRepSystem.reconcile_assignments` ve `daily_tick`,
+    `CharacterRegistry.count_active_by_role(ROLE_CUSTOMER_REP) == 0` ise hiçbir şey yapmadan dönüyor. Masanın kendisi
+    (`ranked_reps`) ise `HRSystem.assigned_to(AREA_CUSTOMER_SUCCESS)` ile alana atanmış çalışanları sayıyor ("rol
+    değil atama"). Sonuç: Hesap sahipliğine konan ama Müşteri Temsilcisi olmayan biri (`JOB_AREAS["accounts"]` Satış
+    alanını da taşır) masayı açamıyor. Başka işe alınan temsilci ise kanalı açık tutuyor; masa boşken `_absorb`,
+    bankadaki 1.0'lık ilerlemeyle bir talebin mandalını log satırı yazmadan temizleyebiliyor. Ayrıca
+    `assigned_to(area)` işi (`JOB_ACCOUNTS`) değil alan aynasını okuyor: Destek işindeki bir Müşteri Temsilcisi de
+    masaya sayılabiliyor. Satış sekmesinin sorumlu seçicisi ve HR sekmesi yine unvanla listeliyor
+    (`get_active_by_role`).
+  - Nerede: `scripts/systems/customer_rep_system.gd` (`reconcile_assignments`, `daily_tick`, `ranked_reps`, `_absorb`,
+    `_escalate`); `scripts/systems/hr_system.gd` (`assigned_to`, `assigned_to_job`); `scripts/systems/hr_constants.gd`
+    (`JOB_AREAS`); `scripts/tabs/sales_tab.gd` (`_open_steward_picker`); `scripts/tabs/hr_tab.gd`
+  - Oyuncuya etkisi: Temsilcisini başka işe alan oyuncunun talep kanalı açık ama masası boş kalıyor; talepler sessizce
+    kapanabiliyor. Temsilci olmayan birini Hesap sahipliğine koyan oyuncu kanalı açamıyor. Ekip §12.0 "Her iş yalnız
+    alanla kapılanır ... Bordroda o unvanı taşıyan biri bulunup bulunmadığına bakılmaz" diyor.
+  - Seçenekler: A) İki giriş `ranked_reps().is_empty()` ile kapılanır, masa alan aynasıyla kalır; en küçük değişiklik,
+    seeded koşu değişebilir. B) Masa, girişler ve seçici `HRSystem.assigned_to_job(JOB_ACCOUNTS)` üzerine kurulur
+    (§12.0'ın harfi). C) Kalır; ayrılık Ekip GDD'sine yazılır.
+  - Kaynak: Ekip GDD §12.0, §4.4, §10.4, §11.3
+
+- **39 · Satış sekmesinin Risk sebebi ile elde tutma kartındaki müşteri sesi farklı kurala bakıyor.**
+  - Ne oluyor: `sales_tab._card_risk`, `ProductSystem.live_bug_count() > B2BConstants.COMPLAINT_BUG_GATE` ise "sık
+    kesinti şikayeti" (SALES_REASON_OUTAGE), değilse "memnuniyet düşüyor" (SALES_REASON_SATISFACTION) yazıyor. Aynı
+    hesabın elde tutma kartındaki sesi `B2BSalesSystem.risk_voice` seçiyor: önce kırılmış söz (`b2b_broke_<id>` →
+    B2B_RISK_VOICE_BROKEN), sonra `ProductState.bugs_confirmed() > COMPLAINT_BUG_GATE` ya da
+    `InfraSystem.is_over_capacity()` (sektör şikâyeti), en son kısa ses. İki yol farklı hata sayacı okuyor; kapasite
+    aşımı ve kırılmış söz sekmede sebep olarak hiç görünmüyor.
+  - Nerede: `scripts/tabs/sales_tab.gd` (`_card_risk`); `scripts/systems/b2b_sales_system.gd` (`risk_voice`);
+    `scripts/systems/product_system.gd` (`live_bug_count`); `ProductState.bugs_confirmed`;
+    `InfraSystem.is_over_capacity`
+  - Oyuncuya etkisi: Sekme "Sebep: memnuniyet düşüyor" derken kart altyapı şikâyeti ya da kırılmış söz sesiyle
+    açılabiliyor; tersi de olabiliyor.
+  - Seçenekler: A) Sekme `risk_voice`'un sırasını ve yüklemini kullanır; kırılmış söz için yeni bir sebep satırı
+    gerekir (yeni metin, onay bekler). B) Yalnız hata yüklemi `risk_voice` ile aynı yapılır (onaylı hata ya da
+    kapasite aşımı), iki sebep kalır. C) Kalır.
+  - Kaynak: Satış GDD §19 (retention kartı korunanlar arasında); ch11 §7
+
+- **40 · Kayıtlı ama okunmayan müşteri ve söz alanları.**
+  - Ne oluyor: SaveCodec'in kaydettiği bazı `@export` alanlarının okuyucusu yok. `Customer.health` her memnuniyet
+    değişiminde `update_health_from_satisfaction` ile yazılıyor (`CustomerRegistry.set_satisfaction`, `SalesSystem`,
+    `main.gd`). `Customer.difficulty_stars` imzada bir kez `prospect.star` ile yazılıyor; aynı değer `scale`'de de
+    duruyor. "Reserved" bloğundaki `renewal_day`, `warning_flags`, `account_contact` ve `notes` ne yazılıyor ne
+    okunuyor. `Promise.created_on_day` `PromiseRegistry.create`'te yazılıyor. `SaveCodec.res_from_dict` yalnız bugünkü
+    alanları okuduğu için bu alanları silmek eski kayıtları bozmaz.
+  - Nerede: `scripts/data_models/customer.gd` (`health`, `difficulty_stars`, `update_health_from_satisfaction`,
+    Reserved blok); `scripts/data_models/promise.gd` (`created_on_day`); `scripts/autoload/customer_registry.gd`
+    (`set_satisfaction`); `scripts/systems/sales_system.gd` (`add_b2b_customer` ve B2C tabanı);
+    `scripts/main/main.gd`; `scripts/autoload/promise_registry.gd` (`create`); `scripts/systems/save_codec.gd`
+    (`res_from_dict`)
+  - Oyuncuya etkisi: Oyuncuya etkisi yok. Kayıt dosyasında ve kodda ölü alan kalıyor (CLAUDE.md §8 ölü alan bırakılmaz
+    der). Reserved blok ise bilinçli olarak ayrılmış.
+  - Seçenekler: A) Hepsi silinir (`update_health_from_satisfaction` ve üç çağrısı dahil); kayıt uyumlu kalır. B)
+    Yalnız yazılıp okunmayanlar (`health`, `difficulty_stars`, `created_on_day`) silinir, Reserved blok gelecek
+    sistemler için kalır. C) Hepsi kalır; sağlık bandı ya da sözün verildiği gün bir okuyucuya bağlanır.
+  - Kaynak: CLAUDE.md §2 (GDD'de adı geçen bağlanmamış kod silinmez; bu alanlar GDD'lerde geçmiyor), §6 (kayıt
+    şeması), §8
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında
@@ -763,7 +876,7 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     `END_{SA,ACQ,BK,BC,VC,BS,RF,GENERIC}*`, `END_META_*`, `END_EV_SHUTTER_*`, `END_EV_ACQ_{TITLE,ACCEPT,DECLINE}`.
   Kayıttaki bekletilen Frank metni (`PROD_ITER_CEILING_NOTE`, üç `PITCH_*`, dört `VC_EV_*` ve `END_EV_PIVOT_*` satırları)
   aşağıdaki Frank belgeleri maddesinde. Yalnız smoke'un okuduğu kayıt aileleri (`COMPANY_BG_*`, `PROD_FEAT_*_VOICE`,
-  `PROD_TYPE_*_{BET,PITCH}`, `B2B_PAIN_*`) oyunda okunmuyor. Kayıttaki referanssız emekli anahtarlar listede yok; temizliğin
+  `PROD_TYPE_*_{BET,PITCH}`, `B2B_PAIN_*`) oyunda okunmuyor. Kayıt dışında da yalnız smoke'un okuduğu satırlar var: B2B'ye özgü `SECTOR_TEXTILE`, fikstür `SECTOR_TESTING` ve `SECTOR_FALLBACK`. Oyunda `SECTOR_` yalnız `ProductCatalog.type_sector_labels` ile ürün tiplerinin sektörlerinden kurulur; bu iki id hiçbir ürün tipinde yok ve o yolun yedek anahtarı yok. Kayıttaki referanssız emekli anahtarlar listede yok; temizliğin
   CSV süpürmesi onları siler: eski B2B pitch'inin `PITCH_{S0..S3,CHECK,RESULT,INNER,BAND,NEED,REAL_NEED}_*` satırları (üç
   Frank satırı hariç; canlı `PITCH_DIFF_*` kayıtta değil), `B2B_EV_COMPLAINT_HARD`, `B2B_EV_REQUEST_BODY_PLAIN`,
   `VC_EV_OFFER_EXPIRING_BODY`, `END_EV_ACQ_BODY`.

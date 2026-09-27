@@ -52,9 +52,8 @@ static func _tick_customer(c: Customer) -> void:
 	_tick_satisfaction(c)
 	# A delegated account raises ONE escalation when it sinks past the level its rep can hold;
 	# recovery above the threshold re-arms it. The flag IS the edge: `customer.cs_escalation`
-	# reads it through `musteri.cs_escalated` (and the `escalated` scope selector), and the
-	# gate decides. It is set BEFORE the lifecycle step, so any edge that step emits
-	# (customer_health_changed) is evaluated against today's escalation state.
+	# reads it through `musteri.cs_escalated` (and the `escalated` scope selector) in the daily
+	# scan, and the gate decides.
 	c.cs_escalated = c.assigned_to != "" and c.satisfaction < B2BConstants.CS_ESCALATION_SAT
 	# EVERY account runs the risk machinery, delegated or not: the player hears from the rep
 	# AND still owns the churn decision. A rep slows the erosion (cs_dampen, see
