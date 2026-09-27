@@ -473,10 +473,11 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			return {"verb": verb, "name": flag_name, "value": e.get("value", true)}
 
 		"mentor_advisory":
-			# The latched line on the ODA phone glass: a key, resolved at emit in the live locale.
-			EventBus.mentor_advisory_changed.emit(
-				TranslationServer.translate(String(e.get("line_key", ""))))
-			return {"verb": verb, "line_key": e.get("line_key", "")}
+			# Frank's latched line on the notice stack and the Events page: a CSV key that the
+			# surfaces translate where they show it, so the line follows the live language.
+			var line_key: String = String(e["line_key"])
+			EventBus.mentor_advisory_changed.emit(line_key, {})
+			return {"verb": verb, "line_key": line_key}
 
 		# --- B2B outcomes, each through its owning seam ---------------------
 		"b2b_retain_delay":

@@ -31,8 +31,7 @@
         },
         {
           "verb": "mentor_advisory",
-          "text": "Görüşme ayarlandı. Hazırlıklı git.",
-          "text_en": "Meeting's set. Go in prepared."
+          "line_key": "FRANK_ADVISORY_MEETING_SET"
         },
         {
           "verb": "goto_tab",

@@ -61,7 +61,7 @@ theme_type_variation = &"DialogueGhost"
 [node name="NextBtn" type="Button" parent="Layout/Footer"]
 layout_mode = 2
 custom_minimum_size = Vector2(140, 38)
-theme_type_variation = &"CommitButton"
+theme_type_variation = &"CommitButtonDark"
 
 [node name="LoadingOverlay" type="Control" parent="."]
 visible = false
@@ -79,7 +79,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.02, 0.027, 0.035, 0.72)
 
 [node name="CenterPanel" type="Panel" parent="LoadingOverlay"]
 layout_mode = 1
@@ -103,6 +102,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/font_size = 18
+theme_type_variation = &"DialogueName"
 horizontal_alignment = 1
 vertical_alignment = 1

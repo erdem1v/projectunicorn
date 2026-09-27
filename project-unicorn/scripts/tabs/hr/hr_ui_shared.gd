@@ -13,8 +13,7 @@ extends RefCounted
 # ============================================================================
 
 const MORALE_BAR_HEIGHT := 6
-const MORALE_BAR_WIDTH := 150
-const MORALE_BAR_WIDTH_DENSE := 92
+const MORALE_BAR_WIDTH := 92
 
 const TRAIT_ICON_DIR := "res://assets/icons/traits/"
 const TRAIT_ICON_DRAWN := ["loyal", "picks_it_up_fast", "takes_them_under",
@@ -25,16 +24,28 @@ const TRAIT_BOX_PX := 26
 # --- Alan yıldızları --------------------------------------------------------
 # Alan adı ÜSTTE, beş yıldız ALTINDA. ÇİP DEĞİL: çip bir DURUM anlatır, yıldız bir MİKTAR.
 
-## Kişinin ANA + İKİNCİL alanı, yıldızla. §4.4 altı alanı düz listede göstermeyi yasaklıyor.
+## Çalışanın çizilen alanları, ANA + İKİNCİL: §4.4 altı alanı düz listede göstermeyi
+## yasaklıyor.
+static func role_areas(role_id: String) -> Array:
+	return [HRConstants.role_key_area(role_id), HRConstants.role_secondary_area(role_id)].filter(
+		func(key: String) -> bool: return key != "")
+
+
+## Yıldız hücresinin başlığı. Karizma bir ALAN değil, kendi anahtarından okunur;
+## FounderConstants.skill_label oran parçası verir ("+%15 satış"), etiket değil.
+static func skill_label(key: String) -> String:
+	if key == FounderConstants.SKILL_CHARISMA:
+		return TranslationServer.translate("PER_CHARISMA")
+	return HRConstants.area_label(key)
+
+
+## Kişinin ANA + İKİNCİL alanı, yıldızla.
 static func area_stars_row(role_id: String, role_stats: Dictionary, glyph_px: int = 14,
 		muted: bool = false) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for area_key in [HRConstants.role_key_area(role_id), HRConstants.role_secondary_area(role_id)]:
-		var key: String = String(area_key)
-		if key == "":
-			continue
+	for key in role_areas(role_id):
 		row.add_child(StarRating.labelled(HRConstants.area_label(key),
 			int(role_stats.get(key, 0)), glyph_px, muted))
 	return row
@@ -77,7 +88,7 @@ static func availability_text(c: Character) -> String:
 
 
 static func v_hairline(height: int = 26) -> Panel:
-	var line := hairline(UiTokens.SEPARATOR)
+	var line := hairline()
 	line.custom_minimum_size = Vector2(1, height)
 	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return line
@@ -116,7 +127,7 @@ static func status_cell(emp: Character, width: int = 0) -> Control:
 	if HRSystem.is_overloaded(emp):
 		var over: Control = UiFactory.make_state_chip(
 			UiTokens.tr_upper(TranslationServer.translate("HR_BADGE_OVERLOADED_JOBS")),
-			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT)
+			UiTokens.ACCENT_DEEP, UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP)
 		over.tooltip_text = TranslationServer.translate("HR_OVERLOAD_HINT")
 		over.mouse_filter = Control.MOUSE_FILTER_PASS   # §13.3: çip tıklamayı yutmaz
 		box.add_child(over)
@@ -130,7 +141,7 @@ static func status_cell(emp: Character, width: int = 0) -> Control:
 	if HRConstants.is_new_hire(emp.hire_day, GameState.day):
 		box.add_child(UiFactory.make_state_chip(
 			UiTokens.tr_upper(TranslationServer.translate("HR_BADGE_NEW")),
-			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT))
+			UiTokens.ACCENT_DEEP, UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP))
 
 	# Süreli durumlar rozet değil, sayaçlı etiket (§13.3).
 	if emp.training_days_left > 0:
@@ -192,8 +203,8 @@ static func morale_color(morale: int) -> Color:
 
 
 ## Bar · sayı. Başlık sütunun kendisinde ("MORAL"). `out_refs`'e "bar" ve "value" düğümlerini
-## koyar; çağıran yerinde-repaint için saklar. Bar sabit genişlikte ve defter kademesini
-## izler: asgari boyut sütunun custom_minimum'unu yener, geniş bar sayfadan taşar.
+## koyar; çağıran yerinde-repaint için saklar. Bar sabit genişlikte ve sayısıyla defterin MORAL
+## sütununa sığar: asgari boyut sütunun custom_minimum'unu yener.
 static func morale_row(morale: int, out_refs: Dictionary) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
@@ -201,8 +212,7 @@ static func morale_row(morale: int, out_refs: Dictionary) -> Control:
 	var bar := ProgressBar.new()
 	bar.theme_type_variation = &"BuildProgress"
 	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(
-		MORALE_BAR_WIDTH_DENSE if HRLedger.dense else MORALE_BAR_WIDTH, MORALE_BAR_HEIGHT)
+	bar.custom_minimum_size = Vector2(MORALE_BAR_WIDTH, MORALE_BAR_HEIGHT)
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.min_value = float(HRConstants.MORALE_MIN)
 	bar.max_value = float(HRConstants.MORALE_MAX)

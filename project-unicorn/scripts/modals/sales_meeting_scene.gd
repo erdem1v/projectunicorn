@@ -21,10 +21,6 @@ extends Control
 # `gui_input`, so every button here would render perfectly and swallow every click. It is
 # invisible in the scene file and only a runtime click test finds it.
 #
-# ZERO NEW THEME ITEMS. Every variation used below already exists in build_theme.gd (the
-# Dialogue* family the VC surface opened), so `UiTokens.THEME_STAMP` does not move: one-off
-# shapes are built in code, not added to the theme.
-#
 # THE STAGE IS NOT THIS FILE'S (rev 6.1 §5.1.1). The room, the scrim, the dialogue column and
 # the identity block at its head belong to `SalesStage`; this scene owns only what happens
 # INSIDE the column — the needle, the talk, the answers and the footer. That split is what
@@ -150,12 +146,12 @@ func _render_needle(vs: Dictionary) -> void:
 	needle_col.add_theme_constant_override("separation", 0)
 	var odds := UiFactory.make_label(
 		tr("SALES_ODDS").format({"n": int(round(float(vs.get("odds", 0.0)) * 100.0))}),
-		&"DialogueOdds", UiTokens.ACCENT)
+		&"DialogueOdds", UiTokens.ACCENT_CHROME)
 	odds.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	needle_col.add_child(odds)
 	# The affordance the engine's §9.6 asks for: the reading says, quietly, that there is more
 	# behind it. The caption is what makes the hover discoverable without a badge per turn.
-	var hint := UiFactory.make_label(tr("SALES_ODDS_HINT"), &"MicroLabel", UiTokens.INK_DIM)
+	var hint := UiFactory.make_label(tr("SALES_ODDS_HINT"), &"MicroLabel", UiTokens.INK_DIM_CHROME)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	needle_col.add_child(hint)
 
@@ -187,7 +183,7 @@ func _render_flow(vs: Dictionary) -> void:
 	# §9 — the memory line. Only a company that actually walked out of a meeting has one.
 	var memory: String = String(vs.get("memory_line", ""))
 	if memory != "":
-		var mem := UiFactory.make_label(memory, &"DialogueTag", UiTokens.INK_DIM)
+		var mem := UiFactory.make_label(memory, &"DialogueTag", UiTokens.INK_DIM_CHROME)
 		mem.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_flow.add_child(mem)
 
@@ -200,7 +196,7 @@ func _render_flow(vs: Dictionary) -> void:
 	# empty slot either: the absence is the design, not a gap to fill.
 	var inner: String = String(vs.get("inner_voice", ""))
 	if inner != "":
-		var q := UiFactory.make_label(inner, &"QuoteSerif", UiTokens.INK_MUTED)
+		var q := UiFactory.make_label(inner, &"QuoteSerif", UiTokens.INK_MUTED_CHROME)
 		q.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_flow.add_child(q)
 
@@ -226,7 +222,7 @@ func _answer_row(a: Dictionary) -> Control:
 	if open:
 		var btn := Button.new()
 		btn.text = label
-		btn.theme_type_variation = &"DialogueChoice"
+		btn.theme_type_variation = &"DialogueChoiceButton"
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		btn.custom_minimum_size = Vector2(0, 40)
@@ -234,12 +230,12 @@ func _answer_row(a: Dictionary) -> Control:
 		btn.pressed.connect(_on_answer.bind(String(a.get("id", ""))))
 		box.add_child(btn)
 	else:
-		var locked := UiFactory.make_label("🔒 " + label, &"LockedTelegraph", UiTokens.INK_DIM)
+		var locked := UiFactory.make_label("🔒 " + label, &"LockedTelegraph", UiTokens.INK_DIM_CHROME)
 		locked.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(locked)
 		var reason_key: String = String(a.get("lock_key", ""))
 		if reason_key != "":
-			box.add_child(UiFactory.make_label(tr(reason_key), &"RowMeta", UiTokens.INK_DIM))
+			box.add_child(UiFactory.make_label(tr(reason_key), &"RowMeta", UiTokens.INK_DIM_CHROME))
 	return box
 
 
@@ -255,7 +251,7 @@ func _render_footer(vs: Dictionary) -> void:
 		return
 	if outcome == "won":
 		_footer.add_child(SalesStage.make_button(tr("SALES_MEETING_OPEN_OFFER"), _on_open_offer,
-			&"CommitButton"))
+			&"CommitButtonDark"))
 	else:
 		_footer.add_child(SalesStage.make_button(tr("SALES_MEETING_CLOSE"), closed.emit, &"DialogueGhost"))
 

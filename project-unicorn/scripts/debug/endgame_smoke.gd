@@ -304,13 +304,12 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"save_roundtrip_fingerprint":         fail = _case_save_roundtrip_fingerprint()
 		"save_continuity_seeded":             fail = _case_save_continuity_seeded()
 		"save_double_load_no_residue":        fail = _case_save_double_load_no_residue()
-		# --- Native çözünürlük / ultrawide 2026-08-08 ---
-		"oda_anchors_stay_in_band":           fail = _case_oda_anchors_stay_in_band()
 		"hr_experience_accrues":      fail = _case_hr_experience_accrues()
 		"hr_training_eligibility_edge": fail = _case_hr_training_eligibility_edge()
 		"hr_training_blocks_and_charges_once": fail = _case_hr_training_blocks_and_charges_once()
 		"hr_training_completion":     fail = _case_hr_training_completion()
 		"hr_expertise_cap_respected": fail = _case_hr_expertise_cap_respected()
+		# --- Native çözünürlük / ultrawide ---
 		"ui_scale_ladder_fits_settings": fail = _case_ui_scale_ladder_fits_settings()
 		# --- Lokalizasyon Faz 2 (2026-08-18) ---
 		"loc_csv_integrity":         fail = _case_loc_csv_integrity()
@@ -460,6 +459,7 @@ static func run_case(case_name: String, payload: Dictionary) -> void:
 		"frank_line_renders_outside_the_paper":  fail = _case_frank_line_renders_outside_the_paper()
 		"card_body_tokens_resolve":              fail = _case_card_body_tokens_resolve()
 		"seed_sheet_round_trips":                fail = _case_seed_sheet_round_trips()
+		"office_move_gates_and_save":            fail = _case_office_move_gates_and_save()
 		_:                      fail = "unknown case"
 
 	if fail == "":
@@ -4202,12 +4202,12 @@ static func _case_rail_tabs_match_scene_order() -> String:
 
 
 static func _case_build_bar_hosts_agree() -> String:
-	# Build Bar (Software Inc. segment grameri, 2026-08-19): ÜÇ ev sahibi — yüzen BuildHUD,
-	# tracker kartı, ODA monitörü — AYNI BuildBar sahnesini kurar ve bar modelini KENDİ
-	# çeker. Bu case üçünün aynı tick'te aynı modeli gösterdiğini ölçer: mount → 3 bar →
-	# parmak izleri eşit ve türetilen modele eşit → 6 saat tik → parmak izleri değişmiş
-	# ve HÂLÂ eşit. FALSİFİKASYON: monitör barının build_progress_changed bağını sök →
-	# ikinci karşılaştırma FAIL (bar fingerprint()'i yeniden türetmez, önbelleği okur).
+	# Build Bar (Software Inc. segment grameri): İKİ ev sahibi — yüzen BuildHUD ve tracker
+	# kartı — AYNI BuildBar sahnesini kurar ve bar modelini KENDİ çeker. Bu case ikisinin aynı
+	# tick'te aynı modeli gösterdiğini ölçer: mount → 2 bar → parmak izleri eşit ve türetilen
+	# modele eşit → 6 saat tik → parmak izleri değişmiş ve HÂLÂ eşit. FALSİFİKASYON: BuildBar'ın
+	# build_progress_changed bağını sök → ikinci karşılaştırma FAIL (bar fingerprint()'i yeniden
+	# türetmez, önbelleği okur).
 	# İlk smoke case'i ki GameShell'i headless mount eder — parse/instantiate grep'i şart.
 	GameState.set_cash(50000)
 	var founder_id: String = CharacterRegistry.get_founder().id
@@ -4243,12 +4243,12 @@ static func _case_build_bar_hosts_agree() -> String:
 		if n.is_queued_for_deletion():
 			continue
 		bars.append(n)
-	if bars.size() != 3:
+	if bars.size() != 2:
 		var paths: Array = []
 		for n in bars:
 			paths.append(str(n.get_path()))
 		shell.queue_free()
-		return "expected 3 BuildBar hosts, found %d: %s" % [bars.size(), str(paths)]
+		return "expected 2 BuildBar hosts, found %d: %s" % [bars.size(), str(paths)]
 	var model = load("res://scripts/ui/components/build_bar_model.gd").new()
 	if not model.derive():
 		shell.queue_free()
@@ -4262,7 +4262,7 @@ static func _case_build_bar_hosts_agree() -> String:
 			var got: String = n.fingerprint()
 			shell.queue_free()
 			return "host %s shows %s, model says %s" % [str(n.get_path()), got, want]
-	# 6 saat tik: durum değişir; üç bar sinyalle birlikte yürümek zorunda.
+	# 6 saat tik: durum değişir; iki bar sinyalle birlikte yürümek zorunda.
 	for i in 6:
 		ProductSystem.hourly_tick(12 + i)
 	var model2 = load("res://scripts/ui/components/build_bar_model.gd").new()
@@ -8884,52 +8884,6 @@ static func _case_save_double_load_no_residue() -> String:
 	return ""
 
 
-# --- ODA çapaları her en-boy oranında GÖRÜNÜR bandın içinde kalmalı -----------
-# Saf matematik: pencere de sahne de gerekmez, yalnız OdaLayout'un kapak dönüşümü.
-# Oda 3840x2160 (16:9) boyanmış ve kompozisyon y 0.0'dan 0.98'e kadar UZANIYOR —
-# yani DİKEY kırpma bütçesi SIFIR. KEEP_ASPECT_COVERED daha geniş bir en-boy
-# oranında tam da bunu yapar: 32:9'da görünür bant [0.261, 0.739]'e iner ve üç
-# çerçeve, kâğıtlar ve TELEFON tamamen ekran dışında kalır. Hepsi tıklanabilir
-# çapa; telefon mentor/olay yüzeyi. Ölçüldü (5120x1440 shot'ı), sonra bu case
-# yazıldı — case önce KIRMIZI doğdu, düzeltmeyle yeşile döndü.
-static func _case_oda_anchors_stay_in_band() -> String:
-	# EN-BOY ORANIYLA parametrelenir, pencere boyutuyla değil: OdaView'in gördüğü
-	# rect viewport DEĞİL, CenterViewport'tur (sol ray genişliği, TopBar + ticker
-	# yüksekliği düşülmüş). 1920x1080'de bu ~1.851 oranına denk geliyor — ilk
-	# taslak ham 1920x1080'i (1.778) test etmişti ve BİRİNCİL çözünürlükteki
-	# şerit gerilemesini tam da bu yüzden kaçırdı.
-	var aspects := {
-		"16:9  (1.778)": 16.0 / 9.0,
-		"16:9 kabuk (1.851)": 1836.0 / 992.0,
-		"16:10 (1.600)": 1.6,
-		"21:9  (2.333)": 21.0 / 9.0,
-		"32:9  (3.556)": 32.0 / 9.0,
-	}
-	# window: boyalı, TIKLANMAZ (yalnız tur bölgesi) ve tepeden y=0.0'da başlar —
-	# hiçbir kırpma bütçesi onu kurtaramaz, kompozisyonun kenarıdır.
-	# overtime_chip: place_clamped kullanır, tanımı gereği banda kendisi sığar.
-	var exempt := ["window", "overtime_chip"]
-	for label in aspects:
-		var view := Vector2(1000.0 * float(aspects[label]), 1000.0)
-		var band: Vector2 = OdaLayout.visible_band_y(view)
-		for id in OdaLayout.RECTS:
-			if id in exempt:
-				continue
-			var r: Rect2 = OdaLayout.RECTS[id]
-			if r.position.y < band.x - 0.001:
-				return "%s: '%s' üst kenarı bandın dışında (y %.3f < %.3f)" % [label, id, r.position.y, band.x]
-			if r.end.y > band.y + 0.001:
-				return "%s: '%s' alt kenarı bandın dışında (y %.3f > %.3f)" % [label, id, r.end.y, band.y]
-
-	# BİRİNCİL ÇÖZÜNÜRLÜK GERİLEME KAPISI: 1920x1080'in kabuk oranında oda tam
-	# viewport'u doldurmalı. Tavan oraya inerse oyuncu 16:9'da yan şeritler görür —
-	# ultrawide'ı kurtarmak uğruna ana durumu bozmak kabul edilebilir değil.
-	var shell := Vector2(1836.0, 992.0)
-	if OdaLayout.room_rect(shell).size != shell:
-		return "16:9 kabuk oranında oda kapaklandı — birincil çözünürlükte yan şerit oluşur"
-	return ""
-
-
 # ============================ DENEYİM / EĞİTİM ===============================
 # Beşi de MEKANİĞİ ölçer, ekranı değil: sayılar
 # HRConstants'ta WORKING ve değişebilir, ama SÖZLEŞME değişmemeli.
@@ -10567,7 +10521,7 @@ static func _case_loc_product_derived_keys() -> String:
 ## compiled once rather than once per script.
 
 
-static var RE_CLASS_NAME: RegEx = RegEx.create_from_string("(?m)^class_name[ \t]+[A-Za-z0-9_]+[ \t\r]*$")
+static var RE_CLASS_NAME: RegEx = RegEx.create_from_string("(?m)^class_name[ \t]+([A-Za-z0-9_]+)[ \t\r]*$")
 
 
 static func _case_all_scripts_load() -> String:
@@ -10596,7 +10550,6 @@ static func _case_all_scripts_load() -> String:
 		if src == "":
 			unreadable.append(path)
 			continue
-		var probe := GDScript.new()
 		# `class_name X` satırını BOŞALT: gerçek dosya o global adın meşru sahibidir, yani
 		# ikinci bir bildirim derlenmez ve projedeki her class_name dosyası bozuk raporlanır
 		# (ölçüldü: 73 yanlış pozitif). Silinmiyor, boşaltılıyor — raporlanan satır numaraları
@@ -10610,8 +10563,23 @@ static func _case_all_scripts_load() -> String:
 		# kırmızı, düzeltilmedikçe BÜYÜYEN bir kırmızıydı. (Dosyalar aynı turda LF'e
 		# normalize edildi; desen yine de satır-sonu bağımsız kalıyor, çünkü bir sonraki
 		# aracın ne yazacağını bu vaka bilemez.)
-		probe.source_code = RE_CLASS_NAME.sub(src, "", true)
-		if probe.reload() != OK:
+		#
+		# Boşaltılmış kopyada `self` artık X tipi değildir, yani `var a: X = self` yalnız kopyada
+		# derlenmez. Sınıf adını kopyaya özel bir ada çeviren ikinci kopya onu derler, ama orada
+		# da adın DEĞER olarak kullanımı (`X.new()`) çözülmez. Her kopya bir öz-göndermeyi
+		# kaçırır; dosya ancak ikisi de derlenmezse bozuktur. Denemeler hata basmadan koşar
+		# (runner basılan her hatayı FAIL sayar); gerçek kırık bir kez daha sesli derlenir ki
+		# hatası logda dursun.
+		var copies: Array[String] = [RE_CLASS_NAME.sub(src, "", true)]
+		var own: RegExMatch = RE_CLASS_NAME.search(src)
+		if own != null:
+			copies.append(RegEx.create_from_string("\\b%s\\b" % own.get_string(1)).sub(
+				src, own.get_string(1) + "__Probe", true))
+		Engine.print_error_messages = false
+		var compiles: bool = copies.any(func(copy: String) -> bool: return _compile(copy) == OK)
+		Engine.print_error_messages = true
+		if not compiles:
+			_compile(copies[0])
 			broken.append(path)
 	# İKİ HATA MODU AYRI RAPORLANIR. Eskiden ikisi de aynı cümleyle geliyordu ve
 	# "okunamadı" ile "derlenemedi" karışınca ilk bakılacak yer yanlış oluyordu.
@@ -10620,6 +10588,14 @@ static func _case_all_scripts_load() -> String:
 	if not broken.is_empty():
 		return "%d script(s) failed to compile: %s" % [broken.size(), ", ".join(broken)]
 	return ""
+
+
+## A detached compile: a fresh GDScript carrying only the source, which nothing in the running
+## game points at.
+static func _compile(source: String) -> Error:
+	var probe := GDScript.new()
+	probe.source_code = source
+	return probe.reload()
 
 
 ## The names passed to `.format({...})` match the {tokens} in that key's CSV row.
@@ -12227,10 +12203,10 @@ static func _case_creation_draft_survives_navigation() -> String:
 		return "on_page_closing stashed nothing for a dirty draft"
 	if int(stashed.get("step", 0)) != 3 or String(stashed.get("type", "")) != "note_tool":
 		return "stashed draft is wrong: %s" % str(stashed)
-	# The router actually calls it: the seam name must appear in center_viewport's free path.
-	var router_src: String = (load("res://scripts/ui/components/center_viewport.gd") as GDScript).source_code
+	# The router actually calls it: the seam name must appear in window_layer's free path.
+	var router_src: String = (load("res://scripts/ui/components/window_layer.gd") as GDScript).source_code
 	if router_src.find('propagate_call("on_page_closing")') < 0:
-		return "center_viewport does not notify the page before freeing it"
+		return "window_layer does not notify the page before freeing it"
 	# Re-mount: ProductTab consumes the draft and lands on the creation view with the selection.
 	var tab: Control = (load("res://scenes/tabs/ProductTab.tscn") as PackedScene).instantiate()
 	root.add_child(tab)
@@ -13714,8 +13690,8 @@ static func _case_pause_kinds_and_lead_note() -> String:
 	return ""
 
 
-## S6'nın ALTI DURUMU, hat modeli yolunda. Bar tek renderer, üç ev sahibi — o yüzden
-## durumları MODEL seviyesinde sabitlemek üç yüzeyi birden sabitler.
+## S6'nın ALTI DURUMU, hat modeli yolunda. Bar tek renderer, iki ev sahibi — o yüzden
+## durumları MODEL seviyesinde sabitlemek iki yüzeyi birden sabitler.
 ##
 ## FALSİFİKASYON: _derive_line'da show_percent'i true bırak → BETA iddiası FAIL.
 ## GELİŞTİRME dolumunu eski (frac−0,20)/0,60 aritmetiğine döndür → %100 iddiası FAIL.
@@ -17074,3 +17050,72 @@ static func _case_seed_sheet_round_trips() -> String:
 	if not GameState.faced_series_a or GameState.faced_series_a_by != "door_open":
 		return "the faced flag did not survive the round trip"
 	return ""
+
+
+## THE OFFICE LADDER: its gates, its week and its save. A fresh run sits in the flat; the
+## business block opens on Frank's cheque and its cash bar, not a dollar short; the move lands on
+## day MOVE_DAYS and not a day early; the flat is no way back; the office survives a real save
+## file; and that file aged to v12 (no office fields) puts a run that took the cheque in the
+## business block and leaves one that did not at home.
+static func _case_office_move_gates_and_save() -> String:
+	if OfficeSystem.current() != "home":
+		return "a fresh run starts in '%s', want home" % OfficeSystem.current()
+	if OfficeSystem.can_move_to("ishani"):
+		return "the business block opened before Frank's cheque"
+	GameState.record_angel_round(AngelRoundSystem.EQUITY_PCT, AngelRoundSystem.CASH_AMOUNT)
+	var cash_bar: int = (OfficeConstants.CATALOG["ishani"].reqs as Array) \
+		.filter(func(r: Dictionary) -> bool: return r.kind == "cash")[0].value
+	GameState.set_cash(cash_bar - 1)
+	if OfficeSystem.can_move_to("ishani"):
+		return "the business block opened a dollar short of its cash bar"
+	GameState.set_cash(cash_bar)
+	if not OfficeSystem.can_move_to("ishani"):
+		return "cheque and cash left the business block shut: %s" \
+			% str(OfficeSystem.requirement_state("ishani"))
+	if not OfficeSystem.move_to("ishani") or not OfficeSystem.is_moving():
+		return "move_to did not start a move"
+	if OfficeSystem.move_to("ishani"):
+		return "a second move started while the first was on the road"
+	for i in OfficeConstants.MOVE_DAYS:
+		if OfficeSystem.current() != "home":
+			return "arrived after %d day(s), want %d" % [i, OfficeConstants.MOVE_DAYS]
+		_sim_day()
+	if OfficeSystem.current() != "ishani" or OfficeSystem.is_moving():
+		return "after %d days the office is '%s' (moving: %s)" \
+			% [OfficeConstants.MOVE_DAYS, OfficeSystem.current(), OfficeSystem.is_moving()]
+	if OfficeSystem.can_move_to("home"):
+		return "the flat is offered as a way back"
+
+	_drain_all_modals()   # a card on screen refuses the save (can_save)
+	var slot: String = "smoke_office_%d" % OS.get_process_id()
+	var done := func(why: String) -> String:
+		SaveManager.delete_slot(slot)
+		return why
+	if not SaveManager.save_to_slot(slot):
+		return done.call("save_to_slot failed (%s)" % SaveManager.cannot_save_reason_key())
+	var path: String = SaveManager.SAVE_DIR + slot + ".json"
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path)) as Dictionary
+	var gs: Dictionary = (raw.get("state", {}) as Dictionary).get("game_state", {}) as Dictionary
+	if String(gs.get("office_id", "")) != "ishani":
+		return done.call("the file holds office_id '%s'; stripping it would prove nothing"
+			% gs.get("office_id", ""))
+	if not SaveManager.apply_loaded_state(SaveManager.read_slot(slot)):
+		return done.call("apply_loaded_state returned false")
+	if OfficeSystem.current() != "ishani":
+		return done.call("the save loaded back into '%s'" % OfficeSystem.current())
+
+	# The same file aged to v12: the office fields gone, the schema explicit.
+	for k in ["office_id", "office_move_to", "office_move_day", "mentor_line_key", "mentor_line_args"]:
+		gs.erase(k)
+	raw["schema_version"] = 12
+	for angel in [AngelRoundSystem.CASH_AMOUNT, 0]:
+		gs["run_angel_amount"] = angel
+		var w := FileAccess.open(path, FileAccess.WRITE)
+		w.store_string(JSON.stringify(raw, "\t", false, true))
+		w.close()
+		var state: Dictionary = SaveManager.read_slot(slot).get("state", {})
+		var got: String = String(state.get("game_state", {}).get("office_id", ""))
+		var want: String = "ishani" if angel > 0 else "home"
+		if got != want:
+			return done.call("a v12 save with angel %d migrated to '%s', want '%s'" % [angel, got, want])
+	return done.call("")

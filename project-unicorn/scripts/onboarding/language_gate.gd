@@ -46,7 +46,7 @@ func _ready() -> void:
 
 func _make_option(label: String, locale: String) -> Button:
 	var b := Button.new()
-	b.theme_type_variation = &"CommitButton"
+	b.theme_type_variation = &"CommitButtonDark"
 	b.text = label
 	b.custom_minimum_size = Vector2(220, 64)
 	b.pressed.connect(_on_chosen.bind(locale))

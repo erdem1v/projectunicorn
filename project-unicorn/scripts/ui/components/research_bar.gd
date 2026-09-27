@@ -27,12 +27,11 @@ extends Control
 # iki yerde iki hâlde bulunurdu.
 #
 # &"build_bar" GRUBUNA KATILMAZ, bilerek: smoke'un `_case_build_bar_hosts_agree`
-# case'i o grubun TAM OLARAK 3 üyesi olduğunu doğruluyor.
+# case'i o grubun TAM OLARAK 2 üyesi olduğunu doğruluyor.
 #
 # TEMA-BAĞIMSIZ, BİLEREK: her ölçü ve renk UiTokens'tan, yazı tipi BarKit üzerinden
-# ThemeDB'den. Sebep BuildBar'ınkiyle aynı (ODA alt ağacı kendi DONDURULMUŞ temasını
-# çözer) — çubuk ODA camına girmez (§5.6) ama tema bağımsızlığı çubukların ortak
-# sözleşmesidir, ev sahibine göre değişmez.
+# ThemeDB'den. İki çubuk BarKit'i paylaştığı için tema bağımsızlığı ortak sözleşmedir,
+# ev sahibine göre değişmez.
 # ============================================================================
 
 const Model := preload("res://scripts/ui/components/research_bar_model.gd")
@@ -104,9 +103,9 @@ func _build_tree() -> void:
 	shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	shell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var shell_sb := StyleBoxFlat.new()
-	shell_sb.bg_color = UiTokens.BG_ART
+	shell_sb.bg_color = UiTokens.CARD_BG
 	shell_sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	shell_sb.border_color = UiTokens.SURFACE_SUNKEN
+	shell_sb.border_color = UiTokens.CARD_BORDER
 	shell_sb.set_corner_radius_all(UiTokens.RADIUS_S)
 	shell_sb.corner_radius_top_left = 0
 	shell_sb.corner_radius_top_right = 0
@@ -137,7 +136,7 @@ func _build_title_row() -> Control:
 	pad.add_child(row)
 	# ALTIGEN, ağaçtaki düğümün şekli. Kimliğin taşıyıcısı — durumun değil, o yüzden
 	# kapak çizgisiyle birlikte renklenir ama cümle taşımaz.
-	_hex = BarKit.hex(HEX_PX, UiTokens.ACCENT)
+	_hex = BarKit.hex(HEX_PX, UiTokens.ACCENT_DEEP)
 	row.add_child(_hex)
 	# AD ESNEYEN ÖĞEDİR ve gerekirse ELİPSLE kısalır. BarKit'in clip_text = false
 	# varsayılanı burada bilerek TERSİNE çevriliyor: o kural, YANINDA esneyen bir
@@ -178,7 +177,7 @@ func _build_phase_row() -> Control:
 	pad.add_child(row)
 	phase_row.add_child(pad)
 
-	_title_label = BarKit.label(_font, UiTokens.SIZE_DATA, UiTokens.ACCENT)
+	_title_label = BarKit.label(_font, UiTokens.SIZE_DATA, UiTokens.ACCENT_DEEP)
 	row.add_child(_title_label)
 	# ALAN ESNEYEN ÖĞEDİR ve ayrı bir boşluk düğümü YOKTUR — o rolü bu label taşıyor.
 	# Yüzde ve iki bağ sabit genişlikte kalır, yani sıkışan tek şey açıklamadır.
@@ -200,7 +199,7 @@ func _build_phase_row() -> Control:
 ## imleci + gui_input. Düğme geometrisi YOK (kutu, kenar, dolgu) — çubuk üzerinde
 ## bir düğme, dolgunun sınırını ikinci bir kenar çizgisiyle keserdi.
 func _make_link(handler: Callable) -> Label:
-	var l := BarKit.label(_font, UiTokens.SIZE_META, UiTokens.ACCENT)
+	var l := BarKit.label(_font, UiTokens.SIZE_META, UiTokens.ACCENT_DEEP)
 	l.mouse_filter = Control.MOUSE_FILTER_STOP
 	l.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	l.gui_input.connect(handler)
@@ -216,7 +215,7 @@ func _repaint() -> void:
 	var m := _model
 	# DURAKLAMIŞTA AMBER GİDER. Kapak ve dolgu nötrleşir; renk durumun TEK
 	# taşıyıcısı, ikinci bir rozet yok.
-	var tone: Color = UiTokens.INK_MUTED if m.paused else UiTokens.ACCENT
+	var tone: Color = UiTokens.INK_MUTED if m.paused else UiTokens.ACCENT_DEEP
 	BarKit.paint_cap(_cap, UiTokens.SURFACE_SUNKEN if m.paused else UiTokens.ACCENT)
 	BarKit.paint_hex(_hex, tone)
 

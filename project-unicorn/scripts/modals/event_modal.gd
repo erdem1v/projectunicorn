@@ -73,29 +73,6 @@ func populate(event: GameEvent) -> void:
 	var readout: bool = _is_readout()
 	_footer_rule.visible = not readout
 	_footer_label.visible = not readout
-	_play_intro()
-
-
-# Oda görünürken olay kartı TELEFONDAN doğar: 0.22 sn scale+translate tween'i. Oda
-# görünmüyorsa (sekme açık / oda dışı mount) varsayılan anlık görünüm kalır. Koordinatlar
-# düz ekran-uzayı (ModalLayer CanvasLayer'ının transformu kimlik). Pause altında çalışır:
-# kök PROCESS_MODE_ALWAYS, create_tween onu izler.
-func _play_intro() -> void:
-	var anchor := get_tree().get_first_node_in_group("oda_phone_anchor") as Control
-	if anchor == null or not anchor.is_visible_in_tree():
-		return
-	var panel: Control = get_node("CenterPanel")
-	var dimmer: Control = get_node("Dimmer")
-	await get_tree().process_frame  # panel boyutu ilk layout'tan sonra geçerli
-	panel.pivot_offset = panel.size * 0.5
-	var home: Vector2 = panel.position
-	panel.scale = Vector2(0.25, 0.25)
-	panel.position = home + anchor.get_global_rect().get_center() - panel.get_global_rect().get_center()
-	dimmer.modulate.a = 0.0
-	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.tween_property(panel, "scale", Vector2.ONE, 0.22)
-	tw.tween_property(panel, "position", home, 0.22)
-	tw.tween_property(dimmer, "modulate:a", 1.0, 0.22)
 
 
 # --- Static frame (built once from _ready) ---

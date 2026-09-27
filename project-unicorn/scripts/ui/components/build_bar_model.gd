@@ -1,10 +1,9 @@
 extends RefCounted
 
 # BuildBarModel — Build Bar kartının TÜRETİLMİŞ verisi. Oyun durumu değildir: her çağrıda
-# ProductSystem'in seam'lerinden yeniden hesaplanır. Üç ev sahibi (yüzen kart, ODA monitörü,
-# Ürün sayfası) aynı BuildBar sahnesini kurar ve sahne bu modeli KENDİSİ türetir, yani ev
-# sahipleri birbirinden kopamaz; smoke `build_bar_hosts_agree` üçünün fingerprint()'ini
-# karşılaştırır.
+# ProductSystem'in seam'lerinden yeniden hesaplanır. İki ev sahibi (yüzen kart, Ürün sayfası)
+# aynı BuildBar sahnesini kurar ve sahne bu modeli KENDİSİ türetir, yani ev sahipleri
+# birbirinden kopamaz; smoke `build_bar_hosts_agree` ikisinin fingerprint()'ini karşılaştırır.
 #
 # Hiçbir şey saklanmaz, her şey sorulur: kart "kim boşta"nın kendi kopyasını tutsaydı atama
 # değiştiği anda state'in tersini iddia ederdi.
@@ -193,7 +192,7 @@ func cap_color() -> Color:
 	return UiTokens.negative() if paused else ramp_color()
 
 
-## Kartın çizdiği durumun parmak izi — smoke (üç ev sahibi aynı mı?) ve harness çıktısı için.
+## Kartın çizdiği durumun parmak izi — smoke (iki ev sahibi aynı mı?) ve harness çıktısı için.
 func fingerprint() -> String:
 	return "%s|%d/%d|%.2f|%d|%d|%d|%s|%s|%s|%s|%d|%d|%d|%d|%d|%d|%d" % [
 		String(phase), round_index, round_max, fill, percent, int(show_percent), int(paused),

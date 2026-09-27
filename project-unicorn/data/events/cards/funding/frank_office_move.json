@@ -1,0 +1,58 @@
+{
+  "_note": "Frank moves the company out of the founder's flat once his cheque is in. It reads office.current and office.moving, so a company already out of the flat, or on its way out, never hears it. One option and no cost: a beat, which GDD v2 ch.11 §4's cost law allows. Tagged critical so the sweep proposes it on the day it comes true instead of leaving it to a weighted draw.",
+  "id": "funding.frank_office_move",
+  "version_scope": "ea",
+  "category": "funding",
+  "tick": "daily",
+  "class": "interrupt",
+  "tags": [
+    "critical",
+    "build_safe"
+  ],
+  "speaker": "char_mentor_frank",
+  "latch": {
+    "one_shot": true
+  },
+  "condition": {
+    "all": [
+      {
+        "seam": "investor.angel_taken",
+        "op": "==",
+        "value": true
+      },
+      {
+        "seam": "office.current",
+        "op": "==",
+        "value": "home"
+      },
+      {
+        "seam": "office.moving",
+        "op": "==",
+        "value": false
+      }
+    ]
+  },
+  "options": [
+    {
+      "id": "ok",
+      "outcome_id": "acknowledged",
+      "effects": []
+    }
+  ],
+  "text": {
+    "tr": {
+      "title": "FRANK_OFFICE_MOVE_TITLE",
+      "body": "FRANK_OFFICE_MOVE_BODY",
+      "options": {
+        "ok": "FRANK_OFFICE_MOVE_OK"
+      }
+    },
+    "en": {
+      "title": "FRANK_OFFICE_MOVE_TITLE",
+      "body": "FRANK_OFFICE_MOVE_BODY",
+      "options": {
+        "ok": "FRANK_OFFICE_MOVE_OK"
+      }
+    }
+  }
+}

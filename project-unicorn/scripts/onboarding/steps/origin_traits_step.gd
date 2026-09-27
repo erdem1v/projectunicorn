@@ -33,7 +33,7 @@ var _check_off: StyleBoxFlat = null
 
 func _ready() -> void:
 	_check_on = StyleBoxFlat.new()
-	_check_on.bg_color = UiTokens.ACCENT
+	_check_on.bg_color = UiTokens.ACCENT_CHROME
 	_check_on.set_corner_radius_all(3)
 	_check_off = StyleBoxFlat.new()
 	_check_off.bg_color = Color.TRANSPARENT
@@ -68,7 +68,7 @@ func _section_header(title_key: String, sub_key: String) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	wrap.add_child(row)
-	row.add_child(UiFactory.make_label(tr(title_key), &"ZoneLabel", UiTokens.ACCENT))
+	row.add_child(UiFactory.make_label(tr(title_key), &"ZoneLabel", UiTokens.ACCENT_CHROME))
 	row.add_child(UiFactory.make_label(tr(sub_key), &"SubtitleSerifCream"))
 	return wrap
 
@@ -119,7 +119,7 @@ func _make_origin_card(origin: Dictionary) -> PanelContainer:
 		card.modulate = Color(1, 1, 1, 0.45)
 	else:
 		for chip in origin.get("chips", []):
-			var fg: Color = UiTokens.ACCENT if chip["kind"] == "plus" else UiTokens.negative_bright()
+			var fg: Color = UiTokens.ACCENT_CHROME if chip["kind"] == "plus" else UiTokens.negative_bright()
 			chips.add_child(UiFactory.make_pill(tr(chip["key"]), Color(fg, 0.12), fg))
 		var origin_id := String(origin["id"])
 		card.gui_input.connect(_on_origin_input.bind(origin_id))
@@ -161,7 +161,7 @@ func _make_trait_column(title_key: String, polarity: String) -> PanelContainer:
 
 	var head := HBoxContainer.new()
 	col.add_child(head)
-	var title := UiFactory.make_label(tr(title_key), &"ZoneLabel", UiTokens.ACCENT)
+	var title := UiFactory.make_label(tr(title_key), &"ZoneLabel", UiTokens.ACCENT_CHROME)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
 	var counter := UiFactory.make_label("", &"DialogueNumber")
@@ -289,7 +289,7 @@ func _make_skill_column(skill_key: String) -> PanelContainer:
 
 	_skill_minus[skill_key] = _add_stepper(controls, "−", skill_key, -1)
 
-	var value := UiFactory.make_label("0", &"MetricValue", UiTokens.ACCENT)
+	var value := UiFactory.make_label("0", &"MetricValue", UiTokens.ACCENT_CHROME)
 	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value.add_theme_font_size_override("font_size", 20)
@@ -320,11 +320,11 @@ func _make_points_card() -> PanelContainer:
 	col.add_theme_constant_override("separation", 4)
 	panel.add_child(col)
 
-	var title := UiFactory.make_label(tr("ONB_POINTS_LEFT"), &"ZoneLabel", UiTokens.ACCENT)
+	var title := UiFactory.make_label(tr("ONB_POINTS_LEFT"), &"ZoneLabel", UiTokens.ACCENT_CHROME)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
 
-	_points_value = UiFactory.make_label("0", &"MetricValue", UiTokens.ACCENT)
+	_points_value = UiFactory.make_label("0", &"MetricValue", UiTokens.ACCENT_CHROME)
 	_points_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_points_value.add_theme_font_size_override("font_size", 30)
 	col.add_child(_points_value)
@@ -356,7 +356,7 @@ func _refresh_skills() -> void:
 		(_skill_minus[skill_key] as Button).disabled = v <= 0
 		(_skill_plus[skill_key] as Button).disabled = v >= FounderConstants.ONBOARDING_CAP or remaining <= 0
 	_points_value.text = str(remaining)
-	_points_value.add_theme_color_override("font_color", UiTokens.CREAM if remaining == 0 else UiTokens.ACCENT)
+	_points_value.add_theme_color_override("font_color", UiTokens.CREAM if remaining == 0 else UiTokens.ACCENT_CHROME)
 
 
 # --- OnboardingStep contract ---

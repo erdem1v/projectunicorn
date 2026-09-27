@@ -4,8 +4,8 @@ extends Node
 # Single source of truth for all customers (acquired accounts).
 #
 # Mutations route through registry methods. State changes emit on EventBus so
-# scenes (Sales tab, ODA) update themselves without the registry knowing who is
-# listening.
+# scenes (Sales tab, the office's notice stack) update themselves without the
+# registry knowing who is listening.
 #
 # SalesSystem's MRR bridge is the canonical path from get_total_mrr to GameState.mrr
 # (TopBar listens to EventBus.mrr_changed); FinanceSystem reads GameState.mrr, not this

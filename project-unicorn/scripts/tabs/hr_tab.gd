@@ -20,7 +20,6 @@ extends Control
 # ============================================================================
 
 const ATLAS_MODAL := "res://scenes/modals/HRAtlasModal.tscn"
-const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
 const WORK_HOURS_MODAL := "res://scenes/modals/WorkHoursModal.tscn"
 
 ## Aynı kadronun iki görünümü. Görünüm değişince sayfa TAM yeniden kurulur: iki tablo
@@ -38,16 +37,15 @@ var _seg_roster: Button = null
 var _seg_assign: Button = null
 var _placement_chips: HBoxContainer = null
 var _attention_strip: VBoxContainer = null
-var _header_slot: VBoxContainer = null   # başlığın evi; içeriği her kurulumda tazelenir
+var _header: Control = null   # KADRO sütun başlıkları; GÖREVLER görünümünde gizli
 # Satır başına yerinde-repaint referansları: emp.id → {"bar":…, "value":…}
 var _morale_refs: Dictionary = {}
 
 
 func _ready() -> void:
-	# Defterin sütun genişlikleri mantıksal viewport'a göre seçiliyor ve oyuncu ölçeği
-	# Ayarlar'dan değiştirince viewport yeniden boyutlanıyor; tek seferlik ölçüm bayatlardı.
-	get_viewport().size_changed.connect(_on_viewport_resized)
 	_build_chrome()
+	# Ekip dosyasından yapılan bir kişi aksiyonu bu sayfayı da tazeler (HRLedger).
+	add_to_group(HRLedger.VIEWS_GROUP)
 	# Mesai ve arayış durumu için motorda sinyal yok; onları hr_day_processed ve aksiyon
 	# sonrası yerel tazeleme taşıyor.
 	_signals = [
@@ -80,41 +78,36 @@ func _on_state_changed(_a = null, _b = null, _c = null) -> void:
 func _on_palette_changed(_cb: bool) -> void:
 	# Yapı anahtarı palette bağlı değil; çipler çalışma zamanında erişimcilerden kurulduğu
 	# için yeni paleti ancak yeniden kurulunca alır.
-	_rebuild_forced()
+	rebuild_view()
 
 
 # --- Sayfa kromu ------------------------------------------------------------
 
 func _build_chrome() -> void:
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 16)
-	add_child(margin)
+	# Kenar boşluğu pencerenin (WindowFrame): başlık satırı kapatma glifiyle aynı çizgide.
 	var outer := VBoxContainer.new()
+	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	outer.add_theme_constant_override("separation", 10)
-	margin.add_child(outer)
+	add_child(outer)
 
 	# Başlık satırı: Ekip + özet + yerleşim çipleri · sağda saat kontrolü + İŞE ALIM BAŞLAT.
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 14)
 	head.alignment = BoxContainer.ALIGNMENT_CENTER
 	head.add_child(UiFactory.make_label(tr("HR_PAGE_TITLE"), &"PageTitleSerif"))
+	# Özet + çipler tek genişleyen grupta durur: özet kelepçelenmez, çipler cümlenin hemen
+	# ardına gelir ve kalan boşluk eylem grubunu sağa iter.
+	var info := HBoxContainer.new()
+	info.add_theme_constant_override("separation", 14)
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(info)
 	_summary = UiFactory.make_label("", &"TitleRowSummary")
-	# Özet yer verir, CTA vermez: dar viewport'ta uzun özet cümlesi kısalır, eylem
-	# düğmesi ekran dışına itilmez.
-	_summary.clip_text = true
-	_summary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_summary.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	head.add_child(_summary)
+	info.add_child(_summary)
 	_placement_chips = HBoxContainer.new()
 	_placement_chips.add_theme_constant_override("separation", UiTokens.SPACE_S)
 	_placement_chips.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	head.add_child(_placement_chips)
-	var head_spacer := Control.new()
-	head_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(head_spacer)
+	info.add_child(_placement_chips)
 	# §13.2 eylem grubu iki üyelidir: çalışma saatleri kontrolü + İŞE ALIM BAŞLAT. Eğitim
 	# satır menüsündedir (§13.3), orada kişi zaten seçili.
 	_hours_control = _build_hours_control()
@@ -136,12 +129,9 @@ func _build_chrome() -> void:
 	_attention_strip.add_theme_constant_override("separation", 6)
 	outer.add_child(_attention_strip)
 
-	# Sütun başlıkları kaydırma alanının DIŞINDA (sayfa kayarken görünür kalır) ve bir
-	# slot'ta: kademe değiştiğinde satırlar gibi başlık da yeniden kurulmalı, yoksa bayat
-	# asgari genişliği sayfanın asgarisi olur.
-	_header_slot = VBoxContainer.new()
-	_header_slot.add_theme_constant_override("separation", 0)
-	outer.add_child(_header_slot)
+	# Sütun başlıkları kaydırma alanının DIŞINDA: sayfa kayarken görünür kalır.
+	_header = HRLedger.column_header()
+	outer.add_child(_header)
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -198,12 +188,7 @@ func _rebuild() -> void:
 	_paint_attention_strip()
 	_paint_segments()
 
-	# Başlık ve satırlar AYNI ölçümü okumalı: `column_header()` genişlikleri HRLedger'ın
-	# statiklerinden okuyor, o yüzden ölçüm kurulumdan önce.
-	HRLedger.measure(get_viewport_rect().size.x)
-	UiFactory.clear(_header_slot)
-	_header_slot.add_child(HRLedger.column_header())
-	_header_slot.visible = _view == VIEW_ROSTER
+	_header.visible = _view == VIEW_ROSTER
 	if _view == VIEW_ASSIGNMENTS:
 		_list.add_child(HRAssignments.build(_on_assignment_toggled, _open_atlas))
 		return
@@ -266,7 +251,7 @@ func _on_cancel_search() -> void:
 
 func _do_cancel_search() -> void:
 	HRSearchSystem.cancel_search()
-	_rebuild_forced()
+	rebuild_view()
 
 
 # --- Çalışma saatleri kontrolü (§13.2 / §8.5) --------------------------------
@@ -304,8 +289,8 @@ func _paint_hours_control() -> void:
 	else:
 		btn.text = window
 	var flagged: bool = over > 0 or exceptions > 0
-	var ink: Color = UiTokens.ACCENT if flagged else UiTokens.INK_MUTED
-	var edge: Color = UiTokens.ACCENT if flagged else UiTokens.BORDER_HOVER
+	var ink: Color = UiTokens.ACCENT_DEEP if flagged else UiTokens.INK_MUTED
+	var edge: Color = UiTokens.ACCENT_DEEP if flagged else UiTokens.BORDER_HOVER
 	btn.add_theme_color_override("font_color", ink)
 	btn.add_theme_color_override("font_hover_color", UiTokens.INK)
 	btn.add_theme_color_override("font_pressed_color", ink)
@@ -313,10 +298,10 @@ func _paint_hours_control() -> void:
 	btn.add_theme_color_override("icon_hover_color", UiTokens.INK)
 	for state in ["normal", "hover", "pressed", "focus"]:
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0, 0, 0, 0)
+		sb.bg_color = Color.TRANSPARENT
 		sb.set_border_width_all(1)
 		# Hover KENARDA yaşar, dolguda değil (Terminal reçetesi).
-		sb.border_color = UiTokens.ACCENT_HOVER if state == "hover" else edge
+		sb.border_color = UiTokens.ACCENT_DEEP if state == "hover" else edge
 		sb.set_corner_radius_all(2)
 		sb.content_margin_left = 14
 		sb.content_margin_right = 14
@@ -326,17 +311,12 @@ func _paint_hours_control() -> void:
 
 
 func _open_hours_modal() -> void:
-	HRUiShared.mount_panel_modal(self, WORK_HOURS_MODAL, _rebuild_forced)
+	HRUiShared.mount_panel_modal(self, WORK_HOURS_MODAL, rebuild_view)
 
 
 func _open_atlas() -> void:
 	# Motorun arayış geçişleri için sinyali yok; modal haber veriyor.
 	HRUiShared.mount_panel_modal(self, ATLAS_MODAL, _refresh)
-
-
-## Alan seçimini oyuncu yapıyor (§5.2), o yüzden onay kutusu değil eğitim modalı.
-func _confirm_training(emp: Character) -> void:
-	HRUiShared.mount_panel_modal(self, TRAINING_MODAL, _rebuild_forced, [emp.id])
 
 
 # --- Kadro grupları ---------------------------------------------------------
@@ -394,7 +374,7 @@ func _show_view(view_id: String) -> void:
 	if _view == view_id:
 		return
 	_view = view_id
-	_rebuild_forced()
+	rebuild_view()
 
 
 ## Aktif segment: INK + 2px amber alt kenar; öteki INK_DIM ve kenarsız (9b).
@@ -403,9 +383,9 @@ func _paint_segments() -> void:
 		var btn: Button = pair[0]
 		var active: bool = String(pair[1]) == _view
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0, 0, 0, 0)
+		sb.bg_color = Color.TRANSPARENT
 		sb.border_width_bottom = UiTokens.BORDER_FOCUS if active else 0
-		sb.border_color = UiTokens.ACCENT
+		sb.border_color = UiTokens.ACCENT_DEEP
 		sb.content_margin_left = 2.0
 		sb.content_margin_right = 2.0
 		sb.content_margin_top = 0.0
@@ -425,7 +405,7 @@ func _paint_placement_chips() -> void:
 	if idle > 0:
 		_placement_chips.add_child(UiFactory.make_state_chip(
 			tr("HR_CHIP_IDLE_COUNT").format({"n": idle}),
-			UiTokens.INK_DIM, Color(0, 0, 0, 0), UiTokens.SEPARATOR))
+			UiTokens.INK_DIM, Color.TRANSPARENT, UiTokens.CARD_BORDER))
 	var over: int = 0
 	for emp in CharacterRegistry.get_active_employees():
 		if HRSystem.is_overloaded(emp):
@@ -433,7 +413,7 @@ func _paint_placement_chips() -> void:
 	if over > 0:
 		_placement_chips.add_child(UiFactory.make_state_chip(
 			tr("HR_CHIP_OVERLOAD_COUNT").format({"n": over}),
-			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT))
+			UiTokens.ACCENT_DEEP, UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP))
 
 
 ## Kaçma riski başına bir kırmızı şerit: ad + MORAL n. Eşik motorun
@@ -468,7 +448,7 @@ func _on_assignment_toggled(char_id: String, job_id: String, currently_on: bool)
 		# ayrışmış demektir.
 		if reason != "":
 			push_warning("[HRTab] assign_job('%s', '%s') refused: %s" % [char_id, job_id, reason])
-	_rebuild_forced()
+	rebuild_view()
 
 
 func _on_card_action(emp_id: String, action: String, anchor: Control) -> void:
@@ -478,20 +458,15 @@ func _on_card_action(emp_id: String, action: String, anchor: Control) -> void:
 	match action:
 		HRLedger.ACTION_MENU:
 			_open_actions(emp, anchor)
-		HRLedger.ACTION_RAISE:
-			_open_raise(emp)
-		HRLedger.ACTION_FIRE:
-			_confirm_fire(emp)
-		HRLedger.ACTION_TRAIN:
-			_confirm_training(emp)
-		HRLedger.ACTION_PROMOTE:
-			_open_promotion(emp)
+		HRLedger.ACTION_DOSSIER:
+			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier", {"character_id": emp.id})
+		_:
+			HRLedger.run_action(self, emp, action)
 
 
 # --- Satır aksiyon menüsü (9e) ---------------------------------------------
 
 func _open_actions(emp: Character, anchor: Control) -> void:
-	# Kapalı satırın gerekçesi preview_*'ın `reason` anahtarından okunur: can_* yalnız bool döner.
 	var pop: HRPopover = HRPopover.mount(self)
 	if pop == null:
 		return
@@ -505,186 +480,15 @@ func _open_actions(emp: Character, anchor: Control) -> void:
 		UiTokens.tr_upper(HRConstants.role_label(emp.role)), &"MicroLabel"))
 	body.add_child(head)
 	body.add_child(HRUiShared.hairline())
-
-	# Sağdaki meta her satırın SONUCUNU söylüyor (mevcut maaş · unvan · süre · kalıcı).
-	for spec in [
-			{"key": "HR_CARD_RAISE", "preview": HRActions.preview_raise(emp, HRConstants.RAISE_MIN_PCT),
-				"action": HRLedger.ACTION_RAISE,
-				"meta": Fmt.money_exact(emp.monthly_salary)},
-			# §13.3: kilitli hâli görünür kalır ve gerekçesini gösterir.
-			{"key": "HR_CARD_PROMOTE",
-				"preview": {"ok": HRActions.can_promote(emp),
-					"reason": HRActions.promotion_block_reason(emp)},
-				"action": HRLedger.ACTION_PROMOTE,
-				"meta": HRConstants.job_title(emp.role, emp.level)},
-			# §5.4 iki gerekçe: bar dolmadı ya da alan tavanda — metni registry seçer.
-			{"key": "HR_TRAINING_PICK_TITLE",
-				"preview": {"ok": CharacterRegistry.can_train(emp.id),
-					"reason": CharacterRegistry.training_block_reason(emp.id)},
-				"action": HRLedger.ACTION_TRAIN,
-				"meta": HRConstants.training_duration_text()},
-			{"key": "HR_CARD_FIRE", "preview": HRActions.preview_fire(emp),
-				"action": HRLedger.ACTION_FIRE,
-				"meta": tr("HR_MENU_PERMANENT")}]:
-		# Yıkıcı eylem ayrı bölümde: İşten çıkar'ın önüne hairline.
-		if String(spec["action"]) == HRLedger.ACTION_FIRE:
-			body.add_child(HRUiShared.hairline())
-		body.add_child(_menu_row(pop, emp, spec, anchor))
+	body.add_child(HRLedger.action_list(emp, func(act: String) -> void:
+		pop.close()
+		HRLedger.run_action(self, emp, act)))
 
 	pop.open_at(anchor)
 
 
-## 46px ritim, 16px iç boşluk, sağda meta, hover'da 2px amber sol kenar + %5 zemin;
-## devre dışıysa kilit glifi + gerekçe.
-func _menu_row(pop: HRPopover, emp: Character, spec: Dictionary, anchor: Control) -> Control:
-	var preview: Dictionary = spec["preview"]
-	var ok: bool = bool(preview.get("ok", false))
-	var reason: String = String(preview.get("reason", ""))
-
-	var btn := Button.new()
-	btn.flat = true
-	btn.focus_mode = Control.FOCUS_NONE
-	btn.custom_minimum_size = Vector2(0, 46)
-	btn.disabled = not ok
-	if ok:
-		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		var act: String = String(spec["action"])
-		btn.pressed.connect(func() -> void:
-			pop.close()
-			_on_card_action(emp.id, act, anchor))
-	else:
-		btn.tooltip_text = reason
-	var flat_sb := StyleBoxEmpty.new()
-	flat_sb.content_margin_left = 16.0
-	flat_sb.content_margin_right = 16.0
-	var hover_sb := StyleBoxFlat.new()
-	hover_sb.bg_color = Color(1, 1, 1, 0.05)
-	hover_sb.border_width_left = 2
-	hover_sb.border_color = UiTokens.ACCENT
-	hover_sb.content_margin_left = 14.0
-	hover_sb.content_margin_right = 16.0
-	btn.add_theme_stylebox_override("normal", flat_sb)
-	btn.add_theme_stylebox_override("disabled", flat_sb)
-	btn.add_theme_stylebox_override("hover", hover_sb if ok else flat_sb)
-	btn.add_theme_stylebox_override("pressed", hover_sb if ok else flat_sb)
-
-	var row := HBoxContainer.new()
-	row.set_anchors_preset(Control.PRESET_FULL_RECT)
-	row.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	row.offset_left = 16
-	row.offset_right = -16
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Açık satırda glif saydam kalır: etiketler kilitli satırlarla aynı hizada durur.
-	row.add_child(HRUiShared.lock_glyph(13, UiTokens.INK_FAINT if not ok else Color(0, 0, 0, 0)))
-	var label_col := VBoxContainer.new()
-	label_col.add_theme_constant_override("separation", 1)
-	label_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	label_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label_col.add_child(UiFactory.make_label(tr(String(spec["key"])), &"RowName",
-		UiTokens.INK if ok else UiTokens.INK_DIM))
-	if not ok and reason != "":
-		label_col.add_child(UiFactory.make_label(reason, &"RowMeta", UiTokens.INK_FAINT))
-	row.add_child(label_col)
-	var meta: String = String(spec.get("meta", ""))
-	if meta != "":
-		var meta_lbl := UiFactory.make_label(meta, &"RowMeta", UiTokens.INK_DIM)
-		meta_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		meta_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(meta_lbl)
-	btn.add_child(row)
-	return btn
-
-
-# --- Zam / terfi / çıkarma (§14 aksiyon kabuğu) -----------------------------
-
-func _open_raise(emp: Character) -> void:
-	if not bool(HRActions.preview_raise(emp, HRConstants.RAISE_MIN_PCT).get("ok", false)):
-		return
-	EventBus.confirm_requested.emit({
-		"modal": "hr_action",
-		"title": tr("HR_CARD_RAISE"),   # başlıkta yalnız eylem, ad yok
-		"commit_key": "HR_APPLY_RAISE_PCT",
-		"slider": {"min": HRConstants.RAISE_MIN_PCT, "max": HRConstants.RAISE_MAX_PCT,
-			"start": HRConstants.RAISE_MIN_PCT},
-		"preview": _preview_raise.bind(emp),
-		"on_commit": _do_raise.bind(emp.id),
-	})
-
-
-## §9.3: zam ile aynı kabuk; fark bir SEVİYE atlaması olması — unvan da bir delta satırı.
-## Minimum %10, yani slider "terfi ettim ama zam almadım"a inmez.
-func _open_promotion(emp: Character) -> void:
-	if not HRActions.can_promote(emp):
-		return
-	EventBus.confirm_requested.emit({
-		"modal": "hr_action",
-		"title": tr("HR_CARD_PROMOTE"),
-		"commit_key": "HR_APPLY_PROMOTE_PCT",
-		"slider": {"min": HRConstants.PROMOTION_MIN_PCT, "max": HRConstants.PROMOTION_MAX_PCT,
-			"start": HRConstants.PROMOTION_MIN_PCT},
-		"preview": _preview_promotion.bind(emp),
-		"on_commit": _do_promotion.bind(emp.id),
-	})
-
-
-func _preview_promotion(pct: int, emp: Character) -> Dictionary:
-	return HRActions.preview_promotion(emp, pct)
-
-
-func _do_promotion(pct: int, emp_id: String) -> bool:
-	var emp: Character = CharacterRegistry.get_character(emp_id)
-	if emp == null or not HRActions.apply_promotion(emp, pct):
-		return false
-	_rebuild_forced()
-	return true
-
-
-func _preview_raise(pct: int, emp: Character) -> Dictionary:
-	return HRActions.preview_raise(emp, pct)
-
-
-func _do_raise(pct: int, emp_id: String) -> bool:
-	var emp: Character = CharacterRegistry.get_character(emp_id)
-	if emp == null or not HRActions.apply_raise(emp, pct):
-		return false
-	_rebuild_forced()
-	return true
-
-
-func _confirm_fire(emp: Character) -> void:
-	var pv: Dictionary = HRActions.preview_fire(emp)
-	if not bool(pv.get("ok", false)):
-		return
-	EventBus.confirm_requested.emit({
-		"modal": "hr_action",
-		"title": tr("HR_CARD_FIRE"),
-		"rows": pv.get("rows", []),
-		"commit_text": tr("HR_FIRE_CONFIRM_OK"),
-		"on_commit": _do_fire.bind(emp.id),
-	})
-
-
-## `_pct`: modal her eyleme tek imzayla döner; çıkarmanın slider'ı yok ve sıfır gönderiliyor.
-func _do_fire(_pct: int, emp_id: String) -> bool:
-	var emp: Character = CharacterRegistry.get_character(emp_id)
-	if emp == null or not HRActions.fire(emp):
-		return false
-	_rebuild_forced()
-	return true
-
-
 ## Yapı anahtarını geçersiz kılıp tam yeniden kurar. set_salary ve set_status sinyal
-## atmadığı için aksiyon sonrası tazeleme buradan tetikleniyor.
-func _rebuild_forced() -> void:
+## atmadığı için aksiyon sonrası tazeleme buradan tetikleniyor (HRLedger.VIEWS_GROUP).
+func rebuild_view() -> void:
 	_structure_key = ""
 	_refresh()
-
-
-func _on_viewport_resized() -> void:
-	if not is_inside_tree():
-		return
-	var was_dense: bool = HRLedger.dense
-	HRLedger.measure(get_viewport_rect().size.x)
-	if HRLedger.dense != was_dense:
-		_rebuild_forced()   # yalnız kademe değiştiyse: her pikselde tabloyu kurmayız

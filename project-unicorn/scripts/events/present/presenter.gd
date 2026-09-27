@@ -5,7 +5,7 @@ extends RefCounted
 # can render, and builds the desk rows.
 #
 #   interrupt  a blocking modal, time stops
-#   paper      the ODA desk, time flows
+#   paper      the desk (notice stack, Events page), time flows
 #   info       the owning module's badge — no engine queue: the module already counts its own
 #              attention (RnDSystem/HRSystem.attention_count), so an info card fires `notify`
 #   ambient    the news ticker
@@ -106,10 +106,10 @@ static func _subject_character(context: Dictionary) -> String:
 
 # --- The desk --------------------------------------------------------------
 
-## What the ODA desk renders, most urgent first. The model is uncapped (§11.4); `visible_slots`
-## is the art's three positions, and EvPapers.ordered() keeps urgent papers inside them. `id` is
-## the paper's key, which is what open_paper takes.
-static func desk_papers(visible_slots: int = 3) -> Array:
+## What the desk lists, most urgent first. The model is uncapped (§11.4); `visible_slots` caps
+## the rows, and EvPapers.ordered() keeps urgent papers inside the cap. `id` is the paper's key,
+## which is what open_paper takes; `category` is the card's id, which the surface puts in words.
+static func desk_papers(visible_slots: int) -> Array:
 	var out: Array = []
 	for key in EvPapers.visible(visible_slots):
 		var card: Dictionary = EvCatalog.card(EvPapers.event_id_of(key))
@@ -117,7 +117,7 @@ static func desk_papers(visible_slots: int = 3) -> Array:
 		out.append({
 			"id": key,
 			"title": resolve_text(text_block(card).get("title", ""), EvPapers.context_of(key)),
-			"tag": String(card.get("category", "")).to_upper(),
+			"category": String(card.get("category", "")),
 			"days_left": left,
 			# §11.4: remaining time is on the paper, emphasised in the last days — the only
 			# warning a deferred decision gets.

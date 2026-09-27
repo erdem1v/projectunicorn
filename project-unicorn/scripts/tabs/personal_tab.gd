@@ -1,8 +1,8 @@
 extends Control
 
 # ============================================================================
-# KİŞİSEL sekmesi (10a). Üç blok, iki kolon: solda KURUCU kartı, sağda NEREDE DURUYORUM
-# ve NET SERVET.
+# KİŞİSEL sekmesi (10a). Üstte KURUCU kartı, altında iki kolon: solda KİLOMETRE TAŞLARI,
+# sağda NEREDE DURUYORUM ve NET SERVET.
 #
 # Bu dosya hiçbir sonucu hesaplamaz. Tek istisna biçimleme ve hisse aritmetiği — o da
 # finance_ozet_view._refresh_captable'ın birebir eşi: aynı soruya iki ekran iki cevap
@@ -13,21 +13,32 @@ extends Control
 # seam yok. Üç hücre "—" ve dürüst bir notla kapanıyor.
 # ============================================================================
 
-const RIGHT_COL_MIN := 430     # sağ kolonun dar viewport'ta inebileceği taban
+const RIGHT_COL_MIN := 430     # sağ kolonun tabanı: dar pencerede 2:1 oranı buna yer verir
 const PORTRAIT_SIZE := Vector2(150, 186)
 ## §2.6'nın nötr huy yuvası — çalışan trait ikonuyla (28×28) aynı ailede, bir tık küçük.
 const TRAIT_SLOT_SIZE := Vector2(26, 26)
 const TRAINING_MODAL := "res://scenes/modals/TrainingModal.tscn"
+## Kazanılmış taşın tek cümle notu, taşın anahtarıyla (GameState.milestones).
+const MILESTONE_NOTES := {"MILESTONE_FOUNDING": "PERSONAL_MS_FOUNDING_NOTE",
+	"MILESTONE_FIRST_SHIP": "PERSONAL_MS_SHIP_NOTE",
+	"MILESTONE_FIRST_FUNDING": "PERSONAL_MS_FUNDING_NOTE"}
 
 var _signals: Array = []
+var _scroll: ScrollContainer
 
 
 func _ready() -> void:
+	# Kenar boşluğu pencerenin (WindowFrame). Sayfa pencereden uzun, dikeyde kayar; kaydırıcı
+	# yeniden kurulumdan geçmez ki günlük tazeleme okunan yeri sıfırlamasın.
+	_scroll = ScrollContainer.new()
+	_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(_scroll)
 	_signals = [
 		EventBus.cash_changed, EventBus.equity_changed, EventBus.phase_changed,
 		EventBus.hr_day_processed, EventBus.employee_experience_changed,
 		EventBus.employee_training_changed, EventBus.character_added,
-		EventBus.character_removed, EventBus.palette_changed,
+		EventBus.character_removed, EventBus.palette_changed, EventBus.version_shipped,
 	]
 	for sig in _signals:
 		sig.connect(_on_state_changed)
@@ -45,37 +56,31 @@ func _on_state_changed(_a = null, _b = null, _c = null) -> void:
 
 
 func _build() -> void:
-	for c in get_children():
-		remove_child(c)
-		c.queue_free()
-
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 16)
-	add_child(margin)
+	UiFactory.clear(_scroll)
 	var root := VBoxContainer.new()
+	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_theme_constant_override("separation", 16)
-	margin.add_child(root)
+	_scroll.add_child(root)
 
 	var founder: Character = CharacterRegistry.get_founder()
 	if founder == null:
-		root.add_child(UiFactory.make_label(tr("ODA_PAGE_PLACEHOLDER"), &"CaptionMuted"))
+		root.add_child(UiFactory.make_label(tr("WIN_PAGE_PLACEHOLDER"), &"CaptionMuted"))
 		return
 
 	root.add_child(_header())
+	# Kurucu kartı tam genişlikte: sekiz yıldız sütunlu şeridi hiçbir kolona sığmaz.
+	root.add_child(_founder_card(founder))
 
 	var cols := HBoxContainer.new()
 	cols.add_theme_constant_override("separation", 22)
-	# İçeriğe göre: sol kartın altındaki hava bilinçli (10a).
-	cols.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	root.add_child(cols)
 
-	# İki kolon da esner, oran sabit (2:1 — 1920'de tasarımın 1246:620'si). Ölçek büyüyünce
-	# mantıksal viewport daralır; sabit genişlikli sağ kolon ekran dışına taşardı.
-	var left := _founder_card(founder)
+	# İki kolon da esner, oran 2:1; pencere darsa oran sağ kolonun tabanına yer verir.
+	var left := _milestones()
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.size_flags_stretch_ratio = 2.0
+	# İçeriğe göre: kartın altındaki hava bilinçli (10a).
+	left.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	cols.add_child(left)
 
 	var right := VBoxContainer.new()
@@ -116,7 +121,7 @@ func _tenure_days() -> int:
 	return maxi(GameState.day, 1)
 
 
-# --- sol: KURUCU kartı --------------------------------------------------------
+# --- üst: KURUCU kartı --------------------------------------------------------
 
 func _founder_card(founder: Character) -> Control:
 	var card := PanelContainer.new()
@@ -150,10 +155,10 @@ func _founder_card(founder: Character) -> Control:
 	var meta := HBoxContainer.new()
 	meta.add_theme_constant_override("separation", 12)
 	meta.add_child(UiFactory.make_label(
-		UiTokens.tr_upper(_origin_label()), &"RowMeta", UiTokens.CREAM_DIM))
+		UiTokens.tr_upper(_origin_label()), &"RowMeta", UiTokens.INK_DIM))
 	meta.add_child(HRUiShared.v_hairline(11))
 	meta.add_child(UiFactory.make_label(
-		tr("PER_TENURE").format({"n": _tenure_days()}), &"RowMeta", UiTokens.CREAM_DIM))
+		tr("PER_TENURE").format({"n": _tenure_days()}), &"RowMeta", UiTokens.INK_DIM))
 	name_block.add_child(meta)
 	right.add_child(name_block)
 
@@ -168,7 +173,7 @@ func _founder_card(founder: Character) -> Control:
 		skills.add_child(cell)
 	skills.add_child(HRUiShared.v_hairline(30))
 	for skill_key in [HRConstants.SKILL_LEADERSHIP, FounderConstants.SKILL_CHARISMA]:
-		skills.add_child(StarRating.labelled(_founder_skill_label(String(skill_key)),
+		skills.add_child(StarRating.labelled(HRUiShared.skill_label(String(skill_key)),
 			int(founder.role_stats.get(String(skill_key), 0)), 15))
 	right.add_child(skills)
 
@@ -179,14 +184,6 @@ func _founder_card(founder: Character) -> Control:
 	return card
 
 
-## Karizma bir ALAN değil, kendi anahtarından okunur; FounderConstants.skill_label oran
-## parçası verir ("+%15 satış"), etiket değil.
-func _founder_skill_label(skill_key: String) -> String:
-	if skill_key == FounderConstants.SKILL_CHARISMA:
-		return tr("PER_CHARISMA")
-	return HRConstants.area_label(skill_key)
-
-
 ## Portre çerçevesi ve huy yuvası: hairline kenarlı boş kare.
 func _frame(min_size: Vector2) -> PanelContainer:
 	var frame := PanelContainer.new()
@@ -194,7 +191,7 @@ func _frame(min_size: Vector2) -> PanelContainer:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = UiTokens.SURFACE_FRAME
 	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	sb.border_color = UiTokens.SEPARATOR
+	sb.border_color = UiTokens.CARD_BORDER
 	sb.set_corner_radius_all(UiTokens.RADIUS_S)
 	frame.add_theme_stylebox_override("panel", sb)
 	return frame
@@ -278,6 +275,39 @@ func _open_training(character_id: String) -> void:
 	HRUiShared.mount_panel_modal(self, TRAINING_MODAL, _on_state_changed, [character_id])
 
 
+# --- sol: KİLOMETRE TAŞLARI -------------------------------------------------
+
+## Mühür + ad + tarih/tutar; kazanılmışsa tek cümle not. Kazanılmamış taş sönük ve tutarsız.
+func _milestones() -> Control:
+	var card := PanelContainer.new()
+	card.theme_type_variation = &"CardPanel"
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiTokens.SPACE_L)
+	card.add_child(col)
+	col.add_child(HRUiShared.section_header(tr("PERSONAL_MILESTONES_TITLE")))
+	for m in GameState.milestones():
+		var earned: bool = bool(m["earned"])
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", UiTokens.SPACE_L)
+		col.add_child(row)
+		row.add_child(UiFactory.make_dot(UiTokens.ACCENT_DEEP if earned else UiTokens.DOT_IDLE, 16))
+		var text_col := VBoxContainer.new()
+		text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		text_col.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
+		row.add_child(text_col)
+		text_col.add_child(UiFactory.make_label(tr(String(m["key"])), &"RowName",
+			UiTokens.INK if earned else UiTokens.INK_DIM))
+		if not earned:
+			continue
+		var note := UiFactory.make_label(tr(String(MILESTONE_NOTES[m["key"]])), &"CaptionMuted")
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		text_col.add_child(note)
+		var meta := UiFactory.make_label(String(m["meta"]), &"RowMeta")
+		meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(meta)
+	return card
+
+
 # --- sağ üst: NEREDE DURUYORUM -----------------------------------------------
 
 func _where_i_stand() -> Control:
@@ -310,7 +340,7 @@ func _where_i_stand() -> Control:
 	var goal_sb := StyleBoxFlat.new()
 	goal_sb.bg_color = UiTokens.AMBER_WASH
 	goal_sb.border_width_left = UiTokens.BORDER_FOCUS
-	goal_sb.border_color = UiTokens.ACCENT
+	goal_sb.border_color = UiTokens.ACCENT_DEEP
 	goal_sb.content_margin_left = 14.0
 	goal_sb.content_margin_right = 14.0
 	goal_sb.content_margin_top = 12.0
@@ -350,7 +380,7 @@ func _net_worth() -> Control:
 	col.add_child(_kv(tr("PER_NET_WORTH"), "—", false))
 	col.add_child(_kv(tr("PER_PEAK_VALUE"), "—", false))
 
-	var note := UiFactory.make_label(tr("PER_NO_VALUATION"), &"RowMeta", UiTokens.CREAM_DIM)
+	var note := UiFactory.make_label(tr("PER_NO_VALUATION"), &"RowMeta", UiTokens.INK_DIM)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var note_pad := MarginContainer.new()
 	note_pad.add_theme_constant_override("margin_top", 14)
@@ -389,7 +419,7 @@ func _kv(caption: String, value: String, strong: bool) -> Control:
 	row.add_child(val)
 	var wrap := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0, 0, 0, 0)
+	sb.bg_color = Color.TRANSPARENT
 	sb.border_width_bottom = UiTokens.BORDER_HAIRLINE
 	sb.border_color = UiTokens.DIVIDER_LIGHT
 	wrap.add_theme_stylebox_override("panel", sb)

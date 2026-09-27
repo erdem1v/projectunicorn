@@ -388,7 +388,7 @@ func _build_coming_soon(col: VBoxContainer) -> void:
 		tr("LOCK_FULL"), tr("ENDING_CARD_IPO_BODY")))
 
 	# WISHLIST'E EKLE — always visible in the demo; inert while the store URL is empty.
-	var wishlist := _button(&"CommitButton", "ENDING_WISHLIST")
+	var wishlist := _button(&"CommitButtonDark", "ENDING_WISHLIST")
 	wishlist.pressed.connect(_on_wishlist)
 	col.add_child(wishlist)
 
@@ -446,7 +446,7 @@ func _build_milestone_rail() -> PanelContainer:
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(body)
 
-	var cont := _button(&"CommitButton", "UI_CONTINUE")
+	var cont := _button(&"CommitButtonDark", "UI_CONTINUE")
 	cont.name = "ContinueButton"
 	cont.pressed.connect(func() -> void: continue_requested.emit())
 	col.add_child(cont)
@@ -505,7 +505,7 @@ func _build_tier_card(tag: String, title: String, badge_text: String, body: Stri
 	var title_lbl := UiFactory.make_label(title, &"DialogueName")
 	vb.add_child(title_lbl)
 
-	vb.add_child(UiFactory.make_badge(badge_text, &"accent"))
+	vb.add_child(UiFactory.make_pill(badge_text, UiTokens.VEIL_FAINT_CHROME, UiTokens.ACCENT_CHROME))
 
 	var body_lbl := UiFactory.make_label(body, &"DialogueMonologue")
 	body_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

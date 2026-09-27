@@ -190,7 +190,7 @@ func _add_blockers(state: String) -> void:
 	if state == RnDUiShared.TILE_FROZEN:
 		_add_line(RnDUiShared.t("RND_FROZEN_KEEPS"), UiTokens.INK_MUTED)
 		# §5.6.1 — duraklamanın SEBEBİ yazılır, çubukla aynı motor okumasından.
-		_add_line(RnDUiShared.t(RnDSystem.freeze_note_key()), UiTokens.ACCENT)
+		_add_line(RnDUiShared.t(RnDSystem.freeze_note_key()), UiTokens.ACCENT_DEEP)
 	elif state == RnDUiShared.TILE_LOCKED or state == RnDUiShared.TILE_AVAILABLE:
 		var reason: String = _refusal()
 		if reason != RnDSystem.REFUSE_NOBODY:
@@ -202,7 +202,7 @@ func _add_blockers(state: String) -> void:
 	# araştırılabilir, ama aylık rapor SESSİZCE ATLANIR. Kapı araştırmadan ÖNCE
 	# yazılır. Amber, kırmızı değil: bu bir engel değil bir uyarı.
 	if _node_id == RnDSystem.NODE_USER_RESEARCH and RnDSystem.note_author() == null:
-		_add_line(RnDUiShared.t("RND_NOTE_NO_WRITER"), UiTokens.ACCENT)
+		_add_line(RnDUiShared.t("RND_NOTE_NO_WRITER"), UiTokens.ACCENT_DEEP)
 
 
 ## `color` null = varyasyonun kendi rengi (UiFactory.make_label'ın sözleşmesi).

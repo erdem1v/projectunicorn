@@ -7,10 +7,10 @@ extends Control
 # İki çubuk tek yığında, çünkü Ar-Ge §5.0'ın öğrettiği an ancak ikisi aynı anda görünürken
 # okunur: araştırma akarken yapım çubuğu "Ekip araştırmada." der.
 #
-# GÖRÜNÜRLÜK: oda görünürken (sekme "") yığın gizlidir — monitör aynı build verisini taşır,
-# resmin üstünde ikinci bir kart yüzmez. Aksi hâlde herhangi bir çubuğun fingerprint()'i
-# doluysa görünür. Çubuk başına görünürlük çubuğun kendi repaint'inin işidir; bu node onu
-# yalnız OKUR, yazsaydı iki yazar tek alan için yarışırdı.
+# GÖRÜNÜRLÜK: herhangi bir çubuğun fingerprint()'i doluysa görünür, ofiste de pencerenin
+# üstünde de; yalnız şehir haritası açıkken gizli, çünkü haritanın ofis kartı sağ kenarı alır.
+# Çubuk başına görünürlük çubuğun kendi repaint'inin işidir; bu node onu yalnız OKUR,
+# yazsaydı iki yazar tek alan için yarışırdı.
 #
 # BOY: Root bir VBoxContainer ve çocuklarına göre boylanır (araştırma başlar/biter), o yüzden
 # kelepçe hem panelin hem Root'un `resized`'ını dinler; yoksa alt kenara sürüklenmiş yığın
@@ -31,10 +31,11 @@ var _bars: Array[Control] = []
 
 var _dragging := false
 var _drag_free := false
-var _current_tab: String = ""
+var _map_open := false
 
 
 func _ready() -> void:
+	add_to_group(&"office_overlays")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	for child in root.get_children():
 		var bar := child as Control
@@ -43,9 +44,6 @@ func _ready() -> void:
 			bar.gui_input.connect(_on_card_gui_input)
 	resized.connect(_clamp_root)
 	root.resized.connect(_clamp_root)
-	EventBus.tab_changed.connect(func(tab_id: String) -> void:
-		_current_tab = tab_id
-		_refresh())
 	# Yalnız "yığında çizilecek bir şey kaldı mı" sorusu için; çubuklar kendi sinyallerini
 	# kendileri dinler ve bu node onlara hiçbir şey itmez.
 	var r1: Callable = _refresh.unbind(1)
@@ -57,9 +55,15 @@ func _ready() -> void:
 	_refresh()
 
 
+## OfficeView her yerleşim yüklenişinde `office_overlays` grubuna söyler.
+func set_map_open(open: bool) -> void:
+	_map_open = open
+	_refresh()
+
+
 func _refresh() -> void:
-	visible = _current_tab != "" and _bars.any(func(bar: Control) -> bool:
-		return String(bar.call("fingerprint")) != "")
+	visible = not _map_open \
+		and _bars.any(func(bar: Control) -> bool: return String(bar.call("fingerprint")) != "")
 
 
 # --- Sürükleme ----------------------------------------------------------------

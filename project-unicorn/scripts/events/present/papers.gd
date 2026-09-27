@@ -8,12 +8,12 @@ extends RefCounted
 # EXPIRY IS NEVER SILENT (§12.4): on_expire runs, history records `expired`, and expire_note goes
 # to the ticker with player-outcome priority. Lint enforces the trio (§17.7).
 #
-# The ODA art has three paper positions and the view shows a "+N" chip past them. Which three
-# is decided here: ordered() sorts by urgency, so a paper inside its last EXPIRY_URGENT_DAYS is
-# always visible and cannot run its clock down behind the chip.
+# The office's notice stack shows the first few papers and a "+N" badge past them. Which come
+# first is decided here: ordered() sorts by urgency, so a paper inside its last
+# EXPIRY_URGENT_DAYS leads the stack and cannot run its clock down behind the badge.
 #
-# Papers are keyed by EvLatches.key_of. The key is also the desk's id for the paper, so the ODA
-# opens the instance it shows.
+# Papers are keyed by EvLatches.key_of. The key is also the desk's id for the paper, so a click
+# on its row opens the instance it shows.
 
 ## key -> {event_id, context, expires_on, arc_id, opened_before, admitted_day}
 static var _papers: Dictionary = {}

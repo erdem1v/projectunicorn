@@ -62,7 +62,6 @@ func _ratio() -> float:
 func _draw() -> void:
 	var track: Rect2 = _track_rect()
 	var handle_x: float = track.position.x + track.size.x * _ratio()
-	var active: bool = _hovered or _dragging
 
 	draw_rect(Rect2(track.position.x, RAIL_Y - RAIL_H * 0.5, track.size.x, RAIL_H),
 		UiTokens.BORDER_HOVER)
@@ -71,16 +70,15 @@ func _draw() -> void:
 
 	# Tutamaç zemini rayı örter: tutamaç rayın üstünde durur, içinden geçmez.
 	var h := Rect2(handle_x - HANDLE_W * 0.5, RAIL_Y - HANDLE_H * 0.5, HANDLE_W, HANDLE_H)
-	var edge: Color = UiTokens.ACCENT_HOVER if active else UiTokens.ACCENT
 	draw_rect(h, UiTokens.CARD_BG)
-	draw_rect(h, edge, false, 1.0)
-	if active:
+	draw_rect(h, UiTokens.ACCENT_DEEP, false, 1.0)
+	if _hovered or _dragging:
 		# Hover kenarda yaşar: dolgu değil, alfası düşük bir dış halka.
-		draw_rect(h.grow(OUTLINE_INSET), Color(UiTokens.ACCENT_HOVER, 0.45), false, 1.0)
+		draw_rect(h.grow(OUTLINE_INSET), Color(UiTokens.ACCENT_DEEP, 0.45), false, 1.0)
 	var gx: float = handle_x - (GRIP_W * 2.0 + GRIP_GAP) * 0.5
 	for i in 2:
 		draw_rect(Rect2(gx + float(i) * (GRIP_W + GRIP_GAP), RAIL_Y - GRIP_H * 0.5,
-			GRIP_W, GRIP_H), edge)
+			GRIP_W, GRIP_H), UiTokens.ACCENT_DEEP)
 
 	var ty: float = RAIL_Y + HANDLE_H * 0.5 + END_GAP + float(END_SIZE)
 	var hi_text: String = Fmt.percent(max_value, 0)

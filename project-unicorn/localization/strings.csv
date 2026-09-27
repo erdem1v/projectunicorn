@@ -136,74 +136,33 @@ HR_ROLE_LOCK_SALES,Bu rol için B2B ürün gerekir.,This role needs a B2B produc
 HR_ROLE_LOCK_FULL_VERSION,Tam sürümde gelecek.,Coming in the full version.
 HR_ROLE_MARKETING,Pazarlama,Marketing
 HR_ROLE_HR_INHOUSE,İnsan Kaynakları,In-house HR
-ODA_RETURN,ODAYA DÖN,BACK TO ROOM
-ODA_PAGE_PLACEHOLDER,İçerik yolda,Content on the way
-ODA_MONITOR_IDLE,Geliştirme bekleniyor,Awaiting development
-ODA_MONITOR_IDLE_META,sistem sakin,all quiet
-ODA_MONITOR_BUILD_TITLE,{product} geliştirmesi,{product} in development
-ODA_MONITOR_LIVE_CHIP,CANLI,LIVE
-ODA_MONITOR_OK_TITLE,Her şey yolunda,All systems calm
-ODA_MONITOR_RISK_TITLE,Sistem zorlanıyor,System under strain
-ODA_MON_CAP_BUGS,hata,bugs
-ODA_MON_CAP_STAB,kararlılık,stability
-ODA_MON_CAP_MRR,MRR,MRR
-ODA_MON_CAP_ACCOUNTS,hesap,accounts
-ODA_MON_CAP_USERS,kullanıcı,users
-ODA_MONITOR_CALM,sistem sakin · uyarı yok,all quiet · no warnings
-ODA_MONITOR_BUGS,sistem ayakta · {n} açık hata,holding up · {n} open bugs
-ODA_MONITOR_WARN,hatalar birikiyor — bakım gerek,bugs piling up — needs care
-ODA_PAPER_TAG_GATE,EŞİK,GATE
-ODA_OVERTIME_TONIGHT,{n} çalışan ek mesaide,{n} still on overtime
-ODA_PAPER_TAG_FUNDING,YATIRIM,FUNDING
-ODA_PAPER_TAG_ATLAS,ATLAS,ATLAS
-ODA_PAPER_GATE_TITLE,Faz kapısı açık — karar bekliyor,Phase gate open — decision pending
-ODA_PAPER_SHEET_TITLE,Yatırım teklifi masada — son {days} gün,Offer on the table — {days} days left
-ODA_PAPER_SHEETS_TITLE,{n} yatırım teklifi masada,{n} offers on the table
-ODA_PAPER_ATLAS_TITLE,{n} aday dosyası hazır,{n} candidate files ready
-ODA_PAPER_EXPANSION_TITLE,Büyüme talebi masada,Expansion request waiting
-ODA_BOARD_GOAL_P1_LABEL,Traction'a:,To Traction:
-ODA_BOARD_GOAL_P1_META,Sürüm + ilk müşteri + ilk gelir,Ship + first customer + first revenue
-ODA_BOARD_GOAL_P2_LABEL,Series A'ya:,To Series A:
-ODA_BOARD_GOAL_P3_LABEL,Series A avı:,Series A hunt:
-ODA_BOARD_GOAL_P3_HUNT,{n} teklif masada,{n} offers on the table
-ODA_BOARD_GOAL_P3_CLOSED,Series A kapandı,Series A closed
-ODA_BOARD_MARKET_TITLE,Pazar payı,Market share
-ODA_BOARD_LEAGUE_YOU,SEN,YOU
-ODA_BOARD_DATES_TITLE,İşaretli tarihler,Marked dates
-ODA_BOARD_DATE_MEETING,VC görüşmesi,VC meeting
-ODA_BOARD_DATE_SHEET,Teklif süresi dolar,Offer expires
-ODA_BOARD_DATE_PROMISE,Söz teslimi,Promise due
-ODA_BOARD_DATE_CHURN,Churn riski · {company},Churn risk · {company}
-ODA_BOARD_DATE_MONTH,Ay kapanışı,Month close
-ODA_DATE_TODAY,BUGÜN,TODAY
-ODA_DATE_TOMORROW,YARIN,TOMORROW
-ODA_DATE_IN_DAYS,{n}G,{n}D
-ODA_BOARD_POSTIT,{name} — konuş,{name} — talk
-ODA_FRAME_FOUNDING,Kuruluş,Founding
-ODA_FRAME_FIRST_SHIP,İlk sürüm,First release
-ODA_FRAME_FIRST_FUNDING,İlk yatırım,First funding
-ODA_MILESTONES_TITLE,Kilometre Taşları,Milestones
-ODA_EVENTS_FRANK_HEADER,Frank'ten not,A note from Frank
-ODA_MS_FOUNDING_NOTE,Kapıya isim asıldı; defterin ilk satırı.,The name went on the door; the ledger's first line.
-ODA_MS_SHIP_NOTE,Ürün raflara çıktı — artık dünya da oynuyor.,The product hit the shelves — now the world plays too.
-ODA_MS_FUNDING_NOTE,İlk çek yazıldı; masadaki sandalyeler arttı.,The first cheque was signed; more chairs at the table.
-ODA_BOARD_MARKET_EMPTY,Piyasadasın. Kimse almadı.,You are on the market. Nobody has bought.
-ODA_BOARD_MARKET_OTHERS,diğerleri,others
-ODA_ANCHOR_MONITOR,Monitör,Monitor
-ODA_ANCHOR_PHONE,Telefon,Phone
-ODA_ANCHOR_PAPERS,Kâğıtlar,Papers
-ODA_ANCHOR_BOARD,Pano,Board
-ODA_ANCHOR_FRAMES,Çerçeveler,Frames
-ODA_ANCHOR_WINDOW,Pencere,Window
-ODA_TOUR_MONITOR_DESC,Aktif geliştirme ya da ürünün nabzı burada.,The active build or your product's pulse lives here.
-ODA_TOUR_PHONE_DESC,Olaylar buradan gelir; Frank'in son sözü burada durur.,Events arrive here; Frank's last word waits here.
-ODA_TOUR_PAPERS_DESC,"Bekleyen kararlar masaya düşer. Temiz masa, işler yolunda demek.",Waiting decisions land on the desk. A clean desk means all is well.
-ODA_TOUR_BOARD_DESC,"Faz hedefi, pazar payı ve işaretli tarihler panoda.","Phase goal, market share and marked dates live on the board."
-ODA_TOUR_FRAMES_DESC,Kilometre taşları çerçevelere asılır.,Milestones get framed on this wall.
-ODA_TOUR_WINDOW_DESC,Gün ışığı ve mesai — yalnız zamanı söyler.,Daylight and overtime — it only tells the time.
-ODA_TOUR_NEXT,İLERİ,NEXT
-ODA_TOUR_SKIP,GEÇ,SKIP
-ODA_TOUR_DONE,BAŞLA,BEGIN
+WIN_PAGE_PLACEHOLDER,İçerik yolda,Content on the way
+DESK_PAPER_TAG_GATE,EŞİK,GATE
+DESK_PAPER_TAG_FUNDING,YATIRIM,FUNDING
+DESK_PAPER_TAG_ATLAS,ATLAS,ATLAS
+DESK_PAPER_GATE_TITLE,Faz kapısı açık — karar bekliyor,Phase gate open: decision pending
+DESK_PAPER_SHEET_TITLE,Yatırım teklifi masada — son {days} gün,"Offer on the table, {days} days left"
+DESK_PAPER_SHEETS_TITLE,{n} yatırım teklifi masada,{n} offers on the table
+DESK_PAPER_ATLAS_TITLE,{n} aday dosyası hazır,{n} candidate files ready
+DESK_PAPER_EXPANSION_TITLE,Büyüme talebi masada,Expansion request waiting
+FIN_GOAL_P1_LABEL,Traction'a:,To Traction:
+FIN_GOAL_P1_META,Sürüm + ilk müşteri + ilk gelir,Ship + first customer + first revenue
+FIN_GOAL_P2_LABEL,Series A'ya:,To Series A:
+FIN_GOAL_P3_LABEL,Series A avı:,Series A hunt:
+FIN_GOAL_P3_HUNT,{n} teklif masada,{n} offers on the table
+FIN_GOAL_P3_CLOSED,Series A kapandı,Series A closed
+FIN_MARKET_TITLE,Pazar payı,Market share
+FIN_MARKET_YOU,SEN,YOU
+MILESTONE_FOUNDING,Kuruluş,Founding
+MILESTONE_FIRST_SHIP,İlk sürüm,First release
+MILESTONE_FIRST_FUNDING,İlk yatırım,First funding
+PERSONAL_MILESTONES_TITLE,Kilometre Taşları,Milestones
+EVENTS_FRANK_HEADER,Frank'ten not,A note from Frank
+PERSONAL_MS_FOUNDING_NOTE,Kapıya isim asıldı; defterin ilk satırı.,The name went on the door; the ledger's first line.
+PERSONAL_MS_SHIP_NOTE,Ürün raflara çıktı — artık dünya da oynuyor.,The product hit the shelves; now the world plays too.
+PERSONAL_MS_FUNDING_NOTE,İlk çek yazıldı; masadaki sandalyeler arttı.,The first cheque was signed; more chairs at the table.
+FIN_MARKET_EMPTY,Piyasadasın. Kimse almadı.,You are on the market. Nobody has bought.
+FIN_MARKET_OTHERS,diğerleri,others
 TICKER_01,Tohum yatırımcıları takvim dolduruyor; erken aşamada trafik yoğun.,Seed investors are booking out their calendars; early-stage traffic is heavy.
 TICKER_02,Kurumsal alım listeleri kısalıyor; alıcılar az ama kararlı.,Enterprise shortlists are getting shorter; fewer buyers with firmer intent.
 TICKER_03,Genç girişimlerde kurucu maaşı tartışması yeniden alevlendi.,The founder-salary debate flares up again among young startups.
@@ -1678,8 +1637,7 @@ MONTH_FRANK_GOOD,Dört rakam da yukarı. İyi bir ay.,All four numbers up. Good 
 MONTH_FRANK_ANOTHER,Bir ay daha geride.,Another month behind you.
 MONTH_EVENT_OF_THE_MONTH,✦ AYIN OLAYI,✦ EVENT OF THE MONTH
 MONTH_AUTO_SUMMARY,Otomatik özet · her ay sonu,Automatic summary · at each month end
-ODA_MENTOR_TAG_FALLBACK,FRANK,FRANK
-ODA_GOAL_PROGRESS,{met}/{total},{met}/{total}
+FIN_GOAL_PROGRESS,{met}/{total},{met}/{total}
 MONTH_ROW_CASH,Kasa,Cash
 MONTH_ROW_TEAM,Ekip,Team
 MONTH_ROW_BRAND,Marka,Brand
@@ -2406,7 +2364,7 @@ EFFECT_PHASE_HOLD,Şimdilik aynı evrede kalırsın,You stay in this phase for n
 EFFECT_SHIP_LIVE,Sürüm yayına çıkar,The version goes live
 EFFECT_MEETING_STARTS,Toplantı başlar,The meeting starts
 EFFECT_TAKES_YOU_THERE,Seni oraya götürür,Takes you there
-ODA_PAPER_DAYS,{n} gün,{n}d
+DESK_PAPER_DAYS,{n} gün,{n}d
 SALES_PIPELINE_HEADER,BORU HATTI,PIPELINE
 SALES_LOCKED_NO_B2B,Canlı B2B ürün yok.,No live B2B product.
 SALES_FLOW_RATE,Akış: {n}/hafta,Flow: {n}/week
@@ -2708,3 +2666,98 @@ ENDING_MILESTONE_HEAD,KİLOMETRE TAŞI,MILESTONE
 ENDING_MILESTONE_BODY,Bu bir son değil. Şirket yoluna devam ediyor.,This isn't the end. The company keeps going.
 ENDING_MAIN_MENU,ANA MENÜ,MAIN MENU
 END_SPAN_OVER_TWO_YEARS,iki yılı aşkın sürede,in over two years
+OFFICE_TIER_HOME,Perde 1,Act 1
+OFFICE_TIER_ISHANI,Başlangıç,Starter
+OFFICE_TIER_PLAZA,Orta,Mid
+OFFICE_TIER_LOFT,Yüksek,High
+OFFICE_NAME_HOME,Ev,Home
+OFFICE_NAME_ISHANI,İş hanı,Business block
+OFFICE_NAME_PLAZA,Plaza katı,Plaza floor
+OFFICE_NAME_LOFT,Depo loft,Warehouse loft
+OFFICE_DESC_HOME,Kurucunun dairesi · eski bir apartmanın 4. katı,The founder's flat · 4th floor of an old apartment block
+OFFICE_DESC_ISHANI,Dört katlı eski bir iş hanının 3. katı,3rd floor of an old four-storey business block
+OFFICE_DESC_PLAZA,Cam bir plaza kulesinin tam katı,A full floor of a glass office tower
+OFFICE_DESC_LOFT,Dönüştürülmüş tuğla depo · zemin ve asma kat,A converted brick warehouse · ground floor and mezzanine
+OFFICE_ROOM_STUDY_CORNER,Çalışma köşesi,Study corner
+OFFICE_ROOM_KITCHEN_CORNER,Mutfak köşesi,Kitchen corner
+OFFICE_ROOM_BEDROOM,Yatak odası,Bedroom
+OFFICE_ROOM_BATHROOM,Banyo,Bathroom
+OFFICE_ROOM_BALCONY,Balkon,Balcony
+OFFICE_ROOM_OPEN_OFFICE,Açık ofis,Open-plan office
+OFFICE_ROOM_MEETING_ROOM,Toplantı odası,Meeting room
+OFFICE_ROOM_FOUNDER_GLASS,Kurucu cam ofisi,Founder's glass office
+OFFICE_ROOM_KITCHEN,Mutfak,Kitchen
+OFFICE_ROOM_RESTROOM,Tuvalet,Restroom
+OFFICE_ROOM_RECEPTION,Resepsiyon,Reception
+OFFICE_ROOM_MEETING_ROOMS_2,2 toplantı odası,2 meeting rooms
+OFFICE_ROOM_BOARD_ROOM,Yönetim kurulu salonu,Board room
+OFFICE_ROOM_DEPARTMENT_PODS,Departman adaları,Department pods
+OFFICE_ROOM_PHONE_BOOTHS,Telefon kabinleri,Phone booths
+OFFICE_ROOM_CAFE_GAMES,Kafe ve oyun alanı,Cafe and games area
+OFFICE_ROOM_RECEPTION_SECURITY,Resepsiyon ve güvenlik,Reception and security
+OFFICE_ROOM_STAGE,Amfi ve sahne,Amphitheatre and stage
+OFFICE_ROOM_MEETING_ROOMS_3,3 toplantı odası,3 meeting rooms
+OFFICE_ROOM_GAMES,Oyun alanı,Games area
+OFFICE_ROOM_VP_OFFICES,VP odaları,VP offices
+OFFICE_ROOM_EXECUTIVE,Yönetim salonu,Executive room
+OFFICE_ROOM_FOUNDER_OFFICE,Kurucu ofisi,Founder's office
+OFFICE_REQ_ANGEL,Frank'in çeki alındı,Frank's cheque taken
+OFFICE_REQ_TEAM,Ekip en az {n} kişi,Team of at least {n}
+OFFICE_REQ_CASH,Kasada {money},{money} in the bank
+OFFICE_REQ_BRAND,Marka en az {n},Brand at least {n}
+OFFICE_REQ_NOW,şu an {value},now {value}
+OFFICE_REQ_NOW_CLOSED,alındı,taken
+OFFICE_REQ_NOW_OPEN,henüz değil,not yet
+OFFICE_STATUS_CURRENT,Mevcut,Current
+OFFICE_STATUS_MOVABLE,Taşınabilir,Can move
+OFFICE_STATUS_BLOCKED,Şartlar karşılanmadı,Requirements not met
+OFFICE_MAP_TITLE,Ofis seç,Choose an office
+OFFICE_MAP_SUB,3 kademe · taşınma bir hafta sürer,3 tiers · moving takes a week
+OFFICE_MAP_LOADING,Şehir haritası hazırlanıyor,Preparing the city map
+OFFICE_MOVE_BTN,Ofisi taşı,Move the office
+OFFICE_CARD_DESKS,MASA,DESKS
+OFFICE_CARD_RENT,KİRA / AY,RENT / MO
+OFFICE_CARD_MOVE,TAŞINMA,MOVE
+OFFICE_CARD_MOVE_NOTE,Depozito {deposit} + nakliye {move},Deposit {deposit} + movers {move}
+OFFICE_CARD_MOVE_FREE,Kira yok · taşınma bedeli yok,No rent · no moving cost
+OFFICE_CARD_ROOMS,GETİRDİKLERİ,WHAT YOU GET
+OFFICE_CARD_REQS,ŞARTLAR,REQUIREMENTS
+OFFICE_CARD_CANCEL,Vazgeç,Cancel
+OFFICE_CARD_HERE,Buradasınız,You are here
+OFFICE_CARD_MOVE_FOR,Taşın · {money},Move · {money}
+OFFICE_CARD_UNMET,{n} şart karşılanmadı,{n} requirements unmet
+OFFICE_TOAST_MOVED,Yeni ofis: {name},New office: {name}
+OFFICE_CHIP_CURRENT,MEVCUT · {name},CURRENT · {name}
+OFFICE_HOVER_HOME,Kurucunun dairesi,The founder's flat
+OFFICE_HOVER_LINE,{desks} masa · {money}/ay,{desks} desks · {money}/mo
+OFFICE_MOVING_BADGE,Taşınıyor · {days} gün,Moving · {days} days
+OFFICE_ACT_CODE,Kod yazıyor,Writing code
+OFFICE_ACT_RESEARCH,Araştırıyor,Researching
+OFFICE_ACT_DESIGN,Çizim yapıyor,Sketching
+OFFICE_ACT_PHONE,Müşteriyle görüşüyor,On a customer call
+OFFICE_ACT_TEST,Test ediyor,Testing
+OFFICE_ACT_PLAN,Planlama yapıyor,Planning
+OFFICE_ACT_COFFEE,Kahve molası,Coffee break
+OFFICE_ACT_WC,Tuvalette,In the restroom
+OFFICE_ACT_FOOD,Yemek yiyor,Eating
+OFFICE_ACT_VISIT,Masaları dolaşıyor,Walking the desks
+OFFICE_ACT_WALK,Yürüyor,Walking
+OFFICE_TOOLTIP,{name} · {status},{name} · {status}
+WIN_CLOSE,Kapat,Close
+HR_DOSSIER_NOW,ŞU AN,NOW
+HR_DOSSIER_SKILLS,YETENEKLER,SKILLS
+HR_DOSSIER_IDLE,Boşta,Idle
+EVENTS_DESK_HEADER,MASADA,ON THE DESK
+EVENTS_DESK_EMPTY,Masada bekleyen bir şey yok.,Nothing is waiting on the desk.
+OFFICE_ACT_SLEEP,Uyuyor,Asleep
+OFFICE_MOVING_BADGE_ONE,Taşınıyor · 1 gün,Moving · 1 day
+OFFICE_CARD_UNMET_ONE,1 şart karşılanmadı,1 requirement unmet
+FRANK_OFFICE_MOVE_TITLE,Taşınma vakti,Time to move
+FRANK_OFFICE_MOVE_BODY,"Frank'ten mesaj.
+
+""Daire işini gördü, bundan sonrasını kaldırmaz. O parayı şirket senin mutfağında otursun diye koymadım. Şehirde bir dolaş, şirkete düzgün bir ofis bul.""","A message from Frank.
+
+""The flat did its job. It won't do the next one. I didn't put money in so the company could keep living in your kitchen. Go and look around the city and find it a real office."""
+FRANK_OFFICE_MOVE_OK,Bakacağım,I'll look into it
+FRANK_ADVISORY_MEETING_SET,Görüşme ayarlandı. Hazırlıklı git.,Meeting's set. Go in prepared.
+FRANK_ADVISORY_PAID_TIER,Artık ücret almanın vakti. Fiyatı belirle.,Time to start charging. Set the price.

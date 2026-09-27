@@ -43,7 +43,7 @@ func _ready() -> void:
 	# Yüzde okunuşu: mono semibold, kehribar. Tasarımın 30px'i merdivende SIZE_ED_HEADLINE'a iner.
 	_pct_label.add_theme_font_override("font", FONT_MONO_SB)
 	_pct_label.add_theme_font_size_override("font_size", UiTokens.SIZE_ED_HEADLINE)
-	_pct_label.add_theme_color_override("font_color", UiTokens.ACCENT)
+	_pct_label.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
 	_cancel_btn.pressed.connect(_close)
 	_commit_btn.pressed.connect(_on_commit)
 	_cancel_btn.grab_focus()   # varsayılan odak güvenli tarafta
@@ -98,9 +98,9 @@ func _render_rows(rows: Array) -> void:
 			"delta":
 				# Sıfırı geçen değerde kırmızı olan YALNIZ sonuçtur; engel yok, bir bilgidir.
 				var negative: bool = bool(row.get("negative_after", false))
-				var after_color: Color = UiTokens.NEGATIVE if negative else UiTokens.INK
+				var after_color: Color = UiTokens.negative() if negative else UiTokens.INK
 				_rows.add_child(_value_row(row, [
-					_mono(String(row.get("before", "")), UiTokens.CREAM_DIM),
+					_mono(String(row.get("before", "")), UiTokens.INK_DIM),
 					_mono(ARROW, UiTokens.INK_DIM),
 					_mono(String(row.get("after", "")), after_color, true)]))
 			"fact":
@@ -129,7 +129,7 @@ func _value_row(row: Dictionary, cells: Array) -> HBoxContainer:
 	var box := HBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(_mono(String(row.get("label", "")), UiTokens.CREAM_DIM))
+	box.add_child(_mono(String(row.get("label", "")), UiTokens.INK_DIM))
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE

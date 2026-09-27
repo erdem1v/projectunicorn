@@ -18,9 +18,8 @@ const DisplaySettingsLib := preload("res://scripts/systems/display_settings.gd")
 # The settings SCHEMA: every key the settings screen writes, with its first-run value.
 # A missing key reads its default from here, so adding a key is the whole migration.
 #
-# Deliberately NOT here: `language` (Localization owns its default) and
-# `oda_intro_seen` (tutorial progress). reset_to_defaults() only clears these keys,
-# so both survive a reset.
+# Deliberately NOT here: `language` (Localization owns its default).
+# reset_to_defaults() only clears these keys, so it survives a reset.
 const DEFAULTS := {
 	# --- Görüntü (DisplaySettings applies) ---
 	"window_mode": "borderless",        # "fullscreen" | "borderless" | "windowed"
@@ -84,8 +83,7 @@ func set_value(key: String, value: Variant) -> void:
 	_mark_dirty()
 
 
-## Reset the SCHEMA only; keys outside DEFAULTS survive (the confirm copy
-## SET_RESET_CONFIRM_BODY promises language and tutorial progress are untouched).
+## Reset the SCHEMA only; keys outside DEFAULTS (the language) survive.
 ## Erase rather than overwrite, so the file returns to its first-run shape.
 func reset_to_defaults() -> void:
 	for key in DEFAULTS.keys():

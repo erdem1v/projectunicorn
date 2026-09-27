@@ -11,11 +11,11 @@ extends Control
 ## Prep focus ids → their words. The ids stay ids; only the WORD localizes.
 const FOCUS_KEYS := {"rakamlar": "HUNT_FOCUS_NUMBERS", "hikaye": "HUNT_FOCUS_STORY", "prova": "HUNT_FOCUS_REHEARSAL"}
 
-@onready var _frank: Label = $Margin/Layout/TitleBar/FrankLabel
-@onready var _roster: VBoxContainer = $Margin/Layout/Columns/RosterPanel/RVBox/RosterScroll/RosterList
-@onready var _offers: VBoxContainer = $Margin/Layout/Columns/RightCol/OffersPanel/OVBox/OffersList
-@onready var _pending: VBoxContainer = $Margin/Layout/Columns/RightCol/PendingPanel/PVBox/PendingList
-@onready var _counter: Label = $Margin/Layout/Columns/RightCol/CounterLabel
+@onready var _frank: Label = $Layout/TitleBar/FrankLabel
+@onready var _roster: VBoxContainer = $Layout/Columns/RosterPanel/RVBox/RosterScroll/RosterList
+@onready var _offers: VBoxContainer = $Layout/Columns/RightCol/OffersPanel/OVBox/OffersList
+@onready var _pending: VBoxContainer = $Layout/Columns/RightCol/PendingPanel/PVBox/PendingList
+@onready var _counter: Label = $Layout/Columns/RightCol/CounterLabel
 
 var _signals: Array = []
 var _advisory_active: bool = false   # a phone note has taken the strip over (see _on_advisory)
@@ -40,8 +40,8 @@ func _ready() -> void:
 	EventBus.mentor_advisory_changed.connect(_on_advisory)
 	_seed_strip = VBoxContainer.new()
 	_seed_strip.add_theme_constant_override("separation", 4)
-	$Margin/Layout.add_child(_seed_strip)
-	$Margin/Layout.move_child(_seed_strip, 2)   # under the title bar and its rule, above the columns
+	$Layout.add_child(_seed_strip)
+	$Layout.move_child(_seed_strip, 2)   # under the title bar and its rule, above the columns
 	_refresh()
 
 
@@ -57,9 +57,9 @@ func _on_changed(_arg = null) -> void:
 	_refresh()
 
 
-func _on_advisory(text: String) -> void:
+func _on_advisory(key: String, args: Dictionary) -> void:
 	_advisory_active = true
-	_frank.text = text
+	_frank.text = tr(key).format(args)
 	_refresh()
 
 

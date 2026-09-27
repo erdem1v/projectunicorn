@@ -26,6 +26,7 @@ signal dismissed
 
 
 func _ready() -> void:
+	($Dimmer as ColorRect).color = UiTokens.SCRIM_MODAL
 	_title.text = tr("SYS_TITLE")
 	_resume_btn.text = tr("SYS_RESUME")
 	_save_btn.text = tr("SYS_SAVE")

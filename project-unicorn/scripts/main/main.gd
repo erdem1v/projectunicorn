@@ -197,7 +197,7 @@ func _run_debug_harness() -> bool:
 		"--modal-shot=": _run_modal_shot,
 		"--onboard-shot=": func(v: String) -> void: _run_onboard_shot(int(v)),
 		"--theme-audit=": _run_theme_audit,
-		"--oda-shot=": _run_oda_shot,
+		"--office-shot=": _run_office_shot,
 	}
 	for prefix in valued:
 		var value: String = _flag_value(prefix, cmdline)
@@ -655,74 +655,61 @@ func _seed_signal_months() -> void:
 		start_day += 30
 
 
-# --oda-shot=<day|evening|night|dawn|event|tab|tour|hover|milestones|market1|market2|signal|build>
-# (build = Build Bar monitor face, --build-state selects its state). MentorIntro is not
-# mounted, so the intro tour never touches the player's Settings flag except under `tour`.
-func _run_oda_shot(kind: String) -> void:
+# --office-shot=<home|ishani|plaza|loft|city>:<hour>[:<extra>]: the office in the GameShell, the
+# clock stopped on the hour; prints frame time and render counts. extra: full = every desk taken
+# and people in (the lit night interior); <tab id> = that tab's window open over it; hr_dossier =
+# the Ekip window with its first employee's dossier on top. city opens the map from İş hanı as
+# the move button does; card (city only) = Plaza picked, its office card open.
+func _run_office_shot(spec: String) -> void:
+	var parts: PackedStringArray = spec.split(":")
+	var office_id: String = parts[0]
+	var hour: int = int(parts[1])
+	var extra: String = parts[2] if parts.size() > 2 else ""
 	_begin_shot()
-	match kind:
-		"market1":   # ürün piyasada değil: pay kartı yok
-			_seed_run_reproducible()
-		"build":
-			_seed_run_reproducible()
-			_seed_build_state(_build_state_arg("r1"))
-		"market2":   # çıktı ama MRR 0: tek yönlendirme satırı
-			_seed_run_reproducible()
-			GameState.day = 40
-			GameState.set_flag("mvp_shipped", true)
-			GameState.set_flag("mvp_product_name", "Pulse")
-			GameState.set_flag("mvp_market_type", "b2b")
-			GameState.set_flag("mvp_sub_product_type_id", "saas_ops")
-		_:
-			_seed_theme_surface()
-	if kind == "signal":   # LOC-DATA debug seed / id
-		_seed_signal_months()   # pano hedef kartının faz 2 dalı: rakam yok, yalnız sinyal
+	_seed_theme_surface()
+	EventBus.speed_change_requested.emit(0)
+	# Debug path: the shot writes the office straight past OfficeSystem. The map is no office:
+	# the company sits in a real one, which its pin and chips read.
+	GameState.office_id = "ishani" if office_id == "city" else office_id
+	GameState.set_current_hour(hour)
+	TimeManager.sync_to_current_hour()
 	await _mount_shot_shell()
-	var oda: Control = _shell.get_node_or_null("MidRow/CenterViewport/OdaView")
-	if oda == null:
-		_shot_fail("[OdaShot] OdaView bulunamadı")
-		return
-	var settle: float = 0.6
-	match kind:
-		"day", "hover", "market1", "market2", "signal", "build":
-			GameState.set_current_hour(14)
-			if kind == "hover":
-				oda.debug_hover_anchors()   # dört hover muamelesi tek karede
-		"night":
-			# §8.1: karanlık şirket penceresine göre çizilir; 23 pencerenin dışında.
-			GameState.set_current_hour(23)
-			oda.debug_seed_papers()
-			settle = 3.2   # LIGHT_FADE_S = 1.5 sn crossfade otursun
-		"evening", "dawn":
-			# Dört durumlu ışık makinesinin ara iki durumu: 18 = akşam, 6 = şafak.
-			GameState.set_current_hour(18 if kind == "evening" else 6)
-			settle = 3.2
-		"event":
-			# The modal reading OVER the ODA needs a card that mounts in an unseeded world:
-			# no condition, no guards, no scope.
-			_wire_modal_signals()
-			if not EventGate.request("product.first_ship"):
-				_shot_fail("[OdaShot] product.first_ship kabul edilmedi")
-				return
-			settle = 1.0
-		"tab":
-			EventBus.tab_changed.emit("product")
-		"tour":
-			# The intro tour's dim must cover edge to edge, TopBar and the left rail included.
-			Settings.set_value("oda_intro_seen", false)
-			GameState.set_current_hour(14)
-			oda.start_intro_tour_if_unseen()
-			settle = 1.0
-		"milestones":
-			EventBus.tab_changed.emit("milestones")
+	var view: Control = get_tree().get_first_node_in_group(&"office_view")
+	var city: OfficeCity = view.get_node("Viewport3D/SubViewport/World/City")
+	if office_id == "city":
+		await city.open()
+	match extra:
+		"":
+			pass
+		"card":
+			city.debug_pick("plaza")
+		"hr_dossier":
+			EventBus.tab_changed.emit("hr")
+			get_tree().call_group(&"window_layer", &"open_detail", "hr_dossier",
+				{"character_id": CharacterRegistry.get_employees()[0].id})
+		"full":
+			# People write the desk states every frame. Two frames draw and pose everyone
+			# (OfficeActor.POSE_EVERY); then they stop, and the states forced below hold.
+			for i in 2:
+				await get_tree().process_frame
+			view.get_node("Viewport3D/SubViewport/World/People").set_process(false)
+			var lighting: OfficeLighting = view.lighting
+			lighting.anyone_in = true
+			lighting.founder_at_desk = true
+			for desk in view.layout.max_n + 1:
+				lighting.set_station_state(desk, true)
 		_:
-			_shot_fail("[OdaShot] bilinmeyen tür: %s" % kind)
-			return
-	await get_tree().process_frame
-	await get_tree().create_timer(settle).timeout
-	get_tree().call_group(&"build_bar", "debug_print")   # monitör barının rect + fingerprint'i
-	var state: String = _build_state_arg("") if kind == "build" else ""
-	_save_shot("oda_shot_%s%s" % [kind, "_" + state if state != "" else ""])
+			EventBus.tab_changed.emit(extra)
+	await get_tree().create_timer(1.2).timeout
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	var start: int = Time.get_ticks_usec()
+	for i in 60:
+		await get_tree().process_frame
+	print("OFFICE_SHOT|%s|%d|frame_ms=%.2f|draw_calls=%d|tris=%d" % [office_id, hour,
+		(Time.get_ticks_usec() - start) / 60000.0,
+		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)])
+	_save_shot("office_shot_%s_%02d%s" % [office_id, hour, "_" + extra if extra != "" else ""])
 	get_tree().quit()
 
 
@@ -810,26 +797,15 @@ func _run_onboard_shot(step: int) -> void:
 
 # --theme-audit=<tab_id> prints the RESOLVED theme values of every Control (no screenshot) —
 # immune to anti-aliasing noise, and it names exactly which nodes changed.
-# `--theme-audit=oda` is the ODA gate: --oda-shot frames flip between two values (tween phase),
-# so the ODA is proved textually, walking only the OdaView subtree.
 func _run_theme_audit(tab_id: String) -> void:
 	_begin_shot()
 	_seed_theme_surface()
 	await _mount_shot_shell()
-	var oda_mode: bool = tab_id == "oda"
-	if oda_mode:
-		GameState.set_current_hour(14)      # sabit ışık durumu: gündüz
-		EventBus.tab_changed.emit("")       # sekme yok → OdaView görünür
-	else:
-		EventBus.tab_changed.emit(tab_id)
+	EventBus.tab_changed.emit(tab_id)
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
-	var root: Node = _shell.get_node_or_null("MidRow/CenterViewport/OdaView") if oda_mode else _shell
-	if root == null:
-		_shot_fail("[ThemeAudit] OdaView bulunamadı")
-		return
 	print("AUDIT_BEGIN %s" % tab_id)
-	_audit_walk(root, "")
+	_audit_walk(_shell, "")
 	print("AUDIT_END %s" % tab_id)
 	get_tree().quit()
 
@@ -1089,7 +1065,7 @@ func _run_hr_shot(kind: String) -> void:
 		"egitim-modal":   # LOC-DATA debug seed / id
 			var who: Array[Character] = CharacterRegistry.get_employees()
 			if not who.is_empty():
-				tab._confirm_training(who[0])
+				tab._on_card_action(who[0].id, HRLedger.ACTION_TRAIN, null)
 		"zam", "menu", "cikar", "cikar-eksi":
 			# The row's REAL path: a row click opens the HRPopover anchored on that row.
 			var row: Control = _first_ledger_row(tab)
@@ -1240,7 +1216,7 @@ func _run_ending_shot(key: String) -> void:
 
 
 ## --build-state=<r1|r3|r4|dev|devpark|beta|beta0|durdu>: Build Bar state for product-shot
-## tracker/beta and oda-shot build. `fallback` when absent or unknown.
+## tracker/beta. `fallback` when absent or unknown.
 func _build_state_arg(fallback: String) -> String:
 	var v: String = _flag_value("--build-state=")
 	if v in ["r1", "r3", "r4", "dev", "devpark", "beta", "beta0", "durdu"]:
@@ -1386,7 +1362,7 @@ func _run_product_shot(kind: String) -> void:
 			# Satış okuma kapısını aç: optimal rakam gerçek değerle çizilsin.
 			founder.role_stats["sales"] = SkillCheck.SALES_READ_THRESHOLD
 		"tracker", "beta":
-			# Same fixture as --oda-shot=build: HUD, tracker and monitor show one model.
+			# The floating HUD and the tracker card draw one model from this fixture.
 			_seed_build_state(_build_state_arg("beta" if kind == "beta" else "r1"))
 	await _mount_shot_shell()
 	EventBus.tab_changed.emit("product")
@@ -1413,7 +1389,7 @@ func _run_product_shot(kind: String) -> void:
 			PublishFlow.open()
 	await get_tree().process_frame
 	await get_tree().create_timer(0.4).timeout
-	get_tree().call_group(&"build_bar", "debug_print")   # üç ev sahibinin rect + fingerprint'i
+	get_tree().call_group(&"build_bar", "debug_print")   # iki ev sahibinin rect + fingerprint'i
 	var state: String = _build_state_arg("")
 	_save_shot("product_shot_%s%s" % [kind, "_" + state if state != "" else ""])
 	get_tree().quit()
@@ -1687,9 +1663,9 @@ func _swap_to_shell_and_modal() -> void:
 		_flow.queue_free()
 		_flow = null
 	await _mount_shell()
-	var mentor: Node = MENTOR_MODAL.instantiate()
-	mentor.dismissed.connect(_on_mentor_dismissed)
-	_modal_layer().add_child(mentor)
+	# The clock stays paused past the intro: the player's first decision (the build commit) is
+	# what unpauses.
+	_modal_layer().add_child(MENTOR_MODAL.instantiate())
 
 
 # The "repaint the world" seam: every shell child paints from GameState in its own _ready(),
@@ -1699,7 +1675,7 @@ func _mount_shell() -> void:
 	_shell = GAME_SHELL.instantiate()
 	add_child(_shell)
 	_shell_mounted = true
-	# One frame so TopBar/OdaView finish their initial paint before anything mounts on top.
+	# One frame so TopBar/OfficeView finish their initial paint before anything mounts on top.
 	await get_tree().process_frame
 	_wire_modal_signals()
 
@@ -1739,12 +1715,6 @@ func _modal_layer() -> CanvasLayer:
 func _restore_speed(pre: int) -> void:
 	if GameState.run_active and not EventGate.has_pending():
 		EventBus.speed_change_requested.emit(pre if pre >= 0 else TimeManager.last_running_speed)
-
-
-func _on_mentor_dismissed() -> void:
-	# Stay paused: the player's first decision (the build commit) is what unpauses. The ODA
-	# intro tour starts now if it was never seen, and runs under pause.
-	get_tree().call_group("oda_view", "start_intro_tour_if_unseen")
 
 
 func _on_event_modal_requested(event: GameEvent) -> void:

@@ -143,11 +143,11 @@ static func _box(checked: bool, primary: bool) -> PanelContainer:
 	else:
 		sb.bg_color = UiTokens.AMBER_WASH if checked else UiTokens.SURFACE_FRAME
 		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-		sb.border_color = UiTokens.ACCENT if checked else UiTokens.BORDER_HOVER
+		sb.border_color = UiTokens.ACCENT_DEEP if checked else UiTokens.BORDER_HOVER
 	box.add_theme_stylebox_override("panel", sb)
 	if checked:
 		var tick := UiFactory.make_label("✓", &"BadgeLabel",
-			UiTokens.ON_ACCENT if primary else UiTokens.ACCENT)
+			UiTokens.ON_ACCENT if primary else UiTokens.ACCENT_DEEP)
 		tick.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tick.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		box.add_child(tick)

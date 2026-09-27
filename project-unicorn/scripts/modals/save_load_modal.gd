@@ -22,6 +22,7 @@ var _mode: String = ""
 
 
 func _ready() -> void:
+	($Dimmer as ColorRect).color = UiTokens.SCRIM_MODAL
 	_close_btn.text = tr("SET_CLOSE")
 	_new_btn.text = tr("SAVE_NEW_SLOT")
 	_empty.text = tr("SAVE_EMPTY")

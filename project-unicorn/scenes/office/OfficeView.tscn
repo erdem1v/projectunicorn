@@ -1,0 +1,151 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/office/office_view.gd" id="1_view"]
+[ext_resource type="Script" path="res://scripts/ui/office/office_camera.gd" id="2_camera"]
+[ext_resource type="Script" path="res://scripts/ui/office/office_people.gd" id="3_people"]
+[ext_resource type="Script" path="res://scripts/ui/office/office_city.gd" id="4_city"]
+[ext_resource type="Shader" path="res://scenes/office/shaders/office_sky.gdshader" id="5_sky"]
+[ext_resource type="Shader" path="res://scenes/office/shaders/office_ink.gdshader" id="6_ink"]
+[ext_resource type="Script" path="res://scripts/ui/office/office_notice_stack.gd" id="7_notice"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
+shader = ExtResource("5_sky")
+
+[sub_resource type="Sky" id="Sky_office"]
+sky_material = SubResource("ShaderMaterial_sky")
+process_mode = 3
+
+[sub_resource type="Environment" id="Environment_office"]
+background_mode = 2
+sky = SubResource("Sky_office")
+ambient_light_source = 3
+reflected_light_source = 1
+tonemap_mode = 3
+glow_enabled = true
+glow_blend_mode = 0
+fog_mode = 1
+fog_density = 1.0
+fog_sky_affect = 0.0
+adjustment_enabled = true
+
+[sub_resource type="QuadMesh" id="QuadMesh_ink"]
+size = Vector2(2, 2)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ink"]
+render_priority = -128
+shader = ExtResource("6_ink")
+
+[node name="OfficeView" type="Control" groups=["office_view"]]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_view")
+
+[node name="Viewport3D" type="SubViewportContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Viewport3D"]
+own_world_3d = true
+handle_input_locally = false
+gui_disable_input = true
+msaa_3d = 2
+screen_space_aa = 1
+
+[node name="World" type="Node3D" parent="Viewport3D/SubViewport"]
+
+[node name="Camera3D" type="Camera3D" parent="Viewport3D/SubViewport/World"]
+projection = 1
+current = true
+size = 20.0
+near = 0.1
+far = 600.0
+script = ExtResource("2_camera")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Viewport3D/SubViewport/World"]
+environment = SubResource("Environment_office")
+
+[node name="Sun" type="DirectionalLight3D" parent="Viewport3D/SubViewport/World"]
+light_specular = 0.0
+shadow_enabled = true
+shadow_blur = 0.35
+directional_shadow_mode = 0
+directional_shadow_fade_start = 1.0
+
+[node name="TopFill" type="DirectionalLight3D" parent="Viewport3D/SubViewport/World"]
+light_specular = 0.0
+
+[node name="Lamp0" type="SpotLight3D" parent="Viewport3D/SubViewport/World"]
+visible = false
+light_specular = 0.0
+spot_range = 2.4
+spot_attenuation = 2.0
+spot_angle = 51.566
+
+[node name="Lamp1" type="SpotLight3D" parent="Viewport3D/SubViewport/World"]
+visible = false
+light_specular = 0.0
+spot_range = 2.4
+spot_attenuation = 2.0
+spot_angle = 51.566
+
+[node name="Screen0" type="OmniLight3D" parent="Viewport3D/SubViewport/World"]
+visible = false
+light_specular = 0.0
+omni_range = 1.6
+omni_attenuation = 2.0
+
+[node name="Screen1" type="OmniLight3D" parent="Viewport3D/SubViewport/World"]
+visible = false
+light_specular = 0.0
+omni_range = 1.6
+omni_attenuation = 2.0
+
+[node name="SceneRoot" type="Node3D" parent="Viewport3D/SubViewport/World"]
+
+[node name="Glows" type="Node3D" parent="Viewport3D/SubViewport/World"]
+
+[node name="InkPass" type="MeshInstance3D" parent="Viewport3D/SubViewport/World"]
+cast_shadow = 0
+extra_cull_margin = 16384.0
+mesh = SubResource("QuadMesh_ink")
+material_override = SubResource("ShaderMaterial_ink")
+
+[node name="People" type="Node3D" parent="Viewport3D/SubViewport/World"]
+script = ExtResource("3_people")
+
+[node name="City" type="Node3D" parent="Viewport3D/SubViewport/World"]
+script = ExtResource("4_city")
+
+[node name="Overlay" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="NoticeStack" type="VBoxContainer" parent="Overlay"]
+layout_mode = 1
+script = ExtResource("7_notice")
+
+[node name="Tooltip" type="PanelContainer" parent="Overlay"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+theme_type_variation = &"CardPanelTight"
+
+[node name="Label" type="Label" parent="Overlay/Tooltip"]
+layout_mode = 2
+theme_type_variation = &"RowMeta"

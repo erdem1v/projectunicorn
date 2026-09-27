@@ -152,15 +152,12 @@ func _build() -> void:
 	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	add_child(scroll)
-	var margin := MarginContainer.new()
-	for side in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 16)
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.add_child(margin)
+	# Kenar boşluğu pencerenin (WindowFrame): ilk satır kapatma glifiyle aynı çizgide.
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 12)
-	margin.add_child(root)
+	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(root)
 	root.add_child(_build_header())
 
 	var cols := HBoxContainer.new()
@@ -398,11 +395,11 @@ func _action_card(title: Label, status: Label, desc: String) -> PanelContainer:
 
 
 ## Amber vurgu paneli (SÖZ VERİLDİ satırı + sonraki sürüm kartı): AMBER_BG zemin + 1px
-## ACCENT çerçeve. CardAttention'ın pembesi değil.
+## ACCENT_DEEP çerçeve. CardAttention'ın pembesi değil.
 func _apply_amber_panel(card: PanelContainer) -> void:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = UiTokens.AMBER_BG
-	sb.border_color = UiTokens.ACCENT
+	sb.border_color = UiTokens.ACCENT_DEEP
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(4)
 	sb.content_margin_left = 14.0
@@ -616,7 +613,7 @@ func _repaint_profile(ver: int, bugs: int, readings: Dictionary, risk: String) -
 		(_legend_rows[axis]["val"] as Label).text = str(int(readings.get(axis, 0)))
 	_risk_value.text = ProductUiShared.risk_label(risk)
 	_risk_value.add_theme_color_override("font_color",
-		UiTokens.negative_bright() if risk == "yuksek" else UiTokens.INK)   # LOC-DATA risk band id
+		UiTokens.negative() if risk == "yuksek" else UiTokens.INK)   # LOC-DATA risk band id
 	# İki rozet: palet ve metin birlikte değiştiği için yeniden kurulur.
 	UiFactory.clear(_badges_row)
 	var pal: Dictionary = UiTokens.bug_severity(bugs)

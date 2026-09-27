@@ -68,23 +68,23 @@ func _initialize() -> void:
 	_lbl(th, &"CaptionMuted", serif_reg, T.SIZE_SMALL, T.INK_MUTED)
 	_lbl(th, &"SectionLabel", mono_label, T.SIZE_SMALL, T.INK_DIM)
 	_lbl(th, &"MicroLabel", mono_label, T.SIZE_MICRO, T.INK_DIM)   # SectionLabel'in MICRO-adım kardeşi
-	_lbl(th, &"MetricCaption", mono_label, T.SIZE_META, T.INK_FAINT)
+	# MetricCaption / MetricValue / MetricUnit: the TopBar's stat columns, so they read the frame.
+	_lbl(th, &"MetricCaption", mono_label, T.SIZE_META, T.INK_FAINT_CHROME)
 	_lbl(th, &"MetricValue", mono_sb, T.SIZE_LEAD, T.CREAM)
-	_lbl(th, &"MetricUnit", mono_reg, T.SIZE_META, T.INK_FAINT)
+	_lbl(th, &"MetricUnit", mono_reg, T.SIZE_META, T.INK_FAINT_CHROME)
 	_lbl(th, &"TabLabel", mono_label, T.SIZE_META, T.INK_DIM)
 	_lbl(th, &"BadgeLabel", mono_reg, T.SIZE_MICRO, T.INK)
 	_lbl(th, &"ChoiceLabel", sans_reg, T.SIZE_LEAD, T.INK)
 	_lbl(th, &"ChoiceLabelStrong", sans_sb, T.SIZE_LEAD, T.INK)
 	_lbl(th, &"FeedDay", mono_reg, T.SIZE_SMALL, T.INK_MUTED)
-	_lbl(th, &"ChromeSerif", serif_reg, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"ChromeLabel", mono_label, T.SIZE_MICRO, T.CREAM_DIM)
 	_lbl(th, &"ChromeValue", sans_sb, T.SIZE_BODY, T.CREAM)
 	_lbl(th, &"ChromeClock", mono_reg, T.SIZE_DATA, T.CREAM_DIM)   # TopBar tarih/saat
 	# ChromeAlert: KEPENK / TEKLİF geri sayımı. Tema statiktir; renk körü takası bu
 	# etiketi top_bar.gd'de yeniden boyar.
-	_lbl(th, &"ChromeAlert", mono_sb, T.SIZE_SMALL, T.NEGATIVE)
+	_lbl(th, &"ChromeAlert", mono_sb, T.SIZE_SMALL, T.NEGATIVE_BRIGHT)
 	_lbl(th, &"ColumnHeader", mono_label, T.SIZE_META, T.INK_DIM)  # defter sütun başlığı
-	_lbl(th, &"SectionAmber", mono_label, T.SIZE_SMALL, T.ACCENT)  # kural çizgisiyle birlikte kullanılır
+	_lbl(th, &"SectionAmber", mono_label, T.SIZE_SMALL, T.ACCENT_DEEP)  # kural çizgisiyle birlikte kullanılır
 	# Serif YALNIZ sayfa ve modal başlığıdır.
 	_lbl(th, &"PageTitleSerif", serif_sb, T.SIZE_ED_CEREMONY, T.INK)
 	_lbl(th, &"ModalTitleSerif", serif_sb, T.SIZE_ED_MODAL, T.INK)
@@ -119,8 +119,8 @@ func _initialize() -> void:
 	_lbl(th, &"TitleSerifCream", serif_sb, T.SIZE_ED_CEREMONY, T.CREAM)  # page title on dark ("Karakter")
 	_lbl(th, &"SubtitleSerifCream", serif_it, T.SIZE_BODY, T.CREAM_DIM)  # italic page/section subtitle on dark
 
-	# ---- Newspaper ending register ("Ekonomi Postası"): the light island, so its
-	# text reads the PAPER_INK_* ladder (INK is light and would print white on cream).
+	# ---- Newspaper ending register ("Ekonomi Postası"): an island with its own
+	# PAPER_INK_* ladder, so a body reskin never reaches the paper.
 	_lbl(th, &"MastheadSerif", serif_sb, T.SIZE_ED_MASTHEAD, T.PAPER_INK_MAST)  # "EKONOMİ POSTASI"
 	_lbl(th, &"NewsHeadlineSerif", serif_sb, T.SIZE_ED_HEADLINE, T.PAPER_INK)   # story headline (darkest)
 	_lbl(th, &"NewsDeckSerif", serif_it, T.SIZE_LEAD, T.PAPER_INK_DECK)         # italic subhead / quoted deck
@@ -131,24 +131,24 @@ func _initialize() -> void:
 
 	# ---- Panel variations ----
 	_panel(th, &"TopBarPanel", "Panel", _sides_box(T.BG_TOPBAR, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.SEPARATOR))
-	_panel(th, &"SidePanel", "Panel", _sides_box(T.BG_PANEL, T.RADIUS_NONE, [T.BORDER_HAIRLINE, T.BORDER_HAIRLINE, 0, 0], T.DIVIDER_LIGHT))
+	# SideRailPanel: the cream tab rail; a right hairline divides it from the office.
+	_panel(th, &"SideRailPanel", "Panel", _sides_box(T.BG_PANEL, T.RADIUS_NONE, [0, T.BORDER_HAIRLINE, 0, 0], T.CARD_BORDER))
 	_panel(th, &"NewsPanel", "Panel", _sides_box(T.BG_NEWS, T.RADIUS_NONE, [0, 0, T.BORDER_HAIRLINE, 0], T.SEPARATOR))
 	_panel(th, &"ViewportPanel", "Panel", _box(T.BG_BODY, T.RADIUS_NONE))
 	_panel(th, &"ModalPanel", "Panel", _box(T.CARD_BG, T.RADIUS_L, T.CARD_BORDER))
-	_panel(th, &"ArtPanel", "Panel", _box(T.BG_ART, T.RADIUS_S))
-	_panel(th, &"PhaseDotActive", "Panel", _box(T.ACCENT, T.RADIUS_XS))
-	_panel(th, &"PhaseDotDim", "Panel", _box(T.DOT_IDLE, T.RADIUS_XS))
-	_panel(th, &"SelectedBorder", "Panel", _box(Color.TRANSPARENT, T.RADIUS_M, T.ACCENT, NO_PAD, T.BORDER_FOCUS))
+	_panel(th, &"PhaseDotActive", "Panel", _box(T.ACCENT_CHROME, T.RADIUS_XS))
+	_panel(th, &"PhaseDotDim", "Panel", _box(T.DOT_IDLE_CHROME, T.RADIUS_XS))
 	_panel(th, &"TabBadge", "Panel", _box(T.ACCENT, T.RADIUS_XL))
 	_panel(th, &"Avatar", "Panel", _box(T.BG_AVATAR, T.RADIUS_PILL))
-	_panel(th, &"CapBar", "Panel", _box(T.BG_AVATAR, T.RADIUS_XS))
 
 	# ---- PanelContainer variations (auto content margins) ----
 	_panel(th, &"CardPanel", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_CARD))
 	# CardCta: "+ Yeni Ürün" davet kartı. StyleBoxFlat kesikli kenar çizemez; düz amber
 	# en yakın karşılık.
-	_panel(th, &"CardCta", "PanelContainer", _box(Color.TRANSPARENT, T.RADIUS_M, T.ACCENT, T.PAD_CARD))
+	_panel(th, &"CardCta", "PanelContainer", _box(Color.TRANSPARENT, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_CARD))
 	_panel(th, &"CardPanelTight", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_CARD_TIGHT))
+	# CardPanelTightHover: a clickable tight card under the pointer; only the edge moves.
+	_panel(th, &"CardPanelTightHover", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.BORDER_HOVER, T.PAD_CARD_TIGHT))
 	_panel(th, &"CardAttention", "PanelContainer", _box(T.CARD_ATTENTION_BG, T.RADIUS_M, T.CARD_ATTENTION_BORDER, T.PAD_CARD))
 	# AttentionStrip: kırmızı dikkat şeridi, sayfa başlığının hemen altında.
 	_panel(th, &"AttentionStrip", "PanelContainer", _box(T.CARD_ATTENTION_BG, T.RADIUS_M, T.CARD_ATTENTION_BORDER, T.PAD_BAND))
@@ -158,19 +158,26 @@ func _initialize() -> void:
 	# LedgerRow(+Hover): hover yalnız kenar; dolgu ve margin aynı kalır, yoksa satır zıplar.
 	_panel(th, &"LedgerRow", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_ROW))
 	_panel(th, &"LedgerRowHover", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.BORDER_HOVER, T.PAD_ROW))
-	# Durum çipleri: ince renkli kenar + koyu dolgu.
+	# Durum çipleri: ince renkli kenar + soluk dolgu.
 	_panel(th, &"ChipNeutral", "PanelContainer", _box(T.NEUTRAL_BADGE_BG, T.RADIUS_S, T.BORDER_DISABLED, T.PAD_CHIP))
-	_panel(th, &"ChipAmber", "PanelContainer", _box(T.AMBER_BG, T.RADIUS_S, T.ACCENT, T.PAD_CHIP))
+	_panel(th, &"ChipAmber", "PanelContainer", _box(T.AMBER_BG, T.RADIUS_S, T.ACCENT_DEEP, T.PAD_CHIP))
 	_panel(th, &"ChipPositive", "PanelContainer", _box(T.POSITIVE_BG, T.RADIUS_S, T.POSITIVE_RULE, T.PAD_CHIP))
 	_panel(th, &"ChipNegative", "PanelContainer", _box(T.NEGATIVE_BG, T.RADIUS_S, T.NEGATIVE_RULE, T.PAD_CHIP))
 	_panel(th, &"ChoiceCard", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_CHOICE))
-	_panel(th, &"ChoiceCardHover", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.ACCENT, T.PAD_CHOICE))
+	_panel(th, &"ChoiceCardHover", "PanelContainer", _box(T.CARD_BG, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_CHOICE))
 	_panel(th, &"HeaderBand", "PanelContainer", _sides_box(Color.TRANSPARENT, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.BORDER_DISABLED, T.PAD_STRIP))
 	# CardFloating: gövde üstünde yüzen kart (BuildHUD overlay'i).
 	var floating_sb := _box(T.CARD_FLOATING_BG, T.RADIUS_L, T.CARD_BORDER, T.PAD_CARD_TIGHT)
 	floating_sb.shadow_color = T.SHADOW_SOFT
 	floating_sb.shadow_size = 6
 	_panel(th, &"CardFloating", "PanelContainer", floating_sb)
+	# WindowPanel: a tab's window over the office. No content margins: WindowFrame pads the page
+	# itself, because its right gutter is wider than the other three sides (close glyph).
+	var window_sb := _box(T.CARD_BG, T.RADIUS_WINDOW, T.CARD_BORDER)
+	window_sb.shadow_color = T.SHADOW_SOFT
+	window_sb.shadow_size = T.SPACE_S
+	window_sb.shadow_offset = Vector2(0, T.SPACE_XXS)
+	_panel(th, &"WindowPanel", "PanelContainer", window_sb)
 
 	# ---- Cinematic dialogue register: dark panels ----
 	# Column = floating semi-opaque charcoal (art shows through); Card = solid
@@ -179,23 +186,23 @@ func _initialize() -> void:
 	_panel(th, &"DialogueColumn", "Panel", _box(T.DIALOGUE_COLUMN_BG, T.RADIUS_XXL))
 	_panel(th, &"DialogueCard", "Panel", _box(T.DIALOGUE_BG, T.RADIUS_CARD_LG, T.DIALOGUE_CARD_BORDER))
 	_panel(th, &"PortraitFrame", "PanelContainer", _box(T.PORTRAIT_FRAME, T.RADIUS_PORTRAIT, Color.TRANSPARENT, T.PAD_FRAME))
-	_panel(th, &"QuoteBox", "PanelContainer", _sides_box(T.DIALOGUE_CARD_BG, T.RADIUS_M, [T.BORDER_ACCENT, 0, 0, 0], T.ACCENT, T.PAD_ROW))
+	_panel(th, &"QuoteBox", "PanelContainer", _sides_box(T.DIALOGUE_CARD_BG, T.RADIUS_M, [T.BORDER_ACCENT, 0, 0, 0], T.ACCENT_CHROME, T.PAD_ROW))
 	_panel(th, &"DialogueChoice", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.DIALOGUE_CARD_BORDER, T.PAD_ROW))
-	_panel(th, &"DialogueChoiceHover", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.ACCENT, T.PAD_ROW))
+	_panel(th, &"DialogueChoiceHover", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.ACCENT_CHROME, T.PAD_ROW))
 	_panel(th, &"NumberChip", "Panel", _box(Color.TRANSPARENT, T.RADIUS_PILL, T.CREAM_DIM))
 	_panel(th, &"StatStrip", "PanelContainer", _box(T.STAT_STRIP_BG, T.RADIUS_M, Color.TRANSPARENT, T.PAD_STRIP))
 
 	# ---- Dark-register onboarding: portrait grid cells (hairline vs 2px amber ring) ----
 	_panel(th, &"PortraitCell", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_L, T.DIALOGUE_CARD_BORDER, T.PAD_CELL))
-	_panel(th, &"PortraitCellSelected", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_L, T.ACCENT, T.PAD_CELL, T.BORDER_FOCUS))
+	_panel(th, &"PortraitCellSelected", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_L, T.ACCENT_CHROME, T.PAD_CELL, T.BORDER_FOCUS))
 
 	# ---- Newspaper ending panels ----
 	# PaperPanel: the cream page is FLAT PRINT — 1px edge on all four sides, no radius,
 	# no drop shadow — so it reads as a printed object rather than a UI card.
 	_panel(th, &"PaperPanel", "PanelContainer", _box(T.PAPER_BG, T.RADIUS_NONE, T.PAPER_EDGE, T.PAD_SHEET))
-	# ModalCard: the standard dark decision modal (event · Atlas · Ayarlar · ay sonu).
-	var modal_card_sb := _box(T.DIALOGUE_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_PAGE)
-	modal_card_sb.shadow_color = Color(0, 0, 0, 0.60)
+	# ModalCard: the decision modal card (event · HR action · publish).
+	var modal_card_sb := _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_PAGE)
+	modal_card_sb.shadow_color = T.SHADOW_MODAL
 	modal_card_sb.shadow_size = 40
 	modal_card_sb.shadow_offset = Vector2(0, 10)
 	_panel(th, &"ModalCard", "PanelContainer", modal_card_sb)
@@ -204,7 +211,7 @@ func _initialize() -> void:
 	# RailCard: Coming-Soon Tier2/Tier3 cards on the rail.
 	_panel(th, &"RailCard", "PanelContainer", _box(T.DIALOGUE_CARD_BG, T.RADIUS_M, T.DIALOGUE_CARD_BORDER, T.PAD_CARD_RAIL))
 	# EngravingFrame: the illustration frame on the paper; reads the paper ink because
-	# its only consumer is the newspaper (ODA resolves its own frozen theme).
+	# its only consumer is the newspaper.
 	_panel(th, &"EngravingFrame", "PanelContainer", _box(T.PAPER_PLATE, T.RADIUS_NONE, T.PAPER_INK_META, Vector2i.ZERO))
 
 	# ---- Button variations ----
@@ -212,86 +219,107 @@ func _initialize() -> void:
 	_tab_button(th, &"TabButtonActive", true)
 	_speed_button(th, &"SpeedButton", false)
 	_speed_button(th, &"SpeedButtonActive", true)
-	_commit_button(th)
+	_commit_button(th, &"CommitButton", false)
+	_commit_button(th, &"CommitButtonDark", true)
 
-	# DialogueGhost: quiet cream text button on the dark register ("Toplantıdan çekil").
-	_ghost_button(th, &"DialogueGhost")
+	# DialogueGhost: quiet cream text button on the dark register ("Toplantıdan çekil"),
+	# transparent until hovered. Disabled and focus are set too: left to base Button they
+	# would draw the cream body's edge and ink on the dark stage.
+	th.set_type_variation(&"DialogueGhost", &"Button")
+	var ghost := _box(Color.TRANSPARENT, T.RADIUS_M, Color.TRANSPARENT, T.PAD_BTN_GHOST)
+	_states(th, &"DialogueGhost", {
+		"normal": ghost,
+		"hover": _box(T.VEIL_SOFT_CHROME, T.RADIUS_M, Color.TRANSPARENT, T.PAD_BTN_GHOST),
+		"pressed": _box(T.VEIL_FAINT_CHROME, T.RADIUS_M, Color.TRANSPARENT, T.PAD_BTN_GHOST),
+		"disabled": ghost,
+		"focus": _no_focus(),
+	})
+	th.set_font_size("font_size", &"DialogueGhost", T.SIZE_SMALL)
+	th.set_color("font_color", &"DialogueGhost", T.CREAM_DIM)
+	th.set_color("font_hover_color", &"DialogueGhost", T.CREAM)
+	th.set_color("font_pressed_color", &"DialogueGhost", T.CREAM_DIM)
+	th.set_color("font_focus_color", &"DialogueGhost", T.CREAM_DIM)
+	th.set_color("font_disabled_color", &"DialogueGhost", T.CREAM_DIM_DISABLED)
+
+	# DialogueChoiceButton: DialogueChoice's card as a Button on the dark stages (meeting
+	# answers, negotiation accept); hover moves only the edge. ChromeAlertButton: the same box
+	# in the alert ink (the negotiation offer at the insult line). The offer flips between it
+	# and CommitButtonDark, so both take PAD_CTA and the button never jumps. The alert ink is
+	# baked like ChromeAlert's: the theme is static, so the colourblind repaint is the call
+	# site's job.
+	for pair in [[&"DialogueChoiceButton", T.CREAM], [&"ChromeAlertButton", T.NEGATIVE_BRIGHT]]:
+		var name: StringName = pair[0]
+		th.set_type_variation(name, &"Button")
+		_states(th, name, {
+			"normal": _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.DIALOGUE_CARD_BORDER, T.PAD_CTA),
+			"hover": _box(T.DIALOGUE_CARD_BG, T.RADIUS_XL, T.ACCENT_CHROME, T.PAD_CTA),
+			"pressed": _box(T.VEIL_SOFT_CHROME, T.RADIUS_XL, T.ACCENT_CHROME, T.PAD_CTA),
+			"focus": _no_focus(),
+		})
+		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+			th.set_color(key, name, pair[1])
+
+	# WindowClose: the × at a window's corner. Face and ink come from base Button; no
+	# fill, hover moves only the edge, zero margins keep the glyph still. The host sizes it.
+	th.set_type_variation(&"WindowClose", &"Button")
+	var close_edge := _box(Color.TRANSPARENT, T.RADIUS_M, T.BORDER_HOVER, Vector2i.ZERO)
+	_states(th, &"WindowClose", {
+		"normal": _box(Color.TRANSPARENT, T.RADIUS_M, Color.TRANSPARENT, Vector2i.ZERO),
+		"hover": close_edge,
+		"pressed": close_edge,
+		"focus": _no_focus(),
+	})
+	th.set_font_size("font_size", &"WindowClose", T.SIZE_BODY)
+
+	# ActionRow: a row of a person's action list (HR). Flat until hovered; hover and press take
+	# the selected-card wash and an amber left rule. Both boxes carry the same side margins, so
+	# the row never jumps. Face and ink come from base Button.
+	th.set_type_variation(&"ActionRow", &"Button")
+	var row_flat := _box(Color.TRANSPARENT, T.RADIUS_NONE, Color.TRANSPARENT, T.PAD_ACTION_ROW)
+	var row_hot := _sides_box(T.AMBER_WASH, T.RADIUS_NONE, [T.BORDER_FOCUS, 0, 0, 0], T.ACCENT_DEEP, T.PAD_ACTION_ROW)
+	_states(th, &"ActionRow", {
+		"normal": row_flat,
+		"hover": row_hot,
+		"pressed": row_hot,
+		"disabled": row_flat,
+		"focus": _no_focus(),
+	})
+
+	# StanceDial(+Active): the Sales tab's price dial. It is the single source of every B2B
+	# price, so the selected position cannot be missed: amber wash, amber edge, amber text.
+	for active in [false, true]:
+		var name: StringName = &"StanceDialActive" if active else &"StanceDial"
+		var ink: Color = T.ACCENT_DEEP if active else T.INK_DIM
+		var dial := _box(T.AMBER_BG if active else T.SURFACE_INPUT, T.RADIUS_S,
+			T.ACCENT_DEEP if active else T.BORDER_DISABLED, T.PAD_DIAL)
+		th.set_type_variation(name, &"Button")
+		_states(th, name, {"normal": dial, "hover": dial, "pressed": dial, "focus": _no_focus()})
+		th.set_font_size("font_size", name, T.SIZE_META)
+		th.set_color("font_color", name, ink)
+		th.set_color("font_hover_color", name, ink if active else T.INK)
+		th.set_color("font_pressed_color", name, ink)
 
 	# ========================================================================
 	# CHROME AİLESİ — koyu kabuk register'ı. Yasal yüzey listesi CLAUDE.md Chrome
-	# kuralında. Desenler kabuğun kendi grameri: SpeedButton'ın VEIL merdiveni,
-	# UiFactory çipinin PAD_CHIP'i, kabuk hairline'ının SEPARATOR'u.
+	# kuralında. Desenler kabuğun kendi grameri (VEIL_*_CHROME merdiveni); gövdeyle
+	# birlikte değişen her renk *_CHROME ikizinden okunur.
 	# ========================================================================
 	# ChromeButton: koyu kabukta standart-boy ikincil buton. Metin boyutu base Button'dan.
 	th.set_type_variation(&"ChromeButton", &"Button")
 	_states(th, &"ChromeButton", {
-		"normal": _box(T.VEIL_FAINT, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
-		"hover": _box(T.VEIL_STRONG, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
-		"pressed": _box(T.VEIL_SOFT, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
-		"disabled": _box(T.VEIL_FAINT, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
+		"normal": _box(T.VEIL_FAINT_CHROME, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
+		"hover": _box(T.VEIL_STRONG_CHROME, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
+		"pressed": _box(T.VEIL_SOFT_CHROME, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
+		"disabled": _box(T.VEIL_FAINT_CHROME, T.RADIUS_S, Color.TRANSPARENT, T.PAD_BTN),
 		"focus": _no_focus(),
 	})
-	th.set_color("font_color", &"ChromeButton", T.CREAM)
-	th.set_color("font_hover_color", &"ChromeButton", T.CREAM)
-	th.set_color("font_pressed_color", &"ChromeButton", T.CREAM)
+	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		th.set_color(key, &"ChromeButton", T.CREAM)
 	th.set_color("font_disabled_color", &"ChromeButton", T.CREAM_DIM_DISABLED)
-	_panel(th, &"ChromeChip", "PanelContainer", _box(T.VEIL_FAINT, T.RADIUS_S, Color.TRANSPARENT, T.PAD_CHIP))
-	_lbl(th, &"ChromeBadgeLabel", mono_sb, T.SIZE_MICRO, T.CREAM)
-	# ChromeSeparator: kabuk hairline'ı (base ayraçlar gövdenin DIVIDER_LIGHT'ı).
-	th.set_type_variation(&"ChromeSeparator", &"VSeparator")
-	th.set_stylebox("separator", &"ChromeSeparator", _rule(T.SEPARATOR, true))
-	th.set_constant("separation", &"ChromeSeparator", T.SPACE_XS)
-	# ChromeRailPanel: sol sekme rayı — TopBar ile aynı kömür (L-biçimli kabuk
-	# çerçevesi); sağ hairline rayı sayfadan ayırır.
-	_panel(th, &"ChromeRailPanel", "Panel", _sides_box(T.BG_TOPBAR, T.RADIUS_NONE, [0, T.BORDER_HAIRLINE, 0, 0], T.SEPARATOR))
-	# ChromeTabButton(+Active): kabuk ile gövde aynı register'da, o yüzden TabButton ile
-	# birebir aynı. Ad ayrı kalır: LeftTabs bu adı okur ve Chrome yasallık grep'i anlamlı kalır.
+	# ChromeTabButton(+Active): TabButton'ın birebir aynısı; Satış sekmesinin bant tavanı
+	# seçicisi okur.
 	_tab_button(th, &"ChromeTabButton", false)
 	_tab_button(th, &"ChromeTabButtonActive", true)
-	_lbl(th, &"ChromeTabLabel", mono_label, T.SIZE_META, T.INK_DIM)
-	# ChromeGhost: kabuk şeridinin sessiz mono butonu ("ODAYA DÖN ✕"). DialogueGhost'un
-	# merdiveni + mono yüz; kabuk grameri olduğu için ayrı ad taşır.
-	_ghost_button(th, &"ChromeGhost")
-	th.set_font("font", &"ChromeGhost", mono_label)
-	# ChromePageStrip: sekme sayfasının üstündeki ince koyu bant; alt hairline sayfaya dikiş atar.
-	_panel(th, &"ChromePageStrip", "PanelContainer", _sides_box(T.BG_TOPBAR, T.RADIUS_NONE, [0, 0, 0, T.BORDER_HAIRLINE], T.SEPARATOR, T.PAD_STRIP))
-
-	# ========================================================================
-	# ODA REGISTER'I — oda sahnesi üstündeki motor-çizimi bilgi yüzeyleri. Sahne
-	# sanatı koyu; okunan her yüzey ya koyu ekran (monitör) ya açık kâğıt/kart.
-	# ========================================================================
-	# Monitör camı ~440×270px: başlık DISPLAY, grid değerleri TITLE, caption'lar SMALL.
-	_lbl(th, &"OdaScreenTitle", serif_sb, T.SIZE_DISPLAY, T.CREAM)
-	_lbl(th, &"OdaScreenValue", sans_sb, T.SIZE_TITLE, T.CREAM)
-	_lbl(th, &"OdaScreenCaption", mono_label, T.SIZE_SMALL, T.CREAM_DIM)
-	# OdaMonitorScreen: monitör camının içindeki bilgi paneli. Gece parlaması stylebox
-	# gölgesi DEĞİL (sarmalayıcı klibi yarım-glow üretirdi); ScreenGlow node'u oda_view'da.
-	_panel(th, &"OdaMonitorScreen", "PanelContainer", _box(T.DIALOGUE_BG, T.RADIUS_XS, Color.TRANSPARENT, T.PAD_CARD))
-	# OdaBoardCard(+Hover): panoya raptiyeli kart. Hover'da dolgu parlamaz, yalnız kenar
-	# amber'e döner; margin'ler aynı kalır ki metin zıplamasın.
-	_panel(th, &"OdaBoardCard", "PanelContainer", _box(T.PAPER_BG, T.RADIUS_XS, T.CARD_BORDER, T.PAD_CARD_TIGHT))
-	_panel(th, &"OdaBoardCardHover", "PanelContainer", _box(T.PAPER_BG, T.RADIUS_XS, T.ACCENT, T.PAD_CARD_TIGHT))
-	_panel(th, &"OdaPostIt", "PanelContainer", _box(T.AMBER_BG, T.RADIUS_XS, Color.TRANSPARENT, T.PAD_CARD_TIGHT))
-	# OdaPaperCard(+Hover): masadaki bekleyen-karar kâğıdı; yumuşak gölgeyle masadan
-	# kalkar, hover amber kenar + amber gölge.
-	var oda_paper := _box(T.CARD_BG, T.RADIUS_XS, T.CARD_BORDER, T.PAD_CARD_TIGHT)
-	oda_paper.shadow_color = T.SHADOW_SOFT
-	oda_paper.shadow_size = 4
-	oda_paper.shadow_offset = Vector2(0, 2)
-	_panel(th, &"OdaPaperCard", "PanelContainer", oda_paper)
-	var oda_paper_hover := _box(T.CARD_BG, T.RADIUS_XS, T.ACCENT, T.PAD_CARD_TIGHT)
-	oda_paper_hover.shadow_color = T.ODA_ANCHOR_GLOW_SHADOW
-	oda_paper_hover.shadow_size = 8
-	oda_paper_hover.shadow_offset = Vector2(0, 2)
-	_panel(th, &"OdaPaperCardHover", "PanelContainer", oda_paper_hover)
-	# OdaAnchorGlow: boyalı çapaların vurgu çerçevesi — YALNIZ kenar. StyleBoxFlat
-	# gölgesi şeffaf zeminin içinden amber dolgu gibi görünürdü; gölge yok,
-	# draw_center kapalı, vurgu modulate.a tween'i.
-	var oda_glow := _box(Color.TRANSPARENT, T.RADIUS_M, T.ACCENT, NO_PAD, T.BORDER_FOCUS)
-	oda_glow.draw_center = false
-	_panel(th, &"OdaAnchorGlow", "Panel", oda_glow)
-	# OdaTourCard: ilk açılış turunun adım kartı (koyu — sahnenin her yerinde okunur).
-	_panel(th, &"OdaTourCard", "PanelContainer", _box(T.DIALOGUE_BG, T.RADIUS_L, T.DIALOGUE_CARD_BORDER, T.PAD_ROW))
 
 	# ---- RichTextLabel variations ----
 	# Godot 4's keys are "italics_font"/"bold_italics_font" (with the s); "italic_font"
@@ -351,9 +379,9 @@ func _initialize() -> void:
 	th.set_type_variation(&"SettingsDropdown", &"OptionButton")
 	_states(th, &"SettingsDropdown", {
 		"normal": _box(T.SURFACE_INPUT, T.RADIUS_M, T.CARD_BORDER, T.PAD_INPUT),
-		"hover": _box(T.SURFACE_INPUT, T.RADIUS_M, T.ACCENT, T.PAD_INPUT),
-		"pressed": _box(T.SURFACE_PRESSED, T.RADIUS_M, T.ACCENT, T.PAD_INPUT),
-		"focus": _box(Color.TRANSPARENT, T.RADIUS_M, T.ACCENT, T.PAD_INPUT),
+		"hover": _box(T.SURFACE_INPUT, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_INPUT),
+		"pressed": _box(T.SURFACE_PRESSED, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_INPUT),
+		"focus": _box(Color.TRANSPARENT, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_INPUT),
 		"disabled": _box(T.SURFACE_DISABLED, T.RADIUS_M, T.BORDER_DISABLED, T.PAD_INPUT),
 	})
 	th.set_font_size("font_size", &"SettingsDropdown", T.SIZE_BODY)
@@ -389,8 +417,8 @@ func _initialize() -> void:
 	# hover law without a per-site decision. ----
 	_states(th, &"Button", {
 		"normal": _box(Color.TRANSPARENT, T.RADIUS_M, T.BORDER_HOVER, T.PAD_BTN),
-		"hover": _box(Color.TRANSPARENT, T.RADIUS_M, T.ACCENT, T.PAD_BTN),
-		"pressed": _box(T.SURFACE_PRESSED, T.RADIUS_M, T.ACCENT, T.PAD_BTN),
+		"hover": _box(Color.TRANSPARENT, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_BTN),
+		"pressed": _box(T.SURFACE_PRESSED, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_BTN),
 		"disabled": _box(Color.TRANSPARENT, T.RADIUS_M, T.BORDER_DISABLED, T.PAD_BTN),
 	})
 	th.set_font("font", &"Button", mono_label)
@@ -403,7 +431,7 @@ func _initialize() -> void:
 	th.set_type_variation(&"DialogueInput", &"LineEdit")
 	_states(th, &"DialogueInput", {
 		"normal": _box(T.DIALOGUE_CARD_BG, T.RADIUS_M, T.DIALOGUE_CARD_BORDER, T.PAD_INPUT_LG),
-		"focus": _box(T.DIALOGUE_CARD_BG, T.RADIUS_M, T.ACCENT, T.PAD_INPUT_LG),
+		"focus": _box(T.DIALOGUE_CARD_BG, T.RADIUS_M, T.ACCENT_CHROME, T.PAD_INPUT_LG),
 		"read_only": _box(T.DIALOGUE_CARD_BG, T.RADIUS_M, T.DIALOGUE_CARD_BORDER, T.PAD_INPUT_LG),
 	})
 	th.set_color("font_color", &"DialogueInput", T.CREAM)
@@ -416,8 +444,8 @@ func _initialize() -> void:
 	_states(th, &"DialogueStepper", {
 		"normal": _box(T.DIALOGUE_CARD_BG, T.RADIUS_M, T.DIALOGUE_CARD_BORDER, T.PAD_BTN_S),
 		"hover": _box(T.DIALOGUE_CARD_BG, T.RADIUS_M, T.CREAM_DIM, T.PAD_BTN_S),
-		"pressed": _box(T.VEIL_SOFT, T.RADIUS_M, T.CREAM_DIM, T.PAD_BTN_S),
-		"disabled": _box(T.VEIL_FAINT, T.RADIUS_M, T.VEIL_SOFT, T.PAD_BTN_S),
+		"pressed": _box(T.VEIL_SOFT_CHROME, T.RADIUS_M, T.CREAM_DIM, T.PAD_BTN_S),
+		"disabled": _box(T.VEIL_FAINT_CHROME, T.RADIUS_M, T.VEIL_SOFT_CHROME, T.PAD_BTN_S),
 		"focus": _no_focus(),
 	})
 	th.set_font_size("font_size", &"DialogueStepper", T.SIZE_LEAD)
@@ -429,7 +457,7 @@ func _initialize() -> void:
 	# ---- Base LineEdit ----
 	_states(th, &"LineEdit", {
 		"normal": _box(T.SURFACE_INPUT, T.RADIUS_M, T.CARD_BORDER, T.PAD_INPUT),
-		"focus": _box(T.SURFACE_INPUT, T.RADIUS_M, T.ACCENT, T.PAD_INPUT),
+		"focus": _box(T.SURFACE_INPUT, T.RADIUS_M, T.ACCENT_DEEP, T.PAD_INPUT),
 		"read_only": _box(T.CARD_BG, T.RADIUS_M, T.CARD_BORDER, T.PAD_INPUT),
 	})
 	th.set_color("font_color", &"LineEdit", T.INK)
@@ -585,76 +613,62 @@ func _grabber_icons(th: Theme, name: StringName, grabber: Texture2D) -> void:
 		th.set_icon(key, name, grabber)
 
 
-## Quiet text button, transparent until hovered (DialogueGhost / ChromeGhost).
-func _ghost_button(th: Theme, name: StringName) -> void:
-	th.set_type_variation(name, &"Button")
-	_states(th, name, {
-		"normal": _box(Color.TRANSPARENT, T.RADIUS_M, Color.TRANSPARENT, T.PAD_BTN_GHOST),
-		"hover": _box(T.VEIL_SOFT, T.RADIUS_M, Color.TRANSPARENT, T.PAD_BTN_GHOST),
-		"pressed": _box(T.VEIL_FAINT, T.RADIUS_M, Color.TRANSPARENT, T.PAD_BTN_GHOST),
-		"focus": _no_focus(),
-	})
-	th.set_font_size("font_size", name, T.SIZE_SMALL)
-	th.set_color("font_color", name, T.CREAM_DIM)
-	th.set_color("font_hover_color", name, T.CREAM)
-	th.set_color("font_pressed_color", name, T.CREAM_DIM)
-
-
-# Rail item. Active: 2px amber left bar + TAB_ACTIVE_BG fill. Idle: flat, no fill.
-# Hover is EDGE, not fill: the left bar turns BORDER_HOVER. On the active item hover
-# equals normal (the amber bar is already there). The idle item keeps a transparent
-# 2px left border so its text lines up with the active one.
+# Rail tile. Idle: CARD_BG fill + CARD_BORDER hairline; hover moves only the edge to
+# BORDER_HOVER. Active: TAB_ACTIVE_BG + an ACCENT_DEEP left rule; hover equals normal.
+# Both carry the same content margins, so a tile with its own text (the Sales tab's
+# band-cap selector) does not jump when it turns active.
 func _tab_button(th: Theme, name: StringName, active: bool) -> void:
 	th.set_type_variation(name, &"Button")
-	var bar: Array = [T.BORDER_FOCUS, 0, 0, 0]
 	var normal: StyleBoxFlat
 	var hover: StyleBoxFlat
 	if active:
-		normal = _sides_box(T.TAB_ACTIVE_BG, T.RADIUS_NONE, bar, T.ACCENT)
+		normal = _sides_box(T.TAB_ACTIVE_BG, T.RADIUS_WINDOW, [T.BORDER_ACCENT, 0, 0, 0], T.ACCENT_DEEP, T.PAD_BTN_XS)
 		hover = normal
 	else:
-		normal = _sides_box(Color.TRANSPARENT, T.RADIUS_NONE, bar, Color.TRANSPARENT)
-		hover = _sides_box(Color.TRANSPARENT, T.RADIUS_NONE, bar, T.BORDER_HOVER)
+		normal = _box(T.CARD_BG, T.RADIUS_WINDOW, T.CARD_BORDER, T.PAD_BTN_XS)
+		hover = _box(T.CARD_BG, T.RADIUS_WINDOW, T.BORDER_HOVER, T.PAD_BTN_XS)
 	_states(th, name, {"normal": normal, "hover": hover, "pressed": normal, "focus": _no_focus()})
-	var fc: Color = T.INK if active else T.INK_DIM
+	var fc: Color = T.ACCENT_DEEP if active else T.INK_DIM
 	th.set_color("font_color", name, fc)
-	th.set_color("font_hover_color", name, T.INK)
+	th.set_color("font_hover_color", name, fc if active else T.INK)
 	th.set_color("font_pressed_color", name, fc)
 	th.set_color("font_focus_color", name, fc)
 
 
-# Speed key: active = ACCENT_DIM fill + amber edge + amber text; idle = no fill,
-# CARD_BORDER edge, INK_DIM text. Hover again moves only the edge.
+# Speed key on the TopBar, so every colour is a frame twin: active = ACCENT_DIM fill +
+# amber edge + amber text; idle = no fill, hairline edge, dim text. Hover again moves
+# only the edge.
 func _speed_button(th: Theme, name: StringName, active: bool) -> void:
 	th.set_type_variation(name, &"Button")
 	var normal: StyleBoxFlat
 	var hover: StyleBoxFlat
 	if active:
-		normal = _box(T.ACCENT_DIM, T.RADIUS_S, T.ACCENT, T.PAD_BTN_XS)
+		normal = _box(T.ACCENT_DIM, T.RADIUS_S, T.ACCENT_CHROME, T.PAD_BTN_XS)
 		hover = normal
 	else:
-		normal = _box(Color.TRANSPARENT, T.RADIUS_S, T.CARD_BORDER, T.PAD_BTN_XS)
-		hover = _box(Color.TRANSPARENT, T.RADIUS_S, T.BORDER_HOVER, T.PAD_BTN_XS)
+		normal = _box(Color.TRANSPARENT, T.RADIUS_S, T.CARD_BORDER_CHROME, T.PAD_BTN_XS)
+		hover = _box(Color.TRANSPARENT, T.RADIUS_S, T.BORDER_HOVER_CHROME, T.PAD_BTN_XS)
 	_states(th, name, {"normal": normal, "hover": hover, "pressed": normal, "focus": _no_focus()})
 	th.set_font_size("font_size", name, T.SIZE_SMALL)
-	th.set_color("font_color", name, T.ACCENT if active else T.INK_DIM)
-	th.set_color("font_hover_color", name, T.ACCENT if active else T.INK_MUTED)
-	th.set_color("font_pressed_color", name, T.ACCENT)
+	th.set_color("font_color", name, T.ACCENT_CHROME if active else T.INK_DIM_CHROME)
+	th.set_color("font_hover_color", name, T.ACCENT_CHROME if active else T.INK_MUTED_CHROME)
+	th.set_color("font_pressed_color", name, T.ACCENT_CHROME)
 
 
-# Primary button: filled amber with ON_ACCENT text (INK is light and would print
-# white on amber). Disabled: SURFACE_DISABLED fill + hairline edge + INK_DIM text.
-func _commit_button(th: Theme) -> void:
-	var name := &"CommitButton"
+# Primary button: filled amber with ON_ACCENT text, the ink that reads on the fill. The body's
+# disables onto the cream plate. The dark stages' (CommitButtonDark) take the frame's amber and
+# disable onto their own recessed card: the cream plate would glare on the charcoal.
+func _commit_button(th: Theme, name: StringName, dark: bool) -> void:
 	th.set_type_variation(name, &"Button")
 	_states(th, name, {
-		"normal": _box(T.ACCENT, T.RADIUS_M, Color.TRANSPARENT, T.PAD_CTA),
-		"hover": _box(T.ACCENT_HOVER, T.RADIUS_M, Color.TRANSPARENT, T.PAD_CTA),
-		"pressed": _box(T.ACCENT_PRESSED, T.RADIUS_M, Color.TRANSPARENT, T.PAD_CTA),
-		"disabled": _box(T.SURFACE_DISABLED, T.RADIUS_M, T.BORDER_DISABLED, T.PAD_CTA),
+		"normal": _box(T.ACCENT_CHROME if dark else T.ACCENT, T.RADIUS_M, Color.TRANSPARENT, T.PAD_CTA),
+		"hover": _box(T.ACCENT_HOVER_CHROME if dark else T.ACCENT_HOVER, T.RADIUS_M, Color.TRANSPARENT, T.PAD_CTA),
+		"pressed": _box(T.ACCENT_PRESSED_CHROME if dark else T.ACCENT_PRESSED, T.RADIUS_M, Color.TRANSPARENT, T.PAD_CTA),
+		"disabled": _box(T.DIALOGUE_CARD_BG if dark else T.SURFACE_DISABLED, T.RADIUS_M,
+			T.DIALOGUE_CARD_BORDER if dark else T.BORDER_DISABLED, T.PAD_CTA),
 		"focus": _no_focus(),
 	})
 	th.set_color("font_color", name, T.ON_ACCENT)
 	th.set_color("font_hover_color", name, T.ON_ACCENT)
 	th.set_color("font_pressed_color", name, T.ON_ACCENT)
-	th.set_color("font_disabled_color", name, T.INK_DIM)
+	th.set_color("font_disabled_color", name, T.CREAM_DIM_DISABLED if dark else T.INK_DIM)

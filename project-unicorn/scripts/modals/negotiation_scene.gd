@@ -90,11 +90,11 @@ class _Ruler extends Control:
 
 	func _draw() -> void:
 		var mid: float = size.y * 0.5
-		# The rail. SURFACE_SUNKEN, not SEPARATOR: the chrome hairline is a shade off the
-		# dialogue column's own fill and does not show on the stage. This token is literally
-		# the meter-track colour.
+		# The rail. CONVICTION_TRACK_BG, not SEPARATOR: the chrome hairline is a shade off the
+		# dialogue column's own fill and does not show on the stage. This token is the dark
+		# register's meter groove.
 		draw_rect(Rect2(0.0, mid - NegotiationScene.RAIL_H * 0.5, size.x, NegotiationScene.RAIL_H),
-			UiTokens.SURFACE_SUNKEN)
+			UiTokens.CONVICTION_TRACK_BG)
 		# DESIGN-PARKED: the insult zone is DRAWN. §5.3 seals that the reserve is never
 		# drawn and says the zone carries "farklı ton"; a tone on the button alone would
 		# let the player cross the line without ever having seen it, and I3 forbids an
@@ -102,34 +102,34 @@ class _Ruler extends Control:
 		if insult_from < band_high:
 			var ix: float = _x_of(insult_from)
 			draw_rect(Rect2(ix, mid - NegotiationScene.RAIL_H * 0.5, size.x - ix,
-				NegotiationScene.RAIL_H), UiTokens.negative_rule())
+				NegotiationScene.RAIL_H), UiTokens.negative_rule_bright())
 		# §5.3 / §6 — the promise-narrowed LOCKED zone. Hatched rather than tinted so it does
 		# not read as "danger"; it is unavailable, which is a different fact.
 		if locked_from >= 0:
 			var x: float = _x_of(locked_from)
 			while x < size.x:
 				draw_line(Vector2(x, mid - 8.0), Vector2(x + 4.0, mid + 8.0),
-					UiTokens.INK_FAINT, 1.0)
+					UiTokens.INK_FAINT_CHROME, 1.0)
 				x += 6.0
 		# The stance anchor (§7.5) — where the dial says this conversation starts.
-		# INK_DIM, not ACCENT_DIM: the latter is a FILL token for amber-keyed chrome (#1E2730)
+		# INK_DIM_CHROME, not ACCENT_DIM: the latter is a FILL token for amber-keyed chrome (#1E2730)
 		# and as a line it vanished into the rail. The tick stays neutral on purpose — the amber
 		# on this ruler belongs to the handle the player is moving.
 		var ax: float = _x_of(anchor)
 		draw_line(Vector2(ax, mid - NegotiationScene.TICK_H), Vector2(ax, mid + NegotiationScene.TICK_H),
-			UiTokens.INK_DIM, 1.0)
+			UiTokens.INK_DIM_CHROME, 1.0)
 		# The counter trail: every number the customer has written, oldest faintest.
 		for i in counters.size():
 			var cx: float = _x_of(int(counters[i]))
 			var fade: float = 0.35 + 0.65 * (float(i + 1) / float(counters.size()))
 			draw_line(Vector2(cx, mid - 6.0), Vector2(cx, mid + 6.0),
-				Color(UiTokens.INK_MUTED, fade), 1.0)
+				Color(UiTokens.INK_MUTED_CHROME, fade), 1.0)
 		# The handle. Its LEFT EDGE is clamped, not its centre: at the band's floor the centred
 		# rect hung half off the ruler and drew as a sliver, which reads as a rendering fault
 		# rather than as "the price is at the bottom of the band".
 		var hw: float = NegotiationScene.HANDLE_W
 		var hx: float = clampf(_x_of(selected) - hw * 0.5, 0.0, maxf(size.x - hw, 0.0))
-		var hcol: Color = UiTokens.negative_bright() if selected >= insult_from else UiTokens.ACCENT
+		var hcol: Color = UiTokens.negative_bright() if selected >= insult_from else UiTokens.ACCENT_CHROME
 		draw_rect(Rect2(hx, mid - NegotiationScene.HANDLE_H * 0.5,
 			hw, NegotiationScene.HANDLE_H), hcol)
 
@@ -174,7 +174,7 @@ func _build() -> void:
 	_patience_row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	state_row.add_child(_patience_row)
 	state_row.add_child(_grow())
-	_counter_label = UiFactory.make_label("", &"DialogueNumber", UiTokens.ACCENT)
+	_counter_label = UiFactory.make_label("", &"DialogueNumber", UiTokens.ACCENT_CHROME)
 	state_row.add_child(_counter_label)
 
 	_confirm_box = VBoxContainer.new()
@@ -190,8 +190,8 @@ func _build() -> void:
 	actions.add_theme_constant_override("separation", UiTokens.SPACE_M)
 	add_child(actions)
 
-	_offer_btn = SalesStage.make_button(tr("NEG_OFFER"), _on_offer, &"CommitButton")
-	_accept_btn = SalesStage.make_button(tr("NEG_ACCEPT"), _on_accept, &"DialogueChoice")
+	_offer_btn = SalesStage.make_button(tr("NEG_OFFER"), _on_offer, &"CommitButtonDark")
+	_accept_btn = SalesStage.make_button(tr("NEG_ACCEPT"), _on_accept, &"DialogueChoiceButton")
 	_walk_btn = SalesStage.make_button(tr("NEG_WALK"), _on_walk, &"DialogueGhost")
 	actions.add_child(_offer_btn)
 	actions.add_child(_accept_btn)
@@ -240,14 +240,14 @@ func _render_scale(vs: Dictionary) -> void:
 		c.queue_free()
 	var band: Dictionary = vs.get("band", {}) as Dictionary
 	_scale_row.add_child(UiFactory.make_label(Fmt.money_exact(int(band.get("low", 0))),
-		&"MicroLabel", UiTokens.INK_DIM))
+		&"MicroLabel", UiTokens.INK_DIM_CHROME))
 	_scale_row.add_child(_grow())
 	_scale_row.add_child(UiFactory.make_label(
 		tr(String(vs.get("price_label_key", ""))) + "  " + Fmt.money_exact(int(vs.get("selected", 0))),
-		&"MetricValueInk"))
+		&"MetricValueInk", UiTokens.CREAM))
 	_scale_row.add_child(_grow())
 	_scale_row.add_child(UiFactory.make_label(Fmt.money_exact(int(band.get("high", 0))),
-		&"MicroLabel", UiTokens.INK_DIM))
+		&"MicroLabel", UiTokens.INK_DIM_CHROME))
 
 
 ## §5.3 — "her karşı-teklif turu bir kutu söndürür; son kutu vurgulu görünür". The highlight
@@ -257,7 +257,7 @@ func _render_patience(p: Dictionary) -> void:
 		c.queue_free()
 	var current: int = int(p.get("current", 0))
 	var total: int = int(p.get("max", 0))
-	_patience_row.add_child(UiFactory.make_label(tr("NEG_PATIENCE"), &"MicroLabel", UiTokens.INK_DIM))
+	_patience_row.add_child(UiFactory.make_label(tr("NEG_PATIENCE"), &"MicroLabel", UiTokens.INK_DIM_CHROME))
 	for i in total:
 		var box := Panel.new()
 		box.custom_minimum_size = PATIENCE_BOX
@@ -267,13 +267,13 @@ func _render_patience(p: Dictionary) -> void:
 		# §5.3 last-offer telegraph and it is the only box that ever takes the warning colour.
 		if i >= current:
 			sb.bg_color = Color.TRANSPARENT
-			sb.border_color = UiTokens.BORDER_DISABLED
+			sb.border_color = UiTokens.BORDER_HOVER_CHROME
 		elif current == 1:
 			sb.bg_color = UiTokens.negative_bright()
 			sb.border_color = UiTokens.negative_bright()
 		else:
 			sb.bg_color = UiTokens.ACCENT_DIM
-			sb.border_color = UiTokens.ACCENT
+			sb.border_color = UiTokens.ACCENT_CHROME
 		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
 		box.add_theme_stylebox_override("panel", sb)
 		_patience_row.add_child(box)
@@ -291,11 +291,11 @@ func _render_confirm(vs: Dictionary) -> void:
 		"unit_label": tr(String(vs.get("units_label_key", ""))),
 		"price": Fmt.money_exact(int(cf.get("unit_price", 0))),
 		"mrr": Fmt.money_exact(int(cf.get("mrr", 0))),
-	}), &"MetricValueInk"))
+	}), &"MetricValueInk", UiTokens.CREAM))
 	_confirm_box.add_child(UiFactory.make_label(tr("NEG_CAPACITY").format({
 		"used": Fmt.group(int(cf.get("capacity_used", 0))),
 		"cap": Fmt.group(int(cf.get("capacity_total", 0))),
-	}), &"RowMeta", UiTokens.INK_DIM))
+	}), &"RowMeta", UiTokens.INK_DIM_CHROME))
 
 
 func _render_actions(vs: Dictionary) -> void:
@@ -307,7 +307,7 @@ func _render_actions(vs: Dictionary) -> void:
 		# Accepted → the strip above is the deal; one button signs it. Closed any other way
 		# and the same button simply leaves.
 		_offer_btn.text = tr("NEG_SIGN") if state == "accepted" else tr("NEG_LEAVE")
-		_offer_btn.theme_type_variation = &"CommitButton"
+		_offer_btn.theme_type_variation = &"CommitButtonDark"
 		_offer_btn.tooltip_text = ""
 		return
 	# §5.3 — "seçili fiyat bölgedeyken Teklif butonu UYARI TONUNA döner ve hover nedeni
@@ -317,12 +317,12 @@ func _render_actions(vs: Dictionary) -> void:
 	# the same telegraph reaching the place the player is about to press.
 	if bool(vs.get("last_offer", false)):
 		_offer_btn.text = tr("NEG_LAST_OFFER")
-		_offer_btn.theme_type_variation = &"ChromeAlert"
+		_offer_btn.theme_type_variation = &"ChromeAlertButton"
 		_offer_btn.tooltip_text = tr("NEG_LAST_OFFER_REASON")
 		return
 	var insulting: bool = bool(vs.get("insulting", false))
 	_offer_btn.text = tr("NEG_OFFER")
-	_offer_btn.theme_type_variation = &"ChromeAlert" if insulting else &"CommitButton"
+	_offer_btn.theme_type_variation = &"ChromeAlertButton" if insulting else &"CommitButtonDark"
 	_offer_btn.tooltip_text = tr(String(vs.get("insult_reason_key", ""))) if insulting else ""
 	if int(vs.get("locked_from", -1)) >= 0:
 		_ruler.tooltip_text = tr(String(vs.get("locked_reason_key", "")))

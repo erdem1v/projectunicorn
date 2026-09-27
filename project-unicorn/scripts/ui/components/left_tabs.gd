@@ -26,7 +26,7 @@ extends Panel
 
 @onready var settings_btn: Button = $Margin/Col/SettingsBtn
 
-var current_tab_idx: int = -1  # -1 = oda görünür, hiçbir sekme açık değil
+var current_tab_idx: int = -1  # -1 = hiçbir sekme açık değil, pencere yok
 
 
 func _ready() -> void:
@@ -35,21 +35,23 @@ func _ready() -> void:
 		if not _is_locked(i):
 			btn.pressed.connect(_on_tab_button.bind(i))
 			continue
-		# Görünür-ama-ölü. Bilerek Button.disabled DEĞİL: ChromeTabButton varyasyonu disabled
+		# Görünür-ama-ölü. Bilerek Button.disabled DEĞİL: TabButton varyasyonu disabled
 		# stylebox tanımlamıyor, taban Button stylebox'ı sızardı. Amber rozet DİKKAT
 		# register'ıdır, kilitli kapı için yanlış ses.
 		btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.focus_mode = Control.FOCUS_NONE
-		btn.modulate = Color(1, 1, 1, 0.45)
+		btn.modulate.a = UiTokens.TAB_LOCKED_ALPHA
 		btn.get_node("Badge").visible = false
 		# Pill akışa (Stack'e) girer, çapaya değil: butona anchor atmak onu rayın tamamına
 		# yayıp etiketin üstüne bindirirdi.
 		var stack: VBoxContainer = btn.get_node("Stack")
-		stack.add_theme_constant_override("separation", 2)
-		stack.add_child(UiFactory.make_pill(tr("SYS_SOON"), Color(1, 1, 1, 0.05), UiTokens.CREAM_DIM))
+		stack.add_theme_constant_override("separation", UiTokens.SPACE_XXS)
+		stack.add_child(UiFactory.make_badge(tr("SYS_SOON")))
 
-	# The gear is not a tab: no active styling, never emits tab_changed.
+	# The gear is not a tab: no active styling, never emits tab_changed. Its icon takes
+	# the idle ink once; the SVG itself is white so modulate can tint it.
 	settings_btn.pressed.connect(EventBus.settings_requested.emit)
+	(settings_btn.get_node("Stack/Icon") as TextureRect).modulate = UiTokens.INK_DIM
 
 	# Rail clicks, the ✕/Esc close and programmatic switches (Tracker Card, product_tab's
 	# sales redirect) all arrive here, so the highlight has a single painter.
@@ -78,12 +80,11 @@ func _ready() -> void:
 
 
 func _on_tab_button(idx: int) -> void:
-	# Aktif sekmeye tekrar tıklama = kapat → odaya dön (✕ ve Esc ile aynı kanal).
+	# Aktif sekmeye tekrar tıklama = kapat → ofise dön (✕ ve Esc ile aynı kanal).
 	EventBus.tab_changed.emit("" if idx == current_tab_idx else String(UiTokens.TABS[idx].id))
 
 
 func _on_tab_changed(tab_id: String) -> void:
-	# Rayda sekmesi olmayan sayfa (milestones) da highlight'ı boşaltır.
 	current_tab_idx = _index_of(tab_id)
 	_apply_visual()
 
@@ -97,11 +98,10 @@ func _is_locked(idx: int) -> bool:
 
 func _apply_visual() -> void:
 	for i in tab_buttons.size():
-		if _is_locked(i):
-			continue   # kilitli sekme sönük idle görünümünde kalır, hiç vurgulanmaz
-		var is_active: bool = i == current_tab_idx
-		tab_buttons[i].theme_type_variation = &"ChromeTabButtonActive" if is_active else &"ChromeTabButton"
-		var color: Color = UiTokens.CREAM if is_active else UiTokens.CREAM_DIM
+		# Kilitli sekme (--tab-shot=marketing onu açabilir) idle görünümde kalır, hiç vurgulanmaz.
+		var is_active: bool = i == current_tab_idx and not _is_locked(i)
+		tab_buttons[i].theme_type_variation = &"TabButtonActive" if is_active else &"TabButton"
+		var color: Color = UiTokens.ACCENT_DEEP if is_active else UiTokens.INK_DIM
 		(tab_buttons[i].get_node("Stack/Icon") as TextureRect).modulate = color
 		(tab_buttons[i].get_node("Stack/NameLabel") as Label).add_theme_color_override("font_color", color)
 
@@ -142,10 +142,9 @@ func _refresh_sales_badge() -> void:
 
 
 func _refresh_rnd_badge() -> void:
-	# Ar-Ge §5.6.2: donmuş araştırma okunmamış raporla toplanır. Yüzen tracker oda görünürken
-	# saklı, cam ürün barını gösteriyor; odadaki oyuncu için donmuş araştırmaya ulaşan tek
-	# yüzey bu rozet. Koşan araştırma sayılmaz: Ar-Ge talep etmez. Ağaç açılmadan sayılacak
-	# bir şey olmaması tesadüftür; koruma o yüzden açıkça yazılı.
+	# Ar-Ge §5.6.2: donmuş araştırma okunmamış raporla toplanır. Koşan araştırma sayılmaz: Ar-Ge
+	# talep etmez. Ağaç açılmadan sayılacak bir şey olmaması tesadüftür; koruma o yüzden açıkça
+	# yazılı.
 	_set_badge_count("rnd", RnDSystem.attention_count() if RnDSystem.tree_open() else 0)
 
 

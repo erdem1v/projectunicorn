@@ -30,7 +30,7 @@ extends Control
 
 signal navigate_requested(view_id: String, args: Dictionary)
 
-# Durum kartının çubuğu yüzen BuildHUD ve ODA monitörüyle AYNI sahne. Sahne preload,
+# Durum kartının çubuğu yüzen BuildHUD'la AYNI sahne. Sahne preload,
 # class_name yok: paylaşılan checkout'ta class-cache tuzağı.
 const _BUILD_BAR_SCENE := preload("res://scenes/ui/components/BuildBar.tscn")
 
@@ -137,14 +137,11 @@ func _rebuild() -> void:
 	_name_edit = null
 	_note_label = null
 
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 16)
-	add_child(margin)
+	# Kenar boşluğu pencerenin (WindowFrame): ilk satır kapatma glifiyle aynı çizgide.
 	var outer := VBoxContainer.new()
+	outer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	outer.add_theme_constant_override("separation", 10)
-	margin.add_child(outer)
+	add_child(outer)
 	if not _locked_mode:   # kilitli görüntülemede yaratım adım şeridi anlamsız
 		outer.add_child(_make_breadcrumb())
 	var scroll := ScrollContainer.new()
@@ -268,6 +265,7 @@ func _make_frank_strip() -> Control:
 	col.add_child(quote)
 	hb.add_child(col)
 	var ok := Button.new()
+	ok.theme_type_variation = &"ChromeButton"
 	ok.text = tr("UI_OK")
 	ok.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	ok.pressed.connect(func() -> void:
@@ -722,8 +720,8 @@ func _on_commit_pressed() -> void:
 		navigate_requested.emit("tracker", {})
 
 
-## Draft guard. The tab router calls this on every page it frees (Esc, ✕, rail, ODA
-## click-through, palette/language rebuild). An in-progress v1 draft — a chosen path, a
+## Draft guard. WindowLayer calls this on every page it frees (Esc, ✕, rail, a notice-stack
+## row, palette/language rebuild). An in-progress v1 draft — a chosen path, a
 ## type, ticked steps, a typed name — is stashed into the typed `creation_draft` flag;
 ## ProductTab re-hydrates it on its next mount through the same prefill path a cancelled
 ## build uses. Locked views and the v2 picker (the live product's own flags) are not drafts.

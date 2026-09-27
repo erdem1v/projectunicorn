@@ -401,7 +401,7 @@ func _frame_box(state: String, hovered: bool) -> StyleBoxFlat:
 	sb.anti_aliasing = false
 	match state:
 		RnDUiShared.TILE_AVAILABLE, RnDUiShared.TILE_RUNNING:
-			sb.border_color = UiTokens.ACCENT_HOVER if hovered else UiTokens.ACCENT
+			sb.border_color = UiTokens.ACCENT if hovered else UiTokens.ACCENT_DEEP
 		RnDUiShared.TILE_FROZEN:
 			sb.border_color = UiTokens.BORDER_HOVER
 		_:
@@ -516,12 +516,12 @@ func _draw_guide() -> void:
 	var lane_y: float = r.end.y + _row_gap * 0.5
 	if ResearchSeam.placement(_selected) == ResearchSeam.PLACE_CONT:
 		lane_y = _tree_bottom + CROSS_LANE_H * 0.35
-	draw_line(Vector2(cx, r.end.y), Vector2(cx, lane_y), UiTokens.ACCENT, LINE_GUIDE, true)
+	draw_line(Vector2(cx, r.end.y), Vector2(cx, lane_y), UiTokens.ACCENT_DEEP, LINE_GUIDE, true)
 	if not is_equal_approx(cx, corridor):
 		draw_line(Vector2(cx, lane_y), Vector2(corridor, lane_y),
-			UiTokens.ACCENT, LINE_GUIDE, true)
+			UiTokens.ACCENT_DEEP, LINE_GUIDE, true)
 	draw_line(Vector2(corridor, lane_y), Vector2(corridor, _detail_top),
-		UiTokens.ACCENT, LINE_GUIDE, true)
+		UiTokens.ACCENT_DEEP, LINE_GUIDE, true)
 
 
 ## Çapraz koşul (§3). Hedef DAİMA başka bir ailenin KÖKÜDÜR (ResearchTree
@@ -540,8 +540,8 @@ func _draw_cross() -> void:
 	var src_cx: float = target.get_center().x
 	var lane_y: float = _tree_bottom + CROSS_LANE_H * 0.72
 	draw_dashed_line(Vector2(sel_cx, sel.end.y), Vector2(sel_cx, lane_y),
-		UiTokens.ACCENT, LINE_CROSS, DASH_CROSS)
+		UiTokens.ACCENT_DEEP, LINE_CROSS, DASH_CROSS)
 	draw_dashed_line(Vector2(sel_cx, lane_y), Vector2(src_cx, lane_y),
-		UiTokens.ACCENT, LINE_CROSS, DASH_CROSS)
+		UiTokens.ACCENT_DEEP, LINE_CROSS, DASH_CROSS)
 	draw_dashed_line(Vector2(src_cx, lane_y), Vector2(src_cx, target.end.y),
-		UiTokens.ACCENT, LINE_CROSS, DASH_CROSS)
+		UiTokens.ACCENT_DEEP, LINE_CROSS, DASH_CROSS)

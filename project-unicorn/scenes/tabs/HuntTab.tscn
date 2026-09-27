@@ -11,113 +11,106 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_hunt")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Layout" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
-
-[node name="Layout" type="VBoxContainer" parent="Margin"]
-layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TitleBar" type="HBoxContainer" parent="Margin/Layout"]
+[node name="TitleBar" type="HBoxContainer" parent="Layout"]
 layout_mode = 2
 
-[node name="TitleLabel" type="Label" parent="Margin/Layout/TitleBar"]
+[node name="TitleLabel" type="Label" parent="Layout/TitleBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"TitleSerif"
 text = "HUNT_PAGE_TITLE"
 
-[node name="FrankLabel" type="Label" parent="Margin/Layout/TitleBar"]
+[node name="FrankLabel" type="Label" parent="Layout/TitleBar"]
 layout_mode = 2
 theme_type_variation = &"RowMeta"
 horizontal_alignment = 2
 
-[node name="Sep" type="HSeparator" parent="Margin/Layout"]
+[node name="Sep" type="HSeparator" parent="Layout"]
 layout_mode = 2
 
-[node name="Columns" type="HBoxContainer" parent="Margin/Layout"]
+[node name="Columns" type="HBoxContainer" parent="Layout"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="RosterPanel" type="PanelContainer" parent="Margin/Layout/Columns"]
+[node name="RosterPanel" type="PanelContainer" parent="Layout/Columns"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.4
 theme_type_variation = &"CardPanel"
 
-[node name="RVBox" type="VBoxContainer" parent="Margin/Layout/Columns/RosterPanel"]
+[node name="RVBox" type="VBoxContainer" parent="Layout/Columns/RosterPanel"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="RHeader" type="Label" parent="Margin/Layout/Columns/RosterPanel/RVBox"]
+[node name="RHeader" type="Label" parent="Layout/Columns/RosterPanel/RVBox"]
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
 text = "HUNT_SEC_INVESTORS"
 
-[node name="RosterScroll" type="ScrollContainer" parent="Margin/Layout/Columns/RosterPanel/RVBox"]
+[node name="RosterScroll" type="ScrollContainer" parent="Layout/Columns/RosterPanel/RVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="RosterList" type="VBoxContainer" parent="Margin/Layout/Columns/RosterPanel/RVBox/RosterScroll"]
+[node name="RosterList" type="VBoxContainer" parent="Layout/Columns/RosterPanel/RVBox/RosterScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="RightCol" type="VBoxContainer" parent="Margin/Layout/Columns"]
+[node name="RightCol" type="VBoxContainer" parent="Layout/Columns"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="OffersPanel" type="PanelContainer" parent="Margin/Layout/Columns/RightCol"]
+[node name="OffersPanel" type="PanelContainer" parent="Layout/Columns/RightCol"]
 layout_mode = 2
 theme_type_variation = &"CardPanel"
 
-[node name="OVBox" type="VBoxContainer" parent="Margin/Layout/Columns/RightCol/OffersPanel"]
+[node name="OVBox" type="VBoxContainer" parent="Layout/Columns/RightCol/OffersPanel"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="OHeader" type="Label" parent="Margin/Layout/Columns/RightCol/OffersPanel/OVBox"]
+[node name="OHeader" type="Label" parent="Layout/Columns/RightCol/OffersPanel/OVBox"]
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
 text = "HUNT_SEC_OFFERS"
 
-[node name="OffersList" type="VBoxContainer" parent="Margin/Layout/Columns/RightCol/OffersPanel/OVBox"]
+[node name="OffersList" type="VBoxContainer" parent="Layout/Columns/RightCol/OffersPanel/OVBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PendingPanel" type="PanelContainer" parent="Margin/Layout/Columns/RightCol"]
+[node name="PendingPanel" type="PanelContainer" parent="Layout/Columns/RightCol"]
 layout_mode = 2
 theme_type_variation = &"CardPanel"
 
-[node name="PVBox" type="VBoxContainer" parent="Margin/Layout/Columns/RightCol/PendingPanel"]
+[node name="PVBox" type="VBoxContainer" parent="Layout/Columns/RightCol/PendingPanel"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="PHeader" type="Label" parent="Margin/Layout/Columns/RightCol/PendingPanel/PVBox"]
+[node name="PHeader" type="Label" parent="Layout/Columns/RightCol/PendingPanel/PVBox"]
 layout_mode = 2
 theme_type_variation = &"SectionLabel"
 text = "HUNT_SEC_PENDING"
 
-[node name="PendingList" type="VBoxContainer" parent="Margin/Layout/Columns/RightCol/PendingPanel/PVBox"]
+[node name="PendingList" type="VBoxContainer" parent="Layout/Columns/RightCol/PendingPanel/PVBox"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Filler" type="Control" parent="Margin/Layout/Columns/RightCol"]
+[node name="Filler" type="Control" parent="Layout/Columns/RightCol"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="CounterLabel" type="Label" parent="Margin/Layout/Columns/RightCol"]
+[node name="CounterLabel" type="Label" parent="Layout/Columns/RightCol"]
 visible = false
 layout_mode = 2
 theme_type_variation = &"RowMeta"

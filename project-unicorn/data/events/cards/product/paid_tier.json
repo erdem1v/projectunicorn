@@ -35,8 +35,7 @@
       "effects": [
         {
           "verb": "mentor_advisory",
-          "text": "Artık ücret almanın vakti. Fiyatı belirle.",
-          "text_en": "Time to start charging. Set the price."
+          "line_key": "FRANK_ADVISORY_PAID_TIER"
         },
         {
           "verb": "goto_tab",

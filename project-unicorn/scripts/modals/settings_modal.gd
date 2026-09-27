@@ -69,6 +69,7 @@ var _label_keys: Dictionary = {}
 
 
 func _ready() -> void:
+	($Dimmer as ColorRect).color = UiTokens.SCRIM_MODAL
 	_build_display_section()
 	_build_audio_section()
 	_build_game_section()

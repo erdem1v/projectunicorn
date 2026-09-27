@@ -65,9 +65,9 @@ func _ready() -> void:
 	add_child(_column)
 
 
-## TEK MOUNT NOKTASI. Yayın kararı üç yerden başlar (yüzen kart · ODA monitörü · Konsept'in
-## durum kartı) ve üçü de aynı BuildBar'ın BETA aksiyonudur. PanelLayer kökten bulunur, yani
-## çağıranın ağaçtaki yeri önemsizdir.
+## TEK MOUNT NOKTASI. Yayın kararı iki yerden başlar (yüzen kart · Konsept'in durum kartı) ve
+## ikisi de aynı BuildBar'ın BETA aksiyonudur. PanelLayer kökten bulunur, yani çağıranın
+## ağaçtaki yeri önemsizdir.
 ##
 ## `only_step` verilirse akış o tek adımdır (§10: "Sağlayıcı canlıda her an
 ## değiştirilebilir"): commit'te kapanır ve HİÇBİR ŞEY YAYINLAMAZ.
@@ -191,7 +191,7 @@ func _build_price_step() -> void:
 	# varyasyon THEME_STAMP artırımı ister. En büyük yasal adım TitleSerif, amber.
 	var fig_row := HBoxContainer.new()
 	fig_row.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	var figure := UiFactory.make_label("", &"TitleSerif", UiTokens.ACCENT)
+	var figure := UiFactory.make_label("", &"TitleSerif", UiTokens.ACCENT_DEEP)
 	fig_row.add_child(figure)
 	var per := UiFactory.make_label(tr("PROD_PER_USER_MONTH"), &"CaptionMuted")
 	per.size_flags_vertical = Control.SIZE_SHRINK_END
@@ -335,10 +335,10 @@ func _provider_row(pid: String) -> Control:
 
 func _paint_provider_row(row: PanelContainer, selected: bool, hovered: bool) -> void:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = UiTokens.AMBER_WASH if selected else Color(0, 0, 0, 0)
+	sb.bg_color = UiTokens.AMBER_WASH if selected else Color.TRANSPARENT
 	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
 	if selected:
-		sb.border_color = UiTokens.ACCENT
+		sb.border_color = UiTokens.ACCENT_DEEP
 	else:
 		sb.border_color = UiTokens.BORDER_HOVER if hovered else UiTokens.CARD_BORDER
 	sb.set_corner_radius_all(UiTokens.RADIUS_M)
@@ -354,12 +354,12 @@ func _radio_mark(selected: bool) -> Control:
 	mark.custom_minimum_size = Vector2(RADIO_BOX, RADIO_BOX)
 	mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0, 0, 0, 0)
+	sb.bg_color = Color.TRANSPARENT
 	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	sb.border_color = UiTokens.ACCENT if selected else UiTokens.BORDER_HOVER
+	sb.border_color = UiTokens.ACCENT_DEEP if selected else UiTokens.BORDER_HOVER
 	sb.set_corner_radius_all(UiTokens.RADIUS_S)
 	mark.add_theme_stylebox_override("panel", sb)
-	var glyph := UiFactory.make_label("✓" if selected else "", &"BadgeLabel", UiTokens.ACCENT)
+	var glyph := UiFactory.make_label("✓" if selected else "", &"BadgeLabel", UiTokens.ACCENT_DEEP)
 	glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	glyph.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	mark.add_child(glyph)

@@ -33,7 +33,6 @@ theme_override_constants/separation = 10
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(1, 0.627, 0.157, 1)
 
 [node name="CompanyNameLabel" type="Label" parent="Margin/Row/IdentityGroup"]
 layout_mode = 2

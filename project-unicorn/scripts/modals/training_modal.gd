@@ -89,7 +89,7 @@ func _rebuild() -> void:
 	warn.theme_type_variation = &"CardCta"
 	var warn_row := HBoxContainer.new()
 	warn_row.add_theme_constant_override("separation", 10)
-	warn_row.add_child(HRUiShared.lock_glyph(12, UiTokens.ACCENT))
+	warn_row.add_child(HRUiShared.lock_glyph(12, UiTokens.ACCENT_DEEP))
 	warn_row.add_child(UiFactory.make_label(tr("HR_TRAINING_WARNING"), &"RowMeta", UiTokens.INK_MUTED))
 	warn.add_child(warn_row)
 	_root_box.add_child(warn)

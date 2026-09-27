@@ -118,7 +118,7 @@ static func open_paper(key: String) -> bool:
 
 
 ## The desk, most urgent first, capped at the layout's slot count.
-static func desk_papers(slots: int = 3) -> Array:
+static func desk_papers(slots: int) -> Array:
 	return EvPresenter.desk_papers(slots)
 
 

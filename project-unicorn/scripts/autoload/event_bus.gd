@@ -19,9 +19,9 @@ signal equity_changed(investor_pct: int)
 
 # --- UI / time signals ---
 signal speed_change_requested(speed: int)  # 0=pause, 1=1x, 2=2x, 3=3x
-# "" = sekme yok, oda görünür. Sekme id'leri ray sırasıyla: "product", "sales", "hr",
-# "finance", "personal", "marketing", "rnd", "events". "marketing" ve "rnd" KİLİTLİ:
-# rayda görünür ama tıklanamaz, bu sinyal onları taşımaz.
+# "" = sekme yok, pencere yok. Sekme id'leri ray sırasıyla: "product", "sales", "hr",
+# "finance", "personal", "marketing", "rnd", "events". "marketing" KİLİTLİ: rayda görünür
+# ama tıklanamaz, bu sinyal onu taşımaz.
 signal tab_changed(tab_id: String)
 # Mount edilmiş Finance sekmesine alt sayfa seçtirir ("ozet"|"yatirim"). tab_changed("finance")
 # SENKRON mount eder, ardışık emit bu yüzden güvenli.
@@ -163,7 +163,8 @@ signal rnd_node_requested(node_id: String, open_assign: bool)
 signal rnd_card_requested(kind: String, data: Dictionary)
 
 # --- Rival signals ---
-# rival_advanced fires once per day after advance_all so the ODA league repaints.
+# rival_advanced fires once per day after advance_all so the market-share readouts (Finance,
+# Product) repaint.
 signal rival_status_changed(rival_id: String, status: String)
 signal rival_advanced()
 
@@ -198,8 +199,8 @@ signal price_stance_changed(stance: String)           # §7.5
 signal rep_band_cap_changed(rep_id: String)           # §7.2.2
 
 # --- Mentor / ticker signals ---
-# Frank's advisory line; the mentor surfaces read it.
-signal mentor_advisory_changed(text: String)
+# Frank's advisory line as a CSV key and its format args; the surfaces resolve it at render.
+signal mentor_advisory_changed(key: String, args: Dictionary)
 
 # Live ticker line: the ONLY non-modal notification channel. `source` is the attribution shown
 # in accent ("Atlas Seçme & Yerleştirme", "İK"). For beats that must NOT interrupt the player.
@@ -237,6 +238,11 @@ signal sheet_walked(vc_id: String)              # a table walk destroyed a sheet
 signal seed_door_opened()                       # SeedRoundSystem.daily_tick latched the ratchet
 signal seed_sheet_granted(vc_id: String)        # VCPitchSystem._grant_seed_sheet — an offer exists
 signal seed_round_closed(vc_id: String)         # SeedRoundSystem.accept — money in, expectation armed
+
+# --- Office ---
+# One publisher, OfficeSystem. A move starts on the city map and lands on arrival_day.
+signal office_move_started(office_id: String, arrival_day: int)
+signal office_changed(office_id: String)
 
 # --- Save / system-menu signals ---
 # END of TimeManager._dispatch_daily_tick, once every daily slot has settled: the only correct

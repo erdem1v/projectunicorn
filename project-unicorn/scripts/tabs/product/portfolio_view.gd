@@ -20,14 +20,11 @@ var _build_bar: ProgressBar = null
 
 
 func setup(_args: Dictionary) -> void:
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 16)
-	add_child(margin)
+	# Kenar boşluğu pencerenin (WindowFrame): ilk satır kapatma glifiyle aynı çizgide.
 	var vb := VBoxContainer.new()
+	vb.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vb.add_theme_constant_override("separation", 10)
-	margin.add_child(vb)
+	add_child(vb)
 	vb.add_child(UiFactory.make_label(tr("PROD_PORTFOLIO"), &"TitleSerif"))
 	_count_label = UiFactory.make_label("", &"CaptionMuted")
 	vb.add_child(_count_label)

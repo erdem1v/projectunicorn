@@ -89,6 +89,12 @@ func sync_to_current_hour() -> void:
 	_in_game_hours = float(GameState.current_hour)
 
 
+## Minutes past midnight with the hour's progress: GameState.current_hour plus the
+## accumulator's fraction, which the SENKRON KURALI above keeps in step with it.
+func day_minute() -> float:
+	return (GameState.current_hour + fposmod(_in_game_hours, 1.0)) * 60.0
+
+
 # --- Run boundary + save (SaveManager) ---
 
 func set_suspended(value: bool) -> void:
@@ -192,6 +198,8 @@ func _dispatch_daily_tick() -> void:
 	SalesSystem.daily_tick()
 	RivalRegistry.advance_all()
 	FinanceSystem.daily_tick()
+	# A move lands before the event slot, so a card reading office.current sees today's office.
+	OfficeSystem.daily_tick()
 	# Gate latches run after Finance (MRR and brand must be settled) and BEFORE the event slot:
 	# `funding.gate_traction` / `funding.seed_door` read the ratchets set here, and evaluated
 	# after the engine the card would arrive the morning after its own condition.

@@ -1,13 +1,14 @@
 class_name EvSeamsWorld
 extends RefCounted
 
-# The `phase.`, `rival.`, `investor.` and `time.` namespaces.
+# The `phase.`, `rival.`, `investor.`, `time.` and `office.` namespaces.
 
 static func install() -> void:
 	_install_phase()
 	_install_time()
 	_install_rival()
 	_install_investor()
+	_install_office()
 
 
 static func _install_phase() -> void:
@@ -124,3 +125,12 @@ static func _install_investor() -> void:
 	EvSeams.register("investor.pivot_used", G, TYPE_BOOL,
 		func() -> bool: return GameState.pivot_used,
 		"Funding", "WRAPPER; the VC path is permanently closed")
+
+
+static func _install_office() -> void:
+	EvSeams.register("office.current", EvSeams.Kind.GLOBAL, TYPE_STRING,
+		func() -> String: return GameState.office_id,
+		"Office", "WRAPPER; home / ishani / plaza / loft. Where the company works, not where a move is heading")
+	EvSeams.register("office.moving", EvSeams.Kind.GLOBAL, TYPE_BOOL,
+		func() -> bool: return OfficeSystem.is_moving(),
+		"Office", "WRAPPER; a move to the next office is under way")

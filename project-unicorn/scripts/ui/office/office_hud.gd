@@ -1,0 +1,113 @@
+extends Control
+
+# The office view's own controls: the move button at the bottom left (windows dock at the top
+# left), the countdown of a move under way beside it, and the toast that announces a move.
+# OfficeCity mounts this on the view's overlay and opens the city map on move_pressed.
+
+signal move_pressed
+
+## After Frank's cheque the button breathes until the company sets off on its first move.
+const PULSE_SCALE := 1.04     # [WORKING]
+const PULSE_ALPHA := 0.8      # [WORKING]
+const PULSE_TIME := 0.9       # [WORKING] seconds each way
+const TOAST_TIME := 2.6
+const TOAST_FADE := 0.3       # [WORKING]
+
+var _row := HBoxContainer.new()
+var _button := PanelContainer.new()
+var _label: Label
+var _badge: Control
+var _pulse: Tween
+var _toast := PanelContainer.new()
+var _toast_label: Label
+var _toast_tween: Tween
+
+
+func _ready() -> void:
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_row.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	add_child(_row)
+
+	_button.theme_type_variation = &"ChoiceCard"
+	_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	# Hover = edge; both variations share fill and margins, so the button does not jump.
+	_button.mouse_entered.connect(func() -> void: _button.theme_type_variation = &"ChoiceCardHover")
+	_button.mouse_exited.connect(func() -> void: _button.theme_type_variation = &"ChoiceCard")
+	_button.gui_input.connect(func(event: InputEvent) -> void:
+		if UiFactory.is_left_click(event):
+			move_pressed.emit())
+	_button.resized.connect(func() -> void: _button.pivot_offset = _button.size * 0.5)
+	_row.add_child(_button)
+	var inner := HBoxContainer.new()
+	inner.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	_button.add_child(inner)
+	var glyph := Panel.new()
+	glyph.theme_type_variation = &"TabBadge"
+	glyph.custom_minimum_size = Vector2.ONE * UiTokens.SPACE_M
+	glyph.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	inner.add_child(glyph)
+	_label = UiFactory.make_label("", &"RowName")
+	inner.add_child(_label)
+	HRUiShared.set_mouse_ignore(inner)
+
+	_toast.theme_type_variation = &"CardFloating"
+	_toast.hide()
+	_toast_label = UiFactory.make_label("", &"RowName")
+	_toast.add_child(_toast_label)
+	HRUiShared.set_mouse_ignore(_toast)
+	add_child(_toast)
+
+	for s: Signal in [EventBus.day_advanced, EventBus.office_changed, EventBus.equity_changed,
+			EventBus.language_changed]:
+		s.connect(_refresh.unbind(1))
+	EventBus.office_move_started.connect(_on_move_started)
+	_refresh()
+
+
+## The map's own panel takes the button's corner while it is open; the toast stays.
+func set_map_open(open: bool) -> void:
+	_row.visible = not open
+
+
+func _refresh() -> void:
+	_label.text = tr("OFFICE_MOVE_BTN")
+	if _badge != null:
+		_badge.free()
+		_badge = null
+	if OfficeSystem.is_moving():
+		var days := OfficeSystem.arrival_day() - GameState.day
+		_badge = UiFactory.make_pill(tr("OFFICE_MOVING_BADGE_ONE") if days == 1 else tr("OFFICE_MOVING_BADGE").format({"days": days}),
+			UiTokens.BADGE_BG, UiTokens.BADGE_FG, false)
+		_row.add_child(_badge)
+	_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_XL)
+	var breathe := GameState.run_angel_amount > 0 and OfficeSystem.current() == "home" and not OfficeSystem.is_moving()
+	if breathe == (_pulse != null):
+		return
+	if not breathe:
+		_pulse.kill()
+		_pulse = null
+		_button.scale = Vector2.ONE
+		_button.modulate.a = 1.0
+		return
+	_pulse = create_tween().set_loops().set_trans(Tween.TRANS_SINE)
+	_pulse.tween_property(_button, "scale", Vector2.ONE * PULSE_SCALE, PULSE_TIME)
+	_pulse.parallel().tween_property(_button, "modulate:a", PULSE_ALPHA, PULSE_TIME)
+	_pulse.tween_property(_button, "scale", Vector2.ONE, PULSE_TIME)
+	_pulse.parallel().tween_property(_button, "modulate:a", 1.0, PULSE_TIME)
+
+
+func _on_move_started(office_id: String, _arrival_day: int) -> void:
+	_toast_label.text = tr("OFFICE_TOAST_MOVED").format({"name": tr(OfficeConstants.CATALOG[office_id].name_key)})
+	_toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_XL)
+	_toast.modulate.a = 1.0
+	_toast.show()
+	if _toast_tween != null:
+		_toast_tween.kill()
+	_toast_tween = create_tween()
+	_toast_tween.tween_interval(TOAST_TIME)
+	_toast_tween.tween_property(_toast, "modulate:a", 0.0, TOAST_FADE)
+	_toast_tween.tween_callback(_toast.hide)
+	_refresh()

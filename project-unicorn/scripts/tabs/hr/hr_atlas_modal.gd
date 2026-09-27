@@ -154,10 +154,10 @@ func _card(selected: bool, pad_v: float) -> PanelContainer:
 	if selected:
 		sb.bg_color = UiTokens.AMBER_WASH
 		sb.border_width_left = UiTokens.BORDER_FOCUS
-		sb.border_color = UiTokens.ACCENT
+		sb.border_color = UiTokens.ACCENT_DEEP
 	else:
 		sb.bg_color = UiTokens.SURFACE_FRAME
-		sb.border_color = UiTokens.SEPARATOR
+		sb.border_color = UiTokens.CARD_BORDER
 	card.add_theme_stylebox_override("panel", sb)
 	return card
 
@@ -182,17 +182,17 @@ func _role_card(label: String, hint_text: String, lock_text: String, selected: b
 	var title_row := HBoxContainer.new()
 	title_row.add_theme_constant_override("separation", 8)
 	title_row.add_child(UiFactory.make_label(label, &"NameSerif",
-		UiTokens.CREAM_DIM if locked else UiTokens.INK))
+		UiTokens.INK_DIM if locked else UiTokens.INK))
 	if locked:
-		title_row.add_child(HRUiShared.lock_glyph(12, UiTokens.CREAM_DIM))
+		title_row.add_child(HRUiShared.lock_glyph(12, UiTokens.INK_DIM))
 	col.add_child(title_row)
 
-	var hint := UiFactory.make_label(hint_text, &"RowMeta", UiTokens.CREAM_DIM)
+	var hint := UiFactory.make_label(hint_text, &"RowMeta", UiTokens.INK_DIM)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(hint)
 
 	if locked:
-		col.add_child(UiFactory.make_label(lock_text, &"RowMeta", UiTokens.ACCENT))
+		col.add_child(UiFactory.make_label(lock_text, &"RowMeta", UiTokens.ACCENT_DEEP))
 		card.modulate.a = 0.6
 	return card
 
@@ -204,7 +204,7 @@ func _level_card(level: int) -> Control:
 	var card := _card(selected, 13.0)
 	card.add_child(UiFactory.make_label(
 		HRConstants.level_label(level), &"RowName",
-		UiTokens.ACCENT if selected else UiTokens.INK_MUTED))
+		UiTokens.ACCENT_DEEP if selected else UiTokens.INK_MUTED))
 	_make_selectable(card, func() -> void: _selected_level = level)
 	return card
 
@@ -278,7 +278,7 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = UiTokens.SURFACE_FRAME
 	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	sb.border_color = UiTokens.SEPARATOR
+	sb.border_color = UiTokens.CARD_BORDER
 	sb.set_corner_radius_all(UiTokens.RADIUS_S)
 	card.add_theme_stylebox_override("panel", sb)
 
@@ -305,7 +305,7 @@ func _file_card(index: int, file: Dictionary) -> Control:
 	col.add_child(head)
 
 	var hint := UiFactory.make_label(
-		HRConstants.role_phase_hint(role_id), &"RowMeta", UiTokens.CREAM_DIM)
+		HRConstants.role_phase_hint(role_id), &"RowMeta", UiTokens.INK_DIM)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(hint)
 
@@ -372,7 +372,7 @@ func _runway_strip(pv: Dictionary) -> Control:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = UiTokens.negative_bg() if worse else UiTokens.SURFACE_FRAME
 	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	sb.border_color = UiTokens.negative_rule() if worse else UiTokens.SEPARATOR
+	sb.border_color = UiTokens.negative_rule() if worse else UiTokens.CARD_BORDER
 	sb.set_corner_radius_all(UiTokens.RADIUS_S)
 	sb.content_margin_left = 12.0
 	sb.content_margin_right = 12.0

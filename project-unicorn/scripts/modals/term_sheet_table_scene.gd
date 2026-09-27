@@ -166,7 +166,7 @@ func _build_lever_row(lever_id: String) -> Control:
 	var name_label := UiFactory.make_label("", &"ZoneLabel")
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
-	var push_btn := _button(tr("TERM_PUSH"), &"CommitButton", _on_push_pressed.bind(lever_id))
+	var push_btn := _button(tr("TERM_PUSH"), &"CommitButtonDark", _on_push_pressed.bind(lever_id))
 	top.add_child(push_btn)
 
 	var value_label := UiFactory.make_label("", &"DialogueName")
@@ -280,7 +280,7 @@ func _build_footer() -> Control:
 	_derived_label.visible = false
 	money_col.add_child(_derived_label)
 
-	_sign_btn = _button(tr("TERM_SIGN_OK"), &"CommitButton", _on_sign_pressed)
+	_sign_btn = _button(tr("TERM_SIGN_OK"), &"CommitButtonDark", _on_sign_pressed)
 	_sign_btn.custom_minimum_size = Vector2(200, 0)
 	actions.add_child(_sign_btn)
 
@@ -375,7 +375,7 @@ func _render_pips(p: Dictionary) -> void:
 	for i in mx:
 		var dot := ColorRect.new()
 		dot.custom_minimum_size = Vector2(14, 14)
-		dot.color = UiTokens.ACCENT if i < cur else UiTokens.CONVICTION_TRACK_BG
+		dot.color = UiTokens.ACCENT_CHROME if i < cur else UiTokens.CONVICTION_TRACK_BG
 		_pip_box.add_child(dot)
 
 

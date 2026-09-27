@@ -60,7 +60,7 @@ func _ready() -> void:
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = UiTokens.DIALOGUE_BG
 	background.add_theme_stylebox_override("panel", bg)
-	loading_label.add_theme_color_override("font_color", UiTokens.CREAM)
+	($LoadingOverlay/Dimmer as ColorRect).color = UiTokens.SCRIM_MODAL
 	_build_header()
 	back_btn.text = tr("ONB_BACK")
 	back_btn.pressed.connect(_on_back_pressed)
@@ -76,7 +76,7 @@ func _build_header() -> void:
 	brand.add_theme_constant_override("separation", 0)
 	header.add_child(brand)
 	brand.add_child(UiFactory.make_label("PROJECT ", &"ZoneLabel"))
-	brand.add_child(UiFactory.make_label("UNICORN", &"ZoneLabel", UiTokens.ACCENT))
+	brand.add_child(UiFactory.make_label("UNICORN", &"ZoneLabel", UiTokens.ACCENT_CHROME))
 
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -106,10 +106,10 @@ func _refresh_stepper(index: int) -> void:
 	for i in _stepper_labels.size():
 		var reached: bool = i <= index
 		_stepper_labels[i].add_theme_color_override("font_color",
-			UiTokens.ACCENT if i == index else (UiTokens.CREAM if reached else UiTokens.CREAM_DIM))
+			UiTokens.ACCENT_CHROME if i == index else (UiTokens.CREAM if reached else UiTokens.CREAM_DIM))
 		# make_dot gives every dot its own override stylebox — recolor it in place.
 		(_stepper_dots[i].get_theme_stylebox("panel") as StyleBoxFlat).bg_color = \
-			UiTokens.ACCENT if reached else UiTokens.CREAM_DIM
+			UiTokens.ACCENT_CHROME if reached else UiTokens.CREAM_DIM
 	_step_counter.text = "%d / %d" % [index + 1, STEPS.size()]
 
 

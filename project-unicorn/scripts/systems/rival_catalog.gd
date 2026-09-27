@@ -33,8 +33,8 @@ const TEMPLATE := [
 # Per-type product names (index 0 = giant, 1-2 = established, 3-7 = startup).
 #
 # TESCİLLİ MARKA YASAĞI (CompanyCatalog'un adlandırma yasası, aynı kural burada da
-# geçerli): gerçek marka yok, şaka ad yok. Bu adlar ODA panosunda, ticker'da ve Ürün
-# sekmesinde rakip ENTITY olarak görünür; bir markayı AYNI pazarda rakip yapmak, metin
+# geçerli): gerçek marka yok, şaka ad yok. Bu adlar Finans'ın pazar payı kartında, ticker'da
+# ve Ürün sekmesinde rakip ENTITY olarak görünür; bir markayı AYNI pazarda rakip yapmak, metin
 # içinde ondan söz etmekten ağır bir maruziyettir. İNDEKS SIRASI KİLİTLİ: TEMPLATE
 # tier'ları ve SHARE_SEED payları indeks-hizalı, o yüzden adlar YERİNDE değişir, asla
 # yeniden sıralanmaz.
@@ -71,7 +71,7 @@ const SHARE_SEED := [34.0, 16.0, 11.0, 2.6, 1.9, 1.4, 0.9, 0.5]
 # (_rival_relative_quality), VC sorgusu ve rank API'si onları hiç görmez; yalnız
 # get_market_snapshot dilim üretir. Adlandırılmış rakip sayısını pazar başına
 # 8+3 = 11'e çıkarırlar. Paylar + momentum WORKING.
-# Adlar da yukarıdaki TESCİLLİ MARKA YASAĞI'na tabidir: ODA panosunda pazar payı satırı
+# Adlar da yukarıdaki TESCİLLİ MARKA YASAĞI'na tabidir: Finans'ın pazar payı kartında satır
 # olarak görünürler. id'ler adlarla eşleşmek zorunda değildir ve değiştirilmez: pay
 # eğrisinin wobble hash'i (RivalRegistry._share_at) ve kayıtlı haber cooldown'u
 # (GameState.news_feed.recent_rivals) id'yi okur.

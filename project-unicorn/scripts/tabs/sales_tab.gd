@@ -22,7 +22,6 @@ extends Control
 # İKİ SÜTUN: solda BORU HATTI + SATIŞ MASASI, sağda HESAP DEFTERİ (§19'un "Korunanlar"ı).
 # ============================================================================
 
-const PAGE_MARGIN := 16
 const COL_SEPARATION := 24
 const LOG_ROWS := 5
 # Hesap defterinde önce dikkat isteyen kartlar.
@@ -73,20 +72,17 @@ func _on_state_changed(_a = null, _b = null, _c = null) -> void:
 # ============================================================================
 
 func _build_chrome() -> void:
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, PAGE_MARGIN)
-	add_child(margin)
-
+	# Kenar boşluğu pencerenin (WindowFrame): başlık satırı kapatma glifiyle aynı çizgide.
 	var root := VBoxContainer.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_theme_constant_override("separation", UiTokens.SPACE_L)
-	margin.add_child(root)
+	add_child(root)
+	root.add_child(UiFactory.make_label(tr("TAB_SALES"), &"PageTitleSerif"))
 
 	_strip = HBoxContainer.new()
 	_strip.add_theme_constant_override("separation", UiTokens.SPACE_XL)
 	root.add_child(_strip)
-	root.add_child(HRUiShared.hairline(UiTokens.SEPARATOR))
+	root.add_child(HRUiShared.hairline())
 
 	var cols := HBoxContainer.new()
 	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -163,33 +159,12 @@ func _stance_dial() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
 	var current: String = SalesLedger.price_stance()
-	# THE SELECTED POSITION HAS TO BE UNMISTAKABLE. `ChromeTabButtonActive` and `ChromeTabButton`
-	# differ by a shade in the terminal palette — enough for a tab rail where the page underneath
-	# tells you where you are, not for a three-position dial that is the SINGLE source of every
-	# B2B price. A code-side `StyleBoxFlat` (the one-off-shape hatch RnDUiShared's header names)
-	# rather than a new theme item, so `THEME_STAMP` does not move for one dial: the active
-	# position takes the amber-keyed fill AND an accent edge, the others stay flat with a
-	# disabled edge.
 	for stance in SalesConstants.STANCES:
 		var id: String = String(stance)
-		var active: bool = id == current
 		var btn := _button(tr("SALES_STANCE_" + id.to_upper()),
-			&"ChromeTabButtonActive" if active else &"ChromeTabButton",
+			&"StanceDialActive" if id == current else &"StanceDial",
 			func() -> void: SalesLedger.set_price_stance(id))
 		btn.tooltip_text = tr("SALES_STANCE_HINT_" + id.to_upper())
-		btn.add_theme_color_override("font_color",
-			UiTokens.ACCENT if active else UiTokens.INK_DIM)
-		var sb := StyleBoxFlat.new()
-		sb.set_corner_radius_all(UiTokens.RADIUS_S)
-		sb.content_margin_left = UiTokens.SPACE_M
-		sb.content_margin_right = UiTokens.SPACE_M
-		sb.content_margin_top = UiTokens.SPACE_XS
-		sb.content_margin_bottom = UiTokens.SPACE_XS
-		sb.bg_color = UiTokens.AMBER_BG if active else UiTokens.SURFACE_INPUT
-		sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-		sb.border_color = UiTokens.ACCENT if active else UiTokens.BORDER_DISABLED
-		for state in ["normal", "hover", "pressed"]:
-			btn.add_theme_stylebox_override(state, sb)
 		row.add_child(btn)
 	col.add_child(row)
 	return UiFactory.make_card(col, true)
@@ -269,13 +244,13 @@ func _lead_card(p: Prospect) -> Control:
 	# §8 — şart masaya OTURMADAN telgraflanır. Balina kartı ne istediğini söylemeden gelmez.
 	if p.whale_condition != "":
 		col.add_child(UiFactory.make_label(tr("SALES_WHALE_" + p.whale_condition.to_upper()),
-			&"DialogueTag", UiTokens.ACCENT))
+			&"MicroLabel", UiTokens.ACCENT_DEEP))
 
 	# §4 — "Bu masa liginin üstünde." Kilit DEĞİL, telgraf: kurucu her masaya oturabilir.
 	var founder_star: int = int(HRConstants.stars_for(
 		GameState.get_founder_skill(HRConstants.AREA_SALES)))
 	if p.is_above_league(founder_star):
-		col.add_child(UiFactory.make_label(tr("SALES_ABOVE_LEAGUE"), &"RowMeta", UiTokens.ACCENT_DIM))
+		col.add_child(UiFactory.make_label(tr("SALES_ABOVE_LEAGUE"), &"RowMeta", UiTokens.INK_MUTED))
 
 	# §7.2 — işlenen lead kimin masasında ve kaçıncı gün.
 	if p.is_being_worked():
@@ -297,10 +272,10 @@ func _lead_actions(p: Prospect) -> Control:
 	# §7.2.1'in iki fiili. "Ayır" masayı kurucuya saklar (temsilci atlar), "Temsilciye ver"
 	# bandındaysa öne alır. İkisi de aynı satırda çünkü ikisi de aynı soruya cevap: bu masaya
 	# kim oturuyor.
-	row.add_child(_button(tr("SALES_ROUTE_RESERVE"), &"DialogueGhost", func() -> void:
+	row.add_child(_button(tr("SALES_ROUTE_RESERVE"), &"", func() -> void:
 		SalesLedger.set_routing(p.id, SalesConstants.ROUTE_RESERVED
 			if p.routing != SalesConstants.ROUTE_RESERVED else SalesConstants.ROUTE_NONE)))
-	row.add_child(_button(tr("SALES_ROUTE_GIVE"), &"DialogueGhost", func() -> void:
+	row.add_child(_button(tr("SALES_ROUTE_GIVE"), &"", func() -> void:
 		SalesLedger.set_routing(p.id, SalesConstants.ROUTE_REP
 			if p.routing != SalesConstants.ROUTE_REP else SalesConstants.ROUTE_NONE)))
 
@@ -524,7 +499,7 @@ func _add_steward_line(col: VBoxContainer, c: Customer) -> void:
 	row.add_child(UiFactory.make_label(tr("SALES_STEWARD").format({"name": who}),
 		&"RowMeta", UiTokens.INK_DIM))
 	row.add_child(RnDUiShared.spacer())
-	var btn := _button(tr("SALES_STEWARD_CHANGE"), &"DialogueGhost")
+	var btn := _button(tr("SALES_STEWARD_CHANGE"), &"")
 	btn.pressed.connect(func() -> void: _open_steward_picker(c, btn))
 	row.add_child(btn)
 	col.add_child(row)

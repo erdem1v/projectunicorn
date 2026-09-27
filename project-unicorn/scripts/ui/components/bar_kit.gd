@@ -4,9 +4,9 @@ extends RefCounted
 #
 # TEMA-BAĞIMSIZ, BİLEREK: yazı boyu/rengi çağıranın verdiği UiTokens değerinden,
 # yazı tipi PROJE temasından (ThemeDB) okunur; `get_theme_font` ya da
-# `theme_type_variation` kullanılmaz. ODA alt ağacı kendi dondurulmuş temasını
-# çözer, yani varyasyona uzanan bir kart monitörde tracker'dakinden farklı düşerdi;
-# iki yerde aynı kart görünmeli.
+# `theme_type_variation` kullanılmaz. Kart ev sahibinin ölçeğiyle çizilir (BuildBar
+# `size_scale`, Ürün sayfasında 1.25×); boyu sabit bir varyasyona uzansaydı yazı
+# büyümez, aynı kart iki ev sahibinde farklı oranda düşerdi.
 #
 # class_name yok, iki çubuk da `preload` eder: paylaşılan checkout'ta yeni bir
 # class_name, öteki oturumların headless koşularını global class-cache yarım
@@ -57,7 +57,7 @@ static func hairline() -> Panel:
 	p.custom_minimum_size = Vector2(0, 1)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = UiTokens.BG_AVATAR   # #1B232B — sayfanın satır kılı
+	sb.bg_color = UiTokens.DIVIDER_LIGHT
 	sb.anti_aliasing = false
 	p.add_theme_stylebox_override(&"panel", sb)
 	return p

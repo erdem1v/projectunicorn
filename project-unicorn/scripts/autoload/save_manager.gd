@@ -13,13 +13,13 @@ extends Node
 # NegotiationSystem) are reset, never serialised: can_save() refuses while any of them
 # is_active(), so a sitting is always idle at the moment a save is taken.
 
-const SCHEMA_VERSION := 12
+const SCHEMA_VERSION := 13
 
 ## GDD ÜRÜN rev 6.1 §22.5 — eski kayıt TAŞINMAZ. "Yükleyici eski sürümü görürse kullanıcıya
 ## AÇIK MESAJ verir, sessizce bozuk state üretmez." Düz özellik listesi hat durumlarına
 ## çevrilemez ve v9 olay bloğu v10 motorunun arklarını/latch'lerini taşımaz; çevirmeye
 ## çalışmak çalışıyor görünen ve yanlış olan bir koşu üretir. O yüzden kapı sürümdedir.
-## v11/v12 alanlarının hepsi bildirilmiş varsayılan taşıdığı için v10 hâlâ yüklenir.
+## v11-v13 alanlarının hepsi bildirilmiş varsayılan ya da göç taşıdığı için v10 hâlâ yüklenir.
 const MIN_LOADABLE_VERSION := 10
 const SAVE_DIR := "user://saves/"
 
@@ -139,6 +139,8 @@ func read_slot(slot_id: String) -> Dictionary:
 	var state: Dictionary = data["state"]
 	if version < 11:
 		_migrate_sales_rev6(state)
+	if version < 13:
+		_migrate_13(state)
 	return {"ok": true, "error_key": "", "meta": meta, "state": state}
 
 
@@ -464,6 +466,14 @@ func _migrate_sales_rev6(state: Dictionary) -> void:
 		var mrr: int = int(c.get("mrr", 0))
 		if seats > 0 and mrr > 0:
 			c["seat_price"] = int(round(float(mrr) / float(seats)))
+
+
+## v12 → v13: the office. A run that took Frank's cheque has outgrown the flat, so it lands in
+## the business block; any other run is at home. The move fields and Frank's latched line load
+## as their declared defaults.
+func _migrate_13(state: Dictionary) -> void:
+	var gs: Dictionary = state.get("game_state", {}) as Dictionary
+	gs["office_id"] = "ishani" if int(gs.get("run_angel_amount", 0)) > 0 else "home"
 
 
 # ----------------------------------------------------------------------------

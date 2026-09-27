@@ -38,9 +38,9 @@ const PART_SEP := " · "
 
 # Sütun genişlikleri sabit: kilit satırı kademe sütununun tam altına iner (§12.9 şeması).
 const W_NAME := 150
-const W_SHIPPED := 170
+const W_SHIPPED := 150
 const W_ARROW := 16
-const W_STAT := 236
+const W_STAT := 200
 
 ## "Tamamlandı" satırının soluğu.
 const DIM_ALPHA := 0.55
@@ -269,7 +269,7 @@ func _make_action_link(kind: String, node_id: String) -> Control:
 		key = "PROD_LOCK_ACTION_RESEARCH"
 	elif kind == LineGates.KIND_TOTAL:
 		key = "PROD_LOCK_ACTION_TOTAL"
-	var link := UiFactory.make_label(tr(key), &"RowMeta", UiTokens.ACCENT)
+	var link := UiFactory.make_label(tr(key), &"RowMeta", UiTokens.ACCENT_DEEP)
 	link.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	if research and not RnDSystem.tree_open():
 		link.add_theme_color_override("font_color", UiTokens.INK_FAINT)
@@ -353,7 +353,7 @@ func _style_row(line_id: String) -> void:
 		if base is StyleBoxFlat:
 			var sel: StyleBoxFlat = base.duplicate()
 			sel.bg_color = UiTokens.AMBER_BG
-			sel.border_color = UiTokens.ACCENT
+			sel.border_color = UiTokens.ACCENT_DEEP
 			card.add_theme_stylebox_override("panel", sel)
 	else:
 		card.remove_theme_stylebox_override("panel")
@@ -361,7 +361,7 @@ func _style_row(line_id: String) -> void:
 	var next_lbl: Label = row["next"]
 	if next_lbl != null:
 		var tint: Color = UiTokens.INK if row["selectable"] else UiTokens.INK_FAINT
-		next_lbl.add_theme_color_override("font_color", UiTokens.ACCENT if picked else tint)
+		next_lbl.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP if picked else tint)
 
 
 func _refresh_count() -> void:

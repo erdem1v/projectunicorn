@@ -144,7 +144,7 @@ func _build() -> void:
 	_star_host.alignment = BoxContainer.ALIGNMENT_CENTER
 	stack.add_child(_star_host)
 
-	_archetype_label = UiFactory.make_label("", &"DialogueRole", UiTokens.INK_MUTED)
+	_archetype_label = UiFactory.make_label("", &"DialogueRole", UiTokens.INK_MUTED_CHROME)
 	_archetype_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_archetype_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	stack.add_child(_archetype_label)
@@ -153,9 +153,9 @@ func _build() -> void:
 	_badge_host.alignment = BoxContainer.ALIGNMENT_CENTER
 	stack.add_child(_badge_host)
 
-	# CARD_BORDER, not SEPARATOR: the chrome hairline is a shade off the column's own fill and
-	# vanishes into it. The card edge actually draws.
-	stack.add_child(HRUiShared.hairline(UiTokens.CARD_BORDER))
+	# CARD_BORDER_CHROME, not SEPARATOR: the chrome hairline is a shade off the column's own fill
+	# and vanishes into it. The card edge actually draws.
+	stack.add_child(HRUiShared.hairline(UiTokens.CARD_BORDER_CHROME))
 
 	# --- the content region: Perde 1, then Perde 2, in the same box -------------------
 	_content = VBoxContainer.new()
@@ -181,7 +181,7 @@ func set_identity(d: Dictionary) -> void:
 
 	for c in _star_host.get_children():
 		c.queue_free()
-	_star_host.add_child(StarRating.make_stars(float(d.get("star", 0)), STAR_GLYPH_PX))
+	_star_host.add_child(StarRating.make_stars(float(d.get("star", 0)), STAR_GLYPH_PX, false, true))
 
 	var archetype_line: String = String(d.get("archetype_line", ""))
 	_archetype_label.text = archetype_line
@@ -194,8 +194,9 @@ func set_identity(d: Dictionary) -> void:
 	var condition: String = String(d.get("whale_condition", ""))
 	_badge_host.visible = condition != ""
 	if condition != "":
-		_badge_host.add_child(UiFactory.make_badge(
-			tr("SALES_WHALE_" + condition.to_upper()), &"attention"))
+		# Koyu diyalog sütunu: gövdenin amber rozeti yerine çerçevenin amberi.
+		_badge_host.add_child(UiFactory.make_pill(
+			tr("SALES_WHALE_" + condition.to_upper()), UiTokens.ACCENT_CHROME, UiTokens.ON_ACCENT))
 
 
 ## The plate is rebuilt rather than toggled: the two shapes have nothing in common but their
@@ -223,12 +224,12 @@ func _monogram(initials: String) -> Control:
 	plate.custom_minimum_size = Vector2(AVATAR_D, AVATAR_D)
 	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = UiTokens.SURFACE_PRESSED
+	sb.bg_color = UiTokens.SURFACE_PRESSED_CHROME
 	sb.set_corner_radius_all(int(AVATAR_D / 2))
 	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	sb.border_color = UiTokens.BORDER_STEPPER_OWN
+	sb.border_color = UiTokens.BORDER_STEPPER_OWN_CHROME
 	plate.add_theme_stylebox_override("panel", sb)
-	var label := UiFactory.make_label(initials, &"DialogueName", UiTokens.INK)
+	var label := UiFactory.make_label(initials, &"DialogueName")
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

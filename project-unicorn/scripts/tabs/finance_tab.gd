@@ -20,9 +20,10 @@ func _ready() -> void:
 	_build()
 	EventBus.phase_changed.connect(_apply_phase_lock)
 	EventBus.seed_door_opened.connect(_apply_phase_lock)
-	# Deep-link: ODA YATIRIM kâğıdı ve kartların goto_tab etkisi tab_changed("finance") + bu
-	# sinyali ardışık emit eder; tab mount'u senkron olduğu için bu connect ikinci emit'ten önce
-	# hazırdır. _show_page'in kilit bekçisi (_yatirim_locked → erken dönüş) deep-link'i güvenli kılar.
+	# Deep-link: masanın term sheet hatırlatıcısı (DeskPapers) ve kartların goto_tab etkisi
+	# tab_changed("finance") + bu sinyali ardışık emit eder; tab mount'u senkron olduğu için bu
+	# connect ikinci emit'ten önce hazırdır. _show_page'in kilit bekçisi (_yatirim_locked → erken
+	# dönüş) deep-link'i güvenli kılar.
 	EventBus.finance_subpage_requested.connect(_show_page)
 	_apply_phase_lock()
 	_show_page("ozet")
@@ -39,21 +40,20 @@ func _exit_tree() -> void:
 
 func _build() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 24)
-	margin.add_theme_constant_override("margin_right", 24)
-	margin.add_theme_constant_override("margin_top", 20)
-	margin.add_theme_constant_override("margin_bottom", 20)
-	add_child(margin)
-
+	# Kenar boşluğu pencerenin (WindowFrame): başlık satırı kapatma glifiyle aynı çizgide.
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 16)
-	margin.add_child(col)
+	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	col.add_theme_constant_override("separation", UiTokens.SPACE_XL)
+	add_child(col)
 
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", UiTokens.SPACE_XL)
+	col.add_child(head)
+	head.add_child(UiFactory.make_label(tr("TAB_FINANCE"), &"PageTitleSerif"))
 	var seg := HBoxContainer.new()
-	seg.add_theme_constant_override("separation", 8)
-	col.add_child(seg)
+	seg.add_theme_constant_override("separation", UiTokens.SPACE_M)
+	seg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(seg)
 	_ozet_btn = _make_segment(tr("FIN_SUBTAB_SUMMARY"), "ozet")
 	_yatirim_btn = _make_segment(tr("FIN_SUBTAB_INVESTMENT"), "yatirim")   # LOC-DATA sub-page id
 	seg.add_child(_ozet_btn)
@@ -90,9 +90,9 @@ func _show_page(id: String) -> void:
 	_current = id
 	_ozet_view.visible = id == "ozet"
 	_yatirim_view.visible = id == "yatirim"   # LOC-DATA sub-page id
-	_ozet_btn.modulate = Color(1, 1, 1, 1) if id == "ozet" else Color(1, 1, 1, 0.6)
+	_ozet_btn.modulate.a = 1.0 if id == "ozet" else UiTokens.TAB_LOCKED_ALPHA
 	if not _yatirim_btn.disabled:
-		_yatirim_btn.modulate = Color(1, 1, 1, 1) if id == "yatirim" else Color(1, 1, 1, 0.6)   # LOC-DATA sub-page id
+		_yatirim_btn.modulate.a = 1.0 if id == "yatirim" else UiTokens.TAB_LOCKED_ALPHA   # LOC-DATA sub-page id
 	if id == "ozet":
 		_ozet_view.refresh()  # görünür olurken taze boya — sinyaller görünmezken erken döner
 
@@ -102,12 +102,10 @@ func _apply_phase_lock(_signal_arg = null) -> void:
 	var locked: bool = _yatirim_locked()
 	_yatirim_btn.disabled = locked
 	_yatirim_btn.tooltip_text = tr("FIN_SUBTAB_LOCKED") if locked else ""
-	if locked:
-		_yatirim_btn.modulate = Color(1, 1, 1, 0.4)
-		if _current == "yatirim":   # LOC-DATA sub-page id
-			_show_page("ozet")
-	elif _current != "yatirim":   # LOC-DATA sub-page id
-		_yatirim_btn.modulate = Color(1, 1, 1, 0.6)
+	if locked or _current != "yatirim":   # LOC-DATA sub-page id
+		_yatirim_btn.modulate.a = UiTokens.TAB_LOCKED_ALPHA
+	if locked and _current == "yatirim":   # LOC-DATA sub-page id
+		_show_page("ozet")
 
 
 ## Is the Yatırım sub-page still shut?

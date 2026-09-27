@@ -1,8 +1,8 @@
 extends Control
 
-# BuildBar — onaylı Build Bar kartı. TEK renderer, üç ev sahibi: yüzen takip kartı, ODA
-# monitörü ve Ürün sayfası aynı sahneyi (BuildBar.tscn) kurar. Monitördeki kart yeniden
-# biçimlenmez, AYNI karttır (R6).
+# BuildBar — onaylı Build Bar kartı. TEK renderer, iki ev sahibi: yüzen takip kartı ve Ürün
+# sayfası aynı sahneyi (BuildBar.tscn) kurar. Ürün sayfası kartı yeniden biçimlendirmez,
+# aynı kartı büyütür (`size_scale`).
 #
 # Üç satır, hepsi modelden:
 #   ürün  : hangi yapım (faz adı burada tekrar edilmez) + tek not etiketi.
@@ -16,8 +16,8 @@ extends Control
 # Tur rakamı hiçbir yerde yazmaz; turu renk taşır (UiTokens.build_ramp).
 #
 # TEMA-BAĞIMSIZ, BİLEREK: boy ve renk UiTokens'tan, yazı tipi proje temasından (BarKit).
-# ODA alt ağacı kendi dondurulmuş temasını çözer; varyasyona uzanan kart monitörde farklı
-# düşerdi.
+# Boylar `size_scale`'le büyür; boyu sabit bir varyasyona uzanan kart Ürün sayfasında
+# büyümezdi.
 #
 # PROCESS_MODE_ALWAYS: ağaç duraklıyken de gui_input dağıtılsın. INHERIT'te kart çizilir ama
 # her tıklamayı yutar.
@@ -40,7 +40,7 @@ const ROW_DECISION_H := 44
 const PAD_X := 12
 const GAP := 10
 
-## Ev sahibi kartı büyütebilir (Ürün sayfası, ODA monitörü). 1.0 = onaylı tracker boyu.
+## Ev sahibi kartı büyütebilir (Ürün sayfası). 1.0 = onaylı tracker boyu.
 @export var size_scale: float = 1.0
 
 var _model = null
@@ -123,9 +123,9 @@ func _build_tree() -> void:
 	shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	shell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var shell_sb := StyleBoxFlat.new()
-	shell_sb.bg_color = UiTokens.BG_ART              # #10161C
+	shell_sb.bg_color = UiTokens.CARD_BG
 	shell_sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
-	shell_sb.border_color = UiTokens.SURFACE_SUNKEN  # #232C34
+	shell_sb.border_color = UiTokens.CARD_BORDER
 	shell_sb.set_corner_radius_all(UiTokens.RADIUS_S)
 	shell_sb.corner_radius_top_left = 0
 	shell_sb.corner_radius_top_right = 0
@@ -143,7 +143,7 @@ func _build_tree() -> void:
 	# Ürün satırı. Monitör glifi her durumda amber: satır durumu değil kimliği taşır.
 	var product: HBoxContainer = _padded_row(col)
 	product.custom_minimum_size = Vector2(0, _px(ROW_PRODUCT_H))
-	product.add_child(BarKit.glyph("monitor", _px(16), UiTokens.ACCENT))
+	product.add_child(BarKit.glyph("monitor", _px(16), UiTokens.ACCENT_DEEP))
 	_name_label = BarKit.label(_font, _fs(13), UiTokens.INK)
 	product.add_child(_name_label)
 	product.add_child(_spacer())
@@ -164,9 +164,9 @@ func _build_tree() -> void:
 	phase_row.add_child(_fill)
 	var phase: HBoxContainer = _padded_row(phase_row)
 	(phase.get_parent() as Control).set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_phase_icon = BarKit.glyph("phase_design", _px(15), UiTokens.ACCENT)
+	_phase_icon = BarKit.glyph("phase_design", _px(15), UiTokens.ACCENT_DEEP)
 	phase.add_child(_phase_icon)
-	_phase_label = BarKit.label(_font, _fs(12), UiTokens.ACCENT)
+	_phase_label = BarKit.label(_font, _fs(12), UiTokens.ACCENT_DEEP)
 	phase.add_child(_phase_label)
 	# Duraklat glifi yalnız bir TextureRect: kutu, kenar, hover yok — "basılabilir tek şey"
 	# kuralı bozulmuyor.
@@ -188,9 +188,9 @@ func _build_tree() -> void:
 	_decision_row.mouse_exited.connect(_on_decision_hover.bind(false))
 	col.add_child(_decision_row)
 	var decision: HBoxContainer = _padded_row(_decision_row)
-	_decision_icon = BarKit.glyph("decision", _px(13), UiTokens.ACCENT)
+	_decision_icon = BarKit.glyph("decision", _px(13), UiTokens.ACCENT_DEEP)
 	decision.add_child(_decision_icon)
-	_decision_label = BarKit.label(_font, _fs(11), UiTokens.ACCENT)
+	_decision_label = BarKit.label(_font, _fs(11), UiTokens.ACCENT_DEEP)
 	decision.add_child(_decision_label)
 
 
@@ -237,15 +237,19 @@ func _repaint() -> void:
 
 	# Dolgu: duraklamışta düz donuk zemin, koşarken rampa renginin soluk hâli. Kenarı yok;
 	# sınır renk değişiminin kendisi.
+	var ramp: Color = m.ramp_color()
 	var fill_sb := StyleBoxFlat.new()
 	var alpha: float = UiTokens.BUILD_SUPPORT_FILL_ALPHA if m.phase == Model.PHASE_SUPPORT \
 		else UiTokens.BUILD_FILL_ALPHA
-	fill_sb.bg_color = UiTokens.BUILD_FILL_PAUSED if m.paused else Color(m.ramp_color(), alpha)
+	fill_sb.bg_color = UiTokens.BUILD_FILL_PAUSED if m.paused else Color(ramp, alpha)
 	fill_sb.anti_aliasing = false
 	_fill.add_theme_stylebox_override(&"panel", fill_sb)
 	_fill.anchor_right = clampf(m.fill, 0.0, 1.0)
 
-	var ink: Color = UiTokens.INK_MUTED if m.paused else m.ramp_color()
+	# Amber bir dolgu tonu; kremde yazı olarak ACCENT_DEEP okunur. Öteki rampa renkleri yazıda
+	# okunacak kadar koyu.
+	var ink: Color = UiTokens.INK_MUTED if m.paused \
+		else (UiTokens.ACCENT_DEEP if ramp == UiTokens.ACCENT else ramp)
 	_phase_icon.texture = load(BarKit.ICON_DIR + "phase_%s.svg" % m.phase)
 	_phase_icon.modulate = ink
 	_phase_label.text = UiTokens.tr_upper(tr(PHASE_KEYS[m.phase]))
@@ -263,7 +267,7 @@ func _repaint() -> void:
 
 	# İş yükü: "8 hata" ve BETA sayaçları kartta başka hiçbir yerde olmayan gerçekler.
 	var work: String = ""
-	var work_col: Color = UiTokens.CREAM_DIM
+	var work_col: Color = UiTokens.INK_DIM
 	match m.phase:
 		Model.PHASE_DEVELOPMENT:
 			if m.dev_bugs > 0:
@@ -292,14 +296,14 @@ func _paint_decision(m) -> void:
 	# bir şeyi vaat eder.
 	_decision_row.mouse_default_cursor_shape = (Control.CURSOR_POINTING_HAND if on
 		else Control.CURSOR_ARROW)
-	var tone: Color = UiTokens.ACCENT if on else UiTokens.INK_DIM
+	var tone: Color = UiTokens.ACCENT_DEEP if on else UiTokens.INK_DIM
 	_decision_icon.modulate = tone
 	_decision_label.add_theme_color_override(&"font_color", UiTokens.INK if hot else tone)
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = UiTokens.AMBER_WASH if hot else Color(0, 0, 0, 0)
+	sb.bg_color = UiTokens.AMBER_WASH if hot else Color.TRANSPARENT
 	if hot:
 		sb.border_width_left = 2
-		sb.border_color = UiTokens.ACCENT
+		sb.border_color = UiTokens.ACCENT_DEEP
 	sb.anti_aliasing = false
 	_decision_row.add_theme_stylebox_override(&"panel", sb)
 

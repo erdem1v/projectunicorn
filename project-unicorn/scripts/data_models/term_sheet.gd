@@ -42,7 +42,7 @@ extends Resource
 @export var opening_terms: Dictionary = {}
 
 
-## Calendar days to the close (the ODA wall's sheet paper reads it).
+## Calendar days to the close (DeskPapers' term-sheet reminder reads it).
 func days_left(current_day: int) -> int:
 	return expires_day - current_day
 

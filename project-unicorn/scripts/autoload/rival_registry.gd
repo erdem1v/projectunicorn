@@ -2,7 +2,7 @@ extends Node
 
 # Rival registry — single source of truth for the
 # competitive field. Mirrors CustomerRegistry: a Dictionary id→Rival, read-only
-# query API, mutations emit on EventBus so scenes (ODA board, Product tab) self-update.
+# query API, mutations emit on EventBus so scenes (Finance, Product tab) self-update.
 #
 # Seeded from RivalCatalog at _ready. Rivals evolve slowly on the daily tick
 # (advance_all, called by TimeManager) — startups fast, established slow, giants
@@ -122,9 +122,10 @@ func _status_for(r: Rival) -> String:
 # Kalite ligi (composite, rank API, ekonomi bağı) ayrıdır: pay, MRR
 # anlatısıdır, kalite yarışı değil. RNG yok — doku, hafta-bloklu hash wobble.
 #
-# Tüketiciler: ODA panosu, Ürün detay görünümü ve haber akışı (get_market_snapshot /
-# format_share); olay seam'leri (get_player_share_pct). Repaint sinyali: day_advanced +
-# mrr_changed yeterlidir (snapshot durumsuz olduğundan her okuma günceldir).
+# Tüketiciler: Finans Özet'in pazar payı kartı, Ürün detay görünümü ve haber akışı
+# (get_market_snapshot / format_share); olay seam'leri (get_player_share_pct). Repaint
+# sinyali: day_advanced + mrr_changed yeterlidir (snapshot durumsuz olduğundan her okuma
+# günceldir).
 
 const SHARE_GROWTH_PER_DAY := 0.004    # momentum başına günlük göreli büyüme  # WORKING
 const SHARE_WOBBLE_AMP := 0.08         # hafta-bloklu doku genliği (momentum ölçekli)  # WORKING
@@ -217,8 +218,8 @@ func _share_at(rid: String, seed: float, momentum: float, day: int) -> float:
 	# sıçrama haftanın basamak sayısı değişince olur (hafta 9→10, yani gün 70). Sonuç:
 	# haftalık delta neredeyse tamamen büyüme terimidir (seed × momentum × 0,028) ve
 	# koşu başına TEK büyük hamle penceresi vardır. Paylar tutarlı, ama "doku" iddiası
-	# şu an gerçekleşmiyor; düzeltmek ODA panosundaki görünen payları oynatır, o yüzden
-	# ayrı karar. Haber eşikleri bu GERÇEK dağılıma göre ayarlandı, iddiaya göre değil.
+	# şu an gerçekleşmiyor; düzeltmek oyuncunun gördüğü payları (Finans, Ürün) oynatır, o
+	# yüzden ayrı karar. Haber eşikleri bu GERÇEK dağılıma göre ayarlandı, iddiaya göre değil.
 	var grown: float = seed * (1.0 + momentum * SHARE_GROWTH_PER_DAY * float(day))
 	var week: int = int(float(day) / float(SHARE_MOVED_WINDOW_DAYS))
 	var w: float = float(absi(hash("%s|%d" % [rid, week])) % 1000) / 1000.0

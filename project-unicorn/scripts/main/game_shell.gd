@@ -6,12 +6,8 @@ extends Control
 
 var _meeting_fixture_toggle: bool = false  # Shift+F2: full ↔ extreme-length fixture
 var _vc_debug_idx: int = 0                 # Shift+F5: cycles the VC roster
-# tab_changed aynası — "" = oda görünür. Esc yönlendirmesi buradan okur.
-var _active_tab_id: String = ""
 
-
-func _ready() -> void:
-	EventBus.tab_changed.connect(func(tab_id: String) -> void: _active_tab_id = tab_id)
+@onready var _windows: Node = $MidRow/CenterViewport   # WindowLayer: Esc en üstteki pencereyi kapatır
 
 
 func _layer_busy(layer_name: String) -> bool:
@@ -56,15 +52,14 @@ func _input(event: InputEvent) -> void:
 	if _layer_busy("ModalLayer"):
 		return
 	if key.keycode == KEY_ESCAPE:
-		# Guard 3: PanelLayer sakinleri (HRAtlasModal / HRPopover / OdaTour) Esc'in sahibi;
+		# Guard 3: PanelLayer sakinleri (HRAtlasModal / HRPopover / PublishFlow) Esc'in sahibi;
 		# yoksa Esc sekmeyi kapatır ve PanelLayer çocuğu ekranda öksüz kalır.
 		if _layer_busy("PanelLayer"):
 			return
 		get_viewport().set_input_as_handled()
-		if _active_tab_id != "":
-			EventBus.tab_changed.emit("")  # açık sayfayı kapat → odaya dön (✕ ile aynı kanal)
-		else:
-			# Odada, her şey kapalıyken: sistem menüsü. Guard 2 geçildiyse zorunlu karar yok.
+		# Önce ayrıntı, sonra birincil pencere (× ile aynı kanal). Ofiste her şey kapalıyken
+		# sistem menüsü; Guard 2 geçildiyse zorunlu karar yok.
+		if not _windows.close_top():
 			EventBus.system_menu_requested.emit()
 		return
 	get_viewport().set_input_as_handled()

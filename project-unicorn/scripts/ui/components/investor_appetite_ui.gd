@@ -5,8 +5,8 @@ extends RefCounted
 # the signal is shown, the revenue figure never is). Paints PhaseGateSystem.series_a_signal()
 # as a Terminal state chip + one line — no progress bar and no growth count. Whether the chip
 # stays or gives way to ch. 08 §5's one-line Frank note is open in docs/ACIK_ISLER/ACIK_KARARLAR.md.
-# Three surfaces read it — the Finance title row, the product page's traction strip and the
-# ODA board's goal card — so the words and the palette live here once.
+# Two surfaces read it — the Finance summary's appetite row and the product page's traction
+# strip — so the words and the palette live here once.
 #
 # Static: no Object, so TranslationServer.translate() rather than tr() (loc_residue bans
 # tr() in statics — it compiles and dies at runtime).
@@ -33,7 +33,7 @@ static func chip(state: String) -> PanelContainer:
 		"open":
 			return UiFactory.make_state_chip(state_text(state), UiTokens.positive(), UiTokens.positive_bg(), UiTokens.positive_rule())
 		"warming":
-			return UiFactory.make_state_chip(state_text(state), UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT)
+			return UiFactory.make_state_chip(state_text(state), UiTokens.ACCENT_DEEP, UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP)
 		_:
 			return UiFactory.make_state_chip(state_text(state), UiTokens.INK_MUTED, UiTokens.NEUTRAL_BADGE_BG, UiTokens.BORDER_DISABLED)
 

@@ -173,11 +173,12 @@ static func state_ink(state: String) -> Color:
 		_: return UiTokens.INK
 
 
-## Kartın üst kenarındaki 2px şeridin rengi.
+## Kartın üst kenarındaki 2px şeridin rengi. Koşan ile araştırılabilir kremde ayrı okunmalı:
+## koşan derin amber (ACCENT_DEEP), araştırılabilir dolgu amberi (ACCENT).
 static func state_edge_color(state: String) -> Color:
 	match state:
-		TILE_RUNNING: return UiTokens.ACCENT
-		TILE_AVAILABLE: return UiTokens.ACCENT_HOVER
+		TILE_RUNNING: return UiTokens.ACCENT_DEEP
+		TILE_AVAILABLE: return UiTokens.ACCENT
 		TILE_FROZEN: return UiTokens.BORDER_HOVER
 		TILE_DONE: return UiTokens.CARD_BORDER
 		_: return UiTokens.BORDER_DASHED
@@ -200,7 +201,7 @@ static func link(text: String) -> Link:
 	var l := Link.new()
 	l.theme_type_variation = &"RowMeta"
 	l.text = text
-	l.add_theme_color_override("font_color", UiTokens.ACCENT)
+	l.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
 	l.mouse_filter = Control.MOUSE_FILTER_STOP
 	l.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -251,7 +252,7 @@ class Swatch extends Control:
 			"intra":
 				draw_line(Vector2(0, mid), Vector2(size.x, mid), UiTokens.CARD_BORDER, 1.5)
 			"cross":
-				draw_dashed_line(Vector2(0, mid), Vector2(size.x, mid), UiTokens.ACCENT, 1.5, 4.0)
+				draw_dashed_line(Vector2(0, mid), Vector2(size.x, mid), UiTokens.ACCENT_DEEP, 1.5, 4.0)
 			"locked":
 				RnDUiShared.draw_dashed_rect(self,
 					Rect2(Vector2(0.5, 2.5), Vector2(size.x - 1.0, size.y - 5.0)),
@@ -259,7 +260,7 @@ class Swatch extends Control:
 			"available", "done":
 				var r := Rect2(Vector2.ZERO, Vector2(size.x, size.y - 2.0))
 				draw_rect(r, UiTokens.CARD_BG, true)
-				draw_rect(r, UiTokens.ACCENT if kind == "available" else UiTokens.CARD_BORDER,
+				draw_rect(r, UiTokens.ACCENT_DEEP if kind == "available" else UiTokens.CARD_BORDER,
 					false, 1.0)
 				if kind == "available":
 					draw_rect(Rect2(r.position, Vector2(2.0, r.size.y)), UiTokens.ACCENT, true)

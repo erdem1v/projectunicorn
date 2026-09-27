@@ -98,7 +98,7 @@ func _needle_color() -> Color:
 	match _result:
 		"success": return UiTokens.positive_bright()
 		"failure": return UiTokens.negative_bright()
-		_: return UiTokens.ACCENT
+		_: return UiTokens.ACCENT_CHROME
 
 
 func _draw() -> void:

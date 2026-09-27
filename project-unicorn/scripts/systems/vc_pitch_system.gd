@@ -786,8 +786,8 @@ static func _tick_callbacks() -> void:
 			cb.met = true
 			st.reentry_bonus = true
 			EventBus.callback_ready.emit(inv.id)
-			EventBus.mentor_advisory_changed.emit(
-				_t("VC_CALLBACK_REOPENED").format({"investor": inv.display_name}))
+			EventBus.mentor_advisory_changed.emit("VC_CALLBACK_REOPENED",
+				{"investor": inv.display_name})
 
 
 static func _tick_prep() -> void:

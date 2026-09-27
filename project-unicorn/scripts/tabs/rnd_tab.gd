@@ -18,7 +18,7 @@ extends Control
 #
 # DİL VE PALET: bu sayfa `language_changed`/`palette_changed`e BAĞLANMAZ.
 # Router sayfayı her mount'ta serbest bırakıp yeniden kuruyor
-# (center_viewport._rebuild_open_page) ve dil/palet yenilemesini KENDİ KENDİNİ İYİLEŞTİREN şey
+# (WindowLayer._rebuild) ve dil/palet yenilemesini KENDİ KENDİNİ İYİLEŞTİREN şey
 # tam olarak bu; buradan da bağlansaydık sayfa iki kez kurulurdu.
 #
 # TAZELEME MODELİ (hr_tab'ın yapı-anahtarı deseni): ucuz bir anahtar (açılmış
@@ -30,8 +30,6 @@ extends Control
 # (voice pass) yazı ekibinin işi.
 # ============================================================================
 
-## Sayfanın kendi kenar boşluğu (Ekip sayfasının ölçüsü).
-const PAGE_MARGIN := 16
 ## Koşan araştırmanın tek satırlık şeridi (§8 — sayfanın en üstü).
 const BAR_H := 26
 
@@ -121,15 +119,11 @@ func select_node(node_id: String, open_assign: bool = false) -> void:
 # --- Sayfa kromu -------------------------------------------------------------
 
 func _build_chrome() -> void:
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, PAGE_MARGIN)
-	add_child(margin)
-
+	# Kenar boşluğu pencerenin (WindowFrame): başlık satırı kapatma glifiyle aynı çizgide.
 	var outer := VBoxContainer.new()
+	outer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	outer.add_theme_constant_override("separation", UiTokens.SPACE_M)
-	margin.add_child(outer)
+	add_child(outer)
 
 	# --- Başlık: Ar-Ge + ipucu · sağda ilerleme ---
 	var head := HBoxContainer.new()
@@ -298,7 +292,7 @@ func _paint_bar() -> void:
 	var days: float = RnDSystem.days_estimate(active, RnDSystem.assigned(active))
 	if note != "":
 		_bar_days.text = tr(note)
-		_bar_days.add_theme_color_override("font_color", UiTokens.ACCENT)
+		_bar_days.add_theme_color_override("font_color", UiTokens.ACCENT_DEEP)
 	else:
 		_bar_days.text = RnDUiShared.days_text(days) if days > 0.0 else ""
 		_bar_days.add_theme_color_override("font_color", UiTokens.INK_MUTED)

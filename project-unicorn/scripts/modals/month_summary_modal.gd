@@ -22,6 +22,7 @@ signal dismissed
 
 
 func _ready() -> void:
+	($Dimmer as ColorRect).color = UiTokens.SCRIM_MODAL
 	_apply_band_styles()
 	_continue_btn.pressed.connect(_dismiss)
 	# Focus-rule exception: the ONLY button, non-destructive continue —
@@ -139,10 +140,10 @@ func _band_stylebox(top: bool) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = UiTokens.BG_TOPBAR
 	# Match ModalPanel's outer radius on the flush edges only.
-	sb.corner_radius_top_left = 6 if top else 0
-	sb.corner_radius_top_right = 6 if top else 0
-	sb.corner_radius_bottom_left = 0 if top else 6
-	sb.corner_radius_bottom_right = 0 if top else 6
+	sb.corner_radius_top_left = UiTokens.RADIUS_L if top else 0
+	sb.corner_radius_top_right = UiTokens.RADIUS_L if top else 0
+	sb.corner_radius_bottom_left = 0 if top else UiTokens.RADIUS_L
+	sb.corner_radius_bottom_right = 0 if top else UiTokens.RADIUS_L
 	sb.content_margin_left = 26
 	sb.content_margin_right = 26
 	sb.content_margin_top = 16 if top else 12

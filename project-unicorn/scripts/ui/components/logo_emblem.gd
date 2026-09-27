@@ -35,17 +35,17 @@ func _draw() -> void:
 	var letter_color: Color = UiTokens.CREAM
 	match _emblem_kind():
 		"circle_outline":
-			draw_arc(c, r, 0.0, TAU, 48, UiTokens.ACCENT, 1.5, true)
+			draw_arc(c, r, 0.0, TAU, 48, UiTokens.ACCENT_CHROME, 1.5, true)
 		"hexagon":
 			var pts := PackedVector2Array()
 			for i in 7:   # 7th point closes the loop
 				var a: float = TAU * i / 6.0 - PI / 2.0
 				pts.append(c + Vector2(cos(a), sin(a)) * r)
-			draw_polyline(pts, UiTokens.ACCENT, 1.5, true)
-			letter_color = UiTokens.ACCENT
+			draw_polyline(pts, UiTokens.ACCENT_CHROME, 1.5, true)
+			letter_color = UiTokens.ACCENT_CHROME
 		"rounded_fill":
 			var sb := StyleBoxFlat.new()
-			sb.bg_color = UiTokens.ACCENT
+			sb.bg_color = UiTokens.ACCENT_CHROME
 			sb.set_corner_radius_all(int(r * 0.45))
 			draw_style_box(sb, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0))
 			letter_color = UiTokens.DIALOGUE_BG

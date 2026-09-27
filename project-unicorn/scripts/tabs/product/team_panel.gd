@@ -255,7 +255,7 @@ func _make_person_row(c: Character) -> Control:
 		UiTokens.INK if picked else UiTokens.INK_MUTED))
 	if c.id == _lead_id:
 		name_row.add_child(UiFactory.make_state_chip(tr("PROD_TEAM_LEAD"),
-			UiTokens.ACCENT, UiTokens.AMBER_BG, UiTokens.ACCENT))
+			UiTokens.ACCENT_DEEP, UiTokens.AMBER_BG, UiTokens.ACCENT_DEEP))
 	var card: PanelContainer = _row_card(picked, name_row, Fmt.upper(HRUiShared.roster_title(c)),
 		_area_cell(c, _primary_area(c)), HRUiShared.availability_text(c), HRSystem.is_busy(c))
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -299,7 +299,7 @@ func _row_card(picked: bool, name_line: Control, subtitle: String, area_cell: Co
 	row.add_child(who)
 	row.add_child(area_cell)
 
-	var flag := UiFactory.make_label(flag_text, &"MicroLabel", UiTokens.ACCENT)
+	var flag := UiFactory.make_label(flag_text, &"MicroLabel", UiTokens.ACCENT_DEEP)
 	flag.custom_minimum_size = Vector2(W_AVAIL, 0)
 	flag.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	flag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -376,14 +376,14 @@ func _check_box(picked: bool) -> Control:
 	var box := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = UiTokens.SURFACE_INPUT
-	sb.border_color = UiTokens.ACCENT if picked else UiTokens.BORDER_HOVER
+	sb.border_color = UiTokens.ACCENT_DEEP if picked else UiTokens.BORDER_HOVER
 	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
 	sb.set_corner_radius_all(UiTokens.RADIUS_S)
 	box.add_theme_stylebox_override("panel", sb)
 	box.custom_minimum_size = Vector2(CHECK_PX, CHECK_PX)
 	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var tick := UiFactory.make_label("✓" if picked else "", &"BadgeLabel", UiTokens.ACCENT)
+	var tick := UiFactory.make_label("✓" if picked else "", &"BadgeLabel", UiTokens.ACCENT_DEEP)
 	tick.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tick.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(tick)
@@ -413,7 +413,7 @@ func _row_box(picked: bool, hovered: bool) -> StyleBoxFlat:
 	sb.set_border_width_all(UiTokens.BORDER_HAIRLINE)
 	sb.border_width_left = SELECT_BAR_W
 	if picked:
-		sb.border_color = UiTokens.ACCENT
+		sb.border_color = UiTokens.ACCENT_DEEP
 	elif hovered:
 		sb.border_color = UiTokens.BORDER_HOVER
 	return sb

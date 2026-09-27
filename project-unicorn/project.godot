@@ -55,4 +55,5 @@ theme/custom="res://themes/master_theme.tres"
 
 [rendering]
 
+reflections/sky_reflections/roughness_layers=7
 rendering_device/driver.windows="d3d12"

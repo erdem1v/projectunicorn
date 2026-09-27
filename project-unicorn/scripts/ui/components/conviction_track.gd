@@ -28,6 +28,6 @@ func _on_track_draw() -> void:
 	var w: float = _track.size.x
 	var h: float = _track.size.y
 	_track.draw_rect(Rect2(0.0, 0.0, w, h), UiTokens.CONVICTION_TRACK_BG)
-	_track.draw_rect(Rect2(0.0, 0.0, w * _value / 100.0, h), UiTokens.ACCENT)
+	_track.draw_rect(Rect2(0.0, 0.0, w * _value / 100.0, h), UiTokens.ACCENT_CHROME)
 	for bound in PitchConstants.ZONE_BOUNDS:
 		_track.draw_rect(Rect2(w * float(bound) / 100.0, 0.0, 1.0, h), UiTokens.SEPARATOR)

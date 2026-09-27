@@ -31,9 +31,9 @@ func _draw() -> void:
 	var w: float = (size.x - SLOT_GAP * (SEGMENTS - 1)) / SEGMENTS
 	var y: float = (size.y - SLOT_HEIGHT) * 0.5
 	for i in SEGMENTS:
-		var color: Color = UiTokens.VEIL_FAINT   # ceiling slots — visible, unreachable now
+		var color: Color = UiTokens.VEIL_FAINT_CHROME   # ceiling slots — visible, unreachable now
 		if i < filled:
-			color = UiTokens.ACCENT
+			color = UiTokens.ACCENT_CHROME
 		elif i < fillable:
 			color = UiTokens.CONVICTION_TRACK_BG
 		draw_rect(Rect2(i * (w + SLOT_GAP), y, w, SLOT_HEIGHT), color)

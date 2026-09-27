@@ -219,9 +219,9 @@ var run_board_seats: int = 0
 var run_board_veto: bool = false
 
 # Frank's angel round, SEPARATE from the Series A terms above: those are written by plain
-# assignment at signing and would erase the angel slice (and light ODA's "İlk Yatırım" diploma,
-# which reads run_investment_amount). Readers compose totals via get_investor_equity_pct /
-# get_total_raised, never by summing raw fields.
+# assignment at signing and would erase the angel slice (and earn the Personal page's
+# first-funding milestone, which reads run_investment_amount). Readers compose totals via
+# get_investor_equity_pct / get_total_raised, never by summing raw fields.
 var run_angel_amount: int = 0
 var run_angel_equity_pct: int = 0
 
@@ -274,6 +274,22 @@ var group_work_hours_override: Dictionary = {}
 # counts, biz_buffer, biz_dropped, recent_rivals, stream}. `biz_dropped` counts milestone lines
 # the ≤20 % "biz" quota refused (calibration data). ---
 var news_feed: Dictionary = {}
+
+# --- Office (sole writer OfficeSystem) ---
+var office_id: String = "home"         # the OfficeConstants.CATALOG id the company works in
+var office_move_to: String = ""        # where a move is heading; "" = not moving
+var office_move_day: int = -1          # that move's arrival day; -1 = not moving
+
+# Frank's latest advisory, kept for the surfaces that open after he said it: a CSV key and its
+# format args, resolved where it is shown so the line follows the live language.
+var mentor_line_key: String = ""
+var mentor_line_args: Dictionary = {}
+
+
+func _ready() -> void:
+	EventBus.mentor_advisory_changed.connect(func(key: String, args: Dictionary) -> void:
+		mentor_line_key = key
+		mentor_line_args = args)
 
 # --- Setters (the only way to mutate from outside) ---
 
@@ -673,6 +689,25 @@ func get_run_ledger() -> Dictionary:
 	}
 
 
+## The run's three milestones as {key, earned, meta}: key an untranslated CSV key, meta the date
+## or amount to show. The engine keeps no milestone ledger, so they derive from persistent traces;
+## the funding day is not recorded, so that meta is the amount.
+func milestones() -> Array:
+	var launch_day: int = int(get_flag("mvp_launch_day", 0))
+	return [
+		{"key": "MILESTONE_FOUNDING", "earned": true, "meta": _month_year(1)},
+		{"key": "MILESTONE_FIRST_SHIP", "earned": launch_day > 0,
+			"meta": _month_year(launch_day) if launch_day > 0 else ""},
+		{"key": "MILESTONE_FIRST_FUNDING", "earned": run_investment_amount > 0,
+			"meta": Fmt.money(run_investment_amount) if run_investment_amount > 0 else ""},
+	]
+
+
+func _month_year(for_day: int) -> String:
+	var d: Dictionary = get_date_dict(for_day)
+	return Fmt.month_name(int(d.month)) + " " + str(int(d.year))
+
+
 func _emit_runway() -> void:
 	EventBus.runway_recalculated.emit(get_runway_months())
 
@@ -787,6 +822,12 @@ func initialize_run(payload: Dictionary) -> void:
 	company_work_hours = HRConstants.WORK_HOURS_DEFAULT
 	group_work_hours_override.clear()
 	news_feed.clear()
+
+	office_id = "home"
+	office_move_to = ""
+	office_move_day = -1
+	mentor_line_key = ""
+	mentor_line_args.clear()
 
 	flags.clear()
 	# Origin flags, after the clear. RESERVED: nothing consumes them yet

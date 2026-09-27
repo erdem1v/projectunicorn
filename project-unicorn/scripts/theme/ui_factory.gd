@@ -38,9 +38,9 @@ static func make_badge(text: String, kind: StringName = &"neutral") -> PanelCont
 	return make_pill(text, p.bg, p.fg)
 
 
-## Terminal state chip: thin coloured edge + dark fill. Built at runtime rather than
-## as a theme variation because the semantic pair's colourblind swap cannot live in a
-## static .tres.
+## Terminal state chip: thin coloured edge over a pale tint of its hue. Built at runtime
+## rather than as a theme variation because the semantic pair's colourblind swap cannot live
+## in a static .tres.
 static func make_state_chip(text: String, fg: Color, bg: Color, border: Color) -> PanelContainer:
 	var chip := PanelContainer.new()
 	var sb := _chip_box(bg)
@@ -161,6 +161,19 @@ static func make_placeholder_column(title: String, line: String) -> VBoxContaine
 	line_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(line_lbl)
 	return col
+
+
+## The × that closes a window or a card. No focus: game_shell reads Space as the speed key.
+## WindowClose carries no margins, so this square is the button's size.
+static func make_close_button(on_close: Callable) -> Button:
+	var close := Button.new()
+	close.theme_type_variation = &"WindowClose"
+	close.focus_mode = Control.FOCUS_NONE
+	close.text = "×"
+	close.tooltip_text = TranslationServer.translate("WIN_CLOSE")
+	close.custom_minimum_size = Vector2(UiTokens.SPACE_3XL, UiTokens.SPACE_3XL)
+	close.pressed.connect(on_close)
+	return close
 
 
 ## Removes every child from the tree at once (so it cannot clash with the replacements

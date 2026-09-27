@@ -47,7 +47,7 @@ var _offer_days_left: int = -1
 
 
 func _ready() -> void:
-	logo_square.color = UiTokens.ACCENT
+	logo_square.color = UiTokens.ACCENT_CHROME
 	_refresh_all()
 
 	EventBus.cash_changed.connect(_on_cash_changed)
@@ -177,7 +177,7 @@ func _on_offer_countdown_changed(days_left: int) -> void:
 	offer_label.visible = days_left >= 0
 	if days_left >= 0:
 		offer_label.text = tr("FIN_OFFER_COUNTDOWN").format({"n": days_left})
-		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT if days_left > 1 else UiTokens.negative_bright())
+		offer_label.add_theme_color_override("font_color", UiTokens.ACCENT_CHROME if days_left > 1 else UiTokens.negative_bright())
 
 
 func _on_phase_changed(new_phase: int) -> void:

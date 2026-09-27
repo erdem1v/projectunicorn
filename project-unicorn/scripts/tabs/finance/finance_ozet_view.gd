@@ -8,7 +8,8 @@ extends Control
 #
 # Bu dosya hiçbir sonucu HESAPLAMAZ: her rakam bir motor seam'inden gelir
 # (FinanceSystem.get_monthly_flow / get_burn_breakdown_pct / get_transactions /
-# get_optimistic_daily_net, GameState.get_cash_history, UiTokens.net_runway_parts).
+# get_optimistic_daily_net, GameState.get_cash_history, UiTokens.net_runway_parts,
+# RivalRegistry.get_market_snapshot, PhaseGateSystem.series_a_signal).
 # Tek istisna BİÇİMLEME (formatters + tarih etiketi).
 #
 # Mockup'tan bilinçli sapmalar (yönetmen kararı):
@@ -55,6 +56,13 @@ var _mentor_card: PanelContainer
 var _mentor_quote: Label            # rewritten per band (Frank v6, surface 20)
 var _appetite_chip_host: HBoxContainer   # "Yatırımcı iştahı" durum çipi (yeniden kurulur; palet duruma bağlı)
 var _appetite_line: Label                # çipin altındaki tek satır
+var _goal_head: Label
+var _goal_progress: Label
+var _goal_value: Label
+var _goal_bar: ProgressBar
+var _league_card: PanelContainer
+var _league_rank: Label
+var _league_rows: VBoxContainer
 
 var _signals: Array = []
 
@@ -73,6 +81,15 @@ func _ready() -> void:
 		[EventBus.month_ended, _on_state_changed],
 		[EventBus.phase_gate_reached, _on_state_changed],
 		[EventBus.phase_changed, _on_state_changed],
+		# Faz hedefi ve pazar payı: sürüm, hesap, teklif ve rakip hareketleri.
+		[EventBus.version_shipped, _on_state_changed],
+		[EventBus.customer_added, _on_state_changed],
+		[EventBus.customer_removed, _on_state_changed],
+		[EventBus.sheet_granted, _on_state_changed],
+		[EventBus.sheet_expired, _on_state_changed],
+		[EventBus.sheet_walked, _on_state_changed],
+		[EventBus.rival_advanced, _on_state_changed],
+		[EventBus.rival_status_changed, _on_state_changed],
 	]
 	for s in _signals:
 		(s[0] as Signal).connect(s[1])
@@ -105,14 +122,9 @@ func _build() -> void:
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(page)
 
-	# Başlık satırı: sayfa adı + "Yatırımcı iştahı" göstergesi (yönetmen kararı: sayı
-	# gösterilmez, sinyal gösterilir).
-	var title_row := HBoxContainer.new()
-	page.add_child(title_row)
-	var title := UiFactory.make_label(tr("TAB_FINANCE"), &"TitleSerif")
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_row.add_child(title)
-	title_row.add_child(_build_appetite_group())
+	# "Yatırımcı iştahı" göstergesi Özet'in başında (yönetmen kararı: sayı gösterilmez, sinyal
+	# gösterilir). Sayfa adı FinanceTab'ın başlık satırında.
+	page.add_child(_build_appetite_group())
 
 	# İki kolon
 	var columns := HBoxContainer.new()
@@ -135,6 +147,9 @@ func _build() -> void:
 	left.add_child(_build_curve_card())
 	left.add_child(_build_transactions_card())
 
+	right.add_child(_build_goal_card())
+	_league_card = _build_league_card()
+	right.add_child(_league_card)
 	right.add_child(_build_flow_card())
 	right.add_child(_build_burn_card())
 	right.add_child(_build_captable_card())
@@ -298,6 +313,42 @@ func _legend_chip(text: String, color: Color) -> Control:
 	return row
 
 
+## Faz hedefi: başlık fazın hedefi, satır ne gerektiği; ilk fazda üç koşulun ilerlemesi.
+func _build_goal_card() -> PanelContainer:
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 8)
+	var head := HBoxContainer.new()
+	vb.add_child(head)
+	_goal_head = UiFactory.make_label("", &"SectionLabel")
+	_goal_head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(_goal_head)
+	_goal_progress = UiFactory.make_label("", &"RowMeta", UiTokens.INK_MUTED)
+	head.add_child(_goal_progress)
+	_goal_value = UiFactory.make_label("", &"RowName")
+	_goal_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb.add_child(_goal_value)
+	_goal_bar = _bar(0)
+	vb.add_child(_goal_bar)
+	return _card(vb)
+
+
+## Pazar payı merdiveni; ürün piyasada değilse kart çizilmez (_refresh_league).
+func _build_league_card() -> PanelContainer:
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 8)
+	var head := HBoxContainer.new()
+	vb.add_child(head)
+	var h := UiFactory.make_section_header(tr("FIN_MARKET_TITLE"))
+	h.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(h)
+	_league_rank = UiFactory.make_label("", &"RowMeta", UiTokens.INK)
+	head.add_child(_league_rank)
+	_league_rows = VBoxContainer.new()
+	_league_rows.add_theme_constant_override("separation", 4)
+	vb.add_child(_league_rows)
+	return _card(vb)
+
+
 func _build_flow_card() -> PanelContainer:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
@@ -408,6 +459,8 @@ func refresh() -> void:
 	_refresh_header()
 	_refresh_profit_progress()
 	_refresh_appetite()
+	_refresh_goal()
+	_refresh_league()
 	_refresh_curve()
 	_refresh_flow()
 	_refresh_burn()
@@ -441,6 +494,108 @@ func _refresh_header() -> void:
 		_runway_val.add_theme_color_override("font_color",
 				UiTokens.negative() if (months < RUNWAY_WARN_MONTHS or GameState.cash < 0) else UiTokens.INK)
 		_runway_note.visible = false
+
+
+func _refresh_goal() -> void:
+	# Eşikler her boyamada canlı okunur. İkinci fazda kart yalnız başlığı taşır: kapının
+	# sinyali iştah çipinde, gelir çıtasının rakamı hiçbir yerde basılmaz.
+	_goal_progress.text = ""
+	_goal_bar.visible = GameState.phase == 1
+	match GameState.phase:
+		1:
+			var met: int = int(ProductState.is_live()) + int(not CustomerRegistry.get_all().is_empty()) \
+				+ int(GameState.mrr > 0)
+			_set_goal("FIN_GOAL_P1_LABEL", tr("FIN_GOAL_P1_META"))
+			_goal_progress.text = tr("FIN_GOAL_PROGRESS").format({"met": met, "total": 3})
+			_goal_bar.value = met / 3.0 * 100.0
+		2:
+			_set_goal("FIN_GOAL_P2_LABEL", "")
+		_:
+			if GameState.series_a_closed:
+				_set_goal("FIN_GOAL_P3_CLOSED", Fmt.money(GameState.run_investment_amount))
+			else:
+				_set_goal("FIN_GOAL_P3_LABEL",
+					tr("FIN_GOAL_P3_HUNT").format({"n": GameState.active_sheets.size()}))
+
+
+## Başlık register'ı mono + BÜYÜK HARF; anahtarın sonundaki iki nokta başlıkta kesilir.
+func _set_goal(head_key: String, value: String) -> void:
+	_goal_head.text = Fmt.upper(tr(head_key).trim_suffix(":"))
+	_goal_value.text = value
+	_goal_value.visible = value != ""
+
+
+func _refresh_league() -> void:
+	# Durumsuz: pay MRR'dan ve katalog tohumlarından türer. Ürün piyasada değilse kart yok.
+	var snap: Dictionary = RivalRegistry.get_market_snapshot(ProductState.subtype()) \
+		if ProductState.is_live() else {"rivals": []}
+	var rivals: Array = snap["rivals"]
+	_league_card.visible = not rivals.is_empty()
+	if rivals.is_empty():
+		return
+	_clear(_league_rows)
+	# Çıktı ama MRR yok: tablo yerine tek yönlendirme satırı.
+	if GameState.mrr <= 0:
+		_league_rank.text = ""
+		var line := UiFactory.make_label(tr("FIN_MARKET_EMPTY"), &"QuoteSerif")
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_league_rows.add_child(line)
+		return
+	# Gerçek pay tablosu: ilk üç + oyuncunun HEMEN üstündeki rakip (tekrarsız) + SEN. Satır
+	# numarası GERÇEK pazar sırasıdır; sayı atlaması aradaki mesafeyi kendisi anlatır.
+	var player_pct: float = float(snap["player_pct"])
+	_league_rank.text = RivalRegistry.format_share(player_pct)
+	var player_name: String = ProductState.product_name()
+	if player_name == "":
+		player_name = GameState.company_name
+	var above_count: int = 0
+	var nearest_above: Dictionary = {}
+	for row in rivals:
+		if float(row["share_pct"]) > player_pct:
+			above_count += 1
+			nearest_above = row
+	var picks: Array = rivals.slice(0, 3)
+	if not nearest_above.is_empty() and not picks.has(nearest_above):
+		picks.append(nearest_above)
+	var entries: Array = []
+	for pick in picks:
+		entries.append({"rank": rivals.find(pick) + 1 + (1 if player_pct > float(pick["share_pct"]) else 0),
+			"name": String(pick["name"]), "share": float(pick["share_pct"]),
+			"trend": int(pick["trend"]), "is_player": false})
+	entries.append({"rank": above_count + 1, "name": player_name, "share": player_pct,
+		"trend": 0, "is_player": true})
+	entries.sort_custom(func(a, b): return float(a["share"]) > float(b["share"]))
+	for e in entries:
+		var glyph: String = ["▼ ", "", "▲ "][signi(int(e["trend"])) + 1]
+		_league_rows.add_child(_league_row(int(e["rank"]), String(e["name"]), bool(e["is_player"]),
+			glyph + RivalRegistry.format_share(float(e["share"]))))
+	# "Diğerleri" kuyruğu SIRASIZ: merdivene girseydi oyuncunun kıymığının üstüne basamak olur,
+	# sıra atlamasının anlattığı mesafeyi bozardı. Baştaki "…" listenin bitmediğini söyler.
+	var others: float = float(snap["others_pct"])
+	if others >= 0.1:
+		var orow := HBoxContainer.new()
+		orow.add_theme_constant_override("separation", UiTokens.SPACE_XS)
+		var olbl := UiFactory.make_label("… %s" % tr("FIN_MARKET_OTHERS"), &"MicroLabel", UiTokens.INK_DIM)
+		olbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		orow.add_child(olbl)
+		orow.add_child(UiFactory.make_label(RivalRegistry.format_share(others), &"MicroLabel", UiTokens.INK_DIM))
+		_league_rows.add_child(orow)
+
+
+## Pay kolonu SEN satırında vurgulu, rakipte sönük.
+func _league_row(no: int, display: String, is_player: bool, value: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_XS)
+	var label := UiFactory.make_label("%d · %s" % [no, Fmt.upper(display)], &"MicroLabel",
+		UiTokens.INK if is_player else UiTokens.INK_MUTED)
+	label.clip_text = true
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+	if is_player:
+		row.add_child(UiFactory.make_label(tr("FIN_MARKET_YOU"), &"MicroLabel", UiTokens.ACCENT_DEEP))
+	row.add_child(UiFactory.make_label(value, &"MicroLabel",
+		UiTokens.ACCENT_DEEP if is_player else UiTokens.INK_DIM))
+	return row
 
 
 func _refresh_curve() -> void:

@@ -610,11 +610,9 @@ static func take_first_note_modal() -> bool:
 ## What the left rail's Ar-Ge badge counts. One number from one place, the
 ## HRSystem.attention_count() grammar.
 ##
-## §5.6.2 — a FROZEN research counts alongside an unread report, numbers adding. The tracker
-## hides while the ODA room is showing and the glass keeps the product bar, so the badge is
-## the only surface that reaches a player sitting in the room while their research is stalled.
-## A running research does NOT count: a badge that nagged about work already in progress
-## would be a demand, and Ar-Ge makes none.
+## §5.6.2 — a FROZEN research counts alongside an unread report, numbers adding. A running
+## research does NOT count: a badge that nagged about work already in progress would be a
+## demand, and Ar-Ge makes none.
 static func attention_count() -> int:
 	return int(_note_unread) + int(is_frozen())
 

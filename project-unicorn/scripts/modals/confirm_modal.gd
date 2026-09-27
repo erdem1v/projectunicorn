@@ -23,6 +23,7 @@ const PANEL_HALF_W_3BTN := 260.0
 
 
 func _ready() -> void:
+	($Dimmer as ColorRect).color = UiTokens.SCRIM_MODAL
 	_confirm_btn.pressed.connect(_close.bind(confirmed))
 	_alt_btn.pressed.connect(_close.bind(alt_selected))
 	_cancel_btn.pressed.connect(_close)

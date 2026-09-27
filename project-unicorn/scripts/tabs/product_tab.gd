@@ -11,7 +11,7 @@ extends Control
 #   func repaint() -> void                 — yerinde metin güncellemesi
 #   signal navigate_requested(view_id: String, args: Dictionary)
 #
-# Açılış HER ZAMAN "portfoy" (center_viewport tab'ı her girişte yeniden kurar;
+# Açılış HER ZAMAN "portfoy" (WindowLayer sekmeyi her girişte yeniden kurar;
 # görünüm state'i bilinçli olarak geçici), yalnız saklanmış bir kurma taslağı onu
 # geçer. Rota düzeltmeleri build_phase_changed üzerinden: "shipped" → detail,
 # "cancelled" → creation (iptal prefill'i ile).

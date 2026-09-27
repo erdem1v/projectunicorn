@@ -249,9 +249,9 @@ func _hours_cell(hours: int, inherited: bool, short_day: bool, on_set: Callable)
 	if inherited:
 		color = UiTokens.INK_DIM
 	elif HRConstants.is_overtime_hours(hours):
-		color = UiTokens.ACCENT
+		color = UiTokens.ACCENT_DEEP
 	elif short_day:
-		color = UiTokens.POSITIVE
+		color = UiTokens.positive()
 	return _pin(W_HOURS, _centered(_stepper(
 		tr("HR_HOURS_VALUE").format({"n": hours}),
 		hours > HRConstants.WORK_HOURS_MIN, hours < HRConstants.WORK_HOURS_MAX,
@@ -271,8 +271,8 @@ func _stepper(text: String, can_down: bool, can_up: bool, on_down: Callable, on_
 	if dashed:
 		# StyleBoxFlat'te kesikli kenar yok; "ödünç" okunuşu yarı saydam kenarla verilir.
 		sb.border_color = Color(UiTokens.BORDER_HOVER, 0.55)
-		sb.bg_color = Color(0, 0, 0, 0)
-	elif color == UiTokens.ACCENT or color == UiTokens.POSITIVE:
+		sb.bg_color = Color.TRANSPARENT
+	elif color == UiTokens.ACCENT_DEEP or color == UiTokens.positive():
 		sb.border_color = color
 		sb.bg_color = Color(color, 0.10)
 	else:
@@ -309,7 +309,7 @@ func _state_cell(hours: int) -> Control:
 		return _pin(W_STATE, Control.new())
 	var text: String = tr("HR_STATE_HOURS_OVER").format({"n": delta}) if delta > 0 \
 		else tr("HR_STATE_HOURS_SHORT").format({"n": -delta})
-	var lbl := UiFactory.make_label(text, &"RowMeta", UiTokens.ACCENT if delta > 0 else UiTokens.POSITIVE)
+	var lbl := UiFactory.make_label(text, &"RowMeta", UiTokens.ACCENT_DEEP if delta > 0 else UiTokens.positive())
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	return _pin(W_STATE, lbl)
 
@@ -331,7 +331,7 @@ func _source_cell(owns: bool, from_text: String, on_revert: Callable) -> Control
 	chip.add_theme_color_override("icon_hover_color", UiTokens.INK_MUTED)
 	for state in ["normal", "hover", "pressed", "focus"]:
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0, 0, 0, 0)
+		sb.bg_color = Color.TRANSPARENT
 		sb.set_border_width_all(1)
 		sb.border_color = UiTokens.BORDER_HOVER if state == "hover" else UiTokens.CARD_BORDER
 		sb.set_corner_radius_all(2)
@@ -393,11 +393,11 @@ func _morale_direction(hours: int) -> Control:
 	box.mouse_filter = Control.MOUSE_FILTER_STOP
 	if delta > 0:
 		for _i in delta:
-			box.add_child(HRUiShared.chevron(9, UiTokens.ACCENT, false))
+			box.add_child(HRUiShared.chevron(9, UiTokens.ACCENT_DEEP, false))
 	elif delta == -1:
-		box.add_child(HRUiShared.chevron_flat(9, UiTokens.POSITIVE))
+		box.add_child(HRUiShared.chevron_flat(9, UiTokens.positive()))
 	else:
-		box.add_child(HRUiShared.chevron(9, UiTokens.POSITIVE, true))
+		box.add_child(HRUiShared.chevron(9, UiTokens.positive(), true))
 	return box
 
 
@@ -422,10 +422,10 @@ func _cost_block() -> Control:
 	var delta := HBoxContainer.new()
 	delta.add_theme_constant_override("separation", 10)
 	delta.add_child(UiFactory.make_label(tr("HR_HOURS_COST_BURN"), &"RowMeta", UiTokens.INK_MUTED))
-	delta.add_child(UiFactory.make_label(Fmt.money_exact(before), &"RowMeta", UiTokens.CREAM_DIM))
+	delta.add_child(UiFactory.make_label(Fmt.money_exact(before), &"RowMeta", UiTokens.INK_DIM))
 	delta.add_child(UiFactory.make_label("→", &"RowMeta", UiTokens.INK_DIM))
 	delta.add_child(UiFactory.make_label(Fmt.money_exact(after), &"MetricValueInk",
-		UiTokens.NEGATIVE if after > before else UiTokens.INK))
+		UiTokens.negative() if after > before else UiTokens.INK))
 	col.add_child(delta)
 
 	# OLGU ve KURAL: sıfır olan yarım hiç yazılmaz. Kısa gün kuralı §8.3'ün istediği satırdır:
@@ -439,7 +439,7 @@ func _cost_block() -> Control:
 	if short_day > 0:
 		facts.append(tr("HR_HOURS_FACT_SHORT").format({"n": short_day}))
 		rules.add_child(UiFactory.make_label(tr("HR_HOURS_RULE_SHORT"), &"QuoteSerif", UiTokens.INK_MUTED))
-	col.add_child(UiFactory.make_label(" · ".join(facts), &"RowMeta", UiTokens.CREAM_DIM))
+	col.add_child(UiFactory.make_label(" · ".join(facts), &"RowMeta", UiTokens.INK_DIM))
 	col.add_child(rules)
 	return col
 
