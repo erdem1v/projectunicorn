@@ -23,11 +23,22 @@
   },
   "latch_key": "entity",
   "condition": {
-    "entity_seam": "musteri.is_at_risk",
-    "scope": "customer",
-    "op": "==",
-    "value": true,
-    "reason": "the account is not in Risk with a countdown running"
+    "all": [
+      {
+        "entity_seam": "musteri.is_at_risk",
+        "scope": "customer",
+        "op": "==",
+        "value": true,
+        "reason": "the account is not in Risk with a countdown running"
+      },
+      {
+        "entity_seam": "musteri.cs_escalated",
+        "scope": "customer",
+        "op": "==",
+        "value": false,
+        "reason": "the account's rep has an escalation open"
+      }
+    ]
   },
   "options": [
     {

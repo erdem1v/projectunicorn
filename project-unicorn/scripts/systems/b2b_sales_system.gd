@@ -153,7 +153,8 @@ static func _tick_at_risk(c: Customer) -> void:
 
 # THE RETENTION PREDICATE: an active b2b account IN Risk with its countdown running, and no
 # escalation open from its rep (that is the rep's voice, not the founder's). Read by the smoke
-# suite; the shipped `customer.retention` card gates on `musteri.is_at_risk`.
+# suite; the shipped `customer.retention` card gates on `musteri.is_at_risk` and
+# `musteri.cs_escalated`.
 static func can_offer_retention(c: Customer) -> bool:
 	if c == null or c.market_type != "b2b" or c.status != "active":
 		return false

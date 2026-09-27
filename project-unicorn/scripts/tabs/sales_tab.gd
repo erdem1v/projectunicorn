@@ -467,9 +467,11 @@ func _card_risk(c: Customer) -> Control:
 	_add_steward_line(col, c)
 	_add_promise_line(col, c)
 	# PROPOSER, not a second admission path (I1): the tab NAMES the card and the gate runs
-	# G1-G8 over it. §19 keeps the retention grammar intact.
-	col.add_child(_action_button(tr("SALES_ACTION_RETAIN") + " →", func() -> void:
-		EventGate.request("customer.retention", {"customer": c.id})))
+	# G1-G8 over it. §19 keeps the retention grammar intact. The card refuses an account its
+	# rep has escalated (that one is customer.cs_escalation's), so the button is not offered.
+	if not c.cs_escalated:
+		col.add_child(_action_button(tr("SALES_ACTION_RETAIN") + " →", func() -> void:
+			EventGate.request("customer.retention", {"customer": c.id})))
 	return UiFactory.make_card(col, false, true)
 
 
@@ -537,7 +539,7 @@ func _open_steward_picker(c: Customer, anchor: Button) -> void:
 		return
 	var body: VBoxContainer = pop.body()
 	body.add_child(UiFactory.make_section_header(tr("SALES_STEWARD_PICK")))
-	for rep in CharacterRegistry.get_active_by_role(HRConstants.ROLE_CUSTOMER_REP):
+	for rep in CustomerRepSystem.ranked_reps():
 		body.add_child(_steward_option(pop, c, rep.id, rep.character_name,
 			CustomerRepSystem.roster_size(rep.id), CustomerRepSystem.capacity_of(rep)))
 	body.add_child(HRUiShared.hairline())

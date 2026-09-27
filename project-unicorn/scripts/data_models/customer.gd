@@ -6,10 +6,6 @@ extends Resource
 # SalesSystem's MRR bridge. SaveCodec walks every @export, so the property list is the save
 # schema and each default is the migration.
 #
-# Reserved (declared with defaults so future systems plug in without
-# retrofitting and so the save schema is forward-compatible):
-#   - renewal_day, warning_flags, account_contact, notes
-#
 # Naming caution (mirrors Character): use company_name (not `name`) for
 # cross-data-model consistency.
 
@@ -36,7 +32,6 @@ extends Resource
 # --- Acquisition (set when a customer is created) ---
 @export var acquisition_source: String = ""   # "founder_pitch" | "sales_rep:<id>" | "organic" | "event" | "referral"
 @export var acquired_on_day: int = 0          # GameState.day at signing (serves as signed_day)
-@export var difficulty_stars: int = 0         # 1-5 carried from the prospect
 
 # --- B2B lifecycle (two-layer satisfaction + watched churn) ---
 # `industry` above serves as the sector channel (tolerance seed, complaint voice, contact seam).
@@ -84,12 +79,6 @@ extends Resource
 # §5.4 — the signing discount is INSIDE seat_price and visible as its own trace. A fraction,
 # not an amount, so it stays readable when the seat count moves.
 @export var signing_discount: float = 0.0
-
-# --- Reserved (declared, no reader or writer yet) ---
-@export var renewal_day: int = 0              # When the next renewal event fires
-@export var warning_flags: Array[String] = [] # "slow_payer" | "picky" | "kompromat_opportunity"
-@export var account_contact: String = ""      # Customer-side contact name
-@export var notes: String = ""                # Free text
 
 
 # Map the satisfaction int onto the `health` band string. CustomerRegistry.set_satisfaction

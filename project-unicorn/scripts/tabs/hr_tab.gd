@@ -180,8 +180,8 @@ func _compute_structure_key() -> String:
 	parts.append("%s|%d" % [HRSearchSystem.get_state(), HRSearchSystem.days_waiting()])
 	# DURUM sütunundaki saat istisnası etiketi bu iki sayıyı okuyor (§8.5, §13.3).
 	parts.append("wh%d|%d" % [GameState.company_work_hours, WorkHoursSystem.override_count()])
-	# MT'nin taşıdığı hesap sayısı satırın şeklinin parçası.
-	for rep in CharacterRegistry.get_active_by_role(HRConstants.ROLE_CUSTOMER_REP):
+	# Müşteri masasındakilerin taşıdığı hesap sayısı satırın şeklinin parçası.
+	for rep in CustomerRepSystem.ranked_reps():
 		parts.append("cs%s%d" % [rep.id, CustomerRepSystem.roster_size(rep.id)])
 	for emp in CharacterRegistry.get_employees():
 		parts.append("%s|%s|%d|%d" % [emp.id, emp.status, emp.monthly_salary,
@@ -353,7 +353,7 @@ func _add_group(group_id: String) -> void:
 	header.add_child(rule)
 	_list.add_child(header)
 
-	# get_employees(), get_active_by_role() DEĞİL: defter izindeki ve eğitimdeki kişiyi de
+	# get_employees(), get_active_employees() DEĞİL: defter izindeki ve eğitimdeki kişiyi de
 	# gösterir — maaşı ödeniyor, yalnız o günkü kapasiteye girmiyor.
 	var roster: Array[Character] = []
 	for emp in CharacterRegistry.get_employees():

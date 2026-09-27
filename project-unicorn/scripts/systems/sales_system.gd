@@ -329,7 +329,6 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	c.signing_discount = clampf(discount, 0.0, 1.0)
 	c.mrr = c.seats * c.seat_price
 	c.satisfaction = clampi(satisfaction, 0, 100)
-	c.difficulty_stars = prospect.star
 	c.acquisition_source = source
 	c.acquired_on_day = GameState.day
 	# B2B lifecycle seed: the star seeds the hidden tolerance (with the sector), drives the seat
@@ -360,6 +359,16 @@ static func add_b2b_customer(prospect: Prospect, seats: int, seat_price: int,
 	if not GameState.b2b_signed_company_names.has(c.company_name):
 		GameState.b2b_signed_company_names.append(c.company_name)
 	GameState.set_flag("sales_last_signed_star", c.scale)   # §14 sales.last_signed_star()
+	if c.scale >= SalesConstants.TICKER_NEWSWORTHY_STAR \
+			and String(GameState.get_flag("sales_first_top_star_id", "")) == "":
+		# A save older than this flag can already hold a 3★ in its book. That account came
+		# first and takes the stamp, so this signing is not news.
+		var first_id: String = c.id
+		for other in CustomerRegistry.get_by_market("b2b"):
+			if other.scale == c.scale and other.id != c.id:
+				first_id = other.id
+				break
+		GameState.set_flag("sales_first_top_star_id", first_id)
 	EventBus.deal_signed.emit(c.id, c.seats, c.seat_price)
 	# Deliberately NO transactions-log row here. That ledger sits under the cash curve and
 	# every other row in it is paired with a real set_cash movement; a subscription's monthly

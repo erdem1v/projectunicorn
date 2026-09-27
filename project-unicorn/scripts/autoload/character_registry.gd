@@ -347,16 +347,6 @@ func count_customer_reps() -> int:
 	return get_customer_reps().size()
 
 
-## İŞ merceği: bir roldeki işbaşındaki herkes, masalar sıralasın diye id'ye göre sıralı.
-func get_active_by_role(role_id: String) -> Array[Character]:
-	var out: Array[Character] = []
-	for c in get_active_employees():
-		if c.role == role_id:
-			out.append(c)
-	out.sort_custom(func(a: Character, b: Character) -> bool: return a.id < b.id)
-	return out
-
-
 func count_active_by_role(role_id: String) -> int:
 	var n: int = 0
 	for c in get_active_employees():

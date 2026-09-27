@@ -13,5 +13,4 @@ extends Resource
 @export var customer_id: String = ""      # the account the word was given to
 @export var feature_id: String = ""       # the ProductCatalog feature that must ship
 @export var deadline_day: int = 0         # GameState.day by which it must ship
-@export var created_on_day: int = 0
 @export var status: String = "open"       # "open" | "kept" | "broken" | "partial"

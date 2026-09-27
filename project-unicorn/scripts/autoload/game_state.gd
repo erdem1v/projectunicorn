@@ -101,6 +101,7 @@ const FLAG_TYPES := {
 	"sales_inner_voice_used": TYPE_INT,        # §5.1.1 — the run's inner-voice budget
 	"sales_open_pitch_promise": TYPE_STRING,   # §6 — the ONE open pitch promise, by account
 	"sales_last_signed_star": TYPE_INT,        # §14 — sales.last_signed_star()
+	"sales_first_top_star_id": TYPE_STRING,    # §7.3 — the run's first 3★ account, "" = none yet
 	"sales_weekly_anchor_day": TYPE_INT,       # §7.3 — the weekly summary's window start
 	"sales_weekly_closes": TYPE_INT,           # §7.3 — closes inside that window
 	# --- phase gate / endgame / VC ---

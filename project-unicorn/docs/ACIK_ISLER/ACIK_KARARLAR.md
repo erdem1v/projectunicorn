@@ -62,20 +62,6 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     (`HR_TRAIT_TAKES_THEM_UNDER_EFFECT`) ve Ekip §6 satırı değişir.
   - Kaynak: Ekip GDD §4.2, §6.
 
-- **3 · "Koşunun ilk 3★'ı" tekrarlanabiliyor.**
-  - Ne oluyor: `SalesLedger.is_newsworthy_signing` ilkliği kalıcı bir kayıttan değil aktif hesaplardan okuyor
-    (`deal_count(c.scale) <= 1`). Churn eden hesap kayıttan silindiği için koşunun tek 3★ hesabı giderse sonraki 3★
-    imza yine "ilk" sayılır.
-  - Nerede: `scripts/systems/sales_ledger.gd` (`is_newsworthy_signing`, `announce_signing`),
-    `scripts/systems/b2b_sales_system.gd` (`_remove_lost`).
-  - Oyuncuya etkisi: Haber bandı satırı ve +3 marka (`SalesConstants.PRESTIGE_SIGNING_BRAND`) yeniden gelir; marka
-    Series A inancını oynatır. Yalnız erişim bandı 3 iken görünür (bant altındayken her 3★ zaten lig üstü haberdir).
-  - Seçenekler: A) Koşu mandalı: yeni bir `GameState.FLAG_TYPES` bayrağı her 3★ imzada yazılır (balina ya da lig üstü
-    olsa da), `is_newsworthy_signing` onu okur. Kayıt dokunuşu: varsayılanı false yeni bayrak; ilk 3★'ını kaybetmiş eski
-    kayıtta bir kez daha haber çıkabilir; Satış §13'ün kayıt listesine girer. B) Kod kalır, §7.3'ün tanımı "defterdeki
-    tek aktif 3★" olur; tek 3★'ını kaybedip yenisini imzalayan haberi ve +3 markayı yeniden alır.
-  - Kaynak: Satış GDD §2, §7.3 [ÇALIŞMA], §13.
-
 - **4 · Balinanın güven şartı `security_cert`'i saymıyor.**
   - Ne oluyor: Şart yalnız `not InfraSystem.blocks_enterprise_signature()` okuyor: Yerel dışındaki her sağlayıcı şartı
     karşılıyor, `security_cert` araştırması sayılmıyor. GDD'ye göre sapma iki yönlü: Satış §8 şartı "sağlayıcı ya da
@@ -199,6 +185,11 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     veriyor. Önceden churn geri sayımı her gün aynı sinyali yaydığı için Risk'teki her hesap her gün yeni kart
     alıyordu. full_run tohum 1 (760 gün): retention kartı 438 → 261, CHURN 44 → 101, İNDİRİM 98 → 31, SÖZ 105 → 88;
     730. gün MRR 409.490 → 278.481, marka 100 → 3; son aynı (running_on_fumes). Hiçbir sabit değişmedi.
+    Bugünkü taban (36. madde uygulandı: kart, temsilcinin tırmandırdığı hesapta açılmıyor): aynı koşuda retention
+    kartı 314, `customer.cs_escalation` 34, CHURN 143, İNDİRİM 44, SÖZ 82; 730. gün MRR 289.134, müşteri 472; son aynı.
+    `cs_escalated` bir durumdur (atanmış ve memnuniyet < 35); 1★ ve sektör eki olmayan atanmış hesabın toleransı 33
+    olduğu için böyle bir hesap Risk'te hep tırmandırılmıştır ve elde tutma kartını hiç görmez. CHURN'ün tolerans
+    kırılımı: 33 bandı 7 → 15, 42 bandı 17 → 47, geri kalanı 77 → 81.
   - Nerede: `scripts/autoload/customer_registry.gd` (`set_churn_countdown`, `customer_churn_countdown_changed`),
     `data/events/cards/customer/retention.json` (tetik, `cooldown_days`), churn geri sayımı ve seçenek etkileri
     `scripts/systems/b2b_constants.gd`'de.
@@ -221,9 +212,13 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     kartlardan geliyor), 4. seçenek 18'den 0'a, SÖZ satırı 88'den 84'e düşüyor. 730. gün MRR 278.481'den 210.894'e,
     kasa 2,44M'den 1,58M'e, müşteri 450'den 346'ya, çalışan 13'ten 7'ye iniyor; marka 3'ten 19'a çıkıyor. Son aynı
     (running_on_fumes). 11. maddedeki rakamlar bugünkü, yanlış bağlanan davranışla ölçüldü.
+    Bu paragraftaki ölçüm 36. madde öncesi ağaçtandır; bugünkü taban 11. maddede (retention 314, CHURN 143, 730. gün
+    MRR 289.134). `at_risk` seçicisi tırmandırılmış hesabı atlamıyor; kartın koşulu artık `musteri.cs_escalated ==
+    false` istediği için, yedek yolda seçicinin bağladığı en düşük memnuniyetli Risk hesabı tırmandırılmışsa kart
+    başka hesaba bağlanmıyor, reddediliyor.
   - Nerede: scripts/events/gate/scope.gd (resolve, verilen id dalı), scripts/events/gate/gate.gd (propose, G5),
     scripts/events/core/engine.gd (sinyal adımı, request), scripts/autoload/customer_registry.gd (churn geri sayımı
-    sinyali)
+    sinyali), data/events/cards/customer/retention.json (koşul)
   - Oyuncuya etkisi: Giden hesap için açılan elde tutma kartı, oyuncuya Risk'teki başka bir hesabı kurtarma şansı
     veriyor. O hesap Risk'e girişte zaten sorulmuş olabilir, yani 11. maddedeki "bir kez sorulur" kuralının dışında
     ikinci kez soruluyor. Koşudaki indirim seçimlerinin tamamı bu yoldan geliyor.
@@ -504,22 +499,6 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     LOCK_CHIP).
   - Kaynak: GDD ch14 §3, §4, §5; ch01 §8; ch02 §1
 
-- **30 · Satış toplantısının giriş kapısı sabit 17:00'a bakıyor, oyuncunun mesaisine değil.**
-  - Ne oluyor: SalesLedger.meeting_block_reason, girişi SalesConstants.WORKDAY_END_HOUR (17) −
-    MEETING_ENTRY_CUTOFF_HOURS (2) saatinden sonra kapatıyor. Oysa şirket mesaisi oyuncunun ayarladığı
-    WorkHoursSystem.company_window(). İkisi yalnız varsayılan saatlerde örtüşüyor. Pencere gece yarısını geçebiliyor
-    (end < start), bu yüzden düz bir 'end − 2' karşılaştırması da yetmiyor.
-  - Nerede: scripts/systems/sales_ledger.gd (meeting_block_reason), scripts/systems/sales_constants.gd
-    (WORKDAY_END_HOUR, MEETING_ENTRY_CUTOFF_HOURS), scripts/systems/work_hours_system.gd (company_window,
-    end_hour_for)
-  - Oyuncuya etkisi: Mesaiyi uzatan oyuncu 15:00'ten sonra toplantıya giremiyor ve 'çok geç' nedenini görüyor. Mesaiyi
-    kısaltan oyuncu mesai bittikten sonra da toplantıya girebiliyor.
-  - Seçenekler: A) Kapı company_window().end − 2 okur; gece yarısını geçen pencere ayrıca ele alınır. Mesai başlamadan
-    girişin de kapanıp kapanmayacağı ayrı bir alt karardır. B) Kapı kurucunun kendi mesai bitişini okur
-    (WorkHoursSystem.end_hour_for(kurucu)). C) 17:00 sabit kalır ve Satış §5.0 'mesai bitimi' yerine sabit saat der.
-  - Kaynak: Satış GDD §5.0 (giriş kapısı [ÇALIŞMA]; 'hak her mesai başında yenilenir'), Ekip GDD §15.2 (şirket
-    penceresi)
-
 - **31 · Pazarlıkta sabır ve karşı teklif adımı mizaçtan gelmiyor.**
   - Ne oluyor: NegotiationSystem.open sabrı arketipin pazarlık profilinden okuyor (SalesArchetypes.negotiation →
     'patience': ops_cautious 3, tech_exacting 2, finance_brisk 2). offer karşı teklif adımını kalan sabırdan
@@ -595,62 +574,24 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     hükmüyle çelişir.
   - Kaynak: CLAUDE.md §5 (BILINGUAL BIRTH LAW, tire yasağı); Ekip GDD §11.3; ch01 §9
 
-- **36 · Elde tutma kartı, temsilcinin tırmandırdığı hesapta da açılıyor.**
-  - Ne oluyor: `customer.retention` koşulu yalnız `musteri.is_at_risk`'e (lifecycle_phase == risk) bakıyor.
-    `B2BSalesSystem.can_offer_retention` ayrıca geri sayımın çalışmasını ve temsilcinin açık bir tırmanması olmamasını
-    (`assigned_to != ""` ve `cs_escalated`) istiyor, ama onu yalnız smoke çağırıyor (`retention_gate_shared`).
-    Temsilcili bir hesap aynı dönemde hem temsilcinin `customer.cs_escalation` kartını hem kurucunun elde tutma
-    kartını alabiliyor; kart hem Risk'e girişte hem Satış sekmesindeki "İlgilen" düğmesinden açılır.
-  - Nerede: `data/events/cards/customer/retention.json` (`condition`); `scripts/systems/b2b_sales_system.gd`
-    (`can_offer_retention`, `_tick_customer`); `data/events/cards/customer/cs_escalation.json`;
-    `scripts/tabs/sales_tab.gd` (`_card_risk`)
-  - Oyuncuya etkisi: Aynı hesap için iki kanaldan karar kartı gelebilir. Ekip §10.4 müşteri olayının temsilci
-    aracılığıyla oyuncuya ulaştığını söylüyor.
-  - Seçenekler: A) retention.json'a `musteri.cs_escalated == false` yaprağı eklenir; davranış değişir, lint ve probe
-    ölçümü gerekir. B) Kural emekliye ayrılır: `can_offer_retention` silinir, smoke'taki doğrudan iddialar düşer, iki
-    kartın birlikte gelebileceği kart notuna yazılır. C) Kart tırmanan hesapta Risk kenarında susar, "İlgilen"
-    düğmesinden yine açılır.
-  - Kaynak: Ekip GDD §10.4; Satış GDD §19 (retention kartı ve CS eskalasyonu korunanlar arasında)
-
-- **37 · Kapının reddettiği temsilci talebi kayboluyor ve haftalık tavandan yer yiyor.**
-  - Ne oluyor: `CustomerRepSystem._escalate` önce talep mandalını temizliyor (`set_support_request(-1)`) ve
-    `GameState.cs_escalation_days`'e damga vuruyor, sonra `EventGate.request("customer.request_<tür>")` çağırıyor.
-    Kapı kartı reddederse (ör. talep kartlarının hesap başına 14 günlük `cooldown_days`'i ya da tempo kotası) talep
-    kaybolur ve haftalık tavandan (`CS_ESCALATION_WEEKLY_CAP`) bir yer yine harcanmış olur. Aynı dosya tavan için
-    "deferred, never dropped", tür damgası için de "a refused request did not happen" diyor.
-  - Nerede: `scripts/systems/customer_rep_system.gd` (`_escalate`, `_escalate_stale`, `_work_the_queue`);
-    `data/events/cards/customer/request_complaint.json`, `request_feature.json`, `request_renewal.json` (`latch`);
-    `scripts/systems/b2b_constants.gd` (`CS_ESCALATION_WEEKLY_CAP`, `CS_ESCALATION_WINDOW_DAYS`)
-  - Oyuncuya etkisi: Oyuncunun karar vermesi gereken bir talep hiç gelmeyebilir; aynı pencerede başka bir hesabın
-    talebi, dolu sanılan tavan yüzünden ertelenebilir. Ölçülmedi: talep aralığı 22 gün, kart cooldown'u 14 gün olduğu
-    için cooldown reddi seyrek.
-  - Seçenekler: A) Önce kapı sorulur; mandal yalnız kart kabul edilirse temizlenir ve damga yalnız o zaman vurulur.
-    Reddedilen talep açık kalır ve ertesi gün yeniden denenir (seeded koşu değişebilir). B) Ret mandalı temizler ama
-    tavan damgası geri alınır. C) Kalır; dosyadaki "never dropped" yorumu, kapı reddini kapsamayacak biçimde
-    düzeltilir.
-  - Kaynak: Olay motoru GDD (kapı, `tick: request` kartları); Satış GDD §19 (CS eskalasyonu korunanlar arasında); Ekip
-    GDD §10.4
-
-- **38 · Müşteri masası unvanla açılıyor, atamayla çalışıyor.**
-  - Ne oluyor: `CustomerRepSystem.reconcile_assignments` ve `daily_tick`,
-    `CharacterRegistry.count_active_by_role(ROLE_CUSTOMER_REP) == 0` ise hiçbir şey yapmadan dönüyor. Masanın kendisi
-    (`ranked_reps`) ise `HRSystem.assigned_to(AREA_CUSTOMER_SUCCESS)` ile alana atanmış çalışanları sayıyor ("rol
-    değil atama"). Sonuç: Hesap sahipliğine konan ama Müşteri Temsilcisi olmayan biri (`JOB_AREAS["accounts"]` Satış
-    alanını da taşır) masayı açamıyor. Başka işe alınan temsilci ise kanalı açık tutuyor; masa boşken `_absorb`,
-    bankadaki 1.0'lık ilerlemeyle bir talebin mandalını log satırı yazmadan temizleyebiliyor. Ayrıca
-    `assigned_to(area)` işi (`JOB_ACCOUNTS`) değil alan aynasını okuyor: Destek işindeki bir Müşteri Temsilcisi de
-    masaya sayılabiliyor. Satış sekmesinin sorumlu seçicisi ve HR sekmesi yine unvanla listeliyor
-    (`get_active_by_role`).
-  - Nerede: `scripts/systems/customer_rep_system.gd` (`reconcile_assignments`, `daily_tick`, `ranked_reps`, `_absorb`,
-    `_escalate`); `scripts/systems/hr_system.gd` (`assigned_to`, `assigned_to_job`); `scripts/systems/hr_constants.gd`
-    (`JOB_AREAS`); `scripts/tabs/sales_tab.gd` (`_open_steward_picker`); `scripts/tabs/hr_tab.gd`
-  - Oyuncuya etkisi: Temsilcisini başka işe alan oyuncunun talep kanalı açık ama masası boş kalıyor; talepler sessizce
-    kapanabiliyor. Temsilci olmayan birini Hesap sahipliğine koyan oyuncu kanalı açamıyor. Ekip §12.0 "Her iş yalnız
-    alanla kapılanır ... Bordroda o unvanı taşıyan biri bulunup bulunmadığına bakılmaz" diyor.
-  - Seçenekler: A) İki giriş `ranked_reps().is_empty()` ile kapılanır, masa alan aynasıyla kalır; en küçük değişiklik,
-    seeded koşu değişebilir. B) Masa, girişler ve seçici `HRSystem.assigned_to_job(JOB_ACCOUNTS)` üzerine kurulur
-    (§12.0'ın harfi). C) Kalır; ayrılık Ekip GDD'sine yazılır.
-  - Kaynak: Ekip GDD §12.0, §4.4, §10.4, §11.3
+- **38 · Müşteri masası Destek işindeki temsilciyi de sayıyor.**
+  - Ne oluyor: Masa (`CustomerRepSystem.ranked_reps`) ve iki girişi (`reconcile_assignments`, `daily_tick`) unvanı değil
+    alan atamasını okuyor: `HRSystem.assigned_to(AREA_CUSTOMER_SUCCESS)`, işlerden türeyen alan aynası. Destek işi de
+    Müşteri İlişkileri alanını taşıdığı için (`HRConstants.JOB_AREAS["support"]`) Destek'teki bir Müşteri Temsilcisi
+    masaya sayılıyor. Yeni işe alınan Müşteri Temsilcisi de `HRConstants.AREA_PRIMARY_JOB["customer_success"]` gereği
+    Destek'e oturuyor ve masayı bu yoldan açıyor. Ekip §12.0'ın tablosu ise "müşteri olayları"nı Hesap sahipliğine,
+    "bilet çözümü"nü Destek'e yazıyor.
+  - Nerede: `scripts/systems/customer_rep_system.gd` (`ranked_reps`); `scripts/systems/hr_system.gd` (`assigned_to`,
+    `assigned_to_job`); `scripts/systems/hr_constants.gd` (`JOB_AREAS`, `AREA_PRIMARY_JOB`); `scripts/tabs/sales_tab.gd`
+    (`_open_steward_picker`)
+  - Oyuncuya etkisi: Temsilcisini yalnız Destek'te tutan oyuncunun talep kanalı ve hesap sahipliği açık kalıyor; aynı
+    kişi hem destek biletlerine hem hesaplara çıktı veriyor.
+  - Seçenekler: A) Kalır; §12.0'ın "o işi taşıyan alanlara atanmış kimse var mı" cümlesi alan aynasıyla okunur. B) Masa,
+    girişler ve seçici `HRSystem.assigned_to_job(JOB_ACCOUNTS)` üzerine kurulur. Yeni işe alınan temsilci Destek'e
+    oturduğu için masa ancak oyuncu onu Hesap sahipliğine koyunca açılır; `AREA_PRIMARY_JOB["customer_success"]`'ın
+    Hesap sahipliği olması ayrı bir alt karardır. Seeded koşu değişir; `_make_cs_rep` kullanan smoke vakaları yeniden
+    yazılır.
+  - Kaynak: Ekip GDD §12.0, §4.4, §10.4
 
 - **39 · Satış sekmesinin Risk sebebi ile elde tutma kartındaki müşteri sesi farklı kurala bakıyor.**
   - Ne oluyor: `sales_tab._card_risk`, `ProductSystem.live_bug_count() > B2BConstants.COMPLAINT_BUG_GATE` ise "sık
@@ -669,25 +610,18 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
     kapasite aşımı), iki sebep kalır. C) Kalır.
   - Kaynak: Satış GDD §19 (retention kartı korunanlar arasında); ch11 §7
 
-- **40 · Kayıtlı ama okunmayan müşteri ve söz alanları.**
-  - Ne oluyor: SaveCodec'in kaydettiği bazı `@export` alanlarının okuyucusu yok. `Customer.health` her memnuniyet
-    değişiminde `update_health_from_satisfaction` ile yazılıyor (`CustomerRegistry.set_satisfaction`, `SalesSystem`,
-    `main.gd`). `Customer.difficulty_stars` imzada bir kez `prospect.star` ile yazılıyor; aynı değer `scale`'de de
-    duruyor. "Reserved" bloğundaki `renewal_day`, `warning_flags`, `account_contact` ve `notes` ne yazılıyor ne
-    okunuyor. `Promise.created_on_day` `PromiseRegistry.create`'te yazılıyor. `SaveCodec.res_from_dict` yalnız bugünkü
-    alanları okuduğu için bu alanları silmek eski kayıtları bozmaz.
-  - Nerede: `scripts/data_models/customer.gd` (`health`, `difficulty_stars`, `update_health_from_satisfaction`,
-    Reserved blok); `scripts/data_models/promise.gd` (`created_on_day`); `scripts/autoload/customer_registry.gd`
-    (`set_satisfaction`); `scripts/systems/sales_system.gd` (`add_b2b_customer` ve B2C tabanı);
-    `scripts/main/main.gd`; `scripts/autoload/promise_registry.gd` (`create`); `scripts/systems/save_codec.gd`
-    (`res_from_dict`)
-  - Oyuncuya etkisi: Oyuncuya etkisi yok. Kayıt dosyasında ve kodda ölü alan kalıyor (CLAUDE.md §8 ölü alan bırakılmaz
-    der). Reserved blok ise bilinçli olarak ayrılmış.
-  - Seçenekler: A) Hepsi silinir (`update_health_from_satisfaction` ve üç çağrısı dahil); kayıt uyumlu kalır. B)
-    Yalnız yazılıp okunmayanlar (`health`, `difficulty_stars`, `created_on_day`) silinir, Reserved blok gelecek
-    sistemler için kalır. C) Hepsi kalır; sağlık bandı ya da sözün verildiği gün bir okuyucuya bağlanır.
-  - Kaynak: CLAUDE.md §2 (GDD'de adı geçen bağlanmamış kod silinmez; bu alanlar GDD'lerde geçmiyor), §6 (kayıt
-    şeması), §8
+- **40 · Kayıtlı ama okunmayan `Customer.health` alanı.**
+  - Ne oluyor: `Customer.health` her memnuniyet değişiminde `update_health_from_satisfaction` ile yazılıyor ama
+    okuyucusu yok; SaveCodec onu kaydediyor. Yazanlar: `CustomerRegistry.set_satisfaction`,
+    `SalesSystem.add_b2b_customer`, B2C tabanı ve `main.gd`'deki debug fikstürü. `SaveCodec.res_from_dict` yalnız
+    bugünkü alanları okuduğu için alanı silmek eski kayıtları bozmaz.
+  - Nerede: `scripts/data_models/customer.gd` (`health`, `update_health_from_satisfaction`);
+    `scripts/autoload/customer_registry.gd` (`set_satisfaction`); `scripts/systems/sales_system.gd` (`add_b2b_customer`
+    ve B2C tabanı); `scripts/main/main.gd`
+  - Oyuncuya etkisi: Yok; kayıt dosyasında ve kodda ölü alan kalıyor (CLAUDE.md §8).
+  - Seçenekler: A) Alan, fonksiyon ve dört çağrısı silinir (main.gd dahil). B) Kalır; sağlık bandı bir okuyucuya
+    bağlanır.
+  - Kaynak: CLAUDE.md §2, §6, §8
 
 - **41 · §12.8 kapı-üstü Yazılım hız bonusu uygulanmıyor.**
   - Ne oluyor: Ürün GDD §12.8 'fazladan Yazılım yıldızları hızı aynı kademeyle çarpar' diyor.

@@ -220,15 +220,16 @@ static func last_signed_star() -> int:
 ##   whale          the account the run was telegraphing
 ##   first 3★       the FIRST one, once, because the second is no longer news
 ##
-## "First" is read from the book: the customer is already seated when this is asked, so it is
-## the first while it is the only ACTIVE 3★ account (a churned account leaves the registry).
+## "First" is a run fact, not a book fact: a churned account leaves the registry but not the
+## run, so the seating stamps the run's first 3★ id (SalesSystem.add_b2b_customer) and only that
+## account reads as first.
 static func is_newsworthy_signing(c: Customer, is_whale: bool) -> bool:
 	if is_whale:
 		return true
 	if c.scale > SalesFaucetSystem.reach_band():
 		return true
 	if c.scale >= SalesConstants.TICKER_NEWSWORTHY_STAR:
-		return deal_count(c.scale) <= 1
+		return String(GameState.get_flag("sales_first_top_star_id", "")) == c.id
 	return false
 
 
@@ -276,14 +277,17 @@ static func consume_meeting_right() -> void:
 	GameState.set_flag("sales_meeting_used_day", GameState.day)
 
 
-## §5.0 — "mesai bitimine 2 saatten az kala giriş kapalı, nedenli." Returns "" when entry is
-## open, otherwise the CSV key naming the reason, so the caller never composes a sentence.
+## §5.0 — "mesai bitimine 2 saatten az kala giriş kapalı, nedenli." The workday is the company
+## window (Ekip §15.2); at its widest settings it ends at 22:00, so it never crosses midnight.
+## Returns "" when entry is open, otherwise the CSV key naming the reason, so the caller never
+## composes a sentence.
 static func meeting_block_reason(lead_id: String) -> String:
 	if not SalesFaucetSystem.market_open():
 		return "SALES_BLOCK_NO_B2B"
 	if not meeting_available_today():
 		return "SALES_BLOCK_MEETING_SPENT"
-	if GameState.current_hour > SalesConstants.WORKDAY_END_HOUR - SalesConstants.MEETING_ENTRY_CUTOFF_HOURS:
+	if GameState.current_hour > int(WorkHoursSystem.company_window().end) \
+			- SalesConstants.MEETING_ENTRY_CUTOFF_HOURS:
 		return "SALES_BLOCK_TOO_LATE"
 	var p: Prospect = ProspectRegistry.get_prospect(lead_id)
 	if p == null:

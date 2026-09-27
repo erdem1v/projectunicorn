@@ -26,9 +26,9 @@ extends RefCounted
 #
 # NO RNG — see SalesRepSystem's header for the reasoning; the same rule binds this file.
 #
-# THE ADDITIVITY INVARIANT: with no active Müşteri Temsilcisi, both entry points return before
-# touching state and no request is ever generated. Customers still reach the player through
-# the retention and expansion cards; the request desk is a SECOND resolution surface for the
+# THE ADDITIVITY INVARIANT: with nobody at the desk (ranked_reps), both entry points return
+# before touching state and no request is ever generated. Customers still reach the player
+# through the retention and expansion cards; the request desk is a SECOND resolution surface for the
 # same dissatisfaction, and it only opens when somebody staffs it.
 
 
@@ -38,10 +38,10 @@ extends RefCounted
 ## needs the same ranking the system itself uses — two rankings of one desk would eventually
 ## disagree, and the card would name someone the system does not consider the lead.
 static func ranked_reps() -> Array:
-	# rev 2 §4: HESAP SAHİPLİĞİ işine atanmış herkes — rol değil atama. Bir Müşteri Temsilcisi
-	# işe alındığında bu işe otomatik konuyor, yani yukarıdaki additivity invariant'ı birebir
-	# korunuyor. Kurucu bu masaya sayılmaz: onun doğrudan taşıdığı hesaplar
-	# (B2BSalesSystem.founder_managed_count) founder_account_capacity() ile ayrı ölçülüyor.
+	# Ekip §12.0: MÜŞTERİ İLİŞKİLERİ alanına atanmış herkes — unvan değil atama; masanın
+	# açılıp açılmadığı da buradan okunur. Kurucu bu masaya sayılmaz: onun doğrudan
+	# taşıdığı hesaplar (B2BSalesSystem.founder_managed_count) founder_account_capacity()
+	# ile ayrı ölçülüyor.
 	var area: String = HRConstants.AREA_CUSTOMER_SUCCESS
 	var reps: Array = HRSystem.assigned_to(area).filter(
 		func(c: Character) -> bool: return c.category == "employee")
@@ -89,7 +89,7 @@ static func reconcile_assignments() -> void:
 	# §11.3: AYRILAN BİR TEMSİLCİNİN HESAPLARI OTOMATİK DEVREDİLMEZ — ayrılmanın bedeli
 	# kapasitedir (§5.7: "iş boşalır, o işi yapacak kimse kalmaz"). Hesap sahipsiz kalır ve
 	# oyuncu onu görür; burada yalnız kurucunun fazlası devredilir.
-	if CharacterRegistry.count_active_by_role(HRConstants.ROLE_CUSTOMER_REP) == 0:
+	if ranked_reps().is_empty():
 		return
 	_delegate_excess()
 
@@ -189,7 +189,7 @@ static func roster_size(rep_id: String) -> int:
 # --- TALEP KANALI: the request channel ---
 
 static func daily_tick() -> void:
-	if CharacterRegistry.count_active_by_role(HRConstants.ROLE_CUSTOMER_REP) == 0:
+	if ranked_reps().is_empty():
 		return
 	_open_due_requests()
 	_work_the_queue()
@@ -265,10 +265,7 @@ static func _absorb(c: Customer) -> void:
 	# Deliberately NO satisfaction credit: a delta with no played decision upstream is exactly
 	# what §10 forbids. The value of absorption is the interruption the player never gets.
 	CustomerRegistry.set_support_request(c.id, -1)
-	var reps: Array = ranked_reps()
-	if reps.is_empty():
-		return
-	SalesSystem.record_sales_event("cs_absorb", reps[0].character_name, c.company_name, 0)
+	SalesSystem.record_sales_event("cs_absorb", ranked_reps()[0].character_name, c.company_name, 0)
 
 
 static func _escalate_stale() -> void:
@@ -286,20 +283,14 @@ static func _escalate(c: Customer) -> void:
 	# entirely. This is the one place that guarantees the player is interrupted at most
 	# CS_ESCALATION_WEEKLY_CAP times per window, whatever the book does. The stamp array is a
 	# rolling window, pruned as it is read.
-	# Over budget → return WITHOUT clearing the latch, so the request stays open and is
-	# re-offered tomorrow. Deferred, never dropped: nothing the player owed a decision on
-	# silently disappears.
+	# Over budget, or refused by the gate → return WITHOUT clearing the latch or stamping the
+	# window, so the request stays open and is re-offered tomorrow. Deferred, never dropped:
+	# nothing the player owed a decision on silently disappears.
 	var cutoff: int = GameState.day - B2BConstants.CS_ESCALATION_WINDOW_DAYS
 	while not GameState.cs_escalation_days.is_empty() and GameState.cs_escalation_days[0] <= cutoff:
 		GameState.cs_escalation_days.remove_at(0)
 	if GameState.cs_escalation_days.size() >= B2BConstants.CS_ESCALATION_WEEKLY_CAP:
 		return
-	if ranked_reps().is_empty():
-		return
-	# Clear the latch AT escalation: the request has left the desk and become the player's, so
-	# the choice's own modifiers resolve it and no new modifier type is needed to close it out.
-	CustomerRegistry.set_support_request(c.id, -1)
-	GameState.cs_escalation_days.append(GameState.day)
 	# NAMES a card; it does not build one. The three request branches are three
 	# `tick: request` cards, picked by the same rule the `musteri.request_kind` seam reads,
 	# and the gate decides.
@@ -308,10 +299,14 @@ static func _escalate(c: Customer) -> void:
 	# are facts about the support desk, not tempo rules, and §13.3's category quota is a
 	# different question asked by a different layer.
 	var kind: String = pick_request_kind(c)
-	# The picker skips `last_request_kind`; stamp it only when the gate actually admits the
-	# card — a refused request did not happen.
-	if EventGate.request("customer.request_" + kind, {"customer": c.id}):
-		CustomerRegistry.set_last_request_kind(c.id, kind)
+	if not EventGate.request("customer.request_" + kind, {"customer": c.id}):
+		return
+	# The latch clears AT admission: the request has left the desk and become the player's, so
+	# the choice's own modifiers resolve it and no new modifier type is needed to close it out.
+	CustomerRegistry.set_support_request(c.id, -1)
+	GameState.cs_escalation_days.append(GameState.day)
+	# The picker's no-repeat rule reads this stamp.
+	CustomerRegistry.set_last_request_kind(c.id, kind)
 
 
 ## The request-kind scoring rule: what an account is most likely calling about. The three
@@ -327,9 +322,8 @@ static func pick_request_kind(c: Customer) -> String:
 	# NO-REPEAT: aynı hesap aynı türü üst üste iki kez açmaz (last_request_kind dışlaması).
 	# RNG YASAĞI: skorlar tamsayı aritmetiği, eşitlik bozucu hesabın kendi faz imzası.
 	#
-	# NOT: support_request_since_day burada OKUNMAZ — CustomerRepSystem talebi
-	# bu fonksiyonu çağırmadan önce o mandalı temizler; seçim anında değeri hep -1,
-	# okuyan kod ölü koşul olurdu.
+	# NOT: support_request_since_day burada OKUNMAZ — seçim anında talep hep açıktır
+	# (mandal kart kabul edilince temizlenir); okuyan kod ölü koşul olurdu.
 	#
 	# Şikâyet: memnuniyet toleransa yaklaştıkça / güven kırıldıkça yükselir.
 	var complaint: int = 2 * maxi(0, c.tolerance + 10 - c.satisfaction)

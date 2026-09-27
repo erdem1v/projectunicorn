@@ -63,7 +63,6 @@ func create(customer_id: String, feature_id: String, deadline_days: int) -> Prom
 	p.id = "promise_%s_%s_%d" % [customer_id, feature_id, GameState.day]
 	p.customer_id = customer_id
 	p.feature_id = feature_id
-	p.created_on_day = GameState.day
 	p.deadline_day = GameState.day + maxi(deadline_days, 1)
 	p.status = "open"
 	# Guard against a duplicate id in the same-day/same-feature edge (append a suffix).
