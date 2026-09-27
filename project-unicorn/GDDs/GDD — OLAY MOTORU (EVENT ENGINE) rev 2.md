@@ -1496,6 +1496,13 @@ tutma kartı, aynı tikte istifa eden ikinci çalışanın kartı kayboluyordu. 
 başı mandal da ancak bu kimlikle tam çalışır: `event_id` kimliğinde, birinci yatırımcının
 uyarısı beklerken önerilen ikincisinin örneği kuyrukta yine yutulurdu.
 
+**Üst düzey `expire_note`, metin bloğundaki satırın ADIDIR.** Belge: §3.1 kartın üst düzeyinde
+`expire_note`'u "süre dolumunda ticker'a yazılan satır" diye tanımlıyor, §3.2 aynı adı locale başına
+metin bloğuna koyuyor; ikisinin ilişkisini yazmıyor. Yapılan: kartın üst düzeydeki `expire_note` alanı,
+metin bloğundaki (§3.2) satırın adıdır. Motor satırı canlı dilde çözer ve kartın slotlarıyla doldurur.
+Bloğunda o ad yoksa değer satırın kendisi sayılır. Neden: üst düzey alan dilsizdir; satır iki dilde ve
+`{customer}` gibi slotlarla yazılır, ticker'a ham ad düşmemelidir (§12.4).
+
 ---
 
 ### §27.5 · Portun açığa çıkardığı, motora ait OLMAYAN kusurlar

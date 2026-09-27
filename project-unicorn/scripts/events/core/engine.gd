@@ -100,13 +100,15 @@ static func _step_paper_expiry() -> void:
 		var card: Dictionary = EvCatalog.card(event_id)
 		var penalties: Array = card.get("on_expire", {}).get("penalties", [])
 
-		# §12.4: on_expire runs, history says `expired`, expire_note reaches the ticker.
+		# §12.4: on_expire runs, history says `expired`, expire_note reaches the ticker. The
+		# note names a line of the card's text block (§3.2); a name the block lacks is the line.
 		var deltas: Array = EvEffects.run_expire(penalties, context)
 		EvHistory.record(event_id, EvHistory.RESOLUTION_EXPIRED, "", "expired",
 			context, deltas, arc_id)
 		var note: String = String(card.get("expire_note", ""))
 		if note != "":
-			EvTicker.push(note, EvTicker.PRIORITY_PLAYER, context)
+			EvTicker.push(String(EvPresenter.text_block(card).get(note, note)),
+				EvTicker.PRIORITY_PLAYER, context)
 
 		# An expiring arc step must move its arc through an arc verb in on_expire (lint enforces
 		# it); without one, an unanswered payoff stalls its arc for the rest of the run (§10.10).
@@ -121,7 +123,7 @@ static func _step_last_warnings() -> void:
 			continue                      # already in front of the player
 		var event_id: String = EvPapers.event_id_of(key)
 		var context: Dictionary = EvPapers.context_of(key)
-		# A paper whose subject died overnight expires quietly rather than being shouted about.
+		# A paper whose subject died overnight gets no last-day warning; it still expires.
 		if not EvGate.revalidate(event_id, context).admitted:
 			continue
 		EvQueue.admit(event_id, context, "interrupt", EvPapers.arc_of(key))
@@ -230,7 +232,7 @@ static func _step_arc_steps() -> void:
 		if event_id == "" or EvQueue.has(event_id) or EvQueue.active_id() == event_id \
 				or not EvPapers.keys_of(event_id).is_empty() or EvSchedule.has(event_id):
 			continue                       # already on its way to the player
-		_propose(event_id, EvGate.Origin.ARC_STEP, EvArcs.subject_of(arc_id), arc_id)
+		_propose(event_id, EvGate.Origin.ARC_STEP, _arc_context(arc_id), arc_id)
 
 
 # --- (g) Signals -----------------------------------------------------------
@@ -273,7 +275,7 @@ static func _step_pool(tick: String) -> void:
 		var verdict: EvGate.Verdict = EvGate.propose(String(card["id"]), EvGate.Origin.POOL)
 		# §13.3 layers 1-3 are a refusal here, not a demotion.
 		if verdict.admitted \
-				and EvTempo.pool_blocked_reason(card, EvGate._subject_of(verdict.context)) == "":
+				and EvTempo.pool_blocked_reason(card, EvGate.subject_of(verdict.context)) == "":
 			candidates.append({"card": card, "verdict": verdict})
 	if candidates.is_empty():
 		return
@@ -385,6 +387,8 @@ static func _admit(event_id: String, verdict: EvGate.Verdict, arc_id: String) ->
 	# The latch is spent AT ADMISSION, so a card waiting in the queue or on the desk is not
 	# re-proposed every tick, and only then, so a refused duplicate costs its subject nothing.
 	EvLatches.spend(key)
+	# A forced instance dropped unanswered left its mark; this one arrived on its own.
+	_forced.erase(key)
 	_today_admissions.append({"event_id": event_id, "context": verdict.context})
 	return true
 
@@ -523,19 +527,24 @@ static func reset() -> void:
 
 ## Ask for a card by id, from outside the tick — e.g. the Sales tab's "İlgilen →". A second
 ## ENTRY POINT, never a second ADMISSION path (I1): the gate applies every step, and an admitted
-## card spends its latch. When the instance's paper already waits on the desk, the caller is
-## reaching for that paper and it opens (§11.4).
+## card spends its latch.
+##
+## When the instance's paper already waits on the desk, the caller is reaching for that paper
+## and it opens (§11.4). That is asked BEFORE the gate: the paper spent its latch when it landed,
+## so a one_shot card would be refused at G3 and the paper would stay out of reach.
 ##
 ## Returns true when the card reached the player, admitted or opened off the desk.
 static func request(event_id: String, context: Dictionary = {}) -> bool:
 	if not GameState.run_active:
 		return false
+	var bound: Dictionary = EvScope.resolve(EvCatalog.card(event_id).get("scope", {}), context)
+	if bool(bound["ok"]):
+		var key: String = EvLatches.key_of(event_id, bound["context"])
+		if EvPapers.has(key):
+			return open_paper(key)
 	var verdict: EvGate.Verdict = EvGate.propose(event_id, EvGate.Origin.REQUEST, context)
 	if not verdict.admitted:
 		return false
-	var key: String = EvLatches.key_of(event_id, verdict.context)
-	if EvPapers.has(key):
-		return open_paper(key)
 	if not _admit(event_id, verdict, ""):
 		return false
 	_step_assign_classes()

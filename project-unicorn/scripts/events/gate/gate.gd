@@ -257,7 +257,7 @@ static func _g6_guards(card: Dictionary) -> String:
 
 ## The card's primary subject, for an entity-keyed latch: the first slot in declaration order.
 ## Dictionaries preserve insertion order, and a smoke case pins it so the key cannot change shape.
-static func _subject_of(context: Dictionary) -> String:
+static func subject_of(context: Dictionary) -> String:
 	for slot_name in context:
 		return String((context[slot_name] as Dictionary).get("id", ""))
 	return ""

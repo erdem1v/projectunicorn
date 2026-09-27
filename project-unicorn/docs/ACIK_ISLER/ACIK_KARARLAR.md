@@ -211,6 +211,143 @@ doğrulama sırasında bulundu; 8. ve sonrası temizliğin son turundan.
   - Kaynak: `retention.json` `_port_note`; Satış GDD §19 (retention kartı ve churn geri sayımı korunanlar arasında);
     bu commit'in probe ölçümü.
 
+- **12 · Gitmiş hesabın sinyali elde tutma kartını başka bir hesaba bağlıyor (11. maddeye bağlı).**
+  - Ne oluyor: Kapı, çağıranın verdiği özne id'sini (sinyal yükü, istek) yalnız o varlık hâlâ varsa kullanıyor. Hesap
+    gitmişse, id yanlış türdeyse ya da başka slota bağlıysa seçiciye düşüyor ve kartı başka bir hesaba bağlıyor. GDD
+    §4.3 ise çağıranın bağlamının kullanıldığını ve tahmin yapılmadığını söylüyor. full_run:760:sim:1'de ilk örnek 70.
+    günde: churn eden co_lead_57_35'in sinyaliyle açılan customer.retention, Risk'teki başka bir hesaba bağlanıyor.
+    Verilen id gitmişse kartı G5'te reddeden bir sürüm bu dalgada ölçüldü ve geri alındı. O sürümde elde tutma kartı
+    261'den 217'ye, CHURN 101'den 153'e, İNDİRİM 31'den 0'a iniyor (koşudaki 31 indirimin hepsi yanlış bağlanan
+    kartlardan geliyor), 4. seçenek 18'den 0'a, SÖZ satırı 88'den 84'e düşüyor. 730. gün MRR 278.481'den 210.894'e,
+    kasa 2,44M'den 1,58M'e, müşteri 450'den 346'ya, çalışan 13'ten 7'ye iniyor; marka 3'ten 19'a çıkıyor. Son aynı
+    (running_on_fumes). 11. maddedeki rakamlar bugünkü, yanlış bağlanan davranışla ölçüldü.
+  - Nerede: scripts/events/gate/scope.gd (resolve, verilen id dalı), scripts/events/gate/gate.gd (propose, G5),
+    scripts/events/core/engine.gd (sinyal adımı, request), scripts/autoload/customer_registry.gd (churn geri sayımı
+    sinyali)
+  - Oyuncuya etkisi: Giden hesap için açılan elde tutma kartı, oyuncuya Risk'teki başka bir hesabı kurtarma şansı
+    veriyor. O hesap Risk'e girişte zaten sorulmuş olabilir, yani 11. maddedeki "bir kez sorulur" kuralının dışında
+    ikinci kez soruluyor. Koşudaki indirim seçimlerinin tamamı bu yoldan geliyor.
+  - Seçenekler: A) Verilen id gitmişse kart G5'te gerekçesiyle reddedilir (§4.3'ün lafzı). 11. maddenin kalibrasyonu
+    yeni rakamlarla yapılır. B) Seçiciye düşme tasarım sayılır. §4.3'e ve §27'ye "verilen özne gitmişse seçici yeniden
+    bağlar" yazılır. C) A ile 11. madde tek karar olarak ele alınır: churn geri sayımı ve Oyala/İndirim etkileri aynı
+    ölçümle yeniden oturtulur.
+  - Kaynak: Olay motoru GDD §4.3; ACIK_KARARLAR 11. madde; bu dalganın probe ölçümü (HEAD ab863fa, full_run:760:sim:1
+    --lang=tr)
+
+- **13 · Masadaki kağıdın öznesi giderse süre dolumu: ceza, not ve son uyarı birbirini tutmuyor.**
+  - Ne oluyor: Kağıt, masaya düştüğünde öznelerini bağlıyor. Bir varlık kağıt masadayken giderse son gün uyarısı
+    düşüyor (`EvGate.revalidate` bütün slotlara bakar), oyuncu açmak isterse kağıt kayboluyor. Ama süre dolunca
+    `on_expire` çalışıyor, history `expired` yazıyor ve expire_note ticker'a gidiyor. İki durum var. (1) Ana özne
+    (hesap) gitti: on_expire'ın etkileri hedef bulamıyor ("satisfaction_delta found no target" hatası,
+    full_run:760:sim:1'de 3 kez). Not satırı da hesabın adı yerine iç id'sini yazıyor (ör. "co_lead_… bir daha
+    aramadı."); bu dalgaya kadar her süre dolumunda ham "expire_note" yazıyordu. (2) İkincil slot (talep kartının
+    temsilcisi) gitti: ceza hesaba işliyor ve not çıkıyor. Aynı koşuda 8 kağıt bu durumda (günler 327, 341, 563, 682).
+    §12.4 "expire_note zorunludur, sessiz süre dolumu yoktur" diyor. §4.4 ve §20 A1 ise gösterimdeki yeniden
+    doğrulamayı anlatıyor, açılmamış kağıdın süre dolumunu değil.
+  - Nerede: scripts/events/core/engine.gd (_step_paper_expiry, _step_last_warnings, open_paper),
+    scripts/events/gate/gate.gd (revalidate), scripts/events/gate/scope.gd (still_valid),
+    scripts/events/present/presenter.gd (_display_name), data/events/cards/customer/request_*.json ve retention.json
+    (scope, on_expire, expire_note)
+  - Oyuncuya etkisi: (1) Haber akışında bir iç kod (hesap id'si) görünüyor; ceza kimseye işlemiyor. (2) Temsilci
+    ayrılınca oyuncu son uyarıyı görmüyor ve kağıdı açamıyor, ama cezayı yiyor. Bu uyarısız bir kayıp.
+  - Seçenekler: A) Hangi slottaki varlık giderse gitsin kağıt süre dolumunda düşer: history `dropped` (entity_gone),
+    on_expire ve not çalışmaz. §12.4'e bu istisna yazılır. Seeded koşuda 8 kağıdın cezası kalkar. B) Yalnız ana özne
+    gidince düşer; ikincil slotta uyarı ve açılış da yalnız ana özneye bakar, temsilci gitse de kağıt açılır ve ceza
+    işler. Ana özne kuralı seeded koşuyu değiştirmiyor (bu dalgada ölçüldü). C) Süre dolumu hep çalışır: bağlam
+    bağlanırken görünen adı da dondurur, not gitmiş varlığı adıyla anar, hedefsiz ceza sessizce atlanır. D) Temsilci
+    slotu açılışta yeniden seçilir (reassign benzeri, yeni mekanik).
+  - Kaynak: Olay motoru GDD §4.4, §12.4, §20 A1, §20 B11; bu dalganın probe ölçümü
+
+- **14 · Etki sözlüğünde karşılığı olmayan fiiller (uygulanmayan, hep reddedilen, çipsiz).**
+  - Ne oluyor: Tablolarda duran dokuz fiilin `_apply`'da kolu yok: assign_to, send_on_leave, start_training,
+    damage_product, add_customer, convert_audience, open_paid_tier, change_salary, fire_employee. Lint onları kabul
+    ediyor, oyunda "not implemented" diye reddediliyorlar. `add_mrr` motor GDD §8.1 ve §8.3'te gerçek bir fiil; kod
+    onu hep reddediyor (MRR defterden türetiliyor, `engine_probe` bu reddi doğruluyor) ve bu ayrılık §27'de yazılı
+    değil. `notify` metni anahtar ya da çeviri olmadan ham basıyor. Çip tarafında 13 fiil ne `_describe_modifier`'da
+    etiketli ne `SILENT_VERBS`'te: clear_flag, set_timed_flag, ticker_push, notify, open_negotiation, add_mrr,
+    assign_to, send_on_leave, start_training, damage_product, change_salary, fire_employee, add_customer. Tersine
+    `convert_audience` ile `open_paid_tier`'in çipi var ama fiilleri uygulanmıyor. Bugün hiçbir kart bu fiilleri
+    kullanmıyor.
+  - Nerede: scripts/events/core/effects.gd (NEUTRAL_VERBS, ECONOMIC_VERBS, _apply: "add_mrr", "notify"),
+    scripts/modals/event_modal.gd (SILENT_VERBS, FIXED_CHIPS, _describe_modifier), scripts/events/tools/lint.gd
+    (_lint_effects), scripts/events/tools/engine_probe.gd (_check_effects)
+  - Oyuncuya etkisi: Bugün yok. Bir yazar bu fiillerden birini kullanırsa lint geçer ve kart oyunda görünür, ama
+    seçenek söylediğini yapmaz: sessizce reddedilir, bazen çipi de gösterilir. notify ile yazılan satır tek dilde
+    kalır.
+  - Seçenekler: A) GDD'nin adını verdiği fiiller (fire_employee, add_customer, damage_product, assign_to) sahibi
+    modülün seam'iyle bağlanır, geri kalanı tablolardan çıkar. Bağlanan her fiil bir çip ya da SILENT_VERBS kaydıyla
+    gelir. B) Bağlanmayan her fiil tablolardan çıkar ve lint onu bilinmeyen fiil diye reddeder. add_mrr GDD §8.1'den
+    düşer, §27'ye "MRR türetilir, yazılmaz" notu girer. notify ya line_key alır ya da kalkar. C) Olduğu gibi kalır:
+    liste §27'ye yazılır, lint uygulanmayan fiile uyarı verir.
+  - Kaynak: Olay motoru GDD §8.1, §8.3, §11.1 (info sınıfı), §27; CLAUDE.md §5 EFFECT-VISIBILITY RULE
+
+- **15 · Bütçe bitince seçenek kilitlenmiyor (spend_budget, §8.5).**
+  - Ne oluyor: GDD §8.5, bütçe bitince o etkiyi taşıyan seçeneğin kilitlenip gerekçesini göstermesini istiyor. §20 E8
+    bu kontrolü `requires`'a koyuyor. Ama `EvBudgets.remaining()`'i okuyan ne bir seam ne bir koşul yaprağı var;
+    §5.2'nin listesinde de bütçe yaprağı yok. Bütçe biterse `EvBudgets.spend` yalnız hata basıyor, seçenek açık
+    kalıyor. Hiçbir kart `spend_budget` kullanmıyor.
+  - Nerede: scripts/events/core/budgets.gd (remaining, spend), scripts/events/core/effects.gd ("spend_budget"),
+    scripts/events/core/condition.gd (yaprak listesi), scripts/events/seams/
+  - Oyuncuya etkisi: Bugün yok, çünkü frank_aphorism bütçesini harcayan kart yok. İlk kart bağlandığında üçüncü
+    aforizma seçeneği kilitlenmez: oyuncu tıklar ve hiçbir şey olmaz.
+  - Seçenekler: A) Her bütçeye bir seam (ör. `frank.aphorisms_left`): yazar seçeneği `requires` ile kilitler, gerekçe
+    metnini kart taşır (E8'in dediği). B) §5.2'ye yeni koşul yaprağı `{"budget": ad}`. C) Motor `spend_budget` taşıyan
+    seçeneği kendiliğinden kilitler, gerekçe ortak bir anahtardan gelir (§8.5'in lafzı).
+  - Kaynak: Olay motoru GDD §8.5, §5.2, §20 E8
+
+- **16 · Ark belleği (arc.vars) yazılıyor ama okunamıyor.**
+  - Ne oluyor: `set_arc_var` fiili ve `EvArcs.set_var` arkın `vars` alanına yazıyor, alan kayda da giriyor. Ama onu
+    okuyan ne bir koşul yaprağı ne kod var: §5.2'nin ark yaprakları yalnız active, at_step, ended ve awaiting_subject.
+    Hiçbir kart bu fiili kullanmıyor. §20 G4 ise arka özgü durumun arc.vars'ta tutulduğunu söylüyor.
+  - Nerede: scripts/events/core/arcs.gd (set_var), scripts/events/core/effects.gd ("set_arc_var"),
+    scripts/events/core/condition.gd (ark yaprakları), scripts/modals/event_modal.gd (SILENT_VERBS)
+  - Oyuncuya etkisi: Bugün yok. Bir yazar ark belleğine yazabilir ama arkın sonraki adımı o değeri okuyamaz.
+  - Seçenekler: A) Yeni yaprak `{"arc": "var", "id", "key", "op", "value"}`, §5.2'ye bir satır. B) `set_arc_var`
+    emekliye ayrılır; ark belleği bayraklarla tutulur (G4'ün uyardığı çakışma riskiyle). C) Kalır; §27'ye "vars
+    okunmuyor" notu girer.
+  - Kaynak: Olay motoru GDD §5.2, §10.1, §16.1, §20 G4
+
+- **17 · Özne başına ark limiti: ikinci ark ertelenmiyor, hiç başlamıyor (§10.7).**
+  - Ne oluyor: §10.7 ve §20 A4'e göre bir özne ikinci bir ark alırsa o ark `deferred` olur ve birincisi bitince
+    yeniden proposal'a girer. `EvArcs.start` ise ikinci arkı reddediyor ve bir yere kaydetmiyor (limit
+    `EvTuning.ARC_PER_SUBJECT_DEFAULT`'tan okunuyor). Ark, bir seçeneğin `start_arc` etkisiyle başlıyor. O kartın
+    mandalı harcandığı için kart yeniden önerilmiyor, yani ark hiç başlamıyor. Bugün fixture'lar dışında özneli ark
+    yok (`arc_final_stretch` öznesiz).
+  - Nerede: scripts/events/core/arcs.gd (start), scripts/events/core/effects.gd ("start_arc"),
+    scripts/events/core/tuning.gd (ARC_PER_SUBJECT_DEFAULT)
+  - Oyuncuya etkisi: Bugün yok. Aynı özneye iki ark bağlandığında ikinci arkı açan seçenek sessizce hiçbir şey
+    başlatmaz.
+  - Seçenekler: A) Ertelenen başlatma motorda tutulur ({arc_id, subject}); birinci ark bitince ikincisi başlar. Kayda
+    yeni bir alan girer. B) Seçim anında engel: özne doluysa arkı başlatacak seçenek gerekçesiyle kilitlenir. C) Ret
+    kalır; §10.7 ve A4 "ikinci ark başlamaz" diye yeniden yazılır.
+  - Kaynak: Olay motoru GDD §10.7, §10.9, §20 A4, §27
+
+- **18 · Okunmayan beş EFFECT_* anahtarı: DRAFT-EN kaydı ile CSV süpürmesi çelişiyor.**
+  - Ne oluyor: EFFECT_MRR, EFFECT_QUALITY_BONUS, EFFECT_NEW_TEAMMATE, EFFECT_PROMISE_HONOR ve EFFECT_PROMISE_REFUSE
+    CSV'de duruyor. Ama `event_modal.gd` (FIXED_CHIPS, _describe_modifier) hiçbirini okumuyor, üretim kodunda da
+    okuyanı yok. DRAFT-EN kaydı `EFFECT_*` ailesini "üretim kodunun okudukları" arasında sayıyor ve "referanssız
+    emekli anahtarları CSV süpürmesi siler" diyor. ISLER'deki CSV süpürmesi ise ACIK_KARARLAR'da geçen anahtarları
+    bırakıyor. Bu beş anahtar için iki kural çelişiyor.
+  - Nerede: localization/strings.csv; scripts/modals/event_modal.gd (FIXED_CHIPS, _describe_modifier);
+    docs/ACIK_ISLER/ACIK_KARARLAR.md (DRAFT-EN kaydı); docs/ACIK_ISLER/ISLER.md (CSV süpürmesi)
+  - Oyuncuya etkisi: Yok. Anahtarlar okunmayan metin.
+  - Seçenekler: A) Süpürmeye girer, silinir. B) Kalır; DRAFT-EN kaydında "okunmayan, ileride çip olacak" diye ayrı
+    satır alır. C) Yeniden bağlanır, ör. EFFECT_PROMISE_HONOR/REFUSE vaat kartlarının çipi olur (içerik kararı).
+  - Kaynak: CLAUDE.md §8 (ölü CSV anahtarı); ACIK_KARARLAR DRAFT-EN kaydı; ISLER CSV süpürmesi
+
+- **19 · arc_final_stretch sönünce ticker'a ham "arc_faded" yazılıyor.**
+  - Ne oluyor: `arc_final_stretch` fade politikasında `note_key: "arc_faded"` taşıyor. Bu ne bir CSV anahtarı ne bir
+    kart metni; ark tanımının metin bloğu da yok. Ark Series A imzasında ya da bootstrap kilometre taşında
+    (`phase.bootstrap_milestone`) söner ve haber akışına ham "arc_faded" satırı düşer.
+  - Nerede: data/events/arcs/soft_cap_stretch.json (on_invalidate.note_key), scripts/events/core/engine.gd
+    (_invalidate, fade kolu), scripts/events/present/ticker.gd (push)
+  - Oyuncuya etkisi: Ark canlıyken kârlı bootstrap kilometre taşı alınırsa (EA/tam) ticker'da ham bir kod satırı
+    görünür. Series A imzasında koşu bittiği için pratikte görünmeyebilir.
+  - Seçenekler: A) Yeni bir oyuncu satırı yazılır, önce EN sonra TR (ör. "The year-end file closed."); note_key o
+    anahtarı taşır. B) note_key kaldırılır; bu ark için §10.5'in "ticker izi" düşer ve §27'ye not girer. C) Ark close
+    politikasına geçer ve görünür bir kartla kapanır.
+  - Kaynak: Olay motoru GDD §10.5, §18.3; CLAUDE.md §5
+
 ## Tasarım ve denge
 
 - **K13 · Kilometre taşı maddesi (Series B köprüsü).** ch09 §5 term sheet koşulları arasında

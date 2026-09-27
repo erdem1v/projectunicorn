@@ -60,8 +60,8 @@ class Result:
 	## The worst day and the longest quiet stretch seen in ANY single run.
 	var busiest_day: int = 0
 	var longest_quiet: int = 0
-	## §13.7's actual anchor, per speed rung: the densest THREE REAL MINUTES of play, and the
-	## longest silence in real seconds. Keyed by speed index (1x, 2x, 3x).
+	## §13.7's anchor, per speed rung: the most interrupts in any THREE REAL MINUTES of play, and
+	## the longest silence in real seconds. Keyed by speed index (1x, 2x, 3x).
 	var densest_3min: Dictionary = {}
 	var longest_silence_s: Dictionary = {}
 	## §13.6: days on which the floor was reached and found nothing. A content hole, counted.
@@ -145,9 +145,8 @@ static func _one_run(mode: String, seed_value: int, max_days: int) -> void:
 		else:
 			quiet = 0
 
-	# §13.7 PROPER. Three real minutes is a different number of DAYS on every speed rung, so
-	# the window is computed once per rung and the anchor is reported per rung. Anything else
-	# is a figure that does not say what speed it was measured at.
+	# §13.7: three real minutes is a different number of DAYS on every speed rung, so the
+	# window is computed and the anchor reported per rung.
 	for speed in range(1, TimeManager.SECONDS_PER_DAY.size()):
 		var secs_per_day: float = float(TimeManager.SECONDS_PER_DAY[speed])
 		if secs_per_day <= 0.0:
@@ -156,9 +155,9 @@ static func _one_run(mode: String, seed_value: int, max_days: int) -> void:
 		var densest: int = 0
 		var running: int = 0
 		for d in range(1, day):
-			running += int(_result.decisions_by_day.get(d, 0))
+			running += int(_result.interrupts_by_day.get(d, 0))
 			if d - window >= 1:
-				running -= int(_result.decisions_by_day.get(d - window, 0))
+				running -= int(_result.interrupts_by_day.get(d - window, 0))
 			densest = maxi(densest, running)
 		_result.densest_3min[speed] = maxi(int(_result.densest_3min.get(speed, 0)), densest)
 		var silence_s: int = int(round(float(_result.longest_quiet) * secs_per_day))
@@ -166,12 +165,9 @@ static func _one_run(mode: String, seed_value: int, max_days: int) -> void:
 			int(_result.longest_silence_s.get(speed, 0)), silence_s)
 
 
-## Arcs that started, and arcs that reached an end, counted once each per run.
-##
-## THIS DID NOT EXIST. `arcs_started` and `arcs_completed` were fields nothing wrote, so the
-## guided report's completion table printed 0/0 whatever the engine did — a gate incapable of
-## passing. Sampled once per day rather than hooked to a signal, because an arc that starts and
-## ends inside one tick still has to be counted, and a sample after the tick sees both.
+## Arcs that started, and arcs that reached an end, counted once each per run. Sampled once per
+## day rather than hooked to a signal, because an arc that starts and ends inside one tick still
+## has to be counted, and a sample after the tick sees both.
 static var _seen_live: Dictionary = {}
 
 static func _note_arcs() -> void:
@@ -195,7 +191,7 @@ static func _drain(mode: String) -> void:
 	# opener is a paper never starts, and `arc_final_stretch`'s opener is exactly that.
 	# Guided mode clears the desk every day (a player trying to finish an arc does); random
 	# mode opens one paper a day, which is closer to how a desk actually drains.
-	var desk: Array = EvPapers.ids()
+	var desk: Array = EvPapers.ordered()
 	for paper_id in desk:
 		if EvQueue.active_id() != "":
 			break
@@ -250,7 +246,6 @@ static func _drain_active(mode: String) -> void:
 		EvEngine.resolve(event_id, option_id)
 
 
-## Guided: take the option that MOVES THE ARC. Random: hash-pick, so a seed reproduces exactly.
 ## An arc whose steps are fixture content. Not production, not in the gate.
 static func _is_fixture_arc(arc_id: String) -> bool:
 	for step in (EvCatalog.arc(arc_id).get("steps", []) as Array):
@@ -260,6 +255,7 @@ static func _is_fixture_arc(arc_id: String) -> bool:
 	return false
 
 
+## Guided: take the option that MOVES THE ARC. Random: hash-pick, so a seed reproduces exactly.
 static func _pick(mode: String, card: Dictionary, event_id: String) -> String:
 	var options: Array = card.get("options", [])
 	var takeable: Array = []
@@ -313,16 +309,15 @@ static func _report(mode: String) -> bool:
 	print("")
 	print("RUNS      %d, %d simulated day(s)" % [r.runs, r.days])
 
-	# Run length. The directive behind this: SOFT_CAP_DAY is 730, and if no run ever gets
-	# near it then the soft-cap telegraph is content nobody will see and I3 is satisfied
-	# vacuously. Worth knowing either way.
+	# Run length: if no run gets near the soft cap, its telegraph is content nobody will see and
+	# I3 is satisfied vacuously.
 	if not r.run_lengths.is_empty():
-		var total: int = 0
-		var longest: int = 0
-		for d in r.run_lengths:
-			total += int(d)
-			longest = maxi(longest, int(d))
-		print("RUN LEN   mean %d day(s), longest %d" % [total / r.run_lengths.size(), longest])
+		var lens: Array = r.run_lengths.duplicate()
+		lens.sort()
+		var longest: int = int(lens[-1])
+		print("RUN LEN   mean %d, median %d, shortest %d, longest %d (in-game days)" % [
+			int(lens.reduce(func(a, b): return a + b, 0)) / lens.size(), int(lens[lens.size() / 2]),
+			int(lens[0]), longest])
 		print("          soft cap is day %d — %s"
 			% [EndingsSystem.SOFT_CAP_DAY,
 				"REACHABLE in this sweep" if longest >= EndingsSystem.SOFT_CAP_DAY
@@ -331,39 +326,39 @@ static func _report(mode: String) -> bool:
 	print("ENDINGS   %s" % (str(r.endings) if not r.endings.is_empty() else "none reached"))
 	print("CARDS     %d distinct fired" % r.cards_fired.size())
 
-	# §13.7's anchor. A measurement, not a gate — §13.7 says so itself. Both figures are the
-	# worst SINGLE RUN, folded in at the end of each seed; the day tables they come from are
+	# §13.7's anchor. A measurement, not a gate — §13.7 says so itself. The window figures are
+	# the worst SINGLE RUN, folded in at the end of each seed; the day tables they come from are
 	# per-run, because every run walks the same day numbers.
 	print("TEMPO     busiest day: %d interrupt(s) against the DAILY ceiling of %d"
 		% [r.busiest_day, EvTuning.MAX_INTERRUPTS_PER_DAY])
 	print("          longest silence: %d in-game day(s)" % r.longest_quiet)
-	print("§13.7 ANCHOR — densest 3 real minutes, and the longest silence in real seconds.")
+	var real_min: float = float(r.days) * float(TimeManager.SECONDS_PER_DAY[1]) / 60.0
+	var decisions: int = r.cards_fired.values().reduce(func(a, b): return a + b, 0)
+	print("§13.7 ANCHOR — one decision every %s real min at 1x (anchor %.1f); the busiest"
+		% ["%.1f" % (real_min / decisions) if decisions > 0 else "n/a",
+			EvTuning.ANCHOR_MINUTES_PER_DECISION]
+		+ " 3 real minutes, and the longest silence in real seconds.")
 	print("          (3 min = %d days at 1x, %d at 2x, %d at 3x)" % [
 		int(round(ANCHOR_WINDOW_SECONDS / float(TimeManager.SECONDS_PER_DAY[1]))),
 		int(round(ANCHOR_WINDOW_SECONDS / float(TimeManager.SECONDS_PER_DAY[2]))),
 		int(round(ANCHOR_WINDOW_SECONDS / float(TimeManager.SECONDS_PER_DAY[3])))])
 	for speed in [1, 2, 3]:
-		print("          %dx : %d decision(s) per 3 min (ceiling %d) · silence %d s" % [
+		print("          %dx : %d interrupt(s) per 3 min (ceiling %d) · silence %d s" % [
 			speed, int(r.densest_3min.get(speed, 0)),
 			EvTuning.ANCHOR_MAX_INTERRUPTS_PER_3_MIN,
 			int(r.longest_silence_s.get(speed, 0))])
 	print("FLOOR     %d day(s) the floor was reached and found nothing (\u00a713.6)"
 		% r.empty_floor_days)
-	var lens: Array = r.run_lengths.duplicate()
-	lens.sort()
-	if not lens.is_empty():
-		print("RUN LEN   median %d, shortest %d, longest %d (in-game days)" % [
-			int(lens[lens.size() / 2]), int(lens[0]), int(lens[lens.size() - 1])])
 
 	var ok: bool = true
 	print("")
 	print("CRASHES   %d" % r.crashes)
 	print("DANGLING  %d" % r.dangling)
 	# §19.3's third clean-run condition. A refusal here is the executor stopping a card from
-	# ending the run on a telegraph that never fired — so nonzero is CONTENT that would have
-	# shipped a silent loss, not an engine failure, and it is named rather than counted silently.
-	print("UNTELEGRAPHED  %d refusal(s) — a card tried to end a run on a telegraph that "
-		% r.untelegraphed + "never fired")
+	# ending the run with no telegraph declared or on one that never fired — so nonzero is
+	# CONTENT that would have shipped a silent loss, not an engine failure.
+	print("UNTELEGRAPHED  %d refusal(s) — a card tried to end a run with no telegraph declared "
+		% r.untelegraphed + "or on one that never fired")
 	if r.untelegraphed > 0:
 		ok = false
 	if r.crashes > 0 or r.dangling > 0:

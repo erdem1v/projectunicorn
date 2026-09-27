@@ -15,14 +15,15 @@ const PRIORITY_WORLD := "world"      ## a rival move, sector news; anything else
 static var _held: Array = []
 
 
-## Push one line. `line_key` is a localization key, never prose (§3.2).
-static func push(line_key: String, priority: String, _context: Dictionary = {}) -> void:
-	if line_key == "":
+## Push one line: a localization key or a card's own prose, resolved in the live locale with the
+## card's slots filled from `context` ("{customer} stopped asking").
+static func push(line: String, priority: String, context: Dictionary = {}) -> void:
+	if line == "":
 		return
-	var text: String = TranslationServer.translate(line_key)
+	var text: String = EvPresenter.resolve_text(line, context)
 	EventBus.headline_added.emit(_source_for(priority), text)
 	if priority == PRIORITY_PLAYER:
-		_held.append({"day": GameState.day, "key": line_key, "text": text})
+		_held.append({"day": GameState.day, "key": line, "text": text})
 
 
 static func _source_for(priority: String) -> String:

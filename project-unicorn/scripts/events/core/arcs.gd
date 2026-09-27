@@ -49,13 +49,15 @@ static func start(arc_id: String, subject: Dictionary = {}) -> bool:
 			push_warning("[EvArcs] '%s' has ended and is not restartable" % arc_id)
 			return false
 
-	# §10.7: one live arc per subject unless the definition opts out. The refused start is not
-	# deferred — the card that wanted it proposes again tomorrow.
+	# §10.7: a subject carries ARC_PER_SUBJECT_DEFAULT live arcs unless the definition opts out.
+	# §10.7 would defer the second arc; it is refused here, and the card that chose it has spent
+	# its latch, so nothing proposes it again.
 	if not subject.is_empty() and not bool(definition.get("allow_concurrent", false)):
-		var holder: String = arc_on_subject(String(subject.get("id", "")))
-		if holder != "" and holder != arc_id:
-			push_warning("[EvArcs] subject %s already carries arc '%s'"
-				% [subject.get("id", ""), holder])
+		var holders: Array = live_ids().filter(
+			func(a): return subject_id(a) == String(subject.get("id", "")))
+		if holders.size() >= EvTuning.ARC_PER_SUBJECT_DEFAULT:
+			push_warning("[EvArcs] subject %s already carries arc(s) %s"
+				% [subject.get("id", ""), str(holders)])
 			return false
 
 	_live[arc_id] = {
@@ -122,19 +124,6 @@ static func subject_of(arc_id: String) -> Dictionary:
 
 static func subject_id(arc_id: String) -> String:
 	return String(subject_of(arc_id).get("id", ""))
-
-
-## Which live arc holds this subject, or "". §10.7's per-subject limit reads it.
-static func arc_on_subject(entity_id: String) -> String:
-	if entity_id == "":
-		return ""
-	for arc_id in _live:
-		var st: Dictionary = _live[arc_id]
-		if String(st["state"]) == STATE_ENDED:
-			continue
-		if String((st["subject"] as Dictionary).get("id", "")) == entity_id:
-			return arc_id
-	return ""
 
 
 ## Bind a new subject to an arc that was waiting for one, and resume it.

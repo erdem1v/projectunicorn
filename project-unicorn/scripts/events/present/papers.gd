@@ -108,18 +108,10 @@ static func visible(slots: int) -> Array:
 	return ordered().slice(0, slots)
 
 
-static func overflow_count(slots: int) -> int:
-	return maxi(0, _papers.size() - slots)
-
-
 # --- Reading ---------------------------------------------------------------
 
 static func has(key: String) -> bool:
 	return _papers.has(key)
-
-
-static func ids() -> Array:
-	return ordered()
 
 
 ## The keys of the card's papers, one per subject.

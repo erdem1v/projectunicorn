@@ -5,9 +5,8 @@ extends RefCounted
 #
 #     godot --headless --path . --why-fire=<event_id>
 #
-# §19.2 calls this the calibration round's precondition, and that is the right framing: you
-# cannot tune a pool you cannot interrogate. Before this existed the answer to "why have I
-# never seen that card" was to read four files and guess.
+# §19.2 calls this the calibration round's precondition: you cannot tune a pool you cannot
+# interrogate.
 #
 # THE ONE DESIGN RULE HERE: this panel must never be able to disagree with the gate. It does
 # not re-derive anything — it calls `EvGate.propose()` and prints the `Verdict` the real
@@ -91,9 +90,8 @@ static func report(event_id: String) -> String:
 		if not EventBus.has_signal(signal_name):
 			out.append("          !! EventBus DOES NOT DECLARE THAT SIGNAL.")
 		elif _never_emitted(signal_name):
-			# The finding that is invisible from any other angle. Three signals are declared
-			# and never emitted anywhere in the tree; a card waiting on one of them looks
-			# perfectly healthy and can never fire.
+			# The finding that is invisible from any other angle: a card waiting on a signal
+			# nothing emits looks perfectly healthy and can never fire.
 			out.append("          !! THAT SIGNAL HAS NO EMITTER ANYWHERE IN scripts/.")
 			out.append("             The card is structurally unreachable, not merely unlucky.")
 		out.append("")

@@ -33,8 +33,9 @@ const TYPES := [TYPE_EMPLOYEE, TYPE_FOUNDER, TYPE_CUSTOMER, TYPE_PROSPECT, TYPE_
 
 ## Bind every declared slot. Returns {ok: bool, context: Dictionary, unresolved: String}.
 ##
-## `given` is what the caller already knows (a signal's employee_id, an arc's subject); §4.3:
-## what the caller supplied wins, then the selector runs.
+## `given` is what the caller already knows, per slot: a bare id (a signal's payload, a request)
+## or a frozen binding {type, id, ...} (an arc's subject, a scheduled entry's context). §4.3: what
+## the caller supplied wins, then the selector runs.
 ##
 ## REQUIRED SLOTS ARE RESOLVED FIRST. With two slots of one type and one candidate, declaration
 ## order could hand the only candidate to an optional slot and then fail the required one.
@@ -53,7 +54,9 @@ static func resolve(slots: Dictionary, given: Dictionary = {}) -> Dictionary:
 		# about its own subject.
 		var chosen: String = ""
 		if given.has(slot_name):
-			var candidate: String = String(given[slot_name])
+			var g: Variant = given[slot_name]
+			var candidate: String = String((g as Dictionary).get("id", "")) \
+				if typeof(g) == TYPE_DICTIONARY else String(g)
 			if _exists(candidate, type_id) and not used.has(candidate):
 				chosen = candidate
 		if chosen == "":
@@ -260,7 +263,7 @@ static func _select_customer(mode: String, used: Dictionary) -> String:
 		"open_request":
 			return _first_by(pool.filter(func(c): return c.support_request_since_day >= 0),
 				func(c): return c.support_request_since_day)
-	return _first_by(pool, func(_c): return 0)
+	return _first_by(pool, func(c): return c.id)
 
 
 ## The id of the entity with the smallest `key`, ties broken by id; "" for an empty pool.

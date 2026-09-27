@@ -10,6 +10,7 @@ extends RefCounted
 
 ## An entity seam reading one Customer field, `fallback` when the account is gone.
 static func customer_field(field: String, fallback: Variant) -> Callable:
+	assert(field in Customer.new(), "Customer has no field '%s'" % field)
 	return func(id: String) -> Variant:
 		var c: Customer = CustomerRegistry.get_customer(id)
 		return c.get(field) if c != null else fallback
@@ -63,12 +64,7 @@ static func install() -> void:
 	EvSeams.register("musteri.min_satisfaction", G, TYPE_INT,
 		func() -> int: return CustomerRegistry.get_min_satisfaction(""), "Sales", "worst account")
 	EvSeams.register("musteri.at_risk_count", G, TYPE_INT,
-		func() -> int:
-			var n: int = 0
-			for c in CustomerRegistry.get_active():
-				if (c as Customer).lifecycle_phase == "risk":
-					n += 1
-			return n,
+		func() -> int: return B2BSalesSystem.attention_count(),
 		"Sales", "accounts currently in Risk")
 	EvSeams.register("musteri.lost_this_run", G, TYPE_INT,
 		func() -> int: return GameState.run_customers_lost, "Sales", "WRAPPER; churn counter")

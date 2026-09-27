@@ -44,7 +44,7 @@ static func key_for(event_id: String, latch_key: String, subject_id: String) -> 
 ## instances (§20 A6), and the same card about the same subject is one (§20 E2, B9).
 static func key_of(event_id: String, context: Dictionary) -> String:
 	return key_for(event_id, String(EvCatalog.card(event_id).get("latch_key", KEY_RUN)),
-		EvGate._subject_of(context))
+		EvGate.subject_of(context))
 
 
 ## key_of for a queue entry or an admission, {event_id, context, ...}.

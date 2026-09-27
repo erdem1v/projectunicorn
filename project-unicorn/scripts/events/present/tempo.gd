@@ -73,7 +73,7 @@ static func assign(admissions: Array) -> Array:
 
 		out.append({"event_id": event_id, "key": key, "class": final_class,
 			"demoted": final_class != declared})
-		_record(event_id, card, final_class, EvGate._subject_of(entry["context"]))
+		_record(event_id, card, final_class, EvGate.subject_of(entry["context"]))
 	return out
 
 
@@ -91,15 +91,8 @@ static func _more_important(a: Dictionary, b: Dictionary) -> bool:
 
 
 static func _rank(entry: Dictionary) -> int:
-	var card: Dictionary = EvCatalog.card(String(entry["event_id"]))
-	var tags: Array = card.get("tags", [])
-	if tags.has("terminal_warning"):
-		return 0
-	if EvPapers.is_expiring_soon(EvLatches.key_of_entry(entry)):
-		return 1
-	if tags.has("critical"):
-		return 2
-	return 3 + maxi(0, EvQueue.PRIORITY.find(String(card.get("class", "ambient"))))
+	var event_id: String = String(entry["event_id"])
+	return EvQueue.rank(event_id, EvLatches.key_of_entry(entry), String(EvCatalog.card(event_id)["class"]))
 
 
 ## §13.5 — what the day's interrupt budget does NOT govern. Public because lint's R8a asks the

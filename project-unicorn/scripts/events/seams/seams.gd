@@ -105,6 +105,11 @@ static func owner_of(name: String) -> String:
 	return String(_seams.get(name, {}).get("owner", ""))
 
 
+static func note_of(name: String) -> String:
+	ensure_installed()
+	return String(_seams.get(name, {}).get("note", ""))
+
+
 static func all_names() -> Array:
 	ensure_installed()
 	var names: Array = _seams.keys()

@@ -58,23 +58,24 @@ static func next() -> Dictionary:
 	var best_rank: int = PRIORITY.size() + 1
 	for e in _entries:
 		var entry: Dictionary = e
-		var rank: int = _rank_of(entry)
-		if rank < best_rank or (rank == best_rank and _earlier(entry, best)):
+		var r: int = rank(String(entry["event_id"]), EvLatches.key_of_entry(entry), String(entry["class"]))
+		if r < best_rank or (r == best_rank and _earlier(entry, best)):
 			best = entry
-			best_rank = rank
+			best_rank = r
 	return best
 
 
-static func _rank_of(entry: Dictionary) -> int:
-	var card: Dictionary = EvCatalog.card(String(entry["event_id"]))
-	var tags: Array = card.get("tags", [])
+## An instance's place on §11.2's ladder, 0 = most urgent. EvTempo charges the day's admissions
+## by the same ladder, with their declared class.
+static func rank(event_id: String, key: String, card_class: String) -> int:
+	var tags: Array = EvCatalog.card(event_id).get("tags", [])
 	if tags.has("terminal_warning"):
 		return 0
-	if EvPapers.is_expiring_soon(EvLatches.key_of_entry(entry)):
+	if EvPapers.is_expiring_soon(key):
 		return 1
 	if tags.has("critical"):
 		return 2
-	var idx: int = PRIORITY.find(String(entry["class"]))
+	var idx: int = PRIORITY.find(card_class)
 	return idx if idx >= 0 else PRIORITY.size()
 
 

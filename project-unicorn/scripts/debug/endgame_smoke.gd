@@ -16871,7 +16871,7 @@ static func _case_buyout_needs_the_road_over() -> String:
 	# FLATTENED: tools/smoke_run.sh extracts the verdict with a line-based grep, so a
 	# failure message carrying a multi-paragraph body would be cut at its first newline
 	# and the useful half would never reach the log.
-	var body: String = Localization.pick(ev.body_text, ev.body_text_en).replace("
+	var body: String = ev.body_text.replace("
 ", " / ")
 	var lead_name: String = String(InvestorRegistry.get_investor("anchor").get("display_name", ""))
 	if not body.contains(lead_name):

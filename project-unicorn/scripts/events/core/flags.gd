@@ -126,16 +126,6 @@ static func to_dict() -> Dictionary:
 
 
 static func from_dict(d: Dictionary) -> void:
-	reset()
-	# Tolerant of the bare {name: value} shape as well as the record shape.
-	for name in (d.get("flags", {}) as Dictionary):
-		var v: Variant = (d["flags"] as Dictionary)[name]
-		_flags[name] = v if typeof(v) == TYPE_DICTIONARY else {"set_day": -1, "set_by": "load"}
-	for name in (d.get("timed_flags", {}) as Dictionary):
-		var v2: Variant = (d["timed_flags"] as Dictionary)[name]
-		_timed[name] = v2 if typeof(v2) == TYPE_DICTIONARY \
-			else {"expires_on": int(v2), "set_day": -1, "set_by": "load"}
-	for name in (d.get("stamps", {}) as Dictionary):
-		var v3: Variant = (d["stamps"] as Dictionary)[name]
-		_stamps[name] = v3 if typeof(v3) == TYPE_DICTIONARY \
-			else {"day": int(v3), "set_by": "load"}
+	_flags = (d.get("flags", {}) as Dictionary).duplicate(true)
+	_timed = (d.get("timed_flags", {}) as Dictionary).duplicate(true)
+	_stamps = (d.get("stamps", {}) as Dictionary).duplicate(true)

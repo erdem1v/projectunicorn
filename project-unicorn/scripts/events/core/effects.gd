@@ -86,8 +86,8 @@ const B2C_CHURN_PCT := 0.15
 
 enum Origin { PLAYED, EXPIRE, AMBIENT, CHECK_BRANCH }
 
-## I3 refusals this run: a card tried to end the run on a telegraph that never fired. The harness
-## reports the count (§19.3, "no untelegraphed loss").
+## I3 refusals this run: a card tried to end the run with no telegraph declared, or on one that
+## never fired. The harness reports the count (§19.3, "no untelegraphed loss").
 static var _untelegraphed_refusals: int = 0
 
 
@@ -133,7 +133,7 @@ static func _run(effects: Array, ctx: Dictionary, origin: Origin) -> Array:
 			push_error("[EvEffects] effect is not a dictionary: %s" % str(raw))
 			continue
 		var effect: Dictionary = raw
-		var verb: String = String(effect.get("verb", effect.get("type", "")))
+		var verb: String = String(effect.get("verb", ""))
 
 		var refusal: String = _permitted(verb, effect, origin)
 		if refusal != "":
@@ -227,7 +227,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			GameState.set_reputation(GameState.reputation + _amount(e))
 			return {"verb": verb, "amount": _amount(e)}
 		"customer_mrr_delta":
-			var cid: String = _entity(e, ctx, EvScope.TYPE_CUSTOMER)
+			var cid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var c: Customer = CustomerRegistry.get_customer(cid)
 			if c == null:
 				return _no_target(verb, cid)
@@ -235,7 +235,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			SalesSystem.reflect_mrr()
 			return {"verb": verb, "customer": cid, "amount": _amount(e)}
 		"seats":
-			var sid: String = _entity(e, ctx, EvScope.TYPE_CUSTOMER)
+			var sid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var sc: Customer = CustomerRegistry.get_customer(sid)
 			if sc == null:
 				return _no_target(verb, sid)
@@ -247,7 +247,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				SalesSystem.reflect_mrr()
 			return {"verb": verb, "customer": sid, "seats": add_seats}
 		"churn_customer":
-			var chid: String = _entity(e, ctx, EvScope.TYPE_CUSTOMER)
+			var chid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var victim: Customer = CustomerRegistry.get_customer(chid)
 			if victim == null:
 				return _no_target(verb, chid)
@@ -297,10 +297,13 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 
 		# --- arcs -----------------------------------------------------------
 		"start_arc":
+			# The slot rides with the subject, so the arc's later steps are handed the same
+			# binding under the same name (EvEngine._arc_context).
 			var subject: Dictionary = {}
 			var slot: String = String(e.get("subject_slot", ""))
 			if slot != "" and ctx.has(slot):
-				subject = ctx[slot]
+				subject = (ctx[slot] as Dictionary).duplicate()
+				subject["slot"] = slot
 			return {"verb": verb, "arc": e.get("arc_id", ""),
 				"started": EvArcs.start(String(e.get("arc_id", "")), subject)}
 		"advance_arc":
@@ -318,7 +321,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 
 		# --- people ----------------------------------------------------------
 		"change_morale":
-			var eid: String = _entity(e, ctx, EvScope.TYPE_EMPLOYEE)
+			var eid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
 			var emp: Character = CharacterRegistry.get_character(eid)
 			if emp == null:
 				return _no_target(verb, eid)
@@ -334,7 +337,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				HRMoraleSystem.apply_delta(worker, _amount(e), "event")
 			return {"verb": verb, "amount": _amount(e)}
 		"employee_leaves":
-			var lid: String = _entity(e, ctx, EvScope.TYPE_EMPLOYEE)
+			var lid: String = entity_of(e, ctx, EvScope.TYPE_EMPLOYEE)
 			if CharacterRegistry.get_character(lid) == null:
 				return _no_target(verb, lid)
 			HRMoraleSystem.confirm_departure(lid)
@@ -342,14 +345,14 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 
 		# --- customers --------------------------------------------------------
 		"satisfaction_delta":
-			var scid: String = _entity(e, ctx, EvScope.TYPE_CUSTOMER)
+			var scid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var sat_c: Customer = CustomerRegistry.get_customer(scid)
 			if sat_c == null:
 				return _no_target(verb, scid)
 			CustomerRegistry.set_satisfaction(scid, sat_c.satisfaction + _amount(e))
 			return {"verb": verb, "customer": scid, "amount": _amount(e)}
 		"promise_create":
-			var pcid: String = _entity(e, ctx, EvScope.TYPE_CUSTOMER)
+			var pcid: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var pfid: String = String(e.get("feature_id", ""))
 			if pfid == PAIN_SENTINEL:
 				var pc: Customer = CustomerRegistry.get_customer(pcid)
@@ -421,7 +424,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			return {"verb": verb}
 		"start_vc_meeting":
 			# The investor comes from the bound slot; no card can name one at authoring time.
-			var mvc: String = _entity(e, ctx, EvScope.TYPE_INVESTOR)
+			var mvc: String = entity_of(e, ctx, EvScope.TYPE_INVESTOR)
 			if mvc == "":
 				return _no_target(verb, mvc)
 			VCPitchSystem.begin_meeting(mvc)
@@ -430,13 +433,13 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 			# A literal vc_id wins; otherwise the bound investor slot.
 			var tvc: String = String(e.get("vc_id", ""))
 			if tvc == "":
-				tvc = _entity(e, ctx, EvScope.TYPE_INVESTOR)
+				tvc = entity_of(e, ctx, EvScope.TYPE_INVESTOR)
 			if tvc == "":
 				return _no_target(verb, tvc)
 			EventBus.term_table_requested.emit(tvc, PitchConstants.STAGE_SERIES_A)
 			return {"verb": verb, "vc": tvc}
 		"decline_offer":
-			var dvc: String = _entity(e, ctx, EvScope.TYPE_INVESTOR)
+			var dvc: String = entity_of(e, ctx, EvScope.TYPE_INVESTOR)
 			if dvc == "":
 				return _no_target(verb, dvc)
 			if not VCPitchSystem.decline_expired_sheet(dvc):
@@ -477,10 +480,10 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 
 		# --- B2B outcomes, each through its owning seam ---------------------
 		"b2b_retain_delay":
-			B2BSalesSystem.hold(_entity(e, ctx, EvScope.TYPE_CUSTOMER))
+			B2BSalesSystem.hold(entity_of(e, ctx, EvScope.TYPE_CUSTOMER))
 			return {"verb": verb}
 		"b2b_retain_discount":
-			var dc: String = _entity(e, ctx, EvScope.TYPE_CUSTOMER)
+			var dc: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var dcust: Customer = CustomerRegistry.get_customer(dc)
 			if dcust == null:
 				return _no_target(verb, dc)
@@ -488,10 +491,10 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				-int(round(float(dcust.mrr) * B2BConstants.RETAIN_DISCOUNT_PCT)))
 			return {"verb": verb, "customer": dc}
 		"b2b_retain_ignore":
-			B2BSalesSystem.ignore_risk(_entity(e, ctx, EvScope.TYPE_CUSTOMER))
+			B2BSalesSystem.ignore_risk(entity_of(e, ctx, EvScope.TYPE_CUSTOMER))
 			return {"verb": verb}
 		"b2b_expand":
-			var ec: String = _entity(e, ctx, EvScope.TYPE_CUSTOMER)
+			var ec: String = entity_of(e, ctx, EvScope.TYPE_CUSTOMER)
 			var ecust: Customer = CustomerRegistry.get_customer(ec)
 			if ecust == null:
 				return _no_target(verb, ec)
@@ -499,7 +502,7 @@ static func _apply(verb: String, e: Dictionary, ctx: Dictionary) -> Dictionary:
 				B2BConstants.EXPANSION_PER_SEAT_MRR)
 			return {"verb": verb, "customer": ec}
 		"b2b_expand_decline":
-			B2BSalesSystem.decline_expansion(_entity(e, ctx, EvScope.TYPE_CUSTOMER))
+			B2BSalesSystem.decline_expansion(entity_of(e, ctx, EvScope.TYPE_CUSTOMER))
 			return {"verb": verb}
 
 		# --- terminal -----------------------------------------------------------
@@ -525,7 +528,7 @@ static func _amount(e: Dictionary) -> int:
 ## The entity this effect targets: an explicit id, else the named slot, else the first slot of
 ## the right type. Resolved fresh per effect — §8.2 lists are non-atomic, so an earlier effect
 ## can remove the entity a later one aims at.
-static func _entity(e: Dictionary, ctx: Dictionary, want_type: String) -> String:
+static func entity_of(e: Dictionary, ctx: Dictionary, want_type: String) -> String:
 	if e.has("entity_id"):
 		return String(e["entity_id"])
 	var slot: String = String(e.get("scope", ""))

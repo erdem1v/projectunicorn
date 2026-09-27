@@ -34,14 +34,13 @@ static func build_view(event_id: String, context: Dictionary) -> GameEvent:
 	var card: Dictionary = EvCatalog.card(event_id)
 	if card.is_empty():
 		return null
-	var text: Dictionary = _text_block(card)
+	var text: Dictionary = text_block(card)
 
 	var ev := GameEvent.new()
 	ev.id = event_id
-	ev.category = String(card.get("category", "reactive"))
-	ev.title = _resolve_text(text.get("title", ""), context)
-	ev.subtitle = _resolve_text(text.get("subtitle", ""), context)
-	ev.body_text = _resolve_text(text.get("body", ""), context)
+	ev.title = resolve_text(text.get("title", ""), context)
+	ev.subtitle = resolve_text(text.get("subtitle", ""), context)
+	ev.body_text = resolve_text(text.get("body", ""), context)
 	for t in card.get("tags", []):
 		ev.tags.append(String(t))
 
@@ -56,11 +55,11 @@ static func build_view(event_id: String, context: Dictionary) -> GameEvent:
 		var opt: Dictionary = o
 		var opt_id: String = String(opt.get("id", ""))
 		var choice := EventChoice.new()
-		choice.label = _resolve_text(labels.get(opt_id, opt_id), context)
+		choice.label = resolve_text(labels.get(opt_id, opt_id), context)
 		# The modal re-evaluates the lock at render time, so a lock can change between
 		# admission and display.
 		choice.unlock_condition = opt.get("requires", {})
-		choice.unlock_reason_text = _resolve_text(reasons.get(opt_id, ""), context)
+		choice.unlock_reason_text = resolve_text(reasons.get(opt_id, ""), context)
 		# Carried only for the modal's chip builder; EvEngine.resolve is the one path that
 		# applies effects and writes history.
 		choice.modifiers = opt.get("effects", [])
@@ -70,7 +69,7 @@ static func build_view(event_id: String, context: Dictionary) -> GameEvent:
 
 ## The card's text block in the live locale. Turkish is canonical: a missing block (a build
 ## error under §17.8) falls back to it.
-static func _text_block(card: Dictionary) -> Dictionary:
+static func text_block(card: Dictionary) -> Dictionary:
 	var all_text: Dictionary = card.get("text", {})
 	var locale: String = "en" if TranslationServer.get_locale().begins_with("en") else "tr"
 	var text: Dictionary = all_text.get(locale, {})
@@ -117,7 +116,7 @@ static func desk_papers(visible_slots: int = 3) -> Array:
 		var left: int = EvPapers.days_left(key)
 		out.append({
 			"id": key,
-			"title": _resolve_text(_text_block(card).get("title", ""), EvPapers.context_of(key)),
+			"title": resolve_text(text_block(card).get("title", ""), EvPapers.context_of(key)),
 			"tag": String(card.get("category", "")).to_upper(),
 			"days_left": left,
 			# §11.4: remaining time is on the paper, emphasised in the last days — the only
@@ -126,10 +125,6 @@ static func desk_papers(visible_slots: int = 3) -> Array:
 			"target": "event:%s" % key,
 		})
 	return out
-
-
-static func desk_overflow(visible_slots: int = 3) -> int:
-	return EvPapers.overflow_count(visible_slots)
 
 
 # --- Text resolution -------------------------------------------------------
@@ -141,7 +136,7 @@ static func desk_overflow(visible_slots: int = 3) -> int:
 ##    ported content's reviewed text already lives in strings.csv, and copying it inline would
 ##    give one string two homes. New content writes prose inline.
 ## 3. Anything else -> literal prose, interpolated.
-static func _resolve_text(value: Variant, context: Dictionary) -> String:
+static func resolve_text(value: Variant, context: Dictionary) -> String:
 	if typeof(value) == TYPE_DICTIONARY:
 		return _resolve_variant(value as Dictionary, context)
 	var text: String = String(value)
@@ -161,13 +156,18 @@ static func _resolve_variant(spec: Dictionary, context: Dictionary) -> String:
 	if variants.is_empty():
 		return ""
 	var value: int = int(EvSeams.read(seam)) if seam != "" and EvSeams.has(seam) else 0
-	var keys: Array = variants.keys().map(func(k): return int(k))
+	# Keyed back to the authored spelling, so "01" is found as written; lint refuses a key
+	# that is not an integer at all.
+	var by_int: Dictionary = {}
+	for k in variants:
+		by_int[int(k)] = k
+	var keys: Array = by_int.keys()
 	keys.sort()
 	var chosen: int = keys[0]
 	for k in keys:
 		if k <= value:
 			chosen = k
-	return _resolve_text(variants[str(chosen)], context)
+	return resolve_text(variants[by_int[chosen]], context)
 
 
 ## `{slot}` / `{slot.name}` -> the bound entity's display name. `{seam:name}` -> a seam's value

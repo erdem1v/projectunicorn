@@ -6,15 +6,7 @@ extends RefCounted
 #
 #     godot --headless --path . --event-probe
 #
-# WHY THIS EXISTS SEPARATELY FROM THE SMOKE SUITE. endgame_smoke.gd is 12,500 lines and shared
-# with several other sessions' work; adding to it mid-build is a merge hazard and a slow
-# feedback loop (one Godot boot per case). This runs every core assertion in a single boot, so
-# it is the loop used WHILE building. The permanent gates still go into the smoke suite — this
-# does not replace them, it front-runs them.
-#
-# It grows into the "why didn't this fire" panel (§19.2): the gate already returns a Verdict
-# carrying the step, the reason and the condition report, so the panel is a presentation of
-# what this file already prints.
+# Every core assertion in a single boot, where the smoke suite pays one boot per case.
 
 static var _pass: int = 0
 static var _fail: int = 0
@@ -103,7 +95,6 @@ static func _check_conditions() -> void:
 	_ok("seam >= fails", not EvCondition.eval({"seam": "hr.headcount", "op": ">=", "value": 4}))
 	_ok("op in", EvCondition.eval({"seam": "hr.headcount", "op": "in", "value": [1, 3, 5]}))
 
-	# The combinators the old vocabulary could not express at all.
 	_ok("all", EvCondition.eval({"all": [
 		{"seam": "hr.headcount", "op": ">=", "value": 3},
 		{"seam": "finance.cash", "op": ">", "value": 100}]}))
@@ -198,8 +189,7 @@ static func _check_history() -> void:
 
 	# THE THESIS PRIMITIVE: a condition reading a choice made earlier.
 	_ok("a CONDITION can read a past choice",
-		EvCondition.eval({"history": "chose", "event": "hr.raise_request", "option": "accept"}),
-		"this is the query the old engine had no way to ask")
+		EvCondition.eval({"history": "chose", "event": "hr.raise_request", "option": "accept"}))
 	_ok("and can read that another was not taken",
 		not EvCondition.eval({"history": "chose", "event": "hr.raise_request", "option": "refuse"}))
 
@@ -390,8 +380,7 @@ static func _check_effects() -> void:
 	_ok("a telegraphed ending from a played decision DOES end the run", not GameState.run_active)
 	GameState.set_run_active(true)
 
-	# add_mrr has no write seam and says so rather than faking it. The old engine shipped a
-	# chip for it with no dispatcher arm — a card promising the player a number nothing applied.
+	# add_mrr has no write seam and says so rather than faking it.
 	var mrr_before: int = GameState.mrr
 	var log: Array = EvEffects.run_played([{"verb": "add_mrr", "amount": 900}], {})
 	_ok("add_mrr is refused with a reason, not silently applied",
@@ -440,12 +429,9 @@ static func _check_save_block() -> void:
 		bool(GameState.get_flag("tech_debt_birikti", false)) and not EvFlags.has("tech_debt_birikti"))
 	GameState.set_flag("tech_debt_birikti", false)
 
-	# The schema moved with the block. THE ASSERTION IS "v10 OR LATER", not "exactly v10", and
-	# the difference matters: what this probe owns is that the event_engine block EXISTS in the
-	# schema, which became true at v10 and stays true afterwards. Pinning the exact number made
-	# every later module's legitimate bump fail an engine assertion about something else —
-	# Satış rev 6 (v11) is the first one to hit it. The MIN_LOADABLE pin below stays EXACT,
-	# because that one really is the engine's own ruling: pre-v10 saves are dead, deliberately.
+	# "v10 OR LATER": what the engine owns is that its block EXISTS in the schema, which later
+	# modules' bumps keep true. The MIN_LOADABLE pin stays EXACT, because pre-v10 saves are dead
+	# by the engine's own ruling.
 	_ok("schema carries the event_engine block (v10+)", SaveManager.SCHEMA_VERSION >= 10)
 	_ok("and v9 saves are refused, not half-loaded", SaveManager.MIN_LOADABLE_VERSION == 10)
 
@@ -474,8 +460,7 @@ static func _check_catalog() -> void:
 	_ok("§10.10: an arc step is never in the pool", not pool_ids.has("fixture.thesis_payoff"))
 
 	# unwired/ must stay unreachable. Its cards have empty conditions, and an empty condition
-	# is TRUE — so a recursive loader that saw that directory would fire ev_seed_closed on
-	# day 1. Today it is inert only because the OLD loader is non-recursive; here it is a rule.
+	# is TRUE — so a loader that saw that directory would fire ev_seed_closed on day 1.
 	_ok("unwired/ is excluded from the catalogue", not EvCatalog.has_card("ev_seed_closed"))
 
 
@@ -570,8 +555,7 @@ static func _check_thesis() -> void:
 	var payoff: EvGate.Verdict = EvGate.propose("fixture.thesis_payoff", EvGate.Origin.SCHEDULE)
 	_ok("day 90: it passes the gate", payoff.admitted, "%s: %s" % [payoff.step, payoff.reason])
 	_ok("its condition read a choice made 80 days earlier",
-		EvCondition.eval((EvCatalog.card("fixture.thesis_payoff") as Dictionary)["condition"]),
-		"this is the query the old engine had no way to ask")
+		EvCondition.eval((EvCatalog.card("fixture.thesis_payoff") as Dictionary)["condition"]))
 
 	EvQueue.admit("fixture.thesis_payoff", payoff.context, "interrupt", "arc_fixture_thesis")
 	EvEngine.pump()

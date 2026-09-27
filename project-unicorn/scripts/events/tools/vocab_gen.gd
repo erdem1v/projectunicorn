@@ -5,17 +5,10 @@ extends RefCounted
 #
 #     godot --headless --path . --event-vocab
 #
-# WHY THIS IS GENERATED AND THE OLD ONE WAS NOT. The hand-kept version drifted in three
-# measurable ways within two months of being written — it listed 43 modifiers including two
-# that had been deleted with the overtime system and one that had been retired, said 27
-# conditions where there were 29, and its line numbers were 20-30 out. Its own §g.8 admits it.
-# That is not neglect; it is what a hand-kept extract of a moving target does. `08_event_ve_
-# anlati.md` §12 asks for it to be generated, and this is that.
+# Generated because a hand-kept extract of a moving vocabulary drifts from it.
 #
-# WHAT IT DOES NOT TOUCH. Three sections of that file are hand-written editorial reasoning and
-# are preserved verbatim between markers: the trigger-hook map, the legacy-function map, and
-# the known-gaps list. Nobody would reconstruct those from source, and regenerating over them
-# would be the tool destroying the thing it was meant to protect.
+# WHAT IT DOES NOT TOUCH: the hand-written block between the KEEP markers is preserved
+# verbatim. Nobody would reconstruct it from source.
 
 const OUT_PATH := "res://docs/content/events_draft/_vocabulary.md"
 const KEEP_BEGIN := "<!-- HAND-WRITTEN — REGENERATION SKIPS THIS BLOCK -->"
@@ -43,9 +36,10 @@ static func run() -> bool:
 	L.append("")
 	L.append("| | count |")
 	L.append("|---|---|")
+	var verb_count: int = EvEffects.NEUTRAL_VERBS.size() + EvEffects.ECONOMIC_VERBS.size() \
+		+ EvEffects.TERMINAL_VERBS.size()
 	L.append("| Seams (read) | **%d** |" % EvSeams.all_names().size())
-	L.append("| Effect verbs (write) | **%d** |" % (EvEffects.NEUTRAL_VERBS.size()
-		+ EvEffects.ECONOMIC_VERBS.size() + EvEffects.TERMINAL_VERBS.size()))
+	L.append("| Effect verbs (write) | **%d** |" % verb_count)
 	L.append("| Cards in the catalogue | %d |" % EvCatalog.card_ids().size())
 	L.append("| Arcs | %d |" % EvCatalog.arc_ids().size())
 	L.append("")
@@ -107,7 +101,7 @@ static func run() -> bool:
 				"entity" if EvSeams.kind_of(String(name)) == EvSeams.Kind.ENTITY else "global",
 				_type_name(EvSeams.type_of(String(name))),
 				EvSeams.owner_of(String(name)),
-				_note_of(String(name))])
+				EvSeams.note_of(String(name))])
 		L.append("")
 
 	# --- conditions ---------------------------------------------------------
@@ -169,10 +163,7 @@ static func run() -> bool:
 	f.store_string("\n".join(L))
 	f.close()
 	print("[EvVocabGen] wrote %s — %d seams, %d verbs, %d cards"
-		% [OUT_PATH, EvSeams.all_names().size(),
-			EvEffects.NEUTRAL_VERBS.size() + EvEffects.ECONOMIC_VERBS.size()
-				+ EvEffects.TERMINAL_VERBS.size(),
-			EvCatalog.card_ids().size()])
+		% [OUT_PATH, EvSeams.all_names().size(), verb_count, EvCatalog.card_ids().size()])
 	return true
 
 
@@ -190,11 +181,8 @@ static func _extract_kept() -> String:
 
 static func _kept_placeholder() -> String:
 	return ("\n## e · Hand-written notes\n\n"
-		+ "This block survives regeneration. The three sections worth keeping here are the ones\n"
-		+ "the old file carried and nobody would reconstruct: the **trigger-hook map** (draft\n"
-		+ "hook name → the signal and file:line that fires it today), the **legacy-function map**\n"
-		+ "(every retired card id → the arc node that inherited its job), and the list of\n"
-		+ "**known gaps** the engine has not closed.\n")
+		+ "This block survives regeneration: editorial notes nobody would reconstruct from\n"
+		+ "source, such as the list of **known gaps** the engine has not closed.\n")
 
 
 static func _type_name(t: int) -> String:
@@ -204,9 +192,3 @@ static func _type_name(t: int) -> String:
 		TYPE_STRING: return "string"
 		TYPE_BOOL: return "bool"
 	return "?"
-
-
-static func _note_of(name: String) -> String:
-	# The registry keeps a note per seam; surfacing it here is what makes the table worth
-	# reading rather than merely complete.
-	return String((EvSeams._seams.get(name, {}) as Dictionary).get("note", ""))

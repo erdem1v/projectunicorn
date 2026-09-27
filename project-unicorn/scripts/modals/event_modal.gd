@@ -1,11 +1,10 @@
 extends Control
 
-# Event modal — mounted into GameShell/ModalLayer by main.gd when EventManager
+# Event modal — mounted into GameShell/ModalLayer by main.gd when the engine
 # emits modal_requested. Editorial paper card: mono-caps header (source chip +
 # "KARAR · GÜN N" + subtitle), serif headline and body, compact speaker strip,
-# optional mentor quote row (event.mentor_line), choice cards with right-aligned
-# effect chips, optional MENTOR TAVSİYESİ highlight (event.mentor_choice), mono
-# footer. No countdown: the game pauses while open.
+# choice cards with right-aligned effect chips, mono footer. No countdown: the
+# game pauses while open.
 #
 # Layout is built in code over a bare .tscn root. Colors come from UiTokens,
 # styleboxes from master_theme.tres variations, widgets from UiFactory.
@@ -53,7 +52,6 @@ var _header_row: HBoxContainer
 var _title_label: Label
 var _body_rich: RichTextLabel
 var _speaker_row: HBoxContainer
-var _mentor_row: HBoxContainer
 var _choices_host: VBoxContainer
 var _footer_rule: ColorRect
 var _footer_label: Label
@@ -68,12 +66,9 @@ func populate(event: GameEvent) -> void:
 	if not is_node_ready():
 		await ready
 	_fill_header()
-	# Authored text resolves HERE, at render, not at load: the event cache is built once at
-	# boot, so resolving earlier would freeze the boot locale into it.
-	_title_label.text = Localization.pick(event.title, event.title_en)
-	_body_rich.text = _markdown_to_bbcode(Localization.pick(event.body_text, event.body_text_en))
+	_title_label.text = event.title
+	_body_rich.text = _markdown_to_bbcode(event.body_text)
 	_build_speaker_row()
-	_build_mentor_row()
 	_render_choices()
 	var readout: bool = _is_readout()
 	_footer_rule.visible = not readout
@@ -155,11 +150,6 @@ func _build_skeleton() -> void:
 	_speaker_row.visible = false
 	body.add_child(_speaker_row)
 
-	_mentor_row = HBoxContainer.new()
-	_mentor_row.add_theme_constant_override("separation", 8)
-	_mentor_row.visible = false
-	body.add_child(_mentor_row)
-
 	_choices_host = VBoxContainer.new()
 	_choices_host.add_theme_constant_override("separation", 8)
 	body.add_child(_choices_host)
@@ -208,9 +198,8 @@ func _fill_header() -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_header_row.add_child(spacer)
-	var subtitle_text: String = Localization.pick(_event.subtitle, _event.subtitle_en)
-	if subtitle_text != "":
-		var sub := UiFactory.make_label(UiTokens.tr_upper(_live_subtitle(subtitle_text)), &"MicroLabel")
+	if _event.subtitle != "":
+		var sub := UiFactory.make_label(UiTokens.tr_upper(_live_subtitle(_event.subtitle)), &"MicroLabel")
 		sub.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_header_row.add_child(sub)
 
@@ -267,63 +256,35 @@ func _build_speaker_row() -> void:
 	for child in _speaker_row.get_children():
 		child.queue_free()
 	_speaker_row.visible = false
-	if _event.character_id != "":
-		_render_registry_character()
-	elif _event.speaker_name != "":
-		_render_synthetic_speaker()
-
-
-func _render_registry_character() -> void:
+	if _event.character_id == "":
+		return
 	var c: Character = CharacterRegistry.get_character(_event.character_id)
 	if c == null:
 		push_warning("[EventModal] event.character_id refers to unknown character: %s" % _event.character_id)
 		return
 	_speaker_row.visible = true
-	_speaker_row.add_child(_make_avatar(UiFactory.initials_of(c.character_name), c.portrait_path))
+	_speaker_row.add_child(_make_avatar(c))
 	# role is a TYPED id — resolve it to a display name so no internal code reaches the strip.
-	_add_speaker_name("%s · %s" % [c.character_name, HRConstants.role_label(c.role)])
+	var name_label := UiFactory.make_label(
+		"%s · %s" % [c.character_name, HRConstants.role_label(c.role)], &"RowName")
+	name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_speaker_row.add_child(name_label)
 	var pal: Dictionary = UiTokens.relationship_palette(c.relationship)
 	_speaker_row.add_child(UiFactory.make_pill(c.relationship, pal.bg, pal.fg))
 	for t in c.traits.slice(0, 2):
 		_speaker_row.add_child(UiFactory.make_badge(_trait_label(String(t)), &"neutral"))
 
 
-# A non-Character speaker (e.g. a B2B customer talking in their own voice), rendered
-# straight from the event's speaker_* fields — no registry lookup.
-func _render_synthetic_speaker() -> void:
-	_speaker_row.visible = true
-	var initial: String = _event.speaker_initial if _event.speaker_initial != "" \
-		else UiFactory.initials_of(_event.speaker_name)
-	_speaker_row.add_child(_make_avatar(initial))
-	if _event.speaker_role != "":
-		_add_speaker_name("%s · %s" % [_event.speaker_name, _event.speaker_role])
-	else:
-		_add_speaker_name(_event.speaker_name)
-	if _event.speaker_status != "":
-		var pal: Dictionary = UiTokens.badge_palette(StringName(_event.speaker_status_kind))
-		_speaker_row.add_child(UiFactory.make_pill(_event.speaker_status, pal.bg, pal.fg))
-	for chip in _event.speaker_chips:
-		if typeof(chip) == TYPE_DICTIONARY:
-			_speaker_row.add_child(UiFactory.make_badge(
-				String(chip.get("text", "")), StringName(String(chip.get("kind", "neutral")))))
-
-
-func _add_speaker_name(text: String) -> void:
-	var lbl := UiFactory.make_label(text, &"RowName")
-	lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_speaker_row.add_child(lbl)
-
-
 # Kart grameri tek (GDD 14 §7): her olay kartı kaynağının küçük yuvarlak avatarını gösterir —
 # portre taşıyanlar portreleriyle, diğerleri baş harfleriyle. `Avatar` varyasyonu RADIUS_PILL,
 # dolayısıyla clip_contents yuvarlak kırpmayı verir.
-static func _make_avatar(initials_text: String, portrait_path: String = "") -> Panel:
-	var avatar: Panel = UiFactory.make_avatar(initials_text)
+static func _make_avatar(c: Character) -> Panel:
 	var tex: Texture2D = null
-	if portrait_path != "" and ResourceLoader.exists(portrait_path):
-		tex = load(portrait_path) as Texture2D
+	if c.portrait_path != "" and ResourceLoader.exists(c.portrait_path):
+		tex = load(c.portrait_path) as Texture2D
+	# A portrait covers the plate, so the initials stay blank.
+	var avatar: Panel = UiFactory.make_avatar("" if tex != null else UiFactory.initials_of(c.character_name))
 	if tex != null:
-		avatar.get_child(0).free()  # the initials label
 		avatar.clip_contents = true
 		var pic := TextureRect.new()
 		pic.texture = tex
@@ -347,27 +308,6 @@ func _trait_label(trait_id: String) -> String:
 	return trait_id
 
 
-# --- Mentor quote row (only when the event carries mentor_line) ---
-
-func _build_mentor_row() -> void:
-	for child in _mentor_row.get_children():
-		child.queue_free()
-	var mentor_text: String = Localization.pick(_event.mentor_line, _event.mentor_line_en)
-	_mentor_row.visible = mentor_text != ""
-	if not _mentor_row.visible:
-		return
-	var mentor: Character = CharacterRegistry.get_mentor()
-	if mentor != null:
-		_mentor_row.add_child(_make_avatar(UiFactory.initials_of(mentor.character_name), mentor.portrait_path))
-	else:
-		_mentor_row.add_child(_make_avatar(""))
-	var quote := UiFactory.make_label(mentor_text, &"QuoteSerif")
-	quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	quote.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	quote.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_mentor_row.add_child(quote)
-
-
 # --- Choice rendering ---
 
 func _render_choices() -> void:
@@ -379,16 +319,12 @@ func _render_choices() -> void:
 	for idx in _event.choices.size():
 		var choice: EventChoice = _event.choices[idx]
 		var unlocked: bool = EventGate.condition_met(choice.unlock_condition, ctx)
-		# A mentor never endorses a locked path (avoids amber-on-dim conflict).
-		var is_mentor_pick: bool = unlocked and _event.mentor_choice == idx
-		var card: PanelContainer = _build_choice_card(choice, idx, unlocked, is_mentor_pick, ctx)
-		_choices_host.add_child(_wrap_with_mentor_tab(card) if is_mentor_pick else card)
+		_choices_host.add_child(_build_choice_card(choice, idx, unlocked, ctx))
 
 
-func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor_pick: bool,
-		ctx: Dictionary) -> PanelContainer:
+func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, ctx: Dictionary) -> PanelContainer:
 	var root := PanelContainer.new()
-	root.theme_type_variation = &"ChoiceCardMentor" if is_mentor_pick else &"ChoiceCard"
+	root.theme_type_variation = &"ChoiceCard"
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
@@ -400,16 +336,10 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor
 	text_col.add_theme_constant_override("separation", 2)
 	text_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(text_col)
-	var lbl := UiFactory.make_label(Localization.pick(choice.label, choice.label_en), &"ChoiceLabelStrong")
+	var lbl := UiFactory.make_label(choice.label, &"ChoiceLabelStrong")
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text_col.add_child(lbl)
-	var desc_text: String = Localization.pick(choice.description, choice.description_en)
-	if desc_text != "":
-		var desc := UiFactory.make_label(desc_text, &"QuoteSerif")
-		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		text_col.add_child(desc)
 
 	# Right-aligned chip column: one chip per row so 2+ effects stack
 	# deterministically (no flow-wrap jitter against the text column).
@@ -428,9 +358,8 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor
 				chip.size_flags_horizontal = Control.SIZE_SHRINK_END
 				chip_col.add_child(chip)
 		root.gui_input.connect(_on_choice_input.bind(idx))
-		if not is_mentor_pick:
-			root.mouse_entered.connect(func() -> void: root.theme_type_variation = &"ChoiceCardHover")
-			root.mouse_exited.connect(func() -> void: root.theme_type_variation = &"ChoiceCard")
+		root.mouse_entered.connect(func() -> void: root.theme_type_variation = &"ChoiceCardHover")
+		root.mouse_exited.connect(func() -> void: root.theme_type_variation = &"ChoiceCard")
 	else:
 		root.modulate = Color(1, 1, 1, 0.5)
 		root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -440,31 +369,9 @@ func _build_choice_card(choice: EventChoice, idx: int, unlocked: bool, is_mentor
 		# authored line is the fallback for when the engine stays silent (two clauses failing
 		# at once, which one sentence cannot honestly explain).
 		var reason: String = EventGate.condition_reason(choice.unlock_condition, ctx)
-		reason = tr(reason) if reason != "" \
-			else Localization.pick(choice.unlock_reason_text, choice.unlock_reason_text_en)
+		reason = tr(reason) if reason != "" else choice.unlock_reason_text
 		chip_col.add_child(UiFactory.make_badge(reason if reason != "" else tr("LOCK_CHIP"), &"neutral"))
 	return root
-
-
-# MENTOR TAVSİYESİ tab sitting ON the card's top edge: negative VBox separation pulls the
-# card up under the chip; z_index lifts the chip above the card's border (later siblings
-# draw over earlier ones otherwise).
-func _wrap_with_mentor_tab(card: PanelContainer) -> Control:
-	var wrapper := VBoxContainer.new()
-	wrapper.add_theme_constant_override("separation", -8)
-	wrapper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var tab_row := HBoxContainer.new()
-	tab_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var pad := Control.new()
-	pad.custom_minimum_size = Vector2(12, 0)
-	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tab_row.add_child(pad)
-	var tab := UiFactory.make_badge(tr("EVENT_MENTOR_ADVICE"), &"accent")
-	tab.z_index = 1
-	tab_row.add_child(tab)
-	wrapper.add_child(tab_row)
-	wrapper.add_child(card)
-	return wrapper
 
 
 func _on_choice_input(event: InputEvent, idx: int) -> void:
@@ -497,6 +404,9 @@ func _describe_modifier(m) -> Dictionary:
 		"morale_all": return _chip("EFFECT_TEAM", _fmt_signed(d), d)
 		"bug_delta": return _chip("EFFECT_BUGS", _fmt_signed(d), -d)
 		"delay_days":
+			# The executor refuses a day cost with no build running; the chip does not claim one.
+			if ProductSystem.get_active_build() == null:
+				return {}
 			var days: int = int(m.get("days", 0))
 			return _chip("EFFECT_DAYS", _fmt_signed(days), -days)
 		"change_morale":
@@ -557,7 +467,7 @@ func _chip(key: String, value_text: String, sign_delta: int) -> Dictionary:
 ## The entity id an effect will act on, resolved by the executor's own rule against the
 ## card's frozen scope binding.
 static func _target(m: Dictionary, want_type: String) -> String:
-	return EvEffects._entity(m, EventGate.active_context(), want_type)
+	return EvEffects.entity_of(m, EventGate.active_context(), want_type)
 
 
 static func _kind(delta: int) -> StringName:

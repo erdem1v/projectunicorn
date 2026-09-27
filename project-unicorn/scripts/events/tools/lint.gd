@@ -29,11 +29,9 @@ extends RefCounted
 # ─────────────────────────────────────────────────────────────────────────────────────────
 #
 # Known and accepted findings live in lint_baseline.json; only NEW findings break the build.
-# §17.10 gives the reason in one sentence: otherwise the team learns to ignore the linter. The
-# project already runs this pattern twice — `LOC_EVENT_EN_PENDING` was a ratchet that could only
-# fall (endgame_smoke.gd:25-27), and `loc_residue.gd` takes per-line opt-outs that each carry a
-# written reason. A baseline entry here is a fingerprint, not a rule suppression: change the
-# card and the fingerprint changes and the finding comes back.
+# §17.10 gives the reason in one sentence: otherwise the team learns to ignore the linter. A
+# baseline entry is a fingerprint, not a rule suppression: change the card and the fingerprint
+# changes and the finding comes back.
 
 const BASELINE_PATH := "res://tools/lint_baseline.json"
 
@@ -41,8 +39,7 @@ const SEVERITY_ERROR := "E"
 const SEVERITY_WARN := "W"
 
 ## §17.8: real trademarks are a RELEASE BLOCKER, not a style note. GDD v2 ch.14 §6 lists them
-## under "Cut / never". Two sweeps have already run (company_catalog.gd:23-25,
-## rival_catalog.gd:34-41); this stops the next one being needed.
+## under "Cut / never".
 const FORBIDDEN_TERMS := [
 	"asana", "stripe", "slack", "product hunt", "producthunt", "notion", "figma",
 	"jira", "trello", "salesforce", "hubspot", "zendesk", "intercom", "datadog",
@@ -57,9 +54,8 @@ const FORBIDDEN_TERMS := [
 const DASH_CHARS := ["—", "–"]
 
 ## §17.8: a daily-tick card may not assert a clock. Deterministic beats fire at the day
-## boundary, so "· 13:05" on one of them is a lie the player can check against the TopBar —
-## and exactly that once shipped on the first screen of the game.
-const CLOCK_RE := "[0-2]?[0-9][:.][0-5][0-9]"
+## boundary, so "· 13:05" on one of them is a lie the player can check against the TopBar.
+static var _clock_re: RegEx = RegEx.create_from_string("[0-2]?[0-9][:.][0-5][0-9]")
 
 static var _findings: Array = []
 static var _baseline: Dictionary = {}
@@ -115,17 +111,13 @@ static func _lint_card(id: String, card: Dictionary) -> void:
 
 	# §17.7 paper ----------------------------------------------------------
 	var is_paper: bool = String(card["class"]) == "paper"
-	# ONE definition, and it lives with the governor that applies it. This used to test only
-	# the `critical` tag, which meant every arc-step interrupt was asked for an expiry trio for
-	# a demotion §13.5 forbids the governor from performing on it.
+	# Demotable is the governor's own definition, so an exempt interrupt is never asked for a
+	# trio it can never need.
 	var demotable: bool = String(card["class"]) == "interrupt" \
 		and not EvTempo.budget_exempt(card)
 	if is_paper or demotable:
-		# The GDD does not cover the second half of this. §13.2 demotes
-		# interrupt → paper when the day's budget is spent; §3.1 says expires_days is
-		# paper-only; §17.7 makes a paper without one an error. So the demotion path
-		# manufactures a card the linter would have rejected. Any interrupt that CAN be
-		# demoted must therefore carry the paper trio too.
+		# §13.2 demotes interrupt → paper when the day's budget is spent and §17.7 makes a
+		# paper without the trio an error, so an interrupt that CAN be demoted carries it too.
 		var why: String = "class: paper" if is_paper else "a demotable interrupt (§13.2)"
 		if not card.has("expires_days"):
 			_add(SEVERITY_ERROR, "17.7", where, "%s without expires_days" % why)
@@ -317,12 +309,8 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 
 	for locale in ["tr", "en"]:
 		var block: Dictionary = text[locale]
-		# A BODY MAY BE A VARIANT SET, and this line used to assume it never was.
-		# `String(dict)` has no constructor in Godot 4, so a {by_seam, variants} body threw
-		# "Nonexistent 'String' constructor" and ABORTED _lint_text — which means the dash
-		# ban and the trademark check silently stopped running for exactly the cards that
-		# carry the most text. funding.gate_series_a has been in that hole since variant
-		# bodies landed. _body_strings flattens both shapes, so every arm is checked.
+		_lint_variant_keys(where, locale, block)
+		# A body may be a variant set; every arm is checked.
 		var body: String = " ".join(PackedStringArray(_body_strings(block)))
 		for dash in DASH_CHARS:
 			if body.contains(dash):
@@ -339,15 +327,27 @@ static func _lint_text(id: String, card: Dictionary, where: String) -> void:
 		# TopBar contradicts 40 pixels away.
 		if String(card["tick"]) == "daily":
 			var subtitle: String = String(block.get("subtitle", ""))
-			var re := RegEx.new()
-			re.compile(CLOCK_RE)
-			if re.search(subtitle) != null or re.search(body) != null:
+			if _clock_re.search(subtitle) != null or _clock_re.search(body) != null:
 				_add(SEVERITY_ERROR, "17.8", where,
 					"[%s] a tick:daily card asserts a clock; daily beats fire at hour 0" % locale)
 
 		if body.length() > 900:
 			_add(SEVERITY_WARN, "17.8", where,
 				"[%s] body is %d chars; the card panel is 780x420" % [locale, body.length()])
+
+
+## EvPresenter picks a variant by a seam's INTEGER value, so a key that is not an integer
+## ("default", "high") can never be chosen.
+static func _lint_variant_keys(where: String, locale: String, value: Variant) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		return
+	for k in (value as Dictionary).get("variants", {}):
+		if not String(k).is_valid_int():
+			_add(SEVERITY_ERROR, "17.8", where,
+				"[%s] variant key '%s' is not an integer; variants are picked by a seam's value"
+				% [locale, k])
+	for v in (value as Dictionary).values():
+		_lint_variant_keys(where, locale, v)
 
 
 # --- §17.6 arcs ------------------------------------------------------------
@@ -422,8 +422,6 @@ static func _lint_reachability() -> void:
 		referenced[String(inv.get("reassign_event", ""))] = true
 		referenced[String(inv.get("close_event", ""))] = true
 	for id in EvCatalog.card_ids():
-		for tree in _trees_of(EvCatalog.card(id)):
-			pass
 		for o in (EvCatalog.card(id).get("options", []) as Array):
 			for e in ((o as Dictionary).get("effects", []) as Array):
 				if typeof(e) == TYPE_DICTIONARY and String((e as Dictionary).get("verb", "")) == "schedule_event":
@@ -618,7 +616,7 @@ static func _write_baseline() -> void:
 	var payload: Dictionary = {
 		"_comment": "Accepted lint findings, by fingerprint. A finding here does NOT suppress "
 			+ "its rule: change the card and the fingerprint changes and it comes back. "
-			+ "Regenerate with --event-lint-baseline. Every addition should be defensible.",
+			+ "Regenerate with --event-lint=baseline. Every addition should be defensible.",
 		"generated_day": Time.get_date_string_from_system(),
 		"accepted": accepted,
 	}
