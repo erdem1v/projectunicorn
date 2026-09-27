@@ -13,8 +13,8 @@ Açık işlerin tek yeri bu klasördür.
 - Araçlar: `scripts/events/tools/`.
 - Sistemler arası iş: dalga 1 raporlarında başka sistemin dosyasına düşen 172 değişiklik önerisi ve 151 bildirilmiş
   hata ya da sapma ayıklanacak. Gerçek hata düzeltilir, tasarım sorusu `ACIK_KARARLAR.md`'ye girer.
-- CSV süpürmesi: dalganın kullanılmaz bıraktığı anahtarlar (raporlarda 101 aday; `docs/writing/` ve
-  `ACIK_KARARLAR.md`'de geçenler kalır, DRAFT-EN maddesindeki PRICE_TIP_PREMIUM ve PRICE_TIP_VOLUME dahil).
+- CSV süpürmesi: kalan anahtarlar yalnız smoke'un okuduğu türetilmiş aileler; test paketi değişince onunla birlikte
+  ele alınır. `docs/writing/` ve `ACIK_KARARLAR.md`'de geçenler karara kadar kalır.
 ## Olay motoru
 - Lint kuralı: bir arkın `reassign_event` / `close_event` kartı öznenin slotunu bildirirse, özne `entity_exists` ile
   geçersizlendikten sonra G5'i hiç geçemez (§10.6'nın yasakladığı sessiz ölüm). Bugünkü kartlarda yok; kural eklenmeli.

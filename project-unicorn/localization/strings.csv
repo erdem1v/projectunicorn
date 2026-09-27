@@ -87,34 +87,22 @@ ONB_SLOGAN_LABEL,SLOGAN (OPSİYONEL),SLOGAN (OPTIONAL)
 ONB_SLOGAN_PLACEHOLDER,Bir cümlede ne yapıyorsun,What you do in one sentence
 ONB_PREVIEW_LABEL,ÖNİZLEME,PREVIEW
 ONB_PREVIEW_FOUNDER_TAG,KURUCU · {year},FOUNDER · {year}
-SALES_SUBTITLE,B2B · PORTFÖY YÖNETİMİ,B2B · PORTFOLIO MANAGEMENT
-SALES_PROSPECTS_HEADER,PROSPECT'LER,PROSPECTS
 SALES_PORTFOLIO_HEADER,MÜŞTERİ PORTFÖYÜ,CUSTOMER PORTFOLIO
-SALES_PROSPECTS_COUNT,{n} aday,{n} leads
 SALES_CUSTOMERS_COUNT,{n} müşteri,{n} customers
 SALES_STRIP_CUSTOMERS,MÜŞTERİ,CUSTOMERS
 SALES_STRIP_SATISFACTION,ORT. MEMNUNİYET,AVG. SATISFACTION
 SALES_STRIP_GAINED,BU AY KAZANILAN,GAINED THIS MONTH
 SALES_STRIP_NET,BU AY NET,NET THIS MONTH
-SALES_FIND,+ Prospect bul,+ Find prospect
-SALES_FIND_COOLDOWN,Cooldown · {n} gün,Cooldown · {n} days
-SALES_FIND_EXHAUSTED,Aday havuzu şimdilik kuru; bu sektörde konuşulacak yeni kimse kalmadı.,Lead pool is dry for now; no one new left to approach in this sector.
-SALES_PROSPECT_ACTION,Görüşmeye git,Go to meeting
 SALES_PROSPECTS_EMPTY,Henüz aday yok.,No leads yet.
 SALES_CUSTOMERS_EMPTY,Henüz müşteri yok.,No customers yet.
 SALES_TIER2_TITLE,Kurumsal segment,Enterprise segment
-SALES_TIER2_TAG,TİER 2,TIER 2
-SALES_TIER2_HINT,4-5 yıldız · çok yakında,4-5 stars · coming soon
 SALES_PER_MONTH,/ay,/mo
 SALES_SEATS,{n} koltuk,{n} seats
 SALES_TENURE,{n} aydır müşteri,customer for {n} mo
 SALES_TENURE_NEW,yeni müşteri,new customer
-SALES_VALUE_RANGE,{min}–{max}/ay,{min}–{max}/mo
 SALES_LOG_HEADER,SON HAREKETLER,RECENT ACTIVITY
 SALES_LOG_CLOSE,{actor} · {company} anlaşmasını kapattı · {amount}/ay,{actor} · closed {company} · {amount}/mo
 SALES_LOG_ABSORB,{actor} · {company} tarafındaki talebi karşıladı,{actor} · handled a request from {company}
-SALES_CHIP_WARMING,Hazırlanıyor,Warming up
-SALES_CHIP_WARM,Isındı,Warmed up
 SALES_FOUNDER_STRETCHED,Doğrudan yönettiğin {n} hesap var,You are managing {n} accounts directly
 SALES_CHIP_HEALTHY,SAĞLIKLI,HEALTHY
 SALES_CHIP_RISK,RİSK ALTINDA,AT RISK
@@ -153,10 +141,6 @@ ODA_PAGE_PLACEHOLDER,İçerik yolda,Content on the way
 ODA_MONITOR_IDLE,Geliştirme bekleniyor,Awaiting development
 ODA_MONITOR_IDLE_META,sistem sakin,all quiet
 ODA_MONITOR_BUILD_TITLE,{product} geliştirmesi,{product} in development
-ODA_MONITOR_BUILD_META,~{days} gün kaldı · sorumlu: {lead},~{days} days left · lead: {lead}
-ODA_MONITOR_BUILD_META_READY,Beta'ya hazır · sorumlu: {lead},ready for beta · lead: {lead}
-ODA_MONITOR_PROGRESS,İlerleme,Progress
-ODA_MONITOR_LEAD_FOUNDER,Kurucu,Founder
 ODA_MONITOR_LIVE_CHIP,CANLI,LIVE
 ODA_MONITOR_OK_TITLE,Her şey yolunda,All systems calm
 ODA_MONITOR_RISK_TITLE,Sistem zorlanıyor,System under strain
@@ -298,9 +282,6 @@ SAVE_DELETE_OK,Sil,Delete
 SAVE_LOAD_CONFIRM_TITLE,Kaydedilmemiş ilerleme var.,You have unsaved progress.
 SAVE_LOAD_CONFIRM_BODY,Bu kaydı açarsan son kayıttan bu yana oynadığın günler kaybolur.,Opening this save loses the days you have played since your last save.
 SAVE_LOAD_CONFIRM_OK,Yükle,Load
-SAVE_SAVED,Kaydedildi.,Saved.
-SAVE_LOADED,Yüklendi.,Loaded.
-SAVE_NEVER_SAVED,Bu oyun hiç kaydedilmedi.,This run has never been saved.
 SAVE_ERR_CORRUPT,Dosya okunamıyor.,This file cannot be read.
 SAVE_ERR_NEWER,Bu kayıt daha yeni bir sürümden; açılamıyor.,This save comes from a newer version and cannot be opened.
 SAVE_ERR_TOO_OLD,Bu kayıt eski bir sürümden; ürün verisi değiştiği için açılamıyor.,This save comes from an older version; the product data changed and it cannot be opened.
@@ -346,7 +327,6 @@ HR_TRAINING_COL_CURRENT,MEVCUT,CURRENT
 HR_TRAINING_COL_TARGET,HEDEF,TARGET
 HR_TRAINING_COL_FEE,ÜCRET,FEE
 HR_TRAINING_COL_DURATION,SÜRE,DURATION
-HR_TRAINING_DURATION_WEEKS,iki hafta,two weeks
 HR_TRAINING_WARNING,Eğitimdeyken görev alamaz.,Cannot be assigned while in training.
 HR_TRAINING_CTA,EĞİTİME GÖNDER · {fee},SEND TO TRAINING · {fee}
 HR_TRAINING_AT_CAP,Bu alan tavanda.,This area is already at the cap.
@@ -391,9 +371,7 @@ HR_AREA_MEANING_DEVELOPER_QA,Beta keşif hızı,Beta discovery speed
 HR_AREA_MEANING_TESTER_QA,Beta keşif hızı ve canlı hata aşınması,Beta discovery speed and live bug wear
 HR_AREA_MEANING_TESTER_ENGINEERING,Geliştirme hızı ve hata oranı,Development speed and bug rate
 HR_AREA_MEANING_SALES_REP_SALES,Kapanış olasılığı ve anlaşma boyutu,Close probability and deal size
-HR_AREA_MEANING_SALES_REP_CUSTOMER_SUCCESS,Hesap memnuniyeti ve churn,Account satisfaction and churn
 HR_AREA_MEANING_CUSTOMER_REP_CUSTOMER_SUCCESS,Bilet çözümü ve churn,Ticket resolution and churn
-HR_AREA_MEANING_CUSTOMER_REP_SALES,Kapanış olasılığı ve anlaşma boyutu,Close probability and deal size
 SKILL_LABEL_CHARISMA,karizma,charisma
 ONB_SKILL_PRODUCT,Ürün,Product
 ONB_SKILL_PRODUCT_DESC,Özellik kararları ve tasarım turları.,Feature decisions and design rounds.
@@ -415,13 +393,10 @@ HR_SUMMARY,ÇALIŞAN {count} · ORTALAMA MORAL {morale} · AYLIK MAAŞ YÜKÜ {p
 HR_SEARCH_START,+ İŞE ALIM BAŞLAT,+ Start Recruitment
 HR_SEARCH_START_INLINE,İŞE ALIM BAŞLAT,Start Recruitment
 HR_EMPTY_ROW,Henüz kimse yok,Nobody here yet
-HR_STATE_ON_LEAVE,İzinde,On leave
 HR_STATE_TRAINING,Eğitimde · {days} gün,In training · {days} d
 HR_TRAINING,EĞİTİM,TRAINING
 HR_TRAINING_SEND,EĞİTİME GÖNDER,SEND TO TRAINING
 HR_TRAINING_PICK_TITLE,Eğitime gönder,Send to training
-HR_TRAINING_NONE_ELIGIBLE,Deneyimi dolan kimse yok.,Nobody has filled their experience bar yet.
-HR_TRAINING_CAPPED,Uzmanlık tavanda.,Expertise is at the cap.
 HR_NEWS_TRAINING_DONE,{name} eğitimden döndü; uzmanlığı arttı.,{name} is back from training with sharper expertise.
 SET_UI_SCALE_TOO_LARGE,{pct}% bu pencere boyutunda arayüzü kırpar; daha büyük bir ekran gerekiyor.,{pct}% would crop the interface at this window size; it needs a larger display.
 ANGEL_EVENT_TITLE,Frank'in teklifi,Frank's offer
@@ -485,12 +460,10 @@ TAB_RND,Ar-Ge,R&D
 TAB_PERSONAL,Kişisel,Personal
 TAB_EVENTS,Olaylar,Events
 TAB_SETTINGS,Ayarlar,Settings
-LOCK_SOON_SUFFIX,· YAKINDA,· SOON
 LOCK_BUILD_IN_PROGRESS,İNŞA EDİLİYOR · SEÇİM KİLİTLİ,BUILD IN PROGRESS · CHOICES LOCKED
 FIN_PHASE_BOOTSTRAP,Bootstrap,Bootstrap
 FIN_PHASE_TRACTION,Traction,Traction
 FIN_PHASE_SERIES_A,Series A,Series A
-FIN_PHASE_GATE,Faz kapısı,Phase gate
 FIN_SHUTTER_COUNTDOWN,KEPENK: {n} GÜN,SHUTTER: {n} DAYS
 FIN_CAP_CASH,KASA,CASH
 FIN_CAP_BURN,BURN,BURN
@@ -499,25 +472,15 @@ FIN_CAP_MRR,MRR,MRR
 FIN_CAP_RUNWAY,RUNWAY,RUNWAY
 FIN_CAP_BRAND,MARKA,BRAND
 FIN_CAP_REPUTATION,İTİBAR,REPUTATION
-FIN_OPEN_ROUND,TUR AÇ,OPEN ROUND
-FIN_RAISED,Toplanan,Raised
 FIN_VALUATION,Değerleme,Valuation
 FIN_EQUITY,Hisse,Equity
-FIN_SEAT,Koltuk,Seat
 BUILD_PHASE_DESIGN,TASARIM,DESIGN
 BUILD_PHASE_DEVELOPMENT,GELİŞTİRME,DEVELOPMENT
-BUILD_PHASE_TEST,TEST,TEST
 BUILD_PHASE_BETA,BETA,BETA
-BUILD_ACTION_BUILD,GELİŞTİR →,BUILD →
-BUILD_ACTION_SHIP,Yayınla →,Ship →
-BUILD_RELEASE,Sürüm,Release
-BUILD_FEATURE,Özellik,Feature
-BUILD_BUG_RISK,hata riski,bug risk
 BUILD_LIVE_VERSION,CANLI V{n},LIVE V{n}
 BUILD_ROUND_OF,Tur {n},Round {n}
 BUILD_ROUND_LAST,Tur {n} · son,Round {n} · last
 BUILD_GAIN_LINE,bu tur +{gain} · kalan {left},this round +{gain} · {left} left
-BUILD_BETA_BUGS_CHIP,HATA {n},BUGS {n}
 BUILD_SHIP_TOOLTIP_BUGS,Yayınla · {n} hata canlıya taşınır,Ship · {n} bugs go live
 BUILD_BETA_GATE_LOCKED,GELİŞTİRME %100 olmadan BETA'ya geçilemez.,BETA needs DEVELOPMENT at 100%.
 BUILD_DESIGN_RUSH_CONFIRM,Tasarım turu tamamlanmadı. Bu sürüm potansiyelinin dörtte üçünü taşıyacak.,The design turn is unfinished. This version will carry three quarters of its potential.
@@ -558,7 +521,6 @@ PROD_PERCENT,%{n},{n}%
 PROD_TO_BETA_PLAIN,Beta'ya geç,Move to beta
 PROD_LAUNCH_PLAIN,Yayınla,Ship it
 BUILD_DEV_LINE,Geliştirme · ~{days} gün,Development · about {days} days
-BUILD_DEV_READY,Geliştirme tamam · Beta'ya hazır,Development done · ready for beta
 BUILD_HALF_ROUND_TOOLTIP,Yarım tur sayılmaz,A half round doesn't count
 HR_ROLE_FOUNDER,Kurucu,Founder
 HR_ROLE_PRODUCT_MANAGER,Ürün Yöneticisi,Product Manager
@@ -590,14 +552,11 @@ HR_HOURS_WINDOW,{start}–{end},{start}–{end}
 HR_HOURS_CHIP_OVERTIME,{window} · {n} çalışan mesaide,{window} · {n} on overtime
 HR_HOURS_CHIP_OVERRIDES,{window} · {n} istisna,{window} · {n} exceptions
 HR_HOURS_TITLE,Çalışma saatleri,Working hours
-HR_HOURS_CLOSE,Kapat,Close
 HR_HOURS_SCOPE_COMPANY,Şirket,Company
-HR_HOURS_SOURCE_OWN,Kendi,Own
 HR_HOURS_COL_HOURS,SÜRE,HOURS
 HR_HOURS_COL_SOURCE,KAYNAK,SOURCE
 HR_HOURS_COL_STATE,DURUM,STATE
 HR_HOURS_VALUE,{n} saat,{n} h
-HR_HOURS_START,Başlangıç,Start
 HR_HOURS_EQUALISE,Tümünü şirkete eşitle,Match everyone to the company
 HR_HOURS_BACK_TO_COMPANY,şirkete dön,back to company
 HR_HOURS_BACK_TO_GROUP,gruba dön,back to the group
@@ -621,36 +580,21 @@ HR_HOURS_FACT_SHORT,{n} çalışan kısa günde,{n} on a short day
 HR_HOURS_RULE_OVERTIME,Mesai saatleri %50 fazla ücretle ödenir,Overtime hours are paid at 50% above the hourly rate
 HR_HOURS_RULE_SHORT,Kısa gün maaş yükünü düşürmez,A short day does not lower the payroll
 HR_BADGE_FLIGHT_RISK,Ayrılabilir,At risk of leaving
-HR_STATE_STARTS_TOMORROW,Yarın başlıyor,Starts tomorrow
 HR_SEARCH_CANCEL,ARAYIŞI İPTAL ET,CANCEL SEARCH
-HR_CANDIDATE_FILE,Aday dosyası,Candidate file
 HR_COST_HIRING,İşe alım,Hiring
 HR_COST_SEVERANCE,Kıdem tazminatı,Severance
 HR_COST_TRAINING,Eğitim ücreti,Training fee
-HR_APPLY_RAISE,ZAMMI UYGULA,APPLY RAISE
 HR_LABEL_HR,İK,HR
 SALES_CUSTOMER,Müşteri,Customer
-SALES_LEAD,aday,lead
-SALES_PROSPECT,prospect,prospect
 SALES_SATISFACTION,Memnuniyet,Satisfaction
-SALES_PROMISE,Söz,Promise
-SALES_PROMISE_DUE,Söz teslimi,Promise due
-SALES_VC_MEETING,VC görüşmesi,VC meeting
-SALES_OFFER,Teklif,Offer
-SALES_OFFER_COUNTDOWN,TEKLİF: {n} GÜN,OFFER: {n} DAYS
-SALES_PATIENCE,SABIR,PATIENCE
-SALES_WALK_AWAY,MASADAN KALK,WALK AWAY
 SALES_ZONE_COLD,SOĞUK,COLD
 SALES_ZONE_WARM,ILIK,WARM
 SALES_ZONE_WON,KAZANILDI,WON
-SALES_PITCH_RESOLVE,KARARLILIK,RESOLVE
-SALES_REL_NEUTRAL,NÖTR,NEUTRAL
 WORLD_OUTLET_EKONOMI,Ekonomi Postası,Ekonomi Postası
 WORLD_OUTLET_TEKNOGUNDEM,TeknoGündem,TeknoGündem
 WORLD_OUTLET_GIRISIM,Girişim Bülteni,Girişim Bülteni
 WORLD_OUTLET_SEKTOR,Sektör Telgrafı,Sektör Telgrafı
 UI_OK,Tamam,OK
-UI_CANCEL,İptal,Cancel
 UI_DISMISS,Vazgeç,Cancel
 UI_CONTINUE,DEVAM ET,CONTINUE
 UI_AVATAR_INITIALS,FK,FK
@@ -770,27 +714,7 @@ B2B_CHOICE_EXPAND,Koltukları ekle,Add the seats
 B2B_CHOICE_NOT_YET,Şimdi değil,Not now
 B2B_CHOICE_PROMISE_FIX,Düzeltme sözü ver,Promise a fix
 B2B_EV_RENEWAL_TITLE,Yenileme sinyali,Renewal signal
-B2B_FILE_NOTE,Dosya notu: {note},File note: {note}
-PITCH_BEAT_INTRO,AÇILIŞ,OPENING
-PITCH_BEAT_OBJECTION,İTİRAZ,OBJECTION
-PITCH_BEAT_PRICING,PAZARLIK,NEGOTIATION
-PITCH_BEAT_CLOSE,KAPANIŞ,CLOSING
-PITCH_BEAT_MEETING,GÖRÜŞME,MEETING
-PITCH_OUTCOME_SIGNED,İMZA,SIGNED
-PITCH_OUTCOME_CALLBACK,GERİ DÖNÜŞ,CALLBACK
-PITCH_OUTCOME_CLOSED,KAPANDI,CLOSED
-PITCH_CHECK_CRIT_SUCCESS,→ Tam isabet. Onu yakaladın.,→ Dead on. You had them.
-PITCH_CHECK_SUCCESS,→ İyi gitti.,→ That landed.
-PITCH_CHECK_NEAR_PASS,→ Kıl payı tuttu.,→ Held by a hair.
-PITCH_CHECK_NEAR_MISS,→ Az kalsın — kaçırdın.,→ So close — you lost it.
-PITCH_CHECK_FAIL,→ Tutmadı. Hava soğudu.,→ It did not land. The room cooled.
-PITCH_RESULT_SIGNED,{company} imzaladı. Aylık {amount}. İlk gerçek müşterin.,{company} signed. {amount} a month. Your first real customer.
-PITCH_RESULT_CALLBACK,{company} 'düşünüp döneceğim' dedi. Pipeline'da kaldı — tekrar deneyebilirsin.,{company} said they would think it over. Still in the pipeline — you can try again.
-PITCH_RESULT_CLOSED,{company} bu sefer olmadı. Kapı kapandı.,{company} did not work out this time. That door is closed.
-PITCH_INNER_SIGNED,"Biri, yaptığın şeye para verdi. Küçük ama gerçek.",Someone paid money for the thing you made. Small but real.
-PITCH_INNER_CALLBACK,'Düşüneceğim' — satışın en kaygan cümlesi. Ama kapı tam kapanmadı.,"""I will think about it"" — the slipperiest sentence in sales. But the door is not shut."
 PITCH_INNER_CLOSED,Olmadı. Frank ne der bilmiyorum ama bir sonraki var.,"It did not happen. I do not know what Frank will say, but there is a next one."
-PITCH_CONTINUE,Devam,Continue
 HUNT_PAGE_TITLE,Series A Avı,The Series A Hunt
 HUNT_SEC_INVESTORS,YATIRIMCILAR,INVESTORS
 HUNT_SEC_OFFERS,TEKLİFLER,OFFERS
@@ -847,12 +771,6 @@ HUNT_MEETING_RESCHEDULE,Ertele (~{n} gün),Reschedule (~{n} days)
 HUNT_CANCEL_TIP,Bu fonun bir sonraki toplantısında ikna −{n}. Bugün yeni toplantı ayarlanamaz.,Conviction −{n} at this fund's next meeting. No new meeting can be booked today.
 HUNT_RESCHEDULE_TIP,Bu fonun bir sonraki toplantısında ikna −{n}.,Conviction −{n} at this fund's next meeting.
 HUNT_MEETING_CANCELLED_TODAY,Bugün bir toplantı iptal edildi. Yenisi yarın ayarlanabilir.,A meeting was cancelled today. The next one can be booked tomorrow.
-PRICE_TIP_AXIS,{axis} {score} → {verdict},{axis} {score} → {verdict}
-PRICE_VERDICT_STRONG,güçlü,strong
-PRICE_VERDICT_MID,orta,fair
-PRICE_VERDICT_WEAK,zayıf,weak
-PRICE_TIP_FULL,{n} özellik → dolu bir ürün,{n} features → a full product
-PRICE_TIP_THIN,{n} özellik → ince bir ürün,{n} features → a thin product
 PRICE_TIP_PREMIUM,Bu kategori premium fiyatı kaldırır,This category can carry a premium price
 PRICE_TIP_VOLUME,Bu kategori hacim oyunu — düşük fiyat mantıklı,This category is a volume game — a low price makes sense
 GROWTH_MELTING,eriyor,shrinking
@@ -860,14 +778,10 @@ GROWTH_FLAT,duruyor,flat
 GROWTH_FAST,hızlı büyüyor,growing fast
 GROWTH_STEADY,büyüyor,growing
 PRODUCT_FALLBACK_NAME,Ürün,Product
-SALES_B2C_METRICS,MRR {mrr} · {users} ödeyen kullanıcı · en düşük memnuniyet {sat},MRR {mrr} · {users} paying users · lowest satisfaction {sat}
-SALES_B2C_ROW,{amount}/ay · {health},{amount}/mo · {health}
 HEALTH_HEALTHY,sağlıklı,healthy
 HEALTH_AT_RISK,riskli,at risk
 HEALTH_CHURNING,kaçıyor,churning
 NOTICE_SRC_SALES,Satış,Sales
-NOTICE_SRC_CUSTOMER,Müşteri,Customer
-SALES_LOG_REP_CLOSED,"{rep}, {company} ile anlaşmayı kapattı.",{rep} closed the deal with {company}.
 HR_BADGE_NEW,Yeni,New
 HR_TRAIT_LOYAL_LABEL,SADIK,Loyal
 HR_TRAIT_LOYAL_EFFECT,Moral düşükken bile kolay kolay ayrılmaz; rakip teklifine dayanır.,"Unlikely to leave even at low morale, and holds out against a rival offer."
@@ -917,8 +831,6 @@ HR_ERR_TOP_LEVEL,En üst seviye,Top level
 HR_CARD_PROMOTE,Terfi ettir,Promote
 HR_APPLY_PROMOTE_PCT,Terfi ettir · +%{pct},Promote · +{pct}%
 HR_ROW_TITLE,Unvan,Title
-HR_ERR_ALREADY_ON_LEAVE,Zaten izinde,Already on leave
-HR_ERR_IN_TRAINING,Eğitimde — dönmesini bekle,In training — wait until they are back
 HR_ERR_NO_RECORD,Kayıt bulunamadı,No record found
 HR_ERR_EMPLOYEES_ONLY,Bu aksiyon yalnız çalışanlar için,This action is for employees only
 HR_ERR_LEAVING,Ayrılık bekliyor,A departure is already pending
@@ -926,14 +838,11 @@ HR_WARN_SEARCH_OPEN,"Zaten açık bir arayış var, kapanmadan yenisi başlamaz.
 HR_WARN_COMMISSION_CASH,"Komisyon kasadaki nakitten fazla, bu ödeme kasayı eksiye düşürür.",The commission is more than the cash on hand; this payment puts the treasury below zero.
 HR_WARN_SALARY_CASHFLOW,"Bu maaş nakit akışını eksiye çevirir, kasa erimeye başlar.",This salary turns cash flow negative and the treasury starts draining.
 HR_NEWS_FILES_READY,{role} arayışı için {n} aday dosyası masanda.,{n} candidate files for the {role} search are on your desk.
-HR_NEWS_OVERTIME_DONE,{dept} bölümünde {length} süren ek mesai bitti.,The {length} overtime block in {dept} has ended.
 HR_EV_RESIGN_TITLE,Ayrılık,A departure
 HR_EV_RESIGN_ACK,Anlaşıldı,Understood
-HR_STATE_STARTS_TODAY,Bugün başladı,Started today
 HR_STATE_ON_LEAVE_DAYS,İzinde · {n} gün kaldı,On leave · {n} days left
 HR_NEWS_BACK_FROM,{name} {whence} döndü,{name} is back from {whence}
 HR_NEWS_ON_LEAVE_MONTH,{name} bu ay izinde,{name} is on leave this month
-HR_TENURE_SINCE,{month}'tan beri · {n}. ay,Since {month} · month {n}
 HR_WHENCE_LEAVE,izinden,leave
 HR_FILES_ON_DESK,{n} aday dosyası masada.,{n} candidate files on your desk.
 HR_OPEN_FILES,DOSYALARI AÇ,OPEN THE FILES
@@ -953,7 +862,6 @@ HR_ATLAS_TAKE_NONE,Hiçbirini alma,Take none
 HR_ATLAS_HIRE,İŞE AL · {amount}/AY,HIRE · {amount}/MO
 HR_ATLAS_CLOSE_BODY,Dosyalar kapanır. Yeni bir arayış başlatırsan adaylar {span} sonra gelir.,The files close. If you start a new search the candidates arrive in {span}.
 HR_ATLAS_CLOSE_OK,Dosyaları kapat,Close the files
-HR_CARD_SALARY,Maaş {amount}/ay,Salary {amount}/mo
 HR_CARD_RAISE,Zam yap,Give a raise
 HR_CARD_FIRE,İşten çıkar,Dismiss
 HR_MENU_PERMANENT,kalıcı,permanent
@@ -1207,9 +1115,7 @@ PROD_TYPE_STEP_TITLE,{market} · Ürün tipini seç,{market} · Choose a product
 PROD_TYPE_STEP_SUB,"Hangi problemi çözüyoruz? Sektör, müşterinin dünyasını belirler.",Which problem are we solving? The sector decides the customer's world.
 PROD_BACK_PORTFOLIO,← GERİ · PORTFÖY,← BACK · PORTFOLIO
 PROD_BACK_TYPE,← GERİ · TİP SEÇİMİ,← BACK · TYPE
-PROD_RESEARCH_REQUIRED,ARAŞTIRMA GEREKLİ,RESEARCH REQUIRED
 PROD_PROFILE,ÜRÜN PROFİLİ,PRODUCT PROFILE
-PROD_TO_DEVELOPMENT,Geliştirmeye geç →,Move to development →
 PROD_CANCEL_BUILD,Geliştirmeyi iptal et,Cancel development
 PROD_CANCEL_BUILD_Q,Geliştirmeyi iptal et?,Cancel development?
 PROD_CANCEL_BUILD_BODY,Kurma ekranına dönersin · seçimlerini düzenleyip yeniden başlarsın.,You return to the setup screen · you can edit your picks and start again.
@@ -1228,9 +1134,7 @@ PROD_TEAM_REFUSE_ROLE,Bu rol yapım işini taşımıyor.,This role does not carr
 PROD_TEAM_REFUSE_INACTIVE,Bu kişi şu an çalışmıyor.,This person is not working right now.
 PROD_TEAM_REFUSE_OTHER,Bu kişi yapıma atanamadı.,This person could not be assigned to the build.
 PROD_PHASE_LINE,{phase} · {pct} · ~{days} gün,{phase} · {pct} · about {days} days
-PROD_HALF_SPEED, · yarı hız, · half speed
 PROD_BETA_LINE,Beta · bulunan {found} · çözülen {fixed} · açık {open},Beta · found {found} · fixed {fixed} · open {open}
-PROD_ROUND_CEILING,Tur kazancı tavanı · İnovasyon {inn} / {inn_max} · Kararlılık {stab} / {stab_max} · Deneyim {exp} / {exp_max},Round gain ceiling · Innovation {inn} / {inn_max} · Stability {stab} / {stab_max} · Experience {exp} / {exp_max}
 PROD_ROUND_LINE,{phase} · Tur {round} · ~{days} gün,{phase} · Round {round} · about {days} days
 PROD_READY_TALK_FRANK,HAZIR · FRANK'LE KONUŞ,READY · TALK TO FRANK
 PROD_STATUS,DURUM,STATUS
@@ -1251,7 +1155,6 @@ PROD_IN_DEVELOPMENT,GELİŞTİRMEDE,IN DEVELOPMENT
 PROD_UNPLANNED,planlanmadı,not planned
 PROD_VERSIONS,SÜRÜMLER,VERSIONS
 PROD_ETA_DAYS,~{n}+ GÜN,~{n}+ DAYS
-PROD_BUGS_ETA,{bugs} HATA · ~{days} GÜN,{bugs} BUGS · ~{days} DAYS
 PROD_MARKET_SHARE,pazar payı {share},market share {share}
 PROD_RIVAL_PASSED, · {rival} seni geçti., · {rival} passed you.
 PROD_DEV_VERSION,Geliştir · v{version},Build · v{version}
@@ -1260,7 +1163,6 @@ PROD_PER_USER,/ kullanıcı,/ user
 PROD_FLOOR,Alt sınır {amount},Floor {amount}
 PROD_UPPER_OPEN,üst açık,no ceiling
 PROD_OPTIMAL_UNKNOWN,Optimal belirsiz (pazar verisi düşük),Optimum unclear (thin market data)
-PROD_LIVE_NAMED,CANLI · {name},LIVE · {name}
 PROD_AXIS_INNOVATION_N,İNOVASYON {n},INNOVATION {n}
 PROD_AXIS_STABILITY_N,KARARLILIK {n},STABILITY {n}
 PROD_AXIS_EXPERIENCE_N,DENEYİM {n},EXPERIENCE {n}
@@ -1327,22 +1229,14 @@ PROD_DESIGN_DECISION_BODY,"Tasarım turu bitti. Frank prototipin başında.
 ""We can run another round if you want — it burns time and polishes the design. But every round returns less than the last. At some point you need better people, not more rounds.""{note}"
 PROD_TO_DEVELOPMENT_PLAIN,Geliştirmeye geç,Move to development
 PROD_TREND_FALLING,AZALIYOR,FALLING
-PROD_AXIS_DELTA,{axis} {delta},{axis} {delta}
-PROD_BUG_RISK,Hata riski: {level},Bug risk: {level}
 PROD_BUGS_TREND,{bugs} HATA · {trend},{bugs} BUGS · {trend}
-PROD_BUILD_FALLBACK,Geliştirme,Build
 PROD_BUILD_STATUS_HEADER,GELİŞTİRME DURUMU,BUILD STATUS
-PROD_COST_API,API,API
-PROD_COST_LICENSE,Lisans,License
 PROD_EFFORT_N,Efor {n},Effort {n}
-PROD_GROUP_COUNT,{title} · {checked}/{total},{title} · {checked}/{total}
 PROD_LIVE_PRICE,CANLI · {amount},LIVE · {amount}
-PROD_META_VERSION,V{version} · {type},V{version} · {type}
 PROD_OPTIMAL,Optimal {amount},Optimal {amount}
 PROD_PER_MONTH,{amount} /ay,{amount} /mo
 PROD_PRICE_DRAFT,Fiyat taslak,Price draft
 PROD_PRICE_N,Fiyat {amount},Price {amount}
-PROD_ROUND_PENDING,{phase} · Tur {round} · karar bekliyor,{phase} · Round {round} · awaiting your call
 PROD_TIP_BUGS,Hata riski yüksek. Düzeltme koşusu başlat.,Bug risk is high. Start a fix run.
 PROD_UNKNOWN,belirsiz,unclear
 PROD_ITER_CEILING_NOTE,"İnovasyon {inn} / tur kazancı tavanı {inn_max} · tavanı tur sayısı değil, masadaki ekip belirler.","Innovation {inn} / round gain ceiling {inn_max} · the ceiling comes from the team at the table, not from the number of rounds."
@@ -1365,14 +1259,8 @@ PROD_EV_ITER_DECISION_BODY,"İlk tasarım turu bitti. Frank prototipin başında
 ""Turlar kendi kendine döner · her biri zaman yakar, tasarımı biraz daha parlatır. Ama her turun getirisi bir öncekinden az. Yeter dediğin an geliştirmeye geçeriz; bir noktada daha iyi insanlar lazım olur, daha çok tur değil.""","The first design round is done. Frank is standing over the prototype.
 
 ""The rounds keep going on their own · each one burns time and polishes the design a little more. But every round returns less than the one before. The moment you say enough, we move to development; at some point you need better people, not more rounds."""
-BUILD_FOUND,BULUNAN,FOUND
-BUILD_FIXED,ÇÖZÜLEN,FIXED
-BUILD_REMAINING,KALAN,OPEN
-PROD_TO_DEVELOPMENT_ARROW,Geliştirmeye geç →,Move to development →
-PROD_TO_BETA_ARROW,Beta'ya geç →,Move to beta →
 PROD_ITER_KEEP_GOING,Turlar sürsün,Keep the rounds going
 PROD_STEP_PATH,01 YOL,01 PATH
-PROD_LEAD_HEADER,SORUMLU,LEAD
 PROD_PATH_B2B,KONTRAT,CONTRACT
 PROD_PATH_B2C_CON2,Kaprisli,Fickle
 PROD_BUG_RISK_CAP,Hata riski:,Bug risk:
@@ -1393,7 +1281,6 @@ PROD_INTEREST_CAP,İLGİ,INTEREST
 PROD_CHURN_CAP,CHURN,CHURN
 PROD_MRR_CONTRIB_CAP,MRR KATKISI,MRR CONTRIBUTION
 PROD_GO_TO_SALES,Satış sekmesine git →,Go to Sales →
-PROD_ACTION_HARDEN,Hata sprinti,Bug sprint
 PROD_DRAFT_CHIP,TASLAK,DRAFT
 PROD_TREND_RISING,ARTIYOR,RISING
 VC_WHY_MRR_STRONG,MRR güçlü,MRR is strong
@@ -1523,44 +1410,8 @@ Frank: ""Artık kaçış yok. İmzalayacaksan bugün imzala.""","Today is the la
 
 Frank: ""Nowhere left to run. If you're signing, sign today."""
 VC_EV_DEAL_TITLE,Yatırımcıdan teklif,The investor's offer
-PITCH_NEED_0,"Ekip dağınık, tek bir yerde toplamak istiyorlar.",The team is scattered; they want it all in one place.
-PITCH_NEED_1,"Manuel süreçler zaman yiyor, otomasyon arıyorlar.",Manual work is eating their time; they are looking to automate.
-PITCH_NEED_2,"Mevcut araçları pahalı ve şişkin, sade bir şey istiyorlar.",Their current tools are expensive and bloated; they want something plain.
-PITCH_NEED_3,"Raporlama kâbus, yönetim net veri istiyor.",Reporting is a nightmare and management wants clean numbers.
-PITCH_REAL_NEED_0,Aslında derdi bütçe değil — patronuna 'modernleştik' diyebilmek.,It is not really about budget — it is being able to tell the boss they modernised.
-PITCH_REAL_NEED_1,Asıl korkusu rakibin gerisinde kalmak.,What they actually fear is falling behind a competitor.
-PITCH_REAL_NEED_2,"Geçen yıl yanlış araca para yatırdı, bu sefer garanti istiyor.",They backed the wrong tool last year and want a sure thing this time.
-PITCH_BUDGET_LOW,dar,tight
-PITCH_BUDGET_MID,orta,middling
-PITCH_BUDGET_HIGH,geniş,generous
-PITCH_BUDGET_READ,Satış okuması — bütçe: {band}. {need},Sales read — budget: {band}. {need}
-PITCH_VALUE_BLIND,Bütçesini kestiremiyorsun — körlemesine teklif vereceksin.,You cannot read their budget — you will be quoting blind.
-PITCH_VALUE_READ,Satış okuması — {seats} seat. Ürün değerin bu segmentte seat başına ~${per_lo}-{per_hi} → ~${lo}-{hi}/ay. Bu aralıkta oyna.,Sales read — {seats} seats. In this segment your product is worth about ${per_lo}-{per_hi} per seat → about ${lo}-{hi}/mo. Play inside that range.
 PITCH_S0_NPC,« Frank iyi şeyler söyledi. Göster bakalım — neyi farklı yapıyorsun? »,« Frank spoke well of you. Show me — what are you doing differently? »
 PITCH_S0_INNER,İlk on saniye. Adam zaten Frank'e güveniyor; kapı aralık. Mesele kapıyı nasıl açtığım.,The first ten seconds. He already trusts Frank; the door is ajar. The question is how I open it.
-PITCH_S0_C1,Sıcak başla — önce onu dinle,Open warm — let him talk first
-PITCH_S0_C2,Direkt ürüne gir,Go straight to the product
-PITCH_S0_C3,Kendinden emin gir — 'bunu görmen lazım',Open with confidence — 'you need to see this'
-PITCH_S1_NPC,« Bizde zaten bir sistem var. Seninki ne ekliyor? »,« We already have a system. What does yours add? »
-PITCH_S1_INNER,Klasik itiraz: 'zaten bir şeyimiz var.' Çerçeveyi cevabım belirler.,The classic objection: 'we already have something.' My answer sets the frame.
-PITCH_S1_C1,Dürüst ol — taze ama derdine birebir,"Be honest — new, but built for exactly this"
-PITCH_S1_C2,Vizyon sat — nereye gittiğimizi anlat,Sell the vision — tell him where this goes
-PITCH_S1_C3,"Onun derdine odaklan, dilinden konuş","Focus on his problem, speak his language"
-PITCH_S2_NPC,"« Tamam, ilgimi çektin. Rakam konuşalım. »","« All right, you have my interest. Let us talk numbers. »"
-PITCH_S2_INNER,İşin döndüğü yer. Yüksek tutarsam ya kaparım ya kaçar; düşük tutarsam garanti ama masada para bırakırım. {hint},This is where it turns. Price high and I either win big or lose him; price low and it is safe but I leave money on the table. {hint}
-PITCH_S2_C1,Yüksek çıpa at — değerine güven,Anchor high — trust the value
-PITCH_S2_C2,Adil fiyat — orta nokta,Fair price — the middle
-PITCH_S2_C3,Güvenli fiyat — anlaşmayı garantile,Safe price — lock the deal in
-PITCH_S3_NPC,« Bir düşüneyim... yoksa hemen mi karar versem? »,« Let me think about it... or should I just decide now? »
-PITCH_S3_INNER,Son viraj. Geri çekilirsem kaçar; itersem ya imza ya kapı. {flavor},The last bend. Back off and he drifts; push and it is either a signature or the door. {flavor}
-PITCH_S3_C1,Nazikçe ama kararlı kapat,Close gently but firmly
-PITCH_S3_C2,"Bir taviz ver, güven inşa et","Give a concession, build trust"
-PITCH_S3_C3,Sert kapat — 'bugün karar ver',Close hard — 'decide today'
-PITCH_BAND_CRIT_SUCCESS,Az önce onu tam yakaladın — havada bir güven var.,You had him completely just now — there is confidence in the room.
-PITCH_BAND_SUCCESS,"İyi gitti, beni ciddiye alıyor.",That went well; he is taking me seriously.
-PITCH_BAND_NEAR_PASS,İkna oldu ama tam değil; pürüz kaldı.,"He is convinced, but not entirely; something is still catching."
-PITCH_BAND_NEAR_MISS,Tereddüt ediyor. Az kalsın.,He is hesitating. So close.
-PITCH_BAND_FAIL,Çuvalladım galiba. Toparlamam lazım.,I think I fumbled that. I need to recover.
 PITCH_DIFF_EASY,Kolay,Easy
 PITCH_DIFF_MEDIUM,Orta,Medium
 PITCH_DIFF_HARD,Zorlu,Hard
@@ -1687,9 +1538,7 @@ FIN_REQ_OPENS,Series A Hunt'ta açılır: {reqs},Opens in the Series A Hunt: {re
 FIN_CAPTABLE_HEADER,Hisse dağılımı,Cap table
 FIN_CAPTABLE_FOUNDER,Kurucu · {pct},Founder · {pct}
 FIN_CAPTABLE_INVESTORS,Yatırımcılar · {pct},Investors · {pct}
-FIN_CAPTABLE_EMPLOYEES,Çalışanlar · {pct},Employees · {pct}
 FIN_CAPTABLE_RAISED,Toplanan · {amount},Raised · {amount}
-FIN_CAPTABLE_EQUITY_NOTE,{n} çalışanın hissesi var,{n} employees hold equity
 TERM_BOARD_SEAT_ONE,{n} koltuk,{n} seat
 FIN_SUBTAB_SUMMARY,Özet,Summary
 FIN_SUBTAB_INVESTMENT,Yatırım,Funding
@@ -2058,14 +1907,6 @@ INV_CHIP_METRICS,METRİK,METRICS
 INV_CHIP_TEAM,EKİP,TEAM
 INV_CHIP_NARRATIVE,ANLATI,NARRATIVE
 INV_CHIP_PRODUCT,ÜRÜN,PRODUCT
-TERM_BAND_HIGH,yüksek,high
-TERM_BAND_LOW,düşük,low
-TERM_BAND_MID,orta,middling
-TERM_BAND_GENEROUS,cömert,generous
-TERM_BAND_SEAT_VETO,koltuk + veto ister,a seat plus a veto
-TERM_BAND_CLEAN,temiz,clean
-TERM_BAND_SEAT_FLEX,koltuk (esnek),a seat (flexible)
-TERM_BAND_OBSERVER,gözlemci,observer
 END_META_SERIES_A_CLOSE_TITLE,Series A Kapandı,Series A Closed
 END_META_SERIES_A_CLOSE_FRANK,İmzaladın. Şimdi asıl iş başlıyor — ama o başka bir oyunun konusu.,You signed. Now the real work starts — but that is another game's subject.
 END_META_ACQUISITION_TITLE,Şirket Satıldı,The Company Was Sold
@@ -2496,10 +2337,6 @@ RND_COL_HEADER_SHORT,{family} · {done}/{total},{family} · {done}/{total}
 RND_PLACE_ROOT,kök,root
 RND_PLACE_BRANCH,dal,branch
 RND_PLACE_CONT,devam,continuation
-RND_STATE_REVEALED,açığa çıkmış,revealed
-RND_STATE_RUNNING,koşuyor,running
-RND_STATE_FROZEN,donmuş,frozen
-RND_STATE_DONE,tamamlandı,completed
 RND_LOCKED_SLOT,? {area},? {area}
 RND_UNLOCKS_PREFIX,Açtığı şey:,What it opens:
 RND_START,Başlat,Start
