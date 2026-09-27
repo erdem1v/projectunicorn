@@ -1108,11 +1108,6 @@ Temizlikte ve sonraki turlarda bulunan, kodda doğrulanan maddeler.
   Frank şeridi, wishlist ve "SIRADA NE VAR?" kartları yalnız demo'da. ch13 §1 bootstrap'ı zafer sonu, ch01 §1 730'u tavan, ch13 §2
   Frank şeridini son ekranının öğesi sayıyor. Açık: ch13 §1–§2 ve galeri (§4) güncellensin mi. Kaynak: HANDOFF_series_a §D ve §H.2.
 
-- **Av ve masa kuralları (K4–K12; 2cbbcd8, 28d5edc).** Teklif 10 iş günü; süre dolunca ertelenemez karar kartı; en çok 2 canlı
-  teklif ve görünür sıra. Masada sabırla çoklu itiş var; sabır bitince son teklif ya da fonun kalkması. Reddeden fon geri dönmez
-  (K9). ch09 §5 "bir kez pazarlık", ch09 §6 "geçen fon rakamlar değişince dönebilir" diyor. K9 kararı ch09 §6'daki cümlenin
-  çıkarılmasını söylüyor; yapılmadı. Kaynak: ONERI_v3 §0A.
-
 - **Seed garanti basamaktır (7946ff3, sahip hükmü 2026-08-27).** Seed odası reddedemez, seed teklifi dolmaz, masadan kalkmak
   ZOR MOD kilidinde; Frank'in mühürlü seed satırları buna dayanıyor. ch09 §3 seed için "kabul / bir kez pazarlık / ret" ve retle
   açık kalan bootstrap yolunu, ch09 §4 "şimdi değil" sonucunu tanımlıyor. Açık: ch09 §3–§4 güncellensin mi; tasarım soruları
