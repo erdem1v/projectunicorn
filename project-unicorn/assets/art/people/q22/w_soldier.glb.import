@@ -1,0 +1,61 @@
+[remap]
+
+importer="scene"
+importer_version=1
+type="PackedScene"
+uid="uid://bi6dhjcplotp3"
+path="res://.godot/imported/w_soldier.glb-2a4b185c3e8a980c93fd6dcf02a0fa0d.scn"
+
+[deps]
+
+source_file="res://assets/art/people/q22/w_soldier.glb"
+dest_files=["res://.godot/imported/w_soldier.glb-2a4b185c3e8a980c93fd6dcf02a0fa0d.scn"]
+
+[params]
+
+nodes/root_type=""
+nodes/root_name=""
+nodes/root_script=null
+nodes/apply_root_scale=true
+nodes/root_scale=1.0
+nodes/import_as_skeleton_bones=false
+nodes/use_name_suffixes=true
+nodes/use_node_type_suffixes=true
+meshes/ensure_tangents=false
+meshes/generate_lods=false
+meshes/create_shadow_meshes=true
+meshes/light_baking=1
+meshes/lightmap_texel_size=0.2
+meshes/force_disable_compression=false
+skins/use_named_skins=true
+animation/import=false
+animation/fps=30
+animation/trimming=false
+animation/remove_immutable_tracks=true
+animation/import_rest_as_RESET=false
+import_script/path=""
+materials/extract=0
+materials/extract_format=0
+materials/extract_path=""
+_subresources={
+"nodes": {
+"PATH:CharacterArmature/Skeleton3D": {
+"retarget/bone_map": Object(BoneMap,"resource_local_to_scene":false,"resource_name":"","profile":Object(SkeletonProfileHumanoid,"resource_local_to_scene":false,"resource_name":"","root_bone":&"Root","scale_base_bone":&"Hips","group_size":4,"bone_size":56,"script":null)
+,"bonemap":null,"bone_map/Root":&"Root","bone_map/Hips":&"Body","bone_map/Spine":&"Abdomen","bone_map/Chest":&"Torso","bone_map/UpperChest":&"Chest","bone_map/Neck":&"Neck","bone_map/Head":&"Head","bone_map/LeftEye":&"","bone_map/RightEye":&"","bone_map/Jaw":&"","bone_map/LeftShoulder":&"Shoulder.L","bone_map/LeftUpperArm":&"UpperArm.L","bone_map/LeftLowerArm":&"LowerArm.L","bone_map/LeftHand":&"Wrist.L","bone_map/LeftThumbMetacarpal":&"Thumb1.L","bone_map/LeftThumbProximal":&"Thumb2.L","bone_map/LeftThumbDistal":&"Thumb3.L","bone_map/LeftIndexProximal":&"Index2.L","bone_map/LeftIndexIntermediate":&"Index3.L","bone_map/LeftIndexDistal":&"Index4.L","bone_map/LeftMiddleProximal":&"Middle2.L","bone_map/LeftMiddleIntermediate":&"Middle3.L","bone_map/LeftMiddleDistal":&"Middle4.L","bone_map/LeftRingProximal":&"Ring2.L","bone_map/LeftRingIntermediate":&"Ring3.L","bone_map/LeftRingDistal":&"Ring4.L","bone_map/LeftLittleProximal":&"Pinky2.L","bone_map/LeftLittleIntermediate":&"Pinky3.L","bone_map/LeftLittleDistal":&"Pinky4.L","bone_map/RightShoulder":&"Shoulder.R","bone_map/RightUpperArm":&"UpperArm.R","bone_map/RightLowerArm":&"LowerArm.R","bone_map/RightHand":&"Wrist.R","bone_map/RightThumbMetacarpal":&"Thumb1.R","bone_map/RightThumbProximal":&"Thumb2.R","bone_map/RightThumbDistal":&"Thumb3.R","bone_map/RightIndexProximal":&"Index2.R","bone_map/RightIndexIntermediate":&"Index3.R","bone_map/RightIndexDistal":&"Index4.R","bone_map/RightMiddleProximal":&"Middle2.R","bone_map/RightMiddleIntermediate":&"Middle3.R","bone_map/RightMiddleDistal":&"Middle4.R","bone_map/RightRingProximal":&"Ring2.R","bone_map/RightRingIntermediate":&"Ring3.R","bone_map/RightRingDistal":&"Ring4.R","bone_map/RightLittleProximal":&"Pinky2.R","bone_map/RightLittleIntermediate":&"Pinky3.R","bone_map/RightLittleDistal":&"Pinky4.R","bone_map/LeftUpperLeg":&"UpperLeg.L","bone_map/LeftLowerLeg":&"LowerLeg.L","bone_map/LeftFoot":&"Foot.L","bone_map/LeftToes":&"","bone_map/RightUpperLeg":&"UpperLeg.R","bone_map/RightLowerLeg":&"LowerLeg.R","bone_map/RightFoot":&"Foot.R","bone_map/RightToes":&"","script":null)
+,
+"retarget/bone_renamer/rename_bones": true,
+"retarget/bone_renamer/unique_node/make_unique": true,
+"retarget/bone_renamer/unique_node/skeleton_name": "GeneralSkeleton",
+"retarget/remove_tracks/except_bone_transform": false,
+"retarget/remove_tracks/unimportant_positions": true,
+"retarget/remove_tracks/unmapped_bones": true,
+"retarget/rest_fixer/apply_node_transforms": true,
+"retarget/rest_fixer/fix_silhouette/enable": false,
+"retarget/rest_fixer/normalize_position_tracks": true,
+"retarget/rest_fixer/reset_all_bone_poses_after_import": true,
+"retarget/rest_fixer/retarget_method": 1
+}
+}
+}
+gltf/naming_version=2
+gltf/embedded_image_handling=1
